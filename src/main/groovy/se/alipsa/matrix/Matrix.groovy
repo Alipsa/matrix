@@ -37,7 +37,7 @@ class Matrix {
         return m
     }
 
-    def static cast(List<List<?>> matrix, int colNum, Closure converter) {
+    static List<List<?>> cast(List<List<?>> matrix, int colNum, Closure converter) {
         def m = clone(matrix)
         def value
         for (int r = 0; r < m.size(); r ++) {
@@ -48,11 +48,42 @@ class Matrix {
         return m
     }
 
-    def static clone(List<List<?>> matrix) {
+    static List<List<?>> clone(List<List<?>> matrix) {
         List<List<?>> copy = new ArrayList<>(matrix.size())
         for (row in matrix) {
             copy.add(row.collect())
         }
         return copy
+    }
+
+    static List<List<?>> transpose(List<List<?>> matrix) {
+        if (matrix == null) return null
+        return matrix.transpose()
+    }
+
+    static boolean isValid(Object matrix) {
+        if (matrix == null) {
+            return false
+        }
+        if (!List.isInstance(matrix)) {
+            return false
+        }
+        int numCols
+        int prevNumCols = -1
+        List list = matrix as List
+        for (row in list) {
+            if (!List.isInstance(row)) {
+                return false
+            }
+            numCols = (row as List).size()
+            if (prevNumCols == -1) {
+                prevNumCols = numCols
+            }
+            if (numCols != prevNumCols) {
+                return false
+            }
+            prevNumCols = numCols
+        }
+        return true
     }
 }
