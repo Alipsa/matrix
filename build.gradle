@@ -1,0 +1,22 @@
+plugins {
+    id 'groovy'
+}
+
+group 'se.alipsa'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    def groovy = 'org.apache.groovy:groovy:4.0.8'
+    compileOnly groovy
+    testImplementation groovy
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
