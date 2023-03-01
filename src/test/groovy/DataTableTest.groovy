@@ -15,8 +15,8 @@ class DataTableTest {
         def employees = [
                 "employee": ['John Doe','Peter Smith','Jane Doe'],
                 "salary": [21000, 23400, 26800],
-                "startDate": asLocalDate('2013-11-01','2018-03-25','2017-03-14'),
-                "endDate": asLocalDate('2020-01-10', '2020-04-12', '2020-10-06')
+                "startDate": toLocalDate('2013-11-01','2018-03-25','2017-03-14'),
+                "endDate": toLocalDate('2020-01-10', '2020-04-12', '2020-10-06')
         ]
         def table = DataTable.create(employees)
         assertEquals('John Doe', table.get(0,0))

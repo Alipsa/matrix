@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.Matrix.*
+import static se.alipsa.matrix.Stat.*
 
 import org.junit.jupiter.api.Test
 

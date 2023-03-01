@@ -4,18 +4,6 @@ import static se.alipsa.matrix.ValueConverter.*
 
 class Matrix {
 
-    static BigDecimal sum(List<List<?>> matrix, int colNum) {
-        def s = 0g
-        def value
-        for (row in matrix) {
-            value = row[colNum]
-            if (value instanceof Number) {
-                s = s + value
-            }
-        }
-        return s
-    }
-
     static List<List<?>> cast(List<List<?>> matrix, int colNum, Class<? extends Number> type) {
         def m = clone(matrix)
         def value

@@ -9,12 +9,32 @@ class ValueConverter {
         return num
     }
 
+    static BigDecimal toBigDecimal(BigInteger num) {
+        return num.toBigDecimal()
+    }
+
     static BigDecimal toBigDecimal(String num) {
         return new BigDecimal(num)
     }
 
     static BigDecimal toBigDecimal(Number num) {
-            return num as BigDecimal
+        return num as BigDecimal
+    }
+
+    static BigDecimal toBigDecimal(Object num) {
+        if (num instanceof BigDecimal) {
+            return toBigDecimal(num as BigDecimal)
+        }
+        if (num instanceof BigInteger) {
+            return toBigDecimal(num as BigInteger)
+        }
+        if (num instanceof Number) {
+            return toBigDecimal(num as Number)
+        }
+        if (num instanceof String) {
+            return toBigDecimal(num as String)
+        }
+        return null
     }
 
     static Double toDouble(Double num) {
@@ -29,7 +49,7 @@ class ValueConverter {
         return num as Double
     }
 
-    static List<LocalDate> asLocalDate(String... dates) {
+    static List<LocalDate> toLocalDate(String... dates) {
         def dat = []
         for (d in dates) {
             dat.add(LocalDate.parse(d))
@@ -37,7 +57,7 @@ class ValueConverter {
         return dat
     }
 
-    static List<LocalDate> asLocalDate(DateTimeFormatter formatter, String ... dates) {
+    static List<LocalDate> toLocalDate(DateTimeFormatter formatter, String ... dates) {
         def dat = []
         for (d in dates) {
             dat.add(LocalDate.parse(d, formatter))
