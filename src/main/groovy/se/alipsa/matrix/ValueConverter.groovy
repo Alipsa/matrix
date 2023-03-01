@@ -1,5 +1,8 @@
 package se.alipsa.matrix
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
 class ValueConverter {
 
     static BigDecimal toBigDecimal(BigDecimal num) {
@@ -24,5 +27,21 @@ class ValueConverter {
 
     static Double toDouble(Number num) {
         return num as Double
+    }
+
+    static List<LocalDate> asLocalDate(String... dates) {
+        def dat = []
+        for (d in dates) {
+            dat.add(LocalDate.parse(d))
+        }
+        return dat
+    }
+
+    static List<LocalDate> asLocalDate(DateTimeFormatter formatter, String ... dates) {
+        def dat = []
+        for (d in dates) {
+            dat.add(LocalDate.parse(d, formatter))
+        }
+        return dat
     }
 }

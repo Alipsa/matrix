@@ -68,13 +68,13 @@ class MatrixTest {
     void testTranspose() {
         def foo = [
                 [12.0, 3.0, Math.PI],
-                ["1,9", 2, 3],
-                ["bla", 2, 3]
+                ["1,9", 2, 4],
+                ["bla", 7, 5]
         ]
         assertEquals([
                 [12.0, "1,9", "bla"],
-                [3.0, 2, 2],
-                [Math.PI, 3, 3]
+                [3.0, 2, 7],
+                [Math.PI, 4, 5]
         ], transpose(foo))
     }
 
