@@ -7,13 +7,14 @@ class Stat {
     static BigDecimal[] sum(List<List<?>> matrix, int[] colNums) {
         def s = [0.0g] * colNums.length
         def value
-        def idx
+        int idx
         for (row in matrix) {
             idx = 0
             for (colNum in colNums) {
                 value = row[colNum]
                 if (value instanceof Number) {
-                    s.set(idx, s.get(colNum) + value)
+                    //s.set(idx, s.get(colNum) + value)
+                    s[idx] = s[idx] + value
                 }
                 idx++
             }
