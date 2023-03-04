@@ -1,23 +1,70 @@
 package se.alipsa.matrix
 
+import java.text.NumberFormat
+
 import static se.alipsa.matrix.ValueConverter.*
 
 class Matrix {
 
-    static List<List<?>> cast(List<List<?>> matrix, int colNum, Class<? extends Number> type) {
+    static List<List<?>> cast(List<List<?>> matrix, Integer colNum, Class<? extends Number> type, NumberFormat format = null) {
+        return cast(matrix, [colNum], type, format)
+    }
+
+    static List<List<?>> cast(List<List<?>> matrix, List<Integer> colNums, Class<? extends Number> type, NumberFormat format = null) {
+        def m = clone(matrix)
+        def value
+        if (type == BigDecimal.class) {
+            for (int r = 0; r < m.size(); r ++) {
+                for (int c in colNums) {
+                    value = m[r][c]
+                    if (value == null) continue
+                    if (format == null) {
+                        m[r][c] = toBigDecimal(value)
+                    } else {
+                        m[r][c] = toBigDecimal(value, format)
+                    }
+                }
+            }
+        } else if (type == Double.class) {
+            for (int r = 0; r < m.size(); r ++) {
+                for (int c in colNums) {
+                    value = m[r][c]
+                    if (value == null) continue
+                    if (format == null) {
+                        m[r][c] = toDouble(value)
+                    } else {
+                        m[r][c] = toDouble(value, format)
+                    }
+                }
+            }
+        } else {
+            throw new RuntimeException("Only cast to BigDecimal and Double are implemented")
+        }
+        return m
+    }
+
+    static List<List<?>> cast(List<List<?>> matrix, int colNum, Class<? extends Number> type, NumberFormat format = null) {
         def m = clone(matrix)
         def value
         if (type == BigDecimal.class) {
             for (int r = 0; r < m.size(); r ++) {
                 value = m[r][colNum]
                 if (value == null) continue
-                m[r][colNum] = toBigDecimal(value)
+                if (format == null) {
+                    m[r][colNum] = toBigDecimal(value)
+                } else {
+                    m[r][colNum] = toBigDecimal(value, format)
+                }
             }
         } else if (type == Double.class) {
             for (int r = 0; r < m.size(); r ++) {
                 value = m[r][colNum]
                 if (value == null) continue
-                m[r][colNum] = toDouble(value)
+                if (format == null) {
+                    m[r][colNum] = toDouble(value)
+                } else {
+                    m[r][colNum] = toDouble(value, format)
+                }
             }
         } else {
             throw new RuntimeException("Only cast to BigDecimal and Double are implemented")

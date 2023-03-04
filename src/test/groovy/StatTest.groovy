@@ -15,7 +15,7 @@ class StatTest {
         ]
 
         assertEquals(2 as BigDecimal, mean(matrix[0]))
-        def m = mean(matrix, 1, 2)
+        def m = mean(matrix, [1, 2])
         assertEquals(10/3, m[0])
         assertEquals(1.95g, m[1])
     }
@@ -29,7 +29,7 @@ class StatTest {
         ]
 
         assertEquals(2 as BigDecimal, median(matrix[0]))
-        def m = median(matrix, 1, 2)
+        def m = median(matrix, [1, 2])
         assertEquals(2 as BigDecimal, m[0])
         assertEquals(1.95g, m[1])
     }
@@ -43,7 +43,7 @@ class StatTest {
         ]
 
         assertEquals(0.3, min(matrix[0]))
-        def m = min(matrix, 1, 2)
+        def m = min(matrix, 1..2)
         assertEquals(1, m[0])
         assertEquals(0.9, m[1])
     }
@@ -57,7 +57,7 @@ class StatTest {
         ]
 
         assertEquals(3, max(matrix[0]))
-        def m = max(matrix, 1, 2)
+        def m = max(matrix, 1..2)
         assertEquals(7, m[0])
         assertEquals(3, m[1])
     }
@@ -73,7 +73,7 @@ class StatTest {
 
         assertEquals(1.3650396819628847, sd(matrix[0]))
         assertEquals(1.3650396819628847, sdSample([0.3, 2, 3]))
-        def s = sd(matrix, 1, 2)
+        def s = sd(matrix, [1, 2])
         assertEquals(3.214550253664318, s[0])
         assertEquals(1.4849242404917498, s[1])
     }

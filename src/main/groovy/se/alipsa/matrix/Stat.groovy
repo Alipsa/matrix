@@ -4,8 +4,12 @@ import static se.alipsa.matrix.ValueConverter.toBigDecimal
 
 class Stat {
 
-    static BigDecimal[] sum(List<List<?>> matrix, int[] colNums) {
-        def s = [0.0g] * colNums.length
+    static BigDecimal[] sum(List<List<?>> matrix, Integer colNum) {
+        return sum(matrix, [colNum])
+    }
+
+    static BigDecimal[] sum(List<List<?>> matrix, List<Integer> colNums) {
+        def s = [0.0g] * colNums.size()
         def value
         int idx
         for (row in matrix) {
@@ -32,9 +36,13 @@ class Stat {
         return s
     }
 
-    static BigDecimal[] mean(List<List<?>> matrix, int[] colNums) {
-        def sums = [0.0g] * colNums.length
-        def ncols = [0.0g] * colNums.length
+    static BigDecimal[] mean(List<List<?>> matrix, Integer colNum) {
+        return mean(matrix, [colNum])
+    }
+
+    static BigDecimal[] mean(List<List<?>> matrix, List<Integer> colNums) {
+        def sums = [0.0g] * colNums.size()
+        def ncols = [0.0g] * colNums.size()
         def value
         def idx
         for (row in matrix) {
@@ -48,8 +56,8 @@ class Stat {
                 idx++
             }
         }
-        def means = new ArrayList<BigDecimal>(colNums.length)
-        for (int i = 0; i < colNums.length; i++) {
+        def means = new ArrayList<BigDecimal>(colNums.size())
+        for (int i = 0; i < colNums.size(); i++) {
             means[i] = sums[i] / ncols[i]
         }
         return means
@@ -67,7 +75,11 @@ class Stat {
         return sum / nVals
     }
 
-    static BigDecimal[] median(List<List<?>> matrix, int[] colNums) {
+    static BigDecimal[] median(List<List<?>> matrix, Integer colNum) {
+        return median(matrix, [colNum])
+    }
+
+    static BigDecimal[] median(List<List<?>> matrix, List<Integer> colNums) {
         Map<String, List<? extends Number>> valueList = [:].withDefault{key -> return []}
         def value
         for (row in matrix) {
@@ -78,7 +90,7 @@ class Stat {
                 }
             }
         }
-        def medians = new ArrayList<BigDecimal>(colNums.length)
+        def medians = new ArrayList<BigDecimal>(colNums.size())
         def m
         def list
         //println "Valuelist = ${valueList}"
@@ -124,10 +136,14 @@ class Stat {
         return minVal
     }
 
-    static Number[] min(List<List<?>> matrix, int[] colNums) {
+    static Number[] min(List<List<?>> matrix, Integer colNum) {
+        return min(matrix, [colNum])
+    }
+
+    static Number[] min(List<List<?>> matrix, List<Integer> colNums) {
         def value
         def minVal
-        def minVals = new ArrayList<Number>(colNums.length)
+        def minVals = new ArrayList<Number>(colNums.size())
         def idx
         for (row in matrix) {
             idx = 0
@@ -157,10 +173,14 @@ class Stat {
         return maxVal
     }
 
-    static Number[] max(List<List<?>> matrix, int[] colNums) {
+    static Number[] max(List<List<?>> matrix, Integer colNum) {
+        return max(matrix, [colNum])
+    }
+
+    static Number[] max(List<List<?>> matrix, List<Integer> colNums) {
         def value
         def maxVal
-        def maxVals = new ArrayList<Number>(colNums.length)
+        def maxVals = new ArrayList<Number>(colNums.size())
         def idx
         for (row in matrix) {
             idx = 0
@@ -178,6 +198,10 @@ class Stat {
         return maxVals
     }
 
+    static BigDecimal[] sd(List<List<?>> matrix, boolean isBiasCorrected = true, Integer colNum) {
+        return sd(matrix, isBiasCorrected, [colNum])
+    }
+
     /**
      *
      * @param matrix the matrix containing the column to compute
@@ -185,7 +209,7 @@ class Stat {
      * @param isBiasCorrected - whether or not the variance computation will use the bias-corrected formula
      * @return the standard deviation
      */
-    static BigDecimal[] sd(List<List<?>> matrix, boolean isBiasCorrected = true, int[] colNums) {
+    static BigDecimal[] sd(List<List<?>> matrix, boolean isBiasCorrected = true, List<Integer> colNums) {
         def value
         def numberMap = [:].withDefault{key -> return []}
         for (row in matrix) {
@@ -207,12 +231,12 @@ class Stat {
         return stds
     }
 
-    static BigDecimal sd(List<?> samples, boolean isBiasCorrected = true) {
-        if (samples == null || samples.isEmpty()) {
+    static BigDecimal variance(List<?> values, boolean isBiasCorrected = true) {
+        if (values == null || values.isEmpty()) {
             return null
         }
         def nullFreeNumbers = new ArrayList<? extends Number>()
-        samples.each { if (it != null && it instanceof Number) nullFreeNumbers.add(it) }
+        values.each { if (it != null && it instanceof Number) nullFreeNumbers.add(it) }
         def m = mean(nullFreeNumbers)
         def squaredDeviations = []
         nullFreeNumbers.each {
@@ -220,7 +244,14 @@ class Stat {
         }
         def sumOfSquares = sum(squaredDeviations)
         def size = isBiasCorrected ? nullFreeNumbers.size() - 1 : nullFreeNumbers.size()
-        def variance = sumOfSquares / size
+        return sumOfSquares / size
+    }
+
+    static BigDecimal sd(List<?> values, boolean isBiasCorrected = true) {
+        if (values == null || values.isEmpty()) {
+            return null
+        }
+        def variance = variance(values, isBiasCorrected)
         return Math.sqrt(variance) as BigDecimal
     }
 
