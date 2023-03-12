@@ -1,6 +1,5 @@
 import org.apache.commons.math3.stat.correlation.KendallsCorrelation
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.Correlation
 
 import java.math.RoundingMode;
 

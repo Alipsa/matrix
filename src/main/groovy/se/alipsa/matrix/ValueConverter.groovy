@@ -2,6 +2,7 @@ package se.alipsa.matrix
 
 import java.text.NumberFormat
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class ValueConverter {
@@ -77,19 +78,54 @@ class ValueConverter {
         return null
     }
 
-    static List<LocalDate> toLocalDate(String... dates) {
-        def dat = new ArrayList<LocalDate>(dates.length)
-        for (d in dates) {
-            dat.add(LocalDate.parse(d))
-        }
-        return dat
+    static LocalDate toLocalDate(String date) {
+        return LocalDate.parse(date)
     }
 
-    static List<LocalDate> toLocalDate(DateTimeFormatter formatter, String... dates) {
-        def dat = new ArrayList<LocalDate>(dates.length)
-        for (d in dates) {
-            dat.add(LocalDate.parse(d, formatter))
+    static LocalDate toLocalDate(String date, DateTimeFormatter formatter) {
+        return LocalDate.parse(date, formatter)
+    }
+
+    static LocalDate toLocalDate(LocalDateTime dateTime) {
+        return dateTime == null ? null : dateTime.toLocalDate()
+    }
+
+    static LocalDate toLocalDate(Object date) {
+        return LocalDate.parse(String.valueOf(date))
+    }
+
+    static <T> T convert(Object o, Class<T> type) {
+        return switch (type) {
+            case String -> (T)String.valueOf(o)
+            case LocalDate -> (T)toLocalDate(o)
+            case LocalDateTime -> (T)toLocalDateTime(o)
+            case BigDecimal -> (T)toBigDecimal(o)
+            case Double -> (T)toDouble(o)
+            case Integer -> (T)toInteger(o)
+            case BigInteger -> (T)toBigInteger(o)
+            default -> try {
+                type.cast(o)
+            } catch (ClassCastException e) {
+                o.asType(type)
+            }
         }
-        return dat
+    }
+
+    static LocalDateTime toLocalDateTime(Object o) {
+        if (o == null) return null
+        if (o instanceof LocalDate) return o as LocalDateTime
+        return LocalDateTime.parse(String.valueOf(o))
+    }
+
+    static Integer toInteger(Object o) {
+        if (o == null) return null
+        if (o instanceof Number) return o.intValue()
+        return Integer.valueOf(String.valueOf(o))
+    }
+
+    static BigInteger toBigInteger(Object o) {
+        if (o == null) return null
+        if (o instanceof Number) return o.toBigInteger()
+        return new BigInteger(String.valueOf(o))
     }
 }

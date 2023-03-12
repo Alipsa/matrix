@@ -1,8 +1,64 @@
 package se.alipsa.matrix
 
+import java.math.RoundingMode
+import java.util.concurrent.atomic.AtomicInteger
+
 import static se.alipsa.matrix.ValueConverter.toBigDecimal
 
 class Stat {
+
+    private static final primitives = ['double', 'float', 'int', 'long', 'short', 'byte']
+
+    static Map<String, List<String>> str(TableMatrix table) {
+        def map = new TreeMap<String, List<String>>()
+        map["TableMatrix"] = ["${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
+        for (colName in table.columnNames()) {
+            def vals = [table.columnType(colName).getSimpleName()]
+            def samples = ListConverter.convert(table.column(colName).subList(0, 4), String.class)
+            vals.addAll(samples)
+            map[colName] = vals
+        }
+        return map
+    }
+
+    static Summary summary(TableMatrix table) {
+        def map = new Summary()
+        for (colName in table.columnNames()) {
+            def column = table.column(colName)
+            def type = table.columnType(colName)
+            if (Number.isAssignableFrom(type) || primitives.contains(type.getTypeName())) {
+                map[colName] = addNumericSummary(column, type)
+            } else {
+                map[colName] = addCategorySummary(column, type)
+            }
+        }
+        return map
+    }
+
+    static Map<String, Object> addNumericSummary(List<Object> objects, Class<?> type) {
+        def numbers = objects as List<Number>
+        def quarts = quartiles(numbers)
+        [
+            'Type': type.getSimpleName(),
+            'Min': min(numbers),
+            '1st Q': quarts[0],
+            'Median': median(numbers),
+            'Mean': mean(numbers),
+            '3rd Q': quarts[1],
+            'Max': max(numbers)
+        ]
+    }
+
+    static Map<String, Object> addCategorySummary(List<Object> objects, Class<?> type) {
+        def freq = frequency(objects)
+        def mostFrequent = freq.subset('Frequency', {it == max(freq['Frequency'])})
+
+        return [
+            'Type': type.getSimpleName(),
+            'Number of unique values': freq.rowCount(),
+            'Most frequent': "${mostFrequent[0,0]} occurs ${mostFrequent[0,1]} times (${mostFrequent[0,2]}%)"
+        ]
+    }
 
     static BigDecimal[] sum(List<List<?>> matrix, Integer colNum) {
         return sum(matrix, [colNum])
@@ -63,6 +119,10 @@ class Stat {
         return means
     }
 
+    static BigDecimal[] mean(TableMatrix table, List<String> colNames) {
+        return mean(table.matrix(), table.columnIndexes(colNames))
+    }
+
     static BigDecimal mean(List<?> list) {
         def sum = 0 as BigDecimal
         def nVals = 0
@@ -75,8 +135,16 @@ class Stat {
         return sum / nVals
     }
 
+    static BigDecimal mean(TableMatrix table, String colName) {
+        return mean(table.column(colName))
+    }
+
     static BigDecimal[] median(List<List<?>> matrix, Integer colNum) {
         return median(matrix, [colNum])
+    }
+
+    static BigDecimal[] median(TableMatrix table, String colName) {
+        return median(table.column(colName) as List<List<?>>, [table.columnNames().indexOf(colName)])
     }
 
     static BigDecimal[] median(List<List<?>> matrix, List<Integer> colNums) {
@@ -105,6 +173,10 @@ class Stat {
         return medians
     }
 
+    static BigDecimal[] median(TableMatrix table, List<String> colNames) {
+        return median(table.matrix(), table.columnIndexes(colNames))
+    }
+
     static BigDecimal median(List<? extends Number> valueList) {
         if (valueList == null || valueList.size() == 0) {
             return null
@@ -122,6 +194,21 @@ class Stat {
         } else {
             return toBigDecimal(valueList[valueList.size()/2 as int])
         }
+    }
+
+    static Number[] quartiles(List<? extends Number> values) {
+        if (values == null || values.size() == 0) {
+            throw new IllegalArgumentException("The list of values are either null or does not contain any data.");
+        }
+
+        // Rank order the values
+        def v = values.collect() as Number[]
+        v.sort()
+
+        int q1 = (int) Math.round((v.size() -1) * 25 / 100)
+        int q3 = (int) Math.round((v.size() -1) * 75 / 100)
+
+        return [v[q1], v[q3]]
     }
 
     static Number min(List<?> list) {
@@ -161,6 +248,10 @@ class Stat {
         return minVals
     }
 
+    static Number[] min(TableMatrix table, List<String> colNames) {
+        return min(table.matrix(), table.columnIndexes(colNames))
+    }
+
     static Number max(List<?> list) {
         def maxVal = null
         for (value in list) {
@@ -198,6 +289,11 @@ class Stat {
         return maxVals
     }
 
+    static Number[] max(TableMatrix table, List<String> colNames) {
+        return max(table.matrix(), table.columnIndexes(colNames))
+    }
+
+
     static BigDecimal[] sd(List<List<?>> matrix, boolean isBiasCorrected = true, Integer colNum) {
         return sd(matrix, isBiasCorrected, [colNum])
     }
@@ -231,6 +327,10 @@ class Stat {
         return stds
     }
 
+    static BigDecimal[] sd(TableMatrix table, List<String> columnNames, boolean isBiasCorrected = true) {
+        return sd(table.matrix(), isBiasCorrected, table.columnIndexes(columnNames))
+    }
+
     static BigDecimal variance(List<?> values, boolean isBiasCorrected = true) {
         if (values == null || values.isEmpty()) {
             return null
@@ -247,6 +347,10 @@ class Stat {
         return sumOfSquares / size
     }
 
+    static BigDecimal sd(TableMatrix table, String columnName, boolean isBiasCorrected = true) {
+        return sd(table.column(columnName), isBiasCorrected)
+    }
+
     static BigDecimal sd(List<?> values, boolean isBiasCorrected = true) {
         if (values == null || values.isEmpty()) {
             return null
@@ -261,5 +365,33 @@ class Stat {
 
     static BigDecimal sdPopulation(List<?> population) {
         return sd(population, false)
+    }
+
+    static TableMatrix frequency(List<?> column) {
+        Map<Object, AtomicInteger> freq = new HashMap<>()
+        column.forEach(v -> {
+            freq.computeIfAbsent(v, k -> new AtomicInteger(0)).incrementAndGet()
+        })
+        int size = column.size()
+        List<List<?>> matrix = []
+        def percent
+        for (Map.Entry<Object, AtomicInteger> entry : freq.entrySet()) {
+            int numOccurrence = entry.getValue().intValue()
+            percent = (numOccurrence * 100.0 / size).setScale(2, RoundingMode.HALF_EVEN)
+            matrix.add([String.valueOf(entry.getKey()), numOccurrence, percent])
+        }
+        return TableMatrix.create(
+            ["Value", "Frequency", "Percent"],
+            matrix,
+            [String, int, BigDecimal]
+        )
+    }
+
+    static TableMatrix frequency(TableMatrix table, String columnName) {
+        return frequency(table.column(columnName))
+    }
+
+    static TableMatrix frequency(TableMatrix table, int columnIndex) {
+        return frequency(table.column(columnIndex))
     }
 }
