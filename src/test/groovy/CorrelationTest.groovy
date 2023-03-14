@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import java.math.RoundingMode;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static se.alipsa.matrix.Correlation.*;
+import static se.alipsa.groovy.matrix.Correlation.*;
 
 class CorrelationTest {
 

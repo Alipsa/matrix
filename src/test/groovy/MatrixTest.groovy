@@ -1,8 +1,8 @@
 import java.text.DecimalFormat
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.Matrix.*
-import static se.alipsa.matrix.Stat.*
+import static se.alipsa.groovy.matrix.Matrix.*
+import static se.alipsa.groovy.matrix.Stat.*
 
 import org.junit.jupiter.api.Test
 

@@ -1,15 +1,15 @@
 import se.alipsa.groovy.datautil.SqlUtil
-import se.alipsa.matrix.Stat
-import se.alipsa.matrix.TableMatrix
+import se.alipsa.groovy.matrix.Stat
+import se.alipsa.groovy.matrix.TableMatrix
 
 import java.time.LocalDate
 
-import static se.alipsa.matrix.ListConverter.*
+import static se.alipsa.groovy.matrix.ListConverter.*
 import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.*
 
-import static se.alipsa.matrix.ValueConverter.toLocalDate
+import static se.alipsa.groovy.matrix.ValueConverter.toLocalDate
 
 
 class TableMatrixTest {

@@ -1,4 +1,4 @@
-package se.alipsa.matrix
+package se.alipsa.groovy.matrix
 
 import java.text.NumberFormat
 import java.time.LocalDate

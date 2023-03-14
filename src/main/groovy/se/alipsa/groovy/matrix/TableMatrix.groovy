@@ -1,4 +1,4 @@
-package se.alipsa.matrix
+package se.alipsa.groovy.matrix
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
