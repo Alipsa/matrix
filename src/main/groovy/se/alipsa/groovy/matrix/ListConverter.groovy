@@ -1,14 +1,16 @@
 package se.alipsa.groovy.matrix
 
+import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class ListConverter {
 
-  static <T> List<T> convert(List<?> list, Class<T> type) {
+  static <T> List<T> convert(List<?> list, Class<T> type,
+                             DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     List<T> c = []
     list.each {
-      c.add(ValueConverter.convert(it, type))
+      c.add(ValueConverter.convert(it, type, dateTimeFormatter, numberFormat))
     }
     return c
   }

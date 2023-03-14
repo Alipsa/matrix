@@ -4,6 +4,8 @@ import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
+import java.text.NumberFormat
+import java.time.format.DateTimeFormatter
 
 /**
  * This is essentially a [][] (List<List<?>>) but also has a header
@@ -236,13 +238,18 @@ class TableMatrix {
         return colNums
     }
 
-    TableMatrix convert(Map<String, Class<?>> columnTypes) {
+    TableMatrix convert(Map<String, Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
         def convertedColumns = []
         def convertedTypes = []
         for (int i = 0; i < columnCount(); i++) {
             String colName = headerList[i]
             if (columnTypes[colName]) {
-                convertedColumns.add(ListConverter.convert(column(i), columnTypes[colName]))
+                convertedColumns.add(ListConverter.convert(
+                        column(i),
+                        columnTypes[colName] as Class<Object>,
+                        dateTimeFormatter,
+                        numberFormat)
+                )
                 convertedTypes.add(columnTypes[colName])
             } else {
                 convertedColumns.add(column(i))

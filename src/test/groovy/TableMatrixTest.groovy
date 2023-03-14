@@ -3,6 +3,8 @@ import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.TableMatrix
 
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 import static se.alipsa.groovy.matrix.ListConverter.*
 import static org.junit.jupiter.api.Assertions.*
@@ -80,16 +82,20 @@ class TableMatrixTest {
         def data = [
             'place': ['1', '2', '3'],
             'firstname': ['Lorena', 'Marianne', 'Lotte'],
-            'start': ['2021-12-01', '2022-07-10', '2023-05-27']
+            'start': ['2021-12-01', '2022-07-10', '2023-05-27'],
+            'end': ['2022-12-01 10:00:00', '2023-07-10 00:01:00', '2024-05-27 00:00:30']
         ]
-        def table = TableMatrix.create(data, [String]*3)
+        def table = TableMatrix.create(data, [String]*4)
 
         def table2 = table.convert([place: int, start: LocalDate])
+        table2 = table2.convert([end: LocalDateTime],
+                DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss'))
         assertEquals(int, table2.columnType('place'))
         assertEquals(Integer, table2[0, 0].class)
 
         assertEquals(LocalDate, table2.columnType('start'))
         assertEquals(LocalDate, table2[0, 2].class)
+        assertEquals(LocalDateTime.parse('2022-12-01T10:00:00.000'), table2['end'][0])
 
     }
 
