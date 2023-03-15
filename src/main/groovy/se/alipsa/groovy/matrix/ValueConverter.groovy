@@ -16,7 +16,7 @@ class ValueConverter {
     }
 
     static BigDecimal toBigDecimal(String num, NumberFormat format = null) {
-        if (num == null || 'null' == num) return null
+        if (num == null || 'null' == num || num.isBlank()) return null
         if (format == null) return new BigDecimal(num)
         return format.parse(num) as BigDecimal
     }
@@ -52,7 +52,7 @@ class ValueConverter {
 
     static Double toDouble(String num, NumberFormat format = null) {
         // Maybe Double.NaN instead of null?
-        if (num == null  || 'null' == num) return null
+        if (num == null  || 'null' == num || num.isBlank()) return null
         if (format == null) return Double.valueOf(num)
         return format.parse(num) as Double
     }
@@ -97,8 +97,8 @@ class ValueConverter {
             case LocalDate -> (T)toLocalDate(o, dateTimeFormatter)
             case LocalDateTime -> (T)toLocalDateTime(o, dateTimeFormatter)
             case BigDecimal -> (T)toBigDecimal(o, numberFormat)
-            case Double -> (T)toDouble(o, numberFormat)
-            case Integer -> (T)toInteger(o)
+            case Double, double -> (T)toDouble(o, numberFormat)
+            case Integer, int -> (T)toInteger(o)
             case BigInteger -> (T)toBigInteger(o)
             default -> try {
                 type.cast(o)
@@ -117,12 +117,14 @@ class ValueConverter {
     }
 
     static Integer toInteger(Object o) {
-        if (o == null) return null
+        if (o == null ) return null
         if (o instanceof Number) return o.intValue()
         try {
             return (o as BigDecimal).intValue()
         } catch (NumberFormatException e) {
-            return Integer.valueOf(String.valueOf(o))
+            String val = toDecimalNumber(String.valueOf(o))
+            if (val.isBlank()) return null
+            return Integer.valueOf(val)
         }
     }
 
@@ -130,5 +132,14 @@ class ValueConverter {
         if (o == null) return null
         if (o instanceof Number) return o.toBigInteger()
         return new BigInteger(String.valueOf(o))
+    }
+
+    /** strips off any non mumeric char from the string. */
+    public static String toDecimalNumber(String txt) {
+        StringBuilder result = new StringBuilder();
+        txt.chars().mapToObj(i -> (char)i)
+                .filter(c -> Character.isDigit(c) || '.' == c || '-' == c)
+                .forEach(c -> result.append(c));
+        return result.toString();
     }
 }

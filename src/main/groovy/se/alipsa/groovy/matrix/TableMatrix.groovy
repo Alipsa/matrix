@@ -260,6 +260,35 @@ class TableMatrix {
         return create(headerList, convertedRows, convertedTypes)
     }
 
+    TableMatrix convert(String colName, Class<?> type, Closure converter) {
+        return convert(columnNames().indexOf(colName), type, converter)
+    }
+
+    /**
+     *
+     * @param colNum the column index for the column to convert
+     * @param type the class the column will be converted to
+     * @param converter as closure converting each value in the designated column
+     * @return a new TableMatrix
+     */
+    TableMatrix convert(int colNum, Class<?> type, Closure converter) {
+        def convertedColumns = []
+        def convertedTypes = []
+        def col = []
+        for (int i = 0; i < columnCount(); i++) {
+            if (colNum == i) {
+                column(i).each { col.add(converter.call(it)) }
+                convertedColumns.add(col)
+                convertedTypes.add(type)
+            } else {
+                convertedColumns.add(column(i))
+                convertedTypes.add(columnType(i))
+            }
+        }
+        def convertedRows = Matrix.transpose(convertedColumns)
+        return create(headerList, convertedRows, convertedTypes)
+    }
+
     /**
      * def table = TableMatrix.create([
      *      'place': [1, 2, 3],
