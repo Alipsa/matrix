@@ -8,14 +8,14 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.0-SNAPSHOT'
+version '1.0.1-SNAPSHOT'
 
 repositories {
   mavenCentral()
 }
 
 dependencies {
-  def groovy = 'org.apache.groovy:groovy:4.0.9'
+  def groovy = 'org.apache.groovy:groovy:4.0.10'
   compileOnly groovy
   testImplementation groovy
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
