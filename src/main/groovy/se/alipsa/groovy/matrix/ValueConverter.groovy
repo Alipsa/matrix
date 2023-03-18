@@ -17,7 +17,11 @@ class ValueConverter {
 
     static BigDecimal toBigDecimal(String num, NumberFormat format = null) {
         if (num == null || 'null' == num || num.isBlank()) return null
-        if (format == null) return new BigDecimal(num)
+        if (format == null) {
+            def n = toDecimalNumber(num)
+            if (n.isBlank()) return null
+            return new BigDecimal(n)
+        }
         return format.parse(num) as BigDecimal
     }
 
@@ -135,10 +139,10 @@ class ValueConverter {
     }
 
     /** strips off any non mumeric char from the string. */
-    public static String toDecimalNumber(String txt) {
-        StringBuilder result = new StringBuilder();
-        txt.chars().mapToObj(i -> (char)i)
-                .filter(c -> Character.isDigit(c) || '.' == c || '-' == c)
+    public static String toDecimalNumber(String txt, char decimalSeparator = '.') {
+        StringBuilder result = new StringBuilder()
+        txt.chars().mapToObj(i -> i as char)
+                .filter(c -> Character.isDigit(c) || decimalSeparator == c || '-' == c)
                 .forEach(c -> result.append(c));
         return result.toString();
     }

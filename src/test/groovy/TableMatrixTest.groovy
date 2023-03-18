@@ -80,7 +80,7 @@ class TableMatrixTest {
     @Test
     void testConvert() {
         def data = [
-            'place': ['1', '2', '3', ''],
+            'place': ['1', '2', '3', ','],
             'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
             'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
             'end': ['2022-12-01 10:00:00', '2023-07-10 00:01:00', '2024-05-27 00:00:30', '2042-01-10 00:00:00']
@@ -98,8 +98,8 @@ class TableMatrixTest {
         assertEquals(LocalDateTime.parse('2022-12-01T10:00:00.000'), table2['end'][0])
 
         def table3 = table.convert('place', Integer, {
-            String val = String.valueOf(it)
-            if (val == 'null' || val.isBlank()) return null
+            String val = String.valueOf(it).trim()
+            if (val == 'null' || val == ',' || val.isBlank()) return null
             return Integer.valueOf(val)
         })
         assertEquals(Integer, table3.columnType('place'))
