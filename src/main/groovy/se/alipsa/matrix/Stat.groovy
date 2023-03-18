@@ -57,7 +57,7 @@ class Stat {
             'Type': type.getSimpleName(),
             'Number of unique values': freq.rowCount(),
             'Most frequent': "${mostFrequent[0,0]} occurs ${mostFrequent[0,1]} times (${mostFrequent[0,2]}%)"
-        ]
+        ] as Map<String, Object>
     }
 
     static BigDecimal[] sum(List<List<?>> matrix, Integer colNum) {
@@ -196,6 +196,12 @@ class Stat {
         }
     }
 
+    /**
+     * The quartiles of a ranked set of data values are three points which divide the data into exactly four equal parts,
+     * each part comprising of quarter data. As Q2 is the median only Q1 and Q3 is returned here
+     * @param values a list of numbers to use
+     * @return a list of the 1:st and 3:rd quartile
+     */
     static Number[] quartiles(List<? extends Number> values) {
         if (values == null || values.size() == 0) {
             throw new IllegalArgumentException("The list of values are either null or does not contain any data.");
