@@ -1,8 +1,8 @@
-package se.alipsa.matrix
+package se.alipsa.groovy.matrix
 
 import java.text.NumberFormat
 
-import static se.alipsa.matrix.ValueConverter.*
+import static ValueConverter.*
 
 class Matrix {
 

@@ -1,9 +1,11 @@
-package se.alipsa.matrix
+package se.alipsa.groovy.matrix
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
+import java.text.NumberFormat
+import java.time.format.DateTimeFormatter
 
 /**
  * This is essentially a [][] (List<List<?>>) but also has a header
@@ -236,14 +238,48 @@ class TableMatrix {
         return colNums
     }
 
-    TableMatrix convert(Map<String, Class<?>> columnTypes) {
+    TableMatrix convert(Map<String, Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
         def convertedColumns = []
         def convertedTypes = []
         for (int i = 0; i < columnCount(); i++) {
             String colName = headerList[i]
             if (columnTypes[colName]) {
-                convertedColumns.add(ListConverter.convert(column(i), columnTypes[colName]))
+                convertedColumns.add(ListConverter.convert(
+                        column(i),
+                        columnTypes[colName] as Class<Object>,
+                        dateTimeFormatter,
+                        numberFormat)
+                )
                 convertedTypes.add(columnTypes[colName])
+            } else {
+                convertedColumns.add(column(i))
+                convertedTypes.add(columnType(i))
+            }
+        }
+        def convertedRows = Matrix.transpose(convertedColumns)
+        return create(headerList, convertedRows, convertedTypes)
+    }
+
+    TableMatrix convert(String colName, Class<?> type, Closure converter) {
+        return convert(columnNames().indexOf(colName), type, converter)
+    }
+
+    /**
+     *
+     * @param colNum the column index for the column to convert
+     * @param type the class the column will be converted to
+     * @param converter as closure converting each value in the designated column
+     * @return a new TableMatrix
+     */
+    TableMatrix convert(int colNum, Class<?> type, Closure converter) {
+        def convertedColumns = []
+        def convertedTypes = []
+        def col = []
+        for (int i = 0; i < columnCount(); i++) {
+            if (colNum == i) {
+                column(i).each { col.add(converter.call(it)) }
+                convertedColumns.add(col)
+                convertedTypes.add(type)
             } else {
                 convertedColumns.add(column(i))
                 convertedTypes.add(columnType(i))

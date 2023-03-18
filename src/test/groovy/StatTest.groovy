@@ -1,7 +1,7 @@
-import se.alipsa.matrix.TableMatrix
+import se.alipsa.groovy.matrix.TableMatrix
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.matrix.Stat.*
+import static se.alipsa.groovy.matrix.Stat.*
 
 import org.junit.jupiter.api.Test
 

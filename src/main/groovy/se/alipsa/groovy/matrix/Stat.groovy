@@ -1,9 +1,9 @@
-package se.alipsa.matrix
+package se.alipsa.groovy.matrix
 
 import java.math.RoundingMode
 import java.util.concurrent.atomic.AtomicInteger
 
-import static se.alipsa.matrix.ValueConverter.toBigDecimal
+import static ValueConverter.toBigDecimal
 
 class Stat {
 

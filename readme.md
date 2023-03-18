@@ -14,7 +14,7 @@ A table Matrix is created using one of the static create methods in TableMatrix.
 
 ### Creating from groovy code:
 ```groovy
-import static se.alipsa.matrix.ListConverter.*
+import static se.alipsa.groovy.matrix.ListConverter.*
 
 def employees = [
         "employee": ['John Doe','Peter Smith','Jane Doe'],
@@ -29,7 +29,7 @@ def table = TableMatrix.create(employees)
 ```groovy
 @Grab('com.h2database:h2:2.1.214')
 
-import se.alipsa.matrix.TableMatrix
+import se.alipsa.groovy.matrix.TableMatrix
 import se.alipsa.groovy.datautil.SqlUtil
 
 dbDriver = "org.h2.Driver"
@@ -63,7 +63,7 @@ println(project.content())
 
 ### Creating from a csv file:
 ```groovy
-import se.alipsa.matrix.TableMatrix
+import se.alipsa.groovy.matrix.TableMatrix
 def table = TableMatrix.create(new File('/some/path/foo.csv'), ';')
 ```
 
@@ -73,7 +73,7 @@ you get the column e.g. List<?> priceColumn = table["price"]
 
 ### Transforming data
 ```groovy
-import se.alipsa.matrix.TableMatrix
+import se.alipsa.groovy.matrix.TableMatrix
 import java.time.LocalDate
 
 // Given a table of strings
