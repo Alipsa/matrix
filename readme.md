@@ -6,6 +6,22 @@ Groovy like this `def myList = [ [1,2,3], [3.4, 7.12, 0.19] ]`
 
 Methods are static making is simple to use in Groovy scripts
 
+## Setup
+Matrix should work with any 4.x version of groovy, and probably older versions as well. Binary builds can be downloaded 
+from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
+handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
+```groovy
+implementation 'se.alipsa.groovy:matrix:1.0.1'
+```
+...and the following for maven
+```xml
+<dependency>
+    <groupId>se.alipsa.groovy</groupId>
+    <artifactId>matrix</artifactId>
+    <version>1.0.1</version>
+</dependency>
+```
+
 ## TableMatrix
 A TableMatrix is an immutable Matrix with a header and where each column type is defined.
 In some ways you can think of it as an in memory ResultSet.
@@ -68,7 +84,7 @@ def table = TableMatrix.create(new File('/some/path/foo.csv'), ';')
 ```
 
 Data can be reference using []
-notation e.g. to get the content of the 3:rd row and 2:nd column you do table[3,2]. If you pass is only one argument,
+notation e.g. to get the content of the 3:rd row and 2:nd column you do table[3,2]. If you pass only one argument,
 you get the column e.g. List<?> priceColumn = table["price"]
 
 ### General inspection
@@ -252,14 +268,25 @@ def table = TableMatrix.create(data, [int, String, LocalDate])
 def selection = table.selectRows {
   // We use the column index to refer to a specific variable, 2 will be the start column
   def date = it[2] as LocalDate
-  return date.isAfter(LocalDate.of(2022,1, 1))
+  return date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
 }
 // Index values 1,2 will match (row with index is before jan 1 2022 so is not included)
 assertArrayEquals([1,2].toArray(), selection.toArray())
 // Double each value in the foo column that matches the selection
 def foo = table.apply("foo", selection, { it * 2})
-assertEquals(4, foo[0, 0])
-assertEquals(6, foo[1, 0])
+assertEquals(4, foo[1, 0])
+assertEquals(6, foo[2, 0])
+
+// The same thing can be done in one go which is a bit more efficient
+def bar = table.apply("foo", {
+    def date = it[2] as LocalDate
+    date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
+  }, {
+    it * 2
+  }
+)
+assertEquals(4, bar[1, 0])
+assertEquals(6, bar[2, 0])
 ```        
 
 ## Matrix
