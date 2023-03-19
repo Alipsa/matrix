@@ -2,8 +2,6 @@ package se.alipsa.groovy.matrix
 
 import java.text.NumberFormat
 
-import static ValueConverter.*
-
 class Matrix {
 
     static List<List<?>> convert(List<List<?>> matrix, Integer colNum, Class<? extends Number> type, NumberFormat format = null) {
@@ -17,7 +15,11 @@ class Matrix {
             for (int c in colNums) {
                 value = m[r][c]
                 if (value == null) continue
-                m[r][c] = convert(value, type, null, format)
+                if (format == null) {
+                    m[r][c] = ValueConverter.convert(value, type)
+                } else {
+                    m[r][c] = ValueConverter.convert(value, type, null, format)
+                }
             }
         }
         return m
@@ -29,7 +31,7 @@ class Matrix {
         for (int r = 0; r < m.size(); r ++) {
             value = m[r][colNum]
             if (value == null) continue
-            m[r][colNum] = convert(value, type, null, format)
+            m[r][colNum] = ValueConverter.convert(value, type, null, format)
         }
         return m
     }

@@ -1,3 +1,5 @@
+import se.alipsa.groovy.matrix.Matrix
+
 import java.text.DecimalFormat
 
 import static org.junit.jupiter.api.Assertions.*
@@ -9,7 +11,7 @@ import org.junit.jupiter.api.Test
 class MatrixTest {
 
     @Test
-    void testCastToBigDecimal() {
+    void testConvertToBigDecimal() {
         def foo = [
                 [12.0, 3.0, Math.PI],
                 ["1.9", 2, 3],
@@ -18,7 +20,7 @@ class MatrixTest {
 
         assertEquals(5 as BigDecimal, sum(foo[1]), "sum of foo: ")
 
-        def bar = convert(foo, 0, BigDecimal.class)
+        def bar = convert(foo, 0, BigDecimal)
         assertEquals(18.2g, sum(bar, 0)[0], "sum of bar: ")
 
         assertEquals(12.0g, sum(foo, 0)[0], "after cast, sum of foo: ")

@@ -184,4 +184,48 @@ class TableMatrixTest {
 
         assertEquals(2, project.rowCount())
     }
+
+    @Test
+    void testSelectRows() {
+        def data = [
+            'place': [1, 2, 3],
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+        ]
+        def table = TableMatrix.create(data, [int, String, LocalDate])
+        def selection = table.selectRows {
+            def date = it[2] as LocalDate
+            return date.isAfter(LocalDate.of(2022,1, 1))
+        }
+        assertArrayEquals([1,2].toArray(), selection.toArray())
+    }
+
+    @Test
+    void testSelectRowsAndApply() {
+        def data = [
+            'place': [1, 2, 3],
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+        ]
+        def table = TableMatrix.create(data, [int, String, LocalDate])
+        def selection = table.selectRows {
+            def date = it[2] as LocalDate
+            return date.isAfter(LocalDate.of(2022,1, 1))
+        }
+        assertArrayEquals([1,2].toArray(), selection.toArray())
+        def foo = table.apply("place", selection, { it * 2})
+        //println(foo.content())
+        assertEquals(4, foo[1, 0])
+        assertEquals(6, foo[2, 0])
+
+        def bar = table.apply("place", {
+            def date = it[2] as LocalDate
+            return date.isAfter(LocalDate.of(2022,1, 1))
+        }, {
+            it * 2
+        })
+        //println(bar.content())
+        assertEquals(4, bar[1, 0])
+        assertEquals(6, bar[2, 0])
+    }
 }

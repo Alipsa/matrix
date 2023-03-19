@@ -201,7 +201,7 @@ def table = create([
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27']
 ], [int, String, String])
-// We ca use the groovy method findIndexValues on a column to select the rows we want
+// We can use the groovy method findIndexValues on a column to select the rows we want
 def rows = table.getRows(table['place'].findIndexValues { it > 1 })
 assertEquals(2, rows.size())
 
@@ -239,6 +239,28 @@ place	firstname	start
 3	Lotte	2023-06-06
 null	Chris	2023-01-20
 ```
+
+### Combining selectRows with apply
+```groovy
+def data = [
+    'foo': [1, 2, 3],
+    'firstname': ['Lorena', 'Marianne', 'Lotte'],
+    'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+]
+def table = TableMatrix.create(data, [int, String, LocalDate])
+// select the observations where start is later than the jan 1 2022
+def selection = table.selectRows {
+  // We use the column index to refer to a specific variable, 2 will be the start column
+  def date = it[2] as LocalDate
+  return date.isAfter(LocalDate.of(2022,1, 1))
+}
+// Index values 1,2 will match (row with index is before jan 1 2022 so is not included)
+assertArrayEquals([1,2].toArray(), selection.toArray())
+// Double each value in the foo column that matches the selection
+def foo = table.apply("foo", selection, { it * 2})
+assertEquals(4, foo[0, 0])
+assertEquals(6, foo[1, 0])
+```        
 
 ## Matrix
 The matrix class contains some static function to operate on a numerical Matrix (a [][] structure or List<List<?>>).
