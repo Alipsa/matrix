@@ -219,8 +219,8 @@ class TableMatrix {
         if (includeHeader) {
             sb.append(String.join(delimiter, headerList)).append(lineEnding)
         }
-        for (int i = 0; i < nRows; i++) {
-            def row = ListConverter.convert(row(rowCount() -1 -i), String.class)
+        for (int i = rowCount() - nRows; i < rowCount(); i++) {
+            def row = ListConverter.convert(row(i), String.class)
             sb.append(String.join(delimiter, row )).append(lineEnding)
         }
         return sb.toString()
@@ -306,5 +306,24 @@ class TableMatrix {
     TableMatrix subset(@NotNull String columnName, @NotNull Closure condition) {
         def rows = rows(column(columnName).findIndexValues(condition) as List<Integer>)
         return create(headerList, rows, columnTypes)
+    }
+
+    TableMatrix apply(String colName, Closure function) {
+        return apply(columnNames().indexOf(colName), function)
+    }
+
+    TableMatrix apply(int colNum, Closure function) {
+        def convertedColumns = []
+        def col = []
+        for (int i = 0; i < columnCount(); i++) {
+            if (colNum == i) {
+                column(i).each { col.add(function.call(it)) }
+                convertedColumns.add(col)
+            } else {
+                convertedColumns.add(column(i))
+            }
+        }
+        def convertedRows = Matrix.transpose(convertedColumns)
+        return create(headerList, convertedRows, columnTypes)
     }
 }

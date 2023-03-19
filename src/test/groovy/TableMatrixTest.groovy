@@ -108,6 +108,25 @@ class TableMatrixTest {
     }
 
     @Test
+    void testApply() {
+        def data = [
+            'place': ['1', '2', '3', ','],
+            'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
+            'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
+        ]
+        def table = TableMatrix
+            .create(data)
+            .convert(place: int, start: LocalDate)
+        def table2 = table.apply("start", { startDate ->
+            startDate.plusDays(10)
+        })
+        assertEquals(LocalDate.of(2021, 12, 11), table2["start"][0])
+        assertEquals(LocalDate.of(2022, 7, 20), table2["start"][1])
+        assertEquals(LocalDate.of(2023, 6, 6), table2["start"][2])
+        assertEquals(LocalDate.of(2023, 1, 20), table2["start"][3])
+    }
+
+    @Test
     void testGetRowsForCriteria() {
         def data = [
             'place': [1, 2, 3],
@@ -133,7 +152,7 @@ class TableMatrixTest {
             [int, String, String]
         )
         assertEquals('1\tLorena\t2021-12-01\n', table.head(1, false))
-        assertEquals('3\tLotte\t2023-05-27\n', table.tail(1, false))
+        assertEquals('2\tMarianne\t2022-07-10\n3\tLotte\t2023-05-27\n', table.tail(2, false))
     }
 
     @SuppressWarnings('SqlNoDataSourceInspection')

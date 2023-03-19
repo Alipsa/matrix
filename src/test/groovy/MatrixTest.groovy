@@ -18,7 +18,7 @@ class MatrixTest {
 
         assertEquals(5 as BigDecimal, sum(foo[1]), "sum of foo: ")
 
-        def bar = cast(foo, 0, BigDecimal.class)
+        def bar = convert(foo, 0, BigDecimal.class)
         assertEquals(18.2g, sum(bar, 0)[0], "sum of bar: ")
 
         assertEquals(12.0g, sum(foo, 0)[0], "after cast, sum of foo: ")
@@ -30,10 +30,10 @@ class MatrixTest {
             ["1,3", "2", 3],
             ["4,3", "2,01", 3]
         ]
-        def baz = cast(foo2, 0, BigDecimal.class, format)
+        def baz = convert(foo2, 0, BigDecimal.class, format)
         assertEquals(17.6, sum(baz, 0)[0])
 
-        def baz2 = cast(foo2, [0,1,2], BigDecimal.class, format)
+        def baz2 = convert(foo2, [0, 1, 2], BigDecimal.class, format)
         assertEquals(7.01, sum(baz2, 0..2)[1])
     }
 
@@ -47,7 +47,7 @@ class MatrixTest {
 
         assertEquals(12.0g, sum(foo, 0)[0], "sum of foo: ")
 
-        def bar = cast(foo, 0, Double.class)
+        def bar = convert(foo, 0, Double.class)
         assertEquals(18.2g, sum(bar, 0)[0], "sum of bar: ")
 
         assertEquals(12.0g, sum(foo, 0)[0], "after cast, sum of foo: ")
@@ -59,7 +59,7 @@ class MatrixTest {
         ]
 
         def format = DecimalFormat.getInstance(Locale.GERMANY)
-        def baz2 = cast(foo2, 0..2, Double.class, format)
+        def baz2 = convert(foo2, 0..2, Double.class, format)
         assertEquals(7.01, sum(baz2, [0,1])[1])
     }
 
@@ -73,7 +73,7 @@ class MatrixTest {
 
         assertEquals(12.0g, sum(foo, 0)[0], "sum of foo: ")
 
-        def bar = cast(foo, 0, {v -> {
+        def bar = convert(foo, 0, { v -> {
             if (v instanceof Number) {
                 return v
             }

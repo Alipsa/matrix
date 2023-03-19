@@ -71,6 +71,106 @@ Data can be reference using []
 notation e.g. to get the content of the 3:rd row and 2:nd column you do table[3,2]. If you pass is only one argument,
 you get the column e.g. List<?> priceColumn = table["price"]
 
+### General inspection
+
+#### head and tail - a short snippet of a TableMatrix
+```groovy
+import se.alipsa.groovy.matrix.*
+
+def table = TableMatrix.create([
+    'place': [1, 2, 3],
+    'firstname': ['Lorena', 'Marianne', 'Lotte'],
+    'start': ['2021-12-01', '2022-07-10', '2023-05-27']
+],
+    [int, String, String]
+)
+println("Head\n${table.head(2, false)}")
+println("Tail\n${table.tail(2, false)}")
+```
+Will print
+```
+Head
+1	Lorena	2021-12-01
+2	Marianne	2022-07-10
+
+Tail
+2	Marianne	2022-07-10
+3	Lotte	2023-05-27
+```
+
+#### str - structure
+```groovy
+import java.time.LocalDate
+import se.alipsa.groovy.matrix.*
+
+import static se.alipsa.groovy.matrix.ListConverter.*
+
+
+def empData = TableMatrix.create(
+    emp_id: 1..5,
+    emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+    salary: [623.3,515.2,611.0,729.0,843.25],
+    start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
+    [int, String, Number, LocalDate]
+)
+struct = Stat.str(empData)
+struct.each {
+  println it
+}
+```
+will print 
+```
+TableMatrix=[5 observations of 4 variables]
+emp_id=[int, 1, 2, 3, 4]
+emp_name=[String, Rick, Dan, Michelle, Ryan]
+salary=[Number, 623.3, 515.2, 611.0, 729.0]
+start_date=[LocalDate, 2012-01-01, 2013-09-23, 2014-11-15, 2014-05-11]
+```
+
+#### Summary
+
+```groovy
+import se.alipsa.groovy.matrix.*
+
+import static se.alipsa.groovy.matrix.Stat.*
+
+def table = TableMatrix.create([
+    v0: [0.3, 2, 3],
+    v1: [1.1, 1, 0.9],
+    v2: [null, 'Foo', "Foo"]
+], [Number, double, String])
+def summary = summary(table)
+println(summary)
+```
+Will print:
+```
+v0
+--
+Type:	Number
+Min:	0.3
+1st Q:	2
+Median:	2
+Mean:	1.7666666667
+3rd Q:	3
+Max:	3
+
+v1
+--
+Type:	double
+Min:	0.9
+1st Q:	1
+Median:	1
+Mean:	1.0
+3rd Q:	1.1
+Max:	1.1
+
+v2
+--
+Type:	String
+Number of unique values:	2
+Most frequent:	Foo occurs 2 times (66.67%)
+```
+
 ### Transforming data
 ```groovy
 import se.alipsa.groovy.matrix.TableMatrix
@@ -110,7 +210,48 @@ def subSet = table.subset('place', { it > 1 })
 // Get matrix returns the data content (no header) of the TableMatrix
 assertArrayEquals(table.getRows(1..2).toArray(), subSet.getMatrix().toArray())
 ```
+
+## Performing calculations with apply
+```groovy
+import java.time.LocalDate
+import se.alipsa.groovy.matrix.*
+
+def data = [
+    'place': ['1', '2', '3', ','],
+    'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
+    'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
+]
+def table = TableMatrix
+    .create(data)
+    .convert(place: int, start: LocalDate)
+
+// Add 10 days to the start dates
+def table2 = table.apply("start", { startDate ->
+    startDate.plusDays(10)
+})
+println(table2.content())
+```
+Will print:
+```
+place	firstname	start
+1	Lorena	2021-12-11
+2	Marianne	2022-07-20
+3	Lotte	2023-06-06
+null	Chris	2023-01-20
+```
+
 ## Matrix
+The matrix class contains some static function to operate on a numerical Matrix (a [][] structure or List<List<?>>).
+- _convert_ converts one column type to another numeric type
+- _clone_ creates a deep copy of the matrix
+- _transpose_ "rotates" the matrix 90 degrees
+- _isValid_ checks if it is a proper matrix or not
 
 ## Stat
-Stat contains basic statistical operations such as sum, mean, median, sd (standard deviation), variance
+Stat contains basic statistical operations such as sum, mean, median, frequency, sd (standard deviation), variance, 
+quartiles. See [StatTest](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/StatTest.groovy)
+for some examples.
+
+## Correlation
+Correlation can do the most common types of correlation calculations (Pearson, Spearman, and Kendall). See
+[CorrelationTest](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/CorrelationTest.groovy) for some examples.

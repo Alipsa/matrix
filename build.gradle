@@ -15,7 +15,8 @@ repositories {
 }
 
 dependencies {
-  def groovy = 'org.apache.groovy:groovy:4.0.10'
+  def groovyVersion = '4.0.10'
+  def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
   testImplementation groovy
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
@@ -23,7 +24,7 @@ dependencies {
   testImplementation 'org.apache.commons:commons-math3:3.6.1'
   testImplementation 'se.alipsa.groovy:data-utils:1.0.3'
   testImplementation 'com.h2database:h2:2.1.214'
-  testImplementation 'org.apache.groovy:groovy-sql:4.0.9'
+  testImplementation "org.apache.groovy:groovy-sql:$groovyVersion"
 }
 
 test {
