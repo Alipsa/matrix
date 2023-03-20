@@ -26,7 +26,7 @@ class TableMatrix {
     if (dataTypesOpt.length > 0) {
       table.columnTypes = Collections.unmodifiableList(dataTypesOpt[0])
       if (headerList.size() != table.columnTypes.size()) {
-        throw new IllegalArgumentException("Number of columns ({$headerList.size()}) differs from number of datatypes provided (${table.columnTypes.size()})")
+        throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${table.columnTypes.size()})")
       }
     } else {
       table.columnTypes = Collections.unmodifiableList([Object.class] * headerList.size())
