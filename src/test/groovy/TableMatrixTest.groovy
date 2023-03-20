@@ -42,7 +42,7 @@ class TableMatrixTest {
            [4563.153, 380.263, 4.938, 12.23],
            [3385.593, 282.133, 3.664, 2.654],
            [2700, 225, 2.922, 1.871]
-        ], tr.matrix())
+        ], tr.rows())
     }
 
     @Test
@@ -139,7 +139,7 @@ class TableMatrixTest {
 
         // Same thing using subset
         def subSet = table.subset('place', { it > 1 })
-        assertArrayEquals(table.rows(1..2).toArray(), subSet.matrix().toArray())
+        assertArrayEquals(table.rows(1..2).toArray(), subSet.rows().toArray())
     }
 
     @Test

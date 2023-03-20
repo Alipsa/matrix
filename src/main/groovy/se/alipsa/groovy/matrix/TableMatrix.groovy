@@ -92,8 +92,20 @@ class TableMatrix {
     return headerList
   }
 
+  int columnIndex(String columnName) {
+    return headerList.indexOf(columnName)
+  }
+
+  List<Integer> columnIndexes(List<String> colNames) {
+    List<Integer> colNums = []
+    colNames.each {
+      colNums.add(columnIndex(it))
+    }
+    return colNums
+  }
+
   List<?> column(String columnName) {
-    return columnList.get(headerList.indexOf(columnName))
+    return columnList.get(columnIndex(columnName))
   }
 
   List<?> column(int index) {
@@ -104,12 +116,20 @@ class TableMatrix {
     return rowList.get(index)
   }
 
+  List<List<?>> columns() {
+    return columnList
+  }
+
   List<List<?>> rows(List<Integer> index) {
     def rows = []
     index.each {
       rows.add(row((int) it))
     }
     return rows
+  }
+
+  List<List<?>> rows() {
+    return rowList
   }
 
   /**
@@ -129,6 +149,11 @@ class TableMatrix {
     return r
   }
 
+  /**
+   * @deprecated Use rows() instead
+   * @return a list of rows (List<?>)
+   */
+  @Deprecated
   List<List<?>> matrix() {
     return rowList
   }
@@ -138,7 +163,7 @@ class TableMatrix {
   }
 
   Class<?> columnType(String columnName) {
-    return columnTypes[headerList.indexOf(columnName)]
+    return columnTypes[columnIndex(columnName)]
   }
 
   List<String> columnTypeNames() {
@@ -178,7 +203,7 @@ class TableMatrix {
    * @return the value corresponding to the row and column name supplied
    */
   Object getAt(int row, String columnName) {
-    return get(row, headerList.indexOf(columnName))
+    return get(row, columnIndex(columnName))
   }
 
   /**
@@ -245,14 +270,6 @@ class TableMatrix {
 
   String content(boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n') {
     return head(rowCount(), includeHeader, delimiter, lineEnding)
-  }
-
-  List<Integer> columnIndexes(List<String> colNames) {
-    List<Integer> colNums = []
-    colNames.each {
-      colNums.add(headerList.indexOf(it))
-    }
-    return colNums
   }
 
   TableMatrix convert(Map<String, Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
@@ -345,7 +362,7 @@ class TableMatrix {
   }
 
   TableMatrix apply(String colName, List<Integer> rows, Closure function) {
-    apply(headerList.indexOf(colName), rows, function)
+    apply(columnIndex(colName), rows, function)
   }
 
   TableMatrix apply(int colNum, List<Integer> rows, Closure function) {

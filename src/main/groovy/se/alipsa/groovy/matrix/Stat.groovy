@@ -92,8 +92,8 @@ class Stat {
         return s
     }
 
-    static BigDecimal[] mean(List<List<?>> matrix, Integer colNum) {
-        return mean(matrix, [colNum])
+    static BigDecimal[] mean(List<List<?>> rows, Integer colNum) {
+        return mean(rows, [colNum])
     }
 
     static BigDecimal[] mean(List<List<?>> matrix, List<Integer> colNums) {
@@ -120,7 +120,7 @@ class Stat {
     }
 
     static BigDecimal[] mean(TableMatrix table, List<String> colNames) {
-        return mean(table.matrix(), table.columnIndexes(colNames))
+        return mean(table.rows(), table.columnIndexes(colNames))
     }
 
     static BigDecimal mean(List<?> list) {
@@ -174,7 +174,7 @@ class Stat {
     }
 
     static BigDecimal[] median(TableMatrix table, List<String> colNames) {
-        return median(table.matrix(), table.columnIndexes(colNames))
+        return median(table.rows(), table.columnIndexes(colNames))
     }
 
     static BigDecimal median(List<? extends Number> valueList) {
@@ -255,7 +255,7 @@ class Stat {
     }
 
     static Number[] min(TableMatrix table, List<String> colNames) {
-        return min(table.matrix(), table.columnIndexes(colNames))
+        return min(table.rows(), table.columnIndexes(colNames))
     }
 
     static Number max(List<?> list) {
@@ -296,7 +296,7 @@ class Stat {
     }
 
     static Number[] max(TableMatrix table, List<String> colNames) {
-        return max(table.matrix(), table.columnIndexes(colNames))
+        return max(table.rows(), table.columnIndexes(colNames))
     }
 
 
@@ -334,7 +334,7 @@ class Stat {
     }
 
     static BigDecimal[] sd(TableMatrix table, List<String> columnNames, boolean isBiasCorrected = true) {
-        return sd(table.matrix(), isBiasCorrected, table.columnIndexes(columnNames))
+        return sd(table.rows(), isBiasCorrected, table.columnIndexes(columnNames))
     }
 
     static BigDecimal variance(List<?> values, boolean isBiasCorrected = true) {
