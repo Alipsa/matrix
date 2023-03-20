@@ -9,7 +9,7 @@ plugins {
 
 group 'se.alipsa.groovy'
 version '1.0.2-SNAPSHOT'
-description = "Groovy library for working with matrix ([][]) data"
+description = "Groovy library for working with matrix ([][] data)"
 
 repositories {
   mavenCentral()
