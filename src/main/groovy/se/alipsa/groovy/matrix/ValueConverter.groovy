@@ -51,6 +51,16 @@ class ValueConverter {
         return toBigDecimal(String.valueOf(num), format)
     }
 
+    static Boolean toBoolean(Object obj) {
+        if (obj == null) return null
+        if (obj instanceof Boolean) return obj as Boolean
+        if (String.valueOf(obj).toLowerCase() in ["1", "true"])
+            return true
+        if (String.valueOf(obj).toLowerCase() in ["0", "false"])
+            return false
+        throw new ConversionException("Failed to convert $obj (${obj == null ? null : obj.getClass()} to Boolean")
+    }
+
     static Double toDouble(Double num) {
         return num
     }
@@ -89,8 +99,11 @@ class ValueConverter {
         return dateTime == null ? null : dateTime.toLocalDate()
     }
 
-    static LocalDate toLocalDate(Object date, DateTimeFormatter formatter) {
+    static LocalDate toLocalDate(Object date, DateTimeFormatter formatter = null) {
         if (date == null) return null
+        if (date instanceof LocalDate) {
+            return date
+        }
         if (date instanceof LocalDateTime) {
             return date.toLocalDate()
         }
@@ -122,7 +135,7 @@ class ValueConverter {
         }
     }
 
-    static LocalDateTime toLocalDateTime(Object o, DateTimeFormatter dateTimeFormatter) {
+    static LocalDateTime toLocalDateTime(Object o, DateTimeFormatter dateTimeFormatter = null) {
         if (o == null) return null
         if (o instanceof LocalDate) return o as LocalDateTime
         if (o instanceof LocalDateTime) return o
