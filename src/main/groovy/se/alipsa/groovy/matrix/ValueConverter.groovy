@@ -1,8 +1,10 @@
 package se.alipsa.groovy.matrix
 
+import java.sql.Timestamp
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 class ValueConverter {
@@ -80,7 +82,7 @@ class ValueConverter {
 
     static LocalDate toLocalDate(String date, DateTimeFormatter formatter) {
         if (formatter == null) return toLocalDate(date)
-        return LocalDate.parse(date, formatter)
+        return date == null ? null : LocalDate.parse(date, formatter)
     }
 
     static LocalDate toLocalDate(LocalDateTime dateTime) {
@@ -88,8 +90,16 @@ class ValueConverter {
     }
 
     static LocalDate toLocalDate(Object date, DateTimeFormatter formatter) {
-        if (formatter == null)
+        if (date == null) return null
+        if (date instanceof LocalDateTime) {
+            return date.toLocalDate()
+        }
+        if (date instanceof Date) {
+            return new java.sql.Date(date.getTime()).toLocalDate()
+        }
+        if (formatter == null) {
             return LocalDate.parse(String.valueOf(date))
+        }
         return LocalDate.parse(String.valueOf(date), formatter)
     }
 
@@ -115,6 +125,11 @@ class ValueConverter {
     static LocalDateTime toLocalDateTime(Object o, DateTimeFormatter dateTimeFormatter) {
         if (o == null) return null
         if (o instanceof LocalDate) return o as LocalDateTime
+        if (o instanceof LocalDateTime) return o
+        if (o instanceof Date) return new Timestamp(o.getTime()).toLocalDateTime()
+        if (o instanceof Number) {
+            return LocalDateTime.ofEpochSecond(o.toLong(), 0, OffsetDateTime.now().getOffset())
+        }
         if (dateTimeFormatter == null)
             return LocalDateTime.parse(String.valueOf(o))
         return LocalDateTime.parse(String.valueOf(o), dateTimeFormatter)

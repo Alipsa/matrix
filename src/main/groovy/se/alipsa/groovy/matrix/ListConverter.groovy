@@ -1,5 +1,7 @@
 package se.alipsa.groovy.matrix
 
+import groovyjarjarantlr4.v4.runtime.misc.NotNull
+
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -7,14 +9,14 @@ import java.time.format.DateTimeFormatter
 
 class ListConverter {
 
-  static <T> List<T> convert(List<?> list, Class<T> type,
+  static <T> List<T> convert(List<?> list, @NotNull Class<T> type,
                              DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     List<T> c = []
     list.eachWithIndex { it, idx ->
       try {
         c.add(ValueConverter.convert(it, type, dateTimeFormatter, numberFormat))
       } catch (Exception e) {
-        throw new ConversionException("Failed to convert $it to $type.simpleName in index $idx", e)
+        throw new ConversionException("Failed to convert $it (${it == null ? null : it.getClass().name}) to $type.name in index $idx", e)
       }
     }
     return c
