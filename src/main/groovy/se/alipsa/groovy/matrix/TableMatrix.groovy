@@ -18,6 +18,13 @@ class TableMatrix {
   private List<Class<?>> columnTypes
   // Copy of the data i column format
   private List<List<Object>> columnList
+  String name
+
+  static TableMatrix create(String name, List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt) {
+    def table = create(headerList, rowList, dataTypesOpt)
+    table.name = name
+    return table
+  }
 
   static TableMatrix create(List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt) {
     TableMatrix table = new TableMatrix()
@@ -35,11 +42,23 @@ class TableMatrix {
     return table
   }
 
+  static TableMatrix create(String name, File file, String delimiter = ',') {
+    def table = create(file, delimiter)
+    table.name = name
+    return table
+  }
+
   static TableMatrix create(File file, String delimiter = ',') {
     def data = file.readLines()*.split(delimiter) as List<List<?>>
     def headerNames = data[0] as List<String>
     def matrix = data[1..data.size() - 1]
     create(headerNames, matrix, [String] * headerNames.size())
+  }
+
+  static TableMatrix create(String name, List<List<?>> rowList) {
+    def table = create(rowList)
+    table.name = name
+    return table
   }
 
   static TableMatrix create(List<List<?>> rowList) {
@@ -50,10 +69,22 @@ class TableMatrix {
     return create(headerList, rowList)
   }
 
+  static TableMatrix create(String name, Map<String, List<?>> map, List<Class<?>>... dataTypesOpt) {
+    def table = create(map, dataTypesOpt)
+    table.name = name
+    return table
+  }
+
   static TableMatrix create(Map<String, List<?>> map, List<Class<?>>... dataTypesOpt) {
     List<String> header = map.keySet().collect()
     List<?> columns = map.values().collect()
     return create(header, columns.transpose(), dataTypesOpt)
+  }
+
+  static TableMatrix create(String name, ResultSet rs) {
+    def table = create(rs)
+    table.name = name
+    return table
   }
 
   static TableMatrix create(ResultSet rs) {
@@ -118,6 +149,14 @@ class TableMatrix {
 
   List<List<?>> columns() {
     return columnList
+  }
+
+  List<List<?>> columns(List<String> columnNames) {
+    def cols = []
+    for (String colName in columnNames) {
+      cols.add(column(colName))
+    }
+    return cols
   }
 
   List<List<?>> rows(List<Integer> index) {
@@ -408,5 +447,9 @@ class TableMatrix {
         }
     }}
     return create(headerList, updatedRows, columnTypes)
+  }
+
+  String name() {
+    return name
   }
 }
