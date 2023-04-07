@@ -12,8 +12,10 @@ version '1.0.2-SNAPSHOT'
 description = "Groovy library for working with matrix ([][] data)"
 
 
-tasks.withType(JavaCompile) {
-  options.release = 11
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(11)
+  }
 }
 
 repositories {
