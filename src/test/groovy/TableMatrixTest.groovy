@@ -1,4 +1,5 @@
 import se.alipsa.groovy.datautil.SqlUtil
+import se.alipsa.groovy.matrix.ListConverter
 import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.TableMatrix
 
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.*
 
 import static se.alipsa.groovy.matrix.ValueConverter.toLocalDate
+import static se.alipsa.groovy.matrix.ValueConverter.toYearMonth
 
 
 class TableMatrixTest {
@@ -245,6 +247,42 @@ class TableMatrixTest {
         assertEquals(YearMonth, table.columnType("yearMonth"))
         assertEquals(YearMonth.of(2012, 1), table[0,4])
         assertEquals(YearMonth.of(2015, 3), table[4,4])
+    }
+
+    @Test
+    void testAddColumns() {
+        def empData = TableMatrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2019-01-01", "2019-01-23", "2019-05-15", "2019-05-11", "2019-03-27"),
+            [int, String, Number, LocalDate]
+        )
+
+        empData = empData.addColumn(
+            "yearMonth",
+            ListConverter.toYearMonth(empData["start_date"]),
+            YearMonth
+        )
+        assertEquals(YearMonth, empData[0,4].class, "type of the added column")
+        assertEquals(YearMonth, empData.columnType("yearMonth"), "claimed type of the added column")
+
+        def counts = Stat.countBy(empData, "yearMonth")
+        assertEquals(YearMonth, counts[0,0] .class, "type of the count column")
+        assertEquals(YearMonth, counts.columnType("yearMonth"), "claimed type of the count column")
+
+        def sums = Stat.sumBy(empData, "salary", "yearMonth")
+        assertEquals(YearMonth, sums[0,0] .class, "type of the sums column")
+        assertEquals(YearMonth, sums.columnType("yearMonth"), "claimed type of the sums column")
+
+        def salaryPerYearMonth = counts
+            .addColumns(sums, "salary")
+            .sort("yearMonth")
+        assertEquals(toYearMonth("2019-01"), salaryPerYearMonth[0, 0])
+        assertEquals(623.3 + 515.2, salaryPerYearMonth[0, 2])
+        assertEquals(2, salaryPerYearMonth[0, 1])
+        assertEquals(843.25, salaryPerYearMonth[1, 2])
+        assertEquals(1, salaryPerYearMonth[1, 1])
     }
 
     @Test

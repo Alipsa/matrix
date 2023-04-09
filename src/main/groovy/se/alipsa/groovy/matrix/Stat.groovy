@@ -56,7 +56,7 @@ class Stat {
         return [
             'Type': type.getSimpleName(),
             'Number of unique values': freq.rowCount(),
-            'Most frequent': "${mostFrequent[0,0]} occurs ${mostFrequent[0,1]} times (${mostFrequent[0,2]}%)"
+            'Most frequent': "${mostFrequent[0,0]} occurs ${mostFrequent[0,1]} times (${mostFrequent[0,2]}%)".toString()
         ] as Map<String, Object>
     }
 
@@ -92,22 +92,22 @@ class Stat {
         return s
     }
 
-    static Map<Object, BigDecimal> sumBy(TableMatrix table, String sumColumn, String by) {
-        TableMatrix[] groups = table.split(by)
-        Map<Object, BigDecimal> sums = [:]
-        for(def t in groups) {
-            sums.put(t.name(), sum(t[sumColumn]))
+    static TableMatrix sumBy(TableMatrix table, String sumColumn, String by) {
+        Map<?, TableMatrix> groups = table.split(by)
+        List<List<?>> sums = []
+        groups.each {
+            sums.add([it.key, sum(it.value[sumColumn])])
         }
-        return sums
+        return TableMatrix.create("${table.name()}-sums by $by".toString(), [by, sumColumn], sums, [table.columnType(by), BigDecimal])
     }
 
-    static Map<Object, Integer> countBy(TableMatrix table, String by) {
-        TableMatrix[] groups = table.split(by)
-        Map<Object, Integer> counts = [:]
-        for(def t in groups) {
-            counts.put(t.name(), t.rowCount())
+    static TableMatrix countBy(TableMatrix table, String by) {
+        Map<?, TableMatrix> groups = table.split(by)
+        List<List<?>> counts = []
+        groups.each {
+            counts.add([it.key, it.value.rowCount()])
         }
-        return counts
+        return TableMatrix.create("${table.name()}-counts by $by".toString(), [by, "${by}_count".toString()], counts, [table.columnType(by), Integer])
     }
 
     static BigDecimal[] mean(List<List<?>> rows, Integer colNum) {

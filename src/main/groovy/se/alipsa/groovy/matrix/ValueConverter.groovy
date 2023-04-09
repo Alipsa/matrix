@@ -178,7 +178,7 @@ class ValueConverter {
     }
 
     static YearMonth toYearMonth(Object o) {
-        if (o == null) return null;
+        if (o == null) return null
         if (o instanceof TemporalAccessor) {
             return YearMonth.from(o as TemporalAccessor)
         }

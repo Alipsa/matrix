@@ -71,10 +71,18 @@ class ListConverter {
     return dat
   }
 
-  static def List<?> toYearMonth(List<?> localDates) {
+  static List<YearMonth> toYearMonth(List<?> localDates) {
     List<YearMonth> list = []
     localDates.each {
       list.add(ValueConverter.toYearMonth(it))
+    }
+    return list
+  }
+
+  static List<String> toString(List<?> objList) {
+    List<String> list = []
+    objList.each {
+      list.add(String.valueOf(it))
     }
     return list
   }
