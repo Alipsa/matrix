@@ -5,7 +5,9 @@ import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 
 class ValueConverter {
 
@@ -167,11 +169,33 @@ class ValueConverter {
     }
 
     /** strips off any non mumeric char from the string. */
-    public static String toDecimalNumber(String txt, char decimalSeparator = '.') {
+    static String toDecimalNumber(String txt, char decimalSeparator = '.') {
         StringBuilder result = new StringBuilder()
         txt.chars().mapToObj(i -> i as char)
                 .filter(c -> Character.isDigit(c) || decimalSeparator == c || '-' == c)
                 .forEach(c -> result.append(c));
         return result.toString();
+    }
+
+    static YearMonth toYearMonth(Object o) {
+        if (o == null) return null;
+        if (o instanceof TemporalAccessor) {
+            return YearMonth.from(o as TemporalAccessor)
+        }
+        if (o instanceof CharSequence) {
+            return YearMonth.parse(o as CharSequence)
+        }
+        if (o instanceof Date) {
+            Date date = o as Date
+            return YearMonth.of(date.year + 1900, date.month +1)
+        }
+        throw new IllegalArgumentException("Failed to convert ${o.class}, $o to a YearMonth")
+    }
+
+    static YearMonth toYearMonth(Object o, DateTimeFormatter formatter) {
+        if (o instanceof String) {
+            return YearMonth.from(formatter.parse(o as String))
+        }
+        return toYearMonth(o)
     }
 }

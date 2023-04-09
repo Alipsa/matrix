@@ -5,6 +5,7 @@ import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 class ListConverter {
@@ -68,5 +69,13 @@ class ListConverter {
       }
     }
     return dat
+  }
+
+  static def List<?> toYearMonth(List<?> localDates) {
+    List<YearMonth> list = []
+    localDates.each {
+      list.add(ValueConverter.toYearMonth(it))
+    }
+    return list
   }
 }

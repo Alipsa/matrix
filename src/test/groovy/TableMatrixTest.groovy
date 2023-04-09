@@ -4,6 +4,7 @@ import se.alipsa.groovy.matrix.TableMatrix
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 import static se.alipsa.groovy.matrix.ListConverter.*
@@ -227,5 +228,74 @@ class TableMatrixTest {
         //println(bar.content())
         assertEquals(4, bar[1, 0])
         assertEquals(6, bar[2, 0])
+    }
+
+    @Test
+    void testAddColumn() {
+        def empData = TableMatrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
+            [int, String, Number, LocalDate]
+        )
+        def table = empData.addColumn("yearMonth", toYearMonth(empData["start_date"]), YearMonth)
+        assertEquals(empData.columnCount() + 1, table.columnCount())
+        assertEquals("yearMonth", table.columnNames()[table.columnCount()-1])
+        assertEquals(YearMonth, table.columnType("yearMonth"))
+        assertEquals(YearMonth.of(2012, 1), table[0,4])
+        assertEquals(YearMonth.of(2015, 3), table[4,4])
+    }
+
+    @Test
+    void testSort() {
+        def empData = TableMatrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [int, String, Number, LocalDate]
+        )
+        def dateSorted = empData.sort("start_date")
+        assertEquals(4, dateSorted[4, 0], "Last row should be the Ryan row")
+        assertEquals(toLocalDate("2012-03-27"), dateSorted[0, 3], "First row should be the Dan Row")
+
+        def salarySorted = empData.sort("salary", true)
+        assertEquals(843.25, salarySorted["salary"][0], "Highest salary")
+        assertEquals(515.2, salarySorted["salary"][4], "Lowest salary")
+    }
+
+    @Test
+    void testDropColumns() {
+        def empData = TableMatrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [int, String, Number, LocalDate]
+        )
+        def empList = empData.dropColumns("salary", "start_date")
+        //println(empList.content())
+        assertEquals(2, empList.columnCount(), "Number of columns after drop")
+        assertEquals(5, empList.rowCount(), "Number of rows after drop")
+        assertArrayEquals(["emp_id",	"emp_name"].toArray(), empList.columnNames().toArray(), "column names after drop")
+        assertArrayEquals([int, String].toArray(), empList.columnTypes().toArray(), "Column types after drop")
+    }
+
+    @Test
+    void testDropColumnsExcept() {
+        def empData = TableMatrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [int, String, Number, LocalDate]
+        )
+        def empList = empData.dropColumnsExcept("emp_id", "emp_name", "start_date")
+        //println(empList.content())
+        assertEquals(3, empList.columnCount(), "Number of columns after drop")
+        assertEquals(5, empList.rowCount(), "Number of rows after drop")
+        assertArrayEquals(["emp_id", "emp_name", "start_date"].toArray(), empList.columnNames().toArray(), "column names after drop")
+        assertArrayEquals([int, String, LocalDate].toArray(), empList.columnTypes().toArray(), "Column types after drop")
     }
 }

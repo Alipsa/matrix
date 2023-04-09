@@ -60,6 +60,16 @@ class Stat {
         ] as Map<String, Object>
     }
 
+    static BigDecimal sum(List<?> list) {
+        BigDecimal s = 0g
+        for (value in list) {
+            if (value instanceof Number) {
+                s += value
+            }
+        }
+        return s
+    }
+
     static BigDecimal[] sum(List<List<?>> matrix, Integer colNum) {
         return sum(matrix, [colNum])
     }
@@ -82,14 +92,22 @@ class Stat {
         return s
     }
 
-    static BigDecimal sum(List<?> list) {
-        BigDecimal s = 0g
-        for (value in list) {
-            if (value instanceof Number) {
-                s += value
-            }
+    static Map<Object, BigDecimal> sumBy(TableMatrix table, String sumColumn, String by) {
+        TableMatrix[] groups = table.split(by)
+        Map<Object, BigDecimal> sums = [:]
+        for(def t in groups) {
+            sums.put(t.name(), sum(t[sumColumn]))
         }
-        return s
+        return sums
+    }
+
+    static Map<Object, Integer> countBy(TableMatrix table, String by) {
+        TableMatrix[] groups = table.split(by)
+        Map<Object, Integer> counts = [:]
+        for(def t in groups) {
+            counts.put(t.name(), t.rowCount())
+        }
+        return counts
     }
 
     static BigDecimal[] mean(List<List<?>> rows, Integer colNum) {

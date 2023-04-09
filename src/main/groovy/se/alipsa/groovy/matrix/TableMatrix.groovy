@@ -205,6 +205,10 @@ class TableMatrix {
     return columnTypes[columnIndex(columnName)]
   }
 
+  List<Class<?>> columnTypes() {
+    return columnTypes
+  }
+
   List<String> columnTypeNames() {
     List<String> types = new ArrayList<>()
     columnTypes.each { types.add(it.getSimpleName()) }
@@ -451,5 +455,133 @@ class TableMatrix {
 
   String name() {
     return name
+  }
+
+  TableMatrix addColumn(String name, List<?> column, type = Object) {
+    List<List<?>> columns = []
+    columns.addAll(columnList)
+    columns.add(column)
+    List<String> headers = []
+    headers.addAll(headerList)
+    headers.add(name)
+    List<Class<?>> types = []
+    types.addAll(columnTypes)
+    types.add(type)
+    return create(headers,  Matrix.transpose(columns), types)
+  }
+
+  TableMatrix addColumns(List<String> names, List<List<?>> columns, List<Class<?>> types) {
+    if (columns.size() != names.size() && columns.size() != types.size()) {
+      throw new IllegalArgumentException("List sizes of columns, names and types does not match")
+    }
+    List<List<?>> c = []
+    columns.addAll(columnList)
+    columns.addAll(c)
+    List<String> headers = []
+    headers.addAll(headerList)
+    headers.addAll(names)
+    List<Class<?>> t = []
+    t.addAll(columnTypes)
+    t.addAll(types)
+    return create(headers,  Matrix.transpose(columns), types)
+  }
+
+  TableMatrix addRow(List<?> row) {
+    if (row == null) {
+      throw new IllegalArgumentException("Row cannot be null")
+    }
+    if (row.size() != columnCount()) {
+      throw new IllegalArgumentException("The number of elements in the row (${row.size()}) does not match the number of columns (${columnCount()})")
+    }
+    def rows = []
+    rows.addAll(rowList)
+    rows.add(row)
+    return create(headerList, rows, columnTypes)
+  }
+
+  TableMatrix addRows(List<List<?>> rows) {
+    if (rows == null) {
+      throw new IllegalArgumentException("Row cannot be null")
+    }
+    def r = []
+    r.addAll(rowList)
+    r.addAll(rows)
+    return create(headerList, r, columnTypes)
+  }
+
+  TableMatrix dropColumnsExcept(String... colNames) {
+    List<List<?>> cols = []
+    List<Class<?>> types = []
+    List<String> heads = []
+    for (int i = 0; i < colNames.length; i++) {
+      def colName = colNames[i]
+      cols.add(column(colName))
+      types.add(columnType(colName))
+      heads.add(colName)
+    }
+    return create(name, heads, Matrix.transpose(cols), types)
+  }
+
+  TableMatrix dropColumns(String... colNames) {
+    def cols = []
+    def types = []
+    def heads = []
+    for (colName in columnNames()) {
+      if (colName in colNames) {
+        continue
+      }
+      cols.add(column(colName))
+      types.add(columnType(colName))
+      heads.add(colName)
+    }
+    return create(name, heads, Matrix.transpose(cols), types)
+  }
+
+  List<TableMatrix> split(String columnName) {
+    List<?> col = column(columnName)
+    Map<Object, List<Integer>> groups = new HashMap<>()
+    for (int i = 0; i < col.size(); i++) {
+      groups.computeIfAbsent(col[i], k -> []).add(i)
+    }
+    println("groups is $groups")
+    List<TableMatrix> tables = []
+    for (entry in groups) {
+      tables.add(create(String.valueOf(entry.key), headerList, rows(entry.value), columnTypes))
+    }
+    return tables
+  }
+
+  TableMatrix sort(String columnName, descending = false) {
+    def comparator = new RowComparator(columnIndex(columnName))
+    List<List<?>> rows = []
+    for (row in rowList) {
+      rows.add(row)
+    }
+    Collections.sort(rows, comparator)
+    if (descending) {
+      Collections.reverse(rows)
+    }
+    return create(name, headerList, rows, columnTypes)
+  }
+
+  class RowComparator<T extends Comparable<T>> implements Comparator<List<T>> {
+
+    int columnIdx
+
+    RowComparator(int columnIdx) {
+      this.columnIdx = columnIdx
+    }
+
+    @Override
+    int compare(List<T> r1, List<T> r2) {
+      def v1 = r1[columnIdx]
+      def v2 = r2[columnIdx]
+      if (v1 instanceof Comparable) {
+        return v1 <=> v2
+      } else {
+        return String.valueOf(v1) <=> String.valueOf(v2)
+      }
+    }
+
   }
 }

@@ -1,6 +1,9 @@
 import se.alipsa.groovy.matrix.TableMatrix
 
+import java.time.LocalDate
+
 import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.groovy.matrix.ListConverter.toLocalDates
 import static se.alipsa.groovy.matrix.Stat.*
 
 import org.junit.jupiter.api.Test
@@ -139,5 +142,23 @@ class StatTest {
 
         data = [9,9,8,9,10,9,3,5,6,8,9,10,11,12,13,11,10]
         assertArrayEquals([8, 10].toArray(), quartiles(data))
+    }
+
+    @Test
+    void testSumBy() {
+        def empData = TableMatrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            department: ["IT", "OPS", "OPS", "IT", "Infra"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
+            [int, String, String, Number, LocalDate]
+        )
+
+        def sums = sumBy(empData, "salary", "department")
+        def salaries = empData["salary"]
+        assertEquals((salaries[0] + salaries[3]) as BigDecimal, sums.get("IT"))
+        assertEquals((salaries[1] + salaries[2]) as BigDecimal, sums.get("OPS"))
+        assertEquals(843.25g, sums.get("Infra"))
     }
 }
