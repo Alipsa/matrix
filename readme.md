@@ -116,17 +116,14 @@ Tail
 
 #### str - structure
 ```groovy
-import java.time.LocalDate
 import se.alipsa.groovy.matrix.*
-
-import static se.alipsa.groovy.matrix.ListConverter.*
-
+import java.time.*
 
 def empData = TableMatrix.create(
     emp_id: 1..5,
     emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
     salary: [623.3,515.2,611.0,729.0,843.25],
-    start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
+    start_date: ListConverter.toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
     [int, String, Number, LocalDate]
 )
 struct = Stat.str(empData)
@@ -137,11 +134,14 @@ struct.each {
 will print 
 ```
 TableMatrix=[5 observations of 4 variables]
-emp_id=[int, 1, 2, 3, 4]
+emp_id=[Integer, 1, 2, 3, 4]
 emp_name=[String, Rick, Dan, Michelle, Ryan]
 salary=[Number, 623.3, 515.2, 611.0, 729.0]
 start_date=[LocalDate, 2012-01-01, 2013-09-23, 2014-11-15, 2014-05-11]
 ```
+Note that even though it is _possible_ to define a column as a primitive data type (int in this example), all 
+primitives will be converted to their wrapper type (Integer in this example). This happens on TableMatrix creation 
+and has nothing to do with the str() method.
 
 #### Summary
 
@@ -172,7 +172,7 @@ Max:	3
 
 v1
 --
-Type:	double
+Type:	Double
 Min:	0.9
 1st Q:	1
 Median:	1
@@ -199,15 +199,15 @@ def table = TableMatrix.create([
     'start': ['2021-12-01', '2022-07-10', '2023-05-27']
 ], [String]*3
 )
-println(table.getColumnTypeNames())
+println(table.columnTypeNames())
 // Convert the place column to int and the start column to localdates
 def table2 = table.convert([place: Integer, start: LocalDate])
-println(table2.getColumnTypeNames())
+println(table2.columnTypeNames())
 ```
 which will print
 ```
 [String, String, String]
-[int, String, LocalDate]
+[Integer, String, LocalDate]
 ```
 
 ### Getting a subset of the table
@@ -255,6 +255,9 @@ place	firstname	start
 3	Lotte	2023-06-06
 null	Chris	2023-01-20
 ```
+Note that it is possible to change the datatype of the column into something else when doing apply. The apply method
+will detect this change and change the datatype to the new one (if all columns are affected) or the nearest common
+one if only a subset of rows is affected.
 
 ### Combining selectRows with apply
 ```groovy
