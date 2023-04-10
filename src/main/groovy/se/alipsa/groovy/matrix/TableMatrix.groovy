@@ -590,6 +590,14 @@ class TableMatrix {
     return create(name, headerList, rows, columnTypes)
   }
 
+  List<?> findFirstRow(String columnName, Object value) {
+    def table = subset(columnName, { it == value })
+    if (table.rowCount() > 0) {
+      return table.row(0)
+    }
+    return null
+  }
+
   class RowComparator<T extends Comparable<T>> implements Comparator<List<T>> {
 
     int columnIdx

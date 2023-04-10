@@ -157,8 +157,9 @@ class StatTest {
 
         def sums = sumBy(empData, "salary", "department")
         def salaries = empData["salary"]
-        assertEquals((salaries[0] + salaries[3]) as BigDecimal, sums.get("IT"))
-        assertEquals((salaries[1] + salaries[2]) as BigDecimal, sums.get("OPS"))
-        assertEquals(843.25g, sums.get("Infra"))
+
+        assertEquals((salaries[0] + salaries[3]) as BigDecimal, sums.findFirstRow('department', "IT")[1])
+        assertEquals((salaries[1] + salaries[2]) as BigDecimal, sums.findFirstRow('department', "OPS")[1])
+        assertEquals(843.25g, sums.findFirstRow('department', "Infra")[1])
     }
 }
