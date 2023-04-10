@@ -74,7 +74,7 @@ class ListConverter {
   static List<YearMonth> toYearMonth(List<?> localDates) {
     List<YearMonth> list = []
     localDates.each {
-      list.add(ValueConverter.toYearMonth(it))
+      list.add(ValueConverter.asYearMonth(it))
     }
     return list
   }

@@ -13,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.*
 
 import org.junit.jupiter.api.*
 
-import static se.alipsa.groovy.matrix.ValueConverter.toLocalDate
-import static se.alipsa.groovy.matrix.ValueConverter.toYearMonth
+import static se.alipsa.groovy.matrix.ValueConverter.asLocalDate
+import static se.alipsa.groovy.matrix.ValueConverter.asYearMonth
 
 
 class TableMatrixTest {
@@ -22,9 +22,9 @@ class TableMatrixTest {
     @Test
     void testTableCreationFromMatrix() {
         def employees = []
-        employees.add(['John Doe', 21000, toLocalDate('2013-11-01'), toLocalDate('2020-01-10')])
+        employees.add(['John Doe', 21000, asLocalDate('2013-11-01'), asLocalDate('2020-01-10')])
         employees.add(['Peter Smith', 23400,	'2018-03-25',	'2020-04-12'])
-        employees.add(['Jane Doe',	26800, toLocalDate('2017-03-14'), toLocalDate('2020-10-02')])
+        employees.add(['Jane Doe', 26800, asLocalDate('2017-03-14'), asLocalDate('2020-10-02')])
 
         def table = TableMatrix.create(employees)
         assertEquals('John Doe', table[0,0])
@@ -278,7 +278,7 @@ class TableMatrixTest {
         def salaryPerYearMonth = counts
             .addColumns(sums, "salary")
             .sort("yearMonth")
-        assertEquals(toYearMonth("2019-01"), salaryPerYearMonth[0, 0])
+        assertEquals(asYearMonth("2019-01"), salaryPerYearMonth[0, 0])
         assertEquals(623.3 + 515.2, salaryPerYearMonth[0, 2])
         assertEquals(2, salaryPerYearMonth[0, 1])
         assertEquals(843.25, salaryPerYearMonth[1, 2])
@@ -296,7 +296,7 @@ class TableMatrixTest {
         )
         def dateSorted = empData.sort("start_date")
         assertEquals(4, dateSorted[4, 0], "Last row should be the Ryan row")
-        assertEquals(toLocalDate("2012-03-27"), dateSorted[0, 3], "First row should be the Dan Row")
+        assertEquals(asLocalDate("2012-03-27"), dateSorted[0, 3], "First row should be the Dan Row")
 
         def salarySorted = empData.sort("salary", true)
         assertEquals(843.25, salarySorted["salary"][0], "Highest salary")

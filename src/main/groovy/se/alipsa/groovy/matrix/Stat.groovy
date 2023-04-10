@@ -3,7 +3,7 @@ package se.alipsa.groovy.matrix
 import java.math.RoundingMode
 import java.util.concurrent.atomic.AtomicInteger
 
-import static ValueConverter.toBigDecimal
+import static ValueConverter.asBigDecimal
 
 class Stat {
 
@@ -210,7 +210,7 @@ class Stat {
             //println("Returning $val1 plus $val2 / 2 = $median")
             return median
         } else {
-            return toBigDecimal(valueList[valueList.size()/2 as int])
+            return asBigDecimal(valueList[valueList.size()/2 as int])
         }
     }
 
