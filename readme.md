@@ -98,7 +98,7 @@ def table = TableMatrix.create([
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27']
 ],
-    [int, String, String]
+    [Integer, String, String]
 )
 println("Head\n${table.head(2, false)}")
 println("Tail\n${table.tail(2, false)}")
@@ -154,7 +154,7 @@ def table = TableMatrix.create([
     v0: [0.3, 2, 3],
     v1: [1.1, 1, 0.9],
     v2: [null, 'Foo', "Foo"]
-], [Number, double, String])
+], [Number, Double, String])
 def summary = summary(table)
 println(summary)
 ```
@@ -201,7 +201,7 @@ def table = TableMatrix.create([
 )
 println(table.getColumnTypeNames())
 // Convert the place column to int and the start column to localdates
-def table2 = table.convert([place: int, start: LocalDate])
+def table2 = table.convert([place: Integer, start: LocalDate])
 println(table2.getColumnTypeNames())
 ```
 which will print
@@ -239,7 +239,7 @@ def data = [
 ]
 def table = TableMatrix
     .create(data)
-    .convert(place: int, start: LocalDate)
+    .convert(place: Integer, start: LocalDate)
 
 // Add 10 days to the start dates
 def table2 = table.apply("start", { startDate ->
@@ -263,14 +263,14 @@ def data = [
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
 ]
-def table = TableMatrix.create(data, [int, String, LocalDate])
+def table = TableMatrix.create(data, [Integer, String, LocalDate])
 // select the observations where start is later than the jan 1 2022
 def selection = table.selectRows {
-  // We use the column index to refer to a specific variable, 2 will be the start column
+  // We use the column index to refer to a specific variable, 2 will be the 'start' column
   def date = it[2] as LocalDate
   return date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
 }
-// Index values 1,2 will match (row with index is before jan 1 2022 so is not included)
+// Index values 1,2 will match (row with index 0 is before jan 1 2022 so is not included)
 assertArrayEquals([1,2].toArray(), selection.toArray())
 // Double each value in the foo column that matches the selection
 def foo = table.apply("foo", selection, { it * 2})

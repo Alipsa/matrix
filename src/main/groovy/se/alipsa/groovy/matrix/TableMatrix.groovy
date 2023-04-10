@@ -6,6 +6,7 @@ import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 import java.text.NumberFormat
 import java.time.format.DateTimeFormatter
+import static se.alipsa.groovy.matrix.util.ClassUtils.*
 
 /**
  * This is essentially a [][] (List<List<?>>) but also has a header
@@ -31,7 +32,7 @@ class TableMatrix {
     table.headerList = Collections.unmodifiableList(headerList.collect())
     table.rowList = Collections.unmodifiableList(rowList.collect())
     if (dataTypesOpt.length > 0) {
-      table.columnTypes = Collections.unmodifiableList(dataTypesOpt[0])
+      table.columnTypes = Collections.unmodifiableList(convertPrimitivesToWrapper(dataTypesOpt[0]))
       if (headerList.size() != table.columnTypes.size()) {
         throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${table.columnTypes.size()})")
       }
@@ -103,7 +104,7 @@ class TableMatrix {
     }
     TableMatrix table = new TableMatrix()
     table.headerList = Collections.unmodifiableList(headers)
-    table.columnTypes = Collections.unmodifiableList(columnTypes)
+    table.columnTypes = Collections.unmodifiableList(convertPrimitivesToWrapper(columnTypes))
     List<List<Object>> rows = []
     while (rs.next()) {
       List<?> row = []
@@ -402,18 +403,28 @@ class TableMatrix {
   }
 
   TableMatrix apply(int colNum, Closure function) {
-    def convertedColumns = []
+    def converted = []
     def col = []
+    Class<?> updatedClass = null
     for (int i = 0; i < columnCount(); i++) {
       if (colNum == i) {
-        column(i).each { col.add(function.call(it)) }
-        convertedColumns.add(col)
+        column(i).each {
+          def val = function.call(it)
+          if (updatedClass == null && val != null) {
+            updatedClass = val.class
+          }
+          col.add(val)
+        }
+        converted.add(col)
       } else {
-        convertedColumns.add(column(i))
+        converted.add(column(i))
       }
     }
-    def convertedRows = Matrix.transpose(convertedColumns)
-    return create(headerList, convertedRows, columnTypes)
+    List<Class<?>> types = updatedClass != columnType(colNum)
+        ? createTypeListWithNewValue(colNum, updatedClass, false)
+        : columnTypes
+    def convertedRows = Matrix.transpose(converted)
+    return create(headerList, convertedRows, types)
   }
 
   TableMatrix apply(String colName, List<Integer> rows, Closure function) {
@@ -421,24 +432,32 @@ class TableMatrix {
   }
 
   TableMatrix apply(int colNum, List<Integer> rows, Closure function) {
-    def convertedColumns = []
+    def converted = []
     def col = []
+    Class<?> updatedClass = null
     for (int i = 0; i < columnCount(); i++) {
       if (colNum == i) {
         column(i).eachWithIndex { it, idx ->
           if (idx in rows) {
-            col.add(function.call(it))
+            def val = function.call(it)
+            if (updatedClass == null && val != null) {
+              updatedClass = val.class
+            }
+            col.add(val)
           } else {
             col.add(it)
           }
         }
-        convertedColumns.add(col)
+        converted.add(col)
       } else {
-        convertedColumns.add(column(i))
+        converted.add(column(i))
       }
     }
-    def convertedRows = Matrix.transpose(convertedColumns)
-    return create(headerList, convertedRows, columnTypes)
+    List<Class<?>> types = updatedClass != columnType(colNum)
+        ? createTypeListWithNewValue(colNum, updatedClass, true)
+        : columnTypes
+    def convertedRows = Matrix.transpose(converted)
+    return create(headerList, convertedRows, types)
   }
 
   TableMatrix apply(String colName, Closure criteria, Closure function) {
@@ -447,12 +466,17 @@ class TableMatrix {
 
   TableMatrix apply(int colNum, Closure criteria, Closure function) {
     def updatedRows = []
+    Class<?> updatedClass = null
     rowList.each { row -> {
         if (criteria(row)) {
           def r = []
           for (int i = 0; i < columnCount(); i++) {
             if (colNum == i) {
-              r.add(function(row[i]))
+              def val = function(row[i])
+              if (updatedClass == null && val != null) {
+                updatedClass = val.class
+              }
+              r.add(val)
             } else {
               r.add(row[i])
             }
@@ -462,7 +486,26 @@ class TableMatrix {
           updatedRows.add(row)
         }
     }}
-    return create(headerList, updatedRows, columnTypes)
+    List<Class<?>> types = updatedClass != columnType(colNum)
+        ? createTypeListWithNewValue(colNum, updatedClass, true)
+        : columnTypes
+    return create(headerList, updatedRows, types)
+  }
+
+  private List<Class<?>> createTypeListWithNewValue(int colNum, Class<?> updatedClass, boolean findCommonGround) {
+    List<Class<?>> types = []
+    for (int i = 0; i < headerList.size(); i++) {
+      if (i == colNum) {
+        if (findCommonGround) {
+          types.add(findClosestCommonSuper(updatedClass, columnType(colNum)))
+        } else {
+          types.add(updatedClass)
+        }
+      } else {
+        types.add(columnType(i))
+      }
+    }
+    return types
   }
 
   String name() {
@@ -563,7 +606,6 @@ class TableMatrix {
     for (int i = 0; i < col.size(); i++) {
       groups.computeIfAbsent(col[i], k -> []).add(i)
     }
-    //println("groups is $groups")
     Map<?, TableMatrix> tables = [:]
     for (entry in groups) {
       tables.put(entry.key, create(String.valueOf(entry.key), headerList, rows(entry.value), columnTypes))

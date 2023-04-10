@@ -59,7 +59,7 @@ class TableMatrixTest {
         )
         def struct = Stat.str(empData)
         assertEquals(['5 observations of 4 variables'], struct['TableMatrix'])
-        assertArrayEquals(['int', '1', '2', '3', '4'].toArray(), struct['emp_id'].toArray())
+        assertArrayEquals(['Integer', '1', '2', '3', '4'].toArray(), struct['emp_id'].toArray())
         assertArrayEquals(['LocalDate', '2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11'].toArray(), struct['start_date'].toArray())
     }
 
@@ -90,10 +90,10 @@ class TableMatrixTest {
         ]
         def table = TableMatrix.create(data, [String]*4)
 
-        def table2 = table.convert(place: int, start: LocalDate)
+        def table2 = table.convert(place: Integer, start: LocalDate)
         table2 = table2.convert([end: LocalDateTime],
                 DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss'))
-        assertEquals(int, table2.columnType('place'))
+        assertEquals(Integer, table2.columnType('place'))
         assertEquals(Integer, table2[0, 0].class)
 
         assertEquals(LocalDate, table2.columnType('start'))
@@ -108,25 +108,6 @@ class TableMatrixTest {
         assertEquals(Integer, table3.columnType('place'))
         assertEquals(3, table3['place'][2])
 
-    }
-
-    @Test
-    void testApply() {
-        def data = [
-            'place': ['1', '2', '3', ','],
-            'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
-            'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
-        ]
-        def table = TableMatrix
-            .create(data)
-            .convert(place: int, start: LocalDate)
-        def table2 = table.apply("start", { startDate ->
-            startDate.plusDays(10)
-        })
-        assertEquals(LocalDate.of(2021, 12, 11), table2["start"][0])
-        assertEquals(LocalDate.of(2022, 7, 20), table2["start"][1])
-        assertEquals(LocalDate.of(2023, 6, 6), table2["start"][2])
-        assertEquals(LocalDate.of(2023, 1, 20), table2["start"][3])
     }
 
     @Test
@@ -204,6 +185,41 @@ class TableMatrixTest {
     }
 
     @Test
+    void testApply() {
+        def data = [
+            'place': ['1', '2', '3', ','],
+            'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
+            'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
+        ]
+        def table = TableMatrix
+            .create(data)
+            .convert(place: int, start: LocalDate)
+        def table2 = table.apply("start", { startDate ->
+            startDate.plusDays(10)
+        })
+        assertEquals(LocalDate.of(2021, 12, 11), table2["start"][0])
+        assertEquals(LocalDate.of(2022, 7, 20), table2["start"][1])
+        assertEquals(LocalDate.of(2023, 6, 6), table2["start"][2])
+        assertEquals(LocalDate.of(2023, 1, 20), table2["start"][3])
+        assertEquals(LocalDate, table2.columnType("start"))
+    }
+
+    @Test
+    void testApplyChangeType() {
+        def data = [
+            'foo': [1, 2, 3],
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+        ]
+
+        def table = TableMatrix.create(data, [int, String, LocalDate])
+
+        def foo = table.apply("start", { asYearMonth(it)})
+        assertEquals(YearMonth.of(2021,12), foo[0, 2])
+        assertEquals(YearMonth, foo.columnType("start"))
+    }
+
+    @Test
     void testSelectRowsAndApply() {
         def data = [
             'place': [1, 2, 3],
@@ -211,6 +227,7 @@ class TableMatrixTest {
             'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
         ]
         def table = TableMatrix.create(data, [int, String, LocalDate])
+        assertEquals(Integer, table.columnType(0), "place column type")
         def selection = table.selectRows {
             def date = it[2] as LocalDate
             return date.isAfter(LocalDate.of(2022,1, 1))
@@ -220,6 +237,8 @@ class TableMatrixTest {
         //println(foo.content())
         assertEquals(4, foo[1, 0])
         assertEquals(6, foo[2, 0])
+        assertEquals(LocalDate, foo.columnType(2))
+        assertEquals(Integer, foo.columnType(0), "place column type")
 
         def bar = table.apply("place", {
             def date = it[2] as LocalDate
@@ -230,6 +249,8 @@ class TableMatrixTest {
         //println(bar.content())
         assertEquals(4, bar[1, 0])
         assertEquals(6, bar[2, 0])
+        assertEquals(LocalDate, bar.columnType(2), "start column type")
+        assertEquals(Integer, bar.columnType(0), "place column type")
     }
 
     @Test
@@ -292,7 +313,7 @@ class TableMatrixTest {
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
             start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
-            [int, String, Number, LocalDate]
+            [Integer, String, Number, LocalDate]
         )
         def dateSorted = empData.sort("start_date")
         assertEquals(4, dateSorted[4, 0], "Last row should be the Ryan row")
@@ -317,7 +338,7 @@ class TableMatrixTest {
         assertEquals(2, empList.columnCount(), "Number of columns after drop")
         assertEquals(5, empList.rowCount(), "Number of rows after drop")
         assertArrayEquals(["emp_id",	"emp_name"].toArray(), empList.columnNames().toArray(), "column names after drop")
-        assertArrayEquals([int, String].toArray(), empList.columnTypes().toArray(), "Column types after drop")
+        assertArrayEquals([Integer, String].toArray(), empList.columnTypes().toArray(), "Column types after drop")
     }
 
     @Test
@@ -334,6 +355,6 @@ class TableMatrixTest {
         assertEquals(3, empList.columnCount(), "Number of columns after drop")
         assertEquals(5, empList.rowCount(), "Number of rows after drop")
         assertArrayEquals(["emp_id", "emp_name", "start_date"].toArray(), empList.columnNames().toArray(), "column names after drop")
-        assertArrayEquals([int, String, LocalDate].toArray(), empList.columnTypes().toArray(), "Column types after drop")
+        assertArrayEquals([Integer, String, LocalDate].toArray(), empList.columnTypes().toArray(), "Column types after drop")
     }
 }
