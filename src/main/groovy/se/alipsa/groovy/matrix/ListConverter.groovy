@@ -82,7 +82,7 @@ class ListConverter {
   static List<String> toString(List<?> objList) {
     List<String> list = []
     objList.each {
-      list.add(String.valueOf(it))
+      list.add(ValueConverter.asString(it))
     }
     return list
   }

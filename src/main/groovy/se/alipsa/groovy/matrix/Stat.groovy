@@ -70,6 +70,7 @@ class Stat {
         return s
     }
 
+
     static BigDecimal[] sum(List<List<?>> matrix, Integer colNum) {
         return sum(matrix, [colNum])
     }
@@ -92,22 +93,55 @@ class Stat {
         return s
     }
 
-    static TableMatrix sumBy(TableMatrix table, String sumColumn, String by) {
-        Map<?, TableMatrix> groups = table.split(by)
-        List<List<?>> sums = []
-        groups.each {
-            sums.add([it.key, sum(it.value[sumColumn])])
-        }
-        return TableMatrix.create("${table.name()}-sums by $by".toString(), [by, sumColumn], sums, [table.columnType(by), BigDecimal])
-    }
-
-    static TableMatrix countBy(TableMatrix table, String by) {
-        Map<?, TableMatrix> groups = table.split(by)
+    static TableMatrix countBy(TableMatrix table, String groupBy) {
+        Map<?, TableMatrix> groups = table.split(groupBy)
         List<List<?>> counts = []
         groups.each {
             counts.add([it.key, it.value.rowCount()])
         }
-        return TableMatrix.create("${table.name()}-counts by $by".toString(), [by, "${by}_count".toString()], counts, [table.columnType(by), Integer])
+        return TableMatrix.create(
+                "${table.name()} - counts by $groupBy".toString(),
+                [groupBy, "${groupBy}_count".toString()],
+                counts,
+                [table.columnType(groupBy),
+                 Integer]
+        )
+    }
+
+    static TableMatrix sumBy(TableMatrix table, String sumColumn, String groupBy) {
+        TableMatrix sums = funBy(table, sumColumn, groupBy, Stat.&sum, BigDecimal)
+        sums.setName("${table.name()}-sums by $groupBy".toString())
+        return sums
+    }
+
+    /**
+     * Splits the table into separate tables, one for each value in groupBy column,
+     * then apply the closure to the columnName column.
+     *
+     * Here is an example of sumBy using funBy:
+     * TableMatrix sums = funBy(table, sumColumn, groupBy, Stat.&sum, BigDecimal)
+     *
+     * @param table the TableMatrix to operate on
+     * @param columnName the name of the column containing the values
+     * @param groupBy the name of the column to split on
+     * @param fun the closure to apply to the column values (List<?>)
+     * @param columnType the type of list (class) that the closure function returns (e.g. if the closure returns a
+     * List<Double> then the columnType should be Double
+     * @return
+     */
+    static TableMatrix funBy(TableMatrix table, String columnName, String groupBy, Closure fun, Class<?> columnType) {
+        Map<?, TableMatrix> groups = table.split(groupBy)
+        List<List<?>> calculations = []
+        groups.each {
+            def val = fun(it.value[columnName])
+            calculations.add([ it.key,  val])
+        }
+        return TableMatrix.create(
+                "${table.name()} - by $groupBy".toString(),
+                [groupBy, columnName],
+                calculations,
+                [table.columnType(groupBy), columnType]
+        )
     }
 
     static BigDecimal[] mean(List<List<?>> rows, Integer colNum) {
@@ -179,12 +213,9 @@ class Stat {
         def medians = new ArrayList<BigDecimal>(colNums.size())
         def m
         def list
-        //println "Valuelist = ${valueList}"
         for (colNum in colNums) {
-            //list = valueList.get(String.valueOf(colNum)).sort()
             list = valueList[String.valueOf(colNum)].sort()
             m = median(list)
-            //println "${list} has median ${m}"
             medians.add(m)
         }
 
