@@ -194,9 +194,16 @@ class ValueConverter {
     }
 
     static YearMonth asYearMonth(Object o, DateTimeFormatter formatter) {
-        if (o instanceof String) {
+        if (o instanceof CharSequence) {
             return YearMonth.from(formatter.parse(o as String))
         }
         return asYearMonth(o)
+    }
+
+    static String asString(Object o, DateTimeFormatter formatter = null) {
+        if (o instanceof TemporalAccessor && formatter != null) {
+            return formatter.format(o)
+        }
+        return String.valueOf(o)
     }
 }
