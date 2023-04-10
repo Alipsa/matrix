@@ -598,7 +598,7 @@ class TableMatrix {
     return null
   }
 
-  class RowComparator<T extends Comparable<T>> implements Comparator<List<T>> {
+  class RowComparator<T> implements Comparator<List<T>> {
 
     int columnIdx
 
