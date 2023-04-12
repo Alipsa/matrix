@@ -8,7 +8,11 @@
 - ListConverter changes
   - Add toLocalDateTimes
   - Add toYearMonth
+- Matrix changes
+  - renamed it to Grid
+  - Now extends ArrayList<List<?>
 - TableMatrix changes
+  - Renamed it to Matrix
   - add columnIndex(columnName)
   - add rows() to replace matrix()
   - add columns()

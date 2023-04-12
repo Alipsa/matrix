@@ -1,4 +1,4 @@
-import se.alipsa.groovy.matrix.TableMatrix
+import se.alipsa.groovy.matrix.Matrix
 
 import java.time.LocalDate
 
@@ -23,7 +23,7 @@ class StatTest {
         assertEquals(10/3, m[0])
         assertEquals(1.95g, m[1])
 
-        def table = TableMatrix.create(["v0", "v1", "v2"], matrix)
+        def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def m2 = mean(table, ["v1", "v2"])
         assertArrayEquals(m, m2)
     }
@@ -41,7 +41,7 @@ class StatTest {
         assertEquals(2 as BigDecimal, m[0])
         assertEquals(1.95g, m[1])
 
-        def table = TableMatrix.create(["v0", "v1", "v2"], matrix)
+        def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def m2 = median(table, ["v1", "v2"])
         assertArrayEquals(m, m2)
     }
@@ -59,7 +59,7 @@ class StatTest {
         assertEquals(1, m[0])
         assertEquals(0.9, m[1])
 
-        def table = TableMatrix.create(["v0", "v1", "v2"], matrix)
+        def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def m2 = min(table, ["v1", "v2"])
         assertArrayEquals(m, m2)
     }
@@ -77,7 +77,7 @@ class StatTest {
         assertEquals(7, m[0])
         assertEquals(3, m[1])
 
-        def table = TableMatrix.create(["v0", "v1", "v2"], matrix)
+        def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def m2 = max(table, ["v1", "v2"])
         assertArrayEquals(m, m2)
     }
@@ -97,7 +97,7 @@ class StatTest {
         assertEquals(3.214550253664318, s[0])
         assertEquals(1.4849242404917498, s[1])
 
-        def table = TableMatrix.create(["v0", "v1", "v2"], matrix)
+        def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def s2 = sd(table, ["v1", "v2"])
         assertArrayEquals(s, s2)
     }
@@ -111,7 +111,7 @@ class StatTest {
         assertEquals(23, freq.get(2, 0) as int, "occurrences of 23")
         assertEquals(37.50, freq.get(3, 2), "occurrences of 12.1")
 
-        def table = TableMatrix.create([ id: 0..7, vals: values])
+        def table = Matrix.create([id: 0..7, vals: values])
         def freq2 = frequency(table, "vals")
         assertEquals(2, freq2.get(0, 1), "occurrences of 0 from table")
         assertEquals(12.50, freq2.get(1, 2), "occurrences of 99 from table")
@@ -121,7 +121,7 @@ class StatTest {
 
     @Test
     void testSummary() {
-        def table = TableMatrix.create([
+        def table = Matrix.create([
             v0: [0.3, 2, 3],
             v1: [1.1, 1, 0.9],
             v2: [null, 'Foo', "Foo"]
@@ -146,7 +146,7 @@ class StatTest {
 
     @Test
     void testSumBy() {
-        def empData = TableMatrix.create(
+        def empData = Matrix.create(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             department: ["IT", "OPS", "OPS", "IT", "Infra"],

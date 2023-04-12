@@ -9,9 +9,9 @@ class Stat {
 
     private static final primitives = ['double', 'float', 'int', 'long', 'short', 'byte']
 
-    static Map<String, List<String>> str(TableMatrix table) {
+    static Map<String, List<String>> str(Matrix table) {
         def map = new TreeMap<String, List<String>>()
-        map["TableMatrix"] = ["${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
+        map["Matrix"] = ["${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
         for (colName in table.columnNames()) {
             def vals = [table.columnType(colName).getSimpleName()]
             def samples = ListConverter.convert(table.column(colName).subList(0, 4), String.class)
@@ -21,7 +21,7 @@ class Stat {
         return map
     }
 
-    static Summary summary(TableMatrix table) {
+    static Summary summary(Matrix table) {
         def map = new Summary()
         for (colName in table.columnNames()) {
             def column = table.column(colName)
@@ -71,15 +71,23 @@ class Stat {
     }
 
 
-    static BigDecimal[] sum(List<List<?>> matrix, Integer colNum) {
-        return sum(matrix, [colNum])
+    static BigDecimal sum(List<List<?>> grid, Integer colNum) {
+        return sum(grid, [colNum])[0]
     }
 
-    static BigDecimal[] sum(List<List<?>> matrix, List<Integer> colNums) {
+    static BigDecimal sum(Grid grid, Integer colNum) {
+        return sum(grid.data, colNum)
+    }
+
+    static BigDecimal[] sum(Grid grid, List<Integer> colNums) {
+        return sum(grid.data, colNums)
+    }
+
+    static BigDecimal[] sum(List<List<?>> grid, List<Integer> colNums) {
         def s = [0.0g] * colNums.size()
         def value
         int idx
-        for (row in matrix) {
+        for (row in grid) {
             idx = 0
             for (colNum in colNums) {
                 value = row[colNum]
@@ -93,13 +101,13 @@ class Stat {
         return s
     }
 
-    static TableMatrix countBy(TableMatrix table, String groupBy) {
-        Map<?, TableMatrix> groups = table.split(groupBy)
+    static Matrix countBy(Matrix table, String groupBy) {
+        Map<?, Matrix> groups = table.split(groupBy)
         List<List<?>> counts = []
         groups.each {
             counts.add([it.key, it.value.rowCount()])
         }
-        return TableMatrix.create(
+        return Matrix.create(
                 "${table.name()} - counts by $groupBy".toString(),
                 [groupBy, "${groupBy}_count".toString()],
                 counts,
@@ -108,8 +116,8 @@ class Stat {
         )
     }
 
-    static TableMatrix sumBy(TableMatrix table, String sumColumn, String groupBy) {
-        TableMatrix sums = funBy(table, sumColumn, groupBy, Stat.&sum, BigDecimal)
+    static Matrix sumBy(Matrix table, String sumColumn, String groupBy) {
+        Matrix sums = funBy(table, sumColumn, groupBy, Stat.&sum, BigDecimal)
         sums.setName("${table.name()}-sums by $groupBy".toString())
         return sums
     }
@@ -119,9 +127,9 @@ class Stat {
      * then apply the closure to the columnName column.
      *
      * Here is an example of sumBy using funBy:
-     * TableMatrix sums = funBy(table, sumColumn, groupBy, Stat.&sum, BigDecimal)
+     * Matrix sums = funBy(table, sumColumn, groupBy, Stat.&sum, BigDecimal)
      *
-     * @param table the TableMatrix to operate on
+     * @param table the Matrix to operate on
      * @param columnName the name of the column containing the values
      * @param groupBy the name of the column to split on
      * @param fun the closure to apply to the column values (List<?>)
@@ -129,14 +137,14 @@ class Stat {
      * List<Double> then the columnType should be Double
      * @return
      */
-    static TableMatrix funBy(TableMatrix table, String columnName, String groupBy, Closure fun, Class<?> columnType) {
-        Map<?, TableMatrix> groups = table.split(groupBy)
+    static Matrix funBy(Matrix table, String columnName, String groupBy, Closure fun, Class<?> columnType) {
+        Map<?, Matrix> groups = table.split(groupBy)
         List<List<?>> calculations = []
         groups.each {
             def val = fun(it.value[columnName])
             calculations.add([ it.key,  val])
         }
-        return TableMatrix.create(
+        return Matrix.create(
                 "${table.name()} - by $groupBy".toString(),
                 [groupBy, columnName],
                 calculations,
@@ -171,7 +179,7 @@ class Stat {
         return means
     }
 
-    static BigDecimal[] mean(TableMatrix table, List<String> colNames) {
+    static BigDecimal[] mean(Matrix table, List<String> colNames) {
         return mean(table.rows(), table.columnIndexes(colNames))
     }
 
@@ -187,7 +195,7 @@ class Stat {
         return sum / nVals
     }
 
-    static BigDecimal mean(TableMatrix table, String colName) {
+    static BigDecimal mean(Matrix table, String colName) {
         return mean(table.column(colName))
     }
 
@@ -195,7 +203,7 @@ class Stat {
         return median(matrix, [colNum])
     }
 
-    static BigDecimal[] median(TableMatrix table, String colName) {
+    static BigDecimal[] median(Matrix table, String colName) {
         return median(table.column(colName) as List<List<?>>, [table.columnNames().indexOf(colName)])
     }
 
@@ -222,7 +230,7 @@ class Stat {
         return medians
     }
 
-    static BigDecimal[] median(TableMatrix table, List<String> colNames) {
+    static BigDecimal[] median(Matrix table, List<String> colNames) {
         return median(table.rows(), table.columnIndexes(colNames))
     }
 
@@ -303,7 +311,7 @@ class Stat {
         return minVals
     }
 
-    static Number[] min(TableMatrix table, List<String> colNames) {
+    static Number[] min(Matrix table, List<String> colNames) {
         return min(table.rows(), table.columnIndexes(colNames))
     }
 
@@ -344,7 +352,7 @@ class Stat {
         return maxVals
     }
 
-    static Number[] max(TableMatrix table, List<String> colNames) {
+    static Number[] max(Matrix table, List<String> colNames) {
         return max(table.rows(), table.columnIndexes(colNames))
     }
 
@@ -382,7 +390,7 @@ class Stat {
         return stds
     }
 
-    static BigDecimal[] sd(TableMatrix table, List<String> columnNames, boolean isBiasCorrected = true) {
+    static BigDecimal[] sd(Matrix table, List<String> columnNames, boolean isBiasCorrected = true) {
         return sd(table.rows(), isBiasCorrected, table.columnIndexes(columnNames))
     }
 
@@ -402,7 +410,7 @@ class Stat {
         return sumOfSquares / size
     }
 
-    static BigDecimal sd(TableMatrix table, String columnName, boolean isBiasCorrected = true) {
+    static BigDecimal sd(Matrix table, String columnName, boolean isBiasCorrected = true) {
         return sd(table.column(columnName), isBiasCorrected)
     }
 
@@ -422,7 +430,7 @@ class Stat {
         return sd(population, false)
     }
 
-    static TableMatrix frequency(List<?> column) {
+    static Matrix frequency(List<?> column) {
         Map<Object, AtomicInteger> freq = new HashMap<>()
         column.forEach(v -> {
             freq.computeIfAbsent(v, k -> new AtomicInteger(0)).incrementAndGet()
@@ -435,18 +443,18 @@ class Stat {
             percent = (numOccurrence * 100.0 / size).setScale(2, RoundingMode.HALF_EVEN)
             matrix.add([String.valueOf(entry.getKey()), numOccurrence, percent])
         }
-        return TableMatrix.create(
+        return Matrix.create(
             ["Value", "Frequency", "Percent"],
             matrix,
             [String, int, BigDecimal]
         )
     }
 
-    static TableMatrix frequency(TableMatrix table, String columnName) {
+    static Matrix frequency(Matrix table, String columnName) {
         return frequency(table.column(columnName))
     }
 
-    static TableMatrix frequency(TableMatrix table, int columnIndex) {
+    static Matrix frequency(Matrix table, int columnIndex) {
         return frequency(table.column(columnIndex))
     }
 }

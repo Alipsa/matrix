@@ -22,11 +22,11 @@ implementation 'se.alipsa.groovy:matrix:1.0.1'
 </dependency>
 ```
 
-## TableMatrix
-A TableMatrix is an immutable Matrix with a header and where each column type is defined.
+## Matrix
+A Matrix is an immutable Grid with a header and where each column type is defined.
 In some ways you can think of it as an in memory ResultSet.
 
-A table Matrix is created using one of the static create methods in TableMatrix. 
+A Matrix is created using one of the static create methods in Matrix. 
 
 ### Creating from groovy code:
 ```groovy
@@ -38,14 +38,14 @@ def employees = [
         "startDate": toLocalDates('2013-11-01','2018-03-25','2017-03-14'),
         "endDate": toLocalDates('2020-01-10', '2020-04-12', '2020-10-06')
 ]
-def table = TableMatrix.create(employees)
+def table = Matrix.create(employees)
 ```        
 ### Creating from a result set:
 
 ```groovy
 @Grab('com.h2database:h2:2.1.214')
 
-import se.alipsa.groovy.matrix.TableMatrix
+import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.datautil.SqlUtil
 
 dbDriver = "org.h2.Driver"
@@ -69,18 +69,18 @@ SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
 
 }
 
-// Create a TableMatrix from the PROJECT table
+// Create a Matrix from the PROJECT table
 SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
-  sql.query('SELECT * FROM PROJECT') { rs -> project = TableMatrix.create(rs) }
+  sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.create(rs) }
 }
-// Now we can do stuff with the project TableMatrix, e.g.
+// Now we can do stuff with the project TMatrix, e.g.
 println(project.content())
 ```
 
 ### Creating from a csv file:
 ```groovy
-import se.alipsa.groovy.matrix.TableMatrix
-def table = TableMatrix.create(new File('/some/path/foo.csv'), ';')
+import se.alipsa.groovy.matrix.Matrix
+def table = Matrix.create(new File('/some/path/foo.csv'), ';')
 ```
 
 Data can be reference using []
@@ -89,11 +89,11 @@ you get the column e.g. List<?> priceColumn = table["price"]
 
 ### General inspection
 
-#### head and tail - a short snippet of a TableMatrix
+#### head and tail - a short snippet of a Matrix
 ```groovy
 import se.alipsa.groovy.matrix.*
 
-def table = TableMatrix.create([
+def table = Matrix.create([
     'place': [1, 2, 3],
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27']
@@ -119,7 +119,7 @@ Tail
 import se.alipsa.groovy.matrix.*
 import java.time.*
 
-def empData = TableMatrix.create(
+def empData = Matrix.create(
     emp_id: 1..5,
     emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
     salary: [623.3,515.2,611.0,729.0,843.25],
@@ -133,14 +133,14 @@ struct.each {
 ```
 will print 
 ```
-TableMatrix=[5 observations of 4 variables]
+Matrix=[5 observations of 4 variables]
 emp_id=[Integer, 1, 2, 3, 4]
 emp_name=[String, Rick, Dan, Michelle, Ryan]
 salary=[Number, 623.3, 515.2, 611.0, 729.0]
 start_date=[LocalDate, 2012-01-01, 2013-09-23, 2014-11-15, 2014-05-11]
 ```
 Note that even though it is _possible_ to define a column as a primitive data type (int in this example), all 
-primitives will be converted to their wrapper type (Integer in this example). This happens on TableMatrix creation 
+primitives will be converted to their wrapper type (Integer in this example). This happens on Matrix creation 
 and has nothing to do with the str() method.
 
 #### Summary
@@ -150,7 +150,7 @@ import se.alipsa.groovy.matrix.*
 
 import static se.alipsa.groovy.matrix.Stat.*
 
-def table = TableMatrix.create([
+def table = Matrix.create([
     v0: [0.3, 2, 3],
     v1: [1.1, 1, 0.9],
     v2: [null, 'Foo', "Foo"]
@@ -189,11 +189,11 @@ Most frequent:	Foo occurs 2 times (66.67%)
 
 ### Transforming data
 ```groovy
-import se.alipsa.groovy.matrix.TableMatrix
+import se.alipsa.groovy.matrix.Matrix
 import java.time.LocalDate
 
 // Given a table of strings
-def table = TableMatrix.create([
+def table = Matrix.create([
     'place': ['1', '2', '3'],
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27']
@@ -223,7 +223,7 @@ assertEquals(2, rows.size())
 
 // ...But the same thing can be done using the subset method
 def subSet = table.subset('place', { it > 1 })
-// Get matrix returns the data content (no header) of the TableMatrix
+// Get matrix returns the data content (no header) of the Matrix
 assertArrayEquals(table.getRows(1..2).toArray(), subSet.getMatrix().toArray())
 ```
 
@@ -237,7 +237,7 @@ def data = [
     'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
 ]
-def table = TableMatrix
+def table = Matrix
     .create(data)
     .convert(place: Integer, start: LocalDate)
 
@@ -266,7 +266,7 @@ def data = [
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
 ]
-def table = TableMatrix.create(data, [Integer, String, LocalDate])
+def table = Matrix.create(data, [Integer, String, LocalDate])
 // select the observations where start is later than the jan 1 2022
 def selection = table.selectRows {
   // We use the column index to refer to a specific variable, 2 will be the 'start' column
