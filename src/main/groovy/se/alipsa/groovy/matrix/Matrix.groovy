@@ -508,10 +508,6 @@ class Matrix {
     return types
   }
 
-  String name() {
-    return mName
-  }
-
 
   Matrix addColumn(String name, List<?> column, type = Object) {
     List<List<?>> columns = []
@@ -659,6 +655,10 @@ class Matrix {
       }
     }
 
+  }
+
+  String getName(){
+    return mName
   }
 
   void setName(String name) {

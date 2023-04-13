@@ -108,7 +108,7 @@ class Stat {
             counts.add([it.key, it.value.rowCount()])
         }
         return Matrix.create(
-                "${table.name()} - counts by $groupBy".toString(),
+                "${table.name} - counts by $groupBy".toString(),
                 [groupBy, "${groupBy}_count".toString()],
                 counts,
                 [table.columnType(groupBy),
@@ -118,7 +118,7 @@ class Stat {
 
     static Matrix sumBy(Matrix table, String sumColumn, String groupBy) {
         Matrix sums = funBy(table, sumColumn, groupBy, Stat.&sum, BigDecimal)
-        sums.setName("${table.name()}-sums by $groupBy".toString())
+        sums.setName("${table.name}-sums by $groupBy".toString())
         return sums
     }
 
@@ -145,7 +145,7 @@ class Stat {
             calculations.add([ it.key,  val])
         }
         return Matrix.create(
-                "${table.name()} - by $groupBy".toString(),
+                "${table.name} - by $groupBy".toString(),
                 [groupBy, columnName],
                 calculations,
                 [table.columnType(groupBy), columnType]
