@@ -664,4 +664,8 @@ class Matrix {
   void setName(String name) {
     mName = name
   }
+
+  Iterator<List<?>> iterator() {
+    return mRows.iterator()
+  }
 }

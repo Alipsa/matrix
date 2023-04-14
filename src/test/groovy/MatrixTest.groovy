@@ -357,4 +357,22 @@ class MatrixTest {
         assertArrayEquals(["emp_id", "emp_name", "start_date"].toArray(), empList.columnNames().toArray(), "column names after drop")
         assertArrayEquals([Integer, String, LocalDate].toArray(), empList.columnTypes().toArray(), "Column types after drop")
     }
+
+    @Test
+    void testIteration() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [int, String, Number, LocalDate]
+        )
+
+        int i = 1
+        for (row in empData) {
+            assertEquals(i, row[0])
+            assertEquals(empData[i-1, 'emp_name'], row[1])
+            i++
+        }
+    }
 }
