@@ -1,4 +1,5 @@
 import se.alipsa.groovy.datautil.SqlUtil
+import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.ListConverter
 import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.Matrix
@@ -374,5 +375,18 @@ class MatrixTest {
             assertEquals(empData[i-1, 'emp_name'], row[1])
             i++
         }
+    }
+
+    @Test
+    void testMatrixToGrid() {
+        def report = [
+            "Full Funding": [4563.153, 380.263, 4.938, 12.23],
+            "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
+            "Current Funding": [2700, 225, 2.922, 1.871]
+        ]
+        Matrix table = Matrix.create(report, [BigDecimal]*3)
+
+        Grid grid = table.grid()
+        assertEquals(3.664, grid[2,1] as BigDecimal)
     }
 }

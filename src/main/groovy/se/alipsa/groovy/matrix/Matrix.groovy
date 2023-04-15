@@ -27,6 +27,16 @@ class Matrix {
     return table
   }
 
+  static Matrix create(String name, List<String> headerList, Grid grid, List<Class<?>>... dataTypesOpt) {
+    def table = create(headerList, grid, dataTypesOpt)
+    table.mName = name
+    return table
+  }
+
+  static Matrix create(List<String> headerList, Grid grid, List<Class<?>>... dataTypesOpt) {
+    create(headerList, grid.data, dataTypesOpt)
+  }
+
   static Matrix create(List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt) {
     Matrix table = new Matrix()
     table.mHeaders = Collections.unmodifiableList(headerList.collect())
@@ -56,10 +66,18 @@ class Matrix {
     create(headerNames, matrix, [String] * headerNames.size())
   }
 
+  static Matrix create(String name, Grid grid) {
+    create(name, grid.data)
+  }
+
   static Matrix create(String name, List<List<?>> rowList) {
     def table = create(rowList)
     table.mName = name
     return table
+  }
+
+  static Matrix create(Grid grid) {
+    create(grid.data)
   }
 
   static Matrix create(List<List<?>> rowList) {
@@ -250,7 +268,7 @@ class Matrix {
    * Enable the use of square bracket to reference a column, e.g. table[0, 1] for the 2:nd column of the first observation
    * @return the value corresponding to the row and column indexes supplied
    */
-  Object getAt(int row, int column) {
+  Object getAt(Integer row, Integer column) {
     return get(row, column)
   }
 
@@ -667,5 +685,9 @@ class Matrix {
 
   Iterator<List<?>> iterator() {
     return mRows.iterator()
+  }
+
+  Grid grid() {
+    return new Grid(rows())
   }
 }

@@ -2,6 +2,9 @@ package se.alipsa.groovy.matrix
 
 import java.text.NumberFormat
 
+// TODO: Consider making grids uniformly Typed e.g. Grid<Double> = new Grid<>()
+//   or perhaps making another class (TypedGrid for that),
+//   maybe even a NumberGrid where the type is <T extends Number>
 class Grid {
 
     List<List<?>> data;
