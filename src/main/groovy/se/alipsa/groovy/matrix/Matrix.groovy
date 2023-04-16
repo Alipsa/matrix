@@ -411,9 +411,25 @@ class Matrix {
    * @param condition a closure containing the condition for what to retain
    * @return new Matrix with only the rows that matched the criteria
    */
-  Matrix subset(@NotNull String columnName, @NotNull Closure condition) {
+  Matrix subset(@NotNull String columnName, @NotNull Closure<Boolean> condition) {
     def rows = rows(column(columnName).findIndexValues(condition) as List<Integer>)
     return create(mHeaders, rows, mTypes)
+  }
+
+  /**
+   *
+   * @param criteria takes a row (List<?>) as parameter and returns true if the row should be included
+   * @return a new Matrix containing the List of rows matching the criteria supplied
+   */
+  Matrix subset(Closure<Boolean> criteria) {
+    def r = [] as List<List<?>>
+    mRows.eachWithIndex { row, idx -> {
+        if (criteria(row)) {
+          r.add(row)
+        }
+      }
+    }
+    return create(mHeaders, r, mTypes)
   }
 
   Matrix apply(String columnName, Closure function) {

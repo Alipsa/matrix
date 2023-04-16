@@ -125,6 +125,16 @@ class MatrixTest {
         // Same thing using subset
         def subSet = table.subset('place', { it > 1 })
         assertArrayEquals(table.rows(1..2).toArray(), subSet.rows().toArray())
+
+        def subSet2 = table.subset {it[0] > 1}
+        assertArrayEquals(table.rows(1..2).toArray(), subSet2.rows().toArray())
+
+        def subSet3 = table.subset {
+            String name = it[1]
+            !name.startsWith('Ma')
+                && asLocalDate(it[2]).isBefore(LocalDate.of(2022,10,1))
+        }
+        assertEquals(table[0, 1], subSet3[0,1])
     }
 
     @Test
