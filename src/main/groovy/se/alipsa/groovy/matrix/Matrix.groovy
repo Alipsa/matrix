@@ -423,7 +423,7 @@ class Matrix {
    */
   Matrix subset(Closure<Boolean> criteria) {
     def r = [] as List<List<?>>
-    mRows.eachWithIndex { row, idx -> {
+    mRows.each { row -> {
         if (criteria(row)) {
           r.add(row)
         }
