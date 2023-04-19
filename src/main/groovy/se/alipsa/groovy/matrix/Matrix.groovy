@@ -2,6 +2,7 @@ package se.alipsa.groovy.matrix
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
+import java.nio.file.Files
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 import java.text.NumberFormat
@@ -60,10 +61,25 @@ class Matrix {
   }
 
   static Matrix create(File file, String delimiter = ',') {
-    def data = file.readLines()*.split(delimiter) as List<List<?>>
-    def headerNames = data[0] as List<String>
-    def matrix = data[1..data.size() - 1]
-    create(headerNames, matrix, [String] * headerNames.size())
+    Matrix table = create(Files.newInputStream(file.toPath()), delimiter)
+    def fileName = file.name
+    table.setName(fileName.substring(0, fileName.lastIndexOf('.')))
+    return table
+  }
+
+  static Matrix create(URL url, String delimiter = ',') {
+    try(InputStream inputStream = url.openStream()) {
+      return create(inputStream, delimiter)
+    }
+  }
+
+  static Matrix create(InputStream inputStream, String delimiter = ',' ) {
+    try(InputStreamReader reader = new InputStreamReader(inputStream)) {
+      def data = reader.readLines()*.split(delimiter) as List<List<?>>
+      def headerNames = data[0] as List<String>
+      def matrix = data[1..data.size() - 1]
+      create(headerNames, matrix, [String] * headerNames.size())
+    }
   }
 
   static Matrix create(String name, Grid grid) {

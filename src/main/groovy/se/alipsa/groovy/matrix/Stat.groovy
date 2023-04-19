@@ -122,6 +122,19 @@ class Stat {
         return sums
     }
 
+    static Matrix meanBy(Matrix table, String meanColumn, String groupBy) {
+        Matrix means = funBy(table, meanColumn, groupBy, Stat.&mean, BigDecimal)
+        means.setName("${table.name}-means by $groupBy".toString())
+        return means
+    }
+
+    static Matrix medianBy(Matrix table, String medianColumn, String groupBy) {
+        def sorted = table.sort(medianColumn)
+        Matrix means = funBy(sorted, medianColumn, groupBy, Stat.&median, BigDecimal)
+        means.setName("${table.name}-medians by $groupBy".toString())
+        return means
+    }
+
     /**
      * Splits the table into separate tables, one for each value in groupBy column,
      * then apply the closure to the columnName column.

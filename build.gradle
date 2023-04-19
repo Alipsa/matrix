@@ -14,7 +14,7 @@ description = "Groovy library for working with matrix ([][] data)"
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(11)
+    languageVersion = JavaLanguageVersion.of(17)
   }
 }
 

@@ -11,16 +11,18 @@ Matrix should work with any 4.x version of groovy, and probably older versions a
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix:1.0.1'
+implementation 'se.alipsa.groovy:matrix:1.1.0'
 ```
 ...and the following for maven
 ```xml
 <dependency>
     <groupId>se.alipsa.groovy</groupId>
     <artifactId>matrix</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
 </dependency>
 ```
+
+The jvm should be JDK 17 or higher.
 
 ## Matrix
 A Matrix is an immutable Grid with a header and where each column type is defined.

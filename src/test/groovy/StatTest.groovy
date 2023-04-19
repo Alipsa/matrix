@@ -162,4 +162,48 @@ class StatTest {
         assertEquals((salaries[1] + salaries[2]) as BigDecimal, sums.findFirstRow('department', "OPS")[1])
         assertEquals(843.25g, sums.findFirstRow('department', "Infra")[1])
     }
+
+    @Test
+    void testMeanBy() {
+        def empData = Matrix.create(
+                emp_id: 1..5,
+                emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+                department: ["IT", "OPS", "OPS", "IT", "Infra"],
+                salary: [623.3,515.2,611.0,729.0,843.25],
+                start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
+                [int, String, String, Number, LocalDate]
+        )
+
+        def sums = meanBy(empData, "salary", "department")
+        def salaries = empData["salary"]
+
+        assertEquals((salaries[0] + salaries[3])/2 as BigDecimal, sums.findFirstRow('department', "IT")[1])
+        assertEquals((salaries[1] + salaries[2])/2 as BigDecimal, sums.findFirstRow('department', "OPS")[1])
+        assertEquals(843.25g, sums.findFirstRow('department', "Infra")[1])
+    }
+
+    @Test
+    void testMedianBy() {
+        def empData = Matrix.create(
+                emp_id: 1..6,
+                emp_name: ["Rick","Dan","Michelle","Ryan","Gary", "Stu"],
+                department: ["IT", "OPS", "IT", "IT", "Infra", "OPS"],
+                salary: [623.3, 515.2, 611.0, 729.0, 843.25, 611.0],
+                start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27", "2020-01-15"),
+                [int, String, String, Number, LocalDate]
+        )
+
+        def sums = medianBy(empData, "salary", "department")
+        def salaries = empData["salary"]
+
+        assertEquals(salaries[0] as BigDecimal,
+                sums.findFirstRow('department', "IT")[1],
+                "median for IT department"
+        )
+        assertEquals((salaries[1] + salaries[2])/2 as BigDecimal,
+                sums.findFirstRow('department', "OPS")[1],
+                "median for OPS department"
+        )
+        assertEquals(843.25g, sums.findFirstRow('department', "Infra")[1], "median for Infra department")
+    }
 }
