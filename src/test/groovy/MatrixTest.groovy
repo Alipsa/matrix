@@ -79,6 +79,17 @@ class MatrixTest {
         assertArrayEquals(data[0] as String[], table.columnNames() as String[])
         assertEquals(data[1][1], table[0, 1] as String)
         assertEquals('Team SD Worx', table[2, 3])
+
+        def plantGrowth = Matrix.create(
+                getClass().getResource('/PlantGrowth.csv'),
+                ',',
+                '"',
+        )
+        assertArrayEquals(['id', 'weight','group'].toArray(), plantGrowth.columnNames().toArray())
+        def row30 = plantGrowth.findFirstRow('id', '30')
+        assertEquals('5.26', row30[1])
+        assertEquals('trt2', row30[2])
+        println plantGrowth.content()
     }
 
     @Test

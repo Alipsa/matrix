@@ -54,30 +54,45 @@ class Matrix {
     return table
   }
 
-  static Matrix create(String name, File file, String delimiter = ',') {
-    def table = create(file, delimiter)
+  static Matrix create(String name, File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
+    def table = create(file, delimiter, stringQuote, firstRowAsHeader)
     table.mName = name
     return table
   }
 
-  static Matrix create(File file, String delimiter = ',') {
-    Matrix table = create(Files.newInputStream(file.toPath()), delimiter)
+  static Matrix create(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
+    Matrix table = create(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader)
     def fileName = file.name
     table.setName(fileName.substring(0, fileName.lastIndexOf('.')))
     return table
   }
 
-  static Matrix create(URL url, String delimiter = ',') {
+  static Matrix create(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     try(InputStream inputStream = url.openStream()) {
-      return create(inputStream, delimiter)
+      return create(inputStream, delimiter, stringQuote, firstRowAsHeader)
     }
   }
 
-  static Matrix create(InputStream inputStream, String delimiter = ',' ) {
+  static Matrix create(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     try(InputStreamReader reader = new InputStreamReader(inputStream)) {
-      def data = reader.readLines()*.split(delimiter) as List<List<?>>
-      def headerNames = data[0] as List<String>
-      def matrix = data[1..data.size() - 1]
+      def data = reader.readLines()*.split(delimiter) as List<List<String>>
+      List<String> headerNames
+      List<List<String>> matrix
+      if (stringQuote != '') {
+        matrix = data.collect {
+          it.collect {
+            it.replaceAll(~/^$stringQuote|$stringQuote$/, "")
+          }
+        }
+      } else {
+        matrix = data
+      }
+      if (firstRowAsHeader) {
+        headerNames = matrix[0] as List<String>
+        matrix = matrix[1..matrix.size() - 1]
+      } else {
+        headerNames = []
+      }
       create(headerNames, matrix, [String] * headerNames.size())
     }
   }
