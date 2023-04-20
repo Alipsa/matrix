@@ -1,16 +1,14 @@
 # Release history
 
-1.1.0, In progress
+1.1.0, 2023-04-20
 - Add null handling
 - Stat changes
-  - Add sumBy
-  - Add countBy
+  - Add sumBy, countBy, medianBy, and meanBy
 - ListConverter changes
   - Add toLocalDateTimes
   - Add toYearMonth
 - Matrix changes
   - renamed it to Grid
-  - Now extends ArrayList<List<?>
 - TableMatrix changes
   - Renamed it to Matrix
   - add columnIndex(columnName)
@@ -21,6 +19,7 @@
   (nearest common if not all rows are affected, the new datatype if all rows are affected) 
   - add sort
   - add split (eg to use in Stat.sumBy and Stat.countBy)
+  - improve file import adding params for string quote and first row as header 
 - ValueConverter additions
   - add toBoolean 
   - improve toLocalDate

@@ -89,7 +89,6 @@ class MatrixTest {
         def row30 = plantGrowth.findFirstRow('id', '30')
         assertEquals('5.26', row30[1])
         assertEquals('trt2', row30[2])
-        println plantGrowth.content()
     }
 
     @Test

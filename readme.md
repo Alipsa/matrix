@@ -294,8 +294,8 @@ assertEquals(4, bar[1, 0])
 assertEquals(6, bar[2, 0])
 ```        
 
-## Matrix
-The matrix class contains some static function to operate on a numerical Matrix (a [][] structure or List<List<?>>).
+## Grid
+The grid class contains some static function to operate on a 2d list (a [][] structure or List<List<?>>).
 - _convert_ converts one column type to another numeric type
 - _clone_ creates a deep copy of the matrix
 - _transpose_ "rotates" the matrix 90 degrees
