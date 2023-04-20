@@ -409,4 +409,19 @@ class MatrixTest {
         Grid grid = table.grid()
         assertEquals(3.664, grid[2,1] as BigDecimal)
     }
+
+    @Test
+    void testSelectColumns() {
+        def report = [
+            "Full Funding": [4563.153, 380.263, 4.938, 12.23],
+            "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
+            "Current Funding": [2700, 225, 2.922, 1.871]
+        ]
+        Matrix table = Matrix.create(report, [BigDecimal]*3)
+            .selectColumns("Baseline Funding", "Full Funding")
+
+        assertEquals(3385.593, table[0,0])
+        assertEquals(12.23, table[3,1])
+
+    }
 }

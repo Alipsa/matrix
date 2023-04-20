@@ -1,5 +1,9 @@
 # Release history
 
+1.1.1, in progress
+- add selectColumns
+- Fix csv reading to make the rows List of String instead of String[]
+
 1.1.0, 2023-04-20
 - Add null handling
 - Stat changes

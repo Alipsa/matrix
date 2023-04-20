@@ -75,25 +75,28 @@ class Matrix {
 
   static Matrix create(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     try(InputStreamReader reader = new InputStreamReader(inputStream)) {
-      def data = reader.readLines()*.split(delimiter) as List<List<String>>
-      List<String> headerNames
-      List<List<String>> matrix
-      if (stringQuote != '') {
-        matrix = data.collect {
-          it.collect {
-            it.replaceAll(~/^$stringQuote|$stringQuote$/, "")
+      List<List<String>> data = []
+      final boolean stripQuotes = stringQuote != ''
+      for (line in reader.readLines()) {
+        List<String> row = []
+        for (val in line.split(delimiter)) {
+          if (stripQuotes) {
+            row.add(val.replaceAll(~/^$stringQuote|$stringQuote$/, ''))
+          } else {
+            row.add(val)
           }
         }
-      } else {
-        matrix = data
+        data.add(row)
       }
+      List<String> headerNames
+
       if (firstRowAsHeader) {
-        headerNames = matrix[0] as List<String>
-        matrix = matrix[1..matrix.size() - 1]
+        headerNames = data[0] as List<String>
+        data = data[1..data.size() - 1]
       } else {
         headerNames = []
       }
-      create(headerNames, matrix, [String] * headerNames.size())
+      create(headerNames, data, [String] * headerNames.size())
     }
   }
 
@@ -240,6 +243,18 @@ class Matrix {
       }
     }
     return r
+  }
+
+  Matrix selectColumns(String... columnNames) {
+    List<List<?>> columns = []
+    List<String> colNames = []
+    List<Class<?>> types = []
+    for (name in columnNames) {
+      columns.add(column(name))
+      colNames.add(name)
+      types.add(columnType(name))
+    }
+    return create(colNames, columns.transpose(), types)
   }
 
   /**
