@@ -301,6 +301,22 @@ The grid class contains some static function to operate on a 2d list (a [][] str
 - _transpose_ "rotates" the matrix 90 degrees
 - _isValid_ checks if it is a proper matrix or not
 
+a Grid can be created by supplying a list of rows to the constructor e.g.
+```groovy
+import se.alipsa.groovy.matrix.Grid
+Grid foo = [
+    [12.0, 3.0, Math.PI],
+    ["1.9", 2, 3],
+    ["4.3", 2, 3]
+] as Grid // the as Grid is technically not needed but makes some IDE's happy (e.g. Intellij)
+```
+elements can be accessed using the simple square bracket notation grid[rowindex, columnIndex], e.g:
+```groovy
+foo[0, 1] = 3.23
+
+assert 3.23 == foo[0,1]
+```
+
 ## Stat
 Stat contains basic statistical operations such as sum, mean, median, frequency, sd (standard deviation), variance, 
 quartiles. See [StatTest](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/StatTest.groovy)

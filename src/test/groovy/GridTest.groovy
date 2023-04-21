@@ -159,4 +159,17 @@ class GridTest {
             i++
         }
     }
+
+    @Test
+    void testShorNotationAssign() {
+        Grid foo = [
+            [12.0, 3.0, Math.PI],
+            ["1.9", 2, 3],
+            ["4.3", 2, 3]
+        ] as Grid
+
+        foo[0, 1] = 3.23
+
+        assertEquals(3.23, foo[0,1])
+    }
 }

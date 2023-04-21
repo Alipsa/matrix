@@ -7,7 +7,7 @@ import java.text.NumberFormat
 //   maybe even a NumberGrid where the type is <T extends Number>
 class Grid {
 
-    List<List<?>> data;
+    List<List<?>> data
 
     Grid() {
         data = new ArrayList<>()
@@ -56,6 +56,12 @@ class Grid {
 
     String plus(String str) {
         data.toString() + str
+    }
+
+    void putAt(List<Integer> rowColumn, Object value) {
+        def row = data.get(rowColumn[0])
+        Integer column = rowColumn[1]
+        row.set(column, value)
     }
 
     String toString() {

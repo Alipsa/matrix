@@ -424,4 +424,41 @@ class MatrixTest {
         assertEquals(12.23, table[3,1])
 
     }
+
+    @Test
+    void testRenameColumns() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [int, String, Number, LocalDate]
+        )
+
+        empData.renameColumn('emp_id', 'id')
+        empData.renameColumn(1, 'name')
+
+        assertEquals('id', empData.columnNames()[0])
+        assertEquals('name', empData.columnNames()[1])
+
+    }
+
+    @Test
+    void testToMarkdown() {
+        def report = [
+            "YearMonth": toYearMonth(['2023-01', '2023-02', '2023-03', '2023-04']),
+            "Full Funding": [4563.153, 380.263, 4.938, 12.23],
+            "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
+            "Current Funding": [2700, 225, 2.922, 1.871]
+        ]
+        Matrix table = Matrix.create(report, [YearMonth, BigDecimal, BigDecimal, BigDecimal])
+
+        def md = table.toMarkdown()
+        def rows = md.split('\n')
+        assertEquals(6, rows.length)
+        assertEquals('| YearMonth | Full Funding | Baseline Funding | Current Funding |', rows[0])
+        assertEquals('| --- | ---: | ---: | ---: |', rows[1])
+        assertEquals('| 2023-01 | 4563.153 | 3385.593 | 2700 |', rows[2])
+        assertEquals('| 2023-04 | 12.23 | 2.654 | 1.871 |', rows[5])
+    }
 }

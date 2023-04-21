@@ -12,6 +12,10 @@ import static se.alipsa.groovy.matrix.util.ClassUtils.*
 /**
  * This is essentially a Grid i.e. [][] (List<List<?>>) but also has a header
  * and several convenience methods to work with it.
+ *
+ * The table name and column names are mutable and can be set with setName() and renameColumn() respectively.
+ * The data and the data types are immutable however.
+ * Any manipulation on the content on those results in a new Matrix where the changes are represented.
  */
 class Matrix {
 
@@ -176,6 +180,28 @@ class Matrix {
     return mHeaders
   }
 
+  void columnNames(List<String> names) {
+    if(columnCount() != names.size()) {
+      throw new IllegalArgumentException("Number of column names (${names.size()}) does not match number of columns (${columnCount()}) in this table")
+    }
+    mHeaders.clear()
+    mHeaders.addAll(names)
+  }
+
+  void renameColumn(String before, String after) {
+    List<String> temp = []
+    temp.addAll(mHeaders)
+    temp[temp.indexOf(before)] = after
+    mHeaders =  Collections.unmodifiableList(temp)
+  }
+
+  void renameColumn(int columnIndex, String after) {
+    List<String> temp = []
+    temp.addAll(mHeaders)
+    temp[columnIndex] = after
+    mHeaders =  Collections.unmodifiableList(temp)
+  }
+
   int columnIndex(String columnName) {
     return mHeaders.indexOf(columnName)
   }
@@ -254,7 +280,7 @@ class Matrix {
       colNames.add(name)
       types.add(columnType(name))
     }
-    return create(colNames, columns.transpose(), types)
+    return create(name, colNames, columns.transpose(), types)
   }
 
   /**
@@ -359,7 +385,51 @@ class Matrix {
 
   @Override
   String toString() {
-    return "${rowCount()} obs * ${columnCount()} vars; " + String.join(", ", mHeaders)
+    return "$name: ${rowCount()} obs * ${columnCount()} variables "
+  }
+
+  /**
+   *
+   * @return a markdown formatted table where all the values have been converted to strings, numbers are right aligned
+   * and everything else default (left) aligned
+   */
+  String toMarkdown() {
+    def alignment = []
+    for (type in columnTypes()) {
+      if (Number.isAssignableFrom(type)) {
+        alignment.add('---:')
+      } else {
+        alignment.add('---')
+      }
+    }
+    //mHeaders.collect(w -> w.replaceAll(".", "-"))
+    return toMarkdown(alignment)
+  }
+
+  /**
+   *
+   * @param alignment use :--- for left align, :----: for centered, and ---: for right alignment
+   * @return a markdown formatted table where all the values have been converted to strings
+   */
+  String toMarkdown(List<String> alignment) {
+    if (alignment.size() != columnCount()) {
+      throw new IllegalArgumentException("number of alignment markers (${alignment.length}) differs from number of columns (${columnCount()})")
+    }
+    StringBuilder sb = new StringBuilder()
+    sb.append('| ')
+    sb.append(String.join(' | ', mHeaders)).append(' |\n')
+    sb.append('| ').append(String.join(' | ', alignment)).append(' |\n')
+    StringBuilder rowBuilder = new StringBuilder()
+    for (row in rows()) {
+      rowBuilder.setLength(0)
+
+      for (val in row) {
+        rowBuilder.append(ValueConverter.asString(val)).append(' | ')
+      }
+      sb.append('| ')
+          .append(rowBuilder.toString().trim()).append('\n')
+    }
+    return sb.toString()
   }
 
   String head(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n') {
