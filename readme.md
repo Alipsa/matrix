@@ -1,5 +1,6 @@
-# Matrix
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.groovy/matrix/javadoc.svg)](https://javadoc.io/doc/se.alipsa.groovy/matrix)
+# Matrix
 This is a Groovy library to make it easy to work with
 a matrix i.e. a List<List<?>> typically defined in 
 Groovy like this `def myList = [ [1,2,3], [3.4, 7.12, 0.19] ]`
