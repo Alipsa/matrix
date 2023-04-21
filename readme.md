@@ -1,5 +1,5 @@
 # Matrix
-
+[![javadoc](https://javadoc.io/badge2/se.alipsa.groovy/matrix/javadoc.svg)](https://javadoc.io/doc/se.alipsa.groovy/matrix)
 This is a Groovy library to make it easy to work with
 a matrix i.e. a List<List<?>> typically defined in 
 Groovy like this `def myList = [ [1,2,3], [3.4, 7.12, 0.19] ]`
@@ -32,13 +32,13 @@ A Matrix is created using one of the static create methods in Matrix.
 
 ### Creating from groovy code:
 ```groovy
-import static se.alipsa.groovy.matrix.ListConverter.*
+import se.alipsa.groovy.matrix.*
 
 def employees = [
         "employee": ['John Doe','Peter Smith','Jane Doe'],
         "salary": [21000, 23400, 26800],
-        "startDate": toLocalDates('2013-11-01','2018-03-25','2017-03-14'),
-        "endDate": toLocalDates('2020-01-10', '2020-04-12', '2020-10-06')
+        "startDate": ListConverter.toLocalDates(['2013-11-01','2018-03-25','2017-03-14']),
+        "reviewPeriod": ListConverter.toYearMonth(['2020-01', '2019-04', '2018-10'])
 ]
 def table = Matrix.create(employees)
 ```        
@@ -292,7 +292,12 @@ def bar = table.apply("foo", {
 )
 assertEquals(4, bar[1, 0])
 assertEquals(6, bar[2, 0])
-```        
+```   
+
+See [tests](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/MatrixTest.groovy) for more usage examples or
+the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/latest/index.html) for more info.
+
+
 
 ## Grid
 The grid class contains some static function to operate on a 2d list (a [][] structure or List<List<?>>).

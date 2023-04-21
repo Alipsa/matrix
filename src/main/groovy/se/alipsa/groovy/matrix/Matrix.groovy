@@ -10,7 +10,8 @@ import java.time.format.DateTimeFormatter
 import static se.alipsa.groovy.matrix.util.ClassUtils.*
 
 /**
- * This is essentially a Grid i.e. [][] (List<List<?>>) but also has a header
+ * A Matrix is a 2 dimensional data structure.
+ * It is essentially a Grid i.e. [][] (List<List<?>>) but also has a header and a name
  * and several convenience methods to work with it.
  *
  * The table name and column names are mutable and can be set with setName() and renameColumn() respectively.
@@ -281,15 +282,6 @@ class Matrix {
       types.add(columnType(name))
     }
     return create(name, colNames, columns.transpose(), types)
-  }
-
-  /**
-   * @deprecated Use rows() instead
-   * @return a list of rows (List<?>)
-   */
-  @Deprecated
-  List<List<?>> matrix() {
-    return mRows
   }
 
   Class<?> columnType(int i) {
