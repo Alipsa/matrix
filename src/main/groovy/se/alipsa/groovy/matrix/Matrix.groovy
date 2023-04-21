@@ -74,7 +74,14 @@ class Matrix {
 
   static Matrix create(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     try(InputStream inputStream = url.openStream()) {
-      return create(inputStream, delimiter, stringQuote, firstRowAsHeader)
+      def name = url.getFile() == null ? url.getPath() : url.getFile()
+      if (name.contains('/')) {
+        name = name.substring(name.lastIndexOf('/'), name.length())
+      }
+      if (name.contains('.')) {
+        name = name.substring(0, name.lastIndexOf('.'))
+      }
+      return create(inputStream, delimiter, stringQuote, firstRowAsHeader).withName(name)
     }
   }
 
@@ -805,6 +812,11 @@ class Matrix {
 
   void setName(String name) {
     mName = name
+  }
+
+  Matrix withName(String name) {
+    setName(name)
+    return this
   }
 
   Iterator<List<?>> iterator() {

@@ -5,6 +5,7 @@
 - Fix csv reading to make the rows List of String instead of String[]
 - Add short syntax notation to grid
 - add toMarkdown() to Matrix 
+- add withName (setName + return this) for chained calls
 
 1.1.0, 2023-04-20
 - Add null handling
