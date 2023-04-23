@@ -6,6 +6,7 @@
 - Add short syntax notation to grid
 - add toMarkdown() to Matrix 
 - add withName (setName + return this) for chained calls
+- trim values in csv file import
 
 1.1.0, 2023-04-20
 - Add null handling

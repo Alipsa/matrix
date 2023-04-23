@@ -93,9 +93,9 @@ class Matrix {
         List<String> row = []
         for (val in line.split(delimiter)) {
           if (stripQuotes) {
-            row.add(val.replaceAll(~/^$stringQuote|$stringQuote$/, ''))
+            row.add(val.replaceAll(~/^$stringQuote|$stringQuote$/, '').trim())
           } else {
-            row.add(val)
+            row.add(val.trim())
           }
         }
         data.add(row)
@@ -758,7 +758,7 @@ class Matrix {
     return tables
   }
 
-  Matrix sort(String columnName, descending = false) {
+  Matrix sort(String columnName, Boolean descending = Boolean.FALSE) {
     if (columnName !in columnNames()) {
       throw new IllegalArgumentException("The column name ${columnName} does not exist is this table (${mName})")
     }
