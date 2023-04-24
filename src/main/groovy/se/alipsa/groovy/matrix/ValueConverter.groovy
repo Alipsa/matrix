@@ -56,11 +56,14 @@ class ValueConverter {
     static Boolean asBoolean(Object obj) {
         if (obj == null) return null
         if (obj instanceof Boolean) return obj as Boolean
-        if (String.valueOf(obj).toLowerCase() in ["1", "true"])
-            return true
-        if (String.valueOf(obj).toLowerCase() in ["0", "false"])
-            return false
-        throw new ConversionException("Failed to convert $obj (${obj == null ? null : obj.getClass()} to Boolean")
+        if (obj instanceof Number) return 1 == (obj as Number)
+        return asBoolean(String.valueOf(obj))
+    }
+
+    static Boolean asBoolean(String val) {
+        if (val == null) return null
+        def v = val.toLowerCase()
+        return v in ['1', 'true', 'on', 'yes']
     }
 
     static Double asDouble(Double num) {
