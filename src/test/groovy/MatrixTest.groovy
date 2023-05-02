@@ -85,6 +85,7 @@ class MatrixTest {
                 ',',
                 '"',
         )
+        assertEquals('PlantGrowth', plantGrowth.name)
         assertArrayEquals(['id', 'weight','group'].toArray(), plantGrowth.columnNames().toArray())
         def row30 = plantGrowth.findFirstRow('id', '30')
         assertEquals('5.26', row30[1])
