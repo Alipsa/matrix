@@ -76,7 +76,7 @@ class Matrix {
     try(InputStream inputStream = url.openStream()) {
       def name = url.getFile() == null ? url.getPath() : url.getFile()
       if (name.contains('/')) {
-        name = name.substring(name.lastIndexOf('/'), name.length())
+        name = name.substring(name.lastIndexOf('/') + 1, name.length())
       }
       if (name.contains('.')) {
         name = name.substring(0, name.lastIndexOf('.'))
