@@ -369,6 +369,7 @@ class Matrix {
 
   private void createColumnList() {
     List<List<Object>> columns = new ArrayList<>()
+    int rowCount = 0;
     for (List<Object> row : mRows) {
       if (columns.size() == 0) {
         for (int i = 0; i < row.size(); i++) {
@@ -376,8 +377,13 @@ class Matrix {
         }
       }
       for (int j = 0; j < row.size(); j++) {
-        columns.get(j).add(row.get(j))
+        try {
+          columns.get(j).add(row.get(j))
+        } catch(IndexOutOfBoundsException e) {
+          throw new ConversionException("Wrong number of columns found on row $rowCount", e)
+        }
       }
+      rowCount++
     }
     mColumns = Collections.unmodifiableList(columns)
   }
