@@ -12,6 +12,10 @@ class Structure {
         data[key]
     }
 
+    LinkedHashMap<String, List<String>> getData() {
+        return data
+    }
+
     @Override
     String toString() {
         StringBuilder sb = new StringBuilder()

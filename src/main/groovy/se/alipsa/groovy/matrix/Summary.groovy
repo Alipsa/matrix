@@ -25,4 +25,8 @@ class Summary {
     }
     return sb.toString()
   }
+
+  LinkedHashMap<String, Map<String, ?>> getData() {
+    return data
+  }
 }
