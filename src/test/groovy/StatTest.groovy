@@ -127,11 +127,10 @@ class StatTest {
             v2: [null, 'Foo', "Foo"]
         ], [Number, double, String])
         def summary = summary(table)
-        //println(summary)
+        println(str(table))
         assertEquals(0.3, summary['v0']["Min"])
         assertEquals(1.1, summary['v1']["Max"])
         assertEquals(2, summary['v2']["Number of unique values"])
-
     }
 
     @Test

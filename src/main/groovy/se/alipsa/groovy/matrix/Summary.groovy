@@ -2,7 +2,7 @@ package se.alipsa.groovy.matrix
 
 class Summary {
 
-  def private data = new TreeMap<String, Map<String, ?>>()
+  def private data = new LinkedHashMap<String, Map<String, ?>>()
 
   def putAt(String key, Map value) {
     data[key] = value

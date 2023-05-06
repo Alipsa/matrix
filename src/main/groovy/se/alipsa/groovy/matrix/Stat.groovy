@@ -9,12 +9,13 @@ class Stat {
 
     private static final primitives = ['double', 'float', 'int', 'long', 'short', 'byte']
 
-    static Map<String, List<String>> str(Matrix table) {
-        def map = new TreeMap<String, List<String>>()
+    static Structure str(Matrix table) {
+        Structure map = new Structure()
         map["Matrix"] = ["${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
         for (colName in table.columnNames()) {
             def vals = [table.columnType(colName).getSimpleName()]
-            def samples = ListConverter.convert(table.column(colName).subList(0, 4), String.class)
+            def endRow = Math.min(4, table.rowCount()-1)
+            def samples = ListConverter.convert(table.column(colName).subList(0, endRow), String.class)
             vals.addAll(samples)
             map[colName] = vals
         }
