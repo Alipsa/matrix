@@ -19,11 +19,22 @@ class Structure {
     @Override
     String toString() {
         StringBuilder sb = new StringBuilder()
+        int rowCount = 0
         data.each {
-            sb.append(it.key)
-            .append(': ')
-            .append(it.value)
-            .append('\n')
+            if (rowCount == 0) {
+                sb.append(it.key)
+                .append(' (')
+                .append(String.join(', ', it.value))
+                .append(')\n')
+                .append("-"*(sb.length()-1))
+                .append('\n')
+            } else {
+                sb.append(it.key)
+                        .append(': ')
+                        .append(it.value)
+                        .append('\n')
+            }
+            rowCount++
         }
         return sb.toString()
     }

@@ -11,7 +11,8 @@ class Stat {
 
     static Structure str(Matrix table) {
         Structure map = new Structure()
-        map["Matrix"] = ["${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
+        def name = table.name == null ? '' : table.name + ', '
+        map["Matrix"] = ["${name}${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
         for (colName in table.columnNames()) {
             def vals = [table.columnType(colName).getSimpleName()]
             def endRow = Math.min(4, table.rowCount()-1)

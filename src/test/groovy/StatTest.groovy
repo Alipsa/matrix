@@ -127,10 +127,27 @@ class StatTest {
             v2: [null, 'Foo', "Foo"]
         ], [Number, double, String])
         def summary = summary(table)
-        println(str(table))
         assertEquals(0.3, summary['v0']["Min"])
         assertEquals(1.1, summary['v1']["Max"])
         assertEquals(2, summary['v2']["Number of unique values"])
+    }
+
+    @Test
+    void testStr() {
+        def table = Matrix.create('Test',
+                [
+                v0: [0.3, 2, 3],
+                v1: [1.1, 1, 0.9],
+                v2: [null, 'Foo', "Foo"]
+        ], [Number, double, String])
+        def structure =  str(table)
+        println structure
+        def rows= structure.toString().split('\n')
+        assertEquals(5, rows.length)
+        assertTrue(rows[0].startsWith('Matrix (Test'), 'First row')
+        assertTrue(rows[1].startsWith('----'), 'second row')
+        assertEquals(rows[0].length(), rows[1].length(), 'underline length')
+        assertTrue(rows[4].startsWith('v2:'), 'Last row')
     }
 
     @Test
