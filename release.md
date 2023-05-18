@@ -1,5 +1,7 @@
 # Release history
 
+1.1.2, in progress
+
 1.1.1, 2023-05-18
 - add selectColumns
 - Fix csv reading to make the rows List of String instead of String[]
