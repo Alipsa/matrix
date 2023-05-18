@@ -320,7 +320,7 @@ class MatrixTest {
 
         def salaryPerYearMonth = counts
             .addColumns(sums, "salary")
-            .sort("yearMonth")
+            .orderBy("yearMonth")
         assertEquals(asYearMonth("2019-01"), salaryPerYearMonth[0, 0])
         assertEquals(623.3 + 515.2, salaryPerYearMonth[0, 2])
         assertEquals(2, salaryPerYearMonth[0, 1])
@@ -337,11 +337,11 @@ class MatrixTest {
             start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
             [Integer, String, Number, LocalDate]
         )
-        def dateSorted = empData.sort("start_date")
+        def dateSorted = empData.orderBy("start_date")
         assertEquals(4, dateSorted[4, 0], "Last row should be the Ryan row")
         assertEquals(asLocalDate("2012-03-27"), dateSorted[0, 3], "First row should be the Dan Row")
 
-        def salarySorted = empData.sort("salary", true)
+        def salarySorted = empData.orderBy(["salary": Matrix.DESC])
         assertEquals(843.25, salarySorted["salary"][0], "Highest salary")
         assertEquals(515.2, salarySorted["salary"][4], "Lowest salary")
     }

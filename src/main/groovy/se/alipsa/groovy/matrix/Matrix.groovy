@@ -1,6 +1,7 @@
 package se.alipsa.groovy.matrix
 
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
+import se.alipsa.groovy.matrix.util.RowComparator
 
 import java.nio.file.Files
 import java.sql.ResultSet
@@ -26,6 +27,8 @@ class Matrix {
   // Copy of the data i column format
   private List<List<Object>> mColumns
   private String mName
+  static final Boolean ASC = Boolean.FALSE
+  static final Boolean DESC = Boolean.TRUE
 
   static Matrix create(String name, List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt) {
     def table = create(headerList, rowList, dataTypesOpt)
@@ -486,7 +489,7 @@ class Matrix {
       }
     }
     def convertedRows = Grid.transpose(convertedColumns)
-    return create(mHeaders, convertedRows, convertedTypes)
+    return create(mName, mHeaders, convertedRows, convertedTypes)
   }
 
   Matrix convert(String columnName, Class<?> type, Closure converter) {
@@ -515,7 +518,7 @@ class Matrix {
       }
     }
     def convertedRows = Grid.transpose(convertedColumns)
-    return create(mHeaders, convertedRows, convertedTypes)
+    return create(mName, mHeaders, convertedRows, convertedTypes)
   }
 
   /**
@@ -534,7 +537,7 @@ class Matrix {
    */
   Matrix subset(@NotNull String columnName, @NotNull Closure<Boolean> condition) {
     def rows = rows(column(columnName).findIndexValues(condition) as List<Integer>)
-    return create(mHeaders, rows, mTypes)
+    return create(mName, mHeaders, rows, mTypes)
   }
 
   /**
@@ -550,7 +553,7 @@ class Matrix {
         }
       }
     }
-    return create(mHeaders, r, mTypes)
+    return create(mName, mHeaders, r, mTypes)
   }
 
   Matrix apply(String columnName, Closure function) {
@@ -579,7 +582,7 @@ class Matrix {
         ? createTypeListWithNewValue(columnNumber, updatedClass, false)
         : mTypes
     def convertedRows = Grid.transpose(converted)
-    return create(mHeaders, convertedRows, types)
+    return create(mName, mHeaders, convertedRows, types)
   }
 
   Matrix apply(String columnName, List<Integer> rows, Closure function) {
@@ -612,7 +615,7 @@ class Matrix {
         ? createTypeListWithNewValue(columnNumber, updatedClass, true)
         : mTypes
     def convertedRows = Grid.transpose(converted)
-    return create(mHeaders, convertedRows, types)
+    return create(mName, mHeaders, convertedRows, types)
   }
 
   Matrix apply(String columnName, Closure criteria, Closure function) {
@@ -644,7 +647,7 @@ class Matrix {
     List<Class<?>> types = updatedClass != columnType(columnNumber)
         ? createTypeListWithNewValue(columnNumber, updatedClass, true)
         : mTypes
-    return create(mHeaders, updatedRows, types)
+    return create(mName, mHeaders, updatedRows, types)
   }
 
   private List<Class<?>> createTypeListWithNewValue(int columnNumber, Class<?> updatedClass, boolean findCommonGround) {
@@ -674,7 +677,7 @@ class Matrix {
     List<Class<?>> types = []
     types.addAll(mTypes)
     types.add(type)
-    return create(headers,  Grid.transpose(columns), types)
+    return create(mName, headers,  Grid.transpose(columns), types)
   }
 
   Matrix addColumns(Matrix table, String... columns) {
@@ -697,7 +700,7 @@ class Matrix {
     List<Class<?>> t = []
     t.addAll(this.mTypes)
     t.addAll(types)
-    return create(headers,  Grid.transpose(c), t)
+    return create(mName, headers,  Grid.transpose(c), t)
   }
 
   Matrix addRow(List<?> row) {
@@ -710,7 +713,7 @@ class Matrix {
     def rows = []
     rows.addAll(mRows)
     rows.add(row)
-    return create(mHeaders, rows, mTypes)
+    return create(name, mHeaders, rows, mTypes)
   }
 
   Matrix addRows(List<List<?>> rows) {
@@ -720,7 +723,7 @@ class Matrix {
     def r = []
     r.addAll(mRows)
     r.addAll(rows)
-    return create(mHeaders, r, mTypes)
+    return create(mName, mHeaders, r, mTypes)
   }
 
   Matrix dropColumnsExcept(String... columnNames) {
@@ -764,7 +767,52 @@ class Matrix {
     return tables
   }
 
+  /**
+   * @deprecated Use orderBy instead
+   */
+  @Deprecated
   Matrix sort(String columnName, Boolean descending = Boolean.FALSE) {
+    return sortBy(columnName, descending)
+  }
+
+  /**
+   * @deprecated Use orderBy instead
+   */
+  @Deprecated
+  Matrix sortBy(String columnName, Boolean descending = Boolean.FALSE) {
+    orderBy(columnName, descending)
+  }
+
+  /**
+   * @deprecated Use orderBy instead
+   */
+  @Deprecated
+  Matrix sortBy(LinkedHashMap<String, Boolean> columnsAndDirection) {
+    orderBy(columnsAndDirection)
+  }
+
+  /**
+   * @deprecated Use orderBy instead
+   */
+  @Deprecated
+  Matrix sortBy(Comparator comparator) {
+    orderBy(comparator)
+  }
+
+  /**
+   * Sort this table in ascending  order by the columns specified
+   * @param columnNames the columns to sort by
+   * @return a copy of this table, sorted in ascending order by the columns specified
+   */
+  Matrix orderBy(List<String> columnNames) {
+    LinkedHashMap<String, Boolean> columnsAndDirection = [:]
+    for (colName in columnNames) {
+      columnsAndDirection[colName] = ASC
+    }
+    return orderBy(columnsAndDirection)
+  }
+
+  Matrix orderBy(String columnName, Boolean descending = Boolean.FALSE) {
     if (columnName !in columnNames()) {
       throw new IllegalArgumentException("The column name ${columnName} does not exist is this table (${mName})")
     }
@@ -783,33 +831,39 @@ class Matrix {
     return create(mName, mHeaders, rows, mTypes)
   }
 
+  Matrix orderBy(LinkedHashMap<String, Boolean> columnsAndDirection) {
+    def columnNames = columnsAndDirection.keySet() as List<String>
+    for (String columnName in columnNames) {
+      if (columnName !in mHeaders) {
+        throw new IllegalArgumentException("The column name ${columnName} does not exist is this table (${mName})")
+      }
+    }
+    LinkedHashMap<Integer, Boolean> sortCriteria = [:]
+    columnsAndDirection.each {
+      sortCriteria[columnIndex(it.key)] = it.value
+    }
+    def comparator = new RowComparator(sortCriteria)
+    return orderBy(comparator)
+  }
+
+  Matrix orderBy(Comparator comparator) {
+    // copy all the rows
+    List<List<?>> rows = []
+    for (row in mRows) {
+      def vals = []
+      vals.addAll(row)
+      rows.add(vals)
+    }
+    Collections.sort(rows, comparator)
+    return create(mName, mHeaders, rows, mTypes)
+  }
+
   List<?> findFirstRow(String columnName, Object value) {
     def table = subset(columnName, { it == value })
     if (table.rowCount() > 0) {
       return table.row(0)
     }
     return null
-  }
-
-  class RowComparator<T> implements Comparator<List<T>> {
-
-    int columnIdx
-
-    RowComparator(int columnIdx) {
-      this.columnIdx = columnIdx
-    }
-
-    @Override
-    int compare(List<T> r1, List<T> r2) {
-      def v1 = r1[columnIdx]
-      def v2 = r2[columnIdx]
-      if (v1 instanceof Comparable) {
-        return v1 <=> v2
-      } else {
-        return String.valueOf(v1) <=> String.valueOf(v2)
-      }
-    }
-
   }
 
   String getName(){
@@ -820,15 +874,38 @@ class Matrix {
     mName = name
   }
 
+  /**
+   * Sets the name of the table and return the table
+   * @param name the name for the table
+   * @return the table itself
+   */
   Matrix withName(String name) {
     setName(name)
     return this
   }
 
+  /**
+   * Allows you to iterate over the rows in this table
+   * <pre><code>
+   *   // a for loop usage example
+   *   for (row in table) {
+   *     //do stuff with the row
+   *   }
+   *
+   *   // using each
+   *   table.each {
+   *     // "it" contains the row
+   *   }
+   * @return an Iterator iterating over the rows (observations) in this table
+   */
   Iterator<List<?>> iterator() {
     return mRows.iterator()
   }
 
+  /**
+   * Convert this table into a Grid
+   * @return a Grid corresponding to the data content of this table
+   */
   Grid grid() {
     return new Grid(rows())
   }

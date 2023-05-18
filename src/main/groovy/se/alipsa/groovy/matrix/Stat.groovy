@@ -131,7 +131,7 @@ class Stat {
     }
 
     static Matrix medianBy(Matrix table, String medianColumn, String groupBy) {
-        def sorted = table.sort(medianColumn)
+        def sorted = table.orderBy(medianColumn)
         Matrix means = funBy(sorted, medianColumn, groupBy, Stat.&median, BigDecimal)
         means.setName("${table.name}-medians by $groupBy".toString())
         return means
@@ -276,7 +276,7 @@ class Stat {
      */
     static Number[] quartiles(List<? extends Number> values) {
         if (values == null || values.size() == 0) {
-            throw new IllegalArgumentException("The list of values are either null or does not contain any data.");
+            throw new IllegalArgumentException("The list of values are either null or does not contain any data.")
         }
 
         // Rank order the values

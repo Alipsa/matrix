@@ -1,12 +1,15 @@
 # Release history
 
-1.1.1, in progress
+1.1.1, 2023-05-18
 - add selectColumns
 - Fix csv reading to make the rows List of String instead of String[]
 - Add short syntax notation to grid
 - add toMarkdown() to Matrix 
 - add withName (setName + return this) for chained calls
 - trim values in csv file import
+- rename sort to orderBy and deprecate sort methods
+- propagate table name to various methods returning a new matrix
+- add some groovy docs
 
 1.1.0, 2023-04-20
 - Add null handling

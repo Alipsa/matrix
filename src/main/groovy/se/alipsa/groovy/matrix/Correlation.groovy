@@ -89,7 +89,7 @@ class Correlation {
     Arrays.sort(pairs, (p1, p2) -> {
       int compareKey = compare(p1.getFirst(), p2.getFirst())
       return compareKey != 0 ? compareKey : compare(p1.getSecond(), p2.getSecond())
-    });
+    })
 
     long tiedXPairs = 0
     long tiedXYPairs = 0
