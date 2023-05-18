@@ -12,14 +12,14 @@ Matrix should work with any 4.x version of groovy, and probably older versions a
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix:1.1.0'
+implementation 'se.alipsa.groovy:matrix:1.1.1'
 ```
 ...and the following for maven
 ```xml
 <dependency>
     <groupId>se.alipsa.groovy</groupId>
     <artifactId>matrix</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
 </dependency>
 ```
 
@@ -226,8 +226,8 @@ assertEquals(2, rows.size())
 
 // ...But the same thing can be done using the subset method
 def subSet = table.subset('place', { it > 1 })
-// Get matrix returns the data content (no header) of the Matrix
-assertArrayEquals(table.getRows(1..2).toArray(), subSet.getMatrix().toArray())
+// grid() returns the data content (no header) of the Matrix
+assertArrayEquals(table.rows(1..2).toArray(), subSet.grid().toArray())
 ```
 
 ## Performing calculations with apply

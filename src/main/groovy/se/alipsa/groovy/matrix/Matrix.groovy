@@ -902,7 +902,7 @@ class Matrix {
     return mRows.iterator()
   }
 
-  /**
+  /**f
    * Convert this table into a Grid
    * @return a Grid corresponding to the data content of this table
    */
