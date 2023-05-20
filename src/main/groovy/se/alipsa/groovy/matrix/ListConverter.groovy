@@ -86,4 +86,20 @@ class ListConverter {
     }
     return list
   }
+
+  static List<Float> toFloats(List<? extends Number> numbers) {
+    List<Float> list = []
+    numbers.each {
+      list.add(ValueConverter.asFloat(it))
+    }
+    return list
+  }
+
+  static List<BigDecimal> toBigDecimals(List<? extends Number> numbers) {
+    List<BigDecimal> list = []
+    numbers.each {
+      list.add(ValueConverter.asBigDecimal(it))
+    }
+    return list
+  }
 }

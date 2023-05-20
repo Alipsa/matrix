@@ -133,9 +133,10 @@ class ValueConverter {
             case Double, double -> (T)asDouble(o, numberFormat)
             case Integer, int -> (T)asInteger(o)
             case BigInteger -> (T)asBigInteger(o)
+            case Float -> (T)asFloat(o)
             default -> try {
                 type.cast(o)
-            } catch (ClassCastException e) {
+            } catch (ClassCastException ignored) {
                 o.asType(type)
             }
         }
@@ -159,7 +160,7 @@ class ValueConverter {
         if (o instanceof Number) return o.intValue()
         try {
             return (o as BigDecimal).intValue()
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException ignored) {
             String val = asDecimalNumber(String.valueOf(o))
             if (val.isBlank()) return null
             return Integer.valueOf(val)
@@ -172,13 +173,13 @@ class ValueConverter {
         return new BigInteger(String.valueOf(o))
     }
 
-    /** strips off any non mumeric char from the string. */
+    /** strips off any non numeric char from the string. */
     static String asDecimalNumber(String txt, char decimalSeparator = '.') {
         StringBuilder result = new StringBuilder()
         txt.chars().mapToObj(i -> i as char)
                 .filter(c -> Character.isDigit(c) || decimalSeparator == c || '-' == c)
-                .forEach(c -> result.append(c));
-        return result.toString();
+                .forEach(c -> result.append(c))
+        return result.toString()
     }
 
     static YearMonth asYearMonth(Object o) {
@@ -191,7 +192,13 @@ class ValueConverter {
         }
         if (o instanceof Date) {
             Date date = o as Date
-            return YearMonth.of(date.year + 1900, date.month +1)
+            Calendar calendar = Calendar.getInstance()
+            calendar.setTime(date)
+            return YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) +1)
+        }
+        if (o instanceof Calendar) {
+            Calendar calendar = o as Calendar
+            return YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) +1)
         }
         throw new IllegalArgumentException("Failed to convert ${o.class}, $o to a YearMonth")
     }
@@ -209,4 +216,11 @@ class ValueConverter {
         }
         return String.valueOf(o)
     }
+
+  static Float asFloat(Object o) {
+      if (o instanceof Number) {
+          return o.toFloat()
+      }
+      return Float.valueOf(String.valueOf(o))
+  }
 }
