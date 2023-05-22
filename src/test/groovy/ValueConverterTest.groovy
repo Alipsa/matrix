@@ -27,8 +27,10 @@ class ValueConverterTest {
     @SuppressWarnings("deprecation")
     @SuppressWarnings("removal")
     void testAsYearMonth() {
-        assertEquals(YearMonth.of(2023, 5), ValueConverter.asYearMonth(new Date(2023 - 1900, 4, 10)))
-        assertEquals(YearMonth.of(2023, 5), ValueConverter.asYearMonth(new GregorianCalendar(2023, 4, 10)))
-        assertEquals(YearMonth.of(2023, 5), ValueConverter.asYearMonth(LocalDate.of(2023, 5, 10)))
+        def expected = YearMonth.of(2023, 5)
+        assertEquals(expected, ValueConverter.asYearMonth(new Date(2023 - 1900, 4, 10)))
+        assertEquals(expected, ValueConverter.asYearMonth(new GregorianCalendar(2023, 4, 10)))
+        assertEquals(expected, ValueConverter.asYearMonth(LocalDate.of(2023, 5, 10)))
+        assertEquals(expected, ValueConverter.asYearMonth("2023-05"))
     }
 }

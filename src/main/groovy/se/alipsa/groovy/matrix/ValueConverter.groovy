@@ -34,6 +34,9 @@ class ValueConverter {
     }
 
     static BigDecimal asBigDecimal(Object num, NumberFormat format = null) {
+        if (num == null) {
+            return null
+        }
         if (num instanceof BigDecimal) {
             return asBigDecimal(num as BigDecimal)
         }
