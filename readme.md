@@ -327,7 +327,3 @@ assert 3.23 == foo[0,1]
 Stat contains basic statistical operations such as sum, mean, median, frequency, sd (standard deviation), variance, 
 quartiles. See [StatTest](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/StatTest.groovy)
 for some examples.
-
-## Correlation
-Correlation can do the most common types of correlation calculations (Pearson, Spearman, and Kendall). See
-[CorrelationTest](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/CorrelationTest.groovy) for some examples.
