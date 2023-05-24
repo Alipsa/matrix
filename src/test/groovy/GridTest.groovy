@@ -29,7 +29,8 @@ class GridTest {
                 ["4.3", 2, 3]
         ]
 
-        assertEquals(5 as BigDecimal, sum(foo[1]), "sum of foo: ")
+        assertEquals((12.0 + 3.0 + Math.PI), sum(foo[0]), "sum of foo 0: ")
+        assertEquals(5 as BigDecimal, sum(foo[1]), "sum of foo 1: ")
 
         Grid bar = convert(foo, 0, BigDecimal)
         assertEquals(18.2g, sum(bar, 0), "sum of bar: ")
