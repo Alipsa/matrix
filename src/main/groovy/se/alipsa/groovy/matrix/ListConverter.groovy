@@ -95,6 +95,25 @@ class ListConverter {
     return list
   }
 
+  static List<Double> toDoubles(List<? extends Number> numbers) {
+    List<Double> list = []
+    numbers.each {
+      list.add(ValueConverter.asDouble(it))
+    }
+    return list
+  }
+
+  /**
+   * Commons math uses double arrays, so this makes usage of commons math simple
+   */
+  static double[] toDoubleArray(List<? extends Number> numbers) {
+    double[] list = new double[numbers.size()]
+    for (int i = 0; i < list.length; i++) {
+      list[i] = numbers.get(i).doubleValue()
+    }
+    return list
+  }
+
   static List<BigDecimal> toBigDecimals(List<? extends Number> numbers) {
     List<BigDecimal> list = []
     numbers.each {
