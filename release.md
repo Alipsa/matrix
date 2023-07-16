@@ -1,6 +1,7 @@
 # Release history
 
 1.1.2, in progress
+- allow min and max to work on all comparables
 
 1.1.1, 2023-05-18
 - add selectColumns
