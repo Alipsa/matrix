@@ -3,7 +3,7 @@ import se.alipsa.groovy.matrix.Matrix
 import java.time.LocalDate
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.groovy.matrix.ListConverter.toLocalDates
+import static se.alipsa.groovy.matrix.ListConverter.*
 import static se.alipsa.groovy.matrix.Stat.*
 
 import org.junit.jupiter.api.Test
@@ -73,12 +73,12 @@ class StatTest {
         ]
 
         assertEquals(3, max(matrix[0]))
-        def m = max(matrix, 1..2)
+        def m = max(matrix, 1..2, true)
         assertEquals(7, m[0])
         assertEquals(3, m[1])
 
         def table = Matrix.create(["v0", "v1", "v2"], matrix)
-        def m2 = max(table, ["v1", "v2"])
+        def m2 = max(table, ["v1", "v2"], true)
         assertArrayEquals(m, m2)
     }
 
@@ -221,5 +221,13 @@ class StatTest {
                 "median for OPS department"
         )
         assertEquals(843.25g, sums.findFirstRow('department', "Infra")[1], "median for Infra department")
+    }
+
+    @Test
+    void testMinMaxYearMonth() {
+        def billingPeriods = ["2023-04", "2023-05", "2023-06"]
+        def bp = toYearMonth(billingPeriods)
+        assertEquals(bp.min(), min(bp))
+        assertEquals(bp.max(), max(bp))
     }
 }

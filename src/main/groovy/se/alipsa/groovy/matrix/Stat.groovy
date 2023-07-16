@@ -295,10 +295,10 @@ class Stat {
         return [v[q1], v[q3]] as T[]
     }
 
-    static <T extends Number> T min(List<T> list) {
+    static <T extends Comparable> T min(List<T> list) {
         def minVal = null
         for (value in list) {
-            if (value instanceof Number ) {
+            if (value instanceof Comparable ) {
                 if (minVal == null || value < minVal) {
                     minVal = value
                 }
@@ -307,11 +307,11 @@ class Stat {
         return minVal
     }
 
-    static <T extends Number> T[] min(List<List<T>> matrix, Integer colNum) {
+    static <T extends Comparable> T[] min(List<List<T>> matrix, Integer colNum) {
         return min(matrix, [colNum])
     }
 
-    static <T extends Number> T[] min(List<List<T>> matrix, List<Integer> colNums) {
+    static <T extends Comparable> T[] min(List<List<T>> matrix, List<Integer> colNums) {
         def value
         def minVal
         def minVals = new ArrayList<T>(colNums.size())
@@ -332,14 +332,14 @@ class Stat {
         return minVals
     }
 
-    static <T extends Number> T[] min(Matrix table, List<String> colNames) {
+    static <T extends Comparable> T[] min(Matrix table, List<String> colNames) {
         return min(table.rows(), table.columnIndexes(colNames))
     }
 
-    static <T extends Number> T max(List<T> list) {
+    static <T> T max(List<T> list) {
         def maxVal = null
         for (value in list) {
-            if (value instanceof Number ) {
+            if (value instanceof Comparable ) {
                 if (maxVal == null || value > maxVal) {
                     maxVal = value
                 }
@@ -348,11 +348,11 @@ class Stat {
         return maxVal
     }
 
-    static <T extends Number> T[] max(List<List<T>> matrix, Integer colNum) {
+    static <T extends Comparable> T[] max(List<List<T>> matrix, Integer colNum) {
         return max(matrix, [colNum])
     }
 
-    static <T extends Number> T[] max(List<List<T>> matrix, List<Integer> colNums) {
+    static <T extends Comparable> T[] max(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def maxVal
         def maxVals = new ArrayList<T>(colNums.size())
@@ -360,8 +360,12 @@ class Stat {
         for (row in matrix) {
             idx = 0
             for (colNum in colNums) {
+                boolean skip = false
                 value = row[colNum]
-                if (value instanceof Number) {
+                if (ignoreNonNumerics && !(value instanceof Number)) {
+                    skip = true
+                }
+                if (value instanceof Comparable && !skip) {
                     maxVal = maxVals[idx]
                     if (maxVal == null || value > maxVal) {
                         maxVals[idx] = value
@@ -373,8 +377,8 @@ class Stat {
         return maxVals
     }
 
-    static <T extends Number> T[] max(Matrix table, List<String> colNames) {
-        return max(table.rows(), table.columnIndexes(colNames))
+    static <T extends Comparable> T[] max(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
+        return max(table.rows(), table.columnIndexes(colNames), ignoreNonNumerics)
     }
 
 
