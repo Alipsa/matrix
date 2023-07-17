@@ -1,10 +1,15 @@
 import se.alipsa.groovy.matrix.Matrix
 
+
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.groovy.matrix.ListConverter.*
 import static se.alipsa.groovy.matrix.Stat.*
+import static se.alipsa.groovy.matrix.ValueConverter.*
 
 import org.junit.jupiter.api.Test
 
@@ -225,9 +230,32 @@ class StatTest {
 
     @Test
     void testMinMaxYearMonth() {
-        def billingPeriods = ["2023-04", "2023-05", "2023-06"]
-        def bp = toYearMonth(billingPeriods)
+        def bp = toYearMonth(["2023-07", "2023-06", "2023-04", "2023-05"])
         assertEquals(bp.min(), min(bp))
+        assertEquals(YearMonth.of(2023, 4), min(bp))
         assertEquals(bp.max(), max(bp))
+        assertEquals(YearMonth.of(2023, 7), max(bp))
+    }
+
+    @Test
+    void testMinMaxDates() {
+        def expMin = asLocalDate("2023-04-10")
+        def expMax = asLocalDate("2023-07-12")
+        def bp = [
+                expMax,
+                asLocalDate("2023-06-01"),
+                expMin,
+                LocalDate.of(2023, 5, 1)
+        ]
+        assertEquals(bp.min(), min(bp))
+        assertEquals(expMin, min(bp))
+        assertEquals(bp.max(), max(bp))
+        assertEquals(expMax, max(bp))
+    }
+
+    @Test
+    void testMixedNumbers() {
+        assertEquals(3.14, min([6, 99g, 3.14d, 7/1.23, 5 as Short, (byte)19, 787987987]))
+        assertEquals(787987987, max([6, 99g, 3.14d, 7/1.23, 5 as Short, (byte)19, 787987987]))
     }
 }

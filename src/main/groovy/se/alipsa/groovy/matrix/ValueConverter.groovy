@@ -158,6 +158,10 @@ class ValueConverter {
         return LocalDateTime.parse(String.valueOf(o), dateTimeFormatter)
     }
 
+    static LocalDateTime asLocalDateTime(Object o, String pattern) {
+        asLocalDateTime(o, DateTimeFormatter.ofPattern(pattern))
+    }
+
     static Integer asInteger(Object o) {
         if (o == null ) return null
         if (o instanceof Number) return o.intValue()
