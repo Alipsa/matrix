@@ -165,9 +165,19 @@ class MatrixTest {
     @Test
     void testCreateFromDb() {
         def dbDriver = "org.h2.Driver"
-        def dbUrl = "jdbc:h2:file:" + System.getProperty("java.io.tmpdir") + "/testdb"
+        def dbFileName = System.getProperty("java.io.tmpdir") + "/testdb"
+        def dbUrl = "jdbc:h2:file:" + dbFileName
         def dbUser = "sa"
         def dbPasswd = "123"
+
+        File dbFile = new File(dbFileName + ".mv.db")
+        if (dbFile.exists()) {
+            dbFile.delete()
+        }
+        File dbTraceFile = new File(dbFileName + "trace.db")
+        if (dbTraceFile.exists()) {
+            dbTraceFile.delete()
+        }
 
         SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
             sql.execute '''
@@ -180,7 +190,6 @@ class MatrixTest {
             sql.execute('delete from PROJECT')
             sql.execute 'insert into PROJECT (id, name, url) values (?, ?, ?)', [10, 'Groovy', 'http://groovy.codehaus.org']
             sql.execute 'insert into PROJECT (id, name, url) values (?, ?, ?)', [20, 'Alipsa', 'http://www.alipsa.se']
-
         }
 
         def project = null
@@ -461,5 +470,15 @@ class MatrixTest {
         assertEquals('| --- | ---: | ---: | ---: |', rows[1])
         assertEquals('| 2023-01 | 4563.153 | 3385.593 | 2700 |', rows[2])
         assertEquals('| 2023-04 | 12.23 | 2.654 | 1.871 |', rows[5])
+    }
+
+    boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        return directoryToBeDeleted.delete();
     }
 }

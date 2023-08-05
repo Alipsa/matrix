@@ -1,7 +1,9 @@
 # Release history
 
-1.1.2, in progress
+1.1.2, 2023-08-05
 - allow min and max to work on all comparables
+- add ignoreNonNumerics param to min functions
+- add List<Double> toDoubles(...) and double[] toDoubleArray(...) to list converter
 
 1.1.1, 2023-05-18
 - add selectColumns
