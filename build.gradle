@@ -107,6 +107,7 @@ def isNonStable = { String version ->
 
 // https://github.com/ben-manes/gradle-versions-plugin
 tasks.named("dependencyUpdates").configure {
+  gradleReleaseChannel = "current"
   resolutionStrategy {
     componentSelection {
       all {
