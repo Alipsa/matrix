@@ -397,11 +397,12 @@ class Matrix {
   }
 
   /**
-   *
+   * @param attr table attributes e.g. id, class etc. that is added immediately after the table and become table
+   *  attributes when rendered as html
    * @return a markdown formatted table where all the values have been converted to strings, numbers are right aligned
    * and everything else default (left) aligned
    */
-  String toMarkdown() {
+  String toMarkdown(Map<String, String> attr = [:]) {
     def alignment = []
     for (type in columnTypes()) {
       if (Number.isAssignableFrom(type)) {
@@ -419,7 +420,7 @@ class Matrix {
    * @param alignment use :--- for left align, :----: for centered, and ---: for right alignment
    * @return a markdown formatted table where all the values have been converted to strings
    */
-  String toMarkdown(List<String> alignment) {
+  String toMarkdown(List<String> alignment, Map<String, String> attr = [:]) {
     if (alignment.size() != columnCount()) {
       throw new IllegalArgumentException("number of alignment markers (${alignment.length}) differs from number of columns (${columnCount()})")
     }
@@ -436,6 +437,13 @@ class Matrix {
       }
       sb.append('| ')
           .append(rowBuilder.toString().trim()).append('\n')
+    }
+    if (attr.size() > 0) {
+      sb.append("{")
+      attr.each {
+        sb.append(it.key).append('="').append(it.value).append('" ')
+      }
+      sb.append("}\n")
     }
     return sb.toString()
   }
