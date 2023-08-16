@@ -470,6 +470,11 @@ class MatrixTest {
         assertEquals('| --- | ---: | ---: | ---: |', rows[1])
         assertEquals('| 2023-01 | 4563.153 | 3385.593 | 2700 |', rows[2])
         assertEquals('| 2023-04 | 12.23 | 2.654 | 1.871 |', rows[5])
+
+        md = table.toMarkdown(Map.of("class", "table"))
+        rows = md.split('\n')
+        assertEquals(7, rows.length)
+        assertEquals('{class="table" }', rows[6])
     }
 
     boolean deleteDirectory(File directoryToBeDeleted) {

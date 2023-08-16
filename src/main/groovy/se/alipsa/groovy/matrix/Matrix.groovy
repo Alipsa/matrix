@@ -412,7 +412,7 @@ class Matrix {
       }
     }
     //mHeaders.collect(w -> w.replaceAll(".", "-"))
-    return toMarkdown(alignment)
+    return toMarkdown(alignment, attr)
   }
 
   /**
@@ -422,7 +422,7 @@ class Matrix {
    */
   String toMarkdown(List<String> alignment, Map<String, String> attr = [:]) {
     if (alignment.size() != columnCount()) {
-      throw new IllegalArgumentException("number of alignment markers (${alignment.length}) differs from number of columns (${columnCount()})")
+      throw new IllegalArgumentException("number of alignment markers (${alignment.size()}) differs from number of columns (${columnCount()})")
     }
     StringBuilder sb = new StringBuilder()
     sb.append('| ')
