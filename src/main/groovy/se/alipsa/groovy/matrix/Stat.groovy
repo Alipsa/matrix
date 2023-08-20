@@ -14,6 +14,9 @@ import static ValueConverter.asBigDecimal
 class Stat {
 
     private static final primitives = ['double', 'float', 'int', 'long', 'short', 'byte']
+    static final String FREQUENCY_VALUE = "Value"
+    static final String FREQUENCY_FREQUENCY = "Frequency"
+    static final String FREQUENCY_PERCENT = "Percent"
 
     static Structure str(Matrix table) {
         Structure map = new Structure()
@@ -59,7 +62,7 @@ class Stat {
 
     static Map<String, Object> addCategorySummary(List<Object> objects, Class<?> type) {
         def freq = frequency(objects)
-        def mostFrequent = freq.subset('Frequency', {it == max(freq['Frequency'])})
+        def mostFrequent = freq.subset(FREQUENCY_FREQUENCY, {it == max(freq[FREQUENCY_FREQUENCY])})
 
         return [
             'Type': type.getSimpleName(),
@@ -481,7 +484,7 @@ class Stat {
             matrix.add([String.valueOf(entry.getKey()), numOccurrence, percent])
         }
         return Matrix.create(
-            ["Value", "Frequency", "Percent"],
+            [FREQUENCY_VALUE, FREQUENCY_FREQUENCY, FREQUENCY_PERCENT],
             matrix,
             [String, int, BigDecimal]
         )
@@ -493,5 +496,35 @@ class Stat {
 
     static Matrix frequency(Matrix table, int columnIndex) {
         return frequency(table.column(columnIndex))
+    }
+
+    /**
+     * This is similar to the table function in R:
+     * table(mtcars$vs, mtcars$gear)
+     * would be expressed here as
+     * table(mtcars, "gear", "vs")
+     * i.e. yield:
+     * <table>
+     *   <thead><tr>
+     *      <th align="right">3</th>	<th align="right">4</th>	<th align="right">5</th>
+     *   </tr></thead>
+     *   <tbody align="right">
+     *     <tr><td align="right">12</td><td align="right">2</td><td align="right">4</td></tr>
+     *     <tr><td align="right">3</td><td align="right">10</td><td align="right">1</td></tr>
+     *   </tbody>
+     * </table>
+     *
+     * @param table the Matrix to use
+     * @param groupName the name to group (split) the matrix on
+     * @param columnName the column name of the column to do a frequency count on
+     * @return a table with the each group as a column and the frequency counts as rows
+     */
+    static Matrix frequency(Matrix table, String groupName, String columnName) {
+        def groups = table.split(groupName)
+        def tbl = [:]
+        groups.each {
+            tbl["${it.key}"] = frequency(it.value, columnName).column(FREQUENCY_FREQUENCY)
+        }
+        return Matrix.create(tbl)
     }
 }

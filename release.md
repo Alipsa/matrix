@@ -1,7 +1,8 @@
 # Release history
 
 1.1.3, in progress
-- .
+- add additional attributes parameter to Matrix.toMarkdown
+- add a group frequency method to Stat similar to the R table function
 
 1.1.2, 2023-08-05
 - allow min and max to work on all comparables

@@ -125,6 +125,21 @@ class StatTest {
     }
 
     @Test
+    void testFrequencyTable() {
+        def table = Matrix.create([
+            gear: [4, 4, 4, 3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 4, 5, 5, 5, 5, 5, 4],
+            vs: [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1]
+        ], [Number, Number])
+
+        def vsByGears = frequency(table, "gear", "vs")
+        assertEquals(3, vsByGears.columnCount(), "column count")
+        assertEquals(2, vsByGears.rowCount(), "row count")
+        assertEquals([12,3], vsByGears["3"])
+        assertEquals([2,10], vsByGears["4"])
+        assertEquals([4,1], vsByGears["5"])
+    }
+
+    @Test
     void testSummary() {
         def table = Matrix.create([
             v0: [0.3, 2, 3],
