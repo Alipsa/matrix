@@ -506,25 +506,29 @@ class Stat {
      * i.e. yield:
      * <table>
      *   <thead><tr>
-     *      <th align="right">3</th>	<th align="right">4</th>	<th align="right">5</th>
+     *      <th align="right">vs</th> <th align="right">3</th>	<th align="right">4</th>	<th align="right">5</th>
      *   </tr></thead>
      *   <tbody align="right">
-     *     <tr><td align="right">12</td><td align="right">2</td><td align="right">4</td></tr>
-     *     <tr><td align="right">3</td><td align="right">10</td><td align="right">1</td></tr>
+     *     <tr><td align="right">0</td><td align="right">12</td><td align="right">2</td><td align="right">4</td></tr>
+     *     <tr><td align="right">1</td><td align="right">3</td><td align="right">10</td><td align="right">1</td></tr>
      *   </tbody>
      * </table>
      *
      * @param table the Matrix to use
      * @param groupName the name to group (split) the matrix on
      * @param columnName the column name of the column to do a frequency count on
-     * @return a table with the each group as a column and the frequency counts as rows
+     * @return a table with one column for the frequency value and each group value as a column
+     * with the frequency counts as rows
      */
     static Matrix frequency(Matrix table, String groupName, String columnName) {
         def groups = table.split(groupName)
-        def tbl = [:]
+        def tbl = new LinkedHashMap<String, List<?>>()
         groups.each {
-            tbl["${it.key}"] = frequency(it.value, columnName).column(FREQUENCY_FREQUENCY)
+            def freqTbl = frequency(it.value, columnName)
+            tbl[columnName] = freqTbl.column(FREQUENCY_VALUE)
+            tbl[String.valueOf(it.key)] = freqTbl.column(FREQUENCY_FREQUENCY)
         }
-        return Matrix.create(tbl)
+        def name = (table.getName() == null || table.getName().isBlank()) ? groupName : table.getName() + '_' + groupName
+        return Matrix.create(tbl).withName(name)
     }
 }

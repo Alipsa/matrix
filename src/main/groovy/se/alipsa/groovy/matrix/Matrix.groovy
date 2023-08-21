@@ -320,9 +320,22 @@ class Matrix {
     return types
   }
 
+  Matrix transpose(String columnNameAsHeader) {
+    List<String> header = ListConverter.toString(column(columnNameAsHeader))
+    return transpose(columnNameAsHeader, [Object]*header.size())
+  }
 
-  Matrix transpose(List<String> header = mHeaders) {
-    return create(header, mColumns, mTypes)
+  Matrix transpose(String columnNameAsHeader, List<Class> types) {
+    List<String> header = ListConverter.toString(column(columnNameAsHeader))
+    return create(header, dropColumns(columnNameAsHeader).columns(), types)
+  }
+
+  Matrix transpose(List<String> header) {
+    return transpose(header, [Object]*header.size())
+  }
+
+  Matrix transpose(List<String> header, List<Class> types) {
+    return create(header, mColumns, types)
   }
 
   int columnCount() {

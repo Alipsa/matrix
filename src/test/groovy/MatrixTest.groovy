@@ -40,8 +40,8 @@ class MatrixTest {
                 "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
                 "Current Funding": [2700, 225, 2.922, 1.871]
         ]
-        def tr = Matrix.create(report).transpose()
-        assertEquals(["Full Funding", "Baseline Funding", "Current Funding"], tr.columnNames())
+        def tr = Matrix.create(report).transpose(['y1', 'y2', 'y3', 'y4'])
+        assertEquals(["y1", "y2", "y3", "y4"], tr.columnNames())
         assertEquals([
            [4563.153, 380.263, 4.938, 12.23],
            [3385.593, 282.133, 3.664, 2.654],

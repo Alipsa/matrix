@@ -132,11 +132,12 @@ class StatTest {
         ], [Number, Number])
 
         def vsByGears = frequency(table, "gear", "vs")
-        assertEquals(3, vsByGears.columnCount(), "column count")
-        assertEquals(2, vsByGears.rowCount(), "row count")
-        assertEquals([12,3], vsByGears["3"])
-        assertEquals([2,10], vsByGears["4"])
-        assertEquals([4,1], vsByGears["5"])
+        assertEquals(4, vsByGears.columnCount(), "column count\n" + vsByGears.content())
+        assertEquals(2, vsByGears.rowCount(), "row count\n" + vsByGears.content())
+        assertEquals(['0','1'], vsByGears["vs"], vsByGears.content())
+        assertEquals([12,3], vsByGears["3"], vsByGears.content())
+        assertEquals([2,10], vsByGears["4"], vsByGears.content())
+        assertEquals([4,1], vsByGears["5"], vsByGears.content())
     }
 
     @Test
