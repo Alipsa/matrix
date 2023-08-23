@@ -320,22 +320,46 @@ class Matrix {
     return types
   }
 
-  Matrix transpose(String columnNameAsHeader) {
-    List<String> header = ListConverter.toString(column(columnNameAsHeader))
-    return transpose(columnNameAsHeader, [Object]*header.size())
+  Matrix transpose(String columnNameAsHeader,  boolean includeHeaderAsRow = false) {
+    List<String> header
+    if (includeHeaderAsRow) {
+      header = ['']
+      header.addAll(ListConverter.toString(column(columnNameAsHeader)))
+    } else {
+      header = ListConverter.toString(column(columnNameAsHeader))
+    }
+    return transpose(header, [Object]*header.size(), includeHeaderAsRow)
   }
 
-  Matrix transpose(String columnNameAsHeader, List<Class> types) {
-    List<String> header = ListConverter.toString(column(columnNameAsHeader))
-    return create(header, dropColumns(columnNameAsHeader).columns(), types)
+  Matrix transpose(String columnNameAsHeader, List<Class> types,  boolean includeHeaderAsRow = false) {
+    List<String> header
+    List<List<?>> r = new ArrayList<>(rowCount()+1)
+    if (includeHeaderAsRow) {
+      header = ['']
+      header.addAll(ListConverter.toString(column(columnNameAsHeader)))
+      r.add(mHeaders)
+    } else {
+      header = ListConverter.toString(column(columnNameAsHeader))
+    }
+    r.addAll(rows())
+    return create(header, r.transpose(), types)
   }
 
-  Matrix transpose(List<String> header) {
-    return transpose(header, [Object]*header.size())
+  Matrix transpose(List<String> header, boolean includeHeaderAsRow = false) {
+    return transpose(header, [Object]*header.size(), includeHeaderAsRow)
   }
 
-  Matrix transpose(List<String> header, List<Class> types) {
-    return create(header, mColumns, types)
+  Matrix transpose(boolean includeHeaderAsRow = false) {
+    return transpose(['']*columnCount(), includeHeaderAsRow)
+  }
+
+  Matrix transpose(List<String> header, List<Class> types, boolean includeHeaderAsRow = false) {
+    List<List<?>> rows = new ArrayList<>(rowCount()+1)
+    if (includeHeaderAsRow) {
+      rows.add(mHeaders)
+    }
+    rows.addAll(mRows)
+    return create(header, rows.transpose(), types)
   }
 
   int columnCount() {

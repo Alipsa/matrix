@@ -36,17 +36,38 @@ class MatrixTest {
     @Test
     void testTransposing() {
         def report = [
-                "Full Funding": [4563.153, 380.263, 4.938, 12.23],
-                "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
-                "Current Funding": [2700, 225, 2.922, 1.871]
+                "Year": [1, 2, 3],
+                "Full Funding": [4563.153, 380.263, 4.938],
+                "Baseline Funding": [3385.593, 282.133, 3.664],
+                "Current Funding": [2700, 225, 2.922]
         ]
-        def tr = Matrix.create(report).transpose(['y1', 'y2', 'y3', 'y4'])
-        assertEquals(["y1", "y2", "y3", "y4"], tr.columnNames())
+        def table = Matrix.create(report)
+        def tr = table.transpose(['y1', 'y2', 'y3'])
+        assertEquals(["y1", "y2", "y3"], tr.columnNames())
         assertEquals([
-           [4563.153, 380.263, 4.938, 12.23],
-           [3385.593, 282.133, 3.664, 2.654],
-           [2700, 225, 2.922, 1.871]
-        ], tr.rows())
+            [1, 2, 3],
+            [4563.153, 380.263, 4.938],
+            [3385.593, 282.133, 3.664],
+            [2700, 225, 2.922]
+        ], tr.rows(), table.content())
+
+        def tr2 = table.transpose(true)
+        assertEquals([
+            ["Year", 1, 2, 3],
+            ["Full Funding", 4563.153, 380.263, 4.938],
+            ["Baseline Funding", 3385.593, 282.133, 3.664],
+            ["Current Funding", 2700, 225, 2.922]
+        ], tr2.rows())
+
+        def t3 = table.transpose('Year', true)
+        assertEquals([
+            ["Year", 1, 2, 3],
+            ["Full Funding", 4563.153, 380.263, 4.938],
+            ["Baseline Funding", 3385.593, 282.133, 3.664],
+            ["Current Funding", 2700, 225, 2.922]
+        ], t3.rows(), t3.content())
+        assertEquals(['', '1', '2', '3'], t3.columnNames())
+        println t3.content()
     }
 
     @Test
