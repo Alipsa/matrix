@@ -67,7 +67,16 @@ class MatrixTest {
             ["Current Funding", 2700, 225, 2.922]
         ], t3.rows(), t3.content())
         assertEquals(['', '1', '2', '3'], t3.columnNames())
-        println t3.content()
+
+        def t4 = table.transpose('Year', [String, Number, Number, Number], true)
+        assertEquals([
+                ["Year", 1, 2, 3],
+                ["Full Funding", 4563.153, 380.263, 4.938],
+                ["Baseline Funding", 3385.593, 282.133, 3.664],
+                ["Current Funding", 2700, 225, 2.922]
+        ], t4.rows(), t4.content())
+        assertEquals(['', '1', '2', '3'], t4.columnNames())
+        println t4.content()
     }
 
     @Test
