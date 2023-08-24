@@ -350,7 +350,8 @@ class Matrix {
   }
 
   Matrix transpose(boolean includeHeaderAsRow = false) {
-    return transpose(['']*columnCount(), includeHeaderAsRow)
+    def numCols = includeHeaderAsRow ? rowCount() + 1 : rowCount()
+    return transpose(['']*numCols, includeHeaderAsRow)
   }
 
   Matrix transpose(List<String> header, List<Class> types, boolean includeHeaderAsRow = false) {

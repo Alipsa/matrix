@@ -36,47 +36,51 @@ class MatrixTest {
     @Test
     void testTransposing() {
         def report = [
-                "Year": [1, 2, 3],
-                "Full Funding": [4563.153, 380.263, 4.938],
-                "Baseline Funding": [3385.593, 282.133, 3.664],
-                "Current Funding": [2700, 225, 2.922]
+                "Year": [1, 2, 3, 4],
+                "Full Funding": [4563.153, 380.263, 4.938, 101.1],
+                "Baseline Funding": [3385.593, 282.133, 3.664, 123.123],
+                "Current Funding": [2700, 225, 2.922, 1010.12]
         ]
         def table = Matrix.create(report)
-        def tr = table.transpose(['y1', 'y2', 'y3'])
-        assertEquals(["y1", "y2", "y3"], tr.columnNames())
+        def tr = table.transpose(['y1', 'y2', 'y3', 'y4'])
+        assertEquals(["y1", "y2", "y3", "y4"], tr.columnNames())
         assertEquals([
-            [1, 2, 3],
-            [4563.153, 380.263, 4.938],
-            [3385.593, 282.133, 3.664],
-            [2700, 225, 2.922]
+            [1, 2, 3, 4],
+            [4563.153, 380.263, 4.938, 101.1],
+            [3385.593, 282.133, 3.664, 123.123],
+            [2700, 225, 2.922, 1010.12]
         ], tr.rows(), table.content())
+        assertEquals(4, tr.columnTypes().size(), "Column types")
 
         def tr2 = table.transpose(true)
         assertEquals([
-            ["Year", 1, 2, 3],
-            ["Full Funding", 4563.153, 380.263, 4.938],
-            ["Baseline Funding", 3385.593, 282.133, 3.664],
-            ["Current Funding", 2700, 225, 2.922]
+            ["Year", 1, 2, 3, 4],
+            ["Full Funding", 4563.153, 380.263, 4.938, 101.1],
+            ["Baseline Funding", 3385.593, 282.133, 3.664, 123.123],
+            ["Current Funding", 2700, 225, 2.922, 1010.12]
         ], tr2.rows())
+        assertEquals(5, tr2.columnTypes().size(), tr2.content() + "\nColumn types: " + tr2.columnTypeNames())
 
         def t3 = table.transpose('Year', true)
         assertEquals([
-            ["Year", 1, 2, 3],
-            ["Full Funding", 4563.153, 380.263, 4.938],
-            ["Baseline Funding", 3385.593, 282.133, 3.664],
-            ["Current Funding", 2700, 225, 2.922]
+            ["Year", 1, 2, 3, 4],
+            ["Full Funding", 4563.153, 380.263, 4.938, 101.1],
+            ["Baseline Funding", 3385.593, 282.133, 3.664, 123.123],
+            ["Current Funding", 2700, 225, 2.922, 1010.12]
         ], t3.rows(), t3.content())
-        assertEquals(['', '1', '2', '3'], t3.columnNames())
+        assertEquals(['', '1', '2', '3', '4'], t3.columnNames())
+        assertEquals(5, t3.columnTypes().size(), t3.content() + "\nColumn types: " + t3.columnTypeNames())
 
-        def t4 = table.transpose('Year', [String, Number, Number, Number], true)
+        def t4 = table.transpose('Year', [String, Number, Number, Number, Number], true)
         assertEquals([
-                ["Year", 1, 2, 3],
-                ["Full Funding", 4563.153, 380.263, 4.938],
-                ["Baseline Funding", 3385.593, 282.133, 3.664],
-                ["Current Funding", 2700, 225, 2.922]
+                ["Year", 1, 2, 3, 4],
+                ["Full Funding", 4563.153, 380.263, 4.938, 101.1],
+                ["Baseline Funding", 3385.593, 282.133, 3.664, 123.123],
+                ["Current Funding", 2700, 225, 2.922, 1010.12]
         ], t4.rows(), t4.content())
-        assertEquals(['', '1', '2', '3'], t4.columnNames())
-        println t4.content()
+        assertEquals(['', '1', '2', '3', '4'], t4.columnNames())
+        assertEquals(5, t4.columnTypes().size(), t4.content() + "\nColumn types: " + t4.columnTypeNames())
+
     }
 
     @Test
