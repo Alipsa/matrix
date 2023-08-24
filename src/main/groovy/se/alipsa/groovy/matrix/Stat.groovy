@@ -517,15 +517,18 @@ class Stat {
      * @param table the Matrix to use
      * @param groupName the name to group (split) the matrix on
      * @param columnName the column name of the column to do a frequency count on
+     * @param includeColumnNameCategory add the values for the columnName in a separate column
      * @return a table with one column for the frequency value and each group value as a column
      * with the frequency counts as rows
      */
-    static Matrix frequency(Matrix table, String groupName, String columnName) {
+    static Matrix frequency(Matrix table, String groupName, String columnName, boolean includeColumnNameCategory = true) {
         def groups = table.split(groupName)
         def tbl = new LinkedHashMap<String, List<?>>()
         groups.each {
             def freqTbl = frequency(it.value, columnName)
-            tbl[columnName] = freqTbl.column(FREQUENCY_VALUE)
+            if (includeColumnNameCategory) {
+                tbl[columnName] = freqTbl.column(FREQUENCY_VALUE)
+            }
             tbl[String.valueOf(it.key)] = freqTbl.column(FREQUENCY_FREQUENCY)
         }
         def name = (table.getName() == null || table.getName().isBlank()) ? groupName : table.getName() + '_' + groupName

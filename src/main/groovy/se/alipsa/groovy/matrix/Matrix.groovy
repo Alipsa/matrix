@@ -342,7 +342,7 @@ class Matrix {
       header = ListConverter.toString(column(columnNameAsHeader))
     }
     r.addAll(rows())
-    return create(header, r.transpose(), types)
+    return create(header, Grid.transpose(r), types)
   }
 
   Matrix transpose(List<String> header, boolean includeHeaderAsRow = false) {
@@ -360,7 +360,7 @@ class Matrix {
       rows.add(mHeaders)
     }
     rows.addAll(mRows)
-    return create(header, rows.transpose(), types)
+    return create(header, Grid.transpose(rows), types)
   }
 
   int columnCount() {
