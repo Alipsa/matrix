@@ -978,16 +978,16 @@ class Matrix {
     return new Grid(rows())
   }
 
-  boolean equals(o) {
+  boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true) {
     if (this.is(o)) return true
     if (!(o instanceof Matrix)) return false
 
     Matrix matrix = (Matrix) o
 
-    if (mHeaders != matrix.mHeaders) return false
-    if (mName != matrix.mName) return false
+    if (!ignoreColumnNames && mHeaders != matrix.mHeaders) return false
+    if (!ignoreName && mName != matrix.mName) return false
     if (mRows != matrix.mRows) return false
-    if (mTypes != matrix.mTypes) return false
+    if (!ignoreTypes && mTypes != matrix.mTypes) return false
 
     return true
   }
@@ -1004,16 +1004,16 @@ class Matrix {
   String diff(Matrix other, boolean forceRowComparing = false) {
     StringBuilder sb = new StringBuilder()
     if (this.name != other.name) {
-      sb.append("Names differ: this: ${name}, that: ${other.name}\n")
+      sb.append("Names differ: this: ${name}; that: ${other.name}\n")
     }
     if (this.columnNames() != other.columnNames()) {
-      sb.append("Column Names differ: this: ${columnNames().join(', ')}, that: ${other.columnNames().join(', ')}\n")
+      sb.append("Column Names differ: this: ${columnNames().join(', ')}; that: ${other.columnNames().join(', ')}\n")
     }
     if (rowCount() != other.rowCount()) {
-      sb.append("Number of rows differ: this: ${columnCount()}, that: ${other.columnCount()}\n")
+      sb.append("Number of rows differ: this: ${columnCount()}; that: ${other.columnCount()}\n")
     }
     if (columnTypes() != other.columnTypes()) {
-      sb.append("Column types differ: this: ${columnTypeNames().join(', ')}, that: ${other.columnTypeNames().join(', ')}")
+      sb.append("Column types differ: this: ${columnTypeNames().join(', ')}; that: ${other.columnTypeNames().join(', ')}")
     }
     if (sb.length() == 0 || forceRowComparing) {
       def thisRow, thatRow
@@ -1021,7 +1021,7 @@ class Matrix {
         thisRow = row(i)
         thatRow = other.row(i)
         if (thisRow != thatRow) {
-          sb.append("Row ${i} differs: this: ${thisRow.join(', ')}, that: ${thatRow.join(', ')}\n")
+          sb.append("Row ${i} differs: this: ${thisRow.join(', ')}; that: ${thatRow.join(', ')}\n")
         }
       }
     }

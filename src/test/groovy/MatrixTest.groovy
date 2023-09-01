@@ -511,6 +511,73 @@ class MatrixTest {
         assertEquals('{class="table" }', rows[6])
     }
 
+    @Test
+    void testEquals() {
+        def empData = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        )
+
+        assertEquals(empData, Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        ))
+
+        assertNotEquals(empData, Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.1],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        ))
+
+        Matrix differentTypes = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [Object, Object, Object, Object]
+        )
+        assertEquals(empData,differentTypes , empData.diff(differentTypes))
+        assertNotEquals(empData,differentTypes.withName("differentTypes") , empData.diff(differentTypes))
+    }
+
+    @Test
+    void testDiff() {
+        def empData = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        )
+        def d1 = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.1],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        )
+        assertEquals('Row 1 differs: this: 2, Dan, 515.2, 2012-03-27; that: 2, Dan, 515.1, 2012-03-27',
+                    empData.diff(d1).trim())
+
+        def d2 = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [Object, Object, Object, Object]
+        )
+        assertEquals('Column types differ: this: Integer, String, Number, LocalDate; that: Object, Object, Object, Object',
+            empData.diff(d2))
+    }
+
     boolean deleteDirectory(File directoryToBeDeleted) {
         File[] allContents = directoryToBeDeleted.listFiles();
         if (allContents != null) {
