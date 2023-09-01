@@ -199,6 +199,10 @@ class Matrix {
     mHeaders.addAll(names)
   }
 
+  String columnName(int index) {
+    return columnNames()[index]
+  }
+
   void renameColumn(String before, String after) {
     List<String> temp = []
     temp.addAll(mHeaders)
@@ -514,6 +518,24 @@ class Matrix {
 
   String content(boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n') {
     return head(rowCount(), includeHeader, delimiter, lineEnding)
+  }
+
+  /**
+   * Convert the columns in the order of a list to the classes specified
+   * @param columnTypes a list of column types (classes)
+   * @param dateTimeFormatter an optional DateTimeFormatter
+   * @param numberFormat an optional NumberFormat
+   * @return a new Matrix converted as specified
+   */
+  Matrix convert(List<Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+    if (columnTypes.size() > columnCount()) {
+      throw new IllegalArgumentException("There are more column types specified (${columnTypes.size()}) than there are columns in this table (${columnCount()})")
+    }
+    Map<String, Class<?>> columnTypeMap = [:]
+    for (int i = 0; i < columnTypes.size(); i++) {
+      columnTypeMap[columnName(i)] = columnTypes[i]
+    }
+    return convert(columnTypeMap, dateTimeFormatter, numberFormat)
   }
 
   Matrix convert(Map<String, Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
@@ -954,5 +976,59 @@ class Matrix {
    */
   Grid grid() {
     return new Grid(rows())
+  }
+
+  boolean equals(o) {
+    if (this.is(o)) return true
+    if (!(o instanceof Matrix)) return false
+
+    Matrix matrix = (Matrix) o
+
+    if (mHeaders != matrix.mHeaders) return false
+    if (mName != matrix.mName) return false
+    if (mRows != matrix.mRows) return false
+    if (mTypes != matrix.mTypes) return false
+
+    return true
+  }
+
+  int hashCode() {
+    int result
+    result = (mHeaders != null ? mHeaders.hashCode() : 0)
+    result = 31 * result + (mRows != null ? mRows.hashCode() : 0)
+    result = 31 * result + (mTypes != null ? mTypes.hashCode() : 0)
+    result = 31 * result + (mName != null ? mName.hashCode() : 0)
+    return result
+  }
+
+  String diff(Matrix other, boolean forceRowComparing = false) {
+    StringBuilder sb = new StringBuilder()
+    if (this.name != other.name) {
+      sb.append("Names differ: this: ${name}, that: ${other.name}\n")
+    }
+    if (this.columnNames() != other.columnNames()) {
+      sb.append("Column Names differ: this: ${columnNames().join(', ')}, that: ${other.columnNames().join(', ')}\n")
+    }
+    if (rowCount() != other.rowCount()) {
+      sb.append("Number of rows differ: this: ${columnCount()}, that: ${other.columnCount()}\n")
+    }
+    if (columnTypes() != other.columnTypes()) {
+      sb.append("Column types differ: this: ${columnTypeNames().join(', ')}, that: ${other.columnTypeNames().join(', ')}")
+    }
+    if (sb.length() == 0 || forceRowComparing) {
+      def thisRow, thatRow
+      for (int i = 0; i < rowCount(); i++) {
+        thisRow = row(i)
+        thatRow = other.row(i)
+        if (thisRow != thatRow) {
+          sb.append("Row ${i} differs: this: ${thisRow.join(', ')}, that: ${thatRow.join(', ')}\n")
+        }
+      }
+    }
+    if (sb.length() > 0) {
+      return sb.toString()
+    } else {
+      return 'No differences between the two matrices detected!'
+    }
   }
 }
