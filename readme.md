@@ -221,6 +221,7 @@ which will print
 The convert methods are:
 #### convert using a list of column types
 `Matrix convert(List<Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null)`
+e.g:
 ```groovy
 table.convert([Integer, String, LocalDate], DateTimeFormatter.ofPattern('yyyy-MM-dd'))
 ```
@@ -230,7 +231,7 @@ This is the example shown in the basic idea above
 
 #### Convert a specified column into the type using a closure to perform the conversion
 `Matrix convert(String columnName, Class<?> type, Closure converter)`
-This is used for more complex conversions where the data is more dirty
+This is used for more complex conversions where the data is more dirty. e.g:
 ```groovy
 table.convert('place', Integer, {
             String val = String.valueOf(it).trim()
@@ -240,10 +241,13 @@ table.convert('place', Integer, {
 ```
 #### Convert using an array of Converters for each column you want to convert
 `Matrix convert(Converter[] converters)`
-a converter is a simple Groovy class containing the column name, the type (class) and a closure to convert each value
+a converter is a simple Groovy class containing the column name, 
+the type (class) and a closure to convert each value, e.g:
 ```groovy
 table.convert([
-    new Converter('place', Integer, {try {Integer.parseInt(it)} catch (NumberFormatException e) {null}}),
+    new Converter('place', Integer, {
+      try {Integer.parseInt(it)} catch (NumberFormatException e) {null}
+    }),
     new Converter('start', LocalDate, {LocalDate.parse(it)})
 ] as Converter[])
 ```
