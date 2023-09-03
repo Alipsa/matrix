@@ -191,6 +191,11 @@ Most frequent:	Foo occurs 2 times (66.67%)
 ```
 
 ### Transforming data
+
+there are several convert methods that can be used to transform data.
+
+The basic idea is like this:
+
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
 import java.time.LocalDate
@@ -211,6 +216,36 @@ which will print
 ```
 [String, String, String]
 [Integer, String, LocalDate]
+```
+
+The convert methods are:
+#### convert using a list of column types
+`Matrix convert(List<Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null)`
+```groovy
+table.convert([Integer, String, LocalDate], DateTimeFormatter.ofPattern('yyyy-MM-dd'))
+```
+#### Convert using a map of column names and their type
+` Matrix convert(Map<String, Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null)`
+This is the example shown in the basic idea above
+
+#### Convert a specified column into the type using a closure to perform the conversion
+`Matrix convert(String columnName, Class<?> type, Closure converter)`
+This is used for more complex conversions where the data is more dirty
+```groovy
+table.convert('place', Integer, {
+            String val = String.valueOf(it).trim()
+            if (val == 'null' || val == ',' || val.isBlank()) return null
+            return Integer.valueOf(val)
+        })
+```
+#### Convert using an array of Converters for each column you want to convert
+`Matrix convert(Converter[] converters)`
+a converter is a simple Groovy class containing the column name, the type (class) and a closure to convert each value
+```groovy
+table.convert([
+    new Converter('place', Integer, {try {Integer.parseInt(it)} catch (NumberFormatException e) {null}}),
+    new Converter('start', LocalDate, {LocalDate.parse(it)})
+] as Converter[])
 ```
 
 ### Getting a subset of the table
