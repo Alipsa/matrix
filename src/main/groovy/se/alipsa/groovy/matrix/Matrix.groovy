@@ -565,6 +565,49 @@ class Matrix {
   }
 
   /**
+   * As this clashes with convert(List<Class<?>>) we require an array as parameter. i.e.
+   * You need to cast it with as Converter[] e.g.
+   * <code>
+   * convert([new Converter('id', Integer, {Integer.parseInt(it)})] as Converter[])
+   * <code>
+   *
+   * @param converters an array of se.alipsa.groovy.matrix.Converter
+   * @return a new converted Matrix
+   */
+  Matrix convert(Converter[] converters) {
+    def convertedColumns = []
+    def convertedTypes = []
+
+    List<String> columnNameList = []
+    List<Class<?>> columnTypeList = []
+    List<Closure> converterList = []
+    converters.each {
+      columnNameList.add(it.columnName)
+      columnTypeList.add(it.type)
+      converterList.add(it.converter)
+    }
+
+    for (int i = 0; i < columnCount(); i++) {
+      String colName = mHeaders[i]
+      if (columnNameList.contains(colName)) {
+        int index = columnNameList.indexOf(colName)
+        def columnVals = []
+        def converter = converterList[index]
+        for (def val in column(colName)) {
+          columnVals.add(converter.call(val))
+        }
+        convertedTypes.add(columnTypeList[index])
+        convertedColumns.add(columnVals)
+      } else {
+        convertedColumns.add(column(i))
+        convertedTypes.add(columnType(i))
+      }
+    }
+    def convertedRows = Grid.transpose(convertedColumns)
+    return create(mName, mHeaders, convertedRows, convertedTypes)
+  }
+
+  /**
    *
    * @param columnNumber the column index for the column to convert
    * @param type the class the column will be converted to

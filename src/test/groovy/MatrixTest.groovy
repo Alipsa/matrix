@@ -1,4 +1,5 @@
 import se.alipsa.groovy.datautil.SqlUtil
+import se.alipsa.groovy.matrix.Converter
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.ListConverter
 import se.alipsa.groovy.matrix.Stat
@@ -154,6 +155,20 @@ class MatrixTest {
         assertEquals(Integer, table3.columnType('place'))
         assertEquals(3, table3['place'][2])
 
+        def table4 = table.convert([
+            new Converter('place', Integer, {try {Integer.parseInt(it)} catch (NumberFormatException e) {null}}),
+            new Converter('start', LocalDate, {LocalDate.parse(it)})
+        ] as Converter[])
+
+        println table.content()
+        println table4.content()
+        assertEquals(Integer, table4.columnType('place'))
+        assertEquals(Integer, table4[0, 0].class)
+        assertEquals(3, table4[2, 0])
+
+        assertEquals(LocalDate, table4.columnType('start'))
+        assertEquals(LocalDate, table4[0, 2].class)
+        assertEquals(LocalDate.of(2023, 5, 27), table4[2, 2])
     }
 
     @Test
