@@ -160,8 +160,8 @@ class MatrixTest {
             new Converter('start', LocalDate, {LocalDate.parse(it)})
         ] as Converter[])
 
-        println table.content()
-        println table4.content()
+        //println table.content()
+        //println table4.content()
         assertEquals(Integer, table4.columnType('place'))
         assertEquals(Integer, table4[0, 0].class)
         assertEquals(3, table4[2, 0])
