@@ -248,9 +248,13 @@ table.convert([
     new Converter('place', Integer, {
       try {Integer.parseInt(it)} catch (NumberFormatException e) {null}
     }),
-    new Converter('start', LocalDate, {LocalDate.parse(it)})
+    new Converter('start', LocalDate, {
+      LocalDate.parse(it)
+    })
 ] as Converter[])
 ```
+Note that the cast to an Array of Converter at the end which is needed as otherwise the 
+compiler will think you want to call the convert(List<Class<?>>) method instead.
 
 ### Getting a subset of the table
 ```groovy
