@@ -169,6 +169,11 @@ class MatrixTest {
         assertEquals(LocalDate, table4.columnType('start'))
         assertEquals(LocalDate, table4[0, 2].class)
         assertEquals(LocalDate.of(2023, 5, 27), table4[2, 2])
+
+        def table5 = table.convert(
+            [Integer, String, LocalDate, String]
+        )
+        assertEquals(table4, table5, table4.diff(table5))
     }
 
     @Test
