@@ -15,7 +15,13 @@ class ListConverter {
     List<T> c = []
     list.eachWithIndex { it, idx ->
       try {
-        c.add(ValueConverter.convert(it, type, dateTimeFormatter, numberFormat))
+        if (it == null) {
+          c.add(null)
+        } else if (it.class.isAssignableFrom(type)) {
+          c.add(type.cast(it))
+        } else {
+          c.add(ValueConverter.convert(it, type, dateTimeFormatter, numberFormat))
+        }
       } catch (Exception e) {
         throw new ConversionException("Failed to convert \'$it\' (${it == null ? null : it.getClass().name}) to $type.name in index $idx", e)
       }
