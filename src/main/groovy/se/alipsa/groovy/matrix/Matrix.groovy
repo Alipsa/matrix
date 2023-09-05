@@ -132,7 +132,7 @@ class Matrix {
   static Matrix create(List<List<?>> rowList) {
     def headerList = []
     for (int i = 0; i < rowList[0].size(); i++) {
-      headerList.add("v$i")
+      headerList.add(String.valueOf("v$i"))
     }
     return create(headerList, rowList)
   }
