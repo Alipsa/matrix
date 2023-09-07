@@ -667,6 +667,19 @@ class Matrix {
     return create(mName, mHeaders, r, mTypes)
   }
 
+  Matrix removeEmptyRows() {
+    return subset { containsValues(it) }
+  }
+
+  static boolean containsValues(Iterable<?> row) {
+    def strVal
+    for (def element in row) {
+      strVal = String.valueOf(element)
+      if (element != null && strVal != 'null' && !strVal.isBlank() ) return true
+    }
+    return false
+  }
+
   Matrix apply(String columnName, Closure function) {
     return apply(columnNames().indexOf(columnName), function)
   }

@@ -598,6 +598,26 @@ class MatrixTest {
             empData.diff(d2))
     }
 
+    @Test
+    void testRemoveEmptyRows() {
+        def empData = Matrix.create(
+                emp_id: [1,2],
+                emp_name: ["Rick","Dan"],
+                salary: [623.3,515.2],
+                start_date: toLocalDates("2013-01-01", "2012-03-27"),
+                [int, String, Number, LocalDate]
+        )
+
+        def d0 = Matrix.create(
+                emp_id: [1,null, 2, null],
+                emp_name: ["Rick", "", "Dan", " "],
+                salary: [623.3, null, 515.2, null],
+                start_date: toLocalDates("2013-01-01", null, "2012-03-27", null),
+                [int, String, Number, LocalDate]
+        )
+        assertEquals(empData, d0.removeEmptyRows(), empData.diff(d0))
+    }
+
     boolean deleteDirectory(File directoryToBeDeleted) {
         File[] allContents = directoryToBeDeleted.listFiles();
         if (allContents != null) {
