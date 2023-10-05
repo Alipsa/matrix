@@ -162,7 +162,7 @@ class StatTest {
                 v2: [null, 'Foo', "Foo"]
         ], [Number, double, String])
         def structure =  str(table)
-        println structure
+        //println structure
         def rows= structure.toString().split('\n')
         assertEquals(5, rows.length)
         assertTrue(rows[0].startsWith('Matrix (Test'), 'First row')

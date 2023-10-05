@@ -23,8 +23,15 @@ class Grid {
         }
     }
 
-    Grid(int initialCapacity) {
-        data = new ArrayList<>(initialCapacity)
+    Grid(int nrow) {
+        data = new ArrayList<>(nrow)
+    }
+
+    Grid(int nrow, int ncol) {
+        data = new ArrayList<>(nrow)
+        for (row in data) {
+            data << new ArrayList<>(ncol)
+        }
     }
 
     List getAt(int row) {
@@ -70,6 +77,13 @@ class Grid {
 
     List<List<?>> getData() {
         return data
+    }
+
+    Grid replaceRow(int index, List<?> row) {
+        def r = data.get(index)
+        r.clear()
+        r.addAll(row)
+        return this
     }
 
     Iterator<List<?>> iterator() {

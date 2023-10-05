@@ -15,17 +15,15 @@ import static se.alipsa.groovy.matrix.util.ClassUtils.*
  * It is essentially a Grid i.e. [][] (List<List<?>>) but also has a header and a name
  * and several convenience methods to work with it.
  *
- * The table name and column names are mutable and can be set with setName() and renameColumn() respectively.
- * The data and the data types are immutable however.
- * Any manipulation on the content on those results in a new Matrix where the changes are represented.
+ * TODO: consider using Collections.checkedList to create a type checked version of each column
+ *
  */
-class Matrix {
+class Matrix implements Iterable {
 
   private List<String> mHeaders
-  private List<List<?>> mRows
   private List<Class<?>> mTypes
   // Copy of the data i column format
-  private List<List<Object>> mColumns
+  private List<List<?>> mColumns
   private String mName
   static final Boolean ASC = Boolean.FALSE
   static final Boolean DESC = Boolean.TRUE
@@ -48,17 +46,16 @@ class Matrix {
 
   static Matrix create(List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt) {
     Matrix table = new Matrix()
-    table.mHeaders = Collections.unmodifiableList(headerList.collect())
-    table.mRows = Collections.unmodifiableList(rowList.collect())
+    table.mHeaders = headerList.collect()
+    table.mColumns = rowList.transpose().collect()
     if (dataTypesOpt.length > 0) {
-      table.mTypes = Collections.unmodifiableList(convertPrimitivesToWrapper(dataTypesOpt[0]))
+      table.mTypes = convertPrimitivesToWrapper(dataTypesOpt[0])
       if (headerList.size() != table.mTypes.size()) {
         throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${table.mTypes.size()})")
       }
     } else {
-      table.mTypes = Collections.unmodifiableList([Object.class] * headerList.size())
+      table.mTypes = [Object.class] * headerList.size()
     }
-    table.createColumnList()
     return table
   }
 
@@ -170,8 +167,10 @@ class Matrix {
       }
     }
     Matrix table = new Matrix()
-    table.mHeaders = Collections.unmodifiableList(headers)
-    table.mTypes = Collections.unmodifiableList(convertPrimitivesToWrapper(columnTypes))
+    //table.mHeaders = Collections.unmodifiableList(headers)
+    //table.mTypes = Collections.unmodifiableList(convertPrimitivesToWrapper(columnTypes))
+    table.mHeaders = headers
+    table.mTypes = convertPrimitivesToWrapper(columnTypes)
     List<List<Object>> rows = []
     while (rs.next()) {
       List<?> row = []
@@ -180,8 +179,7 @@ class Matrix {
       }
       rows.add(row)
     }
-    table.mRows = Collections.unmodifiableList(rows)
-    table.createColumnList()
+    table.mColumns = rows.transpose()
     return table
   }
 
@@ -207,14 +205,16 @@ class Matrix {
     List<String> temp = []
     temp.addAll(mHeaders)
     temp[temp.indexOf(before)] = after
-    mHeaders =  Collections.unmodifiableList(temp)
+    //mHeaders = Collections.unmodifiableList(temp)
+    mHeaders = temp
   }
 
   void renameColumn(int columnIndex, String after) {
     List<String> temp = []
     temp.addAll(mHeaders)
     temp[columnIndex] = after
-    mHeaders =  Collections.unmodifiableList(temp)
+    //mHeaders =  Collections.unmodifiableList(temp)
+    mHeaders = temp
   }
 
   int columnIndex(String columnName) {
@@ -241,8 +241,12 @@ class Matrix {
     return mColumns.get(index)
   }
 
-  List<?> row(int index) {
-    return mRows.get(index)
+  Row row(int index) {
+    def data = []
+    mColumns.each { col ->
+      data << col[index]
+    }
+    return new Row(index, data, this)
   }
 
   List<List<?>> columns() {
@@ -257,7 +261,15 @@ class Matrix {
     return cols
   }
 
-  List<List<?>> rows(List<Integer> index) {
+  List<List<?>> columns(Integer[] indices) {
+    def cols = []
+    for (int index in indices) {
+      cols.add(column(index))
+    }
+    return cols
+  }
+
+  List<Row> rows(List<Integer> index) {
     def rows = []
     index.each {
       rows.add(row((int) it))
@@ -266,7 +278,7 @@ class Matrix {
   }
 
   List<List<?>> rows() {
-    return mRows
+    return mColumns.transpose()
   }
 
   /**
@@ -276,7 +288,7 @@ class Matrix {
    */
   List<Integer> selectRows(Closure criteria) {
     def r = [] as List<Integer>
-    mRows.eachWithIndex { row, idx ->
+    rows().eachWithIndex { row, idx ->
       {
         if (criteria(row)) {
           r.add(idx)
@@ -358,12 +370,13 @@ class Matrix {
     return transpose(['']*numCols, includeHeaderAsRow)
   }
 
+  // TODO: this could be done more efficiently, too many transpositions
   Matrix transpose(List<String> header, List<Class> types, boolean includeHeaderAsRow = false) {
     List<List<?>> rows = new ArrayList<>(rowCount()+1)
     if (includeHeaderAsRow) {
       rows.add(mHeaders)
     }
-    rows.addAll(mRows)
+    rows.addAll(mColumns.transpose())
     return create(header, Grid.transpose(rows), types)
   }
 
@@ -372,12 +385,11 @@ class Matrix {
   }
 
   int rowCount() {
-    return mRows.size()
+    return rows().size()
   }
 
   Object get(int row, int column) {
-    //return rowList.get(row).get(column)
-    return mRows[row][column]
+    return mColumns[column][row]
   }
 
   /**
@@ -412,25 +424,61 @@ class Matrix {
     return column(columnIndex)
   }
 
-  private void createColumnList() {
-    List<List<Object>> columns = new ArrayList<>()
-    int rowCount = 0;
-    for (List<Object> row : mRows) {
-      if (columns.size() == 0) {
-        for (int i = 0; i < row.size(); i++) {
-          columns.add(new ArrayList<>())
-        }
-      }
-      for (int j = 0; j < row.size(); j++) {
-        try {
-          columns.get(j).add(row.get(j))
-        } catch(IndexOutOfBoundsException e) {
-          throw new ConversionException("Wrong number of columns found on row $rowCount", e)
-        }
-      }
-      rowCount++
+  /**
+   * Allows for "short form" manipulation of values e.g:
+   * myMatrix[1,2] = 42
+   */
+  void putAt(List<Number> where, Object value) {
+    putAt(where[0], where[1], value)
+  }
+
+  void putAt(Number rowIndex, Number colIndex, Object value) {
+    mColumns[colIndex.intValue()][rowIndex.intValue()] = value
+  }
+
+  /**
+   * Allows for "short form" manipulation of columns e.g:
+   * myMatrix["yearMonth", YearMonth] = ListConverter.toYearMonth(myMatrix["start_date"])
+   * If the column exists, the data will be replaced, otherwise a new column will be appended
+   *
+   * @param columnName the name of the column to replace or add
+   * @param type the class of the column data
+   * @param column a list of the column values
+   */
+  void putAt(List where, List<?> column) {
+    if (where.size() < 2) {
+      throw new IllegalArgumentException("Insufficient number of arguments, specify at least columnName, type and the list of values")
     }
-    mColumns = Collections.unmodifiableList(columns)
+    if (where.size() == 2) {
+      putAt(where[0] as String, where[1] as Class<?>, column)
+    } else if (where.size() == 3) {
+      putAt(where[0] as String, where[1] as Class<?>, where[2] as Integer, column)
+    } else {
+      throw new IllegalArgumentException("Too many arguments ${where.size()}, putAt understands maximim 4")
+    }
+  }
+
+
+  // Groovy semantics requires this to mutate, i.e. this does not work
+  // Matrix t2 = (table["yearMonth", YearMonth, 0] = toYearMonth(table["start_date"]))
+  // thus, we return void to make that fact obvious
+  void putAt(String columnName, Class<?> type, Integer index = null, List<?> column) {
+    if(rowCount() != column.size()) {
+      throw new IllegalArgumentException("Number of column values (${column.size()}) does not match number of rows (${rowCount()}) in this table")
+    }
+    if (columnNames().contains(columnName)) {
+      replaceColumn(columnName, type, column)
+    } else {
+      if (index == null) {
+        mColumns << column
+        mHeaders << columnName
+        mTypes << type
+      } else {
+        mColumns.add(index, column)
+        mHeaders.add(index, columnName)
+        mTypes.add(index, type)
+      }
+    }
   }
 
   @Override
@@ -658,7 +706,7 @@ class Matrix {
    */
   Matrix subset(Closure<Boolean> criteria) {
     def r = [] as List<List<?>>
-    mRows.each { row -> {
+    mColumns.transpose().each { row -> {
         if (criteria(row)) {
           r.add(row)
         }
@@ -749,7 +797,7 @@ class Matrix {
   Matrix apply(int columnNumber, Closure criteria, Closure function) {
     def updatedRows = []
     Class<?> updatedClass = null
-    mRows.each { row -> {
+    mColumns.transpose().each { row -> {
         if (criteria(row)) {
           def r = []
           for (int i = 0; i < columnCount(); i++) {
@@ -791,7 +839,7 @@ class Matrix {
   }
 
 
-  Matrix addColumn(String name, List<?> column, type = Object) {
+  Matrix addColumn(String name, type = Object, List<?> column) {
     List<List<?>> columns = []
     columns.addAll(mColumns)
     columns.add(column)
@@ -801,6 +849,28 @@ class Matrix {
     List<Class<?>> types = []
     types.addAll(mTypes)
     types.add(type)
+    return create(mName, headers,  Grid.transpose(columns), types)
+  }
+
+  /**
+   * add (insert) a column into the specified location of the Matrix
+   *
+   * @param name the name of the column
+   * @param column the list of column values
+   * @param type the type (class) of the data
+   * @param index where to put the column
+   * @return a new Matrix with the column inserted
+   */
+  Matrix addColumn(String name, type = Object, Integer index, List<?> column) {
+    List<List<?>> columns = []
+    columns.addAll(mColumns)
+    columns.add(index, column)
+    List<String> headers = []
+    headers.addAll(mHeaders)
+    headers.add(index, name)
+    List<Class<?>> types = []
+    types.addAll(mTypes)
+    types.add(index, type)
     return create(mName, headers,  Grid.transpose(columns), types)
   }
 
@@ -896,7 +966,7 @@ class Matrix {
    */
   @Deprecated
   Matrix sort(String columnName, Boolean descending = Boolean.FALSE) {
-    return sortBy(columnName, descending)
+    return orderBy(columnName, descending)
   }
 
   /**
@@ -943,7 +1013,7 @@ class Matrix {
     def comparator = new RowComparator(columnIndex(columnName))
     // copy all the rows
     List<List<?>> rows = []
-    for (row in mRows) {
+    for (row in mColumns.transpose()) {
       def vals = []
       vals.addAll(row)
       rows.add(vals)
@@ -973,7 +1043,7 @@ class Matrix {
   Matrix orderBy(Comparator comparator) {
     // copy all the rows
     List<List<?>> rows = []
-    for (row in mRows) {
+    for (row in mColumns.transpose()) {
       def vals = []
       vals.addAll(row)
       rows.add(vals)
@@ -1022,8 +1092,9 @@ class Matrix {
    *   }
    * @return an Iterator iterating over the rows (observations) in this table
    */
-  Iterator<List<?>> iterator() {
-    return mRows.iterator()
+  @Override
+  Iterator<Row> iterator() {
+    return new RowIterator(this)
   }
 
   /**f
@@ -1042,7 +1113,7 @@ class Matrix {
 
     if (!ignoreColumnNames && mHeaders != matrix.mHeaders) return false
     if (!ignoreName && mName != matrix.mName) return false
-    if (mRows != matrix.mRows) return false
+    if (mColumns != matrix.mColumns) return false
     if (!ignoreTypes && mTypes != matrix.mTypes) return false
 
     return true
@@ -1086,5 +1157,75 @@ class Matrix {
     } else {
       return 'No differences between the two matrices detected!'
     }
+  }
+
+
+  void replaceColumn(String columnName, Class<?> type = Object, List<?> values) {
+    def col = column(columnName)
+    col.clear()
+    col.addAll(values)
+    mTypes.set(columnIndex(columnName), type)
+  }
+
+  Matrix clone() {
+    return create(mName, mHeaders, mColumns.transpose(), mTypes)
+  }
+
+  /**
+   * Easy way to calculate and create a new column based on existing data.
+   *
+   * assuming two columns as follows:
+   *  a: [1,2,3,4,5],
+   *  b: [1.2,2.3,0.7,1.3,1.9]
+   * The equivalent to
+   * <code>
+   * def m = []
+   * columns(['a','b'].transpose().each {
+   *  x, y -> m << x - y
+   * }
+   * </code>
+   * ... can be done as follows:
+   * <code>
+   * def m = withColumns(['a', 'b']) { x, y -> x - y }
+   * </code>
+   * which will result in
+   * <code>
+   * [-0.2, -0.3, 2.3, 2.7, 3.1]
+   * </code>
+   *
+   * @param colNames the names of the columns to include
+   * @param operation the closure operation doing the calculation
+   * @return a list with the result of the operations
+   */
+  List<?> withColumns(List<String> colNames, Closure operation) {
+    def result = []
+    columns(colNames).transpose().each {
+      result << operation.call(it)
+    }
+    return result
+  }
+
+  /**
+   * @see #withColumns(List<String>, Closure)
+   * @param colIndices the column indices to include
+   * @param operation the closure operation doing the calculation
+   * @return a list with the result of the operations
+   */
+  List<?> withColumns(Number[] colIndices, Closure operation) {
+    return withColumns(colIndices as int[], operation)
+  }
+
+  /**
+   * @see #withColumns(List<String>, Closure)
+   * @param colIndices the column indices to include
+   * @param operation the closure operation doing the calculation
+   * @return a list with the result of the operations
+   */
+  List<?> withColumns(int[] colIndices, Closure operation) {
+    def result = []
+    columns(colIndices).transpose().each {
+      result << operation.call(it)
+    }
+    return result
   }
 }

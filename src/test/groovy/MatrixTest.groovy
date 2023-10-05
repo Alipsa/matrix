@@ -95,8 +95,8 @@ class MatrixTest {
         )
         def struct = Stat.str(empData)
         assertEquals(['5 observations of 4 variables'], struct['Matrix'])
-        assertArrayEquals(['Integer', '1', '2', '3', '4'].toArray(), struct['emp_id'].toArray())
-        assertArrayEquals(['LocalDate', '2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11'].toArray(), struct['start_date'].toArray())
+        assertIterableEquals(['Integer', '1', '2', '3', '4'], struct['emp_id'])
+        assertIterableEquals(['LocalDate', '2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11'], struct['start_date'])
     }
 
     @Test
@@ -111,7 +111,7 @@ class MatrixTest {
         file.text = data*.join(',').join('\n')
 
         def table = Matrix.create(file)
-        assertArrayEquals(data[0] as String[], table.columnNames() as String[])
+        assertIterableEquals(data[0], table.columnNames())
         assertEquals(data[1][1], table[0, 1] as String)
         assertEquals('Team SD Worx', table[2, 3])
 
@@ -121,7 +121,7 @@ class MatrixTest {
                 '"',
         )
         assertEquals('PlantGrowth', plantGrowth.name)
-        assertArrayEquals(['id', 'weight','group'].toArray(), plantGrowth.columnNames().toArray())
+        assertIterableEquals(['id', 'weight','group'], plantGrowth.columnNames())
         def row30 = plantGrowth.findFirstRow('id', '30')
         assertEquals('5.26', row30[1])
         assertEquals('trt2', row30[2])
@@ -189,10 +189,10 @@ class MatrixTest {
 
         // Same thing using subset
         def subSet = table.subset('place', { it > 1 })
-        assertArrayEquals(table.rows(1..2).toArray(), subSet.rows().toArray())
+        assertIterableEquals(table.rows(1..2), subSet.rows())
 
         def subSet2 = table.subset {it[0] > 1}
-        assertArrayEquals(table.rows(1..2).toArray(), subSet2.rows().toArray())
+        assertIterableEquals(table.rows(1..2), subSet2.rows())
 
         def subSet3 = table.subset {
             String name = it[1]
@@ -266,7 +266,7 @@ class MatrixTest {
             def date = it[2] as LocalDate
             return date.isAfter(LocalDate.of(2022,1, 1))
         }
-        assertArrayEquals([1,2].toArray(), selection.toArray())
+        assertIterableEquals([1,2], selection)
     }
 
     @Test
@@ -294,7 +294,7 @@ class MatrixTest {
         def data = [
             'foo': [1, 2, 3],
             'firstname': ['Lorena', 'Marianne', 'Lotte'],
-            'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
         ]
 
         def table = Matrix.create(data, [int, String, LocalDate])
@@ -317,7 +317,7 @@ class MatrixTest {
             def date = it[2] as LocalDate
             return date.isAfter(LocalDate.of(2022,1, 1))
         }
-        assertArrayEquals([1,2].toArray(), selection.toArray())
+        assertIterableEquals([1,2], selection)
         def foo = table.apply("place", selection, { it * 2})
         //println(foo.content())
         assertEquals(4, foo[1, 0])
@@ -347,12 +347,30 @@ class MatrixTest {
             start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
             [int, String, Number, LocalDate]
         )
-        def table = empData.addColumn("yearMonth", toYearMonth(empData["start_date"]), YearMonth)
+        def table = empData.addColumn("yearMonth", YearMonth, toYearMonth(empData["start_date"]))
         assertEquals(empData.columnCount() + 1, table.columnCount())
         assertEquals("yearMonth", table.columnNames()[table.columnCount()-1])
         assertEquals(YearMonth, table.columnType("yearMonth"))
         assertEquals(YearMonth.of(2012, 1), table[0,4])
         assertEquals(YearMonth.of(2015, 3), table[4,4])
+
+        // Append a new column to the end
+        Matrix table2 = empData.clone()
+        table2["yearMonth", YearMonth] = toYearMonth(table2["start_date"])
+        assertEquals(empData.columnCount() + 1, table2.columnCount())
+        assertEquals("yearMonth", table2.columnNames()[table2.columnCount()-1])
+        assertEquals(YearMonth, table2.columnType("yearMonth"))
+        assertEquals(YearMonth.of(2012, 1), table2[0,4])
+        assertEquals(YearMonth.of(2015, 3), table2[4,4])
+
+        // Insert a new column first
+        Matrix table3 = empData.clone()
+        table3["yearMonth", YearMonth, 0] = toYearMonth(table3["start_date"])
+        assertEquals(empData.columnCount() + 1, table3.columnCount())
+        assertEquals("yearMonth", table3.columnNames()[0])
+        assertEquals(YearMonth, table3.columnType("yearMonth"))
+        assertEquals(YearMonth.of(2012, 1), table3[0,0])
+        assertEquals(YearMonth.of(2015, 3), table3[4,0])
     }
 
     @Test
@@ -365,11 +383,7 @@ class MatrixTest {
             [int, String, Number, LocalDate]
         )
 
-        empData = empData.addColumn(
-            "yearMonth",
-            ListConverter.toYearMonth(empData["start_date"]),
-            YearMonth
-        )
+        empData = empData.addColumn("yearMonth", YearMonth, toYearMonth(empData["start_date"]))
         assertEquals(YearMonth, empData[0,4].class, "type of the added column")
         assertEquals(YearMonth, empData.columnType("yearMonth"), "claimed type of the added column")
 
@@ -422,8 +436,8 @@ class MatrixTest {
         //println(empList.content())
         assertEquals(2, empList.columnCount(), "Number of columns after drop")
         assertEquals(5, empList.rowCount(), "Number of rows after drop")
-        assertArrayEquals(["emp_id",	"emp_name"].toArray(), empList.columnNames().toArray(), "column names after drop")
-        assertArrayEquals([Integer, String].toArray(), empList.columnTypes().toArray(), "Column types after drop")
+        assertIterableEquals(["emp_id",	"emp_name"], empList.columnNames(), "column names after drop")
+        assertIterableEquals([Integer, String], empList.columnTypes(), "Column types after drop")
     }
 
     @Test
@@ -439,8 +453,8 @@ class MatrixTest {
         //println(empList.content())
         assertEquals(3, empList.columnCount(), "Number of columns after drop")
         assertEquals(5, empList.rowCount(), "Number of rows after drop")
-        assertArrayEquals(["emp_id", "emp_name", "start_date"].toArray(), empList.columnNames().toArray(), "column names after drop")
-        assertArrayEquals([Integer, String, LocalDate].toArray(), empList.columnTypes().toArray(), "Column types after drop")
+        assertIterableEquals(["emp_id", "emp_name", "start_date"], empList.columnNames(), "column names after drop")
+        assertIterableEquals([Integer, String, LocalDate], empList.columnTypes(), "Column types after drop")
     }
 
     @Test
@@ -455,10 +469,22 @@ class MatrixTest {
 
         int i = 1
         for (row in empData) {
-            assertEquals(i, row[0])
-            assertEquals(empData[i-1, 'emp_name'], row[1])
+            assertEquals(i, row[0], String.valueOf(row))
+            assertEquals(empData[i-1, 'emp_name'], row[1], String.valueOf(row))
             i++
         }
+
+        for (row in empData) {
+            if (row[2] > 600) {
+                row[2] = row[2] - 600
+            }
+        }
+
+        assertEquals(23.3, empData[0, 2], empData.toMarkdown())
+        assertEquals(515.2, empData[1, 2], empData.toMarkdown())
+        assertEquals(11.0, empData[2, 2], empData.toMarkdown())
+        assertEquals(129.0, empData[3, 2], empData.toMarkdown())
+        assertEquals(243.25, empData[4, 2], empData.toMarkdown())
     }
 
     @Test
@@ -619,12 +645,26 @@ class MatrixTest {
     }
 
     boolean deleteDirectory(File directoryToBeDeleted) {
-        File[] allContents = directoryToBeDeleted.listFiles();
+        File[] allContents = directoryToBeDeleted.listFiles()
         if (allContents != null) {
             for (File file : allContents) {
-                deleteDirectory(file);
+                deleteDirectory(file)
             }
         }
-        return directoryToBeDeleted.delete();
+        return directoryToBeDeleted.delete()
+    }
+
+    @Test
+    void testWithColumns() {
+        def table = Matrix.create([
+            a: [1,2,3,4,5],
+            b: [1.2,2.3,0.7,1.3,1.9]
+        ], [Integer, BigDecimal])
+
+        def m = table.withColumns(['a', 'b']) { x, y -> x - y }
+        assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], m)
+
+        def n = table.withColumns([0,1] as Integer[]) { x, y -> x - y }
+        assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], n)
     }
 }
