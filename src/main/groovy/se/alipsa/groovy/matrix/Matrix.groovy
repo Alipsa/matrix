@@ -15,10 +15,24 @@ import static se.alipsa.groovy.matrix.util.ClassUtils.*
  * It is essentially a Grid i.e. [][] (List<List<?>>) but also has a header and a name
  * and several convenience methods to work with it.
  *
- * TODO: consider using Collections.checkedList to create a type checked version of each column
+ * For row based data, use one of the static create methods to create the Matrix.
+ * For column based, use one of the constructors to create the Matrix.
+ *
+ * Matrix data can be read using the matrix[row, column] notation e.g. <code>myMatrix[1,3]</code>
+ * for the 4:th variable of the second observation
+ * or matrix[column] for the whole column e.g.
+ * <code>myMatrix[1]</code> for the second column, or <code>myMatrix['foo']</code> for the column named foo.
+ *
+ * Similarly, you use the the same notation to assign / change values e.g.
+ * <code>myMatrix[0,1] = 23</code> to assign the value 23 to the second variable of the first observation
+ * or to assign / create a column <code> myMatrix['bar'] = [1..12]</code> to assign the range 1 to 12 to the column bar
+ *
+ *
  *
  */
 class Matrix implements Iterable {
+
+  // TODO: consider using Collections.checkedList to create a type checked version of each column
 
   private List<String> mHeaders
   private List<Class<?>> mTypes
@@ -48,14 +62,7 @@ class Matrix implements Iterable {
     Matrix table = new Matrix()
     table.mHeaders = headerList.collect()
     table.mColumns = rowList.transpose().collect()
-    if (dataTypesOpt.length > 0) {
-      table.mTypes = convertPrimitivesToWrapper(dataTypesOpt[0])
-      if (headerList.size() != table.mTypes.size()) {
-        throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${table.mTypes.size()})")
-      }
-    } else {
-      table.mTypes = [Object.class] * headerList.size()
-    }
+    table.mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
     return table
   }
 
@@ -184,6 +191,51 @@ class Matrix implements Iterable {
   }
 
   private Matrix() {}
+
+  Matrix(String name, List<String> headerList, List<List<?>> columnList, List<Class<?>>... dataTypesOpt) {
+    mName = name
+    mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
+    mHeaders = headerList.collect()
+    mColumns = []
+    columnList.eachWithIndex { List<?> column, int i ->
+      //mColumns.add(Collections.checkedList(column, mTypes[i]))
+      mColumns.add(column.collect())
+    }
+  }
+
+  Matrix(String name, Map<String, List<String>> columns, List<Class<?>>... dataTypesOpt) {
+    mName = name
+    mHeaders = []
+    mColumns = []
+    columns.each {k, v ->
+      mHeaders << k
+      mColumns << v.collect()
+    }
+    mTypes = sanitizeColumnTypes(mHeaders, dataTypesOpt)
+  }
+
+  Matrix(List<List<?>> columnList) {
+    mHeaders = []
+    mColumns = []
+    columnList.eachWithIndex { List<?> column, int i ->
+      mHeaders << ("v$i" as String)
+      mColumns << column.collect()
+    }
+    mTypes = [Object.class] * columnList.size()
+  }
+
+  private static List<Class<?>> sanitizeColumnTypes(List<String> headerList, List<Class<?>>... dataTypesOpt) {
+    List<Class<?>> types
+    if (dataTypesOpt.length > 0) {
+      types = convertPrimitivesToWrapper(dataTypesOpt[0])
+      if (headerList.size() != types.size()) {
+        throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${types.size()})")
+      }
+    } else {
+      types = [Object.class] * headerList.size()
+    }
+    return types
+  }
 
   List<String> columnNames() {
     return mHeaders

@@ -1,7 +1,6 @@
 import se.alipsa.groovy.datautil.SqlUtil
 import se.alipsa.groovy.matrix.Converter
 import se.alipsa.groovy.matrix.Grid
-import se.alipsa.groovy.matrix.ListConverter
 import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.Matrix
 
@@ -20,6 +19,53 @@ import static se.alipsa.groovy.matrix.ValueConverter.asYearMonth
 
 
 class MatrixTest {
+
+    @Test
+    void testMatrixConstructors() {
+        def empData = new Matrix('empData',
+                [
+                emp_id: 1..5,
+                emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+                salary: [623.3,515.2,611.0,729.0,843.25],
+                start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+                ],
+                [int, String, Number, LocalDate]
+        )
+        assertEquals('empData', empData.getName())
+        assertEquals(1, empData[0,0])
+        assertEquals("Dan", empData[1,1])
+        assertEquals(611.0, empData[2,2])
+        assertEquals(LocalDate.of(2015, 3, 27), empData[4,3])
+        assertIterableEquals([Integer, String, Number, LocalDate], empData.columnTypes())
+
+        def ed = new Matrix("ed",
+                ['id', 'name', 'salary', 'start'], [
+                    1..5,
+                    ["Rick","Dan","Michelle","Ryan","Gary"],
+                    [623.3,515.2,611.0,729.0,843.25],
+                    toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+                ]
+        )
+        assertEquals('ed', ed.getName())
+        assertEquals(1, ed[0,0])
+        assertEquals("Dan", ed[1,1])
+        assertEquals(611.0, ed[2,2])
+        assertEquals(LocalDate.of(2015, 3, 27), ed[4,3])
+        assertIterableEquals([Object, Object, Object, Object], ed.columnTypes())
+
+        def e = new Matrix([
+                1..5,
+                ["Rick","Dan","Michelle","Ryan","Gary"],
+                [623.3,515.2,611.0,729.0,843.25],
+                toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+            ])
+        assertNull(e.getName())
+        assertEquals(1, e[0,0])
+        assertEquals("Dan", e[1,1])
+        assertEquals(611.0, e[2,2])
+        assertEquals(LocalDate.of(2015, 3, 27), e[4,3])
+        assertIterableEquals([Object, Object, Object, Object], ed.columnTypes())
+    }
 
     @Test
     void testTableCreationFromMatrix() {
