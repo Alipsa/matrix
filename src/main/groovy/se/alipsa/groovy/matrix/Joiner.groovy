@@ -1,6 +1,6 @@
 package se.alipsa.groovy.matrix
 
-class Merger {
+class Joiner {
 
     /**
      * Note: The implementation is embarrassingly crude and will be terrible for large matrices

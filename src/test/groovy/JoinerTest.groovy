@@ -1,10 +1,10 @@
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.Merger
+import se.alipsa.groovy.matrix.Joiner
 
 import static org.junit.jupiter.api.Assertions.*
 
-class MergerTest {
+class JoinerTest {
 
     @Test
     void testInnerJoin() {
@@ -20,7 +20,7 @@ class MergerTest {
                 lastName: ["Smith", "Carpenter", "Bowman", "Carson", "McDougal"]
         ])
 
-        def merged = Merger.merge(e, f, 'id')
+        def merged = Joiner.merge(e, f, 'id')
         //println merged.toMarkdown()
         assertIterableEquals([1, 'Rick', 623.3, '2012-01-01', 'Smith'], merged.row(0))
         assertIterableEquals([5, 'Gary', 843.25, '2015-03-27', 'McDougal'], merged.row(4))
@@ -47,7 +47,7 @@ class MergerTest {
                 employeeId: 2..4,
                 lastName: ["Carpenter", "Bowman", "Carson"]
         ])
-        def leftJoined = Merger.merge(e, g, [x: 'id', y:'employeeId'], true)
+        def leftJoined = Joiner.merge(e, g, [x: 'id', y:'employeeId'], true)
         //println leftJoined.toMarkdown()
         assertEquals([1, 'Rick', 623.3, '2012-01-01', null], leftJoined.row(0))
         assertEquals([2, 'Dan', 515.2, '2013-09-23', 'Carpenter'], leftJoined.row(1))
