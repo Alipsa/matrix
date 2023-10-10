@@ -329,8 +329,28 @@ class Matrix implements Iterable {
     return rows
   }
 
-  List<List<?>> rows() {
-    return mColumns.transpose()
+  List<Row> rows(Closure criteria) {
+    def r = []
+    mColumns.transpose().eachWithIndex { List<?> it, int i ->
+      if (criteria(it)) {
+        r << new Row(i, it, this)
+      }
+    }
+    return r
+  }
+
+  List<Row> rows() {
+    int nRows = mColumns[0].size()
+    Map<Integer, Row> r = [:]
+    for (Integer i = 0; i < nRows; i++) {
+      r[i] = new Row(i, this)
+    }
+    mColumns.eachWithIndex { List<?> column, int col ->
+      for (Integer row = 0; row < nRows; row++) {
+        r.get(row).addElement(column[row])
+      }
+    }
+    return r.values() as List
   }
 
   /**
@@ -1000,6 +1020,13 @@ class Matrix implements Iterable {
     return create(mName, heads, Grid.transpose(cols), types)
   }
 
+  /**
+   * split is used t create a map of matrices for each unique value in the column.
+   * This is useful for e.g. countBy or sumBy (see Stat.countBy() and Stat.countBy())
+   *
+   * @param columnName
+   * @return a map of matrices for each unique value in the column where the key is the value
+   */
   Map<?, Matrix> split(String columnName) {
     List<?> col = column(columnName)
     Map<Object, List<Integer>> groups = new HashMap<>()
@@ -1015,7 +1042,7 @@ class Matrix implements Iterable {
 
   /**
    * @deprecated Use orderBy instead
-   */
+   *
   @Deprecated
   Matrix sort(String columnName, Boolean descending = Boolean.FALSE) {
     return orderBy(columnName, descending)
@@ -1023,7 +1050,7 @@ class Matrix implements Iterable {
 
   /**
    * @deprecated Use orderBy instead
-   */
+   *
   @Deprecated
   Matrix sortBy(String columnName, Boolean descending = Boolean.FALSE) {
     orderBy(columnName, descending)
@@ -1031,7 +1058,7 @@ class Matrix implements Iterable {
 
   /**
    * @deprecated Use orderBy instead
-   */
+   *
   @Deprecated
   Matrix sortBy(LinkedHashMap<String, Boolean> columnsAndDirection) {
     orderBy(columnsAndDirection)
@@ -1039,11 +1066,12 @@ class Matrix implements Iterable {
 
   /**
    * @deprecated Use orderBy instead
-   */
+   *
   @Deprecated
   Matrix sortBy(Comparator comparator) {
     orderBy(comparator)
   }
+   */
 
   /**
    * Sort this table in ascending  order by the columns specified
@@ -1214,13 +1242,19 @@ class Matrix implements Iterable {
 
   void replaceColumn(String columnName, Class<?> type = Object, List<?> values) {
     def col = column(columnName)
+    if (values == null) {
+      throw new IllegalArgumentException('The list of values cannot be null')
+    }
+    if (col.size() != values.size()) {
+      throw new IllegalArgumentException("The size of the column is ${col.size()} but values only contains ${values.size()} elements")
+    }
     col.clear()
     col.addAll(values)
     mTypes.set(columnIndex(columnName), type)
   }
 
   Matrix clone() {
-    return create(mName, mHeaders, mColumns.transpose(), mTypes)
+    return new Matrix(mName, mHeaders, mColumns, mTypes)
   }
 
   /**
@@ -1271,7 +1305,7 @@ class Matrix implements Iterable {
    * @see #withColumns(List<String>, Closure)
    * @param colIndices the column indices to include
    * @param operation the closure operation doing the calculation
-   * @return a list with the result of the operations
+   * @return a list (a new column) with the result of the operations
    */
   List<?> withColumns(int[] colIndices, Closure operation) {
     def result = []
