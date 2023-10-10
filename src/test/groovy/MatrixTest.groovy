@@ -382,6 +382,11 @@ class MatrixTest {
         assertEquals(6, bar[2, 0])
         assertEquals(LocalDate, bar.columnType(2), "start column type")
         assertEquals(Integer, bar.columnType(0), "place column type")
+
+        def r = table.rows { row ->
+            row[table.columnIndex('place')] == 2
+        }
+        assertEquals([2, 'Marianne', LocalDate.parse('2022-07-10')], r[0])
     }
 
     @Test
@@ -433,22 +438,30 @@ class MatrixTest {
         assertEquals(YearMonth, empData[0,4].class, "type of the added column")
         assertEquals(YearMonth, empData.columnType("yearMonth"), "claimed type of the added column")
 
-        def counts = Stat.countBy(empData, "yearMonth")
-        assertEquals(YearMonth, counts[0,0] .class, "type of the count column")
+        def counts = Stat.countBy(empData, "yearMonth").orderBy('yearMonth')
+        assertEquals(YearMonth, counts[0,0].class, "type of the count column")
         assertEquals(YearMonth, counts.columnType("yearMonth"), "claimed type of the count column")
 
-        def sums = Stat.sumBy(empData, "salary", "yearMonth")
-        assertEquals(YearMonth, sums[0,0] .class, "type of the sums column")
+        assertEquals(2, counts.subset('yearMonth', {it == YearMonth.of(2019,5)})[0,1])
+        assertEquals(1, counts.subset('yearMonth', {it == YearMonth.of(2019,3)})['yearMonth_count'][0])
+        assertEquals(2, counts[0, 'yearMonth_count'])
+
+        def sums = Stat.sumBy(empData, "salary", "yearMonth").orderBy("yearMonth", true)
+        assertEquals(YearMonth, sums[0,0].class, "type of the sums column")
         assertEquals(YearMonth, sums.columnType("yearMonth"), "claimed type of the sums column")
+        assertEquals(611.0 + 729.0, sums[0, 1], sums.content())
+        assertEquals(843.25, sums[1, 1], sums.content())
+        assertEquals(623.3 + 515.2, sums[2, 1], sums.content())
 
         def salaryPerYearMonth = counts
-            .addColumns(sums, "salary")
-            .orderBy("yearMonth")
-        assertEquals(asYearMonth("2019-01"), salaryPerYearMonth[0, 0])
-        assertEquals(623.3 + 515.2, salaryPerYearMonth[0, 2])
-        assertEquals(2, salaryPerYearMonth[0, 1])
-        assertEquals(843.25, salaryPerYearMonth[1, 2])
-        assertEquals(1, salaryPerYearMonth[1, 1])
+                .orderBy("yearMonth", true)
+                .addColumns(sums, "salary")
+
+        assertEquals(asYearMonth("2019-05"), salaryPerYearMonth[0, 0], salaryPerYearMonth.content())
+        assertEquals(611.0 + 729.0, salaryPerYearMonth[0, 2], salaryPerYearMonth.content())
+        assertEquals(2, salaryPerYearMonth[0, 1], salaryPerYearMonth.content())
+        assertEquals(843.25, salaryPerYearMonth[1, 2], salaryPerYearMonth.content())
+        assertEquals(1, salaryPerYearMonth[1, 1], salaryPerYearMonth.content())
     }
 
     @Test

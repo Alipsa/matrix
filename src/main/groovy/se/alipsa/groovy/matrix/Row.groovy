@@ -1,9 +1,19 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.PackageScope
+
 class Row implements List {
     private int rowNumber
     private List<?> content
     private Matrix parent
+
+    /** this method must be package scoped as only a Matrix should be able to use it */
+    @PackageScope
+    Row(int rowNumber, Matrix parent) {
+        this.rowNumber = rowNumber
+        this.content = []
+        this.parent = parent
+    }
 
     Row(int rowNumber, List<?> rowContent, Matrix parent) {
         this.rowNumber = rowNumber
@@ -152,5 +162,21 @@ class Row implements List {
     @Override
     String toString() {
         return String.valueOf(content)
+    }
+
+    /**
+     * specific package scope mutating metod that does not change the backing parent
+     * used to construct a row and adding the data afterwards.
+     *
+     * @param e the element to add
+     */
+    @PackageScope
+    void addElement(Object e) {
+        content << e
+    }
+
+    @PackageScope
+    void setElement(int index, Object e) {
+        content.set(index, e)
     }
 }

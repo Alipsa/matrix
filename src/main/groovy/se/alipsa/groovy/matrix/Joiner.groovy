@@ -11,6 +11,7 @@ class Joiner {
      * @param all true for a left join, false for an inner join
      * @return a new matrix with the two ones joined
      */
+    // TODO: investigate if it is possible to use GINQ for this
     static Matrix merge(Matrix x, Matrix y, Map<String, String> by, boolean all = false) {
         def xColIndex = x.columnIndex(by.x)
         def yColIndex = y.columnIndex(by.y)
@@ -18,6 +19,8 @@ class Joiner {
         def nYcol = y.columnCount()
         x.each{ List row->
             boolean added = false
+            // maybe it would be faster to copy y and then remove the rows that are found so the
+            // search space gets smaller for each hit
             for (List yRow in y) {
                 if (row[xColIndex] == yRow[yColIndex]) {
                     def yr = yRow.collect()
