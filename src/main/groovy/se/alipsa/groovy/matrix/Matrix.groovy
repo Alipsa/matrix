@@ -339,6 +339,11 @@ class Matrix implements Iterable {
     return r
   }
 
+  /**
+   *
+   * @return a list of all the rows in this Matrix.
+   * Changes to values in a row is reflected back to the Matrix.
+   */
   List<Row> rows() {
     int nRows = mColumns[0].size()
     Map<Integer, Row> r = [:]
@@ -351,6 +356,14 @@ class Matrix implements Iterable {
       }
     }
     return r.values() as List
+  }
+
+  /**
+   *
+   * @return a detached list of rows where each row is a list of objects
+   */
+  List<List<Object>> rowList() {
+    return mColumns.transpose()
   }
 
   /**

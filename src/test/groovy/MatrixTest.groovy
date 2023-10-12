@@ -99,6 +99,13 @@ class MatrixTest {
         ], tr.rows(), table.content())
         assertEquals(4, tr.columnTypes().size(), "Column types")
 
+        assertEquals([
+                [1, 2, 3, 4],
+                [4563.153, 380.263, 4.938, 101.1],
+                [3385.593, 282.133, 3.664, 123.123],
+                [2700, 225, 2.922, 1010.12]
+        ], tr.rowList(), table.content())
+
         def tr2 = table.transpose(true)
         assertEquals([
             ["Year", 1, 2, 3, 4],

@@ -75,7 +75,21 @@ class Grid {
         data.toString()
     }
 
+    /**
+     *
+     * @return the list of rows in the grid
+     * Mutable, i.e. changes to the result is reflected in the Grid
+     */
     List<List<?>> getData() {
+        return data
+    }
+
+    /**
+     *
+     * @return the list of rows in the grid
+     * Mutable, i.e. changes to the result is reflected in the Grid
+     */
+    List<List<Object>> getRowList() {
         return data
     }
 

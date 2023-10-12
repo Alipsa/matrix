@@ -116,6 +116,13 @@ class GridTest {
                 [3.0, 2, 7],
                 [Math.PI, 4, 5]
         ], transpose(foo).data)
+
+        // ensure that transpose did not change anything in the Grid
+        assertEquals([
+                [12.0, 3.0, Math.PI],
+                ["1,9", 2, 4],
+                ["bla", 7, 5]
+        ], foo.getRowList())
     }
 
     @Test

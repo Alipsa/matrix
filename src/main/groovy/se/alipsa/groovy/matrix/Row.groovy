@@ -2,7 +2,7 @@ package se.alipsa.groovy.matrix
 
 import groovy.transform.PackageScope
 
-class Row implements List {
+class Row implements List<Object> {
     private int rowNumber
     private List<?> content
     private Matrix parent
