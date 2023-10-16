@@ -253,22 +253,35 @@ class Matrix implements Iterable {
     return columnNames()[index]
   }
 
-  void renameColumn(String before, String after) {
-    List<String> temp = []
-    temp.addAll(mHeaders)
-    temp[temp.indexOf(before)] = after
-    //mHeaders = Collections.unmodifiableList(temp)
-    mHeaders = temp
+  /**
+   * renames the column and returns the table to allow for chaining
+   *
+   * @param before the existing column name
+   * @param after the new column name
+   * @return the (mutated) table to allow for chaining
+   */
+  Matrix renameColumn(String before, String after) {
+    renameColumn(columnIndex(before), after)
+    this
   }
 
-  void renameColumn(int columnIndex, String after) {
-    List<String> temp = []
-    temp.addAll(mHeaders)
-    temp[columnIndex] = after
-    //mHeaders =  Collections.unmodifiableList(temp)
-    mHeaders = temp
+  /**
+   * renames the column and returns the table to allow for chaining
+   *
+   * @param columnIndex the index of the column to rename
+   * @param after the new column name
+   * @return the (mutated) table to allow for chaining
+   */
+  Matrix renameColumn(int columnIndex, String after) {
+    mHeaders.set(columnIndex, after)
+    this
   }
 
+  /**
+   *
+   * @param columnName the column name to match
+   * @return the index (position) of the columnName
+   */
   int columnIndex(String columnName) {
     return mHeaders.indexOf(columnName)
   }
