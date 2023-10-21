@@ -98,6 +98,10 @@ class Stat {
     }
 
     static List<Number> sum(Matrix matrix, IntRange columnIndices) {
+        return sum(matrix, columnIndices as List)
+    }
+
+    static List<Number> sum(Matrix matrix, List<Integer> columnIndices) {
         List<Number> sums = []
         List<String> columns
         columnIndices.each { colIdx ->

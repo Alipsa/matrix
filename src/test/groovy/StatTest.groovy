@@ -189,10 +189,10 @@ class StatTest {
                 v1: [1.1, 1, 0.9],
                 v2: 1..3 as IntRange
             ], [Number, double, Integer])
-        def sumRow = sum(table)
-        assertIterableEquals([5.3, 3.0d, 6i], sumRow)
+        assertIterableEquals([5.3, 3.0d, 6i], sum(table))
         assertIterableEquals([3.0d, 6i], sum(table, 'v1', 'v2'))
         assertIterableEquals([3.0d, 6i], sum(table, 1..2))
+        assertIterableEquals([5.3, 6i], sum(table, [0,2]))
     }
 
     @Test
