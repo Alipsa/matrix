@@ -81,6 +81,33 @@ class Stat {
         return s
     }
 
+    static List<Number> sum(Matrix matrix, String... columnNames) {
+        List<Number> sums = []
+        List<String> columns
+        if (columnNames.length == 0) {
+            columns = matrix.columnNames()
+        } else {
+            columns = columnNames as List<String>
+        }
+        for (columnName in columns) {
+            def column = matrix.column(columnName)
+            def type = matrix.columnType(columnName)
+            sums << sum(column).asType(type)
+        }
+        return sums
+    }
+
+    static List<Number> sum(Matrix matrix, IntRange columnIndices) {
+        List<Number> sums = []
+        List<String> columns
+        columnIndices.each { colIdx ->
+            def column = matrix.column(colIdx)
+            def type = matrix.columnType(colIdx)
+            sums << sum(column).asType(type)
+        }
+        return sums
+    }
+
 
     static <T extends Number> T sum(List<List<T>> grid, Integer colNum) {
         return sum(grid, [colNum])[0]

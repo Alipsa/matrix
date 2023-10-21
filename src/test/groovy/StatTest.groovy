@@ -182,6 +182,20 @@ class StatTest {
     }
 
     @Test
+    void testSum() {
+        def table = Matrix.create('Test',
+            [
+                v0: [0.3, 2, 3],
+                v1: [1.1, 1, 0.9],
+                v2: 1..3 as IntRange
+            ], [Number, double, Integer])
+        def sumRow = sum(table)
+        assertIterableEquals([5.3, 3.0d, 6i], sumRow)
+        assertIterableEquals([3.0d, 6i], sum(table, 'v1', 'v2'))
+        assertIterableEquals([3.0d, 6i], sum(table, 1..2))
+    }
+
+    @Test
     void testSumBy() {
         def empData = Matrix.create(
             emp_id: 1..5,
