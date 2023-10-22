@@ -19,6 +19,13 @@ class GridTest {
         assertEquals(1, grid[0][0])
         assertEquals("bar", grid[1,1])
         assertEquals(4.21, g2[2,2])
+
+        grid = new Grid(0, 5, 3)
+        assertEquals(0, grid[0, 0])
+        assertEquals(0, grid[4, 2])
+        assertEquals(5, grid.getRowList().size())
+        assertEquals(3, grid.getRowList()[0].size())
+        assertEquals(3, grid.getRowList()[4].size())
     }
 
     @Test

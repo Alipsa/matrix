@@ -29,8 +29,15 @@ class Grid {
 
     Grid(int nrow, int ncol) {
         data = new ArrayList<>(nrow)
-        for (row in data) {
+        for (row in 1..nrow) {
             data << new ArrayList<>(ncol)
+        }
+    }
+
+    Grid(Number value, int nrow, int ncol) {
+        data = new ArrayList<>(nrow)
+        for (row in 1..nrow) {
+            data << [value]*ncol
         }
     }
 
