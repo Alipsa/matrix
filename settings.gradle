@@ -1,2 +1,9 @@
 rootProject.name = 'matrix'
+include 'matrix-core'
+include 'matrix-stats'
+include 'matrix-csv'
+include 'matrix-datasets'
+include 'matrix-json'
+include 'matrix-spreadsheet'
+include 'matrix-charts'
 
