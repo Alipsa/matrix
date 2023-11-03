@@ -4,6 +4,7 @@ plugins {
   id 'groovy'
   id 'java-library'
   //id 'org.openjfx.javafxplugin' version '0.0.13'
+  id 'maven-publish'
   id 'signing'
 }
 
@@ -85,13 +86,11 @@ task javadocJar(type: Jar, dependsOn: groovydoc) {
   from groovydoc.destinationDir
 }
 
-
 task sourcesJar(type: Jar, dependsOn: classes) {
   archiveClassifier.set 'sources'
   from sourceSets.main.allSource
 }
 
-/*
 publishing {
   publications {
     maven(MavenPublication) {
@@ -101,11 +100,11 @@ publishing {
       pom {
         name = 'Groovy Matrix Plotting'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/charts"
+        url = "https://github.com/Alipsa/matrix/matrix-charts"
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/charts/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-charts/master/LICENSE'
           }
         }
         developers {
@@ -115,16 +114,15 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/charts/tree/master'
-          connection = 'scm:git:https://github.com/Alipsa/charts.git'
-          developerConnection = 'scm:git:https://github.com/Alipsa/charts.git'
+          url = 'https://github.com/Alipsa/matrix/matrix-charts/tree/master'
+          connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
       }
     }
   }
 }
 
- */
 
 signing {
   if (project.properties['signing.keyId'] != null) {

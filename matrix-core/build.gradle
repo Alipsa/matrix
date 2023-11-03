@@ -41,22 +41,23 @@ test {
   useJUnitPlatform()
 }
 
-//Maven Central uploads
 task javadocJar(type: Jar, dependsOn: groovydoc) {
-  archiveClassifier.set('javadoc')
+  archiveClassifier.set 'javadoc'
   from groovydoc.destinationDir
 }
 
-
 task sourcesJar(type: Jar, dependsOn: classes) {
-  archiveClassifier.set('sources')
+  archiveClassifier.set 'sources'
   from sourceSets.main.allSource
 }
 
+
+//Maven Central uploads
 publishing {
   publications {
     maven(MavenPublication) {
       from components.java
+
       artifact(javadocJar)
       artifact(sourcesJar)
       pom {
@@ -66,7 +67,7 @@ publishing {
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-core/main/LICENSE'
           }
         }
         developers {
@@ -76,7 +77,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/tree/main'
+          url = 'https://github.com/Alipsa/matrix/matrix-core/tree/main'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
@@ -91,25 +92,5 @@ signing {
     sign publishing.publications.maven
   } else {
     project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
-  }
-}
-
-def isNonStable = { String version ->
-  def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
-  def regex = /^[0-9,.v-]+(-r)?$/
-  return !stableKeyword && !(version ==~ regex)
-}
-
-// https://github.com/ben-manes/gradle-versions-plugin
-tasks.named("dependencyUpdates").configure {
-  gradleReleaseChannel = "current"
-  resolutionStrategy {
-    componentSelection {
-      all {
-        if (isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)) {
-          reject('Release candidate')
-        }
-      }
-    }
   }
 }

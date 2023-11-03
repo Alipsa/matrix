@@ -96,11 +96,11 @@ publishing {
             pom {
                 name = 'Common datasets'
                 description = "${project.description}"
-                url = "https://github.com/Alipsa/matrix-datasets"
+                url = "https://github.com/Alipsa/matrix/matrix-datasets"
                 licenses {
                     license {
                         name = 'MIT License'
-                        url = 'https://raw.githubusercontent.com/Alipsa/matrix-datasets/master/LICENSE'
+                        url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-datasets/master/LICENSE'
                     }
                 }
                 developers {
@@ -110,9 +110,9 @@ publishing {
                     }
                 }
                 scm {
-                    url = 'https://github.com/Alipsa/matrix-datasets/tree/master'
-                    connection = 'scm:git:https://github.com/Alipsa/matrix-datasets.git'
-                    developerConnection = 'scm:git:https://github.com/Alipsa/matrix-datasets.git'
+                    url = 'https://github.com/Alipsa/matrix/matrix-datasets/tree/master'
+                    connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+                    developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
                 }
             }
         }

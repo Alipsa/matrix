@@ -1,4 +1,4 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix-core)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.groovy/matrix/javadoc.svg)](https://javadoc.io/doc/se.alipsa.groovy/matrix)
 # Matrix
 This is a Groovy library to make it easy to work with
@@ -12,13 +12,13 @@ Matrix should work with any 4.x version of groovy, and probably older versions a
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix:1.1.2'
+implementation 'se.alipsa.groovy:matrix-core:1.1.2'
 ```
 ...and the following for maven
 ```xml
 <dependency>
     <groupId>se.alipsa.groovy</groupId>
-    <artifactId>matrix</artifactId>
+    <artifactId>matrix-core</artifactId>
     <version>1.1.2</version>
 </dependency>
 ```

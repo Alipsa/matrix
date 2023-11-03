@@ -62,11 +62,11 @@ publishing {
       pom {
         name = 'Groovy Matrix CSV'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix-csv"
+        url = "https://github.com/Alipsa/matrix/matrix-csv"
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix-csv/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-csv/master/LICENSE'
           }
         }
         developers {
@@ -76,9 +76,9 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix-csv/tree/master'
-          connection = 'scm:git:https://github.com/Alipsa/matrix-csv.git'
-          developerConnection = 'scm:git:https://github.com/Alipsa/matrix-csv.git'
+          url = 'https://github.com/Alipsa/matrix/matrix-csv/tree/master'
+          connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
       }
     }

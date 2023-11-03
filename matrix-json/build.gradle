@@ -64,11 +64,11 @@ publishing {
       pom {
         name = 'Groovy Matrix Json'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix-json"
+        url = "https://github.com/Alipsa/matrix/matrix-json"
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix-json/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-json/master/LICENSE'
           }
         }
         developers {
@@ -78,9 +78,9 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix-json/tree/master'
-          connection = 'scm:git:https://github.com/Alipsa/matrix-json.git'
-          developerConnection = 'scm:git:https://github.com/Alipsa/matrix-json.git'
+          url = 'https://github.com/Alipsa/matrix/matrix-json/tree/master'
+          connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
       }
     }
