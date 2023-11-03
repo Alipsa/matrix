@@ -1,0 +1,736 @@
+import se.alipsa.groovy.datautil.SqlUtil
+import se.alipsa.groovy.matrix.Converter
+import se.alipsa.groovy.matrix.Grid
+import se.alipsa.groovy.matrix.Stat
+import se.alipsa.groovy.matrix.Matrix
+
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+
+import static se.alipsa.groovy.matrix.ListConverter.*
+import static org.junit.jupiter.api.Assertions.*
+
+import org.junit.jupiter.api.*
+
+import static se.alipsa.groovy.matrix.ValueConverter.asLocalDate
+import static se.alipsa.groovy.matrix.ValueConverter.asYearMonth
+
+
+class MatrixTest {
+
+    @Test
+    void testMatrixConstructors() {
+        def empData = new Matrix('empData',
+                [
+                emp_id: 1..5,
+                emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+                salary: [623.3,515.2,611.0,729.0,843.25],
+                start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+                ],
+                [int, String, Number, LocalDate]
+        )
+        assertEquals('empData', empData.getName())
+        assertEquals(1, empData[0,0])
+        assertEquals("Dan", empData[1,1])
+        assertEquals(611.0, empData[2,2])
+        assertEquals(LocalDate.of(2015, 3, 27), empData[4,3])
+        assertIterableEquals([Integer, String, Number, LocalDate], empData.columnTypes())
+
+        def ed = new Matrix("ed",
+                ['id', 'name', 'salary', 'start'], [
+                    1..5,
+                    ["Rick","Dan","Michelle","Ryan","Gary"],
+                    [623.3,515.2,611.0,729.0,843.25],
+                    toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+                ]
+        )
+        assertEquals('ed', ed.getName())
+        assertEquals(1, ed[0,0])
+        assertEquals("Dan", ed[1,1])
+        assertEquals(611.0, ed[2,2])
+        assertEquals(LocalDate.of(2015, 3, 27), ed[4,3])
+        assertIterableEquals([Object, Object, Object, Object], ed.columnTypes())
+
+        def e = new Matrix([
+                1..5,
+                ["Rick","Dan","Michelle","Ryan","Gary"],
+                [623.3,515.2,611.0,729.0,843.25],
+                toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+            ])
+        assertNull(e.getName())
+        assertEquals(1, e[0,0])
+        assertEquals("Dan", e[1,1])
+        assertEquals(611.0, e[2,2])
+        assertEquals(LocalDate.of(2015, 3, 27), e[4,3])
+        assertIterableEquals([Object, Object, Object, Object], ed.columnTypes())
+    }
+
+    @Test
+    void testTableCreationFromMatrix() {
+        def employees = []
+        employees.add(['John Doe', 21000, asLocalDate('2013-11-01'), asLocalDate('2020-01-10')])
+        employees.add(['Peter Smith', 23400,	'2018-03-25',	'2020-04-12'])
+        employees.add(['Jane Doe', 26800, asLocalDate('2017-03-14'), asLocalDate('2020-10-02')])
+
+        def table = Matrix.create(employees)
+        assertEquals('John Doe', table[0,0])
+        assertEquals(23400, table[1,1] as Integer)
+        assertEquals(LocalDate.of(2017, 3, 14), table[2,2])
+    }
+
+    @Test
+    void testTransposing() {
+        def report = [
+                "Year": [1, 2, 3, 4],
+                "Full Funding": [4563.153, 380.263, 4.938, 101.1],
+                "Baseline Funding": [3385.593, 282.133, 3.664, 123.123],
+                "Current Funding": [2700, 225, 2.922, 1010.12]
+        ]
+        def table = Matrix.create(report)
+        def tr = table.transpose(['y1', 'y2', 'y3', 'y4'])
+        assertEquals(["y1", "y2", "y3", "y4"], tr.columnNames())
+        assertEquals([
+            [1, 2, 3, 4],
+            [4563.153, 380.263, 4.938, 101.1],
+            [3385.593, 282.133, 3.664, 123.123],
+            [2700, 225, 2.922, 1010.12]
+        ], tr.rows(), table.content())
+        assertEquals(4, tr.columnTypes().size(), "Column types")
+
+        assertEquals([
+                [1, 2, 3, 4],
+                [4563.153, 380.263, 4.938, 101.1],
+                [3385.593, 282.133, 3.664, 123.123],
+                [2700, 225, 2.922, 1010.12]
+        ], tr.rowList(), table.content())
+
+        def tr2 = table.transpose(true)
+        assertEquals([
+            ["Year", 1, 2, 3, 4],
+            ["Full Funding", 4563.153, 380.263, 4.938, 101.1],
+            ["Baseline Funding", 3385.593, 282.133, 3.664, 123.123],
+            ["Current Funding", 2700, 225, 2.922, 1010.12]
+        ], tr2.rows())
+        assertEquals(5, tr2.columnTypes().size(), tr2.content() + "\nColumn types: " + tr2.columnTypeNames())
+
+        def t3 = table.transpose('Year', true)
+        assertEquals([
+            ["Year", 1, 2, 3, 4],
+            ["Full Funding", 4563.153, 380.263, 4.938, 101.1],
+            ["Baseline Funding", 3385.593, 282.133, 3.664, 123.123],
+            ["Current Funding", 2700, 225, 2.922, 1010.12]
+        ], t3.rows(), t3.content())
+        assertEquals(['', '1', '2', '3', '4'], t3.columnNames())
+        assertEquals(5, t3.columnTypes().size(), t3.content() + "\nColumn types: " + t3.columnTypeNames())
+
+        def t4 = table.transpose('Year', [String, Number, Number, Number, Number], true)
+        assertEquals([
+                ["Year", 1, 2, 3, 4],
+                ["Full Funding", 4563.153, 380.263, 4.938, 101.1],
+                ["Baseline Funding", 3385.593, 282.133, 3.664, 123.123],
+                ["Current Funding", 2700, 225, 2.922, 1010.12]
+        ], t4.rows(), t4.content())
+        assertEquals(['', '1', '2', '3', '4'], t4.columnNames())
+        assertEquals(5, t4.columnTypes().size(), t4.content() + "\nColumn types: " + t4.columnTypeNames())
+
+    }
+
+    @Test
+    void testStr() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
+            [int, String, Number, LocalDate]
+        )
+        def struct = Stat.str(empData)
+        assertEquals(['5 observations of 4 variables'], struct['Matrix'])
+        assertIterableEquals(['Integer', '1', '2', '3', '4'], struct['emp_id'])
+        assertIterableEquals(['LocalDate', '2012-01-01', '2013-09-23', '2014-11-15', '2014-05-11'], struct['start_date'])
+    }
+
+    @Test
+    void testCsv() {
+        def data = [
+            ['place', 'firstname', 'lastname', 'team'],
+            ['1', 'Lorena', 'Wiebes', 'Team DSM'],
+            ['2', 'Marianne', 'Vos', 'Team Jumbo Visma'],
+            ['3', 'Lotte', 'Kopecky', 'Team SD Worx']
+        ]
+        def file = File.createTempFile('FemmesStage1Podium', '.csv')
+        file.text = data*.join(',').join('\n')
+
+        def table = Matrix.create(file)
+        assertIterableEquals(data[0], table.columnNames())
+        assertEquals(data[1][1], table[0, 1] as String)
+        assertEquals('Team SD Worx', table[2, 3])
+
+        def plantGrowth = Matrix.create(
+                getClass().getResource('/PlantGrowth.csv'),
+                ',',
+                '"',
+        )
+        assertEquals('PlantGrowth', plantGrowth.name)
+        assertIterableEquals(['id', 'weight','group'], plantGrowth.columnNames())
+        def row30 = plantGrowth.findFirstRow('id', '30')
+        assertEquals('5.26', row30[1])
+        assertEquals('trt2', row30[2])
+    }
+
+    @Test
+    void testConvert() {
+        def data = [
+            'place': ['1', '2', '3', ','],
+            'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
+            'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
+            'end': ['2022-12-01 10:00:00', '2023-07-10 00:01:00', '2024-05-27 00:00:30', '2042-01-10 00:00:00']
+        ]
+        def table = Matrix.create(data, [String]*4)
+
+        def table2 = table.convert(place: Integer, start: LocalDate)
+        table2 = table2.convert([end: LocalDateTime],
+                DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss'))
+        assertEquals(Integer, table2.columnType('place'))
+        assertEquals(Integer, table2[0, 0].class)
+
+        assertEquals(LocalDate, table2.columnType('start'))
+        assertEquals(LocalDate, table2[0, 2].class)
+        assertEquals(LocalDateTime.parse('2022-12-01T10:00:00.000'), table2['end'][0])
+
+        def table3 = table.convert('place', Integer, {
+            String val = String.valueOf(it).trim()
+            if (val == 'null' || val == ',' || val.isBlank()) return null
+            return Integer.valueOf(val)
+        })
+        assertEquals(Integer, table3.columnType('place'))
+        assertEquals(3, table3['place'][2])
+
+        def table4 = table.convert([
+            new Converter('place', Integer, {try {Integer.parseInt(it)} catch (NumberFormatException e) {null}}),
+            new Converter('start', LocalDate, {LocalDate.parse(it)})
+        ] as Converter[])
+
+        //println table.content()
+        //println table4.content()
+        assertEquals(Integer, table4.columnType('place'))
+        assertEquals(Integer, table4[0, 0].class)
+        assertEquals(3, table4[2, 0])
+
+        assertEquals(LocalDate, table4.columnType('start'))
+        assertEquals(LocalDate, table4[0, 2].class)
+        assertEquals(LocalDate.of(2023, 5, 27), table4[2, 2])
+
+        def table5 = table.convert(
+            [Integer, String, LocalDate, String]
+        )
+        assertEquals(table4, table5, table4.diff(table5))
+    }
+
+    @Test
+    void testGetRowsForCriteria() {
+        def data = [
+            'place': [1, 2, 3],
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': ['2021-12-01', '2022-07-10', '2023-05-27']
+        ]
+        def table = Matrix.create(data, [int, String, String])
+        def rows = table.rows(table['place'].findIndexValues { it > 1 })
+        assertEquals(2, rows.size())
+
+        // Same thing using subset
+        def subSet = table.subset('place', { it > 1 })
+        assertIterableEquals(table.rows(1..2), subSet.rows())
+
+        def subSet2 = table.subset {it[0] > 1}
+        assertIterableEquals(table.rows(1..2), subSet2.rows())
+
+        def subSet3 = table.subset {
+            String name = it[1]
+            !name.startsWith('Ma')
+                && asLocalDate(it[2]).isBefore(LocalDate.of(2022,10,1))
+        }
+        assertEquals(table[0, 1], subSet3[0,1])
+    }
+
+    @Test
+    void testHeadAndTail() {
+        def table = Matrix.create([
+                'place': [1, 2, 3],
+                'firstname': ['Lorena', 'Marianne', 'Lotte'],
+                'start': ['2021-12-01', '2022-07-10', '2023-05-27']
+            ],
+            [int, String, String]
+        )
+        assertEquals('1\tLorena\t2021-12-01\n', table.head(1, false))
+        assertEquals('2\tMarianne\t2022-07-10\n3\tLotte\t2023-05-27\n', table.tail(2, false))
+    }
+
+    @SuppressWarnings('SqlNoDataSourceInspection')
+    @Test
+    void testCreateFromDb() {
+        def dbDriver = "org.h2.Driver"
+        def dbFileName = System.getProperty("java.io.tmpdir") + "/testdb"
+        def dbUrl = "jdbc:h2:file:" + dbFileName
+        def dbUser = "sa"
+        def dbPasswd = "123"
+
+        File dbFile = new File(dbFileName + ".mv.db")
+        if (dbFile.exists()) {
+            dbFile.delete()
+        }
+        File dbTraceFile = new File(dbFileName + "trace.db")
+        if (dbTraceFile.exists()) {
+            dbTraceFile.delete()
+        }
+
+        SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
+            sql.execute '''
+                create table IF NOT EXISTS PROJECT  (
+                    id integer not null primary key,
+                    name varchar(50),
+                    url varchar(100)
+                )
+            '''
+            sql.execute('delete from PROJECT')
+            sql.execute 'insert into PROJECT (id, name, url) values (?, ?, ?)', [10, 'Groovy', 'http://groovy.codehaus.org']
+            sql.execute 'insert into PROJECT (id, name, url) values (?, ?, ?)', [20, 'Alipsa', 'http://www.alipsa.se']
+        }
+
+        def project = null
+        SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
+            sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.create(rs) }
+        }
+
+        assertEquals(2, project.rowCount())
+    }
+
+    @Test
+    void testSelectRows() {
+        def data = [
+            'place': [1, 2, 3],
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+        ]
+        def table = Matrix.create(data, [int, String, LocalDate])
+        def selection = table.selectRows {
+            def date = it[2] as LocalDate
+            return date.isAfter(LocalDate.of(2022,1, 1))
+        }
+        assertIterableEquals([1,2], selection)
+    }
+
+    @Test
+    void testApply() {
+        def data = [
+            'place': ['1', '2', '3', ','],
+            'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
+            'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
+        ]
+        def table = Matrix
+            .create(data)
+            .convert(place: int, start: LocalDate)
+        def table2 = table.apply("start", { startDate ->
+            startDate.plusDays(10)
+        })
+        assertEquals(LocalDate.of(2021, 12, 11), table2["start"][0])
+        assertEquals(LocalDate.of(2022, 7, 20), table2["start"][1])
+        assertEquals(LocalDate.of(2023, 6, 6), table2["start"][2])
+        assertEquals(LocalDate.of(2023, 1, 20), table2["start"][3])
+        assertEquals(LocalDate, table2.columnType("start"))
+    }
+
+    @Test
+    void testApplyChangeType() {
+        def data = [
+            'foo': [1, 2, 3],
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+        ]
+
+        def table = Matrix.create(data, [int, String, LocalDate])
+
+        def foo = table.apply("start", { asYearMonth(it)})
+        assertEquals(YearMonth.of(2021,12), foo[0, 2])
+        assertEquals(YearMonth, foo.columnType("start"))
+    }
+
+    @Test
+    void testSelectRowsAndApply() {
+        def data = [
+            'place': [1, 2, 3],
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+        ]
+        def table = Matrix.create(data, [int, String, LocalDate])
+        assertEquals(Integer, table.columnType(0), "place column type")
+        def selection = table.selectRows {
+            def date = it[2] as LocalDate
+            return date.isAfter(LocalDate.of(2022,1, 1))
+        }
+        assertIterableEquals([1,2], selection)
+        def foo = table.apply("place", selection, { it * 2})
+        //println(foo.content())
+        assertEquals(4, foo[1, 0])
+        assertEquals(6, foo[2, 0])
+        assertEquals(LocalDate, foo.columnType(2))
+        assertEquals(Integer, foo.columnType(0), "place column type")
+
+        def bar = table.apply("place", {
+            def date = it[2] as LocalDate
+            return date.isAfter(LocalDate.of(2022,1, 1))
+        }, {
+            it * 2
+        })
+        //println(bar.content())
+        assertEquals(4, bar[1, 0])
+        assertEquals(6, bar[2, 0])
+        assertEquals(LocalDate, bar.columnType(2), "start column type")
+        assertEquals(Integer, bar.columnType(0), "place column type")
+
+        def r = table.rows { row ->
+            row[table.columnIndex('place')] == 2
+        }
+        assertEquals([2, 'Marianne', LocalDate.parse('2022-07-10')], r[0])
+    }
+
+    @Test
+    void testAddColumn() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
+            [int, String, Number, LocalDate]
+        )
+        def table = empData.addColumn("yearMonth", YearMonth, toYearMonth(empData["start_date"]))
+        assertEquals(empData.columnCount() + 1, table.columnCount())
+        assertEquals("yearMonth", table.columnNames()[table.columnCount()-1])
+        assertEquals(YearMonth, table.columnType("yearMonth"))
+        assertEquals(YearMonth.of(2012, 1), table[0,4])
+        assertEquals(YearMonth.of(2015, 3), table[4,4])
+
+        // Append a new column to the end
+        Matrix table2 = empData.clone()
+        table2["yearMonth", YearMonth] = toYearMonth(table2["start_date"])
+        assertEquals(empData.columnCount() + 1, table2.columnCount())
+        assertEquals("yearMonth", table2.columnNames()[table2.columnCount()-1])
+        assertEquals(YearMonth, table2.columnType("yearMonth"))
+        assertEquals(YearMonth.of(2012, 1), table2[0,4])
+        assertEquals(YearMonth.of(2015, 3), table2[4,4])
+
+        // Insert a new column first
+        Matrix table3 = empData.clone()
+        table3["yearMonth", YearMonth, 0] = toYearMonth(table3["start_date"])
+        assertEquals(empData.columnCount() + 1, table3.columnCount())
+        assertEquals("yearMonth", table3.columnNames()[0])
+        assertEquals(YearMonth, table3.columnType("yearMonth"))
+        assertEquals(YearMonth.of(2012, 1), table3[0,0])
+        assertEquals(YearMonth.of(2015, 3), table3[4,0])
+    }
+
+    @Test
+    void testAddColumns() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2019-01-01", "2019-01-23", "2019-05-15", "2019-05-11", "2019-03-27"),
+            [int, String, Number, LocalDate]
+        )
+
+        empData = empData.addColumn("yearMonth", YearMonth, toYearMonth(empData["start_date"]))
+        assertEquals(YearMonth, empData[0,4].class, "type of the added column")
+        assertEquals(YearMonth, empData.columnType("yearMonth"), "claimed type of the added column")
+
+        def counts = Stat.countBy(empData, "yearMonth").orderBy('yearMonth')
+        assertEquals(YearMonth, counts[0,0].class, "type of the count column")
+        assertEquals(YearMonth, counts.columnType("yearMonth"), "claimed type of the count column")
+
+        assertEquals(2, counts.subset('yearMonth', {it == YearMonth.of(2019,5)})[0,1])
+        assertEquals(1, counts.subset('yearMonth', {it == YearMonth.of(2019,3)})['yearMonth_count'][0])
+        assertEquals(2, counts[0, 'yearMonth_count'])
+
+        def sums = Stat.sumBy(empData, "salary", "yearMonth").orderBy("yearMonth", true)
+        assertEquals(YearMonth, sums[0,0].class, "type of the sums column")
+        assertEquals(YearMonth, sums.columnType("yearMonth"), "claimed type of the sums column")
+        assertEquals(611.0 + 729.0, sums[0, 1], sums.content())
+        assertEquals(843.25, sums[1, 1], sums.content())
+        assertEquals(623.3 + 515.2, sums[2, 1], sums.content())
+
+        def salaryPerYearMonth = counts
+                .orderBy("yearMonth", true)
+                .addColumns(sums, "salary")
+
+        assertEquals(asYearMonth("2019-05"), salaryPerYearMonth[0, 0], salaryPerYearMonth.content())
+        assertEquals(611.0 + 729.0, salaryPerYearMonth[0, 2], salaryPerYearMonth.content())
+        assertEquals(2, salaryPerYearMonth[0, 1], salaryPerYearMonth.content())
+        assertEquals(843.25, salaryPerYearMonth[1, 2], salaryPerYearMonth.content())
+        assertEquals(1, salaryPerYearMonth[1, 1], salaryPerYearMonth.content())
+    }
+
+    @Test
+    void testSort() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [Integer, String, Number, LocalDate]
+        )
+        def dateSorted = empData.orderBy("start_date")
+        assertEquals(4, dateSorted[4, 0], "Last row should be the Ryan row")
+        assertEquals(asLocalDate("2012-03-27"), dateSorted[0, 3], "First row should be the Dan Row")
+
+        def salarySorted = empData.orderBy(["salary": Matrix.DESC])
+        assertEquals(843.25, salarySorted["salary"][0], "Highest salary")
+        assertEquals(515.2, salarySorted["salary"][4], "Lowest salary")
+    }
+
+    @Test
+    void testDropColumns() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [int, String, Number, LocalDate]
+        )
+        def empList = empData.dropColumns("salary", "start_date")
+        //println(empList.content())
+        assertEquals(2, empList.columnCount(), "Number of columns after drop")
+        assertEquals(5, empList.rowCount(), "Number of rows after drop")
+        assertIterableEquals(["emp_id",	"emp_name"], empList.columnNames(), "column names after drop")
+        assertIterableEquals([Integer, String], empList.columnTypes(), "Column types after drop")
+    }
+
+    @Test
+    void testDropColumnsExcept() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [int, String, Number, LocalDate]
+        )
+        def empList = empData.dropColumnsExcept("emp_id", "emp_name", "start_date")
+        //println(empList.content())
+        assertEquals(3, empList.columnCount(), "Number of columns after drop")
+        assertEquals(5, empList.rowCount(), "Number of rows after drop")
+        assertIterableEquals(["emp_id", "emp_name", "start_date"], empList.columnNames(), "column names after drop")
+        assertIterableEquals([Integer, String, LocalDate], empList.columnTypes(), "Column types after drop")
+    }
+
+    @Test
+    void testIteration() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [int, String, Number, LocalDate]
+        )
+
+        int i = 1
+        for (row in empData) {
+            assertEquals(i, row[0], String.valueOf(row))
+            assertEquals(empData[i-1, 'emp_name'], row[1], String.valueOf(row))
+            i++
+        }
+
+        for (row in empData) {
+            if (row[2] > 600) {
+                row[2] = row[2] - 600
+            }
+        }
+
+        assertEquals(23.3, empData[0, 2], empData.toMarkdown())
+        assertEquals(515.2, empData[1, 2], empData.toMarkdown())
+        assertEquals(11.0, empData[2, 2], empData.toMarkdown())
+        assertEquals(129.0, empData[3, 2], empData.toMarkdown())
+        assertEquals(243.25, empData[4, 2], empData.toMarkdown())
+    }
+
+    @Test
+    void testMatrixToGrid() {
+        def report = [
+            "Full Funding": [4563.153, 380.263, 4.938, 12.23],
+            "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
+            "Current Funding": [2700, 225, 2.922, 1.871]
+        ]
+        Matrix table = Matrix.create(report, [BigDecimal]*3)
+
+        Grid grid = table.grid()
+        assertEquals(3.664, grid[2,1] as BigDecimal)
+    }
+
+    @Test
+    void testSelectColumns() {
+        def report = [
+            "Full Funding": [4563.153, 380.263, 4.938, 12.23],
+            "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
+            "Current Funding": [2700, 225, 2.922, 1.871]
+        ]
+        Matrix table = Matrix.create(report, [BigDecimal]*3)
+            .selectColumns("Baseline Funding", "Full Funding")
+
+        assertEquals(3385.593, table[0,0])
+        assertEquals(12.23, table[3,1])
+
+    }
+
+    @Test
+    void testRenameColumns() {
+        def empData = Matrix.create(
+            emp_id: 1..5,
+            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+            salary: [623.3,515.2,611.0,729.0,843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
+            [int, String, Number, LocalDate]
+        )
+
+        empData.renameColumn('emp_id', 'id')
+        empData.renameColumn(1, 'name')
+
+        assertEquals('id', empData.columnNames()[0])
+        assertEquals('name', empData.columnNames()[1])
+
+    }
+
+    @Test
+    void testToMarkdown() {
+        def report = [
+            "YearMonth": toYearMonth(['2023-01', '2023-02', '2023-03', '2023-04']),
+            "Full Funding": [4563.153, 380.263, 4.938, 12.23],
+            "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
+            "Current Funding": [2700, 225, 2.922, 1.871]
+        ]
+        Matrix table = Matrix.create(report, [YearMonth, BigDecimal, BigDecimal, BigDecimal])
+
+        def md = table.toMarkdown()
+        def rows = md.split('\n')
+        assertEquals(6, rows.length)
+        assertEquals('| YearMonth | Full Funding | Baseline Funding | Current Funding |', rows[0])
+        assertEquals('| --- | ---: | ---: | ---: |', rows[1])
+        assertEquals('| 2023-01 | 4563.153 | 3385.593 | 2700 |', rows[2])
+        assertEquals('| 2023-04 | 12.23 | 2.654 | 1.871 |', rows[5])
+
+        md = table.toMarkdown(Map.of("class", "table"))
+        rows = md.split('\n')
+        assertEquals(7, rows.length)
+        assertEquals('{class="table" }', rows[6])
+    }
+
+    @Test
+    void testEquals() {
+        def empData = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        )
+
+        assertEquals(empData, Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        ))
+
+        assertNotEquals(empData, Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.1],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        ))
+
+        Matrix differentTypes = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [Object, Object, Object, Object]
+        )
+        assertEquals(empData,differentTypes , empData.diff(differentTypes))
+        assertNotEquals(empData,differentTypes.withName("differentTypes") , empData.diff(differentTypes))
+    }
+
+    @Test
+    void testDiff() {
+        def empData = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        )
+        def d1 = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.1],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [int, String, Number, LocalDate]
+        )
+        assertEquals('Row 1 differs: this: 2, Dan, 515.2, 2012-03-27; that: 2, Dan, 515.1, 2012-03-27',
+                    empData.diff(d1).trim())
+
+        def d2 = Matrix.create(
+            emp_id: [1,2],
+            emp_name: ["Rick","Dan"],
+            salary: [623.3,515.2],
+            start_date: toLocalDates("2013-01-01", "2012-03-27"),
+            [Object, Object, Object, Object]
+        )
+        assertEquals('Column types differ: this: Integer, String, Number, LocalDate; that: Object, Object, Object, Object',
+            empData.diff(d2))
+    }
+
+    @Test
+    void testRemoveEmptyRows() {
+        def empData = Matrix.create(
+                emp_id: [1,2],
+                emp_name: ["Rick","Dan"],
+                salary: [623.3,515.2],
+                start_date: toLocalDates("2013-01-01", "2012-03-27"),
+                [int, String, Number, LocalDate]
+        )
+
+        def d0 = Matrix.create(
+                emp_id: [1,null, 2, null],
+                emp_name: ["Rick", "", "Dan", " "],
+                salary: [623.3, null, 515.2, null],
+                start_date: toLocalDates("2013-01-01", null, "2012-03-27", null),
+                [int, String, Number, LocalDate]
+        )
+        assertEquals(empData, d0.removeEmptyRows(), empData.diff(d0))
+    }
+
+    boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles()
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file)
+            }
+        }
+        return directoryToBeDeleted.delete()
+    }
+
+    @Test
+    void testWithColumns() {
+        def table = Matrix.create([
+            a: [1,2,3,4,5],
+            b: [1.2,2.3,0.7,1.3,1.9]
+        ], [Integer, BigDecimal])
+
+        def m = table.withColumns(['a', 'b']) { x, y -> x - y }
+        assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], m)
+
+        def n = table.withColumns([0,1] as Integer[]) { x, y -> x - y }
+        assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], n)
+    }
+}

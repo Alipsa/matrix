@@ -1,0 +1,129 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+plugins {
+    id 'groovy'
+    id 'java-library'
+    //id 'org.openjfx.javafxplugin' version '0.0.13'
+    id 'signing'
+    id 'maven-publish'
+}
+
+group 'se.alipsa.groovy'
+version '1.0.3-SNAPSHOT'
+description = "Groovy library common public domain and oss data in matrix format)"
+
+repositories {
+    if (version.contains('SNAPSHOT')) {
+        mavenLocal()
+    }
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    def groovyVersion = '4.0.15'
+    def groovy = "org.apache.groovy:groovy:$groovyVersion"
+    compileOnly groovy
+    compileOnly project(':matrix-core')
+
+    testImplementation groovy
+    testImplementation project(':matrix-core')
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        // set options for log level LIFECYCLE
+        events TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_OUT
+        exceptionFormat TestExceptionFormat.FULL
+        showExceptions true
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED,
+                    TestLogEvent.FAILED,
+                    TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED,
+                    TestLogEvent.STANDARD_ERROR,
+                    TestLogEvent.STANDARD_OUT
+            exceptionFormat TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+                def startItem = '|  ', endItem = '  |'
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+            }
+        }
+    }
+}
+
+//Maven Central uploads
+task javadocJar(type: Jar, dependsOn: groovydoc) {
+    archiveClassifier.set('javadoc')
+    from groovydoc.destinationDir
+}
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier.set('sources')
+    from sourceSets.main.allSource
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact(javadocJar)
+            artifact(sourcesJar)
+            pom {
+                name = 'Common datasets'
+                description = "${project.description}"
+                url = "https://github.com/Alipsa/matrix-datasets"
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://raw.githubusercontent.com/Alipsa/matrix-datasets/master/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'perNyfelt'
+                        name = 'Per Nyfelt'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/Alipsa/matrix-datasets/tree/master'
+                    connection = 'scm:git:https://github.com/Alipsa/matrix-datasets.git'
+                    developerConnection = 'scm:git:https://github.com/Alipsa/matrix-datasets.git'
+                }
+            }
+        }
+    }
+}
+
+signing {
+    if (project.properties['signing.keyId'] != null) {
+        project.logger.lifecycle("Signing artifacts...")
+        sign publishing.publications.maven
+    } else {
+        project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
+    }
+}
