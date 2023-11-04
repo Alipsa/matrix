@@ -394,6 +394,12 @@ class MatrixTest {
             row[table.columnIndex('place')] == 2
         }
         assertEquals([2, 'Marianne', LocalDate.parse('2022-07-10')], r[0])
+
+        // An item in a Row can also be referenced by the column name
+        List r2 = table.rows().find { row ->
+            row['place'] == 3
+        }
+        assertIterableEquals([3, 'Lotte', LocalDate.parse('2023-05-27')], r2, String.valueOf(r2))
     }
 
     @Test

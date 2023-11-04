@@ -147,12 +147,20 @@ class Row implements List<Object> {
         return set(index.intValue(), value)
     }
 
+    Object putAt(String columnName, Object value) {
+        return set(parent.columnIndex(columnName), value)
+    }
+
     Object getAt(int index) {
         return get(index)
     }
 
     Object getAt(Number index) {
         return get(index.intValue())
+    }
+
+    Object getAt(String columnName) {
+        return get(parent.columnIndex(columnName))
     }
 
     int getRowNumber() {
@@ -165,7 +173,7 @@ class Row implements List<Object> {
     }
 
     /**
-     * specific package scope mutating metod that does not change the backing parent
+     * specific package scope mutating method that does not change the backing parent
      * used to construct a row and adding the data afterwards.
      *
      * @param e the element to add

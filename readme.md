@@ -1,11 +1,27 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.groovy/matrix/javadoc.svg)](https://javadoc.io/doc/se.alipsa.groovy/matrix)
 # Matrix
-This is a Groovy library to make it easy to work with
-a matrix i.e. a List<List<?>> typically defined in 
-Groovy like this `def myList = [ [1,2,3], [3.4, 7.12, 0.19] ]`
+This is a Groovy library (that also works in Java) to make it easy to work with
+a matrix (tabular) data. Whenever you ḧave a structure like this
+List<List<?>> (typically defined in 
+Groovy like this `def myList = [ [1,2,3], [3.4, 7.12, 0.19] ]`) a Matrix or
+a Grid can greatly enhance the experience of working with that data structure.
 
-Methods are static making is simple to use in Groovy scripts
+The Matrix project consist of the following modules:
+1. _[matrix-core](https://github.com/Alipsa/matrix/matrix-core/blob/main/readme.md)_ The matrix-core is the heart of the matrix project. It
+   contains the Matrix and Grid classes as well as several utility classes to
+   do basic statistics (sum, mean, median, sd, variance, counts, frequency etc.) and to
+   convert data into various shapes and formats
+   See [tests](https://github.com/Alipsa/matrix/matrix-core/blob/main/src/test/groovy/MatrixTest.groovy) for more usage examples or
+   the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/matrix-core/latest/index.html) for more info.
+2. _[matrix-stats](https://github.com/Alipsa/matrix/matrix-stats/blob/main/readme.md)_ The stats library contains various statistical methods and tests
+   (correlations, normalization, linear regression, t-test, etc.)
+3. _[matrix-datasets](https://github.com/Alipsa/matrix/matrix-datasets/blob/main/readme.md)_ contains some common datasets used in R and Python such as mtcars, iris, diamonds, plantgrowth, toothgrowth etc.
+4. _[matrix-spreadsheet](https://github.com/Alipsa/matrix/matrix-spreadsheet/blob/main/readme.md)_ provides ways to import and export between a Matrix and an Excel or OpenOffice Calc spreadsheet
+5. _[matrix-csv](https://github.com/Alipsa/matrix/matrix-csv/blob/main/readme.md)_ provides a more advanced way to import and export between a Matrix and a CSV file (matrix-core has basic support
+   for doing this built in)
+6. _[matrix-json](https://github.com/Alipsa/matrix/matrix-json/blob/main/readme.md)_ provides ways to import and export between a Matrix and Json 
+7. _[matrix-charts](https://github.com/Alipsa/matrix/matrix-charts/blob/main/readme.md)_ allows you to create charts in various formats (file, javafx) based on Matrix data.
 
 ## Setup
 Matrix should work with any 4.x version of groovy, and probably older versions as well. Binary builds can be downloaded 
@@ -26,8 +42,8 @@ implementation 'se.alipsa.groovy:matrix:1.1.2'
 The jvm should be JDK 17 or higher.
 
 ## Matrix
-A Matrix is an immutable Grid with a header and where each column type is defined.
-In some ways you can think of it as an in memory ResultSet.
+A Matrix is a grid with a header and where each column type is defined.
+In some ways you can think of it as an in-memory ResultSet.
 
 A Matrix is created using one of the static create methods in Matrix. 
 
@@ -86,9 +102,9 @@ import se.alipsa.groovy.matrix.Matrix
 def table = Matrix.create(new File('/some/path/foo.csv'), ';')
 ```
 
-Data can be reference using []
-notation e.g. to get the content of the 3:rd row and 2:nd column you do table[3,2]. If you pass only one argument,
-you get the column e.g. List<?> priceColumn = table["price"]
+Data can be referenced using square bracket notation [] 
+e.g. to get the content of the 3:rd row and 2:nd column you do table[3,2] or table[3, 'price']. 
+If you pass only one argument, you get the column e.g. List<?> priceColumn = table['price']
 
 ### General inspection
 
@@ -270,7 +286,7 @@ assertEquals(2, rows.size())
 // ...But the same thing can be done using the subset method
 def subSet = table.subset('place', { it > 1 })
 // grid() returns the data content (no header) of the Matrix
-assertArrayEquals(table.rows(1..2).toArray(), subSet.grid().toArray())
+assertIterableEquals(table.rows(1..2), subSet.grid())
 ```
 
 ## Performing calculations with apply
@@ -338,35 +354,5 @@ assertEquals(4, bar[1, 0])
 assertEquals(6, bar[2, 0])
 ```   
 
-See [tests](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/MatrixTest.groovy) for more usage examples or
-the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/latest/index.html) for more info.
 
 
-
-## Grid
-The grid class contains some static function to operate on a 2d list (a [][] structure or List<List<?>>).
-- _convert_ converts one column type to another numeric type
-- _clone_ creates a deep copy of the matrix
-- _transpose_ "rotates" the matrix 90 degrees
-- _isValid_ checks if it is a proper matrix or not
-
-a Grid can be created by supplying a list of rows to the constructor e.g.
-```groovy
-import se.alipsa.groovy.matrix.Grid
-Grid foo = [
-    [12.0, 3.0, Math.PI],
-    ["1.9", 2, 3],
-    ["4.3", 2, 3]
-] as Grid // the as Grid is technically not needed but makes some IDE's happy (e.g. Intellij)
-```
-elements can be accessed using the simple square bracket notation grid[rowindex, columnIndex], e.g:
-```groovy
-foo[0, 1] = 3.23
-
-assert 3.23 == foo[0,1]
-```
-
-## Stat
-Stat contains basic statistical operations such as sum, mean, median, frequency, sd (standard deviation), variance, 
-quartiles. See [StatTest](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/StatTest.groovy)
-for some examples.
