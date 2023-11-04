@@ -8,20 +8,20 @@ Groovy like this `def myList = [ [1,2,3], [3.4, 7.12, 0.19] ]`) a Matrix or
 a Grid can greatly enhance the experience of working with that data structure.
 
 The Matrix project consist of the following modules:
-1. _[matrix-core](https://github.com/Alipsa/matrix/matrix-core/blob/main/readme.md)_ The matrix-core is the heart of the matrix project. It
+1. _[matrix-core](https://github.com/Alipsa/matrix/blob/main/matrix-core/readme.md)_ The matrix-core is the heart of the matrix project. It
    contains the Matrix and Grid classes as well as several utility classes to
    do basic statistics (sum, mean, median, sd, variance, counts, frequency etc.) and to
    convert data into various shapes and formats
-   See [tests](https://github.com/Alipsa/matrix/matrix-core/blob/main/src/test/groovy/MatrixTest.groovy) for more usage examples or
-   the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/matrix-core/latest/index.html) for more info.
-2. _[matrix-stats](https://github.com/Alipsa/matrix/matrix-stats/blob/main/readme.md)_ The stats library contains various statistical methods and tests
+   See [tests](https://github.com/Alipsa/matrix/blob/main/matrix-core/src/test/groovy/MatrixTest.groovy) for more usage examples or
+   the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix-core/latest/index.html) for more info.
+2. _[matrix-stats](https://github.com/Alipsa/matrix/blob/main/matrix-stats/readme.md)_ The stats library contains various statistical methods and tests
    (correlations, normalization, linear regression, t-test, etc.)
-3. _[matrix-datasets](https://github.com/Alipsa/matrix/matrix-datasets/blob/main/readme.md)_ contains some common datasets used in R and Python such as mtcars, iris, diamonds, plantgrowth, toothgrowth etc.
-4. _[matrix-spreadsheet](https://github.com/Alipsa/matrix/matrix-spreadsheet/blob/main/readme.md)_ provides ways to import and export between a Matrix and an Excel or OpenOffice Calc spreadsheet
-5. _[matrix-csv](https://github.com/Alipsa/matrix/matrix-csv/blob/main/readme.md)_ provides a more advanced way to import and export between a Matrix and a CSV file (matrix-core has basic support
+3. _[matrix-datasets](https://github.com/Alipsa/matrix/blob/main/matrix-datasets/readme.md)_ contains some common datasets used in R and Python such as mtcars, iris, diamonds, plantgrowth, toothgrowth etc.
+4. _[matrix-spreadsheet](https://github.com/Alipsa/matrix/blob/main/matrix-spreadsheet/readme.md)_ provides ways to import and export between a Matrix and an Excel or OpenOffice Calc spreadsheet
+5. _[matrix-csv](https://github.com/Alipsa/matrix/blob/main/matrix-csv/readme.md)_ provides a more advanced way to import and export between a Matrix and a CSV file (matrix-core has basic support
    for doing this built in)
-6. _[matrix-json](https://github.com/Alipsa/matrix/matrix-json/blob/main/readme.md)_ provides ways to import and export between a Matrix and Json 
-7. _[matrix-charts](https://github.com/Alipsa/matrix/matrix-charts/blob/main/readme.md)_ allows you to create charts in various formats (file, javafx) based on Matrix data.
+6. _[matrix-json](https://github.com/Alipsa/matrix/blob/main/matrix-json/readme.md)_ provides ways to import and export between a Matrix and Json 
+7. _[matrix-charts](https://github.com/Alipsa/matrix/blob/main/matrix-charts/readme.md)_ allows you to create charts in various formats (file, javafx) based on Matrix data.
 
 ## Setup
 Matrix should work with any 4.x version of groovy, and probably older versions as well. Binary builds can be downloaded 
