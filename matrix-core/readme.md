@@ -12,14 +12,14 @@ Matrix should work with any 4.x version of groovy, and probably older versions a
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:1.1.2'
+implementation 'se.alipsa.groovy:matrix-core:1.1.3'
 ```
 ...and the following for maven
 ```xml
 <dependency>
     <groupId>se.alipsa.groovy</groupId>
     <artifactId>matrix-core</artifactId>
-    <version>1.1.2</version>
+    <version>1.1.3</version>
 </dependency>
 ```
 
@@ -27,7 +27,7 @@ The jvm should be JDK 17 or higher.
 
 ## Matrix
 A Matrix is tabular data with a header and where each column type is defined.
-In some ways you can think of it as an in memory ResultSet.
+In some ways you can think of it as an in-memory ResultSet.
 
 A Matrix is created using one of the static create methods in Matrix. 
 
@@ -258,19 +258,22 @@ compiler will think you want to call the convert(List<Class<?>>) method instead.
 
 ### Getting a subset of the table
 ```groovy
-def table = create([
+import se.alipsa.groovy.matrix.Matrix
+import static org.junit.jupiter.api.Assertions.*
+
+def table = Matrix.create([
     'place': [1, 2, 3],
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27']
 ], [int, String, String])
 // We can use the groovy method findIndexValues on a column to select the rows we want
-def rows = table.getRows(table['place'].findIndexValues { it > 1 })
+def rows = table.rows(table['place'].findIndexValues { it > 1 })
 assertEquals(2, rows.size())
 
 // ...But the same thing can be done using the subset method
 def subSet = table.subset('place', { it > 1 })
 // grid() returns the data content (no header) of the Matrix
-assertArrayEquals(table.rows(1..2).toArray(), subSet.grid().toArray())
+assertIterableEquals(table.rows(1..2), subSet.grid())
 ```
 
 ## Performing calculations with apply
@@ -307,6 +310,10 @@ one if only a subset of rows is affected.
 
 ### Combining selectRows with apply
 ```groovy
+import java.time.LocalDate
+import se.alipsa.groovy.matrix.*
+import static org.junit.jupiter.api.Assertions.*
+
 def data = [
     'foo': [1, 2, 3],
     'firstname': ['Lorena', 'Marianne', 'Lotte'],

@@ -5,7 +5,7 @@ import groovy.transform.CompileStatic
 import java.text.NumberFormat
 
 @CompileStatic
-class Grid<T> {
+class Grid<T> implements Iterable<T> {
 
     List<List<T>> data
 
