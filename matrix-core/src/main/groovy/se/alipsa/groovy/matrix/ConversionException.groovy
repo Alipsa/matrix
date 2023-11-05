@@ -1,5 +1,8 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class ConversionException extends RuntimeException {
     ConversionException(String message, Throwable cause) {
         super(message, cause)

@@ -30,7 +30,7 @@ class StatTest {
 
         def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def m2 = mean(table, ["v1", "v2"])
-        assertArrayEquals(m, m2)
+        assertIterableEquals(m, m2)
     }
 
     @Test
@@ -48,7 +48,7 @@ class StatTest {
 
         def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def m2 = median(table, ["v1", "v2"])
-        assertArrayEquals(m, m2)
+        assertIterableEquals(m, m2)
     }
 
     @Test
@@ -66,7 +66,7 @@ class StatTest {
 
         def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def m2 = min(table, ["v1", "v2"])
-        assertArrayEquals(m, m2)
+        assertIterableEquals(m, m2)
     }
 
     @Test
@@ -84,7 +84,7 @@ class StatTest {
 
         def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def m2 = max(table, ["v1", "v2"], true)
-        assertArrayEquals(m, m2)
+        assertIterableEquals(m, m2)
     }
 
     @Test
@@ -104,7 +104,7 @@ class StatTest {
 
         def table = Matrix.create(["v0", "v1", "v2"], matrix)
         def s2 = sd(table, ["v1", "v2"])
-        assertArrayEquals(s, s2)
+        assertIterableEquals(s, s2)
     }
 
     @Test
@@ -175,10 +175,10 @@ class StatTest {
     void testQuartiles() {
         def data = [3, 6, 7, 8, 8, 10, 13, 15, 16, 20]
         def q = quartiles(data)
-        assertArrayEquals([7, 15].toArray(), q)
+        assertIterableEquals([7, 15], q)
 
         data = [9,9,8,9,10,9,3,5,6,8,9,10,11,12,13,11,10]
-        assertArrayEquals([8, 10].toArray(), quartiles(data))
+        assertIterableEquals([8, 10], quartiles(data))
     }
 
     @Test

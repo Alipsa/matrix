@@ -1,5 +1,8 @@
 package se.alipsa.groovy.matrix.util
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class ClassUtils {
 
   static Class<?> primitiveWrapper(Class<?> it) {

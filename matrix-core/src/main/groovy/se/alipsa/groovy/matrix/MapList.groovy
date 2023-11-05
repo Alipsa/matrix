@@ -1,5 +1,8 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class MapList<M,L> {
 
   Map<M, List<L>> data = new HashMap<>()

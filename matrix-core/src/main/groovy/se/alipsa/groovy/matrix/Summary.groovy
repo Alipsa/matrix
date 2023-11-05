@@ -1,8 +1,11 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class Summary {
 
-  def private data = new LinkedHashMap<String, Map<String, ?>>()
+  private LinkedHashMap<String, Map<String, ?>> data = new LinkedHashMap<>()
 
   def putAt(String key, Map value) {
     data[key] = value
@@ -15,7 +18,7 @@ class Summary {
   @Override
   String toString() {
     def sb = new StringBuilder()
-    data.each {
+    data.each { it ->
       sb.append(it.key).append("\n")
       sb.append( "-"*it.key.length()).append("\n")
       it.value.each {

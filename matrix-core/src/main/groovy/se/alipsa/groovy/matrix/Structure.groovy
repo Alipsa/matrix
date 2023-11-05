@@ -1,5 +1,8 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class Structure {
 
     LinkedHashMap<String, List<String>> data = [:]

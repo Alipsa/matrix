@@ -1,7 +1,9 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 
+@CompileStatic
 class Row implements List<Object> {
     private int rowNumber
     private List<?> content
@@ -100,7 +102,7 @@ class Row implements List<Object> {
     @Override
     Object set(int index, Object element) {
         def result = content.set(index, element)
-        parent[rowNumber, index] = element
+        parent.putAt([rowNumber, index] as List<Number>, element)
         return result
     }
 
@@ -180,7 +182,7 @@ class Row implements List<Object> {
      */
     @PackageScope
     void addElement(Object e) {
-        content << e
+        content.add(e)
     }
 
     @PackageScope

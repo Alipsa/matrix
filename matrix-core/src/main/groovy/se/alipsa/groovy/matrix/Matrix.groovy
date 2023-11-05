@@ -1169,7 +1169,7 @@ class Matrix implements Iterable {
   }
 
   /**
-   * Allows you to iterate over the rows in this table
+   * Allows you to iterate over the rows in this Matrix
    * <pre><code>
    *   // a for loop usage example
    *   for (row in table) {
@@ -1184,7 +1184,8 @@ class Matrix implements Iterable {
    */
   @Override
   Iterator<Row> iterator() {
-    return new RowIterator(this)
+    return rows().iterator()
+    //return new RowIterator(this)
   }
 
   /**f

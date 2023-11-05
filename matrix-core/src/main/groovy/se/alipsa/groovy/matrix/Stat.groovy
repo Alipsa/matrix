@@ -10,10 +10,14 @@ import static ValueConverter.asBigDecimal
  * as well as some basic "overview" functions such as structure (str), summary, frequency.
  *
  * For statistical test functions, see the matrix-stat-tests library
+ *
  */
+// Note: Must be compiled dynamically for now as CompileStatic results in
+// * BUG! exception in phase 'instruction selection' in source unit
+//@CompileStatic
 class Stat {
 
-    private static final primitives = ['double', 'float', 'int', 'long', 'short', 'byte']
+    private static final List<String> primitives = ['double', 'float', 'int', 'long', 'short', 'byte']
     static final String FREQUENCY_VALUE = "Value"
     static final String FREQUENCY_FREQUENCY = "Frequency"
     static final String FREQUENCY_PERCENT = "Percent"
@@ -47,7 +51,11 @@ class Stat {
     }
 
     static Map<String, Object> addNumericSummary(List<Object> objects, Class<?> type) {
-        def numbers = objects as List<Number>
+        if (objects == null) {
+            System.err.println("The list of objects for addNumericSummary is null")
+            return null
+        }
+        List<Number> numbers = objects as List<Number>
         def quarts = quartiles(numbers)
         [
             'Type': type.getSimpleName(),
@@ -81,6 +89,16 @@ class Stat {
         return s
     }
 
+    static <T> T sum(List<?> list, Class<T> type) {
+        def s = 0 as BigDecimal
+        for (value in list) {
+            if (value instanceof Number) {
+                s += value
+            }
+        }
+        return s.asType(type)
+    }
+
     static List<Number> sum(Matrix matrix, String... columnNames) {
         List<Number> sums = []
         List<String> columns
@@ -92,7 +110,11 @@ class Stat {
         for (columnName in columns) {
             def column = matrix.column(columnName)
             def type = matrix.columnType(columnName)
-            sums << sum(column).asType(type)
+            if (Number.isAssignableFrom(type)) {
+                sums.add(sum(column, type))
+            } else {
+                sums.add(null)
+            }
         }
         return sums
     }
@@ -102,12 +124,16 @@ class Stat {
     }
 
     static List<Number> sum(Matrix matrix, List<Integer> columnIndices) {
-        List<Number> sums = []
-        List<String> columns
+        List<? extends Number> sums = []
         columnIndices.each { colIdx ->
             def column = matrix.column(colIdx)
             def type = matrix.columnType(colIdx)
-            sums << sum(column).asType(type)
+            if (Number.isAssignableFrom(type)) {
+                sums.add(sum(column, type))
+            } else {
+                sums << null
+            }
+
         }
         return sums
     }
@@ -121,11 +147,11 @@ class Stat {
         return sum(grid.data, colNum)
     }
 
-    static <T extends Number> T[] sum(Grid grid, List<Integer> colNums) {
+    static <T extends Number> List<T> sum(Grid grid, List<Integer> colNums) {
         return sum(grid.data, colNums)
     }
 
-    static <T extends Number> T[] sum(List<List<T>> grid, List<Integer> colNums) {
+    static <T extends Number> List<T> sum(List<List<T>> grid, List<Integer> colNums) {
         def s = [0 as T] * colNums.size()
         def value
         int idx
@@ -207,11 +233,11 @@ class Stat {
         )
     }
 
-    static BigDecimal[] mean(List<List<?>> rows, Integer colNum) {
+    static List<BigDecimal> mean(List<List<?>> rows, Integer colNum) {
         return mean(rows, [colNum])
     }
 
-    static BigDecimal[] mean(List<List<?>> matrix, List<Integer> colNums) {
+    static List<BigDecimal> mean(List<List<?>> matrix, List<Integer> colNums) {
         def sums = [0.0g] * colNums.size()
         def ncols = [0.0g] * colNums.size()
         def value
@@ -234,8 +260,8 @@ class Stat {
         return means
     }
 
-    static BigDecimal[] mean(Matrix table, List<String> colNames) {
-        return mean(table.rows(), table.columnIndexes(colNames))
+    static List<BigDecimal> mean(Matrix table, List<String> colNames) {
+        return mean(table.rows() as List<List<?>>, table.columnIndexes(colNames))
     }
 
     static BigDecimal mean(List<?> list) {
@@ -254,15 +280,15 @@ class Stat {
         return mean(table.column(colName))
     }
 
-    static BigDecimal[] median(List<List<?>> matrix, Integer colNum) {
+    static List<BigDecimal> median(List<List<?>> matrix, Integer colNum) {
         return median(matrix, [colNum])
     }
 
-    static BigDecimal[] median(Matrix table, String colName) {
+    static List<BigDecimal> median(Matrix table, String colName) {
         return median(table.column(colName) as List<List<?>>, [table.columnNames().indexOf(colName)])
     }
 
-    static BigDecimal[] median(List<List<?>> matrix, List<Integer> colNums) {
+    static List<BigDecimal> median(List<List<?>> matrix, List<Integer> colNums) {
         Map<String, List<? extends Number>> valueList = [:].withDefault{key -> return []}
         def value
         for (row in matrix) {
@@ -278,15 +304,15 @@ class Stat {
         def list
         for (colNum in colNums) {
             list = valueList[String.valueOf(colNum)].sort()
-            m = median(list)
+            m = median(list as List<? extends Number>)
             medians.add(m)
         }
 
         return medians
     }
 
-    static BigDecimal[] median(Matrix table, List<String> colNames) {
-        return median(table.rows(), table.columnIndexes(colNames))
+    static List<BigDecimal> median(Matrix table, List<String> colNames) {
+        return median(table.rows() as List<List<?>>, table.columnIndexes(colNames))
     }
 
     static BigDecimal median(List<? extends Number> valueList) {
@@ -300,7 +326,7 @@ class Stat {
             def index = valueList.size()/2 as int
             def val1 = valueList[index -1] as Number
             def val2 = valueList[index] as Number
-            def median = (val1 + val2) / 2
+            BigDecimal median = (val1 + val2) / 2
             //println("Returning $val1 plus $val2 / 2 = $median")
             return median
         } else {
@@ -314,7 +340,7 @@ class Stat {
      * @param values a list of numbers to use
      * @return a list of the 1:st and 3:rd quartile
      */
-    static <T extends Number> T[] quartiles(List<T> values) {
+    static <T extends Number> List<T> quartiles(List<T> values) {
         if (values == null || values.size() == 0) {
             throw new IllegalArgumentException("The list of values are either null or does not contain any data.")
         }
@@ -323,10 +349,10 @@ class Stat {
         def v = values.collect() as Number[]
         v.sort()
 
-        int q1 = (int) Math.round((v.size() -1) * 25 / 100)
-        int q3 = (int) Math.round((v.size() -1) * 75 / 100)
+        int q1 = ((v.size() -1) * 25 / 100).round(0).intValue()
+        int q3 = ((v.size() -1) * 75 / 100).round(0).intValue()
 
-        return [v[q1], v[q3]] as T[]
+        return [v[q1], v[q3]] as List<T>
     }
 
     static <T extends Comparable> T min(List<T> list, boolean ignoreNonNumerics = false) {
@@ -345,14 +371,14 @@ class Stat {
         return minVal
     }
 
-    static <T extends Comparable> T[] min(List<List<T>> matrix, Integer colNum, boolean ignoreNonNumerics = false) {
+    static <T extends Comparable> List<T> min(List<List<T>> matrix, Integer colNum, boolean ignoreNonNumerics = false) {
         return min(matrix, [colNum], ignoreNonNumerics)
     }
 
-    static <T extends Comparable> T[] min(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
+    static <T extends Comparable> List<T> min(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def minVal
-        def minVals = new ArrayList<T>(colNums.size())
+        List<T> minVals = new ArrayList<T>(colNums.size())
         def idx
         for (row in matrix) {
             idx = 0
@@ -374,8 +400,8 @@ class Stat {
         return minVals
     }
 
-    static <T extends Comparable> T[] min(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
-        return min(table.rows(), table.columnIndexes(colNames), ignoreNonNumerics)
+    static <T extends Comparable> List<T> min(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
+        return min(table.rows() as List<List<T>>, table.columnIndexes(colNames), ignoreNonNumerics)
     }
 
     static <T> T max(List<T> list, boolean ignoreNonNumerics = false) {
@@ -394,11 +420,11 @@ class Stat {
         return maxVal
     }
 
-    static <T extends Comparable> T[] max(List<List<T>> matrix, Integer colNum, boolean ignoreNonNumerics = false) {
+    static <T extends Comparable> List<T> max(List<List<T>> matrix, Integer colNum, boolean ignoreNonNumerics = false) {
         return max(matrix, [colNum], ignoreNonNumerics)
     }
 
-    static <T extends Comparable> T[] max(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
+    static <T extends Comparable> List<T> max(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
         def value
         def maxVal
         def maxVals = new ArrayList<T>(colNums.size())
@@ -423,12 +449,12 @@ class Stat {
         return maxVals
     }
 
-    static <T extends Comparable> T[] max(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
-        return max(table.rows(), table.columnIndexes(colNames), ignoreNonNumerics)
+    static <T extends Comparable> List<T> max(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
+        return max(table.rows() as List<List<T>>, table.columnIndexes(colNames), ignoreNonNumerics)
     }
 
 
-    static <T extends Number> T[] sd(List<List<T>> matrix, boolean isBiasCorrected = true, Integer colNum) {
+    static <T extends Number> List<T> sd(List<List<T>> matrix, boolean isBiasCorrected = true, Integer colNum) {
         return sd(matrix, isBiasCorrected, [colNum])
     }
 
@@ -439,7 +465,7 @@ class Stat {
      * @param isBiasCorrected - whether or not the variance computation will use the bias-corrected formula
      * @return the standard deviation
      */
-    static <T extends Number> T[] sd(List<List<T>> matrix, boolean isBiasCorrected = true, List<Integer> colNums) {
+    static <T extends Number> List<T> sd(List<List<T>> matrix, boolean isBiasCorrected = true, List<Integer> colNums) {
         def value
         def numberMap = [:].withDefault{key -> return []}
         for (row in matrix) {
@@ -452,17 +478,17 @@ class Stat {
         }
         def list
         def std
-        def stds = []
+        List<T> stds = []
         for (colNum in colNums) {
             list = numberMap[String.valueOf(colNum)]
-            std = sd(list, isBiasCorrected)
+            std = (T)sd(list, isBiasCorrected)
             stds.add(std)
         }
         return stds
     }
 
-    static <T extends Number> T[] sd(Matrix table, List<String> columnNames, boolean isBiasCorrected = true) {
-        return sd(table.rows(), isBiasCorrected, table.columnIndexes(columnNames))
+    static <T extends Number> List<T> sd(Matrix table, List<String> columnNames, boolean isBiasCorrected = true) {
+        return sd(table.rows() as List<List<T>>, isBiasCorrected, table.columnIndexes(columnNames))
     }
 
     static <T extends Number> T variance(List<T> values, boolean isBiasCorrected = true) {
@@ -565,4 +591,6 @@ class Stat {
         def name = (table.getName() == null || table.getName().isBlank()) ? groupName : table.getName() + '_' + groupName
         return Matrix.create(tbl).withName(name)
     }
+
+
 }

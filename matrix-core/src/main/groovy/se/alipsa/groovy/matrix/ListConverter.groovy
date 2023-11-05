@@ -1,5 +1,6 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
 import java.text.NumberFormat
@@ -8,6 +9,7 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
+@CompileStatic
 class ListConverter {
 
   static <T> List<T> convert(List<?> list, @NotNull Class<T> type,
