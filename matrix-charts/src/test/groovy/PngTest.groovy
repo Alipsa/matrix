@@ -47,7 +47,7 @@ class PngTest {
         BarChart chart = BarChart.createVertical("Salaries", empData, "emp_name", ChartType.BASIC, "salary")
         try {
             def base64 = Plot.base64(chart, 600, 400)
-            println(base64)
+            //println(base64)
             assertNotNull(base64)
             assertTrue(base64.startsWith('data:image/png;base64,'))
         } catch (UnsatisfiedLinkError | NoClassDefFoundError e) {

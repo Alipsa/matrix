@@ -26,7 +26,7 @@ implementation 'se.alipsa.groovy:matrix-core:1.1.2'
 The jvm should be JDK 17 or higher.
 
 ## Matrix
-A Matrix is an immutable Grid with a header and where each column type is defined.
+A Matrix is tabular data with a header and where each column type is defined.
 In some ways you can think of it as an in memory ResultSet.
 
 A Matrix is created using one of the static create methods in Matrix. 
@@ -87,8 +87,8 @@ def table = Matrix.create(new File('/some/path/foo.csv'), ';')
 ```
 
 Data can be reference using []
-notation e.g. to get the content of the 3:rd row and 2:nd column you do table[3,2]. If you pass only one argument,
-you get the column e.g. List<?> priceColumn = table["price"]
+notation e.g. to get the content of the 3:rd row and 2:nd column you do table[3,2] or table[3,'price']. 
+If you pass only one argument, you get the column e.g. List<?> priceColumn = table["price"]
 
 ### General inspection
 
@@ -344,8 +344,9 @@ the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/latest/index.html)
 
 
 ## Grid
-The grid class contains some static function to operate on a 2d list (a [][] structure or List<List<?>>).
-- _convert_ converts one column type to another numeric type
+A Grid is a uniformly typed table
+The grid class contains some static function to operate on a 2d list (a [][] structure or List<List<T>>).
+- _convert_ converts one column type to another type
 - _clone_ creates a deep copy of the matrix
 - _transpose_ "rotates" the matrix 90 degrees
 - _isValid_ checks if it is a proper matrix or not

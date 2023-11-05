@@ -1,67 +1,67 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
+
 import java.text.NumberFormat
 
-// TODO: Consider making grids uniformly Typed e.g. Grid<Double> = new Grid<>()
-//   or perhaps making another class (TypedGrid for that),
-//   maybe even a NumberGrid where the type is <T extends Number>
-class Grid {
+@CompileStatic
+class Grid<T> {
 
-    List<List<?>> data
+    List<List<T>> data
 
     Grid() {
-        data = new ArrayList<>()
+        data = []
     }
 
-    Grid(List<List<?>> data) {
+    Grid(List<List<T>> data) {
         if (isValid(data)) {
             this.data = data
         } else if (data instanceof List) {
-            this.data = [data]
+            this.data = [data] as List<List<T>>
         } else {
             throw new IllegalArgumentException("data is invalid")
         }
     }
 
     Grid(int nrow) {
-        data = new ArrayList<>(nrow)
+        data = new ArrayList<List<T>>(nrow)
     }
 
     Grid(int nrow, int ncol) {
-        data = new ArrayList<>(nrow)
+        data = new ArrayList<List<T>>(nrow)
         for (row in 1..nrow) {
-            data << new ArrayList<>(ncol)
+            data << new ArrayList<T>(ncol)
         }
     }
 
-    Grid(Number value, int nrow, int ncol) {
-        data = new ArrayList<>(nrow)
+    Grid(T value, int nrow, int ncol) {
+        data = new ArrayList<List<T>>(nrow)
         for (row in 1..nrow) {
-            data << [value]*ncol
+            data << ([value]*ncol) as List<T>
         }
     }
 
-    List getAt(int row) {
+    List<T> getAt(int row) {
         return data[row]
     }
 
-    def getAt(int row, int column) {
+    T getAt(int row, int column) {
         return data[row][column]
     }
 
-    def leftShift(List row) {
+    def leftShift(List<T> row) {
         data << row
     }
 
-    boolean add(List<?> row) {
+    boolean add(List<T> row) {
         data.add(row)
     }
 
-    boolean addAll(List<List<?>> grid) {
+    boolean addAll(List<List<T>> grid) {
         data.addAll(grid)
     }
 
-    Grid plus(List<?> row) {
+    Grid plus(List<T> row) {
         def grid = new Grid()
         grid.addAll(data)
         grid.add(row)
@@ -72,14 +72,16 @@ class Grid {
         data.toString() + str
     }
 
-    void putAt(List<Integer> rowColumn, Object value) {
+    void putAt(List<Integer> rowColumn, T value) {
         def row = data.get(rowColumn[0])
         Integer column = rowColumn[1]
         row.set(column, value)
     }
 
     String toString() {
-        data.toString()
+        StringBuilder sb = new StringBuilder('[\n')
+        data.each {sb.append('  ').append(String.valueOf(it)).append('\n')}
+        sb.append(']\n')
     }
 
     /**
@@ -87,7 +89,7 @@ class Grid {
      * @return the list of rows in the grid
      * Mutable, i.e. changes to the result is reflected in the Grid
      */
-    List<List<?>> getData() {
+    List<List<T>> getData() {
         return data
     }
 
@@ -96,42 +98,42 @@ class Grid {
      * @return the list of rows in the grid
      * Mutable, i.e. changes to the result is reflected in the Grid
      */
-    List<List<Object>> getRowList() {
+    List<List<T>> getRowList() {
         return data
     }
 
-    Grid replaceRow(int index, List<?> row) {
+    Grid replaceRow(int index, List<T> row) {
         def r = data.get(index)
         r.clear()
         r.addAll(row)
         return this
     }
 
-    Iterator<List<?>> iterator() {
+    Iterator<List<T>> iterator() {
         return data.iterator()
     }
 
-    static Grid convert(Grid grid, Integer colNum, Class<? extends Number> type, NumberFormat format = null) {
+    static <N> Grid<N> convert(Grid grid, Integer colNum, Class<N> type, NumberFormat format = null) {
         return new Grid(convert(grid.data, [colNum], type, format))
     }
 
-    static List<List<?>> convert(List<List<?>> rowList, Integer colNum, Class<? extends Number> type, NumberFormat format = null) {
+    static <N> List<List<N>> convert(List<List<?>> rowList, Integer colNum, Class<N> type, NumberFormat format = null) {
         if (colNum == null) return null
         def m = clone(rowList)
         def value
         for (int r = 0; r < m.size(); r++) {
             value = m[r][colNum]
             if (value == null) continue
-            m[r][colNum] = ValueConverter.convert(value, type, null, format)
+            m[r].set(colNum, ValueConverter.convert(value, type, null, format))
         }
-        return m
+        return m as List<List<N>>
     }
 
-    static Grid convert(Grid grid, List<Integer> colNums, Class<? extends Number> type, NumberFormat format = null) {
+    static <N> Grid<N> convert(Grid grid, List<Integer> colNums, Class<N> type, NumberFormat format = null) {
         return new Grid(convert(grid.data, colNums, type, format))
     }
 
-    static List<List<?>> convert(List<List<?>> rowList, List<Integer> colNums, Class<? extends Number> type, NumberFormat format = null) {
+    static List<List<?>> convert(List<List<?>> rowList, List<Integer> colNums, Class<?> type, NumberFormat format = null) {
         def m = clone(rowList)
         def value
         for (int r = 0; r < m.size(); r++) {
@@ -139,9 +141,9 @@ class Grid {
                 value = m[r][c]
                 if (value == null) continue
                 if (format == null) {
-                    m[r][c] = ValueConverter.convert(value, type)
+                    m[r].set(c, ValueConverter.convert(value, type))
                 } else {
-                    m[r][c] = ValueConverter.convert(value, type, null, format)
+                    m[r].set(c, ValueConverter.convert(value, type, null, format))
                 }
             }
         }
@@ -158,7 +160,7 @@ class Grid {
         for (int r = 0; r < m.size(); r++) {
             value = m[r][colNum]
             if (value == null) continue
-            m[r][colNum] = converter.call(value)
+            m[r].set(colNum, converter.call(value))
         }
         return m
     }
@@ -209,4 +211,6 @@ class Grid {
         }
         return true
     }
+
+
 }

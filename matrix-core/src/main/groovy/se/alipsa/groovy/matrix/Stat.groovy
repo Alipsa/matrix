@@ -171,10 +171,10 @@ class Stat {
     }
 
     static Matrix medianBy(Matrix table, String medianColumn, String groupBy) {
-        def sorted = table.orderBy(medianColumn)
-        Matrix means = funBy(sorted, medianColumn, groupBy, Stat.&median, BigDecimal)
-        means.setName("${table.name}-medians by $groupBy".toString())
-        return means
+        def sorted = table.clone().orderBy(medianColumn)
+        Matrix medians = funBy(sorted, medianColumn, groupBy, Stat.&median, BigDecimal)
+        medians.setName("${table.name ?: ''}-medians by $groupBy".toString())
+        return medians
     }
 
     /**

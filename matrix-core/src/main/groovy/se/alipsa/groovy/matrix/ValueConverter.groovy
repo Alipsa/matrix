@@ -1,5 +1,7 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
+
 import java.sql.Timestamp
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -9,6 +11,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
 
+@CompileStatic
 class ValueConverter {
 
     static BigDecimal asBigDecimal(BigDecimal num) {
@@ -124,19 +127,19 @@ class ValueConverter {
         return LocalDate.parse(String.valueOf(date), formatter)
     }
 
-    static <T> T convert(Object o, Class<T> type,
+    static <E> E convert(Object o, Class<E> type,
                          DateTimeFormatter dateTimeFormatter = null,
                          NumberFormat numberFormat = null) {
         return switch (type) {
-            case String -> (T)String.valueOf(o)
-            case LocalDate -> (T)asLocalDate(o, dateTimeFormatter)
-            case LocalDateTime -> (T)asLocalDateTime(o, dateTimeFormatter)
-            case YearMonth -> (T)asYearMonth(o)
-            case BigDecimal -> (T)asBigDecimal(o, numberFormat)
-            case Double, double -> (T)asDouble(o, numberFormat)
-            case Integer, int -> (T)asInteger(o)
-            case BigInteger -> (T)asBigInteger(o)
-            case Float -> (T)asFloat(o)
+            case String -> (E)String.valueOf(o)
+            case LocalDate -> (E)asLocalDate(o, dateTimeFormatter)
+            case LocalDateTime -> (E)asLocalDateTime(o, dateTimeFormatter)
+            case YearMonth -> (E)asYearMonth(o)
+            case BigDecimal -> (E)asBigDecimal(o, numberFormat)
+            case Double, double -> (E)asDouble(o, numberFormat)
+            case Integer, int -> (E)asInteger(o)
+            case BigInteger -> (E)asBigInteger(o)
+            case Float -> (E)asFloat(o)
             default -> try {
                 type.cast(o)
             } catch (ClassCastException ignored) {

@@ -24,16 +24,17 @@ The Matrix project consist of the following modules:
 ## Setup
 Matrix should work with any 4.x version of groovy, and probably older versions as well. Binary builds can be downloaded 
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
-handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
+handles dependencies via maven central (gradle, maven ivy etc.) you can add your dependencies from there
+. The group name is se.alipsa.groovy. An example for matrix-core is as follows for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix:1.1.2'
+implementation 'se.alipsa.groovy:matrix-core:1.1.3'
 ```
 ...and the following for maven
 ```xml
 <dependency>
     <groupId>se.alipsa.groovy</groupId>
-    <artifactId>matrix</artifactId>
-    <version>1.1.2</version>
+    <artifactId>matrix-core</artifactId>
+    <version>1.1.3</version>
 </dependency>
 ```
 

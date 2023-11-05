@@ -1,5 +1,6 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.groovy.matrix.util.RowComparator
 
@@ -30,6 +31,7 @@ import static se.alipsa.groovy.matrix.util.ClassUtils.*
  *
  *
  */
+@CompileStatic
 class Matrix implements Iterable {
 
   // TODO: consider using Collections.checkedList to create a type checked version of each column
@@ -61,7 +63,7 @@ class Matrix implements Iterable {
   static Matrix create(List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt) {
     Matrix table = new Matrix()
     table.mHeaders = headerList.collect()
-    table.mColumns = rowList.transpose().collect()
+    table.mColumns = rowList.transpose().collect() as List<List<?>>
     table.mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
     return table
   }
@@ -221,7 +223,7 @@ class Matrix implements Iterable {
       mHeaders << ("v$i" as String)
       mColumns << column.collect()
     }
-    mTypes = [Object.class] * columnList.size()
+    mTypes = [Object.class] * columnList.size() as List<Class<?>>
   }
 
   private static List<Class<?>> sanitizeColumnTypes(List<String> headerList, List<Class<?>>... dataTypesOpt) {
@@ -232,7 +234,7 @@ class Matrix implements Iterable {
         throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${types.size()})")
       }
     } else {
-      types = [Object.class] * headerList.size()
+      types = [Object.class] * headerList.size() as List<Class<?>>
     }
     return types
   }
@@ -323,7 +325,7 @@ class Matrix implements Iterable {
     for (String colName in columnNames) {
       cols.add(column(colName))
     }
-    return cols
+    return cols as List<List<?>>
   }
 
   List<List<?>> columns(Integer[] indices) {
@@ -331,11 +333,11 @@ class Matrix implements Iterable {
     for (int index in indices) {
       cols.add(column(index))
     }
-    return cols
+    return cols as List<List<?>>
   }
 
   List<Row> rows(List<Integer> index) {
-    def rows = []
+    List<Row> rows = []
     index.each {
       rows.add(row((int) it))
     }
@@ -360,10 +362,11 @@ class Matrix implements Iterable {
    * @return a List of Rows that matched the criteria
    */
   List<Row> rows(Closure criteria) {
-    def r = []
-    mColumns.transpose().eachWithIndex { List<?> it, int i ->
-      if (criteria(it)) {
-        r << new Row(i, it, this)
+    List<Row> r = []
+    mColumns.transpose().eachWithIndex { it, int i ->
+      def row = it as List<?>
+      if (criteria(row)) {
+        r << new Row(i, row, this)
       }
     }
     return r
@@ -491,7 +494,7 @@ class Matrix implements Iterable {
     if (includeHeaderAsRow) {
       rows.add(mHeaders)
     }
-    rows.addAll(mColumns.transpose())
+    rows.addAll(mColumns.transpose() as List<List<?>>)
     return create(header, Grid.transpose(rows), types)
   }
 
@@ -548,7 +551,7 @@ class Matrix implements Iterable {
   }
 
   void putAt(Number rowIndex, Number colIndex, Object value) {
-    mColumns[colIndex.intValue()][rowIndex.intValue()] = value
+    mColumns[colIndex.intValue()].set(rowIndex.intValue(), value)
   }
 
   /**
@@ -608,7 +611,7 @@ class Matrix implements Iterable {
    * and everything else default (left) aligned
    */
   String toMarkdown(Map<String, String> attr = [:]) {
-    def alignment = []
+    List<String> alignment = []
     for (type in columnTypes()) {
       if (Number.isAssignableFrom(type)) {
         alignment.add('---:')
@@ -702,8 +705,8 @@ class Matrix implements Iterable {
   }
 
   Matrix convert(Map<String, Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
-    def convertedColumns = []
-    def convertedTypes = []
+    List<List<?>> convertedColumns = []
+    List<Class<?>> convertedTypes = []
     for (int i = 0; i < columnCount(); i++) {
       String colName = mHeaders[i]
       if (columnTypes[colName]) {
@@ -719,7 +722,7 @@ class Matrix implements Iterable {
         convertedTypes.add(columnType(i))
       }
     }
-    def convertedRows = Grid.transpose(convertedColumns)
+    def convertedRows = Grid.transpose(convertedColumns) as List<List<?>>
     return create(mName, mHeaders, convertedRows, convertedTypes)
   }
 
@@ -738,8 +741,8 @@ class Matrix implements Iterable {
    * @return a new converted Matrix
    */
   Matrix convert(Converter[] converters) {
-    def convertedColumns = []
-    def convertedTypes = []
+    List<List<?>> convertedColumns = []
+    List<Class<?>> convertedTypes = []
 
     List<String> columnNameList = []
     List<Class<?>> columnTypeList = []
@@ -778,8 +781,8 @@ class Matrix implements Iterable {
    * @return a new Matrix
    */
   Matrix convert(int columnNumber, Class<?> type, Closure converter) {
-    def convertedColumns = []
-    def convertedTypes = []
+    List<List<?>> convertedColumns = []
+    List<Class<?>> convertedTypes = []
     def col = []
     for (int i = 0; i < columnCount(); i++) {
       if (columnNumber == i) {
@@ -811,7 +814,7 @@ class Matrix implements Iterable {
    */
   Matrix subset(@NotNull String columnName, @NotNull Closure<Boolean> condition) {
     def rows = rows(column(columnName).findIndexValues(condition) as List<Integer>)
-    return create(mName, mHeaders, rows, mTypes)
+    return create(mName, mHeaders, rows as List<List<?>>, mTypes)
   }
 
   /**
@@ -821,7 +824,8 @@ class Matrix implements Iterable {
    */
   Matrix subset(Closure<Boolean> criteria) {
     def r = [] as List<List<?>>
-    mColumns.transpose().each { row -> {
+    mColumns.transpose().each { it -> {
+        def row = it as List<?>
         if (criteria(row)) {
           r.add(row)
         }
@@ -831,7 +835,7 @@ class Matrix implements Iterable {
   }
 
   Matrix removeEmptyRows() {
-    return subset { containsValues(it) }
+    return subset { containsValues(it as Iterable<?>) }
   }
 
   static boolean containsValues(Iterable<?> row) {
@@ -848,7 +852,7 @@ class Matrix implements Iterable {
   }
 
   Matrix apply(int columnNumber, Closure function) {
-    def converted = []
+    List<List<?>> converted = []
     def col = []
     Class<?> updatedClass = null
     for (int i = 0; i < columnCount(); i++) {
@@ -877,7 +881,7 @@ class Matrix implements Iterable {
   }
 
   Matrix apply(int columnNumber, List<Integer> rows, Closure function) {
-    def converted = []
+    List<List<?>> converted = []
     def col = []
     Class<?> updatedClass = null
     for (int i = 0; i < columnCount(); i++) {
@@ -910,9 +914,10 @@ class Matrix implements Iterable {
   }
 
   Matrix apply(int columnNumber, Closure criteria, Closure function) {
-    def updatedRows = []
+    List<List<?>> updatedRows = []
     Class<?> updatedClass = null
-    mColumns.transpose().each { row -> {
+    mColumns.transpose().each { it -> {
+        def row = it as List<?>
         if (criteria(row)) {
           def r = []
           for (int i = 0; i < columnCount(); i++) {
@@ -955,16 +960,10 @@ class Matrix implements Iterable {
 
 
   Matrix addColumn(String name, type = Object, List<?> column) {
-    List<List<?>> columns = []
-    columns.addAll(mColumns)
-    columns.add(column)
-    List<String> headers = []
-    headers.addAll(mHeaders)
-    headers.add(name)
-    List<Class<?>> types = []
-    types.addAll(mTypes)
-    types.add(type)
-    return create(mName, headers,  Grid.transpose(columns), types)
+    mHeaders << name
+    mTypes << (type as Class<?>)
+    mColumns << column
+    return this
   }
 
   /**
@@ -977,16 +976,10 @@ class Matrix implements Iterable {
    * @return a new Matrix with the column inserted
    */
   Matrix addColumn(String name, type = Object, Integer index, List<?> column) {
-    List<List<?>> columns = []
-    columns.addAll(mColumns)
-    columns.add(index, column)
-    List<String> headers = []
-    headers.addAll(mHeaders)
-    headers.add(index, name)
-    List<Class<?>> types = []
-    types.addAll(mTypes)
-    types.add(index, type)
-    return create(mName, headers,  Grid.transpose(columns), types)
+    mHeaders.add(index, name)
+    mTypes.add(index, type as Class<?>)
+    mColumns.add(index, column)
+    return this
   }
 
   Matrix addColumns(Matrix table, String... columns) {
@@ -1000,18 +993,18 @@ class Matrix implements Iterable {
     if (columns.size() != names.size() && columns.size() != types.size()) {
       throw new IllegalArgumentException("List sizes of columns, names and types does not match")
     }
-    List<List<?>> c = []
-    c.addAll(this.mColumns)
-    c.addAll(columns)
-    List<String> headers = []
-    headers.addAll(this.mHeaders)
-    headers.addAll(names)
-    List<Class<?>> t = []
-    t.addAll(this.mTypes)
-    t.addAll(types)
-    return create(mName, headers,  Grid.transpose(c), t)
+    names.eachWithIndex { String name, int i ->
+      addColumn(name, types[i], columns[i])
+    }
+    return this
   }
 
+  /**
+   * Adds a row to the current Matrix
+   *
+   * @param row a List<?> containing the row to add
+   * @return a reference to the this Matrix to allow method chaining
+   */
   Matrix addRow(List<?> row) {
     if (row == null) {
       throw new IllegalArgumentException("Row cannot be null")
@@ -1019,48 +1012,53 @@ class Matrix implements Iterable {
     if (row.size() != columnCount()) {
       throw new IllegalArgumentException("The number of elements in the row (${row.size()}) does not match the number of columns (${columnCount()})")
     }
-    def rows = []
-    rows.addAll(mRows)
-    rows.add(row)
-    return create(name, mHeaders, rows, mTypes)
+    for (int c = 0; c < row.size(); c++) {
+      mColumns[c].add(row[c])
+    }
+    return this
   }
 
+  /**
+   * Adds several rows to the current Matrix
+   *
+   * @param rows a List<List<?> containing the rows to add
+   * @return a reference to the this Matrix to allow method chaining
+   */
   Matrix addRows(List<List<?>> rows) {
     if (rows == null) {
       throw new IllegalArgumentException("Row cannot be null")
     }
-    def r = []
-    r.addAll(mRows)
-    r.addAll(rows)
-    return create(mName, mHeaders, r, mTypes)
+    rows.each {
+      addRow(it)
+    }
+    return this
   }
 
   Matrix dropColumnsExcept(String... columnNames) {
-    List<List<?>> cols = []
-    List<Class<?>> types = []
-    List<String> heads = []
-    for (int i = 0; i < columnNames.length; i++) {
-      def colName = columnNames[i]
-      cols.add(column(colName))
-      types.add(columnType(colName))
-      heads.add(colName)
+    def retainColNames = columnNames.length > 0 ? columnNames as List : []
+    for (String columnName : mHeaders.collect()) {
+      if (retainColNames.contains(columnName)) {
+        continue
+      }
+      def colIdx = columnIndex(columnName)
+      mColumns.remove(colIdx)
+      mTypes.remove(colIdx)
+      mHeaders.remove(colIdx)
     }
-    return create(mName, heads, Grid.transpose(cols), types)
+    return this
   }
 
   Matrix dropColumns(String... columnNames) {
-    def cols = []
-    def types = []
-    def heads = []
-    for (colName in this.columnNames()) {
-      if (colName in columnNames) {
-        continue
+    def columnsToDrop = columnNames.length > 0 ? columnNames as List<String> : []
+    columnsToDrop.each { colName ->
+      if (colName in this.columnNames()) {
+        def colIdx = columnIndex(colName)
+        mColumns.remove(colIdx)
+        mTypes.remove(colIdx)
+        mHeaders.remove(colIdx)
       }
-      cols.add(column(colName))
-      types.add(columnType(colName))
-      heads.add(colName)
     }
-    return create(mName, heads, Grid.transpose(cols), types)
+    return this
   }
 
   /**
@@ -1078,43 +1076,10 @@ class Matrix implements Iterable {
     }
     Map<?, Matrix> tables = [:]
     for (entry in groups) {
-      tables.put(entry.key, create(String.valueOf(entry.key), mHeaders, rows(entry.value), mTypes))
+      tables.put(entry.key, create(String.valueOf(entry.key), mHeaders, rows(entry.value) as List<List<?>>, mTypes))
     }
     return tables
   }
-
-  /**
-   * @deprecated Use orderBy instead
-   *
-  @Deprecated
-  Matrix sort(String columnName, Boolean descending = Boolean.FALSE) {
-    return orderBy(columnName, descending)
-  }
-
-  /**
-   * @deprecated Use orderBy instead
-   *
-  @Deprecated
-  Matrix sortBy(String columnName, Boolean descending = Boolean.FALSE) {
-    orderBy(columnName, descending)
-  }
-
-  /**
-   * @deprecated Use orderBy instead
-   *
-  @Deprecated
-  Matrix sortBy(LinkedHashMap<String, Boolean> columnsAndDirection) {
-    orderBy(columnsAndDirection)
-  }
-
-  /**
-   * @deprecated Use orderBy instead
-   *
-  @Deprecated
-  Matrix sortBy(Comparator comparator) {
-    orderBy(comparator)
-  }
-   */
 
   /**
    * Sort this table in ascending  order by the columns specified
@@ -1135,17 +1100,22 @@ class Matrix implements Iterable {
     }
     def comparator = new RowComparator(columnIndex(columnName))
     // copy all the rows
-    List<List<?>> rows = []
-    for (row in mColumns.transpose()) {
-      def vals = []
-      vals.addAll(row)
-      rows.add(vals)
-    }
+    List<Row> rows = this.rows()
     Collections.sort(rows, comparator)
     if (descending) {
       Collections.reverse(rows)
     }
-    return create(mName, mHeaders, rows, mTypes)
+    updateValues(rows)
+    return this
+    //return create(mName, mHeaders, rows as List<List<?>>, mTypes)
+  }
+
+  private void updateValues(List<Row> rows) {
+    rows.eachWithIndex{ Row row, int r ->
+      row.eachWithIndex { Object value, int c ->
+        mColumns[c].set(r, value)
+      }
+    }
   }
 
   Matrix orderBy(LinkedHashMap<String, Boolean> columnsAndDirection) {
@@ -1165,14 +1135,11 @@ class Matrix implements Iterable {
 
   Matrix orderBy(Comparator comparator) {
     // copy all the rows
-    List<List<?>> rows = []
-    for (row in mColumns.transpose()) {
-      def vals = []
-      vals.addAll(row)
-      rows.add(vals)
-    }
+    List<Row> rows = this.rows()
     Collections.sort(rows, comparator)
-    return create(mName, mHeaders, rows, mTypes)
+    updateValues(rows)
+    return this
+    //return create(mName, mHeaders, rows as List<List<?>>, mTypes)
   }
 
   List<?> findFirstRow(String columnName, Object value) {
@@ -1224,8 +1191,8 @@ class Matrix implements Iterable {
    * Convert this table into a Grid
    * @return a Grid corresponding to the data content of this table
    */
-  Grid grid() {
-    return new Grid(rows())
+  Grid<Object> grid() {
+    return new Grid<Object>(rows() as List<List<Object>>)
   }
 
   boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true) {
@@ -1242,10 +1209,10 @@ class Matrix implements Iterable {
     return true
   }
 
+  @Override
   int hashCode() {
     int result
     result = (mHeaders != null ? mHeaders.hashCode() : 0)
-    result = 31 * result + (mRows != null ? mRows.hashCode() : 0)
     result = 31 * result + (mTypes != null ? mTypes.hashCode() : 0)
     result = 31 * result + (mName != null ? mName.hashCode() : 0)
     return result
@@ -1352,7 +1319,7 @@ class Matrix implements Iterable {
    */
   List<?> withColumns(int[] colIndices, Closure operation) {
     def result = []
-    columns(colIndices).transpose().each {
+    columns(colIndices as Integer[]).transpose().each {
       result << operation.call(it)
     }
     return result

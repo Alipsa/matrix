@@ -1,7 +1,10 @@
 package se.alipsa.groovy.matrix.util
 
+import groovy.transform.CompileStatic
+
 import static se.alipsa.groovy.matrix.Matrix.*
 
+@CompileStatic
 class RowComparator<T> implements Comparator<List<T>> {
 
   LinkedHashMap<Integer, Boolean> columnIdx = [:]
@@ -28,9 +31,9 @@ class RowComparator<T> implements Comparator<List<T>> {
 
       if (v1 instanceof Comparable) {
         if (idx.value == ASC) {
-          result = v1 <=> v2
+          result = v1 as Comparable <=> v2 as Comparable
         } else {
-          result = v2 <=> v1
+          result = v2 as Comparable <=> v1 as Comparable
         }
       } else if (v1 instanceof Number){
         if (idx.value == ASC) {

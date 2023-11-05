@@ -86,17 +86,17 @@ class GridTest {
 
     @Test
     void testCastWithClosure() {
-        Grid foo = [
+        Grid<Object> foo = new Grid([
                 [12.0, 3.0, Math.PI],
                 ["1,9", 2, 3],
                 ["bla", 2, 3]
-        ]
+        ])
 
         assertEquals(12.0g, sum(foo, 0), "sum of foo: ")
 
-        Grid bar = convert(foo, 0, { v -> {
+        Grid<BigDecimal> bar = convert(foo, 0, { v -> {
             if (v instanceof Number) {
-                return v
+                return v as BigDecimal
             }
             if (v instanceof String) {
                 def num = v.replace(',', '.')
@@ -104,20 +104,20 @@ class GridTest {
                     return new BigDecimal(num)
                 }
             }
-            return 0
+            return BigDecimal.ZERO
         }})
-        assertEquals(13.9g, sum(bar, 0), "sum of bar: ")
+        assertEquals(13.9g, sum(bar, 0), "sum of bar: $bar")
 
         assertEquals(12.0g, sum(foo, 0), "after cast, sum of foo: ")
     }
 
     @Test
     void testTranspose() {
-        Grid foo = [
+        Grid<Object> foo = [
                 [12.0, 3.0, Math.PI],
                 ["1,9", 2, 4],
                 ["bla", 7, 5]
-        ]
+        ] as Grid
         assertEquals([
                 [12.0, "1,9", "bla"],
                 [3.0, 2, 7],
@@ -134,7 +134,7 @@ class GridTest {
 
     @Test
     void testValidate() {
-        Grid singleRow = [[1,2,3]]
+        Grid singleRow = [[1,2,3]] as Grid
         assertTrue(isValid(singleRow), "Single row, " + singleRow.getClass())
         assertTrue(isValid([[1,2,3], ["a", "b", "c"]]), "two rows")
         assertFalse(isValid([1,2,3]), "One dimensional")
@@ -166,10 +166,10 @@ class GridTest {
         int i = 0;
         for(row in foo) {
             if (i == 0) {
-                assertArrayEquals([12.0, 3.0, Math.PI].toArray(), row.toArray())
+                assertIterableEquals([12.0, 3.0, Math.PI], row)
             }
             if (i == 2) {
-                assertArrayEquals(["bla", 7, 5].toArray(), row.toArray())
+                assertIterableEquals(["bla", 7, 5], row)
             }
             i++
         }

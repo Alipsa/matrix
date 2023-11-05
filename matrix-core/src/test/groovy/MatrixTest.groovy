@@ -411,8 +411,8 @@ class MatrixTest {
             start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
             [int, String, Number, LocalDate]
         )
-        def table = empData.addColumn("yearMonth", YearMonth, toYearMonth(empData["start_date"]))
-        assertEquals(empData.columnCount() + 1, table.columnCount())
+        def table = empData.clone().addColumn("yearMonth", YearMonth, toYearMonth(empData["start_date"]))
+        assertEquals(5, table.columnCount())
         assertEquals("yearMonth", table.columnNames()[table.columnCount()-1])
         assertEquals(YearMonth, table.columnType("yearMonth"))
         assertEquals(YearMonth.of(2012, 1), table[0,4])
@@ -487,12 +487,13 @@ class MatrixTest {
             [Integer, String, Number, LocalDate]
         )
         def dateSorted = empData.orderBy("start_date")
-        assertEquals(4, dateSorted[4, 0], "Last row should be the Ryan row")
+        assertEquals(4, dateSorted[4, 0], "Last row should be the Ryan row: \n${dateSorted.content()}")
         assertEquals(asLocalDate("2012-03-27"), dateSorted[0, 3], "First row should be the Dan Row")
 
+        //println(empData.content())
         def salarySorted = empData.orderBy(["salary": Matrix.DESC])
-        assertEquals(843.25, salarySorted["salary"][0], "Highest salary")
-        assertEquals(515.2, salarySorted["salary"][4], "Lowest salary")
+        assertEquals(843.25, salarySorted["salary"][0], "Highest salary: ${salarySorted.content()}")
+        assertEquals(515.2, salarySorted["salary"][4], "Lowest salary: ${salarySorted.content()}")
     }
 
     @Test
@@ -521,12 +522,12 @@ class MatrixTest {
             start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
             [int, String, Number, LocalDate]
         )
-        def empList = empData.dropColumnsExcept("emp_id", "emp_name", "start_date")
+        def empList = empData.dropColumnsExcept("emp_id", "start_date")
         //println(empList.content())
-        assertEquals(3, empList.columnCount(), "Number of columns after drop")
+        assertEquals(2, empList.columnCount(), "Number of columns after drop")
         assertEquals(5, empList.rowCount(), "Number of rows after drop")
-        assertIterableEquals(["emp_id", "emp_name", "start_date"], empList.columnNames(), "column names after drop")
-        assertIterableEquals([Integer, String, LocalDate], empList.columnTypes(), "Column types after drop")
+        assertIterableEquals(["emp_id", "start_date"], empList.columnNames(), "column names after drop")
+        assertIterableEquals([Integer, LocalDate], empList.columnTypes(), "Column types after drop")
     }
 
     @Test
