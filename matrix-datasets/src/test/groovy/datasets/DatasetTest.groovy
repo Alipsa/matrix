@@ -26,8 +26,8 @@ class DatasetTest {
         def virginica = iris.subset {
             it[speciesIdx] == 'virginica'
         }
-        assertEquals(1.462, Stat.mean(setosa['Petal Length']))
-        assertEquals(5.552, Stat.mean(virginica['Petal Length']))
+        assertEquals(1.462, Stat.mean(setosa['Petal Length'], 3))
+        assertEquals(5.552, Stat.mean(virginica['Petal Length'], 3))
     }
 
 

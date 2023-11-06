@@ -36,8 +36,29 @@ class MapListTest {
     lm.add(YearMonth.of(2014, 3), asLocalDate("2014-03-20"))
     lm.add(YearMonth.of(2014, 3), asLocalDate("2014-03-28"))
 
-    assertEquals(asLocalDate("2014-02-01"), lm[YearMonth.of(2014, 2), 0])
+    println lm.get(YearMonth.of(2014, 2))
+    assertEquals(asLocalDate("2014-02-01"), lm.getAt([YearMonth.of(2014, 2), 0]), lm.toString())
+    assertEquals(asLocalDate("2014-02-01"), lm[YearMonth.of(2014, 2), 0], lm.toString())
     assertEquals(asLocalDate("2014-03-28"), lm[YearMonth.of(2014, 3), 2])
     assertEquals(asLocalDate("2014-01-11"), lm[YearMonth.of(2014, 1), 0])
+  }
+
+  @Test
+  void testPutAt() {
+    MapList<Integer, String> ml = new MapList<>()
+    ml[1] = 'Foo'
+    ml[1] = 'Bar'
+    ml[2] = 'Baz'
+    assertIterableEquals(['Baz'], ml.get(2))
+    assertIterableEquals(['Foo', 'Bar'], ml.get(1))
+  }
+
+  @Test
+  void testRemove() {
+    MapList<Integer, String> ml = new MapList<>()
+    ml[1] = 'Foo'
+    ml[1] = 'Bar'
+    ml.remove(1, 0)
+    assertIterableEquals(['Bar'], ml.get(1))
   }
 }

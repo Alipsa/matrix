@@ -190,8 +190,11 @@ class Stat {
         return sums
     }
 
-    static Matrix meanBy(Matrix table, String meanColumn, String groupBy) {
+    static Matrix meanBy(Matrix table, String meanColumn, String groupBy, int scale = 9) {
         Matrix means = funBy(table, meanColumn, groupBy, Stat.&mean, BigDecimal)
+        means = means.apply(meanColumn) {
+            it.setScale(scale, RoundingMode.HALF_UP)
+        }
         means.setName("${table.name}-means by $groupBy".toString())
         return means
     }
@@ -233,11 +236,21 @@ class Stat {
         )
     }
 
-    static List<BigDecimal> mean(List<List<?>> rows, Integer colNum) {
-        return mean(rows, [colNum])
+    static List<BigDecimal> means(Grid grid, int scale = 9) {
+        return means(grid.getRowList(), scale)
     }
 
-    static List<BigDecimal> mean(List<List<?>> matrix, List<Integer> colNums) {
+    static List<BigDecimal> means(List<List<?>> rowList, int scale = 9) {
+        List<List<?>> columns = Grid.transpose(rowList)
+        println columns
+        List<BigDecimal> results = []
+        columns.each {
+            results << mean(it, scale)
+        }
+        return results
+    }
+
+    static List<BigDecimal> means(List<List<?>> matrix, List<Integer> colNums) {
         def sums = [0.0g] * colNums.size()
         def ncols = [0.0g] * colNums.size()
         def value
@@ -260,35 +273,41 @@ class Stat {
         return means
     }
 
-    static List<BigDecimal> mean(Matrix table, List<String> colNames) {
-        return mean(table.rows() as List<List<?>>, table.columnIndexes(colNames))
+    static List<BigDecimal> means(Matrix table, List<String> colNames) {
+        return means(table.rows() as List<List<?>>, table.columnIndexes(colNames))
     }
 
-    static BigDecimal mean(List<?> list) {
-        def sum = 0 as BigDecimal
-        def nVals = 0
+    static BigDecimal mean(List<?> list, int scale = 9) {
+        if (list == null || list.isEmpty()) {
+            return null
+        }
+        BigDecimal sum = BigDecimal.ZERO //.setScale(scale, RoundingMode.HALF_UP)
+        int nVals = 0
         for (value in list) {
             if (value != null && value instanceof Number) {
-                sum += value
+                sum += (value as BigDecimal) //.setScale(scale, RoundingMode.HALF_UP)
                 nVals++
             }
         }
-        return sum / nVals
+        if (sum == 0) {
+            return BigDecimal.ZERO.setScale(scale, RoundingMode.HALF_UP)
+        }
+        return sum.divide((nVals as BigDecimal), scale, RoundingMode.HALF_UP)
     }
 
     static BigDecimal mean(Matrix table, String colName) {
         return mean(table.column(colName))
     }
 
-    static List<BigDecimal> median(List<List<?>> matrix, Integer colNum) {
-        return median(matrix, [colNum])
+    static List<BigDecimal> medians(List<List<?>> matrix, Integer colNum) {
+        return medians(matrix, [colNum])
     }
 
-    static List<BigDecimal> median(Matrix table, String colName) {
-        return median(table.column(colName) as List<List<?>>, [table.columnNames().indexOf(colName)])
+    static List<BigDecimal> medians(Matrix table, String colName) {
+        return medians(table.column(colName) as List<List<?>>, [table.columnNames().indexOf(colName)])
     }
 
-    static List<BigDecimal> median(List<List<?>> matrix, List<Integer> colNums) {
+    static List<BigDecimal> medians(List<List<?>> matrix, List<Integer> colNums) {
         Map<String, List<? extends Number>> valueList = [:].withDefault{key -> return []}
         def value
         for (row in matrix) {
@@ -311,8 +330,8 @@ class Stat {
         return medians
     }
 
-    static List<BigDecimal> median(Matrix table, List<String> colNames) {
-        return median(table.rows() as List<List<?>>, table.columnIndexes(colNames))
+    static List<BigDecimal> medians(Matrix table, List<String> colNames) {
+        return medians(table.rows() as List<List<?>>, table.columnIndexes(colNames))
     }
 
     static BigDecimal median(List<? extends Number> valueList) {

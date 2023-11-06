@@ -34,8 +34,7 @@ class StudentTest {
     println(result)
     assertEquals(-49.98618626, result.getT(8), "t value")
     println("var1 = ${result.var1}, var2 = ${result.var2}")
-    // The 8:th decimal differs from gnu R but matches e.g. https://calculator-online.net/degrees-of-freedom-calculator/
-    assertEquals(58.60939454, result.getDf(8), "Degrees of freedom")
+    assertEquals(58.60939455, result.getDf(8), "Degrees of freedom")
     assertEquals(0.17366400, result.getSd1(8), "sd1")
     assertEquals(0.55189470, result.getSd2(8), "sd2")
     assertEquals(0.55189470, result.getSd2(8), "sd2")

@@ -366,6 +366,15 @@ Grid foo = [
     ["1.9", 2, 3],
     ["4.3", 2, 3]
 ] as Grid // the as Grid is technically not needed but makes some IDE's happy (e.g. Intellij)
+
+// But a Typed way is usually clearer
+Grid<Number> bar = new Grid<>([
+    [12.0, 3.0, Math.PI],
+    [1.9, 2, 3],
+    [4.3, 2, 3]
+])
+
+Stat.mean(bar)
 ```
 elements can be accessed using the simple square bracket notation grid[rowindex, columnIndex], e.g:
 ```groovy

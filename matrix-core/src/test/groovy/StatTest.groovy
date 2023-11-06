@@ -1,10 +1,9 @@
+import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
 
-
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.ZoneId
-import java.time.ZonedDateTime
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.groovy.matrix.ListConverter.*
@@ -23,14 +22,22 @@ class StatTest {
                 [null, 7, "2"]
         ]
 
-        assertEquals(2 as BigDecimal, mean(matrix[0]))
-        def m = mean(matrix, [1, 2])
+        assertEquals(2.0g, mean(matrix[0],1))
+        def m = means(matrix, [1, 2])
         assertEquals(10/3, m[0])
         assertEquals(1.95g, m[1])
 
         def table = Matrix.create(["v0", "v1", "v2"], matrix)
-        def m2 = mean(table, ["v1", "v2"])
+        def m2 = means(table, ["v1", "v2"])
         assertIterableEquals(m, m2)
+
+        Grid<Number> bar = new Grid<>([
+            [12.0, 3.0, Math.PI],
+            [1.9, 2, 3],
+            [4.3, 2, 3]
+        ])
+
+        assertIterableEquals([6.07, 2.33, 3.05], means(bar, 2))
     }
 
     @Test
@@ -42,12 +49,12 @@ class StatTest {
         ]
 
         assertEquals(2 as BigDecimal, median(matrix[0]))
-        def m = median(matrix, [1, 2])
+        def m = medians(matrix, [1, 2])
         assertEquals(2 as BigDecimal, m[0])
         assertEquals(1.95g, m[1])
 
         def table = Matrix.create(["v0", "v1", "v2"], matrix)
-        def m2 = median(table, ["v1", "v2"])
+        def m2 = medians(table, ["v1", "v2"])
         assertIterableEquals(m, m2)
     }
 
@@ -225,11 +232,11 @@ class StatTest {
                 [int, String, String, Number, LocalDate]
         )
 
-        def sums = meanBy(empData, "salary", "department")
+        def sums = meanBy(empData, "salary", "department", 2)
         def salaries = empData["salary"]
 
-        assertEquals((salaries[0] + salaries[3])/2 as BigDecimal, sums.findFirstRow('department', "IT")[1])
-        assertEquals((salaries[1] + salaries[2])/2 as BigDecimal, sums.findFirstRow('department', "OPS")[1])
+        assertEquals(((salaries[0] + salaries[3])/2).setScale(2, RoundingMode.HALF_UP), sums.findFirstRow('department', "IT")[1])
+        assertEquals(((salaries[1] + salaries[2])/2).setScale(2, RoundingMode.HALF_UP), sums.findFirstRow('department', "OPS")[1])
         assertEquals(843.25g, sums.findFirstRow('department', "Infra")[1])
     }
 

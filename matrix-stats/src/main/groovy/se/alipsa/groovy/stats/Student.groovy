@@ -30,6 +30,8 @@ import java.math.RoundingMode
  */
 class Student {
 
+  private static final SCALE = 15
+
   /**
    * The paired samples t-test is used to compare the means between two related groups of samples.
    * In this case, you have two values (i.e., pair of values) for the same samples.
@@ -44,8 +46,8 @@ class Student {
     if (n1 != n2) {
       throw new IllegalArgumentException("The two lists of values are of different size")
     }
-    BigDecimal mean1 = Stat.mean(first)
-    BigDecimal mean2 = Stat.mean(second)
+    BigDecimal mean1 = Stat.mean(first, SCALE)
+    BigDecimal mean2 = Stat.mean(second, SCALE)
     BigDecimal var1 = Stat.variance(first, true)
     BigDecimal var2 = Stat.variance(second, true)
     BigDecimal sd1 = Math.sqrt(var1 as double)
@@ -68,8 +70,8 @@ class Student {
     result.tVal = t
     result.n1 = n1
     result.n2 = n2
-    result.mean1 = mean1
-    result.mean2 = mean2
+    result.mean1 = mean1.stripTrailingZeros()
+    result.mean2 = mean2.stripTrailingZeros()
     result.var1 = var1
     result.var2 = var2
     result.sd = sd
@@ -88,14 +90,14 @@ class Student {
    * @return
    */
   static Result tTest(List<? extends Number> first, List<? extends Number> second, Boolean equalVariance = null) {
-    BigDecimal mean1 = Stat.mean(first)
-    BigDecimal mean2 = Stat.mean(second)
+    BigDecimal mean1 = Stat.mean(first, SCALE)
+    BigDecimal mean2 = Stat.mean(second, SCALE)
     BigDecimal var1 = Stat.variance(first, true)
     BigDecimal var2 = Stat.variance(second, true)
     BigDecimal sd1 = Math.sqrt(var1 as double)
     BigDecimal sd2 = Math.sqrt(var2 as double)
-    Integer n1 = first.size()
-    Integer n2 = second.size()
+    BigDecimal n1 = first.size()
+    BigDecimal n2 = second.size()
     Result result = new Result()
     def t = (mean1 - mean2) / Math.sqrt((sd1 ** 2) / n1 + (sd2 ** 2) / n2)
     result.tVal = t
@@ -110,10 +112,10 @@ class Student {
       result.df = n1 + n2 - 2
       result.description = "Welch two sample t-test with equal variance"
     } else {
-      def dividend = (var1/n1 + var2/n2) ** 2
-      def divisor1 = (var1 ** 2) / ((n1 ** 2) * (n1-1))
-      def divisor2 = (var2 ** 2) / ((n2 ** 2) * (n2 -1))
-      result.df =  dividend / (divisor1 + divisor2)
+      BigDecimal dividend = (var1/n1 + var2/n2) ** 2
+      BigDecimal divisor1 = (var1 ** 2).divide((n1 ** 2) * (n1-1), SCALE, RoundingMode.HALF_UP)
+      BigDecimal divisor2 = (var2 ** 2).divide((n2 ** 2) * (n2 -1), SCALE, RoundingMode.HALF_UP)
+      result.df =  dividend.divide(divisor1 + divisor2, SCALE, RoundingMode.HALF_UP)
       result.description = "Welch two sample t-test with unequal variance"
     }
     result.mean1 = mean1
@@ -142,7 +144,7 @@ class Student {
    * </ul>
    */
   static SingleResult tTest(List<? extends Number> values, Number comparison) {
-    def mean = Stat.mean(values)
+    def mean = Stat.mean(values, SCALE)
     def variance = Stat.variance(values)
     def sd = Math.sqrt(variance as double)
     def n = values.size()
