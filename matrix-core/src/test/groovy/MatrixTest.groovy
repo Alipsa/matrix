@@ -1,8 +1,9 @@
-import se.alipsa.groovy.datautil.SqlUtil
 import se.alipsa.groovy.matrix.Converter
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.Matrix
+
+import groovy.sql.Sql
 
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -286,7 +287,7 @@ class MatrixTest {
             dbTraceFile.delete()
         }
 
-        SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
+        Sql.withInstance(dbUrl, dbUser, dbPasswd, dbDriver) { sql ->
             sql.execute '''
                 create table IF NOT EXISTS PROJECT  (
                     id integer not null primary key,
@@ -300,7 +301,7 @@ class MatrixTest {
         }
 
         def project = null
-        SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
+        Sql.withInstance(dbUrl, dbUser, dbPasswd, dbDriver) { sql ->
             sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.create(rs) }
         }
 

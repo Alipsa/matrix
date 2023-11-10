@@ -2,4 +2,4 @@
 source ~/.sdkman/bin/sdkman-init.sh
 source jdk17
 cd ..
-./gradlew :matrix-core:clean :matrix-core:publishToSonatype closeAndReleaseSonatypeStagingRepository
+./gradlew :matrix-core:clean :matrix-core:build :matrix-core:publishToSonatype closeAndReleaseSonatypeStagingRepository
