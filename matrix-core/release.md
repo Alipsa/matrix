@@ -1,12 +1,14 @@
 # Release history
 
-1.1.3, in progress
+1.2.0, in progress
 - add additional attributes parameter to Matrix.toMarkdown
 - add a group frequency method to Stat similar to the R table function
-- Remove rows from the matix and use only a list of columns. 
+- Remove rows from the matrix and use only a list of columns. 
 - Regard a Matrix to be mutable to allow for native Groovy syntax constructs. 
 - Add compact form syntax to a Matrix allowing easy adding and altering of data. 
 - Add withColumns, replaceColumn and clone() methods
+- Make Grid mono typed
+- MapList enhancements
 
 1.1.2, 2023-08-05
 - allow min and max to work on all comparables
