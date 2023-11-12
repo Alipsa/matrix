@@ -7,9 +7,12 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.2.0'
+version '1.2.1-SNAPSHOT'
 description = "Groovy library for working with matrix ([][] data)"
 
+ext.nexusUrl = version.contains("SNAPSHOT")
+    ? "https://oss.sonatype.org/content/repositories/snapshots/"
+    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 java {
   toolchain {
@@ -83,13 +86,114 @@ publishing {
       }
     }
   }
+  repositories {
+    maven {
+      credentials {
+        username = sonatypeUsername
+        password = sonatypePassword
+      }
+      url = nexusUrl
+    }
+  }
+  logger.lifecycle("Log in to https://oss.sonatype.org/index.htm to release the deployment")
 }
 
 signing {
   if (project.properties['signing.keyId'] != null) {
     project.logger.lifecycle("Signing artifacts...")
     sign publishing.publications.maven
+    //sign configurations.archives
   } else {
     project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
   }
 }
+// TODO: add code to "Release" the published build, see https://github.com/sonatype/nexus-book-examples/blob/master/gradle/simple-project-staging/build.gradle
+//   and https://github.com/sonatype/nexus-ant-tasks/tree/master/nexus-staging-ant-tasks
+
+interface NexusReleasePluginExtension {
+  Property<String> getNexusUrl()
+  Property<String> getUserName()
+  Property<String> getPassword()
+}
+
+class NexusReleasePlugin implements Plugin<Project> {
+  static final String APPLICATION_JSON = "application/json"
+  void apply(Project project) {
+    def extension = project.extensions.create('nexusReleasePlugin', NexusReleasePluginExtension)
+    project.task('release') {
+      // TODO: enable dependsOn so there is actually something published!
+      //dependsOn(publishMavenPublicationToMavenRepository)
+      if (project.version.endsWith("-SNAPSHOT")) {
+        println("NexusReleasePlugin: A snapshot cannot be released, publish is enough (or maybe you forgot to change the version?")
+        return
+       }
+      doLast {
+        String profileId = findStagingProfileId(
+            String.valueOf(project.group),
+            extension.nexusUrl.get(),
+            extension.userName.get(),
+            extension.password.get()
+        )
+        println "Hello from the NexusReleasePlugin, profileId = $profileId"
+      }
+    }
+  }
+
+  String findStagingProfileId(String groupName, String url, String userName, String password) {
+    //println("Searching for a match for $groupName")
+    URL publishUrl = new URL(url)
+    String protocol = publishUrl.getProtocol()
+    String host = publishUrl.getHost()
+    String port = publishUrl.getPort() == -1 ? "" : ":${publishUrl.getPort()}"
+    Map<String, String> response = get("$protocol://$host$port/service/local/staging/profiles", userName, password)
+
+    String body = response["body"]
+    def stagingProfiles = new groovy.json.JsonSlurper().parseText(body)
+    // First try exact match
+    def profile = stagingProfiles.data.find { stagingProfile ->
+      groupName == stagingProfile.name
+    }
+    // If that didnt work, look for something similar enough instead
+    if (profile == null || profile == '') {
+      Collection profiles = stagingProfiles.data.findAll { stagingProfile ->
+        groupName.startsWith(stagingProfile.name)
+      }
+      profile = profiles[0]
+      if (profiles.size() > 1) {
+        // Not sure what to do here, maybe fail and require configuration to be set
+        println "multiple profiles matching $groupName found, picking $profile.name"
+      }
+    }
+    if (profile == null) {
+      System.err.println("Failed to find a matching profile")
+    }
+    return profile.id
+  }
+
+  Map<String, String> get(String urlString, String username, String password) {
+    StringBuilder writer = new StringBuilder()
+    URL url = new URL(urlString)
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection()
+    conn.setRequestMethod("GET")
+    conn.setRequestProperty("Accept", APPLICATION_JSON)
+    conn.setRequestProperty("Authorization", basicAuth(username, password))
+    conn.connect()
+    int responseCode = conn.getResponseCode();
+    var responseHeaders = conn.getHeaderFields();
+    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+    String line;
+    while ((line = br.readLine()) != null) {
+      writer.append(line).append('\n');
+    }
+    conn.disconnect();
+    return [body: writer.toString(), responseCode: responseCode, headers: responseHeaders]
+  }
+
+  String basicAuth(String username, String password) {
+    return "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes())
+  }
+}
+apply plugin: NexusReleasePlugin
+nexusReleasePlugin.nexusUrl = nexusUrl
+nexusReleasePlugin.userName = sonatypeUsername
+nexusReleasePlugin.password = sonatypePassword
