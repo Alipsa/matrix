@@ -86,13 +86,15 @@ publishing {
       }
     }
   }
-  repositories {
-    maven {
-      credentials {
-        username = sonatypeUsername
-        password = sonatypePassword
+  if (project.ext.properties.sonatypeUsername) {
+    repositories {
+      maven {
+        credentials {
+          username = sonatypeUsername
+          password = sonatypePassword
+        }
+        url = nexusUrl
       }
-      url = nexusUrl
     }
   }
   logger.lifecycle("Log in to https://oss.sonatype.org/index.htm to release the deployment")
@@ -130,9 +132,9 @@ class NexusReleasePlugin implements Plugin<Project> {
       doLast {
         String profileId = findStagingProfileId(
             String.valueOf(project.group),
-            extension.nexusUrl.get(),
-            extension.userName.get(),
-            extension.password.get()
+            extension.nexusUrl.getOrNull(),
+            extension.userName.getOrNull(),
+            extension.password.getOrNull()
         )
         println "Hello from the NexusReleasePlugin, profileId = $profileId"
       }
@@ -141,6 +143,10 @@ class NexusReleasePlugin implements Plugin<Project> {
 
   String findStagingProfileId(String groupName, String url, String userName, String password) {
     //println("Searching for a match for $groupName")
+    if (url == null) {
+      println("nexusUrl is not set cannot continue")
+      return null
+    }
     URL publishUrl = new URL(url)
     String protocol = publishUrl.getProtocol()
     String host = publishUrl.getHost()
@@ -193,7 +199,9 @@ class NexusReleasePlugin implements Plugin<Project> {
     return "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes())
   }
 }
-apply plugin: NexusReleasePlugin
-nexusReleasePlugin.nexusUrl = nexusUrl
-nexusReleasePlugin.userName = sonatypeUsername
-nexusReleasePlugin.password = sonatypePassword
+if (project.ext.properties.sonatypeUsername) {
+  apply plugin: NexusReleasePlugin
+  nexusReleasePlugin.nexusUrl = nexusUrl
+  nexusReleasePlugin.userName = sonatypeUsername
+  nexusReleasePlugin.password = sonatypePassword
+}
