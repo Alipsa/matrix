@@ -123,8 +123,7 @@ class NexusReleasePlugin implements Plugin<Project> {
   void apply(Project project) {
     def extension = project.extensions.create('nexusReleasePlugin', NexusReleasePluginExtension)
     project.task('release') {
-      // TODO: enable dependsOn so there is actually something published!
-      //dependsOn(publishMavenPublicationToMavenRepository)
+      dependsOn(publishMavenPublicationToMavenRepository)
       if (project.version.endsWith("-SNAPSHOT")) {
         println("NexusReleasePlugin: A snapshot cannot be released, publish is enough (or maybe you forgot to change the version?")
         return
@@ -137,8 +136,22 @@ class NexusReleasePlugin implements Plugin<Project> {
             extension.password.getOrNull()
         )
         println "Hello from the NexusReleasePlugin, profileId = $profileId"
+        String stagingRepoId = findStagingRepositoryId(
+                String.valueOf(project.group),
+                extension.nexusUrl.getOrNull(),
+                extension.userName.getOrNull(),
+                extension.password.getOrNull()
+        )
+        println "NexusReleasePlugin, stagingRepoId = $stagingRepoId"
       }
     }
+  }
+
+  String findStagingRepositoryId(String groupName, String url, String userName, String password) {
+    //https://oss.sonatype.org/service/local/staging/profile_repositories
+    Map<String, String> response = get("${baseUrl(url)}/service/local/staging/profile_repositories", userName, password)
+    String body = response["body"]
+    return body
   }
 
   String findStagingProfileId(String groupName, String url, String userName, String password) {
@@ -147,11 +160,7 @@ class NexusReleasePlugin implements Plugin<Project> {
       println("nexusUrl is not set cannot continue")
       return null
     }
-    URL publishUrl = new URL(url)
-    String protocol = publishUrl.getProtocol()
-    String host = publishUrl.getHost()
-    String port = publishUrl.getPort() == -1 ? "" : ":${publishUrl.getPort()}"
-    Map<String, String> response = get("$protocol://$host$port/service/local/staging/profiles", userName, password)
+    Map<String, String> response = get("${baseUrl(url)}/service/local/staging/profiles", userName, password)
 
     String body = response["body"]
     def stagingProfiles = new groovy.json.JsonSlurper().parseText(body)
@@ -197,6 +206,14 @@ class NexusReleasePlugin implements Plugin<Project> {
 
   String basicAuth(String username, String password) {
     return "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes())
+  }
+
+  String baseUrl(String url) {
+    URL publishUrl = new URL(url)
+    String protocol = publishUrl.getProtocol()
+    String host = publishUrl.getHost()
+    String port = publishUrl.getPort() == -1 ? "" : ":${publishUrl.getPort()}"
+    return "$protocol://$host$port"
   }
 }
 if (project.ext.properties.sonatypeUsername) {
