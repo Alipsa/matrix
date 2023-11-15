@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.2.1-SNAPSHOT'
+version '1.2.1'
 description = "Groovy library for working with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -119,11 +119,16 @@ interface NexusReleasePluginExtension {
 }
 
 class NexusReleasePlugin implements Plugin<Project> {
-  static final String APPLICATION_JSON = "application/json"
+  static final String APPLICATION_JSON = 'application/json'
+  static final String APPLICATION_XML = 'application/xml'
+  static final String BODY = 'body'
+  static final String RESPONSE_CODE = 'responseCode'
+  static final String HEADERS = 'headers'
+
   void apply(Project project) {
     def extension = project.extensions.create('nexusReleasePlugin', NexusReleasePluginExtension)
     project.task('release') {
-      dependsOn(publishMavenPublicationToMavenRepository)
+      dependsOn(project.tasks.named('publishMavenPublicationToMavenRepository'))
       if (project.version.endsWith("-SNAPSHOT")) {
         println("NexusReleasePlugin: A snapshot cannot be released, publish is enough (or maybe you forgot to change the version?")
         return
@@ -137,21 +142,68 @@ class NexusReleasePlugin implements Plugin<Project> {
         )
         println "Hello from the NexusReleasePlugin, profileId = $profileId"
         String stagingRepoId = findStagingRepositoryId(
-                String.valueOf(project.group),
+                profileId,
                 extension.nexusUrl.getOrNull(),
                 extension.userName.getOrNull(),
                 extension.password.getOrNull()
         )
         println "NexusReleasePlugin, stagingRepoId = $stagingRepoId"
+        Map<String, Object> response = closeStagingRepository(
+            stagingRepoId,
+            profileId,
+            extension.nexusUrl.getOrNull(),
+            extension.userName.getOrNull(),
+            extension.password.getOrNull(),
+            project
+        )
+        println "Close request result = ${response[RESPONSE_CODE]}, body = ${response[BODY]}"
+
+        Map<String, Object> releaseResponse = releaseStagingRepository(
+            stagingRepoId,
+            extension.nexusUrl.getOrNull(),
+            extension.userName.getOrNull(),
+            extension.password.getOrNull()
+        )
       }
     }
   }
 
-  String findStagingRepositoryId(String groupName, String url, String userName, String password) {
+  Map<String, Object> releaseStagingRepository(String stagingRepoId, String publishUrl,
+                                               String userName, String password) {
+    // /staging/bulk/promote
+  }
+
+  Map<String, Object> closeStagingRepository(String stagingRepoId, String profileId, String publishUrl,
+                                             String userName, String password, Project project) {
+    // /service/local/staging/profiles/<profile-id>/finish
+    String url = "${baseUrl(publishUrl)}/service/local/staging/profiles/$profileId/finish"
+    String payload = """<promoteRequest>
+      <data>
+          <stagedRepositoryId>${stagingRepoId}</stagedRepositoryId>
+          <description>${project.group}:${project.name} closed by nexus release plugin</description>
+      </data>
+    </promoteRequest>"""
+    return post(url, payload, userName, password)
+  }
+
+  String findStagingRepositoryId(String profileId, String url, String userName, String password) {
     //https://oss.sonatype.org/service/local/staging/profile_repositories
     Map<String, String> response = get("${baseUrl(url)}/service/local/staging/profile_repositories", userName, password)
-    String body = response["body"]
-    return body
+    String body = response[BODY]
+    def stagingRepos = new groovy.json.JsonSlurper().parseText(body)
+
+    def repo = null
+    stagingRepos.data.each { stageRepo ->
+      if (profileId == stageRepo.profileId) {
+        if (repo == null && stageRepo.type == 'open') {
+          repo = stageRepo
+        }
+        if (stageRepo.type == 'open' && java.time.Instant.parse(repo.created) > java.time.Instant.parse(stageRepo.created)) {
+          repo = stageRepo
+        }
+      }
+    }
+    return repo?.repositoryId
   }
 
   String findStagingProfileId(String groupName, String url, String userName, String password) {
@@ -162,7 +214,7 @@ class NexusReleasePlugin implements Plugin<Project> {
     }
     Map<String, String> response = get("${baseUrl(url)}/service/local/staging/profiles", userName, password)
 
-    String body = response["body"]
+    String body = response[BODY]
     def stagingProfiles = new groovy.json.JsonSlurper().parseText(body)
     // First try exact match
     def profile = stagingProfiles.data.find { stagingProfile ->
@@ -185,7 +237,7 @@ class NexusReleasePlugin implements Plugin<Project> {
     return profile.id
   }
 
-  Map<String, String> get(String urlString, String username, String password) {
+  Map<String, Object> get(String urlString, String username, String password) {
     StringBuilder writer = new StringBuilder()
     URL url = new URL(urlString)
     HttpURLConnection conn = (HttpURLConnection) url.openConnection()
@@ -201,7 +253,42 @@ class NexusReleasePlugin implements Plugin<Project> {
       writer.append(line).append('\n');
     }
     conn.disconnect();
-    return [body: writer.toString(), responseCode: responseCode, headers: responseHeaders]
+    return [(BODY): writer.toString(), (RESPONSE_CODE): responseCode, (HEADERS): responseHeaders]
+  }
+
+  Map<String, Object> post(String urlString, String payload, String username, String password) {
+    StringBuilder writer = new StringBuilder()
+    URL url = new URL(urlString)
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection()
+    conn.setRequestMethod('POST')
+    conn.setRequestProperty('Content-Type', APPLICATION_XML)
+    conn.setRequestProperty("Accept", APPLICATION_JSON)
+    conn.setRequestProperty("Authorization", basicAuth(username, password))
+    conn.setDoOutput(true)
+    conn.connect()
+    OutputStream os = conn.getOutputStream();
+    os.write(payload.getBytes())
+    os.flush()
+    os.close()
+    int responseCode = conn.getResponseCode()
+    var responseHeaders = conn.getHeaderFields()
+    InputStream is = null
+    try {
+      is = conn.getInputStream()
+    } catch (IOException e) {
+      // no content
+    }
+    if (is != null) {
+      BufferedReader br = new BufferedReader(new InputStreamReader(is))
+
+      String line
+      while ((line = br.readLine()) != null) {
+        writer.append(line).append('\n')
+      }
+      is.close()
+    }
+    conn.disconnect()
+    return [(BODY): writer.toString(), (RESPONSE_CODE): responseCode, (HEADERS): responseHeaders]
   }
 
   String basicAuth(String username, String password) {
