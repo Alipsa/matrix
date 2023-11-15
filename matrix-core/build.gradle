@@ -119,8 +119,10 @@ interface NexusReleasePluginExtension {
 }
 
 class NexusReleasePlugin implements Plugin<Project> {
+
+  // RESt documentation is here: https://oss.sonatype.org/nexus-staging-plugin/default/docs/rest.html
   static final String APPLICATION_JSON = 'application/json'
-  static final String APPLICATION_XML = 'application/xml'
+  //static final String APPLICATION_XML = 'application/xml'
   static final String BODY = 'body'
   static final String RESPONSE_CODE = 'responseCode'
   static final String HEADERS = 'headers'
@@ -148,7 +150,7 @@ class NexusReleasePlugin implements Plugin<Project> {
                 extension.password.getOrNull()
         )
         println "NexusReleasePlugin, stagingRepoId = $stagingRepoId"
-        Map<String, Object> response = closeStagingRepository(
+        Map<String, Object> closeResponse = closeStagingRepository(
             stagingRepoId,
             profileId,
             extension.nexusUrl.getOrNull(),
@@ -156,63 +158,36 @@ class NexusReleasePlugin implements Plugin<Project> {
             extension.password.getOrNull(),
             project
         )
-        println "Close request result = ${response[RESPONSE_CODE]}, body = ${response[BODY]}"
+        println "Close request result = ${closeResponse[RESPONSE_CODE]}, body = ${closeResponse[BODY]}"
 
-        Map<String, Object> releaseResponse = releaseStagingRepository(
+        Map<String, Object> promoteResponse = promoteStagingRepository(
             stagingRepoId,
+            profileId,
             extension.nexusUrl.getOrNull(),
             extension.userName.getOrNull(),
             extension.password.getOrNull()
         )
+        println "Promote request result = ${promoteResponse[RESPONSE_CODE]}, body = ${promoteResponse[BODY]}"
+
+        Map<String, Object> dropResponse = dropStagingRepository(
+                stagingRepoId,
+                profileId,
+                extension.nexusUrl.getOrNull(),
+                extension.userName.getOrNull(),
+                extension.password.getOrNull()
+        )
+        println "Drop request result = ${dropResponse[RESPONSE_CODE]}, body = ${dropResponse[BODY]}"
       }
     }
   }
 
-  Map<String, Object> releaseStagingRepository(String stagingRepoId, String publishUrl,
-                                               String userName, String password) {
-    // /staging/bulk/promote
-  }
-
-  Map<String, Object> closeStagingRepository(String stagingRepoId, String profileId, String publishUrl,
-                                             String userName, String password, Project project) {
-    // /service/local/staging/profiles/<profile-id>/finish
-    String url = "${baseUrl(publishUrl)}/service/local/staging/profiles/$profileId/finish"
-    String payload = """<promoteRequest>
-      <data>
-          <stagedRepositoryId>${stagingRepoId}</stagedRepositoryId>
-          <description>${project.group}:${project.name} closed by nexus release plugin</description>
-      </data>
-    </promoteRequest>"""
-    return post(url, payload, userName, password)
-  }
-
-  String findStagingRepositoryId(String profileId, String url, String userName, String password) {
-    //https://oss.sonatype.org/service/local/staging/profile_repositories
-    Map<String, String> response = get("${baseUrl(url)}/service/local/staging/profile_repositories", userName, password)
-    String body = response[BODY]
-    def stagingRepos = new groovy.json.JsonSlurper().parseText(body)
-
-    def repo = null
-    stagingRepos.data.each { stageRepo ->
-      if (profileId == stageRepo.profileId) {
-        if (repo == null && stageRepo.type == 'open') {
-          repo = stageRepo
-        }
-        if (stageRepo.type == 'open' && java.time.Instant.parse(repo.created) > java.time.Instant.parse(stageRepo.created)) {
-          repo = stageRepo
-        }
-      }
-    }
-    return repo?.repositoryId
-  }
-
-  String findStagingProfileId(String groupName, String url, String userName, String password) {
+  static String findStagingProfileId(String groupName, String url, String userName, String password) {
     //println("Searching for a match for $groupName")
     if (url == null) {
       println("nexusUrl is not set cannot continue")
       return null
     }
-    Map<String, String> response = get("${baseUrl(url)}/service/local/staging/profiles", userName, password)
+    Map<String, Object> response = get("${baseUrl(url)}/service/local/staging/profiles", userName, password)
 
     String body = response[BODY]
     def stagingProfiles = new groovy.json.JsonSlurper().parseText(body)
@@ -237,7 +212,72 @@ class NexusReleasePlugin implements Plugin<Project> {
     return profile.id
   }
 
-  Map<String, Object> get(String urlString, String username, String password) {
+  static String findStagingRepositoryId(String profileId, String url, String userName, String password) {
+    //https://oss.sonatype.org/service/local/staging/profile_repositories
+    Map<String, String> response = get("${baseUrl(url)}/service/local/staging/profile_repositories", userName, password)
+    String body = response[BODY]
+    def stagingRepos = new groovy.json.JsonSlurper().parseText(body)
+
+    def repo = null
+    stagingRepos.data.each { stageRepo ->
+      if (profileId == stageRepo.profileId) {
+        if (repo == null && stageRepo.type == 'open') {
+          repo = stageRepo
+        }
+        if (stageRepo.type == 'open' && java.time.Instant.parse(repo.created) > java.time.Instant.parse(stageRepo.created)) {
+          repo = stageRepo
+        }
+      }
+    }
+    return repo?.repositoryId
+  }
+
+  static Map<String, Object> closeStagingRepository(String stagingRepoId, String profileId, String publishUrl,
+                                                    String userName, String password, Project project) {
+    // /service/local/staging/profiles/<profile-id>/finish
+    String url = "${baseUrl(publishUrl)}/service/local/staging/profiles/$profileId/finish"
+    String payload = """<promoteRequest>
+      <data>
+          <stagedRepositoryId>${stagingRepoId}</stagedRepositoryId>
+          <description>${project.group}:${project.name} closed by nexus release plugin</description>
+      </data>
+    </promoteRequest>"""
+    payload = """{
+      "data":{
+        "stagedRepositoryId":"${stagingRepoId}",
+        "description":"${project.group}:${project.name} closed by nexus release plugin"
+      }
+    }"""
+    return post(url, payload, userName, password)
+  }
+
+  Map<String, Object> promoteStagingRepository(String stagingRepoId, String profileId, String publishUrl,
+                                               String userName, String password) {
+    // /staging/bulk/promote
+    String url = "${baseUrl(publishUrl)}/service/local/staging/profiles/$profileId/promote"
+    String payload = """{
+      "data":{
+        "stagedRepositoryId":"${stagingRepoId}",
+        "description":"${project.group}:${project.name} promoted by nexus release plugin"
+      }
+    }"""
+    return post(url, payload, userName, password)
+  }
+
+  Map<String, Object> dropStagingRepository(String stagingRepoId, String profileId, String publishUrl,
+                                            String userName, String password) {
+    // /staging/bulk/promote
+    String url = "${baseUrl(publishUrl)}/service/local/staging/profiles/$profileId/drop"
+    String payload = """{
+      "data":{
+        "stagedRepositoryId":"${stagingRepoId}",
+        "description":"${project.group}:${project.name} dropped by nexus release plugin"
+      }
+    }"""
+    return post(url, payload, userName, password)
+  }
+
+  static Map<String, Object> get(String urlString, String username, String password) {
     StringBuilder writer = new StringBuilder()
     URL url = new URL(urlString)
     HttpURLConnection conn = (HttpURLConnection) url.openConnection()
@@ -256,12 +296,12 @@ class NexusReleasePlugin implements Plugin<Project> {
     return [(BODY): writer.toString(), (RESPONSE_CODE): responseCode, (HEADERS): responseHeaders]
   }
 
-  Map<String, Object> post(String urlString, String payload, String username, String password) {
+  static Map<String, Object> post(String urlString, String payload, String username, String password) {
     StringBuilder writer = new StringBuilder()
     URL url = new URL(urlString)
     HttpURLConnection conn = (HttpURLConnection) url.openConnection()
     conn.setRequestMethod('POST')
-    conn.setRequestProperty('Content-Type', APPLICATION_XML)
+    conn.setRequestProperty('Content-Type', APPLICATION_JSON)
     conn.setRequestProperty("Accept", APPLICATION_JSON)
     conn.setRequestProperty("Authorization", basicAuth(username, password))
     conn.setDoOutput(true)
@@ -291,11 +331,11 @@ class NexusReleasePlugin implements Plugin<Project> {
     return [(BODY): writer.toString(), (RESPONSE_CODE): responseCode, (HEADERS): responseHeaders]
   }
 
-  String basicAuth(String username, String password) {
+  static String basicAuth(String username, String password) {
     return "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes())
   }
 
-  String baseUrl(String url) {
+  static String baseUrl(String url) {
     URL publishUrl = new URL(url)
     String protocol = publishUrl.getProtocol()
     String host = publishUrl.getHost()
