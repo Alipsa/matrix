@@ -7,14 +7,20 @@ for [Renjin R](https://github.com/bedatadriven/renjin).
 
 To use it, add the following to your gradle build script: 
 ```groovy
-implementation 'se.alipsa.groovy:spreadsheet:1.0.0'
+implementation 'se.alipsa.groovy:matrix-core:1.2.1'
+implementation 'se.alipsa.groovy:matrix-spreadsheet:1.0.1'
 ```
 or if you use maven:
 ```xml
 <dependency>
+    <groupId>se.alipsa.groovy</groupId>
+    <artifactId>matrix-core</artifactId>
+    <version>1.2.1</version>
+</dependency>
+<dependency>
   <groupId>se.alipsa.groovy</groupId>
-  <artifactId>spreadsheet</artifactId>
-  <version>1.0.0</version>
+  <artifactId>matrix-spreadsheet</artifactId>
+  <version>1.0.1</version>
 </dependency>
 ```
 
@@ -116,7 +122,7 @@ Used to handle Excel import and export
 - URL: https://poi.apache.org/
 - License: Apache 2.0
 
-### Matrix
+### Matrix-core
 Used to define the data format i.e. the result from an import or the data to export
 - URL: https://github.com/Alipsa/matrix
 - License: MIT

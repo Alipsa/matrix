@@ -1,6 +1,6 @@
 # Release history
 
-## v1.0.1, in progress
+## v1.0.1, 2023-11-21
 - Change index of the SpreadsheetImporter to start with 1
 - Name the imported Matrix after the sheet name
 
