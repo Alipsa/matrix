@@ -1,3 +1,10 @@
+pluginManagement {
+  repositories {
+    mavenLocal()
+    //mavenCentral()
+    gradlePluginPortal()
+  }
+}
 rootProject.name = 'matrix'
 include 'matrix-core'
 include 'matrix-stats'
