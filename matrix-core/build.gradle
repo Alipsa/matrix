@@ -103,7 +103,7 @@ publishing {
       }
     }
   }
-  logger.lifecycle("Log in to https://oss.sonatype.org/index.htm to release the deployment")
+  //logger.lifecycle("Log in to https://oss.sonatype.org/index.htm to release the deployment")
 }
 
 signing {
