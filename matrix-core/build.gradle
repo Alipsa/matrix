@@ -75,7 +75,7 @@ publishing {
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-core/main/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/matrix-core/LICENSE'
           }
         }
         developers {
@@ -85,7 +85,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-core/tree/main'
+          url = 'https://github.com/Alipsa/matrix/tree/main/matrix-core'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
