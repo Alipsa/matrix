@@ -741,4 +741,16 @@ class MatrixTest {
         def n = table.withColumns([0,1] as Integer[]) { x, y -> x - y }
         assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], n)
     }
+
+    @Test
+    void testPopulateColumn() {
+        Matrix components = Matrix.create([
+            id: [1,2,3,4,5],
+            size: [1.2,2.3,0.7,1.3,1.9]
+        ], [Integer, BigDecimal])
+        components['id'] = [10, 11, 12, 13, 14]
+        assertEquals(10, components[0, 'id'])
+        assertEquals(13, components[3, 'id'])
+        assertEquals(14, components[4, 'id'])
+    }
 }

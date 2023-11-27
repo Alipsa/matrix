@@ -559,8 +559,8 @@ class Matrix implements Iterable {
    * myMatrix["yearMonth", YearMonth] = ListConverter.toYearMonth(myMatrix["start_date"])
    * If the column exists, the data will be replaced, otherwise a new column will be appended
    *
-   * @param columnName the name of the column to replace or add
-   * @param type the class of the column data
+   * @param where a List of columnName (the name of the column to replace or add) and
+   * type the class of the column data
    * @param column a list of the column values
    */
   void putAt(List where, List<?> column) {
@@ -597,6 +597,19 @@ class Matrix implements Iterable {
         mTypes.add(index, type)
       }
     }
+  }
+
+  void putAt(String columnName, List<?> values) {
+    putAt(columnIndex(columnName), values)
+  }
+
+  void putAt(Integer column, List<?> values) {
+    def col = this.column(column)
+    if (values.size() != col.size()) {
+      throw new IllegalArgumentException("The list of values is not the same as the number of rows")
+    }
+    col.clear()
+    col.addAll(values)
   }
 
   @Override

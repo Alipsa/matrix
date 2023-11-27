@@ -41,6 +41,10 @@ class Grid<T> implements Iterable<T> {
         }
     }
 
+    Grid(Map<String, Object> params) {
+        this((T)params.value, params.nrow as int, params.ncol as int)
+    }
+
     List<T> getAt(int row) {
         return data[row]
     }
@@ -76,6 +80,12 @@ class Grid<T> implements Iterable<T> {
         def row = data.get(rowColumn[0])
         Integer column = rowColumn[1]
         row.set(column, value)
+    }
+
+    void putAt(Integer column, List<T> values) {
+        data.eachWithIndex{ List row, int i ->
+            row[column] = values[i]
+        }
     }
 
     String toString() {

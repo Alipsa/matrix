@@ -1,4 +1,5 @@
 import se.alipsa.groovy.matrix.Grid
+import se.alipsa.groovy.matrix.Matrix
 
 import java.text.DecimalFormat
 
@@ -186,5 +187,18 @@ class GridTest {
         foo[0, 1] = 3.23
 
         assertEquals(3.23, foo[0,1])
+    }
+
+    @Test
+    void testPopulateColumn() {
+        def components = Matrix.create([
+            id: [1,2,3,4,5],
+            size: [1.2,2.3,0.7,1.3,1.9]
+        ], [Integer, BigDecimal])
+        def yearCountMx = new Grid<Integer>(value:0, ncol: 31, nrow: components.rowCount())
+        yearCountMx[1] = components['id']
+        assertEquals(1, yearCountMx[0, 1])
+        assertEquals(3, yearCountMx[2, 1])
+        assertEquals(5, yearCountMx[4, 1])
     }
 }

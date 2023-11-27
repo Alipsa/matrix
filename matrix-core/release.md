@@ -1,6 +1,12 @@
 # Release history
 
-1.2.0, in progress
+1.2.2, in progress
+- add putAt for a whole column for both Grid and Matrix enabling expressions like `matrix['id'] = [10, 11, 12, 13, 14]`
+
+1.2.1, 2023-11-19
+- No changes
+
+1.2.0, 2023-11-11
 - add additional attributes parameter to Matrix.toMarkdown
 - add a group frequency method to Stat similar to the R table function
 - Remove rows from the matrix and use only a list of columns. 
