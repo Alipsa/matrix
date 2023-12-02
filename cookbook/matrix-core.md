@@ -67,16 +67,19 @@ Creating based on a collection (List or map) of data
 - static Matrix create(List<List<?>> rowList)
 - static Matrix create(String name, Map<String, List<?>> map, List<Class<?>>... dataTypesOpt)
 - static Matrix create(Map<String, List<?>> map, List<Class<?>>... dataTypesOpt)
+
 Creating based on Grid
 - static Matrix create(String name, List<String> headerList, Grid grid, List<Class<?>>... dataTypesOpt)
 - static Matrix create(List<String> headerList, Grid grid, List<Class<?>>... dataTypesOpt)
 - static Matrix create(String name, Grid grid)
 - static Matrix create(Grid grid)
+
 Creating based on a CSV
 - static Matrix create(String name, File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true)
 - static Matrix create(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true)
 - static Matrix create(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true)
 - static Matrix create(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true)
+
 Creating based on a jdbc ResultSet
 - static Matrix create(String name, ResultSet rs)
 - static Matrix create(ResultSet rs)
