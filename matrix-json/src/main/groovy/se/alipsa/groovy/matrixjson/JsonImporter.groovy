@@ -56,6 +56,6 @@ class JsonImporter {
         columnMap.computeIfAbsent(it.key, k -> []) << it.value
       }
     }
-    return Matrix.create(columnMap)
+    return new Matrix(columnMap)
   }
 }

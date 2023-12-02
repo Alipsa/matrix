@@ -191,7 +191,7 @@ class GridTest {
 
     @Test
     void testPopulateColumn() {
-        def components = Matrix.create([
+        def components = new Matrix([
             id: [1,2,3,4,5],
             size: [1.2,2.3,0.7,1.3,1.9]
         ], [Integer, BigDecimal])

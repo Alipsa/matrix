@@ -96,7 +96,7 @@ class StudentTest {
    */
   @Test
   void testPaired() {
-    def data = Matrix.create(
+    def data = new Matrix(
         score: [85 ,85, 78, 78, 92, 94, 91, 85, 72, 97,
                 84, 95, 99, 80, 90, 88, 95, 90, 96, 89,
                 84, 88, 88, 90, 92, 93, 91, 85, 80, 93,

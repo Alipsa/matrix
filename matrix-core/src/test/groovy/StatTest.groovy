@@ -123,7 +123,7 @@ class StatTest {
         assertEquals(23, freq.get(2, 0) as int, "occurrences of 23")
         assertEquals(37.50, freq.get(3, 2), "occurrences of 12.1")
 
-        def table = Matrix.create([id: 0..7, vals: values])
+        def table = new Matrix([id: 0..7, vals: values])
         def freq2 = frequency(table, "vals")
         assertEquals(2, freq2.get(0, 1), "occurrences of 0 from table")
         assertEquals(12.50, freq2.get(1, 2), "occurrences of 99 from table")
@@ -133,7 +133,7 @@ class StatTest {
 
     @Test
     void testFrequencyTable() {
-        def table = Matrix.create([
+        def table = new Matrix([
             gear: [4, 4, 4, 3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 4, 5, 5, 5, 5, 5, 4],
             vs: [0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1]
         ], [Number, Number])
@@ -149,7 +149,7 @@ class StatTest {
 
     @Test
     void testSummary() {
-        def table = Matrix.create([
+        def table = new Matrix([
             v0: [0.3, 2, 3],
             v1: [1.1, 1, 0.9],
             v2: [null, 'Foo', "Foo"]
@@ -162,7 +162,7 @@ class StatTest {
 
     @Test
     void testStr() {
-        def table = Matrix.create('Test',
+        def table = new Matrix('Test',
                 [
                 v0: [0.3, 2, 3],
                 v1: [1.1, 1, 0.9],
@@ -190,7 +190,7 @@ class StatTest {
 
     @Test
     void testSum() {
-        def table = Matrix.create('Test',
+        def table = new Matrix('Test',
             [
                 v0: [0.3, 2, 3],
                 v1: [1.1, 1, 0.9],
@@ -204,7 +204,7 @@ class StatTest {
 
     @Test
     void testSumBy() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             department: ["IT", "OPS", "OPS", "IT", "Infra"],
@@ -223,7 +223,7 @@ class StatTest {
 
     @Test
     void testMeanBy() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
                 emp_id: 1..5,
                 emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
                 department: ["IT", "OPS", "OPS", "IT", "Infra"],
@@ -242,7 +242,7 @@ class StatTest {
 
     @Test
     void testMedianBy() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
                 emp_id: 1..6,
                 emp_name: ["Rick","Dan","Michelle","Ryan","Gary", "Stu"],
                 department: ["IT", "OPS", "IT", "IT", "Infra", "OPS"],

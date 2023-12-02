@@ -608,7 +608,7 @@ class Stat {
             tbl[String.valueOf(it.key)] = freqTbl.column(FREQUENCY_FREQUENCY)
         }
         def name = (table.getName() == null || table.getName().isBlank()) ? groupName : table.getName() + '_' + groupName
-        return Matrix.create(tbl).withName(name)
+        return new Matrix(tbl).withName(name)
     }
 
 

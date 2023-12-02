@@ -50,6 +50,28 @@ class Matrix implements Iterable {
     return table
   }
 
+  static Matrix create(List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt) {
+    Matrix table = new Matrix()
+    table.mHeaders = headerList.collect()
+    table.mColumns = rowList.transpose().collect() as List<List<?>>
+    table.mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
+    return table
+  }
+
+  static Matrix create(String name, List<List<?>> rowList) {
+    def table = create(rowList)
+    table.mName = name
+    return table
+  }
+
+  static Matrix create(List<List<?>> rowList) {
+    def headerList = []
+    for (int i = 0; i < rowList[0].size(); i++) {
+      headerList.add(String.valueOf("v$i"))
+    }
+    return create(headerList, rowList)
+  }
+
   static Matrix create(String name, List<String> headerList, Grid grid, List<Class<?>>... dataTypesOpt) {
     def table = create(headerList, grid, dataTypesOpt)
     table.mName = name
@@ -60,12 +82,12 @@ class Matrix implements Iterable {
     create(headerList, grid.data, dataTypesOpt)
   }
 
-  static Matrix create(List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt) {
-    Matrix table = new Matrix()
-    table.mHeaders = headerList.collect()
-    table.mColumns = rowList.transpose().collect() as List<List<?>>
-    table.mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
-    return table
+  static Matrix create(String name, Grid grid) {
+    create(name, grid.data)
+  }
+
+  static Matrix create(Grid grid) {
+    create(grid.data)
   }
 
   static Matrix create(String name, File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
@@ -121,40 +143,6 @@ class Matrix implements Iterable {
     }
   }
 
-  static Matrix create(String name, Grid grid) {
-    create(name, grid.data)
-  }
-
-  static Matrix create(String name, List<List<?>> rowList) {
-    def table = create(rowList)
-    table.mName = name
-    return table
-  }
-
-  static Matrix create(Grid grid) {
-    create(grid.data)
-  }
-
-  static Matrix create(List<List<?>> rowList) {
-    def headerList = []
-    for (int i = 0; i < rowList[0].size(); i++) {
-      headerList.add(String.valueOf("v$i"))
-    }
-    return create(headerList, rowList)
-  }
-
-  static Matrix create(String name, Map<String, List<?>> map, List<Class<?>>... dataTypesOpt) {
-    def table = create(map, dataTypesOpt)
-    table.mName = name
-    return table
-  }
-
-  static Matrix create(Map<String, List<?>> map, List<Class<?>>... dataTypesOpt) {
-    List<String> header = map.keySet().collect()
-    List<?> columns = map.values().collect()
-    return create(header, columns.transpose(), dataTypesOpt)
-  }
-
   static Matrix create(String name, ResultSet rs) {
     def table = create(rs)
     table.mName = name
@@ -194,6 +182,7 @@ class Matrix implements Iterable {
 
   private Matrix() {}
 
+
   Matrix(String name, List<String> headerList, List<List<?>> columns, List<Class<?>>... dataTypesOpt) {
     mName = name
     mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
@@ -205,7 +194,7 @@ class Matrix implements Iterable {
     }
   }
 
-  Matrix(String name, Map<String, List<String>> columns, List<Class<?>>... dataTypesOpt) {
+  Matrix(String name, Map<String, List<?>> columns, List<Class<?>>... dataTypesOpt) {
     mName = name
     mHeaders = []
     mColumns = []
@@ -214,6 +203,10 @@ class Matrix implements Iterable {
       mColumns << v.collect()
     }
     mTypes = sanitizeColumnTypes(mHeaders, dataTypesOpt)
+  }
+
+  Matrix(Map<String, List<?>> columns, List<Class<?>>... dataTypesOpt) {
+    this((String)null, columns, dataTypesOpt)
   }
 
   Matrix(List<List<?>> columns) {

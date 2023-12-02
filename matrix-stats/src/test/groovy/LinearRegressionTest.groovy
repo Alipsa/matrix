@@ -55,7 +55,7 @@ class LinearRegressionTest {
    */
   @Test
   void testLinearRegressionFromMatrix() {
-    def table = Matrix.create(
+    def table = new Matrix(
       x: [2, 3, 5, 7, 9, 11, 14],
       y: [4.02, 5.44, 7.12, 10.88, 15.10, 20.91, 26.02]
     )

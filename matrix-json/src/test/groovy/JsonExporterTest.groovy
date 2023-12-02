@@ -14,7 +14,7 @@ class JsonExporterTest {
 
     @Test
     void testExportJson() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
                 emp_id: 1..3,
                 emp_name: ["Rick","Dan","Michelle"],
                 salary: [623.3,515.2,611.0],

@@ -71,9 +71,9 @@ class MatrixTest {
     @Test
     void testTableCreationFromMatrix() {
         def employees = []
-        employees.add(['John Doe', 21000, asLocalDate('2013-11-01'), asLocalDate('2020-01-10')])
-        employees.add(['Peter Smith', 23400,	'2018-03-25',	'2020-04-12'])
-        employees.add(['Jane Doe', 26800, asLocalDate('2017-03-14'), asLocalDate('2020-10-02')])
+        employees << ['John Doe', 21000, asLocalDate('2013-11-01'), asLocalDate('2020-01-10')]
+        employees << ['Peter Smith', 23400,	'2018-03-25',	'2020-04-12']
+        employees << ['Jane Doe', 26800, asLocalDate('2017-03-14'), asLocalDate('2020-10-02')]
 
         def table = Matrix.create(employees)
         assertEquals('John Doe', table[0,0])
@@ -89,7 +89,7 @@ class MatrixTest {
                 "Baseline Funding": [3385.593, 282.133, 3.664, 123.123],
                 "Current Funding": [2700, 225, 2.922, 1010.12]
         ]
-        def table = Matrix.create(report)
+        def table = new Matrix(report)
         def tr = table.transpose(['y1', 'y2', 'y3', 'y4'])
         assertEquals(["y1", "y2", "y3", "y4"], tr.columnNames())
         assertEquals([
@@ -140,7 +140,7 @@ class MatrixTest {
 
     @Test
     void testStr() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
@@ -189,7 +189,7 @@ class MatrixTest {
             'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
             'end': ['2022-12-01 10:00:00', '2023-07-10 00:01:00', '2024-05-27 00:00:30', '2042-01-10 00:00:00']
         ]
-        def table = Matrix.create(data, [String]*4)
+        def table = new Matrix(data, [String]*4)
 
         def table2 = table.convert(place: Integer, start: LocalDate)
         table2 = table2.convert([end: LocalDateTime],
@@ -237,7 +237,7 @@ class MatrixTest {
             'firstname': ['Lorena', 'Marianne', 'Lotte'],
             'start': ['2021-12-01', '2022-07-10', '2023-05-27']
         ]
-        def table = Matrix.create(data, [int, String, String])
+        def table = new Matrix(data, [int, String, String])
         def rows = table.rows(table['place'].findIndexValues { it > 1 })
         assertEquals(2, rows.size())
 
@@ -258,7 +258,7 @@ class MatrixTest {
 
     @Test
     void testHeadAndTail() {
-        def table = Matrix.create([
+        def table = new Matrix([
                 'place': [1, 2, 3],
                 'firstname': ['Lorena', 'Marianne', 'Lotte'],
                 'start': ['2021-12-01', '2022-07-10', '2023-05-27']
@@ -315,7 +315,7 @@ class MatrixTest {
             'firstname': ['Lorena', 'Marianne', 'Lotte'],
             'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
         ]
-        def table = Matrix.create(data, [int, String, LocalDate])
+        def table = new Matrix(data, [int, String, LocalDate])
         def selection = table.selectRows {
             def date = it[2] as LocalDate
             return date.isAfter(LocalDate.of(2022,1, 1))
@@ -330,8 +330,7 @@ class MatrixTest {
             'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
             'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
         ]
-        def table = Matrix
-            .create(data)
+        def table = new Matrix(data)
             .convert(place: int, start: LocalDate)
         def table2 = table.apply("start", { startDate ->
             startDate.plusDays(10)
@@ -351,7 +350,7 @@ class MatrixTest {
             'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
         ]
 
-        def table = Matrix.create(data, [int, String, LocalDate])
+        def table = new Matrix(data, [int, String, LocalDate])
 
         def foo = table.apply("start", { asYearMonth(it)})
         assertEquals(YearMonth.of(2021,12), foo[0, 2])
@@ -365,7 +364,7 @@ class MatrixTest {
             'firstname': ['Lorena', 'Marianne', 'Lotte'],
             'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
         ]
-        def table = Matrix.create(data, [int, String, LocalDate])
+        def table = new Matrix(data, [int, String, LocalDate])
         assertEquals(Integer, table.columnType(0), "place column type")
         def selection = table.selectRows {
             def date = it[2] as LocalDate
@@ -405,7 +404,7 @@ class MatrixTest {
 
     @Test
     void testAddColumn() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
@@ -440,7 +439,7 @@ class MatrixTest {
 
     @Test
     void testAddColumns() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
@@ -480,7 +479,7 @@ class MatrixTest {
 
     @Test
     void testSort() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
@@ -499,7 +498,7 @@ class MatrixTest {
 
     @Test
     void testDropColumns() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
@@ -516,7 +515,7 @@ class MatrixTest {
 
     @Test
     void testDropColumnsExcept() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
@@ -533,7 +532,7 @@ class MatrixTest {
 
     @Test
     void testIteration() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
@@ -568,7 +567,7 @@ class MatrixTest {
             "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
             "Current Funding": [2700, 225, 2.922, 1.871]
         ]
-        Matrix table = Matrix.create(report, [BigDecimal]*3)
+        Matrix table = new Matrix(report, [BigDecimal]*3)
 
         Grid grid = table.grid()
         assertEquals(3.664, grid[2,1] as BigDecimal)
@@ -581,7 +580,7 @@ class MatrixTest {
             "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
             "Current Funding": [2700, 225, 2.922, 1.871]
         ]
-        Matrix table = Matrix.create(report, [BigDecimal]*3)
+        Matrix table = new Matrix(report, [BigDecimal]*3)
             .selectColumns("Baseline Funding", "Full Funding")
 
         assertEquals(3385.593, table[0,0])
@@ -591,7 +590,7 @@ class MatrixTest {
 
     @Test
     void testRenameColumns() {
-        def empData = Matrix.create(
+        def empData = new Matrix (
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
@@ -615,7 +614,7 @@ class MatrixTest {
             "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
             "Current Funding": [2700, 225, 2.922, 1.871]
         ]
-        Matrix table = Matrix.create(report, [YearMonth, BigDecimal, BigDecimal, BigDecimal])
+        Matrix table = new Matrix(report, [YearMonth, BigDecimal, BigDecimal, BigDecimal])
 
         def md = table.toMarkdown()
         def rows = md.split('\n')
@@ -633,7 +632,7 @@ class MatrixTest {
 
     @Test
     void testEquals() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: [1,2],
             emp_name: ["Rick","Dan"],
             salary: [623.3,515.2],
@@ -641,7 +640,7 @@ class MatrixTest {
             [int, String, Number, LocalDate]
         )
 
-        assertEquals(empData, Matrix.create(
+        assertEquals(empData, new Matrix(
             emp_id: [1,2],
             emp_name: ["Rick","Dan"],
             salary: [623.3,515.2],
@@ -649,7 +648,7 @@ class MatrixTest {
             [int, String, Number, LocalDate]
         ))
 
-        assertNotEquals(empData, Matrix.create(
+        assertNotEquals(empData, new Matrix (
             emp_id: [1,2],
             emp_name: ["Rick","Dan"],
             salary: [623.3,515.1],
@@ -657,7 +656,7 @@ class MatrixTest {
             [int, String, Number, LocalDate]
         ))
 
-        Matrix differentTypes = Matrix.create(
+        Matrix differentTypes = new Matrix (
             emp_id: [1,2],
             emp_name: ["Rick","Dan"],
             salary: [623.3,515.2],
@@ -670,14 +669,14 @@ class MatrixTest {
 
     @Test
     void testDiff() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
             emp_id: [1,2],
             emp_name: ["Rick","Dan"],
             salary: [623.3,515.2],
             start_date: toLocalDates("2013-01-01", "2012-03-27"),
             [int, String, Number, LocalDate]
         )
-        def d1 = Matrix.create(
+        def d1 = new Matrix(
             emp_id: [1,2],
             emp_name: ["Rick","Dan"],
             salary: [623.3,515.1],
@@ -687,7 +686,7 @@ class MatrixTest {
         assertEquals('Row 1 differs: this: 2, Dan, 515.2, 2012-03-27; that: 2, Dan, 515.1, 2012-03-27',
                     empData.diff(d1).trim())
 
-        def d2 = Matrix.create(
+        def d2 = new Matrix(
             emp_id: [1,2],
             emp_name: ["Rick","Dan"],
             salary: [623.3,515.2],
@@ -700,7 +699,7 @@ class MatrixTest {
 
     @Test
     void testRemoveEmptyRows() {
-        def empData = Matrix.create(
+        def empData = new Matrix(
                 emp_id: [1,2],
                 emp_name: ["Rick","Dan"],
                 salary: [623.3,515.2],
@@ -708,7 +707,7 @@ class MatrixTest {
                 [int, String, Number, LocalDate]
         )
 
-        def d0 = Matrix.create(
+        def d0 = new Matrix(
                 emp_id: [1,null, 2, null],
                 emp_name: ["Rick", "", "Dan", " "],
                 salary: [623.3, null, 515.2, null],
@@ -730,7 +729,7 @@ class MatrixTest {
 
     @Test
     void testWithColumns() {
-        def table = Matrix.create([
+        def table = new Matrix([
             a: [1,2,3,4,5],
             b: [1.2,2.3,0.7,1.3,1.9]
         ], [Integer, BigDecimal])
@@ -744,7 +743,7 @@ class MatrixTest {
 
     @Test
     void testPopulateColumn() {
-        Matrix components = Matrix.create([
+        Matrix components = new Matrix([
             id: [1,2,3,4,5],
             size: [1.2,2.3,0.7,1.3,1.9]
         ], [Integer, BigDecimal])

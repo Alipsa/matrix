@@ -21,7 +21,7 @@ class PngTest {
         }
     }
 
-    def empData = Matrix.create(
+    def empData = new Matrix(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
