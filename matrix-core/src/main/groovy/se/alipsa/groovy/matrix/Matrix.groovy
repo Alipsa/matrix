@@ -194,12 +194,12 @@ class Matrix implements Iterable {
 
   private Matrix() {}
 
-  Matrix(String name, List<String> headerList, List<List<?>> columnList, List<Class<?>>... dataTypesOpt) {
+  Matrix(String name, List<String> headerList, List<List<?>> columns, List<Class<?>>... dataTypesOpt) {
     mName = name
     mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
     mHeaders = headerList.collect()
     mColumns = []
-    columnList.eachWithIndex { List<?> column, int i ->
+    columns.eachWithIndex { List<?> column, int i ->
       //mColumns.add(Collections.checkedList(column, mTypes[i]))
       mColumns.add(column.collect())
     }
@@ -216,14 +216,14 @@ class Matrix implements Iterable {
     mTypes = sanitizeColumnTypes(mHeaders, dataTypesOpt)
   }
 
-  Matrix(List<List<?>> columnList) {
+  Matrix(List<List<?>> columns) {
     mHeaders = []
     mColumns = []
-    columnList.eachWithIndex { List<?> column, int i ->
+    columns.eachWithIndex { List<?> column, int i ->
       mHeaders << ("v$i" as String)
       mColumns << column.collect()
     }
-    mTypes = [Object.class] * columnList.size() as List<Class<?>>
+    mTypes = [Object.class] * columns.size() as List<Class<?>>
   }
 
   private static List<Class<?>> sanitizeColumnTypes(List<String> headerList, List<Class<?>>... dataTypesOpt) {

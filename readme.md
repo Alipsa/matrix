@@ -351,7 +351,9 @@ def bar = table.apply("foo", {
 )
 assertEquals(4, bar[1, 0])
 assertEquals(6, bar[2, 0])
-```   
+```
+
+For more information see the [Cookbook](cookbook/cookbook.md)
 
 
 
