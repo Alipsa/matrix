@@ -1,7 +1,7 @@
 # Release history
 
 1.2.2, in progress
-- add putAt for a whole column for both Grid and Matrix enabling expressions like `matrix['id'] = [10, 11, 12, 13, 14]`
+- add putAt for a whole column for both Grid and Matrix enabling expressions like `myMatrix['id'] = [10, 11, 12, 13, 14]`
 
 1.2.1, 2023-11-19
 - No changes
