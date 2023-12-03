@@ -4,7 +4,7 @@
 - add putAt for a whole column for both Grid and Matrix enabling expressions like `myMatrix['id'] = [10, 11, 12, 13, 14]`
 - Remove the create methods using a map as it assumes columnar data which goes against the basic idea of
 using contructors for column data and create methods for row based data.
--  Rename Matrix.selectRows() to selectRowIndices() and add a new selectRows() that return a List of Rows
+- Rename Matrix.selectRows() to selectRowIndices()
 
 ## 1.2.1, 2023-11-19
 - No changes
