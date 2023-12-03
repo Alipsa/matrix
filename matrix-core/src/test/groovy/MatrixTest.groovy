@@ -316,11 +316,17 @@ class MatrixTest {
             'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
         ]
         def table = new Matrix(data, [int, String, LocalDate])
-        def selection = table.selectRows {
+        def selection = table.selectRowIndices {
             def date = it[2] as LocalDate
             return date.isAfter(LocalDate.of(2022,1, 1))
         }
         assertIterableEquals([1,2], selection)
+
+        def rows = table.rows {
+            def date = it[2] as LocalDate
+            return date.isAfter(LocalDate.of(2022,10, 1))
+        }
+        assertIterableEquals([[3, 'Lotte', LocalDate.of(2023, 5, 27)]], rows)
     }
 
     @Test
@@ -366,7 +372,7 @@ class MatrixTest {
         ]
         def table = new Matrix(data, [int, String, LocalDate])
         assertEquals(Integer, table.columnType(0), "place column type")
-        def selection = table.selectRows {
+        def selection = table.selectRowIndices {
             def date = it[2] as LocalDate
             return date.isAfter(LocalDate.of(2022,1, 1))
         }
@@ -391,7 +397,7 @@ class MatrixTest {
         assertEquals(Integer, bar.columnType(0), "place column type")
 
         def r = table.rows { row ->
-            row[table.columnIndex('place')] == 2
+            row['place'] == 2
         }
         assertEquals([2, 'Marianne', LocalDate.parse('2022-07-10')], r[0])
 
@@ -541,7 +547,7 @@ class MatrixTest {
         )
 
         int i = 1
-        for (row in empData) {
+        empData.each { row ->
             assertEquals(i, row[0], String.valueOf(row))
             assertEquals(empData[i-1, 'emp_name'], row[1], String.valueOf(row))
             i++
@@ -577,11 +583,11 @@ class MatrixTest {
     void testSelectColumns() {
         def report = [
             "Full Funding": [4563.153, 380.263, 4.938, 12.23],
-            "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
+            "Base Funding": [3385.593, 282.133, 3.664, 2.654],
             "Current Funding": [2700, 225, 2.922, 1.871]
         ]
         Matrix table = new Matrix(report, [BigDecimal]*3)
-            .selectColumns("Baseline Funding", "Full Funding")
+            .selectColumns("Base Funding", "Full Funding")
 
         assertEquals(3385.593, table[0,0])
         assertEquals(12.23, table[3,1])

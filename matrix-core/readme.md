@@ -319,15 +319,16 @@ def data = [
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
 ]
-def table = Matrix.create(data, [Integer, String, LocalDate])
+def table = new Matrix(data, [Integer, String, LocalDate])
 // select the observations where start is later than the jan 1 2022
-def selection = table.selectRows {
+List<Row> selection = table.selectRows {
   // We use the column index to refer to a specific variable, 2 will be the 'start' column
   def date = it[2] as LocalDate
   return date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
 }
 // Index values 1,2 will match (row with index 0 is before jan 1 2022 so is not included)
-assertArrayEquals([1,2].toArray(), selection.toArray())
+assertIterableEquals([2,3], selection['foo'])
+
 // Double each value in the foo column that matches the selection
 def foo = table.apply("foo", selection, { it * 2})
 assertEquals(4, foo[1, 0])

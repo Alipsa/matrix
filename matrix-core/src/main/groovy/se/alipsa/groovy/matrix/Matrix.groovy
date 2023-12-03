@@ -338,28 +338,21 @@ class Matrix implements Iterable {
   }
 
   /**
-   * In most cases the groovy built in find (or any) methods provides a nicer syntax i.e. instead of
+   * Finding rows based on some criterie e.g:
    * <code>
    * def r = table.rows { row ->
-   *   row[table.columnIndex('place')] == 2
+   *   row['place'] == 2
    * }
    * </code>
-   * You can simply do
-   * <code>
-   * def r = table.rows().find { row -> row['place'] == 3 }
-   * </code>
-   *
-   * But for a Matrix with a lot of observations the rows(Closure) will be more performant and sometimes easier to read
    *
    * @param criteria a Closure returning true if the row should be included in the result or not.
    * @return a List of Rows that matched the criteria
    */
   List<Row> rows(Closure criteria) {
     List<Row> r = []
-    mColumns.transpose().eachWithIndex { it, int i ->
-      def row = it as List<?>
+    this.each { row->
       if (criteria(row)) {
-        r << new Row(i, row, this)
+        r.add(row as Row)
       }
     }
     return r
@@ -397,7 +390,7 @@ class Matrix implements Iterable {
    * @param criteria takes a row (List<?>) as parameter and returns true if the row should be included
    * @return a List of row indexes matching the criteria supplied
    */
-  List<Integer> selectRows(Closure criteria) {
+  List<Integer> selectRowIndices(Closure criteria) {
     def r = [] as List<Integer>
     rows().eachWithIndex { row, idx ->
       {

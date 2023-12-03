@@ -97,7 +97,8 @@ Creating based on a jdbc ResultSet
 
 Examples:
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.*
+import static se.alipsa.groovy.matrix.ListConverter.*
 
 // Create based on column names and rows
 def table = Matrix.create(["v0", "v1", "v2"], [
@@ -138,5 +139,188 @@ Sql.withInstance(dbUrl, dbUser, dbPasswd, dbDriver) { sql ->
   sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.create(rs) }
 }
 ```
+
+## Getting data
+A Matrix can be referenced using the shorthand square bracket syntax. If you use Java instead of groovy,
+you can use the getAt() methods instead.
+
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+
+import javax.swing.JTable
+
+// Given the following matrix
+def myMatrix = new Matrix([
+    id    : [1, 2, 3, 4],
+    weight: [23.12, 19.98, 20.21, 24.10],
+    height: [123, 128, 99, 113]],
+    [int, BigDecimal, int]
+)
+// Getting an individual value by matrix[row, column]
+assert 123 == myMatrix[0, 2]
+assert 123 == myMatrix.get(0, 2)
+assert 123 == myMatrix[0, 'height']
+
+
+//Getting an entire column
+assert [1, 2, 3, 4] == myMatrix[0]
+assert [1, 2, 3, 4] == myMatrix.column(0)
+assert [1, 2, 3, 4] == myMatrix['id']
+assert [1, 2, 3, 4] == myMatrix.column('id')
+
+// Getting an observation (row)
+assert [2, 19.98, 128] == myMatrix.row(1)
+
+// Getting all observations as a list of lists (List<List<Object>>)
+assert 4 == myMatrix.rowList().size()
+
+// Getting them as a List of Rows enables you to make changes to values that are reflected back
+assert 4 == myMatrix.rows().size()
+
+// Getting subset of rows in a new matrix, all observations where weight is less than 23
+Matrix lightWeight = myMatrix.subset('weight', { it < 23 })
+assert 2 == lightWeight.rowCount()
+
+// if you have more complex criteria you can omit the column and deal with the entire row
+Matrix lightAndShort = myMatrix.subset {
+  BigDecimal weight = it[1]
+  Integer height = it[2]
+  return weight < 24 && height < 125
+}
+
+// Similarly to get just the list of rows matching the criteria, use the rows(Closure criteria) method
+List<Row> lightAndShortRows = myMatrix.rows {
+  def weight = it[1]
+  def height = it[2]
+  return weight < 24 && height < 125
+}
+
+// Iterating through the data
+def doubleVector = new Vector<Vector<String>>()
+myMatrix.each { row ->
+  def singleVector = new Vector<String>()
+  singleVector.add(String.valueOf(row[1]))
+  singleVector.add(String.valueOf(row[2]))
+  doubleVector.add(singlevector)
+}
+JTable swingTable = new JTable(doubleVector, ['weight', 'height'] as Vector)
+
+// Identical operation using the for..in syntax:
+doubleVector = new Vector<Vector<String>>()
+for (row in myMatrix) {
+  def singleVector = new Vector<String>()
+  singleVector.add(String.valueOf(row[1]))
+  singleVector.add(String.valueOf(row[2]))
+  doubleVector.add(singlevector)
+}
+swingTable = new JTable(doubleVector, ['weight', 'height'] as Vector)
+
+// Search for the first row where the value equals that in the column
+assert [2, 19.98, 128] == findFirstRow('id', 2)
+
+// The Matrix selectColumns(String... columnNames) return a new matrix with only the selected columns
+def hightAndWeight = myMatrix.selectColumns('height', 'weight')
+// The hightAndWeight Matrix will look like this:
+// height	weight
+// 123	  23.12
+// 128	  19.98
+//  99    20.21
+// 113	  24.10
+
+List<Row> rows(List<Integer> index)
+List<List<?>> columns(Integer[] indices)
+List<List<?>> columns(List<String> columnNames)
+List<List<?>> columns()
+int columnIndex(String columnName)
+List<Integer> columnIndexes(List<String> columnNames)
+```
+
+## Displaying data
+String content(boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n')
+String head(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n')
+String tail(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n')
+String toMarkdown(Map<String, String> attr = [:])
+String toMarkdown(List<String> alignment, Map<String, String> attr = [:])
+String toString()
+
+## Matrix meta data
+int rowCount()
+int columnCount()
+Stat.str()
+Stat.summary()
+String getName()
+void setName(String name)
+Matrix withName(String name)
+List<String> columnTypeNames()
+Class<?> columnType(String columnName)
+Class<?> columnType(int i)
+List<Class<?>> columnTypes(List<String> columnNames)
+List<Class<?>> columnTypes()
+Matrix renameColumn(int columnIndex, String after)
+Matrix renameColumn(String before, String after)
+String columnName(int index)
+void columnNames(List<String> names)
+List<String> columnNames()
+
+## Adding Data
+Matrix addRow(List<?> row)
+Matrix addRows(List<List<?>> rows)
+Matrix addColumn(String name, type = Object, List<?> column)
+Matrix addColumn(String name, type = Object, Integer index, List<?> column)
+Matrix addColumns(Matrix table, String... columns)
+Matrix addColumns(List<String> names, List<List<?>> columns, List<Class<?>> types)
+
+## Removing data
+Matrix dropColumns(String... columnNames)
+Matrix dropColumnsExcept(String... columnNames)
+Matrix removeEmptyRows()
+
+## updating data
+void putAt(Integer column, List<?> values)
+void putAt(String columnName, List<?> values)
+void putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
+void putAt(List where, List<?> column)
+void putAt(Number rowIndex, Number colIndex, Object value)
+void putAt(List<Number> where, Object value)
+
+## Manipulating data
+Matrix convert(int columnNumber, Class<?> type, Closure converter)
+Matrix convert(Converter[] converters)
+Matrix convert(String columnName, Class<?> type, Closure converter)
+Matrix convert(Map<String, Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null)
+Matrix convert(List<Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null)
+void replaceColumn(String columnName, Class<?> type = Object, List<?> values)
+Matrix apply(int columnNumber, Closure criteria, Closure function)
+Matrix apply(String columnName, Closure criteria, Closure function)
+Matrix apply(int columnNumber, List<Integer> rows, Closure function)
+Matrix apply(String columnName, List<Integer> rows, Closure function)
+Matrix apply(int columnNumber, Closure function)
+Matrix apply(String columnName, Closure function)
+
+## Using data in calculations
+List<?> withColumns(List<String> colNames, Closure operation)
+List<?> withColumns(Number[] colIndices, Closure operation)
+List<?> withColumns(int[] colIndices, Closure operation)
+
+## Restructuring data
+Matrix orderBy(List<String> columnNames)
+Matrix orderBy(String columnName, Boolean descending = Boolean.FALSE)
+Matrix orderBy(LinkedHashMap<String, Boolean> columnsAndDirection)
+Matrix orderBy(Comparator comparator)
+
+## Transforming data
+Map<?, Matrix> split(String columnName)
+Grid<Object> grid()
+Matrix clone()
+Matrix transpose(List<String> header, List<Class> types, boolean includeHeaderAsRow = false)
+Matrix transpose(boolean includeHeaderAsRow = false)
+Matrix transpose(List<String> header, boolean includeHeaderAsRow = false)
+Matrix transpose(String columnNameAsHeader, List<Class> types,  boolean includeHeaderAsRow = false)
+Matrix transpose(String columnNameAsHeader,  boolean includeHeaderAsRow = false)
+
+## Comparing data
+boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true)
+String diff(Matrix other, boolean forceRowComparing = false)
+
 ---
 [Back to index](cookbook.md)  |  [Next (Matrix Stats)](matrix-stats.md)
