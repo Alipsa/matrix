@@ -7,19 +7,18 @@ convert data into various shapes and formats.
 
 ## Matrix creation
 
-### Creating from code
 There are two kinds of creation methods:
 1. The constructors. They assume that the data you supply is in columnar format
 2. The static create methods. They assume that the data you supply is in row based format
 
-#### Constructor methods:
+### Constructor methods:
 - Matrix(String name, List<String> headerList, List<List<?>> columns, List<Class<?>>... dataTypesOpt). Note: if no data types are given, they will be set to Object
 - Matrix(String name, Map<String, List<String>> columns, List<Class<?>>... dataTypesOpt)
 - Matrix(Map<String, List<?>> columns, List<Class<?>>... dataTypesOpt)
 - Matrix(List<List<?>> columns). Note, columns will be named v1, v2 etc.
 
 
-##### Parameters
+#### Parameters
 - Name is the name of the Matrix e.g. if you have a matrix of cars, the matrix might be named 'car'
 - HeaderList are the names of the columns
 - columns are lists of each the actual columns
@@ -60,7 +59,7 @@ def e = new Matrix([
 ])
 ```      
 
-#### Static create methods
+### Static create methods
 Creating based on a collection (List) of data
 - static Matrix create(String name, List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt)
 - static Matrix create(List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt)
@@ -83,7 +82,7 @@ Creating based on a jdbc ResultSet
 - static Matrix create(String name, ResultSet rs)
 - static Matrix create(ResultSet rs)
 
-##### Parameters
+#### Parameters
 - Name is the name of the Matrix e.g. if you have a matrix of cars, the matrix might be named 'car'
 - HeaderList are the names of the columns
 - rowList are a list of lists of the observations
@@ -227,12 +226,14 @@ def hightAndWeight = myMatrix.selectColumns('height', 'weight')
 //  99    20.21
 // 113	  24.10
 
-List<Row> rows(List<Integer> index)
-List<List<?>> columns(Integer[] indices)
-List<List<?>> columns(List<String> columnNames)
-List<List<?>> columns()
-int columnIndex(String columnName)
-List<Integer> columnIndexes(List<String> columnNames)
+// Selecting the 2nd and 3rd row
+List<Row> r = myMatrix.rows(1..2)
+
+// Getting the weight and height columns
+List<List<?>> weightHight = myMatrix.columns(['weight', 'hight'])
+// Other variation of this are 
+// List<List<?>> columns(Integer[] indices) which selects rows based on the indices
+// List<List<?>> columns() which returns all columns in a list format
 ```
 
 ## Displaying data
@@ -242,6 +243,40 @@ List<Integer> columnIndexes(List<String> columnNames)
 - String toMarkdown(Map<String, String> attr = [:])
 - String toMarkdown(List<String> alignment, Map<String, String> attr = [:])
 - String toString()
+
+### Examples:
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+// Given the following Matrix
+def myMatrix = new Matrix([
+    id    : [1, 2, 3, 4],
+    weight: [23.12, 19.98, 20.21, 24.10],
+    height: [123, 128, 99, 113]],
+    [int, BigDecimal, int]
+)
+println myMatrix.content()
+```
+will output
+```
+id	weight	height
+1	23.12	123
+2	19.98	128
+3	20.21	99
+4	24.10	113
+```
+```groovy
+println myMatrix.toMarkdown(Map.of("class", "table"))
+```
+will output
+```
+| id | weight | height |
+| ---: | ---: | ---: |
+| 1 | 23.12 | 123 |
+| 2 | 19.98 | 128 |
+| 3 | 20.21 | 99 |
+| 4 | 24.10 | 113 |
+{class="table" }
+```
 
 ## Matrix meta data
 - int rowCount()
@@ -261,6 +296,8 @@ List<Integer> columnIndexes(List<String> columnNames)
 - String columnName(int index)
 - void columnNames(List<String> names)
 - List<String> columnNames()
+- int columnIndex(String columnName)
+- List<Integer> columnIndices(List<String> columnNames)
 
 ## Adding Data
 - Matrix addRow(List<?> row)
@@ -275,15 +312,13 @@ List<Integer> columnIndexes(List<String> columnNames)
 - Matrix dropColumnsExcept(String... columnNames)
 - Matrix removeEmptyRows()
 
-## updating data
+## Modifying data
 - void putAt(Integer column, List<?> values)
 - void putAt(String columnName, List<?> values)
 - void putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
 - void putAt(List where, List<?> column)
 - void putAt(Number rowIndex, Number colIndex, Object value)
 - void putAt(List<Number> where, Object value)
-
-## Manipulating data
 - Matrix convert(int columnNumber, Class<?> type, Closure converter)
 - Matrix convert(Converter[] converters)
 - Matrix convert(String columnName, Class<?> type, Closure converter)
@@ -302,6 +337,27 @@ List<Integer> columnIndexes(List<String> columnNames)
 - List<?> withColumns(Number[] colIndices, Closure operation)
 - List<?> withColumns(int[] colIndices, Closure operation)
 
+Stat methods
+- static Matrix countBy(Matrix table, String groupBy)
+- static List<Number> sum(Matrix matrix, String... columnNames)
+- static List<Number> sum(Matrix matrix, IntRange columnIndices)
+- static List<Number> sum(Matrix matrix, List<Integer> columnIndices)
+- static Matrix sumBy(Matrix table, String sumColumn, String groupBy)
+- static Matrix meanBy(Matrix table, String meanColumn, String groupBy, int scale = 9)
+- static Matrix medianBy(Matrix table, String medianColumn, String groupBy)
+- static Matrix funBy(Matrix table, String columnName, String groupBy, Closure fun, Class<?> columnType)
+- static List<BigDecimal> means(Matrix table, List<String> colNames)
+- static BigDecimal mean(Matrix table, String colName)
+- static List<BigDecimal> medians(Matrix table, String colName)
+- static List<BigDecimal> medians(Matrix table, List<String> colNames)
+- static <T extends Comparable> List<T> min(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false)
+- static <T extends Comparable> List<T> max(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false)
+- static <T extends Number> List<T> sd(Matrix table, List<String> columnNames, boolean isBiasCorrected = true)
+- static <T extends Number> T sd(Matrix table, String columnName, boolean isBiasCorrected = true)
+- static Matrix frequency(Matrix table, String columnName)
+- static Matrix frequency(Matrix table, int columnIndex)
+- static Matrix frequency(Matrix table, String groupName, String columnName, boolean includeColumnNameCategory = true)
+
 ## Restructuring data
 - Matrix orderBy(List<String> columnNames)
 - Matrix orderBy(String columnName, Boolean descending = Boolean.FALSE)
@@ -317,6 +373,9 @@ List<Integer> columnIndexes(List<String> columnNames)
 - Matrix transpose(List<String> header, boolean includeHeaderAsRow = false)
 - Matrix transpose(String columnNameAsHeader, List<Class> types,  boolean includeHeaderAsRow = false)
 - Matrix transpose(String columnNameAsHeader,  boolean includeHeaderAsRow = false)
+
+## Joining (merging) Matrices 
+- static Matrix merge(Matrix x, Matrix y, Map<String, String> by, boolean all = false)
 
 ## Comparing data
 - boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true)

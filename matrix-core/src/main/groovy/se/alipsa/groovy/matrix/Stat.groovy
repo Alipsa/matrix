@@ -274,7 +274,7 @@ class Stat {
     }
 
     static List<BigDecimal> means(Matrix table, List<String> colNames) {
-        return means(table.rows() as List<List<?>>, table.columnIndexes(colNames))
+        return means(table.rows() as List<List<?>>, table.columnIndices(colNames))
     }
 
     static BigDecimal mean(List<?> list, int scale = 9) {
@@ -331,7 +331,7 @@ class Stat {
     }
 
     static List<BigDecimal> medians(Matrix table, List<String> colNames) {
-        return medians(table.rows() as List<List<?>>, table.columnIndexes(colNames))
+        return medians(table.rows() as List<List<?>>, table.columnIndices(colNames))
     }
 
     static BigDecimal median(List<? extends Number> valueList) {
@@ -420,7 +420,7 @@ class Stat {
     }
 
     static <T extends Comparable> List<T> min(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
-        return min(table.rows() as List<List<T>>, table.columnIndexes(colNames), ignoreNonNumerics)
+        return min(table.rows() as List<List<T>>, table.columnIndices(colNames), ignoreNonNumerics)
     }
 
     static <T> T max(List<T> list, boolean ignoreNonNumerics = false) {
@@ -469,7 +469,7 @@ class Stat {
     }
 
     static <T extends Comparable> List<T> max(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
-        return max(table.rows() as List<List<T>>, table.columnIndexes(colNames), ignoreNonNumerics)
+        return max(table.rows() as List<List<T>>, table.columnIndices(colNames), ignoreNonNumerics)
     }
 
 
@@ -507,7 +507,7 @@ class Stat {
     }
 
     static <T extends Number> List<T> sd(Matrix table, List<String> columnNames, boolean isBiasCorrected = true) {
-        return sd(table.rows() as List<List<T>>, isBiasCorrected, table.columnIndexes(columnNames))
+        return sd(table.rows() as List<List<T>>, isBiasCorrected, table.columnIndices(columnNames))
     }
 
     static <T extends Number> T variance(List<T> values, boolean isBiasCorrected = true) {

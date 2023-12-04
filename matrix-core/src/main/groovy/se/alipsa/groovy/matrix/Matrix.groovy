@@ -281,7 +281,7 @@ class Matrix implements Iterable {
     return mHeaders.indexOf(columnName)
   }
 
-  List<Integer> columnIndexes(List<String> columnNames) {
+  List<Integer> columnIndices(List<String> columnNames) {
     List<Integer> colNums = []
     columnNames.each {
       colNums.add(columnIndex(it))
