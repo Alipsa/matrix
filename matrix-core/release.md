@@ -3,8 +3,9 @@
 ## 1.2.2, in progress
 - add putAt for a whole column for both Grid and Matrix enabling expressions like `myMatrix['id'] = [10, 11, 12, 13, 14]`
 - Remove the create methods using a map as it assumes columnar data which goes against the basic idea of
-using contructors for column data and create methods for row based data.
+using constructors for column data and create methods for row based data.
 - Rename Matrix.selectRows() to selectRowIndices()
+- add some convenience methods to Row, make it clear that iterations is over Row objects
 
 ## 1.2.1, 2023-11-19
 - No changes
