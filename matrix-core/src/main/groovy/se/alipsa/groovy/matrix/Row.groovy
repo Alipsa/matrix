@@ -169,6 +169,10 @@ class Row implements List<Object> {
         return rowNumber
     }
 
+    List<String> columnNames() {
+        return parent.columnNames()
+    }
+
     @Override
     String toString() {
         return String.valueOf(content)
@@ -188,5 +192,17 @@ class Row implements List<Object> {
     @PackageScope
     void setElement(int index, Object e) {
         content.set(index, e)
+    }
+
+    String getString(int index) {
+        return String.valueOf(get(index))
+    }
+
+    Integer getInt(int index) {
+        return get(index) as Integer
+    }
+
+    Object getObject(int index){
+        return get(index)
     }
 }

@@ -32,7 +32,7 @@ import static se.alipsa.groovy.matrix.util.ClassUtils.*
  *
  */
 @CompileStatic
-class Matrix implements Iterable {
+class Matrix implements Iterable<Row> {
 
   // TODO: consider using Collections.checkedList to create a type checked version of each column
 
