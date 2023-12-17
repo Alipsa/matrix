@@ -279,25 +279,83 @@ will output
 ```
 
 ## Matrix meta data
-- int rowCount()
-- int columnCount()
-- Stat.str()
-- Stat.summary()
-- String getName()
+- int rowCount(): Gives you the number of observations in the Matrix
+- int columnCount(): GIves you the number of variables in the Matrix
+- Stat.str(): Provides information about the structure of the Matrix
+- Stat.summary(): Provides information about the data in the Matrix
+- String getName(): the name of the Matrix
 - void setName(String name)
-- Matrix withName(String name)
-- List<String> columnTypeNames()
-- Class<?> columnType(String columnName)
-- Class<?> columnType(int i)
-- List<Class<?>> columnTypes(List<String> columnNames)
-- List<Class<?>> columnTypes()
-- Matrix renameColumn(int columnIndex, String after)
-- Matrix renameColumn(String before, String after)
-- String columnName(int index)
-- void columnNames(List<String> names)
-- List<String> columnNames()
-- int columnIndex(String columnName)
-- List<Integer> columnIndices(List<String> columnNames)
+- Matrix withName(String name): sets the name and returns itself allowing for method chaining 
+- List<String> columnTypeNames(): gives you the simple names of the column types
+- Class<?> columnType(String columnName): gives you the type class of the column  
+- Class<?> columnType(int i): as above
+- List<Class<?>> columnTypes(List<String> columnNames): as above but for a list of columns
+- List<Class<?>> columnTypes(): as above but for all variables 
+- Matrix renameColumn(int columnIndex, String after): Rename the specified column
+- Matrix renameColumn(String before, String after): as above
+- String columnName(int index): the variable name for the specified column
+- void columnNames(List<String> names): set all variable names
+- List<String> columnNames(): gives you all variable names
+- int columnIndex(String columnName): the position for the variable specified
+- List<Integer> columnIndices(List<String> columnNames): the positions for the variables specified
+
+```groovy 
+import se.alipsa.groovy.matrix.Matrix
+import static se.alipsa.groovy.matrix.Stat.*
+
+table = new Matrix('Test',
+                [
+                v0: [0.3, 2, 3],
+                v1: [1.1, 1, 0.9],
+                v2: [null, 'Foo', "Foo"]
+        ], [Number, double, String])
+println table.columnTypes()
+println str(table)
+```
+Which will print
+```
+[class java.lang.Number, class java.lang.Double, class java.lang.String]
+Matrix (Test, 3 observations of 3 variables)
+--------------------------------------------
+v0: [Number, 0.3, 2]
+v1: [Double, 1.1, 1]
+v2: [String, null, Foo]
+```
+Notice that the for the line that prints the column types, the second column contains Double and not double which was given.
+This is because a List cannot contain primitives and also because we prefer to work with the wrapper over the 
+raw primitive in Groovy.
+
+```groovy
+summary(table)
+```
+will print
+```
+v0
+--
+Type:	Number
+Min:	0.3
+1st Q:	2
+Median:	2
+Mean:	1.766666667
+3rd Q:	3
+Max:	3
+
+v1
+--
+Type:	Double
+Min:	0.9
+1st Q:	1
+Median:	1
+Mean:	1.000000000
+3rd Q:	1.1
+Max:	1.1
+
+v2
+--
+Type:	String
+Number of unique values:	2
+Most frequent:	Foo occurs 2 times (66.67%)
+```
 
 ## Adding Data
 - Matrix addRow(List<?> row)
@@ -307,10 +365,85 @@ will output
 - Matrix addColumns(Matrix table, String... columns)
 - Matrix addColumns(List<String> names, List<List<?>> columns, List<Class<?>> types)
 
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+def table = new Matrix('Test',
+                [
+                v0: [0.3, 2, 3],
+                v1: [1.1, 1, 0.9],
+                v2: [null, 'Foo', "Foo"]
+        ], [Number, double, String])
+table.addRow([0.9, 1.2, 'Bar'])
+table.addColumn('v3', Integer, 1..4)
+```
+The table will now contain the following (one added row and one added column):
+
+| v0 | v1 | v2 | v3 |
+| ---: | ---: | --- | ---: |
+| 0.3 | 1.1 | null | 1 |
+| 2 | 1 | Foo | 2 |
+| 3 | 0.9 | Foo | 3 |
+| 0.9 | 1.2 | Bar | 4 |
+
 ## Removing data
 - Matrix dropColumns(String... columnNames)
 - Matrix dropColumnsExcept(String... columnNames)
 - Matrix removeEmptyRows()
+
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+def table = new Matrix('Test',
+                [
+                v0: [0.3, 2, 3],
+                v1: [1.1, 1, 0.9],
+                v2: [null, 'Foo', "Foo"]
+        ], [Number, double, String])
+table.dropColumn(v1)
+```
+Table will now contain:
+
+| v0 | v2 |
+| ---: | --- |
+| 0.3 | null |
+| 2 | Foo |
+| 3 | Foo |
+
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+def table = new Matrix('Test',
+                [
+                v0: [null, 2, 3],
+                v1: [null, 1, 0.9],
+                v2: [null, 'Foo', "Bar"]
+        ], [Number, double, String])
+table.removeEmptyRows()
+```
+Table will now contain
+
+| v0 | v1 | v2  |
+| ---: | ---: |-----|
+| 2 | 1 | Foo |
+| 3 | 0.9 | Bar |
+
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+def table = new Matrix('Test',
+                [
+                v0: [null, 2, 3],
+                v1: [null, 1, 0.9],
+                v2: [null, 'Foo', "Bar"]
+        ], [Number, double, String])
+println table.dropColumnsExcept('v0', 'v2')
+```
+
+Table will now contain:
+
+| v0 | v2 |
+| ---: | --- |
+| null | null |
+| 2 | Foo |
+| 3 | Bar |
+
 
 ## Modifying data
 - void putAt(Integer column, List<?> values)
