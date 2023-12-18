@@ -1,30 +1,8 @@
 plugins {
-  //id('io.github.gradle-nexus.publish-plugin') version '1.3.0'
   id "com.github.ben-manes.versions" version "0.47.0"
 }
 
 description = "Groovy libraries for working with matrix ([][] data)"
-
-/*
-subprojects {
-
-  afterEvaluate {
-    artifacts {
-      archives javadocJar
-    }
-    artifacts {
-      archives sourcesJar
-    }
-  }
-}
-
-nexusPublishing {
-  repositories {
-    sonatype()
-  }
-}
-
- */
 
 def isNonStable = { String version ->
   def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }

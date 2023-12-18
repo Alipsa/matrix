@@ -236,12 +236,13 @@ class Matrix implements Iterable<Row> {
     return mHeaders
   }
 
-  void columnNames(List<String> names) {
+  Matrix columnNames(List<String> names) {
     if(columnCount() != names.size()) {
       throw new IllegalArgumentException("Number of column names (${names.size()}) does not match number of columns (${columnCount()}) in this table")
     }
     mHeaders.clear()
     mHeaders.addAll(names)
+    return this
   }
 
   String columnName(int index) {
@@ -683,6 +684,19 @@ class Matrix implements Iterable<Row> {
 
   String content(boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n') {
     return head(rowCount(), includeHeader, delimiter, lineEnding)
+  }
+
+  /**
+   * Convert all columns to the type specified
+   *
+   * @param type the class to convert all values to
+   * @param dateTimeFormatter an optional formatter if you are cnverting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return a new Matrix converted as specified
+   */
+  <T> Matrix convert(Class<T> type, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+    List<Class<T>> columnTypes = [type]*columnCount()
+    convert(columnTypes, dateTimeFormatter, numberFormat)
   }
 
   /**

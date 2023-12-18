@@ -6,6 +6,7 @@
 using constructors for column data and create methods for row based data.
 - Rename Matrix.selectRows() to selectRowIndices()
 - add some convenience methods to Row, make it clear that iterations is over Row objects
+- add a convert method to easily convert the entire matrix to a singular type
 
 ## 1.2.1, 2023-11-19
 - No changes
