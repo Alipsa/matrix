@@ -496,16 +496,17 @@ Stat methods
 - Matrix orderBy(String columnName, Boolean descending = Boolean.FALSE)
 - Matrix orderBy(LinkedHashMap<String, Boolean> columnsAndDirection)
 - Matrix orderBy(Comparator comparator)
-
-## Transforming data
-- Map<?, Matrix> split(String columnName)
-- Grid<Object> grid()
-- Matrix clone()
+- Matrix moveColumn(String columnName, int index)
 - Matrix transpose(List<String> header, List<Class> types, boolean includeHeaderAsRow = false)
 - Matrix transpose(boolean includeHeaderAsRow = false)
 - Matrix transpose(List<String> header, boolean includeHeaderAsRow = false)
 - Matrix transpose(String columnNameAsHeader, List<Class> types,  boolean includeHeaderAsRow = false)
 - Matrix transpose(String columnNameAsHeader,  boolean includeHeaderAsRow = false)
+
+## Transforming data
+- Map<?, Matrix> split(String columnName)
+- Grid<Object> grid()
+- Matrix clone()
 
 ## Joining (merging) Matrices 
 - static Matrix merge(Matrix x, Matrix y, Map<String, String> by, boolean all = false)
