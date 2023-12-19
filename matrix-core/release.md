@@ -1,4 +1,4 @@
-# Release history
+# Matrix core Release history
 
 ## 1.2.2, in progress
 - add putAt for a whole column for both Grid and Matrix enabling expressions like `myMatrix['id'] = [10, 11, 12, 13, 14]`
@@ -7,6 +7,7 @@ using constructors for column data and create methods for row based data.
 - Rename Matrix.selectRows() to selectRowIndices()
 - add some convenience methods to Row, make it clear that iterations is over Row objects
 - add a convert method to easily convert the entire matrix to a singular type
+- add moveColumn to Matrix
 
 ## 1.2.1, 2023-11-19
 - No changes

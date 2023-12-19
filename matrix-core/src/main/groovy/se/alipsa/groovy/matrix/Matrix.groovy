@@ -365,6 +365,9 @@ class Matrix implements Iterable<Row> {
    * Changes to values in a row is reflected back to the Matrix.
    */
   List<Row> rows() {
+    if (mColumns.isEmpty()) {
+      return Collections.emptyList()
+    }
     int nRows = mColumns[0].size()
     Map<Integer, Row> r = [:]
     for (Integer i = 0; i < nRows; i++) {
@@ -490,7 +493,11 @@ class Matrix implements Iterable<Row> {
   }
 
   int rowCount() {
-    return rows().size()
+    if (mColumns == null || mColumns.isEmpty()) {
+      return 0
+    }
+    return mColumns.get(0).size()
+    //return rows().size()
   }
 
   Object get(int row, int column) {
@@ -849,6 +856,19 @@ class Matrix implements Iterable<Row> {
 
   Matrix removeEmptyRows() {
     return subset { containsValues(it as Iterable<?>) }
+  }
+
+  Matrix moveColumn(String columnName, int index) {
+    Class<?> type = columnType(columnName)
+    int currentIndex = columnIndex(columnName)
+    List<?> col = mColumns[currentIndex]
+    mColumns.remove(currentIndex)
+    mColumns.add(index, col)
+    mHeaders.remove(currentIndex)
+    mHeaders.add(index, columnName)
+    mTypes.remove(currentIndex)
+    mTypes.add(index, type)
+    return this
   }
 
   static boolean containsValues(Iterable<?> row) {

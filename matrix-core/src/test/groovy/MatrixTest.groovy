@@ -758,4 +758,17 @@ class MatrixTest {
         assertEquals(13, components[3, 'id'])
         assertEquals(14, components[4, 'id'])
     }
+
+    @Test
+    void testMoveColumn() {
+        def table = new Matrix([
+                'firstname': ['Lorena', 'Marianne', 'Lotte'],
+                'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+                'foo': [1, 2, 3]
+        ], [String, LocalDate, int])
+
+        table.moveColumn('foo', 0)
+
+        println(table.content())
+    }
 }
