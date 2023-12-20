@@ -771,4 +771,15 @@ class MatrixTest {
 
         println(table.content())
     }
+
+    @Test
+    void testPutAt() {
+        def table = new Matrix([
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+            'foo': [1, 2, 3]
+        ], [String, LocalDate, int])
+        table["yearMonth", YearMonth, 0] = toYearMonth(table["start_date"])
+        println table.content()
+    }
 }

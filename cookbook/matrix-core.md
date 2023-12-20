@@ -447,7 +447,9 @@ Table will now contain:
 
 ## Modifying data
 - void putAt(Integer column, List<?> values)
+  e.g. `myMatrix[1] = [42, 12, 10]`
 - void putAt(String columnName, List<?> values)
+  e.g. `myMatrix['temperature'] = [42, 12, 10]`
 - void putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
 - void putAt(List where, List<?> column)
 - void putAt(Number rowIndex, Number colIndex, Object value)
@@ -464,6 +466,9 @@ Table will now contain:
 - Matrix apply(String columnName, List<Integer> rows, Closure function)
 - Matrix apply(int columnNumber, Closure function)
 - Matrix apply(String columnName, Closure function)
+
+The various putAt methods can be used with the shorthand square bracket notation in Groovy.
+
 
 ## Using data in calculations
 - List<?> withColumns(List<String> colNames, Closure operation)
