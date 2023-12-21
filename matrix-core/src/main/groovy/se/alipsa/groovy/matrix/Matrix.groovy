@@ -1082,6 +1082,19 @@ class Matrix implements Iterable<Row> {
     return this
   }
 
+  Matrix dropColumnsExcept(int... columnIndices) {
+    def retainColIndices = columnIndices.length > 0 ? columnIndices as List : []
+    for (int i = 0; i < columnCount(); i++) {
+      if (retainColIndices.contains(i)) {
+        continue
+      }
+      mColumns.remove(i)
+      mTypes.remove(i)
+      mHeaders.remove(i)
+    }
+    return this
+  }
+
   Matrix dropColumns(String... columnNames) {
     def columnsToDrop = columnNames.length > 0 ? columnNames as List<String> : []
     columnsToDrop.each { colName ->
