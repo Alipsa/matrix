@@ -31,6 +31,10 @@ class ListConverter {
     return c
   }
 
+  static List<LocalDate> toLocalDates(List<String> dates) {
+    toLocalDates(dates as String[])
+  }
+
   static List<LocalDate> toLocalDates(String[] dates) {
     def dat = new ArrayList<LocalDate>(dates.length)
     dates.eachWithIndex { String d, int i ->
@@ -107,6 +111,14 @@ class ListConverter {
     List<Double> list = []
     numbers.each {
       list.add(ValueConverter.asDouble(it))
+    }
+    return list
+  }
+
+  static List<Integer> toIntegers(List<?> numbers) {
+    List<Integer> list = []
+    numbers.each {
+      list << ValueConverter.asInteger(it);
     }
     return list
   }

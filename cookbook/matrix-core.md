@@ -451,9 +451,49 @@ Table will now contain:
 - void putAt(String columnName, List<?> values)
   e.g. `myMatrix['temperature'] = [42, 12, 10]`
 - void putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
+```groovy
+// note that this version of put at will add a new column
+ def table = new Matrix([
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+            'foo': [1, 2, 3]
+        ], [String, LocalDate, int])
+        table["yearMonth", YearMonth, 0] = toYearMonth(table["start"])
+```
+
+| yearMonth | firstname | start | foo |
+| --- | --- | --- | ---: |
+| 2021-12 | Lorena | 2021-12-01 | 1 |
+| 2022-07 | Marianne | 2022-07-10 | 2 |
+| 2023-05 | Lotte | 2023-05-27 | 3 |
+
 - void putAt(List where, List<?> column)
+```groovy
+// this will (can only) update an existing column
+def table = new Matrix([
+        'firstname': ['Lorena', 'Marianne', 'Lotte'],
+        'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+        'foo': [1, 2, 3]
+], [String, LocalDate, int])
+table["foo"] = [2,5,3]
+```
+
+| firstname | start | foo |
+| --- | --- | ---: |
+| Lorena | 2021-12-01 | 2 |
+| Marianne | 2022-07-10 | 5 |
+| Lotte | 2023-05-27 | 3 |
+
 - void putAt(Number rowIndex, Number colIndex, Object value)
+```groovy
+myMatrix.putAt(1,2,42)
+```
 - void putAt(List<Number> where, Object value)
+```groovy 
+myMatrix[1,2] = 42
+// or in java
+myMatrix.putAt(List.of(1,2),42)
+```
 - Matrix convert(int columnNumber, Class<?> type, Closure converter)
 - Matrix convert(Converter[] converters)
 - Matrix convert(String columnName, Class<?> type, Closure converter)

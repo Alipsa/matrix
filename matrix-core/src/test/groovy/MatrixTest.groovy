@@ -774,12 +774,27 @@ class MatrixTest {
 
     @Test
     void testPutAt() {
+        // putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
         def table = new Matrix([
             'firstname': ['Lorena', 'Marianne', 'Lotte'],
             'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
             'foo': [1, 2, 3]
         ], [String, LocalDate, int])
-        table["yearMonth", YearMonth, 0] = toYearMonth(table["start_date"])
-        println table.content()
+        table["yearMonth", YearMonth, 0] = toYearMonth(table["start"])
+        assertEquals(4, table.columnCount())
+        assertIterableEquals(['yearMonth', 'firstname', 'start', 'foo'], table.columnNames())
+        assertIterableEquals(toYearMonth(['2021-12', '2022-07', '2023-05']), table[0])
+
+        // putAt(List where, List<?> column)
+        table = new Matrix([
+                'firstname': ['Lorena', 'Marianne', 'Lotte'],
+                'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+                'foo': [1, 2, 3]
+        ], [String, LocalDate, int])
+        table["start"] = (table["start"]).collect {it.plusDays(10)}
+        assertEquals(3, table.columnCount())
+        assertIterableEquals(['firstname', 'start', 'foo'], table.columnNames())
+        assertIterableEquals(toLocalDates(['2021-12-11', '2022-07-20', '2023-06-06']), table[1])
+
     }
 }
