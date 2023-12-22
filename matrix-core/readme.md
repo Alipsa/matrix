@@ -12,18 +12,30 @@ Matrix should work with any 4.x version of groovy, and probably older versions a
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:1.1.3'
+implementation 'se.alipsa.groovy:matrix-core:1.2.2'
 ```
 ...and the following for maven
 ```xml
 <dependency>
     <groupId>se.alipsa.groovy</groupId>
     <artifactId>matrix-core</artifactId>
-    <version>1.1.3</version>
+    <version>1.2.2</version>
 </dependency>
 ```
 
-The jvm should be JDK 17 or higher.
+The jvm should be JDK 17 or higher. If using the matrix library from Java, you need to add a dependency for 
+the groovy core library as well e.g:
+
+```xml
+<dependency>
+    <groupId>org.apache.groovy</groupId>
+    <artifactId>groovy</artifactId>
+    <version>4.0.16</version>
+</dependency>
+```
+
+The only difference when using it from Java is that some of the shorthand methods does not work e.g.
+instead of doing `myMatrix[2, 'id']` you will need to use the underlying method instead i.e. `myMatrix.getAt(2, 'id')`
 
 ## Matrix
 A Matrix is tabular data with a header and where each column type is defined.
