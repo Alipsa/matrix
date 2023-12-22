@@ -791,7 +791,7 @@ class MatrixTest {
                 'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
                 'foo': [1, 2, 3]
         ], [String, LocalDate, int])
-        table["start"] = (table["start"]).collect {it.plusDays(10)}
+        table["start"] = table["start"].collect {it.plusDays(10)}
         assertEquals(3, table.columnCount())
         assertIterableEquals(['firstname', 'start', 'foo'], table.columnNames())
         assertIterableEquals(toLocalDates(['2021-12-11', '2022-07-20', '2023-06-06']), table[1])
