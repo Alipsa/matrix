@@ -768,8 +768,9 @@ class MatrixTest {
         ], [String, LocalDate, int])
 
         table.moveColumn('foo', 0)
-
-        println(table.content())
+        assertIterableEquals(['foo', 'firstname', 'start'], table.columnNames())
+        assertIterableEquals([1, 2, 3], table[0])
+        assertIterableEquals([Integer, String, LocalDate], table.columnTypes())
     }
 
     @Test

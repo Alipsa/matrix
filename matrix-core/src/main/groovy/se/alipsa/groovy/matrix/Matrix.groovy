@@ -279,7 +279,6 @@ class Matrix implements Iterable<Row> {
    * @return the index (position) of the columnName
    */
   int columnIndex(String columnName) {
-    println("Finding index for $columnName in $mHeaders")
     return mHeaders.indexOf(columnName)
   }
 
