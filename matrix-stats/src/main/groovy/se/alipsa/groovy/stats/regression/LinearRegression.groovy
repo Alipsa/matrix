@@ -30,9 +30,13 @@ class LinearRegression {
   BigDecimal r2
   BigDecimal interceptStdErr
   BigDecimal slopeStdErr
+  String x = 'X'
+  String y = 'Y'
 
   LinearRegression(Matrix table, String x, String y) {
     this(table[x] as List<? extends Number>, table[y] as List<? extends Number>)
+    this.x = x
+    this.y = y
   }
 
   LinearRegression(List<? extends Number> x, List<? extends Number> y) {
@@ -186,5 +190,30 @@ class LinearRegression {
   @Override
   String toString() {
     return "Y = ${getSlope(2)}X ${intercept > 0 ? '+' : '-'} ${getIntercept(2).abs()}"
+  }
+
+  String summary() {
+    String interceptLab = '(Intercept)'
+    String xLab = x
+    if (interceptLab.length() > xLab.length()) {
+      xLab = xLab.padRight(interceptLab.length())
+    }
+    Matrix coefficients = new Matrix('Coefficients',
+        ['           ','Estimate','Std. Error' /*, 't value', 'Pr(>|t|)'*/],
+        [
+            [interceptLab, xLab],
+            [getIntercept(3), getSlope(3)],
+            [getInterceptStdErr(3), getSlopeStdErr(3)]
+        ]
+    )
+    """
+Equation: ${toString()}
+Residuals: (not yet implemented)   
+
+Coefficients
+${coefficients.content()}
+
+Multiple R-squared: ${getRsquared(3)}
+""".stripIndent()
   }
 }

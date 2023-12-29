@@ -1,5 +1,8 @@
 # Release history
 
+## v1.0.3, in progress
+- add cars dataset
+
 ## v 1.0.2, 2023-08-06
 - replace iris dataset with a better version
 - upgrade matrix to ver 1.1.2

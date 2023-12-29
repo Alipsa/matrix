@@ -134,7 +134,7 @@ class ListConverter {
     return list
   }
 
-  static List<BigDecimal> toBigDecimals(List<? extends Number> numbers) {
+  static List<BigDecimal> toBigDecimals(List<?> numbers) {
     List<BigDecimal> list = []
     numbers.each {
       list.add(ValueConverter.asBigDecimal(it))

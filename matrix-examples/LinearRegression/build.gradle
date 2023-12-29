@@ -1,0 +1,58 @@
+plugins {
+    id 'groovy'
+}
+
+group = 'se.alipsa.groovy'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    if (version.contains('SNAPSHOT')) {
+        mavenLocal()
+    }
+}
+
+dependencies {
+    org.gradle.internal.os.OperatingSystem os = org.gradle.internal.os.OperatingSystem.current()
+    def qualifier = 'unknown'
+    if (os.isLinux()) {
+        qualifier='linux'
+    } else if (os.isWindows()) {
+        qualifier = 'win'
+    } else if (os.isMacOsX()) {
+        qualifier = 'mac-aarch64'
+    }
+    implementation 'org.apache.groovy:groovy:4.0.16'
+    implementation "org.openjfx:javafx-base:20.0.2:$qualifier"
+    implementation "org.openjfx:javafx-graphics:20.0.2:$qualifier"
+    implementation "org.openjfx:javafx-controls:20.0.2:$qualifier"
+    implementation "org.openjfx:javafx-swing:20.0.2:$qualifier"
+    implementation 'se.alipsa.groovy:matrix-core:1.2.2'
+    implementation 'se.alipsa.groovy:matrix-datasets:1.0.3-SNAPSHOT'
+    implementation 'se.alipsa.groovy:matrix-stats:1.0.1-SNAPSHOT'
+    implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+def fatJarContainer = tasks.register('fatJar', Jar) {
+    dependsOn(classes)
+    archiveClassifier = 'fatjar'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    with jar
+}
+
+
+jar {
+    dependsOn fatJarContainer
+}

@@ -13,4 +13,8 @@ include 'matrix-datasets'
 include 'matrix-json'
 include 'matrix-spreadsheet'
 include 'matrix-charts'
+//include 'matrix-examples:candles'
+//include 'matrix-examples:HousePrices'
+include 'matrix-examples:LinearRegression'
+findProject(':matrix-examples:LinearRegression')?.name = 'LinearRegression'
 

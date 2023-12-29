@@ -18,6 +18,7 @@ abstract class Chart {
 
   protected List<?> categorySeries
   protected List<?>[] valueSeries
+  protected List<String> valueSeriesNames
 
   protected AxisScale xAxisScale = null
   protected AxisScale yAxisScale = null
@@ -99,6 +100,34 @@ abstract class Chart {
 
   void setyAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
     this.yAxisScale = new AxisScale(start, end, step)
+  }
+
+  void setTitle(String title) {
+    this.title = title
+  }
+
+  void setxAxisTitle(String xAxisTitle) {
+    this.xAxisTitle = xAxisTitle
+  }
+
+  void setyAxisTitle(String yAxisTitle) {
+    this.yAxisTitle = yAxisTitle
+  }
+
+  void setCategorySeries(List<?> categorySeries) {
+    this.categorySeries = categorySeries
+  }
+
+  void setValueSeries(List<?>[] valueSeries) {
+    this.valueSeries = valueSeries
+  }
+
+  List<String> getValueSeriesNames() {
+    return valueSeriesNames
+  }
+
+  void setValueSeriesNames(List<String> valueSeriesNames) {
+    this.valueSeriesNames = valueSeriesNames
   }
 
   @Override

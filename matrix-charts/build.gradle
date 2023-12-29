@@ -54,7 +54,11 @@ dependencies {
   compileOnly groovy
   implementation project(':matrix-core')
   implementation project(':matrix-datasets')
-  implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+
+  // One of these is enough
+  implementation "org.jfree:jfreechart:1.5.4"
+  implementation 'org.knowm.xchart:xchart:3.8.6'
+
   compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   compileOnly "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"

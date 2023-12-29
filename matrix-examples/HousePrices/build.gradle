@@ -1,0 +1,14 @@
+plugins {
+    id 'groovy'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.apache.groovy:groovy:4.0.16"
+    implementation "se.alipsa.groovy:matrix-core:1.2.2"
+}
+
+

@@ -1,0 +1,19 @@
+
+------------------------------------------------------------
+: Project Dependency Updates (report to plain text file)
+------------------------------------------------------------
+
+The following dependencies are using the latest release version:
+ - com.github.ben-manes.versions:com.github.ben-manes.versions.gradle.plugin:0.42.0
+ - org.apache.groovy:groovy:4.0.4
+ - org.apache.logging.log4j:log4j-core:2.18.0
+ - tech.tablesaw:tablesaw-aggregate:0.43.1
+ - tech.tablesaw:tablesaw-core:0.43.1
+ - tech.tablesaw:tablesaw-excel:0.43.1
+
+The following dependencies have later release versions:
+ - org.slf4j:slf4j-simple [1.7.36 -> 2.0.0-alpha7]
+     http://www.slf4j.org
+
+Gradle release-candidate updates:
+ - Gradle: [7.5: UP-TO-DATE]

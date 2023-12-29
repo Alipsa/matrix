@@ -6,6 +6,13 @@ import se.alipsa.groovy.matrix.Stat
 
 class Dataset {
 
+    static Matrix cars() {
+        Matrix.create(url('/data/cars.csv'), ',', '"').convert(
+            speed: BigDecimal,
+            dist: BigDecimal
+        ).withName('cars')
+    }
+
     /**
      * Measurements in centimeters of the variables sepal length, sepal width,
      * petal length and petal width, respectively, for 50 flowers from each of 3 species of iris.
@@ -196,6 +203,7 @@ class Dataset {
      */
     static String describe(String tableName) {
         def name = tableName.toLowerCase()
+        if (name == 'cars') return descCars()
         if (name == 'mtcars') return descMtcars()
         if (name == 'iris') return descIris()
         if (name == 'plantgrowth') return descPlantGrowth()
@@ -207,7 +215,16 @@ class Dataset {
         return "Unknown table: ${tableName}"
     }
 
-
+    static String descCars() {
+        '''
+        The data give the speed of cars and the distances taken to stop. Note that the data were recorded in the 1920s.
+        Original source: Ezekiel, M. (1930) Methods of Correlation Analysis. Wiley.
+        
+        Variables:
+        speed: the speed in miles per hour 
+        dist: the stopping distance in feet
+        '''.stripIndent()
+    }
 
     static String descMtcars() {
         return '''

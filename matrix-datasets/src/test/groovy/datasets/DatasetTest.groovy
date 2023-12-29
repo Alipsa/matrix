@@ -11,6 +11,18 @@ import se.alipsa.groovy.matrix.*
 class DatasetTest {
 
     @Test
+    void testCars() {
+        Matrix cars = Dataset.cars()
+        assertEquals(50, cars.rowCount(), 'number of rows')
+        assertEquals(2, cars.columnCount(), 'number of columns')
+        println Stat.str(cars)
+        assertEquals(770 as BigDecimal, Stat.sum(cars['speed']))
+        assertEquals(2149 as BigDecimal, Stat.sum(cars['dist']))
+        assertEquals(Dataset.descCars(), Dataset.describe(cars))
+        assertEquals(Dataset.descCars(), Dataset.describe('cars'))
+    }
+
+    @Test
     void testIris() {
         Matrix iris = Dataset.iris()
         assertEquals(150, iris.rowCount(), 'number of rows')

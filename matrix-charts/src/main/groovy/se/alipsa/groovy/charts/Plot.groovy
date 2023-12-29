@@ -1,4 +1,4 @@
-package se.alipsa.groovy.charts;
+package se.alipsa.groovy.charts
 
 import se.alipsa.groovy.charts.jfx.JfxConverter
 import se.alipsa.groovy.charts.png.PngConverter
@@ -13,7 +13,7 @@ class Plot {
     }
   }
 
-  static void png(Chart chart, OutputStream os, double width, double height) {
+  static void png(Chart chart, OutputStream os, double width = 800, double height = 600) {
     PngConverter.convert(chart, os, width, height)
   }
 
@@ -21,11 +21,10 @@ class Plot {
     JfxConverter.convert(chart)
   }
 
-  static String base64(Chart chart, double width, double height) {
+  static String base64(Chart chart, double width = 800, double height = 600) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     png(chart, baos, width, height)
     return "data:image/png;base64," + Base64.getEncoder().encodeToString(baos.toByteArray())
   }
-
 
 }

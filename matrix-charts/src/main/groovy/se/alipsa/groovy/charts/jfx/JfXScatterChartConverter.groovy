@@ -3,8 +3,6 @@ package se.alipsa.groovy.charts.jfx
 import javafx.scene.chart.Axis
 import javafx.scene.chart.NumberAxis
 import javafx.scene.chart.XYChart
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import se.alipsa.groovy.charts.AxisScale
 import se.alipsa.groovy.charts.ScatterChart
 import se.alipsa.groovy.matrix.Stat
@@ -12,8 +10,6 @@ import se.alipsa.groovy.matrix.Stat
 import java.math.RoundingMode
 
 class JfXScatterChartConverter {
-
-  private static final Logger log = LogManager.getLogger()
 
   static javafx.scene.chart.ScatterChart convert(ScatterChart chart) {
     def series = chart.getValueSeries()[0]

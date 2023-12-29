@@ -1107,6 +1107,16 @@ class Matrix implements Iterable<Row> {
     return this
   }
 
+  Matrix dropColumns(int... columnIndices) {
+    def columnsToDrop = columnIndices.length > 0 ? columnIndices as List<Integer> : []
+    columnsToDrop.each { colIdx ->
+        mColumns.remove(colIdx)
+        mTypes.remove(colIdx)
+        mHeaders.remove(colIdx)
+    }
+    return this
+  }
+
   /**
    * split is used t create a map of matrices for each unique value in the column.
    * This is useful for e.g. countBy or sumBy (see Stat.countBy() and Stat.countBy())

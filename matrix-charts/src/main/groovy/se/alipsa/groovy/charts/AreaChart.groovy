@@ -12,7 +12,7 @@ class AreaChart extends Chart {
     AreaChart chart = new AreaChart()
     chart.title = data.name
     chart.categorySeries = data.column(0)
-    chart.valueSeries = data.rejectColumns(0).columnArray()
+    chart.valueSeries = [data.column(1)]
     return chart
   }
 

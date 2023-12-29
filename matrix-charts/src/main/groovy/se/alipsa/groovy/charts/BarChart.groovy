@@ -22,6 +22,7 @@ class BarChart extends Chart {
     chart.valueSeries = valueColumn
     chart.chartType = chartType
     chart.direction = direction
+    chart.valueSeriesNames = 1..valueColumn.size() as List<String>
     return chart
   }
 
@@ -32,6 +33,7 @@ class BarChart extends Chart {
     chart.title = title
     chart.categorySeries = groupColumn
     chart.valueSeries = valueColumns
+    chart.valueSeriesNames = valueColumn.toList()
     chart.chartType = chartType
     chart.direction = direction
     return chart
@@ -65,5 +67,9 @@ class BarChart extends Chart {
    */
   static BarChart createVertical(String title, Matrix data, String categoryColumnName, ChartType chartType = ChartType.BASIC, String... valueColumn) {
     return create(title, chartType, data, categoryColumnName, ChartDirection.VERTICAL, valueColumn)
+  }
+
+  boolean isStacked() {
+    return chartType == ChartType.STACKED
   }
 }

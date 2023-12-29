@@ -13,6 +13,7 @@ class BoxChart extends Chart {
     chart.title = title
     chart.categorySeries = groupColumn
     chart.valueSeries = valueColumns
+    chart.valueSeriesNames = [valueColumn]
     chart.xAxisTitle = categoryColumnName
     chart.yAxisTitle = valueColumn
     return chart
