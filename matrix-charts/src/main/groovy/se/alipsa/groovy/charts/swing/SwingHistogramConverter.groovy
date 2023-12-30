@@ -18,7 +18,9 @@ class SwingHistogramConverter {
             .xAxisTitle("Range")
             .yAxisTitle("Frequency")
             .build()
-    /*
+    /* the xchart standard below gives counts for a mean with the means as x axis lables
+       which is not exactly what we want so rolling it manually instead...
+
     def histogram = new org.knowm.xchart.Histogram(chart.originalData, chart.numberOfBins)
 
     categoryChart.addSeries(
