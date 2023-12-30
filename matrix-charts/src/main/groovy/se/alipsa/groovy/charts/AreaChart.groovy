@@ -13,6 +13,7 @@ class AreaChart extends Chart {
     chart.title = data.name
     chart.categorySeries = data.column(0)
     chart.valueSeries = [data.column(1)]
+    chart.valueSeriesNames = [data.columnName(1)]
     return chart
   }
 
@@ -29,9 +30,11 @@ class AreaChart extends Chart {
    *         "Boston Robberies by month: Jan 1966-Oct 1975", robberies, "Record", "Robberies")
    */
   static AreaChart create(String title, Matrix data, String xCol, String yCol) {
-    var xColumn = data.column(xCol)
-    var yColumn = data.column(yCol)
-    return create(title, xColumn, yColumn)
+    def xColumn = data.column(xCol)
+    def yColumn = data.column(yCol)
+    def chart = create(title, xColumn, yColumn)
+    chart.valueSeriesNames = [yCol]
+    return chart
   }
 
   /**

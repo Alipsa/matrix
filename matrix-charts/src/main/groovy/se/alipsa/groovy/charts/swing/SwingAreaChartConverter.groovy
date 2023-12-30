@@ -10,12 +10,12 @@ class SwingAreaChartConverter {
 
     XYChart xyChart =
         new XYChartBuilder()
-            //.width(800)
-            //.height(600)
             .title(chart.getTitle())
             .xAxisTitle(chart.getxAxisTitle())
             .yAxisTitle(chart.getyAxisTitle())
             .build()
+
+    xyChart.getStyler().setLegendVisible(false)
 
     def series = chart.getValueSeries()
     def categories = chart.getCategorySeries()
