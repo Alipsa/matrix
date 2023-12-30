@@ -22,6 +22,8 @@ class JfxHistogramConverter {
       data.add(new XYChart.Data(it.key.toString(), it.value))
     }
     barChart.getData().add(series1)
+    barChart.setTitle(histogram.getTitle() ?: '')
+    barChart.setLegendVisible(false)
     return barChart
   }
 }

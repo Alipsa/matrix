@@ -6,7 +6,10 @@ import se.alipsa.groovy.matrix.Stat
 import java.math.RoundingMode
 
 class Histogram extends Chart {
+
+  List<? extends Number> originalData = []
   Map<MinMax, Integer> ranges
+  Integer numberOfBins = 9
 
   static Histogram create(Map params) {
     String title = params.title as String
@@ -20,9 +23,10 @@ class Histogram extends Chart {
   static Histogram create(String title, Matrix data, String columnName, Integer bins = 9, int binDecimals = 1) {
     Histogram chart = new Histogram()
     chart.title = title
-    var column = data[columnName]
+    chart.numberOfBins = bins
     if (Number.isAssignableFrom(data.columnType(columnName))) {
-      chart.ranges  = createRanges(column as List<? extends Number>, bins, binDecimals)
+      chart.originalData = data.column(columnName) as List<? extends Number>
+      chart.ranges  = createRanges(chart.originalData, bins, binDecimals)
     } else {
       throw new IllegalArgumentException("Column must be numeric in a histogram (hint: you can Barplot a Frequency)")
     }
@@ -31,6 +35,8 @@ class Histogram extends Chart {
 
   static Histogram create(List<? extends Number> column, Integer bins = 9) {
     Histogram chart = new Histogram()
+    chart.originalData = column
+    chart.numberOfBins = bins
     chart.ranges  = createRanges(column as List<? extends Number>, bins)
     return chart
   }
@@ -66,6 +72,14 @@ class Histogram extends Chart {
 
   Map<MinMax, Integer> getRanges() {
     return ranges
+  }
+
+  List<? extends Number> getOriginalData() {
+    return originalData
+  }
+
+  Integer getNumberOfBins() {
+    return numberOfBins
   }
 }
 
