@@ -19,6 +19,7 @@ class JfXScatterChartConverter {
     xAxis.setLabel(chart.xAxisTitle)
     yAxis.setLabel(chart.yAxisTitle)
     def jfxChart = new javafx.scene.chart.ScatterChart(xAxis, yAxis)
+    jfxChart.setLegendVisible(false)
 
     XYChart.Series fxSeries = new XYChart.Series()
     for (int i = 0; i < series.size(); i++) {
@@ -38,15 +39,15 @@ class JfXScatterChartConverter {
     if (scale == null) {
       def start = Stat.min(series) as Double
       if (start > 0) {
-        start = Math.floor(start * 0.99)
+        start = Math.floor(start * 0.98)
       } else {
-        start = Math.ceil(start * 1.01)
+        start = Math.ceil(start * 1.02)
       }
       def end = Stat.max(series) as Double
       if (end > 0) {
-        end = Math.ceil(end * 1.01)
+        end = Math.ceil(end * 1.02)
       } else {
-        end = Math.floor(end * 0.99)
+        end = Math.floor(end * 0.98)
       }
       def step = (((end - start) / 12) as BigDecimal).setScale(1, RoundingMode.HALF_EVEN)
       if (step > 2) {

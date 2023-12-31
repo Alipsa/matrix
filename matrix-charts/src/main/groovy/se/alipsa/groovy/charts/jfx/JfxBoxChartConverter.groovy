@@ -15,10 +15,19 @@ class JfxBoxChartConverter {
     Axis<?> xAxis = new CategoryAxis()
     Axis<?> yAxis = new NumberAxis()
     def fxChart = new StackedBarChart<>(xAxis, yAxis)
-    ConverterUtil.populateVerticalSeries(fxChart, chart)
-    fxChart.setTitle(chart.getTitle())
-    xAxis.setLabel(chart.xAxisTitle)
-    yAxis.setLabel(chart.yAxisTitle)
+    chart.categorySeries.eachWithIndex { serie, idx ->
+      XYChart.Series fxSeries = new XYChart.Series()
+      def columnVals = chart.valueSeries[idx]
+      for (val in columnVals) {
+        if (val instanceof Number) {
+          fxSeries.getData().add(new XYChart.Data(serie, (Number)val))
+        }
+      }
+      fxChart.getData().add(fxSeries)
+    }
+    fxChart.setTitle(chart.getTitle() ?: '')
+    xAxis.setLabel(chart.xAxisTitle ?: 'X')
+    yAxis.setLabel(chart.yAxisTitle ?: 'Y')
     return fxChart
   }
 }

@@ -91,7 +91,7 @@ class ListConverter {
     return list
   }
 
-  static List<String> toString(List<?> objList) {
+  static List<String> toString(Collection<?> objList) {
     List<String> list = []
     objList.each {
       list.add(ValueConverter.asString(it))

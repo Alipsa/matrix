@@ -122,6 +122,10 @@ abstract class Chart {
     this.valueSeries = valueSeries
   }
 
+  List<?> getValueSerie(int index) {
+    valueSeries[index]
+  }
+
   List<String> getValueSeriesNames() {
     return valueSeriesNames
   }

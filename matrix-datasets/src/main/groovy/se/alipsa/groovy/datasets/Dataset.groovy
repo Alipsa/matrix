@@ -6,6 +6,16 @@ import se.alipsa.groovy.matrix.Stat
 
 class Dataset {
 
+    static Matrix airquality() {
+        Matrix.create(url('/data/airquality.csv'), ',', '', true).convert(
+            'Ozone': BigDecimal,
+            'Solar.R': BigDecimal,
+            'Wind': BigDecimal,
+            'Temp': BigDecimal,
+            'Month': Byte
+        ).withName('airquality')
+    }
+
     static Matrix cars() {
         Matrix.create(url('/data/cars.csv'), ',', '"').convert(
             speed: BigDecimal,
@@ -203,6 +213,7 @@ class Dataset {
      */
     static String describe(String tableName) {
         def name = tableName.toLowerCase()
+        if (name == 'airquality') return descAirquality()
         if (name == 'cars') return descCars()
         if (name == 'mtcars') return descMtcars()
         if (name == 'iris') return descIris()
@@ -213,6 +224,21 @@ class Dataset {
         if (name == 'diamonds') return descDiamonds()
         if (name == 'mapdata' || name == 'map_data') return descMapData()
         return "Unknown table: ${tableName}"
+    }
+
+    static String descAirquality() {
+        '''
+        Daily air quality measurements in New York, May to September 1973.
+        
+        Original source: Chambers, J. M., Cleveland, W. S., Kleiner, B. and Tukey, P. A. (1983) 
+        Graphical Methods for Data Analysis. Belmont, CA: Wadsworth.
+        
+        Variables:
+        Ozone: Mean ozone in parts per billion from 1300 to 1500 hours at Roosevelt Island
+        Solar.R: Solar radiation in Langleys in the frequency band 4000--7700 Angstroms from 0800 to 1200 hours at Central Park
+        Wind: Average wind speed in miles per hour at 0700 and 1000 hours at LaGuardia Airport
+        Temp: Maximum daily temperature in degrees Fahrenheit at La Guardia Airport.
+        '''.stripIndent()
     }
 
     static String descCars() {
