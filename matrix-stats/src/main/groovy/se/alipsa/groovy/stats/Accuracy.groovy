@@ -4,6 +4,23 @@ import java.math.MathContext
 
 class Accuracy {
 
+  static final MathContext precision = new MathContext(9)
+
+  static Map<String, BigDecimal> evaluatePredictions(List actuals, List predictions) {
+    def sae = 0.0G
+    def sse = 0.0G
+    def m = 0.0G
+    def N = actuals.size() as BigDecimal
+    actuals.eachWithIndex { Object entry, int i ->
+      def act = entry as BigDecimal
+      def pred = predictions[i] as BigDecimal
+      sae += (act - pred).abs()
+      sse += (act - pred)**2
+      m += ((act-pred)/act).abs()/N
+    }
+    [mae: sae/N, mse: sse/N, rmse: (sse/N).sqrt(precision), mape: m]
+  }
+
   /**
    * Calculate the Mean Absolute Percentage Error
    * Mean Absolute Percentage Error (MAPE) is a common method for calculating sales forecast accuracy.

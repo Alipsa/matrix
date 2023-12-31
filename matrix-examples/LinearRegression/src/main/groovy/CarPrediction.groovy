@@ -1,9 +1,10 @@
 import se.alipsa.groovy.charts.Chart
-import se.alipsa.groovy.charts.Plot
+import se.alipsa.groovy.charts.SwingPlot
 import se.alipsa.groovy.charts.ScatterChart
 import se.alipsa.groovy.datasets.*
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.Stat
+import se.alipsa.groovy.stats.Accuracy
 import se.alipsa.groovy.stats.Correlation
 import se.alipsa.groovy.stats.regression.LinearRegression
 import se.alipsa.groovy.stats.Sampler
@@ -17,9 +18,9 @@ println cars.head(8)
 // Display the structure of the cars dataset
 println Stat.str(cars)
 
-Chart chart = ScatterChart.create("Speed vs distance", cars, 'dist', 'speed')
+Chart chart = ScatterChart.create("Speed vs distance", cars, 'speed','dist')
 File scatterplotFile = new File('cars.png')
-Plot.png(chart, scatterplotFile, 800, 600)
+SwingPlot.png(chart, scatterplotFile, 800, 600)
 println "Wrote ${scatterplotFile.getAbsolutePath()}"
 
 println "Correlation between speed and distance is ${Correlation.cor(cars['speed'], cars['dist'])}"
@@ -34,9 +35,11 @@ def lm = new LinearRegression(trainingData, 'speed', 'dist')
 def predictions = lm.predict(testData['speed'], 1)
 println "Predictions: ${predictions.sort()}"
 println "Actuals: ${testData['dist'].sort()}"
-System.exit(0)
 
+def accuracy = Accuracy.evaluatePredictions(predictions, testData['dist'])
+println "accuracy: $accuracy"
 /*
+Equivalent code in R:
 head(cars)
 str(cars)
 plot(cars)
