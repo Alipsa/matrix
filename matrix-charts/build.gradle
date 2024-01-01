@@ -54,6 +54,7 @@ dependencies {
   compileOnly groovy
   implementation project(':matrix-core')
   implementation project(':matrix-datasets')
+  implementation project(':matrix-stats')
 
   // One of these is enough
   implementation "org.jfree:jfreechart:1.5.4"

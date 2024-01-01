@@ -1,9 +1,16 @@
+/*
+This is an example of doing a linear regression analysis.
+The Plotting is using JavaFx so hence the dependency on JavaFx below.
+This way, a JDK without Javafx can call the fat jar and everything will work.
+
+Note: Other examples will show plotting without Javafx
+ */
 plugins {
     id 'groovy'
 }
 
 group = 'se.alipsa.groovy'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -41,7 +48,7 @@ test {
 
 def fatJarContainer = tasks.register('fatJar', Jar) {
     dependsOn(classes)
-    archiveClassifier = 'fatjar'
+    archiveClassifier = 'fat'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {
         configurations.runtimeClasspath.collect {

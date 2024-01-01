@@ -17,4 +17,6 @@ include 'matrix-charts'
 //include 'matrix-examples:HousePrices'
 include 'matrix-examples:LinearRegression'
 findProject(':matrix-examples:LinearRegression')?.name = 'LinearRegression'
+include 'matrix-examples:DecisionTree'
+findProject(':matrix-examples:DecisionTree')?.name = 'DecisionTree'
 

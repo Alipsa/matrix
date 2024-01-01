@@ -314,6 +314,10 @@ class Matrix implements Iterable<Row> {
     return mColumns
   }
 
+  List<List<?>> columns(String[] columnNames) {
+    return columns(columnNames as List<String>)
+  }
+
   List<List<?>> columns(List<String> columnNames) {
     def cols = []
     for (String colName in columnNames) {

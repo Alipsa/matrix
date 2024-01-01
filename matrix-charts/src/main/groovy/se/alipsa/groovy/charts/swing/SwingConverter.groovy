@@ -3,7 +3,6 @@ package se.alipsa.groovy.charts.swing
 import org.knowm.xchart.CategoryChart
 import org.knowm.xchart.XChartPanel
 import org.knowm.xchart.XYChart
-import org.knowm.xchart.XYSeries
 import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.Styler
 import se.alipsa.groovy.charts.AreaChart
@@ -11,6 +10,7 @@ import se.alipsa.groovy.charts.BarChart
 import se.alipsa.groovy.charts.BoxChart
 import se.alipsa.groovy.charts.Chart
 import se.alipsa.groovy.charts.Histogram
+import se.alipsa.groovy.charts.LineChart
 import se.alipsa.groovy.charts.PieChart
 import se.alipsa.groovy.charts.ScatterChart
 
@@ -29,6 +29,8 @@ class SwingConverter {
       return convert((BoxChart)chart)
     } else if (chart instanceof ScatterChart) {
       return convert((ScatterChart)chart)
+    } else if (chart instanceof LineChart) {
+      return convert((LineChart)chart)
     }
     throw new RuntimeException(chart.getClass().getSimpleName() + " conversion is not yet implemented")
   }
@@ -55,5 +57,9 @@ class SwingConverter {
 
   static XChartPanel<XYChart> convert(ScatterChart chart) {
     return new XChartPanel<>(SwingScatterChartConverter.convert(chart))
+  }
+
+  static XChartPanel<XYChart> convert(LineChart chart) {
+    return new XChartPanel<>(SwingLineChartConverter.convert(chart))
   }
 }

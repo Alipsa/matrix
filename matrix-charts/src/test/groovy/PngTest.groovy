@@ -37,6 +37,7 @@ class PngTest {
             Plot.png(chart, file, 600, 400)
             println("Wrote $file")
             assertTrue(file.exists())
+            file.delete()
         } catch (UnsatisfiedLinkError | NoClassDefFoundError e) {
             println "No graphics environment available: $e, skipping test"
         }
@@ -63,6 +64,7 @@ class PngTest {
             Plot.png(chart, file, 1024, 768)
             println("Wrote $file")
             assertTrue(file.exists())
+            file.delete()
         } catch (UnsatisfiedLinkError | NoClassDefFoundError e) {
             println "No graphics environment available: $e, skipping test"
         }

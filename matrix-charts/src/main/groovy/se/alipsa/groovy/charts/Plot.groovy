@@ -1,5 +1,6 @@
 package se.alipsa.groovy.charts
 
+import javafx.application.Platform
 import se.alipsa.groovy.charts.jfx.JfxConverter
 import se.alipsa.groovy.charts.png.PngConverter
 
@@ -7,7 +8,7 @@ import java.nio.file.Files;
 
 class Plot {
 
-  static void png(Chart chart, File file, double width, double height) throws IOException {
+  static void png(Chart chart, File file, double width = 800, double height = 600) throws IOException {
     try(OutputStream os = Files.newOutputStream(file.toPath())) {
       png(chart, os, width, height)
     }

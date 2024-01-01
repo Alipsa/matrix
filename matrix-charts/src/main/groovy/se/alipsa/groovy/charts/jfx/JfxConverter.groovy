@@ -6,6 +6,7 @@ import se.alipsa.groovy.charts.BarChart
 import se.alipsa.groovy.charts.BoxChart
 import se.alipsa.groovy.charts.Chart
 import se.alipsa.groovy.charts.Histogram
+import se.alipsa.groovy.charts.LineChart
 import se.alipsa.groovy.charts.PieChart
 import se.alipsa.groovy.charts.ScatterChart
 
@@ -24,8 +25,14 @@ class JfxConverter {
             return convert((BoxChart)chart)
         } else if (chart instanceof ScatterChart) {
             return convert((ScatterChart)chart)
+        } else if (chart instanceof LineChart) {
+            return convert((LineChart)chart)
         }
         throw new RuntimeException(chart.getClass().getSimpleName() + " conversion is not yet implemented")
+    }
+
+    static javafx.scene.chart.LineChart<?,?> convert(LineChart chart) {
+        return JfxLineChartConverter.convert(chart)
     }
 
     static javafx.scene.chart.AreaChart<?,?> convert(AreaChart chart) {

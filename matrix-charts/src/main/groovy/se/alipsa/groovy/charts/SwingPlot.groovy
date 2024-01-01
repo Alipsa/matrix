@@ -14,7 +14,7 @@ class SwingPlot {
     SwingConverter.convert(chart)
   }
 
-  static void png(Chart chart, File file, double width, double height) throws IOException {
+  static void png(Chart chart, File file, double width = 800, double height = 600) throws IOException {
     try(OutputStream os = Files.newOutputStream(file.toPath())) {
       png(chart, os, width, height)
     }

@@ -23,8 +23,10 @@ class ConverterUtil {
   static void populateSeries(XYChart<?,?> fxChart, se.alipsa.groovy.charts.Chart data, Closure<XYChart.Data> dataCreator) {
     def series = data.getValueSeries()
     def categories = data.getCategorySeries()
+    int colIdx = 0
     for (column in series) {
       XYChart.Series fxSeries = new XYChart.Series()
+      fxSeries.name = data.valueSeriesNames[colIdx++]
       for (int i = 0; i < column.size(); i++) {
         fxSeries.getData().add(dataCreator(categories, i, column))
       }

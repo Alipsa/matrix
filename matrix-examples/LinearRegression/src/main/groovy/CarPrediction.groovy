@@ -1,5 +1,5 @@
 import se.alipsa.groovy.charts.Chart
-import se.alipsa.groovy.charts.SwingPlot
+import se.alipsa.groovy.charts.Plot
 import se.alipsa.groovy.charts.ScatterChart
 import se.alipsa.groovy.datasets.*
 import se.alipsa.groovy.matrix.Matrix
@@ -20,7 +20,7 @@ println Stat.str(cars)
 
 Chart chart = ScatterChart.create("Speed vs distance", cars, 'speed','dist')
 File scatterplotFile = new File('cars.png')
-SwingPlot.png(chart, scatterplotFile, 800, 600)
+Plot.png(chart, scatterplotFile, 800, 600)
 println "Wrote ${scatterplotFile.getAbsolutePath()}"
 
 println "Correlation between speed and distance is ${Correlation.cor(cars['speed'], cars['dist'])}"
@@ -28,7 +28,7 @@ println "Correlation between speed and distance is ${Correlation.cor(cars['speed
 def model = new LinearRegression(cars, 'speed', 'dist')
 println model.summary()
 
-// https://www.simplilearn.com/tutorials/data-science-tutorial/data-science-with-r
+
 def (trainingData, testData) = Sampler.split(cars, 0.8)
 
 def lm = new LinearRegression(trainingData, 'speed', 'dist')
@@ -39,6 +39,7 @@ println "Actuals: ${testData['dist'].sort()}"
 def accuracy = Accuracy.evaluatePredictions(predictions, testData['dist'])
 println "accuracy: $accuracy"
 /*
+https://www.simplilearn.com/tutorials/data-science-tutorial/data-science-with-r
 Equivalent code in R:
 head(cars)
 str(cars)

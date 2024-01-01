@@ -21,7 +21,7 @@ class SwingAreaChartConverter {
     def categories = chart.getCategorySeries()
 
     for (int i = 0; i < series.size(); i++) {
-      xyChart.addSeries(String.valueOf(categories[i]), series[i] as List<? extends Number>)
+      xyChart.addSeries(String.valueOf(chart.valueSeriesNames[i]), series[i] as List<? extends Number>)
     }
     return xyChart
   }
