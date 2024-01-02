@@ -34,10 +34,21 @@ dependencies {
     implementation "org.openjfx:javafx-graphics:20.0.2:$qualifier"
     implementation "org.openjfx:javafx-controls:20.0.2:$qualifier"
     implementation "org.openjfx:javafx-swing:20.0.2:$qualifier"
-    implementation 'se.alipsa.groovy:matrix-core:1.2.2'
-    implementation 'se.alipsa.groovy:matrix-datasets:1.0.3-SNAPSHOT'
-    implementation 'se.alipsa.groovy:matrix-stats:1.0.1-SNAPSHOT'
-    implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
+    if (version.contains('SNAPSHOT') && rootProject.name != project.name) {
+        // if we execute the build from the matrix root then we include project dependencies as SNAPSHOTS might not
+        // have been published (or up to date).
+        println "Adding dynamic project dependencies for matrix projects, root: ${rootProject.name}, project: ${project.name}"
+        implementation project(':matrix-core')
+        implementation project(':matrix-datasets')
+        implementation project(':matrix-stats')
+        implementation project(':matrix-charts')
+    } else {
+        println "Adding fixed version dependencies for matrix projects, root: ${rootProject.name}, project: ${project.name}"
+        implementation 'se.alipsa.groovy:matrix-core:1.2.2'
+        implementation 'se.alipsa.groovy:matrix-datasets:1.0.3-SNAPSHOT'
+        implementation 'se.alipsa.groovy:matrix-stats:1.0.1-SNAPSHOT'
+        implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
+    }
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
