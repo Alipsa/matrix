@@ -31,6 +31,9 @@ class JfxBarChartConverter {
         ConverterUtil.populateVerticalSeries(fxChart, chart)
       }
     }
+    if (chart.getValueSeries().length == 1) {
+      fxChart.setLegendVisible(false)
+    }
     fxChart.setTitle(chart.getTitle())
 
 

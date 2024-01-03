@@ -1,6 +1,5 @@
 package se.alipsa.groovy.charts
 
-import javafx.application.Platform
 import se.alipsa.groovy.charts.jfx.JfxConverter
 import se.alipsa.groovy.charts.png.PngConverter
 
