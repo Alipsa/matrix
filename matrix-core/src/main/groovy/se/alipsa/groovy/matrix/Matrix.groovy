@@ -667,15 +667,44 @@ class Matrix implements Iterable<Row> {
     return sb.toString()
   }
 
+  int maxContentLength(String columnName, boolean includeHeader) {
+    Integer maxLength = includeHeader ? columnName.length() : 0
+    Integer length
+    column(columnName).each {
+      length = String.valueOf(it).length()
+      if (length > maxLength) {
+        maxLength = length
+      }
+    }
+    maxLength
+  }
+
+  List<String> padRow(Row row, List<Integer> columnLengths) {
+    List<String> stringRow = []
+    for (int c = 0; c < mHeaders.size(); c++) {
+      def val = row[c]
+      def strVal = String.valueOf(val)
+      if (val instanceof Number) {
+        strVal = strVal.padLeft(columnLengths[c])
+      } else {
+        strVal = strVal.padRight(columnLengths[c])
+      }
+      stringRow << strVal
+    }
+    stringRow
+  }
+
   String head(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n') {
     StringBuilder sb = new StringBuilder()
     def nRows = Math.min(rows, rowCount())
     if (includeHeader) {
       sb.append(String.join(delimiter, mHeaders)).append(lineEnding)
     }
+    List<Integer> columnLengths = mHeaders.collect { colName -> maxContentLength(colName, includeHeader)}
+
     for (int i = 0; i < nRows; i++) {
-      def row = ListConverter.convert(row(i), String.class)
-      sb.append(String.join(delimiter, row)).append(lineEnding)
+      List<String> stringRow = padRow(row(i), columnLengths)
+      sb.append(String.join(delimiter, stringRow)).append(lineEnding)
     }
     return sb.toString()
   }
@@ -686,9 +715,11 @@ class Matrix implements Iterable<Row> {
     if (includeHeader) {
       sb.append(String.join(delimiter, mHeaders)).append(lineEnding)
     }
+    List<Integer> columnLengths = mHeaders.collect { colName -> maxContentLength(colName, includeHeader)}
     for (int i = rowCount() - nRows; i < rowCount(); i++) {
-      def row = ListConverter.convert(row(i), String.class)
-      sb.append(String.join(delimiter, row)).append(lineEnding)
+      //def row = ListConverter.convert(row(i), String.class)
+      List<String> stringRow = padRow(row(i), columnLengths)
+      sb.append(String.join(delimiter, stringRow)).append(lineEnding)
     }
     return sb.toString()
   }

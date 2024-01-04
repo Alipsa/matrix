@@ -259,14 +259,17 @@ class MatrixTest {
     @Test
     void testHeadAndTail() {
         def table = new Matrix([
-                'place': [1, 2, 3],
+                'place': [1, 20, 3],
                 'firstname': ['Lorena', 'Marianne', 'Lotte'],
                 'start': ['2021-12-01', '2022-07-10', '2023-05-27']
             ],
             [int, String, String]
         )
-        assertEquals('1\tLorena\t2021-12-01\n', table.head(1, false))
-        assertEquals('2\tMarianne\t2022-07-10\n3\tLotte\t2023-05-27\n', table.tail(2, false))
+        //println table.content()
+        def head = table.head(1, false)
+        assertEquals(' 1\tLorena  \t2021-12-01\n', head, head)
+        def tail = table.tail(2, false)
+        assertEquals('20\tMarianne\t2022-07-10\n 3\tLotte   \t2023-05-27\n', tail, tail)
     }
 
     @SuppressWarnings('SqlNoDataSourceInspection')
