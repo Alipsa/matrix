@@ -667,13 +667,17 @@ class Matrix implements Iterable<Row> {
     return sb.toString()
   }
 
-  int maxContentLength(String columnName, boolean includeHeader) {
-    Integer maxLength = includeHeader ? columnName.length() : 0
+  int maxContentLength(String columnName, boolean includeHeader, int maxColumnLength = 50) {
+    Integer maxLength = Math.min(includeHeader ? columnName.length() : 0, maxColumnLength)
     Integer length
     column(columnName).each {
       length = String.valueOf(it).length()
       if (length > maxLength) {
-        maxLength = length
+        if (length >= maxColumnLength) {
+          maxLength = maxColumnLength
+        } else {
+          maxLength = length
+        }
       }
     }
     maxLength
@@ -684,23 +688,27 @@ class Matrix implements Iterable<Row> {
     for (int c = 0; c < mHeaders.size(); c++) {
       def val = row[c]
       def strVal = String.valueOf(val)
+      int columnLength = columnLengths[c]
+      if (strVal.length() > columnLength) {
+        strVal = strVal.substring(0, columnLength)
+      }
       if (val instanceof Number) {
-        strVal = strVal.padLeft(columnLengths[c])
+        strVal = strVal.padLeft(columnLength)
       } else {
-        strVal = strVal.padRight(columnLengths[c])
+        strVal = strVal.padRight(columnLength)
       }
       stringRow << strVal
     }
     stringRow
   }
 
-  String head(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n') {
+  String head(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     StringBuilder sb = new StringBuilder()
     def nRows = Math.min(rows, rowCount())
     if (includeHeader) {
       sb.append(String.join(delimiter, mHeaders)).append(lineEnding)
     }
-    List<Integer> columnLengths = mHeaders.collect { colName -> maxContentLength(colName, includeHeader)}
+    List<Integer> columnLengths = mHeaders.collect { colName -> maxContentLength(colName, includeHeader, maxColumnLength)}
 
     for (int i = 0; i < nRows; i++) {
       List<String> stringRow = padRow(row(i), columnLengths)
@@ -709,13 +717,13 @@ class Matrix implements Iterable<Row> {
     return sb.toString()
   }
 
-  String tail(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n') {
+  String tail(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     StringBuilder sb = new StringBuilder()
     def nRows = Math.min(rows, rowCount())
     if (includeHeader) {
       sb.append(String.join(delimiter, mHeaders)).append(lineEnding)
     }
-    List<Integer> columnLengths = mHeaders.collect { colName -> maxContentLength(colName, includeHeader)}
+    List<Integer> columnLengths = mHeaders.collect { colName -> maxContentLength(colName, includeHeader, maxColumnLength)}
     for (int i = rowCount() - nRows; i < rowCount(); i++) {
       //def row = ListConverter.convert(row(i), String.class)
       List<String> stringRow = padRow(row(i), columnLengths)
@@ -724,8 +732,16 @@ class Matrix implements Iterable<Row> {
     return sb.toString()
   }
 
-  String content(boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n') {
-    return head(rowCount(), includeHeader, delimiter, lineEnding)
+  String content(boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
+    return head(rowCount(), includeHeader, delimiter, lineEnding, maxColumnLength)
+  }
+
+  String content(Map params) {
+    boolean includeHeader = params.getOrDefault('includeHeader', true)
+    String delimiter = params.getOrDefault('delimiter' , '\t')
+    String lineEnding = params.getOrDefault('lineEnding', '\n')
+    int maxColumnLength = (int)params.getOrDefault('maxColumnLength', 50)
+    return content(includeHeader, delimiter, lineEnding, maxColumnLength)
   }
 
   /**

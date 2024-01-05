@@ -265,11 +265,13 @@ class MatrixTest {
             ],
             [int, String, String]
         )
-        //println table.content()
         def head = table.head(1, false)
         assertEquals(' 1\tLorena  \t2021-12-01\n', head, head)
         def tail = table.tail(2, false)
         assertEquals('20\tMarianne\t2022-07-10\n 3\tLotte   \t2023-05-27\n', tail, tail)
+        String[] content = table.content(includeHeader: false, maxColumnLength:7).split('\n')
+        assertEquals(' 1\tLorena \t2021-12', content[0])
+
     }
 
     @SuppressWarnings('SqlNoDataSourceInspection')
