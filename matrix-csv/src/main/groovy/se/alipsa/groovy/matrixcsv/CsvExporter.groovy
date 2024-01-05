@@ -6,6 +6,9 @@ import se.alipsa.groovy.matrix.Matrix
 
 class CsvExporter {
 
+  static void exportToCsv(Matrix table, File out, boolean withHeader = true) {
+    exportToCsv(table, CSVFormat.DEFAULT, new PrintWriter(out), withHeader)
+  }
 
   static void exportToCsv(Matrix table, CSVFormat format, File out, boolean withHeader = true) {
     exportToCsv(table, format, new PrintWriter(out), withHeader)
