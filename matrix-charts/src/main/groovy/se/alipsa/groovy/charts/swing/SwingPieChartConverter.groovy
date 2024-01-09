@@ -17,6 +17,7 @@ class SwingPieChartConverter {
     chart.getCategorySeries().eachWithIndex { serie, idx ->
       pieChart.addSeries(String.valueOf(serie), valueSerie[idx] as Number)
     }
+    SwingStyler.style(pieChart, chart)
     pieChart
   }
 }

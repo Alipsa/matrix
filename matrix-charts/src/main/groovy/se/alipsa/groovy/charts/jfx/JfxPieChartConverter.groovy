@@ -17,6 +17,7 @@ class JfxPieChartConverter {
     }
 
     fxChart.setTitle(chart.getTitle())
+    JfxStyler.style(fxChart, chart)
     return fxChart
   }
 }

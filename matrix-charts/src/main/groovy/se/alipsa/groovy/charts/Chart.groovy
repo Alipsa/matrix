@@ -23,6 +23,8 @@ abstract class Chart {
   protected AxisScale xAxisScale = null
   protected AxisScale yAxisScale = null
 
+  protected Style style = new Style()
+
   String getTitle() {
     return title;
   }
@@ -132,6 +134,10 @@ abstract class Chart {
 
   void setValueSeriesNames(List<String> valueSeriesNames) {
     this.valueSeriesNames = valueSeriesNames
+  }
+
+  Style getStyle() {
+    return style
   }
 
   @Override
