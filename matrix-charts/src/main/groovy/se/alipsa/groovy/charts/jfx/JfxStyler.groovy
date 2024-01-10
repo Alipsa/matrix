@@ -1,26 +1,51 @@
 package se.alipsa.groovy.charts.jfx
 
 import javafx.scene.Node
+import javafx.scene.chart.Chart
 import se.alipsa.groovy.charts.PieChart
 import se.alipsa.groovy.charts.Style
 
 import java.awt.Color
 
+/**
+ * Javafx style classes for charts are as follows:
+ * <pre>
+ * |------------------------------------------|
+ * |           .chart                         |
+ * |   ------------------------------------   |
+ * | . |       .chart-title               |   |
+ * | c |----------------------------------| . |
+ * | h |                                  | c |
+ * | a |       .chart-content             | h |
+ * | r |                                  | a |
+ * | t |                                  | r |
+ * |   |----------------------------------| t |
+ * |   |       .chart-legend              |   |
+ * |   |----------------------------------|   |
+ * |           .chart                         |
+ * |------------------------------------------|
+ * </pre>
+ */
 class JfxStyler {
 
-    static void style(javafx.scene.chart.PieChart pieChart, PieChart chart) {
+    static void style(Chart jfxChart, PieChart chart) {
         Style style = chart.getStyle()
 
         if (style.plotBackgroundColor != null) {
-            addStyle(pieChart.lookup('.chart-content'), "-fx-background-color: ${asHexString(style.plotBackgroundColor)};")
+            addStyle(jfxChart.lookup('.chart-content'), "-fx-background-color: ${asHexString(style.plotBackgroundColor)};")
         }
 
         if (style.legendVisible != null) {
-            pieChart.setLegendVisible(style.legendVisible)
+            jfxChart.setLegendVisible(style.legendVisible)
         }
 
         if (style.chartBackgroundColor != null) {
-            addStyle(pieChart.lookup('.chart'),"-fx-background-color: ${asHexString(style.chartBackgroundColor)};")
+            addStyle(jfxChart.lookup('.chart'),"-fx-background-color: ${asHexString(style.chartBackgroundColor)};")
+        }
+
+        if (style.titleVisible != null && style.titleVisible == false) {
+            //addStyle(jfxChart.lookup('.chart-title'), 'visibility: hidden;') //does not work
+            jfxChart.setTitle(null)
         }
     }
 

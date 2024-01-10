@@ -6,6 +6,22 @@ import java.awt.Font
 /**
  * Most of the styles are specified using java.awt classes (Because they are always accessible)
  * Of course, they will be translated to the Javafx or Swing equivalent when plotted (displayed).
+ * <pre>
+ * |------------------------------------------|
+ * |            chart                         |
+ * |   ------------------------------------   |
+ * | c |          Title                   |   |
+ * | h |----------------------------------|   |
+ * | a |                                  | c |
+ * | r |          Plot                    | h |
+ * | t |                                  | a |
+ * |   |                                  | r |
+ * |   |----------------------------------| t |
+ * |   |          Legend                  |   |
+ * |   |----------------------------------|   |
+ * |            chart                         |
+ * |------------------------------------------|
+ * </pre>
  */
 class Style {
 
@@ -21,4 +37,6 @@ class Style {
     /** whether to show the legend or not */
     Boolean legendVisible
 
+    /** whether to show the title or not */
+    Boolean titleVisible
 }
