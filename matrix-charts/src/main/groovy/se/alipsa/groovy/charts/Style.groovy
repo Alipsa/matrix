@@ -37,6 +37,16 @@ class Style {
     /** whether to show the legend or not */
     Boolean legendVisible
 
+    Color legendBackgroundColor
+
+    Position legendPosition
+
     /** whether to show the title or not */
     Boolean titleVisible
+
+    static enum Position {TOP, RIGHT, BOTTOM, LEFT}
+
+    void setLegendPosition(String pos) {
+         legendPosition = Position.valueOf(pos.toUpperCase())
+    }
 }
