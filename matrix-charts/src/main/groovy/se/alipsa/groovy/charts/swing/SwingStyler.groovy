@@ -49,10 +49,10 @@ class SwingStyler {
 
         if (style.legendPosition != null) {
             switch (style.legendPosition) {
-                case TOP -> styler.setLegendPosition(Styler.LegendPosition.InsideNE)
+                case TOP -> styler.setLegendPosition(Styler.LegendPosition.InsideN)
                 case RIGHT -> styler.setLegendPosition(Styler.LegendPosition.OutsideE)
                 case BOTTOM -> styler.setLegendPosition(Styler.LegendPosition.OutsideS)
-                case LEFT -> styler.setLegendPosition(Styler.LegendPosition.InsideSW)
+                case LEFT -> styler.setLegendPosition(Styler.LegendPosition.InsideNW)
             }
         }
 

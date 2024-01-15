@@ -33,4 +33,11 @@ class ConverterUtil {
       fxChart.getData().add(fxSeries)
     }
   }
+
+  static void maybeHideLegend(se.alipsa.groovy.charts.Chart chart, Chart fxChart) {
+    if (chart.getValueSeries().length == 1 && ! chart.style.isLegendVisible()) {
+      fxChart.setLegendVisible(false)
+    }
+
+  }
 }

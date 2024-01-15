@@ -24,6 +24,7 @@ class JfxHistogramConverter {
     barChart.getData().add(series1)
     barChart.setTitle(histogram.getTitle() ?: '')
     barChart.setLegendVisible(false)
+    JfxStyler.style(barChart, histogram)
     return barChart
   }
 }

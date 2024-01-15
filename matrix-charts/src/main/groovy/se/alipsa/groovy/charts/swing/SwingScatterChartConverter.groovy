@@ -15,6 +15,7 @@ class SwingScatterChartConverter {
     scatterChart.setXAxisTitle(chart.xAxisTitle)
     scatterChart.setYAxisTitle(chart.yAxisTitle)
     scatterChart.setTitle(chart.getTitle() ?: 'ScatterChart')
+    SwingStyler.style(scatterChart, chart)
     return scatterChart
   }
 }

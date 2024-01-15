@@ -39,6 +39,8 @@ class SwingHistogramConverter {
     categoryChart.getStyler().seriesColors = [Color.BLUE]
     categoryChart.getStyler().legendVisible = false
     categoryChart.getStyler().setAxisTickPadding(5)
+
+    SwingStyler.style(categoryChart, chart)
     categoryChart
   }
 }

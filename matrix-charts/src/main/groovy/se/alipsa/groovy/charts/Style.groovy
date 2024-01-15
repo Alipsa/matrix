@@ -44,7 +44,11 @@ class Style {
     /** whether to show the title or not */
     Boolean titleVisible
 
-    static enum Position {TOP, RIGHT, BOTTOM, LEFT}
+  boolean isLegendVisible() {
+    Boolean.TRUE == legendVisible
+  }
+
+  static enum Position {TOP, RIGHT, BOTTOM, LEFT}
 
     void setLegendPosition(String pos) {
          legendPosition = Position.valueOf(pos.toUpperCase())

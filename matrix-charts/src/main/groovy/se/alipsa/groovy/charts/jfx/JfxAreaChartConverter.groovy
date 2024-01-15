@@ -12,7 +12,8 @@ class JfxAreaChartConverter {
     fxChart.setTitle(chart.getTitle())
 
     ConverterUtil.populateVerticalSeries(fxChart, chart)
-    return fxChart;
+    JfxStyler.style(fxChart, chart)
+    return fxChart
   }
 
 

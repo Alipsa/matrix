@@ -42,9 +42,8 @@ class JfxLineChartConverter {
     }
     xAxis.setForceZeroInRange(false)
     yAxis.setForceZeroInRange(false)
-    if (chart.getCategorySeries().size() == 1) {
-      fxChart.setLegendVisible(false)
-    }
+    ConverterUtil.maybeHideLegend(chart, fxChart)
+    JfxStyler.style(fxChart, chart)
     return fxChart
   }
 

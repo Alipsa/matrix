@@ -28,6 +28,7 @@ class JfxBoxChartConverter {
     fxChart.setTitle(chart.getTitle() ?: '')
     xAxis.setLabel(chart.xAxisTitle ?: 'X')
     yAxis.setLabel(chart.yAxisTitle ?: 'Y')
+    JfxStyler.style(fxChart, chart)
     return fxChart
   }
 }

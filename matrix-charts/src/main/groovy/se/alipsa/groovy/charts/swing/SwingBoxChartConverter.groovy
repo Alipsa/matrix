@@ -16,6 +16,7 @@ class SwingBoxChartConverter {
     for (serie in chart.getCategorySeries()) {
       boxChart.addSeries(String.valueOf(serie), chart.getValueSerie(idx++) as List<? extends Number>)
     }
+    SwingStyler.style(boxChart, chart)
     return boxChart
   }
 }

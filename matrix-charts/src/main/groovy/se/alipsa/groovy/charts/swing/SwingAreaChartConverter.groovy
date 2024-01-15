@@ -23,6 +23,7 @@ class SwingAreaChartConverter {
     for (int i = 0; i < series.size(); i++) {
       xyChart.addSeries(String.valueOf(chart.valueSeriesNames[i]), series[i] as List<? extends Number>)
     }
+    SwingStyler.style(xyChart, chart)
     return xyChart
   }
 }

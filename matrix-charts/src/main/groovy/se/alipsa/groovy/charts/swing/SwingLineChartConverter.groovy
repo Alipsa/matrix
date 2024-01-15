@@ -31,7 +31,7 @@ class SwingLineChartConverter {
     lineChart.getStyler().xAxisTickLabelsFormattingFunction = { Double val ->
       return String.valueOf(val)
     }
-
+    SwingStyler.style(lineChart, chart)
     lineChart
   }
 }

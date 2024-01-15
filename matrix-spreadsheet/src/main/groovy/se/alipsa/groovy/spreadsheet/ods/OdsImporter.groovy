@@ -93,7 +93,7 @@ class OdsImporter {
     def header = []
     File excelFile = FileUtil.checkFilePath(file)
     SpreadSheet spreadSheet = new SpreadSheet(excelFile)
-    Sheet sheet = spreadSheet.getSheet(sheetNumber -1)
+    Sheet sheet = spreadSheet.getSheet(sheetNumber)
     if (firstRowAsColNames) {
       buildHeaderRow(startRow, startCol, endCol, header, sheet)
       startRow = startRow + 1

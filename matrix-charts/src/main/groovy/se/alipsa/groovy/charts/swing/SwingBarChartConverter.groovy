@@ -13,12 +13,13 @@ class SwingBarChartConverter {
             .xAxisTitle(chart.getxAxisTitle())
             .yAxisTitle(chart.getyAxisTitle())
             .build()
-    categoryChart.getStyler().setLegendVisible(false)
+
     categoryChart.getStyler().setStacked(chart.isStacked())
     int serieIdx = 0
     for (String serieName in chart.valueSeriesNames) {
       categoryChart.addSeries(serieName, chart.getCategorySeries(), chart.getValueSeries()[serieIdx++] as List<? extends Number>)
     }
+    SwingStyler.style(categoryChart, chart)
     return categoryChart
   }
 }

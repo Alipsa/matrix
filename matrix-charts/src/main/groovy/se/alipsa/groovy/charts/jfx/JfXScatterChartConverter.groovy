@@ -31,6 +31,7 @@ class JfXScatterChartConverter {
     jfxChart.getData().add(fxSeries)
 
     jfxChart.setTitle(chart.title)
+    JfxStyler.style(jfxChart, chart)
     return jfxChart
   }
 
