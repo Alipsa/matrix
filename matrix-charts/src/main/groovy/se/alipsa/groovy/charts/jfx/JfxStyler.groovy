@@ -5,9 +5,9 @@ import javafx.scene.Node
 import javafx.scene.chart.Chart
 import se.alipsa.groovy.charts.Style
 
-import java.awt.Color
-
 import static se.alipsa.groovy.charts.Style.Position.*
+import static se.alipsa.groovy.charts.util.ColorUtil.*
+import static se.alipsa.groovy.charts.util.StyleUtil.*
 
 /**
  * Javafx style classes for charts are as follows:
@@ -36,27 +36,6 @@ class JfxStyler {
         setTitleStyles(jfxChart, style)
         setPlotStyles(jfxChart, style)
         setLegendStyles(jfxChart, style)
-    }
-
-    static void addStyle(Node node, String style) {
-        String existingStyle = node.getStyle().trim()
-        String newStyle = style.endsWith(';') ? style : style + ';'
-        if(!existingStyle.isEmpty()) {
-            newStyle = (existingStyle.endsWith(';') ? existingStyle : existingStyle + ';') + newStyle
-        }
-        node.setStyle(newStyle)
-    }
-
-    private static String asHexString(Color color) {
-        final String red = pad(Integer.toHexString(color.getRed()))
-        final String green = pad(Integer.toHexString(color.getGreen()))
-        final String blue = pad(Integer.toHexString(color.getBlue()))
-        final String alpha = pad(Integer.toHexString(color.getAlpha()))
-        return '#' + red + green + blue + alpha
-    }
-
-    private static String pad(final String hex) {
-        return (hex.length() == 1) ? "0" + hex : hex;
     }
 
     static void setChartStyles(Chart jfxChart, Style style) {
