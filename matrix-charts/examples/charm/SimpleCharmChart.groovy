@@ -37,11 +37,21 @@ chart.addLegend('Red': Color.RED, 'Green': Color.GREEN, 'Yellow': Color.YELLOW, 
         //.setPrefWrapLength(100)
 
 PlotPane plotPane = new PlotPane(210,210)
-Rectangle rect = new Rectangle(5, 5, 200, 200);
+Rectangle rect = new Rectangle(15, 5, 50, 200);
 rect.setFill(Color.BLUE);
 def gc = plotPane.getGraphicsContext2D()
 gc.setFill(rect.getFill())
 gc.fillRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight())
 
+
+gc.setFill(Color.LIGHTGRAY)
+gc.fillRoundRect(110, 5, 50, 200, 10, 10)
+
+gc.setFill(Color.GREEN)
+gc.fillRoundRect(110, 200-120+5, 50, 120, 10, 10)
+
+gc.setFill(Color.DARKGRAY)
+gc.strokeLine(0, 210, 210, 210)
+gc.strokeLine(0, 0, 1, 210)
 chart.add(plotPane)
 show(chart, "Charm chart")
