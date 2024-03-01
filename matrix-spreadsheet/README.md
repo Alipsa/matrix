@@ -48,7 +48,7 @@ See [the Matrix package](https://github.com/Alipsa/matrix) for more information 
 ```groovy
 import static se.alipsa.groovy.matrix.ListConverter.*
 import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.spreadsheet.SpreadSheetExporter
+import se.alipsa.groovy.spreadsheet.SpreadsheetExporter
 import java.time.format.DateTimeFormatter
 
 def dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -66,7 +66,7 @@ def table = Matrix.create(
 def file = File.createTempFile("matrix", ".xlsx")
 
 // Export the Matrix to an excel file
-SpreadSheetExporter.exportSpreadSheet(file, table)
+SpreadsheetExporter.exportSpreadsheet(file, table)
 ```
 
 ## Export to multiple sheets

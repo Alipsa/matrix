@@ -44,6 +44,9 @@ class Style {
     /** whether to show the title or not */
     Boolean titleVisible
 
+    Boolean XAxisVisible
+    Boolean YAxisVisible
+
   boolean isLegendVisible() {
     Boolean.TRUE == legendVisible
   }

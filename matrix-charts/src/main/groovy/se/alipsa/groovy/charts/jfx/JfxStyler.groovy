@@ -3,6 +3,7 @@ package se.alipsa.groovy.charts.jfx
 import javafx.geometry.Side
 import javafx.scene.Node
 import javafx.scene.chart.Chart
+import javafx.scene.chart.XYChart
 import se.alipsa.groovy.charts.Style
 
 import static se.alipsa.groovy.charts.Style.Position.*
@@ -57,6 +58,17 @@ class JfxStyler {
         Node plotNode = jfxChart.lookup('.chart-content')
         if (style.plotBackgroundColor != null) {
             addStyle(plotNode, "-fx-background-color: ${asHexString(style.plotBackgroundColor)};")
+        }
+        if (jfxChart instanceof XYChart) {
+            def xyChart = jfxChart as XYChart
+            if (Boolean.FALSE.equals(style.XAxisVisible)) {
+                xyChart.getXAxis().setTickLabelsVisible(false)
+                xyChart.getXAxis().setOpacity(0);
+            }
+            if (Boolean.FALSE == style.YAxisVisible) {
+                xyChart.getYAxis().setTickLabelsVisible(false)
+                xyChart.getYAxis().setOpacity(0);
+            }
         }
     }
 
