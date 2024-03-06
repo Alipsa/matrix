@@ -1,10 +1,10 @@
-package se.alipsa.groovy.spreadsheet.excel;
+package se.alipsa.groovy.spreadsheet.excel
 
 import org.apache.poi.ss.usermodel.*
 import se.alipsa.groovy.spreadsheet.SpreadsheetUtil
 import se.alipsa.groovy.spreadsheet.ValueExtractor
 
-import java.time.LocalDateTime;
+import java.time.LocalDateTime
 
 /**
  * A value extractor specialized in extracting info from an Excel file

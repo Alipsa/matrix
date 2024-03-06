@@ -19,7 +19,7 @@ abstract class ValueExtractor {
       }
       String strVal = val.toString()
       try {
-         return Double.parseDouble(strVal);
+         return Double.parseDouble(strVal)
       } catch (NumberFormatException e) {
          try {
             percentFormat.parse(strVal).doubleValue()
@@ -37,10 +37,10 @@ abstract class ValueExtractor {
       if (val instanceof Double) {
          return (Double) val
       }
-      String strVal = val.toString();
+      String strVal = val.toString()
       if (strVal.contains("%")) {
          try {
-            return percentFormat.parse(strVal).doubleValue();
+            return percentFormat.parse(strVal).doubleValue()
          } catch (ParseException e) {
             return null
          }
@@ -49,7 +49,7 @@ abstract class ValueExtractor {
       }
    }
 
-   Integer getInt(Object objVal) {
+   static Integer getInt(Object objVal) {
       if (objVal == null) {
          return null
       }
@@ -76,7 +76,7 @@ abstract class ValueExtractor {
    }
 
    Boolean getBoolean(Object val) {
-      if (val == null || "".equals(val)) {
+      if (val == null || "" == val) {
          return null
       }
       if (val instanceof Boolean) {
@@ -101,7 +101,7 @@ abstract class ValueExtractor {
       }
    }
 
-   String getString(Object val) {
+   static String getString(Object val) {
       return val == null ? null : String.valueOf(val)
    }
 }
