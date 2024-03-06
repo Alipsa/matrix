@@ -1,6 +1,11 @@
 # Matrix core Release history
 
-## 1.2.2, in progress
+### 1.2.3, in progress
+- Add padding to head, tail, content to make the output much more readable
+- add a column max length limit to head, tail and content
+- add replace methods for simple data cleaning
+
+## 1.2.2, 2023-12-22
 - add putAt for a whole column for both Grid and Matrix enabling expressions like `myMatrix['id'] = [10, 11, 12, 13, 14]`
 - Remove the create methods using a map as it assumes columnar data which goes against the basic idea of
 using constructors for column data and create methods for row based data.
