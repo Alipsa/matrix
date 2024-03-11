@@ -1,5 +1,6 @@
 import se.alipsa.groovy.matrix.Converter
 import se.alipsa.groovy.matrix.Grid
+import se.alipsa.groovy.matrix.Row
 import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.Matrix
 
@@ -802,5 +803,21 @@ class MatrixTest {
         assertIterableEquals(['firstname', 'start', 'foo'], table.columnNames())
         assertIterableEquals(toLocalDates(['2021-12-11', '2022-07-20', '2023-06-06']), table[1])
 
+    }
+
+    @Test
+    void testGetAt() {
+        def table = new Matrix([
+                'firstname': ['Lorena', 'Marianne', 'Lotte'],
+                'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+                'foo': [1, 2, 3]
+        ], [String, LocalDate, int])
+
+        Row row = table.row(1)
+        assertEquals(LocalDate, row.getAt('start', LocalDate).class)
+        assertEquals(LocalDate, row[1, LocalDate].class)
+        assertEquals(LocalDate, row['start', LocalDate].class)
+        assertEquals(LocalDate.parse('2022-07-10'), row[1, LocalDate])
+        assertEquals(LocalDate.parse('2022-07-10'), row['start', LocalDate])
     }
 }
