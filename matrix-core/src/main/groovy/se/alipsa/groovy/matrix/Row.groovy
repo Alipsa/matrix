@@ -153,55 +153,24 @@ class Row implements List<Object> {
         return set(parent.columnIndex(columnName), value)
     }
 
-    Object getAt(int index) {
-        return get(index)
+    <T> T getAt(int index) {
+        Class<T> type = parent.columnType(index) as Class<T>
+        return type.cast(get(index))
     }
 
-    Object getAt(Number index) {
-        return get(index.intValue())
+    <T> T getAt(Number index) {
+        Class<T> type = parent.columnType(index.intValue()) as Class<T>
+        return type.cast(get(index.intValue()))
     }
 
-    Object getAt(String columnName) {
+    <T> T getAt(String columnName) {
         int idx = parent.columnIndex(columnName)
         if (idx == -1) {
             throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
         }
-        return get(idx)
+        Class<T> type = parent.columnType(idx) as Class<T>
+        return type.cast(get(idx))
     }
-
-    <T> T getAt(String columnName, Class<T> type) {
-        type.cast(getAt(columnName))
-    }
-
-    <T> T getAt(Number columnIndex, Class<T> type) {
-        type.cast(getAt(columnIndex))
-    }
-
-    // We override the DefaultGroovyMethod version to get the getAt methods to work
-    // This disables the <T> List<T> getAt(List<T> self, Collection indices) in DefaultGroovyMethods
-    <T> T getAt(Collection params) {
-        if (params == null || params.size() != 2) {
-            String paramDetails = params == null ? 'null' : params.size()
-            throw new IllegalArgumentException('Incorrect number of parameter for getAt, expected 2 but was ' + paramDetails)
-        }
-        def column = params[0]
-        Object typeParam = params[1]
-
-        if (typeParam == null) {
-            throw new IllegalArgumentException('Second parameter must be the return type (class) but you supplied null')
-        }
-        if (!Class.isAssignableFrom(typeParam.class)) {
-            throw new IllegalArgumentException('Second parameter must be the return type (class) but you supplied a ' + typeParam.class.getName())
-        }
-        Class<T> type = typeParam as Class<T>
-        if (column instanceof Number) {
-            return getAt(column as Number, type)
-        } else {
-            return getAt(column as String, type)
-        }
-
-    }
-
 
     int getRowNumber() {
         return rowNumber

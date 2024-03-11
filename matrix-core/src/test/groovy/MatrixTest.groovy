@@ -813,11 +813,24 @@ class MatrixTest {
                 'foo': [1, 2, 3]
         ], [String, LocalDate, int])
 
+        assertEquals(Integer, table.getAt(2, 2).class)
+        assertEquals(3, table.getAt(2, 2))
+
+        assertEquals(Integer, table[2, 2].class)
+        assertEquals(3, table[2, 2])
+
+        assertEquals(LocalDate, table[2, 'start'].class)
+        assertEquals(asLocalDate('2023-05-27'), table[2, 'start'])
+
+        assertEquals(asLocalDate('2023-05-27'), table.getAt(2, 'start'))
+        assertEquals(LocalDate, table.getAt(2, 'start').class)
+
+
         Row row = table.row(1)
-        assertEquals(LocalDate, row.getAt('start', LocalDate).class)
-        assertEquals(LocalDate, row[1, LocalDate].class)
-        assertEquals(LocalDate, row['start', LocalDate].class)
-        assertEquals(LocalDate.parse('2022-07-10'), row[1, LocalDate])
-        assertEquals(LocalDate.parse('2022-07-10'), row['start', LocalDate])
+        assertEquals(LocalDate, row.getAt('start').class)
+        assertEquals(LocalDate, row[1].class)
+        assertEquals(LocalDate, row['start'].class)
+        assertEquals(LocalDate.parse('2022-07-10'), row[1])
+        assertEquals(LocalDate.parse('2022-07-10'), row['start'])
     }
 }

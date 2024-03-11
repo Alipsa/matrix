@@ -770,16 +770,18 @@ class Matrix implements Iterable<Row> {
    * Enable the use of square bracket to reference a column, e.g. table[0, 1] for the 2:nd column of the first observation
    * @return the value corresponding to the row and column indexes supplied
    */
-  Object getAt(Integer row, Integer column) {
-    return get(row, column)
+  <T> T getAt(Integer row, Integer column) {
+    Class<T> type = columnType(column) as Class<T>
+    return type.cast(get(row, column))
   }
 
   /**
    * Enable the use of square bracket to reference a column, e.g. table[0, "salary"] for the salary for the first observation
    * @return the value corresponding to the row and column name supplied
    */
-  Object getAt(int row, String columnName) {
-    return get(row, columnIndex(columnName))
+  <T> T getAt(int row, String columnName) {
+    Class<T> type = columnType(columnName) as Class<T>
+    return type.cast(get(row, columnIndex(columnName)))
   }
 
   /**
