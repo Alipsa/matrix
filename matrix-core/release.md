@@ -4,7 +4,7 @@
 - Add padding to head, tail, content to make the output much more readable
 - add a column max length limit to head, tail and content
 - add replace methods for simple data cleaning
-- add typed getAt methods to Row
+- change to typed getAt methods in Row and Matrix
 
 ## 1.2.2, 2023-12-22
 - add putAt for a whole column for both Grid and Matrix enabling expressions like `myMatrix['id'] = [10, 11, 12, 13, 14]`
