@@ -18,6 +18,7 @@ class CharmChartFx extends BorderPane {
     legendArea = new ChartPane(padding)
     plotArea = new StackPane()
     plotArea.setPadding(padding)
+    plotArea.setStyle("-fx-border-color: yellow")
     setPadding(padding)
     setCenter(titleArea)
     titleArea.setCenter(legendArea)
@@ -57,7 +58,6 @@ class CharmChartFx extends BorderPane {
 
   CharmChartFx add(PlotPane plotPane) {
     var plots = plotArea.getChildren()
-    plotArea.setStyle("-fx-border-color: yellow")
     if (plots.size() > 0) {
       plotPane.setStyle('-fx-background-color: null')
       //plotPane.getGraphicsContext2D().setFill(Color.TRANSPARENT) // not sure if we ned this or if it wrecks the whole plot

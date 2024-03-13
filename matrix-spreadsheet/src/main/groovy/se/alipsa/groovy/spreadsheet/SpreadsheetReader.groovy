@@ -1,7 +1,7 @@
 package se.alipsa.groovy.spreadsheet
 
 import se.alipsa.groovy.spreadsheet.excel.ExcelReader
-import se.alipsa.groovy.spreadsheet.ods.OdsReader;
+import se.alipsa.groovy.spreadsheet.ods.OdsReader
 
 interface SpreadsheetReader extends Closeable {
 

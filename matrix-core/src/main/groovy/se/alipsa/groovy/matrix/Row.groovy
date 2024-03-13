@@ -153,16 +153,23 @@ class Row implements List<Object> {
         return set(parent.columnIndex(columnName), value)
     }
 
-    Object getAt(int index) {
-        return get(index)
+    <T> T getAt(int index) {
+        Class<T> type = parent.columnType(index) as Class<T>
+        return type.cast(get(index))
     }
 
-    Object getAt(Number index) {
-        return get(index.intValue())
+    <T> T getAt(Number index) {
+        Class<T> type = parent.columnType(index.intValue()) as Class<T>
+        return type.cast(get(index.intValue()))
     }
 
-    Object getAt(String columnName) {
-        return get(parent.columnIndex(columnName))
+    <T> T getAt(String columnName) {
+        int idx = parent.columnIndex(columnName)
+        if (idx == -1) {
+            throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
+        }
+        Class<T> type = parent.columnType(idx) as Class<T>
+        return type.cast(get(idx))
     }
 
     int getRowNumber() {

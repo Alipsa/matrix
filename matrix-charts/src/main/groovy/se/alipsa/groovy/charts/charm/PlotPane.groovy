@@ -8,4 +8,12 @@ class PlotPane extends Canvas {
         setWidth(width)
         setHeight(height)
     }
+
+    void setXAxisVisible(boolean visible) {
+
+    }
+
+    void setYAxisVisible(boolean visible) {
+
+    }
 }

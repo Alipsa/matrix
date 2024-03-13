@@ -79,7 +79,7 @@ class OdsReader implements SpreadsheetReader {
       return findRowNum(sheet, colNumber, content)
    }
 
-   int findRowNum(Sheet sheet, int colNumber, String content) {
+   static int findRowNum(Sheet sheet, int colNumber, String content) {
       OdsValueExtractor ext = new OdsValueExtractor(sheet)
       int poiColNum = colNumber -1
 
@@ -121,16 +121,16 @@ class OdsReader implements SpreadsheetReader {
       return findColNum(sheet, rowNumber, content)
    }
 
-   int findColNum(Sheet sheet, int rowNumber, String content) {
+   static int findColNum(Sheet sheet, int rowNumber, String content) {
       if (content==null) return -1
       OdsValueExtractor ext = new OdsValueExtractor(sheet)
       int poiRowNum = rowNumber - 1
       for (int colNum = 0; colNum < sheet.getDataRange().getLastColumn(); colNum++) {
-         if (content.equals(ext.getString(poiRowNum, colNum))) {
+         if (content == ext.getString(poiRowNum, colNum)) {
             return colNum + 1
          }
       }
-      return -1;
+      return -1
    }
 
    @Override
@@ -143,7 +143,7 @@ class OdsReader implements SpreadsheetReader {
       findLastRow(spreadSheet.getSheet(sheetName))
    }
 
-   int findLastRow(Sheet sheet) {
+   static int findLastRow(Sheet sheet) {
       sheet.getDataRange().getLastRow()
    }
 

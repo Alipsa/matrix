@@ -1,15 +1,15 @@
 package se.alipsa.groovy.spreadsheet
 
-import org.apache.poi.ss.util.WorkbookUtil;
+import org.apache.poi.ss.util.WorkbookUtil
 
-import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatter
 
 /**
  * Common spreadsheet utilities
  */
-public class SpreadsheetUtil {
+class SpreadsheetUtil {
 
-   public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+   public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
    private SpreadsheetUtil() {
       // prevent instantiation
@@ -22,14 +22,14 @@ public class SpreadsheetUtil {
     */
    static int asColumnNumber(String name) {
       if (name == null) {
-         return 0;
+         return 0
       }
-      String colName = name.toUpperCase();
-      int number = 0;
+      String colName = name.toUpperCase()
+      int number = 0
       for (int i = 0; i < colName.length(); i++) {
          number = number * 26 + (colName.charAt(i) - ('A' as char - 1))
       }
-      return number;
+      return number
    }
 
    /**
@@ -38,10 +38,10 @@ public class SpreadsheetUtil {
     * @return the corresponding name of the index (1 == A, 14 == N etc.)
     */
    static String asColumnName(int number) {
-      StringBuilder sb = new StringBuilder();
+      StringBuilder sb = new StringBuilder()
       while (number-- > 0) {
          sb.append(('A' as char + (number % 26)) as char)
-         number /= 26;
+         number /= 26
       }
       return sb.reverse().toString()
    }
