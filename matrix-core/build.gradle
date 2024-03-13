@@ -8,11 +8,10 @@ plugins {
   id 'java-library'
   id 'signing'
   id 'maven-publish'
-  id "com.github.ben-manes.versions" version "0.47.0"
 }
 
 group 'se.alipsa.groovy'
-version '1.2.3-SNAPSHOT'
+version '1.2.3'
 description = "Groovy library for working with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -31,15 +30,15 @@ repositories {
 }
 
 dependencies {
-  def groovyVersion = '4.0.15'
+  def groovyVersion = '4.0.19'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
   //compileOnly "org.apache.groovy:groovy-ginq:$groovyVersion"
   testImplementation groovy
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
   testImplementation 'org.apache.commons:commons-math3:3.6.1'
-  testImplementation 'com.h2database:h2:2.2.220'
+  testImplementation 'com.h2database:h2:2.2.224'
   testImplementation "org.apache.groovy:groovy-sql:$groovyVersion"
   //testImplementation "org.apache.groovy:groovy-ginq:$groovyVersion"
 }
