@@ -47,8 +47,8 @@ dependencies {
   } else if (os.isMacOsX()) {
     qualifier = 'mac-aarch64'
   }
-  def javaFxVersion = '20'
-  def groovyVersion = '4.0.15'
+  def javaFxVersion = '22'
+  def groovyVersion = '4.0.20'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   // compile only dependencies are not included in the pom
   compileOnly groovy
@@ -58,7 +58,7 @@ dependencies {
 
   // One of these is enough
   implementation "org.jfree:jfreechart:1.5.4"
-  implementation 'org.knowm.xchart:xchart:3.8.6'
+  implementation 'org.knowm.xchart:xchart:3.8.7'
 
   compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
@@ -72,8 +72,8 @@ dependencies {
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
   testImplementation "org.apache.groovy:groovy-sql:$groovyVersion"
   //testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
 }

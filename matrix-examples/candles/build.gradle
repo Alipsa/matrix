@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-  def groovy4Version = "4.0.6"
+  def groovy4Version = "4.0.20"
   def tablesawVersion = "0.43.1"
   def slf4jVersion = "1.7.36"
   def log4j2Version = "2.18.0"

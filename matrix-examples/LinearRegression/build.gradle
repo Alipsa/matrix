@@ -29,7 +29,7 @@ dependencies {
     } else if (os.isMacOsX()) {
         qualifier = 'mac-aarch64'
     }
-    implementation 'org.apache.groovy:groovy:4.0.16'
+    implementation 'org.apache.groovy:groovy:4.0.20'
     implementation "org.openjfx:javafx-base:20.0.2:$qualifier"
     implementation "org.openjfx:javafx-graphics:20.0.2:$qualifier"
     implementation "org.openjfx:javafx-controls:20.0.2:$qualifier"
@@ -44,7 +44,7 @@ dependencies {
         implementation project(':matrix-charts')
     } else {
         println "Adding fixed version dependencies for matrix projects, root: ${rootProject.name}, project: ${project.name}"
-        implementation 'se.alipsa.groovy:matrix-core:1.2.2'
+        implementation 'se.alipsa.groovy:matrix-core:1.2.3'
         implementation 'se.alipsa.groovy:matrix-datasets:1.0.3-SNAPSHOT'
         implementation 'se.alipsa.groovy:matrix-stats:1.0.1-SNAPSHOT'
         implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'

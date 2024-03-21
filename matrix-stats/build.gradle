@@ -27,7 +27,7 @@ java {
 }
 
 dependencies {
-  def groovyVersion = '4.0.15'
+  def groovyVersion = '4.0.20'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
   compileOnly project(':matrix-core')
@@ -36,8 +36,8 @@ dependencies {
   testImplementation groovy
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 }
 
 test {

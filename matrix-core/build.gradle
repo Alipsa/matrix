@@ -11,7 +11,7 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.2.3'
+version '1.2.4-SNAPSHOT'
 description = "Groovy library for working with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-  def groovyVersion = '4.0.19'
+  def groovyVersion = '4.0.20'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
   //compileOnly "org.apache.groovy:groovy-ginq:$groovyVersion"
