@@ -29,13 +29,13 @@ class ExportTest {
         measure: [12.45, null, 14.11, 15.23, 10.99],
         active: [true, false, null, true, false]
     ]
-    table = Matrix.create(matrix, [int, String, LocalDate, LocalDateTime, BigDecimal, Boolean])
+    table = new Matrix(matrix, [int, String, LocalDate, LocalDateTime, BigDecimal, Boolean])
     def stats = [
         id: [null,2,3,4,-5],
-        jan: [1123.1234, 2341.234, 1010.00122, 991, 1100.1],
-        feb: [1111.1235, 2312.235, 1001.00121, 999, 1200.7]
+        jan: toBigDecimals([1123.1234, 2341.234, 1010.00122, 991, 1100.1]),
+        feb: toBigDecimals([1111.1235, 2312.235, 1001.00121, 999, 1200.7])
     ]
-    table2 = Matrix.create(stats, [int, BigDecimal, BigDecimal])
+    table2 = new Matrix(stats, [int, BigDecimal, BigDecimal])
   }
 
   @Test
