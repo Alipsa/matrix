@@ -32,7 +32,9 @@ class ExportTest {
     table = new Matrix(matrix, [int, String, LocalDate, LocalDateTime, BigDecimal, Boolean])
     def stats = [
         id: [null,2,3,4,-5],
+        // Normally it is best to ensure the data is actually what we say it is
         jan: toBigDecimals([1123.1234, 2341.234, 1010.00122, 991, 1100.1]),
+        // No conversion here, this still works as getAt will type cast 999 which is an Integer
         feb: [1111.1235, 2312.235, 1001.00121, 999, 1200.7]
     ]
     table2 = new Matrix(stats, [int, BigDecimal, BigDecimal])
