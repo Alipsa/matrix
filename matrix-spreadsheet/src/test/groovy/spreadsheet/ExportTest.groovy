@@ -33,7 +33,7 @@ class ExportTest {
     def stats = [
         id: [null,2,3,4,-5],
         jan: toBigDecimals([1123.1234, 2341.234, 1010.00122, 991, 1100.1]),
-        feb: toBigDecimals([1111.1235, 2312.235, 1001.00121, 999, 1200.7])
+        feb: [1111.1235, 2312.235, 1001.00121, 999, 1200.7]
     ]
     table2 = new Matrix(stats, [int, BigDecimal, BigDecimal])
   }

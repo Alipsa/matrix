@@ -772,7 +772,7 @@ class Matrix implements Iterable<Row> {
    */
   <T> T getAt(Integer row, Integer column) {
     Class<T> type = columnType(column) as Class<T>
-    return type.cast(get(row, column))
+    return get(row, column).asType(type)
   }
 
   /**
@@ -781,7 +781,7 @@ class Matrix implements Iterable<Row> {
    */
   <T> T getAt(int row, String columnName) {
     Class<T> type = columnType(columnName) as Class<T>
-    return type.cast(get(row, columnIndex(columnName)))
+    return get(row, columnIndex(columnName)).asType(type)
   }
 
   /**
