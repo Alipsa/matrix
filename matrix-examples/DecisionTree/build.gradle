@@ -13,12 +13,12 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.apache.groovy:groovy:4.0.16'
-    implementation 'se.alipsa.groovy:matrix-core:1.2.2'
+    implementation 'org.apache.groovy:groovy:4.0.21'
+    implementation 'se.alipsa.groovy:matrix-core:1.2.3'
     implementation 'se.alipsa.groovy:matrix-datasets:1.0.3-SNAPSHOT'
     implementation 'se.alipsa.groovy:matrix-stats:1.0.1-SNAPSHOT'
     implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
-    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 

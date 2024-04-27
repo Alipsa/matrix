@@ -29,11 +29,12 @@ dependencies {
     } else if (os.isMacOsX()) {
         qualifier = 'mac-aarch64'
     }
-    implementation 'org.apache.groovy:groovy:4.0.20'
-    implementation "org.openjfx:javafx-base:20.0.2:$qualifier"
-    implementation "org.openjfx:javafx-graphics:20.0.2:$qualifier"
-    implementation "org.openjfx:javafx-controls:20.0.2:$qualifier"
-    implementation "org.openjfx:javafx-swing:20.0.2:$qualifier"
+    def javafxVersion = "22.0.1"
+    implementation 'org.apache.groovy:groovy:4.0.21'
+    implementation "org.openjfx:javafx-base:${javafxVersion}:$qualifier"
+    implementation "org.openjfx:javafx-graphics:${javafxVersion}:$qualifier"
+    implementation "org.openjfx:javafx-controls:${javafxVersion}:$qualifier"
+    implementation "org.openjfx:javafx-swing:${javafxVersion}:$qualifier"
     if (version.contains('SNAPSHOT') && rootProject.name != project.name) {
         // if we execute the build from the matrix root then we include project dependencies as SNAPSHOTS might not
         // have been published (or up to date).
@@ -49,7 +50,7 @@ dependencies {
         implementation 'se.alipsa.groovy:matrix-stats:1.0.1-SNAPSHOT'
         implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
     }
-    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 

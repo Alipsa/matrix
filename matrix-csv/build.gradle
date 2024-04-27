@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-  def groovyVersion = '4.0.20'
+  def groovyVersion = '4.0.21'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly project(':matrix-core')
   api 'org.apache.commons:commons-csv:1.10.0'

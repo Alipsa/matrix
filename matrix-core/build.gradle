@@ -30,7 +30,7 @@ repositories {
 }
 
 dependencies {
-  def groovyVersion = '4.0.20'
+  def groovyVersion = '4.0.21'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
   //compileOnly "org.apache.groovy:groovy-ginq:$groovyVersion"
