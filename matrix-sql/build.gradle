@@ -1,0 +1,85 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+plugins {
+    id 'groovy'
+    id 'java-library'
+    id 'signing'
+    id 'maven-publish'
+}
+
+group 'se.alipsa.groovy'
+version '1.0.0-SNAPSHOT'
+description 'Groovy sql module for Matrix'
+
+repositories {
+    if (version.contains('SNAPSHOT')) {
+        mavenLocal()
+    }
+    mavenCentral()
+    maven {
+        url = uri('https://repo.gradle.org/gradle/libs-releases')
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    def groovyVersion = '4.0.21'
+    def groovy = "org.apache.groovy:groovy:$groovyVersion"
+    compileOnly groovy
+    compileOnly project(':matrix-core')
+    implementation 'se.alipsa.groovy:data-utils:1.0.5-SNAPSHOT'
+    implementation 'org.gradle:gradle-tooling-api:8.6'
+    implementation 'commons-io:commons-io:2.16.1'
+    implementation 'se.alipsa:maven-3.9.4-utils:1.0.3-SNAPSHOT'
+
+    testImplementation groovy
+    testImplementation "org.apache.groovy:groovy-sql:$groovyVersion"
+    testImplementation project(':matrix-core')
+    testImplementation project(':matrix-datasets')
+    //testImplementation 'com.h2database:h2:2.2.224'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        // set options for log level LIFECYCLE
+        events TestLogEvent.FAILED,
+            TestLogEvent.PASSED,
+            TestLogEvent.SKIPPED,
+            TestLogEvent.STANDARD_OUT
+        exceptionFormat TestExceptionFormat.FULL
+        showExceptions true
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED,
+                TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_ERROR,
+                TestLogEvent.STANDARD_OUT
+            exceptionFormat TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+                def startItem = '|  ', endItem = '  |'
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+            }
+        }
+    }
+}

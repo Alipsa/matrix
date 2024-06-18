@@ -37,8 +37,7 @@ class DataType {
     return CHARACTER.equals(dataType(columnType))
   }
 
-
-  public static String sqlType(Class columnType, int... varcharSize) {
+  static String sqlType(Class columnType, int... varcharSize) {
     if (Short == columnType) {
       return "SMALLINT"
     }

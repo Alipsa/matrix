@@ -13,9 +13,9 @@ include 'matrix-datasets'
 include 'matrix-json'
 include 'matrix-spreadsheet'
 include 'matrix-charts'
+include 'matrix-sql'
 //include 'matrix-examples:candles'
 //include 'matrix-examples:HousePrices'
 include 'matrix-examples:LinearRegression'
 include 'matrix-examples:DecisionTree'
-
 
