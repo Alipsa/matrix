@@ -5,6 +5,7 @@
 - add a column max length limit to head, tail and content
 - add replace methods for simple data cleaning
 - change to typed getAt methods in Row and Matrix
+- add a getAt using the column name
 
 ## 1.2.2, 2023-12-22
 - add putAt for a whole column for both Grid and Matrix enabling expressions like `myMatrix['id'] = [10, 11, 12, 13, 14]`
