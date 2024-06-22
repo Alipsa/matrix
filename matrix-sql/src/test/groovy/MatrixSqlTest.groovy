@@ -39,6 +39,18 @@ class MatrixSqlTest {
         }
       }
     }
+
+    Matrix m2 = matrixSql.dbSelect("select * from airquality")
+    for (int r = 0; r < airq.rowCount(); r++) {
+      for (int c = 0; c < airq.columnCount(); c++) {
+        def expected = airq[r,c] as BigDecimal
+        def actual = (m2[r,c] as BigDecimal)
+        if (expected != null && actual != null) {
+          actual = actual.setScale(expected.scale())
+        }
+        assertEquals(expected, actual, "Diff detected on row $r, column ${airq.columnName(c)}")
+      }
+    }
   }
 
   static Double ps(BigDecimal bd) {
