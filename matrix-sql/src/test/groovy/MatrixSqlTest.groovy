@@ -1,7 +1,6 @@
 import groovy.sql.Sql
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
-import se.alipsa.groovy.datautil.SqlUtil
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.sql.MatrixSql
 import se.alipsa.groovy.datasets.Dataset
@@ -20,12 +19,13 @@ class MatrixSqlTest {
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")
     Matrix airq = Dataset.airquality()
-    if (MatrixSql.dbTableExists(ci, 'airquality')) {
-      MatrixSql.dbDropTable(ci, "airquality")
+    MatrixSql matrixSql = new MatrixSql(ci)
+    if (matrixSql.dbTableExists( 'airquality')) {
+      matrixSql.dbDropTable("airquality")
     }
-    MatrixSql.dbCreate(ci, airq)
+    matrixSql.dbCreate(airq)
 
-    try(Sql sql = new Sql(MatrixSql.connect(ci))) {
+    try(Sql sql = new Sql(matrixSql.connect(ci))) {
       int i = 0
       sql.query("select * from airquality") { rs ->
         while (rs.next()) {
@@ -41,7 +41,7 @@ class MatrixSqlTest {
     }
   }
 
-  static String ps(BigDecimal bd) {
-    bd == null ? 'null' : bd.toPlainString()
+  static Double ps(BigDecimal bd) {
+    bd == null ? null : bd.doubleValue()
   }
 }

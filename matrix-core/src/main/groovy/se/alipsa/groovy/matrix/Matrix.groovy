@@ -766,6 +766,12 @@ class Matrix implements Iterable<Row> {
     return mName
   }
 
+  <T> T getAt(Integer row, String columnName) {
+    Class<T> type = columnType(columnName) as Class<T>
+    Integer columnIdx = columnIndex(columnName)
+    return get(row, columnIdx).asType(type)
+  }
+
   /**
    * Enable the use of square bracket to reference a column, e.g. table[0, 1] for the 2:nd column of the first observation
    * @return the value corresponding to the row and column indexes supplied
