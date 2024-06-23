@@ -14,16 +14,17 @@ class MatrixSqlTest {
   void testH2TableCreation() {
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDependency('com.h2database:h2:2.2.224')
-    ci.setUrl("jdbc:h2:file:${System.getProperty('java.io.tmpdir')}testdb")
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb').getAbsolutePath()
+    ci.setUrl("jdbc:h2:file:${tmpDb}")
     ci.setUser('sa')
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")
     Matrix airq = Dataset.airquality()
     MatrixSql matrixSql = new MatrixSql(ci)
-    if (matrixSql.dbTableExists( 'airquality')) {
+    if (matrixSql.tableExists( 'airquality')) {
       matrixSql.dbDropTable("airquality")
     }
-    matrixSql.dbCreate(airq)
+    matrixSql.create(airq)
 
     try(Sql sql = new Sql(matrixSql.connect(ci))) {
       int i = 0
@@ -40,7 +41,7 @@ class MatrixSqlTest {
       }
     }
 
-    Matrix m2 = matrixSql.dbSelect("select * from airquality")
+    Matrix m2 = matrixSql.select("select * from airquality")
     for (int r = 0; r < airq.rowCount(); r++) {
       for (int c = 0; c < airq.columnCount(); c++) {
         def expected = airq[r,c] as BigDecimal

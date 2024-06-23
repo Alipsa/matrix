@@ -27,37 +27,37 @@ class MatrixSql {
     mapper = create(ci)
   }
 
-  Matrix dbSelect(String sqlQuery) throws SQLException {
+  Matrix select(String sqlQuery) throws SQLException {
     if (!sqlQuery.trim().toLowerCase().startsWith("select ")) {
       sqlQuery = "select $sqlQuery"
     }
-    try(Connection con = dbConnect(); Statement stm = con.createStatement(); ResultSet rs = stm.executeQuery(sqlQuery)) {
+    try(Connection con = connect(); Statement stm = con.createStatement(); ResultSet rs = stm.executeQuery(sqlQuery)) {
       return Matrix.create(rs);
     }
   }
 
-  int dbUpdate(String sqlQuery) throws SQLException  {
-    try(Connection con = dbConnect(); Statement stm = con.createStatement()) {
+  int update(String sqlQuery) throws SQLException  {
+    try(Connection con = connect(); Statement stm = con.createStatement()) {
       return dbExecuteUpdate(stm, sqlQuery)
     }
   }
 
-  int dbUpdate(String tableName, Row row, String... matchColumnName) throws SQLException {
+  int update(String tableName, Row row, String... matchColumnName) throws SQLException {
     String sql = dbCreateUpdateSql(tableName, row, matchColumnName)
-    return dbUpdate(sql);
+    return update(sql);
   }
 
-  int dbUpdate(Matrix table, String... matchColumnName) throws SQLException {
-    return dbExecuteBatchUpdate(table, dbConnect(), matchColumnName)
+  int update(Matrix table, String... matchColumnName) throws SQLException {
+    return dbExecuteBatchUpdate(table, connect(), matchColumnName)
   }
 
-  boolean dbTableExists(String tableName) throws SQLException {
-    try(Connection con = dbConnect()) {
-      return dbTableExists(con, tableName)
+  boolean tableExists(String tableName) throws SQLException {
+    try(Connection con = connect()) {
+      return tableExists(con, tableName)
     }
   }
 
-  boolean dbTableExists(Connection con, String tableName) throws SQLException {
+  boolean tableExists(Connection con, String tableName) throws SQLException {
     var rs = con.getMetaData().getTables(null, null, tableName.toUpperCase(), null);
     return rs.next()
   }
@@ -69,7 +69,7 @@ class MatrixSql {
    * @param table the table to copy to the db
    * @param primaryKey name(s) of the primary key columns
    */
-  void dbCreate(Matrix table, String... primaryKey) throws SQLException {
+  void create(Matrix table, String... primaryKey) throws SQLException {
     int i = 0
     List<Class<?>> types = table.columnTypes()
     Map<String,Map<String, Integer>> mappings = [:]
@@ -109,7 +109,7 @@ class MatrixSql {
       }
       mappings.put(name, props)
     }
-    dbCreate(table, mappings, primaryKey)
+    create(table, mappings, primaryKey)
   }
 
   /**
@@ -120,7 +120,7 @@ class MatrixSql {
    * constants as key and the size as value
    * @param primaryKey name(s) of the primary key columns
    */
-  void dbCreate(Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
+  void create(Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
 
     var tableName = table.getName()
         .replaceAll("\\.", "_")
@@ -143,14 +143,14 @@ class MatrixSql {
     }
     sql += "\n);"
 
-    try(Connection con = dbConnect()
+    try(Connection con = connect()
         Statement stm = con.createStatement()) {
-      if (dbTableExists(con, tableName)) {
+      if (tableExists(con, tableName)) {
         throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
       }
       println("Creating table using DDL: ${sql}");
       stm.execute(sql);
-      dbInsert(con, table);
+      insert(con, table);
     }
   }
 
@@ -159,7 +159,7 @@ class MatrixSql {
     dbExecuteSql("drop table $tableName")
   }
 
-  int dbInsert(String sqlQuery) throws SQLException, ExecutionException, InterruptedException {
+  int insert(String sqlQuery) throws SQLException, ExecutionException, InterruptedException {
     if (sqlQuery.trim().toLowerCase().startsWith("insert into ")) {
       return (int)dbExecuteSql(sqlQuery)
     } else {
@@ -167,22 +167,22 @@ class MatrixSql {
     }
   }
 
-  int dbInsert(String tableName, Row row) throws SQLException, ExecutionException, InterruptedException {
-    String sql = createInsertSql(tableName, row)
+  int insert(String tableName, Row row) throws SQLException, ExecutionException, InterruptedException {
+    String sql = dbCreateInsertSql(tableName, row)
     println("Executing insert query: ${sql}")
-    return dbInsert(ci, sql);
+    return insert(ci, sql);
   }
 
-  int dbInsert(Matrix table) throws SQLException {
-    try(Connection con = dbConnect()) {
-      return dbInsert(con, table)
+  int insert(Matrix table) throws SQLException {
+    try(Connection con = connect()) {
+      return insert(con, table)
     }
   }
 
-  int dbInsert(Connection con, Matrix table) throws SQLException {
+  int insert(Connection con, Matrix table) throws SQLException {
     try(Statement stm = con.createStatement()) {
       for (Row row : table) {
-        String insertSql = createInsertSql(table.getName(), row)
+        String insertSql = dbCreateInsertSql(table.getName(), row)
         //println insertSql
         stm.addBatch(insertSql)
       }
@@ -191,7 +191,7 @@ class MatrixSql {
     }
   }
 
-  int dbExecuteUpdate(Statement stm, String sqlQuery) throws SQLException {
+  static int dbExecuteUpdate(Statement stm, String sqlQuery) throws SQLException {
     if (sqlQuery.trim().toLowerCase().startsWith("update ")) {
       return stm.executeUpdate(sqlQuery)
     } else {
@@ -199,7 +199,7 @@ class MatrixSql {
     }
   }
 
-  String dbCreateUpdateSql(String tableName, Row row, String[] matchColumnName) {
+  static String dbCreateUpdateSql(String tableName, Row row, String[] matchColumnName) {
     String sql = "update " + tableName + " set "
     List<String> columnNames = new ArrayList<>(row.columnNames())
     columnNames.removeAll(List.of(matchColumnName))
@@ -224,7 +224,7 @@ class MatrixSql {
     return String.valueOf(value)
   }
 
-  private int dbExecuteBatchUpdate(Matrix table, Connection connect, String[] matchColumnName) throws SQLException {
+  private static int dbExecuteBatchUpdate(Matrix table, Connection connect, String[] matchColumnName) throws SQLException {
     try(Connection con = connect
         Statement stm = con.createStatement()) {
       for (Row row : table) {
@@ -236,7 +236,7 @@ class MatrixSql {
   }
 
   private Object dbExecuteSql(String sql) throws SQLException {
-    try(Connection con = dbConnect()
+    try(Connection con = connect()
         Statement stm = con.createStatement()) {
       boolean hasResultSet = stm.execute(sql)
       if (hasResultSet) {
@@ -247,7 +247,7 @@ class MatrixSql {
     }
   }
 
-  Connection dbConnect() throws SQLException {
+  Connection connect() throws SQLException {
     String url = ci.getUrl().toLowerCase()
     if (isBlank(ci.getPassword()) && !url.contains("passw") && !url.contains("integratedsecurity=true")) {
       println("Password required to " + ci.getName() + " for " + ci.getUser())
@@ -255,7 +255,7 @@ class MatrixSql {
     return connect(ci)
   }
 
-  boolean isBlank(String str) {
+  static boolean isBlank(String str) {
     if (str == null) {
       return true
     }
@@ -314,12 +314,12 @@ class MatrixSql {
     return driver.connect(ci.getUrl(), props);
   }
 
-  boolean urlContainsLogin(String url) {
+  static boolean urlContainsLogin(String url) {
     String safeLcUrl = url.toLowerCase()
     return ( safeLcUrl.contains("user") && safeLcUrl.contains("pass") ) || safeLcUrl.contains("@")
   }
 
-  private String createInsertSql(String tableName, Row row) {
+  private static String dbCreateInsertSql(String tableName, Row row) {
     String sql = "insert into " + tableName + " ( "
     List<String> columnNames = row.columnNames()
 
