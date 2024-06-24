@@ -22,7 +22,7 @@ class MatrixSqlTest {
     Matrix airq = Dataset.airquality()
     MatrixSql matrixSql = new MatrixSql(ci)
     if (matrixSql.tableExists( 'airquality')) {
-      matrixSql.dbDropTable("airquality")
+      matrixSql.dropTable("airquality")
     }
     matrixSql.create(airq)
 

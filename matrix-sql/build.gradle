@@ -42,9 +42,11 @@ dependencies {
     testImplementation "org.apache.groovy:groovy-sql:$groovyVersion"
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
-    //testImplementation 'com.h2database:h2:2.2.224'
+    //testImplementation 'com.h2database:h2:2.2.224' // dynamically fetched so not needed
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testImplementation 'org.slf4j:slf4j-simple:2.0.13'
+    testImplementation 'org.apache.logging.log4j:log4j-to-slf4j:2.23.1'
 }
 
 test {

@@ -1,6 +1,7 @@
 package se.alipsa.groovy.matrix.sql
 
 import se.alipsa.groovy.datautil.ConnectionInfo
+import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.Row
@@ -27,12 +28,17 @@ class MatrixSql {
     mapper = create(ci)
   }
 
+  MatrixSql(ConnectionInfo ci, DataBaseProvider dbProvider) {
+    this.ci = ci
+    mapper = create(dbProvider)
+  }
+
   Matrix select(String sqlQuery) throws SQLException {
     if (!sqlQuery.trim().toLowerCase().startsWith("select ")) {
       sqlQuery = "select $sqlQuery"
     }
     try(Connection con = connect(); Statement stm = con.createStatement(); ResultSet rs = stm.executeQuery(sqlQuery)) {
-      return Matrix.create(rs);
+      return Matrix.create(rs)
     }
   }
 
@@ -44,7 +50,7 @@ class MatrixSql {
 
   int update(String tableName, Row row, String... matchColumnName) throws SQLException {
     String sql = dbCreateUpdateSql(tableName, row, matchColumnName)
-    return update(sql);
+    return update(sql)
   }
 
   int update(Matrix table, String... matchColumnName) throws SQLException {
@@ -57,46 +63,45 @@ class MatrixSql {
     }
   }
 
-  boolean tableExists(Connection con, String tableName) throws SQLException {
-    var rs = con.getMetaData().getTables(null, null, tableName.toUpperCase(), null);
-    return rs.next()
+  static boolean tableExists(Connection con, String tableName) throws SQLException {
+    var rs = con.getMetaData().getTables(null, null, null, null)
+    while (rs.next()) {
+      String name = rs.getString('TABLE_NAME')
+      if (name.toUpperCase() == tableName.toUpperCase()) {
+        return true
+      }
+    }
+    return false
   }
 
-  /**
-   * create table and insert the table data.
-   *
-   * @param connectionInfo the connection info defined in the Connections tab
-   * @param table the table to copy to the db
-   * @param primaryKey name(s) of the primary key columns
-   */
-  void create(Matrix table, String... primaryKey) throws SQLException {
+
+  void create(Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
     int i = 0
     List<Class<?>> types = table.columnTypes()
     Map<String,Map<String, Integer>> mappings = [:]
-    int nrows = Math.max(100, table.rowCount());
     for (String name : table.columnNames()) {
       Map<String, Integer> props = [:]
       Class type = types.get(i++)
       if (BigDecimal == type) {
-        Integer precision = 0
-        Integer scale = 0
-        for (int r = 0; r < nrows; r++) {
+        Integer left = 0
+        Integer right = 0
+        for (int r = 0; r < scanNumRows; r++) {
           BigDecimal val = table[r, name]
           if (val == null) {
             continue
           }
-          if (val.precision() > precision) {
-            precision = val.precision()
+          if (val.precision() - val.scale() > left) {
+            left = val.precision() - val.scale()
           }
-          if (val.scale() > scale) {
-            scale = val.scale()
+          if (val.scale() > right) {
+            right = val.scale()
           }
         }
-        props.put(DECIMAL_PRECISION, precision)
-        props.put(DECIMAL_SCALE, scale)
+        props.put(DECIMAL_PRECISION, left + right)
+        props.put(DECIMAL_SCALE, right)
       } else if (type == String) {
         Integer maxLength = 0
-        for (int r = 0; r < nrows; r++) {
+        for (int r = 0; r < scanNumRows; r++) {
           String val = table[r, name]
           if (val == null) {
             continue
@@ -110,6 +115,16 @@ class MatrixSql {
       mappings.put(name, props)
     }
     create(table, mappings, primaryKey)
+  }
+  /**
+   * create table and insert the table data.
+   *
+   * @param connectionInfo the connection info defined in the Connections tab
+   * @param table the table to copy to the db
+   * @param primaryKey name(s) of the primary key columns
+   */
+  void create(Matrix table, String... primaryKey) throws SQLException {
+    create(table, Math.max(100, table.rowCount()), primaryKey)
   }
 
   /**
@@ -154,7 +169,7 @@ class MatrixSql {
     }
   }
 
-  Object dbDropTable(String tableName) {
+  Object dropTable(String tableName) {
     println "Dropping $tableName..."
     dbExecuteSql("drop table $tableName")
   }
@@ -170,7 +185,7 @@ class MatrixSql {
   int insert(String tableName, Row row) throws SQLException, ExecutionException, InterruptedException {
     String sql = dbCreateInsertSql(tableName, row)
     println("Executing insert query: ${sql}")
-    return insert(ci, sql);
+    return insert(ci, sql)
   }
 
   int insert(Matrix table) throws SQLException {
@@ -212,7 +227,7 @@ class MatrixSql {
       conditions.add(condition + " = " + quoteIfString(row, condition))
     }
     sql += String.join(" and ", conditions)
-    println("Executing update query: ${sql}")
+    //println("Executing update query: ${sql}")
     return sql;
   }
 
@@ -263,17 +278,17 @@ class MatrixSql {
   }
 
   Connection connect(ConnectionInfo ci) throws SQLException, IOException {
-    println("Connecting to ${ci.getUrl()} using ${ci.getDependency()}")
+    //println("Connecting to ${ci.getUrl()} using ${ci.getDependency()}")
 
     Driver driver
 
     MavenUtils mvnUtils = new MavenUtils()
     String[] dep = ci.getDependency().split(':')
-    println("Resolving dependency ${ci.getDependency()}")
+    //println("Resolving dependency ${ci.getDependency()}")
     File jar = mvnUtils.resolveArtifact(dep[0], dep[1], null, 'jar', dep[2])
     URL url = jar.toURI().toURL()
     URL[] urls = new URL[]{url}
-    println("Dependency url is ${urls[0]}")
+    //println("Dependency url is ${urls[0]}")
 
     GroovyClassLoader cl
     if (this.class.getClassLoader() instanceof GroovyClassLoader) {
@@ -287,9 +302,9 @@ class MatrixSql {
     }
 
     try {
-      println("Attempting to load the class ${ci.getDriver()}")
+      //println("Attempting to load the class ${ci.getDriver()}")
       Class<Driver> clazz = (Class<Driver>) cl.loadClass(ci.getDriver())
-      println("Loaded driver from session classloader, instating the driver ${ci.getDriver()}")
+      //println("Loaded driver from session classloader, instating the driver ${ci.getDriver()}")
       try {
         driver = clazz.getDeclaredConstructor().newInstance();
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | NullPointerException e) {
@@ -329,7 +344,7 @@ class MatrixSql {
     List<String> values = new ArrayList<>()
     columnNames.forEach(n -> {
       values.add(quoteIfString(row, n))
-    });
+    })
     sql += String.join(", ", values)
     sql += " ); "
     return sql

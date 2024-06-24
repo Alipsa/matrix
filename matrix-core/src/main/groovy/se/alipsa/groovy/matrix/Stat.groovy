@@ -439,8 +439,8 @@ class Stat {
         return maxVal
     }
 
-    static <T extends Comparable> List<T> max(List<List<T>> matrix, Integer colNum, boolean ignoreNonNumerics = false) {
-        return max(matrix, [colNum], ignoreNonNumerics)
+    static <T extends Comparable> T max(List<List<T>> matrix, Integer colNum, boolean ignoreNonNumerics = false) {
+        return max(matrix, [colNum], ignoreNonNumerics)[0]
     }
 
     static <T extends Comparable> List<T> max(List<List<T>> matrix, List<Integer> colNums, boolean ignoreNonNumerics = false) {
@@ -470,6 +470,10 @@ class Stat {
 
     static <T extends Comparable> List<T> max(Matrix table, List<String> colNames, boolean ignoreNonNumerics = false) {
         return max(table.rows() as List<List<T>>, table.columnIndices(colNames), ignoreNonNumerics)
+    }
+
+    static <T extends Comparable> T max(Matrix table, String colName) {
+        max(table.rows() as List<List<T>>, table.columnIndex(colName))
     }
 
 
