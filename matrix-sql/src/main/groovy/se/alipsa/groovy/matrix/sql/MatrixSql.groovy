@@ -335,6 +335,16 @@ class MatrixSql {
   }
 
   private static String dbCreateInsertSql(String tableName, Row row) {
+    // TODO this should be changed to parameterized sql ie
+    //  insert into (foo, bar, baz) values (?,?,?)
+    //  PreparedStatement statement = conn.prepareStatement(query);
+    //  statement.setBytes(1, foo);
+    //  statement.setString(2, bar);
+    //  statement.setInt(2, baz);
+    //  statement.executeUpdate();
+    //  Alternatively values for things like byt[] must be converted to hex format
+    //  https://www.postgresql.org/docs/current/datatype-binary.html#AEN5318
+    //  https://techcommunity.microsoft.com/t5/sql-server-blog/sql-server-2008-new-binary-8211-hex-string-conversion/ba-p/383490
     String sql = "insert into " + tableName + " ( "
     List<String> columnNames = row.columnNames()
 
