@@ -13,8 +13,12 @@ class DatasetTest {
     @Test
     void testAirquality() {
        Matrix airQuality = Dataset.airquality()
-       println Stat.str(airQuality)
-       println airQuality.content()
+       //println Stat.str(airQuality)
+       //println airQuality.content()
+        assertEquals(153, airQuality.rowCount(), 'number of rows')
+        assertEquals(6, airQuality.columnCount(), 'number of columns')
+        def sums = ListConverter.toDoubles(Stat.sum(airQuality))
+        assertIterableEquals(ListConverter.toDoubles([4887.0, 27146.0,  1523.5, 11916.0,  1070.0,  2418.0]), sums)
     }
 
     @Test

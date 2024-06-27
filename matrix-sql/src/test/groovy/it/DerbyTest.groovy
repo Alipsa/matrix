@@ -6,10 +6,15 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.matrix.Matrix
 
 
-class DerbyTest extends DbTest {
+class DerbyTest extends AbstractDbTest {
 
   DerbyTest() {
     super(DataBaseProvider.DERBY, 'derbyTest', 'Derby', 'DEFAULT_NULL_ORDERING=HIGH')
+  }
+
+  @Test
+  void testComplexMatrix() {
+    verifyDbCreation(getComplexData())
   }
 
   @Test

@@ -6,10 +6,15 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.matrix.Matrix
 
 
-class HsqlDbTest extends DbTest {
+class HsqlDbTest extends AbstractDbTest {
 
   HsqlDbTest() {
     super(DataBaseProvider.HSQLDB, 'hsqlTest', 'HSQLDB', 'DEFAULT_NULL_ORDERING=FIRST')
+  }
+
+  @Test
+  void testComplexMatrix() {
+    verifyDbCreation(getComplexData())
   }
 
   @Test

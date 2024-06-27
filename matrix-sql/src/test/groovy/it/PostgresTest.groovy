@@ -6,10 +6,15 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.matrix.Matrix
 
 
-class PostgresTest extends DbTest {
+class PostgresTest extends AbstractDbTest {
 
   PostgresTest() {
     super(DataBaseProvider.POSTGRESQL, 'postgresTest', 'PostgreSQL', 'DATABASE_TO_LOWER=TRUE', 'DEFAULT_NULL_ORDERING=HIGH')
+  }
+
+  @Test
+  void testComplexMatrix() {
+    verifyDbCreation(getComplexData())
   }
 
   @Test

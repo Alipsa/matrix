@@ -459,6 +459,10 @@ class Matrix implements Iterable<Row> {
     return create(mName, mHeaders, convertedRows, convertedTypes)
   }
 
+  Matrix convert(String columnName, Class<?> type) {
+    return convert([(columnName): type])
+  }
+
   Matrix convert(String columnName, Class<?> type, Closure converter) {
     return convert(columnNames().indexOf(columnName), type, converter)
   }

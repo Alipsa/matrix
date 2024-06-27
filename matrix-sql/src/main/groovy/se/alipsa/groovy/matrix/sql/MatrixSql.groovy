@@ -1,5 +1,7 @@
 package se.alipsa.groovy.matrix.sql
 
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
@@ -10,6 +12,7 @@ import se.alipsa.mavenutils.MavenUtils
 import java.lang.reflect.InvocationTargetException
 import java.sql.Connection
 import java.sql.Driver
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
@@ -19,6 +22,8 @@ import java.util.stream.IntStream
 import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.*
 
 class MatrixSql {
+
+  private static final Logger LOG = LogManager.getLogger(MatrixSql.class)
 
   ConnectionInfo ci
   SqlTypeMapper mapper
@@ -61,6 +66,10 @@ class MatrixSql {
     try(Connection con = connect()) {
       return tableExists(con, tableName)
     }
+  }
+
+  boolean tableExists(Matrix table) throws SQLException {
+    tableExists(tableName(table))
   }
 
   static boolean tableExists(Connection con, String tableName) throws SQLException {
@@ -137,10 +146,7 @@ class MatrixSql {
    */
   void create(Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
 
-    var tableName = table.getName()
-        .replaceAll("\\.", "_")
-        .replaceAll("-", "_")
-        .replaceAll("\\*", "")
+    String tableName = tableName(table)
 
     String sql = "create table $tableName (\n"
 
@@ -163,15 +169,26 @@ class MatrixSql {
       if (tableExists(con, tableName)) {
         throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
       }
-      println("Creating table using DDL: ${sql}");
+      LOG.debug("Creating table using DDL: {}", sql);
       stm.execute(sql);
       insert(con, table);
     }
   }
 
+  static String tableName(Matrix table) {
+    table.getName()
+        .replace(".", "_")
+        .replace("-", "_")
+        .replace("*", "")
+  }
+
   Object dropTable(String tableName) {
-    println "Dropping $tableName..."
+    LOG.debug("Dropping {}...", tableName);
     dbExecuteSql("drop table $tableName")
+  }
+
+  Object dropTable(Matrix table) {
+    dropTable(tableName(table))
   }
 
   int insert(String sqlQuery) throws SQLException, ExecutionException, InterruptedException {
@@ -184,8 +201,8 @@ class MatrixSql {
 
   int insert(String tableName, Row row) throws SQLException, ExecutionException, InterruptedException {
     String sql = dbCreateInsertSql(tableName, row)
-    println("Executing insert query: ${sql}")
-    return insert(ci, sql)
+    LOG.debug("Executing insert query: {}", sql)
+    return insert(sql)
   }
 
   int insert(Matrix table) throws SQLException {
@@ -195,11 +212,16 @@ class MatrixSql {
   }
 
   int insert(Connection con, Matrix table) throws SQLException {
-    try(Statement stm = con.createStatement()) {
+    String insertSql = dbCreatePreparedInsertSql(table)
+    LOG.trace(insertSql)
+    try(PreparedStatement stm = con.prepareStatement(insertSql)) {
       for (Row row : table) {
-        String insertSql = dbCreateInsertSql(table.getName(), row)
-        //println insertSql
-        stm.addBatch(insertSql)
+        int i = 1
+        row.each {
+          // if there are issues we could use the setObject method that also takes a java.sql.Types
+          stm.setObject(i++, it)
+        }
+        stm.addBatch()
       }
       int[] results = stm.executeBatch()
       return IntStream.of(results).sum()
@@ -227,8 +249,8 @@ class MatrixSql {
       conditions.add(condition + " = " + quoteIfString(row, condition))
     }
     sql += String.join(" and ", conditions)
-    //println("Executing update query: ${sql}")
-    return sql;
+    LOG.debug("Executing update query: ${sql}")
+    return sql
   }
 
   private static String quoteIfString(Row row, String columnName) {
@@ -265,9 +287,9 @@ class MatrixSql {
   Connection connect() throws SQLException {
     String url = ci.getUrl().toLowerCase()
     if (isBlank(ci.getPassword()) && !url.contains("passw") && !url.contains("integratedsecurity=true")) {
-      println("Password required to " + ci.getName() + " for " + ci.getUser())
+      LOG.warn("Password probably required to " + ci.getName() + " for " + ci.getUser())
     }
-    return connect(ci)
+    return dbConnect(ci)
   }
 
   static boolean isBlank(String str) {
@@ -277,18 +299,16 @@ class MatrixSql {
     return str.isBlank()
   }
 
-  Connection connect(ConnectionInfo ci) throws SQLException, IOException {
-    //println("Connecting to ${ci.getUrl()} using ${ci.getDependency()}")
+  private Connection dbConnect(ConnectionInfo ci) throws SQLException, IOException {
+    LOG.debug("Connecting to ${ci.getUrl()} using ${ci.getDependency()}")
 
     Driver driver
 
     MavenUtils mvnUtils = new MavenUtils()
     String[] dep = ci.getDependency().split(':')
-    //println("Resolving dependency ${ci.getDependency()}")
+    LOG.trace("Resolving dependency ${ci.getDependency()}")
     File jar = mvnUtils.resolveArtifact(dep[0], dep[1], null, 'jar', dep[2])
     URL url = jar.toURI().toURL()
-    URL[] urls = new URL[]{url}
-    //println("Dependency url is ${urls[0]}")
 
     GroovyClassLoader cl
     if (this.class.getClassLoader() instanceof GroovyClassLoader) {
@@ -302,22 +322,22 @@ class MatrixSql {
     }
 
     try {
-      //println("Attempting to load the class ${ci.getDriver()}")
+      LOG.trace("Attempting to load the class ${ci.getDriver()}")
       Class<Driver> clazz = (Class<Driver>) cl.loadClass(ci.getDriver())
-      //println("Loaded driver from session classloader, instating the driver ${ci.getDriver()}")
+      LOG.trace("Loaded driver from session classloader, instating the driver ${ci.getDriver()}")
       try {
         driver = clazz.getDeclaredConstructor().newInstance();
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | NullPointerException e) {
-        println("Failed to instantiate the driver: ${ci.getDriver()}, clazz is ${clazz}: " + e)
+        LOG.trace("Failed to instantiate the driver: ${ci.getDriver()}, clazz is ${clazz}: " + e)
         throw e
       }
     } catch (ClassCastException | ClassNotFoundException e) {
-      println("Failed to load driver ${ci.getDriver()} could not be loaded from dependency ${ci.getDependency()}")
+      LOG.warn("Failed to load driver; ${ci.getDriver()} could not be loaded from dependency ${ci.getDependency()}")
       throw e
     }
     Properties props = new Properties()
     if ( urlContainsLogin(ci.getUrlSafe()) ) {
-      println("Skipping specified user/password since it is part of the url")
+      LOG.debug("Skipping specified user/password since it is part of the url")
     } else {
       if (ci.getUser() != null) {
         props.put("user", ci.getUser())
@@ -329,20 +349,28 @@ class MatrixSql {
     return driver.connect(ci.getUrl(), props);
   }
 
-  static boolean urlContainsLogin(String url) {
+  private static boolean urlContainsLogin(String url) {
     String safeLcUrl = url.toLowerCase()
     return ( safeLcUrl.contains("user") && safeLcUrl.contains("pass") ) || safeLcUrl.contains("@")
   }
 
+  private static String dbCreatePreparedInsertSql(Matrix table) {
+    String sql = "insert into " + table.name + " ( "
+    List<String> columnNames = table.columnNames()
+
+    sql += "\"" + String.join("\", \"", columnNames) + "\""
+    sql += " ) values ( "
+    List<String> values = new ArrayList<>()
+    columnNames.forEach(n -> {
+      values.add('?')
+    })
+    sql += String.join(", ", values)
+    sql += " ); "
+    return sql
+  }
+
   private static String dbCreateInsertSql(String tableName, Row row) {
-    // TODO this should be changed to parameterized sql ie
-    //  insert into (foo, bar, baz) values (?,?,?)
-    //  PreparedStatement statement = conn.prepareStatement(query);
-    //  statement.setBytes(1, foo);
-    //  statement.setString(2, bar);
-    //  statement.setInt(2, baz);
-    //  statement.executeUpdate();
-    //  Alternatively values for things like byt[] must be converted to hex format
+    // TODO values for things like byt[] must be converted to hex format
     //  https://www.postgresql.org/docs/current/datatype-binary.html#AEN5318
     //  https://techcommunity.microsoft.com/t5/sql-server-blog/sql-server-2008-new-binary-8211-hex-string-conversion/ba-p/383490
     String sql = "insert into " + tableName + " ( "

@@ -90,10 +90,10 @@ class Stat {
     }
 
     static <T> T sum(List<?> list, Class<T> type) {
-        def s = 0 as BigDecimal
+        BigDecimal s = 0.0g
         for (value in list) {
             if (value instanceof Number) {
-                s += value
+                s += (value as BigDecimal)
             }
         }
         return s.asType(type)

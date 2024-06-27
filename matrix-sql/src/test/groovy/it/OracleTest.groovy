@@ -6,10 +6,15 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.matrix.Matrix
 
 
-class OracleTest extends DbTest {
+class OracleTest extends AbstractDbTest {
 
   OracleTest() {
     super(DataBaseProvider.ORACLE, 'oracleTest', 'Oracle', 'DEFAULT_NULL_ORDERING=HIGH')
+  }
+
+  @Test
+  void testComplexMatrix() {
+    verifyDbCreation(getComplexData())
   }
 
   @Test

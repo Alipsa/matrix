@@ -6,10 +6,15 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.matrix.Matrix
 
 
-class MariaDbTest extends DbTest {
+class MariaDbTest extends AbstractDbTest {
 
   MariaDbTest() {
     super(DataBaseProvider.MARIADB, 'mariadbTest', 'MariaDB', 'DATABASE_TO_LOWER=TRUE')
+  }
+
+  @Test
+  void testComplexMatrix() {
+    verifyDbCreation(getComplexData())
   }
 
   @Test

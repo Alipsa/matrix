@@ -6,10 +6,15 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.matrix.Matrix
 
 
-class MySqlTest extends DbTest {
+class MySqlTest extends AbstractDbTest {
 
   MySqlTest() {
     super(DataBaseProvider.MYSQL, 'mysqlTest', 'MySQL', 'DATABASE_TO_LOWER=TRUE')
+  }
+
+  @Test
+  void testComplexMatrix() {
+    verifyDbCreation(getComplexData())
   }
 
   @Test

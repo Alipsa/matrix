@@ -12,7 +12,8 @@ class Dataset {
             'Solar.R': BigDecimal,
             'Wind': BigDecimal,
             'Temp': BigDecimal,
-            'Month': Byte
+            'Month': Short,
+            'Day': Short
         ).withName('airquality')
     }
 

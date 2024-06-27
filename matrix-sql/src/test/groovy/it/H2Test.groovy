@@ -5,11 +5,11 @@ import se.alipsa.groovy.datasets.Dataset
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.matrix.Matrix
 
+class H2Test extends AbstractDbTest {
 
-class SqlServerTest extends AbstractDbTest {
 
-  SqlServerTest() {
-    super(DataBaseProvider.MSSQL, 'mssqlTest', 'MSSQLServer', 'DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE')
+  H2Test() {
+    super(DataBaseProvider.H2, 'h2Test', 'H2')
   }
 
   @Test
@@ -35,7 +35,6 @@ class SqlServerTest extends AbstractDbTest {
 
   @Test
   void testPlantGrowth() {
-    Matrix ds = Dataset.plantGrowth()
-    verifyDbCreation(ds)
+    verifyDbCreation(Dataset.plantGrowth())
   }
 }

@@ -137,6 +137,8 @@ class ValueConverter {
             case YearMonth -> (E)asYearMonth(o)
             case BigDecimal -> (E)asBigDecimal(o, numberFormat)
             case Double, double -> (E)asDouble(o, numberFormat)
+            case Byte, byte -> (E)asByte(o)
+            case Short, short -> (E)asShort(o)
             case Integer, int -> (E)asInteger(o)
             case BigInteger -> (E)asBigInteger(o)
             case Float -> (E)asFloat(o)
@@ -163,6 +165,30 @@ class ValueConverter {
 
     static LocalDateTime asLocalDateTime(Object o, String pattern) {
         asLocalDateTime(o, DateTimeFormatter.ofPattern(pattern))
+    }
+
+    static Byte asByte(Object o) {
+        if (o == null ) return null
+        if (o instanceof Number) return o.byteValue()
+        try {
+            return (o as BigDecimal).byteValue()
+        } catch (NumberFormatException ignored) {
+            String val = asDecimalNumber(String.valueOf(o))
+            if (val.isBlank()) return null
+            return Byte.valueOf(val)
+        }
+    }
+
+    static Short asShort(Object o) {
+        if (o == null ) return null
+        if (o instanceof Number) return o.shortValue()
+        try {
+            return (o as BigDecimal).shortValue()
+        } catch (NumberFormatException ignored) {
+            String val = asDecimalNumber(String.valueOf(o))
+            if (val.isBlank()) return null
+            return Short.valueOf(val)
+        }
     }
 
     static Integer asInteger(Object o) {
