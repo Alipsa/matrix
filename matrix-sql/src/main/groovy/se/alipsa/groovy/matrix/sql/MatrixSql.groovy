@@ -12,20 +12,20 @@ import se.alipsa.mavenutils.MavenUtils
 import java.lang.reflect.InvocationTargetException
 import java.sql.Connection
 import java.sql.Driver
+import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.sql.Statement
 import java.util.concurrent.ExecutionException
 import java.util.stream.IntStream
 
-import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.*
-
-class MatrixSql {
+class MatrixSql implements Closeable {
 
   private static final Logger LOG = LogManager.getLogger(MatrixSql.class)
 
   ConnectionInfo ci
   SqlTypeMapper mapper
   MatrixDbUtil matrixDbUtil
+  Connection con
 
   MatrixSql(ConnectionInfo ci) {
     this.ci = ci
@@ -39,14 +39,18 @@ class MatrixSql {
     matrixDbUtil = new MatrixDbUtil(mapper)
   }
 
+  @Override
+  void close() throws SQLException {
+    con.close()
+    con == null
+  }
+
   Matrix select(String sqlQuery) throws SQLException {
-    try(Connection con = connect()) {
-      matrixDbUtil.select(con, sqlQuery)
-    }
+    matrixDbUtil.select(connect(), sqlQuery)
   }
 
   private int dbUpdate(String sqlQuery) throws SQLException  {
-    try(Connection con = connect(); Statement stm = con.createStatement()) {
+    try(Statement stm = connect().createStatement()) {
       return dbExecuteUpdate(stm, sqlQuery)
     }
   }
@@ -57,15 +61,11 @@ class MatrixSql {
   }
 
   int update(Matrix table, String... matchColumnName) throws SQLException {
-    try(Connection con = connect()) {
-      dbExecuteBatchUpdate(table, con, matchColumnName)
-    }
+    dbExecuteBatchUpdate(table, matchColumnName)
   }
 
   boolean tableExists(String tableName) throws SQLException {
-    try(Connection con = connect()) {
-      return matrixDbUtil.tableExists(con, tableName)
-    }
+    return matrixDbUtil.tableExists(connect(), tableName)
   }
 
   boolean tableExists(Matrix table) throws SQLException {
@@ -74,9 +74,7 @@ class MatrixSql {
 
 
   void create(Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
-    try(Connection con = connect()) {
-      matrixDbUtil.create(con, table, scanNumRows, primaryKey)
-    }
+    matrixDbUtil.create(connect(), table, scanNumRows, primaryKey)
   }
 
   /**
@@ -99,9 +97,7 @@ class MatrixSql {
    * @param primaryKey name(s) of the primary key columns
    */
   void create(Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
-    try(Connection con = connect()) {
-      matrixDbUtil.create(con, table, props, primaryKey)
-    }
+    matrixDbUtil.create(connect(), table, props, primaryKey)
   }
 
   String tableName(Matrix table) {
@@ -126,9 +122,15 @@ class MatrixSql {
   }
 
   int insert(String tableName, Row row) throws SQLException, ExecutionException, InterruptedException {
-    String sql = SqlGenerator.createInsertSql(tableName, row)
+    String sql = SqlGenerator.createPreparedInsertSql(tableName, row)
     LOG.debug("Executing insert query: {}", sql)
-    return dbInsert(sql)
+    try(PreparedStatement stm = connect().prepareStatement(sql)) {
+      int i = 1
+      row.each {
+        stm.setObject(i++, it)
+      }
+      return stm.executeUpdate()
+    }
   }
 
   int insert(Matrix table, Row row) throws SQLException, ExecutionException, InterruptedException {
@@ -136,9 +138,7 @@ class MatrixSql {
   }
 
   int insert(Matrix table) throws SQLException {
-    try(Connection con = connect()) {
-      return matrixDbUtil.insert(con, table)
-    }
+    return matrixDbUtil.insert(connect(), table)
   }
 
   static int dbExecuteUpdate(Statement stm, String sqlQuery) throws SQLException {
@@ -149,9 +149,8 @@ class MatrixSql {
     }
   }
 
-  private static int dbExecuteBatchUpdate(Matrix table, Connection connect, String[] matchColumnName) throws SQLException {
-    try(Connection con = connect
-        Statement stm = con.createStatement()) {
+  private int dbExecuteBatchUpdate(Matrix table, String[] matchColumnName) throws SQLException {
+    try(Statement stm = connect().createStatement()) {
       for (Row row : table) {
         stm.addBatch(SqlGenerator.createUpdateSql(table.getName(), row, matchColumnName))
       }
@@ -161,17 +160,18 @@ class MatrixSql {
   }
 
   private Object dbExecuteSql(String sql) throws SQLException {
-    try(Connection con = connect()) {
-      matrixDbUtil.dbExecuteSql(con, sql)
-    }
+      matrixDbUtil.dbExecuteSql(connect(), sql)
   }
 
-  Connection connect() throws SQLException {
-    String url = ci.getUrl().toLowerCase()
-    if (isBlank(ci.getPassword()) && !url.contains("passw") && !url.contains("integratedsecurity=true")) {
-      LOG.warn("Password probably required to " + ci.getName() + " for " + ci.getUser())
+  synchronized Connection connect() throws SQLException {
+    if (con == null) {
+      String url = ci.getUrl().toLowerCase()
+      if (isBlank(ci.getPassword()) && !url.contains("passw") && !url.contains("integratedsecurity=true")) {
+        LOG.warn("Password probably required to " + ci.getName() + " for " + ci.getUser())
+      }
+      con = dbConnect(ci)
     }
-    return dbConnect(ci)
+    con
   }
 
   static boolean isBlank(String str) {
@@ -181,7 +181,7 @@ class MatrixSql {
     return str.isBlank()
   }
 
-  private Connection dbConnect(ConnectionInfo ci) throws SQLException, IOException {
+  Connection dbConnect(ConnectionInfo ci) throws SQLException, IOException {
     LOG.debug("Connecting to ${ci.getUrl()} using ${ci.getDependency()}")
 
     Driver driver

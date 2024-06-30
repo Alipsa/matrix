@@ -37,6 +37,10 @@ The simplest way to create a table corresponding to a Matrix and populate it is 
 if you want to define a primary key, you just append the column name(s) to the create method e.g:
 `matrixSql.create(myMatrix, 'id')`
 
+The MatrixSql is Closeable and should be used in a try with resources block.
+If that is not an option, you must close the connection to the database when you are
+finished e.g: `matrixSql.close()`
+
 ### Drop
 User either the Matrix or the table to drop a table i.e.
 either `matrixSql.dropTable(myMatrix)`

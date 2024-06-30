@@ -27,7 +27,7 @@ class SqlGenerator {
   }
 
   static String createPreparedInsertSql(Matrix table) {
-    StringBuilder sql = new StringBuilder("insert into " + table.name + " ( ")
+    StringBuilder sql = new StringBuilder("insert into " + MatrixDbUtil.tableName(table) + " ( ")
     List<String> columnNames = table.columnNames()
 
     sql.append('"').append(String.join('", "', columnNames)).append('"')
@@ -41,11 +41,7 @@ class SqlGenerator {
     return sql.toString()
   }
 
-  // Not used, using createPreparedInsertSql instead as it handles various data much better
-  private static String createInsertSql(String tableName, Row row) {
-    // TODO values for things like byte[] must be converted to hex format
-    //  https://www.postgresql.org/docs/current/datatype-binary.html#AEN5318
-    //  https://techcommunity.microsoft.com/t5/sql-server-blog/sql-server-2008-new-binary-8211-hex-string-conversion/ba-p/383490
+  static String createPreparedInsertSql(String tableName, Row row) {
     String sql = "insert into " + tableName + " ( "
     List<String> columnNames = row.columnNames()
 
@@ -54,7 +50,7 @@ class SqlGenerator {
 
     List<String> values = new ArrayList<>()
     columnNames.forEach(n -> {
-      values.add(quoteIfString(row, n))
+      values.add('?')
     })
     sql += String.join(", ", values)
     sql += " ); "

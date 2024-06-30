@@ -26,13 +26,18 @@ class MatrixSqlTest {
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")
     Matrix airq = Dataset.airquality()
-    MatrixSql matrixSql = new MatrixSql(ci)
-    String tableName = matrixSql.tableName(airq)
-    if (matrixSql.tableExists( tableName)) {
-      matrixSql.dropTable(tableName)
-    }
-    matrixSql.create(airq)
-    try(Sql sql = new Sql(matrixSql.connect())) {
+    try (MatrixSql matrixSql = new MatrixSql(ci)) {
+
+      String tableName = matrixSql.tableName(airq)
+      if (matrixSql.tableExists(tableName)) {
+        matrixSql.dropTable(tableName)
+      }
+      matrixSql.create(airq)
+
+      // For h2 we MUST piggyback on the existing connection as there can only be one
+      // for another db we could have done Sql sql = new Sql(matrixSql.dbConnect(ci))
+      // But since this is surrounded in a "try with resources", this is actually better
+      Sql sql = new Sql(matrixSql.connect())
       int i = 0
       // Explicitly call toString to force interpolation in a closure
       sql.query("select * from $tableName".toString()) { rs ->
@@ -46,16 +51,16 @@ class MatrixSqlTest {
           i++
         }
       }
-    }
 
-    Matrix m2 = matrixSql.select("select * from $tableName")
-    airq.eachWithIndex { Row row, int r ->
-      row.eachWithIndex { BigDecimal expected, int c ->
-        def actual = (m2[r,c] as BigDecimal)
-        if (expected != null && actual != null) {
-          actual = actual.setScale(expected.scale())
+      Matrix m2 = matrixSql.select("select * from $tableName")
+      airq.eachWithIndex { Row row, int r ->
+        row.eachWithIndex { BigDecimal expected, int c ->
+          def actual = (m2[r, c] as BigDecimal)
+          if (expected != null && actual != null) {
+            actual = actual.setScale(expected.scale())
+          }
+          assertEquals(expected, actual, "Diff detected on row $r, column ${airq.columnName(c)}")
         }
-        assertEquals(expected, actual, "Diff detected on row $r, column ${airq.columnName(c)}")
       }
     }
   }
@@ -82,22 +87,22 @@ class MatrixSqlTest {
     ci.setUser('sa')
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")
-    MatrixSql matrixSql = new MatrixSql(ci)
+    try(MatrixSql matrixSql = new MatrixSql(ci)) {
 
-    String tableName = matrixSql.tableName(complexData)
+      String tableName = matrixSql.tableName(complexData)
 
-    if (matrixSql.tableExists(complexData)) {
-      matrixSql.dropTable(complexData)
+      if (matrixSql.tableExists(complexData)) {
+        matrixSql.dropTable(complexData)
+      }
+
+      matrixSql.create(complexData)
+
+      Matrix stored = matrixSql.select("* from $tableName")
+      println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
+
+      stored = stored.convert('start', LocalDate)
+      println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
     }
-
-    matrixSql.create(complexData)
-
-    Matrix stored = matrixSql.select("* from $tableName")
-    println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
-
-    stored = stored.convert('start', LocalDate)
-    println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
-
   }
 
   @Test
@@ -118,23 +123,25 @@ class MatrixSqlTest {
     ci.setUser('sa')
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")
-    MatrixSql matrixSql = new MatrixSql(ci)
 
-    String tableName = matrixSql.tableName(pkdata)
+    try (MatrixSql matrixSql = new MatrixSql(ci)) {
 
-    if (matrixSql.tableExists( tableName)) {
-      matrixSql.dropTable(tableName)
-    }
+      String tableName = matrixSql.tableName(pkdata)
 
-    matrixSql.create(pkdata, 'id')
+      if (matrixSql.tableExists(tableName)) {
+        matrixSql.dropTable(tableName)
+      }
 
-    try (Connection con = matrixSql.connect(); ResultSet rs = con.getMetaData().getPrimaryKeys(null, null, tableName.toUpperCase())) {
-      assertTrue(rs.next(), 'No pk results found')
-      assertEquals(
-          'id',
-          rs.getString("COLUMN_NAME"),
-          "Expected to find 'id' as the primary key"
-      )
+      matrixSql.create(pkdata, 'id')
+
+      try (Connection con = matrixSql.connect(); ResultSet rs = con.getMetaData().getPrimaryKeys(null, null, tableName.toUpperCase())) {
+        assertTrue(rs.next(), 'No pk results found')
+        assertEquals(
+            'id',
+            rs.getString("COLUMN_NAME"),
+            "Expected to find 'id' as the primary key"
+        )
+      }
     }
   }
 }
