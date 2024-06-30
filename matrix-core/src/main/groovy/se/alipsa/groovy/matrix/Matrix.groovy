@@ -180,20 +180,32 @@ class Matrix implements Iterable<Row> {
     return table
   }
 
-  private Matrix() {}
-
-  Matrix(String name, Map<String, Class<?>> columnNameAndType) {
-    mName = name
+  /**
+   * Create an empty matrix
+   * Note the difference between Matrix.create(String, Map) which creates and empty matrix
+   * (the map contains column names and types) and this new Matrix(String, Map) which creates a matrix
+   * with data (the map contains column name and values)
+   *
+   * @param name
+   * @param columnNameAndType a map containing thd column name and its type
+   * @return a new Matrix with empty rows
+   */
+  static Matrix create(String name, Map<String, Class<?>> columnNameAndType) {
+    Matrix m = new Matrix()
+    m.mName = name
     List<String> headers = new ArrayList<>(columnNameAndType.keySet())
     List types = new ArrayList(columnNameAndType.values())
-    mTypes = sanitizeColumnTypes(headers, types)
-    mHeaders = headers
+    m.mTypes = sanitizeColumnTypes(headers, types)
+    m.mHeaders = headers
     List<List<?>> columns = []
     headers.each {
       columns << new ArrayList()
     }
-    mColumns = columns
+    m.mColumns = columns
+    m
   }
+
+  private Matrix() {}
 
   Matrix(String name, List<String> headerList, List<List<?>> columns, List<Class<?>>... dataTypesOpt) {
     mName = name
@@ -206,6 +218,16 @@ class Matrix implements Iterable<Row> {
     }
   }
 
+  /**
+   * Constructor to create a matrix with the map of columnar data supplied
+   * Note the difference between Matrix.create(String, Map) which creates and empty matrix
+   * (the map contains column names and types) and this new Matrix(String, Map) which creates a matrix
+   * with data (the map contains column name and values)
+   *
+   * @param name the name of the matrix
+   * @param columns a map with the column name as the key and a lost of values for that column
+   * @param dataTypesOpt an optional list of dataTypes
+   */
   Matrix(String name, Map<String, List<?>> columns, List<Class<?>>... dataTypesOpt) {
     mName = name
     mHeaders = []
@@ -1231,7 +1253,7 @@ class Matrix implements Iterable<Row> {
     return r.values() as List
   }
 
-  private static List<Class<?>> sanitizeColumnTypes(Collection<String> headerList, Collection<Class<?>>... dataTypesOpt) {
+  private static List<Class<?>> sanitizeColumnTypes(Collection<String> headerList, List<Class<?>>... dataTypesOpt) {
     List<Class<?>> types
     if (dataTypesOpt.length > 0) {
       types = convertPrimitivesToWrapper(dataTypesOpt[0])

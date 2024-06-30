@@ -27,7 +27,7 @@ abstract class AbstractDbTest {
   MatrixSql matrixSql
   MatrixDbUtil matrixDbUtil
 
-  Matrix dur = new Matrix('duration', ['name': String, 'measurePoint': String, 'millis': Long])
+  Matrix dur = Matrix.create('duration', ['name': String, 'measurePoint': String, 'millis': Long])
 
   AbstractDbTest(DataBaseProvider db, String dbName, String mode, String... additionalSettings) {
     ci = new ConnectionInfo()
