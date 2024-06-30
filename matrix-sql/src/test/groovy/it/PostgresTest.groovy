@@ -11,30 +11,4 @@ class PostgresTest extends AbstractDbTest {
   PostgresTest() {
     super(DataBaseProvider.POSTGRESQL, 'postgresTest', 'PostgreSQL', 'DATABASE_TO_LOWER=TRUE', 'DEFAULT_NULL_ORDERING=HIGH')
   }
-
-  @Test
-  void testComplexMatrix() {
-    verifyDbCreation(getComplexData())
-  }
-
-  @Test
-  void testAirQuality() {
-    verifyDbCreation(Dataset.airquality())
-  }
-
-  @Test
-  void testMtCars() {
-    verifyDbCreation(Dataset.mtcars())
-  }
-
-  @Test
-  void testDiamonds() {
-    Matrix diamonds = Dataset.diamonds()
-    verifyDbCreation(diamonds, diamonds.rowCount())
-  }
-
-  @Test
-  void testPlantGrowth() {
-    verifyDbCreation(Dataset.plantGrowth())
-  }
 }

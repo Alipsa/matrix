@@ -2,6 +2,7 @@ import groovy.sql.Sql
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.Row
 import se.alipsa.groovy.matrix.sql.MatrixSql
 import se.alipsa.groovy.matrix.ListConverter
 import se.alipsa.groovy.datasets.Dataset
@@ -19,19 +20,18 @@ class MatrixSqlTest {
   void testH2TableCreation() {
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDependency('com.h2database:h2:2.2.224')
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb').getAbsolutePath()
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'h2testdb').getAbsolutePath()
     ci.setUrl("jdbc:h2:file:${tmpDb}")
     ci.setUser('sa')
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")
     Matrix airq = Dataset.airquality()
     MatrixSql matrixSql = new MatrixSql(ci)
-    String tableName = MatrixSql.tableName(airq)
+    String tableName = matrixSql.tableName(airq)
     if (matrixSql.tableExists( tableName)) {
       matrixSql.dropTable(tableName)
     }
     matrixSql.create(airq)
-    println "table name is $tableName"
     try(Sql sql = new Sql(matrixSql.connect())) {
       int i = 0
       // Explicitly call toString to force interpolation in a closure
@@ -49,9 +49,8 @@ class MatrixSqlTest {
     }
 
     Matrix m2 = matrixSql.select("select * from $tableName")
-    for (int r = 0; r < airq.rowCount(); r++) {
-      for (int c = 0; c < airq.columnCount(); c++) {
-        def expected = airq[r,c] as BigDecimal
+    airq.eachWithIndex { Row row, int r ->
+      row.eachWithIndex { BigDecimal expected, int c ->
         def actual = (m2[r,c] as BigDecimal)
         if (expected != null && actual != null) {
           actual = actual.setScale(expected.scale())
@@ -85,7 +84,7 @@ class MatrixSqlTest {
     ci.setDriver("org.h2.Driver")
     MatrixSql matrixSql = new MatrixSql(ci)
 
-    String tableName = MatrixSql.tableName(complexData)
+    String tableName = matrixSql.tableName(complexData)
 
     if (matrixSql.tableExists(complexData)) {
       matrixSql.dropTable(complexData)
@@ -121,7 +120,7 @@ class MatrixSqlTest {
     ci.setDriver("org.h2.Driver")
     MatrixSql matrixSql = new MatrixSql(ci)
 
-    String tableName = MatrixSql.tableName(pkdata)
+    String tableName = matrixSql.tableName(pkdata)
 
     if (matrixSql.tableExists( tableName)) {
       matrixSql.dropTable(tableName)

@@ -2,6 +2,7 @@
 
 ## v1.0.3, in progress
 - add cars dataset
+- change datatype for month and day of airquality to Short
 
 ## v 1.0.2, 2023-08-06
 - replace iris dataset with a better version

@@ -27,7 +27,7 @@ class ClassUtils {
     return it
   }
 
-  static List<Class<?>> convertPrimitivesToWrapper(List<Class<?>> types) {
+  static List<Class<?>> convertPrimitivesToWrapper(Collection<Class<?>> types) {
     List<Class<?>> safeTypes = []
     types.each {
       if (it.isPrimitive()) {

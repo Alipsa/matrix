@@ -1,12 +1,19 @@
 package it
 
+import org.junit.jupiter.api.Test
+import se.alipsa.groovy.datasets.Dataset
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
+import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.groovy.matrix.ListConverter
 import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.Row
+import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.ValueConverter
+import se.alipsa.groovy.matrix.sql.MatrixDbUtil
 import se.alipsa.groovy.matrix.sql.MatrixSql
 
+import java.sql.Connection
 import java.sql.Time
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -17,6 +24,10 @@ abstract class AbstractDbTest {
 
   protected ConnectionInfo ci
   DataBaseProvider db
+  MatrixSql matrixSql
+  MatrixDbUtil matrixDbUtil
+
+  Matrix dur = new Matrix('duration', ['name': String, 'measurePoint': String, 'millis': Long])
 
   AbstractDbTest(DataBaseProvider db, String dbName, String mode, String... additionalSettings) {
     ci = new ConnectionInfo()
@@ -34,24 +45,47 @@ abstract class AbstractDbTest {
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")
     this.db = db
+    matrixSql = new MatrixSql(ci, db)
+    matrixDbUtil = new MatrixDbUtil(db)
   }
 
-  void verifyDbCreation(Matrix dataset, int... scanNumRows) {
-    MatrixSql matrixSql = new MatrixSql(ci, db)
-    String tableName = dataset.name
-    if (matrixSql.tableExists(tableName)) {
-      matrixSql.dropTable(tableName)
+  @Test
+  void createAndVerify() {
+    //println Stat.str(dur)
+    try (Connection con = matrixSql.connect()) {
+      verifyDbCreation(con, getComplexData())
+      verifyDbCreation(con, Dataset.airquality())
+      verifyDbCreation(con, Dataset.mtcars())
+      Matrix diamonds = Dataset.diamonds()
+      verifyDbCreation(con, diamonds, diamonds.rowCount())
+      verifyDbCreation(con, Dataset.plantGrowth())
     }
-    if (scanNumRows.length > 0) {
-      matrixSql.create(dataset, scanNumRows[0])
-    } else {
-      matrixSql.create(dataset)
-    }
+    //println dur.content()
+  }
 
-    Matrix m2 = matrixSql.select("select * from $tableName")
-    for (int r = 0; r < dataset.rowCount(); r++) {
-      for (int c = 0; c < dataset.columnCount(); c++) {
-        def expected = dataset[r, c].asType(dataset.columnType(c))
+  void verifyDbCreation(Connection con, Matrix dataset, int... scanNumRows) {
+    long start = System.currentTimeMillis()
+    String tableName = matrixDbUtil.tableName(dataset)
+    long ctm1 = System.currentTimeMillis()
+    dur + [dataset.name, "1. table name", ctm1 - start]
+    if (matrixDbUtil.tableExists(con, tableName)) {
+      matrixDbUtil.dropTable(con, tableName)
+    }
+    long ctm2 = System.currentTimeMillis()
+    dur + [dataset.name, "2. check and drop table", ctm2 - ctm1]
+    if (scanNumRows.length > 0) {
+      matrixDbUtil.create(con, dataset, scanNumRows[0])
+    } else {
+      matrixDbUtil.create(con, dataset)
+    }
+    long ctm3 = System.currentTimeMillis()
+    dur + [dataset.name, "3. create table", ctm3 - ctm2]
+
+    Matrix m2 = matrixDbUtil.select(con,"select * from $tableName")
+    long ctm4 = System.currentTimeMillis()
+    dur + [dataset.name, "4. select *", ctm4 - ctm3]
+    dataset.eachWithIndex { Row row, int r ->
+      row.eachWithIndex { Object expected, int c ->
         def actual = ValueConverter.convert(m2[r, c], dataset.columnType(c))
         if (expected != null && actual != null) {
           if (expected instanceof BigDecimal) {
@@ -65,6 +99,9 @@ abstract class AbstractDbTest {
         assertEquals(expected, actual, "Diff detected in $tableName on row $r, column ${dataset.columnName(c)}")
       }
     }
+    long ctm5 = System.currentTimeMillis()
+    dur + [dataset.name, "5. compare values", ctm5 - ctm4]
+    dur + [dataset.name, "6. total round", System.currentTimeMillis() - start]
   }
 
   Matrix getComplexData() {

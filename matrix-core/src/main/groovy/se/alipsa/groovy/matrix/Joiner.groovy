@@ -1,7 +1,5 @@
 package se.alipsa.groovy.matrix
 
-import groovy.transform.CompileStatic
-
 class Joiner {
 
     /**

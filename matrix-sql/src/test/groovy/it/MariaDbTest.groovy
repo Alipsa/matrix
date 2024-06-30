@@ -11,30 +11,4 @@ class MariaDbTest extends AbstractDbTest {
   MariaDbTest() {
     super(DataBaseProvider.MARIADB, 'mariadbTest', 'MariaDB', 'DATABASE_TO_LOWER=TRUE')
   }
-
-  @Test
-  void testComplexMatrix() {
-    verifyDbCreation(getComplexData())
-  }
-
-  @Test
-  void testAirQuality() {
-    verifyDbCreation(Dataset.airquality())
-  }
-
-  @Test
-  void testMtCars() {
-    verifyDbCreation(Dataset.mtcars())
-  }
-
-  @Test
-  void testDiamonds() {
-    Matrix diamonds = Dataset.diamonds()
-    verifyDbCreation(diamonds, diamonds.rowCount())
-  }
-
-  @Test
-  void testPlantGrowth() {
-    verifyDbCreation(Dataset.plantGrowth())
-  }
 }

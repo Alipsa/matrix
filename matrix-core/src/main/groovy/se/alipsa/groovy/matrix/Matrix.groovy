@@ -182,6 +182,18 @@ class Matrix implements Iterable<Row> {
 
   private Matrix() {}
 
+  Matrix(String name, Map<String, Class<?>> columnNameAndType) {
+    mName = name
+    List<String> headers = new ArrayList<>(columnNameAndType.keySet())
+    List types = new ArrayList(columnNameAndType.values())
+    mTypes = sanitizeColumnTypes(headers, types)
+    mHeaders = headers
+    List<List<?>> columns = []
+    headers.each {
+      columns << new ArrayList()
+    }
+    mColumns = columns
+  }
 
   Matrix(String name, List<String> headerList, List<List<?>> columns, List<Class<?>>... dataTypesOpt) {
     mName = name
@@ -967,6 +979,26 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
+   * Append a row to this matrix
+   *
+   * @param row
+   * @return this matrix
+   */
+  Matrix plus(List row) {
+    addRow(row)
+  }
+
+  /**
+   * Append all rows from the matrix to this one
+   *
+   * @param table the matrix to append from
+   * @return this matrix
+   */
+  Matrix plus(Matrix table) {
+    addRows(table.rowList())
+  }
+
+  /**
    * Allows for "short form" manipulation of values e.g:
    * myMatrix[1,2] = 42
    */
@@ -1199,7 +1231,7 @@ class Matrix implements Iterable<Row> {
     return r.values() as List
   }
 
-  private static List<Class<?>> sanitizeColumnTypes(List<String> headerList, List<Class<?>>... dataTypesOpt) {
+  private static List<Class<?>> sanitizeColumnTypes(Collection<String> headerList, Collection<Class<?>>... dataTypesOpt) {
     List<Class<?>> types
     if (dataTypesOpt.length > 0) {
       types = convertPrimitivesToWrapper(dataTypesOpt[0])

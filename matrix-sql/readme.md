@@ -8,7 +8,11 @@ A connection info contains the jdbc url, credentials and info of the jdbc driver
 The driver will be downloaded, if needed, and added to the classpath enabling dynamic 
 instantiation of the driver when connecting to the db.
 
-Creating a MatrxSql can be done as follows:
+If you want to manage db connections yourself, you can directly use the MatrixDbUtil class instead.
+The api is more or less identical to MatrixSql with the difference that all methods 
+requires a java.sql.Connection. You instantiate a MatrixDbUtil with a SqlTypeMapper or a DataBaseProvider enum
+
+Creating a MatrixSql can be done as follows:
 ```groovy 
 ConnectionInfo ci = new ConnectionInfo()
 ci.setDependency('org.postgresql:postgresql:42.7.3')
@@ -37,6 +41,12 @@ if you want to define a primary key, you just append the column name(s) to the c
 User either the Matrix or the table to drop a table i.e.
 either `matrixSql.dropTable(myMatrix)`
 or `matrixSql.dropTable('theTableName')`
+Typically, you want to check that the table exists before attempting to drop it:
+```groovy
+if (matrixSql.tableExists(myMatrix)) {
+   matrixSql.dropTable(myMatrix)
+}
+```
 
 ### Insert
 ### Select

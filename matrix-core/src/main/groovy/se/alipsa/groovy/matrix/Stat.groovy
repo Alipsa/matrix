@@ -29,8 +29,10 @@ class Stat {
         for (colName in table.columnNames()) {
             def vals = [table.columnType(colName).getSimpleName()]
             def endRow = Math.min(4, table.rowCount()-1)
-            def samples = ListConverter.convert(table.column(colName).subList(0, endRow), String.class)
-            vals.addAll(samples)
+            if (endRow > 0) {
+                def samples = ListConverter.convert(table.column(colName).subList(0, endRow), String.class)
+                vals.addAll(samples)
+            }
             map[colName] = vals
         }
         return map
