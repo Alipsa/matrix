@@ -12,6 +12,10 @@ group 'se.alipsa.groovy'
 version '1.0.0-SNAPSHOT'
 description 'Groovy sql module for Matrix'
 
+ext.nexusUrl = version.contains("SNAPSHOT")
+    ? "https://oss.sonatype.org/content/repositories/snapshots/"
+    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
 repositories {
     if (version.contains('SNAPSHOT')) {
         mavenLocal()
@@ -29,12 +33,12 @@ java {
 }
 
 dependencies {
-    def groovyVersion = '4.0.21'
+    def groovyVersion = '4.0.22'
     def groovy = "org.apache.groovy:groovy:$groovyVersion"
     compileOnly groovy
     compileOnly project(':matrix-core')
     implementation 'se.alipsa.groovy:data-utils:1.0.5-SNAPSHOT'
-    implementation 'org.gradle:gradle-tooling-api:8.6'
+    implementation 'org.gradle:gradle-tooling-api:8.8'
     implementation 'commons-io:commons-io:2.16.1'
     implementation 'se.alipsa:maven-3.9.4-utils:1.0.3-SNAPSHOT'
     implementation 'org.apache.logging.log4j:log4j-api:2.23.1'
@@ -44,8 +48,8 @@ dependencies {
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
     //testImplementation 'com.h2database:h2:2.2.224' // dynamically fetched so not needed
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.3'
     testImplementation 'org.slf4j:slf4j-simple:2.0.13'
     testImplementation 'org.apache.logging.log4j:log4j-to-slf4j:2.23.1'
     testImplementation 'org.apache.logging.log4j:log4j-core:2.23.1'
@@ -86,4 +90,78 @@ test {
             }
         }
     }
+}
+
+task javadocJar(type: Jar, dependsOn: groovydoc) {
+    archiveClassifier.set 'javadoc'
+    from groovydoc.destinationDir
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier.set 'sources'
+    from sourceSets.main.allSource
+}
+
+
+//Maven Central uploads
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+
+            artifact(javadocJar)
+            artifact(sourcesJar)
+            pom {
+                name = 'Matrix Core'
+                description = "${project.description}"
+                url = "https://github.com/Alipsa/matrix"
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/matrix-sql/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'perNyfelt'
+                        name = 'Per Nyfelt'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/Alipsa/matrix/tree/main/matrix-sql'
+                    connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+                    developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
+                }
+            }
+        }
+    }
+    if (project.ext.properties.sonatypeUsername) {
+        repositories {
+            maven {
+                credentials {
+                    username = sonatypeUsername
+                    password = sonatypePassword
+                }
+                url = nexusUrl
+            }
+        }
+    }
+    //logger.lifecycle("Log in to https://oss.sonatype.org/index.htm to release the deployment")
+}
+
+signing {
+    if (project.properties['signing.keyId'] != null) {
+        project.logger.lifecycle("Signing artifacts...")
+        sign publishing.publications.maven
+        //sign configurations.archives
+    }
+}
+
+if (project.ext.properties.sonatypeUsername) {
+
+    apply plugin: 'nexus-release-plugin'
+    //apply plugin: 'se.alipsa.groovy.NexusReleasePlugin'
+    nexusReleasePlugin.nexusUrl = nexusUrl
+    nexusReleasePlugin.userName = sonatypeUsername
+    nexusReleasePlugin.password = sonatypePassword
 }
