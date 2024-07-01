@@ -1,6 +1,10 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-
+buildscript {
+    dependencies {
+        classpath 'se.alipsa.groovy:nexus-release-plugin:1.0.0-SNAPSHOT'
+    }
+}
 plugins {
     id 'groovy'
     id 'java-library'
