@@ -18,4 +18,5 @@ include 'matrix-sql'
 //include 'matrix-examples:HousePrices'
 include 'matrix-examples:LinearRegression'
 include 'matrix-examples:DecisionTree'
+include 'matrix-tablesaw'
 

@@ -1,0 +1,186 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+buildscript {
+    dependencies {
+        classpath 'se.alipsa.groovy:nexus-release-plugin:1.0.0-SNAPSHOT'
+    }
+}
+
+plugins {
+    id 'groovy'
+    id 'java-library'
+    id 'signing'
+    id 'maven-publish'
+    //id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
+    id "com.github.ben-manes.versions" version "0.51.0"
+}
+
+group = 'se.alipsa.groovy'
+version = '1.0.0-SNAPSHOT'
+description = 'Allows conversion between Matrix and Tablesaw'
+
+ext.nexusUrl = version.contains("SNAPSHOT")
+    ? "https://oss.sonatype.org/content/repositories/snapshots/"
+    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+repositories {
+    if (version.contains('SNAPSHOT')) {
+        mavenLocal()
+    }
+    mavenCentral()
+}
+
+dependencies {
+    def groovyVersion = "4.0.21"
+    def tablesawVersion = "[0.43.1, )"
+    compileOnly "org.apache.groovy:groovy:${groovyVersion}"
+    implementation("tech.tablesaw:tablesaw-core:${tablesawVersion}") {
+        constraints {
+            implementation "io.github.classgraph:classgraph:4.8.174"
+            because 'Fix CWE-611: Improper Restriction of XML External Entity Reference (XXE)'
+        }
+        constraints {
+            implementation "com.google.guava:guava:33.2.1-jre"
+            because 'Fix CWE-379: Creation of Temporary File in Directory with Incorrect Permissions'
+        }
+    }
+    compileOnly project(':matrix-core')
+    compileOnly project(':matrix-stats')
+    // for XlsxWriter, TODO: remove once contributed to tablesaw
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+    // for OdsReader and Writer, TODO: remove once contributed to tablesaw
+    implementation 'com.github.miachm.sods:SODS:1.6.7'
+    // for XmlReader and writer, TODO: remove once contributed to tablesaw
+    implementation 'org.dom4j:dom4j:2.1.4'
+
+    testImplementation project(':matrix-core')
+    testImplementation project(':matrix-stats')
+    testImplementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation 'com.h2database:h2:2.2.224'
+    testImplementation "org.slf4j:slf4j-simple:2.0.13"
+    testImplementation "org.apache.groovy:groovy:${groovyVersion}"
+    testImplementation "org.apache.groovy:groovy-sql:${groovyVersion}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:unchecked"
+}
+
+test {
+    dependsOn cleanTest
+    testLogging.showStandardStreams = true
+
+    useJUnitPlatform()
+    testLogging {
+        // set options for log level LIFECYCLE
+        events TestLogEvent.FAILED,
+            TestLogEvent.PASSED,
+            TestLogEvent.SKIPPED,
+            TestLogEvent.STANDARD_OUT
+        exceptionFormat TestExceptionFormat.FULL
+        showExceptions true
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED,
+                TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_ERROR,
+                TestLogEvent.STANDARD_OUT
+            exceptionFormat TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+                def startItem = '|  ', endItem = '  |'
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+            }
+        }
+    }
+}
+
+//Maven Central uploads
+task javadocJar(type: Jar, dependsOn: groovydoc) {
+    archiveClassifier.set 'javadoc'
+    from groovydoc.destinationDir
+}
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier.set 'sources'
+    from sourceSets.main.allSource
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact(javadocJar)
+            artifact(sourcesJar)
+            pom {
+                name = 'Groovy Data Utils'
+                description = "${project.description}"
+                url = "https://github.com/perNyfelt/data-utils"
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://raw.githubusercontent.com/Alipsa/matrix/main/matrix-tablesaw/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'perNyfelt'
+                        name = 'Per Nyfelt'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/Alipsa/matrix/tree/main/matrix-tablesaw'
+                    connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+                    developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
+                }
+            }
+        }
+    }
+}
+
+signing {
+    if (project.properties['signing.keyId'] != null) {
+        project.logger.lifecycle("Signing artifacts...")
+        sign publishing.publications.maven
+    } else {
+        project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
+    }
+}
+
+def isNonStable = { String version ->
+    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
+    def regex = /^[0-9,.v-]+(-r)?$/
+    return !stableKeyword && !(version ==~ regex)
+}
+// https://github.com/ben-manes/gradle-versions-plugin
+tasks.named("dependencyUpdates").configure {
+    gradleReleaseChannel = "current"
+    resolutionStrategy {
+        componentSelection {
+            all {
+                if (isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)) {
+                    reject('Release candidate')
+                }
+            }
+        }
+    }
+}

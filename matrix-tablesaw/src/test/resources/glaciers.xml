@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table name="glaciers">
+    <tr>
+        <td name="Year">1945</td>
+        <td name="Mean cumulative mass balance">0.0</td>
+        <td name="Number of observations"/>
+    </tr>
+    <tr>
+        <td name="Year">1946</td>
+        <td name="Mean cumulative mass balance">-1.13</td>
+        <td name="Number of observations">1</td>
+    </tr>
+    <tr>
+        <td name="Year">1947</td>
+        <td name="Mean cumulative mass balance">-3.19</td>
+        <td name="Number of observations">1</td>
+    </tr>
+    <tr>
+        <td name="Year">1948</td>
+        <td name="Mean cumulative mass balance">-3.19</td>
+        <td name="Number of observations">1</td>
+    </tr>
+    <tr>
+        <td name="Year">1949</td>
+        <td name="Mean cumulative mass balance">-3.82</td>
+        <td name="Number of observations">3</td>
+    </tr>
+    <tr>
+        <td name="Year">1950</td>
+        <td name="Mean cumulative mass balance">-4.887</td>
+        <td name="Number of observations">3</td>
+    </tr>
+    <tr>
+        <td name="Year">1951</td>
+        <td name="Mean cumulative mass balance">-5.217</td>
+        <td name="Number of observations">3</td>
+    </tr>
+    <tr>
+        <td name="Year">1952</td>
+        <td name="Mean cumulative mass balance">-5.707</td>
+        <td name="Number of observations">3</td>
+    </tr>
+    <tr>
+        <td name="Year">1953</td>
+        <td name="Mean cumulative mass balance">-6.341</td>
+        <td name="Number of observations">7</td>
+    </tr>
+    <tr>
+        <td name="Year">1954</td>
+        <td name="Mean cumulative mass balance">-6.825</td>
+        <td name="Number of observations">6</td>
+    </tr>
+    <tr>
+        <td name="Year">1955</td>
+        <td name="Mean cumulative mass balance">-6.575</td>
+        <td name="Number of observations">7</td>
+    </tr>
+    <tr>
+        <td name="Year">1956</td>
+        <td name="Mean cumulative mass balance">-6.814</td>
+        <td name="Number of observations">7</td>
+    </tr>
+    <tr>
+        <td name="Year">1957</td>
+        <td name="Mean cumulative mass balance">-6.989</td>
+        <td name="Number of observations">9</td>
+    </tr>
+    <tr>
+        <td name="Year">1958</td>
+        <td name="Mean cumulative mass balance">-7.693</td>
+        <td name="Number of observations">9</td>
+    </tr>
+    <tr>
+        <td name="Year">1959</td>
+        <td name="Mean cumulative mass balance">-8.325</td>
+        <td name="Number of observations">11</td>
+    </tr>
+    <tr>
+        <td name="Year">1960</td>
+        <td name="Mean cumulative mass balance">-8.688</td>
+        <td name="Number of observations">14</td>
+    </tr>
+    <tr>
+        <td name="Year">1961</td>
+        <td name="Mean cumulative mass balance">-8.935</td>
+        <td name="Number of observations">15</td>
+    </tr>
+    <tr>
+        <td name="Year">1962</td>
+        <td name="Mean cumulative mass balance">-9.109</td>
+        <td name="Number of observations">20</td>
+    </tr>
+    <tr>
+        <td name="Year">1963</td>
+        <td name="Mean cumulative mass balance">-9.567</td>
+        <td name="Number of observations">22</td>
+    </tr>
+    <tr>
+        <td name="Year">1964</td>
+        <td name="Mean cumulative mass balance">-9.699</td>
+        <td name="Number of observations">22</td>
+    </tr>
+    <tr>
+        <td name="Year">1965</td>
+        <td name="Mean cumulative mass balance">-9.298</td>
+        <td name="Number of observations">24</td>
+    </tr>
+    <tr>
+        <td name="Year">1966</td>
+        <td name="Mean cumulative mass balance">-9.436</td>
+        <td name="Number of observations">27</td>
+    </tr>
+    <tr>
+        <td name="Year">1967</td>
+        <td name="Mean cumulative mass balance">-9.303</td>
+        <td name="Number of observations">29</td>
+    </tr>
+    <tr>
+        <td name="Year">1968</td>
+        <td name="Mean cumulative mass balance">-9.219</td>
+        <td name="Number of observations">31</td>
+    </tr>
+    <tr>
+        <td name="Year">1969</td>
+        <td name="Mean cumulative mass balance">-9.732</td>
+        <td name="Number of observations">31</td>
+    </tr>
+    <tr>
+        <td name="Year">1970</td>
+        <td name="Mean cumulative mass balance">-10.128</td>
+        <td name="Number of observations">32</td>
+    </tr>
+    <tr>
+        <td name="Year">1971</td>
+        <td name="Mean cumulative mass balance">-10.288</td>
+        <td name="Number of observations">32</td>
+    </tr>
+    <tr>
+        <td name="Year">1972</td>
+        <td name="Mean cumulative mass balance">-10.441</td>
+        <td name="Number of observations">32</td>
+    </tr>
+    <tr>
+        <td name="Year">1973</td>
+        <td name="Mean cumulative mass balance">-10.538</td>
+        <td name="Number of observations">32</td>
+    </tr>
+    <tr>
+        <td name="Year">1974</td>
+        <td name="Mean cumulative mass balance">-10.613</td>
+        <td name="Number of observations">32</td>
+    </tr>
+    <tr>
+        <td name="Year">1975</td>
+        <td name="Mean cumulative mass balance">-10.534</td>
+        <td name="Number of observations">33</td>
+    </tr>
+    <tr>
+        <td name="Year">1976</td>
+        <td name="Mean cumulative mass balance">-10.633</td>
+        <td name="Number of observations">35</td>
+    </tr>
+    <tr>
+        <td name="Year">1977</td>
+        <td name="Mean cumulative mass balance">-10.682</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1978</td>
+        <td name="Mean cumulative mass balance">-10.754</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1979</td>
+        <td name="Mean cumulative mass balance">-11.127</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1980</td>
+        <td name="Mean cumulative mass balance">-11.318</td>
+        <td name="Number of observations">36</td>
+    </tr>
+    <tr>
+        <td name="Year">1981</td>
+        <td name="Mean cumulative mass balance">-11.394</td>
+        <td name="Number of observations">35</td>
+    </tr>
+    <tr>
+        <td name="Year">1982</td>
+        <td name="Mean cumulative mass balance">-11.849</td>
+        <td name="Number of observations">36</td>
+    </tr>
+    <tr>
+        <td name="Year">1983</td>
+        <td name="Mean cumulative mass balance">-11.846</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1984</td>
+        <td name="Mean cumulative mass balance">-11.902</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1985</td>
+        <td name="Mean cumulative mass balance">-12.238</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1986</td>
+        <td name="Mean cumulative mass balance">-12.782</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1987</td>
+        <td name="Mean cumulative mass balance">-12.795</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1988</td>
+        <td name="Mean cumulative mass balance">-13.26</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1989</td>
+        <td name="Mean cumulative mass balance">-13.343</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1990</td>
+        <td name="Mean cumulative mass balance">-13.687</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1991</td>
+        <td name="Mean cumulative mass balance">-14.255</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1992</td>
+        <td name="Mean cumulative mass balance">-14.501</td>
+        <td name="Number of observations">36</td>
+    </tr>
+    <tr>
+        <td name="Year">1993</td>
+        <td name="Mean cumulative mass balance">-14.695</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1994</td>
+        <td name="Mean cumulative mass balance">-15.276</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1995</td>
+        <td name="Mean cumulative mass balance">-15.486</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1996</td>
+        <td name="Mean cumulative mass balance">-15.89</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1997</td>
+        <td name="Mean cumulative mass balance">-16.487</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1998</td>
+        <td name="Mean cumulative mass balance">-17.31</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">1999</td>
+        <td name="Mean cumulative mass balance">-17.697</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2000</td>
+        <td name="Mean cumulative mass balance">-17.727</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2001</td>
+        <td name="Mean cumulative mass balance">-18.032</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2002</td>
+        <td name="Mean cumulative mass balance">-18.726</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2003</td>
+        <td name="Mean cumulative mass balance">-19.984</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2004</td>
+        <td name="Mean cumulative mass balance">-20.703</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2005</td>
+        <td name="Mean cumulative mass balance">-21.405</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2006</td>
+        <td name="Mean cumulative mass balance">-22.595</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2007</td>
+        <td name="Mean cumulative mass balance">-23.255</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2008</td>
+        <td name="Mean cumulative mass balance">-23.776</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2009</td>
+        <td name="Mean cumulative mass balance">-24.459</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2010</td>
+        <td name="Mean cumulative mass balance">-25.158</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2011</td>
+        <td name="Mean cumulative mass balance">-26.294</td>
+        <td name="Number of observations">37</td>
+    </tr>
+    <tr>
+        <td name="Year">2012</td>
+        <td name="Mean cumulative mass balance">-26.93</td>
+        <td name="Number of observations">36</td>
+    </tr>
+    <tr>
+        <td name="Year">2013</td>
+        <td name="Mean cumulative mass balance">-27.817</td>
+        <td name="Number of observations">31</td>
+    </tr>
+    <tr>
+        <td name="Year">2014</td>
+        <td name="Mean cumulative mass balance">-28.652</td>
+        <td name="Number of observations">24</td>
+    </tr>
+</table>
