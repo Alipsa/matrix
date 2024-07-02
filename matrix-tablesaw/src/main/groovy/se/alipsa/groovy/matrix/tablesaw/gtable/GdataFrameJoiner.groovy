@@ -1,4 +1,4 @@
-package se.alipsa.groovy.tablesaw.gtable
+package se.alipsa.groovy.matrix.tablesaw.gtable
 
 
 import tech.tablesaw.api.Table

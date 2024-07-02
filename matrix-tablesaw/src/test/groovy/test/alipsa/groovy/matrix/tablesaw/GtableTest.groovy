@@ -1,7 +1,7 @@
-package test.alipsa.groovy.tablesaw
+package test.alipsa.groovy.matrix.tablesaw
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.tablesaw.gtable.Gtable
+import se.alipsa.groovy.matrix.tablesaw.gtable.Gtable
 import tech.tablesaw.api.ColumnType
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.io.csv.CsvReadOptions

@@ -1,8 +1,8 @@
-package test.alipsa.groovy.tablesaw
+package test.alipsa.groovy.matrix.tablesaw
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.tablesaw.Normalizer
+import se.alipsa.groovy.matrix.tablesaw.Normalizer
 import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.DoubleColumn
 import tech.tablesaw.api.FloatColumn

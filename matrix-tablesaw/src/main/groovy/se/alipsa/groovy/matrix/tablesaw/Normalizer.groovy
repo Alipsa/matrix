@@ -1,4 +1,4 @@
-package se.alipsa.groovy.tablesaw
+package se.alipsa.groovy.matrix.tablesaw
 
 import se.alipsa.groovy.stats.Normalize
 import tech.tablesaw.api.BigDecimalColumn

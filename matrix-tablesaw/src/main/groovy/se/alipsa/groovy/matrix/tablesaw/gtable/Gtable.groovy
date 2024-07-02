@@ -1,8 +1,8 @@
-package se.alipsa.groovy.tablesaw.gtable
+package se.alipsa.groovy.matrix.tablesaw.gtable
 
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.tablesaw.TableUtil
+import se.alipsa.groovy.matrix.tablesaw.TableUtil
 import tech.tablesaw.api.*
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.columns.Column

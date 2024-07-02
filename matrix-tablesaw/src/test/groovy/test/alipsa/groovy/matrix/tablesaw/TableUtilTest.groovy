@@ -1,9 +1,9 @@
-package test.alipsa.groovy.tablesaw
+package test.alipsa.groovy.matrix.tablesaw
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.tablesaw.TableUtil
+import se.alipsa.groovy.matrix.tablesaw.TableUtil
 import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.ColumnType
 import tech.tablesaw.api.Table
