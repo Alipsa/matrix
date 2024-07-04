@@ -37,15 +37,15 @@ java {
 }
 
 dependencies {
-    def groovyVersion = '4.0.21'
+    def groovyVersion = '4.0.22'
     def groovy = "org.apache.groovy:groovy:$groovyVersion"
     compileOnly groovy
     compileOnly project(':matrix-core')
 
     testImplementation groovy
     testImplementation project(':matrix-core')
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.3'
 }
 
 test {
@@ -124,6 +124,17 @@ publishing {
                     connection = 'scm:git:https://github.com/Alipsa/matrix.git'
                     developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
                 }
+            }
+        }
+    }
+    if (project.ext.properties.sonatypeUsername) {
+        repositories {
+            maven {
+                credentials {
+                    username = sonatypeUsername
+                    password = sonatypePassword
+                }
+                url = nexusUrl
             }
         }
     }
