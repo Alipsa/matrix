@@ -20,6 +20,8 @@ The Matrix project consist of the following modules:
    for doing this built in)
 6. _[matrix-json](https://github.com/Alipsa/matrix/blob/main/matrix-json/README.md)_ provides ways to import and export between a Matrix and Json 
 7. _[matrix-charts](https://github.com/Alipsa/matrix/blob/main/matrix-charts/README.md)_ allows you to create charts in various formats (file, javafx) based on Matrix data.
+8. _[matrix-sql](https://github.com/Alipsa/matrix/blob/main/matrix-sql/readme.md)_ relational database interaction
+9. _[matrix-tablesaw](https://github.com/Alipsa/matrix/blob/main/matrix-tablesaw/readme.md)_ interoperability between Matrix and the Tablesaw library
 
 ## Setup
 Matrix should work with any 4.x version of groovy, and probably older versions as well. Binary builds can be downloaded 

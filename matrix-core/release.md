@@ -1,6 +1,8 @@
 # Matrix core Release history
 
-### 1.2.3, 2024-07-04
+### 1.2.5, In progress
+
+### 1.2.4, 2024-07-04
 - add plus override to Matrix allow for easy ways to append a row or append all rows from another matrix
 - add constructor for an empty Matrix
 

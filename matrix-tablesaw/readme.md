@@ -1,5 +1,7 @@
 # Matrix-Tablesaw
 
+Note: this module is work in progress, no release version has been published yet.
+
 Interoperability between Tablesaw and Matrix as well as
 various extension to Tablesaw such as BigDecimalColumn,
 GTable (which makes Tablesaw Groovier) and

@@ -16,7 +16,7 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.0.3'
+version '1.0.4-SNAPSHOT'
 description = "Groovy library common public domain and oss data in matrix format)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")

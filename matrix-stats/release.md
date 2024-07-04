@@ -1,8 +1,10 @@
 # Matrix stats release history
 
+## v1.0.2, in progress
+
 ## v1.0.1, 2024-07-04
 - Implement Accuracy.evaluatePredictions
-- Add DecisionTree and Randomize to support LineCharts
+- Add DecisionTree and Randomize to support LineCharts**
 - 
 ## v1.0.0, 2023-08-06
 - initial version able to handle correlations,
