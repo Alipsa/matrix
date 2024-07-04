@@ -13,12 +13,21 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.0.0-SNAPSHOT'
+version '1.0.0'
 description 'Groovy sql module for Matrix'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+// For some reason this is required to upgrade the wrapper
+// Change the version and run 'gradle wrapper' to upgrade
+task wrapper(type: Wrapper) {
+    def gv = '8.8'
+    gradleVersion = gv //version required
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
+    validateDistributionUrl = true
+}
 
 repositories {
     if (version.contains('SNAPSHOT')) {
@@ -44,7 +53,7 @@ dependencies {
     implementation 'se.alipsa.groovy:data-utils:1.0.5'
     implementation 'org.gradle:gradle-tooling-api:8.8'
     implementation 'commons-io:commons-io:2.16.1'
-    implementation 'se.alipsa:maven-3.9.4-utils:1.0.3-SNAPSHOT'
+    implementation 'se.alipsa:maven-3.9.4-utils:1.0.3'
     implementation 'org.apache.logging.log4j:log4j-api:2.23.1'
 
     testImplementation groovy
