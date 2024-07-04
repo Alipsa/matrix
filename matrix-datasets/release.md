@@ -1,6 +1,6 @@
 # Release history
 
-## v1.0.3, in progress
+## v1.0.3, 2024-07-04
 - add cars dataset
 - change datatype for month and day of airquality to Short
 
