@@ -134,7 +134,7 @@ publishing {
             pom {
                 name = 'Groovy Data Utils'
                 description = "${project.description}"
-                url = "https://github.com/perNyfelt/data-utils"
+                url = "https://github.com/Alipsa/matrix/main/matrix-tablesaw"
                 licenses {
                     license {
                         name = 'MIT License'
