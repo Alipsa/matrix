@@ -1,13 +1,15 @@
 # Matrix core Release history
 
-### 1.2.3, in progress
+### 1.2.3, 2024-07-04
+- add plus override to Matrix allow for easy ways to append a row or append all rows from another matrix
+- add constructor for an empty Matrix
+
+### 1.2.3, 2024-03-17
 - Add padding to head, tail, content to make the output much more readable
 - add a column max length limit to head, tail and content
 - add replace methods for simple data cleaning
 - change to typed getAt methods in Row and Matrix
 - add a getAt using the column name
-- add plus override to Matrix allow for easy ways to append a row or append all rows from another matrix
-- add constructor for an empty Matrix
 
 ## 1.2.2, 2023-12-22
 - add putAt for a whole column for both Grid and Matrix enabling expressions like `myMatrix['id'] = [10, 11, 12, 13, 14]`
