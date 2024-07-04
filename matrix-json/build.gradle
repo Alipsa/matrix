@@ -9,6 +9,12 @@ group 'se.alipsa.groovy'
 version '1.0.0-SNAPSHOT'
 description = "Groovy library for importing and exporting json to and from a Matrix or Grid"
 
+task wrapper(type: Wrapper) {
+  def gv = '8.8'
+  gradleVersion = gv
+  distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
+  validateDistributionUrl = true
+}
 
 java {
   toolchain {
@@ -24,7 +30,7 @@ repositories {
 }
 
 dependencies {
-  def groovyVersion = '4.0.21'
+  def groovyVersion = '4.0.22'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly project(':matrix-core')
   compileOnly groovy
@@ -33,8 +39,8 @@ dependencies {
   testImplementation groovy
   testImplementation "org.apache.groovy:groovy-json:$groovyVersion"
   testImplementation project(':matrix-core')
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.3'
   testImplementation project(':matrix-datasets')
 }
 
