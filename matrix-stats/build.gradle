@@ -10,8 +10,17 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.0.1-SNAPSHOT'
+version '1.0.1'
 description = "Statistical hypothesis tests based on Matrix data."
+
+// For some reason this is required to upgrade the wrapper
+// Change the version and run 'gradle wrapper' to upgrade
+task wrapper(type: Wrapper) {
+  def gv = '8.8'
+  gradleVersion = gv //version required
+  distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
+  validateDistributionUrl = true
+}
 
 repositories {
   if (version.contains('SNAPSHOT')) {
@@ -27,7 +36,7 @@ java {
 }
 
 dependencies {
-  def groovyVersion = '4.0.21'
+  def groovyVersion = '4.0.22'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
   compileOnly project(':matrix-core')
@@ -36,8 +45,8 @@ dependencies {
   testImplementation groovy
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.3'
 }
 
 test {
