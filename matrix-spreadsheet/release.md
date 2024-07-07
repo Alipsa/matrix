@@ -1,6 +1,6 @@
 # Release history
 
-## v1.0.2, In progress...
+## v1.0.2, 2024-07-07
 - Consistently use index starting with 1 in the user api
 
 ## v1.0.1, 2023-11-21
