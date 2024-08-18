@@ -1,9 +1,15 @@
 # Matrix core Release history
 
 ### 1.2.5, In progress
+- add constructor to create an empty Matrix with only name and the column names defined
+- change Grid semantics so that getAt and putAt mean the same thing
+  it was so that getAt (X = grid[0]) gets the row and putAt (grid[0] = X) puts the column
+  but now both refers to the row.
+- Added replaceColumn method to compensate for the change in putAt semantics for a Grid
+- add dimensions() method to Grid and Matrix returning a Map of number of observations and variables
 
 ### 1.2.4, 2024-07-04
-- add plus override to Matrix allow for easy ways to append a row or append all rows from another matrix
+- add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix
 - add constructor for an empty Matrix
 
 ### 1.2.3, 2024-03-17

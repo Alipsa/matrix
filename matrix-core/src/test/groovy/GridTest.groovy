@@ -14,12 +14,24 @@ class GridTest {
     @Test
     void testGridCreation() {
         Grid grid = []
-        grid << [1, "foo", 3.14]
-        grid << [2, "bar", 9.81]
-        def g2 = grid + [3, "baz", 4.21]
+        grid << [1, 'foo', 3.14]
+        grid << [2, 'bar', 9.81]
+        def dims = grid.dimensions()
+        assertEquals(2, dims.observations)
+        assertEquals(3, dims.variables)
+
+        def g2 = grid + [3, 'baz', 4.21]
         assertEquals(1, grid[0][0])
         assertEquals("bar", grid[1,1])
         assertEquals(4.21, g2[2,2])
+
+        g2.eachWithIndex { List entry, int idx ->
+            entry[1] = "'$idx - ${entry[1]}'".toString()
+            //println "index $idx: ${entry[0]}, ${entry[1]}, ${entry[2]}"
+        }
+        assertEquals("'0 - foo'", g2[0,1])
+        assertEquals("'1 - bar'", g2[1,1])
+        assertEquals("'2 - baz'", g2[2,1])
 
         grid = new Grid(0, 5, 3)
         assertEquals(0, grid[0, 0])
@@ -27,6 +39,19 @@ class GridTest {
         assertEquals(5, grid.getRowList().size())
         assertEquals(3, grid.getRowList()[0].size())
         assertEquals(3, grid.getRowList()[4].size())
+
+    }
+
+    @Test
+    void testReplaceRow() {
+        Grid grid = []
+        grid << [1,2,3]
+        grid << [10,20,30]
+        assertIterableEquals([1,2,3], grid[0])
+        grid[0] = [0.1, 0.2, 0.3]
+        assertIterableEquals([0.1, 0.2, 0.3], grid[0])
+        grid.replaceRow(1, [5,6,7])
+        assertIterableEquals([5,6,7], grid[1])
     }
 
     @Test
@@ -196,7 +221,7 @@ class GridTest {
             size: [1.2,2.3,0.7,1.3,1.9]
         ], [Integer, BigDecimal])
         def yearCountMx = new Grid<Integer>(value:0, ncol: 31, nrow: components.rowCount())
-        yearCountMx[1] = components['id']
+        yearCountMx.replaceColumn(1, components['id'] as List<Integer>)
         assertEquals(1, yearCountMx[0, 1])
         assertEquals(3, yearCountMx[2, 1])
         assertEquals(5, yearCountMx[4, 1])

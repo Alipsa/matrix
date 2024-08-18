@@ -40,6 +40,10 @@ class MatrixTest {
         assertEquals(LocalDate.of(2015, 3, 27), empData[4,3])
         assertIterableEquals([Integer, String, Number, LocalDate], empData.columnTypes())
 
+        def dims = empData.dimensions()
+        assertEquals(5, dims.observations)
+        assertEquals(4, dims.variables)
+
         def ed = new Matrix("ed",
                 ['id', 'name', 'salary', 'start'], [
                     1..5,
@@ -67,6 +71,12 @@ class MatrixTest {
         assertEquals(611.0, e[2,2])
         assertEquals(LocalDate.of(2015, 3, 27), e[4,3])
         assertIterableEquals([Object, Object, Object, Object], ed.columnTypes())
+        Matrix m = new Matrix("years", (1..5).collect{"Y" + it})
+        m.addRow([1,2,3,4,5])
+        m << [10,20,30,40,50]
+        assertIterableEquals(['Y1',	'Y2',	'Y3',	'Y4',	'Y5'], m.columnNames())
+        assertIterableEquals([1,2,3,4,5], m.row(0))
+        assertIterableEquals([10,20,30,40,50], m.row(1))
     }
 
     @Test

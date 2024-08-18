@@ -83,9 +83,11 @@ class Grid<T> implements Iterable<T> {
     }
 
     void putAt(Integer column, List<T> values) {
-        data.eachWithIndex{ List row, int i ->
-            row[column] = values[i]
-        }
+        replaceRow(column, new ArrayList<T>(values))
+    }
+
+    Map<String, Integer> dimensions() {
+        ['observations': data.size(), 'variables': data.collect() {it.size()}.max()]
     }
 
     String toString() {
@@ -116,7 +118,14 @@ class Grid<T> implements Iterable<T> {
         def r = data.get(index)
         r.clear()
         r.addAll(row)
-        return this
+        this
+    }
+
+    Grid replaceColumn(int column, List<T> values) {
+        data.eachWithIndex{ List row, int i ->
+            row[column] = values[i]
+        }
+        this
     }
 
     Iterator<List<T>> iterator() {

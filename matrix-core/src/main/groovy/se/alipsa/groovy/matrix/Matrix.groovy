@@ -207,6 +207,17 @@ class Matrix implements Iterable<Row> {
 
   private Matrix() {}
 
+  /**
+   * Create an empty matrix with the column names defined
+   *
+   * @param name the name of the matrix
+   * @param headerList the list of column names
+   * @param dataTypesOpt and optional list of data types for the columns
+   */
+  Matrix(String name, List<String> headerList, List<Class<?>>... dataTypesOpt) {
+    this(name, headerList, headerList.collect {[]} as List<List<?>>, dataTypesOpt)
+  }
+
   Matrix(String name, List<String> headerList, List<List<?>> columns, List<Class<?>>... dataTypesOpt) {
     mName = name
     mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
@@ -1090,6 +1101,10 @@ class Matrix implements Iterable<Row> {
     col.addAll(values)
   }
 
+  def leftShift(List row) {
+    addRow(row)
+  }
+
   /**
    * renames the column and returns the table to allow for chaining
    *
@@ -1374,6 +1389,10 @@ class Matrix implements Iterable<Row> {
   @Override
   String toString() {
     return "$name: ${rowCount()} obs * ${columnCount()} variables "
+  }
+
+  Map<String, Integer> dimensions() {
+    ['observations': rowCount(), 'variables': columnCount()]
   }
 
   /**
