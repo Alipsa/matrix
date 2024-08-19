@@ -94,20 +94,24 @@ class Grid<T> implements Iterable<T> {
      * provides short notation for updating or adding a
      * Observation. Given a grid as follows
      * <code>
-     *   Grid foo = [
+     * <pre>
+     * Grid foo = [
      *     [12.0, 3.0, Math.PI],
      *     [1.9, 2, 3],
      *     [4.3, 2, 3]
-     *   ] as Grid
+     * ] as Grid
+     * </pre>
      * </code>
      * The following will replace the second observation
      * <code>
-     *   foo[1] = [1.7, 1, 5]
+     * <pre>
+     * foo[1] = [1.7, 1, 5]
+     * </pre>
      * </code>
      * and the following will append a new row
-     * <code>
-     *   foo[3] = [1.7, 1, 5]
-     * </code>
+     * <code><pre>
+     * foo[3] = [1.7, 1, 5]
+     * </pre></code>
      *
      * @param rowIdx the row index to update when less than the number of rows or
      * append when equal the number of rows
@@ -132,6 +136,11 @@ class Grid<T> implements Iterable<T> {
         }
     }
 
+    /**
+     *
+     * @return a Map<String, Integer> of the number of observations (rows) and the number of
+     * variables (columns) in the Grid with the keys 'observations' and 'variables'
+     */
     Map<String, Integer> dimensions() {
         ['observations': data.size(), 'variables': data.collect() {it.size()}.max()]
     }
@@ -144,8 +153,8 @@ class Grid<T> implements Iterable<T> {
 
     /**
      *
-     * @return the list of rows in the grid
-     * Mutable, i.e. changes to the result is reflected in the Grid
+     * @return the list of rows in the grid.
+     * Note that this enables mutability, i.e. changes to the result is reflected in the Grid
      */
     List<List<T>> getData() {
         return data
@@ -153,11 +162,16 @@ class Grid<T> implements Iterable<T> {
 
     /**
      *
-     * @return the list of rows in the grid
-     * Mutable, i.e. changes to the result is reflected in the Grid
+     * @return a copy of the list of rows in the grid
+     * Immutable, i.e. changes to the result is not reflected in the Grid unless
+     * the grid contains mutable objects that are changed.
      */
     List<List<T>> getRowList() {
-        return data
+        def copy = new ArrayList(data.size())
+        data.each {
+            copy << it.collect()
+        }
+        copy
     }
 
     Grid replaceRow(int index, List<T> row) {
