@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    def groovyVersion = "4.0.21"
+    def groovyVersion = "4.0.22"
     def tablesawVersion = "[0.43.1, )"
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
     implementation("tech.tablesaw:tablesaw-core:${tablesawVersion}") {

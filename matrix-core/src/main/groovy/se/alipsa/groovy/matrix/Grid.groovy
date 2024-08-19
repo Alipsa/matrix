@@ -4,6 +4,14 @@ import groovy.transform.CompileStatic
 
 import java.text.NumberFormat
 
+/**
+ * A Grid is thin layer on top of a List<List<T>>.
+ * Note than unlike a Matrix, the getAt and putAt methods with
+ * a single argument refers to a row and not (as with a Matrik) to a column.
+ *
+ *
+ * @param <T>
+ */
 @CompileStatic
 class Grid<T> implements Iterable<T> {
 
@@ -82,8 +90,46 @@ class Grid<T> implements Iterable<T> {
         row.set(column, value)
     }
 
-    void putAt(Integer column, List<T> values) {
-        replaceRow(column, new ArrayList<T>(values))
+    /**
+     * provides short notation for updating or adding a
+     * Observation. Given a grid as follows
+     * <code>
+     *   Grid foo = [
+     *     [12.0, 3.0, Math.PI],
+     *     [1.9, 2, 3],
+     *     [4.3, 2, 3]
+     *   ] as Grid
+     * </code>
+     * The following will replace the second observation
+     * <code>
+     *   foo[1] = [1.7, 1, 5]
+     * </code>
+     * and the following will append a new row
+     * <code>
+     *   foo[3] = [1.7, 1, 5]
+     * </code>
+     *
+     * @param rowIdx the row index to update when less than the number of rows or
+     * append when equal the number of rows
+     * @param values a list of variables representing the observation to update
+     * @throws IllegalArgumentException when the index is null or negative
+     * @throws IndexOutOfBoundsException when the index is larger than the size of the
+     * number of observation in the Grid
+     */
+    void putAt(Integer rowIdx, List<T> values) {
+        if (rowIdx == null) {
+            throw new IllegalArgumentException("Observation index cannot be null")
+        }
+        if (rowIdx < 0) {
+            throw new IllegalArgumentException("Observation index cannot be less than zero")
+        }
+        if (rowIdx < data.size()) {
+            replaceRow(rowIdx, values.collect())
+        } else if (rowIdx == data.size()) {
+            data << values.collect()
+        } else {
+            throw new IndexOutOfBoundsException("Index $rowIdx cannot be greater than ${data.size()}" )
+        }
     }
 
     Map<String, Integer> dimensions() {

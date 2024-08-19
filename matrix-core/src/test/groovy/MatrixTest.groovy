@@ -811,8 +811,10 @@ class MatrixTest {
         table["start"] = table["start"].collect {it.plusDays(10)}
         assertEquals(3, table.columnCount())
         assertIterableEquals(['firstname', 'start', 'foo'], table.columnNames())
+        // getAt and putAt should have the same semantics i refer to columns:
         assertIterableEquals(toLocalDates(['2021-12-11', '2022-07-20', '2023-06-06']), table[1])
-
+        assertIterableEquals(table.column(2), table[2])
+        assertIterableEquals(table.column("foo"), table["foo"])
     }
 
     @Test

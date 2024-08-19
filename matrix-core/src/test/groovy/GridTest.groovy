@@ -202,7 +202,7 @@ class GridTest {
     }
 
     @Test
-    void testShorNotationAssign() {
+    void testShortNotationAssign() {
         Grid foo = [
             [12.0, 3.0, Math.PI],
             ["1.9", 2, 3],
@@ -210,8 +210,11 @@ class GridTest {
         ] as Grid
 
         foo[0, 1] = 3.23
-
         assertEquals(3.23, foo[0,1])
+
+        assertIterableEquals(["4.3", 2, 3], foo[2])
+        foo[3] = [1,2,3]
+        assertIterableEquals([1,2,3], foo[3])
     }
 
     @Test
