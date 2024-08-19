@@ -39,6 +39,22 @@ class OdsImporter {
     )
   }
 
+  static Matrix importOds(InputStream is, String sheetName = 'Sheet1',
+                          int startRow = 1, int endRow,
+                          String startCol = 'A', String endCol,
+                          boolean firstRowAsColNames = true) {
+
+    return importOds(
+        is,
+        sheetName,
+        startRow as int,
+        endRow as int,
+        SpreadsheetUtil.asColumnNumber(startCol) as int,
+        SpreadsheetUtil.asColumnNumber(endCol) as int,
+        firstRowAsColNames as boolean
+    )
+  }
+
   /**
    * Import an excel spreadsheet
    * @param file the filePath or the file object pointing to the excel file
@@ -94,6 +110,25 @@ class OdsImporter {
     File excelFile = FileUtil.checkFilePath(file)
     SpreadSheet spreadSheet = new SpreadSheet(excelFile)
     Sheet sheet = spreadSheet.getSheet(sheetNumber)
+    if (firstRowAsColNames) {
+      buildHeaderRow(startRow, startCol, endCol, header, sheet)
+      startRow = startRow + 1
+    } else {
+      for (int i = 1; i <= endCol - startCol; i++) {
+        header.add(String.valueOf(i))
+      }
+    }
+    return importOds(sheet, startRow, endRow, startCol, endCol, header)
+  }
+
+  static Matrix importOds(InputStream is, String sheetName,
+                          int startRow = 1, int endRow,
+                          int startCol = 1, int endCol,
+                          boolean firstRowAsColNames = true) {
+    def header = []
+
+    SpreadSheet spreadSheet = new SpreadSheet(is)
+    Sheet sheet = spreadSheet.getSheet(sheetName)
     if (firstRowAsColNames) {
       buildHeaderRow(startRow, startCol, endCol, header, sheet)
       startRow = startRow + 1

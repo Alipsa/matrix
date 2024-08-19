@@ -1,7 +1,9 @@
 package spreadsheet
 
 import org.junit.jupiter.api.Test
+import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.spreadsheet.SpreadsheetImporter
+import se.alipsa.groovy.spreadsheet.ods.OdsImporter
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -35,5 +37,19 @@ class OdsImporterTest {
     assertEquals("2023-05-06 00:00:00.000", date)
     assertEquals("17.4", table['baz'][table.rowCount()-1])
     assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
+  }
+
+  @Test
+  void testImportFromStream() {
+    try(InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
+      Matrix table = OdsImporter.importOds(
+          is, 'Sheet1', 1, 12, 'A', 'D', true
+      )
+      assertEquals("3.0", table[2, 0])
+      def date = table[6, 2]
+      assertEquals("2023-05-06 00:00:00.000", date)
+      assertEquals("17.4", table['baz'][table.rowCount()-1])
+      assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
+    }
   }
 }
