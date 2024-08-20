@@ -41,7 +41,35 @@ The SpreadSheetImporter.importSpreadSheetSheet takes the following parameters:
 - _endCol_ the end column name (K, L etc) or column number (11, 12 etc.)
 - _firstRowAsColNames_ whether the first row should be used for the names of each column, if false the column names will be v1, v2 etc. Defaults to true
 
+Note: there are seveal overloaded versions of the importSpreadsheet method e.g taking a sheet index instead of a sheet name,
+using column index instead of column name etc.
+
 See [the Matrix package](https://github.com/Alipsa/matrix) for more information on what you can do with a Matrix.
+
+If you need to import from a stream you must use the importer specific to the type of spreadsheet you are reading 
+(ExcelImporter or OdsImporter respectively) e.g.
+
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.spreadsheet.excel.ExcelImporter
+import se.alipsa.groovy.spreadsheet.ods.OdsImporter
+
+// Importing an excel spreadsheet
+try(InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
+  Matrix table = ExcelImporter.importExcel(
+      is, 'Sheet1', 1, 12, 'A', 'D', true
+  )
+  assert 3.0d == table[2, 0]
+}
+
+// importing an open document spreadsheet
+try(InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
+  Matrix table = OdsImporter.importOds(
+      is, 'Sheet1', 1, 12, 'A', 'D', true
+  )
+  assert "3.0" == table[2, 0]
+}
+```
 
 ## Export a spreadsheet
 

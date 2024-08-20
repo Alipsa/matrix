@@ -28,19 +28,35 @@ class ExcelImporter {
      * it column names will be v1, v2 etc. Defaults to true
      * @return A Matrix with the excel data.
      */
-    static Matrix importExcel(String file, String sheetName = 'Sheet1',
+    static Matrix importExcel(InputStream is, String sheetName = 'Sheet1',
                                         int startRow = 1, int endRow,
                                         String startCol = 'A', String endCol,
                                         boolean firstRowAsColNames = true) {
 
         return importExcel(
-                file,
+                is,
                 sheetName,
                 startRow as int,
                 endRow as int,
                 SpreadsheetUtil.asColumnNumber(startCol) as int,
                 SpreadsheetUtil.asColumnNumber(endCol) as int,
                 firstRowAsColNames as boolean
+        )
+    }
+
+    static Matrix importExcel(String file, String sheetName = 'Sheet1',
+                              int startRow = 1, int endRow,
+                              String startCol = 'A', String endCol,
+                              boolean firstRowAsColNames = true) {
+
+        return importExcel(
+            file,
+            sheetName,
+            startRow as int,
+            endRow as int,
+            SpreadsheetUtil.asColumnNumber(startCol) as int,
+            SpreadsheetUtil.asColumnNumber(endCol) as int,
+            firstRowAsColNames as boolean
         )
     }
 
@@ -86,6 +102,25 @@ class ExcelImporter {
         def header = []
         File excelFile = FileUtil.checkFilePath(file)
         try (Workbook workbook = WorkbookFactory.create(excelFile)) {
+            Sheet sheet = workbook.getSheet(sheetName)
+            if (firstRowAsColNames) {
+                buildHeaderRow(startRow, startCol, endCol, header, sheet)
+                startRow = startRow + 1
+            } else {
+                for (int i = 1; i <= endCol - startCol; i++) {
+                    header.add(String.valueOf(i))
+                }
+            }
+            return importExcelSheet(sheet, startRow, endRow, startCol, endCol, header)
+        }
+    }
+
+    static Matrix importExcel(InputStream is, String sheetName = 'Sheet1',
+                              int startRow = 1, int endRow,
+                              int startCol = 1, int endCol,
+                              boolean firstRowAsColNames = true) {
+        def header = []
+        try (Workbook workbook = WorkbookFactory.create(is)) {
             Sheet sheet = workbook.getSheet(sheetName)
             if (firstRowAsColNames) {
                 buildHeaderRow(startRow, startCol, endCol, header, sheet)
