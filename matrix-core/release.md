@@ -7,6 +7,8 @@
   but now both refers to the row.
 - Added replaceColumn method to compensate for the change in putAt semantics for a Grid
 - add dimensions() method to Grid and Matrix returning a Map of number of observations and variables
+- add typed get at (e.g: myMatrix[0, 1, String]) using the ValueConvert to convert
+- add ValueConverter for Long
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

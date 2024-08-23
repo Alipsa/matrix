@@ -844,5 +844,11 @@ class MatrixTest {
         assertEquals(LocalDate, row['start'].class)
         assertEquals(LocalDate.parse('2022-07-10'), row[1])
         assertEquals(LocalDate.parse('2022-07-10'), row['start'])
+
+        assertEquals(String, table[0, 1, String].class)
+        assertEquals('2021-12-01', table[0, 1, String])
+
+        assertEquals(String, table[0, 'foo', String].class)
+        assertEquals('3', table[2, 'foo', String])
     }
 }

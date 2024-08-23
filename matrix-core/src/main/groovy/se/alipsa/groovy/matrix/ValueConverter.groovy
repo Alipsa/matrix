@@ -140,6 +140,7 @@ class ValueConverter {
             case Byte, byte -> (E)asByte(o)
             case Short, short -> (E)asShort(o)
             case Integer, int -> (E)asInteger(o)
+            case Long, long -> (E)asLong(o)
             case BigInteger -> (E)asBigInteger(o)
             case Float -> (E)asFloat(o)
             default -> try {
@@ -259,4 +260,15 @@ class ValueConverter {
       }
       return Float.valueOf(String.valueOf(o))
   }
+
+    static Long asLong(Object o) {
+        if (o instanceof Number) {
+            return o.toLong()
+        }
+        String strVal = String.valueOf(o)
+        if (strVal.contains('.')) {
+            strVal = strVal.substring(0, strVal.indexOf('.'))
+        }
+        return Long.valueOf(strVal)
+    }
 }

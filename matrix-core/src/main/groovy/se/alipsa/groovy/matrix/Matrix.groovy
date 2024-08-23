@@ -822,6 +822,38 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
+   * Convenience method with built in type conversion
+   * A LocalDate variable with the value LocalDate.of(2021, 12, 1)
+   * in the first row, second column will have
+   * assert '2021-12-01' == table[0, 1, String]. The ValueConverter is used
+   * to convert the type.
+   *
+   * @param row the observation to get
+   * @param column the variable to get
+   * @param type the class that the the value should be converted to
+   * @return a value of the type specified
+   */
+  <T> T getAt(int row, int column, Class<T> type) {
+    return ValueConverter.convert(get(row, column), type)
+  }
+
+  /**
+   * Convenience method with built in type conversion
+   * A LocalDate variable with the value LocalDate.of(2021, 12, 1)
+   * in the first row, second column will have
+   * assert '2021-12-01' == table[0, 1, String]. The ValueConverter is used
+   * to convert the type.
+   *
+   * @param row the observation to get
+   * @param columnName the variable to get
+   * @param type the class that the the value should be converted to
+   * @return a value of the type specified
+   */
+  <T> T getAt(int row, String columnName, Class<T> type) {
+    return ValueConverter.convert(get(row, columnIndex(columnName)), type)
+  }
+
+  /**
    * Enable the use of square bracket to reference a column, e.g. table[0, 1] for the 2:nd column of the first observation
    * @return the value corresponding to the row and column indexes supplied
    */

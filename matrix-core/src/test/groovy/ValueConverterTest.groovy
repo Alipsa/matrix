@@ -33,4 +33,10 @@ class ValueConverterTest {
         assertEquals(expected, ValueConverter.asYearMonth(LocalDate.of(2023, 5, 10)))
         assertEquals(expected, ValueConverter.asYearMonth("2023-05"))
     }
+
+    @Test
+    void testAsLong() {
+        assertEquals(2001251L, ValueConverter.asLong('2001251.0'))
+        assertEquals(2001251L, ValueConverter.convert('2001251.0', Long))
+    }
 }
