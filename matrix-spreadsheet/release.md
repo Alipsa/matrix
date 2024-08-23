@@ -1,7 +1,7 @@
 # Release history
 
 ## v1.0.3, in progress...
-- Add import ODS from an InputStream
+- Add import ODS and XLSX from an InputStream
 
 ## v1.0.2, 2024-07-07
 - Consistently use index starting with 1 in the user api
