@@ -38,5 +38,7 @@ class ValueConverterTest {
     void testAsLong() {
         assertEquals(2001251L, ValueConverter.asLong('2001251.0'))
         assertEquals(2001251L, ValueConverter.convert('2001251.0', Long))
+        assertEquals(2001251L, ValueConverter.convert(2001251, Long))
+        assertEquals(2001251L, ValueConverter.convert(2001251.9, Long))
     }
 }
