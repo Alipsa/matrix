@@ -3,6 +3,7 @@ package se.alipsa.groovy.spreadsheet.ods
 import com.github.miachm.sods.Sheet
 import com.github.miachm.sods.SpreadSheet
 import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.ValueConverter
 import se.alipsa.groovy.spreadsheet.FileUtil
 import se.alipsa.groovy.spreadsheet.SpreadsheetUtil
 
@@ -138,6 +139,61 @@ class OdsImporter {
       }
     }
     return importOds(sheet, startRow, endRow, startCol, endCol, header)
+  }
+
+  /**
+   * Imports multiple sheets in one go. This is much more efficient compared to importing them one by one.
+   * Example:
+   * <code><pre>
+   * Map<String, Matrix> sheets = OdsImporter.importOdsSheets(is, [
+   *   [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 5, firstRowAsColNames: true],
+   *   [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true]
+   * ])
+   * </pre></code>
+   *
+   * @param is the InputStream pointing to the ods spreadsheet to import
+   * @param sheetParams a Map of parameters containing the keys:
+   *  sheetName, startRow, endRow, startCol (number or name), endCol (number or name), firstRowAsColNames
+   * @return a map of sheet names and the corresponding Matrix
+   */
+  static Map<String, Matrix> importOdsSheets(InputStream is, List<Map> sheetParams) {
+    SpreadSheet spreadSheet = new SpreadSheet(is)
+    Map<String, Matrix> result = [:]
+    sheetParams.each {
+      def header = []
+      String sheetName = it.sheetName
+      Sheet sheet = spreadSheet.getSheet(sheetName)
+      int startRow = it.startRow as int
+      int startCol
+      if (ValueConverter.isNumeric(it.startCol)) {
+        startCol = ValueConverter.asInteger(it.startCol)
+      } else {
+        startCol = SpreadsheetUtil.asColumnNumber(it.startCol as String)
+      }
+      int endCol
+      if (ValueConverter.isNumeric(it.endCol)) {
+        endCol = ValueConverter.asInteger(it.endCol)
+      } else {
+        endCol = SpreadsheetUtil.asColumnNumber(it.endCol as String)
+      }
+      if (it.firstRowAsColNames) {
+        buildHeaderRow(startRow, startCol, endCol, header, sheet)
+        startRow = startRow + 1
+      } else {
+        for (int i = 1; i <= endCol - startCol; i++) {
+          header.add(String.valueOf(i))
+        }
+      }
+      Matrix matrix = importOds(
+          sheet,
+          startRow,
+          it.endRow as int,
+          startCol,
+          endCol,
+          header)
+      result.put(sheetName, matrix)
+    }
+    result
   }
 
   static Matrix importOds(Sheet sheet, int startRow, int endRow, int startCol, int endCol, List<String> colNames) {

@@ -52,4 +52,28 @@ class OdsImporterTest {
       assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
     }
   }
+
+  @Test
+  void testImportMultipleSheets() {
+    try(InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
+      Map<String, Matrix> sheets = OdsImporter.importOdsSheets(is,
+       [
+           [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 5, firstRowAsColNames: true],
+           [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true]
+       ])
+      assertEquals(2, sheets.size())
+      Matrix table2 = sheets.Sheet2
+      assertEquals("3.0", table2[2, 0])
+      def date = table2[6, 2]
+      assertEquals("2023-05-06 00:00:00.000", date)
+      assertEquals("17.4", table2['baz'][table2.rowCount()-1])
+      assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())
+
+      Matrix table1 = sheets.Sheet1
+      assertEquals(710381, table1[0,0, Integer])
+      assertEquals('103599.04', table1[1,1])
+      assertEquals(66952.95, table1[2,2, Double])
+      assertEquals(0.0G, table1[3,3, BigDecimal])
+    }
+  }
 }

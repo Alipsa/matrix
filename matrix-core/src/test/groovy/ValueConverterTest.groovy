@@ -41,4 +41,17 @@ class ValueConverterTest {
         assertEquals(2001251L, ValueConverter.convert(2001251, Long))
         assertEquals(2001251L, ValueConverter.convert(2001251.9, Long))
     }
+
+    @Test
+    void testIsNumeric() {
+        assertTrue(ValueConverter.isNumeric('123'))
+        assertTrue(ValueConverter.isNumeric('123.4'))
+        assertTrue(ValueConverter.isNumeric('-123'))
+        assertTrue(ValueConverter.isNumeric(-123))
+        assertTrue(ValueConverter.isNumeric(123_234.5))
+        assertFalse(ValueConverter.isNumeric('12ab3'))
+        assertFalse(ValueConverter.isNumeric('abc'))
+        assertFalse(ValueConverter.isNumeric(LocalDate.now()))
+        assertFalse(ValueConverter.isNumeric(null))
+    }
 }

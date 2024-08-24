@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 import java.sql.Timestamp
 import java.text.NumberFormat
+import java.text.ParsePosition
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
@@ -208,6 +209,26 @@ class ValueConverter {
     if (o == null) return null
     if (o instanceof Number) return o.toBigInteger()
     return new BigInteger(String.valueOf(o))
+  }
+
+  /**
+   * Checks whether object is a Number or a CharSequence containing numbers
+   *
+   * @param o the Object to test
+   * @return true if it is numeric otherwise false
+   */
+  static boolean isNumeric(Object o) {
+    if (o == null) return false
+    if (o instanceof Number) return true
+    if (o instanceof CharSequence) {
+      ParsePosition pos = new ParsePosition(0)
+      String str = ((CharSequence)o).toString()
+      NumberFormat.getInstance().parse(str, pos)
+      //  if, after parsing the string, the parser position is at the end of the string,
+      //  we can safely assume that the entire string is numeric
+      return str.length() == pos.getIndex()
+    }
+    return false
   }
 
   /** strips off any non numeric char from the string. */
