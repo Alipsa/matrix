@@ -1,0 +1,8 @@
+# Note In order to maintain compatibility for Java, Scala and Kotlin users
+# We only use extensions to register (override) short notations so that the
+# "regular" method still works as expected
+moduleName=matrix-core
+moduleVersion=1.0
+# comma separated list of classes that overrides DefaultGroovyMethods (and create new ones if needed)
+extensionClasses=se.alipsa.groovy.matrix.RowExtension
+# staticExtensionClasses=support.StaticStringExtension

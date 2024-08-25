@@ -7,8 +7,16 @@
   but now both refers to the row.
 - Added replaceColumn method to compensate for the change in putAt semantics for a Grid
 - add dimensions() method to Grid and Matrix returning a Map of number of observations and variables
-- add typed get at (e.g: myMatrix[0, 1, String]) using the ValueConvert to convert
+- add typed get at (e.g: myMatrix[0, 1, String]) using the ValueConverter to convert
 - add ValueConverter for Long
+- add Matrix.removeEmptyColumns
+- add type conversion to Row (using the GroovyExtension mechanism to get the short notation to work as well)
+- Fix Grid declaration (should implement Iterable<List<T>> not Iterable<T>)
+- Changed Matrix.apply() and Matrix.subset() to apply to Row instead of a generic list
+- Fix index adjustment for Matrix.dropColumns()
+- safeguard Matrix maxContentLength from NPE when the column name is null
+- Add several Java classes to make is much easier (and more Groovy like) to use a
+  Matrix from Java code. See MatrixJavaTest for details
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

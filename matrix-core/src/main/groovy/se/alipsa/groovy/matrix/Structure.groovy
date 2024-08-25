@@ -15,7 +15,7 @@ class Structure {
         data[key] = value
     }
 
-    def getAt(String key) {
+    List getAt(String key) {
         data[key]
     }
 

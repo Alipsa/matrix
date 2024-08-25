@@ -2,6 +2,7 @@
 
 ## v1.0.3, in progress...
 - Add import ODS and XLSX from an InputStream
+- Add import multiple sheets from an InputStream for both ods and xlsx
 
 ## v1.0.2, 2024-07-07
 - Consistently use index starting with 1 in the user api

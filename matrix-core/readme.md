@@ -361,7 +361,74 @@ assertEquals(6, bar[2, 0])
 See [tests](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/MatrixTest.groovy) for more usage examples or
 the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/latest/index.html) for more info.
 
+### Using Matrix from another JVM language
+If you are using the Matrix library from another JVM language, you cannot use the 
+short notation for creating and referring to lists and maps. Instead of
+```groovy
+myMatrix[1,2] = 34
+// you must use the following in java
+myMatrix.putAt(1,2, 34);
 
+def myGroovyVar = myMatrix[1,2]
+// you must use the following in java
+var myJavaVar = myMatrix.getAt(1,2);
+```
+There are some utility classes making Matrix creation much less painful in java:
+
+```groovy
+// In groovy you can do
+def gEmpData = new Matrix(
+    emp_id: 1..5,
+    emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+    salary: [623.3,515.2,611.0,729.0,843.25],
+    start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
+    [int, String, Number, LocalDate]
+)
+
+// ... in java you can take advantage of the Column and CollectionUtils  
+// to do something almost as simple:
+import se.alipsa.groovy.matrix.util.Columns;
+import static se.alipsa.groovy.matrix.util.CollectionUtils.*;
+
+var jEmpData = new Matrix( new Columns()
+    .add("emp_id", r(1,5))
+    .add("emp_name", "Rick","Dan","Michelle","Ryan","Gary")
+    .add("salary", 623.3,515.2,611.0,729.0,843.25)
+    .add("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")),
+    c(int.class, String.class, Number.class, LocalDate.class)
+);
+```
+Note that some methods require a closure as a parameter. You need to rewrite that somewhat in java. E.g:
+```groovy
+// The following groovy code
+def data = [
+    'place': [1, 2, 3],
+    'firstname': ['Lorena', 'Marianne', 'Lotte'],
+    'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+]
+def table = new Matrix(data, [int, String, LocalDate])
+def selection = table.selectRowIndices {
+  it[2].isAfter(LocalDate.of(2022,1, 1))
+}
+assertIterableEquals([1,2], selection)
+
+// ...will looks like this in Java:
+import se.alipsa.groovy.matrix.util.Columns;
+import static se.alipsa.groovy.matrix.util.CollectionUtils.*;
+var dat = new Columns(
+    m("place", 1, 2, 3),
+    m("firstname", "Lorena", "Marianne", "Lotte"),
+    m("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+);
+var tabl = new Matrix(dat, c(int.class, String.class, LocalDate.class));
+var select = tabl.selectRowIndices(new CriteriaClosure(it -> 
+    it.getAt(2, LocalDate.class).isAfter(LocalDate.of(2022,1, 1))
+)
+);
+assertIterableEquals(c(1,2), select);
+```
+See test.alipsa.matrix.MatrixJavaTest for more examples (the logic is identical to the
+groovy version MatrixTest).
 
 ## Grid
 A Grid is a uniformly typed table

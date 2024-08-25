@@ -13,7 +13,7 @@ import java.text.NumberFormat
  * @param <T>
  */
 @CompileStatic
-class Grid<T> implements Iterable<T> {
+class Grid<T> implements Iterable<List<T>> {
 
     List<List<T>> data
 

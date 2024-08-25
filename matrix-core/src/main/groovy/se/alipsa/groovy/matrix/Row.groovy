@@ -163,6 +163,18 @@ class Row implements List<Object> {
         return get(index.intValue()).asType(type)
     }
 
+    /**
+     * This override is registered in RowExtension allowing for the short notation to work
+     * Example: <code>row[2, BigDecimal]</code>
+     *
+     * @param index the index position of the variable (column) to get
+     * @param type the class to convert the result to (using the ValueConverter)
+     * @return the value converted to the type specified
+     */
+    <T> T getAt(Number index, Class<T> type) {
+        return ValueConverter.convert(get(index.intValue()),type)
+    }
+
     <T> T getAt(String columnName) {
         int idx = parent.columnIndex(columnName)
         if (idx == -1) {
@@ -170,6 +182,22 @@ class Row implements List<Object> {
         }
         Class<T> type = parent.columnType(idx) as Class<T>
         return get(idx).asType(type)
+    }
+
+    /**
+     * This override is registered in RowExtension allowing for the short notation to work
+     * Example: <code>row['foo', BigDecimal]</code>
+     *
+     * @param columnName the name of the variable (column) to get
+     * @param type the class to convert the result to (using the ValueConverter)
+     * @return the value converted to the type specified
+     */
+    <T> T getAt(String columnName, Class<T> type) {
+        int idx = parent.columnIndex(columnName)
+        if (idx == -1) {
+            throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
+        }
+        ValueConverter.convert(get(idx), type)
     }
 
     int getRowNumber() {

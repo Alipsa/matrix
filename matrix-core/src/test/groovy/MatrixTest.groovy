@@ -333,14 +333,12 @@ class MatrixTest {
         ]
         def table = new Matrix(data, [int, String, LocalDate])
         def selection = table.selectRowIndices {
-            def date = it[2] as LocalDate
-            return date.isAfter(LocalDate.of(2022,1, 1))
+            return it[2, LocalDate].isAfter(LocalDate.of(2022,1, 1))
         }
         assertIterableEquals([1,2], selection)
 
         def rows = table.rows {
-            def date = it[2] as LocalDate
-            return date.isAfter(LocalDate.of(2022,10, 1))
+            return it[2].isAfter(LocalDate.of(2022,10, 1))
         }
         assertIterableEquals([[3, 'Lotte', LocalDate.of(2023, 5, 27)]], rows)
     }
@@ -418,7 +416,7 @@ class MatrixTest {
         assertEquals([2, 'Marianne', LocalDate.parse('2022-07-10')], r[0])
 
         // An item in a Row can also be referenced by the column name
-        List r2 = table.rows().find { row ->
+        Row r2 = table.rows().find { row ->
             row['place'] == 3
         }
         assertIterableEquals([3, 'Lotte', LocalDate.parse('2023-05-27')], r2, String.valueOf(r2))
@@ -739,6 +737,21 @@ class MatrixTest {
         assertEquals(empData, d0.removeEmptyRows(), empData.diff(d0))
     }
 
+    @Test
+    void testRemoveEmptyColumns() {
+        def empData = new Matrix(
+            emp_id: [1,2],
+            emp_name: [null, null],
+            salary: [623.3,515.2],
+            start_date: [null, null],
+            other: [null, null],
+            [int, String, Number, LocalDate, String]
+        )
+        assertIterableEquals(['emp_id', 'emp_name', 'salary', 'start_date', 'other'], empData.columnNames())
+        empData.removeEmptyColumns()
+        assertEquals(2, empData.columnCount())
+        assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
+    }
     boolean deleteDirectory(File directoryToBeDeleted) {
         File[] allContents = directoryToBeDeleted.listFiles()
         if (allContents != null) {
@@ -850,5 +863,12 @@ class MatrixTest {
 
         assertEquals(String, table[0, 'foo', String].class)
         assertEquals('3', table[2, 'foo', String])
+
+        assertEquals(2 as BigDecimal, row['foo', BigDecimal])
+        assertEquals(2 as BigDecimal, row.getAt('foo', BigDecimal))
+        assertEquals('2', row['foo', String])
+        assertEquals(2 as BigDecimal, row[2, BigDecimal])
+        assertEquals('2', row[2, String])
+        assertEquals('2', row.getAt(2, String))
     }
 }

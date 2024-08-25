@@ -408,7 +408,7 @@ class Matrix implements Iterable<Row> {
   Matrix apply(int columnNumber, Closure criteria, Closure function) {
     List<List<?>> updatedRows = []
     Class<?> updatedClass = null
-    mColumns.transpose().each { it -> {
+    rows().each { it -> {
       def row = it as List<?>
       if (criteria(row)) {
         def r = []
@@ -775,14 +775,21 @@ class Matrix implements Iterable<Row> {
     return this
   }
 
-  Matrix dropColumns(int... columnIndices) {
-    def columnsToDrop = columnIndices.length > 0 ? columnIndices as List<Integer> : []
-    columnsToDrop.each { colIdx ->
-      mColumns.remove(colIdx)
-      mTypes.remove(colIdx)
-      mHeaders.remove(colIdx)
+  Matrix dropColumns(List<Integer> columnIndices) {
+    Collections.sort(columnIndices)
+    columnIndices.eachWithIndex { colIdx, idx ->
+      // Each time we iterate and remove, all of the below will have one less item
+      // so we need to adjust the colIdx to still match
+      mColumns.remove(colIdx - idx)
+      mTypes.remove(colIdx - idx)
+      mHeaders.remove(colIdx - idx)
     }
     return this
+  }
+
+  Matrix dropColumns(int... columnIndices) {
+    def columnsToDrop = columnIndices.length > 0 ? columnIndices as List<Integer> : []
+    dropColumns(columnsToDrop)
   }
 
   boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true) {
@@ -940,7 +947,8 @@ class Matrix implements Iterable<Row> {
   }
 
   int maxContentLength(String columnName, boolean includeHeader, int maxColumnLength = 50) {
-    Integer maxLength = Math.min(includeHeader ? columnName.length() : 0, maxColumnLength)
+    int columnNameLength = columnName == null ? 0 : columnName.length()
+    Integer maxLength = Math.min(includeHeader ? columnNameLength : 0, maxColumnLength)
     Integer length
     column(columnName).each {
       length = String.valueOf(it).length()
@@ -1221,6 +1229,27 @@ class Matrix implements Iterable<Row> {
     return subset { containsValues(it as Iterable<?>) }
   }
 
+  Matrix removeEmptyColumns() {
+    int i = 0
+    List<Integer> columnsToRemove = []
+    for (List<?> col in mColumns) {
+      boolean hasVal = false
+      for (def v in col) {
+        if (v != null) {
+          hasVal = true
+          break
+        }
+      }
+      if (!hasVal) {
+        columnsToRemove.add( i as Integer)
+      }
+      i++
+    }
+    println "Removing columns $columnsToRemove"
+    dropColumns(columnsToRemove)
+    this
+  }
+
   /**
    * @param index the index of the row
    * @return the row (@see Row) corresponding to the row index (starting with 0)
@@ -1332,8 +1361,7 @@ class Matrix implements Iterable<Row> {
    */
   List<Integer> selectRowIndices(Closure criteria) {
     def r = [] as List<Integer>
-    rows().eachWithIndex { row, idx ->
-      {
+    rows().eachWithIndex { row, idx -> {
         if (criteria(row)) {
           r.add(idx)
         }
@@ -1392,13 +1420,11 @@ class Matrix implements Iterable<Row> {
    */
   Matrix subset(Closure<Boolean> criteria) {
     def r = [] as List<List<?>>
-    mColumns.transpose().each { it -> {
-      def row = it as List<?>
+    rows().each { row -> {
       if (criteria(row)) {
         r.add(row)
       }
-    }
-    }
+    }}
     return create(mName, mHeaders, r, mTypes)
   }
 

@@ -35,7 +35,7 @@ class ListConverter {
     toLocalDates(dates as String[])
   }
 
-  static List<LocalDate> toLocalDates(String[] dates) {
+  static List<LocalDate> toLocalDates(String... dates) {
     def dat = new ArrayList<LocalDate>(dates.length)
     dates.eachWithIndex { String d, int i ->
       try {
