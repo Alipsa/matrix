@@ -13,6 +13,8 @@ import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
 
+import java.text.NumberFormat
+
 class ExcelImporter {
 
     private static Logger log = LogManager.getLogger()
@@ -149,7 +151,8 @@ class ExcelImporter {
      *  sheetName, startRow, endRow, startCol (number or name), endCol (number or name), firstRowAsColNames
      * @return a map of sheet names and the corresponding Matrix
      */
-    static Map<String, Matrix> importExcelSheets(InputStream is, List<Map> sheetParams) {
+    static Map<String, Matrix> importExcelSheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
+        NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
         try (Workbook workbook = WorkbookFactory.create(is)) {
             Map<String, Matrix> result = [:]
             sheetParams.each {
@@ -158,13 +161,13 @@ class ExcelImporter {
                 Sheet sheet = workbook.getSheet(sheetName)
                 int startRow = it.startRow as int
                 int startCol
-                if (ValueConverter.isNumeric(it.startCol)) {
+                if (ValueConverter.isNumeric(it.startCol, format)) {
                     startCol = ValueConverter.asInteger(it.startCol)
                 } else {
                     startCol = SpreadsheetUtil.asColumnNumber(it.startCol as String)
                 }
                 int endCol
-                if (ValueConverter.isNumeric(it.endCol)) {
+                if (ValueConverter.isNumeric(it.endCol, format)) {
                     endCol = ValueConverter.asInteger(it.endCol)
                 } else {
                     endCol = SpreadsheetUtil.asColumnNumber(it.endCol as String)

@@ -47,7 +47,7 @@ class ListConverter {
     return dat
   }
 
-  static List<LocalDate> toLocalDates(String[] dates, DateTimeFormatter formatter) {
+  static List<LocalDate> toLocalDates(DateTimeFormatter formatter, String[] dates) {
     def dat = new ArrayList<LocalDate>(dates.length)
     dates.eachWithIndex { String d, int i ->
       try {
@@ -59,7 +59,7 @@ class ListConverter {
     return dat
   }
 
-  static List<LocalDateTime> toLocalDateTimes(String[] dates) {
+  static List<LocalDateTime> toLocalDateTimes(String... dates) {
     def dat = new ArrayList<LocalDateTime>(dates.length)
     dates.eachWithIndex { String d, int i ->
       try {
@@ -83,44 +83,44 @@ class ListConverter {
     return dat
   }
 
-  static List<YearMonth> toYearMonth(List<?> localDates) {
-    List<YearMonth> list = []
-    localDates.each {
-      list.add(ValueConverter.asYearMonth(it))
-    }
-    return list
+  static List<YearMonth> toYearMonths(List<?> localDates) {
+    localDates.collect({ValueConverter.asYearMonth(it)})
   }
 
-  static List<String> toString(Collection<?> objList) {
-    List<String> list = []
-    objList.each {
-      list.add(ValueConverter.asString(it))
-    }
-    return list
+  static List<YearMonth> toYearMonths(Object... localDates) {
+    localDates.collect({ValueConverter.asYearMonth(it)})
+  }
+
+  static List<String> toStrings(Collection<?> objList) {
+    objList.collect({ValueConverter.asString(it)})
+  }
+
+  static List<String> toStrings(Object... objList) {
+    objList.collect({ValueConverter.asString(it)})
   }
 
   static List<Float> toFloats(List<? extends Number> numbers) {
-    List<Float> list = []
-    numbers.each {
-      list.add(ValueConverter.asFloat(it))
-    }
-    return list
+    numbers.collect({ValueConverter.asFloat(it)})
+  }
+
+  static List<Float> toFloats(Object... numbers) {
+    numbers.collect({ValueConverter.asFloat(it)})
+  }
+
+  static List<Double> toDoubles(Object... numbers) {
+    numbers.collect({ValueConverter.asDouble(it)})
   }
 
   static List<Double> toDoubles(List<? extends Number> numbers) {
-    List<Double> list = []
-    numbers.each {
-      list.add(ValueConverter.asDouble(it))
-    }
-    return list
+    numbers.collect({ValueConverter.asDouble(it)})
+  }
+
+  static List<Integer> toIntegers(Object... numbers) {
+    numbers.collect({ValueConverter.asInteger(it)})
   }
 
   static List<Integer> toIntegers(List<?> numbers) {
-    List<Integer> list = []
-    numbers.each {
-      list << ValueConverter.asInteger(it);
-    }
-    return list
+    numbers.collect({ValueConverter.asInteger(it)})
   }
 
   /**
@@ -135,6 +135,14 @@ class ListConverter {
   }
 
   static List<BigDecimal> toBigDecimals(List<?> numbers) {
+    List<BigDecimal> list = []
+    numbers.each {
+      list.add(ValueConverter.asBigDecimal(it))
+    }
+    return list
+  }
+
+  static List<BigDecimal> toBigDecimals(Object... numbers) {
     List<BigDecimal> list = []
     numbers.each {
       list.add(ValueConverter.asBigDecimal(it))

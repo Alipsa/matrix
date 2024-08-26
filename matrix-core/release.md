@@ -17,6 +17,9 @@
 - safeguard Matrix maxContentLength from NPE when the column name is null
 - Add several Java classes to make is much easier (and more Groovy like) to use a
   Matrix from Java code. See MatrixJavaTest for details
+- Overload ListConverter methods, align naming and parameter order. 
+- Add Matrix.getAt for column with type conversion. 
+- Add Numberformat as optional argument to OdsImporter.importOdsSheets and ValueConverter.isNumeric()
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

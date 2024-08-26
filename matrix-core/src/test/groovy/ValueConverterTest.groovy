@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.matrix.ValueConverter
 
+import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -44,8 +45,11 @@ class ValueConverterTest {
 
     @Test
     void testIsNumeric() {
+        NumberFormat enFormat = NumberFormat.getInstance(Locale.ENGLISH)
+        NumberFormat swFormat = NumberFormat.getInstance(new Locale("sv","SE"))
         assertTrue(ValueConverter.isNumeric('123'))
-        assertTrue(ValueConverter.isNumeric('123.4'))
+        assertTrue(ValueConverter.isNumeric('123.4', enFormat))
+        assertTrue(ValueConverter.isNumeric('123,4', swFormat))
         assertTrue(ValueConverter.isNumeric('-123'))
         assertTrue(ValueConverter.isNumeric(-123))
         assertTrue(ValueConverter.isNumeric(123_234.5))

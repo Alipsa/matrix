@@ -7,6 +7,8 @@ import se.alipsa.groovy.matrix.ValueConverter
 import se.alipsa.groovy.spreadsheet.FileUtil
 import se.alipsa.groovy.spreadsheet.SpreadsheetUtil
 
+import java.text.NumberFormat
+
 /**
  * Import Calc (ods file) into Renjin R in the form of a data.frame (ListVector).
  */
@@ -156,7 +158,8 @@ class OdsImporter {
    *  sheetName, startRow, endRow, startCol (number or name), endCol (number or name), firstRowAsColNames
    * @return a map of sheet names and the corresponding Matrix
    */
-  static Map<String, Matrix> importOdsSheets(InputStream is, List<Map> sheetParams) {
+  static Map<String, Matrix> importOdsSheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
+    NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
     SpreadSheet spreadSheet = new SpreadSheet(is)
     Map<String, Matrix> result = [:]
     sheetParams.each {
@@ -165,13 +168,13 @@ class OdsImporter {
       Sheet sheet = spreadSheet.getSheet(sheetName)
       int startRow = it.startRow as int
       int startCol
-      if (ValueConverter.isNumeric(it.startCol)) {
+      if (ValueConverter.isNumeric(it.startCol, format)) {
         startCol = ValueConverter.asInteger(it.startCol)
       } else {
         startCol = SpreadsheetUtil.asColumnNumber(it.startCol as String)
       }
       int endCol
-      if (ValueConverter.isNumeric(it.endCol)) {
+      if (ValueConverter.isNumeric(it.endCol, format)) {
         endCol = ValueConverter.asInteger(it.endCol)
       } else {
         endCol = SpreadsheetUtil.asColumnNumber(it.endCol as String)

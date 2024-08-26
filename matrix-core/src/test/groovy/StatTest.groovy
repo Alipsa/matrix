@@ -267,7 +267,7 @@ class StatTest {
 
     @Test
     void testMinMaxYearMonth() {
-        def bp = toYearMonth(["2023-07", "2023-06", "2023-04", "2023-05"])
+        def bp = toYearMonths(["2023-07", "2023-06", "2023-04", "2023-05"])
         assertEquals(bp.min(), min(bp))
         assertEquals(YearMonth.of(2023, 4), min(bp))
         assertEquals(bp.max(), max(bp))

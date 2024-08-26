@@ -1,5 +1,6 @@
 package test.alipsa.matrix;
 
+import groovy.lang.Closure;
 import org.junit.jupiter.api.Test;
 import se.alipsa.groovy.matrix.*;
 import se.alipsa.groovy.matrix.util.Columns;
@@ -10,6 +11,7 @@ import se.alipsa.groovy.matrix.util.ValueClosure;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -22,14 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static se.alipsa.groovy.matrix.ListConverter.toLocalDates;
-import static se.alipsa.groovy.matrix.ListConverter.toYearMonth;
-import static se.alipsa.groovy.matrix.ValueConverter.asLocalDate;
-import static se.alipsa.groovy.matrix.ValueConverter.asYearMonth;
+import static se.alipsa.groovy.matrix.ListConverter.*;
+import static se.alipsa.groovy.matrix.ValueConverter.*;
 import static se.alipsa.groovy.matrix.util.CollectionUtils.*;
 
 /**
@@ -62,16 +63,16 @@ class MatrixJavaTest {
     assertEquals(4, dims.get("variables"));
 
     var ed = new Matrix("ed",
-        c("id", "name", "salary", "start"), c(
-        c(1, 2, 3, 4, 5),
-        c("Rick", "Dan", "Michelle", "Ryan", "Gary"),
-        c(623.3, 515.2, 611.0, 729.0, 843.25),
+        toStrings("id", "name", "salary", "start"), c(
+        toIntegers(1, 2, 3, 4, 5),
+        toStrings("Rick", "Dan", "Michelle", "Ryan", "Gary"),
+        toBigDecimals(623.3, 515.2, 611.0, 729.0, 843.25),
         toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
     ));
     assertEquals("ed", ed.getName());
     assertEquals(1, ed.getAt(0, 0, int.class));
     assertEquals("Dan", ed.getAt(1, 1));
-    assertEquals(611.0, ed.getAt(2, 2));
+    assertEquals(asBigDecimal("611.0"), ed.getAt(2, 2));
     assertEquals(LocalDate.of(2015, 3, 27), ed.getAt(4, 3));
     assertIterableEquals(
         c(Object.class, Object.class, Object.class, Object.class),
@@ -79,15 +80,15 @@ class MatrixJavaTest {
     );
 
     var e = new Matrix(c(
-        c(1, 2, 3, 4, 5),
-        c("Rick", "Dan", "Michelle", "Ryan", "Gary"),
-        c(623.3, 515.2, 611.0, 729.0, 843.25),
+        toIntegers(1, 2, 3, 4, 5),
+        toStrings("Rick", "Dan", "Michelle", "Ryan", "Gary"),
+        toBigDecimals(623.3, 515.2, 611.0, 729.0, 843.25),
         toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
     ));
     assertNull(e.getName());
     assertEquals(1, (int) e.getAt(0, 0));
     assertEquals("Dan", e.getAt(1, 1));
-    assertEquals(611.0, e.getAt(2, 2));
+    assertEquals(asBigDecimal("611.0"), e.getAt(2, 2));
     assertEquals(LocalDate.of(2015, 3, 27), e.getAt(4, 3));
     assertIterableEquals(
         c(Object.class, Object.class, Object.class, Object.class),
@@ -246,10 +247,10 @@ class MatrixJavaTest {
     assertEquals(LocalDateTime.parse("2022-12-01T10:00:00.000"), table2.getAt("end").get(0));
 
     var table3 = table.convert("place", Integer.class, new ValueClosure<>(it -> {
-        String val = String.valueOf(it).trim();
-        if ("null".equals(val) || ",".equals(val) || val.isBlank()) return null;
-        return Integer.valueOf(val);
-      }
+      String val = String.valueOf(it).trim();
+      if ("null".equals(val) || ",".equals(val) || val.isBlank()) return null;
+      return Integer.valueOf(val);
+    }
     ));
 
     assertEquals(Integer.class, table3.columnType("place"));
@@ -258,12 +259,12 @@ class MatrixJavaTest {
 
     var table4 = table.convert(new Converter[]{
         new Converter("place", Integer.class, new ValueClosure<Integer, String>(it -> {
-            try {
-              return Integer.parseInt(it);
-            } catch (NumberFormatException e) {
-              return null;
-            }
+          try {
+            return Integer.parseInt(it);
+          } catch (NumberFormatException e) {
+            return null;
           }
+        }
         )),
         new Converter("start", LocalDate.class,
             new ValueClosure<LocalDate, String>(LocalDate::parse))
@@ -299,7 +300,7 @@ class MatrixJavaTest {
 
     // Same thing using subset
     var subSet = table.subset("place", new ObjectCriteriaClosure(it ->
-        ((Integer)it) > 1
+        ((Integer) it) > 1
     ));
     assertIterableEquals(table.rows(c(1, 2)), subSet.rows());
 
@@ -309,10 +310,10 @@ class MatrixJavaTest {
     assertIterableEquals(table.rows(c(1, 2)), subSet2.rows());
 
     var subSet3 = table.subset(new RowCriteriaClosure(it -> {
-        String name = it.getAt(1, String.class);
-        return !name.startsWith("Ma")
-            && asLocalDate(it.getAt(2, LocalDate.class)).isBefore(LocalDate.of(2022, 10, 1));
-      }
+      String name = it.getAt(1, String.class);
+      return !name.startsWith("Ma")
+          && asLocalDate(it.getAt(2, LocalDate.class)).isBefore(LocalDate.of(2022, 10, 1));
+    }
     ));
     assertEquals(table.getAt(0, 1, String.class), subSet3.getAt(0, 1, String.class));
   }
@@ -381,573 +382,591 @@ class MatrixJavaTest {
   }
 
 
-    @Test
-    void testSelectRows() {
-        var data = new Columns(
-            m("place", 1, 2, 3),
-            m("firstname", "Lorena", "Marianne", "Lotte"),
-            m("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
-        );
-        var table = new Matrix(data, c(int.class, String.class, LocalDate.class));
-        var selection = table.selectRowIndices(new RowCriteriaClosure(it ->
-            it.getAt(2, LocalDate.class)
-                .isAfter(LocalDate.of(2022,1, 1))
+  @Test
+  void testSelectRows() {
+    var data = new Columns(
+        m("place", 1, 2, 3),
+        m("firstname", "Lorena", "Marianne", "Lotte"),
+        m("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+    );
+    var table = new Matrix(data, c(int.class, String.class, LocalDate.class));
+    var selection = table.selectRowIndices(new RowCriteriaClosure(it ->
+        it.getAt(2, LocalDate.class)
+            .isAfter(LocalDate.of(2022, 1, 1))
+    ));
+    assertIterableEquals(c(1, 2), selection);
+
+    var rows = table.rows(new RowCriteriaClosure(it ->
+        it.getAt(2, LocalDate.class)
+            .isAfter(LocalDate.of(2022, 10, 1))
+    ));
+    assertIterableEquals(
+        c(c(3, "Lotte", LocalDate.of(2023, 5, 27))),
+        rows
+    );
+  }
+
+
+  @Test
+  void testApply() {
+    var data = new Columns()
+        .add("place", "1", "2", "3", ",")
+        .add("firstname", "Lorena", "Marianne", "Lotte", "Chris")
+        .add("start", "2021-12-01", "2022-07-10", "2023-05-27", "2023-01-10");
+
+    var table = new Matrix(data)
+        .convert(Map.of("place", int.class, "start", LocalDate.class));
+    var table2 = table.apply("start",
+        new ValueClosure<LocalDate, LocalDate>(startDate -> startDate.plusDays(10)
         ));
-        assertIterableEquals(c(1,2), selection);
+    assertEquals(LocalDate.of(2021, 12, 11), table2.getAt("start").get(0));
+    assertEquals(LocalDate.of(2022, 7, 20), table2.getAt(1, "start"));
+    assertEquals(LocalDate.of(2023, 6, 6), table2.getAt("start").get(2));
+    assertEquals(LocalDate.of(2023, 1, 20), table2.getAt(3, "start"));
+    assertEquals(LocalDate.class, table2.columnType("start"));
+  }
 
-        var rows = table.rows(new RowCriteriaClosure(it ->
-            it.getAt(2, LocalDate.class)
-                .isAfter(LocalDate.of(2022, 10, 1))
-        ));
-        assertIterableEquals(
-            c(c(3, "Lotte", LocalDate.of(2023, 5, 27))),
-            rows
-        );
+
+  @Test
+  void testApplyChangeType() {
+    var data = new Columns(
+        m("foo", 1, 2, 3),
+        m("firstname", "Lorena", "Marianne", "Lotte"),
+        m("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+    );
+
+    var table = new Matrix(data, c(int.class, String.class, LocalDate.class));
+
+    var foo = table.apply("start", new ValueClosure<>(ValueConverter::asYearMonth));
+    assertEquals(YearMonth.of(2021, 12), foo.getAt(0, 2));
+    assertEquals(YearMonth.class, foo.columnType("start"));
+  }
+
+
+  @Test
+  void testSelectRowsAndApply() {
+    var data = new Columns(m("place", 1, 2, 3))
+        .add("firstname", "Lorena", "Marianne", "Lotte")
+        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"));
+    var table = new Matrix(data, c(int.class, String.class, LocalDate.class));
+    assertEquals(Integer.class, table.columnType(0), "place column type");
+    var selection = table.selectRowIndices(new RowCriteriaClosure(it -> {
+      var date = it.getAt(2, LocalDate.class);
+      return date.isAfter(LocalDate.of(2022, 1, 1));
+    }
+    ));
+    assertIterableEquals(c(1, 2), selection);
+
+    var foo = table.apply("place", selection,
+        new ValueClosure<Integer, Integer>(it -> it * 2));
+    //println(foo.content())
+    assertEquals(4, foo.getAt(1, 0, Integer.class));
+    assertEquals(6, foo.getAt(2, 0, Integer.class));
+    assertEquals(LocalDate.class, foo.columnType(2));
+    assertEquals(Integer.class, foo.columnType(0), "place column type");
+
+    var bar = table.apply("place", new RowCriteriaClosure(it -> {
+      var date = it.getAt(2, LocalDate.class);
+      return date.isAfter(LocalDate.of(2022, 1, 1));
+    }), new ValueClosure<Integer, Integer>(it -> it * 2));
+    //println(bar.content())
+    assertEquals(4, bar.getAt(1, 0, Integer.class));
+    assertEquals(6, bar.getAt(2, 0, Integer.class));
+    assertEquals(LocalDate.class, bar.columnType(2), "start column type");
+    assertEquals(Integer.class, bar.columnType(0), "place column type");
+
+    var r = table.rows(new RowCriteriaClosure(row -> row.getAt("place", Integer.class) == 2));
+    assertEquals(c(2, "Marianne", LocalDate.parse("2022-07-10")), r.get(0));
+
+    // An item in a Row can also be referenced by the column name
+    Row r2 = table.rows().stream().filter(row -> row.getAt("place", Integer.class) == 3).findFirst().orElse(null);
+    assertIterableEquals(c(3, "Lotte", LocalDate.parse("2023-05-27")), r2, String.valueOf(r2));
+  }
+
+
+  @Test
+  void testAddColumn() {
+    var empData = new Matrix(new Columns(
+        m("emp_id", r(1, 5)),
+        m("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary"),
+        m("salary", 623.3, 515.2, 611.0, 729.0, 843.25),
+        m("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+    ), c(int.class, String.class, Number.class, LocalDate.class)
+    );
+    var table = empData.clone().addColumn("yearMonth", YearMonth.class, toYearMonths(empData.column("start_date")));
+    assertEquals(5, table.columnCount());
+    assertEquals("yearMonth", table.columnNames().get(table.columnCount() - 1));
+    assertEquals(YearMonth.class, table.columnType("yearMonth"));
+    assertEquals(YearMonth.of(2012, 1), table.getAt(0, 4));
+    assertEquals(YearMonth.of(2015, 3), table.getAt(4, 4));
+
+    // Append a new column to the end
+    Matrix table2 = empData.clone();
+    table2.putAt("yearMonth", YearMonth.class, toYearMonths(table2.getAt("start_date")));
+    assertEquals(empData.columnCount() + 1, table2.columnCount());
+    assertEquals("yearMonth", table2.columnNames().get(table2.columnCount() - 1));
+    assertEquals(YearMonth.class, table2.columnType("yearMonth"));
+    assertEquals(YearMonth.of(2012, 1), table2.getAt(0, 4));
+    assertEquals(YearMonth.of(2015, 3), table2.getAt(4, 4));
+
+    // Insert a new column first
+    Matrix table3 = empData.clone();
+    table3.putAt("yearMonth", YearMonth.class, 0, toYearMonths(table3.getAt("start_date")));
+    assertEquals(empData.columnCount() + 1, table3.columnCount());
+    assertEquals("yearMonth", table3.columnNames().get(0));
+    assertEquals(YearMonth.class, table3.columnType("yearMonth"));
+    assertEquals(YearMonth.of(2012, 1), table3.getAt(0, 0));
+    assertEquals(YearMonth.of(2015, 3), table3.getAt(4, 0));
+  }
+
+
+  @Test
+  void testAddColumns() {
+    var empData = new Matrix(new Columns()
+        .add("emp_id", r(1, 5))
+        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+        .add("start_date", toLocalDates("2019-01-01", "2019-01-23", "2019-05-15", "2019-05-11", "2019-03-27")),
+        c(int.class, String.class, Number.class, LocalDate.class)
+    );
+
+    empData = empData.addColumn("yearMonth", YearMonth.class, toYearMonths(empData.getAt("start_date")));
+    assertEquals(YearMonth.class, empData.getAt(0, 4).getClass(), "type of the added column");
+    assertEquals(YearMonth.class, empData.columnType("yearMonth"), "claimed type of the added column");
+
+    var counts = Stat.countBy(empData, "yearMonth").orderBy("yearMonth");
+    assertEquals(YearMonth.class, counts.getAt(0, 0).getClass(), "type of the count column");
+    assertEquals(YearMonth.class, counts.columnType("yearMonth"), "claimed type of the count column");
+
+    assertEquals(2, counts.subset("yearMonth", new ObjectCriteriaClosure(it -> it.equals(YearMonth.of(2019, 5)))).getAt(0, 1, Integer.class));
+    assertEquals(1, counts.subset("yearMonth", new ObjectCriteriaClosure(it -> it.equals(YearMonth.of(2019, 3)))).getAt("yearMonth_count").get(0));
+    assertEquals(2, counts.getAt(0, "yearMonth_count", Integer.class));
+
+    var sums = Stat.sumBy(empData, "salary", "yearMonth").orderBy("yearMonth", true);
+    assertEquals(YearMonth.class, sums.getAt(0, 0).getClass(), "type of the sums column");
+    assertEquals(YearMonth.class, sums.columnType("yearMonth"), "claimed type of the sums column");
+    assertEquals(611.0 + 729.0, sums.getAt(0, 1, Double.class), sums.content());
+    assertEquals(843.25, sums.getAt(1, 1, Double.class), sums.content());
+    assertEquals(623.3 + 515.2, sums.getAt(2, 1, Double.class), sums.content());
+
+    var salaryPerYearMonth = counts
+        .orderBy("yearMonth", true)
+        .addColumns(sums, "salary");
+    // In groovy, the default decimal type is BigDecimal, In java it is Double, so we have to cast to get comparable things
+    assertEquals(asYearMonth("2019-05"), salaryPerYearMonth.getAt(0, 0), salaryPerYearMonth.content());
+    assertEquals(611.0 + 729.0, salaryPerYearMonth.getAt(0, 2, Double.class), salaryPerYearMonth.content());
+    assertEquals(2, salaryPerYearMonth.getAt(0, 1, Integer.class), salaryPerYearMonth.content());
+    assertEquals(843.25, salaryPerYearMonth.getAt(1, 2, Double.class), salaryPerYearMonth.content());
+    assertEquals(1, salaryPerYearMonth.getAt(1, 1, Integer.class), salaryPerYearMonth.content());
+  }
+
+  @Test
+  void testSort() {
+    var empData = new Matrix(new Columns()
+        .add("emp_id", r(1, 5))
+        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
+        c(Integer.class, String.class, Number.class, LocalDate.class)
+    );
+    var dateSorted = empData.orderBy("start_date");
+    assertEquals(4, dateSorted.getAt(4, 0, Integer.class), "Last row should be the Ryan row: \n${dateSorted.content()}");
+    assertEquals(asLocalDate("2012-03-27"), dateSorted.getAt(0, 3), "First row should be the Dan Row");
+
+    //println(empData.content())
+    var salarySorted = empData.orderBy(lhm("salary", Matrix.DESC));
+    assertEquals(843.25, salarySorted.getAt("salary").get(0), "Highest salary: ${salarySorted.content()}");
+    assertEquals(515.2, salarySorted.getAt("salary").get(4), "Lowest salary: ${salarySorted.content()}");
+  }
+
+
+  @Test
+  void testDropColumns() {
+    var empData = new Matrix(new Columns()
+        .add("emp_id", r(1, 5))
+        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
+        c(Integer.class, String.class, Number.class, LocalDate.class)
+    );
+    var empList = empData.dropColumns("salary", "start_date");
+    //println(empList.content())
+    assertEquals(2, empList.columnCount(), "Number of columns after drop");
+    assertEquals(5, empList.rowCount(), "Number of rows after drop");
+    assertIterableEquals(c("emp_id", "emp_name"), empList.columnNames(), "column names after drop");
+    assertIterableEquals(c(Integer.class, String.class), empList.columnTypes(), "Column types after drop");
+  }
+
+
+  @Test
+  void testDropColumnsExcept() {
+    var empData = new Matrix(new Columns()
+        .add("emp_id", r(1, 5))
+        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
+        c(Integer.class, String.class, Number.class, LocalDate.class)
+    );
+    var empList = empData.dropColumnsExcept("emp_id", "start_date");
+    //println(empList.content())
+    assertEquals(2, empList.columnCount(), "Number of columns after drop");
+    assertEquals(5, empList.rowCount(), "Number of rows after drop");
+    assertIterableEquals(c("emp_id", "start_date"), empList.columnNames(), "column names after drop");
+    assertIterableEquals(c(Integer.class, LocalDate.class), empList.columnTypes(), "Column types after drop");
+  }
+
+
+  @Test
+  void testIteration() {
+    var empData = new Matrix(new Columns()
+        .add("emp_id", r(1, 5))
+        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
+        c(Integer.class, String.class, Number.class, LocalDate.class)
+    );
+
+    AtomicInteger i = new AtomicInteger(1);
+    empData.forEach(row -> {
+      assertEquals(i.get(), row.get(0), String.valueOf(row));
+      assertEquals(empData.getAt(i.get() - 1, "emp_name"), row.get(1), String.valueOf(row));
+      i.incrementAndGet();
+    });
+
+    for (Row row : empData.rows()) {
+      if (row.getAt(2, Double.class) > 600) {
+        Double value = row.getAt(2, double.class) - 600;
+        row.putAt(2, value);
+      }
     }
 
+    assertEquals(23.3, empData.getAt(0, 2), 0.00001, empData.toMarkdown());
+    assertEquals(515.2, empData.getAt(1, 2), 0.00001, empData.toMarkdown());
+    assertEquals(11.0, empData.getAt(2, 2), 0.00001, empData.toMarkdown());
+    assertEquals(129.0, empData.getAt(3, 2), 0.00001, empData.toMarkdown());
+    assertEquals(243.25, empData.getAt(4, 2), 0.00001, empData.toMarkdown());
+  }
 
-    @Test
-    void testApply() {
-        var data = new Columns()
-            .add("place", "1", "2", "3", ",")
-            .add("firstname", "Lorena", "Marianne", "Lotte", "Chris")
-            .add("start", "2021-12-01", "2022-07-10", "2023-05-27", "2023-01-10");
 
-        var table = new Matrix(data)
-            .convert(Map.of("place", int.class, "start", LocalDate.class));
-        var table2 = table.apply("start",
-            new ValueClosure<LocalDate, LocalDate>(startDate -> startDate.plusDays(10)
-            ));
-        assertEquals(LocalDate.of(2021, 12, 11), table2.getAt("start").get(0));
-        assertEquals(LocalDate.of(2022, 7, 20), table2.getAt(1, "start"));
-        assertEquals(LocalDate.of(2023, 6, 6), table2.getAt("start").get(2));
-        assertEquals(LocalDate.of(2023, 1, 20), table2.getAt(3, "start"));
-        assertEquals(LocalDate.class, table2.columnType("start"));
+  @Test
+  void testMatrixToGrid() {
+    // BigDecimals are the default in Groovy, in java we need to convert upon creation
+    var report = new Columns(
+        m("Full Funding", toBigDecimals(4563.153, 380.263, 4.938, 12.23)),
+        m("Baseline Funding", toBigDecimals(3385.593, 282.133, 3.664, 2.654)),
+        m("Current Funding", toBigDecimals(2700, 225, 2.922, 1.871))
+    );
+    Matrix table = new Matrix(report, cr(BigDecimal.class, 3));
+
+    Grid grid = table.grid();
+    assertEquals(new BigDecimal("3.664"), grid.getAt(2, 1));
+  }
+
+
+  @Test
+  void testSelectColumns() {
+    var report = new Columns(
+        m("Full Funding", toBigDecimals(4563.153, 380.263, 4.938, 12.23)),
+        m("Baseline Funding", toBigDecimals(3385.593, 282.133, 3.664, 2.654)),
+        m("Current Funding", toBigDecimals(2700, 225, 2.922, 1.871))
+    );
+    Matrix table = new Matrix(report, cr(BigDecimal.class, 3))
+        .selectColumns("Baseline Funding", "Full Funding");
+
+    assertEquals(asBigDecimal(3385.593), table.getAt(0, 0));
+    assertEquals(asBigDecimal(12.23), table.getAt(3, 1));
+  }
+
+
+  @Test
+  void testRenameColumns() {
+    var empData = new Matrix(new Columns()
+        .add("emp_id", r(1, 5))
+        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
+        c(Integer.class, String.class, Number.class, LocalDate.class)
+    );
+
+    empData.renameColumn("emp_id", "id");
+    empData.renameColumn(1, "name");
+
+    assertEquals("id", empData.columnNames().get(0));
+    assertEquals("name", empData.columnNames().get(1));
+  }
+
+
+  @Test
+  void testToMarkdown() {
+    var report = new Columns(
+        m("YearMonth", toYearMonths("2023-01", "2023-02", "2023-03", "2023-04")),
+        m("Full Funding", 4563.153, 380.263, 4.938, 12.23),
+        m("Baseline Funding", 3385.593, 282.133, 3.664, 2.654),
+        m("Current Funding", 2700, 225, 2.922, 1.871)
+    );
+    Matrix table = new Matrix(report, c(YearMonth.class, BigDecimal.class, BigDecimal.class, BigDecimal.class));
+
+    var md = table.toMarkdown();
+    var rows = md.split("\n");
+    assertEquals(6, rows.length);
+    assertEquals("| YearMonth | Full Funding | Baseline Funding | Current Funding |", rows[0]);
+    assertEquals("| --- | ---: | ---: | ---: |", rows[1]);
+    assertEquals("| 2023-01 | 4563.153 | 3385.593 | 2700 |", rows[2]);
+    assertEquals("| 2023-04 | 12.23 | 2.654 | 1.871 |", rows[5]);
+
+    md = table.toMarkdown(Map.of("class", "table"));
+    rows = md.split("\n");
+    assertEquals(7, rows.length);
+    assertEquals("{class=\"table\" }", rows[6]);
+  }
+
+
+  @Test
+  void testEquals() {
+    var empData = new Matrix(new Columns(
+        m("emp_id", c(1, 2)),
+        m("emp_name", "Rick", "Dan"),
+        m("salary", 623.3, 515.2),
+        m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
+        c(int.class, String.class, Number.class, LocalDate.class)
+    );
+
+    assertEquals(empData, new Matrix(new Columns(
+        m("emp_id", c(1, 2)),
+        m("emp_name", "Rick", "Dan"),
+        m("salary", 623.3, 515.2),
+        m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
+        c(int.class, String.class, Number.class, LocalDate.class)
+    ));
+
+    assertNotEquals(empData, new Matrix(new Columns(
+        m("emp_id", c(1, 2)),
+        m("emp_name", "Rick", "Dan"),
+        m("salary", 623.3, 515.1),
+        m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
+        c(int.class, String.class, Number.class, LocalDate.class)
+    ));
+
+    Matrix differentTypes = new Matrix(
+        new Columns(
+            m("emp_id", c(1, 2)),
+            m("emp_name", "Rick", "Dan"),
+            m("salary", 623.3, 515.2),
+            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
+        cr(Object.class, 4)
+    );
+    assertEquals(empData, differentTypes, empData.diff(differentTypes));
+    assertNotEquals(empData, differentTypes.withName("differentTypes"), empData.diff(differentTypes));
+  }
+
+
+  @Test
+  void testDiff() {
+    var empData = new Matrix(
+        new Columns(
+            m("emp_id", c(1, 2)),
+            m("emp_name", "Rick", "Dan"),
+            m("salary", 623.3, 515.2),
+            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
+        c(int.class, String.class, Number.class, LocalDate.class)
+    );
+    var d1 = new Matrix(
+        new Columns(
+            m("emp_id", c(1, 2)),
+            m("emp_name", "Rick", "Dan"),
+            m("salary", 623.3, 515.1),
+            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
+        c(int.class, String.class, Number.class, LocalDate.class)
+    );
+    assertEquals("Row 1 differs: this: 2, Dan, 515.2, 2012-03-27; that: 2, Dan, 515.1, 2012-03-27",
+        empData.diff(d1).trim());
+
+    var d2 = new Matrix(
+        new Columns(
+            m("emp_id", c(1, 2)),
+            m("emp_name", "Rick", "Dan"),
+            m("salary", 623.3, 515.2),
+            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
+        cr(Object.class, 4)
+    );
+    assertEquals("Column types differ: this: Integer, String, Number, LocalDate; that: Object, Object, Object, Object",
+        empData.diff(d2));
+  }
+
+
+  @Test
+  void testRemoveEmptyRows() {
+    var empData = new Matrix("empData", new Columns(
+        m("emp_id", c(1, 2)),
+        m("emp_name", "Rick", "Dan"),
+        m("salary", 623.3, 515.2),
+        m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
+        c(int.class, String.class, Number.class, LocalDate.class)
+    );
+
+    var d0 = new Matrix("empData", new Columns(
+        m("emp_id", 1, null, 2, null),
+        m("emp_name", "Rick", "", "Dan", " "),
+        m("salary", 623.3, null, 515.2, null),
+        m("start_date", toLocalDates("2013-01-01", null, "2012-03-27", null))),
+        c(int.class, String.class, Number.class, LocalDate.class)
+    );
+    var d0r = d0.removeEmptyRows();
+    assertEquals(empData, d0r, empData.diff(d0r, true));
+  }
+
+
+  @Test
+  void testRemoveEmptyColumns() {
+    var empData = new Matrix(new Columns()
+        .add("emp_id", 1, 2)
+        .add("emp_name", null, null)
+        .add("salary", 623.3, 515.2)
+        .add("start_date", null, null)
+        .add("other", null, null),
+        c(int.class, String.class, Number.class, LocalDate.class, String.class)
+    );
+    assertIterableEquals(c("emp_id", "emp_name", "salary", "start_date", "other"), empData.columnNames());
+    empData.removeEmptyColumns();
+    assertEquals(2, empData.columnCount());
+    assertIterableEquals(c("emp_id", "salary"), empData.columnNames());
+  }
+
+  boolean deleteDirectory(File directoryToBeDeleted) {
+    File[] allContents = directoryToBeDeleted.listFiles();
+    if (allContents != null) {
+      for (File file : allContents) {
+        deleteDirectory(file);
+      }
     }
-
-
-    @Test
-    void testApplyChangeType() {
-        var data = new Columns(
-            m("foo", 1, 2, 3),
-            m("firstname", "Lorena", "Marianne", "Lotte"),
-            m("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
-        );
-
-        var table = new Matrix(data, c(int.class, String.class, LocalDate.class));
-
-        var foo = table.apply("start", new ValueClosure<>(ValueConverter::asYearMonth));
-        assertEquals(YearMonth.of(2021,12), foo.getAt(0, 2));
-        assertEquals(YearMonth.class, foo.columnType("start"));
-    }
-
-  
-    @Test
-    void testSelectRowsAndApply() {
-        var data = new Columns(m("place", 1, 2, 3))
-            .add("firstname", "Lorena", "Marianne", "Lotte")
-            .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"));
-        var table = new Matrix(data, c(int.class, String.class, LocalDate.class));
-        assertEquals(Integer.class, table.columnType(0), "place column type");
-        var selection = table.selectRowIndices( new RowCriteriaClosure(it -> {
-            var date = it.getAt(2, LocalDate.class);
-            return date.isAfter(LocalDate.of(2022,1, 1));
-          }
-        ));
-        assertIterableEquals(c(1,2), selection);
-
-        var foo = table.apply("place", selection,
-            new ValueClosure<Integer, Integer>( it -> it * 2));
-        //println(foo.content())
-        assertEquals(4, foo.getAt(1, 0, Integer.class));
-        assertEquals(6, foo.getAt(2, 0, Integer.class));
-        assertEquals(LocalDate.class, foo.columnType(2));
-        assertEquals(Integer.class, foo.columnType(0), "place column type");
-
-        var bar = table.apply("place", new RowCriteriaClosure(it -> {
-            var date = it.getAt(2, LocalDate.class);
-            return date.isAfter(LocalDate.of(2022,1, 1));
-        }), new ValueClosure<Integer, Integer>(it -> it * 2));
-        //println(bar.content())
-        assertEquals(4, bar.getAt(1, 0, Integer.class));
-        assertEquals(6, bar.getAt(2, 0, Integer.class));
-        assertEquals(LocalDate.class, bar.columnType(2), "start column type");
-        assertEquals(Integer.class, bar.columnType(0), "place column type");
-
-        var r = table.rows(new RowCriteriaClosure(row -> row.getAt("place", Integer.class) == 2));
-        assertEquals(c(2, "Marianne", LocalDate.parse("2022-07-10")), r.get(0));
-
-        // An item in a Row can also be referenced by the column name
-        Row r2 = table.rows().stream().filter(row -> row.getAt("place", Integer.class) == 3).findFirst().orElse(null);
-        assertIterableEquals(c(3, "Lotte", LocalDate.parse("2023-05-27")), r2, String.valueOf(r2));
-    }
-
-
-    @Test
-    void testAddColumn() {
-        var empData = new Matrix( new Columns(
-            m("emp_id", r(1,5)),
-            m("emp_name", "Rick","Dan","Michelle","Ryan","Gary"),
-            m("salary", 623.3,515.2,611.0,729.0,843.25),
-            m("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
-            ), c(int.class, String.class, Number.class, LocalDate.class)
-        );
-        var table = empData.clone().addColumn("yearMonth", YearMonth.class, toYearMonth(empData.column("start_date")));
-        assertEquals(5, table.columnCount());
-        assertEquals("yearMonth", table.columnNames().get(table.columnCount()-1));
-        assertEquals(YearMonth.class, table.columnType("yearMonth"));
-        assertEquals(YearMonth.of(2012, 1), table.getAt(0,4));
-        assertEquals(YearMonth.of(2015, 3), table.getAt(4,4));
-
-        // Append a new column to the end
-        Matrix table2 = empData.clone();
-        table2.putAt("yearMonth", YearMonth.class, toYearMonth(table2.getAt("start_date")));
-        assertEquals(empData.columnCount() + 1, table2.columnCount());
-        assertEquals("yearMonth", table2.columnNames().get(table2.columnCount()-1));
-        assertEquals(YearMonth.class, table2.columnType("yearMonth"));
-        assertEquals(YearMonth.of(2012, 1), table2.getAt(0,4));
-        assertEquals(YearMonth.of(2015, 3), table2.getAt(4,4));
-
-        // Insert a new column first
-        Matrix table3 = empData.clone();
-        table3.putAt("yearMonth", YearMonth.class, 0, toYearMonth(table3.getAt("start_date")));
-        assertEquals(empData.columnCount() + 1, table3.columnCount());
-        assertEquals("yearMonth", table3.columnNames().get(0));
-        assertEquals(YearMonth.class, table3.columnType("yearMonth"));
-        assertEquals(YearMonth.of(2012, 1), table3.getAt(0,0));
-        assertEquals(YearMonth.of(2015, 3), table3.getAt(4,0));
-    }
-
-    /*
-    @Test
-    void testAddColumns() {
-        def empData = new Matrix(
-            emp_id: 1..5,
-            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-            salary: [623.3,515.2,611.0,729.0,843.25],
-            start_date: toLocalDates("2019-01-01", "2019-01-23", "2019-05-15", "2019-05-11", "2019-03-27"),
-            [int, String, Number, LocalDate]
-        )
-
-        empData = empData.addColumn("yearMonth", YearMonth, toYearMonth(empData["start_date"]))
-        assertEquals(YearMonth, empData[0,4].class, "type of the added column")
-        assertEquals(YearMonth, empData.columnType("yearMonth"), "claimed type of the added column")
-
-        def counts = Stat.countBy(empData, "yearMonth").orderBy('yearMonth')
-        assertEquals(YearMonth, counts[0,0].class, "type of the count column")
-        assertEquals(YearMonth, counts.columnType("yearMonth"), "claimed type of the count column")
-
-        assertEquals(2, counts.subset('yearMonth', {it == YearMonth.of(2019,5)})[0,1])
-        assertEquals(1, counts.subset('yearMonth', {it == YearMonth.of(2019,3)})['yearMonth_count'][0])
-        assertEquals(2, counts[0, 'yearMonth_count'])
-
-        def sums = Stat.sumBy(empData, "salary", "yearMonth").orderBy("yearMonth", true)
-        assertEquals(YearMonth, sums[0,0].class, "type of the sums column")
-        assertEquals(YearMonth, sums.columnType("yearMonth"), "claimed type of the sums column")
-        assertEquals(611.0 + 729.0, sums[0, 1], sums.content())
-        assertEquals(843.25, sums[1, 1], sums.content())
-        assertEquals(623.3 + 515.2, sums[2, 1], sums.content())
-
-        def salaryPerYearMonth = counts
-                .orderBy("yearMonth", true)
-                .addColumns(sums, "salary")
-
-        assertEquals(asYearMonth("2019-05"), salaryPerYearMonth[0, 0], salaryPerYearMonth.content())
-        assertEquals(611.0 + 729.0, salaryPerYearMonth[0, 2], salaryPerYearMonth.content())
-        assertEquals(2, salaryPerYearMonth[0, 1], salaryPerYearMonth.content())
-        assertEquals(843.25, salaryPerYearMonth[1, 2], salaryPerYearMonth.content())
-        assertEquals(1, salaryPerYearMonth[1, 1], salaryPerYearMonth.content())
-    }*/
-
-    /*
-    @Test
-    void testSort() {
-        def empData = new Matrix(
-            emp_id: 1..5,
-            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-            salary: [623.3,515.2,611.0,729.0,843.25],
-            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
-            [Integer, String, Number, LocalDate]
-        )
-        def dateSorted = empData.orderBy("start_date")
-        assertEquals(4, dateSorted[4, 0], "Last row should be the Ryan row: \n${dateSorted.content()}")
-        assertEquals(asLocalDate("2012-03-27"), dateSorted[0, 3], "First row should be the Dan Row")
-
-        //println(empData.content())
-        def salarySorted = empData.orderBy(["salary": Matrix.DESC])
-        assertEquals(843.25, salarySorted["salary"][0], "Highest salary: ${salarySorted.content()}")
-        assertEquals(515.2, salarySorted["salary"][4], "Lowest salary: ${salarySorted.content()}")
-    }*/
-
-    /*
-    @Test
-    void testDropColumns() {
-        def empData = new Matrix(
-            emp_id: 1..5,
-            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-            salary: [623.3,515.2,611.0,729.0,843.25],
-            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
-            [int, String, Number, LocalDate]
-        )
-        def empList = empData.dropColumns("salary", "start_date")
-        //println(empList.content())
-        assertEquals(2, empList.columnCount(), "Number of columns after drop")
-        assertEquals(5, empList.rowCount(), "Number of rows after drop")
-        assertIterableEquals(["emp_id",	"emp_name"], empList.columnNames(), "column names after drop")
-        assertIterableEquals([Integer, String], empList.columnTypes(), "Column types after drop")
-    }*/
-
-    /*
-    @Test
-    void testDropColumnsExcept() {
-        def empData = new Matrix(
-            emp_id: 1..5,
-            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-            salary: [623.3,515.2,611.0,729.0,843.25],
-            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
-            [int, String, Number, LocalDate]
-        )
-        def empList = empData.dropColumnsExcept("emp_id", "start_date")
-        //println(empList.content())
-        assertEquals(2, empList.columnCount(), "Number of columns after drop")
-        assertEquals(5, empList.rowCount(), "Number of rows after drop")
-        assertIterableEquals(["emp_id", "start_date"], empList.columnNames(), "column names after drop")
-        assertIterableEquals([Integer, LocalDate], empList.columnTypes(), "Column types after drop")
-    }*/
-
-    /*
-    @Test
-    void testIteration() {
-        def empData = new Matrix(
-            emp_id: 1..5,
-            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-            salary: [623.3,515.2,611.0,729.0,843.25],
-            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
-            [int, String, Number, LocalDate]
-        )
-
-        int i = 1
-        empData.each { row ->
-            assertEquals(i, row[0], String.valueOf(row))
-            assertEquals(empData[i-1, 'emp_name'], row[1], String.valueOf(row))
-            i++
-        }
-
-        for (row in empData) {
-            if (row[2] > 600) {
-                row[2] = row[2] - 600
-            }
-        }
-
-        assertEquals(23.3, empData[0, 2], empData.toMarkdown())
-        assertEquals(515.2, empData[1, 2], empData.toMarkdown())
-        assertEquals(11.0, empData[2, 2], empData.toMarkdown())
-        assertEquals(129.0, empData[3, 2], empData.toMarkdown())
-        assertEquals(243.25, empData[4, 2], empData.toMarkdown())
-    }*/
-
-    /*
-    @Test
-    void testMatrixToGrid() {
-        def report = [
-            "Full Funding": [4563.153, 380.263, 4.938, 12.23],
-            "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
-            "Current Funding": [2700, 225, 2.922, 1.871]
-        ]
-        Matrix table = new Matrix(report, [BigDecimal]*3)
-
-        Grid grid = table.grid()
-        assertEquals(3.664, grid[2,1] as BigDecimal)
-    }*/
-
-    /*
-    @Test
-    void testSelectColumns() {
-        def report = [
-            "Full Funding": [4563.153, 380.263, 4.938, 12.23],
-            "Base Funding": [3385.593, 282.133, 3.664, 2.654],
-            "Current Funding": [2700, 225, 2.922, 1.871]
-        ]
-        Matrix table = new Matrix(report, [BigDecimal]*3)
-            .selectColumns("Base Funding", "Full Funding")
-
-        assertEquals(3385.593, table[0,0])
-        assertEquals(12.23, table[3,1])
-
-    }*/
-
-    /*
-    @Test
-    void testRenameColumns() {
-        def empData = new Matrix (
-            emp_id: 1..5,
-            emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-            salary: [623.3,515.2,611.0,729.0,843.25],
-            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11" ),
-            [int, String, Number, LocalDate]
-        )
-
-        empData.renameColumn('emp_id', 'id')
-        empData.renameColumn(1, 'name')
-
-        assertEquals('id', empData.columnNames()[0])
-        assertEquals('name', empData.columnNames()[1])
-
-    }*/
-
-    /*
-    @Test
-    void testToMarkdown() {
-        def report = [
-            "YearMonth": toYearMonth(['2023-01', '2023-02', '2023-03', '2023-04']),
-            "Full Funding": [4563.153, 380.263, 4.938, 12.23],
-            "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
-            "Current Funding": [2700, 225, 2.922, 1.871]
-        ]
-        Matrix table = new Matrix(report, [YearMonth, BigDecimal, BigDecimal, BigDecimal])
-
-        def md = table.toMarkdown()
-        def rows = md.split('\n')
-        assertEquals(6, rows.length)
-        assertEquals('| YearMonth | Full Funding | Baseline Funding | Current Funding |', rows[0])
-        assertEquals('| --- | ---: | ---: | ---: |', rows[1])
-        assertEquals('| 2023-01 | 4563.153 | 3385.593 | 2700 |', rows[2])
-        assertEquals('| 2023-04 | 12.23 | 2.654 | 1.871 |', rows[5])
-
-        md = table.toMarkdown(Map.of("class", "table"))
-        rows = md.split('\n')
-        assertEquals(7, rows.length)
-        assertEquals('{class="table" }', rows[6])
-    }*/
-
-    /*
-    @Test
-    void testEquals() {
-        def empData = new Matrix(
-            emp_id: [1,2],
-            emp_name: ["Rick","Dan"],
-            salary: [623.3,515.2],
-            start_date: toLocalDates("2013-01-01", "2012-03-27"),
-            [int, String, Number, LocalDate]
-        )
-
-        assertEquals(empData, new Matrix(
-            emp_id: [1,2],
-            emp_name: ["Rick","Dan"],
-            salary: [623.3,515.2],
-            start_date: toLocalDates("2013-01-01", "2012-03-27"),
-            [int, String, Number, LocalDate]
-        ))
-
-        assertNotEquals(empData, new Matrix (
-            emp_id: [1,2],
-            emp_name: ["Rick","Dan"],
-            salary: [623.3,515.1],
-            start_date: toLocalDates("2013-01-01", "2012-03-27"),
-            [int, String, Number, LocalDate]
-        ))
-
-        Matrix differentTypes = new Matrix (
-            emp_id: [1,2],
-            emp_name: ["Rick","Dan"],
-            salary: [623.3,515.2],
-            start_date: toLocalDates("2013-01-01", "2012-03-27"),
-            [Object, Object, Object, Object]
-        )
-        assertEquals(empData,differentTypes , empData.diff(differentTypes))
-        assertNotEquals(empData,differentTypes.withName("differentTypes") , empData.diff(differentTypes))
-    }*/
-
-    /*
-    @Test
-    void testDiff() {
-        def empData = new Matrix(
-            emp_id: [1,2],
-            emp_name: ["Rick","Dan"],
-            salary: [623.3,515.2],
-            start_date: toLocalDates("2013-01-01", "2012-03-27"),
-            [int, String, Number, LocalDate]
-        )
-        def d1 = new Matrix(
-            emp_id: [1,2],
-            emp_name: ["Rick","Dan"],
-            salary: [623.3,515.1],
-            start_date: toLocalDates("2013-01-01", "2012-03-27"),
-            [int, String, Number, LocalDate]
-        )
-        assertEquals('Row 1 differs: this: 2, Dan, 515.2, 2012-03-27; that: 2, Dan, 515.1, 2012-03-27',
-                    empData.diff(d1).trim())
-
-        def d2 = new Matrix(
-            emp_id: [1,2],
-            emp_name: ["Rick","Dan"],
-            salary: [623.3,515.2],
-            start_date: toLocalDates("2013-01-01", "2012-03-27"),
-            [Object, Object, Object, Object]
-        )
-        assertEquals('Column types differ: this: Integer, String, Number, LocalDate; that: Object, Object, Object, Object',
-            empData.diff(d2))
-    }*/
-
-    /*
-    @Test
-    void testRemoveEmptyRows() {
-        def empData = new Matrix(
-                emp_id: [1,2],
-                emp_name: ["Rick","Dan"],
-                salary: [623.3,515.2],
-                start_date: toLocalDates("2013-01-01", "2012-03-27"),
-                [int, String, Number, LocalDate]
-        )
-
-        def d0 = new Matrix(
-                emp_id: [1,null, 2, null],
-                emp_name: ["Rick", "", "Dan", " "],
-                salary: [623.3, null, 515.2, null],
-                start_date: toLocalDates("2013-01-01", null, "2012-03-27", null),
-                [int, String, Number, LocalDate]
-        )
-        assertEquals(empData, d0.removeEmptyRows(), empData.diff(d0))
-    }*/
-
-    /*
-    @Test
-    void testRemoveEmptyColumns() {
-        def empData = new Matrix(
-            emp_id: [1,2],
-            emp_name: [null, null],
-            salary: [623.3,515.2],
-            start_date: [null, null],
-            other: [null, null],
-            [int, String, Number, LocalDate, String]
-        )
-        assertIterableEquals(['emp_id', 'emp_name', 'salary', 'start_date', 'other'], empData.columnNames())
-        empData.removeEmptyColumns()
-        assertEquals(2, empData.columnCount())
-        assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
-    }
-    boolean deleteDirectory(File directoryToBeDeleted) {
-        File[] allContents = directoryToBeDeleted.listFiles()
-        if (allContents != null) {
-            for (File file : allContents) {
-                deleteDirectory(file)
-            }
-        }
-        return directoryToBeDeleted.delete()
-    }*/
-
-    /*
-    @Test
-    void testWithColumns() {
-        def table = new Matrix([
-            a: [1,2,3,4,5],
-            b: [1.2,2.3,0.7,1.3,1.9]
-        ], [Integer, BigDecimal])
-
-        def m = table.withColumns(['a', 'b']) { x, y -> x - y }
-        assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], m)
-
-        def n = table.withColumns([0,1] as Integer[]) { x, y -> x - y }
-        assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], n)
-    }*/
-
-    /*
-    @Test
-    void testPopulateColumn() {
-        Matrix components = new Matrix([
-            id: [1,2,3,4,5],
-            size: [1.2,2.3,0.7,1.3,1.9]
-        ], [Integer, BigDecimal])
-        components['id'] = [10, 11, 12, 13, 14]
-        assertEquals(10, components[0, 'id'])
-        assertEquals(13, components[3, 'id'])
-        assertEquals(14, components[4, 'id'])
-    }*/
-
-    /*
-    @Test
-    void testMoveColumn() {
-        def table = new Matrix([
-                'firstname': ['Lorena', 'Marianne', 'Lotte'],
-                'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
-                'foo': [1, 2, 3]
-        ], [String, LocalDate, int])
-
-        table.moveColumn('foo', 0)
-        assertIterableEquals(['foo', 'firstname', 'start'], table.columnNames())
-        assertIterableEquals([1, 2, 3], table[0])
-        assertIterableEquals([Integer, String, LocalDate], table.columnTypes())
-    }*/
-
-    /*
-    @Test
-    void testPutAt() {
-        // putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
-        def table = new Matrix([
-            'firstname': ['Lorena', 'Marianne', 'Lotte'],
-            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
-            'foo': [1, 2, 3]
-        ], [String, LocalDate, int])
-        table["yearMonth", YearMonth, 0] = toYearMonth(table["start"])
-        assertEquals(4, table.columnCount())
-        assertIterableEquals(['yearMonth', 'firstname', 'start', 'foo'], table.columnNames())
-        assertIterableEquals(toYearMonth(['2021-12', '2022-07', '2023-05']), table[0])
-
-        // putAt(List where, List<?> column)
-        table = new Matrix([
-                'firstname': ['Lorena', 'Marianne', 'Lotte'],
-                'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
-                'foo': [1, 2, 3]
-        ], [String, LocalDate, int])
-        table["start"] = table["start"].collect {it.plusDays(10)}
-        assertEquals(3, table.columnCount())
-        assertIterableEquals(['firstname', 'start', 'foo'], table.columnNames())
-        // getAt and putAt should have the same semantics i refer to columns:
-        assertIterableEquals(toLocalDates(['2021-12-11', '2022-07-20', '2023-06-06']), table[1])
-        assertIterableEquals(table.column(2), table[2])
-        assertIterableEquals(table.column("foo"), table["foo"])
-    }*/
-
-    /*
-    @Test
-    void testGetAt() {
-        def table = new Matrix([
-                'firstname': ['Lorena', 'Marianne', 'Lotte'],
-                'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
-                'foo': [1, 2, 3]
-        ], [String, LocalDate, int])
-
-        assertEquals(Integer, table.getAt(2, 2).class)
-        assertEquals(3, table.getAt(2, 2))
-
-        assertEquals(Integer, table[2, 2].class)
-        assertEquals(3, table[2, 2])
-
-        assertEquals(LocalDate, table[2, 'start'].class)
-        assertEquals(asLocalDate('2023-05-27'), table[2, 'start'])
-
-        assertEquals(asLocalDate('2023-05-27'), table.getAt(2, 'start'))
-        assertEquals(LocalDate, table.getAt(2, 'start').class)
-
-
-        Row row = table.row(1)
-        assertEquals(LocalDate, row.getAt('start').class)
-        assertEquals(LocalDate, row[1].class)
-        assertEquals(LocalDate, row['start'].class)
-        assertEquals(LocalDate.parse('2022-07-10'), row[1])
-        assertEquals(LocalDate.parse('2022-07-10'), row['start'])
-
-        assertEquals(String, table[0, 1, String].class)
-        assertEquals('2021-12-01', table[0, 1, String])
-
-        assertEquals(String, table[0, 'foo', String].class)
-        assertEquals('3', table[2, 'foo', String])
-
-        assertEquals(2 as BigDecimal, row['foo', BigDecimal])
-        assertEquals(2 as BigDecimal, row.getAt('foo', BigDecimal))
-        assertEquals('2', row['foo', String])
-        assertEquals(2 as BigDecimal, row[2, BigDecimal])
-        assertEquals('2', row[2, String])
-        assertEquals('2', row.getAt(2, String))
-    }*/
+    return directoryToBeDeleted.delete();
+  }
+
+
+  @Test
+  void testWithColumns() {
+    var table = new Matrix(new Columns()
+        .add("a", toIntegers(1, 2, 3, 4, 5))
+        .add("b", toBigDecimals(1.2, 2.3, 0.7, 1.3, 1.9))
+        , c(Integer.class, BigDecimal.class));
+
+    var m = table.withColumns(c("a", "b"), new Closure<BigDecimal>(null) {
+      public BigDecimal doCall(Integer x, BigDecimal y) {
+        return new BigDecimal(x).subtract(y);
+      }
+    });
+    assertIterableEquals(toBigDecimals(-0.2, -0.3, 2.3, 2.7, 3.1), m);
+
+    var n = table.withColumns(toIntegers(0, 1).toArray(new Integer[]{}), new Closure<BigDecimal>(null) {
+      public BigDecimal doCall(Integer x, BigDecimal y) {
+        return new BigDecimal(x).subtract(y);
+      }
+    });
+    assertIterableEquals(toBigDecimals(-0.2, -0.3, 2.3, 2.7, 3.1), n);
+  }
+
+
+  @Test
+  void testPopulateColumn() {
+    Matrix components = new Matrix(new Columns()
+        .add("id", 1, 2, 3, 4, 5)
+        .add("size", 1.2, 2.3, 0.7, 1.3, 1.9)
+        , c(Integer.class, Double.class));
+    components.putAt("id", c(10, 11, 12, 13, 14));
+    assertEquals(10, components.getAt(0, "id", Integer.class));
+    assertEquals(13, components.getAt(3, "id", Integer.class));
+    assertEquals(14, components.getAt(4, "id", Integer.class));
+  }
+
+
+  @Test
+  void testMoveColumn() {
+    var table = new Matrix(new Columns()
+        .add("firstname", "Lorena", "Marianne", "Lotte")
+        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+        .add("foo", 1, 2, 3)
+        , c(String.class, LocalDate.class, int.class));
+
+    table.moveColumn("foo", 0);
+    assertIterableEquals(c("foo", "firstname", "start"), table.columnNames());
+    assertIterableEquals(c(1, 2, 3), table.getAt(0));
+    assertIterableEquals(c(Integer.class, String.class, LocalDate.class), table.columnTypes());
+  }
+
+
+  @Test
+  void testPutAt() {
+    // putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
+    var table = new Matrix(new Columns()
+        .add("firstname", "Lorena", "Marianne", "Lotte")
+        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+        .add("foo", 1, 2, 3)
+        , c(String.class, LocalDate.class, int.class));
+    table.putAt("yearMonth", YearMonth.class, 0, toYearMonths(table.getAt("start")));
+    assertEquals(4, table.columnCount());
+    assertIterableEquals(c("yearMonth", "firstname", "start", "foo"), table.columnNames());
+    assertIterableEquals(toYearMonths("2021-12", "2022-07", "2023-05"), table.getAt(0));
+
+    // putAt(List where, List<?> column)
+    table = new Matrix(new Columns()
+        .add("firstname", "Lorena", "Marianne", "Lotte")
+        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+        .add("foo", 1, 2, 3)
+        , c(String.class, LocalDate.class, int.class));
+    table.putAt(
+        "start",
+        table.getAt("start", LocalDate.class)
+            .stream().map(it -> it.plusDays(10))
+            .collect(Collectors.toList())
+    );
+    assertEquals(3, table.columnCount());
+    assertIterableEquals(c("firstname", "start", "foo"), table.columnNames());
+    // getAt and putAt should have the same semantics i refer to columns:
+    assertIterableEquals(toLocalDates(c("2021-12-11", "2022-07-20", "2023-06-06")), table.getAt(1));
+    assertIterableEquals(table.column(2), table.getAt(2));
+    assertIterableEquals(table.column("foo"), table.getAt("foo"));
+  }
+
+
+  @Test
+  void testGetAt() {
+    var table = new Matrix(new Columns()
+        .add("firstname", "Lorena", "Marianne", "Lotte")
+        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+        .add("foo", 1, 2, 3)
+        , c(String.class, LocalDate.class, int.class));
+
+    assertEquals(Integer.class, table.getAt(2, 2).getClass());
+    assertEquals(3, table.getAt(2, 2, Integer.class));
+
+    assertEquals(Integer.class, table.getAt(2, 2).getClass());
+    assertEquals(3, table.getAt(2, 2, Integer.class));
+
+    assertEquals(LocalDate.class, table.getAt(2, "start").getClass());
+    assertEquals(asLocalDate("2023-05-27"), table.getAt(2, "start"));
+
+    assertEquals(asLocalDate("2023-05-27"), table.getAt(2, "start"));
+    assertEquals(LocalDate.class, table.getAt(2, "start").getClass());
+
+
+    Row row = table.row(1);
+    assertEquals(LocalDate.class, row.getAt("start").getClass());
+    assertEquals(LocalDate.class, row.getAt(1).getClass());
+    assertEquals(LocalDate.class, row.getAt("start").getClass());
+    assertEquals(LocalDate.parse("2022-07-10"), row.getAt(1));
+    assertEquals(LocalDate.parse("2022-07-10"), row.getAt("start"));
+
+    assertEquals(String.class, table.getAt(0, 1, String.class).getClass());
+    assertEquals("2021-12-01", table.getAt(0, 1, String.class));
+
+    assertEquals(String.class, table.getAt(0, "foo", String.class).getClass());
+    assertEquals("3", table.getAt(2, "foo", String.class));
+
+    assertEquals(asBigDecimal(2), row.getAt("foo", BigDecimal.class));
+    assertEquals(asBigDecimal(2), row.getAt("foo", BigDecimal.class));
+    assertEquals("2", row.getAt("foo", String.class));
+    assertEquals(asBigDecimal(2), row.getAt(2, BigDecimal.class));
+    assertEquals("2", row.getAt(2, String.class));
+    assertEquals("2", row.getAt(2, String.class));
+  }
 }

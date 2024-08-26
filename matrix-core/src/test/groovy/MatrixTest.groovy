@@ -431,7 +431,7 @@ class MatrixTest {
             start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
             [int, String, Number, LocalDate]
         )
-        def table = empData.clone().addColumn("yearMonth", YearMonth, toYearMonth(empData["start_date"]))
+        def table = empData.clone().addColumn("yearMonth", YearMonth, toYearMonths(empData["start_date"]))
         assertEquals(5, table.columnCount())
         assertEquals("yearMonth", table.columnNames()[table.columnCount()-1])
         assertEquals(YearMonth, table.columnType("yearMonth"))
@@ -440,7 +440,7 @@ class MatrixTest {
 
         // Append a new column to the end
         Matrix table2 = empData.clone()
-        table2["yearMonth", YearMonth] = toYearMonth(table2["start_date"])
+        table2["yearMonth", YearMonth] = toYearMonths(table2["start_date"])
         assertEquals(empData.columnCount() + 1, table2.columnCount())
         assertEquals("yearMonth", table2.columnNames()[table2.columnCount()-1])
         assertEquals(YearMonth, table2.columnType("yearMonth"))
@@ -449,7 +449,7 @@ class MatrixTest {
 
         // Insert a new column first
         Matrix table3 = empData.clone()
-        table3["yearMonth", YearMonth, 0] = toYearMonth(table3["start_date"])
+        table3["yearMonth", YearMonth, 0] = toYearMonths(table3["start_date"])
         assertEquals(empData.columnCount() + 1, table3.columnCount())
         assertEquals("yearMonth", table3.columnNames()[0])
         assertEquals(YearMonth, table3.columnType("yearMonth"))
@@ -467,7 +467,7 @@ class MatrixTest {
             [int, String, Number, LocalDate]
         )
 
-        empData = empData.addColumn("yearMonth", YearMonth, toYearMonth(empData["start_date"]))
+        empData = empData.addColumn("yearMonth", YearMonth, toYearMonths(empData["start_date"]))
         assertEquals(YearMonth, empData[0,4].class, "type of the added column")
         assertEquals(YearMonth, empData.columnType("yearMonth"), "claimed type of the added column")
 
@@ -629,7 +629,7 @@ class MatrixTest {
     @Test
     void testToMarkdown() {
         def report = [
-            "YearMonth": toYearMonth(['2023-01', '2023-02', '2023-03', '2023-04']),
+            "YearMonth": toYearMonths(['2023-01', '2023-02', '2023-03', '2023-04']),
             "Full Funding": [4563.153, 380.263, 4.938, 12.23],
             "Baseline Funding": [3385.593, 282.133, 3.664, 2.654],
             "Current Funding": [2700, 225, 2.922, 1.871]
@@ -734,7 +734,8 @@ class MatrixTest {
                 start_date: toLocalDates("2013-01-01", null, "2012-03-27", null),
                 [int, String, Number, LocalDate]
         )
-        assertEquals(empData, d0.removeEmptyRows(), empData.diff(d0))
+        def d0r = d0.removeEmptyRows()
+        assertEquals(empData, d0r, empData.diff(d0r, true))
     }
 
     @Test
@@ -810,10 +811,10 @@ class MatrixTest {
             'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
             'foo': [1, 2, 3]
         ], [String, LocalDate, int])
-        table["yearMonth", YearMonth, 0] = toYearMonth(table["start"])
+        table["yearMonth", YearMonth, 0] = toYearMonths(table["start"])
         assertEquals(4, table.columnCount())
         assertIterableEquals(['yearMonth', 'firstname', 'start', 'foo'], table.columnNames())
-        assertIterableEquals(toYearMonth(['2021-12', '2022-07', '2023-05']), table[0])
+        assertIterableEquals(toYearMonths(['2021-12', '2022-07', '2023-05']), table[0])
 
         // putAt(List where, List<?> column)
         table = new Matrix([

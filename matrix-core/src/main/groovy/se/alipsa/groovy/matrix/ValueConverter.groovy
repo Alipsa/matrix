@@ -215,15 +215,17 @@ class ValueConverter {
    * Checks whether object is a Number or a CharSequence containing numbers
    *
    * @param o the Object to test
+   * @param numberFormatOpt an optional NumberFormat to use
    * @return true if it is numeric otherwise false
    */
-  static boolean isNumeric(Object o) {
+  static boolean isNumeric(Object o, NumberFormat... numberFormatOpt) {
     if (o == null) return false
     if (o instanceof Number) return true
     if (o instanceof CharSequence) {
       ParsePosition pos = new ParsePosition(0)
       String str = ((CharSequence)o).toString()
-      NumberFormat.getInstance().parse(str, pos)
+      NumberFormat format = numberFormatOpt.length == 0 ? NumberFormat.getInstance() : numberFormatOpt[0]
+      format.parse(str, pos)
       //  if, after parsing the string, the parser position is at the end of the string,
       //  we can safely assume that the entire string is numeric
       return str.length() == pos.getIndex()

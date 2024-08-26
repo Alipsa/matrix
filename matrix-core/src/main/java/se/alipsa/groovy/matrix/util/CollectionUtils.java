@@ -54,4 +54,25 @@ public class CollectionUtils {
     }
     return list;
   }
+
+  public static <K, V> LinkedHashMap<K, V> lhm(K k1, V v1) {
+    LinkedHashMap<K, V> map = new LinkedHashMap<>();
+    map.put(k1, v1);
+    return map;
+  }
+
+  public static <K, V> LinkedHashMap<K, V> lhm(K k1, V v1, K k2, V v2) {
+    LinkedHashMap<K, V> map = new LinkedHashMap<>();
+    map.put(k1, v1);
+    map.put(k2, v2);
+    return map;
+  }
+
+  public static <K, V> LinkedHashMap<K, V> lhm(K k1, V v1, K k2, V v2, K k3, V v3) {
+    LinkedHashMap<K, V> map = new LinkedHashMap<>();
+    map.put(k1, v1);
+    map.put(k2, v2);
+    map.put(k3, v3);
+    return map;
+  }
 }

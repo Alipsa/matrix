@@ -10,7 +10,7 @@ class BoxChart extends Chart {
     def groups = data.split(categoryColumnName).sort()
     BoxChart chart = new BoxChart()
     chart.title = title
-    chart.categorySeries = ListConverter.toString(groups.keySet())
+    chart.categorySeries = ListConverter.toStrings(groups.keySet())
     chart.valueSeries = groups.values().collect {it[valueColumn] - null}
     chart.valueSeriesNames = chart.categorySeries as List<String>
     chart.xAxisTitle = categoryColumnName

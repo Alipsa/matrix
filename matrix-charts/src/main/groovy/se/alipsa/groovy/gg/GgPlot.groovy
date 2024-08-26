@@ -30,7 +30,6 @@ import se.alipsa.groovy.gg.stat.StatCount
 import se.alipsa.groovy.gg.stat.StatSum
 import se.alipsa.groovy.matrix.ListConverter
 import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.ValueConverter
 
 /**
  * An api very similar to ggplot2 making ports from R code using ggplot2 simple.
@@ -201,7 +200,7 @@ class GgPlot {
   static class As {
 
     static List factor(List column) {
-      return ListConverter.toString(column)
+      return ListConverter.toStrings(column)
     }
   }
   static Matrix map_data(String map, String region = null, boolean exact = false) {

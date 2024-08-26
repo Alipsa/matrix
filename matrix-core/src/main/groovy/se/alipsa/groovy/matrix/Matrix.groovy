@@ -41,8 +41,8 @@ class Matrix implements Iterable<Row> {
   // Copy of the data i column format
   private List<List<?>> mColumns
   private String mName
-  static final Boolean ASC = Boolean.FALSE
-  static final Boolean DESC = Boolean.TRUE
+  public static final Boolean ASC = Boolean.FALSE
+  public static final Boolean DESC = Boolean.TRUE
 
   static Matrix create(String name, List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt) {
     def table = create(headerList, rowList, dataTypesOpt)
@@ -712,10 +712,10 @@ class Matrix implements Iterable<Row> {
     if (this.columnNames() != other.columnNames()) {
       sb.append("Column Names differ: this: ${columnNames().join(', ')}; that: ${other.columnNames().join(', ')}\n")
     }
-    if (rowCount() != other.rowCount()) {
-      sb.append("Number of rows differ: this: ${columnCount()}; that: ${other.columnCount()}\n")
+    if (this.rowCount() != other.rowCount()) {
+      sb.append("Number of rows differ: this: ${this.columnCount()}; that: ${other.columnCount()}\n")
     }
-    if (columnTypes() != other.columnTypes()) {
+    if (this.columnTypes() != other.columnTypes()) {
       sb.append("Column types differ: this: ${columnTypeNames().join(', ')}; that: ${other.columnTypeNames().join(', ')}")
     }
     if (sb.length() == 0 || forceRowComparing) {
@@ -884,6 +884,10 @@ class Matrix implements Iterable<Row> {
    */
   List<?> getAt(String columnName) {
     return column(columnName)
+  }
+
+  <T> List<T> getAt(String columnName, Class<T> type) {
+    ListConverter.convert(column(columnName), type)
   }
 
   /**
@@ -1245,7 +1249,7 @@ class Matrix implements Iterable<Row> {
       }
       i++
     }
-    println "Removing columns $columnsToRemove"
+    //println "Removing columns $columnsToRemove"
     dropColumns(columnsToRemove)
     this
   }
@@ -1509,9 +1513,9 @@ class Matrix implements Iterable<Row> {
     List<String> header
     if (includeHeaderAsRow) {
       header = ['']
-      header.addAll(ListConverter.toString(column(columnNameAsHeader)))
+      header.addAll(ListConverter.toStrings(column(columnNameAsHeader)))
     } else {
-      header = ListConverter.toString(column(columnNameAsHeader))
+      header = ListConverter.toStrings(column(columnNameAsHeader))
     }
     return transpose(header, [Object]*header.size(), includeHeaderAsRow)
   }
@@ -1521,10 +1525,10 @@ class Matrix implements Iterable<Row> {
     List<List<?>> r = new ArrayList<>(rowCount()+1)
     if (includeHeaderAsRow) {
       header = ['']
-      header.addAll(ListConverter.toString(column(columnNameAsHeader)))
+      header.addAll(ListConverter.toStrings(column(columnNameAsHeader)))
       r.add(mHeaders)
     } else {
-      header = ListConverter.toString(column(columnNameAsHeader))
+      header = ListConverter.toStrings(column(columnNameAsHeader))
     }
     r.addAll(rows())
     return create(header, Grid.transpose(r), types)
