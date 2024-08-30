@@ -3,10 +3,7 @@ package test.alipsa.matrix;
 import groovy.lang.Closure;
 import org.junit.jupiter.api.Test;
 import se.alipsa.groovy.matrix.*;
-import se.alipsa.groovy.matrix.util.Columns;
-import se.alipsa.groovy.matrix.util.RowCriteriaClosure;
-import se.alipsa.groovy.matrix.util.ObjectCriteriaClosure;
-import se.alipsa.groovy.matrix.util.ValueClosure;
+import se.alipsa.groovy.matrix.util.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -850,18 +847,24 @@ class MatrixJavaTest {
         .add("b", toBigDecimals(1.2, 2.3, 0.7, 1.3, 1.9))
         , c(Integer.class, BigDecimal.class));
 
-    var m = table.withColumns(c("a", "b"), new Closure<BigDecimal>(null) {
+    var m = table.withColumns(c("a", "b"), new ValueTwoArgClosure<BigDecimal, Integer, BigDecimal> (
+        (x,y) -> new BigDecimal(x).subtract(y))
+    );
+
+    // we can always create a Closure directly of course, but that is less elegant in java
+    var m2 = table.withColumns(c("a", "b"), new Closure<BigDecimal>(null) {
       public BigDecimal doCall(Integer x, BigDecimal y) {
         return new BigDecimal(x).subtract(y);
       }
     });
+    assertIterableEquals(m, m2);
     assertIterableEquals(toBigDecimals(-0.2, -0.3, 2.3, 2.7, 3.1), m);
 
-    var n = table.withColumns(toIntegers(0, 1).toArray(new Integer[]{}), new Closure<BigDecimal>(null) {
-      public BigDecimal doCall(Integer x, BigDecimal y) {
-        return new BigDecimal(x).subtract(y);
-      }
-    });
+    var n = table.withColumns(
+        toIntegers(0, 1)
+        .toArray(new Integer[]{}),
+        new ValueTwoArgClosure<BigDecimal, Integer, BigDecimal>((x,y) -> new BigDecimal(x).subtract(y))
+    );
     assertIterableEquals(toBigDecimals(-0.2, -0.3, 2.3, 2.7, 3.1), n);
   }
 
