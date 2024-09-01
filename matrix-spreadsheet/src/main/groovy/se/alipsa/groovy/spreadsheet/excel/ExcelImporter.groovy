@@ -149,6 +149,7 @@ class ExcelImporter {
      * @param is the InputStream pointing to the excel spreadsheet to import
      * @param sheetParams a Map of parameters containing the keys:
      *  sheetName, startRow, endRow, startCol (number or name), endCol (number or name), firstRowAsColNames
+     *  key (optional, defaults to sheetName)
      * @return a map of sheet names and the corresponding Matrix
      */
     static Map<String, Matrix> importExcelSheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
@@ -181,7 +182,9 @@ class ExcelImporter {
                     }
                 }
                 Matrix matrix = importExcelSheet(sheet, startRow, it.endRow as int, startCol, endCol, header)
-                result.put(sheetName, matrix)
+                String key = it.getOrDefault("key", sheetName)
+                matrix.setName(key)
+                result.put(key, matrix)
             }
             return result
         }

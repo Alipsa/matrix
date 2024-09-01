@@ -155,7 +155,8 @@ class OdsImporter {
    *
    * @param is the InputStream pointing to the ods spreadsheet to import
    * @param sheetParams a Map of parameters containing the keys:
-   *  sheetName, startRow, endRow, startCol (number or name), endCol (number or name), firstRowAsColNames
+   *  sheetName, startRow, endRow, startCol (number or name), endCol (number or name), firstRowAsColNames,
+   *  key (optional, defaults to sheetName)
    * @return a map of sheet names and the corresponding Matrix
    */
   static Map<String, Matrix> importOdsSheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
@@ -194,7 +195,9 @@ class OdsImporter {
           startCol,
           endCol,
           header)
-      result.put(sheetName, matrix)
+      String key = it.getOrDefault("key", sheetName)
+      matrix.setName(key)
+      result.put(key, matrix)
     }
     result
   }

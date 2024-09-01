@@ -6,7 +6,7 @@ package se.alipsa.groovy.matrix
 class RowExtension {
 
   static <T> T getAt(Row self, Collection indices) {
-    println indices
+    //println("${this.class}: $indices")
     if (indices.size() == 2) {
       def column = indices[0]
       if (column instanceof String) {

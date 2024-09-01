@@ -42,6 +42,8 @@ class Grid<T> implements Iterable<List<T>> {
         }
     }
 
+
+
     Grid(T value, int nrow, int ncol) {
         data = new ArrayList<List<T>>(nrow)
         for (row in 1..nrow) {
@@ -67,6 +69,17 @@ class Grid<T> implements Iterable<List<T>> {
 
     boolean add(List<T> row) {
         data.add(row)
+    }
+
+    /**
+     * Insert a row i the specified position.
+     *
+     * @param position the row index to insert the row at
+     * @param row the row data
+     * @return the mutated Grid
+     */
+    boolean add(int position, List<T> row) {
+        data.add(position, row)
     }
 
     boolean addAll(List<List<T>> grid) {

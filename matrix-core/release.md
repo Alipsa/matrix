@@ -20,6 +20,11 @@
 - Overload ListConverter methods, align naming and parameter order. 
 - Add Matrix.getAt for column with type conversion. 
 - Add Numberformat as optional argument to OdsImporter.importOdsSheets and ValueConverter.isNumeric()
+- Add a Grid.add(int, List) and Matrix.addRow(int, List) to allow for inserting a row at the designated place. 
+- Add ValueTwoArgClosure to enable more elegant Java code.
+- Fix Matrix.content() and head() to pretty print the column names 
+- add Matrix.removeRows()
+- change columnCount to count number of columns instead of number of columnNames
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

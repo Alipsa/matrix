@@ -221,7 +221,7 @@ class Matrix implements Iterable<Row> {
   Matrix(String name, List<String> headerList, List<List<?>> columns, List<Class<?>>... dataTypesOpt) {
     mName = name
     mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
-    mHeaders = headerList.collect()
+    mHeaders = headerList.collect{ String.valueOf(it) }
     mColumns = []
     columns.eachWithIndex { List<?> column, int i ->
       //mColumns.add(Collections.checkedList(column, mTypes[i]))
@@ -244,7 +244,7 @@ class Matrix implements Iterable<Row> {
     mHeaders = []
     mColumns = []
     columns.each {k, v ->
-      mHeaders << k
+      mHeaders << String.valueOf(k)
       mColumns << v.collect()
     }
     mTypes = sanitizeColumnTypes(mHeaders, dataTypesOpt)
@@ -305,7 +305,7 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
-   * Adds a row to the current Matrix
+   * Appends a row to the current Matrix
    *
    * @param row a List<?> containing the row to add
    * @return a reference to the this Matrix to allow method chaining
@@ -319,6 +319,26 @@ class Matrix implements Iterable<Row> {
     }
     for (int c = 0; c < row.size(); c++) {
       mColumns[c].add(row[c])
+    }
+    return this
+  }
+
+  /**
+   * Insert a row i the specified position.
+   *
+   * @param position the row index to insert the row at
+   * @param row the row data
+   * @return the mutated Matrix
+   */
+  Matrix addRow(int position, List<?> row) {
+    if (row == null) {
+      throw new IllegalArgumentException("Row cannot be null")
+    }
+    if (row.size() != columnCount()) {
+      throw new IllegalArgumentException("The number of elements in the row (${row.size()}) does not match the number of columns (${columnCount()})")
+    }
+    for (int c = 0; c < row.size(); c++) {
+      mColumns[c].add(position, row[c])
     }
     return this
   }
@@ -440,7 +460,7 @@ class Matrix implements Iterable<Row> {
 
   Matrix columnNames(List<String> names) {
     if(columnCount() != names.size()) {
-      throw new IllegalArgumentException("Number of column names (${names.size()}) does not match number of columns (${columnCount()}) in this table")
+      throw new IllegalArgumentException("Number of column names (${names.size()}) does not match number of columns (${columnCount()}) in this matrix")
     }
     mHeaders.clear()
     mHeaders.addAll(names)
@@ -473,7 +493,7 @@ class Matrix implements Iterable<Row> {
    */
   Matrix convert(List<Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     if (columnTypes.size() > columnCount()) {
-      throw new IllegalArgumentException("There are more column types specified (${columnTypes.size()}) than there are columns in this table (${columnCount()})")
+      throw new IllegalArgumentException("There are more column types specified (${columnTypes.size()}) than there are columns in this matrix (${columnCount()})")
     }
     Map<String, Class<?>> columnTypeMap = [:]
     for (int i = 0; i < columnTypes.size(); i++) {
@@ -581,7 +601,7 @@ class Matrix implements Iterable<Row> {
   }
 
   int columnCount() {
-    return mHeaders.size()
+    return mColumns.size()
   }
 
   /**
@@ -605,7 +625,7 @@ class Matrix implements Iterable<Row> {
     try {
       return mColumns.get(columnIndex(columnName))
     } catch (IndexOutOfBoundsException e) {
-      throw new IndexOutOfBoundsException("The column '$columnName' does not exist in this table: " + e.getMessage())
+      throw new IndexOutOfBoundsException("The column '$columnName' does not exist in this matrix: " + e.getMessage())
     }
   }
 
@@ -901,10 +921,12 @@ class Matrix implements Iterable<Row> {
   String head(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     StringBuilder sb = new StringBuilder()
     def nRows = Math.min(rows, rowCount())
-    if (includeHeader) {
-      sb.append(String.join(delimiter, mHeaders)).append(lineEnding)
-    }
     List<Integer> columnLengths = mHeaders.collect { colName -> maxContentLength(colName, includeHeader, maxColumnLength)}
+
+    if (includeHeader) {
+      List<String> headerRow = padRow(mHeaders, columnLengths)
+      sb.append(String.join(delimiter, headerRow)).append(lineEnding)
+    }
 
     for (int i = 0; i < nRows; i++) {
       List<String> stringRow = padRow(row(i), columnLengths)
@@ -942,7 +964,7 @@ class Matrix implements Iterable<Row> {
    *   table.each {
    *     // "it" contains the row
    *   }
-   * @return an Iterator iterating over the rows (observations) in this table
+   * @return an Iterator iterating over the rows (observations) in this matrix
    */
   @Override
   Iterator<Row> iterator() {
@@ -1036,7 +1058,7 @@ class Matrix implements Iterable<Row> {
   /**
    * Used to pretty print (e.g. to console) a row
    */
-  List<String> padRow(Row row, List<Integer> columnLengths) {
+  List<String> padRow(List row, List<Integer> columnLengths) {
     List<String> stringRow = []
     for (int c = 0; c < mHeaders.size(); c++) {
       def val = row[c]
@@ -1115,7 +1137,7 @@ class Matrix implements Iterable<Row> {
   // thus, we return void to make that fact obvious
   void putAt(String columnName, Class<?> type, Integer index = null, List<?> column) {
     if(rowCount() != column.size()) {
-      throw new IllegalArgumentException("Number of column values (${column.size()}) does not match number of rows (${rowCount()}) in this table")
+      throw new IllegalArgumentException("Number of column values (${column.size()}) does not match number of rows (${rowCount()}) in this matrix")
     }
     if (columnNames().contains(columnName)) {
       replace(columnName, type, column)
@@ -1227,6 +1249,16 @@ class Matrix implements Iterable<Row> {
     col.clear()
     col.addAll(values)
     mTypes.set(columnIndex(columnName), type)
+  }
+
+  Matrix removeRows(int... indexes) {
+    Arrays.sort(indexes)
+    mColumns.each { col ->
+      indexes.eachWithIndex { int idx, int count ->
+        col.remove(idx - count)
+      }
+    }
+    this
   }
 
   Matrix removeEmptyRows() {
