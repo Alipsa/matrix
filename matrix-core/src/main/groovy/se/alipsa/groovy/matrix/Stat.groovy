@@ -244,7 +244,7 @@ class Stat {
 
     static List<BigDecimal> means(List<List<?>> rowList, int scale = 9) {
         List<List<?>> columns = Grid.transpose(rowList)
-        println columns
+        //println columns
         List<BigDecimal> results = []
         columns.each {
             results << mean(it, scale)

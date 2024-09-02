@@ -40,6 +40,10 @@ class OdsValueExtractor extends ValueExtractor {
       return getInt(range.getValue())
    }
 
+   Object getObject(Range range) {
+      return range.getValue()
+   }
+
    String getString(int row, int column) {
       try {
          return getString(sheet.getRange(row, column))
