@@ -55,6 +55,9 @@ class Matrix implements Iterable<Row> {
     table.mHeaders = headerList.collect()
     table.mColumns = rowList.transpose().collect() as List<List<?>>
     table.mTypes = sanitizeColumnTypes(headerList, dataTypesOpt)
+    if (table.mHeaders.size() != table.mColumns.size()) {
+      throw new IllegalArgumentException("Headers and Columns does not match, there were ${headerList.size()} headers and ${table.mColumns.size()} provided")
+    }
     return table
   }
 
@@ -783,16 +786,15 @@ class Matrix implements Iterable<Row> {
   }
 
   Matrix dropColumns(String... columnNames) {
-    def columnsToDrop = columnNames.length > 0 ? columnNames as List<String> : []
-    columnsToDrop.each { colName ->
-      if (colName in this.columnNames()) {
-        def colIdx = columnIndex(colName)
-        mColumns.remove(colIdx)
-        mTypes.remove(colIdx)
-        mHeaders.remove(colIdx)
-      }
+    if (columnNames.length == 0) {
+      println "no variables to drop specified, nothing to do"
+      return this
     }
-    return this
+    List<Integer> idxs = columnIndices(columnNames as List<String>)
+    if (idxs.contains(-1)) {
+      throw new IllegalArgumentException("Variables ${String.join(',', columnNames)} does not match actual column names: ${String.join(',', mHeaders)}")
+    }
+    dropColumns(idxs)
   }
 
   Matrix dropColumns(List<Integer> columnIndices) {
@@ -1370,6 +1372,8 @@ class Matrix implements Iterable<Row> {
     if (dataTypesOpt.length > 0) {
       types = convertPrimitivesToWrapper(dataTypesOpt[0])
       if (headerList.size() != types.size()) {
+        println "Headers (${headerList.size()} elements): $headerList"
+        println "Types:  (${types.size()} elements): ${types.collect{ it.simpleName}}"
         throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${types.size()})")
       }
     } else {

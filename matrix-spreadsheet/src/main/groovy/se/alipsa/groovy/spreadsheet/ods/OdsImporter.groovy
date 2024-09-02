@@ -184,10 +184,9 @@ class OdsImporter {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
         startRow = startRow + 1
       } else {
-        for (int i = 1; i <= endCol - startCol; i++) {
-          header.add(String.valueOf(i))
-        }
+        header.addAll(SpreadsheetUtil.createColumnNames(startCol, endCol))
       }
+      //println ("importOdsSheets: startCol ${it.startCol} = $startCol, endCol ${it.endCol} = $endCol")
       Matrix matrix = importOds(
           sheet,
           startRow,
@@ -208,6 +207,7 @@ class OdsImporter {
     startCol--
     endCol--
 
+    //println "importOds: startCol = $startCol, endCol = $endCol"
     OdsValueExtractor ext = new OdsValueExtractor(sheet)
     List<List<?>> matrix = []
     List<?> rowList
@@ -221,6 +221,7 @@ class OdsImporter {
           if (val.endsWith("%")) {
             // In excel there is no % in the end of percentage cell, so we make it the same
             // This has the unfortunate consequence that intentional columns ending with % will be changed
+            //TODO: check if we can get something from the ext.getObject() that is useful
             try {
               double dblVal = Double.parseDouble(val.replace("%", "").replace(",", ".")) / 100
               val = String.valueOf(dblVal)

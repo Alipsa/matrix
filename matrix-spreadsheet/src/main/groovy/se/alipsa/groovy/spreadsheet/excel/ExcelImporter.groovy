@@ -177,9 +177,7 @@ class ExcelImporter {
                     buildHeaderRow(startRow, startCol, endCol, header, sheet)
                     startRow = startRow + 1
                 } else {
-                    for (int i = 1; i <= endCol - startCol; i++) {
-                        header.add(String.valueOf(i))
-                    }
+                    header.addAll(SpreadsheetUtil.createColumnNames(startCol, endCol))
                 }
                 Matrix matrix = importExcelSheet(sheet, startRow, it.endRow as int, startCol, endCol, header)
                 String key = it.getOrDefault("key", sheetName)

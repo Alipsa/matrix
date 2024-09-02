@@ -36,7 +36,7 @@ class MapListTest {
     lm.add(YearMonth.of(2014, 3), asLocalDate("2014-03-20"))
     lm.add(YearMonth.of(2014, 3), asLocalDate("2014-03-28"))
 
-    println lm.get(YearMonth.of(2014, 2))
+    //println lm.get(YearMonth.of(2014, 2))
     assertEquals(asLocalDate("2014-02-01"), lm.getAt([YearMonth.of(2014, 2), 0]), lm.toString())
     assertEquals(asLocalDate("2014-02-01"), lm[YearMonth.of(2014, 2), 0], lm.toString())
     assertEquals(asLocalDate("2014-03-28"), lm[YearMonth.of(2014, 3), 2])

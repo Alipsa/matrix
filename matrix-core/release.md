@@ -25,6 +25,8 @@
 - Fix Matrix.content() and head() to pretty print the column names 
 - add Matrix.removeRows()
 - change columnCount to count number of columns instead of number of columnNames
+- add size check to Matrix.create()
+- add check for missing column in Matrix.dropColumns()
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

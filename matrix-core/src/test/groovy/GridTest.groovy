@@ -223,7 +223,7 @@ class GridTest {
         g = g + [1,2,3,4,5]
         g << [10,20,30,40,50]
         g.add(0, ['Y1',	'Y2',	'Y3',	'Y4',	'Y5'])
-        g.rowList.each {println it}
+        //g.rowList.each {println it}
         assertIterableEquals(['Y1',	'Y2',	'Y3',	'Y4',	'Y5'], g[0])
         assertIterableEquals([1,2,3,4,5], g.getAt(1))
         assertIterableEquals([10,20,30,40,50], g[2])

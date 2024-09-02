@@ -2,6 +2,7 @@ package spreadsheet
 
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.ValueConverter
 import se.alipsa.groovy.spreadsheet.excel.ExcelImporter
 import se.alipsa.groovy.spreadsheet.ods.OdsImporter
 
@@ -61,9 +62,11 @@ class ExcelImporterTest {
             Map<String, Matrix> sheets = ExcelImporter.importExcelSheets(is,
                 [
                     [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 5, firstRowAsColNames: true],
-                    [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true]
+                    [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true],
+                    ['key': 'comp', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: false],
+                    ['key': 'comp2', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: true]
                 ])
-            assertEquals(2, sheets.size())
+            assertEquals(4, sheets.size())
             Matrix table2 = sheets.Sheet2
             assertEquals(3.0, table2[2, 0])
             def date = table2[6, 2]
@@ -76,6 +79,41 @@ class ExcelImporterTest {
             assertEquals(103599.04, table1[1,1])
             assertEquals(66952.95, table1[2,2])
             assertEquals(0.0G, table1[3,3, BigDecimal])
+
+            Matrix comp = sheets.comp.clone()
+            assertEquals('Component', comp[0,0])
+            assertEquals(5, comp.rowCount())
+            assertEquals(32, comp.columnCount())
+            assertEquals(31, comp[0,31, Integer])
+
+            def headerRow = comp.row(0)
+            List<String> names = headerRow.collect{
+                if (it == "Component") {
+                    String.valueOf(it)
+                } else {
+                    String.valueOf(ValueConverter.asDouble(it).intValue())
+                }
+            }
+            assertEquals(32, names.size())
+            comp.columnNames(names)
+            comp.removeRows(0)
+            comp = comp.convert([String] + [Integer]*31 as List<Class<?>>)
+            assertEquals(2043, comp[0,1])
+            assertEquals(2790, comp[3,31])
+
+            Matrix comp2 = sheets.comp2
+            assertIterableEquals(sheets.comp.columnTypeNames(), comp2.columnTypeNames(), "column types differ")
+            comp2.columnNames(comp2.columnNames().collect{
+                if (it == "Component") {
+                    String.valueOf(it)
+                } else {
+                    String.valueOf(ValueConverter.asDouble(it).intValue())
+                }
+            })
+            assertIterableEquals(comp.columnNames(), comp2.columnNames(), "column names differ")
+            comp2 = comp2.convert([String] + [Integer]*31 as List<Class<?>>)
+            assertIterableEquals(comp.columnTypeNames(), comp2.columnTypeNames(), "column types differ after column name setting")
+
         }
     }
 }

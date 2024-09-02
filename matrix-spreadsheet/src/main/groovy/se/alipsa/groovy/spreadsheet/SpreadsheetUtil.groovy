@@ -49,4 +49,12 @@ class SpreadsheetUtil {
    static String createValidSheetName(String suggestion) {
       return WorkbookUtil.createSafeSheetName(suggestion)
    }
+
+   static List<String> createColumnNames(int startCol, int endCol) {
+      def header = []
+      for (int i = 1; i <= endCol - startCol + 1; i++) {
+         header.add(String.valueOf(i))
+      }
+      header
+   }
 }
