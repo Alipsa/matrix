@@ -107,7 +107,7 @@ class MatrixJavaTest {
     employees.add(c("Peter Smith", 23400, "2018-03-25", "2020-04-12"));
     employees.add(c("Jane Doe", 26800, asLocalDate("2017-03-14"), asLocalDate("2020-10-02")));
 
-    var table = Matrix.create(employees);
+    var table = Matrix.builder().rows(employees).build();
     assertEquals("John Doe", table.getAt(0, 0));
     assertEquals(23400, table.getAt(1, 1, Integer.class));
     assertEquals(LocalDate.of(2017, 3, 14), table.getAt(2, 2));
@@ -206,16 +206,14 @@ class MatrixJavaTest {
         fw.write(String.join(",", row) + '\n');
       }
     }
-    var table = Matrix.create(file);
+    var table = Matrix.builder().data(file).build();
     assertIterableEquals(data.get(0), table.columnNames());
     assertEquals(data.get(1).get(1), table.getAt(0, 1));
     assertEquals("Team SD Worx", table.getAt(2, 3));
 
-    var plantGrowth = Matrix.create(
-        getClass().getResource("/PlantGrowth.csv"),
-        ",",
-        "\""
-    );
+    var plantGrowth = Matrix.builder()
+        .data(getClass().getResource("/PlantGrowth.csv"),",","\"")
+        .build();
     assertEquals("PlantGrowth", plantGrowth.getName());
     assertIterableEquals(c("id", "weight", "group"), plantGrowth.columnNames());
     var row30 = plantGrowth.findFirstRow("id", "30");
@@ -329,7 +327,7 @@ class MatrixJavaTest {
     assertEquals(" 1\tLorena  \t2021-12-01\n", head, head);
     var tail = table.tail(2, false);
     assertEquals("20\tMarianne\t2022-07-10\n 3\tLotte   \t2023-05-27\n", tail, tail);
-    String[] content = table.content(Map.of("includeHeader", false, "maxColumnLength", 7)).split("\n");
+    String[] content = table.content(Map.of("includeHeader", false, "includeTitle", false,"maxColumnLength", 7)).split("\n");
     assertEquals(" 1\tLorena \t2021-12", content[0]);
   }
 
@@ -372,7 +370,7 @@ class MatrixJavaTest {
     Matrix project;
     try (Connection con = DriverManager.getConnection(dbUrl, props); Statement sql = con.createStatement()) {
       var rs = sql.executeQuery("SELECT * FROM PROJECT");
-      project = Matrix.create(rs);
+      project = Matrix.builder().data(rs).build();
     }
 
     assertEquals(2, project.rowCount());

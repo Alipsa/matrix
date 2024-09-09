@@ -27,6 +27,9 @@
 - change columnCount to count number of columns instead of number of columnNames
 - add size check to Matrix.create()
 - add check for missing column in Matrix.dropColumns()
+- Modify Matrix.addColumns to include all columns from the supplied matrix if no columns are specified
+- Fix bug in Matrix.diff and add check for number of columns
+- Add a builder to Matrix and deprecate some static create methods and constructors as a result
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

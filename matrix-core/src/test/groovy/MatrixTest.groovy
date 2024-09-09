@@ -74,6 +74,100 @@ class MatrixTest {
     }
 
     @Test
+    void testBuilder() {
+        Matrix m1 = Matrix.builder()
+        .name("empData")
+        .build()
+        m1.content()
+
+        Matrix m2 = Matrix.builder()
+        .name('m2')
+        .columnNames(['id', 'name', 'salary', 'start']).build()
+        m2['id'].addAll([1,2,3])
+        m2.content()
+
+        Matrix m3 = Matrix.builder()
+            .columns([
+                [1,2,3],
+                ['foo', 'bar', 'baz']
+            ]).build()
+        m3[1] = [1,2,3]
+        m3.content()
+
+        Matrix m4 = Matrix.builder()
+            .dataTypes([int, String, Number, LocalDate]).build()
+        m4.content()
+
+        Matrix m5 = Matrix.builder()
+            .name("m5")
+            .columnNames(['id', 'name', 'salary', 'start'])
+            .dataTypes([int, String, Number, LocalDate]).build()
+        m5['id'] = [1,2,3]
+        m5[1] << 'Rick'
+        m5['name'] << 'Dan'
+        m5.column(1).add('Michelle')
+        m5.content()
+        assertEquals(2, m5[1, 'id'])
+        assertEquals('Rick', m5[0, 1])
+
+        Matrix m6 = Matrix.builder()
+            .name("m6")
+            .columns([
+                [1,2,3],
+                ['foo', 'bar', 'baz']
+            ])
+            .dataTypes([int, String]).build()
+        m6.content()
+
+        Matrix m7 = Matrix.builder()
+            .name("m7")
+            .columns([
+                [1,2,3],
+                ['foo', 'bar', 'baz']
+            ])
+            .dataTypes([int, String, Number]).build()
+        m7.content()
+
+
+        Matrix r3 = Matrix.builder()
+            .rows([
+                [1, 'foo'],
+                [2, 'bar'],
+                [3, 'baz']
+            ]).build()
+        r3[1] = [1,2,3]
+        r3.content()
+        assertEquals(m3, r3, m3.diff(r3))
+
+        Matrix r6 = Matrix.builder()
+            .name("m6")
+            .rows([
+                [1, 'foo'],
+                [2, 'bar'],
+                [3, 'baz']
+            ])
+            .dataTypes([int, String]).build()
+        r6.addRow([4, 'qux'])
+        r6.removeRows(r6.size() -1)
+        r6.content()
+        assertEquals(m6, r6)
+
+        Matrix r7 = Matrix.builder()
+            .name("m7")
+            .rows([
+                [1, 'foo'],
+                [2, 'bar'],
+                [3, 'baz']
+            ])
+            .dataTypes([int, String, Number]).build()
+        r7.addColumn('c4', int, [7,8,9])
+        r7.content()
+        assertNotEquals(m7, r7)
+        r7.dropColumns('c4')
+        assertEquals(m7, r7, m7.diff(r7))
+    }
+
+    @Test
     void testTableCreationFromMatrix() {
         def employees = []
         employees << ['John Doe', 21000, asLocalDate('2013-11-01'), asLocalDate('2020-01-10')]
@@ -88,7 +182,10 @@ class MatrixTest {
 
     @Test
     void testAddRow() {
-        Matrix m = new Matrix("years", (1..5).collect{"Y" + it})
+        Matrix m = Matrix.builder()
+            .name("years")
+            .columnNames((1..5).collect{"Y" + it})
+            .build()
         m.addRow([1,2,3,4,5])
         m << [10,20,30,40,50]
         m.addRow(0, m.columnNames())
@@ -286,7 +383,7 @@ class MatrixTest {
         assertEquals(' 1\tLorena  \t2021-12-01\n', head, head)
         def tail = table.tail(2, false)
         assertEquals('20\tMarianne\t2022-07-10\n 3\tLotte   \t2023-05-27\n', tail, tail)
-        String[] content = table.content(includeHeader: false, maxColumnLength:7).split('\n')
+        String[] content = table.content(includeHeader: false, includeTitle: false, maxColumnLength:7).split('\n')
         assertEquals(' 1\tLorena \t2021-12', content[0])
 
     }
@@ -358,9 +455,9 @@ class MatrixTest {
         ]
         def table = new Matrix(data)
             .convert(place: int, start: LocalDate)
-        def table2 = table.apply("start", { startDate ->
+        def table2 = table.apply("start") { startDate ->
             startDate.plusDays(10)
-        })
+        }
         assertEquals(LocalDate.of(2021, 12, 11), table2["start"][0])
         assertEquals(LocalDate.of(2022, 7, 20), table2["start"][1])
         assertEquals(LocalDate.of(2023, 6, 6), table2["start"][2])
@@ -429,6 +526,16 @@ class MatrixTest {
     }
 
     @Test
+    void testAppendColumnValue() {
+        String name = 'numbers'
+        List<String> header = ['foo','bar']
+        def table = new Matrix(name, header)
+        table['foo'] << 1
+        table[0] << 2
+        println table.content()
+    }
+
+    @Test
     void testAddColumn() {
         def empData = new Matrix(
             emp_id: 1..5,
@@ -475,7 +582,24 @@ class MatrixTest {
             [int, String, Number, LocalDate]
         )
 
-        empData = empData.addColumn("yearMonth", YearMonth, toYearMonths(empData["start_date"]))
+        def empData2 = new Matrix(
+            foo: [0,1,0,0,2],
+            bar: ["Truman","Schwartz", "Bowman", "Lawson", "Carlson"],
+            [int, String]
+        )
+
+        def empData3 = new Matrix(
+            baz: [8, 9, 12.1, 3, 4],
+            [Number]
+        )
+
+        def empd = empData.clone()
+        empd.addColumns(empData2)
+        empd.addColumns(empData3)
+
+        println empd.content()
+
+        empData.addColumn("yearMonth", YearMonth, toYearMonths(empData["start_date"]))
         assertEquals(YearMonth, empData[0,4].class, "type of the added column")
         assertEquals(YearMonth, empData.columnType("yearMonth"), "claimed type of the added column")
 
