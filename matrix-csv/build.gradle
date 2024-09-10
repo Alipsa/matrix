@@ -24,6 +24,14 @@ java {
   }
 }
 
+tasks.withType(JavaCompile) {
+  options.deprecation = true
+}
+
+tasks.withType(GroovyCompile) { task ->
+  task.options.deprecation = true
+}
+
 repositories {
   if (version.contains('SNAPSHOT')) {
     mavenLocal()

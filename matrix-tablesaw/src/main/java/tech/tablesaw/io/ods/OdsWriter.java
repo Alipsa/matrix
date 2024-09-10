@@ -61,7 +61,7 @@ public class OdsWriter implements DataWriter<OdsWriteOptions> {
           spreadSheet.save(os);
         } else {
           try(Writer writer = options.destination().writer();
-              OutputStream wos = new WriterOutputStream(writer, StandardCharsets.UTF_8)) {
+              OutputStream wos = WriterOutputStream.builder().setWriter(writer).setCharset(StandardCharsets.UTF_8).get()) {
             spreadSheet.save(wos);
           }
         }

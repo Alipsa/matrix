@@ -25,6 +25,14 @@ repositories {
     mavenCentral()
 }
 
+tasks.withType(JavaCompile) {
+    options.deprecation = true
+}
+
+tasks.withType(GroovyCompile) { task ->
+    task.options.deprecation = true
+}
+
 dependencies {
     def groovy = 'org.apache.groovy:groovy:4.0.22'
     compileOnly groovy

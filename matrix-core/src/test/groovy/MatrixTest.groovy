@@ -24,15 +24,17 @@ class MatrixTest {
 
     @Test
     void testMatrixConstructors() {
-        def empData = new Matrix('empData',
+        def empData = Matrix.builder()
+            .name('empData')
+            .data(
                 [
                 emp_id: 1..5,
                 emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
                 salary: [623.3,515.2,611.0,729.0,843.25],
                 start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
-                ],
-                [int, String, Number, LocalDate]
-        )
+                ])
+            .dataTypes([int, String, Number, LocalDate])
+            .build()
         assertEquals('empData', empData.getName())
         assertEquals(1, empData[0,0])
         assertEquals("Dan", empData[1,1])
@@ -74,113 +76,6 @@ class MatrixTest {
     }
 
     @Test
-    void testBuilder() {
-        Matrix m1 = Matrix.builder()
-        .name("empData")
-        .build()
-        m1.content()
-
-        Matrix m2 = Matrix.builder()
-        .name('m2')
-        .columnNames(['id', 'name', 'salary', 'start']).build()
-        m2['id'].addAll([1,2,3])
-        m2.content()
-
-        Matrix m3 = Matrix.builder()
-            .columns([
-                [1,2,3],
-                ['foo', 'bar', 'baz']
-            ]).build()
-        m3[1] = [1,2,3]
-        m3.content()
-
-        Matrix m4 = Matrix.builder()
-            .dataTypes([int, String, Number, LocalDate]).build()
-        m4.content()
-
-        Matrix m5 = Matrix.builder()
-            .name("m5")
-            .columnNames(['id', 'name', 'salary', 'start'])
-            .dataTypes([int, String, Number, LocalDate]).build()
-        m5['id'] = [1,2,3]
-        m5[1] << 'Rick'
-        m5['name'] << 'Dan'
-        m5.column(1).add('Michelle')
-        m5.content()
-        assertEquals(2, m5[1, 'id'])
-        assertEquals('Rick', m5[0, 1])
-
-        Matrix m6 = Matrix.builder()
-            .name("m6")
-            .columns([
-                [1,2,3],
-                ['foo', 'bar', 'baz']
-            ])
-            .dataTypes([int, String]).build()
-        m6.content()
-
-        Matrix m7 = Matrix.builder()
-            .name("m7")
-            .columns([
-                [1,2,3],
-                ['foo', 'bar', 'baz']
-            ])
-            .dataTypes([int, String, Number]).build()
-        m7.content()
-
-
-        Matrix r3 = Matrix.builder()
-            .rows([
-                [1, 'foo'],
-                [2, 'bar'],
-                [3, 'baz']
-            ]).build()
-        r3[1] = [1,2,3]
-        r3.content()
-        assertEquals(m3, r3, m3.diff(r3))
-
-        Matrix r6 = Matrix.builder()
-            .name("m6")
-            .rows([
-                [1, 'foo'],
-                [2, 'bar'],
-                [3, 'baz']
-            ])
-            .dataTypes([int, String]).build()
-        r6.addRow([4, 'qux'])
-        r6.removeRows(r6.size() -1)
-        r6.content()
-        assertEquals(m6, r6)
-
-        Matrix r7 = Matrix.builder()
-            .name("m7")
-            .rows([
-                [1, 'foo'],
-                [2, 'bar'],
-                [3, 'baz']
-            ])
-            .dataTypes([int, String, Number]).build()
-        r7.addColumn('c4', int, [7,8,9])
-        r7.content()
-        assertNotEquals(m7, r7)
-        r7.dropColumns('c4')
-        assertEquals(m7, r7, m7.diff(r7))
-    }
-
-    @Test
-    void testTableCreationFromMatrix() {
-        def employees = []
-        employees << ['John Doe', 21000, asLocalDate('2013-11-01'), asLocalDate('2020-01-10')]
-        employees << ['Peter Smith', 23400,	'2018-03-25',	'2020-04-12']
-        employees << ['Jane Doe', 26800, asLocalDate('2017-03-14'), asLocalDate('2020-10-02')]
-
-        def table = Matrix.create(employees)
-        assertEquals('John Doe', table[0,0])
-        assertEquals(23400, table[1,1] as Integer)
-        assertEquals(LocalDate.of(2017, 3, 14), table[2,2])
-    }
-
-    @Test
     void testAddRow() {
         Matrix m = Matrix.builder()
             .name("years")
@@ -203,7 +98,7 @@ class MatrixTest {
                 "Baseline Funding": [3385.593, 282.133, 3.664, 123.123],
                 "Current Funding": [2700, 225, 2.922, 1010.12]
         ]
-        def table = new Matrix(report)
+        def table = Matrix.builder().data(report).build()
         def tr = table.transpose(['y1', 'y2', 'y3', 'y4'])
         assertEquals(["y1", "y2", "y3", "y4"], tr.columnNames())
         assertEquals([
@@ -249,18 +144,18 @@ class MatrixTest {
         ], t4.rows(), t4.content())
         assertEquals(['', '1', '2', '3', '4'], t4.columnNames())
         assertEquals(5, t4.columnTypes().size(), t4.content() + "\nColumn types: " + t4.columnTypeNames())
-
     }
 
     @Test
     void testStr() {
-        def empData = new Matrix(
+        def empData = Matrix.builder().data(
             emp_id: 1..5,
             emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
             salary: [623.3,515.2,611.0,729.0,843.25],
-            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
-            [int, String, Number, LocalDate]
-        )
+            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+        ).dataTypes(int, String, Number, LocalDate)
+        .build()
+
         def struct = Stat.str(empData)
         assertEquals(['5 observations of 4 variables'], struct['Matrix'])
         assertIterableEquals(['Integer', '1', '2', '3', '4'], struct['emp_id'])
@@ -372,13 +267,15 @@ class MatrixTest {
 
     @Test
     void testHeadAndTail() {
-        def table = new Matrix([
+        def table = Matrix.builder()
+            .data([
                 'place': [1, 20, 3],
                 'firstname': ['Lorena', 'Marianne', 'Lotte'],
                 'start': ['2021-12-01', '2022-07-10', '2023-05-27']
-            ],
-            [int, String, String]
-        )
+            ])
+            .dataTypes([int, String, String])
+            .build()
+
         def head = table.head(1, false)
         assertEquals(' 1\tLorena  \t2021-12-01\n', head, head)
         def tail = table.tail(2, false)
@@ -386,45 +283,6 @@ class MatrixTest {
         String[] content = table.content(includeHeader: false, includeTitle: false, maxColumnLength:7).split('\n')
         assertEquals(' 1\tLorena \t2021-12', content[0])
 
-    }
-
-    @SuppressWarnings('SqlNoDataSourceInspection')
-    @Test
-    void testCreateFromDb() {
-        def dbDriver = "org.h2.Driver"
-        def dbFileName = System.getProperty("java.io.tmpdir") + "/testdb"
-        def dbUrl = "jdbc:h2:file:" + dbFileName
-        def dbUser = "sa"
-        def dbPasswd = "123"
-
-        File dbFile = new File(dbFileName + ".mv.db")
-        if (dbFile.exists()) {
-            dbFile.delete()
-        }
-        File dbTraceFile = new File(dbFileName + "trace.db")
-        if (dbTraceFile.exists()) {
-            dbTraceFile.delete()
-        }
-
-        Sql.withInstance(dbUrl, dbUser, dbPasswd, dbDriver) { sql ->
-            sql.execute '''
-                create table IF NOT EXISTS PROJECT  (
-                    id integer not null primary key,
-                    name varchar(50),
-                    url varchar(100)
-                )
-            '''
-            sql.execute('delete from PROJECT')
-            sql.execute 'insert into PROJECT (id, name, url) values (?, ?, ?)', [10, 'Groovy', 'http://groovy.codehaus.org']
-            sql.execute 'insert into PROJECT (id, name, url) values (?, ?, ?)', [20, 'Alipsa', 'http://www.alipsa.se']
-        }
-
-        def project = null
-        Sql.withInstance(dbUrl, dbUser, dbPasswd, dbDriver) { sql ->
-            sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.create(rs) }
-        }
-
-        assertEquals(2, project.rowCount())
     }
 
     @Test

@@ -16,10 +16,11 @@ import static se.alipsa.groovy.matrix.util.ClassUtils.*
  * It is essentially a Grid i.e. [][] (List<List<?>>) but also has a header and a name
  * and several convenience methods to work with it.
  *
- * For row based data, use one of the static create methods to create the Matrix.
- * For column based, use one of the constructors to create the Matrix.
+ * Use the Matrix.builder() to create a Matrix.
+ * The builder takes either data in the form of a list of rows, a list of columns, a map of the columns with their
+ * column name, a resultset etc.
  *
- * Matrix data can be read using the matrix[row, column] notation e.g. <code>myMatrix[1,3]</code>
+ * Matrix data can be accessed using the matrix[row, column] notation e.g. <code>myMatrix[1,3]</code>
  * for the 4:th variable of the second observation
  * or matrix[column] for the whole column e.g.
  * <code>myMatrix[1]</code> for the second column, or <code>myMatrix['foo']</code> for the column named foo.
@@ -27,8 +28,6 @@ import static se.alipsa.groovy.matrix.util.ClassUtils.*
  * Similarly, you use the the same notation to assign / change values e.g.
  * <code>myMatrix[0,1] = 23</code> to assign the value 23 to the second variable of the first observation
  * or to assign / create a column <code> myMatrix['bar'] = [1..12]</code> to assign the range 1 to 12 to the column bar
- *
- *
  *
  */
 @CompileStatic
@@ -314,10 +313,38 @@ class Matrix implements Iterable<Row> {
    * @param dataTypes the data types (classes)
    */
   Matrix(String name, List<String> headerList, List<List<?>> columns, List<Class<?>> dataTypes) {
+    if (dataTypes != null && headerList == null) {
+      headerList = (1..dataTypes.size()).collect{'c' + it}
+    }
+
+    if (columns == null) {
+      int ncol = headerList == null ? (dataTypes == null ? 0 : dataTypes.size()): headerList.size()
+      columns = []
+      for(int i = 0; i < ncol; i++) {
+        columns << []
+      }
+    }
+
+    if (columns != null && headerList == null) {
+      if (columns.isEmpty()) {
+        headerList = []
+      } else {
+        headerList = (1..columns.size()).collect { 'c' + it }
+      }
+    }
+
+    dataTypes = dataTypes ?: []
+
+    if (dataTypes.size() > columns.size()) {
+      for (int i = 0; i < dataTypes.size() - columns.size(); i++) {
+        columns << []
+      }
+    }
+
     mName = name
     mTypes = sanitizeColumnTypes(headerList, dataTypes)
     mHeaders = headerList.collect{ String.valueOf(it) }
-    if (mHeaders.size() != dataTypes.size()) {
+    if (mHeaders.size() != mTypes.size()) {
       throw new IllegalArgumentException("Number of elements in the headerList (${headerList}) differs from number of datatypes (${dataTypes})")
     }
     mColumns = []
@@ -325,6 +352,7 @@ class Matrix implements Iterable<Row> {
       //mColumns.add(Collections.checkedList(column, mTypes[i]))
       mColumns.add(column.collect())
     }
+    //println "Creating a matrix with name: '$mName', ${mHeaders.size()} headers, ${mColumns.size()} columns, ${mTypes.size()} types"
   }
 
   /**
@@ -378,7 +406,7 @@ class Matrix implements Iterable<Row> {
     mHeaders = []
     mColumns = []
     columns.eachWithIndex { List<?> column, int i ->
-      mHeaders << ("v$i" as String)
+      mHeaders << ("c$i" as String)
       mColumns << column.collect()
     }
     mTypes = createObjectTypes(columns)
@@ -1530,7 +1558,7 @@ class Matrix implements Iterable<Row> {
   }
 
   private static List<Class<?>> sanitizeColumnTypes(Collection<String> headerList, List<Class<?>>... dataTypesOpt) {
-    List<Class<?>> types
+    List<Class<?>> types = []
     if (dataTypesOpt.length > 0) {
       types = convertPrimitivesToWrapper(dataTypesOpt[0])
       if (types.isEmpty()) {
@@ -1541,7 +1569,8 @@ class Matrix implements Iterable<Row> {
         println "Types:  (${types.size()} elements): ${types.collect{ it.simpleName}}"
         throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${types.size()})")
       }
-    } else {
+    }
+    if (types.isEmpty()) {
       types = createObjectTypes(headerList)
     }
     return types

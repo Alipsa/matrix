@@ -1,11 +1,13 @@
 package se.alipsa.groovy.matrix
 
+import groovy.transform.CompileStatic
 import se.alipsa.groovy.matrix.util.ClassUtils
 
 import java.nio.file.Files
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 
+@CompileStatic
 class MatrixBuilder {
 
   String name
@@ -14,32 +16,7 @@ class MatrixBuilder {
   List<Class<?>> dataTypes
 
   Matrix build() {
-    if (dataTypes != null && headerList == null) {
-      headerList = (1..dataTypes.size()).collect{'c' + it}
-    }
-    if (columns != null && headerList == null) {
-      headerList = (1..columns.size()).collect{'c' + it}
-    }
-    if (headerList != null && dataTypes == null) {
-      dataTypes = [Object]*headerList.size()
-    }
-
-    if (columns == null) {
-      int ncol = headerList == null ? (dataTypes == null ? 0 : dataTypes.size()): headerList.size()
-      columns = []
-      for(int i = 0; i < ncol; i++) {
-        columns << []
-      }
-    }
-    dataTypes = dataTypes ?: []
-
-    if (dataTypes.size() > columns.size()) {
-      for (int i = 0; i < dataTypes.size() - columns.size(); i++) {
-        columns << []
-      }
-    }
-    //println "Creating a matrix with name: '$name', ${headerList.size()} headers, ${columns.size()} columns, ${dataTypes.size()} types"
-    new Matrix(name, headerList ?: [], columns, dataTypes)
+    new Matrix(name, headerList, columns, dataTypes)
   }
 
   MatrixBuilder name(String name) {
@@ -52,10 +29,14 @@ class MatrixBuilder {
     this
   }
 
+  MatrixBuilder columnNames(String... colNames) {
+    columnNames(colNames as List<String>)
+  }
+
   /**
    * Populate the data of the Matrix. Use only one of rows, columns or data methods i.e.
    * either provide the rows (observations) or the columns (variables) or one of the data methods
-   * if you use multiple ones, only the ast one will be used.
+   * if you use multiple ones, only the last one will be used.
    *
    * @param columns a list of variables
    * @return this builder
@@ -65,16 +46,29 @@ class MatrixBuilder {
     this
   }
 
+  MatrixBuilder columns(List<?>... columns) {
+    this.columns = columns as List<List<?>>
+    this
+  }
+
   MatrixBuilder columns(Map<String, List<?>> columData) {
-    def headers = []
+    List<String> headers = []
     List<List<?>> cols = []
     columData.each {k, v ->
       headers << String.valueOf(k)
       cols << v.collect()
     }
-    columnNames(headers)
-    columns(cols)
+    if(noColumnNames()) {
+      columnNames(headers)
+    }
+    if(noColumns()) {
+      columns(cols)
+    }
     this
+  }
+
+  MatrixBuilder data(Map<String, List<?>> columData) {
+    columns(columData)
   }
 
   /**
@@ -96,7 +90,9 @@ class MatrixBuilder {
 
   MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     data(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader)
-    name(file.name.substring(0, file.name.lastIndexOf('.')))
+    if(noName()) {
+      name(file.name.substring(0, file.name.lastIndexOf('.')))
+    }
     this
   }
 
@@ -110,7 +106,9 @@ class MatrixBuilder {
         n = n.substring(0, n.lastIndexOf('.'))
       }
       data(inputStream, delimiter, stringQuote, firstRowAsHeader)
-      name(n)
+      if(noName()) {
+        name(n)
+      }
     }
   }
 
@@ -137,10 +135,15 @@ class MatrixBuilder {
       } else {
         headerNames = []
       }
-      columnNames(headerNames)
+      if (noColumnNames()) {
+        columnNames(headerNames)
+      }
       rows(data)
-      dataTypes([String] * headerNames.size())
+      if(noDataTypes()) {
+        dataTypes([String] * headerNames.size())
+      }
     }
+    this
   }
 
   MatrixBuilder data(ResultSet rs) {
@@ -157,8 +160,12 @@ class MatrixBuilder {
         columnTypes.add(Object.class)
       }
     }
-    columnNames(headers)
-    dataTypes(columnTypes)
+    if (noColumnNames()) {
+      columnNames(headers)
+    }
+    if(noDataTypes()) {
+      dataTypes(columnTypes)
+    }
     List<List<Object>> rows = []
     while (rs.next()) {
       List<?> row = []
@@ -176,11 +183,31 @@ class MatrixBuilder {
     this
   }
 
+  MatrixBuilder dataTypes(Class<?>... types) {
+    dataTypes(types as List<Class<?>>)
+  }
+
   MatrixBuilder dataTypes(List<Class<?>>... types) {
     if (types.length > 0) {
       this.dataTypes = types[0]
     }
     this
+  }
+
+  private boolean noColumnNames() {
+    headerList == null || headerList.isEmpty()
+  }
+
+  private boolean noColumns() {
+    columns == null || columns.isEmpty()
+  }
+
+  private boolean noDataTypes() {
+    dataTypes == null || dataTypes.isEmpty()
+  }
+
+  private boolean noName() {
+    name == null || name.isBlank()
   }
 
 }

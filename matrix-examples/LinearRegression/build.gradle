@@ -19,6 +19,14 @@ repositories {
     }
 }
 
+tasks.withType(JavaCompile) {
+    options.deprecation = true
+}
+
+tasks.withType(GroovyCompile) { task ->
+    task.options.deprecation = true
+}
+
 dependencies {
     org.gradle.internal.os.OperatingSystem os = org.gradle.internal.os.OperatingSystem.current()
     def qualifier = 'unknown'

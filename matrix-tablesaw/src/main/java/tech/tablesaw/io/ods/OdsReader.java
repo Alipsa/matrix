@@ -72,12 +72,16 @@ public class OdsReader implements DataReader<OdsReadOptions> {
     }
   }
 
-  private InputStream getInputStream(ReadOptions options) throws FileNotFoundException {
+  private InputStream getInputStream(ReadOptions options) throws IOException {
     if (options.source().file() != null) {
       return new FileInputStream(options.source().file());
     }
     if (options.source().reader() != null) {
-      return new ReaderInputStream(options.source().reader(), StandardCharsets.UTF_8);
+      return ReaderInputStream.builder()
+          .setReader(options.source().reader())
+          .setCharset(StandardCharsets.UTF_8)
+          .get();
+      //return new ReaderInputStream(options.source().reader(), StandardCharsets.UTF_8);
     }
     return options.source().inputStream();
   }

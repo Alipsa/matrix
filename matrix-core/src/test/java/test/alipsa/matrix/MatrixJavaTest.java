@@ -42,9 +42,11 @@ class MatrixJavaTest {
     columns.add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary");
     columns.add("salary", 623.3, 515.2, 611.0, 729.0, 843.25);
     columns.add("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"));
-    var empData = new Matrix("empData", columns,
-        c(int.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder()
+        .name("empData")
+        .columns(columns)
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build();
     assertEquals("empData", empData.getName());
     assertEquals(1, (int) empData.getAt(0, 0));
     assertEquals("Dan", empData.getAt(1, 1));
@@ -59,13 +61,16 @@ class MatrixJavaTest {
     assertEquals(5, dims.get("observations"));
     assertEquals(4, dims.get("variables"));
 
-    var ed = new Matrix("ed",
-        toStrings("id", "name", "salary", "start"), c(
-        toIntegers(1, 2, 3, 4, 5),
-        toStrings("Rick", "Dan", "Michelle", "Ryan", "Gary"),
-        toBigDecimals(623.3, 515.2, 611.0, 729.0, 843.25),
-        toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
-    ));
+    var ed = Matrix.builder()
+        .name("ed")
+        .columnNames("id", "name", "salary", "start")
+        .columns(
+            toIntegers(1, 2, 3, 4, 5),
+            toStrings("Rick", "Dan", "Michelle", "Ryan", "Gary"),
+            toBigDecimals(623.3, 515.2, 611.0, 729.0, 843.25),
+            toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+        )
+        .build();
     assertEquals("ed", ed.getName());
     assertEquals(1, ed.getAt(0, 0, int.class));
     assertEquals("Dan", ed.getAt(1, 1));
@@ -76,12 +81,12 @@ class MatrixJavaTest {
         ed.columnTypes()
     );
 
-    var e = new Matrix(c(
+    var e = Matrix.builder().columns(c(
         toIntegers(1, 2, 3, 4, 5),
         toStrings("Rick", "Dan", "Michelle", "Ryan", "Gary"),
         toBigDecimals(623.3, 515.2, 611.0, 729.0, 843.25),
         toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
-    ));
+    )).build();
     assertNull(e.getName());
     assertEquals(1, (int) e.getAt(0, 0));
     assertEquals("Dan", e.getAt(1, 1));
@@ -92,7 +97,10 @@ class MatrixJavaTest {
         ed.columnTypes()
     );
 
-    Matrix m = new Matrix("years", Stream.of(1, 2, 3, 4, 5).map(it -> "Y" + it).collect(Collectors.toList()));
+    Matrix m = Matrix.builder()
+        .name("years")
+        .columnNames(Stream.of(1, 2, 3, 4, 5).map(it -> "Y" + it).collect(Collectors.toList()))
+        .build();
     m.addRow(c(1, 2, 3, 4, 5));
     m.addRow(c(10, 20, 30, 40, 50));
     assertIterableEquals(c("Y1", "Y2", "Y3", "Y4", "Y5"), m.columnNames());
@@ -122,7 +130,7 @@ class MatrixJavaTest {
         m("Baseline Funding", 3385.593, 282.133, 3.664, 123.123),
         m("Current Funding", 2700, 225, 2.922, 1010.12)
     );
-    var table = new Matrix(report);
+    var table = Matrix.builder().data(report).build();
 
     var tr = table.transpose(c("y1", "y2", "y3", "y4"));
     assertEquals(c("y1", "y2", "y3", "y4"), tr.columnNames());
@@ -178,13 +186,14 @@ class MatrixJavaTest {
 
   @Test
   void testStr() {
-    var empData = new Matrix(new Columns()
-        .add("emp_id", r(1, 5))
-        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
-        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
-        .add("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")),
-        c(int.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder().data(new Columns()
+            .add("emp_id", r(1, 5))
+            .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+            .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+            .add("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+        )
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build();
     Structure struct = Stat.str(empData);
     assertEquals(c("5 observations of 4 variables"), struct.getAt("Matrix"));
     assertIterableEquals(c("Integer", "1", "2", "3", "4"), struct.getAt("emp_id"));
@@ -212,7 +221,7 @@ class MatrixJavaTest {
     assertEquals("Team SD Worx", table.getAt(2, 3));
 
     var plantGrowth = Matrix.builder()
-        .data(getClass().getResource("/PlantGrowth.csv"),",","\"")
+        .data(getClass().getResource("/PlantGrowth.csv"), ",", "\"")
         .build();
     assertEquals("PlantGrowth", plantGrowth.getName());
     assertIterableEquals(c("id", "weight", "group"), plantGrowth.columnNames());
@@ -229,7 +238,10 @@ class MatrixJavaTest {
         m("start", "2021-12-01", "2022-07-10", "2023-05-27", "2023-01-10"),
         m("end", "2022-12-01 10:00:00", "2023-07-10 00:01:00", "2024-05-27 00:00:30", "2042-01-10 00:00:00")
     );
-    var table = new Matrix(data, cr(String.class, 4));
+    var table = Matrix.builder()
+        .data(data)
+        .dataTypes(cr(String.class, 4))
+        .build();
 
     var table2 = table.convert(Map.of("place", Integer.class, "start", LocalDate.class));
     table2 = table2.convert(Map.of("end", LocalDateTime.class),
@@ -288,7 +300,10 @@ class MatrixJavaTest {
         .add("place", 1, 2, 3)
         .add("firstname", "Lorena", "Marianne", "Lotte")
         .add("start", "2021-12-01", "2022-07-10", "2023-05-27");
-    var table = new Matrix(data, c(int.class, String.class, String.class));
+    var table = Matrix.builder()
+        .data(data)
+        .dataTypes(c(int.class, String.class, String.class))
+        .build();
     List<Integer> idx = (List<Integer>) table.getAt("place").stream().filter(it -> (Integer) it > 1).collect(Collectors.toList());
     var rows = table.rows(idx);
     assertEquals(2, rows.size());
@@ -316,18 +331,18 @@ class MatrixJavaTest {
 
   @Test
   void testHeadAndTail() {
-    var table = new Matrix(new Columns()
-        .add("place", 1, 20, 3)
-        .add("firstname", "Lorena", "Marianne", "Lotte")
-        .add("start", "2021-12-01", "2022-07-10", "2023-05-27")
-        ,
-        c(int.class, String.class, String.class)
-    );
+    var table = Matrix.builder().data(new Columns()
+            .add("place", 1, 20, 3)
+            .add("firstname", "Lorena", "Marianne", "Lotte")
+            .add("start", "2021-12-01", "2022-07-10", "2023-05-27")
+        )
+        .dataTypes(c(int.class, String.class, String.class))
+        .build();
     var head = table.head(1, false);
     assertEquals(" 1\tLorena  \t2021-12-01\n", head, head);
     var tail = table.tail(2, false);
     assertEquals("20\tMarianne\t2022-07-10\n 3\tLotte   \t2023-05-27\n", tail, tail);
-    String[] content = table.content(Map.of("includeHeader", false, "includeTitle", false,"maxColumnLength", 7)).split("\n");
+    String[] content = table.content(Map.of("includeHeader", false, "includeTitle", false, "maxColumnLength", 7)).split("\n");
     assertEquals(" 1\tLorena \t2021-12", content[0]);
   }
 
@@ -384,7 +399,7 @@ class MatrixJavaTest {
         m("firstname", "Lorena", "Marianne", "Lotte"),
         m("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
     );
-    var table = new Matrix(data, c(int.class, String.class, LocalDate.class));
+    var table = Matrix.builder().data(data).dataTypes(c(int.class, String.class, LocalDate.class)).build();
     var selection = table.selectRowIndices(new RowCriteriaClosure(it ->
         it.getAt(2, LocalDate.class)
             .isAfter(LocalDate.of(2022, 1, 1))
@@ -409,7 +424,7 @@ class MatrixJavaTest {
         .add("firstname", "Lorena", "Marianne", "Lotte", "Chris")
         .add("start", "2021-12-01", "2022-07-10", "2023-05-27", "2023-01-10");
 
-    var table = new Matrix(data)
+    var table = Matrix.builder().data(data).build()
         .convert(Map.of("place", int.class, "start", LocalDate.class));
     var table2 = table.apply("start",
         new ValueClosure<LocalDate, LocalDate>(startDate -> startDate.plusDays(10)
@@ -430,7 +445,10 @@ class MatrixJavaTest {
         m("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
     );
 
-    var table = new Matrix(data, c(int.class, String.class, LocalDate.class));
+    var table = Matrix.builder()
+        .data(data)
+        .dataTypes(int.class, String.class, LocalDate.class)
+        .build();
 
     var foo = table.apply("start", new ValueClosure<>(ValueConverter::asYearMonth));
     assertEquals(YearMonth.of(2021, 12), foo.getAt(0, 2));
@@ -443,7 +461,10 @@ class MatrixJavaTest {
     var data = new Columns(m("place", 1, 2, 3))
         .add("firstname", "Lorena", "Marianne", "Lotte")
         .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"));
-    var table = new Matrix(data, c(int.class, String.class, LocalDate.class));
+    var table = Matrix.builder()
+        .data(data)
+        .dataTypes(c(int.class, String.class, LocalDate.class))
+        .build();
     assertEquals(Integer.class, table.columnType(0), "place column type");
     var selection = table.selectRowIndices(new RowCriteriaClosure(it -> {
       var date = it.getAt(2, LocalDate.class);
@@ -481,13 +502,14 @@ class MatrixJavaTest {
 
   @Test
   void testAddColumn() {
-    var empData = new Matrix(new Columns(
-        m("emp_id", r(1, 5)),
-        m("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary"),
-        m("salary", 623.3, 515.2, 611.0, 729.0, 843.25),
-        m("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
-    ), c(int.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder().columns(new Columns(
+            m("emp_id", r(1, 5)),
+            m("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary"),
+            m("salary", 623.3, 515.2, 611.0, 729.0, 843.25),
+            m("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")))
+        )
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build();
     var table = empData.clone().addColumn("yearMonth", YearMonth.class, toYearMonths(empData.column("start_date")));
     assertEquals(5, table.columnCount());
     assertEquals("yearMonth", table.columnNames().get(table.columnCount() - 1));
@@ -517,13 +539,14 @@ class MatrixJavaTest {
 
   @Test
   void testAddColumns() {
-    var empData = new Matrix(new Columns()
-        .add("emp_id", r(1, 5))
-        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
-        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
-        .add("start_date", toLocalDates("2019-01-01", "2019-01-23", "2019-05-15", "2019-05-11", "2019-03-27")),
-        c(int.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder()
+        .columns(new Columns()
+            .add("emp_id", r(1, 5))
+            .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+            .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+            .add("start_date", toLocalDates("2019-01-01", "2019-01-23", "2019-05-15", "2019-05-11", "2019-03-27")))
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build();
 
     empData = empData.addColumn("yearMonth", YearMonth.class, toYearMonths(empData.getAt("start_date")));
     assertEquals(YearMonth.class, empData.getAt(0, 4).getClass(), "type of the added column");
@@ -557,13 +580,13 @@ class MatrixJavaTest {
 
   @Test
   void testSort() {
-    var empData = new Matrix(new Columns()
-        .add("emp_id", r(1, 5))
-        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
-        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
-        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
-        c(Integer.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder().columns(new Columns()
+            .add("emp_id", r(1, 5))
+            .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+            .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+            .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")))
+        .dataTypes(Integer.class, String.class, Number.class, LocalDate.class)
+        .build();
     var dateSorted = empData.orderBy("start_date");
     assertEquals(4, dateSorted.getAt(4, 0, Integer.class), "Last row should be the Ryan row: \n${dateSorted.content()}");
     assertEquals(asLocalDate("2012-03-27"), dateSorted.getAt(0, 3), "First row should be the Dan Row");
@@ -577,13 +600,13 @@ class MatrixJavaTest {
 
   @Test
   void testDropColumns() {
-    var empData = new Matrix(new Columns()
-        .add("emp_id", r(1, 5))
-        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
-        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
-        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
-        c(Integer.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder().columns(new Columns()
+            .add("emp_id", r(1, 5))
+            .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+            .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+            .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")))
+        .dataTypes(Integer.class, String.class, Number.class, LocalDate.class)
+        .build();
     var empList = empData.dropColumns("salary", "start_date");
     //println(empList.content())
     assertEquals(2, empList.columnCount(), "Number of columns after drop");
@@ -595,13 +618,13 @@ class MatrixJavaTest {
 
   @Test
   void testDropColumnsExcept() {
-    var empData = new Matrix(new Columns()
-        .add("emp_id", r(1, 5))
-        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
-        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
-        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
-        c(Integer.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder().columns(new Columns()
+            .add("emp_id", r(1, 5))
+            .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+            .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+            .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")))
+        .dataTypes(Integer.class, String.class, Number.class, LocalDate.class)
+        .build();
     var empList = empData.dropColumnsExcept("emp_id", "start_date");
     //println(empList.content())
     assertEquals(2, empList.columnCount(), "Number of columns after drop");
@@ -613,13 +636,13 @@ class MatrixJavaTest {
 
   @Test
   void testIteration() {
-    var empData = new Matrix(new Columns()
-        .add("emp_id", r(1, 5))
-        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
-        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
-        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
-        c(Integer.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder().columns(new Columns()
+            .add("emp_id", r(1, 5))
+            .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+            .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+            .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")))
+        .dataTypes(Integer.class, String.class, Number.class, LocalDate.class)
+        .build();
 
     AtomicInteger i = new AtomicInteger(1);
     empData.forEach(row -> {
@@ -651,7 +674,7 @@ class MatrixJavaTest {
         m("Baseline Funding", toBigDecimals(3385.593, 282.133, 3.664, 2.654)),
         m("Current Funding", toBigDecimals(2700, 225, 2.922, 1.871))
     );
-    Matrix table = new Matrix(report, cr(BigDecimal.class, 3));
+    Matrix table = Matrix.builder().data(report).dataTypes(cr(BigDecimal.class, 3)).build();
 
     Grid grid = table.grid();
     assertEquals(new BigDecimal("3.664"), grid.getAt(2, 1));
@@ -665,7 +688,7 @@ class MatrixJavaTest {
         m("Baseline Funding", toBigDecimals(3385.593, 282.133, 3.664, 2.654)),
         m("Current Funding", toBigDecimals(2700, 225, 2.922, 1.871))
     );
-    Matrix table = new Matrix(report, cr(BigDecimal.class, 3))
+    Matrix table = Matrix.builder().data(report).dataTypes(cr(BigDecimal.class, 3)).build()
         .selectColumns("Baseline Funding", "Full Funding");
 
     assertEquals(asBigDecimal(3385.593), table.getAt(0, 0));
@@ -675,13 +698,14 @@ class MatrixJavaTest {
 
   @Test
   void testRenameColumns() {
-    var empData = new Matrix(new Columns()
-        .add("emp_id", r(1, 5))
-        .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
-        .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
-        .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")),
-        c(Integer.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder()
+        .data(new Columns()
+            .add("emp_id", r(1, 5))
+            .add("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary")
+            .add("salary", 623.3, 515.2, 611.0, 729.0, 843.25)
+            .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")))
+        .dataTypes(Integer.class, String.class, Number.class, LocalDate.class)
+        .build();
 
     empData.renameColumn("emp_id", "id");
     empData.renameColumn(1, "name");
@@ -699,7 +723,10 @@ class MatrixJavaTest {
         m("Baseline Funding", 3385.593, 282.133, 3.664, 2.654),
         m("Current Funding", 2700, 225, 2.922, 1.871)
     );
-    Matrix table = new Matrix(report, c(YearMonth.class, BigDecimal.class, BigDecimal.class, BigDecimal.class));
+    Matrix table = Matrix.builder()
+        .data(report)
+        .dataTypes(YearMonth.class, BigDecimal.class, BigDecimal.class, BigDecimal.class)
+        .build();
 
     var md = table.toMarkdown();
     var rows = md.split("\n");
@@ -718,38 +745,39 @@ class MatrixJavaTest {
 
   @Test
   void testEquals() {
-    var empData = new Matrix(new Columns(
-        m("emp_id", c(1, 2)),
-        m("emp_name", "Rick", "Dan"),
-        m("salary", 623.3, 515.2),
-        m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
-        c(int.class, String.class, Number.class, LocalDate.class)
-    );
-
-    assertEquals(empData, new Matrix(new Columns(
-        m("emp_id", c(1, 2)),
-        m("emp_name", "Rick", "Dan"),
-        m("salary", 623.3, 515.2),
-        m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
-        c(int.class, String.class, Number.class, LocalDate.class)
-    ));
-
-    assertNotEquals(empData, new Matrix(new Columns(
-        m("emp_id", c(1, 2)),
-        m("emp_name", "Rick", "Dan"),
-        m("salary", 623.3, 515.1),
-        m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
-        c(int.class, String.class, Number.class, LocalDate.class)
-    ));
-
-    Matrix differentTypes = new Matrix(
-        new Columns(
+    var empData = Matrix.builder().columns(new Columns(
             m("emp_id", c(1, 2)),
             m("emp_name", "Rick", "Dan"),
             m("salary", 623.3, 515.2),
-            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
-        cr(Object.class, 4)
+            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))))
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build();
+
+    assertEquals(empData, Matrix.builder().columns(new Columns(
+            m("emp_id", c(1, 2)),
+            m("emp_name", "Rick", "Dan"),
+            m("salary", 623.3, 515.2),
+            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))))
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build());
+
+    assertNotEquals(empData, Matrix.builder().columns(new Columns(
+            m("emp_id", c(1, 2)),
+            m("emp_name", "Rick", "Dan"),
+            m("salary", 623.3, 515.1),
+            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))))
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build()
     );
+
+    Matrix differentTypes = Matrix.builder().columns(
+            new Columns(
+                m("emp_id", c(1, 2)),
+                m("emp_name", "Rick", "Dan"),
+                m("salary", 623.3, 515.2),
+                m("start_date", toLocalDates("2013-01-01", "2012-03-27"))))
+        .dataTypes(cr(Object.class, 4))
+        .build();
     assertEquals(empData, differentTypes, empData.diff(differentTypes));
     assertNotEquals(empData, differentTypes.withName("differentTypes"), empData.diff(differentTypes));
   }
@@ -757,33 +785,33 @@ class MatrixJavaTest {
 
   @Test
   void testDiff() {
-    var empData = new Matrix(
-        new Columns(
-            m("emp_id", c(1, 2)),
-            m("emp_name", "Rick", "Dan"),
-            m("salary", 623.3, 515.2),
-            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
-        c(int.class, String.class, Number.class, LocalDate.class)
-    );
-    var d1 = new Matrix(
-        new Columns(
-            m("emp_id", c(1, 2)),
-            m("emp_name", "Rick", "Dan"),
-            m("salary", 623.3, 515.1),
-            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
-        c(int.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder().columns(
+            new Columns(
+                m("emp_id", c(1, 2)),
+                m("emp_name", "Rick", "Dan"),
+                m("salary", 623.3, 515.2),
+                m("start_date", toLocalDates("2013-01-01", "2012-03-27"))))
+        .dataTypes(c(int.class, String.class, Number.class, LocalDate.class))
+        .build();
+    var d1 = Matrix.builder().columns(
+            new Columns(
+                m("emp_id", c(1, 2)),
+                m("emp_name", "Rick", "Dan"),
+                m("salary", 623.3, 515.1),
+                m("start_date", toLocalDates("2013-01-01", "2012-03-27"))))
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build();
     assertEquals("Row 1 differs: this: 2, Dan, 515.2, 2012-03-27; that: 2, Dan, 515.1, 2012-03-27",
         empData.diff(d1).trim());
 
-    var d2 = new Matrix(
-        new Columns(
-            m("emp_id", c(1, 2)),
-            m("emp_name", "Rick", "Dan"),
-            m("salary", 623.3, 515.2),
-            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
-        cr(Object.class, 4)
-    );
+    var d2 = Matrix.builder().data(
+            new Columns(
+                m("emp_id", c(1, 2)),
+                m("emp_name", "Rick", "Dan"),
+                m("salary", 623.3, 515.2),
+                m("start_date", toLocalDates("2013-01-01", "2012-03-27"))))
+        .dataTypes(cr(Object.class, 4))
+        .build();
     assertEquals("Column types differ: this: Integer, String, Number, LocalDate; that: Object, Object, Object, Object",
         empData.diff(d2));
   }
@@ -791,21 +819,21 @@ class MatrixJavaTest {
 
   @Test
   void testRemoveEmptyRows() {
-    var empData = new Matrix("empData", new Columns(
-        m("emp_id", c(1, 2)),
-        m("emp_name", "Rick", "Dan"),
-        m("salary", 623.3, 515.2),
-        m("start_date", toLocalDates("2013-01-01", "2012-03-27"))),
-        c(int.class, String.class, Number.class, LocalDate.class)
-    );
+    var empData = Matrix.builder().name("empData").columns(new Columns(
+            m("emp_id", c(1, 2)),
+            m("emp_name", "Rick", "Dan"),
+            m("salary", 623.3, 515.2),
+            m("start_date", toLocalDates("2013-01-01", "2012-03-27"))))
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build();
 
-    var d0 = new Matrix("empData", new Columns(
-        m("emp_id", 1, null, 2, null),
-        m("emp_name", "Rick", "", "Dan", " "),
-        m("salary", 623.3, null, 515.2, null),
-        m("start_date", toLocalDates("2013-01-01", null, "2012-03-27", null))),
-        c(int.class, String.class, Number.class, LocalDate.class)
-    );
+    var d0 = Matrix.builder().name("empData").columns(new Columns(
+            m("emp_id", 1, null, 2, null),
+            m("emp_name", "Rick", "", "Dan", " "),
+            m("salary", 623.3, null, 515.2, null),
+            m("start_date", toLocalDates("2013-01-01", null, "2012-03-27", null))))
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class)
+        .build();
     var d0r = d0.removeEmptyRows();
     assertEquals(empData, d0r, empData.diff(d0r, true));
   }
@@ -813,14 +841,14 @@ class MatrixJavaTest {
 
   @Test
   void testRemoveEmptyColumns() {
-    var empData = new Matrix(new Columns()
-        .add("emp_id", 1, 2)
-        .add("emp_name", null, null)
-        .add("salary", 623.3, 515.2)
-        .add("start_date", null, null)
-        .add("other", null, null),
-        c(int.class, String.class, Number.class, LocalDate.class, String.class)
-    );
+    var empData = Matrix.builder().data(new Columns()
+            .add("emp_id", 1, 2)
+            .add("emp_name", null, null)
+            .add("salary", 623.3, 515.2)
+            .add("start_date", null, null)
+            .add("other", null, null))
+        .dataTypes(int.class, String.class, Number.class, LocalDate.class, String.class)
+        .build();
     assertIterableEquals(c("emp_id", "emp_name", "salary", "start_date", "other"), empData.columnNames());
     empData.removeEmptyColumns();
     assertEquals(2, empData.columnCount());
@@ -840,13 +868,14 @@ class MatrixJavaTest {
 
   @Test
   void testWithColumns() {
-    var table = new Matrix(new Columns()
-        .add("a", toIntegers(1, 2, 3, 4, 5))
-        .add("b", toBigDecimals(1.2, 2.3, 0.7, 1.3, 1.9))
-        , c(Integer.class, BigDecimal.class));
+    var table = Matrix.builder().data(new Columns()
+            .add("a", toIntegers(1, 2, 3, 4, 5))
+            .add("b", toBigDecimals(1.2, 2.3, 0.7, 1.3, 1.9))
+        ).dataTypes(Integer.class, BigDecimal.class)
+        .build();
 
-    var m = table.withColumns(c("a", "b"), new ValueTwoArgClosure<BigDecimal, Integer, BigDecimal> (
-        (x,y) -> new BigDecimal(x).subtract(y))
+    var m = table.withColumns(c("a", "b"), new ValueTwoArgClosure<BigDecimal, Integer, BigDecimal>(
+        (x, y) -> new BigDecimal(x).subtract(y))
     );
 
     // we can always create a Closure directly of course, but that is less elegant in java
@@ -860,8 +889,8 @@ class MatrixJavaTest {
 
     var n = table.withColumns(
         toIntegers(0, 1)
-        .toArray(new Integer[]{}),
-        new ValueTwoArgClosure<BigDecimal, Integer, BigDecimal>((x,y) -> new BigDecimal(x).subtract(y))
+            .toArray(new Integer[]{}),
+        new ValueTwoArgClosure<BigDecimal, Integer, BigDecimal>((x, y) -> new BigDecimal(x).subtract(y))
     );
     assertIterableEquals(toBigDecimals(-0.2, -0.3, 2.3, 2.7, 3.1), n);
   }
@@ -869,10 +898,11 @@ class MatrixJavaTest {
 
   @Test
   void testPopulateColumn() {
-    Matrix components = new Matrix(new Columns()
-        .add("id", 1, 2, 3, 4, 5)
-        .add("size", 1.2, 2.3, 0.7, 1.3, 1.9)
-        , c(Integer.class, Double.class));
+    Matrix components = Matrix.builder().data(new Columns()
+            .add("id", 1, 2, 3, 4, 5)
+            .add("size", 1.2, 2.3, 0.7, 1.3, 1.9))
+        .dataTypes(Integer.class, Double.class)
+        .build();
     components.putAt("id", c(10, 11, 12, 13, 14));
     assertEquals(10, components.getAt(0, "id", Integer.class));
     assertEquals(13, components.getAt(3, "id", Integer.class));
@@ -882,11 +912,13 @@ class MatrixJavaTest {
 
   @Test
   void testMoveColumn() {
-    var table = new Matrix(new Columns()
-        .add("firstname", "Lorena", "Marianne", "Lotte")
-        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
-        .add("foo", 1, 2, 3)
-        , c(String.class, LocalDate.class, int.class));
+    var table = Matrix.builder().data(new Columns()
+            .add("firstname", "Lorena", "Marianne", "Lotte")
+            .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+            .add("foo", 1, 2, 3)
+        )
+        .dataTypes(String.class, LocalDate.class, int.class)
+        .build();
 
     table.moveColumn("foo", 0);
     assertIterableEquals(c("foo", "firstname", "start"), table.columnNames());
@@ -898,22 +930,26 @@ class MatrixJavaTest {
   @Test
   void testPutAt() {
     // putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
-    var table = new Matrix(new Columns()
-        .add("firstname", "Lorena", "Marianne", "Lotte")
-        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
-        .add("foo", 1, 2, 3)
-        , c(String.class, LocalDate.class, int.class));
+    var table = Matrix.builder().data(new Columns()
+            .add("firstname", "Lorena", "Marianne", "Lotte")
+            .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+            .add("foo", 1, 2, 3)
+        )
+        .dataTypes(c(String.class, LocalDate.class, int.class))
+        .build();
     table.putAt("yearMonth", YearMonth.class, 0, toYearMonths(table.getAt("start")));
     assertEquals(4, table.columnCount());
     assertIterableEquals(c("yearMonth", "firstname", "start", "foo"), table.columnNames());
     assertIterableEquals(toYearMonths("2021-12", "2022-07", "2023-05"), table.getAt(0));
 
     // putAt(List where, List<?> column)
-    table = new Matrix(new Columns()
-        .add("firstname", "Lorena", "Marianne", "Lotte")
-        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
-        .add("foo", 1, 2, 3)
-        , c(String.class, LocalDate.class, int.class));
+    table = Matrix.builder().data(new Columns()
+            .add("firstname", "Lorena", "Marianne", "Lotte")
+            .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+            .add("foo", 1, 2, 3)
+        )
+        .dataTypes(c(String.class, LocalDate.class, int.class))
+        .build();
     table.putAt(
         "start",
         table.getAt("start", LocalDate.class)
@@ -931,11 +967,13 @@ class MatrixJavaTest {
 
   @Test
   void testGetAt() {
-    var table = new Matrix(new Columns()
-        .add("firstname", "Lorena", "Marianne", "Lotte")
-        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
-        .add("foo", 1, 2, 3)
-        , c(String.class, LocalDate.class, int.class));
+    var table = Matrix.builder().data(new Columns()
+            .add("firstname", "Lorena", "Marianne", "Lotte")
+            .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
+            .add("foo", 1, 2, 3)
+        )
+        .dataTypes(String.class, LocalDate.class, int.class)
+        .build();
 
     assertEquals(Integer.class, table.getAt(2, 2).getClass());
     assertEquals(3, table.getAt(2, 2, Integer.class));

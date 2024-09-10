@@ -12,6 +12,14 @@ repositories {
     }
 }
 
+tasks.withType(JavaCompile) {
+    options.deprecation = true
+}
+
+tasks.withType(GroovyCompile) { task ->
+    task.options.deprecation = true
+}
+
 dependencies {
     implementation 'org.apache.groovy:groovy:4.0.21'
     implementation 'se.alipsa.groovy:matrix-core:1.2.3'
