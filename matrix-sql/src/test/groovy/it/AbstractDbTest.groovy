@@ -31,7 +31,7 @@ abstract class AbstractDbTest {
 
   AbstractDbTest(DataBaseProvider db, String dbName, String mode, String... additionalSettings) {
     ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.2.224')
+    ci.setDependency('com.h2database:h2:2.3.232')
     def tmpDb = new File(System.getProperty('java.io.tmpdir'), "$dbName").getAbsolutePath()
     String settings = ''
     if (mode != null && db != DataBaseProvider.H2) {

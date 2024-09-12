@@ -58,7 +58,7 @@ def table = Matrix.create(employees)
 ### Creating from a result set:
 
 ```groovy
-@Grab('com.h2database:h2:2.1.214')
+@Grab('com.h2database:h2:2.3.232')
 
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.datautil.SqlUtil

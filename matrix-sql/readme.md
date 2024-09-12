@@ -87,7 +87,7 @@ E.g:
    import se.alipsa.groovy.matrix.sql.MatrixSql
    
    ConnectionInfo ci = new ConnectionInfo()
-   ci.setDependency('com.h2database:h2:2.2.224')
+   ci.setDependency('com.h2database:h2:2.3.232')
    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb').getAbsolutePath()
    ci.setUrl("jdbc:h2:file:${tmpDb}")
    ci.setUser('sa')

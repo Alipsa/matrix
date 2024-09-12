@@ -23,6 +23,14 @@ ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
+
+task wrapper(type: Wrapper) {
+    def gv = '8.10.1'
+    gradleVersion = gv
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
+    validateDistributionUrl = true
+}
+
 repositories {
     if (version.contains('SNAPSHOT')) {
         mavenLocal()
@@ -52,8 +60,8 @@ dependencies {
 
     testImplementation groovy
     testImplementation project(':matrix-core')
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.3'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.0'
 }
 
 test {

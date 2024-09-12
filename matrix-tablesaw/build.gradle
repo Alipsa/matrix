@@ -55,7 +55,7 @@ dependencies {
     compileOnly project(':matrix-core')
     compileOnly project(':matrix-stats')
     // for XlsxWriter, TODO: remove once contributed to tablesaw
-    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+    implementation 'org.apache.poi:poi-ooxml:5.3.0'
     // for OdsReader and Writer, TODO: remove once contributed to tablesaw
     implementation 'com.github.miachm.sods:SODS:1.6.7'
     // for XmlReader and writer, TODO: remove once contributed to tablesaw
@@ -64,9 +64,9 @@ dependencies {
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-stats')
     testImplementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
-    testImplementation 'com.h2database:h2:2.2.224'
-    testImplementation "org.slf4j:slf4j-simple:2.0.13"
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    testImplementation 'com.h2database:h2:2.3.232'
+    testImplementation "org.slf4j:slf4j-simple:2.0.16"
     testImplementation "org.apache.groovy:groovy:${groovyVersion}"
     testImplementation "org.apache.groovy:groovy-sql:${groovyVersion}"
 }

@@ -15,8 +15,8 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    implementation "org.apache.groovy:groovy:4.0.20"
-    implementation "se.alipsa.groovy:matrix-core:1.2.3"
+    implementation "org.apache.groovy:groovy:4.0.22"
+    implementation "se.alipsa.groovy:matrix-core:1.2.4"
 }
 
 

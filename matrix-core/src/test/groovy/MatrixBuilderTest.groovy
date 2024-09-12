@@ -219,4 +219,48 @@ class MatrixBuilderTest {
     assertIterableEquals([Integer, String, String], project.columnTypes())
     assertEquals(project[1,1], 'Alipsa')
   }
+
+  @Test
+  void testCsv() {
+    def data = [
+        ['place', 'firstname', 'lastname', 'team'],
+        ['1', 'Lorena', 'Wiebes', 'Team DSM'],
+        ['2', 'Marianne', 'Vos', 'Team Jumbo Visma'],
+        ['3', 'Lotte', 'Kopecky', 'Team SD Worx']
+    ]
+    def file = File.createTempFile('FemmesStage1Podium', '.csv')
+    file.text = data*.join(',').join('\n')
+
+    def table = Matrix.builder().data(file).build()
+    assertIterableEquals(data[0], table.columnNames())
+    assertEquals(data[1][1], table[0, 1] as String)
+    assertEquals('Team SD Worx', table[2, 3])
+
+    def plantGrowth = Matrix.builder().data(
+        getClass().getResource('/PlantGrowth.csv'),
+        ',',
+        '"',
+    ).build()
+    assertEquals('PlantGrowth', plantGrowth.name)
+    assertIterableEquals(['id', 'weight','group'], plantGrowth.columnNames())
+    def row30 = plantGrowth.findFirstRow('id', '30')
+    assertEquals('5.26', row30[1])
+    assertEquals('trt2', row30[2])
+  }
+
+  @Test
+  void testCreationFromComplexCsvFile() {
+    File complex = new File(getClass().getResource('/complex.csv').toURI())
+    def matrix = Matrix.builder().data(complex, ';', '"', false).build()
+    assertEquals('1234567', matrix[0,8])
+    assertEquals('', matrix[1,8])
+
+    assertIterableEquals(['324269',"77464400",'APPLICATION','SIGNED','1211121202332555','2','2023-10-09 16:35:05.644','2023-10-09 16:38:00.341','1234567'],
+    matrix.row(0))
+    assertIterableEquals(
+        ["324471","","APPLICATION","SIGNED","1211121202339617","1","2021-11-09 17:47:30.604","2023-10-09 17:55:00.370","1234573"],
+        matrix.row(7)
+    )
+    matrix.content()
+  }
 }

@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.matrix.util.ClassUtils
 
 import java.nio.file.Files
+import java.nio.file.Path
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 
@@ -88,14 +89,61 @@ class MatrixBuilder {
     rows(grid.data)
   }
 
+  /**
+   * The cvs parsing is fast but rather primitive. For a much more thorough solution, use the CsvImporter in the
+   * matrix-csv library.
+   *
+   * @param file
+   * @param delimiter
+   * @param stringQuote
+   * @param firstRowAsHeader
+   * @return
+   */
   MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     data(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader)
     if(noName()) {
-      name(file.name.substring(0, file.name.lastIndexOf('.')))
+      int endIdx = file.name.length()
+      if (file.name.contains('.')) {
+        endIdx = file.name.lastIndexOf('.')
+      }
+      name(file.name.substring(0, endIdx))
     }
     this
   }
 
+  /**
+   * The cvs parsing is fast but rather primitive. For a much more thorough solution, use the CsvImporter in the
+   * matrix-csv library.
+   *
+   * @param file
+   * @param delimiter
+   * @param stringQuote
+   * @param firstRowAsHeader
+   * @return
+   */
+  MatrixBuilder data(Path file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
+    data(Files.newInputStream(file), delimiter, stringQuote, firstRowAsHeader)
+    if(noName()) {
+      String fileName = file.getFileName().toString()
+      int endIdx = fileName.length()
+      if (file.contains('.')) {
+        endIdx = fileName.lastIndexOf('.')
+      }
+      name(fileName.substring(0, endIdx))
+    }
+    this
+  }
+
+  /**
+   * The cvs parsing is fast but rather primitive. For a much more thorough solution, use the CsvImporter in the
+   * matrix-csv library.
+   *
+   * @param url
+   * @param delimiter
+   * @param stringQuote
+   * @param firstRowAsHeader
+   * @return
+   */
   MatrixBuilder data(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     try(InputStream inputStream = url.openStream()) {
       String n = url.getFile() == null ? url.getPath() : url.getFile()
@@ -110,30 +158,46 @@ class MatrixBuilder {
         name(n)
       }
     }
+    this
   }
 
+  /**
+   * The cvs parsing is fast but rather primitive. For a much more thorough solution, use the CsvImporter in the
+   * matrix-csv library.
+   *
+   * @param inputStream
+   * @param delimiter
+   * @param stringQuote
+   * @param firstRowAsHeader
+   * @return
+   */
   MatrixBuilder data(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     try(InputStreamReader reader = new InputStreamReader(inputStream)) {
       List<List<String>> data = []
       final boolean stripQuotes = stringQuote != ''
+      int maxCols = 0
       for (line in reader.readLines()) {
         List<String> row = []
-        for (val in line.split(delimiter)) {
+        // if there are empty columns in the end, split does not take those into account unless we set the limit to -1
+        def values = line.split(delimiter, -1)
+        maxCols = Math.max(maxCols, values.length)
+        for (val in values) {
+          String value
           if (stripQuotes) {
-            row.add(val.replaceAll(~/^$stringQuote|$stringQuote$/, '').trim())
+            value = (val.replaceAll(~/^$stringQuote|$stringQuote$/, '').trim())
           } else {
-            row.add(val.trim())
+            value = val.trim()
           }
+          row.add(value)
         }
         data.add(row)
       }
       List<String> headerNames
 
       if (firstRowAsHeader) {
-        headerNames = data[0] as List<String>
-        data = data[1..data.size() - 1]
+        headerNames = data.remove(0)
       } else {
-        headerNames = []
+        headerNames = (1..maxCols).collect {'c' + it}
       }
       if (noColumnNames()) {
         columnNames(headerNames)

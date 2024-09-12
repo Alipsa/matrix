@@ -100,8 +100,8 @@ class MatrixSql implements Closeable {
     matrixDbUtil.create(connect(), table, props, primaryKey)
   }
 
-  String tableName(Matrix table) {
-    matrixDbUtil.tableName(table)
+  static String tableName(Matrix table) {
+    MatrixDbUtil.tableName(table)
   }
 
   Object dropTable(String tableName) {

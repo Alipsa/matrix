@@ -695,8 +695,9 @@ class Matrix implements Iterable<Row> {
         convertedTypes.add(columnType(i))
       }
     }
-    def convertedRows = Grid.transpose(convertedColumns) as List<List<?>>
-    return create(mName, mHeaders, convertedRows, convertedTypes)
+    //def convertedRows = Grid.transpose(convertedColumns) as List<List<?>>
+    // TODO, why not mutate the Matrix instead?
+    return new Matrix(mName, mHeaders, convertedColumns, convertedTypes)
   }
 
   Matrix convert(String columnName, Class<?> type) {

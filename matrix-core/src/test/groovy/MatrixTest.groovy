@@ -163,34 +163,6 @@ class MatrixTest {
     }
 
     @Test
-    void testCsv() {
-        def data = [
-            ['place', 'firstname', 'lastname', 'team'],
-            ['1', 'Lorena', 'Wiebes', 'Team DSM'],
-            ['2', 'Marianne', 'Vos', 'Team Jumbo Visma'],
-            ['3', 'Lotte', 'Kopecky', 'Team SD Worx']
-        ]
-        def file = File.createTempFile('FemmesStage1Podium', '.csv')
-        file.text = data*.join(',').join('\n')
-
-        def table = Matrix.create(file)
-        assertIterableEquals(data[0], table.columnNames())
-        assertEquals(data[1][1], table[0, 1] as String)
-        assertEquals('Team SD Worx', table[2, 3])
-
-        def plantGrowth = Matrix.create(
-                getClass().getResource('/PlantGrowth.csv'),
-                ',',
-                '"',
-        )
-        assertEquals('PlantGrowth', plantGrowth.name)
-        assertIterableEquals(['id', 'weight','group'], plantGrowth.columnNames())
-        def row30 = plantGrowth.findFirstRow('id', '30')
-        assertEquals('5.26', row30[1])
-        assertEquals('trt2', row30[2])
-    }
-
-    @Test
     void testConvert() {
         def data = [
             'place': ['1', '2', '3', ','],

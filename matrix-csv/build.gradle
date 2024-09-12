@@ -12,7 +12,7 @@ description = "Groovy library for importing structured text into a matrix"
 // For some reason this is required to upgrade the wrapper
 // Change the version and run 'gradle wrapper' to upgrade
 task wrapper(type: Wrapper) {
-  def gv = '8.8'
+  def gv = '8.10.1'
   gradleVersion = gv
   distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
   validateDistributionUrl = true
@@ -47,8 +47,8 @@ dependencies {
   compileOnly groovy
   testImplementation groovy
   testImplementation project(':matrix-core')
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.3'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.0'
   testImplementation project(':matrix-datasets')
 }
 

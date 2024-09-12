@@ -19,7 +19,7 @@ class MatrixSqlTest {
   @Test
   void testH2TableCreation() {
     ConnectionInfo ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.2.224')
+    ci.setDependency('com.h2database:h2:2.3.232')
     def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'h2testdb').getAbsolutePath()
     ci.setUrl("jdbc:h2:file:${tmpDb}")
     ci.setUser('sa')
@@ -81,7 +81,7 @@ class MatrixSqlTest {
     ).withName('complexData')
 
     ConnectionInfo ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.2.224')
+    ci.setDependency('com.h2database:h2:2.3.232')
     def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb').getAbsolutePath()
     ci.setUrl("jdbc:h2:file:${tmpDb}")
     ci.setUser('sa')
@@ -117,7 +117,7 @@ class MatrixSqlTest {
     ).withName('pkdata')
 
     ConnectionInfo ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.2.224')
+    ci.setDependency('com.h2database:h2:2.3.232')
     def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'pktestdb').getAbsolutePath()
     ci.setUrl("jdbc:h2:file:${tmpDb}")
     ci.setUser('sa')
