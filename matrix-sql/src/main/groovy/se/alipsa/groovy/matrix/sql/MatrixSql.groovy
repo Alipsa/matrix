@@ -105,7 +105,7 @@ class MatrixSql implements Closeable {
   }
 
   Object dropTable(String tableName) {
-    LOG.debug("Dropping {}...", tableName);
+    LOG.debug("Dropping {}...", tableName)
     dbExecuteSql("drop table $tableName")
   }
 
@@ -199,7 +199,7 @@ class MatrixSql implements Closeable {
       cl = new GroovyClassLoader()
     }
 
-    if (Arrays.stream(cl.getURLs()).noneMatch(p -> p.equals(url))) {
+    if (Arrays.stream(cl.getURLs()).noneMatch(p -> p == url)) {
       cl.addURL(url)
     }
 
@@ -208,7 +208,7 @@ class MatrixSql implements Closeable {
       Class<Driver> clazz = (Class<Driver>) cl.loadClass(ci.getDriver())
       LOG.trace("Loaded driver from session classloader, instating the driver ${ci.getDriver()}")
       try {
-        driver = clazz.getDeclaredConstructor().newInstance();
+        driver = clazz.getDeclaredConstructor().newInstance()
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | NullPointerException e) {
         LOG.trace("Failed to instantiate the driver: ${ci.getDriver()}, clazz is ${clazz}: " + e)
         throw e
@@ -228,7 +228,7 @@ class MatrixSql implements Closeable {
         }
       }
     }
-    return driver.connect(ci.getUrl(), props);
+    return driver.connect(ci.getUrl(), props)
   }
 
   private static boolean urlContainsLogin(String url) {

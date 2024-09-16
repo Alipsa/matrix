@@ -14,8 +14,19 @@ class Sampler {
     def train = samples.take(size)
     def test = samples.takeRight(data.rowCount()-size)
 
-    Matrix trainMatrix = Matrix.create(data.name + '-train', data.columnNames(), data.rows(train), data.types())
-    Matrix testMatrix = Matrix.create(data.name + '-test', data.columnNames(), data.rows(test), data.types())
+    Matrix trainMatrix = Matrix.builder()
+    .name(data.name + '-train')
+    .columnNames(data.columnNames())
+    .rows(data.rows(train))
+    .types(data.types())
+    .build()
+    Matrix testMatrix =
+        Matrix.builder()
+            .name(data.name + '-test')
+            .columnNames(data.columnNames())
+            .rows(data.rows(test))
+            .types(data.types())
+            .build()
     return [trainMatrix, testMatrix]
   }
 }

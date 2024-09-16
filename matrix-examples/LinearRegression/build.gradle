@@ -19,11 +19,11 @@ repositories {
     }
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.deprecation = true
 }
 
-tasks.withType(GroovyCompile) { task ->
+tasks.withType(GroovyCompile).configureEach { task ->
     task.options.deprecation = true
 }
 

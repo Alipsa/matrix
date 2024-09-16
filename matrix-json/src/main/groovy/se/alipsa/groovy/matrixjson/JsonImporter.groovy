@@ -46,7 +46,7 @@ class JsonImporter {
    * @return a Matrix corresponding to the json data
    */
   static Matrix jsonToMatrix(Object o) {
-    if (! o instanceof List) {
+    if (!o instanceof List) {
       throw new IllegalArgumentException('The Json string is not a list of objects')
     }
     def rows = o as List<Map<String, List<?>>>
@@ -56,6 +56,8 @@ class JsonImporter {
         columnMap.computeIfAbsent(it.key, k -> []) << it.value
       }
     }
-    return new Matrix(columnMap)
+    return Matrix.builder()
+        .data(columnMap)
+        .build()
   }
 }

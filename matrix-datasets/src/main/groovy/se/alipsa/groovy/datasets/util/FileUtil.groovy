@@ -88,7 +88,7 @@ class FileUtil {
          String path = getResourcePath(name, encodingOpt)
          file = new File(path)
       } catch (UnsupportedEncodingException e) {
-         throw new FileNotFoundException("Failed to find resource " + name);
+         throw new FileNotFoundException("Failed to find resource " + name)
       }
       return file
    }

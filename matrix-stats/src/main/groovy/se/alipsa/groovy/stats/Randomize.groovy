@@ -15,7 +15,12 @@ class Randomize {
     def copy = data.clone()
     def rows = copy.rows()
     rows.shuffle()
-    return Matrix.create(copy.name, copy.columnNames(), rows, copy.types())
+    return Matrix.builder()
+        .name(copy.name)
+        .columnNames(copy.columnNames())
+        .rows(rows)
+        .types(copy.types())
+        .build()
   }
 
   /**
@@ -29,7 +34,12 @@ class Randomize {
     def copy = data.clone()
     def rows = copy.rows()
     rows.shuffle(random)
-    return Matrix.create(copy.name, copy.columnNames(), rows, copy.types())
+    return Matrix.builder()
+        .name(copy.name)
+        .columnNames(copy.columnNames())
+        .rows(rows)
+        .types(copy.types())
+        .build()
   }
 
   /**

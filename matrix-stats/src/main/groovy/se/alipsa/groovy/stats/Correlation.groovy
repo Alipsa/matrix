@@ -192,7 +192,7 @@ class Correlation {
    * @return the sum of the number from 1 to n
    */
   private static long sumN(long n) {
-    return n * (n + 1) / 2l;
+    return n * (n + 1) / 2l
   }
 
   /**
@@ -200,27 +200,27 @@ class Correlation {
    */
   private static class BigDecimalPair {
     /** The first value */
-    private final BigDecimal first;
+    private final BigDecimal first
     /** The second value */
-    private final BigDecimal second;
+    private final BigDecimal second
 
     /**
      * @param first first value.
      * @param second second value.
      */
     BigDecimalPair(BigDecimal first, BigDecimal second) {
-      this.first = first;
-      this.second = second;
+      this.first = first
+      this.second = second
     }
 
     /** @return the first value.  */
     BigDecimal getFirst() {
-      return first;
+      return first
     }
 
     /** @return the second value.  */
     BigDecimal getSecond() {
-      return second;
+      return second
     }
 
   }

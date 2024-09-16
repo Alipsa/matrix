@@ -7,7 +7,7 @@ import java.text.NumberFormat
 /**
  * A Grid is thin layer on top of a List<List<T>>.
  * Note than unlike a Matrix, the getAt and putAt methods with
- * a single argument refers to a row and not (as with a Matrik) to a column.
+ * a single argument refers to a row and not (as with a Matrix) to a column.
  *
  *
  * @param <T>

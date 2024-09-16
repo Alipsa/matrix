@@ -48,12 +48,12 @@ class MatrixDbUtil {
     String sql = "create table $tableName (\n"
 
     List<String> columns = new ArrayList<>()
-    int i = 0;
+    int i = 0
     List<Class<?>> types = table.types()
     for (String name : table.columnNames()) {
       Class type = types.get(i++)
       String column = "\"" + name + "\" " + mapper.sqlType(type, props[name])
-      columns.add(column);
+      columns.add(column)
     }
     sql += String.join(",\n", columns)
     if (primaryKey.length > 0) {
@@ -124,7 +124,7 @@ class MatrixDbUtil {
   }
 
   Object dropTable(Connection con, String tableName) {
-    LOG.debug("Dropping {}...", tableName);
+    LOG.debug("Dropping {}...", tableName)
     dbExecuteSql(con, "drop table $tableName")
   }
 
@@ -137,7 +137,7 @@ class MatrixDbUtil {
       sqlQuery = "select $sqlQuery"
     }
     try(Statement stm = con.createStatement(); ResultSet rs = stm.executeQuery(sqlQuery)) {
-      return Matrix.create(rs)
+      return Matrix.builder().data(rs).build()
     }
   }
 
@@ -185,7 +185,7 @@ class MatrixDbUtil {
     try(Statement stm = con.createStatement()) {
       boolean hasResultSet = stm.execute(sql)
       if (hasResultSet) {
-        return Matrix.create(stm.getResultSet())
+        return Matrix.builder().data(stm.getResultSet()).build()
       } else {
         return stm.getUpdateCount()
       }

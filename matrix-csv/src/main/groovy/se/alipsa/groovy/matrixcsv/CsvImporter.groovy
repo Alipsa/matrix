@@ -41,17 +41,22 @@ class CsvImporter {
     if (parser.headerNames != null && parser.headerNames.size() > 0) {
       headerRow = parser.headerNames
     } else if (firstRowAsHeader) {
-        headerRow = rows.remove(0)
+      headerRow = rows.remove(0)
     } else {
-        for (int i = 0;i < ncols; i++) {
-          headerRow << "c" + i
-        }
+      for (int i = 0; i < ncols; i++) {
+        headerRow << "c" + i
+      }
     }
     //println(headerRow)
     //rows.each {println(it)}
     List<Class<?>> types = [String] * ncols
     //println types
-    return Matrix.create(tableName, headerRow, rows, types)
+    return Matrix.builder()
+        .name(tableName)
+        .columnNames(headerRow)
+        .rows(rows)
+        .types(types)
+        .build()
   }
 
   static String tableName(URL url) {

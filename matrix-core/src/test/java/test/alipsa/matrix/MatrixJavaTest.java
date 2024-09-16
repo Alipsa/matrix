@@ -676,8 +676,20 @@ class MatrixJavaTest {
     );
     Matrix table = Matrix.builder().data(report).types(cr(BigDecimal.class, 3)).build();
 
-    Grid grid = table.grid();
+    Grid<Object> grid = table.grid();
     assertEquals(new BigDecimal("3.664"), grid.getAt(2, 1));
+    Grid<BigDecimal> typedGrid = table.grid(BigDecimal.class);
+    assertEquals(new BigDecimal("380.263"), typedGrid.getAt(1, 0));
+
+    var report2 = new Columns(
+        m("Full Funding", toDoubles(4563.153, 380.263, 4.938, 12.23)),
+        m("Baseline Funding", 3385.593, 282.133, 3.664, 2.654),
+        m("Current Funding", 2700, 225, 2.922, 1.871)
+    );
+    table = Matrix.builder().data(report2).types(cr(Double.class, 3)).build();
+    Grid<BigDecimal> tg2 = table.grid(BigDecimal.class, true);
+    assertEquals(new BigDecimal("3.664"), tg2.getAt(2, 1));
+    assertEquals(new BigDecimal("380.263"), tg2.getAt(1, 0));
   }
 
 

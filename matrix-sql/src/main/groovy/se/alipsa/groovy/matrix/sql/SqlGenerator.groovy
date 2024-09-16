@@ -13,7 +13,7 @@ class SqlGenerator {
     String sql = "update " + tableName + " set "
     List<String> columnNames = new ArrayList<>(row.columnNames())
     columnNames.removeAll(List.of(matchColumnName))
-    List<String> setValues = new ArrayList<>();
+    List<String> setValues = new ArrayList<>()
     columnNames.forEach(n -> setValues.add(n + " = " + quoteIfString(row, n)))
     sql += String.join(", ", setValues)
     sql += " where "

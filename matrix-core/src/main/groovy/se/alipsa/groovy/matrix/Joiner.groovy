@@ -37,7 +37,7 @@ class Joiner {
         }
         def yColNames = y.columnNames().collect()
         yColNames.remove(yColIndex)
-        return Matrix.create(x.name, [*x.columnNames(), *yColNames], resultRows)
+        return Matrix.builder().name(x.name).columnNames([*x.columnNames(), *yColNames]).rows(resultRows).build()
     }
 
     /**

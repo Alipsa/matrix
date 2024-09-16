@@ -178,13 +178,12 @@ class Stat {
         groups.each {
             counts.add([it.key, it.value.rowCount()])
         }
-        return Matrix.create(
-                "${table.name} - counts by $groupBy".toString(),
-                [groupBy, "${groupBy}_count".toString()],
-                counts,
-                [table.type(groupBy),
-                 Integer]
-        )
+        Matrix.builder()
+            .name("${table.name} - counts by $groupBy".toString())
+            .columnNames([groupBy, "${groupBy}_count".toString()])
+            .rows(counts)
+            .types([table.type(groupBy), Integer])
+            .build()
     }
 
     static Matrix sumBy(Matrix table, String sumColumn, String groupBy) {
@@ -231,12 +230,12 @@ class Stat {
             def val = fun(it.value[columnName])
             calculations.add([ it.key,  val])
         }
-        return Matrix.create(
-                "${table.name} - by $groupBy".toString(),
-                [groupBy, columnName],
-                calculations,
-                [table.type(groupBy), columnType]
-        )
+        Matrix.builder()
+            .name("${table.name} - by $groupBy".toString())
+            .columnNames([groupBy, columnName])
+            .rows(calculations)
+            .types([table.type(groupBy), columnType])
+            .build()
     }
 
     static List<BigDecimal> means(Grid grid, int scale = 9) {
@@ -566,11 +565,11 @@ class Stat {
             percent = (numOccurrence * 100.0 / size).setScale(2, RoundingMode.HALF_EVEN)
             matrix.add([String.valueOf(entry.getKey()), numOccurrence, percent])
         }
-        return Matrix.create(
-            [FREQUENCY_VALUE, FREQUENCY_FREQUENCY, FREQUENCY_PERCENT],
-            matrix,
-            [String, int, BigDecimal]
-        )
+        Matrix.builder()
+            .columnNames([FREQUENCY_VALUE, FREQUENCY_FREQUENCY, FREQUENCY_PERCENT])
+            .rows(matrix)
+            .types([String, int, BigDecimal])
+            .build()
     }
 
     static Matrix frequency(Matrix table, String columnName) {
@@ -614,8 +613,8 @@ class Stat {
             }
             tbl[String.valueOf(it.key)] = freqTbl.column(FREQUENCY_FREQUENCY)
         }
-        def name = (table.getName() == null || table.getName().isBlank()) ? groupName : table.getName() + '_' + groupName
-        return new Matrix(tbl).withName(name)
+        def nam = (table.getName() == null || table.getName().isBlank()) ? groupName : table.getName() + '_' + groupName
+        return Matrix.builder().data(tbl).name(nam).build()
     }
 
     /**

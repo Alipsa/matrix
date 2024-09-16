@@ -10,7 +10,10 @@ class JsonExporter {
     Matrix table
 
     JsonExporter(Grid grid, List<String> columnNames) {
-        this.table = Matrix.create(columnNames, grid)
+        this.table = Matrix.builder()
+        .columnNames(columnNames)
+        .data(grid)
+        .build()
     }
 
     JsonExporter(Matrix table) {

@@ -19,7 +19,7 @@ implementation 'se.alipsa.groovy:matrix-core:1.2.2'
 <dependency>
     <groupId>se.alipsa.groovy</groupId>
     <artifactId>matrix-core</artifactId>
-    <version>1.2.2</version>
+    <version>1.2.4</version>
 </dependency>
 ```
 
@@ -30,7 +30,7 @@ the groovy core library as well e.g:
 <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>4.0.16</version>
+    <version>4.0.23</version>
 </dependency>
 ```
 
@@ -53,7 +53,7 @@ def employees = [
         "startDate": ListConverter.toLocalDates(['2013-11-01','2018-03-25','2017-03-14']),
         "reviewPeriod": ListConverter.toYearMonth(['2020-01', '2019-04', '2018-10'])
 ]
-def table = Matrix.create(employees)
+def table = Matrix.builder().data(employees).build()
 ```        
 ### Creating from a result set:
 
@@ -86,7 +86,7 @@ SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
 
 // Create a Matrix from the PROJECT table
 SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
-  sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.create(rs) }
+  sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.builder().data(rs).build() }
 }
 // Now we can do stuff with the project TMatrix, e.g.
 println(project.content())
@@ -95,7 +95,7 @@ println(project.content())
 ### Creating from a csv file:
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
-def table = Matrix.create(new File('/some/path/foo.csv'), ';')
+def table = Matrix.builder().data(new File('/some/path/foo.csv'), ';').build()
 ```
 
 Data can be reference using []
@@ -108,13 +108,13 @@ If you pass only one argument, you get the column e.g. List<?> priceColumn = tab
 ```groovy
 import se.alipsa.groovy.matrix.*
 
-def table = Matrix.create([
+def table = Matrix.builder().columns([
     'place': [1, 2, 3],
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27']
-],
-    [Integer, String, String]
-)
+    ])
+    .types(Integer, String, String)
+    .build()
 println("Head\n${table.head(2, false)}")
 println("Tail\n${table.tail(2, false)}")
 ```
@@ -134,13 +134,13 @@ Tail
 import se.alipsa.groovy.matrix.*
 import java.time.*
 
-def empData = Matrix.create(
+def empData = Matrix.builder().data(
     emp_id: 1..5,
     emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
     salary: [623.3,515.2,611.0,729.0,843.25],
-    start_date: ListConverter.toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
-    [int, String, Number, LocalDate]
-)
+    start_date: ListConverter.toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+    .types(int, String, Number, LocalDate)
+    .build()
 struct = Stat.str(empData)
 struct.each {
   println it
@@ -165,11 +165,13 @@ import se.alipsa.groovy.matrix.*
 
 import static se.alipsa.groovy.matrix.Stat.*
 
-def table = Matrix.create([
+def table = Matrix.builder().data([
     v0: [0.3, 2, 3],
     v1: [1.1, 1, 0.9],
     v2: [null, 'Foo', "Foo"]
-], [Number, Double, String])
+  ])
+  .types(Number, Double, String)
+  .build()
 def summary = summary(table)
 println(summary)
 ```
@@ -213,16 +215,18 @@ import se.alipsa.groovy.matrix.Matrix
 import java.time.LocalDate
 
 // Given a table of strings
-def table = Matrix.create([
-    'place': ['1', '2', '3'],
-    'firstname': ['Lorena', 'Marianne', 'Lotte'],
-    'start': ['2021-12-01', '2022-07-10', '2023-05-27']
-], [String]*3
-)
-println(table.columnTypeNames())
+def table = Matrix.builder()
+    .data([
+        'place': ['1', '2', '3'], 
+        'firstname': ['Lorena', 'Marianne', 'Lotte'], 
+        'start': ['2021-12-01', '2022-07-10', '2023-05-27']
+    ])
+    .types([String]*3)
+    .build()
+println(table.typeNames())
 // Convert the place column to int and the start column to localdates
 def table2 = table.convert([place: Integer, start: LocalDate])
-println(table2.columnTypeNames())
+println(table2.typeNames())
 ```
 which will print
 ```
@@ -273,11 +277,12 @@ compiler will think you want to call the convert(List<Class<?>>) method instead.
 import se.alipsa.groovy.matrix.Matrix
 import static org.junit.jupiter.api.Assertions.*
 
-def table = Matrix.create([
+def table = Matrix.builder().data([
     'place': [1, 2, 3],
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
-    'start': ['2021-12-01', '2022-07-10', '2023-05-27']
-], [int, String, String])
+    'start': ['2021-12-01', '2022-07-10', '2023-05-27']])
+  .types([int, String, String])
+  .build()
 // We can use the groovy method findIndexValues on a column to select the rows we want
 def rows = table.rows(table['place'].findIndexValues { it > 1 })
 assertEquals(2, rows.size())
@@ -298,8 +303,10 @@ def data = [
     'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
 ]
-def table = Matrix
-    .create(data)
+def table = Matrix.builder()
+    .name('emp')
+    .columns(data)
+    .build()
     .convert(place: Integer, start: LocalDate)
 
 // Add 10 days to the start dates
@@ -310,15 +317,56 @@ println(table2.content())
 ```
 Will print:
 ```
-place	firstname	start
-1	Lorena	2021-12-11
-2	Marianne	2022-07-20
-3	Lotte	2023-06-06
-null	Chris	2023-01-20
+emp: 4 obs * 3 variables 
+place	firstname	start     
+    1	Lorena   	2021-12-11
+    2	Marianne 	2022-07-20
+    3	Lotte    	2023-06-06
+ null	Chris    	2023-01-20
 ```
 Note that it is possible to change the datatype of the column into something else when doing apply. The apply method
 will detect this change and change the datatype to the new one (if all columns are affected) or the nearest common
 one if only a subset of rows is affected.
+
+Stat also have an apply method that does not mutate any data. It is useful if you want to do 
+something with two columns. e.g:
+
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.Stat
+import static se.alipsa.groovy.matrix.ListConverter.*
+
+def account = Matrix.builder()
+    .name('account')
+    .columns([
+        'id': ['1', '2', '3', '4'],
+        'balance': [12323, 23400, 45932, 77200],
+    ])
+    .build()
+
+def ir = Matrix.builder()
+    .name('interest rates')
+    .columns([
+        id: [1,2,3,4],
+        interestRate: [0.034, 0.022, 0.019, 0.028]
+    ])
+    .build()
+
+def accountAndInterest = account.clone().withName('accountAndInterest')
+accountAndInterest['interestAmount', Double] = Stat.apply(account['balance'], ir['interestRate']) { b, r ->
+  b * r
+}
+accountAndInterest.content()
+```
+which will print
+```
+accountAndInterest: 4 obs * 3 variables 
+id	balance	interestAmount
+1 	  12323	       418.982
+2 	  23400	       514.800
+3 	  45932	       872.708
+4 	  77200	      2161.600
+```
 
 ### Combining selectRows with apply
 ```groovy
@@ -363,12 +411,15 @@ the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/latest/index.html)
 
 ### Using Matrix from another JVM language
 If you are using the Matrix library from another JVM language, you cannot use the 
-short notation for creating and referring to lists and maps. Instead of
+short notation for creating and referring to lists and maps:
+
 ```groovy
+// Instead of
 myMatrix[1,2] = 34
 // you must use the following in java
 myMatrix.putAt(1,2, 34);
 
+// Instead of
 def myGroovyVar = myMatrix[1,2]
 // you must use the following in java
 var myJavaVar = myMatrix.getAt(1,2);

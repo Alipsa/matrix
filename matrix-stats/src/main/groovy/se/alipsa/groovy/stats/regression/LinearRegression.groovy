@@ -198,14 +198,15 @@ class LinearRegression {
     if (interceptLab.length() > xLab.length()) {
       xLab = xLab.padRight(interceptLab.length())
     }
-    Matrix coefficients = new Matrix('Coefficients',
-        ['           ','Estimate','Std. Error' /*, 't value', 'Pr(>|t|)'*/],
-        [
+    Matrix coefficients = Matrix.builder()
+    .name('Coefficients')
+    .columnNames(['           ','Estimate','Std. Error' /*, 't value', 'Pr(>|t|)'*/])
+    .rows([
             [interceptLab, xLab],
             [getIntercept(3), getSlope(3)],
             [getInterceptStdErr(3), getSlopeStdErr(3)]
-        ]
-    )
+        ])
+    .build()
     """
 Equation: ${toString()}
 Residuals: (not yet implemented)   
