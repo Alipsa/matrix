@@ -155,7 +155,7 @@ class Normalize {
   }
 
   static List<? extends Number> logNorm(Matrix table, String columnName, int... decimals) {
-    if (Number.isAssignableFrom(table.columnType(columnName))) {
+    if (Number.isAssignableFrom(table.type(columnName))) {
       return logNorm(table[columnName] as List<? extends Number>, decimals)
     } else {
       throw new IllegalArgumentException("$columnName is not a numeric column")
@@ -318,7 +318,7 @@ class Normalize {
   }
 
   static List<? extends Number> minMaxNorm(Matrix table, String columnName, int... decimals) {
-    if (Number.isAssignableFrom(table.columnType(columnName))) {
+    if (Number.isAssignableFrom(table.type(columnName))) {
       return minMaxNorm(table[columnName] as List<? extends Number>, decimals)
     } else {
       throw new IllegalArgumentException("$columnName is not a numeric column")
@@ -490,7 +490,7 @@ class Normalize {
   }
 
   static List<? extends Number> meanNorm(Matrix table, String columnName, int... decimals) {
-    if (Number.isAssignableFrom(table.columnType(columnName))) {
+    if (Number.isAssignableFrom(table.type(columnName))) {
       return meanNorm(table[columnName] as List<? extends Number>, decimals)
     } else {
       throw new IllegalArgumentException("$columnName is not a numeric column")
@@ -666,7 +666,7 @@ class Normalize {
   }
 
   static List<? extends Number> stdScaleNorm(Matrix table, String columnName, int... decimals) {
-    if (Number.isAssignableFrom(table.columnType(columnName))) {
+    if (Number.isAssignableFrom(table.type(columnName))) {
       return stdScaleNorm(table[columnName] as List<? extends Number>, decimals)
     } else {
       throw new IllegalArgumentException("$columnName is not a numeric column")

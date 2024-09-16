@@ -49,7 +49,7 @@ class MatrixDbUtil {
 
     List<String> columns = new ArrayList<>()
     int i = 0;
-    List<Class<?>> types = table.columnTypes()
+    List<Class<?>> types = table.types()
     for (String name : table.columnNames()) {
       Class type = types.get(i++)
       String column = "\"" + name + "\" " + mapper.sqlType(type, props[name])
@@ -73,7 +73,7 @@ class MatrixDbUtil {
 
   void create(Connection con, Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
     int i = 0
-    List<Class<?>> types = table.columnTypes()
+    List<Class<?>> types = table.types()
     Map<String,Map<String, Integer>> mappings = [:]
     for (String name : table.columnNames()) {
       Map<String, Integer> props = [:]

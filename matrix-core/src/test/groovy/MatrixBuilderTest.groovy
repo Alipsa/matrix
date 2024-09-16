@@ -23,7 +23,7 @@ class MatrixBuilderTest {
     assertEquals(null, m1.name)
     assertEquals(0, m1.rowCount())
     assertEquals(0, m1.columnCount())
-    assertEquals(0, m1.columnTypes().size())
+    assertEquals(0, m1.types().size())
   }
 
   @Test
@@ -35,7 +35,7 @@ class MatrixBuilderTest {
     assertEquals('empData', m1.name)
     assertEquals(0, m1.rowCount())
     assertEquals(0, m1.columnCount())
-    assertEquals(0, m1.columnTypes().size())
+    assertEquals(0, m1.types().size())
   }
 
   @Test
@@ -47,8 +47,8 @@ class MatrixBuilderTest {
     assertEquals('m2', m2.name)
     assertEquals(3, m2.rowCount())
     assertEquals(4, m2.columnCount())
-    assertEquals(4, m2.columnTypes().size())
-    assertIterableEquals([Object]*4, m2.columnTypes())
+    assertEquals(4, m2.types().size())
+    assertIterableEquals([Object]*4, m2.types())
     assertEquals(m2[1,0], 2)
     m2.content()
 
@@ -61,8 +61,8 @@ class MatrixBuilderTest {
     assertEquals(null, m3.name)
     assertEquals(3, m3.rowCount())
     assertEquals(2, m3.columnCount())
-    assertEquals(2, m3.columnTypes().size())
-    assertIterableEquals([Object]*2, m3.columnTypes())
+    assertEquals(2, m3.types().size())
+    assertIterableEquals([Object]*2, m3.types())
     assertEquals(m3[1,0], 2)
     m3.content()
 
@@ -81,7 +81,7 @@ class MatrixBuilderTest {
     Matrix m5 = Matrix.builder()
         .name("m5")
         .columnNames(['id', 'name', 'salary', 'start'])
-        .dataTypes([int, String, Number, LocalDate]).build()
+        .types([int, String, Number, LocalDate]).build()
     m5['id'] = [1,2,3]
     m5[1] << 'Rick'
     m5['name'] << 'Dan'
@@ -94,8 +94,8 @@ class MatrixBuilderTest {
   @Test
   void testDataTypesOnly() {
     Matrix m4 = Matrix.builder()
-        .dataTypes([int, String, Number, LocalDate]).build()
-    assertEquals([Integer, String, Number, LocalDate], m4.columnTypes())
+        .types([int, String, Number, LocalDate]).build()
+    assertEquals([Integer, String, Number, LocalDate], m4.types())
     assertEquals(null, m4.name)
     assertEquals(0, m4.rowCount())
     assertEquals(4, m4.columnCount())
@@ -110,7 +110,7 @@ class MatrixBuilderTest {
             [1,2,3],
             ['foo', 'bar', 'baz']
         ])
-        .dataTypes([int, String]).build()
+        .types([int, String]).build()
 
     m6.content()
 
@@ -120,7 +120,7 @@ class MatrixBuilderTest {
             [1,2,3],
             ['foo', 'bar', 'baz']
         ])
-        .dataTypes([int, String, Number]).build()
+        .types([int, String, Number]).build()
     m7.content()
 
     Matrix r6 = Matrix.builder()
@@ -130,7 +130,7 @@ class MatrixBuilderTest {
             [2, 'bar'],
             [3, 'baz']
         ])
-        .dataTypes([int, String]).build()
+        .types([int, String]).build()
     r6.addRow([4, 'qux'])
     r6.removeRows(r6.size() -1)
     r6.content()
@@ -143,7 +143,7 @@ class MatrixBuilderTest {
             [2, 'bar'],
             [3, 'baz']
         ])
-        .dataTypes([int, String, Number]).build()
+        .types([int, String, Number]).build()
     r7.addColumn('c4', int, [7,8,9])
     r7.content()
     assertNotEquals(m7, r7)
@@ -172,7 +172,7 @@ class MatrixBuilderTest {
             'firstname': ['Lorena', 'Marianne', 'Lotte'],
             'start': ['2021-12-01', '2022-07-10', '2023-05-27']
         ])
-        .dataTypes([int, String, String])
+        .types([int, String, String])
         .build()
     assertIterableEquals([1, 20, 3], m['place'])
     assertIterableEquals([3, 'Lotte', '2023-05-27'], m.row(2))
@@ -216,7 +216,7 @@ class MatrixBuilderTest {
 
     assertEquals(2, project.rowCount())
     assertIterableEquals(['ID', 'NAME', 'URL'], project.columnNames())
-    assertIterableEquals([Integer, String, String], project.columnTypes())
+    assertIterableEquals([Integer, String, String], project.types())
     assertEquals(project[1,1], 'Alipsa')
   }
 

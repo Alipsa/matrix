@@ -132,7 +132,7 @@ class ValueConverter {
                        DateTimeFormatter dateTimeFormatter = null,
                        NumberFormat numberFormat = null) {
     return switch (type) {
-      case String -> (E) String.valueOf(o)
+      case String -> (E) asString(o, dateTimeFormatter, numberFormat)
       case LocalDate -> (E) asLocalDate(o, dateTimeFormatter)
       case LocalDateTime -> (E) asLocalDateTime(o, dateTimeFormatter)
       case YearMonth -> (E) asYearMonth(o)
@@ -270,9 +270,11 @@ class ValueConverter {
     return asYearMonth(o)
   }
 
-  static String asString(Object o, DateTimeFormatter formatter = null) {
+  static String asString(Object o, DateTimeFormatter formatter = null, NumberFormat numberFormat = null) {
     if (o instanceof TemporalAccessor && formatter != null) {
       return formatter.format(o)
+    } else if (o instanceof Number && numberFormat != null) {
+      return numberFormat.format(o)
     }
     return String.valueOf(o)
   }

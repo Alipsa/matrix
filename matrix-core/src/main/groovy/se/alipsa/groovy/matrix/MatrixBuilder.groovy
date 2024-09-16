@@ -204,7 +204,7 @@ class MatrixBuilder {
       }
       rows(data)
       if(noDataTypes()) {
-        dataTypes([String] * headerNames.size())
+        types([String] * headerNames.size())
       }
     }
     this
@@ -228,7 +228,7 @@ class MatrixBuilder {
       columnNames(headers)
     }
     if(noDataTypes()) {
-      dataTypes(columnTypes)
+      types(columnTypes)
     }
     List<List<Object>> rows = []
     while (rs.next()) {
@@ -242,16 +242,16 @@ class MatrixBuilder {
   }
 
 
-  MatrixBuilder dataTypes(List<Class<?>> types) {
+  MatrixBuilder types(List<Class<?>> types) {
     this.dataTypes = ClassUtils.convertPrimitivesToWrapper(types)
     this
   }
 
-  MatrixBuilder dataTypes(Class<?>... types) {
-    dataTypes(types as List<Class<?>>)
+  MatrixBuilder types(Class<?>... dataTypes) {
+    types(dataTypes as List<Class<?>>)
   }
 
-  MatrixBuilder dataTypes(List<Class<?>>... types) {
+  MatrixBuilder types(List<Class<?>>... types) {
     if (types.length > 0) {
       this.dataTypes = types[0]
     }

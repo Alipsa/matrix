@@ -144,7 +144,7 @@ class ExcelExporter {
         Row row = sheet.getRow(rowIdx)
         if (row == null) row = sheet.createRow(rowIdx)
         Cell cell = row.createCell(col)
-        Class type = data.columnType(col)
+        Class type = data.type(col)
 
         if (type in [double, Double, BigDecimal, float, Float, Long, long, BigInteger, Number]) {
           cell.setCellValue(ValueConverter.asDouble(matrixRow[col]))

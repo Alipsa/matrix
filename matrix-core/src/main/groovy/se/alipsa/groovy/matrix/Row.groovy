@@ -154,12 +154,12 @@ class Row implements List<Object> {
     }
 
     <T> T getAt(int index) {
-        Class<T> type = parent.columnType(index) as Class<T>
+        Class<T> type = parent.type(index) as Class<T>
         return get(index).asType(type)
     }
 
     <T> T getAt(Number index) {
-        Class<T> type = parent.columnType(index.intValue()) as Class<T>
+        Class<T> type = parent.type(index.intValue()) as Class<T>
         return get(index.intValue()).asType(type)
     }
 
@@ -180,7 +180,7 @@ class Row implements List<Object> {
         if (idx == -1) {
             throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
         }
-        Class<T> type = parent.columnType(idx) as Class<T>
+        Class<T> type = parent.type(idx) as Class<T>
         return get(idx).asType(type)
     }
 

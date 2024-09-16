@@ -25,7 +25,7 @@ class ListConverter {
           c.add(ValueConverter.convert(it, type, dateTimeFormatter, numberFormat))
         }
       } catch (Exception e) {
-        throw new ConversionException("Failed to convert \'$it\' (${it == null ? null : it.getClass().name}) to $type.name in index $idx", e)
+        throw new ConversionException("Failed to convert \'$it\' (${it == null ? null : it.getClass().name}) to $type.name in index $idx: ${e.getMessage()}", e)
       }
     }
     return c

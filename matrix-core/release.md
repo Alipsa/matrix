@@ -1,6 +1,6 @@
 # Matrix core Release history
 
-### 1.2.5, In progress
+### 1.3.0, In progress, note there are several api breaking changes due to extensive cleanup and consistency fixes
 - add constructor to create an empty Matrix with only name and the column names defined
 - change Grid semantics so that getAt and putAt mean the same thing
   it was so that getAt (X = grid[0]) gets the row and putAt (grid[0] = X) puts the column
@@ -29,7 +29,18 @@
 - add check for missing column in Matrix.dropColumns()
 - Modify Matrix.addColumns to include all columns from the supplied matrix if no columns are specified
 - Fix bug in Matrix.diff and add check for number of columns
-- Add a builder to Matrix and deprecate some static create methods and constructors as a result
+- Add a builder to Matrix and deprecate all static create methods and constructors as a result
+- change Matrix.columnTypes() to Matrix.types() 
+- add putAt for ranges (e.g. myMatrix[0..2] = otherMatrix[1..3])
+- change putAt to allow for add operations i.e. it is now possible to add an element using e.g. myMatrix[1,2] = 'Foo'
+  note that the element to add must be at the size of the column i.e. it is not possible to do `myMatrix[2,2] = 'Foo'`
+  if there is only 1 row in the matrix.
+- Add Stat.apply for various column operations (i.e. do something with values from two columns and assign the result to a third column)
+- Add Matrix.dropColumns(IntRange columnIndices)
+- Add Matrix.convert() for IntRange and individual column index, add formatters to the convert method taking a column name
+- Change Matrix.diff() formatting for easier reading
+- Add Matrix.columns(IntRange range) to get the specified range of columns
+- Change equals to compare values and add a parameter for allowed diff used when comparing numbers
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

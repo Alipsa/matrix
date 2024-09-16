@@ -1,5 +1,6 @@
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.Stat
 
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -294,5 +295,15 @@ class StatTest {
     void testMixedNumbers() {
         assertEquals(3.14, min([6, 99g, 3.14d, 7/1.23, 5 as Short, (byte)19, 787987987]))
         assertEquals(787987987, max([6, 99g, 3.14d, 7/1.23, 5 as Short, (byte)19, 787987987]))
+    }
+
+    @Test
+    void testApply() {
+        List x = [0,1,2,3]
+        List y = [1,2,3,4]
+        def result = Stat.apply(x, y) { a, b ->
+            a * b
+        }
+        assertIterableEquals([0, 2, 6, 12], result)
     }
 }

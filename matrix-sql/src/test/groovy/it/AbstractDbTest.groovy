@@ -4,11 +4,9 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datasets.Dataset
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
-import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.groovy.matrix.ListConverter
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.Row
-import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.ValueConverter
 import se.alipsa.groovy.matrix.sql.MatrixDbUtil
 import se.alipsa.groovy.matrix.sql.MatrixSql
@@ -86,7 +84,7 @@ abstract class AbstractDbTest {
     dur + [dataset.name, "4. select *", ctm4 - ctm3]
     dataset.eachWithIndex { Row row, int r ->
       row.eachWithIndex { Object expected, int c ->
-        def actual = ValueConverter.convert(m2[r, c], dataset.columnType(c))
+        def actual = ValueConverter.convert(m2[r, c], dataset.type(c))
         if (expected != null && actual != null) {
           if (expected instanceof BigDecimal) {
             actual = (actual as BigDecimal).setScale(expected.scale())

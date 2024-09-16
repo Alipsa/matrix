@@ -27,7 +27,7 @@ class Stat {
         def name = table.name == null ? '' : table.name + ', '
         map["Matrix"] = ["${name}${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
         for (colName in table.columnNames()) {
-            def vals = [table.columnType(colName).getSimpleName()]
+            def vals = [table.type(colName).getSimpleName()]
             def endRow = Math.min(4, table.rowCount()-1)
             if (endRow > 0) {
                 def samples = ListConverter.convert(table.column(colName).subList(0, endRow), String.class)
@@ -42,7 +42,7 @@ class Stat {
         def map = new Summary()
         for (colName in table.columnNames()) {
             def column = table.column(colName)
-            def type = table.columnType(colName)
+            def type = table.type(colName)
             if (Number.isAssignableFrom(type) || primitives.contains(type.getTypeName())) {
                 map[colName] = addNumericSummary(column, type)
             } else {
@@ -111,7 +111,7 @@ class Stat {
         }
         for (columnName in columns) {
             def column = matrix.column(columnName)
-            def type = matrix.columnType(columnName)
+            def type = matrix.type(columnName)
             if (Number.isAssignableFrom(type)) {
                 sums.add(sum(column, type))
             } else {
@@ -130,7 +130,7 @@ class Stat {
         List<? extends Number> sums = []
         columnIndices.each { colIdx ->
             def column = matrix.column(colIdx)
-            def type = matrix.columnType(colIdx)
+            def type = matrix.type(colIdx)
             if (Number.isAssignableFrom(type)) {
                 sums.add(sum(column, type))
             } else {
@@ -182,7 +182,7 @@ class Stat {
                 "${table.name} - counts by $groupBy".toString(),
                 [groupBy, "${groupBy}_count".toString()],
                 counts,
-                [table.columnType(groupBy),
+                [table.type(groupBy),
                  Integer]
         )
     }
@@ -235,7 +235,7 @@ class Stat {
                 "${table.name} - by $groupBy".toString(),
                 [groupBy, columnName],
                 calculations,
-                [table.columnType(groupBy), columnType]
+                [table.type(groupBy), columnType]
         )
     }
 
@@ -618,5 +618,27 @@ class Stat {
         return new Matrix(tbl).withName(name)
     }
 
-
+    /**
+     * Allows for various column operations such as multiplying, adding values together etc.
+     * Example:
+     * <code><pre>
+     * List a = [0,1,2,3]
+     * List b = [1,2,3,4]
+     * def result = Stat.apply(a, b) { x, y ->
+     *  x * y
+     * }
+     * assertIterableEquals([0, 2, 6, 12], result)
+     * </pre></code>
+     *
+     * @param x the first list of values
+     * @param y the second list of values
+     * @param operation what each element should to with the corresponding element in the other list
+     * @return a list containing the result of the operation
+     */
+    static List apply(List x, List y, Closure operation) {
+        int i = 0
+        x.collect {
+            operation.call(it, y[i++])
+        }
+    }
 }

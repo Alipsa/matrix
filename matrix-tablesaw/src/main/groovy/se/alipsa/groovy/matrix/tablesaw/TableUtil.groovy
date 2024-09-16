@@ -116,7 +116,7 @@ class TableUtil {
   static Table toTablesaw(Matrix matrix) {
     List<Column<?>> columns = new ArrayList<>()
     for(int i = 0; i < matrix.columnCount(); i++) {
-      ColumnType type = columnTypeForClass(matrix.columnType(i))
+      ColumnType type = columnTypeForClass(matrix.type(i))
       Column<?> col = createColumn(type, matrix.columnNames().get(i), matrix.column(i))
       columns.add(col)
     }

@@ -103,7 +103,7 @@ class OdsImporterTest {
       assertEquals(2790, comp[3,31])
 
       Matrix comp2 = sheets.comp2
-      assertIterableEquals(sheets.comp.columnTypeNames(), comp2.columnTypeNames(), "column types differ")
+      assertIterableEquals(sheets.comp.typeNames(), comp2.typeNames(), "column types differ")
       comp2.columnNames(comp2.columnNames().collect{
         if (it == "Component") {
           String.valueOf(it)
@@ -113,7 +113,7 @@ class OdsImporterTest {
       })
       assertIterableEquals(comp.columnNames(), comp2.columnNames(), "column names differ")
       comp2 = comp2.convert([String] + [Integer]*31 as List<Class<?>>)
-      assertIterableEquals(comp.columnTypeNames(), comp2.columnTypeNames(), "column types differ after column name setting")
+      assertIterableEquals(comp.typeNames(), comp2.typeNames(), "column types differ after column name setting")
     }
   }
 }

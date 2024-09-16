@@ -98,10 +98,10 @@ class MatrixSqlTest {
       matrixSql.create(complexData)
 
       Matrix stored = matrixSql.select("* from $tableName")
-      println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
+      println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
 
       stored = stored.convert('start', LocalDate)
-      println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
+      println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
     }
   }
 
