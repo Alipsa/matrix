@@ -25,9 +25,9 @@ class MatrixTest {
     def empData = Matrix.builder()
         .name('empData')
         .data(
-            emp_id    : 1..5,
-            emp_name  : ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
-            salary    : [623.3, 515.2, 611.0, 729.0, 843.25],
+            emp_id: 1..5,
+            emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+            salary: [623.3, 515.2, 611.0, 729.0, 843.25],
             start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
         )
         .types([int, String, Number, LocalDate])
@@ -568,9 +568,9 @@ class MatrixTest {
     assertEquals(new BigDecimal("380.263"), typedGrid[1, 0])
 
     var report2 = [
-        "Full Funding": toDoubles(4563.153, 380.263, 4.938, 12.23),
+        "Full Funding"    : toDoubles(4563.153, 380.263, 4.938, 12.23),
         "Baseline Funding": ['3385.593', '282.133', '3.664', '2.654'],
-        "Current Funding": [2700, 225, 2.922, 1.871]
+        "Current Funding" : [2700, 225, 2.922, 1.871]
     ]
     table = Matrix.builder().data(report2).types([Double, String, BigDecimal]).build()
     Grid<BigDecimal> tg2 = table.grid(BigDecimal)
@@ -807,13 +807,13 @@ class MatrixTest {
   @Test
   void testMoveColumn() {
     def table = Matrix.builder()
-    .columns([
-        'firstname': ['Lorena', 'Marianne', 'Lotte'],
-        'start'    : toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
-        'foo'      : [1, 2, 3]
-    ])
-    .types(String, LocalDate, int)
-    .build()
+        .columns([
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start'    : toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+            'foo'      : [1, 2, 3]
+        ])
+        .types(String, LocalDate, int)
+        .build()
 
     table.moveColumn('foo', 0)
     assertIterableEquals(['foo', 'firstname', 'start'], table.columnNames())
@@ -881,11 +881,13 @@ class MatrixTest {
 
   @Test
   void testGetAt() {
-    def table = Matrix.builder().columns([
-        'firstname': ['Lorena', 'Marianne', 'Lotte'],
-        'start'    : toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
-        'foo'      : [1, 2, 3]
-    ]).types([String, LocalDate, int]).build()
+    def table = Matrix.builder()
+        .columns(
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+            'foo': [1, 2, 3])
+        .types(String, LocalDate, int)
+        .build()
 
     assertEquals(Integer, table.getAt(2, 2).class)
     assertEquals(3, table.getAt(2, 2))
@@ -919,5 +921,8 @@ class MatrixTest {
     assertEquals(2 as BigDecimal, row[2, BigDecimal])
     assertEquals('2', row[2, String])
     assertEquals('2', row.getAt(2, String))
+
+    assertIterableEquals([asLocalDate('2021-12-01'), 1], table[0, 1..2], "column intRange")
+    assertIterableEquals(['Marianne', 'Lotte'], table[1..2, 0], "row intRange")
   }
 }

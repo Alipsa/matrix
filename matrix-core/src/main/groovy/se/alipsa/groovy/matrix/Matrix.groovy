@@ -805,6 +805,10 @@ class Matrix implements Iterable<Row> {
     return mColumns.size()
   }
 
+  int lastColumnIndex() {
+    columnCount() -1
+  }
+
   /**
    *
    * @param columnName the column name to match
@@ -1170,6 +1174,58 @@ class Matrix implements Iterable<Row> {
     return column(columnIndex)
   }
 
+  /**
+   * get the variables in the range specified for a specific row
+   * <code><pre>
+   * def table = Matrix.builder()
+   *  .columns(
+   *    'firstname': ['Lorena', 'Marianne', 'Lotte'],
+   *    'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+   *    'foo': [1, 2, 3])
+   *  .types(String, LocalDate, int)
+   *  .build()
+   *
+   * assert [asLocalDate('2021-12-01'), 1] == table[0, 1..2]
+   * </pre></code>
+   * @param rowIndex the observation to get
+   * @param columns the variables to from the observation to include in the result
+   * @return
+   */
+  List<?> getAt(int rowIndex, IntRange columns) {
+    row(rowIndex)[columns]
+  }
+
+  /**
+   * Get the observations in the range specified for a specific column
+   * <code><pre>
+   * def table = Matrix.builder()
+   *  .columns(
+   *    'firstname': ['Lorena', 'Marianne', 'Lotte'],
+   *    'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+   *    'foo': [1, 2, 3])
+   *  .types(String, LocalDate, int)
+   *  .build()
+   *
+   * assert ['Marianne', 'Lotte'] == table[1..2, 0]
+   * </pre></code>
+   * @param rows
+   * @param colIndex
+   * @return
+   */
+  List<?> getAt(IntRange rows, int colIndex) {
+    column(colIndex)[rows]
+  }
+
+  /**
+   * This method is primarily meant for human viewíng of the content of the matrix
+   *
+   * @param rows the number of observations to include in the result
+   * @param includeHeader optional, defaults to false
+   * @param delimiter optional defaults to tab (\t)
+   * @param lineEnding optional defaults to newline (\n)
+   * @param maxColumnLength optional defaults to 50
+   * @return a string representation of each observation up to the rows specified
+   */
   String head(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     StringBuilder sb = new StringBuilder()
     def nRows = Math.min(rows, rowCount())
@@ -1238,6 +1294,14 @@ class Matrix implements Iterable<Row> {
     //return new RowIterator(this)
   }
 
+  /**
+   * returns the longest content (number of characters) of the column specified
+   *
+   * @param columnName
+   * @param includeHeader
+   * @param maxColumnLength
+   * @return
+   */
   int maxContentLength(String columnName, boolean includeHeader, int maxColumnLength = 50) {
     int columnNameLength = columnName == null ? 0 : columnName.length()
     Integer maxLength = Math.min(includeHeader ? columnNameLength : 0, maxColumnLength)
@@ -1255,6 +1319,13 @@ class Matrix implements Iterable<Row> {
     maxLength
   }
 
+  /**
+   * Move the named column to the index specified
+   *
+   * @param columnName the name of the volumn to move
+   * @param index the index to move it to
+   * @return this mutated matrix
+   */
   Matrix moveColumn(String columnName, int index) {
     Class<?> type = type(columnName)
     int currentIndex = columnIndex(columnName)
@@ -1618,6 +1689,10 @@ class Matrix implements Iterable<Row> {
     }
     return mColumns.get(0).size()
     //return rows().size()
+  }
+
+  int lastRowIndex() {
+    rowCount() -1
   }
 
   /**

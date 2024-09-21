@@ -41,6 +41,8 @@
 - Change Matrix.diff() formatting for easier reading
 - Add Matrix.columns(IntRange range) to get the specified range of columns
 - Change equals to compare values and add a parameter for allowed diff used when comparing numbers
+- add lastRowIndex and LastColumnIndex as convenience methods for rowCount -1 and ColumnCount -1 respectively
+- add getAt for a range of rows or a range of columns
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

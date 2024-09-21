@@ -136,9 +136,18 @@ class Row implements List<Object> {
         return content.listIterator(index)
     }
 
+    /**
+     * NOTE this method returns a disconnected list, no longer representing a row of the
+     * backing matrix although changes to values that can be mutated (e.g. java.util.Date) will still
+     * change the Matrix content (Numbers and Strings, jav.util.time classes are all immutable).
+     *
+     * @param fromIndex low endpoint (inclusive) of the subList
+     * @param toIndex high endpoint (exclusive) of the subList
+     * @return a list with the columns values specified in the range
+     */
     @Override
     List subList(int fromIndex, int toIndex) {
-        throw new UnsupportedOperationException()
+        content.subList(fromIndex, toIndex)
     }
 
     Object putAt(int index, Object value) {
