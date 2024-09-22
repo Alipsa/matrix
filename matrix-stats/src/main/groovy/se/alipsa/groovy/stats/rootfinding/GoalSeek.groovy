@@ -1,6 +1,6 @@
 package se.alipsa.groovy.stats.rootfinding
 
-import static java.lang.Math.*
+import java.text.DecimalFormat
 
 /**
 Similar to the excel goal seek function. Uses the Bisection method which is predicable and linear
@@ -37,8 +37,8 @@ class GoalSeek {
       if (!Double.isInfinite(currentValue) && !Double.isNaN(currentValue)) {
         seeker.evaluateAndAdjust(currentValue)
 
-        if (abs(seeker.getMinValue() - seeker.getMaxValue()) / 2 <= threshold
-            || abs(seeker.getDiff(currentValue)) < threshold) {
+        if ((seeker.getMinValue() - seeker.getMaxValue()).abs() / 2 <= threshold
+            || (seeker.getDiff(currentValue)).abs() < threshold) {
           double val = seeker.getMidValue()
           // println "Found value $val after $i iterations, ${algorithm.call(val)}"
           return [value: val, result: algorithm.call(val), diff: seeker.getDiff(currentValue), iterations: i]
@@ -57,8 +57,8 @@ class GoalSeek {
 
     Seeker(double targetValue, double minValue, double maxValue) {
       this.targetValue = targetValue;
-      this.minValue = minValue;
-      this.maxValue = maxValue;
+      this.minValue = minValue
+      this.maxValue = maxValue
     }
 
     double getMidValue() {

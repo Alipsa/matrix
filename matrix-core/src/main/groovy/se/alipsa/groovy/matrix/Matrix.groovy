@@ -646,16 +646,30 @@ class Matrix implements Iterable<Row> {
     return mHeaders
   }
 
-  void columnName(int index, String name) {
-    mHeaders[index] = name
+  /**
+   * Set the column name at the index specified
+   * The column name will be converted to a String.
+   *
+   * @param index
+   * @param name
+   */
+  void columnName(int index, Object name) {
+    mHeaders[index] = String.valueOf(name)
   }
 
+  /**
+   * Due to type erasure, we cannot guard against a list of something else
+   * being passed as column names so we convert all items in the list to a String
+   *
+   * @param names
+   * @return
+   */
   Matrix columnNames(List<String> names) {
     if(columnCount() != names.size()) {
       throw new IllegalArgumentException("Number of column names (${names.size()}) does not match number of columns (${columnCount()}) in this matrix")
     }
     mHeaders.clear()
-    mHeaders.addAll(names)
+    mHeaders.addAll(ListConverter.toStrings(names))
     return this
   }
 
