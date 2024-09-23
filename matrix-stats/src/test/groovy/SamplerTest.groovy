@@ -13,10 +13,14 @@ class SamplerTest {
     assertEquals(25, train.rowCount(), 'train size')
     assertEquals(25, train.rowCount(), 'test size')
 
-    Matrix ids = new Matrix('ids', [
-        id: [0,1,2,3,4,5,6,7,8,9],
-        letter: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
-    ], [Integer, String])
+    Matrix ids = Matrix.builder()
+        .name('ids')
+        .data(
+            id: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+            letter: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+        )
+        .types(Integer, String)
+        .build()
     (train, test) = Sampler.split(ids, 0.1)
     assertEquals(1, train.rowCount())
     assertEquals(9, test.rowCount())

@@ -55,10 +55,10 @@ class LinearRegressionTest {
    */
   @Test
   void testLinearRegressionFromMatrix() {
-    def table = new Matrix(
+    def table = Matrix.builder().data(
       x: [2, 3, 5, 7, 9, 11, 14],
       y: [4.02, 5.44, 7.12, 10.88, 15.10, 20.91, 26.02]
-    )
+    ).build()
     def model = new LinearRegression(table, 'x', 'y')
 
     assertEquals(-0.98130982, model.getIntercept(8), 'Estimate intercept')

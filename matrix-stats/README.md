@@ -1,7 +1,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix-stats/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.groovy/matrix-stats/javadoc.svg)](https://javadoc.io/doc/se.alipsa.groovy/matrix-stats)
 # matrix-stats
-Statistical functions for Matrix data. E.g correlations, normalizations, regressions, and hypothesis tests.
+Statistical functions for Matrix data. E.g. correlations, normalizations, regressions, and hypothesis tests.
 
 ## Using the dependency
 matrix-stats is available from maven central
@@ -168,3 +168,19 @@ t = 1.588, df = 19, p = 0.1288, sd diff = 1.354
 x: mean = 90.300, size = 20, sd = 4.879
 y: mean = 88.150, size = 20, sd = 7.242 
 ```
+
+# Dependencies
+
+### Groovy
+This is groovy library so Groovy must be present. But in order to not interfere with 
+your preferred groovy version, there is no direct dependency on groovy (i.e. you need to add it
+in you build script). Any version of Groovy >= 4 should work, possibly even older ones as well
+License: Apache 2.0
+
+### Matrix-core
+You need to include a dependency to matrix-core >= 1.3.0
+License: MIT
+
+### Apache Commons Math
+Used in the solver package and in some other places where we dont have a native implementation yet.
+License: Apache 2.0

@@ -96,16 +96,16 @@ class StudentTest {
    */
   @Test
   void testPaired() {
-    def data = new Matrix(
-        score: [85 ,85, 78, 78, 92, 94, 91, 85, 72, 97,
+    def data = Matrix.builder().data(
+        score: [85, 85, 78, 78, 92, 94, 91, 85, 72, 97,
                 84, 95, 99, 80, 90, 88, 95, 90, 96, 89,
                 84, 88, 88, 90, 92, 93, 91, 85, 80, 93,
                 97, 100, 93, 91, 90, 87, 94, 83, 92, 95],
-        group: ['pre']*20 + ['post']*20,
-        [Integer, String]
-    )
-    def pre = data.subset('group', {it == 'pre'})
-    def post = data.subset('group', {it == 'post'})
+        group: ['pre'] * 20 + ['post'] * 20)
+        .types(Integer, String)
+        .build()
+    def pre = data.subset('group', { it == 'pre' })
+    def post = data.subset('group', { it == 'post' })
     def result = Student.pairedTTest(post['score'], pre['score'])
     println(result)
     assertEquals(1.58801321, result.getT(8), 't statistic')

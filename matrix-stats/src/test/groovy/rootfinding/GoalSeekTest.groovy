@@ -5,9 +5,18 @@ import se.alipsa.groovy.matrix.Stat
 
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.stats.rootfinding.GoalSeek
+import se.alipsa.groovy.stats.solver.GoalSeek
 
+/**
+ * The expected values are taken from doing the same thing in OpenOffice calc.
+ * The methods that Excel and Calc are using (Newton-Raphson with an unknown fallback)
+ * are different from the metod used in GoalSeek (Extended Brent-Decker) so the result
+ * is very similar, but not identical. We allow a difference on the 9:th decimal in these
+ * tests which should be more than enough.
+ */
 class GoalSeekTest {
+
+  final double delta = 0.00000001
 
   @Test
   void testGoalSeek() {
@@ -16,7 +25,7 @@ class GoalSeekTest {
     }
     println val
     assertTrue(val.interations < 37)
-    assertEquals(0.270, val.value, 0.0000001)
+    assertEquals(0.270, val.value, delta)
   }
 
   @Test
@@ -29,21 +38,28 @@ class GoalSeekTest {
         Stat.mean(n)
     }
     println(r)
-    assertEquals(90.0, r.value, 0.001)
+    assertEquals(90.0, r.value, delta)
   }
 
   @Test
   void testLoanAmount() {
-    def ir = 0.06
-    def tenure = 30
-    def loanAmt = 300_000
+    // If i can afford to pay 1500 per month, how much can i borrow?
+    double ir = 0.06
+    int tenure = 30
+    int loanAmt = 300_000
 
-    assertEquals(-1798.65158, LoanCalculator.pmt(ir/12, tenure*12, loanAmt), 0.0001)
-    assertEquals(-1500, LoanCalculator.pmt(ir/12, tenure*12,250187.421588503), 0.0001)
+    double expectedLoanAmount = 250187.421588503
 
-    def s = GoalSeek.solve(1500, -300_000, 0, 0.00001, 1000) { amt ->
+    // Sanity check that Calc/Excel PMT is the same as LoanCalculator.pmt()
+    assertEquals(-1798.65157546, LoanCalculator.pmt(ir/12, tenure*12, loanAmt), delta)
+    // verify that the excel solution and the pmt algorithm agrees
+    assertEquals(-1500, LoanCalculator.pmt(ir/12, tenure*12,expectedLoanAmount), delta)
+
+    def s = GoalSeek.solve(-1500, 0, 300_000, delta, 100) { amt ->
       LoanCalculator.pmt(ir/12, tenure*12, amt)
     }
-    assertEquals(-250187.421588503, s.value, String.valueOf(s))
+    println(s)
+    // Now check that our goal seek produced a similar value
+    assertEquals(expectedLoanAmount, s.value, delta, String.valueOf(s))
   }
 }
