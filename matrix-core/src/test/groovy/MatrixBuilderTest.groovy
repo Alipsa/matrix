@@ -263,4 +263,27 @@ class MatrixBuilderTest {
     )
     matrix.content()
   }
+
+  @Test
+  void testObjectList() {
+    def obs = [
+        new Person(1, 'Per')
+        , new Person(2, 'Louise')
+        , new Person(3, 'Ian')
+    ]
+    Matrix m = Matrix.builder().data(obs).build()
+    println(m.content())
+    assertIterableEquals(['id', 'name'], m.columnNames())
+    assertEquals(2, m[1, 'id'])
+    assertEquals('Ian', m[2, 'name'])
+  }
+
+  class Person {
+    String name
+    int id
+    Person(int id, String name) {
+      this.id = id
+      this.name = name
+    }
+  }
 }

@@ -16,11 +16,18 @@ implementation 'se.alipsa.groovy:matrix-core:1.2.2'
 ```
 ...and the following for maven
 ```xml
-<dependency>
-    <groupId>se.alipsa.groovy</groupId>
-    <artifactId>matrix-core</artifactId>
-    <version>1.2.4</version>
-</dependency>
+<dependencies>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>4.0.23</version> <!-- any version 4 or higher should work -->
+    </dependency>
+    <dependency>
+        <groupId>se.alipsa.groovy</groupId>
+        <artifactId>matrix-core</artifactId>
+        <version>1.2.4</version>
+    </dependency>
+</dependencies>
 ```
 
 The jvm should be JDK 17 or higher. If using the matrix library from Java, you need to add a dependency for 

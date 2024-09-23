@@ -50,7 +50,7 @@ sourceSets {
 }
 
 dependencies {
-  def groovyVersion = '4.0.22'
+  def groovyVersion = '4.0.23'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
   //compileOnly "org.apache.groovy:groovy-ginq:$groovyVersion"

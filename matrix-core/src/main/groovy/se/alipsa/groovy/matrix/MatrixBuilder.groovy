@@ -1,14 +1,15 @@
 package se.alipsa.groovy.matrix
 
-import groovy.transform.CompileStatic
+//import groovy.transform.CompileStatic
 import se.alipsa.groovy.matrix.util.ClassUtils
 
+import java.lang.reflect.Modifier
 import java.nio.file.Files
 import java.nio.file.Path
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 
-@CompileStatic
+//@CompileStatic
 class MatrixBuilder {
 
   String name
@@ -68,10 +69,6 @@ class MatrixBuilder {
     this
   }
 
-  MatrixBuilder data(Map<String, List<?>> columData) {
-    columns(columData)
-  }
-
   /**
    * Populate the data of the Matrix. Use only one of rows, columns or data methods i.e.
    * either provide the rows (observations) or the columns (variables) or one of the data methods
@@ -83,6 +80,61 @@ class MatrixBuilder {
   MatrixBuilder rows(List<List<?>> rows) {
     this.columns = rows.transpose()
     this
+  }
+
+  /**
+   * Takes a List of objects and turn them into rows using reflection
+   * The names of the variables will be the column names sorted alphabetically
+   * Example:
+   * <code><pre>
+   * class Person {
+   *   String name
+   *   int id
+   *
+   *   Person(int id, String name) {
+   *     this.id = id
+   *     this.name = name
+   *   }
+   * }
+   * def observations = [new Person(1, 'Per'), new Person(2, 'Louise')]
+   * def m = Matrix.builder().data(observations).build()
+   * assert m[0, 'id'] == 1
+   * assert m[1, 1} == 'Louise'
+   * </pre></code>
+   *
+   * Note: this is a bit experimental as it uses some reflection magic to guess the structure
+   * of the custom objects. If your custom objects ar POJOS it should be fine but if you do something more
+   * exotic, you are probably better off converting the data to a List of List of values and use the
+   * rows() method instead.
+   *
+   * @param observations
+   * @return
+   */
+  MatrixBuilder data(List observations) {
+    if (observations == null || observations.isEmpty()) {
+      throw new IllegalArgumentException("The list of observations contains no data")
+    }
+    Object o = observations.first()
+    List<String> colNames = o.class.declaredFields
+        .findAll { !it.synthetic && !Modifier.isStatic(it.modifiers)}
+        .collect{it.name}
+        .sort()
+    List<List<?>> rowList = []
+    List row
+    observations.each { obs ->
+      row = []
+      colNames.each {p ->
+        row << obs.properties.(p)
+      }
+      rowList << row
+    }
+    columnNames(colNames)
+    rows(rowList)
+    this
+  }
+
+  MatrixBuilder data(Map<String, List<?>> columData) {
+    columns(columData)
   }
 
   MatrixBuilder data(Grid grid) {
