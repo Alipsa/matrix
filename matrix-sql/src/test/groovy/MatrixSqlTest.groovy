@@ -1,4 +1,5 @@
 import groovy.sql.Sql
+import it.AbstractDbTest
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.matrix.Matrix
@@ -142,6 +143,23 @@ class MatrixSqlTest {
             "Expected to find 'id' as the primary key"
         )
       }
+    }
+  }
+
+  @Test
+  void testDdl() {
+    ConnectionInfo ci = new ConnectionInfo()
+    ci.setDependency('com.h2database:h2:2.3.232')
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'ddltestdb').getAbsolutePath()
+    ci.setUrl("jdbc:h2:file:${tmpDb};MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE")
+    ci.setUser('sa')
+    ci.setPassword('123')
+    ci.setDriver("org.h2.Driver")
+    Matrix m = AbstractDbTest.getComplexData()
+    try (MatrixSql sql = new MatrixSql(ci)) {
+      String ddl = sql.createDdl(m)
+      //check that DB detection works properly
+      assertTrue(ddl.contains('"local date time" datetime2'))
     }
   }
 }

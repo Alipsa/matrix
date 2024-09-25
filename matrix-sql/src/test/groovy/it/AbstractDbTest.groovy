@@ -61,7 +61,7 @@ abstract class AbstractDbTest {
     //println dur.content()
   }
 
-  void verifyDbCreation(Connection con, Matrix dataset, int... scanNumRows) {
+  void verifyDbCreation(Connection con, Matrix dataset, int ... scanNumRows) {
     long start = System.currentTimeMillis()
     String tableName = matrixDbUtil.tableName(dataset)
     long ctm1 = System.currentTimeMillis()
@@ -79,7 +79,7 @@ abstract class AbstractDbTest {
     long ctm3 = System.currentTimeMillis()
     dur + [dataset.name, "3. create table", ctm3 - ctm2]
 
-    Matrix m2 = matrixDbUtil.select(con,"select * from $tableName")
+    Matrix m2 = matrixDbUtil.select(con, "select * from $tableName")
     long ctm4 = System.currentTimeMillis()
     dur + [dataset.name, "4. select *", ctm4 - ctm3]
     dataset.eachWithIndex { Row row, int r ->
@@ -102,16 +102,18 @@ abstract class AbstractDbTest {
     dur + [dataset.name, "6. total round", System.currentTimeMillis() - start]
   }
 
-  Matrix getComplexData() {
-    new Matrix([
-        'place': [1, 20, 3],
-        'firstname': ['Lorena', 'Marianne', 'Lotte'],
-        'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
-        'bin': [[1,2,3] as byte[], [2,3,4] as byte[], [3,4,5] as byte[]],
-        'theTime': [Time.valueOf('01:11:41'), Time.valueOf('02:22:42'), Time.valueOf('03:33:43')],
-        'local date time': ListConverter.toLocalDateTimes('2021-12-01T01:11:41', '2022-07-10T02:22:42', '2023-05-27T03:33:43')
-    ],
-        [int, String, LocalDate, byte[], Time, LocalDateTime]
-    ).withName('complexData')
+  static Matrix getComplexData() {
+    Matrix.builder()
+        .data(
+            'place': [1, 20, 3],
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+            'bin': [[1, 2, 3] as byte[], [2, 3, 4] as byte[], [3, 4, 5] as byte[]],
+            'theTime': [Time.valueOf('01:11:41'), Time.valueOf('02:22:42'), Time.valueOf('03:33:43')],
+            'local date time': ListConverter.toLocalDateTimes('2021-12-01T01:11:41', '2022-07-10T02:22:42', '2023-05-27T03:33:43')
+        )
+        .types(int, String, LocalDate, byte[], Time, LocalDateTime)
+        .name('complexData')
+        .build()
   }
 }
