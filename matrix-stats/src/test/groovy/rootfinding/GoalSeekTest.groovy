@@ -1,9 +1,9 @@
 package rootfinding
 
-import se.alipsa.financials.LoanCalculator
-import se.alipsa.groovy.matrix.Stat
-
 import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.jfinancials.Financials.*
+
+import se.alipsa.groovy.matrix.Stat
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.stats.solver.GoalSeek
 
@@ -51,12 +51,12 @@ class GoalSeekTest {
     double expectedLoanAmount = 250187.421588503
 
     // Sanity check that Calc/Excel PMT is the same as LoanCalculator.pmt()
-    assertEquals(-1798.65157546, LoanCalculator.pmt(ir/12, tenure*12, loanAmt), delta)
+    assertEquals(-1798.65157546, pmt(ir/12, tenure*12, loanAmt), delta)
     // verify that the excel solution and the pmt algorithm agrees
-    assertEquals(-1500, LoanCalculator.pmt(ir/12, tenure*12,expectedLoanAmount), delta)
+    assertEquals(-1500, pmt(ir/12, tenure*12,expectedLoanAmount), delta)
 
     def s = GoalSeek.solve(-1500, 0, 300_000, delta, 100) { amt ->
-      LoanCalculator.pmt(ir/12, tenure*12, amt)
+      pmt(ir/12, tenure*12, amt)
     }
     println(s)
     // Now check that our goal seek produced a similar value
