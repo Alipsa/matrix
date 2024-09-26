@@ -23,7 +23,7 @@ ext.nexusUrl = version.contains("SNAPSHOT")
 // For some reason this is required to upgrade the wrapper
 // Change the version and run 'gradle wrapper' to upgrade
 task wrapper(type: Wrapper) {
-    def gv = '8.8'
+    def gv = '8.10.2'
     gradleVersion = gv //version required
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
     validateDistributionUrl = true
@@ -54,13 +54,13 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    def groovyVersion = '4.0.22'
+    def groovyVersion = '4.0.23'
     def groovy = "org.apache.groovy:groovy:$groovyVersion"
     compileOnly groovy
     compileOnly project(':matrix-core')
-    implementation 'se.alipsa.groovy:data-utils:1.0.5'
-    implementation 'org.gradle:gradle-tooling-api:8.10.1'
-    implementation 'commons-io:commons-io:2.16.1'
+    implementation 'se.alipsa.groovy:data-utils:1.0.6-SNAPSHOT'
+    implementation 'org.gradle:gradle-tooling-api:8.10.2'
+    implementation 'commons-io:commons-io:2.17.0'
     implementation 'se.alipsa:maven-3.9.4-utils:1.0.3'
     implementation 'org.apache.logging.log4j:log4j-api:2.24.0'
 
@@ -69,8 +69,8 @@ dependencies {
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
     //testImplementation 'com.h2database:h2:2.2.224' // dynamically fetched so not needed
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.1'
     testImplementation 'org.slf4j:slf4j-simple:2.0.16'
     testImplementation 'org.apache.logging.log4j:log4j-to-slf4j:2.24.0'
     testImplementation 'org.apache.logging.log4j:log4j-core:2.24.0'

@@ -41,10 +41,24 @@ class MatrixDbUtil {
    * constants as key and the size as value
    * @param primaryKey name(s) of the primary key columns
    */
-  void create(Connection con, Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
-
+  Map create(Connection con, Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
+    Map result = [:]
     String tableName = tableName(table)
 
+    String sql = createTableDdl(tableName, table, props, primaryKey)
+    result.sql = sql
+    try(Statement stm = con.createStatement()) {
+      if (tableExists(con, tableName)) {
+        throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
+      }
+      LOG.debug("Creating table using DDL: {}", sql)
+      result.ddlResult = stm.execute(sql)
+      result.inserted = insert(con, table)
+    }
+    result
+  }
+
+  String createTableDdl(String tableName, Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) {
     String sql = "create table $tableName (\n"
 
     List<String> columns = new ArrayList<>()
@@ -60,21 +74,18 @@ class MatrixDbUtil {
       sql += "\n , CONSTRAINT pk_" + table.getName() + " PRIMARY KEY (\"" + String.join("\", \"", primaryKey) + "\")"
     }
     sql += "\n);"
-
-    try(Statement stm = con.createStatement()) {
-      if (tableExists(con, tableName)) {
-        throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
-      }
-      LOG.debug("Creating table using DDL: {}", sql)
-      stm.execute(sql)
-      insert(con, table)
-    }
+    sql
   }
 
-  void create(Connection con, Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
-    int i = 0
+  Map create(Connection con, Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
+    Map<String,Map<String, Integer>> mappings = createMappings(table, scanNumRows)
+    return create(con, table, mappings, primaryKey)
+  }
+
+  Map<String,Map<String, Integer>> createMappings(Matrix table, int scanNumRows) {
     List<Class<?>> types = table.types()
-    Map<String,Map<String, Integer>> mappings = [:]
+    Map<String, Map<String, Integer>> mappings = [:]
+    int i = 0
     for (String name : table.columnNames()) {
       Map<String, Integer> props = [:]
       Class type = types.get(i++)
@@ -110,8 +121,9 @@ class MatrixDbUtil {
       }
       mappings.put(name, props)
     }
-    create(con, table, mappings, primaryKey)
+    mappings
   }
+
   /**
    * create table and insert the table data.
    *
@@ -119,8 +131,8 @@ class MatrixDbUtil {
    * @param table the table to copy to the db
    * @param primaryKey name(s) of the primary key columns
    */
-  void create(Connection con, Matrix table, String... primaryKey) throws SQLException {
-    create(con, table, Math.max(100, table.rowCount()), primaryKey)
+  Map create(Connection con, Matrix table, String... primaryKey) throws SQLException {
+    return create(con, table, Math.max(100, table.rowCount()), primaryKey)
   }
 
   Object dropTable(Connection con, String tableName) {

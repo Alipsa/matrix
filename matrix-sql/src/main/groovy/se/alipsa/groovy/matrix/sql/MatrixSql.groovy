@@ -41,7 +41,9 @@ class MatrixSql implements Closeable {
 
   @Override
   void close() throws SQLException {
-    con.close()
+    if (con != null) {
+      con.close()
+    }
     con == null
   }
 
@@ -73,18 +75,38 @@ class MatrixSql implements Closeable {
   }
 
 
-  void create(Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
+  /**
+   * create a table corresponding to the Matrix and insert the matrix data.
+   *
+   * @param table the Matrix to copy to the db
+   * @param scanNumRows the number of rows to scan to obtain sizing info
+   * @param primaryKey the primary keys (if any)
+   * @return A Map with the following keys:
+   <ul>
+   <li>sql - the ddl to create the table</li>
+   <li>ddlResult - the result of the ddl query</li>
+   <li>inserted - the number of rows inserted</li>
+   </ul>
+   * @throws SQLException
+   */
+  Map create(Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
     matrixDbUtil.create(connect(), table, scanNumRows, primaryKey)
   }
 
   /**
-   * create table and insert the table data.
+   * create a table corresponding to the Matrix and insert the matrix data.
    *
    * @param connectionInfo the connection info defined in the Connections tab
    * @param table the table to copy to the db
    * @param primaryKey name(s) of the primary key columns
+   * @return A Map with the following keys:
+   <ul>
+   <li>sql - the ddl to create the table</li>
+   <li>ddlResult - the result of the ddl query</li>
+   <li>inserted - the number of rows inserted</li>
+   </ul>
    */
-  void create(Matrix table, String... primaryKey) throws SQLException {
+  Map create(Matrix table, String... primaryKey) throws SQLException {
     create(table, Math.max(100, table.rowCount()), primaryKey)
   }
 
@@ -95,9 +117,20 @@ class MatrixSql implements Closeable {
    * @param props a map containing the column name and a map containing sizing information using the SqlTypeMapper
    * constants as key and the size as value
    * @param primaryKey name(s) of the primary key columns
+   * @returns A Map with the following keys:
+   <ul>
+      <li>sql - the ddl to create the table</li>
+      <li>ddlResult - the result of the ddl query</li>
+      <li>inserted - the number of rows inserted</li>
+   </ul>
    */
-  void create(Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
+  Map create(Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
     matrixDbUtil.create(connect(), table, props, primaryKey)
+  }
+
+  String createDdl(Matrix table, int... scanNumrows) {
+    Map mappings = matrixDbUtil.createMappings(table, scanNumrows.length > 0 ? scanNumrows[0] : Math.max(100, table.rowCount()))
+    matrixDbUtil.createTableDdl(tableName(table), table, mappings)
   }
 
   static String tableName(Matrix table) {
