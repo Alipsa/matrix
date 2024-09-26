@@ -62,7 +62,7 @@ dependencies {
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0'
-  testImplementation("se.alipsa:jfinancials:1.0-SNAPSHOT")
+  testImplementation("se.alipsa:jfinancials:1.0.0")
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.0'
 }
 
