@@ -650,11 +650,13 @@ class Matrix implements Iterable<Row> {
    * Set the column name at the index specified
    * The column name will be converted to a String.
    *
-   * @param index
-   * @param name
+   * @param index the position to rename
+   * @param name the value to rename the column to
+   * @return a reference to this matrix
    */
-  void columnName(int index, Object name) {
+  Matrix columnName(int index, Object name) {
     mHeaders[index] = String.valueOf(name)
+    this
   }
 
   /**
@@ -900,6 +902,10 @@ class Matrix implements Iterable<Row> {
       types.add(type(name))
     }
     return types
+  }
+
+  List<Class<?>> types(IntRange range) {
+    return mTypes[range]
   }
 
   List<String> typeNames() {
@@ -1333,6 +1339,13 @@ class Matrix implements Iterable<Row> {
     maxLength
   }
 
+  Matrix moveRow(int from, int to) {
+    mColumns.each {
+      it.add(to, it.remove(from))
+    }
+    this
+  }
+
   /**
    * Move the named column to the index specified
    *
@@ -1587,7 +1600,7 @@ class Matrix implements Iterable<Row> {
    *
    * @param columnIndex the index of the column to rename
    * @param after the new column name
-   * @return the (mutated) table to allow for chaining
+   * @return this matrix (mutated) to allow for method chaining
    */
   Matrix renameColumn(int columnIndex, String after) {
     mHeaders.set(columnIndex, after)
@@ -1599,11 +1612,13 @@ class Matrix implements Iterable<Row> {
    *
    * @param from the value to search for
    * @param to the value to replace with
+   * @return this matrix (mutated) to allow for method chaining
    */
-  void replace(Object from, Object to) {
+  Matrix replace(Object from, Object to) {
     columns().each {
       Collections.replaceAll(it as List<Object>, from, to)
     }
+    this
   }
 
   /**
@@ -1612,9 +1627,11 @@ class Matrix implements Iterable<Row> {
    * @param columnName the name of the column to replace values in
    * @param from the value to search for
    * @param to the value to replace with
+   * @return this matrix (mutated) to allow for method chaining
    */
-  void replace(String columnName, Object from, Object to) {
+  Matrix replace(String columnName, Object from, Object to) {
     Collections.replaceAll(column(columnName) as List<Object>, from, to)
+    this
   }
 
   /**
@@ -1623,9 +1640,11 @@ class Matrix implements Iterable<Row> {
    * @param columnIndex the index of the column to replace values in
    * @param from the value to search for
    * @param to the value to replace with
+   * @return this matrix (mutated) to allow for method chaining
    */
-  void replace(int columnIndex, Object from, Object to) {
+  Matrix replace(int columnIndex, Object from, Object to) {
     Collections.replaceAll(column(columnIndex) as List<Object>, from, to)
+    this
   }
 
 
@@ -1635,9 +1654,10 @@ class Matrix implements Iterable<Row> {
    * @param columnName the name of the column to replace values in
    * @param type the type of the new column
    * @param values the values to replace the old one with
+   * @return this matrix (mutated) to allow for method chaining
    * @throws IllegalArgumentException if the column provided is null or of different size than the previous one
    */
-  void replace(String columnName, Class<?> type = Object, List<?> values) {
+  Matrix replace(String columnName, Class<?> type = Object, List<?> values) {
     def col = column(columnName)
     if (values == null) {
       throw new IllegalArgumentException('The list of values cannot be null')
@@ -1648,13 +1668,28 @@ class Matrix implements Iterable<Row> {
     col.clear()
     col.addAll(values)
     mTypes.set(columnIndex(columnName), type)
+    this
   }
 
+  /**
+   *
+   * @param indexes the row indexes to remove
+   * @return this matrix (mutated) to allow for method chaining
+   */
   Matrix removeRows(int... indexes) {
+    removeRows(indexes as List<Integer>)
+  }
+
+  /**
+   *
+   * @param indexes the row indexes to remove
+   * @return this matrix (mutated) to allow for method chaining
+   */
+  Matrix removeRows(List<Integer> indexes) {
     Arrays.sort(indexes)
     mColumns.each { col ->
-      indexes.eachWithIndex { int idx, int count ->
-        col.remove(idx - count)
+      indexes.eachWithIndex { Number idx, int count ->
+        col.remove((int)idx - count)
       }
     }
     this
@@ -1682,7 +1717,6 @@ class Matrix implements Iterable<Row> {
     }
     //println "Removing columns $columnsToRemove"
     dropColumns(columnsToRemove)
-    this
   }
 
   /**
@@ -1863,36 +1897,39 @@ class Matrix implements Iterable<Row> {
    *  Matrix subSet = table.subset('place', { it > 1 })
    * @param columnName the name of the column to use to select matches
    * @param condition a closure containing the condition for what to retain
-   * @return new Matrix with only the rows that matched the criteria
+   * @return this matrix (mutated) to allow for method chaining, use clone().subset() if you want
+   * to retain the original Matrix
    */
   Matrix subset(@NotNull String columnName, @NotNull Closure<Boolean> condition) {
-    def rows = rows(column(columnName).findIndexValues(condition) as List<Integer>)
-    builder()
-        .name(mName)
-        .columnNames(mHeaders)
-        .rows(rows as List<List<?>>)
-        .types(mTypes)
-        .build()
+    Closure<Boolean> rem = {
+      !condition(it)
+    }
+    List<Integer> rows = column(columnName).findIndexValues(rem) as List<Integer>
+    removeRows(rows)
   }
 
   /**
    *
    * @param criteria takes a row (List<?>) as parameter and returns true if the row should be included
-   * @return a new Matrix containing the List of rows matching the criteria supplied
+   * @return this Matrix with the rows matching the criteria supplied retained
    */
   Matrix subset(Closure<Boolean> criteria) {
-    def r = [] as List<List<?>>
-    rows().each { row -> {
-      if (criteria(row)) {
-        r.add(row)
+    List<Integer> r = []
+    rows().eachWithIndex { Row row, int idx -> {
+      if (!criteria(row)) {
+        r.add(idx)
       }
     }}
-    builder()
-        .name(mName)
-        .columnNames(mHeaders)
-        .rows(r)
-        .types(mTypes)
-        .build()
+    removeRows(r)
+  }
+
+  Matrix subset(IntRange rows) {
+    mColumns.eachWithIndex { List col, int idx ->
+      List keep = col[rows]
+      col.clear()
+      col.addAll(keep)
+    }
+    this
   }
 
   String tail(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
@@ -1972,6 +2009,12 @@ class Matrix implements Iterable<Row> {
     return sb.toString()
   }
 
+  /**
+   *
+   * @param columnNameAsHeader
+   * @param includeHeaderAsRow
+   * @return a new Matrix turned 90 degrees
+   */
   Matrix transpose(String columnNameAsHeader,  boolean includeHeaderAsRow = false) {
     List<String> header
     if (includeHeaderAsRow) {
@@ -1983,6 +2026,13 @@ class Matrix implements Iterable<Row> {
     return transpose(header, createObjectTypes(header), includeHeaderAsRow)
   }
 
+  /**
+   *
+   * @param columnNameAsHeader
+   * @param dataTypes
+   * @param includeHeaderAsRow
+   * @return a new Matrix turned 90 degrees
+   */
   Matrix transpose(String columnNameAsHeader, List<Class> dataTypes,  boolean includeHeaderAsRow = false) {
     List<String> header
     List<List<?>> r = new ArrayList<>(rowCount()+1)
@@ -2002,17 +2052,34 @@ class Matrix implements Iterable<Row> {
         .build()
   }
 
+  /**
+   *
+   * @param header
+   * @param includeHeaderAsRow
+   * @return a new Matrix turned 90 degrees
+   */
   Matrix transpose(List<String> header, boolean includeHeaderAsRow = false) {
     return transpose(header, createObjectTypes(header), includeHeaderAsRow)
   }
 
+  /**
+   *
+   * @param includeHeaderAsRow
+   * @return a new Matrix turned 90 degrees
+   */
   Matrix transpose(boolean includeHeaderAsRow = false) {
     def numCols = includeHeaderAsRow ? rowCount() + 1 : rowCount()
 
     return transpose((1..numCols).collect{'c' + it}, includeHeaderAsRow)
   }
 
-  // TODO: this could be done more efficiently, too many transpositions
+  /**
+   *
+   * @param header
+   * @param dataTypes
+   * @param includeHeaderAsRow
+   * @return a new Matrix turned 90 degrees
+   */
   Matrix transpose(List<String> header, List<Class> dataTypes, boolean includeHeaderAsRow = false) {
     List<List<?>> rows = new ArrayList<>(rowCount()+1)
     if (includeHeaderAsRow) {

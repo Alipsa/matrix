@@ -30,7 +30,7 @@ class ClassUtils {
   static List<Class<?>> convertPrimitivesToWrapper(List<Class<?>> types) {
     List<Class<?>> safeTypes = []
     types.each {
-      if (it.isPrimitive()) {
+      if (it != null && it.isPrimitive()) {
         safeTypes.add(primitiveWrapper(it))
       } else {
         safeTypes.add(it)

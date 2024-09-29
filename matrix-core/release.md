@@ -44,6 +44,9 @@
 - add lastRowIndex and LastColumnIndex as convenience methods for rowCount -1 and ColumnCount -1 respectively
 - add getAt for a range of rows or a range of columns
 - add a MatrixBuilder.data() method for when the data is a list of custom objects
+- change most Matrix method to mutate to make things more consistent
+- Add Matrix.moveRow()
+- Add subset for an IntRange of rows
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

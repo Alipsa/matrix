@@ -227,18 +227,24 @@ class MatrixTest {
     assertEquals(2, rows.size())
 
     // Same thing using subset
-    def subSet = table.subset('place', { it > 1 })
-    assertIterableEquals(table.rows(1..2), subSet.rows())
+    def subSet = table.clone().subset('place', { it > 1 })
+    assertIterableEquals(table.rows(1..2), subSet.rows(), subSet.content())
 
-    def subSet2 = table.subset { it[0] > 1 }
+    def subSet2 = table.clone().subset { it[0] > 1 }
     assertIterableEquals(table.rows(1..2), subSet2.rows())
 
-    def subSet3 = table.subset {
+    def subSet3 = table.clone().subset {
       String name = it[1]
       !name.startsWith('Ma')
           && asLocalDate(it[2]).isBefore(LocalDate.of(2022, 10, 1))
     }
     assertEquals(table[0, 1], subSet3[0, 1])
+
+    def subset4 = table.clone().subset(0..1)
+    assertEquals(2, subset4.rowCount())
+    assertIterableEquals([1, 'Lorena', '2021-12-01'], subset4.row(0))
+    assertIterableEquals([2, 'Marianne', '2022-07-10'], subset4.row(1))
+
   }
 
   @Test
@@ -722,7 +728,7 @@ class MatrixTest {
         .data(report)
         .types(YearMonth, BigDecimal, BigDecimal, BigDecimal)
         .build()
-    table.removeRows(0, 2)
+    table.removeRows([0, 2])
     assertEquals(2, table.rowCount())
     assertIterableEquals([asYearMonth('2023-02'), 380.263, 282.133, 225], table.row(0))
     assertIterableEquals([asYearMonth('2023-04'), 12.23, 2.654, 1.871], table.row(1))
@@ -749,6 +755,24 @@ class MatrixTest {
         .build()
     def d0r = d0.removeEmptyRows()
     assertEquals(empData, d0r, empData.diff(d0r, true))
+
+    def m = Matrix.builder().rows([
+        [null, 'foo', 'bar', null],
+        [null, 1, 2, null],
+        [null, null, null, null],
+        [0,1,2, null]
+    ]).build()
+    m.removeEmptyRows()
+    assertEquals(3, m.rowCount())
+    assertNull(m[0, 0])
+    assertEquals('foo', m[0,1])
+    assertEquals('bar', m[0,2])
+    assertNull(m[0, 3])
+    assertIterableEquals([0,1,2], m.row(2)[0..2])
+    assertNull(m[2, 3])
+    m.removeEmptyColumns()
+    assertEquals(3, m.rowCount())
+    assertEquals(3, m.columnCount())
   }
 
   @Test
@@ -802,6 +826,23 @@ class MatrixTest {
     assertEquals(10, components[0, 'id'])
     assertEquals(13, components[3, 'id'])
     assertEquals(14, components[4, 'id'])
+  }
+
+  @Test
+  void testMoveRow() {
+    def table = Matrix.builder()
+        .columns([
+            'firstname': ['Lorena', 'Marianne', 'Lotte'],
+            'start'    : toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
+            'foo'      : [1, 2, 3]
+        ])
+        .types(String, LocalDate, int)
+        .build()
+
+    table.moveRow(2, 0)
+    assertIterableEquals(['Lotte', asLocalDate('2023-05-27'),3], table.row(0))
+    assertIterableEquals(['Lorena', asLocalDate('2021-12-01'),1], table.row(1))
+    assertIterableEquals(['Marianne', asLocalDate('2022-07-10'),2], table.row(2))
   }
 
   @Test
@@ -924,5 +965,8 @@ class MatrixTest {
 
     assertIterableEquals([asLocalDate('2021-12-01'), 1], table[0, 1..2], "column intRange")
     assertIterableEquals(['Marianne', 'Lotte'], table[1..2, 0], "row intRange")
+    table[3,2] = Stat.sum(table[0..2, 2])
+    assertEquals(6, table[3,2])
+    assertIterableEquals([1, 2, 3], table.getAt(0..2, 2))
   }
 }
