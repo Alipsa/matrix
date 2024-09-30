@@ -334,20 +334,20 @@ class MatrixTest {
       return date.isAfter(LocalDate.of(2022, 1, 1))
     }
     assertIterableEquals([1, 2], selection)
-    def foo = table.apply("place", selection, { it * 2 })
-    //println(foo.content())
+    def foo = table.clone().apply("place", selection, { it * 2 })
     assertEquals(4, foo[1, 0])
     assertEquals(6, foo[2, 0])
     assertEquals(LocalDate, foo.type(2))
     assertEquals(Integer, foo.type(0), "place column type")
 
-    def bar = table.apply("place", {
+    def bar = table.clone().apply("place", {
       def date = it[2] as LocalDate
       return date.isAfter(LocalDate.of(2022, 1, 1))
     }, {
       it * 2
     })
-    //println(bar.content())
+    println(bar.types())
+    println(bar.content())
     assertEquals(4, bar[1, 0])
     assertEquals(6, bar[2, 0])
     assertEquals(LocalDate, bar.type(2), "start column type")

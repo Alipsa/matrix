@@ -24,19 +24,19 @@ The Matrix project consist of the following modules:
 9. _[matrix-tablesaw](https://github.com/Alipsa/matrix/blob/main/matrix-tablesaw/readme.md)_ interoperability between Matrix and the Tablesaw library
 
 ## Setup
-Matrix should work with any 4.x version of groovy, and probably older versions as well. Binary builds can be downloaded 
+Matrix should work with any 4.x version of groovy. Binary builds can be downloaded 
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can add your dependencies from there
 . The group name is se.alipsa.groovy. An example for matrix-core is as follows for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:1.1.3'
+implementation 'se.alipsa.groovy:matrix-core:1.2.4'
 ```
 ...and the following for maven
 ```xml
 <dependency>
     <groupId>se.alipsa.groovy</groupId>
     <artifactId>matrix-core</artifactId>
-    <version>1.1.3</version>
+    <version>1.2.4</version>
 </dependency>
 ```
 
@@ -46,7 +46,7 @@ The jvm should be JDK 17 or higher.
 A Matrix is a grid with a header and where each column type is defined.
 In some ways you can think of it as an in-memory ResultSet.
 
-A Matrix is created using one of the static create methods in Matrix. 
+A Matrix is created using the builder. 
 
 ### Creating from groovy code:
 ```groovy
@@ -58,7 +58,7 @@ def employees = [
         "startDate": ListConverter.toLocalDates(['2013-11-01','2018-03-25','2017-03-14']),
         "reviewPeriod": ListConverter.toYearMonth(['2020-01', '2019-04', '2018-10'])
 ]
-def table = Matrix.create(employees)
+def table = Matrix.builder.data(employees).build()
 ```        
 ### Creating from a result set:
 
@@ -91,7 +91,7 @@ SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
 
 // Create a Matrix from the PROJECT table
 SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
-  sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.create(rs) }
+  sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.builder().data(rs).build() }
 }
 // Now we can do stuff with the project TMatrix, e.g.
 println(project.content())
@@ -100,7 +100,7 @@ println(project.content())
 ### Creating from a csv file:
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
-def table = Matrix.create(new File('/some/path/foo.csv'), ';')
+def table = Matrix.builder().data(new File('/some/path/foo.csv'), ';').build()
 ```
 
 Data can be referenced using square bracket notation [] 
@@ -113,25 +113,25 @@ If you pass only one argument, you get the column e.g. List<?> priceColumn = tab
 ```groovy
 import se.alipsa.groovy.matrix.*
 
-def table = Matrix.create([
+def table = Matrix.builder().data(
     'place': [1, 2, 3],
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27']
-],
-    [Integer, String, String]
-)
+  )
+  .types(Integer, String, String)
+  .build()
 println("Head\n${table.head(2, false)}")
 println("Tail\n${table.tail(2, false)}")
 ```
 Will print
 ```
 Head
-1	Lorena	2021-12-01
-2	Marianne	2022-07-10
+1	Lorena	   2021-12-01
+2	Marianne   2022-07-10
 
 Tail
-2	Marianne	2022-07-10
-3	Lotte	2023-05-27
+2	Marianne   2022-07-10
+3	Lotte	   2023-05-27
 ```
 
 #### str - structure
@@ -139,13 +139,13 @@ Tail
 import se.alipsa.groovy.matrix.*
 import java.time.*
 
-def empData = Matrix.create(
-    emp_id: 1..5,
-    emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-    salary: [623.3,515.2,611.0,729.0,843.25],
-    start_date: ListConverter.toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
-    [int, String, Number, LocalDate]
-)
+Matrix empData = Matrix.builder().data(
+        emp_id: 1..5, 
+        emp_name: ["Rick","Dan","Michelle","Ryan","Gary"], 
+        salary: [623.3,515.2,611.0,729.0,843.25], 
+        start_date: ListConverter.toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+        .types(int, String, Number, LocalDate)
+        .build()
 struct = Stat.str(empData)
 struct.each {
   println it
@@ -170,11 +170,12 @@ import se.alipsa.groovy.matrix.*
 
 import static se.alipsa.groovy.matrix.Stat.*
 
-def table = Matrix.create([
+def table = Matrix.builder().data(
     v0: [0.3, 2, 3],
     v1: [1.1, 1, 0.9],
-    v2: [null, 'Foo', "Foo"]
-], [Number, Double, String])
+    v2: [null, 'Foo', "Foo"])
+    .types(Number, Double, String)
+    .build()
 def summary = summary(table)
 println(summary)
 ```
@@ -218,16 +219,16 @@ import se.alipsa.groovy.matrix.Matrix
 import java.time.LocalDate
 
 // Given a table of strings
-def table = Matrix.create([
-    'place': ['1', '2', '3'],
-    'firstname': ['Lorena', 'Marianne', 'Lotte'],
-    'start': ['2021-12-01', '2022-07-10', '2023-05-27']
-], [String]*3
-)
-println(table.columnTypeNames())
+def table = Matrix.builder().data(
+        'place': ['1', '2', '3'],
+        'firstname': ['Lorena', 'Marianne', 'Lotte'],
+        'start': ['2021-12-01', '2022-07-10', '2023-05-27'])
+        .types([String]*3)
+        .build()
+println(table.typeNames())
 // Convert the place column to int and the start column to localdates
-def table2 = table.convert([place: Integer, start: LocalDate])
-println(table2.columnTypeNames())
+table.convert([place: Integer, start: LocalDate])
+println(table.typeNames())
 ```
 which will print
 ```
@@ -243,7 +244,7 @@ e.g:
 table.convert([Integer, String, LocalDate], DateTimeFormatter.ofPattern('yyyy-MM-dd'))
 ```
 #### Convert using a map of column names and their type
-` Matrix convert(Map<String, Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null)`
+`Matrix convert(Map<String, Class<?>> columnTypes, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null)`
 This is the example shown in the basic idea above
 
 #### Convert a specified column into the type using a closure to perform the conversion
@@ -261,6 +262,9 @@ table.convert('place', Integer, {
 a converter is a simple Groovy class containing the column name, 
 the type (class) and a closure to convert each value, e.g:
 ```groovy
+import se.alipsa.groovy.matrix.*
+import java.time.LocalDate
+
 table.convert([
     new Converter('place', Integer, {
       try {Integer.parseInt(it)} catch (NumberFormatException e) {null}
@@ -275,19 +279,23 @@ compiler will think you want to call the convert(List<Class<?>>) method instead.
 
 ### Getting a subset of the table
 ```groovy
-def table = create([
-    'place': [1, 2, 3],
-    'firstname': ['Lorena', 'Marianne', 'Lotte'],
-    'start': ['2021-12-01', '2022-07-10', '2023-05-27']
-], [int, String, String])
+import se.alipsa.groovy.matrix.*
+def table = Matrix.builder().data(
+        'place': [1, 2, 3],
+        'firstname': ['Lorena', 'Marianne', 'Lotte'],
+        'start': ['2021-12-01', '2022-07-10', '2023-05-27']
+)
+        .types(int, String, String)
+        .build()
 // We can use the groovy method findIndexValues on a column to select the rows we want
-def rows = table.getRows(table['place'].findIndexValues { it > 1 })
-assertEquals(2, rows.size())
+def rows = table.rows(table['place'].findIndexValues { it > 1 })
+assert 2 == rows.size()
 
 // ...But the same thing can be done using the subset method
 def subSet = table.subset('place', { it > 1 })
 // grid() returns the data content (no header) of the Matrix
-assertIterableEquals(table.rows(1..2), subSet.grid())
+assert table.rows(1..2)[0] == subSet.grid()[0]
+assert table.rows(1..2)[1] == subSet.row(1) // or we specify the row directly from the subset 
 ```
 
 ## Performing calculations with apply
@@ -296,27 +304,29 @@ import java.time.LocalDate
 import se.alipsa.groovy.matrix.*
 
 def data = [
-    'place': ['1', '2', '3', ','],
-    'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
-    'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
+        'place': ['1', '2', '3', ','],
+        'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
+        'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
 ]
-def table = Matrix
-    .create(data)
-    .convert(place: Integer, start: LocalDate)
+def table = Matrix.builder()
+        .data(data)
+        .build()
+        .convert(place: Integer, start: LocalDate)
 
 // Add 10 days to the start dates
-def table2 = table.apply("start", { startDate ->
-    startDate.plusDays(10)
+table.apply("start", { startDate ->
+   startDate.plusDays(10)
 })
-println(table2.content())
+println(table.content())
 ```
 Will print:
 ```
-place	firstname	start
-1	Lorena	2021-12-11
-2	Marianne	2022-07-20
-3	Lotte	2023-06-06
-null	Chris	2023-01-20
+null: 4 obs * 3 variables 
+place	firstname	start     
+    1	Lorena   	2021-12-01
+    2	Marianne 	2022-07-10
+    3	Lotte    	2023-05-27
+ null	Chris    	2023-01-10
 ```
 Note that it is possible to change the datatype of the column into something else when doing apply. The apply method
 will detect this change and change the datatype to the new one (if all columns are affected) or the nearest common
@@ -324,35 +334,41 @@ one if only a subset of rows is affected.
 
 ### Combining selectRows with apply
 ```groovy
+import java.time.LocalDate
+import se.alipsa.groovy.matrix.*
+import static se.alipsa.groovy.matrix.ListConverter.*
+
 def data = [
-    'foo': [1, 2, 3],
-    'firstname': ['Lorena', 'Marianne', 'Lotte'],
-    'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+        'foo': [1, 2, 3],
+        'firstname': ['Lorena', 'Marianne', 'Lotte'],
+        'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
 ]
-def table = Matrix.create(data, [Integer, String, LocalDate])
+def table = Matrix.builder().data(data).types(Integer, String, LocalDate).build()
 // select the observations where start is later than the jan 1 2022
-def selection = table.selectRows {
-  // We use the column index to refer to a specific variable, 2 will be the 'start' column
-  def date = it[2] as LocalDate
-  return date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
+def selection = table.selectRowIndices {
+   def date = it['start']
+   return date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
 }
+
 // Index values 1,2 will match (row with index 0 is before jan 1 2022 so is not included)
-assertArrayEquals([1,2].toArray(), selection.toArray())
+assert [1,2] == selection
 // Double each value in the foo column that matches the selection
-def foo = table.apply("foo", selection, { it * 2})
-assertEquals(4, foo[1, 0])
-assertEquals(6, foo[2, 0])
+// as apply mutates the matrix, we clone it so the table is kept intact
+def foo = table.clone().apply("foo", selection, { it * 2})
+assert 4 == foo[1, 0]
+assert 6 == foo[2, 0]
+assert 2 == table[1, 0]
+assert 3 == table[2, 0]
 
 // The same thing can be done in one go which is a bit more efficient
-def bar = table.apply("foo", {
-    def date = it[2] as LocalDate
-    date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
-  }, {
-    it * 2
-  }
-)
-assertEquals(4, bar[1, 0])
-assertEquals(6, bar[2, 0])
+table.apply("foo", {
+   def date = it[2] as LocalDate
+   date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
+}, {
+   it * 2
+})
+assert 4 == table[1, 0]
+assert 6 == table[2, 0]
 ```
 
 For more information see the [Cookbook](cookbook/cookbook.md)

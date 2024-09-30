@@ -205,6 +205,10 @@ class Grid<T> implements Iterable<List<T>> {
         return data.iterator()
     }
 
+    Grid<T> transpose() {
+      new Grid<T>(transpose(this.data))
+    }
+
     static <N> Grid<N> convert(Grid grid, Integer colNum, Class<N> type, NumberFormat format = null) {
         return new Grid(convert(grid.data, [colNum], type, format))
     }

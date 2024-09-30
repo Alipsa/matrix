@@ -44,7 +44,7 @@
 - add lastRowIndex and LastColumnIndex as convenience methods for rowCount -1 and ColumnCount -1 respectively
 - add getAt for a range of rows or a range of columns
 - add a MatrixBuilder.data() method for when the data is a list of custom objects
-- changed some Matrix methods (e.g. the convert, removeRows and orderBy methods) to mutate to make things more consistent
+- changed some Matrix methods (e.g. the convert, apply, removeRows and orderBy methods) to mutate to make things more consistent
 - Add Matrix.moveRow()
 - Add Matrix.subset() for an IntRange of rows
 

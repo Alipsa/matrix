@@ -521,10 +521,24 @@ class Matrix implements Iterable<Row> {
     return this
   }
 
+  /**
+   * Apply executes a Closure on each value of the specified column
+   *
+   * @param columnName the column to apply to
+   * @param function the closure to apply
+   * @return this Matrix (mutated)
+   */
   Matrix apply(String columnName, Closure function) {
     return apply(columnNames().indexOf(columnName), function)
   }
 
+  /**
+   * Apply executes a Closure on each value of the specified column
+   *
+   * @param columnNumber the column to apply to
+   * @param function the closure to apply
+   * @return this Matrix (mutated)
+   */
   Matrix apply(int columnNumber, Closure function) {
     List<List<?>> converted = []
     def col = []
@@ -546,6 +560,10 @@ class Matrix implements Iterable<Row> {
     List<Class<?>> types = updatedClass != type(columnNumber)
             ? createTypeListWithNewValue(columnNumber, updatedClass, false)
             : mTypes
+
+    mColumns = new ArrayList<>(converted)
+    mTypes = new ArrayList<>(types)
+    /*
     def convertedRows = Grid.transpose(converted)
     return builder()
         .name(mName)
@@ -553,19 +571,31 @@ class Matrix implements Iterable<Row> {
         .rows(convertedRows)
         .types(types)
         .build()
-  }
 
-  Matrix applyRows(String columnName, Closure function) {
-    this.rows().each { row ->
-      row[columnName] = function.call(row)
-    }
+     */
     this
   }
 
+  /**
+   * Apply executes a Closure on each value of the specified column for the rows specified
+   *
+   * @param columnName the column to apply to
+   * @param rows the rows to apply to
+   * @param function the closure to apply
+   * @return this Matrix (mutated)
+   */
   Matrix apply(String columnName, List<Integer> rows, Closure function) {
     apply(columnIndex(columnName), rows, function)
   }
 
+  /**
+   * Apply executes a Closure on each value of the specified column for the rows specified
+   *
+   * @param columnNumber the column to apply to
+   * @param rows the rows to apply to
+   * @param function the closure to apply
+   * @return this Matrix (mutated)
+   */
   Matrix apply(int columnNumber, List<Integer> rows, Closure function) {
     List<List<?>> converted = []
     def col = []
@@ -591,19 +621,39 @@ class Matrix implements Iterable<Row> {
     List<Class<?>> dataTypes = updatedClass != type(columnNumber)
             ? createTypeListWithNewValue(columnNumber, updatedClass, true)
             : mTypes
+    mColumns = new ArrayList<>(converted)
+    mTypes = new ArrayList<>(dataTypes)
+    /*
     def convertedRows = Grid.transpose(converted)
     return builder()
       .name(mName)
       .columnNames(mHeaders)
       .rows(convertedRows)
       .types(dataTypes)
-      .build()
+      .build()*/
+    this
   }
 
-  Matrix apply(String columnName, Closure criteria, Closure function) {
+  /**
+   * Apply executes a Closure on each value of the specified column if the criteria closure is true
+   *
+   * @param columnName the column to apply to
+   * @param criteria the Closure determining the rows to apply to
+   * @param function the closure to apply
+   * @return this Matrix (mutated)
+   */
+  Matrix apply(String columnName, Closure<Boolean> criteria, Closure function) {
     apply(columnNames().indexOf(columnName), criteria, function)
   }
 
+  /**
+   * Apply executes a Closure on each value of the specified column if the criteria closure is true
+   *
+   * @param columnNumber the column to apply to
+   * @param criteria the Closure determining the rows to apply to
+   * @param function the closure to apply
+   * @return this Matrix (mutated)
+   */
   Matrix apply(int columnNumber, Closure criteria, Closure function) {
     List<List<?>> updatedRows = []
     Class<?> updatedClass = null
@@ -630,12 +680,32 @@ class Matrix implements Iterable<Row> {
     List<Class<?>> dataTypes = updatedClass != type(columnNumber)
             ? createTypeListWithNewValue(columnNumber, updatedClass, true)
             : mTypes
+    mColumns = new ArrayList<>(Grid.transpose(updatedRows))
+    mTypes = new ArrayList<>(dataTypes)
+    /*
     return builder()
       .name(mName)
       .columnNames(mHeaders)
       .rows(updatedRows)
       .types(dataTypes)
-      .build()
+      .build()*/
+    this
+  }
+
+  /**
+   * Apply executes a Closure on each value of the specified column
+   * but takes the entire row as the parameter which is different from the apply(columnName, function)
+   * which only takes the column value as parameter
+   *
+   * @param columnName the column to apply to
+   * @param function the closure taking the entire row as parameter
+   * @return this Matrix (mutated)
+   */
+  Matrix applyRows(String columnName, Closure function) {
+    this.rows().each { row ->
+      row[columnName] = function.call(row)
+    }
+    this
   }
 
   String columnName(int index) {
@@ -724,10 +794,8 @@ class Matrix implements Iterable<Row> {
         convertedTypes.add(type(i))
       }
     }
-    mColumns.clear()
-    mColumns.addAll(convertedColumns)
-    mTypes.clear()
-    mTypes.addAll(convertedTypes)
+    mColumns = new ArrayList<>(convertedColumns)
+    mTypes = new ArrayList<>(convertedTypes)
     //def convertedRows = Grid.transpose(convertedColumns) as List<List<?>>
     //return new Matrix(mName, mHeaders, convertedColumns, convertedTypes)
     this
@@ -1172,7 +1240,10 @@ class Matrix implements Iterable<Row> {
    */
   <T> T getAt(Integer row, Integer column) {
     Class<T> type = type(column) as Class<T>
-    return get(row, column).asType(type)
+    if (type != null) {
+      return get(row, column).asType(type)
+    }
+    return get(row, column) as T
   }
 
   /**
@@ -1473,7 +1544,8 @@ class Matrix implements Iterable<Row> {
       if (strVal.length() > columnLength) {
         strVal = strVal.substring(0, columnLength)
       }
-      if (val instanceof Number || Number.isAssignableFrom(type(c))) {
+      def valType = type(c)
+      if (val instanceof Number || (valType != null && Number.isAssignableFrom(valType))) {
         strVal = strVal.padLeft(columnLength)
       } else {
         strVal = strVal.padRight(columnLength)

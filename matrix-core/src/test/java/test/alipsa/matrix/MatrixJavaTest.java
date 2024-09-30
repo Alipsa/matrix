@@ -473,7 +473,7 @@ class MatrixJavaTest {
     ));
     assertIterableEquals(c(1, 2), selection);
 
-    var foo = table.apply("place", selection,
+    var foo = table.clone().apply("place", selection,
         new ValueClosure<Integer, Integer>(it -> it * 2));
     //println(foo.content())
     assertEquals(4, foo.getAt(1, 0, Integer.class));
@@ -481,7 +481,7 @@ class MatrixJavaTest {
     assertEquals(LocalDate.class, foo.type(2));
     assertEquals(Integer.class, foo.type(0), "place column type");
 
-    var bar = table.apply("place", new RowCriteriaClosure(it -> {
+    var bar = table.clone().apply("place", new RowCriteriaClosure(it -> {
       var date = it.getAt(2, LocalDate.class);
       return date.isAfter(LocalDate.of(2022, 1, 1));
     }), new ValueClosure<Integer, Integer>(it -> it * 2));
