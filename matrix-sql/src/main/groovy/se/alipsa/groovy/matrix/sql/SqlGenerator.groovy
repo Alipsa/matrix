@@ -1,13 +1,10 @@
 package se.alipsa.groovy.matrix.sql
 
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.Row
 
 class SqlGenerator {
 
-  private static final Logger LOG = LogManager.getLogger(SqlGenerator.class)
 
   static String createUpdateSql(String tableName, Row row, String[] matchColumnName) {
     String sql = "update " + tableName + " set "
@@ -22,7 +19,6 @@ class SqlGenerator {
       conditions.add(condition + " = " + quoteIfString(row, condition))
     }
     sql += String.join(" and ", conditions)
-    LOG.debug("Executing update query: ${sql}")
     return sql
   }
 

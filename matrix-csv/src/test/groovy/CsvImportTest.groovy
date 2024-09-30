@@ -36,7 +36,7 @@ class CsvImportTest {
     assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
     assertEquals(['4', 'Arne', '2023-Jul-01', '222,99'], matrix.row(3), "last row")
 
-    Matrix table = matrix.convert(
+    Matrix table = matrix.clone().convert(
         ["id": Integer,
          "name": String,
          "date": LocalDate,

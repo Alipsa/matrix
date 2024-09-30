@@ -1,6 +1,5 @@
 package se.alipsa.groovy.matrix
 
-//import groovy.transform.CompileStatic
 import se.alipsa.groovy.matrix.util.ClassUtils
 
 import java.lang.reflect.Modifier
@@ -9,7 +8,6 @@ import java.nio.file.Path
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 
-//@CompileStatic
 class MatrixBuilder {
 
   String name
@@ -187,8 +185,8 @@ class MatrixBuilder {
   }
 
   /**
-   * The cvs parsing is fast but rather primitive. For a much more thorough solution, use the CsvImporter in the
-   * matrix-csv library.
+   * The cvs parsing is reasonably fast but rather primitive.
+   * For a much more thorough solution, use the CsvImporter in the matrix-csv library.
    *
    * @param url
    * @param delimiter

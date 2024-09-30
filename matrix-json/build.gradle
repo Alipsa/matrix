@@ -10,7 +10,7 @@ version '1.0.0-SNAPSHOT'
 description = "Groovy library for importing and exporting json to and from a Matrix or Grid"
 
 task wrapper(type: Wrapper) {
-  def gv = '8.10.1'
+  def gv = '8.10.2'
   gradleVersion = gv
   distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
   validateDistributionUrl = true
@@ -38,7 +38,7 @@ repositories {
 }
 
 dependencies {
-  def groovyVersion = '4.0.22'
+  def groovyVersion = '4.0.23'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly project(':matrix-core')
   compileOnly groovy
@@ -47,8 +47,8 @@ dependencies {
   testImplementation groovy
   testImplementation "org.apache.groovy:groovy-json:$groovyVersion"
   testImplementation project(':matrix-core')
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.1'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.1'
   testImplementation project(':matrix-datasets')
 }
 

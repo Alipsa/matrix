@@ -19,7 +19,7 @@
   Matrix from Java code. See MatrixJavaTest for details
 - Overload ListConverter methods, align naming and parameter order. 
 - Add Matrix.getAt for column with type conversion. 
-- Add Numberformat as optional argument to OdsImporter.importOdsSheets and ValueConverter.isNumeric()
+- Add NumberFormat as optional argument to OdsImporter.importOdsSheets and ValueConverter.isNumeric()
 - Add a Grid.add(int, List) and Matrix.addRow(int, List) to allow for inserting a row at the designated place. 
 - Add ValueTwoArgClosure to enable more elegant Java code.
 - Fix Matrix.content() and head() to pretty print the column names 
@@ -44,9 +44,9 @@
 - add lastRowIndex and LastColumnIndex as convenience methods for rowCount -1 and ColumnCount -1 respectively
 - add getAt for a range of rows or a range of columns
 - add a MatrixBuilder.data() method for when the data is a list of custom objects
-- change most Matrix method to mutate to make things more consistent
+- changed some Matrix methods (e.g. the convert, removeRows and orderBy methods) to mutate to make things more consistent
 - Add Matrix.moveRow()
-- Add subset for an IntRange of rows
+- Add Matrix.subset() for an IntRange of rows
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

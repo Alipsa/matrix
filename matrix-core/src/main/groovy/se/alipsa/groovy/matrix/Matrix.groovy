@@ -679,9 +679,9 @@ class Matrix implements Iterable<Row> {
    * Convert all columns to the type specified
    *
    * @param type the class to convert all values to
-   * @param dateTimeFormatter an optional formatter if you are cnverting to a date object (LocalDate, LocalDateTime etc)
+   * @param dateTimeFormatter an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
    * @param numberFormat an optional number format if you are converting Strings to numbers
-   * @return a new Matrix converted as specified
+   * @return this Matrix converted as specified
    */
   <T> Matrix convert(Class<T> type, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     List<Class<T>> types = [type]*columnCount()
@@ -693,7 +693,7 @@ class Matrix implements Iterable<Row> {
    * @param types a list of column types (classes)
    * @param dateTimeFormatter an optional DateTimeFormatter
    * @param numberFormat an optional NumberFormat
-   * @return a new Matrix converted as specified
+   * @return this Matrix converted as specified
    */
   Matrix convert(List<Class<?>> types, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     if (types.size() > columnCount()) {
@@ -724,9 +724,13 @@ class Matrix implements Iterable<Row> {
         convertedTypes.add(type(i))
       }
     }
+    mColumns.clear()
+    mColumns.addAll(convertedColumns)
+    mTypes.clear()
+    mTypes.addAll(convertedTypes)
     //def convertedRows = Grid.transpose(convertedColumns) as List<List<?>>
-    // TODO, why not mutate the Matrix instead?
-    return new Matrix(mName, mHeaders, convertedColumns, convertedTypes)
+    //return new Matrix(mName, mHeaders, convertedColumns, convertedTypes)
+    this
   }
 
   Matrix convert(String columnName, Class<?> type, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
@@ -749,7 +753,7 @@ class Matrix implements Iterable<Row> {
    * <code>
    *
    * @param converters an array of se.alipsa.groovy.matrix.Converter
-   * @return a new converted Matrix
+   * @return this Matrix with the types and column values converted
    */
   Matrix convert(Converter[] converters) {
     List<List<?>> convertedColumns = []
@@ -780,8 +784,13 @@ class Matrix implements Iterable<Row> {
         convertedTypes.add(type(i))
       }
     }
-    def convertedRows = Grid.transpose(convertedColumns)
-    return builder().name(mName).columnNames(mHeaders).rows(convertedRows).types(convertedTypes).build()
+    //def convertedRows = Grid.transpose(convertedColumns)
+    //return builder().name(mName).columnNames(mHeaders).rows(convertedRows).types(convertedTypes).build()
+    mColumns.clear()
+    mColumns.addAll(convertedColumns)
+    mTypes.clear()
+    mTypes.addAll(convertedTypes)
+    this
   }
 
   /**
@@ -940,6 +949,7 @@ class Matrix implements Iterable<Row> {
     return false
   }
 
+  @Override
   Matrix clone() {
     return new Matrix(mName, mHeaders, mColumns, mTypes)
   }
@@ -985,7 +995,7 @@ class Matrix implements Iterable<Row> {
         boolean valueDiff = false
         thisRow.eachWithIndex { Object entry, int c ->
           if (entry instanceof Number) {
-            def thatVal = thatRow[c] as double
+            def thatVal = (thatRow[c] ?: Double.NaN) as double
             double thisVal = entry as double
             if (Math.abs(thisVal - thatVal as double) > allowedDiff) {
               valueDiff = true
@@ -1082,7 +1092,7 @@ class Matrix implements Iterable<Row> {
       column.eachWithIndex { Object entry, int r ->
         def thatVal = thatCol[r]
         if (entry instanceof Number) {
-          def diff = Math.abs((entry as double) - (thatVal as double))
+          def diff = Math.abs((entry as double) - ((thatVal ?: Double.NaN) as double))
           if (diff > allowedDiff) {
             valueDiff = true
           }
@@ -1098,12 +1108,16 @@ class Matrix implements Iterable<Row> {
     return true
   }
 
+  /**
+   * Searches for the first occurance of the value in the column specified
+   *
+   * @param columnName the name of the column to search
+   * @param value the value to search for
+   * @return the first row where the column matches the value or null of no match found
+   */
   List<?> findFirstRow(String columnName, Object value) {
-    def table = subset(columnName, { it == value })
-    if (table.rowCount() > 0) {
-      return table.row(0)
-    }
-    return null
+    int rowIndex = column(columnName).findIndexOf {it == value}
+    return rowIndex >= 0 ? row(rowIndex) : null
   }
 
   Object get(int row, int column) {
@@ -1172,22 +1186,35 @@ class Matrix implements Iterable<Row> {
 
   /**
    * Enable the use of square bracket to reference a column, e.g. table["salary"] for the salary column
+   *
    * @return the column corresponding to the column name supplied
    */
   List<?> getAt(String columnName) {
     return column(columnName)
   }
 
+  /**
+   * Enable the use of square bracket to reference a range of columns, e.g. table[0..2] for the first 3 columns
+   *
+   * @return the column corresponding to the column name supplied
+   */
   List<List<?>> getAt(IntRange range) {
     mColumns[range]
   }
 
+  /**
+   * Enable the use of square bracket to reference a column, e.g. table["salary", BigDecimal] for the salary column
+   * converted to the type specified (BigDecimal in this case)
+   *
+   * @return the column corresponding to the column name supplied converted to the type (using the ListConverter)
+   */
   <T> List<T> getAt(String columnName, Class<T> type) {
     ListConverter.convert(column(columnName), type)
   }
 
   /**
    * Enable the use of square bracket to reference a column, e.g. table[2] for the 3:rd column
+   *
    * @return the column corresponding to the column index supplied
    */
   List<?> getAt(int columnIndex) {
@@ -1209,7 +1236,7 @@ class Matrix implements Iterable<Row> {
    * </pre></code>
    * @param rowIndex the observation to get
    * @param columns the variables to from the observation to include in the result
-   * @return
+   * @return the variables (columns) in the range specified for a specific row
    */
   List<?> getAt(int rowIndex, IntRange columns) {
     row(rowIndex)[columns]
@@ -1228,9 +1255,10 @@ class Matrix implements Iterable<Row> {
    *
    * assert ['Marianne', 'Lotte'] == table[1..2, 0]
    * </pre></code>
+   *
    * @param rows
    * @param colIndex
-   * @return
+   * @return a number of observations (rows) of the variable (column) specified
    */
   List<?> getAt(IntRange rows, int colIndex) {
     column(colIndex)[rows]
@@ -1339,6 +1367,13 @@ class Matrix implements Iterable<Row> {
     maxLength
   }
 
+  /**
+   * move a row from one position to another
+   *
+   * @param from the index of the row to move
+   * @param to the index where the rwo should be inserted
+   * @return this Matrix reorganized as specified
+   */
   Matrix moveRow(int from, int to) {
     mColumns.each {
       it.add(to, it.remove(from))
@@ -1351,7 +1386,7 @@ class Matrix implements Iterable<Row> {
    *
    * @param columnName the name of the volumn to move
    * @param index the index to move it to
-   * @return this mutated matrix
+   * @return this (mutated) matrix
    */
   Matrix moveColumn(String columnName, int index) {
     Class<?> type = type(columnName)
@@ -1367,9 +1402,10 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
-   * Sort this table in ascending  order by the columns specified
+   * Sort this table in ascending order by the columns specified
+   *
    * @param columnNames the columns to sort by
-   * @return a copy of this table, sorted in ascending order by the columns specified
+   * @return this table (mutated), sorted in ascending order by the columns specified
    */
   Matrix orderBy(List<String> columnNames) {
     LinkedHashMap<String, Boolean> columnsAndDirection = [:]
@@ -1379,6 +1415,12 @@ class Matrix implements Iterable<Row> {
     return orderBy(columnsAndDirection)
   }
 
+  /**
+   * Sort this table in the order specified by the columns specified
+   *
+   * @param columnNames the columns to sort by
+   * @return this table (mutated), sorted in the order specified by the columns specified
+   */
   Matrix orderBy(String columnName, Boolean descending = Boolean.FALSE) {
     if (columnName !in columnNames()) {
       throw new IllegalArgumentException("The column name ${columnName} does not exist is this table (${mName})")
@@ -1672,6 +1714,8 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
+   * Remove the row indexes specified from this Matrix.
+   * This is the mutating equivalent to subset.
    *
    * @param indexes the row indexes to remove
    * @return this matrix (mutated) to allow for method chaining
@@ -1681,6 +1725,8 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
+   * Remove the row indexes specified from this Matrix.
+   * This is the mutating equivalent to subset.
    *
    * @param indexes the row indexes to remove
    * @return this matrix (mutated) to allow for method chaining
@@ -1695,10 +1741,20 @@ class Matrix implements Iterable<Row> {
     this
   }
 
+  /**
+   * Remove all rows with only null values and/or blank strings
+   *
+   * @return this matrix with the empty rows removed
+   */
   Matrix removeEmptyRows() {
-    return subset { containsValues(it as Iterable<?>) }
+    removeRows(selectRowIndices { !containsValues(it as Iterable<?>) })
   }
 
+  /**
+   * Remove all columns with only null values and/or blank strings
+   *
+   * @return this matrix with the empty columns removed
+   */
   Matrix removeEmptyColumns() {
     int i = 0
     List<Integer> columnsToRemove = []
@@ -1720,6 +1776,8 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
+   * Get the row at the specified index
+   *
    * @param index the index of the row
    * @return the row (@see Row) corresponding to the row index (starting with 0)
    */
@@ -1731,6 +1789,13 @@ class Matrix implements Iterable<Row> {
     return new Row(index, data, this)
   }
 
+  /**
+   * The Matrix should be uniform for this to work properly since
+   * it returns the number of elements in the first column as the
+   * row count.
+   *
+   * @return the number of rows in this matrix
+   */
   int rowCount() {
     if (mColumns == null || mColumns.isEmpty()) {
       return 0
@@ -1739,6 +1804,10 @@ class Matrix implements Iterable<Row> {
     //return rows().size()
   }
 
+  /**
+   *
+   * @return the index value of the last observation
+   */
   int lastRowIndex() {
     rowCount() -1
   }
@@ -1895,17 +1964,21 @@ class Matrix implements Iterable<Row> {
    *  )
    *  // This will select the second and third row and return it in a new Matrix
    *  Matrix subSet = table.subset('place', { it > 1 })
+   *
+   *  The mutable version of this is removeRows.
+   *
    * @param columnName the name of the column to use to select matches
    * @param condition a closure containing the condition for what to retain
-   * @return this matrix (mutated) to allow for method chaining, use clone().subset() if you want
-   * to retain the original Matrix
+   * @return the subset of the matrix (a new Matrix, the original one is unaffected)
    */
   Matrix subset(@NotNull String columnName, @NotNull Closure<Boolean> condition) {
-    Closure<Boolean> rem = {
-      !condition(it)
-    }
-    List<Integer> rows = column(columnName).findIndexValues(rem) as List<Integer>
-    removeRows(rows)
+    List<Integer> r = column(columnName).findIndexValues(condition) as List<Integer>
+    builder()
+        .rows(this.rows(r) as List<List<?>>)
+        .name(this.name)
+        .columnNames(this.columnNames())
+        .types(this.types())
+        .build()
   }
 
   /**
@@ -1914,22 +1987,21 @@ class Matrix implements Iterable<Row> {
    * @return this Matrix with the rows matching the criteria supplied retained
    */
   Matrix subset(Closure<Boolean> criteria) {
-    List<Integer> r = []
-    rows().eachWithIndex { Row row, int idx -> {
-      if (!criteria(row)) {
-        r.add(idx)
-      }
-    }}
-    removeRows(r)
+    builder()
+        .rows(rows(criteria) as List<List<?>>)
+        .name(this.name)
+        .columnNames(this.columnNames())
+        .types(this.types())
+        .build()
   }
 
   Matrix subset(IntRange rows) {
-    mColumns.eachWithIndex { List col, int idx ->
-      List keep = col[rows]
-      col.clear()
-      col.addAll(keep)
-    }
-    this
+    builder()
+        .rows(this.rows(rows) as List<List<?>>)
+        .name(this.name)
+        .columnNames(this.columnNames())
+        .types(this.types())
+        .build()
   }
 
   String tail(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {

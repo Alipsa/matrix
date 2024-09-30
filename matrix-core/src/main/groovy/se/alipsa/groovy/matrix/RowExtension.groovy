@@ -2,6 +2,7 @@ package se.alipsa.groovy.matrix
 
 /**
  * Overrides DefaultGroovyMethods so we can define our own getAt and putAt
+ * see resources/META-INF.groovy
  */
 class RowExtension {
 

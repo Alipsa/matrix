@@ -20,7 +20,7 @@ description = "Statistical hypothesis tests based on Matrix data."
 // For some reason this is required to upgrade the wrapper
 // Change the version and run 'gradle wrapper' to upgrade
 task wrapper(type: Wrapper) {
-  def gv = '8.8'
+  def gv = '8.10.2'
   gradleVersion = gv //version required
   distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
   validateDistributionUrl = true
@@ -52,7 +52,7 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-  def groovyVersion = '4.0.22'
+  def groovyVersion = '4.0.23'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
   compileOnly project(':matrix-core')
@@ -61,9 +61,9 @@ dependencies {
   testImplementation groovy
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.1'
   testImplementation("se.alipsa:jfinancials:1.0.0")
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.0'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.1'
 }
 
 test {

@@ -30,6 +30,13 @@ repositories {
     mavenCentral()
 }
 
+task wrapper(type: Wrapper) {
+    def gv = '8.10.2'
+    gradleVersion = gv
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
+    validateDistributionUrl = true
+}
+
 tasks.withType(JavaCompile) {
     options.deprecation = true
 }
@@ -39,7 +46,7 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    def groovyVersion = "4.0.22"
+    def groovyVersion = "4.0.23"
     def tablesawVersion = "[0.43.1, )"
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
     implementation("tech.tablesaw:tablesaw-core:${tablesawVersion}") {
@@ -64,7 +71,7 @@ dependencies {
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-stats')
     testImplementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.1'
     testImplementation 'com.h2database:h2:2.3.232'
     testImplementation "org.slf4j:slf4j-simple:2.0.16"
     testImplementation "org.apache.groovy:groovy:${groovyVersion}"

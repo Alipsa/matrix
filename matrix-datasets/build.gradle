@@ -25,7 +25,7 @@ ext.nexusUrl = version.contains("SNAPSHOT")
 
 
 task wrapper(type: Wrapper) {
-    def gv = '8.10.1'
+    def gv = '8.10.2'
     gradleVersion = gv
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
     validateDistributionUrl = true
@@ -53,15 +53,15 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    def groovyVersion = '4.0.22'
+    def groovyVersion = '4.0.23'
     def groovy = "org.apache.groovy:groovy:$groovyVersion"
     compileOnly groovy
     compileOnly project(':matrix-core')
 
     testImplementation groovy
     testImplementation project(':matrix-core')
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.1'
 }
 
 test {

@@ -243,7 +243,7 @@ class MatrixJavaTest {
         .types(cr(String.class, 4))
         .build();
 
-    var table2 = table.convert(Map.of("place", Integer.class, "start", LocalDate.class));
+    var table2 = table.clone().convert(Map.of("place", Integer.class, "start", LocalDate.class));
     table2 = table2.convert(Map.of("end", LocalDateTime.class),
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     assertEquals(Integer.class, table2.type("place"));
@@ -253,7 +253,7 @@ class MatrixJavaTest {
     assertEquals(LocalDate.class, table2.getAt(0, 2).getClass());
     assertEquals(LocalDateTime.parse("2022-12-01T10:00:00.000"), table2.getAt("end").get(0));
 
-    var table3 = table.convert("place", Integer.class, new ValueClosure<>(it -> {
+    var table3 = table.clone().convert("place", Integer.class, new ValueClosure<>(it -> {
       String val = String.valueOf(it).trim();
       if ("null".equals(val) || ",".equals(val) || val.isBlank()) return null;
       return Integer.valueOf(val);
@@ -264,7 +264,7 @@ class MatrixJavaTest {
     assertEquals(3, table3.getAt("place").get(2));
 
 
-    var table4 = table.convert(new Converter[]{
+    var table4 = table.clone().convert(new Converter[]{
         new Converter("place", Integer.class, new ValueClosure<Integer, String>(it -> {
           try {
             return Integer.parseInt(it);
@@ -287,7 +287,7 @@ class MatrixJavaTest {
     assertEquals(LocalDate.class, table4.getAt(0, 2).getClass());
     assertEquals(LocalDate.of(2023, 5, 27), table4.getAt(2, 2));
 
-    var table5 = table.convert(
+    var table5 = table.clone().convert(
         c(Integer.class, String.class, LocalDate.class, String.class)
     );
     assertEquals(table4, table5, table4.diff(table5));
@@ -847,6 +847,7 @@ class MatrixJavaTest {
         .types(int.class, String.class, Number.class, LocalDate.class)
         .build();
     var d0r = d0.removeEmptyRows();
+    System.out.println(d0r.content());
     assertEquals(empData, d0r, empData.diff(d0r, true));
   }
 

@@ -1,7 +1,5 @@
 package se.alipsa.groovy.matrix.sql
 
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.groovy.matrix.Matrix
@@ -19,8 +17,6 @@ import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_SCALE
 import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getVARCHAR_SIZE
 
 class MatrixDbUtil {
-
-  private static final Logger LOG = LogManager.getLogger(MatrixDbUtil.class)
 
   SqlTypeMapper mapper
 
@@ -51,7 +47,6 @@ class MatrixDbUtil {
       if (tableExists(con, tableName)) {
         throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
       }
-      LOG.debug("Creating table using DDL: {}", sql)
       result.ddlResult = stm.execute(sql)
       result.inserted = insert(con, table)
     }
@@ -136,7 +131,6 @@ class MatrixDbUtil {
   }
 
   Object dropTable(Connection con, String tableName) {
-    LOG.debug("Dropping {}...", tableName)
     dbExecuteSql(con, "drop table $tableName")
   }
 
@@ -171,7 +165,6 @@ class MatrixDbUtil {
 
   int insert(Connection con, Matrix table) throws SQLException {
     String insertSql = SqlGenerator.createPreparedInsertSql(table)
-    LOG.trace(insertSql)
     try(PreparedStatement stm = con.prepareStatement(insertSql)) {
       for (Row row : table) {
         int i = 1

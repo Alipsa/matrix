@@ -1,5 +1,6 @@
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.Row
 
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -118,17 +119,27 @@ class StatTest {
   void testFrequency() {
     def values = [12.1, 23, 0, 12.1, 99, 0, 23, 12.1]
     def freq = frequency(values)
-    assertEquals(2, freq.get(0, 1), "occurrences of 0")
-    assertEquals(12.50, freq.get(1, 2), "occurrences of 99")
+    assertEquals(2, freq.get(1, 1), "occurrences of 0")
+    assertEquals(12.50, freq.get(3, 2), "occurrences of 99")
     assertEquals(23, freq.get(2, 0) as int, "occurrences of 23")
-    assertEquals(37.50, freq.get(3, 2), "occurrences of 12.1")
+    assertEquals(37.50, freq.get(0, 2), "occurrences of 12.1")
 
     def table = Matrix.builder().data([id: 0..7, vals: values]).build()
     def freq2 = frequency(table, "vals")
-    assertEquals(2, freq2.get(0, 1), "occurrences of 0 from table")
-    assertEquals(12.50, freq2.get(1, 2), "occurrences of 99 from table")
+    assertEquals(2, freq2.get(1, 1), "occurrences of 0 from table")
+    assertEquals(12.50, freq2.get(3, 2), "occurrences of 99 from table")
     assertEquals(23, freq2.get(2, 0) as int, "occurrences of 23 from table")
-    assertEquals(37.50, freq2.get(3, 2), "occurrences of 12.1 from table")
+    assertEquals(37.50, freq2.get(0, 2), "occurrences of 12.1 from table")
+
+    def freq3 = frequency([null, 1,2,1,null])
+    def row = freq3.findFirstRow('Value', 'null')
+    assertEquals(2, row[FREQUENCY_FREQUENCY])
+    assertEquals(2/5 * 100, row[FREQUENCY_PERCENT] as Double)
+
+    def freq4 = frequency([null, 'Foo','Bar','Bar',null])
+    Row nullRow = freq4.findFirstRow('Value', 'null')
+    assertEquals(2, nullRow[FREQUENCY_FREQUENCY])
+    assertEquals(2/5 * 100, nullRow[FREQUENCY_PERCENT] as Double)
   }
 
   @Test
@@ -143,7 +154,7 @@ class StatTest {
     assertEquals(2, vsByGears.rowCount(), "row count\n" + vsByGears.content())
     assertEquals(['0', '1'], vsByGears["vs"], vsByGears.content())
     assertEquals([12, 3], vsByGears["3"], vsByGears.content())
-    assertEquals([2, 10], vsByGears["4"], vsByGears.content())
+    assertEquals([10, 2], vsByGears["4"], vsByGears.content())
     assertEquals([4, 1], vsByGears["5"], vsByGears.content())
   }
 
@@ -155,6 +166,7 @@ class StatTest {
         v2: [null, 'Foo', "Foo"]
     ]).types([Number, double, String]).build()
     def summary = summary(table)
+    println summary
     assertEquals(0.3, summary['v0']["Min"])
     assertEquals(1.1, summary['v1']["Max"])
     assertEquals(2, summary['v2']["Number of unique values"])

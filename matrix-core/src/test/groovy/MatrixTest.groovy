@@ -170,8 +170,8 @@ class MatrixTest {
     ]
     def table = Matrix.builder().data(data).types([String] * 4).build()
 
-    def table2 = table.convert(place: Integer, start: LocalDate)
-    table2 = table2.convert([end: LocalDateTime],
+    def table2 = table.clone().convert(place: Integer, start: LocalDate)
+    table2.convert([end: LocalDateTime],
         DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss'))
     assertEquals(Integer, table2.type('place'))
     assertEquals(Integer, table2[0, 0].class)
@@ -180,7 +180,7 @@ class MatrixTest {
     assertEquals(LocalDate, table2[0, 2].class)
     assertEquals(LocalDateTime.parse('2022-12-01T10:00:00.000'), table2['end'][0])
 
-    def table3 = table.convert('place', Integer, { Object it ->
+    def table3 = table.clone().convert('place', Integer, { Object it ->
       String val = String.valueOf(it).trim()
       if (val == 'null' || val == ',' || val.isBlank()) return null
       return Integer.valueOf(val)
@@ -188,7 +188,7 @@ class MatrixTest {
     assertEquals(Integer, table3.type('place'))
     assertEquals(3, table3['place'][2])
 
-    def table4 = table.convert([
+    def table4 = table.clone().convert([
         new Converter('place', Integer, { try { Integer.parseInt(it) } catch (NumberFormatException ignore) { null } }),
         new Converter('start', LocalDate, { LocalDate.parse(it) })
     ] as Converter[])
@@ -203,7 +203,7 @@ class MatrixTest {
     assertEquals(LocalDate, table4[0, 2].class)
     assertEquals(LocalDate.of(2023, 5, 27), table4[2, 2])
 
-    def table5 = table.convert(
+    def table5 = table.clone().convert(
         [Integer, String, LocalDate, String]
     )
     assertEquals(table4, table5, table4.diff(table5))
@@ -227,20 +227,20 @@ class MatrixTest {
     assertEquals(2, rows.size())
 
     // Same thing using subset
-    def subSet = table.clone().subset('place', { it > 1 })
+    def subSet = table.subset('place', { it > 1 })
     assertIterableEquals(table.rows(1..2), subSet.rows(), subSet.content())
 
-    def subSet2 = table.clone().subset { it[0] > 1 }
+    def subSet2 = table.subset { it[0] > 1 }
     assertIterableEquals(table.rows(1..2), subSet2.rows())
 
-    def subSet3 = table.clone().subset {
+    def subSet3 = table.subset {
       String name = it[1]
       !name.startsWith('Ma')
           && asLocalDate(it[2]).isBefore(LocalDate.of(2022, 10, 1))
     }
     assertEquals(table[0, 1], subSet3[0, 1])
 
-    def subset4 = table.clone().subset(0..1)
+    def subset4 = table.subset(0..1)
     assertEquals(2, subset4.rowCount())
     assertIterableEquals([1, 'Lorena', '2021-12-01'], subset4.row(0))
     assertIterableEquals([2, 'Marianne', '2022-07-10'], subset4.row(1))

@@ -1,7 +1,5 @@
 package se.alipsa.groovy.matrix.sql
 
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
@@ -19,8 +17,6 @@ import java.util.concurrent.ExecutionException
 import java.util.stream.IntStream
 
 class MatrixSql implements Closeable {
-
-  private static final Logger LOG = LogManager.getLogger(MatrixSql.class)
 
   ConnectionInfo ci
   SqlTypeMapper mapper
@@ -138,7 +134,6 @@ class MatrixSql implements Closeable {
   }
 
   Object dropTable(String tableName) {
-    LOG.debug("Dropping {}...", tableName)
     dbExecuteSql("drop table $tableName")
   }
 
@@ -156,7 +151,6 @@ class MatrixSql implements Closeable {
 
   int insert(String tableName, Row row) throws SQLException, ExecutionException, InterruptedException {
     String sql = SqlGenerator.createPreparedInsertSql(tableName, row)
-    LOG.debug("Executing insert query: {}", sql)
     try(PreparedStatement stm = connect().prepareStatement(sql)) {
       int i = 1
       row.each {
@@ -200,7 +194,7 @@ class MatrixSql implements Closeable {
     if (con == null) {
       String url = ci.getUrl().toLowerCase()
       if (isBlank(ci.getPassword()) && !url.contains("passw") && !url.contains("integratedsecurity=true")) {
-        LOG.warn("Password probably required to " + ci.getName() + " for " + ci.getUser())
+        System.err.println("Password probably required to " + ci.getName() + " for " + ci.getUser())
       }
       con = dbConnect(ci)
     }
@@ -215,13 +209,9 @@ class MatrixSql implements Closeable {
   }
 
   Connection dbConnect(ConnectionInfo ci) throws SQLException, IOException {
-    LOG.debug("Connecting to ${ci.getUrl()} using ${ci.getDependency()}")
-
     Driver driver
-
     MavenUtils mvnUtils = new MavenUtils()
     String[] dep = ci.getDependency().split(':')
-    LOG.trace("Resolving dependency ${ci.getDependency()}")
     File jar = mvnUtils.resolveArtifact(dep[0], dep[1], null, 'jar', dep[2])
     URL url = jar.toURI().toURL()
 
@@ -237,22 +227,19 @@ class MatrixSql implements Closeable {
     }
 
     try {
-      LOG.trace("Attempting to load the class ${ci.getDriver()}")
       Class<Driver> clazz = (Class<Driver>) cl.loadClass(ci.getDriver())
-      LOG.trace("Loaded driver from session classloader, instating the driver ${ci.getDriver()}")
       try {
         driver = clazz.getDeclaredConstructor().newInstance()
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | NullPointerException e) {
-        LOG.trace("Failed to instantiate the driver: ${ci.getDriver()}, clazz is ${clazz}: " + e)
+        System.err.println("Failed to instantiate the driver: ${ci.getDriver()}, clazz is ${clazz}: " + e)
         throw e
       }
     } catch (ClassCastException | ClassNotFoundException e) {
-      LOG.warn("Failed to load driver; ${ci.getDriver()} could not be loaded from dependency ${ci.getDependency()}")
+      System.err.println("Failed to load driver; ${ci.getDriver()} could not be loaded from dependency ${ci.getDependency()}")
       throw e
     }
     Properties props = new Properties()
     if ( urlContainsLogin(ci.getUrlSafe()) ) {
-      LOG.debug("Skipping specified user/password since it is part of the url")
     } else {
       if (ci.getUser() != null) {
         props.put("user", ci.getUser())
@@ -268,6 +255,4 @@ class MatrixSql implements Closeable {
     String safeLcUrl = url.toLowerCase()
     return ( safeLcUrl.contains("user") && safeLcUrl.contains("pass") ) || safeLcUrl.contains("@")
   }
-
-
 }

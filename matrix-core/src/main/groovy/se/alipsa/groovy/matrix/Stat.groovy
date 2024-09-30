@@ -553,9 +553,9 @@ class Stat {
     }
 
     static Matrix frequency(List<?> column) {
-        Map<Object, AtomicInteger> freq = new HashMap<>()
+        Map<String, AtomicInteger> freq = new HashMap<>()
         column.forEach(v -> {
-            freq.computeIfAbsent(v, k -> new AtomicInteger(0)).incrementAndGet()
+            freq.computeIfAbsent(String.valueOf(v), k -> new AtomicInteger(0)).incrementAndGet()
         })
         int size = column.size()
         List<List<?>> matrix = []
@@ -570,6 +570,7 @@ class Stat {
             .rows(matrix)
             .types([String, int, BigDecimal])
             .build()
+        .orderBy((FREQUENCY_FREQUENCY): true, (FREQUENCY_VALUE): false)
     }
 
     static Matrix frequency(Matrix table, String columnName) {
