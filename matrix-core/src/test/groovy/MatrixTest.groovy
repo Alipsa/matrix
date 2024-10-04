@@ -284,6 +284,11 @@ class MatrixTest {
       return it[2].isAfter(LocalDate.of(2022, 10, 1))
     }
     assertIterableEquals([[3, 'Lotte', LocalDate.of(2023, 5, 27)]], rows)
+    // We can refer to a row column as a property
+    def row = rows[0]
+    assertEquals(3, row.place)
+    assertEquals('Lotte', row.firstname)
+    assertEquals(LocalDate.of(2023, 5, 27), row.start)
   }
 
   @Test
