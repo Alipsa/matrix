@@ -23,6 +23,28 @@ class Row implements List<Object> {
         this.parent = parent
     }
 
+    /**
+     * Enable use of ginq and other libraries that wants to access the row like a bean
+     *
+     * @param propertyName the column name
+     * @return the corresponding value
+     */
+    @Override
+    Object getProperty(String propertyName) {
+        getAt(propertyName)
+    }
+
+    /**
+     * Add support for other libraries to treat the row as a bean
+     *
+     * @param propertyName the column name
+     * @param newValue the new value to set
+     */
+    @Override
+    void setProperty(String propertyName, Object newValue) {
+        putAt(propertyName, newValue)
+    }
+
     @Override
     int size() {
         return content.size()

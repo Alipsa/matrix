@@ -47,6 +47,8 @@
 - changed some Matrix methods (e.g. the convert, apply, removeRows and orderBy methods) to mutate to make things more consistent
 - Add Matrix.moveRow()
 - Add Matrix.subset() for an IntRange of rows
+- Enable using ginq by overriding get and set Property on a Row
+  
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

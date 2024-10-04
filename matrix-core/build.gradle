@@ -60,7 +60,8 @@ dependencies {
   testImplementation 'org.apache.commons:commons-math3:3.6.1'
   testImplementation 'com.h2database:h2:2.3.232'
   testImplementation "org.apache.groovy:groovy-sql:$groovyVersion"
-  //testImplementation "org.apache.groovy:groovy-ginq:$groovyVersion"
+  testImplementation "org.apache.groovy:groovy-ginq:$groovyVersion"
+  //testImplementation "org.apache.groovy:groovy-json:$groovyVersion"
 }
 
 test {

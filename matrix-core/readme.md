@@ -413,6 +413,32 @@ assertEquals(4, bar[1, 0])
 assertEquals(6, bar[2, 0])
 ```   
 
+### Using Ginq
+Groovy Integrated queries can be used on Matrix rows. 
+You needs to add groovy-ginq as a dependency, and then you can do things like:
+
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+
+Matrix m = Matrix.builder().data(
+    name: ['Orange', 'Apple', 'Banana', 'Mango', 'Durian'],
+    price: [11,6,4,29,32])
+.types(String, int)
+.build()
+
+def expected = [['Mango', 29], ['Orange', 11], ['Apple', 6], ['Banana', 4]]
+
+def result = GQ {
+  from f in m.rows()
+  where f.price < 32
+  orderby f.price in desc
+  select f.name, f.price
+}.toList()
+assert expected == result
+
+```
+See [using ginq](https://groovy-lang.org/using-ginq.html) for more info about ginq.
+
 See [tests](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/MatrixTest.groovy) for more usage examples or
 the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/latest/index.html) for more info.
 
