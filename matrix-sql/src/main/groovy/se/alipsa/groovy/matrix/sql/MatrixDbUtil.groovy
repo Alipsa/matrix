@@ -38,8 +38,19 @@ class MatrixDbUtil {
    * @param primaryKey name(s) of the primary key columns
    */
   Map create(Connection con, Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
+    create(tableName(table), con, table, props, primaryKey)
+  }
+
+  /**
+   * create table and insert the table data.
+   *
+   * @param table the table to copy to the db
+   * @param props a map containing the column name and a map containing sizing information using the SqlTypeMapper
+   * constants as key and the size as value
+   * @param primaryKey name(s) of the primary key columns
+   */
+  Map create(String tableName, Connection con, Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
     Map result = [:]
-    String tableName = tableName(table)
 
     String sql = createTableDdl(tableName, table, props, primaryKey)
     result.sql = sql
@@ -48,7 +59,7 @@ class MatrixDbUtil {
         throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
       }
       result.ddlResult = stm.execute(sql)
-      result.inserted = insert(con, table)
+      result.inserted = insert(con, tableName, table)
     }
     result
   }
@@ -75,6 +86,11 @@ class MatrixDbUtil {
   Map create(Connection con, Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
     Map<String,Map<String, Integer>> mappings = createMappings(table, scanNumRows)
     return create(con, table, mappings, primaryKey)
+  }
+
+  Map create(String tableName, Connection con, Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
+    Map<String,Map<String, Integer>> mappings = createMappings(table, scanNumRows)
+    return create(tableName, con, table, mappings, primaryKey)
   }
 
   Map<String,Map<String, Integer>> createMappings(Matrix table, int scanNumRows) {
@@ -164,7 +180,11 @@ class MatrixDbUtil {
   }
 
   int insert(Connection con, Matrix table) throws SQLException {
-    String insertSql = SqlGenerator.createPreparedInsertSql(table)
+    insert(con, tableName(table), table)
+  }
+
+  int insert(Connection con, String tableName, Matrix table) throws SQLException {
+    String insertSql = SqlGenerator.createPreparedInsertSql(tableName, table)
     try(PreparedStatement stm = con.prepareStatement(insertSql)) {
       for (Row row : table) {
         int i = 1
@@ -195,5 +215,9 @@ class MatrixDbUtil {
         return stm.getUpdateCount()
       }
     }
+  }
+
+  static ResultSet asResultSet(Matrix matrix) {
+
   }
 }

@@ -89,6 +89,10 @@ class MatrixSql implements Closeable {
     matrixDbUtil.create(connect(), table, scanNumRows, primaryKey)
   }
 
+  Map create(String tableName, Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
+    matrixDbUtil.create(tableName, connect(), table, scanNumRows, primaryKey)
+  }
+
   /**
    * create a table corresponding to the Matrix and insert the matrix data.
    *
@@ -104,6 +108,10 @@ class MatrixSql implements Closeable {
    */
   Map create(Matrix table, String... primaryKey) throws SQLException {
     create(table, Math.max(100, table.rowCount()), primaryKey)
+  }
+
+  Map create(String tableName, Matrix table, String... primaryKey) throws SQLException {
+    create(tableName, table, Math.max(100, table.rowCount()), primaryKey)
   }
 
   /**

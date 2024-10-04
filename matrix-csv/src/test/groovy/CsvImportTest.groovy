@@ -19,6 +19,16 @@ class CsvImportTest {
     assertEquals(4, basic.rowCount(), "Number of rows")
     assertEquals(['id', 'name', 'date', 'amount'], basic.columnNames(), "Column names")
     assertEquals(['4', 'Arne', '2023-07-01', '222.99'], basic.row(3), "last row")
+
+    Matrix b = CsvImporter.importCsv((CsvImporter.Format.Trim): true, url)
+    assertEquals(4, b.rowCount(), "Number of rows")
+    assertEquals(['id', 'name', 'date', 'amount'], b.columnNames(), "Column names")
+    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], b.row(3), "last row")
+
+    Matrix b2 = CsvImporter.importCsv(Trim: true, url)
+    assertEquals(4, b2.rowCount(), "Number of rows")
+    assertEquals(['id', 'name', 'date', 'amount'], b2.columnNames(), "Column names")
+    assertEquals(['4', 'Arne', '2023-07-01', '222.99'], b2.row(3), "last row")
   }
 
   @Test
@@ -35,6 +45,28 @@ class CsvImportTest {
     assertEquals(4, matrix.rowCount(), "Number of rows")
     assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
     assertEquals(['4', 'Arne', '2023-Jul-01', '222,99'], matrix.row(3), "last row")
+
+    Matrix m = CsvImporter.importCsv(
+        (CsvImporter.Format.Trim): true,
+        (CsvImporter.Format.Delimiter): ';',
+        (CsvImporter.Format.IgnoreEmptyLines): true,
+        (CsvImporter.Format.Quote): '"',
+        (CsvImporter.Format.Header): ['id', 'name', 'date', 'amount'],
+        url)
+    assertEquals(4, m.rowCount(), "Number of rows \\n ${m.content()}")
+    assertEquals(['id', 'name', 'date', 'amount'], m.columnNames(), "Column names")
+    assertEquals(['4', 'Arne', '2023-Jul-01', '222,99'], m.row(3), "last row")
+
+    Matrix m2 = CsvImporter.importCsv(
+        Trim: true,
+        Delimiter: ';',
+        IgnoreEmptyLines: true,
+        Quote: '"',
+        Header: ['id', 'name', 'date', 'amount'],
+        url)
+    assertEquals(4, m2.rowCount(), "Number of rows: \n ${m2.content()}")
+    assertEquals(['id', 'name', 'date', 'amount'], m2.columnNames(), "Column names")
+    assertEquals(['4', 'Arne', '2023-Jul-01', '222,99'], m2.row(3), "last row")
 
     Matrix table = matrix.clone().convert(
         ["id": Integer,

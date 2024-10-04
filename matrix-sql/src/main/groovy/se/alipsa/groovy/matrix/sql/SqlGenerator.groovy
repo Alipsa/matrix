@@ -22,8 +22,8 @@ class SqlGenerator {
     return sql
   }
 
-  static String createPreparedInsertSql(Matrix table) {
-    StringBuilder sql = new StringBuilder("insert into " + MatrixDbUtil.tableName(table) + " ( ")
+  static String createPreparedInsertSql(String tableName, Matrix table) {
+    StringBuilder sql = new StringBuilder("insert into " + tableName + " ( ")
     List<String> columnNames = table.columnNames()
 
     sql.append('"').append(String.join('", "', columnNames)).append('"')
