@@ -227,16 +227,15 @@ class MatrixTest {
     assertEquals(2, rows.size())
 
     // Same thing using subset
-    def subSet = table.subset('place', { it > 1 })
+    def subSet = table.subset({ it.place > 1 })
     assertIterableEquals(table.rows(1..2), subSet.rows(), subSet.content())
 
     def subSet2 = table.subset { it[0] > 1 }
     assertIterableEquals(table.rows(1..2), subSet2.rows())
 
     def subSet3 = table.subset {
-      String name = it[1]
-      !name.startsWith('Ma')
-          && asLocalDate(it[2]).isBefore(LocalDate.of(2022, 10, 1))
+      !it.firstname.startsWith('Ma')
+          && asLocalDate(it.start).isBefore(LocalDate.of(2022, 10, 1))
     }
     assertEquals(table[0, 1], subSet3[0, 1])
 

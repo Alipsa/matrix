@@ -53,7 +53,6 @@ dependencies {
   def groovyVersion = '4.0.23'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
-  //compileOnly "org.apache.groovy:groovy-ginq:$groovyVersion"
   testImplementation groovy
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.1'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.1'

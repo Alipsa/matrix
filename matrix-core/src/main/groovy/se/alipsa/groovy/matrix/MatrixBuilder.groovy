@@ -33,6 +33,10 @@ class MatrixBuilder {
     columnNames(colNames as List<String>)
   }
 
+  MatrixBuilder columnNames(Matrix template) {
+    columnNames(template.columnNames())
+  }
+
   /**
    * Populate the data of the Matrix. Use only one of rows, columns or data methods i.e.
    * either provide the rows (observations) or the columns (variables) or one of the data methods
@@ -308,6 +312,10 @@ class MatrixBuilder {
     this
   }
 
+  MatrixBuilder types(Matrix template) {
+    types(template.types())
+  }
+
   private boolean noColumnNames() {
     headerList == null || headerList.isEmpty()
   }
@@ -323,5 +331,4 @@ class MatrixBuilder {
   private boolean noName() {
     name == null || name.isBlank()
   }
-
 }

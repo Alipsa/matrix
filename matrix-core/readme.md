@@ -422,19 +422,33 @@ import se.alipsa.groovy.matrix.Matrix
 
 Matrix m = Matrix.builder().data(
     name: ['Orange', 'Apple', 'Banana', 'Mango', 'Durian'],
-    price: [11,6,4,29,32])
-.types(String, int)
-.build()
+    price: [11,6,4,29,32],
+    stock: [2,3,1,10,9])
 
-def expected = [['Mango', 29], ['Orange', 11], ['Apple', 6], ['Banana', 4]]
+    .types(String, int, int)
+    .build()
+
+def expected = [['Mango', 29, 10], ['Orange', 11, 2], ['Apple', 6, 3], ['Banana', 4, 1]]
 
 def result = GQ {
   from f in m.rows()
   where f.price < 32
   orderby f.price in desc
-  select f.name, f.price
-}.toList()
-assert expected == result
+  select f.name, f.price, f.stock
+}
+
+assert expected == result.toList()
+
+// The same thing using matrix built in query capabilities:
+def exp = m.subset{it.price < 32}.orderBy('price', true)
+// We can construct a Matrix from the query result
+Matrix m2 = Matrix.builder()
+    .rows(result.toList())
+    .columnNames(m) // copy the column names from the original matrix
+    .types(m) // copy the types from the original matrix
+    .build()
+
+assert exp == m2
 
 ```
 See [using ginq](https://groovy-lang.org/using-ginq.html) for more info about ginq.
