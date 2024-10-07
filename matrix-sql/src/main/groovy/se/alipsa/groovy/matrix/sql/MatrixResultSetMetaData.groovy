@@ -1,5 +1,7 @@
 package se.alipsa.groovy.matrix.sql
 
+import se.alipsa.groovy.datautil.DataBaseProvider
+import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.groovy.matrix.Matrix
 
 import java.sql.ResultSetMetaData
@@ -7,6 +9,7 @@ import java.sql.SQLException
 
 class MatrixResultSetMetaData implements ResultSetMetaData {
   Matrix matrix
+  SqlTypeMapper sqlTypeMapper = SqlTypeMapper.create(DataBaseProvider.UNKNOWN)
 
   MatrixResultSetMetaData(Matrix matrix) {
     this.matrix = matrix
@@ -209,11 +212,11 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    * @param column the first column is 1, the second is 2, ...
    * @return SQL type from java.sql.Types
    * @throws SQLException if a database access error occurs
-   * @see Types
+   * @see java.sql.Types
    */
   @Override
   int getColumnType(int column) throws SQLException {
-    return 0
+    sqlTypeMapper.jdbcType(matrix.type(column-1))
   }
 
   /**
@@ -226,7 +229,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnTypeName(int column) throws SQLException {
-    return null
+    sqlTypeMapper.sqlType(matrix.type(column-1))
   }
 
   /**
@@ -250,7 +253,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isWritable(int column) throws SQLException {
-    return false
+    return true
   }
 
   /**
@@ -262,7 +265,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isDefinitelyWritable(int column) throws SQLException {
-    return false
+    return true
   }
 
   /**
@@ -282,7 +285,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnClassName(int column) throws SQLException {
-    return null
+    return matrix.type(column -1).toString()
   }
 
   /**
@@ -303,7 +306,13 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    * @since 1.6
    */
   @Override
-  def <T> T unwrap(Class<T> iface) throws SQLException {
+  <T> T unwrap(Class<T> iface) throws SQLException {
+    if (iface == Matrix) {
+      return matrix as T
+    }
+    if (iface == List) {
+      return matrix.rows() as T
+    }
     return null
   }
 
@@ -324,6 +333,9 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isWrapperFor(Class<?> iface) throws SQLException {
+    if (iface == Matrix || iface == List) {
+      return true
+    }
     return false
   }
 }

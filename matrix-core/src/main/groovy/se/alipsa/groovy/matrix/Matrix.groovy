@@ -1226,12 +1226,41 @@ class Matrix implements Iterable<Row> {
    * to convert the type.
    *
    * @param row the observation to get
+   * @param column the variable to get
+   * @param type the class that the the value should be converted to
+   * @param valIfNull value to replace a missing (null) value
+   * @return a value of the type specified
+   */
+  <T> T getAt(int row, int column, Class<T> type, T valIfNull) {
+    getAt(row, column, type) ?: valIfNull
+  }
+
+  /**
+   * Convenience method with built in type conversion
+   * A LocalDate variable with the value LocalDate.of(2021, 12, 1)
+   * in the first row, second column will have
+   * assert '2021-12-01' == table[0, 1, String]. The ValueConverter is used
+   * to convert the type.
+   *
+   * @param row the observation to get
    * @param columnName the variable to get
    * @param type the class that the the value should be converted to
    * @return a value of the type specified
    */
   <T> T getAt(int row, String columnName, Class<T> type) {
     return ValueConverter.convert(get(row, columnIndex(columnName)), type)
+  }
+
+  /**
+   *
+   * @param row the observation to get
+   * @param columnName the variable to get
+   * @param type the class that the the value should be converted to
+   * @param valIfNull value to replace a missing (null) value
+   * @return
+   */
+  <T> T getAt(int row, String columnName, Class<T> type, T valIfNull) {
+    getAt(row, columnName, type) ?: valIfNull
   }
 
   /**
