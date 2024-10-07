@@ -758,6 +758,9 @@ class Matrix implements Iterable<Row> {
     convert(types, dateTimeFormatter, numberFormat)
   }
 
+  <T> Matrix convert(Class<T> type, T valueIfNull, DateTimeFormatter = null, NumberFormat = null) {
+  }
+
   /**
    * Convert the columns in the order of a list to the classes specified
    * @param types a list of column types (classes)
