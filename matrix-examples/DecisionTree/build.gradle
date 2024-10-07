@@ -33,7 +33,7 @@ dependencies {
     implementation 'se.alipsa.groovy:matrix-datasets:1.0.3'
     implementation 'se.alipsa.groovy:matrix-stats:1.0.1'
     implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
-    testImplementation platform('org.junit:junit-bom:5.11.1')
+    testImplementation platform('org.junit:junit-bom:5.11.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 

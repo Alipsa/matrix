@@ -67,7 +67,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isCurrency(int column) throws SQLException {
-    return Number.isAssignableFrom(matrix.type(column))
+    return Number.isAssignableFrom(matrix.type(column-1))
   }
 
   /**
@@ -92,7 +92,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   boolean isSigned(int column) throws SQLException {
-    return Number.isAssignableFrom(matrix.type(column))
+    return Number.isAssignableFrom(matrix.type(column-1))
   }
 
   /**
@@ -105,7 +105,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   int getColumnDisplaySize(int column) throws SQLException {
-    matrix.maxContentLength(matrix.columnName(column), false)
+    matrix.maxContentLength(matrix.columnName(column-1), false)
   }
 
   /**
@@ -121,7 +121,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnLabel(int column) throws SQLException {
-    return null
+    return matrix.columnName(column-1)
   }
 
   /**
@@ -133,7 +133,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnName(int column) throws SQLException {
-    return null
+    return matrix.columnName(column-1)
   }
 
   /**
@@ -145,7 +145,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getSchemaName(int column) throws SQLException {
-    return null
+    return ""
   }
 
   /**
@@ -187,7 +187,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getTableName(int column) throws SQLException {
-    return null
+    return matrix.name
   }
 
   /**
@@ -200,7 +200,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getCatalogName(int column) throws SQLException {
-    return null
+    return ""
   }
 
   /**
