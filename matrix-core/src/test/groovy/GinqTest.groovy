@@ -54,16 +54,15 @@ class GinqTest {
     ).types(LocalDate, int)
     .build()
 
-    def q = GQ {
-      from s in sales.rows()
-      join w in warehouse.rows() on w.id == s.item
-      select w.name, w.price
-    }
     def q2 = GQ {
-      from s in q
-      groupby s.name
-      orderby s.name
-      select s.name, sum(s.price)
+      from n in (
+        from s in sales.rows()
+        join w in warehouse.rows() on w.id == s.item
+        select w.name, w.price
+      )
+      groupby n.name
+      orderby n.name
+      select n.name, sum(n.price)
     }
     def m = Matrix.builder()
         .rows(q2.toList())
@@ -97,19 +96,22 @@ class GinqTest {
     }
   }
 
-  //@Test
-  void testJoin2() {
-     List<Warehouse> warehouse = [
+  @Test
+  void testJoinFromPojos() {
+     Matrix warehouse = Matrix.builder().data([
         new Warehouse(1, 'Orange', 11, 2),
         new Warehouse(2, 'Apple', 6, 3),
         new Warehouse(3, 'Banana', 4, 1),
         new Warehouse(4, 'Mango', 29, 10)
-    ]
-    List<Sales> sales = [
+    ]).build()
+    Matrix sales = Matrix.builder().data([
         new Sales(LocalDate.of(2024, 5, 1), 1),
         new Sales(LocalDate.of(2024, 5, 2), 1),
         new Sales(LocalDate.of(2024, 5, 3), 3)
-    ]
+    ]).build()
+
+    // a matrix is iterable so can be used directly (no need to call matrix.rows())
+    // even though intellij is not happy about it
     def q = GQ {
       from s in sales
       join w in warehouse on w.id == s.item
@@ -123,9 +125,9 @@ class GinqTest {
       orderby w.name in desc
       select w.name, sum(w.price)
     }
-    println q2
     assertIterableEquals([['Orange', 22.0], ['Banana', 4.0]], q2.toList())
 
+    /*
     // however, doing it all in one go does not work:
     def qSum = GQ {
       from s in sales
@@ -135,6 +137,17 @@ class GinqTest {
       select w.name, sum(w.price)
     }
     // Fails with No such property: price for class: GinqTest$Sales
+     */
+    // subselect however, works:
+    def qSum = GQ {
+      from n in (
+        from s in sales
+        join w in warehouse on w.id == s.item
+        select w.name, w.price)
+      groupby n.name
+      orderby n.name in desc
+      select n.name, sum(n.price) as price
+    }
     assertIterableEquals([['Orange', 22.0], ['Banana', 4.0]], qSum.toList())
   }
 }

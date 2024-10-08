@@ -420,7 +420,7 @@ You needs to add groovy-ginq as a dependency, and then you can do things like:
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
 
-Matrix m = Matrix.builder().data(
+Matrix stock = Matrix.builder().data(
     name: ['Orange', 'Apple', 'Banana', 'Mango', 'Durian'],
     price: [11,6,4,29,32],
     stock: [2,3,1,10,9])
@@ -431,7 +431,7 @@ Matrix m = Matrix.builder().data(
 def expected = [['Mango', 29, 10], ['Orange', 11, 2], ['Apple', 6, 3], ['Banana', 4, 1]]
 
 def result = GQ {
-  from f in m.rows()
+  from f in stock
   where f.price < 32
   orderby f.price in desc
   select f.name, f.price, f.stock
