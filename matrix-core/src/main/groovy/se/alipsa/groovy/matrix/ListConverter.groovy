@@ -12,13 +12,13 @@ import java.time.format.DateTimeFormatter
 @CompileStatic
 class ListConverter {
 
-  static <T> List<T> convert(List<?> list, @NotNull Class<T> type,
+  static <T> List<T> convert(List<?> list, @NotNull Class<T> type, T valueIfNull = null,
                              DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     List<T> c = []
     list.eachWithIndex { it, idx ->
       try {
         if (it == null) {
-          c.add(null)
+          c.add(valueIfNull)
         } else if (it.class.isAssignableFrom(type)) {
           c.add(type.cast(it))
         } else {

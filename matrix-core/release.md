@@ -50,6 +50,7 @@
 - Enable using ginq by overriding get and set Property on a Row
 - add support in MatrixBuilder for building from an existing Matrix
 - add option to set default value if null to matrix getAt methods
+- add support for null substitution to Matrix.convert methods by overloading them.
   
 
 ### 1.2.4, 2024-07-04

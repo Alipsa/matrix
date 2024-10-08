@@ -171,7 +171,7 @@ class MatrixTest {
     def table = Matrix.builder().data(data).types([String] * 4).build()
 
     def table2 = table.clone().convert(place: Integer, start: LocalDate)
-    table2.convert([end: LocalDateTime],
+    table2.convert(end: LocalDateTime,
         DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss'))
     assertEquals(Integer, table2.type('place'))
     assertEquals(Integer, table2[0, 0].class)
@@ -475,7 +475,7 @@ class MatrixTest {
         emp_id: 1..5,
         emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
         salary: [623.3, 515.2, 611.0, 729.0, 843.25],
-        start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11"))
+        start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-01-01", "2014-11-15", "2014-05-11"))
         .types([Integer, String, Number, LocalDate])
         .build()
     def dateSorted = empData.orderBy("start_date")
@@ -486,6 +486,9 @@ class MatrixTest {
     def salarySorted = empData.orderBy(["salary": Matrix.DESC])
     assertEquals(843.25, salarySorted["salary"][0], "Highest salary: ${salarySorted.content()}")
     assertEquals(515.2, salarySorted["salary"][4], "Lowest salary: ${salarySorted.content()}")
+
+    def dateSalarySorted = empData.orderBy(["start_date", "salary"])
+    assertIterableEquals([2,3,1,5,4], dateSalarySorted['emp_id'], dateSalarySorted.content())
   }
 
   @Test

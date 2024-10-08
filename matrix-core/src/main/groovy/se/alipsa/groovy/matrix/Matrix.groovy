@@ -755,10 +755,17 @@ class Matrix implements Iterable<Row> {
    */
   <T> Matrix convert(Class<T> type, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     List<Class<T>> types = [type]*columnCount()
-    convert(types, dateTimeFormatter, numberFormat)
+    convert(types, null, dateTimeFormatter, numberFormat)
   }
 
-  <T> Matrix convert(Class<T> type, T valueIfNull, DateTimeFormatter = null, NumberFormat = null) {
+  <T> Matrix convert(Class<T> type, T valueIfNull, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+    List<Class<T>> types = [type]*columnCount()
+    convert(types, valueIfNull, dateTimeFormatter, numberFormat)
+  }
+
+
+  Matrix convert(List<Class<?>> types, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+    convert(types, null, dateTimeFormatter, numberFormat)
   }
 
   /**
@@ -768,7 +775,7 @@ class Matrix implements Iterable<Row> {
    * @param numberFormat an optional NumberFormat
    * @return this Matrix converted as specified
    */
-  Matrix convert(List<Class<?>> types, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+  Matrix convert(List<Class<?>> types, Object valueIfNull, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     if (types.size() > columnCount()) {
       throw new IllegalArgumentException("There are more column types specified (${types.size()}) than there are columns in this matrix (${columnCount()})")
     }
@@ -776,10 +783,14 @@ class Matrix implements Iterable<Row> {
     for (int i = 0; i < types.size(); i++) {
       columnTypeMap[columnName(i)] =types[i]
     }
-    return convert(columnTypeMap, dateTimeFormatter, numberFormat)
+    return convert(columnTypeMap, valueIfNull, dateTimeFormatter, numberFormat)
   }
 
   Matrix convert(Map<String, Class<?>> types, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+    convert(types, null, dateTimeFormatter, numberFormat)
+  }
+
+  Matrix convert(Map<String, Class<?>> types, Object valueIfNull, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     List<List<?>> convertedColumns = []
     List<Class<?>> convertedTypes = []
     for (int i = 0; i < columnCount(); i++) {
@@ -788,6 +799,7 @@ class Matrix implements Iterable<Row> {
         convertedColumns.add(ListConverter.convert(
                 column(i),
                 types[colName] as Class<Object>,
+                valueIfNull,
                 dateTimeFormatter,
                 numberFormat)
         )
@@ -804,12 +816,20 @@ class Matrix implements Iterable<Row> {
     this
   }
 
-  Matrix convert(String columnName, Class<?> type, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
-    return convert([(columnName): type], dateTimeFormatter, numberFormat)
+  <T> Matrix convert(String columnName, Class<T> type, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+    return convert([(columnName): type], null, dateTimeFormatter, numberFormat)
   }
 
-  Matrix convert(int columnIndex, Class<?> type, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
-    convert(columnName(columnIndex), type, dateTimeFormatter, numberFormat)
+  <T> Matrix convert(String columnName, Class<T> type, T valueIfNull, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+    return convert([(columnName): type], valueIfNull, dateTimeFormatter, numberFormat)
+  }
+
+  <T> Matrix convert(int columnIndex, Class<T> type, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+    convert(columnIndex, type, null, dateTimeFormatter, numberFormat)
+  }
+
+  <T> Matrix convert(int columnIndex, Class<T> type, T valueIfNull, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+    convert(columnName(columnIndex), type, valueIfNull, dateTimeFormatter, numberFormat)
   }
 
   Matrix convert(String columnName, Class<?> type, Closure converter) {
@@ -889,12 +909,12 @@ class Matrix implements Iterable<Row> {
     return builder().name(mName).columnNames(mHeaders).rows(convertedRows).types(convertedTypes).build()
   }
 
-  Matrix convert(IntRange columns, Class<?> type, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+  <T> Matrix convert(IntRange columns, Class<T> type, T valueIfNull = null, DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
     Map<String, Class<?>> map = [:]
     columns.each {
       map.put((columnName(it)), type)
     }
-    convert(map, dateTimeFormatter, numberFormat)
+    convert(map, valueIfNull, dateTimeFormatter, numberFormat)
   }
 
   int columnCount() {
@@ -1442,7 +1462,6 @@ class Matrix implements Iterable<Row> {
   @Override
   Iterator<Row> iterator() {
     return rows().iterator()
-    //return new RowIterator(this)
   }
 
   /**
