@@ -23,6 +23,17 @@ import java.sql.Statement
 import java.sql.Time
 import java.sql.Timestamp
 
+/**
+ * This is Result set representation of a Matrix.
+ * It is detached from the Matrix used to clone it so any update operation or similar will
+ * not affect the underlying Matrix. To get the Matrix from this resultset you call unwrap. E.g:
+ * <code><pre>
+ * // update the first column in the first row:
+ * rs.first().updateString(1, "Foo")
+ * Matrix m = rs.unwrap(Matrix)
+ * assert m[0,0] == "Foo"
+ * </pre></code>
+ */
 class MatrixResultSet implements ResultSet{
 
   int rowIdx = -1
@@ -30,6 +41,11 @@ class MatrixResultSet implements ResultSet{
   Object lastReadValue
   SqlTypeMapper sqlTypeMapper = SqlTypeMapper.create(DataBaseProvider.UNKNOWN)
 
+  /**
+   * Constructor to create a ResultSet from a Matrix.
+   *
+   * @param matrix the matrix containing the data, note that a cloned copy of it will be used
+   */
   MatrixResultSet(Matrix matrix) {
     this.matrix = matrix.clone()
   }
@@ -425,7 +441,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   String getString(String columnLabel) throws SQLException {
-    getString(matrix.columnIndex(columnLabel))
+    getString(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -449,7 +465,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   boolean getBoolean(String columnLabel) throws SQLException {
-    getBoolean(matrix.columnIndex(columnLabel))
+    getBoolean(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -466,7 +482,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   byte getByte(String columnLabel) throws SQLException {
-    getByte(matrix.columnIndex(columnLabel))
+    getByte(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -483,7 +499,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   short getShort(String columnLabel) throws SQLException {
-    getShort(matrix.columnIndex(columnLabel))
+    getShort(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -500,7 +516,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   int getInt(String columnLabel) throws SQLException {
-    getInt(matrix.columnIndex(columnLabel))
+    getInt(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -517,7 +533,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   long getLong(String columnLabel) throws SQLException {
-    getLong(matrix.columnIndex(columnLabel))
+    getLong(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -534,7 +550,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   float getFloat(String columnLabel) throws SQLException {
-    getFloat(matrix.columnIndex(columnLabel))
+    getFloat(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -551,13 +567,13 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   double getDouble(String columnLabel) throws SQLException {
-   getDouble(matrix.columnIndex(columnLabel))
+   getDouble(matrix.columnIndex(columnLabel)+1)
   }
 
   /** @deprecated */
   @Override
   BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
-    getBigDecimal(matrix.columnIndex(columnLabel))
+    getBigDecimal(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -575,7 +591,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   byte[] getBytes(String columnLabel) throws SQLException {
-    getBytes(matrix.columnIndex(columnLabel))
+    getBytes(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -592,7 +608,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   Date getDate(String columnLabel) throws SQLException {
-    getDate(matrix.columnIndex(columnLabel))
+    getDate(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -610,7 +626,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   Time getTime(String columnLabel) throws SQLException {
-   getTime(matrix.columnIndex(columnLabel))
+   getTime(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -627,7 +643,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   Timestamp getTimestamp(String columnLabel) throws SQLException {
-    getTimestamp(matrix.columnIndex(columnLabel))
+    getTimestamp(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -656,13 +672,13 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   InputStream getAsciiStream(String columnLabel) throws SQLException {
-    getAsciiStream(matrix.columnIndex(columnLabel))
+    getAsciiStream(matrix.columnIndex(columnLabel)+1)
   }
 
   /** @deprecated */
   @Override
   InputStream getUnicodeStream(String columnLabel) throws SQLException {
-    getUnicodeStream(matrix.columnIndex(columnLabel))
+    getUnicodeStream(matrix.columnIndex(columnLabel)+1)
   }
 
   /**
@@ -690,7 +706,7 @@ class MatrixResultSet implements ResultSet{
    */
   @Override
   InputStream getBinaryStream(String columnLabel) throws SQLException {
-    getBinaryStream(matrix.columnIndex(columnLabel))
+    getBinaryStream(matrix.columnIndex(columnLabel)+1)
   }
 
   /**

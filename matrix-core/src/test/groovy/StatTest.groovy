@@ -334,13 +334,15 @@ class StatTest {
     Matrix m = Matrix.builder().data(
         foo: [1.0,2.0,3.0],
         bar: [5.0,6.0,7.0],
-        baz: [2.0, 3.0, 4.0]
-    ).types([BigDecimal]*3)
+        baz: [2.0, 3.0, 4.0],
+        qux: [3.0, 1.0, 9.0]
+    ).types([BigDecimal]*4)
     .build()
-    def means = meanRows(m, [0, 2])
-    assert [1.5, 2.5, 3.5] == means
+    assert [1.5, 2.5, 3.5] == meanRows(m, [0, 2])
     assert [3.0, 4.0, 5.0] == meanRows(m, 0..1)
     assert [3.0, 4.0, 5.0] == meanRows(m, 'foo', 'bar')
+    assert [2.75, 3.0, 5.75] == meanRows(m, 0..3)
+    assert [2.75, 3.0, 5.75] == meanRows(m)
   }
 
   @Test
@@ -348,13 +350,15 @@ class StatTest {
     Matrix m = Matrix.builder().data(
         foo: [1.0,2.0,3.0],
         bar: [5.0,6.0,7.0],
-        baz: [2.0, 3.0, 4.0]
-    ).types([BigDecimal]*3)
+        baz: [2.0, 3.0, 4.0],
+        qux: [3.0, 1.0, 9.0]
+    ).types([BigDecimal]*4)
         .build()
     def sums = sumRows(m, [0, 2])
     assert [3.0, 5.0, 7.0] == sums
     assert [6.0, 8.0, 10.0] == sumRows(m, 0..1)
     assert [6.0, 8.0, 10.0] == sumRows(m, 'foo', 'bar')
+    assert [11.0, 12.0, 23.0] == sumRows(m)
   }
 
   @Test
@@ -366,8 +370,12 @@ class StatTest {
         qux: [3.0, 1.0, 9.0]
     ).types([BigDecimal]*4)
         .build()
-    assert [2.0, 3.0, 4.0] == medianRows(m, [0, 2, 3])
-    assert [5.0, 6.0, 7.0] == medianRows(m, 0..2)
-    assert [5.0, 6.0, 7.0] == medianRows(m, 'foo', 'bar', 'baz')
+
+    println m.content()
+    assert [2.0, 2.0, 4.0] == medianRows(m, [0, 2, 3])
+    assert [2.0, 3.0, 4.0] == medianRows(m, 0..2)
+    assert [2.0, 3.0, 4.0] == medianRows(m, 'foo', 'bar', 'baz')
+    assert [2.5, 2.5, 5.5] == medianRows(m, 0..3)
+    assert [2.5, 2.5, 5.5] == medianRows(m)
   }
 }

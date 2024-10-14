@@ -189,6 +189,9 @@ class Stat {
 
     static <T extends Number> List<T> sumRows(Matrix m, String... colNames) {
         List<T> means = []
+        if (colNames.length == 0) {
+            colNames = m.columnNames()
+        }
         m.each { row ->
             means << sum(row[colNames])
         }
@@ -321,9 +324,12 @@ class Stat {
         means
     }
 
-    static List<BigDecimal> meanRows(Matrix table, String... colNames) {
+    static List<BigDecimal> meanRows(Matrix m, String... colNames) {
         List<BigDecimal> means = []
-        table.each { row ->
+        if (colNames.length == 0) {
+            colNames = m.columnNames()
+        }
+        m.each { row ->
             means << mean(row[colNames])
         }
         means
@@ -401,9 +407,18 @@ class Stat {
         means
     }
 
-    static List<BigDecimal> medianRows(Matrix table, String... colNames) {
+    /**
+     *
+     * @param m the matrix containing the data
+     * @param colNames the names of the columns to include, if omitted, all columns will be included
+     * @return a list of the row sums
+     */
+    static List<BigDecimal> medianRows(Matrix m, String... colNames) {
         List<BigDecimal> means = []
-        table.each { row ->
+        if (colNames.length == 0) {
+            colNames = m.columnNames()
+        }
+        m.each { row ->
             means << median(row[colNames])
         }
         means
@@ -416,6 +431,7 @@ class Stat {
         if (valueList.size() == 1) {
             return valueList[0]
         }
+        valueList.sort()
         if (valueList.size() % 2 == 0) {
             def index = valueList.size()/2 as int
             def val1 = valueList[index -1] as Number
