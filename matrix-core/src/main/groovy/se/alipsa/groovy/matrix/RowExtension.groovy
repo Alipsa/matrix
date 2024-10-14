@@ -6,17 +6,37 @@ package se.alipsa.groovy.matrix
  */
 class RowExtension {
 
-  static <T> T getAt(Row self, Collection indices) {
+  static Object getAt(Row self, String[] colNames) {
+    return self.subList(colNames)
+  }
+
+  static Object getAt(Row self, Collection indices) {
     //println("${this.class}: $indices")
+    if (indices instanceof IntRange) {
+      return self.subList(indices.min(), indices.max())
+    }
     if (indices.size() == 2) {
       def column = indices[0]
       if (column instanceof String) {
-        return self.getAt(indices[0] as String, indices[1] as Class<T>)
+        return self.getAt(indices[0] as String, indices[1] as Class)
       }
-      if (column instanceof Number) {
-        return self.getAt(indices[0] as Number, indices[1] as Class<T>)
+      if (column instanceof Number && indices[1] instanceof Class) {
+        return self.getAt(indices[0] as Number, indices[1] as Class)
+      }
+      if (column instanceof Number && indices[1] instanceof Number) {
+        return self.subList(indices)
+      }
+      if (column instanceof String && indices[1] instanceof String) {
+        return self.subList(indices as String[])
       }
     }
-    throw new IllegalArgumentException("Dont know what to do with ${indices.size()} parameters to getAt()")
+    if (!indices.any { ! it instanceof Number}) {
+      return self.subList(indices)
+    }
+    if (!indices.any { ! it instanceof String}) {
+      return self.subList(indices as String[])
+    }
+    throw new IllegalArgumentException("Dont know what to do with ${indices.size()} parameters ($indices) to getAt()")
   }
+
 }

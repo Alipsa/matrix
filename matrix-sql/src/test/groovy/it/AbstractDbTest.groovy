@@ -72,9 +72,11 @@ abstract class AbstractDbTest {
     long ctm2 = System.currentTimeMillis()
     dur + [dataset.name, "2. check and drop table", ctm2 - ctm1]
     if (scanNumRows.length > 0) {
-      matrixDbUtil.create(con, dataset, scanNumRows[0])
+      Map map = matrixDbUtil.create(con, dataset, scanNumRows[0])
+      //println map
     } else {
-      matrixDbUtil.create(con, dataset)
+      Map map = matrixDbUtil.create(con, dataset)
+      //println map
     }
     long ctm3 = System.currentTimeMillis()
     dur + [dataset.name, "3. create table", ctm3 - ctm2]

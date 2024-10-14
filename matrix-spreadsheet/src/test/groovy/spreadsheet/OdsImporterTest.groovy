@@ -17,7 +17,7 @@ class OdsImporterTest {
   @Test
   void testOdsImport() {
     def table = SpreadsheetImporter.importSpreadsheet(file: "Book1.ods", endRow: 12, endCol: 4, firstRowAsColNames: true)
-    table = table.convert(id: Integer, bar: LocalDate, baz: BigDecimal, DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS'))
+    table = table.convert(id: Integer, bar: LocalDate, baz: BigDecimal, 'yyyy-MM-dd HH:mm:ss.SSS')
     //println(table.content())
     assertEquals(3, table[2, 0])
     assertEquals(LocalDate.parse("2023-05-06"), table[6, 2])

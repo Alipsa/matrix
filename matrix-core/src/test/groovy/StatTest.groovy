@@ -1,6 +1,7 @@
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.Row
+import se.alipsa.groovy.matrix.Stat
 
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -166,7 +167,7 @@ class StatTest {
         v2: [null, 'Foo', "Foo"]
     ]).types([Number, double, String]).build()
     def summary = summary(table)
-    println summary
+    //println summary
     assertEquals(0.3, summary['v0']["Min"])
     assertEquals(1.1, summary['v1']["Max"])
     assertEquals(2, summary['v2']["Number of unique values"])
@@ -326,5 +327,47 @@ class StatTest {
       a * b
     }
     assertIterableEquals([0, 2, 6, 12], result)
+  }
+
+  @Test
+  void testMeanRows() {
+    Matrix m = Matrix.builder().data(
+        foo: [1.0,2.0,3.0],
+        bar: [5.0,6.0,7.0],
+        baz: [2.0, 3.0, 4.0]
+    ).types([BigDecimal]*3)
+    .build()
+    def means = meanRows(m, [0, 2])
+    assert [1.5, 2.5, 3.5] == means
+    assert [3.0, 4.0, 5.0] == meanRows(m, 0..1)
+    assert [3.0, 4.0, 5.0] == meanRows(m, 'foo', 'bar')
+  }
+
+  @Test
+  void testSumRows() {
+    Matrix m = Matrix.builder().data(
+        foo: [1.0,2.0,3.0],
+        bar: [5.0,6.0,7.0],
+        baz: [2.0, 3.0, 4.0]
+    ).types([BigDecimal]*3)
+        .build()
+    def sums = sumRows(m, [0, 2])
+    assert [3.0, 5.0, 7.0] == sums
+    assert [6.0, 8.0, 10.0] == sumRows(m, 0..1)
+    assert [6.0, 8.0, 10.0] == sumRows(m, 'foo', 'bar')
+  }
+
+  @Test
+  void testMedianRows() {
+    Matrix m = Matrix.builder().data(
+        foo: [1.0,2.0,3.0],
+        bar: [5.0,6.0,7.0],
+        baz: [2.0, 3.0, 4.0],
+        qux: [3.0, 1.0, 9.0]
+    ).types([BigDecimal]*4)
+        .build()
+    assert [2.0, 3.0, 4.0] == medianRows(m, [0, 2, 3])
+    assert [5.0, 6.0, 7.0] == medianRows(m, 0..2)
+    assert [5.0, 6.0, 7.0] == medianRows(m, 'foo', 'bar', 'baz')
   }
 }

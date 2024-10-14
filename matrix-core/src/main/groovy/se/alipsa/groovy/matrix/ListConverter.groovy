@@ -3,7 +3,9 @@ package se.alipsa.groovy.matrix
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 
+import java.sql.Date
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -13,7 +15,7 @@ import java.time.format.DateTimeFormatter
 class ListConverter {
 
   static <T> List<T> convert(List<?> list, @NotNull Class<T> type, T valueIfNull = null,
-                             DateTimeFormatter dateTimeFormatter = null, NumberFormat numberFormat = null) {
+                             String dateTimeFormat = null, NumberFormat numberFormat = null) {
     List<T> c = []
     list.eachWithIndex { it, idx ->
       try {
@@ -22,13 +24,64 @@ class ListConverter {
         } else if (it.class.isAssignableFrom(type)) {
           c.add(type.cast(it))
         } else {
-          c.add(ValueConverter.convert(it, type, dateTimeFormatter, numberFormat))
+          c.add(ValueConverter.convert(it, type, dateTimeFormat, numberFormat))
         }
       } catch (Exception e) {
         throw new ConversionException("Failed to convert \'$it\' (${it == null ? null : it.getClass().name}) to $type.name in index $idx: ${e.getMessage()}", e)
       }
     }
     return c
+  }
+
+  static List<java.util.Date> toDates(String... dates) {
+    toDates(dates as List, null)
+  }
+
+  static List<java.util.Date> toDates(List<String> dates) {
+    toDates(dates, null)
+  }
+
+  static List<java.util.Date> toDates(List<String> dates, Date valueIfNull) {
+    toDates(dates, valueIfNull, 'yyyy-MM-dd')
+  }
+
+  static List<java.util.Date> toDates(List<String> dates, java.util.Date valueIfNull, String formatPattern) {
+    def format = new SimpleDateFormat(formatPattern)
+    def dat = new ArrayList<java.util.Date>(dates.size())
+    dates.eachWithIndex { String d, int i ->
+      try {
+        def date = format.parse(d)
+        dat.add(d == null ? valueIfNull : date)
+      } catch (Exception e) {
+        throw new ConversionException("Failed to convert $d to java.util.Date in index $i", e)
+      }
+    }
+    return dat
+  }
+
+  static List<Date> toSqlDates(String... dates) {
+    toSqlDates(dates as List, null)
+  }
+
+  static List<Date> toSqlDates(List<String> dates) {
+    toSqlDates(dates, null)
+  }
+
+  static List<Date> toSqlDates(List<String> dates, Date valueIfNull) {
+    toSqlDates(dates, valueIfNull, 'yyyy-MM-dd')
+  }
+
+  static List<Date> toSqlDates(List<String> dates, Date valueIfNull, String formatPattern) {
+    def format = new SimpleDateFormat(formatPattern)
+    def dat = new ArrayList<Date>(dates.size())
+    dates.eachWithIndex { String d, int i ->
+      try {
+        dat.add(d == null ? valueIfNull : new Date(format.parse(d).getTime()))
+      } catch (Exception e) {
+        throw new ConversionException("Failed to convert $d to java.sql.Date in index $i", e)
+      }
+    }
+    return dat
   }
 
   static List<LocalDate> toLocalDates(List<String> dates) {

@@ -77,19 +77,19 @@ class GtableTest {
 
     // does not mutate the table
     Gtable joined = table.joinOn("emp_id").inner(table2, 'employee_id')
-    println joined
+    //println joined
     assertEquals(4, joined.rowCount(), 'joined rowcount, inner join should have removed a row')
     assertEquals(5, joined.columnCount(), 'joined columnCount')
 
     // mutates the table!
     table.concat(table2)
-    println(table)
+    //println(table)
     assertEquals(5, table.rowCount(), 'concat rowcount')
     assertEquals(6, table.columnCount(), 'concat columnCount')
   }
 
   @Test
-  void testSHortHandPut() {
+  void testShortHandPut() {
     def empData = [
         emp_id: 1..5,
         emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],

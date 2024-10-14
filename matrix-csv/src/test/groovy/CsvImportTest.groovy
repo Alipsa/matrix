@@ -74,7 +74,7 @@ class CsvImportTest {
          "date": LocalDate,
          "amount": BigDecimal
         ],
-        DateTimeFormatter.ofPattern("yyyy-MMM-dd"),
+        "yyyy-MMM-dd",
         NumberFormat.getInstance(Locale.GERMANY)
     )
     assertEquals(4, table.rowCount(), "Number of rows")

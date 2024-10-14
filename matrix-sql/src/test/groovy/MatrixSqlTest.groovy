@@ -99,10 +99,13 @@ class MatrixSqlTest {
       matrixSql.create(complexData)
 
       Matrix stored = matrixSql.select("* from $tableName")
-      println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
+      //println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
+      assertEquals(java.sql.Date, stored.type('start'))
+      assertEquals(ListConverter.toSqlDates('2021-12-01', '2022-07-10', '2023-05-27'), stored.column('start'))
 
       stored = stored.convert('start', LocalDate)
-      println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
+      assertEquals(LocalDate, stored.type('start'))
+      assertEquals(ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'), stored.column('start'))
     }
   }
 

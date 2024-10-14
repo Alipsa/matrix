@@ -31,9 +31,9 @@ class StudentTest {
       it[speciesIdx] == 'virginica'
     }
     Student.Result result = Student.tTest(setosa['Petal Length'], virginica['Petal Length'], false)
-    println(result)
+    //println(result)
     assertEquals(-49.98618626, result.getT(8), "t value")
-    println("var1 = ${result.var1}, var2 = ${result.var2}")
+    //println("var1 = ${result.var1}, var2 = ${result.var2}")
     assertEquals(58.60939455, result.getDf(8), "Degrees of freedom")
     assertEquals(0.17366400, result.getSd1(8), "sd1")
     assertEquals(0.55189470, result.getSd2(8), "sd2")
@@ -63,7 +63,7 @@ class StudentTest {
   void testOneSample() {
     def plantHeights = [14, 14, 16, 13, 12, 17, 15, 14, 15, 13, 15, 14]
     def t = Student.tTest(plantHeights, 15)
-    println(t)
+    //println(t)
     assertEquals(-1.68484708, t.getT(8))
     assertEquals(11, t.getDf())
     assertEquals(0.12014461, t.getP(8))
@@ -107,7 +107,7 @@ class StudentTest {
     def pre = data.subset('group', { it == 'pre' })
     def post = data.subset('group', { it == 'post' })
     def result = Student.pairedTTest(post['score'], pre['score'])
-    println(result)
+    //println(result)
     assertEquals(1.58801321, result.getT(8), 't statistic')
     assertEquals(19, result.getDf() as Integer, 'Degrees of freedom')
     assertEquals(0.128785661, result.getP(9), 'P value')

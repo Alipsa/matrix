@@ -1,6 +1,8 @@
 # Matrix core Release history
 
-### 1.3.0, In progress, note there are several api breaking changes due to extensive cleanup and consistency fixes
+### 1.3.0, In progress
+note there are several api breaking changes due to extensive cleanup and consistency fixes
+This release was mainly guided by a big port of an R based application to Groovy powered by Matrix
 - add constructor to create an empty Matrix with only name and the column names defined
 - change Grid semantics so that getAt and putAt mean the same thing
   it was so that getAt (X = grid[0]) gets the row and putAt (grid[0] = X) puts the column
@@ -51,7 +53,9 @@
 - add support in MatrixBuilder for building from an existing Matrix
 - add option to set default value if null to matrix getAt methods
 - add support for null substitution to Matrix.convert methods by overloading them.
-  
+- add MatrixBuilder.rowList to create a Matrix from a List of Rows
+- Matrix.findFirstRow() now returns a Row instead of a List<?>
+- Add Stat sumRows, meanRows, medianRows
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

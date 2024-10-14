@@ -2,8 +2,11 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.matrix.ValueConverter
 
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
+import java.time.ZoneId
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -57,5 +60,24 @@ class ValueConverterTest {
         assertFalse(ValueConverter.isNumeric('abc'))
         assertFalse(ValueConverter.isNumeric(LocalDate.now()))
         assertFalse(ValueConverter.isNumeric(null))
+    }
+
+    @Test
+    void testAsDate() {
+        assertEquals(new Date(1728667826640), ValueConverter.asDate(1728667826640))
+        assertEquals(java.sql.Date.valueOf("2024-10-11"), ValueConverter.asDate(20241011))
+        assertEquals(java.sql.Date.valueOf("2024-10-11"), ValueConverter.asDate('20241011'))
+        assertEquals(java.sql.Date.valueOf("2024-10-11"), ValueConverter.asDate("2024-10-11"))
+        assertEquals(java.sql.Date.valueOf("2024-10-11"), ValueConverter.asDate("2024/10/11", "yy/MM/dd"))
+        def ld = LocalDate.of(2024, 10, 11)
+        assertEquals(
+            ld.toString(),
+            new SimpleDateFormat("yyyy-MM-dd").format(ValueConverter.asDate(ld))
+        )
+        def ldt = LocalDateTime.now()
+        assertEquals(
+            ldt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            ValueConverter.asDate(ldt).getTime()
+        )
     }
 }

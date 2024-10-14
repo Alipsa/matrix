@@ -172,7 +172,7 @@ class MatrixTest {
 
     def table2 = table.clone().convert(place: Integer, start: LocalDate)
     table2.convert(end: LocalDateTime,
-        DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss'))
+        'yyyy-MM-dd HH:mm:ss')
     assertEquals(Integer, table2.type('place'))
     assertEquals(Integer, table2[0, 0].class)
 
@@ -210,8 +210,8 @@ class MatrixTest {
 
     table2[3, 0] = ',' // We lost the comma when converted to Integer, restore so we can compare
     def table6 = table2
-        .convert(0..2, String, DateTimeFormatter.ofPattern('yyyy-MM-dd'))
-        .convert(3, String, DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss'))
+        .convert(0..2, String, 'yyyy-MM-dd')
+        .convert(3, String, 'yyyy-MM-dd HH:mm:ss')
     assertEquals(table, table6, table.diff(table6))
   }
 

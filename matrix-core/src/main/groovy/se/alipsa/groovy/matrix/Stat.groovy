@@ -172,6 +172,29 @@ class Stat {
         return s
     }
 
+    /**
+     * summarises each row and return a list of the result.
+     *
+     * @param m the matrix to summarise
+     * @param colNums either a List of numbers or an IntRange
+     * @return a list (a column) with the sum of the rows for the columns specified
+     */
+    static <T extends Number> List<T> sumRows(Matrix m, List<Integer> colNums) {
+        List<T> means = []
+        m.each { row ->
+            means << sum(row[colNums])
+        }
+        means
+    }
+
+    static <T extends Number> List<T> sumRows(Matrix m, String... colNames) {
+        List<T> means = []
+        m.each { row ->
+            means << sum(row[colNames])
+        }
+        means
+    }
+
     static Matrix countBy(Matrix table, String groupBy) {
         Map<?, Matrix> groups = table.split(groupBy)
         List<List<?>> counts = []
@@ -252,6 +275,10 @@ class Stat {
         return results
     }
 
+    static List<BigDecimal> means(List<List<?>> matrix, IntRange colNums) {
+        means(matrix, colNums as List<Integer>)
+    }
+
     static List<BigDecimal> means(List<List<?>> matrix, List<Integer> colNums) {
         def sums = [0.0g] * colNums.size()
         def ncols = [0.0g] * colNums.size()
@@ -277,6 +304,29 @@ class Stat {
 
     static List<BigDecimal> means(Matrix table, List<String> colNames) {
         return means(table.rows() as List<List<?>>, table.columnIndices(colNames))
+    }
+
+    /**
+     * calculates the mean for each row and return a list of the result.
+     *
+     * @param m the matrix to use
+     * @param colNums either a List of numbers or an IntRange to include
+     * @return a list (a column) with the mean of the rows for the columns specified
+     */
+    static List<BigDecimal> meanRows(Matrix table, List<Integer> columns) {
+        List<BigDecimal> means = []
+        table.each { row ->
+            means << mean(row[columns])
+        }
+        means
+    }
+
+    static List<BigDecimal> meanRows(Matrix table, String... colNames) {
+        List<BigDecimal> means = []
+        table.each { row ->
+            means << mean(row[colNames])
+        }
+        means
     }
 
     static BigDecimal mean(List<?> list, int scale = 9) {
@@ -334,6 +384,29 @@ class Stat {
 
     static List<BigDecimal> medians(Matrix table, List<String> colNames) {
         return medians(table.rows() as List<List<?>>, table.columnIndices(colNames))
+    }
+
+    /**
+     * calculates the mean for each row and return a list of the result.
+     *
+     * @param m the matrix to use
+     * @param colNums either a List of numbers or an IntRange to include
+     * @return a list (a column) with the mean of the rows for the columns specified
+     */
+    static List<BigDecimal> medianRows(Matrix table, List<Integer> columns) {
+        List<BigDecimal> means = []
+        table.each { row ->
+            means << median(row[columns])
+        }
+        means
+    }
+
+    static List<BigDecimal> medianRows(Matrix table, String... colNames) {
+        List<BigDecimal> means = []
+        table.each { row ->
+            means << median(row[colNames])
+        }
+        means
     }
 
     static BigDecimal median(List<? extends Number> valueList) {

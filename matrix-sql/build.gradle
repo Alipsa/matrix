@@ -58,7 +58,7 @@ dependencies {
     def groovy = "org.apache.groovy:groovy:$groovyVersion"
     compileOnly groovy
     compileOnly project(':matrix-core')
-    implementation 'se.alipsa.groovy:data-utils:1.0.6-SNAPSHOT'
+    implementation 'se.alipsa.groovy:data-utils:1.0.6'
     implementation 'org.gradle:gradle-tooling-api:8.10.2'
     implementation 'commons-io:commons-io:2.17.0'
     implementation 'se.alipsa:maven-3.9.4-utils:1.0.3'

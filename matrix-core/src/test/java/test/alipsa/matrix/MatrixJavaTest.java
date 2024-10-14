@@ -16,7 +16,6 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -245,7 +244,7 @@ class MatrixJavaTest {
 
     var table2 = table.clone().convert(Map.of("place", Integer.class, "start", LocalDate.class));
     table2 = table2.convert(Map.of("end", LocalDateTime.class),
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        "yyyy-MM-dd HH:mm:ss");
     assertEquals(Integer.class, table2.type("place"));
     assertEquals(Integer.class, table2.getAt(0, 0).getClass());
 

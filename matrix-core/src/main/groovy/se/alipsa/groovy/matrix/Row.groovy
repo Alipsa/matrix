@@ -172,6 +172,26 @@ class Row implements List<Object> {
         content.subList(fromIndex, toIndex)
     }
 
+    List subList(IntRange range) {
+        content.subList(range.min(), range.max())
+    }
+
+    List subList(Collection indices) {
+        def vals = []
+        indices.each {
+            vals << get(it as int)
+        }
+        vals
+    }
+
+    List subList(String... colNames) {
+        def vals = []
+        colNames.each {
+            vals << getAt(it)
+        }
+        vals
+    }
+
     Object putAt(int index, Object value) {
         return set(index, value)
     }
@@ -237,6 +257,10 @@ class Row implements List<Object> {
 
     List<String> columnNames() {
         return parent.columnNames()
+    }
+
+    List<Class<?>> types() {
+        return parent.types()
     }
 
     @Override

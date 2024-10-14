@@ -38,7 +38,7 @@ class MatrixBuilder {
   }
 
   /**
-   * Populate the data of the Matrix. Use only one of rows, columns or data methods i.e.
+   * Populate the data of the Matrix. Use only one of rows, rowList, columns or data methods i.e.
    * either provide the rows (observations) or the columns (variables) or one of the data methods
    * if you use multiple ones, only the last one will be used.
    *
@@ -72,9 +72,9 @@ class MatrixBuilder {
   }
 
   /**
-   * Populate the data of the Matrix. Use only one of rows, columns or data methods i.e.
+   * Populate the data of the Matrix. Use only one of rows, rowList, columns or data methods i.e.
    * either provide the rows (observations) or the columns (variables) or one of the data methods
-   * if you use multiple ones, only the ast one will be used.
+   * if you use multiple ones, only the last one will be used.
    *
    * @param rows a list of observations
    * @return this builder
@@ -82,6 +82,26 @@ class MatrixBuilder {
   MatrixBuilder rows(List<List<?>> rows) {
     this.columns = rows.transpose()
     this
+  }
+
+  /**
+   * Populate the data of the Matrix. Use only one of rows, rowList, columns or data methods i.e.
+   * either provide the rows (observations) or the columns (variables) or one of the data methods
+   * if you use multiple ones, only the last one will be used.
+   * This method populates column names, types and data so is superior if you have a list of Row
+   * instead of only a List of List.
+   *
+   * @param rows a list of observations
+   * @return this builder
+   */
+  MatrixBuilder rowList(List<Row> rows) {
+    if (rows.isEmpty()) {
+      return this
+    }
+    Row row = rows.first()
+    columnNames(row.columnNames())
+    types(row.types())
+    rows(rows)
   }
 
   /**
