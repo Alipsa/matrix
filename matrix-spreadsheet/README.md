@@ -131,6 +131,14 @@ try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheet)) {
 
 See [the tests](https://github.com/Alipsa/spreadsheet/tree/main/src/test/groovy/spreadsheet) for more usage examples!
 
+# Release version compatibility matrix
+The following table illustrates the version compatibility of the matrix-csv and matrix core
+
+| Matrix spreadsheet |    Matrix core | 
+|-------------------:|---------------:|
+|              1.0.2 |          1.2.4 |
+|              1.0.1 | 1.2.1 -> 1.2.3 |
+
 # Third party libraries used
 Note: only direct dependencies are listed below.
 

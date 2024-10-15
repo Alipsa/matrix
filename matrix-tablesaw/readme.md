@@ -11,6 +11,14 @@ Normalize tablesaw columns etc.
 See [test.alipsa.groovy.datautil.TableUtilTest](https://github.com/perNyfelt/data-utils/blob/master/src/test/groovy/test/alipsa/groovy/datautil/TableUtilTest.groovy)
 for usage examples!
 
+# Release version compatibility matrix
+The following table illustrates the version compatibility of
+matrix-tablesaw and matrix core
+
+| Matrix tablesaw | Matrix core | 
+|----------------:|------------:|
+|                 |             |
+
 ## Version history
 - moved from data-utils 1.0.5-SNAPSHOT
 - add putAt method in GTable allowing the shorthand syntax `table[0,1] = 12` and `table[0, 'columnName'] = 'foo'` to change data.

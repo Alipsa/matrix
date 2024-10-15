@@ -68,7 +68,6 @@ dependencies {
   // compile only dependencies are not included in the pom
   compileOnly groovy
   implementation project(':matrix-core')
-  implementation project(':matrix-datasets')
   implementation project(':matrix-stats')
 
   // One of these is enough
@@ -83,6 +82,7 @@ dependencies {
   testImplementation groovy
   //testImplementation "org.testfx:openjfx-monocle:jdk-11+26"
 
+  testImplementation project(':matrix-datasets')
   testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"

@@ -115,3 +115,11 @@ start column is of type class java.sql.Date, values are [2021-12-01, 2022-07-10,
     ```
     start column is of type class java.time.LocalDate, values are [2021-12-01, 2022-07-10, 2023-05-27]
     ```
+
+# Release version compatibility matrix
+The following table illustrates the version compatibility of 
+matrix-sql and matrix core
+
+| Matrix sql |    Matrix core | 
+|-----------:|---------------:|
+|      1.0.0 |          1.2.4 |

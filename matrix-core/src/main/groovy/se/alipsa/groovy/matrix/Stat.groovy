@@ -431,16 +431,17 @@ class Stat {
         if (valueList.size() == 1) {
             return valueList[0]
         }
-        valueList.sort()
-        if (valueList.size() % 2 == 0) {
-            def index = valueList.size()/2 as int
-            def val1 = valueList[index -1] as Number
-            def val2 = valueList[index] as Number
+        List<? extends Number> vals = new ArrayList(valueList)
+        vals.sort()
+        if (vals.size() % 2 == 0) {
+            def index = vals.size()/2 as int
+            def val1 = vals[index -1] as Number
+            def val2 = vals[index] as Number
             BigDecimal median = (val1 + val2) / 2
             //println("Returning $val1 plus $val2 / 2 = $median")
             return median
         } else {
-            return asBigDecimal(valueList[valueList.size()/2 as int])
+            return asBigDecimal(vals[vals.size()/2 as int])
         }
     }
 

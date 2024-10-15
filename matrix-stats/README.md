@@ -169,6 +169,14 @@ x: mean = 90.300, size = 20, sd = 4.879
 y: mean = 88.150, size = 20, sd = 7.242 
 ```
 
+# Release version compatibility matrix
+The following table illustrates the version compatibility of
+matrix-sql and matrix core
+
+| Matrix stats |    Matrix core | 
+|-------------:|---------------:|
+|        1.0.1 |          1.2.4 |
+
 # Dependencies
 
 ### Groovy

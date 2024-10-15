@@ -79,3 +79,11 @@ File file = File.createTempFile('mtcars', '.csv')
 CsvExporter.exportToCsv(Dataset.mtcars(), CSVFormat.DEFAULT, file)
 ```
 exportToCsv() takes a File or a Writer as output parameter.
+
+
+# Release version compatibility matrix
+The following table illustrates the version compatibility of the matrix-csv and matrix core
+
+| Matrix csv |    Matrix core | 
+|-----------:|---------------:|
+|      1.0.0 | 1.2.3 -> 1.2.4 |

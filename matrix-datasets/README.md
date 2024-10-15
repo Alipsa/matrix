@@ -31,4 +31,11 @@ println speciesMeans.content()
 | Iris-versicolor | 5.936        |
 | Iris-virginica	 | 6.588        |
 | Iris-setosa	    | 5.006        |
-```
+
+# Release version compatibility matrix
+The following table illustrates the version compatibility of the matrix datasets and matrix core
+
+| Matrix datasets |    Matrix core | 
+|----------------:|---------------:|
+|           1.0.3 | 1.2.3 -> 1.2.4 |
+

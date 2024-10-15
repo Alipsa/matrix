@@ -41,3 +41,11 @@ Plot.svg(barChart, new File("barChart.svg"))
 
 javafx.scene.chart.Chart jfxPieChart = Plot.jfx(pieChart)
 ```
+
+# Release version compatibility matrix
+The following table illustrates the version compatibility of 
+matrix-charts, matrix-core, and matrix-stats
+
+| Matrix charts | Matrix core | Matrix stats |
+|--------------:|------------:|-------------:|
+|               |             |              |
