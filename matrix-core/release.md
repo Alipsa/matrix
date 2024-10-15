@@ -55,7 +55,8 @@ This release was mainly guided by a big port of an R based application to Groovy
 - add support for null substitution to Matrix.convert methods by overloading them.
 - add MatrixBuilder.rowList to create a Matrix from a List of Rows
 - Matrix.findFirstRow() now returns a Row instead of a List<?>
-- Add Stat sumRows, meanRows, medianRows
+- Add Stat sumRows, meanRows, medianRows and ensure that median calculations no longer depends on a 
+  sorted list by always sorting it internally
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix
