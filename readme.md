@@ -1,5 +1,3 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix-core)
-[![javadoc](https://javadoc.io/badge2/se.alipsa.groovy/matrix/javadoc.svg)](https://javadoc.io/doc/se.alipsa.groovy/matrix)
 # Matrix
 This is a Groovy library (that also works in Java) to make it easy to work with
 a matrix (tabular) data. Whenever you ḧave a structure like this
