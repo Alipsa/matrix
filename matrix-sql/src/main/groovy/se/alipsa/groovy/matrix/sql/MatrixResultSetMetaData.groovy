@@ -190,7 +190,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getTableName(int column) throws SQLException {
-    return matrix.name
+    return matrix.matrixName
   }
 
   /**

@@ -7,10 +7,10 @@ class AreaChart extends Chart {
 
   static AreaChart create(Matrix data) {
     if (data.columnCount() != 2) {
-      throw new IllegalArgumentException("Table " + data.name + " does not contain 2 columns.")
+      throw new IllegalArgumentException("Table " + data.matrixName + " does not contain 2 columns.")
     }
     AreaChart chart = new AreaChart()
-    chart.title = data.name
+    chart.title = data.matrixName
     chart.categorySeries = data.column(0)
     chart.valueSeries = [data.column(1)]
     chart.valueSeriesNames = [data.columnName(1)]

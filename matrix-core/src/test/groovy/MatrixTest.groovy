@@ -7,7 +7,6 @@ import se.alipsa.groovy.matrix.Matrix
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter
 
 import static se.alipsa.groovy.matrix.ListConverter.*
 import static org.junit.jupiter.api.Assertions.*
@@ -23,7 +22,7 @@ class MatrixTest {
   @Test
   void testMatrixConstructors() {
     def empData = Matrix.builder()
-        .name('empData')
+        .matrixName('empData')
         .data(
             emp_id: 1..5,
             emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
@@ -32,7 +31,7 @@ class MatrixTest {
         )
         .types([int, String, Number, LocalDate])
         .build()
-    assertEquals('empData', empData.getName())
+    assertEquals('empData', empData.getMatrixName())
     assertEquals(1, empData[0, 0])
     assertEquals("Dan", empData[1, 1])
     assertEquals(611.0, empData[2, 2])
@@ -44,7 +43,7 @@ class MatrixTest {
     assertEquals(4, dims.variables)
 
     def ed = Matrix.builder().
-        name("ed")
+        matrixName("ed")
         .columnNames(['id', 'name', 'salary', 'start'])
         .columns(
             1..5,
@@ -52,7 +51,7 @@ class MatrixTest {
             [623.3, 515.2, 611.0, 729.0, 843.25],
             toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
         ).build()
-    assertEquals('ed', ed.getName())
+    assertEquals('ed', ed.getMatrixName())
     assertEquals(1, ed[0, 0])
     assertEquals("Dan", ed[1, 1])
     assertEquals(611.0, ed[2, 2])
@@ -65,7 +64,7 @@ class MatrixTest {
         [623.3, 515.2, 611.0, 729.0, 843.25],
         toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
     ]).build()
-    assertNull(e.getName())
+    assertNull(e.getMatrixName())
     assertEquals(1, e[0, 0])
     assertEquals("Dan", e[1, 1])
     assertEquals(611.0, e[2, 2])
@@ -76,7 +75,7 @@ class MatrixTest {
   @Test
   void testAddRow() {
     Matrix m = Matrix.builder()
-        .name("years")
+        .matrixName("years")
         .columnNames((1..5).collect { "Y" + it })
         .build()
     m.addRow([1, 2, 3, 4, 5])
@@ -373,7 +372,7 @@ class MatrixTest {
   void testAppendColumnValue() {
     String name = 'numbers'
     List<String> header = ['foo', 'bar']
-    def table = Matrix.builder().name(name).columnNames(header).build()
+    def table = Matrix.builder().matrixName(name).columnNames(header).build()
     table['foo'] << 1
     table[0] << 2
     println table.content()
@@ -408,6 +407,15 @@ class MatrixTest {
     // Insert a new column first
     Matrix table3 = empData.clone()
     table3["yearMonth", YearMonth, 0] = toYearMonths(table3["start_date"])
+    assertEquals(empData.columnCount() + 1, table3.columnCount())
+    assertEquals("yearMonth", table3.columnNames()[0])
+    assertEquals(YearMonth, table3.type("yearMonth"))
+    assertEquals(YearMonth.of(2012, 1), table3[0, 0])
+    assertEquals(YearMonth.of(2015, 3), table3[4, 0])
+
+    // Use property notation
+    Matrix table4 = empData.clone()
+    table4.yearMonth = toYearMonths(table4["start_date"])
     assertEquals(empData.columnCount() + 1, table3.columnCount())
     assertEquals("yearMonth", table3.columnNames()[0])
     assertEquals(YearMonth, table3.type("yearMonth"))
@@ -488,7 +496,7 @@ class MatrixTest {
     assertEquals(515.2, salarySorted["salary"][4], "Lowest salary: ${salarySorted.content()}")
 
     def dateSalarySorted = empData.orderBy(["start_date", "salary"])
-    assertIterableEquals([2,3,1,5,4], dateSalarySorted['emp_id'], dateSalarySorted.content())
+    assertIterableEquals([2, 3, 1, 5, 4], dateSalarySorted['emp_id'], dateSalarySorted.content())
   }
 
   @Test
@@ -692,7 +700,7 @@ class MatrixTest {
         .types([Object] * 4)
         .build()
     assertEquals(empData, differentTypes, empData.diff(differentTypes))
-    assertNotEquals(empData, differentTypes.withName("differentTypes"), empData.diff(differentTypes))
+    assertNotEquals(empData, differentTypes.withMatrixName("differentTypes"), empData.diff(differentTypes))
   }
 
   @Test
@@ -767,15 +775,15 @@ class MatrixTest {
         [null, 'foo', 'bar', null],
         [null, 1, 2, null],
         [null, null, null, null],
-        [0,1,2, null]
+        [0, 1, 2, null]
     ]).build()
     m.removeEmptyRows()
     assertEquals(3, m.rowCount())
     assertNull(m[0, 0])
-    assertEquals('foo', m[0,1])
-    assertEquals('bar', m[0,2])
+    assertEquals('foo', m[0, 1])
+    assertEquals('bar', m[0, 2])
     assertNull(m[0, 3])
-    assertIterableEquals([0,1,2], m.row(2)[0..2])
+    assertIterableEquals([0, 1, 2], m.row(2)[0..2])
     assertNull(m[2, 3])
     m.removeEmptyColumns()
     assertEquals(3, m.rowCount())
@@ -833,6 +841,14 @@ class MatrixTest {
     assertEquals(10, components[0, 'id'])
     assertEquals(13, components[3, 'id'])
     assertEquals(14, components[4, 'id'])
+    components.id = [10, 11, 12, 13, 14]
+    assertEquals(10, components[0, 'id'])
+    assertEquals(13, components[3, 'id'])
+    assertEquals(14, components[4, 'id'])
+    components.identity = [10, 11, 12, 13, 14]
+    assertEquals(components.id[0], components[0, 'identity'])
+    assertEquals(components.identity[3], components[3, 'id'])
+    assertEquals(components.id[4], components.identity[4])
   }
 
   @Test
@@ -847,9 +863,9 @@ class MatrixTest {
         .build()
 
     table.moveRow(2, 0)
-    assertIterableEquals(['Lotte', asLocalDate('2023-05-27'),3], table.row(0))
-    assertIterableEquals(['Lorena', asLocalDate('2021-12-01'),1], table.row(1))
-    assertIterableEquals(['Marianne', asLocalDate('2022-07-10'),2], table.row(2))
+    assertIterableEquals(['Lotte', asLocalDate('2023-05-27'), 3], table.row(0))
+    assertIterableEquals(['Lorena', asLocalDate('2021-12-01'), 1], table.row(1))
+    assertIterableEquals(['Marianne', asLocalDate('2022-07-10'), 2], table.row(2))
   }
 
   @Test
@@ -942,9 +958,13 @@ class MatrixTest {
 
     assertEquals(Integer, table[2, 2].class)
     assertEquals(3, table[2, 2])
+    assertEquals(3, table.foo[2], "Get column property did not work")
+
 
     assertEquals(LocalDate, table[2, 'start'].class)
+    assertEquals(LocalDate, table.start[2].class)
     assertEquals(asLocalDate('2023-05-27'), table[2, 'start'])
+    assertEquals(asLocalDate('2023-05-27'), table.start[2])
 
     assertEquals(asLocalDate('2023-05-27'), table.getAt(2, 'start'))
     assertEquals(LocalDate, table.getAt(2, 'start').class)
@@ -954,8 +974,10 @@ class MatrixTest {
     assertEquals(LocalDate, row.getAt('start').class)
     assertEquals(LocalDate, row[1].class)
     assertEquals(LocalDate, row['start'].class)
+    assertEquals(LocalDate, row.start.class)
     assertEquals(LocalDate.parse('2022-07-10'), row[1])
     assertEquals(LocalDate.parse('2022-07-10'), row['start'])
+    assertEquals(LocalDate.parse('2022-07-10'), row.start)
 
     assertEquals(String, table[0, 1, String].class)
     assertEquals('2021-12-01', table[0, 1, String])
@@ -972,8 +994,8 @@ class MatrixTest {
 
     assertIterableEquals([asLocalDate('2021-12-01'), 1], table[0, 1..2], "column intRange")
     assertIterableEquals(['Marianne', 'Lotte'], table[1..2, 0], "row intRange")
-    table[3,2] = Stat.sum(table[0..2, 2])
-    assertEquals(6, table[3,2])
+    table[3, 2] = Stat.sum(table[0..2, 2])
+    assertEquals(6, table[3, 2])
     assertIterableEquals([1, 2, 3], table.getAt(0..2, 2))
   }
 }

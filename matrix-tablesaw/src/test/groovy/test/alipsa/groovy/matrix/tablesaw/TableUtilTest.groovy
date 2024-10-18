@@ -69,7 +69,7 @@ class TableUtilTest {
 
     var table = Table.read().usingOptions(builder.build());
     Matrix matrix = TableUtil.fromTablesaw(table);
-    assertEquals(table.name(), matrix.getName());
+    assertEquals(table.name(), matrix.getMatrixName());
     assertEquals(table.columnCount(), matrix.columnCount(), "number of columns");
     assertEquals(table.rowCount(), matrix.rowCount(), "number of rows");
     assertEquals(table.get(0,1), matrix.get(0, 1));

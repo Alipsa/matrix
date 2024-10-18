@@ -98,7 +98,7 @@ class CsvImporter {
     }
     List<Class<?>> types = [String] * ncols
     return Matrix.builder()
-        .name(tableName)
+        .matrixName(tableName)
         .columnNames(headerRow)
         .rows(rows)
         .types(types)

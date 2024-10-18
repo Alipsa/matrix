@@ -187,7 +187,7 @@ class MatrixSql implements Closeable {
   private int dbExecuteBatchUpdate(Matrix table, String[] matchColumnName) throws SQLException {
     try(Statement stm = connect().createStatement()) {
       for (Row row : table) {
-        stm.addBatch(SqlGenerator.createUpdateSql(table.getName(), row, matchColumnName))
+        stm.addBatch(SqlGenerator.createUpdateSql(table.getMatrixName(), row, matchColumnName))
       }
       int[] results = stm.executeBatch()
       return IntStream.of(results).sum()

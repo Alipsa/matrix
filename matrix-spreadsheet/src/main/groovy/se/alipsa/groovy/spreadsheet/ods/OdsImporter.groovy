@@ -195,7 +195,7 @@ class OdsImporter {
           endCol,
           header)
       String key = it.getOrDefault("key", sheetName)
-      matrix.setName(key)
+      matrix.setMatrixName(key)
       result.put(key, matrix)
     }
     result
@@ -235,7 +235,7 @@ class OdsImporter {
       matrix.add(rowList)
     }
     return Matrix.builder()
-    .name(sheet.name)
+    .matrixName(sheet.name)
     .columnNames(colNames)
     .rows(matrix)
     .types([String]*colNames.size())

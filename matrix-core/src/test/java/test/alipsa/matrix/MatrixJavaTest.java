@@ -42,11 +42,11 @@ class MatrixJavaTest {
     columns.add("salary", 623.3, 515.2, 611.0, 729.0, 843.25);
     columns.add("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"));
     var empData = Matrix.builder()
-        .name("empData")
+        .matrixName("empData")
         .columns(columns)
         .types(int.class, String.class, Number.class, LocalDate.class)
         .build();
-    assertEquals("empData", empData.getName());
+    assertEquals("empData", empData.getMatrixName());
     assertEquals(1, (int) empData.getAt(0, 0));
     assertEquals("Dan", empData.getAt(1, 1));
     assertEquals(611.0, empData.getAt(2, 2));
@@ -61,7 +61,7 @@ class MatrixJavaTest {
     assertEquals(4, dims.get("variables"));
 
     var ed = Matrix.builder()
-        .name("ed")
+        .matrixName("ed")
         .columnNames("id", "name", "salary", "start")
         .columns(
             toIntegers(1, 2, 3, 4, 5),
@@ -70,7 +70,7 @@ class MatrixJavaTest {
             toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
         )
         .build();
-    assertEquals("ed", ed.getName());
+    assertEquals("ed", ed.getMatrixName());
     assertEquals(1, ed.getAt(0, 0, int.class));
     assertEquals("Dan", ed.getAt(1, 1));
     assertEquals(asBigDecimal("611.0"), ed.getAt(2, 2));
@@ -86,7 +86,7 @@ class MatrixJavaTest {
         toBigDecimals(623.3, 515.2, 611.0, 729.0, 843.25),
         toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
     )).build();
-    assertNull(e.getName());
+    assertNull(e.getMatrixName());
     assertEquals(1, (int) e.getAt(0, 0));
     assertEquals("Dan", e.getAt(1, 1));
     assertEquals(asBigDecimal("611.0"), e.getAt(2, 2));
@@ -97,7 +97,7 @@ class MatrixJavaTest {
     );
 
     Matrix m = Matrix.builder()
-        .name("years")
+        .matrixName("years")
         .columnNames(Stream.of(1, 2, 3, 4, 5).map(it -> "Y" + it).collect(Collectors.toList()))
         .build();
     m.addRow(c(1, 2, 3, 4, 5));
@@ -222,7 +222,7 @@ class MatrixJavaTest {
     var plantGrowth = Matrix.builder()
         .data(getClass().getResource("/PlantGrowth.csv"), ",", "\"")
         .build();
-    assertEquals("PlantGrowth", plantGrowth.getName());
+    assertEquals("PlantGrowth", plantGrowth.getMatrixName());
     assertIterableEquals(c("id", "weight", "group"), plantGrowth.columnNames());
     var row30 = plantGrowth.findFirstRow("id", "30");
     assertEquals("5.26", row30.get(1));
@@ -790,7 +790,7 @@ class MatrixJavaTest {
         .types(cr(Object.class, 4))
         .build();
     assertEquals(empData, differentTypes, empData.diff(differentTypes));
-    assertNotEquals(empData, differentTypes.withName("differentTypes"), empData.diff(differentTypes));
+    assertNotEquals(empData, differentTypes.withMatrixName("differentTypes"), empData.diff(differentTypes));
   }
 
 
@@ -830,7 +830,7 @@ class MatrixJavaTest {
 
   @Test
   void testRemoveEmptyRows() {
-    var empData = Matrix.builder().name("empData").columns(new Columns(
+    var empData = Matrix.builder().matrixName("empData").columns(new Columns(
             m("emp_id", c(1, 2)),
             m("emp_name", "Rick", "Dan"),
             m("salary", 623.3, 515.2),
@@ -838,7 +838,7 @@ class MatrixJavaTest {
         .types(int.class, String.class, Number.class, LocalDate.class)
         .build();
 
-    var d0 = Matrix.builder().name("empData").columns(new Columns(
+    var d0 = Matrix.builder().matrixName("empData").columns(new Columns(
             m("emp_id", 1, null, 2, null),
             m("emp_name", "Rick", "", "Dan", " "),
             m("salary", 623.3, null, 515.2, null),

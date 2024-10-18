@@ -57,6 +57,10 @@ This release was mainly guided by a big port of an R based application to Groovy
 - Matrix.findFirstRow() now returns a Row instead of a List<?>
 - Add Stat sumRows, meanRows, medianRows and ensure that median calculations no longer depends on a 
   sorted list by always sorting it internally
+- Override getProperty for Matrix allowing the column to be accessed by dot notation
+- rename Matrix.getName() to Matrix.getMatrixName, setName() -> setMatrixName, withName() -> withMatrixName()
+  to not collide with the common column name "name"
+- Renmae MatrixBuilder.name() to matrixName() for consistency with the Matrix name change
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

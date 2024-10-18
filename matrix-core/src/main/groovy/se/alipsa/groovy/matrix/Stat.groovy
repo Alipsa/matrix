@@ -24,7 +24,7 @@ class Stat {
 
     static Structure str(Matrix table) {
         Structure map = new Structure()
-        def name = table.name == null ? '' : table.name + ', '
+        def name = table.matrixName == null ? '' : table.matrixName + ', '
         map["Matrix"] = ["${name}${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
         for (colName in table.columnNames()) {
             def vals = [table.type(colName).getSimpleName()]
@@ -115,7 +115,7 @@ class Stat {
             if (Number.isAssignableFrom(type)) {
                 sums.add(sum(column, type))
             } else {
-                println("${matrix.name}: $columnName is not a Numeric column but of type ${type.simpleName}")
+                println("${matrix.matrixName}: $columnName is not a Numeric column but of type ${type.simpleName}")
                 sums.add(null)
             }
         }
@@ -205,7 +205,7 @@ class Stat {
             counts.add([it.key, it.value.rowCount()])
         }
         Matrix.builder()
-            .name("${table.name} - counts by $groupBy".toString())
+            .matrixName("${table.matrixName} - counts by $groupBy".toString())
             .columnNames([groupBy, "${groupBy}_count".toString()])
             .rows(counts)
             .types([table.type(groupBy), Integer])
@@ -214,7 +214,7 @@ class Stat {
 
     static Matrix sumBy(Matrix table, String sumColumn, String groupBy) {
         Matrix sums = funBy(table, sumColumn, groupBy, Stat.&sum, BigDecimal)
-        sums.setName("${table.name}-sums by $groupBy".toString())
+        sums.setMatrixName("${table.matrixName}-sums by $groupBy".toString())
         return sums
     }
 
@@ -223,14 +223,14 @@ class Stat {
         means = means.apply(meanColumn) {
             it.setScale(scale, RoundingMode.HALF_UP)
         }
-        means.setName("${table.name}-means by $groupBy".toString())
+        means.setMatrixName("${table.matrixName}-means by $groupBy".toString())
         return means
     }
 
     static Matrix medianBy(Matrix table, String medianColumn, String groupBy) {
         def sorted = table.clone().orderBy(medianColumn)
         Matrix medians = funBy(sorted, medianColumn, groupBy, Stat.&median, BigDecimal)
-        medians.setName("${table.name ?: ''}-medians by $groupBy".toString())
+        medians.setMatrixName("${table.matrixName ?: ''}-medians by $groupBy".toString())
         return medians
     }
 
@@ -257,7 +257,7 @@ class Stat {
             calculations.add([ it.key,  val])
         }
         Matrix.builder()
-            .name("${table.name} - by $groupBy".toString())
+            .matrixName("${table.matrixName} - by $groupBy".toString())
             .columnNames([groupBy, columnName])
             .rows(calculations)
             .types([table.type(groupBy), columnType])
@@ -704,8 +704,8 @@ class Stat {
             }
             tbl[String.valueOf(it.key)] = freqTbl.column(FREQUENCY_FREQUENCY)
         }
-        def nam = (table.getName() == null || table.getName().isBlank()) ? groupName : table.getName() + '_' + groupName
-        return Matrix.builder().data(tbl).name(nam).build()
+        def nam = (table.getMatrixName() == null || table.getMatrixName().isBlank()) ? groupName : table.getMatrixName() + '_' + groupName
+        return Matrix.builder().data(tbl).matrixName(nam).build()
     }
 
     /**

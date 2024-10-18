@@ -120,7 +120,7 @@ class TableUtil {
       Column<?> col = createColumn(type, matrix.columnNames().get(i), matrix.column(i))
       columns.add(col)
     }
-    return Table.create(matrix.getName(), columns)
+    return Table.create(matrix.getMatrixName(), columns)
   }
 
   static <T> Column<T> createColumn(T type, String name, List<?> values) {

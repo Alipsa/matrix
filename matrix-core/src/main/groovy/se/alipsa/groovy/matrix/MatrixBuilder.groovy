@@ -10,17 +10,17 @@ import java.sql.ResultSetMetaData
 
 class MatrixBuilder {
 
-  String name
+  String matrixName
   List<String> headerList
   List<List<?>> columns
   List<Class<?>> dataTypes
 
   Matrix build() {
-    new Matrix(name, headerList, columns, dataTypes)
+    new Matrix(matrixName, headerList, columns, dataTypes)
   }
 
-  MatrixBuilder name(String name) {
-    this.name = name
+  MatrixBuilder matrixName(String name) {
+    this.matrixName = name
     this
   }
 
@@ -180,7 +180,7 @@ class MatrixBuilder {
       if (file.name.contains('.')) {
         endIdx = file.name.lastIndexOf('.')
       }
-      name(file.name.substring(0, endIdx))
+      matrixName(file.name.substring(0, endIdx))
     }
     this
   }
@@ -203,7 +203,7 @@ class MatrixBuilder {
       if (file.contains('.')) {
         endIdx = fileName.lastIndexOf('.')
       }
-      name(fileName.substring(0, endIdx))
+      matrixName(fileName.substring(0, endIdx))
     }
     this
   }
@@ -229,7 +229,7 @@ class MatrixBuilder {
       }
       data(inputStream, delimiter, stringQuote, firstRowAsHeader)
       if(noName()) {
-        name(n)
+        matrixName(n)
       }
     }
     this
@@ -315,6 +315,11 @@ class MatrixBuilder {
     columns(rows.transpose())
   }
 
+  MatrixBuilder definition(Map<String, Class<?>> namesAndTypes) {
+    columnNames(namesAndTypes.keySet() as List)
+    types(namesAndTypes.values() as List)
+  }
+
 
   MatrixBuilder types(List<Class<?>> types) {
     this.dataTypes = ClassUtils.convertPrimitivesToWrapper(types)
@@ -349,6 +354,6 @@ class MatrixBuilder {
   }
 
   private boolean noName() {
-    name == null || name.isBlank()
+    matrixName == null || matrixName.isBlank()
   }
 }

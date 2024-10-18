@@ -77,7 +77,7 @@ class MatrixDbUtil {
     }
     sql += String.join(",\n", columns)
     if (primaryKey.length > 0) {
-      sql += "\n , CONSTRAINT pk_" + table.getName() + " PRIMARY KEY (\"" + String.join("\", \"", primaryKey) + "\")"
+      sql += "\n , CONSTRAINT pk_" + table.getMatrixName() + " PRIMARY KEY (\"" + String.join("\", \"", primaryKey) + "\")"
     }
     sql += "\n);"
     sql
@@ -200,7 +200,7 @@ class MatrixDbUtil {
   }
 
   static String tableName(Matrix table) {
-    table.getName()
+    table.getMatrixName()
         .replace(".", "_")
         .replace("-", "_")
         .replace("*", "")

@@ -20,7 +20,7 @@ class MatrixBuilderTest {
   void testEmpty() {
     Matrix m1 = Matrix.builder().build()
     m1.content()
-    assertEquals(null, m1.name)
+    assertEquals(null, m1.matrixName)
     assertEquals(0, m1.rowCount())
     assertEquals(0, m1.columnCount())
     assertEquals(0, m1.types().size())
@@ -29,10 +29,10 @@ class MatrixBuilderTest {
   @Test
   void testNameOnly() {
     Matrix m1 = Matrix.builder()
-        .name("empData")
+        .matrixName("empData")
         .build()
     m1.content()
-    assertEquals('empData', m1.name)
+    assertEquals('empData', m1.matrixName)
     assertEquals(0, m1.rowCount())
     assertEquals(0, m1.columnCount())
     assertEquals(0, m1.types().size())
@@ -41,10 +41,10 @@ class MatrixBuilderTest {
   @Test
   void testColumns() {
     Matrix m2 = Matrix.builder()
-        .name('m2')
+        .matrixName('m2')
         .columnNames(['id', 'name', 'salary', 'start']).build()
     m2['id'].addAll([1,2,3])
-    assertEquals('m2', m2.name)
+    assertEquals('m2', m2.matrixName)
     assertEquals(3, m2.rowCount())
     assertEquals(4, m2.columnCount())
     assertEquals(4, m2.types().size())
@@ -58,7 +58,7 @@ class MatrixBuilderTest {
             ['foo', 'bar', 'baz']
         ]).build()
     m3[1] = [1,2,3]
-    assertEquals(null, m3.name)
+    assertEquals(null, m3.matrixName)
     assertEquals(3, m3.rowCount())
     assertEquals(2, m3.columnCount())
     assertEquals(2, m3.types().size())
@@ -79,7 +79,7 @@ class MatrixBuilderTest {
 
     // add individual data points to a column
     Matrix m5 = Matrix.builder()
-        .name("m5")
+        .matrixName("m5")
         .columnNames(['id', 'name', 'salary', 'start'])
         .types([int, String, Number, LocalDate]).build()
     m5['id'] = [1,2,3]
@@ -96,7 +96,7 @@ class MatrixBuilderTest {
     Matrix m4 = Matrix.builder()
         .types([int, String, Number, LocalDate]).build()
     assertEquals([Integer, String, Number, LocalDate], m4.types())
-    assertEquals(null, m4.name)
+    assertEquals(null, m4.matrixName)
     assertEquals(0, m4.rowCount())
     assertEquals(4, m4.columnCount())
     m4.content()
@@ -105,7 +105,7 @@ class MatrixBuilderTest {
   @Test
   void testNameColumnTypes() {
     Matrix m6 = Matrix.builder()
-        .name("m6")
+        .matrixName("m6")
         .columns([
             [1,2,3],
             ['foo', 'bar', 'baz']
@@ -115,7 +115,7 @@ class MatrixBuilderTest {
     m6.content()
 
     Matrix m7 = Matrix.builder()
-        .name("m7")
+        .matrixName("m7")
         .columns([
             [1,2,3],
             ['foo', 'bar', 'baz']
@@ -124,7 +124,7 @@ class MatrixBuilderTest {
     m7.content()
 
     Matrix r6 = Matrix.builder()
-        .name("m6")
+        .matrixName("m6")
         .rows([
             [1, 'foo'],
             [2, 'bar'],
@@ -137,7 +137,7 @@ class MatrixBuilderTest {
     assertEquals(m6, r6)
 
     Matrix r7 = Matrix.builder()
-        .name("m7")
+        .matrixName("m7")
         .rows([
             [1, 'foo'],
             [2, 'bar'],
@@ -241,7 +241,7 @@ class MatrixBuilderTest {
         ',',
         '"',
     ).build()
-    assertEquals('PlantGrowth', plantGrowth.name)
+    assertEquals('PlantGrowth', plantGrowth.matrixName)
     assertIterableEquals(['id', 'weight','group'], plantGrowth.columnNames())
     def row30 = plantGrowth.findFirstRow('id', '30')
     assertEquals('5.26', row30[1])

@@ -14,7 +14,7 @@ class PieChart extends Chart {
   }
 
   static PieChart create(Matrix table, String groupColName, String numberColName){
-    return create(table.name, table, groupColName, numberColName)
+    return create(table.matrixName, table, groupColName, numberColName)
   }
 
   static PieChart create(String title, Matrix table, String groupColName, String numberColName){

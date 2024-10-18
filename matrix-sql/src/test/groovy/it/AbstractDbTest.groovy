@@ -25,7 +25,10 @@ abstract class AbstractDbTest {
   MatrixSql matrixSql
   MatrixDbUtil matrixDbUtil
 
-  Matrix dur = Matrix.create('duration', ['name': String, 'measurePoint': String, 'millis': Long])
+  Matrix dur = Matrix.builder()
+      .matrixName('duration')
+      .definition(['name': String, 'measurePoint': String, 'millis': Long])
+      .build()
 
   AbstractDbTest(DataBaseProvider db, String dbName, String mode, String... additionalSettings) {
     ci = new ConnectionInfo()
@@ -65,12 +68,12 @@ abstract class AbstractDbTest {
     long start = System.currentTimeMillis()
     String tableName = matrixDbUtil.tableName(dataset)
     long ctm1 = System.currentTimeMillis()
-    dur + [dataset.name, "1. table name", ctm1 - start]
+    dur + [dataset.matrixName, "1. table name", ctm1 - start]
     if (matrixDbUtil.tableExists(con, tableName)) {
       matrixDbUtil.dropTable(con, tableName)
     }
     long ctm2 = System.currentTimeMillis()
-    dur + [dataset.name, "2. check and drop table", ctm2 - ctm1]
+    dur + [dataset.matrixName, "2. check and drop table", ctm2 - ctm1]
     if (scanNumRows.length > 0) {
       Map map = matrixDbUtil.create(con, dataset, scanNumRows[0])
       //println map
@@ -79,11 +82,11 @@ abstract class AbstractDbTest {
       //println map
     }
     long ctm3 = System.currentTimeMillis()
-    dur + [dataset.name, "3. create table", ctm3 - ctm2]
+    dur + [dataset.matrixName, "3. create table", ctm3 - ctm2]
 
     Matrix m2 = matrixDbUtil.select(con, "select * from $tableName")
     long ctm4 = System.currentTimeMillis()
-    dur + [dataset.name, "4. select *", ctm4 - ctm3]
+    dur + [dataset.matrixName, "4. select *", ctm4 - ctm3]
     dataset.eachWithIndex { Row row, int r ->
       row.eachWithIndex { Object expected, int c ->
         def actual = ValueConverter.convert(m2[r, c], dataset.type(c))
@@ -100,8 +103,8 @@ abstract class AbstractDbTest {
       }
     }
     long ctm5 = System.currentTimeMillis()
-    dur + [dataset.name, "5. compare values", ctm5 - ctm4]
-    dur + [dataset.name, "6. total round", System.currentTimeMillis() - start]
+    dur + [dataset.matrixName, "5. compare values", ctm5 - ctm4]
+    dur + [dataset.matrixName, "6. total round", System.currentTimeMillis() - start]
   }
 
   static Matrix getComplexData() {
@@ -115,7 +118,7 @@ abstract class AbstractDbTest {
             'local date time': ListConverter.toLocalDateTimes('2021-12-01T01:11:41', '2022-07-10T02:22:42', '2023-05-27T03:33:43')
         )
         .types(int, String, LocalDate, byte[], Time, LocalDateTime)
-        .name('complexData')
+        .matrixName('complexData')
         .build()
   }
 }

@@ -15,7 +15,7 @@ class Dataset {
         'Temp': BigDecimal,
         'Month': Short,
         'Day': Short
-    ).withName('airquality')
+    ).withMatrixName('airquality')
   }
 
   static Matrix cars() {
@@ -23,7 +23,7 @@ class Dataset {
         .build().convert(
         speed: BigDecimal,
         dist: BigDecimal
-    ).withName('cars')
+    ).withMatrixName('cars')
   }
 
   /**
@@ -41,7 +41,7 @@ class Dataset {
             'Petal Width': BigDecimal,
             Species: String
         )
-    table.setName('Iris')
+    table.setMatrixName('Iris')
     return table
   }
 
@@ -50,7 +50,7 @@ class Dataset {
    */
   static Matrix mtcars() {
     Matrix.builder()
-        .name('mtcars')
+        .matrixName('mtcars')
         .data(url('/data/mtcars.csv'))
         .build()
         .convert(
@@ -76,7 +76,7 @@ class Dataset {
    */
   static Matrix plantGrowth() {
     Matrix.builder()
-        .name('PlantGrowth')
+        .matrixName('PlantGrowth')
         .data(url('/data/PlantGrowth.csv'), ',', '"')
         .build()
         .convert(
@@ -91,7 +91,7 @@ class Dataset {
    */
   static Matrix toothGrowth() {
     Matrix.builder()
-        .name('ToothGrowth')
+        .matrixName('ToothGrowth')
         .data(url('/data/ToothGrowth.csv'), ',', '"')
         .build()
         .convert(
@@ -107,7 +107,7 @@ class Dataset {
    */
   static Matrix usArrests() {
     Matrix.builder()
-        .name('USArrests')
+        .matrixName('USArrests')
         .data(url('/data/USArrests.csv'), ',', '"')
         .build()
         .convert(
@@ -124,7 +124,7 @@ class Dataset {
    */
   static Matrix mpg() {
     return Matrix.builder()
-        .name('mpg')
+        .matrixName('mpg')
         .data(url('/data/mpg.csv'), ',', '"')
         .build()
         .convert(
@@ -144,7 +144,7 @@ class Dataset {
 
   static Matrix diamonds() {
     return Matrix.builder()
-        .name('diamonds')
+        .matrixName('diamonds')
         .data(url('/data/diamonds.csv'), ',', '"')
         .build()
         .convert(
@@ -227,7 +227,7 @@ class Dataset {
    * @return a String describing the content of the dataset
    */
   static String describe(Matrix table) {
-    describe(table.name)
+    describe(table.matrixName)
   }
 
   /**

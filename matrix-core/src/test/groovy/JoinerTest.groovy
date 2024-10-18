@@ -38,7 +38,7 @@ class JoinerTest {
   @Test
   void testLeftJoin() {
     def e = Matrix.builder()
-        .name('employees')
+        .matrixName('employees')
         .data([
             id       : 1..5,
             firstName: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
@@ -47,7 +47,7 @@ class JoinerTest {
         ])
         .build()
     def g = Matrix.builder()
-        .name('eln')
+        .matrixName('eln')
         .data([
             employeeId: 2..4,
             lastName  : ["Carpenter", "Bowman", "Carson"]
@@ -61,7 +61,7 @@ class JoinerTest {
 
     // Make sure the original matrices was unaltered
     assertEquals(Matrix.builder()
-        .name('employees')
+        .matrixName('employees')
         .columns([
             id       : 1..5,
             firstName: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
@@ -70,7 +70,7 @@ class JoinerTest {
         ])
         .build(), e)
     assertEquals(Matrix.builder()
-        .name('eln')
+        .matrixName('eln')
         .data([
             employeeId: 2..4,
             lastName  : ["Carpenter", "Bowman", "Carson"]

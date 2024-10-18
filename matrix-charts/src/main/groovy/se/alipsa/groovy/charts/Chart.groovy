@@ -47,7 +47,7 @@ abstract class Chart {
     Class firstColumn = firstTable.type(0)
     Class secondColumn = firstTable.type(1)
     if (firstTable.columnCount() != 2) {
-      throw new IllegalArgumentException("Table " + idx + "(" + firstTable.name + ") does not contain 2 columns.")
+      throw new IllegalArgumentException("Table " + idx + "(" + firstTable.matrixName + ") does not contain 2 columns.")
     }
 
     for (table in series) {
@@ -56,7 +56,7 @@ abstract class Chart {
         continue
       }
       if (table.columnCount() != 2) {
-        throw new IllegalArgumentException("Table " + idx + "(" + table.name + ") does not contain 2 columns.")
+        throw new IllegalArgumentException("Table " + idx + "(" + table.matrixName + ") does not contain 2 columns.")
       }
       Class col0Type = table.type(0)
       Class col1Type = table.type(1)

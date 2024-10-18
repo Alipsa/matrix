@@ -11,7 +11,7 @@ class LineChart extends Chart {
 
   static LineChart create(Matrix data, String xAxis, String... valueColumns) {
     LineChart chart = new LineChart()
-    chart.title = data.name
+    chart.title = data.matrixName
     chart.valueSeries = data.columns(valueColumns)
     chart.categorySeries = data[xAxis] as List<Number>
     chart.valueSeriesNames = valueColumns as List<String>

@@ -14,7 +14,7 @@ class SamplerTest {
     assertEquals(25, train.rowCount(), 'test size')
 
     Matrix ids = Matrix.builder()
-        .name('ids')
+        .matrixName('ids')
         .data(
             id: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
             letter: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']

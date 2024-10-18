@@ -1,7 +1,6 @@
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.Row
-import se.alipsa.groovy.matrix.Stat
 
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -176,7 +175,7 @@ class StatTest {
   @Test
   void testStr() {
     def table = Matrix.builder()
-        .name('Test')
+        .matrixName('Test')
         .data([
             v0: [0.3, 2, 3],
             v1: [1.1, 1, 0.9],
@@ -207,7 +206,7 @@ class StatTest {
   @Test
   void testSum() {
     def table = Matrix.builder()
-        .name('Test')
+        .matrixName('Test')
         .data(
             [
                 v0: [0.3, 2, 3],

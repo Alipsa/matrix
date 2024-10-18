@@ -58,9 +58,16 @@ def employees = [
         "employee": ['John Doe','Peter Smith','Jane Doe'],
         "salary": [21000, 23400, 26800],
         "startDate": ListConverter.toLocalDates(['2013-11-01','2018-03-25','2017-03-14']),
-        "reviewPeriod": ListConverter.toYearMonth(['2020-01', '2019-04', '2018-10'])
+        "reviewPeriod": ListConverter.toYearMonths(['2020-01', '2019-04', '2018-10'])
 ]
 def table = Matrix.builder().data(employees).build()
+// There are several ways to access the data, below are some examples how to get single values:
+assert table.salary[0] == 21000 // get column salary and then index 0
+assert table[0, 1] == 21000 // get row 0, column 1
+assert table[0, 'salary'] == 21000 // get row index 0 from the column name salary
+assert table['salary'][0] == 21000 // get the column and the first index
+assert table.row(0).salary == 21000 // get the first row and then the salary column
+assert table.row(0)[1] == 21000 // get the first row and then the second column
 ```        
 ### Creating from a result set:
 

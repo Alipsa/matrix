@@ -41,7 +41,7 @@ class ExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data) {
-    String sheetName = SpreadsheetUtil.createValidSheetName(data.name)
+    String sheetName = SpreadsheetUtil.createValidSheetName(data.matrixName)
     exportExcel(file, data, sheetName)
     return sheetName
   }

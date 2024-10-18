@@ -79,7 +79,7 @@ class MatrixSqlTest {
         'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
     ],
         [int, String, LocalDate]
-    ).withName('complexData')
+    ).withMatrixName('complexData')
 
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDependency('com.h2database:h2:2.3.232')
@@ -118,7 +118,7 @@ class MatrixSqlTest {
         'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
     ],
         [int, int, String, LocalDate]
-    ).withName('pkdata')
+    ).withMatrixName('pkdata')
 
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDependency('com.h2database:h2:2.3.232')

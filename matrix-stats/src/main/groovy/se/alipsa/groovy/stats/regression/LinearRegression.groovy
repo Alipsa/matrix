@@ -199,7 +199,7 @@ class LinearRegression {
       xLab = xLab.padRight(interceptLab.length())
     }
     Matrix coefficients = Matrix.builder()
-    .name('Coefficients')
+    .matrixName('Coefficients')
     .columnNames(['           ','Estimate','Std. Error' /*, 't value', 'Pr(>|t|)'*/])
     .rows([
             [interceptLab, xLab],

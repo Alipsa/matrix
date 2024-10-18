@@ -181,7 +181,7 @@ class ExcelImporter {
         }
         Matrix matrix = importExcelSheet(sheet, startRow, it.endRow as int, startCol, endCol, header)
         String key = it.getOrDefault("key", sheetName)
-        matrix.setName(key)
+        matrix.setMatrixName(key)
         result.put(key, matrix)
       }
       return result
@@ -241,7 +241,7 @@ class ExcelImporter {
       matrix.add(rowList)
     }
     return Matrix.builder()
-        .name(sheet.getSheetName())
+        .matrixName(sheet.getSheetName())
         .columnNames(colNames)
         .rows(matrix)
         .types([Object] * colNames.size())
