@@ -272,7 +272,7 @@ class MatrixBuilderTest {
         , new Person(3, 'Ian')
     ]
     Matrix m = Matrix.builder().data(obs).build()
-    println(m.content())
+    //println(m.content())
     assertIterableEquals(['id', 'name'], m.columnNames())
     assertEquals(2, m[1, 'id'])
     assertEquals('Ian', m[2, 'name'])

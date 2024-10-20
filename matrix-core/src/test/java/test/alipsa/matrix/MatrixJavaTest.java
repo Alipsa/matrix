@@ -435,6 +435,26 @@ class MatrixJavaTest {
     assertEquals(LocalDate.class, table2.type("start"));
   }
 
+  @Test
+  void testApplyRows() {
+    var data = new Columns()
+        .add("place", 1, 2, 3, 4)
+        .add("firstname", "Lorena", "Marianne", "Lotte", "Chris")
+        .add("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27", "2023-01-10"));
+
+    var table = Matrix.builder().data(data).build();
+
+    table.applyRows("place", new ValueClosure<Integer, Row>(row -> {
+      if (row.getAt("start", LocalDate.class).isBefore(LocalDate.of(2022, 8,1))) {
+        return row.getAt("place", int.class) + row.getAt("firstname", String.class).length();
+      } else {
+        return (Integer)row.getProperty("place");
+      }
+    }
+    ));
+    assertIterableEquals(c(7, 10, 3, 4), table.column("place"), table.content());
+  }
+
 
   @Test
   void testApplyChangeType() {
@@ -474,7 +494,9 @@ class MatrixJavaTest {
 
     var foo = table.clone().apply("place", selection,
         new ValueClosure<Integer, Integer>(it -> it * 2));
-    //println(foo.content())
+    assertEquals(3, foo.rowCount(), "Number of rows should be unaffected by apply");
+    assertEquals(3, foo.columnCount(), "Number of columns should be unaffected by apply");
+
     assertEquals(4, foo.getAt(1, 0, Integer.class));
     assertEquals(6, foo.getAt(2, 0, Integer.class));
     assertEquals(LocalDate.class, foo.type(2));
@@ -484,7 +506,7 @@ class MatrixJavaTest {
       var date = it.getAt(2, LocalDate.class);
       return date.isAfter(LocalDate.of(2022, 1, 1));
     }), new ValueClosure<Integer, Integer>(it -> it * 2));
-    //println(bar.content())
+    System.out.println(bar.content());
     assertEquals(4, bar.getAt(1, 0, Integer.class));
     assertEquals(6, bar.getAt(2, 0, Integer.class));
     assertEquals(LocalDate.class, bar.type(2), "start column type");
@@ -846,7 +868,7 @@ class MatrixJavaTest {
         .types(int.class, String.class, Number.class, LocalDate.class)
         .build();
     var d0r = d0.removeEmptyRows();
-    System.out.println(d0r.content());
+    //System.out.println(d0r.content());
     assertEquals(empData, d0r, empData.diff(d0r, true));
   }
 

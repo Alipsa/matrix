@@ -13,7 +13,7 @@ class RowExtension {
   static Object getAt(Row self, Collection indices) {
     //println("${this.class}: $indices")
     if (indices instanceof IntRange) {
-      return self.subList(indices.min(), indices.max())
+      return self[indices]
     }
     if (indices.size() == 2) {
       def column = indices[0]

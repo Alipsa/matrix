@@ -342,6 +342,9 @@ class StatTest {
     assert [3.0, 4.0, 5.0] == meanRows(m, 'foo', 'bar')
     assert [2.75, 3.0, 5.75] == meanRows(m, 0..3)
     assert [2.75, 3.0, 5.75] == meanRows(m)
+
+    m.means = meanRows(m[0..3])
+    assert [2.75, 3.0, 5.75] == m['means']
   }
 
   @Test
@@ -358,6 +361,9 @@ class StatTest {
     assert [6.0, 8.0, 10.0] == sumRows(m, 0..1)
     assert [6.0, 8.0, 10.0] == sumRows(m, 'foo', 'bar')
     assert [11.0, 12.0, 23.0] == sumRows(m)
+
+    m.addColumn('total', sumRows(m[0..2]))
+    assertIterableEquals([8.0, 11.0, 14.0], m.total)
   }
 
   @Test
@@ -370,11 +376,14 @@ class StatTest {
     ).types([BigDecimal]*4)
         .build()
 
-    println m.content()
+    //println m.content()
     assert [2.0, 2.0, 4.0] == medianRows(m, [0, 2, 3])
     assert [2.0, 3.0, 4.0] == medianRows(m, 0..2)
     assert [2.0, 3.0, 4.0] == medianRows(m, 'foo', 'bar', 'baz')
     assert [2.5, 2.5, 5.5] == medianRows(m, 0..3)
     assert [2.5, 2.5, 5.5] == medianRows(m)
+
+    m['medians'] = medianRows(m[0..2])
+    assert [2.0, 3.0, 4.0] == m.medians
   }
 }

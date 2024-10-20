@@ -4,6 +4,7 @@ import se.alipsa.groovy.matrix.Row
 import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.Matrix
 
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -295,17 +296,23 @@ class MatrixTest {
         'place'    : ['1', '2', '3', ','],
         'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
         'start'    : ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
+        'bloodsugar': [5.23, 5.64, 4.22, 3.91]
     ]
     def table = Matrix.builder().columns(data).build()
         .convert(place: int, start: LocalDate)
-    def table2 = table.apply("start") { startDate ->
+    table.apply("start") { startDate ->
       startDate.plusDays(10)
     }
-    assertEquals(LocalDate.of(2021, 12, 11), table2["start"][0])
-    assertEquals(LocalDate.of(2022, 7, 20), table2["start"][1])
-    assertEquals(LocalDate.of(2023, 6, 6), table2["start"][2])
-    assertEquals(LocalDate.of(2023, 1, 20), table2["start"][3])
-    assertEquals(LocalDate, table2.type("start"))
+    assertEquals(LocalDate.of(2021, 12, 11), table["start"][0])
+    assertEquals(LocalDate.of(2022, 7, 20), table["start"][1])
+    assertEquals(LocalDate.of(2023, 6, 6), table["start"][2])
+    assertEquals(LocalDate.of(2023, 1, 20), table["start"][3])
+    assertEquals(LocalDate, table.type("start"))
+
+    table.apply('bloodsugar') { BigDecimal v ->
+      v.setScale(1, RoundingMode.HALF_UP)
+    }
+    assertIterableEquals([5.2, 5.6, 4.2, 3.9], table.bloodsugar, table.content())
   }
 
   @Test
@@ -338,7 +345,9 @@ class MatrixTest {
     }
     assertIterableEquals([1, 2], selection)
     def foo = table.clone().apply("place", selection, { it * 2 })
-    assertEquals(4, foo[1, 0])
+    assertEquals(3, foo.rowCount(), 'Number of rows should be unaffected by apply')
+    assertEquals(3, foo.columnCount(), 'Number of columns should be unaffected by apply')
+    assertEquals(4, foo[1, 0], foo.content())
     assertEquals(6, foo[2, 0])
     assertEquals(LocalDate, foo.type(2))
     assertEquals(Integer, foo.type(0), "place column type")
@@ -347,12 +356,13 @@ class MatrixTest {
       def date = it[2] as LocalDate
       return date.isAfter(LocalDate.of(2022, 1, 1))
     }, {
-      it * 2
+      it + 2
     })
-    println(bar.types())
-    println(bar.content())
+    //println(bar.types())
+    //println(bar.content())
+    assertEquals(1, bar[0, 0])
     assertEquals(4, bar[1, 0])
-    assertEquals(6, bar[2, 0])
+    assertEquals(5, bar[2, 0])
     assertEquals(LocalDate, bar.type(2), "start column type")
     assertEquals(Integer, bar.type(0), "place column type")
 
@@ -369,13 +379,31 @@ class MatrixTest {
   }
 
   @Test
+  void testApplyRows() {
+    def data = [
+        'place'    : [1, 2, 3],
+        'firstname': ['Lorena', 'Marianne', 'Lotte'],
+        'start'    : toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+    ]
+    def table = Matrix.builder().columns(data).types(int, String, LocalDate).build()
+    table.applyRows('place') { Row row ->
+      if (row.start.isBefore(LocalDate.of(2022, 8,1))) {
+        row.place + row.firstname.length()
+      } else {
+        row.place
+      }
+    }
+    assert [7, 10, 3] == table.place
+  }
+
+  @Test
   void testAppendColumnValue() {
     String name = 'numbers'
     List<String> header = ['foo', 'bar']
     def table = Matrix.builder().matrixName(name).columnNames(header).build()
     table['foo'] << 1
     table[0] << 2
-    println table.content()
+    assertEquals([1,2], table.foo)
   }
 
   @Test
@@ -445,7 +473,7 @@ class MatrixTest {
     empd.addColumns(empData2)
     empd.addColumns(empData3)
 
-    println empd.content()
+    //println empd.content()
 
     empData.addColumn("yearMonth", YearMonth, toYearMonths(empData["start_date"]))
     assertEquals(YearMonth, empData[0, 4].class, "type of the added column")
@@ -614,11 +642,15 @@ class MatrixTest {
         "Current Funding": [2700, 225, 2.922, 1.871]
     ]
     Matrix table = Matrix.builder().data(report).types([BigDecimal] * 3).build()
-        .selectColumns("Base Funding", "Full Funding")
 
-    assertEquals(3385.593, table[0, 0])
-    assertEquals(12.23, table[3, 1])
+    Matrix m = table.selectColumns("Base Funding", "Full Funding")
 
+    assertEquals(3385.593, m[0, 0])
+    assertEquals(12.23, m[3, 1])
+
+    m.moveColumn("Base Funding", 1)
+    Matrix m2 = table.selectColumns(0..1)
+    assertEquals(m, m2, m.diff(m2))
   }
 
   @Test
@@ -824,11 +856,24 @@ class MatrixTest {
         b: [1.2, 2.3, 0.7, 1.3, 1.9]
     ]).types([Integer, BigDecimal]).build()
 
+    def aPlus = table.withColumn('a') { a ->
+      a + 1
+    }
+    assertEquals([2,3,4,5,6], aPlus)
+
+    def firstPlus = table.withColumn(0) { a ->
+      a + 1
+    }
+    assertEquals([2,3,4,5,6], firstPlus)
+
     def m = table.withColumns(['a', 'b']) { x, y -> x - y }
     assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], m)
 
     def n = table.withColumns([0, 1] as Integer[]) { x, y -> x - y }
     assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], n)
+
+    def o = table.withColumns(0..1) { x, y -> x - y }
+    assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], o)
   }
 
   @Test

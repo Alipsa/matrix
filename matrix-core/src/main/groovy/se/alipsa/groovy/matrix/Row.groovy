@@ -173,7 +173,7 @@ class Row implements List<Object> {
     }
 
     List subList(IntRange range) {
-        content.subList(range.min(), range.max())
+        content[range]
     }
 
     List subList(Collection indices) {

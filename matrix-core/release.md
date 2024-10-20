@@ -60,8 +60,11 @@ This release was mainly guided by a big port of an R based application to Groovy
 - Override getProperty for Matrix allowing the column to be accessed by dot notation
 - rename Matrix.getName() to Matrix.getMatrixName, setName() -> setMatrixName, withName() -> withMatrixName()
   to not collide with the common column name "name"
-- Renmae MatrixBuilder.name() to matrixName() for consistency with the Matrix name change
-
+- Rename MatrixBuilder.name() to matrixName() for consistency with the Matrix name change
+- add Matrix withColumn(String, Closure), withColumn(int columnIndex, Closure operation), withColumns(IntRange, Closure)
+- add Matrix.selectColumns(IntRange range), Matrix.columnNames(IntRange)
+- enable short notation for adding a row. Both myMatrix.columnName = [1,2,3] and myMatrix['columnName'] = [1,2,3] works
+- change sublist from min, max of range to the entire range (max excludes the last value)
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix
 - add constructor for an empty Matrix

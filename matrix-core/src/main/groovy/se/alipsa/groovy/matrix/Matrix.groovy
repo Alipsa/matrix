@@ -531,7 +531,10 @@ class Matrix implements Iterable<Row> {
    * @return this Matrix (mutated)
    */
   Matrix apply(String columnName, Closure function) {
-    return apply(columnNames().indexOf(columnName), function)
+    if (!mHeaders.contains(columnName)) {
+      throw new IllegalArgumentException("There is no column called $columnName in this matrix")
+    }
+    return apply(columnIndex(columnName), function)
   }
 
   /**
@@ -542,39 +545,21 @@ class Matrix implements Iterable<Row> {
    * @return this Matrix (mutated)
    */
   Matrix apply(int columnNumber, Closure function) {
-    List<List<?>> converted = []
+    int lastColIdx = mColumns.size() -1
+    if (columnNumber < 0 || columnNumber > lastColIdx) {
+      throw new IndexOutOfBoundsException("The column number must be within the available columns (0-${lastColIdx}) but was $columnNumber")
+    }
     def col = []
     Class<?> updatedClass = null
-    for (int i = 0; i < columnCount(); i++) {
-      if (columnNumber == i) {
-        column(i).each {
-          def val = function.call(it)
-          if (updatedClass == null && val != null) {
-            updatedClass = val.class
-          }
-          col.add(val)
-        }
-        converted.add(col)
-      } else {
-        converted.add(column(i))
+    column(columnNumber).each { v ->
+      def val = function.call(v)
+      if (updatedClass == null && val != null) {
+        updatedClass = val.class
       }
+      col.add(val)
     }
-    List<Class<?>> types = updatedClass != type(columnNumber)
-        ? createTypeListWithNewValue(columnNumber, updatedClass, false)
-        : mTypes
-
-    mColumns = new ArrayList<>(converted)
-    mTypes = new ArrayList<>(types)
-    /*
-    def convertedRows = Grid.transpose(converted)
-    return builder()
-        .name(mName)
-        .columnNames(mHeaders)
-        .rows(convertedRows)
-        .types(types)
-        .build()
-
-     */
+    mTypes[columnNumber] = updatedClass
+    mColumns[columnNumber] = col
     this
   }
 
@@ -599,40 +584,25 @@ class Matrix implements Iterable<Row> {
    * @return this Matrix (mutated)
    */
   Matrix apply(int columnNumber, List<Integer> rows, Closure function) {
-    List<List<?>> converted = []
+    int lastColIdx = mColumns.size() -1
+    if (columnNumber > 0 || columnNumber > lastColIdx) {
+      throw new IndexOutOfBoundsException("The column number must be within the available columns (0-${lastColIdx}) but was $columnNumber")
+    }
     def col = []
     Class<?> updatedClass = null
-    for (int i = 0; i < columnCount(); i++) {
-      if (columnNumber == i) {
-        column(i).eachWithIndex { it, idx ->
-          if (idx in rows) {
-            def val = function.call(it)
-            if (updatedClass == null && val != null) {
-              updatedClass = val.class
-            }
-            col.add(val)
-          } else {
-            col.add(it)
-          }
+    column(columnNumber).eachWithIndex { it, idx ->
+      if (idx in rows) {
+        def val = function(it)
+        if (updatedClass == null && val != null) {
+          updatedClass = val.class
         }
-        converted.add(col)
+        col.add(val)
       } else {
-        converted.add(column(i))
+        col.add(it)
       }
     }
-    List<Class<?>> dataTypes = updatedClass != type(columnNumber)
-        ? createTypeListWithNewValue(columnNumber, updatedClass, true)
-        : mTypes
-    mColumns = new ArrayList<>(converted)
-    mTypes = new ArrayList<>(dataTypes)
-    /*
-    def convertedRows = Grid.transpose(converted)
-    return builder()
-      .name(mName)
-      .columnNames(mHeaders)
-      .rows(convertedRows)
-      .types(dataTypes)
-      .build()*/
+    mTypes[columnNumber] = updatedClass
+    mColumns[columnNumber] = col
     this
   }
 
@@ -656,29 +626,29 @@ class Matrix implements Iterable<Row> {
    * @param function the closure to apply
    * @return this Matrix (mutated)
    */
-  Matrix apply(int columnNumber, Closure criteria, Closure function) {
+  Matrix apply(int columnNumber, Closure<Boolean> criteria, Closure function) {
     List<List<?>> updatedRows = []
     Class<?> updatedClass = null
+    def orgVal
     rows().each { it ->
-      {
-        def row = it as List<?>
-        if (criteria(row)) {
-          def r = []
-          for (int i = 0; i < columnCount(); i++) {
-            if (columnNumber == i) {
-              def val = function(row[i])
-              if (updatedClass == null && val != null) {
-                updatedClass = val.class
-              }
-              r.add(val)
-            } else {
-              r.add(row[i])
+      def row = it as List<?>
+      if (criteria.call(row)) {
+        def r = []
+        for (int i = 0; i < columnCount(); i++) {
+          orgVal = row[i]
+          if (columnNumber == i) {
+            def val = function.call(orgVal)
+            if (updatedClass == null && val != null) {
+              updatedClass = val.class
             }
+            r.add(val)
+          } else {
+            r.add(orgVal)
           }
-          updatedRows.add(r)
-        } else {
-          updatedRows.add(row)
         }
+        updatedRows.add(r)
+      } else {
+        updatedRows.add(row)
       }
     }
     List<Class<?>> dataTypes = updatedClass != type(columnNumber)
@@ -686,13 +656,6 @@ class Matrix implements Iterable<Row> {
         : mTypes
     mColumns = new ArrayList<>(Grid.transpose(updatedRows))
     mTypes = new ArrayList<>(dataTypes)
-    /*
-    return builder()
-      .name(mName)
-      .columnNames(mHeaders)
-      .rows(updatedRows)
-      .types(dataTypes)
-      .build()*/
     this
   }
 
@@ -719,6 +682,8 @@ class Matrix implements Iterable<Row> {
   List<String> columnNames() {
     return mHeaders
   }
+
+
 
   /**
    * Set the column name at the index specified
@@ -747,6 +712,15 @@ class Matrix implements Iterable<Row> {
     mHeaders.clear()
     mHeaders.addAll(ListConverter.toStrings(names))
     return this
+  }
+
+  /**
+   *
+   * @param range
+   * @return the column names corresponding to each index in the range
+   */
+  List<String> columnNames(IntRange range) {
+    mHeaders[range]
   }
 
   /**
@@ -1673,8 +1647,8 @@ class Matrix implements Iterable<Row> {
     }
   }
 
-  void putAt(Number rowIndex, String colName, Object value) {
-    putAt(rowIndex, columnIndex(colName), value)
+  void putAt(Number rowIndex, String columnName, Object value) {
+    putAt(rowIndex, columnIndex(columnName), value)
   }
 
   /**
@@ -1723,17 +1697,11 @@ class Matrix implements Iterable<Row> {
   }
 
   void putAt(String columnName, List<?> values) {
-    putAt(columnIndex(columnName), values)
+    upsertColumn(columnName, values)
   }
 
   void putAt(Integer column, List<?> values) {
-    def col = this.column(column)
-    if (values.size() != col.size() && !col.isEmpty()) {
-      // We only allow putAt when the row is empty or number of rows equals number of values
-      throw new IllegalArgumentException("The list of values is not the same as the number of rows")
-    }
-    col.clear()
-    col.addAll(values)
+    upsertColumn(columnName(column), values)
   }
 
   /**
@@ -2041,6 +2009,10 @@ class Matrix implements Iterable<Row> {
         .build()
   }
 
+  Matrix selectColumns(IntRange range) {
+    selectColumns(columnNames(range) as String[])
+  }
+
   /**
    *
    * @param criteria takes a row (List<?>) as parameter and returns true if the row should be included
@@ -2065,17 +2037,27 @@ class Matrix implements Iterable<Row> {
   @Override
   void setProperty(String propertyName, Object newValue) {
     if (newValue instanceof List) {
-      if (mHeaders.contains(propertyName)) {
-        putAt(propertyName, newValue)
-      } else {
-        if (newValue.isEmpty()) {
-          addColumn(propertyName, Object, newValue)
-        } else {
-          addColumn(propertyName, newValue[0].class, newValue)
-        }
-      }
+      upsertColumn(propertyName, newValue)
     } else {
       super.setProperty(propertyName, newValue)
+    }
+  }
+
+  private void upsertColumn(String propertyName, List values) {
+    if (mHeaders.contains(propertyName)) {
+      def col = column(propertyName)
+      if (values.size() != col.size() && !col.isEmpty()) {
+        // We only allow update when the row is empty or number of rows equals number of values
+        throw new IllegalArgumentException("The list of values is not the same as the number of rows")
+      }
+      col.clear()
+      col.addAll(values)
+    } else {
+      if (values.isEmpty()) {
+        addColumn(propertyName, Object, values)
+      } else {
+        addColumn(propertyName, values[0].class, values)
+      }
     }
   }
 
@@ -2326,6 +2308,18 @@ class Matrix implements Iterable<Row> {
     }
   }
 
+  List<?> withColumn(String columnName, Closure operation) {
+    def result = []
+    column(columnName).each {
+      result << operation.call(it)
+    }
+    result
+  }
+
+  List<?> withColumn(int columnIndex, Closure operation) {
+    withColumn(columnName(columnIndex), operation)
+  }
+
   /**
    * Easy way to calculate and create a new column based on existing data.
    *
@@ -2348,13 +2342,13 @@ class Matrix implements Iterable<Row> {
    * [-0.2, -0.3, 2.3, 2.7, 3.1]
    * </code>
    *
-   * @param colNames the names of the columns to include
+   * @param columnNames the names of the columns to include
    * @param operation the closure operation doing the calculation
    * @return a list with the result of the operations
    */
-  List<?> withColumns(List<String> colNames, Closure operation) {
+  List<?> withColumns(List<String> columnNames, Closure operation) {
     def result = []
-    columns(colNames).transpose().each {
+    columns(columnNames).transpose().each {
       result << operation.call(it)
     }
     return result
@@ -2382,6 +2376,10 @@ class Matrix implements Iterable<Row> {
       result << operation.call(it)
     }
     return result
+  }
+
+  List<?> withColumns(IntRange colIndices, Closure operation) {
+    withColumns(colIndices as int[], operation)
   }
 
   /**

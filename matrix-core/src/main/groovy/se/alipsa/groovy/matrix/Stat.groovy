@@ -28,9 +28,9 @@ class Stat {
         map["Matrix"] = ["${name}${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
         for (colName in table.columnNames()) {
             def vals = [table.type(colName).getSimpleName()]
-            def endRow = Math.min(4, table.rowCount()-1)
-            if (endRow > 0) {
-                def samples = ListConverter.convert(table.column(colName).subList(0, endRow), String.class)
+            def endRowIndex = Math.min(3, table.lastRowIndex())
+            if (endRowIndex > 0) {
+                def samples = ListConverter.convert(table[colName][0..endRowIndex], String.class)
                 vals.addAll(samples)
             }
             map[colName] = vals
@@ -198,6 +198,19 @@ class Stat {
         means
     }
 
+    /**
+     * Enable expressions such as <code>table.addColumn('total', sumRows(table[1..23]))</code>
+     * @param columns a list of columns to summarize by row
+     * @return a list of numbers with sums for each row
+     */
+    static <T extends Number> List<T> sumRows(List<List<?>> columns) {
+        def sums = []
+        columns.transpose().each {
+            sums << sum(it as List<?>)
+        }
+        sums
+    }
+
     static Matrix countBy(Matrix table, String groupBy) {
         Map<?, Matrix> groups = table.split(groupBy)
         List<List<?>> counts = []
@@ -335,6 +348,19 @@ class Stat {
         means
     }
 
+    /**
+     * Enable expressions such as <code>table.addColumn('means', meanRows(table[1..23]))</code>
+     * @param columns a list of columns to summarize by row
+     * @return a list of numbers with sums for each row
+     */
+    static <T extends Number> List<T> meanRows(List<List<?>> columns) {
+        def means = []
+        columns.transpose().each {
+            means << mean(it as List<?>)
+        }
+        means
+    }
+
     static BigDecimal mean(List<?> list, int scale = 9) {
         if (list == null || list.isEmpty()) {
             return null
@@ -422,6 +448,19 @@ class Stat {
             means << median(row[colNames])
         }
         means
+    }
+
+    /**
+     * Enable expressions such as <code>table.addColumn('medians', medianRows(table[1..23]))</code>
+     * @param columns a list of columns to summarize by row
+     * @return a list of numbers with sums for each row
+     */
+    static <T extends Number> List<T> medianRows(List<List<?>> columns) {
+        def medians = []
+        columns.transpose().each {
+            medians << median(it as List<?>)
+        }
+        medians
     }
 
     static BigDecimal median(List<? extends Number> valueList) {
