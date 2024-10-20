@@ -65,6 +65,9 @@ This release was mainly guided by a big port of an R based application to Groovy
 - add Matrix.selectColumns(IntRange range), Matrix.columnNames(IntRange)
 - enable short notation for adding a row. Both myMatrix.columnName = [1,2,3] and myMatrix['columnName'] = [1,2,3] works
 - change sublist from min, max of range to the entire range (max excludes the last value)
+- bugfix for putAt when supplying null as value e.g. `myMatrix[0,2] = null` or `myMatrix[0,'columnName'] = null` 
+
+
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix
 - add constructor for an empty Matrix

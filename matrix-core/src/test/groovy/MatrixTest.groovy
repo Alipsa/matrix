@@ -986,6 +986,12 @@ class MatrixTest {
     assertIterableEquals(['Marianne', asLocalDate('2022-07-20'), 2, asYearMonth('2022-07')], m.row(1))
     assertIterableEquals(['Lotte', asLocalDate('2023-06-06'), 4, asYearMonth('2023-06')], m.row(2))
     assertIterableEquals(['Sven', asLocalDate('2024-01-10'), 5, asYearMonth('2024-01')], m.row(3))
+
+    // verify that we can assign a null value
+    m[1,2] = null
+    assertNull(m[1,2], m.content())
+    m[1, 'firstname'] = null
+    assertNull(m[1, 'firstname'], m.content())
   }
 
   @Test

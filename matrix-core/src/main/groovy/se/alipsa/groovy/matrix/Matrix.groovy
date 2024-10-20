@@ -1200,7 +1200,8 @@ class Matrix implements Iterable<Row> {
   <T> T getAt(Integer row, String columnName) {
     Class<T> type = type(columnName) as Class<T>
     Integer columnIdx = columnIndex(columnName)
-    return get(row, columnIdx).asType(type)
+    def val = get(row, columnIdx)
+    val == null ? null : val.asType(type)
   }
 
   /**
@@ -1665,7 +1666,16 @@ class Matrix implements Iterable<Row> {
       throw new IllegalArgumentException("Insufficient number of arguments, specify at least columnName, type and the list of values")
     }
     if (where.size() == 2) {
-      putAt(where[0] as String, where[1] as Class<?>, column)
+      // special cases, when null is passed, the closest match is actually here so we need to redirect properly
+      if (where[0] instanceof Number && column == null) {
+        if (where[1] instanceof String) {
+          putAt(where[0] as Number, where[1] as String, null as Object)
+        } else if (where[1] instanceof Number) {
+          putAt(where[0] as Number, where[1] as Number, null as Object)
+        }
+      } else {
+        putAt(where[0] as String, where[1] as Class<?>, column)
+      }
     } else if (where.size() == 3) {
       putAt(where[0] as String, where[1] as Class<?>, where[2] as Integer, column)
     } else {
