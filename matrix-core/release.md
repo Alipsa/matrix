@@ -1,10 +1,13 @@
 # Matrix core Release history
 
-### 1.3.0, In progress
-note there are several api breaking changes due to extensive cleanup and consistency fixes
-This release was mainly guided by a big port of an R based application to Groovy powered by Matrix
+### 2.0.0, In progress
+note there are several (minor) api breaking changes due to extensive cleanup and consistency fixes
+This release was mainly guided by a big port of an R based budget planning and reporting application 
+to Groovy powered by Matrix (resulting in a code reduction with about 20% and a increased performance by
+more than 300%).
+
 - add constructor to create an empty Matrix with only name and the column names defined
-- change Grid semantics so that getAt and putAt mean the same thing
+- *Breaking change:* change Grid semantics so that getAt and putAt mean the same thing
   it was so that getAt (X = grid[0]) gets the row and putAt (grid[0] = X) puts the column
   but now both refers to the row.
 - Added replaceColumn method to compensate for the change in putAt semantics for a Grid
@@ -46,7 +49,7 @@ This release was mainly guided by a big port of an R based application to Groovy
 - add lastRowIndex and LastColumnIndex as convenience methods for rowCount -1 and ColumnCount -1 respectively
 - add getAt for a range of rows or a range of columns
 - add a MatrixBuilder.data() method for when the data is a list of custom objects
-- changed some Matrix methods (e.g. the convert, apply, removeRows and orderBy methods) to mutate to make things more consistent
+- *Breaking change:* changed some Matrix methods (e.g. the convert, apply, removeRows and orderBy methods) to mutate to make things more consistent
 - Add Matrix.moveRow()
 - Add Matrix.subset() for an IntRange of rows
 - Enable using ginq by overriding get and set Property on a Row
@@ -58,15 +61,19 @@ This release was mainly guided by a big port of an R based application to Groovy
 - Add Stat sumRows, meanRows, medianRows and ensure that median calculations no longer depends on a 
   sorted list by always sorting it internally
 - Override getProperty for Matrix allowing the column to be accessed by dot notation
-- rename Matrix.getName() to Matrix.getMatrixName, setName() -> setMatrixName, withName() -> withMatrixName()
-  to not collide with the common column name "name"
-- Rename MatrixBuilder.name() to matrixName() for consistency with the Matrix name change
+- *Breaking change:* Rename Matrix.getName() to Matrix.getMatrixName, setName() -> setMatrixName, withName() -> withMatrixName()
+  to not collide with the common column name "name". Hence, `myMatrix.name` now refers to the column 'name' (if any) and
+  `myMatrix.matrixName` refers to the name ot the Matrix.
 - add Matrix withColumn(String, Closure), withColumn(int columnIndex, Closure operation), withColumns(IntRange, Closure)
 - add Matrix.selectColumns(IntRange range), Matrix.columnNames(IntRange)
 - enable short notation for adding a row. Both myMatrix.columnName = [1,2,3] and myMatrix['columnName'] = [1,2,3] works
-- change sublist from min, max of range to the entire range (max excludes the last value)
+- *Breaking change:* change sublist from min, max of range to the entire range (max excludes the last value) to be 
+  consistent with the way IntRanges are handled w.r.t. collections in Groovy
 - bugfix for putAt when supplying null as value e.g. `myMatrix[0,2] = null` or `myMatrix[0,'columnName'] = null` 
-
+- *Breaking change:* leftShift (short notation <<) now only refers to column operations so removed the 
+  "add row" since that is already covered with plus and added a leftshift for a Matrix. Plus is no longer mutating as 
+  this `m + [1,2,3]` does not look intuitive, instead you need to do `m = m + [1,2,3]` which is much easier to read. 
+  Plus (+) operations pertains to rows, left shift (<<) refers to columns.
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

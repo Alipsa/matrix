@@ -186,7 +186,7 @@ in you build script). Any version of Groovy >= 4 should work, possibly even olde
 License: Apache 2.0
 
 ### Matrix-core
-You need to include a dependency to matrix-core >= 1.3.0
+You need to include a dependency to matrix-core >= 2.0.0
 License: MIT
 
 ### Apache Commons Math

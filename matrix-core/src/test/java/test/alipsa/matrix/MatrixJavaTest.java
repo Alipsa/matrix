@@ -120,7 +120,82 @@ class MatrixJavaTest {
     assertEquals(LocalDate.of(2017, 3, 14), table.getAt(2, 2));
   }
 
+  @Test
+  void testAddRow() {
+    Matrix m = Matrix.builder()
+        .matrixName("years")
+        .columnNames(Stream.of(1, 2, 3, 4, 5).map(it -> "Y" + it).collect(Collectors.toList()))
+        .build();
+    m.addRow(c(1, 2, 3, 4, 5));
+    m = m.plus(c(10, 20, 30, 40, 50));
+    m.addRow(0, m.columnNames());
+    assertIterableEquals(c("Y1", "Y2", "Y3", "Y4", "Y5"), m.columnNames());
+    assertIterableEquals(c("Y1", "Y2", "Y3", "Y4", "Y5"), m.row(0));
+    assertIterableEquals(c(1, 2, 3, 4, 5), m.row(1));
+    assertIterableEquals(c(10, 20, 30, 40, 50), m.row(2));
 
+    m = m.plus(c(2,3,4,5,6));
+    assertIterableEquals(c(2,3,4,5,6), m.row(m.lastRowIndex()));
+  }
+
+  @Test
+  void testAddColumn() {
+    var empData = Matrix.builder().columns(new Columns(
+            m("emp_id", r(1, 5)),
+            m("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary"),
+            m("salary", 623.3, 515.2, 611.0, 729.0, 843.25),
+            m("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")))
+        )
+        .types(int.class, String.class, Number.class, LocalDate.class)
+        .build();
+    var table = empData.clone().addColumn("yearMonth", YearMonth.class, toYearMonths(empData.column("start_date")));
+    assertEquals(5, table.columnCount());
+    assertEquals("yearMonth", table.columnNames().get(table.columnCount() - 1));
+    assertEquals(YearMonth.class, table.type("yearMonth"));
+    assertEquals(YearMonth.of(2012, 1), table.getAt(0, 4));
+    assertEquals(YearMonth.of(2015, 3), table.getAt(4, 4));
+    assertIterableEquals(c(Integer.class, String.class, Number.class, LocalDate.class, YearMonth.class), table.types());
+
+    // Append a new column to the end
+    Matrix table2 = empData.clone();
+    assertIterableEquals(c(Integer.class, String.class, Number.class, LocalDate.class), table2.types());
+    table2.putAt("yearMonth", YearMonth.class, toYearMonths(table2.column("start_date")));
+    assertEquals(empData.columnCount() + 1, table2.columnCount());
+    assertEquals("yearMonth", table2.columnNames().get(table2.columnCount() - 1));
+    assertEquals(YearMonth.class, table2.type("yearMonth"));
+    assertEquals(YearMonth.of(2012, 1), table2.getAt(0, 4));
+    assertEquals(YearMonth.of(2015, 3), table2.getAt(4, 4));
+
+    // Insert a new column first
+    Matrix table3 = empData.clone();
+    table3.putAt("yearMonth", YearMonth.class, 0, toYearMonths(table3.column("start_date")));
+    assertEquals(empData.columnCount() + 1, table3.columnCount());
+    assertEquals("yearMonth", table3.columnNames().get(0));
+    assertEquals(YearMonth.class, table3.type("yearMonth"));
+    assertEquals(YearMonth.of(2012, 1), table3.getAt(0, 0));
+    assertEquals(YearMonth.of(2015, 3), table3.getAt(4, 0));
+
+    // Use property notation
+    Matrix table4 = empData.clone();
+    table4.setProperty("yearMonth", toYearMonths(table4.column("start_date")));
+    assertEquals(empData.columnCount() + 1, table3.columnCount());
+    assertEquals("yearMonth", table3.columnNames().get(0));
+    assertEquals(YearMonth.class, table3.type("yearMonth"));
+    assertEquals(YearMonth.of(2012, 1), table3.getAt(0, 0));
+    assertEquals(YearMonth.of(2015, 3), table3.getAt(4, 0));
+
+    Matrix table5 = empData.clone();
+    table5.leftShift(m("vacation", c(10, 15, 12, 20, 30)));
+    assertIterableEquals(c(10, 15, 12, 20, 30), (List<?>)table5.getProperty("vacation"));
+
+    var t5 = Matrix.builder()
+        .columnNames("rv")
+        .types(Integer.class)
+        .columns(c(c(5, 5, 1, 2, 22)))
+        .build();
+    table5.leftShift(t5);
+    assertIterableEquals(c(5, 5, 1, 2, 22), (List<?>)table5.getProperty("rv"));
+  }
   @Test
   void testTransposing() {
     var report = new Columns(
@@ -518,43 +593,6 @@ class MatrixJavaTest {
     // An item in a Row can also be referenced by the column name
     Row r2 = table.rows().stream().filter(row -> row.getAt("place", Integer.class) == 3).findFirst().orElse(null);
     assertIterableEquals(c(3, "Lotte", LocalDate.parse("2023-05-27")), r2, String.valueOf(r2));
-  }
-
-
-  @Test
-  void testAddColumn() {
-    var empData = Matrix.builder().columns(new Columns(
-            m("emp_id", r(1, 5)),
-            m("emp_name", "Rick", "Dan", "Michelle", "Ryan", "Gary"),
-            m("salary", 623.3, 515.2, 611.0, 729.0, 843.25),
-            m("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")))
-        )
-        .types(int.class, String.class, Number.class, LocalDate.class)
-        .build();
-    var table = empData.clone().addColumn("yearMonth", YearMonth.class, toYearMonths(empData.column("start_date")));
-    assertEquals(5, table.columnCount());
-    assertEquals("yearMonth", table.columnNames().get(table.columnCount() - 1));
-    assertEquals(YearMonth.class, table.type("yearMonth"));
-    assertEquals(YearMonth.of(2012, 1), table.getAt(0, 4));
-    assertEquals(YearMonth.of(2015, 3), table.getAt(4, 4));
-
-    // Append a new column to the end
-    Matrix table2 = empData.clone();
-    table2.putAt("yearMonth", YearMonth.class, toYearMonths(table2.getAt("start_date")));
-    assertEquals(empData.columnCount() + 1, table2.columnCount());
-    assertEquals("yearMonth", table2.columnNames().get(table2.columnCount() - 1));
-    assertEquals(YearMonth.class, table2.type("yearMonth"));
-    assertEquals(YearMonth.of(2012, 1), table2.getAt(0, 4));
-    assertEquals(YearMonth.of(2015, 3), table2.getAt(4, 4));
-
-    // Insert a new column first
-    Matrix table3 = empData.clone();
-    table3.putAt("yearMonth", YearMonth.class, 0, toYearMonths(table3.getAt("start_date")));
-    assertEquals(empData.columnCount() + 1, table3.columnCount());
-    assertEquals("yearMonth", table3.columnNames().get(0));
-    assertEquals(YearMonth.class, table3.type("yearMonth"));
-    assertEquals(YearMonth.of(2012, 1), table3.getAt(0, 0));
-    assertEquals(YearMonth.of(2015, 3), table3.getAt(4, 0));
   }
 
 

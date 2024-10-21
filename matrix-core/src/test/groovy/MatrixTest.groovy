@@ -80,12 +80,15 @@ class MatrixTest {
         .columnNames((1..5).collect { "Y" + it })
         .build()
     m.addRow([1, 2, 3, 4, 5])
-    m << [10, 20, 30, 40, 50]
+    m = m.plus([10, 20, 30, 40, 50])
     m.addRow(0, m.columnNames())
     assertIterableEquals(['Y1', 'Y2', 'Y3', 'Y4', 'Y5'], m.columnNames())
     assertIterableEquals(['Y1', 'Y2', 'Y3', 'Y4', 'Y5'], m.row(0))
     assertIterableEquals([1, 2, 3, 4, 5], m.row(1))
     assertIterableEquals([10, 20, 30, 40, 50], m.row(2))
+
+    m = m + [2,3,4,5,6]
+    assertIterableEquals([2,3,4,5,6], m.row(m.lastRowIndex()))
   }
 
   @Test
@@ -449,6 +452,18 @@ class MatrixTest {
     assertEquals(YearMonth, table3.type("yearMonth"))
     assertEquals(YearMonth.of(2012, 1), table3[0, 0])
     assertEquals(YearMonth.of(2015, 3), table3[4, 0])
+
+    Matrix table5 = empData.clone()
+    table5 << [vacation: [10, 15, 12, 20, 30]]
+    assertIterableEquals([10, 15, 12, 20, 30], table5.vacation)
+
+    def t5 = Matrix.builder()
+        .columnNames('rv')
+        .types(Integer)
+        .columns([[5, 5, 1, 2, 22]])
+        .build()
+    table5 << t5
+    assertIterableEquals([5, 5, 1, 2, 22], table5.rv)
   }
 
   @Test

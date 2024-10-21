@@ -16,7 +16,7 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.3.0-SNAPSHOT'
+version '2.0.0-SNAPSHOT'
 description = "Groovy library for working with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")

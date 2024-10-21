@@ -1596,10 +1596,10 @@ class Matrix implements Iterable<Row> {
    * Append a row to this matrix
    *
    * @param row
-   * @return this matrix
+   * @return a new matrix with the row appended to the end
    */
   Matrix plus(List row) {
-    addRow(row)
+    clone().addRow(row)
   }
 
   /**
@@ -1609,12 +1609,7 @@ class Matrix implements Iterable<Row> {
    * @return this matrix
    */
   Matrix plus(Matrix table) {
-    addRows(table.rowList())
-  }
-
-  Matrix appendValues(String columnName, List<?> values) {
-    column(columnName).addAll(values)
-    this
+    clone().addRows(table.rowList())
   }
 
   /**
@@ -1729,12 +1724,42 @@ class Matrix implements Iterable<Row> {
     }
   }
 
-  def leftShift(List row) {
-    addRow(row)
+  def leftShift(List column) {
+    throw new IllegalArgumentException("leftShift to add a column should be specified with a Map or another Matrix")
+  }
+
+  /**
+   * Adds the column from the specified matrix to this one. Note that this is not a join on some matching criteria
+   * but just a "raw" add. If the specified Matrix has more rows than this, only a subset will be added. If it is smaller
+   * nulls will be used to fill the extra space.
+   *
+   * @param m the matrix containing the columns to add
+   * @return this Matrix (mutated)
+   */
+  def leftShift(Matrix m) {
+    int nrow = rowCount()
+    m.columns().eachWithIndex {c, idx ->
+      def col
+      if (c.size() < nrow) {
+        col = c + [null]*(nrow-c.size())
+      } else if (c.size() > nrow) {
+        col = c.subList(0, nrow)
+      } else {
+        col = c
+      }
+      addColumn(m.columnName(idx), m.type(idx), col)
+    }
   }
 
   def leftShift(List column, Object value) {
     column.add(value)
+  }
+
+  def leftShift(Map<String, List<?>> columns) {
+    columns.each { name, list ->
+      def type = list.isEmpty() ? Object : list[0].class
+      addColumn(name, type, list)
+    }
   }
 
   /**
