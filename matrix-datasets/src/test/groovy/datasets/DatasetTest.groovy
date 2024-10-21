@@ -60,6 +60,10 @@ class DatasetTest {
         assertEquals(32, mtcars.rowCount(), 'number of rows')
         assertEquals(12, mtcars.columnCount(), 'number of columns')
         assertEquals(642.9, Stat.sum(mtcars['mpg']), 'sum of mpg')
+        assertIterableEquals(
+            ['Volvo 142E','21.4','4','121','109','4.11','2.78','18.6','1','1','4','2'],
+            ListConverter.toStrings(mtcars.row(31))
+        )
         assertEquals(Dataset.descMtcars(), Dataset.describe(mtcars))
         assertEquals(Dataset.descMtcars(), Dataset.describe('mtcars'))
     }

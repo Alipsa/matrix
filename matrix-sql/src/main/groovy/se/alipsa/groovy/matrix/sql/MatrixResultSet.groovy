@@ -78,7 +78,7 @@ class MatrixResultSet implements ResultSet{
   @Override
   boolean next() throws SQLException {
     rowIdx++
-    if (rowIdx > matrix.rowCount()) {
+    if (rowIdx >= matrix.rowCount()) {
       return false
     }
     return true
