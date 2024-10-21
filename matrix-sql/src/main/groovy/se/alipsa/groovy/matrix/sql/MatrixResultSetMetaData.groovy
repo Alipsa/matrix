@@ -285,7 +285,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
    */
   @Override
   String getColumnClassName(int column) throws SQLException {
-    return matrix.type(column -1).toString()
+    return matrix.type(column -1).getName()
   }
 
   /**

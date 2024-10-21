@@ -3,6 +3,7 @@ import se.alipsa.groovy.datasets.Dataset
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.sql.MatrixResultSet
 import java.sql.ResultSet
+import java.sql.Types
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -27,5 +28,11 @@ class MatrixResultSetTest {
     rs.updateString(1, "Foo")
     Matrix m = rs.unwrap(Matrix)
     assertEquals("Foo", m[0,0])
+
+    def rsmd = rs.getMetaData()
+    assertEquals(String.class.getName(), rsmd.getColumnClassName(1), "First column should be String")
+    assertEquals(mtcars.columnCount(), rsmd.columnCount)
+    assertEquals('VARCHAR', rsmd.getColumnTypeName(1))
+    assertEquals(Types.VARCHAR, rsmd.getColumnType(1))
   }
 }
