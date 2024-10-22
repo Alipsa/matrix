@@ -5,7 +5,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class ClassUtils {
 
-  static Class<?> primitiveWrapper(Class<?> it) {
+  static Class primitiveWrapper(Class it) {
     if (it == boolean) {
       return Boolean
     } else if (it == byte) {
@@ -27,8 +27,8 @@ class ClassUtils {
     return it
   }
 
-  static List<Class<?>> convertPrimitivesToWrapper(List<Class<?>> types) {
-    List<Class<?>> safeTypes = []
+  static List<Class> convertPrimitivesToWrapper(List<Class> types) {
+    List<Class> safeTypes = []
     types.each {
       if (it != null && it.isPrimitive()) {
         safeTypes.add(primitiveWrapper(it))
@@ -39,7 +39,7 @@ class ClassUtils {
     return safeTypes
   }
 
-  static Class<?> findClosestCommonSuper(Class<?> updatedClass, Class<?> columnType) {
+  static Class findClosestCommonSuper(Class updatedClass, Class columnType) {
     if (updatedClass == null || columnType == null) {
       return Object
     }

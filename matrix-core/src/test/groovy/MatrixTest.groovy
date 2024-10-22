@@ -1064,4 +1064,37 @@ class MatrixTest {
     assertEquals(6, table[3, 2])
     assertIterableEquals([1, 2, 3], table.getAt(0..2, 2))
   }
+
+  @Test
+  void testColumnArithmetics() {
+    Matrix m = Matrix.builder().columns(
+        [id: [1,2,3,4],
+         balance: [10000, 1000.23, 20122, 12.1]
+        ]
+    ).types(int, double)
+    .build()
+
+    Matrix r = Matrix.builder().columns(
+        [id: [1,2,3,4],
+         ir: [0.041, 0.020, 0.035, 0.5]
+        ])
+    .types(int, double)
+    .build()
+
+    // verify individual parts
+    def interest = [10000*0.041, 1000.23*0.020, 20122*0.035, 12.1*0.5]
+    assert interest == m.balance * r.ir
+
+    def balanceSum = 10000 + 1000.23 + 20122 + 12.1
+    assert  balanceSum == m.balance.sum()
+
+    def weighted = interest.sum() / balanceSum
+    assert weighted == 0.0366259560
+
+    // now we arrive at the nice, compound syntax:
+    assert weighted == (m.balance * r.ir).sum() / m.balance.sum()
+
+    // verify that single number multiplication works
+    assert [10000*0.05, 1000.23*0.05, 20122*0.05, 12.1*0.05] == m.balance * 0.05
+  }
 }

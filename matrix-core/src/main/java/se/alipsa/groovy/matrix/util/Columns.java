@@ -5,13 +5,14 @@ import java.util.*;
 /**
  * Simplifies Matrix creation making Map creation almost as simple as i Groovy
  */
-public class Columns extends LinkedHashMap<String, List<?>> {
+public class Columns extends LinkedHashMap<String, List> {
 
   public Columns() {
   }
 
-  public Columns(Map<String, List<?>>... values) {
-    for (Map<String, List<?>> vals : values) {
+  @SafeVarargs
+  public Columns(Map<String, List>... values) {
+    for (Map<String, List> vals : values) {
       putAll(vals);
     }
   }
@@ -21,7 +22,7 @@ public class Columns extends LinkedHashMap<String, List<?>> {
     return this;
   }
 
-  public Columns add(String name, List<?> values) {
+  public Columns add(String name, List values) {
     put(name, values);
     return this;
   }

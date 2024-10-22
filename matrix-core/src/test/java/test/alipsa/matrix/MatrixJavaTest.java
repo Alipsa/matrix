@@ -109,7 +109,7 @@ class MatrixJavaTest {
 
   @Test
   void testTableCreationFromMatrix() {
-    var employees = new ArrayList<List<?>>();
+    var employees = new ArrayList<List>();
     employees.add(c("John Doe", 21000, asLocalDate("2013-11-01"), asLocalDate("2020-01-10")));
     employees.add(c("Peter Smith", 23400, "2018-03-25", "2020-04-12"));
     employees.add(c("Jane Doe", 26800, asLocalDate("2017-03-14"), asLocalDate("2020-10-02")));

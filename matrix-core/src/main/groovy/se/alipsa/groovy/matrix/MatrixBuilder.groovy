@@ -12,8 +12,8 @@ class MatrixBuilder {
 
   String matrixName
   List<String> headerList
-  List<List<?>> columns
-  List<Class<?>> dataTypes
+  List<List> columns
+  List<Class> dataTypes
 
   Matrix build() {
     new Matrix(matrixName, headerList, columns, dataTypes)
@@ -45,7 +45,7 @@ class MatrixBuilder {
    * @param columns a list of variables
    * @return this builder
    */
-  MatrixBuilder columns(List<List<?>> columns) {
+  MatrixBuilder columns(List<List> columns) {
     if (columns.size() > 0 && !columns[0] instanceof List) {
       throw new IllegalArgumentException("The List of columns does not contain lists but ${columns[0].class}")
     }
@@ -53,14 +53,14 @@ class MatrixBuilder {
     this
   }
 
-  MatrixBuilder columns(List<?>... columns) {
-    this.columns = columns as List<List<?>>
+  MatrixBuilder columns(List... columns) {
+    this.columns = columns as List<List>
     this
   }
 
-  MatrixBuilder columns(Map<String, List<?>> columData) {
+  MatrixBuilder columns(Map<String, List> columData) {
     List<String> headers = []
-    List<List<?>> cols = []
+    List<List> cols = []
     columData.each {k, v ->
       headers << String.valueOf(k)
       cols << v.collect()
@@ -82,7 +82,7 @@ class MatrixBuilder {
    * @param rows a list of observations
    * @return this builder
    */
-  MatrixBuilder rows(List<List<?>> rows) {
+  MatrixBuilder rows(List<List> rows) {
     this.columns = rows.transpose()
     this
   }
@@ -144,7 +144,7 @@ class MatrixBuilder {
         .findAll { !it.synthetic && !Modifier.isStatic(it.modifiers)}
         .collect{it.name}
         .sort()
-    List<List<?>> rowList = []
+    List<List> rowList = []
     List row
     observations.each { obs ->
       row = []
@@ -158,7 +158,7 @@ class MatrixBuilder {
     this
   }
 
-  MatrixBuilder data(Map<String, List<?>> columData) {
+  MatrixBuilder data(Map<String, List> columData) {
     columns(columData)
   }
 
@@ -291,7 +291,7 @@ class MatrixBuilder {
     ResultSetMetaData rsmd = rs.getMetaData()
     int ncols = rsmd.getColumnCount()
     List<String> headers = []
-    List<Class<?>> columnTypes = []
+    List<Class> columnTypes = []
     for (int i = 1; i <= ncols; i++) {
       headers.add(rsmd.getColumnName(i))
       try {
@@ -309,7 +309,7 @@ class MatrixBuilder {
     }
     List<List<Object>> rows = []
     while (rs.next()) {
-      List<?> row = []
+      List row = []
       for (int i = 1; i <= ncols; i++) {
         row.add(rs.getObject(i))
       }
@@ -318,22 +318,22 @@ class MatrixBuilder {
     columns(rows.transpose())
   }
 
-  MatrixBuilder definition(Map<String, Class<?>> namesAndTypes) {
+  MatrixBuilder definition(Map<String, Class> namesAndTypes) {
     columnNames(namesAndTypes.keySet() as List)
     types(namesAndTypes.values() as List)
   }
 
 
-  MatrixBuilder types(List<Class<?>> types) {
+  MatrixBuilder types(List<Class> types) {
     this.dataTypes = ClassUtils.convertPrimitivesToWrapper(types)
     this
   }
 
-  MatrixBuilder types(Class<?>... dataTypes) {
-    types(dataTypes as List<Class<?>>)
+  MatrixBuilder types(Class... dataTypes) {
+    types(dataTypes as List<Class>)
   }
 
-  MatrixBuilder types(List<Class<?>>... types) {
+  MatrixBuilder types(List<Class>... types) {
     if (types.length > 0) {
       this.dataTypes = types[0]
     }

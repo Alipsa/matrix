@@ -463,6 +463,35 @@ See [using ginq](https://groovy-lang.org/using-ginq.html) for more info about gi
 See [tests](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/MatrixTest.groovy) for more usage examples or
 the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/latest/index.html) for more info.
 
+### Column Arithmetics
+The columns in a matrix overrides the following basic mathematical operations to be on each element in the column
+which differs from standard Groovy behavior on lists: plus (+), minus (-), multiply (*), 
+divide (/), power (**). As a consequence you can do stuff like this:
+```groovy
+import se.alipsa.groovy.matrix.Matrix
+Matrix m = Matrix.builder().columns(
+    [id: [1,2,3,4],
+     balance: [10000, 1000.23, 20122, 12.1]
+]).types(int, double)
+.build()
+
+Matrix r = Matrix.builder().columns(
+  [id: [1,2,3,4],
+   ir: [0.041, 0.020, 0.035, 0.5]
+])
+.types(int, double)
+.build()
+
+
+def interest = [10000*0.041, 1000.23*0.020, 20122*0.035, 12.1*0.5]
+assert interest == m.balance * r.ir
+
+assert 0.0366259560 == (m.balance * r.ir).sum() / m.balance.sum()
+
+// or we can multiply all items in a column like this
+assert [10000*0.05, 1000.23*0.05, 20122*0.05, 12.1*0.05] == m.balance * 0.05
+```
+
 ### Using Matrix from another JVM language
 If you are using the Matrix library from another JVM language, you cannot use the 
 short notation for creating and referring to lists and maps:

@@ -22,7 +22,7 @@ public class CollectionUtils {
    * @param values the values that the list should contain
    * @return a List&lt;?&gt; of the values specified
    */
-  public static List<?> cg(Object... values) {
+  public static List cg(Object... values) {
     return Arrays.asList(values);
   }
 
@@ -34,20 +34,20 @@ public class CollectionUtils {
     return list;
   }
 
-  public static LinkedHashMap<String, List<?>> m(String name, Object... values) {
-    LinkedHashMap<String, List<?>> map = new LinkedHashMap<>();
+  public static LinkedHashMap<String, List> m(String name, Object... values) {
+    LinkedHashMap<String, List> map = new LinkedHashMap<>();
     map.put(name, Arrays.asList(values));
     return map;
   }
 
-  public static LinkedHashMap<String, List<?>> m(String name, List<?> values) {
-    LinkedHashMap<String, List<?>> map = new LinkedHashMap<>();
+  public static LinkedHashMap<String, List> m(String name, List values) {
+    LinkedHashMap<String, List> map = new LinkedHashMap<>();
     map.put(name, values);
     return map;
   }
 
 
-  public static List<?> r(int from, int to) {
+  public static List r(int from, int to) {
     List<Integer> list = new ArrayList<>();
     for (int i = from; i <= to; i++) {
       list.add(i);

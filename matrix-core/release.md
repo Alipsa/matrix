@@ -74,6 +74,8 @@ more than 300%).
   "add row" since that is already covered with plus and added a leftshift for a Matrix. Plus is no longer mutating as 
   this `m + [1,2,3]` does not look intuitive, instead you need to do `m = m + [1,2,3]` which is much easier to read. 
   Plus (+) operations pertains to rows, left shift (<<) refers to columns.
+- Add a column type that extends ArrayList that can do arithmetic operations on individual elements
+- Removed Generics <?> constraints for List and Class as it was not adding value, just made he code harder to read
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix
