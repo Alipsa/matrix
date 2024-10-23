@@ -8,17 +8,17 @@ class JoinerTest {
 
   @Test
   void testInnerJoin() {
-    def e = new Matrix('employees', [
+    def e = Matrix.builder('employees').data([
         id       : 1..5,
         firstName: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
         salary   : [623.3, 515.2, 611.0, 729.0, 843.25],
         startDate: ["2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"]
-    ])
+    ]).build()
 
-    def f = new Matrix('eln', [
+    def f = Matrix.builder('eln').data( [
         id      : 1..5,
         lastName: ["Smith", "Carpenter", "Bowman", "Carson", "McDougal"]
-    ])
+    ]).build()
 
     def merged = Joiner.merge(e, f, 'id')
     //println merged.toMarkdown()
@@ -27,12 +27,12 @@ class JoinerTest {
 
 
     // Make sure the original matrices was unaltered
-    assertEquals(new Matrix('employees', [
+    assertEquals(Matrix.builder('employees').data([
         id       : 1..5,
         firstName: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
         salary   : [623.3, 515.2, 611.0, 729.0, 843.25],
         startDate: ["2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"]
-    ]), e)
+    ]).build(), e)
   }
 
   @Test

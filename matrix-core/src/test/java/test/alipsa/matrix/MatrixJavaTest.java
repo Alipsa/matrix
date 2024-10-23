@@ -474,7 +474,7 @@ class MatrixJavaTest {
         m("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
     );
     var table = Matrix.builder().data(data).types(c(int.class, String.class, LocalDate.class)).build();
-    var selection = table.selectRowIndices(new RowCriteriaClosure(it ->
+    var selection = table.rowIndices(new RowCriteriaClosure(it ->
         it.getAt(2, LocalDate.class)
             .isAfter(LocalDate.of(2022, 1, 1))
     ));
@@ -560,7 +560,7 @@ class MatrixJavaTest {
         .types(c(int.class, String.class, LocalDate.class))
         .build();
     assertEquals(Integer.class, table.type(0), "place column type");
-    var selection = table.selectRowIndices(new RowCriteriaClosure(it -> {
+    var selection = table.rowIndices(new RowCriteriaClosure(it -> {
       var date = it.getAt(2, LocalDate.class);
       return date.isAfter(LocalDate.of(2022, 1, 1));
     }

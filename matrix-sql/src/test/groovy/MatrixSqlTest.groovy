@@ -73,13 +73,13 @@ class MatrixSqlTest {
   @Test
   void testExample() {
 
-    Matrix complexData = new Matrix([
+    Matrix complexData = Matrix.builder('complexData').data([
         'place': [1, 20, 3],
         'firstname': ['Lorena', 'Marianne', 'Lotte'],
         'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
-    ],
-        [int, String, LocalDate]
-    ).withMatrixName('complexData')
+    ])
+    .types(int, String, LocalDate)
+    .build()
 
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDependency('com.h2database:h2:2.3.232')
@@ -111,14 +111,14 @@ class MatrixSqlTest {
 
   @Test
   void testPrimaryKey() {
-    Matrix pkdata = new Matrix([
+    Matrix pkdata = Matrix.builder('pkdata').data([
         'id': [1,2,3],
         'place': [1, 20, 3],
         'firstname': ['Lorena', 'Marianne', 'Lotte'],
         'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
-    ],
-        [int, int, String, LocalDate]
-    ).withMatrixName('pkdata')
+    ])
+    .types(int, int, String, LocalDate)
+    .build()
 
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDependency('com.h2database:h2:2.3.232')

@@ -277,7 +277,7 @@ class MatrixTest {
         'start'    : toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
     ]
     def table = Matrix.builder().data(data).types([int, String, LocalDate]).build()
-    def selection = table.selectRowIndices {
+    def selection = table.rowIndices {
       return it[2, LocalDate].isAfter(LocalDate.of(2022, 1, 1))
     }
     assertIterableEquals([1, 2], selection)
@@ -342,7 +342,7 @@ class MatrixTest {
     ]
     def table = Matrix.builder().columns(data).types(int, String, LocalDate).build()
     assertEquals(Integer, table.type(0), "place column type")
-    def selection = table.selectRowIndices {
+    def selection = table.rowIndices {
       def date = it[2] as LocalDate
       return date.isAfter(LocalDate.of(2022, 1, 1))
     }

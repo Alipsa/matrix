@@ -50,7 +50,7 @@ class TableUtilTest {
 
   @Test
   void testConvertMatrixToTablesaw() {
-    Matrix glaciers = Matrix.create(getClass().getResource("/glaciers.csv"))
+    Matrix glaciers = Matrix.builder().data(getClass().getResource("/glaciers.csv")).build()
     Table table = TableUtil.toTablesaw(glaciers)
     assertEquals("glaciers", table.name())
     assertEquals(glaciers.columnCount(), table.columnCount(), "number of columns")

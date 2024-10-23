@@ -384,40 +384,41 @@ id	balance	interestAmount
 
 ### Combining selectRows with apply
 ```groovy
+import java.time.*
 import java.time.LocalDate
 import se.alipsa.groovy.matrix.*
-import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.groovy.matrix.ListConverter.*
 
 def data = [
     'foo': [1, 2, 3],
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
 ]
-def table = new Matrix(data, [Integer, String, LocalDate])
+def table = Matrix.builder().data(data).types(Integer, String, LocalDate).build()
 // select the observations where start is later than the jan 1 2022
-List<Row> selection = table.selectRows {
+List<Integer> selection = table.rowIndices {
   // We use the column index to refer to a specific variable, 2 will be the 'start' column
   def date = it[2] as LocalDate
   return date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
 }
 // Index values 1,2 will match (row with index 0 is before jan 1 2022 so is not included)
-assertIterableEquals([2,3], selection['foo'])
+assert [1,2] == selection
 
 // Double each value in the foo column that matches the selection
-def foo = table.apply("foo", selection, { it * 2})
-assertEquals(4, foo[1, 0])
-assertEquals(6, foo[2, 0])
+def f = table.clone().apply("foo", selection, { it * 2})
+assert 4 == f[1, 0]
+assert 6 == f[2, 0]
 
 // The same thing can be done in one go which is a bit more efficient
-def bar = table.apply("foo", {
-    def date = it[2] as LocalDate
-    date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
-  }, {
-    it * 2
-  }
+table.apply("foo", {
+  def date = it[2] as LocalDate
+  date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
+}, {
+  it * 2
+}
 )
-assertEquals(4, bar[1, 0])
-assertEquals(6, bar[2, 0])
+assert 4 == table[1, 0]
+assert 6 == table[2, 0]
 ```   
 
 ### Using Ginq

@@ -96,7 +96,7 @@ class TableUtil {
       }
       rowList.add(r)
     }
-    return  rowList
+    return rowList
   }
 
   static Matrix fromTablesaw(Table table) {
@@ -105,17 +105,16 @@ class TableUtil {
     for (ColumnType type : table.types()) {
       columnTypes.add(classForColumnType(type))
     }
-    return Matrix.create(
-        table.name(),
-        table.columnNames(),
-        rows,
-        columnTypes
-    )
+    return Matrix.builder(table.name())
+        .columnNames(table.columnNames())
+        .rows(rows)
+        .types(columnTypes)
+        .build()
   }
 
   static Table toTablesaw(Matrix matrix) {
     List<Column<?>> columns = new ArrayList<>()
-    for(int i = 0; i < matrix.columnCount(); i++) {
+    for (int i = 0; i < matrix.columnCount(); i++) {
       ColumnType type = columnTypeForClass(matrix.type(i))
       Column<?> col = createColumn(type, matrix.columnNames().get(i), matrix.column(i))
       columns.add(col)
@@ -127,14 +126,14 @@ class TableUtil {
     if (type == ColumnType.STRING) {
       var col = StringColumn.create(name)
       for (Object val : values) {
-        col.append((String)val)
+        col.append((String) val)
       }
       return (Column<T>) col
     }
     if (type == ColumnType.BOOLEAN) {
       var col = BooleanColumn.create(name)
       for (Object val : values) {
-        col.append((Boolean)val)
+        col.append((Boolean) val)
       }
       return (Column<T>) col
     }
@@ -216,11 +215,11 @@ class TableUtil {
   static ColumnType columnTypeForClass(Class<?> columnType) {
     if (columnType == String.class) {
       return ColumnType.STRING
-    } else if(columnType == Boolean.class) {
+    } else if (columnType == Boolean.class) {
       return ColumnType.BOOLEAN
-    } else if(columnType == LocalDate.class) {
+    } else if (columnType == LocalDate.class) {
       return ColumnType.LOCAL_DATE
-    } else if(columnType == LocalDateTime.class) {
+    } else if (columnType == LocalDateTime.class) {
       return ColumnType.LOCAL_DATE_TIME
     } else if (columnType == Instant.class) {
       return ColumnType.INSTANT
@@ -271,7 +270,7 @@ class TableUtil {
       return Short
     } else if (BigDecimalColumn.isAssignableFrom(typeClass)) {
       return BigDecimal
-    }else {
+    } else {
       // it is some custom column type made outside the "official" tablesaw api
       return Object.class
     }

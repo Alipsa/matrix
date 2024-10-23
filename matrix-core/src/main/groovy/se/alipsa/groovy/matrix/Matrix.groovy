@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.groovy.matrix.util.RowComparator
 
-import java.sql.ResultSet
 import java.text.NumberFormat
 
 import static se.alipsa.groovy.matrix.util.ClassUtils.*
@@ -42,271 +41,8 @@ class Matrix implements Iterable<Row> {
     new MatrixBuilder()
   }
 
-  /**
-   * @deprecated use builder()
-   *  .name(name)
-   *  .columnNames(headerList)
-   *  .rows(rowList)
-   *  .dataTypes(classList)
-   *  .build() instead
-   * @param name the name of the Matrix
-   * @param headerList the names of the variables (columns)
-   * @param rowList the observations
-   * @param dataTypesOpt the data types (classes) for the columns
-   * @return a new Matrix
-   */
-  @Deprecated
-  static Matrix create(String name, List<String> headerList, List<List> rowList, List<Class>... dataTypesOpt) {
-    builder()
-        .matrixName(name)
-        .columnNames(headerList)
-        .rows(rowList)
-        .types(dataTypesOpt)
-        .build()
-  }
-
-  /**
-   * @deprecated use builder()
-   *  .columnNames(headerList)
-   *  .rows(rowList)
-   *  .dataTypes(classList)
-   *  .build() instead
-   * @param headerList the names of the variables (columns)
-   * @param rowList the observations
-   * @param dataTypesOpt the data types (classes) for the columns
-   * @return a new Matrix
-   */
-  @Deprecated
-  static Matrix create(List<String> headerList, List<List> rowList, List<Class>... dataTypesOpt) {
-    builder()
-        .columnNames(headerList)
-        .rows(rowList)
-        .types(dataTypesOpt)
-        .build()
-  }
-
-  /**
-   *
-   * Deprecated, use <code><pre>
-   *   Matrix.builder()
-   *   .name(theName)
-   *   .rows(rowList)
-   *   .build()
-   * </pre></code> instead
-   *
-   * @param name the name of the Matrix
-   * @param rowList the observations
-   * @return a new Matrix
-   * @deprecated use Matrix.builder() instead
-   */
-  @Deprecated
-  static Matrix create(String name, List<List> rowList) {
-    builder()
-        .matrixName(name)
-        .rows(rowList)
-        .build()
-  }
-
-  /**
-   * @deprecated use Matrix.builder().rows(rowList).build() instead
-   * @param rowList the observations
-   * @return a new Matrix
-   */
-  @Deprecated
-  static Matrix create(List<List> rowList) {
-    builder().rows(rowList).build()
-  }
-
-  /**
-   *
-   * @param name
-   * @param headerList
-   * @param grid
-   * @param dataTypesOpt
-   * @return
-   * @deprecated use Matrix.builder().name(name).columnNames(headerList).data(grid).dataTypes(classList).build() instead
-   */
-  static Matrix create(String name, List<String> headerList, Grid grid, List<Class>... dataTypesOpt) {
-    builder().matrixName(name).columnNames(headerList).data(grid).types(dataTypesOpt).build()
-  }
-
-  /**
-   *
-   * @param headerList the variable names
-   * @param grid the data
-   * @param dataTypesOpt the data types
-   * @return a new Matrix
-   * @deprecated use Matrix.builder().columnNames(headerList).data(grid).dataTypes(classList).build() instead
-   */
-  @Deprecated
-  static Matrix create(List<String> headerList, Grid grid, List<Class>... dataTypesOpt) {
-    builder()
-        .columnNames(headerList)
-        .rows(grid.data)
-        .types(dataTypesOpt)
-        .build()
-  }
-
-  /**
-   *
-   * @param name the name of the Matrix
-   * @param grid the data
-   * @return a new Matrix
-   * @deprecated use builder().name(name).rows(grid.data).build() instead
-   */
-  @Deprecated
-  static Matrix create(String name, Grid grid) {
-    builder().matrixName(name).rows(grid.data).build()
-  }
-
-  /**
-   * @deprecated use builder().rows(grid.data).build() instead
-   * @param grid
-   * @return
-   */
-  @Deprecated
-  static Matrix create(Grid grid) {
-    builder().rows(grid.data).build()
-  }
-
-  /**
-   * @deprecated use builder().name(name).data(file, delimiter, stringQuote, firstRowAsHeader).build() instead
-   * @param name
-   * @param file
-   * @param delimiter
-   * @param stringQuote
-   * @param firstRowAsHeader
-   * @return
-   */
-  @Deprecated
-  static Matrix create(String name, File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
-    builder()
-        .matrixName(name)
-        .data(file, delimiter, stringQuote, firstRowAsHeader)
-        .build()
-  }
-
-  /**
-   *
-   * @param file
-   * @param delimiter
-   * @param stringQuote
-   * @param firstRowAsHeader
-   * @return
-   * @deprecated use builder().data(file, delimiter, stringQuote).build() instead
-   */
-  @Deprecated
-  static Matrix create(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
-    builder()
-        .data(file, delimiter, stringQuote, firstRowAsHeader)
-        .build()
-  }
-
-  /**
-   * @deprecated use builder().data(url, delimiter, stringQuote, firstRowAsHeader).build() instead
-   * @param url
-   * @param delimiter
-   * @param stringQuote
-   * @param firstRowAsHeader
-   * @return
-   */
-  @Deprecated
-  static Matrix create(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
-    builder().data(url, delimiter, stringQuote, firstRowAsHeader).build()
-  }
-
-  /**
-   * @deprecated use builder().data(inputStream, delimiter, stringQuote, firstRowAsHeader).build() instead
-   * @param inputStream
-   * @param delimiter
-   * @param stringQuote
-   * @param firstRowAsHeader
-   * @return
-   */
-  @Deprecated
-  static Matrix create(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
-    builder().data(inputStream, delimiter, stringQuote, firstRowAsHeader).build()
-  }
-
-  /**
-   * @deprecated use builder().name(name).data(rs).build() instead
-   * @param name
-   * @param rs
-   * @return
-   */
-  @Deprecated
-  static Matrix create(String name, ResultSet rs) {
-    builder().matrixName(name).data(rs).build()
-  }
-
-  /**
-   * @deprecated use builder().data(rs).build() instead
-   * @param rs
-   * @return
-   */
-  @Deprecated
-  static Matrix create(ResultSet rs) {
-    builder().data(rs).build()
-  }
-
-  /**
-   * Create an empty matrix
-   * Note the difference between Matrix.create(String, Map) which creates and empty matrix
-   * (the map contains column names and types) and this new Matrix(String, Map) which creates a matrix
-   * with data (the map contains column name and values)
-   *
-   * @param name
-   * @param columnNameAndType a map containing thd column name and its type
-   * @return a new Matrix with empty rows
-   * @deprecated use builder() instead
-   */
-  @Deprecated
-  static Matrix create(String name, Map<String, Class> columnNameAndType) {
-    Matrix m = new Matrix()
-    m.mName = name
-    List<String> headers = new ArrayList<>(columnNameAndType.keySet())
-    List types = new ArrayList(columnNameAndType.values())
-    m.mTypes = sanitizeTypes(headers, types)
-    m.mHeaders = headers
-    List<Column> columns = []
-    headers.each {
-      columns << new Column()
-    }
-    m.mColumns = columns
-    m
-  }
-
-  private Matrix() {}
-
-  /**
-   * Create an empty matrix with the column names defined
-   *
-   * @deprecated use builder().name(name).columnNames(headerList).build() instead
-   * @param name the name of the matrix
-   * @param headerList the list of column names
-   */
-  @Deprecated
-  Matrix(String name, List<String> headerList) {
-    this(name, headerList, createEmptyColumns(headerList), createObjectTypes(headerList))
-  }
-
-  /**
-   * @deprecated use builder().name(name).columnNames(headerList).columns(columns).build() instead
-   * @param name
-   * @param headerList
-   * @param columns
-   */
-  @Deprecated
-  Matrix(String name, List<String> headerList, List<List> columns) {
-    this(name, headerList, convertListOfListToListOfColumn(columns), createObjectTypes(columns))
-  }
-
-  private static List<Column> convertListOfListToListOfColumn(List<List> columns) {
-    List<Column> cols = []
-    columns.collect {
-      cols << new Column(it)
-    }
-    cols
+  static MatrixBuilder builder(String matrixName) {
+    new MatrixBuilder().matrixName(matrixName)
   }
 
   /**
@@ -358,63 +94,6 @@ class Matrix implements Iterable<Row> {
       mColumns.add(new Column(column))
     }
     //println "Creating a matrix with name: '$mName', ${mHeaders.size()} headers, ${mColumns.size()} columns, ${mTypes.size()} types"
-  }
-
-  /**
-   * Constructor to create a matrix with the map of columnar data supplied
-   * Note the difference between Matrix.create(String, Map) which creates and empty matrix
-   * (the map contains column names and types) and this new Matrix(String, Map) which creates a matrix
-   * with data (the map contains column name and values)
-   *
-   * @param name the name of the matrix
-   * @param columns a map with the column name as the key and a lost of values for that column
-   * @param dataTypesOpt an optional list of dataTypes
-   * @deprecated use builder().name(theName).data(columns).dataTypes(dataTypesOpt).build() instead
-   */
-  @Deprecated
-  Matrix(String name, Map<String, List> columns, List<Class>... dataTypesOpt) {
-    mName = name
-    mHeaders = []
-    mColumns = []
-    columns.each { k, v ->
-      mHeaders << String.valueOf(k)
-      mColumns << new Column(v)
-    }
-    mTypes = sanitizeTypes(mHeaders, dataTypesOpt)
-  }
-
-  /**
-   *
-   * @deprecated use builder().columns(theColumns).build() instead
-   */
-  @Deprecated
-  Matrix(Map<String, List> columns) {
-    this((String) null, columns, [])
-  }
-
-  /**
-   * @deprecated use builder().columns(columnList).dataTypes(classList).build() instead
-   * @param columns the data in columnar format
-   * @param dataTypes the classes for each column
-   */
-  @Deprecated
-  Matrix(Map<String, List> columns, List<Class> dataTypes) {
-    this((String) null, columns, dataTypes)
-  }
-
-  /**
-   * @deprecated use builder().columns(columnList).build() instead
-   * @param columns
-   */
-  @Deprecated
-  Matrix(List<List> columns) {
-    mHeaders = []
-    mColumns = []
-    columns.eachWithIndex { List column, int i ->
-      mHeaders << ("c$i" as String)
-      mColumns << new Column(column)
-    }
-    mTypes = createObjectTypes(columns)
   }
 
   Matrix addColumn(String name, type = Object, List column) {
@@ -1891,7 +1570,7 @@ class Matrix implements Iterable<Row> {
    * @return this matrix with the empty rows removed
    */
   Matrix removeEmptyRows() {
-    removeRows(selectRowIndices { !containsValues(it as Iterable) })
+    removeRows(rowIndices { !containsValues(it as Iterable) })
   }
 
   /**
@@ -2060,7 +1739,7 @@ class Matrix implements Iterable<Row> {
    * @param criteria takes a row (List) as parameter and returns true if the row should be included
    * @return a List of row indexes matching the criteria supplied
    */
-  List<Integer> selectRowIndices(Closure criteria) {
+  List<Integer> rowIndices(Closure criteria) {
     def r = [] as List<Integer>
     rows().eachWithIndex { row, idx ->
       {

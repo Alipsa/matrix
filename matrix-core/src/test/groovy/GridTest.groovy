@@ -239,10 +239,10 @@ class GridTest {
 
     @Test
     void testPopulateColumn() {
-        def components = new Matrix([
+        def components = Matrix.builder().data([
             id: [1,2,3,4,5],
             size: [1.2,2.3,0.7,1.3,1.9]
-        ], [Integer, BigDecimal])
+        ]).types(Integer, BigDecimal).build()
         def yearCountMx = new Grid<Integer>(value:0, ncol: 31, nrow: components.rowCount())
         yearCountMx.replaceColumn(1, components['id'] as List<Integer>)
         assertEquals(1, yearCountMx[0, 1])

@@ -73,13 +73,11 @@ E.g:
     import se.alipsa.groovy.matrix.ListConverter
     import java.time.LocalDate
 
-    Matrix complexData = new Matrix([
+    Matrix complexData = Matrix.builder('complexData').data([
         'place': [1, 20, 3],
         'firstname': ['Lorena', 'Marianne', 'Lotte'],
         'start': ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
-    ],
-        [int, String, LocalDate]
-    ).withName('complexData')
+    ]).types([int, String, LocalDate]).build()
     ```
 2. We save it to the db
    ```groovy 

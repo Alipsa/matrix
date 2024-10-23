@@ -34,7 +34,7 @@ more than 300%).
 - add check for missing column in Matrix.dropColumns()
 - Modify Matrix.addColumns to include all columns from the supplied matrix if no columns are specified
 - Fix bug in Matrix.diff and add check for number of columns
-- Add a builder to Matrix and deprecate all static create methods and constructors as a result
+- *Breaking change:* Add a builder to Matrix and remove all static create methods and constructors as a result
 - change Matrix.columnTypes() to Matrix.types() 
 - add putAt for ranges (e.g. myMatrix[0..2] = otherMatrix[1..3])
 - change putAt to allow for add operations i.e. it is now possible to add an element using e.g. myMatrix[1,2] = 'Foo'
@@ -76,6 +76,7 @@ more than 300%).
   Plus (+) operations pertains to rows, left shift (<<) refers to columns.
 - Add a column type that extends ArrayList that can do arithmetic operations on individual elements
 - Removed Generics <?> constraints for List and Class as it was not adding value, just made he code harder to read
+- *Breaking change:* change methodName Matrix.selectRowIndices to Matrix.rowIndices
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

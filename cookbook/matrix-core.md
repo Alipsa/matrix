@@ -7,111 +7,65 @@ convert data into various shapes and formats.
 
 ## Matrix creation
 
-There are two kinds of creation methods:
-1. The constructors. They assume that the data you supply is in columnar format
-2. The static create methods. They assume that the data you supply is in row based format
-
-### Constructor methods:
-- Matrix(String name, List<String> headerList, List<List<?>> columns, List<Class<?>>... dataTypesOpt). Note: if no data types are given, they will be set to Object
-- Matrix(String name, Map<String, List<String>> columns, List<Class<?>>... dataTypesOpt)
-- Matrix(Map<String, List<?>> columns, List<Class<?>>... dataTypesOpt)
-- Matrix(List<List<?>> columns). Note, columns will be named v1, v2 etc.
-
-
-#### Parameters
-- Name is the name of the Matrix e.g. if you have a matrix of cars, the matrix might be named 'car'
-- HeaderList are the names of the columns
-- columns are lists of each the actual columns
-- dataTypesOpt are a List of the classes for the data in each column
+There recommended way to create a Matrix is to use the MatrixBuilder created from the static Matrix.builder() method
+The builder can create a Matrix based on data in the form of a Map<String, List> representing the column name and the column data,
+or from a csv file, a url, a ResultSet, some list structure (either row using the rows() method orcolumns using the columns() method)
+etc.
 
 Examples:
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
+import java.time.LocalDate
 import static se.alipsa.groovy.matrix.ListConverter.*
+import static se.alipsa.groovy.matrix.ValueConverter.*
 
 // Creating based on lists of data
-Matrix ed = new Matrix("ed",
-                ['id', 'name', 'salary', 'start'], [
+Matrix ed = Matrix.builder("ed")
+        .columnNames('id', 'name', 'salary', 'start')
+        .columns([
                     1..5,
                     ["Rick","Dan","Michelle","Ryan","Gary"],
                     [623.3,515.2,611.0,729.0,843.25],
                     toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
-                ]
-        )
+                ])
+        .build()
 
 // Creating based on a map of data, with types
-Matrix empData = new Matrix('empData',
+Matrix empData = Matrix.builder('empData').data(
     [
         emp_id: 1..5,
         emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
         salary: [623.3,515.2,611.0,729.0,843.25],
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
-    ],
-    [int, String, Number, LocalDate]
-)
+    ])
+    .types([int, String, Number, LocalDate])
+    .build()
 
 // Creating based on a list of columns
-def e = new Matrix([
+def e = Matrix.builder().columns([
     1..5,
     ["Rick","Dan","Michelle","Ryan","Gary"],
     [623.3,515.2,611.0,729.0,843.25],
     toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
-])
-```      
-
-### Static create methods
-Creating based on a collection (List) of data
-- static Matrix create(String name, List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt)
-- static Matrix create(List<String> headerList, List<List<?>> rowList, List<Class<?>>... dataTypesOpt)
-- static Matrix create(String name, List<List<?>> rowList)
-- static Matrix create(List<List<?>> rowList)
-
-Creating based on Grid
-- static Matrix create(String name, List<String> headerList, Grid grid, List<Class<?>>... dataTypesOpt)
-- static Matrix create(List<String> headerList, Grid grid, List<Class<?>>... dataTypesOpt)
-- static Matrix create(String name, Grid grid)
-- static Matrix create(Grid grid)
-
-Creating based on a CSV (note: for more advanced text file import, use the matrix-csv package)
-- static Matrix create(String name, File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true)
-- static Matrix create(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true)
-- static Matrix create(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true)
-- static Matrix create(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true)
-
-Creating based on a jdbc ResultSet
-- static Matrix create(String name, ResultSet rs)
-- static Matrix create(ResultSet rs)
-
-#### Parameters
-- Name is the name of the Matrix e.g. if you have a matrix of cars, the matrix might be named 'car'
-- HeaderList are the names of the columns
-- rowList are a list of lists of the observations
-- dataTypesOpt are a List of the classes for the data in each column
-- grid is a monotyped two dimensional list structure
-- file is a pointer to a text file containing rows of observations
-- delimiter is what separates variables in an observation
-- stringQuote is the string surrounding each string type variable (value)
-- firstRowAsHeader is boolean where true means 'use the first row to assign column names'
-- rs is the jdbc resultset to use to create the Matrix
-
-Examples:
-```groovy
-import se.alipsa.groovy.matrix.*
-import static se.alipsa.groovy.matrix.ListConverter.*
+  ])
+  .build()
 
 // Create based on column names and rows
-def table = Matrix.create(["v0", "v1", "v2"], [
-    [1, 2, 3],
-    [1.1, 1, 0.9],
-    [null, 7, "2"]
-])
+def table = Matrix.builder()
+        .columnNames("v0", "v1", "v2")
+        .columns(
+                [1, 2, 3], 
+                [1.1, 1, 0.9], 
+                [null, 7, "2"]
+        )
+        .build()
 
 // Create based on a list of rows
 def employeeList = []
-employees << ['John Doe', 21000, asLocalDate('2013-11-01'), asLocalDate('2020-01-10')]
-employees << ['Peter Smith', 23400,	'2018-03-25',	'2020-04-12']
-employees << ['Jane Doe', 26800, asLocalDate('2017-03-14'), asLocalDate('2020-10-02')]
-def employees = Matrix.create(employeeList)
+employeeList << ['John Doe', 21000, asLocalDate('2013-11-01'), asLocalDate('2020-01-10')]
+employeeList << ['Peter Smith', 23400,	'2018-03-25',	'2020-04-12']
+employeeList << ['Jane Doe', 26800, asLocalDate('2017-03-14'), asLocalDate('2020-10-02')]
+def employees = Matrix.builder().rows(employeeList).build()
 
 // Created based on a CSV:
 def data = [
@@ -122,20 +76,20 @@ def data = [
 ]
 def file = File.createTempFile('FemmesStage1Podium', '.csv')
 file.text = data*.join(',').join('\n') // Write the CSV file
-def femmesStage1Podium = Matrix.create(file)
+def femmesStage1Podium = Matrix.builder().data(file).build()
 
 // Create based on an URL
-def plantGrowth = Matrix.create(
+def plantGrowth = Matrix.builder().data(
     getClass().getResource('/PlantGrowth.csv'),
     ',',
     '"',
-)
+).build()
 
 import groovy.sql.Sql
 // Create based on a resultSet
 def project = null
 Sql.withInstance(dbUrl, dbUser, dbPasswd, dbDriver) { sql ->
-  sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.create(rs) }
+  sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.builder().data(rs).build() }
 }
 ```
 
@@ -149,12 +103,12 @@ import se.alipsa.groovy.matrix.Matrix
 import javax.swing.JTable
 
 // Given the following matrix
-def myMatrix = new Matrix([
+def myMatrix = Matrix.builder().data(
     id    : [1, 2, 3, 4],
     weight: [23.12, 19.98, 20.21, 24.10],
-    height: [123, 128, 99, 113]],
-    [int, BigDecimal, int]
-)
+    height: [123, 128, 99, 113]
+  ).types(int, BigDecimal, int)
+  .build()
 // Getting an individual value by matrix[row, column]
 assert 123 == myMatrix[0, 2]
 assert 123 == myMatrix.get(0, 2)
@@ -166,6 +120,7 @@ assert [1, 2, 3, 4] == myMatrix[0]
 assert [1, 2, 3, 4] == myMatrix.column(0)
 assert [1, 2, 3, 4] == myMatrix['id']
 assert [1, 2, 3, 4] == myMatrix.column('id')
+assert [1, 2, 3, 4] == myMatrix.id
 
 // Getting an observation (row)
 assert [2, 19.98, 128] == myMatrix.row(1)
@@ -189,9 +144,7 @@ Matrix lightAndShort = myMatrix.subset {
 
 // Similarly to get just the list of rows matching the criteria, use the rows(Closure criteria) method
 List<Row> lightAndShortRows = myMatrix.rows {
-  def weight = it[1]
-  def height = it[2]
-  return weight < 24 && height < 125
+  return it.weight < 24 && it.height < 125
 }
 
 // Iterating through the data
@@ -208,14 +161,14 @@ JTable swingTable = new JTable(doubleVector, ['weight', 'height'] as Vector)
 doubleVector = new Vector<Vector<String>>()
 for (row in myMatrix) {
   def singleVector = new Vector<String>()
-  singleVector.add(String.valueOf(row[1]))
-  singleVector.add(String.valueOf(row[2]))
+  singleVector.add(String.valueOf(row.weight))
+  singleVector.add(String.valueOf(row.height))
   doubleVector.add(singlevector)
 }
 swingTable = new JTable(doubleVector, ['weight', 'height'] as Vector)
 
 // Search for the first row where the value equals that in the column
-assert [2, 19.98, 128] == findFirstRow('id', 2)
+assert [2, 19.98, 128] == myMatrix.findFirstRow('id', 2)
 
 // The Matrix selectColumns(String... columnNames) return a new matrix with only the selected columns
 def hightAndWeight = myMatrix.selectColumns('height', 'weight')
@@ -230,7 +183,7 @@ def hightAndWeight = myMatrix.selectColumns('height', 'weight')
 List<Row> r = myMatrix.rows(1..2)
 
 // Getting the weight and height columns
-List<List<?>> weightHight = myMatrix.columns(['weight', 'hight'])
+List<List<?>> weightHight = myMatrix.columns(['weight', 'height'])
 // Other variation of this are 
 // List<List<?>> columns(Integer[] indices) which selects rows based on the indices
 // List<List<?>> columns() which returns all columns in a list format
@@ -248,12 +201,12 @@ List<List<?>> weightHight = myMatrix.columns(['weight', 'hight'])
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
 // Given the following Matrix
-def myMatrix = new Matrix([
+def myMatrix = Matrix.builder().data(
     id    : [1, 2, 3, 4],
     weight: [23.12, 19.98, 20.21, 24.10],
-    height: [123, 128, 99, 113]],
-    [int, BigDecimal, int]
-)
+    height: [123, 128, 99, 113])
+    .types(int, BigDecimal, int)
+    .build()
 println myMatrix.content()
 ```
 will output
@@ -303,13 +256,15 @@ will output
 import se.alipsa.groovy.matrix.Matrix
 import static se.alipsa.groovy.matrix.Stat.*
 
-table = new Matrix('Test',
-                [
+table = Matrix.builder('Test')
+          .data(
                 v0: [0.3, 2, 3],
                 v1: [1.1, 1, 0.9],
                 v2: [null, 'Foo', "Foo"]
-        ], [Number, double, String])
-println table.columnTypes()
+          )
+        .types(Number, double, String)
+        .build()
+println table.types()
 println str(table)
 ```
 Which will print
@@ -317,9 +272,9 @@ Which will print
 [class java.lang.Number, class java.lang.Double, class java.lang.String]
 Matrix (Test, 3 observations of 3 variables)
 --------------------------------------------
-v0: [Number, 0.3, 2]
-v1: [Double, 1.1, 1]
-v2: [String, null, Foo]
+v0: [Number, 0.3, 2, 3]
+v1: [Double, 1.1, 1, 0.9]
+v2: [String, null, Foo, Foo]
 ```
 Notice that the for the line that prints the column types, the second column contains Double and not double which was given.
 This is because a List cannot contain primitives and also because we prefer to work with the wrapper over the 
@@ -367,12 +322,13 @@ Most frequent:	Foo occurs 2 times (66.67%)
 
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
-def table = new Matrix('Test',
-                [
+def table = Matrix.builder('Test')
+        .data(
                 v0: [0.3, 2, 3],
                 v1: [1.1, 1, 0.9],
-                v2: [null, 'Foo', "Foo"]
-        ], [Number, double, String])
+                v2: [null, 'Foo', "Foo"])
+        .types(Number, double, String)
+        .build()
 table.addRow([0.9, 1.2, 'Bar'])
 table.addColumn('v3', Integer, 1..4)
 ```
@@ -392,13 +348,16 @@ The table will now contain the following (one added row and one added column):
 
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
-def table = new Matrix('Test',
+def table = Matrix.builder('Test')
+            .data(
                 [
                 v0: [0.3, 2, 3],
                 v1: [1.1, 1, 0.9],
                 v2: [null, 'Foo', "Foo"]
-        ], [Number, double, String])
-table.dropColumn(v1)
+        ])
+  .types(Number, double, String)
+  .build()
+table.dropColumns('v1')
 ```
 Table will now contain:
 
@@ -410,12 +369,13 @@ Table will now contain:
 
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
-def table = new Matrix('Test',
-                [
-                v0: [null, 2, 3],
-                v1: [null, 1, 0.9],
-                v2: [null, 'Foo', "Bar"]
-        ], [Number, double, String])
+def table = Matrix.builder('Test').data([
+        v0: [null, 2, 3],
+        v1: [null, 1, 0.9],
+        v2: [null, 'Foo', "Bar"]
+  ])
+        .types([Number, double, String])
+        .build()
 table.removeEmptyRows()
 ```
 Table will now contain
@@ -427,13 +387,13 @@ Table will now contain
 
 ```groovy
 import se.alipsa.groovy.matrix.Matrix
-def table = new Matrix('Test',
+def table = Matrix.builder('Test').data(
                 [
                 v0: [null, 2, 3],
                 v1: [null, 1, 0.9],
                 v2: [null, 'Foo', "Bar"]
-        ], [Number, double, String])
-println table.dropColumnsExcept('v0', 'v2')
+        ]).types([Number, double, String]).build()
+println table.dropColumnsExcept('v0', 'v2').content()
 ```
 
 Table will now contain:
@@ -452,13 +412,17 @@ Table will now contain:
   e.g. `myMatrix['temperature'] = [42, 12, 10]`
 - void putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
 ```groovy
+import se.alipsa.groovy.matrix.Matrix
+import java.time.*
+import static se.alipsa.groovy.matrix.ListConverter.*
+
 // note that this version of put at will add a new column
- def table = new Matrix([
+ def table = Matrix.builder().data(
             'firstname': ['Lorena', 'Marianne', 'Lotte'],
             'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
             'foo': [1, 2, 3]
-        ], [String, LocalDate, int])
-        table["yearMonth", YearMonth, 0] = toYearMonth(table["start"])
+ ).types(String, LocalDate, int).build()
+        table["yearMonth", YearMonth, 0] = toYearMonths(table["start"])
 ```
 
 | yearMonth | firstname | start | foo |
@@ -470,12 +434,13 @@ Table will now contain:
 - void putAt(List where, List<?> column)
 ```groovy
 // this will (can only) update an existing column
-def table = new Matrix([
+def table = Matrix.builder().data(
         'firstname': ['Lorena', 'Marianne', 'Lotte'],
         'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'),
         'foo': [1, 2, 3]
-], [String, LocalDate, int])
+).types(String, LocalDate, int).build
 table["foo"] = [2,5,3]
+table.content()
 ```
 
 | firstname | start | foo |

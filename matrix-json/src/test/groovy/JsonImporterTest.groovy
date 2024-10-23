@@ -33,14 +33,13 @@ class JsonImporterTest {
         }
     ]''').convert([int, String, Number, LocalDate])
 
-    Matrix empData = new Matrix(
+    Matrix empData = Matrix.builder().data(
         emp_id: 1..3,
         emp_name: ["Rick","Dan","Michelle"],
         salary: [623.3,515.2,611.0],
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"),
-        [int, String, Number, LocalDate]
-    )
-
+        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
+      .types(int, String, Number, LocalDate)
+      .build()
     assertEquals(empData, table, empData.diff(table))
   }
 }

@@ -345,7 +345,7 @@ def data = [
 ]
 def table = Matrix.builder().data(data).types(Integer, String, LocalDate).build()
 // select the observations where start is later than the jan 1 2022
-def selection = table.selectRowIndices {
+def selection = table.rowIndices {
    def date = it['start']
    return date == null ? false : date.isAfter(LocalDate.of(2022,1, 1))
 }

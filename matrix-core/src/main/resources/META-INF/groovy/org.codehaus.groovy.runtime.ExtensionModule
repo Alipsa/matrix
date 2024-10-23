@@ -4,5 +4,5 @@
 moduleName=matrix-core
 moduleVersion=1.0
 # comma separated list of classes that overrides DefaultGroovyMethods (and create new ones if needed)
-extensionClasses=se.alipsa.groovy.matrix.RowExtension
+extensionClasses=se.alipsa.groovy.matrix.RowExtension,se.alipsa.groovy.matrix.ListToColumnConversionExtension
 # staticExtensionClasses=support.StaticStringExtension

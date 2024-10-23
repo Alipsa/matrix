@@ -10,10 +10,6 @@ class Column extends ArrayList {
   String name
   Class type
 
-  static {
-    ArrayList.mixin(ListToColumnConversionStrategy)
-  }
-
   Column(int initialCapacity) {
     this(initialCapacity, Object)
   }
