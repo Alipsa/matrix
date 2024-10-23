@@ -37,7 +37,7 @@ dependencies {
     } else if (os.isMacOsX()) {
         qualifier = 'mac-aarch64'
     }
-    def javafxVersion = "23"
+    def javafxVersion = "23.0.1"
     implementation 'org.apache.groovy:groovy:4.0.23'
     implementation "org.openjfx:javafx-base:${javafxVersion}:$qualifier"
     implementation "org.openjfx:javafx-graphics:${javafxVersion}:$qualifier"
@@ -58,7 +58,7 @@ dependencies {
         implementation 'se.alipsa.groovy:matrix-stats:1.0.1'
         implementation 'se.alipsa.groovy:matrix-charts:1.0.0-SNAPSHOT'
     }
-    testImplementation platform('org.junit:junit-bom:5.11.2')
+    testImplementation platform('org.junit:junit-bom:5.11.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
