@@ -45,11 +45,10 @@ The only difference when using it from Java is that some of the shorthand method
 instead of doing `myMatrix[2, 'id']` you will need to use the underlying method instead i.e. `myMatrix.getAt(2, 'id')`
 
 ## Matrix
-A Matrix is tabular data with a header and where each column type is defined.
+A Matrix is a grid with a header and where each column type is defined.
 In some ways you can think of it as an in-memory ResultSet.
 
-A Matrix is created using one of the static create methods in Matrix. 
-
+A Matrix is created using the builder.
 ### Creating from groovy code:
 ```groovy
 import se.alipsa.groovy.matrix.*
@@ -112,9 +111,10 @@ import se.alipsa.groovy.matrix.Matrix
 def table = Matrix.builder().data(new File('/some/path/foo.csv'), ';').build()
 ```
 
-Data can be reference using []
-notation e.g. to get the content of the 3:rd row and 2:nd column you do table[3,2] or table[3,'price']. 
-If you pass only one argument, you get the column e.g. List<?> priceColumn = table["price"]
+Data can be referenced using [] notation e.g. to get the content of the 
+3:rd row and 2:nd column you do table[3,2] or table[3,'price'], or even table.price[3]. 
+If you pass only one argument, you get the column e.g. List<?> priceColumn = table["price"],
+or if you prefer: List<?> priceColumn = table.price
 
 ### General inspection
 
@@ -162,11 +162,12 @@ struct.each {
 ```
 will print 
 ```
-Matrix=[5 observations of 4 variables]
-emp_id=[Integer, 1, 2, 3, 4]
-emp_name=[String, Rick, Dan, Michelle, Ryan]
-salary=[Number, 623.3, 515.2, 611.0, 729.0]
-start_date=[LocalDate, 2012-01-01, 2013-09-23, 2014-11-15, 2014-05-11]
+Matrix (5 observations of 4 variables)
+--------------------------------------
+emp_id: [Integer, 1, 2, 3, 4]
+emp_name: [String, Rick, Dan, Michelle, Ryan]
+salary: [Number, 623.3, 515.2, 611.0, 729.0]
+start_date: [LocalDate, 2012-01-01, 2013-09-23, 2014-11-15, 2014-05-11]
 ```
 Note that even though it is _possible_ to define a column as a primitive data type (int in this example), all 
 primitives will be converted to their wrapper type (Integer in this example). This happens on Matrix creation 
@@ -317,8 +318,7 @@ def data = [
     'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
 ]
-def table = Matrix.builder()
-    .name('emp')
+def table = Matrix.builder('emp')
     .columns(data)
     .build()
     .convert(place: Integer, start: LocalDate)
@@ -350,23 +350,21 @@ import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.Stat
 import static se.alipsa.groovy.matrix.ListConverter.*
 
-def account = Matrix.builder()
-    .name('account')
+def account = Matrix.builder('account')
     .columns([
         'id': ['1', '2', '3', '4'],
         'balance': [12323, 23400, 45932, 77200],
     ])
     .build()
 
-def ir = Matrix.builder()
-    .name('interest rates')
+def ir = Matrix.builder('interest rates')
     .columns([
         id: [1,2,3,4],
         interestRate: [0.034, 0.022, 0.019, 0.028]
     ])
     .build()
 
-def accountAndInterest = account.clone().withName('accountAndInterest')
+def accountAndInterest = account.clone().withMatrixName('accountAndInterest')
 accountAndInterest['interestAmount', Double] = Stat.apply(account['balance'], ir['interestRate']) { b, r ->
   b * r
 }
@@ -448,12 +446,12 @@ def result = GQ {
 assert expected == result.toList()
 
 // The same thing using matrix built in query capabilities:
-def exp = m.subset{it.price < 32}.orderBy('price', true)
+def exp = stock.subset{it.price < 32}.orderBy('price', true)
 // We can construct a Matrix from the query result
 Matrix m2 = Matrix.builder()
     .rows(result.toList())
-    .columnNames(m) // copy the column names from the original matrix
-    .types(m) // copy the types from the original matrix
+    .columnNames(stock) // copy the column names from the original matrix
+    .types(stock) // copy the types from the original matrix
     .build()
 
 assert exp == m2
@@ -512,51 +510,60 @@ There are some utility classes making Matrix creation much less painful in java:
 
 ```groovy
 // In groovy you can do
-def gEmpData = new Matrix(
-    emp_id: 1..5,
-    emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-    salary: [623.3,515.2,611.0,729.0,843.25],
-    start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"),
-    [int, String, Number, LocalDate]
-)
+def gEmpData = Matrix.builder().data(
+      emp_id: 1..5,
+      emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
+      salary: [623.3,515.2,611.0,729.0,843.25],
+      start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+    ).types(int, String, Number, LocalDate)
+    .build()
 
 // ... in java you can take advantage of the Column and CollectionUtils  
 // to do something almost as simple:
 import se.alipsa.groovy.matrix.util.Columns;
 import static se.alipsa.groovy.matrix.util.CollectionUtils.*;
 
-var jEmpData = new Matrix( new Columns()
+var jEmpData = Matrix.builder().data( new Columns()
     .add("emp_id", r(1,5))
     .add("emp_name", "Rick","Dan","Michelle","Ryan","Gary")
     .add("salary", 623.3,515.2,611.0,729.0,843.25)
-    .add("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")),
-    c(int.class, String.class, Number.class, LocalDate.class)
-);
+    .add("start_date", toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")))
+    .types(int.class, String.class, Number.class, LocalDate.class)
+    .build();
 ```
 Note that some methods require a closure as a parameter. You need to rewrite that somewhat in java. E.g:
 ```groovy
 // The following groovy code
+import se.alipsa.groovy.matrix.Matrix
+import java.time.LocalDate
+import static se.alipsa.groovy.matrix.ListConverter.*
+
 def data = [
     'place': [1, 2, 3],
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
 ]
-def table = new Matrix(data, [int, String, LocalDate])
-def selection = table.selectRowIndices {
+def table = Matrix.builder().data(data).types(int, String, LocalDate).build()
+def selection = table.rowIndices {
   it[2].isAfter(LocalDate.of(2022,1, 1))
 }
-assertIterableEquals([1,2], selection)
+assert [1,2] == selection
 
 // ...will looks like this in Java:
-import se.alipsa.groovy.matrix.util.Columns;
+import se.alipsa.groovy.matrix.Matrix;
+import java.time.LocalDate;
+import se.alipsa.groovy.matrix.util.*;
 import static se.alipsa.groovy.matrix.util.CollectionUtils.*;
+import static se.alipsa.groovy.matrix.ListConverter.*;
+import static org.junit.jupiter.api.Assertions.*
+
 var dat = new Columns(
     m("place", 1, 2, 3),
     m("firstname", "Lorena", "Marianne", "Lotte"),
     m("start", toLocalDates("2021-12-01", "2022-07-10", "2023-05-27"))
 );
-var tabl = new Matrix(dat, c(int.class, String.class, LocalDate.class));
-var select = tabl.selectRowIndices(new CriteriaClosure(it -> 
+var tabl = Matrix.builder().data(dat).types(int.class, String.class, LocalDate.class).build();
+var select = tabl.rowIndices(new RowCriteriaClosure(it -> 
     it.getAt(2, LocalDate.class).isAfter(LocalDate.of(2022,1, 1))
 )
 );
@@ -575,7 +582,7 @@ The grid class contains some static function to operate on a 2d list (a [][] str
 
 a Grid can be created by supplying a list of rows to the constructor e.g.
 ```groovy
-import se.alipsa.groovy.matrix.Grid
+import se.alipsa.groovy.matrix.*
 Grid foo = [
     [12.0, 3.0, Math.PI],
     ["1.9", 2, 3],
@@ -589,7 +596,7 @@ Grid<Number> bar = new Grid<>([
     [4.3, 2, 3]
 ])
 
-Stat.mean(bar)
+Stat.means(bar)
 ```
 elements can be accessed using the simple square bracket notation grid[rowindex, columnIndex], e.g:
 ```groovy
