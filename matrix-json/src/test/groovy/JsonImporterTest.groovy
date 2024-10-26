@@ -1,12 +1,16 @@
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.ValueNode
 import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.Row
 import se.alipsa.groovy.matrixjson.*
 
 import java.time.LocalDate
@@ -71,40 +75,40 @@ class JsonImporterTest {
     String json = mapper.writeValueAsString([f1, f2])
     println json
     JsonNode root = mapper.readTree(json)
-    JsonNode flatJson = null
-    JsonNodeFactory factory = JsonNodeFactory.instance
+    Matrix jacksonMatrix = toMatrix(root)
+    println(jacksonMatrix.clone().withMatrixName('Jackson').content())
 
+    def importer = new JsonImporter()
+    Matrix m = importer.parse(json)
+    println(m.clone().withMatrixName('jsonSlurper').content())
+    assertEquals(jacksonMatrix, m, jacksonMatrix.diff(m))
+
+  }
+
+  Matrix toMatrix(JsonNode root) {
     List<Map<String, String>> flatMaps = []
+    Set<String> keySet = new LinkedHashSet<>()
     root.each {
       Map<String, String> flatMap = [:]
       addKeys('', it, flatMap)
       flatMaps << flatMap
+      keySet.addAll(flatMap.keySet())
     }
     // Find the max of each key and fill the rest with null
-    Set<String> keySet = new LinkedHashSet<>()
-    flatMaps.each {
-      keySet.addAll(it.keySet())
-    }
+    List rows = []
     for (int i = 0; i < flatMaps.size(); i++) {
-      def m = flatMaps.get(0)
+      def m = flatMaps.get(i)
       keySet.each {
         if (!m.containsKey(it)) {
           m.put(it, null)
         }
       }
+      rows << new ArrayList<>(m.values())
     }
-    flatJson = new ArrayNode(factory)
-    flatMaps.each {
-      def rowJson = new JsonBuilder(it).toString()
-      //println ("adding $rowJson")
-      flatJson.add(mapper.readTree(rowJson))
-    }
-
-    def flatJsonString = mapper.writeValueAsString(flatJson)
-    println (flatJsonString)
-    def importer = new JsonImporter()
-    def table = importer.parse(flatJsonString)
-    println table.content()
+    return Matrix.builder()
+        .rows(rows)
+        .columnNames(keySet)
+        .build()
   }
 
   class Person {
@@ -130,7 +134,7 @@ class JsonImporterTest {
     List<Family> clanMembers = []
   }
 
-  def addKeys(String currentPath, JsonNode jsonNode, Map<String, String> map) {
+  def addKeys(String currentPath, JsonNode jsonNode, Map<String, Object> map) {
     if (jsonNode.isObject()) {
       ObjectNode objectNode = (ObjectNode) jsonNode
       Iterator<Map.Entry<String, JsonNode>> iter = objectNode.fields()
@@ -146,8 +150,16 @@ class JsonImporterTest {
         addKeys(currentPath + '[' + i + ']', arrayNode.get(i), map);
       }
     } else if (jsonNode.isValueNode()) {
-      ValueNode valueNode = (ValueNode) jsonNode;
-      map.put(currentPath, valueNode.asText());
+      if (jsonNode instanceof NumericNode) {
+        NumericNode node = jsonNode as NumericNode
+        map.put(currentPath, node.numberValue())
+      } else if (jsonNode instanceof BooleanNode) {
+        BooleanNode node = jsonNode as BooleanNode
+        map.put(currentPath, node.booleanValue())
+      } else {
+        ValueNode valueNode = (ValueNode) jsonNode
+        map.put(currentPath, valueNode.asText())
+      }
     }
   }
 }

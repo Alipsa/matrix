@@ -45,19 +45,45 @@ class JsonImporter {
    * @param o the result of a JsonSlurper.parse method; should be a List
    * @return a Matrix corresponding to the json data
    */
-  static Matrix jsonToMatrix(Object o) {
-    if (!o instanceof List) {
-      throw new IllegalArgumentException('The Json string is not a list of objects')
+  private Matrix jsonToMatrix(Object root) {
+    List<Map<String, String>> flatMaps = []
+    Set<String> keySet = new LinkedHashSet<>()
+    root.each {
+      Map<String, String> flatMap = [:]
+      flatten('', it, flatMap)
+      flatMaps << flatMap
+      keySet.addAll(flatMap.keySet())
     }
-    def rows = o as List<Map<String, List<?>>>
-    Map<String, List<?>> columnMap = new LinkedHashMap<>()
-    for (Map<String, ?> map in rows) {
-      map.each {
-        columnMap.computeIfAbsent(it.key, k -> []) << it.value
+    // Find the max of each key and fill the rest with null
+    List rows = []
+    for (int i = 0; i < flatMaps.size(); i++) {
+      def m = flatMaps.get(i)
+      keySet.each {
+        if (!m.containsKey(it)) {
+          m.put(it, null)
+        }
       }
+      rows << new ArrayList<>(m.values())
     }
     return Matrix.builder()
-        .data(columnMap)
+        .rows(rows)
+        .columnNames(keySet)
         .build()
+  }
+
+  private def flatten(String currentPath, Object jsonNode, Map<String, Object> map) {
+    if (jsonNode instanceof Map) {
+      def pathPrefix = currentPath.isEmpty() ? "" : currentPath + ".";
+      jsonNode.each {
+        flatten(pathPrefix + it.getKey(), it.getValue(), map);
+      }
+    } else if (jsonNode instanceof List) {
+      jsonNode.eachWithIndex { it, idx ->
+        flatten(currentPath + '[' + idx + ']', it, map);
+      }
+    } else {
+      // its a value
+      map.put(currentPath, jsonNode)
+    }
   }
 }
