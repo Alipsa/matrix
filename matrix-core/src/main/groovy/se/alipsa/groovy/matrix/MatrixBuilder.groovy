@@ -29,6 +29,11 @@ class MatrixBuilder {
     this
   }
 
+  MatrixBuilder columnNames(Set<String> columnNames) {
+    headerList = new ArrayList<>(columnNames)
+    this
+  }
+
   MatrixBuilder columnNames(String... colNames) {
     columnNames(colNames as List<String>)
   }

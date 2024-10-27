@@ -1,3 +1,6 @@
+import se.alipsa.groovy.datasets.Dataset
+import se.alipsa.groovy.matrixjson.JsonImporter
+
 import java.time.format.DateTimeFormatter
 
 import static org.junit.jupiter.api.Assertions.*
@@ -31,6 +34,12 @@ class JsonExporterTest {
                 exporter.toJson(),
                 exporter.toJson())
 
+        def exp2 =  new JsonExporter(empData.grid(), empData.columnNames())
+        assertEquals(
+            '[{"emp_id":1,"emp_name":"Rick","salary":623.3,"start_date":"2012-01-01"},{"emp_id":2,"emp_name":"Dan","salary":515.2,"start_date":"2013-09-23"},{"emp_id":3,"emp_name":"Michelle","salary":611.0,"start_date":"2014-11-15"}]',
+            exp2.toJson(),
+            exp2.toJson())
+
         //println JsonOutput.prettyPrint(exporter.toJson())
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern('yy/dd/MM')
@@ -41,6 +50,32 @@ class JsonExporterTest {
                 json,
                 json
         )
-        //println JsonOutput.prettyPrint(json)
+
+    }
+
+    @Test
+    void testExportDatasets() {
+        def ds = Dataset.mtcars()
+        JsonExporter exporter = new JsonExporter(ds)
+        String json = exporter.toJson(true)
+        Matrix m = JsonImporter.parse(json)
+        .convert(ds.types()).withMatrixName(ds.matrixName)
+        assertEquals(ds, m, ds.diff(m))
+
+        ds = Dataset.airquality()
+        exporter = new JsonExporter(ds)
+        json = exporter.toJson()
+        m = JsonImporter.parse(json)
+            .convert(ds.types()).withMatrixName(ds.matrixName)
+        assertEquals(ds, m, ds.diff(m))
+
+        /* TODO: causes Out Of Memory Error
+        def diamonds = Dataset.diamonds()
+        exporter = new JsonExporter(diamonds)
+        json = exporter.toJson(true)
+        m = JsonImporter.parse(json)
+        assertEquals(diamonds, m, diamonds.diff(m))
+         */
+
     }
 }

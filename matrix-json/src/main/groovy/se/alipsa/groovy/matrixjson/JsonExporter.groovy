@@ -20,7 +20,15 @@ class JsonExporter {
         this.table = table
     }
 
-    String toJson(Map<String, Closure> columnFormatters = [:], boolean indent = false) {
+    String toJson(boolean indent = false) {
+        toJson([:], indent)
+    }
+
+    String toJson(Map<String, Closure> columnFormatters) {
+        toJson(columnFormatters, false)
+    }
+
+    String toJson(Map<String, Closure> columnFormatters, boolean indent) {
         def nCol = table.columnCount()
         def colNames = table.columnNames()
         def rows = []

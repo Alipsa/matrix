@@ -8,6 +8,9 @@ import java.nio.charset.StandardCharsets
 
 class JsonImporter {
 
+  private JsonImporter() {
+    // Only static methods
+  }
 
   /**
    *
@@ -15,25 +18,25 @@ class JsonImporter {
    *        a row is defined as a json object
    * @return
    */
-  Matrix parse(String str) {
+  static Matrix parse(String str) {
     JsonSlurper importer = new JsonSlurper()
     def o = importer.parseText(str)
     return jsonToMatrix(o)
   }
 
-  Matrix parse(InputStream is, Charset charset = StandardCharsets.UTF_8) {
+  static Matrix parse(InputStream is, Charset charset = StandardCharsets.UTF_8) {
     JsonSlurper importer = new JsonSlurper()
     def o = importer.parse(is, charset.name())
     return jsonToMatrix(o)
   }
 
-  Matrix parse(File file, Charset charset = StandardCharsets.UTF_8) {
+  static Matrix parse(File file, Charset charset = StandardCharsets.UTF_8) {
     JsonSlurper importer = new JsonSlurper()
     def o = importer.parse(file, charset.name())
     return jsonToMatrix(o)
   }
 
-  Matrix parse(Reader reader) {
+  static Matrix parse(Reader reader) {
     JsonSlurper importer = new JsonSlurper()
     def o = importer.parse(reader)
     return jsonToMatrix(o)
@@ -45,7 +48,7 @@ class JsonImporter {
    * @param o the result of a JsonSlurper.parse method; should be a List
    * @return a Matrix corresponding to the json data
    */
-  private Matrix jsonToMatrix(Object root) {
+  private static Matrix jsonToMatrix(Object root) {
     List<Map<String, String>> flatMaps = []
     Set<String> keySet = new LinkedHashSet<>()
     root.each {
@@ -65,13 +68,14 @@ class JsonImporter {
       }
       rows << new ArrayList<>(m.values())
     }
+    flatMaps = null
     return Matrix.builder()
         .rows(rows)
         .columnNames(keySet)
         .build()
   }
 
-  private def flatten(String currentPath, Object jsonNode, Map<String, Object> map) {
+  private static def flatten(String currentPath, Object jsonNode, Map<String, Object> map) {
     if (jsonNode instanceof Map) {
       def pathPrefix = currentPath.isEmpty() ? "" : currentPath + ".";
       jsonNode.each {

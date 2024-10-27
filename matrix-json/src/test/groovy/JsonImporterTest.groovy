@@ -22,8 +22,7 @@ class JsonImporterTest {
 
   @Test
   void testJsonImport() {
-    def importer = new JsonImporter()
-    def table = importer.parse('''[
+    def table = JsonImporter.parse('''[
         {
           "emp_id": 1,
           "emp_name": "Rick",
@@ -76,11 +75,8 @@ class JsonImporterTest {
     println json
     JsonNode root = mapper.readTree(json)
     Matrix jacksonMatrix = toMatrix(root)
-    println(jacksonMatrix.clone().withMatrixName('Jackson').content())
 
-    def importer = new JsonImporter()
-    Matrix m = importer.parse(json)
-    println(m.clone().withMatrixName('jsonSlurper').content())
+    Matrix m = JsonImporter.parse(json)
     assertEquals(jacksonMatrix, m, jacksonMatrix.diff(m))
 
   }

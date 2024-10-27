@@ -447,7 +447,7 @@ class Matrix implements Iterable<Row> {
     }
     Map<String, Class> columnTypeMap = [:]
     for (int i = 0; i < types.size(); i++) {
-      columnTypeMap[columnName(i)] = types[i]
+      columnTypeMap[columnName(i)] = convertPrimitiveToWrapper(types[i])
     }
     return convert(columnTypeMap, valueIfNull, dateTimeFormat, numberFormat)
   }
