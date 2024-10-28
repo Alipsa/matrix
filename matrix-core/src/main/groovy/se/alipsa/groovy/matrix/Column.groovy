@@ -36,9 +36,15 @@ class Column extends ArrayList {
     this.type = type
   }
 
+  Column(String name, Collection c) {
+    super(c)
+    this.name = name
+  }
+
   Column(String name, Collection c, Class type) {
     super(c)
     this.type = type
+    this.name = name
   }
 
   Column(String name, Class type) {

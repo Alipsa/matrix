@@ -525,5 +525,80 @@ Stat methods
 - boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true)
 - String diff(Matrix other, boolean forceRowComparing = false)
 
----
+## Short notations and arithmetics (operator overloads)
+The Matrix, Row and Column defines short notation and operators for common operations making the code more succinct.
+
+### Matrix
+| Notation | Method name | Arguments                | Meaning                                   | Example                                                   |
+|----------|-------------|--------------------------|-------------------------------------------|-----------------------------------------------------------|
+| +        | plus        | List                     | immutable operation to add a row          | Matrix m2 = m + ['Foo',3,4,5,6]                           |
+| +        | plus        | Matrix                   | immutable operation to add all rows       | Matrix m2 = m + m1                                        |
+| &        | and         | List                     | mutable operation to add a row            | m & ['Foo',3,4,5,6]                                       |
+| &        | and         | Matrix                   | mutable operation to add all rows         | m & m1                                                    |
+| <<       | leftShift   | Column                   | add column to the matrix                  | m << n.salary                                             |
+| <<       | leftShift   | Map                      | add column to the matrix                  | m << [place: [1,2,3]]                                     |
+| <<       | leftShift   | Matrix                   | add add columns to the matrix             | m << n                                                    |
+| .        | getProperty | String                   | return the column                         | Column s = m.salary                                       |
+| . =      | setProperty | String                   | add or replace the column                 | m.salary = [50000, 60000, 55000]                          |
+| []       | getAt       | String                   | return the column                         | Column c = m['salary']                                    |
+| []       | getAt       | String, Class            | return the column as the type specified   | Column c = m['salary', BigDecimal]                        |
+| []       | getAt       | int                      | return the column                         | Column c = m[1]                                           |
+| []       | getAt       | IntRange                 | return the columns                        | List<Column> cs = m[1..4]                                 |
+| []       | getAt       | int, IntRange            | return row with the columns in range      | List<Column> cs = m[2, 1..4]                              |
+| []       | getAt       | IntRange, int            | return column with the rows in range      | List<Column> cs = m[1..4, 2]                              |
+| []       | getAt       | List                     | return the columns                        | List<Column> cs = m[1,2,4]                                |
+| []       | getAt       | int, String              | return the value                          | Object o = m[1, 'salary']                                 |
+| []       | getAt       | int, String, Class       | return the value as the type              | Double v = m[1, 'salary', Double]                         |
+| []       | getAt       | int, String, Class<T>, T | return the value as the type or T if null | double v = m[1, 'salary', Double, 0]                      |
+| []       | getAt       | int, int                 | return the value                          | Object o = m[1, 2]                                        |
+| []       | getAt       | int, int, Class          | return the value as the type              | Double V = m[1, 2, Double]                                |
+| []       | getAt       | int, int, Class<T>, T    | return the value as the type or T if null | double v = m[1, 2, double, 0]                             |
+| [] =     | putAt       | String                   | replace the column                        | m['salary'] = [50000, 60000, 55000]                       |
+| [] =     | putAt       | int, String              | replace the value                         | m[1, 'salary'] = 52000                                    |
+| [] =     | putAt       | String, Class, List      | add the column to the end                 | t["yearMonth", YearMonth] = toYearMonths(t.start_date)    |
+| [] =     | putAt       | String, Class, int, List | add the column at the index               | t["yearMonth", YearMonth, 1] = toYearMonths(t.start_date) |
+| [] =     | putAt       | String, List             | add or replace the column                 | t["yearMonth"] = toYearMonths(t.start_date)               |
+| [] =     | putAt       | int, List                | add or replace the column                 | t[1] = toYearMonths(t.start_date)                         |
+| [] =     | putAt       | IntRange, List<List>     | add or replace the column                 | myMatrix[0..2] = otherMatrix[1..3]                        |
+
+### Column
+Given that matrix.col1 contains the value [1,2,3,4]
+
+| Notation | Method name | Arguments | Meaning                              | Example                                               |
+|----------|-------------|-----------|--------------------------------------|-------------------------------------------------------|
+| +        | plus        | List      | add the values                       | assert matrix.col1 + [1, 2, 3, 4] == [2, 4, 6, 8]     |
+| +        | plus        | Object    | add the value to all elements        | assert matrix.col1 + 1 == [2, 3, 4, 5]                |
+| -        | minus       | List      | subtract the values                  | assert matrix.col1 - [1, 2, 3, 4] == [0, 0, 0, 0]     |
+| -        | minus       | Object    | subtract the value from all elements | assert matrix.col1 - 1 == [0, 1, 2, 3]                |
+| *        | multiply    | List      | multiply the values                  | assert matrix.col1 * [1, 2, 3, 4] == [1, 4, 9, 16]    |
+| *        | multiply    | Number    | multiply the value to all elements   | assert matrix.col1 * 2 == [2, 4, 6, 8]                |
+| /        | div         | List      | divides the values                   | assert matrix.col1 / [1, 1, 2, 0.5] == [1, 2, 1.5, 8] |
+| /        | div         | Number    | divides the value from all elements  | assert matrix.col1 / 2 == [0.5, 1, 1.5, 2]            |
+| **       | power       | List      | power of the values                  | assert matrix.col1 ** [1, 2, 3, 4] == [1, 4, 27, 256] |
+| **       | power       | Number    | power of the value                   | assert matrix.col1 ** 2 == [1, 4, 9, 16]              |
+| <<       | leftShift   | List      | add the values                       | assert matrix.col1 << [5,6] == [1, 2, 3, 4, 5, 6]     |
+| <<       | leftShift   | Object    | add the value to the column          | assert matrix.col1 << 5 == [1, 2, 3, 4, 5]            |
+
+
+
+
+### Row
+| Notation | Method name | Arguments           | Meaning                                                       | Example                                |
+|----------|-------------|---------------------|---------------------------------------------------------------|----------------------------------------|
+| .        | getProperty | String              | return the value                                              | Object s = r.salary                    |
+| . =      | setProperty | String              | add or replace the value                                      | r.salary = 50000                       |
+| []       | getAt       | String              | return the value                                              | Object c = r['salary']                 |
+| []       | getAt       | String, Class       | return the value as the type specified                        | BigDecimal c = r['salary', BigDecimal] |
+| []       | getAt       | Number              | return the value                                              | Object c = r[1]                        |
+| []       | getAt       | Number, Class       | return the value as the type specified                        | BigDecimal c = r[1, BigDecimal]        |
+| []       | getAt       | Number, Number      | return the values at the indices                              | List c = r[1, 2]                       |
+| []       | getAt       | String, String      | return the values at the column names                         | Object c = r['id', 'salary']           | |
+| []       | getAt       | String, Class<T>, T | return the values as the type specified replacing null with T | double c = r['id', double, 0]          |
+| []       | getAt       | List<Number>        | return the values at the indices                              | List c = r[1, 2, 3]                    |
+| []       | getAt       | String...           | return the values at the column names                         | List c = r['id', 'salary', 'name']     |
+| []       | putAt       | String              | update the value                                              | r['salary'] = 50000                    |
+| []       | putAt       | Number              | update the value                                              | r[1] = 50000                           |
+
+Other operations are just like the groovy default behavior
+
 [Back to index](cookbook.md)  |  [Next (Matrix Stats)](matrix-stats.md)

@@ -7,7 +7,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
  * <code> def col = [1,2,3] as Column</code>
  * Registered in resources/META-INF.groovy/org.codehaus.groovy.runtime.ExtensionModule
  */
-class ListToColumnConversionExtension {
+class ColumnExtension {
 
   static def asType(List self, Class cls) {
     if (cls == Column) {
@@ -15,5 +15,9 @@ class ListToColumnConversionExtension {
     } else {
       DefaultGroovyMethods.asType(self, cls)
     }
+  }
+
+  static def leftShift(Column self, Collection list) {
+    self.addAll(list)
   }
 }

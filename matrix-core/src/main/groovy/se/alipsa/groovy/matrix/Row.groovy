@@ -243,13 +243,15 @@ class Row implements List<Object> {
      * @param type the class to convert the result to (using the ValueConverter)
      * @return the value converted to the type specified
      */
-    <T> T getAt(String columnName, Class<T> type) {
+    <T> T getAt(String columnName, Class<T> type, T valueIfNull = null) {
         int idx = parent.columnIndex(columnName)
         if (idx == -1) {
             throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
         }
-        ValueConverter.convert(get(idx), type)
+        ValueConverter.convert(get(idx), type, null, null, valueIfNull)
     }
+
+
 
     int getRowNumber() {
         return rowNumber
@@ -259,7 +261,7 @@ class Row implements List<Object> {
         return parent.columnNames()
     }
 
-    List<Class<?>> types() {
+    List<Class> types() {
         return parent.types()
     }
 
@@ -282,17 +284,5 @@ class Row implements List<Object> {
     @PackageScope
     void setElement(int index, Object e) {
         content.set(index, e)
-    }
-
-    String getString(int index) {
-        return String.valueOf(get(index))
-    }
-
-    Integer getInt(int index) {
-        return get(index) as Integer
-    }
-
-    Object getObject(int index){
-        return get(index)
     }
 }

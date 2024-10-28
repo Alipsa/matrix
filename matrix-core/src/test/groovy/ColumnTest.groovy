@@ -122,11 +122,11 @@ class ColumnTest {
   @Test
   void testDivNumber() {
     Column c1 = new Column([1, 2, 3, 4])
-    assert c1.multiply(2) == [2, 4, 6, 8]
-    assert c1 * 2 == [2, 4, 6, 8]
+    assert c1.div(2) == [0.5, 1, 1.5, 2]
+    assert c1 / 2 ==  [0.5, 1, 1.5, 2]
 
     Column c2 = new Column([1, null, 3, 4])
-    assert c2 * 2 == [2, null, 6, 8]
+    assert c2 / 2 == [0.5, null, 1.5, 2]
   }
 
   @Test
@@ -156,6 +156,15 @@ class ColumnTest {
 
     Column c2 = new Column([1, null, 3, 4])
     assert c2 ** 2 == [1, null, 9, 16]
+  }
+
+  @Test
+  void testLeftShift() {
+    Column c1 = new Column([1, 2, 3, 4])
+    c1 << 5
+    assert [1,2,3,4,5] == c1
+    c1 << [6,7]
+    assert [1,2,3,4,5,6,7] == c1
   }
 
   @Test

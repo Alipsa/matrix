@@ -80,4 +80,12 @@ class ValueConverterTest {
             ValueConverter.asDate(ldt).getTime()
         )
     }
+
+    @Test
+    void testConvertWithNullFallback() {
+        assertEquals((int)1, ValueConverter.convert(1, int, null, null, 0))
+        assertEquals((int)0, ValueConverter.convert(null, int, null, null, 0))
+        def d = LocalDate.of(2024,10,27)
+        assertEquals(d, ValueConverter.convert(null, LocalDate, null, null, d))
+    }
 }

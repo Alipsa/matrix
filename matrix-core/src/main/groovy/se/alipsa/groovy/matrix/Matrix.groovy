@@ -89,20 +89,20 @@ class Matrix implements Iterable<Row> {
       throw new IllegalArgumentException("Number of elements in the headerList (${headerList}) differs from number of datatypes (${dataTypes})")
     }
     mColumns = []
-    columns.each { List column ->
+    columns.eachWithIndex { List column, int idx ->
       //mColumns.add(Collections.checkedList(column, mTypes[i]))
-      mColumns.add(new Column(column))
+      mColumns.add(new Column(mHeaders[idx], column, mTypes[idx]))
     }
     //println "Creating a matrix with name: '$mName', ${mHeaders.size()} headers, ${mColumns.size()} columns, ${mTypes.size()} types"
   }
 
-  Matrix addColumn(String name, type = Object, List column) {
+  Matrix addColumn(String name, Class type = Object, List column) {
     if (mHeaders.contains(name)) {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
     }
     mHeaders << name
-    mTypes << (type as Class)
-    mColumns << new Column(column)
+    mTypes << type
+    mColumns << new Column(name, column, type)
     return this
   }
 
@@ -115,10 +115,10 @@ class Matrix implements Iterable<Row> {
    * @param index where to put the column
    * @return a new Matrix with the column inserted
    */
-  Matrix addColumn(String name, type = Object, Integer index, List column) {
+  Matrix addColumn(String name, Class type = Object, Integer index, List column) {
     mHeaders.add(index, name)
-    mTypes.add(index, type as Class)
-    mColumns.add(index, new Column(column))
+    mTypes.add(index, type)
+    mColumns.add(index, new Column(name, column, type))
     return this
   }
 
@@ -208,6 +208,26 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
+   * Mutable operation to add a row
+   *
+   * @param row the row list to add
+   * @return this matrix (altered)
+   */
+  Matrix and(List row) {
+    addRow(row)
+  }
+
+  /**
+   * Mutable operation to add a row
+   *
+   * @param row the row list to add
+   * @return this matrix (altered)
+   */
+  Matrix and(Matrix matrix) {
+    addRows(matrix.rowList())
+  }
+
+  /**
    * Apply executes a Closure on each value of the specified column
    *
    * @param columnName the column to apply to
@@ -242,6 +262,8 @@ class Matrix implements Iterable<Row> {
       }
       col.add(val)
     }
+    col.type = updatedClass
+    col.name = columnName(columnNumber)
     mTypes[columnNumber] = updatedClass
     mColumns[columnNumber] = col
     this
@@ -286,6 +308,8 @@ class Matrix implements Iterable<Row> {
       }
     }
     mTypes[columnNumber] = updatedClass
+    col.type = updatedClass
+    col.name = columnName(columnNumber)
     mColumns[columnNumber] = col
     this
   }
@@ -340,7 +364,7 @@ class Matrix implements Iterable<Row> {
         : mTypes
     List<Column> cols = new ArrayList<>()
     Grid.transpose(updatedRows).each {
-      cols << new Column(it as List)
+      cols << new Column(columnName(columnNumber), it as List, updatedClass)
     }
     mColumns = cols
     mTypes = new ArrayList<>(dataTypes)
@@ -462,12 +486,13 @@ class Matrix implements Iterable<Row> {
     for (int i = 0; i < columnCount(); i++) {
       String colName = mHeaders[i]
       if (types[colName]) {
-        convertedColumns.add(new Column(ListConverter.convert(
+        convertedColumns.add(new Column(colName, ListConverter.convert(
             column(i),
             types[colName] as Class<Object>,
             valueIfNull,
             dateTimeFormat,
-            numberFormat)
+            numberFormat
+        ), types[colName] as Class
         ))
         convertedTypes.add(types[colName])
       } else {
@@ -533,6 +558,8 @@ class Matrix implements Iterable<Row> {
           columnVals.add(converter.call(val))
         }
         convertedTypes.add(columnTypeList[index])
+        columnVals.name = colName
+        columnVals.type = columnTypeList[index]
         convertedColumns.add(columnVals)
       } else {
         convertedColumns.add(column(i))
@@ -1285,14 +1312,15 @@ class Matrix implements Iterable<Row> {
    * @return a new matrix with the row appended to the end
    */
   Matrix plus(List row) {
+    //println ("cloning matrix and adding row")
     clone().addRow(row)
   }
 
   /**
-   * Append all rows from the matrix to this one
+   * Append all rows from the matrix to a clone of this one.
    *
    * @param table the matrix to append from
-   * @return this matrix
+   * @return a new matrix containing the rows of the former and the new rows added
    */
   Matrix plus(Matrix table) {
     clone().addRows(table.rowList())
@@ -1368,6 +1396,16 @@ class Matrix implements Iterable<Row> {
   // Groovy semantics requires this to mutate, i.e. this does not work
   // Matrix t2 = (table["yearMonth", YearMonth, 0] = toYearMonth(table["start_date"]))
   // thus, we return void to make that fact obvious
+  /**
+   * add the column to the end or at the index if specified
+   * <code><pre>
+   *   tbl["yearMonth", YearMonth] = toYearMonths(tbl.start_date)
+   * </code>
+   * @param columnName the column name to add
+   * @param type the class of the contents in the column list
+   * @param index the position to insert it or null if append to the end
+   * @param column the list of values to add
+   */
   void putAt(String columnName, Class type, Integer index = null, List column) {
     if (rowCount() != column.size()) {
       throw new IllegalArgumentException("Number of column values (${column.size()}) does not match number of rows (${rowCount()}) in this matrix")
@@ -1376,11 +1414,11 @@ class Matrix implements Iterable<Row> {
       replace(columnName, type, column)
     } else {
       if (index == null) {
-        mColumns << new Column(column)
+        mColumns << new Column(columnName, column, type)
         mHeaders << columnName
         mTypes << type
       } else {
-        mColumns.add(index, new Column(column))
+        mColumns.add(index, new Column(columnName, column, type))
         mHeaders.add(index, columnName)
         mTypes.add(index, type)
       }
@@ -1410,7 +1448,11 @@ class Matrix implements Iterable<Row> {
     }
   }
 
-  def leftShift(List column) {
+  def leftShift(Column column) {
+    addColumn(column.name, column.type, column)
+  }
+
+  def leftShift(Collection column) {
     throw new IllegalArgumentException("leftShift to add a column should be specified with a Map or another Matrix")
   }
 
@@ -1435,10 +1477,6 @@ class Matrix implements Iterable<Row> {
       }
       addColumn(m.columnName(idx), m.type(idx), col)
     }
-  }
-
-  def leftShift(List column, Object value) {
-    column.add(value)
   }
 
   def leftShift(Map<String, List> columns) {
@@ -2115,13 +2153,5 @@ class Matrix implements Iterable<Row> {
 
   static List<Class> createObjectTypes(Collection template) {
     [Object] * template.size() as List<Class>
-  }
-
-  static List<Column> createEmptyColumns(Collection template) {
-    List<Column> columns = []
-    for (int i = 0; i < template.size(); i++) {
-      columns << new Column()
-    }
-    columns
   }
 }

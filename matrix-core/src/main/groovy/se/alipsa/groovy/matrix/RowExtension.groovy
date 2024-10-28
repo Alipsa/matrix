@@ -30,6 +30,11 @@ class RowExtension {
         return self.subList(indices as String[])
       }
     }
+    if (indices.size() == 3 && indices[0] instanceof String && indices[1] instanceof Class) {
+      if (indices[0] instanceof String) {
+        return self.getAt(indices[0] as String, indices[1] as Class, indices[2])
+      }
+    }
     if (!indices.any { ! it instanceof Number}) {
       return self.subList(indices)
     }

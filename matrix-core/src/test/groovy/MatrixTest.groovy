@@ -87,8 +87,22 @@ class MatrixTest {
     assertIterableEquals([1, 2, 3, 4, 5], m.row(1))
     assertIterableEquals([10, 20, 30, 40, 50], m.row(2))
 
-    m = m + [2,3,4,5,6]
-    assertIterableEquals([2,3,4,5,6], m.row(m.lastRowIndex()))
+    def m2 = m + ['Foo',3,4,5,6]
+    assertIterableEquals(['Foo',3,4,5,6], m2.row(m2.lastRowIndex()))
+
+    // test add row mutable
+    m & [3,4,5,6,7]
+    assertIterableEquals([3,4,5,6,7], m.row(m.lastRowIndex()))
+
+    Matrix n = Matrix.builder().columns(
+        Y1: [10, 11],
+        Y2: [12, 13],
+        Y3: [14, 15],
+        Y4: [16, 17],
+        Y5: [18, 19]
+    ).build()
+    m & n
+    assertIterableEquals([11,13,15,17,19], m.row(m.lastRowIndex()))
   }
 
   @Test
@@ -457,6 +471,9 @@ class MatrixTest {
     table5 << [vacation: [10, 15, 12, 20, 30]]
     assertIterableEquals([10, 15, 12, 20, 30], table5.vacation)
 
+    //table5.leftShift(table5['vacation'], 2)
+    //table5 << (table5['vacation'], 2)
+
     def t5 = Matrix.builder()
         .columnNames('rv')
         .types(Integer)
@@ -502,7 +519,8 @@ class MatrixTest {
     assertEquals(1, counts.subset('yearMonth', { it == YearMonth.of(2019, 3) })['yearMonth_count'][0])
     assertEquals(2, counts[0, 'yearMonth_count'])
 
-    def sums = Stat.sumBy(empData, "salary", "yearMonth").orderBy("yearMonth", true)
+    def sums = Stat.sumBy(empData, "salary", "yearMonth")
+        .orderBy("yearMonth", true)
     assertEquals(YearMonth, sums[0, 0].class, "type of the sums column")
     assertEquals(YearMonth, sums.type("yearMonth"), "claimed type of the sums column")
     assertEquals(611.0 + 729.0, sums[0, 1], sums.content())
@@ -511,13 +529,28 @@ class MatrixTest {
 
     def salaryPerYearMonth = counts
         .orderBy("yearMonth", true)
-        .addColumns(sums, "salary")
+        << sums.salary
 
     assertEquals(asYearMonth("2019-05"), salaryPerYearMonth[0, 0], salaryPerYearMonth.content())
     assertEquals(611.0 + 729.0, salaryPerYearMonth[0, 2], salaryPerYearMonth.content())
     assertEquals(2, salaryPerYearMonth[0, 1], salaryPerYearMonth.content())
     assertEquals(843.25, salaryPerYearMonth[1, 2], salaryPerYearMonth.content())
     assertEquals(1, salaryPerYearMonth[1, 1], salaryPerYearMonth.content())
+
+    Matrix m = Matrix.builder().data(id: [1,2,3]).build()
+    m << [salary: [10000, 9979, 8980]]
+    assertIterableEquals([10000, 9979, 8980], m.salary)
+
+    Matrix n = Matrix.builder().data(years: [2,4,3], vacation: [12,20,30]).build()
+    m << n
+    assertEquals(4, m.columnCount())
+    assertIterableEquals(['id', 'salary', 'years', 'vacation'], m.columnNames())
+
+    m.years = [3,4,5]
+    assertEquals(3, m[0, 'years'])
+
+    m.foo = ['jabba', 'dabba', 'doo']
+    assertEquals(['jabba', 'dabba', 'doo'], m.column('foo'))
   }
 
   @Test
@@ -815,6 +848,9 @@ class MatrixTest {
             start_date: toLocalDates("2013-01-01", null, "2012-03-27", null))
         .types([int, String, Number, LocalDate])
         .build()
+
+    def row = d0.row(1)
+    assertEquals(0, row['salary', Double, 0] )
     def d0r = d0.removeEmptyRows()
     assertEquals(empData, d0r, empData.diff(d0r, true))
 
