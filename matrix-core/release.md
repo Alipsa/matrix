@@ -3,7 +3,7 @@
 ### 2.0.0, In progress
 note there are several (minor) api breaking changes due to extensive cleanup and consistency fixes
 This release was mainly guided by a big port of an R based budget planning and reporting application 
-to Groovy powered by Matrix (resulting in a code reduction with about 20% and a increased performance by
+to Groovy powered by Matrix (resulting in a code reduction with about 20% and an increased performance by
 more than 300%).
 
 - add constructor to create an empty Matrix with only name and the column names defined
@@ -33,14 +33,14 @@ more than 300%).
 - add size check to Matrix.create()
 - add check for missing column in Matrix.dropColumns()
 - Modify Matrix.addColumns to include all columns from the supplied matrix if no columns are specified
-- Fix bug in Matrix.diff and add check for number of columns
+- Fix bug in Matrix.diff() and add check for number of columns
 - *Breaking change:* Add a builder to Matrix and remove all static create methods and constructors as a result
 - change Matrix.columnTypes() to Matrix.types() 
 - add putAt for ranges (e.g. myMatrix[0..2] = otherMatrix[1..3])
 - change putAt to allow for add operations i.e. it is now possible to add an element using e.g. myMatrix[1,2] = 'Foo'
   note that the element to add must be at the size of the column i.e. it is not possible to do `myMatrix[2,2] = 'Foo'`
   if there is only 1 row in the matrix.
-- Add Stat.apply for various column operations (i.e. do something with values from two columns and assign the result to a third column)
+- Add Stat.apply() for various column operations (i.e. do something with values from two columns and assign the result to a third column)
 - Add Matrix.dropColumns(IntRange columnIndices)
 - Add Matrix.convert() for IntRange and individual column index, add formatters to the convert method taking a column name
 - Change Matrix.diff() formatting for easier reading
@@ -55,7 +55,7 @@ more than 300%).
 - Enable using ginq by overriding get and set Property on a Row
 - add support in MatrixBuilder for building from an existing Matrix
 - add option to set default value if null to matrix getAt methods
-- add support for null substitution to Matrix.convert methods by overloading them.
+- add support for null substitution to Matrix.convert() methods by overloading them.
 - add MatrixBuilder.rowList to create a Matrix from a List of Rows
 - Matrix.findFirstRow() now returns a Row instead of a List<?>
 - Add Stat sumRows, meanRows, medianRows and ensure that median calculations no longer depends on a 
@@ -75,8 +75,11 @@ more than 300%).
   this `m + [1,2,3]` does not look intuitive, instead you need to do `m = m + [1,2,3]` which is much easier to read. 
   Plus (+) operations pertains to rows, left shift (<<) refers to columns.
 - Add a column type that extends ArrayList that can do arithmetic operations on individual elements
-- Removed Generics <?> constraints for List and Class as it was not adding value, just made he code harder to read
+- Removed Generics <?> constraints for List and Class as it was not adding value, just made the code harder to read
 - *Breaking change:* change methodName Matrix.selectRowIndices to Matrix.rowIndices
+- add leftShift short notation to add a column to a Matrix
+- cleanup Row by removing the getString, getInt and getObject methods
+- add support for converting nulls to specified value in Row.getAt
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix
