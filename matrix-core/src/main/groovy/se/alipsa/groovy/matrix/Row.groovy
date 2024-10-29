@@ -76,22 +76,42 @@ class Row implements List<Object> {
         return content.toArray(a)
     }
 
+    /**
+     * Convert this Row into a Map&lt;String, ?&gt; where each key corresponds to the column name
+     * and each value corresponds to the row value.
+     *
+     * @return a Map&lt;String, ?&gt; with the column names and data
+     */
     Map<String, ?> toMap() {
         Map<String, ?> map = [:]
         this.eachWithIndex { Object entry, int i ->
-            map[columnName(i)] = entry
+            map[parent.columnName(i)] = entry
         }
         map
     }
 
+    /**
+     * Adding and deleting values from a row is not supported. This method always throws an
+     * UnsupportedOperationException
+     *
+     * @param o element whose presence in this collection is to be added
+     * @return throws UnsupportedOperationException
+     */
     @Override
     boolean add(Object o) {
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
     }
 
+    /**
+     * Adding and deleting values from a row is not supported. This method always throws an
+     * UnsupportedOperationException
+     *
+     * @param o element whose presence in this collection is to be removed
+     * @return throws UnsupportedOperationException
+     */
     @Override
     boolean remove(Object o) {
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
     }
 
     @Override
@@ -99,29 +119,63 @@ class Row implements List<Object> {
         return content.containsAll(c)
     }
 
+    /**
+     * Adding and deleting values from a row is not supported. This method always throws an
+     * UnsupportedOperationException
+     *
+     * @param c the collection to add
+     * @return throws UnsupportedOperationException
+     */
     @Override
     boolean addAll(Collection c) {
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
     }
 
+    /**
+     * Adding and deleting values from a row is not supported. This method always throws an
+     * UnsupportedOperationException
+     *
+     * @param index index at which to insert the first element from the
+     *              specified collection
+     * @param c collection containing elements to be added to this list
+     * @return throws UnsupportedOperationException
+     */
     @Override
     boolean addAll(int index, Collection c) {
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
     }
 
+    /**
+     * Adding and deleting values from a row is not supported. This method always throws an
+     * UnsupportedOperationException
+     *
+     * @param c collection containing elements to be removed from this list
+     * @return throws UnsupportedOperationException
+     */
     @Override
     boolean removeAll(Collection c) {
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
     }
 
+    /**
+     * Adding and deleting values from a row is not supported. This method always throws an
+     * UnsupportedOperationException
+     *
+     * @param c collection containing elements to be retained in this list
+     * @return throws UnsupportedOperationException
+     */
     @Override
     boolean retainAll(Collection c) {
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
     }
 
+    /**
+     * Adding and deleting values from a row is not supported. This method always throws an
+     * UnsupportedOperationException
+     */
     @Override
     void clear() {
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
     }
 
     @Override
@@ -136,14 +190,28 @@ class Row implements List<Object> {
         return result
     }
 
+    /**
+     * Adding and deleting values from a row is not supported. This method always throws an
+     * UnsupportedOperationException.
+     *
+     * @param index index at which the specified element is to be inserted
+     * @param element element to be inserted
+     */
     @Override
     void add(int index, Object element) {
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
     }
 
+    /**
+     * Adding and deleting values from a row is not supported. This method always throws an
+     * UnsupportedOperationException.
+     *
+     * @param index the index of the element to be removed
+     * @return throws UnsupportedOperationException
+     */
     @Override
     Object remove(int index) {
-        throw new UnsupportedOperationException()
+        throw new UnsupportedOperationException('Adding and deleting values from a row is not supported.')
     }
 
     @Override
@@ -169,7 +237,7 @@ class Row implements List<Object> {
     /**
      * NOTE this method returns a disconnected list, no longer representing a row of the
      * backing matrix although changes to values that can be mutated (e.g. java.util.Date) will still
-     * change the Matrix content (Numbers and Strings, jav.util.time classes are all immutable).
+     * change the Matrix content (Numbers and Strings, java.util.time classes are all immutable).
      *
      * @param fromIndex low endpoint (inclusive) of the subList
      * @param toIndex high endpoint (exclusive) of the subList
