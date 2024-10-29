@@ -135,12 +135,12 @@ println("Tail\n${table.tail(2, false)}")
 Will print
 ```
 Head
-1	Lorena	2021-12-01
-2	Marianne	2022-07-10
+1	Lorena	  2021-12-01
+2	Marianne  2022-07-10
 
 Tail
-2	Marianne	2022-07-10
-3	Lotte	2023-05-27
+2	Marianne  2022-07-10
+3	Lotte	  2023-05-27
 ```
 
 #### str - structure
