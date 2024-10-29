@@ -2,15 +2,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.ValueNode
-import groovy.json.JsonBuilder
-import groovy.json.JsonSlurper
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.Row
 import se.alipsa.groovy.matrixjson.*
 
 import java.time.LocalDate
@@ -72,7 +68,6 @@ class JsonImporterTest {
     c1.clanMembers.add(f2)
 
     String json = mapper.writeValueAsString([f1, f2])
-    println json
     JsonNode root = mapper.readTree(json)
     Matrix jacksonMatrix = toMatrix(root)
 

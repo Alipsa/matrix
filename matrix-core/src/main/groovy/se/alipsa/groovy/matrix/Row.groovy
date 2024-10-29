@@ -76,6 +76,14 @@ class Row implements List<Object> {
         return content.toArray(a)
     }
 
+    Map<String, ?> toMap() {
+        Map<String, ?> map = [:]
+        this.eachWithIndex { Object entry, int i ->
+            map[columnName(i)] = entry
+        }
+        map
+    }
+
     @Override
     boolean add(Object o) {
         throw new UnsupportedOperationException()
@@ -259,6 +267,10 @@ class Row implements List<Object> {
 
     List<String> columnNames() {
         return parent.columnNames()
+    }
+
+    String columnName(int index) {
+        return parent.columnName(index)
     }
 
     List<Class> types() {

@@ -436,6 +436,22 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
+   * get all column names matching the type specified
+   *
+   * @param c the Class to look for, subclasses will also match
+   * @return a list of all column names matching the type specified
+   */
+  List<String> columnNames(Class c) {
+    List<String> names = []
+    mTypes.eachWithIndex { Class cls, int idx ->
+      if (c.isAssignableFrom(cls)) {
+        names << columnName(idx)
+      }
+    }
+    names
+  }
+
+  /**
    * Convert all columns to the type specified
    *
    * @param type the class to convert all values to
@@ -582,22 +598,17 @@ class Matrix implements Iterable<Row> {
    * @param converter as closure converting each value in the designated column
    * @return a new Matrix
    */
-  Matrix convert(int columnNumber, Class columnType, Closure converter) {
-    List<List> convertedColumns = []
-    List<Class> convertedTypes = []
-    def col = []
-    for (int i = 0; i < columnCount(); i++) {
-      if (columnNumber == i) {
-        column(i).each { col.add(converter.call(it)) }
-        convertedColumns.add(col)
-        convertedTypes.add(columnType)
-      } else {
-        convertedColumns.add(column(i))
-        convertedTypes.add(type(i))
-      }
+  <T> Matrix convert(int columnNumber, Class<T> columnType, Closure<T> converter) {
+
+    def col = new Column(columnName(columnNumber),columnType)
+    Column column = mColumns[columnNumber]
+    column.each {
+       col << converter(it)
     }
-    def convertedRows = Grid.transpose(convertedColumns)
-    return builder().matrixName(mName).columnNames(mHeaders).rows(convertedRows).types(convertedTypes).build()
+    column.clear()
+    column.addAll(col)
+    mTypes[columnNumber] = columnType
+    this
   }
 
   <T> Matrix convert(IntRange columns, Class<T> type, T valueIfNull = null, String dateTimeFormat = null, NumberFormat numberFormat = null) {

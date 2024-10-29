@@ -8,6 +8,7 @@ import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
+import java.time.temporal.TemporalAccessor
 
 import static se.alipsa.groovy.matrix.ListConverter.*
 import static org.junit.jupiter.api.Assertions.*
@@ -1132,5 +1133,19 @@ class MatrixTest {
 
     // verify that single number multiplication works
     assert [10000*0.05, 1000.23*0.05, 20122*0.05, 12.1*0.05] == m.balance * 0.05
+  }
+
+  @Test
+  void testNamesForType() {
+    def empData = Matrix.builder().data(
+        emp_id: 1..3,
+        name: ["Rick","Dan","Michelle"],
+        salary: [623.3,515.2,611.0],
+        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
+        .types([int, String, Number, LocalDate])
+        .build()
+    assertIterableEquals(['start_date'], empData.columnNames(TemporalAccessor))
+    assertIterableEquals(['emp_id', 'salary'], empData.columnNames(Number))
+    assertIterableEquals([], empData.columnNames(float))
   }
 }

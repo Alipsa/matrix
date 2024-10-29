@@ -80,6 +80,8 @@ more than 300%).
 - add leftShift short notation to add a column to a Matrix
 - cleanup Row by removing the getString, getInt and getObject methods
 - add support for converting nulls to specified value in Row.getAt
+- add Row.toMap() to get a Map<String, ?> representation of the row
+- Matrix.columnNames(Class type) to get all column names matching the type (including subclasses)
 
 ### 1.2.4, 2024-07-04
 - add plus override to Matrix allowing for easy ways to append a row or append all rows from another matrix

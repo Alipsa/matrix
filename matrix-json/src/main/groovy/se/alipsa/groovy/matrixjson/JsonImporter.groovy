@@ -51,9 +51,12 @@ class JsonImporter {
   private static Matrix jsonToMatrix(Object root) {
     List<Map<String, String>> flatMaps = []
     Set<String> keySet = new LinkedHashSet<>()
-    root.each {
+    Iterator it = root.iterator()
+    while (it.hasNext()) {
+      def o = it.next()
       Map<String, String> flatMap = [:]
-      flatten('', it, flatMap)
+      flatten('', o, flatMap)
+      it.remove()
       flatMaps << flatMap
       keySet.addAll(flatMap.keySet())
     }
@@ -79,11 +82,11 @@ class JsonImporter {
     if (jsonNode instanceof Map) {
       def pathPrefix = currentPath.isEmpty() ? "" : currentPath + ".";
       jsonNode.each {
-        flatten(pathPrefix + it.getKey(), it.getValue(), map);
+        flatten(pathPrefix + it.getKey(), it.getValue(), map)
       }
     } else if (jsonNode instanceof List) {
       jsonNode.eachWithIndex { it, idx ->
-        flatten(currentPath + '[' + idx + ']', it, map);
+        flatten(currentPath + '[' + idx + ']', it, map)
       }
     } else {
       // its a value

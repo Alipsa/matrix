@@ -2,8 +2,13 @@ package se.alipsa.groovy.matrixjson
 
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.groovy.matrix.Stat
 import se.alipsa.groovy.matrix.ValueConverter
 import groovy.json.*
+
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 
 class JsonExporter {
 
@@ -28,31 +33,57 @@ class JsonExporter {
         toJson(columnFormatters, false)
     }
 
-    String toJson(Map<String, Closure> columnFormatters, boolean indent) {
-        def nCol = table.columnCount()
-        def colNames = table.columnNames()
-        def rows = []
-        for (def row in table.rows()) {
-            def rowList = []
-            for (int c = 0; c < nCol; c++) {
-                def key = colNames[c]
-                def value = row[c]
-                if (columnFormatters.containsKey(key)) {
-                    value = columnFormatters.get(key).call(value)
-                }
-                if (value instanceof Number) {
-                    rowList << "\"${key}\":${value}"
-                } else {
-                    rowList << "\"${key}\":\"${ValueConverter.asString(value)}\""
-                }
-            }
-            rows << "{${rowList.join(',')}}"
+    String toJson(String dateFormat) {
+        toJson([:], false, dateFormat)
+    }
+
+    /**
+     * If your data contains temporal data, you should add a converter for each such column
+     * that converts the data into strings. If you are satisfied with converting all temporal data
+     * to the format yyyy-MM-dd then you can skip that, or alternatively supply a dateFormat pattern which
+     * applies to all Date and TemporalAccessor columns
+     *
+     * @param columnFormatters
+     * @param indent whether to pretty print the json string or not
+     * @param dateFormat optional date format pattern, default is yyyy-MM-dd
+     * @return a json string
+     */
+    String toJson(Map<String, Closure> columnFormatters, boolean indent, String dateFormat='yyyy-MM-dd') {
+        def t = table.clone()
+        columnFormatters.each { k,v ->
+            t.apply(k, v)
         }
-        def json = "[${rows.join(',')}]"
-        if (indent) {
-            return JsonOutput.prettyPrint(json)
-        } else {
-            return json
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dateFormat)
+        /*
+        // we do this in a custom formatter in the JsonGenerator below instead
+        def names = (t.columnNames(TemporalAccessor) - columnFormatters.keySet() as List)
+        names.each { name ->
+            t.convert(name, String, {dtf.format(it)})
+        }*/
+
+        // convert each row to a Map so we get an array of objects as json output instead of an array of arrays
+        List<Map<String,?>> mapList = []
+        t.each {
+            mapList << it.toMap()
         }
+        def jsonOutput = new JsonGenerator.Options()
+            .dateFormat(dateFormat)
+            .addConverter(new JsonGenerator.Converter() {
+                /**
+                 * Indicate which type this converter can handle.
+                 */
+                @Override
+                boolean handles(Class<?> type) {
+                    return TemporalAccessor.isAssignableFrom(type)
+                }
+                @Override
+                Object convert(Object date, String key) {
+                    dtf.format(date as TemporalAccessor)
+                }
+
+            })
+            .build()
+        String json = jsonOutput.toJson(mapList)
+        return indent ? JsonOutput.prettyPrint(json) : json
     }
 }
