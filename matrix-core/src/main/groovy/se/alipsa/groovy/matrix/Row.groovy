@@ -8,18 +8,24 @@ class Row implements List<Object> {
     private int rowNumber
     private List<?> content
     private Matrix parent
+    private List<String> columnNames
+    private List<Class> types
 
     /** this method must be package scoped as only a Matrix should be able to use it */
     @PackageScope
     Row(int rowNumber, Matrix parent) {
         this.rowNumber = rowNumber
         this.content = []
+        columnNames = parent.columnNames().collect()
+        types = parent.types().collect()
         this.parent = parent
     }
 
     Row(int rowNumber, List<?> rowContent, Matrix parent) {
         this.rowNumber = rowNumber
         this.content = rowContent
+        columnNames = parent.columnNames().collect()
+        types = parent.types().collect()
         this.parent = parent
     }
 
@@ -85,7 +91,7 @@ class Row implements List<Object> {
     Map<String, ?> toMap() {
         Map<String, ?> map = [:]
         this.eachWithIndex { Object entry, int i ->
-            map[parent.columnName(i)] = entry
+            map[columnNames[i]] = entry
         }
         map
     }
@@ -277,16 +283,16 @@ class Row implements List<Object> {
     }
 
     Object putAt(String columnName, Object value) {
-        return set(parent.columnIndex(columnName), value)
+        return set(columnNames.indexOf(columnName), value)
     }
 
     <T> T getAt(int index) {
-        Class<T> type = parent.type(index) as Class<T>
+        Class<T> type = types[index] as Class<T>
         return get(index).asType(type)
     }
 
     <T> T getAt(Number index) {
-        Class<T> type = parent.type(index.intValue()) as Class<T>
+        Class<T> type = types[index.intValue()] as Class<T>
         return get(index.intValue()).asType(type)
     }
 
@@ -303,11 +309,11 @@ class Row implements List<Object> {
     }
 
     <T> T getAt(String columnName) {
-        int idx = parent.columnIndex(columnName)
+        int idx = columnNames.indexOf(columnName)
         if (idx == -1) {
             throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
         }
-        Class<T> type = parent.type(idx) as Class<T>
+        Class<T> type = types[idx] as Class<T>
         return get(idx).asType(type)
     }
 
@@ -320,7 +326,7 @@ class Row implements List<Object> {
      * @return the value converted to the type specified
      */
     <T> T getAt(String columnName, Class<T> type, T valueIfNull = null) {
-        int idx = parent.columnIndex(columnName)
+        int idx = columnNames.indexOf(columnName)
         if (idx == -1) {
             throw new IllegalArgumentException("Failed to find a column with the name " + columnName)
         }
@@ -334,15 +340,15 @@ class Row implements List<Object> {
     }
 
     List<String> columnNames() {
-        return parent.columnNames()
+        return columnNames
     }
 
     String columnName(int index) {
-        return parent.columnName(index)
+        return columnNames[index]
     }
 
     List<Class> types() {
-        return parent.types()
+        return types
     }
 
     @Override
