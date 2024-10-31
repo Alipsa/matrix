@@ -16,7 +16,7 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '2.0.0-SNAPSHOT'
+version '2.0.0'
 description = "Groovy library for working with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -39,7 +39,9 @@ tasks.withType(GroovyCompile) { task ->
 
 repositories {
   mavenCentral()
-  mavenLocal()
+  if (version.endsWith('SNAPSHOT')) {
+    mavenLocal()
+  }
 }
 
 sourceSets {
