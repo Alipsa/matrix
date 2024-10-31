@@ -1,6 +1,6 @@
 # Matrix core Release history
 
-### 2.0.0, In progress
+### 2.0.0, 2024-10-31
 note there are several (minor) api breaking changes due to extensive cleanup and consistency fixes
 This release was mainly guided by a big port of an R based budget planning and reporting application 
 to Groovy powered by Matrix (resulting in a code reduction with about 20% and an increased performance by

@@ -6,6 +6,7 @@ Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and m
 ## Setup
 Gradle:
 ```groovy
+implementation 'se.alipsa.groovy:matrix-core:2.0.0'
 implementation 'se.alipsa.groovy:matrix-datasets:1.0.4'
 ```
 Maven:

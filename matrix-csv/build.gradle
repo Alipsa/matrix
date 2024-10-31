@@ -1,3 +1,8 @@
+buildscript {
+  dependencies {
+    classpath 'se.alipsa.groovy:nexus-release-plugin:1.0.0-SNAPSHOT'
+  }
+}
 plugins {
   id 'groovy'
   id 'java-library'
@@ -8,6 +13,10 @@ plugins {
 group 'se.alipsa.groovy'
 version '1.0.1'
 description = "Groovy library for importing structured text into a matrix"
+
+ext.nexusUrl = version.contains("SNAPSHOT")
+    ? "https://oss.sonatype.org/content/repositories/snapshots/"
+    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 // For some reason this is required to upgrade the wrapper
 // Change the version and run 'gradle wrapper' to upgrade
@@ -116,4 +125,13 @@ signing {
   } else {
     project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
   }
+}
+
+if (project.ext.properties.sonatypeUsername) {
+
+  apply plugin: 'nexus-release-plugin'
+  //apply plugin: 'se.alipsa.groovy.NexusReleasePlugin'
+  nexusReleasePlugin.nexusUrl = nexusUrl
+  nexusReleasePlugin.userName = sonatypeUsername
+  nexusReleasePlugin.password = sonatypePassword
 }

@@ -1,6 +1,6 @@
 # Release history
 
-## v1.0.4, in progress
+## v1.0.4, 2024-10-31
 - adapt to new matrix 2x style creation using builders
 
 ## v1.0.3, 2024-07-04
