@@ -1,6 +1,7 @@
 # Release history
 
 ## v1.0.4, in progress
+- adapt to new matrix 2x style creation using builders
 
 ## v1.0.3, 2024-07-04
 - add cars dataset
