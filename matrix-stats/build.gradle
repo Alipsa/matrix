@@ -14,7 +14,7 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.0.2-SNAPSHOT'
+version '1.0.2'
 description = "Statistical hypothesis tests based on Matrix data."
 
 // For some reason this is required to upgrade the wrapper

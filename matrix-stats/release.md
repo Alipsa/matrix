@@ -1,6 +1,7 @@
 # Matrix stats release history
 
-## v1.0.2, in progress
+## v1.0.2, 2024-10-31
+- adapt to matrix 2.0.0
 - Implement GoalSeek
 
 ## v1.0.1, 2024-07-04

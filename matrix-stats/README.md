@@ -8,16 +8,24 @@ matrix-stats is available from maven central
 
 Groovy:
 ```groovy
-implementation "se.alipsa.groovy:matrix-stats:1.0.0"
+implementation 'org.apache.groovy:groovy:4.0.23'
+implementation "se.alipsa.groovy:matrix-stats:1.0.2"
 ```
 
 Maven:
 ```xml
-<dependency>
-    <groupId>se.alipsa.groovy</groupId>
-    <artifactId>matrix-stats</artifactId>
-    <version>1.0.0</version>
-</dependency>
+<dependencies>
+    <dependency>
+        <groupId>org.apache.groovy</groupId>
+        <artifactId>groovy</artifactId>
+        <version>4.0.23</version>
+    </dependency>
+    <dependency>
+        <groupId>se.alipsa.groovy</groupId>
+        <artifactId>matrix-stats</artifactId>
+        <version>1.0.2</version>
+    </dependency>
+</dependencies>
 ```
 
 ## Correlations
@@ -173,9 +181,10 @@ y: mean = 88.150, size = 20, sd = 7.242
 The following table illustrates the version compatibility of
 matrix-sql and matrix core
 
-| Matrix stats |    Matrix core | 
-|-------------:|---------------:|
-|        1.0.1 |          1.2.4 |
+| Matrix stats | Matrix core | 
+|-------------:|------------:|
+|        1.0.1 |       1.2.4 |
+|        1.0.2 |       2.0.0 |
 
 # Dependencies
 
