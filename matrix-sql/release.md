@@ -5,6 +5,7 @@
 - NPE fix in MatrixSql. 
 - Upgrade dependencies
 - implement support for conversion of a Matrix to a ResultSet
+- adapt to matrix 2.0.0
 
 ## v1.0.0, 2024-07-04
 Initial version
