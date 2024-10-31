@@ -3,6 +3,33 @@
 The Matrix SQL module aims to make communication between the Matrix library and a 
 relational database as easy as possible.
 
+To use it, add the following to your gradle build script:
+```groovy
+implementation 'org.apache.groovy:groovy:4.0.23'
+implementation 'se.alipsa.groovy:matrix-core:2.0.0'
+implementation 'se.alipsa.groovy:matrix-sql:1.0.1'
+```
+or if you use maven:
+```xml
+<dependencies>
+  <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>4.0.23</version>
+  </dependency>
+  <dependency>
+      <groupId>se.alipsa.groovy</groupId>
+      <artifactId>matrix-core</artifactId>
+      <version>2.0.0</version>
+  </dependency>
+  <dependency>
+    <groupId>se.alipsa.groovy</groupId>
+    <artifactId>matrix-sql</artifactId>
+    <version>1.0.1</version>
+  </dependency>
+</dependencies>
+```
+
 The core class is MatrixSql. It is created using a ConnectionInfo from the data-utils library.
 A connection info contains the jdbc url, credentials and info of the jdbc driver to use.
 The driver will be downloaded, if needed, and added to the classpath enabling dynamic 
@@ -118,6 +145,7 @@ start column is of type class java.sql.Date, values are [2021-12-01, 2022-07-10,
 The following table illustrates the version compatibility of 
 matrix-sql and matrix core
 
-| Matrix sql |    Matrix core | 
-|-----------:|---------------:|
-|      1.0.0 |          1.2.4 |
+| Matrix sql | Matrix core | 
+|-----------:|------------:|
+|      1.0.0 |       1.2.4 |
+|      1.0.1 |       2.0.0 |
