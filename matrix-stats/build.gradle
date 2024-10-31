@@ -55,12 +55,18 @@ dependencies {
   def groovyVersion = '4.0.23'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   compileOnly groovy
-  compileOnly project(':matrix-core')
-  implementation 'org.apache.commons:commons-math3:3.6.1'
+  if (version.endsWith('SNAPSHOT')) {
+    compileOnly project(':matrix-core')
+    testImplementation project(':matrix-core')
+    testImplementation project(':matrix-datasets')
+  } else {
+    compileOnly('se.alipsa.groovy:matrix-core:2.0.0')
+    testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
+    testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
+  }
 
+  implementation 'org.apache.commons:commons-math3:3.6.1'
   testImplementation groovy
-  testImplementation project(':matrix-core')
-  testImplementation project(':matrix-datasets')
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
   testImplementation("se.alipsa:jfinancials:1.0.0")
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'

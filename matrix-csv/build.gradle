@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.0.1-SNAPSHOT'
+version '1.0.1'
 description = "Groovy library for importing structured text into a matrix"
 
 // For some reason this is required to upgrade the wrapper
@@ -42,14 +42,22 @@ repositories {
 dependencies {
   def groovyVersion = '4.0.23'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
-  compileOnly project(':matrix-core')
+  if (version.endsWith('SNAPSHOT')) {
+    compileOnly project(':matrix-core')
+    testImplementation project(':matrix-core')
+    testImplementation project(':matrix-datasets')
+  } else {
+    compileOnly('se.alipsa.groovy:matrix-core:2.0.0')
+    testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
+    testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
+  }
   api 'org.apache.commons:commons-csv:1.12.0'
   compileOnly groovy
   testImplementation groovy
-  testImplementation project(':matrix-core')
+
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
-  testImplementation project(':matrix-datasets')
+
 }
 
 test {

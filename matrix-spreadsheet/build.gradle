@@ -41,8 +41,8 @@ dependencies {
         compileOnly project(':matrix-core')
         testImplementation project(':matrix-core')
     } else {
-        compileOnly 'se.alipsa.groovy:matrix-core:1.2.4'
-        testImplementation('se.alipsa.groovy:matrix-core:1.2.4')
+        compileOnly 'se.alipsa.groovy:matrix-core:2.0.0'
+        testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
     }
     implementation('org.apache.poi:poi:5.3.0')
     implementation('org.apache.poi:poi-ooxml:5.3.0')

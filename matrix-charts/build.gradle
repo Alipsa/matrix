@@ -20,7 +20,7 @@ task wrapper(type: Wrapper) {
 }
 
 repositories {
-  if (version.contains('SNAPSHOT')) {
+  if (version.endsWith('SNAPSHOT')) {
     mavenLocal()
   }
   mavenCentral()
@@ -67,8 +67,19 @@ dependencies {
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   // compile only dependencies are not included in the pom
   compileOnly groovy
-  implementation project(':matrix-core')
-  implementation project(':matrix-stats')
+  if (version.endsWith('SNAPSHOT')) {
+    compileOnly project(':matrix-core')
+    compileOnly project(':matrix-stats')
+    testImplementation project(':matrix-core')
+    testImplementation project(':matrix-stats')
+    testImplementation project(':matrix-datasets')
+  } else {
+    compileOnly('se.alipsa.groovy:matrix-core:2.0.0')
+    compileOnly('se.alipsa.groovy:matrix-stats:1.0.2')
+    testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
+    testImplementation('se.alipsa.groovy:matrix-stats:1.0.2')
+    testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
+  }
 
   // One of these is enough
   implementation "org.jfree:jfreechart:1.5.5"
@@ -82,7 +93,6 @@ dependencies {
   testImplementation groovy
   //testImplementation "org.testfx:openjfx-monocle:jdk-11+26"
 
-  testImplementation project(':matrix-datasets')
   testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"

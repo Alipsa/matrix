@@ -57,7 +57,15 @@ dependencies {
     def groovyVersion = '4.0.23'
     def groovy = "org.apache.groovy:groovy:$groovyVersion"
     compileOnly groovy
-    compileOnly project(':matrix-core')
+    if (version.endsWith('SNAPSHOT')) {
+        compileOnly project(':matrix-core')
+        testImplementation project(':matrix-core')
+        testImplementation project(':matrix-datasets')
+    } else {
+        compileOnly('se.alipsa.groovy:matrix-core:2.0.0')
+        testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
+        testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
+    }
     implementation 'se.alipsa.groovy:data-utils:1.0.6'
     implementation 'org.gradle:gradle-tooling-api:8.10.2'
     implementation 'commons-io:commons-io:2.17.0'
@@ -66,8 +74,7 @@ dependencies {
 
     testImplementation groovy
     testImplementation "org.apache.groovy:groovy-sql:$groovyVersion"
-    testImplementation project(':matrix-core')
-    testImplementation project(':matrix-datasets')
+
     //testImplementation 'com.h2database:h2:2.2.224' // dynamically fetched so not needed
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'

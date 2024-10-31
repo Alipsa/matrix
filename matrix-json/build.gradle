@@ -40,16 +40,24 @@ repositories {
 dependencies {
   def groovyVersion = '4.0.23'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
-  compileOnly project(':matrix-core')
+
+  if (version.endsWith('SNAPSHOT')) {
+    compileOnly project(':matrix-core')
+    testImplementation project(':matrix-core')
+    testImplementation project(':matrix-datasets')
+  } else {
+    compileOnly('se.alipsa.groovy:matrix-core:2.0.0')
+    testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
+    testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
+  }
+
   compileOnly groovy
   compileOnly "org.apache.groovy:groovy-json:$groovyVersion"
 
   testImplementation groovy
   testImplementation "org.apache.groovy:groovy-json:$groovyVersion"
-  testImplementation project(':matrix-core')
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.2'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.2'
-  testImplementation project(':matrix-datasets')
   testImplementation('com.fasterxml.jackson.core:jackson-core:2.18.0')
   testImplementation('com.fasterxml.jackson.core:jackson-databind:2.18.0')
 }

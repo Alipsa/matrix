@@ -16,7 +16,7 @@ plugins {
 }
 
 group 'se.alipsa.groovy'
-version '1.0.4-SNAPSHOT'
+version '1.0.4'
 description = "Groovy library common public domain and oss data in matrix format)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -56,10 +56,15 @@ dependencies {
     def groovyVersion = '4.0.23'
     def groovy = "org.apache.groovy:groovy:$groovyVersion"
     compileOnly groovy
-    compileOnly project(':matrix-core')
+    if (version.endsWith('SNAPSHOT')) {
+        compileOnly project(':matrix-core')
+        testImplementation project(':matrix-core')
+    } else {
+        compileOnly('se.alipsa.groovy:matrix-core:2.0.0')
+        testImplementation ('se.alipsa.groovy:matrix-core:2.0.0')
+    }
 
     testImplementation groovy
-    testImplementation project(':matrix-core')
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
 }
