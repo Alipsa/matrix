@@ -7,21 +7,29 @@ for [Renjin R](https://github.com/bedatadriven/renjin).
 
 To use it, add the following to your gradle build script: 
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:1.2.1'
-implementation 'se.alipsa.groovy:matrix-spreadsheet:1.0.1'
+implementation 'org.apache.groovy:groovy:4.0.23'
+implementation 'se.alipsa.groovy:matrix-core:2.0.0'
+implementation 'se.alipsa.groovy:matrix-spreadsheet:1.0.3'
 ```
 or if you use maven:
 ```xml
-<dependency>
+<dependencies>
+  <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>4.0.23</version>
+  </dependency>
+  <dependency>
+      <groupId>se.alipsa.groovy</groupId>
+      <artifactId>matrix-core</artifactId>
+      <version>2.0.0</version>
+  </dependency>
+  <dependency>
     <groupId>se.alipsa.groovy</groupId>
-    <artifactId>matrix-core</artifactId>
-    <version>1.2.1</version>
-</dependency>
-<dependency>
-  <groupId>se.alipsa.groovy</groupId>
-  <artifactId>matrix-spreadsheet</artifactId>
-  <version>1.0.1</version>
-</dependency>
+    <artifactId>matrix-spreadsheet</artifactId>
+    <version>1.0.3</version>
+  </dependency>
+</dependencies>
 ```
 
 ## Import a spreadsheet
@@ -136,6 +144,7 @@ The following table illustrates the version compatibility of the matrix-csv and 
 
 | Matrix spreadsheet |    Matrix core | 
 |-------------------:|---------------:|
+|              1.0.3 |          2.0.0 |
 |              1.0.2 |          1.2.4 |
 |              1.0.1 | 1.2.1 -> 1.2.3 |
 
