@@ -8,5 +8,5 @@ if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
 else
   echo "$PROJECT uploaded, release it if it checks out"
   echo "see https://central.sonatype.org/publish/release/ for more info"
-  browse https://oss.sonatype.org &
+  # browse https://oss.sonatype.org &
 fi
