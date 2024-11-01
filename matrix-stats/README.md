@@ -87,10 +87,10 @@ def y = [4, 5, 7, 10.8, 15, 20, 40]
 def model = new LinearRegression(x, y)
 
 // The same thing can be done from a Matrix i.e:
-// def table = Matrix.create(
+// def table = Matrix.builder().data(
 //    x: [2.7, 3, 5, 7, 9, 11, 14],
 //    y: [4, 5, 7, 10.8, 15, 20, 40]
-// )
+// ).build()
 // model = new LinearRegression(table, 'x', 'y')
 
 // note: 8 is is the number of decimals to round the result to
@@ -154,14 +154,13 @@ mean = 14.333, size = 12, sd = 1.371
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.stats.Student
 
-def data = Matrix.create(
+def data = Matrix.builder().data(
 score: [85 ,85, 78, 78, 92, 94, 91, 85, 72, 97,
 84, 95, 99, 80, 90, 88, 95, 90, 96, 89,
 84, 88, 88, 90, 92, 93, 91, 85, 80, 93,
 97, 100, 93, 91, 90, 87, 94, 83, 92, 95],
-group: ['pre']*20 + ['post']*20,
-[Integer, String]
-)
+group: ['pre']*20 + ['post']*20)
+.columnNames(Integer, String).build()
 def pre = data.subset('group', {it == 'pre'})
 def post = data.subset('group', {it == 'post'})
 def result = Student.pairedTTest(post['score'], pre['score'])
