@@ -66,14 +66,14 @@ class MatrixBuilder {
   MatrixBuilder columns(Map<String, List> columData) {
     List<String> headers = []
     List<List> cols = []
-    columData.each {k, v ->
+    columData.each { k, v ->
       headers << String.valueOf(k)
       cols << v.collect()
     }
-    if(noColumnNames()) {
+    if (noColumnNames()) {
       columnNames(headers)
     }
-    if(noColumns()) {
+    if (noColumns()) {
       columns(cols)
     }
     this
@@ -112,6 +112,62 @@ class MatrixBuilder {
     rows(rows)
   }
 
+  // This allows us to extract ginq results without relying on ginq as a dependency
+  MatrixBuilder ginqResult(Object ginqResult) {
+    if (ginqResult == null) {
+      return this
+    }
+    if ('QueryableCollection' == ginqResult.class.getSimpleName()) {
+      // this is a QueryableCollection (from GINQ) we need to convert it. We can only read it once and
+      // some data contains desirable metadata that we want (hence toList() is a no-go)
+      List r = []
+      ginqResult.each {
+        r << it
+      }
+      Object row = r.first()
+      if (row instanceof Row) {
+        // This happens when the whole object is returned in ginq
+        columnNames(row.columnNames())
+        types(row.types())
+        rows(r)
+      } else if('NamedRecord' == row.class.simpleName) {
+        // this happens when a select contains more than one named item
+        List<String> colNames = row.getNameList()
+        List<Class> t = []
+        boolean isTypesCollected = false
+        def rowValues = []
+        r.each { namedRecord ->
+          def vals = []
+          colNames.each {
+            vals << namedRecord[it]
+            if (!isTypesCollected) {
+              t << namedRecord[it].class
+            }
+          }
+          isTypesCollected = true
+          rowValues << vals
+        }
+        columnNames(colNames)
+        rows(rowValues)
+        types(t)
+      } else if (row instanceof Collection) {
+        // assuming it is some list of data equivalent to a row, not sure if this ever happens
+        def ct = []
+        r.first().each {
+          ct << it.class
+        }
+        types(ct)
+        rows(r)
+      } else {
+        // This happens when a single variable is selected
+        types([r.first().class])
+        columns([r])
+      }
+    } else {
+      throw new RuntimeException("Dont know what to do with $ginqResult.class")
+    }
+  }
+
   /**
    * Takes a List of objects and turn them into rows using reflection
    * The names of the variables will be the column names sorted alphabetically
@@ -146,14 +202,14 @@ class MatrixBuilder {
     }
     Object o = observations.first()
     List<String> colNames = o.class.declaredFields
-        .findAll { !it.synthetic && !Modifier.isStatic(it.modifiers)}
-        .collect{it.name}
+        .findAll { !it.synthetic && !Modifier.isStatic(it.modifiers) }
+        .collect { it.name }
         .sort()
     List<List> rowList = []
     List row
     observations.each { obs ->
       row = []
-      colNames.each {p ->
+      colNames.each { p ->
         row << obs.properties.(p)
       }
       rowList << row
@@ -183,7 +239,7 @@ class MatrixBuilder {
    */
   MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     data(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader)
-    if(noName()) {
+    if (noName()) {
       int endIdx = file.name.length()
       if (file.name.contains('.')) {
         endIdx = file.name.lastIndexOf('.')
@@ -205,7 +261,7 @@ class MatrixBuilder {
    */
   MatrixBuilder data(Path file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
     data(Files.newInputStream(file), delimiter, stringQuote, firstRowAsHeader)
-    if(noName()) {
+    if (noName()) {
       String fileName = file.getFileName().toString()
       int endIdx = fileName.length()
       if (file.contains('.')) {
@@ -227,7 +283,7 @@ class MatrixBuilder {
    * @return
    */
   MatrixBuilder data(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
-    try(InputStream inputStream = url.openStream()) {
+    try (InputStream inputStream = url.openStream()) {
       String n = url.getFile() == null ? url.getPath() : url.getFile()
       if (n.contains('/')) {
         n = n.substring(n.lastIndexOf('/') + 1, n.length())
@@ -236,7 +292,7 @@ class MatrixBuilder {
         n = n.substring(0, n.lastIndexOf('.'))
       }
       data(inputStream, delimiter, stringQuote, firstRowAsHeader)
-      if(noName()) {
+      if (noName()) {
         matrixName(n)
       }
     }
@@ -254,7 +310,7 @@ class MatrixBuilder {
    * @return
    */
   MatrixBuilder data(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
-    try(InputStreamReader reader = new InputStreamReader(inputStream)) {
+    try (InputStreamReader reader = new InputStreamReader(inputStream)) {
       List<List<String>> data = []
       final boolean stripQuotes = stringQuote != ''
       int maxCols = 0
@@ -279,13 +335,13 @@ class MatrixBuilder {
       if (firstRowAsHeader) {
         headerNames = data.remove(0)
       } else {
-        headerNames = (1..maxCols).collect {'c' + it}
+        headerNames = (1..maxCols).collect { 'c' + it }
       }
       if (noColumnNames()) {
         columnNames(headerNames)
       }
       rows(data)
-      if(noDataTypes()) {
+      if (noDataTypes()) {
         types([String] * headerNames.size())
       }
     }
@@ -309,7 +365,7 @@ class MatrixBuilder {
     if (noColumnNames()) {
       columnNames(headers)
     }
-    if(noDataTypes()) {
+    if (noDataTypes()) {
       types(columnTypes)
     }
     List<List<Object>> rows = []

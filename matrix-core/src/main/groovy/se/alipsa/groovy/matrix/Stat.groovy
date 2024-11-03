@@ -52,6 +52,18 @@ class Stat {
         return map
     }
 
+    static Summary summary(Column column) {
+        def sum = new Summary()
+        def colName = column.name
+        def type = column.type
+        if (Number.isAssignableFrom(type) || primitives.contains(type.getTypeName())) {
+            sum[colName] = addNumericSummary(column, type)
+        } else {
+            sum[colName] = addCategorySummary(column, type)
+        }
+        sum
+    }
+
     static Map<String, Object> addNumericSummary(List<Object> objects, Class<?> type) {
         if (objects == null) {
             System.err.println("The list of objects for addNumericSummary is null")

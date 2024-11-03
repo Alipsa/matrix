@@ -7,11 +7,19 @@ class Summary {
 
   private LinkedHashMap<String, Map<String, ?>> data = new LinkedHashMap<>()
 
-  def putAt(String key, Map value) {
-    data[key] = value
+  def putAt(String column, Map value) {
+    data[column] = value
   }
 
-  def getAt(String key) {
+  def getAt(String column) {
+    data[column]
+  }
+
+  def getAt(String column, key) {
+    data[column][key]
+  }
+
+  Object getProperty(String key) {
     data[key]
   }
 

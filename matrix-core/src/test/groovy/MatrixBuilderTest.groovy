@@ -1,4 +1,5 @@
 import groovy.sql.Sql
+import org.apache.groovy.ginq.provider.collection.runtime.NamedRecord
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.matrix.Matrix
 
@@ -276,6 +277,84 @@ class MatrixBuilderTest {
     assertIterableEquals(['id', 'name'], m.columnNames())
     assertEquals(2, m[1, 'id'])
     assertEquals('Ian', m[2, 'name'])
+  }
+
+  @Test
+  void testGreationFromGinq() {
+    Matrix matrix = Matrix.builder()
+        .data([
+            id: [1,2,3],
+            name: ['foo', 'bar', 'baz'],
+            sample: ['train', 'test', 'test']
+        ])
+        .types(int, String, String).build()
+
+    def m2 = GQ {
+      from m in matrix
+      where m.id > 1
+      select m
+    }
+
+    Matrix matrix2 = Matrix.builder().ginqResult(m2).build()
+    assert matrix.columnNames() == matrix2.columnNames()
+    assert matrix.rows([1,2]) == matrix2.rows()
+    assertEquals(2, matrix2.rowCount())
+    assertEquals(3, matrix2.columnCount())
+
+    def m3 = GQ {
+      from m in matrix
+      where m.id > 1
+      select m.id, m.name, m.sample
+    }
+    Matrix matrix3 = Matrix.builder().ginqResult(m3).build()
+    //println(matrix3.content())
+    def expected = matrix.subset(1..2)
+    assertIterableEquals(expected, matrix3, expected.diff(matrix3))
+    assertEquals(2, matrix3.rowCount())
+    assertEquals(3, matrix3.columnCount())
+
+    def m4 = GQ {
+      from m in matrix
+      where m.id > 1
+      select m.id
+    }
+    Matrix matrix4 = Matrix.builder().ginqResult(m4).build()
+    assert matrix.id[1..2] == matrix4[0]
+    assertEquals(2, matrix4.rowCount())
+    assertEquals(1, matrix4.columnCount())
+
+    def m5 = GQ {
+      from m in matrix
+      groupby m.sample
+      orderby count()
+      select m.sample, count() as numSamples
+    }
+    Matrix matrix5 = Matrix.builder().ginqResult(m5).build()
+    assert ['sample', 'numSamples'] == matrix5.columnNames()
+    assertEquals(1, matrix5.findFirstRow('sample', 'train').numSamples)
+    assertEquals(2, matrix5.findFirstRow('sample', 'test').numSamples)
+    assertEquals(2, matrix5.rowCount())
+    assertEquals(2, matrix5.columnCount())
+
+    def m6 = GQ {
+      from m in matrix
+      where m.id == 1
+      select m
+    }
+    Matrix matrix6 = Matrix.builder().ginqResult(m6).build()
+    assertIterableEquals([1,'foo','train'], matrix6.row(0))
+    assertEquals(1, matrix6.rowCount())
+    assertEquals(3, matrix6.columnCount())
+
+    def m7 = GQ {
+      from m in matrix
+      where m.id == 1
+      select m.name
+    }
+    Matrix matrix7 = Matrix.builder().ginqResult(m7).build()
+    assertEquals('foo', matrix7[0,0, String])
+    assertEquals(1, matrix7.rowCount())
+    assertEquals(1, matrix7.columnCount())
   }
 
   class Person {

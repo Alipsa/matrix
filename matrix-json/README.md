@@ -45,13 +45,13 @@ import java.time.LocalDate
 import static se.alipsa.groovy.matrix.ListConverter.toLocalDates
 import groovy.json.JsonOutput
 
-def empData = Matrix.create(
+def empData = Matrix.builder().data(
         emp_id: 1..3,
         emp_name: ["Rick","Dan","Michelle"],
         salary: [623.3,515.2,611.0],
-        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"),
-        [int, String, Number, LocalDate]
-)
+        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
+      .types(int, String, Number, LocalDate)
+      .build()
 
 def exporter = new JsonExporter(empData)
 println JsonOutput.prettyPrint(exporter.toJson())
@@ -157,13 +157,13 @@ def table = importer.parse('''[
 // Note: there are other conversion methods that can handle more complex scenarios
 
 // the above will give you exactly this:
-Matrix empData = Matrix.create(
+Matrix empData = Matrix.builder().data(
     emp_id: 1..3,
     emp_name: ["Rick","Dan","Michelle"],
     salary: [623.3,515.2,611.0],
-    start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"),
-    [int, String, Number, LocalDate]
-)
+    start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
+    .types(int, String, Number, LocalDate)
+    .build()
 ```
 
 # Release version compatibility matrix

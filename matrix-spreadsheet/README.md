@@ -88,17 +88,16 @@ import se.alipsa.groovy.spreadsheet.SpreadsheetExporter
 import java.time.format.DateTimeFormatter
 
 def dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-def table = Matrix.create(
-    [
+def table = Matrix.builder().data(
         id: [null,2,3,4,-5],
         name: ['foo', 'bar', 'baz', 'bla', null],
         start: toLocalDates('2021-01-04', null, '2023-03-13', '2024-04-15', '2025-05-20'),
         end: toLocalDateTimes(dateFormat, '2021-02-04 12:01:22', '2022-03-12 13:14:15', '2023-04-13 15:16:17', null, '2025-06-20 17:18:19'),
         measure: [12.45, null, 14.11, 15.23, 10.99],
         active: [true, false, null, true, false]
-    ]
-    , [int, String, LocalDate, LocalDateTime, BigDecimal, Boolean]
-)
+    )
+    .types(int, String, LocalDate, LocalDateTime, BigDecimal, Boolean)
+    .build()
 def file = File.createTempFile("matrix", ".xlsx")
 
 // Export the Matrix to an excel file

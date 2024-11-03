@@ -1,6 +1,8 @@
+import se.alipsa.groovy.matrix.Column
 import se.alipsa.groovy.matrix.Grid
 import se.alipsa.groovy.matrix.Matrix
 import se.alipsa.groovy.matrix.Row
+import se.alipsa.groovy.matrix.Summary
 
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -165,11 +167,15 @@ class StatTest {
         v1: [1.1, 1, 0.9],
         v2: [null, 'Foo', "Foo"]
     ]).types([Number, double, String]).build()
-    def summary = summary(table)
+    def sum = summary(table)
     //println summary
-    assertEquals(0.3, summary['v0']["Min"])
-    assertEquals(1.1, summary['v1']["Max"])
-    assertEquals(2, summary['v2']["Number of unique values"])
+    assertEquals(0.3, sum['v0']["Min"])
+    assertEquals(1.1, sum['v1']["Max"])
+    assertEquals(2, sum['v2']["Number of unique values"])
+
+    Summary colSum = summary(table.v1)
+    assertEquals(1.1, colSum.v1["Max"])
+    assertEquals(0.9, colSum['v1',"Min"])
   }
 
   @Test

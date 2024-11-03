@@ -1,5 +1,9 @@
 # Matrix core Release history
 
+### 2.1.0, in progress
+- add MatrixBuilder.ginqResult() to create a Matrix from the result of a ginq query
+- add Stat.summary(Column) to make it possible to get the summary of a single column
+
 ### 2.0.0, 2024-10-31
 note there are several (minor) api breaking changes due to extensive cleanup and consistency fixes
 This release was mainly guided by a big port of an R based budget planning and reporting application 

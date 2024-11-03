@@ -15,25 +15,37 @@
  */
 import se.alipsa.groovy.matrix.*
 
-def file = getClass().getResource("/data/kc_house_data.csv")
+import static se.alipsa.groovy.matrix.Stat.*
 
-Matrix.create
+def file = io.projectFile("src/main/resources/data/kc_house_data.csv")
+assert file != null
 
-rows = Table.read().csv(file)
+Matrix rows = Matrix.builder().data(file).build()
 
 println "House data overview"
 println "-------------------"
 
-println rows.shape()
+println str(rows)
 
-println rows.structure()
-
-println rows.column("bedrooms").summary().print()
+println summary(rows.bedrooms)
 
 println "\nHouses with more than 10 bedrooms"
 println   "---------------------------------"
-println rows.where(rows.column("bedrooms").isGreaterThan(10))
+println rows.subset("bedrooms") {
+  it as Integer > 10
+}.content()
 
+// another way is to use ginq:
+def bigHouse = GQ {
+  from r in rows
+  where r.bedrooms as Integer > 10
+  select r
+}
+
+''
+println Matrix.builder().ginqResult(bigHouse).build().content()
+
+// TODO continue matrix conversion here
 println "\nHouses with less than 30 bedrooms"
 println   "---------------------------------"
 cleaned = rows.dropWhere(rows.column("bedrooms").isGreaterThan(30))

@@ -1859,16 +1859,17 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
-   * def table = Matrix.create([
+   * <code><pre>
+   * def table = Matrix.builder().data(
    *      'place': [1, 2, 3],
    *      'firstname': ['Lorena', 'Marianne', 'Lotte'],
-   *      'start': ['2021-12-01', '2022-07-10', '2023-05-27']
-   *  ],
-   *      [int, String, String]
-   *  )
+   *      'start': ['2021-12-01', '2022-07-10', '2023-05-27'])
+   *      .types(int, String, String)
+   *      .build()
+   *
    *  // This will select the second and third row and return it in a new Matrix
    *  Matrix subSet = table.subset('place', { it > 1 })
-   *
+   *  </pre></code>
    *  The mutable version of this is removeRows.
    *
    * @param columnName the name of the column to use to select matches

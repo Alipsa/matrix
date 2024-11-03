@@ -37,7 +37,11 @@ class Row implements List<Object> {
      */
     @Override
     Object getProperty(String propertyName) {
-        getAt(propertyName)
+        if (propertyName in columnNames) {
+            getAt(propertyName)
+        } else {
+            super.getProperty(propertyName)
+        }
     }
 
     /**
@@ -48,7 +52,11 @@ class Row implements List<Object> {
      */
     @Override
     void setProperty(String propertyName, Object newValue) {
-        putAt(propertyName, newValue)
+        if (propertyName in columnNames) {
+            putAt(propertyName, newValue)
+        } else {
+            super.setProperty(propertyName, newValue)
+        }
     }
 
     @Override
@@ -189,6 +197,13 @@ class Row implements List<Object> {
         return content.get(index)
     }
 
+    /**
+     * Change a value at the specified index
+     *
+     * @param index index of the element to replace
+     * @param element element to be stored at the specified position
+     * @return the element previously at the specified position
+     */
     @Override
     Object set(int index, Object element) {
         def result = content.set(index, element)
@@ -254,10 +269,26 @@ class Row implements List<Object> {
         content.subList(fromIndex, toIndex)
     }
 
+    /**
+     * NOTE this method returns a disconnected list, no longer representing a row of the
+     * backing matrix although changes to values that can be mutated (e.g. java.util.Date) will still
+     * change the Matrix content (Numbers and Strings, java.util.time classes are all immutable).
+     *
+     * @param range (inclusive) of all the indexes to include
+     * @return a new list with the values for the indices
+     */
     List subList(IntRange range) {
         content[range]
     }
 
+    /**
+     * NOTE this method returns a disconnected list, no longer representing a row of the
+     * backing matrix although changes to values that can be mutated (e.g. java.util.Date) will still
+     * change the Matrix content (Numbers and Strings, java.util.time classes are all immutable).
+     *
+     * @param indices a collection (inclusive) of all the indexes to include
+     * @return a new list with the values for the indices
+     */
     List subList(Collection indices) {
         def vals = []
         indices.each {
@@ -266,6 +297,14 @@ class Row implements List<Object> {
         vals
     }
 
+    /**
+     * NOTE this method returns a disconnected list, no longer representing a row of the
+     * backing matrix although changes to values that can be mutated (e.g. java.util.Date) will still
+     * change the Matrix content (Numbers and Strings, java.util.time classes are all immutable).
+     *
+     * @param colNames an array of column names to include
+     * @return a new list with the values for the colNames
+     */
     List subList(String... colNames) {
         def vals = []
         colNames.each {
@@ -274,23 +313,59 @@ class Row implements List<Object> {
         vals
     }
 
+    /**
+     * Short notation to set a value e.g.
+     * <code> row[1] = 'foo'</code>
+     *
+     * @param index the column index to set
+     * @param value the new value
+     * @return
+     */
     Object putAt(int index, Object value) {
         return set(index, value)
     }
 
+    /**
+     * Short notation to set a value e.g.
+     * <code> row[nameIndex] = 'foo'</code>
+     *
+     * @param index the column index to set
+     * @param value the new value
+     * @return
+     */
     Object putAt(Number index, Object value) {
         return set(index.intValue(), value)
     }
 
+    /**
+     * Short notation to set a value e.g.
+     * <code> row['name'] = 'foo'</code>
+     *
+     * @param columnName the column columnName to set
+     * @param value the new value
+     * @return
+     */
     Object putAt(String columnName, Object value) {
         return set(columnNames.indexOf(columnName), value)
     }
 
+    /**
+     * Short notation to get a value e.g. <code>def val = row[1]</code>
+     *
+     * @param index
+     * @return the value as the type specified in the types() assignment
+     */
     <T> T getAt(int index) {
         Class<T> type = types[index] as Class<T>
         return get(index).asType(type)
     }
 
+    /**
+     * Short notation to get a value e.g. <code>def val = row[foo]</code>
+     *
+     * @param index
+     * @return the value as the type specified in the types() assignment
+     */
     <T> T getAt(Number index) {
         Class<T> type = types[index.intValue()] as Class<T>
         return get(index.intValue()).asType(type)
@@ -308,6 +383,12 @@ class Row implements List<Object> {
         return ValueConverter.convert(get(index.intValue()),type)
     }
 
+    /**
+     * Short notation to get a value e.g. <code>def val = row['foo']</code>
+     *
+     * @param columnName the column name to get the value from
+     * @return the value as the type specified in the types() assignment
+     */
     <T> T getAt(String columnName) {
         int idx = columnNames.indexOf(columnName)
         if (idx == -1) {
@@ -333,8 +414,9 @@ class Row implements List<Object> {
         ValueConverter.convert(get(idx), type, null, null, valueIfNull)
     }
 
-
-
+    /**
+     * @return the row number where this row appears in the Matrix
+     */
     int getRowNumber() {
         return rowNumber
     }
