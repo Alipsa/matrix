@@ -499,8 +499,9 @@ class MatrixTest {
         .types([int, String]).build()
 
     def empData3 = Matrix.builder().columns(
-        baz: [8, 9, 12.1, 3, 4])
-        .types(Number).build()
+        baz: [8, 9, 12.1, 3, 4],
+        qui: [1.0, 1.5, 2.0, 2.5, 3.0])
+        .types(Number, Number).build()
 
     def empd = empData.clone()
     empd.addColumns(empData2)
@@ -552,6 +553,20 @@ class MatrixTest {
 
     m.foo = ['jabba', 'dabba', 'doo']
     assertEquals(['jabba', 'dabba', 'doo'], m.column('foo'))
+
+    def e = empData.clone()
+    e << empData2[0..1]
+    e.addColumns(empData3, 0..1)
+    def expected = empData.columnNames() + empData2.columnNames()[0..1] + empData3.columnNames()[0..1]
+    assertIterableEquals(expected, e.columnNames())
+    assertIterableEquals(empData3.qui, e.qui)
+    assertIterableEquals(empData2.bar, e.bar)
+
+    def a = empData.clone()
+    a.addColumns(empData2, 'foo', 'bar')
+    assertIterableEquals(empData.columnNames() + ['foo', 'bar'], a.columnNames())
+    assertIterableEquals(empData2.foo, a.foo)
+    assertIterableEquals(empData2.bar, a.bar)
   }
 
   @Test
@@ -1147,5 +1162,21 @@ class MatrixTest {
     assertIterableEquals(['start_date'], empData.columnNames(TemporalAccessor))
     assertIterableEquals(['emp_id', 'salary'], empData.columnNames(Number))
     assertIterableEquals([], empData.columnNames(float))
+  }
+
+  @Test
+  void testColumnIndexFuzzy() {
+    def empData = Matrix.builder().data(
+        emp_id: 1..3,
+        name: ["Rick","Dan","Michelle"],
+        salary: [623.3,515.2,611.0],
+        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
+        .types([int, String, Number, LocalDate])
+        .build()
+
+    assertEquals(0, empData.columnIndexFuzzy('id'))
+    assertEquals(3, empData.columnIndexFuzzy('start'))
+    assertEquals(1, empData.columnIndexFuzzy('nam'))
+    assertEquals(-1, empData.columnIndexFuzzy('am'))
   }
 }

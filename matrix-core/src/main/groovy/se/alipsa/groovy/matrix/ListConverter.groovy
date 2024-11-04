@@ -164,7 +164,7 @@ class ListConverter {
     numbers.collect({ValueConverter.asDouble(it)})
   }
 
-  static List<Double> toDoubles(List<? extends Number> numbers) {
+  static List<Double> toDoubles(List numbers) {
     numbers.collect({ValueConverter.asDouble(it)})
   }
 
@@ -172,7 +172,7 @@ class ListConverter {
     numbers.collect({ValueConverter.asInteger(it)})
   }
 
-  static List<Integer> toIntegers(List<?> numbers) {
+  static List<Integer> toIntegers(List numbers) {
     numbers.collect({ValueConverter.asInteger(it)})
   }
 

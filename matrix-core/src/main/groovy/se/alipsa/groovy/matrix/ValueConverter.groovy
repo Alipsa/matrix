@@ -124,19 +124,19 @@ class ValueConverter {
   }
 
 
-  static Double asDouble(String num, NumberFormat format = null) {
+  static Double asDouble(String num, NumberFormat format = null, Double valueIfNull = null) {
     // Maybe Double.NaN instead of null?
-    if (num == null || 'null' == num || num.isBlank()) return null
+    if (num == null || 'null' == num || num.isBlank()) return valueIfNull
     if (format == null) return Double.valueOf(num)
     return format.parse(num) as Double
   }
 
-  static Double asDouble(Number num) {
-    return num as Double
+  static Double asDouble(Number num, Double valueIfNull = null) {
+    return num == null ? valueIfNull : num as Double
   }
 
-  static Double asDouble(Object obj, NumberFormat format = null) {
-    if (obj == null) return null
+  static Double asDouble(Object obj, NumberFormat format = null, Double valueIfNull = null) {
+    if (obj == null) return valueIfNull
     if (obj instanceof Number) return asDouble(obj as Number)
     if (obj instanceof String) return asDouble(obj as String, format)
     return asDouble(String.valueOf(obj), format)

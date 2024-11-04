@@ -152,6 +152,18 @@ class Matrix implements Iterable<Row> {
     return this
   }
 
+  Matrix addColumns(Matrix table, List<Integer> columns) {
+    List<String> names
+    columns.each {
+      addColumn(
+          table.columnName(it),
+          table.type(it),
+          table[it]
+      )
+    }
+    this
+  }
+
   /**
    * Appends a row to the current Matrix
    *
@@ -634,6 +646,27 @@ class Matrix implements Iterable<Row> {
    */
   int columnIndex(String columnName) {
     return mHeaders.indexOf(columnName)
+  }
+
+  /**
+   * Finds the index of a partial column name. It
+   * 1. ignores leading and trailing whitespace
+   * 2. matches the first column that either starts with or endswith the columName supplied
+   *
+   * @param columnName a partial column name
+   * @return the index of the first match or -1 if not found
+   */
+  int columnIndexFuzzy(String columnName) {
+    String colName = columnName.trim()
+    int i = 0
+    for (String name in mHeaders) {
+      String n = name.trim()
+      if (n.startsWith(colName) || n.endsWith(colName)) {
+        return i
+      }
+      i++
+    }
+    return -1
   }
 
   List<Integer> columnIndices(List<String> columnNames) {
@@ -1463,8 +1496,13 @@ class Matrix implements Iterable<Row> {
     addColumn(column.name, column.type, column)
   }
 
-  def leftShift(Collection column) {
-    throw new IllegalArgumentException("leftShift to add a column should be specified with a Map or another Matrix")
+  def leftShift(Collection<Column> columns) {
+    columns.each { column ->
+      if (!column instanceof Column) {
+        throw new IllegalArgumentException("leftShift to add columns should be specified with a list of columns, a Map or another Matrix")
+      }
+      addColumn(column.name, column.type, column)
+    }
   }
 
   /**
@@ -1627,7 +1665,7 @@ class Matrix implements Iterable<Row> {
    *
    * @return this matrix with the empty columns removed
    */
-  Matrix removeEmptyColumns() {
+  Matrix dropEmptyColumns() {
     int i = 0
     List<Integer> columnsToRemove = []
     for (List col in mColumns) {
@@ -1646,6 +1684,17 @@ class Matrix implements Iterable<Row> {
     //println "Removing columns $columnsToRemove"
     dropColumns(columnsToRemove)
   }
+
+  /**
+   *
+   * @return this matrix without the empty columns
+   * @deprecated Use dropEmptyColumns() instead
+   */
+  @Deprecated
+  Matrix removeEmptyColumns() {
+    dropEmptyColumns()
+  }
+
 
   /**
    * Get the row at the specified index

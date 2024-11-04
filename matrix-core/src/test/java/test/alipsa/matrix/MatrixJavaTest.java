@@ -922,7 +922,7 @@ class MatrixJavaTest {
         .types(int.class, String.class, Number.class, LocalDate.class, String.class)
         .build();
     assertIterableEquals(c("emp_id", "emp_name", "salary", "start_date", "other"), empData.columnNames());
-    empData.removeEmptyColumns();
+    empData.dropEmptyColumns();
     assertEquals(2, empData.columnCount());
     assertIterableEquals(c("emp_id", "salary"), empData.columnNames());
   }

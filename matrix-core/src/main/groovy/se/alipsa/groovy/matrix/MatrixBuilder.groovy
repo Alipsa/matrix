@@ -109,7 +109,7 @@ class MatrixBuilder {
     Row row = rows.first()
     columnNames(row.columnNames())
     types(row.types())
-    rows(rows)
+    this.rows(rows)
   }
 
   // This allows us to extract ginq results without relying on ginq as a dependency

@@ -163,6 +163,11 @@ class MatrixBuilderTest {
     assertEquals('John Doe', table[0,0])
     assertEquals(23400, table[1,1] as Integer)
     assertEquals(LocalDate.of(2017, 3, 14), table[2,2])
+
+    Matrix t2 = Matrix.builder()
+        .rowList(table.rows())
+        .build()
+    assertEquals(table, t2)
   }
 
   @Test
