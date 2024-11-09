@@ -9,6 +9,9 @@
 - Add Matrix.addColumns() for a List of indices or IntRange of a Matrix
 - Deprecate Matrix removeEmptyColumns in favor of dropEmptyColumns()
 - Fix bug in MatrixBuilder.rowList that had a circular reference
+- add Matrix.typeName(Integer) to get the type simpleName
+- add toHtml() to create a xhtml representation of the Matrix
+
 ### 2.0.0, 2024-10-31
 note there are several (minor) api breaking changes due to extensive cleanup and consistency fixes
 This release was mainly guided by a big port of an R based budget planning and reporting application 

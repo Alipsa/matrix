@@ -749,6 +749,10 @@ class Matrix implements Iterable<Row> {
     return types
   }
 
+  String typeName(Integer idx) {
+    type(idx).simpleName
+  }
+
   String content(boolean includeHeader = true, boolean includeTitle = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     String title = ''
     if (includeTitle) {
@@ -1983,6 +1987,112 @@ class Matrix implements Iterable<Row> {
     ['observations': rowCount(), 'variables': columnCount()]
   }
 
+  /**
+   * There are some additional attributes added to the table: each th and td element will have the column name and
+   * the simple type name added as classes. All attributes added a parameter becomes a table attribute except the
+   * align attribute which is used to set alignment on the columns. Here is an example:
+   * <code><pre>
+   * def empData = Matrix.builder()
+   *   .columns(
+   *     emp_id: 1..3,
+   *     emp_name: ["Rick", "Dan", "Michelle"],
+   *     salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+   *     start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23"))
+   *   .types(int, String, Number, LocalDate)
+   *   .build()
+   * println empData.toHtml(id: 'mytable', class: 'table', align: 'emp_id: center, salary: right, start_date: center')
+   * </pre></code>
+   * This will print
+   * <pre>
+   * <table id="mytable" class="table">
+   * <thead>
+   * <tr>
+   * <th class='emp_id Integer' style='text-align: left'>emp_id</th>
+   * <th class='emp_name String'>emp_name</th>
+   * <th class='salary Number' style='text-align: right'>salary</th>
+   * <th class='start_date LocalDate' style='text-align: center'>start_date</th>
+   * </tr>
+   * </thead>
+   * <tbody>
+   * <tr>
+   * <td class='emp_id Integer' style='text-align: left'>1</td>
+   * <td class='emp_name String'>Rick</td>
+   * <td class='salary Number' style='text-align: right'>623.3</td>
+   * <td class='start_date LocalDate' style='text-align: center'>2013-01-01</td>
+   * </tr>
+   * <tr>
+   * <td class='emp_id Integer' style='text-align: left'>2</td>
+   * <td class='emp_name String'>Dan</td>
+   * <td class='salary Number' style='text-align: right'>515.2</td>
+   * <td class='start_date LocalDate' style='text-align: center'>2012-03-27</td>
+   * </tr>
+   * <tr>
+   * <td class='emp_id Integer' style='text-align: left'>3</td>
+   * <td class='emp_name String'>Michelle</td>
+   * <td class='salary Number' style='text-align: right'>611.0</td>
+   * <td class='start_date LocalDate' style='text-align: center'>2013-09-23</td>
+   * </tr>
+   * <tbody>
+   * </table>
+   * </pre>
+   *
+   * @param attr attributes to add to the table element except the align attributes which will result in a
+   * style attribute added to the th and td elements matching the column name (see example above)
+   *
+   * @return a xhtml representation of the table
+   */
+  String toHtml(Map<String, String> attr = [:]) {
+    Map alignment = [:]
+    StringBuilder sb = new StringBuilder()
+    sb.append('<table')
+    if (attr.size() > 0) {
+      attr.each {k,v ->
+        if (k == 'align') {
+          v.split(',').each { a ->
+            def key = a.substring(0, a.indexOf(':')).trim()
+            def value = a.substring(a.indexOf(':')+1).trim()
+            println "adding key '$key' and value '$value'"
+            alignment.put( key, value)
+          }
+        } else {
+          sb.append(' ').append(k).append('="').append(v).append('"')
+        }
+      }
+    }
+    println "Alignments are $alignment"
+    sb.append('>\n')
+    if (mHeaders.size() > 0) {
+      sb.append('  <thead>\n')
+      sb.append('    <tr>\n')
+
+      mHeaders.eachWithIndex { it, idx ->
+        String colName = columnName(idx)
+        sb.append("      <th class='$colName ${typeName(idx)}'")
+        if (alignment.containsKey(colName)) {
+          sb.append(" style='text-align: ${alignment[colName]}'")
+        }
+        sb.append('>').append(it).append('</th>\n')
+      }
+      sb.append('    </tr>\n  </thead>\n')
+    }
+    StringBuilder rowBuilder = new StringBuilder()
+    sb.append('  <tbody>\n')
+    for (row in rows()) {
+      rowBuilder.setLength(0)
+      sb.append('    <tr>\n')
+      row.eachWithIndex { Object val, int i ->
+        rowBuilder.append("      <td class='${columnName(i)} ${typeName(i)}'")
+        String colName = columnName(i)
+        if (alignment.containsKey(colName)) {
+          rowBuilder.append(" style='text-align: ${alignment[colName]}'")
+        }
+        rowBuilder.append('>').append(ValueConverter.asString(val)).append('</td>\n')
+      }
+      sb.append(rowBuilder).append('    </tr>\n')
+    }
+    sb.append('  <tbody>\n</table>\n')
+    sb.toString()
+  }
   /**
    * @param attr table attributes e.g. id, class etc. that is added immediately after the table and become table
    *  attributes when rendered as html

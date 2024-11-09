@@ -760,6 +760,19 @@ class MatrixTest {
   }
 
   @Test
+  void testToHtml() {
+    def empData = Matrix.builder()
+        .columns(
+            emp_id: 1..5,
+            emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+            salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+            start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11"))
+        .types([int, String, Number, LocalDate])
+        .build()
+    println empData.toHtml(id: 'mytable', class: 'table', align: 'emp_id: left, salary: right, start_date: center')
+  }
+
+  @Test
   void testEquals() {
     def empData = Matrix.builder()
         .data(
