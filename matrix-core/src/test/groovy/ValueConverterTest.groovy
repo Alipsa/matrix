@@ -88,4 +88,27 @@ class ValueConverterTest {
         def d = LocalDate.of(2024,10,27)
         assertEquals(d, ValueConverter.convert(null, LocalDate, null, null, d))
     }
+
+    @Test
+    void testAsInteger() {
+        assertEquals(485160, ValueConverter.asInteger("485160.00"))
+        assertEquals(485161, ValueConverter.asInteger("485161"))
+        assertEquals(485162, ValueConverter.asInteger(485162G))
+        assertEquals(485163, ValueConverter.asInteger(485163.01))
+        assertEquals(485164, ValueConverter.asInteger(485164.999))
+        assertEquals(1, ValueConverter.asInteger(true))
+        assertEquals(0, ValueConverter.asInteger(false))
+        assertEquals(1, ValueConverter.asInteger('TRUE'))
+        assertEquals(0, ValueConverter.asInteger('false'))
+    }
+
+    @Test
+    void testAsIntegerRound() {
+        assertEquals(485160, ValueConverter.asIntegerRound("485160.00"))
+        assertEquals(485161, ValueConverter.asIntegerRound("485160.7"))
+        assertEquals(485162, ValueConverter.asIntegerRound(485161.5G))
+        assertEquals(485163, ValueConverter.asIntegerRound(485163.01))
+        assertEquals(485164, ValueConverter.asIntegerRound(485163.999))
+        assertEquals(485165, ValueConverter.asIntegerRound("485165"))
+    }
 }

@@ -48,7 +48,7 @@ class OdsValueExtractor extends ValueExtractor {
       try {
          return getString(sheet.getRange(row, column))
       } catch (IndexOutOfBoundsException e) {
-         throw new IndexOutOfBoundsException("Failed to get String at row $row, col $column: ${e.getMessage()}")
+         throw new IndexOutOfBoundsException("Sheet: ${sheet.name}: Failed to get String at row $row, col $column: ${e.getMessage()}")
       }
    }
 

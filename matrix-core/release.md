@@ -5,12 +5,14 @@
 - add Stat.summary(Column) to make it possible to get the summary of a single column
 - Change signature of ListConverter to be a List instead of a List<Number> so it also applies to a list of Strings
 - Add columnIndexFuzzy() to search for a column name that starts or ends with the name supplied
-- Add Matrix.leftshift for a List of columns
+- Add Matrix.leftshift to support adding a List of columns
 - Add Matrix.addColumns() for a List of indices or IntRange of a Matrix
-- Deprecate Matrix removeEmptyColumns in favor of dropEmptyColumns()
+- Deprecate Matrix removeEmptyColumns in favor of dropEmptyColumns() (we drop columns and remove rows)
 - Fix bug in MatrixBuilder.rowList that had a circular reference
 - add Matrix.typeName(Integer) to get the type simpleName
 - add toHtml() to create a xhtml representation of the Matrix
+- improve ValueConverter.asInteger to handle String decimals better and also handle boolean conversions
+- add ValueConverter.asIntegerRound for nearest int value
 
 ### 2.0.0, 2024-10-31
 note there are several (minor) api breaking changes due to extensive cleanup and consistency fixes

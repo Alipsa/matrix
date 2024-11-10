@@ -1,5 +1,8 @@
 # Release history
 
+## v1.0.4, In progress
+- clarify which sheet we are on when trying to read outside boundaries
+
 ## v1.0.3, 2024-10-31
 - Add import ODS and XLSX from an InputStream
 - Add import multiple sheets from an InputStream for both ods and xlsx

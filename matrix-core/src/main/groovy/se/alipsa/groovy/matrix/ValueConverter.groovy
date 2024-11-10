@@ -220,14 +220,31 @@ class ValueConverter {
 
   static Integer asInteger(Object o) {
     if (o == null) return null
-    if (o instanceof Number) return o.intValue()
-    try {
-      return (o as BigDecimal).intValue()
-    } catch (NumberFormatException ignored) {
-      String val = asDecimalNumber(String.valueOf(o))
-      if (val.isBlank()) return null
-      return Integer.valueOf(val)
+    if (o instanceof Number) {
+      return o.intValue()
+    } else if (o instanceof Boolean) {
+      return o ? 1 : 0
     }
+    String strVal = String.valueOf(o).toLowerCase()
+    if (strVal == 'true') {
+      return 1
+    } else if (strVal == 'false') {
+      return 0
+    }
+    String val = asDecimalNumber(strVal)
+    if (val.isBlank()) return null
+    return Double.parseDouble(val).intValue()
+  }
+
+  static Integer asIntegerRound(Object o) {
+    if (o == null) return null
+    if (o instanceof Number) {
+      return Math.round(o.doubleValue()).intValue()
+    }
+
+    String val = asDecimalNumber(String.valueOf(o))
+    if (val.isBlank()) return null
+    return Math.round(Double.parseDouble(val)).intValue()
   }
 
   static BigInteger asBigInteger(Object o) {
