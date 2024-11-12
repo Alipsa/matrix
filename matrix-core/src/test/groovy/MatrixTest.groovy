@@ -769,7 +769,17 @@ class MatrixTest {
             start_date: toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11"))
         .types([int, String, Number, LocalDate])
         .build()
-    println empData.toHtml(id: 'mytable', class: 'table', align: 'emp_id: left, salary: right, start_date: center')
+    String html = empData.toHtml(id: 'mytable', class: 'table', align: 'emp_id: left, salary: right, start_date: center')
+    assertTrue(html.contains(' id="mytable"'), 'table should have the id attribute set')
+    assertTrue(html.contains("<th class='salary Number' style='text-align: right'>salary</th>"), 'table header for salary should be right aligned but was ' + html)
+    assertTrue(html.contains("<td class='salary Number' style='text-align: right'>623.3</td>"), 'table row for salary should be right aligned but was ' + html)
+
+    // no alignment so it should be auto aligned
+    html = empData.toHtml(["class": "table"])
+    assertTrue(html.contains(' class="table"'), 'table should have the class attribute set')
+    assertTrue(html.contains("<th class='salary Number' style='text-align: right'>salary</th>"), 'table header for salary should be right aligned but was ' + html)
+    assertTrue(html.contains("<td class='salary Number' style='text-align: right'>623.3</td>"), 'table row for salary should be right aligned but was ' + html)
+
   }
 
   @Test

@@ -2038,10 +2038,10 @@ class Matrix implements Iterable<Row> {
    *
    * @param attr attributes to add to the table element except the align attributes which will result in a
    * style attribute added to the th and td elements matching the column name (see example above)
-   *
+   * @param autoAlign if true all numbers will be right aligned. If the align key is set in the map this setting has no effect
    * @return a xhtml representation of the table
    */
-  String toHtml(Map<String, String> attr = [:]) {
+  String toHtml(Map<String, String> attr = [:], boolean autoAlign=true) {
     Map alignment = [:]
     StringBuilder sb = new StringBuilder()
     sb.append('<table')
@@ -2059,7 +2059,14 @@ class Matrix implements Iterable<Row> {
         }
       }
     }
-    println "Alignments are $alignment"
+    if (alignment.isEmpty() && autoAlign) {
+      columnNames().eachWithIndex { String colName, int idx ->
+        if (Number.isAssignableFrom(type(idx))) {
+          alignment.put(colName, 'right')
+        }
+      }
+    }
+
     sb.append('>\n')
     if (mHeaders.size() > 0) {
       sb.append('  <thead>\n')
