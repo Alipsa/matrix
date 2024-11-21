@@ -950,6 +950,11 @@ class Matrix implements Iterable<Row> {
     return rowIndex >= 0 ? row(rowIndex) : null
   }
 
+  Row findFirstRow(Integer columnIndex, Object value) {
+    int rowIndex = column(columnIndex).findIndexOf { it == value }
+    return rowIndex >= 0 ? row(rowIndex) : null
+  }
+
   Object get(int row, int column) {
     return mColumns[column][row]
   }

@@ -134,9 +134,10 @@ class StatTest {
     assertEquals(37.50, freq2.get(0, 2), "occurrences of 12.1 from table")
 
     def freq3 = frequency([null, 1,2,1,null])
-    def row = freq3.findFirstRow('Value', 'null')
-    assertEquals(2, row[FREQUENCY_FREQUENCY])
-    assertEquals(2/5 * 100, row[FREQUENCY_PERCENT] as Double)
+    def row = freq3.findFirstRow(0, 'null')
+    assertNotNull(row, freq3.content())
+    assertEquals(2, row[FREQUENCY_FREQUENCY], freq3.content())
+    assertEquals(2/5 * 100, row[FREQUENCY_PERCENT] as Double, freq3.content())
 
     def freq4 = frequency([null, 'Foo','Bar','Bar',null])
     Row nullRow = freq4.findFirstRow('Value', 'null')

@@ -13,6 +13,7 @@
 - add toHtml() to create a xhtml representation of the Matrix
 - improve ValueConverter.asInteger to handle String decimals better and also handle boolean conversions
 - add ValueConverter.asIntegerRound for nearest int value
+- add Matrix findFirstRow(Integer columnIndex, Object value) overload
 
 ### 2.0.0, 2024-10-31
 note there are several (minor) api breaking changes due to extensive cleanup and consistency fixes
