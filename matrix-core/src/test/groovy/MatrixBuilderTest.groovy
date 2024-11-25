@@ -171,6 +171,20 @@ class MatrixBuilderTest {
   }
 
   @Test
+  void testCreationFromMapList() {
+    def result = []
+    result << [place: 1, firstname: 'Lorena', start: asLocalDate('2021-12-01')]
+    result << [place: 2, firstname: 'Marianne', start: asLocalDate('2022-07-10')]
+    result << [place: 3, firstname: 'Lotte', start: asLocalDate('2023-05-27')]
+    Matrix m = Matrix.builder().mapList(result).build()
+    assertIterableEquals(['place', 'firstname', 'start'], m.columnNames())
+    assertIterableEquals([Integer, String, LocalDate], m.types())
+    assertEquals(1, m.place[0])
+    assertEquals('Marianne', m[1, 1])
+    assertEquals(asLocalDate('2023-05-27'), m[2, 'start'])
+  }
+
+  @Test
   void testCreationFromMap() {
     def m = Matrix.builder()
         .data([

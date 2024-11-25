@@ -112,6 +112,29 @@ class MatrixBuilder {
     this.rows(rows)
   }
 
+  /**
+   * Build a Matrix (Column names, data content, types) from a List of Maps.
+   * The types are assigned from the data in the first row. Each map has the column name as key and the data content
+   * as value.
+   *
+   * @param rows
+   * @return
+   */
+  MatrixBuilder mapList(List<Map> rows) {
+    if (rows.isEmpty()) {
+      return this
+    }
+    Map row = rows.first()
+    columnNames(row.keySet())
+    def t = []
+    row.each {
+      t << it.value.class
+    }
+    types(t)
+    def r = rows.collect { it.values() as List}
+    this.rows(r)
+  }
+
   // This allows us to extract ginq results without relying on ginq as a dependency
   MatrixBuilder ginqResult(Object ginqResult) {
     if (ginqResult == null) {
