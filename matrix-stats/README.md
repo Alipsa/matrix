@@ -18,7 +18,7 @@ Maven:
     <dependency>
         <groupId>org.apache.groovy</groupId>
         <artifactId>groovy</artifactId>
-        <version>4.0.23</version>
+        <version>4.0.24</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.groovy</groupId>
@@ -180,10 +180,10 @@ y: mean = 88.150, size = 20, sd = 7.242
 The following table illustrates the version compatibility of
 matrix-sql and matrix core
 
-| Matrix stats | Matrix core | 
-|-------------:|------------:|
-|        1.0.1 |       1.2.4 |
-|        1.0.2 |       2.0.0 |
+| Matrix stats |    Matrix core | 
+|-------------:|---------------:|
+|        1.0.1 |          1.2.4 |
+|        1.0.2 | 2.0.0 -> 2.1.0 |
 
 # Dependencies
 

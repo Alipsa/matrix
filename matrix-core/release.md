@@ -1,6 +1,8 @@
 # Matrix core Release history
 
-### 2.1.0, in progress
+### 2.1.1, In progress
+
+### 2.1.0, 2024-Nov-26
 - add MatrixBuilder.ginqResult() to create a Matrix from the result of a ginq query
 - add Stat.summary(Column) to make it possible to get the summary of a single column
 - Change signature of ListConverter to be a List instead of a List<Number> so it also applies to a list of Strings

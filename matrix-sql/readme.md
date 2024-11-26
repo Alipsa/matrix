@@ -15,12 +15,12 @@ or if you use maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>4.0.23</version>
+      <version>4.0.24</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.groovy</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.0.0</version>
+      <version>2.1.0</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.groovy</groupId>
@@ -145,7 +145,7 @@ start column is of type class java.sql.Date, values are [2021-12-01, 2022-07-10,
 The following table illustrates the version compatibility of 
 matrix-sql and matrix core
 
-| Matrix sql | Matrix core | 
-|-----------:|------------:|
-|      1.0.0 |       1.2.4 |
-|      1.0.1 |       2.0.0 |
+| Matrix sql |    Matrix core | 
+|-----------:|---------------:|
+|      1.0.0 |          1.2.4 |
+|      1.0.1 | 2.0.0 -> 2.1.0 |

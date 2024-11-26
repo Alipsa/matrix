@@ -12,20 +12,15 @@ Matrix should work with any 4.x version of groovy, and probably older versions a
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:2.0.0'
+implementation 'se.alipsa.groovy:matrix-core:2.1.0'
 ```
 ...and the following for maven
 ```xml
 <dependencies>
     <dependency>
-      <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy</artifactId>
-      <version>4.0.23</version> <!-- any version 4 or higher should work -->
-    </dependency>
-    <dependency>
         <groupId>se.alipsa.groovy</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>2.0.0</version>
+        <version>2.1.0</version>
     </dependency>
 </dependencies>
 ```
@@ -37,7 +32,7 @@ the groovy core library as well e.g:
 <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>4.0.23</version>
+    <version>4.0.24</version>
 </dependency>
 ```
 
