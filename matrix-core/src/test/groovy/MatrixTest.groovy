@@ -261,7 +261,21 @@ class MatrixTest {
     assertEquals(2, subset4.rowCount())
     assertIterableEquals([1, 'Lorena', '2021-12-01'], subset4.row(0))
     assertIterableEquals([2, 'Marianne', '2022-07-10'], subset4.row(1))
+  }
 
+  @Test
+  void testRowDetach() {
+    Matrix m = Matrix.builder().rows([
+        [1, 'Abc'],
+        [2, 'Def']
+    ]).build()
+    def firstRow = m.row(0)
+    firstRow[1] = 'Ghi'
+    assertEquals(m[0, 1], 'Ghi')
+    firstRow.detach()
+    firstRow[1] = 'Jkl'
+    assertEquals(m[0, 1], 'Ghi', 'Matrix should be unchanged')
+    assertEquals('Jkl', firstRow[1])
   }
 
   @Test

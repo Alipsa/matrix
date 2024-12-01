@@ -207,7 +207,9 @@ class Row implements List<Object> {
     @Override
     Object set(int index, Object element) {
         def result = content.set(index, element)
-        parent.putAt([rowNumber, index] as List<Number>, element)
+        if (parent != null) {
+            parent.putAt([rowNumber, index] as List<Number>, element)
+        }
         return result
     }
 
@@ -436,6 +438,17 @@ class Row implements List<Object> {
     @Override
     String toString() {
         return String.valueOf(content)
+    }
+
+    /**
+     * Disconnect the row from the underlying Matrix so that any data manipulation will not affect
+     * the parent matrix.
+     *
+     * @return this detached
+     */
+    Row detach() {
+        parent = null
+        this
     }
 
     /**
