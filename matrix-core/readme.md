@@ -5,7 +5,8 @@ This is a Groovy library to make it easy to work with
 a matrix i.e. a List<List<?>> typically defined in 
 Groovy like this `def myList = [ [1,2,3], [3.4, 7.12, 0.19] ]`
 
-Methods are static making is simple to use in Groovy scripts
+The matrix core is focused on providing the data structure and data manipulation functionality (through the Matrix and 
+Grid classes) that all the other matrix libraries use.
 
 ## Setup
 Matrix should work with any 4.x version of groovy, and probably older versions as well. Binary builds can be downloaded 
@@ -56,13 +57,14 @@ def employees = [
 ]
 def table = Matrix.builder().data(employees).build()
 // There are several ways to access the data, below are some examples how to get single values:
-assert table.salary[0] == 21000 // get column salary and then index 0
+assert table.salary[0] == 21000 // get index 0 from the column "salary"
 assert table[0, 1] == 21000 // get row 0, column 1
 assert table[0, 'salary'] == 21000 // get row index 0 from the column name salary
 assert table['salary'][0] == 21000 // get the column and the first index
 assert table.row(0).salary == 21000 // get the first row and then the salary column
 assert table.row(0)[1] == 21000 // get the first row and then the second column
-```        
+```
+
 ### Creating from a result set:
 
 ```groovy
@@ -96,7 +98,7 @@ SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
 SqlUtil.withInstance(dbUrl, dbUser, dbPasswd, dbDriver, this) { sql ->
   sql.query('SELECT * FROM PROJECT') { rs -> project = Matrix.builder().data(rs).build() }
 }
-// Now we can do stuff with the project TMatrix, e.g.
+// Now we can do stuff with the project Matrix, e.g. pretty print the data:
 println(project.content())
 ```
 
@@ -234,7 +236,8 @@ def table = Matrix.builder()
     .types([String]*3)
     .build()
 println(table.typeNames())
-// Convert the place column to int and the start column to localdates
+
+// Convert the place column to Integer and the start column to LocalDate
 def table2 = table.convert([place: Integer, start: LocalDate])
 println(table2.typeNames())
 ```
@@ -442,7 +445,12 @@ assert expected == result.toList()
 
 // The same thing using matrix built in query capabilities:
 def exp = stock.subset{it.price < 32}.orderBy('price', true)
+
 // We can construct a Matrix from the query result
+Matrix matrix2 = Matrix.builder().ginqResult(result).build()
+assert exp == matrix2
+
+// or if we want a bit more control of column names and types:
 Matrix m2 = Matrix.builder()
     .rows(result.toList())
     .columnNames(stock) // copy the column names from the original matrix
