@@ -1,6 +1,6 @@
 # Matrix core Release history
 
-### 2.1.1, In progress
+### 2.1.1, 2024-Dec-03
 - Add Row.detach() to allow data manipulations independently of the Matrix parent.
 
 ### 2.1.0, 2024-Nov-26

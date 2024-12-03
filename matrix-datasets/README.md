@@ -15,7 +15,7 @@ Maven:
   <dependency>
       <groupId>se.alipsa.groovy</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.1.0</version>
+      <version>2.1.1</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.groovy</groupId>
@@ -46,5 +46,5 @@ The following table illustrates the version compatibility of the matrix datasets
 | Matrix datasets |    Matrix core | 
 |----------------:|---------------:|
 |           1.0.3 | 1.2.3 -> 1.2.4 |
-|           1.0.4 | 2.0.0 -> 2.1.0 |
+|           1.0.4 | 2.0.0 -> 2.1.1 |
 

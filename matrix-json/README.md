@@ -169,6 +169,6 @@ Matrix empData = Matrix.builder().data(
 # Release version compatibility matrix
 The following table illustrates the version compatibility of the matrix-csv and matrix core
 
-| Matrix json | Matrix core | 
-|------------:|------------:|
-|       1.0.0 |       2.0.0 |
+| Matrix json |    Matrix core | 
+|------------:|---------------:|
+|       1.0.0 | 2.0.0 -> 2.1.1 |
