@@ -52,15 +52,15 @@ repositories {
 }
 
 dependencies {
-  def groovyVersion = '4.0.23'
+  def groovyVersion = '4.0.24'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   if (version.endsWith('SNAPSHOT')) {
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
   } else {
-    compileOnly('se.alipsa.groovy:matrix-core:2.0.0')
-    testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
+    compileOnly('se.alipsa.groovy:matrix-core:2.1.1')
+    testImplementation('se.alipsa.groovy:matrix-core:2.1.1')
     testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
   }
   api 'org.apache.commons:commons-csv:1.12.0'

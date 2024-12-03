@@ -5,8 +5,8 @@ relational database as easy as possible.
 
 To use it, add the following to your gradle build script:
 ```groovy
-implementation 'org.apache.groovy:groovy:4.0.23'
-implementation 'se.alipsa.groovy:matrix-core:2.0.0'
+implementation 'org.apache.groovy:groovy:4.0.24'
+implementation 'se.alipsa.groovy:matrix-core:2.1.1'
 implementation 'se.alipsa.groovy:matrix-sql:1.0.1'
 ```
 or if you use maven:

@@ -38,7 +38,7 @@ dependencies {
         qualifier = 'mac-aarch64'
     }
     def javafxVersion = "23.0.1"
-    implementation 'org.apache.groovy:groovy:4.0.23'
+    implementation 'org.apache.groovy:groovy:4.0.24'
     implementation "org.openjfx:javafx-base:${javafxVersion}:$qualifier"
     implementation "org.openjfx:javafx-graphics:${javafxVersion}:$qualifier"
     implementation "org.openjfx:javafx-controls:${javafxVersion}:$qualifier"

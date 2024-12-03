@@ -54,7 +54,7 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    def groovyVersion = '4.0.23'
+    def groovyVersion = '4.0.24'
     def groovy = "org.apache.groovy:groovy:$groovyVersion"
     compileOnly groovy
     if (version.endsWith('SNAPSHOT')) {
@@ -62,8 +62,8 @@ dependencies {
         testImplementation project(':matrix-core')
         testImplementation project(':matrix-datasets')
     } else {
-        compileOnly('se.alipsa.groovy:matrix-core:2.0.0')
-        testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
+        compileOnly('se.alipsa.groovy:matrix-core:2.1.1')
+        testImplementation('se.alipsa.groovy:matrix-core:2.1.1')
         testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
     }
     implementation 'se.alipsa.groovy:data-utils:1.0.6'

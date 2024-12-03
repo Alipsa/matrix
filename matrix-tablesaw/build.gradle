@@ -46,7 +46,7 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    def groovyVersion = "4.0.23"
+    def groovyVersion = "4.0.24"
     def tablesawVersion = "[0.43.1, )"
     compileOnly "org.apache.groovy:groovy:${groovyVersion}"
     implementation("tech.tablesaw:tablesaw-core:${tablesawVersion}") {

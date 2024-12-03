@@ -10,7 +10,7 @@ Binary builds can be downloaded
 from the [Matrix-json project release page](https://github.com/Alipsa/matrix-json/releases) but if you use a build system that
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-def groovyVersion = '4.0.23' // any 4.x version should work
+def groovyVersion = '4.0.24' // any 4.x version should work
 implementation "org.apache.groovy:groovy:$groovyVersion"
 implementation "org.apache.groovy:groovy-json:$groovyVersion"
 implementation 'se.alipsa.groovy:matrix-core:2.0.0'

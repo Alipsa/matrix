@@ -28,7 +28,7 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    implementation 'org.apache.groovy:groovy:4.0.23'
+    implementation 'org.apache.groovy:groovy:4.0.24'
     if (version.contains('SNAPSHOT') && rootProject.name != project.name) {
         // if we execute the build from the matrix root then we include project dependencies as SNAPSHOTS might not
         // have been published (or up to date).

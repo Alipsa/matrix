@@ -63,7 +63,7 @@ dependencies {
     qualifier = 'mac-aarch64'
   }
   def javaFxVersion = '23.0.1'
-  def groovyVersion = '4.0.23'
+  def groovyVersion = '4.0.24'
   def groovy = "org.apache.groovy:groovy:$groovyVersion"
   // compile only dependencies are not included in the pom
   compileOnly groovy

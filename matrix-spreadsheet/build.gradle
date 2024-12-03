@@ -34,15 +34,15 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    def groovy = 'org.apache.groovy:groovy:4.0.23'
+    def groovy = 'org.apache.groovy:groovy:4.0.24'
     compileOnly groovy
     //api project(':matrix-core')
     if (version.contains('SNAPSHOT') && rootProject.name != project.name) {
         compileOnly project(':matrix-core')
         testImplementation project(':matrix-core')
     } else {
-        compileOnly 'se.alipsa.groovy:matrix-core:2.0.0'
-        testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
+        compileOnly 'se.alipsa.groovy:matrix-core:2.1.1'
+        testImplementation('se.alipsa.groovy:matrix-core:2.1.1')
     }
     implementation('org.apache.poi:poi:5.3.0')
     implementation('org.apache.poi:poi-ooxml:5.3.0')

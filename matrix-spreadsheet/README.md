@@ -7,8 +7,8 @@ for [Renjin R](https://github.com/bedatadriven/renjin).
 
 To use it, add the following to your gradle build script: 
 ```groovy
-implementation 'org.apache.groovy:groovy:4.0.23'
-implementation 'se.alipsa.groovy:matrix-core:2.0.0'
+implementation 'org.apache.groovy:groovy:4.0.24'
+implementation 'se.alipsa.groovy:matrix-core:2.1.1'
 implementation 'se.alipsa.groovy:matrix-spreadsheet:1.0.3'
 ```
 or if you use maven:
