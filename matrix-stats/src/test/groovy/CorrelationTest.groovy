@@ -1,6 +1,6 @@
 import org.apache.commons.math3.stat.correlation.KendallsCorrelation
 import org.junit.jupiter.api.Test
-import static se.alipsa.groovy.stats.Correlation.*
+import static se.alipsa.matrix.stats.Correlation.*
 
 import java.math.RoundingMode
 

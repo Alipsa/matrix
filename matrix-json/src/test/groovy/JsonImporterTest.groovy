@@ -6,13 +6,13 @@ import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.ValueNode
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrixjson.*
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.matrixjson.JsonImporter
 
 import java.time.LocalDate
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.groovy.matrix.ListConverter.toLocalDates
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class JsonImporterTest {
 

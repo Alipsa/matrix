@@ -1,16 +1,16 @@
 package spreadsheet
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.ValueConverter
-import se.alipsa.groovy.spreadsheet.excel.ExcelImporter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.ValueConverter
+import se.alipsa.matrix.spreadsheet.excel.ExcelImporter
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 import java.time.LocalDate
 
-import static se.alipsa.groovy.spreadsheet.SpreadsheetImporter.*
+import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.*
 import static org.junit.jupiter.api.Assertions.*
 
 class ExcelImporterTest {

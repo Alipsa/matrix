@@ -1,13 +1,13 @@
 package test.alipsa.groovy.matrix.tablesaw
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.tablesaw.gtable.Gtable
+import se.alipsa.matrix.tablesaw.gtable.Gtable
 import tech.tablesaw.api.ColumnType
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.io.csv.CsvReadOptions
 
 import static org.junit.jupiter.api.Assertions.assertEquals
-import static se.alipsa.groovy.matrix.ListConverter.toLocalDates
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import static tech.tablesaw.api.ColumnType.*
 
 class GtableTest {

@@ -1,13 +1,13 @@
-import se.alipsa.groovy.charts.Chart
-import se.alipsa.groovy.charts.Plot
-import se.alipsa.groovy.charts.ScatterChart
-import se.alipsa.groovy.datasets.*
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.Stat
-import se.alipsa.groovy.stats.Accuracy
-import se.alipsa.groovy.stats.Correlation
-import se.alipsa.groovy.stats.regression.LinearRegression
-import se.alipsa.groovy.stats.Sampler
+import se.alipsa.matrix.charts.Chart
+import se.alipsa.matrix.charts.Plot
+import se.alipsa.matrix.charts.ScatterChart
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.stats.Accuracy
+import se.alipsa.matrix.stats.Correlation
+import se.alipsa.matrix.stats.regression.LinearRegression
+import se.alipsa.matrix.stats.Sampler
 
 
 Matrix cars = Dataset.cars()

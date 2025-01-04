@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.ListConverter
-import se.alipsa.groovy.stats.Normalize
+import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.stats.Normalize
 
 class NormalizeTest {
 

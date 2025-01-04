@@ -1,11 +1,12 @@
 package chart
 
+import se.alipsa.matrix.core.Matrix
+
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.*
-import se.alipsa.groovy.charts.LineChart
-import se.alipsa.groovy.charts.SwingPlot
-import se.alipsa.groovy.charts.Plot
+import se.alipsa.matrix.charts.LineChart
+import se.alipsa.matrix.charts.swing.SwingPlot
+import se.alipsa.matrix.charts.Plot
 import java.time.YearMonth
 
 class LineChartTest {

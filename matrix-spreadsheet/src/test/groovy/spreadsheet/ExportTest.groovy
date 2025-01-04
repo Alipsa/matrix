@@ -2,17 +2,17 @@ package spreadsheet
 
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.spreadsheet.SpreadsheetReader
-import se.alipsa.groovy.spreadsheet.SpreadsheetExporter
-import se.alipsa.groovy.spreadsheet.SpreadsheetUtil
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.spreadsheet.SpreadsheetReader
+import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
+import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.groovy.matrix.ListConverter.*
+import static se.alipsa.matrix.core.ListConverter.*
 
 class ExportTest {
 

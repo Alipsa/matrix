@@ -1,8 +1,8 @@
 package chart
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.charts.Histogram
-import se.alipsa.groovy.datasets.Dataset
+import se.alipsa.matrix.charts.Histogram
+import se.alipsa.matrix.datasets.Dataset
 
 import static org.junit.jupiter.api.Assertions.*
 

@@ -3,9 +3,9 @@ package rootfinding
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.jfinancials.Financials.*
 
-import se.alipsa.groovy.matrix.Stat
+import se.alipsa.matrix.core.Stat
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.stats.solver.GoalSeek
+import se.alipsa.matrix.stats.solver.GoalSeek
 
 /**
  * The expected values are taken from doing the same thing in OpenOffice calc.

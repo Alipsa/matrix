@@ -1,5 +1,5 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.ValueConverter
+import se.alipsa.matrix.core.ValueConverter
 
 import java.text.NumberFormat
 import java.text.SimpleDateFormat

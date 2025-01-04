@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.datasets.Dataset
-import se.alipsa.groovy.matrixcsv.CsvExporter
+import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.matrixcsv.CsvExporter
 import org.apache.commons.csv.CSVFormat
 import static org.junit.jupiter.api.Assertions.*
 

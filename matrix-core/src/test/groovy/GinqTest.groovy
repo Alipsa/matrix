@@ -1,10 +1,10 @@
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate
 
-import static se.alipsa.groovy.matrix.ListConverter.*
+import static se.alipsa.matrix.core.ListConverter.*
 
 import static org.junit.jupiter.api.Assertions.*
 

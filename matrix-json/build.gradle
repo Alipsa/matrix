@@ -10,8 +10,8 @@ plugins {
   id 'maven-publish'
 }
 
-group 'se.alipsa.groovy'
-version '1.0.0'
+group 'se.alipsa.matrix'
+version '1.1.0-SNAPSHOT'
 description = "Groovy library for importing and exporting json to and from a Matrix or Grid"
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
@@ -47,26 +47,24 @@ repositories {
 }
 
 dependencies {
-  def groovyVersion = '4.0.24'
-  def groovy = "org.apache.groovy:groovy:$groovyVersion"
 
   if (version.endsWith('SNAPSHOT')) {
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
   } else {
-    compileOnly('se.alipsa.groovy:matrix-core:2.1.1')
-    testImplementation('se.alipsa.groovy:matrix-core:2.1.1')
-    testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
+    compileOnly('se.alipsa.matrix:matrix-core:2.1.1')
+    testImplementation('se.alipsa.matrix:matrix-core:2.1.1')
+    testImplementation('se.alipsa.matrix:matrix-datasets:1.0.4')
   }
 
-  compileOnly groovy
-  compileOnly "org.apache.groovy:groovy-json:$groovyVersion"
+  compileOnly libs.groovy
+  compileOnly libs.groovyJson
 
-  testImplementation groovy
-  testImplementation "org.apache.groovy:groovy-json:$groovyVersion"
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.2'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.2'
+  testImplementation libs.groovy
+  testImplementation libs.groovyJson
+  testImplementation testLibs.junitJupiterApi
+  testRuntimeOnly testLibs.junitJupiterEngine
   testImplementation('com.fasterxml.jackson.core:jackson-core:2.18.0')
   testImplementation('com.fasterxml.jackson.core:jackson-databind:2.18.0')
 }

@@ -1,5 +1,5 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.Column
+import se.alipsa.matrix.core.Column
 
 class ColumnTest {
 

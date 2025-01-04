@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.datasets.Dataset
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.sql.MatrixResultSet
+import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.sql.MatrixResultSet
 import java.sql.ResultSet
 import java.sql.Types
 

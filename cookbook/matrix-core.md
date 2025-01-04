@@ -14,7 +14,7 @@ etc.
 
 Examples:
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.Matrix
 import java.time.LocalDate
 import static se.alipsa.groovy.matrix.ListConverter.*
 import static se.alipsa.groovy.matrix.ValueConverter.*

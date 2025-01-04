@@ -1,6 +1,6 @@
 import static org.junit.jupiter.api.Assertions.*
 
-import static se.alipsa.groovy.matrix.util.ClassUtils.*
+import static se.alipsa.matrix.core.util.ClassUtils.*
 
 import org.junit.jupiter.api.Test
 

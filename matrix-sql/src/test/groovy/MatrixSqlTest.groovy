@@ -2,11 +2,11 @@ import groovy.sql.Sql
 import it.AbstractDbTest
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.Row
-import se.alipsa.groovy.matrix.sql.MatrixSql
-import se.alipsa.groovy.matrix.ListConverter
-import se.alipsa.groovy.datasets.Dataset
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.sql.MatrixSql
+import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.datasets.Dataset
 
 import java.sql.Connection
 import java.sql.ResultSet

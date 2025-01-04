@@ -11,21 +11,21 @@ from the [Matrix-json project release page](https://github.com/Alipsa/matrix-jso
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
 def groovyVersion = '4.0.24' // any 4.x version should work
-implementation "org.apache.groovy:groovy:$groovyVersion"
-implementation "org.apache.groovy:groovy-json:$groovyVersion"
-implementation 'se.alipsa.groovy:matrix-core:2.0.0'
-implementation 'se.alipsa.groovy:matrix-json:1.0.0'
+implementation libs.groovy
+implementation libs.groovyJson
+implementation 'se.alipsa.matrix:matrix-core:2.0.0'
+implementation 'se.alipsa.matrix:matrix-json:1.0.0'
 ```
 ...and the following for maven
 ```xml
 <dependencies>
   <dependency>
-      <groupId>se.alipsa.groovy</groupId>
+      <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.0.0</version>
+      <version>2.1.0</version>
   </dependency>  
   <dependency>
-      <groupId>se.alipsa.groovy</groupId>
+      <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-json</artifactId>
       <version>1.0.0</version>
   </dependency>

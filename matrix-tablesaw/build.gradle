@@ -15,7 +15,7 @@ plugins {
     id "com.github.ben-manes.versions" version "0.51.0"
 }
 
-group = 'se.alipsa.groovy'
+group = 'se.alipsa.matrix'
 version = '1.0.0-SNAPSHOT'
 description = 'Allows conversion between Matrix and Tablesaw'
 
@@ -46,9 +46,8 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    def groovyVersion = "4.0.24"
     def tablesawVersion = "[0.43.1, )"
-    compileOnly "org.apache.groovy:groovy:${groovyVersion}"
+    compileOnly libs.groovy
     implementation("tech.tablesaw:tablesaw-core:${tablesawVersion}") {
         constraints {
             implementation "io.github.classgraph:classgraph:4.8.174"
@@ -71,11 +70,11 @@ dependencies {
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-stats')
     testImplementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
+    testImplementation testLibs.junitJupiter
     testImplementation 'com.h2database:h2:2.3.232'
     testImplementation "org.slf4j:slf4j-simple:2.0.16"
-    testImplementation "org.apache.groovy:groovy:${groovyVersion}"
-    testImplementation "org.apache.groovy:groovy-sql:${groovyVersion}"
+    testImplementation libs.groovy
+    testImplementation libs.groovySql
 }
 
 java {

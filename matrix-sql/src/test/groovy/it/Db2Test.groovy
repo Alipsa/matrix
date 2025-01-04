@@ -1,11 +1,6 @@
 package it
 
-import org.junit.jupiter.api.Test
-import se.alipsa.groovy.datasets.Dataset
 import se.alipsa.groovy.datautil.DataBaseProvider
-import se.alipsa.groovy.matrix.Matrix
-
-import java.sql.Connection
 
 
 class Db2Test extends AbstractDbTest {

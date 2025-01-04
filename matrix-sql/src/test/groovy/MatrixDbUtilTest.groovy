@@ -2,8 +2,8 @@ import it.AbstractDbTest
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.sql.MatrixDbUtil
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.sql.MatrixDbUtil
 import static org.junit.jupiter.api.Assertions.*
 
 class MatrixDbUtilTest {

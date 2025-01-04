@@ -10,8 +10,8 @@ plugins {
     id 'maven-publish'
 }
 
-group 'se.alipsa.groovy'
-version '1.0.4-SNAPSHOT'
+group 'se.alipsa.matrix'
+version '1.1.0-SNAPSHOT'
 description 'Groovy spreadsheet import/export'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -34,24 +34,23 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-    def groovy = 'org.apache.groovy:groovy:4.0.24'
-    compileOnly groovy
+    compileOnly libs.groovy
     //api project(':matrix-core')
     if (version.contains('SNAPSHOT') && rootProject.name != project.name) {
         compileOnly project(':matrix-core')
         testImplementation project(':matrix-core')
     } else {
-        compileOnly 'se.alipsa.groovy:matrix-core:2.1.1'
-        testImplementation('se.alipsa.groovy:matrix-core:2.1.1')
+        compileOnly 'se.alipsa.matrix:matrix-core:2.1.1'
+        testImplementation('se.alipsa.matrix:matrix-core:2.1.1')
     }
     implementation('org.apache.poi:poi:5.3.0')
     implementation('org.apache.poi:poi-ooxml:5.3.0')
     implementation 'com.github.miachm.sods:SODS:1.6.7'
 
     testImplementation 'org.apache.logging.log4j:log4j-core:2.24.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
-    testImplementation groovy
+    testImplementation testLibs.junitJupiterApi
+    testRuntimeOnly testLibs.junitJupiterEngine
+    testImplementation libs.groovy
 }
 
 java {

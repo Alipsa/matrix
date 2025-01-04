@@ -6,6 +6,25 @@ pluginManagement {
   }
 }
 rootProject.name = 'matrix'
+dependencyResolutionManagement {
+  versionCatalogs {
+
+    libs {
+      def groovyVersion="4.0.24"
+      library('groovy', "org.apache.groovy:groovy:$groovyVersion")
+      library('groovySql', "org.apache.groovy:groovy-sql:$groovyVersion")
+      library('groovyGinq', "org.apache.groovy:groovy-ginq:$groovyVersion")
+      library('groovyJson', "org.apache.groovy:groovy-json:$groovyVersion")
+    }
+
+    testLibs {
+      def junitVersion = '5.11.4'
+      library('junitJupiter', "org.junit.jupiter:junit-jupiter:$junitVersion")
+      library('junitJupiterEngine', "org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+      library('junitJupiterApi', "org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    }
+  }
+}
 include 'matrix-core'
 include 'matrix-stats'
 include 'matrix-csv'

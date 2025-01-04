@@ -13,8 +13,8 @@ plugins {
   id 'maven-publish'
 }
 
-group 'se.alipsa.groovy'
-version '1.0.2'
+group 'se.alipsa.matrix'
+version '1.1.0-SNAPSHOT'
 description = "Statistical hypothesis tests based on Matrix data."
 
 // For some reason this is required to upgrade the wrapper
@@ -52,24 +52,22 @@ tasks.withType(GroovyCompile) { task ->
 }
 
 dependencies {
-  def groovyVersion = '4.0.24'
-  def groovy = "org.apache.groovy:groovy:$groovyVersion"
-  compileOnly groovy
+  compileOnly libs.groovy
   if (version.endsWith('SNAPSHOT')) {
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
   } else {
-    compileOnly('se.alipsa.groovy:matrix-core:2.1.1')
-    testImplementation('se.alipsa.groovy:matrix-core:2.1.1')
-    testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
+    compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
+    testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
+    testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
   }
 
   implementation 'org.apache.commons:commons-math3:3.6.1'
-  testImplementation groovy
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
+  testImplementation libs.groovy
+  testImplementation testLibs.junitJupiterApi
   testImplementation("se.alipsa:jfinancials:1.0.0")
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
+  testRuntimeOnly testLibs.junitJupiterEngine
 }
 
 test {

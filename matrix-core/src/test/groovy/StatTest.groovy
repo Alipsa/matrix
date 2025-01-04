@@ -1,17 +1,16 @@
-import se.alipsa.groovy.matrix.Column
-import se.alipsa.groovy.matrix.Grid
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.Row
-import se.alipsa.groovy.matrix.Summary
+import se.alipsa.matrix.core.Grid
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.core.Summary
 
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.YearMonth
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.groovy.matrix.ListConverter.*
-import static se.alipsa.groovy.matrix.Stat.*
-import static se.alipsa.groovy.matrix.ValueConverter.*
+import static se.alipsa.matrix.core.ListConverter.*
+import static se.alipsa.matrix.core.Stat.*
+import static se.alipsa.matrix.core.ValueConverter.*
 
 import org.junit.jupiter.api.Test
 

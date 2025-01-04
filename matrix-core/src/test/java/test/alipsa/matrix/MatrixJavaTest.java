@@ -2,8 +2,8 @@ package test.alipsa.matrix;
 
 import groovy.lang.Closure;
 import org.junit.jupiter.api.Test;
-import se.alipsa.groovy.matrix.*;
-import se.alipsa.groovy.matrix.util.*;
+import se.alipsa.matrix.core.*;
+import se.alipsa.matrix.core.util.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static se.alipsa.groovy.matrix.ListConverter.*;
-import static se.alipsa.groovy.matrix.ValueConverter.*;
-import static se.alipsa.groovy.matrix.util.CollectionUtils.*;
+import static se.alipsa.matrix.core.ListConverter.*;
+import static se.alipsa.matrix.core.ValueConverter.*;
+import static se.alipsa.matrix.core.util.CollectionUtils.*;
 
 /**
  * Testing that a Matrix can work fine outside Groovy e.g. used in Java

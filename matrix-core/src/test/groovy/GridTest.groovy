@@ -1,11 +1,11 @@
-import se.alipsa.groovy.matrix.Grid
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Grid
+import se.alipsa.matrix.core.Matrix
 
 import java.text.DecimalFormat
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.groovy.matrix.Grid.*
-import static se.alipsa.groovy.matrix.Stat.*
+import static se.alipsa.matrix.core.Grid.*
+import static se.alipsa.matrix.core.Stat.*
 
 import org.junit.jupiter.api.Test
 

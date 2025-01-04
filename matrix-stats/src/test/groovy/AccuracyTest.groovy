@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.stats.Accuracy
+import se.alipsa.matrix.stats.Accuracy
 
 class AccuracyTest {
 

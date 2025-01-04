@@ -1,11 +1,11 @@
-import static se.alipsa.groovy.matrix.ValueConverter.*
+import static se.alipsa.matrix.core.ValueConverter.*
 
 import java.time.LocalDate
 import java.time.YearMonth
 
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.MapList
+import se.alipsa.matrix.core.MapList
 
 class MapListTest {
 

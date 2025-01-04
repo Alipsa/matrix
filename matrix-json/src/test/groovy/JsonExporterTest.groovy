@@ -1,17 +1,17 @@
-import se.alipsa.groovy.datasets.Dataset
-import se.alipsa.groovy.matrixjson.JsonImporter
+import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.matrixjson.JsonImporter
 
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
 
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrixjson.JsonExporter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.matrixjson.JsonExporter
 
 import java.time.LocalDate
 
-import static se.alipsa.groovy.matrix.ListConverter.toLocalDates
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class JsonExporterTest {
 

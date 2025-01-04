@@ -8,7 +8,7 @@ plugins {
   id 'signing'
 }
 
-group 'se.alipsa.groovy'
+group 'se.alipsa.matrix'
 version '1.0.0-SNAPSHOT'
 description = "Groovy library for plotting with matrix ([][] data)"
 
@@ -63,10 +63,8 @@ dependencies {
     qualifier = 'mac-aarch64'
   }
   def javaFxVersion = '23.0.1'
-  def groovyVersion = '4.0.24'
-  def groovy = "org.apache.groovy:groovy:$groovyVersion"
   // compile only dependencies are not included in the pom
-  compileOnly groovy
+  compileOnly libs.groovy
   if (version.endsWith('SNAPSHOT')) {
     compileOnly project(':matrix-core')
     compileOnly project(':matrix-stats')
@@ -74,12 +72,13 @@ dependencies {
     testImplementation project(':matrix-stats')
     testImplementation project(':matrix-datasets')
   } else {
-    compileOnly('se.alipsa.groovy:matrix-core:2.0.0')
-    compileOnly('se.alipsa.groovy:matrix-stats:1.0.2')
-    testImplementation('se.alipsa.groovy:matrix-core:2.0.0')
-    testImplementation('se.alipsa.groovy:matrix-stats:1.0.2')
-    testImplementation('se.alipsa.groovy:matrix-datasets:1.0.4')
+    compileOnly('se.alipsa.matrix:matrix-core:2.0.0')
+    compileOnly('se.alipsa.matrix:matrix-stats:1.0.2')
+    testImplementation('se.alipsa.matrix:matrix-core:2.0.0')
+    testImplementation('se.alipsa.matrix:matrix-stats:1.0.2')
+    testImplementation('se.alipsa.matrix:matrix-datasets:1.0.4')
   }
+  implementation("se.alipsa.groovy:gsvg:0.1.0-SNAPSHOT")
 
   // One of these is enough
   implementation "org.jfree:jfreechart:1.5.5"
@@ -90,16 +89,16 @@ dependencies {
   compileOnly "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
   compileOnly "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
 
-  testImplementation groovy
+  testImplementation libs.groovy
   //testImplementation "org.testfx:openjfx-monocle:jdk-11+26"
 
   testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
-  testImplementation "org.apache.groovy:groovy-sql:$groovyVersion"
+  testImplementation testLibs.junitJupiter
+  testRuntimeOnly testLibs.junitJupiterEngine
+  testImplementation libs.groovySql
   //testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
 }
 

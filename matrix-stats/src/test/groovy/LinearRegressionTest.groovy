@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.stats.regression.LinearRegression
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.regression.LinearRegression
 
 import java.math.RoundingMode
 

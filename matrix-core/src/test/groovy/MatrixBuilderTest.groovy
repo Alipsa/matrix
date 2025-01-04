@@ -1,14 +1,13 @@
 import groovy.sql.Sql
-import org.apache.groovy.ginq.provider.collection.runtime.NamedRecord
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertNotEquals
-import static se.alipsa.groovy.matrix.ValueConverter.asLocalDate
+import static se.alipsa.matrix.core.ValueConverter.asLocalDate
 
 /**
  * Note the the calls to content() is a decent way to check the integrity of the matrix and is there to ensure

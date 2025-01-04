@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.Joiner
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Joiner
 
 import static org.junit.jupiter.api.Assertions.*
 

@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.datasets.*
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.stats.Student
+import se.alipsa.matrix.datasets.*
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.Student
 
 import static org.junit.jupiter.api.Assertions.*
 

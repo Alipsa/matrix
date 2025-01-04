@@ -3,8 +3,8 @@ import org.junit.jupiter.api.Test
 import java.text.DecimalFormat
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.groovy.matrix.Grid.*
-import static se.alipsa.groovy.matrix.Stat.sum
+import static se.alipsa.matrix.core.Grid.*
+import static se.alipsa.matrix.core.Stat.sum
 
 class ListOfListsTest {
 

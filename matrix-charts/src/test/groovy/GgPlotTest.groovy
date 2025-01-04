@@ -1,9 +1,9 @@
-import se.alipsa.groovy.matrix.Stat
+import se.alipsa.matrix.core.Stat
 
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.datasets.Dataset
-import static se.alipsa.groovy.gg.GgPlot.*
+import se.alipsa.matrix.datasets.Dataset
+import static se.alipsa.matrix.gg.GgPlot.*
 
 class GgPlotTest {
 

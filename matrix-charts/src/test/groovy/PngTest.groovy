@@ -1,12 +1,13 @@
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate
-import se.alipsa.groovy.matrix.*
-import se.alipsa.groovy.charts.*
+
+import se.alipsa.matrix.charts.*
 
 import static org.junit.jupiter.api.Assertions.*
-import static se.alipsa.groovy.matrix.ListConverter.*
+import static se.alipsa.matrix.core.ListConverter.*
 
 class PngTest {
 
