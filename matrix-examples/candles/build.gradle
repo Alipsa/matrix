@@ -28,10 +28,11 @@ repositories {
 }
 
 dependencies {
+  def groovy4Version = "4.0.24"
   def tablesawVersion = "0.43.1"
   def slf4jVersion = "2.0.16"
   def log4j2Version = "2.24.0"
-  implementation libs.groovy
+  implementation "org.apache.groovy:groovy:$groovy4Version"
   implementation "tech.tablesaw:tablesaw-core:$tablesawVersion"
   implementation "tech.tablesaw:tablesaw-excel:$tablesawVersion"
   implementation "tech.tablesaw:tablesaw-aggregate:$tablesawVersion"
