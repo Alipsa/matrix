@@ -13,15 +13,15 @@ Matrix should work with any 4.x version of groovy, and probably older versions a
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:2.1.1'
+implementation 'se.alipsa.matrix:matrix-core:2.2.0'
 ```
 ...and the following for maven
 ```xml
 <dependencies>
     <dependency>
-        <groupId>se.alipsa.groovy</groupId>
+        <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>2.1.1</version>
+        <version>2.2.0</version>
     </dependency>
 </dependencies>
 ```
@@ -47,7 +47,7 @@ In some ways you can think of it as an in-memory ResultSet.
 A Matrix is created using the builder.
 ### Creating from groovy code:
 ```groovy
-import se.alipsa.groovy.matrix.*
+import se.alipsa.matrix.core.*
 
 def employees = [
         "employee": ['John Doe','Peter Smith','Jane Doe'],
@@ -70,7 +70,7 @@ assert table.row(0)[1] == 21000 // get the first row and then the second column
 ```groovy
 @Grab('com.h2database:h2:2.3.232')
 
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.groovy.datautil.SqlUtil
 
 dbDriver = "org.h2.Driver"
@@ -104,7 +104,7 @@ println(project.content())
 
 ### Creating from a csv file:
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 def table = Matrix.builder().data(new File('/some/path/foo.csv'), ';').build()
 ```
 
@@ -117,7 +117,7 @@ or if you prefer: List<?> priceColumn = table.price
 
 #### head and tail - a short snippet of a Matrix
 ```groovy
-import se.alipsa.groovy.matrix.*
+import se.alipsa.matrix.core.*
 
 def table = Matrix.builder().columns([
     'place': [1, 2, 3],
@@ -142,7 +142,7 @@ Tail
 
 #### str - structure
 ```groovy
-import se.alipsa.groovy.matrix.*
+import se.alipsa.matrix.core.*
 import java.time.*
 
 def empData = Matrix.builder().data(
@@ -173,9 +173,9 @@ and has nothing to do with the str() method.
 #### Summary
 
 ```groovy
-import se.alipsa.groovy.matrix.*
+import se.alipsa.matrix.core.*
 
-import static se.alipsa.groovy.matrix.Stat.*
+import static se.alipsa.matrix.core.Stat.*
 
 def table = Matrix.builder().data([
     v0: [0.3, 2, 3],
@@ -223,7 +223,7 @@ there are several convert methods that can be used to transform data.
 The basic idea is like this:
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 import java.time.LocalDate
 
 // Given a table of strings
@@ -287,7 +287,7 @@ compiler will think you want to call the convert(List<Class<?>>) method instead.
 
 ### Getting a subset of the table
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 import static org.junit.jupiter.api.Assertions.*
 
 def table = Matrix.builder().data([
@@ -309,7 +309,7 @@ assertIterableEquals(table.rows(1..2), subSet.grid())
 ## Performing calculations with apply
 ```groovy
 import java.time.LocalDate
-import se.alipsa.groovy.matrix.*
+import se.alipsa.matrix.core.*
 
 def data = [
     'place': ['1', '2', '3', ','],
@@ -344,9 +344,9 @@ Stat also have an apply method that does not mutate any data. It is useful if yo
 something with two columns. e.g:
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrix.Stat
-import static se.alipsa.groovy.matrix.ListConverter.*
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Stat
+import static se.alipsa.matrix.core.ListConverter.*
 
 def account = Matrix.builder('account')
     .columns([
@@ -382,8 +382,8 @@ id	balance	interestAmount
 ```groovy
 import java.time.*
 import java.time.LocalDate
-import se.alipsa.groovy.matrix.*
-import static se.alipsa.groovy.matrix.ListConverter.*
+import se.alipsa.matrix.core.*
+import static se.alipsa.matrix.core.ListConverter.*
 
 def data = [
     'foo': [1, 2, 3],
@@ -422,7 +422,7 @@ Groovy Integrated queries can be used on Matrix rows.
 You needs to add groovy-ginq as a dependency, and then you can do things like:
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 
 Matrix stock = Matrix.builder().data(
     name: ['Orange', 'Apple', 'Banana', 'Mango', 'Durian'],
@@ -470,7 +470,7 @@ The columns in a matrix overrides the following basic mathematical operations to
 which differs from standard Groovy behavior on lists: plus (+), minus (-), multiply (*), 
 divide (/), power (**). As a consequence you can do stuff like this:
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 Matrix m = Matrix.builder().columns(
     [id: [1,2,3,4],
      balance: [10000, 1000.23, 20122, 12.1]
@@ -523,8 +523,8 @@ def gEmpData = Matrix.builder().data(
 
 // ... in java you can take advantage of the Column and CollectionUtils  
 // to do something almost as simple:
-import se.alipsa.groovy.matrix.util.Columns;
-import static se.alipsa.groovy.matrix.util.CollectionUtils.*;
+import se.alipsa.matrix.core.util.Columns;
+import static se.alipsa.matrix.core.util.CollectionUtils.*;
 
 var jEmpData = Matrix.builder().data( new Columns()
     .add("emp_id", r(1,5))
@@ -537,9 +537,9 @@ var jEmpData = Matrix.builder().data( new Columns()
 Note that some methods require a closure as a parameter. You need to rewrite that somewhat in java. E.g:
 ```groovy
 // The following groovy code
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.corex.Matrix
 import java.time.LocalDate
-import static se.alipsa.groovy.matrix.ListConverter.*
+import static se.alipsa.matrix.core.ListConverter.*
 
 def data = [
     'place': [1, 2, 3],
@@ -553,11 +553,11 @@ def selection = table.rowIndices {
 assert [1,2] == selection
 
 // ...will looks like this in Java:
-import se.alipsa.groovy.matrix.Matrix;
+import se.alipsa.matrix.core.Matrix;
 import java.time.LocalDate;
-import se.alipsa.groovy.matrix.util.*;
-import static se.alipsa.groovy.matrix.util.CollectionUtils.*;
-import static se.alipsa.groovy.matrix.ListConverter.*;
+import se.alipsa.matrix.core.util.*;
+import static se.alipsa.matrix.core.util.CollectionUtils.*;
+import static se.alipsa.matrix.core.ListConverter.*;
 import static org.junit.jupiter.api.Assertions.*
 
 var dat = new Columns(
@@ -585,7 +585,7 @@ The grid class contains some static function to operate on a 2d list (a [][] str
 
 a Grid can be created by supplying a list of rows to the constructor e.g.
 ```groovy
-import se.alipsa.groovy.matrix.*
+import se.alipsa.matrix.core.*
 Grid foo = [
     [12.0, 3.0, Math.PI],
     ["1.9", 2, 3],
