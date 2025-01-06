@@ -29,14 +29,14 @@ from the [Matrix project release page](https://github.com/Alipsa/matrix/releases
 handles dependencies via maven central (gradle, maven ivy etc.) you can add your dependencies from there
 . The group name is se.alipsa.groovy. An example for matrix-core is as follows for Gradle
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:2.1.1'
+implementation 'se.alipsa.matrix:matrix-core:2.2.0'
 ```
 ...and the following for maven
 ```xml
 <dependency>
-    <groupId>se.alipsa.groovy</groupId>
+    <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-core</artifactId>
-    <version>2.1.1</version>
+    <version>2.2.0</version>
 </dependency>
 ```
 
