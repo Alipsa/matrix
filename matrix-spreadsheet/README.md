@@ -8,8 +8,8 @@ for [Renjin R](https://github.com/bedatadriven/renjin).
 To use it, add the following to your gradle build script: 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.24'
-implementation 'se.alipsa.groovy:matrix-core:2.1.1'
-implementation 'se.alipsa.groovy:matrix-spreadsheet:1.0.3'
+implementation 'se.alipsa.groovy:matrix-core:2.2.0'
+implementation 'se.alipsa.groovy:matrix-spreadsheet:1.1.0'
 ```
 or if you use maven:
 ```xml
@@ -22,20 +22,20 @@ or if you use maven:
   <dependency>
       <groupId>se.alipsa.groovy</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.1.1</version>
+      <version>2.2.0</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.groovy</groupId>
     <artifactId>matrix-spreadsheet</artifactId>
-    <version>1.0.3</version>
+    <version>1.1.0</version>
   </dependency>
 </dependencies>
 ```
 
 ## Import a spreadsheet
 ```groovy
-import se.alipsa.groovy.spreadsheet.*
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.spreadsheet.*
+import se.alipsa.matrix.core.Matrix
 
 Matrix table = SpreadsheetImporter.importSpreadsheet(file: "Book1.xlsx", endRow: 11, endCol: 4)
 println(table.head(10))
@@ -58,9 +58,9 @@ If you need to import from a stream you must use the importer specific to the ty
 (ExcelImporter or OdsImporter respectively) e.g.
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.spreadsheet.excel.ExcelImporter
-import se.alipsa.groovy.spreadsheet.ods.OdsImporter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.spreadsheet.excel.ExcelImporter
+import se.alipsa.matrix.spreadsheet.ods.OdsImporter
 
 // Importing an excel spreadsheet
 try(InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
@@ -82,9 +82,9 @@ try(InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
 ## Export a spreadsheet
 
 ```groovy
-import static se.alipsa.groovy.matrix.ListConverter.*
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.spreadsheet.SpreadsheetExporter
+import static se.alipsa.matrix.core.ListConverter.*
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
 import java.time.format.DateTimeFormatter
 
 def dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -107,7 +107,7 @@ SpreadsheetExporter.exportSpreadsheet(file, table)
 ## Export to multiple sheets
 
 ```groovy
-import se.alipsa.groovy.spreadsheet.*
+import se.alipsa.matrix.spreadsheet.*
 
 // get data from somewhere
 Matrix revenuePerYearMonth = getRevenue() 
@@ -125,7 +125,7 @@ SpreadsheetExporter.exportSpreadsheets(
 The SpreadsheetReader is an autocloseable class that can help you find various information about the
 content e.g. where certain rows and columns are located. Here's an example:
 ```groovy
-import se.alipsa.groovy.spreadsheet.*
+import se.alipsa.matrix.spreadsheet.*
 
 File spreadsheet = new File("/some/path/to/excel_or_ods_file")
 try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheet)) {
@@ -143,9 +143,11 @@ The following table illustrates the version compatibility of the matrix-csv and 
 
 | Matrix spreadsheet |    Matrix core | 
 |-------------------:|---------------:|
+|              1.1.0 |          2.2.0 |
 |              1.0.3 | 2.0.0 -> 2.1.1 |
 |              1.0.2 |          1.2.4 |
 |              1.0.1 | 1.2.1 -> 1.2.3 |
+
 
 # Third party libraries used
 Note: only direct dependencies are listed below.

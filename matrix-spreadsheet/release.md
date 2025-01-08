@@ -1,7 +1,9 @@
 # Release history
 
-## v1.0.4, In progress
+## v1.1.0, 2025-01-08
 - clarify which sheet we are on when trying to read outside boundaries
+- change base package name to se.alipsa.matrix.spreadsheet
+- adopt to matrix-core 2.2.0
 
 ## v1.0.3, 2024-10-31
 - Add import ODS and XLSX from an InputStream
