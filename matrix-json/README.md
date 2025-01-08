@@ -14,7 +14,7 @@ def groovyVersion = '4.0.24' // any 4.x version should work
 implementation libs.groovy
 implementation libs.groovyJson
 implementation 'se.alipsa.matrix:matrix-core:2.0.0'
-implementation 'se.alipsa.matrix:matrix-json:1.0.0'
+implementation 'se.alipsa.matrix:matrix-json:1.1.0'
 ```
 ...and the following for maven
 ```xml
@@ -22,12 +22,12 @@ implementation 'se.alipsa.matrix:matrix-json:1.0.0'
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.1.0</version>
+      <version>2.2.0</version>
   </dependency>  
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-json</artifactId>
-      <version>1.0.0</version>
+      <version>1.1.0</version>
   </dependency>
 </dependencies>
 ```
@@ -84,11 +84,11 @@ Sometimes you need to convert the Matrix data in some way. You can do that by su
 Closures for each column name that should be treated. E.g:
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrixjson.JsonExporter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.matrixjson.JsonExporter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import static se.alipsa.groovy.matrix.ListConverter.toLocalDates
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import groovy.json.JsonOutput
 
 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern('yy/dd/MM')
@@ -128,10 +128,10 @@ which will result in the following
 The json needs to be in the format of a list `[]` with each row represented as an Object `{}`
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrixjson.*
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.matrixjson.*
 import java.time.LocalDate
-import static se.alipsa.groovy.matrix.ListConverter.toLocalDates
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 def importer = new JsonImporter()
 def table = importer.parse('''[
@@ -172,3 +172,4 @@ The following table illustrates the version compatibility of the matrix-csv and 
 | Matrix json |    Matrix core | 
 |------------:|---------------:|
 |       1.0.0 | 2.0.0 -> 2.1.1 |
+|       1.1.0 |          2.2.0 |

@@ -5,7 +5,7 @@ a CSV file in the format of choice.
 To use it in your project, add the following dependencies to your code
 ```groovy
 implementation 'se.alipsa.groovy:matrix-core:2.1.1'
-implementation 'se.alipsa.groovy:matrix-csv:1.0.1' 
+implementation 'se.alipsa.groovy:matrix-csv:1.1.0' 
 ```
 
 ## Import a CSV file into a Matrix
@@ -13,8 +13,8 @@ Matrix-csv uses apache-commons csv to parse the csv file. Here is a simple examp
 
 ```groovy
 import org.apache.commons.csv.CSVFormat
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrixcsv.CsvImporter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.matrixcsv.CsvImporter
 
 URL url = getClass().getResource("/basic.csv")
 CSVFormat format = CSVFormat.Builder.create().setTrim(true).build()
@@ -36,8 +36,8 @@ Given the following text file:
 ...we can parse as follows:
 ```groovy
 import org.apache.commons.csv.CSVFormat
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrixcsv.CsvImporter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.matrixcsv.CsvImporter
 
 URL url = getClass().getResource("/colonQuotesEmptyLine.csv")
 CSVFormat format = CSVFormat.Builder.create()
@@ -71,8 +71,8 @@ assert [4, 'Arne', LocalDate.parse('2023-07-01'), 222.99] == table.row(3) // las
 ## Exporting a Matrix to a CSV file
 
 ```groovy
-import se.alipsa.groovy.datasets.Dataset
-import se.alipsa.groovy.matrixcsv.CsvExporter
+import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.matrixcsv.CsvExporter
 import org.apache.commons.csv.CSVFormat
 
 File file = File.createTempFile('mtcars', '.csv')
@@ -88,3 +88,4 @@ The following table illustrates the version compatibility of the matrix-csv and 
 |-----------:|---------------:|
 |      1.0.0 | 1.2.3 -> 1.2.4 |
 |      1.0.1 | 2.0.0 -> 2.1.1 |
+|      1.1.0 |          2.2.0 |
