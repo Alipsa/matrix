@@ -13,7 +13,7 @@ plugins {
 }
 
 group 'se.alipsa.matrix'
-version '1.1.0-SNAPSHOT'
+version '1.1.0'
 description 'Groovy sql module for Matrix'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -23,7 +23,7 @@ ext.nexusUrl = version.contains("SNAPSHOT")
 // For some reason this is required to upgrade the wrapper
 // Change the version and run 'gradle wrapper' to upgrade
 task wrapper(type: Wrapper) {
-    def gv = '8.10.2'
+    def gv = '8.12'
     gradleVersion = gv //version required
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
     validateDistributionUrl = true
@@ -60,13 +60,13 @@ dependencies {
         testImplementation project(':matrix-core')
         testImplementation project(':matrix-datasets')
     } else {
-        compileOnly('se.alipsa.matrix:matrix-core:2.1.1')
-        testImplementation('se.alipsa.matrix:matrix-core:2.1.1')
-        testImplementation('se.alipsa.matrix:matrix-datasets:1.0.4')
+        compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
+        testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
+        testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
     }
     implementation 'se.alipsa.groovy:data-utils:1.0.6'
-    implementation 'org.gradle:gradle-tooling-api:8.10.2'
-    implementation 'commons-io:commons-io:2.17.0'
+    implementation 'org.gradle:gradle-tooling-api:8.12'
+    implementation 'commons-io:commons-io:2.18.0'
     implementation 'se.alipsa:maven-3.9.4-utils:1.0.3'
     //implementation 'org.apache.logging.log4j:log4j-api:2.24.1'
 
@@ -77,8 +77,8 @@ dependencies {
     testImplementation testLibs.junitJupiterApi
     testRuntimeOnly testLibs.junitJupiterEngine
     testImplementation 'org.slf4j:slf4j-simple:2.0.16'
-    testImplementation 'org.apache.logging.log4j:log4j-to-slf4j:2.24.1'
-    testImplementation 'org.apache.logging.log4j:log4j-core:2.24.1'
+    testImplementation 'org.apache.logging.log4j:log4j-to-slf4j:2.24.3'
+    testImplementation 'org.apache.logging.log4j:log4j-core:2.24.3'
 }
 
 test {

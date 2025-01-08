@@ -1,5 +1,8 @@
 # Release history
 
+## v 1.1.0
+- adapt to matrix-core 2.2.0
+
 ## v1.0.1, 2024.10-31
 - return a map of some info from create table. 
 - NPE fix in MatrixSql. 

@@ -6,8 +6,8 @@ relational database as easy as possible.
 To use it, add the following to your gradle build script:
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.24'
-implementation 'se.alipsa.groovy:matrix-core:2.1.1'
-implementation 'se.alipsa.groovy:matrix-sql:1.0.1'
+implementation 'se.alipsa.matrix:matrix-core:2.1.1'
+implementation 'se.alipsa.matrix:matrix-sql:1.0.1'
 ```
 or if you use maven:
 ```xml
@@ -18,14 +18,14 @@ or if you use maven:
       <version>4.0.24</version>
   </dependency>
   <dependency>
-      <groupId>se.alipsa.groovy</groupId>
+      <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.1.1</version>
+      <version>2.2.0</version>
   </dependency>
   <dependency>
-    <groupId>se.alipsa.groovy</groupId>
+    <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-sql</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
   </dependency>
 </dependencies>
 ```
@@ -96,8 +96,8 @@ E.g:
 
 1. We have the following Matrix
     ```groovy
-    import se.alipsa.groovy.matrix.Matrix
-    import se.alipsa.groovy.matrix.ListConverter
+    import se.alipsa.matrix.core.Matrix
+    import se.alipsa.matrix.core.ListConverter
     import java.time.LocalDate
 
     Matrix complexData = Matrix.builder('complexData').data([
@@ -109,7 +109,7 @@ E.g:
 2. We save it to the db
    ```groovy 
    import se.alipsa.groovy.datautil.ConnectionInfo
-   import se.alipsa.groovy.matrix.sql.MatrixSql
+   import se.alipsa.matrix.sql.MatrixSql
    
    ConnectionInfo ci = new ConnectionInfo()
    ci.setDependency('com.h2database:h2:2.3.232')
@@ -149,3 +149,4 @@ matrix-sql and matrix core
 |-----------:|---------------:|
 |      1.0.0 |          1.2.4 |
 |      1.0.1 | 2.0.0 -> 2.1.1 |
+|      1.1.0 |          2.2.0 |
