@@ -82,7 +82,7 @@ publishing {
             artifact(javadocJar)
             artifact(sourcesJar)
             pom {
-                name = 'Groovy spreadsheet import/export'
+                name = 'Matrix Spreadsheet import/export'
                 description = "${project.description}"
                 url = "https://github.com/Alipsa/matrix/matrix-spreadsheet"
                 licenses {

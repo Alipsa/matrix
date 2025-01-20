@@ -93,7 +93,7 @@ publishing {
       artifact(javadocJar)
       artifact(sourcesJar)
       pom {
-        name = 'Groovy Matrix Json'
+        name = 'Matrix Json'
         description = "${project.description}"
         url = "https://github.com/Alipsa/matrix/matrix-json"
         licenses {
