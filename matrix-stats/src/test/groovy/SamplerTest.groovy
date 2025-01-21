@@ -11,7 +11,7 @@ class SamplerTest {
   void testSampleMatrix() {
     def (train, test) = Sampler.split(Dataset.cars(), 0.5)
     assertEquals(25, train.rowCount(), 'train size')
-    assertEquals(25, train.rowCount(), 'test size')
+    assertEquals(25, test.rowCount(), 'test size')
 
     Matrix ids = Matrix.builder()
         .matrixName('ids')

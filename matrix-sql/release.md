@@ -1,5 +1,8 @@
 # Release history
 
+## v1.1.1
+- Remove dependency on gradle-tooling-api
+
 ## v 1.1.0
 - adapt to matrix-core 2.2.0
 

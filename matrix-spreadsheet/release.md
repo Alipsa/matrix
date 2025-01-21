@@ -1,5 +1,9 @@
 # Release history
 
+## v1.1.1, in progress
+- Default to 1:st sheet instead of 'Sheet1' if no sheet is given
+- Change check for sheet param to detect Number instead of integer
+
 ## v1.1.0, 2025-01-08
 - clarify which sheet we are on when trying to read outside boundaries
 - change base package name to se.alipsa.matrix.spreadsheet

@@ -65,7 +65,7 @@ dependencies {
         testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
     }
     implementation 'se.alipsa.groovy:data-utils:1.0.6'
-    implementation 'org.gradle:gradle-tooling-api:8.12'
+    //implementation 'org.gradle:gradle-tooling-api:8.12' dont think we need this
     implementation 'commons-io:commons-io:2.18.0'
     implementation 'se.alipsa:maven-3.9.4-utils:1.0.3'
     //implementation 'org.apache.logging.log4j:log4j-api:2.24.1'
