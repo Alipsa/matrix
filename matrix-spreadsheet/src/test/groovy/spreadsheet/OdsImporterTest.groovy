@@ -33,10 +33,10 @@ class OdsImporterTest {
         "endCol": 'D'
     )
     //println(table.content())
-    assertEquals("3.0", table[2, 0])
+    assertEquals(3.0, table[2, 0])
     def date = table[6, 2]
-    assertEquals("2023-05-06 00:00:00.000", date)
-    assertEquals("17.4", table['baz'][table.rowCount()-1])
+    assertEquals(LocalDate.parse("2023-05-06"), date)
+    assertEquals(17.4, table['baz'][table.rowCount()-1])
     assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
   }
 
@@ -46,10 +46,10 @@ class OdsImporterTest {
       Matrix table = OdsImporter.importOds(
           is, 'Sheet1', 1, 12, 'A', 'D', true
       )
-      assertEquals("3.0", table[2, 0])
+      assertEquals(3.0, table[2, 0])
       def date = table[6, 2]
-      assertEquals("2023-05-06 00:00:00.000", date)
-      assertEquals("17.4", table['baz'][table.rowCount()-1])
+      assertEquals(LocalDate.parse("2023-05-06"), date)
+      assertEquals(17.4, table['baz'][table.rowCount()-1])
       assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
     }
   }
@@ -67,15 +67,15 @@ class OdsImporterTest {
       assertEquals(4, sheets.size())
       Matrix table2 = sheets.Sheet2
       table2.columnNames(['id', 'foo', 'bar', 'baz'])
-      assertEquals("3.0", table2[2, 0])
+      assertEquals(3.0, table2[2, 0])
       def date = table2[6, 2]
-      assertEquals("2023-05-06 00:00:00.000", date)
-      assertEquals("17.4", table2['baz'][table2.rowCount()-1])
+      assertEquals(LocalDate.parse("2023-05-06"), date)
+      assertEquals(17.4, table2['baz'][table2.rowCount()-1])
       assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())
 
       Matrix table1 = sheets.Sheet1
       assertEquals(710381, table1[0,0, Integer])
-      assertEquals('103599.04', table1[1,1])
+      assertEquals(103599.04, table1[1,1])
       assertEquals(66952.95, table1[2,2, Double])
       assertEquals(0.0G, table1[3,3, BigDecimal])
       assertIterableEquals(['id',	'OB',	'IB',	'deferred_interest_amount'], table1.columnNames())

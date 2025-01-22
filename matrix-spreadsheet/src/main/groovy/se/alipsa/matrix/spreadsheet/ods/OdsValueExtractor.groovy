@@ -41,7 +41,15 @@ class OdsValueExtractor extends ValueExtractor {
    }
 
    Object getObject(Range range) {
-      return range.getValue()
+      range.getValue()
+   }
+
+   Object getObject(int row, int column) {
+      try {
+         return getObject(sheet.getRange(row, column))
+      } catch (IndexOutOfBoundsException e) {
+         throw new IndexOutOfBoundsException("Sheet: ${sheet.name}: Failed to get Object at row $row, col $column: ${e.getMessage()}")
+      }
    }
 
    String getString(int row, int column) {

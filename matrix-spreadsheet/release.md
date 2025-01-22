@@ -1,8 +1,9 @@
 # Release history
 
-## v1.1.1, in progress
+## v1.2.0, in progress
 - Default to 1:st sheet instead of 'Sheet1' if no sheet is given
 - Change check for sheet param to detect Number instead of integer
+- Breaking change: Change importOds to fetch as object instead of as string
 
 ## v1.1.0, 2025-01-08
 - clarify which sheet we are on when trying to read outside boundaries

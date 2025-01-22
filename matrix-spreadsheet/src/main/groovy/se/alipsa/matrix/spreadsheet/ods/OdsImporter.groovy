@@ -214,23 +214,7 @@ class OdsImporter {
     for (int rowIdx = startRow; rowIdx <= endRow; rowIdx++) {
       rowList = []
       for (int colIdx = startCol; colIdx <= endCol; colIdx++) {
-        String val = ext.getString(rowIdx, colIdx)
-        if (val == null) {
-          rowList.add(null)
-        } else {
-          if (val.endsWith("%")) {
-            // In excel there is no % in the end of percentage cell, so we make it the same
-            // This has the unfortunate consequence that intentional columns ending with % will be changed
-            //TODO: check if we can get something from the ext.getObject() that is useful
-            try {
-              double dblVal = Double.parseDouble(val.replace("%", "").replace(",", ".")) / 100
-              val = String.valueOf(dblVal)
-            } catch (NumberFormatException ignored) {
-              // it is not a percentage number, leave the value as it was
-            }
-          }
-          rowList.add(val)
-        }
+        rowList.add(ext.getObject(rowIdx, colIdx))
       }
       matrix.add(rowList)
     }
@@ -238,7 +222,7 @@ class OdsImporter {
     .matrixName(sheet.name)
     .columnNames(colNames)
     .rows(matrix)
-    .types([String]*colNames.size())
+    .types([Object]*colNames.size())
     .build()
   }
 
