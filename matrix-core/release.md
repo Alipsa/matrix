@@ -1,5 +1,8 @@
 # Matrix core Release history
 
+### 2.3.0, In progress
+- Add pivot method to a Matrix
+
 ### 2.2.0, 2025-01-06
 - Change group name and package name from se.alipsa.groovy to se.alipsa.matrix
 

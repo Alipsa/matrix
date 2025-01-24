@@ -2,4 +2,4 @@
 set -e
 mvn -f bom.xml install
 mvn verify
-mvn -f bom.xml deploy
+mvn -Prelease -f bom.xml deploy

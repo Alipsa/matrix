@@ -981,6 +981,39 @@ class MatrixTest {
   }
 
   @Test
+  void testPivot() {
+    def m = Matrix.builder('deposits').data(
+        customerId: [1,1,2,2,2,3],
+        amount: [100, 110, 100, 110, 120, 100],
+        currency: ['SEK', 'DKK', 'SEK', 'USD', 'EUR', 'SEK'],
+        name: ['Per', 'Per', 'Ian', 'Ian', 'Ian', 'John']
+    ).types(int, int, String, String)
+    .build()
+
+    def pm = m.pivot('customerId', 'currency', 'amount')
+    /*
+     customerId	name	SEK	 DKK	 USD	 EUR
+             1	Per 	100	 110	null	null
+             2	Ian 	100	null	 110	 120
+             3	John	100	null	null	null
+     */
+    assertEquals(3, pm.rowCount())
+    assertEquals(6, pm.columnCount())
+    assertEquals(100, pm[0, 'SEK'])
+    assertEquals(110, pm[0, 'DKK'])
+    assertNull(pm[0, 'USD'])
+    assertNull(pm[0, 'EUR'])
+    assertEquals(100, pm[1, 'SEK'])
+    assertEquals(110, pm[1, 'USD'])
+    assertEquals(120, pm[1, 'EUR'])
+    assertNull(pm[1, 'DKK'])
+    assertEquals(100, pm[2, 'SEK'])
+    assertNull(pm[2, 'USD'])
+    assertNull(pm[2, 'EUR'])
+    assertNull(pm[2, 'DKK'])
+  }
+
+  @Test
   void testPopulateColumn() {
     Matrix components = Matrix.builder().data([
         id  : [1, 2, 3, 4, 5],

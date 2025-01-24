@@ -96,6 +96,10 @@ class Matrix implements Iterable<Row> {
     //println "Creating a matrix with name: '$mName', ${mHeaders.size()} headers, ${mColumns.size()} columns, ${mTypes.size()} types"
   }
 
+  Matrix addColumn(String name, Class type) {
+    addColumn(name, type, [null]*rowCount())
+  }
+
   Matrix addColumn(String name, Class type = Object, List column) {
     if (mHeaders.contains(name)) {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
@@ -1501,6 +1505,14 @@ class Matrix implements Iterable<Row> {
     }
   }
 
+  /**
+   *
+   * @return the index value of the last observation
+   */
+  int lastRowIndex() {
+    rowCount() - 1
+  }
+
   def leftShift(Column column) {
     addColumn(column.name, column.type, column)
   }
@@ -1542,6 +1554,71 @@ class Matrix implements Iterable<Row> {
       def type = list.isEmpty() ? Object : list[0].class
       addColumn(name, type, list)
     }
+  }
+
+  /**
+   * Pivot is a "partial transpose" i.e. it turns rows into columns for a particular column.
+   * <code><pre>
+   * Matrix orgMatrix = Matrix.builder('deposits').data(
+   *   customerId: [1,1,2,2,2,3],
+   *   amount: [100, 110, 100, 110, 120, 100],
+   *   currency: ['SEK', 'DKK', 'SEK', 'USD', 'EUR', 'SEK'],
+   *   name: ['Per', 'Per', 'Ian', 'Ian', 'Ian', 'John']
+   * ).types(int, int, String, String)
+   * .build()
+   * Matrix pivotedMatrix = orgMatrix.pivot('customerId', 'currency', 'amount')
+   * </pre></code>
+   * The orgMatrix which looks like this
+   * <pre>
+   *   customerId	amount	currency	name
+   *           1	   100	SEK     	Per
+   *           1	   110	DKK     	Per
+   *           2	   100	SEK     	Ian
+   *           2	   110	USD     	Ian
+   *           2	   120	EUR     	Ian
+   *           3	   100	SEK     	John
+   * </pre>
+   * will in the pivotedMatrix be changed to the following:
+   * <pre>
+   *   customerId	name	SEK	 DKK	 USD	 EUR
+   *           1	Per 	100	 110	null	null
+   *           2	Ian 	100	null	 110	 120
+   *           3	John	100	null	null	null
+   * </pre>
+   *
+   * @param idColumn the first occurance of the each value in the Id column will be used as a new row in the new matrix
+   * @param columnNameColumn the column with the column names to create
+   * @param valueColumn the value column to use to populate the new columns
+   * @return a new Matrix with the additional columns for the values in the columnNameColumn
+   */
+  Matrix pivot(String idColumn, String columnNameColumn, String valueColumn) {
+    def d = [:]
+    List<Row> rows = []
+    Set newColumns = new LinkedHashSet()
+    this.each {
+      def id = it[idColumn]
+      def m = d[id]
+      if (m == null) {
+        d[id] = m = [:]
+        rows.add(it)
+      }
+      def colName = String.valueOf(it[columnNameColumn])
+      newColumns.add(colName)
+      m[colName] = it[valueColumn]
+    }
+
+    Matrix pm = builder(matrixName).rowList(rows).build()
+    def colType = type(valueColumn)
+    newColumns.each {
+      pm.addColumn(String.valueOf(it), colType)
+    }
+    d.eachWithIndex { Map.Entry it, int idx ->
+      Map values = it.value as Map
+      values.each { k, v ->
+        pm.putAt(idx, String.valueOf(k), v)
+      }
+    }
+    pm.dropColumns(columnNameColumn, valueColumn)
   }
 
   /**
@@ -1732,14 +1809,6 @@ class Matrix implements Iterable<Row> {
     }
     return mColumns.get(0).size()
     //return rows().size()
-  }
-
-  /**
-   *
-   * @return the index value of the last observation
-   */
-  int lastRowIndex() {
-    rowCount() - 1
   }
 
   /**
