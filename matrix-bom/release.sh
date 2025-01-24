@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
-mvn -f bom.xml install || exit
-mvn verify || exit
+set -e
+mvn -f bom.xml install
+mvn verify
 mvn -f bom.xml deploy
