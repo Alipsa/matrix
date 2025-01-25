@@ -788,6 +788,15 @@ class Matrix implements Iterable<Row> {
     return new Matrix(mName, mHeaders, mColumns, mTypes)
   }
 
+  /**
+   * Makes a copy of the matrix structure only (name, column names, types) but not the data.
+   *
+   * @return a new Matrix identical to this except for the content.
+   */
+  Matrix cloneEmpty() {
+    builder(mName).columnNames(mHeaders).types(mTypes).build()
+  }
+
   private List<Class> createTypeListWithNewValue(int columnNumber, Class updatedClass, boolean findCommonGround) {
     List<Class> types = []
     for (int i = 0; i < mHeaders.size(); i++) {
@@ -1938,6 +1947,65 @@ class Matrix implements Iterable<Row> {
     } else {
       super.setProperty(propertyName, newValue)
     }
+  }
+
+  /**
+   * unPivot is a "partial transpose" i.e. it turns columns into rows for a set of columns.
+   * <code><pre>
+   * Matrix orgMatrix = Matrix.builder('deposits').data(
+   *   customerId: [1,2,3],
+   *   name: ['Per', 'Ian', 'John']
+   *   SEK: [100, 100, 100],
+   *   DKK: [110, null, null],
+   *   USD: [null, 110, null],
+   *   EUR: [null, 120, null]
+   * ).types(int, String, int, int, int, int)
+   * .build()
+   * Matrix pivotedMatrix = orgMatrix.unPivot('amount', 'currency', ['SEK', 'DKK', 'USD', 'EUR'])
+   * </pre></code>
+   * The orgMatrix which looks like this
+   * <pre>
+   *   customerId	name	SEK	 DKK	 USD	 EUR
+   *           1	Per 	100	 110	null	null
+   *           2	Ian 	100	null	 110	 120
+   *           3	John	100	null	null	null
+   * </pre>
+   * will in the unPivotedMatrix be changed to the following:
+   * <pre>
+   *   customerId	name	amount	currency
+   *           1	Per 	   100	SEK
+   *           1	Per 	   110	DKK
+   *           2	Ian 	   100	SEK
+   *           2	Ian 	   110	USD
+   *           2	Ian 	   120	EUR
+   *           3	John	   100	SEK
+   * </pre>
+   *
+   * @param valueColumnName the name of the column where the values will be
+   * @param categoryColumnName the column with name of each category (column name) from the list of column names
+   * @param columnNames the column names to unPivot
+   * @return a new Matrix with the additional rows for the values in the columnNames
+   */
+  Matrix unPivot(String valueColumnName, String categoryColumnName, List<String> columnNames) {
+    def m = this.cloneEmpty()
+    def colType = type(columnNames[0])
+    columnNames.each { String it ->
+      colType = findClosestCommonSuper(type(it), colType)
+    }
+
+    m.addColumn(valueColumnName, colType)
+    m.addColumn(categoryColumnName, String)
+    this.each { row ->
+      columnNames.each {
+        def value = row[it]
+        if (value != null) {
+          m.addRow(row + [value, it])
+        }
+      }
+    }
+    m.dropColumns(columnNames as String[])
+
+    m
   }
 
   private void upsertColumn(String propertyName, List values) {

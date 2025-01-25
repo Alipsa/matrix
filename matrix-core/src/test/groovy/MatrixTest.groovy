@@ -1014,6 +1014,22 @@ class MatrixTest {
   }
 
   @Test
+  void testUnPivot() {
+    Matrix orgMatrix = Matrix.builder('deposits').data(
+        customerId: [1,2,3],
+        name: ['Per', 'Ian', 'John'],
+        SEK: [100, 100, 100],
+        DKK: [110, null, null],
+        USD: [null, 110, null],
+        EUR: [null, 120, null]
+    )
+        .types(int, String, int, int, int, int)
+        .build()
+    Matrix pivotedMatrix = orgMatrix.unPivot('amount', 'currency', ['SEK', 'DKK', 'USD', 'EUR'])
+    println pivotedMatrix.content()
+  }
+
+  @Test
   void testPopulateColumn() {
     Matrix components = Matrix.builder().data([
         id  : [1, 2, 3, 4, 5],
