@@ -1954,14 +1954,14 @@ class Matrix implements Iterable<Row> {
    * <code><pre>
    * Matrix orgMatrix = Matrix.builder('deposits').data(
    *   customerId: [1,2,3],
-   *   name: ['Per', 'Ian', 'John']
+   *   name: ['Per', 'Ian', 'John'],
    *   SEK: [100, 100, 100],
    *   DKK: [110, null, null],
    *   USD: [null, 110, null],
    *   EUR: [null, 120, null]
    * ).types(int, String, int, int, int, int)
    * .build()
-   * Matrix pivotedMatrix = orgMatrix.unPivot('amount', 'currency', ['SEK', 'DKK', 'USD', 'EUR'])
+   * Matrix unPivotedMatrix = orgMatrix.unPivot('amount', 'currency', ['SEK', 'DKK', 'USD', 'EUR'])
    * </pre></code>
    * The orgMatrix which looks like this
    * <pre>

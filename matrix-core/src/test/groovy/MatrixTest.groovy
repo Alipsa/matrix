@@ -1025,8 +1025,24 @@ class MatrixTest {
     )
         .types(int, String, int, int, int, int)
         .build()
-    Matrix pivotedMatrix = orgMatrix.unPivot('amount', 'currency', ['SEK', 'DKK', 'USD', 'EUR'])
-    println pivotedMatrix.content()
+    Matrix unPivotedMatrix = orgMatrix.unPivot('amount', 'currency', ['SEK', 'DKK', 'USD', 'EUR'])
+    //println unPivotedMatrix.content()
+    /* customerId	name	amount	currency
+              1	  Per	     100	SEK
+              1	  Per	     110	DKK
+              2	  Ian	     100	SEK
+              2	  Ian	     110	USD
+              2	  Ian	     120	EUR
+              3	  John	   100	SEK
+     */
+    assertEquals(6, unPivotedMatrix.rowCount())
+    assertEquals(4, unPivotedMatrix.columnCount())
+    assertIterableEquals([1, 'Per', 100, 'SEK'], unPivotedMatrix.row(0))
+    assertIterableEquals([1, 'Per', 110, 'DKK'], unPivotedMatrix.row(1))
+    assertIterableEquals([2, 'Ian', 100, 'SEK'], unPivotedMatrix.row(2))
+    assertIterableEquals([2, 'Ian', 110, 'USD'], unPivotedMatrix.row(3))
+    assertIterableEquals([2, 'Ian', 120, 'EUR'], unPivotedMatrix.row(4))
+    assertIterableEquals([3, 'John', 100, 'SEK'], unPivotedMatrix.row(5))
   }
 
   @Test
