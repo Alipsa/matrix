@@ -1,6 +1,6 @@
-# matrix-csv
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-csv/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-csv)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-csv/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-csv)
+# matrix-csv
 Comprehensive support for creating a Matrix from structured text files (CSV files) and writing a Matrix to
 a CSV file in the format of choice.
 

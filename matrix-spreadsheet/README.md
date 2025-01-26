@@ -1,10 +1,10 @@
-# Matrix Spreadsheet
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-spreadsheet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-spreadsheet)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-spreadsheet/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-spreadsheet)
-Groovy spreadsheet import/export
+# Matrix Spreadsheet
+Spreadsheet import to a Matrix and Matrix export to a spreadsheet. 
 
 This Groovy library enables you to import and export Excel and Libre/Open Office Calc spreadsheets.
-It is based on (heavily inspired by) the [Spreadsheets](https://github.com/Alipsa/spreadsheets) library 
+It is heavily inspired by the [Spreadsheets](https://github.com/Alipsa/spreadsheets) library 
 for [Renjin R](https://github.com/bedatadriven/renjin).
 
 To use it, add the following to your gradle build script: 

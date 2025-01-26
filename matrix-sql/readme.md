@@ -1,6 +1,6 @@
-# Matrix SQL
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-sql/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-sql)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-sql/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-sql)
+# Matrix SQL
 The Matrix SQL module aims to make communication between the Matrix library and a 
 relational database as easy as possible.
 
