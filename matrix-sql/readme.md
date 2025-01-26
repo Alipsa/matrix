@@ -1,13 +1,14 @@
 # Matrix SQL
-
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-sql/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-sql)
+[![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-sql/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-sql)
 The Matrix SQL module aims to make communication between the Matrix library and a 
 relational database as easy as possible.
 
 To use it, add the following to your gradle build script:
 ```groovy
-implementation 'org.apache.groovy:groovy:4.0.24'
-implementation 'se.alipsa.matrix:matrix-core:2.1.1'
-implementation 'se.alipsa.matrix:matrix-sql:1.0.1'
+implementation 'org.apache.groovy:groovy:4.0.25'
+implementation 'se.alipsa.matrix:matrix-core:2.2.0'
+implementation 'se.alipsa.matrix:matrix-sql:1.1.0'
 ```
 or if you use maven:
 ```xml
@@ -15,7 +16,7 @@ or if you use maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>4.0.24</version>
+      <version>4.0.25</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>

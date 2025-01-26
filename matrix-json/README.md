@@ -1,5 +1,5 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix-json/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.groovy/matrix-json)
-[![javadoc](https://javadoc.io/badge2/se.alipsa.groovy/matrix-json/javadoc.svg)](https://javadoc.io/doc/se.alipsa.groovy/matrix-json)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-json/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-json)
+[![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-json/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-json)
 # matrix-json
 Json import and export functionality to and from a Matrix or Grid
 
@@ -10,15 +10,25 @@ Binary builds can be downloaded
 from the [Matrix-json project release page](https://github.com/Alipsa/matrix-json/releases) but if you use a build system that
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-def groovyVersion = '4.0.24' // any 4.x version should work
-implementation libs.groovy
-implementation libs.groovyJson
+def groovyVersion = '4.0.25' // any 4.x version should work
+implementation "org.apache.groovy:groovy:$groovyVersion"
+implementation "org.apache.groovy:groovy-json:$groovyVersion"
 implementation 'se.alipsa.matrix:matrix-core:2.0.0'
 implementation 'se.alipsa.matrix:matrix-json:1.1.0'
 ```
 ...and the following for maven
 ```xml
 <dependencies>
+  <dependency>
+    <groupId>org.apache-groovy</groupId>
+    <artifactId>groovy</artifactId>
+    <version>4.0.25</version>
+  </dependency>
+  <dependency>
+    <groupId>org.apache-groovy</groupId>
+    <artifactId>groovy-json</artifactId>
+    <version>4.0.25</version>
+  </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>

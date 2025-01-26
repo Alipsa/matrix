@@ -1,4 +1,6 @@
 # Matrix Datasets
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-datasets/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-datasets)
+[![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-datasets/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-datasets)
 Common, public domain and oss datasets in Matrix format for Groovy applications running on JDK 17 or later.
 
 Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and map data
@@ -6,8 +8,8 @@ Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and m
 ## Setup
 Gradle:
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:2.0.0'
-implementation 'se.alipsa.groovy:matrix-datasets:1.0.4'
+implementation 'se.alipsa.groovy:matrix-core:2.2.0'
+implementation 'se.alipsa.groovy:matrix-datasets:1.1.0'
 ```
 Maven:
 ```xml
@@ -15,12 +17,12 @@ Maven:
   <dependency>
       <groupId>se.alipsa.groovy</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.1.1</version>
+      <version>2.2.0</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.groovy</groupId>
       <artifactId>matrix-datasets</artifactId>
-      <version>1.0.4</version>
+      <version>1.1.0</version>
   </dependency>
 </dependencies>
 ```
