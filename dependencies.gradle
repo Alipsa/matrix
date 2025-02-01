@@ -2,11 +2,12 @@ dependencyResolutionManagement {
   versionCatalogs {
 
     libs {
-      def groovyVersion="4.0.24"
+      def groovyVersion="4.0.25"
       library('groovy', "org.apache.groovy:groovy:$groovyVersion")
       library('groovySql', "org.apache.groovy:groovy-sql:$groovyVersion")
       library('groovyGinq', "org.apache.groovy:groovy-ginq:$groovyVersion")
       library('groovyJson', "org.apache.groovy:groovy-json:$groovyVersion")
+      library('groovyTemplates', "org.apache.groovy:groovy-templates:$groovyVersion")
     }
 
     testLibs {

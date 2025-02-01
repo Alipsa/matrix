@@ -1,6 +1,7 @@
 package se.alipsa.matrix.core.util
 
 import groovy.transform.CompileStatic
+import jdk.internal.reflect.Reflection
 
 @CompileStatic
 class ClassUtils {
@@ -184,5 +185,15 @@ class ClassUtils {
     }
 
     return Number
+  }
+
+  static GroovyClassLoader findGroovyClassLoader(Object obj) {
+
+    ClassLoader cl = obj.class.classLoader
+    while(cl != null && !(cl instanceof GroovyClassLoader)) {
+      //println("cl = $cl")
+      cl = cl.parent
+    }
+    cl as GroovyClassLoader ?: new GroovyClassLoader()
   }
 }

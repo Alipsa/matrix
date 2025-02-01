@@ -1,6 +1,7 @@
 package test.alipsa.matrix
 
 import groovy.sql.Sql
+import org.junit.jupiter.api.Assertions
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.matrix.matrixjson.JsonExporter
 import se.alipsa.matrix.matrixjson.JsonImporter
@@ -9,6 +10,7 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.stats.Sampler
 import se.alipsa.matrix.stats.regression.LinearRegression
+import se.alipsa.matrix.parquet.MatrixParquetIO
 
 import static org.junit.jupiter.api.Assertions.*
 import org.apache.commons.csv.CSVFormat
@@ -118,5 +120,15 @@ class MatrixModulesTest {
         }
       }
     }
+  }
+
+  @Test
+  void testParquet() {
+    Matrix data = Dataset.mtcars()
+    File file = new File("target/mtcars.parquet")
+    MatrixParquetIO.write(data, file, [precision: 6, scale: 3])
+
+    Matrix d2 = MatrixParquetIO.read(file, 'mtcars')
+    Assertions.assertEquals(data, d2)
   }
 }
