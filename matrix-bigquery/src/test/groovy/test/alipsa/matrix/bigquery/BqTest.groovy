@@ -8,6 +8,11 @@ class BqTest {
 
   @Test
   void testExample() {
+    String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
+    if (projectId == null) {
+      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      return
+    }
     Bq bq = new Bq()
     Matrix m = bq.query("""SELECT CONCAT('https://stackoverflow.com/questions/', 
         CAST(id as STRING)) as url, view_count 
