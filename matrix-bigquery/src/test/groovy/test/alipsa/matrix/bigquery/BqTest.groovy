@@ -22,5 +22,6 @@ class BqTest {
         LIMIT 10
         """.stripIndent())
     println m.content()
+    println m.types()
   }
 }

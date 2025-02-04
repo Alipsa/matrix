@@ -4,9 +4,7 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.bigquery.*
 import se.alipsa.matrix.core.Matrix
 
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import java.time.Instant
 
 class Bq {
 
@@ -28,9 +26,9 @@ class Bq {
     }
     this.projectId = projectId
     bigQuery = BigQueryOptions.newBuilder()
-      .setProjectId(projectId)
-      .build()
-      .getService()
+        .setProjectId(projectId)
+        .build()
+        .getService()
   }
 
   Bq() {
@@ -91,10 +89,12 @@ class Bq {
     for (FieldValueList fvl : result.iterateAll()) {
       row = []
       for (FieldValue fv : fvl.iterator()) {
-         row << fv.value
+        row << fv.value
       }
       rows << row
     }
+    // TODO: all values are Strings, must be converted to the types in the columnTypes list
+    //  we need a custom converter for this
     Matrix.builder()
         .rows(rows)
         .types(columnTypes)
@@ -106,23 +106,23 @@ class Bq {
   // TODO: check each one and finish mapping
   static Class convertType(LegacySQLTypeName typeName) {
     return switch (typeName) {
-      //case LegacySQLTypeName.BIGNUMERIC -> BigDecimal
-      //case LegacySQLTypeName.BOOLEAN -> Boolean
-      //case LegacySQLTypeName.BYTES -> byte[]
-      //case LegacySQLTypeName.DATE -> LocalDate
-      //case LegacySQLTypeName.DATETIME -> LocalDateTime
-      //case LegacySQLTypeName.FLOAT -> Double
-      //case LegacySQLTypeName.GEOGRAPHY -> Object
-      //case LegacySQLTypeName.INTEGER -> Integer
-      //case LegacySQLTypeName.INTERVAL ->
-      //case LegacySQLTypeName.JSON ->
-      //case LegacySQLTypeName.NUMERIC -> BigDecimal
-      //case LegacySQLTypeName.RANGE -> IntRange
-      // case LegacySQLTypeName.RECORD
-      case LegacySQLTypeName.STRING -> String
-      //case LegacySQLTypeName.TIMESTAMP -> LocalDateTime
+    //case LegacySQLTypeName.BIGNUMERIC -> BigDecimal
+    //case LegacySQLTypeName.BOOLEAN -> Boolean
+    //case LegacySQLTypeName.BYTES -> byte[]
+    //case LegacySQLTypeName.DATE -> LocalDate
+    //case LegacySQLTypeName.DATETIME -> LocalDateTime
+    //case LegacySQLTypeName.FLOAT -> Double
+    //case LegacySQLTypeName.GEOGRAPHY -> Object
+    //case LegacySQLTypeName.INTEGER -> Integer
+    //case LegacySQLTypeName.INTERVAL -> Duration
+    //case LegacySQLTypeName.JSON ->
+    //case LegacySQLTypeName.NUMERIC -> BigDecimal
+    //case LegacySQLTypeName.RANGE -> Range
+    //case LegacySQLTypeName.RECORD
+    //case LegacySQLTypeName.STRING -> String
+    //case LegacySQLTypeName.TIMESTAMP -> Instant
       //case LegacySQLTypeName.TIME -> LocalTime
-      default -> Object
+    default -> Object
     }
   }
 }
