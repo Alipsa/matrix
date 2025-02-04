@@ -1,4 +1,4 @@
-package se.alipsa.matrix.charts.charm
+package se.alipsa.matrix.charts.charmfx
 
 import javafx.collections.ObservableList
 import javafx.geometry.Insets
