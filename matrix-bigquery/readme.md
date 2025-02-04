@@ -23,7 +23,7 @@ Matrix data = Dataset.cars()
 Bq bq = new Bq()
 // Export 
 bq.saveToBigQuery(data, 'mydataset.cars')
-// Import, the file and the name of the matrix (if omitted it will be same as the file name)
+// Import
 Matrix d2 = bq.query("select * from 'mydataset.cars'")
 assert data == d2
 ```
