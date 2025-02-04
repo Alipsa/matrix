@@ -10,7 +10,7 @@ implementation 'org.apache.groovy:groovy:4.0.25'
 implementation 'se.alipsa.matrix:matrix-core:2.2.0'
 implementation 'se.alipsa.matrix:matrix-bigquery:0.1'
 ```
-To export and import a parquet file:
+To export and import data:
 ```groovy
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
