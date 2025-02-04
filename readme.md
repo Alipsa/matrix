@@ -21,7 +21,7 @@ The Matrix project consist of the following modules:
 6. _[matrix-json](https://github.com/Alipsa/matrix/blob/main/matrix-json/README.md)_ provides ways to import and export between a Matrix and Json 
 7. _[matrix-charts](https://github.com/Alipsa/matrix/blob/main/matrix-charts/README.md)_ allows you to create charts in various formats (file, javafx) based on Matrix data.
 8. _[matrix-sql](https://github.com/Alipsa/matrix/blob/main/matrix-sql/readme.md)_ relational database interaction
-9. _[matrix-tablesaw](https://github.com/Alipsa/matrix/blob/main/matrix-tablesaw/readme.md)_ interoperability between Matrix and the Tablesaw library
+9. _[matrix-tablesaw](https://github.com/Alipsa/matrix/blob/main/matrix-tablesaw/readme.md)_ interoperability between Matrix and the [Tablesaw](https://github.com/jtablesaw/tablesaw) library
 10. _[matrix-parquet](https://github.com/Alipsa/matrix/blob/main/matrix-parquet/readme.md)_ provides ways to import and export between Matrix and [Parquet](https://parquet.apache.org/)
 11. _[matrix-bigquery](https://github.com/Alipsa/matrix/blob/main/matrix-bigquery/readme.md)_
     provides ways to import and export between Matrix and [Google Big Query](https://cloud.google.com/bigquery).
