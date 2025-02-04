@@ -1,0 +1,124 @@
+package se.alipsa.matrix.bigquery
+
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.bigquery.*
+import se.alipsa.matrix.core.Matrix
+
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+
+class Bq {
+
+  private BigQuery bigQuery
+  private String projectId
+
+  Bq(GoogleCredentials credentials, String projectId) {
+    this.projectId = projectId
+    bigQuery = BigQueryOptions.newBuilder()
+        .setCredentials(credentials)
+        .setProjectId(projectId)
+        .build()
+        .getService()
+  }
+
+  Bq(String projectId) {
+    if (projectId == null) {
+      throw new IllegalArgumentException("ProjectId cannot be null")
+    }
+    this.projectId = projectId
+    bigQuery = BigQueryOptions.newBuilder()
+      .setProjectId(projectId)
+      .build()
+      .getService()
+  }
+
+  Bq() {
+    String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
+    if (projectId == null) {
+      throw new RuntimeException("Please set the environment variable GOOGLE_CLOUD_PROJECT prior to creating this class (or pass it as a parameter)")
+    }
+    this.projectId = projectId
+    bigQuery = BigQueryOptions.newBuilder()
+        .setProjectId(projectId)
+        .build()
+        .getService()
+  }
+
+  Matrix query(String qry) {
+    try {
+      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
+          .setUseLegacySql(false)
+          .build()
+      JobId jobId = JobId.newBuilder().setProject(projectId).build()
+      Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build())
+      // Wait for the query to complete.
+      queryJob = queryJob.waitFor()
+
+      // Check for errors
+      if (queryJob == null) {
+        throw new RuntimeException("Job no longer exists")
+      } else if (queryJob.getStatus().getError() != null) {
+        // You can also look at queryJob.getStatus().getExecutionErrors() for all
+        // errors, not just the latest one.
+        throw new RuntimeException(queryJob.getStatus().getError().toString())
+      }
+
+      // Convert to a Matrix and return the results.
+      TableResult result = queryJob.getQueryResults()
+      return convertToMatrix(result)
+    } catch (BigQueryException | InterruptedException e) {
+      System.out.println("Query failed due to error: \n" + e.toString());
+      throw new RuntimeException(e)
+    }
+  }
+
+  static Matrix convertToMatrix(TableResult result) {
+    Schema schema = result.getSchema()
+    List<String> columnNames = []
+    List<Class> columnTypes = []
+    schema.fields.each {
+      columnNames << it.name
+      columnTypes << convertType(it.type)
+    }
+
+    List<List> rows = []
+    def row
+    for (FieldValueList fvl : result.iterateAll()) {
+      row = []
+      for (FieldValue fv : fvl.iterator()) {
+         row << fv.value
+      }
+      rows << row
+    }
+    Matrix.builder()
+        .rows(rows)
+        .types(columnTypes)
+        .columnNames(columnNames)
+        .build()
+  }
+
+
+  // TODO: check each one and finish mapping
+  static Class convertType(LegacySQLTypeName typeName) {
+    return switch (typeName) {
+      //case LegacySQLTypeName.BIGNUMERIC -> BigDecimal
+      //case LegacySQLTypeName.BOOLEAN -> Boolean
+      //case LegacySQLTypeName.BYTES -> byte[]
+      //case LegacySQLTypeName.DATE -> LocalDate
+      //case LegacySQLTypeName.DATETIME -> LocalDateTime
+      //case LegacySQLTypeName.FLOAT -> Double
+      //case LegacySQLTypeName.GEOGRAPHY -> Object
+      //case LegacySQLTypeName.INTEGER -> Integer
+      //case LegacySQLTypeName.INTERVAL ->
+      //case LegacySQLTypeName.JSON ->
+      //case LegacySQLTypeName.NUMERIC -> BigDecimal
+      //case LegacySQLTypeName.RANGE -> IntRange
+      // case LegacySQLTypeName.RECORD
+      case LegacySQLTypeName.STRING -> String
+      //case LegacySQLTypeName.TIMESTAMP -> LocalDateTime
+      //case LegacySQLTypeName.TIME -> LocalTime
+      default -> Object
+    }
+  }
+}
