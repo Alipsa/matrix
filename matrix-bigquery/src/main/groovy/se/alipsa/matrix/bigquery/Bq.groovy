@@ -45,10 +45,10 @@ class Bq {
         .getService()
   }
 
-  Matrix query(String qry) {
+  Matrix query(String qry, boolean useLegacySql = false) {
     try {
       QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
-          .setUseLegacySql(false)
+          .setUseLegacySql(useLegacySql)
           .build()
       JobId jobId = JobId.newBuilder().setProject(projectId).build()
       Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build())
@@ -71,6 +71,10 @@ class Bq {
       System.out.println("Query failed due to error: \n" + e.toString());
       throw new RuntimeException(e)
     }
+  }
+
+  void saveToBigQuery(Matrix, String dataSet) {
+
   }
 
   static Matrix convertToMatrix(TableResult result) {
