@@ -77,6 +77,10 @@
       <artifactId>matrix-bigquery</artifactId>
     </dependency>
     <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-charts</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>${junit-jupiter.version}</version>
