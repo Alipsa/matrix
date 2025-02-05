@@ -1,6 +1,7 @@
 # Matrix-Parquet
 
-This module enables import of a [Parquet](https://parquet.apache.org/) file into a Matrix and export of a Matrix to a Parquet file. Parquet support is enabled by the [parquet-carpet](https://github.com/jerolba/parquet-carpet) library.
+This module enables import of a [Parquet](https://parquet.apache.org/) file into a Matrix and export of a Matrix to a Parquet file. Parquet support is enabled by the [parquet-carpet](https://github.com/jerolba/parquet-carpet) library. Note that a Matrix is an in-memory structure, hence
+you need to have enough RAM available to fit the Matrix resulting from reading a parquet file.
 
 To use it, add the following to your gradle build script
 ```groovy

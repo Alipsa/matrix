@@ -4,7 +4,7 @@ import javafx.scene.Node
 import javafx.scene.control.Alert
 import javafx.scene.paint.Color
 import javafx.stage.Modality
-import se.alipsa.matrix.charts.charm.*
+import se.alipsa.matrix.charts.charmfx.*
 import javafx.scene.shape.Rectangle
 
 
