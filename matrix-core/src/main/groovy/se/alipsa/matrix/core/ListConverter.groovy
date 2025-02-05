@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter
 @CompileStatic
 class ListConverter {
 
-  static <T> List<T> convert(List<?> list, @NotNull Class<T> type, T valueIfNull = null,
+  static <T> List<T> convert(Collection<?> list, @NotNull Class<T> type, T valueIfNull = null,
                              String dateTimeFormat = null, NumberFormat numberFormat = null) {
     List<T> c = []
     list.eachWithIndex { it, idx ->

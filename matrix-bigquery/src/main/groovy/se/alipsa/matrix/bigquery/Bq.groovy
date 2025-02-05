@@ -1,7 +1,10 @@
 package se.alipsa.matrix.bigquery
 
+import com.google.api.gax.paging.Page
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.bigquery.*
+import com.google.cloud.bigquery.BigQuery.DatasetListOption;
+import com.google.cloud.bigquery.BigQuery.TableListOption
 import se.alipsa.matrix.core.Matrix
 
 import java.time.Instant
@@ -100,6 +103,62 @@ class Bq {
         .types(columnTypes)
         .columnNames(columnNames)
         .build()
+  }
+
+  List<String> getDatasets() {
+    Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(100));
+    if (datasets == null) {
+      System.out.println("Dataset does not contain any models");
+      return []
+    }
+    return datasets
+        .iterateAll()
+        .collect {
+          it.getDatasetId().dataset
+        }
+  }
+
+  List<String> getTableNames(String datasetName) {
+    DatasetId datasetId = DatasetId.of(projectId, datasetName);
+    Page<Table> tables = bigQuery.listTables(datasetId, TableListOption.pageSize(100))
+    return tables.iterateAll().collect {
+      it.tableId.table
+    }
+  }
+
+  Matrix getTableInfo(String datasetName, String tableName) {
+    query("""select * from ${datasetName}.INFORMATION_SCHEMA.COLUMNS
+      WHERE table_name = '$tableName';
+      """)
+  }
+
+  Dataset getDataset(String datasetName) {
+    bigQuery.getDataset(datasetName)
+  }
+
+  Dataset.Builder getDatasetBuilder(String datasetName) {
+    getDataset(datasetName).toBuilder()
+  }
+
+  Dataset createDataset(String datasetName, String description = null) {
+    try {
+      def builder = DatasetInfo.newBuilder(datasetName)
+      if (description != null) {
+        builder.setDescription(description)
+      }
+      DatasetInfo datasetInfo = builder.build()
+      Dataset ds = bigQuery.create(datasetInfo)
+      String newDatasetName = ds.getDatasetId().getDataset()
+      System.out.println(newDatasetName + " created successfully")
+      ds
+    } catch (BigQueryException e) {
+      throw new RuntimeException("Dataset was not created: " + e.toString(), e)
+    }
+    null
+  }
+
+  Dataset updateDataset(Dataset.Builder ds) {
+    bigQuery.update(ds.build())
   }
 
 
