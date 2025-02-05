@@ -3,11 +3,9 @@ package se.alipsa.matrix.bigquery
 import com.google.api.gax.paging.Page
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.bigquery.*
-import com.google.cloud.bigquery.BigQuery.DatasetListOption;
+import com.google.cloud.bigquery.BigQuery.DatasetListOption
 import com.google.cloud.bigquery.BigQuery.TableListOption
 import se.alipsa.matrix.core.Matrix
-
-import java.time.Instant
 
 class Bq {
 
@@ -69,7 +67,7 @@ class Bq {
       TableResult result = queryJob.getQueryResults()
       return convertToMatrix(result)
     } catch (BigQueryException | InterruptedException e) {
-      System.out.println("Query failed due to error: \n" + e.toString());
+      System.out.println("Query failed due to error: \n" + e.toString())
       throw new RuntimeException(e)
     }
   }
@@ -106,9 +104,9 @@ class Bq {
   }
 
   List<String> getDatasets() {
-    Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(100));
+    Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(100))
     if (datasets == null) {
-      System.out.println("Dataset does not contain any models");
+      System.out.println("Dataset does not contain any models")
       return []
     }
     return datasets
@@ -119,7 +117,7 @@ class Bq {
   }
 
   List<String> getTableNames(String datasetName) {
-    DatasetId datasetId = DatasetId.of(projectId, datasetName);
+    DatasetId datasetId = DatasetId.of(projectId, datasetName)
     Page<Table> tables = bigQuery.listTables(datasetId, TableListOption.pageSize(100))
     return tables.iterateAll().collect {
       it.tableId.table
