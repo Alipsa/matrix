@@ -1,9 +1,12 @@
 package se.alipsa.matrix.bigquery
 
+import com.google.api.gax.paging.Page
 import static se.alipsa.matrix.bigquery.TypeMapper.*
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.bigquery.*
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption
+import com.google.cloud.bigquery.BigQuery.DatasetListOption
+import com.google.cloud.bigquery.BigQuery.TableListOption
 import se.alipsa.matrix.core.Matrix
 
 class Bq {
@@ -66,7 +69,7 @@ class Bq {
       TableResult result = queryJob.getQueryResults()
       return convertToMatrix(result)
     } catch (BigQueryException | InterruptedException e) {
-      System.out.println("Query failed due to error: \n" + e.toString());
+      System.out.println("Query failed due to error: \n" + e.toString())
       throw new RuntimeException(e)
     }
   }
@@ -166,29 +169,73 @@ class Bq {
         .build()
   }
 
-  static Schema createSchema(Matrix matrix) {
-    def fields = []
-    matrix.columns().each { c ->
-      fields << Field.of(c.name, toStandardSqlType(c.type))
+  List<String> getDatasets() {
+    Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(100))
+    if (datasets == null) {
+      System.out.println("Dataset does not contain any models")
+      return []
     }
-    Schema.of(fields as Field[])
+    return datasets
+        .iterateAll()
+        .collect {
+          it.getDatasetId().dataset
+        }
   }
 
-  Dataset createDataset(String datasetName) {
+  List<String> getTableNames(String datasetName) {
+    DatasetId datasetId = DatasetId.of(projectId, datasetName)
+    Page<Table> tables = bigQuery.listTables(datasetId, TableListOption.pageSize(100))
+    return tables.iterateAll().collect {
+      it.tableId.table
+    }
+  }
+
+  Matrix getTableInfo(String datasetName, String tableName) {
+    query("""select * from ${datasetName}.INFORMATION_SCHEMA.COLUMNS
+      WHERE table_name = '$tableName';
+      """)
+  }
+
+  Dataset getDataset(String datasetName) {
+    bigQuery.getDataset(datasetName)
+  }
+
+  Dataset.Builder getDatasetBuilder(String datasetName) {
+    getDataset(datasetName).toBuilder()
+  }
+
+  Dataset createDataset(String datasetName, String description = null) {
     try {
       Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetName))
       if (dataset != null) {
         System.out.println("Dataset $datasetName already exists.")
         return dataset
       }
-      DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build()
-      Dataset newDataset = bigQuery.create(datasetInfo)
-      String newDatasetName = newDataset.getDatasetId().getDataset()
+      def builder = DatasetInfo.newBuilder(datasetName)
+      if (description != null) {
+        builder.setDescription(description)
+      }
+      DatasetInfo datasetInfo = builder.build()
+      Dataset ds = bigQuery.create(datasetInfo)
+      String newDatasetName = ds.getDatasetId().getDataset()
       System.out.println(newDatasetName + " created successfully")
-      newDataset
+      ds
     } catch (BigQueryException e) {
-      System.out.println("Dataset was not created. \n" + e.toString());
+      throw new RuntimeException("Dataset was not created: " + e.toString(), e)
     }
+    null
+  }
+
+  Dataset updateDataset(Dataset.Builder ds) {
+    bigQuery.update(ds.build())
+  }
+
+  static Schema createSchema(Matrix matrix) {
+    def fields = []
+    matrix.columns().each { c ->
+      fields << Field.of(c.name, toStandardSqlType(c.type))
+    }
+    Schema.of(fields as Field[])
   }
 
   boolean dropDataset(String datasetName) {
@@ -228,11 +275,8 @@ class Bq {
     def table = bigQuery.getTable(TableId.of(datasetName, tableName))
     if (table != null && table.exists()) {
       // table will be null if it is not found and setThrowNotFound is not set to `true`
-      //System.out.println("Table already exist")
       return true
-    } else {
-      //System.out.println("Table not found")
-      return false
     }
+    return false
   }
 }
