@@ -2242,6 +2242,7 @@ class Matrix implements Iterable<Row> {
     sb.append('  <tbody>\n</table>\n')
     sb.toString()
   }
+
   /**
    * @param attr table attributes e.g. id, class etc. that is added immediately after the table and become table
    *  attributes when rendered as html
