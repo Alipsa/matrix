@@ -369,7 +369,10 @@ class MatrixTest {
         'firstname': ['Lorena', 'Marianne', 'Lotte'],
         'start'    : toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
     ]
-    def table = Matrix.builder().columns(data).types(int, String, LocalDate).build()
+    def table = Matrix.builder()
+        .columns(data)
+        .types(int, String, LocalDate)
+        .build()
     assertEquals(Integer, table.type(0), "place column type")
     def selection = table.rowIndices {
       def date = it[2] as LocalDate
@@ -395,7 +398,10 @@ class MatrixTest {
     assertEquals(1, bar[0, 0])
     assertEquals(4, bar[1, 0])
     assertEquals(5, bar[2, 0])
+
+    assertEquals(asLocalDate('2022-07-10'), bar[1, 'start'])
     assertEquals(LocalDate, bar.type(2), "start column type")
+    assertEquals(String, bar.firstname.type, "firstname column type")
     assertEquals(Integer, bar.type(0), "place column type")
 
     def r = table.rows { row ->
@@ -832,7 +838,7 @@ class MatrixTest {
             start_date: toLocalDates("2013-01-01", "2012-03-27"))
         .types([Object] * 4)
         .build()
-    assertEquals(empData, differentTypes, empData.diff(differentTypes))
+    assertTrue(empData.equals(differentTypes, false, true, true), empData.diff(differentTypes))
     assertNotEquals(empData, differentTypes.withMatrixName("differentTypes"), empData.diff(differentTypes))
   }
 

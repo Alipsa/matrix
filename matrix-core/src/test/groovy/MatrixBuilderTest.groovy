@@ -134,7 +134,7 @@ class MatrixBuilderTest {
     r6.addRow([4, 'qux'])
     r6.removeRows(r6.size() -1)
     r6.content()
-    assertEquals(m6, r6)
+    assertEquals(m6, r6, m6.diff(r6))
 
     Matrix r7 = Matrix.builder()
         .matrixName("m7")
@@ -146,7 +146,7 @@ class MatrixBuilderTest {
         .types([int, String, Number]).build()
     r7.addColumn('c4', int, [7,8,9])
     r7.content()
-    assertNotEquals(m7, r7)
+    assertNotEquals(m7, r7, m7.diff(r7))
     r7.dropColumns('c4')
     assertEquals(m7, r7, m7.diff(r7))
   }

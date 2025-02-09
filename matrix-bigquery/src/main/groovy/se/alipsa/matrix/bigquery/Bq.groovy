@@ -1,6 +1,8 @@
 package se.alipsa.matrix.bigquery
 
 import com.google.api.gax.paging.Page
+import se.alipsa.matrix.core.ValueConverter
+
 import static se.alipsa.matrix.bigquery.TypeMapper.*
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.bigquery.*
@@ -13,6 +15,11 @@ class Bq {
 
   private BigQuery bigQuery
   private String projectId
+
+  Bq(BigQueryOptions options) {
+    bigQuery = options.getService()
+    projectId = options.getProjectId()
+  }
 
   Bq(GoogleCredentials credentials, String projectId) {
     this.projectId = projectId
@@ -128,7 +135,7 @@ class Bq {
     mapList.each {
       builder.addRow(it)
     }
-    println "Inserting into $tableId"
+    //println "Bq: Inserting into $tableId"
     InsertAllResponse response = bigQuery.insertAll(builder.build())
 
     //if (response.hasErrors()) {
@@ -144,28 +151,33 @@ class Bq {
 
   static Matrix convertToMatrix(TableResult result) {
     Schema schema = result.getSchema()
-    List<String> columnNames = []
-    List<Class> columnTypes = []
+    List<String> colNames = []
+    List<Class> colTypes = []
     schema.fields.each {
-      columnNames << it.name
-      columnTypes << convertType(it.type)
+      colNames << it.name
+      colTypes << convertType(it.type)
     }
 
+    println "Bq.convertToMatrix: result contains $result.totalRows rows"
+    //println "Bq.convertToMatrix: Column names in bq result are ${colNames}"
+    //println "Bq.convertToMatrix: Column types in bq result are ${colTypes}"
     List<List> rows = []
     def row
     for (FieldValueList fvl : result.iterateAll()) {
       row = []
+      int i = 0
       for (FieldValue fv : fvl.iterator()) {
-        row << fv.value
+        row << ValueConverter.convert(fv.value, colTypes[i++])
       }
+      //println "Bq.convertToMatrix: adding $row"
       rows << row
     }
     // TODO: all values are Strings, must be converted to the types in the columnTypes list
     //  we need a custom converter for this
     Matrix.builder()
         .rows(rows)
-        .types(columnTypes)
-        .columnNames(columnNames)
+        .types(colTypes)
+        .columnNames(colNames)
         .build()
   }
 

@@ -30,8 +30,6 @@ import static se.alipsa.matrix.core.util.ClassUtils.*
 @CompileStatic
 class Matrix implements Iterable<Row> {
 
-  private List<String> mHeaders
-  private List<Class> mTypes
   private List<Column> mColumns
   private String mName
   public static final Boolean ASC = Boolean.FALSE
@@ -83,14 +81,14 @@ class Matrix implements Iterable<Row> {
     }
 
     mName = name
-    mTypes = sanitizeTypes(headerList, dataTypes)
-    mHeaders = headerList.collect { String.valueOf(it) }
+    def mTypes = sanitizeTypes(headerList, dataTypes)
+    def mHeaders = headerList.collect { String.valueOf(it) }
     if (mHeaders.size() != mTypes.size()) {
       throw new IllegalArgumentException("Number of elements in the headerList (${headerList}) differs from number of datatypes (${dataTypes})")
     }
     mColumns = []
     columns.eachWithIndex { List column, int idx ->
-      //mColumns.add(Collections.checkedList(column, mTypes[i]))
+      //println "adding ${mHeaders[idx]} with type ${mTypes[idx]}"
       mColumns.add(new Column(mHeaders[idx], column, mTypes[idx]))
     }
     //println "Creating a matrix with name: '$mName', ${mHeaders.size()} headers, ${mColumns.size()} columns, ${mTypes.size()} types"
@@ -101,11 +99,9 @@ class Matrix implements Iterable<Row> {
   }
 
   Matrix addColumn(String name, Class type = Object, List column) {
-    if (mHeaders.contains(name)) {
+    if (columnNames().contains(name)) {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
     }
-    mHeaders << name
-    mTypes << type
     mColumns << new Column(name, column, type)
     return this
   }
@@ -120,8 +116,6 @@ class Matrix implements Iterable<Row> {
    * @return a new Matrix with the column inserted
    */
   Matrix addColumn(String name, Class type = Object, Integer index, List column) {
-    mHeaders.add(index, name)
-    mTypes.add(index, type)
     mColumns.add(index, new Column(name, column, type))
     return this
   }
@@ -251,7 +245,7 @@ class Matrix implements Iterable<Row> {
    * @return this Matrix (mutated)
    */
   Matrix apply(String columnName, Closure function) {
-    if (!mHeaders.contains(columnName)) {
+    if (!columnNames().contains(columnName)) {
       throw new IllegalArgumentException("There is no column called $columnName in this matrix")
     }
     return apply(columnIndex(columnName), function)
@@ -280,7 +274,6 @@ class Matrix implements Iterable<Row> {
     }
     col.type = updatedClass
     col.name = columnName(columnNumber)
-    mTypes[columnNumber] = updatedClass
     mColumns[columnNumber] = col
     this
   }
@@ -323,7 +316,6 @@ class Matrix implements Iterable<Row> {
         col.add(it)
       }
     }
-    mTypes[columnNumber] = updatedClass
     col.type = updatedClass
     col.name = columnName(columnNumber)
     mColumns[columnNumber] = col
@@ -375,15 +367,15 @@ class Matrix implements Iterable<Row> {
         updatedRows.add(row)
       }
     }
+
     List<Class> dataTypes = updatedClass != type(columnNumber)
         ? createTypeListWithNewValue(columnNumber, updatedClass, true)
-        : mTypes
+        : types()
     List<Column> cols = new ArrayList<>()
-    Grid.transpose(updatedRows).each {
-      cols << new Column(columnName(columnNumber), it as List, updatedClass)
+    Grid.transpose(updatedRows).eachWithIndex { it, idx ->
+      cols << new Column(columnName(idx), it as List, dataTypes[idx])
     }
     mColumns = cols
-    mTypes = new ArrayList<>(dataTypes)
     this
   }
 
@@ -408,7 +400,7 @@ class Matrix implements Iterable<Row> {
   }
 
   List<String> columnNames() {
-    return mHeaders
+    return mColumns.collect{it.name}
   }
 
 
@@ -422,7 +414,7 @@ class Matrix implements Iterable<Row> {
    * @return a reference to this matrix
    */
   Matrix columnName(int index, Object name) {
-    mHeaders[index] = String.valueOf(name)
+    mColumns[index].name = String.valueOf(name)
     this
   }
 
@@ -437,8 +429,9 @@ class Matrix implements Iterable<Row> {
     if (columnCount() != names.size()) {
       throw new IllegalArgumentException("Number of column names (${names.size()}) does not match number of columns (${columnCount()}) in this matrix")
     }
-    mHeaders.clear()
-    mHeaders.addAll(ListConverter.toStrings(names))
+    mColumns.eachWithIndex { Column col, int i ->
+      col.setName(names[i])
+    }
     return this
   }
 
@@ -448,7 +441,7 @@ class Matrix implements Iterable<Row> {
    * @return the column names corresponding to each index in the range
    */
   List<String> columnNames(IntRange range) {
-    mHeaders[range]
+    columns(range).collect {it.name}
   }
 
   /**
@@ -459,7 +452,8 @@ class Matrix implements Iterable<Row> {
    */
   List<String> columnNames(Class c) {
     List<String> names = []
-    mTypes.eachWithIndex { Class cls, int idx ->
+    mColumns.eachWithIndex { Column col, int idx ->
+      Class cls = col.type
       if (c.isAssignableFrom(cls)) {
         names << columnName(idx)
       }
@@ -514,9 +508,8 @@ class Matrix implements Iterable<Row> {
 
   Matrix convert(Map<String, Class> types, Object valueIfNull, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     List<Column> convertedColumns = []
-    List<Class> convertedTypes = []
     for (int i = 0; i < columnCount(); i++) {
-      String colName = mHeaders[i]
+      String colName = columnName(i)
       if (types[colName]) {
         convertedColumns.add(new Column(colName, ListConverter.convert(
             column(i),
@@ -526,14 +519,11 @@ class Matrix implements Iterable<Row> {
             numberFormat
         ), types[colName] as Class
         ))
-        convertedTypes.add(types[colName])
       } else {
         convertedColumns.add(column(i))
-        convertedTypes.add(type(i))
       }
     }
     mColumns = convertedColumns
-    mTypes = new ArrayList<>(convertedTypes)
     this
   }
 
@@ -581,7 +571,7 @@ class Matrix implements Iterable<Row> {
     }
 
     for (int i = 0; i < columnCount(); i++) {
-      String colName = mHeaders[i]
+      String colName = columnName(i)
       if (columnNameList.contains(colName)) {
         int index = columnNameList.indexOf(colName)
         def columnVals = new Column()
@@ -598,12 +588,8 @@ class Matrix implements Iterable<Row> {
         convertedTypes.add(type(i))
       }
     }
-    //def convertedRows = Grid.transpose(convertedColumns)
-    //return builder().name(mName).columnNames(mHeaders).rows(convertedRows).types(convertedTypes).build()
     mColumns.clear()
     mColumns.addAll(convertedColumns)
-    mTypes.clear()
-    mTypes.addAll(convertedTypes)
     this
   }
 
@@ -623,7 +609,7 @@ class Matrix implements Iterable<Row> {
     }
     column.clear()
     column.addAll(col)
-    mTypes[columnNumber] = columnType
+    column.type = columnType
     this
   }
 
@@ -649,7 +635,12 @@ class Matrix implements Iterable<Row> {
    * @return the index (position) of the columnName
    */
   int columnIndex(String columnName) {
-    return mHeaders.indexOf(columnName)
+    for (int i = 0; i < mColumns.size(); i++) {
+      if (mColumns[i].name == columnName) {
+        return i
+      }
+    }
+    return -1
   }
 
   /**
@@ -663,7 +654,7 @@ class Matrix implements Iterable<Row> {
   int columnIndexFuzzy(String columnName) {
     String colName = columnName.trim()
     int i = 0
-    for (String name in mHeaders) {
+    for (String name in columnNames()) {
       String n = name.trim()
       if (n.startsWith(colName) || n.endsWith(colName)) {
         return i
@@ -685,6 +676,7 @@ class Matrix implements Iterable<Row> {
     try {
       return mColumns.get(columnIndex(columnName))
     } catch (IndexOutOfBoundsException e) {
+      println ("Attempting to find index for '$columnName' but got ${columnIndex(columnName)}")
       throw new IndexOutOfBoundsException("The column '$columnName' does not exist in this matrix (${this.mName}): " + e.getMessage())
     }
   }
@@ -724,15 +716,15 @@ class Matrix implements Iterable<Row> {
   }
 
   Class type(int i) {
-    return mTypes[i]
+    return mColumns[i].type
   }
 
   Class type(String columnName) {
-    return mTypes[columnIndex(columnName)]
+    return mColumns[columnIndex(columnName)].type
   }
 
   List<Class> types() {
-    return mTypes
+    return mColumns.collect{it.type}
   }
 
   List<Class> types(List<String> columnNames) {
@@ -744,13 +736,11 @@ class Matrix implements Iterable<Row> {
   }
 
   List<Class> types(IntRange range) {
-    return mTypes[range]
+    return mColumns[range].collect {it.type}
   }
 
   List<String> typeNames() {
-    List<String> types = new ArrayList<>()
-    mTypes.each { types.add(it.getSimpleName()) }
-    return types
+    return mColumns.collect {it.type.simpleName}
   }
 
   String typeName(Integer idx) {
@@ -785,7 +775,13 @@ class Matrix implements Iterable<Row> {
 
   @Override
   Matrix clone() {
-    return new Matrix(mName, mHeaders, mColumns, mTypes)
+    List<String> headers = []
+    List<Class> types = []
+    mColumns.each {
+      headers << it.name
+      types << it.type
+    }
+    return new Matrix(mName, headers, mColumns, types)
   }
 
   /**
@@ -794,12 +790,18 @@ class Matrix implements Iterable<Row> {
    * @return a new Matrix identical to this except for the content.
    */
   Matrix cloneEmpty() {
-    builder(mName).columnNames(mHeaders).types(mTypes).build()
+    List<String> headers = []
+    List<Class> types = []
+    mColumns.each {
+      headers << it.name
+      types << it.type
+    }
+    builder(mName).columnNames(headers).types(types).build()
   }
 
   private List<Class> createTypeListWithNewValue(int columnNumber, Class updatedClass, boolean findCommonGround) {
     List<Class> types = []
-    for (int i = 0; i < mHeaders.size(); i++) {
+    for (int i = 0; i < mColumns.size(); i++) {
       if (i == columnNumber) {
         if (findCommonGround) {
           types.add(findClosestCommonSuper(updatedClass, type(columnNumber)))
@@ -861,14 +863,12 @@ class Matrix implements Iterable<Row> {
 
   Matrix dropColumnsExcept(String... columnNames) {
     def retainColNames = columnNames.length > 0 ? columnNames as List : []
-    for (String columnName : mHeaders.collect()) {
+    for (String columnName : this.columnNames()) {
       if (retainColNames.contains(columnName)) {
         continue
       }
       def colIdx = columnIndex(columnName)
       mColumns.remove(colIdx)
-      mTypes.remove(colIdx)
-      mHeaders.remove(colIdx)
     }
     return this
   }
@@ -880,8 +880,6 @@ class Matrix implements Iterable<Row> {
         continue
       }
       mColumns.remove(i)
-      mTypes.remove(i)
-      mHeaders.remove(i)
     }
     return this
   }
@@ -893,7 +891,8 @@ class Matrix implements Iterable<Row> {
     }
     List<Integer> idxs = columnIndices(columnNames as List<String>)
     if (idxs.contains(-1)) {
-      throw new IllegalArgumentException("Variables ${String.join(',', columnNames)} does not match actual column names: ${String.join(',', mHeaders)}")
+      def colNames = this.columnNames()
+      throw new IllegalArgumentException("Variables ${String.join(',', columnNames)} does not match actual column names: ${String.join(',', colNames)}")
     }
     dropColumns(idxs)
   }
@@ -908,8 +907,6 @@ class Matrix implements Iterable<Row> {
       // Each time we iterate and remove, all of the below will have one less item
       // so we need to adjust the colIdx to still match
       mColumns.remove(colIdx - idx)
-      mTypes.remove(colIdx - idx)
-      mHeaders.remove(colIdx - idx)
     }
     return this
   }
@@ -919,15 +916,32 @@ class Matrix implements Iterable<Row> {
     dropColumns(columnsToDrop)
   }
 
-  boolean equals(Object o, boolean ignoreColumnNames = false, boolean ignoreName = false, boolean ignoreTypes = true, Double allowedDiff = 0.0001) {
+  @Override
+  boolean equals(Object o) {
+    equals(o, false, false, true)
+  }
+
+  boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreName = false, boolean ignoreTypes = true, Double allowedDiff = 0.0001) {
     if (this.is(o)) return true
     if (!(o instanceof Matrix)) return false
 
     Matrix matrix = (Matrix) o
-
-    if (!ignoreColumnNames && mHeaders != matrix.mHeaders) return false
-    if (!ignoreName && mName != matrix.mName) return false
-    if (!ignoreTypes && mTypes != matrix.mTypes) return false
+    if (!ignoreName && mName != matrix.mName) {
+      println("Matrix.equals: names do not match")
+      return false
+    }
+    if (mColumns.size() != matrix.columnCount()) {
+      println("Matrix.equals: number of columns differ")
+      return false
+    }
+    if (!ignoreColumnNames && columnNames() != matrix.columnNames()) {
+      println("Matrix.equals: column names differ")
+      return false
+    }
+    if (!ignoreTypes && types() != matrix.types()) {
+      println("Matrix.equals: column types differ")
+      return false
+    }
     //if (mColumns != matrix.mColumns) return false
     boolean valueDiff = false
     mColumns.eachWithIndex { List column, int i ->
@@ -946,7 +960,10 @@ class Matrix implements Iterable<Row> {
         }
       }
     }
-    if (valueDiff) return false
+    if (valueDiff) {
+      println "Matrix.equals: value(s) differ"
+      return false
+    }
 
     return true
   }
@@ -1146,7 +1163,7 @@ class Matrix implements Iterable<Row> {
   }
 
   Object getProperty(String name) {
-    if (mHeaders.contains(name)) {
+    if (columnNames().contains(name)) {
       return column(name)
     }
     return getProperties().get(name)
@@ -1165,10 +1182,13 @@ class Matrix implements Iterable<Row> {
   String head(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     StringBuilder sb = new StringBuilder()
     def nRows = Math.min(rows, rowCount())
-    List<Integer> columnLengths = mHeaders.collect { colName -> maxContentLength(colName, includeHeader, maxColumnLength) }
+    List<String> colNames = columnNames()
+    List<Integer> columnLengths = colNames.collect {
+      colName -> maxContentLength(colName, includeHeader, maxColumnLength)
+    }
 
     if (includeHeader) {
-      List<String> headerRow = padRow(mHeaders, columnLengths)
+      List<String> headerRow = padRow(colNames, columnLengths)
       sb.append(String.join(delimiter, headerRow)).append(lineEnding)
     }
 
@@ -1182,8 +1202,7 @@ class Matrix implements Iterable<Row> {
   @Override
   int hashCode() {
     int result
-    result = (mHeaders != null ? mHeaders.hashCode() : 0)
-    result = 31 * result + (mTypes != null ? mTypes.hashCode() : 0)
+    result = (mColumns != null ? mColumns.size() : 0)
     result = 31 * result + (mName != null ? mName.hashCode() : 0)
     return result
   }
@@ -1276,15 +1295,9 @@ class Matrix implements Iterable<Row> {
    * @return this (mutated) matrix
    */
   Matrix moveColumn(String columnName, int index) {
-    Class type = type(columnName)
     int currentIndex = columnIndex(columnName)
-    List col = mColumns[currentIndex]
-    mColumns.remove(currentIndex)
+    Column col = mColumns.remove(currentIndex)
     mColumns.add(index, col)
-    mHeaders.remove(currentIndex)
-    mHeaders.add(index, columnName)
-    mTypes.remove(currentIndex)
-    mTypes.add(index, type)
     return this
   }
 
@@ -1325,9 +1338,10 @@ class Matrix implements Iterable<Row> {
   }
 
   Matrix orderBy(LinkedHashMap<String, Boolean> columnsAndDirection) {
-    def columnNames = columnsAndDirection.keySet() as List<String>
-    for (String columnName in columnNames) {
-      if (columnName !in mHeaders) {
+    def colNames = columnsAndDirection.keySet() as List<String>
+    def headers = columnNames()
+    for (String columnName in colNames) {
+      if (columnName !in headers) {
         throw new IllegalArgumentException("The column name ${columnName} does not exist is this table (${mName})")
       }
     }
@@ -1353,7 +1367,7 @@ class Matrix implements Iterable<Row> {
    */
   List<String> padRow(List row, List<Integer> columnLengths) {
     List<String> stringRow = []
-    for (int c = 0; c < mHeaders.size(); c++) {
+    for (int c = 0; c < mColumns.size(); c++) {
       def val = row[c]
       def strVal = String.valueOf(val)
       int columnLength = columnLengths[c]
@@ -1481,12 +1495,8 @@ class Matrix implements Iterable<Row> {
     } else {
       if (index == null) {
         mColumns << new Column(columnName, column, type)
-        mHeaders << columnName
-        mTypes << type
       } else {
         mColumns.add(index, new Column(columnName, column, type))
-        mHeaders.add(index, columnName)
-        mTypes.add(index, type)
       }
     }
   }
@@ -1650,7 +1660,7 @@ class Matrix implements Iterable<Row> {
    * @return this matrix (mutated) to allow for method chaining
    */
   Matrix renameColumn(int columnIndex, String after) {
-    mHeaders.set(columnIndex, after)
+    mColumns[columnIndex].name = after
     this
   }
 
@@ -1714,7 +1724,7 @@ class Matrix implements Iterable<Row> {
     }
     col.clear()
     col.addAll(values)
-    mTypes.set(columnIndex(columnName), type)
+    col.type = type
     this
   }
 
@@ -1817,7 +1827,6 @@ class Matrix implements Iterable<Row> {
       return 0
     }
     return mColumns.get(0).size()
-    //return rows().size()
   }
 
   /**
@@ -2004,12 +2013,11 @@ class Matrix implements Iterable<Row> {
       }
     }
     m.dropColumns(columnNames as String[])
-
     m
   }
 
   private void upsertColumn(String propertyName, List values) {
-    if (mHeaders.contains(propertyName)) {
+    if (columnNames().contains(propertyName)) {
       def col = column(propertyName)
       if (values.size() != col.size() && !col.isEmpty()) {
         // We only allow update when the row is empty or number of rows equals number of values
@@ -2044,9 +2052,9 @@ class Matrix implements Iterable<Row> {
       tables.put(entry.key,
           builder()
               .matrixName(String.valueOf(entry.key))
-              .columnNames(mHeaders)
+              .columnNames(columnNames())
               .rows(rows(entry.value) as List<List>)
-              .types(mTypes)
+              .types(types())
               .build()
       )
     }
@@ -2107,12 +2115,12 @@ class Matrix implements Iterable<Row> {
   String tail(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     StringBuilder sb = new StringBuilder()
     def nRows = Math.min(rows, rowCount())
+    def headers = columnNames()
     if (includeHeader) {
-      sb.append(String.join(delimiter, mHeaders)).append(lineEnding)
+      sb.append(String.join(delimiter, headers)).append(lineEnding)
     }
-    List<Integer> columnLengths = mHeaders.collect { colName -> maxContentLength(colName, includeHeader, maxColumnLength) }
+    List<Integer> columnLengths = headers.collect { colName -> maxContentLength(colName, includeHeader, maxColumnLength) }
     for (int i = rowCount() - nRows; i < rowCount(); i++) {
-      //def row = ListConverter.convert(row(i), String.class)
       List<String> stringRow = padRow(row(i), columnLengths)
       sb.append(String.join(delimiter, stringRow)).append(lineEnding)
     }
@@ -2193,7 +2201,7 @@ class Matrix implements Iterable<Row> {
           v.split(',').each { a ->
             def key = a.substring(0, a.indexOf(':')).trim()
             def value = a.substring(a.indexOf(':')+1).trim()
-            println "adding key '$key' and value '$value'"
+            //println "adding key '$key' and value '$value'"
             alignment.put( key, value)
           }
         } else {
@@ -2210,11 +2218,11 @@ class Matrix implements Iterable<Row> {
     }
 
     sb.append('>\n')
-    if (mHeaders.size() > 0) {
+    if (mColumns.size() > 0) {
       sb.append('  <thead>\n')
       sb.append('    <tr>\n')
 
-      mHeaders.eachWithIndex { it, idx ->
+      columnNames().eachWithIndex { it, idx ->
         String colName = columnName(idx)
         sb.append("      <th class='$colName ${typeName(idx)}'")
         if (alignment.containsKey(colName)) {
@@ -2258,7 +2266,6 @@ class Matrix implements Iterable<Row> {
         alignment.add('---')
       }
     }
-    //mHeaders.collect(w -> w.replaceAll(".", "-"))
     return toMarkdown(alignment, attr)
   }
 
@@ -2273,7 +2280,7 @@ class Matrix implements Iterable<Row> {
     }
     StringBuilder sb = new StringBuilder()
     sb.append('| ')
-    sb.append(String.join(' | ', mHeaders)).append(' |\n')
+    sb.append(String.join(' | ', columnNames())).append(' |\n')
     sb.append('| ').append(String.join(' | ', alignment)).append(' |\n')
     StringBuilder rowBuilder = new StringBuilder()
     for (row in rows()) {
@@ -2325,7 +2332,7 @@ class Matrix implements Iterable<Row> {
     if (includeHeaderAsRow) {
       header = ['']
       header.addAll(ListConverter.toStrings(column(columnNameAsHeader)))
-      r.add(mHeaders)
+      r.add(columnNames())
     } else {
       header = ListConverter.toStrings(column(columnNameAsHeader))
     }
@@ -2369,7 +2376,7 @@ class Matrix implements Iterable<Row> {
   Matrix transpose(List<String> header, List<Class> dataTypes, boolean includeHeaderAsRow = false) {
     List<List> rows = new ArrayList<>(rowCount() + 1)
     if (includeHeaderAsRow) {
-      rows.add(mHeaders)
+      rows.add(columnNames())
     }
     rows.addAll(mColumns.transpose() as List<List>)
     builder()

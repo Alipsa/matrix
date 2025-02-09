@@ -4,6 +4,7 @@
 - Default to 1:st sheet instead of 'Sheet1' if no sheet is given
 - Change check for sheet param to detect Number instead of integer
 - Breaking change: Change importOds to fetch as object instead of as string
+- Upgrade POI 5.3.0 -> 5.4.0
 
 ## v1.1.0, 2025-01-08
 - clarify which sheet we are on when trying to read outside boundaries

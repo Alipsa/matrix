@@ -31,12 +31,12 @@
   </scm>
   <properties>
     <matrixCoreVersion>2.3.0-SNAPSHOT</matrixCoreVersion>
-    <matrixStatsVersion>1.1.0</matrixStatsVersion>
-    <matrixSqlVersion>1.1.0</matrixSqlVersion>
-    <matrixDatasetsVersion>1.1.0</matrixDatasetsVersion>
+    <matrixStatsVersion>1.1.1-SNAPSHOT</matrixStatsVersion>
+    <matrixSqlVersion>1.1.1-SNAPSHOT</matrixSqlVersion>
+    <matrixDatasetsVersion>1.1.1-SNAPSHOT</matrixDatasetsVersion>
     <matrixSpreadsheetVersion>1.2.0-SNAPSHOT</matrixSpreadsheetVersion>
-    <matrixJsonVersion>1.1.0</matrixJsonVersion>
-    <matrixCsvVersion>1.1.0</matrixCsvVersion>
+    <matrixJsonVersion>1.1.1-SNAPSHOT</matrixJsonVersion>
+    <matrixCsvVersion>1.1.1-SNAPSHOT</matrixCsvVersion>
     <matrixParquetVersion>1.0.0-SNAPSHOT</matrixParquetVersion>
     <matrixBigQueryVersion>0.1-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>1.0.0-SNAPSHOT</matrixChartsVersion>

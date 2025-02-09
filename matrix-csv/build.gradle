@@ -3,18 +3,18 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 buildscript {
   dependencies {
-    classpath 'se.alipsa.groovy:nexus-release-plugin:1.0.0-SNAPSHOT'
+    classpath('se.alipsa.groovy:nexus-release-plugin:1.0.0-SNAPSHOT')
   }
 }
 plugins {
-  id 'groovy'
-  id 'java-library'
-  id 'signing'
-  id 'maven-publish'
+  id('groovy')
+  id('java-library')
+  id('signing')
+  id('maven-publish')
 }
 
-group 'se.alipsa.matrix'
-version '1.1.1-SNAPSHOT'
+group = 'se.alipsa.matrix'
+version = '1.1.1-SNAPSHOT'
 description = "Groovy library for importing structured text into a matrix"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -78,10 +78,10 @@ test {
         TestLogEvent.PASSED,
         TestLogEvent.SKIPPED,
         TestLogEvent.STANDARD_OUT
-    exceptionFormat TestExceptionFormat.FULL
-    showExceptions true
-    showCauses true
-    showStackTraces true
+    exceptionFormat = TestExceptionFormat.FULL
+    showExceptions = true
+    showCauses = true
+    showStackTraces = true
 
     // set options for log level DEBUG and INFO
     debug {
@@ -91,7 +91,7 @@ test {
           TestLogEvent.SKIPPED,
           TestLogEvent.STANDARD_ERROR,
           TestLogEvent.STANDARD_OUT
-      exceptionFormat TestExceptionFormat.FULL
+      exceptionFormat = TestExceptionFormat.FULL
     }
     info.events = debug.events
     info.exceptionFormat = debug.exceptionFormat

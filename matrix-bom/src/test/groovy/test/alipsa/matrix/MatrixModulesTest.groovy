@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets
  */
 class MatrixModulesTest {
 
+
   @Test
   void testStat() {
     Matrix mtcars = Dataset.mtcars()
@@ -131,4 +132,5 @@ class MatrixModulesTest {
     Matrix d2 = MatrixParquetIO.read(file, 'mtcars')
     Assertions.assertEquals(data, d2)
   }
+
 }

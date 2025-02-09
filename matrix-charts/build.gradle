@@ -1,15 +1,15 @@
 import org.gradle.internal.os.OperatingSystem
 
 plugins {
-  id 'groovy'
-  id 'java-library'
+  id('groovy')
+  id('java-library')
   //id 'org.openjfx.javafxplugin' version '0.0.13'
-  id 'maven-publish'
-  id 'signing'
+  id('maven-publish')
+  id('signing')
 }
 
-group 'se.alipsa.matrix'
-version '1.0.0-SNAPSHOT'
+group = 'se.alipsa.matrix'
+version = '1.0.0-SNAPSHOT'
 description = "Groovy library for plotting with matrix ([][] data)"
 
 task wrapper(type: Wrapper) {

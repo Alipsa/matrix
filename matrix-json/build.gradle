@@ -4,14 +4,14 @@ buildscript {
   }
 }
 plugins {
-  id 'groovy'
-  id 'java-library'
-  id 'signing'
-  id 'maven-publish'
+  id('groovy')
+  id('java-library')
+  id('signing')
+  id('maven-publish')
 }
 
-group 'se.alipsa.matrix'
-version '1.1.1-SNAPSHOT'
+group = 'se.alipsa.matrix'
+version = '1.1.1-SNAPSHOT'
 description = "Groovy library for importing and exporting json to and from a Matrix or Grid"
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")

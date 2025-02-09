@@ -8,15 +8,15 @@ buildscript {
 }
 
 plugins {
-    id 'groovy'
-    id 'java-library'
+    id('groovy')
+    id('java-library')
     //id 'org.openjfx.javafxplugin' version '0.0.13'
-    id 'signing'
-    id 'maven-publish'
+    id('signing')
+    id('maven-publish')
 }
 
-group 'se.alipsa.matrix'
-version '1.1.1-SNAPSHOT'
+group = 'se.alipsa.matrix'
+version = '1.1.1-SNAPSHOT'
 description = "Groovy library common public domain and oss data in matrix format)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -75,10 +75,10 @@ test {
                 TestLogEvent.PASSED,
                 TestLogEvent.SKIPPED,
                 TestLogEvent.STANDARD_OUT
-        exceptionFormat TestExceptionFormat.FULL
-        showExceptions true
-        showCauses true
-        showStackTraces true
+        exceptionFormat = TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
 
         // set options for log level DEBUG and INFO
         debug {
@@ -88,7 +88,7 @@ test {
                     TestLogEvent.SKIPPED,
                     TestLogEvent.STANDARD_ERROR,
                     TestLogEvent.STANDARD_OUT
-            exceptionFormat TestExceptionFormat.FULL
+            exceptionFormat = TestExceptionFormat.FULL
         }
         info.events = debug.events
         info.exceptionFormat = debug.exceptionFormat
