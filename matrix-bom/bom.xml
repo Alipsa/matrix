@@ -29,57 +29,69 @@
     <developerConnection>scm:git:https://github.com/Alipsa/matrix.git</developerConnection>
     <url>https://github.com/Alipsa/matrix/tree/main</url>
   </scm>
+  <properties>
+    <matrixCoreVersion>2.3.0-SNAPSHOT</matrixCoreVersion>
+    <matrixStatsVersion>1.1.0</matrixStatsVersion>
+    <matrixSqlVersion>1.1.0</matrixSqlVersion>
+    <matrixDatasetsVersion>1.1.0</matrixDatasetsVersion>
+    <matrixSpreadsheetVersion>1.2.0-SNAPSHOT</matrixSpreadsheetVersion>
+    <matrixJsonVersion>1.1.0</matrixJsonVersion>
+    <matrixCsvVersion>1.1.0</matrixCsvVersion>
+    <matrixParquetVersion>1.0.0-SNAPSHOT</matrixParquetVersion>
+    <matrixBigQueryVersion>0.1-SNAPSHOT</matrixBigQueryVersion>
+    <matrixChartsVersion>1.0.0-SNAPSHOT</matrixChartsVersion>
+  </properties>
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>2.3.0-SNAPSHOT</version>
+        <version>${matrixCoreVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-stats</artifactId>
-        <version>1.1.0</version>
+        <version>${matrixStatsVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-sql</artifactId>
-        <version>1.1.0</version>
+        <version>${matrixSqlVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-datasets</artifactId>
-        <version>1.1.0</version>
+        <version>${matrixDatasetsVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-spreadsheet</artifactId>
-        <version>1.2.0-SNAPSHOT</version>
+        <version>${matrixSpreadsheetVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-json</artifactId>
-        <version>1.1.0</version>
+        <version>${matrixJsonVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-csv</artifactId>
-        <version>1.1.0</version>
+        <version>${matrixCsvVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-parquet</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>${matrixParquetVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-bigquery</artifactId>
-        <version>0.1-SNAPSHOT</version>
+        <version>${matrixBigQueryVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-charts</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>${matrixChartsVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
