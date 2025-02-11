@@ -35,6 +35,18 @@ class BqTest {
   }
 
   @Test
+  void testListProjects() {
+    String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
+    if (projectId == null) {
+      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      return
+    }
+    System.err.println("List projects is not working yet")
+    Bq bq = new Bq()
+    println "Projects are ${bq.getProjects()}"
+  }
+
+  @Test
   void testCreateAndRetrieve() {
     String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {

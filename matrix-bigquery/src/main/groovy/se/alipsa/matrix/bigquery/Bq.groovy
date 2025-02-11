@@ -1,6 +1,7 @@
 package se.alipsa.matrix.bigquery
 
 import com.google.api.gax.paging.Page
+import com.google.api.services.bigquery.model.ProjectList
 import se.alipsa.matrix.core.ValueConverter
 
 import static se.alipsa.matrix.bigquery.TypeMapper.*
@@ -53,7 +54,7 @@ class Bq {
         .getService()
   }
 
-  Matrix query(String qry, boolean useLegacySql = false) {
+  Matrix query(String qry, boolean useLegacySql = false) throws BqException {
     try {
       QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
           .setUseLegacySql(useLegacySql)
@@ -76,12 +77,11 @@ class Bq {
       TableResult result = queryJob.getQueryResults()
       return convertToMatrix(result)
     } catch (BigQueryException | InterruptedException e) {
-      System.out.println("Query failed due to error: \n" + e.toString())
-      throw new RuntimeException(e)
+      throw new BqException("Query failed due to error: " + e.toString(), e)
     }
   }
 
-  boolean saveToBigQuery(Matrix matrix, String datasetName) throws BigQueryException {
+  boolean saveToBigQuery(Matrix matrix, String datasetName) throws BqException {
     String tableName = matrix.matrixName
     if (tableExist(datasetName, tableName)) {
       println "${datasetName}.$tableName already exists"
@@ -106,44 +106,52 @@ class Bq {
     return true
   }
 
-  Map createTable(Matrix matrix, String datasetName) {
+  Map createTable(Matrix matrix, String datasetName) throws BqException {
     createTable(matrix, datasetName, projectId)
   }
 
-  Map createTable(Matrix matrix, String datasetName, String projectId) {
+  Map createTable(Matrix matrix, String datasetName, String projectId) throws BqException {
     Schema schema = createSchema(matrix)
     createTable(matrix, datasetName, projectId, schema)
   }
 
-  Map createTable(Matrix matrix, String datasetName, String projectId, Schema schema) {
-    String tableName = matrix.matrixName
-    TableId tableId = TableId.of(projectId, datasetName, tableName)
-    TableDefinition tableDefinition = StandardTableDefinition.of(schema)
-    TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build()
-    Table table = bigQuery.create(tableInfo)
-    println("Table ${datasetName}.$tableName created successfully")
-    return [table: table, schema: schema]
+  Map createTable(Matrix matrix, String datasetName, String projectId, Schema schema) throws BqException {
+    try {
+      String tableName = matrix.matrixName
+      TableId tableId = TableId.of(projectId, datasetName, tableName)
+      TableDefinition tableDefinition = StandardTableDefinition.of(schema)
+      TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build()
+      Table table = bigQuery.create(tableInfo)
+      println("Table ${datasetName}.$tableName created successfully")
+      return [table: table, schema: schema]
+    } catch (BigQueryException e) {
+      throw new BqException(e)
+    }
   }
 
-  Map<Long, List<BigQueryError>> insert(Matrix matrix, String dataSet) {
+  Map<Long, List<BigQueryError>> insert(Matrix matrix, String dataSet) throws BqException {
     insert(matrix, dataSet, projectId)
   }
 
-  Map<Long, List<BigQueryError>> insert(Matrix matrix, TableId tableId) {
-    def mapList = matrix.rows().collect(m -> m.toMap())
-    def builder = InsertAllRequest.newBuilder(tableId)
-    mapList.each {
-      builder.addRow(it)
-    }
-    //println "Bq: Inserting into $tableId"
-    InsertAllResponse response = bigQuery.insertAll(builder.build())
+  Map<Long, List<BigQueryError>> insert(Matrix matrix, TableId tableId) throws BqException {
+    try {
+      def mapList = matrix.rows().collect(m -> m.toMap())
+      def builder = InsertAllRequest.newBuilder(tableId)
+      mapList.each {
+        builder.addRow(it)
+      }
+      //println "Bq: Inserting into $tableId"
+      InsertAllResponse response = bigQuery.insertAll(builder.build())
 
-    //if (response.hasErrors()) {
-    return response.getInsertErrors()
-    //}
+      //if (response.hasErrors()) {
+      return response.getInsertErrors()
+      //}
+    } catch (BigQueryException e) {
+      throw new BqException(e)
+    }
   }
 
-  Map<Long, List<BigQueryError>> insert(Matrix matrix, String dataSet, String projectId) {
+  Map<Long, List<BigQueryError>> insert(Matrix matrix, String dataSet, String projectId) throws BqException {
     String tableName = matrix.matrixName
     TableId tableId = TableId.of(projectId, dataSet, tableName)
     insert(matrix, tableId)
@@ -152,10 +160,10 @@ class Bq {
   static Matrix convertToMatrix(TableResult result) {
     Schema schema = result.getSchema()
     List<String> colNames = []
-    List<Class> colTypes = []
+    List<LegacySQLTypeName> colTypes = []
     schema.fields.each {
       colNames << it.name
-      colTypes << convertType(it.type)
+      colTypes << it.type
     }
 
     println "Bq.convertToMatrix: result contains $result.totalRows rows"
@@ -167,56 +175,73 @@ class Bq {
       row = []
       int i = 0
       for (FieldValue fv : fvl.iterator()) {
-        row << ValueConverter.convert(fv.value, colTypes[i++])
+        row << convert(fv.value, colTypes[i++])
       }
       //println "Bq.convertToMatrix: adding $row"
       rows << row
     }
-    // TODO: all values are Strings, must be converted to the types in the columnTypes list
-    //  we need a custom converter for this
     Matrix.builder()
         .rows(rows)
-        .types(colTypes)
+        .types(colTypes.collect{convertType(it)})
         .columnNames(colNames)
         .build()
   }
 
-  List<String> getDatasets() {
-    Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(100))
-    if (datasets == null) {
-      System.out.println("Dataset does not contain any models")
-      return []
-    }
-    return datasets
-        .iterateAll()
-        .collect {
-          it.getDatasetId().dataset
-        }
-  }
-
-  List<String> getTableNames(String datasetName) {
-    DatasetId datasetId = DatasetId.of(projectId, datasetName)
-    Page<Table> tables = bigQuery.listTables(datasetId, TableListOption.pageSize(100))
-    return tables.iterateAll().collect {
-      it.tableId.table
+  List<String> getDatasets() throws BqException {
+    try {
+      Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(100))
+      if (datasets == null) {
+        System.out.println("Dataset does not contain any models")
+        return []
+      }
+      return datasets
+          .iterateAll()
+          .collect {
+            it.getDatasetId().dataset
+          }
+    } catch (BigQueryException e) {
+      throw new BqException(e)
     }
   }
 
-  Matrix getTableInfo(String datasetName, String tableName) {
+  List<String> getProjects() throws BqException {
+    // TODO, this is not the wayt to do it, Maybe use resource manager API?
+    new ProjectList().getProjects().collect {
+      it.getId()
+    }
+  }
+
+  List<String> getTableNames(String datasetName) throws BqException {
+    try {
+      DatasetId datasetId = DatasetId.of(projectId, datasetName)
+      Page<Table> tables = bigQuery.listTables(datasetId, TableListOption.pageSize(100))
+      return tables.iterateAll().collect {
+        it.tableId.table
+      }
+    } catch (BigQueryException e) {
+      throw new BqException(e)
+    }
+  }
+
+  Matrix getTableInfo(String datasetName, String tableName)  throws BqException {
     query("""select * from ${datasetName}.INFORMATION_SCHEMA.COLUMNS
       WHERE table_name = '$tableName';
       """)
   }
 
-  Dataset getDataset(String datasetName) {
-    bigQuery.getDataset(datasetName)
+  Dataset getDataset(String datasetName) throws BqException {
+    try {
+      bigQuery.getDataset(datasetName)
+    } catch (BigQueryException e) {
+      throw new BqException(e)
+    }
   }
 
-  Dataset.Builder getDatasetBuilder(String datasetName) {
+  Dataset.Builder getDatasetBuilder(String datasetName) throws BqException {
     getDataset(datasetName).toBuilder()
   }
 
-  Dataset createDataset(String datasetName, String description = null) {
+  Dataset createDataset(String datasetName, String description = null) throws BqException {
     try {
       Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetName))
       if (dataset != null) {
@@ -233,13 +258,16 @@ class Bq {
       System.out.println(newDatasetName + " created successfully")
       ds
     } catch (BigQueryException e) {
-      throw new RuntimeException("Dataset was not created: " + e.toString(), e)
+      throw new BqException("Dataset was not created: " + e.toString(), e)
     }
-    null
   }
 
-  Dataset updateDataset(Dataset.Builder ds) {
-    bigQuery.update(ds.build())
+  Dataset updateDataset(Dataset.Builder ds) throws BqException {
+    try {
+      bigQuery.update(ds.build())
+    } catch (BigQueryException e) {
+      throw new BqException(e)
+    }
   }
 
   static Schema createSchema(Matrix matrix) {
@@ -250,45 +278,61 @@ class Bq {
     Schema.of(fields as Field[])
   }
 
-  boolean dropDataset(String datasetName) {
-    DatasetId datasetId = DatasetId.of(projectId, datasetName);
-    boolean success = bigQuery.delete(datasetId, DatasetDeleteOption.deleteContents())
-    if (success) {
-      System.out.println("Dataset $datasetName deleted successfully");
-    } else {
-      System.out.println("Dataset $datasetName was not found");
+  boolean dropDataset(String datasetName) throws BqException {
+    try {
+      DatasetId datasetId = DatasetId.of(projectId, datasetName)
+      boolean success = bigQuery.delete(datasetId, DatasetDeleteOption.deleteContents())
+      if (success) {
+        System.out.println("Dataset $datasetName deleted successfully");
+      } else {
+        System.out.println("Dataset $datasetName was not found");
+      }
+      return success
+    } catch (BigQueryException e) {
+      throw new BqException(e)
     }
-    return success
   }
 
-  boolean dropTable(String datasetName, Matrix matrix) {
+  boolean dropTable(String datasetName, Matrix matrix) throws BqException {
     dropTable(datasetName, matrix.matrixName)
   }
 
-  boolean dropTable(String datasetName, String tableName) {
-    boolean success = bigQuery.delete(TableId.of(datasetName, tableName))
-    if (success) {
-      System.out.println("Table ${datasetName}.${tableName} deleted successfully")
-    } else {
-      System.out.println("Table ${datasetName}.${tableName} was not found")
+  boolean dropTable(String datasetName, String tableName) throws BqException {
+    try {
+      boolean success = bigQuery.delete(TableId.of(datasetName, tableName))
+      if (success) {
+        System.out.println("Table ${datasetName}.${tableName} deleted successfully")
+      } else {
+        System.out.println("Table ${datasetName}.${tableName} was not found")
+      }
+      return success
+    } catch (BigQueryException e) {
+      throw new BqException(e)
     }
-    return success
   }
 
-  boolean datasetExist(String datasetName) {
-    Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetName));
-    if (dataset != null) {
-      return true
+  boolean datasetExist(String datasetName) throws BqException {
+    try {
+      Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetName));
+      if (dataset != null) {
+        return true
+      }
+      return false
+    } catch (BigQueryException e) {
+      throw new BqException(e)
     }
-    return false
   }
 
-  boolean tableExist(String datasetName, String tableName) {
-    def table = bigQuery.getTable(TableId.of(datasetName, tableName))
-    if (table != null && table.exists()) {
-      // table will be null if it is not found and setThrowNotFound is not set to `true`
-      return true
+  boolean tableExist(String datasetName, String tableName) throws BqException {
+    try {
+      def table = bigQuery.getTable(TableId.of(datasetName, tableName))
+      if (table != null && table.exists()) {
+        // table will be null if it is not found and setThrowNotFound is not set to `true`
+        return true
+      }
+      return false
+    } catch (BigQueryException e) {
+      throw new BqException(e)
     }
-    return false
   }
 }
