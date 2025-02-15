@@ -27,3 +27,14 @@ bq.saveToBigQuery(data, 'mydataset.cars')
 Matrix d2 = bq.query("select * from 'mydataset.cars'")
 assert data == d2
 ```
+
+
+# 3:rd party libraries used
+
+## com.google.cloud:google-cloud-bigquery
+Used to access Google Big Query
+License: Apache 2.0
+
+## com.google.auth:google-auth-library-oauth2-http
+Used for authentication against Google Big Query
+License: BSD-3-Clause
