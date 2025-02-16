@@ -13,7 +13,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '1.1.1-SNAPSHOT'
+version = '1.1.1'
 description = 'Groovy sql module for Matrix'
 
 ext.nexusUrl = version.contains("SNAPSHOT")

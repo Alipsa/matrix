@@ -1,12 +1,13 @@
 # Release history
+Date format used below is yyyy-MM-dd
 
-## v1.1.1
+## v1.1.1, 2025-02-16
 - Remove dependency on gradle-tooling-api
 
-## v 1.1.0
+## v1.1.0, 2025-01-08
 - adapt to matrix-core 2.2.0
 
-## v1.0.1, 2024.10-31
+## v1.0.1, 2024-10-31
 - return a map of some info from create table. 
 - NPE fix in MatrixSql. 
 - Upgrade dependencies

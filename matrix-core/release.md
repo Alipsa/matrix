@@ -1,6 +1,6 @@
 # Matrix core Release history
 
-### 2.3.0, In progress
+### 2.3.0, 2025-02-16
 - Add pivot (rows to columns) and unPivot (columns to rows) methods to a Matrix
 - Add Matrix.cloneEmpty() to make a copy without data content.
 - Remove the duplicate list for rows and types and rely solely on the column attributes (which fixed a bug in renameColumn in the process)
