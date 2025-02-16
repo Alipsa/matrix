@@ -1,5 +1,9 @@
 import org.gradle.internal.os.OperatingSystem
-
+buildscript {
+  dependencies {
+    classpath('se.alipsa.groovy:nexus-release-plugin:1.0.0-SNAPSHOT')
+  }
+}
 plugins {
   id('groovy')
   id('java-library')
@@ -11,6 +15,10 @@ plugins {
 group = 'se.alipsa.matrix'
 version = '0.1'
 description = "Groovy library for plotting with matrix ([][] data)"
+
+ext.nexusUrl = version.contains("SNAPSHOT")
+    ? "https://oss.sonatype.org/content/repositories/snapshots/"
+    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 task wrapper(type: Wrapper) {
   def gv = '8.10.2'
@@ -150,6 +158,17 @@ publishing {
       }
     }
   }
+  if (project.ext.properties.sonatypeUsername) {
+    repositories {
+      maven {
+        credentials {
+          username = sonatypeUsername
+          password = sonatypePassword
+        }
+        url = nexusUrl
+      }
+    }
+  }
 }
 
 
@@ -160,4 +179,12 @@ signing {
   } else {
     project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
   }
+}
+
+if (project.ext.properties.sonatypeUsername) {
+  apply plugin: 'nexus-release-plugin'
+  //apply plugin: 'se.alipsa.groovy.NexusReleasePlugin'
+  nexusReleasePlugin.nexusUrl = nexusUrl
+  nexusReleasePlugin.userName = sonatypeUsername
+  nexusReleasePlugin.password = sonatypePassword
 }
