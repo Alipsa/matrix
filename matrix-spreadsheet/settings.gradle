@@ -1,8 +1,0 @@
-pluginManagement {
-  repositories {
-    mavenLocal()
-    //mavenCentral()
-    gradlePluginPortal()
-  }
-}
-apply from: '../dependencies.gradle'

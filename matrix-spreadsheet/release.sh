@@ -2,7 +2,7 @@
 source ~/.sdkman/bin/sdkman-init.sh
 source jdk17
 #./gradlew clean publishToSonatype closeAndReleaseSonatypeStagingRepository
-./gradlew clean build release || exit 1
+./gradlew :matrix-spreadsheet:clean :matrix-spreadsheet:build :matrix-spreadsheet:release || exit 1
 PROJECT=$(basename "$PWD")
 if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"
