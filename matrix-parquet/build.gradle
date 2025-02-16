@@ -41,15 +41,15 @@ repositories {
 
 dependencies {
     compileOnly libs.groovy
-    if (version.endsWith('SNAPSHOT')) {
+    //if (version.endsWith('SNAPSHOT')) {
         compileOnly project(':matrix-core')
         testImplementation project(':matrix-core')
         testImplementation project(':matrix-datasets')
-    } else {
+    /*} else {
         compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
         testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
         testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
-    }
+    }*/
     implementation 'org.apache.ivy:ivy:2.5.3'
     //implementation 'com.jerolba:carpet-record:0.2.1' must be loaded by Grab for now
     testImplementation testLibs.junitJupiterApi

@@ -65,20 +65,20 @@ dependencies {
   def javaFxVersion = '23.0.1'
   // compile only dependencies are not included in the pom
   compileOnly libs.groovy
-  if (version.endsWith('SNAPSHOT')) {
+  //if (version.endsWith('SNAPSHOT')) {
     compileOnly project(':matrix-core')
     compileOnly project(':matrix-stats')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-stats')
     testImplementation project(':matrix-datasets')
-  } else {
-    compileOnly('se.alipsa.matrix:matrix-core:2.0.0')
-    compileOnly('se.alipsa.matrix:matrix-stats:1.0.2')
-    testImplementation('se.alipsa.matrix:matrix-core:2.0.0')
-    testImplementation('se.alipsa.matrix:matrix-stats:1.0.2')
-    testImplementation('se.alipsa.matrix:matrix-datasets:1.0.4')
-  }
-  implementation("se.alipsa.groovy:gsvg:0.1.0-SNAPSHOT")
+  /*} else {
+    compileOnly('se.alipsa.matrix:matrix-core:2.3.0')
+    compileOnly('se.alipsa.matrix:matrix-stats:1.1.0')
+    testImplementation('se.alipsa.matrix:matrix-core:2.3.0')
+    testImplementation('se.alipsa.matrix:matrix-stats:1.1.0')
+    testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
+  }*/
+  implementation("se.alipsa.groovy:gsvg:0.1.0")
 
   // One of these is enough
   implementation "org.jfree:jfreechart:1.5.5"

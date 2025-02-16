@@ -54,13 +54,13 @@ tasks.withType(GroovyCompile) { task ->
 
 dependencies {
     compileOnly libs.groovy
-    if (version.endsWith('SNAPSHOT')) {
+    //if (version.endsWith('SNAPSHOT')) {
         compileOnly project(':matrix-core')
         testImplementation project(':matrix-core')
-    } else {
+    /*} else {
         compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
         testImplementation ('se.alipsa.matrix:matrix-core:2.2.0')
-    }
+    }*/
 
     testImplementation libs.groovy
     testImplementation testLibs.junitJupiterApi

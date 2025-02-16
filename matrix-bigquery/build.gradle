@@ -40,15 +40,15 @@ repositories {
 }
 
 dependencies {
-    if (version.endsWith('SNAPSHOT')) {
+    //if (version.endsWith('SNAPSHOT')) {
         compileOnly project(':matrix-core')
         testImplementation project(':matrix-core')
         testImplementation project(':matrix-datasets')
-    } else {
+    /*} else {
         compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
         testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
         testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
-    }
+    }*/
     compileOnly libs.groovy
 
     api('com.google.cloud:google-cloud-bigquery:2.47.0')

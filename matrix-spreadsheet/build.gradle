@@ -36,13 +36,13 @@ tasks.withType(GroovyCompile) { task ->
 dependencies {
     compileOnly libs.groovy
     //api project(':matrix-core')
-    if (version.contains('SNAPSHOT') && rootProject.name != project.name) {
+    //if (version.contains('SNAPSHOT') && rootProject.name != project.name) {
         compileOnly project(':matrix-core')
         testImplementation project(':matrix-core')
-    } else {
+    /*} else {
         compileOnly 'se.alipsa.matrix:matrix-core:2.2.0'
         testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
-    }
+    }*/
     implementation('org.apache.poi:poi:5.4.0')
     implementation('org.apache.poi:poi-ooxml:5.4.0')
     implementation 'com.github.miachm.sods:SODS:1.6.7'

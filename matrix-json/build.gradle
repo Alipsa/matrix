@@ -53,8 +53,8 @@ dependencies {
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
   } else {
-    compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
-    testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
+    compileOnly('se.alipsa.matrix:matrix-core:2.3.0')
+    testImplementation('se.alipsa.matrix:matrix-core:2.3.0')
     testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
   }
 
