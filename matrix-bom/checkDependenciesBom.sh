@@ -1,0 +1,1 @@
+mvn -f bom.xml versions:display-plugin-updates versions:display-dependency-updates
