@@ -1,5 +1,7 @@
 # Release history
 
+## v1.2.1, in progress
+
 ## v1.2.0, 2025-01-16
 - Default to 1:st sheet instead of 'Sheet1' if no sheet is given
 - Change check for sheet param to detect Number instead of integer
