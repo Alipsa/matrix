@@ -7,5 +7,5 @@ if [[ -d "$localRepo/se/alipsa/matrix" ]]; then
   rm -r "$localRepo/se/alipsa/matrix"
 fi
 mvn -f bom.xml install
-mvn verify
-mvn -Prelease -f bom.xml deploy
+mvn clean verify
+mvn -Prelease -f bom.xml clean deploy
