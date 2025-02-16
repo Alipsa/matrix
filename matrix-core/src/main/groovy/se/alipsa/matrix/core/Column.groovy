@@ -210,4 +210,8 @@ class Column extends ArrayList {
     }
     that
   }
+
+  List subList(IntRange range) {
+    this.subList(range.min(), range.max() +1)
+  }
 }

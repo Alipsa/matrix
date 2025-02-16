@@ -4,6 +4,7 @@
 - Add pivot (rows to columns) and unPivot (columns to rows) methods to a Matrix
 - Add Matrix.cloneEmpty() to make a copy without data content.
 - Remove the duplicate list for rows and types and rely solely on the column attributes (which fixed a bug in renameColumn in the process)
+- Add subList(IntRange) to Column
 
 ### 2.2.0, 2025-01-06
 - Change group name and package name from se.alipsa.groovy to se.alipsa.matrix

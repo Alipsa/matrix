@@ -179,4 +179,10 @@ class ColumnTest {
     Column col = l as Column
     assert [2,4,4] == col + c
   }
+
+  @Test
+  void testSubList() {
+    Column c = [1,2,3,4] as Column
+    assert [1,2,3] == c.subList(0..2)
+  }
 }
