@@ -1,6 +1,7 @@
 # Release history
 
 ## v1.2.1, in progress
+- Fix ODS import for Percentage and Currency columns by converting them to Double
 
 ## v1.2.0, 2025-01-16
 - Default to 1:st sheet instead of 'Sheet1' if no sheet is given

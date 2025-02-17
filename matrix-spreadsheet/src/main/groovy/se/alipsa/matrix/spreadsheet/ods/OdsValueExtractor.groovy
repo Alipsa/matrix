@@ -1,5 +1,7 @@
 package se.alipsa.matrix.spreadsheet.ods
 
+import com.github.miachm.sods.OfficeCurrency
+import com.github.miachm.sods.OfficePercentage
 import com.github.miachm.sods.Range
 import com.github.miachm.sods.Sheet
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
@@ -46,7 +48,15 @@ class OdsValueExtractor extends ValueExtractor {
 
    Object getObject(int row, int column) {
       try {
-         return getObject(sheet.getRange(row, column))
+         def val = getObject(sheet.getRange(row, column))
+         if (val != null) {
+            if (val.class == OfficePercentage) {
+               return ((OfficePercentage) val).value
+            } else if (val.class == OfficeCurrency) {
+               return ((OfficeCurrency)val).value
+            }
+         }
+         return val
       } catch (IndexOutOfBoundsException e) {
          throw new IndexOutOfBoundsException("Sheet: ${sheet.name}: Failed to get Object at row $row, col $column: ${e.getMessage()}")
       }

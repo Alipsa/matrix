@@ -60,7 +60,7 @@ class ExcelImporterTest {
         try(InputStream is = this.getClass().getResourceAsStream("/Book2.xlsx")) {
             Map<String, Matrix> sheets = ExcelImporter.importExcelSheets(is,
                 [
-                    [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 5, firstRowAsColNames: true],
+                    [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
                     [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true],
                     ['key': 'comp', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: false],
                     ['key': 'comp2', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: true]
@@ -74,10 +74,13 @@ class ExcelImporterTest {
             assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())
 
             Matrix table1 = sheets.Sheet1
+            //println(table1.content())
+            //println(table1.types())
             assertEquals(710381, table1[0,0])
             assertEquals(103599.04, table1[1,1])
             assertEquals(66952.95, table1[2,2])
             assertEquals(0.0G, table1[3,3, BigDecimal])
+            assertEquals(-0.00982, table1[6, 'percentdiff'], 0.00001)
 
             Matrix comp = sheets.comp.clone()
             assertEquals('Component', comp[0,0])

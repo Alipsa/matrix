@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.ods
 
+import com.github.miachm.sods.OfficePercentage
 import com.github.miachm.sods.Sheet
 import com.github.miachm.sods.SpreadSheet
 import se.alipsa.matrix.spreadsheet.FileUtil
@@ -214,7 +215,8 @@ class OdsImporter {
     for (int rowIdx = startRow; rowIdx <= endRow; rowIdx++) {
       rowList = []
       for (int colIdx = startCol; colIdx <= endCol; colIdx++) {
-        rowList.add(ext.getObject(rowIdx, colIdx))
+        def val = ext.getObject(rowIdx, colIdx)
+        rowList.add(val)
       }
       matrix.add(rowList)
     }

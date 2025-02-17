@@ -7,6 +7,7 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.spreadsheet.ods.OdsImporter
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
@@ -59,7 +60,7 @@ class OdsImporterTest {
     try(InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
       Map<String, Matrix> sheets = OdsImporter.importOdsSheets(is,
        [
-           [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 5, firstRowAsColNames: true],
+           [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
            [sheetName: 'Sheet2', startRow: 2, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: false],
            ['key': 'comp', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: false],
            ['key': 'comp2', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: true]
@@ -69,7 +70,7 @@ class OdsImporterTest {
       table2.columnNames(['id', 'foo', 'bar', 'baz'])
       assertEquals(3.0, table2[2, 0])
       def date = table2[6, 2]
-      assertEquals(LocalDate.parse("2023-05-06"), date)
+      assertEquals(LocalDateTime.parse("2023-05-06T00:00"), date)
       assertEquals(17.4, table2['baz'][table2.rowCount()-1])
       assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())
 
@@ -78,7 +79,8 @@ class OdsImporterTest {
       assertEquals(103599.04, table1[1,1])
       assertEquals(66952.95, table1[2,2, Double])
       assertEquals(0.0G, table1[3,3, BigDecimal])
-      assertIterableEquals(['id',	'OB',	'IB',	'deferred_interest_amount'], table1.columnNames())
+      assertEquals(-0.00982, table1[6, 'percentdiff'], 0.00001)
+      assertIterableEquals(['id',	'OB',	'IB',	'deferred_interest_amount', 'percentdiff'], table1.columnNames())
 
       Matrix comp = sheets.comp.clone()
       assertEquals('Component', comp[0,0])
