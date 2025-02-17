@@ -35,8 +35,7 @@ class OdsImporterTest {
     )
     //println(table.content())
     assertEquals(3.0, table[2, 0])
-    def date = table[6, 2]
-    assertEquals(LocalDate.parse("2023-05-06"), date)
+    assertEquals(LocalDate.parse("2023-05-06"), table[6, 2])
     assertEquals(17.4, table['baz'][table.rowCount()-1])
     assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
   }
@@ -70,7 +69,7 @@ class OdsImporterTest {
       table2.columnNames(['id', 'foo', 'bar', 'baz'])
       assertEquals(3.0, table2[2, 0])
       def date = table2[6, 2]
-      assertEquals(LocalDateTime.parse("2023-05-06T00:00"), date)
+      assertEquals(LocalDate.parse("2023-05-06"), date)
       assertEquals(17.4, table2['baz'][table2.rowCount()-1])
       assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())
 

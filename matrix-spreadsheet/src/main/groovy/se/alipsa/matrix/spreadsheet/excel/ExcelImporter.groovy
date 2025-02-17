@@ -15,6 +15,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 
 import java.text.NumberFormat
+import java.time.LocalDateTime
 
 class ExcelImporter {
 
@@ -228,7 +229,12 @@ class ExcelImporter {
             case CellType.BOOLEAN -> rowList.add(ext.getBoolean(row, colIdx))
             case CellType.NUMERIC -> {
               if (DateUtil.isCellDateFormatted(cell)) {
-                rowList.add(ext.getLocalDateTime(cell))
+                LocalDateTime val = ext.getLocalDateTime(cell)
+                if (val != null && val.getHour() == 0 && val.getMinute() == 0 && val.getSecond() == 0 && val.getNano() == 0) {
+                  rowList.add(val.toLocalDate())
+                } else {
+                  rowList.add(val)
+                }
               } else {
                 rowList.add(ext.getDouble(row, colIdx))
               }
