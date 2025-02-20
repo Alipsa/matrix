@@ -73,9 +73,10 @@ class ValueConverter {
   static BigDecimal asBigDecimal(String num, NumberFormat format = null) {
     if (num == null || 'null' == num || num.isBlank()) return null
     if (format == null) {
-      def n = asDecimalNumber(num)
-      if (n.isBlank()) return null
-      return new BigDecimal(n)
+      // dont strip, must work for new BigDecimal('7.594000000032963e-05')
+      //def n = asDecimalNumber(num)
+      //if (n.isBlank()) return null
+      return new BigDecimal(num)
     }
     return format.parse(num) as BigDecimal
   }

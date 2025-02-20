@@ -111,4 +111,9 @@ class ValueConverterTest {
         assertEquals(485164, ValueConverter.asIntegerRound(485163.999))
         assertEquals(485165, ValueConverter.asIntegerRound("485165"))
     }
+
+    @Test
+    void testAsBigDecimal() {
+        assertEquals(.00007594000000032963, ValueConverter.asBigDecimal('7.594000000032963e-05'))
+    }
 }

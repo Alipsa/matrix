@@ -1,5 +1,10 @@
 # Matrix core Release history
 
+### 2.3.1, in progress
+- dont strip out non numeric characters if converting from String to BigDecimal 
+  to support formats such as '7.594000000032963e-05'
+- 
+
 ### 2.3.0, 2025-02-16
 - Add pivot (rows to columns) and unPivot (columns to rows) methods to a Matrix
 - Add Matrix.cloneEmpty() to make a copy without data content.
