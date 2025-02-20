@@ -23,6 +23,11 @@ import java.time.temporal.TemporalAccessor
 @CompileStatic
 class ValueConverter {
 
+  private static final char C_MINUS = '-'
+  private static final char C_PLUS = '+'
+  private static final char C_E = 'E'
+  private static final char C_e = 'e'
+
   static Map<String, SimpleDateFormat> simpleDateCache = [:]
   static Map<String, DateTimeFormatter> dateTimeFormatterCache = [:]
 
@@ -73,9 +78,8 @@ class ValueConverter {
   static BigDecimal asBigDecimal(String num, NumberFormat format = null) {
     if (num == null || 'null' == num || num.isBlank()) return null
     if (format == null) {
-      // dont strip, must work for new BigDecimal('7.594000000032963e-05')
-      //def n = asDecimalNumber(num)
-      //if (n.isBlank()) return null
+      def n = asDecimalNumber(num)
+      if (n.isBlank()) return null
       return new BigDecimal(num)
     }
     return format.parse(num) as BigDecimal
@@ -280,7 +284,8 @@ class ValueConverter {
   static String asDecimalNumber(String txt, char decimalSeparator = '.') {
     StringBuilder result = new StringBuilder()
     txt.chars().mapToObj(i -> i as char)
-        .filter(c -> Character.isDigit(c) || decimalSeparator == c || '-' == c)
+        .filter(c -> c.isDigit() || decimalSeparator == c || C_MINUS == c || C_PLUS == c
+            || C_e == c || C_E == c)
         .forEach(c -> result.append(c))
     return result.toString()
   }

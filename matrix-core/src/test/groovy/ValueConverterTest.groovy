@@ -13,6 +13,12 @@ import static org.junit.jupiter.api.Assertions.*
 class ValueConverterTest {
 
     @Test
+    void testAsBigDecimal() {
+        assertEquals(.00007594000000032963G, ValueConverter.asBigDecimal('7.594000000032963e-05'))
+        assertEquals(-12.3G, ValueConverter.asBigDecimal('-0.123E+2'))
+    }
+
+    @Test
     void testAsBoolean() {
         assertEquals(true, ValueConverter.asBoolean(1))
         assertEquals(true, ValueConverter.asBoolean(1.0))
@@ -28,38 +34,11 @@ class ValueConverterTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
-    @SuppressWarnings("removal")
-    void testAsYearMonth() {
-        def expected = YearMonth.of(2023, 5)
-        assertEquals(expected, ValueConverter.asYearMonth(new Date(2023 - 1900, 4, 10)))
-        assertEquals(expected, ValueConverter.asYearMonth(new GregorianCalendar(2023, 4, 10)))
-        assertEquals(expected, ValueConverter.asYearMonth(LocalDate.of(2023, 5, 10)))
-        assertEquals(expected, ValueConverter.asYearMonth("2023-05"))
-    }
-
-    @Test
     void testAsLong() {
         assertEquals(2001251L, ValueConverter.asLong('2001251.0'))
         assertEquals(2001251L, ValueConverter.convert('2001251.0', Long))
         assertEquals(2001251L, ValueConverter.convert(2001251, Long))
         assertEquals(2001251L, ValueConverter.convert(2001251.9, Long))
-    }
-
-    @Test
-    void testIsNumeric() {
-        NumberFormat enFormat = NumberFormat.getInstance(Locale.ENGLISH)
-        NumberFormat swFormat = NumberFormat.getInstance(new Locale("sv","SE"))
-        assertTrue(ValueConverter.isNumeric('123'))
-        assertTrue(ValueConverter.isNumeric('123.4', enFormat))
-        assertTrue(ValueConverter.isNumeric('123,4', swFormat))
-        assertTrue(ValueConverter.isNumeric('-123'))
-        assertTrue(ValueConverter.isNumeric(-123))
-        assertTrue(ValueConverter.isNumeric(123_234.5))
-        assertFalse(ValueConverter.isNumeric('12ab3'))
-        assertFalse(ValueConverter.isNumeric('abc'))
-        assertFalse(ValueConverter.isNumeric(LocalDate.now()))
-        assertFalse(ValueConverter.isNumeric(null))
     }
 
     @Test
@@ -82,11 +61,15 @@ class ValueConverterTest {
     }
 
     @Test
-    void testConvertWithNullFallback() {
-        assertEquals((int)1, ValueConverter.convert(1, int, null, null, 0))
-        assertEquals((int)0, ValueConverter.convert(null, int, null, null, 0))
-        def d = LocalDate.of(2024,10,27)
-        assertEquals(d, ValueConverter.convert(null, LocalDate, null, null, d))
+    void testAsDouble() {
+        assertEquals(.00007594000000032963d, ValueConverter.asDouble('7.594000000032963e-05'))
+        assertEquals(-12.3d, ValueConverter.asDouble('-0.123E+2'))
+    }
+
+    @Test
+    void testAsFloat() {
+        assertEquals(.00007594000000032963f, ValueConverter.asFloat('7.594000000032963e-05'))
+        assertEquals(-12.3f, ValueConverter.asFloat('-0.123E+2'))
     }
 
     @Test
@@ -113,7 +96,37 @@ class ValueConverterTest {
     }
 
     @Test
-    void testAsBigDecimal() {
-        assertEquals(.00007594000000032963, ValueConverter.asBigDecimal('7.594000000032963e-05'))
+    void testIsNumeric() {
+        NumberFormat enFormat = NumberFormat.getInstance(Locale.ENGLISH)
+        NumberFormat swFormat = NumberFormat.getInstance(new Locale("sv","SE"))
+        assertTrue(ValueConverter.isNumeric('123'))
+        assertTrue(ValueConverter.isNumeric('123.4', enFormat))
+        assertTrue(ValueConverter.isNumeric('123,4', swFormat))
+        assertTrue(ValueConverter.isNumeric('-123'))
+        assertTrue(ValueConverter.isNumeric(-123))
+        assertTrue(ValueConverter.isNumeric(123_234.5))
+        assertFalse(ValueConverter.isNumeric('12ab3'))
+        assertFalse(ValueConverter.isNumeric('abc'))
+        assertFalse(ValueConverter.isNumeric(LocalDate.now()))
+        assertFalse(ValueConverter.isNumeric(null))
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    @SuppressWarnings("removal")
+    void testAsYearMonth() {
+        def expected = YearMonth.of(2023, 5)
+        assertEquals(expected, ValueConverter.asYearMonth(new Date(2023 - 1900, 4, 10)))
+        assertEquals(expected, ValueConverter.asYearMonth(new GregorianCalendar(2023, 4, 10)))
+        assertEquals(expected, ValueConverter.asYearMonth(LocalDate.of(2023, 5, 10)))
+        assertEquals(expected, ValueConverter.asYearMonth("2023-05"))
+    }
+
+    @Test
+    void testConvertWithNullFallback() {
+        assertEquals((int)1, ValueConverter.convert(1, int, null, null, 0))
+        assertEquals((int)0, ValueConverter.convert(null, int, null, null, 0))
+        def d = LocalDate.of(2024,10,27)
+        assertEquals(d, ValueConverter.convert(null, LocalDate, null, null, d))
     }
 }
