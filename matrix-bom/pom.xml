@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-bom-tests</artifactId>
-  <version>1.1.1</version>
+  <version>1.1.2-SNAPSHOT</version>
   <name>Test of Matrix BOM</name>
   <packaging>jar</packaging>
   <url>https://github.com/Alipsa/matrix</url>
