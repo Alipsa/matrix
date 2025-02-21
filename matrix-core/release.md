@@ -1,9 +1,7 @@
 # Matrix core Release history
 
-### 2.3.1, in progress
-- dont strip out non numeric characters if converting from String to BigDecimal 
-  to support formats such as '7.594000000032963e-05'
-- 
+### 2.3.1, i2025-02-21
+- Dont strip out non-numeric characters when converting from String to BigDecimal, Double and Float to support scientific notation e.g. '7.594000000032963e-05'
 
 ### 2.3.0, 2025-02-16
 - Add pivot (rows to columns) and unPivot (columns to rows) methods to a Matrix
