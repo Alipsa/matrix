@@ -5,7 +5,7 @@
   <!-- deploy with mvn -Prelease -f bom.xml deploy -->
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-bom</artifactId>
-  <version>1.1.2-SNAPSHOT</version>
+  <version>1.1.2</version>
   <name>Matrix Bill of Materials</name>
   <description>bom file for simpler dependency management of Matrix libraries</description>
   <packaging>pom</packaging>
@@ -30,7 +30,7 @@
     <url>https://github.com/Alipsa/matrix/tree/main</url>
   </scm>
   <properties>
-    <matrixCoreVersion>2.3.1-SNAPSHOT</matrixCoreVersion>
+    <matrixCoreVersion>2.3.1</matrixCoreVersion>
     <matrixStatsVersion>1.1.0</matrixStatsVersion><!-- no change -->
     <matrixSqlVersion>1.1.1</matrixSqlVersion>
     <matrixDatasetsVersion>1.1.0</matrixDatasetsVersion><!-- no change -->

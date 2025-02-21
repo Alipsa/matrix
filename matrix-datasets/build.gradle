@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 buildscript {
     dependencies {
-        classpath 'se.alipsa.groovy:nexus-release-plugin:1.0.0-SNAPSHOT'
+        classpath 'se.alipsa.groovy:nexus-release-plugin:1.0.1'
     }
 }
 

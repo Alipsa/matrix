@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 
 buildscript {
   dependencies {
-    classpath('se.alipsa.groovy:nexus-release-plugin:1.0.0-SNAPSHOT')
+    classpath('se.alipsa.groovy:nexus-release-plugin:1.0.1')
   }
 }
 plugins {

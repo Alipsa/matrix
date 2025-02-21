@@ -13,7 +13,7 @@ Matrix should work with any 4.x version of groovy, and probably older versions a
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:2.3.0'
+implementation 'se.alipsa.matrix:matrix-core:2.3.1'
 ```
 ...and the following for maven
 ```xml
@@ -21,7 +21,7 @@ implementation 'se.alipsa.matrix:matrix-core:2.3.0'
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>2.3.0</version>
+        <version>2.3.1</version>
     </dependency>
 </dependencies>
 ```
