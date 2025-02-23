@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 buildscript {
   dependencies {
-    classpath('se.alipsa.groovy:nexus-release-plugin:1.0.1')
+    classpath('se.alipsa:nexus-release-plugin:1.0.1')
   }
 }
 plugins {
@@ -173,7 +173,7 @@ signing {
 
 if (project.ext.properties.sonatypeUsername) {
 
-  apply plugin: 'nexus-release-plugin'
+  apply plugin: 'se.alipsa.nexus-release-plugin'
   //apply plugin: 'se.alipsa.groovy.NexusReleasePlugin'
   nexusReleasePlugin.nexusUrl = nexusUrl
   nexusReleasePlugin.userName = sonatypeUsername
