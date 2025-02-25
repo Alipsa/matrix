@@ -179,6 +179,15 @@ class MatrixDbUtil {
     return false
   }
 
+  Set<String> getTableNames(Connection con) throws SQLException {
+    var rs = con.getMetaData().getTables(null, null, null, null)
+    Set<String> names = new HashSet<>()
+    while (rs.next()) {
+      names << rs.getString('TABLE_NAME')
+    }
+    names
+  }
+
   int insert(Connection con, Matrix table) throws SQLException {
     insert(con, tableName(table), table)
   }
@@ -218,6 +227,6 @@ class MatrixDbUtil {
   }
 
   static ResultSet asResultSet(Matrix matrix) {
-
+    new MatrixResultSet(matrix)
   }
 }

@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.sql.MatrixSqlFactory
 
 import java.sql.Connection
 import java.sql.ResultSet
@@ -19,15 +20,9 @@ class MatrixSqlTest {
 
   @Test
   void testH2TableCreation() {
-    ConnectionInfo ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.3.232')
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'h2testdb').getAbsolutePath()
-    ci.setUrl("jdbc:h2:file:${tmpDb}")
-    ci.setUser('sa')
-    ci.setPassword('123')
-    ci.setDriver("org.h2.Driver")
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'h2testdb')
     Matrix airq = Dataset.airquality()
-    try (MatrixSql matrixSql = new MatrixSql(ci)) {
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')) {
 
       String tableName = matrixSql.tableName(airq)
       if (matrixSql.tableExists(tableName)) {
@@ -81,14 +76,8 @@ class MatrixSqlTest {
     .types(int, String, LocalDate)
     .build()
 
-    ConnectionInfo ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.3.232')
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb').getAbsolutePath()
-    ci.setUrl("jdbc:h2:file:${tmpDb}")
-    ci.setUser('sa')
-    ci.setPassword('123')
-    ci.setDriver("org.h2.Driver")
-    try(MatrixSql matrixSql = new MatrixSql(ci)) {
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb')
+    try(MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')) {
 
       String tableName = matrixSql.tableName(complexData)
 
@@ -120,18 +109,10 @@ class MatrixSqlTest {
     .types(int, int, String, LocalDate)
     .build()
 
-    ConnectionInfo ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.3.232')
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'pktestdb').getAbsolutePath()
-    ci.setUrl("jdbc:h2:file:${tmpDb}")
-    ci.setUser('sa')
-    ci.setPassword('123')
-    ci.setDriver("org.h2.Driver")
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'pktestdb')
 
-    try (MatrixSql matrixSql = new MatrixSql(ci)) {
-
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')) {
       String tableName = matrixSql.tableName(pkdata)
-
       if (matrixSql.tableExists(tableName)) {
         matrixSql.dropTable(tableName)
       }
@@ -151,18 +132,38 @@ class MatrixSqlTest {
 
   @Test
   void testDdl() {
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'ddltestdb')
+    String h2version = "2.3.232"
+    Matrix m = AbstractDbTest.getComplexData()
+    String props = "MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
+
     ConnectionInfo ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.3.232')
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'ddltestdb').getAbsolutePath()
-    ci.setUrl("jdbc:h2:file:${tmpDb};MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE")
+    ci.setDependency("com.h2database:h2:$h2version")
+    ci.setUrl("jdbc:h2:file:${tmpDb};$props")
     ci.setUser('sa')
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")
-    Matrix m = AbstractDbTest.getComplexData()
+    String ddl1
+    String ddl2
     try (MatrixSql sql = new MatrixSql(ci)) {
-      String ddl = sql.createDdl(m)
+      ddl1 = sql.createDdl(m)
       //check that DB detection works properly
-      assertTrue(ddl.contains('"local date time" datetime2'))
+      assertTrue(ddl1.contains('"local date time" datetime2'), "Expected to find datetime2 but was $ddl1")
     }
+
+    // Check that the factory creates the same MatrixSql as the explicit creation does
+    try (MatrixSql h2 = MatrixSqlFactory.createH2(tmpDb, 'sa', '123', props)) {
+      //println "using $h2.connectionInfo.dependency with url ${h2.connectionInfo.url}"
+      ddl2 = h2.createDdl(m)
+      String latestVersion = h2.connectionInfo.dependencyVersion
+      if (latestVersion != h2version) {
+        System.err.println("We are using version $h2version when explicitly specifying it but latest version is $latestVersion")
+        System.err.println("Consider updating it!")
+      }
+      //check that DB detection works properly
+      assertTrue(ddl2.contains('"local date time" datetime2'), "Expected to find datetime2 but was $ddl2")
+      assertEquals(ci.url, h2.connectionInfo.url, "Urls does not match")
+    }
+    assertEquals(ddl1, ddl2)
   }
 }

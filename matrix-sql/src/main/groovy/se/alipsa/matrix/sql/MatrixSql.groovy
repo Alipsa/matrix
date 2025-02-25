@@ -18,18 +18,20 @@ import java.util.stream.IntStream
 
 class MatrixSql implements Closeable {
 
-  ConnectionInfo ci
-  SqlTypeMapper mapper
-  MatrixDbUtil matrixDbUtil
-  Connection con
+  private ConnectionInfo ci
+  private SqlTypeMapper mapper
+  private MatrixDbUtil matrixDbUtil
+  private Connection con
 
   MatrixSql(ConnectionInfo ci) {
+    check(ci)
     this.ci = ci
     mapper = SqlTypeMapper.create(ci)
     matrixDbUtil = new MatrixDbUtil(mapper)
   }
 
   MatrixSql(ConnectionInfo ci, DataBaseProvider dbProvider) {
+    check(ci)
     this.ci = ci
     mapper = SqlTypeMapper.create(dbProvider)
     matrixDbUtil = new MatrixDbUtil(mapper)
@@ -68,6 +70,10 @@ class MatrixSql implements Closeable {
 
   boolean tableExists(Matrix table) throws SQLException {
     tableExists(tableName(table))
+  }
+
+  Set<String> getTableNames() throws SQLException {
+    matrixDbUtil.getTableNames(connect())
   }
 
 
@@ -201,7 +207,7 @@ class MatrixSql implements Closeable {
   synchronized Connection connect() throws SQLException {
     if (con == null) {
       String url = ci.getUrl().toLowerCase()
-      if (isBlank(ci.getPassword()) && !url.contains("passw") && !url.contains("integratedsecurity=true")) {
+      if (!url.contains(':h2:') &&isBlank(ci.getPassword()) && !url.contains("passw") && !url.contains("integratedsecurity=true")) {
         System.err.println("Password probably required to " + ci.getName() + " for " + ci.getUser())
       }
       con = dbConnect(ci)
@@ -262,5 +268,27 @@ class MatrixSql implements Closeable {
   private static boolean urlContainsLogin(String url) {
     String safeLcUrl = url.toLowerCase()
     return ( safeLcUrl.contains("user") && safeLcUrl.contains("pass") ) || safeLcUrl.contains("@")
+  }
+
+  static void check(ConnectionInfo connectionInfo) {
+    if (connectionInfo.getDependency() == null || connectionInfo.getDependency().isBlank()) {
+      throw new IllegalArgumentException("Dependency is required")
+    }
+  }
+
+  ConnectionInfo getConnectionInfo() {
+    return ci
+  }
+
+  SqlTypeMapper getSqlTypeMapper() {
+    return mapper
+  }
+
+  MatrixDbUtil getMatrixDbUtil() {
+    return matrixDbUtil
+  }
+
+  Connection getConnection() {
+    return con
   }
 }
