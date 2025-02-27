@@ -1,5 +1,6 @@
 package it
 
+import groovy.grape.Grape
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
@@ -32,19 +33,26 @@ abstract class AbstractDbTest {
 
   AbstractDbTest(DataBaseProvider db, String dbName, String mode, String... additionalSettings) {
     ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.3.232')
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), "$dbName").getAbsolutePath()
-    String settings = ''
-    if (mode != null && db != DataBaseProvider.H2) {
-      settings += "MODE=$mode"
+    if (db == DataBaseProvider.DERBY) {
+      ci.setDependency('org.apache.derby:derby:10.17.1.0;org.apache.derby:derbytools:10.17.1.0;org.apache.derby:derbyshared:10.17.1.0')
+      ci.setUrl("jdbc:derby:memory:$dbName;create=true")
+      ci.setDriver("org.apache.derby.jdbc.EmbeddedDriver")
+      //Grape.grab(ci.dependency) // does not work since junit is not running in a groovy class loader
+    } else {
+      ci.setDependency('com.h2database:h2:2.3.232')
+      def tmpDb = new File(System.getProperty('java.io.tmpdir'), "$dbName").getAbsolutePath()
+      String settings = ''
+      if (mode != null && db != DataBaseProvider.H2) {
+        settings += "MODE=$mode"
+      }
+      additionalSettings.each {
+        settings += ";$it"
+      }
+      ci.setUrl("jdbc:h2:file:${tmpDb};$settings")
+      ci.setUser('sa')
+      ci.setPassword('123')
+      ci.setDriver("org.h2.Driver")
     }
-    additionalSettings.each {
-      settings += ";$it"
-    }
-    ci.setUrl("jdbc:h2:file:${tmpDb};$settings")
-    ci.setUser('sa')
-    ci.setPassword('123')
-    ci.setDriver("org.h2.Driver")
     this.db = db
     matrixSql = new MatrixSql(ci, db)
     matrixDbUtil = new MatrixDbUtil(db)

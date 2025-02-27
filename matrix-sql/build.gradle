@@ -13,7 +13,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '1.1.2-SNAPSHOT'
+version = '2.0.0-SNAPSHOT'
 description = 'Groovy sql module for Matrix'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -41,7 +41,7 @@ repositories {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -74,6 +74,8 @@ dependencies {
     testImplementation libs.groovy
     testImplementation libs.groovySql
 
+    //testImplementation('org.apache.derby:derby:10.17.1.0') // needed because the below is needed (needs the same classloader
+    //testImplementation 'org.apache.derby:derbytools:10.17.1.0' // TODO this should also be loaded for embedded to work, figure out a way
     //testImplementation 'com.h2database:h2:2.2.224' // dynamically fetched so not needed
     testImplementation testLibs.junitJupiterApi
     testRuntimeOnly testLibs.junitJupiterEngine

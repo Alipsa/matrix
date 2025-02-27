@@ -1,6 +1,13 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
+## v2.0.0, In progress
+- add MatrixSqlFactory for simpler creation of some MatrixSql instances
+- add optional matrix name argument to MatrixSql.select()
+- Remove semicolon at the end of the ddl and insert statements to support Derby
+- MatrixBuilder: Handle byte[] when building from a result set. 
+- MatrixSql now requires Java 21 (hence semver bump to 2.0.0)
+
 ## v1.1.1, 2025-02-16
 - Remove dependency on gradle-tooling-api
 

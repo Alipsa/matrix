@@ -5,6 +5,7 @@ import se.alipsa.groovy.resolver.MavenRepoLookup
 
 class MatrixSqlFactory {
 
+  static String REPO_URL = "https://repo1.maven.org/maven2/"
   static MatrixSql createH2(String url, String user, String password, String additionalUrlProperties = null, String version = null) {
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDriver("org.h2.Driver")
@@ -19,11 +20,11 @@ class MatrixSqlFactory {
     if (version == null) {
       try {
         dependencyVersion = MavenRepoLookup
-            .fetchLatestArtifact('com.h2database', 'h2', "https://repo1.maven.org/maven2/")
+            .fetchLatestArtifact('com.h2database', 'h2', REPO_URL)
             .getVersion()
       } catch (Exception e) {
         dependencyVersion = '2.3.232'
-        System.err.println("Failed to fetch latest artifact, falling back to version $dependencyVersion, " + e)
+        System.err.println("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion, " + e)
       }
     } else {
       dependencyVersion = version
@@ -37,4 +38,24 @@ class MatrixSqlFactory {
     createH2("jdbc:h2:file:$dbFile.absolutePath", user, password, additionalUrlProperties, version)
   }
 
+  static MatrixSql createDerby(String dbName, String version = null) {
+    ConnectionInfo ci = new ConnectionInfo()
+    String dependencyVersion
+    if (version == null) {
+      try {
+        dependencyVersion = MavenRepoLookup
+            .fetchLatestArtifact('org.apache.derby', 'derby', REPO_URL)
+            .getVersion()
+      } catch (Exception e) {
+        dependencyVersion = '10.17.1.0'
+        System.err.println("Failed to fetch latest Derby artifact, falling back to version $dependencyVersion, " + e)
+      }
+    } else {
+      dependencyVersion = version
+    }
+    ci.setDependency("org.apache.derby:derby:$dependencyVersion;org.apache.derby:derbytools:$dependencyVersion;org.apache.derby:derbyshared:$dependencyVersion")
+    ci.setDriver("org.apache.derby.jdbc.EmbeddedDriver")
+    ci.setUrl("jdbc:derby:$dbName;create=true")
+    return new MatrixSql(ci)
+  }
 }

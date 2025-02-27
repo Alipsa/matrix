@@ -59,7 +59,16 @@ class MatrixDbUtil {
         throw new SQLException("Table $tableName already exists", "Cannot create $tableName since it already exists, no data copied to db")
       }
       result.ddlResult = stm.execute(sql)
+
+    } catch (SQLException e) {
+      System.err.println("Failed to create table $tableName using ddl: " + sql)
+      throw e
+    }
+    try {
       result.inserted = insert(con, tableName, table)
+    } catch (SQLException e) {
+      System.err.println("Failed to insert data to table $tableName", e)
+      throw e
     }
     result
   }
@@ -79,7 +88,7 @@ class MatrixDbUtil {
     if (primaryKey.length > 0) {
       sql += "\n , CONSTRAINT pk_" + table.getMatrixName() + " PRIMARY KEY (\"" + String.join("\", \"", primaryKey) + "\")"
     }
-    sql += "\n);"
+    sql += "\n)"
     sql
   }
 
@@ -199,7 +208,7 @@ class MatrixDbUtil {
         int i = 1
         row.each {
           // if there are issues we could use the setObject method that also takes a java.sql.Types
-          stm.setObject(i++, it)
+          stm.setObject(i++, mapper.convertToDbValue(it))
         }
         stm.addBatch()
       }
@@ -209,8 +218,11 @@ class MatrixDbUtil {
   }
 
   static String tableName(Matrix table) {
-    table.getMatrixName()
-        .replace(".", "_")
+    def name = table.getMatrixName()
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("Matrix name is required but was '$name'")
+    }
+    name.replace(".", "_")
         .replace("-", "_")
         .replace("*", "")
   }

@@ -45,8 +45,8 @@ class MatrixSql implements Closeable {
     con == null
   }
 
-  Matrix select(String sqlQuery) throws SQLException {
-    matrixDbUtil.select(connect(), sqlQuery)
+  Matrix select(String sqlQuery, String matrixName = 'myMatrix') throws SQLException {
+    matrixDbUtil.select(connect(), sqlQuery).withMatrixName(matrixName)
   }
 
   private int dbUpdate(String sqlQuery) throws SQLException  {
@@ -74,6 +74,10 @@ class MatrixSql implements Closeable {
 
   Set<String> getTableNames() throws SQLException {
     matrixDbUtil.getTableNames(connect())
+  }
+
+  Object executeQuery(String sql) throws SQLException {
+    matrixDbUtil.dbExecuteSql(connect(), sql)
   }
 
 
@@ -207,7 +211,9 @@ class MatrixSql implements Closeable {
   synchronized Connection connect() throws SQLException {
     if (con == null) {
       String url = ci.getUrl().toLowerCase()
-      if (!url.contains(':h2:') &&isBlank(ci.getPassword()) && !url.contains("passw") && !url.contains("integratedsecurity=true")) {
+      if (!url.contains(':h2:') && !url.contains(':derby:')
+          && isBlank(ci.getPassword()) && !url.contains("passw")
+          && !url.contains("integratedsecurity=true")) {
         System.err.println("Password probably required to " + ci.getName() + " for " + ci.getUser())
       }
       con = dbConnect(ci)
@@ -225,19 +231,26 @@ class MatrixSql implements Closeable {
   Connection dbConnect(ConnectionInfo ci) throws SQLException, IOException {
     Driver driver
     MavenUtils mvnUtils = new MavenUtils()
-    String[] dep = ci.getDependency().split(':')
-    File jar = mvnUtils.resolveArtifact(dep[0], dep[1], null, 'jar', dep[2])
-    URL url = jar.toURI().toURL()
-
     GroovyClassLoader cl
     if (this.class.getClassLoader() instanceof GroovyClassLoader) {
       cl = this.class.getClassLoader() as GroovyClassLoader
     } else {
       cl = new GroovyClassLoader()
     }
-
-    if (Arrays.stream(cl.getURLs()).noneMatch(p -> p == url)) {
-      cl.addURL(url)
+    String dependency = ci.getDependency()
+    List<String> dependencies = []
+    if (dependency.contains(';')) {
+      dependency.split(';').each {
+        dependencies << it
+      }
+    } else {
+      dependencies << dependency
+    }
+    dependencies.each { String d ->
+      String[] dep = d.split(':')
+      File jar = mvnUtils.resolveArtifact(dep[0], dep[1], null, 'jar', dep[2])
+      URL url = jar.toURI().toURL()
+      addToClassloader(cl, url)
     }
 
     try {
@@ -263,6 +276,12 @@ class MatrixSql implements Closeable {
       }
     }
     return driver.connect(ci.getUrl(), props)
+  }
+
+  private static void addToClassloader(GroovyClassLoader cl, URL url) {
+    if (Arrays.stream(cl.getURLs()).noneMatch(p -> p == url)) {
+      cl.addURL(url)
+    }
   }
 
   private static boolean urlContainsLogin(String url) {

@@ -33,7 +33,7 @@ class SqlGenerator {
       values.add('?')
     })
     sql.append(String.join(", ", values))
-    sql.append(' ); ')
+    sql.append(' ) ')
     return sql.toString()
   }
 

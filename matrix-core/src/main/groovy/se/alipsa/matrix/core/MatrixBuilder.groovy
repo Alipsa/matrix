@@ -378,11 +378,16 @@ class MatrixBuilder {
     List<Class> columnTypes = []
     for (int i = 1; i <= ncols; i++) {
       headers.add(rsmd.getColumnName(i))
-      try {
-        columnTypes.add(Class.forName(rsmd.getColumnClassName(i)))
-      } catch (ClassNotFoundException e) {
-        System.err.println "Failed to load class ${rsmd.getColumnClassName(i)}, setting type to Object; ${e.toString()}"
-        columnTypes.add(Object.class)
+      String columnClassName = rsmd.getColumnClassName(i)
+      if (columnClassName == "byte[]") {
+        columnTypes.add(byte[].class)
+      } else {
+        try {
+          columnTypes.add(Class.forName(columnClassName))
+        } catch (ClassNotFoundException e) {
+          System.err.println "Failed to load class $columnClassName, setting type to Object; ${e.toString()}"
+          columnTypes.add(Object.class)
+        }
       }
     }
     if (noColumnNames()) {
