@@ -60,7 +60,7 @@ public class BigDecimalColumnFormatter extends NumberColumnFormatter {
   }
 
   public static BigDecimalColumnFormatter currency(String language, String country) {
-    NumberFormat format = NumberFormat.getCurrencyInstance(new Locale(language, country));
+    NumberFormat format = NumberFormat.getCurrencyInstance(Locale.of(language, country));
     return new BigDecimalColumnFormatter(format);
   }
 

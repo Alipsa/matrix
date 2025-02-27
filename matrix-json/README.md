@@ -42,7 +42,7 @@ implementation 'se.alipsa.matrix:matrix-json:1.1.0'
 </dependencies>
 ```
 
-The jvm should be JDK 17 or higher.
+The jvm should be JDK 21 or higher.
 
 ## Exporting a Matrix to Json
 

@@ -13,19 +13,12 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1'
+version = '0.2-SNAPSHOT'
 description = "Groovy library for plotting with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-
-task wrapper(type: Wrapper) {
-  def gv = '8.10.2'
-  gradleVersion = gv
-  distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
-  validateDistributionUrl = true
-}
 
 repositories {
   if (version.endsWith('SNAPSHOT')) {
@@ -34,18 +27,14 @@ repositories {
   mavenCentral()
 }
 
-java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
-  }
-}
-
-tasks.withType(JavaCompile) {
+compileJava {
+  options.release = 21
   options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
 }
 
-tasks.withType(GroovyCompile) { task ->
-  task.options.deprecation = true
+compileGroovy {
+  options.deprecation = true
 }
 
 // we should consider using monocle to allow this to work for back-end headless apps:

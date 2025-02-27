@@ -7,7 +7,8 @@ class DerbyDbTest {
 
   @Test
   void testCreateTable() {
-    try (def derby = MatrixSqlFactory.createDerby("derbyTest")) {
+    File dbFile = new File('build/derbyTest.db')
+    try (def derby = MatrixSqlFactory.createDerby(dbFile)) {
       def result
       if (derby.tableExists('test')) {
         result = derby.executeQuery("drop table test")

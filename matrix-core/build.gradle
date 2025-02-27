@@ -16,25 +16,21 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.3.1'
+version = '3.0.0-SNAPSHOT'
 description = "Groovy library for working with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
-java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
-  }
-}
-
-tasks.withType(JavaCompile) {
+compileJava {
+  options.release = 21
   options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
 }
 
-tasks.withType(GroovyCompile) { task ->
-  task.options.deprecation = true
+compileGroovy {
+  options.deprecation = true
 }
 
 repositories {

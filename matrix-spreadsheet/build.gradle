@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '1.2.1'
+version = '2.0.0-SNAPSHOT'
 description = 'Groovy spreadsheet import/export'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -25,12 +25,14 @@ repositories {
     mavenCentral()
 }
 
-tasks.withType(JavaCompile) {
+compileJava {
+    options.release = 21
     options.deprecation = true
+    options.compilerArgs << "-Xlint:unchecked"
 }
 
-tasks.withType(GroovyCompile) { task ->
-    task.options.deprecation = true
+compileGroovy {
+    options.deprecation = true
 }
 
 dependencies {
@@ -51,12 +53,6 @@ dependencies {
     testImplementation testLibs.junitJupiterApi
     testRuntimeOnly testLibs.junitJupiterEngine
     testImplementation libs.groovy
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
 }
 
 test {

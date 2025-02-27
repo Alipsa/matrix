@@ -1,5 +1,8 @@
 # Release history
 
+## v2.0.0, In progress
+- Require JDK 21
+
 ## v1.1.0, 2025-01-06
 - adopt to matrix core 2.2.0
 

@@ -14,34 +14,22 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '1.1.1-SNAPSHOT'
+version = '2.0.0-SNAPSHOT'
 description = "Groovy library for importing structured text into a matrix"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
-// For some reason this is required to upgrade the wrapper
-// Change the version and run 'gradle wrapper' to upgrade
-task wrapper(type: Wrapper) {
-  def gv = '8.12'
-  gradleVersion = gv
-  distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
-  validateDistributionUrl = true
-}
 
-java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
-  }
-}
-
-tasks.withType(JavaCompile) {
+compileJava {
+  options.release = 21
   options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
 }
 
-tasks.withType(GroovyCompile) { task ->
-  task.options.deprecation = true
+compileGroovy {
+  options.deprecation = true
 }
 
 repositories {

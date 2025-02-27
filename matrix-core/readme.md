@@ -26,7 +26,7 @@ implementation 'se.alipsa.matrix:matrix-core:2.3.1'
 </dependencies>
 ```
 
-The jvm should be JDK 17 or higher. If using the matrix library from Java, you need to add a dependency for 
+The jvm should be JDK 21 or higher. If using the matrix library from Java, you need to add a dependency for 
 the groovy core library as well e.g:
 
 ```xml

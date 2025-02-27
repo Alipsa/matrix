@@ -1,5 +1,8 @@
 # Matrix core Release history
 
+### 3.0.0, In progress
+- Require JDK 21
+
 ### 2.3.1, i2025-02-21
 - Dont strip out non-numeric characters when converting from String to BigDecimal, Double and Float to support scientific notation e.g. '7.594000000032963e-05'
 

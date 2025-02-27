@@ -1,5 +1,8 @@
 # Matrix stats release history
 
+## v2.0.0, in progress
+- Require JDK 21
+
 ## v1.1.0, 2025-01-06
 - adapt to Matrix 2.2.0
 

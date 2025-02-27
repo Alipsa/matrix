@@ -1,5 +1,8 @@
 # Release history
 
+## v2.0.0, In progress
+- Require JDK 21
+
 ## v1.2.1, 2025-01-17
 - Fix ODS import for Percentage and Currency columns by converting them to Doubles
 - ExcelImporter now returns a LocalDate is no time info was specified to align with OdsImporter behavior 

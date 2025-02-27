@@ -38,6 +38,10 @@ class MatrixSqlFactory {
     createH2("jdbc:h2:file:$dbFile.absolutePath", user, password, additionalUrlProperties, version)
   }
 
+  static MatrixSql createDerby(File dbFile, String version = null) {
+    createDerby(dbFile.absolutePath, version)
+  }
+
   static MatrixSql createDerby(String dbName, String version = null) {
     ConnectionInfo ci = new ConnectionInfo()
     String dependencyVersion

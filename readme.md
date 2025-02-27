@@ -65,7 +65,7 @@ implementation('se.alipsa.matrix:matrix-core')
 </project>
 ```
 
-The jvm should be JDK 17 or higher.
+The jvm should be JDK 21 or higher.
 
 For more information see the readme file in each subproject,
 the test classes and the [Cookbook](cookbook/cookbook.md)

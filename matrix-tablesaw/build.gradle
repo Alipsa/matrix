@@ -30,19 +30,14 @@ repositories {
     mavenCentral()
 }
 
-task wrapper(type: Wrapper) {
-    def gv = '8.10.2'
-    gradleVersion = gv
-    distributionUrl = "https://services.gradle.org/distributions/gradle-$gv-bin.zip"
-    validateDistributionUrl = true
-}
-
-tasks.withType(JavaCompile) {
+compileJava {
+    options.release = 21
     options.deprecation = true
+    options.compilerArgs << "-Xlint:unchecked"
 }
 
-tasks.withType(GroovyCompile) { task ->
-    task.options.deprecation = true
+compileGroovy {
+    options.deprecation = true
 }
 
 dependencies {
@@ -75,16 +70,6 @@ dependencies {
     testImplementation "org.slf4j:slf4j-simple:2.0.16"
     testImplementation libs.groovy
     testImplementation libs.groovySql
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
-tasks.withType(JavaCompile) {
-    options.compilerArgs << "-Xlint:unchecked"
 }
 
 test {
