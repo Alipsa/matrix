@@ -51,7 +51,7 @@ dependencies {
         testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
         testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
     }*/
-    implementation 'se.alipsa.groovy:data-utils:1.0.7-SNAPSHOT'
+    implementation 'se.alipsa.groovy:data-utils:2.0.0-SNAPSHOT'
     //implementation 'org.gradle:gradle-tooling-api:8.12' dont think we need this
     implementation 'commons-io:commons-io:2.18.0'
     implementation 'se.alipsa.groovy:dependency-resolver:1.0.1-SNAPSHOT'
