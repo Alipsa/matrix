@@ -22,4 +22,5 @@ include 'matrix-examples:DecisionTree'
 include 'matrix-tablesaw'
 include 'matrix-parquet'
 include 'matrix-bigquery'
+include 'matrix-xchart'
 

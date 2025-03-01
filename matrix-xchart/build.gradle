@@ -1,0 +1,58 @@
+buildscript {
+    dependencies {
+        classpath('se.alipsa:nexus-release-plugin:1.0.1')
+    }
+}
+plugins {
+    id 'groovy'
+    id('java-library')
+    id('maven-publish')
+    id('signing')
+}
+
+group = 'se.alipsa.matrix'
+version = '0.1-SNAPSHOT'
+description = "Groovy library for creating charts with xcharts using matrix ([][] data)"
+
+ext.nexusUrl = version.contains("SNAPSHOT")
+    ? "https://oss.sonatype.org/content/repositories/snapshots/"
+    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+repositories {
+    if (version.endsWith('SNAPSHOT')) {
+        mavenLocal()
+    }
+    mavenCentral()
+}
+
+compileJava {
+    options.release = 21
+    options.deprecation = true
+    options.compilerArgs << "-Xlint:unchecked"
+}
+
+compileGroovy {
+    options.deprecation = true
+}
+
+dependencies {
+    compileOnly libs.groovy
+    compileOnly project(':matrix-core')
+    compileOnly project(':matrix-stats')
+
+    api 'org.knowm.xchart:xchart:3.8.8'
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation libs.groovy
+    testImplementation project(':matrix-core')
+    testImplementation project(':matrix-stats')
+    testImplementation project(':matrix-datasets')
+}
+
+test {
+    testLogging.showStandardStreams = true
+    // run using gradle -Pheadless=true test
+    jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+    useJUnitPlatform()
+}

@@ -47,10 +47,10 @@ class SwingStyler {
 
         if (style.legendPosition != null) {
             switch (style.legendPosition) {
-                case TOP -> styler.setLegendPosition(Styler.LegendPosition.InsideN)
-                case RIGHT -> styler.setLegendPosition(Styler.LegendPosition.OutsideE)
-                case BOTTOM -> styler.setLegendPosition(Styler.LegendPosition.OutsideS)
-                case LEFT -> styler.setLegendPosition(Styler.LegendPosition.InsideNW)
+                case Style.Position.TOP -> styler.setLegendPosition(Styler.LegendPosition.InsideN)
+                case Style.Position.RIGHT -> styler.setLegendPosition(Styler.LegendPosition.OutsideE)
+                case Style.Position.BOTTOM -> styler.setLegendPosition(Styler.LegendPosition.OutsideS)
+                case Style.Position.LEFT -> styler.setLegendPosition(Styler.LegendPosition.InsideNW)
             }
         }
 
