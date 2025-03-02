@@ -2,6 +2,7 @@ package se.alipsa.matrix.xchart
 
 import org.knowm.xchart.XYSeries
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
 
 class LineChart extends AbstractXYChart<LineChart> {
 

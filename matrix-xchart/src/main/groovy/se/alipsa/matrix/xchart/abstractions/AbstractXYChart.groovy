@@ -1,13 +1,13 @@
-package se.alipsa.matrix.xchart
+package se.alipsa.matrix.xchart.abstractions
 
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.XYSeries
-import org.knowm.xchart.style.PieStyler
 import org.knowm.xchart.style.XYStyler
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.xchart.MatrixTheme
 
 abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<T> {
 
@@ -30,6 +30,7 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
     style.defaultSeriesRenderStyle = chartType
   }
 
+  @Override
   XYChart getXchart() {
     return super.xchart as XYChart
   }

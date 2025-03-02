@@ -2,12 +2,11 @@ package se.alipsa.matrix.xchart
 
 import org.knowm.xchart.PieChartBuilder
 import org.knowm.xchart.PieSeries
-import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.PieStyler
-import org.knowm.xchart.style.Styler
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
+import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
 class PieChart extends AbstractChart<PieChart> {
 

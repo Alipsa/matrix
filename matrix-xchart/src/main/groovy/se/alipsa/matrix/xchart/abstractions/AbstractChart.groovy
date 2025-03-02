@@ -1,4 +1,4 @@
-package se.alipsa.matrix.xchart
+package se.alipsa.matrix.xchart.abstractions
 
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.VectorGraphicsEncoder
@@ -6,9 +6,10 @@ import org.knowm.xchart.XChartPanel
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYSeries
 import org.knowm.xchart.internal.chartpart.Chart
+import org.knowm.xchart.internal.chartpart.RenderableSeries
 import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.Styler
-import org.knowm.xchart.style.XYStyler
+import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 
 abstract class AbstractChart<T extends AbstractChart> {
@@ -47,7 +48,10 @@ abstract class AbstractChart<T extends AbstractChart> {
     new XChartPanel(xchart as XYChart)
   }
 
+  abstract <C extends Chart> C getXchart();
+
   abstract <S extends Series> S getSeries(String name);
 
   abstract <S extends Series> Map<String, S> getSeries();
+
 }
