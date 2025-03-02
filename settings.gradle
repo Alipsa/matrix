@@ -23,4 +23,5 @@ include 'matrix-tablesaw'
 include 'matrix-parquet'
 include 'matrix-bigquery'
 include 'matrix-xchart'
+include 'matrix-examples:XChartDemo'
 

@@ -1,10 +1,11 @@
-# Matrix core Release history
+# Matrix Core Release History
 
 ### 3.0.0, In progress
 - Require JDK 21
+- override getAt for Column to allow type conversion
 
 ### 2.3.1, i2025-02-21
-- Dont strip out non-numeric characters when converting from String to BigDecimal, Double and Float to support scientific notation e.g. '7.594000000032963e-05'
+- Don't strip out non-numeric characters when converting from String to BigDecimal, Double and Float to support scientific notation e.g. '7.594000000032963e-05'
 
 ### 2.3.0, 2025-02-16
 - Add pivot (rows to columns) and unPivot (columns to rows) methods to a Matrix

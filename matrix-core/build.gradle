@@ -99,12 +99,16 @@ test {
   }
 }
 
-task javadocJar(type: Jar, dependsOn: groovydoc) {
+
+tasks.register('javadocJar', Jar) {
+  dependsOn groovydoc
   archiveClassifier.set 'javadoc'
   from groovydoc.destinationDir
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
+
+tasks.register('sourcesJar', Jar) {
+  dependsOn classes
   archiveClassifier.set 'sources'
   from sourceSets.main.allSource
 }

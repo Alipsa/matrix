@@ -3,13 +3,9 @@ package se.alipsa.matrix.xchart.abstractions
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.VectorGraphicsEncoder
 import org.knowm.xchart.XChartPanel
-import org.knowm.xchart.XYChart
-import org.knowm.xchart.XYSeries
 import org.knowm.xchart.internal.chartpart.Chart
-import org.knowm.xchart.internal.chartpart.RenderableSeries
 import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.Styler
-import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 
 abstract class AbstractChart<T extends AbstractChart> {
@@ -44,8 +40,8 @@ abstract class AbstractChart<T extends AbstractChart> {
     VectorGraphicsEncoder.saveVectorGraphic(xchart, file.absolutePath, VectorGraphicsEncoder.VectorGraphicsFormat.SVG)
   }
 
-  XChartPanel exportSwing() {
-    new XChartPanel(xchart as XYChart)
+  <C extends Chart> XChartPanel<C> exportSwing() {
+    new XChartPanel<>(getXchart())
   }
 
   abstract <C extends Chart> C getXchart();

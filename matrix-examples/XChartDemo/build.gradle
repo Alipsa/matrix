@@ -1,0 +1,23 @@
+plugins {
+    id 'groovy'
+    id('application')
+}
+
+group = 'se.alipsa.matrix'
+version = '0.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(project(':matrix-core'))
+    implementation(project(':matrix-xchart'))
+    implementation(project(':matrix-datasets'))
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
