@@ -11,6 +11,7 @@ import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.stats.Sampler
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.parquet.MatrixParquetIO
+import se.alipsa.matrix.xchart.PieChart
 
 import static org.junit.jupiter.api.Assertions.*
 import org.apache.commons.csv.CSVFormat
@@ -133,4 +134,20 @@ class MatrixModulesTest {
     Assertions.assertEquals(data, d2)
   }
 
+  @Test
+  void testXChart() {
+    Matrix matrix = new MatrixBuilder().data(
+        metal: ['Gold', 'Silver', 'Platinum', 'Copper', 'Zinc'],
+        ratio: [24, 21, 39, 17, 40]
+    ).matrixName('Metal ratio')
+        .types(String, Number)
+        .build()
+
+    File file = new File("target/testPieChart.png")
+    def pc = PieChart.create(matrix)
+        .addSeries(matrix.metal, matrix.ratio)
+
+    pc.exportPng(file)
+    assertTrue(file.exists())
+  }
 }

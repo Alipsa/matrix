@@ -20,4 +20,11 @@ class ColumnExtension {
   static def leftShift(Column self, Collection list) {
     self.addAll(list)
   }
+
+  static Object getAt(Column self, Collection indices) {
+    if (indices.size() == 2 && indices[1] instanceof Class) {
+      return self.getAt(indices[0] as Number, indices[1] as Class)
+    }
+    self[indices]
+  }
 }

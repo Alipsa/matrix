@@ -40,6 +40,7 @@
     <matrixParquetVersion>0.2-SNAPSHOT</matrixParquetVersion>
     <matrixBigQueryVersion>0.2-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>0.2-SNAPSHOT</matrixChartsVersion>
+    <matrixXChartsVersion>0.1-SNAPSHOT</matrixXChartsVersion>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -92,6 +93,11 @@
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-charts</artifactId>
         <version>${matrixChartsVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-xchart</artifactId>
+        <version>${matrixXChartsVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

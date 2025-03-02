@@ -52,6 +52,10 @@ class Column extends ArrayList {
     this.type = type
   }
 
+  <T> T getAt(Number index, Class<T> type) {
+    ValueConverter.convert(this.get(index.intValue()), type)
+  }
+
   List plus(Object val) {
     List result = new Column()
     this.each {

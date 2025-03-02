@@ -3,20 +3,25 @@ package se.alipsa.matrix.xchart
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.XYSeries
+import org.knowm.xchart.style.PieStyler
 import org.knowm.xchart.style.XYStyler
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
-abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart {
+abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<T> {
 
-  AbstractXYChart(Matrix matrix, int width, int height,
+  AbstractXYChart(Matrix matrix, Integer width = null, Integer height = null,
                   XYSeries.XYSeriesRenderStyle chartType) {
     this.matrix = matrix
-    xchart = new XYChartBuilder()
-        .width(width)
-        .height(height)
-        .build()
+    XYChartBuilder builder = new XYChartBuilder()
+    if (width != null) {
+      builder.width = width
+    }
+    if (height != null) {
+      builder.height = height
+    }
+    xchart = builder.build()
     style.theme = new MatrixTheme()
     def matrixName = matrix.matrixName
     if (matrixName != null && !matrixName.isBlank()) {
@@ -25,17 +30,8 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart 
     style.defaultSeriesRenderStyle = chartType
   }
 
-  XYStyler getStyle() {
-    xchart.getStyler()
-  }
-
   XYChart getXchart() {
     return super.xchart as XYChart
-  }
-
-  T setTitle(String title) {
-    xchart.setTitle(title)
-    return this as T
   }
 
   T addSeries(String xValueCol, String yValueCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
@@ -61,11 +57,18 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart 
     this as T
   }
 
+  @Override
   XYSeries getSeries(String name) {
     xchart.getSeriesMap().get(name)
   }
 
+  @Override
   Map<String, XYSeries> getSeries() {
     xchart.getSeriesMap()
+  }
+
+  @Override
+  XYStyler getStyle() {
+    xchart.getStyler()
   }
 }

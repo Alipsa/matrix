@@ -94,6 +94,11 @@ class MatrixTheme extends AbstractBaseTheme {
   }
 
   @Override
+  boolean isPlotBorderVisible() {
+    return false
+  }
+
+  @Override
   Color getPlotGridLinesColor() {
     return ChartColor.DARK_GREY.getColor()
   }
