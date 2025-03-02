@@ -17,6 +17,8 @@ import java.awt.Font
  */
 class MatrixTheme extends AbstractBaseTheme {
 
+  static final List MARKERS = [SeriesMarkers.CIRCLE, SeriesMarkers.CROSS, SeriesMarkers.DIAMOND,
+                         SeriesMarkers.SQUARE, SeriesMarkers.TRIANGLE_UP]
   // Chart Style ///////////////////////////////
   @Override
   Color getChartFontColor() {

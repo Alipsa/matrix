@@ -38,7 +38,7 @@ class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractCha
   }
 
   T addSeries(Column xCol, Column yCol, CategorySeries.CategorySeriesRenderStyle renderStyle = null) {
-    addSeries(xCol.name, xCol, yCol, renderStyle)
+    addSeries(yCol.name, xCol, yCol, renderStyle)
   }
 
   T addSeries(String name, Column xCol, Column yCol, CategorySeries.CategorySeriesRenderStyle renderStyle = null) {

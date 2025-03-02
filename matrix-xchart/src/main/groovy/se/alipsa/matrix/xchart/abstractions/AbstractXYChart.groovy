@@ -43,15 +43,28 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
     addSeries(seriesName, matrix.column(xValueCol), matrix.column(yValueCol), renderStyle)
   }
 
+  T addSeries(String seriesName, String xValueCol, String yValueCol, String errorCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
+    addSeries(seriesName, matrix.column(xValueCol), matrix.column(yValueCol), matrix.column(errorCol), renderStyle)
+  }
+
   T addSeries(Column xCol, Column yCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
     addSeries(xCol.name, xCol, yCol, renderStyle)
   }
 
+  T addSeries(Column xCol, Column yCol, Column errorCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
+    addSeries(xCol.name, xCol, yCol, errorCol, renderStyle)
+  }
+
+  T addSeries(String name, Column xCol, Column yCol, Column errorCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
+    XYSeries xySeries = xchart.addSeries(name, xCol, yCol, errorCol)
+    if (renderStyle != null) {
+      xySeries.setXYSeriesRenderStyle(renderStyle)
+    }
+    this as T
+  }
+
   T addSeries(String name, Column xCol, Column yCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
-    XYSeries xySeries = xchart.addSeries(name,
-        ListConverter.toDoubleArray(xCol),
-        ListConverter.toDoubleArray(yCol)
-    )
+    XYSeries xySeries = xchart.addSeries(name, xCol, yCol)
     if (renderStyle != null) {
       xySeries.setXYSeriesRenderStyle(renderStyle)
     }

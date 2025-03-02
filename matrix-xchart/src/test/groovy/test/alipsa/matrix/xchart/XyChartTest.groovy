@@ -9,6 +9,9 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.xchart.AreaChart
 import se.alipsa.matrix.xchart.LineChart
+import se.alipsa.matrix.xchart.ScatterChart
+
+import java.awt.Color
 
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static org.knowm.xchart.XYSeries.XYSeriesRenderStyle.*
@@ -128,6 +131,63 @@ class XyChartTest {
 
     File file = new File("build/testAreaAndLineCombo.svg")
     ac.exportSvg(file)
+    assertTrue(file.exists())
+  }
+
+  @Test
+  void testScatterChart() {
+    List<Number> xData = []
+    List<Number> yData = []
+    Random random = new Random();
+    int size = 1000;
+    for (int i = 0; i < size; i++) {
+      xData << (random.nextGaussian() / 1000)
+      yData << (-1000000 + random.nextGaussian())
+    }
+    Matrix matrix = new MatrixBuilder().data(
+        xData: xData,
+        yData: yData
+    ).types(Number, Number)
+    .build()
+    def sc = ScatterChart.create(matrix)
+      .addSeries("Gaussian blob", "xData", "yData")
+    sc.style.setMarkerSize(14)
+    sc.style.setLegendPosition(Styler.LegendPosition.InsideSW)
+    File file = new File("build/testScatterChart.svg")
+    try(FileOutputStream fos = new FileOutputStream(file)) {
+      sc.exportSvg(fos)
+    }
+    assertTrue(file.exists())
+  }
+
+  @Test
+  void testScatterChartWithErrorBars() {
+    def xData = []
+    def yData = []
+    def errorBars = []
+    Random random = new Random();
+    for (int i = 0; i < 12; i++) {
+      xData << (random.nextGaussian() * 2)
+      yData << (20 + random.nextGaussian())
+      errorBars << Math.random() + .3
+    }
+    Matrix matrix = new MatrixBuilder().data(
+        xData: xData,
+        yData: yData,
+        error: errorBars
+    ).types([Number]*3)
+        .build()
+    def sc = ScatterChart.create(matrix)
+        .addSeries("10^(-x)", "xData", "yData", "error")
+
+    sc.getSeries('10^(-x)')
+        .setMarkerColor(Color.RED)
+        .setMarker(SeriesMarkers.SQUARE)
+    sc.style.setLegendPosition(Styler.LegendPosition.InsideSW)
+    File file = new File("build/testScatterChartWithErrorBars.png")
+    try(FileOutputStream fos = new FileOutputStream(file)) {
+      sc.exportPng(fos)
+    }
     assertTrue(file.exists())
   }
 }
