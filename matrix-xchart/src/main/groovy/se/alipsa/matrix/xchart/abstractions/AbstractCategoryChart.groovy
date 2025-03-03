@@ -3,12 +3,15 @@ package se.alipsa.matrix.xchart.abstractions
 import org.knowm.xchart.CategoryChart
 import org.knowm.xchart.CategoryChartBuilder
 import org.knowm.xchart.CategorySeries
+import org.knowm.xchart.internal.chartpart.Chart
+import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.CategoryStyler
+import org.knowm.xchart.style.Styler
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.MatrixTheme
 
-class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractChart<T> {
+class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractChart<T, CategoryChart, CategoryStyler, CategorySeries> {
 
   AbstractCategoryChart(Matrix matrix, Integer width = null, Integer height = null, CategorySeries.CategorySeriesRenderStyle chartType) {
     this.matrix = matrix
@@ -49,23 +52,4 @@ class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractCha
     this as T
   }
 
-  @Override
-  CategoryChart getXchart() {
-    super.xchart as CategoryChart
-  }
-
-  @Override
-  CategoryStyler getStyle() {
-    xchart.styler
-  }
-
-  @Override
-  CategorySeries getSeries(String name) {
-    xchart.seriesMap.get(name)
-  }
-
-  @Override
-  Map<String, CategorySeries> getSeries() {
-    xchart.seriesMap
-  }
 }

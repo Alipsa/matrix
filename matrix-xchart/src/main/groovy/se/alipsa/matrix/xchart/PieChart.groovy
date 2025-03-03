@@ -8,7 +8,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
-class PieChart extends AbstractChart<PieChart> {
+class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieStyler, PieSeries> {
 
   private PieChart(Matrix matrix, Integer width = null, Integer height = null) {
     super.matrix = matrix
@@ -53,20 +53,5 @@ class PieChart extends AbstractChart<PieChart> {
       xchart.addSeries(ValueConverter.asString(name), yCol[i, Number])
     }
     this
-  }
-
-  @Override
-  PieStyler getStyle() {
-    xchart.getStyler()
-  }
-
-  @Override
-  PieSeries getSeries(String name) {
-    xchart.getSeriesMap().get(name)
-  }
-
-  @Override
-  Map<String, PieSeries> getSeries() {
-    xchart.getSeriesMap()
   }
 }

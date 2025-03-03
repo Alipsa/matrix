@@ -8,9 +8,9 @@ import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.Styler
 import se.alipsa.matrix.core.Matrix
 
-abstract class AbstractChart<T extends AbstractChart> {
+abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> {
 
-  protected Chart xchart
+  protected C xchart
   protected Matrix matrix
 
   Matrix getMatrix() {
@@ -22,7 +22,9 @@ abstract class AbstractChart<T extends AbstractChart> {
     return this as T
   }
 
-  abstract <ST extends Styler> ST getStyle();
+  ST getStyle() {
+    return xchart.getStyler() as ST
+  }
 
   void exportPng(OutputStream os) {
     BitmapEncoder.saveBitmap(xchart, os, BitmapEncoder.BitmapFormat.PNG)
@@ -40,14 +42,20 @@ abstract class AbstractChart<T extends AbstractChart> {
     VectorGraphicsEncoder.saveVectorGraphic(xchart, file.absolutePath, VectorGraphicsEncoder.VectorGraphicsFormat.SVG)
   }
 
-  <C extends Chart> XChartPanel<C> exportSwing() {
+  XChartPanel<C> exportSwing() {
     new XChartPanel<>(getXchart())
   }
 
-  abstract <C extends Chart> C getXchart();
+  C getXchart() {
+    return this.xchart
+  }
 
-  abstract <S extends Series> S getSeries(String name);
+  S getSeries(String name) {
+    xchart.getSeriesMap().get(name)
+  }
 
-  abstract <S extends Series> Map<String, S> getSeries();
+  Map<String, S> getSeries() {
+    xchart.getSeriesMap()
+  }
 
 }

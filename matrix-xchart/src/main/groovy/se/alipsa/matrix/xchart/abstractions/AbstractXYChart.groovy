@@ -3,13 +3,16 @@ package se.alipsa.matrix.xchart.abstractions
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.XYSeries
+import org.knowm.xchart.internal.chartpart.Chart
+import org.knowm.xchart.internal.series.Series
+import org.knowm.xchart.style.Styler
 import org.knowm.xchart.style.XYStyler
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.MatrixTheme
 
-abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<T> {
+abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<T, XYChart, XYStyler, XYSeries> {
 
   AbstractXYChart(Matrix matrix, Integer width = null, Integer height = null,
                   XYSeries.XYSeriesRenderStyle chartType) {
@@ -28,11 +31,6 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
       title = matrix.matrixName
     }
     style.defaultSeriesRenderStyle = chartType
-  }
-
-  @Override
-  XYChart getXchart() {
-    return super.xchart as XYChart
   }
 
   T addSeries(String xValueCol, String yValueCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
@@ -69,20 +67,5 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
       xySeries.setXYSeriesRenderStyle(renderStyle)
     }
     this as T
-  }
-
-  @Override
-  XYSeries getSeries(String name) {
-    xchart.getSeriesMap().get(name)
-  }
-
-  @Override
-  Map<String, XYSeries> getSeries() {
-    xchart.getSeriesMap()
-  }
-
-  @Override
-  XYStyler getStyle() {
-    xchart.getStyler()
   }
 }
