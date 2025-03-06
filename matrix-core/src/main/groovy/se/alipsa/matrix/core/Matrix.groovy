@@ -921,12 +921,12 @@ class Matrix implements Iterable<Row> {
     equals(o, false, false, true)
   }
 
-  boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreName = false, boolean ignoreTypes = true, Double allowedDiff = 0.0001) {
+  boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName = false, boolean ignoreTypes = true, Double allowedDiff = 0.0001) {
     if (this.is(o)) return true
     if (!(o instanceof Matrix)) return false
 
     Matrix matrix = (Matrix) o
-    if (!ignoreName && mName != matrix.mName) {
+    if (!ignoreMatrixName && mName != matrix.mName) {
       println("Matrix.equals: names do not match")
       return false
     }
@@ -943,29 +943,38 @@ class Matrix implements Iterable<Row> {
       return false
     }
     //if (mColumns != matrix.mColumns) return false
-    boolean valueDiff = false
-    mColumns.eachWithIndex { List column, int i ->
-      def thatCol = matrix.column(i)
-      column.eachWithIndex { Object entry, int r ->
-        def thatVal = thatCol[r]
-        if (entry instanceof Number) {
-          def diff = Math.abs((entry as double) - ((thatVal ?: Double.NaN) as double))
-          if (diff > allowedDiff) {
-            valueDiff = true
-          }
-        } else {
-          if (entry != thatVal) {
-            valueDiff = true
-          }
-        }
-      }
-    }
-    if (valueDiff) {
-      println "Matrix.equals: value(s) differ"
+    List valueDiff = checkValues(matrix, allowedDiff)
+    if (valueDiff.size() > 0) {
+      println "Matrix.equals: value(s) differ: row ${valueDiff[0]}, column ${valueDiff[1]} expected ${valueDiff[2]} but was ${valueDiff[3]}"
       return false
     }
 
     return true
+  }
+
+  private List checkValues(Matrix matrix, Double allowedDiff) {
+    List valueDiff = []
+    int i = 0
+    for (List column in mColumns) {
+      def thatCol = matrix.column(i)
+      int r = 0
+      for (entry in column) {
+        def thatVal = thatCol[r]
+        if (entry instanceof Number) {
+          def diff = Math.abs((entry as double) - ((thatVal ?: Double.NaN) as double))
+          if (diff > allowedDiff) {
+            return [r, i, entry, thatVal]
+          }
+        } else {
+          if (entry != thatVal) {
+            return [r, i, entry, thatVal]
+          }
+        }
+        r++
+      }
+      i++
+    }
+    return valueDiff
   }
 
   /**

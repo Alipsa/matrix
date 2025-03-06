@@ -25,6 +25,8 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     }
     xchart = builder.build()
     style.theme = new MatrixTheme()
+    style.setPlotContentSize(1)
+    style.setShowValue(true)
     def matrixName = matrix.matrixName
     if (matrixName != null && !matrixName.isBlank()) {
       title = matrix.matrixName
@@ -45,16 +47,37 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     List<Number[]> heatData = []
     Number[] numberArray = new Number[]{}
     def tmpRows = []
+    int idx = 0
     for (int r = 0; r < nRows; r++) {
+      def tmpRow = []
       for (int c = 0; c < nCols; c++) {
-        heatData << [r, c, col[r+c]].toArray(numberArray)
-        tmpRows << [r, c, col[r+c]]
+        heatData << [c, r, col[idx]].toArray(numberArray)
+        tmpRow << col[idx]
+        idx++
       }
+      tmpRows << tmpRow
     }
-    def xData = 1..nRows
-    def yData = 1..nCols
     heatMapMatrix = new MatrixBuilder().rows(tmpRows).build()
-    xchart.addSeries(seriesName, xData, yData, heatData)
+    xchart.addSeries(seriesName, 1..nCols, 1..nRows, heatData)
+    this
+  }
+
+  HeatmapChart addSeries(String seriesName, Column... columns) {
+    int nCols = columns.length
+    int nRows = columns[0].size()
+    List<Number[]> heatData = []
+    final Number[] numberArray = new Number[]{}
+    def tmpRows = []
+    for (int r = 0; r < nRows; r++) {
+      def tmpRow = []
+      for (int c = 0; c < nCols; c++) {
+        heatData << [c, r, columns[c][r]].toArray(numberArray)
+        tmpRow << columns[c][r]
+      }
+      tmpRows << tmpRow
+    }
+    heatMapMatrix = new MatrixBuilder().rows(tmpRows).build()
+    xchart.addSeries(seriesName, 1..nCols, 1..nRows, heatData)
     this
   }
 }

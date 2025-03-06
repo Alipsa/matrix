@@ -15,6 +15,11 @@ class MatrixBuilder {
   List<List> columns
   List<Class> dataTypes
 
+  MatrixBuilder() {}
+  MatrixBuilder(String matrixName) {
+    this.matrixName = matrixName
+  }
+
   Matrix build() {
     new Matrix(matrixName, headerList, columns, dataTypes)
   }
