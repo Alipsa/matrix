@@ -3,6 +3,7 @@
 ### 3.0.0, In progress
 - Require JDK 21
 - override getAt for Column to allow type conversion
+- override minus for row to mean remove a column and return a new list
 
 ### 2.3.1, i2025-02-21
 - Don't strip out non-numeric characters when converting from String to BigDecimal, Double and Float to support scientific notation e.g. '7.594000000032963e-05'

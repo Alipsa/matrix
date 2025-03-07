@@ -1,6 +1,8 @@
 package se.alipsa.matrix.stats
 
+import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
@@ -160,6 +162,17 @@ class Normalize {
     } else {
       throw new IllegalArgumentException("$columnName is not a numeric column")
     }
+  }
+
+  static Matrix logNorm(Matrix table, int... decimals) {
+    List<List> columns = []
+    for (Column col in table.columns()) {
+      columns << logNorm(col, decimals)
+    }
+    new MatrixBuilder(table.matrixName)
+        .columns(columns)
+        .types(table.types())
+        .build()
   }
 
   /**
@@ -323,6 +336,22 @@ class Normalize {
     } else {
       throw new IllegalArgumentException("$columnName is not a numeric column")
     }
+  }
+
+  static Matrix minMaxNorm(Matrix table, int... decimals) {
+    List<List> columns = []
+    for (Column col in table.columns()) {
+      if (! Number.isAssignableFrom(col.type)) {
+        columns << col
+      } else {
+        columns << minMaxNorm(col, decimals)
+      }
+    }
+    new MatrixBuilder(table.matrixName)
+        .columns(columns)
+        .columnNames(table.columnNames())
+        .types(table.types())
+        .build()
   }
 
   /**
@@ -497,6 +526,22 @@ class Normalize {
     }
   }
 
+  static Matrix meanNorm(Matrix table, int... decimals) {
+    List<List> columns = []
+    for (Column col in table.columns()) {
+      if (! Number.isAssignableFrom(col.type)) {
+        columns << col
+      } else {
+        columns << meanNorm(col, decimals)
+      }
+    }
+    new MatrixBuilder(table.matrixName)
+        .columns(columns)
+        .columnNames(table.columnNames())
+        .types(table.types())
+        .build()
+  }
+
   /**
    * scales the distribution of data values so that the mean of the observed values
    * will be 0 and standard deviation will be 1 (a.k.a Z-score).
@@ -574,6 +619,7 @@ class Normalize {
     if (x == null || Float.isNaN(x) || sampleMean == null || Float.isNaN(sampleMean) || stdDeviation == null || Float.isNaN(stdDeviation)) {
       return Float.NaN
     }
+    println ("(x - sampleMean) / stdDeviation = ${(x - sampleMean) / stdDeviation}")
     def result = (x - sampleMean) / stdDeviation as BigDecimal
     if (decimals.length > 0) {
       return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
@@ -659,8 +705,7 @@ class Normalize {
 
     List<? extends Number> vals = []
     for (def x : column) {
-      def type = x.getClass()
-      vals.add(stdScaleNorm(x, convert(mean, type), convert(stdDev, type), decimals))
+      vals.add(stdScaleNorm(x, mean, stdDev, decimals))
     }
     return vals
   }
@@ -671,6 +716,22 @@ class Normalize {
     } else {
       throw new IllegalArgumentException("$columnName is not a numeric column")
     }
+  }
+
+  static Matrix stdScaleNorm(Matrix table, int... decimals) {
+    List<List> columns = []
+    for (Column col in table.columns()) {
+      if (! Number.isAssignableFrom(col.type)) {
+        columns << col
+      } else {
+        columns << stdScaleNorm(col, decimals)
+      }
+    }
+    new MatrixBuilder(table.matrixName)
+        .columns(columns)
+        .columnNames(table.columnNames())
+        .types(table.types())
+        .build()
   }
 
 }

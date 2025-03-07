@@ -2,6 +2,7 @@
 
 ## v2.0.0, in progress
 - Require JDK 21
+- overload Normalize methods with a way to normalize an entire matrix
 
 ## v1.1.0, 2025-01-06
 - adapt to Matrix 2.2.0

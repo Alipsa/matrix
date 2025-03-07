@@ -44,4 +44,12 @@ class RowExtension {
     throw new IllegalArgumentException("Dont know what to do with ${indices.size()} parameters ($indices) to getAt()")
   }
 
+  static minus(Row self, String name) {
+    self.minusColumn(name)
+  }
+
+  static minus(Row self, int index) {
+    self.minusColumn(index)
+  }
+
 }

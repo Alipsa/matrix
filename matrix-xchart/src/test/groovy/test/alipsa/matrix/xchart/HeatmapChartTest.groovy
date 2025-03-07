@@ -8,6 +8,8 @@ import org.knowm.xchart.style.Styler
 import org.knowm.xchart.style.theme.MatlabTheme
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixBuilder
+import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.stats.Normalize
 import se.alipsa.matrix.xchart.HeatmapChart
 import se.alipsa.matrix.xchart.MatrixTheme
 
@@ -78,5 +80,38 @@ class HeatmapChartTest {
     assertTrue(file3.exists())
     Matrix hmc3 = hmc.heatMapMatrix.withMatrixName("matrix chart3")
     assertTrue(hm.equals(hmc3,true, true, false), hm.diff(hmc3))
+  }
+
+  @Test
+  void testVerifyDistribution() {
+    def hmc = HeatmapChart.create(Dataset.mtcars())
+        .addAllSeriesBy('model')
+    hmc.xLabel = "Features"
+    hmc.yLabel = "Cars"
+    println hmc.heatMapMatrix.content()
+    File file = new File("build/testVerifyDistribution.png")
+    hmc.exportPng(file)
+    assertTrue(file.exists())
+  }
+
+  /**
+   * mimics
+   * heatmaply(
+   *   normalize(mtcars),
+   *   xlab = "Features",
+   *   ylab = "Cars",
+   *   main = "Data Scaling"
+   * )
+   */
+  @Test
+  void testNormalizedHeatmap() {
+    def mtcars = Normalize.minMaxNorm(Dataset.mtcars(), 5).withMatrixName("Data Scaling")
+    def hmc = HeatmapChart.create(mtcars).addAllSeriesBy('model')
+    hmc.xLabel = "Features"
+    hmc.yLabel = "Cars"
+    hmc.style.showValue = false
+    File file = new File("build/testNormalizedHeatmap.png")
+    hmc.exportPng(file)
+    assertTrue(file.exists())
   }
 }

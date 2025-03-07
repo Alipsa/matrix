@@ -440,6 +440,16 @@ class Row implements List<Object> {
         return String.valueOf(content)
     }
 
+    List minusColumn(String columnName) {
+        minusColumn(columnNames.indexOf(columnName))
+    }
+
+    List minusColumn(int index) {
+        def result = new ArrayList(this)
+        result.remove(index)
+        result
+    }
+
     /**
      * Disconnect the row from the underlying Matrix so that any data manipulation will not affect
      * the parent matrix.

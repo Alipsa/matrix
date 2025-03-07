@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize
 
 class NormalizeTest {
@@ -201,4 +202,10 @@ class NormalizeTest {
     Assertions.assertIterableEquals(exp, norm)
   }
 
+  @Test
+  void testNormalizeMatrix() {
+    def mtcars = Dataset.mtcars()
+    def m = Normalize.stdScaleNorm(mtcars)
+    assert mtcars['model'] == m['model']
+  }
 }

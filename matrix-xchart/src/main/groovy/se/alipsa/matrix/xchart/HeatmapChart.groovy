@@ -12,6 +12,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
 class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
+  final Number[] numberArray = new Number[]{}
   Matrix heatMapMatrix
 
   private HeatmapChart(Matrix matrix, Integer width = null, Integer height = null) {
@@ -66,7 +67,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     int nCols = columns.length
     int nRows = columns[0].size()
     List<Number[]> heatData = []
-    final Number[] numberArray = new Number[]{}
+
     def tmpRows = []
     for (int r = 0; r < nRows; r++) {
       def tmpRow = []
@@ -78,6 +79,28 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     }
     heatMapMatrix = new MatrixBuilder().rows(tmpRows).build()
     xchart.addSeries(seriesName, 1..nCols, 1..nRows, heatData)
+    this
+  }
+
+  HeatmapChart addAllSeriesBy(String columnName) {
+    int byIdx = matrix.columnIndex(columnName)
+    List<Number[]> heatData = []
+    def tmpRows = []
+    matrix.rows().eachWithIndex { row, r ->
+      def tmpRow = []
+      def valueRow = row - byIdx
+      valueRow.eachWithIndex { Object entry, int c ->
+        heatData << [c, r, entry as Number].toArray(numberArray)
+        tmpRow << entry
+      }
+      tmpRows << tmpRow
+    }
+    heatMapMatrix = new MatrixBuilder()
+        .rows(tmpRows)
+        .columnNames(matrix.columnNames() - columnName)
+        .build()
+    def colNames = matrix.columnNames() - columnName
+    xchart.addSeries(matrix.matrixName, colNames, matrix[columnName], heatData)
     this
   }
 }
