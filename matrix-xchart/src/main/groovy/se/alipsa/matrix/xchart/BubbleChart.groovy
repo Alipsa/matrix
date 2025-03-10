@@ -51,15 +51,7 @@ class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChar
       throw new IllegalArgumentException("The valueCol is null, cannot add series")
     }
     def s = xchart.addSeries(seriesName, xCol, yCol, valueCol)
-    // Make the fill transparent so that overlaps are visible
-    def colors = style.theme.seriesColors
-    if (numSeries > colors.size() - 1) {
-      def multiple = Math.ceil(style.theme.seriesColors.size() / numSeries).intValue()
-      colors = style.theme.seriesColors*multiple
-    }
-    def color = colors[numSeries]
-    //s.lineColor = color.darker()
-    s.fillColor = new Color(color.red, color.green, color.blue, transparency)
+    makeFillTransparent(s, numSeries, transparency)
     numSeries++
     this
   }

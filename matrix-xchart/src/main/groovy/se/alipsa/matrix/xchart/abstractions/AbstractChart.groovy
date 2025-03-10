@@ -8,6 +8,8 @@ import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.Styler
 import se.alipsa.matrix.core.Matrix
 
+import java.awt.Color
+
 abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> {
 
   protected C xchart
@@ -72,6 +74,18 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
 
   String getyLabel() {
     xchart.YAxisTitle
+  }
+
+  void makeFillTransparent(Series s, int numSeries, Integer transparency = 185) {
+    // Make the fill transparent so that overlaps are visible
+    def colors = style.theme.seriesColors
+    if (numSeries > colors.size() - 1) {
+      def multiple = Math.ceil(style.theme.seriesColors.size() / numSeries).intValue()
+      colors = style.theme.seriesColors*multiple
+    }
+    def color = colors[numSeries]
+    //s.lineColor = color.darker()
+    s.fillColor = new Color(color.red, color.green, color.blue, transparency)
   }
 
 }
