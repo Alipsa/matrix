@@ -5,8 +5,9 @@
 - override getAt for Column to allow type conversion
 - override minus for row to mean remove a column and return a new list
 - add Stat.iqr: inter quartile range
+- add ValueConverter for Number
 
-### 2.3.1, i2025-02-21
+### 2.3.1, 2025-02-21
 - Don't strip out non-numeric characters when converting from String to BigDecimal, Double and Float to support scientific notation e.g. '7.594000000032963e-05'
 
 ### 2.3.0, 2025-02-16

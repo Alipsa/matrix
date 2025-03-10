@@ -59,6 +59,7 @@ class ValueConverter {
       case Time -> (E) asSqlTIme(o)
       case Timestamp -> (E) asTimestamp(o)
       case java.util.Date -> (E) asDate(o, dateTimePattern)
+      case Number -> (E) asNumber(o)
       default -> try {
         type.cast(o)
       } catch (ClassCastException ignored) {
@@ -471,5 +472,12 @@ class ValueConverter {
       return o.toLocalTime()
     }
     return LocalTime.parse(String.valueOf(o))
+  }
+
+  static Number asNumber(Object o) {
+    if (o instanceof Number) {
+      return o as Number
+    }
+    asBigDecimal(o)
   }
 }

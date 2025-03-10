@@ -53,6 +53,7 @@ dependencies {
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-stats')
     testImplementation project(':matrix-datasets')
+    testImplementation(project(':matrix-csv'))
 }
 
 test {
