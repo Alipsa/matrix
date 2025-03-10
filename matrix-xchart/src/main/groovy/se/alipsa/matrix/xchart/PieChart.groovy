@@ -31,6 +31,16 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
     new PieChart(matrix, width, height)
   }
 
+  static PieChart createDonut(Matrix matrix, Integer width = null, Integer height = null) {
+    def chart = new PieChart(matrix, width, height)
+    chart.style.setDefaultSeriesRenderStyle(PieSeries.PieSeriesRenderStyle.Donut)
+    chart.style.setLabelType(PieStyler.LabelType.NameAndValue)
+    chart.style.setLabelsDistance(.82);
+    chart.style.setPlotContentSize(.9);
+    chart.style.setSumVisible(true);
+    chart
+  }
+
   org.knowm.xchart.PieChart getXchart() {
     return super.xchart as org.knowm.xchart.PieChart
   }

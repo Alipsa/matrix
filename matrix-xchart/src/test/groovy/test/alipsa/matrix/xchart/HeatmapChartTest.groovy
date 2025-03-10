@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder
-import org.knowm.xchart.style.Styler
-import org.knowm.xchart.style.theme.MatlabTheme
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.datasets.Dataset
@@ -85,7 +83,7 @@ class HeatmapChartTest {
   @Test
   void testVerifyDistribution() {
     def hmc = HeatmapChart.create(Dataset.mtcars())
-        .addAllSeriesBy('model')
+        .addAllToSeriesBy('model')
     hmc.xLabel = "Features"
     hmc.yLabel = "Cars"
     println hmc.heatMapMatrix.content()
@@ -106,7 +104,7 @@ class HeatmapChartTest {
   @Test
   void testNormalizedHeatmap() {
     def mtcars = Normalize.minMaxNorm(Dataset.mtcars(), 5).withMatrixName("Data Scaling")
-    def hmc = HeatmapChart.create(mtcars).addAllSeriesBy('model')
+    def hmc = HeatmapChart.create(mtcars).addAllToSeriesBy('model')
     hmc.xLabel = "Features"
     hmc.yLabel = "Cars"
     hmc.style.showValue = false

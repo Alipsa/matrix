@@ -17,12 +17,13 @@ import java.awt.Font
  */
 class MatrixTheme extends AbstractBaseTheme {
 
+  static final Color TEXT_COLOR = ChartColor.DARK_GREY.getColor().darker().darker()
   static final List MARKERS = [SeriesMarkers.CIRCLE, SeriesMarkers.CROSS, SeriesMarkers.DIAMOND,
                          SeriesMarkers.SQUARE, SeriesMarkers.TRIANGLE_UP]
   // Chart Style ///////////////////////////////
   @Override
   Color getChartFontColor() {
-    ChartColor.DARK_GREY.getColor()
+    TEXT_COLOR
   }
 
 // SeriesMarkers, SeriesLines, SeriesColors ///////////////////////////////
@@ -53,7 +54,7 @@ class MatrixTheme extends AbstractBaseTheme {
 
   @Override
   Color getLegendBorderColor() {
-    return ChartColor.DARK_GREY.getColor()
+    return TEXT_COLOR
   }
 
   // Chart Axes ///////////////////////////////
@@ -70,7 +71,7 @@ class MatrixTheme extends AbstractBaseTheme {
 
   @Override
   Color getAxisTickMarksColor() {
-    return ChartColor.DARK_GREY.getColor()
+    return TEXT_COLOR
   }
 
   @Override
@@ -92,7 +93,7 @@ class MatrixTheme extends AbstractBaseTheme {
 
   @Override
   Color getPlotBorderColor() {
-    return ChartColor.DARK_GREY.getColor()
+    return TEXT_COLOR
   }
 
   @Override
@@ -102,7 +103,7 @@ class MatrixTheme extends AbstractBaseTheme {
 
   @Override
   Color getPlotGridLinesColor() {
-    return ChartColor.DARK_GREY.getColor()
+    return TEXT_COLOR
   }
 
   @Override
@@ -125,12 +126,12 @@ class MatrixTheme extends AbstractBaseTheme {
 
   @Override
   Color getToolTipBorderColor() {
-    return ChartColor.DARK_GREY.getColor()
+    return TEXT_COLOR
   }
 
   @Override
   Color getToolTipHighlightColor() {
-    return ChartColor.DARK_GREY.getColor()
+    return TEXT_COLOR
   }
 
   // Category Charts ///////////////////////////////
