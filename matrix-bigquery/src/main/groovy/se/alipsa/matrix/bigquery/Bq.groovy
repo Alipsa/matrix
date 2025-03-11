@@ -1,8 +1,9 @@
 package se.alipsa.matrix.bigquery
 
 import com.google.api.gax.paging.Page
-import com.google.api.services.bigquery.model.ProjectList
-import se.alipsa.matrix.core.ValueConverter
+import com.google.cloud.resourcemanager.v3.Project
+import com.google.cloud.resourcemanager.v3.ProjectsClient
+import com.google.cloud.resourcemanager.v3.ProjectsSettings
 
 import static se.alipsa.matrix.bigquery.TypeMapper.*
 import com.google.auth.oauth2.GoogleCredentials
@@ -166,7 +167,7 @@ class Bq {
       colTypes << it.type
     }
 
-    println "Bq.convertToMatrix: result contains $result.totalRows rows"
+    //println "Bq.convertToMatrix: result contains $result.totalRows rows"
     //println "Bq.convertToMatrix: Column names in bq result are ${colNames}"
     //println "Bq.convertToMatrix: Column types in bq result are ${colTypes}"
     List<List> rows = []
@@ -191,7 +192,7 @@ class Bq {
     try {
       Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(100))
       if (datasets == null) {
-        System.out.println("Dataset does not contain any models")
+        println("Dataset does not contain any models")
         return []
       }
       return datasets
@@ -204,11 +205,11 @@ class Bq {
     }
   }
 
-  List<String> getProjects() throws BqException {
-    // TODO, this is not the wayt to do it, Maybe use resource manager API?
-    new ProjectList().getProjects().collect {
-      it.getId()
-    }
+  List<Project> getProjects() throws BqException {
+    ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
+    ProjectsClient projectsClient = ProjectsClient.create(projectsSettings)
+    ProjectsClient.SearchProjectsPagedResponse searchProjectsPagedResponse = projectsClient.searchProjects("")
+    searchProjectsPagedResponse.iterateAll().collect()
   }
 
   List<String> getTableNames(String datasetName) throws BqException {
@@ -245,7 +246,7 @@ class Bq {
     try {
       Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetName))
       if (dataset != null) {
-        System.out.println("Dataset $datasetName already exists.")
+        println("Dataset $datasetName already exists.")
         return dataset
       }
       def builder = DatasetInfo.newBuilder(datasetName)
@@ -283,9 +284,9 @@ class Bq {
       DatasetId datasetId = DatasetId.of(projectId, datasetName)
       boolean success = bigQuery.delete(datasetId, DatasetDeleteOption.deleteContents())
       if (success) {
-        System.out.println("Dataset $datasetName deleted successfully");
+        println("Dataset $datasetName deleted successfully");
       } else {
-        System.out.println("Dataset $datasetName was not found");
+        println("Dataset $datasetName was not found");
       }
       return success
     } catch (BigQueryException e) {

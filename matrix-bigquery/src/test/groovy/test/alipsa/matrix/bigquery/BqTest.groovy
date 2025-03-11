@@ -1,10 +1,16 @@
 package test.alipsa.matrix.bigquery
 
+import com.google.cloud.resourcemanager.v3.ListProjectsRequest
+import com.google.cloud.resourcemanager.v3.ProjectsClient
+import com.google.cloud.resourcemanager.v3.ProjectsSettings
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
+
+import static org.junit.jupiter.api.Assertions.assertNotNull
 
 /**
  * The GCloud testcontainer project is not yet mature enough to rely on so
@@ -41,9 +47,9 @@ class BqTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    System.err.println("List projects is not working yet")
     Bq bq = new Bq()
-    println "Projects are ${bq.getProjects()}"
+    println "Projects are ${bq.getProjects().collect{it.displayName}}"
+
   }
 
   @Test
@@ -115,6 +121,7 @@ class BqTest {
     //tableNames.each {println it}
     // println "Table info for tableNames[0]"
     Matrix tableInfo = bq.getTableInfo(ds[0], tableNames[0])
-    println tableInfo.content()
+    assertNotNull(tableInfo)
+    //println tableInfo.content()
   }
 }
