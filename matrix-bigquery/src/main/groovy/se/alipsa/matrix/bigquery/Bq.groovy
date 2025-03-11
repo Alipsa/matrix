@@ -206,10 +206,14 @@ class Bq {
   }
 
   List<Project> getProjects() throws BqException {
-    ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
-    ProjectsClient projectsClient = ProjectsClient.create(projectsSettings)
-    ProjectsClient.SearchProjectsPagedResponse searchProjectsPagedResponse = projectsClient.searchProjects("")
-    searchProjectsPagedResponse.iterateAll().collect()
+    try {
+      ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
+      ProjectsClient projectsClient = ProjectsClient.create(projectsSettings)
+      ProjectsClient.SearchProjectsPagedResponse searchProjectsPagedResponse = projectsClient.searchProjects("")
+      searchProjectsPagedResponse.iterateAll().collect()
+    } catch (BigQueryException e) {
+      throw new BqException(e)
+    }
   }
 
   List<String> getTableNames(String datasetName) throws BqException {
