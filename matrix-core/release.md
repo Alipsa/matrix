@@ -6,6 +6,9 @@
 - override minus for row to mean remove a column and return a new list
 - add Stat.iqr: inter quartile range
 - add ValueConverter for Number
+- add Number -> YearMonth conversion to ValueConverter
+- ValueConverter.asString() now returns null when converting a null instead of 'null'
+- add null value handling/assignment to all ValueConverter methods
 
 ### 2.3.1, 2025-02-21
 - Don't strip out non-numeric characters when converting from String to BigDecimal, Double and Float to support scientific notation e.g. '7.594000000032963e-05'

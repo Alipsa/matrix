@@ -51,6 +51,7 @@ dependencies {
     //implementation 'com.jerolba:carpet-record:0.2.1' must be loaded by Grab for now
     testImplementation testLibs.junitJupiterApi
     testRuntimeOnly testLibs.junitJupiterEngine
+    testRuntimeOnly testLibs.junitPlatformLauncher
     testImplementation libs.groovy
     testImplementation 'org.apache.logging.log4j:log4j-core:2.24.3'
 }

@@ -705,7 +705,8 @@ class Normalize {
 
     List<? extends Number> vals = []
     for (def x : column) {
-      vals.add(stdScaleNorm(x, mean, stdDev, decimals))
+      Class<? extends Number> cls = x.getClass()
+      vals.add(stdScaleNorm(x as Number, mean, stdDev, decimals).asType(cls))
     }
     return vals
   }

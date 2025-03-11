@@ -2,7 +2,7 @@ dependencyResolutionManagement {
   versionCatalogs {
 
     libs {
-      def groovyVersion="4.0.25"
+      def groovyVersion="4.0.26"
       library('groovy', "org.apache.groovy:groovy:$groovyVersion")
       library('groovySql', "org.apache.groovy:groovy-sql:$groovyVersion")
       library('groovyGinq', "org.apache.groovy:groovy-ginq:$groovyVersion")
@@ -11,10 +11,14 @@ dependencyResolutionManagement {
     }
 
     testLibs {
-      def junitVersion = '5.11.4'
+      def junitVersion = '5.12.0'
+      def junitPlatformVersion = '1.12.0'
+      library('junitPlatformEngine', "org.junit.platform:junit-platform-engine:$junitPlatformVersion")
+      library('junitPlatformLauncher', "org.junit.platform:junit-platform-launcher:$junitPlatformVersion")
       library('junitJupiter', "org.junit.jupiter:junit-jupiter:$junitVersion")
       library('junitJupiterEngine', "org.junit.jupiter:junit-jupiter-engine:$junitVersion")
       library('junitJupiterApi', "org.junit.jupiter:junit-jupiter-api:$junitVersion")
+      library('slf4jSimple', "org.slf4j:slf4j-simple:2.0.17")
     }
   }
 }

@@ -59,7 +59,7 @@ dependencies {
   } else if (os.isMacOsX()) {
     qualifier = 'mac-aarch64'
   }
-  def javaFxVersion = '23.0.1'
+  def javaFxVersion = '23.0.2'
   // compile only dependencies are not included in the pom
   compileOnly libs.groovy
   //if (version.endsWith('SNAPSHOT')) {
@@ -95,6 +95,7 @@ dependencies {
   testImplementation "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
   testImplementation testLibs.junitJupiter
   testRuntimeOnly testLibs.junitJupiterEngine
+  testRuntimeOnly testLibs.junitPlatformLauncher
   testImplementation libs.groovySql
   //testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
 }

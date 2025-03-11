@@ -47,8 +47,8 @@ dependencies {
 
     api 'org.knowm.xchart:xchart:3.8.8'
 
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation testLibs.junitJupiter
+    testRuntimeOnly testLibs.junitPlatformLauncher
     testImplementation libs.groovy
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-stats')

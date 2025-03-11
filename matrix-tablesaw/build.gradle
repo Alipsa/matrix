@@ -12,7 +12,7 @@ plugins {
     id('signing')
     id('maven-publish')
     //id('io.github.gradle-nexus.publish-plugin') version '2.0.0'
-    id("com.github.ben-manes.versions").version("0.51.0")
+    id("com.github.ben-manes.versions").version("0.52.0")
 }
 
 group = 'se.alipsa.matrix'
@@ -56,7 +56,7 @@ dependencies {
     compileOnly project(':matrix-core')
     compileOnly project(':matrix-stats')
     // for XlsxWriter, TODO: remove once contributed to tablesaw
-    implementation 'org.apache.poi:poi-ooxml:5.3.0'
+    implementation 'org.apache.poi:poi-ooxml:5.4.0'
     // for OdsReader and Writer, TODO: remove once contributed to tablesaw
     implementation 'com.github.miachm.sods:SODS:1.6.7'
     // for XmlReader and writer, TODO: remove once contributed to tablesaw
@@ -66,8 +66,9 @@ dependencies {
     testImplementation project(':matrix-stats')
     testImplementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
     testImplementation testLibs.junitJupiter
+    testRuntimeOnly testLibs.junitPlatformLauncher
     testImplementation 'com.h2database:h2:2.3.232'
-    testImplementation "org.slf4j:slf4j-simple:2.0.16"
+    testImplementation testLibs.slf4jSimple
     testImplementation libs.groovy
     testImplementation libs.groovySql
 }

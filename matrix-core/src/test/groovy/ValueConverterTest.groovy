@@ -120,6 +120,7 @@ class ValueConverterTest {
         assertEquals(expected, ValueConverter.asYearMonth(new GregorianCalendar(2023, 4, 10)))
         assertEquals(expected, ValueConverter.asYearMonth(LocalDate.of(2023, 5, 10)))
         assertEquals(expected, ValueConverter.asYearMonth("2023-05"))
+        assertEquals(expected, ValueConverter.asYearMonth(202305.0))
     }
 
     @Test

@@ -118,7 +118,7 @@ class SpreadsheetImporter {
     } else {
       file = String.valueOf(fp)
     }
-    println "importSpreadsheet, parase = $params"
+    println "importSpreadsheet, parse = $params"
     def sheet = params.get("sheet")
     if (sheet == null) {
       sheet = params.get("sheetNumber")

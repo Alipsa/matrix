@@ -72,7 +72,7 @@ class HeatmapChartTest {
     ).types([Number]*4)
         .build()
     def hmc = HeatmapChart.create(m2, 1000, 600)
-    .addSeries("Basic HeatMap", m2['c1'], m2['c2'], m2['c3'], m2['c4'])
+    .addSeries("Basic HeatMap", [m2['c1'], m2['c2'], m2['c3'], m2['c4']])
     File file3 = new File("build/testHeatmap3.png")
     hmc.exportPng(file3)
     assertTrue(file3.exists())
@@ -86,7 +86,7 @@ class HeatmapChartTest {
         .addAllToSeriesBy('model')
     hmc.xLabel = "Features"
     hmc.yLabel = "Cars"
-    println hmc.heatMapMatrix.content()
+    //println hmc.heatMapMatrix.content()
     File file = new File("build/testVerifyDistribution.png")
     hmc.exportPng(file)
     assertTrue(file.exists())

@@ -49,12 +49,13 @@ dependencies {
     testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
     testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
   }*/
-  api 'org.apache.commons:commons-csv:1.12.0'
+  api 'org.apache.commons:commons-csv:1.13.0'
   compileOnly libs.groovy
   testImplementation libs.groovy
 
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
+  testRuntimeOnly testLibs.junitPlatformLauncher
 
 }
 

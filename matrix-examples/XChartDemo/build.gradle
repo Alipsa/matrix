@@ -14,8 +14,9 @@ dependencies {
     implementation(project(':matrix-core'))
     implementation(project(':matrix-xchart'))
     implementation(project(':matrix-datasets'))
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation testLibs.junitJupiter
+    //testImplementation platform('org.junit:junit-bom:5.10.0')
+    //testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
 test {

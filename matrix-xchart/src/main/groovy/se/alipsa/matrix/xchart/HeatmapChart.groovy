@@ -62,14 +62,14 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     this
   }
 
-  HeatmapChart addSeries(String seriesName, Column... columns) {
-    int nCols = columns.length
+  HeatmapChart addSeries(String seriesName, List<Column> columns) {
+    int nCols = columns.size()
     int nRows = columns[0].size()
     addSeries(seriesName, 1..nRows, 1..nCols, columns)
   }
 
-  HeatmapChart addSeries(String seriesName, List columnLabels, List rowLabels, Column... columns) {
-    int nCols = columns.length
+  HeatmapChart addSeries(String seriesName, List columnLabels, List rowLabels, List<Column> columns) {
+    int nCols = columns.size()
     int nRows = columns[0].size()
     List<Number[]> heatData = []
 

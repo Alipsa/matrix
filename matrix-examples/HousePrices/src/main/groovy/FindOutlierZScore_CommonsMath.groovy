@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 //@Grab('org.apache.commons:commons-math3:3.6.1')
-//@Grab('org.apache.commons:commons-csv:1.8')
+//@Grab('org.apache.commons:commons-csv:1.13.0')
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import static org.apache.commons.csv.CSVFormat.RFC4180 as CSV
