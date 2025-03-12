@@ -6,9 +6,9 @@ This module makes it simple to query data from Google Big Query and get the resu
 
 To use it, add the following to your gradle build script
 ```groovy
-implementation 'org.apache.groovy:groovy:4.0.25'
-implementation 'se.alipsa.matrix:matrix-core:2.2.0'
-implementation 'se.alipsa.matrix:matrix-bigquery:0.1'
+implementation 'org.apache.groovy:groovy:4.0.26'
+implementation 'se.alipsa.matrix:matrix-core:3.0.0'
+implementation 'se.alipsa.matrix:matrix-bigquery:0.2'
 ```
 To export and import data:
 ```groovy
@@ -38,3 +38,7 @@ License: Apache 2.0
 ## com.google.auth:google-auth-library-oauth2-http
 Used for authentication against Google Big Query
 License: BSD-3-Clause
+
+## com.google.cloud:google-cloud-resourcemanager
+Used for Google project and other resource operations
+License: Apache 2.0

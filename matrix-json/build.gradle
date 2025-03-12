@@ -1,17 +1,13 @@
-buildscript {
-  dependencies {
-    classpath 'se.alipsa:nexus-release-plugin:1.0.1'
-  }
-}
 plugins {
   id('groovy')
   id('java-library')
   id('signing')
   id('maven-publish')
+  id("se.alipsa.nexus-release-plugin") version "1.0.1"
 }
 
 group = 'se.alipsa.matrix'
-version = '2.0.0-SNAPSHOT'
+version = '2.0.0'
 description = "Groovy library for importing and exporting json to and from a Matrix or Grid"
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")

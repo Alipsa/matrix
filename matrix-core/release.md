@@ -1,6 +1,6 @@
 # Matrix Core Release History
 
-### 3.0.0, In progress
+### 3.0.0, 2025-03-12
 - Require JDK 21
 - override getAt for Column to allow type conversion
 - override minus for row to mean remove a column and return a new list

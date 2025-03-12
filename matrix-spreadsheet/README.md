@@ -9,9 +9,9 @@ for [Renjin R](https://github.com/bedatadriven/renjin).
 
 To use it, add the following to your gradle build script: 
 ```groovy
-implementation 'org.apache.groovy:groovy:4.0.25'
-implementation 'se.alipsa.matrix:matrix-core:2.3.0'
-implementation 'se.alipsa.matrix:matrix-spreadsheet:1.2.1'
+implementation 'org.apache.groovy:groovy:4.0.26'
+implementation 'se.alipsa.matrix:matrix-core:3.0.0'
+implementation 'se.alipsa.matrix:matrix-spreadsheet:2.0.0'
 ```
 or if you use maven:
 ```xml
@@ -19,17 +19,17 @@ or if you use maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>4.0.25</version>
+      <version>4.0.26</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.3.0</version>
+      <version>3.0.0</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-spreadsheet</artifactId>
-    <version>1.2.1</version>
+    <version>2.0.0</version>
   </dependency>
 </dependencies>
 ```
@@ -140,11 +140,16 @@ try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheet)) {
 
 See [the tests](https://github.com/Alipsa/spreadsheet/tree/main/src/test/groovy/spreadsheet) for more usage examples!
 
+# Handling large files
+Apache POI which is used to handle excel sheets requires quite a lot of memory. If you have excel sheets with more than 150,000 rows you might encounter out of memory errors. If increasing RAM is not an option, consider exporting the content to a csv and use matrix-csv to import the data instead.
+
 # Release version compatibility matrix
 The following table illustrates the version compatibility of the matrix-csv and matrix core
 
-| Matrix spreadsheet |    Matrix core | 
+| Matrix spreadsheet |    Matrix core |
 |-------------------:|---------------:|
+|              2.0.0 |          3.0.0 |
+|     1.2.0 -> 1.2.1 |          2.3.0 |
 |              1.1.0 |          2.2.0 |
 |              1.0.3 | 2.0.0 -> 2.1.1 |
 |              1.0.2 |          1.2.4 |

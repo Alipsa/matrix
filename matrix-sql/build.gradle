@@ -1,19 +1,15 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-buildscript {
-    dependencies {
-        classpath('se.alipsa:nexus-release-plugin:1.0.1')
-    }
-}
 plugins {
     id('groovy')
     id('java-library')
     id('signing')
     id('maven-publish')
+    id("se.alipsa.nexus-release-plugin") version "1.0.1"
 }
 
 group = 'se.alipsa.matrix'
-version = '2.0.0-SNAPSHOT'
+version = '2.0.0'
 description = 'Groovy sql module for Matrix'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -51,10 +47,10 @@ dependencies {
         testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
         testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
     }*/
-    implementation 'se.alipsa.groovy:data-utils:2.0.0-SNAPSHOT'
+    implementation 'se.alipsa.groovy:data-utils:2.0.0'
     //implementation 'org.gradle:gradle-tooling-api:8.12' dont think we need this
     implementation 'commons-io:commons-io:2.18.0'
-    implementation 'se.alipsa.groovy:dependency-resolver:1.0.1-SNAPSHOT'
+    implementation 'se.alipsa.groovy:dependency-resolver:1.0.1'
     implementation 'se.alipsa:maven-3.9.4-utils:1.0.3'
     //implementation 'org.apache.logging.log4j:log4j-api:2.24.1'
 

@@ -3,20 +3,16 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 import java.util.concurrent.TimeUnit
 
-buildscript {
-  dependencies {
-    classpath('se.alipsa:nexus-release-plugin:1.0.1')
-  }
-}
 plugins {
   id('groovy')
   id('java-library')
   id('signing')
   id('maven-publish')
+  id("se.alipsa.nexus-release-plugin") version "1.0.1"
 }
 
 group = 'se.alipsa.matrix'
-version = '3.0.0-SNAPSHOT'
+version = '3.0.0'
 description = "Groovy library for working with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")

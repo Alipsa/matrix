@@ -3,7 +3,7 @@ Groovy library for creating graphs based on Matrix or [][] data
 
 add the following dependency to your gradle build script
 ```groovy
-implementation 'se.alipsa.groovy:charts:1.0.0-SNAPSHOT'
+implementation 'se.alipsa.groovy:charts:0.2'
 ```
 
 ... or maven pom.xml
@@ -11,7 +11,7 @@ implementation 'se.alipsa.groovy:charts:1.0.0-SNAPSHOT'
 <dependency>
     <groupId>se.alipsa.groovy</groupId>
     <artifactId>charts</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.2</version>
 </dependency>
 ```
 
@@ -48,4 +48,4 @@ matrix-charts, matrix-core, and matrix-stats
 
 | Matrix charts | Matrix core | Matrix stats |
 |--------------:|------------:|-------------:|
-|               |             |              |
+|           0.2 |       3.0.0 |        2.0.0 |

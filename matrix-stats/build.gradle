@@ -1,20 +1,17 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-buildscript {
-  dependencies {
-    classpath('se.alipsa:nexus-release-plugin:1.0.1')
-  }
-}
+
 plugins {
   id('groovy')
   id('java-library')
   //id 'org.openjfx.javafxplugin' version '0.0.13'
   id('signing')
   id('maven-publish')
+  id("se.alipsa.nexus-release-plugin") version "1.0.1"
 }
 
 group = 'se.alipsa.matrix'
-version = '2.0.0-SNAPSHOT'
+version = '2.0.0'
 description = "Statistical hypothesis tests based on Matrix data."
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -40,15 +37,10 @@ compileGroovy {
 
 dependencies {
   compileOnly libs.groovy
-  if (version.endsWith('SNAPSHOT')) {
-    compileOnly project(':matrix-core')
-    testImplementation project(':matrix-core')
-    testImplementation project(':matrix-datasets')
-  } else {
-    compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
-    testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
-    testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
-  }
+
+  compileOnly project(':matrix-core')
+  testImplementation project(':matrix-core')
+  testImplementation project(':matrix-datasets')
 
   implementation 'org.apache.commons:commons-math3:3.6.1'
   testImplementation libs.groovy

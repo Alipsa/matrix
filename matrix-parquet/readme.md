@@ -5,9 +5,9 @@ you need to have enough RAM available to fit the Matrix resulting from reading a
 
 To use it, add the following to your gradle build script
 ```groovy
-implementation 'org.apache.groovy:groovy:4.0.25'
-implementation 'se.alipsa.matrix:matrix-core:2.2.0'
-implementation 'se.alipsa.matrix:matrix-parquet:1.0.0'
+implementation 'org.apache.groovy:groovy:4.0.26'
+implementation 'se.alipsa.matrix:matrix-core:3.0.0'
+implementation 'se.alipsa.matrix:matrix-parquet:0.2'
 ```
 To export and import a parquet file:
 ```groovy

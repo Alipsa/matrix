@@ -1,22 +1,17 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
-buildscript {
-    dependencies {
-        classpath 'se.alipsa:nexus-release-plugin:1.0.1'
-    }
-}
-
 plugins {
     id('groovy')
     id('java-library')
     //id 'org.openjfx.javafxplugin' version '0.0.13'
     id('signing')
     id('maven-publish')
+    id("se.alipsa.nexus-release-plugin") version "1.0.1"
 }
 
 group = 'se.alipsa.matrix'
-version = '2.0.0-SNAPSHOT'
+version = '2.0.0'
 description = "Groovy library common public domain and oss data in matrix format)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")

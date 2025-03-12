@@ -22,20 +22,11 @@ tasks.withType(GroovyCompile) { task ->
 
 dependencies {
     implementation libs.groovy
-    if (version.contains('SNAPSHOT') && rootProject.name != project.name) {
-        // if we execute the build from the matrix root then we include project dependencies as SNAPSHOTS might not
-        // have been published (or up to date).
-        println "Adding dynamic project dependencies for matrix projects, root: ${rootProject.name}, project: ${project.name}"
-        implementation project(':matrix-core')
-        implementation project(':matrix-datasets')
-        implementation project(':matrix-stats')
-        implementation project(':matrix-charts')
-    } else {
-        implementation 'se.alipsa.matrix:matrix-core:1.2.4'
-        implementation 'se.alipsa.matrix:matrix-datasets:1.0.3'
-        implementation 'se.alipsa.matrix:matrix-stats:1.0.1'
-        implementation 'se.alipsa.matrix:matrix-charts:1.0.0-SNAPSHOT'
-    }
+    implementation(platform( 'se.alipsa.matrix:matrix-bom:1.1.2'))
+    implementation('se.alipsa.matrix:matrix-core')
+    implementation('se.alipsa.matrix:matrix-datasets')
+    implementation('se.alipsa.matrix:matrix-stats')
+    implementation('se.alipsa.matrix:matrix-charts')
     testImplementation testLibs.junitJupiter
 }
 

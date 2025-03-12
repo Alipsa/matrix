@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 source ~/.sdkman/bin/sdkman-init.sh
-source jdk17
+source jdk21
 ./gradlew :matrix-core:clean :matrix-core:build :matrix-core:release
 PROJECT=$(basename "$PWD")
 if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then

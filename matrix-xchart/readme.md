@@ -6,7 +6,13 @@ Matrix-xchart integrates the Matrix library with the [XChart library](https://kn
 
 The se.alipsa.matrix.xchart package contains factory classes for each chart type.
 
-Here is an example for a Line Chart:
+To use it add the following to your gradle build script (or equivalent for maven etc)
+```groovy
+implementation 'org.apache.groovy:groovy:4.0.26'
+implementation 'se.alipsa.matrix:matrix-core:3.0.0'
+implementation 'se.alipsa.matrix:matrix-xchart:0.1'
+```
+Here is an example usage for a Line Chart:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
@@ -32,12 +38,13 @@ LineChart chart = LineChart.create(matrix, 600, 500)
 chart.exportPng(new File("./build/testLineChart.png"))
 
 // Write it to an output stream
-try (FileOutputStream fos = new FileOutputStream("./build/testLineChart2.png")) {
+try (FileOutputStream fos = new FileOutputStream("./build/testLineChart2.svg")) {
   // add an additional series to the chart with an optional series name
   // instead of specifying the column name, we provide the columns themselves
-  chart.addSeries('Third', matrix.X1, matrix.Y2).exportPng(fos)
+  chart.addSeries('Third', matrix.X1, matrix.Y2).exportSvg(fos)
 }
 ```
+See the [tests](https://github.com/Alipsa/matrix/tree/main/matrix-xchart/src/test/groovy/test/alipsa/matrix/xchart) for more examples.
 
 You can easily export to png, svg or swing using one of the exportXXX methods but if you need something else you can always get the underlying XChart and use one of the encoders. E.g:
 ```groovy

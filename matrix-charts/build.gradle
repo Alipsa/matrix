@@ -1,19 +1,15 @@
 import org.gradle.internal.os.OperatingSystem
-buildscript {
-  dependencies {
-    classpath('se.alipsa:nexus-release-plugin:1.0.1')
-  }
-}
 plugins {
   id('groovy')
   id('java-library')
   //id 'org.openjfx.javafxplugin' version '0.0.13'
   id('maven-publish')
   id('signing')
+  id("se.alipsa.nexus-release-plugin") version "1.0.1"
 }
 
 group = 'se.alipsa.matrix'
-version = '0.2-SNAPSHOT'
+version = '0.2'
 description = "Groovy library for plotting with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")

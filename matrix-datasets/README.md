@@ -8,8 +8,8 @@ Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and m
 ## Setup
 Gradle:
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:2.2.0'
-implementation 'se.alipsa.groovy:matrix-datasets:1.1.0'
+implementation 'se.alipsa.groovy:matrix-core:3.0.0'
+implementation 'se.alipsa.groovy:matrix-datasets:2.0.0'
 ```
 Maven:
 ```xml
@@ -17,12 +17,12 @@ Maven:
   <dependency>
       <groupId>se.alipsa.groovy</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.2.0</version>
+      <version>3.0.0</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.groovy</groupId>
       <artifactId>matrix-datasets</artifactId>
-      <version>1.1.0</version>
+      <version>2.0.0</version>
   </dependency>
 </dependencies>
 ```
@@ -49,4 +49,7 @@ The following table illustrates the version compatibility of the matrix datasets
 |----------------:|---------------:|
 |           1.0.3 | 1.2.3 -> 1.2.4 |
 |           1.0.4 | 2.0.0 -> 2.1.1 |
+|           1.1.0 | 2.2.0 -> 2.2.1 |
+|           2.0.0 |          3.0.0 |
+
 

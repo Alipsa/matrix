@@ -10,11 +10,11 @@ Binary builds can be downloaded
 from the [Matrix-json project release page](https://github.com/Alipsa/matrix-json/releases) but if you use a build system that
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy
-def groovyVersion = '4.0.25' // any 4.x version should work
+def groovyVersion = '4.0.26' // any 4.x version should work
 implementation "org.apache.groovy:groovy:$groovyVersion"
 implementation "org.apache.groovy:groovy-json:$groovyVersion"
-implementation 'se.alipsa.matrix:matrix-core:2.0.0'
-implementation 'se.alipsa.matrix:matrix-json:1.1.0'
+implementation 'se.alipsa.matrix:matrix-core:3.0.0'
+implementation 'se.alipsa.matrix:matrix-json:2.0.0'
 ```
 ...and the following for maven
 ```xml
@@ -22,22 +22,22 @@ implementation 'se.alipsa.matrix:matrix-json:1.1.0'
   <dependency>
     <groupId>org.apache-groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>4.0.25</version>
+    <version>4.0.26</version>
   </dependency>
   <dependency>
     <groupId>org.apache-groovy</groupId>
     <artifactId>groovy-json</artifactId>
-    <version>4.0.25</version>
+    <version>4.0.26</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>2.2.0</version>
+      <version>3.0.0</version>
   </dependency>  
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-json</artifactId>
-      <version>1.1.0</version>
+      <version>2.0.0</version>
   </dependency>
 </dependencies>
 ```
@@ -182,4 +182,5 @@ The following table illustrates the version compatibility of the matrix-csv and 
 | Matrix json |    Matrix core | 
 |------------:|---------------:|
 |       1.0.0 | 2.0.0 -> 2.1.1 |
-|       1.1.0 |          2.2.0 |
+|       1.1.0 | 2.2.0 -> 2.2.1 |
+|       2.0.0 |          3.0.0 |

@@ -1,17 +1,13 @@
-buildscript {
-    dependencies {
-        classpath('se.alipsa:nexus-release-plugin:1.0.1')
-    }
-}
 plugins {
     id 'groovy'
     id('java-library')
     id('maven-publish')
     id('signing')
+    id("se.alipsa.nexus-release-plugin") version "1.0.1"
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1-SNAPSHOT'
+version = '0.1'
 description = "Groovy library for creating charts with xcharts using matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")

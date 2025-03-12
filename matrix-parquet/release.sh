@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source ~/.sdkman/bin/sdkman-init.sh
-source jdk17
+source jdk21
 #./gradlew clean publishToSonatype closeAndReleaseSonatypeStagingRepository
 ../gradlew :matrix-parquet:clean :matrix-parquet:build :matrix-parquet:release || exit 1
 PROJECT=$(basename "$PWD")
