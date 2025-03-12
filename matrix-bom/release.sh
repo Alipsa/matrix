@@ -8,4 +8,4 @@ if [[ -d "$localRepo/se/alipsa/matrix" ]]; then
 fi
 mvn -f bom.xml install
 mvn clean verify
-mvn -Prelease -f bom.xml clean deploy
+mvn -DstagingProcessTimeoutMinutes=10 -Prelease -f bom.xml clean deploy

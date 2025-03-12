@@ -1,5 +1,8 @@
 # Maven-BOM release history
 
+## v2.0.0, 2025-03-12
+- Upgrade all modules due to bump to jdk 21 as min version
+
 ## v1.1.2, 2025-02-21
 - Upgrade matrix core 2.3.0 -> 2.3.1
 

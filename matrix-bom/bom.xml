@@ -31,12 +31,12 @@
   </scm>
   <properties>
     <matrixCoreVersion>3.0.0</matrixCoreVersion>
-    <matrixStatsVersion>2.0.0</matrixStatsVersion><!-- no change -->
+    <matrixStatsVersion>2.0.0</matrixStatsVersion>
     <matrixSqlVersion>2.0.0</matrixSqlVersion>
-    <matrixDatasetsVersion>2.0.0</matrixDatasetsVersion><!-- no change -->
+    <matrixDatasetsVersion>2.0.0</matrixDatasetsVersion>
     <matrixSpreadsheetVersion>2.0.0</matrixSpreadsheetVersion>
-    <matrixJsonVersion>2.0.0</matrixJsonVersion><!-- no change -->
-    <matrixCsvVersion>2.0.0</matrixCsvVersion><!-- no change -->
+    <matrixJsonVersion>2.0.0</matrixJsonVersion>
+    <matrixCsvVersion>2.0.0</matrixCsvVersion>
     <matrixParquetVersion>0.2</matrixParquetVersion>
     <matrixBigQueryVersion>0.2</matrixBigQueryVersion>
     <matrixChartsVersion>0.2</matrixChartsVersion>
@@ -141,7 +141,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>3.1.3</version>
+        <version>3.1.4</version>
       </plugin>
     </plugins>
   </build>
