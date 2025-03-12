@@ -66,11 +66,11 @@ publishing {
             pom {
                 name = 'Groovy Matrix XCharts'
                 description = "${project.description}"
-                url = "https://github.com/Alipsa/matrix/matrix-xcharts"
+                url = "https://github.com/Alipsa/matrix/tree/main/matrix-xchart"
                 licenses {
                     license {
                         name = 'MIT License'
-                        url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-xcharts/master/LICENSE'
+                        url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-xchart/master/LICENSE'
                     }
                 }
                 developers {
@@ -80,7 +80,7 @@ publishing {
                     }
                 }
                 scm {
-                    url = 'https://github.com/Alipsa/matrix/matrix-xcharts/tree/master'
+                    url = 'https://github.com/Alipsa/matrix'
                     connection = 'scm:git:https://github.com/Alipsa/matrix.git'
                     developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
                 }
