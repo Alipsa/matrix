@@ -33,15 +33,9 @@ repositories {
 
 dependencies {
 
-  if (version.endsWith('SNAPSHOT')) {
-    compileOnly project(':matrix-core')
-    testImplementation project(':matrix-core')
-    testImplementation project(':matrix-datasets')
-  } else {
-    compileOnly('se.alipsa.matrix:matrix-core:2.3.0')
-    testImplementation('se.alipsa.matrix:matrix-core:2.3.0')
-    testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
-  }
+  compileOnly project(':matrix-core')
+  testImplementation project(':matrix-core')
+  testImplementation project(':matrix-datasets')
 
   compileOnly libs.groovy
   compileOnly libs.groovyJson

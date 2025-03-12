@@ -1,6 +1,6 @@
 # Release history
 
-## v2.0.0, In progress
+## v2.0.0, 2025-03-12
 - require JDK 21
 
 ## v1.1.0, 2025-01-08
