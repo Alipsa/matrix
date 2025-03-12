@@ -1,6 +1,6 @@
 # Matrix stats release history
 
-## v2.0.0, in progress
+## v2.0.0, 2025-03-12
 - Require JDK 21
 - overload Normalize methods with a way to normalize an entire matrix
 
