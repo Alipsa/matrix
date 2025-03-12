@@ -1,6 +1,6 @@
 # Matrix-bigquery Release History
 
-## v0.2, In progress
+## v0.2, 2025-03-12
 - Require JDK 21
 - Implement getProjects()
 - Upgrade dependencies
