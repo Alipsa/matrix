@@ -38,15 +38,9 @@ compileGroovy {
 
 dependencies {
     compileOnly libs.groovy
-    //if (version.endsWith('SNAPSHOT')) {
-        compileOnly project(':matrix-core')
-        testImplementation project(':matrix-core')
-        testImplementation project(':matrix-datasets')
-    /*} else {
-        compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
-        testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
-        testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
-    }*/
+    compileOnly project(':matrix-core')
+    testImplementation project(':matrix-core')
+    testImplementation project(':matrix-datasets')
     implementation 'se.alipsa.groovy:data-utils:2.0.0'
     //implementation 'org.gradle:gradle-tooling-api:8.12' dont think we need this
     implementation 'commons-io:commons-io:2.18.0'
@@ -57,9 +51,6 @@ dependencies {
     testImplementation libs.groovy
     testImplementation libs.groovySql
 
-    //testImplementation('org.apache.derby:derby:10.17.1.0') // needed because the below is needed (needs the same classloader
-    //testImplementation 'org.apache.derby:derbytools:10.17.1.0' // TODO this should also be loaded for embedded to work, figure out a way
-    //testImplementation 'com.h2database:h2:2.2.224' // dynamically fetched so not needed
     testImplementation testLibs.junitJupiterApi
     testRuntimeOnly testLibs.junitJupiterEngine
     testRuntimeOnly testLibs.junitPlatformLauncher

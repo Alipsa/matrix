@@ -1,7 +1,7 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
-## v2.0.0, In progress
+## v2.0.0, 2025-03-12
 - add MatrixSqlFactory for simpler creation of some MatrixSql instances
 - add optional matrix name argument to MatrixSql.select()
 - Remove semicolon at the end of the ddl and insert statements to support Derby
