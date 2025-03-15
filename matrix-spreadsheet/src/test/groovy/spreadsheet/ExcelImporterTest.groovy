@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.excel.ExcelImporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelUtil
 
 import java.time.format.DateTimeFormatter
 
@@ -121,5 +123,18 @@ class ExcelImporterTest {
             assertIterableEquals(comp.typeNames(), comp2.typeNames(), "column types differ after column name setting")
 
         }
+    }
+
+    @Test
+    void testFormulas() {
+        URL file = this.getClass().getResource("/Book3.xlsx")
+        Matrix m = ExcelImporter.importExcel(file, 1, 2, 8, 'A', 'G', false)
+            .convert('c3': LocalDate)
+        //println m.content()
+        //println m.types()
+        assertEquals(21, m[6, 0, Integer])
+        assertEquals(LocalDate.parse('2025-03-20'), m[5, 2])
+        assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001)
+        assertEquals('foobar1', m[0, 'c7'])
     }
 }

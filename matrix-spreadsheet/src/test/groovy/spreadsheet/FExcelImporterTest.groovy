@@ -145,12 +145,7 @@ class FExcelImporterTest {
     URL file = this.getClass().getResource("/Book3.xlsx")
     Matrix m = FExcelImporter.importExcel(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
-    /*
-    m.convert() {
-        //DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm").parse(it)
-        return it == null ? null : DateUtil.convertToDate(asDouble(it), m.metaData['isDate1904'] as boolean).toLocalDate()
-    }*/
-    println m.content()
+    //println m.content()
     println FExcelUtil.getFormat(file, 'Sheet1', 'G', 2)
     assertEquals(21, m[6, 0, Integer])
     assertEquals(LocalDate.parse('2025-03-20'), m[5, 2])

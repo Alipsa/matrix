@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelUtil
 import se.alipsa.matrix.spreadsheet.ods.OdsImporter
 
 import java.time.LocalDate
@@ -115,5 +117,17 @@ class OdsImporterTest {
       comp2 = comp2.convert([String] + [Integer]*31 as List<Class<?>>)
       assertIterableEquals(comp.typeNames(), comp2.typeNames(), "column types differ after column name setting")
     }
+  }
+
+  @Test
+  void testFormulas() {
+    URL file = this.getClass().getResource("/Book3.ods")
+    Matrix m = OdsImporter.importOds(file, 1, 2, 8, 'A', 'G', false)
+        .convert('c3': LocalDate)
+    println m.content()
+    assertEquals(21, m[6, 0, Integer])
+    assertEquals(LocalDate.parse('2025-03-20'), m[5, 2])
+    assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001)
+    assertEquals('foobar1', m[0, 'c7'])
   }
 }

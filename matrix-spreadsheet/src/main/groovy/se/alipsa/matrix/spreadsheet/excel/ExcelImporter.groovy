@@ -172,9 +172,8 @@ class ExcelImporter {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
         startRow = startRow + 1
       } else {
-        for (int i = 1; i <= endCol - startCol; i++) {
-          header.add(String.valueOf(i))
-        }
+        int ncol = endCol - startCol + 1
+        (1..ncol).each {i-> header.add("c$i")}
       }
       return importExcelSheet(sheet, startRow, endRow, startCol, endCol, header)
     }
@@ -266,7 +265,8 @@ class ExcelImporter {
     ExcelValueExtractor ext = new ExcelValueExtractor(sheet)
     Row row = sheet.getRow(startRowNum)
     for (int i = 0; i <= endColNum - startColNum; i++) {
-      header.add(ext.getString(row, startColNum + i))
+      String colName = ext.getString(row, startColNum + i)
+      header.add(colName ?: "c$i")
     }
   }
 
