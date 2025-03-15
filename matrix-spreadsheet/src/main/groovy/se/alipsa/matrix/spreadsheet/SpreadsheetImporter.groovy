@@ -3,9 +3,15 @@ package se.alipsa.matrix.spreadsheet
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.excel.ExcelImporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
 import se.alipsa.matrix.spreadsheet.ods.OdsImporter
 
+import java.text.NumberFormat
+
 class SpreadsheetImporter {
+
+  public static ExcelImplementation excelImplementation = ExcelImplementation.FastExcel
+
 
   /**
    *
@@ -27,7 +33,10 @@ class SpreadsheetImporter {
     if (file.toLowerCase().endsWith(".ods")) {
       return OdsImporter.importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    return ExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    return switch (excelImplementation) {
+      case ExcelImplementation.POI -> ExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case ExcelImplementation.FastExcel -> FExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    }
   }
 
   /**
@@ -50,7 +59,10 @@ class SpreadsheetImporter {
     if (file.toLowerCase().endsWith(".ods")) {
       return OdsImporter.importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    return ExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    return switch (excelImplementation) {
+      case ExcelImplementation.POI -> ExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case ExcelImplementation.FastExcel -> FExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    }
   }
 
   /**
@@ -72,7 +84,10 @@ class SpreadsheetImporter {
     if (file.toLowerCase().endsWith(".ods")) {
       return OdsImporter.importOds(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
-    return ExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    return switch (excelImplementation) {
+      case ExcelImplementation.POI -> ExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      case ExcelImplementation.FastExcel -> FExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    }
   }
 
   /**
@@ -94,7 +109,10 @@ class SpreadsheetImporter {
     if (file.toLowerCase().endsWith(".ods")) {
       return OdsImporter.importOds(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
-    return ExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    return switch (excelImplementation) {
+      case ExcelImplementation.POI -> ExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      case ExcelImplementation.FastExcel -> FExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    }
   }
 
   /**
@@ -162,6 +180,16 @@ class SpreadsheetImporter {
         endCol as int,
         firstRowAsColNames as boolean
     )
+  }
+
+  static Map<String, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+    if (fileName.toLowerCase().endsWith(".ods")) {
+      return OdsImporter.importOdsSheets(fileName, sheetParams, formatOpt)
+    }
+    return switch (excelImplementation) {
+      case ExcelImplementation.POI -> ExcelImporter.importExcelSheets(fileName, sheetParams, formatOpt)
+      case ExcelImplementation.FastExcel -> FExcelImporter.importExcelSheets(fileName, sheetParams, formatOpt)
+    }
   }
 
   static void validateNotNull(Object paramVal, String paramName) {

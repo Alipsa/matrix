@@ -1,10 +1,14 @@
 package se.alipsa.matrix.spreadsheet
 
-
+import se.alipsa.matrix.spreadsheet.excel.ExcelExporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelReader
 import se.alipsa.matrix.spreadsheet.ods.OdsReader
 import se.alipsa.matrix.spreadsheet.excel.ExcelReader
 
 interface SpreadsheetReader extends Closeable {
+
+  public static ExcelImplementation excelImplementation = ExcelImplementation.POI
 
   // Groovy does not support static methods in interfaces so we create an inner class for those
   class Factory {
@@ -15,7 +19,10 @@ interface SpreadsheetReader extends Closeable {
       if (file.getName().toLowerCase().endsWith(".ods")) {
         return new OdsReader(file)
       }
-      return new ExcelReader(file)
+      return switch (excelImplementation) {
+        case ExcelImplementation.POI -> new ExcelReader(file)
+        case ExcelImplementation.FastExcel -> new FExcelReader(file)
+      }
     }
 
     static SpreadsheetReader create(String filePath) throws Exception {
@@ -25,7 +32,10 @@ interface SpreadsheetReader extends Closeable {
       if (filePath.toLowerCase().endsWith(".ods")) {
         return new OdsReader(filePath)
       }
-      return new ExcelReader(filePath)
+      return switch (excelImplementation) {
+        case ExcelImplementation.POI -> new ExcelReader(filePath)
+        case ExcelImplementation.FastExcel -> new FExcelReader(filePath)
+      }
     }
   }
 

@@ -5,19 +5,22 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.excel.ExcelImporter
 
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 import java.time.LocalDate
 
-import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.*
 import static org.junit.jupiter.api.Assertions.*
 
 class ExcelImporterTest {
 
     @Test
     void testExcelImport() {
-        def table = importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true)
+        def table = ExcelImporter.importExcel(
+            this.class.getResource("/Book1.xlsx"), 'Sheet1',
+            1, 12,
+            1, 4,
+            true
+        )
         table = table.convert(id: Integer, bar: LocalDate, baz: BigDecimal, DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS'))
         //println(table.content())
         assertEquals(3, table[2, 0])
@@ -28,11 +31,12 @@ class ExcelImporterTest {
 
     @Test
     void TestImportWithColnames() {
-        def table = importSpreadsheet(
-                "file": "Book1.xlsx",
-                "endRow": 12,
-                "startCol": 'A',
-                "endCol": 'D'
+        def table = ExcelImporter.importExcel(
+            this.class.getResource("/Book1.xlsx"),
+            1,
+            1, 12,
+            'A', 'D',
+            true
         )
         //println(table.content())
         assertEquals(3.0d, table[2, 0])

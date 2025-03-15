@@ -95,13 +95,14 @@ class FExcelExporter {
     return exportExcelSheets(new File(filePath), data, sheetNames)
   }
 
-  static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames) throws IOException {
+  static List<String> exportExcelSheets(File file, List<Matrix> data) {
+    exportExcelSheets(file, data, data.collect{it.matrixName})
+  }
 
-    if (file.exists()) {
-      System.err.println("Appending to an externa file is not yet supported")
-      return null
-      //fis = new FileInputStream(file)
-      //workbook = Workbook.create(fis)
+  static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames, boolean overwrite = false) throws IOException {
+
+    if (file.exists() && !overwrite && file.length() > 0) {
+      throw new IllegalArgumentException("Appending to an external file is not supported, remove it first")
     }
 
     try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {
@@ -113,7 +114,6 @@ class FExcelExporter {
         buildSheet(dataFrame, workbook.newWorksheet(sheetName))
         actualSheetNames.add(sheetName)
       }
-      //writeFile(file, workbook)
       return actualSheetNames
     } catch (IOException e) {
       logger.error("Failed to create excel file {}" + file.getAbsolutePath(), e)

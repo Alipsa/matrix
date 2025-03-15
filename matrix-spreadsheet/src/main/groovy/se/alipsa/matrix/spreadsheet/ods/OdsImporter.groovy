@@ -202,6 +202,13 @@ class OdsImporter {
     result
   }
 
+  static Map<String, Matrix> importOdsSheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+    File file = FileUtil.checkFilePath(fileName)
+    try (FileInputStream fis = new FileInputStream(file)) {
+      importOdsSheets(fis, sheetParams, formatOpt)
+    }
+  }
+
   static Matrix importOds(Sheet sheet, int startRow, int endRow, int startCol, int endCol, List<String> colNames) {
     startRow--
     endRow--

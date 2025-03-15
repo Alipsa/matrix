@@ -1,0 +1,67 @@
+package spreadsheet
+
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelReader
+
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static se.alipsa.matrix.core.ListConverter.*
+
+class FExportTest {
+
+  static Matrix table
+  static Matrix table2
+
+  @BeforeAll
+  static void init() {
+    def matrix = [
+        id     : [null, 2, 3, 4, -5],
+        name   : ['foo', 'bar', 'baz', 'bla', null],
+        start  : toLocalDates('2021-01-04', null, '2023-03-13', '2024-04-15', '2025-05-20'),
+        end    : toLocalDateTimes(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"), '2021-02-04 12:01:22', '2022-03-12 13:14:15', '2023-04-13 15:16:17', null, '2025-06-20 17:18:19'),
+        measure: [12.45, null, 14.11, 15.23, 10.99],
+        active : [true, false, null, true, false]
+    ]
+    table = Matrix.builder('table')
+        .data(matrix)
+        .types(int, String, LocalDate, LocalDateTime, BigDecimal, Boolean).build()
+    def stats = [
+        id : [null, 2, 3, 4, -5],
+        // Normally it is best to ensure the data is actually what we say it is
+        jan: toBigDecimals([1123.1234, 2341.234, 1010.00122, 991, 1100.1]),
+        // No conversion here, this still works as getAt will type cast 999 which is an Integer
+        feb: [1111.1235, 2312.235, 1001.00121, 999, 1200.7]
+    ]
+    table2 = Matrix.builder('table2').data(stats).types(int, BigDecimal, BigDecimal).build()
+  }
+
+  @Test
+  void exportExcelTest() {
+
+    //println(table.content())
+    def file = File.createTempFile("matrix", ".xlsx")
+    FExcelExporter.exportExcel(file, table)
+    println("Wrote to $file")
+
+    def file2 = File.createTempFile("matrix2", ".xlsx")
+    FExcelExporter.exportExcelSheets(file2, [table, table2])
+    println("Wrote 2 sheets to $file2")
+    try (def reader = new FExcelReader(file2)) {
+      assertEquals(2, reader.sheetNames.size(), "number of sheets")
+    }
+  }
+
+  @Test
+  void testValidSheetNames() {
+    assertEquals("abl rac adabra ", SpreadsheetUtil.createValidSheetName("abl\\rac[adabra]"))
+    assertEquals(" Det var en gång ", SpreadsheetUtil.createValidSheetName("'Det var en gång'"))
+    assertEquals("Det var en gång", SpreadsheetUtil.createValidSheetName("Det var en gång"))
+  }
+}

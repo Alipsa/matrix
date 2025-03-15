@@ -51,9 +51,16 @@ class FExcelImporter {
       int startColNum = SpreadsheetUtil.asColumnNumber(startCol)
       int endColNum = SpreadsheetUtil.asColumnNumber(endCol)
       boolean isDate1904 = workbook.isDate1904()
-      Matrix m = importExcelSheet(sheet, startRow, endRow, startColNum, endColNum, firstRowAsColNames, isDate1904)
-      m.metaData.isDate1904 = isDate1904
-      return m
+      return importExcelSheet(sheet, startRow, endRow, startColNum, endColNum, firstRowAsColNames, isDate1904)
+    }
+  }
+
+  static Matrix importExcel(URL url, String sheetName = 'Sheet1',
+                            int startRow, int endRow,
+                            int startCol, int endCol,
+                            boolean firstRowAsColNames = true) {
+    try(InputStream is = url.openStream()) {
+      importExcel(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
   }
 
@@ -90,9 +97,7 @@ class FExcelImporter {
     try (ReadableWorkbook workbook = new ReadableWorkbook(excelFile, OPTIONS)) {
       Sheet sheet = workbook.getSheet(sheetNumber).orElse(null)
       boolean isDate1904 = workbook.isDate1904()
-      def m = importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
-      m.metaData.isDate1904 = isDate1904
-      return m
+      return importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
     }
   }
 
@@ -119,9 +124,7 @@ class FExcelImporter {
     try (ReadableWorkbook workbook = new ReadableWorkbook(excelFile, OPTIONS)) {
       Sheet sheet = workbook.findSheet(sheetName).orElseThrow()
       boolean isDate1904 = workbook.isDate1904()
-      def m = importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
-      m.metaData.isDate1904 = isDate1904
-      return m
+      return importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
     }
   }
 
@@ -133,7 +136,6 @@ class FExcelImporter {
       Sheet sheet = workbook.findSheet(sheetName).orElseThrow()
       boolean isDate1904 = workbook.isDate1904()
       def m = importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
-      m.metaData.isDate1904 = isDate1904
       return m
     }
   }
@@ -176,7 +178,6 @@ class FExcelImporter {
         }
         boolean isDate1904 = workbook.isDate1904()
         Matrix matrix = importExcelSheet(sheet, startRow, it.endRow as int, startCol, endCol, it.firstRowAsColNames as Boolean, isDate1904)
-        matrix.metaData.isDate1904 = isDate1904
         String key = it.getOrDefault("key", sheetName)
         matrix.setMatrixName(key)
         result.put(key, matrix)
@@ -185,7 +186,15 @@ class FExcelImporter {
     }
   }
 
+  static Map<String, Matrix> importExcelSheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+    File file = FileUtil.checkFilePath(fileName)
+    try (FileInputStream fis = new FileInputStream(file)) {
+      importExcelSheets(fis, sheetParams, formatOpt)
+    }
+  }
+
   private static Matrix importExcelSheet(Sheet sheet, int startRowNum, int endRowNum, int startColNum, int endColNum, boolean firstRowAsColNames, boolean isDate1904) {
+    //println "Importing sheet ${sheet.name}, startRowNum = $startRowNum, endRowNum = $endRowNum"
     //int startRowNumZI = startRowNum - 1
     //int endRowNumZI = endRowNum - 1
     int startColNumZI = startColNum - 1
@@ -196,10 +205,12 @@ class FExcelImporter {
     int ncol = endColNum - startColNum + 1 // both start and end are included
     try (Stream<Row> rows = sheet.openStream()) {
       rows.each { Row row ->
+        //println "on row $row.rowNum, row.rowNum >= startRowNum = ${row.rowNum >= startRowNum} row.rowNum <= endRowNum = ${row.rowNum <= endRowNum}"
         if (row.rowNum >= startRowNum && row.rowNum <= endRowNum) {
           rowList = []
           List list = row.asList()
           if (colNames.size() == 0) {
+            println "Building header"
             if (firstRowAsColNames) {
               list.eachWithIndex { Cell cell, int i ->
                 if (i >= startColNumZI && i <= endColNumZI) {
@@ -214,17 +225,23 @@ class FExcelImporter {
             }
           }
           list.eachWithIndex { cell, cIdx ->
-            //println "row $i adding " + cell?.rawValue
+            //println "row $cIdx adding " + cell?.rawValue
             if (cIdx >= startColNumZI && cIdx <= endColNumZI) {
               if (cell == null) {
                 rowList.add(null)
               } else {
+                Integer dataFormatId = cell.dataFormatId
+                String dateFormatString = cell.dataFormatString
                 switch (cell.type) {
                   case CellType.EMPTY -> rowList.add(null)
                   case CellType.NUMBER -> {
-                    if (isDate(cell.getDataFormatId(), cell.dataFormatString)) {
-                      //println ("adding date " + cell.asDate())
-                      rowList.add(cell.asDate())
+                    if (isDate(dataFormatId, dateFormatString)) {
+                      def date = cell.asDate()
+                      if (!dateFormatString.toLowerCase().contains('hh') && date.hour == 0 && date.minute == 0) {
+                        rowList.add(date.toLocalDate())
+                      } else {
+                        rowList.add(date)
+                      }
                     } else {
                       //println ("adding number " + cell.asNumber())
                       rowList.add(cell.asNumber())
@@ -234,9 +251,14 @@ class FExcelImporter {
                   case CellType.BOOLEAN -> rowList.add(cell.asBoolean())
                   case CellType.FORMULA -> {
                     String rawValue = cell.getRawValue()
-                    if (isDate(cell.getDataFormatId(), cell.dataFormatString)) {
+                    if (isDate(dataFormatId, dateFormatString)) {
                       //println "adding FORMULA date $rawValue"
-                      rowList.add(FDateUtil.convertToDate(ValueConverter.asDouble(rawValue), isDate1904))
+                      def date = FDateUtil.convertToDate(ValueConverter.asDouble(rawValue), isDate1904)
+                      if (!dateFormatString.toLowerCase().contains('hh') && date.hour == 0 && date.minute == 0) {
+                        rowList.add(date.toLocalDate())
+                      } else {
+                        rowList.add(date)
+                      }
                     } else if (ValueConverter.isNumeric(rawValue)){
                       //println "adding FORMULA number $rawValue"
                       rowList.add(ValueConverter.asNumber(rawValue))
@@ -265,12 +287,14 @@ class FExcelImporter {
         }
       }
     }
-    return Matrix.builder()
+    Matrix m = Matrix.builder()
         .matrixName(sheet.name)
         .columnNames(colNames)
         .rows(matrix)
         .types([Object] * colNames.size())
         .build()
+    m.metaData.isDate1904 = isDate1904
+    m
   }
 
   static boolean isDate(Integer dateFormatId, String dateFormatString) {
