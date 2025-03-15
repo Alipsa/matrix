@@ -148,7 +148,8 @@ The following table illustrates the version compatibility of the matrix-csv and 
 
 | Matrix spreadsheet |    Matrix core |
 |-------------------:|---------------:|
-|     2.0.0 -> 2.1.0 |          3.0.0 |
+|              2.1.0 |          3.1.0 |
+|              2.0.0 |          3.0.0 |
 |     1.2.0 -> 1.2.1 |          2.3.0 |
 |              1.1.0 |          2.2.0 |
 |              1.0.3 | 2.0.0 -> 2.1.1 |

@@ -30,7 +30,7 @@
     <url>https://github.com/Alipsa/matrix/tree/main</url>
   </scm>
   <properties>
-    <matrixCoreVersion>3.0.0</matrixCoreVersion>
+    <matrixCoreVersion>3.1.0-SNAPSHOT</matrixCoreVersion>
     <matrixStatsVersion>2.0.0</matrixStatsVersion>
     <matrixSqlVersion>2.0.0</matrixSqlVersion>
     <matrixDatasetsVersion>2.0.0</matrixDatasetsVersion>

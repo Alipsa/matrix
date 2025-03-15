@@ -1,5 +1,8 @@
 # Matrix Core Release History
 
+### 3.1.0, in progress
+- Add support for arbitrary metaData to a Matrix
+
 ### 3.0.0, 2025-03-12
 - Require JDK 21
 - override getAt for Column to allow type conversion
