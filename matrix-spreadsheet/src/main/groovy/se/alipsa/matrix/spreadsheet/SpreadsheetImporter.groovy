@@ -15,7 +15,7 @@ class SpreadsheetImporter {
    * @param endRow the last row to include
    * @param startColumn the first column to include (index starting with 1)
    * @param endColumn the last column to include
-   * @param firstRowAsColNames whether to treat the first row as a header row for thecolumn names or not,
+   * @param firstRowAsColNames whether to treat the first row as a header row for the column names or not,
    *        defaults to true
    * @return A Matrix corresponding to the spreadsheet data.
    */

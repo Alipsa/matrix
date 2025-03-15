@@ -1,7 +1,5 @@
 package se.alipsa.matrix.spreadsheet
 
-import org.apache.poi.ss.util.WorkbookUtil
-
 import java.time.format.DateTimeFormatter
 
 /**
@@ -47,7 +45,7 @@ class SpreadsheetUtil {
    }
 
    static String createValidSheetName(String suggestion) {
-      return WorkbookUtil.createSafeSheetName(suggestion)
+      return createSafeSheetName(suggestion)
    }
 
    static List<String> createColumnNames(int startCol, int endCol) {
@@ -56,5 +54,30 @@ class SpreadsheetUtil {
          header.add(String.valueOf(i))
       }
       header
+   }
+
+   private final static String createSafeSheetName(final String nameProposal, char replaceChar = ' ' as char) {
+      if (nameProposal == null) {
+         return "null"
+      }
+      if (nameProposal.length() < 1) {
+         return "empty"
+      }
+      final int length = Math.min(31, nameProposal.length())
+      final String shortname = nameProposal.substring(0, length)
+      final StringBuilder result = new StringBuilder(shortname)
+      for (int i=0; i<length; i++) {
+         char ch = result.charAt(i)
+         switch (ch) {
+            case '\u0000', '\u0003', ':', '/', '\\', '?', '*', ']', '[' ->
+               result.setCharAt(i, replaceChar)
+            case '\'' ->
+               if (i==0 || i==length-1) {
+                  result.setCharAt(i, replaceChar);
+               }
+            default -> result.setCharAt(i, ch)
+         }
+      }
+      return result.toString()
    }
 }

@@ -34,6 +34,7 @@ class Matrix implements Iterable<Row> {
   private String mName
   public static final Boolean ASC = Boolean.FALSE
   public static final Boolean DESC = Boolean.TRUE
+  private Map<String, ?> metaData = [:]
 
   static MatrixBuilder builder() {
     new MatrixBuilder()
@@ -2486,6 +2487,16 @@ class Matrix implements Iterable<Row> {
   Matrix withMatrixName(String name) {
     setMatrixName(name)
     return this
+  }
+
+  /**
+   * metaData gives the ability to add useful meta data content to the matrix
+   * e.g. creationDate, author etc.
+   *
+   * @return the metaData Map&lt;String,?&gt;
+   */
+  Map<String, ?> getMetaData() {
+    return metaData
   }
 
   static List<Class> createObjectTypes(Collection template) {
