@@ -26,7 +26,10 @@ class SpreadsheetTest {
         measure: [12.45, 11.45, 14.11, 15.23, 10.99],
         active: [true, false, false, true, false]
     ]
-    Matrix table = Matrix.builder("table").data(matrix).types(int, String, LocalDate, LocalDateTime, BigDecimal, Boolean).build()
+    Matrix table = Matrix.builder("table")
+        .data(matrix)
+        .types(int, String, LocalDate, LocalDateTime, BigDecimal, Boolean)
+        .build()
     def file = new File("build/table.xlsx")
     if (file.exists()) file.delete()
     SpreadsheetExporter.exportSpreadsheet(file, table)

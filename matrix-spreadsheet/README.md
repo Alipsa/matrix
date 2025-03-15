@@ -141,14 +141,14 @@ try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheet)) {
 See [the tests](https://github.com/Alipsa/spreadsheet/tree/main/src/test/groovy/spreadsheet) for more usage examples!
 
 # Handling large files
-Apache POI which is used to handle excel sheets requires quite a lot of memory. If you have excel sheets with more than 150,000 rows you might encounter out of memory errors. If increasing RAM is not an option, consider exporting the content to a csv and use matrix-csv to import the data instead.
+Apache POI which is used to handle Excel sheets requires quite a lot of memory. If you have Excel sheets with more than 150,000 rows you might encounter out of memory errors. If increasing RAM is not an option, consider exporting the content to a csv and use matrix-csv to import the data instead. There is also an early alternative implementation based on fastexcel which uses streaming and MUCH less memory. It has a very similar API as the poi one except for one difference: it is unable to append sheets to an existing Excel document. See [FExcelImporterTest](https://github.com/Alipsa/matrix/blob/main/matrix-spreadsheet/src/test/groovy/spreadsheet/FExcelImporterTest.groovy) and [FExporterTest](https://github.com/Alipsa/matrix/blob/main/matrix-spreadsheet/src/test/groovy/spreadsheet/FExporterTest.groovy) for example usage. You can also switch between implementations when using the Spreadsheet API (e.g. SpreadsheetImporter) by setting the static enum variable `excelImplementation` e.g. `SpreadsheetImporter.excelImplementation = ExcelImplementation.FastExcel`. See [SpreadsheetImporterTest](https://github.com/Alipsa/matrix/blob/main/matrix-spreadsheet/src/test/groovy/spreadsheet/SpreadsheetImporterTest.groovy) for examples.
 
 # Release version compatibility matrix
 The following table illustrates the version compatibility of the matrix-csv and matrix core
 
 | Matrix spreadsheet |    Matrix core |
 |-------------------:|---------------:|
-|              2.0.0 |          3.0.0 |
+|     2.0.0 -> 2.1.0 |          3.0.0 |
 |     1.2.0 -> 1.2.1 |          2.3.0 |
 |              1.1.0 |          2.2.0 |
 |              1.0.3 | 2.0.0 -> 2.1.1 |

@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.0.0'
+version = '2.1.0-SNAPSHOT'
 description = 'Groovy spreadsheet import/export'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -33,19 +33,19 @@ compileGroovy {
 
 dependencies {
     compileOnly libs.groovy
-    //api project(':matrix-core')
-    //if (version.contains('SNAPSHOT') && rootProject.name != project.name) {
-        compileOnly project(':matrix-core')
-        testImplementation project(':matrix-core')
-    /*} else {
-        compileOnly 'se.alipsa.matrix:matrix-core:2.2.0'
-        testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
-    }*/
+
+    compileOnly project(':matrix-core')
+    testImplementation project(':matrix-core')
+    implementation 'org.apache.logging.log4j:log4j-core:2.24.3'
+
     implementation('org.apache.poi:poi:5.4.0')
     implementation('org.apache.poi:poi-ooxml:5.4.0')
+    // https://github.com/dhatim/fastexcel
+    implementation('org.dhatim:fastexcel:0.18.4')
+    implementation('org.dhatim:fastexcel-reader:0.18.4')
     implementation 'com.github.miachm.sods:SODS:1.6.7'
 
-    testImplementation 'org.apache.logging.log4j:log4j-core:2.24.3'
+
     testImplementation testLibs.junitJupiterApi
     testRuntimeOnly testLibs.junitJupiterEngine
     testRuntimeOnly testLibs.junitPlatformLauncher

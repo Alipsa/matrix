@@ -3,9 +3,9 @@ package spreadsheet
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
-import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelReader
 
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static se.alipsa.matrix.core.ListConverter.*
 
-class ExportTest {
+class FExportTest {
 
   static Matrix table
   static Matrix table2
@@ -29,7 +29,9 @@ class ExportTest {
         measure: [12.45, null, 14.11, 15.23, 10.99],
         active : [true, false, null, true, false]
     ]
-    table = Matrix.builder().data(matrix).types(int, String, LocalDate, LocalDateTime, BigDecimal, Boolean).build()
+    table = Matrix.builder('table')
+        .data(matrix)
+        .types(int, String, LocalDate, LocalDateTime, BigDecimal, Boolean).build()
     def stats = [
         id : [null, 2, 3, 4, -5],
         // Normally it is best to ensure the data is actually what we say it is
@@ -37,7 +39,7 @@ class ExportTest {
         // No conversion here, this still works as getAt will type cast 999 which is an Integer
         feb: [1111.1235, 2312.235, 1001.00121, 999, 1200.7]
     ]
-    table2 = Matrix.builder().data(stats).types(int, BigDecimal, BigDecimal).build()
+    table2 = Matrix.builder('table2').data(stats).types(int, BigDecimal, BigDecimal).build()
   }
 
   @Test
@@ -45,30 +47,13 @@ class ExportTest {
 
     //println(table.content())
     def file = File.createTempFile("matrix", ".xlsx")
-    SpreadsheetExporter.exportSpreadsheet(file, table)
+    FExcelExporter.exportExcel(file, table)
     println("Wrote to $file")
 
-    SpreadsheetExporter.exportSpreadsheet(file, table2)
-    println("Wrote another sheet to $file")
-    try (def reader = SpreadsheetReader.Factory.create(file)) {
-      assertEquals(2, reader.sheetNames.size(), "number of sheets")
-    }
-  }
-
-  @Test
-  void testOdsExport() {
-    File odsFile = File.createTempFile("matrix", ".ods")
-    if (odsFile.exists()) {
-      odsFile.delete()
-    }
-    SpreadsheetExporter.exportSpreadsheet(odsFile, table, "Sheet 1")
-    println("Wrote to $odsFile")
-    try (def reader = SpreadsheetReader.Factory.create(odsFile)) {
-      assertEquals(1, reader.sheetNames.size(), "number of sheets")
-    }
-    SpreadsheetExporter.exportSpreadsheet(odsFile, table2, "Sheet 2")
-    println("Wrote another sheet to $odsFile")
-    try (def reader = SpreadsheetReader.Factory.create(odsFile)) {
+    def file2 = File.createTempFile("matrix2", ".xlsx")
+    FExcelExporter.exportExcelSheets(file2, [table, table2])
+    println("Wrote 2 sheets to $file2")
+    try (def reader = new FExcelReader(file2)) {
       assertEquals(2, reader.sheetNames.size(), "number of sheets")
     }
   }

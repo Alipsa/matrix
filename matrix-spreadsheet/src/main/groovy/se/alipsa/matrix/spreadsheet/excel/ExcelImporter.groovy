@@ -20,6 +20,37 @@ import java.time.LocalDateTime
 class ExcelImporter {
 
   private static Logger log = LogManager.getLogger()
+
+
+  static Matrix importExcel(URL url, String sheetName = 'Sheet1',
+                            int startRow = 1, int endRow,
+                            int startCol = 1, int endCol,
+                            boolean firstRowAsColNames = true) {
+    try (InputStream is = url.openStream()) {
+      importExcel(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    }
+  }
+
+  static Matrix importExcel(URL url, String sheetName = 'Sheet1',
+                            int startRow = 1, int endRow,
+                            String startCol = 'A', String endCol,
+                            boolean firstRowAsColNames = true) {
+    try (InputStream is = url.openStream()) {
+      importExcel(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    }
+  }
+
+  static Matrix importExcel(URL url, int sheetNum,
+                            int startRow = 1, int endRow,
+                            String startCol = 'A', String endCol,
+                            boolean firstRowAsColNames = true) {
+    try (InputStream is = url.openStream()) {
+      int startColNum = SpreadsheetUtil.asColumnNumber(startCol)
+      int endColNum = SpreadsheetUtil.asColumnNumber(endCol)
+      importExcel(is, sheetNum, startRow, endRow, startColNum, endColNum, firstRowAsColNames)
+    }
+  }
+
   /**
    * Import an excel spreadsheet
    * @param file the filePath or the file object pointing to the excel file
@@ -119,6 +150,35 @@ class ExcelImporter {
     }
   }
 
+  /**
+   *
+   * @param is
+   * @param sheetNum 1 indexed
+   * @param startRow 1 indexed
+   * @param endRow 1 indexed
+   * @param startCol 1 indexed
+   * @param endCol 1 indexed
+   * @param firstRowAsColNames
+   * @return
+   */
+  static Matrix importExcel(InputStream is, int sheetNum,
+                            int startRow = 1, int endRow,
+                            int startCol = 1, int endCol,
+                            boolean firstRowAsColNames = true) {
+    def header = []
+    try (Workbook workbook = WorkbookFactory.create(is)) {
+      Sheet sheet = workbook.getSheetAt(sheetNum-1)
+      if (firstRowAsColNames) {
+        buildHeaderRow(startRow, startCol, endCol, header, sheet)
+        startRow = startRow + 1
+      } else {
+        int ncol = endCol - startCol + 1
+        (1..ncol).each {i-> header.add("c$i")}
+      }
+      return importExcelSheet(sheet, startRow, endRow, startCol, endCol, header)
+    }
+  }
+
   static Matrix importExcel(InputStream is, String sheetName = 'Sheet1',
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
@@ -190,6 +250,13 @@ class ExcelImporter {
     }
   }
 
+  static Map<String, Matrix> importExcelSheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+    File file = FileUtil.checkFilePath(fileName)
+    try (FileInputStream fis = new FileInputStream(file)) {
+      importExcelSheets(fis, sheetParams, formatOpt)
+    }
+  }
+
 
   private static void buildHeaderRow(int startRowNum, int startColNum, int endColNum, List<String> header, Sheet sheet) {
     startRowNum--
@@ -198,7 +265,8 @@ class ExcelImporter {
     ExcelValueExtractor ext = new ExcelValueExtractor(sheet)
     Row row = sheet.getRow(startRowNum)
     for (int i = 0; i <= endColNum - startColNum; i++) {
-      header.add(ext.getString(row, startColNum + i))
+      String colName = ext.getString(row, startColNum + i)
+      header.add(colName ?: "c$i")
     }
   }
 
