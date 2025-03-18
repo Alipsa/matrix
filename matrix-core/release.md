@@ -2,6 +2,7 @@
 
 ### 3.1.0, in progress
 - Add support for arbitrary metaData to a Matrix
+- add conversion from minus and hyphen to the correct negation symbol when supplying a formatter to the conversion
 
 ### 3.0.0, 2025-03-12
 - Require JDK 21

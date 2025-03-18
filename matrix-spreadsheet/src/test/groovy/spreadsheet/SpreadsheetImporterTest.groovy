@@ -89,7 +89,7 @@ class SpreadsheetImporterTest {
       assertEquals(103599.04, table1[1,1])
       assertEquals(66952.95, table1[2,2])
       assertEquals(0.0G, table1[3,3, BigDecimal].setScale(1))
-      assertEquals(-0.00982, table1[6, 'percentdiff'], 0.00001)
+      assertEquals(-0.00982d, table1[6, 'percentdiff'] as double, 0.00001)
 
       Matrix comp = sheets.comp.clone()
       assertEquals('Component', comp[0,0])

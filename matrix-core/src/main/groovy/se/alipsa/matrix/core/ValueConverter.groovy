@@ -5,10 +5,10 @@ import groovy.transform.CompileStatic
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
+import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -17,13 +17,16 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.Temporal
 import java.time.temporal.TemporalAccessor
 
 @CompileStatic
 class ValueConverter {
 
-  private static final char C_MINUS = '-'
+  private static final char C_HYPHEN = '\u002D'
+  private static final String S_HYPHEN = String.valueOf(C_HYPHEN)
+  private static final char C_MINUS = '\u2212'
+  private static final String S_MINUS = String.valueOf(C_MINUS)
+
   private static final char C_PLUS = '+'
   private static final char C_E = 'E'
   private static final char C_e = 'e'
@@ -83,7 +86,7 @@ class ValueConverter {
       if (n.isBlank()) return null
       return new BigDecimal(num)
     }
-    return format.parse(num) as BigDecimal
+    return format.parse(fixNegationFormat(format, num)) as BigDecimal
   }
 
   static BigDecimal asBigDecimal(Number num) {
@@ -133,8 +136,10 @@ class ValueConverter {
   static Double asDouble(String num, NumberFormat format = null, Double valueIfNull = null) {
     // Maybe Double.NaN instead of null?
     if (num == null || 'null' == num || num.isBlank()) return valueIfNull
+
     if (format == null) return Double.valueOf(num)
-    return format.parse(num) as Double
+
+    return format.parse(fixNegationFormat(format, num)) as Double
   }
 
   static Double asDouble(Number num, Double valueIfNull = null) {
@@ -287,8 +292,8 @@ class ValueConverter {
     if (txt == null) return valueIfNull
     StringBuilder result = new StringBuilder()
     txt.chars().mapToObj(i -> i as char)
-        .filter(c -> c.isDigit() || decimalSeparator == c || C_MINUS == c || C_PLUS == c
-            || C_e == c || C_E == c)
+        .filter(c -> c.isDigit() || decimalSeparator == c || C_MINUS == c || C_HYPHEN == c
+            || C_PLUS == c || C_e == c || C_E == c)
         .forEach(c -> result.append(c))
     return result.toString()
   }
@@ -499,5 +504,13 @@ class ValueConverter {
       return o as Number
     }
     asBigDecimal(o)
+  }
+
+  static String fixNegationFormat(NumberFormat format, String val) {
+    // Some formats e.g. Sweden requires minus and throws an error on hyphen
+    // Other formats e.g. US does the opposite
+    // here we make sure hyphen and minus both mean the negative prefix
+    String neg = ((DecimalFormat)format).negativePrefix
+    val.replace(S_HYPHEN, neg).replace(S_MINUS, neg)
   }
 }
