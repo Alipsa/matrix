@@ -8,11 +8,9 @@ import se.alipsa.matrix.spreadsheet.excel.ExcelReader
 
 interface SpreadsheetReader extends Closeable {
 
-  public static ExcelImplementation excelImplementation = ExcelImplementation.POI
-
   // Groovy does not support static methods in interfaces so we create an inner class for those
   class Factory {
-    static SpreadsheetReader create(File file) {
+    static SpreadsheetReader create(File file, excelImplementation = ExcelImplementation.FastExcel) {
       if (file == null) {
         throw new IllegalArgumentException("File is null, cannot create SpreadsheetReader")
       }
@@ -22,10 +20,11 @@ interface SpreadsheetReader extends Closeable {
       return switch (excelImplementation) {
         case ExcelImplementation.POI -> new ExcelReader(file)
         case ExcelImplementation.FastExcel -> new FExcelReader(file)
+        default -> throw new IllegalArgumentException("Unknown excelImplementation: $excelImplementation")
       }
     }
 
-    static SpreadsheetReader create(String filePath) throws Exception {
+    static SpreadsheetReader create(String filePath, excelImplementation = ExcelImplementation.FastExcel) throws Exception {
       if (filePath == null) {
         throw new IllegalArgumentException("filePath is null, cannot create SpreadsheetReader")
       }

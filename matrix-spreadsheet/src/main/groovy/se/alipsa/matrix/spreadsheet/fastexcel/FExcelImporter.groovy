@@ -210,7 +210,7 @@ class FExcelImporter {
           rowList = []
           List list = row.asList()
           if (colNames.size() == 0) {
-            println "Building header"
+            //println "Building header"
             if (firstRowAsColNames) {
               list.eachWithIndex { Cell cell, int i ->
                 if (i >= startColNumZI && i <= endColNumZI) {

@@ -18,15 +18,13 @@ class SpreadsheetImporterTest {
 
   @Test
   void testExcelImport() {
-    SpreadsheetImporter.excelImplementation = ExcelImplementation.POI
-    excelImportAssertions()
-    SpreadsheetImporter.excelImplementation = ExcelImplementation.FastExcel
-    excelImportAssertions()
+    excelImportAssertions(ExcelImplementation.POI)
+    excelImportAssertions(ExcelImplementation.FastExcel)
 
   }
 
-  static void excelImportAssertions() {
-    def table = importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true)
+  static void excelImportAssertions(ExcelImplementation excelImplementation) {
+    def table = importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true, excelImplementation: excelImplementation)
     table = table.convert(id: Integer, bar: LocalDate, baz: BigDecimal, DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS'))
     //println(table.content())
     assertEquals(3, table[2, 0])
@@ -37,18 +35,17 @@ class SpreadsheetImporterTest {
 
   @Test
   void TestImportWithColnames() {
-    SpreadsheetImporter.excelImplementation = ExcelImplementation.POI
-    importWithColnamesAssertions()
-    SpreadsheetImporter.excelImplementation = ExcelImplementation.FastExcel
-    importWithColnamesAssertions()
+    importWithColnamesAssertions(ExcelImplementation.POI)
+    importWithColnamesAssertions(ExcelImplementation.FastExcel)
   }
 
-  static void importWithColnamesAssertions() {
+  static void importWithColnamesAssertions(ExcelImplementation excelImplementation) {
     def table = importSpreadsheet(
         "file": "Book1.xlsx",
         "endRow": 12,
         "startCol": 'A',
-        "endCol": 'D'
+        "endCol": 'D',
+        'excelImplementation': excelImplementation
     )
     //println(table.content())
     assertEquals(3.0d, table[2, 0])
@@ -59,13 +56,11 @@ class SpreadsheetImporterTest {
 
   @Test
   void testImportMultipleSheets() {
-    SpreadsheetImporter.excelImplementation = ExcelImplementation.POI
-    importMultipleSheetsAssertions()
-    SpreadsheetImporter.excelImplementation = ExcelImplementation.FastExcel
-    importMultipleSheetsAssertions()
+    importMultipleSheetsAssertions(ExcelImplementation.POI)
+    importMultipleSheetsAssertions(ExcelImplementation.FastExcel)
   }
 
-  void importMultipleSheetsAssertions() {
+  void importMultipleSheetsAssertions(ExcelImplementation excelImplementation) {
 
       Map<String, Matrix> sheets = SpreadsheetImporter.importSpreadsheets("Book2.xlsx",
           [
@@ -73,7 +68,7 @@ class SpreadsheetImporterTest {
               [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true],
               ['key': 'comp', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: false],
               ['key': 'comp2', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: true]
-          ])
+          ], excelImplementation)
       assertEquals(4, sheets.size())
       Matrix table2 = sheets.Sheet2
       assertEquals(3i, table2[2, 0, Integer])

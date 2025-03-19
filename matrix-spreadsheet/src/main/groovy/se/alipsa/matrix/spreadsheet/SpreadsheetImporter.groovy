@@ -10,9 +10,6 @@ import java.text.NumberFormat
 
 class SpreadsheetImporter {
 
-  public static ExcelImplementation excelImplementation = ExcelImplementation.FastExcel
-
-
   /**
    *
    * @param file the ods or excel file to import
@@ -28,7 +25,8 @@ class SpreadsheetImporter {
   static Matrix importSpreadsheet(String file, int sheet,
                                   int startRow = 1, int endRow,
                                   int startColumn = 1, int endColumn,
-                                  boolean firstRowAsColNames = true) {
+                                  boolean firstRowAsColNames = true,
+                                  ExcelImplementation excelImplementation = ExcelImplementation.FastExcel) {
     sheet = sheet -1
     if (file.toLowerCase().endsWith(".ods")) {
       return OdsImporter.importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
@@ -52,9 +50,10 @@ class SpreadsheetImporter {
    * @return A Matrix corresponding to the spreadsheet data.
    */
   static Matrix importSpreadsheet(String file, int sheet,
-                                       int startRow = 1, int endRow,
-                                       String startColumn = 'A', String endColumn,
-                                       boolean firstRowAsColNames = true) {
+                                  int startRow = 1, int endRow,
+                                  String startColumn = 'A', String endColumn,
+                                  boolean firstRowAsColNames = true,
+                                  ExcelImplementation excelImplementation = ExcelImplementation.FastExcel) {
     sheet = sheet -1
     if (file.toLowerCase().endsWith(".ods")) {
       return OdsImporter.importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
@@ -78,9 +77,10 @@ class SpreadsheetImporter {
    * @return A Matrix corresponding to the spreadsheet data.
    */
   static Matrix importSpreadsheet(String file, String sheet = 'Sheet1',
-                                      int startRow = 1, int endRow,
-                                      int startCol = 1, int endCol,
-                                      boolean firstRowAsColNames = true) {
+                                  int startRow = 1, int endRow,
+                                  int startCol = 1, int endCol,
+                                  boolean firstRowAsColNames = true,
+                                  ExcelImplementation excelImplementation = ExcelImplementation.FastExcel) {
     if (file.toLowerCase().endsWith(".ods")) {
       return OdsImporter.importOds(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
@@ -103,9 +103,10 @@ class SpreadsheetImporter {
    * @return A Matrix corresponding to the spreadsheet data.
    */
   static Matrix importSpreadsheet(String file, String sheet = 'Sheet1',
-                                      int startRow = 1, int endRow,
-                                      String startCol = 'A', String endCol,
-                                      boolean firstRowAsColNames = true) {
+                                  int startRow = 1, int endRow,
+                                  String startCol = 'A', String endCol,
+                                  boolean firstRowAsColNames = true,
+                                  ExcelImplementation excelImplementation = ExcelImplementation.FastExcel) {
     if (file.toLowerCase().endsWith(".ods")) {
       return OdsImporter.importOds(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
@@ -162,6 +163,7 @@ class SpreadsheetImporter {
     Boolean firstRowAsColNames = params.getOrDefault('firstRowAsColNames', true) as Boolean
     validateNotNull(firstRowAsColNames, 'firstRowAsColNames')
 
+    ExcelImplementation excelImplementation = params.getOrDefault('excelImplementation', ExcelImplementation.FastExcel) as ExcelImplementation
     if (sheet instanceof Number) {
       return importSpreadsheet(file,
           sheet as int,
@@ -169,7 +171,8 @@ class SpreadsheetImporter {
           endRow as int,
           startCol as int,
           endCol as int,
-          firstRowAsColNames as boolean)
+          firstRowAsColNames as boolean,
+          excelImplementation)
     }
     return importSpreadsheet(
         file,
@@ -178,11 +181,15 @@ class SpreadsheetImporter {
         endRow as int,
         startCol as int,
         endCol as int,
-        firstRowAsColNames as boolean
+        firstRowAsColNames as boolean,
+        excelImplementation
     )
   }
 
-  static Map<String, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+  static Map<String, Matrix> importSpreadsheets(String fileName,
+                                                List<Map> sheetParams,
+                                                ExcelImplementation excelImplementation = ExcelImplementation.FastExcel,
+                                                NumberFormat... formatOpt) {
     if (fileName.toLowerCase().endsWith(".ods")) {
       return OdsImporter.importOdsSheets(fileName, sheetParams, formatOpt)
     }
