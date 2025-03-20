@@ -3,6 +3,8 @@ package se.alipsa.matrix.spreadsheet.fastexcel
 import org.dhatim.fastexcel.reader.*
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
+import java.util.concurrent.atomic.AtomicInteger
+
 class FExcelUtil {
 
   private FExcelUtil() {
@@ -38,5 +40,10 @@ class FExcelUtil {
     Cell cell = row.getCell(new CellAddress("$columnName$rowNumber"))
     if (cell == null) return null
     [cellAddress: cell.address, formatId: cell.dataFormatId, formatString: cell.dataFormatString, rawValue: cell.rawValue]
+  }
+
+  static Row getRow(Sheet sheet, int rowIdx) {
+    AtomicInteger index = new AtomicInteger()
+    sheet.openStream().find(n -> rowIdx == index.getAndIncrement()) as Row
   }
 }

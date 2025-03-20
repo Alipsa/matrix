@@ -4,6 +4,7 @@ import org.dhatim.fastexcel.reader.Cell
 import org.dhatim.fastexcel.reader.CellType
 import org.dhatim.fastexcel.reader.Row
 import org.dhatim.fastexcel.reader.Sheet
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.ValueExtractor
 
@@ -15,14 +16,16 @@ import java.time.LocalDateTime
 class FExcelValueExtractor extends ValueExtractor {
 
    private final Sheet sheet
+   private final boolean isDate1904
    //private final FormulaEvaluator evaluator
    //private final DataFormatter dataFormatter
 
-   FExcelValueExtractor(Sheet sheet /*, DataFormatter... dataFormatterOpt*/) {
+   FExcelValueExtractor(Sheet sheet, boolean isDate1904) {
       if (sheet == null) {
          throw new IllegalArgumentException("Sheet is null, will not be able to extract any values")
       }
       this.sheet = sheet
+      this.isDate1904 = isDate1904
       /*
       evaluator = sheet.getWorkbook().getCreationHelper().createFormulaEvaluator()
       if (dataFormatterOpt.length > 0) {
@@ -34,7 +37,7 @@ class FExcelValueExtractor extends ValueExtractor {
 
 
    Double getDouble(int row, int column) {
-      return getDouble(sheet.getRow(row), column)
+      return getDouble(FExcelUtil.getRow(sheet, row), column)
    }
 
    Double getDouble(Row row, int column) {
@@ -42,7 +45,7 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    Float getFloat(int row, int column) {
-      Double d = getDouble(sheet.getRow(row), column)
+      Double d = getDouble(FExcelUtil.getRow(sheet, row), column)
       return d == null ? null : d.floatValue()
    }
 
@@ -53,7 +56,7 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    Integer getInteger(int row, int column) {
-      return getInteger(sheet.getRow(row), column)
+      return getInteger(FExcelUtil.getRow(sheet, row), column)
    }
 
    Integer getInteger(Row row, int column) {
@@ -61,7 +64,7 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    String getString(int row, int column) {
-      return getString(sheet.getRow(row), column)
+      return getString(FExcelUtil.getRow(sheet, row), column)
    }
 
    String getString(Row row, int column) {
@@ -75,7 +78,7 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    Long getLong(int row, int column) {
-      return getLong(sheet.getRow(row), column)
+      return getLong(FExcelUtil.getRow(sheet, row), column)
    }
 
    Long getLong(Row row, int column) {
@@ -83,7 +86,7 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    Boolean getBoolean(int row, int column) {
-      return getBoolean(sheet.getRow(row), column)
+      return getBoolean(FExcelUtil.getRow(sheet, row), column)
    }
 
    Boolean getBoolean(Row row, int column) {
@@ -107,41 +110,52 @@ class FExcelValueExtractor extends ValueExtractor {
       if (cell == null) {
          return null
       }
-
+      def formatId = cell.dataFormatId
+      def formatString = cell.dataFormatString
       switch (cell.getType()) {
-         case CellType.BLANK:
+         case CellType.EMPTY:
             return null
-         case CellType.NUMERIC:
-            if (FDateUtil.isCellDateFormatted(cell)) {
-               return SpreadsheetUtil.dateTimeFormatter.format(cell.getLocalDateTimeCellValue())
+         case CellType.NUMBER:
+            if (FDateUtil.isADateFormat(formatId, formatString)) {
+               def date = cell.asDate()
+               if (!formatString.toLowerCase().contains('hh') && date.hour == 0 && date.minute == 0) {
+                  return date.toLocalDate()
+               } else {
+                  return date
+               }
+            } else {
+               //println ("adding number " + cell.asNumber())
+               return cell.asNumber()
             }
-            return cell.getNumericCellValue()
          case CellType.BOOLEAN:
-            return cell.getBooleanCellValue()
+            return cell.asBoolean()
          case CellType.STRING:
-            return cell.getStringCellValue()
+            return cell.asString()
          case CellType.FORMULA:
             return getValueFromFormulaCell(cell)
          default:
-            return dataFormatter.formatCellValue(cell)
+            return cell.getRawValue()
       }
    }
 
    private Object getValueFromFormulaCell(Cell cell) {
-      switch (evaluator.evaluateFormulaCell(cell)) {
-         case CellType.BLANK:
-            return null
-         case CellType.NUMERIC:
-            if (FDateUtil.isCellDateFormatted(cell)) {
-               return cell.getLocalDateTimeCellValue()
-            }
-            return evaluator.evaluate(cell).getNumberValue()
-         case CellType.BOOLEAN:
-            return evaluator.evaluate(cell).getBooleanValue()
-         case CellType.STRING:
-            return evaluator.evaluate(cell).getStringValue()
-         default:
-            return dataFormatter.formatCellValue(cell)
+      String rawValue = cell.getRawValue()
+      Integer dataFormatId = cell.dataFormatId
+      String dateFormatString = cell.dataFormatString
+      if (FDateUtil.isADateFormat(dataFormatId, dateFormatString)) {
+         //println "adding FORMULA date $rawValue"
+         def date = FDateUtil.convertToDate(ValueConverter.asDouble(rawValue), isDate1904)
+         if (!dateFormatString.toLowerCase().contains('hh') && date.hour == 0 && date.minute == 0) {
+            return date.toLocalDate()
+         } else {
+            return date
+         }
+      } else if (ValueConverter.isNumeric(rawValue)){
+         //println "adding FORMULA number $rawValue"
+         return ValueConverter.asNumber(rawValue)
+      } else {
+         //println "adding FORMULA string $rawValue"
+         return rawValue
       }
    }
 }

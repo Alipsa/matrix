@@ -197,6 +197,7 @@ class FExcelImporter {
     //println "Importing sheet ${sheet.name}, startRowNum = $startRowNum, endRowNum = $endRowNum"
     //int startRowNumZI = startRowNum - 1
     //int endRowNumZI = endRowNum - 1
+    FExcelValueExtractor ext = new FExcelValueExtractor(sheet, isDate1904)
     int startColNumZI = startColNum - 1
     int endColNumZI = endColNum - 1
     List<String> colNames = []
@@ -230,46 +231,7 @@ class FExcelImporter {
               if (cell == null) {
                 rowList.add(null)
               } else {
-                Integer dataFormatId = cell.dataFormatId
-                String dateFormatString = cell.dataFormatString
-                switch (cell.type) {
-                  case CellType.EMPTY -> rowList.add(null)
-                  case CellType.NUMBER -> {
-                    if (isDate(dataFormatId, dateFormatString)) {
-                      def date = cell.asDate()
-                      if (!dateFormatString.toLowerCase().contains('hh') && date.hour == 0 && date.minute == 0) {
-                        rowList.add(date.toLocalDate())
-                      } else {
-                        rowList.add(date)
-                      }
-                    } else {
-                      //println ("adding number " + cell.asNumber())
-                      rowList.add(cell.asNumber())
-                    }
-                  }
-                  case CellType.STRING -> rowList.add(cell.asString())
-                  case CellType.BOOLEAN -> rowList.add(cell.asBoolean())
-                  case CellType.FORMULA -> {
-                    String rawValue = cell.getRawValue()
-                    if (isDate(dataFormatId, dateFormatString)) {
-                      //println "adding FORMULA date $rawValue"
-                      def date = FDateUtil.convertToDate(ValueConverter.asDouble(rawValue), isDate1904)
-                      if (!dateFormatString.toLowerCase().contains('hh') && date.hour == 0 && date.minute == 0) {
-                        rowList.add(date.toLocalDate())
-                      } else {
-                        rowList.add(date)
-                      }
-                    } else if (ValueConverter.isNumeric(rawValue)){
-                      //println "adding FORMULA number $rawValue"
-                      rowList.add(ValueConverter.asNumber(rawValue))
-                    } else {
-                      //println "adding FORMULA string $rawValue"
-                      rowList.add(rawValue)
-                    }
-                  }
-                  //case CellType.ERROR -> rowList.add(null)
-                  default -> rowList.add(cell.getRawValue())
-                }
+                rowList.add(ext.getObject(cell))
               }
             }
           }
@@ -295,10 +257,5 @@ class FExcelImporter {
         .build()
     m.metaData.isDate1904 = isDate1904
     m
-  }
-
-  static boolean isDate(Integer dateFormatId, String dateFormatString) {
-    //return DATE_FORMAT_IDS.contains(dateFormatId)
-    FDateUtil.isADateFormat(dateFormatId, dateFormatString)
   }
 }

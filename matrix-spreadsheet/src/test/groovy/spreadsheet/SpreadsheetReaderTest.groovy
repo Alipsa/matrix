@@ -20,6 +20,7 @@ class SpreadsheetReaderTest {
       assertEquals(4, endCol, "$spreadsheetName: End column")
       def firstRow = reader.findRowNum(1, 'B', 'gång')
       assertEquals(5, firstRow, "$spreadsheetName: find first row matching gång")
+      assert 4 == reader.findColNum(1, 8, '20.9')
     }
   }
 }
