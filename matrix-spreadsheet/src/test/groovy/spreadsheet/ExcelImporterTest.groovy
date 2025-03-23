@@ -3,9 +3,7 @@ package spreadsheet
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
-import se.alipsa.matrix.spreadsheet.excel.ExcelImporter
-import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
-import se.alipsa.matrix.spreadsheet.fastexcel.FExcelUtil
+import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
 
 import java.time.format.DateTimeFormatter
 

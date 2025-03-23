@@ -1,4 +1,4 @@
-package se.alipsa.matrix.spreadsheet.ods
+package se.alipsa.matrix.spreadsheet.sods
 
 import com.github.miachm.sods.OfficeCurrency
 import com.github.miachm.sods.OfficePercentage
@@ -13,11 +13,11 @@ import java.time.LocalDateTime
 /**
  * A value extractor specialized in extracting info from a Calc (ods) file
  */
-class OdsValueExtractor extends ValueExtractor {
+class SOdsValueExtractor extends ValueExtractor {
 
    private final Sheet sheet
 
-   OdsValueExtractor(Sheet sheet) {
+   SOdsValueExtractor(Sheet sheet) {
       this.sheet = sheet
    }
 

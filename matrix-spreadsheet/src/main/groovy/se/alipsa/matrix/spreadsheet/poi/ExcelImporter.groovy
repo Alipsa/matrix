@@ -1,9 +1,10 @@
-package se.alipsa.matrix.spreadsheet.excel
+package se.alipsa.matrix.spreadsheet.poi
 
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.DateUtil
+import org.apache.poi.util.IOUtils
 import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
@@ -21,6 +22,9 @@ class ExcelImporter {
 
   private static Logger log = LogManager.getLogger()
 
+  static {
+    IOUtils.setByteArrayMaxOverride(600_000_000)
+  }
 
   static Matrix importExcel(URL url, String sheetName = 'Sheet1',
                             int startRow = 1, int endRow,

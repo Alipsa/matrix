@@ -1,15 +1,21 @@
-package se.alipsa.matrix.spreadsheet.excel
+package se.alipsa.matrix.spreadsheet.poi
 
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.util.IOUtils
 import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 class ExcelReader implements SpreadsheetReader  {
+
+    static {
+        IOUtils.setByteArrayMaxOverride(600_000_000)
+    }
+
     private Workbook workbook
 
     ExcelReader(File excelFile) {

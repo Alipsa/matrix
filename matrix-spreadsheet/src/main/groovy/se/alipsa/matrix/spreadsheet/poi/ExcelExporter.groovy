@@ -1,4 +1,4 @@
-package se.alipsa.matrix.spreadsheet.excel
+package se.alipsa.matrix.spreadsheet.poi
 
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger

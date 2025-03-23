@@ -5,7 +5,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.ExcelImplementation
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
-import se.alipsa.matrix.spreadsheet.excel.ExcelImporter
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter

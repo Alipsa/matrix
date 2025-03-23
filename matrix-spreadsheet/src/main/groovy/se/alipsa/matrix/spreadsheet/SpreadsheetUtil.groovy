@@ -49,9 +49,13 @@ class SpreadsheetUtil {
    }
 
    static List<String> createColumnNames(int startCol, int endCol) {
+      createColumnNames(endCol - startCol + 1)
+   }
+
+   static List<String> createColumnNames(int nCols) {
       def header = []
-      for (int i = 1; i <= endCol - startCol + 1; i++) {
-         header.add(String.valueOf(i))
+      for (int i = 1; i <= nCols; i++) {
+         header.add("c$i")
       }
       header
    }

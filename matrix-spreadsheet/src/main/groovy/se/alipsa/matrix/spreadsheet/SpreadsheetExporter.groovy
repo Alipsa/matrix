@@ -1,9 +1,9 @@
 package se.alipsa.matrix.spreadsheet
 
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
-import se.alipsa.matrix.spreadsheet.ods.OdsExporter
+import se.alipsa.matrix.spreadsheet.sods.SOdsExporter
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.excel.ExcelExporter
+import se.alipsa.matrix.spreadsheet.poi.ExcelExporter
 
 class SpreadsheetExporter {
 
@@ -11,7 +11,7 @@ class SpreadsheetExporter {
 
   static String exportSpreadsheet(File file, Matrix data) {
     if (file.getName().toLowerCase().endsWith(".ods")) {
-      return OdsExporter.exportOds(file, data)
+      return SOdsExporter.exportOds(file, data)
     }
     return switch (excelImplementation) {
       case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, data)
@@ -21,7 +21,7 @@ class SpreadsheetExporter {
 
   static String exportSpreadsheet(File file, Matrix data, String sheetName) {
     if (file.getName().toLowerCase().endsWith(".ods")) {
-      return OdsExporter.exportOds(file, data, sheetName)
+      return SOdsExporter.exportOds(file, data, sheetName)
     }
     return switch (excelImplementation) {
       case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, data, sheetName)
@@ -31,7 +31,7 @@ class SpreadsheetExporter {
 
   static List<String> exportSpreadsheets(File file, List<Matrix> data, List<String> sheetNames) {
     if (file.getName().toLowerCase().endsWith(".ods")) {
-      return OdsExporter.exportOdsSheets(file, data, sheetNames)
+      return SOdsExporter.exportOdsSheets(file, data, sheetNames)
     }
     switch (excelImplementation) {
       case ExcelImplementation.POI -> ExcelExporter.exportExcelSheets(file, data, sheetNames)

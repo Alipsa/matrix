@@ -1,10 +1,9 @@
 package se.alipsa.matrix.spreadsheet
 
-import se.alipsa.matrix.spreadsheet.excel.ExcelExporter
-import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
+
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelReader
-import se.alipsa.matrix.spreadsheet.ods.OdsReader
-import se.alipsa.matrix.spreadsheet.excel.ExcelReader
+import se.alipsa.matrix.spreadsheet.sods.SOdsReader
+import se.alipsa.matrix.spreadsheet.poi.ExcelReader
 
 interface SpreadsheetReader extends Closeable {
 
@@ -15,7 +14,7 @@ interface SpreadsheetReader extends Closeable {
         throw new IllegalArgumentException("File is null, cannot create SpreadsheetReader")
       }
       if (file.getName().toLowerCase().endsWith(".ods")) {
-        return new OdsReader(file)
+        return new SOdsReader(file)
       }
       return switch (excelImplementation) {
         case ExcelImplementation.POI -> new ExcelReader(file)
@@ -29,7 +28,7 @@ interface SpreadsheetReader extends Closeable {
         throw new IllegalArgumentException("filePath is null, cannot create SpreadsheetReader")
       }
       if (filePath.toLowerCase().endsWith(".ods")) {
-        return new OdsReader(filePath)
+        return new SOdsReader(filePath)
       }
       return switch (excelImplementation) {
         case ExcelImplementation.POI -> new ExcelReader(filePath)

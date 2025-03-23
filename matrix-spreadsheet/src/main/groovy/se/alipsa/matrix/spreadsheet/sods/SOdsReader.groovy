@@ -1,4 +1,4 @@
-package se.alipsa.matrix.spreadsheet.ods
+package se.alipsa.matrix.spreadsheet.sods
 
 import com.github.miachm.sods.Sheet
 import com.github.miachm.sods.SpreadSheet
@@ -9,15 +9,15 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 /**
  * Extract various information from a Calc (ods) file.
  */
-class OdsReader implements SpreadsheetReader {
+class SOdsReader implements SpreadsheetReader {
 
    private SpreadSheet spreadSheet
 
-   OdsReader(File odsFile) {
+   SOdsReader(File odsFile) {
       spreadSheet = new SpreadSheet(odsFile)
    }
 
-   OdsReader(String filePath) throws Exception {
+   SOdsReader(String filePath) throws Exception {
       this(FileUtil.checkFilePath(filePath))
    }
 
@@ -80,7 +80,7 @@ class OdsReader implements SpreadsheetReader {
    }
 
    static int findRowNum(Sheet sheet, int colNumber, String content) {
-      OdsValueExtractor ext = new OdsValueExtractor(sheet)
+      SOdsValueExtractor ext = new SOdsValueExtractor(sheet)
       int poiColNum = colNumber -1
 
       for (int rowCount = 0; rowCount < sheet.getDataRange().getLastRow(); rowCount ++) {
@@ -123,7 +123,7 @@ class OdsReader implements SpreadsheetReader {
 
    static int findColNum(Sheet sheet, int rowNumber, String content) {
       if (content==null) return -1
-      OdsValueExtractor ext = new OdsValueExtractor(sheet)
+      SOdsValueExtractor ext = new SOdsValueExtractor(sheet)
       int poiRowNum = rowNumber - 1
       for (int colNum = 0; colNum < sheet.getDataRange().getLastColumn(); colNum++) {
          if (content == ext.getString(poiRowNum, colNum)) {

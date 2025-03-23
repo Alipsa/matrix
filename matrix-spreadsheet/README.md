@@ -61,11 +61,11 @@ If you need to import from a stream you must use the importer specific to the ty
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.excel.ExcelImporter
-import se.alipsa.matrix.spreadsheet.ods.OdsImporter
+import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
+import se.alipsa.matrix.spreadsheet.sods.OdsImporter
 
 // Importing an excel spreadsheet
-try(InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
+try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
   Matrix table = ExcelImporter.importExcel(
       is, 'Sheet1', 1, 12, 'A', 'D', true
   )
@@ -73,7 +73,7 @@ try(InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
 }
 
 // importing an open document spreadsheet
-try(InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
+try (InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
   Matrix table = OdsImporter.importOds(
       is, 'Sheet1', 1, 12, 'A', 'D', true
   )

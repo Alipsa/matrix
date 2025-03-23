@@ -2,18 +2,15 @@ package spreadsheet
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.excel.ExcelImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelUtil
 
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
 import static se.alipsa.matrix.core.ValueConverter.asDouble
-import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importSpreadsheet
 
 class FExcelImporterTest {
 

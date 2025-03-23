@@ -1,4 +1,4 @@
-package se.alipsa.matrix.spreadsheet.ods
+package se.alipsa.matrix.spreadsheet.sods
 
 import com.github.miachm.sods.Sheet
 import com.github.miachm.sods.SpreadSheet
@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
-class OdsExporter {
+class SOdsExporter {
   private static Logger logger = LogManager.getLogger()
 
 

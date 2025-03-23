@@ -1,6 +1,6 @@
-package se.alipsa.matrix.spreadsheet.ods
+package se.alipsa.matrix.spreadsheet.sods
 
-import com.github.miachm.sods.OfficePercentage
+
 import com.github.miachm.sods.Sheet
 import com.github.miachm.sods.SpreadSheet
 import se.alipsa.matrix.spreadsheet.FileUtil
@@ -11,9 +11,9 @@ import se.alipsa.matrix.core.ValueConverter
 import java.text.NumberFormat
 
 /**
- * Import Calc (ods file) into Renjin R in the form of a data.frame (ListVector).
+ * Import Calc (ods file) into a Matrix.
  */
-class OdsImporter {
+class SOdsImporter {
 
   /**
    * Import an excel spreadsheet
@@ -254,7 +254,7 @@ class OdsImporter {
     endCol--
 
     //println "importOds: startCol = $startCol, endCol = $endCol"
-    OdsValueExtractor ext = new OdsValueExtractor(sheet)
+    SOdsValueExtractor ext = new SOdsValueExtractor(sheet)
     List<List<?>> matrix = []
     List<?> rowList
     for (int rowIdx = startRow; rowIdx <= endRow; rowIdx++) {
@@ -277,7 +277,7 @@ class OdsImporter {
     startRowNum--
     startColNum--
     endColNum--
-    OdsValueExtractor ext = new OdsValueExtractor(sheet)
+    SOdsValueExtractor ext = new SOdsValueExtractor(sheet)
     for (int i = 0; i <= endColNum - startColNum; i++) {
       header.add(ext.getString(startRowNum, startColNum + i))
     }

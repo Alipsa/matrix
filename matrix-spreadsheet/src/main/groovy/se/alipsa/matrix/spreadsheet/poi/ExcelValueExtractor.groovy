@@ -1,4 +1,4 @@
-package se.alipsa.matrix.spreadsheet.excel
+package se.alipsa.matrix.spreadsheet.poi
 
 import org.apache.poi.ss.usermodel.*
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil

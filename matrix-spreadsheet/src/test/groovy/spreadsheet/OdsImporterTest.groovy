@@ -4,12 +4,9 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
-import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
-import se.alipsa.matrix.spreadsheet.fastexcel.FExcelUtil
-import se.alipsa.matrix.spreadsheet.ods.OdsImporter
+import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
 
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
@@ -45,7 +42,7 @@ class OdsImporterTest {
   @Test
   void testImportFromStream() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
-      Matrix table = OdsImporter.importOds(
+      Matrix table = SOdsImporter.importOds(
           is, 'Sheet1', 1, 12, 'A', 'D', true
       )
       assertEquals(3.0, table[2, 0])
@@ -59,7 +56,7 @@ class OdsImporterTest {
   @Test
   void testImportMultipleSheets() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
-      Map<String, Matrix> sheets = OdsImporter.importOdsSheets(is,
+      Map<String, Matrix> sheets = SOdsImporter.importOdsSheets(is,
        [
            [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
            [sheetName: 'Sheet2', startRow: 2, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: false],
@@ -122,7 +119,7 @@ class OdsImporterTest {
   @Test
   void testFormulas() {
     URL file = this.getClass().getResource("/Book3.ods")
-    Matrix m = OdsImporter.importOds(file, 1, 2, 8, 'A', 'G', false)
+    Matrix m = SOdsImporter.importOds(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
     println m.content()
     assertEquals(21, m[6, 0, Integer])
