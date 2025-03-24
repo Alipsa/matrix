@@ -190,7 +190,7 @@ class ValueConverter {
 
   static LocalDateTime asLocalDateTime(Object o, DateTimeFormatter dateTimeFormatter = null, LocalDateTime valueIfNull = null) {
     if (o == null) return valueIfNull
-    if (o instanceof LocalDate) return o as LocalDateTime
+    if (o instanceof LocalDate) return o.atStartOfDay()
     if (o instanceof LocalDateTime) return o
     if (o instanceof Date) return new Timestamp(o.getTime()).toLocalDateTime()
     if (o instanceof Timestamp) return o.toLocalDateTime()

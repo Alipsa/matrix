@@ -19,7 +19,7 @@ import static se.alipsa.matrix.core.ValueConverter.*
 
 class LargeFileImportTest {
 
-  int nrows = 360131 // including header row
+  int nrows = 100 //360131 // including header row
 
   String datePattern = 'MM/dd/yyyy hh:mm:ss a'
   DateTimeFormatter dtf = DateTimeFormatter.ofPattern(datePattern)

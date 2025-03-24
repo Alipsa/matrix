@@ -514,7 +514,7 @@ class Matrix implements Iterable<Row> {
       if (types[colName]) {
         convertedColumns.add(new Column(colName, ListConverter.convert(
             column(i),
-            types[colName] as Class<Object>,
+            types[colName],
             valueIfNull,
             dateTimeFormat,
             numberFormat

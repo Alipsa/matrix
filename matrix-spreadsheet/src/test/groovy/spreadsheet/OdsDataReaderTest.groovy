@@ -1,19 +1,17 @@
 package spreadsheet;
 
 import org.junit.jupiter.api.Test;
-import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader;
-import java.io.IOException;
-import java.io.InputStream;
+import se.alipsa.matrix.spreadsheet.fastods.reader.OdsEventDataReader
+
 import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
+import java.time.Instant
 
 class OdsDataReaderTest {
 
   @Test
   void testDataReader() throws IOException {
     try (InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
-      List<List<?>> rows = OdsDataReader.load(is, 'Sheet1')
+      List<List<?>> rows = OdsEventDataReader.load(is, 'Sheet1')
       if (rows != null) {
         for (List<?> row : rows) {
           println("$row (${row.size()})")
@@ -28,7 +26,7 @@ class OdsDataReaderTest {
   void testHugeFile() throws IOException {
     try (InputStream is = this.getClass().getResourceAsStream("/Crime_Data_from_2023.ods")) {
       Instant start = Instant.now()
-      List<List<?>> rows = OdsDataReader.load(is, "Sheet1")
+      List<List<?>> rows = OdsEventDataReader.load(is, "Sheet1")
       Instant finish = Instant.now()
       System.out.println("Parsing time: " + formatDuration(Duration.between(start, finish)));
       assert 360131 == rows.size()

@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
+import groovy.transform.CompileStatic
 import org.apache.commons.io.IOUtils
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
@@ -8,14 +9,15 @@ import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
 
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 import java.text.NumberFormat
 
 /**
  * Import Calc (ods file)
  */
+@CompileStatic
 class FOdsImporter {
+
+  static final OdsDataReader odsDataReader = OdsDataReader.create(OdsDataReader.ReaderImpl.EVENT)
 
   static Matrix importOds(String file, int sheetNumber,
                           int startRow = 1, int endRow,
@@ -33,16 +35,16 @@ class FOdsImporter {
   }
 
   static Matrix importOds(String file, int sheetNumber,
-                          int startRow = 1, int endRow,
-                          int startCol = 1, int endCol,
+                          Integer startRow = 1, Integer endRow,
+                          Integer startCol = 1, Integer endCol,
                           boolean firstRowAsColNames = true) {
 
     File odsFile = FileUtil.checkFilePath(file)
     Spreadsheet spreadSheet
     try (FileInputStream fis = new FileInputStream(odsFile)) {
-      spreadSheet = OdsDataReader.create().readOds(fis, [
+      spreadSheet = odsDataReader.readOds(fis, [
           (sheetNumber): [startRow, endRow, startCol, endCol]
-      ])
+      ] as Map<Object, List<Integer>>)
     }
     Sheet sheet = spreadSheet[sheetNumber]
     return buildMatrix(sheet, firstRowAsColNames)
@@ -65,23 +67,23 @@ class FOdsImporter {
   }
 
   static Matrix importOds(InputStream is, String sheetName,
-                          int startRow = 1, int endRow,
-                          int startCol = 1, int endCol,
+                          Integer startRow = 1, Integer endRow,
+                          Integer startCol = 1, Integer endCol,
                           boolean firstRowAsColNames = true) {
-    def spreadSheet = OdsDataReader.create().readOds(is, [
+    def spreadSheet = odsDataReader.readOds(is, [
         (sheetName): [startRow, endRow, startCol, endCol]
-    ])
+    ] as Map<Object, List<Integer>>)
     Sheet sheet = spreadSheet[sheetName]
     return buildMatrix(sheet, firstRowAsColNames)
   }
 
-  static Matrix importOds(InputStream is, int sheetNum,
-                          int startRow = 1, int endRow,
-                          int startCol = 1, int endCol,
+  static Matrix importOds(InputStream is, Integer sheetNum,
+                          Integer startRow = 1, Integer endRow,
+                          Integer startCol = 1, Integer endCol,
                           boolean firstRowAsColNames = true) {
-    def spreadSheet = OdsDataReader.create().readOds(is, [
+    def spreadSheet = odsDataReader.readOds(is, [
         (sheetNum): [startRow, endRow, startCol, endCol]
-    ])
+    ] as Map<Object, List<Integer>>)
     Sheet sheet = spreadSheet[sheetNum]
     return buildMatrix(sheet, firstRowAsColNames)
   }
@@ -95,16 +97,16 @@ class FOdsImporter {
     }
   }
 
-  static Matrix importOds(URL url, int sheetNum,
-                          int startRow = 1, int endRow,
+  static Matrix importOds(URL url, Integer sheetNum,
+                          Integer startRow = 1, Integer endRow,
                           String startCol = 'A', String endCol,
                           boolean firstRowAsColNames = true) {
     try(InputStream is = url.openStream()) {
       int startColNum = SpreadsheetUtil.asColumnNumber(startCol)
       int endColNum = SpreadsheetUtil.asColumnNumber(endCol)
-      def spreadSheet = OdsDataReader.create().readOds(is, [
+      def spreadSheet = odsDataReader.readOds(is, [
           (sheetNum): [startRow, endRow, startColNum, endColNum]
-      ])
+      ] as Map<Object, List<Integer>>)
       Sheet sheet = spreadSheet[sheetNum]
       return buildMatrix(sheet, firstRowAsColNames)
     }
@@ -128,7 +130,7 @@ class FOdsImporter {
     Matrix.builder()
     .matrixName(sheet.sheetName)
     .columnNames(header)
-    .rows(sheet)
+    .rows(sheet as List<List>)
     .build()
   }
 
@@ -165,7 +167,7 @@ class FOdsImporter {
       Spreadsheet ss
       try (InputStream is = new ByteArrayInputStream(content)) {
         println "Create Spreadsheet $sheet with params ${[startRow, endRow, startCol, endCol]}"
-        ss = OdsDataReader.create().readOds(is, [(sheet): [startRow, endRow, startCol, endCol]])
+        ss = odsDataReader.readOds(is, [(sheet): [startRow, endRow, startCol, endCol]])
       }
       Matrix matrix = buildMatrix(ss[sheet], firstRowAsColNames)
       def key = it.getOrDefault("key", sheet)
@@ -175,9 +177,9 @@ class FOdsImporter {
     result
   }
 
-  static Map<Object, Matrix> importOdsSheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+  static Map<Object, Matrix> importOdsSheets(String fileName, List<Map> sheetParams, NumberFormat format = NumberFormat.getInstance()) {
     File file = FileUtil.checkFilePath(fileName)
-    importOdsSheets(file.toURI().toURL(),sheetParams, formatOpt)
+    importOdsSheets(file.toURI().toURL(),sheetParams, format)
   }
 
   private static List<String> buildHeaderRow(Sheet sheet, boolean firstRowHasColumnNames) {

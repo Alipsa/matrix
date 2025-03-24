@@ -1,7 +1,9 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
+
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLStreamConstants
+import javax.xml.stream.XMLStreamReader
 import javax.xml.stream.events.StartElement
 import javax.xml.stream.events.XMLEvent
 
@@ -13,15 +15,29 @@ class OdsXmlUtil {
 
   static String attributes(StartElement startElement) {
     StringBuilder sb = new StringBuilder()
-    startElement.attributes.each {sb.append(it.name.localPart)
-        .append('=')
-        .append(it.value)
-        .append(' ')
+    startElement.attributes.each {
+      sb.append(it.name.localPart)
+          .append('=')
+          .append(it.value)
+          .append(' ')
     }
     sb.toString()
   }
+
+  static String attributes(XMLStreamReader reader) {
+    StringBuilder sb = new StringBuilder()
+    if (reader.isStartElement())
+      for (int i = 0; i < reader.getAttributeCount(); i++) {
+        sb.append(reader.getAttributeLocalName(i))
+            .append('=')
+            .append(reader.getAttributeValue(i))
+            .append(' ')
+      }
+    sb.toString()
+  }
+
   static String eventTypeName(int eventTypeCode) {
-    return switch(eventTypeCode) {
+    return switch (eventTypeCode) {
       case XMLStreamConstants.ATTRIBUTE -> 'ATTRIBUTE'
       case XMLStreamConstants.CDATA -> 'CDATA'
       case XMLStreamConstants.CHARACTERS -> 'CHARACTERS'
