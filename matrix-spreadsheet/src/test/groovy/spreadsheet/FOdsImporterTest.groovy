@@ -16,7 +16,7 @@ class FOdsImporterTest {
 
   @Test
   void testOdsImport() {
-    def table = FOdsImporter.create().importOds(
+    def table = FOdsImporter.create().importSpreadsheet(
         this.class.getResource("/Book1.ods"),
         'Sheet1',
         1, 12,
@@ -33,7 +33,7 @@ class FOdsImporterTest {
 
   @Test
   void TestImportSection() {
-    def table = FOdsImporter.create().importOds(
+    def table = FOdsImporter.create().importSpreadsheet(
         this.class.getResource("/positions.ods"), 1,
         2, 9,
         'B', 'E',
@@ -46,7 +46,7 @@ class FOdsImporterTest {
 
   @Test
   void TestImportWithColnames() {
-    def table = FOdsImporter.create().importOds(
+    def table = FOdsImporter.create().importSpreadsheet(
         this.class.getResource("/Book2.ods"), 2,
         6, 10,
         'AC', 'BH',
@@ -61,7 +61,7 @@ class FOdsImporterTest {
   @Test
   void testImportFromStream() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
-      Matrix table = FOdsImporter.create().importOds(
+      Matrix table = FOdsImporter.create().importSpreadsheet(
           is, "Sheet1", 1, 12, 'A', 'D', true
       )
       assert ['id', 'foo', 'bar', 'baz'] == table.columnNames()
@@ -77,7 +77,7 @@ class FOdsImporterTest {
   @Test
   void testImportFromStreamOffset() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
-      Matrix m = FOdsImporter.create().importOds(is, "Sheet1", 3, 11, 2, 6, true)
+      Matrix m = FOdsImporter.create().importSpreadsheet(is, "Sheet1", 3, 11, 2, 6, true)
       m.convert(id: Integer)
       //println m.content()
       assert 8 == m.rowCount()
@@ -97,7 +97,7 @@ class FOdsImporterTest {
   @Test
   void testImportMultipleSheets() {
     URL url = this.getClass().getResource("/Book2.ods")
-    Map<Object, Matrix> sheets = FOdsImporter.create().importOdsSheets(url,
+    Map<Object, Matrix> sheets = FOdsImporter.create().importSpreadsheets(url,
      [
          [sheetNumber: 1, startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
          [sheetNumber: 2, startRow: 2, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: false],
@@ -105,6 +105,10 @@ class FOdsImporterTest {
          ['key': 'comp2', sheetNumber: 2, startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: true]
      ])
     assertEquals(4, sheets.size())
+    assert [1, 2, 'comp', 'comp2'] == sheets.keySet() as List
+    sheets.each {
+      println "$it.key = $it.value"
+    }
     Matrix table2 = sheets[2]
     table2.columnNames(['id', 'foo', 'bar', 'baz'])
     assertEquals(3, table2[2, 0, Integer])
@@ -160,7 +164,7 @@ class FOdsImporterTest {
   @Test
   void testFormulas() {
     URL file = this.getClass().getResource("/Book3.ods")
-    Matrix m = SOdsImporter.importOds(file, 1, 2, 8, 'A', 'G', false)
+    Matrix m = SOdsImporter.create().importSpreadsheet(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
     //println m.content()
     assertEquals(21, m[6, 0, Integer])
@@ -168,7 +172,7 @@ class FOdsImporterTest {
     assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001d)
     assertEquals('foobar1', m[0, 'c7'])
 
-    m = FOdsImporter.create().importOds(file, 1, 2, 8, 'A', 'G', false)
+    m = FOdsImporter.create().importSpreadsheet(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
     //println m.content()
     assertEquals(21, m[6, 0, Integer])

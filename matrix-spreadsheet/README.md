@@ -66,7 +66,7 @@ import se.alipsa.matrix.spreadsheet.sods.OdsImporter
 
 // Importing an excel spreadsheet
 try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
-  Matrix table = ExcelImporter.importExcel(
+  Matrix table = ExcelImporter.create().importExcel(
       is, 'Sheet1', 1, 12, 'A', 'D', true
   )
   assert 3.0d == table[2, 0]

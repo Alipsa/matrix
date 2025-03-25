@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.FileUtil
+import se.alipsa.matrix.spreadsheet.Importer
 import se.alipsa.matrix.spreadsheet.OdsImplementation
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
@@ -18,7 +19,7 @@ import static se.alipsa.matrix.spreadsheet.OdsImplementation.*
  * Import Calc (ods file)
  */
 @CompileStatic
-class FOdsImporter {
+class FOdsImporter implements Importer {
 
   OdsDataReader odsDataReader
 
@@ -38,11 +39,12 @@ class FOdsImporter {
     odsDataReader = reader
   }
 
-  Matrix importOds(String file, int sheetNumber,
+  @Override
+  Matrix importSpreadsheet(String file, int sheetNumber,
                           int startRow = 1, int endRow,
                           String startCol = 'A', String endCol,
                           boolean firstRowAsColNames = true) {
-    return importOds(
+    return importSpreadsheet(
         file,
         sheetNumber as int,
         startRow as int,
@@ -53,9 +55,10 @@ class FOdsImporter {
     )
   }
 
-  Matrix importOds(String file, int sheetNumber,
-                          Integer startRow = 1, Integer endRow,
-                          Integer startCol = 1, Integer endCol,
+  @Override
+  Matrix importSpreadsheet(String file, int sheetNumber,
+                           int startRow = 1, int endRow,
+                           int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
     //println("FOdsImporter.importOds: file=$file, sheetNumber=$sheetNumber, startRow=$startRow, endRow=$endRow, startCol=$startCol, endCol=$endCol, firstRowAsColNames=$firstRowAsColNames")
     File odsFile = FileUtil.checkFilePath(file)
@@ -67,7 +70,9 @@ class FOdsImporter {
     return buildMatrix(sheet, firstRowAsColNames)
   }
 
-  Matrix importOds(String file, String sheetName = 'Sheet1',
+
+  @Override
+  Matrix importSpreadsheet(String file, String sheetName = 'Sheet1',
                           int startRow = 1, int endRow,
                           int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
@@ -80,12 +85,24 @@ class FOdsImporter {
     return buildMatrix(sheet, firstRowAsColNames)
   }
 
-  Matrix importOds(InputStream is, String sheetName = 'Sheet1',
+  @Override
+  Matrix importSpreadsheet(String file, String sheetName, int startRow, int endRow, String startCol, String endCol, boolean firstRowAsColNames) {
+    importSpreadsheet(file,
+        sheetName,
+        startRow,
+        endRow,
+        SpreadsheetUtil.asColumnNumber(startCol),
+        SpreadsheetUtil.asColumnNumber(endCol),
+        firstRowAsColNames)
+  }
+
+  @Override
+  Matrix importSpreadsheet(InputStream is, String sheetName = 'Sheet1',
                           int startRow = 1, int endRow,
                           String startCol = 'A', String endCol,
                           boolean firstRowAsColNames = true) {
 
-    return importOds(
+    return importSpreadsheet(
         is,
         sheetName,
         startRow as int,
@@ -96,33 +113,37 @@ class FOdsImporter {
     )
   }
 
-  Matrix importOds(InputStream is, String sheetName,
-                          Integer startRow = 1, Integer endRow,
-                          Integer startCol = 1, Integer endCol,
+  @Override
+  Matrix importSpreadsheet(InputStream is, String sheetName,
+                           int startRow = 1, int endRow,
+                           int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
     def sheet = odsDataReader.readOds(is, sheetName, startRow, endRow, startCol, endCol)
     return buildMatrix(sheet, firstRowAsColNames)
   }
 
-  Matrix importOds(InputStream is, Integer sheetNum,
-                          Integer startRow = 1, Integer endRow,
-                          Integer startCol = 1, Integer endCol,
+  @Override
+  Matrix importSpreadsheet(InputStream is, int sheetNum,
+                           int startRow = 1, int endRow,
+                           int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
     def sheet = odsDataReader.readOds(is, sheetNum, startRow, endRow, startCol, endCol)
     return buildMatrix(sheet, firstRowAsColNames)
   }
 
-  Matrix importOds(URL url, String sheetName = 'Sheet1',
+  @Override
+  Matrix importSpreadsheet(URL url, String sheetName = 'Sheet1',
                           int startRow = 1, int endRow,
                           String startCol = 'A', String endCol,
                           boolean firstRowAsColNames = true) {
     try(InputStream is = url.openStream()) {
-      importOds(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      importSpreadsheet(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
   }
 
-  Matrix importOds(URL url, Integer sheetNum,
-                          Integer startRow = 1, Integer endRow,
+  @Override
+  Matrix importSpreadsheet(URL url, int sheetNum,
+                           int startRow = 1, int endRow,
                           String startCol = 'A', String endCol,
                           boolean firstRowAsColNames = true) {
     try(InputStream is = url.openStream()) {
@@ -133,10 +154,67 @@ class FOdsImporter {
     }
   }
 
-  Matrix importOds(URL url, String sheetName, int startRow = 1, int endRow, int startCol = 1, int endCol, boolean firstRowAsColNames = true) {
+  @Override
+  Matrix importSpreadsheet(URL url, String sheetName, int startRow = 1, int endRow, int startCol = 1, int endCol, boolean firstRowAsColNames = true) {
     try (InputStream is = url.openStream()) {
-      importOds(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      importSpreadsheet(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
+  }
+
+  @Override
+  Map<Object, Matrix> importSpreadsheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
+    byte[] bytes = IOUtils.toByteArray(is)
+    Map<Object, Matrix> result = [:]
+    sheetParams.each {
+      try (InputStream is2 = new ByteArrayInputStream(bytes)) {
+        Matrix matrix = importSpreadsheet(is2, it, formatOpt)
+        def sheet = it.getOrDefault(it.sheetName, it.sheetNumber)
+        def key = it.getOrDefault("key", sheet)
+        result.put(key, matrix)
+      }
+    }
+    result
+  }
+
+  Matrix importSpreadsheet(InputStream is, Map params, NumberFormat... formatOpt) {
+    def sheet = params.getOrDefault(params.sheetName, params.sheetNumber)
+    Integer startRow = params.startRow as Integer
+    Integer endRow = params.endRow as Integer
+    Integer startCol
+    if (ValueConverter.isNumeric(params.startCol, formatOpt)) {
+      startCol = ValueConverter.asInteger(params.startCol)
+    } else {
+      startCol = SpreadsheetUtil.asColumnNumber(params.startCol as String)
+    }
+    Integer endCol
+    if (ValueConverter.isNumeric(params.endCol, formatOpt)) {
+      endCol = ValueConverter.asInteger(params.endCol)
+    } else {
+      endCol = SpreadsheetUtil.asColumnNumber(params.endCol as String)
+    }
+
+    Boolean firstRowAsColNames = params.firstRowAsColNames
+    Sheet ss = odsDataReader.readOds(is, sheet, startRow, endRow, startCol, endCol)
+
+    Matrix matrix = buildMatrix(ss, firstRowAsColNames)
+    def key = params.getOrDefault("key", sheet)
+    matrix.setMatrixName(String.valueOf(key))
+    matrix
+  }
+
+  @Override
+  Map<Object, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+    Map<Object, Matrix> result = [:]
+    File file = FileUtil.checkFilePath(fileName)
+    sheetParams.each {
+      try (InputStream is2 = new FileInputStream(file)) {
+        Matrix matrix = importSpreadsheet(is2, it, formatOpt)
+        def sheet = it.getOrDefault(it.sheetName, it.sheetNumber)
+        def key = it.getOrDefault("key", sheet)
+        result.put(key, matrix)
+      }
+    }
+    result
   }
 
   static Matrix buildMatrix(Sheet sheet, boolean firstRowAsColNames) {
@@ -160,47 +238,26 @@ class FOdsImporter {
    * parse the entire thing for each sheet defined. There is room for optimization here.
    * @param is
    * @param sheetParams
-   * @param formatOpt
+   * @param format
    * @return
    */
-  Map<Object, Matrix> importOdsSheets(URL url, List<Map> sheetParams, NumberFormat format = NumberFormat.getInstance()) {
+  Map<Object, Matrix> importSpreadsheets(URL url, List<Map> sheetParams, NumberFormat format = NumberFormat.getInstance()) {
     Map<Object, Matrix> result = [:]
     byte[] content = IOUtils.toByteArray(url)
-
-    sheetParams.each {
-      def sheet = it.getOrDefault(it.sheetName, it.sheetNumber)
-      Integer startRow = it.startRow as Integer
-      Integer endRow = it.endRow as Integer
-      Integer startCol
-      if (ValueConverter.isNumeric(it.startCol, format)) {
-        startCol = ValueConverter.asInteger(it.startCol)
-      } else {
-        startCol = SpreadsheetUtil.asColumnNumber(it.startCol as String)
+    sheetParams.each {params ->
+      try (InputStream is2 = new ByteArrayInputStream(content)) {
+        Matrix matrix = importSpreadsheet(is2, params, format)
+        def sheet = params.getOrDefault(params.sheetName, params.sheetNumber)
+        def key = params.getOrDefault("key", sheet)
+        result.put(key, matrix)
       }
-      Integer endCol
-      if (ValueConverter.isNumeric(it.endCol, format)) {
-        endCol = ValueConverter.asInteger(it.endCol)
-      } else {
-        endCol = SpreadsheetUtil.asColumnNumber(it.endCol as String)
-      }
-
-      Boolean firstRowAsColNames = it.firstRowAsColNames
-      Sheet ss
-      try (InputStream is = new ByteArrayInputStream(content)) {
-        //println "Create Spreadsheet $sheet with params ${[startRow, endRow, startCol, endCol]}"
-        ss = odsDataReader.readOds(is, sheet, startRow, endRow, startCol, endCol)
-      }
-      Matrix matrix = buildMatrix(ss, firstRowAsColNames)
-      def key = it.getOrDefault("key", sheet)
-      matrix.setMatrixName(String.valueOf(key))
-      result.put(key, matrix)
     }
     result
   }
 
-  Map<Object, Matrix> importOdsSheets(String fileName, List<Map> sheetParams, NumberFormat format = NumberFormat.getInstance()) {
+  Map<Object, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat format = NumberFormat.getInstance()) {
     File file = FileUtil.checkFilePath(fileName)
-    importOdsSheets(file.toURI().toURL(),sheetParams, format)
+    importSpreadsheets(file.toURI().toURL(),sheetParams, format)
   }
 
   private static List<String> buildHeaderRow(Sheet sheet, boolean firstRowHasColumnNames) {

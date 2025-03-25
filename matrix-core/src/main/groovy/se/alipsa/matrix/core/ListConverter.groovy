@@ -128,6 +128,18 @@ class ListConverter {
     return dat
   }
 
+  static List<LocalDateTime> toLocalDateTimes(List<String> dates) {
+    def dat = new ArrayList<LocalDateTime>(dates.size())
+    dates.eachWithIndex { def d, int i ->
+      try {
+        dat.add(d == null ? null : LocalDateTime.parse(String.valueOf(d)))
+      } catch (Exception e) {
+        throw new ConversionException("Failed to convert $d to LocalDateTime in index $i, maybe you need to provide a DateTimeFormatter?", e)
+      }
+    }
+    return dat
+  }
+
   static List<LocalDateTime> toLocalDateTimes(DateTimeFormatter formatter, String[] dates) {
     def dat = new ArrayList<LocalDateTime>(dates.length)
     dates.eachWithIndex { String d, int i ->

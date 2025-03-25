@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.DateUtil
 import org.apache.poi.util.IOUtils
 import se.alipsa.matrix.spreadsheet.FileUtil
+import se.alipsa.matrix.spreadsheet.Importer
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import org.apache.poi.ss.usermodel.Row
@@ -20,61 +21,54 @@ import java.text.NumberFormat
 import java.time.LocalDateTime
 
 @CompileStatic
-class ExcelImporter {
+class ExcelImporter implements Importer {
 
   private static Logger log = LogManager.getLogger()
 
-  static {
-    IOUtils.setByteArrayMaxOverride(600_000_000)
+  static ExcelImporter create(int byteArrayMaxOverride = 600_000_000) {
+    IOUtils.setByteArrayMaxOverride(byteArrayMaxOverride)
+    new ExcelImporter()
   }
 
-  static Matrix importExcel(URL url, String sheetName = 'Sheet1',
+  @Override
+  Matrix importSpreadsheet(URL url, String sheetName = 'Sheet1',
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
     try (InputStream is = url.openStream()) {
-      importExcel(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      importSpreadsheet(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
   }
 
-  static Matrix importExcel(URL url, String sheetName = 'Sheet1',
+  @Override
+  Matrix importSpreadsheet(URL url, String sheetName = 'Sheet1',
                             int startRow = 1, int endRow,
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
     try (InputStream is = url.openStream()) {
-      importExcel(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      importSpreadsheet(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
   }
 
-  static Matrix importExcel(URL url, int sheetNum,
+  @Override
+  Matrix importSpreadsheet(URL url, int sheetNum,
                             int startRow = 1, int endRow,
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
     try (InputStream is = url.openStream()) {
       int startColNum = SpreadsheetUtil.asColumnNumber(startCol)
       int endColNum = SpreadsheetUtil.asColumnNumber(endCol)
-      importExcel(is, sheetNum, startRow, endRow, startColNum, endColNum, firstRowAsColNames)
+      importSpreadsheet(is, sheetNum, startRow, endRow, startColNum, endColNum, firstRowAsColNames)
     }
   }
 
-  /**
-   * Import an excel spreadsheet
-   * @param file the filePath or the file object pointing to the excel file
-   * @param sheetName the name of the sheet to import, default is 'Sheet1'
-   * @param startRow the starting row for the import (as you would see the row number in excel), defaults to 1
-   * @param endRow the last row to import
-   * @param startCol the starting column name (A, B etc) or column number (1, 2 etc.)
-   * @param endCol the end column name (K, L etc) or column number (11, 12 etc.)
-   * @param firstRowAsColNames whether the first row should be used for the names of each column, if false
-   * it column names will be v1, v2 etc. Defaults to true
-   * @return A Matrix with the excel data.
-   */
-  static Matrix importExcel(InputStream is, String sheetName = 'Sheet1',
-                            int startRow = 1, int endRow,
-                            String startCol = 'A', String endCol,
-                            boolean firstRowAsColNames = true) {
+  @Override
+  Matrix importSpreadsheet(InputStream is, String sheetName = 'Sheet1',
+                           int startRow = 1, int endRow,
+                           String startCol = 'A', String endCol,
+                           boolean firstRowAsColNames = true) {
 
-    return importExcel(
+    return importSpreadsheet(
         is,
         sheetName,
         startRow as int,
@@ -85,12 +79,13 @@ class ExcelImporter {
     )
   }
 
-  static Matrix importExcel(String file, String sheetName = 'Sheet1',
-                            int startRow = 1, int endRow,
-                            String startCol = 'A', String endCol,
-                            boolean firstRowAsColNames = true) {
+  @Override
+  Matrix importSpreadsheet(String file, String sheetName = 'Sheet1',
+                           int startRow = 1, int endRow,
+                           String startCol = 'A', String endCol,
+                           boolean firstRowAsColNames = true) {
 
-    return importExcel(
+    return importSpreadsheet(
         file,
         sheetName,
         startRow as int,
@@ -101,10 +96,11 @@ class ExcelImporter {
     )
   }
 
-  static Matrix importExcel(String file, int sheetNumber,
-                            int startRow = 1, int endRow,
-                            int startCol = 1, int endCol,
-                            boolean firstRowAsColNames = true) {
+  @Override
+  Matrix importSpreadsheet(String file, int sheetNumber,
+                           int startRow = 1, int endRow,
+                           int startCol = 1, int endCol,
+                           boolean firstRowAsColNames = true) {
     List<String> header = []
     File excelFile = FileUtil.checkFilePath(file)
     try (Workbook workbook = WorkbookFactory.create(excelFile)) {
@@ -122,11 +118,12 @@ class ExcelImporter {
     }
   }
 
-  static Matrix importExcel(String file, int sheet,
-                            int startRow = 1, int endRow,
-                            String startColumn = 'A', String endColumn,
-                            boolean firstRowAsColNames = true) {
-    return importExcel(
+  @Override
+  Matrix importSpreadsheet(String file, int sheet,
+                           int startRow = 1, int endRow,
+                           String startColumn = 'A', String endColumn,
+                           boolean firstRowAsColNames = true) {
+    return importSpreadsheet(
         file,
         sheet,
         startRow,
@@ -137,10 +134,11 @@ class ExcelImporter {
     )
   }
 
-  static Matrix importExcel(String file, String sheetName = 'Sheet1',
-                            int startRow = 1, int endRow,
-                            int startCol = 1, int endCol,
-                            boolean firstRowAsColNames = true) {
+  @Override
+  Matrix importSpreadsheet(String file, String sheetName = 'Sheet1',
+                           int startRow = 1, int endRow,
+                           int startCol = 1, int endCol,
+                           boolean firstRowAsColNames = true) {
     List<String> header = []
     File excelFile = FileUtil.checkFilePath(file)
     try (Workbook workbook = WorkbookFactory.create(excelFile)) {
@@ -169,10 +167,11 @@ class ExcelImporter {
    * @param firstRowAsColNames
    * @return
    */
-  static Matrix importExcel(InputStream is, int sheetNum,
-                            int startRow = 1, int endRow,
-                            int startCol = 1, int endCol,
-                            boolean firstRowAsColNames = true) {
+  @Override
+  Matrix importSpreadsheet(InputStream is, int sheetNum,
+                           int startRow = 1, int endRow,
+                           int startCol = 1, int endCol,
+                           boolean firstRowAsColNames = true) {
     List<String> header = []
     try (Workbook workbook = WorkbookFactory.create(is)) {
       Sheet sheet = workbook.getSheetAt(sheetNum-1)
@@ -188,10 +187,11 @@ class ExcelImporter {
     }
   }
 
-  static Matrix importExcel(InputStream is, String sheetName = 'Sheet1',
-                            int startRow = 1, int endRow,
-                            int startCol = 1, int endCol,
-                            boolean firstRowAsColNames = true) {
+  @Override
+  Matrix importSpreadsheet(InputStream is, String sheetName = 'Sheet1',
+                           int startRow = 1, int endRow,
+                           int startCol = 1, int endCol,
+                           boolean firstRowAsColNames = true) {
     List<String> header = []
     try (Workbook workbook = WorkbookFactory.create(is)) {
       Sheet sheet = workbook.getSheet(sheetName)
@@ -207,23 +207,8 @@ class ExcelImporter {
     }
   }
 
-  /**
-   * Imports multiple sheets in one go. This is much more efficient compared to importing them one by one.
-   * Example:
-   * <code><pre>
-   * Map<String, Matrix> sheets = ExcelImporter.importExcelSheets(is, [
-   *   [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 5, firstRowAsColNames: true],
-   *   [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true]
-   * ])
-   * </pre></code>
-   *
-   * @param is the InputStream pointing to the excel spreadsheet to import
-   * @param sheetParams a Map of parameters containing the keys:
-   *  sheetName, startRow, endRow, startCol (number or name), endCol (number or name), firstRowAsColNames
-   *  key (optional, defaults to sheetName)
-   * @return a map of sheet names and the corresponding Matrix
-   */
-  static Map<Object, Matrix> importExcelSheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
+  @Override
+  Map<Object, Matrix> importSpreadsheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
     NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
     try (Workbook workbook = WorkbookFactory.create(is)) {
       Map<Object, Matrix> result = [:]
@@ -259,10 +244,11 @@ class ExcelImporter {
     }
   }
 
-  static Map<Object, Matrix> importExcelSheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+  @Override
+  Map<Object, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
     File file = FileUtil.checkFilePath(fileName)
     try (FileInputStream fis = new FileInputStream(file)) {
-      importExcelSheets(fis, sheetParams, formatOpt)
+      importSpreadsheets(fis, sheetParams, formatOpt)
     }
   }
 

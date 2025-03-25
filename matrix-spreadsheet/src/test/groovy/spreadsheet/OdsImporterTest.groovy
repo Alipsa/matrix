@@ -42,7 +42,7 @@ class OdsImporterTest {
   @Test
   void testImportFromStream() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
-      Matrix table = SOdsImporter.importOds(
+      Matrix table = SOdsImporter.create().importSpreadsheet(
           is, 'Sheet1', 1, 12, 'A', 'D', true
       )
       assertEquals(3.0, table[2, 0])
@@ -56,7 +56,7 @@ class OdsImporterTest {
   @Test
   void testImportMultipleSheets() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
-      Map<String, Matrix> sheets = SOdsImporter.importOdsSheets(is,
+      Map<String, Matrix> sheets = SOdsImporter.create().importSpreadsheets(is,
        [
            [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
            [sheetName: 'Sheet2', startRow: 2, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: false],
@@ -119,7 +119,7 @@ class OdsImporterTest {
   @Test
   void testFormulas() {
     URL file = this.getClass().getResource("/Book3.ods")
-    Matrix m = SOdsImporter.importOds(file, 1, 2, 8, 'A', 'G', false)
+    Matrix m = SOdsImporter.create().importSpreadsheet(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
     //println m.content()
     assertEquals(21, m[6, 0, Integer])

@@ -17,7 +17,7 @@ class FExcelImporterTest {
   @Test
   void testExcelImport() {
     //println 'url is ' + this.class.getResource("/Book1.xlsx")
-    def table = FExcelImporter.importExcel(
+    def table = FExcelImporter.create().importSpreadsheet(
         this.class.getResource("/Book1.xlsx"), 'Sheet1',
         1, 12,
         1, 4,
@@ -34,7 +34,7 @@ class FExcelImporterTest {
 
   @Test
   void TestImportWithColnames() {
-    def table = FExcelImporter.importExcel(
+    def table = FExcelImporter.create().importSpreadsheet(
         this.class.getResource("/Book1.xlsx"),
         1,
         1, 12,
@@ -51,7 +51,7 @@ class FExcelImporterTest {
   @Test
   void testImportFromStream() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
-      Matrix table = FExcelImporter.importExcel(
+      Matrix table = FExcelImporter.create().importSpreadsheet(
           is, 'Sheet1', 1, 12, 'A', 'D', true
       )
       assertEquals(3.0d, table[2, 0])
@@ -65,7 +65,7 @@ class FExcelImporterTest {
   @Test
   void testImportMultipleSheets() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book2.xlsx")) {
-      Map<String, Matrix> sheets = FExcelImporter.importExcelSheets(is,
+      Map<String, Matrix> sheets = FExcelImporter.create().importSpreadsheets(is,
           [
               [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
               [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true],
@@ -139,7 +139,7 @@ class FExcelImporterTest {
   @Test
   void testFormulas() {
     URL file = this.getClass().getResource("/Book3.xlsx")
-    Matrix m = FExcelImporter.importExcel(file, 1, 2, 8, 'A', 'G', false)
+    Matrix m = FExcelImporter.create().importSpreadsheet(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
     //println m.content()
     //println FExcelUtil.getFormat(file, 'Sheet1', 'G', 2)

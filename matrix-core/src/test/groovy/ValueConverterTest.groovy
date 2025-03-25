@@ -1,10 +1,13 @@
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.ValueConverter
 
+import java.sql.Time
+import java.sql.Timestamp
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneId
 
@@ -98,7 +101,7 @@ class ValueConverterTest {
     @Test
     void testIsNumeric() {
         NumberFormat enFormat = NumberFormat.getInstance(Locale.ENGLISH)
-        NumberFormat swFormat = NumberFormat.getInstance(new Locale("sv","SE"))
+        NumberFormat swFormat = NumberFormat.getInstance(Locale.of("sv","SE"))
         assertTrue(ValueConverter.isNumeric('123'))
         assertTrue(ValueConverter.isNumeric('123.4', enFormat))
         assertTrue(ValueConverter.isNumeric('123,4', swFormat))
@@ -129,5 +132,56 @@ class ValueConverterTest {
         assertEquals((int)0, ValueConverter.convert(null, int, null, null, 0))
         def d = LocalDate.of(2024,10,27)
         assertEquals(d, ValueConverter.convert(null, LocalDate, null, null, d))
+    }
+
+    @Test
+    void testAsByte() {
+        assertEquals((byte) 127, ValueConverter.asByte("127"))
+        assertEquals((byte) -128, ValueConverter.asByte("-128"))
+        assertEquals((byte) 0, ValueConverter.asByte("0"))
+        assertNull(ValueConverter.asByte(null))
+    }
+
+    @Test
+    void testAsShort() {
+        assertEquals((short) 32767, ValueConverter.asShort("32767"))
+        assertEquals((short) -32768, ValueConverter.asShort("-32768"))
+        assertEquals((short) 0, ValueConverter.asShort("0"))
+        assertNull(ValueConverter.asShort(null))
+    }
+
+    @Test
+    void testAsBigInteger() {
+        assertEquals(new BigInteger("12345678901234567890"), ValueConverter.asBigInteger("12345678901234567890"))
+        assertEquals(new BigInteger("-12345678901234567890"), ValueConverter.asBigInteger("-12345678901234567890"))
+        assertNull(ValueConverter.asBigInteger(null))
+    }
+
+    @Test
+    void testAsLocalTime() {
+        assertEquals(LocalTime.of(12, 34, 56), ValueConverter.asLocalTime("12:34:56"))
+        assertEquals(LocalTime.of(0, 0, 0), ValueConverter.asLocalTime("00:00:00"))
+        assertNull(ValueConverter.asLocalTime(null))
+    }
+
+    @Test
+    void testAsTimestamp() {
+        assertEquals(Timestamp.valueOf("2024-10-11 12:34:56"), ValueConverter.asTimestamp("2024-10-11 12:34:56"))
+        assertEquals(Timestamp.valueOf("2024-10-11 00:00:00"), ValueConverter.asTimestamp(LocalDate.parse("2024-10-11")))
+        assertNull(ValueConverter.asTimestamp(null))
+    }
+
+    @Test
+    void testAsSqlTime() {
+        assertEquals(Time.valueOf("12:34:56"), ValueConverter.asSqlTIme("12:34:56"))
+        assertEquals(Time.valueOf("00:00:00"), ValueConverter.asSqlTIme("00:00:00"))
+        assertNull(ValueConverter.asSqlTIme(null))
+    }
+
+    @Test
+    void testAsNumber() {
+        assert 123 == ValueConverter.asNumber("123")
+        assert 123.45 == ValueConverter.asNumber("123.45")
+        assertNull(ValueConverter.asNumber(null))
     }
 }

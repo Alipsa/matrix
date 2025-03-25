@@ -49,7 +49,7 @@ class LargeFileImportTest {
     URL url = this.getClass().getResource('/Crime_Data_from_2023.ods')
     println "LargeFileImportTest.testImportWithODSImporter: importing $url"
     Instant start = Instant.now()
-    def matrix = SOdsImporter.importOds(url, 1, 1, nrows, 'A', 'AB', true)
+    def matrix = SOdsImporter.create().importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
     println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
@@ -67,7 +67,7 @@ class LargeFileImportTest {
     println "LargeFileImportTest.testImportWithFastOdsStreamImporter importing $url"
     Instant start = Instant.now()
     def matrix = FOdsImporter.create(OdsDataReader.create(OdsDataReader.ReaderImpl.STREAM))
-        .importOds(url, 1, 1, nrows, 'A', 'AB', true)
+        .importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
     println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
@@ -82,7 +82,7 @@ class LargeFileImportTest {
     println "LargeFileImportTest.testImportWithFastOdsEventImporter: importing $url"
     Instant start = Instant.now()
     def matrix = FOdsImporter.create(OdsDataReader.create(OdsDataReader.ReaderImpl.EVENT))
-        .importOds(url, 1, 1, nrows, 'A', 'AB', true)
+        .importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
     println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
@@ -96,7 +96,7 @@ class LargeFileImportTest {
     URL url = this.getClass().getResource('/Crime_Data_from_2023.xlsx')
     println "LargeFileImportTest.testImportFromFastExcel: importing $url"
     Instant start = Instant.now()
-    def matrix = FExcelImporter.importExcel(url, 1, 1, nrows, 'A', 'AB', true)
+    def matrix = FExcelImporter.create().importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
     println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
@@ -115,7 +115,7 @@ class LargeFileImportTest {
     URL url = this.getClass().getResource('/Crime_Data_from_2023.xlsx')
     println "LargeFileImportTest.testImportFromPoi importing $url"
     Instant start = Instant.now()
-    def matrix = ExcelImporter.importExcel(url, 1, 1, nrows, 'A', 'AB', true)
+    def matrix = ExcelImporter.create().importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
     println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
@@ -123,26 +123,26 @@ class LargeFileImportTest {
   }
 
   private static String formatDuration(Duration duration) {
-    List<String> parts = new ArrayList<>();
-    long days = duration.toDaysPart();
+    List<String> parts = new ArrayList<>()
+    long days = duration.toDaysPart()
     if (days > 0) {
-      parts.add(plural(days, "day"));
+      parts.add(plural(days, "day"))
     }
-    int hours = duration.toHoursPart();
+    int hours = duration.toHoursPart()
     if (hours > 0 || !parts.isEmpty()) {
-      parts.add(plural(hours, "hour"));
+      parts.add(plural(hours, "hour"))
     }
-    int minutes = duration.toMinutesPart();
+    int minutes = duration.toMinutesPart()
     if (minutes > 0 || !parts.isEmpty()) {
-      parts.add(plural(minutes, "minute"));
+      parts.add(plural(minutes, "minute"))
     }
-    int seconds = duration.toSecondsPart();
-    parts.add(plural(seconds, "second"));
-    return String.join(", ", parts);
+    int seconds = duration.toSecondsPart()
+    parts.add(plural(seconds, "second"))
+    return String.join(", ", parts)
   }
 
   private static String plural(long num, String unit) {
-    return num + " " + unit + (num == 1 ? "" : "s");
+    return num + " " + unit + (num == 1 ? "" : "s")
   }
 
   void checkAssertions(Matrix matrix) {

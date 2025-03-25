@@ -38,8 +38,8 @@ class SpreadsheetImporter {
     }
     sheet = sheet -1
     return switch (excelImplementation) {
-      case POI -> ExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
-      case FastExcel -> FExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case POI -> ExcelImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case FastExcel -> FExcelImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
   }
 
@@ -48,9 +48,9 @@ class SpreadsheetImporter {
                                   int startColumn = 1, int endColumn,
                                   boolean firstRowAsColNames = true) {
     return switch(odsImplementation) {
-      case SODS -> SOdsImporter.importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
-      case FastOdsStream -> FOdsImporter.create(FastOdsStream).importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
-      case FastOdsEvent -> FOdsImporter.create(FastOdsEvent).importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case SODS -> SOdsImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case FastOdsStream -> FOdsImporter.create(FastOdsStream).importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case FastOdsEvent -> FOdsImporter.create(FastOdsEvent).importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
   }
 
@@ -59,9 +59,9 @@ class SpreadsheetImporter {
                                   int startColumn = 1, int endColumn,
                                   boolean firstRowAsColNames = true) {
     return switch(odsImplementation) {
-      case SODS -> SOdsImporter.importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
-      case FastOdsStream -> FOdsImporter.create(FastOdsStream).importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
-      case FastOdsEvent -> FOdsImporter.create(FastOdsEvent).importOds(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case SODS -> SOdsImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case FastOdsStream -> FOdsImporter.create(FastOdsStream).importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case FastOdsEvent -> FOdsImporter.create(FastOdsEvent).importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
   }
 
@@ -90,8 +90,8 @@ class SpreadsheetImporter {
     }
     sheet = sheet -1
     return switch (excelImplementation) {
-      case POI -> ExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
-      case FastExcel -> FExcelImporter.importExcel(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case POI -> ExcelImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+      case FastExcel -> FExcelImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
   }
 
@@ -117,8 +117,8 @@ class SpreadsheetImporter {
       return importOds(odsImplementation, file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
     return switch (excelImplementation) {
-      case POI -> ExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
-      case FastExcel -> FExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      case POI -> ExcelImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      case FastExcel -> FExcelImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
   }
 
@@ -146,8 +146,8 @@ class SpreadsheetImporter {
       return importOds(odsImplementation, file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
     return switch (excelImplementation) {
-      case POI -> ExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
-      case FastExcel -> FExcelImporter.importExcel(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      case POI -> ExcelImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+      case FastExcel -> FExcelImporter.create().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
   }
 
@@ -235,11 +235,11 @@ class SpreadsheetImporter {
     if (fileName.toLowerCase().endsWith(".ods")) {
       //return SOdsImporter.importOdsSheets(fileName, sheetParams, formatOpt)
       NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
-      return FOdsImporter.create(odsImplementation).importOdsSheets(fileName, sheetParams, format)
+      return FOdsImporter.create(odsImplementation).importSpreadsheets(fileName, sheetParams, format)
     }
     return switch (excelImplementation) {
-      case POI -> ExcelImporter.importExcelSheets(fileName, sheetParams, formatOpt)
-      case FastExcel -> FExcelImporter.importExcelSheets(fileName, sheetParams, formatOpt)
+      case POI -> ExcelImporter.create().importSpreadsheets(fileName, sheetParams, formatOpt)
+      case FastExcel -> FExcelImporter.create().importSpreadsheets(fileName, sheetParams, formatOpt)
     }
   }
 
