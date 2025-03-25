@@ -1,5 +1,6 @@
 package se.alipsa.matrix.sql
 
+import groovy.transform.CompileStatic
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
@@ -7,6 +8,7 @@ import se.alipsa.matrix.core.Matrix
 import java.sql.ResultSetMetaData
 import java.sql.SQLException
 
+@CompileStatic
 class MatrixResultSetMetaData implements ResultSetMetaData {
   Matrix matrix
   SqlTypeMapper sqlTypeMapper = SqlTypeMapper.create(DataBaseProvider.UNKNOWN)

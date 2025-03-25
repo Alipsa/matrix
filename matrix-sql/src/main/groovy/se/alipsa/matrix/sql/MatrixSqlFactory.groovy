@@ -1,8 +1,10 @@
 package se.alipsa.matrix.sql
 
+import groovy.transform.CompileStatic
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.resolver.MavenRepoLookup
 
+@CompileStatic
 class MatrixSqlFactory {
 
   static String REPO_URL = "https://repo1.maven.org/maven2/"

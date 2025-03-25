@@ -1,5 +1,8 @@
 # Release history
 
+## v2.0.1, In progress
+- set FileUtil to CompileStatic
+
 ## v2.0.0, 2025-03-12
 - Require JDK 21
 

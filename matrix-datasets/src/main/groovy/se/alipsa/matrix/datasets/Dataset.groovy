@@ -4,6 +4,9 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.util.FileUtil
 import se.alipsa.matrix.core.Stat
 
+// Cannot find matching method java.lang.Object#minus(java.lang.Comparable)
+// Need to add more type info for CompileStatic to work
+//@groovy.transform.CompileStatic
 class Dataset {
 
   static Matrix airquality() {

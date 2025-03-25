@@ -1,5 +1,6 @@
 package se.alipsa.matrix.sql
 
+import groovy.transform.CompileStatic
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
@@ -16,6 +17,8 @@ import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_PRECIS
 import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_SCALE
 import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getVARCHAR_SIZE
 
+// dynamic use of getAt extensions prevents this from being compiled statically
+// @CompileStatic
 class MatrixDbUtil {
 
   SqlTypeMapper mapper
@@ -67,7 +70,7 @@ class MatrixDbUtil {
     try {
       result.inserted = insert(con, tableName, table)
     } catch (SQLException e) {
-      System.err.println("Failed to insert data to table $tableName", e)
+      System.err.println("Failed to insert data to table $tableName" + e)
       throw e
     }
     result
@@ -78,7 +81,7 @@ class MatrixDbUtil {
 
     List<String> columns = new ArrayList<>()
     int i = 0
-    List<Class<?>> types = table.types()
+    List<Class> types = table.types()
     for (String name : table.columnNames()) {
       Class type = types.get(i++)
       String column = "\"" + name + "\" " + mapper.sqlType(type, props[name])

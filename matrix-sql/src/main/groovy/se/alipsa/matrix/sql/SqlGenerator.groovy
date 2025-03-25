@@ -1,10 +1,11 @@
 package se.alipsa.matrix.sql
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
+@CompileStatic
 class SqlGenerator {
-
 
   static String createUpdateSql(String tableName, Row row, String[] matchColumnName) {
     String sql = "update " + tableName + " set "

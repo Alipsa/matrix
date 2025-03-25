@@ -163,8 +163,6 @@ class Student {
     return result
   }
 
-
-
   static class Result {
     Integer n1
     Integer n2

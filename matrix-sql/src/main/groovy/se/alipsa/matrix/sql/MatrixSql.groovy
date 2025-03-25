@@ -1,5 +1,6 @@
 package se.alipsa.matrix.sql
 
+import groovy.transform.CompileStatic
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
@@ -16,6 +17,7 @@ import java.sql.Statement
 import java.util.concurrent.ExecutionException
 import java.util.stream.IntStream
 
+@CompileStatic
 class MatrixSql implements Closeable {
 
   private ConnectionInfo ci
