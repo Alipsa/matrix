@@ -1,10 +1,12 @@
 package se.alipsa.matrix.spreadsheet
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
 import se.alipsa.matrix.spreadsheet.sods.SOdsExporter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.poi.ExcelExporter
 
+@CompileStatic
 class SpreadsheetExporter {
 
   public static ExcelImplementation excelImplementation = ExcelImplementation.POI

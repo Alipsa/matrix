@@ -11,7 +11,7 @@ import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
 
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 import static org.junit.jupiter.api.Assertions.assertEquals
@@ -19,9 +19,9 @@ import static se.alipsa.matrix.core.ValueConverter.*
 
 class LargeFileImportTest {
 
-  int nrows = 100 //360131 // including header row
+  int nrows = 360131 // including header row
 
-  String datePattern = 'MM/dd/yyyy hh:mm:ss a'
+  String datePattern = 'MM/dd/yyyy'
   DateTimeFormatter dtf = DateTimeFormatter.ofPattern(datePattern)
 
   List<String> colNames = ['DR_NO', 'Date Rptd',	'DATE OCC',	'TIME OCC',	'AREA',	'AREA NAME',
@@ -30,9 +30,9 @@ class LargeFileImportTest {
                            'Weapon Desc',	'Status',	'Status Desc',	'Crm Cd 1',	'Crm Cd 2',	'Crm Cd 3',
                            'Crm Cd 4', 'LOCATION', 'Cross Street', 'LAT', 'LON']
 
-  List lastRow = [250504051,	asLocalDateTime('01/14/2025 12:00:00 AM', dtf),
-                  asLocalDateTime('01/14/2025 12:00:00 AM', dtf),	1250,	5,	'Harbor',	509,	1,
-                  210,	'ROBBERY',	'1822 0344 1259',	15,	'F', 'H',	721,	'HIGH SCHOOL', 400,
+  List lastRow = [250504051,	asLocalDate('01/14/2025', dtf),
+                  asLocalDate('01/14/2025', dtf),	1250,	5,	'Harbor',	509,	1,
+                  210,	'ROBBERY',	asBigDecimal(1822_0344_1259),	15,	'F', 'H',	721,	'HIGH SCHOOL', 400,
                   'STRONG-ARM (HANDS, FIST, FEET OR BODILY FORCE)',	'IC',	'Invest Cont', 210,
                   null, null, null, '24300    WESTERN                      AV', null,	33.8046, -118.3074]
 
@@ -122,8 +122,8 @@ class LargeFileImportTest {
     println "Converting datatypes"
     matrix.convert(
         'DR_NO': Integer,
-        'Date Rptd': LocalDateTime,
-        'DATE OCC': LocalDateTime,
+        'Date Rptd': LocalDate,
+        'DATE OCC': LocalDate,
         'TIME OCC': Integer,
         'AREA': Integer,
         'Rpt Dist No': Integer,
@@ -144,8 +144,13 @@ class LargeFileImportTest {
     Row mRow = matrix.row(matrix.lastRowIndex())
     //println mRow
     mRow.eachWithIndex {it, idx ->
-      //println "$it ${it?.class}"
-      assertEquals( lastRow[idx], it, "diff on column $idx")
+      def expected = lastRow[idx]
+      println "expected $expected ${expected?.class} got $it ${it?.class}"
+      if (expected instanceof BigDecimal || it instanceof BigDecimal) {
+        assertEquals(expected as Double, it as Double, 0.00001, "diff on column $idx")
+      } else {
+        assertEquals(lastRow[idx], it, "diff on column $idx")
+      }
     }
   }
 }

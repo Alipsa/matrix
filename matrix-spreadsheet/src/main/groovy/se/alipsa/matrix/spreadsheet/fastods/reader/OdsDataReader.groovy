@@ -1,9 +1,12 @@
 package se.alipsa.matrix.spreadsheet.fastods.reader
 
+import groovy.transform.CompileStatic
+import se.alipsa.matrix.spreadsheet.fastods.Sheet
 import se.alipsa.matrix.spreadsheet.fastods.Spreadsheet
 
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OPENDOCUMENT_MIMETYPE
 
+@CompileStatic
 abstract class OdsDataReader {
 
   enum ReaderImpl {
@@ -17,21 +20,19 @@ abstract class OdsDataReader {
     }
   }
 
-  Spreadsheet readOds(InputStream is, Map<Object, List<Integer>> sheets) {
-    Spreadsheet spreadsheet = null
+  Sheet readOds(InputStream is, Object sheet, Integer startRow, Integer endRow, Integer startCol, Integer endCol) {
+
     try (Uncompressor unc = new Uncompressor(is)) {
       String entry = unc.nextFile()
       while (entry != null) {
         if (entry == 'content.xml') {
-          spreadsheet = processContent(unc.inputStream,sheets)
-          break
+          return processContent(unc.inputStream, sheet, startRow, endRow, startCol, endCol)
         } else if (entry == "mimetype") {
           checkMimeType(unc)
         }
         entry = unc.nextFile()
       }
     }
-    spreadsheet
   }
 
   private static void checkMimeType(Uncompressor uncompressor) throws IOException {
@@ -43,6 +44,6 @@ abstract class OdsDataReader {
       throw new NotAnOdsException("This file doesn't look like an ODS file. Mimetype: " + mimetype);
   }
 
-  abstract Spreadsheet processContent(InputStream is, Map<Object, List<Integer>> sheets);
+  abstract Sheet processContent(InputStream is, Object sheet, Integer startRow, Integer endRow, Integer startCol, Integer endCol);
 
 }

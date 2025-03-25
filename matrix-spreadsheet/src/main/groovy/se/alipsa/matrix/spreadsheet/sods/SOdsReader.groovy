@@ -2,6 +2,7 @@ package se.alipsa.matrix.spreadsheet.sods
 
 import com.github.miachm.sods.Sheet
 import com.github.miachm.sods.SpreadSheet
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
@@ -9,6 +10,7 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 /**
  * Extract various information from a Calc (ods) file.
  */
+@CompileStatic
 class SOdsReader implements SpreadsheetReader {
 
    private SpreadSheet spreadSheet

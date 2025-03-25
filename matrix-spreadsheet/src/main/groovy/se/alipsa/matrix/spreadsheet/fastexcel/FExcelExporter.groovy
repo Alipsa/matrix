@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
+import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.dhatim.fastexcel.Workbook
@@ -14,6 +15,9 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
+// Causes module access error (failed to access class org.dhatim.fastexcel.GenericStyleSetter)
+// so go with dynamic for now
+//@CompileStatic
 class FExcelExporter {
 
   static final Logger logger = LogManager.getLogger()
@@ -85,6 +89,7 @@ class FExcelExporter {
       try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {
         Worksheet sheet = workbook.newWorksheet(validSheetName)
         buildSheet(data, sheet)
+        workbook.finish()
         //writeFile(file, workbook)
       }
     }
@@ -179,6 +184,7 @@ class FExcelExporter {
     return null
   }
 
+  /*
   private static void writeFile(File file, Workbook workbook) throws IOException {
     if (workbook == null) {
       logger.warn("Workbook is null, cannot write to file")
@@ -190,5 +196,5 @@ class FExcelExporter {
     try (FileOutputStream fos = new FileOutputStream(file)) {
       workbook.write(fos)
     }
-  }
+  }*/
 }

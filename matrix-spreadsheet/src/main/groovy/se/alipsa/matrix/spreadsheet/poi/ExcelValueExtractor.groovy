@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.poi
 
+import groovy.transform.CompileStatic
 import org.apache.poi.ss.usermodel.*
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.ValueExtractor
@@ -9,6 +10,7 @@ import java.time.LocalDateTime
 /**
  * A value extractor specialized in extracting info from an Excel file
  */
+@CompileStatic
 class ExcelValueExtractor extends ValueExtractor {
 
    private final Sheet sheet

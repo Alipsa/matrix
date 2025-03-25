@@ -53,6 +53,7 @@ dependencies {
 }
 
 test {
+    jvmArgs '-Xmx4g'
     useJUnitPlatform()
 }
 

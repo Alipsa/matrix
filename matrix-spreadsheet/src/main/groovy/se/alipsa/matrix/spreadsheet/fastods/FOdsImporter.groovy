@@ -40,13 +40,11 @@ class FOdsImporter {
                           boolean firstRowAsColNames = true) {
 
     File odsFile = FileUtil.checkFilePath(file)
-    Spreadsheet spreadSheet
+    Sheet sheet
     try (FileInputStream fis = new FileInputStream(odsFile)) {
-      spreadSheet = odsDataReader.readOds(fis, [
-          (sheetNumber): [startRow, endRow, startCol, endCol]
-      ] as Map<Object, List<Integer>>)
+      sheet = odsDataReader.readOds(fis,
+          sheetNumber, startRow, endRow, startCol, endCol)
     }
-    Sheet sheet = spreadSheet[sheetNumber]
     return buildMatrix(sheet, firstRowAsColNames)
   }
 
@@ -70,10 +68,7 @@ class FOdsImporter {
                           Integer startRow = 1, Integer endRow,
                           Integer startCol = 1, Integer endCol,
                           boolean firstRowAsColNames = true) {
-    def spreadSheet = odsDataReader.readOds(is, [
-        (sheetName): [startRow, endRow, startCol, endCol]
-    ] as Map<Object, List<Integer>>)
-    Sheet sheet = spreadSheet[sheetName]
+    def sheet = odsDataReader.readOds(is, sheetName, startRow, endRow, startCol, endCol)
     return buildMatrix(sheet, firstRowAsColNames)
   }
 
@@ -81,10 +76,7 @@ class FOdsImporter {
                           Integer startRow = 1, Integer endRow,
                           Integer startCol = 1, Integer endCol,
                           boolean firstRowAsColNames = true) {
-    def spreadSheet = odsDataReader.readOds(is, [
-        (sheetNum): [startRow, endRow, startCol, endCol]
-    ] as Map<Object, List<Integer>>)
-    Sheet sheet = spreadSheet[sheetNum]
+    def sheet = odsDataReader.readOds(is, sheetNum, startRow, endRow, startCol, endCol)
     return buildMatrix(sheet, firstRowAsColNames)
   }
 
@@ -104,10 +96,7 @@ class FOdsImporter {
     try(InputStream is = url.openStream()) {
       int startColNum = SpreadsheetUtil.asColumnNumber(startCol)
       int endColNum = SpreadsheetUtil.asColumnNumber(endCol)
-      def spreadSheet = odsDataReader.readOds(is, [
-          (sheetNum): [startRow, endRow, startColNum, endColNum]
-      ] as Map<Object, List<Integer>>)
-      Sheet sheet = spreadSheet[sheetNum]
+      def sheet = odsDataReader.readOds(is, sheetNum, startRow, endRow, startColNum, endColNum)
       return buildMatrix(sheet, firstRowAsColNames)
     }
   }
@@ -164,12 +153,12 @@ class FOdsImporter {
       }
 
       Boolean firstRowAsColNames = it.firstRowAsColNames
-      Spreadsheet ss
+      Sheet ss
       try (InputStream is = new ByteArrayInputStream(content)) {
         println "Create Spreadsheet $sheet with params ${[startRow, endRow, startCol, endCol]}"
-        ss = odsDataReader.readOds(is, [(sheet): [startRow, endRow, startCol, endCol]])
+        ss = odsDataReader.readOds(is, sheet, startRow, endRow, startCol, endCol)
       }
-      Matrix matrix = buildMatrix(ss[sheet], firstRowAsColNames)
+      Matrix matrix = buildMatrix(ss, firstRowAsColNames)
       def key = it.getOrDefault("key", sheet)
       matrix.setMatrixName(String.valueOf(key))
       result.put(key, matrix)

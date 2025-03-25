@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
+import groovy.transform.CompileStatic
 import org.dhatim.fastexcel.reader.Cell
 import org.dhatim.fastexcel.reader.ReadableWorkbook
 import org.dhatim.fastexcel.reader.Row
@@ -8,9 +9,9 @@ import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.Stream
 
+@CompileStatic
 class FExcelReader implements SpreadsheetReader {
   private ReadableWorkbook workbook
 
@@ -31,7 +32,7 @@ class FExcelReader implements SpreadsheetReader {
   }
 
   static List<String> getSheetNames(ReadableWorkbook workbook) throws Exception {
-    workbook.sheets.collect { it.name }
+    workbook.sheets.collect { Sheet it -> it.name }
   }
 
   /**
@@ -45,7 +46,7 @@ class FExcelReader implements SpreadsheetReader {
   @Override
   int findRowNum(int sheetNumber, int colNumber, String content) {
     Sheet sheet = workbook.getSheet(sheetNumber - 1)
-        .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetName"))
+        .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetNumber"))
     return findRowNum(sheet, colNumber, content)
   }
 
@@ -65,7 +66,7 @@ class FExcelReader implements SpreadsheetReader {
   @Override
   int findRowNum(int sheetNumber, String colName, String content) throws Exception {
     Sheet sheet = workbook.getSheet(sheetNumber - 1)
-        .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetName"))
+        .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetNumber"))
     return findRowNum(sheet, SpreadsheetUtil.asColumnNumber(colName), content)
   }
 
@@ -96,7 +97,7 @@ class FExcelReader implements SpreadsheetReader {
     int poiColNum = colNumber - 1
     int rowNum = -1
     try (Stream<Row> rows = sheet.openStream()) {
-      rows.each { row ->
+      rows.each { Row row ->
         Cell cell = row.getCell(poiColNum)
         if (cell != null && content == cell.getRawValue()) {
           rowNum = row.getRowNum()
@@ -117,7 +118,7 @@ class FExcelReader implements SpreadsheetReader {
   @Override
   int findColNum(int sheetNumber, int rowNumber, String content) {
     Sheet sheet = workbook.getSheet(sheetNumber - 1)
-        .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetName"))
+        .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetNumber"))
     return findColNum(sheet, rowNumber, content)
   }
 
@@ -178,7 +179,7 @@ class FExcelReader implements SpreadsheetReader {
 
   @Override
   int findLastCol(String sheetName) {
-    findLastCol(workbook.findSheet(sheetName).orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetNum")))
+    findLastCol(workbook.findSheet(sheetName).orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetName")))
   }
 
   static int findLastCol(Sheet sheet, int numRowsToScan = 10) {

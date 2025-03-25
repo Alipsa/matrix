@@ -3,6 +3,7 @@ package se.alipsa.matrix.spreadsheet.sods
 
 import com.github.miachm.sods.Sheet
 import com.github.miachm.sods.SpreadSheet
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.core.Matrix
@@ -13,6 +14,7 @@ import java.text.NumberFormat
 /**
  * Import Calc (ods file) into a Matrix.
  */
+@CompileStatic
 class SOdsImporter {
 
   /**
@@ -83,7 +85,7 @@ class SOdsImporter {
                           int startRow = 1, int endRow,
                           int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
-    def header = []
+    List<String> header = []
 
     SpreadSheet spreadSheet = new SpreadSheet(is)
     Sheet sheet = spreadSheet.getSheet(sheetName)
@@ -102,7 +104,7 @@ class SOdsImporter {
                           int startRow = 1, int endRow,
                           int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
-    def header = []
+    List<String> header = []
 
     SpreadSheet spreadSheet = new SpreadSheet(is)
     Sheet sheet = spreadSheet.getSheet(sheetNum -1)
@@ -111,7 +113,7 @@ class SOdsImporter {
       startRow = startRow + 1
     } else {
       int ncol = endCol - startCol + 1
-      (1..ncol).each {i -> header.add("c$i")}
+      (1..ncol).each {i -> header.add("c$i".toString())}
     }
     return importOds(sheet, startRow, endRow, startCol, endCol, header)
   }
@@ -148,7 +150,7 @@ class SOdsImporter {
                                       int startRow = 1, int endRow,
                                       int startCol = 1, int endCol,
                                       boolean firstRowAsColNames = true) {
-    def header = []
+    List<String> header = []
     File excelFile = FileUtil.checkFilePath(file)
     SpreadSheet spreadSheet = new SpreadSheet(excelFile)
     Sheet sheet = spreadSheet.getSheet(sheetName)
@@ -167,7 +169,7 @@ class SOdsImporter {
                                int startRow = 1, int endRow,
                                int startCol = 1, int endCol,
                                boolean firstRowAsColNames = true) {
-    def header = []
+    List<String> header = []
     File excelFile = FileUtil.checkFilePath(file)
     SpreadSheet spreadSheet = new SpreadSheet(excelFile)
     Sheet sheet = spreadSheet.getSheet(sheetNumber)
@@ -203,7 +205,7 @@ class SOdsImporter {
     SpreadSheet spreadSheet = new SpreadSheet(is)
     Map<String, Matrix> result = [:]
     sheetParams.each {
-      def header = []
+      List<String> header = []
       String sheetName = it.sheetName
       Sheet sheet = spreadSheet.getSheet(sheetName)
       int startRow = it.startRow as int

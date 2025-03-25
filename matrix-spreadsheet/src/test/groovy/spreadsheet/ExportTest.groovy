@@ -29,7 +29,7 @@ class ExportTest {
         measure: [12.45, null, 14.11, 15.23, 10.99],
         active : [true, false, null, true, false]
     ]
-    table = Matrix.builder().data(matrix).types(int, String, LocalDate, LocalDateTime, BigDecimal, Boolean).build()
+    table = Matrix.builder().data(matrix).types(Integer, String, LocalDate, LocalDateTime, BigDecimal, Boolean).build()
     def stats = [
         id : [null, 2, 3, 4, -5],
         // Normally it is best to ensure the data is actually what we say it is
@@ -37,7 +37,7 @@ class ExportTest {
         // No conversion here, this still works as getAt will type cast 999 which is an Integer
         feb: [1111.1235, 2312.235, 1001.00121, 999, 1200.7]
     ]
-    table2 = Matrix.builder().data(stats).types(int, BigDecimal, BigDecimal).build()
+    table2 = Matrix.builder().data(stats).types(Integer, BigDecimal, BigDecimal).build()
   }
 
   @Test

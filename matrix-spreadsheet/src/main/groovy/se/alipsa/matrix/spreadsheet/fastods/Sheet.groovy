@@ -1,5 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class Sheet extends ArrayList<List<?>> {
 
   Object name

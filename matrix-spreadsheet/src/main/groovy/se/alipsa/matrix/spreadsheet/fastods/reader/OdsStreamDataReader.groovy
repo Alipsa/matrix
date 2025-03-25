@@ -17,20 +17,23 @@ import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
 
 /**
  * Minimal reader that discards styles and only reads the content
- * into a list of rows.
+ * into a list of rows. In theory this should be more memory efficient then
+ * the event reader but the navigation is a bit trickier so needs more testing
+ * to see if it warrants switching to this as the default reader.
  */
 @CompileStatic
 final class OdsStreamDataReader extends OdsDataReader {
+
+  static StringBuilder text = new StringBuilder()
 
   static OdsStreamDataReader create() {
     new OdsStreamDataReader()
   }
 
-  Spreadsheet processContent(final InputStream is, final Map<Object, List<Integer>> sheets){
+  Sheet processContent(final InputStream is, Object sheet, Integer startRow, Integer endRow, Integer startCol, Integer endCol){
 
     final XMLInputFactory factory = XMLInputFactory.newInstance()
 
-    final Spreadsheet spreadSheet = new Spreadsheet()
     Integer sheetCount = 1
     final XMLStreamReader reader = factory.createXMLStreamReader(is)
     while (reader.hasNext()) {
@@ -41,30 +44,22 @@ final class OdsStreamDataReader extends OdsDataReader {
 
           String sheetName = reader.getAttributeValue(tableUrn, 'name')
           //println "sheetCount: $sheetCount, table: $sheetName: Attributes: ${attributes(startElement)}"
-          if (sheets.containsKey(sheetName)) {
-            int startRow = sheets[sheetName][0]
-            int endRow = sheets[sheetName][1]
-            int startColumn = sheets[sheetName][2]
-            int endColumn = sheets[sheetName][3]
+          if (sheet == sheetName) {
             //println "reading ${sheetName}, startRow=$startRow, endRow=$endRow, startColumn=$startColumn, endColumn=$endColumn"
-            Sheet sheet = processSheet(reader, startRow, endRow, startColumn, endColumn)
-            sheet.name = sheetName
-            spreadSheet.add(sheetName, sheet)
-          } else if(sheets.containsKey(sheetCount)) {
-            int startRow = sheets[sheetCount][0]
-            int endRow = sheets[sheetCount][1]
-            int startColumn = sheets[sheetCount][2]
-            int endColumn = sheets[sheetCount][3]
-            println "reading ${sheetCount}, startRow=$startRow, endRow=$endRow, startColumn=$startColumn, endColumn=$endColumn"
-            Sheet sheet = processSheet(reader, startRow, endRow, startColumn, endColumn)
-            sheet.setName(sheetCount)
-            spreadSheet.add(sheetCount, sheet)
+            Sheet s = processSheet(reader, startRow, endRow, startCol, endCol)
+            s.name = sheetName
+            return s
+          } else if(sheet == sheetCount) {
+            println "reading ${sheetCount}, startRow=$startRow, endRow=$endRow, startColumn=$startCol, endColumn=$endCol"
+            Sheet s = processSheet(reader, startRow, endRow, startCol, endCol)
+            s.setName(sheetCount)
+            return s
           }
           sheetCount++
         }
       }
     }
-    spreadSheet
+    return null
   }
 
 
@@ -163,6 +158,7 @@ final class OdsStreamDataReader extends OdsDataReader {
         }
         default -> {
           // extract the text value
+          text.setLength(0)
           reader.next()
           //println "start text extract, ${eventTypeName(element.eventType)}"
           while (!reader.isStartElement() || 'p' != reader.localName)
@@ -170,13 +166,20 @@ final class OdsStreamDataReader extends OdsDataReader {
 
           //println "in p, ${eventTypeName(element.eventType)}, ${element.asStartElement().attributes.collect()}"
           boolean isText = true
-          StringBuilder text = new StringBuilder()
+
           while(isText) {
             if (reader.isCharacters()) {
               //println "assigned value $text"
               String s = reader.getText()
               if (s != null) {
                 text.append(s)
+              }
+            } else if (reader.isStartElement() && reader.localName == 's') {
+              def numSpaces = reader.getAttributeValue(textUrn, 'c')
+              if (numSpaces != null) {
+                char[] repeat = new char[Integer.parseInt(numSpaces)]
+                Arrays.fill(repeat, ' ' as char)
+                text.append(repeat)
               }
             }
             reader.next()

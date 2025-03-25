@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
+import groovy.transform.CompileStatic
 import org.dhatim.fastexcel.reader.*
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
@@ -9,6 +10,7 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import java.text.NumberFormat
 import java.util.stream.Stream
 
+@CompileStatic
 class FExcelImporter {
 
   static final ReadingOptions OPTIONS = new ReadingOptions(true, true)
@@ -212,6 +214,7 @@ class FExcelImporter {
           List list = row.asList()
           if (colNames.size() == 0) {
             //println "Building header"
+            // TODO refactor build header to either use first row or create column names
             if (firstRowAsColNames) {
               list.eachWithIndex { Cell cell, int i ->
                 if (i >= startColNumZI && i <= endColNumZI) {
@@ -221,7 +224,7 @@ class FExcelImporter {
               return
             } else {
               for (int i = 1; i <= endColNum - startColNum + 1; i++) {
-                colNames.add("c$i")
+                colNames.add("c$i".toString())
               }
             }
           }

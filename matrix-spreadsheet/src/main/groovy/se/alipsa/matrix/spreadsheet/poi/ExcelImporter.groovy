@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.poi
 
+import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.apache.poi.ss.usermodel.CellType
@@ -18,6 +19,7 @@ import se.alipsa.matrix.core.ValueConverter
 import java.text.NumberFormat
 import java.time.LocalDateTime
 
+@CompileStatic
 class ExcelImporter {
 
   private static Logger log = LogManager.getLogger()
@@ -103,10 +105,11 @@ class ExcelImporter {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
-    def header = []
+    List<String> header = []
     File excelFile = FileUtil.checkFilePath(file)
     try (Workbook workbook = WorkbookFactory.create(excelFile)) {
       Sheet sheet = workbook.getSheetAt(sheetNumber)
+      // TODO refactor build header to either use first row or create column names
       if (firstRowAsColNames) {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
         startRow = startRow + 1
@@ -138,10 +141,11 @@ class ExcelImporter {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
-    def header = []
+    List<String> header = []
     File excelFile = FileUtil.checkFilePath(file)
     try (Workbook workbook = WorkbookFactory.create(excelFile)) {
       Sheet sheet = workbook.getSheet(sheetName)
+      // TODO refactor build header to either use first row or create column names
       if (firstRowAsColNames) {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
         startRow = startRow + 1
@@ -169,15 +173,16 @@ class ExcelImporter {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
-    def header = []
+    List<String> header = []
     try (Workbook workbook = WorkbookFactory.create(is)) {
       Sheet sheet = workbook.getSheetAt(sheetNum-1)
+      // TODO refactor build header to either use first row or create column names
       if (firstRowAsColNames) {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
         startRow = startRow + 1
       } else {
         int ncol = endCol - startCol + 1
-        (1..ncol).each {i-> header.add("c$i")}
+        (1..ncol).each {i-> header.add("c$i".toString())}
       }
       return importExcelSheet(sheet, startRow, endRow, startCol, endCol, header)
     }
@@ -187,7 +192,7 @@ class ExcelImporter {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
-    def header = []
+    List<String> header = []
     try (Workbook workbook = WorkbookFactory.create(is)) {
       Sheet sheet = workbook.getSheet(sheetName)
       if (firstRowAsColNames) {
@@ -223,7 +228,7 @@ class ExcelImporter {
     try (Workbook workbook = WorkbookFactory.create(is)) {
       Map<String, Matrix> result = [:]
       sheetParams.each {
-        def header = []
+        List<String> header = []
         String sheetName = it.sheetName
         Sheet sheet = workbook.getSheet(sheetName)
         int startRow = it.startRow as int
@@ -270,7 +275,7 @@ class ExcelImporter {
     Row row = sheet.getRow(startRowNum)
     for (int i = 0; i <= endColNum - startColNum; i++) {
       String colName = ext.getString(row, startColNum + i)
-      header.add(colName ?: "c$i")
+      header.add(colName ?: "c$i".toString())
     }
   }
 

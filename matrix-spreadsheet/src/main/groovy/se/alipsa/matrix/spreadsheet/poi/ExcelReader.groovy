@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.poi
 
+import groovy.transform.CompileStatic
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
@@ -10,6 +11,7 @@ import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
+@CompileStatic
 class ExcelReader implements SpreadsheetReader  {
 
     static {

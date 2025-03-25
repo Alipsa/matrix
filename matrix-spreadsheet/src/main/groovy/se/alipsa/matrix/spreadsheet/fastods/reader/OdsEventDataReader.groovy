@@ -23,177 +23,122 @@ import static se.alipsa.matrix.core.ValueConverter.asInteger
 @CompileStatic
 class OdsEventDataReader extends OdsDataReader {
 
+  static StringBuilder text = new StringBuilder()
+
   static OdsEventDataReader create() {
     new OdsEventDataReader()
   }
 
-  Spreadsheet processContent(InputStream is, Map<Object, List<Integer>> sheets){
-
+  Sheet processContent(InputStream is, Object sheet, Integer startRow, Integer endRow, Integer startCol, Integer endCol) {
     XMLInputFactory factory = XMLInputFactory.newInstance()
+    factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false)
+    factory.setProperty(XMLInputFactory.SUPPORT_DTD, false)
 
-    Spreadsheet spreadSheet = new Spreadsheet()
     Integer sheetCount = 1
-    //XMLStreamReader reader = factory.createXMLStreamReader(is)
     XMLEventReader reader = factory.createXMLEventReader(is)
-    while (reader.hasNext()) {
-      XMLEvent event = reader.nextEvent()
-      if (event.isStartElement()) {
-        StartElement startElement = event.asStartElement()
-        if (startElement.name.localPart == 'table') {
-
-          String sheetName = startElement.getAttributeByName(tqn('name')).value
-          //println "sheetCount: $sheetCount, table: $sheetName: Attributes: ${attributes(startElement)}"
-          if (sheets.containsKey(sheetName)) {
-            int startRow = sheets[sheetName][0]
-            int endRow = sheets[sheetName][1]
-            int startColumn = sheets[sheetName][2]
-            int endColumn = sheets[sheetName][3]
-            //println "reading ${sheetName}, startRow=$startRow, endRow=$endRow, startColumn=$startColumn, endColumn=$endColumn"
-            Sheet sheet = processSheet(reader, startRow, endRow, startColumn, endColumn)
-            sheet.name = sheetName
-            spreadSheet.add(sheetName, sheet)
-          } else if(sheets.containsKey(sheetCount)) {
-            int startRow = sheets[sheetCount][0]
-            int endRow = sheets[sheetCount][1]
-            int startColumn = sheets[sheetCount][2]
-            int endColumn = sheets[sheetCount][3]
-            println "reading ${sheetCount}, startRow=$startRow, endRow=$endRow, startColumn=$startColumn, endColumn=$endColumn"
-            Sheet sheet = processSheet(reader, startRow, endRow, startColumn, endColumn)
-            sheet.setName(sheetCount)
-            spreadSheet.add(sheetCount, sheet)
+    try {
+      while (reader.hasNext()) {
+        XMLEvent event = reader.nextEvent()
+        if (event.isStartElement()) {
+          StartElement startElement = event.asStartElement()
+          if (startElement.name.localPart == 'table') {
+            String sheetName = startElement.getAttributeByName(tqn('name')).value
+            if (sheet == sheetName || sheet == sheetCount) {
+              Sheet s = processSheet(reader, startRow, endRow, startCol, endCol)
+              s.name = sheet == sheetName ? sheetName : sheetCount.toString()
+              return s
+            }
+            sheetCount++
           }
-          sheetCount++
         }
       }
+    } finally {
+      reader.close()
     }
-    spreadSheet
+    null
   }
-
-
 
   Sheet processSheet(XMLEventReader reader, int startRow, int endRow, int startColumn, int endColumn) {
     Sheet sheet = new Sheet()
-    XMLEvent event = reader.nextEvent()
     int rowCount = 1
-    while(!(event.isEndElement() && event.asEndElement().name.localPart == 'table')) {
-      //println " row $rowCount processSheet: element = ${eventTypeName(event.eventType)}: ${elementName(event)}"
+    while (reader.hasNext()) {
+      XMLEvent event = reader.nextEvent()
       if (event.isStartElement() && event.asStartElement().name.localPart == 'table-row') {
-        //println " table-row: row $rowCount Attributes: ${attributes(event.asStartElement())}"
         int repeatRows = asInteger(event.asStartElement().getAttributeByName(tqn('number-rows-repeated'))?.value ?: 1)
         for (int i = 0; i < repeatRows; i++) {
-          if (rowCount < startRow) {
-            event = reader.nextEvent()
-            rowCount++
-            continue
-          } else if (rowCount > endRow) {
-            break
+          if (rowCount >= startRow && rowCount <= endRow) {
+            sheet.add(processRow(reader, startColumn, endColumn))
           }
-          //println " row $rowCount processSheet: process row $rowCount"
-          sheet.add(processRow(reader, startColumn, endColumn))
           rowCount++
         }
       }
-      event = reader.nextEvent()
+      if (event.isEndElement() && event.asEndElement().name.localPart == 'table') {
+        break
+      }
     }
     sheet
   }
 
   List<?> processRow(XMLEventReader reader, int startColumn, int endColumn) {
-    List<?> row = new ArrayList<>()
-    XMLEvent event = reader.nextEvent()
+    List<Object> row = new ArrayList<>()
     int columnCount = 1
-    while(!(event.isEndElement() && event.asEndElement().name.localPart == 'table-row')) {
-      //println "   col $columnCount processRow: element = ${eventTypeName(event.eventType)}: ${elementName(event)}"
+    while (reader.hasNext()) {
+      XMLEvent event = reader.nextEvent()
       if (event.isStartElement() && event.asStartElement().name.localPart == 'table-cell') {
-        //println("   processRow columnCount=$columnCount, startColumn=$startColumn, endColumn=$endColumn")
         StartElement cellElement = event.asStartElement()
-        //println "   table-cell: column $columnCount Attributes: ${attributes(event.asStartElement())}"
         int repeatColumns = asInteger(cellElement.getAttributeByName(tqn('number-columns-repeated'))?.value ?: 1)
-        //println ("   Repeat repeatColumns times")
         for (int i = 0; i < repeatColumns; i++) {
-          if (columnCount < startColumn) {
-            //println "   processRow: skipping column $columnCount, value=${extractValue(reader, cellElement)}"
-            while (!event.isStartElement()) {
-              event = reader.nextEvent()
-            }
-            columnCount++
-            continue
-          } else if(columnCount > endColumn) {
-            //println "   processRow: breaking at column $columnCount"
-            break
+          if (columnCount >= startColumn && columnCount <= endColumn) {
+            row.add(extractValue(reader, cellElement))
           }
-          def value = extractValue(reader, cellElement)
-          row.add(value)
-          //println("   processRow -> extract value from row $rowCount, column $columnCount: $value")
           columnCount++
         }
       }
-      event = reader.nextEvent()
+      if (event.isEndElement() && event.asEndElement().name.localPart == 'table-row') {
+        break
+      }
     }
-    //println "Returning row: $row"
     row
   }
 
-  Object extractValue(XMLEventReader reader, StartElement cellElement) {
+  static Object extractValue(XMLEventReader reader, StartElement cellElement) {
     Object value = null
     String valueType = cellElement.getAttributeByName(oqn('value-type'))?.value
-    // using yield just because it makes it slightly easier to see what the return value is
-    //println "     extractValue from type $valueType in element ${cellElement.name.localPart}"
     if (valueType != null) {
       String attrValue
       value = switch (valueType) {
-        case 'boolean' -> {
-          attrValue = cellElement.getAttributeByName(oqn('boolean-value'))?.value
-          yield Boolean.parseBoolean(attrValue)
-        }
-        case 'float', 'percentage', 'currency' -> {
-          attrValue = cellElement.getAttributeByName(oqn('value'))?.value
-          yield asBigDecimal(attrValue)
-        }
+        case 'boolean' -> Boolean.parseBoolean(cellElement.getAttributeByName(oqn('boolean-value'))?.value)
+        case 'float', 'percentage', 'currency' -> asBigDecimal(cellElement.getAttributeByName(oqn('value'))?.value)
         case 'date' -> {
           attrValue = cellElement.getAttributeByName(oqn('date-value'))?.value
-          if (attrValue.length() == 10) {
-            yield LocalDate.parse(attrValue)
-          } else {
-            yield LocalDateTime.parse(attrValue)
-          }
+          yield attrValue.length() == 10 ? LocalDate.parse(attrValue) : LocalDateTime.parse(attrValue)
         }
-        case 'time' -> {
-          attrValue = cellElement.getAttributeByName(oqn('time-value'))?.value
-          yield Duration.parse(attrValue)
-        }
+        case 'time' -> Duration.parse(cellElement.getAttributeByName(oqn('time-value'))?.value)
         default -> {
-          // extract the text value
-          def element = reader.nextEvent()
-          //println "start text extract, ${eventTypeName(element.eventType)}"
-          while (!element.isStartElement() || 'p' != element.asStartElement().name.localPart)
-            element = reader.nextEvent()
-
-          //println "in p, ${eventTypeName(element.eventType)}, ${element.asStartElement().attributes.collect()}"
-          boolean isText = true
-          String text = null
-          while(isText) {
-            if (element.isCharacters()) {
-              if (text == null) {
-                //println "assigned value $text"
-                text = element.asCharacters().data
-              } else {
-                text += element.asCharacters().data
-                //println "appended value, now is $text"
+          text.setLength(0)
+          while (reader.hasNext()) {
+            XMLEvent event = reader.nextEvent()
+            if (event.isCharacters()) {
+              text.append(event.asCharacters().data)
+            } else if (event.isStartElement()) {
+              def textElement = event.asStartElement()
+              if (textElement.name.localPart == 's') {
+                def numSpaces = textElement.getAttributeByName(textQn('c'))?.value
+                if (numSpaces != null) {
+                  char[] repeat = new char[Integer.parseInt(numSpaces)]
+                  Arrays.fill(repeat, ' ' as char)
+                  text.append(repeat)
+                }
               }
             }
-            element = reader.nextEvent()
-            //println "looking for text in p, ${eventTypeName(element.eventType)}"
-            if (element.isEndElement() &&  'p' == element.asEndElement().name.localPart) {
-              isText = false
+            if (event.isEndElement() && event.asEndElement().name.localPart == 'p') {
+              break
             }
           }
-          yield text
+          yield text.toString()
         }
       }
     }
-    //println "     extractValue returning value $value"
     value
   }
-
 }

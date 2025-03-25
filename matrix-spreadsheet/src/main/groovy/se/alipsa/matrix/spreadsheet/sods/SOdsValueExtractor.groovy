@@ -4,6 +4,7 @@ import com.github.miachm.sods.OfficeCurrency
 import com.github.miachm.sods.OfficePercentage
 import com.github.miachm.sods.Range
 import com.github.miachm.sods.Sheet
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.ValueExtractor
 
@@ -13,6 +14,7 @@ import java.time.LocalDateTime
 /**
  * A value extractor specialized in extracting info from a Calc (ods) file
  */
+@CompileStatic
 class SOdsValueExtractor extends ValueExtractor {
 
    private final Sheet sheet

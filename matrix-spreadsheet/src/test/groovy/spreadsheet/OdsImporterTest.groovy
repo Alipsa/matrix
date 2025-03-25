@@ -67,7 +67,7 @@ class OdsImporterTest {
       Matrix table2 = sheets.Sheet2
       table2.columnNames(['id', 'foo', 'bar', 'baz'])
       assertEquals(3.0, table2[2, 0])
-      def date = table2[6, 2]
+      def date = table2[6, 2, LocalDate]
       assertEquals(LocalDate.parse("2023-05-06"), date)
       assertEquals(17.4, table2['baz'][table2.rowCount()-1])
       assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())

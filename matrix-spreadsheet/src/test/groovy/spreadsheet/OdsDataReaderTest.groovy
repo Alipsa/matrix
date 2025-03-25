@@ -1,6 +1,9 @@
-package spreadsheet;
+package spreadsheet
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test
+import se.alipsa.matrix.spreadsheet.fastods.Sheet
+import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader;
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsEventDataReader
 
 import java.time.Duration;
@@ -11,7 +14,7 @@ class OdsDataReaderTest {
   @Test
   void testDataReader() throws IOException {
     try (InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
-      List<List<?>> rows = OdsEventDataReader.load(is, 'Sheet1')
+      List<List<?>> rows = OdsEventDataReader.create().readOds(is, 'Sheet1', 3, 11, 2, 6)
       if (rows != null) {
         for (List<?> row : rows) {
           println("$row (${row.size()})")
@@ -21,18 +24,27 @@ class OdsDataReaderTest {
       }
     }
   }
+  // 24300    WESTERN                      AV
+  @Test
+  void testPreserveSpace() throws IOException {
+    try (InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
+      Sheet rows = OdsEventDataReader.create().readOds(is, 'Sheet3', 1, 1, 1, 1)
+      Assertions.assertEquals('24300    WESTERN                      AV', rows [ 0][ 0])
+    }
+  }
 
   @Test
   void testHugeFile() throws IOException {
+    int nRows = 360131
     try (InputStream is = this.getClass().getResourceAsStream("/Crime_Data_from_2023.ods")) {
       Instant start = Instant.now()
-      List<List<?>> rows = OdsEventDataReader.load(is, "Sheet1")
+      Sheet sheet = OdsDataReader.create().readOds(is, "Sheet1", 1, nRows, 1, 28)
       Instant finish = Instant.now()
       System.out.println("Parsing time: " + formatDuration(Duration.between(start, finish)));
-      assert 360131 == rows.size()
+      assert nRows == sheet.size()
       int ncols = 0
       for (int i = 0; i < 20; i++) {
-        ncols = Math.max(ncols, rows.get(i).size())
+        ncols = Math.max(ncols, sheet.get(i).size())
       }
       println("Read " + ncols + " columns")
       assert ncols >= 28

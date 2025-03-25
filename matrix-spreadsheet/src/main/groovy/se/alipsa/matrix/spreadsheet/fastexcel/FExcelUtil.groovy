@@ -1,10 +1,12 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
+import groovy.transform.CompileStatic
 import org.dhatim.fastexcel.reader.*
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.util.concurrent.atomic.AtomicInteger
 
+@CompileStatic
 class FExcelUtil {
 
   private FExcelUtil() {
@@ -30,8 +32,8 @@ class FExcelUtil {
   static Map<String, ?> getFormat(InputStream is, String sheetName, String columnName, int rowNumber) {
     ReadableWorkbook wb = new ReadableWorkbook(is, FExcelImporter.OPTIONS)
     Sheet sheet = wb.findSheet(sheetName).orElseThrow()
-    List<Row> rowList = sheet.read()
-    Row row = sheet.openStream().find { row ->
+    //List<Row> rowList = sheet.read()
+    Row row = sheet.openStream().find { Row row ->
       if (row.rowNum == rowNumber) {
         return true
       }

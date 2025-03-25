@@ -1,10 +1,11 @@
 package se.alipsa.matrix.spreadsheet
 
-
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelReader
 import se.alipsa.matrix.spreadsheet.sods.SOdsReader
 import se.alipsa.matrix.spreadsheet.poi.ExcelReader
 
+@CompileStatic
 interface SpreadsheetReader extends Closeable {
 
   // Groovy does not support static methods in interfaces so we create an inner class for those

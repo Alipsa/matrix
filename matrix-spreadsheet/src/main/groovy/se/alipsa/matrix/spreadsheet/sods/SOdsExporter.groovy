@@ -2,11 +2,14 @@ package se.alipsa.matrix.spreadsheet.sods
 
 import com.github.miachm.sods.Sheet
 import com.github.miachm.sods.SpreadSheet
+import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
+@CompileStatic
 class SOdsExporter {
   private static Logger logger = LogManager.getLogger()
 
@@ -128,7 +131,7 @@ class SOdsExporter {
       sheet.getRange(0, i).setValue(names[i])
     }
 
-    Iterator<List<?>> it = dataFrame.columns().iterator()
+    Iterator<Column> it = dataFrame.columns().iterator()
     int colIdx = 0
     while (it.hasNext()) {
       List<?> colVec = it.next()

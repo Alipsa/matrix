@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
+import groovy.transform.CompileStatic
 
 import javax.xml.namespace.QName
 import javax.xml.stream.XMLStreamConstants
@@ -7,11 +8,13 @@ import javax.xml.stream.XMLStreamReader
 import javax.xml.stream.events.StartElement
 import javax.xml.stream.events.XMLEvent
 
+@CompileStatic
 class OdsXmlUtil {
 
   static final String OPENDOCUMENT_MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet";
   static final String tableUrn = 'urn:oasis:names:tc:opendocument:xmlns:table:1.0'
   static final String officeUrn = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0'
+  static final String textUrn = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'
 
   static String attributes(StartElement startElement) {
     StringBuilder sb = new StringBuilder()
@@ -69,5 +72,9 @@ class OdsXmlUtil {
 
   static QName tqn(String localPart) {
     new QName(tableUrn, localPart)
+  }
+
+  static QName textQn(String localPart) {
+    new QName(textUrn, localPart)
   }
 }

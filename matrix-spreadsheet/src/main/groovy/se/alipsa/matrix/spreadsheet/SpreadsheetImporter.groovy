@@ -1,6 +1,6 @@
 package se.alipsa.matrix.spreadsheet
 
-
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
@@ -8,6 +8,7 @@ import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
 
 import java.text.NumberFormat
 
+@CompileStatic
 class SpreadsheetImporter {
 
   /**

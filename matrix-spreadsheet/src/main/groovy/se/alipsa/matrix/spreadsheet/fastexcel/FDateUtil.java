@@ -16,6 +16,7 @@
 ==================================================================== */
 package se.alipsa.matrix.spreadsheet.fastexcel;
 
+import groovy.transform.CompileStatic;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -35,6 +36,7 @@ import java.util.regex.Pattern;
  * @author  Thies Wellpott
  * @author  Per Nyfelt
  */
+@CompileStatic
 public class FDateUtil {
 
   private static final long DAY_MILLISECONDS = 86_400_000L;

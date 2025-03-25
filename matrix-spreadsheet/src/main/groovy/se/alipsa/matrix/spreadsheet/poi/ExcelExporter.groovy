@@ -1,5 +1,6 @@
 package se.alipsa.matrix.spreadsheet.poi
 
+import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.apache.poi.ss.usermodel.Cell
@@ -15,6 +16,7 @@ import se.alipsa.matrix.core.ValueConverter
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+@CompileStatic
 class ExcelExporter {
 
   static final Logger logger = LogManager.getLogger()
@@ -145,8 +147,10 @@ class ExcelExporter {
         if (row == null) row = sheet.createRow(rowIdx)
         Cell cell = row.createCell(col)
         Class type = data.type(col)
-
-        if (type in [double, Double, BigDecimal, float, Float, Long, long, BigInteger, Number]) {
+        def val = matrixRow[col]
+        if (val == null) {
+          cell.setBlank()
+        } else if (type in [double, Double, BigDecimal, float, Float, Long, long, BigInteger, Number]) {
           cell.setCellValue(ValueConverter.asDouble(matrixRow[col]))
         } else if (type in [int, Integer, short, Short]) {
           cell.setCellValue(ValueConverter.asInteger(matrixRow[col]))
@@ -164,12 +168,7 @@ class ExcelExporter {
           cell.setCellValue(matrixRow[col] as Date)
           cell.setCellStyle(localDateTimeStyle)
         } else {
-          def val = matrixRow[col]
-          if (val == null) {
-            cell.setBlank()
-          } else {
-            cell.setCellValue(String.valueOf(val))
-          }
+          cell.setCellValue(String.valueOf(val))
         }
       }
       rowIdx++
