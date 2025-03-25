@@ -15,13 +15,20 @@ class OdsDataReaderTest {
   void testDataReader() throws IOException {
     try (InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
       List<List<?>> rows = OdsEventDataReader.create().readOds(is, 'Sheet1', 3, 11, 2, 6)
+      /*
       if (rows != null) {
         for (List<?> row : rows) {
           println("$row (${row.size()})")
         }
       } else {
         println("No data found")
+      }*/
+      assert rows.size() == 9
+      for (List<?> row : rows) {
+        assert 5 == row.size()
       }
+      assert ['id', 'OB', 'IB', 'deferred_interest_amount', 'percentdiff'] == rows.get(0)
+      assert [752810, 18609, ',', 0, '#VALUE!'] == rows[8]
     }
   }
   // 24300    WESTERN                      AV
@@ -46,7 +53,7 @@ class OdsDataReaderTest {
       for (int i = 0; i < 20; i++) {
         ncols = Math.max(ncols, sheet.get(i).size())
       }
-      println("Read " + ncols + " columns")
+      //println("Read " + ncols + " columns")
       assert ncols >= 28
 
     }

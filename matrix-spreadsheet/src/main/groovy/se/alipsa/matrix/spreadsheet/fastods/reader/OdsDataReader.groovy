@@ -2,7 +2,6 @@ package se.alipsa.matrix.spreadsheet.fastods.reader
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
-import se.alipsa.matrix.spreadsheet.fastods.Spreadsheet
 
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OPENDOCUMENT_MIMETYPE
 

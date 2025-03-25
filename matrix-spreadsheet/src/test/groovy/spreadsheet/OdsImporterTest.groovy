@@ -33,7 +33,7 @@ class OdsImporterTest {
         "endCol": 'D'
     )
     //println(table.content())
-    assertEquals(3.0, table[2, 0])
+    assert 3.0 == table[2, 0]
     assertEquals(LocalDate.parse("2023-05-06"), table[6, 2])
     assertEquals(17.4, table['baz'][table.rowCount()-1])
     assertEquals(['id', 'foo', 'bar', 'baz'], table.columnNames())
@@ -121,7 +121,7 @@ class OdsImporterTest {
     URL file = this.getClass().getResource("/Book3.ods")
     Matrix m = SOdsImporter.importOds(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
-    println m.content()
+    //println m.content()
     assertEquals(21, m[6, 0, Integer])
     assertEquals(LocalDate.parse('2025-03-20'), m[5, 2])
     assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001)

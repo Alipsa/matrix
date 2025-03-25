@@ -48,11 +48,11 @@ class FExportTest {
     //println(table.content())
     def file = File.createTempFile("matrix", ".xlsx")
     FExcelExporter.exportExcel(file, table)
-    println("Wrote to $file")
+    println("FExportTest.exportExcelTest: Wrote to $file")
 
     def file2 = File.createTempFile("matrix2", ".xlsx")
     FExcelExporter.exportExcelSheets(file2, [table, table2])
-    println("Wrote 2 sheets to $file2")
+    println("FExportTest.exportExcelTest: Wrote 2 sheets to $file2")
     try (def reader = new FExcelReader(file2)) {
       assertEquals(2, reader.sheetNames.size(), "number of sheets")
     }

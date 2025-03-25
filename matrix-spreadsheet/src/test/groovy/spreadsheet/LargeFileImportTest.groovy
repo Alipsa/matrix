@@ -8,7 +8,9 @@ import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
 import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
 import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
+import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
 
+import java.math.RoundingMode
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -45,35 +47,58 @@ class LargeFileImportTest {
   void testImportWithODSImporter() {
     assert colNames.size() == lastRow.size()
     URL url = this.getClass().getResource('/Crime_Data_from_2023.ods')
-    println "importing $url"
+    println "LargeFileImportTest.testImportWithODSImporter: importing $url"
     Instant start = Instant.now()
     def matrix = SOdsImporter.importOds(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
+    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
     checkAssertions(matrix)
   }
 
 
+  // this is about 2-7 seconds faster then the event reader
+  // memory consumption is the same, at least after completion
   @Test
-  void testImportWithFastOdsImporter() {
+  void testImportWithFastOdsStreamImporter() {
+    System.gc()
     assert colNames.size() == lastRow.size()
     URL url = this.getClass().getResource('/Crime_Data_from_2023.ods')
-    println "importing $url"
+    println "LargeFileImportTest.testImportWithFastOdsStreamImporter importing $url"
     Instant start = Instant.now()
-    def matrix = FOdsImporter.importOds(url, 1, 1, nrows, 'A', 'AB', true)
+    def matrix = FOdsImporter.create(OdsDataReader.create(OdsDataReader.ReaderImpl.STREAM))
+        .importOds(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
+    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
+    println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
+    checkAssertions(matrix)
+  }
+
+  @Test
+  void testImportWithFastOdsEventImporter() {
+    System.gc()
+    assert colNames.size() == lastRow.size()
+    URL url = this.getClass().getResource('/Crime_Data_from_2023.ods')
+    println "LargeFileImportTest.testImportWithFastOdsEventImporter: importing $url"
+    Instant start = Instant.now()
+    def matrix = FOdsImporter.create(OdsDataReader.create(OdsDataReader.ReaderImpl.EVENT))
+        .importOds(url, 1, 1, nrows, 'A', 'AB', true)
+    Instant finish = Instant.now()
+    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
     checkAssertions(matrix)
   }
 
   @Test
   void testImportFromFastExcel() {
+    System.gc()
     assert colNames.size() == lastRow.size()
     URL url = this.getClass().getResource('/Crime_Data_from_2023.xlsx')
-    println "importing $url"
+    println "LargeFileImportTest.testImportFromFastExcel: importing $url"
     Instant start = Instant.now()
     def matrix = FExcelImporter.importExcel(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
+    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
     checkAssertions(matrix)
   }
@@ -85,12 +110,14 @@ class LargeFileImportTest {
   @Disabled
   @Test
   void testImportFromPoi() {
+    System.gc()
     assert colNames.size() == lastRow.size()
     URL url = this.getClass().getResource('/Crime_Data_from_2023.xlsx')
-    println "importing $url"
+    println "LargeFileImportTest.testImportFromPoi importing $url"
     Instant start = Instant.now()
     def matrix = ExcelImporter.importExcel(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
+    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
     checkAssertions(matrix)
   }
@@ -145,7 +172,7 @@ class LargeFileImportTest {
     //println mRow
     mRow.eachWithIndex {it, idx ->
       def expected = lastRow[idx]
-      println "expected $expected ${expected?.class} got $it ${it?.class}"
+      //println "expected $expected ${expected?.class} got $it ${it?.class}"
       if (expected instanceof BigDecimal || it instanceof BigDecimal) {
         assertEquals(expected as Double, it as Double, 0.00001, "diff on column $idx")
       } else {

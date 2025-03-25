@@ -16,8 +16,7 @@ class FExcelImporterTest {
 
   @Test
   void testExcelImport() {
-
-    println 'url is ' + this.class.getResource("/Book1.xlsx")
+    //println 'url is ' + this.class.getResource("/Book1.xlsx")
     def table = FExcelImporter.importExcel(
         this.class.getResource("/Book1.xlsx"), 'Sheet1',
         1, 12,
@@ -143,7 +142,7 @@ class FExcelImporterTest {
     Matrix m = FExcelImporter.importExcel(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
     //println m.content()
-    println FExcelUtil.getFormat(file, 'Sheet1', 'G', 2)
+    //println FExcelUtil.getFormat(file, 'Sheet1', 'G', 2)
     assertEquals(21, m[6, 0, Integer])
     assertEquals(LocalDate.parse('2025-03-20'), m[5, 2])
     assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001)

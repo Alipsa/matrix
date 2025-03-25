@@ -46,10 +46,10 @@ class ExportTest {
     //println(table.content())
     def file = File.createTempFile("matrix", ".xlsx")
     SpreadsheetExporter.exportSpreadsheet(file, table)
-    println("Wrote to $file")
+    println("ExportTest.exportExcelTest: Wrote to $file")
 
     SpreadsheetExporter.exportSpreadsheet(file, table2)
-    println("Wrote another sheet to $file")
+    println("ExportTest.exportExcelTest: Wrote another sheet to $file")
     try (def reader = SpreadsheetReader.Factory.create(file)) {
       assertEquals(2, reader.sheetNames.size(), "number of sheets")
     }
@@ -62,12 +62,12 @@ class ExportTest {
       odsFile.delete()
     }
     SpreadsheetExporter.exportSpreadsheet(odsFile, table, "Sheet 1")
-    println("Wrote to $odsFile")
+    println("ExportTest.testOdsExport: Wrote to $odsFile")
     try (def reader = SpreadsheetReader.Factory.create(odsFile)) {
       assertEquals(1, reader.sheetNames.size(), "number of sheets")
     }
     SpreadsheetExporter.exportSpreadsheet(odsFile, table2, "Sheet 2")
-    println("Wrote another sheet to $odsFile")
+    println("ExportTest.testOdsExport: Wrote another sheet to $odsFile")
     try (def reader = SpreadsheetReader.Factory.create(odsFile)) {
       assertEquals(2, reader.sheetNames.size(), "number of sheets")
     }

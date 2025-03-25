@@ -17,7 +17,7 @@ import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
 import static se.alipsa.matrix.core.ValueConverter.asInteger
 
 /**
- * Minimal reader that discards styles and only reads the content
+ * Minimal event reader that discards styles and only reads the content
  * into a list of rows.
  */
 @CompileStatic
@@ -123,12 +123,8 @@ class OdsEventDataReader extends OdsDataReader {
             } else if (event.isStartElement()) {
               def textElement = event.asStartElement()
               if (textElement.name.localPart == 's') {
-                def numSpaces = textElement.getAttributeByName(textQn('c'))?.value
-                if (numSpaces != null) {
-                  char[] repeat = new char[Integer.parseInt(numSpaces)]
-                  Arrays.fill(repeat, ' ' as char)
-                  text.append(repeat)
-                }
+                int numSpaces = asInteger(textElement.getAttributeByName(textQn('c'))?.value) ?: 1
+                text.append(' '.repeat(numSpaces))
               }
             }
             if (event.isEndElement() && event.asEndElement().name.localPart == 'p') {

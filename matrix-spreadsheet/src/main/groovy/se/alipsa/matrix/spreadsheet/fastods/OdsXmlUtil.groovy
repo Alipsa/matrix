@@ -16,6 +16,19 @@ class OdsXmlUtil {
   static final String officeUrn = 'urn:oasis:names:tc:opendocument:xmlns:office:1.0'
   static final String textUrn = 'urn:oasis:names:tc:opendocument:xmlns:text:1.0'
 
+  static QName oqn(String localPart) {
+    new QName(officeUrn, localPart)
+  }
+
+  static QName tqn(String localPart) {
+    new QName(tableUrn, localPart)
+  }
+
+  static QName textQn(String localPart) {
+    new QName(textUrn, localPart)
+  }
+
+  // Useful for debugging
   static String attributes(StartElement startElement) {
     StringBuilder sb = new StringBuilder()
     startElement.attributes.each {
@@ -27,6 +40,7 @@ class OdsXmlUtil {
     sb.toString()
   }
 
+  // Useful for debugging
   static String attributes(XMLStreamReader reader) {
     StringBuilder sb = new StringBuilder()
     if (reader.isStartElement())
@@ -39,6 +53,7 @@ class OdsXmlUtil {
     sb.toString()
   }
 
+  // Useful for debugging
   static String eventTypeName(int eventTypeCode) {
     return switch (eventTypeCode) {
       case XMLStreamConstants.ATTRIBUTE -> 'ATTRIBUTE'
@@ -56,6 +71,7 @@ class OdsXmlUtil {
     }
   }
 
+  // Useful for debugging
   static String elementName(XMLEvent event) {
     if (event.isStartElement()) {
       return event.asStartElement().name.localPart
@@ -66,15 +82,4 @@ class OdsXmlUtil {
     ''
   }
 
-  static QName oqn(String localPart) {
-    new QName(officeUrn, localPart)
-  }
-
-  static QName tqn(String localPart) {
-    new QName(tableUrn, localPart)
-  }
-
-  static QName textQn(String localPart) {
-    new QName(textUrn, localPart)
-  }
 }

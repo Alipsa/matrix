@@ -223,10 +223,10 @@ class ExcelImporter {
    *  key (optional, defaults to sheetName)
    * @return a map of sheet names and the corresponding Matrix
    */
-  static Map<String, Matrix> importExcelSheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
+  static Map<Object, Matrix> importExcelSheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
     NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
     try (Workbook workbook = WorkbookFactory.create(is)) {
-      Map<String, Matrix> result = [:]
+      Map<Object, Matrix> result = [:]
       sheetParams.each {
         List<String> header = []
         String sheetName = it.sheetName
@@ -259,7 +259,7 @@ class ExcelImporter {
     }
   }
 
-  static Map<String, Matrix> importExcelSheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+  static Map<Object, Matrix> importExcelSheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
     File file = FileUtil.checkFilePath(fileName)
     try (FileInputStream fis = new FileInputStream(file)) {
       importExcelSheets(fis, sheetParams, formatOpt)

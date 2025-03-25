@@ -16,7 +16,9 @@ class FOdsImporterTest {
 
   @Test
   void testOdsImport() {
-    def table = FOdsImporter.importOds(this.class.getResource("/Book1.ods"), 'Sheet1',
+    def table = FOdsImporter.create().importOds(
+        this.class.getResource("/Book1.ods"),
+        'Sheet1',
         1, 12,
         1, 4,
         true)
@@ -31,20 +33,20 @@ class FOdsImporterTest {
 
   @Test
   void TestImportSection() {
-    def table = FOdsImporter.importOds(
+    def table = FOdsImporter.create().importOds(
         this.class.getResource("/positions.ods"), 1,
         2, 9,
         'B', 'E',
         false
     )
-    println(table.content())
+    //println(table.content())
     assert ['b2',	'c2',	'd2',	'e2'] == table.row(0).toList()
     assert ['b2', 'b3','b4','b5', 'b6','b7', 'b8', 'b9'] == table[0]
   }
 
   @Test
   void TestImportWithColnames() {
-    def table = FOdsImporter.importOds(
+    def table = FOdsImporter.create().importOds(
         this.class.getResource("/Book2.ods"), 2,
         6, 10,
         'AC', 'BH',
@@ -59,7 +61,7 @@ class FOdsImporterTest {
   @Test
   void testImportFromStream() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
-      Matrix table = FOdsImporter.importOds(
+      Matrix table = FOdsImporter.create().importOds(
           is, "Sheet1", 1, 12, 'A', 'D', true
       )
       assert ['id', 'foo', 'bar', 'baz'] == table.columnNames()
@@ -75,9 +77,9 @@ class FOdsImporterTest {
   @Test
   void testImportFromStreamOffset() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
-      Matrix m = FOdsImporter.importOds(is, "Sheet1", 3, 11, 2, 6, true)
+      Matrix m = FOdsImporter.create().importOds(is, "Sheet1", 3, 11, 2, 6, true)
       m.convert(id: Integer)
-      println m.content()
+      //println m.content()
       assert 8 == m.rowCount()
       assert 5 == m.columnCount()
       assert ['id','OB','IB','deferred_interest_amount','percentdiff'] == m.columnNames()
@@ -95,7 +97,7 @@ class FOdsImporterTest {
   @Test
   void testImportMultipleSheets() {
     URL url = this.getClass().getResource("/Book2.ods")
-    Map<Object, Matrix> sheets = FOdsImporter.importOdsSheets(url,
+    Map<Object, Matrix> sheets = FOdsImporter.create().importOdsSheets(url,
      [
          [sheetNumber: 1, startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
          [sheetNumber: 2, startRow: 2, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: false],
@@ -113,14 +115,14 @@ class FOdsImporterTest {
 
     Matrix table1 = sheets[1]
     assertEquals(710381, table1[0,0, Integer])
-    assertEquals(103599.04, table1[1,1].setScale(2, RoundingMode.HALF_UP))
+    assertEquals(103599.04, table1[1,1, BigDecimal].setScale(2, RoundingMode.HALF_UP))
     assertEquals(66952.95, table1[2,2, Double])
     assertEquals(0.0G, table1[3,3, BigDecimal].setScale(1, RoundingMode.HALF_UP))
-    assertEquals(-0.00982 as Double, table1[6, 'percentdiff', Double], 0.00001)
+    assertEquals(-0.00982 as Double, table1[6, 'percentdiff', Double], 0.00001d)
     assertIterableEquals(['id',	'OB',	'IB',	'deferred_interest_amount', 'percentdiff'], table1.columnNames())
 
     Matrix comp = sheets.comp.clone()
-    println comp.content()
+    //println comp.content()
     assertEquals('Component', comp[0,0])
     assertEquals(5, comp.rowCount())
     assertEquals(32, comp.columnCount())
@@ -163,15 +165,15 @@ class FOdsImporterTest {
     //println m.content()
     assertEquals(21, m[6, 0, Integer])
     assertEquals(LocalDate.parse('2025-03-20'), m[5, 2])
-    assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001)
+    assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001d)
     assertEquals('foobar1', m[0, 'c7'])
 
-    m = FOdsImporter.importOds(file, 1, 2, 8, 'A', 'G', false)
+    m = FOdsImporter.create().importOds(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
     //println m.content()
     assertEquals(21, m[6, 0, Integer])
     assertEquals(LocalDate.parse('2025-03-20'), m[5, 2])
-    assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001)
+    assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001d)
     assertEquals('foobar1', m[0, 'c7'])
   }
 }
