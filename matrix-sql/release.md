@@ -1,7 +1,7 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
-## v2.0.1, In progress
+## v2.0.1, 2025-03-26
 - Compile statically where possible 
 
 ## v2.0.0, 2025-03-12
