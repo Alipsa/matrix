@@ -1,5 +1,11 @@
 # Maven-BOM release history
 
+## v2.1.0, 2025-03-26
+- Upgrade matrix-core 3.0.0 -> 3.1.0
+- Upgrade matrix-sql 2.0.0 -> 2.0.1
+- Upgrade matrix-datasets 2.0.0 -> 2.0.1
+- Upgrade matrix-spreadsheet 2.0.0 -> 2.1.0
+
 ## v2.0.0, 2025-03-12
 - Upgrade all modules due to bump to jdk 21 as min version
 
