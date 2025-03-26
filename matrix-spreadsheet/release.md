@@ -1,6 +1,6 @@
 # Release history
 
-## v2.1.0, in progress
+## v2.1.0, 2025-03-26
 - Add several new import options (for file, input streams and URL)
 - Add alternative excel implementation based on fastexcel to be able to handle very large Excel files
 - Add home-brewed fast ods import option to be able to handle very large ods files
