@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
 import static org.apache.commons.csv.CSVFormat.RFC4180 as CSV
 
 //def file = 'kc_house_data.csv' as File
 def file = getClass().classLoader.getResource('kc_house_data.csv').file
 def records = CSV.withFirstRecordAsHeader().parse(new FileReader(file))
 records.findAll{ it.bedrooms.toInteger() > 10 }.each{ println it.toMap() as TreeMap }
-
+*/
 /*
 [bathrooms:3, bedrooms:11, condition:3, date:20140821T000000, floors:2, grade:7, id:1773100755, lat:47.556,
  long:-122.363, price:520000, sqft_above:2400, sqft_basement:600, sqft_living:3000, sqft_living15:1420,

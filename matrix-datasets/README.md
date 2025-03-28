@@ -8,29 +8,29 @@ Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and m
 ## Setup
 Gradle:
 ```groovy
-implementation 'se.alipsa.groovy:matrix-core:3.0.0'
-implementation 'se.alipsa.groovy:matrix-datasets:2.0.0'
+implementation 'se.alipsa.matrix:matrix-core:3.1.0'
+implementation 'se.alipsa.matrix:matrix-datasets:2.0.1'
 ```
 Maven:
 ```xml
 <dependencies>
   <dependency>
-      <groupId>se.alipsa.groovy</groupId>
+      <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.0.0</version>
+      <version>3.1.0</version>
   </dependency>
   <dependency>
-      <groupId>se.alipsa.groovy</groupId>
+      <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-datasets</artifactId>
-      <version>2.0.0</version>
+      <version>2.0.1</version>
   </dependency>
 </dependencies>
 ```
 
 ## Usage:
 ```groovy
-import se.alipsa.groovy.datasets.*
-import se.alipsa.groovy.matrix.*
+import se.alipsa.matrix.datasets.*
+import se.alipsa.matrix.core.*
 
 Matrix iris = Dataset.iris()
 Matrix speciesMeans = Stat.meanBy(iris, 'Sepal Length','Species')

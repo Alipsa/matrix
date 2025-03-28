@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.0.0'
+version = '2.1.0-SNAPSHOT'
 description = "Groovy library for importing and exporting json to and from a Matrix or Grid"
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
@@ -121,7 +121,6 @@ signing {
 if (project.ext.properties.sonatypeUsername) {
 
   apply plugin: 'se.alipsa.nexus-release-plugin'
-  //apply plugin: 'se.alipsa.groovy.NexusReleasePlugin'
   nexusReleasePlugin.nexusUrl = nexusUrl
   nexusReleasePlugin.userName = sonatypeUsername
   nexusReleasePlugin.password = sonatypePassword

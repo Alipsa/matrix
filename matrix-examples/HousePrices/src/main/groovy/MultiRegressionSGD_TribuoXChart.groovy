@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/*
 import groovy.transform.CompileStatic
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.XYChartBuilder
@@ -73,3 +74,5 @@ chart.addSeries("Ideal", range, range).with {
     XYSeriesRenderStyle = Line
 }
 new SwingWrapper(chart).displayChart()
+
+ */

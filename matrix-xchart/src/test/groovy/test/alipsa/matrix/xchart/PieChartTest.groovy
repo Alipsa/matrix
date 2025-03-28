@@ -2,14 +2,13 @@ package test.alipsa.matrix.xchart
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.xchart.PieChart
 
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class PieChartTest {
 
-  Matrix matrix = new MatrixBuilder().data(
+  Matrix matrix = Matrix.builder().data(
       metal: ['Gold', 'Silver', 'Platinum', 'Copper', 'Zinc'],
       ratio: [24, 21, 39, 17, 40]
   ).matrixName('Metal ratio')

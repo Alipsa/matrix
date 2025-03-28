@@ -1,5 +1,6 @@
 package se.alipsa.matrix.core
 
+import groovy.transform.PackageScope
 import se.alipsa.matrix.core.util.ClassUtils
 
 import java.lang.reflect.Modifier
@@ -15,7 +16,22 @@ class MatrixBuilder {
   List<List> columns
   List<Class> dataTypes
 
+  /**
+   * Create a MatrixBuilder with no name. This is package scoped as the way to create a MatrixBuilder
+   * is by using the Matrix.builder() methods.
+   *
+   * @return a new MatrixBuilder
+   */
+  @PackageScope
   MatrixBuilder() {}
+
+  /**
+   * Create a MatrixBuilder with a matrix name. This is package scoped as the way to create a MatrixBuilder
+   * is by using the Matrix.builder() methods.
+   *
+   * @param matrixName
+   */
+  @PackageScope
   MatrixBuilder(String matrixName) {
     this.matrixName = matrixName
   }

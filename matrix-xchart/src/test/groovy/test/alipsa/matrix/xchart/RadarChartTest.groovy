@@ -6,7 +6,6 @@ import org.knowm.xchart.RadarChart
 import org.knowm.xchart.RadarChartBuilder
 import org.knowm.xchart.style.Styler
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 
 import static org.junit.jupiter.api.Assertions.assertTrue
 
@@ -38,7 +37,7 @@ class RadarChartTest {
     BitmapEncoder.saveBitmap(chart, file.absolutePath, BitmapEncoder.BitmapFormat.PNG)
     assertTrue(file.exists())
 
-    Matrix m = new MatrixBuilder()
+    Matrix m = Matrix.builder()
         .columnNames('System', 'Sales', 'Marketing', 'Development',
         'Customer Support', 'Information Technology', 'Administration')
         .rows([

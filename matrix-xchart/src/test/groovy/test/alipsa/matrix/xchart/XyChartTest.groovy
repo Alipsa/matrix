@@ -6,7 +6,6 @@ import org.knowm.xchart.style.AxesChartStyler
 import org.knowm.xchart.style.Styler
 import org.knowm.xchart.style.markers.SeriesMarkers
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.xchart.AreaChart
 import se.alipsa.matrix.xchart.LineChart
 import se.alipsa.matrix.xchart.ScatterChart
@@ -20,7 +19,7 @@ class XyChartTest {
 
   @Test
   void testLineChart() {
-    Matrix matrix = new MatrixBuilder()
+    Matrix matrix = Matrix.builder()
         .data(
             X1: [0.0, 1.0, 2.0],
             Y1: [2.0, 1.0, 0.0],
@@ -58,7 +57,7 @@ class XyChartTest {
 
   @Test
   void testAreaChart() {
-    Matrix matrix = new MatrixBuilder()
+    Matrix matrix = Matrix.builder()
         .data(
             ax: [0, 3, 5, 7, 9],
             ay: [-3, 5, 9, 6, 5],
@@ -83,7 +82,7 @@ class XyChartTest {
 
   @Test
   void testAreaAndLineCombo() {
-    Matrix matrix = new MatrixBuilder()
+    Matrix matrix = Matrix.builder()
         .data(
             ages: [60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76,
                     77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93,
@@ -144,7 +143,7 @@ class XyChartTest {
       xData << (random.nextGaussian() / 1000)
       yData << (-1000000 + random.nextGaussian())
     }
-    Matrix matrix = new MatrixBuilder().data(
+    Matrix matrix = Matrix.builder().data(
         xData: xData,
         yData: yData
     ).types(Number, Number)
@@ -171,7 +170,7 @@ class XyChartTest {
       yData << (20 + random.nextGaussian())
       errorBars << Math.random() + .3
     }
-    Matrix matrix = new MatrixBuilder().data(
+    Matrix matrix = Matrix.builder().data(
         xData: xData,
         yData: yData,
         error: errorBars

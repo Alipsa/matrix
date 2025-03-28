@@ -1,3 +1,4 @@
+package houseprice
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -13,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import se.alipsa.groovy.matrix.*
+import se.alipsa.matrix.core.*
 
-import static se.alipsa.groovy.matrix.Stat.*
+import static se.alipsa.matrix.core.Stat.*
 
-def file = io.projectFile("src/main/resources/data/kc_house_data.csv")
+def file = this.getClass().getResource("/data/kc_house_data.csv")
 assert file != null
 
 Matrix rows = Matrix.builder().data(file).build()
@@ -45,6 +46,7 @@ def bigHouse = GQ {
 ''
 println Matrix.builder().ginqResult(bigHouse).build().content()
 
+/*
 // TODO continue matrix conversion here
 println "\nHouses with less than 30 bedrooms"
 println   "---------------------------------"
@@ -65,3 +67,4 @@ helper.show(BubblePlot.create("Price vs living area and grade (bubble size)",
 
 helper.show(Scatter3DPlot.create("Grade, living space, bathrooms and price (bubble size)",
         cleaned, "sqft_living", "bathrooms", "grade", "scaledPrice", "waterfrontDesc"), 'LivingBathroomsGradePriceWaterfront')
+*/

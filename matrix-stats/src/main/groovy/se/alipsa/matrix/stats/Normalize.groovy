@@ -169,7 +169,7 @@ class Normalize {
     for (Column col in table.columns()) {
       columns << logNorm(col, decimals)
     }
-    new MatrixBuilder(table.matrixName)
+    Matrix.builder(table.matrixName)
         .columns(columns)
         .types(table.types())
         .build()
@@ -347,7 +347,7 @@ class Normalize {
         columns << minMaxNorm(col, decimals)
       }
     }
-    new MatrixBuilder(table.matrixName)
+    Matrix.builder(table.matrixName)
         .columns(columns)
         .columnNames(table.columnNames())
         .types(table.types())
@@ -535,7 +535,7 @@ class Normalize {
         columns << meanNorm(col, decimals)
       }
     }
-    new MatrixBuilder(table.matrixName)
+    Matrix.builder(table.matrixName)
         .columns(columns)
         .columnNames(table.columnNames())
         .types(table.types())
@@ -728,7 +728,7 @@ class Normalize {
         columns << stdScaleNorm(col, decimals)
       }
     }
-    new MatrixBuilder(table.matrixName)
+    Matrix.builder(table.matrixName)
         .columns(columns)
         .columnNames(table.columnNames())
         .types(table.types())

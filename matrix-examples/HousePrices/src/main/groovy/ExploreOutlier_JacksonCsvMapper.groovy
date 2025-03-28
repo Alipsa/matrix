@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
 import com.fasterxml.jackson.dataformat.csv.CsvMapper
 import com.fasterxml.jackson.dataformat.csv.CsvSchema
 
@@ -35,6 +36,8 @@ def mapper = new CsvMapper().configure(IGNORE_TRAILING_UNMAPPABLE, true)
 def records = mapper.readerForMapOf(String).with(schema).readValues(data).readAll()
 
 records.findAll{ it.bedrooms.toInteger() > 10 }.each{ println it }
+
+ */
 
 /*
 [id:1773100755, date:20140821T000000, price:520000, bedrooms:11, bathrooms:3, sqft_living:3000, sqft_lot:4960]

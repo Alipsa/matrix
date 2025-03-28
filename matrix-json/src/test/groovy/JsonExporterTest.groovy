@@ -1,5 +1,5 @@
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.matrixjson.JsonImporter
+import se.alipsa.matrix.json.JsonImporter
 
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
@@ -7,7 +7,7 @@ import java.time.temporal.TemporalAccessor
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixjson.JsonExporter
+import se.alipsa.matrix.json.JsonExporter
 
 import java.time.LocalDate
 

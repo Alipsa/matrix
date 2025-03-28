@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/*
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.XYChartBuilder
 import weka.classifiers.functions.SGD
@@ -52,3 +54,4 @@ chart.addSeries("Ideal", [from, to] as double[], [from, to] as double[]).with {
     XYSeriesRenderStyle = Line
 }
 new SwingWrapper(chart).displayChart()
+*/

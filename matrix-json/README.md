@@ -49,10 +49,10 @@ The jvm should be JDK 21 or higher.
 The simplest way is to just use the toJson method on th JsonExporter, e.g:
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.matrixjson.JsonExporter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.matrixjson.JsonExporter
 import java.time.LocalDate
-import static se.alipsa.groovy.matrix.ListConverter.toLocalDates
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import groovy.json.JsonOutput
 
 def empData = Matrix.builder().data(

@@ -16,10 +16,9 @@ Here is an example usage for a Line Chart:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.xchart.LineChart
 
-Matrix matrix = new MatrixBuilder()
+Matrix matrix = Matrix.builder()
   .data(
       X1: [0.0, 1.0, 2.0],
       Y1: [2.0, 1.0, 0.0],

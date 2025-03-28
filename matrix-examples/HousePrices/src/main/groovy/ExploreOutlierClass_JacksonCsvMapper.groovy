@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
 import com.fasterxml.jackson.annotation.JsonIncludeProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
@@ -48,6 +49,8 @@ def mapper = new CsvMapper().configure(IGNORE_TRAILING_UNMAPPABLE, true)
 def records = mapper.readerFor(HouseClass).with(schema).readValues(data).readAll()
 
 records.findAll{ it.bedrooms > 10 }.each{ println it }
+
+ */
 
 /*
 HouseClass(bedrooms:11, bathrooms:3, area_lot:4960)

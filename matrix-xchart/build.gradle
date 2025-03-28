@@ -112,7 +112,6 @@ signing {
 
 if (project.ext.properties.sonatypeUsername) {
     apply plugin: 'se.alipsa.nexus-release-plugin'
-    //apply plugin: 'se.alipsa.groovy.NexusReleasePlugin'
     nexusReleasePlugin.nexusUrl = nexusUrl
     nexusReleasePlugin.userName = sonatypeUsername
     nexusReleasePlugin.password = sonatypePassword

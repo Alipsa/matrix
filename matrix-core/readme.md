@@ -463,7 +463,7 @@ assert exp == m2
 See [using ginq](https://groovy-lang.org/using-ginq.html) for more info about ginq.
 
 See [tests](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/MatrixTest.groovy) for more usage examples or
-the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix/latest/index.html) for more info.
+the [javadocs](https://javadoc.io/doc/se.alipsa.matrix/matrix-core/latest/index.html) for more info.
 
 ### Column Arithmetics
 The columns in a matrix overrides the following basic mathematical operations to be on each element in the column

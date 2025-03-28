@@ -11,7 +11,7 @@ The Matrix project consist of the following modules:
    do basic statistics (sum, mean, median, sd, variance, counts, frequency etc.) and to
    convert data into various shapes and formats
    See [tests](https://github.com/Alipsa/matrix/blob/main/matrix-core/src/test/groovy/MatrixTest.groovy) for more usage examples or
-   the [javadocs](https://javadoc.io/doc/se.alipsa.groovy/matrix-core/latest/index.html) for more info.
+   the [javadocs](https://javadoc.io/doc/se.alipsa.matrix/matrix-core/latest/index.html) for more info.
 1. _[matrix-stats](https://github.com/Alipsa/matrix/blob/main/matrix-stats/README.md)_ The stats library contains various statistical methods and tests
    (correlations, normalization, linear regression, t-test, etc.)
 1. _[matrix-datasets](https://github.com/Alipsa/matrix/blob/main/matrix-datasets/README.md)_ contains some common datasets used in R and Python such as mtcars, iris, diamonds, plantgrowth, toothgrowth etc.

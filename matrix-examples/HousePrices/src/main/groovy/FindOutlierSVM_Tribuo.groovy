@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/*
 import org.tribuo.MutableDataset
 import org.tribuo.anomaly.AnomalyFactory
 import org.tribuo.anomaly.evaluation.AnomalyEvaluator
@@ -61,3 +61,6 @@ if (anomalies) {
 def testEvaluation = eval.evaluate(model, data)
 println "\n$testEvaluation"
 println testEvaluation.confusionString()
+
+
+ */

@@ -6,7 +6,6 @@ import org.knowm.xchart.HeatMapSeries
 import org.knowm.xchart.style.HeatMapStyler
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
 class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
@@ -57,7 +56,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
       }
       tmpRows << tmpRow
     }
-    heatMapMatrix = new MatrixBuilder().rows(tmpRows).build()
+    heatMapMatrix = Matrix.builder().rows(tmpRows).build()
     xchart.addSeries(seriesName, 1..nCols, 1..nRows, heatData)
     this
   }
@@ -82,7 +81,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
       }
       tmpRows << tmpRow
     }
-    heatMapMatrix = new MatrixBuilder().rows(tmpRows).build()
+    heatMapMatrix = Matrix.builder().rows(tmpRows).build()
     xchart.addSeries(seriesName, rowLabels, columnLabels, heatData)
     this
   }
@@ -100,7 +99,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
       }
       tmpRows << tmpRow
     }
-    heatMapMatrix = new MatrixBuilder()
+    heatMapMatrix = Matrix.builder()
         .rows(tmpRows)
         .columnNames(matrix.columnNames() - columnName)
         .build()

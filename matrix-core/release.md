@@ -1,5 +1,10 @@
 # Matrix Core Release History
 
+### 3.2.0, in progress
+- Add a static builder create methods to Matrix for name, columns and types
+- Change the Matrix constructor to use a list instead of Columns 
+- Make MatrixBuilder constructors package scoped
+
 ### 3.1.0, 2025-03-26
 - Add support for arbitrary metaData to a Matrix
 - add conversion from minus and hyphen to the correct negation symbol when supplying a formatter to the conversion

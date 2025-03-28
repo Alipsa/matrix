@@ -22,7 +22,7 @@ import tech.tablesaw.plotly.components.*
 import tech.tablesaw.plotly.traces.ScatterTrace
 import tech.tablesaw.plotly.traces.Trace
 import tech.tablesaw.selection.Selection
-
+import se.alipsa.gi.swing.*
 import java.time.*
 import java.util.function.Function
 
@@ -30,6 +30,8 @@ import static java.time.Month.JANUARY
 import static tech.tablesaw.aggregate.AggregateFunctions.mean
 import static tech.tablesaw.api.QuerySupport.and
 import static tech.tablesaw.io.xlsx.XlsxReadOptions.builder
+
+// Based on https://github.com/paulk-asert/groovy-data-science/blob/master/subprojects/Candles/src/main/groovy/CandleRatings.groovy
 
 // helper function
 List<Trace> traces(URL url, String lineColor, String markerColor) {
@@ -74,15 +76,17 @@ line = ScatterTrace.builder(reported.dateTimeColumn('Date'), reported.nCol('Val'
         .line(Line.builder().width(2).dash(Line.Dash.DOT).color('red').build())
         .build()
 
-url = new File(io.scriptDir(), '../data/Scented_all.xlsx').toURL()
+url = this.getClass().getResource('/data/Scented_all.xlsx')
+def helper = new TablesawHelper(url.file)
 (sAverage, sScatter) = traces(url, 'seablue', 'lightskyblue')
 
-url = new File(io.scriptDir(), '../data/Unscented_all.xlsx').toURL()
+url = this.getClass().getResource('/data/Unscented_all.xlsx')
 (uAverage, uScatter) = traces(url, 'seagreen', 'lightgreen')
 
-io.display(new Figure(layout(''), sAverage, sScatter, uAverage, uScatter, line))
-io.display(new Figure(layout('scented'), sAverage, sScatter, line), 'ScentedRatings')
-io.display(new Figure(layout('unscented'), uAverage, uScatter, line), 'UnscentedRatings')
-//helper.show(new Figure(layout(''), sAverage, sScatter, uAverage, uScatter, line))
+
+//io.display(new Figure(layout(''), sAverage, sScatter, uAverage, uScatter, line))
+//io.display(new Figure(layout('scented'), sAverage, sScatter, line), 'ScentedRatings')
+//io.display(new Figure(layout('unscented'), uAverage, uScatter, line), 'UnscentedRatings')
+// TODO: does not work in java 21, rewrite using matrix-xchart
 //helper.show(new Figure(layout('scented'), sAverage, sScatter, line), 'ScentedRatings')
 //helper.show(new Figure(layout('unscented'), uAverage, uScatter, line), 'UnscentedRatings')

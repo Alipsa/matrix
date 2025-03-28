@@ -3,13 +3,13 @@ Groovy library for creating graphs based on Matrix or [][] data
 
 add the following dependency to your gradle build script
 ```groovy
-implementation 'se.alipsa.groovy:charts:0.2'
+implementation 'se.alipsa.matrix:charts:0.2'
 ```
 
 ... or maven pom.xml
 ```xml
 <dependency>
-    <groupId>se.alipsa.groovy</groupId>
+    <groupId>se.alipsa.matrix</groupId>
     <artifactId>charts</artifactId>
     <version>0.2</version>
 </dependency>
@@ -19,8 +19,8 @@ implementation 'se.alipsa.groovy:charts:0.2'
 
 ```groovy
 import java.time.LocalDate
-import se.alipsa.groovy.matrix.*
-import se.alipsa.groovy.charts.*
+import se.alipsa.matrix.core.*
+import se.alipsa.matrix.charts.*
 
 def empData = Matrix.builder().data(
     emp_id: 1..5,

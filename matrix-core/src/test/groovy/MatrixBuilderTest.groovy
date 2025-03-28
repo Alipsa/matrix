@@ -375,6 +375,20 @@ class MatrixBuilderTest {
     assertEquals(1, matrix7.columnCount())
   }
 
+  @Test
+  void testComplexArgumentsBuilder() {
+    Matrix matrix = Matrix.builder(
+        metal: ['Gold', 'Silver', 'Platinum', 'Copper', 'Zinc'],
+        ratio: [24, 21, 39, 17, 40],
+        [String, Number],
+        'Metal ratio',
+    ).build()
+    assertEquals('Metal ratio', matrix.matrixName)
+    assertEquals(5, matrix.rowCount())
+    assertEquals(2, matrix.columnCount())
+    assertIterableEquals([String, Number], matrix.types())
+  }
+
   class Person {
     String name
     int id

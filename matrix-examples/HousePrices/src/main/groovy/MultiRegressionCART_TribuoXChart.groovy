@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/*
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.XYChartBuilder
 import org.tribuo.MutableDataset
@@ -55,3 +56,5 @@ chart.addSeries("Ideal", range, range).with {
     XYSeriesRenderStyle = Line
 }
 new SwingWrapper(chart).displayChart()
+
+ */

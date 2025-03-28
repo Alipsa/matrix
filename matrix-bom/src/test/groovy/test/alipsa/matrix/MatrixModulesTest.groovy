@@ -3,8 +3,8 @@ package test.alipsa.matrix
 import groovy.sql.Sql
 import org.junit.jupiter.api.Assertions
 import se.alipsa.groovy.datautil.ConnectionInfo
-import se.alipsa.matrix.matrixjson.JsonExporter
-import se.alipsa.matrix.matrixjson.JsonImporter
+import se.alipsa.matrix.json.JsonExporter
+import se.alipsa.matrix.json.JsonImporter
 import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.sql.MatrixSql
@@ -136,12 +136,12 @@ class MatrixModulesTest {
 
   @Test
   void testXChart() {
-    Matrix matrix = new MatrixBuilder().data(
+    Matrix matrix = Matrix.builder(
         metal: ['Gold', 'Silver', 'Platinum', 'Copper', 'Zinc'],
-        ratio: [24, 21, 39, 17, 40]
-    ).matrixName('Metal ratio')
-        .types(String, Number)
-        .build()
+        ratio: [24, 21, 39, 17, 40],
+        [String, Number],
+        'Metal ratio',
+    ).build()
 
     File file = new File("target/testPieChart.png")
     def pc = PieChart.create(matrix)

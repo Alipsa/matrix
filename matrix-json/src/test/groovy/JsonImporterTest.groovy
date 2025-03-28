@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.ValueNode
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixjson.JsonImporter
+import se.alipsa.matrix.json.JsonImporter
 
 import java.time.LocalDate
 

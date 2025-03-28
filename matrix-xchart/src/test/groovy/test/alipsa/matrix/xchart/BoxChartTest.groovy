@@ -2,14 +2,13 @@ package test.alipsa.matrix.xchart
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.xchart.BoxChart
 
 class BoxChartTest {
 
   @Test
   void testBoxChart() {
-    Matrix matrix = new MatrixBuilder(). data(
+    Matrix matrix = Matrix.builder(). data(
         'aaa': [40, 30, 20, 60, 50],
         'bbb': [-20, -10, -30, -15, -25],
         'ccc': [50, -20, 10, 5, 1]

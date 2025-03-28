@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
 import com.fasterxml.jackson.annotation.JsonIncludeProperties
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import com.fasterxml.jackson.dataformat.csv.CsvMapper
@@ -22,7 +23,7 @@ import static com.fasterxml.jackson.dataformat.csv.CsvParser.Feature.IGNORE_TRAI
 
 @JsonPropertyOrder(['bedrooms', 'bathrooms', 'sqft_lot'])
 @JsonIncludeProperties(['bedrooms', 'bathrooms', 'sqft_lot'])
-record HouseRecord(Integer bedrooms, String bathrooms, Integer sqft_lot/*, @JsonProperty("sqft_lot") Integer area_lot*/) { }
+record HouseRecord(Integer bedrooms, String bathrooms, Integer sqft_lot) { }
 
 def full = getClass().classLoader.getResource('kc_house_data.csv').file as File
 
@@ -41,8 +42,10 @@ def mapper = new CsvMapper().configure(IGNORE_TRAILING_UNMAPPABLE, true)
 def records = mapper.readerFor(HouseRecord).with(schema).readValues(full).readAll()
 
 records.findAll{ it.bedrooms > 10 }.each{ println it }
+*/
 
 /*
 HouseRecord[bedrooms=11, bathrooms=3, sqft_lot=4960]
 HouseRecord[bedrooms=33, bathrooms=1.75, sqft_lot=6000]
 */
+

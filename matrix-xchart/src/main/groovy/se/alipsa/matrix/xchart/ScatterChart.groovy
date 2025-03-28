@@ -14,4 +14,11 @@ class ScatterChart extends AbstractXYChart<ScatterChart> {
   static ScatterChart create(Matrix matrix, Integer width = null, Integer height = null) {
     new ScatterChart(matrix, width, height)
   }
+
+  static ScatterChart create(String title, Matrix matrix, String xAxis, String yAxis, Integer width = null, Integer height = null) {
+    def chart = new ScatterChart(matrix, width, height)
+    chart.title = title
+    chart.addSeries(xAxis, yAxis)
+    chart
+  }
 }

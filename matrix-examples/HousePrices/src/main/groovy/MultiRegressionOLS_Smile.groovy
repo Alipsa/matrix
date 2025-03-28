@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/*
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.io.Read
@@ -48,3 +50,5 @@ ScatterPlot.of(data, BLUE).canvas().with {
     add(ideal)
     window()
 }
+
+ */

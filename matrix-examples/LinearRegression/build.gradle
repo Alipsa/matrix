@@ -14,9 +14,7 @@ version = '1.0.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    if (version.contains('SNAPSHOT')) {
-        mavenLocal()
-    }
+    mavenLocal()
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -28,47 +26,17 @@ tasks.withType(GroovyCompile).configureEach { task ->
 }
 
 dependencies {
-    org.gradle.internal.os.OperatingSystem os = org.gradle.internal.os.OperatingSystem.current()
-    def qualifier = 'unknown'
-    if (os.isLinux()) {
-        qualifier='linux'
-    } else if (os.isWindows()) {
-        qualifier = 'win'
-    } else if (os.isMacOsX()) {
-        qualifier = 'mac-aarch64'
-    }
-    def javafxVersion = "23.0.2"
+    // Note that for an independent project, you must use platform("se.alipsa.matrix:matrix-bom:2.1.1")
+    // and then implementation 'se.alipsa.matrix:matrix-core' etc without a version as described in the readme.md
     implementation libs.groovy
-    implementation "org.openjfx:javafx-base:${javafxVersion}:$qualifier"
-    implementation "org.openjfx:javafx-graphics:${javafxVersion}:$qualifier"
-    implementation "org.openjfx:javafx-controls:${javafxVersion}:$qualifier"
-    implementation "org.openjfx:javafx-swing:${javafxVersion}:$qualifier"
-    implementation(platform( 'se.alipsa.matrix:matrix-bom:1.1.2'))
-    implementation('se.alipsa.matrix:matrix-core')
-    implementation('se.alipsa.matrix:matrix-datasets')
-    implementation('se.alipsa.matrix:matrix-stats')
-    implementation('se.alipsa.matrix:matrix-charts')
+    implementation project(':matrix-core')
+    implementation project(':matrix-datasets')
+    implementation project(':matrix-stats')
+    implementation project(':matrix-xchart')
     testImplementation testLibs.junitJupiter
+    testImplementation testLibs.junitPlatformLauncher
 }
 
 test {
     useJUnitPlatform()
-}
-
-def fatJarContainer = tasks.register('fatJar', Jar) {
-    dependsOn(classes)
-    archiveClassifier = 'fat'
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from {
-        configurations.runtimeClasspath.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
-    with jar
-}
-
-
-jar {
-    dependsOn fatJarContainer
 }

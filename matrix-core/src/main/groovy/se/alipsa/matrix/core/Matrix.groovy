@@ -41,7 +41,11 @@ class Matrix implements Iterable<Row> {
   }
 
   static MatrixBuilder builder(String matrixName) {
-    new MatrixBuilder().matrixName(matrixName)
+    new MatrixBuilder(matrixName)
+  }
+
+  static MatrixBuilder builder(Map<String, List> columnData, List<Class> types, String name = null) {
+    new MatrixBuilder(name).columns(columnData).types(types)
   }
 
   /**
@@ -52,7 +56,7 @@ class Matrix implements Iterable<Row> {
    * @param columns the variable list (the data in columnar format)
    * @param dataTypes the data types (classes)
    */
-  Matrix(String name, List<String> headerList, List<Column> columns, List<Class> dataTypes) {
+  Matrix(String name, List<String> headerList, List<? extends List> columns, List<Class> dataTypes) {
     if (dataTypes != null && headerList == null) {
       headerList = (1..dataTypes.size()).collect { 'c' + it }
     }
@@ -77,7 +81,7 @@ class Matrix implements Iterable<Row> {
 
     if (dataTypes.size() > columns.size()) {
       for (int i = 0; i < dataTypes.size() - columns.size(); i++) {
-        columns << new Column()
+        columns.add([])
       }
     }
 
@@ -555,7 +559,7 @@ class Matrix implements Iterable<Row> {
    * convert([new Converter('id', Integer, {Integer.parseInt(it)})] as Converter[])
    * <code>
    *
-   * @param converters an array of se.alipsa.groovy.matrix.Converter
+   * @param converters an array of se.alipsa.matrix.core.Converter
    * @return this Matrix with the types and column values converted
    */
   Matrix convert(Converter[] converters) {

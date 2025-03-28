@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
 // joinery has some neat capabilities but has a restrictive GPL3 license
 import joinery.DataFrame
 import org.apache.commons.math3.random.EmpiricalDistribution
@@ -43,3 +44,6 @@ chart.styler.with {
     XAxisMax = 8_000_000
 }
 new SwingWrapper(chart).displayChart()
+
+
+ */

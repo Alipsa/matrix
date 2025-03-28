@@ -1,3 +1,4 @@
+package houseprice
 /*
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -13,10 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@Grab("org.knowm.xchart:xchart:3.8.1")
-@Grab("org.apache.commons:commons-math3:3.6.1")
-
-import tech.tablesaw.api.*
+/*
 import tech.tablesaw.plotly.api.*
 import org.knowm.xchart.CategoryChartBuilder
 import org.knowm.xchart.Histogram
@@ -44,3 +42,5 @@ chart.styler.with {
 JPanel chartPanel = new XChartPanel<Chart>(chart);
 io.display(chartPanel, "Price histogram")
 //new SwingWrapper(chart).displayChart()
+
+ */

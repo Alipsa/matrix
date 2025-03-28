@@ -39,7 +39,7 @@ Correlation is a statistical measure that expresses the extent to which two vari
 The Correlation class can do the most common types of correlation calculations (Pearson, Spearman, and Kendall).
 Pearson correlation is the default one:
 ```groovy
-import static se.alipsa.groovy.stats.Correlation.*
+import static se.alipsa.matrix.stats.Correlation.*
 import java.math.RoundingMode
 
 assert 0.95346258924559 == cor([15, 18, 21, 24, 27], [25, 25, 27, 31, 32]).setScale(14, RoundingMode.HALF_EVEN)
@@ -48,7 +48,7 @@ assert 0.95346258924559 == cor([15, 18, 21, 24, 27], [25, 25, 27, 31, 32]).setSc
 Add a method parameter to get Spearman and Kendall correlations instead e.g:
 
 ```groovy
-import static se.alipsa.groovy.stats.Correlation.*
+import static se.alipsa.matrix.stats.Correlation.*
 import java.math.RoundingMode
 // Spearman
 assert 0.45643546458764 == cor([15, 18, 21, 15, 21], [25, 25, 27, 27, 27], SPEARMAN).setScale(14, RoundingMode.HALF_EVEN)
@@ -71,8 +71,8 @@ It implements 4 different approaches
 
 Here is an example:
 ```groovy
-import se.alipsa.groovy.matrix.ListConverter
-import se.alipsa.groovy.stats.Normalize
+import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.stats.Normalize
 List<BigDecimal> obs = ListConverter.toBigDecimals([1200, 34567, 3456, 12, 3456, 985, 1211])
 def expected = [-0.1508444, 0.8147756,  -0.0855572, -0.1852244, -0.0855572, -0.1570664, -0.1505261]
 assert expected == Normalize.meanNorm(obs, 7) // 7 is the number of decimals
@@ -86,7 +86,7 @@ See
 Implements the least squares regression with one independent variable estimating the linear model.
 Here is an example:
 ```groovy
-import se.alipsa.groovy.stats.regression.LinearRegression
+import se.alipsa.matrix.stats.regression.LinearRegression
 
 def x = [2.7, 3, 5, 7, 9, 11, 14]
 def y = [4, 5, 7, 10.8, 15, 20, 40]
@@ -112,8 +112,8 @@ assert 30.34082454 == model.predict(13, 8)
 #### Two sample t-test
 
 ```groovy
-import se.alipsa.groovy.datasets.*
-import se.alipsa.groovy.stats.Student
+import se.alipsa.matrix.datasets.*
+import se.alipsa.matrix.stats.Student
 
 def iris = Dataset.iris()
 def speciesIdx = iris.columnIndex("Species")
@@ -139,7 +139,7 @@ y: mean = 5.552, size = 50, sd = 0.552
 #### One sample t-test
 
 ```groovy
-import se.alipsa.groovy.stats.Student
+import se.alipsa.matrix.stats.Student
 
 def plantHeights = [14, 14, 16, 13, 12, 17, 15, 14, 15, 13, 15, 14]
 def t = Student.tTest(plantHeights, 15)
@@ -157,8 +157,8 @@ mean = 14.333, size = 12, sd = 1.371
 #### Paired t-test
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
-import se.alipsa.groovy.stats.Student
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.Student
 
 def data = Matrix.builder().data(
 score: [85 ,85, 78, 78, 92, 94, 91, 85, 72, 97,

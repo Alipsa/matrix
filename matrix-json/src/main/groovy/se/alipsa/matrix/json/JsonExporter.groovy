@@ -1,4 +1,4 @@
-package se.alipsa.matrix.matrixjson
+package se.alipsa.matrix.json
 
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix

@@ -1,6 +1,6 @@
-import se.alipsa.matrix.charts.Chart
-import se.alipsa.matrix.charts.Plot
-import se.alipsa.matrix.charts.ScatterChart
+package lra
+
+import se.alipsa.matrix.xchart.ScatterChart
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.datasets.Dataset
@@ -18,9 +18,9 @@ println cars.head(8)
 // Display the structure of the cars dataset
 println Stat.str(cars)
 
-Chart chart = ScatterChart.create("Speed vs distance", cars, 'speed','dist')
+ScatterChart chart = ScatterChart.create("Cars speed vs distance", cars, 'speed','dist')
 File scatterplotFile = new File('cars.png')
-Plot.png(chart, scatterplotFile, 800, 600)
+chart.exportPng(scatterplotFile)
 println "Wrote ${scatterplotFile.getAbsolutePath()}"
 
 println "Correlation between speed and distance is ${Correlation.cor(cars['speed'], cars['dist'])}"

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
 import com.opencsv.bean.*
 import groovy.transform.ToString
 
@@ -34,6 +35,8 @@ def builder = new CsvToBeanBuilder(new FileReader(full))
 def records = builder.withType(House).build().parse()
 
 records.findAll{ it.bedrooms > 10 }.each{ println it }
+
+ */
 
 /*
 House(bedrooms:11, bathrooms:3, area_lot:4960)

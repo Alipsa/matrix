@@ -16,8 +16,8 @@ Examples:
 ```groovy
 import se.alipsa.matrix.Matrix
 import java.time.LocalDate
-import static se.alipsa.groovy.matrix.ListConverter.*
-import static se.alipsa.groovy.matrix.ValueConverter.*
+import static se.alipsa.matrix.core.ListConverter.*
+import static se.alipsa.matrix.core.ValueConverter.*
 
 // Creating based on lists of data
 Matrix ed = Matrix.builder("ed")
@@ -98,7 +98,7 @@ A Matrix can be referenced using the shorthand square bracket syntax. If you use
 you can use the getAt() methods instead.
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 
 import javax.swing.JTable
 
@@ -199,7 +199,7 @@ List<List<?>> weightHight = myMatrix.columns(['weight', 'height'])
 
 ### Examples:
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 // Given the following Matrix
 def myMatrix = Matrix.builder().data(
     id    : [1, 2, 3, 4],
@@ -253,8 +253,8 @@ will output
 - List<Integer> columnIndices(List<String> columnNames): the positions for the variables specified
 
 ```groovy 
-import se.alipsa.groovy.matrix.Matrix
-import static se.alipsa.groovy.matrix.Stat.*
+import se.alipsa.matrix.core.Matrix
+import static se.alipsa.matrix.core.Stat.*
 
 table = Matrix.builder('Test')
           .data(
@@ -321,7 +321,7 @@ Most frequent:	Foo occurs 2 times (66.67%)
 - Matrix addColumns(List<String> names, List<List<?>> columns, List<Class<?>> types)
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 def table = Matrix.builder('Test')
         .data(
                 v0: [0.3, 2, 3],
@@ -347,7 +347,7 @@ The table will now contain the following (one added row and one added column):
 - Matrix removeEmptyRows()
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 def table = Matrix.builder('Test')
             .data(
                 [
@@ -368,7 +368,7 @@ Table will now contain:
 | 3 | Foo |
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 def table = Matrix.builder('Test').data([
         v0: [null, 2, 3],
         v1: [null, 1, 0.9],
@@ -386,7 +386,7 @@ Table will now contain
 | 3 | 0.9 | Bar |
 
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 def table = Matrix.builder('Test').data(
                 [
                 v0: [null, 2, 3],
@@ -412,9 +412,9 @@ Table will now contain:
   e.g. `myMatrix['temperature'] = [42, 12, 10]`
 - void putAt(String columnName, Class<?> type, Integer index = null, List<?> column)
 ```groovy
-import se.alipsa.groovy.matrix.Matrix
+import se.alipsa.matrix.core.Matrix
 import java.time.*
-import static se.alipsa.groovy.matrix.ListConverter.*
+import static se.alipsa.matrix.core.ListConverter.*
 
 // note that this version of put at will add a new column
  def table = Matrix.builder().data(

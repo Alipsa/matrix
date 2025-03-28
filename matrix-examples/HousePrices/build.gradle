@@ -16,7 +16,16 @@ tasks.withType(GroovyCompile) { task ->
 
 dependencies {
     implementation libs.groovy
-    implementation "se.alipsa.matrix:matrix-core:1.2.4"
+    implementation libs.groovyGinq
+    implementation project(':matrix-core')
+    testImplementation testLibs.junitJupiter
+    testImplementation testLibs.junitPlatformLauncher
 }
 
+test {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+    }
+}
 

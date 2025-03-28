@@ -5,7 +5,6 @@ import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize
 import se.alipsa.matrix.xchart.HeatmapChart
@@ -18,7 +17,7 @@ class HeatmapChartTest {
   @Test
   void testHeatmap() {
     def data = [123, 210, 89, 87, 245, 187, 100, 110, 99, 59, 110, 101]
-    Matrix matrix = new MatrixBuilder().data(
+    Matrix matrix = Matrix.builder().data(
         'c': data
     ).types(Number)
     .build()
@@ -57,7 +56,7 @@ class HeatmapChartTest {
       rows << row
     }
 
-    Matrix m = new MatrixBuilder('xchart').rows(rows).build()
+    Matrix m = Matrix.builder('xchart').rows(rows).build()
     chart.addSeries("Basic HeatMap", columnNums, rowNums, heatData)
     def file2 = new File("build/testHeatmap2.png")
     BitmapEncoder.saveBitmap(chart, file2.absolutePath, BitmapEncoder.BitmapFormat.PNG)
@@ -65,7 +64,7 @@ class HeatmapChartTest {
     assertTrue(m.equals(hm,true, true), m.diff(hm))
 
     // Same thing, different way of constructing
-    Matrix m2 = new MatrixBuilder('matrix chart3').rows([
+    Matrix m2 = Matrix.builder('matrix chart3').rows([
         [123, 210, 89, 87],
         [245, 187, 100, 110],
         [99, 59, 110, 101]]

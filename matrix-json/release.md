@@ -1,5 +1,8 @@
 # Release history
 
+"" v2.1.0, in progress
+- rename package from se.alipsa.matrix.matrixjson to se.alipsa.matrix.json
+- 
 ## v2.0.0, 2025-03-12
 - require JDK 21
 

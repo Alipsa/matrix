@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test
 import org.knowm.xchart.style.Styler
 import org.knowm.xchart.style.markers.SeriesMarkers
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.xchart.BarChart
 import se.alipsa.matrix.xchart.StickChart
 
@@ -14,7 +13,7 @@ class CategoryChartTest {
 
   @Test
   void testStickChart() {
-    Matrix matrix = new MatrixBuilder().data(
+    Matrix matrix = Matrix.builder().data(
         xData: -3..24,
         yData: -3..24
     ).types(Integer, Integer)
@@ -35,7 +34,7 @@ class CategoryChartTest {
 
   @Test
   void testBarChart() {
-    Matrix matrix = new MatrixBuilder().data(
+    Matrix matrix = Matrix.builder().data(
         name: ['Per', 'Karin', 'Tage', 'Sixten', 'Ulrik'],
         score: [4, 5, 9, 6, 5]
     ).types(String, Number)
@@ -50,7 +49,7 @@ class CategoryChartTest {
 
   @Test
   void testBarChartStacked() {
-    Matrix matrix = new MatrixBuilder().data(
+    Matrix matrix = Matrix.builder().data(
         name: ['Per', 'Karin', 'Tage', 'Sixten', 'Ulrik'],
         score: [4, 5, 9, 6, 5],
         addon: [4, 3, 2, 3, 4]

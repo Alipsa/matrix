@@ -17,10 +17,12 @@
  * Slightly modified to behave nicely in Gade
  */
 
+
 import tech.tablesaw.io.xlsx.XlsxReader
 import tech.tablesaw.plotly.components.Figure
 import tech.tablesaw.plotly.components.Layout
 import tech.tablesaw.plotly.traces.BarTrace
+import tech.tablesaw.plotly.Plot
 import tech.tablesaw.plotly.traces.ScatterTrace
 import java.time.LocalDateTime
 import java.util.function.Function
@@ -34,7 +36,7 @@ import static tech.tablesaw.api.DoubleColumn.create as dCol
 import static tech.tablesaw.api.StringColumn.create as sCol
 import static tech.tablesaw.io.xlsx.XlsxReadOptions.builder
 
-url = new File(io.scriptDir(), '../data/Scented_all.xlsx').toURL()
+var url = getClass().getResource('/data/Scented_all.xlsx')
 table = new XlsxReader().read(builder(url).build())
 start2020 = LocalDateTime.of(2020, JANUARY, 1, 0, 0)
 Function from2020 = r -> r.dateTimeColumn('Date').isAfter(start2020)
@@ -62,4 +64,8 @@ trace = BarTrace.builder(byMonth2020.categoricalColumn('Month'), byMonth2020.nCo
 errors = ScatterTrace.builder(byMonth2020.categoricalColumn('Month'), byMonth2020.nCol('barLower'),
         byMonth2020.nCol('barHigher'), byMonth2020.nCol('barLower'), byMonth2020.nCol('barHigher'))
         .type("candlestick").opacity(0.5).build()
-io.display(new Figure(layout, trace, errors), 'ReviewBarchart')
+//io.display(new Figure(layout, trace, errors), 'ReviewBarchart')
+var chart = new Figure(layout, trace, errors)
+var parentDir = new File(url.file).parentFile
+// TODO: does not work in java 21, rewrite using matrix-xchart
+//Plot.show(chart, new File(parentDir, 'ReviewBarchart.html'))
