@@ -2,12 +2,10 @@
 
 This module makes it simple to query data from Google Big Query and get the result back as a Matrix and also to export a Matrix to Big Query.
 
-**Note: This module is still work in progress and not published to Maven central yet!**
-
 To use it, add the following to your gradle build script
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.26'
-implementation 'se.alipsa.matrix:matrix-core:3.0.0'
+implementation 'se.alipsa.matrix:matrix-core:3.1.0'
 implementation 'se.alipsa.matrix:matrix-bigquery:0.2'
 ```
 To export and import data:
@@ -27,7 +25,7 @@ bq.saveToBigQuery(data, 'mydataset.cars')
 Matrix d2 = bq.query("select * from 'mydataset.cars'")
 assert data == d2
 ```
-
+See the [BqTest](src/test/groovy/se/alipsa/matrix/bigquery/BqTest.groovy) for more usage examples.
 
 # 3:rd party libraries used
 
