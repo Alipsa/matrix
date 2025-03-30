@@ -10,7 +10,7 @@ import se.alipsa.matrix.core.Matrix
 
 import java.awt.Color
 
-abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> {
+abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> implements MatrixXChart {
 
   protected C xchart
   protected Matrix matrix

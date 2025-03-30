@@ -1,5 +1,9 @@
 import tech.tablesaw.plotly.Plot
 import tech.tablesaw.plotly.components.Figure
+import tech.tablesaw.plotly.components.Page
+import tech.tablesaw.plotly.display.Browser
+
+import java.nio.charset.StandardCharsets
 
 class TablesawHelper {
   private File parent
@@ -21,6 +25,22 @@ class TablesawHelper {
       Plot.show(figure, file)
     } catch(ex) {
       println "Unable to show file '$file' due to '$ex.message'"
+    }
+  }
+
+  def save(Figure figure, String filename) {
+    if (!filename.endsWith('.html')) {
+      filename += '.html'
+    }
+    def outputFile = new File(parent, filename)
+    Page page = Page.pageBuilder(figure, "target").build();
+    String output = page.asJavascript();
+
+    try( Writer writer = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
+      writer.write(output)
+      println("Saved html to $outputFile")
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
   }
 }

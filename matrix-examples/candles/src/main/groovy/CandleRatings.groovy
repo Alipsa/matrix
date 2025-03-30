@@ -87,6 +87,6 @@ url = this.getClass().getResource('/data/Unscented_all.xlsx')
 //io.display(new Figure(layout(''), sAverage, sScatter, uAverage, uScatter, line))
 //io.display(new Figure(layout('scented'), sAverage, sScatter, line), 'ScentedRatings')
 //io.display(new Figure(layout('unscented'), uAverage, uScatter, line), 'UnscentedRatings')
-// TODO: does not work in java 21, rewrite using matrix-xchart
-//helper.show(new Figure(layout('scented'), sAverage, sScatter, line), 'ScentedRatings')
-//helper.show(new Figure(layout('unscented'), uAverage, uScatter, line), 'UnscentedRatings')
+
+helper.save(new Figure(layout('scented'), sAverage, sScatter, line), 'ScentedRatings')
+helper.save(new Figure(layout('unscented'), uAverage, uScatter, line), 'UnscentedRatings')

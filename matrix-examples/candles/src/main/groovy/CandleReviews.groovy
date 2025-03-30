@@ -64,8 +64,6 @@ trace = BarTrace.builder(byMonth2020.categoricalColumn('Month'), byMonth2020.nCo
 errors = ScatterTrace.builder(byMonth2020.categoricalColumn('Month'), byMonth2020.nCol('barLower'),
         byMonth2020.nCol('barHigher'), byMonth2020.nCol('barLower'), byMonth2020.nCol('barHigher'))
         .type("candlestick").opacity(0.5).build()
-//io.display(new Figure(layout, trace, errors), 'ReviewBarchart')
 var chart = new Figure(layout, trace, errors)
-var parentDir = new File(url.file).parentFile
-// TODO: does not work in java 21, rewrite using matrix-xchart
-//Plot.show(chart, new File(parentDir, 'ReviewBarchart.html'))
+def helper = new TablesawHelper(url.file)
+helper.save(chart, 'ReviewBarchart.html')
