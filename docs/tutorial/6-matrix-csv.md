@@ -9,25 +9,37 @@ To use the matrix-csv module, you need to add it as a dependency to your project
 ### Gradle Configuration
 
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:3.0.0'
-implementation 'se.alipsa.matrix:matrix-csv:2.0.0'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-csv'
 ```
 
 ### Maven Configuration
 
 ```xml
-<dependencies>
-  <dependency>
-      <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-core</artifactId>
-      <version>3.0.0</version>
-  </dependency>
-  <dependency>
-      <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-csv</artifactId>
-      <version>2.0.0</version>
-  </dependency>
-</dependencies>
+<project>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-bom</artifactId>
+        <version>2.1.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+    </dependencyManagement>
+  <dependencies>
+    <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-core</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-csv</artifactId>
+    </dependency>
+  </dependencies>
+</project>
 ```
 
 ## Importing CSV Files
@@ -41,7 +53,7 @@ Here's a simple example of importing a basic CSV file:
 ```groovy
 import org.apache.commons.csv.CSVFormat
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvImporter
+import se.alipsa.matrix.csv.CsvImporter
 
 // Import a CSV file with default settings
 URL url = getClass().getResource("/basic.csv")
@@ -59,7 +71,7 @@ For more complex CSV files, you can customize the CSV format using the Apache Co
 ```groovy
 import org.apache.commons.csv.CSVFormat
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvImporter
+import se.alipsa.matrix.csv.CsvImporter
 
 // Import a CSV file with custom settings
 URL url = getClass().getResource("/data.csv")
@@ -81,7 +93,7 @@ Let's look at a more complex example with semicolon-delimited fields, quoted str
 ```groovy
 import org.apache.commons.csv.CSVFormat
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvImporter
+import se.alipsa.matrix.csv.CsvImporter
 
 // Sample CSV content:
 // 1;"Per";"2023-Apr-30";234,12
@@ -109,7 +121,7 @@ When importing CSV files, all values are initially imported as strings. To conve
 ```groovy
 import org.apache.commons.csv.CSVFormat
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvImporter
+import se.alipsa.matrix.csv.CsvImporter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.text.NumberFormat
@@ -134,7 +146,7 @@ Matrix table = matrix.convert(
         "date": LocalDate,
         "amount": BigDecimal
     ],
-    DateTimeFormatter.ofPattern("yyyy-MMM-dd"),
+    "yyyy-MMM-dd",
     NumberFormat.getInstance(Locale.GERMANY)  // For parsing numbers with comma as decimal separator
 )
 
@@ -153,8 +165,9 @@ The matrix-csv module also provides functionality to export Matrix objects to CS
 Here's a simple example of exporting a Matrix to a CSV file:
 
 ```groovy
+import se.alipsa.matrix.core.*
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.matrixcsv.CsvExporter
+import se.alipsa.matrix.csv.CsvExporter
 import org.apache.commons.csv.CSVFormat
 
 // Load a sample dataset
@@ -164,7 +177,7 @@ Matrix mtcars = Dataset.mtcars()
 File file = File.createTempFile('mtcars', '.csv')
 
 // Export the Matrix to a CSV file with default settings
-CsvExporter.exportToCsv(mtcars, CSVFormat.DEFAULT, file)
+CsvExporter.exportToCsv(mtcars, file)
 
 println("CSV file exported to: ${file.absolutePath}")
 ```
@@ -175,7 +188,7 @@ You can customize the CSV format for export using the Apache Commons CSV builder
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvExporter
+import se.alipsa.matrix.csv.CsvExporter
 import org.apache.commons.csv.CSVFormat
 
 // Create or obtain a Matrix
@@ -196,6 +209,7 @@ CSVFormat format = CSVFormat.Builder.create()
 // Export to a file
 File file = new File('/path/to/sales_data.csv')
 CsvExporter.exportToCsv(salesData, format, file)
+println "exported to $file.absolutePath"
 ```
 
 ### Exporting to a Writer
@@ -204,7 +218,7 @@ Instead of exporting to a file, you can export to a Writer, which is useful for 
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvExporter
+import se.alipsa.matrix.csv.CsvExporter
 import org.apache.commons.csv.CSVFormat
 
 // Create or obtain a Matrix
@@ -279,19 +293,6 @@ CSVFormat customFormat = CSVFormat.Builder.create()
 4. **Error Handling**: Implement proper error handling when importing CSV files, as they may contain unexpected formats or values.
 
 5. **Large Files**: For large CSV files, consider processing them in chunks to avoid memory issues.
-
-## Version Compatibility
-
-The matrix-csv module has specific version compatibility requirements with the matrix-core module. The following table illustrates the version compatibility:
-
-| Matrix CSV | Matrix Core |
-|------------|-------------|
-| 1.0.0      | 1.2.3 -> 1.2.4 |
-| 1.0.1      | 2.0.0 -> 2.1.1 |
-| 1.1.0      | 2.2.0 |
-| 2.0.0      | 3.0.0 |
-
-Make sure to use compatible versions to avoid potential issues.
 
 ## Conclusion
 

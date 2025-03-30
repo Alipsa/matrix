@@ -10,30 +10,42 @@ To use the matrix-spreadsheet module, you need to add it as a dependency to your
 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.26'
-implementation 'se.alipsa.matrix:matrix-core:3.0.0'
-implementation 'se.alipsa.matrix:matrix-spreadsheet:2.0.0'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-spreadsheet'
 ```
 
 ### Maven Configuration
 
 ```xml
-<dependencies>
-  <dependency>
-      <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy</artifactId>
-      <version>4.0.26</version>
-  </dependency>
-  <dependency>
+<project>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-bom</artifactId>
+        <version>2.1.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+        <groupId>org.apache.groovy</groupId>
+        <artifactId>groovy</artifactId>
+        <version>4.0.26</version>
+    </dependency>
+    <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-core</artifactId>
-      <version>3.0.0</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-spreadsheet</artifactId>
-    <version>2.0.0</version>
-  </dependency>
-</dependencies>
+      <artifactId>matrix-spreadsheet</artifactId>
+    </dependency>
+  </dependencies>
+</project>
 ```
 
 ## Importing Spreadsheets
@@ -161,6 +173,7 @@ You can export multiple Matrix objects to different sheets in the same spreadshe
 ```groovy
 import se.alipsa.matrix.spreadsheet.*
 import se.alipsa.matrix.core.Matrix
+import static se.alipsa.matrix.core.ListConverter.*
 
 // Create or obtain Matrix objects
 Matrix salesByMonth = Matrix.builder().data(

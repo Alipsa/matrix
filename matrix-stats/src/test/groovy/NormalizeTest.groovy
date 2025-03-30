@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.stats.Normalize
 
@@ -55,6 +56,8 @@ class NormalizeTest {
       Assertions.assertTrue(val instanceof BigDecimal, "value is not BigDecimal but ${val.getClass().simpleName}")
       Assertions.assertEquals(it, val as BigDecimal, 6, "index $idx")
     }
+
+    assert [2.079f, 1.946f, 2.197f, 1.792f, 2.079f] == Normalize.logNorm([8, 7, 9, 6, 8], 3)
   }
 
   @Test

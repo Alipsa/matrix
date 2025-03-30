@@ -50,7 +50,7 @@ The simplest way is to just use the toJson method on th JsonExporter, e.g:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixjson.JsonExporter
+import se.alipsa.matrix.json.JsonExporter
 import java.time.LocalDate
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import groovy.json.JsonOutput
@@ -95,7 +95,7 @@ Closures for each column name that should be treated. E.g:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixjson.JsonExporter
+import se.alipsa.matrix.json.JsonExporter
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
@@ -139,7 +139,7 @@ The json needs to be in the format of a list `[]` with each row represented as a
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixjson.*
+import se.alipsa.matrix.json.*
 import java.time.LocalDate
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 

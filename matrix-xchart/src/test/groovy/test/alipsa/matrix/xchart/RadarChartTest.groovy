@@ -6,6 +6,7 @@ import org.knowm.xchart.RadarChart
 import org.knowm.xchart.RadarChartBuilder
 import org.knowm.xchart.style.Styler
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.Normalize
 
 import static org.junit.jupiter.api.Assertions.assertTrue
 
@@ -50,5 +51,24 @@ class RadarChartTest {
     def file2 = new File("build/testSimpleRadarChart2.png")
     rc.exportPng(file2)
     assertTrue(file2.exists())
+  }
+
+  @Test
+  void testTutorialExample() {
+    // Create a Matrix with data for the radar chart
+    Matrix matrix = Matrix.builder()
+        .columnNames("Player", "Speed", "Power", "Agility", "Endurance", "Accuracy")
+        .rows([
+            ['Player1', 8, 7, 9, 6, 8],
+            ['Player2', 6, 9, 7, 8, 7]
+        ]).types([String] + [Number]*5)
+        .matrixName("Radar")
+        .build()
+
+    def normalizedMatrix = Normalize.stdScaleNorm(matrix, 3)
+    // Create a radar chart
+    def rc = se.alipsa.matrix.xchart.RadarChart.create(normalizedMatrix)
+    // Add series using variable and value columns
+        .addSeries("Player")
   }
 }

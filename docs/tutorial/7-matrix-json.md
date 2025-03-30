@@ -12,35 +12,47 @@ To use the matrix-json module, you need to add it as a dependency to your projec
 def groovyVersion = '4.0.26' // any 4.x version should work
 implementation "org.apache.groovy:groovy:$groovyVersion"
 implementation "org.apache.groovy:groovy-json:$groovyVersion"
-implementation 'se.alipsa.matrix:matrix-core:3.0.0'
-implementation 'se.alipsa.matrix:matrix-json:2.0.0'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-json'
 ```
 
 ### Maven Configuration
 
 ```xml
-<dependencies>
-  <dependency>
-    <groupId>org.apache.groovy</groupId>
-    <artifactId>groovy</artifactId>
-    <version>4.0.26</version>
-  </dependency>
-  <dependency>
-    <groupId>org.apache.groovy</groupId>
-    <artifactId>groovy-json</artifactId>
-    <version>4.0.26</version>
-  </dependency>
-  <dependency>
-      <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-core</artifactId>
-      <version>3.0.0</version>
-  </dependency>  
-  <dependency>
-      <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-json</artifactId>
-      <version>2.0.0</version>
-  </dependency>
-</dependencies>
+<project>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-bom</artifactId>
+        <version>2.1.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>4.0.26</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-json</artifactId>
+      <version>4.0.26</version>
+    </dependency>
+    <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-core</artifactId>
+    </dependency>  
+    <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-json</artifactId>
+    </dependency>
+  </dependencies>
+</project>
 ```
 
 Note that the matrix-json module requires JDK 21 or higher.
@@ -55,7 +67,7 @@ Here's a simple example of exporting a Matrix to JSON:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixjson.JsonExporter
+import se.alipsa.matrix.json.JsonExporter
 import java.time.LocalDate
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 import groovy.json.JsonOutput
@@ -306,7 +318,7 @@ def typedTable = table.convert(
         "price": BigDecimal,
         "date": LocalDate
     ],
-    DateTimeFormatter.ISO_LOCAL_DATE,
+    "yyyy-MM-dd",  // Date format
     NumberFormat.getInstance(Locale.GERMANY)  // For parsing numbers with comma as decimal separator
 )
 

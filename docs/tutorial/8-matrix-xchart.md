@@ -10,30 +10,42 @@ To use the matrix-xchart module, you need to add it as a dependency to your proj
 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.26'
-implementation 'se.alipsa.matrix:matrix-core:3.0.0'
-implementation 'se.alipsa.matrix:matrix-xchart:0.1'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-xchart'
 ```
 
 ### Maven Configuration
 
 ```xml
-<dependencies>
-  <dependency>
-    <groupId>org.apache.groovy</groupId>
-    <artifactId>groovy</artifactId>
-    <version>4.0.26</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-core</artifactId>
-    <version>3.0.0</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-xchart</artifactId>
-    <version>0.1</version>
-  </dependency>
-</dependencies>
+<project>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-bom</artifactId>
+        <version>2.1.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>4.0.26</version>
+    </dependency>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-xchart</artifactId>
+    </dependency>
+  </dependencies>
+</project>
 ```
 
 ## Chart Types
@@ -113,7 +125,7 @@ def bc = BoxChart.create(matrix)
     .addSeries(matrix['ccc'])
 
 // Export the chart to a PNG file
-File file = new File("build/testBoxChart.png")
+File file = new File("boxChart.png")
 bc.exportPng(file)
 ```
 
@@ -143,13 +155,13 @@ def bc = BubbleChart.create(matrix)
 bc.exportPng(new File("bubbleChart.png"))
 ```
 
-### Category Chart
+### Bar Chart
 
 Category charts include bar charts, which are useful for comparing values across categories.
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.xchart.CategoryChart
+import se.alipsa.matrix.xchart.BarChart
 
 // Create a Matrix with data for the category chart
 Matrix matrix = Matrix.builder().data(
@@ -161,13 +173,13 @@ Matrix matrix = Matrix.builder().data(
   .build()
 
 // Create a category chart
-def cc = CategoryChart.create(matrix)
+def cc = BarChart.create(matrix)
     // Add series using category and value columns
     .addSeries("Series 1", "Category", "Value1")
     .addSeries("Series 2", "Category", "Value2")
 
 // Export the chart to a PNG file
-cc.exportPng(new File("categoryChart.png"))
+cc.exportPng(new File("barChart.png"))
 ```
 
 ### Heatmap Chart
@@ -180,17 +192,16 @@ import se.alipsa.matrix.xchart.HeatmapChart
 
 // Create a Matrix with data for the heatmap
 Matrix matrix = Matrix.builder().data(
-    X: [1, 2, 3, 4, 5],
-    Y: [1, 2, 3, 4, 5],
-    Heat: [10, 15, 8, 12, 7]
-).types([Number] * 3)
-  .matrixName("Heatmap")
-  .build()
+    X: [1, 2, 3, 4, 5, 6, 7, 8],
+    Heat: [10, 15, 8, 12, 7, 8, 12, 11]
+).types([Number] * 2)
+    .matrixName("Heatmap")
+    .build()
 
 // Create a heatmap chart
 def hc = HeatmapChart.create(matrix)
-    // Add a series with X, Y, and Heat columns
-    .addSeries("Heat Series", "X", "Y", "Heat")
+// Add a series with X and Heat columns
+    .addSeries("Heat Series", "Heat")
 
 // Export the chart to a PNG file
 hc.exportPng(new File("heatmapChart.png"))
@@ -206,15 +217,15 @@ import se.alipsa.matrix.xchart.HistogramChart
 
 // Create a Matrix with data for the histogram
 Matrix matrix = Matrix.builder().data(
-    Values: [1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 5, 6, 7, 8, 9, 10]
+    Values: [1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 5, 6, 7, 8, 9, 10, 4, 8, 5]
 ).types([Number])
-  .matrixName("Histogram")
-  .build()
+    .matrixName("Histogram")
+    .build()
 
 // Create a histogram chart
-def hc = HistogramChart.create(matrix)
-    // Add a series using the Values column
-    .addSeries("Distribution", "Values")
+def hc = HistogramChart.create(matrix).setTitle("Distribution")
+    // Add a series using the Values column, distribute in 6 buckets
+    .addSeries("Values", 6)
 
 // Export the chart to a PNG file
 hc.exportPng(new File("histogramChart.png"))
@@ -228,25 +239,22 @@ OHLC (Open-High-Low-Close) charts are commonly used for financial data, particul
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.OhlcChart
 import java.time.LocalDate
+import static se.alipsa.matrix.core.ListConverter.*
 
 // Create a Matrix with data for the OHLC chart
 Matrix matrix = Matrix.builder().data(
-    Date: [
-        LocalDate.of(2023, 1, 1),
-        LocalDate.of(2023, 1, 2),
-        LocalDate.of(2023, 1, 3)
-    ],
+    Date: toDates('2023-01-01', '2023-01-2', '2023-01-03'),
     Open: [100.0, 105.0, 103.0],
     High: [110.0, 108.0, 107.0],
     Low: [95.0, 102.0, 100.0],
     Close: [105.0, 103.0, 106.0]
-).types([LocalDate, Double, Double, Double, Double])
-  .matrixName("Stock Prices")
-  .build()
+).types([Date, Double, Double, Double, Double])
+    .matrixName("Stock Prices")
+    .build()
 
 // Create an OHLC chart
 def oc = OhlcChart.create(matrix)
-    // Add a series with Date, Open, High, Low, and Close columns
+// Add a series with Date, Open, High, Low, and Close columns
     .addSeries("Stock", "Date", "Open", "High", "Low", "Close")
 
 // Export the chart to a PNG file
@@ -285,33 +293,36 @@ Radar charts (also known as spider charts) are useful for comparing multiple var
 ```groovy
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.RadarChart
+import se.alipsa.matrix.stats.Normalize
 
 // Create a Matrix with data for the radar chart
-Matrix matrix = Matrix.builder().data(
-    Variable: ["Speed", "Power", "Agility", "Endurance", "Accuracy"],
-    Player1: [8, 7, 9, 6, 8],
-    Player2: [6, 9, 7, 8, 7]
-).types([String, Number, Number])
-  .matrixName("Radar")
-  .build()
+Matrix matrix = Matrix.builder()
+    .columnNames("Player", "Speed", "Power", "Agility", "Endurance", "Accuracy")
+    .rows([
+        ['Player1', 8d, 7d, 9d, 6d, 8d],
+        ['Player2', 6d, 9d, 7d, 5d, 7d],
+        ['Player3', 5d, 8d, 4d, 8d, 9d]
+    ]).types([String] + [Double]*5)
+    .matrixName("Radar")
+    .build()
 
+def normalizedMatrix = Normalize.minMaxNorm(matrix, 3)
+println(normalizedMatrix.content())
 // Create a radar chart
-def rc = RadarChart.create(matrix)
-    // Add series using variable and value columns
-    .addSeries("Player 1", "Variable", "Player1")
-    .addSeries("Player 2", "Variable", "Player2")
-
+def rc = RadarChart.create(normalizedMatrix)
+    // Add series using the Player column and the other columns as values
+    .addSeries("Player")
 // Export the chart to a PNG file
 rc.exportPng(new File("radarChart.png"))
 ```
 
-### XY Chart
+### Scatter Chart
 
-XY charts (scatter plots) are useful for showing relationships between two variables.
+Scatter plots are useful for showing relationships between two variables.
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.xchart.XyChart
+import se.alipsa.matrix.xchart.ScatterChart
 
 // Create a Matrix with data for the XY chart
 Matrix matrix = Matrix.builder().data(
@@ -320,17 +331,17 @@ Matrix matrix = Matrix.builder().data(
     X2: [1.5, 2.5, 3.5, 4.5, 5.5],
     Y2: [8, 12, 10, 14, 9]
 ).types([Number] * 4)
-  .matrixName("Scatter")
-  .build()
+    .matrixName("Scatter")
+    .build()
 
 // Create an XY chart
-def xyc = XyChart.create(matrix)
-    // Add series using X and Y columns
+def xyc = ScatterChart.create(matrix)
+// Add series using X and Y columns
     .addSeries("Series 1", "X1", "Y1")
     .addSeries("Series 2", "X2", "Y2")
 
 // Export the chart to a PNG file
-xyc.exportPng(new File("xyChart.png"))
+xyc.exportPng(new File("ScatterChart.png"))
 ```
 
 ## Exporting Charts
@@ -360,7 +371,14 @@ try (FileOutputStream fos = new FileOutputStream("chart.svg")) {
 
 ```groovy
 // Display the chart in a Swing window
-chart.displayChart()
+JFrame frame=new JFrame("Main")
+frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
+JDialog d=new JDialog(frame, "Chart")
+d.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE)
+d.setContentPane(chart.exportSwing())
+d.pack()
+d.setLocationRelativeTo(frame)
+d.setVisible(true)
 ```
 
 ### Custom Export Formats

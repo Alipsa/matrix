@@ -9,25 +9,37 @@ To use the matrix-datasets module, you need to add it as a dependency to your pr
 ### Gradle Configuration
 
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:3.1.0'
-implementation 'se.alipsa.matrix:matrix-datasets:2.0.1'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:matrix-datasets'
 ```
 
 ### Maven Configuration
 
 ```xml
-<dependencies>
-  <dependency>
-      <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-core</artifactId>
-      <version>3.1.0</version>
-  </dependency>
-  <dependency>
-      <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-datasets</artifactId>
-      <version>2.0.1</version>
-  </dependency>
-</dependencies>
+<project>
+  <!-- Other project configurations -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-bom</artifactId>
+        <version>2.1.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-core</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-datasets</artifactId>
+    </dependency>
+  </dependencies>
+</project>
 ```
 
 ## Available Datasets
@@ -78,11 +90,11 @@ Matrix speciesMeans = Stat.meanBy(iris, 'Sepal Length', 'Species')
 println(speciesMeans.content())
 
 // Output:
-// | Species        | Sepal Length |
-// | -------------- | ------------ |
-// | Iris-versicolor| 5.936        |
-// | Iris-virginica | 6.588        |
-// | Iris-setosa    | 5.006        |
+// Iris-means by Species: 3 obs * 2 variables
+// Species   	Sepal Length
+// virginica 	 6.588000000
+// setosa    	 5.006000000
+// versicolor	 5.936000000
 
 // Calculate summary statistics for each numeric column
 def summary = Stat.summary(iris)
@@ -96,10 +108,10 @@ def setosa = iris.subset {
 
 // Calculate the mean of each measurement for setosa
 println("Setosa means:")
-println("Sepal Length: ${Stat.mean(setosa['Sepal Length'])}")
-println("Sepal Width: ${Stat.mean(setosa['Sepal Width'])}")
-println("Petal Length: ${Stat.mean(setosa['Petal Length'])}")
-println("Petal Width: ${Stat.mean(setosa['Petal Width'])}")
+println("Sepal Length: ${setosa['Sepal Length'].mean()}")
+println("Sepal Width: ${setosa['Sepal Width'].mean()}")
+println("Petal Length: ${setosa['Petal Length'].mean()}")
+println("Petal Width: ${setosa['Petal Width'].mean()}")
 ```
 
 ## Example: Working with the mtcars Dataset
@@ -109,6 +121,7 @@ The mtcars dataset contains information about various car models:
 ```groovy
 import se.alipsa.matrix.datasets.*
 import se.alipsa.matrix.core.*
+import se.alipsa.matrix.stats.*
 
 // Load the mtcars dataset
 Matrix mtcars = Dataset.mtcars()
@@ -126,7 +139,7 @@ println("Cars with high horsepower:")
 println(highPowerCars.content())
 
 // Calculate correlation between mpg and weight
-def correlation = Stat.cor(mtcars['mpg'], mtcars['wt'])
+def correlation = Correlation.cor(mtcars['mpg'], mtcars['wt'])
 println("Correlation between mpg and weight: ${correlation}")
 ```
 
@@ -184,9 +197,9 @@ println("Average price by color:")
 println(priceByColor.content())
 
 // Find the most expensive diamonds (top 5)
-def sortedByPrice = diamonds.sort('price', false)
+def sortedByPrice = diamonds.orderBy('price', false)
 println("Top 5 most expensive diamonds:")
-println(sortedByPrice.rows(0..4).content())
+println(sortedByPrice.subset(0..4).content())
 ```
 
 ## Creating Your Own Datasets
@@ -195,6 +208,7 @@ While the matrix-datasets module provides several common datasets, you might wan
 
 ```groovy
 import se.alipsa.matrix.core.*
+import se.alipsa.matrix.csv.*
 
 // Create a custom dataset
 def customData = Matrix.builder().data(
@@ -204,25 +218,11 @@ def customData = Matrix.builder().data(
 ).build()
 
 // Save the dataset to a CSV file for future use
-customData.writeCsv(new File('/path/to/custom_dataset.csv'))
+CsvExporter.exportToCsv(customData, new File('/path/to/custom_dataset.csv'))
 
 // Later, you can load it back
 def loadedData = Matrix.builder().data(new File('/path/to/custom_dataset.csv')).build()
 ```
-
-## Version Compatibility
-
-The matrix-datasets module has specific version compatibility requirements with the matrix-core module. The following table illustrates the version compatibility:
-
-| Matrix datasets | Matrix core |
-|-----------------|-------------|
-| 1.0.3           | 1.2.3 -> 1.2.4 |
-| 1.0.4           | 2.0.0 -> 2.1.1 |
-| 1.1.0           | 2.2.0 -> 2.2.1 |
-| 2.0.0           | 3.0.0 |
-| 2.0.1           | 3.1.0 |
-
-Make sure to use compatible versions to avoid potential issues.
 
 ## Conclusion
 
