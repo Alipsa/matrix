@@ -1,7 +1,7 @@
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvImporter
+import se.alipsa.matrix.csv.CsvImporter
 
 import java.text.NumberFormat
 import java.time.LocalDate

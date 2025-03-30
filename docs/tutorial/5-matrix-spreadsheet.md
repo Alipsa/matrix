@@ -257,3 +257,5 @@ Note that the streaming implementation has some limitations compared to the POI 
 The matrix-spreadsheet module provides a powerful and flexible way to interact with Excel and OpenOffice Calc spreadsheets in your Groovy applications. Whether you need to import data for analysis or export results to a shareable format, this module offers the tools you need.
 
 In the next section, we'll explore the matrix-csv module, which provides similar functionality for CSV files with additional features for handling various CSV formats.
+
+Go to [previous section](4-matrix-datasets.md) | Go to [next section](6-matrix-csv.md) | Back to [outline](outline.md)

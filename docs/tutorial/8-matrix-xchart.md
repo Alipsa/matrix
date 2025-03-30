@@ -497,3 +497,5 @@ pieChart.exportPng(new File("salesPieChart.png"))
 The matrix-xchart module provides a powerful and flexible way to create various types of charts from Matrix data. By leveraging the XChart library, it offers a wide range of chart types and customization options while maintaining a simple and consistent API.
 
 In the next section, we'll explore the matrix-sql module, which provides functionality for interacting with databases.
+
+Go to [previous section](7-matrix-json.md) | Go to [next section](9-matrix-sql.md) | Back to [outline](outline.md)

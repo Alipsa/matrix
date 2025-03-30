@@ -1,5 +1,8 @@
 # Release history
 
+## v2.1.0, in progress
+- change package name from `se.alipsa.matrix.matrixcsv` to `se.alipsa.matrix.csv`
+- 
 ## v2.0.0, 2025-03-12
 - Require JDK 21
 

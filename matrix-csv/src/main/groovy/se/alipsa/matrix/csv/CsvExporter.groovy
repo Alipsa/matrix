@@ -1,4 +1,4 @@
-package se.alipsa.matrix.matrixcsv
+package se.alipsa.matrix.csv
 
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
@@ -14,11 +14,11 @@ class CsvExporter {
     exportToCsv(table, format, new PrintWriter(out), withHeader)
   }
 
-  static void exportToCsv(Matrix table, CSVFormat format, Writer out, boolean withHeader = true) {
+  static void exportToCsv(Matrix table, CSVFormat format = CSVFormat.DEFAULT, Writer out, boolean withHeader = true) {
     exportToCsv(table, format, new PrintWriter(out), withHeader)
   }
 
-  static void exportToCsv(Matrix table, CSVFormat format, PrintWriter out, boolean withHeader = true) {
+  static void exportToCsv(Matrix table, CSVFormat format = CSVFormat.DEFAULT, PrintWriter out, boolean withHeader = true) {
     try(CSVPrinter printer = new CSVPrinter(out, format)) {
       if (format.header != null && format.header.size() == table.columnCount()) {
         printer.printRecord(format.header)

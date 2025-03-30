@@ -276,3 +276,5 @@ println(result)
 The matrix-stats module provides a comprehensive set of statistical tools for working with Matrix data. From basic correlation analysis to hypothesis testing and linear regression, this module enables you to perform sophisticated statistical analyses on your data.
 
 In the next section, we'll explore the matrix-datasets module, which provides access to common datasets used in data science and statistics.
+
+Go to [previous section](2-matrix-core.md) | Go to [next section](4-matrix-datasets.md) | Back to [outline](outline.md)

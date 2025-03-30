@@ -271,3 +271,5 @@ Here are some best practices for working with the matrix-bigquery module:
 The matrix-bigquery module provides a convenient way to integrate the Matrix library with Google BigQuery. It allows you to easily query data from BigQuery into Matrix objects and save Matrix objects to BigQuery tables, enabling powerful data analysis workflows that combine the strengths of both systems.
 
 In the next section, we'll explore the matrix-charts module, which provides functionality for creating various types of charts and visualizations.
+
+Go to [previous section](11-matrix-parquet.md) | Go to [next section](13-matrix-charts.md) | Back to [outline](outline.md)

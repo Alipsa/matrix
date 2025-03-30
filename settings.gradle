@@ -24,4 +24,6 @@ include 'matrix-parquet'
 include 'matrix-bigquery'
 include 'matrix-xchart'
 include 'matrix-examples:XChartDemo'
+include 'matrix-examples:AnalysisScenario1'
+findProject(':matrix-examples:AnalysisScenario1')?.name = 'AnalysisScenario1'
 

@@ -422,3 +422,5 @@ var jEmpData = Matrix.builder().data( new Columns()
 The matrix-core module provides a solid foundation for working with tabular data in Groovy and Java. Its intuitive API, powerful data manipulation capabilities, and statistical functions make it an excellent choice for data analysis and processing tasks.
 
 In the next sections, we'll explore the additional modules that build upon this foundation to provide specialized functionality for various data formats and operations.
+
+Go to [previous section](1-introduction.md) | Go to [next section](3-matrix-stats.md) | Back to [outline](outline.md)

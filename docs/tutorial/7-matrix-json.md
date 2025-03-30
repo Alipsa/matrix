@@ -363,3 +363,5 @@ if (responseCode == 200) {
 The matrix-json module provides a convenient way to work with JSON data in your Groovy applications. Whether you're consuming data from web APIs or need to exchange data with JavaScript applications, this module makes it easy to convert between Matrix objects and JSON format.
 
 In the next section, we'll explore the matrix-xchart module, which provides functionality for creating charts and visualizations from Matrix data.
+
+Go to [previous section](6-matrix-csv.md) | Go to [next section](8-matrix-xchart.md) | Back to [outline](outline.md)

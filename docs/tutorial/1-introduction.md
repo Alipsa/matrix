@@ -131,5 +131,5 @@ The Matrix project consists of multiple modules, each providing specific functio
 
 In the following sections, we'll explore each of these modules in detail, starting with the core functionality provided by the matrix-core module.
 
-Go to [previous section](outline.md), Go to [next section](2-matrix-core.md)
+Go to [previous section](outline.md) | Go to [next section](2-matrix-core.md)
 

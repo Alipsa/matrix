@@ -229,3 +229,5 @@ Make sure to use compatible versions to avoid potential issues.
 The matrix-datasets module provides a convenient way to access common datasets for data analysis and machine learning tasks in Groovy. These datasets can be used for learning, testing algorithms, or as reference data for your applications.
 
 In the next section, we'll explore the matrix-spreadsheet module, which provides functionality for importing and exporting data between Matrix objects and Excel or OpenOffice Calc spreadsheets.
+
+Go to [previous section](3-matrix-stats.md) | Go to [next section](5-matrix-spreadsheet.md) | Back to [outline](outline.md)

@@ -217,3 +217,5 @@ Here are some best practices for using the Matrix BOM:
 The Matrix BOM module simplifies dependency management for projects that use multiple Matrix modules. By using the BOM, you can ensure that all modules are compatible with each other and reduce the complexity of managing version numbers.
 
 In the next section, we'll explore the matrix-parquet module, which provides support for the Apache Parquet file format.
+
+Go to [previous section](9-matrix-sql.md) | Go to [next section](11-matrix-parquet.md) | Back to [outline](outline.md)

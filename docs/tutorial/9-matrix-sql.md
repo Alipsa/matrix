@@ -423,3 +423,5 @@ Make sure to use compatible versions to avoid potential issues.
 The matrix-sql module provides a convenient way to interact with relational databases using Matrix objects. It simplifies common database operations like creating tables, inserting data, and querying, while handling the conversion between Matrix data types and SQL data types.
 
 In the next section, we'll explore the matrix-bom module, which provides a Bill of Materials for dependency management.
+
+Go to [previous section](8-matrix-xchart.md) | Go to [next section](10-matrix-bom.md) | Back to [outline](outline.md)

@@ -298,3 +298,5 @@ Make sure to use compatible versions to avoid potential issues.
 The matrix-csv module provides a powerful and flexible way to import data from CSV files into Matrix objects and export Matrix objects to CSV files. By leveraging Apache Commons CSV, it offers extensive customization options to handle various CSV formats and requirements.
 
 In the next section, we'll explore the matrix-json module, which provides similar functionality for working with JSON data.
+
+Go to [previous section](5-matrix-spreadsheet.md) | Go to [next section](7-matrix-json.md) | Back to [outline](outline.md)

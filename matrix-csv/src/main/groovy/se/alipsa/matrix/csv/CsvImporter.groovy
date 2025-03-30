@@ -1,4 +1,4 @@
-package se.alipsa.matrix.matrixcsv
+package se.alipsa.matrix.csv
 
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
@@ -64,7 +64,7 @@ class CsvImporter {
     }
   }
 
-  static Matrix importCsv(URL url, CSVFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) {
+  static Matrix importCsv(URL url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) {
     try (CSVParser parser = CSVParser.parse(url, charset, format)) {
       return parse(tableName(url), parser, firstRowAsHeader)
     }

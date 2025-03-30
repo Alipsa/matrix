@@ -1,6 +1,6 @@
 # Alipsa Matrix Library Tutorial - Outline
 
-## 1. Introduction
+## 1. [Introduction](1-introduction.md)
 - Overview of the Alipsa Matrix library
 - Purpose and benefits of using Matrix for tabular data
 - Installation and setup instructions
@@ -8,7 +8,7 @@
   - Maven configuration
   - JDK requirements
 
-## 2. Matrix Core Module
+## 2. [Matrix Core Module](2-matrix-core.md)
 - Understanding the Matrix class
   - What is a Matrix?
   - Matrix vs. Grid
@@ -35,7 +35,7 @@
   - Grid operations
   - Differences from Matrix
 
-## 3. Matrix Stats Module
+## 3. [Matrix Stats Module](3-matrix-stats.md)
 - Statistical methods and tests
 - Correlations
 - Normalization
@@ -43,7 +43,7 @@
 - T-test
 - Other statistical functions
 
-## 4. Matrix Datasets Module
+## 4. [Matrix Datasets Module](4-matrix-datasets.md)
 - Overview of included datasets
 - Using common datasets
   - mtcars
@@ -53,46 +53,46 @@
   - toothgrowth
 - Creating your own datasets
 
-## 5. Matrix Spreadsheet Module
+## 5. [Matrix Spreadsheet Module](5-matrix-spreadsheet.md)
 - Importing data from Excel/OpenOffice
 - Exporting Matrix to spreadsheets
 - Working with multiple sheets
 
-## 6. Matrix CSV Module
+## 6. [Matrix CSV Module](6-matrix-csv.md)
 - Advanced CSV import/export
 - Customizing CSV parsing
 - Handling different CSV formats
 
-## 7. Matrix JSON Module
+## 7. [Matrix JSON Module](7-matrix-json.md)
 - Converting between Matrix and JSON
 - JSON import/export options
 - Working with nested JSON structures
 
-## 8. Matrix XChart Module
+## 8. [Matrix XChart Module](8-matrix-xchart.md)
 - Creating charts with XCharts library
 - Chart types and options
 - Customizing chart appearance
 - Exporting charts to different formats
 
-## 9. Matrix SQL Module
+## 9. [Matrix SQL Module](9-matrix-sql.md)
 - Database interaction
 - Querying databases
 - Converting result sets to Matrix
 - Performing operations on database data
 
-## 10. Matrix BOM Module
+## 10. [Matrix BOM Module](10-matrix-bom.md)
 - Bill of materials for dependency management
 - Simplifying dependency configuration
 - Version management
 
-## 11. Experimental Modules
-- Matrix Parquet Module
+## 11. Experimental (early development) Modules
+- [Matrix Parquet Module](11-matrix-parquet.md)
   - Working with Parquet files
-- Matrix BigQuery Module
+- [Matrix BigQuery Module](12-matrix-bigquery.md)
   - Google BigQuery integration
-- Matrix Charts Module
+- [Matrix Charts Module](13-matrix-charts.md)
   - Alternative charting capabilities
-- Matrix Tablesaw Module
+- [Matrix Tablesaw Module](14-matrix-tablesaw.md)
   - Interoperability with Tablesaw library
 
 ## 12. Practical Examples

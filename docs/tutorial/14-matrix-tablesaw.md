@@ -313,3 +313,5 @@ The Matrix Tablesaw module bridges the gap between the Matrix library and the Ta
 By leveraging both libraries through this module, you can take advantage of Matrix's simplicity and Tablesaw's advanced data manipulation capabilities in a unified and Groovy-friendly way.
 
 In future releases, we can expect more features and improvements to enhance the integration between these two powerful data libraries.
+
+Go to [previous section](13-matrix-charts.md) | Back to [outline](outline.md)

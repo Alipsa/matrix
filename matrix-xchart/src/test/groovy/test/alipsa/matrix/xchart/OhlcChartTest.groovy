@@ -7,7 +7,7 @@ import org.knowm.xchart.OHLCChart
 import org.knowm.xchart.OHLCChartBuilder
 import org.knowm.xchart.OHLCSeries
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvImporter
+import se.alipsa.matrix.csv.CsvImporter
 import se.alipsa.matrix.xchart.OhlcChart
 
 import java.awt.Color

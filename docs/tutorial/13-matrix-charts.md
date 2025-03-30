@@ -22,16 +22,6 @@ implementation 'se.alipsa.matrix:charts:0.2'
 </dependency>
 ```
 
-## Version Compatibility
-
-The matrix-charts module has specific version compatibility requirements with other Matrix modules:
-
-| Matrix charts | Matrix core | Matrix stats |
-|---------------|-------------|--------------|
-| 0.2           | 3.0.0       | 2.0.0        |
-
-Make sure to use compatible versions to avoid potential issues.
-
 ## Chart Types
 
 The matrix-charts module supports several types of charts:
@@ -392,3 +382,5 @@ println "Charts have been exported successfully."
 The matrix-charts module provides a powerful and flexible way to create various types of charts from Matrix data. It offers a simple API for generating visualizations that can be exported to different formats, making it easy to include data visualizations in your Groovy applications.
 
 In the next section, we'll explore the matrix-tablesaw module, which provides interoperability with the Tablesaw library for advanced data manipulation and analysis.
+
+Go to [previous section](12-matrix-bigquery.md) | Go to [next section](14-matrix-tablesaw.md) | Back to [outline](outline.md)

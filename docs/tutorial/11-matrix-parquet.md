@@ -162,3 +162,5 @@ Here are some best practices for working with the matrix-parquet module:
 The matrix-parquet module provides a convenient way to work with Parquet files in the Matrix library. It allows you to easily import data from Parquet files into Matrix objects and export Matrix objects to Parquet files, enabling integration with big data ecosystems.
 
 In the next section, we'll explore the matrix-bigquery module, which provides functionality for interacting with Google BigQuery.
+
+Go to [previous section](10-matrix-bom.md) | Go to [next section](12-matrix-bigquery.md) | Back to [outline](outline.md)
