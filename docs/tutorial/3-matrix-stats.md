@@ -181,7 +181,7 @@ println("Slope: ${model.getSlope(4)}")
 println("Predicted value at x=10: ${model.predict(10, 4)}")
 
 // Get the R-squared value (coefficient of determination)
-println("R-squared: ${model.getRSquared(4)}")
+println("R-squared: ${model.r2.round(4)}")
 ```
 
 ## Hypothesis Tests
