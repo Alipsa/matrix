@@ -124,7 +124,7 @@ def minMaxScaled = Normalize.minMaxNorm(obs, 7)
 println("Min-Max scaled: ${minMaxScaled}")
 
 // Apply standard deviation normalization (Z-score)
-def zScores = Normalize.standardizeNorm(obs, 7)
+def zScores = Normalize.stdScaleNorm(obs, 7)
 println("Z-scores: ${zScores}")
 
 // Apply logarithmic normalization
@@ -260,7 +260,7 @@ def data = Matrix.builder().data(
             84, 88, 88, 90, 92, 93, 91, 85, 80, 93,
             97, 100, 93, 91, 90, 87, 94, 83, 92, 95],
     group: ['pre']*20 + ['post']*20
-).columnNames(Integer, String).build()
+).types(Integer, String).build()
 
 // Create subsets for pre and post groups
 def pre = data.subset('group', {it == 'pre'})
