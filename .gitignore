@@ -5,3 +5,4 @@ build/
 
 /matrix-bom/target/
 /matrix-sql/derby.log
+/matrix-examples/AnalysisScenario1/analysis_results/

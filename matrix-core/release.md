@@ -4,6 +4,7 @@
 - Add a static builder create methods to Matrix for name, columns and types
 - Change the Matrix constructor to use a list instead of Columns 
 - Make MatrixBuilder constructors package scoped
+- Override unique() in Column to not mutate it. 
 
 ### 3.1.0, 2025-03-26
 - Add support for arbitrary metaData to a Matrix

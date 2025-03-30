@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats
 
+import org.apache.commons.math3.stat.inference.TestUtils
+import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -31,11 +33,27 @@ class Anova {
       throw new IllegalArgumentException("data must contain at least 2 groups (found only ${data.size()} groups")
     }
     def result = new AnovaResult()
-    // TODO implement me!
+    // TODO implement me! using commons math for now...
+    List categoryData = []
+    data.each { String key, List<? extends Number> values ->
+      categoryData.add(ListConverter.toDoubleArray(values))
+    }
+
+    result.pValue = TestUtils.oneWayAnovaPValue(categoryData)
+    result.fValue = TestUtils.oneWayAnovaFValue(categoryData)
     return result
   }
 
   static class AnovaResult {
+    Double pValue
+    Double fValue
 
+    String toString() {
+      return "pValue: ${pValue}, fValue: ${fValue}"
+    }
+
+    boolean evaluate(double alpha = 0.05) {
+      return pValue < alpha
+    }
   }
 }

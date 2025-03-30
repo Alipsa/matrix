@@ -1,0 +1,25 @@
+plugins {
+    id 'groovy'
+}
+
+group = 'se.alipsa.matrix'
+version = '1.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    //mavenLocal()
+}
+
+dependencies {
+    implementation libs.groovy
+    implementation project(":matrix-core")
+    implementation project(":matrix-csv")
+    implementation project(":matrix-stats")
+    implementation project(":matrix-xchart")
+    testImplementation testLibs.junitJupiter
+    testImplementation testLibs.junitPlatformLauncher
+}
+
+test {
+    useJUnitPlatform()
+}

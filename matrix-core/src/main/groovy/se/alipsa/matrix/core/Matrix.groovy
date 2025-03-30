@@ -2126,6 +2126,19 @@ class Matrix implements Iterable<Row> {
         .build()
   }
 
+  /**
+   * Filters the matrix to only include rows where the columnName has the value specified
+   *
+   * @param columnName
+   * @param value
+   * @return a new matrix with the rows matching the value
+   */
+  Matrix subset(String columnName, Object value) {
+    subset(columnName) {
+      it == value
+    }
+  }
+
   String tail(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     StringBuilder sb = new StringBuilder()
     def nRows = Math.min(rows, rowCount())

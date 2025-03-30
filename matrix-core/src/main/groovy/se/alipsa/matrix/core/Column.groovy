@@ -218,4 +218,28 @@ class Column extends ArrayList {
   List subList(IntRange range) {
     this.subList(range.min(), range.max() +1)
   }
+
+  /**
+   * Change the default behavior of the unique method to not mutate
+   * (otherwise the rest of the column values will be filled with null).
+   * Returns a new Column with unique values from this column.
+   *
+   * @param ignoreNulls if true, null values are ignored
+   * @return a new Column with unique values
+   */
+  List unique() {
+    unique(false)
+  }
+
+  Number mean() {
+    Stat.mean(this)
+  }
+
+  Number sd() {
+    Stat.sd(this)
+  }
+
+  Number median() {
+    Stat.median(this)
+  }
 }

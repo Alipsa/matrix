@@ -9,10 +9,12 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.text.ParsePosition
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.Year
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -383,6 +385,23 @@ class ValueConverter {
 
   static java.util.Date asDate(Object o, java.util.Date valueIfNull = null) {
     if (o == null) return valueIfNull
+    if (o instanceof TemporalAccessor) {
+      if (o instanceof LocalDate) {
+        return asDate(o as LocalDate)
+      } else if (o instanceof LocalDateTime) {
+        return asDate(o as LocalDateTime)
+      } else if (o instanceof ZonedDateTime) {
+        return Date.from(((ZonedDateTime)o).toInstant())
+      } else if (o instanceof YearMonth) {
+        return Date.from(((YearMonth)o).atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant())
+      } else if (o instanceof OffsetDateTime) {
+        return Date.from(((OffsetDateTime)o).toInstant())
+      } else if (o instanceof Instant) {
+        return Date.from((Instant)o)
+      } else if (o instanceof Year) {
+        return Date.from(((Year)o).atMonth(1).atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant())
+      }
+    }
     String s = String.valueOf(o)
     if (s.size() == 10) {
       return simpleDateFormatCache('yyyy-MM-dd').parse(s)

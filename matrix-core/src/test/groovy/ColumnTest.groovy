@@ -185,4 +185,21 @@ class ColumnTest {
     Column c = [1,2,3,4] as Column
     assert [1,2,3] == c.subList(0..2)
   }
+
+  @Test
+  void testUnique() {
+    Column c = new Column([1, 2, 3, 4, 1, 2, 3])
+    assert [1, 2, 3, 4] == c.unique() : "unique() should return a new Column with unique values"
+    assert new Column([1, 2, 3, 4, 1, 2, 3]) == c : "unique() should not mutate the original Column"
+  }
+
+  @Test
+  void testCollectionMaths() {
+    Column c = new Column([1, 2, 3, 4, 1, 2, 3])
+    assert 4 == c.max()
+    assert 1 == c.min()
+    assert 2 == c.median()
+    assert 2.285714286 == c.mean()
+    assert 1.1126972805283737 == c.sd()
+  }
 }

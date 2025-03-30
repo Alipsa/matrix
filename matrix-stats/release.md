@@ -1,5 +1,8 @@
 # Matrix stats release history
 
+## v2.1.0, in progress
+- add temp implementation of one way anova using commons math.
+
 ## v2.0.0, 2025-03-12
 - Require JDK 21
 - overload Normalize methods with a way to normalize an entire matrix

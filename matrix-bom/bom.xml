@@ -31,16 +31,16 @@
   </scm>
   <properties>
     <matrixCoreVersion>3.2.0-SNAPSHOT</matrixCoreVersion>
-    <matrixStatsVersion>2.0.0</matrixStatsVersion>
+    <matrixStatsVersion>2.1.0-SNAPSHOT</matrixStatsVersion>
     <matrixSqlVersion>2.0.1</matrixSqlVersion>
     <matrixDatasetsVersion>2.0.1</matrixDatasetsVersion>
     <matrixSpreadsheetVersion>2.1.0</matrixSpreadsheetVersion>
     <matrixJsonVersion>2.1.0-SNAPSHOT</matrixJsonVersion>
-    <matrixCsvVersion>2.0.0</matrixCsvVersion>
+    <matrixCsvVersion>2.1.0-SNAPSHOT</matrixCsvVersion>
     <matrixParquetVersion>0.2</matrixParquetVersion>
     <matrixBigQueryVersion>0.3.0-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>0.2</matrixChartsVersion>
-    <matrixXChartsVersion>0.1</matrixXChartsVersion>
+    <matrixXChartVersion>0.2-SNAPSHOT</matrixXChartVersion>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -97,7 +97,7 @@
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-xchart</artifactId>
-        <version>${matrixXChartsVersion}</version>
+        <version>${matrixXChartVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

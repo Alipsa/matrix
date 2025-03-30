@@ -1,23 +1,31 @@
-package se.alipsa.matrix.examples.as1
-
-// Complete Data Analysis Example using Alipsa Matrix Library
-// This script demonstrates a full data analysis workflow:
-// 1. Importing data
-// 2. Exploring data
-// 3. Cleaning data
-// 4. Analyzing data
-// 5. Visualizing data
+/**************************************************************
+ * Complete Data Analysis Example using Alipsa Matrix Library *
+ *                                                            *
+ * This script demonstrates a full data analysis workflow:    *
+ * 1. Importing data                                          *
+ * 2. Exploring data                                          *
+ * 3. Cleaning data                                           *
+ * 4. Analyzing data                                          *
+ * 5. Visualizing data                                        *
+ *************************************************************/
 
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
 import se.alipsa.matrix.stats.*
+import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.xchart.*
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.text.NumberFormat
 import org.apache.commons.csv.CSVFormat
 
+import java.time.YearMonth
+
+import static se.alipsa.matrix.core.ListConverter.toDates
+import static se.alipsa.matrix.core.ValueConverter.*
+
 // Create a directory to store our results
-new File("analysis_results").mkdirs()
+File analysisResults = new File("analysis_results")
+analysisResults.mkdirs()
 
 println "=== COMPLETE DATA ANALYSIS EXAMPLE USING ALIPSA MATRIX LIBRARY ==="
 println "=================================================================="
@@ -83,15 +91,15 @@ def salesData = Matrix.builder().data(
     .build()
 
 // Let's also save this data to a CSV file for demonstration
-def outputFile = new File("analysis_results/sales_data.csv")
+def outputFile = new File(analysisResults, "sales_data.csv")
 CsvExporter.exportToCsv(salesData, outputFile)
 
 // Now let's read it back to demonstrate CSV import
-def importedData = CsvImporter.importCsv(new File("analysis_results/sales_data.csv"), CSVFormat.DEFAULT)
+def importedData = CsvImporter.importCsv(new File(analysisResults,"sales_data.csv"), CSVFormat.DEFAULT)
 
 println "Data imported successfully with ${importedData.rowCount()} rows and ${importedData.columnCount()} columns."
 println "Column names: ${importedData.columnNames()}"
-println "Column types: ${importedData.columnTypes()}"
+println "Column types: ${importedData.types()}"
 
 // ============================================================
 // PART 2: EXPLORING DATA
@@ -108,18 +116,6 @@ println salesData.head(5)
 // Get basic statistics for numeric columns
 println "\nBasic statistics for units_sold:"
 println Stat.summary(salesData)
-//println "Min: ${salesData.column("units_sold").min()}"
-//println "Max: ${salesData.column("units_sold").max()}"
-//println "Mean: ${salesData.column("units_sold").mean()}"
-//println "Median: ${salesData.column("units_sold").median()}"
-//println "Standard Deviation: ${salesData.column("units_sold").sd()}"
-
-println "\nBasic statistics for revenue:"
-println "Min: ${salesData.column("revenue").min()}"
-println "Max: ${salesData.column("revenue").max()}"
-println "Mean: ${salesData.column("revenue").mean()}"
-println "Median: ${salesData.column("revenue").median()}"
-println "Standard Deviation: ${salesData.column("revenue").sd()}"
 
 // Count unique values in categorical columns
 println "\nUnique products:"
@@ -137,8 +133,8 @@ println productSales.content()
 
 // Distribution of sales by region
 println "\nSales distribution by region:"
-def regionSales = salesData.summarize("units_sold", "sum").by("region")
-println regionSales
+def regionSales = Stat.sumBy(salesData,"units_sold", "region")
+println regionSales.content()
 
 // ============================================================
 // PART 3: CLEANING DATA
@@ -149,24 +145,24 @@ println "\n=== PART 3: CLEANING DATA ==="
 println "Introducing some missing and outlier values for demonstration..."
 
 // Create a copy with some "dirty" data
-def dirtyData = salesData.copy()
+def dirtyData = salesData.clone()
 
 // Introduce some missing values
-dirtyData.set(3, "units_sold", null)
-dirtyData.set(7, "revenue", null)
-dirtyData.set(12, "customer_satisfaction", null)
+dirtyData[3, "units_sold"] = null
+dirtyData[7, "revenue"] = null
+dirtyData[12, "customer_satisfaction"] = null
 
 // Introduce some outliers
-dirtyData.set(5, "units_sold", 500)  // Unusually high
-dirtyData.set(9, "revenue", 500000)  // Unusually high
-dirtyData.set(15, "returns", 50)     // Unusually high
+dirtyData[5, "units_sold"] = 500  // Unusually high
+dirtyData[9, "revenue"] = 500000  // Unusually high
+dirtyData[15, "returns"] = 50     // Unusually high
 
 println "\nDirty data preview (with missing values and outliers):"
 println dirtyData.head(5)
 
 // 1. Check for missing values
 println "\nChecking for missing values:"
-def missingValues = [:]
+Map<String, Number> missingValues = [:]
 dirtyData.columnNames().each { colName ->
   def nullCount = dirtyData.column(colName).count { it == null }
   missingValues[colName] = nullCount
@@ -175,17 +171,17 @@ println missingValues
 
 // 2. Handle missing values
 println "\nHandling missing values..."
-def cleanedData = dirtyData.copy()
+Matrix cleanedData = dirtyData.clone()
 
 // Fill missing numeric values with column means
-def numericColumns = ["units_sold", "revenue", "customer_satisfaction", "returns"]
-numericColumns.each { colName ->
-  def colValues = cleanedData.column(colName)
-  def mean = colValues.findAll { it != null }.sum() / colValues.count { it != null }
+def numericColumns = missingValues.findAll{ k,v -> v > 0}.keySet()
+numericColumns.each { String colName ->
+  def mean = Stat.mean(cleanedData[colName])
+  //def mean = colValues.findAll { it != null }.sum() / colValues.count { it != null }
 
   for (int i = 0; i < cleanedData.rowCount(); i++) {
-    if (cleanedData.get(i, colName) == null) {
-      cleanedData.set(i, colName, mean)
+    if (cleanedData[i, colName] == null) {
+      cleanedData[i, colName] = mean
       println "Replaced missing value in $colName at row $i with mean: $mean"
     }
   }
@@ -194,19 +190,19 @@ numericColumns.each { colName ->
 // 3. Detect and handle outliers using Z-score method
 println "\nDetecting and handling outliers..."
 numericColumns.each { colName ->
-  def values = cleanedData.column(colName)
-  def mean = values.mean()
-  def sd = values.sd()
+  def values = cleanedData[colName]
+  Number mean = values.mean()
+  Number sd = values.sd()
 
   // Consider values with Z-score > 3 as outliers
   for (int i = 0; i < cleanedData.rowCount(); i++) {
-    def value = cleanedData.get(i, colName)
-    def zScore = Math.abs((value - mean) / sd)
+    def value = cleanedData[i, colName]
+    def zScore = (value - mean).abs() / sd
 
     if (zScore > 3) {
       println "Detected outlier in $colName at row $i: $value (Z-score: $zScore)"
       // Replace with median (more robust than mean for outliers)
-      cleanedData.set(i, colName, values.median())
+      cleanedData[i, colName] = values.median()
       println "Replaced with median: ${values.median()}"
     }
   }
@@ -222,11 +218,11 @@ println "Cleaned data shape: ${cleanedData.rowCount()} rows, ${cleanedData.colum
 println "\n=== PART 4: ANALYZING DATA ==="
 
 // Let's use the original clean data for analysis
-def analysisData = salesData.copy()
+Matrix analysisData = salesData.clone()
 
 // 1. Calculate average revenue per unit by product
 println "\nAverage revenue per unit by product:"
-def avgRevenueByProduct = Matrix.builder().data(
+Matrix avgRevenueByProduct = Matrix.builder().data(
     product: uniqueProducts,
     total_units: [],
     total_revenue: [],
@@ -235,64 +231,62 @@ def avgRevenueByProduct = Matrix.builder().data(
     .build()
 
 uniqueProducts.eachWithIndex { product, idx ->
-  def productRows = analysisData.filter("product", product)
-  def totalUnits = productRows.column("units_sold").sum()
-  def totalRevenue = productRows.column("revenue").sum()
+  def productRows = analysisData.subset("product", product)
+  def totalUnits = productRows["units_sold"].sum()
+  def totalRevenue = productRows["revenue"].sum()
   def avgRevenuePerUnit = totalRevenue / totalUnits
 
-  avgRevenueByProduct.set(idx, "total_units", totalUnits)
-  avgRevenueByProduct.set(idx, "total_revenue", totalRevenue)
-  avgRevenueByProduct.set(idx, "avg_revenue_per_unit", avgRevenuePerUnit)
+  avgRevenueByProduct[idx, "total_units"] = totalUnits
+  avgRevenueByProduct[idx, "total_revenue"] = totalRevenue
+  avgRevenueByProduct[idx, "avg_revenue_per_unit"] = avgRevenuePerUnit
 }
 
-println avgRevenueByProduct
+println avgRevenueByProduct.content()
 
 // 2. Calculate correlation between units_sold and customer_satisfaction
 println "\nCorrelation analysis:"
-def unitsSold = analysisData.column("units_sold")
-def satisfaction = analysisData.column("customer_satisfaction")
-def correlation = Correlation.pearson(unitsSold, satisfaction)
+def unitsSold = analysisData["units_sold"]
+def satisfaction = analysisData["customer_satisfaction"]
+def correlation = Correlation.cor(unitsSold, satisfaction)
 println "Correlation between units_sold and customer_satisfaction: $correlation"
 
 // 3. Time series analysis - monthly sales trend
 println "\nMonthly sales trend:"
 def monthlySales = [:]
 analysisData.rows().each { row ->
-  def date = row.get("date")
-  def yearMonth = "${date.year}-${String.format('%02d', date.monthValue)}"
-  def units = row.get("units_sold")
-
-  monthlySales[yearMonth] = (monthlySales[yearMonth] ?: 0) + units
+  def yearMonth = asYearMonth(row.date)
+  monthlySales[yearMonth] = row.units_sold
 }
 
 def sortedMonthlySales = monthlySales.sort { it.key }
-println sortedMonthlySales
+sortedMonthlySales.each {
+  println "${it.key}: ${it.value}"
+}
 
 // 4. Perform hypothesis testing - is there a significant difference in sales between regions?
 println "\nHypothesis testing - sales difference between regions:"
-def regionData = [:]
+Map<String, List> regionData = [:]
 uniqueRegions.each { region ->
-  regionData[region] = analysisData.filter("region", region).column("units_sold")
+  regionData[region] = analysisData.subset("region", region)["units_sold"]
 }
 
 // Perform ANOVA test
-def anovaResult = Anova.oneWay(regionData.values().toList())
-println "ANOVA p-value: ${anovaResult.pValue}"
-println "Is there a significant difference between regions? ${anovaResult.pValue < 0.05 ? 'Yes' : 'No'}"
+def anovaResult = Anova.aov(regionData)
+println "ANOVA p-value: ${anovaResult.pValue.round(3)}"
+println "Is there a significant difference between regions? ${anovaResult.evaluate(0.05) ? 'Yes' : 'No'}"
 
 // 5. Create a simple predictive model - linear regression for revenue based on units_sold
 println "\nSimple linear regression model:"
-def x = analysisData.column("units_sold")
-def y = analysisData.column("revenue")
-def regression = LinearRegression.fit(x, y)
+def regression = new LinearRegression(analysisData, "units_sold", "revenue")
 
 println "Regression equation: revenue = ${regression.intercept} + ${regression.slope} * units_sold"
-println "R-squared: ${regression.rSquared}"
+println "R-squared: ${regression.r2.round(3)}"
 
 // Make a prediction
 def newUnitsSold = 100
 def predictedRevenue = regression.predict(newUnitsSold)
-println "Predicted revenue for $newUnitsSold units: \$${predictedRevenue}"
+NumberFormat formatter = NumberFormat.getCurrencyInstance(Locale.US)
+println "Predicted revenue for $newUnitsSold units: ${formatter.format(predictedRevenue)}"
 
 // ============================================================
 // PART 5: VISUALIZING DATA
@@ -300,14 +294,12 @@ println "Predicted revenue for $newUnitsSold units: \$${predictedRevenue}"
 println "\n=== PART 5: VISUALIZING DATA ==="
 
 // 1. Bar chart - Sales by Product
-def salesByProductChart = BarChart.createVertical(
-    "Total Units Sold by Product",
-    avgRevenueByProduct,
-    "product",
-    ChartType.NONE,
-    "total_units"
-)
-Plot.png(salesByProductChart, new File("analysis_results/sales_by_product.png"), 800, 600)
+BarChart salesByProductChart = BarChart.create(avgRevenueByProduct, 800, 600)
+    .setTitle("Total Units Sold by Product")
+    .addSeries("Total Units Sold", avgRevenueByProduct["product"], avgRevenueByProduct["total_units"])
+    .setXLabel("Product")
+    .setYLabel("Total Units Sold")
+salesByProductChart.exportPng(new File(analysisResults, "sales_by_product.png"))
 println "Created bar chart: analysis_results/sales_by_product.png"
 
 // 2. Bar chart - Sales by Region
@@ -318,56 +310,53 @@ def salesByRegionMatrix = Matrix.builder().data(
     .build()
 
 uniqueRegions.eachWithIndex { region, idx ->
-  def regionRows = analysisData.filter("region", region)
+  def regionRows = analysisData.subset("region", region)
   def totalUnits = regionRows.column("units_sold").sum()
-  salesByRegionMatrix.set(idx, "total_units", totalUnits)
+  salesByRegionMatrix[idx, "total_units"] = totalUnits
 }
 
-def salesByRegionChart = BarChart.createVertical(
-    "Total Units Sold by Region",
-    salesByRegionMatrix,
-    "region",
-    ChartType.NONE,
-    "total_units"
-)
-Plot.png(salesByRegionChart, new File("analysis_results/sales_by_region.png"), 800, 600)
-println "Created bar chart: analysis_results/sales_by_region.png"
+def salesByRegionChart = BarChart.create(salesByRegionMatrix, 800, 600)
+    .setTitle("Total Units Sold by Region")
+    .addSeries("Total Units Sold by Region", "region", "total_units")
+
+File regionChartFile = new File(analysisResults, "sales_by_region.png")
+salesByRegionChart.exportPng(regionChartFile)
+println "Created bar chart: $regionChartFile"
 
 // 3. Scatter plot - Units Sold vs Revenue
 def scatterChart = ScatterChart.create(
     "Units Sold vs Revenue",
     analysisData,
     "units_sold",
-    "revenue"
+    "revenue",
+    800, 600
 )
-Plot.png(scatterChart, new File("analysis_results/units_vs_revenue.png"), 800, 600)
+scatterChart.exportPng(new File(analysisResults,"units_vs_revenue.png"))
 println "Created scatter plot: analysis_results/units_vs_revenue.png"
 
 // 4. Line chart - Monthly Sales Trend
 def monthlyTrendMatrix = Matrix.builder().data(
-    month: sortedMonthlySales.keySet().toList(),
+    month: toDates(sortedMonthlySales.keySet()),
     sales: sortedMonthlySales.values().toList()
-).types(String, Integer)
+).types(YearMonth, Integer)
     .build()
 
-def lineChart = LineChart.create(
-    "Monthly Sales Trend",
-    monthlyTrendMatrix,
-    "month",
-    "sales"
-)
-Plot.png(lineChart, new File("analysis_results/monthly_trend.png"), 800, 600)
-println "Created line chart: analysis_results/monthly_trend.png"
+def lineChart = LineChart.create(monthlyTrendMatrix, 800, 600)
+    .setTitle("Monthly Sales Trend")
+    .addSeries("Monthly Sales", "month", "sales")
+
+File lineChartFile = new File(analysisResults, "monthly_trend.png")
+lineChart.exportPng(lineChartFile)
+println "Created line chart: $lineChartFile"
 
 // 5. Pie chart - Product Distribution
-def pieChart = PieChart.create(
-    "Product Sales Distribution",
-    avgRevenueByProduct,
-    "product",
-    "total_units"
-)
-Plot.png(pieChart, new File("analysis_results/product_distribution.png"), 800, 600)
-println "Created pie chart: analysis_results/product_distribution.png"
+def pieChart = PieChart.create(avgRevenueByProduct, 800, 600)
+    .setTitle("Product Sales Distribution")
+    .addSeries("product", "total_units")
+
+File pieChartFile = new File(analysisResults, "product_distribution.png")
+pieChart.exportPng(pieChartFile)
+println "Created pie chart: $pieChartFile"
 
 // ============================================================
 // SUMMARY
@@ -387,5 +376,5 @@ println "   - Bar charts for product and regional sales"
 println "   - Scatter plot for units sold vs revenue"
 println "   - Line chart for monthly sales trend"
 println "   - Pie chart for product distribution"
-println "\nAll results and visualizations have been saved to the 'analysis_results' directory."
+println "\nAll results and visualizations have been saved to the $analysisResults.absolutePath directory."
 

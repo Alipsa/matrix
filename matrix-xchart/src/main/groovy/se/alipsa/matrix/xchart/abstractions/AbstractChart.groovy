@@ -60,19 +60,21 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
     xchart.getSeriesMap()
   }
 
-  void setxLabel(String label) {
+  T setXLabel(String label) {
     xchart.XAxisTitle = label
+    return this as T
   }
 
-  void setyLabel(String label) {
+  T setYLabel(String label) {
     xchart.YAxisTitle = label
+    return this as T
   }
 
-  String getxLabel() {
+  String getXLabel() {
     xchart.XAxisTitle
   }
 
-  String getyLabel() {
+  String getYLabel() {
     xchart.YAxisTitle
   }
 

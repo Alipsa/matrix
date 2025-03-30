@@ -41,8 +41,10 @@ class ListConverter {
     toDates(dates as List, null)
   }
 
-  static List<java.util.Date> toDates(List<String> dates) {
-    toDates(dates, null)
+  static List<java.util.Date> toDates(Collection dates) {
+    dates.collect {
+      ValueConverter.asDate(it)
+    }
   }
 
   static List<java.util.Date> toDates(List<String> dates, Date valueIfNull) {
@@ -152,12 +154,12 @@ class ListConverter {
     return dat
   }
 
-  static List<YearMonth> toYearMonths(List<?> localDates) {
+  static List<YearMonth> toYearMonths(Object... localDates) {
     localDates.collect({ValueConverter.asYearMonth(it)})
   }
 
-  static List<YearMonth> toYearMonths(Object... localDates) {
-    localDates.collect({ValueConverter.asYearMonth(it)})
+  static List<YearMonth> toYearMonths(Collection<?> objList) {
+    objList.collect({ValueConverter.asYearMonth(it)})
   }
 
   static List<String> toStrings(Collection<?> objList) {

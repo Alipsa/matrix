@@ -83,8 +83,8 @@ class HeatmapChartTest {
   void testVerifyDistribution() {
     def hmc = HeatmapChart.create(Dataset.mtcars())
         .addAllToSeriesBy('model')
-    hmc.xLabel = "Features"
-    hmc.yLabel = "Cars"
+        .setXLabel("Features")
+        .setYLabel("Cars")
     //println hmc.heatMapMatrix.content()
     File file = new File("build/testVerifyDistribution.png")
     hmc.exportPng(file)
@@ -104,8 +104,8 @@ class HeatmapChartTest {
   void testNormalizedHeatmap() {
     def mtcars = Normalize.minMaxNorm(Dataset.mtcars(), 5).withMatrixName("Data Scaling")
     def hmc = HeatmapChart.create(mtcars).addAllToSeriesBy('model')
-    hmc.xLabel = "Features"
-    hmc.yLabel = "Cars"
+    hmc.XLabel = "Features"
+    hmc.YLabel = "Cars"
     hmc.style.showValue = false
     File file = new File("build/testNormalizedHeatmap.png")
     hmc.exportPng(file)

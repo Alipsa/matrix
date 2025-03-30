@@ -96,7 +96,8 @@
   - Interoperability with Tablesaw library
 
 ## 12. Practical Examples
-- Data analysis workflow
+- [Data analysis workflow](15-analysis-workflow.md)
+<!--
 - Combining multiple modules
 - Real-world use cases
 
@@ -110,3 +111,4 @@
 - Summary of key concepts
 - Additional resources
 - Community and support
+-->

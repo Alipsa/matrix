@@ -18,10 +18,10 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.io.input.ReaderInputStream
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.matrixcsv.CsvExporter
+import se.alipsa.matrix.csv.CsvExporter
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.matrixcsv.CsvImporter
+import se.alipsa.matrix.csv.CsvImporter
 
 import java.io.*
 import java.nio.charset.StandardCharsets

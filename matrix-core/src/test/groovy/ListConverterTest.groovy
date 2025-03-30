@@ -44,6 +44,15 @@ class ListConverterTest {
         new SimpleDateFormat('yyyy-MM-dd').parse('2023-12-31')
     ]
     assertIterableEquals(expected, ListConverter.toDates(dates))
+
+    List yearMonths = [
+        YearMonth.of(2023, 1),
+        YearMonth.of(2023, 2),
+        YearMonth.of(2023, 3),
+        YearMonth.of(2023, 4),
+        YearMonth.of(2023, 5)
+    ]
+    println ListConverter.toDates(yearMonths)
   }
 
   @Test
@@ -84,6 +93,17 @@ class ListConverterTest {
         YearMonth.of(2024, 6)
     ]
     assertIterableEquals(expected, ListConverter.toYearMonths(dates))
+
+    def map = ['2023-01':120, '2023-02':50, '2023-03':40, '2023-04':140, '2023-05':48]
+    def expectedList = [
+        YearMonth.of(2023, 1),
+        YearMonth.of(2023, 2),
+        YearMonth.of(2023, 3),
+        YearMonth.of(2023, 4),
+        YearMonth.of(2023, 5)
+    ]
+    assert expectedList == ListConverter.toYearMonths(map.keySet())
+
   }
 
   @Test
