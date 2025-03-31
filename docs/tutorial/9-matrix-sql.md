@@ -10,30 +10,42 @@ To use the matrix-sql module, you need to add it as a dependency to your project
 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.26'
-implementation 'se.alipsa.matrix:matrix-core:3.0.0'
-implementation 'se.alipsa.matrix:matrix-sql:2.0.0'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-sql'
 ```
 
 ### Maven Configuration
 
 ```xml
-<dependencies>
-  <dependency>
-      <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy</artifactId>
-      <version>4.0.26</version>
-  </dependency>
-  <dependency>
-      <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-core</artifactId>
-      <version>3.0.0</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-sql</artifactId>
-    <version>2.0.0</version>
-  </dependency>
-</dependencies>
+<project>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-bom</artifactId>
+        <version>2.1.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+    <dependencies>
+      <dependency>
+          <groupId>org.apache.groovy</groupId>
+          <artifactId>groovy</artifactId>
+          <version>4.0.26</version>
+      </dependency>
+      <dependency>
+          <groupId>se.alipsa.matrix</groupId>
+          <artifactId>matrix-core</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-sql</artifactId>
+      </dependency>
+    </dependencies>
+</project>
 ```
 
 ## Core Classes
@@ -289,7 +301,7 @@ matrixSql.create(complexData)
 Matrix stored = matrixSql.select('* from complexData')
 
 // Check the type of the 'start' column
-println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
+println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
 // Output: start column is of type class java.sql.Date, values are [2021-12-01, 2022-07-10, 2023-05-27]
 ```
 
@@ -300,7 +312,7 @@ println "start column is of type ${stored.columnType('start')}, values are ${sto
 stored = stored.convert('start', LocalDate)
 
 // Check the type after conversion
-println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
+println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
 // Output: start column is of type class java.time.LocalDate, values are [2021-12-01, 2022-07-10, 2023-05-27]
 ```
 
@@ -340,11 +352,11 @@ import java.time.LocalDate
 
 // Create a Matrix with employee data
 Matrix employees = Matrix.builder('employees').data([
-    'id': [1, 2, 3, 4],
-    'name': ['Alice', 'Bob', 'Charlie', 'Diana'],
-    'department': ['HR', 'Engineering', 'Engineering', 'Marketing'],
-    'salary': [60000, 75000, 72000, 65000],
-    'hire_date': [
+    id: [1, 2, 3, 4],
+    name: ['Alice', 'Bob', 'Charlie', 'Diana'],
+    department: ['HR', 'Engineering', 'Engineering', 'Marketing'],
+    salary: [60000, 75000, 72000, 65000],
+    hire_date: [
         LocalDate.of(2020, 3, 15),
         LocalDate.of(2019, 7, 10),
         LocalDate.of(2021, 1, 5),
@@ -355,39 +367,39 @@ Matrix employees = Matrix.builder('employees').data([
 // Set up a connection to an H2 in-memory database
 ConnectionInfo ci = new ConnectionInfo()
 ci.setDependency('com.h2database:h2:2.3.232')
-ci.setUrl("jdbc:h2:mem:employeedb")
+ci.setUrl("jdbc:h2:mem:employeedb;CASE_INSENSITIVE_IDENTIFIERS=true")
 ci.setUser('sa')
 ci.setPassword('')
 ci.setDriver("org.h2.Driver")
 
 // Use try-with-resources to ensure the connection is closed
 try (MatrixSql matrixSql = new MatrixSql(ci)) {
-    // Create a table and insert the data
-    matrixSql.create(employees, 'id')
-    
-    // Query all employees
-    Matrix allEmployees = matrixSql.select('* from employees')
-    println "All employees:"
-    println allEmployees.content()
-    
-    // Query employees in the Engineering department
-    Matrix engineers = matrixSql.select('* from employees WHERE department = ?', ['Engineering'])
-    println "\nEngineers:"
-    println engineers.content()
-    
-    // Update salaries for the Engineering department
-    int updated = matrixSql.update('UPDATE employees SET salary = salary * 1.1 WHERE department = ?', ['Engineering'])
-    println "\nUpdated ${updated} employee salaries"
-    
-    // Query the updated data
-    Matrix updatedEmployees = matrixSql.select('* from employees')
-    println "\nEmployees after salary update:"
-    println updatedEmployees.content()
-    
-    // Convert the hire_date column from java.sql.Date to LocalDate
-    updatedEmployees = updatedEmployees.convert('hire_date', LocalDate)
-    println "\nAfter converting hire_date to LocalDate:"
-    println "hire_date column is of type ${updatedEmployees.columnType('hire_date')}"
+  // Create a table and insert the data
+  matrixSql.create(employees, 'id')
+
+  // Query all employees
+  Matrix allEmployees = matrixSql.select('* from employees')
+  println "All employees:"
+  println allEmployees.content()
+
+  // Query employees in the Engineering department
+  Matrix engineers = matrixSql.select("* from employees WHERE department = 'Engineering'")
+  println "\nEngineers:"
+  println engineers.content()
+
+  // Update salaries for the Engineering department
+  int updated = matrixSql.update("employees SET salary = salary * 1.1 WHERE department = 'Engineering'")
+  println "\nUpdated ${updated} employee salaries"
+
+  // Query the updated data
+  Matrix updatedEmployees = matrixSql.select('* from employees')
+  println "\nEmployees after salary update:"
+  println updatedEmployees.content()
+
+  // Convert the hire_date column from java.sql.Date to LocalDate
+  updatedEmployees = updatedEmployees.convert('hire_date', LocalDate)
+  println "\nAfter converting hire_date to LocalDate:"
+  println "hire_date column is of type ${updatedEmployees.type('hire_date')}"
 }
 ```
 
@@ -404,19 +416,6 @@ try (MatrixSql matrixSql = new MatrixSql(ci)) {
 5. **Manage Large Result Sets**: When dealing with large result sets, consider using pagination or limiting the number of rows returned.
 
 6. **Handle Exceptions**: Implement proper exception handling to catch and handle database-related exceptions.
-
-## Version Compatibility
-
-The matrix-sql module has specific version compatibility requirements with the matrix-core module. The following table illustrates the version compatibility:
-
-| Matrix SQL | Matrix Core |
-|------------|-------------|
-| 1.0.0      | 1.2.4       |
-| 1.0.1      | 2.0.0 -> 2.1.1 |
-| 1.1.0      | 2.2.0       |
-| 2.0.0      | 3.0.0       |
-
-Make sure to use compatible versions to avoid potential issues.
 
 ## Conclusion
 

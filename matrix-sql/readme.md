@@ -125,7 +125,7 @@ E.g:
 3. Retreive it
    ```groovy
    Matrix stored = matrixSql.select('* from complexData')
-   println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
+   println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
    ```
    
 The output will be
@@ -135,7 +135,7 @@ start column is of type class java.sql.Date, values are [2021-12-01, 2022-07-10,
 4. We can convert the Date column to a LocalDate
     ```groovy
     stored = stored.convert('start', LocalDate)
-    println "start column is of type ${stored.columnType('start')}, values are ${stored.column('start')}"
+    println "start column is of type ${stored.type('start')}, values are ${stored.column('start')}"
     ```
    The output will be
     ```

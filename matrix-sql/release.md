@@ -1,6 +1,9 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
+## v2.1.0, in progress
+- add back MatrixSql.update(String)
+
 ## v2.0.1, 2025-03-26
 - Compile statically where possible 
 

@@ -32,7 +32,7 @@
   <properties>
     <matrixCoreVersion>3.2.0-SNAPSHOT</matrixCoreVersion>
     <matrixStatsVersion>2.1.0-SNAPSHOT</matrixStatsVersion>
-    <matrixSqlVersion>2.0.1</matrixSqlVersion>
+    <matrixSqlVersion>2.1.0-SNAPSHOT</matrixSqlVersion>
     <matrixDatasetsVersion>2.0.1</matrixDatasetsVersion>
     <matrixSpreadsheetVersion>2.1.0</matrixSpreadsheetVersion>
     <matrixJsonVersion>2.1.0-SNAPSHOT</matrixJsonVersion>

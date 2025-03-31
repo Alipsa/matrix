@@ -22,7 +22,7 @@ class HistogramTest {
   @Test
   void testMtcarsMpg() {
     def mtcars = Dataset.mtcars()
-    //println "${mtcars['mpg']}: ${mtcars.columnType('mpg')}"
+    //println "${mtcars['mpg']}: ${mtcars.type('mpg')}"
     def chart = Histogram.create("mtcars.mpg", mtcars, 'mpg', 5)
 
     def expected = [6,12,8,2,4]

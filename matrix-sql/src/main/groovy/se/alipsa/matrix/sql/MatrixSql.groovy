@@ -51,6 +51,13 @@ class MatrixSql implements Closeable {
     matrixDbUtil.select(connect(), sqlQuery).withMatrixName(matrixName)
   }
 
+  int update(String sqlQuery) {
+    if (!sqlQuery.trim().toLowerCase().startsWith('update ')) {
+      sqlQuery = "update $sqlQuery"
+    }
+    dbUpdate(sqlQuery)
+  }
+
   private int dbUpdate(String sqlQuery) throws SQLException  {
     try(Statement stm = connect().createStatement()) {
       return dbExecuteUpdate(stm, sqlQuery)

@@ -240,10 +240,10 @@ will output
 - void setName(String name)
 - Matrix withName(String name): sets the name and returns itself allowing for method chaining 
 - List<String> columnTypeNames(): gives you the simple names of the column types
-- Class<?> columnType(String columnName): gives you the type class of the column  
-- Class<?> columnType(int i): as above
-- List<Class<?>> columnTypes(List<String> columnNames): as above but for a list of columns
-- List<Class<?>> columnTypes(): as above but for all variables 
+- Class<?> type(String columnName): gives you the type class of the column  
+- Class<?> type(int i): as above
+- List<Class<?>> types(List<String> columnNames): as above but for a list of columns
+- List<Class<?>> types(): as above but for all variables 
 - Matrix renameColumn(int columnIndex, String after): Rename the specified column
 - Matrix renameColumn(String before, String after): as above
 - String columnName(int index): the variable name for the specified column
