@@ -337,4 +337,4 @@ By leveraging both libraries through this module, you can take advantage of Matr
 
 In future releases, we can expect more features and improvements to enhance the integration between these two powerful data libraries.
 
-Go to [previous section](13-matrix-charts.md) | Back to [outline](outline.md)
+Go to [previous section](13-matrix-charts.md) | Go to [next section](13-matrix-charts.md) | Back to [outline](outline.md)

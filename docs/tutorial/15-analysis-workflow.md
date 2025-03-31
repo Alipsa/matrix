@@ -1,6 +1,7 @@
+# Complete Data Analysis Example using the Matrix Library
+
 ```groovy
 /**************************************************************
- * Complete Data Analysis Example using Alipsa Matrix Library *
  *                                                            *
  * This script demonstrates a full data analysis workflow:    *
  * 1. Importing data                                          *
@@ -383,3 +384,5 @@ println "   - Line chart for monthly sales trend"
 println "   - Pie chart for product distribution"
 println "\nAll results and visualizations have been saved to the $analysisResults.absolutePath directory."
 ```
+
+Go to [previous section](14-matrix-tablesaw.md) | Back to [outline](outline.md)
