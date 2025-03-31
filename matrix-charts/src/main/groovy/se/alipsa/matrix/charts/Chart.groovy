@@ -10,7 +10,7 @@ import se.alipsa.matrix.core.Matrix;
  * inout.view(Plot.jfx(chart))
  * </code>
  */
-abstract class Chart {
+abstract class Chart<T extends Chart> {
 
   protected String title
   protected String xAxisTitle = ""
@@ -86,44 +86,53 @@ abstract class Chart {
     return xAxisScale
   }
 
-  void setxAxisScale(AxisScale xAxisScale) {
+  T setXAxisScale(AxisScale xAxisScale) {
     this.xAxisScale = xAxisScale
+    this as T
   }
 
-  void setxAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
+  T setXAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
     this.xAxisScale = new AxisScale(start, end, step)
+    this as T
   }
 
   AxisScale getyAxisScale() {
     return yAxisScale
   }
 
-  void setyAxisScale(AxisScale yAxisScale) {
+  T setYAxisScale(AxisScale yAxisScale) {
     this.yAxisScale = yAxisScale
+    this as T
   }
 
-  void setyAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
+  T setYAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
     this.yAxisScale = new AxisScale(start, end, step)
+    this as T
   }
 
-  void setTitle(String title) {
+  T setTitle(String title) {
     this.title = title
+    this as T
   }
 
-  void setxAxisTitle(String xAxisTitle) {
+  T setXAxisTitle(String xAxisTitle) {
     this.xAxisTitle = xAxisTitle
+    this as T
   }
 
-  void setyAxisTitle(String yAxisTitle) {
+  T setYAxisTitle(String yAxisTitle) {
     this.yAxisTitle = yAxisTitle
+    this as T
   }
 
-  void setCategorySeries(List<?> categorySeries) {
+  T setCategorySeries(List<?> categorySeries) {
     this.categorySeries = categorySeries
+    this as T
   }
 
-  void setValueSeries(List<List> valueSeries) {
+  T setValueSeries(List<List> valueSeries) {
     this.valueSeries = valueSeries
+    this as T
   }
 
   List<?> getValueSerie(int index) {
@@ -134,8 +143,9 @@ abstract class Chart {
     return valueSeriesNames
   }
 
-  void setValueSeriesNames(List<String> valueSeriesNames) {
+  T setValueSeriesNames(List<String> valueSeriesNames) {
     this.valueSeriesNames = valueSeriesNames
+    this as T
   }
 
   Style getStyle() {
@@ -146,8 +156,9 @@ abstract class Chart {
     return legend
   }
 
-  void setLegend(Legend legend) {
+  T setLegend(Legend legend) {
     this.legend = legend
+    this as T
   }
 
   @Override

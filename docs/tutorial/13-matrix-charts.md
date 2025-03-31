@@ -1,6 +1,9 @@
 # Matrix Charts Module
 
-The Matrix Charts module is a Groovy library for creating various types of graphs and charts based on Matrix data. It provides a simple and intuitive API for generating visualizations that can be exported to different formats.
+The Matrix Charts module is a Groovy library for creating various types of graphs and charts based on Matrix data. 
+It provides a simple and intuitive API for generating visualizations that can be exported to different formats but the
+"native" format is SVG. It uses the gsvg SVG model to greate charts and it is always possible to access the model directly
+for advanced customization.
 
 ## Installation
 
@@ -9,17 +12,47 @@ To use the matrix-charts module, add the following dependency to your project:
 ### Gradle Configuration
 
 ```groovy
-implementation 'se.alipsa.matrix:charts:0.2'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:charts'
+implementation 'se.alipsa.matrix:core'
+implementation 'se.alipsa.matrix:stats'
 ```
 
 ### Maven Configuration
 
 ```xml
-<dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>charts</artifactId>
-    <version>0.2</version>
-</dependency>
+<project>
+   <dependencyManagement>
+      <dependencies>
+         <dependency>
+            <groupId>se.alipsa.matrix</groupId>
+            <artifactId>matrix-bom</artifactId>
+            <version>2.1.1</version>
+            <type>pom</type>
+            <scope>import</scope>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
+   <dependencies>
+      <dependency>
+         <groupId>org.apache.groovy</groupId>
+         <artifactId>groovy</artifactId>
+         <version>4.0.26</version>
+      </dependency>
+      <dependency>
+         <groupId>se.alipsa.matrix</groupId>
+         <artifactId>matrix-charts</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>se.alipsa.matrix</groupId>
+         <artifactId>matrix-core</artifactId>
+      </dependency>
+      <dependency>
+         <groupId>se.alipsa.matrix</groupId>
+         <artifactId>matrix-stats</artifactId>
+      </dependency>
+   </dependencies>
+</project>
 ```
 
 ## Chart Types
@@ -310,54 +343,58 @@ import se.alipsa.matrix.charts.*
 
 // Create a sample Matrix with sales data
 def salesData = Matrix.builder().data(
-    quarter: ["Q1", "Q2", "Q3", "Q4"],
-    product_a: [120, 150, 160, 180],
-    product_b: [90, 110, 130, 150],
-    product_c: [70, 80, 100, 120]
+        quarter: ['Q1', 'Q2', 'Q3', 'Q4'],
+        product_a: [120, 150, 160, 180],
+        product_b: [90, 110, 130, 150],
+        product_c: [70, 80, 100, 120]
 ).types(String, Number, Number, Number)
- .build()
+        .build()
 
 // Create a bar chart
 def barChart = BarChart.createVertical(
-    "Quarterly Sales by Product",
-    salesData,
-    "quarter",
-    ChartType.GROUPED,
-    "product_a", "product_b", "product_c"
+        "Quarterly Sales by Product",
+        salesData,
+        "quarter",
+        ChartType.GROUPED,
+        "product_a", "product_b", "product_c"
 )
-.setXAxisLabel("Quarter")
-.setYAxisLabel("Sales (in thousands)")
+        .setXAxisTitle("Quarter")
+        .setYAxisTitle("Sales (in thousands)")
+File file = new File("quarterly_sales_bar.png")
+Plot.png(barChart, file)
+println "saved barchart to $file.absolutePath"
+
+salesData['quarter'] = [1,2,3,4]
 
 // Create a line chart
 def lineChart = LineChart.create(
-    "Sales Trends",
-    salesData,
-    "quarter",
-    "product_a", "product_b", "product_c"
+        "Sales Trends",
+        salesData,
+        "quarter",
+        "product_a", "product_b", "product_c"
 )
-.setXAxisLabel("Quarter")
-.setYAxisLabel("Sales (in thousands)")
+        .setXAxisTitle("Quarter")
+        .setYAxisTitle("Sales (in thousands)")
+file = new File("quarterly_sales_line.png")
+Plot.png(lineChart, file)
+println "saved lineChart to $file.absolutePath"
 
 // Create a pie chart (using only one quarter for demonstration)
 def q4Data = Matrix.builder().data(
-    product: ["Product A", "Product B", "Product C"],
-    sales: [180, 150, 120]
+        product: ["Product A", "Product B", "Product C"],
+        sales: [180, 150, 120]
 ).types(String, Number)
- .build()
+        .build()
 
 def pieChart = PieChart.create(
-    "Q4 Sales Distribution",
-    q4Data,
-    "product",
-    "sales"
+        "Q4 Sales Distribution",
+        q4Data,
+        "product",
+        "sales"
 )
-.setColors([Color.BLUE, Color.GREEN, Color.RED])
-
-// Export all charts
-Plot.png(barChart, new File("quarterly_sales_bar.png"))
-Plot.png(lineChart, new File("quarterly_sales_line.png"))
-Plot.png(pieChart, new File("q4_sales_pie.png"))
-
+file = new File("q4_sales_pie.png")
+Plot.png(pieChart, file)
+println "saved pieChart to $file.absolutePath"
 println "Charts have been exported successfully."
 ```
 

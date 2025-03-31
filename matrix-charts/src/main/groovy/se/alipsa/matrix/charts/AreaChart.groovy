@@ -3,7 +3,7 @@ package se.alipsa.matrix.charts
 import se.alipsa.matrix.core.Matrix;
 
 
-class AreaChart extends Chart {
+class AreaChart extends Chart<AreaChart> {
 
   static AreaChart create(Matrix data) {
     if (data.columnCount() != 2) {

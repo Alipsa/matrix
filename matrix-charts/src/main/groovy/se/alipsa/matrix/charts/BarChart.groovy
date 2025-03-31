@@ -2,7 +2,7 @@ package se.alipsa.matrix.charts
 
 import se.alipsa.matrix.core.Matrix;
 
-class BarChart extends Chart {
+class BarChart extends Chart<BarChart> {
 
   protected ChartType chartType = ChartType.BASIC
   private ChartDirection direction

@@ -5,7 +5,7 @@ import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
 
-class Histogram extends Chart {
+class Histogram extends Chart<Histogram> {
 
   List<? extends Number> originalData = []
   Map<MinMax, Integer> ranges

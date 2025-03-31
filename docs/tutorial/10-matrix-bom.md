@@ -19,13 +19,14 @@ This approach simplifies dependency management and helps avoid version conflicts
 To use the Matrix BOM in a Gradle project, add the following to your build script:
 
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.0.0'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.1.1'))
 implementation('se.alipsa.matrix:matrix-core')
 implementation('se.alipsa.matrix:matrix-spreadsheet')
 // Add other matrix modules as needed without specifying versions
 ```
 
-The `platform` keyword tells Gradle to use the BOM for dependency management. After that, you can declare Matrix dependencies without specifying their versions.
+The `platform` keyword tells Gradle to use the BOM for dependency management. After that, you can declare 
+Matrix dependencies without specifying their versions.
 
 ### Maven Configuration
 
@@ -39,7 +40,7 @@ To use the Matrix BOM in a Maven project, add the following to your `pom.xml` fi
          <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.0.0</version>
+            <version>2.1.1</version>
             <type>pom</type>
             <scope>import</scope>
          </dependency>
@@ -91,7 +92,7 @@ repositories {
 
 dependencies {
     // Import the BOM
-    implementation(platform('se.alipsa.matrix:matrix-bom:2.0.0'))
+    implementation(platform('se.alipsa.matrix:matrix-bom:2.1.1'))
     
     // Add Groovy
     implementation 'org.apache.groovy:groovy:4.0.26'
@@ -125,7 +126,7 @@ dependencies {
             <dependency>
                 <groupId>se.alipsa.matrix</groupId>
                 <artifactId>matrix-bom</artifactId>
-                <version>2.0.0</version>
+                <version>2.1.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -198,7 +199,7 @@ When selecting a BOM version, consider the following:
 
 2. **Compatibility Requirements**: If your project has specific compatibility requirements, check the BOM's documentation to find a version that meets your needs.
 
-3. **Experimental Modules**: If you're using experimental modules, be aware that they might have more frequent updates or breaking changes.
+3. **Experimental Modules**: If you're using experimental modules (i.e. the version number is < 1.0.0), be aware that they might have more frequent updates or breaking changes.
 
 ## Best Practices
 

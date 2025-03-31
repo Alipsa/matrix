@@ -4,7 +4,7 @@ package se.alipsa.matrix.charts
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
 
-class BoxChart extends Chart {
+class BoxChart extends Chart<BoxChart> {
 
   static BoxChart create(String title, Matrix data, String categoryColumnName, String valueColumn) {
 

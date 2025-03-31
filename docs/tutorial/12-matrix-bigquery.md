@@ -14,30 +14,42 @@ To use the matrix-bigquery module, add the following dependencies to your projec
 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.26'
-implementation 'se.alipsa.matrix:matrix-core:3.1.0'
-implementation 'se.alipsa.matrix:matrix-bigquery:0.2'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-bigquery'
 ```
 
 ### Maven Configuration
 
 ```xml
-<dependencies>
-  <dependency>
-    <groupId>org.apache.groovy</groupId>
-    <artifactId>groovy</artifactId>
-    <version>4.0.26</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-core</artifactId>
-    <version>3.1.0</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-bigquery</artifactId>
-    <version>0.2</version>
-  </dependency>
-</dependencies>
+<project>
+   <dependencyManagement>
+      <dependencies>
+         <dependency>
+            <groupId>se.alipsa.matrix</groupId>
+            <artifactId>matrix-bom</artifactId>
+            <version>2.1.1</version>
+            <type>pom</type>
+            <scope>import</scope>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
+   <dependencies>
+     <dependency>
+       <groupId>org.apache.groovy</groupId>
+       <artifactId>groovy</artifactId>
+       <version>4.0.26</version>
+     </dependency>
+     <dependency>
+       <groupId>se.alipsa.matrix</groupId>
+       <artifactId>matrix-core</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>se.alipsa.matrix</groupId>
+       <artifactId>matrix-bigquery</artifactId>
+     </dependency>
+   </dependencies>
+</project>
 ```
 
 ## Authentication Setup

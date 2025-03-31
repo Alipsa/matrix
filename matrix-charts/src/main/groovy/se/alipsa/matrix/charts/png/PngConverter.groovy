@@ -24,16 +24,24 @@ class PngConverter {
      */
     static void convert(Chart chart, OutputStream out, double width, double height) throws IOException {
         new JFXPanel()
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1)
+        Throwable exc = null
         Platform.runLater(() -> {
-            var jfxChart = Plot.jfx(chart)
-            Scene scene = new Scene(jfxChart, width, height)
-            WritableImage snapshot = scene.snapshot(null)
-            ImageIO.write(SwingFXUtils.fromFXImage(snapshot, null), "png", out)
+            try {
+                var jfxChart = Plot.jfx(chart)
+                Scene scene = new Scene(jfxChart, width, height)
+                WritableImage snapshot = scene.snapshot(null)
+                ImageIO.write(SwingFXUtils.fromFXImage(snapshot, null), "png", out)
+            } catch (Throwable e) {
+                exc = e
+            }
             countDownLatch.countDown()
         })
         try {
             countDownLatch.await()
+            if (exc != null) {
+                throw new IOException("Error while saving the chart", exc)
+            }
         } catch (InterruptedException e) {
             throw new IOException("Interrupted while saving the chart", e)
         }

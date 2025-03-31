@@ -10,12 +10,14 @@ The Matrix Tablesaw module provides interoperability between the Matrix library 
 
 ## Installation
 
-Since the matrix-tablesaw module is still in development, there's no official release yet. However, once released, you'll be able to add it to your project using:
+To use the matrix-tablesaw module, you need to add it as a dependency to your project.
 
 ### Gradle Configuration (Future)
 
 ```groovy
-implementation 'se.alipsa.matrix:matrix-tablesaw:x.y.z'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:core'
+implementation 'se.alipsa.matrix:matrix-tablesaw'
 ```
 
 ### Maven Configuration (Future)
@@ -24,8 +26,30 @@ implementation 'se.alipsa.matrix:matrix-tablesaw:x.y.z'
 <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-tablesaw</artifactId>
-    <version>x.y.z</version>
 </dependency>
+<project>
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-bom</artifactId>
+      <version>2.1.1</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+<dependencies>
+  <dependency>
+    <groupId>se.alipsa.matrix</groupId>
+    <artifactId>matrix-tablesaw</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>se.alipsa.matrix</groupId>
+    <artifactId>matrix-core</artifactId>
+  </dependency>
+</dependencies>
+</project>
 ```
 
 ## Key Components of the Matrix Tablesaw Module
@@ -243,12 +267,10 @@ Here's a complete example that demonstrates how to use the Matrix Tablesaw modul
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.tablesaw.gtable.GTable
+import se.alipsa.matrix.tablesaw.gtable.Gtable
 import se.alipsa.matrix.tablesaw.TableUtil
 import se.alipsa.matrix.tablesaw.Normalizer
-import tech.tablesaw.api.Table
-import tech.tablesaw.api.DoubleColumn
-import tech.tablesaw.api.StringColumn
+import tech.tablesaw.api.*
 
 // Create a Matrix with sample data
 def matrix = Matrix.builder().data(
@@ -256,40 +278,40 @@ def matrix = Matrix.builder().data(
     age: [25, 30, 35, 40, 45],
     salary: [50000, 60000, 70000, 80000, 90000],
     department: ["HR", "IT", "Finance", "IT", "HR"]
-).types(String, Integer, Integer, String)
- .build()
+).types(String, Integer, BigDecimal, String)
+    .build()
 
 // Convert Matrix to GTable
-def gTable = GTable.fromMatrix(matrix)
+def gTable = TableUtil.fromMatrix(matrix)
 
 // Calculate average salary by department
-def deptSalary = gTable.summarize("salary", "mean")
+def deptSalary = gTable.summarize("salary", BigDecimalAggregateFunctions.mean)
     .by("department")
 
 println "Average salary by department:"
 println deptSalary
 
 // Create a frequency table for the department column
-def deptFreq = TableUtil.frequency(gTable.table(), "department")
+def deptFreq = TableUtil.frequency(gTable, "department")
 
 println "\nDepartment frequency:"
 println deptFreq
 
 // Normalize the salary column
-def salaryCol = gTable.table().column("salary")
-def normalizedSalary = Normalizer.minMaxNormalize(salaryCol)
+var salaryCol = gTable.column("salary") as BigDecimalColumn
+def normalizedSalary = Normalizer.minMaxNorm(salaryCol)
 
 // Replace the original column with the normalized one
-gTable.table().replaceColumn("salary", normalizedSalary)
+gTable.replaceColumn("salary", normalizedSalary)
 
 println "\nData with normalized salaries:"
 println gTable
 
 // Convert back to Matrix for further analysis
-def newMatrix = gTable.toMatrix()
+def newMatrix = TableUtil.toMatrix(gTable)
 
 println "\nConverted back to Matrix:"
-println newMatrix
+println newMatrix.content()
 ```
 
 ## Best Practices

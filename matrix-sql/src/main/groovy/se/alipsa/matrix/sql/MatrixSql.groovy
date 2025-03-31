@@ -195,6 +195,18 @@ class MatrixSql implements Closeable {
     return matrixDbUtil.insert(connect(), table)
   }
 
+  int delete(String sql) throws SQLException {
+    if (sql.trim().toLowerCase().startsWith("delete ")) {
+      sql = "delete $sql"
+    }
+    if (!sql.toLowerCase().startsWith("delete from ")) {
+      sql = "from $sql"
+    }
+    try(Statement stm = connect().createStatement()) {
+      return stm.executeUpdate(sql)
+    }
+  }
+
   static int dbExecuteUpdate(Statement stm, String sqlQuery) throws SQLException {
     if (sqlQuery.trim().toLowerCase().startsWith("update ")) {
       return stm.executeUpdate(sqlQuery)

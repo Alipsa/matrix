@@ -1,5 +1,8 @@
 # Matrix-charts Release History
 
+## v0.3, in progress
+- enable fluent interaction
+
 ## v0.2, 2025-03-12
 - require JDK 21
 

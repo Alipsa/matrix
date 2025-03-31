@@ -529,15 +529,15 @@ class Stat {
         (q[0] - q[1]) as T
     }
 
-    static <T extends Comparable> T min(List<T> list, boolean ignoreNonNumerics = false) {
+    static <T> T min(List<T> list, boolean ignoreNonNumerics = false) {
         def minVal = null
         for (value in list) {
-            if (value instanceof Comparable ) {
-                boolean skip = false
-                if (ignoreNonNumerics && !(value instanceof Number)) {
-                    skip = true
-                }
-                if (!skip && (minVal == null || value < minVal)) {
+            boolean skip = false
+            if (ignoreNonNumerics && !(value instanceof Number)) {
+                skip = true
+            }
+            if (value instanceof Comparable && !skip) {
+                if (minVal == null || value < minVal) {
                     minVal = value
                 }
             }

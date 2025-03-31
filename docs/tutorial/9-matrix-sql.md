@@ -155,7 +155,7 @@ You can execute SQL UPDATE statements:
 
 ```groovy
 // Update data in a table
-int rowsAffected = matrixSql.update('UPDATE employee_data SET salary = salary * 1.1 WHERE department = ?', ['Engineering'])
+int rowsAffected = matrixSql.update("UPDATE employee_data SET salary = salary * 1.1 WHERE department = 'Engineering'"")
 ```
 
 ### Deleting Data
@@ -164,7 +164,7 @@ You can execute SQL DELETE statements:
 
 ```groovy
 // Delete data from a table
-int rowsAffected = matrixSql.delete('DELETE FROM employee_data WHERE department = ?', ['Engineering'])
+int rowsAffected = matrixSql.delete("FROM employee_data WHERE department = 'Engineering'")
 ```
 
 ### Closing the Connection

@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1.0'
+version = '0.2.0-SNAPSHOT'
 description = 'Allows conversion between Matrix and Tablesaw'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -38,7 +38,7 @@ compileGroovy {
 dependencies {
     def tablesawVersion = "[0.43.1, )"
     compileOnly libs.groovy
-    implementation("tech.tablesaw:tablesaw-core:${tablesawVersion}") {
+    api("tech.tablesaw:tablesaw-core:${tablesawVersion}") {
         constraints {
             implementation "io.github.classgraph:classgraph:4.8.174"
             because 'Fix CWE-611: Improper Restriction of XML External Entity Reference (XXE)'

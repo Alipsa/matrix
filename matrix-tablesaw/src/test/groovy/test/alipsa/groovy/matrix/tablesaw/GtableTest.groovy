@@ -1,7 +1,12 @@
 package test.alipsa.groovy.matrix.tablesaw
 
 import org.junit.jupiter.api.Test
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.tablesaw.TableUtil
+import se.alipsa.matrix.tablesaw.Normalizer
 import se.alipsa.matrix.tablesaw.gtable.Gtable
+import tech.tablesaw.api.BigDecimalAggregateFunctions
+import tech.tablesaw.api.BigDecimalColumn
 import tech.tablesaw.api.ColumnType
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.io.csv.CsvReadOptions
@@ -103,5 +108,49 @@ class GtableTest {
     assertEquals("Sven", table[4, 1])
     table[4, "salary"] = 123.10
     assertEquals(123.10, table[4, "salary"])
+  }
+
+  @Test
+  void testTutorialExample() {
+    // Create a Matrix with sample data
+    def matrix = Matrix.builder().data(
+        name: ["Alice", "Bob", "Charlie", "David", "Eve"],
+        age: [25, 30, 35, 40, 45],
+        salary: [50000, 60000, 70000, 80000, 90000],
+        department: ["HR", "IT", "Finance", "IT", "HR"]
+    ).types(String, Integer, BigDecimal, String)
+        .build()
+
+    // Convert Matrix to GTable
+    def gTable = TableUtil.fromMatrix(matrix)
+
+    // Calculate average salary by department
+    def deptSalary = gTable.summarize("salary", BigDecimalAggregateFunctions.mean)
+        .by("department")
+
+    println "Average salary by department:"
+    println deptSalary
+
+    // Create a frequency table for the department column
+    def deptFreq = TableUtil.frequency(gTable, "department")
+
+    println "\nDepartment frequency:"
+    println deptFreq
+
+    // Normalize the salary column
+    var salaryCol = gTable.column("salary") as BigDecimalColumn
+    def normalizedSalary = Normalizer.minMaxNorm(salaryCol)
+
+    // Replace the original column with the normalized one
+    gTable.replaceColumn("salary", normalizedSalary)
+
+    println "\nData with normalized salaries:"
+    println gTable
+
+    // Convert back to Matrix for further analysis
+    def newMatrix = TableUtil.toMatrix(gTable)
+
+    println "\nConverted back to Matrix:"
+    println newMatrix.content()
   }
 }

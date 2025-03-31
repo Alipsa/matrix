@@ -3,7 +3,7 @@ package se.alipsa.matrix.charts
 import se.alipsa.matrix.core.Matrix;
 
 
-class PieChart extends Chart {
+class PieChart extends Chart<PieChart> {
 
   static PieChart create(String title, List<?> groupCol, List<?> numberCol){
     PieChart chart = new PieChart()

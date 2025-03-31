@@ -2,6 +2,7 @@ package se.alipsa.matrix.tablesaw
 
 
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.tablesaw.gtable.Gtable
 import tech.tablesaw.api.*
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.columns.Column
@@ -111,6 +112,14 @@ class TableUtil {
         .rows(rows)
         .types(columnTypes)
         .build()
+  }
+
+  static Gtable fromMatrix(Matrix matrix) {
+    Gtable.create(toTablesaw(matrix))
+  }
+
+  static Matrix toMatrix(Gtable gtable) {
+    return fromTablesaw(gtable)
   }
 
   static Table toTablesaw(Matrix matrix) {

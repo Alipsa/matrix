@@ -14,30 +14,42 @@ To use the matrix-parquet module, add the following dependencies to your project
 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.26'
-implementation 'se.alipsa.matrix:matrix-core:3.0.0'
-implementation 'se.alipsa.matrix:matrix-parquet:0.2'
+implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation 'se.alipsa.matrix:matrix-core'
+implementation 'se.alipsa.matrix:matrix-parquet'
 ```
 
 ### Maven Configuration
 
 ```xml
-<dependencies>
-  <dependency>
-    <groupId>org.apache.groovy</groupId>
-    <artifactId>groovy</artifactId>
-    <version>4.0.26</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-core</artifactId>
-    <version>3.0.0</version>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-parquet</artifactId>
-    <version>0.2</version>
-  </dependency>
-</dependencies>
+<project>
+   <dependencyManagement>
+      <dependencies>
+         <dependency>
+            <groupId>se.alipsa.matrix</groupId>
+            <artifactId>matrix-bom</artifactId>
+            <version>2.1.1</version>
+            <type>pom</type>
+            <scope>import</scope>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
+   <dependencies>
+     <dependency>
+       <groupId>org.apache.groovy</groupId>
+       <artifactId>groovy</artifactId>
+       <version>4.0.26</version>
+     </dependency>
+     <dependency>
+       <groupId>se.alipsa.matrix</groupId>
+       <artifactId>matrix-core</artifactId>
+     </dependency>
+     <dependency>
+       <groupId>se.alipsa.matrix</groupId>
+       <artifactId>matrix-parquet</artifactId>
+     </dependency>
+   </dependencies>
+</project>
 ```
 
 ## Using the Matrix Parquet Module
@@ -92,7 +104,7 @@ println "Original Matrix:"
 println cars.head(5)  // Display the first 5 rows
 
 // Write the Matrix to a Parquet file
-File parquetFile = new File("build/cars.parquet")
+File parquetFile = new File("cars.parquet")
 MatrixParquetIO.write(cars, parquetFile)
 println "Matrix written to ${parquetFile.absolutePath}"
 
@@ -118,12 +130,14 @@ If you're working with very large Parquet files, consider these approaches:
 
 ## Technical Implementation Details
 
-The matrix-parquet module uses the [carpet-record](https://github.com/jerolba/carpet-record) library to handle Parquet file operations. This implementation converts each row in the Matrix to a Record class that is created dynamically to match the structure of the Matrix.
+The matrix-parquet module uses the [carpet-record](https://github.com/jerolba/carpet-record) library to handle Parquet file operations. 
+This implementation converts each row in the Matrix to a Record class that is created dynamically to match the structure of the Matrix.
 
 ### Dependency Resolution
 
-The carpet-record library requires some dependencies that are fetched using Groovy's `@Grab` annotation. If you encounter dependency resolution issues, you might need to manually resolve some dependencies using Maven:
-
+The carpet-record library requires some dependencies that are fetched using Groovy's `@Grab` annotation. 
+If you encounter dependency resolution issues, you might need to manually resolve some dependencies using Maven:
+E.g:
 ```bash
 mvn dependency:get -Dartifact='commons-pool:commons-pool:1.6'
 mvn dependency:get -Dartifact='com.google.guava:guava:27.0-jre'

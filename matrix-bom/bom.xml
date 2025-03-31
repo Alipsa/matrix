@@ -39,8 +39,9 @@
     <matrixCsvVersion>2.1.0-SNAPSHOT</matrixCsvVersion>
     <matrixParquetVersion>0.2</matrixParquetVersion>
     <matrixBigQueryVersion>0.3.0-SNAPSHOT</matrixBigQueryVersion>
-    <matrixChartsVersion>0.2</matrixChartsVersion>
+    <matrixChartsVersion>0.3-SNAPSHOT</matrixChartsVersion>
     <matrixXChartVersion>0.2-SNAPSHOT</matrixXChartVersion>
+    <matrixTablesawVersion>0.2.0-SNAPSHOT</matrixTablesawVersion>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -98,6 +99,11 @@
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-xchart</artifactId>
         <version>${matrixXChartVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-tablesaw</artifactId>
+        <version>${matrixTablesawVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
