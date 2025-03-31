@@ -180,15 +180,16 @@ def gTable = GTable.create("Students")
     .addDoubleColumn("Score", [85.5, 92.3, 78.9])
 
 // Convert GTable to Matrix
-def matrix = gTable.toMatrix()
+def matrix = TableUtil.toMatrix(gTable)
 
 // Convert Matrix back to GTable
-def newGTable = GTable.fromMatrix(matrix)
+def newGTable = TableUtil.fromMatrix(matrix)
 ```
 
 ## Normalizer
 
-The `Normalizer` class provides utilities for normalizing Tablesaw columns. Normalization is the process of scaling numeric values to a standard range, which is useful for many machine learning algorithms.
+The `Normalizer` class provides utilities for normalizing Tablesaw columns. Normalization is the process of scaling 
+numeric values to a standard range, which is useful for many machine learning algorithms.
 
 ### Min-Max Normalization
 
@@ -205,7 +206,7 @@ def values = DoubleColumn.create("Value", [10, 20, 30, 40, 50])
 data.addColumns(values)
 
 // Normalize the "Value" column using min-max normalization
-def normalizedColumn = Normalizer.minMaxNormalize(data.column("Value"))
+def normalizedColumn = Normalizer.minMaxNorm(data.column("Value"))
 
 // Replace the original column with the normalized one
 data.replaceColumn("Value", normalizedColumn)
@@ -228,7 +229,7 @@ def values = DoubleColumn.create("Value", [10, 20, 30, 40, 50])
 data.addColumns(values)
 
 // Normalize the "Value" column using z-score normalization
-def normalizedColumn = Normalizer.zScoreNormalize(data.column("Value"))
+def normalizedColumn = Normalizer.stdScaleNorm(data.column("Value"))
 
 // Replace the original column with the normalized one
 data.replaceColumn("Value", normalizedColumn)

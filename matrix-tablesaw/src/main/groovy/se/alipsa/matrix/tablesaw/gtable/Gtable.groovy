@@ -133,6 +133,46 @@ class Gtable extends Table {
     return new Gtable(name, columns.collect(Collectors.toList()))
   }
 
+  Gtable addStringColumn(String name, List data) {
+    return addColumns(StringColumn.create(name, data)) as Gtable
+  }
+
+  Gtable addDoubleColumn(String name, List data) {
+    return addColumns(DoubleColumn.create(name, data)) as Gtable
+  }
+
+  Gtable addBigDecimalColumn(String name, List data) {
+    return addColumns(BigDecimalColumn.create(name, data)) as Gtable
+  }
+
+  Gtable addFloatColumn(String name, List data) {
+    return addColumns(FloatColumn.create(name, data as Float[])) as Gtable
+  }
+
+  Gtable addIntColumn(String name, List data) {
+    return addColumns(IntColumn.create(name, data as Integer[])) as Gtable
+  }
+
+  Gtable addLongColumn(String name, List data) {
+    return addColumns(LongColumn.create(name, data as long[])) as Gtable
+  }
+
+  Gtable addShortColumn(String name, List data) {
+    return addColumns(ShortColumn.create(name, data as short[])) as Gtable
+  }
+
+  Gtable addBooleanColumn(String name, List data) {
+    return addColumns(BooleanColumn.create(name, data)) as Gtable
+  }
+
+  Gtable addDateColumn(String name, List data) {
+    return addColumns(DateColumn.create(name, data)) as Gtable
+  }
+
+  Gtable addDateTimeColumn(String name, List data) {
+    return addColumns(DateTimeColumn.create(name, data)) as Gtable
+  }
+
   Object getAt(int row, int column) {
     return get(row, column)
   }
