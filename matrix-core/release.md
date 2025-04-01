@@ -1,6 +1,7 @@
 # Matrix Core Release History
 
-### 3.2.0, in progress
+### 3.2.0, 2025-04-01
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.2.0/matrix-core-3.2.0.jar)
 - Add a static builder create methods to Matrix for name, columns and types
 - Change the Matrix constructor to use a list instead of Columns 
 - Make MatrixBuilder constructors package scoped
