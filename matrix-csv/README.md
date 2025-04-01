@@ -6,8 +6,8 @@ a CSV file in the format of choice.
 
 To use it in your project, add the following dependencies to your code
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:3.0.0'
-implementation 'se.alipsa.matrix:matrix-csv:2.0.0' 
+implementation 'se.alipsa.matrix:matrix-core:3.2.0'
+implementation 'se.alipsa.matrix:matrix-csv:2.1.0' 
 ```
 
 ## Import a CSV file into a Matrix

@@ -1,8 +1,11 @@
 # Release history
 
-## v2.1.0, in progress
+## v2.1.0, 2025-04-01
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-csv/2.1.0/matrix-csv-2.1.0.jar)
+
 - change package name from `se.alipsa.matrix.matrixcsv` to `se.alipsa.matrix.csv`
-- 
+- upgrade commons-csv from 1.13.0 to 1.14.0
+
 ## v2.0.0, 2025-03-12
 - Require JDK 21
 
