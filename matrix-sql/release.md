@@ -1,7 +1,9 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
-## v2.1.0, in progress
+## v2.1.0, 2025-04-01
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-sql/2.1.0/matrix-sql-2.1.0.jar)
+
 - add back MatrixSql.update(String)
 
 ## v2.0.1, 2025-03-26

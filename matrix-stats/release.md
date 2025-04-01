@@ -1,6 +1,6 @@
 # Matrix stats release history
 
-## v2.1.0, in progress
+## v2.1.0, 2025-04-01
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-stats/2.1.0/matrix-stats-2.1.0.jar)
 - add temp implementation of one way anova using commons math.
 
