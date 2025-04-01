@@ -9,7 +9,7 @@ To use the matrix-csv module, you need to add it as a dependency to your project
 ### Gradle Configuration
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-csv'
 ```
@@ -23,7 +23,7 @@ implementation 'se.alipsa.matrix:matrix-csv'
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-bom</artifactId>
-        <version>2.1.1</version>
+        <version>2.2.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

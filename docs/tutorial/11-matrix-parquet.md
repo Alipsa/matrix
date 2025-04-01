@@ -14,7 +14,7 @@ To use the matrix-parquet module, add the following dependencies to your project
 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.26'
-implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-parquet'
 ```
@@ -28,7 +28,7 @@ implementation 'se.alipsa.matrix:matrix-parquet'
          <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.1.1</version>
+            <version>2.2.0</version>
             <type>pom</type>
             <scope>import</scope>
          </dependency>

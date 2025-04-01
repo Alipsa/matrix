@@ -5,6 +5,7 @@
 - Change the Matrix constructor to use a list instead of Columns 
 - Make MatrixBuilder constructors package scoped
 - Override unique() in Column to not mutate it. 
+- Add common stats methods to Column as short hands for using Stat
 
 ### 3.1.0, 2025-03-26
 - Add support for arbitrary metaData to a Matrix

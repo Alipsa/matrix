@@ -242,4 +242,8 @@ class Column extends ArrayList {
   Number median() {
     Stat.median(this)
   }
+
+  Number variance(boolean isBiasedCorrected = true) {
+    Stat.variance(this, isBiasedCorrected)
+  }
 }

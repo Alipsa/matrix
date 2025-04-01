@@ -12,7 +12,7 @@ To use the matrix-charts module, add the following dependency to your project:
 ### Gradle Configuration
 
 ```groovy
-implementation platform('se.alipsa.matrix:matrix-bom:2.1.1')
+implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
 implementation 'se.alipsa.matrix:charts'
 implementation 'se.alipsa.matrix:core'
 implementation 'se.alipsa.matrix:stats'
@@ -27,7 +27,7 @@ implementation 'se.alipsa.matrix:stats'
          <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.1.1</version>
+            <version>2.2.0</version>
             <type>pom</type>
             <scope>import</scope>
          </dependency>

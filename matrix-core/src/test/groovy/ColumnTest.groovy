@@ -1,5 +1,6 @@
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Column
+import se.alipsa.matrix.core.Stat
 
 class ColumnTest {
 
@@ -201,5 +202,6 @@ class ColumnTest {
     assert 2 == c.median()
     assert 2.285714286 == c.mean()
     assert 1.1126972805283737 == c.sd()
+    assert Stat.variance(c) == c.variance()
   }
 }
