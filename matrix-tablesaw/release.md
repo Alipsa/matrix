@@ -1,0 +1,13 @@
+# Matrix-Tablesaw Version history
+
+## v0.2.0, 2025-04-01
+- Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-tablesaw/0.2.0/matrix-tablesaw-0.2.0.jar)
+
+- Add BigDecimalAggregateFunctions to GTable
+- Add column creation methods to Gtable to enable fluent interaction.
+- Add from and toMatrix static factory methods to TableUtil
+
+## v0.1
+- moved from data-utils 1.0.5-SNAPSHOT
+- add putAt method in GTable allowing the shorthand syntax `table[0,1] = 12` and `table[0, 'columnName'] = 'foo'` to change data.
+- add possibility to cast a GTable to a Grid
