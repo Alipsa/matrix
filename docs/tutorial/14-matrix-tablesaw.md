@@ -12,7 +12,7 @@ The Matrix Tablesaw module provides interoperability between the Matrix library 
 
 To use the matrix-tablesaw module, you need to add it as a dependency to your project.
 
-### Gradle Configuration (Future)
+### Gradle Configuration
 
 ```groovy
 implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
@@ -20,7 +20,7 @@ implementation 'se.alipsa.matrix:core'
 implementation 'se.alipsa.matrix:matrix-tablesaw'
 ```
 
-### Maven Configuration (Future)
+### Maven Configuration
 
 ```xml
 <dependency>

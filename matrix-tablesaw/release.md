@@ -1,7 +1,7 @@
 # Matrix-Tablesaw Version history
 
 ## v0.2.0, 2025-04-01
-- Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-tablesaw/0.2.0/matrix-tablesaw-0.2.0.jar)
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-tablesaw/0.2.0/matrix-tablesaw-0.2.0.jar)
 
 - Add BigDecimalAggregateFunctions to GTable
 - Add column creation methods to Gtable to enable fluent interaction.
