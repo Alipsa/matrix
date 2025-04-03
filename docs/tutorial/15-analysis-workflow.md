@@ -13,7 +13,7 @@
 @Grab('se.alipsa.matrix:matrix-core:3.2.0')
 @Grab('se.alipsa.matrix:matrix-csv:2.1.0')
 @Grab('se.alipsa.matrix:matrix-stats:2.1.0')
-@Grab('se.alipsa.matrix:matrix-xchart:0.2')
+@Grab('se.alipsa.matrix:matrix-xchart:0.2.0')
 
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*

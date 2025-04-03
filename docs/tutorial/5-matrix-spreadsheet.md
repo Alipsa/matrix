@@ -2,6 +2,9 @@
 
 The matrix-spreadsheet module provides functionality for importing data from spreadsheets into Matrix objects and exporting Matrix objects to spreadsheets. It supports both Excel (.xls, .xlsx) and LibreOffice/OpenOffice Calc (.ods) formats.
 
+Note that indexing in this module follows the Excel convention of starting with 1 instead of the usual 0 in Groovy.
+This means that the first row and the first column are both referenced as 1.
+
 ## Installation
 
 To use the matrix-spreadsheet module, you need to add it as a dependency to your project.

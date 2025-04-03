@@ -10,8 +10,8 @@ To use the matrix-stats module, you need to add it as a dependency to your proje
 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.26'
-implementation "se.alipsa.matrix:matrix-core:3.0.0"
-implementation "se.alipsa.matrix:matrix-stats:2.0.0"
+implementation "se.alipsa.matrix:matrix-core:3.2.0"
+implementation "se.alipsa.matrix:matrix-stats:2.1.0"
 ```
 
 ### Maven Configuration
@@ -26,12 +26,12 @@ implementation "se.alipsa.matrix:matrix-stats:2.0.0"
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.0.0</version>
+        <version>3.2.0</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-stats</artifactId>
-        <version>2.0.0</version>
+        <version>2.1.0</version>
     </dependency>
 </dependencies>
 ```
@@ -53,9 +53,11 @@ def x = [15, 18, 21, 24, 27]
 def y = [25, 25, 27, 31, 32]
 def pearsonCorr = cor(x, y).setScale(14, RoundingMode.HALF_EVEN)
 assert 0.95346258924559 == pearsonCorr
-
-// You can also calculate correlation directly from Matrix columns
+```
+You can also calculate correlation directly from Matrix columns
+```groovy
 import se.alipsa.matrix.core.Matrix
+import static se.alipsa.matrix.stats.Correlation.*
 
 def data = Matrix.builder().data(
     x: [15, 18, 21, 24, 27],
@@ -131,7 +133,12 @@ println("Z-scores: ${zScores}")
 def logNormalized = Normalize.logNorm(obs, 7)
 println("Log normalized: ${logNormalized}")
 ```
-
+Output
+```
+Min-Max scaled: [0.0343800, 1.0000000, 0.0996672, 0E-7, 0.0996672, 0.0281580, 0.0346983]
+Z-scores: [-0.4175944, 2.2556070, -0.2368546, -0.5127711, -0.2368546, -0.4348191, -0.4167131]
+Log normalized: [7.0900768, 10.4506547, 8.1478671, 2.4849066, 8.1478671, 6.8926416, 7.0992017]
+```
 ## Linear Regression
 
 The LinearRegression class implements least squares regression with one independent variable, estimating a linear model in the form of y = mx + b.
@@ -183,7 +190,13 @@ println("Predicted value at x=10: ${model.predict(10, 4)}")
 // Get the R-squared value (coefficient of determination)
 println("R-squared: ${model.r2.round(4)}")
 ```
-
+Output
+```
+Intercept: -6.2397
+Slope: 2.8139
+Predicted value at x=10: 21.8992
+R-squared: 0.8861
+```
 ## Hypothesis Tests
 
 The matrix-stats module includes implementations of common statistical hypothesis tests, such as Student's t-test.
@@ -270,7 +283,13 @@ def post = data.subset('group', {it == 'post'})
 def result = Student.tTest(pre.score, post.score, true)
 println(result)
 ```
-
+Output:
+```
+Welch two sample t-test with equal variance
+t = -1.101, df = 38.000, p = 0.279
+x: mean = 88.150, size = 20, sd = 7.242
+y: mean = 90.300, size = 20, sd = 4.879 
+```
 ## Conclusion
 
 The matrix-stats module provides a comprehensive set of statistical tools for working with Matrix data. From basic correlation analysis to hypothesis testing and linear regression, this module enables you to perform sophisticated statistical analyses on your data.
