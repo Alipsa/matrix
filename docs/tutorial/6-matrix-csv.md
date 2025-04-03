@@ -80,7 +80,6 @@ CSVFormat format = CSVFormat.Builder.create()
     .setQuote('"' as Character)  // Set the quote character
     .setTrim(true)               // Trim whitespace from values
     .setIgnoreEmptyLines(true)   // Skip empty lines
-    .setHeader()                 // Use first row as header
     .build()
     
 Matrix data = CsvImporter.importCsv(url, format)

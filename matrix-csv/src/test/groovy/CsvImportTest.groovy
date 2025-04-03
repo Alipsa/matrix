@@ -39,7 +39,7 @@ class CsvImportTest {
         .setIgnoreEmptyLines(true)
         .setQuote('"' as Character)
         .setHeader('id', 'name', 'date', 'amount')
-        .build()
+        .get()
     Matrix matrix = CsvImporter.importCsv(url, format)
     assertEquals(4, matrix.rowCount(), "Number of rows")
     assertEquals(['id', 'name', 'date', 'amount'], matrix.columnNames(), "Column names")
