@@ -2,6 +2,9 @@
 
 The matrix-spreadsheet module provides functionality for importing data from spreadsheets into Matrix objects and exporting Matrix objects to spreadsheets. It supports both Excel (.xls, .xlsx) and LibreOffice/OpenOffice Calc (.ods) formats.
 
+Note that indexing in this module follows the Excel convention of starting with 1 instead of the usual 0 in Groovy.
+This means that the first row and the first column are both referenced as 1.
+
 ## Installation
 
 To use the matrix-spreadsheet module, you need to add it as a dependency to your project.
@@ -107,11 +110,11 @@ If you need to import from a stream (e.g., from a resource or network), you must
 ```groovy
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
-import se.alipsa.matrix.spreadsheet.sods.OdsImporter
+import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
 
 // Importing an Excel spreadsheet
 try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
-    Matrix table = ExcelImporter.create().importExcel(
+    Matrix table = ExcelImporter.create().importSpreadsheet(
         is, 'Sheet1', 1, 12, 'A', 'D', true
     )
     assert 3.0d == table[2, 0]
@@ -119,7 +122,7 @@ try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
 
 // Importing an OpenOffice spreadsheet
 try (InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
-    Matrix table = OdsImporter.importOds(
+    Matrix table = SOdsImporter.importSpreadsheet(
         is, 'Sheet1', 1, 12, 'A', 'D', true
     )
     assert "3.0" == table[2, 0]
