@@ -107,11 +107,11 @@ If you need to import from a stream (e.g., from a resource or network), you must
 ```groovy
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
-import se.alipsa.matrix.spreadsheet.sods.OdsImporter
+import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
 
 // Importing an Excel spreadsheet
 try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
-    Matrix table = ExcelImporter.create().importExcel(
+    Matrix table = ExcelImporter.create().importSpreadsheet(
         is, 'Sheet1', 1, 12, 'A', 'D', true
     )
     assert 3.0d == table[2, 0]
@@ -119,12 +119,41 @@ try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
 
 // Importing an OpenOffice spreadsheet
 try (InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
-    Matrix table = OdsImporter.importOds(
+    Matrix table = SOdsImporter.importSpreadsheet(
         is, 'Sheet1', 1, 12, 'A', 'D', true
     )
     assert "3.0" == table[2, 0]
 }
 ```
+
+### Importing from URL
+You can also import spreadsheets from a URL:
+
+```groovy
+import se.alipsa.matrix.core.*
+import se.alipsa.matrix.spreadsheet.fastexcel.*
+import se.alipsa.matrix.spreadsheet.fastods.*
+
+// Importing an Excel spreadsheet
+URL url = this.getClass().getResource("/Book1.xlsx")
+Matrix table = ExcelImporter.create().importSpreadsheet(
+    url, 'Sheet1', 1, 12, 'A', 'D', true
+)
+assert 3.0d == table[2, 0]
+
+
+// Importing an OpenOffice spreadsheet
+URL odsUrl = this.getClass().getResource("/Book1.ods")
+Matrix book1 = FOdsImporter.create().importSpreadsheet(
+    odsUrl, 'Sheet1', 1, 12, 'A', 'D', true
+)
+assert 3.0 == book1[2, 0]
+
+```
+
+### Different spreadsheet import and export implementations
+Since both POI and SODS as require quite a lot of memory for large spreadsheets, work is underway to implement faster and less memory hungry implementations. The SpreadsheetImporter and SpreadsheetExporter classes shields you from a lot of that complexity. For reading Excel files, the current default implementation is based on fastexcel, while the export defaults are based on POI. Similarly, the default implementation for reading ODS files is based on a "native" matrix-spreadsheet implementation (see the se.alipsa.matrix.spreadsheet.fastods package) while the default for writing is based on SODS. It is possible to override the default and specify which implementation to use in the importSpreadsheet and exportSpreadsheet methods respectively. The API will stay the same but the underlying default implementation may change in the future.
+
 
 ## Exporting to Spreadsheets
 
@@ -207,14 +236,14 @@ import se.alipsa.matrix.spreadsheet.*
 
 File spreadsheet = new File("/path/to/spreadsheet.xlsx")
 try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheet)) {
-    // Find the last row in the first sheet (index 0)
-    def lastRow = reader.findLastRow(0)
+    // Find the last row in the first sheet (index 1)
+    def lastRow = reader.findLastRow(1)
     
     // Find the last column in the first sheet
-    def endCol = reader.findLastCol(0)
+    def endCol = reader.findLastCol(1)
     
     // Search for the first cell with the value 'Name' in sheet 1 in column A
-    def firstRow = reader.findRowNum(0, 'A', 'Name')
+    def firstRow = reader.findRowNum(1, 'A', 'Name')
     
     println("Last row: ${lastRow}, Last column: ${endCol}, 'Name' found at row: ${firstRow}")
     
@@ -252,6 +281,7 @@ Matrix data = FExcelImporter.importExcel(
 ```
 
 Note that the streaming implementation has some limitations compared to the POI implementation, such as being unable to append sheets to an existing Excel document.
+Also, reading multiple sheets at once requires the streaming implementation to change the content of the spreadsheet so it can be re streamed for each sheet which might take up a lot of memory. The streaming readers shines when reading a single sheet of a large spreadsheets. 
 
 ## Best Practices
 
