@@ -51,6 +51,7 @@ You can also create a Matrix by specifying columns and their types:
 
 ```groovy
 import se.alipsa.matrix.core.*
+import java.time.LocalDate
 
 // Create a Matrix with column definitions
 def table = Matrix.builder().columns([
@@ -58,8 +59,8 @@ def table = Matrix.builder().columns([
     'firstname': ['Lorena', 'Marianne', 'Lotte'],
     'start': ['2021-12-01', '2022-07-10', '2023-05-27']
 ])
-.types([String, String, String]*3)
-.build()
+    .types([String]*3)
+    .build()
 
 // Convert column types after creation
 def table2 = table.convert([place: Integer, start: LocalDate])
@@ -130,7 +131,11 @@ Matrix provides property-like access to columns:
 ```groovy
 // These are equivalent
 def priceColumn = table.price
-def priceColumn = table["price"]
+def priceColumn2 = table["price"]
+def priceColumn3 = table.getAt("price")
+def priceColumn4 = table.column("price")
+def priceColumn5 = table.column(table.columnNames().indexOf("price"))
+def priceColumn6 = table.columns().get(table.columnNames().indexOf("price"))
 ```
 
 ### Using Row Indices
@@ -211,7 +216,7 @@ assertEquals(2, rows.size())
 
 // Using subset method
 def subSet = table.subset('place', { it > 1 })
-assertIterableEquals(table.rows(1..2), subSet.grid())
+assert table.rows(1..2) == subSet.grid().rowList
 ```
 
 ## Performing Calculations
@@ -238,7 +243,7 @@ def ir = Matrix.builder('interest rates')
     .build()
 
 def accountAndInterest = account.clone().withMatrixName('accountAndInterest')
-accountAndInterest['interestAmount', Double] = Stat.apply(account['balance'], ir['interestRate']) { b * r }
+accountAndInterest['interestAmount', Double] = Stat.apply(account['balance'], ir['interestRate']) { b,r -> b * r }
 
 // Result will have interest amounts calculated for each account
 println(accountAndInterest.content())
@@ -307,7 +312,7 @@ Groovy Integrated queries can be used on Matrix rows for powerful data manipulat
 ```groovy
 import se.alipsa.matrix.core.Matrix
 
-def stock = Matrix.builder().data(
+def stock = Matrix.builder('stock').data(
     name: ['Orange', 'Apple', 'Banana', 'Mango', 'Durian'],
     price: [11, 6, 4, 29, 32],
     stock: [2, 3, 1, 10, 9]
@@ -323,10 +328,20 @@ def result = GQ {
 }
 
 // You can also use Matrix's built-in query capabilities
-def exp = stock.subset(it.price < 32).orderBy('price', true)
+def exp = stock.subset{it.price < 32}.orderBy('price', true)
 
 // Create a new Matrix from the query result
-def matrix2 = Matrix.builder().ginqResult(result).build()
+def matrix2 = Matrix.builder(stock.matrixName).ginqResult(result).build()
+println matrix2.content()
+```
+Will output 
+```
+stock: 4 obs * 3 variables 
+name  	price	stock
+Mango 	   29	   10
+Orange	   11	    2
+Apple 	    6	    3
+Banana	    4	    1
 ```
 
 ## The Grid Class
@@ -352,7 +367,11 @@ def bar = new Grid<Number>([
 ])
 
 // Calculate mean
-Stat.means(bar)
+println Stat.means(bar)
+```
+Output 
+```
+[6.066666667, 2.333333333, 3.047197551]
 ```
 
 ### Grid Operations
@@ -391,7 +410,10 @@ var myJavaVar = myMatrix.getAt(1, 2);
 
 There are some utility classes making Matrix creation less painful in Java:
 
-```java
+```groovy
+import se.alipsa.matrix.core.Matrix
+import static se.alipsa.matrix.core.ListConverter.*
+import java.time.LocalDate
 // In Groovy
 def gEmpData = Matrix.builder()
     .data(
@@ -401,9 +423,13 @@ def gEmpData = Matrix.builder()
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
     )
     .types(int, String, Number, LocalDate)
-    .build();
-
+    .build()
+```
+```java
 // In Java
+import se.alipsa.matrix.core.Matrix;
+import static se.alipsa.matrix.core.ListConverter.*;
+import java.time.LocalDate;
 import se.alipsa.matrix.core.util.Columns;
 import static se.alipsa.matrix.core.util.CollectionUtils.*;
 

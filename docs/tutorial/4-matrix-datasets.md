@@ -67,13 +67,24 @@ import se.alipsa.matrix.core.*
 Matrix iris = Dataset.iris()
 
 // Print the first few rows
-println(iris.head())
+println(iris.head(5))
 
 // Get basic information about the dataset
 println("Dimensions: ${iris.rowCount()} rows x ${iris.columnCount()} columns")
 println("Column names: ${iris.columnNames()}")
 ```
+Output
+```
+Sepal Length	Sepal Width	Petal Length	Petal Width	Species   
+         5.1	        3.5	         1.4	        0.2	setosa    
+         4.9	          3	         1.4	        0.2	setosa    
+         4.7	        3.2	         1.3	        0.2	setosa    
+         4.6	        3.1	         1.5	        0.2	setosa    
+           5	        3.6	         1.4	        0.2	setosa    
 
+Dimensions: 150 rows x 5 columns
+Column names: [Sepal Length, Sepal Width, Petal Length, Petal Width, Species]
+```
 ## Example: Analyzing the Iris Dataset
 
 Let's explore the iris dataset in more detail:
@@ -88,22 +99,73 @@ Matrix iris = Dataset.iris()
 // Calculate mean sepal length by species
 Matrix speciesMeans = Stat.meanBy(iris, 'Sepal Length', 'Species')
 println(speciesMeans.content())
-
-// Output:
-// Iris-means by Species: 3 obs * 2 variables
-// Species   	Sepal Length
-// virginica 	 6.588000000
-// setosa    	 5.006000000
-// versicolor	 5.936000000
-
+```
+Output:
+```
+Iris-means by Species: 3 obs * 2 variables 
+Species   	Sepal Length
+virginica 	 6.588000000
+setosa    	 5.006000000
+versicolor	 5.936000000
+```
+```groovy
 // Calculate summary statistics for each numeric column
 def summary = Stat.summary(iris)
 println(summary)
+```
+output
+```
+Sepal Length
+------------
+Type:	BigDecimal
+Min:	4.3
+1st Q:	5.1
+Median:	5.8
+Mean:	5.843333333
+3rd Q:	6.4
+Max:	7.9
 
+Sepal Width
+-----------
+Type:	BigDecimal
+Min:	2
+1st Q:	2.8
+Median:	3
+Mean:	3.057333333
+3rd Q:	3.3
+Max:	4.4
+
+Petal Length
+------------
+Type:	BigDecimal
+Min:	1
+1st Q:	1.6
+Median:	4.35
+Mean:	3.758000000
+3rd Q:	5.1
+Max:	6.9
+
+Petal Width
+-----------
+Type:	BigDecimal
+Min:	0.1
+1st Q:	0.3
+Median:	1.3
+Mean:	1.199333333
+3rd Q:	1.8
+Max:	2.5
+
+Species
+-------
+Type:	String
+Number of unique values:	3
+Most frequent:	setosa occurs 50 times (33.33%)
+```
+```groovy
 // Filter the dataset to get only one species
 def speciesIdx = iris.columnIndex("Species")
 def setosa = iris.subset {
-    it[speciesIdx] == 'setosa'
+    it["Species"] == 'setosa'
 }
 
 // Calculate the mean of each measurement for setosa
@@ -112,6 +174,14 @@ println("Sepal Length: ${setosa['Sepal Length'].mean()}")
 println("Sepal Width: ${setosa['Sepal Width'].mean()}")
 println("Petal Length: ${setosa['Petal Length'].mean()}")
 println("Petal Width: ${setosa['Petal Width'].mean()}")
+```
+output
+```
+Setosa means:
+Sepal Length: 5.006000000
+Sepal Width: 3.428000000
+Petal Length: 1.462000000
+Petal Width: 0.246000000
 ```
 
 ## Example: Working with the mtcars Dataset
@@ -127,7 +197,7 @@ import se.alipsa.matrix.stats.*
 Matrix mtcars = Dataset.mtcars()
 
 // Print the first few rows
-println(mtcars.head())
+println(mtcars.head(3))
 
 // Calculate the average mpg (miles per gallon) by number of cylinders
 Matrix mpgByCyl = Stat.meanBy(mtcars, 'mpg', 'cyl')
