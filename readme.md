@@ -68,8 +68,7 @@ implementation('se.alipsa.matrix:matrix-core')
 
 The jvm should be JDK 21 or higher.
 
-For more information see the readme file in each subproject,
-the test classes and the [tutorial](docs/tutorial/outline.md).
+For more information see the the [tutorial](docs/tutorial/outline.md) and the readme file and test classes in each subproject.
 <!---
 [Cookbook](docs/cookbook/cookbook.md)
 -->
