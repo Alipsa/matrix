@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.1.0'
+version = '2.1.1-SNAPSHOT'
 description = 'Groovy spreadsheet import/export'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -41,8 +41,8 @@ dependencies {
     testImplementation project(':matrix-core')
     implementation 'org.apache.logging.log4j:log4j-core:2.24.3'
 
-    implementation('org.apache.poi:poi:5.4.0')
-    implementation('org.apache.poi:poi-ooxml:5.4.0')
+    implementation('org.apache.poi:poi:5.4.1')
+    implementation('org.apache.poi:poi-ooxml:5.4.1')
     // https://github.com/dhatim/fastexcel
     implementation('org.dhatim:fastexcel:0.18.4')
     implementation('org.dhatim:fastexcel-reader:0.18.4')

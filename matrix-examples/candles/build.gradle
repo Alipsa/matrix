@@ -29,9 +29,9 @@ repositories {
 }
 
 dependencies {
-  def tablesawVersion = "0.43.1"
-  def slf4jVersion = "2.0.16"
-  def log4j2Version = "2.24.0"
+  def tablesawVersion = "0.44.1"
+  def slf4jVersion = "2.0.17"
+  def log4j2Version = "2.24.3"
   implementation libs.groovy
   implementation "tech.tablesaw:tablesaw-core:$tablesawVersion"
   implementation "tech.tablesaw:tablesaw-excel:$tablesawVersion"

@@ -44,7 +44,7 @@ The Matrix library is designed to work with any Groovy 4.x version and requires 
 For Gradle projects, you can use the Bill of Materials (BOM) to simplify dependency management:
 
 ```groovy
-implementation(platform('se.alipsa.matrix:matrix-bom:2.1.0'))
+implementation(platform('se.alipsa.matrix:matrix-bom:2.2.0'))
 implementation('se.alipsa.matrix:matrix-core')
 ```
 
@@ -66,7 +66,7 @@ For Maven projects, add the following to your `pom.xml`:
         <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.1.0</version>
+            <version>2.2.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
