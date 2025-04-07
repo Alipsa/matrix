@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.2'
+version = '0.2.1-SNAPSHOT'
 description = "Groovy library for importing and exporting parquet files to and from a Matrix"
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
@@ -15,7 +15,7 @@ ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 
-compileJava {
+JavaCompile javaCompile = compileJava {
     options.release = 21
     options.deprecation = true
     options.compilerArgs << "-Xlint:unchecked"
@@ -79,6 +79,9 @@ publishing {
                 name = 'Matrix Parquet'
                 description = "${project.description}"
                 url = "https://github.com/Alipsa/matrix/matrix-parquet"
+                properties = [
+                    'maven.compiler.release': "${javaCompile.options.release.get()}"
+                ]
                 licenses {
                     license {
                         name = 'MIT License'
