@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.2.0'
+version = '0.2.1-SNAPSHOT'
 description = 'Allows conversion between Matrix and Tablesaw'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -25,7 +25,7 @@ repositories {
     mavenCentral()
 }
 
-compileJava {
+JavaCompile javaCompile = compileJava {
     options.release = 21
     options.deprecation = true
     options.compilerArgs << "-Xlint:unchecked"
@@ -121,6 +121,9 @@ publishing {
                 name = 'Matrix-Tablesaw integration'
                 description = "${project.description}"
                 url = "https://github.com/Alipsa/matrix/main/matrix-tablesaw"
+                properties = [
+                    'maven.compiler.release': "${javaCompile.options.release.get()}"
+                ]
                 licenses {
                     license {
                         name = 'MIT License'

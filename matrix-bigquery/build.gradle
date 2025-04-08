@@ -14,7 +14,7 @@ ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
-compileJava {
+JavaCompile javaCompile = compileJava {
     options.release = 21
     options.deprecation = true
     options.compilerArgs << "-Xlint:unchecked"
@@ -80,6 +80,9 @@ publishing {
                 name = 'Matrix Json'
                 description = "${project.description}"
                 url = "https://github.com/Alipsa/matrix/matrix-bigquery"
+                properties = [
+                    'maven.compiler.release': "${javaCompile.options.release.get()}"
+                ]
                 licenses {
                     license {
                         name = 'MIT License'

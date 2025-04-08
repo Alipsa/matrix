@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.1.0'
+version = '2.1.1-SNAPSHOT'
 description = 'Groovy sql module for Matrix'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -26,7 +26,7 @@ repositories {
     }
 }
 
-compileJava {
+JavaCompile javaCompile = compileJava {
     options.release = 21
     options.deprecation = true
     options.compilerArgs << "-Xlint:unchecked"
@@ -119,6 +119,9 @@ publishing {
                 name = 'Matrix Core'
                 description = "${project.description}"
                 url = "https://github.com/Alipsa/matrix"
+                properties = [
+                    'maven.compiler.release': "${javaCompile.options.release.get()}"
+                ]
                 licenses {
                     license {
                         name = 'MIT License'

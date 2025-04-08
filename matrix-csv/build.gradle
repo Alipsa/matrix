@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.1.0'
+version = '2.1.1-SNAPSHOT'
 description = "Groovy library for importing structured text into a matrix"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -18,7 +18,7 @@ ext.nexusUrl = version.contains("SNAPSHOT")
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 
-compileJava {
+JavaCompile javaCompile = compileJava {
   options.release = 21
   options.deprecation = true
   options.compilerArgs << "-Xlint:unchecked"
@@ -114,6 +114,9 @@ publishing {
         name = 'Matrix CSV import/export'
         description = "${project.description}"
         url = "https://github.com/Alipsa/matrix/matrix-csv"
+        properties = [
+            'maven.compiler.release': "${javaCompile.options.release.get()}"
+        ]
         licenses {
           license {
             name = 'MIT License'

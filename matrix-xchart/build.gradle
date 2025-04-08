@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.2.0'
+version = '0.2.1-SNAPSHOT'
 description = "Groovy library for creating charts with xcharts using matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -21,7 +21,7 @@ repositories {
     mavenCentral()
 }
 
-compileJava {
+JavaCompile javaCompile = compileJava {
     options.release = 21
     options.deprecation = true
     options.compilerArgs << "-Xlint:unchecked"
@@ -67,6 +67,9 @@ publishing {
                 name = 'Groovy Matrix XCharts'
                 description = "${project.description}"
                 url = "https://github.com/Alipsa/matrix/tree/main/matrix-xchart"
+                properties = [
+                    'maven.compiler.release': "${javaCompile.options.release.get()}"
+                ]
                 licenses {
                     license {
                         name = 'MIT License'

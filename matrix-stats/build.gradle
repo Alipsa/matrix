@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.1.0'
+version = '2.1.1-SNAPSHOT'
 description = "Statistical hypothesis tests based on Matrix data."
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -25,7 +25,7 @@ repositories {
   mavenCentral()
 }
 
-compileJava {
+JavaCompile javaCompile = compileJava {
   options.release = 21
   options.deprecation = true
   options.compilerArgs << "-Xlint:unchecked"
@@ -109,6 +109,9 @@ publishing {
         name = 'Matrix Stats'
         description = "${project.description}"
         url = "https://github.com/Alipsa/matrix/matrix-stats"
+        properties = [
+            'maven.compiler.release': "${javaCompile.options.release.get()}"
+        ]
         licenses {
           license {
             name = 'MIT License'

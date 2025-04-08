@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.0.1'
+version = '2.0.2-SNAPSHOT'
 description = "Groovy library common public domain and oss data in matrix format)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -25,7 +25,7 @@ repositories {
     mavenCentral()
 }
 
-compileJava {
+JavaCompile javaCompile = compileJava {
     options.release = 21
     options.deprecation = true
     options.compilerArgs << "-Xlint:unchecked"
@@ -106,6 +106,9 @@ publishing {
                 name = 'Matrix common datasets'
                 description = "${project.description}"
                 url = "https://github.com/Alipsa/matrix/matrix-datasets"
+                properties = [
+                    'maven.compiler.release': "${javaCompile.options.release.get()}"
+                ]
                 licenses {
                     license {
                         name = 'MIT License'

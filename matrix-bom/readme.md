@@ -9,7 +9,7 @@ The point is that, using the bom, you only need to define the version for the bo
 
 An example for matrix-core is as follows for Gradle
 ```groovy
-implementation(platform( 'se.alipsa.matrix:matrix-bom:2.0.0'))
+implementation(platform( 'se.alipsa.matrix:matrix-bom:2.2.0'))
 implementation('se.alipsa.matrix:matrix-core')
 implementation('se.alipsa.matrix:matrix-spreadsheet')
 ```
@@ -22,7 +22,7 @@ implementation('se.alipsa.matrix:matrix-spreadsheet')
          <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.0.0</version>
+            <version>2.2.0</version>
             <type>pom</type>
             <scope>import</scope>
          </dependency>

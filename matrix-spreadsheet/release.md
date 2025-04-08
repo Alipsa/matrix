@@ -1,5 +1,8 @@
 # Release history
 
+## v2.1.1, in progress
+- upgrade poi 5.4.0 -> 5.4.1
+
 ## v2.1.0, 2025-03-26
 - Add several new import options (for file, input streams and URL)
 - Add alternative excel implementation based on fastexcel to be able to handle very large Excel files
