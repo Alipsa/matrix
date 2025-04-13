@@ -154,6 +154,13 @@ class FExcelImporter implements Importer {
   }
 
   @Override
+  Matrix importSpreadsheet(URL url, int sheetNumber, int startRow, int endRow, int startCol, int endCol, boolean firstRowAsColNames) {
+    try (InputStream is = url.openStream()) {
+      importSpreadsheet(is, sheetNumber, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    }
+  }
+
+  @Override
   Map<Object, Matrix> importSpreadsheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
     NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
     try (ReadableWorkbook workbook = new ReadableWorkbook(is, OPTIONS)) {
@@ -176,11 +183,18 @@ class FExcelImporter implements Importer {
         }
         boolean isDate1904 = workbook.isDate1904()
         Matrix matrix = importExcelSheet(sheet, startRow, it.endRow as int, startCol, endCol, it.firstRowAsColNames as Boolean, isDate1904)
-        String key = it.getOrDefault("key", sheetName)
+        String key = it["key"] ?: sheetName
         matrix.setMatrixName(key)
         result.put(key, matrix)
       }
       return result
+    }
+  }
+
+  @Override
+  Map<Object, Matrix> importSpreadsheets(URL url, List<Map> sheetParams, NumberFormat... formatOpt) {
+    try(InputStream is = url.openStream()) {
+      importSpreadsheets(is, sheetParams, formatOpt)
     }
   }
 

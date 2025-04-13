@@ -69,6 +69,13 @@ class SOdsImporter implements Importer {
   }
 
   @Override
+  Matrix importSpreadsheet(URL url, int sheetNumber, int startRow, int endRow, int startCol, int endCol, boolean firstRowAsColNames) {
+    try(InputStream is = url.openStream()) {
+      importSpreadsheet(is, sheetNumber, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    }
+  }
+
+  @Override
   Matrix importSpreadsheet(InputStream is, String sheetName = 'Sheet1',
                           int startRow = 1, int endRow,
                           String startCol = 'A', String endCol,
@@ -183,14 +190,20 @@ class SOdsImporter implements Importer {
   }
 
   @Override
-  Map<String, Matrix> importSpreadsheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
+  Map<Object, Matrix> importSpreadsheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
     NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
     SpreadSheet spreadSheet = new SpreadSheet(is)
-    Map<String, Matrix> result = [:]
+    Map<Object, Matrix> result = [:]
     sheetParams.each {
       List<String> header = []
-      String sheetName = it.sheetName
-      Sheet sheet = spreadSheet.getSheet(sheetName)
+      Sheet sheet
+      if (it.sheetName != null) {
+        sheet = spreadSheet.getSheet(it.sheetName as String)
+      } else if (it.sheetNumber != null) {
+        sheet = spreadSheet.getSheet(it.sheetNumber as int)
+      } else {
+        throw new IllegalArgumentException("Either sheetName or sheetNumber must be specified")
+      }
       int startRow = it.startRow as int
       int startCol
       if (ValueConverter.isNumeric(it.startCol, format)) {
@@ -218,7 +231,7 @@ class SOdsImporter implements Importer {
           startCol,
           endCol,
           header)
-      String key = it.getOrDefault("key", sheetName)
+      String key = it["key"] ?: sheet.name
       matrix.setMatrixName(key)
       result.put(key, matrix)
     }
@@ -226,7 +239,14 @@ class SOdsImporter implements Importer {
   }
 
   @Override
-  Map<String, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+  Map<Object, Matrix> importSpreadsheets(URL url, List<Map> sheetParams, NumberFormat... formatOpt) {
+    try(InputStream is = url.openStream()) {
+      importSpreadsheets(is, sheetParams, formatOpt)
+    }
+  }
+
+  @Override
+  Map<Object, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
     File file = FileUtil.checkFilePath(fileName)
     try (FileInputStream fis = new FileInputStream(file)) {
       importSpreadsheets(fis, sheetParams, formatOpt)

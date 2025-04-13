@@ -161,23 +161,14 @@ class FOdsImporter implements Importer {
     }
   }
 
-  @Override
-  Map<Object, Matrix> importSpreadsheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
-    byte[] bytes = IOUtils.toByteArray(is)
-    Map<Object, Matrix> result = [:]
-    sheetParams.each {
-      try (InputStream is2 = new ByteArrayInputStream(bytes)) {
-        Matrix matrix = importSpreadsheet(is2, it, formatOpt)
-        def sheet = it.getOrDefault(it.sheetName, it.sheetNumber)
-        def key = it.getOrDefault("key", sheet)
-        result.put(key, matrix)
-      }
-    }
-    result
-  }
-
   Matrix importSpreadsheet(InputStream is, Map params, NumberFormat... formatOpt) {
-    def sheet = params.getOrDefault(params.sheetName, params.sheetNumber)
+    def sheet = params.sheetName
+    if (sheet == null) {
+      sheet = params.sheetNumber
+    }
+    if (sheet == null) {
+      throw new IllegalArgumentException("Sheet name or number must be provided but was null")
+    }
     Integer startRow = params.startRow as Integer
     Integer endRow = params.endRow as Integer
     Integer startCol
@@ -197,9 +188,38 @@ class FOdsImporter implements Importer {
     Sheet ss = odsDataReader.readOds(is, sheet, startRow, endRow, startCol, endCol)
 
     Matrix matrix = buildMatrix(ss, firstRowAsColNames)
-    def key = params.getOrDefault("key", sheet)
+    def key = params["key"] ?: sheet
     matrix.setMatrixName(String.valueOf(key))
     matrix
+  }
+
+  @Override
+  Matrix importSpreadsheet(URL url, int sheetNumber, int startRow, int endRow, int startCol, int endCol, boolean firstRowAsColNames) {
+    try (InputStream is = url.openStream()) {
+      importSpreadsheet(is, sheetNumber, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    }
+  }
+
+  @Override
+  Map<Object, Matrix> importSpreadsheets(InputStream is, List<Map> sheetParams, NumberFormat... formatOpt) {
+    byte[] bytes = IOUtils.toByteArray(is)
+    Map<Object, Matrix> result = [:]
+    sheetParams.each {
+      try (InputStream is2 = new ByteArrayInputStream(bytes)) {
+        Matrix matrix = importSpreadsheet(is2, it, formatOpt)
+        def sheet = it.sheetName ?: it.sheetNumber
+        def key = it["key"] ?: sheet
+        result.put(key, matrix)
+      }
+    }
+    result
+  }
+
+  @Override
+  Map<Object, Matrix> importSpreadsheets(URL url, List<Map> sheetParams, NumberFormat... formatOpt) {
+    try (InputStream is = url.openStream()) {
+      importSpreadsheets(is, sheetParams, formatOpt)
+    }
   }
 
   @Override
@@ -209,8 +229,8 @@ class FOdsImporter implements Importer {
     sheetParams.each {
       try (InputStream is2 = new FileInputStream(file)) {
         Matrix matrix = importSpreadsheet(is2, it, formatOpt)
-        def sheet = it.getOrDefault(it.sheetName, it.sheetNumber)
-        def key = it.getOrDefault("key", sheet)
+        def sheet = it[it.sheetName] ?: it.sheetNumber
+        def key = it["key"] ?: sheet
         result.put(key, matrix)
       }
     }
@@ -247,8 +267,8 @@ class FOdsImporter implements Importer {
     sheetParams.each {params ->
       try (InputStream is2 = new ByteArrayInputStream(content)) {
         Matrix matrix = importSpreadsheet(is2, params, format)
-        def sheet = params.getOrDefault(params.sheetName, params.sheetNumber)
-        def key = params.getOrDefault("key", sheet)
+        def sheet = params[params.sheetName] ?: params.sheetNumber
+        def key = params["key"] ?: sheet
         result.put(key, matrix)
       }
     }
@@ -267,5 +287,4 @@ class FOdsImporter implements Importer {
       SpreadsheetUtil.createColumnNames(sheet.first.size())
     }
   }
-
 }

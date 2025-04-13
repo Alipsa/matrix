@@ -12,19 +12,27 @@ import java.time.format.DateTimeFormatter
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importExcel
 import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importSpreadsheet
 
 class SpreadsheetImporterTest {
 
   @Test
   void testExcelImport() {
-    excelImportAssertions(ExcelImplementation.POI)
-    excelImportAssertions(ExcelImplementation.FastExcel)
-
+    excelImportAssertions(
+      importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true, excelImplementation: ExcelImplementation.POI)
+    )
+    excelImportAssertions(
+        importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true, excelImplementation: ExcelImplementation.FastExcel)
+    )
+    URL url = getClass().getResource("/Book1.xlsx")
+    excelImportAssertions(
+      importExcel(url, 1, 1, 12, 1, 4, true)
+    )
   }
 
-  static void excelImportAssertions(ExcelImplementation excelImplementation) {
-    def table = importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true, excelImplementation: excelImplementation)
+  static void excelImportAssertions(Matrix table) {
+
     table = table.convert(id: Integer, bar: LocalDate, baz: BigDecimal, DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS'))
     //println(table.content())
     assertEquals(3, table[2, 0])

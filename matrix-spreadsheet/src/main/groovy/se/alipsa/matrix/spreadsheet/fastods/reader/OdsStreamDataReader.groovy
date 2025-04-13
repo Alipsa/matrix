@@ -1,6 +1,7 @@
 package se.alipsa.matrix.spreadsheet.fastods.reader
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
 
 import javax.xml.stream.XMLInputFactory
@@ -31,14 +32,20 @@ final class OdsStreamDataReader extends OdsDataReader {
     final XMLInputFactory factory = XMLInputFactory.newInstance()
     Integer sheetCount = 1
     final XMLStreamReader reader = factory.createXMLStreamReader(is)
+    if (sheet == null) {
+      throw new FastOdsException("Sheet name or number must be provided but was null")
+    }
     try {
       while (reader.hasNext()) {
         reader.next()
         if (reader.isStartElement() && reader.localName == 'table') {
-          String sheetName = reader.getAttributeValue(tableUrn, 'name')
+          String sheetName = reader.getAttributeValue(tableUrn, 'name').trim()
           if (sheet == sheetName || sheet == sheetCount) {
             Sheet s = processSheet(reader, startRow, endRow, startCol, endCol)
-            s.name = sheet == sheetName ? sheetName : sheetCount.toString()
+            if (s == null) {
+              throw new FastOdsException("Failed to process '$sheet' in the ODS file")
+            }
+            s.name = String.valueOf(sheet)
             return s
           }
           sheetCount++
@@ -47,7 +54,7 @@ final class OdsStreamDataReader extends OdsDataReader {
     } finally {
       reader.close()
     }
-    return null
+    throw new FastOdsException("Failed to find sheet '$sheet' in the ODS file")
   }
 
   final static Sheet processSheet(final XMLStreamReader reader, final int startRow, final int endRow, int startColumn, int endColumn) {

@@ -21,25 +21,10 @@ interface Importer {
                            String startCol, String endCol,
                            boolean firstRowAsColNames)
 
-  /**
-   * Imports multiple sheets in one go.
-   * Example:
-   * <code><pre>
-   * Map<String, Matrix> sheets = ExcelImporter.create().importSpreadsheets(is, [
-   *   [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 5, firstRowAsColNames: true],
-   *   [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true]
-   * ])
-   * </pre></code>
-   *
-   * @param is the InputStream pointing to the spreadsheet to import
-   * @param sheetParams a Map of parameters containing the keys:
-   *  sheetName, startRow, endRow, startCol (number or name), endCol (number or name), firstRowAsColNames
-   *  key (optional, defaults to sheetName)
-   * @return a map of sheet names and the corresponding Matrix
-   */
-  Map<Object, Matrix> importSpreadsheets(InputStream is,
-                                         List<Map> sheetParams,
-                                         NumberFormat... formatOpt)
+  Matrix importSpreadsheet(URL url, int sheetNumber,
+                           int startRow, int endRow,
+                           int startCol, int endCol,
+                           boolean firstRowAsColNames)
 
   /**
    * Import a spreadsheet
@@ -87,6 +72,29 @@ interface Importer {
                            int startRow, int endRow,
                            int startCol, int endCol,
                            boolean firstRowAsColNames)
+
+  /**
+   * Imports multiple sheets in one go.
+   * Example:
+   * <code><pre>
+   * Map<String, Matrix> sheets = ExcelImporter.create().importSpreadsheets(is, [
+   *   [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 5, firstRowAsColNames: true],
+   *   [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true]
+   * ])
+   * </pre></code>
+   *
+   * @param is the InputStream pointing to the spreadsheet to import
+   * @param sheetParams a Map of parameters containing the keys:
+   *  sheetName, startRow, endRow, startCol (number or name), endCol (number or name), firstRowAsColNames
+   *  key (optional, defaults to sheetName)
+   * @return a map of sheet names and the corresponding Matrix
+   */
+  Map<Object, Matrix> importSpreadsheets(InputStream is,
+                                         List<Map> sheetParams,
+                                         NumberFormat... formatOpt)
+
+
+  Map<Object, Matrix> importSpreadsheets(URL url, List<Map> sheetParams, NumberFormat... formatOpt)
 
   Map<Object, Matrix> importSpreadsheets(String fileName,
                                          List<Map> sheetParams,
