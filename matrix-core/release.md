@@ -1,5 +1,8 @@
 # Matrix Core Release History
 
+### 3.2.1, in progress
+- Add Matrix.getAt(List) to get statically compiled groovy to work using short notations
+
 ### 3.2.0, 2025-04-01
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.2.0/matrix-core-3.2.0.jar)
 - Add a static builder create methods to Matrix for name, columns and types

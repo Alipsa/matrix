@@ -1185,9 +1185,8 @@ class Matrix implements Iterable<Row> {
    * @param args matching any of the individual getAt methods
    * @return
    */
-  @CompileStatic
   def getAt(List args) {
-    if (args.size() == 0) {
+    if (args == null || args.size() == 0) {
       throw new IllegalArgumentException("No arguments supplied")
     }
     if (args.size() == 1) {
