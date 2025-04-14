@@ -1,5 +1,10 @@
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
+import se.alipsa.matrix.core.Matrix
+
+import java.time.LocalDate
+
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class PutAtTest {
 
@@ -102,5 +107,26 @@ class PutAtTest {
     println d
     assert d[0,1] == null
     assert d[1,2] == 'c'
+  }
+
+  @CompileStatic
+  @Test
+  void testAssignNullToMatrixElement() {
+    def empData = Matrix.builder()
+        .matrixName('empData')
+        .data(
+            emp_id: 1..5,
+            emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+            salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+        )
+        .types([int, String, Number, LocalDate])
+        .build()
+    empData[1, 0] = null
+    //println(empData.content())
+    assert empData[1, 0] == null
+    assert empData[1, 1] == "Dan"
+    assert 5 == empData.rowCount()
+    assert 4 == empData.columnCount()
   }
 }

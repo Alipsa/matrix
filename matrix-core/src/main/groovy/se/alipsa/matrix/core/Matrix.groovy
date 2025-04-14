@@ -1007,95 +1007,6 @@ class Matrix implements Iterable<Row> {
     return mName
   }
 
-  <T> T getAt(Integer row, String columnName) {
-    Class<T> type = type(columnName) as Class<T>
-    Integer columnIdx = columnIndex(columnName)
-    def val = get(row, columnIdx)
-    val == null ? null : val.asType(type)
-  }
-
-  /**
-   * Convenience method with built in type conversion
-   * A LocalDate variable with the value LocalDate.of(2021, 12, 1)
-   * in the first row, second column will have
-   * assert '2021-12-01' == table[0, 1, String]. The ValueConverter is used
-   * to convert the type.
-   *
-   * @param row the observation to get
-   * @param column the variable to get
-   * @param type the class that the the value should be converted to
-   * @return a value of the type specified
-   */
-  <T> T getAt(int row, int column, Class<T> type) {
-    return ValueConverter.convert(get(row, column), type)
-  }
-
-  /**
-   * Convenience method with built in type conversion
-   * A LocalDate variable with the value LocalDate.of(2021, 12, 1)
-   * in the first row, second column will have
-   * assert '2021-12-01' == table[0, 1, String]. The ValueConverter is used
-   * to convert the type.
-   *
-   * @param row the observation to get
-   * @param column the variable to get
-   * @param type the class that the the value should be converted to
-   * @param valIfNull value to replace a missing (null) value
-   * @return a value of the type specified
-   */
-  <T> T getAt(int row, int column, Class<T> type, T valIfNull) {
-    getAt(row, column, type) ?: valIfNull
-  }
-
-  /**
-   * Convenience method with built in type conversion
-   * A LocalDate variable with the value LocalDate.of(2021, 12, 1)
-   * in the first row, second column will have
-   * assert '2021-12-01' == table[0, 1, String]. The ValueConverter is used
-   * to convert the type.
-   *
-   * @param row the observation to get
-   * @param columnName the variable to get
-   * @param type the class that the the value should be converted to
-   * @return a value of the type specified
-   */
-  <T> T getAt(int row, String columnName, Class<T> type) {
-    return ValueConverter.convert(get(row, columnIndex(columnName)), type)
-  }
-
-  /**
-   *
-   * @param row the observation to get
-   * @param columnName the variable to get
-   * @param type the class that the the value should be converted to
-   * @param valIfNull value to replace a missing (null) value
-   * @return
-   */
-  <T> T getAt(int row, String columnName, Class<T> type, T valIfNull) {
-    getAt(row, columnName, type) ?: valIfNull
-  }
-
-  /**
-   * Enable the use of square bracket to reference a column, e.g. table[0, 1] for the 2:nd column of the first observation
-   * @return the value corresponding to the row and column indexes supplied
-   */
-  <T> T getAt(Integer row, Integer column) {
-    Class<T> type = type(column) as Class<T>
-    if (type != null) {
-      return get(row, column).asType(type)
-    }
-    return get(row, column) as T
-  }
-
-  /**
-   * Enable the use of square bracket to reference a column, e.g. table[0, "salary"] for the salary for the first observation
-   * @return the value corresponding to the row and column name supplied
-   */
-  <T> T getAt(int row, String columnName) {
-    Class<T> type = type(columnName) as Class<T>
-    return get(row, columnIndex(columnName)).asType(type)
-  }
-
   /**
    * Enable the use of square bracket to reference a column, e.g. table["salary"] for the salary column
    *
@@ -1115,6 +1026,44 @@ class Matrix implements Iterable<Row> {
   }
 
   /**
+   * Enable the use of square bracket to reference a column, e.g. table[2] for the 3:rd column
+   *
+   * @return the column corresponding to the column index supplied
+   */
+  List getAt(int columnIndex) {
+    return column(columnIndex)
+  }
+
+  /**
+   * Enable the use of square bracket to reference a column, e.g. table[0, 1] for the 2:nd column of the first observation
+   * @return the value corresponding to the row and column indexes supplied
+   */
+  <T> T getAt(Integer row, Integer column) {
+    Class<T> type = type(column) as Class<T>
+    if (type != null) {
+      return get(row, column).asType(type)
+    }
+    return get(row, column) as T
+  }
+
+  /**
+   * Enable the use of square bracket to reference a column, e.g. table[0, "salary"] for the salary for the first observation
+   * @return the value corresponding to the row and column name supplied
+   */
+  /* should be the same as below
+  <T> T getAt(int row, String columnName) {
+    Class<T> type = type(columnName) as Class<T>
+    return get(row, columnIndex(columnName)).asType(type)
+  }*/
+
+  <T> T getAt(Integer row, String columnName) {
+    Class<T> type = type(columnName) as Class<T>
+    Integer columnIdx = columnIndex(columnName)
+    def val = get(row, columnIdx)
+    val == null ? null : val.asType(type)
+  }
+
+  /**
    * Enable the use of square bracket to reference a column, e.g. table["salary", BigDecimal] for the salary column
    * converted to the type specified (BigDecimal in this case)
    *
@@ -1122,15 +1071,6 @@ class Matrix implements Iterable<Row> {
    */
   <T> List<T> getAt(String columnName, Class<T> type) {
     ListConverter.convert(column(columnName), type)
-  }
-
-  /**
-   * Enable the use of square bracket to reference a column, e.g. table[2] for the 3:rd column
-   *
-   * @return the column corresponding to the column index supplied
-   */
-  List getAt(int columnIndex) {
-    return column(columnIndex)
   }
 
   /**
@@ -1174,6 +1114,117 @@ class Matrix implements Iterable<Row> {
    */
   List getAt(IntRange rows, int colIndex) {
     column(colIndex)[rows]
+  }
+
+  /**
+   * Convenience method with built in type conversion
+   * A LocalDate variable with the value LocalDate.of(2021, 12, 1)
+   * in the first row, second column will have
+   * assert '2021-12-01' == table[0, 1, String]. The ValueConverter is used
+   * to convert the type.
+   *
+   * @param row the observation to get
+   * @param column the variable to get
+   * @param type the class that the the value should be converted to
+   * @return a value of the type specified
+   */
+  <T> T getAt(int row, int column, Class<T> type) {
+    return ValueConverter.convert(get(row, column), type)
+  }
+
+  /**
+   * Convenience method with built in type conversion
+   * A LocalDate variable with the value LocalDate.of(2021, 12, 1)
+   * in the first row, second column will have
+   * assert '2021-12-01' == table[0, 1, String]. The ValueConverter is used
+   * to convert the type.
+   *
+   * @param row the observation to get
+   * @param columnName the variable to get
+   * @param type the class that the the value should be converted to
+   * @return a value of the type specified
+   */
+  <T> T getAt(int row, String columnName, Class<T> type) {
+    return ValueConverter.convert(get(row, columnIndex(columnName)), type)
+  }
+
+  /**
+   * Convenience method with built in type conversion
+   * A LocalDate variable with the value LocalDate.of(2021, 12, 1)
+   * in the first row, second column will have
+   * assert '2021-12-01' == table[0, 1, String]. The ValueConverter is used
+   * to convert the type.
+   *
+   * @param row the observation to get
+   * @param column the variable to get
+   * @param type the class that the the value should be converted to
+   * @param valIfNull value to replace a missing (null) value
+   * @return a value of the type specified
+   */
+  <T> T getAt(int row, int column, Class<T> type, T valIfNull) {
+    getAt(row, column, type) ?: valIfNull
+  }
+
+  /**
+   *
+   * @param row the observation to get
+   * @param columnName the variable to get
+   * @param type the class that the the value should be converted to
+   * @param valIfNull value to replace a missing (null) value
+   * @return
+   */
+  <T> T getAt(int row, String columnName, Class<T> type, T valIfNull) {
+    getAt(row, columnName, type) ?: valIfNull
+  }
+
+  /**
+   * Generic override for getAt to enable access from statically compiled groovy.
+   * Without this putAt expressions such as <code>matris[0,1] = null</code> would fail
+   * with a compilation error.
+   *
+   * @param args matching any of the individual getAt methods
+   * @return
+   */
+  @CompileStatic
+  def getAt(List args) {
+    if (args.size() == 0) {
+      throw new IllegalArgumentException("No arguments supplied")
+    }
+    if (args.size() == 1) {
+      def arg = args[0]
+      if (arg instanceof String) return getAt(arg as String)
+      if (arg instanceof IntRange) return getAt(arg as IntRange)
+      if (arg instanceof Integer) return getAt(arg as Integer)
+    }
+    if (args.size() == 2) {
+      def arg0 = args[0]
+      def arg1 = args[1]
+      if (arg0 instanceof Integer && arg1 instanceof Integer) return getAt(arg0 as Integer, arg1 as Integer)
+      if (arg0 instanceof Integer && arg1 instanceof String) return getAt(arg0 as Integer, arg1 as String)
+      if (arg0 instanceof Integer && arg1 instanceof IntRange) return getAt(arg0 as Integer, arg1 as IntRange)
+      if (arg0 instanceof IntRange && arg1 instanceof Integer) return getAt(arg0 as IntRange, arg1 as Integer)
+      if (arg0 instanceof String && arg1 instanceof Class) return getAt(arg0 as String, arg1 as Class)
+    }
+    if (args.size() == 3) {
+      def arg0 = args[0]
+      def arg1 = args[1]
+      def arg2 = args[2]
+      if (arg0 instanceof Integer && arg1 instanceof Integer && arg2 instanceof Class)
+        return getAt(arg0 as Integer, arg1 as Integer, arg2 as Class)
+      if (arg0 instanceof Integer && arg1 instanceof String && arg2 instanceof Class)
+        return getAt(arg0 as Integer, arg1 as String, arg2 as Class)
+    }
+    if (args.size() == 4) {
+      def arg0 = args[0]
+      def arg1 = args[1]
+      def arg2 = args[2]
+      def arg3 = args[3]
+      if (arg0 instanceof Integer && arg1 instanceof Integer && arg2 instanceof Class)
+        return getAt(arg0 as Integer, arg1 as Integer, arg2 as Class, arg3)
+      if (arg0 instanceof Integer && arg1 instanceof String && arg2 instanceof Class)
+        return getAt(arg0 as Integer, arg1 as String, arg2 as Class, arg3)
+    }
+    throw new IllegalArgumentException("Unable to understand arguments supplied: $args")
   }
 
   Object getProperty(String name) {
