@@ -1,6 +1,7 @@
 package se.alipsa.matrix.spreadsheet.fastods.reader
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
 
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OPENDOCUMENT_MIMETYPE
@@ -32,6 +33,7 @@ abstract class OdsDataReader {
         entry = unc.nextFile()
       }
     }
+    throw new FastOdsException("No content.xml found in the ODS file")
   }
 
   private static void checkMimeType(Uncompressor uncompressor) throws IOException {

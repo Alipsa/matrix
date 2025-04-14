@@ -3,12 +3,8 @@ package se.alipsa.matrix.xchart.abstractions
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.XYSeries
-import org.knowm.xchart.internal.chartpart.Chart
-import org.knowm.xchart.internal.series.Series
-import org.knowm.xchart.style.Styler
 import org.knowm.xchart.style.XYStyler
 import se.alipsa.matrix.core.Column
-import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.MatrixTheme
 
