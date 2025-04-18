@@ -39,10 +39,10 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
     def labels = matrix.columnNames() - seriesNameColumn
     //println "labels are $labels"
     xchart.radiiLabels = labels as String[]
-    matrix.rows().eachWithIndex { Row row, int idx ->
+    matrix.rows().each { Row row ->
+      def label = row[seriesNameColumn].toString()
       def r = row - seriesNameColumn
-      //println "adding series ${labels[idx]} with data ${r}"
-      def s = xchart.addSeries(labels[idx], r as double[])
+      def s = xchart.addSeries(label, r as double[])
       makeFillTransparent(s, numSeries, transparency)
       numSeries++
     }
