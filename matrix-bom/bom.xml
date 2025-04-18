@@ -44,6 +44,18 @@
     <matrixXChartVersion>0.2.1-SNAPSHOT</matrixXChartVersion>
     <matrixTablesawVersion>0.2.1-SNAPSHOT</matrixTablesawVersion>
   </properties>
+  <repositories>
+    <repository>
+      <id>oss.sonatype.org-snapshot</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
   <dependencyManagement>
     <dependencies>
       <dependency>
