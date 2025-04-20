@@ -21,4 +21,15 @@ class ScatterChart extends AbstractXYChart<ScatterChart> {
     chart.addSeries(xAxis, yAxis)
     chart
   }
+
+  static ScatterChart create(String title, Matrix matrix, String xAxis, String yAxis, String seriesCol, Integer width = null, Integer height = null) {
+    def chart = new ScatterChart(matrix, width, height)
+    chart.title = title
+    def seriesVals = matrix[seriesCol].toSet()
+    for (val in seriesVals) {
+      def series = matrix.subset(seriesCol, val)
+      chart.addSeries("$seriesCol=$val", series.column(xAxis), series.column(yAxis))
+    }
+    chart
+  }
 }
