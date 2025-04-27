@@ -1971,6 +1971,10 @@ class Matrix implements Iterable<Row> {
     return types
   }
 
+  Matrix selectColumns(List<String> columnNames) {
+    selectColumns(columnNames as String[])
+  }
+
   Matrix selectColumns(String... columnNames) {
     List<List> cols = []
     List<String> colNames = []
@@ -2214,6 +2218,21 @@ class Matrix implements Iterable<Row> {
     ['observations': rowCount(), 'variables': columnCount()]
   }
 
+
+  String toHtml(Map<String, String> attr = [:], Integer numRows, boolean fromHead = true, boolean autoAlign = true) {
+    List<?> r
+    if (fromHead) {
+      r = rows(0..numRows - 1)
+    } else {
+      r = rows(rowCount() - numRows..rowCount() - 1)
+    }
+    toHtml(attr, r, autoAlign)
+  }
+
+  String toHtml(Map<String, String> attr = [:], boolean autoAlign=true) {
+    toHtml(attr, rows(), autoAlign)
+  }
+
   /**
    * There are some additional attributes added to the table: each th and td element will have the column name and
    * the simple type name added as classes. All attributes added a parameter becomes a table attribute except the
@@ -2268,7 +2287,7 @@ class Matrix implements Iterable<Row> {
    * @param autoAlign if true all numbers will be right aligned. If the align key is set in the map this setting has no effect
    * @return a xhtml representation of the table
    */
-  String toHtml(Map<String, String> attr = [:], boolean autoAlign=true) {
+  String toHtml(Map<String, String> attr = [:], List<?> rows, boolean autoAlign=true) {
     Map alignment = [:]
     StringBuilder sb = new StringBuilder()
     sb.append('<table')
@@ -2311,7 +2330,7 @@ class Matrix implements Iterable<Row> {
     }
     StringBuilder rowBuilder = new StringBuilder()
     sb.append('  <tbody>\n')
-    for (row in rows()) {
+    for (row in rows) {
       rowBuilder.setLength(0)
       sb.append('    <tr>\n')
       row.eachWithIndex { Object val, int i ->
@@ -2335,23 +2354,34 @@ class Matrix implements Iterable<Row> {
    * and everything else default (left) aligned
    */
   String toMarkdown(Map<String, String> attr = [:]) {
-    List<String> alignment = []
-    for (type in types()) {
-      if (Number.isAssignableFrom(type)) {
-        alignment.add('---:')
-      } else {
-        alignment.add('---')
-      }
+    return toMarkdown(attr, calculateAlignment())
+  }
+
+  String toMarkdown(int numRows, boolean fromHead = true) {
+    toMarkdown([:], numRows, fromHead)
+  }
+
+  String toMarkdown(Map<String, String> attr, int numRows, boolean fromHead = true) {
+    List<?> r
+    if (fromHead) {
+      r = rows(0..numRows - 1)
+    } else {
+      r = rows(rowCount() - numRows..rowCount() - 1)
     }
-    return toMarkdown(alignment, attr)
+    return toMarkdown(attr, calculateAlignment(), r)
+  }
+
+  String toMarkdown(Map<String, String> attr = [:], List<String> alignment) {
+    toMarkdown(attr, alignment, rows())
   }
 
   /**
-   *
+   * @param attr table attributes e.g. id, class etc. that is added immediately after the table and become table
+   *  attributes when rendered as html
    * @param alignment use :--- for left align, :----: for centered, and ---: for right alignment
    * @return a markdown formatted table where all the values have been converted to strings
    */
-  String toMarkdown(List<String> alignment, Map<String, String> attr = [:]) {
+  String toMarkdown(Map<String, String> attr = [:], List<String> alignment, List<?> rows) {
     if (alignment.size() != columnCount()) {
       throw new IllegalArgumentException("number of alignment markers (${alignment.size()}) differs from number of columns (${columnCount()})")
     }
@@ -2360,7 +2390,7 @@ class Matrix implements Iterable<Row> {
     sb.append(String.join(' | ', columnNames())).append(' |\n')
     sb.append('| ').append(String.join(' | ', alignment)).append(' |\n')
     StringBuilder rowBuilder = new StringBuilder()
-    for (row in rows()) {
+    for (row in rows) {
       rowBuilder.setLength(0)
 
       for (val in row) {
@@ -2377,6 +2407,18 @@ class Matrix implements Iterable<Row> {
       sb.append("}\n")
     }
     return sb.toString()
+  }
+
+  private List<String> calculateAlignment() {
+    List<String> alignment = []
+    for (type in types()) {
+      if (Number.isAssignableFrom(type)) {
+        alignment.add('---:')
+      } else {
+        alignment.add('---')
+      }
+    }
+    alignment
   }
 
   /**

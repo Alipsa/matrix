@@ -1,6 +1,7 @@
 package se.alipsa.matrix.xchart.abstractions
 
 import org.knowm.xchart.BitmapEncoder
+import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.VectorGraphicsEncoder
 import org.knowm.xchart.XChartPanel
 import org.knowm.xchart.internal.chartpart.Chart
@@ -8,7 +9,11 @@ import org.knowm.xchart.internal.series.Series
 import org.knowm.xchart.style.Styler
 import se.alipsa.matrix.core.Matrix
 
+import javax.swing.JFrame
+import javax.swing.SwingUtilities
+import javax.swing.WindowConstants
 import java.awt.Color
+import java.lang.reflect.InvocationTargetException
 
 abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> implements MatrixXChart {
 
@@ -90,4 +95,20 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
     s.fillColor = new Color(color.red, color.green, color.blue, transparency)
   }
 
+  @Override
+  void display() {
+    String windowTitle = xchart.title ?: matrix.getMatrixName() ?: "Matrix XChart"
+    final JFrame frame = new JFrame(windowTitle);
+
+    try {
+      SwingUtilities.invokeAndWait(() -> {
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
+        frame.add(exportSwing())
+        frame.pack()
+        frame.setVisible(true)
+      })
+    } catch (InterruptedException | InvocationTargetException e) {
+      throw new RuntimeException("Error displaying chart", e)
+    }
+  }
 }

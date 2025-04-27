@@ -58,6 +58,7 @@ class NormalizeTest {
     }
 
     assert [2.079f, 1.946f, 2.197f, 1.792f, 2.079f] == Normalize.logNorm([8, 7, 9, 6, 8], 3)
+    assert [Double.NEGATIVE_INFINITY]*3 == Normalize.logNorm([0, 0, 0])
   }
 
   @Test
@@ -77,6 +78,7 @@ class NormalizeTest {
       Assertions.assertTrue(val instanceof Double, "value is not Double but ${val.getClass().simpleName}")
       Assertions.assertEquals(it, val as Double, 8, "index $idx")
     }
+    assert [Double.NaN]*3 == Normalize.minMaxNorm([0d, 0d, 0d])
   }
 
   @Test
@@ -96,6 +98,8 @@ class NormalizeTest {
       Assertions.assertTrue(val instanceof Float, "value is not Float but ${val.getClass().simpleName}")
       Assertions.assertEquals(it, val as Float, 8, "index $idx")
     }
+
+    assert [Float.NaN]*3 == Normalize.minMaxNorm([0f, 0f, 0f])
   }
 
   @Test
@@ -115,6 +119,8 @@ class NormalizeTest {
       Assertions.assertTrue(val instanceof BigDecimal, "value is not BigDecimal but ${val.getClass().simpleName}")
       Assertions.assertEquals(it, val as BigDecimal, 8, "index $idx")
     }
+
+    assert [null]*3 == Normalize.minMaxNorm([0.0g, 0.0g, 0.0g])
   }
 
   @Test
@@ -133,6 +139,8 @@ class NormalizeTest {
       Assertions.assertTrue(val instanceof Double, "value is not Double but ${val.getClass().simpleName}")
       Assertions.assertEquals(it, val as Double, 7, "index $idx")
     }
+
+    assert [null]*3 == Normalize.stdScaleNorm([0.0d, 0.0d, 0.0d])
   }
 
   @Test
@@ -151,6 +159,7 @@ class NormalizeTest {
       Assertions.assertTrue(val instanceof Float, "value is not Float but ${val.getClass().simpleName}")
       Assertions.assertEquals(it, val as Float, 6, "index $idx")
     }
+    assert [null]*3 == Normalize.stdScaleNorm([0.0f, 0.0f, 0.0f])
   }
 
   @Test
@@ -164,6 +173,7 @@ class NormalizeTest {
 
     norm = Normalize.stdScaleNorm(obs, 7)
     Assertions.assertIterableEquals(exp, norm)
+    assert [null]*3 == Normalize.stdScaleNorm([0.0g, 0.0g, 0.0g])
   }
 
   @Test
@@ -177,6 +187,7 @@ class NormalizeTest {
 
     norm = Normalize.meanNorm(obs, 7)
     Assertions.assertIterableEquals(exp, norm)
+    assert [Double.NaN]*3 == Normalize.meanNorm([0.0d, 0.0d, 0.0d])
   }
 
   @Test
@@ -190,6 +201,7 @@ class NormalizeTest {
 
     norm = Normalize.meanNorm(obs, 7)
     Assertions.assertIterableEquals(exp, norm)
+    assert [Float.NaN]*3 == Normalize.meanNorm([0.0f, 0.0f, 0.0f])
   }
 
   @Test
@@ -203,6 +215,7 @@ class NormalizeTest {
 
     norm = Normalize.meanNorm(obs, 7)
     Assertions.assertIterableEquals(exp, norm)
+    assert [null]*3 == Normalize.meanNorm([0.0g, 0.0g, 0.0g])
   }
 
   @Test

@@ -3,10 +3,12 @@ package se.alipsa.matrix.csv
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.DuplicateHeaderMode
+import org.apache.commons.io.input.ReaderInputStream
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.nio.file.Path
 
 class CsvImporter {
 
@@ -27,19 +29,34 @@ class CsvImporter {
     TableName // the name of the Matrix, defaults to ''
   }
 
-  static Matrix importCsv(Map format, URL url) {
+  static Matrix importCsv(Map format, URL url) throws IOException {
     Map r = parseMap(format)
     importCsv(url, r.builder as CSVFormat, r.firstRowAsHeader as boolean, r.charset as Charset)
   }
 
-  static Matrix importCsv(Map format, InputStream is) {
+  static Matrix importCsv(Map format, String url) throws IOException {
+    Map r = parseMap(format)
+    importCsv(url, r.builder as CSVFormat, r.firstRowAsHeader as boolean, r.charset as Charset)
+  }
+
+  static Matrix importCsv(Map format, InputStream is) throws IOException {
     Map r = parseMap(format)
     importCsv(is, r.builder as CSVFormat, r.firstRowAsHeader as boolean, r.charset as Charset, r.tableName as String)
   }
 
-  static Matrix importCsv(Map format, File file) {
+  static Matrix importCsv(Map format, Reader reader) throws IOException {
+    Map r = parseMap(format)
+    importCsv(reader, r.builder as CSVFormat, r.firstRowAsHeader as boolean, r.charset as Charset, r.tableName as String)
+  }
+
+  static Matrix importCsv(Map format, File file) throws IOException {
     Map r = parseMap(format)
     importCsv(file, r.builder as CSVFormat, r.firstRowAsHeader as boolean, r.charset as Charset)
+  }
+
+  static Matrix importCsv(Map format, Path path) throws IOException {
+    Map r = parseMap(format)
+    importCsv(path, r.builder as CSVFormat, r.firstRowAsHeader as boolean, r.charset as Charset)
   }
 
   private static Map parseMap(Map format) {
@@ -58,19 +75,34 @@ class CsvImporter {
   }
 
 
-  static Matrix importCsv(InputStream is, CSVFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String tableName = '') {
+  static Matrix importCsv(InputStream is, CSVFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String tableName = '') throws IOException {
     try (CSVParser parser = CSVParser.parse(is, charset, format)) {
       return parse(tableName, parser, firstRowAsHeader)
     }
   }
 
-  static Matrix importCsv(URL url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) {
+  static Matrix importCsv(Reader reader, CSVFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String tableName = '') throws IOException {
+    try(ReaderInputStream readerInputStream = ReaderInputStream.builder()
+    .setCharset(charset).setReader(reader).get()) {
+      return importCsv(readerInputStream, format, firstRowAsHeader, charset, tableName)
+    }
+  }
+
+  static Matrix importCsv(URL url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
     try (CSVParser parser = CSVParser.parse(url, charset, format)) {
       return parse(tableName(url), parser, firstRowAsHeader)
     }
   }
 
-  static Matrix importCsv(File file, CSVFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) {
+  static Matrix importCsv(String url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
+    importCsv(new URI(url).toURL(), format, firstRowAsHeader, charset)
+  }
+
+  static Matrix importCsv(Path path, CSVFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
+   importCsv(path.toFile(), format, firstRowAsHeader, charset)
+  }
+
+  static Matrix importCsv(File file, CSVFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
     try (CSVParser parser = CSVParser.parse(file, charset, format)) {
       return parse(tableName(file), parser, firstRowAsHeader)
     }

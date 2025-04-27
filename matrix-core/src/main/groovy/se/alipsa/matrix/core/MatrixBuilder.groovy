@@ -317,8 +317,9 @@ class MatrixBuilder {
   }
 
   /**
-   * The cvs parsing is reasonably fast but rather primitive.
-   * For a much more thorough solution, use the CsvImporter in the matrix-csv library.
+   * Add data from the url to the csv specified to the matrix.
+   * Note: The cvs parsing is reasonably fast but rather primitive and does not handle BOMs or irregularities well.
+   * For a much more robust solution, use the CsvImporter in the matrix-csv library.
    *
    * @param url
    * @param delimiter
@@ -341,6 +342,22 @@ class MatrixBuilder {
       }
     }
     this
+  }
+
+  /**
+   * Add data from the url to the csv specified (in String format) to the matrix.
+   * note: The cvs parsing is fast but rather primitive and does not handle BOMs or irregularities well.
+   * For a much more robust solution, use the CsvImporter in the
+   * matrix-csv library.
+   *
+   * @param url the url to the csv file
+   * @param delimiter the delimiter to use, default is ','
+   * @param stringQuote the string quote to use, default is ''
+   * @param firstRowAsHeader if true, the first row is used as header, default is true
+   * @return this builder
+   */
+  MatrixBuilder data(String url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
+    data(new URI(url).toURL(), delimiter, stringQuote, firstRowAsHeader)
   }
 
   /**
@@ -428,6 +445,15 @@ class MatrixBuilder {
     columns(rows.transpose())
   }
 
+  /**
+   * Set the "schema" for the Matrix from a Map of names and types.
+   * The names are the column names and the types are the
+   * data types of the columns.
+   * This is equivalent to calling columnNames() and types() successively.
+   *
+   * @param namesAndTypes a map of names(String) and types(Class)
+   * @return this builder
+   */
   MatrixBuilder definition(Map<String, Class> namesAndTypes) {
     columnNames(namesAndTypes.keySet() as List)
     types(namesAndTypes.values() as List)

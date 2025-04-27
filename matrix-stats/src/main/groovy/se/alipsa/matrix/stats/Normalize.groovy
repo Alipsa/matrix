@@ -2,7 +2,6 @@ package se.alipsa.matrix.stats
 
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.MatrixBuilder
 import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
@@ -34,7 +33,7 @@ class Normalize {
    */
   static BigDecimal logNorm(BigDecimal x, int... decimals) {
     if (x == null) return null
-    def result = Math.log(x) as BigDecimal
+    def result = Math.log(x.doubleValue()) as BigDecimal
     if (decimals.length > 0) {
       return result.setScale(decimals[0], RoundingMode.HALF_EVEN)
     }
@@ -51,8 +50,8 @@ class Normalize {
    */
   static <T extends Number> T logNorm(T x, int... decimals) {
     if (x == null) return null
-    def result = Math.log(x as BigDecimal) as T
-    if (decimals.length > 0) {
+    T result = Math.log(x.doubleValue()) as T
+    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
       return (result as BigDecimal).setScale(decimals[0], RoundingMode.HALF_EVEN) as T
     }
     return result
@@ -85,9 +84,10 @@ class Normalize {
    */
   static Float logNorm(Float x, int... decimals) {
     if (x == null) return Float.NaN
-    def result = Math.log(x) as BigDecimal
-    if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
+    Double result = Math.log(x)
+    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
+      result = result.round(decimals[0])
+      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
     }
     return result.floatValue()
   }
@@ -182,12 +182,14 @@ class Normalize {
    * @param x the observed value
    * @param minX the lowest value in the distribution
    * @param maxX the highest value in the distribution
-   * @return a scaled value between 0 and 1
+   * @return a scaled value between 0 and 1 or null if the input is null or maxX - minX == 0
    */
   static BigDecimal minMaxNorm(BigDecimal x, BigDecimal minX, BigDecimal maxX, int... decimals) {
-    if (x == null || minX == null || maxX == null) {
+    if (x == null || minX == null || maxX == null || (maxX - minX) == 0) {
+      System.err.println("Invalid input for minMaxNorm: x=$x, minX=$minX, maxX=$maxX, returning null")
       return null
     }
+
     def result = (x - minX) / (maxX - minX) as BigDecimal
     if (decimals.length > 0) {
       return result.setScale(decimals[0], RoundingMode.HALF_EVEN)
@@ -208,11 +210,12 @@ class Normalize {
     if (x == null || minX == null || maxX == null) {
       return null
     }
-    def result = ((x - minX) / (maxX - minX)) as T
-    if (decimals.length > 0) {
-      return (result as BigDecimal).setScale(decimals[0], RoundingMode.HALF_EVEN) as T
+    Double result = ((x - minX) / (maxX - minX))
+    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
+      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN) as T
+      result = result.round(decimals[0])
     }
-    return result
+    return result as T
   }
 
   /**
@@ -228,9 +231,11 @@ class Normalize {
     if (x == null || Double.isNaN(x) || minX == null || Double.isNaN(minX) || maxX == null || Double.isNaN(maxX)) {
       return Double.NaN
     }
-    def result = (x - minX) / (maxX - minX) as BigDecimal
-    if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN).doubleValue()
+    Double result = (x - minX) / (maxX - minX)
+    // divide by zero -> NaN
+    if (decimals.length > 0 && result != Double.NaN) {
+      return result.round(decimals[0])
+      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).doubleValue()
     }
     return result.doubleValue()
   }
@@ -248,9 +253,10 @@ class Normalize {
     if (x == null || Float.isNaN(x) || minX == null || Float.isNaN(minX) || maxX == null || Float.isNaN(maxX)) {
       return Float.NaN
     }
-    def result = (x - minX) / (maxX - minX) as BigDecimal
+    Double result = (x - minX) / (maxX - minX)
     if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
+      return result.round(decimals[0])
+      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
     }
     return result.floatValue()
   }
@@ -325,7 +331,8 @@ class Normalize {
     List<? extends Number> vals = []
     for (def x : column) {
       def type = x.getClass()
-      vals.add(minMaxNorm(x, convert(min, type), convert(max, type), decimals))
+      def val = minMaxNorm(x, convert(min, type), convert(max, type), decimals)
+      vals.add(val)
     }
     return vals
   }
@@ -365,7 +372,7 @@ class Normalize {
    * @return a scaled value between -1 and 1
    */
   static BigDecimal meanNorm(BigDecimal x, BigDecimal sampleMean, BigDecimal minX, BigDecimal maxX, int... decimals) {
-    if (x == null || sampleMean == null || minX == null || maxX == null) {
+    if (x == null || sampleMean == null || minX == null || maxX == null || (maxX - minX) == 0) {
       return null
     }
     def result = (x - sampleMean) / (maxX - minX) as BigDecimal
@@ -410,9 +417,10 @@ class Normalize {
     if (x == null || Double.isNaN(x) || sampleMean == null || Double.isNaN(sampleMean) || minX == null || Double.isNaN(minX) || maxX == null || Double.isNaN(maxX)) {
       return Double.NaN
     }
-    def result = (x - sampleMean) / (maxX - minX) as BigDecimal
-    if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN).doubleValue()
+    def result = (x - sampleMean) / (maxX - minX)
+    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
+      return result.round(decimals[0])
+      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).doubleValue()
     }
     return result.doubleValue()
   }
@@ -431,9 +439,10 @@ class Normalize {
     if (x == null || Float.isNaN(x) || sampleMean == null || Float.isNaN(sampleMean) || minX == null || Float.isNaN(minX) || maxX == null || Float.isNaN(maxX)) {
       return Float.NaN
     }
-    def result = (x - sampleMean) / (maxX - minX) as BigDecimal
-    if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
+    def result = (x - sampleMean) / (maxX - minX)
+    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
+      result = result.round(decimals[0])
+      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
     }
     return result.floatValue()
   }
@@ -449,7 +458,7 @@ class Normalize {
     List<Double> col = column as List<Double>
     def min = col.min()
     def max = col.max()
-    def mean = Stat.mean(col)
+    def mean = Stat.mean(col).doubleValue()
 
     List<Double> vals = []
     for (def x : col) {
@@ -574,7 +583,7 @@ class Normalize {
    * @return a scaled value so that the mean of the observed values will be 0 and standard deviation will be 1
    */
   static <T extends Number> T stdScaleNorm(T x, T sampleMean, T stdDeviation, int... decimals) {
-    if (x == null || sampleMean == null || stdDeviation == null) {
+    if (x == null || sampleMean == null || stdDeviation == null || stdDeviation == 0) {
       return null
     }
     def result = ((x - sampleMean) / stdDeviation) as T
@@ -619,7 +628,7 @@ class Normalize {
     if (x == null || Float.isNaN(x) || sampleMean == null || Float.isNaN(sampleMean) || stdDeviation == null || Float.isNaN(stdDeviation)) {
       return Float.NaN
     }
-    println ("(x - sampleMean) / stdDeviation = ${(x - sampleMean) / stdDeviation}")
+    //println ("(x - sampleMean) / stdDeviation = ${(x - sampleMean) / stdDeviation}")
     def result = (x - sampleMean) / stdDeviation as BigDecimal
     if (decimals.length > 0) {
       return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()

@@ -1,0 +1,30 @@
+plugins {
+  id 'groovy'
+}
+
+group = 'se.alipsa.matrix.examples'
+version = '1.0.0-SNAPSHOT'
+
+def groovyVersion = '4.0.26'
+repositories {
+  mavenCentral()
+  mavenLocal()
+}
+
+dependencies {
+  implementation "org.apache.groovy:groovy:$groovyVersion"
+  implementation "org.apache.groovy:groovy-ginq:$groovyVersion"
+  implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
+  implementation 'se.alipsa.matrix:matrix-core'
+  implementation 'se.alipsa.matrix:matrix-csv'
+  implementation 'se.alipsa.matrix:matrix-stats'
+  implementation 'se.alipsa.matrix:matrix-xchart'
+  implementation 'com.github.haifengl:smile-core:4.3.0'
+  implementation 'com.github.haifengl:smile-plot:4.3.0'
+  testImplementation platform('org.junit:junit-bom:5.12.0')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+  useJUnitPlatform()
+}

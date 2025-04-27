@@ -22,7 +22,7 @@ class GinqTest {
     def expected = [['Mango', 29, 10], ['Orange', 11, 2], ['Apple', 6, 3], ['Banana', 4, 1]]
 
     def result = GQ {
-      from f in m.rows()
+      from f in m
       where f.price < 32
       orderby f.price in desc
       select f.name, f.price, f.stock

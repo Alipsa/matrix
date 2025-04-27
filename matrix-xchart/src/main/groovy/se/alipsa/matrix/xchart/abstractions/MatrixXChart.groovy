@@ -12,4 +12,6 @@ interface MatrixXChart<C extends Chart> {
   void exportSvg(File file)
   XChartPanel<C> exportSwing()
 
+  void display()
+
 }

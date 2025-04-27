@@ -777,6 +777,26 @@ class MatrixTest {
     rows = md.split('\n')
     assertEquals(7, rows.length)
     assertEquals('{class="table" }', rows[6])
+
+    md = table.toMarkdown(2)
+    rows = md.split('\n')
+    assertEquals(4, rows.length)
+    assertEquals('| YearMonth | Full Funding | Baseline Funding | Current Funding |', rows[0])
+    assertEquals('| --- | ---: | ---: | ---: |', rows[1])
+    assertEquals('| 2023-01 | 4563.153 | 3385.593 | 2700 |', rows[2])
+    assertEquals('| 2023-02 | 380.263 | 282.133 | 225 |', rows[3])
+
+    md = table.toMarkdown(2, false)
+    rows = md.split('\n')
+    assertEquals(4, rows.length)
+    assertEquals(4, rows.length)
+    assertEquals('| YearMonth | Full Funding | Baseline Funding | Current Funding |', rows[0])
+    assertEquals('| --- | ---: | ---: | ---: |', rows[1])
+    assertEquals('| 2023-03 | 4.938 | 3.664 | 2.922 |', rows[2])
+    assertEquals('| 2023-04 | 12.23 | 2.654 | 1.871 |', rows[3])
+
+    assert table.subset(0..1).toMarkdown() == table.toMarkdown(2)
+    assert table.subset(2..3).toMarkdown() == table.toMarkdown(2, false)
   }
 
   @Test

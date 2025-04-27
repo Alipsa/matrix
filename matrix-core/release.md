@@ -2,6 +2,9 @@
 
 ### 3.2.1, in progress
 - Add Matrix.getAt(List) to get statically compiled groovy to work using short notations
+- Add Matrix.selectColumns(List<String> columnNames) behaving like the other selectColumns methods
+- Add MatrixBuilder.data() method that takes a url in String format
+- Add versions of toHtml and toMarkdown that takes the number of rows to show
 
 ### 3.2.0, 2025-04-01
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.2.0/matrix-core-3.2.0.jar)

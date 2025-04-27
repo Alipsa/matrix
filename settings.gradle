@@ -27,3 +27,5 @@ include 'matrix-examples:XChartDemo'
 include 'matrix-examples:AnalysisScenario1'
 findProject(':matrix-examples:AnalysisScenario1')?.name = 'AnalysisScenario1'
 
+
+include 'matrix-examples:whiskey'
