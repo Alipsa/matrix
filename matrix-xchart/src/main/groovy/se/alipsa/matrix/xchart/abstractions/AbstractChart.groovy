@@ -50,10 +50,10 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
   }
 
   XChartPanel<C> exportSwing() {
-    new XChartPanel<>(getXchart())
+    new XChartPanel<>(getXChart())
   }
 
-  C getXchart() {
+  C getXChart() {
     return this.xchart
   }
 

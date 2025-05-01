@@ -33,6 +33,7 @@ class Normalize {
    */
   static BigDecimal logNorm(BigDecimal x, int... decimals) {
     if (x == null) return null
+    if (x == 0) return null
     def result = Math.log(x.doubleValue()) as BigDecimal
     if (decimals.length > 0) {
       return result.setScale(decimals[0], RoundingMode.HALF_EVEN)
@@ -50,6 +51,7 @@ class Normalize {
    */
   static <T extends Number> T logNorm(T x, int... decimals) {
     if (x == null) return null
+    if (x == 0) return null
     T result = Math.log(x.doubleValue()) as T
     if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
       return (result as BigDecimal).setScale(decimals[0], RoundingMode.HALF_EVEN) as T
@@ -144,6 +146,7 @@ class Normalize {
    * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
    * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
    * will thus generate a more normal distribution.
+   * If the values are zero, the results will be null
    *
    * @param column the BigDecimal column to normalize
    * @return a BigDecimal column where all values are transformed with the natural logarithm (base e) of the observations
@@ -151,7 +154,11 @@ class Normalize {
   static List<? extends Number> logNorm(List<? extends Number> column, int... decimals) {
     def vals = []
     for (def x : column) {
-      vals.add(logNorm(x, decimals))
+      if (x == null || x == 0) {
+        vals.add(null)
+      } else {
+        vals.add(logNorm(x, decimals))
+      }
     }
     return vals
   }
@@ -210,6 +217,10 @@ class Normalize {
     if (x == null || minX == null || maxX == null) {
       return null
     }
+    if (minX == 0 && maxX == 0) {
+      return null
+    }
+
     Double result = ((x - minX) / (maxX - minX))
     if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
       //return result.setScale(decimals[0], RoundingMode.HALF_EVEN) as T
@@ -320,6 +331,10 @@ class Normalize {
   /**
    * Ranges the data values to be between 0 and 1, the formula is:
    * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
+   * If the values are all zero, the results will all be as follows:
+   * Double.NaN if all the values as doubles, long, int
+   * Float.Nan if all the values as floats, short, byte
+   * null for other numeric types (e.g. BigDecimal, BigInteger)
    *
    * @param column the float column to scale
    * @return a new float column of scaled values between 0 and 1
@@ -394,6 +409,9 @@ class Normalize {
    */
   static <T extends Number> T meanNorm(T x, T sampleMean, T minX, T maxX, int... decimals) {
     if (x == null || sampleMean == null || minX == null || maxX == null) {
+      return null
+    }
+    if (minX == 0 && maxX == 0) {
       return null
     }
     def result = ((x - sampleMean) / (maxX - minX)) as T
@@ -510,7 +528,12 @@ class Normalize {
   /**
    * Scales the data values to be between (–1, 1), the formula is
    * X´ = ( X - μ ) / ( max(X) - min(X) )
-   *
+   * <p>
+   * If the values are all zero, the results will all be as follows:
+   * Float.NaN if the values are all byte, short, integer, float, long
+   * Double.NaN if the values are all double
+   * null for other numeric types (BigDecimal, BigInteger)
+   * </p>
    * @param column the float column to scale
    * @return a new, normalized float column
    */
@@ -700,13 +723,15 @@ class Normalize {
   }
 
   /**
-  * scales the distribution of data values so that the mean of the observed values
-  * will be 0 and standard deviation will be 1 (a.k.a Z-score).
-  * Z = ( X<sub>i</sub> - μ ) / σ
-  *
-  * @param column the float column to scale
-  * @return a scaled float column where the values are scaled so that the mean of the observed values
-  * will be 0 and standard deviation will be 1
+   * scales the distribution of data values so that the mean of the observed values
+   * will be 0 and standard deviation will be 1 (a.k.a Z-score).
+   * Z = ( X<sub>i</sub> - μ ) / σ
+   * <p>
+   *   If the values are all zero, the results will be all null.
+   * </p>
+   * @param column the float column to scale
+   * @return a scaled float column where the values are scaled so that the mean of the observed values
+   * will be 0 and standard deviation will be 1
   */
   static List<? extends Number> stdScaleNorm(List<? extends Number> column, int... decimals) {
     def stdDev = Stat.sd(column)

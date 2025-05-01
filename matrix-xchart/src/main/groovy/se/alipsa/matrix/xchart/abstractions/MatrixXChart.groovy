@@ -13,5 +13,5 @@ interface MatrixXChart<C extends Chart> {
   XChartPanel<C> exportSwing()
 
   void display()
-
+  C getXChart()
 }

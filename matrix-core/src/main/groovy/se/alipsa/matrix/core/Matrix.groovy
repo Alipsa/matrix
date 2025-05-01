@@ -28,7 +28,7 @@ import static se.alipsa.matrix.core.util.ClassUtils.*
  *
  */
 @CompileStatic
-class Matrix implements Iterable<Row> {
+class Matrix implements Iterable<Row>, Cloneable {
 
   private List<Column> mColumns
   private String mName
