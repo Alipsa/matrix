@@ -137,8 +137,8 @@ class XyChartTest {
   void testScatterChart() {
     List<Number> xData = []
     List<Number> yData = []
-    Random random = new Random();
-    int size = 1000;
+    Random random = new Random()
+    int size = 1000
     for (int i = 0; i < size; i++) {
       xData << (random.nextGaussian() / 1000)
       yData << (-1000000 + random.nextGaussian())
@@ -160,11 +160,44 @@ class XyChartTest {
   }
 
   @Test
+  void testScatterMultiSeriesChart() {
+    List<Number> xData = []
+    List<Number> yData = []
+    List<Number> blob = []
+    def random = new Random()
+    int numBlobs = 3
+    int size = 300
+    for (i in 0..<numBlobs) {
+      def centreX = random.nextGaussian() * 3
+      def centreY = random.nextGaussian() * 2
+      for (j in 0..<size) {
+        xData << centreX + random.nextGaussian()
+        yData << centreY + random.nextGaussian()
+        blob << i
+      }
+    }
+    Matrix matrix = Matrix.builder().data(xData: xData, yData: yData, blob: blob)
+            .types([Number] * 3)
+            .build()
+    def sc = ScatterChart.create("Gaussian blobs", matrix, "xData", "yData", "blob")
+    sc.style.with {
+      markerSize = 12
+      legendPosition = Styler.LegendPosition.InsideSW
+      plotContentSize = .9
+    }
+    def file = new File("build/testScatterMultiSeriesChart.svg")
+    file.withOutputStream { fos ->
+      sc.exportSvg(fos)
+    }
+    assert file.exists()
+  }
+
+  @Test
   void testScatterChartWithErrorBars() {
     def xData = []
     def yData = []
     def errorBars = []
-    Random random = new Random();
+    Random random = new Random()
     for (int i = 0; i < 12; i++) {
       xData << (random.nextGaussian() * 2)
       yData << (20 + random.nextGaussian())
