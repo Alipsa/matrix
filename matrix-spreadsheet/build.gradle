@@ -37,16 +37,18 @@ compileGroovy {
 dependencies {
     compileOnly libs.groovy
 
+    def fastExcelVersion = '0.19.0'
+    def poiVersion = '5.4.1'
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     implementation 'org.apache.logging.log4j:log4j-core:2.24.3'
 
-    implementation('org.apache.poi:poi:5.4.1')
-    implementation('org.apache.poi:poi-ooxml:5.4.1')
+    implementation("org.apache.poi:poi:${poiVersion}")
+    implementation("org.apache.poi:poi-ooxml:${poiVersion}")
     // https://github.com/dhatim/fastexcel
-    implementation('org.dhatim:fastexcel:0.18.4')
-    implementation('org.dhatim:fastexcel-reader:0.18.4')
-    implementation 'com.github.miachm.sods:SODS:1.6.7'
+    implementation("org.dhatim:fastexcel:$fastExcelVersion")
+    implementation("org.dhatim:fastexcel-reader:$fastExcelVersion")
+    implementation 'com.github.miachm.sods:SODS:1.6.8'
 
 
     testImplementation testLibs.junitJupiterApi
