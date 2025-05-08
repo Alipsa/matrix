@@ -15,8 +15,9 @@ import se.alipsa.matrix.datasets.Dataset
 @Testcontainers
 class BiqQueryTest {
 
-  @Container
-  private static final BigQueryEmulatorContainer container = new BigQueryEmulatorContainer("ghcr.io/goccy/bigquery-emulator:0.4.3")
+  private static final BigQueryEmulatorContainer container = null
+  //@Container
+  //private static final BigQueryEmulatorContainer container = new BigQueryEmulatorContainer("ghcr.io/goccy/bigquery-emulator:0.4.3")
 
   // Issue with testContainers:
   // fails with java.lang.NullPointerException: Cannot invoke "com.google.cloud.bigquery.TableId.getProject()" because "tableId" is null
