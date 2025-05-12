@@ -114,6 +114,35 @@ class MatrixBuilder {
   }
 
   /**
+   * Allows for incremental building of the matrix by adding rows one by one.
+   *
+   * @param row a list of values to add to the matrix
+   * @return this builder
+   */
+  MatrixBuilder addRow(List row) {
+    if (columns == null) {
+      columns = []
+    }
+    row.eachWithIndex { it, idx ->
+      if (columns.size() <= idx) {
+        columns << []
+      }
+      columns[idx] << it
+    }
+    this
+  }
+
+  /**
+   * Allows for incremental building of the matrix by adding rows one by one.
+   *
+   * @param rowDate the values to add to the matrix
+   * @return this builder
+   */
+  MatrixBuilder addRow(Object... rowData) {
+    addRow(rowData as List)
+  }
+
+  /**
    * Populate the data of the Matrix. Use only one of rows, rowList, columns or data methods i.e.
    * either provide the rows (observations) or the columns (variables) or one of the data methods
    * if you use multiple ones, only the last one will be used.

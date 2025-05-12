@@ -389,6 +389,22 @@ class MatrixBuilderTest {
     assertIterableEquals([String, Number], matrix.types())
   }
 
+  @Test
+  void testAddRow() {
+    Matrix matrix = Matrix.builder('incrementalRows')
+    .columnNames('id', 'name')
+    .types(int, String)
+    .addRow(1, 'Per')
+    .addRow([2, 'Lisa'])
+    .addRow([3, 'Ian'])
+    .build()
+    println(matrix.content())
+    assertEquals(3, matrix.rowCount())
+    assertEquals(2, matrix.columnCount())
+    assertEquals(1, matrix[0, 0])
+    assertEquals('Lisa', matrix[1, 1])
+  }
+
   class Person {
     String name
     int id

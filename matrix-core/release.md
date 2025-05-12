@@ -6,6 +6,7 @@
 - Add MatrixBuilder.data() method that takes a url in String format
 - Add versions of toHtml and toMarkdown that takes the number of rows to show
 - Add implement Cloneable to Matrix
+- Add MatrixBuilder.addRow() to add a row to the matrix
 
 ### 3.2.0, 2025-04-01
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.2.0/matrix-core-3.2.0.jar)
