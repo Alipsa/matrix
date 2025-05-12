@@ -134,6 +134,8 @@ class MatrixBuilder {
 
   /**
    * Allows for incremental building of the matrix by adding rows one by one.
+   * This should NOT be used with a combination with rows, rowList, columns or data methods UNLESS
+   * you purposely want to add a row to the existing bulk data.
    *
    * @param rowDate the values to add to the matrix
    * @return this builder

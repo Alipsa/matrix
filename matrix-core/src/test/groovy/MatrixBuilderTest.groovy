@@ -1,6 +1,7 @@
 import groovy.sql.Sql
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.MatrixBuilder
 
 import java.time.LocalDate
 
@@ -398,11 +399,24 @@ class MatrixBuilderTest {
     .addRow([2, 'Lisa'])
     .addRow([3, 'Ian'])
     .build()
-    println(matrix.content())
+    //println(matrix.content())
     assertEquals(3, matrix.rowCount())
     assertEquals(2, matrix.columnCount())
     assertEquals(1, matrix[0, 0])
     assertEquals('Lisa', matrix[1, 1])
+  }
+
+  @Test
+  void testAppendRow() {
+    Matrix m = Matrix.builder('appendRow')
+        .data('id': [1,2], 'name': ['Per', 'Lisa'])
+        .types(int, String)
+        .addRow([3, 'Ian'])
+        .build()
+    assertEquals(3, m.rowCount())
+    assertEquals(2, m.columnCount())
+    assertEquals(1, m[0, 0])
+    assertEquals('Lisa', m[1, 1])
   }
 
   class Person {
