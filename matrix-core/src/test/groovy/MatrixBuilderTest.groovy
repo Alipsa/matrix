@@ -417,6 +417,12 @@ class MatrixBuilderTest {
     assertEquals(2, m.columnCount())
     assertEquals(1, m[0, 0])
     assertEquals('Lisa', m[1, 1])
+
+    MatrixBuilder m2b = Matrix.builder('appendRow')
+        .data('id': [1,2], 'name': ['Per', 'Lisa'])
+        .types(int, String)
+    Matrix m2 = m2b.addRow([3, 'Ian']).build()
+    assertEquals(m, m2)
   }
 
   class Person {
