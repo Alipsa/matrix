@@ -201,7 +201,7 @@ class MatrixBuilder {
       }
       Object row = r.first()
       if (row instanceof Row) {
-        // This happens when the whole object is returned in ginq
+        // This happens when the whole object is returned in ginq (as a result of querying a Matrix)
         columnNames(row.columnNames())
         types(row.types())
         rows(r)
