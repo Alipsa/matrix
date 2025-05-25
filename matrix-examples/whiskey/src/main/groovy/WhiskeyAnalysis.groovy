@@ -70,8 +70,9 @@ for (i in clusters) {
 //sc.exportPng(new File( 'clusters.png'))
 io.display(sc.exportSwing())
 
+// Create a correlation heatmap
 corr = [size<..0, 0..<size].combinations().collect { i, j ->
-  Correlation.cor(data*.getAt(j), data*.getAt(i)) * 100 as int
+  Correlation.cor(data*.getAt(j) as List<? extends Number>, data*.getAt(i) as List<? extends Number>) * 100 as int
 }
 
 corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)

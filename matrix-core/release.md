@@ -1,6 +1,7 @@
 # Matrix Core Release History
 
 ### 3.3.0, 2025-05-25
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.3.0/matrix-core-3.3.0.jar)
 - Add Matrix.getAt(List) to get statically compiled groovy to work using short notations
 - Add Matrix.selectColumns(List<String> columnNames) behaving like the other selectColumns methods
 - Add MatrixBuilder.data() method that takes a url in String format
