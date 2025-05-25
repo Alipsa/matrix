@@ -1,6 +1,6 @@
 # Matrix Core Release History
 
-### 3.2.1, in progress
+### 3.3.0, 2025-05-25
 - Add Matrix.getAt(List) to get statically compiled groovy to work using short notations
 - Add Matrix.selectColumns(List<String> columnNames) behaving like the other selectColumns methods
 - Add MatrixBuilder.data() method that takes a url in String format

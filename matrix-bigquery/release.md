@@ -1,6 +1,6 @@
 # Matrix-bigquery Release History
 
-## v0.3, 2025-04-01
+## v0.3, 2025-05-25
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bigquery/0.3/matrix-bigquery-0.3.jar)
 - upgrade 
   - com.google.auth:google-auth-library-bom [1.33.1 -> 1.35.0]
