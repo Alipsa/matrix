@@ -392,4 +392,36 @@ class StatTest {
     m['medians'] = medianRows(m[0..2])
     assert [2.0, 3.0, 4.0] == m.medians
   }
+
+  @Test
+  void testGroupBy() {
+    def empData = Matrix.builder()
+        .data(
+            emp_id: 1..5,
+            emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+            department: ["IT", "OPS", "OPS", "IT", "IT"],
+            emp_type: ["Full-time", "Part-time", "Full-time", "Part-time", "Full-time"],
+            salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+        .types(int, String, String, String, Number, LocalDate)
+        .build()
+
+    def grouped = groupBy(empData, ['department', 'emp_type'])
+    assertEquals(1, grouped['OPS_Full-time'].size())
+    assertEquals(1, grouped['OPS_Part-time'].size())
+    assertEquals(2, grouped['IT_Full-time'].size())
+    assertEquals(1, grouped['IT_Part-time'].size())
+
+    def ab = Matrix.builder().data(
+        a: [1, 1, 2, 2, 2, 2, 2],
+        b: ['A', 'B', 'A', 'B', 'B', 'A', 'B']
+    )
+        .types(int, String)
+        .build()
+    def grouped2 = groupBy(ab, 'a', 'b')
+    assertEquals(1, grouped2['1_A'].size())
+    assertEquals(1, grouped2['1_B'].size())
+    assertEquals(2, grouped2['2_A'].size())
+    assertEquals(3, grouped2['2_B'].size())
+  }
 }

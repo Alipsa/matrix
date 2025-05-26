@@ -31,7 +31,7 @@
   </scm>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
-    <matrixCoreVersion>3.3.0</matrixCoreVersion>
+    <matrixCoreVersion>3.3.0</matrixCoreVersion> <!-- do not bump to next SNAPSHOT version until all modules are released -->
     <matrixStatsVersion>2.1.1-SNAPSHOT</matrixStatsVersion>
     <matrixSqlVersion>2.1.1-SNAPSHOT</matrixSqlVersion>
     <matrixDatasetsVersion>2.0.2-SNAPSHOT</matrixDatasetsVersion>

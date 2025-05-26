@@ -260,6 +260,58 @@ class Stat {
     }
 
     /**
+     * Splits the table into separate tables, one for each value in the named columns.
+     * The key values are a compound of the grouped values in the order specified in columnNames
+     * separated by underscore.
+     * Example usage:
+     * <pre><code>
+     * def ab = Matrix.builder().data(
+     *   a: [1, 1, 2, 2, 2, 2, 2],
+     *   b: ['A', 'B', 'A', 'B', 'B', 'A', 'B']
+     *   )
+     *   .types(int, String)
+     *   .build()
+     * def groups = Stat.groupBy(ab, 'a', 'b')
+     * assert 1 == groups['1_A'].size()
+     * assert 1 == groups['1_B'].size()
+     * assert 2 == groups['2_A'].size()
+     * assert 3 == groups['2_B'].size()
+     * </code></pre>
+     *
+     * @param table the Matrix to operate on
+     * @param columnName the name(s) of the column(s) containing the values
+     * @return a Map<String, Matrix> where the key is a compound of the grouped values separated by underscore.
+     */
+    static Map<String, Matrix> groupBy(Matrix table, String... columnNames) {
+        if (columnNames.length == 0) {
+            throw new IllegalArgumentException("At least one column name must be specified to groupBy")
+        }
+
+        Map<String, Matrix> result = [:]
+
+        def recursiveGroup
+        recursiveGroup = { Matrix currentTable, int index, String prefix ->
+            Map<?, Matrix> splitMap = currentTable.split(columnNames[index])
+            splitMap.each { entry ->
+                String key = prefix ? "${prefix}_${entry.key}" : "${entry.key}"
+                if (index == columnNames.length - 1) {
+                    result[key] = entry.value
+                } else {
+                    recursiveGroup(entry.value, index + 1, key)
+                }
+            }
+        }
+
+        recursiveGroup(table, 0, "")
+        return result
+    }
+
+    static Map<String, Matrix> groupBy(Matrix table, List<String> columnNames) {
+        groupBy(table, columnNames as String[])
+    }
+
+
+    /**
      * Splits the table into separate tables, one for each value in groupBy column,
      * then apply the closure to the columnName column.
      *
