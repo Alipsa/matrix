@@ -7,6 +7,29 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
+/**
+ * A BoxChart is a chart that displays data in the form of box plots.
+ * It can be used to visualize the distribution of data points across different categories.
+ * Sample usage:
+ * <pre><code>
+ * Matrix matrix = Matrix.builder(). data(
+ *   'aaa': [40, 30, 20, 60, 50],
+ *   'bbb': [-20, -10, -30, -15, -25],
+ *   'ccc': [50, -20, 10, 5, 1]
+ *    )
+ *   .types([Number]*3)
+ *   .matrixName("Box chart")
+ *   .build()
+ *
+ * def bc = BoxChart.create(matrix)
+ *   .addSeries('aaa')
+ *   .addSeries('BBB', matrix.bbb)
+ *   .addSeries(matrix['ccc'])
+ *
+ * File file = new File('build/testBoxChart.png')
+ * bc.exportPng(file)
+ * </code></pre>
+ */
 class BoxChart extends AbstractChart<BoxChart, org.knowm.xchart.BoxChart, BoxStyler, BoxSeries> {
 
   private BoxChart(Matrix matrix, Integer width = null, Integer height = null) {

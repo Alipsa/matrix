@@ -49,3 +49,31 @@ You can easily export to png, svg or swing using one of the exportXXX methods bu
 ```groovy
 VectorGraphicsEncoder.saveVectorGraphic(chart.xchart, file.absolutePath, VectorGraphicsEncoder.VectorGraphicsFormat.PDF)
 ```
+
+The Chart types supported are:
+- [AreaChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/AreaChart.groovy)
+  -  An area chart or area graph displays graphically quantitative data. It is based on an XY chart. It is usually used to compare two or more quantities over time. 
+- [BarChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/BarChart.groovy)
+  - A bar chart or bar graph is a chart or graph that presents categorical data with rectangular bars with heights or lengths proportional to the values that they represent.
+- [BoxChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/BoxChart.groovy)
+  - A box chart or box plot is a standardized way of displaying the distribution of data based on a five-number summary ("minimum", first quartile (Q1), median, third quartile (Q3), and "maximum").
+- [BubbleChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/BubbleChart.groovy)
+  - A bubble chart is a scatter plot in which a third dimension of the data is shown through the size of markers.
+- [CorrelationHeatmapChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/CorrelationHeatmapChart.groovy)
+  - A correlation heatmap chart is a graphical representation of the correlation matrix, where the values are represented by colors. It is used to visualize the correlation between different variables in a dataset.
+- [HeatmapChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/HeatmapChart.groovy)
+  - A heatmap is a 2-dimensional data visualization technique that represents the magnitude of individual values within a dataset as a color.
+- [HistogramChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/HistogramChart.groovy)
+  - A visual representation of the distribution of quantitative data.
+- [LineChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/LineChart.groovy)
+  - a type of chart that displays information as a series of data points called 'markers' connected by straight line segments.
+- [OhlcChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/OhlcChart.groovy)
+  - An open-high-low-close chart (OHLC) is a type of chart typically used in technical analysis to illustrate movements in the price of a financial instrument over time. Each vertical line on the chart shows the price range (the highest and lowest prices) over one unit of time, e.g., one day or one hour. 
+- [PieChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/PieChart.groovy)
+  - A pie chart (or a circle chart) is a circular statistical graphic which is divided into slices to illustrate numerical proportion.
+- [RadarChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/RadarChart.groovy)
+  - A radar chart is a graphical method of displaying multivariate data in the form of a two-dimensional chart of three or more quantitative variables represented on axes starting from the same point.
+- [ScatterChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/ScatterChart.groovy)
+  - a type of plot or mathematical diagram using Cartesian coordinates to display values for typically two variables for a set of data. If the points are coded (color/shape/size), additional variables can be displayed.
+- [StickChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/StickChart.groovy)
+  -

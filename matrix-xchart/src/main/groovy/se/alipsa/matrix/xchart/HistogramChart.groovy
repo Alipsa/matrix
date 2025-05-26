@@ -10,6 +10,17 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
+/**
+ * A HistogramChart is a visual representation of the distribution of quantitative data.
+ * It is a type of bar chart that groups data into bins or intervals.
+ * Sample usage:
+ * <pre><code>
+ * def hc = HistogramChart.create(Dataset.airquality())
+ *   hc.addSeries('Temp', 9) // 9 is the number of bins
+ * File file = new File("exampleHistogram.png")
+ * hc.exportPng(file)
+ * </code></pre>
+ */
 class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, CategoryStyler, CategorySeries> {
 
   private HistogramChart(Matrix matrix, Integer width = null, Integer height = null, CategorySeries.CategorySeriesRenderStyle type) {

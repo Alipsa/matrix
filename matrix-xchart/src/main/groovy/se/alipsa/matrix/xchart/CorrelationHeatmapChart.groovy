@@ -9,6 +9,18 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.Correlation
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
+/**
+ * A correlation heatmap chart is a graphical representation of the correlation matrix, where the values are
+ * represented by colors. It is used to visualize the correlation between different variables in a dataset.
+ * Sample usage:
+ * <pre><code>
+ * Matrix whisky = Matrix.builder().data(this.class.getResource('/ScotchWhisky01.csv')).build()
+ * def chart = CorrelationHeatmapChart.create(whisky, 800, 600)
+ *   .setTitle("Correlation Heatmap of Scotch Whisky Data")
+ *   .addSeries("Correlation", whisky.columnNames() - 'Distillery' as List<String>) // only numeric columns allowed
+ * chart.exportSvg(new File("build/correlationHeatmap.svg")
+ * </code></pre>
+ */
 class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   final Number[] numberArray = new Number[]{}

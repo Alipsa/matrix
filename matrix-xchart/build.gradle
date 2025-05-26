@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.2.1-SNAPSHOT'
+version = '0.2.1'
 description = "Groovy library for creating charts with xcharts using matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")

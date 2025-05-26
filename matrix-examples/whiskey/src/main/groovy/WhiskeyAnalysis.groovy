@@ -71,8 +71,9 @@ for (i in clusters) {
 io.display(sc.exportSwing())
 
 // Create a correlation heatmap
-corr = [size<..0, 0..<size].combinations().collect { i, j ->
-  Correlation.cor(data*.getAt(j) as List<? extends Number>, data*.getAt(i) as List<? extends Number>) * 100 as int
+// TODO use a CorrelationHeatmapChart instead of a homegrown HeatmapChart
+corr = [size<..0, 0..<size].combinations().collect { int i, int j ->
+  Correlation.cor(data[j] as List<? extends Number>, data[i] as List<? extends Number>) * 100 as int
 }
 
 corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)

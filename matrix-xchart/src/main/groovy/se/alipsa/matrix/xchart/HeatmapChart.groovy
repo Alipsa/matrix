@@ -8,6 +8,21 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
+/**
+ * A heat map (or heatmap) is a 2-dimensional data visualization technique that represents the magnitude of
+ * individual values within a dataset as a color.
+ * Example usage:
+ * <pre><code>
+ * def data = [123, 210, 89, 87, 245, 187, 100, 110, 99, 59, 110, 101]
+ * Matrix matrix = Matrix.builder().data( 'c': data ).types(Number).build()
+ * def hc = HeatmapChart.create(matrix, 1000, 600)
+ *   .setTitle(getClass().getSimpleName())
+ *   .addSeries("Basic HeatMap",'c', 4)
+ *
+ * File file = new File("build/testHeatmap.png")
+ * hc.exportPng(file)
+ * </code></pre>
+ */
 class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   final Number[] numberArray = new Number[]{}

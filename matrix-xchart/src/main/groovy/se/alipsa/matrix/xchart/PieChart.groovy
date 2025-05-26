@@ -8,6 +8,23 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
+/**
+ * A PieChart is a circular statistical graphic that is divided into slices to illustrate numerical proportions.
+ * Each slice of the pie represents a category's contribution to the whole.
+ * Sample usage:
+ * <pre><code>
+ * Matrix matrix = Matrix.builder().data(
+ *   'Category': ['A', 'B', 'C', 'D'],
+ *   'Value': [30, 20, 40, 10]
+ * ).types([String, Number]).matrixName("Pie Chart Example").build()
+ *
+ * def pieChart = PieChart.create(matrix)
+ *   .addSeries('Category', 'Value')
+ *
+ * File file = new File('pieChart.png')
+ * pieChart.exportPng(file)
+ * </code></pre>
+ */
 class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieStyler, PieSeries> {
 
   private PieChart(Matrix matrix, Integer width = null, Integer height = null) {
