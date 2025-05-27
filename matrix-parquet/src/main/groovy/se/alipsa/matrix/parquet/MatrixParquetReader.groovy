@@ -113,22 +113,7 @@ class MatrixParquetReader {
 
   static List<Class> parseTypeString(String typeString) {
     return typeString.split(',').collect { className ->
-      switch (className.trim()) {
-        case "int" -> Integer
-        case "long" -> Long
-        case "float" -> Float
-        case "double" -> Double
-        case "boolean" -> Boolean
-        case "BigDecimal" -> BigDecimal
-        case "BigInteger" -> BigInteger
-        case "String" -> String
-        case "LocalDate" -> LocalDate
-        case "LocalDateTime" -> LocalDateTime
-        case "Date" -> Date
-        case "Time" -> Time
-        case "java.sql.Date" -> java.sql.Date
-        default -> throw new IllegalArgumentException("Unsupported class in metadata: $className")
-      }
+      return Class.forName(className.trim())
     }
   }
 

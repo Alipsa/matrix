@@ -28,6 +28,8 @@ class MatrixParquetWriter {
   static void write(Matrix matrix, File file, boolean inferPrecisionAndScale = false) {
     def schema = buildSchema(matrix, inferPrecisionAndScale)
     def conf = new Configuration()
+    /*
+
     conf.set("parquet.example.schema", schema.toString())
     conf.set("matrix.columnTypes", matrix.types().collect { it.simpleName }.join(','))
     GroupWriteSupport.setSchema(schema, conf)
@@ -46,7 +48,16 @@ class MatrixParquetWriter {
         ParquetWriter.DEFAULT_IS_VALIDATING_ENABLED,
         ParquetWriter.DEFAULT_WRITER_VERSION,
         conf
-    )
+    )*/
+    def extraMeta = new HashMap<String, String>()
+    extraMeta.put("matrix.columnTypes", matrix.types().collect { it.name }.join(','))
+
+    def writer = ExampleParquetWriter.builder(new Path(file.toURI()))
+        .withConf(conf)
+        .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
+        .withType(schema)
+        .withExtraMetaData(extraMeta)
+        .build()
 
     def factory = new SimpleGroupFactory(schema)
     def rowCount = matrix.rowCount()

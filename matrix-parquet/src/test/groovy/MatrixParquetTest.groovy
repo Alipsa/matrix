@@ -1,6 +1,5 @@
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.parquet.MatrixParquetWriter
@@ -25,8 +24,10 @@ class MatrixParquetTest {
     MatrixParquetWriter.write(data, file)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
-    println matrix.content()
+    //println matrix.content()
     assertEquals(data, matrix, "Data read from Parquet file does not match original data")
+    assertEquals(data.types(), matrix.types(),
+        "Types read from Parquet file do not match expected types")
   }
 
   @Test
@@ -45,7 +46,7 @@ class MatrixParquetTest {
     MatrixParquetWriter.write(empData, file)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
-    println matrix.content()
+    //println matrix.content()
     assertEquals(empData, matrix, "Data read from Parquet file does not match original data")
     assertEquals([Integer, String, BigDecimal, Double, LocalDate], matrix.types(),
         "Types read from Parquet file do not match expected types")
@@ -67,8 +68,8 @@ class MatrixParquetTest {
     MatrixParquetWriter.write(empData, file, true)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
-    println matrix.content()
-    println Stat.str(matrix)
+    //println matrix.content()
+    //println Stat.str(matrix)
     assertEquals(empData, matrix, "Data read from Parquet file does not match original data")
     assertIterableEquals([Integer, String, BigDecimal, BigDecimal, LocalDate], matrix.types(),
         "Types read from Parquet file do not match expected types")
