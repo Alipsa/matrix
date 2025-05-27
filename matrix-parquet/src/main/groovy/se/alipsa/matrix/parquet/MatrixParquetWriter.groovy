@@ -79,7 +79,7 @@ class MatrixParquetWriter {
     }
     matrix.columnNames().each { col ->
       def type = matrix.type(col)
-      if (decimalMeta != null && type == BigDecimal) {
+      if (decimalMeta != null) {
         builder.addField(buildParquetField(col, type, decimalMeta[col]))
       } else {
         builder.addField(buildParquetField(col, type))
