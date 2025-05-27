@@ -4,12 +4,16 @@ import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.parquet.MatrixParquetWriter
 
+import java.time.LocalDate
+
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static se.alipsa.matrix.core.ListConverter.toDoubles
+import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
 class MatrixParquetTest {
 
   @Test
-  void testMatrixParquet() {
+  void testMatrixParquetCars() {
     Matrix data = Dataset.cars().withMatrixName('cars')
     File file = new File("build/cars.parquet")
     MatrixParquetWriter.write(data, file)
@@ -17,5 +21,22 @@ class MatrixParquetTest {
     def matrix = MatrixParquetReader.read(file)
     println matrix.content()
     assertEquals(data, matrix, "Data read from Parquet file does not match original data")
+  }
+
+  @Test
+  void testMatrixParquetComplexData() {
+    def empData = Matrix.builder().columns(
+        emp_id: 1..5,
+        emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+        salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+        score: toDoubles([0.5, 0.6, 0.7, 0.8, 0.9]),
+        start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+        .types([int, String, BigDecimal, Double, LocalDate]).build()
+    File file = new File("build/empData.parquet")
+    MatrixParquetWriter.write(empData, file)
+    assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
+    def matrix = MatrixParquetReader.read(file)
+    println matrix.content()
+    assertEquals(empData, matrix, "Data read from Parquet file does not match original data")
   }
 }

@@ -8,6 +8,13 @@ import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.PrimitiveType
 import se.alipsa.matrix.core.Matrix
 
+import java.sql.Time
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+
 class MatrixParquetReader {
 
   static Matrix read(File file) {
@@ -42,23 +49,26 @@ class MatrixParquetReader {
 
         if (row.getFieldRepetitionCount(name) > 0) {
           switch (type) {
-            case Integer:
-              value = row.getInteger(name, 0)
-              break
-            case Long:
-              value = row.getLong(name, 0)
-              break
-            case Float:
-              value = row.getFloat(name, 0)
-              break
-            case Double:
-              value = row.getDouble(name, 0)
-              break
-            case Boolean:
-              value = row.getBoolean(name, 0)
-              break
-            default:
-              value = row.getString(name, 0)
+            case Integer     -> value = row.getInteger(name, 0)
+            case Long        -> value = row.getLong(name, 0)
+            case Float       -> value = row.getFloat(name, 0)
+            case Double      -> value = row.getDouble(name, 0)
+            case Boolean     -> value = row.getBoolean(name, 0)
+            case BigDecimal  -> value = new BigDecimal(row.getDouble(name, 0))
+            case BigInteger  -> value = BigInteger.valueOf(row.getLong(name, 0))
+            case LocalDate   -> value = LocalDate.ofEpochDay(row.getInteger(name, 0))
+            case java.sql.Date ->
+              value = java.sql.Date.valueOf(LocalDate.ofEpochDay(row.getInteger(name, 0)))
+            case Time ->
+              value = Time.valueOf(LocalTime.ofSecondOfDay(row.getInteger(name, 0)))
+            case Date ->
+              value = new Date(row.getLong(name, 0))
+            case LocalDateTime -> {
+              def micros = (long) row.getLong(name, 0)
+              def millis = (long) (micros / 1000)
+              value = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
+            }
+            default -> value = row.getString(name, 0)
           }
         }
 

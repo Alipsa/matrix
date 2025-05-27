@@ -16,6 +16,7 @@ import java.sql.Time
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 class MatrixParquetWriter {
 
@@ -39,7 +40,22 @@ class MatrixParquetWriter {
       colNames.each { col ->
         def value = matrix[i, col]
         if (value != null) {
-          group.append(col, value.toString()) // TODO: type-specific appending
+          if (value instanceof BigDecimal || value instanceof BigInteger) {
+            group.append(col, value.toDouble())
+          } else if (value instanceof LocalDate) {
+            group.append(col, (int) value.toEpochDay())
+          } else if (value instanceof java.sql.Date) {
+            group.append(col, (int) (value.toLocalDate().toEpochDay()))
+          } else if (value instanceof Time) {
+            group.append(col, (int) (value.toLocalTime().toSecondOfDay()))
+          } else if (value instanceof LocalDateTime) {
+            def micros = value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() * 1000
+            group.append(col, micros as long) // Or use INT96 logic
+          } else if (value instanceof Date) {
+            group.append(col, value.time) // milliseconds since epoch
+          } else {
+            group.append(col, value.toString())
+          }
         }
       }
       writer.write(group)
