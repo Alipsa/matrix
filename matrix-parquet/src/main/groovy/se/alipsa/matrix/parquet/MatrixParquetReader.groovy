@@ -4,6 +4,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.parquet.example.data.Group
 import org.apache.parquet.hadoop.ParquetReader
 import org.apache.parquet.hadoop.example.GroupReadSupport
+import org.apache.parquet.schema.LogicalTypeAnnotation
 import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.PrimitiveType
 import se.alipsa.matrix.core.Matrix
@@ -35,7 +36,7 @@ class MatrixParquetReader {
 
     MessageType schema = row.getType()
     List<String> fieldNames = schema.fields.collect { it.name }
-    List<Class> fieldTypes = schema.fields.collect { getJavaType(it.asPrimitiveType().primitiveTypeName) }
+    List<Class> fieldTypes = extractFieldTypes(schema)
 
     def builder = Matrix.builder(matrixName)
     .columnNames(fieldNames)
@@ -54,7 +55,20 @@ class MatrixParquetReader {
             case Float       -> value = row.getFloat(name, 0)
             case Double      -> value = row.getDouble(name, 0)
             case Boolean     -> value = row.getBoolean(name, 0)
-            case BigDecimal  -> value = new BigDecimal(row.getDouble(name, 0))
+            case BigDecimal  -> {
+              def field = schema.getType(name)
+              def logical = field.getLogicalTypeAnnotation()
+              if (field.asPrimitiveType().primitiveTypeName == PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY &&
+                  logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                def scale = logical.scale
+                def binary = row.getBinary(name, 0)
+                def unscaled = new BigInteger(binary.getBytes())
+                value = new BigDecimal(unscaled, scale)
+              } else {
+                // fallback (when not using inferredType i.e. FIXED_LEN_BYTE_ARRAY)
+                value = new BigDecimal(row.getDouble(name, 0))
+              }
+            }
             case BigInteger  -> value = BigInteger.valueOf(row.getLong(name, 0))
             case LocalDate   -> value = LocalDate.ofEpochDay(row.getInteger(name, 0))
             case java.sql.Date ->
@@ -89,5 +103,25 @@ class MatrixParquetReader {
       case PrimitiveType.PrimitiveTypeName.BOOLEAN: return Boolean
       default: return String
     }
+  }
+
+  static List<Class> extractFieldTypes(MessageType schema) {
+      schema.fields.collect { field ->
+        def logical = field.getLogicalTypeAnnotation()
+        def primitive = field.asPrimitiveType().primitiveTypeName
+
+        if (logical != null) {
+          if (logical == LogicalTypeAnnotation.dateType()) {
+            return LocalDate
+          }
+          if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
+            return LocalDateTime
+          }
+          if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+            return BigDecimal
+          }
+        }
+        getJavaType(primitive)
+      }
   }
 }

@@ -6,7 +6,9 @@ import org.apache.parquet.example.data.simple.SimpleGroupFactory
 import org.apache.parquet.hadoop.ParquetFileWriter
 import org.apache.parquet.hadoop.example.ExampleParquetWriter
 import org.apache.parquet.hadoop.example.GroupWriteSupport
+import org.apache.parquet.schema.LogicalTypeAnnotation
 import org.apache.parquet.schema.MessageType
+import org.apache.parquet.schema.PrimitiveType
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName
 import org.apache.parquet.schema.Types
 
@@ -20,7 +22,7 @@ import java.time.ZoneId
 
 class MatrixParquetWriter {
 
-  static void write(Matrix matrix, File file) {
+  static void write(Matrix matrix, File file, boolean inferPrecisionAndScale = false) {
     def schema = buildSchema(matrix)
     def conf = new Configuration()
     GroupWriteSupport.setSchema(schema, conf)
@@ -69,27 +71,95 @@ class MatrixParquetWriter {
     writer.close()
   }
 
-  static MessageType buildSchema(Matrix matrix) {
+  static MessageType buildSchema(Matrix matrix, boolean inferPrecisionAndScale = false) {
     def builder = Types.buildMessage()
+    Map<String, int[]> decimalMeta = null
+    if (inferPrecisionAndScale) {
+      decimalMeta = inferDecimalPrecisionAndScale(matrix)
+    }
     matrix.columnNames().each { col ->
       def type = matrix.type(col)
-      builder.optional(getPrimitiveType(type)).named(col)
+      if (decimalMeta != null && type == BigDecimal) {
+        builder.addField(buildParquetField(col, type, decimalMeta[col]))
+      } else {
+        builder.addField(buildParquetField(col, type))
+      }
+
     }
     return builder.named("MatrixSchema")
   }
 
-  static PrimitiveTypeName getPrimitiveType(Class clazz) {
+  static PrimitiveType buildParquetField(String name, Class clazz, int[] decimalMeta = null) {
+    def primitive
+    def logical = null
+
     switch (clazz) {
-      case Integer, int -> PrimitiveTypeName.INT32
-      case Long, long, BigInteger -> PrimitiveTypeName.INT64
-      case Float, float -> PrimitiveTypeName.FLOAT
-      case Double, double, BigDecimal -> PrimitiveTypeName.DOUBLE
-      case Boolean, boolean -> PrimitiveTypeName.BOOLEAN
-      case LocalDate, java.sql.Date -> PrimitiveTypeName.INT32  // logicalType: DATE
-      case LocalDateTime, Timestamp -> PrimitiveTypeName.INT96 // legacy support
-      case Time -> PrimitiveTypeName.INT32 // logicalType: TIME
-      default -> PrimitiveTypeName.BINARY
+      case Integer, int -> primitive = PrimitiveTypeName.INT32
+      case Long, long, BigInteger -> primitive = PrimitiveTypeName.INT64
+      case Float, float -> primitive = PrimitiveTypeName.FLOAT
+      case Double, double -> primitive = PrimitiveTypeName.DOUBLE
+      case BigDecimal -> {
+        if (decimalMeta != null) {
+          int precision = decimalMeta ? decimalMeta[0] : 10
+          int scale = decimalMeta ? decimalMeta[1] : 2
+          primitive = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY
+          logical = LogicalTypeAnnotation.decimalType(scale, precision)
+          Types.optional(primitive)
+              .length(minBytesForPrecision(precision))
+              .as(logical)
+              .named(name)
+        } else {
+          primitive = PrimitiveTypeName.DOUBLE
+          logical = null
+        }
+      }
+      case Boolean, boolean -> primitive = PrimitiveTypeName.BOOLEAN
+      case LocalDate, java.sql.Date -> {
+        primitive = PrimitiveTypeName.INT32
+        logical = LogicalTypeAnnotation.dateType()
+      }
+      case LocalDateTime, Timestamp -> {
+        primitive = PrimitiveTypeName.INT64
+        logical = LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MILLIS)
+      }
+      case Time -> {
+        primitive = PrimitiveTypeName.INT32
+        logical = LogicalTypeAnnotation.timeType(true, LogicalTypeAnnotation.TimeUnit.SECONDS)
+      }
+      default -> primitive = PrimitiveTypeName.BINARY
     }
+
+    def builder = Types.optional(primitive)
+    if (logical != null) {
+      builder = builder.as(logical)
+    }
+    return builder.named(name)
+  }
+
+  static Map<String, int[]> inferDecimalPrecisionAndScale(Matrix matrix) {
+    def result = [:] // columnName -> [precision, scale]
+
+    matrix.columnNames().each { col ->
+      if (matrix.type(col) == BigDecimal) {
+        int maxPrecision = 0
+        int maxScale = 0
+        (0..<matrix.rowCount()).each { i ->
+          def value = matrix[i, col]
+          if (value instanceof BigDecimal) {
+            maxPrecision = Math.max(maxPrecision, value.precision())
+            maxScale = Math.max(maxScale, value.scale())
+          }
+        }
+        result[col] = [maxPrecision, maxScale]
+      }
+    }
+
+    return result
+  }
+
+  static int minBytesForPrecision(int precision) {
+    // According to the Parquet spec
+    return (Math.ceil((Math.log(Math.pow(10, precision)) / Math.log(2) + 1) / 8) as int)
   }
 }
 
