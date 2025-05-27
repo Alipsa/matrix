@@ -1,5 +1,6 @@
 package se.alipsa.matrix.parquet
 
+import org.apache.hadoop.fs.Path
 import org.apache.parquet.example.data.Group
 import org.apache.parquet.hadoop.ParquetReader
 import org.apache.parquet.hadoop.example.GroupReadSupport
@@ -10,36 +11,58 @@ import se.alipsa.matrix.core.Matrix
 class MatrixParquetReader {
 
   static Matrix read(File file) {
-    def path = new org.apache.hadoop.fs.Path(file.toURI())
+    def path = new Path(file.toURI())
     def reader = ParquetReader.builder(new GroupReadSupport(), path).build()
+
+    String matrixName
+    if (file.name.contains('.')) {
+      matrixName = file.name.substring(0, file.name.lastIndexOf('.'))
+    } else {
+      matrixName = file.name
+    }
 
     Group row = reader.read()
     if (row == null) {
-      return new Matrix("EmptyParquet")
+      return Matrix.builder(matrixName).build()
     }
 
     MessageType schema = row.getType()
     List<String> fieldNames = schema.fields.collect { it.name }
     List<Class> fieldTypes = schema.fields.collect { getJavaType(it.asPrimitiveType().primitiveTypeName) }
 
-    def builder = Matrix.builder("ParquetData")
+    def builder = Matrix.builder(matrixName)
     .columnNames(fieldNames)
     .types(fieldTypes)
 
     while (row != null) {
-      def rowData = fieldNames.collectWithIndex { name, i ->
+      def rowData = []
+      fieldNames.eachWithIndex { name, i ->
         def type = fieldTypes[i]
-        if (row.getFieldRepetitionCount(name) == 0) {
-          return null
+        def value = null
+
+        if (row.getFieldRepetitionCount(name) > 0) {
+          switch (type) {
+            case Integer:
+              value = row.getInteger(name, 0)
+              break
+            case Long:
+              value = row.getLong(name, 0)
+              break
+            case Float:
+              value = row.getFloat(name, 0)
+              break
+            case Double:
+              value = row.getDouble(name, 0)
+              break
+            case Boolean:
+              value = row.getBoolean(name, 0)
+              break
+            default:
+              value = row.getString(name, 0)
+          }
         }
-        return switch (type) {
-          case Integer -> row.getInteger(name, 0)
-          case Long    -> row.getLong(name, 0)
-          case Float   -> row.getFloat(name, 0)
-          case Double  -> row.getDouble(name, 0)
-          case Boolean -> row.getBoolean(name, 0)
-          default      -> row.getString(name, 0)
-        }
+
+        rowData << value
       }
       builder.addRow(rowData as Object[])
       row = reader.read()

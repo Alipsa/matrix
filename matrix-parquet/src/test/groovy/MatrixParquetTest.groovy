@@ -10,7 +10,7 @@ class MatrixParquetTest {
 
   @Test
   void testMatrixParquet() {
-    Matrix data = Dataset.cars().withMatrixName('cars.parquet')
+    Matrix data = Dataset.cars().withMatrixName('cars')
     File file = new File("build/cars.parquet")
     MatrixParquetWriter.write(data, file)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
