@@ -12,6 +12,11 @@ import org.apache.parquet.schema.Types
 
 import se.alipsa.matrix.core.Matrix
 
+import java.sql.Time
+import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.LocalDateTime
+
 class MatrixParquetWriter {
 
   static void write(Matrix matrix, File file) {
@@ -53,12 +58,17 @@ class MatrixParquetWriter {
   }
 
   static PrimitiveTypeName getPrimitiveType(Class clazz) {
-    if (clazz == Integer || clazz == int) return PrimitiveTypeName.INT32
-    if (clazz == Long || clazz == long) return PrimitiveTypeName.INT64
-    if (clazz == Double || clazz == double) return PrimitiveTypeName.DOUBLE
-    if (clazz == Float || clazz == float) return PrimitiveTypeName.FLOAT
-    if (clazz == Boolean || clazz == boolean) return PrimitiveTypeName.BOOLEAN
-    return PrimitiveTypeName.BINARY
+    switch (clazz) {
+      case Integer, int -> PrimitiveTypeName.INT32
+      case Long, long, BigInteger -> PrimitiveTypeName.INT64
+      case Float, float -> PrimitiveTypeName.FLOAT
+      case Double, double, BigDecimal -> PrimitiveTypeName.DOUBLE
+      case Boolean, boolean -> PrimitiveTypeName.BOOLEAN
+      case LocalDate, java.sql.Date -> PrimitiveTypeName.INT32  // logicalType: DATE
+      case LocalDateTime, Timestamp -> PrimitiveTypeName.INT96 // legacy support
+      case Time -> PrimitiveTypeName.INT32 // logicalType: TIME
+      default -> PrimitiveTypeName.BINARY
+    }
   }
 }
 
