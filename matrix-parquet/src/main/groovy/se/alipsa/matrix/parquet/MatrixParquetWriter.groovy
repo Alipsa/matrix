@@ -40,21 +40,26 @@ class MatrixParquetWriter {
       colNames.each { col ->
         def value = matrix[i, col]
         if (value != null) {
-          if (value instanceof BigDecimal || value instanceof BigInteger) {
-            group.append(col, value.toDouble())
-          } else if (value instanceof LocalDate) {
-            group.append(col, (int) value.toEpochDay())
-          } else if (value instanceof java.sql.Date) {
-            group.append(col, (int) (value.toLocalDate().toEpochDay()))
-          } else if (value instanceof Time) {
-            group.append(col, (int) (value.toLocalTime().toSecondOfDay()))
-          } else if (value instanceof LocalDateTime) {
-            def micros = value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() * 1000
-            group.append(col, micros as long) // Or use INT96 logic
-          } else if (value instanceof Date) {
-            group.append(col, value.time) // milliseconds since epoch
-          } else {
-            group.append(col, value.toString())
+          def fieldType = schema.getType(col)
+          if (!fieldType.isPrimitive()) {
+            throw new IllegalArgumentException("Column '$col' is not a primitive field in schema: $fieldType")
+          }
+
+          switch (value) {
+            case Integer, int -> group.append(col, (int) value)
+            case Long, long, BigInteger -> group.append(col, ((Number)value).longValue())
+            case Float, float -> group.append(col, ((Number)value).floatValue())
+            case Double, double, BigDecimal -> group.append(col, ((Number)value).doubleValue())
+            case Boolean, boolean -> group.append(col, (boolean)value)
+            case LocalDate -> group.append(col, (int) value.toEpochDay())
+            case java.sql.Date -> group.append(col, (int) value.toLocalDate().toEpochDay())
+            case Time -> group.append(col, (int) value.toLocalTime().toSecondOfDay())
+            case LocalDateTime -> {
+              def micros = value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() * 1000
+              group.append(col, (long) micros)
+            }
+            case Date -> group.append(col, value.time)
+            default -> group.append(col, value.toString())
           }
         }
       }

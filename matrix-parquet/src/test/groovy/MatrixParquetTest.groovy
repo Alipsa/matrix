@@ -25,7 +25,7 @@ class MatrixParquetTest {
 
   @Test
   void testMatrixParquetComplexData() {
-    def empData = Matrix.builder().columns(
+    def empData = Matrix.builder('empData').columns(
         emp_id: 1..5,
         emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
         salary: [623.3, 515.2, 611.0, 729.0, 843.25],
