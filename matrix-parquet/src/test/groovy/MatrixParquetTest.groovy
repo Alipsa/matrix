@@ -19,6 +19,9 @@ class MatrixParquetTest {
   void testMatrixParquetCars() {
     Matrix data = Dataset.cars().withMatrixName('cars')
     File file = new File("build/cars.parquet")
+    if (file.exists()) {
+      file.delete() // Ensure we start with a clean slate
+    }
     MatrixParquetWriter.write(data, file)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
@@ -36,6 +39,9 @@ class MatrixParquetTest {
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
         .types([int, String, BigDecimal, Double, LocalDate]).build()
     File file = new File("build/empData.parquet")
+    if (file.exists()) {
+      file.delete() // Ensure we start with a clean slate
+    }
     MatrixParquetWriter.write(empData, file)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
@@ -55,6 +61,9 @@ class MatrixParquetTest {
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
         .types([int, String, BigDecimal, BigDecimal, LocalDate]).build()
     File file = new File("build/empData.parquet")
+    if (file.exists()) {
+      file.delete() // Ensure we start with a clean slate
+    }
     MatrixParquetWriter.write(empData, file, true)
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)

@@ -2,10 +2,13 @@ package se.alipsa.matrix.parquet
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
+import org.apache.parquet.example.data.Group
 import org.apache.parquet.example.data.simple.SimpleGroupFactory
 import org.apache.parquet.hadoop.ParquetFileWriter
+import org.apache.parquet.hadoop.ParquetWriter
 import org.apache.parquet.hadoop.example.ExampleParquetWriter
 import org.apache.parquet.hadoop.example.GroupWriteSupport
+import org.apache.parquet.io.api.Binary
 import org.apache.parquet.schema.LogicalTypeAnnotation
 import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.PrimitiveType
@@ -23,15 +26,27 @@ import java.time.ZoneId
 class MatrixParquetWriter {
 
   static void write(Matrix matrix, File file, boolean inferPrecisionAndScale = false) {
-    def schema = buildSchema(matrix)
+    def schema = buildSchema(matrix, inferPrecisionAndScale)
     def conf = new Configuration()
+    conf.set("parquet.example.schema", schema.toString())
+    conf.set("matrix.columnTypes", matrix.types().collect { it.simpleName }.join(','))
     GroupWriteSupport.setSchema(schema, conf)
 
-    def writer = ExampleParquetWriter.builder(new Path(file.toURI()))
-        .withConf(conf)
-        .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
-        .withType(schema)
-        .build()
+    def writeSupport = new GroupWriteSupportWithMetadata()
+    writeSupport.init(conf)
+
+    def writer = new ParquetWriter<Group>(
+        new Path(file.toURI()),
+        writeSupport,
+        ParquetWriter.DEFAULT_COMPRESSION_CODEC_NAME,
+        ParquetWriter.DEFAULT_BLOCK_SIZE,
+        ParquetWriter.DEFAULT_PAGE_SIZE,
+        ParquetWriter.DEFAULT_PAGE_SIZE,
+        ParquetWriter.DEFAULT_IS_DICTIONARY_ENABLED,
+        ParquetWriter.DEFAULT_IS_VALIDATING_ENABLED,
+        ParquetWriter.DEFAULT_WRITER_VERSION,
+        conf
+    )
 
     def factory = new SimpleGroupFactory(schema)
     def rowCount = matrix.rowCount()
@@ -47,11 +62,29 @@ class MatrixParquetWriter {
             throw new IllegalArgumentException("Column '$col' is not a primitive field in schema: $fieldType")
           }
 
-          switch (value) {
+          switch (value.class) {
             case Integer, int -> group.append(col, (int) value)
             case Long, long, BigInteger -> group.append(col, ((Number)value).longValue())
             case Float, float -> group.append(col, ((Number)value).floatValue())
-            case Double, double, BigDecimal -> group.append(col, ((Number)value).doubleValue())
+            case Double, double -> group.append(col, ((Number)value).doubleValue())
+            case BigDecimal -> {
+              def field = schema.getType(col).asPrimitiveType()
+              def logical = field.getLogicalTypeAnnotation()
+              if (field.primitiveTypeName == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY &&
+                  logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+                def bd = (BigDecimal) value
+                def scale = logical.scale
+                def unscaled = bd.setScale(scale).unscaledValue()
+                def bytes = unscaled.toByteArray()
+                def size = field.typeLength
+                def padded = new byte[size]
+                System.arraycopy(bytes, 0, padded, size - bytes.length, bytes.length)
+                group.add(col, Binary.fromConstantByteArray(padded))
+              } else {
+                def bd = (BigDecimal) value
+                group.append(col, bd.doubleValue())
+              }
+            }
             case Boolean, boolean -> group.append(col, (boolean)value)
             case LocalDate -> group.append(col, (int) value.toEpochDay())
             case java.sql.Date -> group.append(col, (int) value.toLocalDate().toEpochDay())
@@ -60,7 +93,7 @@ class MatrixParquetWriter {
               def micros = value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() * 1000
               group.append(col, (long) micros)
             }
-            case Date -> group.append(col, value.time)
+            case Date -> group.append(col, ((Date)value).time)
             default -> group.append(col, value.toString())
           }
         }
@@ -90,6 +123,20 @@ class MatrixParquetWriter {
   }
 
   static PrimitiveType buildParquetField(String name, Class clazz, int[] decimalMeta = null) {
+    if (clazz == BigDecimal) {
+      if (decimalMeta != null) {
+        int precision = decimalMeta[0] ?: 10
+        int scale = decimalMeta[1] ?: 2
+        return Types.optional(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
+            .length(minBytesForPrecision(precision))
+            .as(LogicalTypeAnnotation.decimalType(scale, precision))
+            .named(name)
+      } else {
+        // fallback to double (discouraged, but allowed for backward compat)
+        return Types.optional(PrimitiveTypeName.DOUBLE).named(name)
+      }
+    }
+
     def primitive
     def logical = null
 
@@ -98,21 +145,6 @@ class MatrixParquetWriter {
       case Long, long, BigInteger -> primitive = PrimitiveTypeName.INT64
       case Float, float -> primitive = PrimitiveTypeName.FLOAT
       case Double, double -> primitive = PrimitiveTypeName.DOUBLE
-      case BigDecimal -> {
-        if (decimalMeta != null) {
-          int precision = decimalMeta ? decimalMeta[0] : 10
-          int scale = decimalMeta ? decimalMeta[1] : 2
-          primitive = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY
-          logical = LogicalTypeAnnotation.decimalType(scale, precision)
-          Types.optional(primitive)
-              .length(minBytesForPrecision(precision))
-              .as(logical)
-              .named(name)
-        } else {
-          primitive = PrimitiveTypeName.DOUBLE
-          logical = null
-        }
-      }
       case Boolean, boolean -> primitive = PrimitiveTypeName.BOOLEAN
       case LocalDate, java.sql.Date -> {
         primitive = PrimitiveTypeName.INT32
@@ -137,7 +169,7 @@ class MatrixParquetWriter {
   }
 
   static Map<String, int[]> inferDecimalPrecisionAndScale(Matrix matrix) {
-    def result = [:] // columnName -> [precision, scale]
+    Map<String, int[]> result = [:] // columnName -> [precision, scale]
 
     matrix.columnNames().each { col ->
       if (matrix.type(col) == BigDecimal) {
@@ -150,10 +182,9 @@ class MatrixParquetWriter {
             maxScale = Math.max(maxScale, value.scale())
           }
         }
-        result[col] = [maxPrecision, maxScale]
+        result[col] = [maxPrecision, maxScale] as int[]
       }
     }
-
     return result
   }
 

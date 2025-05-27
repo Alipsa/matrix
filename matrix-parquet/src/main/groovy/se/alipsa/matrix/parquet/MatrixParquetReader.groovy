@@ -1,9 +1,12 @@
 package se.alipsa.matrix.parquet
 
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.parquet.example.data.Group
+import org.apache.parquet.hadoop.ParquetFileReader
 import org.apache.parquet.hadoop.ParquetReader
 import org.apache.parquet.hadoop.example.GroupReadSupport
+import org.apache.parquet.schema.GroupType
 import org.apache.parquet.schema.LogicalTypeAnnotation
 import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.PrimitiveType
@@ -20,6 +23,18 @@ class MatrixParquetReader {
 
   static Matrix read(File file) {
     def path = new Path(file.toURI())
+    def conf = new Configuration()
+    // Open Parquet file metadata
+    def footer = ParquetFileReader.readFooter(conf, path)
+    def keyValueMetaData = footer.getFileMetaData().getKeyValueMetaData()
+    def typeString = keyValueMetaData.get("matrix.columnTypes")
+
+    println("typeString: $typeString")
+    List<Class> fieldTypes
+    if (typeString != null) {
+      fieldTypes = parseTypeString(typeString)
+    }
+
     def reader = ParquetReader.builder(new GroupReadSupport(), path).build()
 
     String matrixName
@@ -34,9 +49,11 @@ class MatrixParquetReader {
       return Matrix.builder(matrixName).build()
     }
 
-    MessageType schema = row.getType()
+    def schema = row.getType()
     List<String> fieldNames = schema.fields.collect { it.name }
-    List<Class> fieldTypes = extractFieldTypes(schema)
+    if (fieldTypes == null) {
+      fieldTypes = extractFieldTypes(schema)
+    }
 
     def builder = Matrix.builder(matrixName)
     .columnNames(fieldNames)
@@ -66,7 +83,7 @@ class MatrixParquetReader {
                 value = new BigDecimal(unscaled, scale)
               } else {
                 // fallback (when not using inferredType i.e. FIXED_LEN_BYTE_ARRAY)
-                value = new BigDecimal(row.getDouble(name, 0))
+                value = BigDecimal.valueOf(row.getDouble(name, 0))
               }
             }
             case BigInteger  -> value = BigInteger.valueOf(row.getLong(name, 0))
@@ -94,6 +111,27 @@ class MatrixParquetReader {
     return builder.build()
   }
 
+  static List<Class> parseTypeString(String typeString) {
+    return typeString.split(',').collect { className ->
+      switch (className.trim()) {
+        case "int" -> Integer
+        case "long" -> Long
+        case "float" -> Float
+        case "double" -> Double
+        case "boolean" -> Boolean
+        case "BigDecimal" -> BigDecimal
+        case "BigInteger" -> BigInteger
+        case "String" -> String
+        case "LocalDate" -> LocalDate
+        case "LocalDateTime" -> LocalDateTime
+        case "Date" -> Date
+        case "Time" -> Time
+        case "java.sql.Date" -> java.sql.Date
+        default -> throw new IllegalArgumentException("Unsupported class in metadata: $className")
+      }
+    }
+  }
+
   private static Class getJavaType(PrimitiveType.PrimitiveTypeName typeName) {
     switch (typeName) {
       case PrimitiveType.PrimitiveTypeName.INT32: return Integer
@@ -105,23 +143,18 @@ class MatrixParquetReader {
     }
   }
 
-  static List<Class> extractFieldTypes(MessageType schema) {
-      schema.fields.collect { field ->
-        def logical = field.getLogicalTypeAnnotation()
-        def primitive = field.asPrimitiveType().primitiveTypeName
+  static List<Class> extractFieldTypes(GroupType schema) {
+    schema.fields.collect { field ->
+      def logical = field.getLogicalTypeAnnotation()
+      def primitive = field.asPrimitiveType().primitiveTypeName
 
-        if (logical != null) {
-          if (logical == LogicalTypeAnnotation.dateType()) {
-            return LocalDate
-          }
-          if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
-            return LocalDateTime
-          }
-          if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-            return BigDecimal
-          }
-        }
-        getJavaType(primitive)
+      if (logical != null) {
+        if (logical == LogicalTypeAnnotation.dateType()) return LocalDate
+        if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) return LocalDateTime
+        if (logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) return BigDecimal
       }
+
+      return getJavaType(primitive)
+    }
   }
 }
