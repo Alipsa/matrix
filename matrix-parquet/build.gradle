@@ -44,7 +44,19 @@ dependencies {
         testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
     }*/
     implementation 'org.apache.ivy:ivy:2.5.3'
-    //implementation 'com.jerolba:carpet-record:0.2.1' must be loaded by Grab for now
+    //implementation 'com.jerolba:carpet-record:0.4.0' //must be loaded by Grab for now
+    implementation 'org.apache.parquet:parquet-column:1.15.2'
+    implementation 'org.apache.parquet:parquet-hadoop:1.15.2'
+    implementation('org.apache.hadoop:hadoop-common:3.4.1') {
+        //exclude group: 'org.slf4j'         // optional: avoid conflicts
+        //exclude group: 'com.google.guava'  // optional: prevent old guava
+        //exclude group: 'org.apache.hadoop.thirdparty'
+        exclude group: 'org.apache.zookeeper'
+        exclude group: 'com.fasterxml.jackson.core'
+        exclude group: 'io.netty'                   // ✅ Netty
+        exclude group: 'com.squareup.okhttp3'       // optional, sometimes pulled transitively
+    }
+    implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.4.1'
     testImplementation testLibs.junitJupiterApi
     testRuntimeOnly testLibs.junitJupiterEngine
     testRuntimeOnly testLibs.junitPlatformLauncher
