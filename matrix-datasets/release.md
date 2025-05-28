@@ -1,7 +1,8 @@
 # Release history
 
-## v2.0.1, In progress
+## v2.1.0, In progress
 - set FileUtil to CompileStatic
+- Add easy access to the 2536 datasets from the R datasets project through the RDatasets class
 
 ## v2.0.0, 2025-03-12
 - Require JDK 21

@@ -34,7 +34,7 @@
     <matrixCoreVersion>3.3.0</matrixCoreVersion> <!-- do not bump to next SNAPSHOT version until all modules are released -->
     <matrixStatsVersion>2.1.1-SNAPSHOT</matrixStatsVersion>
     <matrixSqlVersion>2.1.1-SNAPSHOT</matrixSqlVersion>
-    <matrixDatasetsVersion>2.0.2-SNAPSHOT</matrixDatasetsVersion>
+    <matrixDatasetsVersion>2.1.0</matrixDatasetsVersion>
     <matrixSpreadsheetVersion>2.1.1-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixJsonVersion>2.1.1-SNAPSHOT</matrixJsonVersion>
     <matrixCsvVersion>2.1.1-SNAPSHOT</matrixCsvVersion>
