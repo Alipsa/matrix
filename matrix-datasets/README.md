@@ -9,7 +9,7 @@ Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and m
 Gradle:
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.27'
-implementation 'org.apache.groovy:groovy-ant:4.0.27'
+implementation 'org.apache.groovy:groovy-ginq:4.0.27'
 implementation 'se.alipsa.matrix:matrix-core:3.3.0'
 implementation 'se.alipsa.matrix:matrix-datasets:2.1.0'
 ```
@@ -23,8 +23,9 @@ Maven:
   </dependency>
   <dependency>
       <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy-ant</artifactId>
+      <artifactId>groovy-ginq</artifactId>
       <version>4.0.27</version>
+  </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
