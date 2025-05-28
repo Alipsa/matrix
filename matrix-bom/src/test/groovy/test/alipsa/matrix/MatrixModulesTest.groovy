@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Assertions
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.matrix.json.JsonExporter
 import se.alipsa.matrix.json.JsonImporter
+import se.alipsa.matrix.parquet.MatrixParquetReader
+import se.alipsa.matrix.parquet.MatrixParquetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.sql.MatrixSql
@@ -132,6 +134,13 @@ class MatrixModulesTest {
 
     Matrix d2 = MatrixParquetIO.read(file, 'mtcars')
     Assertions.assertEquals(data, d2)
+
+    file.delete()
+    MatrixParquetWriter.write(data, file)
+    Matrix d3 = MatrixParquetReader.read(file)
+    Assertions.assertEquals(data, d3, "Data read from Parquet file does not match original data")
+    Assertions.assertEquals(data.types(), d3.types(),
+        "Types read from Parquet file do not match expected types")
   }
 
   @Test

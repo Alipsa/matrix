@@ -5,7 +5,7 @@ plugins {
 group = 'se.alipsa.matrix.examples'
 version = '1.0.0-SNAPSHOT'
 
-def groovyVersion = '4.0.26'
+def groovyVersion = '4.0.27'
 repositories {
   mavenCentral()
   mavenLocal()

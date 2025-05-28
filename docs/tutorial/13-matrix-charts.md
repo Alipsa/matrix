@@ -37,7 +37,7 @@ implementation 'se.alipsa.matrix:stats'
       <dependency>
          <groupId>org.apache.groovy</groupId>
          <artifactId>groovy</artifactId>
-         <version>4.0.26</version>
+         <version>4.0.27</version>
       </dependency>
       <dependency>
          <groupId>se.alipsa.matrix</groupId>

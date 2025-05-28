@@ -87,7 +87,7 @@ If you're using the Matrix library from Java, you'll need to add the Groovy core
 
 ```groovy
 // For Gradle
-implementation('org.apache.groovy:groovy:4.0.26')
+implementation('org.apache.groovy:groovy:4.0.27')
 ```
 
 ```xml
@@ -95,7 +95,7 @@ implementation('org.apache.groovy:groovy:4.0.26')
 <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>4.0.26</version>
+    <version>4.0.27</version>
 </dependency>
 ```
 

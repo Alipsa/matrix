@@ -38,7 +38,7 @@
     <matrixSpreadsheetVersion>2.1.1-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixJsonVersion>2.1.1-SNAPSHOT</matrixJsonVersion>
     <matrixCsvVersion>2.1.1-SNAPSHOT</matrixCsvVersion>
-    <matrixParquetVersion>0.2.1-SNAPSHOT</matrixParquetVersion>
+    <matrixParquetVersion>0.3.0</matrixParquetVersion>
     <matrixBigQueryVersion>0.3.0</matrixBigQueryVersion>
     <matrixChartsVersion>0.3.1-SNAPSHOT</matrixChartsVersion>
     <matrixXChartVersion>0.2.1</matrixXChartVersion>
