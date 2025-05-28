@@ -8,6 +8,7 @@ dependencyResolutionManagement {
       library('groovyGinq', "org.apache.groovy:groovy-ginq:$groovyVersion")
       library('groovyJson', "org.apache.groovy:groovy-json:$groovyVersion")
       library('groovyTemplates', "org.apache.groovy:groovy-templates:$groovyVersion")
+      library('groovyAnt', "org.apache.groovy:groovy-ant:$groovyVersion")
     }
 
     testLibs {

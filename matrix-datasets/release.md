@@ -1,11 +1,16 @@
 # Release history
 
-## v2.1.0, In progress
-- set FileUtil to CompileStatic
+## v2.1.0, 2025-05-28
 - Add easy access to the 2536 datasets from the R datasets project through the RDatasets class
+Jar available at https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-datasets/2.1.0/matrix-datasets-2.1.0.jar
+
+## v2.0.1, 2025-03-26
+- set FileUtil to CompileStatic
+Jar available at https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-datasets/2.0.1/matrix-datasets-2.0.1.jar
 
 ## v2.0.0, 2025-03-12
 - Require JDK 21
+Jar available at https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-datasets/2.0.0/matrix-datasets-2.0.0.jar
 
 ## v1.1.0, 2025-01-06
 - adopt to matrix core 2.2.0

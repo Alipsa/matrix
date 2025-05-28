@@ -8,21 +8,32 @@ Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and m
 ## Setup
 Gradle:
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:3.1.0'
-implementation 'se.alipsa.matrix:matrix-datasets:2.0.1'
+implementation 'org.apache.groovy:groovy:4.0.27'
+implementation 'org.apache.groovy:groovy-ant:4.0.27'
+implementation 'se.alipsa.matrix:matrix-core:3.3.0'
+implementation 'se.alipsa.matrix:matrix-datasets:2.1.0'
 ```
 Maven:
 ```xml
 <dependencies>
   <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>4.0.27</version>
+  </dependency>
+  <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-ant</artifactId>
+      <version>4.0.27</version>
+  <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.1.0</version>
+      <version>3.3.0</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-datasets</artifactId>
-      <version>2.0.1</version>
+      <version>2.1.0</version>
   </dependency>
 </dependencies>
 ```
