@@ -1,12 +1,13 @@
 # Release history
 
-## v2.1.1, in progress
+## v2.2.0, in progress
 - upgrade poi 5.4.0 -> 5.4.1
 - getOrDefault() behaves oddly so switched to get() and elvis operator
 - overload additional import options to SpreadsheetImporter to allow for more flexible import
 - add importOds and importExcel method to SpreadsheetImporter to handle import from a URL
 - upgrade SODS 1.6.7 -> 1.6.8
 - Upgrade fastExcel 0.18.4 -> 0.19.0
+- Fix groovydoc generation by using the groovydoc ant task to generate the docs (to be able to set javaVersion).
 
 ## v2.1.0, 2025-03-26
 - Add several new import options (for file, input streams and URL)

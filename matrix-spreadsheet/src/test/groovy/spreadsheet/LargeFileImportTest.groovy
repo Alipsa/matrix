@@ -39,7 +39,7 @@ class LargeFileImportTest {
                   null, null, null, '24300    WESTERN                      AV', null,	33.8046, -118.3074]
 
   /**
-   * This test causes OutOfMemoryError which is
+   * This test takes VERY long time at best or causes OutOfMemoryError at worst which is
    * precisely why the fastods implementation was created
    */
   @Disabled

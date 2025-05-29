@@ -35,7 +35,7 @@
     <matrixStatsVersion>2.1.1-SNAPSHOT</matrixStatsVersion>
     <matrixSqlVersion>2.1.1-SNAPSHOT</matrixSqlVersion>
     <matrixDatasetsVersion>2.1.0</matrixDatasetsVersion>
-    <matrixSpreadsheetVersion>2.1.1-SNAPSHOT</matrixSpreadsheetVersion>
+    <matrixSpreadsheetVersion>2.2.0</matrixSpreadsheetVersion>
     <matrixJsonVersion>2.1.1-SNAPSHOT</matrixJsonVersion>
     <matrixCsvVersion>2.1.1-SNAPSHOT</matrixCsvVersion>
     <matrixParquetVersion>0.3.0</matrixParquetVersion>

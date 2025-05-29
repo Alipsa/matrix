@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.1.1-SNAPSHOT'
+version = '2.2.0'
 description = 'Groovy spreadsheet import/export'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -36,6 +36,11 @@ compileGroovy {
 
 dependencies {
     compileOnly libs.groovy
+    compileOnly libs.groovyAnt
+    compileOnly libs.groovyTemplates
+    compileOnly libs.groovyDoc
+    compileOnly 'com.github.javaparser:javaparser-core:3.26.4'
+
 
     def fastExcelVersion = '0.19.0'
     def poiVersion = '5.4.1'
@@ -98,14 +103,54 @@ test {
     }
 }
 
-//Maven Central uploads
-task javadocJar(type: Jar, dependsOn: groovydoc) {
-    archiveClassifier.set('javadoc')
-    from groovydoc.destinationDir
+//docTitle = "${project.name} ${project.version}"
+//windowTitle = "${project.name} ${project.version}"
+//link 'https://docs.oracle.com/en/java/javase/21/docs/api/', 'java.'
+
+tasks.register('antGroovydoc', DefaultTask) {
+    group = 'documentation'
+    description = 'Generate Groovydoc using Ant with custom config'
+
+    doLast {
+        def outputDir = layout.buildDirectory.dir("groovydocant").get().asFile
+
+        ant.taskdef(
+            name: 'groovydoc',
+            classname: 'org.codehaus.groovy.ant.Groovydoc',
+            classpath: sourceSets.main.compileClasspath.asPath
+        )
+
+        ant.groovydoc(
+            destdir: outputDir,
+            sourcepath: sourceSets.main.groovy.srcDirs.join(':'),
+            packagenames: '*',
+            javaVersion: 'JAVA_21',
+            doctitle: "${project.name} ${project.version}",
+            windowtitle: "${project.name} ${project.version}"
+        ) {
+            // Does not work, groovydoc does not support modules e,g,
+            //  URL will become https://docs.oracle.com/en/java/javase/21/docs/api/java/net/URL.html
+            //  instead of https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/URL.html
+            //link packages: 'java.', href: 'https://docs.oracle.com/en/java/javase/21/docs/api/'
+            link packages:"groovy.,org.codehaus.groovy.", href: "http://docs.groovy-lang.org/latest/html/api/"
+        }
+    }
 }
 
+tasks.named('build') {
+    dependsOn tasks.named('antGroovydoc')
+}
 
-task sourcesJar(type: Jar, dependsOn: classes) {
+//Maven Central uploads
+
+tasks.register('javadocJar', Jar) {
+    dependsOn tasks.named('antGroovydoc')
+    archiveClassifier.set('javadoc')
+    from layout.buildDirectory.dir("groovydocant")
+}
+
+tasks.register('sourcesJar', Jar) {
+    dependsOn tasks.named('classes')
     archiveClassifier.set('sources')
     from sourceSets.main.allSource
 }
