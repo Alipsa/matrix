@@ -1,25 +1,84 @@
 package se.alipsa.matrix.stats.cluster
 
-import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.Matrix
 
 /**
- * KMeans clustering algorithm.
- *
- * The K-means algorithm is a method of vector quantization, originally from signal processing,
- * that is popular for cluster analysis in data mining.
- *
- * The algorithm aims to partition n observations into k clusters in which each observation belongs to the cluster with the nearest mean,
- * serving as a prototype of the cluster.
+ * Run KMeans clustering on selected columns.
  * Example usage:
  * <pre><code>
- *   import se.alipsa.matrix.stats.cluster.KMeans
- *   import se.alipsa.matrix.core.Matrix
+ * Matrix m = Matrix.builder('Whiskey data')
+ *   .data('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
+ *   .build()
+ * KMeans kmeans = new KMeans(m)
+ * List<String> features = m.columnNames() - 'Distillery'
  *
- *   Matrix m = Matrix.builder('Whiskey data').data('https://www.niss.org/sites/default/files/ScotchWhisky01.txt').build())
- *   KMeans kmeans = new KMeans(m)
- kmeans.fit(features, 3, 20)
+ * // Option 1: explicitly specify k and iterations
+ * Matrix mWithGroup = kmeans.fit(features, 3, 20)
+ *
+ * // Option 2: estimate k automatically
+ * Matrix mWithGroupAuto = kmeans.fit(features, 20, GroupEstimator.CalculationMethod.ELBOW)
+ * </pre></code>
+ *
+ * @param columnNames the column names to use as feature vectors
+ * @param k number of clusters
+ * @param iterations number of iterations to try, default is 30
+ * @param columnName name of the added cluster column (default "Group")
+ * @param mutate whether to mutate the original Matrix (true) or return a copy (false), default is true
  */
-@CompileStatic
 class KMeans {
 
+  private Matrix matrix
+
+  KMeans(Matrix matrix) {
+    if (matrix == null || matrix.rowCount() == 0 || matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must contain data")
+    }
+    this.matrix = matrix
+  }
+
+  private double[][] extractPoints(List<String> columnNames) {
+    List<double[]> points = []
+    def colNames = matrix.columnNames()
+
+    columnNames.each {
+      if (!colNames.contains(it)) {
+        throw new IllegalArgumentException("The Matrix does not contain column: $it")
+      }
+    }
+    for (int i = 0; i < matrix.rowCount(); i++) {
+      double[] row = new double[columnNames.size()]
+      for (int j = 0; j < columnNames.size(); j++) {
+        row[j] = matrix.getAt(i, columnNames[j], Number, Double.NaN).doubleValue()
+      }
+      points << row
+    }
+    return points as double[][]
+  }
+
+  Matrix fit(List<String> columnNames, int k, int iterations, String columnName = "Group", boolean mutate = true) {
+    double[][] points = extractPoints(columnNames)
+    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(k, points)
+        .iterations(iterations)
+        .pp(true)
+        .useEpsilon(true)
+        .build()
+    return addClusterColumn(clustering, columnName, mutate)
+  }
+
+  Matrix fit(List<String> columnNames, int iterations = 30, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW, String columnName = "Group", boolean mutate = true) {
+    double[][] points = extractPoints(columnNames)
+    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(points, method)
+        .iterations(iterations)
+        .build()
+    return addClusterColumn(clustering, columnName, mutate)
+  }
+
+  private Matrix addClusterColumn(KMeansPlusPlus clustering, String columnName, boolean mutate) {
+    List<Integer> clusterIds = clustering.assignment*.clusterId
+    if (mutate) {
+      return matrix.addColumn(columnName, Integer, clusterIds)
+    } else {
+      return matrix.clone().addColumn(columnName, Integer, clusterIds)
+    }
+  }
 }

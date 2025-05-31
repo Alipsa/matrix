@@ -14,7 +14,7 @@ repositories {
 dependencies {
   implementation "org.apache.groovy:groovy:$groovyVersion"
   implementation "org.apache.groovy:groovy-ginq:$groovyVersion"
-  implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
+  implementation platform('se.alipsa.matrix:matrix-bom:2.2.1-SNAPSHOT')
   implementation 'se.alipsa.matrix:matrix-core'
   implementation 'se.alipsa.matrix:matrix-csv'
   implementation 'se.alipsa.matrix:matrix-stats'

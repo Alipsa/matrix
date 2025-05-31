@@ -2,6 +2,14 @@
 @Grab('com.github.haifengl:smile-plot:4.3.0')
 @Grab(group='org.bytedeco', module='openblas', version='0.3.28-1.5.11')
 @Grab(group='org.bytedeco', module='javacpp', version='1.5.11')
+//@Grab('org.apache.ivy:ivy:2.5.3')
+//@Grab('org.apache.groovy:groovy-ginq:4.0.27')
+@Grab('se.alipsa.matrix:matrix-core:3.3.0')
+@Grab('se.alipsa.matrix:matrix-csv:2.1.1-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-stats:2.1.1-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-xchart:0.2.1')
+@groovy.lang.GrabConfig(systemClassLoader=true)
+
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.csv.*
 import se.alipsa.matrix.stats.Correlation
@@ -27,15 +35,15 @@ aberlour = selected.subset(0..0)
 aberlourRc = RadarChart.create(aberlour, 600, 500)
     .setTitle('aberlour')
     .addSeries('Distillery', transparency)
-io.display(aberlourRc.exportSwing())
-//rc.display()
+//io.display(aberlourRc.exportSwing())
+aberlourRc.display()
 //rc.exportPng(new File( 'aberlour.png'))
 distilleriesRc = RadarChart.create(selected, 680, 500)
     .setTitle("Distilleries")
     .addSeries('Distillery', transparency)
-//rc.display()
+distilleriesRc.display()
 //rc.exportPng(new File( 'distilleries.png'))
-io.display(distilleriesRc.exportSwing())
+//io.display(distilleriesRc.exportSwing())
 
 iterations = 20
 data = m.selectColumns(features) as double[][]
@@ -66,12 +74,16 @@ for (i in clusters) {
   def series = m.subset('Cluster', i)
   sc.addSeries("Cluster $i", series.column('X'), series.column('Y'))
 }
-//sc.display()
+sc.display()
 //sc.exportPng(new File( 'clusters.png'))
-io.display(sc.exportSwing())
+//io.display(sc.exportSwing())
 
 // Create a correlation heatmap
 // TODO use a CorrelationHeatmapChart instead of a homegrown HeatmapChart
+CorrelationHeatmapChart.create(m)
+  .addSeries('Heat Series', features)
+  .display()
+
 corr = [size<..0, 0..<size].combinations().collect { int i, int j ->
   Correlation.cor(data[j] as List<? extends Number>, data[i] as List<? extends Number>) * 100 as int
 }
@@ -86,4 +98,5 @@ hc = HeatmapChart.create(corrMatrix, 820, 500)
         corrMatrix.column('Heat').collate(size))
 
 //hc.exportPng(new File('heatmap.png'))
-io.display(hc.exportSwing())
+//io.display(hc.exportSwing())
+hc.display()
