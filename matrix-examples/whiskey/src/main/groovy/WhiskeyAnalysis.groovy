@@ -45,13 +45,18 @@ distilleriesRc.display()
 //rc.exportPng(new File( 'distilleries.png'))
 //io.display(distilleriesRc.exportSwing())
 
+
 iterations = 20
-data = m.selectColumns(features) as double[][]
-model = KMeans.fit(data,3, iterations)
-m['Cluster'] = model.group().toList()
+def km = new se.alipsa.matrix.stats.cluster.KMeans(m)
+mCluster = km.fit(features, 3, iterations, 'Cluster', true).withMatrixName('mCluster')
+println mCluster.content()
+println Stat.countBy(mCluster, 'Cluster')
+
+//model = KMeans.fit(data,3, iterations)
+//m['Cluster'] = model.group().toList()
 
 result = GQ {
-  from w in m
+  from w in mCluster
   groupby w.Cluster
   orderby w.Cluster
   select w.Cluster, count(w.Cluster) as Count
@@ -61,7 +66,7 @@ println result
 println Matrix.builder('Cluster allocation').ginqResult(result).build().content()
 
 //assert m.rows().countBy{ it.Cluster } == [0:51, 1:23, 2:12]
-
+data = m.selectColumns(features) as double[][]
 pca = PCA.fit(data)
 projected = pca.getProjection(2).apply(data)
 m['X'] = projected*.getAt(0)

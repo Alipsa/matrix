@@ -304,6 +304,9 @@ class KMeansPlusPlus {
      * @return a new KMeansPlusPlus object
      */
     KMeansPlusPlus build() {
+      //println "Running KMeansPlusPlus clustering..."
+      //println "Input points: ${points.length}"
+      //println "k = $k, iterations = $iterations"
       return new KMeansPlusPlus(this)
     }
   }
@@ -317,6 +320,7 @@ class KMeansPlusPlus {
    * Run KMeans algorithm
    */
   private void run() {
+    //println "Starting clustering with $points.length points and $k clusters"
     // for choosing the best run
     double bestWCSS = Double.POSITIVE_INFINITY
     double[][] bestCentroids = new double[0][0]
@@ -324,6 +328,7 @@ class KMeansPlusPlus {
 
     // run multiple times and then choose the best run
     for (int n = 0; n < iterations; n++) {
+      //println "Iteration $n: WCSS = $WCSS"
       cluster()
 
       // store info if it was the best run so far

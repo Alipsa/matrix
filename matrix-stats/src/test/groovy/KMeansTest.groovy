@@ -71,4 +71,24 @@ class KMeansTest {
     }
     assertTrue(thrown.message.contains("Matrix does not contain column: c"))
   }
+
+  @Test
+  void testWhiskeyDataClustering() {
+    def m = Matrix.builder()
+        .data('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
+        .build()
+        .dropColumns('RowID')
+
+    List<String> features = m.columnNames() - 'Distillery'
+    features.each {
+      m.convert(it, Double)
+    }
+    KMeans kmeans = new KMeans(m)
+    Matrix clustered = kmeans.fit(features, 3, 50, "Group", false)
+
+    //println clustered.content()
+    assertEquals(3, clustered.column("Group").toSet().size(), "Should have three clusters")
+    assertEquals(6, clustered.rowCount(), "Should have same row count after clustering")
+    assertTrue(clustered.columnNames().contains("Group"), "Matrix should contain 'Group' column")
+  }
 }
