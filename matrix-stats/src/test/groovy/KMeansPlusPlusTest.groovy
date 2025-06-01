@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 class KMeansPlusPlusTest {
 
   @Test
-  void testKMeans() {
+  void testKMeansPlusPlus() {
     // the test data is four 750-point Gaussian clusters (3000 points in all)
     // created around the vertices of the unit square
     int k = 4
@@ -63,6 +63,7 @@ class KMeansPlusPlusTest {
     double[][] data = gaussianClusters(750, 0.05) as double[][]
     KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(data, GroupEstimator.CalculationMethod.ELBOW).build()
     println "Estimated number of clusters for elbow method: ${clustering.getCentroids().length}"
+    println clustering.getTiming()
     assert clustering.getCentroids().length in 3..5
   }
 
@@ -71,6 +72,7 @@ class KMeansPlusPlusTest {
     double[][] data = gaussianClusters(750, 0.05) as double[][]
     KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(data, GroupEstimator.CalculationMethod.RULE_OF_THUMB).build()
     println "Estimated number of clusters for Rule of thumb: ${clustering.getCentroids().length}"
+    println clustering.getTiming()
     assert clustering.getCentroids().length <= (int)Math.max(2, Math.sqrt(data.length / 2.0d))
     assert clustering.getCentroids().length >= Math.max(2, (int) Math.round(Math.cbrt(data.length)))
   }
@@ -84,7 +86,7 @@ class KMeansPlusPlusTest {
    * @param stdDev Standard deviation for the Gaussian distribution
    * @return List of points, each represented as a list of doubles
    */
-  private static List<List<Double>> gaussianClusters(int pointsPerCluster = 750, double stdDev = 0.05) {
+  static List<List<Double>> gaussianClusters(int pointsPerCluster = 750, double stdDev = 0.05) {
 
 
     // Cluster centers at corners of unit square

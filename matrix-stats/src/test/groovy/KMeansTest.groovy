@@ -1,5 +1,7 @@
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.stats.Normalize
 import se.alipsa.matrix.stats.cluster.GroupEstimator
 import se.alipsa.matrix.stats.cluster.KMeans
 
@@ -45,16 +47,22 @@ class KMeansTest {
   void testNoMutationReturnsNewMatrix() {
     Matrix m = Matrix.builder("test").columns([
         "x": [0.1, 0.9, 0.1, 0.9],
-        "y": [0.1, 0.9, 0.9, 0.1]
-    ]).build()
+        "y": [0.1, 0.9, 0.9, 0.1],
+        "z": [0.42, 0.73, 0.64, 0.45] // added column
+    ]).types([double]*3)
+        .build()
 
     KMeans kmeans = new KMeans(m)
-    List<String> features = ["x", "y"]
-    Matrix result = kmeans.fit(features, 2, 10, "clusterGroup", false)
+    List<String> features = ["x", "y", "z"]
+    Matrix result = kmeans.fit(features, 2, 20, "clusterGroup", false)
 
+    println result.content()
+    // Assertions
     assertNotSame(m, result, "Should return a new Matrix when mutate = false")
     assertEquals(m.rowCount(), result.rowCount())
     assertTrue(result.columnNames().contains("clusterGroup"))
+    assertEquals(m.column("z"), result.column("z"), "z column should be preserved in result")
+    assertTrue(result.column("clusterGroup").every { it instanceof Integer }, "Group values should be integers")
   }
 
   @Test
@@ -83,12 +91,13 @@ class KMeansTest {
     features.each {
       m.convert(it, Double)
     }
+    m = Normalize.minMaxNorm(m)
     KMeans kmeans = new KMeans(m)
     Matrix clustered = kmeans.fit(features, 3, 50, "Group", false)
-
-    //println clustered.content()
+    println "testWhiskeyDataClustering: " + kmeans.reportTime()
+    println Stat.countBy(clustered, 'Group').content()
     assertEquals(3, clustered.column("Group").toSet().size(), "Should have three clusters")
-    assertEquals(6, clustered.rowCount(), "Should have same row count after clustering")
+    assertEquals(m.rowCount(), clustered.rowCount(), "Should have same row count after clustering")
     assertTrue(clustered.columnNames().contains("Group"), "Matrix should contain 'Group' column")
   }
 }

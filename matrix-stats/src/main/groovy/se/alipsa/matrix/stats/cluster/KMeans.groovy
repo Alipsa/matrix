@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.cluster
 
+import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -28,6 +29,7 @@ import se.alipsa.matrix.core.Matrix
 class KMeans {
 
   private Matrix matrix
+  private KMeansPlusPlus clustering
 
   KMeans(Matrix matrix) {
     if (matrix == null || matrix.rowCount() == 0 || matrix.columnCount() == 0) {
@@ -37,27 +39,17 @@ class KMeans {
   }
 
   private double[][] extractPoints(List<String> columnNames) {
-    List<double[]> points = []
-    def colNames = matrix.columnNames()
-
-    columnNames.each {
-      if (!colNames.contains(it)) {
-        throw new IllegalArgumentException("The Matrix does not contain column: $it")
-      }
+    Matrix m = matrix.selectColumns(columnNames)
+    double[][] points = new double[m.rowCount()][m.columnCount()]
+    m.eachWithIndex { row, i ->
+      points[i] = ListConverter.toDoubleArray(row as List<? extends Number>)
     }
-    for (int i = 0; i < matrix.rowCount(); i++) {
-      double[] row = new double[columnNames.size()]
-      for (int j = 0; j < columnNames.size(); j++) {
-        row[j] = matrix.getAt(i, columnNames[j], Number, Double.NaN).doubleValue()
-      }
-      points << row
-    }
-    return points as double[][]
+    return points
   }
 
   Matrix fit(List<String> columnNames, int k, int iterations, String columnName = "Group", boolean mutate = true) {
     double[][] points = extractPoints(columnNames)
-    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(k, points)
+    clustering = new KMeansPlusPlus.Builder(k, points)
         .iterations(iterations)
         .pp(true)
         .useEpsilon(true)
@@ -67,8 +59,10 @@ class KMeans {
 
   Matrix fit(List<String> columnNames, int iterations = 30, GroupEstimator.CalculationMethod method = GroupEstimator.CalculationMethod.ELBOW, String columnName = "Group", boolean mutate = true) {
     double[][] points = extractPoints(columnNames)
-    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(points, method)
+    clustering = new KMeansPlusPlus.Builder(points, method)
         .iterations(iterations)
+        .pp(true)
+        .useEpsilon(true)
         .build()
     return addClusterColumn(clustering, columnName, mutate)
   }
@@ -81,4 +75,13 @@ class KMeans {
       return matrix.clone().addColumn(columnName, Integer, clusterIds)
     }
   }
+
+  String reportTime() {
+    return clustering?.timing ?: "No clustering performed yet"
+  }
+
+  int getExecutionTimeMillis() {
+    return clustering?.executionTimeMillis ?: -1
+  }
+
 }

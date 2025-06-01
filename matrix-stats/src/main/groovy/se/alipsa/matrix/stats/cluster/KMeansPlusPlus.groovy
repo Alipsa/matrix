@@ -66,7 +66,7 @@ import se.alipsa.matrix.core.Matrix
  * </ul>
  * <strong>Optional:</strong>
  * <ul>
- *   <li><code>int iterations</code> (default 10): number of runs to find best clustering</li>
+ *   <li><code>int iterations</code> (default 50): number of runs to find best clustering</li>
  *   <li><code>boolean pp</code> (default true): use KMeans++ initialization</li>
  *   <li><code>double epsilon</code> (default .001): WCSS improvement threshold</li>
  *   <li><code>boolean useEpsilon</code> (default true)</li>
@@ -160,7 +160,7 @@ class KMeansPlusPlus {
     private final double[][] points
 
     // optional (default values given)
-    private int iterations     = 10
+    private int iterations     = 50
     private boolean pp         = true
     private double epsilon     = .001
     private boolean useEpsilon = true
@@ -218,7 +218,7 @@ class KMeansPlusPlus {
     }
 
     /**
-     * Set the number of clustering iterations (default is 30).
+     * Set the number of clustering iterations (default is 50).
      * Each iteration runs KMeans independently and retains the best result.
      *
      * @param iterations the number of runs; must be ≥ 1
@@ -333,6 +333,9 @@ class KMeansPlusPlus {
 
       // store info if it was the best run so far
       if (WCSS < bestWCSS) {
+        //println "$n WCSS < bestWCSS = $WCSS < $bestWCSS"
+        //println("$n Centroids: ${centroids} clusters")
+        //println("$n Assignment: ${assignment.length} points assigned to clusters")
         bestWCSS = WCSS
         bestCentroids = centroids
         bestAssignment = assignment
@@ -350,6 +353,7 @@ class KMeansPlusPlus {
    * Perform KMeans clustering algorithm once.
    */
   private void cluster() {
+    centroids = new double[k][n]
     // continue to re-cluster until marginal gains are small enough
     chooseInitialCentroids()
     WCSS = Double.POSITIVE_INFINITY
@@ -390,55 +394,48 @@ class KMeansPlusPlus {
    * Updates the centroids.
    */
   private void updateStep() {
-    // reuse memory is faster than re-allocation
-    for (int i = 0; i < k; i++)
-      Arrays.fill(centroids[i], 0)
+    // Zero out all centroids
+    for (int i = 0; i < k; i++) {
+      if (centroids[i] == null) {
+        centroids[i] = new double[n]
+      } else {
+        Arrays.fill(centroids[i], 0.0d)
+      }
+    }
 
     int[] clustSize = new int[k]
-    // sum points assigned to each cluster
+
+    // Sum points assigned to each cluster
     for (ClusteredPoint cp : assignment) {
-      clustSize[cp.clusterId]++
+      int cid = cp.clusterId
+      clustSize[cid]++
       for (int j = 0; j < n; j++) {
-        centroids[cp.clusterId][j] += cp.point[j]
+        centroids[cid][j] += cp.point[j]
       }
     }
-    // store indices of empty clusters
-    HashSet<Integer> emptyCentroids = new HashSet<>()
 
-    // divide to get averages -> centroids
+    Random rand = new Random()
+
+    // Defensive fix for empty clusters
     for (int i = 0; i < k; i++) {
       if (clustSize[i] == 0) {
-        emptyCentroids.add(i)
-      } else {
-        for (int j = 0; j < n; j++) {
-          centroids[i][j] /= clustSize[i]
-        }
+        println "⚠️ Cluster $i is empty, reinitializing to a random point"
+        int randIndex = rand.nextInt(m)
+        centroids[i] = Arrays.copyOf(points[randIndex], n)
+        clustSize[i] = 1 // prevent division by zero
       }
     }
 
-    // gracefully handle empty clusters by assigning to that centroid an unused data point
-    if (!emptyCentroids.isEmpty()) {
-      HashSet<double[]> nonemptyCentroids = new HashSet<>(k - emptyCentroids.size())
-      for (int i = 0; i < k; i++) {
-        if (!emptyCentroids.contains(i)) {
-          nonemptyCentroids.add(centroids[i])
-        }
-      }
-
-      Random r = new Random()
-      for (int i : emptyCentroids) {
-        while (true) {
-          int rand = r.nextInt(points.length)
-          if (!nonemptyCentroids.contains(points[rand])) {
-            nonemptyCentroids.add(points[rand])
-            centroids[i] = points[rand]
-            break
-          }
+    // Normalize to mean (centroid)
+    for (int i = 0; i < k; i++) {
+      for (int j = 0; j < n; j++) {
+        centroids[i][j] /= clustSize[i]
+        if (Double.isNaN(centroids[i][j])) {
+          throw new IllegalStateException("Centroid $i at dim $j is NaN!")
         }
       }
     }
   }
-
 
   /***********************************************************************
    * Choose initial centroids
