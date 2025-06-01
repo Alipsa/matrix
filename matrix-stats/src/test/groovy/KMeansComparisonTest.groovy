@@ -59,9 +59,12 @@ class KMeansComparisonTest {
       assertEquals(m[1], s[1], 1e-5d)
     }
     // WCSS calculation differs between Smile and Matrix, so we adjust and allow a small tolerance
+    // SMILE's distortion is normalized: it returns the average squared distance per dimension,
+    // and includes a 1/2 factor (as is common in probabilistic models).
+    // To compare with Matrix's total WCSS (sum of squared L2 distances), we scale SMILE's result:
     def n = points.length
     def d = points[0].length
     def smileTotalWCSS = smileWCSS * n * d / 2
-    assertEquals(matrixWCSS, smileTotalWCSS, 0.05d)
+    assertEquals(matrixWCSS, smileTotalWCSS, 0.01d)
   }
 }

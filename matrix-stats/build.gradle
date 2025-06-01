@@ -49,6 +49,7 @@ dependencies {
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitPlatformLauncher
   testRuntimeOnly testLibs.junitJupiterEngine
+  testRuntimeOnly testLibs.slf4jSimple
 
 }
 
