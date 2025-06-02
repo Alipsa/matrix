@@ -14,11 +14,21 @@ repositories {
 dependencies {
   implementation "org.apache.groovy:groovy:$groovyVersion"
   implementation "org.apache.groovy:groovy-ginq:$groovyVersion"
-  implementation platform('se.alipsa.matrix:matrix-bom:2.2.1-SNAPSHOT')
-  implementation 'se.alipsa.matrix:matrix-core'
-  implementation 'se.alipsa.matrix:matrix-csv'
-  implementation 'se.alipsa.matrix:matrix-stats'
-  implementation 'se.alipsa.matrix:matrix-xchart'
+  if (version.contains('SNAPSHOT')) {
+    // If we are using snapshot versions of the project we need to
+    // depend on the project, otherwise this example will be built before
+    // the other project dependencies have been published.
+    implementation project(':matrix-core')
+    implementation project(':matrix-csv')
+    implementation project(':matrix-stats')
+    implementation project(':matrix-xchart')
+  } else {
+    implementation platform('se.alipsa.matrix:matrix-bom:2.2.1-SNAPSHOT')
+    implementation 'se.alipsa.matrix:matrix-core'
+    implementation 'se.alipsa.matrix:matrix-csv'
+    implementation 'se.alipsa.matrix:matrix-stats'
+    implementation 'se.alipsa.matrix:matrix-xchart'
+  }
   implementation 'com.github.haifengl:smile-core:4.3.0'
   implementation 'com.github.haifengl:smile-plot:4.3.0'
   testImplementation platform('org.junit:junit-bom:5.12.0')
