@@ -13,16 +13,19 @@ import se.alipsa.matrix.core.Matrix
  * KMeans kmeans = new KMeans(m)
  * List<String> features = m.columnNames() - 'Distillery'
  *
- * // Option 1: explicitly specify k and iterations
+ * // Option 1: explicitly specify k (number of groups) and iterations
  * Matrix mWithGroup = kmeans.fit(features, 3, 20)
  *
  * // Option 2: estimate k automatically
+ * Matrix mWithGroupAuto = kmeans.fit(features, 20)
+ * // If you want, you can specify which method to use for automatic estimation (ELBOW or RULE_OF_THUMB)
  * Matrix mWithGroupAuto = kmeans.fit(features, 20, GroupEstimator.CalculationMethod.ELBOW)
+ *
  * </pre></code>
  *
  * @param columnNames the column names to use as feature vectors
  * @param k number of clusters
- * @param iterations number of iterations to try, default is 30
+ * @param iterations number of iterations to try, default is 50
  * @param columnName name of the added cluster column (default "Group")
  * @param mutate whether to mutate the original Matrix (true) or return a copy (false), default is true
  */
@@ -83,7 +86,7 @@ class KMeans {
   }
 
   String reportTime() {
-    return clustering?.timing ?: "No clustering performed yet"
+    return clustering?.timing ?: "No clustering performed yet, call fit() first."
   }
 
   int getExecutionTimeMillis() {

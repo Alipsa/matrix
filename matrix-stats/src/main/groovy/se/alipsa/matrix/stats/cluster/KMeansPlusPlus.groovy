@@ -79,6 +79,19 @@ import se.alipsa.matrix.core.Matrix
  *   <li><code>double</code> WCSS</li>
  * </ul>
  *
+ * <h3>Matrix integration</h3>
+ * The getClustersById() gives you a Matrix for each group, where the group id is the key.
+ * Example:
+ * <pre><code>
+ * KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(k, points)
+ *   .iterations(20)
+ *   .pp(true)
+ *   .epsilon(.003)
+ *   .useEpsilon(true)
+ *   .build()
+ * Map<Integer, Matrix> clusters = clustering.getClustersById()
+ * </code></pre>
+ *
  * @author Jason Altschuler
  * @author Per Nyfelt
  */
