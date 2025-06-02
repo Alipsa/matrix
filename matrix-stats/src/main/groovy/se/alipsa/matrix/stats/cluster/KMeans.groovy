@@ -39,6 +39,12 @@ class KMeans {
   }
 
   private double[][] extractPoints(List<String> columnNames) {
+    List missingItems = columnNames - matrix.columnNames()
+
+    if (missingItems) {
+      throw new IllegalArgumentException("The following columns does not exist in the matrix: ${missingItems.join(', ')}")
+    }
+
     Matrix m = matrix.selectColumns(columnNames)
     double[][] points = new double[m.rowCount()][m.columnCount()]
     m.eachWithIndex { row, i ->

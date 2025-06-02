@@ -77,7 +77,7 @@ class KMeansTest {
     IllegalArgumentException thrown = assertThrows(IllegalArgumentException) {
       kmeans.fit(["c"], 2)
     }
-    assertTrue(thrown.message.contains("Matrix does not contain column: c"))
+    assertTrue(thrown.message.contains("The following columns does not exist in the matrix: c"))
   }
 
   @Test
