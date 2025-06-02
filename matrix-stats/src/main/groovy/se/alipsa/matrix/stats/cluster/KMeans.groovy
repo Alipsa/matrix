@@ -10,8 +10,12 @@ import se.alipsa.matrix.core.Matrix
  * Matrix m = Matrix.builder('Whiskey data')
  *   .data('https://www.niss.org/sites/default/files/ScotchWhisky01.txt')
  *   .build()
- * KMeans kmeans = new KMeans(m)
  * List<String> features = m.columnNames() - 'Distillery'
+ * features.each {
+ *   m.convert(it, Double)
+ * }
+ * m = Normalize.minMaxNorm(m) // Normalize all numeric columns
+ * KMeans kmeans = new KMeans(m)
  *
  * // Option 1: explicitly specify k (number of groups) and iterations
  * Matrix mWithGroup = kmeans.fit(features, 3, 20)

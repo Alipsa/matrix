@@ -1,6 +1,15 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
+# v2.1.1, 2025-06-02
+- upgrade dependencies
+  - commons-io:commons-io [2.18.0 -> 2.19.0]
+  - org.junit.jupiter:junit-jupiter-api [5.12.2 -> 5.13.0]
+  - org.junit.jupiter:junit-jupiter-engine [5.12.2 -> 5.13.0]
+  - org.junit.platform:junit-platform-launcher [1.12.2 -> 1.13.0]
+  - se.alipsa:maven-3.9.4-utils [1.0.3 -> 1.1.0]
+- add release java version to pom
+
 ## v2.1.0, 2025-04-01
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-sql/2.1.0/matrix-sql-2.1.0.jar)
 
