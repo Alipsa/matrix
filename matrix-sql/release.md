@@ -10,6 +10,8 @@ Date format used below is yyyy-MM-dd
   - se.alipsa:maven-3.9.4-utils [1.0.3 -> 1.1.0]
 - add release java version to pom
 
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-sql/2.1.1/matrix-sql-2.1.1.jar)
+
 ## v2.1.0, 2025-04-01
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-sql/2.1.0/matrix-sql-2.1.0.jar)
 

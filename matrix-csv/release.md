@@ -1,9 +1,12 @@
 # Release history
 
-## v2.2.2, in progress
+## v2.2.0, 2025-06-03
 - add CsvImporter.importCsv method from a url string
 - add CsvImporter.importCsv method from a Path
 - add CsvImporter.importCsv method from a Reader
+- add release java version to pom
+
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-csv/2.2.0/matrix-csv-2.2.0.jar)
 
 ## v2.1.0, 2025-04-01
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-csv/2.1.0/matrix-csv-2.1.0.jar)

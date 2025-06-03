@@ -6,8 +6,8 @@ a CSV file in the format of choice.
 
 To use it in your project, add the following dependencies to your code
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:3.2.0'
-implementation 'se.alipsa.matrix:matrix-csv:2.1.0' 
+implementation 'se.alipsa.matrix:matrix-core:3.3.0'
+implementation 'se.alipsa.matrix:matrix-csv:2.2.0' 
 ```
 
 ## Import a CSV file into a Matrix
@@ -39,7 +39,7 @@ Given the following text file:
 ```groovy
 import org.apache.commons.csv.CSVFormat
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvImporter
+import se.alipsa.matrix.csv.CsvImporter
 
 URL url = getClass().getResource("/colonQuotesEmptyLine.csv")
 CSVFormat format = CSVFormat.Builder.create()
@@ -74,7 +74,7 @@ assert [4, 'Arne', LocalDate.parse('2023-07-01'), 222.99] == table.row(3) // las
 
 ```groovy
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.matrixcsv.CsvExporter
+import se.alipsa.matrix.csv.CsvExporter
 import org.apache.commons.csv.CSVFormat
 
 File file = File.createTempFile('mtcars', '.csv')
@@ -86,8 +86,9 @@ exportToCsv() takes a File or a Writer as output parameter.
 # Release version compatibility matrix
 The following table illustrates the version compatibility of the matrix-csv and matrix core
 
-| Matrix csv |    Matrix core | 
-|-----------:|---------------:|
-|      1.0.0 | 1.2.3 -> 1.2.4 |
-|      1.0.1 | 2.0.0 -> 2.1.1 |
-|      1.1.0 |          2.2.0 |
+|     Matrix csv |    Matrix core | 
+|---------------:|---------------:|
+|          1.0.0 | 1.2.3 -> 1.2.4 |
+|          1.0.1 | 2.0.0 -> 2.1.1 |
+|          1.1.0 |          2.2.0 |
+| 2.0.0 -> 2.2.0 | 2.2.0 -> 3.3.0 |
