@@ -7,8 +7,8 @@ relational database as easy as possible.
 To use it, add the following to your gradle build script:
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.27'
-implementation 'se.alipsa.matrix:matrix-core:3.2.0'
-implementation 'se.alipsa.matrix:matrix-sql:2.1.0'
+implementation 'se.alipsa.matrix:matrix-core:3.3.0'
+implementation 'se.alipsa.matrix:matrix-sql:2.1.1'
 ```
 or if you use maven:
 ```xml
@@ -21,12 +21,12 @@ or if you use maven:
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.2.0</version>
+      <version>3.3.0</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-sql</artifactId>
-    <version>2.1.0</version>
+    <version>2.1.1</version>
   </dependency>
 </dependencies>
 ```
@@ -152,3 +152,5 @@ matrix-sql and matrix core
 |      1.0.1 | 2.0.0 -> 2.1.1 |
 |      1.1.0 |          2.2.0 |
 |      2.0.0 |          3.0.0 |
+|      2.1.0 |          3.1.0 |
+|      2.1.1 | 3.2.0 -> 3.3.0 |

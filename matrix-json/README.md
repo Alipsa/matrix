@@ -13,7 +13,7 @@ handles dependencies via maven central (gradle, maven ivy etc.) you can do the f
 def groovyVersion = '4.0.27' // any 4.x version should work
 implementation "org.apache.groovy:groovy:$groovyVersion"
 implementation "org.apache.groovy:groovy-json:$groovyVersion"
-implementation 'se.alipsa.matrix:matrix-core:3.2.0'
+implementation 'se.alipsa.matrix:matrix-core:3.3.0'
 implementation 'se.alipsa.matrix:matrix-json:2.1.0'
 ```
 ...and the following for maven
@@ -32,7 +32,7 @@ implementation 'se.alipsa.matrix:matrix-json:2.1.0'
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.2.0</version>
+      <version>3.3.0</version>
   </dependency>  
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
@@ -184,3 +184,4 @@ The following table illustrates the version compatibility of the matrix-csv and 
 |       1.0.0 | 2.0.0 -> 2.1.1 |
 |       1.1.0 | 2.2.0 -> 2.2.1 |
 |       2.0.0 |          3.0.0 |
+|       2.1.0 | 3.1.0 -> 3.3.0 |

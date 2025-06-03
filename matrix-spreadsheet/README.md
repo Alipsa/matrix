@@ -10,8 +10,8 @@ for [Renjin R](https://github.com/bedatadriven/renjin).
 To use it, add the following to your gradle build script: 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.27'
-implementation 'se.alipsa.matrix:matrix-core:3.0.0'
-implementation 'se.alipsa.matrix:matrix-spreadsheet:2.0.0'
+implementation 'se.alipsa.matrix:matrix-core:3.3.0'
+implementation 'se.alipsa.matrix:matrix-spreadsheet:2.2.0'
 ```
 or if you use maven:
 ```xml
@@ -24,12 +24,12 @@ or if you use maven:
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.0.0</version>
+      <version>3.3.0</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-spreadsheet</artifactId>
-    <version>2.0.0</version>
+    <version>2.2.0</version>
   </dependency>
 </dependencies>
 ```
@@ -155,6 +155,9 @@ The following table illustrates the version compatibility of the matrix-csv and 
 |              1.0.3 | 2.0.0 -> 2.1.1 |
 |              1.0.2 |          1.2.4 |
 |              1.0.1 | 1.2.1 -> 1.2.3 |
+|              2.0.0 |          3.0.0 |
+|              2.1.0 |          3.1.0 |
+|              2.2.0 | 3.2.0 -> 3.3.0 |
 
 
 # Third party libraries used
