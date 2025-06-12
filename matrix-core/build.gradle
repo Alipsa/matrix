@@ -12,7 +12,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '3.3.0'
+version = '3.4.0-SNAPSHOT'
 description = "Groovy library for working with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -176,4 +176,5 @@ if (project.ext.properties.sonatypeUsername) {
   nexusReleasePlugin.nexusUrl = nexusUrl
   nexusReleasePlugin.userName = sonatypeUsername
   nexusReleasePlugin.password = sonatypePassword
+  nexusReleasePlugin.mavenPublication = publishing.publications.maven
 }
