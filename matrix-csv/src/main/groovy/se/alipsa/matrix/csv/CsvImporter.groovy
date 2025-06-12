@@ -102,7 +102,7 @@ class CsvImporter {
    importCsv(path.toFile(), format, firstRowAsHeader, charset)
   }
 
-  static Matrix importCsv(File file, CSVFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
+  static Matrix importCsv(File file, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
     try (CSVParser parser = CSVParser.parse(file, charset, format)) {
       return parse(tableName(file), parser, firstRowAsHeader)
     }

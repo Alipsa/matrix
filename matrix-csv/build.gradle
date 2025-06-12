@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.2.0'
+version = '2.2.1-SNAPSHOT'
 description = "Groovy library for importing structured text into a matrix"
 
 ext.nexusUrl = version.contains("SNAPSHOT")

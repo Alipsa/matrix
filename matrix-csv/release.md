@@ -1,5 +1,8 @@
 # Release history
 
+## v2.2.1, in progress
+- Add default value for CSV importer when importing from a file to make the api mirror the exporter.
+
 ## v2.2.0, 2025-06-03
 - add CsvImporter.importCsv method from a url string
 - add CsvImporter.importCsv method from a Path
