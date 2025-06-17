@@ -180,7 +180,7 @@ class MatrixBuilder {
     columnNames(row.keySet())
     def t = []
     row.each {
-      t << it.value.class
+      t << it.value?.class ?: Object
     }
     types(t)
     def r = rows.collect { it.values() as List}

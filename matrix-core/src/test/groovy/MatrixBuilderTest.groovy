@@ -8,6 +8,7 @@ import java.time.LocalDate
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertNotEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.core.ValueConverter.asLocalDate
 
 /**
@@ -432,5 +433,40 @@ class MatrixBuilderTest {
       this.id = id
       this.name = name
     }
+  }
+
+  @Test
+  void testMapList() {
+    def table = Matrix.builder()
+        .matrixName('employees')
+        .data([
+            mainSsn  : ["111", "222", "333"],
+            coSsn    : ['', '444', '555'],
+            firstName: ["Rick", "Dan", "Michelle"],
+            salary   : [623.3, 515.2, 611.0],
+            startDate: ["2012-01-01", "2013-09-23", "2014-11-15"]
+        ])
+        .build()
+    def ssnCustomerId = Matrix.builder()
+        .matrixName('eln')
+        .data([
+            customerId: 2..6,
+            lei  : ["111", "222", "333", '444', '555']
+        ])
+        .build()
+
+    def result = GQ {
+      from t in table
+      leftjoin mcid in ssnCustomerId on t.mainSsn == mcid.lei
+      leftjoin cocid in ssnCustomerId on t.coSsn == cocid.lei
+      select t.toMap() + [mainCustomerId: mcid.customerId] + [coCustomerId: cocid?.customerId]
+    }
+    def resultList = result.toList()
+    Matrix m = Matrix.builder().mapList(resultList).build()
+    println m.content()
+    assertTrue(m.columnNames().contains('mainCustomerId'))
+    assertTrue(m.columnNames().contains('coCustomerId'))
+    assertEquals(3, m.rowCount())
+    assertEquals(7, m.columnCount())
   }
 }
