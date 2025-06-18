@@ -476,4 +476,20 @@ class Row implements List<Object> {
     void setElement(int index, Object e) {
         content.set(index, e)
     }
+
+    def asType(Class type) {
+        if (type == Row) {
+            return this
+        } else if (type == Map) {
+            return toMap()
+        } else if (type == List) {
+            return content
+        } else if (type == Set) {
+            return content as Set
+        } else if (type == String) {
+            return content.collect { it.toString() }.join(', ')
+        } else {
+            throw new IllegalArgumentException("Cannot convert Row to type ${type.name}")
+        }
+    }
 }

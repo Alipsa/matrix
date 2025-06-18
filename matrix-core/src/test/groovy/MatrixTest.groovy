@@ -88,12 +88,12 @@ class MatrixTest {
     assertIterableEquals([1, 2, 3, 4, 5], m.row(1))
     assertIterableEquals([10, 20, 30, 40, 50], m.row(2))
 
-    def m2 = m + ['Foo',3,4,5,6]
-    assertIterableEquals(['Foo',3,4,5,6], m2.row(m2.lastRowIndex()))
+    def m2 = m + ['Foo', 3, 4, 5, 6]
+    assertIterableEquals(['Foo', 3, 4, 5, 6], m2.row(m2.lastRowIndex()))
 
     // test add row mutable
-    m & [3,4,5,6,7]
-    assertIterableEquals([3,4,5,6,7], m.row(m.lastRowIndex()))
+    m & [3, 4, 5, 6, 7]
+    assertIterableEquals([3, 4, 5, 6, 7], m.row(m.lastRowIndex()))
 
     Matrix n = Matrix.builder().columns(
         Y1: [10, 11],
@@ -103,7 +103,7 @@ class MatrixTest {
         Y5: [18, 19]
     ).build()
     m & n
-    assertIterableEquals([11,13,15,17,19], m.row(m.lastRowIndex()))
+    assertIterableEquals([11, 13, 15, 17, 19], m.row(m.lastRowIndex()))
   }
 
   @Test
@@ -325,9 +325,9 @@ class MatrixTest {
   @Test
   void testApply() {
     def data = [
-        'place'    : ['1', '2', '3', ','],
-        'firstname': ['Lorena', 'Marianne', 'Lotte', 'Chris'],
-        'start'    : ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
+        'place'     : ['1', '2', '3', ','],
+        'firstname' : ['Lorena', 'Marianne', 'Lotte', 'Chris'],
+        'start'     : ['2021-12-01', '2022-07-10', '2023-05-27', '2023-01-10'],
         'bloodsugar': [5.23, 5.64, 4.22, 3.91]
     ]
     def table = Matrix.builder().columns(data).build()
@@ -425,7 +425,7 @@ class MatrixTest {
     ]
     def table = Matrix.builder().columns(data).types(int, String, LocalDate).build()
     table.applyRows('place') { Row row ->
-      if (row.start.isBefore(LocalDate.of(2022, 8,1))) {
+      if (row.start.isBefore(LocalDate.of(2022, 8, 1))) {
         row.place + row.firstname.length()
       } else {
         row.place
@@ -441,7 +441,7 @@ class MatrixTest {
     def table = Matrix.builder().matrixName(name).columnNames(header).build()
     table['foo'] << 1
     table[0] << 2
-    assertEquals([1,2], table.foo)
+    assertEquals([1, 2], table.foo)
   }
 
   @Test
@@ -559,16 +559,16 @@ class MatrixTest {
     assertEquals(843.25, salaryPerYearMonth[1, 2], salaryPerYearMonth.content())
     assertEquals(1, salaryPerYearMonth[1, 1], salaryPerYearMonth.content())
 
-    Matrix m = Matrix.builder().data(id: [1,2,3]).build()
+    Matrix m = Matrix.builder().data(id: [1, 2, 3]).build()
     m << [salary: [10000, 9979, 8980]]
     assertIterableEquals([10000, 9979, 8980], m.salary)
 
-    Matrix n = Matrix.builder().data(years: [2,4,3], vacation: [12,20,30]).build()
+    Matrix n = Matrix.builder().data(years: [2, 4, 3], vacation: [12, 20, 30]).build()
     m << n
     assertEquals(4, m.columnCount())
     assertIterableEquals(['id', 'salary', 'years', 'vacation'], m.columnNames())
 
-    m.years = [3,4,5]
+    m.years = [3, 4, 5]
     assertEquals(3, m[0, 'years'])
 
     m.foo = ['jabba', 'dabba', 'doo']
@@ -929,7 +929,7 @@ class MatrixTest {
         .build()
 
     def row = d0.row(1)
-    assertEquals(0, row['salary', Double, 0] )
+    assertEquals(0, row['salary', Double, 0])
     def d0r = d0.removeEmptyRows()
     assertEquals(empData, d0r, empData.diff(d0r, true))
 
@@ -989,12 +989,12 @@ class MatrixTest {
     def aPlus = table.withColumn('a') { a ->
       a + 1
     }
-    assertEquals([2,3,4,5,6], aPlus)
+    assertEquals([2, 3, 4, 5, 6], aPlus)
 
     def firstPlus = table.withColumn(0) { a ->
       a + 1
     }
-    assertEquals([2,3,4,5,6], firstPlus)
+    assertEquals([2, 3, 4, 5, 6], firstPlus)
 
     def m = table.withColumns(['a', 'b']) { x, y -> x - y }
     assertEquals([-0.2, -0.3, 2.3, 2.7, 3.1], m)
@@ -1009,12 +1009,12 @@ class MatrixTest {
   @Test
   void testPivot() {
     def m = Matrix.builder('deposits').data(
-        customerId: [1,1,2,2,2,3],
+        customerId: [1, 1, 2, 2, 2, 3],
         amount: [100, 110, 100, 110, 120, 100],
         currency: ['SEK', 'DKK', 'SEK', 'USD', 'EUR', 'SEK'],
         name: ['Per', 'Per', 'Ian', 'Ian', 'Ian', 'John']
     ).types(int, int, String, String)
-    .build()
+        .build()
 
     def pm = m.pivot('customerId', 'currency', 'amount')
     /*
@@ -1042,7 +1042,7 @@ class MatrixTest {
   @Test
   void testUnPivot() {
     Matrix orgMatrix = Matrix.builder('deposits').data(
-        customerId: [1,2,3],
+        customerId: [1, 2, 3],
         name: ['Per', 'Ian', 'John'],
         SEK: [100, 100, 100],
         DKK: [110, null, null],
@@ -1183,8 +1183,8 @@ class MatrixTest {
     assertIterableEquals(['Sven', asLocalDate('2024-01-10'), 5, asYearMonth('2024-01')], m.row(3))
 
     // verify that we can assign a null value
-    m[1,2] = null
-    assertNull(m[1,2], m.content())
+    m[1, 2] = null
+    assertNull(m[1, 2], m.content())
     m[1, 'firstname'] = null
     assertNull(m[1, 'firstname'], m.content())
   }
@@ -1248,25 +1248,25 @@ class MatrixTest {
   @Test
   void testColumnArithmetics() {
     Matrix m = Matrix.builder().columns(
-        [id: [1,2,3,4],
+        [id     : [1, 2, 3, 4],
          balance: [10000, 1000.23, 20122, 12.1]
         ]
     ).types(int, double)
-    .build()
+        .build()
 
     Matrix r = Matrix.builder().columns(
-        [id: [1,2,3,4],
+        [id: [1, 2, 3, 4],
          ir: [0.041, 0.020, 0.035, 0.5]
         ])
-    .types(int, double)
-    .build()
+        .types(int, double)
+        .build()
 
     // verify individual parts
-    def interest = [10000*0.041, 1000.23*0.020, 20122*0.035, 12.1*0.5]
+    def interest = [10000 * 0.041, 1000.23 * 0.020, 20122 * 0.035, 12.1 * 0.5]
     assert interest == m.balance * r.ir
 
     def balanceSum = 10000 + 1000.23 + 20122 + 12.1
-    assert  balanceSum == m.balance.sum()
+    assert balanceSum == m.balance.sum()
 
     def weighted = interest.sum() / balanceSum
     assert weighted == 0.0366259560
@@ -1275,15 +1275,15 @@ class MatrixTest {
     assert weighted == (m.balance * r.ir).sum() / m.balance.sum()
 
     // verify that single number multiplication works
-    assert [10000*0.05, 1000.23*0.05, 20122*0.05, 12.1*0.05] == m.balance * 0.05
+    assert [10000 * 0.05, 1000.23 * 0.05, 20122 * 0.05, 12.1 * 0.05] == m.balance * 0.05
   }
 
   @Test
   void testNamesForType() {
     def empData = Matrix.builder().data(
         emp_id: 1..3,
-        name: ["Rick","Dan","Michelle"],
-        salary: [623.3,515.2,611.0],
+        name: ["Rick", "Dan", "Michelle"],
+        salary: [623.3, 515.2, 611.0],
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
         .types([int, String, Number, LocalDate])
         .build()
@@ -1296,8 +1296,8 @@ class MatrixTest {
   void testColumnIndexFuzzy() {
     def empData = Matrix.builder().data(
         emp_id: 1..3,
-        name: ["Rick","Dan","Michelle"],
-        salary: [623.3,515.2,611.0],
+        name: ["Rick", "Dan", "Michelle"],
+        salary: [623.3, 515.2, 611.0],
         start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15"))
         .types([int, String, Number, LocalDate])
         .build()
@@ -1306,5 +1306,28 @@ class MatrixTest {
     assertEquals(3, empData.columnIndexFuzzy('start'))
     assertEquals(1, empData.columnIndexFuzzy('nam'))
     assertEquals(-1, empData.columnIndexFuzzy('am'))
+  }
+
+  @Test
+  void testCast() {
+    def empData = Matrix.builder()
+        .matrixName('empData')
+        .data(
+            emp_id: 1..5,
+            emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+            salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+            start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+        )
+        .types([int, String, Number, LocalDate])
+        .build()
+    List list = empData as List
+    assertEquals(5, list.size())
+    assertEquals([1, "Rick", 623.3, asLocalDate("2012-01-01")], list[0])
+    Map map = empData as Map
+    assertEquals(4, map.size())
+    assertEquals([623.3, 515.2, 611.0, 729.0, 843.25], map.salary)
+    Grid grid = empData as Grid
+    assertEquals(5, grid.dimensions().observations)
+    assertEquals(4, grid.dimensions().variables)
   }
 }
