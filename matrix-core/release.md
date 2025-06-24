@@ -4,6 +4,7 @@
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.4.0/matrix-core-3.4.0.jar)
 - Add Stat.groupBy() to group by column(s)
 - Improve robustness of mapList in Builder (default to Object for columnType if value is null)
+- Add support for setting the locale for ValueConverter date methods.
 
 ### 3.3.0, 2025-05-25
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.3.0/matrix-core-3.3.0.jar)

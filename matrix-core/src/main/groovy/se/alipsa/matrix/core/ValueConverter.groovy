@@ -39,7 +39,8 @@ class ValueConverter {
   static <E> E convert(Object o, Class<E> type,
                        String dateTimePattern = null,
                        NumberFormat numberFormat = null,
-                       E valueIfNull = null) {
+                       E valueIfNull = null,
+                       Locale locale = Locale.default) {
     if (o == null) {
       return valueIfNull
     }
@@ -47,9 +48,9 @@ class ValueConverter {
       return (E)o
     }
     return switch (type) {
-      case String -> (E) asString(o, dateTimeFormatter(dateTimePattern), numberFormat)
-      case LocalDate -> (E) asLocalDate(o,dateTimeFormatter(dateTimePattern))
-      case LocalDateTime -> (E) asLocalDateTime(o, dateTimeFormatter(dateTimePattern))
+      case String -> (E) asString(o, dateTimeFormatter(dateTimePattern).withLocale(locale), numberFormat)
+      case LocalDate -> (E) asLocalDate(String.valueOf(o), dateTimePattern)
+      case LocalDateTime -> (E) asLocalDateTime(o, dateTimeFormatter(dateTimePattern).withLocale(locale))
       case LocalTime -> (E) asLocalTime(o)
       case YearMonth -> (E) asYearMonth(o)
       case BigDecimal -> (E) asBigDecimal(o, numberFormat)
@@ -160,6 +161,13 @@ class ValueConverter {
     return LocalDate.parse(date)
   }
 
+  static LocalDate asLocalDate(String date, String pattern, LocalDate valueIfNull = null, Locale locale = Locale.default) {
+    if (date == null || date == 'null') return valueIfNull
+    if (pattern == null) return asLocalDate(date, valueIfNull)
+    if (locale == null) return LocalDate.parse(date, dateTimeFormatter(pattern))
+    return LocalDate.parse(date, dateTimeFormatter(pattern).withLocale(locale))
+  }
+
   static LocalDate asLocalDate(String date, DateTimeFormatter formatter) {
     if (formatter == null) return asLocalDate(date)
     return date == null ? null : LocalDate.parse(date, formatter)
@@ -204,8 +212,8 @@ class ValueConverter {
     return LocalDateTime.parse(String.valueOf(o), dateTimeFormatter)
   }
 
-  static LocalDateTime asLocalDateTime(Object o, String pattern, LocalDateTime valueIfNull = null) {
-    asLocalDateTime(o, DateTimeFormatter.ofPattern(pattern), valueIfNull)
+  static LocalDateTime asLocalDateTime(Object o, String pattern, LocalDateTime valueIfNull = null, Locale locale = Locale.default) {
+    asLocalDateTime(o, DateTimeFormatter.ofPattern(pattern).withLocale(locale), valueIfNull)
   }
 
   static Byte asByte(Object o, Byte valueIfNull = null) {
@@ -383,7 +391,7 @@ class ValueConverter {
   }
 
 
-  static java.util.Date asDate(Object o, java.util.Date valueIfNull = null) {
+  static java.util.Date asDate(Object o, java.util.Date valueIfNull = null, Locale locale = Locale.default) {
     if (o == null) return valueIfNull
     if (o instanceof TemporalAccessor) {
       if (o instanceof LocalDate) {
@@ -404,22 +412,22 @@ class ValueConverter {
     }
     String s = String.valueOf(o)
     if (s.size() == 10) {
-      return simpleDateFormatCache('yyyy-MM-dd').parse(s)
+      return simpleDateFormatCache('yyyy-MM-dd', locale).parse(s)
     }
     if (s.size() == 8 && isNumeric(s)) {
-      return simpleDateFormatCache('yyyyMMdd').parse(s)
+      return simpleDateFormatCache('yyyyMMdd', locale).parse(s)
     }
     throw new IllegalArgumentException("Failed to convert $o of type ${o.class} to java.util.Date")
   }
 
-  static java.util.Date asDate(String val, String pattern, java.util.Date valueIfNull = null) {
+  static java.util.Date asDate(String val, String pattern, java.util.Date valueIfNull = null, Locale locale = Locale.default) {
     if (val == null) return valueIfNull
-    return simpleDateFormatCache(pattern).parse(val)
+    return simpleDateFormatCache(pattern, locale).parse(val)
   }
 
-  static java.util.Date asDate(Object val, String pattern, java.util.Date valueIfNull = null) {
+  static java.util.Date asDate(Object val, String pattern, java.util.Date valueIfNull = null, Locale locale = Locale.default) {
     if (val instanceof String && pattern != null) {
-      return asDate(val as String, pattern)
+      return asDate(val as String, pattern, valueIfNull, locale)
     } else {
       return asDate(val, valueIfNull)
     }
@@ -472,13 +480,13 @@ class ValueConverter {
     throw new IllegalArgumentException("Failed to convert $o of type ${o.class} to java.sql.Date")
   }
 
-  private static SimpleDateFormat simpleDateFormatCache(String pattern) {
+  private static SimpleDateFormat simpleDateFormatCache(String pattern, Locale locale = Locale.default) {
     if (pattern == null) return null
-
-    if (!simpleDateCache.containsKey(pattern)) {
-      simpleDateCache.put(pattern, new SimpleDateFormat(pattern))
+    String localeString = locale.toString()
+    if (!simpleDateCache.containsKey(pattern + localeString)) {
+      simpleDateCache.put(pattern + localeString, new SimpleDateFormat(pattern, locale))
     }
-    return simpleDateCache.get(pattern)
+    return simpleDateCache.get(pattern + localeString)
   }
 
   static DateTimeFormatter dateTimeFormatter(String pattern) {
