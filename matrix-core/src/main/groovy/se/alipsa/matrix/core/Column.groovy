@@ -246,4 +246,8 @@ class Column extends ArrayList {
   Number variance(boolean isBiasedCorrected = true) {
     Stat.variance(this, isBiasedCorrected)
   }
+
+  List getValues() {
+    this.collect { it }
+  }
 }

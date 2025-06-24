@@ -408,7 +408,28 @@ class Matrix implements Iterable<Row>, Cloneable {
     return mColumns.collect{it.name}
   }
 
-
+  def asType(Class type) {
+    if (type == null) {
+      throw new IllegalArgumentException("Type cannot be null")
+    }
+    if (type == Matrix) {
+      return this
+    }
+    if (type == List || type == ArrayList) {
+      return rowList()
+    }
+    if (type == Map || type == LinkedHashMap) {
+      Map map = [:]
+      columns().each {
+        map[it.name] = it.values
+      }
+      return map
+    }
+    if (type == Grid) {
+      return grid()
+    }
+    throw new IllegalArgumentException("Cannot convert Matrix to type $type")
+  }
 
   /**
    * Set the column name at the index specified

@@ -1,6 +1,6 @@
 pluginManagement {
   repositories {
-    //mavenLocal()
+    mavenLocal() // For local development, use mavenLocal to resolve SNAPSHOT dependencies
     //mavenCentral()
     gradlePluginPortal()
   }
