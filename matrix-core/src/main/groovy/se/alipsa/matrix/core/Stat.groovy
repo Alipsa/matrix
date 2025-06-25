@@ -27,7 +27,7 @@ class Stat {
         def name = table.matrixName == null ? '' : table.matrixName + ', '
         map["Matrix"] = ["${name}${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
         for (colName in table.columnNames()) {
-            def vals = [table.type(colName).getSimpleName()]
+            def vals = [table.type(colName)?.getSimpleName()]
             def endRowIndex = Math.min(3, table.lastRowIndex())
             if (endRowIndex > 0) {
                 def samples = ListConverter.convert(table[colName][0..endRowIndex], String.class)
