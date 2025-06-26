@@ -2,6 +2,7 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
+import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
 @CompileStatic
 class Row implements List<Object> {
@@ -489,7 +490,7 @@ class Row implements List<Object> {
         } else if (type == String) {
             return content.collect { it.toString() }.join(', ')
         } else {
-            throw new IllegalArgumentException("Cannot convert Row to type ${type.name}")
+            DefaultGroovyMethods.asType(this, type as Class<Object>)
         }
     }
 }

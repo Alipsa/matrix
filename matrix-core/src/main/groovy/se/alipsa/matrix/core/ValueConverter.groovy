@@ -48,9 +48,9 @@ class ValueConverter {
       return (E)o
     }
     return switch (type) {
-      case String -> (E) asString(o, dateTimeFormatter(dateTimePattern).withLocale(locale), numberFormat)
+      case String -> (E) asString(o, dateTimeFormatter(dateTimePattern, locale), numberFormat)
       case LocalDate -> (E) asLocalDate(String.valueOf(o), dateTimePattern)
-      case LocalDateTime -> (E) asLocalDateTime(o, dateTimeFormatter(dateTimePattern).withLocale(locale))
+      case LocalDateTime -> (E) asLocalDateTime(o, dateTimeFormatter(dateTimePattern, locale))
       case LocalTime -> (E) asLocalTime(o)
       case YearMonth -> (E) asYearMonth(o)
       case BigDecimal -> (E) asBigDecimal(o, numberFormat)
@@ -165,7 +165,7 @@ class ValueConverter {
     if (date == null || date == 'null') return valueIfNull
     if (pattern == null) return asLocalDate(date, valueIfNull)
     if (locale == null) return LocalDate.parse(date, dateTimeFormatter(pattern))
-    return LocalDate.parse(date, dateTimeFormatter(pattern).withLocale(locale))
+    return LocalDate.parse(date, dateTimeFormatter(pattern, locale))
   }
 
   static LocalDate asLocalDate(String date, DateTimeFormatter formatter) {
@@ -489,12 +489,13 @@ class ValueConverter {
     return simpleDateCache.get(pattern + localeString)
   }
 
-  static DateTimeFormatter dateTimeFormatter(String pattern) {
+  static DateTimeFormatter dateTimeFormatter(String pattern, Locale locale = Locale.default) {
     if (pattern == null) return null
     if (!dateTimeFormatterCache.containsKey(pattern)) {
       dateTimeFormatterCache.put(pattern, DateTimeFormatter.ofPattern(pattern))
     }
-    dateTimeFormatterCache.get(pattern)
+    if (locale == null) return dateTimeFormatterCache.get(pattern)
+    dateTimeFormatterCache.get(pattern).withLocale(locale)
   }
 
   static Time asSqlTIme(Object o, Time valueIfNull = null) {
