@@ -19,6 +19,8 @@ import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.temporal.Temporal
 import java.time.temporal.TemporalAccessor
 
 @CompileStatic
@@ -49,7 +51,7 @@ class ValueConverter {
     }
     return switch (type) {
       case String -> (E) asString(o, dateTimeFormatter(dateTimePattern, locale), numberFormat)
-      case LocalDate -> (E) asLocalDate(String.valueOf(o), dateTimePattern)
+      case LocalDate -> (E) asLocalDate(o, dateTimePattern)
       case LocalDateTime -> (E) asLocalDateTime(o, dateTimeFormatter(dateTimePattern, locale))
       case LocalTime -> (E) asLocalTime(o)
       case YearMonth -> (E) asYearMonth(o)
@@ -157,15 +159,20 @@ class ValueConverter {
   }
 
   static LocalDate asLocalDate(String date, LocalDate valueIfNull = null) {
-    if (date == null) return valueIfNull
+    if (date == null || date.isBlank()) return valueIfNull
+    if (date.length() > 10) return LocalDateTime.parse(date).toLocalDate()
     return LocalDate.parse(date)
   }
 
   static LocalDate asLocalDate(String date, String pattern, LocalDate valueIfNull = null, Locale locale = Locale.default) {
     if (date == null || date == 'null') return valueIfNull
-    if (pattern == null) return asLocalDate(date, valueIfNull)
-    if (locale == null) return LocalDate.parse(date, dateTimeFormatter(pattern))
-    return LocalDate.parse(date, dateTimeFormatter(pattern, locale))
+    try {
+      if (pattern == null) return asLocalDate(date, valueIfNull)
+      if (locale == null) return LocalDate.parse(date, dateTimeFormatter(pattern))
+      return LocalDate.parse(date, dateTimeFormatter(pattern, locale))
+    } catch (DateTimeParseException e) {
+      throw new IllegalArgumentException("Failed to convert '$date' to LocalDate with pattern '$pattern' and locale '$locale'", e)
+    }
   }
 
   static LocalDate asLocalDate(String date, DateTimeFormatter formatter) {
@@ -177,13 +184,17 @@ class ValueConverter {
     return dateTime == null ? null : dateTime.toLocalDate()
   }
 
+  static LocalDate asLocalDate(Object date, String pattern, LocalDate valueIfNull = null, Locale locale = Locale.default) {
+    asLocalDate(date, dateTimeFormatter(pattern, locale), valueIfNull)
+  }
+
   static LocalDate asLocalDate(Object date, DateTimeFormatter formatter = null, LocalDate valueIfNull = null) {
     if (date == null) return valueIfNull
     if (date instanceof LocalDate) {
       return date
     }
-    if (date instanceof LocalDateTime) {
-      return date.toLocalDate()
+    if (date instanceof Temporal) {
+      return LocalDate.from(date as Temporal)
     }
     if (date instanceof java.util.Date) {
       return new Date(date.getTime()).toLocalDate()

@@ -31,7 +31,7 @@ class ListConverter {
         if (list instanceof Column) {
           context = 'Column ' + ((Column) list).name + ': '
         }
-        throw new ConversionException(context + "Failed to convert \'$it\' (${it == null ? null : it.getClass().name}) to $type.name in index $idx: ${e.getMessage()}", e)
+        throw new ConversionException(context + "Failed to convert \'$it\' (${it == null ? null : it.getClass().name}) to $type.name in index $idx: ${e.getMessage()}, dateTimeFormat=$dateTimeFormat, numberFormat=$numberFormat", e)
       }
     }
     return c

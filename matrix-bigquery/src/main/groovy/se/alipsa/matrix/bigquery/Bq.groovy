@@ -5,6 +5,14 @@ import com.google.cloud.resourcemanager.v3.Project
 import com.google.cloud.resourcemanager.v3.ProjectsClient
 import com.google.cloud.resourcemanager.v3.ProjectsSettings
 
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 import static se.alipsa.matrix.bigquery.TypeMapper.*
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.bigquery.*
@@ -14,6 +22,12 @@ import com.google.cloud.bigquery.BigQuery.TableListOption
 import se.alipsa.matrix.core.Matrix
 
 class Bq {
+
+  // BigQuery serializes complex datatypes into structs so we must convert things like BigDecimal, Date, LocalDate etc
+  // into plain text strings that BigQuery will understand hen inserting data
+  static final SimpleDateFormat bqSimpledateFormat = new SimpleDateFormat("yyyy-MM-dd")
+  static final DateTimeFormatter bqDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+  static final DateTimeFormatter bqDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:SS.SSSSSS")
 
   private BigQuery bigQuery
   private String projectId
@@ -94,7 +108,13 @@ class Bq {
     //  for the table to be ready for insert (but how long)
     while(true) {
       try {
-        insert(matrix, definitions.table.tableId)
+        Map<Long, List<BigQueryError>> errors = insert(matrix, definitions.table.tableId)
+        if (!errors.isEmpty()) {
+          errors.each {
+            println("$it.key: $it.value")
+          }
+          throw new BqException("Inserting data into table $tableName failed!")
+        }
         break
       } catch (BigQueryException e) {
         if (e.code != 404) {
@@ -138,8 +158,16 @@ class Bq {
     try {
       def mapList = matrix.rows().collect(m -> m.toMap())
       def builder = InsertAllRequest.newBuilder(tableId)
-      mapList.each {
-        builder.addRow(it)
+      mapList.each { rowMap ->
+          // Create a new map to hold the processed row to avoid modifying the original
+          Map<String, Object> processedRow = new HashMap<>(rowMap)
+
+          processedRow.each { entry ->
+            if (needsConversion(entry.value))
+              processedRow[entry.key] = convertObjectValue(entry.value)
+          }
+
+          builder.addRow(processedRow) // Add the processed row
       }
       //println "Bq: Inserting into $tableId"
       InsertAllResponse response = bigQuery.insertAll(builder.build())
@@ -150,6 +178,50 @@ class Bq {
     } catch (BigQueryException e) {
       throw new BqException(e)
     }
+  }
+
+  static boolean needsConversion(Object orgVal) {
+    return orgVal instanceof BigDecimal
+        || orgVal instanceof BigInteger
+        || orgVal instanceof Date
+        || orgVal instanceof LocalDate
+        || orgVal instanceof LocalDateTime
+    || orgVal instanceof Instant // The default toString works fine
+    || orgVal instanceof Timestamp
+    || orgVal instanceof ZonedDateTime
+  }
+
+  static def convertObjectValue(Object orgVal) {
+    if (orgVal instanceof BigDecimal) {
+      BigDecimal val = (BigDecimal) orgVal
+      // toPlainString() is crucial to avoid scientific notation
+      return val.toPlainString()
+    }
+    if (orgVal instanceof BigInteger) {
+      BigInteger val = (BigInteger) orgVal
+      return val.toString()
+    }
+    if (orgVal instanceof Date) {
+      Date date = (Date) orgVal
+      return bqSimpledateFormat.format(date)
+    }
+    if (orgVal instanceof LocalDate) {
+      LocalDate date = (LocalDate) orgVal
+      return date.format(bqDateFormatter)
+    }
+    if (orgVal instanceof LocalDateTime) {
+      LocalDateTime date = (LocalDateTime) orgVal
+      return date.format(bqDateTimeFormatter)
+    }
+    if (orgVal instanceof Timestamp) {
+      Timestamp ts = (Timestamp) orgVal
+      return ts.toInstant().toString()
+    }
+    if (orgVal instanceof ZonedDateTime) {
+      ZonedDateTime ts = (ZonedDateTime) orgVal
+      return ts.format(DateTimeFormatter.ISO_INSTANT)
+    }
+    String.valueOf(orgVal)
   }
 
   Map<Long, List<BigQueryError>> insert(Matrix matrix, String dataSet, String projectId) throws BqException {

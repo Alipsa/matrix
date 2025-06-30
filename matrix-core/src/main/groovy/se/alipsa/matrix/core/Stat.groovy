@@ -27,7 +27,11 @@ class Stat {
         def name = table.matrixName == null ? '' : table.matrixName + ', '
         map["Matrix"] = ["${name}${table.rowCount()} observations of ${table.columnCount()} variables".toString()]
         for (colName in table.columnNames()) {
-            def vals = [table.type(colName)?.getSimpleName()]
+            Class type = table.type(colName)
+            if (type == null) {
+                type = scanForType(table[colName])
+            }
+            def vals = [type?.getSimpleName()]
             def endRowIndex = Math.min(3, table.lastRowIndex())
             if (endRowIndex > 0) {
                 def samples = ListConverter.convert(table[colName][0..endRowIndex], String.class)
@@ -122,10 +126,10 @@ class Stat {
             columns = columnNames as List<String>
         }
         for (columnName in columns) {
-            def column = matrix.column(columnName)
-            def type = matrix.type(columnName)
+            Column column = matrix.column(columnName)
+            Class type = matrix.type(columnName)
             if (Number.isAssignableFrom(type)) {
-                sums.add(sum(column, type))
+                sums.add(sum(column, type as Class<Object>) as Number)
             } else {
                 println("${matrix.matrixName}: $columnName is not a Numeric column but of type ${type.simpleName}")
                 sums.add(null)
@@ -144,7 +148,7 @@ class Stat {
             def column = matrix.column(colIdx)
             def type = matrix.type(colIdx)
             if (Number.isAssignableFrom(type)) {
-                sums.add(sum(column, type))
+                sums.add(sum(column, type as Class<Object>) as Number)
             } else {
                 sums << null
             }
@@ -193,8 +197,8 @@ class Stat {
      */
     static <T extends Number> List<T> sumRows(Matrix m, List<Integer> colNums) {
         List<T> means = []
-        m.each { row ->
-            means << sum(row[colNums])
+        m.each { Row row ->
+            means << (sum(row[colNums]) as T)
         }
         means
     }
@@ -205,7 +209,7 @@ class Stat {
             colNames = m.columnNames()
         }
         m.each { row ->
-            means << sum(row[colNames])
+            means << (sum(row[colNames]) as T)
         }
         means
     }
@@ -845,5 +849,14 @@ class Stat {
         x.collect {
             operation.call(it, y[i++])
         }
+    }
+
+    static Class scanForType(Column column) {
+        for (def val in column) {
+            if (val != null) {
+                return val.getClass()
+            }
+        }
+        return null
     }
 }

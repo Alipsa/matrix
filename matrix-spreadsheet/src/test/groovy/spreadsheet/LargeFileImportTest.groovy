@@ -23,7 +23,7 @@ class LargeFileImportTest {
 
   int nrows = 360131 // including header row
 
-  String datePattern = 'MM/dd/yyyy'
+  static final String datePattern = 'MM/dd/yyyy'
   DateTimeFormatter dtf = DateTimeFormatter.ofPattern(datePattern)
 
   List<String> colNames = ['DR_NO', 'Date Rptd',	'DATE OCC',	'TIME OCC',	'AREA',	'AREA NAME',
@@ -71,7 +71,7 @@ class LargeFileImportTest {
     Instant finish = Instant.now()
     println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
-    checkAssertions(matrix)
+    checkAssertions(matrix, "yyyy-MM-dd'T'HH:mm")
   }
 
   @Test
@@ -86,7 +86,7 @@ class LargeFileImportTest {
     Instant finish = Instant.now()
     println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
     println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
-    checkAssertions(matrix)
+    checkAssertions(matrix, "yyyy-MM-dd'T'HH:mm")
   }
 
   @Test
@@ -145,7 +145,7 @@ class LargeFileImportTest {
     return num + " " + unit + (num == 1 ? "" : "s")
   }
 
-  void checkAssertions(Matrix matrix) {
+  void checkAssertions(Matrix matrix, String datePattern = LargeFileImportTest.datePattern) {
     println "Converting datatypes"
     matrix.convert(
         'DR_NO': Integer,

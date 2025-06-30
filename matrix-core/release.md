@@ -7,6 +7,8 @@ Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix
 - Override asType for Row so it supports casting to Map, List, Set and String
 - Override asType for Matrix so it supports casting to Map, List and Grid
 - Add support for setting the locale for ValueConverter date methods.
+- In Stat.str scan for datatype if type is null
+- Enhance robustness of ValueConverter -> toLocalDate
 
 ### 3.3.0, 2025-05-25
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.3.0/matrix-core-3.3.0.jar)
