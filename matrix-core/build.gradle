@@ -193,11 +193,9 @@ tasks.withType(Sign).configureEach { signTask ->
   }
 }
 
-if (project.ext.properties.sonatypeUsername) {
-  nexusReleasePlugin {
-    nexusUrl = releaseNexusUrl
-    userName = project.ext.properties.sonatypeUsername
-    password = project.ext.properties.sonatypePassword
-    mavenPublication = publishing.publications.maven
-  }
+nexusReleasePlugin {
+  nexusUrl = releaseNexusUrl
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
 }
