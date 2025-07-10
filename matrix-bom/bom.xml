@@ -35,7 +35,7 @@
     <matrixBigQueryVersion>0.3.1</matrixBigQueryVersion>
     <matrixChartsVersion>0.3.0</matrixChartsVersion>
     <matrixCoreVersion>3.4.0</matrixCoreVersion>
-    <matrixCsvVersion>2.2.1-SNAPSHOT</matrixCsvVersion>
+    <matrixCsvVersion>2.2.1</matrixCsvVersion>
     <matrixDatasetsVersion>2.1.0</matrixDatasetsVersion>
     <matrixJsonVersion>2.1.0</matrixJsonVersion>
     <matrixParquetVersion>0.3.0</matrixParquetVersion>

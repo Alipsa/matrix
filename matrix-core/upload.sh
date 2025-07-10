@@ -8,9 +8,10 @@ token=$(printf "$sonatypeUsername:$sonatypePassword" | base64)
 pushd build/zips
   echo "upload the bundle"
   zipFile=$(ls matrix-core*.zip)
-  deploymentId=$(curl --no-progress-meter --header "Authorization: Bearer $token" \
+  deploymentId=$(curl --request POST --no-progress-meter \
+    --header "Authorization: Bearer $token" \
     --form bundle=@${zipFile} \
-    https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC)
+    'https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC')
 popd
 
 echo "deploymentId = $deploymentId"
