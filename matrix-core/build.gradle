@@ -16,7 +16,7 @@ group = 'se.alipsa.matrix'
 version = '3.4.0'
 description = "Groovy library for working with matrix ([][] data)"
 
-ext.nexusUrl = version.contains("SNAPSHOT")
+ext.releaseNexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
@@ -194,11 +194,10 @@ tasks.withType(Sign).configureEach { signTask ->
 }
 
 if (project.ext.properties.sonatypeUsername) {
-
-  apply plugin: 'se.alipsa.nexus-release-plugin'
-  //apply plugin: 'se.alipsa.groovy.NexusReleasePlugin'
-  nexusReleasePlugin.nexusUrl = nexusUrl
-  nexusReleasePlugin.userName = sonatypeUsername
-  nexusReleasePlugin.password = sonatypePassword
-  nexusReleasePlugin.mavenPublication = publishing.publications.maven
+  nexusReleasePlugin {
+    nexusUrl = releaseNexusUrl
+    userName = project.ext.properties.sonatypeUsername
+    password = project.ext.properties.sonatypePassword
+    mavenPublication = publishing.publications.maven
+  }
 }

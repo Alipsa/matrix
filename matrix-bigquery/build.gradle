@@ -1,16 +1,19 @@
+import java.security.MessageDigest
+
 plugins {
     id 'groovy'
     id 'java-library'
     id 'signing'
     id 'maven-publish'
-    id("se.alipsa.nexus-release-plugin") version "1.0.1"
+    // id("se.alipsa.nexus-release-plugin") version "1.0.1"
+    id("se.alipsa.nexus-release-plugin") version '2.0.0-SNAPSHOT'
 }
 
 group = 'se.alipsa.matrix'
 version = '0.3.1-SNAPSHOT'
 description = "Groovy library for importing and exporting to and from Google BigQuery to a Matrix"
 
-ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
+ext.releaseNexusUrl = version.toString().endsWith("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
@@ -111,7 +114,7 @@ publishing {
                     username = sonatypeUsername
                     password = sonatypePassword
                 }
-                url = nexusUrl
+                url = releaseNexusUrl
             }
         }
     }
@@ -125,12 +128,32 @@ signing {
         project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
     }
 }
+def generateChecksum(File file, String algo) {
+    def digest = MessageDigest.getInstance(algo)
+    file.withInputStream { is -> digest.update(is.bytes) }
+    def hash = digest.digest().encodeHex().toString()
+    String extension = algo.toLowerCase().replace('-', '')
+    def checksumFile = new File("${file.absolutePath}.${extension}")
+    checksumFile.text = hash
+    println "Generated ${algo} for ${file.name} → ${checksumFile.name}"
+}
 
-if (project.ext.properties.sonatypeUsername) {
+tasks.withType(Sign).configureEach { signTask ->
+    doLast {
+        signTask.signatureFiles.each { ascFile ->
+            def originalFile = new File(ascFile.absolutePath - '.asc')
+            if (originalFile.exists()) {
+                ['MD5', 'SHA-1'].each { algo ->
+                    generateChecksum(originalFile, algo)
+                }
+            }
+        }
+    }
+}
 
-    apply plugin: 'se.alipsa.nexus-release-plugin'
-    //apply plugin: 'se.alipsa.groovy.NexusReleasePlugin'
-    nexusReleasePlugin.nexusUrl = nexusUrl
-    nexusReleasePlugin.userName = sonatypeUsername
-    nexusReleasePlugin.password = sonatypePassword
+nexusReleasePlugin {
+    nexusUrl = releaseNexusUrl
+    userName = project.ext.properties.sonatypeUsername
+    password = project.ext.properties.sonatypePassword
+    mavenPublication = publishing.publications.maven
 }
