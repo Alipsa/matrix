@@ -1,6 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
 plugins {
@@ -153,7 +152,7 @@ publishing {
           username = sonatypeUsername
           password = sonatypePassword
         }
-        url = nexusUrl
+        url = releaseNexusUrl
       }
     }
   }

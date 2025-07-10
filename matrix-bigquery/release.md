@@ -1,10 +1,11 @@
 # Matrix-bigquery Release History
 
-## v0.3.1, In progress
+## v0.3.1, 2025-07-10
 - upgrade
   - com.google.auth:google-auth-library-bom [1.35.0 -> 1.37.1]
-  - com.google.cloud:google-cloud-bigquery [2.50.1 -> 2.51.0]
-  - com.google.cloud:google-cloud-resourcemanager [1.65.0 -> 1.68.0]
+  - com.google.cloud:google-cloud-bigquery [2.50.1 -> 2.52.0]
+  - com.google.cloud:google-cloud-resourcemanager [1.65.0 -> 1.69.0]
+  -  com.google.cloud:google-cloud-bigquerystorage [3.15.2 -> 3.15.3]
 - Add google-cloud-bigquerystorage:3.15.2
 - Convert complex objects such as BigDecimal, Date, LocalDate etc to a String format
   that BigQuery can accept as primitive (otherwise they become structs)

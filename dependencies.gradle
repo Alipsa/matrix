@@ -13,8 +13,8 @@ dependencyResolutionManagement {
     }
 
     testLibs {
-      def junitVersion = '5.13.0'
-      def junitPlatformVersion = '1.13.0'
+      def junitVersion = '5.13.3'
+      def junitPlatformVersion = '1.13.3'
       library('junitPlatformEngine', "org.junit.platform:junit-platform-engine:$junitPlatformVersion")
       library('junitPlatformLauncher', "org.junit.platform:junit-platform-launcher:$junitPlatformVersion")
       library('junitJupiter', "org.junit.jupiter:junit-jupiter:$junitVersion")

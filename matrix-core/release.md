@@ -1,6 +1,6 @@
 # Matrix Core Release History
 
-### 3.4.0, In Progress
+### 3.4.0, 2025-07-09
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.4.0/matrix-core-3.4.0.jar)
 - Add Stat.groupBy() to group by column(s)
 - Improve robustness of mapList in Builder (default to Object for columnType if value is null)
