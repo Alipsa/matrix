@@ -1,5 +1,24 @@
 # Maven-BOM release history
 
+## v2.2.2, 2025-07-10
+Pom file available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.2.2/matrix-bom-2.2.2.pom)
+- Upgrade matrix-core 3.3.0 -> 3.4.0
+- Upgrade matrix-csv 2.2.0 -> 2.2.1
+- Upgrade matrix-bigquery 0.3.0 -> 0.3.1
+
+## v2.2.1, 2025-06-03
+Pom file available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.2.1/matrix-bom-2.2.1.pom)
+- Upgrade matrix-core 3.2.0 -> 3.3.0
+- Upgrade matrix-csv 2.1.0 -> 2.2.0
+- Upgrade matrix-bigquery 0.2.0 -> 0.3.0
+- Upgrade matrix-stats 2.1.0 -> 2.2.0
+- Upgrade matrix-sql 2.1.0 -> 2.1.1
+- Upgrade matrix-datasets 2.0.1 -> 2.1.0
+- Upgrade matrix-spreadsheet 2.1.0 -> 2.2.0
+- Upgrade matrix-parquet 0.1.0 -> 0.3.0
+- Upgrade matrix-bigquery 0.1.0 -> 0.3.0
+- Upgrade matrix-xchart 0.2.0 -> 0.2.1
+- 
 ## v2.2.0, 2025-04-01
 Pom file available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.2.0/matrix-bom-2.2.0.pom)
 
