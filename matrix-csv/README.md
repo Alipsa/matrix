@@ -6,8 +6,8 @@ a CSV file in the format of choice.
 
 To use it in your project, add the following dependencies to your code
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:3.3.0'
-implementation 'se.alipsa.matrix:matrix-csv:2.2.0' 
+implementation 'se.alipsa.matrix:matrix-core:3.4.0'
+implementation 'se.alipsa.matrix:matrix-csv:2.2.1' 
 ```
 
 ## Import a CSV file into a Matrix
@@ -91,4 +91,4 @@ The following table illustrates the version compatibility of the matrix-csv and 
 |          1.0.0 | 1.2.3 -> 1.2.4 |
 |          1.0.1 | 2.0.0 -> 2.1.1 |
 |          1.1.0 |          2.2.0 |
-| 2.0.0 -> 2.2.0 | 2.2.0 -> 3.3.0 |
+| 2.0.0 -> 2.2.0 | 2.2.0 -> 3.4.0 |
