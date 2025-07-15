@@ -1,5 +1,9 @@
 # Matrix Core Release History
 
+### 3.4.1, in progress
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.4.1/matrix-core-3.4.1.jar)
+- return null value when converting a blank string to LocalDate or LocalDateTime
+
 ### 3.4.0, 2025-07-09
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.4.0/matrix-core-3.4.0.jar)
 - Add Stat.groupBy() to group by column(s)

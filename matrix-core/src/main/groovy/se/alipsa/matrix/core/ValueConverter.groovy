@@ -203,6 +203,9 @@ class ValueConverter {
       // Number of days since 1970-01-01
       LocalDate.ofEpochDay(date.longValue())
     }
+    if ("$date".isBlank()) {
+      return valueIfNull
+    }
     if (formatter == null) {
       return LocalDate.parse(String.valueOf(date))
     }
@@ -217,6 +220,9 @@ class ValueConverter {
     if (o instanceof Timestamp) return o.toLocalDateTime()
     if (o instanceof Number) {
       return LocalDateTime.ofEpochSecond(o.toLong(), 0, OffsetDateTime.now().getOffset())
+    }
+    if ("$o".isBlank()) {
+      return valueIfNull
     }
     if (dateTimeFormatter == null)
       return LocalDateTime.parse(String.valueOf(o))
