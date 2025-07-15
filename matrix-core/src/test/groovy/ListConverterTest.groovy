@@ -28,6 +28,16 @@ class ListConverterTest {
         null,
         null, numberFormat
     ))
+    assertIterableEquals(expected, ListConverter.convert(
+        ['50', '2000', '-145292', '-4.0', '300', '3.14'],
+        Double,
+        Locale.of('en', 'US')
+    ))
+    assertIterableEquals(expected, ListConverter.convert(
+        ['50', '2000', '-145292', '-4,0', '300', '3,14'],
+        Double,
+        Locale.of('sv', 'SE')
+    ))
   }
 
   @Test
