@@ -15,6 +15,11 @@ import java.time.format.DateTimeFormatter
 class ListConverter {
 
   static <T> List<T> convert(Collection<?> list, @NotNull Class<T> type, T valueIfNull = null,
+                             String dateTimeFormat = null, Locale numberFormat) {
+    convert(list, type, valueIfNull, dateTimeFormat, NumberFormat.getInstance(numberFormat))
+  }
+
+  static <T> List<T> convert(Collection<?> list, @NotNull Class<T> type, T valueIfNull = null,
                              String dateTimeFormat = null, NumberFormat numberFormat = null) {
     List<T> c = []
     list.eachWithIndex { it, idx ->
