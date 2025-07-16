@@ -289,7 +289,9 @@ class ValueConverter {
   static BigInteger asBigInteger(Object o, BigInteger valueIfNull = null) {
     if (o == null) return valueIfNull
     if (o instanceof Number) return o.toBigInteger()
-    return new BigInteger(String.valueOf(o))
+    String val = String.valueOf(o)
+    if (val.isBlank()) return null
+    return new BigInteger(val)
   }
 
   /**
