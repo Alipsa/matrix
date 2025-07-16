@@ -1,5 +1,11 @@
 # Release history
 
+## v2.2.1, in progress
+- Upgrade dependencies
+    - com.github.javaparser:javaparser-core [3.26.4 -> 3.27.0]
+    - org.apache.logging.log4j:log4j-core [2.24.3 -> 2.25.1]
+- Remove log4j impl and just use log4j api (it's a library should not have logging implementations).
+
 ## v2.2.0, 2025-05-29
 - upgrade poi 5.4.0 -> 5.4.1
 - getOrDefault() behaves oddly so switched to get() and elvis operator

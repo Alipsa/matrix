@@ -10,6 +10,7 @@ dependencyResolutionManagement {
       library('groovyTemplates', "org.apache.groovy:groovy-templates:$groovyVersion")
       library('groovyAnt', "org.apache.groovy:groovy-ant:$groovyVersion")
       library('groovyDoc', "org.apache.groovy:groovy-groovydoc:$groovyVersion")
+      library('log4jApi', "org.apache.logging.log4j:log4j-api:2.25.1")
     }
 
     testLibs {
@@ -21,6 +22,7 @@ dependencyResolutionManagement {
       library('junitJupiterEngine', "org.junit.jupiter:junit-jupiter-engine:$junitVersion")
       library('junitJupiterApi', "org.junit.jupiter:junit-jupiter-api:$junitVersion")
       library('slf4jSimple', "org.slf4j:slf4j-simple:2.0.17")
+      library('log4jToSlf4j', 'org.apache.logging.log4j:log4j-slf4j2-impl:2.25.1')
     }
   }
 }

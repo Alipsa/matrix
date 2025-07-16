@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.2.0'
+version = '2.2.1-SNAPSHOT'
 description = 'Groovy spreadsheet import/export'
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -39,14 +39,14 @@ dependencies {
     compileOnly libs.groovyAnt
     compileOnly libs.groovyTemplates
     compileOnly libs.groovyDoc
-    compileOnly 'com.github.javaparser:javaparser-core:3.26.4'
+    compileOnly 'com.github.javaparser:javaparser-core:3.27.0'
 
 
     def fastExcelVersion = '0.19.0'
     def poiVersion = '5.4.1'
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
-    implementation 'org.apache.logging.log4j:log4j-core:2.24.3'
+    implementation libs.log4jApi
 
     implementation("org.apache.poi:poi:${poiVersion}")
     implementation("org.apache.poi:poi-ooxml:${poiVersion}")
@@ -60,6 +60,8 @@ dependencies {
     testRuntimeOnly testLibs.junitJupiterEngine
     testRuntimeOnly testLibs.junitPlatformLauncher
     testImplementation libs.groovy
+    testImplementation testLibs.log4jToSlf4j
+    testImplementation testLibs.slf4jSimple
 }
 
 test {

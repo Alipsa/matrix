@@ -41,7 +41,7 @@
     <matrixParquetVersion>0.3.0</matrixParquetVersion>
     <matrixStatsVersion>2.2.0</matrixStatsVersion>
     <matrixSqlVersion>2.1.1</matrixSqlVersion>
-    <matrixSpreadsheetVersion>2.2.0</matrixSpreadsheetVersion>
+    <matrixSpreadsheetVersion>2.2.1-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixTablesawVersion>0.2.0</matrixTablesawVersion>
     <matrixXChartVersion>0.2.1</matrixXChartVersion>
   </properties>
