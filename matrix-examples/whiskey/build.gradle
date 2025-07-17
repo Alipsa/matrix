@@ -23,15 +23,16 @@ dependencies {
     implementation project(':matrix-stats')
     implementation project(':matrix-xchart')
   } else {
-    implementation platform('se.alipsa.matrix:matrix-bom:2.2.1-SNAPSHOT')
+    // This is what you would if the project was standalone:
+    implementation platform('se.alipsa.matrix:matrix-bom:2.2.2')
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-csv'
     implementation 'se.alipsa.matrix:matrix-stats'
     implementation 'se.alipsa.matrix:matrix-xchart'
   }
-  implementation 'com.github.haifengl:smile-core:4.3.0'
-  implementation 'com.github.haifengl:smile-plot:4.3.0'
-  testImplementation platform('org.junit:junit-bom:5.12.0')
+  implementation 'com.github.haifengl:smile-core:4.4.0'
+  implementation 'com.github.haifengl:smile-plot:4.4.0'
+  testImplementation platform('org.junit:junit-bom:5.13.3')
   testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 

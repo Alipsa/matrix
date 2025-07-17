@@ -1,5 +1,10 @@
 # Release history
 
+## v2.1.1, in progress
+- Upgrade dependencies
+  - com.fasterxml.jackson.core:jackson-core [2.18.3 -> 2.19.1]
+  - com.fasterxml.jackson.core:jackson-databind [2.18.3 -> 2.19.1]
+  
 ## v2.1.0, 2025-04-01
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-json/2.1.0/matrix-json-2.1.0.jar)
 - rename package from se.alipsa.matrix.matrixjson to se.alipsa.matrix.json

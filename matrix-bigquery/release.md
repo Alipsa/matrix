@@ -1,5 +1,11 @@
 # Matrix-bigquery Release History
 
+## v0.3.2, in progress
+- Upgrade dependencies
+  - com.google.cloud:google-cloud-bigquery [2.52.0 -> 2.53.0]
+  - com.google.cloud:google-cloud-bigquerystorage [3.15.3 -> 3.16.0]
+  - com.google.cloud:google-cloud-resourcemanager [1.69.0 -> 1.70.0]
+
 ## v0.3.1, 2025-07-10
 - upgrade
   - com.google.auth:google-auth-library-bom [1.35.0 -> 1.37.1]

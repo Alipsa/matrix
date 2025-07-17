@@ -61,7 +61,8 @@ dependencies {
     testRuntimeOnly testLibs.junitJupiterEngine
     testRuntimeOnly testLibs.junitPlatformLauncher
     testImplementation libs.groovy
-    testImplementation 'org.apache.logging.log4j:log4j-core:2.24.3'
+    testImplementation testLibs.slf4jSimple
+    testImplementation testLibs.log4jToSlf4j
 }
 
 test {

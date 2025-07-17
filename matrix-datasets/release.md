@@ -1,5 +1,9 @@
 # Release history
 
+## v2.1.1, in progress
+- Upgrade dependencies
+  - org.jsoup:jsoup [1.20.1 -> 1.21.1]
+
 ## v2.1.0, 2025-05-28
 - Add easy access to the 2536 datasets from the R datasets project through the RDatasets class
 Jar available at https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-datasets/2.1.0/matrix-datasets-2.1.0.jar

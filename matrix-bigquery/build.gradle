@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.3.1'
+version = '0.3.2-SNAPSHOT'
 description = "Groovy library for importing and exporting to and from Google BigQuery to a Matrix"
 
 ext.releaseNexusUrl = version.toString().endsWith("SNAPSHOT")
@@ -44,11 +44,11 @@ dependencies {
     }*/
     compileOnly libs.groovy
 
-    api('com.google.cloud:google-cloud-bigquery:2.52.0')
-    api 'com.google.cloud:google-cloud-resourcemanager:1.69.0'
+    api('com.google.cloud:google-cloud-bigquery:2.53.0')
+    api 'com.google.cloud:google-cloud-resourcemanager:1.70.0'
     implementation platform('com.google.auth:google-auth-library-bom:1.37.1')
     implementation 'com.google.auth:google-auth-library-oauth2-http'
-    implementation('com.google.cloud:google-cloud-bigquerystorage:3.15.3')
+    implementation('com.google.cloud:google-cloud-bigquerystorage:3.16.0')
 
     testImplementation libs.groovy
     testImplementation testLibs.junitJupiterApi

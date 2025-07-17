@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.1.0'
+version = '2.1.1-SNAPSHOT'
 description = "Groovy library common public domain and oss data in matrix format)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
@@ -38,7 +38,7 @@ compileGroovy {
 dependencies {
     compileOnly libs.groovy
     compileOnly libs.groovyGinq
-    implementation 'org.jsoup:jsoup:1.20.1'
+    implementation 'org.jsoup:jsoup:1.21.1'
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
 

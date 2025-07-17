@@ -1,5 +1,11 @@
 # Matrix-Tablesaw Version history
 
+## v0.2.1, in progress
+- Upgrade dependencies
+  - com.github.miachm.sods:SODS [1.6.7 -> 1.6.8]
+  - org.apache.poi:poi-ooxml [5.4.0 -> 5.4.1]
+  - org.dom4j:dom4j [2.1.4 -> 2.2.0]
+  
 ## v0.2.0, 2025-04-01
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-tablesaw/0.2.0/matrix-tablesaw-0.2.0.jar)
 
