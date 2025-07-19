@@ -6,17 +6,14 @@ plugins {
     id('java-library')
     id('signing')
     id('maven-publish')
-    id("se.alipsa.nexus-release-plugin") version "1.0.1"
+    //id("se.alipsa.nexus-release-plugin") version "1.0.1"
+    id("se.alipsa.nexus-release-plugin") version '2.0.0-SNAPSHOT'
     id("com.github.ben-manes.versions").version("0.52.0")
 }
 
 group = 'se.alipsa.matrix'
-version = '0.2.1-SNAPSHOT'
+version = '0.2.1'
 description = 'Allows conversion between Matrix and Tablesaw'
-
-ext.nexusUrl = version.contains("SNAPSHOT")
-    ? "https://oss.sonatype.org/content/repositories/snapshots/"
-    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 repositories {
     if (version.contains('SNAPSHOT')) {
@@ -41,18 +38,9 @@ java {
 }
 
 dependencies {
-    def tablesawVersion = "[0.43.1, )"
+    def tablesawVersion = "0.44.4"
     compileOnly libs.groovy
-    api("tech.tablesaw:tablesaw-core:${tablesawVersion}") {
-        constraints {
-            implementation "io.github.classgraph:classgraph:4.8.174"
-            because 'Fix CWE-611: Improper Restriction of XML External Entity Reference (XXE)'
-        }
-        constraints {
-            implementation "com.google.guava:guava:33.2.1-jre"
-            because 'Fix CWE-379: Creation of Temporary File in Directory with Incorrect Permissions'
-        }
-    }
+    api("tech.tablesaw:tablesaw-core:${tablesawVersion}")
     compileOnly project(':matrix-core')
     compileOnly project(':matrix-stats')
     // for XlsxWriter, TODO: remove once contributed to tablesaw
@@ -144,17 +132,6 @@ publishing {
             }
         }
     }
-    if (project.ext.properties.sonatypeUsername) {
-        repositories {
-            maven {
-                credentials {
-                    username = sonatypeUsername
-                    password = sonatypePassword
-                }
-                url = nexusUrl
-            }
-        }
-    }
 }
 
 signing {
@@ -166,11 +143,10 @@ signing {
     }
 }
 
-if (project.ext.properties.sonatypeUsername) {
-    apply plugin: 'se.alipsa.nexus-release-plugin'
-    nexusReleasePlugin.nexusUrl = nexusUrl
-    nexusReleasePlugin.userName = sonatypeUsername
-    nexusReleasePlugin.password = sonatypePassword
+nexusReleasePlugin {
+    userName = project.ext.properties.sonatypeUsername
+    password = project.ext.properties.sonatypePassword
+    mavenPublication = publishing.publications.maven
 }
 
 def isNonStable = { String version ->
