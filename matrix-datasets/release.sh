@@ -6,7 +6,7 @@ PROJECT=$(basename "$PWD")
 if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"
 else
-  echo "$PROJECT uploaded, release it if it checks out"
-  echo "see https://central.sonatype.org/publish/release/ for more info"
+  echo "$PROJECT released"
+  echo "see https://central.sonatype.com/publishing/deployments for more info"
   # browse https://oss.sonatype.org &
 fi

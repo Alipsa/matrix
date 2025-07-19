@@ -3,7 +3,7 @@ Groovy library for creating graphs based on Matrix or [][] data
 
 add the following dependency to your gradle build script
 ```groovy
-implementation 'se.alipsa.matrix:charts:0.3.0'
+implementation 'se.alipsa.matrix:charts:0.3.1'
 ```
 
 ... or maven pom.xml
@@ -11,7 +11,7 @@ implementation 'se.alipsa.matrix:charts:0.3.0'
 <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>charts</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 
@@ -43,9 +43,4 @@ javafx.scene.chart.Chart jfxPieChart = Plot.jfx(pieChart)
 ```
 
 # Release version compatibility matrix
-The following table illustrates the version compatibility of 
-matrix-charts, matrix-core, and matrix-stats
-
-| Matrix charts | Matrix core | Matrix stats |
-|--------------:|------------:|-------------:|
-|  0.2 -> 0.3.0 |       3.0.0 |        2.0.0 |
+See the [Matrix BOM](https://mvnrepository.com/artifact/se.alipsa.matrix/matrix-bom) for the recommended matrix library versions. 
