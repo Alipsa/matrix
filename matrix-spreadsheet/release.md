@@ -6,6 +6,8 @@
     - org.apache.logging.log4j:log4j-api [2.24.3 -> 2.25.1]
 - Remove log4j impl and just use log4j api (it's a library should not have logging implementations).
 
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-spreadsheet/2.2.1/matrix-spreadsheet-2.2.1.jar)
+
 ## v2.2.0, 2025-05-29
 - upgrade poi 5.4.0 -> 5.4.1
 - getOrDefault() behaves oddly so switched to get() and elvis operator

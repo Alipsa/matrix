@@ -10,8 +10,8 @@ for [Renjin R](https://github.com/bedatadriven/renjin).
 To use it, add the following to your gradle build script: 
 ```groovy
 implementation 'org.apache.groovy:groovy:4.0.27'
-implementation 'se.alipsa.matrix:matrix-core:3.3.0'
-implementation 'se.alipsa.matrix:matrix-spreadsheet:2.2.0'
+implementation 'se.alipsa.matrix:matrix-core:3.4.1'
+implementation 'se.alipsa.matrix:matrix-spreadsheet:2.2.1'
 ```
 or if you use maven:
 ```xml
@@ -24,12 +24,12 @@ or if you use maven:
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.3.0</version>
+      <version>3.4.1</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-spreadsheet</artifactId>
-    <version>2.2.0</version>
+    <version>2.2.1</version>
   </dependency>
 </dependencies>
 ```
