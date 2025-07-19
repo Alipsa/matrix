@@ -37,11 +37,11 @@
     <matrixCoreVersion>3.4.1</matrixCoreVersion>
     <matrixCsvVersion>2.2.1</matrixCsvVersion>
     <matrixDatasetsVersion>2.1.1</matrixDatasetsVersion>
-    <matrixJsonVersion>2.1.1-SNAPSHOT</matrixJsonVersion>
+    <matrixJsonVersion>2.1.0</matrixJsonVersion>
     <matrixParquetVersion>0.3.0</matrixParquetVersion>
     <matrixStatsVersion>2.2.0</matrixStatsVersion>
     <matrixSqlVersion>2.1.1</matrixSqlVersion>
-    <matrixSpreadsheetVersion>2.2.1-SNAPSHOT</matrixSpreadsheetVersion>
+    <matrixSpreadsheetVersion>2.2.1</matrixSpreadsheetVersion>
     <matrixTablesawVersion>0.2.1</matrixTablesawVersion>
     <matrixXChartVersion>0.2.1</matrixXChartVersion>
   </properties>

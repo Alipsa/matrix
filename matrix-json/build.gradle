@@ -3,7 +3,8 @@ plugins {
   id('java-library')
   id('signing')
   id('maven-publish')
-  id("se.alipsa.nexus-release-plugin") version "1.0.1"
+  //id("se.alipsa.nexus-release-plugin") version "1.0.1"
+  id("se.alipsa.nexus-release-plugin") version '2.0.0-SNAPSHOT'
 }
 
 group = 'se.alipsa.matrix'
@@ -32,7 +33,7 @@ repositories {
 }
 
 dependencies {
-
+  def jacksonVersion = '2.19.2'
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
@@ -45,8 +46,8 @@ dependencies {
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
   testRuntimeOnly testLibs.junitPlatformLauncher
-  testImplementation('com.fasterxml.jackson.core:jackson-core:2.19.1')
-  testImplementation('com.fasterxml.jackson.core:jackson-databind:2.19.1')
+  testImplementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 }
 
 test {
@@ -121,10 +122,8 @@ signing {
   }
 }
 
-if (project.ext.properties.sonatypeUsername) {
-
-  apply plugin: 'se.alipsa.nexus-release-plugin'
-  nexusReleasePlugin.nexusUrl = nexusUrl
-  nexusReleasePlugin.userName = sonatypeUsername
-  nexusReleasePlugin.password = sonatypePassword
+nexusReleasePlugin {
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
 }
