@@ -1,6 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import java.util.concurrent.TimeUnit
 
 plugins {
   id('groovy')
@@ -12,12 +11,8 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '3.4.1-SNAPSHOT'
+version = '3.4.1'
 description = "Groovy library for working with matrix ([][] data)"
-
-ext.releaseNexusUrl = version.contains("SNAPSHOT")
-    ? "https://oss.sonatype.org/content/repositories/snapshots/"
-    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 JavaCompile javaCompile = compileJava {
   options.release = 21
@@ -152,7 +147,7 @@ publishing {
           username = sonatypeUsername
           password = sonatypePassword
         }
-        url = releaseNexusUrl
+        //url = releaseNexusUrl
       }
     }
   }
@@ -170,7 +165,6 @@ signing {
 }
 
 nexusReleasePlugin {
-  nexusUrl = releaseNexusUrl
   userName = project.ext.properties.sonatypeUsername
   password = project.ext.properties.sonatypePassword
   mavenPublication = publishing.publications.maven
