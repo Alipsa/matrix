@@ -6,6 +6,8 @@
   - com.google.cloud:google-cloud-bigquerystorage [3.15.3 -> 3.16.0]
   - com.google.cloud:google-cloud-resourcemanager [1.69.0 -> 1.70.0]
 
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bigquery/0.3.2/matrix-bigquery-0.3.2.jar)
+
 ## v0.3.1, 2025-07-10
 - upgrade
   - com.google.auth:google-auth-library-bom [1.35.0 -> 1.37.1]

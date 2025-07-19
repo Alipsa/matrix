@@ -5,12 +5,13 @@ plugins {
   //id 'org.openjfx.javafxplugin' version '0.0.13'
   id('maven-publish')
   id('signing')
-  id("se.alipsa.nexus-release-plugin") version "1.0.1"
+  //id("se.alipsa.nexus-release-plugin") version "1.0.1"
+  id("se.alipsa.nexus-release-plugin") version '2.0.0-SNAPSHOT'
 }
 
 group = 'se.alipsa.matrix'
-version = '0.3.1-SNAPSHOT'
-description = "Groovy library for plotting with matrix ([][] data)"
+version = '0.3.1'
+description = "Groovy chart library for plotting with matrix ([][] data)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
@@ -162,10 +163,8 @@ signing {
   }
 }
 
-if (project.ext.properties.sonatypeUsername) {
-  apply plugin: 'se.alipsa.nexus-release-plugin'
-  //apply plugin: 'se.alipsa.groovy.NexusReleasePlugin'
-  nexusReleasePlugin.nexusUrl = nexusUrl
-  nexusReleasePlugin.userName = sonatypeUsername
-  nexusReleasePlugin.password = sonatypePassword
+nexusReleasePlugin {
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
 }

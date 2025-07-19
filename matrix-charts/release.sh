@@ -8,6 +8,6 @@ if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"
 else
   echo "$PROJECT uploaded and released"
-  echo "see https://central.sonatype.org/publish/release/ for more info"
+  echo "see https://central.sonatype.com/publishing/deployments for more info"
   # browse https://oss.sonatype.org &
 fi
