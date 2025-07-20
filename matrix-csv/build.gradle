@@ -161,7 +161,6 @@ signing {
 }
 
 nexusReleasePlugin {
-  nexusUrl = nexusReleaseUrl
   userName = project.ext.properties.sonatypeUsername
   password = project.ext.properties.sonatypePassword
   mavenPublication = publishing.publications.maven

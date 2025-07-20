@@ -3,7 +3,8 @@ plugins {
     id 'java-library'
     id 'signing'
     id 'maven-publish'
-    id("se.alipsa.nexus-release-plugin") version "1.0.1"
+    //id("se.alipsa.nexus-release-plugin") version "1.0.1"
+    id("se.alipsa.nexus-release-plugin") version '2.0.0-SNAPSHOT'
 }
 
 group = 'se.alipsa.matrix'
@@ -137,10 +138,8 @@ signing {
     }
 }
 
-if (project.ext.properties.sonatypeUsername) {
-
-    apply plugin: 'se.alipsa.nexus-release-plugin'
-    nexusReleasePlugin.nexusUrl = nexusUrl
-    nexusReleasePlugin.userName = sonatypeUsername
-    nexusReleasePlugin.password = sonatypePassword
+nexusReleasePlugin {
+    userName = project.ext.properties.sonatypeUsername
+    password = project.ext.properties.sonatypePassword
+    mavenPublication = publishing.publications.maven
 }
