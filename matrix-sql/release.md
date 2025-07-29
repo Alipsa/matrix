@@ -1,7 +1,11 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
-# v2.1.1, 2025-06-02
+## v2.1.2, In progress
+- upgrade dependencies
+  - commons-io:commons-io [2.19.0 -> 2.20.0]
+
+## v2.1.1, 2025-06-02
 - upgrade dependencies
   - commons-io:commons-io [2.18.0 -> 2.19.0]
   - org.junit.jupiter:junit-jupiter-api [5.12.2 -> 5.13.0]

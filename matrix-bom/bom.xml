@@ -40,7 +40,7 @@
     <matrixJsonVersion>2.1.0</matrixJsonVersion>
     <matrixParquetVersion>0.3.0</matrixParquetVersion>
     <matrixStatsVersion>2.2.0</matrixStatsVersion>
-    <matrixSqlVersion>2.1.1</matrixSqlVersion>
+    <matrixSqlVersion>2.1.2-SNAPSHOT</matrixSqlVersion>
     <matrixSpreadsheetVersion>2.2.1</matrixSpreadsheetVersion>
     <matrixTablesawVersion>0.2.1</matrixTablesawVersion>
     <matrixXChartVersion>0.2.1</matrixXChartVersion>
