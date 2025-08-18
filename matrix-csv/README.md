@@ -16,7 +16,7 @@ Matrix-csv uses apache-commons csv to parse the csv file. Here is a simple examp
 ```groovy
 import org.apache.commons.csv.CSVFormat
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.matrixcsv.CsvImporter
+import se.alipsa.matrix.csv.CsvImporter
 
 URL url = getClass().getResource("/basic.csv")
 CSVFormat format = CSVFormat.Builder.create().setTrim(true).build()
