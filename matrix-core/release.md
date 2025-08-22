@@ -1,5 +1,8 @@
 # Matrix Core Release History
 
+### 3.4.2, In progress
+- return clone if (matrix + null) instead of forcing users to do a null check.
+
 ### 3.4.1, 2025-07-18
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.4.1/matrix-core-3.4.1.jar)
 - ValueConverter
