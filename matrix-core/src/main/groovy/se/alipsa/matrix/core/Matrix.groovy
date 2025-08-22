@@ -1478,6 +1478,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix plus(List row) {
     //println ("cloning matrix and adding row")
+    if (row == null) {
+      return clone()
+    }
     clone().addRow(row)
   }
 
@@ -1488,6 +1491,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new matrix containing the rows of the former and the new rows added
    */
   Matrix plus(Matrix table) {
+    if (table == null) {
+      return clone()
+    }
     clone().addRows(table.rowList())
   }
 
