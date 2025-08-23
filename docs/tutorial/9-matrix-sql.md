@@ -9,8 +9,8 @@ To use the matrix-sql module, you need to add it as a dependency to your project
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:4.0.27'
-implementation platform('se.alipsa.matrix:matrix-bom:2.2.0')
+implementation 'org.apache.groovy:groovy:4.0.28'
+implementation platform('se.alipsa.matrix:matrix-bom:2.2.3')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-sql'
 ```
@@ -24,7 +24,7 @@ implementation 'se.alipsa.matrix:matrix-sql'
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-bom</artifactId>
-        <version>2.2.0</version>
+        <version>2.2.3</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -34,7 +34,7 @@ implementation 'se.alipsa.matrix:matrix-sql'
       <dependency>
           <groupId>org.apache.groovy</groupId>
           <artifactId>groovy</artifactId>
-          <version>4.0.27</version>
+          <version>4.0.28</version>
       </dependency>
       <dependency>
           <groupId>se.alipsa.matrix</groupId>

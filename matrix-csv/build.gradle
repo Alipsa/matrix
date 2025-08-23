@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '2.2.1'
+version = '2.2.2-SNAPSHOT'
 description = "Groovy library for importing structured text into a matrix"
 
 ext.nexusReleaseUrl = version.contains("SNAPSHOT")
@@ -46,7 +46,7 @@ dependencies {
     testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
     testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
   }*/
-  api 'org.apache.commons:commons-csv:1.14.0'
+  api 'org.apache.commons:commons-csv:1.14.1'
   compileOnly libs.groovy
   testImplementation libs.groovy
 

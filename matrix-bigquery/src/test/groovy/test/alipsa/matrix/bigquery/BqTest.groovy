@@ -48,7 +48,7 @@ class BqTest {
       return
     }
     Bq bq = new Bq()
-    println "Projects are ${bq.getProjects().collect{it.displayName}}"
+    println "Projects are ${bq.getProjects().collect{it.displayName + ' (' + it.projectId + ')'}}"
 
   }
 
@@ -69,7 +69,7 @@ class BqTest {
     String qry = "select * from `${projectId}.${datasetName}.mtcars`"
     println qry
     Matrix mtcars2 = bq.query(qry).withMatrixName(mtcars.matrixName)
-    assert mtcars == mtcars2
+    assert mtcars.orderBy("model") == mtcars2.orderBy("model")
     bq.dropDataset(datasetName)
     Assertions.assertFalse(bq.datasetExist(datasetName))
   }

@@ -12,7 +12,7 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit-jupiter.version>5.13.3</junit-jupiter.version>
+    <junit-jupiter.version>5.13.4</junit-jupiter.version>
     <junitPlatformVersion.version>1.13.3</junitPlatformVersion.version>
     <slf4j.version>2.0.17</slf4j.version>
   </properties>
@@ -43,7 +43,7 @@
     <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy-all</artifactId>
-      <version>4.0.27</version>
+      <version>4.0.28</version>
       <type>pom</type>
     </dependency>
     <dependency>

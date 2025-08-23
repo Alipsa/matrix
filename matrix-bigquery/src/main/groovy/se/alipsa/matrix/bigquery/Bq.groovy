@@ -1,10 +1,14 @@
 package se.alipsa.matrix.bigquery
 
+import com.fasterxml.jackson.core.JsonEncoding
+import com.fasterxml.jackson.core.JsonFactory
+import com.fasterxml.jackson.core.JsonGenerator
 import com.google.api.gax.paging.Page
 import com.google.cloud.resourcemanager.v3.Project
 import com.google.cloud.resourcemanager.v3.ProjectsClient
 import com.google.cloud.resourcemanager.v3.ProjectsSettings
 
+import java.nio.channels.Channels
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -27,7 +31,7 @@ class Bq {
   // into plain text strings that BigQuery will understand hen inserting data
   static final SimpleDateFormat bqSimpledateFormat = new SimpleDateFormat("yyyy-MM-dd")
   static final DateTimeFormatter bqDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-  static final DateTimeFormatter bqDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:SS.SSSSSS")
+  static final DateTimeFormatter bqDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
 
   private BigQuery bigQuery
   private String projectId
@@ -98,33 +102,65 @@ class Bq {
 
   boolean saveToBigQuery(Matrix matrix, String datasetName) throws BqException {
     String tableName = matrix.matrixName
-    if (tableExist(datasetName, tableName)) {
-      println "${datasetName}.$tableName already exists"
-      return false
+    if (!tableExist(datasetName, tableName)) {
+      def defs = createTable(matrix, datasetName)
+      waitForTable(defs.table.tableId) // same helper as before
     }
-    def definitions = createTable(matrix, datasetName)
-    Thread.sleep(5000)
-    // TODO: this is fragile, we cannot insert directly but must wait "a while"
-    //  for the table to be ready for insert (but how long)
-    while(true) {
-      try {
-        Map<Long, List<BigQueryError>> errors = insert(matrix, definitions.table.tableId)
-        if (!errors.isEmpty()) {
-          errors.each {
-            println("$it.key: $it.value")
-          }
-          throw new BqException("Inserting data into table $tableName failed!")
+    TableId tableId = TableId.of(projectId, datasetName, tableName)
+
+    def wcfg = WriteChannelConfiguration.newBuilder(tableId)
+        .setFormatOptions(FormatOptions.json())
+        .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE) // or WRITE_APPEND
+        .build()
+
+    JobId jobId  = JobId.newBuilder().setProject(projectId).setRandomJob().build()
+    TableDataWriteChannel writer = bigQuery.writer(jobId, wcfg)
+    OutputStream out = Channels.newOutputStream(writer)
+    JsonGenerator json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
+
+    // one JSON object per line (NDJSON), no Map allocations required
+    def names = matrix.columnNames()
+    for (def row : matrix.rows()) {
+      json.writeStartObject()
+      for (String name : names) {
+        def v = row[name]
+        json.writeFieldName(name)
+        // Write with correct types, converting only when needed
+        if (needsConversion(v)) {
+          json.writeString(String.valueOf(convertObjectValue(v))) // dates/decimals as strings
+        } else if (v instanceof Number) {
+          json.writeNumber(v.toString())  // keep numbers as numbers
+        } else if (v instanceof Boolean) {
+          json.writeBoolean((Boolean)v)
+        } else if (v == null) {
+          json.writeNull()
+        } else {
+          json.writeString(v.toString())
         }
-        break
-      } catch (BigQueryException e) {
-        if (e.code != 404) {
-          throw e
-        }
-        println("Table is not ready for insert, sleeping for 5 seconds")
-        Thread.sleep(5000)
       }
+      json.writeEndObject()
+      json.writeRaw('\n') // NDJSON newline
     }
+    json.flush(); json.close()
+
+    Job loadJob = writer.getJob().waitFor()
+    if (loadJob == null || loadJob.getStatus().getError() != null) {
+      throw new BqException("Write-channel load (JSON) failed: ${loadJob?.status?.error}")
+    }
+
     return true
+  }
+
+  private void waitForTable(TableId tableId, long timeoutMs = 60_000L) {
+    long start = System.currentTimeMillis()
+    long backoff = 300L
+    while (System.currentTimeMillis() - start < timeoutMs) {
+      def t = bigQuery.getTable(tableId)
+      if (t != null && t.exists()) return
+      Thread.sleep(backoff)
+      backoff = Math.min((long)(backoff * 1.7), 5000L)
+    }
+    throw new BqException("Timed out waiting for table ${tableId} to be ready.")
   }
 
   Map createTable(Matrix matrix, String datasetName) throws BqException {
@@ -278,11 +314,9 @@ class Bq {
   }
 
   List<Project> getProjects() throws BqException {
-    try {
-      ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
-      ProjectsClient projectsClient = ProjectsClient.create(projectsSettings)
-      ProjectsClient.SearchProjectsPagedResponse searchProjectsPagedResponse = projectsClient.searchProjects("")
-      searchProjectsPagedResponse.iterateAll().collect()
+    ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
+    try (ProjectsClient pc = ProjectsClient.create(projectsSettings)) {
+        return pc.searchProjects("").iterateAll().collect()
     } catch (BigQueryException e) {
       throw new BqException(e)
     }

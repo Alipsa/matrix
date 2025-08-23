@@ -1,5 +1,8 @@
 # Release history
 
+## v2.2.2. In progress
+- com.github.miachm.sods:SODS [1.6.8 -> 1.7.0]
+
 ## v2.2.1, 2025-07-19
 - Upgrade dependencies
     - com.github.javaparser:javaparser-core [3.26.4 -> 3.27.0]

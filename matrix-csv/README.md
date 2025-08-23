@@ -6,7 +6,7 @@ a CSV file in the format of choice.
 
 To use it in your project, add the following dependencies to your code
 ```groovy
-implementation 'se.alipsa.matrix:matrix-core:3.4.0'
+implementation 'se.alipsa.matrix:matrix-core:3.4.1'
 implementation 'se.alipsa.matrix:matrix-csv:2.2.1' 
 ```
 

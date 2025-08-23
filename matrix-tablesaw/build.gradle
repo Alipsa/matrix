@@ -12,7 +12,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.2.1'
+version = '0.2.2-SNAPSHOT'
 description = 'Allows conversion between Matrix and Tablesaw'
 
 repositories {
@@ -46,7 +46,7 @@ dependencies {
     // for XlsxWriter, TODO: remove once contributed to tablesaw
     implementation 'org.apache.poi:poi-ooxml:5.4.1'
     // for OdsReader and Writer, TODO: remove once contributed to tablesaw
-    implementation 'com.github.miachm.sods:SODS:1.6.8'
+    implementation 'com.github.miachm.sods:SODS:1.7.0'
     // for XmlReader and writer, TODO: remove once contributed to tablesaw
     implementation 'org.dom4j:dom4j:2.2.0'
 

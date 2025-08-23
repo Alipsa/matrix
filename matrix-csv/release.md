@@ -1,5 +1,8 @@
 # Release history
 
+## v2.2.2, In progress
+- Upgrade commons-csv from 1.14.0 to 1.14.1
+
 ## v2.2.1, 2025-07-10
 - Add default value for CSV importer when importing from a file to make the api mirror the exporter.
 
