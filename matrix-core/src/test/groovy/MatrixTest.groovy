@@ -1330,4 +1330,16 @@ class MatrixTest {
     assertEquals(5, grid.dimensions().observations)
     assertEquals(4, grid.dimensions().variables)
   }
+
+  @Test
+  void testChunkSplit() {
+    Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
+    List<Matrix> chunks = m.split(4)
+    assertEquals(5, chunks.size())
+    assertEquals(m.subset(0..6).withMatrixName("${m.matrixName}_0"), chunks[0])
+    assertEquals(m.subset(7..13).withMatrixName("${m.matrixName}_1"), chunks[1])
+    assertEquals(m.subset(14..20).withMatrixName("${m.matrixName}_2"), chunks[2])
+    assertEquals(m.subset(21..27).withMatrixName("${m.matrixName}_3"), chunks[3])
+    assertEquals(m.subset(28..29).withMatrixName("${m.matrixName}_4"), chunks[4])
+  }
 }
