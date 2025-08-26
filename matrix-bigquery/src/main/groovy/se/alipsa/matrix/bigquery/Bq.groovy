@@ -107,7 +107,50 @@ class Bq {
       waitForTable(defs.table.tableId) // same helper as before
     }
     TableId tableId = TableId.of(projectId, datasetName, tableName)
+    insert(matrix, tableId)
+    return true
+  }
 
+  private void waitForTable(TableId tableId, long timeoutMs = 60_000L) {
+    long start = System.currentTimeMillis()
+    long backoff = 300L
+    while (System.currentTimeMillis() - start < timeoutMs) {
+      def t = bigQuery.getTable(tableId)
+      if (t != null && t.exists()) return
+      Thread.sleep(backoff)
+      backoff = Math.min((long)(backoff * 1.7), 5000L)
+    }
+    throw new BqException("Timed out waiting for table ${tableId} to be ready.")
+  }
+
+  Map createTable(Matrix matrix, String datasetName) throws BqException {
+    createTable(matrix, datasetName, projectId)
+  }
+
+  Map createTable(Matrix matrix, String datasetName, String projectId) throws BqException {
+    Schema schema = createSchema(matrix)
+    createTable(matrix, datasetName, projectId, schema)
+  }
+
+  Map createTable(Matrix matrix, String datasetName, String projectId, Schema schema) throws BqException {
+    try {
+      String tableName = matrix.matrixName
+      TableId tableId = TableId.of(projectId, datasetName, tableName)
+      TableDefinition tableDefinition = StandardTableDefinition.of(schema)
+      TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build()
+      Table table = bigQuery.create(tableInfo)
+      println("Table ${datasetName}.$tableName created successfully")
+      return [table: table, schema: schema]
+    } catch (BigQueryException e) {
+      throw new BqException(e)
+    }
+  }
+
+  Long insert(Matrix matrix, String dataSet) throws BqException {
+    insert(matrix, dataSet, projectId)
+  }
+
+  Long insert(Matrix matrix, TableId tableId) throws BqException {
     def wcfg = WriteChannelConfiguration.newBuilder(tableId)
         .setFormatOptions(FormatOptions.json())
         .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE) // or WRITE_APPEND
@@ -147,50 +190,9 @@ class Bq {
     if (loadJob == null || loadJob.getStatus().getError() != null) {
       throw new BqException("Write-channel load (JSON) failed: ${loadJob?.status?.error}")
     }
+    loadJob.getQueryResults().getTotalRows()
 
-    return true
-  }
-
-  private void waitForTable(TableId tableId, long timeoutMs = 60_000L) {
-    long start = System.currentTimeMillis()
-    long backoff = 300L
-    while (System.currentTimeMillis() - start < timeoutMs) {
-      def t = bigQuery.getTable(tableId)
-      if (t != null && t.exists()) return
-      Thread.sleep(backoff)
-      backoff = Math.min((long)(backoff * 1.7), 5000L)
-    }
-    throw new BqException("Timed out waiting for table ${tableId} to be ready.")
-  }
-
-  Map createTable(Matrix matrix, String datasetName) throws BqException {
-    createTable(matrix, datasetName, projectId)
-  }
-
-  Map createTable(Matrix matrix, String datasetName, String projectId) throws BqException {
-    Schema schema = createSchema(matrix)
-    createTable(matrix, datasetName, projectId, schema)
-  }
-
-  Map createTable(Matrix matrix, String datasetName, String projectId, Schema schema) throws BqException {
-    try {
-      String tableName = matrix.matrixName
-      TableId tableId = TableId.of(projectId, datasetName, tableName)
-      TableDefinition tableDefinition = StandardTableDefinition.of(schema)
-      TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build()
-      Table table = bigQuery.create(tableInfo)
-      println("Table ${datasetName}.$tableName created successfully")
-      return [table: table, schema: schema]
-    } catch (BigQueryException e) {
-      throw new BqException(e)
-    }
-  }
-
-  Map<Long, List<BigQueryError>> insert(Matrix matrix, String dataSet) throws BqException {
-    insert(matrix, dataSet, projectId)
-  }
-
-  Map<Long, List<BigQueryError>> insert(Matrix matrix, TableId tableId) throws BqException {
+    /*
     try {
       def mapList = matrix.rows().collect(m -> m.toMap())
       def builder = InsertAllRequest.newBuilder(tableId)
@@ -214,6 +216,8 @@ class Bq {
     } catch (BigQueryException e) {
       throw new BqException(e)
     }
+
+     */
   }
 
   static boolean needsConversion(Object orgVal) {
@@ -260,7 +264,7 @@ class Bq {
     String.valueOf(orgVal)
   }
 
-  Map<Long, List<BigQueryError>> insert(Matrix matrix, String dataSet, String projectId) throws BqException {
+  Long insert(Matrix matrix, String dataSet, String projectId) throws BqException {
     String tableName = matrix.matrixName
     TableId tableId = TableId.of(projectId, dataSet, tableName)
     insert(matrix, tableId)
