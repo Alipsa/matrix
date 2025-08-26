@@ -170,15 +170,19 @@ class Bq {
         json.writeFieldName(name)
         // Write with correct types, converting only when needed
         if (needsConversion(v)) {
-          json.writeString(String.valueOf(convertObjectValue(v))) // dates/decimals as strings
+          json.writeString(sanitizeString(convertObjectValue(v))) // dates/decimals as strings
         } else if (v instanceof Number) {
           json.writeNumber(v.toString())  // keep numbers as numbers
         } else if (v instanceof Boolean) {
           json.writeBoolean((Boolean)v)
         } else if (v == null) {
           json.writeNull()
+        } else if (v instanceof byte[]) {
+          json.writeBinary(v as byte[])
+        } else if (v instanceof CharSequence) {
+          json.writeString(sanitizeString(v.toString()))
         } else {
-          json.writeString(v.toString())
+          json.writeObject(v)
         }
       }
       json.writeEndObject()
@@ -449,5 +453,13 @@ class Bq {
     } catch (BigQueryException e) {
       throw new BqException(e)
     }
+  }
+
+  static String sanitizeString(Object input) {
+    if (input == null) return null
+    String str = input.toString()
+    // This regular expression removes all Unicode control characters (the C category)
+    // which are the most common cause of JSON serialization errors.
+    return str.replaceAll("\\p{C}", "")
   }
 }
