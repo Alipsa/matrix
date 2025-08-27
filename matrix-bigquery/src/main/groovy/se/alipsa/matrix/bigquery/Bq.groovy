@@ -7,6 +7,7 @@ import com.google.api.gax.paging.Page
 import com.google.cloud.resourcemanager.v3.Project
 import com.google.cloud.resourcemanager.v3.ProjectsClient
 import com.google.cloud.resourcemanager.v3.ProjectsSettings
+import groovy.transform.CompileStatic
 
 import java.nio.channels.Channels
 import java.sql.Timestamp
@@ -25,6 +26,7 @@ import com.google.cloud.bigquery.BigQuery.DatasetListOption
 import com.google.cloud.bigquery.BigQuery.TableListOption
 import se.alipsa.matrix.core.Matrix
 
+@CompileStatic
 class Bq {
 
   // BigQuery serializes complex datatypes into structs so we must convert things like BigDecimal, Date, LocalDate etc
@@ -103,8 +105,8 @@ class Bq {
   boolean saveToBigQuery(Matrix matrix, String datasetName) throws BqException {
     String tableName = matrix.matrixName
     if (!tableExist(datasetName, tableName)) {
-      def defs = createTable(matrix, datasetName)
-      waitForTable(defs.table.tableId) // same helper as before
+      TableSchema defs = createTable(matrix, datasetName)
+      waitForTable(defs.table.tableId)
     }
     TableId tableId = TableId.of(projectId, datasetName, tableName)
     insert(matrix, tableId)
@@ -123,16 +125,16 @@ class Bq {
     throw new BqException("Timed out waiting for table ${tableId} to be ready.")
   }
 
-  Map createTable(Matrix matrix, String datasetName) throws BqException {
+  TableSchema createTable(Matrix matrix, String datasetName) throws BqException {
     createTable(matrix, datasetName, projectId)
   }
 
-  Map createTable(Matrix matrix, String datasetName, String projectId) throws BqException {
+  TableSchema createTable(Matrix matrix, String datasetName, String projectId) throws BqException {
     Schema schema = createSchema(matrix)
     createTable(matrix, datasetName, projectId, schema)
   }
 
-  Map createTable(Matrix matrix, String datasetName, String projectId, Schema schema) throws BqException {
+  TableSchema createTable(Matrix matrix, String datasetName, String projectId, Schema schema) throws BqException {
     try {
       String tableName = matrix.matrixName
       TableId tableId = TableId.of(projectId, datasetName, tableName)
@@ -140,88 +142,76 @@ class Bq {
       TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build()
       Table table = bigQuery.create(tableInfo)
       println("Table ${datasetName}.$tableName created successfully")
-      return [table: table, schema: schema]
+      return new TableSchema(table, schema)
     } catch (BigQueryException e) {
       throw new BqException(e)
     }
   }
 
-  Long insert(Matrix matrix, String dataSet) throws BqException {
+  JobStatistics.LoadStatistics insert(Matrix matrix, String dataSet) throws BqException {
     insert(matrix, dataSet, projectId)
   }
 
-  Long insert(Matrix matrix, TableId tableId) throws BqException {
-    def wcfg = WriteChannelConfiguration.newBuilder(tableId)
-        .setFormatOptions(FormatOptions.json())
-        .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE) // or WRITE_APPEND
-        .build()
-
-    JobId jobId  = JobId.newBuilder().setProject(projectId).setRandomJob().build()
-    TableDataWriteChannel writer = bigQuery.writer(jobId, wcfg)
-    OutputStream out = Channels.newOutputStream(writer)
-    JsonGenerator json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
-
-    // one JSON object per line (NDJSON), no Map allocations required
-    def names = matrix.columnNames()
-    for (def row : matrix.rows()) {
-      json.writeStartObject()
-      for (String name : names) {
-        def v = row[name]
-        json.writeFieldName(name)
-        // Write with correct types, converting only when needed
-        if (needsConversion(v)) {
-          json.writeString(sanitizeString(convertObjectValue(v))) // dates/decimals as strings
-        } else if (v instanceof Number) {
-          json.writeNumber(v.toString())  // keep numbers as numbers
-        } else if (v instanceof Boolean) {
-          json.writeBoolean((Boolean)v)
-        } else if (v == null) {
-          json.writeNull()
-        } else if (v instanceof byte[]) {
-          json.writeBinary(v as byte[])
-        } else if (v instanceof CharSequence) {
-          json.writeString(sanitizeString(v.toString()))
-        } else {
-          json.writeObject(v)
-        }
-      }
-      json.writeEndObject()
-      json.writeRaw('\n') // NDJSON newline
-    }
-    json.flush(); json.close()
-
-    Job loadJob = writer.getJob().waitFor()
-    if (loadJob == null || loadJob.getStatus().getError() != null) {
-      throw new BqException("Write-channel load (JSON) failed: ${loadJob?.status?.error}")
-    }
-    loadJob.getQueryResults().getTotalRows()
-
-    /*
+  JobStatistics.LoadStatistics insert(Matrix matrix, TableId tableId) throws BqException {
+    int rowIdx = 0
+    Object value = null
     try {
-      def mapList = matrix.rows().collect(m -> m.toMap())
-      def builder = InsertAllRequest.newBuilder(tableId)
-      mapList.each { rowMap ->
-          // Create a new map to hold the processed row to avoid modifying the original
-          Map<String, Object> processedRow = new HashMap<>(rowMap)
+      def wcfg = WriteChannelConfiguration.newBuilder(tableId)
+          .setFormatOptions(FormatOptions.json())
+          .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE) // or WRITE_APPEND
+          .build()
 
-          processedRow.each { entry ->
-            if (needsConversion(entry.value))
-              processedRow[entry.key] = convertObjectValue(entry.value)
+      JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
+      TableDataWriteChannel writer = bigQuery.writer(jobId, wcfg)
+      OutputStream out = Channels.newOutputStream(writer)
+      JsonGenerator json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
+
+      // one JSON object per line (NDJSON), no Map allocations required
+      def names = matrix.columnNames()
+      for (def row : matrix.rows()) {
+        rowIdx++
+        json.writeStartObject()
+        for (String name : names) {
+          value = row[name]
+          json.writeFieldName(name)
+          // Write with correct types, converting only when needed
+          if (needsConversion(value)) {
+            json.writeString(sanitizeString(convertObjectValue(value))) // dates/decimals as strings
+          } else if (value instanceof Number) {
+            json.writeNumber(value.toString())  // keep numbers as numbers
+          } else if (value instanceof Boolean) {
+            json.writeBoolean((Boolean) value)
+          } else if (value == null) {
+            json.writeNull()
+          } else if (value instanceof byte[]) {
+            json.writeBinary(value as byte[])
+          } else if (value instanceof CharSequence) {
+            json.writeString(sanitizeString(value.toString()))
+          } else {
+            json.writeObject(value)
           }
-
-          builder.addRow(processedRow) // Add the processed row
+        }
+        json.writeEndObject()
+        json.writeRaw('\n') // NDJSON newline
       }
-      //println "Bq: Inserting into $tableId"
-      InsertAllResponse response = bigQuery.insertAll(builder.build())
+      json.flush()
+      json.close()
 
-      //if (response.hasErrors()) {
-      return response.getInsertErrors()
-      //}
-    } catch (BigQueryException e) {
-      throw new BqException(e)
+      Job loadJob = writer.getJob().waitFor()
+
+      if (loadJob == null || loadJob.getStatus().getError() != null) {
+        throw new BqException("Write-channel load (JSON) failed: ${loadJob?.status?.error}")
+      }
+      JobStatistics.LoadStatistics stats = loadJob.getStatistics()
+      long rowsInserted = stats.getOutputRows()
+
+      println "Load job completed successfully. Inserted ${rowsInserted} rows."
+
+      return stats
+
+    } catch (Exception e) {
+        throw new BqException("Error writing value $value on row $rowIdx", e)
     }
-
-     */
   }
 
   static boolean needsConversion(Object orgVal) {
@@ -268,7 +258,7 @@ class Bq {
     String.valueOf(orgVal)
   }
 
-  Long insert(Matrix matrix, String dataSet, String projectId) throws BqException {
+  JobStatistics.LoadStatistics insert(Matrix matrix, String dataSet, String projectId) throws BqException {
     String tableName = matrix.matrixName
     TableId tableId = TableId.of(projectId, dataSet, tableName)
     insert(matrix, tableId)

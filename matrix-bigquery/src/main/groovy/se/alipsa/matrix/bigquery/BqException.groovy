@@ -1,5 +1,8 @@
 package se.alipsa.matrix.bigquery
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class BqException extends Exception {
   /**
    * Constructs a new exception with the specified detail message.  The

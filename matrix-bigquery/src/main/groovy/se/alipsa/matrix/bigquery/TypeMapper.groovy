@@ -2,6 +2,7 @@ package se.alipsa.matrix.bigquery
 
 import com.google.cloud.bigquery.LegacySQLTypeName
 import com.google.cloud.bigquery.StandardSQLTypeName
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.ValueConverter
 
 import java.sql.Timestamp
@@ -10,6 +11,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+@CompileStatic
 class TypeMapper {
 
   static StandardSQLTypeName toStandardSqlType(Class cls) {
