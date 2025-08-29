@@ -1,10 +1,14 @@
 package se.alipsa.matrix.core
 
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+
 /**
  * A column is a list with some arithmetic operations changed compared to how lists normally behaves in Groovy.
  * the multiply, div, plus, minus, and power applies to each element in the list instead of on the list itself. E.g.
  * new Column([1,2,3]) * 2 == [2,4,6] instead of [2,4,6,2,4,6] which the default result would on a list i Groovy.
  */
+@CompileStatic
 class Column extends ArrayList {
 
   String name
@@ -56,6 +60,7 @@ class Column extends ArrayList {
     ValueConverter.convert(this.get(index.intValue()), type)
   }
 
+  @CompileDynamic
   List plus(Object val) {
     List result = new Column()
     this.each {
@@ -68,6 +73,7 @@ class Column extends ArrayList {
     result
   }
 
+  @CompileDynamic
   List plus(List list) {
     List result = new Column()
     def that = fill(list)
@@ -89,6 +95,7 @@ class Column extends ArrayList {
     result
   }
 
+  @CompileDynamic
   List minus(Object val) {
     List result = new Column()
     this.each {
@@ -101,6 +108,7 @@ class Column extends ArrayList {
     result
   }
 
+  @CompileDynamic
   List minus(List list) {
     List result = new Column()
     def that = fill(list)
@@ -121,6 +129,7 @@ class Column extends ArrayList {
     result
   }
 
+  @CompileDynamic
   List multiply(Number val) {
     List result = new Column()
     this.each {
@@ -133,6 +142,7 @@ class Column extends ArrayList {
     result
   }
 
+  @CompileDynamic
   List multiply(List list) {
     List result = new Column()
     def that = fill(list)
@@ -149,6 +159,7 @@ class Column extends ArrayList {
     result
   }
 
+  @CompileDynamic
   List div(Number val) {
     List result = new Column()
     this.each {
@@ -161,6 +172,7 @@ class Column extends ArrayList {
     result
   }
 
+  @CompileDynamic
   List div(List list) {
     List result = new Column()
     def that = fill(list)
@@ -177,6 +189,7 @@ class Column extends ArrayList {
     result
   }
 
+  @CompileDynamic
   List power(Number val) {
     List result = new Column()
     this.each {
@@ -189,6 +202,7 @@ class Column extends ArrayList {
     result
   }
 
+  @CompileDynamic
   List power(List list) {
     List result = new Column()
     def that = fill(list)
@@ -224,25 +238,28 @@ class Column extends ArrayList {
    * (otherwise the rest of the column values will be filled with null).
    * Returns a new Column with unique values from this column.
    *
-   * @param ignoreNulls if true, null values are ignored
    * @return a new Column with unique values
    */
   List unique() {
     unique(false)
   }
 
+  @CompileDynamic
   Number mean() {
     Stat.mean(this)
   }
 
+  @CompileDynamic
   Number sd() {
     Stat.sd(this)
   }
 
+  @CompileDynamic
   Number median() {
     Stat.median(this)
   }
 
+  @CompileDynamic
   Number variance(boolean isBiasedCorrected = true) {
     Stat.variance(this, isBiasedCorrected)
   }

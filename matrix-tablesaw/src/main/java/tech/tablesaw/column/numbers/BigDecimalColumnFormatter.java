@@ -8,10 +8,15 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Locale;
 
+/**
+ * A formatter for BigDecimalColumn that can be configured to use different formats for printing
+ * values.
+ */
 public class BigDecimalColumnFormatter extends NumberColumnFormatter {
 
   protected NumberFormat format;
 
+  /** Returns a formatter that prints floating point numbers with a fixed number of fractional digits */
   public static BigDecimalColumnFormatter percent(int fractionalDigits) {
     NumberFormat format = NumberFormat.getPercentInstance();
     format.setGroupingUsed(false);
@@ -35,6 +40,7 @@ public class BigDecimalColumnFormatter extends NumberColumnFormatter {
     return new BigDecimalColumnFormatter();
   }
 
+  /** Returns a formatter that prints floating point numbers as if they were integers */
   public static BigDecimalColumnFormatter ints() {
     NumberFormat format = new DecimalFormat();
     format.setGroupingUsed(false);
@@ -51,6 +57,7 @@ public class BigDecimalColumnFormatter extends NumberColumnFormatter {
     return new BigDecimalColumnFormatter(format);
   }
 
+  /** Returns a formatter that prints floating point numbers with a fixed number of fractional digits */
   public static BigDecimalColumnFormatter fixedWithGrouping(int fractionalDigits) {
     NumberFormat format = new DecimalFormat();
     format.setGroupingUsed(true);
@@ -59,6 +66,13 @@ public class BigDecimalColumnFormatter extends NumberColumnFormatter {
     return new BigDecimalColumnFormatter(format);
   }
 
+  /**
+   * Returns a formatter that prints floating point numbers in the currency format
+   * of the language and country provided.
+   *
+   * @param language the ISO 639 alpha-2 or alpha-3 language code
+   * @param country the ISO 3166 alpha-2 country code
+   */
   public static BigDecimalColumnFormatter currency(String language, String country) {
     NumberFormat format = NumberFormat.getCurrencyInstance(Locale.of(language, country));
     return new BigDecimalColumnFormatter(format);

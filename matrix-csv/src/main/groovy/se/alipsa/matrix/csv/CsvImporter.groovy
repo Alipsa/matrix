@@ -1,5 +1,6 @@
 package se.alipsa.matrix.csv
 
+import groovy.transform.CompileStatic
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.DuplicateHeaderMode
@@ -10,6 +11,7 @@ import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
+@CompileStatic
 class CsvImporter {
 
   enum Format {
@@ -128,7 +130,7 @@ class CsvImporter {
         headerRow << "c" + i
       }
     }
-    List<Class<?>> types = [String] * ncols
+    def types = [String] * ncols
     return Matrix.builder()
         .matrixName(tableName)
         .columnNames(headerRow)

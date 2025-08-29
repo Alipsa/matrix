@@ -158,7 +158,7 @@ publishing {
 
 signing {
     if (project.properties['signing.keyId'] != null) {
-        project.logger.lifecycle("Signing artifacts...")
+        //project.logger.lifecycle("Signing artifacts...")
         sign publishing.publications.maven
         //sign configurations.archives
     }

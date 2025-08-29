@@ -1,10 +1,7 @@
 package test.alipsa.matrix.bigquery
 
-import com.google.cloud.resourcemanager.v3.ListProjectsRequest
-import com.google.cloud.resourcemanager.v3.ProjectsClient
-import com.google.cloud.resourcemanager.v3.ProjectsSettings
+import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.Matrix
@@ -19,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull
  * wants to run it must set the environment variable GOOGLE_CLOUD_PROJECT prior to running the
  * tests.
  */
+@CompileStatic
 class BqTest {
 
   @Test

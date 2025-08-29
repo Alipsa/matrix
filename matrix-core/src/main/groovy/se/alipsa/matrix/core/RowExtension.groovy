@@ -1,9 +1,12 @@
 package se.alipsa.matrix.core
 
+import groovy.transform.CompileStatic
+
 /**
  * Overrides DefaultGroovyMethods so we can define our own getAt and putAt
  * see resources/META-INF.groovy
  */
+@CompileStatic
 class RowExtension {
 
   static Object getAt(Row self, String[] colNames) {

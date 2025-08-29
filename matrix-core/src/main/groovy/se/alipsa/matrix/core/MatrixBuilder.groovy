@@ -1,5 +1,7 @@
 package se.alipsa.matrix.core
 
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import se.alipsa.matrix.core.util.ClassUtils
 
@@ -9,6 +11,7 @@ import java.nio.file.Path
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 
+@CompileStatic
 class MatrixBuilder {
 
   String matrixName
@@ -161,7 +164,7 @@ class MatrixBuilder {
     Row row = rows.first()
     columnNames(row.columnNames())
     types(row.types())
-    this.rows(rows)
+    this.rows(rows as List<List>)
   }
 
   /**
@@ -176,9 +179,9 @@ class MatrixBuilder {
     if (rows.isEmpty()) {
       return this
     }
-    Map row = rows.first()
+    Map<String, ?> row = rows.first()
     columnNames(row.keySet())
-    def t = []
+    List<Class> t = []
     row.each {
       t << it.value?.class ?: Object
     }
@@ -188,6 +191,7 @@ class MatrixBuilder {
   }
 
   // This allows us to extract ginq results without relying on ginq as a dependency
+  @CompileDynamic
   MatrixBuilder ginqResult(Object ginqResult) {
     if (ginqResult == null) {
       return this
@@ -285,7 +289,12 @@ class MatrixBuilder {
     observations.each { obs ->
       row = []
       colNames.each { p ->
-        row << obs.properties.(p)
+        if (obs == null || p == null) {
+          row << null
+        } else {
+          row.add(obs.getProperties().get(p))
+          //row << obs.properties.(p)
+        }
       }
       rowList << row
     }

@@ -1,6 +1,16 @@
 package se.alipsa.matrix.parquet
 import se.alipsa.matrix.core.Matrix
 
+/**
+ * This class uses Groovy Grape to load Carpet and Hadoop at runtime and thus avoid having them
+ * as compile time dependencies. However, this also means that the code is
+ * significantly slower than using MatrixParquetReader and MatrixParquetWriter directly.
+ * It is only here for backwards compatibility and to trouble shoot issues with MatrixParquetReader
+ * and MatrixParquetWriter.
+ *
+ * @deprecated Use MatrixParquetReader and MatrixParquetWriter instead
+ */
+@Deprecated
 class MatrixParquetIO {
 
   /**

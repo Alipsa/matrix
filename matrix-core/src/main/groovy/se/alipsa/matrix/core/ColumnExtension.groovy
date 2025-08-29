@@ -1,5 +1,6 @@
 package se.alipsa.matrix.core
 
+import groovy.transform.CompileStatic
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
 /**
@@ -7,6 +8,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
  * <code> def col = [1,2,3] as Column</code>
  * Registered in resources/META-INF.groovy/org.codehaus.groovy.runtime.ExtensionModule
  */
+@CompileStatic
 class ColumnExtension {
 
   static def asType(List self, Class cls) {

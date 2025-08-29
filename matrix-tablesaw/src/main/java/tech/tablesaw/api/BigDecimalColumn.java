@@ -288,28 +288,56 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
-  /** Adds the given float to this column */
+  /**
+   * Adds the given float to this column.
+   *
+   * @param f the float to add
+   * @return this column
+   */
   public BigDecimalColumn append(final float f) {
     data.add(BigDecimal.valueOf(f));
     return this;
   }
 
-  /** Adds the given double to this column */
+  /**
+   * Adds the given double to this column.
+   *
+   * @param d the double to add
+   * @return this column
+   */
   public BigDecimalColumn append(double d) {
     data.add(BigDecimal.valueOf(d));
     return this;
   }
 
+  /**
+   * Adds the given int to this column.
+   *
+   * @param i the int to add
+   * @return this column
+   */
   public BigDecimalColumn append(int i) {
     data.add(BigDecimal.valueOf(i));
     return this;
   }
 
+  /**
+   * Adds the given long to this column.
+   *
+   * @param l the long to add
+   * @return this column
+   */
   public BigDecimalColumn append(long l) {
     data.add(BigDecimal.valueOf(l));
     return this;
   }
 
+  /**
+   * Converts the given Number to a BigDecimal and adds it to this column.
+   *
+   * @param val the Number to add
+   * @return this column
+   */
   public BigDecimalColumn append(Number val) {
     if (val == null) {
       appendMissing();
@@ -319,6 +347,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
+  /**
+   * Converts the given numeric String to a BigDecimal and adds it to this column.
+   *
+   * @param val the numeric string to add
+   * @return this column
+   */
   public BigDecimalColumn append(String val) {
     if (val == null) {
       appendMissing();

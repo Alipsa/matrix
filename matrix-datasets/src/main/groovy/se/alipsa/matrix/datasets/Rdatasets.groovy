@@ -1,5 +1,7 @@
 package se.alipsa.matrix.datasets
 
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import org.jsoup.Jsoup
 import se.alipsa.matrix.core.Matrix
 
@@ -8,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
  * Rdatasets is a collection of 2536 datasets which were originally distributed alongside the
  * statistical software environment R and some of its add-on packages.
  */
+@CompileStatic
 class Rdatasets {
 
   static Matrix overView
@@ -37,6 +40,7 @@ class Rdatasets {
    * @param toPlainText if true, converts HTML content to plain text (default is false)
    * @return the documentation for the specified dataset
    */
+  @CompileDynamic
   static String fetchInfo(String packageName, String itemName, boolean toPlainText = false) {
     if (packageName == null || itemName.isEmpty()) {
       throw new IllegalArgumentException("Dataset name cannot be null or empty")
@@ -61,6 +65,7 @@ class Rdatasets {
    * @param itemName the name of the dataset (column Item in the overview)
    * @return a Matrix containing the data for the specified dataset
    */
+  @CompileDynamic
   static Matrix fetchData(String packageName, String itemName) {
     if (packageName == null || itemName.isEmpty()) {
       throw new IllegalArgumentException("Dataset name cannot be null or empty")

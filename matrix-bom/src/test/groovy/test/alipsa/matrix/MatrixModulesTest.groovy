@@ -1,10 +1,18 @@
 package test.alipsa.matrix
 
 import groovy.sql.Sql
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.io.input.ReaderInputStream
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.csv.CsvExporter
+import se.alipsa.matrix.csv.CsvImporter
+import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.json.JsonExporter
 import se.alipsa.matrix.json.JsonImporter
+import se.alipsa.matrix.parquet.MatrixParquetIO
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.parquet.MatrixParquetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
@@ -12,21 +20,12 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.stats.Sampler
 import se.alipsa.matrix.stats.regression.LinearRegression
-import se.alipsa.matrix.parquet.MatrixParquetIO
 import se.alipsa.matrix.xchart.PieChart
 
-import static org.junit.jupiter.api.Assertions.*
-import org.apache.commons.csv.CSVFormat
-import org.apache.commons.io.input.ReaderInputStream
-import se.alipsa.matrix.core.*
-import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.csv.CsvExporter
-
-import org.junit.jupiter.api.Test
-import se.alipsa.matrix.csv.CsvImporter
-
-import java.io.*
 import java.nio.charset.StandardCharsets
+
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
 
 /**
  * We do some basic tests for each module to verify they work together.
@@ -56,7 +55,11 @@ class MatrixModulesTest {
 
     StringWriter writer = new StringWriter()
     CsvExporter.exportToCsv(mtcars, CSVFormat.DEFAULT, writer)
-    ReaderInputStream sr = new ReaderInputStream(new StringReader(writer.toString()), StandardCharsets.UTF_8)
+    ReaderInputStream sr = ReaderInputStream.builder()
+        .setReader(new StringReader(writer.toString()))
+        .setCharset(StandardCharsets.UTF_8)
+        .get()
+    //ReaderInputStream sr = new ReaderInputStream(new StringReader(writer.toString()), StandardCharsets.UTF_8)
     Matrix m2 = CsvImporter.importCsv(sr, CSVFormat.DEFAULT, true)
         .withMatrixName('mtcars')
     assertEquals(mtcars, m2)

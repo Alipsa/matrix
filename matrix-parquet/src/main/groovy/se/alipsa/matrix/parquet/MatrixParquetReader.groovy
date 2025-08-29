@@ -21,6 +21,10 @@ import java.time.ZoneId
 
 class MatrixParquetReader {
 
+  static Matrix read(File file, String matrixName) {
+    read(file).withMatrixName(matrixName)
+  }
+
   static Matrix read(File file) {
     def path = new Path(file.toURI())
     def conf = new Configuration()

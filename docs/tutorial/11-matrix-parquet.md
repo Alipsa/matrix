@@ -62,14 +62,14 @@ To import data from a Parquet file into a Matrix object:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.parquet.MatrixParquetIO
+import se.alipsa.matrix.parquet.MatrixParquetReader
 
 // Read a Parquet file into a Matrix
 File parquetFile = new File("path/to/data.parquet")
-Matrix data = MatrixParquetIO.read(parquetFile, 'myData')
+Matrix data = MatrixParquetReader.read(parquetFile, 'myData')
 
 // You can also omit the name parameter, and it will use the file name as the Matrix name
-Matrix data2 = MatrixParquetIO.read(parquetFile)
+Matrix data2 = MatrixParquetReader.read(parquetFile)
 ```
 
 ### Exporting a Matrix to a Parquet File
@@ -79,14 +79,14 @@ To export a Matrix object to a Parquet file:
 ```groovy
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.parquet.MatrixParquetIO
+import se.alipsa.matrix.parquet.MatrixParquetWriter
 
 // Create or obtain a Matrix
 Matrix data = Dataset.cars()
 
 // Write the Matrix to a Parquet file
 File outputFile = new File("path/to/output.parquet")
-MatrixParquetIO.write(data, outputFile)
+MatrixParquetWriter.write(data, outputFile)
 ```
 
 ## Complete Example
@@ -96,7 +96,8 @@ Here's a complete example that demonstrates creating a Matrix, writing it to a P
 ```groovy
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.parquet.MatrixParquetIO
+import se.alipsa.matrix.parquet.MatrixParquetReader
+import se.alipsa.matrix.parquet.MatrixParquetWriter
 
 // Create a Matrix using a built-in dataset
 Matrix cars = Dataset.cars()
@@ -105,11 +106,11 @@ println cars.head(5)  // Display the first 5 rows
 
 // Write the Matrix to a Parquet file
 File parquetFile = new File("cars.parquet")
-MatrixParquetIO.write(cars, parquetFile)
+MatrixParquetWriter.write(cars, parquetFile)
 println "Matrix written to ${parquetFile.absolutePath}"
 
 // Read the Parquet file back into a new Matrix
-Matrix carsFromParquet = MatrixParquetIO.read(parquetFile, 'cars')
+Matrix carsFromParquet = MatrixParquetReader.read(parquetFile, 'cars')
 println "\nMatrix read from Parquet file:"
 println carsFromParquet.head(5)  // Display the first 5 rows
 

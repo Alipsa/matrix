@@ -1,12 +1,14 @@
 package se.alipsa.matrix.datasets
 
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.util.FileUtil
 import se.alipsa.matrix.core.Stat
 
 // Cannot find matching method java.lang.Object#minus(java.lang.Comparable)
 // Need to add more type info for CompileStatic to work
-//@groovy.transform.CompileStatic
+@CompileStatic
 class Dataset {
 
   static Matrix airquality() {
@@ -194,6 +196,7 @@ class Dataset {
     throw new IllegalArgumentException("no map data exists for $datasetName")
   }
 
+  @CompileDynamic
   static Matrix mapDataSet(String filePath, String region = null) {
     Matrix ds = Matrix.builder()
         .data(url(filePath), ',', '"')
@@ -209,7 +212,7 @@ class Dataset {
     if (region == null) {
       return ds
     }
-    def sub = ds.subset("region", { it == region })
+    Matrix sub = ds.subset("region", { it == region })
     def minOrder = Stat.min(sub['order']) - 1
     def minGroup = Stat.min(sub['group']) - 1
     return sub.apply(

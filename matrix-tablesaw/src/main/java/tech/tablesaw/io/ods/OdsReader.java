@@ -14,9 +14,28 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Reader for ODS (OpenDocument Spreadsheet) files, which are used by applications like LibreOffice Calc and Apache OpenOffice Calc.
+ * <p>
+ * This reader utilizes the 'sods' library to parse ODS files and convert them into a Tablesaw Table.
+ * <p>
+ * Supported options include:
+ * <ul>
+ *     <li>sheetIndex: The index of the sheet to read (default is 0, the first sheet).</li>
+ * </ul>
+ * <p>
+ * Example usage:
+ * <pre>{@code
+ * Table table = Table.read().ods("data.ods", OdsReadOptions.builder().sheetIndex(1).build());
+ * }</pre>
+ */
 public class OdsReader implements DataReader<OdsReadOptions> {
 
   private static final OdsReader INSTANCE = new OdsReader();
+
+  private OdsReader() {
+    // singleton
+  }
 
   static {
     register(Table.defaultReaderRegistry);
