@@ -32,7 +32,7 @@
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
 
-    <matrixBigQueryVersion>0.3.3-SNAPSHOT</matrixBigQueryVersion>
+    <matrixBigQueryVersion>0.4.0-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>0.3.1</matrixChartsVersion>
     <matrixCoreVersion>3.4.2-SNAPSHOT</matrixCoreVersion>
     <matrixCsvVersion>2.2.2-SNAPSHOT</matrixCsvVersion>

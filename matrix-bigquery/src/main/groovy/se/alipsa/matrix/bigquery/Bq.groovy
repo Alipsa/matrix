@@ -10,13 +10,16 @@ import com.google.cloud.resourcemanager.v3.ProjectsSettings
 import groovy.transform.CompileStatic
 
 import java.nio.channels.Channels
+import java.sql.Time
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 import static se.alipsa.matrix.bigquery.TypeMapper.*
 import com.google.auth.oauth2.GoogleCredentials
@@ -34,6 +37,7 @@ class Bq {
   static final SimpleDateFormat bqSimpledateFormat = new SimpleDateFormat("yyyy-MM-dd")
   static final DateTimeFormatter bqDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
   static final DateTimeFormatter bqDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+  static final DateTimeFormatter bqTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss[.SSSSSS]")
 
   private BigQuery bigQuery
   private String projectId
@@ -199,8 +203,16 @@ class Bq {
 
       Job loadJob = writer.getJob().waitFor()
 
-      if (loadJob == null || loadJob.getStatus().getError() != null) {
-        throw new BqException("Write-channel load (JSON) failed: ${loadJob?.status?.error}")
+      def status = loadJob.getStatus()
+      def primary = status?.getError()
+      def execErrs = status?.getExecutionErrors()
+
+      if (primary != null || (execErrs != null && !execErrs.isEmpty())) {
+        String details = ([primary] + (execErrs ?: []))
+            .findAll { it != null }
+            .collect { e -> "${e.message} (reason=${e.reason}, location=${e.location})" }
+            .join("; ")
+        throw new BqException("Write-channel load (JSON) failed: ${details}")
       }
       JobStatistics.LoadStatistics stats = loadJob.getStatistics()
       long rowsInserted = stats.getOutputRows()
@@ -210,19 +222,21 @@ class Bq {
       return stats
 
     } catch (Exception e) {
-        throw new BqException("Error writing value $value on row $rowIdx", e)
+      throw new BqException("Error writing value '${value}' (type=${value?.class?.name}) on row ${rowIdx}", e)
     }
   }
 
   static boolean needsConversion(Object orgVal) {
     return orgVal instanceof BigDecimal
         || orgVal instanceof BigInteger
+        || orgVal instanceof Time
+        || orgVal instanceof LocalDateTime
+        || orgVal instanceof LocalTime
+        || orgVal instanceof Instant
+        || orgVal instanceof Timestamp
+        || orgVal instanceof ZonedDateTime
         || orgVal instanceof Date
         || orgVal instanceof LocalDate
-        || orgVal instanceof LocalDateTime
-    || orgVal instanceof Instant // The default toString works fine
-    || orgVal instanceof Timestamp
-    || orgVal instanceof ZonedDateTime
   }
 
   static def convertObjectValue(Object orgVal) {
@@ -234,10 +248,6 @@ class Bq {
     if (orgVal instanceof BigInteger) {
       BigInteger val = (BigInteger) orgVal
       return val.toString()
-    }
-    if (orgVal instanceof Date) {
-      Date date = (Date) orgVal
-      return bqSimpledateFormat.format(date)
     }
     if (orgVal instanceof LocalDate) {
       LocalDate date = (LocalDate) orgVal
@@ -253,7 +263,21 @@ class Bq {
     }
     if (orgVal instanceof ZonedDateTime) {
       ZonedDateTime ts = (ZonedDateTime) orgVal
-      return ts.format(DateTimeFormatter.ISO_INSTANT)
+      return ts.format(DateTimeFormatter.ISO_ZONED_DATE_TIME)
+    }
+    if (orgVal instanceof LocalTime) {
+      LocalTime t = ((LocalTime) orgVal).truncatedTo(ChronoUnit.MICROS)
+      return bqTimeFormatter.format(t)
+    }
+    // Time is a subclass of Date so must come before Date
+    if (orgVal instanceof Time) {
+      Time t = (Time) orgVal
+      LocalTime lt = t.toLocalTime().truncatedTo(ChronoUnit.MICROS)
+      return bqTimeFormatter.format(lt)
+    }
+    if (orgVal instanceof Date) {
+      Date date = (Date) orgVal
+      return bqSimpledateFormat.format(date)
     }
     String.valueOf(orgVal)
   }
@@ -282,7 +306,7 @@ class Bq {
       row = []
       int i = 0
       for (FieldValue fv : fvl.iterator()) {
-        row << convert(fv.value, colTypes[i++])
+        row << convertFieldValue(fv, colTypes[i++])
       }
       //println "Bq.convertToMatrix: adding $row"
       rows << row

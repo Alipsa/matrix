@@ -8,6 +8,7 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
@@ -222,6 +223,30 @@ class ListConverter {
     List<BigDecimal> list = []
     numbers.each {
       list.add(ValueConverter.asBigDecimal(it))
+    }
+    return list
+  }
+
+  static List<Short> toShorts(Object... numbers) {
+    List<Short> list = []
+    numbers.each {
+      list.add(ValueConverter.asShort(it))
+    }
+    return list
+  }
+
+  static List<LocalTime> toLocalTimes(Object... times) {
+    List<LocalTime> list = []
+    times.each {
+      list.add(ValueConverter.asLocalTime(it))
+    }
+    return list
+  }
+
+  static List<Byte> toBytes(Object ... bytes) {
+    List<Byte> list = []
+    bytes.each {
+      list.add(ValueConverter.asByte(it))
     }
     return list
   }

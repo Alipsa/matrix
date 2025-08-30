@@ -68,6 +68,7 @@ class ValueConverter {
       case Timestamp -> (E) asTimestamp(o)
       case java.util.Date -> (E) asDate(o, dateTimePattern)
       case Number -> (E) asNumber(o)
+      case ZonedDateTime -> (E) asZonedDateTime(o, dateTimeFormatter(dateTimePattern, locale))
       default -> try {
         type.cast(o)
       } catch (ClassCastException ignored) {
@@ -559,5 +560,25 @@ class ValueConverter {
     // here we make sure hyphen and minus both mean the negative prefix
     String neg = ((DecimalFormat)format).negativePrefix
     val.replace(S_HYPHEN, neg).replace(S_MINUS, neg)
+  }
+
+  static ZonedDateTime asZonedDateTime(Object o, DateTimeFormatter dateTimeFormatter, ZoneId zoneId = ZoneId.systemDefault()) {
+    //println "asZonedDateTime: o=$o, type=${o?.class}, zoneId=$zoneId"
+    if (o == null) return null
+    if (o instanceof ZonedDateTime) return o
+    if (o instanceof Instant) return ZonedDateTime.ofInstant(o as Instant, zoneId)
+    if (o instanceof LocalDateTime) return (o as LocalDateTime).atZone(zoneId)
+    if (o instanceof String) {
+      if (dateTimeFormatter != null) {
+        return ZonedDateTime.parse(o as String, dateTimeFormatter)
+      } else {
+        return ZonedDateTime.parse(o as String)
+      }
+    }
+    throw new IllegalArgumentException("Failed to convert $o of type ${o.class} to java.time.ZonedDateTime")
+  }
+
+  static ZonedDateTime asZonedDateTime(Object o, ZoneId zoneId) {
+    asZonedDateTime(o, null, zoneId)
   }
 }

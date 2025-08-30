@@ -3,6 +3,8 @@
 ### 3.4.2, In progress
 - enhance plus() to return clone if (matrix + null) instead of forcing users to do a null check.
 - add a split method to Matrix taking a integer as parma to split the matrix into chunks
+- ListConverter: add support for converting to a list of Short, LocalTime, and Bytes
+- ValueConverter: add support for ZonedDateTime
 
 ### 3.4.1, 2025-07-18
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.4.1/matrix-core-3.4.1.jar)
