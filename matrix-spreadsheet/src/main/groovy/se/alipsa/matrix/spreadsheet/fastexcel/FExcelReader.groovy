@@ -169,7 +169,7 @@ class FExcelReader implements SpreadsheetReader {
   }
 
   static int findLastRow(Sheet sheet) {
-    return sheet.openStream().count()
+    return sheet.openStream().count() as int
   }
 
   @Override

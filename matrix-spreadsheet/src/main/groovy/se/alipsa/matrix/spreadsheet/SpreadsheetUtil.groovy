@@ -42,7 +42,7 @@ class SpreadsheetUtil {
       StringBuilder sb = new StringBuilder()
       while (number-- > 0) {
          sb.append(('A' as char + (number % 26)) as char)
-         number /= 26
+         number = (int) (number / 26)
       }
       return sb.reverse().toString()
    }

@@ -1,13 +1,14 @@
 package se.alipsa.matrix.core
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
 @CompileStatic
-class Row implements List<Object> {
+class Row implements GroovyObject, List<Object> {
     private int rowNumber
-    private List<?> content
+    private List<Object> content
     private Matrix parent
     private List<String> columnNames
     private List<Class> types
@@ -41,7 +42,7 @@ class Row implements List<Object> {
         if (propertyName in columnNames) {
             getAt(propertyName)
         } else {
-            super.getProperty(propertyName)
+          GroovyObject.super.getProperty(propertyName)
         }
     }
 
@@ -56,7 +57,7 @@ class Row implements List<Object> {
         if (propertyName in columnNames) {
             putAt(propertyName, newValue)
         } else {
-            super.setProperty(propertyName, newValue)
+          GroovyObject.super.setProperty(propertyName, newValue)
         }
     }
 

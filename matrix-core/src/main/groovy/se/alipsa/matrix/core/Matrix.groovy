@@ -1,5 +1,6 @@
 package se.alipsa.matrix.core
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.matrix.core.util.RowComparator
@@ -56,7 +57,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param columns the variable list (the data in columnar format)
    * @param dataTypes the data types (classes)
    */
-  Matrix(String name, List<String> headerList, List<? extends List> columns, List<Class> dataTypes) {
+  Matrix(String name, List<String> headerList, List<List> columns, List<Class> dataTypes) {
     if (dataTypes != null && headerList == null) {
       headerList = (1..dataTypes.size()).collect { 'c' + it }
     }
@@ -807,7 +808,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       headers << it.name
       types << it.type
     }
-    return new Matrix(mName, headers, mColumns, types)
+    return new Matrix(mName, headers, mColumns as List<List>, types)
   }
 
   /**
@@ -2049,7 +2050,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (newValue instanceof List) {
       upsertColumn(propertyName, newValue)
     } else {
-      super.setProperty(propertyName, newValue)
+      GroovyObject.super.setProperty(propertyName, newValue)
     }
   }
 
@@ -2156,7 +2157,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     for (int i = 0; i < col.size(); i++) {
       groups.computeIfAbsent(col[i], k -> []).add(i)
     }
-    Map<?, Matrix> tables = [:]
+    Map<Object, Matrix> tables = [:]
     for (entry in groups) {
       tables.put(entry.key,
           builder()

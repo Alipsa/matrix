@@ -33,7 +33,7 @@ the groovy core library as well e.g:
 <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>4.0.28</version>
+    <version>5.0.0</version>
 </dependency>
 ```
 

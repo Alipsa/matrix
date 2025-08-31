@@ -286,8 +286,8 @@ class ExcelImporter implements Importer {
     endColNum--
 
     ExcelValueExtractor ext = new ExcelValueExtractor(sheet)
-    List<List<?>> matrix = []
-    List<?> rowList
+    List<List> matrix = []
+    List rowList
     for (int rowIdx = startRowNum; rowIdx <= endRowNum; rowIdx++) {
       Row row = sheet.getRow(rowIdx)
       if (row == null) {

@@ -38,7 +38,7 @@ compileGroovy {
 dependencies {
     compileOnly libs.groovy
     compileOnly libs.groovyGinq
-    implementation 'org.jsoup:jsoup:1.21.1'
+    implementation 'org.jsoup:jsoup:1.21.2'
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
 

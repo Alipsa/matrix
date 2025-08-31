@@ -44,11 +44,11 @@ dependencies {
     }*/
     compileOnly libs.groovy
 
-    api('com.google.cloud:google-cloud-bigquery:2.54.1')
-    api 'com.google.cloud:google-cloud-resourcemanager:1.74.0'
+    api('com.google.cloud:google-cloud-bigquery:2.54.2')
+    api 'com.google.cloud:google-cloud-resourcemanager:1.75.0'
     implementation platform('com.google.auth:google-auth-library-bom:1.38.0')
     implementation 'com.google.auth:google-auth-library-oauth2-http'
-    implementation('com.google.cloud:google-cloud-bigquerystorage:3.16.2')
+    implementation('com.google.cloud:google-cloud-bigquerystorage:3.16.3')
 
     testImplementation libs.groovy
     testImplementation testLibs.junitJupiterApi

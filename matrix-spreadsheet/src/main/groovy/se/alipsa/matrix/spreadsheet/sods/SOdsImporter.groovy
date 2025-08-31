@@ -261,8 +261,8 @@ class SOdsImporter implements Importer {
 
     //println "importOds: startCol = $startCol, endCol = $endCol"
     SOdsValueExtractor ext = new SOdsValueExtractor(sheet)
-    List<List<?>> matrix = []
-    List<?> rowList
+    List<List> matrix = []
+    List rowList
     for (int rowIdx = startRow; rowIdx <= endRow; rowIdx++) {
       rowList = []
       for (int colIdx = startCol; colIdx <= endCol; colIdx++) {

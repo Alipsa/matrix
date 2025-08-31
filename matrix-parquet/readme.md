@@ -5,7 +5,7 @@ and the other (MatrixParquetWriter and MatrixParquetReader) using the [Apache Pa
 
 To use it, add the following to your gradle build script
 ```groovy
-implementation 'org.apache.groovy:groovy:4.0.28'
+implementation 'org.apache.groovy:groovy:5.0.0'
 implementation 'se.alipsa.matrix:matrix-core:3.3.0'
 implementation 'se.alipsa.matrix:matrix-parquet:0.3.0'
 ```

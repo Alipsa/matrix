@@ -236,8 +236,12 @@ class CsvImporter {
 
     if (format.containsKey(Format.Header)) {
       def val = format.get(Format.Header)
-      if (val instanceof List || val instanceof String[]) {
+      if (val instanceof String[]) {
         f.setHeader(val as String[])
+        format.put(Format.FirstRowAsHeader, false)
+        f.setSkipHeaderRecord(false)
+      } else if (val instanceof List) {
+        f.setHeader(val.toArray(new String[0]) as String[])
         format.put(Format.FirstRowAsHeader, false)
         f.setSkipHeaderRecord(false)
       } else if (val instanceof String) {

@@ -214,8 +214,8 @@ class FExcelImporter implements Importer {
     int startColNumZI = startColNum - 1
     int endColNumZI = endColNum - 1
     List<String> colNames = []
-    List<List<?>> matrix = []
-    List<?> rowList
+    List<List> matrix = []
+    List rowList
     int ncol = endColNum - startColNum + 1 // both start and end are included
     try (Stream<Row> rows = sheet.openStream()) {
       rows.each { Row row ->

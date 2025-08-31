@@ -5,6 +5,8 @@ import tech.tablesaw.io.ReadOptions;
 import tech.tablesaw.io.Source;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -45,8 +47,8 @@ public class OdsReadOptions extends ReadOptions {
     return new Builder(new StringReader(contents));
   }
 
-  public static Builder builderFromUrl(String url) throws IOException {
-    return new Builder(new URL(url));
+  public static Builder builderFromUrl(String url) throws IOException, URISyntaxException {
+    return new Builder(new URI(url).toURL());
   }
 
 
