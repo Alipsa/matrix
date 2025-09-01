@@ -22,7 +22,7 @@ class GsImporter {
    *        for example, Sheet1!A1:B2 refers to a specific range on a specific sheet.
    * @return A Matrix corresponding to the sheet range specified
    */
-  static Matrix importSheet(String sheetId, String range) {
+  static Matrix importSheet(String sheetId, String range, boolean firstRowAsColumnNames) {
     def transport = GoogleNetHttpTransport.newTrustedTransport()
     def gsonFactory = GsonFactory.getDefaultInstance()
 
@@ -41,7 +41,17 @@ class GsImporter {
         .setValueRenderOption('UNFORMATTED_VALUE')
         .execute()
     List<List<Object>> values = response.getValues()
+    List<String> headers
+    if (firstRowAsColumnNames) {
+      List<Object> firstRow = values.remove(0)
+      headers = firstRow.collect { String.valueOf(it) }
+    } else {
+      headers = Matrix.anonymousHeader(values[0])
+    }
     def sheetName = range.split('!')[0]
-    Matrix.builder(sheetName).rows(values).build()
+    Matrix.builder(sheetName)
+        .rows(values)
+        .columnNames(headers)
+        .build()
   }
 }

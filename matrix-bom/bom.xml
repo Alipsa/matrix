@@ -42,6 +42,7 @@
     <matrixStatsVersion>2.2.0</matrixStatsVersion>
     <matrixSqlVersion>2.1.2-SNAPSHOT</matrixSqlVersion>
     <matrixSpreadsheetVersion>2.2.2-SNAPSHOT</matrixSpreadsheetVersion>
+    <matrixGsheetsVersion>0.0.1-SNAPSHOT</matrixGsheetsVersion>
     <matrixTablesawVersion>0.2.2-SNAPSHOT</matrixTablesawVersion>
     <matrixXChartVersion>0.2.1</matrixXChartVersion>
   </properties>
@@ -83,6 +84,11 @@
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-spreadsheet</artifactId>
         <version>${matrixSpreadsheetVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-gsheets</artifactId>
+        <version>${matrixGsheetsVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>

@@ -33,18 +33,20 @@ compileGroovy {
 
 dependencies {
   compileOnly libs.groovy
+  compileOnly libs.groovyJson
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
   implementation 'com.google.auth:google-auth-library-oauth2-http:1.38.0'
-  implementation 'com.google.apis:google-api-services-oauth2:v2-rev157-1.25.0'
+  implementation 'com.google.apis:google-api-services-oauth2:v2-rev20200213-2.0.0'
   implementation 'com.google.http-client:google-http-client-gson:1.43.3'
-  //implementation 'com.google.api-client:google-api-client:1.32.1'
-  //implementation 'com.google.oauth-client:google-oauth-client-jetty:1.32.1'
+  implementation 'com.google.api-client:google-api-client:2.6.0'
+  implementation 'com.google.oauth-client:google-oauth-client-jetty:1.36.0'
   implementation 'com.google.apis:google-api-services-sheets:v4-rev20220927-2.0.0'
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
   testRuntimeOnly testLibs.junitPlatformLauncher
   testImplementation libs.groovy
+  testImplementation libs.groovyJson
   testImplementation testLibs.log4jToSlf4j
   testImplementation testLibs.slf4jSimple
 }
@@ -171,7 +173,6 @@ test {
             username = sonatypeUsername
             password = sonatypePassword
           }
-          url = nexusUrl
         }
       }
     }

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.core
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.matrix.core.util.RowComparator
@@ -49,6 +48,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     new MatrixBuilder(name).columns(columnData).types(types)
   }
 
+  static List<String> anonymousHeader(List row) {
+    (1..row.size()).collect { 'c' + it }
+  }
+
   /**
    * Creates a new Matrix
    *
@@ -59,7 +62,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix(String name, List<String> headerList, List<List> columns, List<Class> dataTypes) {
     if (dataTypes != null && headerList == null) {
-      headerList = (1..dataTypes.size()).collect { 'c' + it }
+      headerList = anonymousHeader(dataTypes)
     }
 
     if (columns == null) {
@@ -74,7 +77,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       if (columns.isEmpty()) {
         headerList = []
       } else {
-        headerList = (1..columns.size()).collect { 'c' + it }
+        headerList = anonymousHeader(columns)
       }
     }
 
