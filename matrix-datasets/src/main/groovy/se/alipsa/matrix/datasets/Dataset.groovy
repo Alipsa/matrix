@@ -223,7 +223,7 @@ class Dataset {
   }
 
   private static URL url(String path) {
-    FileUtil.getResource(path)
+    FileUtil.getResourceUrl(path)
   }
 
   /**
