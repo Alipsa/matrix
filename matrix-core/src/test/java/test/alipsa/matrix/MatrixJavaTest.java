@@ -849,7 +849,7 @@ class MatrixJavaTest {
                 m("start_date", toLocalDates("2013-01-01", "2012-03-27"))))
         .types(cr(Object.class, 4))
         .build();
-    assertEquals(empData, differentTypes, empData.diff(differentTypes));
+    MatrixAssertions.assertContentMatches(empData, differentTypes, empData.diff(differentTypes));
     assertNotEquals(empData, differentTypes.withMatrixName("differentTypes"), empData.diff(differentTypes));
   }
 

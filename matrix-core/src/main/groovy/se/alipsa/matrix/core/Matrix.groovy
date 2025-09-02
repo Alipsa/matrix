@@ -2,6 +2,7 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
+import org.opentest4j.AssertionFailedError
 import se.alipsa.matrix.core.util.RowComparator
 
 import java.text.NumberFormat
@@ -948,41 +949,50 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   @Override
   boolean equals(Object o) {
-    equals(o, false, false, true)
+    equals(o, true, true, false, 0.0001d, false)
   }
 
-  boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName = false, boolean ignoreTypes = true, Double allowedDiff = 0.0001) {
+  boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName, boolean ignoreTypes = true,
+                 Double allowedDiff = 0.0001, boolean throwException = false, String message = '') {
     if (this.is(o)) return true
     if (!(o instanceof Matrix)) return false
 
     Matrix matrix = (Matrix) o
     if (!ignoreMatrixName && mName != matrix.mName) {
-      println("Matrix.equals: names do not match")
+      handleError("$message - Matrix.equals: names do not match", throwException)
       return false
     }
     if (mColumns.size() != matrix.columnCount()) {
-      println("Matrix.equals: number of columns differ")
+      handleError("$message - Matrix.equals: number of columns differ", throwException)
       return false
     }
     if (!ignoreColumnNames && columnNames() != matrix.columnNames()) {
-      println("Matrix.equals: column names differ")
+      handleError("$message - Matrix.equals: column names differ", throwException)
       return false
     }
     if (!ignoreTypes && types() != matrix.types()) {
-      println("Matrix.equals: column types differ")
+      handleError("$message - Matrix.equals: column types differ", throwException)
       return false
     }
     //if (mColumns != matrix.mColumns) return false
-    List valueDiff = checkValues(matrix, allowedDiff)
+    List valueDiff = checkValues(matrix, allowedDiff, ignoreTypes)
     if (valueDiff.size() > 0) {
-      println "Matrix.equals: value(s) differ: row ${valueDiff[0]}, column ${valueDiff[1]} expected ${valueDiff[2]} but was ${valueDiff[3]}"
+      handleError("$message - Matrix.equals: value(s) differ: row ${valueDiff[0]}, column ${valueDiff[1]} expected ${valueDiff[2]} but was ${valueDiff[3]}", throwException)
       return false
     }
 
     return true
   }
 
-  private List checkValues(Matrix matrix, Double allowedDiff) {
+  static void handleError(String msg, boolean throwException) {
+    if (throwException) {
+      throw new AssertionFailedError(msg)
+    } else {
+      println(msg)
+    }
+  }
+
+  private List checkValues(Matrix matrix, Double allowedDiff, boolean ignoreTypes = false) {
     List valueDiff = []
     int i = 0
     for (List column in mColumns) {
@@ -996,8 +1006,14 @@ class Matrix implements Iterable<Row>, Cloneable {
             return [r, i, entry, thatVal]
           }
         } else {
-          if (entry != thatVal) {
-            return [r, i, entry, thatVal]
+          if (ignoreTypes) {
+            if (String.valueOf(entry) != String.valueOf(thatVal)) {
+              return [r, i, entry, thatVal]
+            }
+          } else {
+            if (entry != thatVal) {
+              return [r, i, entry, thatVal]
+            }
           }
         }
         r++
@@ -2256,7 +2272,7 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   @Override
   String toString() {
-    return "$matrixName: ${rowCount()} obs * ${columnCount()} variables "
+    return "${matrixName ?: 'a matrix with '}: ${rowCount()} obs * ${columnCount()} variables "
   }
 
   Map<String, Integer> dimensions() {

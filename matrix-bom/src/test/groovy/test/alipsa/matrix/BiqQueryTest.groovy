@@ -6,7 +6,6 @@ import com.google.cloud.bigquery.BigQueryOptions
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.BigQueryEmulatorContainer
-import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.Matrix
@@ -15,14 +14,14 @@ import se.alipsa.matrix.datasets.Dataset
 @Testcontainers
 class BiqQueryTest {
 
-  //private static final BigQueryEmulatorContainer container = null
-  @Container
-  private static final BigQueryEmulatorContainer container = new BigQueryEmulatorContainer("ghcr.io/goccy/bigquery-emulator:0.4.3")
+  private static final BigQueryEmulatorContainer container = null
+  //@org.testcontainers.junit.jupiter.Container
+  //private static final BigQueryEmulatorContainer container = new BigQueryEmulatorContainer("ghcr.io/goccy/bigquery-emulator:0.4.3")
 
   // Issue with testContainers:
   // fails with se.alipsa.matrix.bigquery.BqException: Error writing value '30' (type=java.lang.Short) on row 153
   // The same test works in the real BigQuery
-  //@Disabled
+  @Disabled
   @Test
   void testBigQuery() {
     String url = container.getEmulatorHttpEndpoint()

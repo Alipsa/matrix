@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.csv.CsvExporter
 import se.alipsa.matrix.csv.CsvImporter
 import se.alipsa.matrix.datasets.Dataset
@@ -62,7 +63,7 @@ class MatrixModulesTest {
     //ReaderInputStream sr = new ReaderInputStream(new StringReader(writer.toString()), StandardCharsets.UTF_8)
     Matrix m2 = CsvImporter.importCsv(sr, CSVFormat.DEFAULT, true)
         .withMatrixName('mtcars')
-    assertEquals(mtcars, m2)
+    MatrixAssertions.assertContentMatches(mtcars, m2, mtcars.diff(m2))
 
   }
 
@@ -71,7 +72,7 @@ class MatrixModulesTest {
     Matrix mtcars = Dataset.mtcars()
     def exporter = new JsonExporter(mtcars)
     Matrix m2 = JsonImporter.parse(exporter.toJson()).withMatrixName('mtcars')
-    assertEquals(mtcars, m2)
+    MatrixAssertions.assertContentMatches(mtcars, m2, mtcars.diff(m2))
   }
 
   @Test
@@ -89,7 +90,7 @@ class MatrixModulesTest {
         endCol: 'L',
         firstRowAsColNames: true]
     ).withMatrixName('mtcars')
-    assertEquals(mtcars, m2)
+    MatrixAssertions.assertContentMatches(mtcars, m2, mtcars.diff(m2))
   }
 
   @Test

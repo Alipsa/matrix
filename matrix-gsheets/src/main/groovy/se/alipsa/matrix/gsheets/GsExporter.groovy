@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gsheets
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
@@ -65,14 +66,19 @@ class GsExporter {
 
     // Need write scope for creating/updating spreadsheets
     def scopes = ["https://www.googleapis.com/auth/drive.file", SheetsScopes.SPREADSHEETS] + BqAuthenticator.SCOPES
-    //GoogleCredentials credentials = BqAuthenticator.authenticate(scopes)
+
+    GoogleCredentials credentials = BqAuthenticator.authenticate(scopes)
+    HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
+    /*
     def home = System.getProperty("user.home")
-    def cred = BqAuthenticator.loginInstalledApp(new File("$home/client_secret_desktop.json"),
-        [SheetsScopes.SPREADSHEETS, "https://www.googleapis.com/auth/drive.file", "openid", "email"]
+    def cred = BqAuthenticator.loginInstalledApp(
+        new File("$home/client_secret_desktop.json"),
+        scopes
     )
 
-    def json = GsonFactory.getDefaultInstance()
-    Sheets sheets = new Sheets.Builder(transport, json, cred)
+     */
+
+    Sheets sheets = new Sheets.Builder(transport, gsonFactory, cred)
         .setApplicationName("Matrix GSheets")
         .build()
 
@@ -107,6 +113,7 @@ class GsExporter {
       it.each { v ->
         row.add(toCell(v))
       }
+      values.add(row)
     }
 
     // 3) Write all values starting at A1

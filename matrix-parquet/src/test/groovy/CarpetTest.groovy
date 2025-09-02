@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.parquet.MatrixParquetIO
 
@@ -28,6 +29,6 @@ class CarpetTest {
     File file = new File("src/test/resources/mtcars.parquet")
     Matrix table = MatrixParquetIO.read(file, 'mtcars')
     def expected = Dataset.mtcars()
-    Assertions.assertEquals(expected, table)
+    MatrixAssertions.assertContentMatches(expected, table)
   }
 }

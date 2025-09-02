@@ -33,6 +33,8 @@ compileGroovy {
 
 dependencies {
   compileOnly libs.groovy
+  compileOnly libs.groovyAnt
+  compileOnly libs.groovyDoc
   compileOnly libs.groovyJson
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
@@ -42,6 +44,8 @@ dependencies {
   implementation 'com.google.api-client:google-api-client:2.6.0'
   implementation 'com.google.oauth-client:google-oauth-client-jetty:1.36.0'
   implementation 'com.google.apis:google-api-services-sheets:v4-rev20220927-2.0.0'
+  // For deleting sheets
+  implementation 'com.google.apis:google-api-services-drive:v3-rev20220815-2.0.0'
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
   testRuntimeOnly testLibs.junitPlatformLauncher

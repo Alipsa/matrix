@@ -1,6 +1,7 @@
 package datasets
 
 import org.junit.jupiter.api.Test
+import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.datasets.Rdatasets
 
@@ -31,6 +32,6 @@ class RdatasetsTest {
     //println Dataset.mtcars().content()
     assertEquals(32, mtcars.rowCount(), 'Mtcars dataset should have 32 rows')
     assertEquals(12, mtcars.columnCount(), 'Mtcars dataset should have 11 columns')
-    assertEquals(Dataset.mtcars(), mtcars)
+    MatrixAssertions.assertContentMatches(Dataset.mtcars(), mtcars, Dataset.mtcars().diff(mtcars))
   }
 }
