@@ -24,6 +24,17 @@ class BqAuthUtils {
   static GoogleCredentials loginAndWriteAdc(File clientSecretJson, List<String> scopes, String quotaProjectId = null) {
     def http = GoogleNetHttpTransport.newTrustedTransport()
     def json = GsonFactory.getDefaultInstance()
+    if (!clientSecretJson.exists()) {
+      println "Please create OAuth 2.0 credentials for a 'Desktop app' in the Google Cloud Console and save the downloaded JSON file to this location."
+      println """
+          1. Go to the Google Cloud Console (https://console.cloud.google.com/).
+          2. Navigate to APIs & Services > Credentials.         
+          3. Click "Create Credentials" and choose "OAuth 2.0 Client ID".
+          4. Select "Desktop App" as the application type.
+          5. After creation, click the download icon to save the JSON file to $clientSecretJson.absolutePath.
+        """
+      throw new IllegalStateException("Error: The 'client_secret_desktop.json' file was not found at $clientSecretJson.absolutePath")
+    }
     GoogleClientSecrets secrets = GoogleClientSecrets.load(json, new FileReader(clientSecretJson))
 
     def flow = new GoogleAuthorizationCodeFlow.Builder(http, json, secrets, scopes)
@@ -60,19 +71,5 @@ class BqAuthUtils {
     if (quotaProjectId) gc = gc.createWithQuotaProject(quotaProjectId)
     gc.refresh()
     return gc
-  }
-
-  static Credential loginInstalledApp(File clientSecretJson, List<String> scopes) {
-    def http = GoogleNetHttpTransport.newTrustedTransport()
-    def json = GsonFactory.getDefaultInstance()
-    GoogleClientSecrets secrets = GoogleClientSecrets.load(json, new FileReader(clientSecretJson))
-
-    def flow = new GoogleAuthorizationCodeFlow.Builder(http, json, secrets, scopes)
-        .setAccessType("offline")       // get a refresh token
-        .setApprovalPrompt("force")     // ensure refresh token on re-consent
-        .build()
-
-    def receiver = new LocalServerReceiver.Builder().setPort(0).build() // auto-pick a free port
-    return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user")
   }
 }

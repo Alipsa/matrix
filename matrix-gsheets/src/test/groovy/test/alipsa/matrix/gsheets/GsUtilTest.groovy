@@ -28,9 +28,24 @@ class GsUtilTest {
 
   @Test
   void testConvertLocalTime() {
-    assertEquals(LocalTime.parse("18:25:44"), GsUtil.asLocalTime(0.76787037037037))
+    assertEquals(LocalTime.parse("18:25:44"), GsUtil.asLocalTime(0.7678703704))
     assertEquals(LocalTime.parse("06:20"), GsUtil.asLocalTime(0.263888888888889))
     assertEquals(LocalTime.parse("06:20"), GsUtil.asLocalTime("06:20"))
+  }
+
+  @Test
+  void testLocalTimeAsSerial() {
+    assertEquals(0.7678703704, GsUtil.asSerial(LocalTime.parse("18:25:44")))
+  }
+
+  @Test
+  void testLocalDateAsSerial() {
+    assertEquals(new BigDecimal(45467), GsUtil.asSerial(LocalDate.parse('2024-06-24')))
+  }
+
+  @Test
+  void testLocalDateTimeAsSerial() {
+    assertEquals(44575.5231481481, GsUtil.asSerial(LocalDateTime.parse('2022-01-14T12:33:20')))
   }
 
 }

@@ -37,7 +37,6 @@ dependencies {
   compileOnly libs.groovyDoc
   compileOnly libs.groovyJson
   compileOnly project(':matrix-core')
-  testImplementation project(':matrix-core')
   implementation 'com.google.auth:google-auth-library-oauth2-http:1.38.0'
   implementation 'com.google.apis:google-api-services-oauth2:v2-rev20200213-2.0.0'
   implementation 'com.google.http-client:google-http-client-gson:1.43.3'
@@ -46,6 +45,8 @@ dependencies {
   implementation 'com.google.apis:google-api-services-sheets:v4-rev20220927-2.0.0'
   // For deleting sheets
   implementation 'com.google.apis:google-api-services-drive:v3-rev20220815-2.0.0'
+  implementation libs.log4jApi
+  testImplementation project(':matrix-core')
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
   testRuntimeOnly testLibs.junitPlatformLauncher

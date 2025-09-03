@@ -39,13 +39,13 @@ class GsTest {
     println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
     Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
     assertTrue(empData.equals(m, true, true, true))
-    println "Data is basically correct"
+    //println "Data is basically correct"
     m.convert('emp_id': Integer,
         'emp_name': String,
         'salary': BigDecimal,
         'start_date': LocalDate)
-    println m.typeNames()
-    m.row(0).each { println "$it $it.class.simpleName" }
+    //println m.typeNames()
+    //m.row(0).each { println "$it $it.class.simpleName" }
     assert empData == m
     GsUtil.deleteSheet(spreadsheetId)
   }

@@ -5,13 +5,17 @@ import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.auth.http.HttpCredentialsAdapter
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 
 class GsUtil {
 
+  private static Logger log = LogManager.getLogger(GsUtil)
   private static long secondsInDay = 24 * 60 * 60
   private static LocalDateTime epochDateTime = LocalDateTime.of(1899, 12, 30, 0, 0, 0)
   private static LocalDate epochDate = LocalDate.of(1899, 12, 30)
@@ -30,10 +34,10 @@ class GsUtil {
     try {
       // Perform the delete operation on the Drive file using its ID
       driveService.files().delete(spreadsheetId).execute()
-      println "✅ Successfully deleted spreadsheet with ID: ${spreadsheetId}"
+      log.info "Successfully deleted spreadsheet with ID: ${spreadsheetId}"
       return true
     } catch (IOException e) {
-      System.err.println("❌ An error occurred while deleting the file: " + e.getMessage())
+      log.error("An error occurred while deleting the file: {}", e.getMessage())
     }
     return false
   }
@@ -108,5 +112,37 @@ class GsUtil {
 
     // Create a LocalTime object from the total seconds
     return LocalTime.ofSecondOfDay(totalSeconds)
+  }
+
+  static BigDecimal asSerial(LocalDate date) {
+    if (date == null) {
+      throw new IllegalArgumentException("Date cannot be null")
+    }
+
+    // Calculate the number of days since the epoch
+    long days = ChronoUnit.DAYS.between(epochDate, date)
+
+    return days
+  }
+
+  static BigDecimal asSerial(LocalDateTime dateTime) {
+    if (dateTime == null) {
+      throw new IllegalArgumentException("DateTime cannot be null")
+    }
+
+    // Calculate the number of days since the epoch
+    def days = ChronoUnit.DAYS.between(epochDateTime, dateTime)
+
+    // Calculate the fraction of the day for the time component
+    def secondsSinceMidnight = dateTime.toLocalTime().toSecondOfDay()
+    def fraction = secondsSinceMidnight / (24.0 * 60.0 * 60.0)
+
+    return days + fraction
+  }
+
+  static BigDecimal asSerial(LocalTime time) {
+    long totalSecondsInDay = 24 * 60 * 60
+    long secondsSinceMidnight = time.toSecondOfDay()
+    return secondsSinceMidnight / totalSecondsInDay
   }
 }
