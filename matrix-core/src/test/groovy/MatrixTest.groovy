@@ -1342,4 +1342,10 @@ class MatrixTest {
     assertEquals(m.subset(21..27).withMatrixName("${m.matrixName}_3"), chunks[3])
     assertEquals(m.subset(28..29).withMatrixName("${m.matrixName}_4"), chunks[4])
   }
+
+  @Test
+  void testAnonymousHeaders() {
+    assertIterableEquals(['c1', 'c2', 'c3'], Matrix.anonymousHeader(['a', 'b', 'c']))
+    assertIterableEquals(['c1', 'c2', 'c3'], Matrix.anonymousHeader(3))
+  }
 }

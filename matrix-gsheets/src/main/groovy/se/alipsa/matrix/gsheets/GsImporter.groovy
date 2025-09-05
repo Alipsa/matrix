@@ -41,17 +41,50 @@ class GsImporter {
         .setValueRenderOption('UNFORMATTED_VALUE')
         .execute()
     List<List<Object>> values = response.getValues()
+    int ncol = GsUtil.columnCountForRange(range)
+    // if values are missing, fill with nulls
+    values.each {
+      fillListToSize(it, ncol)
+    }
     List<String> headers
     if (firstRowAsColumnNames) {
       List<Object> firstRow = values.remove(0)
       headers = firstRow.collect { String.valueOf(it) }
     } else {
-      headers = Matrix.anonymousHeader(values[0])
+      headers = Matrix.anonymousHeader(ncol)
+    }
+    values.each {
+
     }
     def sheetName = range.split('!')[0]
     Matrix.builder(sheetName)
         .rows(values)
-        .columnNames(headers)
+        .columnNames(fillHeaderToSize(headers, ncol))
         .build()
+  }
+
+  static List<String> fillHeaderToSize(List<String> list, int desiredSize) {
+    if (list.size() >= desiredSize) {
+      return list
+    }
+
+    int currentSize = list.size()
+    for (int i = currentSize; i < desiredSize; i++) {
+      def index = i + 1
+      list.add("c" + index)
+    }
+    list
+  }
+
+  static List<Object> fillListToSize(List<Object> list, int desiredSize) {
+    if (list.size() >= desiredSize) {
+      return list
+    }
+
+    int currentSize = list.size()
+    for (int i = currentSize; i < desiredSize; i++) {
+      list.add(null)
+    }
+    list
   }
 }

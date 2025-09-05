@@ -145,4 +145,51 @@ class GsUtil {
     long secondsSinceMidnight = time.toSecondOfDay()
     return secondsSinceMidnight / totalSecondsInDay
   }
+
+  /**
+   * Calculates the number of columns in a given A1-style range string.
+   * @param range The range string, e.g., "Arkiv!B2:H100" or "A1:C10".
+   * @return The number of columns in the range.
+   */
+  static int columnCountForRange(String range) {
+    String[] parts = range.split('!')
+    String cellRange = parts.size() > 1 ? parts[1] : parts[0]
+
+    // Split the range into start and end cells
+    String[] cellParts = cellRange.split(':')
+    if (cellParts.size() != 2) {
+      throw new IllegalArgumentException("Invalid range format: ${range}")
+    }
+
+    String startCell = cellParts[0]
+    String endCell = cellParts[1]
+
+    // Extract the column letters from the cell references
+    String startColumnLetters = (startCell =~ /^([A-Z]+)/)[0][1]
+    String endColumnLetters = (endCell =~ /^([A-Z]+)/)[0][1]
+
+    // Convert column letters to numerical indices
+    int startColIndex = asColumnNumber(startColumnLetters)
+    int endColIndex = asColumnNumber(endColumnLetters)
+
+    // Calculate the number of columns
+    return endColIndex - startColIndex + 1
+  }
+
+  /**
+   * Converts a column letter string (e.g., "A", "Z", "AA") to its numerical index (1-based).
+   * @param colLetters The column letter string.
+   * @return The 1-based column index.
+   */
+  static int asColumnNumber(String name) {
+    if (name == null) {
+      return 0
+    }
+    String colName = name.toUpperCase()
+    int number = 0
+    for (int i = 0; i < colName.length(); i++) {
+      number = number * 26 + (colName.charAt(i) - ('A' as char - 1))
+    }
+    return number
+  }
 }

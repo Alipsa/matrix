@@ -53,6 +53,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     (1..row.size()).collect { 'c' + it }
   }
 
+  static List<String> anonymousHeader(int ncols) {
+    (1..ncols).collect { 'c' + it }
+  }
+
   /**
    * Creates a new Matrix
    *
@@ -2671,5 +2675,23 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   static List<Class> createObjectTypes(Collection template) {
     [Object] * template.size() as List<Class>
+  }
+
+  Matrix moveValue(int rowIndex, int fromColumn, int toColumn) {
+    Row row = row(rowIndex)
+    row.move(fromColumn, toColumn)
+    this
+  }
+
+  Matrix moveValue(int rowIndex, String fromColumn, String toColumn) {
+    moveValue(rowIndex, columnIndex(fromColumn), columnIndex(toColumn))
+  }
+
+  Matrix moveValue(int rowIndex, int fromColumn, String toColumn) {
+    moveValue(rowIndex, fromColumn, columnIndex(toColumn))
+  }
+
+  Matrix moveValue(int rowIndex, String fromColumn, int toColumn) {
+    moveValue(rowIndex, columnIndex(fromColumn), toColumn)
   }
 }
