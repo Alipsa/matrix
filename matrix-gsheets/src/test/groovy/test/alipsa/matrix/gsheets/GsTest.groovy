@@ -51,4 +51,31 @@ class GsTest {
     assert empData == m
     GsUtil.deleteSheet(spreadsheetId)
   }
+
+  @Test
+  void testImportWithNull() {
+    Matrix ed = empData.clone()
+    ed[2,'salary'] = null
+    ed[4,'emp_id'] = null
+
+    //println ed.withMatrixName('original').content()
+    String spreadsheetId = GsExporter.exportSheet(ed.withMatrixName('empData'))
+
+    //println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
+    Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+    //println m.withMatrixName('imported').content()
+    m.moveValue(2, 'start_date', 'salary')
+    m.moveValue(4, 3, 0)
+    //println m.withMatrixName('after move').content()
+    assertTrue(ed.equals(m, true, true, true))
+    //println "Data is basically correct"
+    m.convert('emp_id': Integer,
+        'emp_name': String,
+        'salary': BigDecimal,
+        'start_date': LocalDate)
+    //println m.typeNames()
+    //m.row(0).each { println "$it $it.class.simpleName" }
+    assert ed == m
+    GsUtil.deleteSheet(spreadsheetId)
+  }
 }

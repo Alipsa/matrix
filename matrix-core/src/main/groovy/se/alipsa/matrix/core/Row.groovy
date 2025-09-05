@@ -494,4 +494,21 @@ class Row implements GroovyObject, List<Object> {
             DefaultGroovyMethods.asType(this, type as Class<Object>)
         }
     }
+
+  Row move(int fromIndex, int toIndex) {
+    if (fromIndex < 0 || fromIndex >= size() || toIndex < 0 || toIndex >= size()) {
+      throw new IndexOutOfBoundsException("Invalid indices for move operation")
+    }
+
+    List values = content.collect { it }
+    // 1. Remove the element from the source index
+    def elementToMove = values.remove(fromIndex)
+
+    // 2. Add the element at the destination index
+    values.add(toIndex, elementToMove)
+    values.eachWithIndex { Object entry, int i ->
+      set(i, entry)
+    }
+    this
+  }
 }

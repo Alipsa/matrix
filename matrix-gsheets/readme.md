@@ -72,3 +72,67 @@ m.convert('emp_id': Integer,
     'salary': BigDecimal,
 )
 ```
+
+### handling null values
+The google api has the unfortunate feature to skipp null values.
+This mean that if a cell has a null value, the returning row will be one 
+element shorter. There is no way to know which column that was so the only think we can 
+do is to fill the remaining columns with null in the end.
+
+Here is an example:
+```groovy
+def empData = Matrix.builder()
+      .matrixName('empData')
+      .data(
+          emp_id: [null, 2, 3, 4, 5],
+          emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+          salary: [623.3, 515.2, null, 729.0, 843.25],
+          start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
+      )
+      .types([Integer, String, BigDecimal, LocalDate])
+      .build()
+```
+This will look like this:
+```
+empData: 5 obs * 4 variables 
+emp_id	emp_name	salary	start_date
+     1	Rick    	 623.3	2012-01-01
+     2	Dan     	 515.2	2013-09-23
+     3	Michelle	  null	2014-11-15
+     4	Ryan    	 729.0	2014-05-11
+  null	Gary    	843.25	2015-03-27
+```
+
+```groovy
+String spreadsheetId = GsExporter.exportSheet(ed.withMatrixName('empData'))
+Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+println m.withMatrixName('imported').content()
+```
+The imported matrix will no look like this:
+```
+imported: 5 obs * 4 variables 
+emp_id	emp_name	salary    	start_date
+     1	Rick    	     623.3	2012-01-01
+     2	Dan     	     515.2	2013-09-23
+     3	Michelle	2014-11-15	null      
+     4	Ryan    	       729	2014-05-11
+Gary  	  843.25	2015-03-27	null   
+```
+To fix this we need to shift the values in row 3 and 5:
+```groovy
+// We can either use column index or column names
+m.moveValue(2, 'start_date', 'salary')
+m.moveValue(4, 3, 0) 
+println m.withMatrixName('after move').content()
+```
+```
+after move: 5 obs * 4 variables 
+emp_id	emp_name	salary	start_date
+     1	Rick    	 623.3	2012-01-01
+     2	Dan     	 515.2	2013-09-23
+     3	Michelle	  null  2014-11-15
+     4	Ryan    	   729	2014-05-11
+  null  Gary    	843.25	2015-03-27
+```
+As this is quite messy, consider filling the missing values in the
+google sheet before importing it.
