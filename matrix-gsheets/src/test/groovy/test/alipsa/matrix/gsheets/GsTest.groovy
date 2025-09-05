@@ -6,11 +6,13 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gsheets.GsExporter
 import se.alipsa.matrix.gsheets.GsImporter
 import se.alipsa.matrix.gsheets.GsUtil
+import org.junit.jupiter.api.Tag
 
 import java.time.LocalDate
 
 import static se.alipsa.matrix.core.ListConverter.toLocalDates
 
+@Tag("external")
 class GsTest {
 
   def empData = Matrix.builder()

@@ -26,7 +26,7 @@ class GsImporter {
     def transport = GoogleNetHttpTransport.newTrustedTransport()
     def gsonFactory = GsonFactory.getDefaultInstance()
 
-    GoogleCredentials credentials = BqAuthenticator.authenticate(SheetsScopes.SPREADSHEETS_READONLY)
+    GoogleCredentials credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
     def sheetsService = new Sheets.Builder(
         transport,
         gsonFactory,

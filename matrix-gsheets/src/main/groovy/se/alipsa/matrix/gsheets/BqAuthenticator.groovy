@@ -7,28 +7,52 @@ package se.alipsa.matrix.gsheets
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.oauth2.Oauth2
-import com.google.auth.http.HttpCredentialsAdapter
+import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.oauth2.GoogleCredentials
 import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 @CompileStatic
 class BqAuthenticator {
 
   private static final Logger log = LogManager.getLogger(BqAuthenticator)
+
+  static final String SCOPE_CLOUD_PLATFORM = "https://www.googleapis.com/auth/cloud-platform"
+  static final String SCOPE_SHEETS = SheetsScopes.SPREADSHEETS
+  static final String SCOPE_SHEETS_READONLY = SheetsScopes.SPREADSHEETS_READONLY
+  static final String SCOPE_DRIVE_FILE = "https://www.googleapis.com/auth/drive.file"
+  static final String SCOPE_OPENID = "openid"
+  static final String SCOPE_USERINFO_EMAIL = "https://www.googleapis.com/auth/userinfo.email"
+
+  private static final AtomicBoolean LOGIN_ATTEMPTED = new AtomicBoolean(false);
+
   private BqAuthenticator() {}
 
   // The location where gcloud stores Application Default Credentials
   static final File ADC_FILE_PATH = new File(System.getProperty("user.home"), ".config/gcloud/application_default_credentials.json")
 
   static final List<String> SCOPES = [
-      "https://www.googleapis.com/auth/cloud-platform",
-      "https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/drive",
-      "openid"
+      SCOPE_CLOUD_PLATFORM,
+      SCOPE_SHEETS,
+      SCOPE_DRIVE_FILE,
+      SCOPE_OPENID,
+      SCOPE_USERINFO_EMAIL
   ]
+
+  @CompileStatic
+  static List<String> normalizeScopesForGcloud(List<String> scopes) {
+    // Always add cloud-platform (gcloud insists on this when --scopes is used)
+    LinkedHashSet<String> s = new LinkedHashSet<>((scopes ?: Collections.<String> emptyList()))
+    s.add(SCOPE_CLOUD_PLATFORM)
+    // Prefer write over readonly to avoid future “missing scope” churn
+    if (s.remove(SCOPE_SHEETS_READONLY)) s.add(SCOPE_SHEETS)
+    s.remove("email") // never ask for short OIDC email; use userinfo.email
+    return new ArrayList<>(s)
+  }
 
   /**
    * Checks for existing and valid Application Default Credentials.
@@ -36,7 +60,7 @@ class BqAuthenticator {
    * @return A GoogleCredentials object if they are valid or can be refreshed.
    *         Returns null if no credentials are found or if they require a new login.
    */
-  static GoogleCredentials getCredentials(List<String> scopes = SCOPES, boolean verbose = true) {
+  static GoogleCredentials getCredentials(List<String> scopes = SCOPES, boolean verbose = false) {
     try {
       // Tries to find credentials in the environment (ADC)
       def credentials = GoogleCredentials.getApplicationDefault().createScoped(scopes)
@@ -47,7 +71,8 @@ class BqAuthenticator {
         try {
           Map json = new JsonSlurper().parseText(ADC_FILE_PATH.getText('UTF-8')) as Map
           qp = json?.quota_project_id as String
-        } catch (ignored) {}
+        } catch (ignored) {
+        }
       }
       if (qp) {
         credentials = credentials.createWithQuotaProject(qp)
@@ -75,11 +100,14 @@ class BqAuthenticator {
    *
    * @return True if the gcloud command succeeds, False otherwise.
    */
-  static boolean runGcloudLogin(List<String> scopes) {
+  static boolean runGcloudLogin(List<String> requestedScopes) {
+    List<String> scopes = normalizeScopesForGcloud(requestedScopes)
     if (isCommandAvailable('gcloud')) {
       try {
         // The command will run interactively in the user's terminal.
-        def command = ["gcloud", "auth", "login", "--update-adc", "--enable-gdrive-access"]
+        //def command = ["gcloud", "auth", "login", "--update-adc", "--enable-gdrive-access"]
+        def command = ["gcloud", "auth", "application-default", "login",
+                       "--scopes", scopes.join(",")]
         def process = new ProcessBuilder(command)
             .inheritIO() // This connects the subprocess's I/O to the current terminal
             .start()
@@ -107,16 +135,16 @@ class BqAuthenticator {
       }
     } else {
       log.warn "gcloud SDK not found. Attempting programmatic login instead."
-      return runProgrammaticLogin(scopes)
+      return runProgrammaticLogin(scopes, System.getenv('GOOGLE_CLOUD_PROJECT'))
     }
   }
 
-  private static boolean runProgrammaticLogin(List<String> scopes) {
+  private static boolean runProgrammaticLogin(List<String> scopes, String quotaProjectId = null) {
     try {
       def home = System.getProperty("user.home")
       def clientSecretFile = new File("$home/client_secret_desktop.json")
 
-      def credentials = BqAuthUtils.loginAndWriteAdc(clientSecretFile, scopes, null)
+      def credentials = BqAuthUtils.loginAndWriteAdc(clientSecretFile, scopes, quotaProjectId)
 
       // If credentials are null, it means the process failed.
       return credentials != null
@@ -137,17 +165,15 @@ class BqAuthenticator {
    */
   static String getUserEmail(GoogleCredentials credentials) {
     try {
-      def httpTransport = GoogleNetHttpTransport.newTrustedTransport()
-      def jsonFactory = GsonFactory.getDefaultInstance()
-      def adapter = new HttpCredentialsAdapter(credentials)
-
-      def oauth2Service = new Oauth2.Builder(httpTransport, jsonFactory, adapter)
-          .setApplicationName("Groovy-Auth-Script")
+      def http = GoogleNetHttpTransport.newTrustedTransport()
+      def json = GsonFactory.getDefaultInstance()
+      def init = BqAuthUtils.noUserProjectInitializer(credentials)
+      def oauth2 = new Oauth2.Builder(http, json, init)
+          .setApplicationName("Matrix GSheets")
           .build()
-
-      return oauth2Service.userinfo().get().execute().getEmail()
+      return oauth2.userinfo().get().execute().getEmail()
     } catch (Exception e) {
-      log.error "Could not fetch user email: ${e.message}"
+      System.err.println "Could not fetch user email: ${e.message}"
       return null
     }
   }
@@ -168,15 +194,47 @@ class BqAuthenticator {
    * @param scopes a list of scopes to grant access to, defaults to SCOPES i.e. cloud platform, email, drive, openId
    * @return true if successful, false otherwise
    */
-  static GoogleCredentials authenticate(List<String> scopes = SCOPES) {
-    def creds = getCredentials(scopes)
+  static GoogleCredentials authenticate(List<String> requestedScopes = SCOPES, String quotaProjectId = null) {
+    List<String> scopes = SCOPES
+    if (requestedScopes) {
+      LinkedHashSet<String> effective = new LinkedHashSet<>(SCOPES)
+      effective.addAll(requestedScopes)
+      // Upgrade readonly to read-write once to avoid future churn
+      if (effective.remove(SCOPE_SHEETS_READONLY)) effective.add(SCOPE_SHEETS)
+      scopes = new ArrayList<>(effective)
+    }
+    def creds = getCredentials(new ArrayList<>(scopes))
+
+    if (creds == null || !BqAuthUtils.hasAllScopes(creds, scopes)) {
+      // Do ONE interactive login (ADC or programmatic), then reload creds
+      if (LOGIN_ATTEMPTED.compareAndSet(false, true)) {
+        boolean ok = isCommandAvailable('gcloud')
+            ? runGcloudLogin(scopes)
+            : runProgrammaticLogin(scopes, quotaProjectId)
+        if (!ok && isCommandAvailable('gcloud')) {
+          // one fallback try
+          ok = runProgrammaticLogin(scopes, quotaProjectId)
+        }
+        if (!ok) return null
+        if (quotaProjectId && isCommandAvailable('gcloud')) {
+          new ProcessBuilder(["gcloud", "auth", "application-default", "set-quota-project", quotaProjectId])
+              .inheritIO().start().waitFor()
+        }
+        creds = getCredentials(scopes, true)
+      } else {
+        // We already attempted an interactive login in this JVM; don’t prompt again.
+        creds = getCredentials(scopes, false)
+      }
+    }
 
     if (creds) {
-      def email = getUserEmail(creds)
-      if (email) {
+      // Only try userinfo if we actually asked for it
+      boolean wantEmail = scopes.any { it == SCOPE_USERINFO_EMAIL || it == SCOPE_OPENID }
+      if (wantEmail) {
+        def email = getUserEmail(creds)
         log.info "Google Cloud is already authenticated with email: ${email}"
       } else {
-        log.info "Google Cloud is already authenticated. (Could not fetch email)."
+        log.info "Google Cloud is already authenticated."
       }
       return creds
     } else {

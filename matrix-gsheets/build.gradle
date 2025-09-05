@@ -58,7 +58,17 @@ dependencies {
 
 test {
   jvmArgs '-Xmx2g'
-  useJUnitPlatform()
+  useJUnitPlatform() {
+    excludeTags 'external'
+  }
+
+  // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)
+  def runExternal = (project.findProperty('runExternalTests') ?: System.getenv('RUN_EXTERNAL_TESTS'))?.toString()?.toBoolean() ?: false
+  if (runExternal) {
+    useJUnitPlatform {
+      excludeTags()          // clear the default exclusion
+    }
+  }
   testLogging {
     // set options for log level LIFECYCLE
     events TestLogEvent.FAILED,

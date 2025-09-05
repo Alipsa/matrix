@@ -2,6 +2,7 @@ package test.alipsa.matrix.bigquery
 
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.ListConverter
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull
  * wants to run it must set the environment variable GOOGLE_CLOUD_PROJECT prior to running the
  * tests.
  */
+@Tag("external")
 @CompileStatic
 class BqTest {
 

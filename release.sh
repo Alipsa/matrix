@@ -3,6 +3,9 @@ set -e
 source ~/.sdkman/bin/sdkman-init.sh
 source jdk21
 
+# Enable external tests such a BigQuery and Gsheets
+export RUN_EXTERNAL_TESTS=true
+
 function release() {
    pushd "$1"
    ./release.sh

@@ -1,5 +1,6 @@
 package se.alipsa.matrix.gsheets
 
+import static se.alipsa.matrix.gsheets.BqAuthenticator.*
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
@@ -65,9 +66,9 @@ class GsExporter {
     def gsonFactory = GsonFactory.getDefaultInstance()
 
     // Need write scope for creating/updating spreadsheets
-    def scopes = ["https://www.googleapis.com/auth/drive.file", SheetsScopes.SPREADSHEETS] + BqAuthenticator.SCOPES
+    def scopes = [SCOPE_DRIVE_FILE, SheetsScopes.SPREADSHEETS] + SCOPES
 
-    GoogleCredentials credentials = BqAuthenticator.authenticate(scopes)
+    GoogleCredentials credentials = authenticate(scopes)
     HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
     /*
     def home = System.getProperty("user.home")

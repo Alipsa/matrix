@@ -58,8 +58,19 @@ dependencies {
 
 test {
     testLogging.showStandardStreams = true
-    useJUnitPlatform()
+    useJUnitPlatform() {
+      excludeTags 'external'
+    }
+
+    // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)
+    def runExternal = (project.findProperty('runExternalTests') ?: System.getenv('RUN_EXTERNAL_TESTS'))?.toString()?.toBoolean() ?: false
+    if (runExternal) {
+      useJUnitPlatform {
+        excludeTags()          // clear the default exclusion
+      }
+    }
 }
+
 //Maven Central uploads
 task javadocJar(type: Jar, dependsOn: groovydoc) {
     archiveClassifier.set('javadoc')

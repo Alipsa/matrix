@@ -2,6 +2,7 @@ package test.alipsa.matrix.bigquery
 
 import com.google.cloud.bigquery.StandardSQLTypeName
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Tag
 import se.alipsa.matrix.bigquery.TypeMapper
 import se.alipsa.matrix.core.Column
 
@@ -25,6 +26,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
+@Tag("external")
 @CompileStatic
 class BqDataTypesTest {
 

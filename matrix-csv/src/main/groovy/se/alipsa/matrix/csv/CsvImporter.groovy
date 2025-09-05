@@ -241,7 +241,7 @@ class CsvImporter {
         format.put(Format.FirstRowAsHeader, false)
         f.setSkipHeaderRecord(false)
       } else if (val instanceof List) {
-        f.setHeader(val.toArray(new String[0]) as String[])
+        f.setHeader(val as String[])
         format.put(Format.FirstRowAsHeader, false)
         f.setSkipHeaderRecord(false)
       } else if (val instanceof String) {
