@@ -592,7 +592,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param converters an array of se.alipsa.matrix.core.Converter
    * @return this Matrix with the types and column values converted
    */
-  Matrix convert(Converter[] converters) {
+  Matrix convert(Converter... converters) {
     List<Column> convertedColumns = []
     List<Class> convertedTypes = []
 

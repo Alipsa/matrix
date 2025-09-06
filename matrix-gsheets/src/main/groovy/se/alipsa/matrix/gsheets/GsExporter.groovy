@@ -54,7 +54,7 @@ class GsExporter {
    * @param matrix the Matrix to export (first row in the sheet will be the column names)
    * @return the created spreadsheetId (open at https://docs.google.com/spreadsheets/d/{spreadsheetId}/edit)
    */
-  static String exportSheet(Matrix matrix) {
+  static String exportSheet(Matrix matrix, boolean convertNullsToEmptyString = true) {
     if (matrix == null) {
       throw new IllegalArgumentException("matrix must not be null")
     }
@@ -112,7 +112,7 @@ class GsExporter {
     matrix.each { Row it ->
       List<Object> row = new ArrayList<>(headers.size())
       it.each { v ->
-        row.add(toCell(v))
+        row.add(toCell(v, convertNullsToEmptyString))
       }
       values.add(row)
     }
@@ -138,8 +138,8 @@ class GsExporter {
     return s.trim().isEmpty() ? "Sheet1" : s
   }
 
-  private static Object toCell(Object v) {
-    if (v == null) return null
+  private static Object toCell(Object v, boolean convertNullsToEmptyString) {
+    if (v == null) return convertNullsToEmptyString ? '' : null
     if (v instanceof Number || v instanceof Boolean) return v
     // Dates/LocalDates/etc. are written as ISO strings unless you convert them to serial numbers yourself.
     return String.valueOf(v)

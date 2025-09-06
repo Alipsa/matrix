@@ -26,4 +26,5 @@ release matrix-tablesaw
 pushd matrix-bom
     mvn -DstagingProcessTimeoutMinutes=10 -Prelease -f bom.xml clean deploy
 popd
+unset RUN_EXTERNAL_TESTS
 echo "done"

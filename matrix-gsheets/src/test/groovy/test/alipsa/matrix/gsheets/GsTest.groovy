@@ -30,7 +30,7 @@ class GsTest {
   void testExport() {
     String spreadsheetId = GsExporter.exportSheet(empData)
 
-    println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
+    //println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
     GsUtil.deleteSheet(spreadsheetId)
   }
 
@@ -38,7 +38,7 @@ class GsTest {
   void testExportImport() {
     String spreadsheetId = GsExporter.exportSheet(empData)
 
-    println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
+    //println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
     Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
     assertTrue(empData.equals(m, true, true, true))
     //println "Data is basically correct"
@@ -61,12 +61,36 @@ class GsTest {
     //println ed.withMatrixName('original').content()
     String spreadsheetId = GsExporter.exportSheet(ed.withMatrixName('empData'))
 
-    //println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
+    println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
     Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
     //println m.withMatrixName('imported').content()
+    assertTrue(ed.equals(m, true, true, true))
+    //println "Data is basically correct"
+    m.convert('emp_id': Integer,
+        'emp_name': String,
+        'salary': BigDecimal,
+        'start_date': LocalDate)
+    //println m.typeNames()
+    //m.row(0).each { println "$it $it.class.simpleName" }
+    assert ed == m
+    GsUtil.deleteSheet(spreadsheetId)
+  }
+
+  @Test
+  void testImportAsObjectWithNull() {
+    Matrix ed = empData.clone()
+    ed[2,'salary'] = null
+    ed[4,'emp_id'] = null
+
+    //println ed.withMatrixName('original').content()
+    String spreadsheetId = GsExporter.exportSheet(ed.withMatrixName('empData'), false)
+
+    //println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
+    Matrix m = GsImporter.importSheetAsObject(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+    //println m.withMatrixName('imported').content()
     m.moveValue(2, 'start_date', 'salary')
-    m.moveValue(4, 3, 0)
-    //println m.withMatrixName('after move').content()
+    m.moveValue(4, 'start_date', 'emp_id')
+    //println m.withMatrixName('imported').content()
     assertTrue(ed.equals(m, true, true, true))
     //println "Data is basically correct"
     m.convert('emp_id': Integer,
