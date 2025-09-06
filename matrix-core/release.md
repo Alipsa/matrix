@@ -1,6 +1,7 @@
 # Matrix Core Release History
 
 ### 3.5.0, 2025-09-06
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.5.0/matrix-core-3.5.0.jar)
 - enhance plus() to return clone if (matrix + null) instead of forcing users to do a null check.
 - add a split method to Matrix taking a integer as parma to split the matrix into chunks
 - ListConverter: add support for converting to a list of Short, LocalTime, and Bytes
