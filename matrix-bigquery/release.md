@@ -10,6 +10,8 @@
   - com.google.cloud:google-cloud-resourcemanager [1.70.0 -> 1.75.0]
 - Improve type mapping, especially for date/time types
 
+Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bigquery/0.4.4/matrix-bigquery-0.4.0.jar)
+
 ## v0.3.2, 2025-07-19
 - Upgrade dependencies
   - com.google.cloud:google-cloud-bigquery [2.52.0 -> 2.53.0]

@@ -1,6 +1,6 @@
 # Release history
 
-## v2.1.1, in progress
+## v2.1.1, 2025-09-06
 - Upgrade dependencies
   - com.fasterxml.jackson.core:jackson-core [2.18.3 -> 2.20.0]
   - com.fasterxml.jackson.core:jackson-databind [2.18.3 -> 2.20.0]
