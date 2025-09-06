@@ -16,6 +16,23 @@ class PieChartTest {
       .build()
 
   @Test
+  void testXChart() {
+    Matrix matrix = Matrix.builder(
+        metal: ['Gold', 'Silver', 'Platinum', 'Copper', 'Zinc'],
+        ratio: [24, 21, 39, 17, 40],
+        [String, Number],
+        'Metal ratio',
+    ).build()
+
+    File file = new File("build/testPieChart.png")
+    def pc = PieChart.create(matrix)
+        .addSeries(matrix.metal, matrix.ratio)
+
+    pc.exportPng(file)
+    assertTrue(file.exists())
+  }
+
+  @Test
   void testPieChart() {
     File file = new File("build/testPieChart.png")
     def pc = PieChart.create(matrix)

@@ -28,6 +28,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
 class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieStyler, PieSeries> {
 
   private PieChart(Matrix matrix, Integer width = null, Integer height = null) {
+    super()
     super.matrix = matrix
     PieChartBuilder builder = new PieChartBuilder()
     if (width != null) {
@@ -37,7 +38,7 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
       builder.height(height)
     }
     xchart = builder.build()
-    style.theme = new MatrixTheme()
+    getStyle().setTheme(new MatrixTheme())
     def matrixName = matrix.matrixName
     if (matrixName != null && !matrixName.isBlank()) {
       title = matrix.matrixName
