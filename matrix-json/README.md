@@ -5,7 +5,7 @@ Json import and export functionality to and from a Matrix or Grid
 
 ## Setup
 Matrix-json should work with any 4.x version of groovy, and probably older versions as well. 
-It requires version 2.0.0 or later of the Matrix-core package (se.alipsa.groovy:matrix-core:2.0.0)
+It requires version 2.0.0 or later of the Matrix-core package (se.alipsa.groovy:matrix-core:3.5.0)
 Binary builds can be downloaded
 from the [Matrix-json project release page](https://github.com/Alipsa/matrix-json/releases) but if you use a build system that
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
@@ -13,7 +13,7 @@ handles dependencies via maven central (gradle, maven ivy etc.) you can do the f
 def groovyVersion = '5.0.0' // any 4.x version should work too
 implementation "org.apache.groovy:groovy:$groovyVersion"
 implementation "org.apache.groovy:groovy-json:$groovyVersion"
-implementation 'se.alipsa.matrix:matrix-core:3.4.1'
+implementation 'se.alipsa.matrix:matrix-core:3.5.0'
 implementation 'se.alipsa.matrix:matrix-json:2.1.0'
 ```
 ...and the following for maven
@@ -32,7 +32,7 @@ implementation 'se.alipsa.matrix:matrix-json:2.1.0'
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.4.1</version>
+      <version>3.5.0</version>
   </dependency>  
   <dependency>
       <groupId>se.alipsa.matrix</groupId>

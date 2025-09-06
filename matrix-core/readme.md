@@ -21,7 +21,7 @@ implementation 'se.alipsa.matrix:matrix-core:3.4.1'
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.4.1</version>
+        <version>3.5.0</version>
     </dependency>
 </dependencies>
 ```

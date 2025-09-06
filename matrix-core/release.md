@@ -1,6 +1,6 @@
 # Matrix Core Release History
 
-### 3.4.2, In progress
+### 3.5.0, 2025-09-06
 - enhance plus() to return clone if (matrix + null) instead of forcing users to do a null check.
 - add a split method to Matrix taking a integer as parma to split the matrix into chunks
 - ListConverter: add support for converting to a list of Short, LocalTime, and Bytes
