@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 description = 'Google Sheets import/export'
 
 repositories {
@@ -36,6 +36,7 @@ dependencies {
   compileOnly libs.groovyAnt
   compileOnly libs.groovyDoc
   compileOnly libs.groovyJson
+  compileOnly libs.groovyTemplates
   compileOnly project(':matrix-core')
   implementation 'com.google.auth:google-auth-library-oauth2-http:1.38.0'
   implementation 'com.google.apis:google-api-services-oauth2:v2-rev20200213-2.0.0'
