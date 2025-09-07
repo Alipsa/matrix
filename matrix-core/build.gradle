@@ -6,12 +6,12 @@ plugins {
   id('java-library')
   id('signing')
   id('maven-publish')
-  id("se.alipsa.nexus-release-plugin") version '2.0.0-SNAPSHOT'
+  id("se.alipsa.nexus-release-plugin") version '2.0.0'
   //id("se.alipsa.nexus-release-plugin") version "1.0.1"
 }
 
 group = 'se.alipsa.matrix'
-version = '3.5.0'
+version = '3.5.1-SNAPSHOT'
 description = "Groovy library for working with matrix ([][] data)"
 
 JavaCompile javaCompile = compileJava {

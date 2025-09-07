@@ -22,7 +22,7 @@ tasks.withType(GroovyCompile) { task ->
 
 dependencies {
     implementation libs.groovy
-    implementation(platform( 'se.alipsa.matrix:matrix-bom:2.2.3'))
+    implementation(platform( 'se.alipsa.matrix:matrix-bom:2.3.0'))
     implementation('se.alipsa.matrix:matrix-core')
     implementation('se.alipsa.matrix:matrix-datasets')
     implementation('se.alipsa.matrix:matrix-stats')

@@ -7,11 +7,11 @@ plugins {
   id('signing')
   id('maven-publish')
   //id("se.alipsa.nexus-release-plugin") version "1.0.1"
-  id("se.alipsa.nexus-release-plugin") version '2.0.0-SNAPSHOT'
+  id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
 group = 'se.alipsa.matrix'
-version = '0.0.1'
+version = '0.1.0-SNAPSHOT'
 description = 'Google Sheets import/export'
 
 repositories {

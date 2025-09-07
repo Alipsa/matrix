@@ -7,11 +7,11 @@ plugins {
     id('signing')
     id('maven-publish')
     //id("se.alipsa.nexus-release-plugin") version "1.0.1"
-    id("se.alipsa.nexus-release-plugin") version '2.0.0-SNAPSHOT'
+    id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
 group = 'se.alipsa.matrix'
-version = '2.1.1'
+version = '2.1.2-SNAPSHOT'
 description = "Groovy library common public domain and oss data in matrix format)"
 
 ext.nexusUrl = version.contains("SNAPSHOT")

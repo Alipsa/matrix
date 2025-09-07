@@ -5,7 +5,7 @@
   <!-- deploy with mvn -Prelease -f bom.xml deploy -->
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-bom</artifactId>
-  <version>2.3.0</version>
+  <version>2.3.1-SNAPSHOT</version>
   <name>Matrix Bill of Materials</name>
   <description>bom file for simpler dependency management of Matrix libraries</description>
   <packaging>pom</packaging>
@@ -32,19 +32,19 @@
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
 
-    <matrixBigQueryVersion>0.4.0</matrixBigQueryVersion>
-    <matrixChartsVersion>0.3.1</matrixChartsVersion>
-    <matrixCoreVersion>3.5.0</matrixCoreVersion>
-    <matrixCsvVersion>2.2.1</matrixCsvVersion>
-    <matrixDatasetsVersion>2.1.1</matrixDatasetsVersion>
-    <matrixJsonVersion>2.1.1</matrixJsonVersion>
-    <matrixParquetVersion>0.3.0</matrixParquetVersion>
-    <matrixStatsVersion>2.2.0</matrixStatsVersion>
-    <matrixSqlVersion>2.1.1</matrixSqlVersion>
-    <matrixSpreadsheetVersion>2.2.1</matrixSpreadsheetVersion>
-    <matrixGsheetsVersion>0.0.1</matrixGsheetsVersion>
-    <matrixTablesawVersion>0.2.1</matrixTablesawVersion>
-    <matrixXChartVersion>0.2.2</matrixXChartVersion>
+    <matrixBigQueryVersion>0.4.1-SNAPSHOT</matrixBigQueryVersion>
+    <matrixChartsVersion>0.3.2-SNAPSHOT</matrixChartsVersion>
+    <matrixCoreVersion>3.5.1-SNAPSHOT</matrixCoreVersion>
+    <matrixCsvVersion>2.2.2-SNAPSHOT</matrixCsvVersion>
+    <matrixDatasetsVersion>2.1.2-SNAPSHOT</matrixDatasetsVersion>
+    <matrixGsheetsVersion>0.1.0-SNAPSHOT</matrixGsheetsVersion>
+    <matrixJsonVersion>2.1.2-SNAPSHOT</matrixJsonVersion>
+    <matrixParquetVersion>0.3.1-SNAPSHOT</matrixParquetVersion>
+    <matrixSpreadsheetVersion>2.2.2-SNAPSHOT</matrixSpreadsheetVersion>
+    <matrixSqlVersion>2.1.2-SNAPSHOT</matrixSqlVersion>
+    <matrixStatsVersion>2.2.1-SNAPSHOT</matrixStatsVersion>
+    <matrixTablesawVersion>0.2.2-SNAPSHOT</matrixTablesawVersion>
+    <matrixXChartVersion>0.2.3-SNAPSHOT</matrixXChartVersion>
   </properties>
   <repositories>
     <repository>
