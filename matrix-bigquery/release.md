@@ -1,5 +1,8 @@
 # Matrix-bigquery Release History
 
+## v0.4.1, In progress
+- com.google.auth:google-auth-library-bom [1.38.0 -> 1.39.0]
+
 ## v0.4.0, 2025-09-06
 - Change saveToBigQuery to use the BigQuery Write API instead of the older
   load job api. This should be faster and more reliable for larger datasets.

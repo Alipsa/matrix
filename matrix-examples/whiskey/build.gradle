@@ -30,8 +30,8 @@ dependencies {
     implementation 'se.alipsa.matrix:matrix-stats'
     implementation 'se.alipsa.matrix:matrix-xchart'
   }
-  implementation 'com.github.haifengl:smile-core:4.4.0'
-  implementation 'com.github.haifengl:smile-plot:4.4.0'
+  implementation 'com.github.haifengl:smile-core:4.4.1'
+  implementation 'com.github.haifengl:smile-plot:4.4.1'
   testImplementation platform('org.junit:junit-bom:5.13.4')
   testImplementation 'org.junit.jupiter:junit-jupiter'
 }

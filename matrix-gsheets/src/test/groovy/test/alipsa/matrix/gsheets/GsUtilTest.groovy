@@ -15,19 +15,20 @@ class GsUtilTest {
   void testColumnCountForRange() {
     def range = "Arkiv!B2:H100"
     def columns = columnCountForRange(range)
-    println "The number of columns in the range is: ${columns}"
+    //println "The number of columns in the range is: ${columns}"
     assertEquals(7, columns)
 
     // Example with a single-letter range
     def simpleRange = "C:F"
     def simpleColumns = columnCountForRange(simpleRange)
-    println "The number of columns in the simple range is: ${simpleColumns}"
+    //println "The number of columns in the simple range is: ${simpleColumns}"
     assertEquals(4, simpleColumns)
 
     // Example with a multi-letter range
     def multiRange = "A1:AB10"
     def multiColumns = columnCountForRange(multiRange)
-    println "The number of columns in the multi-letter range is: ${multiColumns}"
+    //println "The number of columns in the multi-letter range is: ${multiColumns}"
+    assertEquals(28, multiColumns)
   }
 
 }
