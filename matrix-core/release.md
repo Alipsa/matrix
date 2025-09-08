@@ -7,6 +7,9 @@ Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix
 - ListConverter: add support for converting to a list of Short, LocalTime, and Bytes
 - ValueConverter: add support for ZonedDateTime
 - Change Matrix.convert(Converter[] converters) to Matrix.convert(Converter... converters) to allow for simpler usage.
+- Add moveValue method to Matrix and Row which allows "manual" fixes of incomplete row data
+  (e.g. when importing from a google sheet with null values)
+- 
 
 ### 3.4.1, 2025-07-18
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.4.1/matrix-core-3.4.1.jar)
