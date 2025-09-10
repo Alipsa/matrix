@@ -1,5 +1,8 @@
 # Matrix Core Release History
 
+### 3.5.1, in progress
+- deprecate renameColumn and dropColumns in favor of rename and drop
+
 ### 3.5.0, 2025-09-06
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.5.0/matrix-core-3.5.0.jar)
 - enhance plus() to return clone if (matrix + null) instead of forcing users to do a null check.

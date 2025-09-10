@@ -896,7 +896,19 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
+  /**
+   *
+   * @param columnNames
+   * @return this modified matrix
+   * @deprecated use dropColumns(String...) instead. Will be removed in 3.6.0
+   */
+  @Deprecated
   Matrix dropColumnsExcept(String... columnNames) {
+    dropExcept(columnNames)
+  }
+
+
+  Matrix dropExcept(String... columnNames) {
     def retainColNames = columnNames.length > 0 ? columnNames as List : []
     for (String columnName : this.columnNames()) {
       if (retainColNames.contains(columnName)) {
@@ -908,7 +920,18 @@ class Matrix implements Iterable<Row>, Cloneable {
     return this
   }
 
+  /**
+   *
+   * @param columnIndices
+   * @return
+   * @deprecated use dropColumns(int...) instead. Will be removed in 3.6.0
+   */
+  @Deprecated
   Matrix dropColumnsExcept(int ... columnIndices) {
+    dropExcept(columnIndices)
+  }
+
+  Matrix dropExcept(int ... columnIndices) {
     def retainColIndices = columnIndices.length > 0 ? columnIndices as List : []
     for (int i = 0; i < columnCount(); i++) {
       if (retainColIndices.contains(i)) {
@@ -919,7 +942,18 @@ class Matrix implements Iterable<Row>, Cloneable {
     return this
   }
 
+  /**
+   *
+   * @param columnNames
+   * @return
+   * @deprecated use drop(String...) instead. Will be removed in 3.6.0
+   */
+  @Deprecated
   Matrix dropColumns(String... columnNames) {
+    drop(columnNames)
+  }
+
+  Matrix drop(String... columnNames) {
     if (columnNames.length == 0) {
       println "no variables to drop specified, nothing to do"
       return this
@@ -932,11 +966,45 @@ class Matrix implements Iterable<Row>, Cloneable {
     dropColumns(idxs)
   }
 
+  /**
+   *
+   * @param columnIndices
+   * @return
+   * @deprecated use drop(int...) instead. Will be removed in 3.6.0
+   */
+  @Deprecated
   Matrix dropColumns(IntRange columnIndices) {
-    dropColumns(columnIndices.toList())
+    drop(columnIndices)
   }
 
+  /**
+   * Drop the range of columns specified.
+   *
+   * @param columnIndices the range of columns to drop
+   * @return this modified matrix
+   */
+  Matrix drop(IntRange columnIndices) {
+    drop(columnIndices.toList())
+  }
+
+  /**
+   *
+   * @param columnIndices
+   * @return
+   * @deprecated use drop(int...) instead. Will be removed in 3.6.0
+   */
+  @Deprecated
   Matrix dropColumns(List<Integer> columnIndices) {
+    drop(columnIndices)
+  }
+
+  /**
+   * Drop the columns specified in the list of column indices.
+   *
+   * @param columnIndices the list of column indices to drop
+   * @return this modified matrix
+   */
+  Matrix drop(List<Integer> columnIndices) {
     Collections.sort(columnIndices)
     columnIndices.eachWithIndex { colIdx, idx ->
       // Each time we iterate and remove, all of the below will have one less item
@@ -946,9 +1014,26 @@ class Matrix implements Iterable<Row>, Cloneable {
     return this
   }
 
+  /**
+   *
+   * @param columnIndices
+   * @return
+   * @deprecated use drop(int...) instead. Will be removed in 3.6.0
+   */
+  @Deprecated
   Matrix dropColumns(int ... columnIndices) {
+    drop(columnIndices)
+  }
+
+  /**
+   * Drop the columns for the indices specified.
+   *
+   * @param columnIndices the columns indices to drop
+   * @return this modified matrix
+   */
+  Matrix drop(int ... columnIndices) {
     def columnsToDrop = columnIndices.length > 0 ? columnIndices as List<Integer> : []
-    dropColumns(columnsToDrop)
+    drop(columnsToDrop)
   }
 
   @Override
@@ -1756,15 +1841,37 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Renames the column and returns the table to allow for chaining.
+   *
+   * @param before the existing column name
+   * @param after the new column name
+   * @return the (mutated) table to allow for chaining
+   * @deprecated Use rename(before, after) instead
+   */
+  @Deprecated
+  Matrix renameColumn(String before, String after) {
+    rename(before, after)
+  }
+  /**
    * renames the column and returns the table to allow for chaining
    *
    * @param before the existing column name
    * @param after the new column name
    * @return the (mutated) table to allow for chaining
    */
-  Matrix renameColumn(String before, String after) {
+  Matrix rename(String before, String after) {
     renameColumn(columnIndex(before), after)
     this
+  }
+
+  /**
+   * Renames the column and returns the table to allow for chaining.
+   *
+   * @deprecated use rename(int, String) instead
+   */
+  @Deprecated
+  Matrix renameColumn(int columnIndex, String after) {
+    rename(columnIndex, after)
   }
 
   /**
@@ -1774,7 +1881,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param after the new column name
    * @return this matrix (mutated) to allow for method chaining
    */
-  Matrix renameColumn(int columnIndex, String after) {
+  Matrix rename(int columnIndex, String after) {
     mColumns[columnIndex].name = after
     this
   }
