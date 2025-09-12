@@ -8,11 +8,6 @@ import com.google.auth.http.HttpCredentialsAdapter
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.temporal.ChronoUnit
-
 class GsUtil {
 
   private static Logger log = LogManager.getLogger(GsUtil)

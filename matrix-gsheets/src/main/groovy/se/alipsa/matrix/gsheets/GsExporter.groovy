@@ -1,5 +1,7 @@
 package se.alipsa.matrix.gsheets
 
+import java.time.LocalTime
+
 import static se.alipsa.matrix.gsheets.BqAuthenticator.*
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.HttpRequestInitializer
@@ -54,7 +56,7 @@ class GsExporter {
    * @param matrix the Matrix to export (first row in the sheet will be the column names)
    * @return the created spreadsheetId (open at https://docs.google.com/spreadsheets/d/{spreadsheetId}/edit)
    */
-  static String exportSheet(Matrix matrix, boolean convertNullsToEmptyString = true) {
+  static String exportSheet(Matrix matrix, GoogleCredentials credentials = null, boolean convertNullsToEmptyString = true, boolean convertDatesToSerial = false) {
     if (matrix == null) {
       throw new IllegalArgumentException("matrix must not be null")
     }
@@ -66,18 +68,10 @@ class GsExporter {
     def gsonFactory = GsonFactory.getDefaultInstance()
 
     // Need write scope for creating/updating spreadsheets
-    def scopes = [SCOPE_DRIVE_FILE, SheetsScopes.SPREADSHEETS] + SCOPES
-
-    GoogleCredentials credentials = authenticate(scopes)
+    if (credentials == null) {
+      credentials = authenticate(SCOPES)
+    }
     HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
-    /*
-    def home = System.getProperty("user.home")
-    def cred = BqAuthenticator.loginInstalledApp(
-        new File("$home/client_secret_desktop.json"),
-        scopes
-    )
-
-     */
 
     Sheets sheets = new Sheets.Builder(transport, gsonFactory, cred)
         .setApplicationName("Matrix GSheets")
@@ -112,7 +106,7 @@ class GsExporter {
     matrix.each { Row it ->
       List<Object> row = new ArrayList<>(headers.size())
       it.each { v ->
-        row.add(toCell(v, convertNullsToEmptyString))
+        row.add(toCell(v, convertNullsToEmptyString, convertDatesToSerial))
       }
       values.add(row)
     }
@@ -138,10 +132,16 @@ class GsExporter {
     return s.trim().isEmpty() ? "Sheet1" : s
   }
 
-  private static Object toCell(Object v, boolean convertNullsToEmptyString) {
+  private static Object toCell(Object v, boolean convertNullsToEmptyString, boolean convertDatesToSerial) {
     if (v == null) return convertNullsToEmptyString ? '' : null
     if (v instanceof Number || v instanceof Boolean) return v
     // Dates/LocalDates/etc. are written as ISO strings unless you convert them to serial numbers yourself.
+    if (convertDatesToSerial) {
+      if (v instanceof LocalDate) return GsConverter.asSerial(v as LocalDate)
+      if (v instanceof LocalDateTime) return GsConverter.asSerial(v as LocalDateTime)
+      if (v instanceof Date) return GsConverter.asSerial(v as Date)
+      if (v instanceof LocalTime) return GsConverter.asSerial(v as LocalTime)
+    }
     return String.valueOf(v)
   }
 }

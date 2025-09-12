@@ -1,5 +1,8 @@
 package se.alipsa.matrix.gsheets
 
+import se.alipsa.matrix.core.ValueConverter
+
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -151,6 +154,11 @@ class GsConverter {
     long totalSecondsInDay = 24 * 60 * 60
     long secondsSinceMidnight = time.toSecondOfDay()
     return secondsSinceMidnight / totalSecondsInDay
+  }
+
+  static asSerial(Date date) {
+    if (date == null) return null
+    return asSerial(new Timestamp(date.getTime()).toLocalDateTime())
   }
 
   static BigDecimal asSerial(Object o) {

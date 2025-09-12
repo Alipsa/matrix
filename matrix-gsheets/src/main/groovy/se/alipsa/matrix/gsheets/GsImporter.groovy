@@ -15,8 +15,8 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class GsImporter {
 
-  static Matrix importSheet(String sheetId, String range, boolean firstRowAsColumnNames) {
-    return importSheetAsStrings(sheetId, range, firstRowAsColumnNames)
+  static Matrix importSheet(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
+    return importSheetAsStrings(sheetId, range, firstRowAsColumnNames, credentials)
   }
   /**
    * @param sheetId This is a unique identifier found in the spreadsheet's URL. It's the string of characters
@@ -25,11 +25,13 @@ class GsImporter {
    *        for example, Sheet1!A1:B2 refers to a specific range on a specific sheet.
    * @return A Matrix corresponding to the sheet range specified
    */
-  static Matrix importSheetAsObject(String sheetId, String range, boolean firstRowAsColumnNames, boolean convertEmptyToNull = false) {
+  static Matrix importSheetAsObject(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null, boolean convertEmptyToNull = false) {
     def transport = GoogleNetHttpTransport.newTrustedTransport()
     def gsonFactory = GsonFactory.getDefaultInstance()
 
-    GoogleCredentials credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
+    if (credentials == null) {
+      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
+    }
     def sheetsService = new Sheets.Builder(
         transport,
         gsonFactory,
@@ -73,11 +75,13 @@ class GsImporter {
         .build()
   }
 
-  static Matrix importSheetAsStrings(String sheetId, String range, boolean firstRowAsColumnNames) {
+  static Matrix importSheetAsStrings(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
     def transport = GoogleNetHttpTransport.newTrustedTransport()
     def gsonFactory = GsonFactory.getDefaultInstance()
 
-    GoogleCredentials credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
+    if (credentials == null) {
+      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
+    }
     def sheetsService = new Sheets.Builder(
         transport,
         gsonFactory,
