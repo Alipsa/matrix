@@ -79,24 +79,68 @@ class Bq {
         .getService()
   }
 
+  /**
+   * Execute an insert, update or delete query. Technically it is possible to
+   * also execute a select query but then only the number of rows in the result
+   * will be returned so doing that is not very useful. Note: If your sql contains multiple statements,
+   * the total number of rows affected will be returned. The job statistics that we retrieve via
+   * queryJob.getStatistics().getDmlStats() will provide the aggregate count of all affected rows
+   * across all statements. There is no built-in mechanism in the BigQuery client library to get
+   * a row count for each individual statement within a single job.
+   *
+   * @param qry the query to execute
+   * @param useLegacySql Sets whether to use BigQuery's legacy SQL dialect for this query.
+   * @return the number of rows affected by the query
+   * @throws BqException if the query fails
+   */
+  int execute(String qry, boolean useLegacySql = false) throws BqException {
+    try {
+      Job queryJob = runQuery(qry, useLegacySql)
+
+      // Retrieve the job statistics to check for DML operations.
+      JobStatistics.QueryStatistics stats = queryJob.getStatistics()
+      DmlStats dmlStats = stats.getDmlStats()
+
+      if (dmlStats != null) {
+        // This is a DML query (INSERT, UPDATE, or DELETE).
+        // We get the affected row count from the DML stats.
+        long insertedRows = dmlStats.getInsertedRowCount() != null ? dmlStats.getInsertedRowCount() : 0
+        long updatedRows = dmlStats.getUpdatedRowCount() != null ? dmlStats.getUpdatedRowCount() : 0
+        long deletedRows = dmlStats.getDeletedRowCount() != null ? dmlStats.getDeletedRowCount() : 0
+
+        return (int) (insertedRows + updatedRows + deletedRows)
+      } else {
+        // This is likely a SELECT query.
+        // We get the result set and return the total number of rows.
+        TableResult result = queryJob.getQueryResults()
+        return result.getTotalRows().intValue()
+      }
+    } catch (BigQueryException | InterruptedException e) {
+      throw new BqException("Query execution failed due to error: " + e.toString(), e)
+    }
+  }
+
+  private Job runQuery(String qry, boolean useLegacySql) throws BqException {
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
+        .setUseLegacySql(useLegacySql)
+        .build()
+    JobId jobId = JobId.newBuilder().setProject(projectId).build()
+    Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build())
+    // Wait for the query to complete.
+    queryJob = queryJob.waitFor()
+
+    // Check for errors
+    if (queryJob == null) {
+      throw new BqException("Job no longer exists")
+    } else if (queryJob.getStatus().getError() != null) {
+      throw new BqException(queryJob.getStatus().getError().toString())
+    }
+    queryJob
+  }
+
   Matrix query(String qry, boolean useLegacySql = false) throws BqException {
     try {
-      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
-          .setUseLegacySql(useLegacySql)
-          .build()
-      JobId jobId = JobId.newBuilder().setProject(projectId).build()
-      Job queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build())
-      // Wait for the query to complete.
-      queryJob = queryJob.waitFor()
-
-      // Check for errors
-      if (queryJob == null) {
-        throw new RuntimeException("Job no longer exists")
-      } else if (queryJob.getStatus().getError() != null) {
-        // You can also look at queryJob.getStatus().getExecutionErrors() for all
-        // errors, not just the latest one.
-        throw new RuntimeException(queryJob.getStatus().getError().toString())
-      }
+      Job queryJob = runQuery(qry, useLegacySql)
 
       // Convert to a Matrix and return the results.
       TableResult result = queryJob.getQueryResults()
