@@ -1,7 +1,12 @@
 # Matrix-bigquery Release History
 
 ## v0.4.1, In progress
-- com.google.auth:google-auth-library-bom [1.38.0 -> 1.39.0]
+- com.google.auth:google-auth-library-bom [1.38.0 -> 1.39.1]
+- com.google.auth:google-auth-library-oauth2-http [1.39.0 -> 1.39.1]
+- com.google.cloud:google-cloud-bigquery [2.54.2 -> 2.55.1]
+- com.google.cloud:google-cloud-bigquerystorage [3.16.3 -> 3.17.1]
+- com.google.cloud:google-cloud-resourcemanager [1.75.0 -> 1.77.0]
+- add execute method to Bq to allow for execution of update, delete or insert queries
 
 ## v0.4.0, 2025-09-06
 - Change saveToBigQuery to use the BigQuery Write API instead of the older

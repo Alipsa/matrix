@@ -96,7 +96,7 @@ class MatrixModulesTest {
   @Test
   void testSql() {
     ConnectionInfo ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.3.232')
+    ci.setDependency('com.h2database:h2:2.4.240')
     ci.setUrl("jdbc:h2:mem:h2testdb")
     ci.setUser('sa')
     ci.setPassword('123')

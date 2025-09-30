@@ -9,7 +9,7 @@ To use the matrix-sql module, you need to add it as a dependency to your project
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.0'
+implementation 'org.apache.groovy:groovy:5.0.1'
 implementation platform('se.alipsa.matrix:matrix-bom:2.2.3')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-sql'
@@ -34,7 +34,7 @@ implementation 'se.alipsa.matrix:matrix-sql'
       <dependency>
           <groupId>org.apache.groovy</groupId>
           <artifactId>groovy</artifactId>
-          <version>5.0.0</version>
+          <version>5.0.1</version>
       </dependency>
       <dependency>
           <groupId>se.alipsa.matrix</groupId>
@@ -232,7 +232,7 @@ MatrixSql matrixSql = new MatrixSql(ci)
 
 ```groovy
 ConnectionInfo ci = new ConnectionInfo()
-ci.setDependency('com.h2database:h2:2.3.232')
+ci.setDependency('com.h2database:h2:2.4.240')
 ci.setUrl("jdbc:h2:mem:testdb")
 ci.setUser('sa')
 ci.setPassword('')
@@ -244,7 +244,7 @@ MatrixSql matrixSql = new MatrixSql(ci)
 
 ```groovy
 ConnectionInfo ci = new ConnectionInfo()
-ci.setDependency('com.h2database:h2:2.3.232')
+ci.setDependency('com.h2database:h2:2.4.240')
 def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb').getAbsolutePath()
 ci.setUrl("jdbc:h2:file:${tmpDb}")
 ci.setUser('sa')
@@ -282,7 +282,7 @@ import se.alipsa.matrix.sql.MatrixSql
 
 // Create a connection to an H2 database
 ConnectionInfo ci = new ConnectionInfo()
-ci.setDependency('com.h2database:h2:2.3.232')
+ci.setDependency('com.h2database:h2:2.4.240')
 def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb').getAbsolutePath()
 ci.setUrl("jdbc:h2:file:${tmpDb}")
 ci.setUser('sa')
@@ -366,7 +366,7 @@ Matrix employees = Matrix.builder('employees').data([
 
 // Set up a connection to an H2 in-memory database
 ConnectionInfo ci = new ConnectionInfo()
-ci.setDependency('com.h2database:h2:2.3.232')
+ci.setDependency('com.h2database:h2:2.4.240')
 ci.setUrl("jdbc:h2:mem:employeedb;CASE_INSENSITIVE_IDENTIFIERS=true")
 ci.setUser('sa')
 ci.setPassword('')

@@ -11,7 +11,7 @@ class MatrixDbUtilTest {
   @Test
   void testDdl() {
     ConnectionInfo ci = new ConnectionInfo()
-    ci.setDependency('com.h2database:h2:2.3.232')
+    ci.setDependency('com.h2database:h2:2.4.240')
     def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'ddltestdb').getAbsolutePath()
     ci.setUrl("jdbc:h2:file:${tmpDb};MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE")
     ci.setUser('sa')

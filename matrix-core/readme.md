@@ -33,7 +33,7 @@ the groovy core library as well e.g:
 <dependency>
     <groupId>org.apache.groovy</groupId>
     <artifactId>groovy</artifactId>
-    <version>5.0.0</version>
+    <version>5.0.1</version>
 </dependency>
 ```
 
@@ -68,7 +68,7 @@ assert table.row(0)[1] == 21000 // get the first row and then the second column
 ### Creating from a result set:
 
 ```groovy
-@Grab('com.h2database:h2:2.3.232')
+@Grab('com.h2database:h2:2.4.240')
 
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.groovy.datautil.SqlUtil

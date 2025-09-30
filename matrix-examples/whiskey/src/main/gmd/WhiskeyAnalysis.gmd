@@ -56,8 +56,8 @@ out.println rc
 
 ## Cluster analysis
 ```{groovy}
-@Grab('com.github.haifengl:smile-core:4.4.1')
-@Grab('com.github.haifengl:smile-plot:4.4.1')
+@Grab('com.github.haifengl:smile-core:4.4.2')
+@Grab('com.github.haifengl:smile-plot:4.4.2')
 @Grab(group='org.bytedeco', module='openblas', version='0.3.28-1.5.11')
 @Grab(group='org.bytedeco', module='javacpp', version='1.5.11')
 

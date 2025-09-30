@@ -44,11 +44,11 @@ dependencies {
     }*/
     compileOnly libs.groovy
 
-    api('com.google.cloud:google-cloud-bigquery:2.54.2')
-    api 'com.google.cloud:google-cloud-resourcemanager:1.75.0'
-    implementation platform('com.google.auth:google-auth-library-bom:1.39.0')
+    api('com.google.cloud:google-cloud-bigquery:2.55.1')
+    api 'com.google.cloud:google-cloud-resourcemanager:1.77.0'
+    implementation platform('com.google.auth:google-auth-library-bom:1.39.1')
     implementation 'com.google.auth:google-auth-library-oauth2-http'
-    implementation('com.google.cloud:google-cloud-bigquerystorage:3.16.3')
+    implementation('com.google.cloud:google-cloud-bigquerystorage:3.17.1')
 
     testImplementation libs.groovy
     testImplementation testLibs.junitJupiterApi
@@ -134,7 +134,7 @@ signing {
         //project.logger.lifecycle("Signing artifacts...")
         sign publishing.publications.maven
     } else {
-        project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
+        project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
     }
 }
 

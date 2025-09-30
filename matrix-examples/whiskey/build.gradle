@@ -5,7 +5,7 @@ plugins {
 group = 'se.alipsa.matrix.examples'
 version = '1.0.0-SNAPSHOT'
 
-def groovyVersion = '5.0.0'
+def groovyVersion = '5.0.1'
 repositories {
   mavenCentral()
   mavenLocal()
@@ -30,8 +30,8 @@ dependencies {
     implementation 'se.alipsa.matrix:matrix-stats'
     implementation 'se.alipsa.matrix:matrix-xchart'
   }
-  implementation 'com.github.haifengl:smile-core:4.4.1'
-  implementation 'com.github.haifengl:smile-plot:4.4.1'
+  implementation 'com.github.haifengl:smile-core:4.4.2'
+  implementation 'com.github.haifengl:smile-plot:4.4.2'
   testImplementation platform('org.junit:junit-bom:5.13.4')
   testImplementation 'org.junit.jupiter:junit-jupiter'
 }

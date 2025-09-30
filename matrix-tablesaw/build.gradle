@@ -8,7 +8,7 @@ plugins {
     id('maven-publish')
     //id("se.alipsa.nexus-release-plugin") version "1.0.1"
     id("se.alipsa.nexus-release-plugin") version '2.0.0'
-    id("com.github.ben-manes.versions").version("0.52.0")
+    //id("com.github.ben-manes.versions").version("0.53.0")
 }
 
 group = 'se.alipsa.matrix'
@@ -55,7 +55,7 @@ dependencies {
     testImplementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
     testImplementation testLibs.junitJupiter
     testRuntimeOnly testLibs.junitPlatformLauncher
-    testImplementation 'com.h2database:h2:2.3.232'
+    testImplementation 'com.h2database:h2:2.4.240'
     testImplementation testLibs.slf4jSimple
     testImplementation libs.groovy
     testImplementation libs.groovySql
@@ -139,7 +139,7 @@ signing {
         //project.logger.lifecycle("Signing artifacts...")
         sign publishing.publications.maven
     } else {
-        project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
+        project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
     }
 }
 

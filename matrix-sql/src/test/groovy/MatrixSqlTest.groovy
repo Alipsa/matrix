@@ -133,7 +133,7 @@ class MatrixSqlTest {
   @Test
   void testDdl() {
     def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'ddltestdb')
-    String h2version = "2.3.232"
+    String h2version = "2.4.240"
     Matrix m = AbstractDbTest.getComplexData()
     String props = "MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
 

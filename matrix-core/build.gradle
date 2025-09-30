@@ -46,7 +46,7 @@ dependencies {
   testRuntimeOnly testLibs.junitJupiterEngine
   testRuntimeOnly testLibs.junitPlatformLauncher
   testImplementation 'org.apache.commons:commons-math3:3.6.1'
-  testImplementation 'com.h2database:h2:2.3.232'
+  testImplementation 'com.h2database:h2:2.4.240'
   testImplementation libs.groovySql
   testImplementation libs.groovyGinq
 }
@@ -161,7 +161,7 @@ signing {
     sign publishing.publications.maven
     //sign configurations.archives
   } else {
-    project.logger.lifecycle("signing.keyId is not defined, skipping signing of artifacts...")
+    project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
   }
 }
 

@@ -25,7 +25,7 @@ class MatrixSqlFactory {
             .fetchLatestArtifact('com.h2database', 'h2', REPO_URL)
             .getVersion()
       } catch (Exception e) {
-        dependencyVersion = '2.3.232'
+        dependencyVersion = '2.4.240'
         System.err.println("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion, " + e)
       }
     } else {

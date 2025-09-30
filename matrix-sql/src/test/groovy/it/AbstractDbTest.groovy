@@ -39,7 +39,7 @@ abstract class AbstractDbTest {
       ci.setDriver("org.apache.derby.jdbc.EmbeddedDriver")
       //Grape.grab(ci.dependency) // does not work since junit is not running in a groovy class loader
     } else {
-      ci.setDependency('com.h2database:h2:2.3.232')
+      ci.setDependency('com.h2database:h2:2.4.240')
       def tmpDb = new File(System.getProperty('java.io.tmpdir'), "$dbName").getAbsolutePath()
       String settings = ''
       if (mode != null && db != DataBaseProvider.H2) {

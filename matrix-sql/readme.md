@@ -6,7 +6,7 @@ relational database as easy as possible.
 
 To use it, add the following to your gradle build script:
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.0'
+implementation 'org.apache.groovy:groovy:5.0.1'
 implementation 'se.alipsa.matrix:matrix-core:3.3.0'
 implementation 'se.alipsa.matrix:matrix-sql:2.1.1'
 ```
@@ -16,7 +16,7 @@ or if you use maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>5.0.0</version>
+      <version>5.0.1</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
@@ -113,7 +113,7 @@ E.g:
    import se.alipsa.matrix.sql.MatrixSql
    
    ConnectionInfo ci = new ConnectionInfo()
-   ci.setDependency('com.h2database:h2:2.3.232')
+   ci.setDependency('com.h2database:h2:2.4.240')
    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb').getAbsolutePath()
    ci.setUrl("jdbc:h2:file:${tmpDb}")
    ci.setUser('sa')
