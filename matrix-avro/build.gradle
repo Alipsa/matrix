@@ -1,0 +1,149 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+plugins {
+  id 'groovy'
+  id 'java-library'
+  id 'signing'
+  id 'maven-publish'
+  id("se.alipsa.nexus-release-plugin") version '2.0.0'
+}
+
+group = 'se.alipsa.matrix'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+  mavenCentral()
+}
+
+JavaCompile javaCompile = compileJava {
+  options.release = 21
+  options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
+}
+
+compileGroovy {
+  options.deprecation = true
+}
+
+repositories {
+  if (version.toString().endsWith('SNAPSHOT')) {
+    mavenLocal()
+  }
+  mavenCentral()
+}
+
+dependencies {
+  compileOnly project(':matrix-core')
+  compileOnly libs.groovy
+  api "org.apache.avro:avro:1.11.4"
+  testImplementation libs.groovy
+  testImplementation project(':matrix-core')
+  testImplementation project(':matrix-datasets')
+  testImplementation testLibs.slf4jSimple
+  testImplementation testLibs.junitJupiterApi
+  testRuntimeOnly testLibs.junitJupiterEngine
+  testRuntimeOnly testLibs.junitPlatformLauncher
+}
+
+test {
+  useJUnitPlatform()
+  testLogging {
+    // set options for log level LIFECYCLE
+    events TestLogEvent.FAILED,
+        TestLogEvent.PASSED,
+        TestLogEvent.SKIPPED,
+        TestLogEvent.STANDARD_OUT
+    exceptionFormat = TestExceptionFormat.FULL
+    showExceptions = true
+    showCauses = true
+    showStackTraces = true
+    showStandardStreams = true
+
+    // set options for log level DEBUG and INFO
+    debug {
+      events TestLogEvent.STARTED,
+          TestLogEvent.FAILED,
+          TestLogEvent.PASSED,
+          TestLogEvent.SKIPPED,
+          TestLogEvent.STANDARD_ERROR,
+          TestLogEvent.STANDARD_OUT
+      exceptionFormat = TestExceptionFormat.FULL
+    }
+    info.events = debug.events
+    info.exceptionFormat = debug.exceptionFormat
+
+    afterSuite { desc, result ->
+      def duration = result.endTime - result.startTime
+      println "Duration of $desc: $duration ms"
+      if (!desc.parent) { // will match the outermost suite
+        def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+        def startItem = '|  ', endItem = '  |'
+        def repeatLength = startItem.length() + output.length() + endItem.length()
+        println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+      }
+    }
+  }
+}
+
+//Maven Central uploads
+task javadocJar(type: Jar, dependsOn: groovydoc) {
+  archiveClassifier.set('javadoc')
+  from groovydoc.destinationDir
+}
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  archiveClassifier.set('sources')
+  from sourceSets.main.allSource
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      from components.java
+      artifact(javadocJar)
+      artifact(sourcesJar)
+      pom {
+        name = 'Matrix Json'
+        description = "${project.description}"
+        url = "https://github.com/Alipsa/matrix/matrix-avro"
+        properties = [
+            'maven.compiler.release': "${javaCompile.options.release.get()}"
+        ]
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-avro/master/LICENSE'
+          }
+        }
+        developers {
+          developer {
+            id = 'perNyfelt'
+            name = 'Per Nyfelt'
+          }
+        }
+        scm {
+          url = 'https://github.com/Alipsa/matrix/matrix-avro/tree/master'
+          connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
+        }
+      }
+    }
+  }
+}
+
+signing {
+  if (project.properties['signing.keyId'] != null) {
+    //project.logger.lifecycle("Signing artifacts...")
+    sign publishing.publications.maven
+  } else {
+    project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
+  }
+}
+
+nexusReleasePlugin {
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
+}

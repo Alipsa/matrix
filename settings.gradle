@@ -30,3 +30,4 @@ findProject(':matrix-examples:AnalysisScenario1')?.name = 'AnalysisScenario1'
 
 
 include 'matrix-examples:whiskey'
+include 'matrix-avro'

@@ -24,6 +24,7 @@ import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.xchart.PieChart
 
 import java.nio.charset.StandardCharsets
+import java.time.format.TextStyle
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -162,5 +163,16 @@ class MatrixModulesTest {
 
     pc.exportPng(file)
     assertTrue(file.exists())
+  }
+
+  @Test
+  void testAvro() {
+    // Just a simple round trip test to verify that the Avro module is working
+    Matrix mtcars = Dataset.mtcars()
+    def file = new File("target/mtcars.avro")
+    if (file.exists()) file.delete()
+    se.alipsa.matrix.avro.MatrixAvroWriter.write(mtcars, file, true)
+    Matrix m2 = se.alipsa.matrix.avro.MatrixAvroReader.read(file, 'mtcars')
+    MatrixAssertions.assertContentMatches(mtcars, m2, mtcars.diff(m2))
   }
 }
