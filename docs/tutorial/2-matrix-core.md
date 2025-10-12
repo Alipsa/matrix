@@ -225,6 +225,7 @@ def empData = Matrix.builder().columns(
     start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
     .types([int, String, Number, LocalDate]).build()
 
+// Add a yearMonth column derived from the start_date column
 def table = empData
     .clone() // clone to avoid modifying the original (optional)
     .addColumn("yearMonth", YearMonth, toYearMonths(empData.start_date))
