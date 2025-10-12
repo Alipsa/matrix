@@ -205,6 +205,42 @@ def table2 = table.apply("start", { startDate ->
 println(table2.content())
 ```
 
+### Adding a column
+You can add new columns to an existing Matrix using addColumn.
+A common use case is to derive a new column from an existing one.
+Here is an example:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import java.time.LocalDate
+
+import static se.alipsa.matrix.core.ListConverter.*
+
+import java.time.YearMonth
+
+def empData = Matrix.builder().columns(
+    emp_id: 1..5,
+    emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+    salary: [623.3, 515.2, 611.0, 729.0, 843.25],
+    start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
+    .types([int, String, Number, LocalDate]).build()
+
+def table = empData
+    .clone() // clone to avoid modifying the original (optional)
+    .addColumn("yearMonth", YearMonth, toYearMonths(empData.start_date))
+
+println table.toMarkdown()
+```
+Which will output
+
+| emp_id | emp_name | salary | start_date | yearMonth |
+|-------:|----------|-------:|------------|-----------|
+|      1 | Rick     |  623.3 | 2012-01-01 | 2012-01   |
+|      2 | Dan      |  515.2 | 2013-09-23 | 2013-09   |
+|      3 | Michelle |  611.0 | 2014-11-15 | 2014-11   |
+|      4 | Ryan     |  729.0 | 2014-05-11 | 2014-05   |
+|      5 | Gary     | 843.25 | 2015-03-27 | 2015-03   |
+
 ### Subsetting Data
 
 You can create subsets of your data using various methods:
