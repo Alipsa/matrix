@@ -2,6 +2,21 @@
 
 ## v2.2.2. In progress
 - com.github.miachm.sods:SODS [1.6.8 -> 1.7.0]
+- ODS Streaming reader 
+  - Row repeats: Parse one physical `<table-row>` once, then replicate the parsed values number-rows-repeated times. 
+  - Column repeats: Parse one physical `<table-cell>` once, then replicate its value number-columns-repeated times. 
+  - Cursor alignment: After reading a cell’s value, drain to `</table-cell>`; similarly, drain covered cells to `</covered-table-cell>`. 
+  - Covered cells: Handle table:covered-table-cell consistently (according to your chosen policy) rather than implicitly skipping.
+- ODS Event reader 
+  - Row & column repeats: Same “parse once, then replicate” fix as the stream reader. 
+  - String cells: Fixed the big bug where office:value-type="string" returned null. We now collect `<text:p>` content (and `<text:s/>` spaces, optional `<text:line-break/>`, `<text:tab/>`) until </table-cell>. 
+  - Cursor alignment: Introduced a drainUntilEnd(reader, "table-cell") helper and used it in all typed branches to keep the event cursor in sync.
+- Multiple paragraphs: Join multiple `<text:p>` with \n. 
+- Defensive attrs: If a typed value’s attribute is missing, return null instead of exploding.
+- Fix sheet numbering (was off by one) for SODSImporter.importSpreadsheet(InputStream is, int sheetNum,
+  int startRow = 1, int endRow,
+  int startCol = 1, int endCol,
+  boolean firstRowAsColNames = true)
 
 ## v2.2.1, 2025-07-19
 - Upgrade dependencies

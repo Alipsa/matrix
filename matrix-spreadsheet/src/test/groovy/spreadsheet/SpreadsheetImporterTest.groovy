@@ -2,8 +2,10 @@ package spreadsheet
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.ExcelImplementation
+import se.alipsa.matrix.spreadsheet.OdsImplementation
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 
 import java.math.RoundingMode
@@ -19,19 +21,38 @@ class SpreadsheetImporterTest {
 
   @Test
   void testExcelImport() {
-    excelImportAssertions(
+    book1ImportAssertions(
       importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true, excelImplementation: ExcelImplementation.POI)
     )
-    excelImportAssertions(
+    book1ImportAssertions(
         importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true, excelImplementation: ExcelImplementation.FastExcel)
     )
     URL url = getClass().getResource("/Book1.xlsx")
-    excelImportAssertions(
+    book1ImportAssertions(
       importExcel(url, 1, 1, 12, 1, 4, true)
     )
   }
 
-  static void excelImportAssertions(Matrix table) {
+  @Test
+  void testOdsImport() {
+    Matrix m = importSpreadsheet("Book1.ods", 1, 1, 12, 1, 4, true)
+    book1ImportAssertions(m)
+    Matrix m2 = importSpreadsheet("Book1.ods", 1, 1, 12, 'A', 'D', true)
+    book1ImportAssertions(m2)
+    Matrix m3 = importSpreadsheet("transactions.ods", 1, 1, 100, 'A', 'D', true,
+        ExcelImplementation.FastExcel, OdsImplementation.FastOdsStream)
+      .withMatrixName('transactions')
+    Matrix m4 = importSpreadsheet("transactions.ods", 1, 1, 100, 'A', 'D', true,
+        ExcelImplementation.FastExcel, OdsImplementation.FastOdsEvent)
+        .withMatrixName('transactions')
+    Matrix m5 = importSpreadsheet("transactions.ods", 1, 1, 100, 'A', 'D', true,
+        ExcelImplementation.FastExcel, OdsImplementation.SODS)
+        .withMatrixName('transactions')
+    MatrixAssertions.assertEquals(m3, m4)
+    MatrixAssertions.assertEquals(m3, m5)
+  }
+
+  static void book1ImportAssertions(Matrix table) {
 
     table = table.convert(id: Integer, bar: LocalDate, baz: BigDecimal, DateTimeFormatter.ofPattern('yyyy-MM-dd HH:mm:ss.SSS'))
     //println(table.content())
