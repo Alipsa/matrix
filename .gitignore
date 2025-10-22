@@ -7,3 +7,4 @@ build/
 /matrix-sql/derby.log
 /matrix-examples/AnalysisScenario1/analysis_results/
 **/out/**
+/matrix-examples/LinearRegression/cars.png

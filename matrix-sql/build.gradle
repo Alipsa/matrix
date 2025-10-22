@@ -42,7 +42,7 @@ dependencies {
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
-    implementation 'se.alipsa.groovy:data-utils:2.0.0'
+    implementation 'se.alipsa.groovy:data-utils:2.0.1-SNAPSHOT'
     //implementation 'org.gradle:gradle-tooling-api:8.12' dont think we need this
     implementation 'commons-io:commons-io:2.20.0'
     implementation 'se.alipsa.groovy:dependency-resolver:1.0.1'

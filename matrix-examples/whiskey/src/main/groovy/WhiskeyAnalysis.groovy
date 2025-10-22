@@ -3,7 +3,7 @@
 @Grab(group='org.bytedeco', module='openblas', version='0.3.28-1.5.11')
 @Grab(group='org.bytedeco', module='javacpp', version='1.5.11')
 //@Grab('org.apache.ivy:ivy:2.5.3')
-//@Grab('org.apache.groovy:groovy-ginq:5.0.1')
+//@Grab('org.apache.groovy:groovy-ginq:5.0.2')
 @Grab('se.alipsa.matrix:matrix-core:3.3.0')
 @Grab('se.alipsa.matrix:matrix-csv:2.1.1-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-stats:2.1.1-SNAPSHOT')

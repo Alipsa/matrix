@@ -95,7 +95,7 @@ dependencies {
     implementation(platform('se.alipsa.matrix:matrix-bom:2.2.0'))
     
     // Add Groovy
-    implementation 'org.apache.groovy:groovy:5.0.1'
+    implementation 'org.apache.groovy:groovy:5.0.2'
     
     // Add Matrix modules without specifying versions
     implementation 'se.alipsa.matrix:matrix-core'
@@ -118,7 +118,7 @@ dependencies {
     <version>1.0.0</version>
     
     <properties>
-        <groovy.version>5.0.1</groovy.version>
+        <groovy.version>5.0.2</groovy.version>
     </properties>
     
     <dependencyManagement>

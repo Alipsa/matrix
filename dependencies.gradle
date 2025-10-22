@@ -2,7 +2,7 @@ dependencyResolutionManagement {
   versionCatalogs {
 
     libs {
-      def groovyVersion="5.0.1"
+      def groovyVersion="5.0.2"
       library('groovy', "org.apache.groovy:groovy:$groovyVersion")
       library('groovySql', "org.apache.groovy:groovy-sql:$groovyVersion")
       library('groovyGinq', "org.apache.groovy:groovy-ginq:$groovyVersion")

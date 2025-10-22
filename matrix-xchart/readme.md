@@ -8,7 +8,7 @@ The se.alipsa.matrix.xchart package contains factory classes for each chart type
 
 To use it add the following to your gradle build script (or equivalent for maven etc)
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.1'
+implementation 'org.apache.groovy:groovy:5.0.2'
 implementation 'se.alipsa.matrix:matrix-core:3.3.0'
 implementation 'se.alipsa.matrix:matrix-xchart:0.2.1'
 ```

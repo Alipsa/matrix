@@ -6,7 +6,7 @@ relational database as easy as possible.
 
 To use it, add the following to your gradle build script:
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.1'
+implementation 'org.apache.groovy:groovy:5.0.2'
 implementation 'se.alipsa.matrix:matrix-core:3.3.0'
 implementation 'se.alipsa.matrix:matrix-sql:2.1.1'
 ```
@@ -16,7 +16,7 @@ or if you use maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>5.0.1</version>
+      <version>5.0.2</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
