@@ -4,6 +4,8 @@ Date format used below is yyyy-MM-dd
 ## v2.1.2, In progress
 - upgrade dependencies
   - commons-io:commons-io [2.19.0 -> 2.20.0]
+  - remove trying to "fix" sql (adding select etc.) 
+  - Add Jaas config for mssql+javaKerberos if not set.
 
 ## v2.1.1, 2025-06-02
 - upgrade dependencies
