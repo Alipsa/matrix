@@ -167,9 +167,6 @@ class MatrixDbUtil {
   }
 
   Matrix select(Connection con, String sqlQuery) throws SQLException {
-    if (!sqlQuery.trim().toLowerCase().startsWith("select ")) {
-      sqlQuery = "select $sqlQuery"
-    }
     try(Statement stm = con.createStatement(); ResultSet rs = stm.executeQuery(sqlQuery)) {
       return Matrix.builder().data(rs).build()
     }

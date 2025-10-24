@@ -6,6 +6,7 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.sql.config.JaasConfigLoader
 import se.alipsa.mavenutils.MavenUtils
 
 import java.lang.reflect.InvocationTargetException
@@ -17,6 +18,10 @@ import java.sql.Statement
 import java.util.concurrent.ExecutionException
 import java.util.stream.IntStream
 
+/**
+ * Bridges Matrix and SQL allowing you to go back and forth between the two.
+ * Note: use the MatrixSqlFactory for more flexible ways to create a MatrixSql.
+ */
 @CompileStatic
 class MatrixSql implements Closeable {
 
@@ -52,9 +57,6 @@ class MatrixSql implements Closeable {
   }
 
   int update(String sqlQuery) {
-    if (!sqlQuery.trim().toLowerCase().startsWith('update ')) {
-      sqlQuery = "update $sqlQuery"
-    }
     dbUpdate(sqlQuery)
   }
 
@@ -169,11 +171,7 @@ class MatrixSql implements Closeable {
   }
 
   private int dbInsert(String sqlQuery) throws SQLException, ExecutionException, InterruptedException {
-    if (sqlQuery.trim().toLowerCase().startsWith("insert into ")) {
-      return (int)dbExecuteSql(sqlQuery)
-    } else {
-      return (int)dbExecuteSql("insert into " + sqlQuery)
-    }
+    return (int)dbExecuteSql(sqlQuery)
   }
 
   int insert(String tableName, Row row) throws SQLException, ExecutionException, InterruptedException {
@@ -196,23 +194,13 @@ class MatrixSql implements Closeable {
   }
 
   int delete(String sql) throws SQLException {
-    if (sql.trim().toLowerCase().startsWith("delete ")) {
-      sql = "delete $sql"
-    }
-    if (!sql.toLowerCase().startsWith("delete from ")) {
-      sql = "from $sql"
-    }
     try(Statement stm = connect().createStatement()) {
       return stm.executeUpdate(sql)
     }
   }
 
   static int dbExecuteUpdate(Statement stm, String sqlQuery) throws SQLException {
-    if (sqlQuery.trim().toLowerCase().startsWith("update ")) {
-      return stm.executeUpdate(sqlQuery)
-    } else {
-      return stm.executeUpdate("update $sqlQuery")
-    }
+    return stm.executeUpdate(sqlQuery)
   }
 
   private int dbExecuteBatchUpdate(Matrix table, String[] matchColumnName) throws SQLException {
@@ -262,7 +250,7 @@ class MatrixSql implements Closeable {
     List<String> dependencies = []
     if (dependency.contains(';')) {
       dependency.split(';').each {
-        dependencies << it
+        dependencies << (it as String)
       }
     } else {
       dependencies << dependency
@@ -295,6 +283,11 @@ class MatrixSql implements Closeable {
           props.put("password", ci.getPassword())
         }
       }
+    }
+    // This is needed in newer version of sql server driver
+    if (ci.url.startsWith(DataBaseProvider.MSSQL.urlStart)
+        && ci.url.toLowerCase().contains('authenticationscheme=javakerberos')) {
+      JaasConfigLoader.loadDefaultKerberosConfigIfNeeded()
     }
     return driver.connect(ci.getUrl(), props)
   }
