@@ -5,17 +5,12 @@ plugins {
     id('java-library')
     id('signing')
     id('maven-publish')
-    //id("se.alipsa.nexus-release-plugin") version "1.0.1"
     id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
 group = 'se.alipsa.matrix'
-version = '2.1.2-SNAPSHOT'
+version = '2.2.0'
 description = 'Groovy sql module for Matrix'
-
-ext.nexusUrl = version.contains("SNAPSHOT")
-    ? "https://oss.sonatype.org/content/repositories/snapshots/"
-    : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 repositories {
     if (version.contains('SNAPSHOT')) {
@@ -42,11 +37,10 @@ dependencies {
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
-    implementation 'se.alipsa.groovy:data-utils:2.0.1-SNAPSHOT'
-    //implementation 'org.gradle:gradle-tooling-api:8.12' dont think we need this
+    implementation 'se.alipsa.groovy:data-utils:2.0.1'
     implementation 'commons-io:commons-io:2.20.0'
     implementation 'se.alipsa.groovy:dependency-resolver:1.0.1'
-    implementation 'se.alipsa:maven-3.9.4-utils:1.1.0'
+    implementation 'se.alipsa:maven-3.9.11-utils:1.0.0'
     //implementation 'org.apache.logging.log4j:log4j-api:2.24.1'
 
     testImplementation libs.groovy
@@ -149,7 +143,6 @@ publishing {
                     username = sonatypeUsername
                     password = sonatypePassword
                 }
-                url = nexusUrl
             }
         }
     }

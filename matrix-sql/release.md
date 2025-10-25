@@ -1,11 +1,12 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
-## v2.1.2, In progress
+## v2.2.0, 2025-10-25
 - upgrade dependencies
   - commons-io:commons-io [2.19.0 -> 2.20.0]
-  - remove trying to "fix" sql (adding select etc.) 
-  - Add Jaas config for mssql+javaKerberos if not set.
+  - Upgrade maven-3.9.4-utils to maven-3.9.11-utils
+- remove trying to "fix" sql (adding select etc.) 
+- Add Jaas config for mssql+javaKerberos if not set.
 
 ## v2.1.1, 2025-06-02
 - upgrade dependencies

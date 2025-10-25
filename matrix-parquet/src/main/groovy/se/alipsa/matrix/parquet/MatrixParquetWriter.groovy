@@ -28,27 +28,6 @@ class MatrixParquetWriter {
   static void write(Matrix matrix, File file, boolean inferPrecisionAndScale = false) {
     def schema = buildSchema(matrix, inferPrecisionAndScale)
     def conf = new Configuration()
-    /*
-
-    conf.set("parquet.example.schema", schema.toString())
-    conf.set("matrix.columnTypes", matrix.types().collect { it.simpleName }.join(','))
-    GroupWriteSupport.setSchema(schema, conf)
-
-    def writeSupport = new GroupWriteSupportWithMetadata()
-    writeSupport.init(conf)
-
-    def writer = new ParquetWriter<Group>(
-        new Path(file.toURI()),
-        writeSupport,
-        ParquetWriter.DEFAULT_COMPRESSION_CODEC_NAME,
-        ParquetWriter.DEFAULT_BLOCK_SIZE,
-        ParquetWriter.DEFAULT_PAGE_SIZE,
-        ParquetWriter.DEFAULT_PAGE_SIZE,
-        ParquetWriter.DEFAULT_IS_DICTIONARY_ENABLED,
-        ParquetWriter.DEFAULT_IS_VALIDATING_ENABLED,
-        ParquetWriter.DEFAULT_WRITER_VERSION,
-        conf
-    )*/
     def extraMeta = new HashMap<String, String>()
     extraMeta.put("matrix.columnTypes", matrix.types().collect { it.name }.join(','))
 
