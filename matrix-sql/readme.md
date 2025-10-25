@@ -7,8 +7,8 @@ relational database as easy as possible.
 To use it, add the following to your gradle build script:
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.2'
-implementation 'se.alipsa.matrix:matrix-core:3.3.0'
-implementation 'se.alipsa.matrix:matrix-sql:2.1.1'
+implementation 'se.alipsa.matrix:matrix-core:3.5.0'
+implementation 'se.alipsa.matrix:matrix-sql:2.2.0'
 ```
 or if you use maven:
 ```xml
@@ -21,12 +21,12 @@ or if you use maven:
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.3.0</version>
+      <version>3.5.0</version>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-sql</artifactId>
-    <version>2.1.1</version>
+    <version>2.2.0</version>
   </dependency>
 </dependencies>
 ```
@@ -122,6 +122,12 @@ E.g:
    MatrixSql matrixSql = new MatrixSql(ci)
    matrixSql.create(complexData)
    ```
+   We can make it much simpler and derive the driver class name and dependency from the url (if we dont specify a version, it will look up and use the latest version):
+    ```groovy
+    MatrixSql matrixSql = MatrixSqlFactory.create("jdbc:h2:file:${tmpDb}", 'sa', '123')
+    matrixSql.create(complexData)
+    ```
+   
 3. Retreive it
    ```groovy
    Matrix stored = matrixSql.select('* from complexData')
@@ -154,3 +160,4 @@ matrix-sql and matrix core
 |      2.0.0 |          3.0.0 |
 |      2.1.0 |          3.1.0 |
 |      2.1.1 | 3.2.0 -> 3.3.0 |
+|      2.2.0 | 3.4.0 -> 3.5.0 |

@@ -37,7 +37,7 @@ dependencies {
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
-    implementation 'se.alipsa.groovy:data-utils:2.0.1'
+    implementation 'se.alipsa.groovy:data-utils:2.0.3'
     implementation 'commons-io:commons-io:2.20.0'
     implementation 'se.alipsa.groovy:dependency-resolver:1.0.1'
     implementation 'se.alipsa:maven-3.9.11-utils:1.0.0'
@@ -49,8 +49,7 @@ dependencies {
     testImplementation testLibs.junitJupiterApi
     testRuntimeOnly testLibs.junitJupiterEngine
     testRuntimeOnly testLibs.junitPlatformLauncher
-    testImplementation testLibs.slf4jSimple
-    testImplementation testLibs.log4jToSlf4j
+    testRuntimeOnly testLibs.log4jToSlf4j
 }
 
 test {

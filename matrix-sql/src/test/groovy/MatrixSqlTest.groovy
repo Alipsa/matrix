@@ -77,7 +77,9 @@ class MatrixSqlTest {
     .build()
 
     def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb')
-    try(MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')) {
+    String url = "jdbc:h2:file:${tmpDb};MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
+    // Test that deriving the dependency and driver from the url works
+    try(MatrixSql matrixSql = MatrixSqlFactory.create(url, 'sa', '123')) {
 
       String tableName = matrixSql.tableName(complexData)
 

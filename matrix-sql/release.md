@@ -5,8 +5,10 @@ Date format used below is yyyy-MM-dd
 - upgrade dependencies
   - commons-io:commons-io [2.19.0 -> 2.20.0]
   - Upgrade maven-3.9.4-utils to maven-3.9.11-utils
+  - data-utils [2.0.1 -> 2.0.3]
 - remove trying to "fix" sql (adding select etc.) 
 - Add Jaas config for mssql+javaKerberos if not set.
+- Add a MatrixSqlFactory method to create a MatrixSql from a url string with optional username, password, and versions parameters.
 
 ## v2.1.1, 2025-06-02
 - upgrade dependencies
