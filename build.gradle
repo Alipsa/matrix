@@ -1,23 +1,42 @@
 plugins {
-  id "com.github.ben-manes.versions" version "0.53.0"
+  id "com.github.ben-manes.versions" version "0.53.0" apply false
 }
 
 description = "Groovy libraries for working with matrix ([][] data)"
 
-def isNonStable = { String version ->
-  def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { it -> version.toUpperCase().contains(it) }
-  def regex = /^[0-9,.v-]+(-r)?$/
-  return !stableKeyword && !(version ==~ regex)
+subprojects {
+  apply plugin: "com.github.ben-manes.versions"
 }
 
-// https://github.com/ben-manes/gradle-versions-plugin
-tasks.named("dependencyUpdates").configure {
-  gradleReleaseChannel = "current"
-  resolutionStrategy {
-    componentSelection {
-      all {
-        if (isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)) {
-          reject('Release candidate')
+def isNonStable = { String v ->
+  def stableKeyword = ['RELEASE','FINAL','GA'].any { v?.toUpperCase()?.contains(it) }
+  def regex = /^[0-9,.v-]+(-r)?$/
+  !stableKeyword && !(v ==~ regex)
+}
+
+// Extract leading numeric major: "5.0.0", "v5.0.0", "5.0.0-RC1"
+def majorOf = { String v ->
+  def m = (v ?: "") =~ /(?i)^\D*?(\d+)/
+  m.find() ? (m.group(1) as int) : -1
+}
+
+allprojects {
+  tasks.matching { it.name == "dependencyUpdates" }.configureEach {
+    gradleReleaseChannel = "current"
+    checkForGradleUpdate = false // optional: silence Gradle RC noise
+
+    resolutionStrategy {
+      componentSelection {
+        all { s ->
+          if (isNonStable(s.candidate.version) && !isNonStable(s.currentVersion)) {
+            s.reject('Release candidate')
+          }
+          if (s.candidate.group == 'com.github.haifengl' && majorOf(s.candidate.version) >= 5) {
+            s.reject('Blocked: Smile >= 5 (needs Java 25)')
+          }
+          if (s.candidate.group == 'org.openjfx' && majorOf(s.candidate.version) >= 24) {
+            s.reject('Blocked: JavaFx >= 24 (Exceeds max version for Java 21)')
+          }
         }
       }
     }
