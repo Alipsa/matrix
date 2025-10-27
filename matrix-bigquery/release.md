@@ -7,6 +7,7 @@
 - com.google.cloud:google-cloud-bigquerystorage [3.16.3 -> 3.17.3]
 - com.google.cloud:google-cloud-resourcemanager [1.75.0 -> 1.80.0]
 - add execute method to Bq to allow for execution of update, delete or insert queries
+- add progress bar when inserting data
 
 ## v0.4.0, 2025-09-06
 - Change saveToBigQuery to use the BigQuery Write API instead of the older

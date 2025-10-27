@@ -4,30 +4,27 @@ import com.fasterxml.jackson.core.JsonEncoding
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.core.JsonGenerator
 import com.google.api.gax.paging.Page
-import com.google.cloud.resourcemanager.v3.Project
-import com.google.cloud.resourcemanager.v3.ProjectsClient
-import com.google.cloud.resourcemanager.v3.ProjectsSettings
-import groovy.transform.CompileStatic
-
-import java.nio.channels.Channels
-import java.sql.Time
-import java.sql.Timestamp
-import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
-
-import static se.alipsa.matrix.bigquery.TypeMapper.*
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.bigquery.*
 import com.google.cloud.bigquery.BigQuery.DatasetDeleteOption
 import com.google.cloud.bigquery.BigQuery.DatasetListOption
 import com.google.cloud.bigquery.BigQuery.TableListOption
+import com.google.cloud.resourcemanager.v3.Project
+import com.google.cloud.resourcemanager.v3.ProjectsClient
+import com.google.cloud.resourcemanager.v3.ProjectsSettings
+import groovy.transform.CompileStatic
+import me.tongfei.progressbar.ProgressBar
 import se.alipsa.matrix.core.Matrix
+
+import java.nio.channels.Channels
+import java.sql.Time
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.time.*
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+
+import static se.alipsa.matrix.bigquery.TypeMapper.*
 
 @CompileStatic
 class Bq {
@@ -214,36 +211,50 @@ class Bq {
       OutputStream out = Channels.newOutputStream(writer)
       JsonGenerator json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
 
-      // one JSON object per line (NDJSON), no Map allocations required
       def names = matrix.columnNames()
-      for (def row : matrix.rows()) {
-        rowIdx++
-        json.writeStartObject()
-        for (String name : names) {
-          value = row[name]
-          json.writeFieldName(name)
-          // Write with correct types, converting only when needed
-          if (needsConversion(value)) {
-            json.writeString(sanitizeString(convertObjectValue(value))) // dates/decimals as strings
-          } else if (value instanceof Number) {
-            json.writeNumber(value.toString())  // keep numbers as numbers
-          } else if (value instanceof Boolean) {
-            json.writeBoolean((Boolean) value)
-          } else if (value == null) {
-            json.writeNull()
-          } else if (value instanceof byte[]) {
-            json.writeBinary(value as byte[])
-          } else if (value instanceof CharSequence) {
-            json.writeString(sanitizeString(value.toString()))
-          } else {
-            json.writeObject(value)
+      int rowCount = matrix.rowCount()
+      int stepSize = Math.max(1, (int) (rowCount * 0.05)) // every 5% of total
+      ProgressBar pb = new ProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
+
+      try {
+        for (def row : matrix.rows()) {
+          rowIdx++
+          json.writeStartObject()
+          for (String name : names) {
+            value = row[name]
+            json.writeFieldName(name)
+            if (needsConversion(value)) {
+              json.writeString(sanitizeString(convertObjectValue(value))) // dates/decimals as strings
+            } else if (value instanceof Number) {
+              json.writeNumber(value.toString())  // keep numbers as numbers
+            } else if (value instanceof Boolean) {
+              json.writeBoolean((Boolean) value)
+            } else if (value == null) {
+              json.writeNull()
+            } else if (value instanceof byte[]) {
+              json.writeBinary(value as byte[])
+            } else if (value instanceof CharSequence) {
+              json.writeString(sanitizeString(value.toString()))
+            } else {
+              json.writeObject(value)
+            }
+          }
+          json.writeEndObject()
+          json.writeRaw('\n') // NDJSON newline
+
+          // ✅ update progress bar every 5% of total rows
+          if (rowIdx % stepSize == 0) {
+            pb.stepBy(stepSize)
           }
         }
-        json.writeEndObject()
-        json.writeRaw('\n') // NDJSON newline
+
+        // make sure we reach 100% even if total not multiple of stepSize
+        pb.stepTo(rowIdx)
+      } finally {
+        pb.close()
+        json.flush()
+        json.close()
       }
-      json.flush()
-      json.close()
 
       Job loadJob = writer.getJob().waitFor()
 
@@ -258,17 +269,18 @@ class Bq {
             .join("; ")
         throw new BqException("Write-channel load (JSON) failed: ${details}")
       }
+
       JobStatistics.LoadStatistics stats = loadJob.getStatistics()
       long rowsInserted = stats.getOutputRows()
 
       println "Load job completed successfully. Inserted ${rowsInserted} rows."
-
       return stats
 
     } catch (Exception e) {
       throw new BqException("Error writing value '${value}' (type=${value?.class?.name}) on row ${rowIdx}", e)
     }
   }
+
 
   static boolean needsConversion(Object orgVal) {
     return orgVal instanceof BigDecimal

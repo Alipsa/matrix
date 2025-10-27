@@ -1,10 +1,10 @@
 plugins {
-    id 'groovy'
-    id 'java-library'
-    id 'signing'
-    id 'maven-publish'
-    // id("se.alipsa.nexus-release-plugin") version "1.0.1"
-    id("se.alipsa.nexus-release-plugin") version '2.0.0'
+  id 'groovy'
+  id 'java-library'
+  id 'signing'
+  id 'maven-publish'
+  // id("se.alipsa.nexus-release-plugin") version "1.0.1"
+  id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
 group = 'se.alipsa.matrix'
@@ -16,130 +16,131 @@ ext.releaseNexusUrl = version.toString().endsWith("SNAPSHOT")
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 JavaCompile javaCompile = compileJava {
-    options.release = 21
-    options.deprecation = true
-    options.compilerArgs << "-Xlint:unchecked"
+  options.release = 21
+  options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
 }
 
 compileGroovy {
-    options.deprecation = true
+  options.deprecation = true
 }
 
 repositories {
-    if (version.toString().endsWith('SNAPSHOT')) {
-        mavenLocal()
-    }
-    mavenCentral()
+  if (version.toString().endsWith('SNAPSHOT')) {
+    mavenLocal()
+  }
+  mavenCentral()
 }
 
 dependencies {
-    //if (version.endsWith('SNAPSHOT')) {
-        compileOnly project(':matrix-core')
-        testImplementation project(':matrix-core')
-        testImplementation project(':matrix-datasets')
-    /*} else {
-        compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
-        testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
-        testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
-    }*/
-    compileOnly libs.groovy
+  //if (version.endsWith('SNAPSHOT')) {
+  compileOnly project(':matrix-core')
+  testImplementation project(':matrix-core')
+  testImplementation project(':matrix-datasets')
+  /*} else {
+      compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
+      testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
+      testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
+  }*/
+  compileOnly libs.groovy
 
-    api('com.google.cloud:google-cloud-bigquery:2.55.3')
-    api 'com.google.cloud:google-cloud-resourcemanager:1.80.0'
-    implementation platform('com.google.auth:google-auth-library-bom:1.40.0')
-    implementation 'com.google.auth:google-auth-library-oauth2-http'
-    implementation('com.google.cloud:google-cloud-bigquerystorage:3.17.3')
+  api('com.google.cloud:google-cloud-bigquery:2.55.3')
+  api 'com.google.cloud:google-cloud-resourcemanager:1.80.0'
+  implementation platform('com.google.auth:google-auth-library-bom:1.40.0')
+  implementation 'com.google.auth:google-auth-library-oauth2-http'
+  implementation('com.google.cloud:google-cloud-bigquerystorage:3.17.3')
+  implementation 'me.tongfei:progressbar:0.10.1'
 
-    testImplementation libs.groovy
-    testImplementation testLibs.junitJupiterApi
-    testRuntimeOnly testLibs.junitJupiterEngine
-    testRuntimeOnly testLibs.junitPlatformLauncher
+  testImplementation libs.groovy
+  testImplementation testLibs.junitJupiterApi
+  testRuntimeOnly testLibs.junitJupiterEngine
+  testRuntimeOnly testLibs.junitPlatformLauncher
 }
 
 test {
-    testLogging.showStandardStreams = true
-    useJUnitPlatform() {
-      excludeTags 'external'
-    }
+  testLogging.showStandardStreams = true
+  useJUnitPlatform() {
+    excludeTags 'external'
+  }
 
-    // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)
-    def runExternal = (project.findProperty('runExternalTests') ?: System.getenv('RUN_EXTERNAL_TESTS'))?.toString()?.toBoolean() ?: false
-    if (runExternal) {
-      useJUnitPlatform {
-        excludeTags()          // clear the default exclusion
-      }
+  // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)
+  def runExternal = (project.findProperty('runExternalTests') ?: System.getenv('RUN_EXTERNAL_TESTS'))?.toString()?.toBoolean() ?: false
+  if (runExternal) {
+    useJUnitPlatform {
+      excludeTags()          // clear the default exclusion
     }
+  }
 }
 
 //Maven Central uploads
 task javadocJar(type: Jar, dependsOn: groovydoc) {
-    archiveClassifier.set('javadoc')
-    from groovydoc.destinationDir
+  archiveClassifier.set('javadoc')
+  from groovydoc.destinationDir
 }
 
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    archiveClassifier.set('sources')
-    from sourceSets.main.allSource
+  archiveClassifier.set('sources')
+  from sourceSets.main.allSource
 }
 
 publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
-            artifact(javadocJar)
-            artifact(sourcesJar)
-            pom {
-                name = 'Matrix Json'
-                description = "${project.description}"
-                url = "https://github.com/Alipsa/matrix/matrix-bigquery"
-                properties = [
-                    'maven.compiler.release': "${javaCompile.options.release.get()}"
-                ]
-                licenses {
-                    license {
-                        name = 'MIT License'
-                        url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-bigquery/master/LICENSE'
-                    }
-                }
-                developers {
-                    developer {
-                        id = 'perNyfelt'
-                        name = 'Per Nyfelt'
-                    }
-                }
-                scm {
-                    url = 'https://github.com/Alipsa/matrix/matrix-bigquery/tree/master'
-                    connection = 'scm:git:https://github.com/Alipsa/matrix.git'
-                    developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
-                }
-            }
+  publications {
+    maven(MavenPublication) {
+      from components.java
+      artifact(javadocJar)
+      artifact(sourcesJar)
+      pom {
+        name = 'Matrix Json'
+        description = "${project.description}"
+        url = "https://github.com/Alipsa/matrix/matrix-bigquery"
+        properties = [
+            'maven.compiler.release': "${javaCompile.options.release.get()}"
+        ]
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-bigquery/master/LICENSE'
+          }
         }
-    }
-    if (project.ext.properties.sonatypeUsername) {
-        repositories {
-            maven {
-                credentials {
-                    username = sonatypeUsername
-                    password = sonatypePassword
-                }
-                url = releaseNexusUrl
-            }
+        developers {
+          developer {
+            id = 'perNyfelt'
+            name = 'Per Nyfelt'
+          }
         }
+        scm {
+          url = 'https://github.com/Alipsa/matrix/matrix-bigquery/tree/master'
+          connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
+        }
+      }
     }
+  }
+  if (project.ext.properties.sonatypeUsername) {
+    repositories {
+      maven {
+        credentials {
+          username = sonatypeUsername
+          password = sonatypePassword
+        }
+        url = releaseNexusUrl
+      }
+    }
+  }
 }
 
 signing {
-    if (project.properties['signing.keyId'] != null) {
-        //project.logger.lifecycle("Signing artifacts...")
-        sign publishing.publications.maven
-    } else {
-        project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
-    }
+  if (project.properties['signing.keyId'] != null) {
+    //project.logger.lifecycle("Signing artifacts...")
+    sign publishing.publications.maven
+  } else {
+    project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
+  }
 }
 
 nexusReleasePlugin {
-    userName = project.ext.properties.sonatypeUsername
-    password = project.ext.properties.sonatypePassword
-    mavenPublication = publishing.publications.maven
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
 }
