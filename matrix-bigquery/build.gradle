@@ -3,7 +3,6 @@ plugins {
   id 'java-library'
   id 'signing'
   id 'maven-publish'
-  // id("se.alipsa.nexus-release-plugin") version "1.0.1"
   id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
@@ -33,15 +32,9 @@ repositories {
 }
 
 dependencies {
-  //if (version.endsWith('SNAPSHOT')) {
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
-  /*} else {
-      compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
-      testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
-      testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
-  }*/
   compileOnly libs.groovy
 
   api('com.google.cloud:google-cloud-bigquery:2.55.3')
@@ -51,10 +44,14 @@ dependencies {
   implementation('com.google.cloud:google-cloud-bigquerystorage:3.17.3')
   implementation 'me.tongfei:progressbar:0.10.1'
 
+  // https://mvnrepository.com/artifact/org.testcontainers/gcloud
+  testImplementation 'org.testcontainers:gcloud:1.21.3'
+  testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
   testImplementation libs.groovy
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
   testRuntimeOnly testLibs.junitPlatformLauncher
+  testRuntimeOnly testLibs.log4jToSlf4j
 }
 
 test {
