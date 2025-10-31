@@ -236,6 +236,13 @@ class MatrixParquetWriter {
         if (precision <= 0) {
           precision = 10 // Fallback to a default precision
         }
+        // Add safeguards for invalid scale: must be non-negative and not greater than precision
+        if (scale < 0) {
+          scale = 0 // Fallback to a default scale
+        }
+        if (scale > precision) {
+          scale = precision // Clamp scale to precision
+        }
 
         return Types.optional(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
             .length(minBytesForPrecision(precision))
