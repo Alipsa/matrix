@@ -38,7 +38,7 @@ class MatrixParquetWriter {
     if (inferPrecisionAndScale) {
       schema = buildSchema(matrix,true)
     } else {
-      schema = buildSchema(matrix,false)
+      schema = buildSchema(matrix, false)
     }
     //println "Write, inferPrecisionAndScale = $inferPrecisionAndScale, schema = $schema"
     File file = determineTargetFile(matrix, fileOrDir)
