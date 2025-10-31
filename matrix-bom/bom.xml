@@ -33,14 +33,14 @@
     <maven.compiler.release>21</maven.compiler.release>
 
     <matrixAvroVersion>0.0.1-SNAPSHOT</matrixAvroVersion>
-    <matrixBigQueryVersion>0.4.1-SNAPSHOT</matrixBigQueryVersion>
+    <matrixBigQueryVersion>0.5.0-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>0.3.2-SNAPSHOT</matrixChartsVersion>
     <matrixCoreVersion>3.5.1-SNAPSHOT</matrixCoreVersion>
     <matrixCsvVersion>2.2.2-SNAPSHOT</matrixCsvVersion>
     <matrixDatasetsVersion>2.1.2-SNAPSHOT</matrixDatasetsVersion>
     <matrixGsheetsVersion>0.1.0-SNAPSHOT</matrixGsheetsVersion>
     <matrixJsonVersion>2.1.2-SNAPSHOT</matrixJsonVersion>
-    <matrixParquetVersion>0.3.1-SNAPSHOT</matrixParquetVersion>
+    <matrixParquetVersion>0.4.0-SNAPSHOT</matrixParquetVersion>
     <matrixSpreadsheetVersion>2.2.2-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.2.0</matrixSqlVersion>
     <matrixStatsVersion>2.2.1-SNAPSHOT</matrixStatsVersion>

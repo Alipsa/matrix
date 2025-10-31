@@ -22,7 +22,7 @@ class TypeMapper {
   static StandardSQLTypeName toStandardSqlType(Class cls) {
     switch (cls) {
       case BigDecimal -> StandardSQLTypeName.BIGNUMERIC
-      case BigInteger, Integer, Long -> StandardSQLTypeName.INT64
+      case BigInteger, Integer, Long, Short -> StandardSQLTypeName.INT64
       case Boolean -> StandardSQLTypeName.BOOL
       case Byte -> StandardSQLTypeName.INT64
       case Byte[], byte[] -> StandardSQLTypeName.BYTES

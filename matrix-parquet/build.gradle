@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.3.1-SNAPSHOT'
+version = '0.4.0-SNAPSHOT'
 description = "Groovy library for importing and exporting parquet files to and from a Matrix"
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
@@ -45,7 +45,6 @@ dependencies {
         testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
     }*/
     implementation 'org.apache.ivy:ivy:2.5.3'
-    //implementation 'com.jerolba:carpet-record:0.4.0' //must be loaded by Grab for now
     implementation 'org.apache.parquet:parquet-column:1.16.0'
     implementation 'org.apache.parquet:parquet-hadoop:1.16.0'
     implementation('org.apache.hadoop:hadoop-common:3.4.2') {
@@ -57,12 +56,11 @@ dependencies {
         exclude group: 'io.netty'                   // ✅ Netty
         exclude group: 'com.squareup.okhttp3'       // optional, sometimes pulled transitively
     }
-    implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.4.2'
+  implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.4.2'
     testImplementation testLibs.junitJupiterApi
     testRuntimeOnly testLibs.junitJupiterEngine
     testRuntimeOnly testLibs.junitPlatformLauncher
     testImplementation libs.groovy
-    testImplementation testLibs.slf4jSimple
     testImplementation testLibs.log4jToSlf4j
 }
 

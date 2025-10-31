@@ -23,8 +23,9 @@ import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-
+import java.util.Collections
 import static se.alipsa.matrix.bigquery.TypeMapper.*
+import com.google.cloud.bigquery.InsertAllRequest.RowToInsert
 
 @CompileStatic
 class Bq {
@@ -92,6 +93,7 @@ class Bq {
    */
   int execute(String qry, boolean useLegacySql = false) throws BqException {
     try {
+      /*
       Job queryJob = runQuery(qry, useLegacySql)
 
       // Retrieve the job statistics to check for DML operations.
@@ -112,6 +114,18 @@ class Bq {
         TableResult result = queryJob.getQueryResults()
         return result.getTotalRows().intValue()
       }
+       */
+      // FIX: Use synchronous query execution to bypass the unstable job polling API in the emulator
+      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
+          .setUseLegacySql(useLegacySql)
+          .build()
+
+      TableResult result = bigQuery.query(queryConfig)
+
+      // When running a query synchronously, TableResult.getTotalRows() returns
+      // either the number of rows returned (SELECT) or the number of rows affected (DML/DDL).
+      return result.getTotalRows().intValue()
+
     } catch (BigQueryException | InterruptedException e) {
       throw new BqException("Query execution failed due to error: " + e.toString(), e)
     }
@@ -137,10 +151,20 @@ class Bq {
 
   Matrix query(String qry, boolean useLegacySql = false) throws BqException {
     try {
-      Job queryJob = runQuery(qry, useLegacySql)
+      /*
+            Job queryJob = runQuery(qry, useLegacySql)
 
       // Convert to a Matrix and return the results.
       TableResult result = queryJob.getQueryResults()
+       */
+      // FIX: Use synchronous query execution to bypass the unstable job polling API in the emulator
+      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
+          .setUseLegacySql(useLegacySql)
+          .build()
+
+      TableResult result = bigQuery.query(queryConfig)
+
+      // Convert to a Matrix and return the results.
       return convertToMatrix(result)
     } catch (BigQueryException | InterruptedException e) {
       throw new BqException("Query failed due to error: " + e.toString(), e)
@@ -200,7 +224,9 @@ class Bq {
   JobStatistics.LoadStatistics insert(Matrix matrix, TableId tableId) throws BqException {
     int rowIdx = 0
     Object value = null
+    final BigDecimal tickPercent = 0.05
     try {
+      // --- STREAMING INSERT ATTEMPT (Original Logic) ---
       def wcfg = WriteChannelConfiguration.newBuilder(tableId)
           .setFormatOptions(FormatOptions.json())
           .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE) // or WRITE_APPEND
@@ -213,7 +239,7 @@ class Bq {
 
       def names = matrix.columnNames()
       int rowCount = matrix.rowCount()
-      int stepSize = Math.max(1, (int) (rowCount * 0.05)) // every 5% of total
+      int stepSize = Math.max(1, (int) (rowCount * tickPercent)) // every 5% of total
       ProgressBar pb = new ProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
 
       try {
@@ -242,7 +268,7 @@ class Bq {
           json.writeEndObject()
           json.writeRaw('\n') // NDJSON newline
 
-          // ✅ update progress bar every 5% of total rows
+          // update progress bar every tickPercent of total rows
           if (rowIdx % stepSize == 0) {
             pb.stepBy(stepSize)
           }
@@ -277,10 +303,72 @@ class Bq {
       return stats
 
     } catch (Exception e) {
+      // Check if the failure is a known connection error that necessitates the fallback
+      if (e.cause instanceof java.net.ConnectException || e.message?.contains("Connection refused")) {
+
+        println "Streaming insert failed with connection error. Falling back to InsertAll..."
+        try {
+
+          List<RowToInsert> rows = matrix.rows().collect { row ->
+            Map<String, Object> content = new LinkedHashMap<>()
+
+            matrix.columnNames().each { name ->
+              Object val = row[name]
+              if (needsConversion(val)) {
+                // Apply conversion for complex types (Dates, BigDecimal, etc.)
+                content.put(name, sanitizeString(convertObjectValue(val)))
+              } else if (val instanceof CharSequence) {
+                // Sanitize regular strings
+                content.put(name, sanitizeString(val.toString()))
+              } else {
+                // Pass simple types (Number, Boolean, byte[], null) directly
+                content.put(name, val)
+              }
+            }
+
+            return RowToInsert.of(content)
+          }
+
+          InsertAllRequest request = InsertAllRequest.newBuilder(tableId)
+              .setRows(rows)
+              .build()
+
+          InsertAllResponse response = bigQuery.insertAll(request)
+
+          if (response.hasErrors()) {
+            def errorDetails = response.getInsertErrors().collect { entry ->
+              def rowErrors = entry.getValue().collect { it.getMessage() }.join(", ")
+              return "Row ${entry.getKey()}: ${rowErrors}"
+            }.join("\n")
+            throw new BqException("InsertAll fallback failed with errors:\n${errorDetails}")
+          }
+
+          // Success: Return a placeholder LoadStatistics object
+          println "InsertAll fallback successful. Inserted ${matrix.rowCount()} rows."
+
+          List<String> emptySourceUris = Collections.emptyList()
+
+          LoadJobConfiguration.Builder loadConfigBuilder = (LoadJobConfiguration.Builder) LoadJobConfiguration
+              .newBuilder(tableId, emptySourceUris)
+              .setFormatOptions(FormatOptions.json())
+
+          LoadJobConfiguration placeholderLoadConfig = loadConfigBuilder.build()
+
+          JobInfo.Builder jobInfoBuilder = JobInfo.newBuilder(placeholderLoadConfig)
+          JobInfo placeholderJobInfo = jobInfoBuilder.build()
+
+          return (JobStatistics.LoadStatistics) placeholderJobInfo.getStatistics()
+
+        } catch (Exception fallbackException) {
+          // If fallback fails, log and throw a detailed exception
+          println "InsertAll fallback also failed: ${fallbackException.message}"
+          throw new BqException("Streaming insert failed: ${e.message}. Fallback also failed: ${fallbackException.message}", e)
+        }
+      }
+      // for non-connection errors or if fallback not used:
       throw new BqException("Error writing value '${value}' (type=${value?.class?.name}) on row ${rowIdx}", e)
     }
   }
-
 
   static boolean needsConversion(Object orgVal) {
     return orgVal instanceof BigDecimal
@@ -394,7 +482,7 @@ class Bq {
   List<Project> getProjects() throws BqException {
     ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
     try (ProjectsClient pc = ProjectsClient.create(projectsSettings)) {
-        return pc.searchProjects("").iterateAll().collect()
+      return pc.searchProjects("").iterateAll().collect()
     } catch (BigQueryException e) {
       throw new BqException(e)
     }

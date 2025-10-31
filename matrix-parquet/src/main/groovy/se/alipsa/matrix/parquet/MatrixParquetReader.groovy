@@ -33,7 +33,7 @@ class MatrixParquetReader {
     def keyValueMetaData = footer.getFileMetaData().getKeyValueMetaData()
     def typeString = keyValueMetaData.get("matrix.columnTypes")
 
-    println("typeString: $typeString")
+    //println("typeString: $typeString")
     List<Class> fieldTypes
     if (typeString != null) {
       fieldTypes = parseTypeString(typeString)
