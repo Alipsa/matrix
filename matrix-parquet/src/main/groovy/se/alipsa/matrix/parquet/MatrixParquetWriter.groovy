@@ -74,7 +74,7 @@ class MatrixParquetWriter {
    * This allows for precise control over how BigDecimal values are stored.
    * Note that precision affects storage but not the precision and
    * scale of the BigDecimal values themselves. This means that if the precision is too small to hold a value,
-   * en exception will be thrown during writing. BigDecimal automatically adjust precision and scale. E.g.
+   * an exception will be thrown during writing. BigDecimal automatically adjust precision and scale. E.g.
    * if you specified precision as 5 and scale as two and then retrieve a value of 12.1
    * the precision of that value will be 3 and scale 1. Example usage:
    * <code><pre>
