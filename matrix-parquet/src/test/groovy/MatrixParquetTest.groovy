@@ -17,11 +17,16 @@ class MatrixParquetTest {
   @Test
   void testMatrixParquetCars() {
     Matrix data = Dataset.cars().withMatrixName('cars')
-    File file = new File("build/cars.parquet")
-    if (file.exists()) {
-      file.delete() // Ensure we start with a clean slate
+    File dir = new File("build/cars")
+    if (dir.exists()) {
+      if (dir.isDirectory()) {
+        dir.listFiles().each {it.delete()}
+      }
+      dir.delete() // Ensure we start with a clean slate
     }
-    MatrixParquetWriter.write(data, file)
+    dir.mkdirs()
+    MatrixParquetWriter.write(data, dir)
+    File file = new File(dir, "cars.parquet")
     assert file.exists() : "Parquet file was not created: ${file.absolutePath}"
     def matrix = MatrixParquetReader.read(file)
     //println matrix.content()

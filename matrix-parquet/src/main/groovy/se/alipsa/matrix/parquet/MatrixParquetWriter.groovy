@@ -1,13 +1,11 @@
 package se.alipsa.matrix.parquet
 
+import groovy.transform.CompileStatic
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
-import org.apache.parquet.example.data.Group
 import org.apache.parquet.example.data.simple.SimpleGroupFactory
 import org.apache.parquet.hadoop.ParquetFileWriter
-import org.apache.parquet.hadoop.ParquetWriter
 import org.apache.parquet.hadoop.example.ExampleParquetWriter
-import org.apache.parquet.hadoop.example.GroupWriteSupport
 import org.apache.parquet.io.api.Binary
 import org.apache.parquet.schema.LogicalTypeAnnotation
 import org.apache.parquet.schema.MessageType
@@ -23,13 +21,29 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 
+@CompileStatic
 class MatrixParquetWriter {
 
-  static void write(Matrix matrix, File file, boolean inferPrecisionAndScale = false) {
+  /**
+   *
+   * @param matrix the matrix to write
+   * @param fileOrDir the target file or directory. If directory the file name will be based on the matrix name.
+   * @param inferPrecisionAndScale
+   * @return the target file
+   */
+  static File write(Matrix matrix, File fileOrDir, boolean inferPrecisionAndScale = false) {
     def schema = buildSchema(matrix, inferPrecisionAndScale)
     def conf = new Configuration()
     def extraMeta = new HashMap<String, String>()
     extraMeta.put("matrix.columnTypes", matrix.types().collect { it.name }.join(','))
+    String name = matrix.matrixName ?: 'matrix'
+    File file
+    if (fileOrDir.isDirectory()) {
+      file = new File(fileOrDir, "${name}.parquet")
+      println "Writing to ${file.absolutePath}"
+    } else {
+      file = fileOrDir
+    }
 
     def writer = ExampleParquetWriter.builder(new Path(file.toURI()))
         .withConf(conf)
@@ -76,11 +90,11 @@ class MatrixParquetWriter {
               }
             }
             case Boolean, boolean -> group.append(col, (boolean)value)
-            case LocalDate -> group.append(col, (int) value.toEpochDay())
-            case java.sql.Date -> group.append(col, (int) value.toLocalDate().toEpochDay())
-            case Time -> group.append(col, (int) value.toLocalTime().toSecondOfDay())
+            case LocalDate -> group.append(col, ((LocalDate)value).toEpochDay().intValue())
+            case java.sql.Date -> group.append(col, ((java.sql.Date)value).toLocalDate().toEpochDay().intValue())
+            case Time -> group.append(col, ((Time)value).toLocalTime().toSecondOfDay())
             case LocalDateTime -> {
-              def micros = value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() * 1000
+              def micros = ((LocalDateTime)value).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() * 1000
               group.append(col, (long) micros)
             }
             case Date -> group.append(col, ((Date)value).time)
@@ -92,6 +106,7 @@ class MatrixParquetWriter {
     }
 
     writer.close()
+    return file
   }
 
   static MessageType buildSchema(Matrix matrix, boolean inferPrecisionAndScale = false) {
@@ -146,7 +161,7 @@ class MatrixParquetWriter {
       }
       case Time -> {
         primitive = PrimitiveTypeName.INT32
-        logical = LogicalTypeAnnotation.timeType(true, LogicalTypeAnnotation.TimeUnit.SECONDS)
+        logical = LogicalTypeAnnotation.timeType(true, LogicalTypeAnnotation.TimeUnit.MILLIS)
       }
       default -> primitive = PrimitiveTypeName.BINARY
     }
@@ -180,7 +195,8 @@ class MatrixParquetWriter {
 
   static int minBytesForPrecision(int precision) {
     // According to the Parquet spec
-    return (Math.ceil((Math.log(Math.pow(10, precision)) / Math.log(2) + 1) / 8) as int)
+    def t = (Math.log(Math.pow(10, precision)) / Math.log(2) + 1) as double
+    return Math.ceil( t / 8d) as int
   }
 }
 
