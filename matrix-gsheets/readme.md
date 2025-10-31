@@ -43,7 +43,7 @@ GsUtil.deleteSheet(spreadsheetId)
 
 ### handling date types
 The Google API is a bit primitive in terms of available meta data. One such thing is handling date types.
-Although it is possible to convert a date to a serial number, when downloading the sheet, there is now
+Although it is possible to convert a date to a serial number, when downloading the sheet, there is no
 way to distinguish that from an ordinary number. Hence, the gsheets converts date, time, timestamp etc 
 to strings when exporting it. This allows for simple conversion back to a date type after downloading the 
 sheet as seen above. However, if you want to handle dates and times as "real" date types (serials), 
