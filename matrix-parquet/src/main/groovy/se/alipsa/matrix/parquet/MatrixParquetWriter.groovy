@@ -48,8 +48,8 @@ class MatrixParquetWriter {
 
   /**
    * Writes a Matrix to a Parquet file using uniform decimal precision
-   * and scale for all BigDecimal columns. This is useful if you dont
-   * want to infer precision/scale but also dont want to store them as double
+   * and scale for all BigDecimal columns. This is useful if you don't
+   * want to infer precision/scale but also don't want to store them as double
    * so you can set the precision and scale to "something big" so there will be no
    * loss of precision.
    *
