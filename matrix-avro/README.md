@@ -1,7 +1,8 @@
 # matrix-avro
 
-Avro read/write support for [Matrix](https://github.com/Alipsa/matrix).  
-This module lets you round-trip data between Avro Object Container Files (`*.avro`) and `se.alipsa.matrix.core.Matrix`, including Avro logical types, and collections (arrays, maps, and record-like structures).
+[Avro](https://avro.apache.org/) read/write support for [Matrix](https://github.com/Alipsa/matrix).  
+This module lets you round-trip data between Avro Object Container Files (`*.avro`) and `se.alipsa.matrix.core.Matrix`, 
+including Avro logical types, and collections (arrays, maps, and record-like structures).
 
 ## Features
 
