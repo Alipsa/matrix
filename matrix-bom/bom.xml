@@ -33,7 +33,7 @@
     <maven.compiler.release>21</maven.compiler.release>
 
     <matrixAvroVersion>0.0.1-SNAPSHOT</matrixAvroVersion>
-    <matrixBigQueryVersion>0.4.1-SNAPSHOT</matrixBigQueryVersion>
+    <matrixBigQueryVersion>0.5.0-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>0.3.2-SNAPSHOT</matrixChartsVersion>
     <matrixCoreVersion>3.5.1-SNAPSHOT</matrixCoreVersion>
     <matrixCsvVersion>2.2.2-SNAPSHOT</matrixCsvVersion>

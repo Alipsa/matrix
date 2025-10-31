@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.4.1-SNAPSHOT'
+version = '0.5.0-SNAPSHOT'
 description = "Groovy library for importing and exporting to and from Google BigQuery to a Matrix"
 
 ext.releaseNexusUrl = version.toString().endsWith("SNAPSHOT")

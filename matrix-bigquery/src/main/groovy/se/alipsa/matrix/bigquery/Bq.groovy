@@ -311,9 +311,21 @@ class Bq {
 
           List<RowToInsert> rows = matrix.rows().collect { row ->
             Map<String, Object> content = new LinkedHashMap<>()
+
             matrix.columnNames().each { name ->
-              content.put(name, row[name])
+              Object val = row[name]
+              if (needsConversion(val)) {
+                // Apply conversion for complex types (Dates, BigDecimal, etc.)
+                content.put(name, sanitizeString(convertObjectValue(val)))
+              } else if (val instanceof CharSequence) {
+                // Sanitize regular strings
+                content.put(name, sanitizeString(val.toString()))
+              } else {
+                // Pass simple types (Number, Boolean, byte[], null) directly
+                content.put(name, val)
+              }
             }
+
             return RowToInsert.of(content)
           }
 
@@ -334,7 +346,6 @@ class Bq {
           // Success: Return a placeholder LoadStatistics object
           println "InsertAll fallback successful. Inserted ${matrix.rowCount()} rows."
 
-          // FIX: Corrected LoadJobConfiguration builder pattern with explicit casts
           List<String> emptySourceUris = Collections.emptyList()
 
           LoadJobConfiguration.Builder loadConfigBuilder = (LoadJobConfiguration.Builder) LoadJobConfiguration

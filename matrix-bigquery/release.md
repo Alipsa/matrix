@@ -1,6 +1,6 @@
 # Matrix-bigquery Release History
 
-## v0.4.1, In progress
+## v0.5.0, In progress
 - com.google.auth:google-auth-library-bom [1.38.0 -> 1.40.0]
 - com.google.auth:google-auth-library-oauth2-http [1.39.0 -> 1.40.0]
 - com.google.cloud:google-cloud-bigquery [2.54.2 -> 2.55.3]
@@ -8,6 +8,10 @@
 - com.google.cloud:google-cloud-resourcemanager [1.75.0 -> 1.80.0]
 - add execute method to Bq to allow for execution of update, delete or insert queries
 - add progress bar when inserting data
+- Added a fallback to InsertAll for BigQuery data insertion in Bq.groovy when streaming inserts fail due to connection errors, ensuring more robust handling with the emulator and production environments. 
+- Changed query execution in Bq.groovy to use synchronous queries instead of job polling, improving reliability with the BigQuery emulator. 
+- Added new test coverage using Testcontainers and the BigQuery emulator, including detailed configuration for reliable integration testing in BqTestContainerTest.groovy. 
+- Map Short type to INT64 in the SQL type mapper for better type compatibility with BigQuery.
 
 ## v0.4.0, 2025-09-06
 - Change saveToBigQuery to use the BigQuery Write API instead of the older
