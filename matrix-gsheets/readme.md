@@ -74,7 +74,7 @@ m.convert('emp_id': Integer,
 ```
 
 ### handling null values
-The google api has the unfortunate feature to skipp null values.
+The google api has the unfortunate feature to skip null values.
 This mean that if a cell has a null value, the returning row will be one 
 element shorter. There is no way to know which column that was so the only thing we can 
 do is to fill the remaining columns with null in the end which would be quit cumbersome to handle. 
