@@ -13,7 +13,6 @@ import se.alipsa.matrix.csv.CsvImporter
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.json.JsonExporter
 import se.alipsa.matrix.json.JsonImporter
-import se.alipsa.matrix.parquet.MatrixParquetIO
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.parquet.MatrixParquetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
@@ -24,7 +23,6 @@ import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.xchart.PieChart
 
 import java.nio.charset.StandardCharsets
-import java.time.format.TextStyle
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -135,17 +133,12 @@ class MatrixModulesTest {
   void testParquet() {
     Matrix data = Dataset.mtcars()
     File file = new File("target/mtcars.parquet")
-    MatrixParquetIO.write(data, file, [precision: 6, scale: 3])
-
-    Matrix d2 = MatrixParquetIO.read(file, 'mtcars')
-    Assertions.assertEquals(data, d2)
-
-    file.delete()
     MatrixParquetWriter.write(data, file)
-    Matrix d3 = MatrixParquetReader.read(file)
-    Assertions.assertEquals(data, d3, "Data read from Parquet file does not match original data")
-    Assertions.assertEquals(data.types(), d3.types(),
-        "Types read from Parquet file do not match expected types")
+
+    Matrix d2 = MatrixParquetReader.read(file, 'mtcars')
+    Assertions.assertEquals(data, d2, "Data read from Parquet file does not match original data")
+    Assertions.assertEquals(data.types(), d2.types(), "Types read from Parquet file do not match expected types")
+    file.delete()
   }
 
   @Test

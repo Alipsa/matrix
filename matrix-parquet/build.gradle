@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.3.1-SNAPSHOT'
+version = '0.4.0-SNAPSHOT'
 description = "Groovy library for importing and exporting parquet files to and from a Matrix"
 
 ext.nexusUrl = version.toString().endsWith("SNAPSHOT")
