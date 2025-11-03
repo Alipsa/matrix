@@ -2,6 +2,7 @@
 
 ### 3.5.1, in progress
 - deprecate renameColumn and dropColumns in favor of rename and drop
+- regard an empty string as null in ValueConverter (except for asString)
 
 ### 3.5.0, 2025-09-06
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.5.0/matrix-core-3.5.0.jar)

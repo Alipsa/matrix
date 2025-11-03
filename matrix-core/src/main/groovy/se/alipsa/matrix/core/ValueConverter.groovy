@@ -100,7 +100,7 @@ class ValueConverter {
   }
 
   static BigDecimal asBigDecimal(Object num, NumberFormat format = null) {
-    if (num == null) {
+    if (num == null || '' == num) {
       return null
     }
     if (num instanceof BigDecimal) {
@@ -123,7 +123,7 @@ class ValueConverter {
   }
 
   static Boolean asBoolean(Object obj) {
-    if (obj == null) return null
+    if (obj == null || '' == obj) return null
     if (obj instanceof Boolean) return obj as Boolean
     if (obj instanceof Number) return 1 == (obj as Number)
     return asBoolean(String.valueOf(obj))
@@ -153,7 +153,7 @@ class ValueConverter {
   }
 
   static Double asDouble(Object obj, NumberFormat format = null, Double valueIfNull = null) {
-    if (obj == null) return valueIfNull
+    if (obj == null || '' == obj) return valueIfNull
     if (obj instanceof Number) return asDouble(obj as Number)
     if (obj instanceof String) return asDouble(obj as String, format)
     return asDouble(String.valueOf(obj), format)
@@ -166,7 +166,7 @@ class ValueConverter {
   }
 
   static LocalDate asLocalDate(String date, String pattern, LocalDate valueIfNull = null, Locale locale = Locale.default) {
-    if (date == null || date == 'null') return valueIfNull
+    if (date == null || date == 'null' || '' == date) return valueIfNull
     try {
       if (pattern == null) return asLocalDate(date, valueIfNull)
       if (locale == null) return LocalDate.parse(date, dateTimeFormatter(pattern))
@@ -190,7 +190,7 @@ class ValueConverter {
   }
 
   static LocalDate asLocalDate(Object date, DateTimeFormatter formatter = null, LocalDate valueIfNull = null) {
-    if (date == null) return valueIfNull
+    if (date == null || '' == date) return valueIfNull
     if (date instanceof LocalDate) {
       return date
     }
@@ -214,7 +214,7 @@ class ValueConverter {
   }
 
   static LocalDateTime asLocalDateTime(Object o, DateTimeFormatter dateTimeFormatter = null, LocalDateTime valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof LocalDate) return o.atStartOfDay()
     if (o instanceof LocalDateTime) return o
     if (o instanceof Date) return new Timestamp(o.getTime()).toLocalDateTime()
@@ -235,7 +235,7 @@ class ValueConverter {
   }
 
   static Byte asByte(Object o, Byte valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof Number) return o.byteValue()
     try {
       return (o as BigDecimal).byteValue()
@@ -247,7 +247,7 @@ class ValueConverter {
   }
 
   static Short asShort(Object o, Short valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof Number) return o.shortValue()
     try {
       return (o as BigDecimal).shortValue()
@@ -259,7 +259,7 @@ class ValueConverter {
   }
 
   static Integer asInteger(Object o, Integer valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof Number) {
       return o.intValue()
     } else if (o instanceof Boolean) {
@@ -277,7 +277,7 @@ class ValueConverter {
   }
 
   static Integer asIntegerRound(Object o, Integer valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof Number) {
       return Math.round(o.doubleValue()).intValue()
     }
@@ -288,7 +288,7 @@ class ValueConverter {
   }
 
   static BigInteger asBigInteger(Object o, BigInteger valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof Number) return o.toBigInteger()
     String val = String.valueOf(o)
     if (val.isBlank()) return null
@@ -329,7 +329,7 @@ class ValueConverter {
   }
 
   static YearMonth asYearMonth(Object o, YearMonth valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof TemporalAccessor) {
       return YearMonth.from(o as TemporalAccessor)
     }
@@ -354,6 +354,7 @@ class ValueConverter {
   }
 
   static YearMonth asYearMonth(Object o, DateTimeFormatter formatter, YearMonth valueIfNull = null) {
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof CharSequence) {
       return YearMonth.from(formatter.parse(o as String))
     }
@@ -371,7 +372,7 @@ class ValueConverter {
   }
 
   static Float asFloat(Object o, Float valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof Number) {
       return o.toFloat()
     }
@@ -379,7 +380,7 @@ class ValueConverter {
   }
 
   static Long asLong(Object o, Long valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof Number) {
       return o.longValue()
     }
@@ -387,12 +388,12 @@ class ValueConverter {
   }
 
   static java.util.Date asDate(java.util.Date o, java.util.Date valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     return o as java.util.Date
   }
 
   static java.util.Date asDate(Number o, java.util.Date valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o < 22991231) {
       return new Date(simpleDateFormatCache('yyyyMMdd').parse(String.valueOf(o.longValue())).getTime())
     }
@@ -412,7 +413,7 @@ class ValueConverter {
 
 
   static java.util.Date asDate(Object o, java.util.Date valueIfNull = null, Locale locale = Locale.default) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof TemporalAccessor) {
       if (o instanceof LocalDate) {
         return asDate(o as LocalDate)
@@ -454,7 +455,7 @@ class ValueConverter {
   }
 
   static Timestamp asTimestamp(Object o, Timestamp valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof Timestamp) {
       return o
     }
@@ -477,7 +478,7 @@ class ValueConverter {
   }
 
   static Date asSqlDate(Object o, Date valueIfNull = null) {
-    if (o == null) return valueIfNull
+    if (o == null || '' == o) return valueIfNull
     if (o instanceof Date) {
       return o
     }
@@ -519,7 +520,7 @@ class ValueConverter {
   }
 
   static Time asSqlTIme(Object o, Time valueIfNull = null) {
-    if (o == null) {
+    if (o == null || '' == o) {
       return valueIfNull
     }
     if (o instanceof Time) {
@@ -532,7 +533,7 @@ class ValueConverter {
   }
 
   static LocalTime asLocalTime(Object o, LocalTime valueIfNull = null) {
-    if (o == null) {
+    if (o == null || '' == o) {
       return valueIfNull
     }
     if (o instanceof LocalTime) {
@@ -545,7 +546,7 @@ class ValueConverter {
   }
 
   static Number asNumber(Object o, Number valueIfNull = null) {
-    if (o == null) {
+    if (o == null || '' == o) {
       return valueIfNull
     }
     if (o instanceof Number) {
@@ -564,7 +565,7 @@ class ValueConverter {
 
   static ZonedDateTime asZonedDateTime(Object o, DateTimeFormatter dateTimeFormatter, ZoneId zoneId = ZoneId.systemDefault()) {
     //println "asZonedDateTime: o=$o, type=${o?.class}, zoneId=$zoneId"
-    if (o == null) return null
+    if (o == null || '' == o) return null
     if (o instanceof ZonedDateTime) return o
     if (o instanceof Instant) return ZonedDateTime.ofInstant(o as Instant, zoneId)
     if (o instanceof LocalDateTime) return (o as LocalDateTime).atZone(zoneId)
