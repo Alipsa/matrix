@@ -17,6 +17,9 @@ import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_PRECIS
 import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getDECIMAL_SCALE
 import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getVARCHAR_SIZE
 
+/**
+ * Utility class for creating tables and inserting data from Matrix objects into a database.
+ */
 // dynamic use of getAt extensions prevents this from being compiled statically
 // @CompileStatic
 class MatrixDbUtil {
@@ -38,10 +41,11 @@ class MatrixDbUtil {
    * @param table the table to copy to the db
    * @param props a map containing the column name and a map containing sizing information using the SqlTypeMapper
    * constants as key and the size as value
+   * @param addQuotes whether to add quotes around column names
    * @param primaryKey name(s) of the primary key columns
    */
-  Map create(Connection con, Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
-    create(tableName(table), con, table, props, primaryKey)
+  Map create(Connection con, Matrix table, Map<String, Map<String, Integer>> props, boolean addQuotes = true, String... primaryKey) throws SQLException {
+    create(tableName(table), con, table, props, addQuotes, primaryKey)
   }
 
   /**
@@ -50,12 +54,13 @@ class MatrixDbUtil {
    * @param table the table to copy to the db
    * @param props a map containing the column name and a map containing sizing information using the SqlTypeMapper
    * constants as key and the size as value
+   * @param addQuotes whether to add quotes around column names
    * @param primaryKey name(s) of the primary key columns
    */
-  Map create(String tableName, Connection con, Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) throws SQLException {
+  Map create(String tableName, Connection con, Matrix table, Map<String, Map<String, Integer>> props, boolean addQuotes = true, String... primaryKey) throws SQLException {
     Map result = [:]
 
-    String sql = createTableDdl(tableName, table, props, primaryKey)
+    String sql = createTableDdl(tableName, table, props, addQuotes, primaryKey)
     result.sql = sql
     try(Statement stm = con.createStatement()) {
       if (tableExists(con, tableName)) {
@@ -76,7 +81,17 @@ class MatrixDbUtil {
     result
   }
 
-  String createTableDdl(String tableName, Matrix table, Map<String, Map<String, Integer>> props, String... primaryKey) {
+  /**
+   * Create a create table ddl statement for the given table.
+   *
+   * @param tableName the name of the table to create
+   * @param table the table to create
+   * @param props a map containing the column name and a map containing sizing information using the SqlTypeMapper
+   * @param addQuotes whether to add quotes around column names
+   * @param primaryKey name(s) of the primary key columns
+   * @return the create table ddl statement
+   */
+  String createTableDdl(String tableName, Matrix table, Map<String, Map<String, Integer>> props, boolean addQuotes, String... primaryKey) {
     String sql = "create table $tableName (\n"
 
     List<String> columns = new ArrayList<>()
@@ -84,8 +99,11 @@ class MatrixDbUtil {
     List<Class> types = table.types()
     for (String name : table.columnNames()) {
       Class type = types.get(i++)
-      String column = "\"" + name + "\" " + mapper.sqlType(type, props[name])
-      columns.add(column)
+      if (addQuotes) {
+        columns.add("\"" + name + "\" " + mapper.sqlType(type, props[name]))
+      } else {
+        columns.add(name + " " + mapper.sqlType(type, props[name]))
+      }
     }
     sql += String.join(",\n", columns)
     if (primaryKey.length > 0) {
@@ -95,16 +113,47 @@ class MatrixDbUtil {
     sql
   }
 
-  Map create(Connection con, Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
+  /**
+   * create table and insert the table data.
+   *
+   * @param con the db connection
+   * @param table the table to copy to the db
+   * @param scanNumRows number of rows to scan for sizing information
+   * @param addQuotes whether to add quotes around column names
+   * @param primaryKey name(s) of the primary key columns
+   * @return a map with information about the created table and inserted data
+   * @throws SQLException if any sql error occurs
+   */
+  Map create(Connection con, Matrix table, int scanNumRows, boolean addQuotes, String... primaryKey) throws SQLException {
     Map<String,Map<String, Integer>> mappings = createMappings(table, scanNumRows)
-    return create(con, table, mappings, primaryKey)
+    return create(con, table, mappings, addQuotes, primaryKey)
   }
 
-  Map create(String tableName, Connection con, Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
+  /**
+   * create table and insert the table data.
+   *
+   * @param tableName The name of the table to create
+   * @param con the db connection
+   * @param table the table to copy to the db
+   * @param scanNumRows number of rows to scan for sizing information
+   * @param addQuotes whether to add quotes around column names
+   * @param primaryKey name(s) of the primary key columns
+   * @return a map with information about the created table and inserted data
+   * @throws SQLException if any sql error occurs
+   */
+  Map create(String tableName, Connection con, Matrix table, int scanNumRows, boolean addQuotes = true, String... primaryKey) throws SQLException {
     Map<String,Map<String, Integer>> mappings = createMappings(table, scanNumRows)
-    return create(tableName, con, table, mappings, primaryKey)
+    return create(tableName, con, table, mappings, addQuotes, primaryKey)
   }
 
+  /**
+   * Create sizing mappings for the given table by scanning the given number of rows.
+   *
+   * @param table the table to create mappings for
+   * @param scanNumRows number of rows to scan for sizing information
+   * @return a map containing the column name and a map containing sizing information using the SqlTypeMapper
+   * constants as key and the size as value
+   */
   Map<String,Map<String, Integer>> createMappings(Matrix table, int scanNumRows) {
     List<Class<?>> types = table.types()
     Map<String, Map<String, Integer>> mappings = [:]
@@ -152,20 +201,43 @@ class MatrixDbUtil {
    *
    * @param connectionInfo the connection info defined in the Connections tab
    * @param table the table to copy to the db
+   * @param addQuotes whether to add quotes around column names
    * @param primaryKey name(s) of the primary key columns
    */
-  Map create(Connection con, Matrix table, String... primaryKey) throws SQLException {
-    return create(con, table, Math.max(100, table.rowCount()), primaryKey)
+  Map create(Connection con, Matrix table, boolean addQuotes = true, String... primaryKey) throws SQLException {
+    return create(con, table, Math.max(100, table.rowCount()), addQuotes, primaryKey)
   }
 
+  /**
+   * Drop the given table from the database.
+   *
+   * @param con the db connection
+   * @param tableName the name of the table to drop
+   * @return the result of the drop operation
+   */
   Object dropTable(Connection con, String tableName) {
     dbExecuteSql(con, "drop table $tableName")
   }
 
+  /**
+   * Drop the given table from the database.
+   *
+   * @param con the db connection
+   * @param table the table to drop
+   * @return the result of the drop operation
+   */
   Object dropTable(Connection con, Matrix table) {
     dropTable(con,  tableName(table))
   }
 
+  /**
+   * Execute the given select query and return the result as a Matrix.
+   *
+   * @param con the db connection
+   * @param sqlQuery the sql select query to execute
+   * @return the result as a Matrix
+   * @throws SQLException if any sql error occurs
+   */
   Matrix select(Connection con, String sqlQuery) throws SQLException {
     try(Statement stm = con.createStatement(); ResultSet rs = stm.executeQuery(sqlQuery)) {
       return Matrix.builder().data(rs).build()
@@ -173,10 +245,26 @@ class MatrixDbUtil {
   }
 
 
+  /**
+   * Check if the given table exists in the database.
+   *
+   * @param con the db connection
+   * @param table the table to check for
+   * @return true if the table exists, false otherwise
+   * @throws SQLException if any sql error occurs
+   */
   boolean tableExists(Connection con, Matrix table) throws SQLException {
     tableExists(con, tableName(table))
   }
 
+  /**
+   * Check if the given table exists in the database.
+   *
+   * @param con the db connection
+   * @param tableName the name of the table to check for
+   * @return true if the table exists, false otherwise
+   * @throws SQLException if any sql error occurs
+   */
   boolean tableExists(Connection con, String tableName) throws SQLException {
     var rs = con.getMetaData().getTables(null, null, null, null)
     while (rs.next()) {
@@ -188,6 +276,13 @@ class MatrixDbUtil {
     return false
   }
 
+  /**
+   * Get the names of all tables in the database.
+   *
+   * @param con the db connection
+   * @return a set of table names
+   * @throws SQLException if any sql error occurs
+   */
   Set<String> getTableNames(Connection con) throws SQLException {
     var rs = con.getMetaData().getTables(null, null, null, null)
     Set<String> names = new HashSet<>()
@@ -197,10 +292,27 @@ class MatrixDbUtil {
     names
   }
 
+  /**
+   * Insert the data from the given table into the given table in the database.
+   *
+   * @param con the db connection
+   * @param table the table containing the data to insert
+   * @return the number of inserted rows
+   * @throws SQLException if any sql error occurs
+   */
   int insert(Connection con, Matrix table) throws SQLException {
     insert(con, tableName(table), table)
   }
 
+  /**
+   * Insert the data from the given table into the given table in the database.
+   *
+   * @param con the db connection
+   * @param tableName the name of the table to insert into
+   * @param table the table containing the data to insert
+   * @return the number of inserted rows
+   * @throws SQLException if any sql error occurs
+   */
   int insert(Connection con, String tableName, Matrix table) throws SQLException {
     String insertSql = SqlGenerator.createPreparedInsertSql(tableName, table)
     try(PreparedStatement stm = con.prepareStatement(insertSql)) {
@@ -217,6 +329,12 @@ class MatrixDbUtil {
     }
   }
 
+  /**
+   * Get a valid table name from the matrix name by replacing invalid characters.
+   *
+   * @param table the matrix to get the table name for
+   * @return a valid table name
+   */
   static String tableName(Matrix table) {
     def name = table.getMatrixName()
     if (name == null || name.isBlank()) {
@@ -227,6 +345,14 @@ class MatrixDbUtil {
         .replace("*", "")
   }
 
+  /**
+   * Execute the given sql statement.
+   *
+   * @param con the db connection
+   * @param sql the sql statement to execute
+   * @return either a Matrix (for select statements) or an Integer (for update counts)
+   * @throws SQLException if any sql error occurs
+   */
   Object dbExecuteSql(Connection con, String sql) throws SQLException {
     try(Statement stm = con.createStatement()) {
       boolean hasResultSet = stm.execute(sql)
@@ -238,6 +364,12 @@ class MatrixDbUtil {
     }
   }
 
+  /**
+   * Convert the given matrix to a ResultSet.
+   *
+   * @param matrix the matrix to convert
+   * @return a ResultSet representing the matrix data
+   */
   static ResultSet asResultSet(Matrix matrix) {
     new MatrixResultSet(matrix)
   }

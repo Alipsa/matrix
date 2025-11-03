@@ -1,6 +1,9 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
+## v2.3.0, in progress
+- add option to control whether column names are quoted when creating a table
+
 ## v2.2.0, 2025-10-25
 - upgrade dependencies
   - commons-io:commons-io [2.19.0 -> 2.20.0]

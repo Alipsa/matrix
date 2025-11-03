@@ -21,7 +21,7 @@ class MatrixDbUtilTest {
     def mapper = SqlTypeMapper.create(ci)
     def util = new MatrixDbUtil(mapper)
     Map mappings = util.createMappings(m, m.rowCount())
-    String ddl = util.createTableDdl(MatrixDbUtil.tableName(m), m, mappings)
+    String ddl = util.createTableDdl(MatrixDbUtil.tableName(m), m, mappings, true)
     // check that LocalDateTime becomes a datetime2 and not a TIMESTAMP
     assertTrue(ddl.contains('"local date time" datetime2'))
   }

@@ -153,9 +153,9 @@ class MatrixSql implements Closeable {
     matrixDbUtil.create(connect(), table, props, primaryKey)
   }
 
-  String createDdl(Matrix table, int... scanNumrows) {
+  String createDdl(Matrix table, boolean addQuotes, int... scanNumrows) {
     Map mappings = matrixDbUtil.createMappings(table, scanNumrows.length > 0 ? scanNumrows[0] : Math.max(100, table.rowCount()))
-    matrixDbUtil.createTableDdl(tableName(table), table, mappings)
+    matrixDbUtil.createTableDdl(tableName(table), table, mappings, addQuotes)
   }
 
   static String tableName(Matrix table) {
