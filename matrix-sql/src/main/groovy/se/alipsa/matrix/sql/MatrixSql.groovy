@@ -13,6 +13,7 @@ import java.lang.reflect.InvocationTargetException
 import java.sql.Connection
 import java.sql.Driver
 import java.sql.PreparedStatement
+import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
 import java.util.concurrent.ExecutionException
@@ -75,6 +76,22 @@ class MatrixSql implements Closeable {
     dbExecuteBatchUpdate(table, matchColumnName)
   }
 
+  /**
+   * Execute the given sql query. The result can be one or more ResultSets
+   * or update counts. The key is the result index (0..n) and the value is either a Matrix
+   * (for ResultSets) or an Integer (for update counts). DDL statements (like CREATE TABLE)
+   * will yield an update count of -1.
+   *
+   * @param sqlQuery the sql query to execute
+   * @return A Map with the result index as key and either a Matrix or an Integer as value
+   * @throws SQLException if a database access error occurs
+   */
+  Map<Integer, Object> execute(String sqlQuery) throws SQLException {
+    try(Statement stm = connect().createStatement()) {
+      return dbExecute(stm, sqlQuery)
+    }
+  }
+
   boolean tableExists(String tableName) throws SQLException {
     return matrixDbUtil.tableExists(connect(), tableName)
   }
@@ -106,12 +123,27 @@ class MatrixSql implements Closeable {
    </ul>
    * @throws SQLException
    */
-  Map create(Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
-    matrixDbUtil.create(connect(), table, scanNumRows, primaryKey)
+  Map create(Matrix table, int scanNumRows, boolean addQuotes = true, String... primaryKey) throws SQLException {
+    matrixDbUtil.create(connect(), table, scanNumRows, addQuotes, primaryKey)
   }
 
-  Map create(String tableName, Matrix table, int scanNumRows, String... primaryKey) throws SQLException {
-    matrixDbUtil.create(tableName, connect(), table, scanNumRows, primaryKey)
+  /**
+   * create a table corresponding to the Matrix and insert the matrix data.
+   *
+   * @param tableName the name of the table to create
+   * @param table the Matrix to copy to the db
+   * @param scanNumRows the number of rows to scan to obtain sizing info
+   * @param primaryKey the primary keys (if any)
+   * @return A Map with the following keys:
+   <ul>
+   <li>sql - the ddl to create the table</li>
+   <li>ddlResult - the result of the ddl query</li>
+   <li>inserted - the number of rows inserted</li>
+   </ul>
+   * @throws SQLException
+   */
+  Map create(String tableName, Matrix table, int scanNumRows, boolean addQuotes = true, String... primaryKey) throws SQLException {
+    matrixDbUtil.create(tableName, connect(), table, scanNumRows, addQuotes, primaryKey)
   }
 
   /**
@@ -131,6 +163,19 @@ class MatrixSql implements Closeable {
     create(table, Math.max(100, table.rowCount()), primaryKey)
   }
 
+  /**
+   * create a table corresponding to the Matrix and insert the matrix data.
+   *
+   * @param tableName the name of the table to create
+   * @param table the table to copy to the db
+   * @param primaryKey name(s) of the primary key columns
+   * @return A Map with the following keys:
+   <ul>
+   <li>sql - the ddl to create the table</li>
+   <li>ddlResult - the result of the ddl query</li>
+   <li>inserted - the number of rows inserted</li>
+   </ul>
+   */
   Map create(String tableName, Matrix table, String... primaryKey) throws SQLException {
     create(tableName, table, Math.max(100, table.rowCount()), primaryKey)
   }
@@ -153,7 +198,7 @@ class MatrixSql implements Closeable {
     matrixDbUtil.create(connect(), table, props, primaryKey)
   }
 
-  String createDdl(Matrix table, boolean addQuotes, int... scanNumrows) {
+  String createDdl(Matrix table, boolean addQuotes = true, int... scanNumrows) {
     Map mappings = matrixDbUtil.createMappings(table, scanNumrows.length > 0 ? scanNumrows[0] : Math.max(100, table.rowCount()))
     matrixDbUtil.createTableDdl(tableName(table), table, mappings, addQuotes)
   }
@@ -197,6 +242,35 @@ class MatrixSql implements Closeable {
     try(Statement stm = connect().createStatement()) {
       return stm.executeUpdate(sql)
     }
+  }
+
+  static Map<Integer, Object> dbExecute(Statement stm, String sqlQuery) throws SQLException {
+    Map<Integer, Object> allResults = [:]
+    int index = 0
+
+    boolean isResultSet = stm.execute(sqlQuery)
+    do {
+      if (isResultSet) {
+        try (ResultSet rs = stm.getResultSet()) {
+          Matrix matrix = Matrix.builder().data(rs).build()
+          allResults[index] = matrix
+        }
+      } else {
+        // --- It's an UPDATE, INSERT, DELETE, or DDL result ---
+        int updateCount = stm.getUpdateCount()
+
+        // updateCount == -1 means no more results or it was DDL (like CREATE TABLE)
+        // updateCount >= 0 means it was an UPDATE/INSERT/DELETE
+        allResults[index] = updateCount
+      }
+      index++
+      isResultSet = stm.getMoreResults()
+
+      // 4. Continue looping as long as there is another result (either a ResultSet
+      //    or an update count other than -1)
+    } while (isResultSet || stm.getUpdateCount() != -1)
+
+    return allResults
   }
 
   static int dbExecuteUpdate(Statement stm, String sqlQuery) throws SQLException {

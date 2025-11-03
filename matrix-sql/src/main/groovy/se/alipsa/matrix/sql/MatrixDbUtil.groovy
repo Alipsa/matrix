@@ -124,7 +124,7 @@ class MatrixDbUtil {
    * @return a map with information about the created table and inserted data
    * @throws SQLException if any sql error occurs
    */
-  Map create(Connection con, Matrix table, int scanNumRows, boolean addQuotes, String... primaryKey) throws SQLException {
+  Map create(Connection con, Matrix table, int scanNumRows, boolean addQuotes = true, String... primaryKey) throws SQLException {
     Map<String,Map<String, Integer>> mappings = createMappings(table, scanNumRows)
     return create(con, table, mappings, addQuotes, primaryKey)
   }

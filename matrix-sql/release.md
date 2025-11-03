@@ -3,6 +3,7 @@ Date format used below is yyyy-MM-dd
 
 ## v2.3.0, in progress
 - add option to control whether column names are quoted when creating a table
+- add an execute method to MatrixSql to run arbitrary sql (update, delete, insert etc.)
 
 ## v2.2.0, 2025-10-25
 - upgrade dependencies
