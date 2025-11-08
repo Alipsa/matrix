@@ -37,10 +37,10 @@ class BqTest {
       return
     }
     Bq bq = new Bq()
-    Matrix m = bq.query("""SELECT CONCAT('https://stackoverflow.com/questions/', 
-        CAST(id as STRING)) as url, view_count 
-        FROM `bigquery-public-data.stackoverflow.posts_questions` 
-        WHERE tags like '%google-bigquery%' 
+    Matrix m = bq.query("""SELECT CONCAT('https://stackoverflow.com/questions/',
+        CAST(id as STRING)) as url, view_count
+        FROM `bigquery-public-data.stackoverflow.posts_questions`
+        WHERE tags like '%google-bigquery%'
         ORDER BY view_count DESC
         LIMIT 10
         """.stripIndent())
@@ -57,7 +57,6 @@ class BqTest {
     }
     Bq bq = new Bq()
     println "Projects are ${bq.getProjects().collect{it.displayName + ' (' + it.projectId + ')'}}"
-
   }
 
   @Test

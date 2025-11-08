@@ -52,7 +52,7 @@ class BqTestContainerTest {
       BigQueryOptions options = BigQueryOptions
           .newBuilder()
           .setProjectId(projectId)
-      // CRITICAL 3: Use the FULL URL for the host setting (required for metadata/query API calls).
+          // CRITICAL 3: Use the FULL URL for the host setting (required for metadata/query API calls).
           .setHost(fullUrl)
           .setLocation(fullUrl) // Explicitly set location to the emulator URL
           .setCredentials(NoCredentials.getInstance())
@@ -93,7 +93,6 @@ class BqTestContainerTest {
           assertEquals(expected, actual, "Non-numeric types should match exactly")
         }
       }
-
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt()
       throw new RuntimeException("Test interrupted during sleep", e)

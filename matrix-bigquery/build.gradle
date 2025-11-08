@@ -92,7 +92,7 @@ publishing {
         description = "${project.description}"
         url = "https://github.com/Alipsa/matrix/matrix-bigquery"
         properties = [
-            'maven.compiler.release': "${javaCompile.options.release.get()}"
+          'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {

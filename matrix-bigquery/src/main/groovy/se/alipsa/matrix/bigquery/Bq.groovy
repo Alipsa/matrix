@@ -93,28 +93,6 @@ class Bq {
    */
   int execute(String qry, boolean useLegacySql = false) throws BqException {
     try {
-      /*
-      Job queryJob = runQuery(qry, useLegacySql)
-
-      // Retrieve the job statistics to check for DML operations.
-      JobStatistics.QueryStatistics stats = queryJob.getStatistics()
-      DmlStats dmlStats = stats.getDmlStats()
-
-      if (dmlStats != null) {
-        // This is a DML query (INSERT, UPDATE, or DELETE).
-        // We get the affected row count from the DML stats.
-        long insertedRows = dmlStats.getInsertedRowCount() != null ? dmlStats.getInsertedRowCount() : 0
-        long updatedRows = dmlStats.getUpdatedRowCount() != null ? dmlStats.getUpdatedRowCount() : 0
-        long deletedRows = dmlStats.getDeletedRowCount() != null ? dmlStats.getDeletedRowCount() : 0
-
-        return (int) (insertedRows + updatedRows + deletedRows)
-      } else {
-        // This is likely a SELECT query.
-        // We get the result set and return the total number of rows.
-        TableResult result = queryJob.getQueryResults()
-        return result.getTotalRows().intValue()
-      }
-       */
       // FIX: Use synchronous query execution to bypass the unstable job polling API in the emulator
       QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
           .setUseLegacySql(useLegacySql)
@@ -125,7 +103,6 @@ class Bq {
       // When running a query synchronously, TableResult.getTotalRows() returns
       // either the number of rows returned (SELECT) or the number of rows affected (DML/DDL).
       return result.getTotalRows().intValue()
-
     } catch (BigQueryException | InterruptedException e) {
       throw new BqException("Query execution failed due to error: " + e.toString(), e)
     }
@@ -151,12 +128,6 @@ class Bq {
 
   Matrix query(String qry, boolean useLegacySql = false) throws BqException {
     try {
-      /*
-            Job queryJob = runQuery(qry, useLegacySql)
-
-      // Convert to a Matrix and return the results.
-      TableResult result = queryJob.getQueryResults()
-       */
       // FIX: Use synchronous query execution to bypass the unstable job polling API in the emulator
       QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
           .setUseLegacySql(useLegacySql)
@@ -188,7 +159,7 @@ class Bq {
     while (System.currentTimeMillis() - start < timeoutMs) {
       def t = bigQuery.getTable(tableId)
       if (t != null && t.exists()) return
-      Thread.sleep(backoff)
+        Thread.sleep(backoff)
       backoff = Math.min((long)(backoff * 1.7), 5000L)
     }
     throw new BqException("Timed out waiting for table ${tableId} to be ready.")
@@ -290,9 +261,9 @@ class Bq {
 
       if (primary != null || (execErrs != null && !execErrs.isEmpty())) {
         String details = ([primary] + (execErrs ?: []))
-            .findAll { it != null }
-            .collect { e -> "${e.message} (reason=${e.reason}, location=${e.location})" }
-            .join("; ")
+        .findAll { it != null }
+        .collect { e -> "${e.message} (reason=${e.reason}, location=${e.location})" }
+        .join("; ")
         throw new BqException("Write-channel load (JSON) failed: ${details}")
       }
 
@@ -301,7 +272,6 @@ class Bq {
 
       println "Load job completed successfully. Inserted ${rowsInserted} rows."
       return stats
-
     } catch (Exception e) {
       // Check if the failure is a known connection error that necessitates the fallback
       if (e.cause instanceof java.net.ConnectException || e.message?.contains("Connection refused")) {
@@ -358,7 +328,6 @@ class Bq {
           JobInfo placeholderJobInfo = jobInfoBuilder.build()
 
           return (JobStatistics.LoadStatistics) placeholderJobInfo.getStatistics()
-
         } catch (Exception fallbackException) {
           // If fallback fails, log and throw a detailed exception
           println "InsertAll fallback also failed: ${fallbackException.message}"
@@ -370,17 +339,30 @@ class Bq {
     }
   }
 
+  private static final List<Class<?>> CONVERTIBLE_TYPES = [
+    BigDecimal,
+    BigInteger,
+    Time,
+    LocalDateTime,
+    LocalTime,
+    Instant,
+    Timestamp,
+    ZonedDateTime,
+    Date,
+    LocalDate
+  ]
+
+  /**
+   * Determine whether the provided value must be converted into a BigQuery compatible representation.
+   *
+   * @param orgVal the original value from the Matrix
+   * @return {@code true} when conversion is required before writing to BigQuery, {@code false} otherwise
+   */
   static boolean needsConversion(Object orgVal) {
-    return orgVal instanceof BigDecimal
-        || orgVal instanceof BigInteger
-        || orgVal instanceof Time
-        || orgVal instanceof LocalDateTime
-        || orgVal instanceof LocalTime
-        || orgVal instanceof Instant
-        || orgVal instanceof Timestamp
-        || orgVal instanceof ZonedDateTime
-        || orgVal instanceof Date
-        || orgVal instanceof LocalDate
+    if (orgVal == null) {
+      return false
+    }
+    return CONVERTIBLE_TYPES.any { it.isInstance(orgVal) }
   }
 
   static def convertObjectValue(Object orgVal) {
@@ -481,10 +463,16 @@ class Bq {
 
   List<Project> getProjects() throws BqException {
     ProjectsSettings projectsSettings = ProjectsSettings.newBuilder().build()
-    try (ProjectsClient pc = ProjectsClient.create(projectsSettings)) {
+    ProjectsClient pc = null
+    try {
+      pc = ProjectsClient.create(projectsSettings)
       return pc.searchProjects("").iterateAll().collect()
     } catch (BigQueryException e) {
       throw new BqException(e)
+    } finally {
+      if (pc != null) {
+        pc.close()
+      }
     }
   }
 
