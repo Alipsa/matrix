@@ -26,7 +26,7 @@ class JfXScatterChartConverter {
       def xVal = categories.get(i) as Number
       def yVal = series.get(i) as Number
       if (xVal == null || yVal == null) continue
-      fxSeries.getData().add(new XYChart.Data(xVal, yVal))
+        fxSeries.getData().add(new XYChart.Data(xVal, yVal))
     }
     jfxChart.getData().add(fxSeries)
 

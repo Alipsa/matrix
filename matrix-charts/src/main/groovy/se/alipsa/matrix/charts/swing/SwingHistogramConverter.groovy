@@ -13,20 +13,18 @@ class SwingHistogramConverter {
   static CategoryChart convert(Histogram chart) {
     CategoryChart categoryChart =
         new CategoryChartBuilder()
-            .title(chart.getTitle() ?: '')
-            .xAxisTitle("Range")
-            .yAxisTitle("Frequency")
-            .build()
+        .title(chart.getTitle() ?: '')
+        .xAxisTitle("Range")
+        .yAxisTitle("Frequency")
+        .build()
     /* the xchart standard below gives counts for a mean with the means as x axis lables
-       which is not exactly what we want so rolling it manually instead...
-
-    def histogram = new org.knowm.xchart.Histogram(chart.originalData, chart.numberOfBins)
-
-    categoryChart.addSeries(
-        "Histogram",
-        histogram.getxAxisData(),
-        histogram.getyAxisData()
-    )
+     which is not exactly what we want so rolling it manually instead...
+     def histogram = new org.knowm.xchart.Histogram(chart.originalData, chart.numberOfBins)
+     categoryChart.addSeries(
+     "Histogram",
+     histogram.getxAxisData(),
+     histogram.getyAxisData()
+     )
      */
     def rangeList = []
     List<Double> valueList = []

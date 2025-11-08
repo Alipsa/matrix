@@ -4,9 +4,9 @@ import se.alipsa.matrix.gg.aes.Aes
 
 class GeomViolin extends Geom {
 
-    Aes aes
+  Aes aes
 
-    GeomViolin(Aes aes) {
-        this.aes = aes
-    }
+  GeomViolin(Aes aes) {
+    this.aes = aes
+  }
 }

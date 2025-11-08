@@ -38,6 +38,5 @@ class ConverterUtil {
     if (chart.getValueSeries().size() == 1 && ! chart.style.isLegendVisible()) {
       fxChart.setLegendVisible(false)
     }
-
   }
 }

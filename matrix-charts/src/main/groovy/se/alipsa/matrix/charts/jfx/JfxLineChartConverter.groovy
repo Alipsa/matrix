@@ -45,5 +45,4 @@ class JfxLineChartConverter {
     JfxStyler.style(fxChart, chart)
     return fxChart
   }
-
 }

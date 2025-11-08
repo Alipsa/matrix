@@ -2,9 +2,8 @@ package se.alipsa.matrix.gg.geom
 
 class GeomBar extends Geom {
 
-    GeomBar() {}
+  GeomBar() {}
 
-    GeomBar(Map params) {
-
-    }
+  GeomBar(Map params) {
+  }
 }

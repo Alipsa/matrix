@@ -42,9 +42,15 @@ class GgPlot {
 
   static Aes aes(Map params) {
     def p = [:]
-    params.computeIfPresent('x', (k,v) -> p.xCol = v)
-    params.computeIfPresent('y', (k,v) -> p.yCol = v)
-    params.computeIfPresent('col', (k,v) -> p.colorCol = v)
+    if (params.containsKey('x')) {
+      p.xCol = params['x']
+    }
+    if (params.containsKey('y')) {
+      p.yCol = params['y']
+    }
+    if (params.containsKey('col')) {
+      p.colorCol = params['col']
+    }
     return new Aes(p)
   }
 
@@ -78,11 +84,11 @@ class GgPlot {
 
   static CoordPolar coord_polar(Map params) {
     coord_polar(
-            params.getOrDefault('theta', 'x') as String,
-            params.getOrDefault('start', 0) as BigDecimal,
-            params.getOrDefault('direction', 1) as Integer,
-            params.getOrDefault('clip', 'on') as String
-    )
+        params.getOrDefault('theta', 'x') as String,
+        params.getOrDefault('start', 0) as BigDecimal,
+        params.getOrDefault('direction', 1) as Integer,
+        params.getOrDefault('clip', 'on') as String
+        )
   }
 
   static GeomAbline geom_abline() {

@@ -6,7 +6,6 @@ package se.alipsa.matrix.gg.coord
  */
 class CoordPolar extends Coord {
 
-    CoordPolar(String theta = "x", BigDecimal offset = 0, Boolean clockwise = true, Boolean clip = true) {
-
-    }
+  CoordPolar(String theta = "x", BigDecimal offset = 0, Boolean clockwise = true, Boolean clip = true) {
+  }
 }

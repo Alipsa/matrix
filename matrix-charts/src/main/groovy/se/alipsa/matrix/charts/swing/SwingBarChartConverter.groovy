@@ -9,10 +9,10 @@ class SwingBarChartConverter {
   static CategoryChart convert(BarChart chart) {
     CategoryChart categoryChart =
         new CategoryChartBuilder()
-            .title(chart.getTitle())
-            .xAxisTitle(chart.getxAxisTitle())
-            .yAxisTitle(chart.getyAxisTitle())
-            .build()
+        .title(chart.getTitle())
+        .xAxisTitle(chart.getxAxisTitle())
+        .yAxisTitle(chart.getyAxisTitle())
+        .build()
 
     categoryChart.getStyler().setStacked(chart.isStacked())
     int serieIdx = 0

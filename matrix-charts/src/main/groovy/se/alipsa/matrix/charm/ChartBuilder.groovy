@@ -36,5 +36,4 @@ class ChartBuilder {
   ChartBuilder addCoordinateSystem(CoordinateSystem coordinateSystem) {
     this
   }
-
 }

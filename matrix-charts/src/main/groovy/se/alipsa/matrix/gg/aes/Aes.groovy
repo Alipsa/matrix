@@ -35,5 +35,4 @@ class Aes {
   String toString() {
     return "Aes(xCol=$xColName, yCol=$yColName, colorCol=$colorColName)"
   }
-
 }

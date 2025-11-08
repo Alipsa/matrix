@@ -2,13 +2,12 @@ package se.alipsa.matrix.gg.geom
 
 class GeomPoint extends Geom {
 
-    String color
+  String color
 
-    GeomPoint() {
+  GeomPoint() {
+  }
 
-    }
-
-    GeomPoint(Map params) {
-        color = params.color
-    }
+  GeomPoint(Map params) {
+    color = params.color
+  }
 }

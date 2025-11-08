@@ -33,7 +33,6 @@ trait LegendPane {
       Circle circle = new Circle(6, it.value)
       addItem(circle, it.key)
     }
-
   }
 
   LegendPane setBackground(Color color) {
@@ -42,7 +41,7 @@ trait LegendPane {
   }
 
   LegendPane setBorder(Color color = Color.DARKGRAY, BorderStrokeStyle borderStrokeStyle = BorderStrokeStyle.SOLID,
-                       CornerRadii cornerRadii = CornerRadii.EMPTY, BorderWidths borderWidths = BorderWidths.DEFAULT) {
+      CornerRadii cornerRadii = CornerRadii.EMPTY, BorderWidths borderWidths = BorderWidths.DEFAULT) {
     Border border = new Border(new BorderStroke(color, borderStrokeStyle, cornerRadii, borderWidths))
     setBorder(border)
     this

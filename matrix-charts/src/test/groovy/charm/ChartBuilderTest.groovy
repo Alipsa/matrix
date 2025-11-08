@@ -18,16 +18,13 @@ class ChartBuilderTest {
 
   @Test
   void testBarChartWithLine() {
-
   }
 
   @Test
   void testScatterPlot() {
-
   }
 
   @Test
   void testScatterPlotWithRegressionLine() {
-
   }
 }

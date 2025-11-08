@@ -6,60 +6,64 @@ import se.alipsa.matrix.charts.Style
 
 class SwingStyler {
 
-    static void style(Chart swingChart, se.alipsa.matrix.charts.Chart chart) {
-        Style style = chart.getStyle()
-        setChartStyles(swingChart, style)
-        setTitleStyles(swingChart, style)
-        setPlotStyles(swingChart, style)
-        setLegendStyles(swingChart, style)
+  static void style(Chart swingChart, se.alipsa.matrix.charts.Chart chart) {
+    Style style = chart.getStyle()
+    setChartStyles(swingChart, style)
+    setTitleStyles(swingChart, style)
+    setPlotStyles(swingChart, style)
+    setLegendStyles(swingChart, style)
+  }
+
+  static void setChartStyles(Chart swingChart, Style style) {
+    Styler styler = swingChart.getStyler()
+
+    if (style.chartBackgroundColor != null) {
+      styler.setChartBackgroundColor(style.chartBackgroundColor)
+    }
+  }
+
+  static void setTitleStyles(Chart swingChart, Style style) {
+    Styler styler = swingChart.getStyler()
+
+    if (style.titleVisible != null) {
+      styler.setChartTitleVisible(style.titleVisible)
+    }
+  }
+
+  static void setPlotStyles(Chart swingChart, Style style) {
+    Styler styler = swingChart.getStyler()
+
+    if (style.plotBackgroundColor != null) {
+      styler.setPlotBackgroundColor(style.plotBackgroundColor)
+    }
+  }
+
+  static void setLegendStyles(Chart swingChart, Style style) {
+    Styler styler = swingChart.getStyler()
+
+    if (style.legendVisible != null) {
+      styler.setLegendVisible(style.legendVisible)
     }
 
-    static void setChartStyles(Chart swingChart, Style style) {
-        Styler styler = swingChart.getStyler()
-
-        if (style.chartBackgroundColor != null) {
-            styler.setChartBackgroundColor(style.chartBackgroundColor)
-        }
+    if (style.legendPosition != null) {
+      Map<Style.Position, Styler.LegendPosition> legendPositionMapping = [
+        (Style.Position.TOP)   : Styler.LegendPosition.InsideN,
+        (Style.Position.RIGHT) : Styler.LegendPosition.OutsideE,
+        (Style.Position.BOTTOM): Styler.LegendPosition.OutsideS,
+        (Style.Position.LEFT)  : Styler.LegendPosition.InsideNW
+      ]
+      Styler.LegendPosition mappedPosition = legendPositionMapping[style.legendPosition]
+      if (mappedPosition != null) {
+        styler.setLegendPosition(mappedPosition)
+      }
     }
 
-    static void setTitleStyles(Chart swingChart, Style style) {
-        Styler styler = swingChart.getStyler()
-
-        if (style.titleVisible != null) {
-            styler.setChartTitleVisible(style.titleVisible)
-        }
+    if (style.legendBackgroundColor != null) {
+      styler.setLegendBackgroundColor(style.legendBackgroundColor)
     }
 
-    static void setPlotStyles(Chart swingChart, Style style) {
-        Styler styler = swingChart.getStyler()
-
-        if (style.plotBackgroundColor != null) {
-            styler.setPlotBackgroundColor(style.plotBackgroundColor)
-        }
+    if (style.legendFont != null) {
+      styler.setLegendFont(style.legendFont)
     }
-
-    static void setLegendStyles(Chart swingChart, Style style) {
-        Styler styler = swingChart.getStyler()
-
-        if (style.legendVisible != null) {
-            styler.setLegendVisible(style.legendVisible)
-        }
-
-        if (style.legendPosition != null) {
-            switch (style.legendPosition) {
-                case Style.Position.TOP -> styler.setLegendPosition(Styler.LegendPosition.InsideN)
-                case Style.Position.RIGHT -> styler.setLegendPosition(Styler.LegendPosition.OutsideE)
-                case Style.Position.BOTTOM -> styler.setLegendPosition(Styler.LegendPosition.OutsideS)
-                case Style.Position.LEFT -> styler.setLegendPosition(Styler.LegendPosition.InsideNW)
-            }
-        }
-
-        if (style.legendBackgroundColor != null) {
-            styler.setLegendBackgroundColor(style.legendBackgroundColor)
-        }
-
-        if (style.legendFont != null) {
-            styler.setLegendFont(style.legendFont)
-        }
-    }
+  }
 }

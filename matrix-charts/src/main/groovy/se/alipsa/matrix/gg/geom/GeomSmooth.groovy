@@ -2,13 +2,12 @@ package se.alipsa.matrix.gg.geom
 
 class GeomSmooth extends Geom {
 
-    String color
+  String color
 
-    GeomSmooth() {
+  GeomSmooth() {
+  }
 
-    }
-
-    GeomSmooth(Map params) {
-        color = params.color
-    }
+  GeomSmooth(Map params) {
+    color = params.color
+  }
 }

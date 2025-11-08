@@ -13,7 +13,6 @@ import se.alipsa.matrix.gg.theme.Theme
 class GgChart {
 
   GgChart(Matrix data, Aes aes) {
-
   }
 
   GgChart plus(Geom geom) {

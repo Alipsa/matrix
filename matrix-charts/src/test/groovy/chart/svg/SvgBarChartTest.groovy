@@ -15,8 +15,21 @@ class SvgBarChartTest {
   void testBarChart() {
     def data = Matrix.builder()
         .data([
-            month: DateUtil.monthNames,
-            sales: [123, 142, 100, 141, 165, 98, 75, 99, 143, 150, 100, 112]
+          month: DateUtil.monthNames,
+          sales: [
+            123,
+            142,
+            100,
+            141,
+            165,
+            98,
+            75,
+            99,
+            143,
+            150,
+            100,
+            112
+          ]
         ])
         .types(String, int)
         .build()
@@ -27,7 +40,7 @@ class SvgBarChartTest {
         'month',
         ChartType.BASIC,
         'sales'
-    )
+        )
     barChart.style.css = '''
       .chart {
        fill: #fff6a7

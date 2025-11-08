@@ -10,10 +10,10 @@ class SwingAreaChartConverter {
 
     XYChart xyChart =
         new XYChartBuilder()
-            .title(chart.getTitle())
-            .xAxisTitle(chart.getxAxisTitle())
-            .yAxisTitle(chart.getyAxisTitle())
-            .build()
+        .title(chart.getTitle())
+        .xAxisTitle(chart.getxAxisTitle())
+        .yAxisTitle(chart.getyAxisTitle())
+        .build()
 
     xyChart.getStyler().setLegendVisible(false)
 

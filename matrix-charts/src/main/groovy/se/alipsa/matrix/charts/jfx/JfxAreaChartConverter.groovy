@@ -15,8 +15,4 @@ class JfxAreaChartConverter {
     JfxStyler.style(fxChart, chart)
     return fxChart
   }
-
-
-
-
 }

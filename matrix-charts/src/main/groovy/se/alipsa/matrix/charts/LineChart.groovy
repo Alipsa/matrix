@@ -23,5 +23,4 @@ class LineChart extends Chart<LineChart> {
     chart.yAxisTitle = valueColumns.length == 1 ? valueColumns[0] : ''
     return chart
   }
-
 }

@@ -6,7 +6,6 @@ class AxisScale {
   private BigDecimal step
 
   AxisScale() {
-
   }
 
   AxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {

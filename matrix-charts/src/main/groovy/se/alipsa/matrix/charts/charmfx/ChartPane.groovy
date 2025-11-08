@@ -25,33 +25,28 @@ class ChartPane extends BorderPane {
   }
 
   ChartPane add(LegendPane node, Position position) {
-    add((Node)node, position)
+    add((Node) node, position)
   }
 
   ChartPane add(Node node, Position position) {
-    switch(position.side) {
-      case Side.TOP -> {
-        topPane.getChildren().add(node)
-        topPane.setAlignment(position.alignment)
-        setAlignment(topPane, position.alignment)
-      }
-      case Side.RIGHT -> {
-        rightPane.getChildren().add(node)
-        rightPane.setAlignment(position.alignment)
-        setAlignment(rightPane, position.alignment)
-      }
-      case Side.BOTTOM -> {
-        bottomPane.getChildren().add(node)
-        bottomPane.setAlignment(position.alignment)
-        setAlignment(bottomPane, position.alignment)
-      }
-      case Side.LEFT -> {
-        leftPane.getChildren().add(node)
-        leftPane.setAlignment(position.alignment)
-        setAlignment(leftPane, position.alignment)
-      }
+    Side side = position.side
+    if (Side.TOP == side) {
+      topPane.getChildren().add(node)
+      topPane.setAlignment(position.alignment)
+      setAlignment(topPane, position.alignment)
+    } else if (Side.RIGHT == side) {
+      rightPane.getChildren().add(node)
+      rightPane.setAlignment(position.alignment)
+      setAlignment(rightPane, position.alignment)
+    } else if (Side.BOTTOM == side) {
+      bottomPane.getChildren().add(node)
+      bottomPane.setAlignment(position.alignment)
+      setAlignment(bottomPane, position.alignment)
+    } else if (Side.LEFT == side) {
+      leftPane.getChildren().add(node)
+      leftPane.setAlignment(position.alignment)
+      setAlignment(leftPane, position.alignment)
     }
     this
   }
-
 }

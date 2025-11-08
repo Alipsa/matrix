@@ -64,11 +64,11 @@ abstract class Chart<T extends Chart> {
       Class col1Type = table.type(1)
       if (DataType.differs(firstColumn, col0Type)) {
         throw new IllegalArgumentException("Column mismatch in series $idx. First series has type $firstColumn.name " +
-                "in the first column but this series has $col0Type")
+        "in the first column but this series has $col0Type")
       }
       if (DataType.differs(secondColumn, col1Type)) {
         throw new IllegalArgumentException("Column mismatch in series $idx. First series has type $secondColumn.name " +
-                "in the second column but this series has $col1Type")
+        "in the second column but this series has $col1Type")
       }
       idx++
     }

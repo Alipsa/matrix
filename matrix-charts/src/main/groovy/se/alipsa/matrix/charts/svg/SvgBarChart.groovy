@@ -65,20 +65,12 @@ class SvgBarChart extends SvgChart {
     def barSpace = 5 // todo check if defined in style
     Map boundaries = calculateValues(barChart.valueSeries)
     double orgMaxHeight = boundaries.maxHeight
-    println "orgMaxHeight = $orgMaxHeight"
     double proportion = graphHeight / orgMaxHeight
-    println("proportion = graphHeight / orgMaxHeight = $proportion = $graphHeight / $orgMaxHeight")
-    List<List> valueSeries = []
-    barChart.valueSeries.each {series ->
-      def serie = []
-      series.each { val ->
-        serie << val * proportion
-      }
-      valueSeries << serie
+    List<List> valueSeries = barChart.valueSeries.collect { series ->
+      series.collect { val -> val * proportion }
     }
     boundaries = calculateValues(valueSeries)
     double maxHeight = boundaries.maxHeight + yOffset
-    println "maxHeight = $maxHeight"
     double barWidth = graphWidth / boundaries.numBars - barSpace * 2
 
     double width = calculateWidth(valueSeries, barWidth, barSpace) + xOffset
@@ -130,16 +122,14 @@ class SvgBarChart extends SvgChart {
   List<Double> plotXTicks(G graph, double maxHeight, List valueSeries , double xOffset, double barWidth, double barSpace, String color) {
     List<Double> xTicks = []
     double x = xOffset + barWidth / 2 + barSpace
-    valueSeries.eachWithIndex { series, seriesIdx -> {
-        series.eachWithIndex{ bar, valueIdx ->
-          //println "add x axis tick at $x"
-          graph.addLine(x, maxHeight - 5, x, maxHeight + 5)
-              .stroke(color)
-              .styleClass('tick xtick')
-              .id("xtick-$seriesIdx-$valueIdx")
-          xTicks << x
-          x += barSpace + barWidth
-        }
+    valueSeries.eachWithIndex { series, seriesIdx ->
+      series.eachWithIndex { bar, valueIdx ->
+        graph.addLine(x, maxHeight - 5, x, maxHeight + 5)
+            .stroke(color)
+            .styleClass('tick xtick')
+            .id("xtick-$seriesIdx-$valueIdx")
+        xTicks << x
+        x += barSpace + barWidth
       }
     }
     //println "xTicks = $xTicks"
@@ -192,10 +182,10 @@ class SvgBarChart extends SvgChart {
 
     xTicks.eachWithIndex { xTick, idx ->
       graph.addText(String.valueOf(barChart.categorySeries.get(idx)))
-      .y(maxHeight + margin)
-      .x(xTick)
-      .fill(color)
-      .textAnchor('middle')
+          .y(maxHeight + margin)
+          .x(xTick)
+          .fill(color)
+          .textAnchor('middle')
     }
   }
 
@@ -206,10 +196,10 @@ class SvgBarChart extends SvgChart {
     yTicks.sort().eachWithIndex { double yTick, int idx ->
       def val = maxValue /(idx + 1)
       graph.addText(format.format(val))
-      .x(xOffset - margin)
-      .y(yTick + 5)
-      .fill(color)
-      .textAnchor('end')
+          .x(xOffset - margin)
+          .y(yTick + 5)
+          .fill(color)
+          .textAnchor('end')
     }
   }
 
