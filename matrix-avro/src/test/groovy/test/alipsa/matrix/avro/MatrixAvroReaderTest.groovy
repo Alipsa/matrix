@@ -109,9 +109,9 @@ class MatrixAvroReaderTest {
   }
 
   private static GenericRecord makeRecord(Schema schema,
-                                          String name, int age,
-                                          LocalDate birthday, Instant ts,
-                                          BigDecimal price) {
+      String name, int age,
+      LocalDate birthday, Instant ts,
+      BigDecimal price) {
     def rec = new GenericData.Record(schema)
     rec.put("name", name)
     rec.put("age", age)

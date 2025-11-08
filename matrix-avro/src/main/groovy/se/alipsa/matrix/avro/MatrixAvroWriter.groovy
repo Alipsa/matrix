@@ -224,8 +224,12 @@ class MatrixAvroWriter {
 
       // More general unions: pick the first compatible branch and serialize with it
       for (Schema branch : types) {
-        if (branch.getType() == Schema.Type.NULL && v == null) return null
-        if (branch.getType() == Schema.Type.NULL) continue
+        if (branch.getType() == Schema.Type.NULL && v == null) {
+          return null
+        }
+        if (branch.getType() == Schema.Type.NULL) {
+          continue
+        }
         if (isCompatible(branch, v)) {
           return toAvroValue(branch, v, decConv)
         }
@@ -329,11 +333,13 @@ class MatrixAvroWriter {
         break
       case Schema.Type.ARRAY:
         Schema elem = fieldSchema.getElementType()
-        List in = (List) v
-        List out = new ArrayList( in == null ? 0 : in.size() )
-        if ( in != null ) {
-        for (def e: in ) out.add(toAvroValue(elem, e, decConv))
-      }
+        List values = (List) v
+        List out = new ArrayList(values == null ? 0 : values.size())
+        if (values != null) {
+          for (def element : values) {
+            out.add(toAvroValue(elem, element, decConv))
+          }
+        }
         return out
 
       case Schema.Type.MAP:
@@ -386,7 +392,9 @@ class MatrixAvroWriter {
     Class<?> concrete = null
     for (int r = 0; r < matrix.rowCount(); r++) {
       Object v = matrix[r, col]
-      if (v == null) continue
+      if (v == null) {
+        continue
+      }
       concrete = (concrete == null) ? v.getClass() : concrete
 
       if (v instanceof BigDecimal) {
@@ -430,7 +438,9 @@ class MatrixAvroWriter {
     Set<String> firstKeys = null
     for (int r = 0; r < matrix.rowCount(); r++) {
       def v = matrix[r, col]
-      if (!(v instanceof Map)) continue
+      if (!(v instanceof Map)) {
+        continue
+      }
       Set<String> keys = new LinkedHashSet<>(((Map) v).keySet().collect { it?.toString() })
       if (firstKeys == null) {
         firstKeys = keys

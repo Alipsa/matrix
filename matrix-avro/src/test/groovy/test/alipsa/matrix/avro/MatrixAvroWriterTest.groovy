@@ -20,11 +20,13 @@ class MatrixAvroWriterTest {
   @Test
   void schema_has_expected_logical_types() {
     // Build a tiny Matrix with the three columns of interest
-    def cols = new LinkedHashMap<String, List<?>>() as LinkedHashMap<String, List<?>>
-    cols["ldt"]   = [LocalDateTime.of(2024, 7, 1, 10, 20, 30, 999_000_000)] // nanos = .999
-    cols["time"]  = [LocalTime.of(9, 10, 11, 345_000_000)]                  // 09:10:11.345
-    cols["price"] = [new BigDecimal("456.78")]                               // precision=5, scale=2
-
+    Map<String, List> cols = new LinkedHashMap<>()
+    cols["ldt"]   = [
+      LocalDateTime.of(2024, 7, 1, 10, 20, 30, 999_000_000)] // nanos = .999
+    cols["time"]  = [
+      LocalTime.of(9, 10, 11, 345_000_000)]                  // 09:10:11.345
+    cols["price"] = [
+      new BigDecimal("456.78")]                               // precision=5, scale=2
     Matrix m = Matrix.builder("WriterSanity")
         .columns(cols)
         .types(LocalDateTime, LocalTime, BigDecimal)

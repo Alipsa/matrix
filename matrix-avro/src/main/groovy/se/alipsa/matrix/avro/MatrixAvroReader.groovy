@@ -76,9 +76,7 @@ class MatrixAvroReader {
 
     // Unwrap UNIONs (commonly ["null", T])
     if (schema.getType() == Schema.Type.UNION) {
-      Schema nonNull = schema.getTypes().stream()
-          .filter(s -> s.getType() != Schema.Type.NULL)
-          .findFirst().orElse(schema)
+      Schema nonNull = schema.getTypes().find { it.type != Schema.Type.NULL } ?: schema
       return convertValue(nonNull, v)
     }
 
@@ -109,7 +107,7 @@ class MatrixAvroReader {
         case "uuid":
           return v.toString()           // or UUID.fromString(v.toString())
         default:
-          // fall through to primitive/complex handling
+        // fall through to primitive/complex handling
           break
       }
     }
@@ -202,8 +200,7 @@ class MatrixAvroReader {
     return LocalDateTime.ofEpochSecond(
         Math.floorDiv(ms, 1000L),
         (int)((ms % 1000L) * 1_000_000L),
-        ZoneOffset.UTC
-    )
+        ZoneOffset.UTC)
   }
 
   private static LocalDateTime toLocalDateTimeMicros(Object v) {

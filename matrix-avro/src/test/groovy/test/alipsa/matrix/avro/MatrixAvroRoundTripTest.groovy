@@ -32,23 +32,40 @@ class MatrixAvroRoundTripTest {
     LocalDateTime ldt1 = LocalDateTime.of(2024, 7, 1, 10, 20, 30, 999_000_000)
     LocalDateTime ldt2 = LocalDateTime.of(2025, 1, 2, 3, 4, 5, 123_000_000)
 
-    def cols = new LinkedHashMap<String, List<?>>() as LinkedHashMap<String, List<?>>
+    Map<String, List> cols = new LinkedHashMap<>()
     cols["name"]      = ["Alice", "Bob", null]
     cols["age"]       = [30, null, 41]
-    cols["birthday"]  = [LocalDate.of(1990,1,5), LocalDate.of(1984,7,23), null]
+    cols["birthday"]  = [
+      LocalDate.of(1990,1,5),
+      LocalDate.of(1984,7,23),
+      null
+    ]
     cols["time"]      = [t1, t2, null]
-    cols["ts"]        = [i1, i2, null]                    // Instant -> timestamp-millis
-    cols["ldt"]       = [ldt1, ldt2, null]                // LocalDateTime -> local-timestamp-millis
-    cols["price"]     = [new BigDecimal("12.34"), null, new BigDecimal("1000.50")] // BigDecimal
+    cols["ts"]        = [
+      i1,
+      i2,
+      null]                    // Instant -> timestamp-millis
+    cols["ldt"]       = [
+      ldt1,
+      ldt2,
+      null]                // LocalDateTime -> local-timestamp-millis
+    cols["price"]     = [
+      new BigDecimal("12.34"),
+      null,
+      new BigDecimal("1000.50")] // BigDecimal
     cols["flag"]      = [true, false, null]
-    cols["bytes"]     = [([1,2,3] as byte[]), null, (byte[])[42]]
+    cols["bytes"]     = [
+      ([1, 2, 3] as byte[]),
+      null,
+      (byte[])[42]
+    ]
     cols["uuid"]      = [uuid1, null, uuid2]
     cols["note"]      = ["hi", null, ""]
 
     Matrix src = Matrix.builder("RoundTripDecimal")
         .columns(cols)
         .types(String, Integer, LocalDate, LocalTime, Instant, LocalDateTime,
-               BigDecimal, Boolean, byte[], UUID, String)
+        BigDecimal, Boolean, byte[], UUID, String)
         .build()
 
     assert src.type("ldt") == LocalDateTime : "Matrix reported type for 'ldt' is ${src.type("ldt")}"
@@ -63,7 +80,8 @@ class MatrixAvroRoundTripTest {
     long raw = rawLongFor(tmp, "ldt")
     if (ltName == "local-timestamp-micros") {
       assertEquals(999_000L, raw % 1_000_000L, "Expected micros remainder 999000, got ${raw % 1_000_000L}")
-    } else { // millis
+    } else {
+      // millis
       assertEquals(999L, raw % 1_000L, "Expected millis remainder 999, got ${raw % 1_000L}")
     }
     // --- Read back ---
@@ -124,7 +142,7 @@ class MatrixAvroRoundTripTest {
     assertNull(back[2, "flag"])
 
     // bytes (byte[])
-    assertArrayEquals([1,2,3] as byte[], (byte[]) back[0, "bytes"])
+    assertArrayEquals([1, 2, 3] as byte[], (byte[]) back[0, "bytes"])
     assertNull(back[1, "bytes"])
     assertArrayEquals([42] as byte[], (byte[]) back[2, "bytes"])
 
@@ -139,8 +157,12 @@ class MatrixAvroRoundTripTest {
   @Test
   void roundTrip_withoutDecimalInference_writesBigDecimalAsDouble() {
     File tmp = Files.createTempFile("matrix-avro-rt-withoutDecimalInference", ".avro").toFile()
-    def cols = new LinkedHashMap<String, List<?>>() as LinkedHashMap<String, List<?>>
-    cols["price"] = [new BigDecimal("12.34"), null, new BigDecimal("1000.5")]
+    Map<String, List> cols = new LinkedHashMap<>()
+    cols["price"] = [
+      new BigDecimal("12.34"),
+      null,
+      new BigDecimal("1000.5")
+    ]
     cols["name"]  = ["A", "B", "C"]
 
     Matrix src = Matrix.builder("RoundTripNoDecimal").columns(cols).build()
@@ -159,7 +181,7 @@ class MatrixAvroRoundTripTest {
     assertNull(back[1, "price"])
     assertEquals(1000.5d, (Double) back[2, "price"], 1e-9)
 
-    assertEquals(["A","B","C"], (0..<3).collect { back[it, "name"] })
+    assertEquals(["A", "B", "C"], (0..<3).collect { back[it, "name"] })
     tmp.delete()
   }
 
@@ -170,8 +192,10 @@ class MatrixAvroRoundTripTest {
     // ----- build a Matrix with ARRAY, MAP, and RECORD-like columns -----
     List<Integer> a1 = [1, 2, 3]
     List<Integer> a2 = []            // empty list should work
-    List<Integer> a3 = [10, null, 30] // null element allowed
-
+    List<Integer> a3 = [
+      10,
+      null,
+      30] // null element allowed
     Map<String,Integer> m1 = [x: 1, y: 2]
     Map<String,Integer> m2 = [y: 5, z: 9] // different keys => will serialize as Avro MAP
     Map<String,Integer> m3 = null
@@ -181,11 +205,16 @@ class MatrixAvroRoundTripTest {
     Map<String, Object> r2 = [name:"Bob",   age:41, birthday: LocalDate.of(1984,7,23)]
     Map<String, Object> r3 = [name:null,    age:null, birthday:null]
 
-    def cols = new LinkedHashMap<String, List<?>>() as LinkedHashMap<String, List<?>>
+    Map<String, List> cols = new LinkedHashMap<>()
     cols["arr"]    = [a1, a2, a3]       // ARRAY
-    cols["props"]  = [m1, m2, m3]       // MAP (keys vary across rows)
-    cols["person"] = [r1, r2, r3]       // RECORD (same fields across rows)
-
+    cols["props"]  = [
+      m1,
+      m2,
+      m3]       // MAP (keys vary across rows)
+    cols["person"] = [
+      r1,
+      r2,
+      r3]       // RECORD (same fields across rows)
     Matrix src = Matrix.builder("ArrMapRec")
         .columns(cols)
         .types(List, Map, Map) // record-like column is a Map but will be written as RECORD by heuristic
@@ -197,10 +226,10 @@ class MatrixAvroRoundTripTest {
 
     // shape & columns
     assertEquals(3, back.rowCount())
-    assertEquals(["arr","props","person"], back.columnNames())
+    assertEquals(["arr", "props", "person"], back.columnNames())
 
     // ----- ARRAY assertions -----
-    assertEquals([1,2,3], back[0, "arr"])
+    assertEquals([1, 2, 3], back[0, "arr"])
     assertEquals([], back[1, "arr"])
     assertEquals([10, null, 30], back[2, "arr"])
 
