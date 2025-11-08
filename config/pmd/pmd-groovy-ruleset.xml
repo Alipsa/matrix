@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Matrix Groovy PMD Rules"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.net/ruleset_2_0_0.xsd"
+    xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <description>
+    Rules focusing on correctness and maintainability for Groovy sources in the Matrix project.
+  </description>
+
+  <rule ref="category/groovy/errorprone.xml/AvoidCatchingGenericException"/>
+  <rule ref="category/groovy/errorprone.xml/AvoidBranchingStatementAsLastInLoop"/>
+  <rule ref="category/groovy/errorprone.xml/AvoidDuplicateLiterals"/>
+  <rule ref="category/groovy/errorprone.xml/CloseResource"/>
+  <rule ref="category/groovy/errorprone.xml/EmptyIfStmt"/>
+  <rule ref="category/groovy/errorprone.xml/EmptyTryOrFinallyBlock"/>
+  <rule ref="category/groovy/errorprone.xml/NullAssignment"/>
+  <rule ref="category/groovy/errorprone.xml/ReturnEmptyCollectionRatherThanNull"/>
+  <rule ref="category/groovy/errorprone.xml/ReturnFromFinallyBlock"/>
+  <rule ref="category/groovy/errorprone.xml/UnnecessaryNullCheck"/>
+  <rule ref="category/groovy/bestpractices.xml/AvoidPrintStackTrace"/>
+  <rule ref="category/groovy/bestpractices.xml/ConstantsInInterface"/>
+  <rule ref="category/groovy/bestpractices.xml/ForLoopShouldBeWhileLoop"/>
+  <rule ref="category/groovy/bestpractices.xml/GroovyLoggerInsteadOfPrintln"/>
+  <rule ref="category/groovy/bestpractices.xml/UnnecessaryParentheses" message="Avoid extraneous parentheses to keep expressions readable."/>
+  <rule ref="category/groovy/bestpractices.xml/UseAssertEqualsInsteadOfAssertTrue"/>
+  <rule ref="category/groovy/bestpractices.xml/UseCollectMany"/>
+  <rule ref="category/groovy/bestpractices.xml/UseIsNull"/>
+</ruleset>

@@ -1,11 +1,69 @@
+import org.gradle.api.plugins.quality.Pmd
+import org.gradle.api.tasks.SourceSetContainer
+
 plugins {
   id "com.github.ben-manes.versions" version "0.53.0" apply false
+  id "com.diffplug.spotless" version "8.0.0" apply false
+  id "pmd"
 }
 
 description = "Groovy libraries for working with matrix ([][] data)"
 
 subprojects {
   apply plugin: "com.github.ben-manes.versions"
+
+  plugins.withId("groovy") {
+    apply plugin: "com.diffplug.spotless"
+    apply plugin: "pmd"
+
+    spotless {
+      groovy {
+        target fileTree(project.projectDir) {
+          include "src/**/*.groovy"
+          exclude "**/build/**"
+        }
+        greclipse()
+        indentWithSpaces(2)
+        trimTrailingWhitespace()
+        endWithNewline()
+      }
+
+      groovyGradle {
+        target "**/*.gradle"
+        greclipse()
+        indentWithSpaces(2)
+        trimTrailingWhitespace()
+        endWithNewline()
+      }
+    }
+
+    pmd {
+      toolVersion = "7.17.0"
+      consoleOutput = true
+      ignoreFailures = false
+      ruleSets = []
+      ruleSetFiles = files("${rootProject.projectDir}/config/pmd/pmd-groovy-ruleset.xml")
+    }
+
+    SourceSetContainer sourceSets = project.extensions.getByType(SourceSetContainer)
+    tasks.withType(Pmd).configureEach { task ->
+      String sourceSetName = task.name - "pmd"
+      if (!sourceSetName.isEmpty()) {
+        sourceSetName = sourceSetName[0].toLowerCase() + sourceSetName.substring(1)
+      }
+      def sourceSet = sourceSets.findByName(sourceSetName)
+      if (sourceSet != null) {
+        task.setSource(sourceSet.allSource.matching { include "**/*.groovy" })
+      } else {
+        task.setSource(fileTree("src") { include "**/*.groovy" })
+      }
+      task.exclude("**/generated/**")
+      task.reports { reports ->
+        reports.xml.required = false
+        reports.html.required = true
+      }
+    }
+  }
 }
 
 def isNonStable = { String v ->
