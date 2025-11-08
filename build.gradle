@@ -23,7 +23,7 @@ subprojects {
           exclude "**/build/**"
         }
         greclipse()
-        indentWithSpaces(2)
+        leadingTabsToSpaces(2)
         trimTrailingWhitespace()
         endWithNewline()
       }
@@ -31,7 +31,7 @@ subprojects {
       groovyGradle {
         target "**/*.gradle"
         greclipse()
-        indentWithSpaces(2)
+        leadingTabsToSpaces(2)
         trimTrailingWhitespace()
         endWithNewline()
       }
