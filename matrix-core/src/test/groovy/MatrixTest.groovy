@@ -590,6 +590,20 @@ class MatrixTest {
   }
 
   @Test
+  void testAddColumnsMetadataSizeValidation() {
+    Matrix matrix = Matrix.builder().columns(id: [1, 2, 3]).types(Integer).build()
+
+    def names = ['foo', 'bar']
+    def columns = [[10, 20, 30], ['a', 'b', 'c']]
+    def types = [Integer]
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      matrix.addColumns(names, columns, types)
+    }
+    assertEquals('List sizes of columns, names and types must match', ex.message)
+  }
+
+  @Test
   void testSort() {
     def empData = Matrix.builder().columns(
         emp_id: 1..5,

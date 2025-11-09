@@ -154,9 +154,19 @@ class Matrix implements Iterable<Row>, Cloneable {
     return addColumns(names, cols, types)
   }
 
+  /**
+   * Add the provided column data, names and types to this matrix.
+   *
+   * @param names the column names to add in the order the columns appear
+   * @param columns the column data lists to add
+   * @param types the column types corresponding to the supplied columns
+   * @return the mutated Matrix
+   * @throws IllegalArgumentException if the number of supplied names, columns and types are not identical
+   */
   Matrix addColumns(List<String> names, List<List> columns, List<Class> types) {
-    if (columns.size() != names.size() && columns.size() != types.size()) {
-      throw new IllegalArgumentException("List sizes of columns, names and types does not match")
+    int columnSize = columns.size()
+    if (columnSize != names.size() || columnSize != types.size()) {
+      throw new IllegalArgumentException("List sizes of columns, names and types must match")
     }
     names.eachWithIndex { String name, int i ->
       addColumn(name, types[i], columns[i])
