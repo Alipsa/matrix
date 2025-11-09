@@ -185,7 +185,7 @@ class SpreadsheetImporterTest {
     MatrixAssertions.assertEquals(book2Sheet2ByName, book2Sheet2ByNumber)
   }
 
-  private void assertSheetNumberIsOneIndexedForStream(Importer importer) {
+  private static void assertSheetNumberIsOneIndexedForStream(Importer importer) {
     Matrix book1Sheet1ByName = importFromStream(importer, "Book1.xlsx", "Sheet1", 1, 12, 1, 4)
     Matrix book1Sheet1ByNumber = importFromStream(importer, "Book1.xlsx", 1, 1, 12, 1, 4)
     MatrixAssertions.assertEquals(book1Sheet1ByName, book1Sheet1ByNumber)
@@ -195,9 +195,9 @@ class SpreadsheetImporterTest {
     MatrixAssertions.assertEquals(book2Sheet2ByName, book2Sheet2ByNumber)
   }
 
-  private Matrix importFromStream(Importer importer, String fileName, String sheetName,
-                                  int startRow, int endRow, int startCol, int endCol) {
-    InputStream stream = getClass().getResourceAsStream("/${fileName}")
+  private static Matrix importFromStream(Importer importer, String fileName, String sheetName,
+                                         int startRow, int endRow, int startCol, int endCol) {
+    InputStream stream = SpreadsheetImporterTest.class.getResourceAsStream("/${fileName}")
     assertNotNull(stream, "Missing test resource ${fileName}")
     try {
       return importer.importSpreadsheet(stream, sheetName, startRow, endRow, startCol, endCol, true)
@@ -206,9 +206,9 @@ class SpreadsheetImporterTest {
     }
   }
 
-  private Matrix importFromStream(Importer importer, String fileName, int sheetNumber,
-                                  int startRow, int endRow, int startCol, int endCol) {
-    InputStream stream = getClass().getResourceAsStream("/${fileName}")
+  private static Matrix importFromStream(Importer importer, String fileName, int sheetNumber,
+                                         int startRow, int endRow, int startCol, int endCol) {
+    InputStream stream = SpreadsheetImporterTest.class.getResourceAsStream("/${fileName}")
     assertNotNull(stream, "Missing test resource ${fileName}")
     try {
       return importer.importSpreadsheet(stream, sheetNumber, startRow, endRow, startCol, endCol, true)
