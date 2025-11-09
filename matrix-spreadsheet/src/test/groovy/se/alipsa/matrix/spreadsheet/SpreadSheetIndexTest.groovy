@@ -206,7 +206,7 @@ class SpreadSheetIndexTest {
   }
 
   private static void assertReaderIndicesAreOneBased(String resource) {
-    try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(resource)) {
+    try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(resourcePath(resource))) {
       assertEquals(12, reader.findLastRow(HEADER_ROW_INDEX), "Last row should be 12 for $resource")
       assertEquals(4, reader.findLastCol(HEADER_ROW_INDEX), "Last column should be 4 for $resource")
       assertEquals(5, reader.findRowNum(HEADER_ROW_INDEX, SECOND_COLUMN_INDEX, 'gång'), "Row lookup failed for $resource")
