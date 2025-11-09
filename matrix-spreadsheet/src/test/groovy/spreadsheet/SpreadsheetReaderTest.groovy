@@ -12,7 +12,7 @@ class SpreadsheetReaderTest {
   void testFindBySheetNumber() {
     withBook1Reader { SpreadsheetReader reader, String spreadsheetName ->
       assertEquals(12, reader.findLastRow(1), "$spreadsheetName: Last row by number")
-      assertEquals(4, reader.findLastCol(1), "$spreadsheetName: End column by number")
+      assertEquals(4, reader.findLastCol(1), "$spreadsheetName: Last column by number")
       assertEquals(5, reader.findRowNum(1, 'B', 'gång'),
           "$spreadsheetName: find row by number and column name")
       assertEquals(4, reader.findColNum(1, 8, '20.9'),
