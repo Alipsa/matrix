@@ -36,7 +36,6 @@ class SpreadsheetImporter {
     if (file.toLowerCase().endsWith(".ods")) {
       return getImporter(odsImplementation).importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    sheet = sheet -1
     return getImporter(excelImplementation)
         .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
@@ -105,7 +104,6 @@ class SpreadsheetImporter {
                             boolean firstRowAsColNames = true,
                             ExcelImplementation excelImplementation = FastExcel) {
 
-    sheet = sheet -1
     getImporter(excelImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
@@ -115,7 +113,6 @@ class SpreadsheetImporter {
                             boolean firstRowAsColNames = true,
                             ExcelImplementation excelImplementation = FastExcel) {
 
-    sheet = sheet -1
     getImporter(excelImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
@@ -124,7 +121,6 @@ class SpreadsheetImporter {
                             String startColumn = 'A', String endColumn,
                             boolean firstRowAsColNames = true,
                             ExcelImplementation excelImplementation = FastExcel) {
-    sheet = sheet -1
     getImporter(excelImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
@@ -158,7 +154,6 @@ class SpreadsheetImporter {
     if (file.toLowerCase().endsWith(".ods")) {
       return getImporter(odsImplementation).importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    sheet = sheet -1
     return getImporter(excelImplementation)
         .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }

@@ -4,9 +4,13 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.core.ValueConverter
+import java.io.InputStream
 import se.alipsa.matrix.spreadsheet.ExcelImplementation
+import se.alipsa.matrix.spreadsheet.Importer
 import se.alipsa.matrix.spreadsheet.OdsImplementation
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
+import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
 
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -14,6 +18,7 @@ import java.time.format.DateTimeFormatter
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
 import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importExcel
 import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importSpreadsheet
 
@@ -148,5 +153,67 @@ class SpreadsheetImporterTest {
       assertIterableEquals(comp.columnNames(), comp2.columnNames(), "column names differ")
       comp2 = comp2.convert([String] + [Integer]*31 as List<Class<?>>)
       assertIterableEquals(comp.typeNames(), comp2.typeNames(), "column types differ after column name setting")
+  }
+
+  @Test
+  void testFastExcelSheetNumberIsOneIndexedForFileImport() {
+    assertSheetNumberIsOneIndexedForFile(FExcelImporter.create())
+  }
+
+  @Test
+  void testPoiSheetNumberIsOneIndexedForFileImport() {
+    assertSheetNumberIsOneIndexedForFile(ExcelImporter.create())
+  }
+
+  @Test
+  void testFastExcelSheetNumberIsOneIndexedForStreamImport() {
+    assertSheetNumberIsOneIndexedForStream(FExcelImporter.create())
+  }
+
+  @Test
+  void testPoiSheetNumberIsOneIndexedForStreamImport() {
+    assertSheetNumberIsOneIndexedForStream(ExcelImporter.create())
+  }
+
+  private static void assertSheetNumberIsOneIndexedForFile(Importer importer) {
+    Matrix book1Sheet1ByName = importer.importSpreadsheet("Book1.xlsx", "Sheet1", 1, 12, 1, 4, true)
+    Matrix book1Sheet1ByNumber = importer.importSpreadsheet("Book1.xlsx", 1, 1, 12, 1, 4, true)
+    MatrixAssertions.assertEquals(book1Sheet1ByName, book1Sheet1ByNumber)
+
+    Matrix book2Sheet2ByName = importer.importSpreadsheet("Book2.xlsx", "Sheet2", 1, 12, 1, 4, true)
+    Matrix book2Sheet2ByNumber = importer.importSpreadsheet("Book2.xlsx", 2, 1, 12, 1, 4, true)
+    MatrixAssertions.assertEquals(book2Sheet2ByName, book2Sheet2ByNumber)
+  }
+
+  private void assertSheetNumberIsOneIndexedForStream(Importer importer) {
+    Matrix book1Sheet1ByName = importFromStream(importer, "Book1.xlsx", "Sheet1", 1, 12, 1, 4)
+    Matrix book1Sheet1ByNumber = importFromStream(importer, "Book1.xlsx", 1, 1, 12, 1, 4)
+    MatrixAssertions.assertEquals(book1Sheet1ByName, book1Sheet1ByNumber)
+
+    Matrix book2Sheet2ByName = importFromStream(importer, "Book2.xlsx", "Sheet2", 1, 12, 1, 4)
+    Matrix book2Sheet2ByNumber = importFromStream(importer, "Book2.xlsx", 2, 1, 12, 1, 4)
+    MatrixAssertions.assertEquals(book2Sheet2ByName, book2Sheet2ByNumber)
+  }
+
+  private Matrix importFromStream(Importer importer, String fileName, String sheetName,
+                                  int startRow, int endRow, int startCol, int endCol) {
+    InputStream stream = getClass().getResourceAsStream("/${fileName}")
+    assertNotNull(stream, "Missing test resource ${fileName}")
+    try {
+      return importer.importSpreadsheet(stream, sheetName, startRow, endRow, startCol, endCol, true)
+    } finally {
+      stream.close()
+    }
+  }
+
+  private Matrix importFromStream(Importer importer, String fileName, int sheetNumber,
+                                  int startRow, int endRow, int startCol, int endCol) {
+    InputStream stream = getClass().getResourceAsStream("/${fileName}")
+    assertNotNull(stream, "Missing test resource ${fileName}")
+    try {
+      return importer.importSpreadsheet(stream, sheetNumber, startRow, endRow, startCol, endCol, true)
+    } finally {
+      stream.close()
+    }
   }
 }
