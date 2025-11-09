@@ -89,6 +89,19 @@ class FExcelImporter implements Importer {
     )
   }
 
+  /**
+   * Import a sheet from a file using a 1-indexed sheet number.
+   *
+   * @param file the file path or resource name
+   * @param sheetNumber the 1-indexed sheet number to import
+   * @param startRow the first row to include (1-indexed)
+   * @param endRow the last row to include (1-indexed)
+   * @param startCol the first column to include (1-indexed)
+   * @param endCol the last column to include (1-indexed)
+   * @param firstRowAsColNames whether the first row should be treated as column headers
+   * @return the imported sheet as a {@link Matrix}
+   * @throws IllegalArgumentException if {@code sheetNumber} is less than 1 or greater than the number of sheets
+   */
   @Override
   Matrix importSpreadsheet(String file, int sheetNumber,
                             int startRow = 1, int endRow,
@@ -96,7 +109,12 @@ class FExcelImporter implements Importer {
                             boolean firstRowAsColNames = true) {
     File excelFile = FileUtil.checkFilePath(file)
     try (ReadableWorkbook workbook = new ReadableWorkbook(excelFile, OPTIONS)) {
-      Sheet sheet = workbook.getSheet(sheetNumber).orElseThrow(() -> new IllegalArgumentException("Sheet number $sheetNumber does not exist"))
+      if (sheetNumber < 1) {
+        throw new IllegalArgumentException("Sheet number must be 1 or greater")
+      }
+      int sheetIndex = sheetNumber - 1
+      Sheet sheet = workbook.getSheet(sheetIndex)
+          .orElseThrow(() -> new IllegalArgumentException("Sheet number $sheetNumber does not exist"))
       boolean isDate1904 = workbook.isDate1904()
       return importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
     }
@@ -144,10 +162,28 @@ class FExcelImporter implements Importer {
     }
   }
 
+  /**
+   * Import a sheet from an {@link InputStream} using a 1-indexed sheet number.
+   *
+   * @param is the stream containing the workbook data
+   * @param sheetNum the 1-indexed sheet number to import
+   * @param startRow the first row to include (1-indexed)
+   * @param endRow the last row to include (1-indexed)
+   * @param startCol the first column to include (1-indexed)
+   * @param endCol the last column to include (1-indexed)
+   * @param firstRowAsColNames whether the first row should be treated as column headers
+   * @return the imported sheet as a {@link Matrix}
+   * @throws IllegalArgumentException if {@code sheetNum} is less than 1 or greater than the number of sheets
+   */
   @Override
   Matrix importSpreadsheet(InputStream is, int sheetNum, int startRow, int endRow, int startCol, int endCol, boolean firstRowAsColNames) {
     try (ReadableWorkbook workbook = new ReadableWorkbook(is, OPTIONS)) {
-      Sheet sheet = workbook.getSheet(sheetNum).orElseThrow(() -> new IllegalArgumentException("Sheet number $sheetNum does not exist"))
+      if (sheetNum < 1) {
+        throw new IllegalArgumentException("Sheet number must be 1 or greater")
+      }
+      int sheetIndex = sheetNum - 1
+      Sheet sheet = workbook.getSheet(sheetIndex)
+          .orElseThrow(() -> new IllegalArgumentException("Sheet number $sheetNum does not exist"))
       boolean isDate1904 = workbook.isDate1904()
       return importExcelSheet(sheet, startRow, endRow, startCol, endCol, firstRowAsColNames, isDate1904)
     }

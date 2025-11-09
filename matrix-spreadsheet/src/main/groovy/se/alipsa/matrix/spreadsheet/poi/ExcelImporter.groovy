@@ -96,6 +96,19 @@ class ExcelImporter implements Importer {
     )
   }
 
+  /**
+   * Import a sheet from a file using a 1-indexed sheet number.
+   *
+   * @param file the file path or name
+   * @param sheetNumber the 1-indexed sheet number to import
+   * @param startRow the first row to include (1-indexed)
+   * @param endRow the last row to include (1-indexed)
+   * @param startCol the first column to include (1-indexed)
+   * @param endCol the last column to include (1-indexed)
+   * @param firstRowAsColNames whether the first row should be treated as column headers
+   * @return the imported sheet as a {@link Matrix}
+   * @throws IllegalArgumentException if {@code sheetNumber} is less than 1 or greater than the number of sheets
+   */
   @Override
   Matrix importSpreadsheet(String file, int sheetNumber,
                            int startRow = 1, int endRow,
@@ -104,7 +117,14 @@ class ExcelImporter implements Importer {
     List<String> header = []
     File excelFile = FileUtil.checkFilePath(file)
     try (Workbook workbook = WorkbookFactory.create(excelFile)) {
-      Sheet sheet = workbook.getSheetAt(sheetNumber)
+      if (sheetNumber < 1) {
+        throw new IllegalArgumentException("Sheet number must be 1 or greater")
+      }
+      int sheetIndex = sheetNumber - 1
+      if (sheetIndex >= workbook.numberOfSheets) {
+        throw new IllegalArgumentException("Sheet number $sheetNumber does not exist")
+      }
+      Sheet sheet = workbook.getSheetAt(sheetIndex)
       // TODO refactor build header to either use first row or create column names
       if (firstRowAsColNames) {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
@@ -157,15 +177,17 @@ class ExcelImporter implements Importer {
   }
 
   /**
+   * Import a sheet using a 1-indexed sheet number from an {@link InputStream}.
    *
-   * @param is
-   * @param sheetNum 1 indexed
-   * @param startRow 1 indexed
-   * @param endRow 1 indexed
-   * @param startCol 1 indexed
-   * @param endCol 1 indexed
-   * @param firstRowAsColNames
-   * @return
+   * @param is the stream containing the workbook data
+   * @param sheetNum the 1-indexed sheet number to import
+   * @param startRow the first row to include (1-indexed)
+   * @param endRow the last row to include (1-indexed)
+   * @param startCol the first column to include (1-indexed)
+   * @param endCol the last column to include (1-indexed)
+   * @param firstRowAsColNames whether the first row should be treated as column headers
+   * @return the imported sheet as a {@link Matrix}
+   * @throws IllegalArgumentException if {@code sheetNum} is less than 1 or greater than the number of sheets
    */
   @Override
   Matrix importSpreadsheet(InputStream is, int sheetNum,
@@ -174,7 +196,14 @@ class ExcelImporter implements Importer {
                            boolean firstRowAsColNames = true) {
     List<String> header = []
     try (Workbook workbook = WorkbookFactory.create(is)) {
-      Sheet sheet = workbook.getSheetAt(sheetNum-1)
+      if (sheetNum < 1) {
+        throw new IllegalArgumentException("Sheet number must be 1 or greater")
+      }
+      int sheetIndex = sheetNum - 1
+      if (sheetIndex >= workbook.numberOfSheets) {
+        throw new IllegalArgumentException("Sheet number $sheetNum does not exist")
+      }
+      Sheet sheet = workbook.getSheetAt(sheetIndex)
       // TODO refactor build header to either use first row or create column names
       if (firstRowAsColNames) {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
