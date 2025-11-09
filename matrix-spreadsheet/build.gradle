@@ -2,12 +2,12 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id('groovy')
-    id('java-library')
-    id('signing')
-    id('maven-publish')
-    //id("se.alipsa.nexus-release-plugin") version "1.0.1"
-    id("se.alipsa.nexus-release-plugin") version '2.0.0'
+  id('groovy')
+  id('java-library')
+  id('signing')
+  id('maven-publish')
+  //id("se.alipsa.nexus-release-plugin") version "1.0.1"
+  id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
 group = 'se.alipsa.matrix'
@@ -19,91 +19,100 @@ ext.nexusUrl = version.contains("SNAPSHOT")
     : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
 repositories {
-    if (version.contains('SNAPSHOT')) {
-        mavenLocal()
-    }
-    mavenCentral()
+  if (version.contains('SNAPSHOT')) {
+    mavenLocal()
+  }
+  mavenCentral()
 }
 
 JavaCompile javaCompile = compileJava {
-    options.release = 21
-    options.deprecation = true
-    options.compilerArgs << "-Xlint:unchecked"
+  options.release = 21
+  options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
 }
 
 compileGroovy {
-    options.deprecation = true
+  options.deprecation = true
 }
 
 dependencies {
-    compileOnly libs.groovy
-    compileOnly libs.groovyAnt
-    compileOnly libs.groovyTemplates
-    compileOnly libs.groovyDoc
-    compileOnly 'com.github.javaparser:javaparser-core:3.27.1'
+  compileOnly libs.groovy
+  compileOnly libs.groovyAnt
+  compileOnly libs.groovyTemplates
+  compileOnly libs.groovyDoc
+  compileOnly 'com.github.javaparser:javaparser-core:3.27.1'
 
 
-    def fastExcelVersion = '0.19.0'
-    def poiVersion = '5.4.1'
-    compileOnly project(':matrix-core')
-    testImplementation project(':matrix-core')
-    implementation libs.log4jApi
+  def fastExcelVersion = '0.19.0'
+  def poiVersion = '5.4.1'
+  compileOnly project(':matrix-core')
+  testImplementation project(':matrix-core')
+  implementation libs.log4jApi
 
-    implementation("org.apache.poi:poi:${poiVersion}")
-    implementation("org.apache.poi:poi-ooxml:${poiVersion}")
-    // https://github.com/dhatim/fastexcel
-    implementation("org.dhatim:fastexcel:$fastExcelVersion")
-    implementation("org.dhatim:fastexcel-reader:$fastExcelVersion")
-    implementation 'com.github.miachm.sods:SODS:1.7.0'
+  implementation("org.apache.poi:poi:${poiVersion}")
+  implementation("org.apache.poi:poi-ooxml:${poiVersion}")
+  // https://github.com/dhatim/fastexcel
+  implementation("org.dhatim:fastexcel:$fastExcelVersion")
+  implementation("org.dhatim:fastexcel-reader:$fastExcelVersion")
+  implementation 'com.github.miachm.sods:SODS:1.7.0'
 
 
-    testImplementation testLibs.junitJupiterApi
-    testRuntimeOnly testLibs.junitJupiterEngine
-    testRuntimeOnly testLibs.junitPlatformLauncher
-    testImplementation libs.groovy
-    testImplementation testLibs.log4jToSlf4j
-    testImplementation testLibs.slf4jSimple
+  testImplementation testLibs.junitJupiterApi
+  testRuntimeOnly testLibs.junitJupiterEngine
+  testRuntimeOnly testLibs.junitPlatformLauncher
+  testImplementation libs.groovy
+  testImplementation testLibs.log4jToSlf4j
+  testImplementation testLibs.slf4jSimple
 }
 
 test {
-    jvmArgs '-Xmx2g'
-    useJUnitPlatform()
-    testLogging {
-        // set options for log level LIFECYCLE
-        events TestLogEvent.FAILED,
-            TestLogEvent.PASSED,
-            TestLogEvent.SKIPPED,
-            TestLogEvent.STANDARD_OUT
-        exceptionFormat = TestExceptionFormat.FULL
-        showExceptions = true
-        showCauses = true
-        showStackTraces = true
-        showStandardStreams = true
-
-        // set options for log level DEBUG and INFO
-        debug {
-            events TestLogEvent.STARTED,
-                TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_ERROR,
-                TestLogEvent.STANDARD_OUT
-            exceptionFormat = TestExceptionFormat.FULL
-        }
-        info.events = debug.events
-        info.exceptionFormat = debug.exceptionFormat
-
-        afterSuite { desc, result ->
-            def duration = result.endTime - result.startTime
-            println "Duration of $desc: $duration ms"
-            if (!desc.parent) { // will match the outermost suite
-                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
-                def startItem = '|  ', endItem = '  |'
-                def repeatLength = startItem.length() + output.length() + endItem.length()
-                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
-            }
-        }
+  jvmArgs '-Xmx2g'
+  useJUnitPlatform() {
+    excludeTags 'slow'
+  }
+  // Allow enabling from CLI:  -PrunSlowTests=true  (or env RUN_SLOW_TESTS=true)
+  def runSlow = (project.findProperty('runSlowTests') ?: System.getenv('RUN_SLOW_TESTS'))?.toString()?.toBoolean() ?: false
+  if (runSlow) {
+    useJUnitPlatform {
+      excludeTags()  // clear the default exclusion
     }
+  }
+  testLogging {
+    // set options for log level LIFECYCLE
+    events TestLogEvent.FAILED,
+        TestLogEvent.PASSED,
+        TestLogEvent.SKIPPED,
+        TestLogEvent.STANDARD_OUT
+    exceptionFormat = TestExceptionFormat.FULL
+    showExceptions = true
+    showCauses = true
+    showStackTraces = true
+    showStandardStreams = true
+
+    // set options for log level DEBUG and INFO
+    debug {
+      events TestLogEvent.STARTED,
+          TestLogEvent.FAILED,
+          TestLogEvent.PASSED,
+          TestLogEvent.SKIPPED,
+          TestLogEvent.STANDARD_ERROR,
+          TestLogEvent.STANDARD_OUT
+      exceptionFormat = TestExceptionFormat.FULL
+    }
+    info.events = debug.events
+    info.exceptionFormat = debug.exceptionFormat
+
+    afterSuite { desc, result ->
+      def duration = result.endTime - result.startTime
+      println "Duration of $desc: $duration ms"
+      if (!desc.parent) { // will match the outermost suite
+        def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+        def startItem = '|  ', endItem = '  |'
+        def repeatLength = startItem.length() + output.length() + endItem.length()
+        println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+      }
+    }
+  }
 }
 
 //docTitle = "${project.name} ${project.version}"
@@ -111,110 +120,110 @@ test {
 //link 'https://docs.oracle.com/en/java/javase/21/docs/api/', 'java.'
 
 tasks.register('antGroovydoc', DefaultTask) {
-    group = 'documentation'
-    description = 'Generate Groovydoc using Ant with custom config'
+  group = 'documentation'
+  description = 'Generate Groovydoc using Ant with custom config'
 
-    doLast {
-        def outputDir = layout.buildDirectory.dir("groovydocant").get().asFile
+  doLast {
+    def outputDir = layout.buildDirectory.dir("groovydocant").get().asFile
 
-        ant.taskdef(
-            name: 'groovydoc',
-            classname: 'org.codehaus.groovy.ant.Groovydoc',
-            classpath: sourceSets.main.compileClasspath.asPath
-        )
+    ant.taskdef(
+        name: 'groovydoc',
+        classname: 'org.codehaus.groovy.ant.Groovydoc',
+        classpath: sourceSets.main.compileClasspath.asPath
+    )
 
-        ant.groovydoc(
-            destdir: outputDir,
-            sourcepath: sourceSets.main.groovy.srcDirs.join(':'),
-            packagenames: '*',
-            javaVersion: 'JAVA_21',
-            doctitle: "${project.name} ${project.version}",
-            windowtitle: "${project.name} ${project.version}"
-        ) {
-            // Does not work, groovydoc does not support modules e,g,
-            //  URL will become https://docs.oracle.com/en/java/javase/21/docs/api/java/net/URL.html
-            //  instead of https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/URL.html
-            //link packages: 'java.', href: 'https://docs.oracle.com/en/java/javase/21/docs/api/'
-            link packages:"groovy.,org.codehaus.groovy.", href: "http://docs.groovy-lang.org/latest/html/api/"
-        }
+    ant.groovydoc(
+        destdir: outputDir,
+        sourcepath: sourceSets.main.groovy.srcDirs.join(':'),
+        packagenames: '*',
+        javaVersion: 'JAVA_21',
+        doctitle: "${project.name} ${project.version}",
+        windowtitle: "${project.name} ${project.version}"
+    ) {
+      // Does not work, groovydoc does not support modules e,g,
+      //  URL will become https://docs.oracle.com/en/java/javase/21/docs/api/java/net/URL.html
+      //  instead of https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/URL.html
+      //link packages: 'java.', href: 'https://docs.oracle.com/en/java/javase/21/docs/api/'
+      link packages: "groovy.,org.codehaus.groovy.", href: "http://docs.groovy-lang.org/latest/html/api/"
     }
+  }
 }
 
 tasks.named('build') {
-    dependsOn tasks.named('antGroovydoc')
+  dependsOn tasks.named('antGroovydoc')
 }
 
 //Maven Central uploads
 
 tasks.register('javadocJar', Jar) {
-    dependsOn tasks.named('antGroovydoc')
-    archiveClassifier.set('javadoc')
-    from layout.buildDirectory.dir("groovydocant")
+  dependsOn tasks.named('antGroovydoc')
+  archiveClassifier.set('javadoc')
+  from layout.buildDirectory.dir("groovydocant")
 }
 
 tasks.register('sourcesJar', Jar) {
-    dependsOn tasks.named('classes')
-    archiveClassifier.set('sources')
-    from sourceSets.main.allSource
+  dependsOn tasks.named('classes')
+  archiveClassifier.set('sources')
+  from sourceSets.main.allSource
 }
 
 publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
-            artifact(javadocJar)
-            artifact(sourcesJar)
-            pom {
-                name = 'Matrix Spreadsheet import/export'
-                description = "${project.description}"
-                url = "https://github.com/Alipsa/matrix/matrix-spreadsheet"
-                properties = [
-                    'maven.compiler.release': "${javaCompile.options.release.get()}"
-                ]
-                licenses {
-                    license {
-                        name = 'MIT License'
-                        url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-spreadsheet/master/LICENSE'
-                    }
-                }
-                developers {
-                    developer {
-                        id = 'perNyfelt'
-                        name = 'Per Nyfelt'
-                    }
-                }
-                scm {
-                    url = 'https://github.com/Alipsa/matrix/matrix-spreadsheet/tree/master'
-                    connection = 'scm:git:https://github.com/Alipsa/matrix.git'
-                    developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
-                }
-            }
+  publications {
+    maven(MavenPublication) {
+      from components.java
+      artifact(javadocJar)
+      artifact(sourcesJar)
+      pom {
+        name = 'Matrix Spreadsheet import/export'
+        description = "${project.description}"
+        url = "https://github.com/Alipsa/matrix/matrix-spreadsheet"
+        properties = [
+            'maven.compiler.release': "${javaCompile.options.release.get()}"
+        ]
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-spreadsheet/master/LICENSE'
+          }
         }
-    }
-    if (project.ext.properties.sonatypeUsername) {
-        repositories {
-            maven {
-                credentials {
-                    username = sonatypeUsername
-                    password = sonatypePassword
-                }
-                url = nexusUrl
-            }
+        developers {
+          developer {
+            id = 'perNyfelt'
+            name = 'Per Nyfelt'
+          }
         }
+        scm {
+          url = 'https://github.com/Alipsa/matrix/matrix-spreadsheet/tree/master'
+          connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
+        }
+      }
     }
+  }
+  if (project.ext.properties.sonatypeUsername) {
+    repositories {
+      maven {
+        credentials {
+          username = sonatypeUsername
+          password = sonatypePassword
+        }
+        url = nexusUrl
+      }
+    }
+  }
 }
 
 signing {
-    if (project.properties['signing.keyId'] != null) {
-        //project.logger.lifecycle("Signing artifacts...")
-        sign publishing.publications.maven
-    } else {
-        project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
-    }
+  if (project.properties['signing.keyId'] != null) {
+    //project.logger.lifecycle("Signing artifacts...")
+    sign publishing.publications.maven
+  } else {
+    project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
+  }
 }
 
 nexusReleasePlugin {
-    userName = project.ext.properties.sonatypeUsername
-    password = project.ext.properties.sonatypePassword
-    mavenPublication = publishing.publications.maven
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
 }

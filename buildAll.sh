@@ -4,6 +4,8 @@ if [[ "$1" == "--external" || "$1" == "-e" ]]; then
   export RUN_EXTERNAL_TESTS=true
   echo "External tests enabled"
 fi
+export RUN_SLOW_TESTS=false
+
 localRepo=$(mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)
 if [[ -d "$localRepo/se/alipsa/matrix" ]]; then
   echo "Removing local cache in $localRepo/se/alipsa/matrix"

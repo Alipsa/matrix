@@ -1,6 +1,7 @@
 package spreadsheet
 
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
@@ -19,6 +20,7 @@ import java.time.format.DateTimeFormatter
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static se.alipsa.matrix.core.ValueConverter.*
 
+@Tag("slow")
 class LargeFileImportTest {
 
   int nrows = 360131 // including header row
@@ -61,7 +63,6 @@ class LargeFileImportTest {
   // memory consumption is the same, at least after completion
   @Test
   void testImportWithFastOdsStreamImporter() {
-    System.gc()
     assert colNames.size() == lastRow.size()
     URL url = this.getClass().getResource('/Crime_Data_from_2023.ods')
     println "LargeFileImportTest.testImportWithFastOdsStreamImporter importing $url"
@@ -76,7 +77,6 @@ class LargeFileImportTest {
 
   @Test
   void testImportWithFastOdsEventImporter() {
-    System.gc()
     assert colNames.size() == lastRow.size()
     URL url = this.getClass().getResource('/Crime_Data_from_2023.ods')
     println "LargeFileImportTest.testImportWithFastOdsEventImporter: importing $url"
@@ -91,7 +91,6 @@ class LargeFileImportTest {
 
   @Test
   void testImportFromFastExcel() {
-    System.gc()
     assert colNames.size() == lastRow.size()
     URL url = this.getClass().getResource('/Crime_Data_from_2023.xlsx')
     println "LargeFileImportTest.testImportFromFastExcel: importing $url"

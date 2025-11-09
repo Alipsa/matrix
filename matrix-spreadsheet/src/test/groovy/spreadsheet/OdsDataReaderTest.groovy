@@ -1,6 +1,7 @@
 package spreadsheet
 
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader;
@@ -41,6 +42,7 @@ class OdsDataReaderTest {
   }
 
   @Test
+  @Tag("slow")
   void testHugeFile() throws IOException {
     int nRows = 360131
     try (InputStream is = this.getClass().getResourceAsStream("/Crime_Data_from_2023.ods")) {

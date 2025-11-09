@@ -5,14 +5,15 @@ source jdk21
 
 # Enable external tests such a BigQuery and Gsheets
 export RUN_EXTERNAL_TESTS=true
+export RUN_SLOW_TESTS=true
 
 function release() {
    pushd "$1"
    ./release.sh
    popd
 }
-#release matrix-core
-#release matrix-datasets
+release matrix-core
+release matrix-datasets
 release matrix-stats
 release matrix-sql
 release matrix-spreadsheet
