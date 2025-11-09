@@ -324,7 +324,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix apply(int columnNumber, List<Integer> rows, Closure function) {
     int lastColIdx = mColumns.size() -1
-    if (columnNumber > 0 || columnNumber > lastColIdx) {
+    if (columnNumber < 0 || columnNumber > lastColIdx) {
       throw new IndexOutOfBoundsException("The column number must be within the available columns (0-${lastColIdx}) but was $columnNumber")
     }
     def col = new Column()

@@ -348,6 +348,28 @@ class MatrixTest {
   }
 
   @Test
+  void testApplyByColumnIndexWithRowSelection() {
+    def data = [
+        'place'    : [1, 2, 3],
+        'firstname': ['Lorena', 'Marianne', 'Lotte'],
+        'start'    : toLocalDates('2021-12-01', '2022-07-10', '2023-05-27')
+    ]
+
+    def table = Matrix.builder().columns(data).types([int, String, LocalDate]).build()
+
+    def mutated = table.clone()
+    mutated.apply(0, [0, 2]) { value -> value * 10 }
+
+    assertEquals(10, mutated[0, 0])
+    assertEquals(2, mutated[1, 0])
+    assertEquals(30, mutated[2, 0])
+
+    assertThrows(IndexOutOfBoundsException) {
+      table.clone().apply(-1, [0]) { val -> val }
+    }
+  }
+
+  @Test
   void testApplyChangeType() {
     def data = [
         'foo'      : [1, 2, 3],
