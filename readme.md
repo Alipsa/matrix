@@ -68,7 +68,7 @@ implementation('se.alipsa.matrix:matrix-core')
 </project>
 ```
 
-The jvm should be JDK 21 or higher.
+The jvm should be JDK 21. You can use a higher version for all modules except matrix-parquet and matrix-avro which cannot handle anything above JDK 21 due to the hadoop dependencies.
 
 For more information see the the [tutorial](docs/tutorial/outline.md) and the readme file and test classes in each subproject.
 <!---
