@@ -244,9 +244,12 @@ class MatrixParquetWriter {
           scale = precision // Clamp scale to precision
         }
 
-        def builder = required ? Types.required(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) : Types.optional(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
-        .length(minBytesForPrecision(precision))
-        .as(LogicalTypeAnnotation.decimalType(scale, precision))
+        def builder = required
+            ? Types.required(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
+            : Types.optional(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
+        builder = builder
+            .length(minBytesForPrecision(precision))
+            .as(LogicalTypeAnnotation.decimalType(scale, precision))
         return builder.named(name)
       } else {
         // fallback to double (discouraged, but allowed for backward compat)

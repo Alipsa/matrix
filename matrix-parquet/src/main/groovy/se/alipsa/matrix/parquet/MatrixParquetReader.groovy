@@ -219,19 +219,16 @@ class MatrixParquetReader {
 
   private static Map readMap(Group group, String fieldName, GroupType groupType) {
     LinkedHashMap result = new LinkedHashMap()
-    int repetition = group.getFieldRepetitionCount(fieldName)
-    for (int i = 0; i < repetition; i++) {
-      Group mapGroup = group.getGroup(fieldName, i)
-      GroupType keyValueType = groupType.getType(0).asGroupType()
-      Type keyType = keyValueType.getType(0)
-      Type valueType = keyValueType.getFieldCount() > 1 ? keyValueType.getType(1) : null
-      int keyValueCount = mapGroup.getFieldRepetitionCount('key_value')
-      for (int j = 0; j < keyValueCount; j++) {
-        Group kvGroup = mapGroup.getGroup('key_value', j)
-        def key = readValue(kvGroup, keyType.name, keyType, null)
-        def value = valueType == null ? null : readValue(kvGroup, valueType.name, valueType, null)
-        result[key] = value
-      }
+    Group mapGroup = group.getGroup(fieldName, 0)
+    GroupType keyValueType = groupType.getType(0).asGroupType()
+    Type keyType = keyValueType.getType(0)
+    Type valueType = keyValueType.getFieldCount() > 1 ? keyValueType.getType(1) : null
+    int keyValueCount = mapGroup.getFieldRepetitionCount('key_value')
+    for (int j = 0; j < keyValueCount; j++) {
+      Group kvGroup = mapGroup.getGroup('key_value', j)
+      def key = readValue(kvGroup, keyType.name, keyType, null)
+      def value = valueType == null ? null : readValue(kvGroup, valueType.name, valueType, null)
+      result[key] = value
     }
     return result
   }
