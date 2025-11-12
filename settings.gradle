@@ -28,3 +28,5 @@ include 'matrix-examples:DecisionTree'
 include 'matrix-examples:whiskey'
 include 'matrix-examples:XChartDemo'
 include 'matrix-examples:AnalysisScenario1'
+
+include 'matrix-smile'

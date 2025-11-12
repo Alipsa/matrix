@@ -12,10 +12,6 @@ plugins {
 group = 'se.alipsa.matrix'
 version = '0.0.1-SNAPSHOT'
 
-repositories {
-  mavenCentral()
-}
-
 JavaCompile javaCompile = compileJava {
   options.release = 21
   options.deprecation = true

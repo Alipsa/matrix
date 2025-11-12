@@ -10,6 +10,7 @@
 - MatrixParquetWriter can now either take a file or a dir (and use the matrix name)
 - Add write methods to MatrixParquetWriter that takes precision and scale for BigDecimal columns.
 - Fixed bug when inferring schema that set scale to 2 as the smallest scale. 
+- Add support for structs (pojos, maps) and repeated fields (arrays) when inferring schema and writing data.
 
 ## v0.3.0, 2025-05-28
 - Add a "native" parquet implementation in the form of MatrixParquetReader and MatrixParquetWriter.
