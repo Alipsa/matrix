@@ -163,4 +163,47 @@ class MatrixParquetTest {
     assertTrue(message.contains("arraycopy") || message.contains("byte array size") || message.contains("exceeds the max precision") || message.contains("overflow"),
         "Expected an exception indicating a precision overflow, but got: ${message}")
   }
+
+  @Test
+  void testNestedStructures() {
+    def productIds = [101, 102, 103]
+    def productNames = ['Laptop Pro', 'Mouse Pad', 'Monitor Ultra']
+    def productTags = [
+        ['Electronics', 'High-End'],
+        ['Accessories', 'Low-Cost', 'Desk'],
+        ['Electronics', 'Display', '4K']
+    ]
+    def productDetails = [
+        [manufacturer: 'Alpha', warranty_years: 3],
+        [manufacturer: 'Beta', warranty_years: 1],
+        [manufacturer: 'Gamma', warranty_years: 2]
+    ]
+    def productReviews = [
+        [[rating: 5, user: 'A'], [rating: 4, user: 'B']],
+        [[rating: 2, user: 'C']],
+        [[rating: 5, user: 'D'], [rating: 5, user: 'E'], [rating: 4, user: 'F']]
+    ]
+
+    def productsNested = Matrix.builder('products_nested').data(
+        id: productIds,
+        name: productNames,
+        tags: productTags,
+        details: productDetails,
+        reviews: productReviews
+    ).types([Integer, String, List, Map, List]).build()
+
+    File file = new File('build/products_nested.parquet')
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.write(productsNested, file)
+    def matrix = MatrixParquetReader.read(file)
+
+    assertEquals(productsNested, matrix, 'Nested data should be preserved when written and read back')
+    assertIterableEquals([Integer, String, List, Map, List], matrix.types(), 'Nested column types should be retained')
+    assertEquals(['Electronics', 'High-End'], matrix.tags[0])
+    assertEquals([manufacturer: 'Alpha', warranty_years: 3], matrix.details[0])
+    assertEquals([rating: 5, user: 'A'], matrix.reviews[0][0])
+  }
 }
