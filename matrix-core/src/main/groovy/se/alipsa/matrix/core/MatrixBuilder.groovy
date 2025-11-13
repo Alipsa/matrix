@@ -8,8 +8,14 @@ import se.alipsa.matrix.core.util.ClassUtils
 import java.lang.reflect.Modifier
 import java.nio.file.Files
 import java.nio.file.Path
+import java.sql.Array
+import java.sql.Blob
+import java.sql.Clob
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
+import java.sql.Time
+import java.sql.Timestamp
+import java.sql.Types
 
 @CompileStatic
 class MatrixBuilder {
@@ -457,14 +463,18 @@ class MatrixBuilder {
     for (int i = 1; i <= ncols; i++) {
       headers.add(rsmd.getColumnName(i))
       String columnClassName = rsmd.getColumnClassName(i)
-      if (columnClassName == "byte[]") {
-        columnTypes.add(byte[].class)
+      if (columnClassName == null || columnClassName.isBlank()) {
+        columnTypes.add(mapTypeToJavaClass(rsmd.getColumnType(i)))
       } else {
-        try {
-          columnTypes.add(Class.forName(columnClassName))
-        } catch (ClassNotFoundException e) {
-          System.err.println "Failed to load class $columnClassName, setting type to Object; ${e.toString()}"
-          columnTypes.add(Object.class)
+        if (columnClassName == "byte[]") {
+          columnTypes.add(byte[].class)
+        } else {
+          try {
+            columnTypes.add(Class.forName(columnClassName))
+          } catch (ClassNotFoundException e) {
+            System.err.println "Failed to load class $columnClassName, setting type to Object; ${e.toString()}"
+            columnTypes.add(Object.class)
+          }
         }
       }
     }
@@ -534,5 +544,28 @@ class MatrixBuilder {
 
   private boolean noName() {
     matrixName == null || matrixName.isBlank()
+  }
+
+  static Class mapTypeToJavaClass(int jdbcType) {
+    return switch (jdbcType) {
+      case Types.BIT, Types.BOOLEAN -> Boolean
+      case Types.TINYINT -> Byte
+      case Types.SMALLINT -> Short
+      case Types.INTEGER -> Integer
+      case Types.BIGINT -> Long
+      case Types.REAL -> Float
+      case Types.FLOAT, Types.DOUBLE -> Double
+      case Types.NUMERIC, Types.DECIMAL -> BigDecimal
+      case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR -> String
+      case Types.DATE -> Date
+      case Types.TIME, Types.TIME_WITH_TIMEZONE -> Time
+      case Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE -> Timestamp
+      case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> byte[]
+      case Types.ARRAY -> List
+      case Types.CLOB, Types.NCLOB -> Clob
+      case Types.BLOB -> Blob
+      case Types.STRUCT -> Map
+      default -> Object
+    }
   }
 }
