@@ -2,6 +2,7 @@
 
 ## v2.2.2. In progress
 - com.github.miachm.sods:SODS [1.6.8 -> 1.7.0]
+- org.apache.poi:poi [5.4.1 -> 5.5.0]
 - ODS Streaming reader 
   - Row repeats: Parse one physical `<table-row>` once, then replicate the parsed values number-rows-repeated times. 
   - Column repeats: Parse one physical `<table-cell>` once, then replicate its value number-columns-repeated times. 
