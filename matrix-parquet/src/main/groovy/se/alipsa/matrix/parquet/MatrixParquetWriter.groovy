@@ -169,7 +169,7 @@ class MatrixParquetWriter {
       //println "Building schema for column '$col' of type $type with decimal meta: $meta"
       builder.addField(buildParquetType(col, matrix.column(col), type, meta))
     }
-    return builder.named("MatrixSchema")
+    return builder.named(matrix.matrixName ?: "MatrixSchema" )
   }
 
   /**
