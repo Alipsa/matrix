@@ -1,8 +1,8 @@
 # Matrix-bigquery Release History
 
 ## v0.5.0, In progress
-- com.google.auth:google-auth-library-bom [1.38.0 -> 1.40.0]
-- com.google.auth:google-auth-library-oauth2-http [1.39.0 -> 1.40.0]
+- com.google.auth:google-auth-library-bom [1.38.0 -> 1.41.0]
+- com.google.auth:google-auth-library-oauth2-http [1.39.0 -> 1.41.0]
 - com.google.cloud:google-cloud-bigquery [2.54.2 -> 2.56.0]
 - com.google.cloud:google-cloud-bigquerystorage [3.16.3 -> 3.18.0]
 - com.google.cloud:google-cloud-resourcemanager [1.75.0 -> 1.82.0]

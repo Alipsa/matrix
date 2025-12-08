@@ -226,7 +226,6 @@ class Bq {
     Object value = null
     final BigDecimal tickPercent = 0.05
     try {
-      // --- STREAMING INSERT ATTEMPT (Original Logic) ---
       def wcfg = WriteChannelConfiguration.newBuilder(tableId)
           .setFormatOptions(FormatOptions.json())
           .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE) // or WRITE_APPEND
@@ -304,7 +303,7 @@ class Bq {
 
     } catch (Exception e) {
       // Check if the failure is a known connection error that necessitates the fallback
-      if (e.cause instanceof java.net.ConnectException || e.message?.contains("Connection refused")) {
+      if (e.cause instanceof ConnectException || e.message?.contains("Connection refused")) {
 
         println "Streaming insert failed with connection error. Falling back to InsertAll..."
         try {
