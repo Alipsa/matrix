@@ -1,0 +1,41 @@
+plugins {
+  id 'groovy'
+  id 'java-library'
+  id 'signing'
+  id 'maven-publish'
+  id("se.alipsa.nexus-release-plugin") version '2.0.0'
+}
+
+group = 'se.alipsa.matrix'
+version = '0.1.0-SNAPSHOT'
+
+repositories {
+  if (version.toString().endsWith('SNAPSHOT')) {
+    mavenLocal()
+  }
+  mavenCentral()
+}
+
+JavaCompile javaCompile = compileJava {
+  options.release = 21
+  options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
+}
+
+compileGroovy {
+  options.deprecation = true
+}
+
+dependencies {
+  compileOnly project(':matrix-core')
+  compileOnly libs.groovy
+  api 'com.github.haifengl:smile-core:4.4.2'
+  testImplementation testLibs.slf4jSimple
+  testImplementation testLibs.junitJupiterApi
+  testRuntimeOnly testLibs.junitJupiterEngine
+  testRuntimeOnly testLibs.junitPlatformLauncher
+}
+
+test {
+  useJUnitPlatform()
+}

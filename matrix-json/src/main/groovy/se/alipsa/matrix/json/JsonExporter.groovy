@@ -46,29 +46,18 @@ class JsonExporter {
      * @return a json string
      */
     String toJson(Map<String, Closure> columnFormatters, boolean indent, String dateFormat='yyyy-MM-dd') {
-        def t = table.clone()
-        columnFormatters.each { k,v ->
-            t.apply(k, v)
+        // Only clone if we need to apply formatters (avoids unnecessary memory allocation)
+        def t = columnFormatters.isEmpty() ? table : table.clone()
+        if (!columnFormatters.isEmpty()) {
+            columnFormatters.each { k,v ->
+                t.apply(k, v)
+            }
         }
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dateFormat)
-        /*
-        // we do this in a custom formatter in the JsonGenerator below instead
-        def names = (t.columnNames(TemporalAccessor) - columnFormatters.keySet() as List)
-        names.each { name ->
-            t.convert(name, String, {dtf.format(it)})
-        }*/
 
-        // convert each row to a Map so we get an array of objects as json output instead of an array of arrays
-        List<Map<String,?>> mapList = []
-        t.each {
-            mapList << it.toMap()
-        }
-        def jsonOutput = new JsonGenerator.Options()
+        def jsonGenerator = new JsonGenerator.Options()
             .dateFormat(dateFormat)
             .addConverter(new JsonGenerator.Converter() {
-                /**
-                 * Indicate which type this converter can handle.
-                 */
                 @Override
                 boolean handles(Class<?> type) {
                     return TemporalAccessor.isAssignableFrom(type)
@@ -77,10 +66,23 @@ class JsonExporter {
                 Object convert(Object date, String key) {
                     dtf.format(date as TemporalAccessor)
                 }
-
             })
             .build()
-        String json = jsonOutput.toJson(mapList)
+
+        // Stream JSON generation - convert one row at a time instead of building full List<Map>
+        StringBuilder sb = new StringBuilder()
+        sb.append('[')
+        boolean first = true
+        for (def row : t) {
+            if (!first) {
+                sb.append(',')
+            }
+            first = false
+            sb.append(jsonGenerator.toJson(row.toMap()))
+        }
+        sb.append(']')
+
+        String json = sb.toString()
         return indent ? JsonOutput.prettyPrint(json) : json
     }
 }

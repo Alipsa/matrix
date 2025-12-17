@@ -41,13 +41,15 @@ dependencies {
   compileOnly libs.groovy
   compileOnly libs.groovyJson
 
+  // Jackson for streaming JSON parsing (low memory footprint)
+  api("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+  api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+
   testImplementation libs.groovy
   testImplementation libs.groovyJson
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
   testRuntimeOnly testLibs.junitPlatformLauncher
-  testImplementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 }
 
 test {

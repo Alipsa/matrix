@@ -191,7 +191,6 @@ class ClassUtils {
 
     ClassLoader cl = obj.class.classLoader
     while(cl != null && !(cl instanceof GroovyClassLoader)) {
-      //println("cl = $cl")
       cl = cl.parent
     }
     cl as GroovyClassLoader ?: new GroovyClassLoader()

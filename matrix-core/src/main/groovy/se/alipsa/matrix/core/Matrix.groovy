@@ -102,10 +102,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     mColumns = []
     columns.eachWithIndex { List column, int idx ->
-      //println "adding ${mHeaders[idx]} with type ${mTypes[idx]}"
       mColumns.add(new Column(mHeaders[idx], column, mTypes[idx]))
     }
-    //println "Creating a matrix with name: '$mName', ${mHeaders.size()} headers, ${mColumns.size()} columns, ${mTypes.size()} types"
   }
 
   Matrix addColumn(String name, Class type) {
@@ -115,6 +113,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   Matrix addColumn(String name, Class type = Object, List column) {
     if (columnNames().contains(name)) {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
+    }
+    if (rowCount() > 0 && column.size() != rowCount()) {
+      throw new IllegalArgumentException("Column size (${column.size()}) does not match matrix row count (${rowCount()})")
     }
     mColumns << new Column(name, column, type)
     return this
@@ -167,6 +168,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     int columnSize = columns.size()
     if (columnSize != names.size() || columnSize != types.size()) {
       throw new IllegalArgumentException("List sizes of columns, names and types must match")
+    }
+    if (rowCount() > 0) {
+      columns.eachWithIndex { List col, int i ->
+        if (col.size() != rowCount()) {
+          throw new IllegalArgumentException("Column '${names[i]}' size (${col.size()}) does not match matrix row count (${rowCount()})")
+        }
+      }
     }
     names.eachWithIndex { String name, int i ->
       addColumn(name, types[i], columns[i])
@@ -1596,7 +1604,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new matrix with the row appended to the end
    */
   Matrix plus(List row) {
-    //println ("cloning matrix and adding row")
     if (row == null) {
       return clone()
     }
@@ -2018,8 +2025,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       i++
     }
-    //println "Removing columns $columnsToRemove"
-    dropColumns(columnsToRemove)
+    drop(columnsToRemove)
   }
 
   /**
@@ -2479,7 +2485,6 @@ class Matrix implements Iterable<Row>, Cloneable {
           v.split(',').each { a ->
             def key = a.substring(0, a.indexOf(':')).trim()
             def value = a.substring(a.indexOf(':')+1).trim()
-            //println "adding key '$key' and value '$value'"
             alignment.put( key, value)
           }
         } else {

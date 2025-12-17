@@ -14,6 +14,7 @@ import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
+import java.security.GeneralSecurityException
 import java.util.concurrent.atomic.AtomicBoolean
 
 @CompileStatic
@@ -148,11 +149,8 @@ class BqAuthenticator {
 
       // If credentials are null, it means the process failed.
       return credentials != null
-    } catch (IllegalStateException e) {
-      log.error("Failed to obtain credentials!", e)
-      return false
-    } catch (Exception e) {
-      log.error("Faild to execute programmatic login: ${e.message}", e)
+    } catch (IllegalStateException | IOException | GeneralSecurityException e) {
+      log.error("Failed to execute programmatic login: ${e.message}", e)
       return false
     }
   }

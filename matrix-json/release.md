@@ -4,6 +4,7 @@
 - Upgrade dependencies
   - com.fasterxml.jackson.core:jackson-core [2.20.0 -> 2.20.1]
   - com.fasterxml.jackson.core:jackson-databind [2.20.0 -> 2.20.1]
+- Change implementation to use Jackson for JSON parsing instead of JsonSlurper to allow handling of much larger JSON files.
   
 ## v2.1.1, 2025-09-06
 - Upgrade dependencies
