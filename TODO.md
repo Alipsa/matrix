@@ -7,7 +7,7 @@ A review across the matrix monorepo revealed several improvement opportunities. 
 ## High Priority (Bugs & Breaking Issues)
 
 ### Fix JsonImporter.jsonToMatrix mutation and iteration assumptions
-**File:** `matrix-json/src/main/groovy/se/alipsa/groovy/matrixjson/JsonImporter.groovy:51-59`
+**File:** `matrix-json/src/main/groovy/se/alipsa/matrix/json/JsonImporter.groovy:51-59`
 
 The routine removes every element from the parsed root (`it.remove()`), which fails for unmodifiable collections, and calls `iterator()` without confirming the root is iterable (e.g., when the JSON represents a single object). Guarding against non-iterables and avoiding mutation of the parsed structure would make the importer more robust.
 
