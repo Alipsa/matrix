@@ -69,20 +69,12 @@ class JsonExporter {
             })
             .build()
 
-        // Stream JSON generation - convert one row at a time instead of building full List<Map>
-        StringBuilder sb = new StringBuilder()
-        sb.append('[')
-        boolean first = true
+        // Build JSON by collecting row maps and letting the generator handle serialization
+        def rowMaps = []
         for (def row : t) {
-            if (!first) {
-                sb.append(',')
-            }
-            first = false
-            sb.append(jsonGenerator.toJson(row.toMap()))
+            rowMaps.add(row.toMap())
         }
-        sb.append(']')
-
-        String json = sb.toString()
+        String json = jsonGenerator.toJson(rowMaps)
         return indent ? JsonOutput.prettyPrint(json) : json
     }
 }
