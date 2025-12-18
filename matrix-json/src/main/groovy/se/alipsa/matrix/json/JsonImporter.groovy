@@ -151,6 +151,8 @@ class JsonImporter {
    * Flatten a nested structure into dot-notation keys.
    * Example: {"a": {"b": 1}} becomes {"a.b": 1}
    * Arrays are indexed: {"arr": [1,2]} becomes {"arr[0]": 1, "arr[1]": 2}
+   * 
+   * @throws IllegalArgumentException if duplicate keys are detected after flattening
    */
   private static void flatten(String prefix, Object node, Map<String, Object> result) {
     if (node instanceof Map) {
@@ -166,6 +168,15 @@ class JsonImporter {
         flatten(prefix + '[' + idx + ']', listNode.get(idx), result)
       }
     } else {
+      // Check for duplicate keys before inserting
+      if (result.containsKey(prefix)) {
+        throw new IllegalArgumentException(
+            "Duplicate key detected after flattening: '${prefix}'. " +
+            "This can occur when JSON contains both a literal key and a nested structure " +
+            "that flatten to the same path (e.g., {\"a.b\": 1, \"a\": {\"b\": 2}}). " +
+            "Previous value: ${result.get(prefix)}, New value: ${node}"
+        )
+      }
       result.put(prefix, node)
     }
   }
