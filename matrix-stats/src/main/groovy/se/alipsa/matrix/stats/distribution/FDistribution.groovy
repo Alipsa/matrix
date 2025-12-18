@@ -43,7 +43,11 @@ class FDistribution {
 
     // F-distribution CDF is related to the regularized incomplete beta function
     double x = dfNumerator * f / (dfNumerator * f + dfDenominator)
-    return SpecialFunctions.regularizedIncompleteBeta(x, dfNumerator / 2.0, dfDenominator / 2.0)
+    return SpecialFunctions.regularizedIncompleteBeta(
+        x,
+        dfNumerator / 2.0d,
+        dfDenominator / 2.0d
+    )
   }
 
   /**

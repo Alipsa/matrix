@@ -27,7 +27,10 @@ class TDistribution {
    */
   double cdf(double t) {
     double x = degreesOfFreedom / (degreesOfFreedom + t * t)
-    double beta = SpecialFunctions.regularizedIncompleteBeta(x, degreesOfFreedom / 2.0, 0.5)
+    double beta = SpecialFunctions.regularizedIncompleteBeta(
+        x,
+        degreesOfFreedom / 2.0d,
+        0.5d)
 
     if (t >= 0) {
       return 1.0 - 0.5 * beta
@@ -98,12 +101,12 @@ class TDistribution {
     double var2 = variance(sample2, mean2)
 
     // Welch's t-test (unequal variances)
-    double se = Math.sqrt(var1 / n1 + var2 / n2)
+    double se = Math.sqrt(var1 / n1 + var2 / n2 as double)
     double t = (mean1 - mean2) / se
 
     // Welch-Satterthwaite degrees of freedom
-    double num = Math.pow(var1 / n1 + var2 / n2, 2)
-    double denom = Math.pow(var1 / n1, 2) / (n1 - 1) + Math.pow(var2 / n2, 2) / (n2 - 1)
+    double num = Math.pow(var1 / n1 + var2 / n2 as double, 2)
+    double denom = Math.pow(var1 / n1 as double, 2) / (n1 - 1) + Math.pow(var2 / n2 as double, 2) / (n2 - 1)
     double df = num / denom
 
     return pValue(t, df)
