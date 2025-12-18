@@ -108,6 +108,10 @@ class Column extends ArrayList {
     result
   }
 
+  List removeNulls() {
+    this.findAll { it != null } as Column
+  }
+
   @CompileDynamic
   List minus(List list) {
     List result = new Column()
