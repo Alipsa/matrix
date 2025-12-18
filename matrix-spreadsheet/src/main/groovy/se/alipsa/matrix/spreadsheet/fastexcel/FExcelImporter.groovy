@@ -260,8 +260,6 @@ class FExcelImporter implements Importer {
           rowList = []
           List list = row.asList()
           if (colNames.size() == 0) {
-            //println "Building header"
-            // TODO refactor build header to either use first row or create column names
             if (firstRowAsColNames) {
               list.eachWithIndex { Cell cell, int i ->
                 if (i >= startColNumZI && i <= endColNumZI) {
@@ -270,9 +268,7 @@ class FExcelImporter implements Importer {
               }
               return
             } else {
-              for (int i = 1; i <= endColNum - startColNum + 1; i++) {
-                colNames.add("c$i".toString())
-              }
+              colNames.addAll(SpreadsheetUtil.createColumnNames(startColNum, endColNum))
             }
           }
           list.eachWithIndex { cell, cIdx ->

@@ -56,7 +56,7 @@ TODO comment: "investigate if it is possible to use GINQ for this" - The current
 ### Reduce Matrix class size
 **File:** `matrix-core/src/main/groovy/se/alipsa/groovy/matrix/Matrix.groovy` (2,814 lines)
 
-The Matrix class violates Single Responsibility Principle. Consider extracting functionality into:
+The Matrix class is very big. Consider extracting functionality into utilities or helper classes, such as:
 - Matrix transformation operations (separate class)
 - Matrix I/O operations (separate class)
 - Matrix statistics operations (leverage matrix-stats more)
@@ -80,11 +80,6 @@ Comment: "There is room for optimization here" - Currently parses entire sheets 
 
 TODO comment: "review and try to optimize" - Performance improvement opportunity. The existing performance test may fail on slower machines.
 
-### Add comprehensive test coverage for matrix-smile
-**Directory:** `matrix-smile/`
-
-Currently only has `DataframeConverter.groovy` with no tests. Add test suite for the Smile library integration.
-
 ---
 
 ## Medium Priority (Dependencies)
@@ -94,15 +89,7 @@ Currently only has `DataframeConverter.groovy` with no tests. Add test suite for
 - `matrix-stats/src/main/groovy/se/alipsa/groovy/stats/Student.groovy:129,160` - TODO: "implement p value function"
 - `matrix-stats/src/main/groovy/se/alipsa/groovy/stats/Anova.groovy:36` - TODO: "implement me! using commons math for now..."
 
-Commons Math 3.6.1 was released in 2016 and is no longer actively maintained. Current TODOs indicate intent to implement native functions. Options:
-1. Implement native p-value and ANOVA functions
-2. Migrate to Apache Commons Statistics (successor project)
-3. Use Smile library functions (matrix-smile integration)
-
-### Remove temporary tablesaw dependencies
-**File:** `matrix-tablesaw/build.gradle:46,48,50`
-
-TODO comment: "remove once contributed to tablesaw" - Temporary XlsxWriter, OdsReader/Writer, XmlReader/writer dependencies should be removed after upstream contribution.
+Commons Math 3.6.1 was released in 2016 and is no longer actively maintained. Current TODOs indicate intent to implement native functions. Plan to replace Commons Math with native implementations or alternative libraries such as Apache Commons Statistics if implementation is not feasible.
 
 ### Document Java version constraints
 The project has a JDK 21 ceiling due to dependency constraints:

@@ -224,17 +224,8 @@ class FOdsImporter implements Importer {
 
   @Override
   Map<Object, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
-    Map<Object, Matrix> result = [:]
     File file = FileUtil.checkFilePath(fileName)
-    sheetParams.each {
-      try (InputStream is2 = new FileInputStream(file)) {
-        Matrix matrix = importSpreadsheet(is2, it, formatOpt)
-        def sheet = it[it.sheetName] ?: it.sheetNumber
-        def key = it["key"] ?: sheet
-        result.put(key, matrix)
-      }
-    }
-    result
+    importSpreadsheets(file.toURI().toURL(), sheetParams, formatOpt)
   }
 
   static Matrix buildMatrix(Sheet sheet, boolean firstRowAsColNames) {
@@ -253,38 +244,12 @@ class FOdsImporter implements Importer {
     .build()
   }
 
-  /**
-   * As it is possible to address different sections of a Sheet we cannot use the "single pass" approach but must
-   * parse the entire thing for each sheet defined. There is room for optimization here.
-   * @param is
-   * @param sheetParams
-   * @param format
-   * @return
-   */
-  Map<Object, Matrix> importSpreadsheets(URL url, List<Map> sheetParams, NumberFormat format = NumberFormat.getInstance()) {
-    Map<Object, Matrix> result = [:]
-    byte[] content = IOUtils.toByteArray(url)
-    sheetParams.each {params ->
-      try (InputStream is2 = new ByteArrayInputStream(content)) {
-        Matrix matrix = importSpreadsheet(is2, params, format)
-        def sheet = params[params.sheetName] ?: params.sheetNumber
-        def key = params["key"] ?: sheet
-        result.put(key, matrix)
-      }
-    }
-    result
-  }
-
-  Map<Object, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat format = NumberFormat.getInstance()) {
-    File file = FileUtil.checkFilePath(fileName)
-    importSpreadsheets(file.toURI().toURL(),sheetParams, format)
-  }
 
   private static List<String> buildHeaderRow(Sheet sheet, boolean firstRowHasColumnNames) {
     if (firstRowHasColumnNames) {
-     return ListConverter.toStrings(sheet.remove(0))
+      return ListConverter.toStrings(sheet.remove(0))
     } else {
-      SpreadsheetUtil.createColumnNames(sheet.first.size())
+      return SpreadsheetUtil.createColumnNames(sheet.first().size())
     }
   }
 }
