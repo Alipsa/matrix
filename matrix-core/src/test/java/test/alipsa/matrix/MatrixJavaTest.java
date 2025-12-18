@@ -666,7 +666,7 @@ class MatrixJavaTest {
             .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")))
         .types(Integer.class, String.class, Number.class, LocalDate.class)
         .build();
-    var empList = empData.dropColumns("salary", "start_date");
+    var empList = empData.drop("salary", "start_date");
     //println(empList.content())
     assertEquals(2, empList.columnCount(), "Number of columns after drop");
     assertEquals(5, empList.rowCount(), "Number of rows after drop");
@@ -684,7 +684,7 @@ class MatrixJavaTest {
             .add("start_date", toLocalDates("2013-01-01", "2012-03-27", "2013-09-23", "2014-11-15", "2014-05-11")))
         .types(Integer.class, String.class, Number.class, LocalDate.class)
         .build();
-    var empList = empData.dropColumnsExcept("emp_id", "start_date");
+    var empList = empData.dropExcept("emp_id", "start_date");
     //println(empList.content())
     assertEquals(2, empList.columnCount(), "Number of columns after drop");
     assertEquals(5, empList.rowCount(), "Number of rows after drop");

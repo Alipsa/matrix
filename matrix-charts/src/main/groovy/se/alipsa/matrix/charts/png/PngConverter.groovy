@@ -32,7 +32,7 @@ class PngConverter {
                 Scene scene = new Scene(jfxChart, width, height)
                 WritableImage snapshot = scene.snapshot(null)
                 ImageIO.write(SwingFXUtils.fromFXImage(snapshot, null), "png", out)
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 exc = e
             }
             countDownLatch.countDown()

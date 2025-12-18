@@ -36,7 +36,7 @@ def predictions = lm.predict(testData['speed'], 1)
 println "Predictions: ${predictions.sort()}"
 println "Actuals: ${testData['dist'].sort()}"
 
-def accuracy = Accuracy.evaluatePredictions(predictions, testData['dist'])
+def accuracy = Accuracy.evaluatePredictions(testData['dist'], predictions)
 println "accuracy: $accuracy"
 /*
 https://www.simplilearn.com/tutorials/data-science-tutorial/data-science-with-r

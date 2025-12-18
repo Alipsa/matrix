@@ -1,8 +1,8 @@
 package se.alipsa.matrix.stats
 
-import org.apache.commons.math3.stat.inference.TTest
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.stats.distribution.TDistribution
 
 import java.math.RoundingMode
 
@@ -63,8 +63,8 @@ class Student {
     double sd = Math.sqrt((var1 + var2 - 2.0 * cov) / n1)
     def t = (mean1 - mean2) / sd
 
-    def tTest = new TTest()
-    def p = tTest.pairedTTest(ListConverter.toDoubleArray(first), ListConverter.toDoubleArray(second))
+    // Use native TDistribution for p-value calculation
+    def p = TDistribution.pValue(t as double, df as double)
     PairedResult result = new PairedResult()
     result.description = "Paired t-test"
     result.tVal = t
@@ -126,9 +126,8 @@ class Student {
     result.sd2 = sd2
     result.n1 = n1
     result.n2 = n2
-    // TODO: implement p value function, relying on commons math3 as a temporary solution
-    TTest tTest = new TTest()
-    result.pVal = tTest.tTest(ListConverter.toDoubleArray(first), ListConverter.toDoubleArray(second))
+    // Use native TDistribution for p-value calculation
+    result.pVal = TDistribution.pValue(t as double, result.df as double)
     return result
   }
 
@@ -156,10 +155,9 @@ class Student {
     result.var = variance
     result.sd = sd
     result.n = n
-    result.df = n -1
-    // TODO: implement p value function, relying on commons math3 as a temporary solution
-    TTest tTest = new TTest()
-    result.pVal = tTest.tTest(comparison.doubleValue(), ListConverter.toDoubleArray(values))
+    result.df = n - 1
+    // Use native TDistribution for p-value calculation
+    result.pVal = TDistribution.pValue(result.tVal as double, result.df as double)
     return result
   }
 

@@ -14,7 +14,6 @@ class RowExtension {
   }
 
   static Object getAt(Row self, Collection indices) {
-    //println("${this.class}: $indices")
     if (indices instanceof IntRange) {
       return self[indices]
     }

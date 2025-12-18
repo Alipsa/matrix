@@ -351,7 +351,6 @@ class Stat {
 
     static List<BigDecimal> means(List<List<?>> rowList, int scale = 9) {
         List<List<?>> columns = Grid.transpose(rowList)
-        //println columns
         List<BigDecimal> results = []
         columns.each {
             results << mean(it, scale)
@@ -545,7 +544,6 @@ class Stat {
             def val1 = vals[index -1] as Number
             def val2 = vals[index] as Number
             BigDecimal median = (val1 + val2) / 2
-            //println("Returning $val1 plus $val2 / 2 = $median")
             return median
         } else {
             return asBigDecimal(vals[vals.size()/2 as int])

@@ -78,8 +78,7 @@ class Row implements GroovyObject, List<Object> {
 
     @Override
     Iterator iterator() {
-        // TODO: how do we handle modifications?
-        return content.iterator()
+        return Collections.unmodifiableList(content).iterator()
     }
 
     @Override

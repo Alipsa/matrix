@@ -204,4 +204,12 @@ class ColumnTest {
     assert 1.1126972805283737 == c.sd()
     assert Stat.variance(c) == c.variance()
   }
+
+  @Test
+  void testRemoveNulls() {
+    Column c = new Column([1, null, 3, null, 5])
+    Column noNulls = c.removeNulls()
+    assert [1,3,5] == noNulls
+    assert [1, null, 3, null, 5] == c // original should be unchanged
+  }
 }

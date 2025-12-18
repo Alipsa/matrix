@@ -125,14 +125,11 @@ class ExcelImporter implements Importer {
         throw new IllegalArgumentException("Sheet number $sheetNumber does not exist")
       }
       Sheet sheet = workbook.getSheetAt(sheetIndex)
-      // TODO refactor build header to either use first row or create column names
       if (firstRowAsColNames) {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
         startRow = startRow + 1
       } else {
-        for (int i = 1; i <= endCol - startCol; i++) {
-          header.add(String.valueOf(i))
-        }
+        header.addAll(SpreadsheetUtil.createColumnNames(startCol, endCol))
       }
       return importExcelSheet(sheet, startRow, endRow, startCol, endCol, header)
     }
@@ -163,14 +160,11 @@ class ExcelImporter implements Importer {
     File excelFile = FileUtil.checkFilePath(file)
     try (Workbook workbook = WorkbookFactory.create(excelFile)) {
       Sheet sheet = workbook.getSheet(sheetName)
-      // TODO refactor build header to either use first row or create column names
       if (firstRowAsColNames) {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
         startRow = startRow + 1
       } else {
-        for (int i = 1; i <= endCol - startCol; i++) {
-          header.add(String.valueOf(i))
-        }
+        header.addAll(SpreadsheetUtil.createColumnNames(startCol, endCol))
       }
       return importExcelSheet(sheet, startRow, endRow, startCol, endCol, header)
     }
@@ -204,13 +198,11 @@ class ExcelImporter implements Importer {
         throw new IllegalArgumentException("Sheet number $sheetNum does not exist")
       }
       Sheet sheet = workbook.getSheetAt(sheetIndex)
-      // TODO refactor build header to either use first row or create column names
       if (firstRowAsColNames) {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
         startRow = startRow + 1
       } else {
-        int ncol = endCol - startCol + 1
-        (1..ncol).each {i-> header.add("c$i".toString())}
+        header.addAll(SpreadsheetUtil.createColumnNames(startCol, endCol))
       }
       return importExcelSheet(sheet, startRow, endRow, startCol, endCol, header)
     }
@@ -228,9 +220,7 @@ class ExcelImporter implements Importer {
         buildHeaderRow(startRow, startCol, endCol, header, sheet)
         startRow = startRow + 1
       } else {
-        for (int i = 1; i <= endCol - startCol; i++) {
-          header.add(String.valueOf(i))
-        }
+        header.addAll(SpreadsheetUtil.createColumnNames(startCol, endCol))
       }
       return importExcelSheet(sheet, startRow, endRow, startCol, endCol, header)
     }

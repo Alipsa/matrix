@@ -3,6 +3,7 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import org.opentest4j.AssertionFailedError
+import se.alipsa.matrix.core.util.MatrixPrinter
 import se.alipsa.matrix.core.util.RowComparator
 
 import java.text.NumberFormat
@@ -102,10 +103,8 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     mColumns = []
     columns.eachWithIndex { List column, int idx ->
-      //println "adding ${mHeaders[idx]} with type ${mTypes[idx]}"
       mColumns.add(new Column(mHeaders[idx], column, mTypes[idx]))
     }
-    //println "Creating a matrix with name: '$mName', ${mHeaders.size()} headers, ${mColumns.size()} columns, ${mTypes.size()} types"
   }
 
   Matrix addColumn(String name, Class type) {
@@ -115,6 +114,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   Matrix addColumn(String name, Class type = Object, List column) {
     if (columnNames().contains(name)) {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
+    }
+    if (rowCount() > 0 && column.size() != rowCount()) {
+      throw new IllegalArgumentException("Column size (${column.size()}) does not match matrix row count (${rowCount()})")
     }
     mColumns << new Column(name, column, type)
     return this
@@ -167,6 +169,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     int columnSize = columns.size()
     if (columnSize != names.size() || columnSize != types.size()) {
       throw new IllegalArgumentException("List sizes of columns, names and types must match")
+    }
+    if (rowCount() > 0) {
+      columns.eachWithIndex { List col, int i ->
+        if (col.size() != rowCount()) {
+          throw new IllegalArgumentException("Column '${names[i]}' size (${col.size()}) does not match matrix row count (${rowCount()})")
+        }
+      }
     }
     names.eachWithIndex { String name, int i ->
       addColumn(name, types[i], columns[i])
@@ -973,7 +982,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       def colNames = this.columnNames()
       throw new IllegalArgumentException("Variables ${String.join(',', columnNames)} does not match actual column names: ${String.join(',', colNames)}")
     }
-    dropColumns(idxs)
+    drop(idxs)
   }
 
   /**
@@ -1384,23 +1393,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a string representation of each observation up to the rows specified
    */
   String head(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
-    StringBuilder sb = new StringBuilder()
-    def nRows = Math.min(rows, rowCount())
-    List<String> colNames = columnNames()
-    List<Integer> columnLengths = colNames.collect {
-      colName -> maxContentLength(colName, includeHeader, maxColumnLength)
-    }
-
-    if (includeHeader) {
-      List<String> headerRow = padRow(colNames, columnLengths)
-      sb.append(String.join(delimiter, headerRow)).append(lineEnding)
-    }
-
-    for (int i = 0; i < nRows; i++) {
-      List<String> stringRow = padRow(row(i), columnLengths)
-      sb.append(String.join(delimiter, stringRow)).append(lineEnding)
-    }
-    return sb.toString()
+    MatrixPrinter.head(this, rows, includeHeader, delimiter, lineEnding, maxColumnLength)
   }
 
   @Override
@@ -1563,30 +1556,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     Collections.sort(rows, comparator)
     updateValues(rows)
     return this
-    //return create(mName, mHeaders, rows as List<List>, mTypes)
-  }
-
-  /**
-   * Used to pretty print (e.g. to console) a row
-   */
-  List<String> padRow(List row, List<Integer> columnLengths) {
-    List<String> stringRow = []
-    for (int c = 0; c < mColumns.size(); c++) {
-      def val = row[c]
-      def strVal = String.valueOf(val)
-      int columnLength = columnLengths[c]
-      if (strVal.length() > columnLength) {
-        strVal = strVal.substring(0, columnLength)
-      }
-      def valType = type(c)
-      if (val instanceof Number || (valType != null && Number.isAssignableFrom(valType))) {
-        strVal = strVal.padLeft(columnLength)
-      } else {
-        strVal = strVal.padRight(columnLength)
-      }
-      stringRow << strVal
-    }
-    stringRow
   }
 
   /**
@@ -1596,7 +1565,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new matrix with the row appended to the end
    */
   Matrix plus(List row) {
-    //println ("cloning matrix and adding row")
     if (row == null) {
       return clone()
     }
@@ -1815,7 +1783,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *           3	John	100	null	null	null
    * </pre>
    *
-   * @param idColumn the first occurance of the each value in the Id column will be used as a new row in the new matrix
+   * @param idColumn the first occurrence of the each value in the Id column will be used as a new row in the new matrix
    * @param columnNameColumn the column with the column names to create
    * @param valueColumn the value column to use to populate the new columns
    * @return a new Matrix with the additional columns for the values in the columnNameColumn
@@ -1847,7 +1815,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         pm.putAt(idx, String.valueOf(k), v)
       }
     }
-    pm.dropColumns(columnNameColumn, valueColumn)
+    pm.drop(columnNameColumn, valueColumn)
   }
 
   /**
@@ -2018,8 +1986,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       i++
     }
-    //println "Removing columns $columnsToRemove"
-    dropColumns(columnsToRemove)
+    drop(columnsToRemove)
   }
 
   /**
@@ -2376,18 +2343,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   String tail(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
-    StringBuilder sb = new StringBuilder()
-    def nRows = Math.min(rows, rowCount())
-    def headers = columnNames()
-    if (includeHeader) {
-      sb.append(String.join(delimiter, headers)).append(lineEnding)
-    }
-    List<Integer> columnLengths = headers.collect { colName -> maxContentLength(colName, includeHeader, maxColumnLength) }
-    for (int i = rowCount() - nRows; i < rowCount(); i++) {
-      List<String> stringRow = padRow(row(i), columnLengths)
-      sb.append(String.join(delimiter, stringRow)).append(lineEnding)
-    }
-    return sb.toString()
+    MatrixPrinter.tail(this, rows, includeHeader, delimiter, lineEnding, maxColumnLength)
   }
 
 
@@ -2476,10 +2432,10 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (attr.size() > 0) {
       attr.each {k,v ->
         if (k == 'align') {
-          v.split(',').each { a ->
+          v.split(',').each { s ->
+            String a = s as String
             def key = a.substring(0, a.indexOf(':')).trim()
             def value = a.substring(a.indexOf(':')+1).trim()
-            //println "adding key '$key' and value '$value'"
             alignment.put( key, value)
           }
         } else {

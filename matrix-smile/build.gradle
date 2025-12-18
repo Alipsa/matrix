@@ -1,0 +1,82 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+plugins {
+  id 'groovy'
+  id 'java-library'
+  id 'signing'
+  id 'maven-publish'
+  id("se.alipsa.nexus-release-plugin") version '2.0.0'
+}
+
+group = 'se.alipsa.matrix'
+version = '0.1.0-SNAPSHOT'
+
+repositories {
+  if (version.toString().endsWith('SNAPSHOT')) {
+    mavenLocal()
+  }
+  mavenCentral()
+}
+
+JavaCompile javaCompile = compileJava {
+  options.release = 21
+  options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
+}
+
+compileGroovy {
+  options.deprecation = true
+}
+
+dependencies {
+  compileOnly project(':matrix-core')
+  compileOnly libs.groovy
+  api 'com.github.haifengl:smile-core:4.4.2'
+  testImplementation project(':matrix-core')
+  testImplementation libs.groovy
+  testImplementation testLibs.slf4jSimple
+  testImplementation testLibs.junitJupiterApi
+  testRuntimeOnly testLibs.junitJupiterEngine
+  testRuntimeOnly testLibs.junitPlatformLauncher
+}
+
+test {
+  useJUnitPlatform()
+  testLogging {
+    // set options for log level LIFECYCLE
+    events TestLogEvent.FAILED,
+        TestLogEvent.PASSED,
+        TestLogEvent.SKIPPED,
+        TestLogEvent.STANDARD_OUT
+    exceptionFormat = TestExceptionFormat.FULL
+    showExceptions = true
+    showCauses = true
+    showStackTraces = true
+    showStandardStreams = true
+
+    // set options for log level DEBUG and INFO
+    debug {
+      events TestLogEvent.STARTED,
+          TestLogEvent.FAILED,
+          TestLogEvent.PASSED,
+          TestLogEvent.SKIPPED,
+          TestLogEvent.STANDARD_ERROR,
+          TestLogEvent.STANDARD_OUT
+      exceptionFormat = TestExceptionFormat.FULL
+    }
+    info.events = debug.events
+    info.exceptionFormat = debug.exceptionFormat
+
+    afterSuite { desc, result ->
+      def duration = result.endTime - result.startTime
+      println "Duration of $desc: $duration ms"
+      if (!desc.parent) { // will match the outermost suite
+        def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+        def startItem = '|  ', endItem = '  |'
+        def repeatLength = startItem.length() + output.length() + endItem.length()
+        println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+      }
+    }
+  }
+}

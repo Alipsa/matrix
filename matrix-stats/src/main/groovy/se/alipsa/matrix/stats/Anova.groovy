@@ -1,8 +1,8 @@
 package se.alipsa.matrix.stats
 
-import org.apache.commons.math3.stat.inference.TestUtils
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.stats.distribution.FDistribution
 
 /**
  * Analysis of variance (ANOVA) is a collection of statistical models and their associated estimation
@@ -33,14 +33,14 @@ class Anova {
       throw new IllegalArgumentException("data must contain at least 2 groups (found only ${data.size()} groups")
     }
     def result = new AnovaResult()
-    // TODO implement me! using commons math for now...
-    List categoryData = []
+    // Use native FDistribution for ANOVA calculations
+    List<double[]> categoryData = []
     data.each { String key, List<? extends Number> values ->
       categoryData.add(ListConverter.toDoubleArray(values))
     }
 
-    result.pValue = TestUtils.oneWayAnovaPValue(categoryData)
-    result.fValue = TestUtils.oneWayAnovaFValue(categoryData)
+    result.fValue = FDistribution.oneWayAnovaFValue(categoryData)
+    result.pValue = FDistribution.oneWayAnovaPValue(categoryData)
     return result
   }
 

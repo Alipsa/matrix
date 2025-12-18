@@ -525,18 +525,21 @@ class KMeansPlusPlus {
 
         }
 
-        // choose the next centroid
-        double rand = gen.nextDouble()
-        for (int j = m - 1; j > 0; j--) {
-          // TODO: review and try to optimize
-          // starts at the largest bin. EDIT: not actually the largest
-          if (rand > weightedDistribution[j - 1] / weightedDistribution[m - 1]) {
-            choose = j // one bigger than the one above
-            break
+        // choose the next centroid using binary search for O(log m) complexity
+        double totalWeight = weightedDistribution[m - 1]
+        double target = gen.nextDouble() * totalWeight
+        // Binary search to find smallest index j where weightedDistribution[j] >= target
+        int lo = 0
+        int hi = m - 1
+        while (lo < hi) {
+          int mid = (lo + hi) >>> 1
+          if (weightedDistribution[mid] < target) {
+            lo = mid + 1
+          } else {
+            hi = mid
           }
-          else // Because of invalid dimension errors, we can't make the forloop go to j2 > -1 when we have (j2-1) in the loop.
-            choose = 0
         }
+        choose = lo
       }
 
       // store the chosen centroid

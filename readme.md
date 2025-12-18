@@ -68,7 +68,17 @@ implementation('se.alipsa.matrix:matrix-core')
 </project>
 ```
 
-The jvm should be JDK 21. You can use a higher version for all modules except matrix-parquet and matrix-avro which cannot handle anything above JDK 21 due to the hadoop dependencies.
+## Java Version Requirements
+
+The project requires **JDK 21**. While some modules may work with higher JDK versions, the following constraints apply:
+
+| Module(s) | Constraint | Reason |
+|-----------|------------|--------|
+| matrix-parquet, matrix-avro | JDK 21 max | Hadoop 3.4.x dependencies do not support JDK 22+ |
+| matrix-charts | JDK 21 max | JavaFX 23.x is the latest version compatible with JDK 21; JavaFX 24+ requires JDK 22+ |
+| matrix-smile | JDK 21 max | Smile 4.x is used; Smile 5+ requires Java 25 |
+
+These constraints are enforced in `build.gradle` via dependency version ceiling rules.
 
 For more information see the the [tutorial](docs/tutorial/outline.md) and the readme file and test classes in each subproject.
 <!---

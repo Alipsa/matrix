@@ -3,7 +3,8 @@ package se.alipsa.matrix.core
 class Joiner {
 
     /**
-     * Note: The implementation is embarrassingly crude and will be terrible for large matrices
+     * Merges two matrices on specified columns using a hash-based join algorithm.
+     * Complexity is O(n + m) where n = x.rowCount() and m = y.rowCount().
      *
      * @param x the Matrix to start from
      * @param y the Matrix to join to x
@@ -11,30 +12,36 @@ class Joiner {
      * @param all true for a left join, false for an inner join
      * @return a new matrix with the two ones joined
      */
-    // TODO: investigate if it is possible to use GINQ for this
     static Matrix merge(Matrix x, Matrix y, Map<String, String> by, boolean all = false) {
         def xColIndex = x.columnIndex(by.x)
         def yColIndex = y.columnIndex(by.y)
-        def resultRows = []
         def nYcol = y.columnCount()
-        x.each{ List row->
-            boolean added = false
-            // maybe it would be faster to copy y and then remove the rows that are found so the
-            // search space gets smaller for each hit
-            for (List yRow in y) {
-                if (row[xColIndex] == yRow[yColIndex]) {
-                    def yr = yRow.collect()
-                    yr.remove(yColIndex)
-                    resultRows << [*row, *yr]
-                    added = true
-                    break
-                }
+
+        // Build a hash map from y indexed by the join column for O(1) lookup
+        Map<Object, List> yIndex = [:]
+        y.each { List yRow ->
+            def key = yRow[yColIndex]
+            if (!yIndex.containsKey(key)) {
+                yIndex[key] = yRow
             }
-            if (!added && all) {
+            // Note: only keep first match per key (matches original behavior)
+        }
+
+        // Join x with y using the hash map
+        def resultRows = []
+        x.each { List row ->
+            def key = row[xColIndex]
+            List yRow = yIndex[key]
+            if (yRow != null) {
+                def yr = yRow.collect()
+                yr.remove(yColIndex)
+                resultRows << [*row, *yr]
+            } else if (all) {
                 // append nulls when we are doing a left join and we have no match
-                resultRows << [*row, *([null]*(nYcol-1))]
+                resultRows << [*row, *([null] * (nYcol - 1))]
             }
         }
+
         def yColNames = y.columnNames().collect()
         yColNames.remove(yColIndex)
         return Matrix.builder().matrixName(x.matrixName).columnNames([*x.columnNames(), *yColNames]).rows(resultRows).build()

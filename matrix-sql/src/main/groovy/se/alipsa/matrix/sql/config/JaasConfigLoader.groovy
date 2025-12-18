@@ -31,9 +31,12 @@ class JaasConfigLoader {
       // or when no configuration has been loaded at all. Treat this as "not configured" and set our default.
       System.err.println("Security exception retrieving JAAS config. Assuming none set and registering default.")
       Configuration.setConfiguration(new KerberosJaasConfiguration(null))
-    } catch (Exception e) {
-      // Handle other unexpected exceptions
-      System.err.println("Unexpected error during JAAS check: " + e.getMessage())
+    } catch (RuntimeException e) {
+      // Intentional fail-fast: for any other unexpected runtime exceptions we log and rethrow
+      // to avoid continuing application startup with a potentially broken JAAS/Kerberos configuration.
+      // This may prevent the application from starting if JAAS initialization fails.
+      System.err.println("Unexpected runtime error during JAAS check: " + e.getMessage())
+      throw e
     }
   }
 }

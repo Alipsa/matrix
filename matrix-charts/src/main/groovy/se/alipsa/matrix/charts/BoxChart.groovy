@@ -25,7 +25,7 @@ class BoxChart extends Chart<BoxChart> {
     chart.categorySeries = columnNames
     def valueColumns = []
     columnNames.each {
-      valueColumns << data[it] - null
+      valueColumns << data[it]
     }
     chart.valueSeries = valueColumns
     chart.valueSeriesNames = columnNames

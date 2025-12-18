@@ -4,6 +4,9 @@
 - deprecate renameColumn and dropColumns in favor of rename and drop
 - regard an empty string as null in ValueConverter (except for asString)
 - add fallback for creating a matrix from a ResultSet that does not have classTypeName set.
+- add size check when adding columns
+- Row iterator is now based on an unmodifiable list
+- Add Column.removeNulls() since minus preserves the column length and Column - null does not do anything.
 
 ### 3.5.0, 2025-09-06
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.5.0/matrix-core-3.5.0.jar)
