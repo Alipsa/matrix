@@ -46,8 +46,6 @@ class DuplicateKeyTest {
     ]'''
 
     Matrix m = JsonImporter.parse(json)
-    println "Columns: ${m.columnNames()}"
-    println "Row 0: ${m.row(0)}"
     
     assertEquals(2, m.columnCount())
     assertEquals(["a.b", "c"], m.columnNames())
