@@ -104,6 +104,9 @@ class JsonImporter {
       Map<String, Object> flatRow = new LinkedHashMap<>()
       flatten('', rowObj, flatRow)
 
+      // Track which columns received values in this row
+      Set<Integer> columnsUpdated = new HashSet<>()
+
       // Process each key-value pair
       for (Map.Entry<String, Object> entry : flatRow.entrySet()) {
         String key = entry.getKey()
@@ -123,14 +126,14 @@ class JsonImporter {
           columns.add(newColumn)
         }
         columns.get(colIdx).add(value)
+        columnsUpdated.add(colIdx)
       }
 
       // Fill nulls for columns not present in this row
       for (int colIdx = 0; colIdx < columnNames.size(); colIdx++) {
-        List<Object> col = columns.get(colIdx)
-        if (col.size() == rowCount) {
+        if (!columnsUpdated.contains(colIdx)) {
           // This column wasn't in the current row, add null
-          col.add(null)
+          columns.get(colIdx).add(null)
         }
       }
 
