@@ -30,3 +30,4 @@ include 'matrix-examples:XChartDemo'
 include 'matrix-examples:AnalysisScenario1'
 
 include 'matrix-smile'
+include 'marix-arff'

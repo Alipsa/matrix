@@ -8,6 +8,7 @@ import org.apache.avro.UnresolvedUnionException
 import org.apache.avro.file.DataFileWriter
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericDatumWriter
+import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
 import se.alipsa.matrix.core.Matrix
 
@@ -329,11 +330,11 @@ class MatrixAvroWriter {
         break
       case Schema.Type.ARRAY:
         Schema elem = fieldSchema.getElementType()
-        List in = (List) v
-        List out = new ArrayList( in == null ? 0 : in.size() )
-        if ( in != null ) {
-        for (def e: in ) out.add(toAvroValue(elem, e, decConv))
-      }
+        List input = (List) v
+        List out = new ArrayList( input == null ? 0 : input.size() )
+        if ( input != null ) {
+          for (def e: input ) out.add(toAvroValue(elem, e, decConv))
+        }
         return out
 
       case Schema.Type.MAP:
@@ -401,9 +402,9 @@ class MatrixAvroWriter {
           needsLong = true
         }
       } else if (v instanceof String || v instanceof Boolean || v instanceof byte[]
-          || v instanceof java.sql.Date || v instanceof java.sql.Time || v instanceof Date
-          || v instanceof java.time.LocalDate || v instanceof java.time.LocalTime
-          || v instanceof java.time.Instant || v instanceof java.time.LocalDateTime
+          || v instanceof java.sql.Date || v instanceof Time || v instanceof Date
+          || v instanceof LocalDate || v instanceof LocalTime
+          || v instanceof Instant || v instanceof LocalDateTime
           || v instanceof UUID) {
         // a specific non-numeric type — return that exact class
         return v.getClass()
@@ -478,11 +479,11 @@ class MatrixAvroWriter {
       case Schema.Type.LONG: return v instanceof Number // includes Integer/Long/BigInteger
       case Schema.Type.FLOAT: return v instanceof Number
       case Schema.Type.DOUBLE: return v instanceof Number || v instanceof BigDecimal
-      case Schema.Type.BYTES: return (v instanceof byte[]) || (v instanceof java.nio.ByteBuffer) || (v instanceof BigDecimal)
+      case Schema.Type.BYTES: return (v instanceof byte[]) || (v instanceof ByteBuffer) || (v instanceof BigDecimal)
       case Schema.Type.ARRAY: return v instanceof List
       case Schema.Type.MAP: return v instanceof Map
-      case Schema.Type.RECORD: return (v instanceof Map) || (v instanceof org.apache.avro.generic.GenericRecord)
-      case Schema.Type.FIXED: return v instanceof org.apache.avro.generic.GenericFixed
+      case Schema.Type.RECORD: return (v instanceof Map) || (v instanceof GenericRecord)
+      case Schema.Type.FIXED: return v instanceof GenericFixed
       default: return false
     }
   }

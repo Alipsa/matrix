@@ -94,13 +94,6 @@ def (train, test) = SmileData.trainTestSplit(matrix, testRatio: 0.2, shuffle: tr
 def folds = SmileData.kFold(matrix, k: 5)
 ```
 
-### 3.2 Create SmileDatasets - Built-in Dataset Loader
-```groovy
-def iris = SmileDatasets.iris()      // Returns Matrix
-def wine = SmileDatasets.wine()
-def digits = SmileDatasets.digits()
-```
-
 ### 3.3 Create SmileFeatures - Feature Engineering
 ```groovy
 def scaled = SmileFeatures.standardize(matrix, ['col1', 'col2'])
