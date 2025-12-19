@@ -1,6 +1,5 @@
 package se.alipsa.matrix.smile
 
-import com.sun.jdi.IntegerType
 import groovy.transform.CompileStatic
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -269,7 +268,7 @@ class DataframeConverter {
     return switch (dataType) {
       case FloatType -> Float
       case DoubleType -> Double
-      case IntegerType, IntType -> Integer
+      case IntType -> Integer
       case StringType -> String
       case BooleanType -> Boolean
       case CharType -> Character

@@ -12,6 +12,7 @@ public class CollectionUtils {
    * @param <T> the type of list to return
    * @return a List&lt;T&gt; of the values specified
    */
+  @SafeVarargs
   public static <T> List<T> c(T... values) {
     return Arrays.asList(values);
   }

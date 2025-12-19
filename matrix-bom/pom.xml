@@ -95,6 +95,14 @@
       <artifactId>matrix-avro</artifactId>
     </dependency>
     <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-arff</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-smile</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers</artifactId>
       <version>1.21.3</version>
