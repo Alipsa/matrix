@@ -6,6 +6,10 @@ import org.apache.commons.io.input.ReaderInputStream
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
+import se.alipsa.matrix.arff.MatrixArffReader
+import se.alipsa.matrix.arff.MatrixArffWriter
+import se.alipsa.matrix.avro.MatrixAvroReader
+import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.csv.CsvExporter
@@ -21,6 +25,9 @@ import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.stats.Sampler
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.xchart.PieChart
+import se.alipsa.matrix.smile.SmileUtil
+import se.alipsa.matrix.smile.stats.SmileStats
+import smile.data.DataFrame
 
 import java.nio.charset.StandardCharsets
 
@@ -164,8 +171,40 @@ class MatrixModulesTest {
     Matrix mtcars = Dataset.mtcars()
     def file = new File("target/mtcars.avro")
     if (file.exists()) file.delete()
-    se.alipsa.matrix.avro.MatrixAvroWriter.write(mtcars, file, true)
-    Matrix m2 = se.alipsa.matrix.avro.MatrixAvroReader.read(file, 'mtcars')
+    MatrixAvroWriter.write(mtcars, file, true)
+    Matrix m2 = MatrixAvroReader.read(file, 'mtcars')
     MatrixAssertions.assertContentMatches(mtcars, m2, mtcars.diff(m2))
+  }
+
+  @Test
+  void testArff() {
+    Matrix mtcars = Dataset.mtcars()
+    def file = new File("target/mtcars.arff")
+    if (file.exists()) file.delete()
+    MatrixArffWriter.write(mtcars, file)
+    Matrix m2 = MatrixArffReader.read(file)
+    MatrixAssertions.assertContentMatches(mtcars, m2, mtcars.diff(m2))
+  }
+
+  @Test
+  void testSmile() {
+    // Test Matrix to Smile DataFrame conversion
+    Matrix mtcars = Dataset.mtcars()
+    DataFrame df = SmileUtil.toDataFrame(mtcars)
+    assertEquals(mtcars.rowCount(), df.nrow(), "Row count should match")
+    assertEquals(mtcars.columnCount(), df.ncol(), "Column count should match")
+
+    // Test DataFrame back to Matrix
+    Matrix m2 = SmileUtil.toMatrix(df)
+    assertEquals(mtcars.rowCount(), m2.rowCount(), "Roundtrip row count should match")
+
+    // Test SmileStats - fit a normal distribution to mpg column
+    def dist = SmileStats.normalFit(mtcars, 'mpg')
+    assertTrue(dist.mean() > 15 && dist.mean() < 25, "Mean mpg should be between 15 and 25")
+
+    // Test correlation with significance
+    def corTest = SmileStats.correlationTest(mtcars, 'mpg', 'wt')
+    assertTrue(corTest.cor() < 0, "mpg and wt should be negatively correlated")
+    assertTrue(corTest.pvalue() < 0.05, "Correlation should be significant")
   }
 }

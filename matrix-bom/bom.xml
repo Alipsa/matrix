@@ -32,7 +32,8 @@
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
 
-    <matrixAvroVersion>0.0.1-SNAPSHOT</matrixAvroVersion>
+    <matrixArffVersion>0.1.0-SNAPSHOT</matrixArffVersion>
+    <matrixAvroVersion>0.1.0-SNAPSHOT</matrixAvroVersion>
     <matrixBigQueryVersion>0.5.0-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>0.3.2-SNAPSHOT</matrixChartsVersion>
     <matrixCoreVersion>3.5.1-SNAPSHOT</matrixCoreVersion>
@@ -41,6 +42,7 @@
     <matrixGsheetsVersion>0.1.0-SNAPSHOT</matrixGsheetsVersion>
     <matrixJsonVersion>2.1.2-SNAPSHOT</matrixJsonVersion>
     <matrixParquetVersion>0.4.0-SNAPSHOT</matrixParquetVersion>
+    <matrixSmileVersion>0.1.0-SNAPSHOT</matrixSmileVersion>
     <matrixSpreadsheetVersion>2.2.2-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.2.0</matrixSqlVersion>
     <matrixStatsVersion>2.2.1-SNAPSHOT</matrixStatsVersion>
@@ -130,6 +132,16 @@
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-avro</artifactId>
         <version>${matrixAvroVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-arff</artifactId>
+        <version>${matrixArffVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-smile</artifactId>
+        <version>${matrixSmileVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

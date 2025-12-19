@@ -1,6 +1,5 @@
 package se.alipsa.matrix.smile
 
-import com.sun.jdi.IntegerType
 import groovy.transform.CompileStatic
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -69,25 +68,77 @@ class DataframeConverter {
       // Extract all data from the column
       List<Object> columnData = matrix.column(j)
 
-      // 4. Create the appropriate Smile ValueVector based on the type
-      // TODO: if we have nulls use ofNullable variants, if no nulls use the of variants
+      // Check if column contains nulls - use optimized primitive arrays when no nulls
+      boolean hasNulls = containsNull(columnData)
+
+      // Create the appropriate Smile ValueVector based on the type
+      // Use of() variants (primitive arrays) when no nulls for better performance
+      // Use ofNullable() variants when nulls are present
       switch (dataType) {
-        case Float -> columns.add(ValueVector.ofNullable(colName, columnData as Float[]))
+        case Float -> {
+          if (hasNulls) {
+            columns.add(ValueVector.ofNullable(colName, columnData as Float[]))
+          } else {
+            columns.add(ValueVector.of(colName, toPrimitiveFloatArray(columnData)))
+          }
+        }
         case float -> columns.add(ValueVector.of(colName, columnData as float[]))
-        case Double -> columns.add(ValueVector.ofNullable(colName, columnData as Double[]))
+        case Double -> {
+          if (hasNulls) {
+            columns.add(ValueVector.ofNullable(colName, columnData as Double[]))
+          } else {
+            columns.add(ValueVector.of(colName, toPrimitiveDoubleArray(columnData)))
+          }
+        }
         case double -> columns.add(ValueVector.of(colName, columnData as double[]))
-        case Integer -> columns.add(ValueVector.ofNullable(colName, columnData as Integer[]))
+        case Integer -> {
+          if (hasNulls) {
+            columns.add(ValueVector.ofNullable(colName, columnData as Integer[]))
+          } else {
+            columns.add(ValueVector.of(colName, toPrimitiveIntArray(columnData)))
+          }
+        }
         case int -> columns.add(ValueVector.of(colName, columnData as int[]))
         case String -> columns.add(ValueVector.of(colName, columnData as String[]))
-        case Boolean -> columns.add(ValueVector.ofNullable(colName, columnData as Boolean[]))
+        case Boolean -> {
+          if (hasNulls) {
+            columns.add(ValueVector.ofNullable(colName, columnData as Boolean[]))
+          } else {
+            columns.add(ValueVector.of(colName, toPrimitiveBooleanArray(columnData)))
+          }
+        }
         case boolean -> columns.add(ValueVector.of(colName, columnData as boolean[]))
-        case Character -> columns.add(ValueVector.ofNullable(colName, columnData as Character[]))
+        case Character -> {
+          if (hasNulls) {
+            columns.add(ValueVector.ofNullable(colName, columnData as Character[]))
+          } else {
+            columns.add(ValueVector.of(colName, toPrimitiveCharArray(columnData)))
+          }
+        }
         case char -> columns.add(ValueVector.of(colName, columnData as char[]))
-        case Byte -> columns.add(ValueVector.ofNullable(colName, columnData as Byte[]))
+        case Byte -> {
+          if (hasNulls) {
+            columns.add(ValueVector.ofNullable(colName, columnData as Byte[]))
+          } else {
+            columns.add(ValueVector.of(colName, toPrimitiveByteArray(columnData)))
+          }
+        }
         case byte -> columns.add(ValueVector.of(colName, columnData as byte[]))
-        case Short -> columns.add(ValueVector.ofNullable(colName, columnData as Short[]))
+        case Short -> {
+          if (hasNulls) {
+            columns.add(ValueVector.ofNullable(colName, columnData as Short[]))
+          } else {
+            columns.add(ValueVector.of(colName, toPrimitiveShortArray(columnData)))
+          }
+        }
         case short -> columns.add(ValueVector.of(colName, columnData as short[]))
-        case Long -> columns.add(ValueVector.ofNullable(colName, columnData as Long[]))
+        case Long -> {
+          if (hasNulls) {
+            columns.add(ValueVector.ofNullable(colName, columnData as Long[]))
+          } else {
+            columns.add(ValueVector.of(colName, toPrimitiveLongArray(columnData)))
+          }
+        }
         case long -> columns.add(ValueVector.of(colName, columnData as long[]))
         case BigDecimal, BigInteger -> columns.add(ValueVector.of(colName, columnData as BigDecimal[]))
         case Timestamp -> columns.add(ValueVector.of(colName, columnData as Timestamp[]))
@@ -99,7 +150,7 @@ class DataframeConverter {
         case OffsetTime -> columns.add(ValueVector.of(colName, columnData as OffsetTime[]))
         case Enum -> columns.add(ValueVector.nominal(colName, columnData as Enum[]))
         default -> {
-          // Handle other types (Boolean, Date, Long, etc.) or default to StringVector
+          // Handle other types or default to StringVector
           log.warn("Warning: Unhandled data type " + dataType.getSimpleName() +
               " for column " + colName + ". Defaulting to StringVector.")
           List<String> values = ListConverter.convert(columnData, String)
@@ -108,8 +159,108 @@ class DataframeConverter {
       }
     }
 
-    // 5. Create the Smile DataFrame from the ValueVectors
+    // Create the Smile DataFrame from the ValueVectors
     return new DataFrame(columns as ValueVector[])
+  }
+
+  /**
+   * Check if a list contains any null values.
+   */
+  private static boolean containsNull(List<?> list) {
+    for (Object item : list) {
+      if (item == null) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Convert List to primitive float array.
+   */
+  private static float[] toPrimitiveFloatArray(List<?> list) {
+    float[] result = new float[list.size()]
+    for (int i = 0; i < list.size(); i++) {
+      result[i] = ((Number) list.get(i)).floatValue()
+    }
+    return result
+  }
+
+  /**
+   * Convert List to primitive double array.
+   */
+  private static double[] toPrimitiveDoubleArray(List<?> list) {
+    double[] result = new double[list.size()]
+    for (int i = 0; i < list.size(); i++) {
+      result[i] = ((Number) list.get(i)).doubleValue()
+    }
+    return result
+  }
+
+  /**
+   * Convert List to primitive int array.
+   */
+  private static int[] toPrimitiveIntArray(List<?> list) {
+    int[] result = new int[list.size()]
+    for (int i = 0; i < list.size(); i++) {
+      result[i] = ((Number) list.get(i)).intValue()
+    }
+    return result
+  }
+
+  /**
+   * Convert List to primitive long array.
+   */
+  private static long[] toPrimitiveLongArray(List<?> list) {
+    long[] result = new long[list.size()]
+    for (int i = 0; i < list.size(); i++) {
+      result[i] = ((Number) list.get(i)).longValue()
+    }
+    return result
+  }
+
+  /**
+   * Convert List to primitive short array.
+   */
+  private static short[] toPrimitiveShortArray(List<?> list) {
+    short[] result = new short[list.size()]
+    for (int i = 0; i < list.size(); i++) {
+      result[i] = ((Number) list.get(i)).shortValue()
+    }
+    return result
+  }
+
+  /**
+   * Convert List to primitive byte array.
+   */
+  private static byte[] toPrimitiveByteArray(List<?> list) {
+    byte[] result = new byte[list.size()]
+    for (int i = 0; i < list.size(); i++) {
+      result[i] = ((Number) list.get(i)).byteValue()
+    }
+    return result
+  }
+
+  /**
+   * Convert List to primitive boolean array.
+   */
+  private static boolean[] toPrimitiveBooleanArray(List<?> list) {
+    boolean[] result = new boolean[list.size()]
+    for (int i = 0; i < list.size(); i++) {
+      result[i] = (Boolean) list.get(i)
+    }
+    return result
+  }
+
+  /**
+   * Convert List to primitive char array.
+   */
+  private static char[] toPrimitiveCharArray(List<?> list) {
+    char[] result = new char[list.size()]
+    for (int i = 0; i < list.size(); i++) {
+      result[i] = (Character) list.get(i)
+    }
+    return result
   }
 
   static Class getType(DataType dataType) {
@@ -117,7 +268,7 @@ class DataframeConverter {
     return switch (dataType) {
       case FloatType -> Float
       case DoubleType -> Double
-      case IntegerType, IntType -> Integer
+      case IntType -> Integer
       case StringType -> String
       case BooleanType -> Boolean
       case CharType -> Character

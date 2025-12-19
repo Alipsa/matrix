@@ -1,0 +1,6 @@
+# Groovy extension module for matrix-smile
+# Adds convenience methods to Matrix and Smile DataFrame classes
+moduleName=matrix-smile
+moduleVersion=1.0
+# comma separated list of classes that extend DefaultGroovyMethods
+extensionClasses=se.alipsa.matrix.smile.Gsmile

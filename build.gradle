@@ -21,6 +21,13 @@ def majorOf = { String v ->
 }
 
 allprojects {
+  plugins.withType(MavenPublishPlugin).configureEach {
+    tasks.withType(PublishToMavenLocal).configureEach {
+      doLast {
+        println "🚀 Published ${project.name}: ${publication.groupId}:${publication.artifactId}:${publication.version}"
+      }
+    }
+  }
   tasks.matching { it.name == "dependencyUpdates" }.configureEach {
     gradleReleaseChannel = "current"
     checkForGradleUpdate = false // optional: silence Gradle RC noise
