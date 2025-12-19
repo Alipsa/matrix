@@ -1,3 +1,5 @@
+![Groovy](https://img.shields.io/badge/groovy-4298B8.svg?style=for-the-badge&logo=apachegroovy&logoColor=white)
+![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
 # Matrix
 This is a Groovy library (that also works in Java) to make it easy to work with
 a matrix (tabular i.e. 2-dimensional) data. Whenever you ḧave a structure like this
