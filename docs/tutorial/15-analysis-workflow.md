@@ -385,4 +385,4 @@ println "   - Pie chart for product distribution"
 println "\nAll results and visualizations have been saved to the $analysisResults.absolutePath directory."
 ```
 
-Go to [previous section](14-matrix-tablesaw.md) | Back to [outline](outline.md)
+Go to [previous section](14-matrix-tablesaw.md) | Go to [next section](16-matrix-arff.md) | Back to [outline](outline.md)

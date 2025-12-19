@@ -97,18 +97,39 @@
 
 ## 12. Practical Examples
 - [Data analysis workflow](15-analysis-workflow.md)
-<!--
-- Combining multiple modules
-- Real-world use cases
 
-## 13. Best Practices and Tips
-- Performance considerations
-- Memory management
-- Code organization
-- Common pitfalls and how to avoid them
+## 13. Machine Learning Modules
+- [Matrix ARFF Module](16-matrix-arff.md)
+  - Reading and writing ARFF files
+  - ARFF attribute types
+  - Custom nominal mappings
+  - Integration with ML workflows
+- [Matrix Smile Module](17-matrix-smile.md)
+  - Data conversion with SmileUtil
+  - Statistical analysis with SmileStats
+  - Classification, regression, clustering
+  - Dimensionality reduction (PCA)
+  - Feature engineering and data splitting
 
-## 14. Conclusion
+## 14. Advanced Topics
+- [Advanced Matrix Operations](18-advanced-operations.md)
+  - Complex subsetting and filtering
+  - Advanced transformations
+  - Joining and merging matrices
+  - Grouping and aggregation
+  - Time series operations
+  - Matrix reshaping (pivot/melt)
+  - Advanced GINQ queries
+- [Performance Best Practices](19-performance-best-practices.md)
+  - Understanding Matrix memory model
+  - Efficient data loading
+  - Optimizing transformations
+  - Working with large datasets
+  - Memory management
+  - Profiling and benchmarking
+  - Common pitfalls
+
+## 15. Conclusion
 - Summary of key concepts
 - Additional resources
 - Community and support
--->
