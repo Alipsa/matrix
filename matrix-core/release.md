@@ -7,7 +7,7 @@
 - add size check when adding columns
 - Row iterator is now based on an unmodifiable list
 - Add Column.removeNulls() since minus preserves the column length and Column - null does not do anything.
-- add a subset method to Matrix taking a list of row indices
+- add a subset method to Matrix taking a list of row indices and another subset taking a vararg of row indices
 
 ### 3.5.0, 2025-09-06
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.5.0/matrix-core-3.5.0.jar)

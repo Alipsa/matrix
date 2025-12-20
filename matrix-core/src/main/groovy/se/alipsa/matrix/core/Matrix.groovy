@@ -2338,6 +2338,18 @@ class Matrix implements Iterable<Row>, Cloneable {
         .build()
   }
 
+  Matrix subset(Integer... rows) {
+    if (rows == null || rows.length == 0) {
+      return this.clone()
+    }
+    builder()
+        .rows(this.rows(rows as List) as List<List>)
+        .matrixName(this.matrixName)
+        .columnNames(this.columnNames())
+        .types(this.types())
+        .build()
+  }
+
   /**
    * Filters the matrix to only include rows where the columnName has the value specified
    *
