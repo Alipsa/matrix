@@ -585,7 +585,7 @@ class DataProcessor {
                 indices << i
             }
         }
-        return matrix.subset(indices as IntRange)
+        return matrix.subset(indices)
     }
 }
 ```
