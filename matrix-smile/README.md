@@ -15,6 +15,14 @@ Add the dependency to your build.gradle:
 implementation 'se.alipsa.matrix:matrix-smile:0.1.0-SNAPSHOT'
 ```
 
+## Design Principles
+
+1. **Matrix-first API** - All methods accept and return Matrix where possible
+2. **Type safety** - Use `@CompileStatic` throughout
+3. **Consistency** - Follow patterns from matrix-tablesaw and matrix-stats
+4. **Documentation** - Each class has usage examples
+5. **Testability** - Comprehensive tests for each wrapper
+
 ## Usage
 
 ### Converting Between Matrix and Smile DataFrame
@@ -168,53 +176,53 @@ int nullCount = SmileUtil.countNulls(matrix.column('age'))
 
 The converter supports the following data types:
 
-| Matrix Type | Smile Type |
-|------------|------------|
-| Integer/int | IntType |
-| Long/long | LongType |
-| Double/double | DoubleType |
-| Float/float | FloatType |
-| Short/short | ShortType |
-| Byte/byte | ByteType |
-| Boolean/boolean | BooleanType |
-| Character/char | CharType |
-| String | StringType |
-| BigDecimal | DecimalType |
-| LocalDate | DateType |
-| LocalDateTime | DateTimeType |
-| LocalTime | TimeType |
-| Timestamp | TimestampType |
-| Instant | InstantType |
-| ZonedDateTime | ZonedDateTimeType |
-| OffsetTime | OffsetTimeType |
-| Enum | NominalType |
+| Matrix Type     | Smile Type        |
+|-----------------|-------------------|
+| Integer/int     | IntType           |
+| Long/long       | LongType          |
+| Double/double   | DoubleType        |
+| Float/float     | FloatType         |
+| Short/short     | ShortType         |
+| Byte/byte       | ByteType          |
+| Boolean/boolean | BooleanType       |
+| Character/char  | CharType          |
+| String          | StringType        |
+| BigDecimal      | DecimalType       |
+| LocalDate       | DateType          |
+| LocalDateTime   | DateTimeType      |
+| LocalTime       | TimeType          |
+| Timestamp       | TimestampType     |
+| Instant         | InstantType       |
+| ZonedDateTime   | ZonedDateTimeType |
+| OffsetTime      | OffsetTimeType    |
+| Enum            | NominalType       |
 
 ## API Reference
 
 ### DataframeConverter
 
-| Method | Description |
-|--------|-------------|
-| `convert(DataFrame df)` | Convert Smile DataFrame to Matrix |
+| Method                   | Description                       |
+|--------------------------|-----------------------------------|
+| `convert(DataFrame df)`  | Convert Smile DataFrame to Matrix |
 | `convert(Matrix matrix)` | Convert Matrix to Smile DataFrame |
 | `getType(DataType type)` | Get Java class for Smile DataType |
 
 ### SmileUtil
 
-| Method | Description |
-|--------|-------------|
-| `toMatrix(DataFrame df)` | Convert Smile DataFrame to Matrix |
-| `toDataFrame(Matrix matrix)` | Convert Matrix to Smile DataFrame |
-| `describe(Matrix matrix)` | Statistical summary of numeric columns |
-| `info(Matrix matrix)` | Column information (type, nulls, uniques) |
-| `frequency(Matrix matrix, String column)` | Frequency table for a column |
-| `sample(Matrix matrix, int n)` | Random sample of n rows |
-| `sample(Matrix matrix, double fraction)` | Random sample by fraction |
-| `head(Matrix matrix, int n)` | First n rows (default 5) |
-| `tail(Matrix matrix, int n)` | Last n rows (default 5) |
-| `hasNulls(List values)` | Check if list contains nulls |
-| `countNulls(List values)` | Count null values in list |
-| `round(double value, int decimals)` | Round to specified decimals |
+| Method                                    | Description                               |
+|-------------------------------------------|-------------------------------------------|
+| `toMatrix(DataFrame df)`                  | Convert Smile DataFrame to Matrix         |
+| `toDataFrame(Matrix matrix)`              | Convert Matrix to Smile DataFrame         |
+| `describe(Matrix matrix)`                 | Statistical summary of numeric columns    |
+| `info(Matrix matrix)`                     | Column information (type, nulls, uniques) |
+| `frequency(Matrix matrix, String column)` | Frequency table for a column              |
+| `sample(Matrix matrix, int n)`            | Random sample of n rows                   |
+| `sample(Matrix matrix, double fraction)`  | Random sample by fraction                 |
+| `head(Matrix matrix, int n)`              | First n rows (default 5)                  |
+| `tail(Matrix matrix, int n)`              | Last n rows (default 5)                   |
+| `hasNulls(List values)`                   | Check if list contains nulls              |
+| `countNulls(List values)`                 | Count null values in list                 |
+| `round(double value, int decimals)`       | Round to specified decimals               |
 
 ## License
 
