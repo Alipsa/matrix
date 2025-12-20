@@ -9,9 +9,9 @@ To use the matrix-stats module, you need to add it as a dependency to your proje
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.2'
-implementation "se.alipsa.matrix:matrix-core:3.2.0"
-implementation "se.alipsa.matrix:matrix-stats:2.1.0"
+implementation 'org.apache.groovy:groovy:5.0.3'
+implementation "se.alipsa.matrix:matrix-core:3.5.0"
+implementation "se.alipsa.matrix:matrix-stats:2.2.0"
 ```
 
 ### Maven Configuration
@@ -21,17 +21,17 @@ implementation "se.alipsa.matrix:matrix-stats:2.1.0"
     <dependency>
         <groupId>org.apache.groovy</groupId>
         <artifactId>groovy</artifactId>
-        <version>5.0.2</version>
+        <version>5.0.3</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.2.0</version>
+        <version>3.5.0</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-stats</artifactId>
-        <version>2.1.0</version>
+        <version>2.2.0</version>
     </dependency>
 </dependencies>
 ```

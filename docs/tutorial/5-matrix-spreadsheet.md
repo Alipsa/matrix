@@ -12,8 +12,8 @@ To use the matrix-spreadsheet module, you need to add it as a dependency to your
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.2'
-implementation platform('se.alipsa.matrix:matrix-bom:2.2.3')
+implementation 'org.apache.groovy:groovy:5.0.3'
+implementation platform('se.alipsa.matrix:matrix-bom:2.3.0')
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-spreadsheet'
 ```
@@ -27,7 +27,7 @@ implementation 'se.alipsa.matrix:matrix-spreadsheet'
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-bom</artifactId>
-        <version>2.2.3</version>
+        <version>2.3.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -37,7 +37,7 @@ implementation 'se.alipsa.matrix:matrix-spreadsheet'
     <dependency>
         <groupId>org.apache.groovy</groupId>
         <artifactId>groovy</artifactId>
-        <version>5.0.2</version>
+        <version>5.0.3</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
