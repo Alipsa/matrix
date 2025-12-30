@@ -106,4 +106,12 @@ class Scale {
     trained = false
     domain = []
   }
+
+  /**
+   * Get the domain of this scale.
+   * @return List of domain values
+   */
+  List getDomain() {
+    return domain
+  }
 }

@@ -282,6 +282,10 @@ class GgPlot {
     return new GeomAbline()
   }
 
+  static GeomAbline geom_abline(Map params) {
+    return new GeomAbline(params)
+  }
+
   static GeomBar geom_bar() {
     return new GeomBar()
   }
@@ -338,6 +342,10 @@ class GgPlot {
     return new GeomHline()
   }
 
+  static GeomHline geom_hline(Map params) {
+    return new GeomHline(params)
+  }
+
   static GeomLine geom_line() {
     return new GeomLine()
   }
@@ -362,6 +370,10 @@ class GgPlot {
     return new GeomSegment()
   }
 
+  static GeomSegment geom_segment(Map params) {
+    return new GeomSegment(params)
+  }
+
   static GeomSmooth geom_smooth() {
     return new GeomSmooth()
   }
@@ -376,6 +388,10 @@ class GgPlot {
 
   static GeomVline geom_vline() {
     return new GeomVline()
+  }
+
+  static GeomVline geom_vline(Map params) {
+    return new GeomVline(params)
   }
 
   // ============ Scales ============

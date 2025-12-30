@@ -376,10 +376,10 @@ Each geom needs:
 - [] `geom/GeomLabel.groovy` (new) - Labeled text with background
 
 #### 5.3 Priority 3 - Reference Lines
-- [] `geom/GeomAbline.groovy` - Arbitrary lines (slope/intercept)
-- [] `geom/GeomHline.groovy` - Horizontal reference lines
-- [] `geom/GeomVline.groovy` - Vertical reference lines
-- [] `geom/GeomSegment.groovy` - Line segments
+- [x] `geom/GeomAbline.groovy` - Arbitrary lines (slope/intercept)
+- [x] `geom/GeomHline.groovy` - Horizontal reference lines
+- [x] `geom/GeomVline.groovy` - Vertical reference lines
+- [x] `geom/GeomSegment.groovy` - Line segments
 
 #### 5.4 Priority 4 - Advanced Geoms
 - [] `geom/GeomViolin.groovy` - Violin plots
@@ -634,7 +634,7 @@ se/alipsa/matrix/gg/
 4. [x] Apply themes in renderer
 
 ### Sprint 7: Remaining Geoms
-1. [] Implement reference line geoms (hline, vline, abline, segment)
+1. [x] Implement reference line geoms (hline, vline, abline, segment) - Full implementations with linetype, color, alpha, arrow support
 2. [x] Implement `GeomSmooth` (basic linear)
 3. [] Implement `GeomArea`
 4. [] Implement remaining geom stubs
