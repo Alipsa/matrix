@@ -473,11 +473,12 @@ class GgRenderer {
 Note: Axis rendering is implemented directly in `render/GgRenderer.groovy`.
 
 #### 7.3 Legend Rendering
-**File**: `render/LegendRenderer.groovy` (new) []
+**File**: `render/GgRenderer.groovy` (implemented as renderLegend method) [x]
 
-- [] Automatic legend generation from scales
-- [] Position control (top, bottom, left, right, inside)
-- [] Key symbols matching geom type
+- [x] Automatic legend generation from scales (color, fill)
+- [x] Position control (top, bottom, left, right, none, custom [x,y])
+- [x] Discrete legends with colored keys and labels
+- [x] Continuous legends with gradient color bars
 
 ---
 
@@ -535,9 +536,9 @@ se/alipsa/matrix/gg/
 ├── layer/
 │   └── [x] Layer.groovy
 ├── render/
-│   ├── [x] GgRenderer.groovy
+│   ├── [x] GgRenderer.groovy   # Includes axis and legend rendering
 │   ├── AxisRenderer.groovy     # Implemented inside render/GgRenderer.groovy
-│   └── LegendRenderer.groovy
+│   └── LegendRenderer.groovy   # Implemented inside render/GgRenderer.groovy
 ├── position/
 │   └── [x] GgPosition.groovy   # Consolidated position implementations
 ├── scale/
@@ -622,8 +623,9 @@ se/alipsa/matrix/gg/
 ### Sprint 5: Color Scales and Legend
 1. [x] Implement `ScaleColorManual` properly
 2. [x] Implement `ScaleColorGradient`
-3. [] Implement `LegendRenderer`
+3. [x] Implement `LegendRenderer` - supports discrete and continuous legends, configurable position
 4. [x] Implement color mapping in geoms - auto-detection in GgRenderer
+5. [x] Write tests for legend (13 tests in LegendTest)
 
 ### Sprint 6: Theme System
 1. [x] Implement `ThemeGray` (default)

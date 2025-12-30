@@ -161,4 +161,11 @@ class ScaleContinuous extends Scale {
     }
     return String.format('%.2g', d)
   }
+
+  /**
+   * Get the computed domain [min, max].
+   */
+  List<Number> getComputedDomain() {
+    return computedDomain
+  }
 }

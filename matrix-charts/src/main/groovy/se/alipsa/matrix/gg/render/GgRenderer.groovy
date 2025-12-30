@@ -583,11 +583,262 @@ class GgRenderer {
   }
 
   /**
-   * Render legend.
+   * Render legend for color, fill, and other aesthetic scales.
    */
   private void renderLegend(Svg svg, Map<String, Scale> scales, GgChart chart, Theme theme) {
-    // TODO: Implement legend rendering based on color/fill/size scales
-    // For now, just a placeholder
+    // Check if legend should be shown
+    if (theme.legendPosition == 'none') return
+
+    // Find scales that need legends (color, fill, size - not x, y)
+    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape']
+    Map<String, Scale> legendScales = scales.findAll { k, v ->
+      if (!legendAesthetics.contains(k) || !v.isTrained()) return false
+      // Check appropriate domain field based on scale type
+      if (v instanceof ScaleContinuous) {
+        return !(v as ScaleContinuous).computedDomain.isEmpty()
+      } else if (v instanceof ScaleDiscrete) {
+        return !(v as ScaleDiscrete).levels.isEmpty()
+      }
+      return !v.domain.isEmpty()
+    }
+
+    if (legendScales.isEmpty()) return
+
+    // Calculate legend position
+    int plotWidth = chart.width - MARGIN_LEFT - MARGIN_RIGHT
+    int plotHeight = chart.height - MARGIN_TOP - MARGIN_BOTTOM
+
+    int legendX, legendY
+    boolean isVertical = theme.legendDirection != 'horizontal'
+
+    // Determine legend position
+    switch (theme.legendPosition) {
+      case 'right':
+        legendX = chart.width - MARGIN_RIGHT + 10
+        legendY = MARGIN_TOP + 20
+        break
+      case 'left':
+        legendX = 10
+        legendY = MARGIN_TOP + 20
+        break
+      case 'top':
+        legendX = MARGIN_LEFT
+        legendY = 10
+        isVertical = false
+        break
+      case 'bottom':
+        legendX = MARGIN_LEFT
+        legendY = chart.height - 40
+        isVertical = false
+        break
+      default:
+        // Custom position [x, y] or default to right
+        if (theme.legendPosition instanceof List && (theme.legendPosition as List).size() >= 2) {
+          List pos = theme.legendPosition as List
+          legendX = (pos[0] as Number).intValue()
+          legendY = (pos[1] as Number).intValue()
+        } else {
+          legendX = chart.width - MARGIN_RIGHT + 10
+          legendY = MARGIN_TOP + 20
+        }
+    }
+
+    // Create legend group
+    G legendGroup = svg.addG()
+    legendGroup.id('legend')
+    legendGroup.transform("translate($legendX, $legendY)")
+
+    // Get legend title from chart labels or scale name
+    String legendTitle = chart.labels?.legendTitle ?: legendScales.values().first()?.name
+
+    int currentY = 0
+    int currentX = 0
+
+    // Render title if present
+    if (legendTitle) {
+      def titleText = legendGroup.addText(legendTitle)
+          .x(0)
+          .y(currentY)
+          .addAttribute('font-weight', 'bold')
+          .fontSize(theme.legendTitle?.size ?: 11)
+      if (theme.legendTitle?.color) {
+        titleText.fill(theme.legendTitle.color)
+      }
+      currentY += 18
+    }
+
+    // Render each legend scale
+    legendScales.each { aesthetic, scale ->
+      if (scale instanceof ScaleDiscrete) {
+        currentY = renderDiscreteLegend(legendGroup, scale as ScaleDiscrete, aesthetic,
+            currentX, currentY, isVertical, theme)
+      } else if (scale instanceof ScaleContinuous) {
+        currentY = renderContinuousLegend(legendGroup, scale as ScaleContinuous, aesthetic,
+            currentX, currentY, isVertical, theme)
+      }
+    }
+  }
+
+  /**
+   * Render legend for a discrete scale (color categories).
+   */
+  private int renderDiscreteLegend(G group, ScaleDiscrete scale, String aesthetic,
+                                   int startX, int startY, boolean vertical, Theme theme) {
+    List<Number> keySize = theme.legendKeySize ?: [15, 15] as List<Number>
+    int keyWidth = keySize[0].intValue()
+    int keyHeight = keySize[1].intValue()
+    int spacing = 5
+    int textOffset = keyWidth + 8
+
+    List<Object> levels = scale.levels
+    List<String> labels = scale.computedLabels
+
+    int x = startX
+    int y = startY
+
+    levels.eachWithIndex { level, int idx ->
+      // Get color for this level
+      String color = scale.transform(level)?.toString() ?: '#999999'
+      String label = idx < labels.size() ? labels[idx] : level?.toString() ?: ''
+
+      // Draw key (colored rectangle or circle)
+      if (aesthetic == 'color' || aesthetic == 'colour' || aesthetic == 'fill') {
+        def rect = group.addRect(keyWidth, keyHeight)
+            .x(x)
+            .y(y)
+            .fill(color)
+        if (theme.legendKey?.color) {
+          rect.stroke(theme.legendKey.color)
+        }
+      }
+
+      // Draw label
+      group.addText(label)
+          .x(x + textOffset)
+          .y(y + keyHeight - 3)
+          .fontSize(theme.legendText?.size ?: 10)
+          .fill(theme.legendText?.color ?: 'black')
+
+      // Move to next position
+      if (vertical) {
+        y += keyHeight + spacing
+      } else {
+        x += keyWidth + textOffset + label.length() * 6 + spacing
+      }
+    }
+
+    return y + (vertical ? 0 : keyHeight + spacing)
+  }
+
+  /**
+   * Render legend for a continuous scale (color gradient bar).
+   */
+  private int renderContinuousLegend(G group, ScaleContinuous scale, String aesthetic,
+                                     int startX, int startY, boolean vertical, Theme theme) {
+    // For continuous scales, render a gradient color bar
+    int barWidth = vertical ? 15 : 100
+    int barHeight = vertical ? 80 : 15
+    int spacing = 5
+
+    int x = startX
+    int y = startY
+
+    // Get domain for labels
+    List domain = scale.computedDomain
+    if (domain.size() < 2) return y
+
+    Number minVal = domain[0] as Number
+    Number maxVal = domain[1] as Number
+
+    // Create gradient definition
+    String gradientId = "legend-gradient-${aesthetic}"
+
+    // We can't easily add to existing defs, so create a simple representation
+    // Draw multiple small rectangles to simulate gradient
+    int numSteps = 20
+    for (int i = 0; i < numSteps; i++) {
+      double t = i / (numSteps - 1)
+      Number value = minVal + t * (maxVal - minVal)
+      String color = scale.transform(value)?.toString() ?: '#999999'
+
+      if (vertical) {
+        int stepHeight = (int) (barHeight / numSteps)
+        int stepY = y + barHeight - (i + 1) * stepHeight
+        group.addRect(barWidth, stepHeight + 1)
+            .x(x)
+            .y(stepY)
+            .fill(color)
+            .stroke('none')
+      } else {
+        int stepWidth = (int) (barWidth / numSteps)
+        int stepX = x + i * stepWidth
+        group.addRect(stepWidth + 1, barHeight)
+            .x(stepX)
+            .y(y)
+            .fill(color)
+            .stroke('none')
+      }
+    }
+
+    // Draw border around the bar
+    group.addRect(barWidth, barHeight)
+        .x(x)
+        .y(y)
+        .fill('none')
+        .stroke(theme.legendKey?.color ?: '#333333')
+
+    // Draw min/max labels
+    List<Number> breaks = scale.computedBreaks as List<Number>
+    List<String> labels = scale.computedLabels
+
+    if (vertical) {
+      // Min at bottom
+      group.addText(labels.first() ?: formatNumber(minVal))
+          .x(x + barWidth + 5)
+          .y(y + barHeight)
+          .fontSize(theme.legendText?.size ?: 9)
+          .fill(theme.legendText?.color ?: 'black')
+
+      // Max at top
+      group.addText(labels.last() ?: formatNumber(maxVal))
+          .x(x + barWidth + 5)
+          .y(y + 10)
+          .fontSize(theme.legendText?.size ?: 9)
+          .fill(theme.legendText?.color ?: 'black')
+
+      return y + barHeight + spacing
+    } else {
+      // Min at left
+      group.addText(labels.first() ?: formatNumber(minVal))
+          .x(x)
+          .y(y + barHeight + 12)
+          .fontSize(theme.legendText?.size ?: 9)
+          .fill(theme.legendText?.color ?: 'black')
+
+      // Max at right
+      group.addText(labels.last() ?: formatNumber(maxVal))
+          .x(x + barWidth - 20)
+          .y(y + barHeight + 12)
+          .fontSize(theme.legendText?.size ?: 9)
+          .fill(theme.legendText?.color ?: 'black')
+
+      return y + barHeight + 20
+    }
+  }
+
+  /**
+   * Format a number for legend display.
+   */
+  private String formatNumber(Number value) {
+    if (value == null) return ''
+    double d = value.doubleValue()
+    if (d == Math.floor(d) && d < 1e6) {
+      return String.valueOf((long) d)
+    }
+    if (Math.abs(d) < 0.01 || Math.abs(d) >= 1e6) {
+      return String.format('%.2e', d)
+    }
+    return String.format('%.2f', d)
   }
 
   /**
