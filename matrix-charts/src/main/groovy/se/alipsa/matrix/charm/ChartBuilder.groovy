@@ -17,23 +17,27 @@ class ChartBuilder {
     this
   }
 
-  ChartBuilder addLegend(Legend legend) {
+  ChartBuilder setLegend(Legend legend) {
     this
   }
 
-  ChartBuilder addGridLines(GridLines gridLines) {
+  ChartBuilder setGridLines(GridLines gridLines) {
     this
   }
 
-  ChartBuilder addTitle(Title title) {
+  ChartBuilder setTitle(Title title) {
     this
   }
 
-  ChartBuilder addSubTitle(SubTitle subTitle) {
+  ChartBuilder setSubTitle(SubTitle subTitle) {
     this
   }
 
-  ChartBuilder addCoordinateSystem(CoordinateSystem coordinateSystem) {
+  ChartBuilder setCoordinateSystem(CoordinateSystem coordinateSystem) {
+    this
+  }
+
+  ChartBuilder setStyle(Style style) {
     this
   }
 

@@ -1,5 +1,8 @@
 package se.alipsa.matrix.gg
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class Label {
 
   String title

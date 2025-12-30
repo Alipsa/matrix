@@ -1,0 +1,249 @@
+package se.alipsa.matrix.gg.geom
+
+import groovy.transform.CompileStatic
+import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.Identity
+import se.alipsa.matrix.gg.coord.Coord
+import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.scale.Scale
+
+/**
+ * Area geometry for area charts.
+ * Like geom_line but fills the area under the line.
+ *
+ * Usage:
+ * - geom_area() - basic area chart
+ * - geom_area(fill: 'blue', alpha: 0.5) - semi-transparent blue area
+ * - With grouping: aes(fill: 'category') for stacked areas
+ */
+@CompileStatic
+class GeomArea extends Geom {
+
+  /** Fill color for the area */
+  String fill = 'gray'
+
+  /** Stroke color for the outline */
+  String color = 'black'
+
+  /** Line width for outline (0 for no outline) */
+  Number linewidth = 0.5
+
+  /** Alpha transparency (0-1) */
+  Number alpha = 0.7
+
+  /** Line type for outline */
+  String linetype = 'solid'
+
+  /** Position adjustment: 'identity', 'stack', 'fill' */
+  String position = 'stack'
+
+  GeomArea() {
+    defaultStat = StatType.IDENTITY
+    requiredAes = ['x', 'y']
+    defaultAes = [fill: 'gray', color: 'black', alpha: 0.7] as Map<String, Object>
+  }
+
+  GeomArea(Map params) {
+    this()
+    if (params.fill) this.fill = params.fill as String
+    if (params.color) this.color = params.color as String
+    if (params.colour) this.color = params.colour as String
+    if (params.linewidth != null) this.linewidth = params.linewidth as Number
+    if (params.size != null) this.linewidth = params.size as Number
+    if (params.alpha != null) this.alpha = params.alpha as Number
+    if (params.linetype) this.linetype = params.linetype as String
+    if (params.position) this.position = params.position as String
+    this.params = params
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    if (data == null || data.rowCount() < 2) return
+
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+    String groupCol = aes.groupColName ?: aes.fillColName
+    String fillCol = aes.fillColName
+
+    if (xCol == null || yCol == null) {
+      throw new IllegalArgumentException("GeomArea requires x and y aesthetics")
+    }
+
+    Scale xScale = scales['x']
+    Scale yScale = scales['y']
+    Scale fillScale = scales['fill'] ?: scales['color']
+
+    // Get baseline y position (typically y=0 or bottom of plot)
+    double baselineY = getBaselineY(yScale)
+
+    // Group data if a group aesthetic is specified
+    Map<Object, List<Map>> groups = [:]
+    data.each { row ->
+      def groupKey = groupCol ? row[groupCol] : '__all__'
+      if (!groups.containsKey(groupKey)) {
+        groups[groupKey] = []
+      }
+      groups[groupKey] << row.toMap()
+    }
+
+    // Render each group as a separate area
+    groups.each { groupKey, rows ->
+      renderArea(group, rows, xCol, yCol, fillCol, groupKey,
+                 xScale, yScale, fillScale, baselineY, aes)
+    }
+  }
+
+  private void renderArea(G group, List<Map> rows, String xCol, String yCol,
+                          String fillCol, Object groupKey,
+                          Scale xScale, Scale yScale, Scale fillScale,
+                          double baselineY, Aes aes) {
+    // Sort rows by x value
+    List<Map> sortedRows = sortRowsByX(rows, xCol)
+
+    // Collect transformed points
+    List<double[]> points = []
+    sortedRows.each { row ->
+      def xVal = row[xCol]
+      def yVal = row[yCol]
+
+      if (xVal == null || yVal == null) return
+
+      // Transform using scales
+      def xTransformed = xScale?.transform(xVal)
+      def yTransformed = yScale?.transform(yVal)
+
+      if (xTransformed == null || yTransformed == null) return
+
+      double xPx = xTransformed as double
+      double yPx = yTransformed as double
+
+      points << ([xPx, yPx] as double[])
+    }
+
+    if (points.size() < 2) return
+
+    // Determine fill color
+    String areaFill = this.fill
+    if (fillCol && groupKey != '__all__') {
+      if (fillScale) {
+        areaFill = fillScale.transform(groupKey)?.toString() ?: this.fill
+      } else {
+        areaFill = getDefaultColor(groupKey)
+      }
+    } else if (aes.fill instanceof Identity) {
+      areaFill = (aes.fill as Identity).value.toString()
+    }
+
+    // Build SVG path
+    StringBuilder d = new StringBuilder()
+
+    // Start at first point
+    double[] firstPoint = points[0]
+    d << "M ${firstPoint[0]} ${firstPoint[1]}"
+
+    // Line to each subsequent point
+    for (int i = 1; i < points.size(); i++) {
+      double[] pt = points[i]
+      d << " L ${pt[0]} ${pt[1]}"
+    }
+
+    // Line down to baseline at last x
+    double[] lastPoint = points[points.size()-1]
+    d << " L ${lastPoint[0]} ${baselineY}"
+
+    // Line along baseline back to first x
+    d << " L ${firstPoint[0]} ${baselineY}"
+
+    // Close path
+    d << " Z"
+
+    // Create filled area
+    def path = group.addPath().d(d.toString())
+        .fill(areaFill)
+
+    // Apply alpha
+    if ((alpha as double) < 1.0) {
+      path.addAttribute('fill-opacity', alpha)
+    }
+
+    // Apply stroke if linewidth > 0
+    if ((linewidth as double) > 0) {
+      path.stroke(color)
+      path.addAttribute('stroke-width', linewidth)
+
+      String dashArray = getDashArray(linetype)
+      if (dashArray) {
+        path.addAttribute('stroke-dasharray', dashArray)
+      }
+    } else {
+      path.stroke('none')
+    }
+  }
+
+  /**
+   * Get the baseline y coordinate (bottom of plot area or y=0).
+   */
+  private double getBaselineY(Scale yScale) {
+    // Try to transform y=0 to get the baseline
+    if (yScale != null) {
+      def baseline = yScale.transform(0)
+      if (baseline != null) {
+        return baseline as double
+      }
+    }
+    // Default: assume 480px plot height (bottom of plot)
+    return 480.0
+  }
+
+  /**
+   * Sort rows by x value for proper area rendering.
+   */
+  private List<Map> sortRowsByX(List<Map> rows, String xCol) {
+    return rows.sort { a, b ->
+      def xA = a[xCol]
+      def xB = b[xCol]
+
+      if (xA instanceof Number && xB instanceof Number) {
+        return (xA as Number) <=> (xB as Number)
+      }
+
+      if (xA instanceof Comparable && xB instanceof Comparable) {
+        return (xA as Comparable) <=> (xB as Comparable)
+      }
+
+      return xA?.toString() <=> xB?.toString()
+    }
+  }
+
+  /**
+   * Convert line type to SVG stroke-dasharray.
+   */
+  private String getDashArray(String type) {
+    switch (type?.toLowerCase()) {
+      case 'dashed': return '8,4'
+      case 'dotted': return '2,2'
+      case 'dotdash': return '2,2,8,2'
+      case 'longdash': return '12,4'
+      case 'twodash': return '4,2,8,2'
+      case 'solid':
+      default: return null
+    }
+  }
+
+  /**
+   * Get a default color from a discrete palette.
+   */
+  private String getDefaultColor(Object value) {
+    List<String> palette = [
+        '#F8766D', '#00BA38', '#619CFF',
+        '#F564E3', '#00BFC4', '#B79F00',
+        '#DE8C00', '#7CAE00', '#00B4F0',
+        '#C77CFF'
+    ]
+
+    int index = Math.abs(value.hashCode()) % palette.size()
+    return palette[index]
+  }
+}
