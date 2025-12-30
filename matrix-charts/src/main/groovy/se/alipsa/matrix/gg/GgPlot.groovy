@@ -10,10 +10,12 @@ import se.alipsa.matrix.gg.geom.GeomContour
 import se.alipsa.matrix.gg.geom.GeomCount
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.geom.GeomHline
+import se.alipsa.matrix.gg.geom.GeomLabel
 import se.alipsa.matrix.gg.geom.GeomLine
 import se.alipsa.matrix.gg.geom.GeomRug
 import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
+import se.alipsa.matrix.gg.geom.GeomText
 import se.alipsa.matrix.gg.geom.GeomVline
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
@@ -23,6 +25,7 @@ import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.geom.GeomAbline
+import se.alipsa.matrix.gg.geom.GeomArea
 import se.alipsa.matrix.gg.geom.GeomBar
 import se.alipsa.matrix.gg.geom.GeomCol
 import se.alipsa.matrix.gg.geom.GeomContourFilled
@@ -286,6 +289,14 @@ class GgPlot {
     return new GeomAbline(params)
   }
 
+  static GeomArea geom_area() {
+    return new GeomArea()
+  }
+
+  static GeomArea geom_area(Map params) {
+    return new GeomArea(params)
+  }
+
   static GeomBar geom_bar() {
     return new GeomBar()
   }
@@ -346,6 +357,14 @@ class GgPlot {
     return new GeomHline(params)
   }
 
+  static GeomLabel geom_label() {
+    return new GeomLabel()
+  }
+
+  static GeomLabel geom_label(Map params) {
+    return new GeomLabel(params)
+  }
+
   static GeomLine geom_line() {
     return new GeomLine()
   }
@@ -380,6 +399,14 @@ class GgPlot {
 
   static GeomSmooth geom_smooth(Map params) {
     return new GeomSmooth(params)
+  }
+
+  static GeomText geom_text() {
+    return new GeomText()
+  }
+
+  static GeomText geom_text(Map params) {
+    return new GeomText(params)
   }
 
   static GeomViolin geom_violin(Aes aes) {

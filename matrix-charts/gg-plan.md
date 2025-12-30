@@ -371,9 +371,9 @@ Each geom needs:
 
 #### 5.2 Priority 2 - Common Geoms
 - [x] `geom/GeomSmooth.groovy` - Trend lines (stat: smooth)
-- [] `geom/GeomArea.groovy` (new) - Area charts
-- [] `geom/GeomText.groovy` (new) - Text labels
-- [] `geom/GeomLabel.groovy` (new) - Labeled text with background
+- [x] `geom/GeomArea.groovy` (new) - Area charts with fill, supports grouping
+- [x] `geom/GeomText.groovy` (new) - Text labels with hjust/vjust, angle, nudge
+- [x] `geom/GeomLabel.groovy` (new) - Labeled text with background rectangle
 
 #### 5.3 Priority 3 - Reference Lines
 - [x] `geom/GeomAbline.groovy` - Arbitrary lines (slope/intercept)
@@ -636,8 +636,10 @@ se/alipsa/matrix/gg/
 ### Sprint 7: Remaining Geoms
 1. [x] Implement reference line geoms (hline, vline, abline, segment) - Full implementations with linetype, color, alpha, arrow support
 2. [x] Implement `GeomSmooth` (basic linear)
-3. [] Implement `GeomArea`
-4. [] Implement remaining geom stubs
+3. [x] Implement `GeomArea` - Area charts with fill, alpha, grouping support
+4. [x] Implement `GeomText` - Text labels with positioning, rotation, styling
+5. [x] Implement `GeomLabel` - Text with background rectangles
+6. [] Implement remaining geom stubs (violin, rug, density, contour, etc.)
 
 ### Sprint 8: Special Coordinates
 1. [] Implement `CoordFlip`
