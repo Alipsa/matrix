@@ -1,4 +1,4 @@
 package se.alipsa.matrix.charm
 
-class SubTitle {
+class SubTitle extends Text {
 }

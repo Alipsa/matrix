@@ -1,6 +1,8 @@
 package se.alipsa.matrix.gg
 
-
+import groovy.transform.CompileStatic
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.gg.geom.GeomBin2d
 import se.alipsa.matrix.gg.geom.GeomBlank
 import se.alipsa.matrix.gg.geom.GeomBoxplot
@@ -15,6 +17,8 @@ import se.alipsa.matrix.gg.geom.GeomVline
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.Identity
+import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.geom.GeomAbline
@@ -30,22 +34,30 @@ import se.alipsa.matrix.gg.stat.StatContour
 import se.alipsa.matrix.gg.stat.StatContourFilled
 import se.alipsa.matrix.gg.stat.StatCount
 import se.alipsa.matrix.gg.stat.StatSum
+import se.alipsa.matrix.gg.theme.Theme
+import se.alipsa.matrix.gg.theme.ElementLine
+import se.alipsa.matrix.gg.theme.ElementRect
+import se.alipsa.matrix.gg.theme.ElementText
 
 /**
  * An api very similar to ggplot2 making ports from R code using ggplot2 simple.
  */
+@CompileStatic
 class GgPlot {
+
+  // ============ Core functions ============
 
   static GgChart ggplot(Matrix data, Aes aes) {
     return new GgChart(data, aes)
   }
 
+  /**
+   * Create aesthetic mappings.
+   * All parameters are treated as column name mappings.
+   * Use I(value) for constant values.
+   */
   static Aes aes(Map params) {
-    def p = [:]
-    params.computeIfPresent('x', (k,v) -> p.xCol = v)
-    params.computeIfPresent('y', (k,v) -> p.yCol = v)
-    params.computeIfPresent('col', (k,v) -> p.colorCol = v)
-    return new Aes(p)
+    return new Aes(params)
   }
 
   static Aes aes(String... colNames) {
@@ -59,6 +71,182 @@ class GgPlot {
   static Aes aes(List<String> colNames, String colour) {
     return new Aes(colNames, colour)
   }
+
+  /**
+   * Identity wrapper for constant values in aes().
+   * Use: aes(color: I('red')) to specify a constant color instead of mapping to a column.
+   */
+  static Identity I(Object value) {
+    return new Identity(value)
+  }
+
+  // ============ Labels ============
+
+  /**
+   * Create label specification for chart titles and axis labels.
+   */
+  static Label labs(Map params) {
+    Label label = new Label()
+    if (params.title) label.title = params.title
+    if (params.subtitle) label.subTitle = params.subtitle
+    if (params.caption) label.caption = params.caption
+    if (params.x) label.x = params.x
+    if (params.y) label.y = params.y
+    if (params.colour || params.color) label.legendTitle = params.colour ?: params.color
+    if (params.fill) label.legendTitle = params.fill
+    return label
+  }
+
+  /**
+   * Set x-axis label.
+   */
+  static Label xlab(String label) {
+    return labs(x: label)
+  }
+
+  /**
+   * Set y-axis label.
+   */
+  static Label ylab(String label) {
+    return labs(y: label)
+  }
+
+  /**
+   * Set chart title.
+   */
+  static Label ggtitle(String title, String subtitle = null) {
+    return labs(title: title, subtitle: subtitle)
+  }
+
+  // ============ Write/Export ============
+
+  /**
+   * Write an SVG to a file.
+   */
+  static void write(Svg svg, File file) {
+    file.text = SvgWriter.toXmlPretty(svg)
+  }
+
+  /**
+   * Write an SVG to an output stream.
+   */
+  static void write(Svg svg, OutputStream stream) {
+    stream.withWriter { writer ->
+      writer.write(SvgWriter.toXmlPretty(svg))
+    }
+  }
+
+  /**
+   * Render a chart and write to file.
+   */
+  static void write(GgChart chart, File file) {
+    write(chart.render(), file)
+  }
+
+  /**
+   * Render a chart and write to stream.
+   */
+  static void write(GgChart chart, OutputStream stream) {
+    write(chart.render(), stream)
+  }
+
+  /**
+   * Convenience alias for write().
+   */
+  static void ggsave(GgChart chart, String filename, Map params = [:]) {
+    if (params.width) chart.width = params.width as int
+    if (params.height) chart.height = params.height as int
+    write(chart, new File(filename))
+  }
+
+  // ============ Axis limits ============
+
+  /**
+   * Set x-axis limits.
+   */
+  static CoordCartesian xlim(Number min, Number max) {
+    return new CoordCartesian(xlim: [min, max])
+  }
+
+  /**
+   * Set y-axis limits.
+   */
+  static CoordCartesian ylim(Number min, Number max) {
+    return new CoordCartesian(ylim: [min, max])
+  }
+
+  // ============ Themes ============
+
+  /**
+   * Default gray theme (ggplot2 default).
+   */
+  static Theme theme_gray() {
+    Theme theme = new Theme()
+    theme.panelBackground = new ElementRect(fill: '#EBEBEB', color: null)
+    theme.panelGridMajor = new ElementLine(color: 'white', size: 1)
+    theme.panelGridMinor = new ElementLine(color: 'white', size: 0.5)
+    theme.plotBackground = new ElementRect(fill: 'white', color: null)
+    return theme
+  }
+
+  /** Alias for theme_gray */
+  static Theme theme_grey() { return theme_gray() }
+
+  /**
+   * Minimal theme with no background annotations.
+   */
+  static Theme theme_minimal() {
+    Theme theme = new Theme()
+    theme.panelBackground = new ElementRect(fill: 'white', color: null)
+    theme.panelGridMajor = new ElementLine(color: '#D3D3D3', size: 0.5)
+    theme.panelGridMinor = null  // No minor grid
+    theme.plotBackground = new ElementRect(fill: 'white', color: null)
+    theme.axisLineX = new ElementLine(color: '#D3D3D3')
+    theme.axisLineY = new ElementLine(color: '#D3D3D3')
+    return theme
+  }
+
+  /**
+   * Black and white theme.
+   */
+  static Theme theme_bw() {
+    Theme theme = new Theme()
+    theme.panelBackground = new ElementRect(fill: 'white', color: 'black')
+    theme.panelGridMajor = new ElementLine(color: '#D3D3D3', size: 0.5)
+    theme.panelGridMinor = new ElementLine(color: '#E5E5E5', size: 0.25)
+    theme.plotBackground = new ElementRect(fill: 'white', color: null)
+    return theme
+  }
+
+  /**
+   * Classic theme with axis lines and no grid.
+   */
+  static Theme theme_classic() {
+    Theme theme = new Theme()
+    theme.panelBackground = new ElementRect(fill: 'white', color: null)
+    theme.panelGridMajor = null  // No grid
+    theme.panelGridMinor = null
+    theme.plotBackground = new ElementRect(fill: 'white', color: null)
+    theme.axisLineX = new ElementLine(color: 'black', size: 1)
+    theme.axisLineY = new ElementLine(color: 'black', size: 1)
+    return theme
+  }
+
+  /**
+   * Customize theme elements.
+   */
+  static Theme theme(Map params) {
+    Theme theme = new Theme()
+    params.each { key, value ->
+      if (theme.hasProperty(key as String)) {
+        //theme."$key" = value
+        theme[key as String] = value
+      }
+    }
+    return theme
+  }
+
+  // ============ Coordinates ============
 
   static CoordFlip coord_flip() {
     return new CoordFlip()
