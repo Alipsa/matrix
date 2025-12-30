@@ -29,7 +29,7 @@ class GgStat {
    *
    * @param data Input matrix
    * @param aes Aesthetic mappings (uses x for grouping)
-   * @return Matrix with columns: x (category), count, percent
+   * @return Matrix with columns: x (original column name), count, percent
    */
   static Matrix count(Matrix data, Aes aes) {
     String xCol = aes.xColName
@@ -37,7 +37,12 @@ class GgStat {
       throw new IllegalArgumentException("stat_count requires x aesthetic")
     }
     // Delegate to matrix-core Stat.frequency
-    return Stat.frequency(data[xCol])
+    Matrix freq = Stat.frequency(data[xCol])
+    // Rename columns to match ggplot2 computed variables:
+    // "Value" -> original x column name, "Frequency" -> "count", "Percent" -> "percent"
+    return freq.renameColumn(Stat.FREQUENCY_VALUE, xCol)
+               .renameColumn(Stat.FREQUENCY_FREQUENCY, 'count')
+               .renameColumn(Stat.FREQUENCY_PERCENT, 'percent')
   }
 
   /**

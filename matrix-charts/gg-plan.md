@@ -364,8 +364,8 @@ Each geom needs:
 **Files** (modify):
 - [x] `geom/GeomPoint.groovy` - Scatter plots (stat: identity)
 - [x] `geom/GeomLine.groovy` (new) - Line charts with grouping support
-- [] `geom/GeomBar.groovy` - Bar charts (stat: count)
-- [] `geom/GeomCol.groovy` - Column charts (stat: identity)
+- [x] `geom/GeomBar.groovy` - Bar charts (stat: count)
+- [x] `geom/GeomCol.groovy` - Column charts (stat: identity)
 - [] `geom/GeomHistogram.groovy` - Histograms (stat: bin)
 - [] `geom/GeomBoxplot.groovy` - Box plots (stat: boxplot)
 
@@ -605,11 +605,11 @@ se/alipsa/matrix/gg/
 
 ### Sprint 3: Bar and Line Charts
 1. [x] Implement `GgStat.count()` for bar charts
-2. [] Implement `GeomBar.render()`
+2. [x] Implement `GeomBar.render()` and `GeomCol.render()` - bar/column charts with stat_count and stat_identity
 3. [x] Implement `GeomLine.render()` (new class) - with grouping, sorting, color scales
 4. [x] Implement `ScaleXDiscrete` for categorical axes
 5. [x] Implement `PositionDodge` and `PositionStack`
-6. [] Write tests for bar/line charts
+6. [x] Write tests for bar/line charts (GeomBarColTest, GeomLineTest)
 
 ### Sprint 4: Histogram and Boxplot
 1. [x] Implement `GgStat.bin()` for histograms

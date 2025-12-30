@@ -236,7 +236,9 @@ class GgRenderer {
    * Determine if data should be treated as discrete (categorical).
    * Data is considered discrete if:
    * - It contains non-numeric values (strings, etc.)
-   * - It contains only a small number of unique integer values
+   *
+   * Numeric data (including integers) is always treated as continuous.
+   * This is important for computed values like counts in bar charts.
    */
   private boolean isDiscreteData(List data) {
     if (data == null || data.isEmpty()) return false
@@ -245,33 +247,62 @@ class GgRenderer {
     List nonNull = data.findAll { it != null }
     if (nonNull.isEmpty()) return false
 
-    // Check if all values are numeric
+    // Check if all values are numeric - if so, treat as continuous
     boolean allNumeric = nonNull.every { it instanceof Number }
-    if (!allNumeric) return true  // Non-numeric data is discrete
+    if (allNumeric) return false  // Numeric data is always continuous
 
-    // Check if all values are integers and there are few unique values
-    boolean allIntegers = nonNull.every { it instanceof Integer || it instanceof Long ||
-      (it instanceof Number && (it as Number).doubleValue() == Math.floor((it as Number).doubleValue())) }
-
-    if (allIntegers) {
-      Set uniqueValues = nonNull.toSet()
-      // Treat as discrete if 10 or fewer unique integer values
-      return uniqueValues.size() <= 10
-    }
-
-    return false
+    // Non-numeric data is discrete (strings, etc.)
+    return true
   }
 
   /**
    * Collect data values for each aesthetic across all layers.
+   * For layers with stat transformations that compute y values (like stat_count),
+   * we need to apply the stat first to get the computed values.
    */
   private Map<String, List> collectAestheticData(GgChart chart) {
     Map<String, List> data = [:].withDefault { [] }
 
     Aes globalAes = chart.globalAes
+    boolean hasBarGeom = false
 
-    // Collect from global aesthetics
-    if (globalAes && chart.data) {
+    // Collect from each layer (including stat-transformed data)
+    chart.layers.each { layer ->
+      Matrix layerData = layer.data ?: chart.data
+      Aes layerAes = layer.aes ?: globalAes
+
+      // Check if this is a bar/column geom that needs y-axis to include 0
+      if (layer.geom?.class?.simpleName in ['GeomBar', 'GeomCol', 'GeomHistogram']) {
+        hasBarGeom = true
+      }
+
+      if (layerAes && layerData) {
+        // Apply stat transformation to get computed values
+        Matrix statData = applyStats(layerData, layerAes, layer)
+
+        if (layerAes.xColName && statData.columnNames().contains(layerAes.xColName)) {
+          data['x'].addAll(statData[layerAes.xColName] ?: [])
+        }
+
+        // For y aesthetic, check both the original y column and computed columns like 'count'
+        if (layerAes.yColName && statData.columnNames().contains(layerAes.yColName)) {
+          data['y'].addAll(statData[layerAes.yColName] ?: [])
+        } else if (statData.columnNames().contains('count')) {
+          // stat_count produces 'count' column for y values
+          data['y'].addAll(statData['count'] ?: [])
+        }
+
+        if (layerAes.colorColName && statData.columnNames().contains(layerAes.colorColName)) {
+          data['color'].addAll(statData[layerAes.colorColName] ?: [])
+        }
+        if (layerAes.fillColName && statData.columnNames().contains(layerAes.fillColName)) {
+          data['fill'].addAll(statData[layerAes.fillColName] ?: [])
+        }
+      }
+    }
+
+    // If no layers, collect from global aesthetics with original data
+    if (chart.layers.isEmpty() && globalAes && chart.data) {
       if (globalAes.xColName) {
         data['x'].addAll(chart.data[globalAes.xColName] ?: [])
       }
@@ -286,25 +317,9 @@ class GgRenderer {
       }
     }
 
-    // Collect from each layer
-    chart.layers.each { layer ->
-      Matrix layerData = layer.data ?: chart.data
-      Aes layerAes = layer.aes ?: globalAes
-
-      if (layerAes && layerData) {
-        if (layerAes.xColName) {
-          data['x'].addAll(layerData[layerAes.xColName] ?: [])
-        }
-        if (layerAes.yColName) {
-          data['y'].addAll(layerData[layerAes.yColName] ?: [])
-        }
-        if (layerAes.colorColName) {
-          data['color'].addAll(layerData[layerAes.colorColName] ?: [])
-        }
-        if (layerAes.fillColName) {
-          data['fill'].addAll(layerData[layerAes.fillColName] ?: [])
-        }
-      }
+    // For bar/column charts, ensure y-axis includes 0 (bars should start from baseline)
+    if (hasBarGeom && !data['y'].isEmpty()) {
+      data['y'].add(0)
     }
 
     return data

@@ -306,6 +306,10 @@ class GgPlot {
     return new GeomCol()
   }
 
+  static GeomCol geom_col(Map params) {
+    return new GeomCol(params)
+  }
+
   static GeomContour geom_contour() {
     return new GeomContour()
   }
