@@ -13,7 +13,7 @@ class ScaleContinuous extends Scale {
   List<Number> range = [0, 1] as List<Number>
 
   /** Domain computed from data [min, max] */
-  private List<Number> computedDomain = [0, 1] as List<Number>
+  protected List<Number> computedDomain = [0, 1] as List<Number>
 
   /** Number of breaks to generate */
   int nBreaks = 5
@@ -39,8 +39,8 @@ class ScaleContinuous extends Scale {
 
     // Apply expansion
     if (expand && expand.size() >= 2) {
-      Number mult = expand[0] ?: 0.05
-      Number add = expand[1] ?: 0
+      Number mult = expand[0] != null ? expand[0] : 0.05
+      Number add = expand[1] != null ? expand[1] : 0
       Number delta = max - min
       min = min - delta * mult - add
       max = max + delta * mult + add

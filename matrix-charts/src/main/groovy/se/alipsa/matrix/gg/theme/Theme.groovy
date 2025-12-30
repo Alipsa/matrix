@@ -139,8 +139,7 @@ class Theme {
     // Merge non-null properties from other
     other.properties.each { key, value ->
       if (value != null && key != 'class') {
-        //merged."$key" = value
-        merged[key as String] = value
+        merged.setProperty(key as String, value)
       }
     }
     return merged
@@ -153,8 +152,7 @@ class Theme {
     Theme modified = this.clone() as Theme
     modifications.each { key, value ->
       if (modified.hasProperty(key as String)) {
-        //modified."$key" = value
-        modified[key as String] = value
+        modified.setProperty(key as String, value)
       }
     }
     return modified
@@ -181,8 +179,7 @@ class ElementText {
   ElementText(Map params) {
     params.each { key, value ->
       if (this.hasProperty(key as String)) {
-        //this."$key" = value
-        this[key as String] = value
+        this.setProperty(key as String, value)
       }
     }
   }
@@ -203,8 +200,7 @@ class ElementLine {
   ElementLine(Map params) {
     params.each { key, value ->
       if (this.hasProperty(key as String)) {
-        this[key as String] = value
-        //this."$key" = value
+        this.setProperty(key as String, value)
       }
     }
   }

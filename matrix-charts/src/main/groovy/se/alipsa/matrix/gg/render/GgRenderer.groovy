@@ -15,6 +15,11 @@ import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.position.GgPosition
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleContinuous
+import se.alipsa.matrix.gg.scale.ScaleDiscrete
+import se.alipsa.matrix.gg.scale.ScaleXContinuous
+import se.alipsa.matrix.gg.scale.ScaleYContinuous
+import se.alipsa.matrix.gg.scale.ScaleXDiscrete
+import se.alipsa.matrix.gg.scale.ScaleYDiscrete
 import se.alipsa.matrix.gg.stat.GgStat
 import se.alipsa.matrix.gg.theme.Theme
 
@@ -135,33 +140,126 @@ class GgRenderer {
     // Collect all data values for each aesthetic
     Map<String, List> aestheticData = collectAestheticData(chart)
 
-    // Create x scale
+    // Create x scale (auto-detect discrete vs continuous)
     if (aestheticData.x) {
-      Scale xScale = new ScaleContinuous()
-      xScale.aesthetic = 'x'
+      Scale xScale = createAutoScale('x', aestheticData.x)
       xScale.train(aestheticData.x)
-      xScale.range = [0, plotWidth] as List<Number>
+      if (xScale instanceof ScaleContinuous) {
+        (xScale as ScaleContinuous).range = [0, plotWidth] as List<Number>
+      } else if (xScale instanceof ScaleDiscrete) {
+        (xScale as ScaleDiscrete).range = [0, plotWidth] as List<Number>
+      }
       scales['x'] = xScale
     }
 
-    // Create y scale
+    // Create y scale (auto-detect discrete vs continuous)
     if (aestheticData.y) {
-      Scale yScale = new ScaleContinuous()
-      yScale.aesthetic = 'y'
+      Scale yScale = createAutoScale('y', aestheticData.y)
       yScale.train(aestheticData.y)
       // Y axis is inverted in SVG (0 at top)
-      yScale.range = [plotHeight, 0] as List<Number>
+      if (yScale instanceof ScaleContinuous) {
+        (yScale as ScaleContinuous).range = [plotHeight, 0] as List<Number>
+      } else if (yScale instanceof ScaleDiscrete) {
+        (yScale as ScaleDiscrete).range = [plotHeight, 0] as List<Number>
+      }
       scales['y'] = yScale
     }
 
-    // Add user-specified scales
+    // Create color scale if color data exists
+    if (aestheticData.color) {
+      Scale colorScale = createAutoScale('color', aestheticData.color)
+      colorScale.train(aestheticData.color)
+      scales['color'] = colorScale
+    }
+
+    // Create fill scale if fill data exists
+    if (aestheticData.fill) {
+      Scale fillScale = createAutoScale('fill', aestheticData.fill)
+      fillScale.train(aestheticData.fill)
+      scales['fill'] = fillScale
+    }
+
+    // Add user-specified scales (these override auto-detected scales)
     chart.scales.each { scale ->
       if (scale.aesthetic) {
+        // Train user scale if not already trained
+        if (!scale.isTrained() && aestheticData[scale.aesthetic]) {
+          scale.train(aestheticData[scale.aesthetic])
+        }
+        // Set range for position scales
+        if (scale.aesthetic == 'x' && scale instanceof ScaleContinuous) {
+          (scale as ScaleContinuous).range = [0, plotWidth] as List<Number>
+        } else if (scale.aesthetic == 'x' && scale instanceof ScaleDiscrete) {
+          (scale as ScaleDiscrete).range = [0, plotWidth] as List<Number>
+        } else if (scale.aesthetic == 'y' && scale instanceof ScaleContinuous) {
+          (scale as ScaleContinuous).range = [plotHeight, 0] as List<Number>
+        } else if (scale.aesthetic == 'y' && scale instanceof ScaleDiscrete) {
+          (scale as ScaleDiscrete).range = [plotHeight, 0] as List<Number>
+        }
         scales[scale.aesthetic] = scale
       }
     }
 
     return scales
+  }
+
+  /**
+   * Auto-detect and create the appropriate scale type based on data.
+   */
+  private Scale createAutoScale(String aesthetic, List data) {
+    boolean isDiscrete = isDiscreteData(data)
+
+    switch (aesthetic) {
+      case 'x':
+        return isDiscrete ? new ScaleXDiscrete() : new ScaleXContinuous()
+      case 'y':
+        return isDiscrete ? new ScaleYDiscrete() : new ScaleYContinuous()
+      case 'color':
+      case 'colour':
+      case 'fill':
+        // For color/fill, use ScaleColorManual for discrete, ScaleColorGradient for continuous
+        if (isDiscrete) {
+          def scale = new se.alipsa.matrix.gg.scale.ScaleColorManual()
+          scale.aesthetic = aesthetic == 'colour' ? 'color' : aesthetic
+          return scale
+        } else {
+          def scale = new se.alipsa.matrix.gg.scale.ScaleColorGradient()
+          scale.aesthetic = aesthetic == 'colour' ? 'color' : aesthetic
+          return scale
+        }
+      default:
+        return isDiscrete ? new ScaleDiscrete() : new ScaleContinuous()
+    }
+  }
+
+  /**
+   * Determine if data should be treated as discrete (categorical).
+   * Data is considered discrete if:
+   * - It contains non-numeric values (strings, etc.)
+   * - It contains only a small number of unique integer values
+   */
+  private boolean isDiscreteData(List data) {
+    if (data == null || data.isEmpty()) return false
+
+    // Filter out nulls
+    List nonNull = data.findAll { it != null }
+    if (nonNull.isEmpty()) return false
+
+    // Check if all values are numeric
+    boolean allNumeric = nonNull.every { it instanceof Number }
+    if (!allNumeric) return true  // Non-numeric data is discrete
+
+    // Check if all values are integers and there are few unique values
+    boolean allIntegers = nonNull.every { it instanceof Integer || it instanceof Long ||
+      (it instanceof Number && (it as Number).doubleValue() == Math.floor((it as Number).doubleValue())) }
+
+    if (allIntegers) {
+      Set uniqueValues = nonNull.toSet()
+      // Treat as discrete if 10 or fewer unique integer values
+      return uniqueValues.size() <= 10
+    }
+
+    return false
   }
 
   /**
@@ -173,12 +271,18 @@ class GgRenderer {
     Aes globalAes = chart.globalAes
 
     // Collect from global aesthetics
-    if (globalAes) {
-      if (globalAes.xColName && chart.data) {
+    if (globalAes && chart.data) {
+      if (globalAes.xColName) {
         data['x'].addAll(chart.data[globalAes.xColName] ?: [])
       }
-      if (globalAes.yColName && chart.data) {
+      if (globalAes.yColName) {
         data['y'].addAll(chart.data[globalAes.yColName] ?: [])
+      }
+      if (globalAes.colorColName) {
+        data['color'].addAll(chart.data[globalAes.colorColName] ?: [])
+      }
+      if (globalAes.fillColName) {
+        data['fill'].addAll(chart.data[globalAes.fillColName] ?: [])
       }
     }
 
@@ -193,6 +297,12 @@ class GgRenderer {
         }
         if (layerAes.yColName) {
           data['y'].addAll(layerData[layerAes.yColName] ?: [])
+        }
+        if (layerAes.colorColName) {
+          data['color'].addAll(layerData[layerAes.colorColName] ?: [])
+        }
+        if (layerAes.fillColName) {
+          data['fill'].addAll(layerData[layerAes.fillColName] ?: [])
         }
       }
     }
@@ -214,23 +324,27 @@ class GgRenderer {
 
       // Vertical grid lines (x axis)
       Scale xScale = scales['x']
-      if (xScale instanceof ScaleContinuous) {
+      if (xScale) {
         xScale.getComputedBreaks().each { breakVal ->
-          double xPos = xScale.transform(breakVal) as double
-          gridGroup.addLine(xPos, 0, xPos, height)
-                   .stroke(color)
-                   .strokeWidth(size)
+          Double xPos = xScale.transform(breakVal) as Double
+          if (xPos != null) {
+            gridGroup.addLine(xPos, 0, xPos, height)
+                     .stroke(color)
+                     .strokeWidth(size)
+          }
         }
       }
 
       // Horizontal grid lines (y axis)
       Scale yScale = scales['y']
-      if (yScale instanceof ScaleContinuous) {
+      if (yScale) {
         yScale.getComputedBreaks().each { breakVal ->
-          double yPos = yScale.transform(breakVal) as double
-          gridGroup.addLine(0, yPos, width, yPos)
-                   .stroke(color)
-                   .strokeWidth(size)
+          Double yPos = yScale.transform(breakVal) as Double
+          if (yPos != null) {
+            gridGroup.addLine(0, yPos, width, yPos)
+                     .stroke(color)
+                     .strokeWidth(size)
+          }
         }
       }
     }
@@ -335,26 +449,25 @@ class GgRenderer {
               .stroke(theme.axisLineX?.color ?: 'black')
               .strokeWidth(theme.axisLineX?.size ?: 1)
 
-    // Ticks and labels
-    if (scale instanceof ScaleContinuous) {
-      List breaks = scale.getComputedBreaks()
-      List<String> labels = scale.getComputedLabels()
+    // Ticks and labels - works for both continuous and discrete scales
+    List breaks = scale.getComputedBreaks()
+    List<String> labels = scale.getComputedLabels()
 
-      breaks.eachWithIndex { breakVal, i ->
-        double xPos = scale.transform(breakVal) as double
+    breaks.eachWithIndex { breakVal, i ->
+      Double xPos = scale.transform(breakVal) as Double
+      if (xPos == null) return  // Skip if transform returns null
 
-        // Tick mark
-        xAxisGroup.addLine(xPos, 0, xPos, theme.axisTickLength ?: 5)
-                  .stroke('black')
+      // Tick mark
+      xAxisGroup.addLine(xPos, 0, xPos, theme.axisTickLength ?: 5)
+                .stroke('black')
 
-        // Label
-        String label = i < labels.size() ? labels[i] : breakVal.toString()
-        xAxisGroup.addText(label)
-                  .x(xPos)
-                  .y((theme.axisTickLength ?: 5) + 15)
-                  .textAnchor('middle')
-                  .fontSize(theme.axisTextX?.size ?: 10)
-      }
+      // Label
+      String label = i < labels.size() ? labels[i] : breakVal.toString()
+      xAxisGroup.addText(label)
+                .x(xPos)
+                .y((theme.axisTickLength ?: 5) + 15)
+                .textAnchor('middle')
+                .fontSize(theme.axisTextX?.size ?: 10)
     }
   }
 
@@ -372,26 +485,25 @@ class GgRenderer {
               .stroke(theme.axisLineY?.color ?: 'black')
               .strokeWidth(theme.axisLineY?.size ?: 1)
 
-    // Ticks and labels
-    if (scale instanceof ScaleContinuous) {
-      List breaks = scale.getComputedBreaks()
-      List<String> labels = scale.getComputedLabels()
+    // Ticks and labels - works for both continuous and discrete scales
+    List breaks = scale.getComputedBreaks()
+    List<String> labels = scale.getComputedLabels()
 
-      breaks.eachWithIndex { breakVal, i ->
-        double yPos = scale.transform(breakVal) as double
+    breaks.eachWithIndex { breakVal, i ->
+      Double yPos = scale.transform(breakVal) as Double
+      if (yPos == null) return  // Skip if transform returns null
 
-        // Tick mark
-        yAxisGroup.addLine(-1*(theme.axisTickLength ?: 5), yPos, 0, yPos)
-                  .stroke('black')
+      // Tick mark
+      yAxisGroup.addLine(-1*(theme.axisTickLength ?: 5), yPos, 0, yPos)
+                .stroke('black')
 
-        // Label
-        String label = i < labels.size() ? labels[i] : breakVal.toString()
-        yAxisGroup.addText(label)
-                  .x(-1*(theme.axisTickLength ?: 5) - 5)
-                  .y(yPos + 4)
-                  .textAnchor('end')
-                  .fontSize(theme.axisTextY?.size ?: 10)
-      }
+      // Label
+      String label = i < labels.size() ? labels[i] : breakVal.toString()
+      yAxisGroup.addText(label)
+                .x(-1*(theme.axisTickLength ?: 5) - 5)
+                .y(yPos + 4)
+                .textAnchor('end')
+                .fontSize(theme.axisTextY?.size ?: 10)
     }
   }
 

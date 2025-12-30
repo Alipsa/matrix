@@ -69,11 +69,17 @@ class GeomPoint extends Geom {
       def yVal = row[yCol]
 
       if (xVal == null || yVal == null) return
-      if (!(xVal instanceof Number) || !(yVal instanceof Number)) return
 
-      // Transform to pixel coordinates
-      double xPx = (xScale?.transform(xVal) ?: xVal) as double
-      double yPx = (yScale?.transform(yVal) ?: yVal) as double
+      // Transform to pixel coordinates using scales
+      // Scales handle both continuous (numeric) and discrete (string) values
+      def xTransformed = xScale?.transform(xVal)
+      def yTransformed = yScale?.transform(yVal)
+
+      // Skip if scale couldn't transform the value
+      if (xTransformed == null || yTransformed == null) return
+
+      double xPx = xTransformed as double
+      double yPx = yTransformed as double
 
       // Determine color
       String pointColor = this.color

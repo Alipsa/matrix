@@ -27,7 +27,12 @@ import se.alipsa.matrix.gg.geom.GeomCol
 import se.alipsa.matrix.gg.geom.GeomContourFilled
 import se.alipsa.matrix.gg.geom.GeomPoint
 import se.alipsa.matrix.gg.geom.GeomViolin
+import se.alipsa.matrix.gg.scale.ScaleColorGradient
 import se.alipsa.matrix.gg.scale.ScaleColorManual
+import se.alipsa.matrix.gg.scale.ScaleXContinuous
+import se.alipsa.matrix.gg.scale.ScaleXDiscrete
+import se.alipsa.matrix.gg.scale.ScaleYContinuous
+import se.alipsa.matrix.gg.scale.ScaleYDiscrete
 import se.alipsa.matrix.gg.stat.StatBin2d
 import se.alipsa.matrix.gg.stat.StatBoxplot
 import se.alipsa.matrix.gg.stat.StatContour
@@ -239,8 +244,7 @@ class GgPlot {
     Theme theme = new Theme()
     params.each { key, value ->
       if (theme.hasProperty(key as String)) {
-        //theme."$key" = value
-        theme[key as String] = value
+        theme.setProperty(key as String, value)
       }
     }
     return theme
@@ -353,12 +357,129 @@ class GgPlot {
     return new GeomVline()
   }
 
+  // ============ Scales ============
+
+  // --- Position scales ---
+
+  /**
+   * Continuous scale for x-axis.
+   */
+  static ScaleXContinuous scale_x_continuous(Map params = [:]) {
+    return new ScaleXContinuous(params)
+  }
+
+  /**
+   * Continuous scale for y-axis.
+   */
+  static ScaleYContinuous scale_y_continuous(Map params = [:]) {
+    return new ScaleYContinuous(params)
+  }
+
+  /**
+   * Discrete scale for x-axis (categorical data).
+   */
+  static ScaleXDiscrete scale_x_discrete(Map params = [:]) {
+    return new ScaleXDiscrete(params)
+  }
+
+  /**
+   * Discrete scale for y-axis (categorical data).
+   */
+  static ScaleYDiscrete scale_y_discrete(Map params = [:]) {
+    return new ScaleYDiscrete(params)
+  }
+
+  // --- Color scales ---
+
+  /**
+   * Manual color scale for discrete data.
+   * @param mappings Map containing 'values' key with list of colors or map of value->color
+   */
   static ScaleColorManual scale_color_manual(Map mappings) {
     return new ScaleColorManual(mappings)
   }
 
+  /** British spelling alias for scale_color_manual */
   static ScaleColorManual scale_colour_manual(Map mappings) {
     return scale_color_manual(mappings)
+  }
+
+  /**
+   * Continuous color gradient scale.
+   * @param params Map with 'low', 'high', optionally 'mid' and 'midpoint'
+   */
+  static ScaleColorGradient scale_color_gradient(Map params = [:]) {
+    return new ScaleColorGradient(params)
+  }
+
+  /** British spelling alias for scale_color_gradient */
+  static ScaleColorGradient scale_colour_gradient(Map params = [:]) {
+    return scale_color_gradient(params)
+  }
+
+  /**
+   * Two-color gradient with specified low and high colors.
+   */
+  static ScaleColorGradient scale_color_gradient(String low, String high) {
+    return new ScaleColorGradient(low: low, high: high)
+  }
+
+  /** British spelling alias */
+  static ScaleColorGradient scale_colour_gradient(String low, String high) {
+    return scale_color_gradient(low, high)
+  }
+
+  /**
+   * Diverging color gradient with mid color.
+   */
+  static ScaleColorGradient scale_color_gradient2(Map params = [:]) {
+    // gradient2 is typically a diverging scale
+    if (!params.mid) params.mid = 'white'
+    return new ScaleColorGradient(params)
+  }
+
+  /** British spelling alias */
+  static ScaleColorGradient scale_colour_gradient2(Map params = [:]) {
+    return scale_color_gradient2(params)
+  }
+
+  // --- Fill scales ---
+
+  /**
+   * Manual fill scale for discrete data.
+   */
+  static ScaleColorManual scale_fill_manual(Map mappings) {
+    def scale = new ScaleColorManual(mappings)
+    scale.aesthetic = 'fill'
+    return scale
+  }
+
+  /**
+   * Continuous fill gradient scale.
+   */
+  static ScaleColorGradient scale_fill_gradient(Map params = [:]) {
+    def scale = new ScaleColorGradient(params)
+    scale.aesthetic = 'fill'
+    return scale
+  }
+
+  /**
+   * Two-color fill gradient.
+   */
+  static ScaleColorGradient scale_fill_gradient(String low, String high) {
+    def scale = new ScaleColorGradient(low: low, high: high)
+    scale.aesthetic = 'fill'
+    return scale
+  }
+
+  /**
+   * Diverging fill gradient with mid color.
+   */
+  static ScaleColorGradient scale_fill_gradient2(Map params = [:]) {
+    if (!params.mid) params.mid = 'white'
+    def scale = new ScaleColorGradient(params)
+    scale.aesthetic = 'fill'
+    return scale
   }
 
   static StatBin2d stat_bin_2d() {
