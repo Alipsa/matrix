@@ -302,6 +302,10 @@ class GgPlot {
     return new GeomBoxplot()
   }
 
+  static GeomBoxplot geom_boxplot(Map params) {
+    return new GeomBoxplot(params)
+  }
+
   static GeomCol geom_col() {
     return new GeomCol()
   }

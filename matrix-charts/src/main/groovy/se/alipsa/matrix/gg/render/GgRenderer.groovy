@@ -290,11 +290,21 @@ class GgRenderer {
         }
 
         // For y aesthetic, check both the original y column and computed columns like 'count'
-        if (layerAes.yColName && statData.columnNames().contains(layerAes.yColName)) {
+        if (statData.columnNames().contains('ymin') && statData.columnNames().contains('ymax')) {
+          // stat_boxplot produces ymin/ymax columns - include both for full y range
+          data['y'].addAll(statData['ymin'] ?: [])
+          data['y'].addAll(statData['ymax'] ?: [])
+        } else if (layerAes.yColName && statData.columnNames().contains(layerAes.yColName)) {
           data['y'].addAll(statData[layerAes.yColName] ?: [])
         } else if (statData.columnNames().contains('count')) {
           // stat_count and stat_bin produce 'count' column for y values
           data['y'].addAll(statData['count'] ?: [])
+        }
+
+        // For boxplot x-axis, use the computed 'x' column (group keys)
+        if (statData.columnNames().contains('x') && !statData.columnNames().contains('xmin')) {
+          // stat_boxplot produces 'x' column with group names (but not xmin/xmax like histograms)
+          data['x'].addAll(statData['x'] ?: [])
         }
 
         if (layerAes.colorColName && statData.columnNames().contains(layerAes.colorColName)) {

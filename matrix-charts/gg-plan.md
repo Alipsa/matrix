@@ -367,7 +367,7 @@ Each geom needs:
 - [x] `geom/GeomBar.groovy` - Bar charts (stat: count)
 - [x] `geom/GeomCol.groovy` - Column charts (stat: identity)
 - [x] `geom/GeomHistogram.groovy` - Histograms (stat: bin)
-- [] `geom/GeomBoxplot.groovy` - Box plots (stat: boxplot)
+- [x] `geom/GeomBoxplot.groovy` - Box plots (stat: boxplot)
 
 #### 5.2 Priority 2 - Common Geoms
 - [x] `geom/GeomSmooth.groovy` - Trend lines (stat: smooth)
@@ -615,8 +615,9 @@ se/alipsa/matrix/gg/
 1. [x] Implement `GgStat.bin()` for histograms
 2. [x] Implement `GeomHistogram.render()` - renders bins as rectangles using stat_bin output
 3. [x] Implement `GgStat.boxplot()` (leveraging matrix-core Stat)
-4. [] Implement `GeomBoxplot.render()`
+4. [x] Implement `GeomBoxplot.render()` - renders box, whiskers, caps, median line, outliers
 5. [x] Write tests for histogram (16 tests in GeomHistogramTest)
+6. [x] Write tests for boxplot (17 tests in GeomBoxplotTest)
 
 ### Sprint 5: Color Scales and Legend
 1. [x] Implement `ScaleColorManual` properly
