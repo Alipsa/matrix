@@ -9,6 +9,8 @@ import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.coord.CoordCartesian
+import se.alipsa.matrix.gg.coord.CoordFlip
+import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
@@ -72,18 +74,24 @@ class GgRenderer {
     // Draw panel background
     renderPanelBackground(plotArea, plotWidth, plotHeight, theme)
 
-    // 3. Compute scales from data
-    Map<String, Scale> computedScales = computeScales(chart, plotWidth, plotHeight)
-
-    // 4. Setup coordinate system
+    // 3. Setup coordinate system (needed before computing scales for CoordFlip/CoordPolar)
     Coord coord = chart.coord ?: new CoordCartesian()
     if (coord instanceof CoordCartesian) {
       coord.plotWidth = plotWidth
       coord.plotHeight = plotHeight
+    } else if (coord instanceof CoordFlip) {
+      coord.plotWidth = plotWidth
+      coord.plotHeight = plotHeight
+    } else if (coord instanceof CoordPolar) {
+      coord.plotWidth = plotWidth
+      coord.plotHeight = plotHeight
     }
 
+    // 4. Compute scales from data (pass coord for flip handling)
+    Map<String, Scale> computedScales = computeScales(chart, plotWidth, plotHeight, coord)
+
     // 5. Draw grid lines (before data)
-    renderGridLines(plotArea, computedScales, plotWidth, plotHeight, theme)
+    renderGridLines(plotArea, computedScales, plotWidth, plotHeight, theme, coord)
 
     // 6. Create data layer group
     G dataLayer = plotArea.addG()
@@ -99,7 +107,7 @@ class GgRenderer {
     }
 
     // 8. Draw axes (on top of data)
-    renderAxes(plotArea, computedScales, plotWidth, plotHeight, theme)
+    renderAxes(plotArea, computedScales, plotWidth, plotHeight, theme, coord)
 
     // 9. Draw title and labels
     renderLabels(svg, chart, plotWidth, plotHeight)
@@ -134,20 +142,30 @@ class GgRenderer {
   /**
    * Compute scales for all aesthetics based on data.
    */
-  private Map<String, Scale> computeScales(GgChart chart, int plotWidth, int plotHeight) {
+  private Map<String, Scale> computeScales(GgChart chart, int plotWidth, int plotHeight, Coord coord) {
     Map<String, Scale> scales = [:]
 
     // Collect all data values for each aesthetic
     Map<String, List> aestheticData = collectAestheticData(chart)
+
+    // Determine if axes are flipped
+    boolean isFlipped = coord instanceof CoordFlip
+
+    // For CoordFlip: x data maps to vertical axis, y data maps to horizontal axis
+    // Normal: x -> [0, plotWidth], y -> [plotHeight, 0] (inverted for SVG)
+    // Flipped: x -> [plotHeight, 0], y -> [0, plotWidth]
+
+    List<Number> xRange = isFlipped ? [plotHeight, 0] as List<Number> : [0, plotWidth] as List<Number>
+    List<Number> yRange = isFlipped ? [0, plotWidth] as List<Number> : [plotHeight, 0] as List<Number>
 
     // Create x scale (auto-detect discrete vs continuous)
     if (aestheticData.x) {
       Scale xScale = createAutoScale('x', aestheticData.x)
       xScale.train(aestheticData.x)
       if (xScale instanceof ScaleContinuous) {
-        (xScale as ScaleContinuous).range = [0, plotWidth] as List<Number>
+        (xScale as ScaleContinuous).range = xRange
       } else if (xScale instanceof ScaleDiscrete) {
-        (xScale as ScaleDiscrete).range = [0, plotWidth] as List<Number>
+        (xScale as ScaleDiscrete).range = xRange
       }
       scales['x'] = xScale
     }
@@ -156,11 +174,10 @@ class GgRenderer {
     if (aestheticData.y) {
       Scale yScale = createAutoScale('y', aestheticData.y)
       yScale.train(aestheticData.y)
-      // Y axis is inverted in SVG (0 at top)
       if (yScale instanceof ScaleContinuous) {
-        (yScale as ScaleContinuous).range = [plotHeight, 0] as List<Number>
+        (yScale as ScaleContinuous).range = yRange
       } else if (yScale instanceof ScaleDiscrete) {
-        (yScale as ScaleDiscrete).range = [plotHeight, 0] as List<Number>
+        (yScale as ScaleDiscrete).range = yRange
       }
       scales['y'] = yScale
     }
@@ -186,15 +203,15 @@ class GgRenderer {
         if (!scale.isTrained() && aestheticData[scale.aesthetic]) {
           scale.train(aestheticData[scale.aesthetic])
         }
-        // Set range for position scales
+        // Set range for position scales (respecting CoordFlip)
         if (scale.aesthetic == 'x' && scale instanceof ScaleContinuous) {
-          (scale as ScaleContinuous).range = [0, plotWidth] as List<Number>
+          (scale as ScaleContinuous).range = xRange
         } else if (scale.aesthetic == 'x' && scale instanceof ScaleDiscrete) {
-          (scale as ScaleDiscrete).range = [0, plotWidth] as List<Number>
+          (scale as ScaleDiscrete).range = xRange
         } else if (scale.aesthetic == 'y' && scale instanceof ScaleContinuous) {
-          (scale as ScaleContinuous).range = [plotHeight, 0] as List<Number>
+          (scale as ScaleContinuous).range = yRange
         } else if (scale.aesthetic == 'y' && scale instanceof ScaleDiscrete) {
-          (scale as ScaleDiscrete).range = [plotHeight, 0] as List<Number>
+          (scale as ScaleDiscrete).range = yRange
         }
         scales[scale.aesthetic] = scale
       }
@@ -343,37 +360,64 @@ class GgRenderer {
   /**
    * Render grid lines.
    */
-  private void renderGridLines(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme) {
+  private void renderGridLines(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme, Coord coord) {
     G gridGroup = plotArea.addG()
     gridGroup.id('grid')
+
+    boolean isFlipped = coord instanceof CoordFlip
 
     // Major grid lines
     if (theme.panelGridMajor) {
       String color = theme.panelGridMajor.color ?: 'white'
       Number size = theme.panelGridMajor.size ?: 1
 
-      // Vertical grid lines (x axis)
       Scale xScale = scales['x']
-      if (xScale) {
-        xScale.getComputedBreaks().each { breakVal ->
-          Double xPos = xScale.transform(breakVal) as Double
-          if (xPos != null) {
-            gridGroup.addLine(xPos, 0, xPos, height)
-                     .stroke(color)
-                     .strokeWidth(size)
+      Scale yScale = scales['y']
+
+      if (isFlipped) {
+        // For flipped coords: x scale controls horizontal grid lines, y scale controls vertical
+        if (xScale) {
+          xScale.getComputedBreaks().each { breakVal ->
+            Double pos = xScale.transform(breakVal) as Double
+            if (pos != null) {
+              // x scale now maps to vertical position, so draw horizontal lines
+              gridGroup.addLine(0, pos, width, pos)
+                       .stroke(color)
+                       .strokeWidth(size)
+            }
           }
         }
-      }
-
-      // Horizontal grid lines (y axis)
-      Scale yScale = scales['y']
-      if (yScale) {
-        yScale.getComputedBreaks().each { breakVal ->
-          Double yPos = yScale.transform(breakVal) as Double
-          if (yPos != null) {
-            gridGroup.addLine(0, yPos, width, yPos)
-                     .stroke(color)
-                     .strokeWidth(size)
+        if (yScale) {
+          yScale.getComputedBreaks().each { breakVal ->
+            Double pos = yScale.transform(breakVal) as Double
+            if (pos != null) {
+              // y scale now maps to horizontal position, so draw vertical lines
+              gridGroup.addLine(pos, 0, pos, height)
+                       .stroke(color)
+                       .strokeWidth(size)
+            }
+          }
+        }
+      } else {
+        // Normal: x scale controls vertical lines, y scale controls horizontal lines
+        if (xScale) {
+          xScale.getComputedBreaks().each { breakVal ->
+            Double xPos = xScale.transform(breakVal) as Double
+            if (xPos != null) {
+              gridGroup.addLine(xPos, 0, xPos, height)
+                       .stroke(color)
+                       .strokeWidth(size)
+            }
+          }
+        }
+        if (yScale) {
+          yScale.getComputedBreaks().each { breakVal ->
+            Double yPos = yScale.transform(breakVal) as Double
+            if (yPos != null) {
+              gridGroup.addLine(0, yPos, width, yPos)
+                       .stroke(color)
+                       .strokeWidth(size)
+            }
           }
         }
       }
@@ -453,15 +497,21 @@ class GgRenderer {
   /**
    * Render axes.
    */
-  private void renderAxes(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme) {
+  private void renderAxes(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme, Coord coord) {
     G axesGroup = plotArea.addG()
     axesGroup.id('axes')
 
-    // X axis
-    renderXAxis(axesGroup, scales['x'], width, height, theme)
+    boolean isFlipped = coord instanceof CoordFlip
 
-    // Y axis
-    renderYAxis(axesGroup, scales['y'], height, theme)
+    if (isFlipped) {
+      // For flipped coords: x data appears on left axis, y data appears on bottom axis
+      renderYAxis(axesGroup, scales['x'], height, theme)  // x scale on left (vertical)
+      renderXAxis(axesGroup, scales['y'], width, height, theme)  // y scale on bottom (horizontal)
+    } else {
+      // Normal: x on bottom, y on left
+      renderXAxis(axesGroup, scales['x'], width, height, theme)
+      renderYAxis(axesGroup, scales['y'], height, theme)
+    }
   }
 
   /**

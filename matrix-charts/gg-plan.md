@@ -238,8 +238,8 @@ Methods:
 
 #### 3.2 Implement Existing Coords
 **Files** (modify):
-- [] `coord/CoordFlip.groovy` - Swap x/y axes
-- [] `coord/CoordPolar.groovy` - Polar transformation for pie charts
+- [x] `coord/CoordFlip.groovy` - Swap x/y axes, integrates with renderer for flipped grid/axis rendering
+- [x] `coord/CoordPolar.groovy` - Polar transformation with theta/r mapping, arc path generation
 
 #### 3.3 Additional Coords (optional)
 - [] `coord/CoordFixed.groovy` - Fixed aspect ratio
@@ -650,8 +650,8 @@ se/alipsa/matrix/gg/
 12. [x] Implement `GeomCount` - Sized points by observation count
 
 ### Sprint 8: Special Coordinates
-1. [] Implement `CoordFlip`
-2. [] Implement `CoordPolar` (for pie charts)
+1. [x] Implement `CoordFlip` - Swaps x/y axes for horizontal bar charts, boxplots, etc.
+2. [x] Implement `CoordPolar` - Polar coordinates with theta/r mapping, arc path generation for pie charts
 
 ### Future: Advanced Features
 - [] Faceting (FacetWrap, FacetGrid)

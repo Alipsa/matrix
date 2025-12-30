@@ -238,6 +238,10 @@ class GgPlot {
     return new CoordFlip()
   }
 
+  static CoordFlip coord_flip(Map params) {
+    return new CoordFlip(params)
+  }
+
   /**
    * @param theta: variable to map angle to (x or y)
    * @param start: Offset of starting point from 12 o'clock in radians.
@@ -251,12 +255,7 @@ class GgPlot {
   }
 
   static CoordPolar coord_polar(Map params) {
-    coord_polar(
-            params.getOrDefault('theta', 'x') as String,
-            params.getOrDefault('start', 0) as BigDecimal,
-            params.getOrDefault('direction', 1) as Integer,
-            params.getOrDefault('clip', 'on') as String
-    )
+    return new CoordPolar(params)
   }
 
   static GeomAbline geom_abline() {

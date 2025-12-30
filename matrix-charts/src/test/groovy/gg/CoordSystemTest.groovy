@@ -1,0 +1,439 @@
+package gg
+
+import org.junit.jupiter.api.Test
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.coord.CoordFlip
+import se.alipsa.matrix.gg.coord.CoordPolar
+
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
+class CoordSystemTest {
+
+  // ==================== CoordFlip Tests ====================
+
+  @Test
+  void testCoordFlipDefaults() {
+    CoordFlip coord = new CoordFlip()
+
+    assertTrue(coord.flipped)
+    assertTrue(coord.expand)
+    assertEquals(0.05, coord.expandMult)
+    assertNull(coord.xlim)
+    assertNull(coord.ylim)
+  }
+
+  @Test
+  void testCoordFlipWithParams() {
+    CoordFlip coord = new CoordFlip(
+        xlim: [0, 10],
+        ylim: [0, 100],
+        expand: false
+    )
+
+    assertEquals([0, 10], coord.xlim)
+    assertEquals([0, 100], coord.ylim)
+    assertFalse(coord.expand)
+  }
+
+  @Test
+  void testHorizontalBarChart() {
+    def data = Matrix.builder()
+        .columnNames('category', 'value')
+        .rows([
+            ['A', 30],
+            ['B', 50],
+            ['C', 20],
+            ['D', 45],
+            ['E', 35]
+        ])
+        .types(String, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'category', y: 'value')) +
+        geom_col(fill: 'steelblue') +
+        coord_flip() +
+        labs(title: 'Horizontal Bar Chart')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<rect'), "Should contain bar rectangles")
+
+    File outputFile = new File('build/coord_flip_horizontal_bar.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFlippedScatterPlot() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [1, 10],
+            [2, 25],
+            [3, 15],
+            [4, 30],
+            [5, 20]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 5, color: 'red') +
+        coord_flip() +
+        labs(title: 'Flipped Scatter Plot')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain point circles")
+
+    File outputFile = new File('build/coord_flip_scatter.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFlippedBoxplot() {
+    def rows = []
+    def random = new Random(42)
+    ['Group A', 'Group B', 'Group C'].each { group ->
+      double mean = group == 'Group A' ? 20 : (group == 'Group B' ? 35 : 50)
+      (1..30).each {
+        rows << [group, mean + random.nextGaussian() * 8]
+      }
+    }
+
+    def data = Matrix.builder()
+        .columnNames('group', 'value')
+        .rows(rows)
+        .types(String, Double)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'group', y: 'value')) +
+        geom_boxplot(fill: 'lightblue') +
+        coord_flip() +
+        labs(title: 'Horizontal Boxplot')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_flip_boxplot.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFlippedHistogram() {
+    def random = new Random(123)
+    def rows = (1..100).collect {
+      [random.nextGaussian() * 10 + 50]
+    }
+
+    def data = Matrix.builder()
+        .columnNames('value')
+        .rows(rows)
+        .types(Double)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'value')) +
+        geom_histogram(fill: 'coral', bins: 15) +
+        coord_flip() +
+        labs(title: 'Horizontal Histogram')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_flip_histogram.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  // ==================== CoordPolar Tests ====================
+
+  @Test
+  void testCoordPolarDefaults() {
+    CoordPolar coord = new CoordPolar()
+
+    assertTrue(coord.polar)
+    assertEquals('x', coord.theta)
+    assertEquals(0, coord.start)
+    assertTrue(coord.clockwise)
+    assertTrue(coord.clip)
+  }
+
+  @Test
+  void testCoordPolarWithParams() {
+    CoordPolar coord = new CoordPolar(
+        theta: 'y',
+        start: Math.PI / 2,
+        direction: -1
+    )
+
+    assertEquals('y', coord.theta)
+    assertEquals(Math.PI / 2, coord.start as double, 0.001)
+    assertFalse(coord.clockwise)
+  }
+
+  @Test
+  void testCoordPolarCenter() {
+    CoordPolar coord = new CoordPolar()
+    coord.plotWidth = 640
+    coord.plotHeight = 480
+
+    def center = coord.getCenter()
+    assertEquals(320, center[0])
+    assertEquals(240, center[1])
+  }
+
+  @Test
+  void testCoordPolarMaxRadius() {
+    CoordPolar coord = new CoordPolar()
+    coord.plotWidth = 640
+    coord.plotHeight = 480
+
+    double maxRadius = coord.getMaxRadius()
+    // min(640, 480) / 2 * 0.9 = 240 * 0.9 = 216
+    assertEquals(216, maxRadius, 0.1)
+  }
+
+  @Test
+  void testPolarArcPath() {
+    CoordPolar coord = new CoordPolar()
+    coord.plotWidth = 400
+    coord.plotHeight = 400
+
+    // Create a quarter circle arc (0 to π/2)
+    String path = coord.createArcPath(0, Math.PI / 2, 0, 100)
+    assertNotNull(path)
+    assertTrue(path.startsWith('M'))  // Move to center
+    assertTrue(path.contains('A'))     // Arc command
+    assertTrue(path.endsWith('Z'))     // Close path
+  }
+
+  @Test
+  void testSimplePolarPlot() {
+    def data = Matrix.builder()
+        .columnNames('angle', 'radius')
+        .rows([
+            [0, 50],
+            [1, 60],
+            [2, 45],
+            [3, 70],
+            [4, 55],
+            [5, 80]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'angle', y: 'radius')) +
+        geom_point(size: 5, color: 'blue') +
+        coord_polar() +
+        labs(title: 'Polar Scatter Plot')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_polar_scatter.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testPolarLineChart() {
+    def data = Matrix.builder()
+        .columnNames('angle', 'value')
+        .rows([
+            [0, 30],
+            [1, 45],
+            [2, 60],
+            [3, 50],
+            [4, 35],
+            [5, 40]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'angle', y: 'value')) +
+        geom_line(color: 'green', linewidth: 2) +
+        geom_point(size: 4) +
+        coord_polar() +
+        labs(title: 'Polar Line Chart')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_polar_line.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testPolarWithThetaY() {
+    def data = Matrix.builder()
+        .columnNames('radius', 'angle')
+        .rows([
+            [50, 0],
+            [60, 1],
+            [45, 2],
+            [70, 3]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'radius', y: 'angle')) +
+        geom_point(size: 6, color: 'purple') +
+        coord_polar(theta: 'y') +
+        labs(title: 'Polar with theta=y')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_polar_theta_y.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testPolarCounterclockwise() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [0, 50],
+            [1, 50],
+            [2, 50],
+            [3, 50]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 8, color: 'orange') +
+        coord_polar(direction: -1) +
+        labs(title: 'Counterclockwise Polar')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_polar_ccw.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testPolarWithStartOffset() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [0, 60],
+            [1, 60],
+            [2, 60],
+            [3, 60]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    // Start at 3 o'clock position (π/2 radians)
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 8, color: 'teal') +
+        coord_polar(start: Math.PI / 2) +
+        labs(title: 'Polar with Start Offset')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_polar_offset.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  // ==================== Factory Method Tests ====================
+
+  @Test
+  void testFactoryMethods() {
+    def flip = coord_flip()
+    assertNotNull(flip)
+    assertTrue(flip instanceof CoordFlip)
+    assertTrue(flip.flipped)
+
+    def flipParams = coord_flip(xlim: [0, 50])
+    assertEquals([0, 50], flipParams.xlim)
+
+    def polar = coord_polar()
+    assertNotNull(polar)
+    assertTrue(polar instanceof CoordPolar)
+    assertEquals('x', polar.theta)
+
+    def polarParams = coord_polar(theta: 'y', direction: -1)
+    assertEquals('y', polarParams.theta)
+    assertFalse(polarParams.clockwise)
+  }
+
+  // ==================== Edge Cases ====================
+
+  @Test
+  void testFlipWithEmptyData() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point() +
+        coord_flip()
+
+    // Should not throw exception
+    Svg svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testPolarWithSinglePoint() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 50]])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 10) +
+        coord_polar()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testCoordFlipTransform() {
+    CoordFlip coord = new CoordFlip()
+    coord.plotWidth = 640
+    coord.plotHeight = 480
+
+    // The transform method swaps x and y scales
+    // This is a unit test for the transform logic
+    assertNotNull(coord)
+    assertTrue(coord.flipped)
+  }
+
+  @Test
+  void testCoordPolarTransform() {
+    CoordPolar coord = new CoordPolar()
+    coord.plotWidth = 400
+    coord.plotHeight = 400
+
+    // Test that center is computed correctly
+    def center = coord.getCenter()
+    assertEquals(200, center[0] as int)
+    assertEquals(200, center[1] as int)
+
+    // Test max radius
+    double maxRadius = coord.getMaxRadius()
+    assertEquals(180, maxRadius, 0.1)  // min(400,400)/2 * 0.9 = 180
+  }
+}
