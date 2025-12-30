@@ -23,7 +23,7 @@ This plan outlines the completion of the `se.alipsa.matrix.gg` package to create
 5. [x] No scale computation - Implemented ScaleDiscrete, ScaleContinuous, color scales
 6. [x] No coordinate transformation
 7. [x] No theme system
-8. [] No faceting
+8. [x] No faceting - Implemented FacetWrap and FacetGrid with full renderer support
 
 ---
 
@@ -504,11 +504,18 @@ The `PositionType` enum is already defined in `Layer.groovy`.
 
 ---
 
-### Phase 9: Faceting (Optional/Future)
+### Phase 9: Faceting
 
-**Files** (new):
-- [] `facet/FacetWrap.groovy` - Wrap a 1D ribbon into 2D
-- [] `facet/FacetGrid.groovy` - 2D grid of panels
+**Files**:
+- [x] `facet/Facet.groovy` - Abstract base class with filterDataForPanel, getPanelLabel, isFreeX/Y
+- [x] `facet/FacetWrap.groovy` - Wrap a 1D ribbon of panels into 2D grid (ncol, nrow, dir, drop, scales)
+- [x] `facet/FacetGrid.groovy` - 2D matrix of panels by row/column variables (rows, cols, margins, scales)
+
+**Renderer Support**:
+- [x] `GgRenderer.renderFaceted()` - Multi-panel rendering with layout computation
+- [x] Panel strip labels with configurable styling
+- [x] Fixed/free scales per panel
+- [x] Axis labels only on bottom row and leftmost column
 
 ---
 
@@ -653,7 +660,19 @@ se/alipsa/matrix/gg/
 1. [x] Implement `CoordFlip` - Swaps x/y axes for horizontal bar charts, boxplots, etc.
 2. [x] Implement `CoordPolar` - Polar coordinates with theta/r mapping, arc path generation for pie charts
 
+### Sprint 9: Faceting
+1. [x] Implement `Facet` base class with abstract methods and common functionality
+2. [x] Implement `FacetWrap` - Wraps panels into 2D grid (ncol, nrow, dir, scales)
+3. [x] Implement `FacetGrid` - Matrix of panels by row/column variables
+4. [x] Update `GgRenderer` with `renderFaceted()` method for multi-panel rendering
+5. [x] Implement panel strip labels with theme-based styling
+6. [x] Support fixed and free scales across panels
+7. [x] Add factory methods `facet_wrap()` and `facet_grid()` to GgPlot
+8. [x] Write tests for faceting (28 tests in FacetTest)
+
 ### Future: Advanced Features
-- [] Faceting (FacetWrap, FacetGrid)
 - [] Additional position adjustments
 - [] More statistical transformations
+- [] ScaleColorBrewer palettes
+- [] CoordFixed (fixed aspect ratio)
+- [] CoordTrans (log, sqrt transformations)

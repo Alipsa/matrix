@@ -25,6 +25,8 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.facet.FacetGrid
+import se.alipsa.matrix.gg.facet.FacetWrap
 import se.alipsa.matrix.gg.geom.GeomAbline
 import se.alipsa.matrix.gg.geom.GeomArea
 import se.alipsa.matrix.gg.geom.GeomBar
@@ -432,6 +434,40 @@ class GgPlot {
 
   static GeomVline geom_vline(Map params) {
     return new GeomVline(params)
+  }
+
+  // ============ Faceting ============
+
+  /**
+   * Wrap a 1D ribbon of panels into a 2D grid.
+   * @param facets Column name(s) to facet by
+   */
+  static FacetWrap facet_wrap(String facet) {
+    return new FacetWrap(facet)
+  }
+
+  /**
+   * Wrap a 1D ribbon of panels into a 2D grid.
+   * @param facets List of column names to facet by (creates combinations)
+   */
+  static FacetWrap facet_wrap(List<String> facets) {
+    return new FacetWrap(facets)
+  }
+
+  /**
+   * Wrap a 1D ribbon of panels into a 2D grid.
+   * @param params Map with 'facets' (String or List), 'ncol', 'nrow', 'scales', 'dir'
+   */
+  static FacetWrap facet_wrap(Map params) {
+    return new FacetWrap(params)
+  }
+
+  /**
+   * Create a matrix of panels defined by row and column faceting variables.
+   * @param params Map with 'rows' and/or 'cols' (String or List), 'scales', 'space', 'labeller'
+   */
+  static FacetGrid facet_grid(Map params) {
+    return new FacetGrid(params)
   }
 
   // ============ Scales ============

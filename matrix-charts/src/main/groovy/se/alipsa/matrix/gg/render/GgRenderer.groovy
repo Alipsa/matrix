@@ -11,6 +11,9 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.facet.Facet
+import se.alipsa.matrix.gg.facet.FacetGrid
+import se.alipsa.matrix.gg.facet.FacetWrap
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
@@ -50,6 +53,17 @@ class GgRenderer {
    * @return The rendered SVG
    */
   Svg render(GgChart chart) {
+    // Check if faceting is enabled
+    if (chart.facet != null) {
+      return renderFaceted(chart)
+    }
+    return renderSingle(chart)
+  }
+
+  /**
+   * Render a single (non-faceted) chart.
+   */
+  private Svg renderSingle(GgChart chart) {
     Svg svg = new Svg()
     svg.width(chart.width)
     svg.height(chart.height)
@@ -116,6 +130,345 @@ class GgRenderer {
     renderLegend(svg, computedScales, chart, theme)
 
     return svg
+  }
+
+  /**
+   * Render a faceted chart with multiple panels.
+   */
+  private Svg renderFaceted(GgChart chart) {
+    Svg svg = new Svg()
+    svg.width(chart.width)
+    svg.height(chart.height)
+    svg.viewBox("0 0 ${chart.width} ${chart.height}")
+
+    Theme theme = chart.theme ?: defaultTheme()
+    Facet facet = chart.facet
+
+    // 1. Draw background
+    renderBackground(svg, chart, theme)
+
+    // 2. Calculate facet layout
+    Map<String, Integer> layout = facet.computeLayout(chart.data)
+    int nrow = layout.nrow
+    int ncol = layout.ncol
+    List<Map<String, Object>> panels = facet.getPanelValues(chart.data)
+
+    if (panels.isEmpty()) {
+      // No faceting data, render as single chart
+      return renderSingle(chart)
+    }
+
+    // 3. Calculate panel dimensions
+    int stripHeight = facet.strip ? 20 : 0
+    int totalPlotWidth = chart.width - MARGIN_LEFT - MARGIN_RIGHT
+    int totalPlotHeight = chart.height - MARGIN_TOP - MARGIN_BOTTOM
+
+    // Account for spacing between panels
+    int panelSpacing = facet.panelSpacing
+    int availableWidth = totalPlotWidth - (ncol - 1) * panelSpacing
+    int availableHeight = totalPlotHeight - (nrow - 1) * panelSpacing - nrow * stripHeight
+
+    int panelWidth = (availableWidth / ncol) as int
+    int panelHeight = (availableHeight / nrow) as int
+
+    // 4. Setup coordinate system
+    Coord coord = chart.coord ?: new CoordCartesian()
+
+    // 5. Compute global scales (for fixed scales mode)
+    Map<String, Scale> globalScales = computeScales(chart, panelWidth, panelHeight, coord)
+
+    // 6. Create clip path for panels
+    Defs defs = svg.addDefs()
+
+    // 7. Render each panel
+    for (int panelIdx = 0; panelIdx < panels.size(); panelIdx++) {
+      Map<String, Object> panelValues = panels[panelIdx]
+
+      // Get panel position
+      int row, col
+      if (facet instanceof FacetWrap) {
+        FacetWrap fw = facet as FacetWrap
+        Map<String, Integer> pos = fw.getPanelPosition(panelIdx, layout)
+        row = pos.row
+        col = pos.col
+      } else if (facet instanceof FacetGrid) {
+        FacetGrid fg = facet as FacetGrid
+        row = fg.getRowIndex(panelValues, chart.data)
+        col = fg.getColIndex(panelValues, chart.data)
+      } else {
+        row = panelIdx / ncol as int
+        col = panelIdx % ncol
+      }
+
+      // Calculate panel position in pixels
+      int panelX = MARGIN_LEFT + col * (panelWidth + panelSpacing)
+      int panelY = MARGIN_TOP + row * (panelHeight + stripHeight + panelSpacing)
+
+      // Filter data for this panel
+      Matrix panelData = facet.filterDataForPanel(chart.data, panelValues)
+
+      // Create panel group
+      G panelGroup = svg.addG()
+      panelGroup.id("panel-${row}-${col}")
+      panelGroup.transform("translate($panelX, $panelY)")
+
+      // Render strip label (if enabled)
+      if (facet.strip) {
+        renderFacetStrip(panelGroup, facet.getPanelLabel(panelValues), panelWidth, stripHeight, theme)
+      }
+
+      // Create panel content group (below strip)
+      G contentGroup = panelGroup.addG()
+      contentGroup.transform("translate(0, $stripHeight)")
+
+      // Draw panel background
+      renderPanelBackground(contentGroup, panelWidth, panelHeight, theme)
+
+      // Compute scales for this panel
+      Map<String, Scale> panelScales
+      if (facet.scales == 'fixed') {
+        // Use global scales
+        panelScales = cloneScales(globalScales, panelWidth, panelHeight, coord)
+      } else {
+        // Compute panel-specific scales
+        panelScales = computeScalesForData(panelData, chart, panelWidth, panelHeight, coord, facet)
+      }
+
+      // Setup coord dimensions for this panel
+      if (coord instanceof CoordCartesian) {
+        coord.plotWidth = panelWidth
+        coord.plotHeight = panelHeight
+      } else if (coord instanceof CoordFlip) {
+        coord.plotWidth = panelWidth
+        coord.plotHeight = panelHeight
+      } else if (coord instanceof CoordPolar) {
+        coord.plotWidth = panelWidth
+        coord.plotHeight = panelHeight
+      }
+
+      // Draw grid lines
+      renderGridLines(contentGroup, panelScales, panelWidth, panelHeight, theme, coord)
+
+      // Create data layer with clip path
+      G dataLayer = contentGroup.addG()
+      dataLayer.id("data-layer-${row}-${col}")
+      String clipId = "panel-clip-${row}-${col}"
+      def clipPath = defs.addClipPath().id(clipId)
+      clipPath.addRect(panelWidth, panelHeight).x(0).y(0)
+      dataLayer.addAttribute('clip-path', "url(#${clipId})")
+
+      // Render each layer with filtered data
+      chart.layers.each { layer ->
+        renderLayerWithData(dataLayer, layer, panelData, chart.globalAes, panelScales, coord, panelWidth, panelHeight)
+      }
+
+      // Draw axes
+      // Only draw y-axis labels on leftmost column
+      boolean showYLabels = (col == 0)
+      // Only draw x-axis labels on bottom row
+      boolean showXLabels = (row == nrow - 1)
+
+      renderFacetAxes(contentGroup, panelScales, panelWidth, panelHeight, theme, coord, showXLabels, showYLabels)
+    }
+
+    // 8. Draw title and labels
+    renderLabels(svg, chart, totalPlotWidth, totalPlotHeight)
+
+    // 9. Draw legend (if needed)
+    renderLegend(svg, globalScales, chart, theme)
+
+    return svg
+  }
+
+  /**
+   * Render a facet strip label.
+   */
+  private void renderFacetStrip(G group, String label, int width, int height, Theme theme) {
+    // Draw strip background
+    group.addRect(width, height)
+        .fill(theme.stripBackground?.fill ?: '#E0E0E0')
+        .stroke(theme.stripBackground?.color ?: 'none')
+
+    // Draw strip text
+    group.addText(label)
+        .x(width / 2)
+        .y(height / 2 + 4)
+        .textAnchor('middle')
+        .fontSize(theme.stripText?.size ?: 10)
+        .fill(theme.stripText?.color ?: 'black')
+  }
+
+  /**
+   * Adjust scales for a panel with new dimensions.
+   * Updates the range of position scales for the panel size.
+   */
+  private Map<String, Scale> cloneScales(Map<String, Scale> original, int width, int height, Coord coord) {
+    Map<String, Scale> adjusted = [:]
+    boolean isFlipped = coord instanceof CoordFlip
+
+    original.each { key, scale ->
+      // For position scales, update the range for this panel's dimensions
+      if (key == 'x') {
+        if (scale instanceof ScaleContinuous) {
+          ScaleContinuous sc = scale as ScaleContinuous
+          sc.range = isFlipped ? [height, 0] as List<Number> : [0, width] as List<Number>
+        } else if (scale instanceof ScaleDiscrete) {
+          ScaleDiscrete sd = scale as ScaleDiscrete
+          sd.range = isFlipped ? [height, 0] as List<Number> : [0, width] as List<Number>
+        }
+      } else if (key == 'y') {
+        if (scale instanceof ScaleContinuous) {
+          ScaleContinuous sc = scale as ScaleContinuous
+          sc.range = isFlipped ? [0, width] as List<Number> : [height, 0] as List<Number>
+        } else if (scale instanceof ScaleDiscrete) {
+          ScaleDiscrete sd = scale as ScaleDiscrete
+          sd.range = isFlipped ? [0, width] as List<Number> : [height, 0] as List<Number>
+        }
+      }
+      adjusted[key] = scale
+    }
+    return adjusted
+  }
+
+  /**
+   * Compute scales for specific panel data (for free scales mode).
+   */
+  private Map<String, Scale> computeScalesForData(Matrix data, GgChart chart, int width, int height, Coord coord, Facet facet) {
+    // Create a temporary chart with filtered data
+    GgChart tempChart = new GgChart(data, chart.globalAes)
+    tempChart.layers = chart.layers
+    tempChart.scales = chart.scales
+
+    Map<String, Scale> scales = computeScales(tempChart, width, height, coord)
+
+    // If scales are partially free, override with global scale
+    if (facet.scales == 'free_x' && scales['y']) {
+      // Keep y fixed from original chart
+      Map<String, Scale> globalScales = computeScales(chart, width, height, coord)
+      scales['y'] = globalScales['y']
+    } else if (facet.scales == 'free_y' && scales['x']) {
+      // Keep x fixed from original chart
+      Map<String, Scale> globalScales = computeScales(chart, width, height, coord)
+      scales['x'] = globalScales['x']
+    }
+
+    return scales
+  }
+
+  /**
+   * Render axes for a facet panel.
+   */
+  private void renderFacetAxes(G plotArea, Map<String, Scale> scales, int width, int height,
+                               Theme theme, Coord coord, boolean showXLabels, boolean showYLabels) {
+    G axesGroup = plotArea.addG()
+    axesGroup.id('axes')
+
+    boolean isFlipped = coord instanceof CoordFlip
+
+    if (isFlipped) {
+      renderFacetYAxis(axesGroup, scales['x'], height, theme, showYLabels)
+      renderFacetXAxis(axesGroup, scales['y'], width, height, theme, showXLabels)
+    } else {
+      renderFacetXAxis(axesGroup, scales['x'], width, height, theme, showXLabels)
+      renderFacetYAxis(axesGroup, scales['y'], height, theme, showYLabels)
+    }
+  }
+
+  /**
+   * Render X axis for facet panel.
+   */
+  private void renderFacetXAxis(G axesGroup, Scale scale, int width, int height, Theme theme, boolean showLabels) {
+    if (scale == null) return
+
+    G xAxisGroup = axesGroup.addG()
+    xAxisGroup.id('x-axis')
+    xAxisGroup.transform("translate(0, $height)")
+
+    // Axis line
+    xAxisGroup.addLine(0, 0, width, 0)
+        .stroke(theme.axisLineX?.color ?: 'black')
+        .strokeWidth(theme.axisLineX?.size ?: 1)
+
+    if (showLabels) {
+      List breaks = scale.getComputedBreaks()
+      List<String> labels = scale.getComputedLabels()
+
+      breaks.eachWithIndex { breakVal, i ->
+        Double xPos = scale.transform(breakVal) as Double
+        if (xPos == null) return
+
+        xAxisGroup.addLine(xPos, 0, xPos, theme.axisTickLength ?: 5)
+            .stroke('black')
+
+        String label = i < labels.size() ? labels[i] : breakVal.toString()
+        xAxisGroup.addText(label)
+            .x(xPos)
+            .y((theme.axisTickLength ?: 5) + 12)
+            .textAnchor('middle')
+            .fontSize(theme.axisTextX?.size ?: 9)
+      }
+    }
+  }
+
+  /**
+   * Render Y axis for facet panel.
+   */
+  private void renderFacetYAxis(G axesGroup, Scale scale, int height, Theme theme, boolean showLabels) {
+    if (scale == null) return
+
+    G yAxisGroup = axesGroup.addG()
+    yAxisGroup.id('y-axis')
+
+    // Axis line
+    yAxisGroup.addLine(0, 0, 0, height)
+        .stroke(theme.axisLineY?.color ?: 'black')
+        .strokeWidth(theme.axisLineY?.size ?: 1)
+
+    if (showLabels) {
+      List breaks = scale.getComputedBreaks()
+      List<String> labels = scale.getComputedLabels()
+
+      breaks.eachWithIndex { breakVal, i ->
+        Double yPos = scale.transform(breakVal) as Double
+        if (yPos == null) return
+
+        yAxisGroup.addLine(-1 * (theme.axisTickLength ?: 5), yPos, 0, yPos)
+            .stroke('black')
+
+        String label = i < labels.size() ? labels[i] : breakVal.toString()
+        yAxisGroup.addText(label)
+            .x(-1 * (theme.axisTickLength ?: 5) - 3)
+            .y(yPos + 3)
+            .textAnchor('end')
+            .fontSize(theme.axisTextY?.size ?: 9)
+      }
+    }
+  }
+
+  /**
+   * Render a layer with specific data (for faceted charts).
+   */
+  private void renderLayerWithData(G dataLayer, Layer layer, Matrix data, Aes globalAes,
+                                   Map<String, Scale> scales, Coord coord,
+                                   int plotWidth, int plotHeight) {
+    Aes aes = layer.aes ?: globalAes
+
+    if (data == null || data.rowCount() == 0 || aes == null) return
+
+    // Apply statistical transformation
+    Matrix statData = applyStats(data, aes, layer)
+
+    // Apply position adjustment
+    Matrix posData = applyPosition(statData, aes, layer)
+
+    // Create layer group
+    G layerGroup = dataLayer.addG()
+    layerGroup.styleClass(layer.geom?.class?.simpleName?.toLowerCase() ?: 'layer')
+
+    // Render the geom
+    if (layer.geom) {
+      layer.geom.render(layerGroup, posData, aes, scales, coord)
+    }
   }
 
   /**
