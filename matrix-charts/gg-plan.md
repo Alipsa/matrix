@@ -363,7 +363,7 @@ Each geom needs:
 #### 5.1 Priority 1 - Essential Geoms
 **Files** (modify):
 - [x] `geom/GeomPoint.groovy` - Scatter plots (stat: identity)
-- [] `geom/GeomLine.groovy` (new) - Line charts
+- [x] `geom/GeomLine.groovy` (new) - Line charts with grouping support
 - [] `geom/GeomBar.groovy` - Bar charts (stat: count)
 - [] `geom/GeomCol.groovy` - Column charts (stat: identity)
 - [] `geom/GeomHistogram.groovy` - Histograms (stat: bin)
@@ -556,7 +556,7 @@ se/alipsa/matrix/gg/
 ├── stat/
 │   └── [x] GgStat.groovy       # Consolidated stat implementations
 ├── geom/
-│   ├── GeomLine.groovy
+│   ├── [x] GeomLine.groovy - Line charts with grouping support
 │   └── GeomArea.groovy
 └── theme/
     ├── ThemeGray.groovy        # Implemented in GgPlot.groovy
@@ -606,7 +606,7 @@ se/alipsa/matrix/gg/
 ### Sprint 3: Bar and Line Charts
 1. [x] Implement `GgStat.count()` for bar charts
 2. [] Implement `GeomBar.render()`
-3. [] Implement `GeomLine.render()` (new class)
+3. [x] Implement `GeomLine.render()` (new class) - with grouping, sorting, color scales
 4. [x] Implement `ScaleXDiscrete` for categorical axes
 5. [x] Implement `PositionDodge` and `PositionStack`
 6. [] Write tests for bar/line charts

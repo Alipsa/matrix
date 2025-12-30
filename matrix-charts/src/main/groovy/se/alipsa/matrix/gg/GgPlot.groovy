@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.geom.GeomContour
 import se.alipsa.matrix.gg.geom.GeomCount
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.geom.GeomHline
+import se.alipsa.matrix.gg.geom.GeomLine
 import se.alipsa.matrix.gg.geom.GeomRug
 import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
@@ -323,6 +324,14 @@ class GgPlot {
 
   static GeomHline geom_hline() {
     return new GeomHline()
+  }
+
+  static GeomLine geom_line() {
+    return new GeomLine()
+  }
+
+  static GeomLine geom_line(Map params) {
+    return new GeomLine(params)
   }
 
   static GeomPoint geom_point() {
