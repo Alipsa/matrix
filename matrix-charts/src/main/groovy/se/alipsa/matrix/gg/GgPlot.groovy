@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.geom.GeomBlank
 import se.alipsa.matrix.gg.geom.GeomBoxplot
 import se.alipsa.matrix.gg.geom.GeomContour
 import se.alipsa.matrix.gg.geom.GeomCount
+import se.alipsa.matrix.gg.geom.GeomDensity
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.geom.GeomHline
 import se.alipsa.matrix.gg.geom.GeomLabel
@@ -47,6 +48,7 @@ import se.alipsa.matrix.gg.theme.Theme
 import se.alipsa.matrix.gg.theme.ElementLine
 import se.alipsa.matrix.gg.theme.ElementRect
 import se.alipsa.matrix.gg.theme.ElementText
+import se.alipsa.matrix.gg.theme.Themes
 
 /**
  * An api very similar to ggplot2 making ports from R code using ggplot2 simple.
@@ -190,12 +192,7 @@ class GgPlot {
    * Default gray theme (ggplot2 default).
    */
   static Theme theme_gray() {
-    Theme theme = new Theme()
-    theme.panelBackground = new ElementRect(fill: '#EBEBEB', color: null)
-    theme.panelGridMajor = new ElementLine(color: 'white', size: 1)
-    theme.panelGridMinor = new ElementLine(color: 'white', size: 0.5)
-    theme.plotBackground = new ElementRect(fill: 'white', color: null)
-    return theme
+    return Themes.gray()
   }
 
   /** Alias for theme_gray */
@@ -205,40 +202,21 @@ class GgPlot {
    * Minimal theme with no background annotations.
    */
   static Theme theme_minimal() {
-    Theme theme = new Theme()
-    theme.panelBackground = new ElementRect(fill: 'white', color: null)
-    theme.panelGridMajor = new ElementLine(color: '#D3D3D3', size: 0.5)
-    theme.panelGridMinor = null  // No minor grid
-    theme.plotBackground = new ElementRect(fill: 'white', color: null)
-    theme.axisLineX = new ElementLine(color: '#D3D3D3')
-    theme.axisLineY = new ElementLine(color: '#D3D3D3')
-    return theme
+    return Themes.minimal()
   }
 
   /**
    * Black and white theme.
    */
   static Theme theme_bw() {
-    Theme theme = new Theme()
-    theme.panelBackground = new ElementRect(fill: 'white', color: 'black')
-    theme.panelGridMajor = new ElementLine(color: '#D3D3D3', size: 0.5)
-    theme.panelGridMinor = new ElementLine(color: '#E5E5E5', size: 0.25)
-    theme.plotBackground = new ElementRect(fill: 'white', color: null)
-    return theme
+    return Themes.bw()
   }
 
   /**
    * Classic theme with axis lines and no grid.
    */
   static Theme theme_classic() {
-    Theme theme = new Theme()
-    theme.panelBackground = new ElementRect(fill: 'white', color: null)
-    theme.panelGridMajor = null  // No grid
-    theme.panelGridMinor = null
-    theme.plotBackground = new ElementRect(fill: 'white', color: null)
-    theme.axisLineX = new ElementLine(color: 'black', size: 1)
-    theme.axisLineY = new ElementLine(color: 'black', size: 1)
-    return theme
+    return Themes.classic()
   }
 
   /**
@@ -309,6 +287,10 @@ class GgPlot {
     return new GeomBin2d()
   }
 
+  static GeomBin2d geom_bin_2d(Map params) {
+    return new GeomBin2d(params)
+  }
+
   static GeomBlank geom_blank() {
     return new GeomBlank()
   }
@@ -333,12 +315,32 @@ class GgPlot {
     return new GeomContour()
   }
 
+  static GeomContour geom_contour(Map params) {
+    return new GeomContour(params)
+  }
+
   static GeomContourFilled geom_contour_filled() {
     return new GeomContourFilled()
   }
 
+  static GeomContourFilled geom_contour_filled(Map params) {
+    return new GeomContourFilled(params)
+  }
+
   static GeomCount geom_count() {
     return new GeomCount()
+  }
+
+  static GeomCount geom_count(Map params) {
+    return new GeomCount(params)
+  }
+
+  static GeomDensity geom_density() {
+    return new GeomDensity()
+  }
+
+  static GeomDensity geom_density(Map params) {
+    return new GeomDensity(params)
   }
 
   static GeomHistogram geom_histogram() {
@@ -381,6 +383,10 @@ class GgPlot {
     return new GeomPoint(params)
   }
 
+  static GeomRug geom_rug() {
+    return new GeomRug()
+  }
+
   static GeomRug geom_rug(Map params) {
     return new GeomRug(params)
   }
@@ -409,8 +415,16 @@ class GgPlot {
     return new GeomText(params)
   }
 
+  static GeomViolin geom_violin() {
+    return new GeomViolin()
+  }
+
   static GeomViolin geom_violin(Aes aes) {
     return new GeomViolin(aes)
+  }
+
+  static GeomViolin geom_violin(Map params) {
+    return new GeomViolin(params)
   }
 
   static GeomVline geom_vline() {

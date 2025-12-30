@@ -112,6 +112,6 @@ Modules like matrix-smile use Groovy extension methods registered via `META-INF/
 
 - **Groovy**: 5.0.3 (groovy, groovy-sql, groovy-ginq)
 - **Testing**: JUnit Jupiter 6.0.1
-- **Charting**: gsvg 0.2.0, JFreeChart 1.5.6, JavaFX 23.0.2
+- **Charting**: gsvg 0.3.0, JFreeChart 1.5.6, JavaFX 23.0.2
 - **Statistics**: Smile 4.4.2, commons-math3
 - **Data formats**: Jackson, Apache POI, commons-csv

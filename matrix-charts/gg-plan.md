@@ -323,9 +323,9 @@ class GgStat {
 
 **What Needs New Implementation (in GgStat):**
 - [x] `GgStat.bin()` - Bin width calculation, break point generation
-- [] `GgStat.density()` - Kernel density estimation (consider Smile's `KernelDensity` or implement Gaussian KDE)
-- [] `GgStat.bin2d()` - 2D binning grid computation
-- [] `GgStat.contour()` - Contour level computation (marching squares algorithm)
+- [x] `GgStat.density()` - Kernel density estimation (Gaussian KDE with Silverman's rule)
+- [x] `GgStat.bin2d()` - 2D binning grid computation - implemented in GeomBin2d
+- [x] `GgStat.contour()` - Contour level computation (marching squares algorithm) - implemented in GeomContour
 
 **Example Implementation Pattern:**
 ```groovy
@@ -382,11 +382,13 @@ Each geom needs:
 - [x] `geom/GeomSegment.groovy` - Line segments
 
 #### 5.4 Priority 4 - Advanced Geoms
-- [] `geom/GeomViolin.groovy` - Violin plots
-- [] `geom/GeomRug.groovy` - Rug plots
-- [] `geom/GeomDensity.groovy` (new) - Density plots
-- [] `geom/GeomContour.groovy`, `geom/GeomContourFilled.groovy`
-- [] `geom/GeomBin2d.groovy`, `geom/GeomCount.groovy`
+- [x] `geom/GeomViolin.groovy` - Violin plots with kernel density, quantile lines
+- [x] `geom/GeomRug.groovy` - Rug plots for marginal distributions (sides: tblr)
+- [x] `geom/GeomDensity.groovy` (new) - Density plots with bandwidth adjustment
+- [x] `geom/GeomContour.groovy` - Contour lines using marching squares algorithm
+- [x] `geom/GeomContourFilled.groovy` - Filled contour regions with viridis-like color palette
+- [x] `geom/GeomBin2d.groovy` - 2D binning heatmaps with configurable bins/binwidth
+- [x] `geom/GeomCount.groovy` - Sized points by observation count at each location
 
 ---
 
@@ -639,7 +641,13 @@ se/alipsa/matrix/gg/
 3. [x] Implement `GeomArea` - Area charts with fill, alpha, grouping support
 4. [x] Implement `GeomText` - Text labels with positioning, rotation, styling
 5. [x] Implement `GeomLabel` - Text with background rectangles
-6. [] Implement remaining geom stubs (violin, rug, density, contour, etc.)
+6. [x] Implement `GeomRug` - Marginal distribution tick marks (sides: tblr)
+7. [x] Implement `GeomViolin` - Violin plots with kernel density estimation
+8. [x] Implement `GeomDensity` - Density curves with bandwidth adjustment
+9. [x] Implement `GeomContour` - Contour lines using marching squares algorithm
+10. [x] Implement `GeomContourFilled` - Filled contour regions between levels
+11. [x] Implement `GeomBin2d` - 2D binning heatmaps
+12. [x] Implement `GeomCount` - Sized points by observation count
 
 ### Sprint 8: Special Coordinates
 1. [] Implement `CoordFlip`
