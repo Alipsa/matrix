@@ -61,37 +61,57 @@ class GgStat {
     }
 
     List<Number> values = data[xCol] as List<Number>
+    if (values == null || values.isEmpty()) {
+      return Matrix.builder()
+          .columnNames(['x', 'xmin', 'xmax', 'count', 'density'])
+          .rows([])
+          .build()
+    }
+
     int bins = (params.bins ?: 30) as int
     Number binwidth = params.binwidth as Number
 
     // Calculate bin edges
     Number minVal = Stat.min(values)
     Number maxVal = Stat.max(values)
-    Number range = maxVal - minVal
+    Number range = (maxVal as double) - (minVal as double)
+
+    // Handle edge case: all values are the same
+    if (range == 0 || range.doubleValue() == 0.0d) {
+      // Single bin containing all values
+      return Matrix.builder()
+          .columnNames(['x', 'xmin', 'xmax', 'count', 'density'])
+          .rows([[minVal, minVal, minVal, values.size(), 1.0]])
+          .types([BigDecimal, BigDecimal, BigDecimal, Integer, BigDecimal])
+          .build()
+    }
 
     if (binwidth == null) {
       binwidth = range / bins
     } else {
-      bins = Math.ceil(range / binwidth as double) as int
+      bins = Math.ceil(range / (binwidth as double)) as int
+      if (bins == 0) bins = 1
     }
 
     // Create bin counts
     List<Map> results = []
     for (int i = 0; i < bins; i++) {
-      Number xmin = minVal + i * binwidth
-      Number xmax = minVal + (i + 1) * binwidth
-      Number center = (xmin + xmax) / 2
+      Number xmin = (minVal as double) + i * (binwidth as double)
+      Number xmax = (minVal as double) + (i + 1) * (binwidth as double)
+      Number center = ((xmin as double) + (xmax as double)) / 2
 
       int count = (int) values.count { v ->
-        v >= xmin && (i == bins - 1 ? v <= xmax : v < xmax)
+        (v as double) >= (xmin as double) && (i == bins - 1 ? (v as double) <= (xmax as double) : (v as double) < (xmax as double))
       }
+
+      double density = count / (values.size() * (binwidth as double))
 
       results << [
           x: center,
           xmin: xmin,
           xmax: xmax,
           count: count,
-          density: count / (values.size() * binwidth)
+          density: density
       ]
     }
 

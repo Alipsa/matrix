@@ -102,7 +102,7 @@ Modules like matrix-smile use Groovy extension methods registered via `META-INF/
 
 ## Code Style
 
-- Use `@CompileStatic` annotation on classes for performance-critical code
+- Use `@CompileStatic` annotation on classes for performance-critical code. 
 - Java compilation target: release 21
 - Groovy compiles both .java and .groovy files (no separate Java srcDir)
 - MIT License

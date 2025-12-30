@@ -326,6 +326,10 @@ class GgPlot {
     return new GeomHistogram()
   }
 
+  static GeomHistogram geom_histogram(Map params) {
+    return new GeomHistogram(params)
+  }
+
   static GeomHline geom_hline() {
     return new GeomHline()
   }

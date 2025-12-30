@@ -280,7 +280,12 @@ class GgRenderer {
         // Apply stat transformation to get computed values
         Matrix statData = applyStats(layerData, layerAes, layer)
 
-        if (layerAes.xColName && statData.columnNames().contains(layerAes.xColName)) {
+        // For x aesthetic: use xmin/xmax for histograms, otherwise use x column
+        if (statData.columnNames().contains('xmin') && statData.columnNames().contains('xmax')) {
+          // stat_bin produces xmin/xmax columns - include both for full range
+          data['x'].addAll(statData['xmin'] ?: [])
+          data['x'].addAll(statData['xmax'] ?: [])
+        } else if (layerAes.xColName && statData.columnNames().contains(layerAes.xColName)) {
           data['x'].addAll(statData[layerAes.xColName] ?: [])
         }
 
@@ -288,7 +293,7 @@ class GgRenderer {
         if (layerAes.yColName && statData.columnNames().contains(layerAes.yColName)) {
           data['y'].addAll(statData[layerAes.yColName] ?: [])
         } else if (statData.columnNames().contains('count')) {
-          // stat_count produces 'count' column for y values
+          // stat_count and stat_bin produce 'count' column for y values
           data['y'].addAll(statData['count'] ?: [])
         }
 
