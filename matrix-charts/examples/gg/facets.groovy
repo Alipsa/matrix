@@ -22,4 +22,4 @@ def chart = ggplot(mpg, aes('cty', 'hwy')) +
 Svg svg = chart.render()
 File targetFile = new File(targetDir, this.class.name + '.svg')
 write(svg, targetFile)
-println("Wrote factes plot to ${targetFile.absolutePath}")
+println("Wrote facets plot to ${targetFile.absolutePath}")
