@@ -90,13 +90,17 @@ class ScaleColorViridisTest {
   void testGeneratesColorsWithValidRange() {
     ScaleColorViridis scale = new ScaleColorViridis(begin: 0.2, end: 0.8)
     scale.train(['A', 'B', 'C'])
-    
+
     List<String> colors = scale.getColors()
     assertEquals(3, colors.size())
     // All colors should be valid hex colors
     colors.each { color ->
       assertTrue(color.startsWith('#'))
       assertTrue(color.length() >= 7) // #RRGGBB or #RRGGBBAA
+    }
+  }
+
+  @Test
   void testDefaultAesthetic() {
     ScaleColorViridis scale = new ScaleColorViridis()
     assertEquals('color', scale.aesthetic)
@@ -384,6 +388,9 @@ class ScaleColorViridisTest {
     })
     assertTrue(exception.message.contains('end'))
     assertTrue(exception.message.contains('[0, 1]'))
+  }
+
+  @Test
   void testGetColorForIndex() {
     ScaleColorViridis scale = new ScaleColorViridis()
     scale.train(['X', 'Y', 'Z'])

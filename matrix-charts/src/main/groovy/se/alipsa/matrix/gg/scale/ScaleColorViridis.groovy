@@ -104,6 +104,10 @@ class ScaleColorViridis extends ScaleDiscrete {
     return value
   }
 
+  private int normalizeDirection(int d) {
+    return d < 0 ? -1 : 1
+  }
+
   private void applyParams(Map params) {
     if (params.option) this.option = normalizeOption(params.option as String)
     if (params.begin != null) this.begin = validateRange(params.begin as double, 'begin')
@@ -112,7 +116,7 @@ class ScaleColorViridis extends ScaleDiscrete {
     if (this.begin > this.end) {
       throw new IllegalArgumentException("begin (${this.begin}) must be less than or equal to end (${this.end})")
     }
-    if (params.direction != null) this.direction = params.direction as int
+    if (params.direction != null) this.direction = normalizeDirection(params.direction as int)
     if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as double)
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
