@@ -53,6 +53,6 @@ class AfterStat {
 
   @Override
   int hashCode() {
-    return stat?.hashCode() ?: 0
+    return stat.hashCode()
   }
 }
