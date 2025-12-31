@@ -158,8 +158,8 @@ class ScaleColorViridis extends ScaleDiscrete {
     List<String> result = []
 
     // Calculate actual begin/end based on direction
-    double actualBegin = direction >= 0 ? begin : end
-    double actualEnd = direction >= 0 ? end : begin
+    double actualBegin = direction > 0 ? begin : end
+    double actualEnd = direction > 0 ? end : begin
 
     for (int i = 0; i < n; i++) {
       // Calculate position in 0-1 range

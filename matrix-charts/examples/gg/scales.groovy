@@ -22,4 +22,4 @@ def chart = ggplot(mpg, aes('cty', 'hwy', colour: 'class')) +
 Svg svg = chart.render()
 File targetFile = new File(targetDir, this.class.name + '.svg')
 write(svg, targetFile)
-println("Wrote scatter plot with regression line to ${targetFile.absolutePath}")
+println("Wrote scatter plot with viridis colors to ${targetFile.absolutePath}")
