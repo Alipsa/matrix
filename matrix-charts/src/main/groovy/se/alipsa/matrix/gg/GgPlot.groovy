@@ -681,7 +681,7 @@ class GgPlot {
    * Diverging fill gradient with mid color.
    */
   static ScaleColorGradient scale_fill_gradient2(Map params = [:]) {
-    return new ScaleColorGradient(params + [mid: params.mid ?: 'white', aesthetic: 'fill'])
+    return new ScaleColorGradient(params + [mid: params.containsKey('mid') ? params.mid : 'white', aesthetic: 'fill'])
   }
 
   /**

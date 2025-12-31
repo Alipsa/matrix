@@ -1,5 +1,6 @@
 package gg
 
+import groovy.xml.XmlSlurper
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
@@ -576,13 +577,19 @@ class ScaleIntegrationTest {
 
   /**
    * Helper method to extract the geomhistogram group content from SVG.
-   * Returns the content of the first geomhistogram group found.
+   * Uses XmlSlurper for proper XML parsing that handles nested groups correctly.
+   * Returns a normalized string representation of the histogram group's children.
    */
   private String extractHistogramGroupContent(String svgContent) {
-    // Find the geomhistogram group and extract its content (using (?s) for DOTALL mode)
-    def matcher = svgContent =~ /(?s)(<g[^>]*class="geomhistogram"[^>]*>.*?<\/g>)/
-    if (matcher.find()) {
-      return matcher.group(1)
+    def svg = new XmlSlurper().parseText(svgContent)
+    def histogramGroup = svg.depthFirst().find { node ->
+      node.name() == 'g' && node.@class?.toString()?.contains('geomhistogram')
+    }
+    if (histogramGroup) {
+      // Convert children to a normalized string for comparison
+      return histogramGroup.children().collect { child ->
+        groovy.xml.XmlUtil.serialize(child)
+      }.join('\n')
     }
     return ""
   }
