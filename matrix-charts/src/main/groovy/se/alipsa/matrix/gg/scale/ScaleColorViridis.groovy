@@ -42,8 +42,8 @@ class ScaleColorViridis extends ScaleDiscrete {
   /** Cached colors for current levels */
   private List<String> computedColors = []
 
-  // Viridis palette colors (256 values sampled at key points)
-  // Each palette defined with ~20 key colors for smooth interpolation
+  // Viridis palette key colors (used for smooth interpolation)
+  // Each palette is defined with approximately 12–20 discrete colors
   private static final Map<String, List<String>> PALETTES = [
     'viridis': ['#440154', '#481567', '#482677', '#453781', '#3F4788',
                 '#39558C', '#32648E', '#2D718E', '#287D8E', '#238A8D',
