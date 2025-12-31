@@ -47,6 +47,12 @@ class GgRenderer {
   static final int MARGIN_RIGHT = 80
   static final int MARGIN_BOTTOM = 60
   static final int MARGIN_LEFT = 80
+  static final int LEGEND_PLOT_GAP = 10
+  static final int LEGEND_TITLE_SPACING = 7
+  static final double AVERAGE_CHAR_WIDTH_RATIO = 0.6d  // Approximate average width per character.
+  static final int LEGEND_WIDTH_PADDING = 15
+  static final String DEFAULT_STRIP_FILL = '#D9D9D9'
+  static final String DEFAULT_STRIP_STROKE = 'none'
 
   /**
    * Render a GgChart to an SVG.
@@ -105,7 +111,7 @@ class GgRenderer {
       int legendWidth = estimateLegendWidth(computedScales, theme)
       if (legendWidth > MARGIN_RIGHT) {
         // Legend needs more space than default margin provides
-        int extraWidth = legendWidth - MARGIN_RIGHT + 10  // 10px gap between plot and legend
+        int extraWidth = legendWidth - MARGIN_RIGHT + LEGEND_PLOT_GAP
         svgWidth += extraWidth
       }
     }
@@ -355,8 +361,8 @@ class GgRenderer {
    */
   private void renderFacetStrip(G group, String label, int width, int height, Theme theme) {
     // Draw strip background (use fill from theme if set, otherwise default to gray)
-    String stripFill = theme.stripBackground?.fill != null ? theme.stripBackground.fill : '#D9D9D9'
-    String stripStroke = theme.stripBackground?.color != null ? theme.stripBackground.color : 'none'
+    String stripFill = resolveStripFill(theme)
+    String stripStroke = resolveStripStroke(theme)
     group.addRect(width, height)
         .fill(stripFill)
         .stroke(stripStroke)
@@ -375,8 +381,8 @@ class GgRenderer {
    */
   private void renderFacetStripRotated(G group, String label, int width, int height, Theme theme) {
     // Draw strip background (use fill from theme if set, otherwise default to gray)
-    String stripFill = theme.stripBackground?.fill != null ? theme.stripBackground.fill : '#D9D9D9'
-    String stripStroke = theme.stripBackground?.color != null ? theme.stripBackground.color : 'none'
+    String stripFill = resolveStripFill(theme)
+    String stripStroke = resolveStripStroke(theme)
     group.addRect(width, height)
         .fill(stripFill)
         .stroke(stripStroke)
@@ -1327,7 +1333,7 @@ class GgRenderer {
     // Determine legend position
     switch (theme.legendPosition) {
       case 'right':
-        legendX = chart.width - MARGIN_RIGHT + 10
+        legendX = chart.width - MARGIN_RIGHT + LEGEND_PLOT_GAP
         legendY = MARGIN_TOP + 20
         break
       case 'left':
@@ -1351,7 +1357,7 @@ class GgRenderer {
           legendX = (pos[0] as Number).intValue()
           legendY = (pos[1] as Number).intValue()
         } else {
-          legendX = chart.width - MARGIN_RIGHT + 10
+          legendX = chart.width - MARGIN_RIGHT + LEGEND_PLOT_GAP
           legendY = MARGIN_TOP + 20
         }
     }
@@ -1378,7 +1384,7 @@ class GgRenderer {
       if (theme.legendTitle?.color) {
         titleText.fill(theme.legendTitle.color)
       }
-      currentY = titleFontSize + 7  // Space below title before legend items
+      currentY = titleFontSize + LEGEND_TITLE_SPACING
     }
 
     // Determine if primary geom uses points (for legend key shape)
@@ -1583,7 +1589,7 @@ class GgRenderer {
     int fontSize = (theme.legendText?.size ?: 10) as int
 
     // Estimate text width: ~0.6 * fontSize per character for typical fonts
-    double charWidth = fontSize * 0.6
+    double charWidth = fontSize * AVERAGE_CHAR_WIDTH_RATIO
     int maxLabelWidth = 0
 
     legendScales.each { aesthetic, scale ->
@@ -1597,7 +1603,24 @@ class GgRenderer {
     }
 
     // Total legend width: textOffset + maxLabelWidth + some padding
-    return textOffset + maxLabelWidth + 15
+    return textOffset + maxLabelWidth + LEGEND_WIDTH_PADDING
+  }
+
+  // Only fall back when unset; 'none' remains a valid explicit value.
+  private String resolveStripFill(Theme theme) {
+    String fill = theme.stripBackground?.fill
+    if (fill == null) {
+      return DEFAULT_STRIP_FILL
+    }
+    return fill
+  }
+
+  private String resolveStripStroke(Theme theme) {
+    String stroke = theme.stripBackground?.color
+    if (stroke == null) {
+      return DEFAULT_STRIP_STROKE
+    }
+    return stroke
   }
 
   /**

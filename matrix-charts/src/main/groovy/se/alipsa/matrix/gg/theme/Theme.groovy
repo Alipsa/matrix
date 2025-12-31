@@ -131,6 +131,97 @@ class Theme implements Cloneable {
   /** Base line height */
   Number baseLineHeight = 1.2
 
+  @Override
+  Theme clone() {
+    Theme copy = super.clone() as Theme
+    copy.plotMargin = copyList(plotMargin)
+    copy.panelSpacing = copyList(panelSpacing)
+    copy.legendKeySize = copyList(legendKeySize)
+    copy.legendMargin = copyList(legendMargin)
+    copy.discreteColors = copyList(discreteColors)
+    copy.gradientColors = copyList(gradientColors)
+    if (legendPosition instanceof List) {
+      copy.legendPosition = copyList(legendPosition as List)
+    }
+
+    copy.plotBackground = cloneRect(plotBackground)
+    copy.plotTitle = cloneText(plotTitle)
+    copy.plotSubtitle = cloneText(plotSubtitle)
+    copy.plotCaption = cloneText(plotCaption)
+
+    copy.panelBackground = cloneRect(panelBackground)
+    copy.panelBorder = cloneRect(panelBorder)
+    copy.panelGridMajor = cloneLine(panelGridMajor)
+    copy.panelGridMinor = cloneLine(panelGridMinor)
+
+    copy.axisLineX = cloneLine(axisLineX)
+    copy.axisLineY = cloneLine(axisLineY)
+    copy.axisTicksX = cloneLine(axisTicksX)
+    copy.axisTicksY = cloneLine(axisTicksY)
+    copy.axisTextX = cloneText(axisTextX)
+    copy.axisTextY = cloneText(axisTextY)
+    copy.axisTitleX = cloneText(axisTitleX)
+    copy.axisTitleY = cloneText(axisTitleY)
+
+    copy.legendBackground = cloneRect(legendBackground)
+    copy.legendKey = cloneRect(legendKey)
+    copy.legendTitle = cloneText(legendTitle)
+    copy.legendText = cloneText(legendText)
+
+    copy.stripBackground = cloneRect(stripBackground)
+    copy.stripText = cloneText(stripText)
+
+    return copy
+  }
+
+  private static <T> List<T> copyList(List<T> source) {
+    if (source == null) {
+      return null
+    }
+    return new ArrayList<>(source) as List<T>
+  }
+
+  private static ElementText cloneText(ElementText text) {
+    if (text == null) {
+      return null
+    }
+    ElementText copy = new ElementText()
+    copy.family = text.family
+    copy.face = text.face
+    copy.size = text.size
+    copy.color = text.color
+    copy.hjust = text.hjust
+    copy.vjust = text.vjust
+    copy.angle = text.angle
+    copy.lineheight = text.lineheight
+    copy.margin = copyList(text.margin)
+    return copy
+  }
+
+  private static ElementLine cloneLine(ElementLine line) {
+    if (line == null) {
+      return null
+    }
+    ElementLine copy = new ElementLine()
+    copy.color = line.color
+    copy.size = line.size
+    copy.linetype = line.linetype
+    copy.lineend = line.lineend
+    return copy
+  }
+
+  private static ElementRect cloneRect(ElementRect rect) {
+    if (rect == null) {
+      return null
+    }
+    ElementRect copy = new ElementRect()
+    copy.fill = rect.fill
+    copy.color = rect.color
+    copy.size = rect.size
+    copy.linetype = rect.linetype
+    return copy
+  }
+
   /**
    * Create a copy of this theme with modifications.
    */

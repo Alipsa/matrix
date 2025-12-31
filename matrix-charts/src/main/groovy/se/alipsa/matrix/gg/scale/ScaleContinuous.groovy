@@ -37,17 +37,14 @@ class ScaleContinuous extends Scale {
       max = limits[1] != null ? limits[1] as Number : max
     }
 
-    // Apply expansion (ggplot2 default is mult=0.05, add=0 for continuous scales)
-    // This ensures axis extends slightly beyond data range
-    Number mult = 0.05
-    Number add = 0
-    if (expand && expand.size() >= 2) {
-      mult = expand[0] != null ? expand[0] : 0.05
-      add = expand[1] != null ? expand[1] : 0
+    // Apply expansion only when configured (ggplot2 default is mult=0.05, add=0).
+    if (expand != null && expand.size() >= 2) {
+      Number mult = expand[0] != null ? expand[0] : 0.05
+      Number add = expand[1] != null ? expand[1] : 0
+      Number delta = max - min
+      min = min - delta * mult - add
+      max = max + delta * mult + add
     }
-    Number delta = max - min
-    min = min - delta * mult - add
-    max = max + delta * mult + add
 
     computedDomain = [min, max]
     trained = true
