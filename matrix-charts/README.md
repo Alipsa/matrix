@@ -42,5 +42,38 @@ Plot.svg(barChart, new File("barChart.svg"))
 javafx.scene.chart.Chart jfxPieChart = Plot.jfx(pieChart)
 ```
 
+# GGPlotting
+The library also supports ggplot2-style charting via the GgPlot class. The api is very similar to the R ggplot2 library and very few modifications are needed to port code from R to Groovy. Essentiallyy:
+1. Use a Matrix instead of a data.frame
+2. Quote column names and constants
+
+Example:
+```R
+library(ggplot2)
+
+chart <- ggplot(mpg, aes(cty, hwy)) +
+  geom_point() +
+  coord_fixed()
+
+ggsave("my_plot.svg", plot = chart)
+```
+The above R code can be translated to Groovy as:
+
+```groovy
+@Grab('se.alipsa.matrix:matrix-core:3.5.1')
+@Grab('se.alipsa.matrix:matrix-charts:0.4.0')
+@Grab('se.alipsa.matrix:matrix-datasets:2.1.2')
+@Grab('se.alipsa.matrix:matrix-stats:2.2.1')
+
+import static se.alipsa.matrix.gg.GgPlot.*
+import se.alipsa.matrix.datasets.Dataset
+
+def chart = ggplot(Dataset.mpg(), aes('cty', 'hwy')) +
+    geom_point() +
+    coord_fixed()
+
+write(chart.render(), new File('my_plot.svg'))
+```
+
 # Release version compatibility matrix
 See the [Matrix BOM](https://mvnrepository.com/artifact/se.alipsa.matrix/matrix-bom) for the recommended matrix library versions. 

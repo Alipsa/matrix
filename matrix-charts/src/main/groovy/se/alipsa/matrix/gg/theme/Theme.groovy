@@ -8,7 +8,7 @@ import groovy.transform.CompileStatic
  * Controls all visual styling aspects of the chart.
  */
 @CompileStatic
-class Theme {
+class Theme implements Cloneable {
 
   // ============ Plot-level elements ============
 
@@ -199,8 +199,13 @@ class ElementLine {
 
   ElementLine(Map params) {
     params.each { key, value ->
-      if (this.hasProperty(key as String)) {
-        this.setProperty(key as String, value)
+      String k = key as String
+      // Handle aliases
+      if (k == 'colour') k = 'color'
+      else if (k == 'linewidth') k = 'size'
+
+      if (this.hasProperty(k)) {
+        this.setProperty(k, value)
       }
     }
   }

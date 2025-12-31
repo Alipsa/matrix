@@ -65,69 +65,103 @@ class GgRenderer {
    * Render a single (non-faceted) chart.
    */
   private Svg renderSingle(GgChart chart) {
-    Svg svg = new Svg()
-    svg.width(chart.width)
-    svg.height(chart.height)
-    svg.viewBox("0 0 ${chart.width} ${chart.height}")
-
     Theme theme = chart.theme ?: defaultTheme()
 
-    // Calculate plot area dimensions
+    // Calculate initial plot area dimensions
     int plotX = MARGIN_LEFT
     int plotY = MARGIN_TOP
     int plotWidth = chart.width - MARGIN_LEFT - MARGIN_RIGHT
     int plotHeight = chart.height - MARGIN_TOP - MARGIN_BOTTOM
 
+    // Setup coordinate system
+    Coord coord = chart.coord ?: new CoordCartesian()
+
+    // For CoordFixed, calculate effective dimensions and resize the entire SVG
+    int effectiveWidth = plotWidth
+    int effectiveHeight = plotHeight
+    int svgWidth = chart.width
+    int svgHeight = chart.height
+
+    if (coord instanceof CoordFixed) {
+      Map<String, List> aestheticData = collectAestheticData(chart)
+      if (aestheticData.x && aestheticData.y) {
+        double[] adjusted = computeFixedAspectDimensionsWithExpansion(
+            aestheticData.x, aestheticData.y, plotWidth, plotHeight, coord as CoordFixed)
+        effectiveWidth = (int) adjusted[0]
+        effectiveHeight = (int) adjusted[1]
+
+        // Resize the entire SVG to fit the effective plot dimensions plus margins
+        svgWidth = effectiveWidth + MARGIN_LEFT + MARGIN_RIGHT
+        svgHeight = effectiveHeight + MARGIN_TOP + MARGIN_BOTTOM
+      }
+    }
+
+    // Compute scales early so we can estimate legend width
+    Map<String, Scale> computedScales = computeScales(chart, effectiveWidth, effectiveHeight, coord)
+
+    // Calculate legend width and adjust SVG if legend is on right side
+    String legendPos = theme.legendPosition ?: 'right'
+    if (legendPos == 'right' || (!(legendPos instanceof String))) {
+      int legendWidth = estimateLegendWidth(computedScales, theme)
+      if (legendWidth > MARGIN_RIGHT) {
+        // Legend needs more space than default margin provides
+        int extraWidth = legendWidth - MARGIN_RIGHT + 10  // 10px gap between plot and legend
+        svgWidth += extraWidth
+      }
+    }
+
+    // Create SVG with adjusted dimensions
+    Svg svg = new Svg()
+    svg.width(svgWidth)
+    svg.height(svgHeight)
+    svg.viewBox("0 0 ${svgWidth} ${svgHeight}")
+
     // 1. Draw background
-    renderBackground(svg, chart, theme)
+    renderBackground(svg, svgWidth, svgHeight, theme)
+
+    // Set coord dimensions
+    if (coord instanceof CoordCartesian) {
+      coord.plotWidth = effectiveWidth
+      coord.plotHeight = effectiveHeight
+    } else if (coord instanceof CoordFlip) {
+      coord.plotWidth = effectiveWidth
+      coord.plotHeight = effectiveHeight
+    } else if (coord instanceof CoordPolar) {
+      coord.plotWidth = effectiveWidth
+      coord.plotHeight = effectiveHeight
+    }
 
     // 2. Setup plot area group
     G plotArea = svg.addG()
     plotArea.id('plot-area')
     plotArea.transform("translate($plotX, $plotY)")
 
-    // Draw panel background
-    renderPanelBackground(plotArea, plotWidth, plotHeight, theme)
+    // Draw panel background (use effective dimensions for CoordFixed)
+    renderPanelBackground(plotArea, effectiveWidth, effectiveHeight, theme)
 
-    // 3. Setup coordinate system (needed before computing scales for CoordFlip/CoordPolar)
-    Coord coord = chart.coord ?: new CoordCartesian()
-    if (coord instanceof CoordCartesian) {
-      coord.plotWidth = plotWidth
-      coord.plotHeight = plotHeight
-    } else if (coord instanceof CoordFlip) {
-      coord.plotWidth = plotWidth
-      coord.plotHeight = plotHeight
-    } else if (coord instanceof CoordPolar) {
-      coord.plotWidth = plotWidth
-      coord.plotHeight = plotHeight
-    }
+    // 6. Draw grid lines (before data, use effective dimensions)
+    renderGridLines(plotArea, computedScales, effectiveWidth, effectiveHeight, theme, coord)
 
-    // 4. Compute scales from data (pass coord for flip handling)
-    Map<String, Scale> computedScales = computeScales(chart, plotWidth, plotHeight, coord)
-
-    // 5. Draw grid lines (before data)
-    renderGridLines(plotArea, computedScales, plotWidth, plotHeight, theme, coord)
-
-    // 6. Create data layer group
+    // 7. Create data layer group with clip path matching effective dimensions
     G dataLayer = plotArea.addG()
     dataLayer.id('data-layer')
     Defs defs = svg.addDefs()
     def clipPath = defs.addClipPath().id('plot-clip')
-    clipPath.addRect(plotWidth, plotHeight).x(0).y(0)
+    clipPath.addRect(effectiveWidth, effectiveHeight).x(0).y(0)
     dataLayer.addAttribute('clip-path', 'url(#plot-clip)')
 
-    // 7. Render each layer
+    // 8. Render each layer
     chart.layers.each { layer ->
-      renderLayer(dataLayer, layer, chart, computedScales, coord, plotWidth, plotHeight)
+      renderLayer(dataLayer, layer, chart, computedScales, coord, effectiveWidth, effectiveHeight)
     }
 
-    // 8. Draw axes (on top of data)
-    renderAxes(plotArea, computedScales, plotWidth, plotHeight, theme, coord)
+    // 9. Draw axes (on top of data, use effective dimensions)
+    renderAxes(plotArea, computedScales, effectiveWidth, effectiveHeight, theme, coord)
 
-    // 9. Draw title and labels
-    renderLabels(svg, chart, plotWidth, plotHeight)
+    // 10. Draw title and labels
+    renderLabels(svg, chart, effectiveWidth, effectiveHeight, svgHeight)
 
-    // 10. Draw legend (if needed)
+    // 11. Draw legend (if needed)
     renderLegend(svg, computedScales, chart, theme)
 
     return svg
@@ -146,7 +180,7 @@ class GgRenderer {
     Facet facet = chart.facet
 
     // 1. Draw background
-    renderBackground(svg, chart, theme)
+    renderBackground(svg, chart.width, chart.height, theme)
 
     // 2. Calculate facet layout
     Map<String, Integer> layout = facet.computeLayout(chart.data)
@@ -160,14 +194,22 @@ class GgRenderer {
     }
 
     // 3. Calculate panel dimensions
-    int stripHeight = facet.strip ? 20 : 0
-    int totalPlotWidth = chart.width - MARGIN_LEFT - MARGIN_RIGHT
-    int totalPlotHeight = chart.height - MARGIN_TOP - MARGIN_BOTTOM
+    // For FacetGrid: column strips at top, row strips at right
+    // For FacetWrap: strip at top of each panel
+    boolean isFacetGrid = facet instanceof FacetGrid
+    FacetGrid fg = isFacetGrid ? (FacetGrid) facet : null
+
+    int colStripHeight = (facet.strip && isFacetGrid && fg.cols) ? 20 : 0
+    int rowStripWidth = (facet.strip && isFacetGrid && fg.rows) ? 20 : 0
+    int perPanelStripHeight = (facet.strip && !isFacetGrid) ? 20 : 0
+
+    int totalPlotWidth = chart.width - MARGIN_LEFT - MARGIN_RIGHT - rowStripWidth
+    int totalPlotHeight = chart.height - MARGIN_TOP - MARGIN_BOTTOM - colStripHeight
 
     // Account for spacing between panels
     int panelSpacing = facet.panelSpacing
     int availableWidth = totalPlotWidth - (ncol - 1) * panelSpacing
-    int availableHeight = totalPlotHeight - (nrow - 1) * panelSpacing - nrow * stripHeight
+    int availableHeight = totalPlotHeight - (nrow - 1) * panelSpacing - nrow * perPanelStripHeight
 
     int panelWidth = (availableWidth / ncol) as int
     int panelHeight = (availableHeight / nrow) as int
@@ -192,8 +234,7 @@ class GgRenderer {
         Map<String, Integer> pos = fw.getPanelPosition(panelIdx, layout)
         row = pos.row
         col = pos.col
-      } else if (facet instanceof FacetGrid) {
-        FacetGrid fg = facet as FacetGrid
+      } else if (isFacetGrid) {
         row = fg.getRowIndex(panelValues, chart.data)
         col = fg.getColIndex(panelValues, chart.data)
       } else {
@@ -202,8 +243,9 @@ class GgRenderer {
       }
 
       // Calculate panel position in pixels
+      // For FacetGrid: panels start below column strips
       int panelX = MARGIN_LEFT + col * (panelWidth + panelSpacing)
-      int panelY = MARGIN_TOP + row * (panelHeight + stripHeight + panelSpacing)
+      int panelY = MARGIN_TOP + colStripHeight + row * (panelHeight + perPanelStripHeight + panelSpacing)
 
       // Filter data for this panel
       Matrix panelData = facet.filterDataForPanel(chart.data, panelValues)
@@ -213,14 +255,14 @@ class GgRenderer {
       panelGroup.id("panel-${row}-${col}")
       panelGroup.transform("translate($panelX, $panelY)")
 
-      // Render strip label (if enabled)
-      if (facet.strip) {
-        renderFacetStrip(panelGroup, facet.getPanelLabel(panelValues), panelWidth, stripHeight, theme)
+      // Render strip label (if enabled and FacetWrap only - FacetGrid has separate strips)
+      if (facet.strip && !isFacetGrid) {
+        renderFacetStrip(panelGroup, facet.getPanelLabel(panelValues), panelWidth, perPanelStripHeight, theme)
       }
 
-      // Create panel content group (below strip)
+      // Create panel content group (below strip for FacetWrap)
       G contentGroup = panelGroup.addG()
-      contentGroup.transform("translate(0, $stripHeight)")
+      contentGroup.transform("translate(0, $perPanelStripHeight)")
 
       // Draw panel background
       renderPanelBackground(contentGroup, panelWidth, panelHeight, theme)
@@ -272,8 +314,35 @@ class GgRenderer {
       renderFacetAxes(contentGroup, panelScales, panelWidth, panelHeight, theme, coord, showXLabels, showYLabels)
     }
 
-    // 8. Draw title and labels
-    renderLabels(svg, chart, totalPlotWidth, totalPlotHeight)
+    // 8. Render FacetGrid strips (column strips at top, row strips at right)
+    if (isFacetGrid && facet.strip) {
+      // Column strips at top
+      if (fg.cols && colStripHeight > 0) {
+        for (int c = 0; c < ncol; c++) {
+          int stripX = MARGIN_LEFT + c * (panelWidth + panelSpacing)
+          int stripY = MARGIN_TOP
+          G colStripGroup = svg.addG()
+          colStripGroup.id("col-strip-${c}")
+          colStripGroup.transform("translate($stripX, $stripY)")
+          renderFacetStrip(colStripGroup, fg.getColLabel(c, chart.data), panelWidth, colStripHeight, theme)
+        }
+      }
+
+      // Row strips at right (rotated 90 degrees)
+      if (fg.rows && rowStripWidth > 0) {
+        for (int r = 0; r < nrow; r++) {
+          int stripX = MARGIN_LEFT + totalPlotWidth
+          int stripY = MARGIN_TOP + colStripHeight + r * (panelHeight + panelSpacing)
+          G rowStripGroup = svg.addG()
+          rowStripGroup.id("row-strip-${r}")
+          rowStripGroup.transform("translate($stripX, $stripY)")
+          renderFacetStripRotated(rowStripGroup, fg.getRowLabel(r, chart.data), rowStripWidth, panelHeight, theme)
+        }
+      }
+    }
+
+    // 9. Draw title and labels
+    renderLabels(svg, chart, totalPlotWidth, totalPlotHeight, chart.height)
 
     // 9. Draw legend (if needed)
     renderLegend(svg, globalScales, chart, theme)
@@ -282,13 +351,15 @@ class GgRenderer {
   }
 
   /**
-   * Render a facet strip label.
+   * Render a facet strip label (horizontal, for column strips at top).
    */
   private void renderFacetStrip(G group, String label, int width, int height, Theme theme) {
-    // Draw strip background
+    // Draw strip background (use fill from theme if set, otherwise default to gray)
+    String stripFill = theme.stripBackground?.fill != null ? theme.stripBackground.fill : '#D9D9D9'
+    String stripStroke = theme.stripBackground?.color != null ? theme.stripBackground.color : 'none'
     group.addRect(width, height)
-        .fill(theme.stripBackground?.fill ?: '#E0E0E0')
-        .stroke(theme.stripBackground?.color ?: 'none')
+        .fill(stripFill)
+        .stroke(stripStroke)
 
     // Draw strip text
     group.addText(label)
@@ -297,6 +368,29 @@ class GgRenderer {
         .textAnchor('middle')
         .fontSize(theme.stripText?.size ?: 10)
         .fill(theme.stripText?.color ?: 'black')
+  }
+
+  /**
+   * Render a facet strip label rotated 90 degrees (for row strips on the right).
+   */
+  private void renderFacetStripRotated(G group, String label, int width, int height, Theme theme) {
+    // Draw strip background (use fill from theme if set, otherwise default to gray)
+    String stripFill = theme.stripBackground?.fill != null ? theme.stripBackground.fill : '#D9D9D9'
+    String stripStroke = theme.stripBackground?.color != null ? theme.stripBackground.color : 'none'
+    group.addRect(width, height)
+        .fill(stripFill)
+        .stroke(stripStroke)
+
+    // Draw strip text rotated 90 degrees
+    int centerX = width / 2 as int
+    int centerY = height / 2 as int
+    group.addText(label)
+        .x(centerX)
+        .y(centerY + 4)
+        .textAnchor('middle')
+        .fontSize(theme.stripText?.size ?: 10)
+        .fill(theme.stripText?.color ?: 'black')
+        .transform("rotate(90, $centerX, $centerY)")
   }
 
   /**
@@ -452,7 +546,13 @@ class GgRenderer {
   private void renderLayerWithData(G dataLayer, Layer layer, Matrix data, Aes globalAes,
                                    Map<String, Scale> scales, Coord coord,
                                    int plotWidth, int plotHeight) {
-    Aes aes = layer.aes ?: globalAes
+    // Merge layer aes with global aes when inheritAes is true (the default)
+    Aes aes
+    if (layer.inheritAes && layer.aes != null) {
+      aes = layer.aes.merge(globalAes)
+    } else {
+      aes = layer.aes ?: globalAes
+    }
 
     if (data == null || data.rowCount() == 0 || aes == null) return
 
@@ -475,9 +575,9 @@ class GgRenderer {
   /**
    * Render background elements.
    */
-  private void renderBackground(Svg svg, GgChart chart, Theme theme) {
+  private void renderBackground(Svg svg, int width, int height, Theme theme) {
     if (theme.plotBackground) {
-      svg.addRect(chart.width, chart.height)
+      svg.addRect(width, height)
          .fill(theme.plotBackground.fill ?: 'white')
     }
   }
@@ -505,25 +605,15 @@ class GgRenderer {
     // Determine if axes are flipped
     boolean isFlipped = coord instanceof CoordFlip
 
-    // Calculate effective plot dimensions (may be adjusted for CoordFixed)
-    int effectiveWidth = plotWidth
-    int effectiveHeight = plotHeight
-
-    // For CoordFixed, adjust dimensions to enforce aspect ratio
-    if (coord instanceof CoordFixed && aestheticData.x && aestheticData.y) {
-      CoordFixed coordFixed = (CoordFixed) coord
-      double[] adjusted = computeFixedAspectDimensions(
-          aestheticData.x, aestheticData.y, plotWidth, plotHeight, coordFixed)
-      effectiveWidth = (int) adjusted[0]
-      effectiveHeight = (int) adjusted[1]
-    }
+    // Note: For CoordFixed, dimensions are already adjusted by renderSingle before calling this method
+    // So plotWidth and plotHeight are the effective dimensions
 
     // For CoordFlip: x data maps to vertical axis, y data maps to horizontal axis
     // Normal: x -> [0, plotWidth], y -> [plotHeight, 0] (inverted for SVG)
     // Flipped: x -> [plotHeight, 0], y -> [0, plotWidth]
 
-    List<Number> xRange = isFlipped ? [effectiveHeight, 0] as List<Number> : [0, effectiveWidth] as List<Number>
-    List<Number> yRange = isFlipped ? [0, effectiveWidth] as List<Number> : [effectiveHeight, 0] as List<Number>
+    List<Number> xRange = isFlipped ? [plotHeight, 0] as List<Number> : [0, plotWidth] as List<Number>
+    List<Number> yRange = isFlipped ? [0, plotWidth] as List<Number> : [plotHeight, 0] as List<Number>
 
     // Create x scale (auto-detect discrete vs continuous)
     if (aestheticData.x) {
@@ -553,6 +643,10 @@ class GgRenderer {
     if (aestheticData.color) {
       Scale colorScale = createAutoScale('color', aestheticData.color)
       colorScale.train(aestheticData.color)
+      // Set name from aesthetic mapping for legend title
+      if (chart.globalAes?.color && !chart.globalAes.isConstant('color')) {
+        colorScale.name = chart.globalAes.colorColName
+      }
       scales['color'] = colorScale
     }
 
@@ -560,6 +654,10 @@ class GgRenderer {
     if (aestheticData.fill) {
       Scale fillScale = createAutoScale('fill', aestheticData.fill)
       fillScale.train(aestheticData.fill)
+      // Set name from aesthetic mapping for legend title
+      if (chart.globalAes?.fill && !chart.globalAes.isConstant('fill')) {
+        fillScale.name = chart.globalAes.fillColName
+      }
       scales['fill'] = fillScale
     }
 
@@ -569,6 +667,29 @@ class GgRenderer {
         // Train user scale if not already trained
         if (!scale.isTrained() && aestheticData[scale.aesthetic]) {
           scale.train(aestheticData[scale.aesthetic])
+        }
+        // Set name from aesthetic mapping for legend title (if not already set by user)
+        if (!scale.name) {
+          String aes = scale.aesthetic == 'colour' ? 'color' : scale.aesthetic
+          // First check globalAes
+          if (aes == 'color' && chart.globalAes?.color && !chart.globalAes.isConstant('color')) {
+            scale.name = chart.globalAes.colorColName
+          } else if (aes == 'fill' && chart.globalAes?.fill && !chart.globalAes.isConstant('fill')) {
+            scale.name = chart.globalAes.fillColName
+          } else {
+            // Check layer aesthetics for color/fill mappings
+            for (layer in chart.layers) {
+              if (layer.aes != null) {
+                if (aes == 'color' && layer.aes.color && !layer.aes.isConstant('color')) {
+                  scale.name = layer.aes.colorColName
+                  break
+                } else if (aes == 'fill' && layer.aes.fill && !layer.aes.isConstant('fill')) {
+                  scale.name = layer.aes.fillColName
+                  break
+                }
+              }
+            }
+          }
         }
         // Set range for position scales (respecting CoordFlip)
         if (scale.aesthetic == 'x' && scale instanceof ScaleContinuous) {
@@ -628,6 +749,88 @@ class GgRenderer {
       yMin = yNums.min() as double
       yMax = yNums.max() as double
     }
+
+    double xDataRange = xMax - xMin
+    double yDataRange = yMax - yMin
+
+    // Avoid division by zero
+    if (xDataRange <= 0) xDataRange = 1
+    if (yDataRange <= 0) yDataRange = 1
+
+    // Current pixels per data unit
+    double pxPerUnitX = plotWidth / xDataRange
+    double pxPerUnitY = plotHeight / yDataRange
+
+    // Desired: pxPerUnitY / pxPerUnitX = ratio
+    // So: pxPerUnitY = ratio * pxPerUnitX
+    // We need to adjust either width or height to achieve this
+
+    double currentRatio = pxPerUnitY / pxPerUnitX
+    double effectiveWidth = plotWidth as double
+    double effectiveHeight = plotHeight as double
+
+    if (currentRatio > ratio) {
+      // Height is too large relative to width, reduce effective height
+      effectiveHeight = (ratio * pxPerUnitX) * yDataRange
+    } else if (currentRatio < ratio) {
+      // Width is too large relative to height, reduce effective width
+      effectiveWidth = (pxPerUnitY / ratio) * xDataRange
+    }
+
+    return [effectiveWidth, effectiveHeight] as double[]
+  }
+
+  /**
+   * Compute adjusted dimensions to enforce a fixed aspect ratio, accounting for scale expansion.
+   * This version applies the same 5% expansion that ScaleContinuous uses, ensuring the
+   * plot area matches the actual scale domain.
+   *
+   * @param xData List of x values
+   * @param yData List of y values
+   * @param plotWidth Available plot width in pixels
+   * @param plotHeight Available plot height in pixels
+   * @param coord CoordFixed with ratio and optional xlim/ylim
+   * @return double[] with [effectiveWidth, effectiveHeight]
+   */
+  private double[] computeFixedAspectDimensionsWithExpansion(List xData, List yData, int plotWidth, int plotHeight, CoordFixed coord) {
+    double ratio = coord.ratio
+
+    // Get numeric values only
+    List<Number> xNums = xData.findAll { it instanceof Number } as List<Number>
+    List<Number> yNums = yData.findAll { it instanceof Number } as List<Number>
+
+    if (xNums.isEmpty() || yNums.isEmpty()) {
+      return [plotWidth, plotHeight] as double[]
+    }
+
+    // Compute data ranges - use xlim/ylim if specified, otherwise use data min/max
+    double xMin, xMax, yMin, yMax
+
+    if (coord.xlim != null && coord.xlim.size() >= 2) {
+      xMin = coord.xlim[0] as double
+      xMax = coord.xlim[1] as double
+    } else {
+      xMin = xNums.min() as double
+      xMax = xNums.max() as double
+    }
+
+    if (coord.ylim != null && coord.ylim.size() >= 2) {
+      yMin = coord.ylim[0] as double
+      yMax = coord.ylim[1] as double
+    } else {
+      yMin = yNums.min() as double
+      yMax = yNums.max() as double
+    }
+
+    // Apply 5% expansion (same as ScaleContinuous default)
+    double xDelta = xMax - xMin
+    double yDelta = yMax - yMin
+    double expansion = 0.05
+
+    xMin = xMin - xDelta * expansion
+    xMax = xMax + xDelta * expansion
+    yMin = yMin - yDelta * expansion
+    yMax = yMax + yDelta * expansion
 
     double xDataRange = xMax - xMin
     double yDataRange = yMax - yMin
@@ -725,7 +928,13 @@ class GgRenderer {
     // Collect from each layer (including stat-transformed data)
     chart.layers.each { layer ->
       Matrix layerData = layer.data ?: chart.data
-      Aes layerAes = layer.aes ?: globalAes
+      // Merge layer aes with global aes when inheritAes is true (the default)
+      Aes layerAes
+      if (layer.inheritAes && layer.aes != null) {
+        layerAes = layer.aes.merge(globalAes)
+      } else {
+        layerAes = layer.aes ?: globalAes
+      }
 
       // Check if this is a bar/column geom that needs y-axis to include 0
       if (layer.geom?.class?.simpleName in ['GeomBar', 'GeomCol', 'GeomHistogram']) {
@@ -877,7 +1086,13 @@ class GgRenderer {
                            int plotWidth, int plotHeight) {
     // Get the data for this layer
     Matrix data = layer.data ?: chart.data
-    Aes aes = layer.aes ?: chart.globalAes
+    // Merge layer aes with global aes when inheritAes is true (the default)
+    Aes aes
+    if (layer.inheritAes && layer.aes != null) {
+      aes = layer.aes.merge(chart.globalAes)
+    } else {
+      aes = layer.aes ?: chart.globalAes
+    }
 
     if (data == null || aes == null) return
 
@@ -1034,13 +1249,13 @@ class GgRenderer {
 
   /**
    * Render title and labels.
+   * Labels default to the aesthetic column names if not explicitly set.
    */
-  private void renderLabels(Svg svg, GgChart chart, int plotWidth, int plotHeight) {
-    if (chart.labels == null) return
-
+  private void renderLabels(Svg svg, GgChart chart, int plotWidth, int plotHeight, int svgHeight) {
     // Title
-    if (chart.labels.title) {
-      svg.addText(chart.labels.title)
+    String title = chart.labels?.title
+    if (title) {
+      svg.addText(title)
          .x(MARGIN_LEFT + plotWidth / 2)
          .y(30)
          .textAnchor('middle')
@@ -1049,26 +1264,29 @@ class GgRenderer {
     }
 
     // Subtitle
-    if (chart.labels.subTitle) {
-      svg.addText(chart.labels.subTitle)
+    String subTitle = chart.labels?.subTitle
+    if (subTitle) {
+      svg.addText(subTitle)
          .x(MARGIN_LEFT + plotWidth / 2)
          .y(50)
          .textAnchor('middle')
          .fontSize(12)
     }
 
-    // X axis label
-    if (chart.labels.x) {
-      svg.addText(chart.labels.x)
+    // X axis label - default to aesthetic x column name
+    String xLabel = chart.labels?.x ?: chart.globalAes?.x
+    if (xLabel) {
+      svg.addText(xLabel)
          .x(MARGIN_LEFT + plotWidth / 2)
-         .y(chart.height - 15)
+         .y(svgHeight - 15)
          .textAnchor('middle')
          .fontSize(12)
     }
 
-    // Y axis label
-    if (chart.labels.y) {
-      svg.addText(chart.labels.y)
+    // Y axis label - default to aesthetic y column name
+    String yLabel = chart.labels?.y ?: chart.globalAes?.y
+    if (yLabel) {
+      svg.addText(yLabel)
          .x(20)
          .y(MARGIN_TOP + plotHeight / 2)
          .textAnchor('middle')
@@ -1151,22 +1369,28 @@ class GgRenderer {
 
     // Render title if present
     if (legendTitle) {
+      int titleFontSize = (theme.legendTitle?.size ?: 11) as int
       def titleText = legendGroup.addText(legendTitle)
           .x(0)
-          .y(currentY)
+          .y(titleFontSize)  // Position baseline at font size so text is visible
           .addAttribute('font-weight', 'bold')
-          .fontSize(theme.legendTitle?.size ?: 11)
+          .fontSize(titleFontSize)
       if (theme.legendTitle?.color) {
         titleText.fill(theme.legendTitle.color)
       }
-      currentY += 18
+      currentY = titleFontSize + 7  // Space below title before legend items
+    }
+
+    // Determine if primary geom uses points (for legend key shape)
+    boolean usesPoints = chart.layers.any { layer ->
+      layer.geom instanceof se.alipsa.matrix.gg.geom.GeomPoint
     }
 
     // Render each legend scale
     legendScales.each { aesthetic, scale ->
       if (scale instanceof ScaleDiscrete) {
         currentY = renderDiscreteLegend(legendGroup, scale as ScaleDiscrete, aesthetic,
-            currentX, currentY, isVertical, theme)
+            currentX, currentY, isVertical, theme, usesPoints)
       } else if (scale instanceof ScaleContinuous) {
         currentY = renderContinuousLegend(legendGroup, scale as ScaleContinuous, aesthetic,
             currentX, currentY, isVertical, theme)
@@ -1176,9 +1400,11 @@ class GgRenderer {
 
   /**
    * Render legend for a discrete scale (color categories).
+   * @param usesPoints If true, draw circles instead of rectangles for color/fill keys
    */
   private int renderDiscreteLegend(G group, ScaleDiscrete scale, String aesthetic,
-                                   int startX, int startY, boolean vertical, Theme theme) {
+                                   int startX, int startY, boolean vertical, Theme theme,
+                                   boolean usesPoints = false) {
     List<Number> keySize = theme.legendKeySize ?: [15, 15] as List<Number>
     int keyWidth = keySize[0].intValue()
     int keyHeight = keySize[1].intValue()
@@ -1196,14 +1422,28 @@ class GgRenderer {
       String color = scale.transform(level)?.toString() ?: '#999999'
       String label = idx < labels.size() ? labels[idx] : level?.toString() ?: ''
 
-      // Draw key (colored rectangle or circle)
+      // Draw key (circle for points, rectangle otherwise)
       if (aesthetic == 'color' || aesthetic == 'colour' || aesthetic == 'fill') {
-        def rect = group.addRect(keyWidth, keyHeight)
-            .x(x)
-            .y(y)
-            .fill(color)
-        if (theme.legendKey?.color) {
-          rect.stroke(theme.legendKey.color)
+        if (usesPoints) {
+          // Draw circle for point geoms
+          int radius = Math.min(keyWidth, keyHeight) / 2 as int
+          def circle = group.addCircle()
+              .cx(x + keyWidth / 2 as int)
+              .cy(y + keyHeight / 2 as int)
+              .r(radius - 1)  // Slightly smaller to fit in key area
+              .fill(color)
+          if (theme.legendKey?.color) {
+            circle.stroke(theme.legendKey.color)
+          }
+        } else {
+          // Draw rectangle for bar/area geoms
+          def rect = group.addRect(keyWidth, keyHeight)
+              .x(x)
+              .y(y)
+              .fill(color)
+          if (theme.legendKey?.color) {
+            rect.stroke(theme.legendKey.color)
+          }
         }
       }
 
@@ -1230,9 +1470,9 @@ class GgRenderer {
    */
   private int renderContinuousLegend(G group, ScaleContinuous scale, String aesthetic,
                                      int startX, int startY, boolean vertical, Theme theme) {
-    // For continuous scales, render a gradient color bar
-    int barWidth = vertical ? 15 : 100
-    int barHeight = vertical ? 80 : 15
+    // For continuous scales, render a gradient color bar (25% larger than original)
+    int barWidth = vertical ? 19 : 125
+    int barHeight = vertical ? 100 : 19
     int spacing = 5
 
     int x = startX
@@ -1319,6 +1559,45 @@ class GgRenderer {
 
       return y + barHeight + 20
     }
+  }
+
+  /**
+   * Estimate the width needed for the legend based on scales and theme.
+   * Returns 0 if no legend is needed.
+   */
+  private int estimateLegendWidth(Map<String, Scale> scales, Theme theme) {
+    if (theme.legendPosition == 'none') return 0
+
+    // Find scales that need legends
+    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape']
+    Map<String, Scale> legendScales = scales.findAll { k, v ->
+      legendAesthetics.contains(k) && v.isTrained()
+    }
+
+    if (legendScales.isEmpty()) return 0
+
+    // Calculate width based on longest label
+    List<Number> keySize = theme.legendKeySize ?: [15, 15] as List<Number>
+    int keyWidth = keySize[0].intValue()
+    int textOffset = keyWidth + 8
+    int fontSize = (theme.legendText?.size ?: 10) as int
+
+    // Estimate text width: ~0.6 * fontSize per character for typical fonts
+    double charWidth = fontSize * 0.6
+    int maxLabelWidth = 0
+
+    legendScales.each { aesthetic, scale ->
+      List<String> labels = scale.computedLabels ?: []
+      labels.each { label ->
+        int labelWidth = (int) (label.length() * charWidth)
+        if (labelWidth > maxLabelWidth) {
+          maxLabelWidth = labelWidth
+        }
+      }
+    }
+
+    // Total legend width: textOffset + maxLabelWidth + some padding
+    return textOffset + maxLabelWidth + 15
   }
 
   /**

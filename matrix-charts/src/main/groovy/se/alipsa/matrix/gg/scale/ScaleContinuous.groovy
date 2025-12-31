@@ -15,8 +15,8 @@ class ScaleContinuous extends Scale {
   /** Domain computed from data [min, max] */
   protected List<Number> computedDomain = [0, 1] as List<Number>
 
-  /** Number of breaks to generate */
-  int nBreaks = 5
+  /** Number of breaks to generate (ggplot2 typically uses 5-7) */
+  int nBreaks = 7
 
   @Override
   void train(List data) {
@@ -37,14 +37,17 @@ class ScaleContinuous extends Scale {
       max = limits[1] != null ? limits[1] as Number : max
     }
 
-    // Apply expansion
+    // Apply expansion (ggplot2 default is mult=0.05, add=0 for continuous scales)
+    // This ensures axis extends slightly beyond data range
+    Number mult = 0.05
+    Number add = 0
     if (expand && expand.size() >= 2) {
-      Number mult = expand[0] != null ? expand[0] : 0.05
-      Number add = expand[1] != null ? expand[1] : 0
-      Number delta = max - min
-      min = min - delta * mult - add
-      max = max + delta * mult + add
+      mult = expand[0] != null ? expand[0] : 0.05
+      add = expand[1] != null ? expand[1] : 0
     }
+    Number delta = max - min
+    min = min - delta * mult - add
+    max = max + delta * mult + add
 
     computedDomain = [min, max]
     trained = true
@@ -107,16 +110,24 @@ class ScaleContinuous extends Scale {
 
   /**
    * Generate nice round breaks for axis ticks.
+   * Based on Wilkinson's algorithm for nice axis labels.
    */
   private List<Number> generateNiceBreaks(double min, double max, int n) {
-    double range = niceNum(max - min, false)
-    double spacing = niceNum(range / (n - 1) as double, true)
+    if (max == min) return [min] as List<Number>
+
+    // Calculate nice spacing directly from the data range
+    double rawRange = max - min
+    double spacing = niceNum(rawRange / (n - 1) as double, true)
+
+    // Calculate nice min/max that are multiples of spacing
     double niceMin = Math.floor(min / spacing as double) * spacing
     double niceMax = Math.ceil(max / spacing as double) * spacing
 
     List<Number> breaks = []
+    // Generate breaks from niceMin to niceMax
     for (double val = niceMin; val <= niceMax + spacing * 0.5; val += spacing) {
-      if (val >= min - spacing * 0.001 && val <= max + spacing * 0.001) {
+      // Include all breaks within the expanded domain (with small tolerance)
+      if (val >= min - spacing * 0.5 && val <= max + spacing * 0.5) {
         breaks << val
       }
     }

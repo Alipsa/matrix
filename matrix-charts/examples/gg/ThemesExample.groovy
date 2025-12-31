@@ -1,3 +1,18 @@
+/*
+The equivalent R code is :
+library(ggplot2)
+
+p <- ggplot(mpg, aes(cty, hwy, colour = class)) +
+  geom_point() +
+  theme_minimal() +
+  theme(
+    legend.position = "top",
+    axis.line = element_line(linewidth = 0.75),
+    axis.line.x.bottom = element_line(colour = "blue")
+  )
+
+ggsave("themes.svg", plot = p)
+ */
 @Grab('se.alipsa.matrix:matrix-core:3.5.1-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-charts:0.4.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2-SNAPSHOT')
