@@ -299,7 +299,35 @@ class ScaleIntegrationTest {
 
   @Test
   void testViridisScaleWithDifferentPalettes() {
-    // Test different viridis palette options
+    // Test different viridis palette options and verify they produce different colors
+    def species = iris.column('Species').toList()
+
+    // Create scales with different palettes
+    def scaleMagma = scale_color_viridis_d(option: 'magma')
+    def scaleePlasma = scale_color_viridis_d(option: 'plasma')
+    def scaleCividis = scale_colour_viridis_d(option: 'cividis')
+
+    // Train scales with the same data
+    scaleMagma.train(species)
+    scaleePlasma.train(species)
+    scaleCividis.train(species)
+
+    // Get the computed colors for each palette
+    List<String> magmaColors = scaleMagma.getColors()
+    List<String> plasmaColors = scaleePlasma.getColors()
+    List<String> cividisColors = scaleCividis.getColors()
+
+    // All palettes should generate the same number of colors (3 species in iris)
+    assertEquals(3, magmaColors.size())
+    assertEquals(3, plasmaColors.size())
+    assertEquals(3, cividisColors.size())
+
+    // Different palettes should produce different color sets
+    assertNotEquals(magmaColors, plasmaColors, "Magma and plasma should produce different colors")
+    assertNotEquals(plasmaColors, cividisColors, "Plasma and cividis should produce different colors")
+    assertNotEquals(magmaColors, cividisColors, "Magma and cividis should produce different colors")
+
+    // Verify that rendering still works with these palettes
     def chart1 = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
         geom_point() +
         scale_color_viridis_d(option: 'magma')
