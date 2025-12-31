@@ -93,10 +93,25 @@ class ScaleColorViridis extends ScaleDiscrete {
     return a
   }
 
+  /**
+   * Validate and normalize begin/end parameters to [0, 1] range.
+   * Throws IllegalArgumentException if the value is outside the valid range.
+   */
+  private double validateRange(double value, String paramName) {
+    if (value < 0.0d || value > 1.0d) {
+      throw new IllegalArgumentException("${paramName} must be in range [0, 1], got: ${value}")
+    }
+    return value
+  }
+
   private void applyParams(Map params) {
     if (params.option) this.option = normalizeOption(params.option as String)
-    if (params.begin != null) this.begin = params.begin as double
-    if (params.end != null) this.end = params.end as double
+    if (params.begin != null) this.begin = validateRange(params.begin as double, 'begin')
+    if (params.end != null) this.end = validateRange(params.end as double, 'end')
+    // Validate that begin <= end after both are set
+    if (this.begin > this.end) {
+      throw new IllegalArgumentException("begin (${this.begin}) must be less than or equal to end (${this.end})")
+    }
     if (params.direction != null) this.direction = params.direction as int
     if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as double)
     if (params.name) this.name = params.name as String
