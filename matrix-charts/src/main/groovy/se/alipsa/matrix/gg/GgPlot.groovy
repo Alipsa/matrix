@@ -24,6 +24,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.CoordCartesian
+import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.facet.FacetGrid
@@ -285,6 +286,44 @@ class GgPlot {
 
   static CoordPolar coord_polar(Map params) {
     return new CoordPolar(params)
+  }
+
+  /**
+   * Default Cartesian coordinate system with optional zooming.
+   * Unlike scale limits which discard data outside the range,
+   * coord_cartesian zooms to the specified range while keeping all data
+   * for statistical calculations.
+   *
+   * @param params Map with optional 'xlim' and/or 'ylim' (List of [min, max])
+   */
+  static CoordCartesian coord_cartesian(Map params = [:]) {
+    return new CoordCartesian(params)
+  }
+
+  /**
+   * Fixed aspect ratio coordinate system.
+   * Ensures equal scaling on both axes (1 unit on x = 1 unit on y in physical length).
+   */
+  static CoordFixed coord_fixed() {
+    return new CoordFixed()
+  }
+
+  /**
+   * Fixed aspect ratio coordinate system with specified ratio.
+   *
+   * @param ratio Aspect ratio: y units per x unit (1.0 = equal scaling)
+   */
+  static CoordFixed coord_fixed(double ratio) {
+    return new CoordFixed(ratio)
+  }
+
+  /**
+   * Fixed aspect ratio coordinate system with parameters.
+   *
+   * @param params Map with optional 'ratio', 'xlim', 'ylim'
+   */
+  static CoordFixed coord_fixed(Map params) {
+    return new CoordFixed(params)
   }
 
   static GeomAbline geom_abline() {

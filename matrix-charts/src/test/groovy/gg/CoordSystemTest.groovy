@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.gg.coord.CoordCartesian
+import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
 
@@ -435,5 +438,179 @@ class CoordSystemTest {
     // Test max radius
     double maxRadius = coord.getMaxRadius()
     assertEquals(180, maxRadius, 0.1)  // min(400,400)/2 * 0.9 = 180
+  }
+
+  // ==================== CoordCartesian Tests ====================
+
+  @Test
+  void testCoordCartesianDefaults() {
+    CoordCartesian coord = new CoordCartesian()
+
+    assertTrue(coord.expand)
+    assertEquals(0.05, coord.expandMult)
+    assertNull(coord.xlim)
+    assertNull(coord.ylim)
+  }
+
+  @Test
+  void testCoordCartesianWithParams() {
+    CoordCartesian coord = new CoordCartesian(
+        xlim: [10, 30],
+        ylim: [0, 100],
+        expand: false
+    )
+
+    assertEquals([10, 30], coord.xlim)
+    assertEquals([0, 100], coord.ylim)
+    assertFalse(coord.expand)
+  }
+
+  @Test
+  void testCoordCartesianFactoryMethod() {
+    def coord = coord_cartesian()
+    assertNotNull(coord)
+    assertTrue(coord instanceof CoordCartesian)
+
+    def coordWithZoom = coord_cartesian(xlim: [10, 30])
+    assertEquals([10, 30], coordWithZoom.xlim)
+  }
+
+  @Test
+  void testCoordCartesianZoom() {
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+        geom_point() +
+        coord_cartesian(xlim: [4, 6]) +
+        labs(title: 'Zoomed Scatter Plot')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_cartesian_zoom.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  // ==================== CoordFixed Tests ====================
+
+  @Test
+  void testCoordFixedDefaults() {
+    CoordFixed coord = new CoordFixed()
+
+    assertEquals(1.0, coord.ratio)
+    assertTrue(coord.expand)
+    assertNull(coord.xlim)
+    assertNull(coord.ylim)
+  }
+
+  @Test
+  void testCoordFixedWithRatio() {
+    CoordFixed coord = new CoordFixed(0.5)
+    assertEquals(0.5, coord.ratio)
+
+    CoordFixed coord2 = new CoordFixed(ratio: 2.0)
+    assertEquals(2.0, coord2.ratio)
+  }
+
+  @Test
+  void testCoordFixedWithParams() {
+    CoordFixed coord = new CoordFixed(
+        ratio: 1.5,
+        xlim: [0, 10],
+        ylim: [0, 50]
+    )
+
+    assertEquals(1.5, coord.ratio)
+    assertEquals([0, 10], coord.xlim)
+    assertEquals([0, 50], coord.ylim)
+  }
+
+  @Test
+  void testCoordFixedFactoryMethods() {
+    def fixed1 = coord_fixed()
+    assertNotNull(fixed1)
+    assertTrue(fixed1 instanceof CoordFixed)
+    assertEquals(1.0, fixed1.ratio)
+
+    def fixed2 = coord_fixed(0.5)
+    assertEquals(0.5, fixed2.ratio)
+
+    def fixed3 = coord_fixed(ratio: 2.0)
+    assertEquals(2.0, fixed3.ratio)
+  }
+
+  @Test
+  void testCoordFixedScatterPlot() {
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes('cty', 'hwy')) +
+        geom_point() +
+        coord_fixed() +
+        labs(title: 'Fixed Aspect Ratio Scatter Plot')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+
+    File outputFile = new File('build/coord_fixed_scatter.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testCoordFixedWithHalfRatio() {
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes('cty', 'hwy')) +
+        geom_point() +
+        coord_fixed(ratio: 0.5) +
+        labs(title: 'Fixed Ratio 0.5')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_fixed_half.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testCoordFixedWithDoubleRatio() {
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes('cty', 'hwy')) +
+        geom_point() +
+        coord_fixed(2.0) +
+        labs(title: 'Fixed Ratio 2.0')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/coord_fixed_double.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testCoordFixedExactExample() {
+    // This is the exact example from coordinates.groovy
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes('cty', 'hwy')) +
+        geom_point() +
+        coord_fixed()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+
+    File outputFile = new File('build/coord_fixed_example.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
   }
 }
