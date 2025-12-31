@@ -661,7 +661,7 @@ class CoordSystemTest {
   @Test
   void testCoordFixedWithDifferentRanges() {
     // Create data with x range 0-100 and y range 0-50
-    // With ratio=1.0, x should use twice the pixel range of y
+    // With ratio=1.0, the y-axis must use twice as many pixels per unit as the x-axis to maintain a 1:1 aspect ratio
     def data = Matrix.builder()
         .columnNames('x', 'y')
         .rows([
