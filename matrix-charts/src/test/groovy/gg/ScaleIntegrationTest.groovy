@@ -305,7 +305,7 @@ class ScaleIntegrationTest {
     // Create scales with different palettes
     def scaleMagma = scale_color_viridis_d(option: 'magma')
     def scaleePlasma = scale_color_viridis_d(option: 'plasma')
-    def scaleCividis = scale_colour_viridis_d(option: 'cividis')
+    def scaleCividis = scale_color_viridis_d(option: 'cividis')
 
     // Train scales with the same data
     scaleMagma.train(species)
