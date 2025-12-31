@@ -304,17 +304,17 @@ class ScaleIntegrationTest {
 
     // Create scales with different palettes
     def scaleMagma = scale_color_viridis_d(option: 'magma')
-    def scaleePlasma = scale_color_viridis_d(option: 'plasma')
+    def scalePlasma = scale_color_viridis_d(option: 'plasma')
     def scaleCividis = scale_color_viridis_d(option: 'cividis')
 
     // Train scales with the same data
     scaleMagma.train(species)
-    scaleePlasma.train(species)
+    scalePlasma.train(species)
     scaleCividis.train(species)
 
     // Get the computed colors for each palette
     List<String> magmaColors = scaleMagma.getColors()
-    List<String> plasmaColors = scaleePlasma.getColors()
+    List<String> plasmaColors = scalePlasma.getColors()
     List<String> cividisColors = scaleCividis.getColors()
 
     // All palettes should generate the same number of colors (3 species in iris)
