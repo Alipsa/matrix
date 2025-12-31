@@ -510,8 +510,7 @@ class GgPlot {
    * @param formula Formula string with ~ separator
    */
   static FacetGrid facet_grid(String formula) {
-    Map<String, List<String>> parsed = FormulaParser.parse(formula)
-    return new FacetGrid(rows: parsed.rows, cols: parsed.cols)
+    return new FacetGrid(formula)
   }
 
   // ============ Scales ============
