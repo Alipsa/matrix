@@ -19,6 +19,33 @@ class GgPlotTest {
         def a = aes(x:"Sepal Length", y:"Petal Length", col:"Species")
         assertEquals('Aes(xCol=Sepal Length, yCol=Petal Length, colorCol=Species)', a.toString())
     }
+
+    @Test
+    void testAesPositionalWithNamedParams() {
+        // Test the new constructor: aes('x', 'y', colour: 'z')
+        def a = aes('cty', 'hwy', colour: 'class')
+        assertEquals('cty', a.x)
+        assertEquals('hwy', a.y)
+        assertEquals('class', a.color)
+
+        // Test that positional params override map params
+        def b = aes('hp', 'mpg', x: 'ignored', y: 'also_ignored', color: 'cyl')
+        assertEquals('hp', b.x)
+        assertEquals('mpg', b.y)
+        assertEquals('cyl', b.color)
+
+        // Test with multiple named parameters
+        def c = aes('Sepal Length', 'Petal Length', col: 'Species', size: 'Petal Width', alpha: 0.8)
+        assertEquals('Sepal Length', c.x)
+        assertEquals('Petal Length', c.y)
+        assertEquals('Species', c.color)
+        assertEquals('Petal Width', c.size)
+        assertEquals(0.8, c.alpha)
+
+        // Test integration with ggplot
+        def chart = ggplot(Dataset.mpg(), aes('cty', 'hwy', colour: 'class')) + geom_point()
+        assertNotNull(chart)
+    }
     @Test
     void testPoint(){
         ggplot(iris,
