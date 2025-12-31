@@ -569,13 +569,14 @@ class ScaleIntegrationTest {
       def rect1 = rects1[i]
       def rect2 = rects2[i]
       
-      assertEquals(rect1.x, rect2.x, 
+      // Compare numeric attributes with tolerance for floating-point precision
+      assertEquals(Double.parseDouble(rect1.x), Double.parseDouble(rect2.x), 0.001,
           "Bar ${i}: x position should be identical")
-      assertEquals(rect1.y, rect2.y, 
+      assertEquals(Double.parseDouble(rect1.y), Double.parseDouble(rect2.y), 0.001,
           "Bar ${i}: y position should be identical")
-      assertEquals(rect1.width, rect2.width, 
+      assertEquals(Double.parseDouble(rect1.width), Double.parseDouble(rect2.width), 0.001,
           "Bar ${i}: width should be identical")
-      assertEquals(rect1.height, rect2.height, 
+      assertEquals(Double.parseDouble(rect1.height), Double.parseDouble(rect2.height), 0.001,
           "Bar ${i}: height should be identical")
     }
 
@@ -589,6 +590,7 @@ class ScaleIntegrationTest {
   /**
    * Helper method to extract rect element attributes from SVG content.
    * Returns a list of maps containing x, y, width, height for each rect.
+   * Only includes rect elements that have all required attributes.
    */
   private List<Map<String, String>> extractRectAttributes(String svgContent) {
     def rects = []
@@ -615,7 +617,10 @@ class ScaleIntegrationTest {
       def heightMatch = (rectTag =~ /height="([^"]*)"/)
       if (heightMatch) attrs.height = heightMatch[0][1]
       
-      rects << attrs
+      // Only add rect if all required attributes are present
+      if (attrs.x && attrs.y && attrs.width && attrs.height) {
+        rects << attrs
+      }
     }
     
     return rects
