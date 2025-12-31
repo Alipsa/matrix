@@ -652,9 +652,10 @@ class GgPlot {
    * Manual fill scale for discrete data.
    */
   static ScaleColorManual scale_fill_manual(Map mappings) {
-    def scale = new ScaleColorManual(mappings)
-    scale.aesthetic = 'fill'
-    return scale
+    if (!mappings.containsKey('aesthetic')) {
+      mappings.aesthetic = 'fill'
+    }
+    return new ScaleColorManual(mappings)
   }
 
   /**
@@ -665,27 +666,31 @@ class GgPlot {
    * @param params Optional map with 'values' (list of colors), 'name', 'limits', 'breaks', 'labels'
    */
   static ScaleColorManual scale_fill_discrete(Map params = [:]) {
-    def scale = new ScaleColorManual(params)
-    scale.aesthetic = 'fill'
-    return scale
+    if (!params.containsKey('aesthetic')) {
+      params.aesthetic = 'fill'
+    }
+    return new ScaleColorManual(params)
   }
 
   /**
    * Continuous fill gradient scale.
    */
   static ScaleColorGradient scale_fill_gradient(Map params = [:]) {
-    def scale = new ScaleColorGradient(params)
-    scale.aesthetic = 'fill'
-    return scale
+    if (!params.containsKey('aesthetic')) {
+      params.aesthetic = 'fill'
+    }
+    return new ScaleColorGradient(params)
   }
 
   /**
    * Two-color fill gradient.
    */
   static ScaleColorGradient scale_fill_gradient(String low, String high) {
-    def scale = new ScaleColorGradient(low: low, high: high)
-    scale.aesthetic = 'fill'
-    return scale
+    def params = [low: low, high: high]
+    if (!params.containsKey('aesthetic')) {
+      params.aesthetic = 'fill'
+    }
+    return new ScaleColorGradient(params)
   }
 
   /**
@@ -693,9 +698,10 @@ class GgPlot {
    */
   static ScaleColorGradient scale_fill_gradient2(Map params = [:]) {
     if (!params.mid) params.mid = 'white'
-    def scale = new ScaleColorGradient(params)
-    scale.aesthetic = 'fill'
-    return scale
+    if (!params.containsKey('aesthetic')) {
+      params.aesthetic = 'fill'
+    }
+    return new ScaleColorGradient(params)
   }
 
   /**
@@ -706,9 +712,10 @@ class GgPlot {
    * @param params Optional map with 'low', 'high', 'mid', 'midpoint', 'name', 'limits'
    */
   static ScaleColorGradient scale_fill_continuous(Map params = [:]) {
-    def scale = new ScaleColorGradient(params)
-    scale.aesthetic = 'fill'
-    return scale
+    if (!params.containsKey('aesthetic')) {
+      params.aesthetic = 'fill'
+    }
+    return new ScaleColorGradient(params)
   }
 
   static StatBin2d stat_bin_2d() {
