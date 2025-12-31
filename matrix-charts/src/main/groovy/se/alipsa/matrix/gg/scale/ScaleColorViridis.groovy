@@ -214,12 +214,28 @@ class ScaleColorViridis extends ScaleDiscrete {
 
   /**
    * Apply alpha transparency if needed.
+   * Converts #RRGGBB to #RRGGBBAA when alpha is in (0,1).
    */
   private String applyAlpha(String color) {
-    if (alpha >= 1.0) return color
-    // For SVG compatibility, we return the color as-is
-    // Alpha would need to be handled at render time
-    return color
+    if (color == null) {
+      return null
+    }
+    // Preserve existing behavior when alpha is fully opaque or higher
+    if (alpha >= 1.0d) {
+      return color
+    }
+
+    String hex = color.startsWith('#') ? color.substring(1) : color
+    // Only handle standard 6-digit hex colors; otherwise, return as-is
+    if (hex.length() != 6) {
+      return color
+    }
+
+    double clampedAlpha = Math.max(0.0d, Math.min(1.0d, alpha))
+    int alphaInt = (int) Math.round(clampedAlpha * 255.0d)
+    String alphaHex = String.format('%02X', alphaInt)
+
+    return '#' + hex + alphaHex
   }
 
   @Override
