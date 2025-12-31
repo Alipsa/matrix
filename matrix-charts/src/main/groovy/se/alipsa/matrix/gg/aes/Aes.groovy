@@ -94,6 +94,18 @@ class Aes {
   }
 
   /**
+   * Constructor with positional x, y and additional named parameters.
+   * Allows syntax like: aes('cty', 'hwy', colour: 'class')
+   * Note: Map must come first for Groovy to collect named parameters.
+   */
+  Aes(Map params, String xCol, String yCol) {
+    this(params)
+    // Override x and y with the positional arguments
+    this.x = xCol
+    this.y = yCol
+  }
+
+  /**
    * Check if an aesthetic is a constant (wrapped in Identity) rather than a column mapping.
    */
   @CompileDynamic

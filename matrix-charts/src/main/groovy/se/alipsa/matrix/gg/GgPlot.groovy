@@ -36,6 +36,7 @@ import se.alipsa.matrix.gg.geom.GeomPoint
 import se.alipsa.matrix.gg.geom.GeomViolin
 import se.alipsa.matrix.gg.scale.ScaleColorGradient
 import se.alipsa.matrix.gg.scale.ScaleColorManual
+import se.alipsa.matrix.gg.scale.ScaleColorViridis
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
@@ -83,6 +84,14 @@ class GgPlot {
 
   static Aes aes(List<String> colNames, String colour) {
     return new Aes(colNames, colour)
+  }
+
+  /**
+   * Create aesthetic mappings with positional x, y and additional named parameters.
+   * Example: aes('cty', 'hwy', colour: 'class')
+   */
+  static Aes aes(Map params, String x, String y) {
+    return new Aes(params, x, y)
   }
 
   /**
@@ -554,6 +563,38 @@ class GgPlot {
   /** British spelling alias */
   static ScaleColorGradient scale_colour_gradient2(Map params = [:]) {
     return scale_color_gradient2(params)
+  }
+
+  // --- Viridis color scales ---
+
+  /**
+   * Viridis discrete color scale.
+   * Creates colorblind-friendly, perceptually uniform color palettes.
+   *
+   * @param params Optional map with:
+   *   - option: palette name ('viridis', 'magma', 'inferno', 'plasma', 'cividis', 'rocket', 'mako', 'turbo')
+   *   - begin: start of color range (0-1), default 0
+   *   - end: end of color range (0-1), default 1
+   *   - direction: 1 for normal, -1 for reversed
+   *   - alpha: transparency (0-1)
+   */
+  static ScaleColorViridis scale_color_viridis_d(Map params = [:]) {
+    return new ScaleColorViridis(params)
+  }
+
+  /** British spelling alias for scale_color_viridis_d */
+  static ScaleColorViridis scale_colour_viridis_d(Map params = [:]) {
+    return scale_color_viridis_d(params)
+  }
+
+  /**
+   * Viridis discrete fill scale.
+   */
+  static ScaleColorViridis scale_fill_viridis_d(Map params = [:]) {
+    if (!params.containsKey('aesthetic')) {
+      params.aesthetic = 'fill'
+    }
+    return new ScaleColorViridis(params)
   }
 
   // --- Fill scales ---

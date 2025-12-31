@@ -277,4 +277,173 @@ class ScaleIntegrationTest {
 
     assertNotNull(chart2.render())
   }
+
+  @Test
+  void testViridisDiscreteScale() {
+    // Test scale_color_viridis_d with discrete categorical data
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes(x: 'cty', y: 'hwy', color: 'class')) +
+        geom_point() +
+        scale_color_viridis_d() +
+        labs(title: 'MPG with Viridis Colors')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('fill="#'), "Points should have colors")
+    assertTrue(content.contains('MPG with Viridis Colors'))
+  }
+
+  @Test
+  void testViridisScaleWithDifferentPalettes() {
+    // Test different viridis palette options and verify they produce different colors
+    def species = iris.column('Species').toList()
+
+    // Create scales with different palettes
+    def scaleMagma = scale_color_viridis_d(option: 'magma')
+    def scalePlasma = scale_color_viridis_d(option: 'plasma')
+    def scaleCividis = scale_color_viridis_d(option: 'cividis')
+
+    // Train scales with the same data
+    scaleMagma.train(species)
+    scalePlasma.train(species)
+    scaleCividis.train(species)
+
+    // Get the computed colors for each palette
+    List<String> magmaColors = scaleMagma.getColors()
+    List<String> plasmaColors = scalePlasma.getColors()
+    List<String> cividisColors = scaleCividis.getColors()
+
+    // Verify all palettes generate 3 colors
+    assertEquals(3, magmaColors.size())
+    assertEquals(3, plasmaColors.size())
+    assertEquals(3, cividisColors.size())
+
+    // Different palettes should produce different color sets
+    assertNotEquals(magmaColors, plasmaColors, "Magma and plasma should produce different colors")
+    assertNotEquals(plasmaColors, cividisColors, "Plasma and cividis should produce different colors")
+    assertNotEquals(magmaColors, cividisColors, "Magma and cividis should produce different colors")
+
+    // Verify that rendering still works with these palettes
+    def chart1 = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
+        geom_point() +
+        scale_color_viridis_d(option: 'magma')
+
+    assertNotNull(chart1.render())
+
+    def chart2 = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
+        geom_point() +
+        scale_color_viridis_d(option: 'plasma')
+
+    assertNotNull(chart2.render())
+
+    def chart3 = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
+        geom_point() +
+        scale_colour_viridis_d(option: 'cividis')
+
+    assertNotNull(chart3.render())
+  }
+
+  @Test
+  void testViridisScaleWithBeginEnd() {
+    // Test using portion of the color scale
+    def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
+        geom_point() +
+        scale_color_viridis_d(begin: 0.2, end: 0.8)
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testViridisScaleReversed() {
+    // Test that direction: -1 actually reverses the color order
+    def normalScale = scale_color_viridis_d()
+    normalScale.train(['setosa', 'versicolor', 'virginica'])
+    List<String> normalColors = normalScale.getColors()
+
+    def reversedScale = scale_color_viridis_d(direction: -1)
+    reversedScale.train(['setosa', 'versicolor', 'virginica'])
+    List<String> reversedColors = reversedScale.getColors()
+
+    // Verify we have colors
+    assertEquals(3, normalColors.size())
+    assertEquals(3, reversedColors.size())
+
+    // Verify the first and last colors are swapped
+    assertEquals(normalColors[0], reversedColors[2], "First normal color should match last reversed color")
+    assertEquals(normalColors[2], reversedColors[0], "Last normal color should match first reversed color")
+
+    // Also verify rendering works
+    def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
+        geom_point() +
+        scale_color_viridis_d(direction: -1)
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testViridisFactoryMethods() {
+    // Verify viridis factory methods create valid scale objects
+    def colorViridis = scale_color_viridis_d()
+    assertEquals('color', colorViridis.aesthetic)
+
+    def colourViridis = scale_colour_viridis_d()
+    assertEquals('color', colourViridis.aesthetic)
+
+    def fillViridis = scale_fill_viridis_d()
+    assertEquals('fill', fillViridis.aesthetic)
+
+    // Test with options
+    def magmaScale = scale_color_viridis_d(option: 'magma')
+    assertEquals('color', magmaScale.aesthetic)
+  }
+
+  @Test
+  void testViridisWithFillAesthetic() {
+    // Test viridis fill scale with bar chart
+    def data = Matrix.builder()
+        .columnNames('category', 'value')
+        .rows([
+            ['A', 10],
+            ['B', 20],
+            ['C', 30],
+            ['D', 25]
+        ])
+        .types(String, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'category', y: 'value', fill: 'category')) +
+        geom_col() +
+        scale_fill_viridis_d()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testViridisDirectionValidation() {
+    // Test that direction parameter is normalized to 1 or -1
+    def scale1 = scale_color_viridis_d(direction: 1)
+    assertEquals(1, scale1.direction)
+
+    def scale2 = scale_color_viridis_d(direction: -1)
+    assertEquals(-1, scale2.direction)
+
+    // Test that values > 0 are normalized to 1
+    def scale3 = scale_color_viridis_d(direction: 5)
+    assertEquals(1, scale3.direction)
+
+    // Test that values < 0 are normalized to -1
+    def scale4 = scale_color_viridis_d(direction: -5)
+    assertEquals(-1, scale4.direction)
+
+    // Test that 0 is normalized to 1
+    def scale5 = scale_color_viridis_d(direction: 0)
+    assertEquals(1, scale5.direction)
+  }
 }
