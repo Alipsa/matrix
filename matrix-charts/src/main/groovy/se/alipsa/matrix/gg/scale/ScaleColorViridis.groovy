@@ -83,12 +83,22 @@ class ScaleColorViridis extends ScaleDiscrete {
     applyParams(params)
   }
 
+  private double normalizeAlpha(double a) {
+    if (a < 0.0d) {
+      return 0.0d
+    }
+    if (a > 1.0d) {
+      return 1.0d
+    }
+    return a
+  }
+
   private void applyParams(Map params) {
     if (params.option) this.option = normalizeOption(params.option as String)
     if (params.begin != null) this.begin = params.begin as double
     if (params.end != null) this.end = params.end as double
     if (params.direction != null) this.direction = params.direction as int
-    if (params.alpha != null) this.alpha = params.alpha as double
+    if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as double)
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
     if (params.breaks) this.breaks = params.breaks as List
