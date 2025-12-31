@@ -596,7 +596,7 @@ class CoordSystemTest {
 
   @Test
   void testCoordFixedExactExample() {
-    // This is the exact example from coordinates.groovy
+    // This is the exact example from CoordinatesExample.groovy
     def mpg = Dataset.mpg()
 
     def chart = ggplot(mpg, aes('cty', 'hwy')) +
