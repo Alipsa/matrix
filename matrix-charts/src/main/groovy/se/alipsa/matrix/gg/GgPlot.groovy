@@ -28,6 +28,7 @@ import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
+import se.alipsa.matrix.gg.facet.FormulaParser
 import se.alipsa.matrix.gg.geom.GeomAbline
 import se.alipsa.matrix.gg.geom.GeomArea
 import se.alipsa.matrix.gg.geom.GeomBar
@@ -494,6 +495,23 @@ class GgPlot {
    */
   static FacetGrid facet_grid(Map params) {
     return new FacetGrid(params)
+  }
+
+  /**
+   * Create a matrix of panels using ggplot2-style formula syntax.
+   *
+   * Formula examples:
+   * - "year ~ drv"       - rows by year, columns by drv
+   * - ". ~ drv" or "~ drv" - columns only (no rows)
+   * - "year ~ ."         - rows only (no columns)
+   * - "year + cyl ~ drv" - multiple row variables
+   * - "year ~ drv + gear" - multiple column variables
+   *
+   * @param formula Formula string with ~ separator
+   */
+  static FacetGrid facet_grid(String formula) {
+    Map<String, List<String>> parsed = FormulaParser.parse(formula)
+    return new FacetGrid(rows: parsed.rows, cols: parsed.cols)
   }
 
   // ============ Scales ============

@@ -32,6 +32,17 @@ class FacetGrid extends Facet {
 
   FacetGrid() {}
 
+  /**
+   * Create a FacetGrid using ggplot2-style formula syntax.
+   *
+   * @param formula Formula string (e.g., "year ~ drv", "~ class", "cyl ~ .")
+   */
+  FacetGrid(String formula) {
+    Map<String, List<String>> parsed = FormulaParser.parse(formula)
+    this.rows = parsed.rows
+    this.cols = parsed.cols
+  }
+
   FacetGrid(Map params) {
     if (params.rows instanceof String) {
       this.rows = [params.rows as String]
