@@ -43,7 +43,7 @@ javafx.scene.chart.Chart jfxPieChart = Plot.jfx(pieChart)
 ```
 
 # GGPlotting
-The library also supports ggplot2-style charting via the GgPlot class. The api is very similar to the R ggplot2 library and very few modifications are needed to port code from R to Groovy. Essentiallyy:
+The library also supports ggplot2-style charting via the GgPlot class. The api is very similar to the R ggplot2 library and very few modifications are needed to port code from R to Groovy. Essentially:
 1. Use a Matrix instead of a data.frame
 2. Quote column names and constants
 
