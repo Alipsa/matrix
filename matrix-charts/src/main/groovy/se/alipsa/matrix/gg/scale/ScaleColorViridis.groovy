@@ -93,6 +93,11 @@ class ScaleColorViridis extends ScaleDiscrete {
     return a
   }
 
+  /**
+   * Normalize direction parameter to ensure it's either 1 or -1.
+   * @param d Direction value
+   * @return 1 if d >= 0, -1 if d < 0
+   */
   private int normalizeDirection(int d) {
     if (d < 0) {
       return -1
