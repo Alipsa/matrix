@@ -640,9 +640,7 @@ class GgPlot {
    * Viridis discrete fill scale.
    */
   static ScaleColorViridis scale_fill_viridis_d(Map params = [:]) {
-    if (!params.containsKey('aesthetic')) {
-      params.aesthetic = 'fill'
-    }
+    params.aesthetic = 'fill'
     return new ScaleColorViridis(params)
   }
 
@@ -652,9 +650,7 @@ class GgPlot {
    * Manual fill scale for discrete data.
    */
   static ScaleColorManual scale_fill_manual(Map mappings) {
-    if (!mappings.containsKey('aesthetic')) {
-      mappings.aesthetic = 'fill'
-    }
+    mappings.aesthetic = 'fill'
     return new ScaleColorManual(mappings)
   }
 
@@ -666,9 +662,7 @@ class GgPlot {
    * @param params Optional map with 'values' (list of colors), 'name', 'limits', 'breaks', 'labels'
    */
   static ScaleColorManual scale_fill_discrete(Map params = [:]) {
-    if (!params.containsKey('aesthetic')) {
-      params.aesthetic = 'fill'
-    }
+    params.aesthetic = 'fill'
     return new ScaleColorManual(params)
   }
 
@@ -676,9 +670,7 @@ class GgPlot {
    * Continuous fill gradient scale.
    */
   static ScaleColorGradient scale_fill_gradient(Map params = [:]) {
-    if (!params.containsKey('aesthetic')) {
-      params.aesthetic = 'fill'
-    }
+    params.aesthetic = 'fill'
     return new ScaleColorGradient(params)
   }
 
@@ -696,9 +688,7 @@ class GgPlot {
    */
   static ScaleColorGradient scale_fill_gradient2(Map params = [:]) {
     if (!params.mid) params.mid = 'white'
-    if (!params.containsKey('aesthetic')) {
-      params.aesthetic = 'fill'
-    }
+    params.aesthetic = 'fill'
     return new ScaleColorGradient(params)
   }
 
@@ -710,9 +700,7 @@ class GgPlot {
    * @param params Optional map with 'low', 'high', 'mid', 'midpoint', 'name', 'limits'
    */
   static ScaleColorGradient scale_fill_continuous(Map params = [:]) {
-    if (!params.containsKey('aesthetic')) {
-      params.aesthetic = 'fill'
-    }
+    params.aesthetic = 'fill'
     return new ScaleColorGradient(params)
   }
 
