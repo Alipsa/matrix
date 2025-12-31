@@ -25,6 +25,9 @@ class AfterStat {
   final String stat
 
   AfterStat(String stat) {
+    if (!stat) {
+      throw new IllegalArgumentException("stat name cannot be null or empty")
+    }
     this.stat = stat
   }
 
