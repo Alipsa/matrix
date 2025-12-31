@@ -556,74 +556,35 @@ class ScaleIntegrationTest {
     assertTrue(content1.contains('<rect'), "Chart 1 should contain histogram bars")
     assertTrue(content2.contains('<rect'), "Chart 2 should contain histogram bars")
 
-    // Extract and compare rect elements to verify identical behavior
-    def rects1 = extractRectAttributes(content1)
-    def rects2 = extractRectAttributes(content2)
-    
-    // Verify same number of bars
-    assertEquals(rects1.size(), rects2.size(), 
-        "Both charts should have the same number of rect elements")
-    
-    // Verify each bar has identical attributes
-    for (int i = 0; i < rects1.size(); i++) {
-      def rect1 = rects1[i]
-      def rect2 = rects2[i]
-      
-      // Compare numeric attributes with tolerance for floating-point precision
-      assertEquals(Double.parseDouble(rect1.x), Double.parseDouble(rect2.x), 0.001,
-          "Bar ${i}: x position should be identical")
-      assertEquals(Double.parseDouble(rect1.y), Double.parseDouble(rect2.y), 0.001,
-          "Bar ${i}: y position should be identical")
-      assertEquals(Double.parseDouble(rect1.width), Double.parseDouble(rect2.width), 0.001,
-          "Bar ${i}: width should be identical")
-      assertEquals(Double.parseDouble(rect1.height), Double.parseDouble(rect2.height), 0.001,
-          "Bar ${i}: height should be identical")
-    }
+    // Extract the histogram group content from both SVGs
+    // Both should have identical histogram content since they're rendering the same data
+    String histogramContent1 = extractHistogramGroupContent(content1)
+    String histogramContent2 = extractHistogramGroupContent(content2)
 
-    // The rendered output should be identical
-    // (excluding any potential minor differences in whitespace or attribute order)
-    // Compare the data-layer group content
+    // Verify both have histogram content
+    assertFalse(histogramContent1.isEmpty(), "Chart 1 should have histogram content")
+    assertFalse(histogramContent2.isEmpty(), "Chart 2 should have histogram content")
+
+    // The histogram group content should be identical
+    assertEquals(histogramContent1, histogramContent2,
+        "Both charts should produce identical histogram content")
+
+    // Verify both have histogram class
     assertTrue(content1.contains('class="geomhistogram"'), "Chart 1 should have histogram class")
     assertTrue(content2.contains('class="geomhistogram"'), "Chart 2 should have histogram class")
   }
-  
+
   /**
-   * Helper method to extract rect element attributes from SVG content.
-   * Returns a list of maps containing x, y, width, height for each rect.
-   * Only includes rect elements that have all required attributes.
+   * Helper method to extract the geomhistogram group content from SVG.
+   * Returns the content of the first geomhistogram group found.
    */
-  private List<Map<String, String>> extractRectAttributes(String svgContent) {
-    def rects = []
-    // Match rect elements and their attributes
-    def pattern = /<rect[^>]*>/
-    def matcher = (svgContent =~ pattern)
-    
-    matcher.each { rectTag ->
-      def attrs = [:]
-      
-      // Extract x attribute
-      def xMatch = (rectTag =~ /x="([^"]*)"/)
-      if (xMatch) attrs.x = xMatch[0][1]
-      
-      // Extract y attribute
-      def yMatch = (rectTag =~ /y="([^"]*)"/)
-      if (yMatch) attrs.y = yMatch[0][1]
-      
-      // Extract width attribute
-      def widthMatch = (rectTag =~ /width="([^"]*)"/)
-      if (widthMatch) attrs.width = widthMatch[0][1]
-      
-      // Extract height attribute
-      def heightMatch = (rectTag =~ /height="([^"]*)"/)
-      if (heightMatch) attrs.height = heightMatch[0][1]
-      
-      // Only add rect if all required attributes are present
-      if (attrs.x && attrs.y && attrs.width && attrs.height) {
-        rects << attrs
-      }
+  private String extractHistogramGroupContent(String svgContent) {
+    // Find the geomhistogram group and extract its content (using (?s) for DOTALL mode)
+    def matcher = svgContent =~ /(?s)(<g[^>]*class="geomhistogram"[^>]*>.*?<\/g>)/
+    if (matcher.find()) {
+      return matcher.group(1)
     }
-    
-    return rects
+    return ""
   }
 
   @Test
