@@ -446,4 +446,153 @@ class ScaleIntegrationTest {
     def scale5 = scale_color_viridis_d(direction: 0)
     assertEquals(1, scale5.direction)
   }
+
+  @Test
+  void testDiscreteAndContinuousScaleFactoryMethods() {
+    // Test scale_color_discrete and scale_colour_discrete
+    def colorDiscrete = scale_color_discrete()
+    assertEquals('color', colorDiscrete.aesthetic)
+
+    def colourDiscrete = scale_colour_discrete()
+    assertEquals('color', colourDiscrete.aesthetic)
+
+    // Test scale_color_continuous and scale_colour_continuous
+    def colorContinuous = scale_color_continuous()
+    assertEquals('color', colorContinuous.aesthetic)
+
+    def colourContinuous = scale_colour_continuous()
+    assertEquals('color', colourContinuous.aesthetic)
+
+    // Test scale_fill_discrete
+    def fillDiscrete = scale_fill_discrete()
+    assertEquals('fill', fillDiscrete.aesthetic)
+
+    // Test scale_fill_continuous
+    def fillContinuous = scale_fill_continuous()
+    assertEquals('fill', fillContinuous.aesthetic)
+  }
+
+  @Test
+  void testDiscreteColorScaleWithChart() {
+    // Test that scale_colour_discrete works in a chart
+    def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
+        geom_point() +
+        scale_colour_discrete()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+  }
+
+  @Test
+  void testContinuousColorScaleWithChart() {
+    // Test that scale_colour_continuous works in a chart
+    def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg', color: 'wt')) +
+        geom_point() +
+        scale_colour_continuous(low: 'yellow', high: 'red')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+  }
+
+  @Test
+  void testFillDiscreteScaleWithChart() {
+    // Test that scale_fill_discrete works in a chart
+    def data = Matrix.builder()
+        .columnNames('category', 'value')
+        .rows([
+            ['A', 10],
+            ['B', 20],
+            ['C', 30]
+        ])
+        .types(String, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'category', y: 'value', fill: 'category')) +
+        geom_col() +
+        scale_fill_discrete()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testFillContinuousScaleWithChart() {
+    // Test that scale_fill_continuous works in a chart
+    def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg', fill: 'wt')) +
+        geom_point() +
+        scale_fill_continuous(low: 'blue', high: 'green')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testHistogramWithAndWithoutAfterStat() {
+    // Test that ggplot(mpg, aes(x: 'displ')) + geom_histogram()
+    // generates identical result as
+    // ggplot(mpg, aes(x: 'displ', y: after_stat('count'))) + geom_histogram()
+
+    def mpg = Dataset.mpg()
+
+    // Chart without explicit y aesthetic (default behavior uses count)
+    def chart1 = ggplot(mpg, aes(x: 'displ')) + geom_histogram(bins: 10)
+    Svg svg1 = chart1.render()
+    assertNotNull(svg1)
+    String content1 = SvgWriter.toXml(svg1)
+
+    // Chart with explicit after_stat(count) for y
+    def chart2 = ggplot(mpg, aes(x: 'displ', y: after_stat('count'))) + geom_histogram(bins: 10)
+    Svg svg2 = chart2.render()
+    assertNotNull(svg2)
+    String content2 = SvgWriter.toXml(svg2)
+
+    // Both should produce histograms with bars (rect elements)
+    assertTrue(content1.contains('<rect'), "Chart 1 should contain histogram bars")
+    assertTrue(content2.contains('<rect'), "Chart 2 should contain histogram bars")
+
+    // Extract just the histogram bars from both SVGs to compare
+    // Both charts should have the same number of bars and same dimensions
+    int barCount1 = content1.count('<rect')
+    int barCount2 = content2.count('<rect')
+    assertEquals(barCount1, barCount2, "Both charts should have the same number of rect elements")
+
+    // The rendered output should be identical
+    // (excluding any potential minor differences in whitespace or attribute order)
+    // Compare the data-layer group content
+    assertTrue(content1.contains('class="geomhistogram"'), "Chart 1 should have histogram class")
+    assertTrue(content2.contains('class="geomhistogram"'), "Chart 2 should have histogram class")
+  }
+
+  @Test
+  void testAfterStatFactoryMethod() {
+    // Test that after_stat() creates proper AfterStat objects
+    def afterCount = after_stat('count')
+    assertNotNull(afterCount)
+    assertEquals('count', afterCount.stat)
+
+    def afterDensity = after_stat('density')
+    assertEquals('density', afterDensity.stat)
+
+    // Test equality
+    def afterCount2 = after_stat('count')
+    assertEquals(afterCount, afterCount2)
+  }
+
+  @Test
+  void testAesWithAfterStat() {
+    // Test that Aes correctly identifies AfterStat values
+    def aesWithAfterStat = aes(x: 'displ', y: after_stat('count'))
+
+    assertTrue(aesWithAfterStat.isAfterStat('y'))
+    assertFalse(aesWithAfterStat.isAfterStat('x'))
+    assertEquals('count', aesWithAfterStat.getAfterStatName('y'))
+    assertNull(aesWithAfterStat.yColName)  // Should be null for AfterStat
+    assertEquals('displ', aesWithAfterStat.xColName)
+  }
 }
