@@ -348,7 +348,7 @@ class ScaleIntegrationTest {
     // Verify the first and last colors are swapped
     assertEquals(normalColors[0], reversedColors[2], "First normal color should match last reversed color")
     assertEquals(normalColors[2], reversedColors[0], "Last normal color should match first reversed color")
-    
+
     // Also verify rendering works
     def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
         geom_point() +
