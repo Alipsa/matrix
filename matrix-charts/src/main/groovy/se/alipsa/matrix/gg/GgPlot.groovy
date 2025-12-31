@@ -336,6 +336,8 @@ class GgPlot {
    * e.g., 'legend.position' -> 'legendPosition'
    *       'axis.line.x' -> 'axisLineX'
    *       'axis.line.x.bottom' -> 'axisLineX'
+   * Note: axis-specific panel grid keys map to major/minor since per-axis grids
+   * are not yet modeled separately.
    */
   private static String convertThemeKey(String key) {
     // Common mappings for dot-notation
@@ -369,7 +371,11 @@ class GgPlot {
       'panel.border': 'panelBorder',
       'panel.grid': 'panelGrid',
       'panel.grid.major': 'panelGridMajor',
+      'panel.grid.major.x': 'panelGridMajor',
+      'panel.grid.major.y': 'panelGridMajor',
       'panel.grid.minor': 'panelGridMinor',
+      'panel.grid.minor.x': 'panelGridMinor',
+      'panel.grid.minor.y': 'panelGridMinor',
       'panel.spacing': 'panelSpacing',
       'plot.background': 'plotBackground',
       'plot.title': 'plotTitle',

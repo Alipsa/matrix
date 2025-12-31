@@ -195,7 +195,7 @@ class ScaleColorViridisC extends ScaleContinuous {
     int g = (int) Math.round(rgb1[1] + t * (rgb2[1] - rgb1[1]))
     int b = (int) Math.round(rgb1[2] + t * (rgb2[2] - rgb1[2]))
 
-    return String.format('#%02X%02X%02X',
+    return String.format('#%02x%02x%02x',
         Math.max(0, Math.min(255, r)),
         Math.max(0, Math.min(255, g)),
         Math.max(0, Math.min(255, b)))
@@ -225,7 +225,7 @@ class ScaleColorViridisC extends ScaleContinuous {
 
     double clampedAlpha = Math.max(0.0d, Math.min(1.0d, alpha))
     int alphaInt = (int) Math.round(clampedAlpha * 255.0d)
-    String alphaHex = String.format('%02X', alphaInt)
+    String alphaHex = String.format('%02x', alphaInt)
 
     return '#' + hex + alphaHex
   }

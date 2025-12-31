@@ -11,6 +11,7 @@ class ScaleContinuous extends Scale {
 
   static final double DEFAULT_EXPAND_MULT = 0.05d
   static final double DEFAULT_EXPAND_ADD = 0.0d
+  static final double BREAK_TOLERANCE_RATIO = 0.001d  // Small epsilon for float comparisons.
 
   /** Output range [min, max] */
   List<Number> range = [0, 1] as List<Number>
@@ -18,7 +19,7 @@ class ScaleContinuous extends Scale {
   /** Domain computed from data [min, max] */
   protected List<Number> computedDomain = [0, 1] as List<Number>
 
-  /** Number of breaks to generate (ggplot2 typically uses 5-7) */
+  /** Number of breaks to generate (default 7; can be adjusted per scale). */
   int nBreaks = 7
 
   @Override
@@ -125,9 +126,10 @@ class ScaleContinuous extends Scale {
 
     List<Number> breaks = []
     // Generate breaks from niceMin to niceMax
-    for (double val = niceMin; val <= niceMax + spacing * 0.5; val += spacing) {
+    double tolerance = spacing * BREAK_TOLERANCE_RATIO
+    for (double val = niceMin; val <= niceMax + tolerance; val += spacing) {
       // Include all breaks within the expanded domain (with small tolerance)
-      if (val >= min - spacing * 0.5 && val <= max + spacing * 0.5) {
+      if (val >= min - tolerance && val <= max + tolerance) {
         breaks << val
       }
     }

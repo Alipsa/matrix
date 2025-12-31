@@ -178,6 +178,7 @@ class Theme implements Cloneable {
     return copy
   }
 
+  // Shallow copy is sufficient for the current lists (Numbers/Strings are immutable).
   private static <T> List<T> copyList(List<T> source) {
     if (source == null) {
       return null

@@ -49,7 +49,7 @@ class GgRenderer {
   static final int MARGIN_LEFT = 80
   static final int LEGEND_PLOT_GAP = 10
   static final int LEGEND_TITLE_SPACING = 7
-  static final double AVERAGE_CHAR_WIDTH_RATIO = 0.6d  // Approximate average width per character.
+  static final double AVERAGE_CHAR_WIDTH_RATIO = 0.6d  // Rough estimate for typical sans-serif fonts; adjust if legends clip.
   static final int LEGEND_WIDTH_PADDING = 15
   static final String DEFAULT_STRIP_FILL = '#D9D9D9'
   static final String DEFAULT_STRIP_STROKE = 'none'
@@ -111,7 +111,9 @@ class GgRenderer {
 
     // Calculate legend width and adjust SVG if legend is on right side
     String legendPos = theme.legendPosition ?: 'right'
-    if (legendPos == 'right' || (!(legendPos instanceof String))) {
+    boolean legendOnRight = legendPos == 'right' ||
+        (!(legendPos instanceof String) && !(legendPos instanceof List))
+    if (legendOnRight) {
       int legendWidth = estimateLegendWidth(computedScales, theme)
       if (legendWidth > MARGIN_RIGHT) {
         // Legend needs more space than default margin provides
@@ -842,7 +844,7 @@ class GgRenderer {
       yMax = yNums.max() as double
     }
 
-    // Apply expansion (same defaults as ScaleContinuous when not explicitly configured)
+    // Apply expansion per side (mult * range plus add) using ScaleContinuous defaults.
     double xDelta = xMax - xMin
     double yDelta = yMax - yMin
     double[] xExpansion = resolveContinuousExpansion(chart, 'x')
@@ -856,9 +858,10 @@ class GgRenderer {
     double xDataRange = xMax - xMin
     double yDataRange = yMax - yMin
 
-    // Avoid division by zero
-    if (xDataRange <= 0) xDataRange = 1
-    if (yDataRange <= 0) yDataRange = 1
+    // If the range collapses, keep original dimensions to avoid misleading scaling.
+    if (xDataRange <= 0 || yDataRange <= 0) {
+      return [plotWidth, plotHeight] as double[]
+    }
 
     // Current pixels per data unit
     double pxPerUnitX = plotWidth / xDataRange

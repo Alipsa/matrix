@@ -81,8 +81,11 @@ class GgChart {
         }
       }
       // Extract mapping parameter as layer aes
-      if (geom.params.containsKey('mapping') && geom.params['mapping'] instanceof Aes) {
-        layerAes = geom.params['mapping'] as Aes
+      if (geom.params.containsKey('mapping')) {
+        def mapping = geom.params['mapping']
+        if (mapping instanceof Aes) {
+          layerAes = mapping as Aes
+        }
       }
     }
 

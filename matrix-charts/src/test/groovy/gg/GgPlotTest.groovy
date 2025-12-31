@@ -145,6 +145,10 @@ class GgPlotTest {
         assertTrue(widthMatcher.find(), "Should include a numeric width attribute")
         int widthValue = (widthMatcher.group(1) as String).toInteger()
         assertTrue(widthValue >= 800, "Width should be at least the base 800px")
+        def heightMatcher = (svgContent =~ /height="(\d+)"/)
+        assertTrue(heightMatcher.find(), "Should include a numeric height attribute")
+        int heightValue = (heightMatcher.group(1) as String).toInteger()
+        assertEquals(600, heightValue, "Height should remain at 600px")
 
         // Verify there are circles (points)
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")

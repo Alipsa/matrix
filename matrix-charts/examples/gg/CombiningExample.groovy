@@ -36,7 +36,7 @@ def chart = ggplot(mpg, aes('cty', 'hwy')) +
     scale_colour_viridis_c() +
     facet_grid('year ~ drv') +
     coord_fixed() +
-    theme_minimal() +
+    theme_minimal() +  // Uses SVG fill='none' which renders transparent in this output.
     theme('panel.grid.minor': element_blank())
 
 Svg svg = chart.render()
