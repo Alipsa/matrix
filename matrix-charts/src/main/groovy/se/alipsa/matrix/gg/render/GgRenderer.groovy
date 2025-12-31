@@ -511,8 +511,9 @@ class GgRenderer {
 
     // For CoordFixed, adjust dimensions to enforce aspect ratio
     if (coord instanceof CoordFixed && aestheticData.x && aestheticData.y) {
+      CoordFixed coordFixed = (CoordFixed) coord
       double[] adjusted = computeFixedAspectDimensions(
-          aestheticData.x, aestheticData.y, plotWidth, plotHeight, ((CoordFixed) coord).ratio)
+          aestheticData.x, aestheticData.y, plotWidth, plotHeight, coordFixed)
       effectiveWidth = (int) adjusted[0]
       effectiveHeight = (int) adjusted[1]
     }
@@ -595,10 +596,12 @@ class GgRenderer {
    * @param yData List of y values
    * @param plotWidth Available plot width in pixels
    * @param plotHeight Available plot height in pixels
-   * @param ratio Desired aspect ratio (y units per x unit)
+   * @param coord CoordFixed with ratio and optional xlim/ylim
    * @return double[] with [effectiveWidth, effectiveHeight]
    */
-  private double[] computeFixedAspectDimensions(List xData, List yData, int plotWidth, int plotHeight, double ratio) {
+  private double[] computeFixedAspectDimensions(List xData, List yData, int plotWidth, int plotHeight, CoordFixed coord) {
+    double ratio = coord.ratio
+
     // Get numeric values only
     List<Number> xNums = xData.findAll { it instanceof Number } as List<Number>
     List<Number> yNums = yData.findAll { it instanceof Number } as List<Number>
@@ -607,11 +610,24 @@ class GgRenderer {
       return [plotWidth, plotHeight] as double[]
     }
 
-    // Compute data ranges
-    double xMin = xNums.min() as double
-    double xMax = xNums.max() as double
-    double yMin = yNums.min() as double
-    double yMax = yNums.max() as double
+    // Compute data ranges - use xlim/ylim if specified, otherwise use data min/max
+    double xMin, xMax, yMin, yMax
+
+    if (coord.xlim != null && coord.xlim.size() >= 2) {
+      xMin = coord.xlim[0] as double
+      xMax = coord.xlim[1] as double
+    } else {
+      xMin = xNums.min() as double
+      xMax = xNums.max() as double
+    }
+
+    if (coord.ylim != null && coord.ylim.size() >= 2) {
+      yMin = coord.ylim[0] as double
+      yMax = coord.ylim[1] as double
+    } else {
+      yMin = yNums.min() as double
+      yMax = yNums.max() as double
+    }
 
     double xDataRange = xMax - xMin
     double yDataRange = yMax - yMin

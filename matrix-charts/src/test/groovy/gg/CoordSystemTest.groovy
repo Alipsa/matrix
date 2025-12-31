@@ -768,4 +768,101 @@ class CoordSystemTest {
     write(svgRatio1, output1)
     write(svgRatio2, output2)
   }
+
+  @Test
+  void testCoordFixedWithXlimYlim() {
+    // Test that coord_fixed respects xlim/ylim when computing aspect ratio
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [0, 0],
+            [100, 100],
+            [50, 50]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    // With xlim=[0,50] and ylim=[0,100], the data ranges are different
+    // The aspect ratio calculation should use these limits, not the data min/max
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 10) +
+        coord_fixed(ratio: 1.0, xlim: [0, 50], ylim: [0, 100])
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+
+    File outputFile = new File('build/coord_fixed_with_limits.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testCoordFixedLimitsAffectScaling() {
+    // Verify that xlim/ylim affect the aspect ratio calculation
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [0, 0],
+            [10, 10]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    // Without limits - data range is 0-10 for both
+    def chartNoLimits = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 10) +
+        coord_fixed(1.0)
+
+    // With limits - x range 0-20, y range 0-10
+    // This should produce different scaling than without limits
+    def chartWithLimits = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 10) +
+        coord_fixed(ratio: 1.0, xlim: [0, 20], ylim: [0, 10])
+
+    Svg svgNoLimits = chartNoLimits.render()
+    Svg svgWithLimits = chartWithLimits.render()
+
+    assertNotNull(svgNoLimits)
+    assertNotNull(svgWithLimits)
+
+    String contentNoLimits = SvgWriter.toXml(svgNoLimits)
+    String contentWithLimits = SvgWriter.toXml(svgWithLimits)
+
+    // Extract circle positions
+    def circlePattern = /cx="(\d+\.?\d*)" cy="(\d+\.?\d*)"/
+
+    def matcherNoLimits = contentNoLimits =~ circlePattern
+    def pointsNoLimits = []
+    while (matcherNoLimits.find()) {
+      pointsNoLimits << [cx: Double.parseDouble(matcherNoLimits.group(1)), cy: Double.parseDouble(matcherNoLimits.group(2))]
+    }
+
+    def matcherWithLimits = contentWithLimits =~ circlePattern
+    def pointsWithLimits = []
+    while (matcherWithLimits.find()) {
+      pointsWithLimits << [cx: Double.parseDouble(matcherWithLimits.group(1)), cy: Double.parseDouble(matcherWithLimits.group(2))]
+    }
+
+    // Both should have 2 points
+    assertEquals(2, pointsNoLimits.size(), "No limits should have 2 points")
+    assertEquals(2, pointsWithLimits.size(), "With limits should have 2 points")
+
+    // The scaling should be different because the x range is different
+    if (pointsNoLimits.size() == 2 && pointsWithLimits.size() == 2) {
+      double deltaXNoLimits = Math.abs(pointsNoLimits[1].cx - pointsNoLimits[0].cx)
+      double deltaXWithLimits = Math.abs(pointsWithLimits[1].cx - pointsWithLimits[0].cx)
+
+      // With xlim=[0,20], the x range is doubled, so deltaX should be different
+      assertTrue(Math.abs(deltaXNoLimits - deltaXWithLimits) > 1.0,
+          "Limits should affect x scaling (deltaXNoLimits=${deltaXNoLimits}, deltaXWithLimits=${deltaXWithLimits})")
+    }
+
+    File output1 = new File('build/coord_fixed_no_limits.svg')
+    File output2 = new File('build/coord_fixed_with_xlim.svg')
+    write(svgNoLimits, output1)
+    write(svgWithLimits, output2)
+  }
 }
