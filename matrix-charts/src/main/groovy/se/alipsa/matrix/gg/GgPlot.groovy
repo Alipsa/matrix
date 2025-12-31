@@ -687,9 +687,7 @@ class GgPlot {
    */
   static ScaleColorGradient scale_fill_gradient(String low, String high) {
     def params = [low: low, high: high]
-    if (!params.containsKey('aesthetic')) {
-      params.aesthetic = 'fill'
-    }
+    params.aesthetic = 'fill'
     return new ScaleColorGradient(params)
   }
 
