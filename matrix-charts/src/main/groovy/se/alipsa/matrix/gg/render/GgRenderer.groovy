@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.coord.CoordCartesian
+import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.facet.Facet
@@ -504,12 +505,25 @@ class GgRenderer {
     // Determine if axes are flipped
     boolean isFlipped = coord instanceof CoordFlip
 
+    // Calculate effective plot dimensions (may be adjusted for CoordFixed)
+    int effectiveWidth = plotWidth
+    int effectiveHeight = plotHeight
+
+    // For CoordFixed, adjust dimensions to enforce aspect ratio
+    if (coord instanceof CoordFixed && aestheticData.x && aestheticData.y) {
+      CoordFixed coordFixed = (CoordFixed) coord
+      double[] adjusted = computeFixedAspectDimensions(
+          aestheticData.x, aestheticData.y, plotWidth, plotHeight, coordFixed)
+      effectiveWidth = (int) adjusted[0]
+      effectiveHeight = (int) adjusted[1]
+    }
+
     // For CoordFlip: x data maps to vertical axis, y data maps to horizontal axis
     // Normal: x -> [0, plotWidth], y -> [plotHeight, 0] (inverted for SVG)
     // Flipped: x -> [plotHeight, 0], y -> [0, plotWidth]
 
-    List<Number> xRange = isFlipped ? [plotHeight, 0] as List<Number> : [0, plotWidth] as List<Number>
-    List<Number> yRange = isFlipped ? [0, plotWidth] as List<Number> : [plotHeight, 0] as List<Number>
+    List<Number> xRange = isFlipped ? [effectiveHeight, 0] as List<Number> : [0, effectiveWidth] as List<Number>
+    List<Number> yRange = isFlipped ? [0, effectiveWidth] as List<Number> : [effectiveHeight, 0] as List<Number>
 
     // Create x scale (auto-detect discrete vs continuous)
     if (aestheticData.x) {
@@ -571,6 +585,78 @@ class GgRenderer {
     }
 
     return scales
+  }
+
+  /**
+   * Compute adjusted dimensions to enforce a fixed aspect ratio.
+   * For ratio r, ensures: (pixelsPerUnitY / pixelsPerUnitX) = r
+   * This means one unit in y appears as r times the size of one unit in x.
+   *
+   * @param xData List of x values
+   * @param yData List of y values
+   * @param plotWidth Available plot width in pixels
+   * @param plotHeight Available plot height in pixels
+   * @param coord CoordFixed with ratio and optional xlim/ylim
+   * @return double[] with [effectiveWidth, effectiveHeight]
+   */
+  private double[] computeFixedAspectDimensions(List xData, List yData, int plotWidth, int plotHeight, CoordFixed coord) {
+    double ratio = coord.ratio
+
+    // Get numeric values only
+    List<Number> xNums = xData.findAll { it instanceof Number } as List<Number>
+    List<Number> yNums = yData.findAll { it instanceof Number } as List<Number>
+
+    if (xNums.isEmpty() || yNums.isEmpty()) {
+      return [plotWidth, plotHeight] as double[]
+    }
+
+    // Compute data ranges - use xlim/ylim if specified, otherwise use data min/max
+    double xMin, xMax, yMin, yMax
+
+    if (coord.xlim != null && coord.xlim.size() >= 2) {
+      xMin = coord.xlim[0] as double
+      xMax = coord.xlim[1] as double
+    } else {
+      xMin = xNums.min() as double
+      xMax = xNums.max() as double
+    }
+
+    if (coord.ylim != null && coord.ylim.size() >= 2) {
+      yMin = coord.ylim[0] as double
+      yMax = coord.ylim[1] as double
+    } else {
+      yMin = yNums.min() as double
+      yMax = yNums.max() as double
+    }
+
+    double xDataRange = xMax - xMin
+    double yDataRange = yMax - yMin
+
+    // Avoid division by zero
+    if (xDataRange <= 0) xDataRange = 1
+    if (yDataRange <= 0) yDataRange = 1
+
+    // Current pixels per data unit
+    double pxPerUnitX = plotWidth / xDataRange
+    double pxPerUnitY = plotHeight / yDataRange
+
+    // Desired: pxPerUnitY / pxPerUnitX = ratio
+    // So: pxPerUnitY = ratio * pxPerUnitX
+    // We need to adjust either width or height to achieve this
+
+    double currentRatio = pxPerUnitY / pxPerUnitX
+    double effectiveWidth = plotWidth as double
+    double effectiveHeight = plotHeight as double
+
+    if (currentRatio > ratio) {
+      // Height is too large relative to width, reduce effective height
+      effectiveHeight = (ratio * pxPerUnitX) * yDataRange
+    } else if (currentRatio < ratio) {
+      // Width is too large relative to height, reduce effective width
+      effectiveWidth = (pxPerUnitY / ratio) * xDataRange
+    }
+
+    return [effectiveWidth, effectiveHeight] as double[]
   }
 
   /**
