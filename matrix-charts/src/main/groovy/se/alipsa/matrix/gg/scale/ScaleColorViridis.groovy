@@ -93,11 +93,23 @@ class ScaleColorViridis extends ScaleDiscrete {
     return a
   }
 
+  /**
+   * Normalize direction parameter to ensure it's either 1 or -1.
+   * @param d Direction value
+   * @return 1 if d >= 0, -1 if d < 0
+   */
+  private int normalizeDirection(int d) {
+    if (d < 0) {
+      return -1
+    }
+    return 1
+  }
+
   private void applyParams(Map params) {
     if (params.option) this.option = normalizeOption(params.option as String)
     if (params.begin != null) this.begin = params.begin as double
     if (params.end != null) this.end = params.end as double
-    if (params.direction != null) this.direction = params.direction as int
+    if (params.direction != null) this.direction = normalizeDirection(params.direction as int)
     if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as double)
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
@@ -143,8 +155,8 @@ class ScaleColorViridis extends ScaleDiscrete {
     List<String> result = []
 
     // Calculate actual begin/end based on direction
-    double actualBegin = direction >= 0 ? begin : end
-    double actualEnd = direction >= 0 ? end : begin
+    double actualBegin = direction > 0 ? begin : end
+    double actualEnd = direction > 0 ? end : begin
 
     for (int i = 0; i < n; i++) {
       // Calculate position in 0-1 range

@@ -407,4 +407,26 @@ class ScaleIntegrationTest {
     Svg svg = chart.render()
     assertNotNull(svg)
   }
+
+  @Test
+  void testViridisDirectionValidation() {
+    // Test that direction parameter is normalized to 1 or -1
+    def scale1 = scale_color_viridis_d(direction: 1)
+    assertEquals(1, scale1.direction)
+
+    def scale2 = scale_color_viridis_d(direction: -1)
+    assertEquals(-1, scale2.direction)
+
+    // Test that values > 0 are normalized to 1
+    def scale3 = scale_color_viridis_d(direction: 5)
+    assertEquals(1, scale3.direction)
+
+    // Test that values < 0 are normalized to -1
+    def scale4 = scale_color_viridis_d(direction: -5)
+    assertEquals(-1, scale4.direction)
+
+    // Test that 0 is normalized to 1
+    def scale5 = scale_color_viridis_d(direction: 0)
+    assertEquals(1, scale5.direction)
+  }
 }
