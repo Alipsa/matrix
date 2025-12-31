@@ -360,7 +360,24 @@ class ScaleIntegrationTest {
 
   @Test
   void testViridisScaleReversed() {
-    // Test reversed direction
+    // Test that direction: -1 actually reverses the color order
+    def normalScale = scale_color_viridis_d()
+    normalScale.train(['setosa', 'versicolor', 'virginica'])
+    List<String> normalColors = normalScale.getColors()
+
+    def reversedScale = scale_color_viridis_d(direction: -1)
+    reversedScale.train(['setosa', 'versicolor', 'virginica'])
+    List<String> reversedColors = reversedScale.getColors()
+
+    // Verify we have colors
+    assertEquals(3, normalColors.size())
+    assertEquals(3, reversedColors.size())
+
+    // Verify the first and last colors are swapped
+    assertEquals(normalColors[0], reversedColors[2], "First normal color should match last reversed color")
+    assertEquals(normalColors[2], reversedColors[0], "Last normal color should match first reversed color")
+
+    // Also verify rendering works
     def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
         geom_point() +
         scale_color_viridis_d(direction: -1)
