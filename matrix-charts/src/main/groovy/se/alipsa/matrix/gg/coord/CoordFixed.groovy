@@ -29,6 +29,14 @@ class CoordFixed extends CoordCartesian {
    */
   double ratio = 1.0
 
+  /**
+   * Returns the configured aspect ratio (y units per x unit).
+   * This can be used by rendering or transformation logic to
+   * enforce a fixed aspect ratio compared to CoordCartesian.
+   */
+  double getRatio() {
+    return ratio
+  }
   CoordFixed() {}
 
   CoordFixed(double ratio) {
