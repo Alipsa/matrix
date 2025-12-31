@@ -556,17 +556,69 @@ class ScaleIntegrationTest {
     assertTrue(content1.contains('<rect'), "Chart 1 should contain histogram bars")
     assertTrue(content2.contains('<rect'), "Chart 2 should contain histogram bars")
 
-    // Extract just the histogram bars from both SVGs to compare
-    // Both charts should have the same number of bars and same dimensions
-    int barCount1 = content1.count('<rect')
-    int barCount2 = content2.count('<rect')
-    assertEquals(barCount1, barCount2, "Both charts should have the same number of rect elements")
+    // Extract and compare rect elements to verify identical behavior
+    def rects1 = extractRectAttributes(content1)
+    def rects2 = extractRectAttributes(content2)
+    
+    // Verify same number of bars
+    assertEquals(rects1.size(), rects2.size(), 
+        "Both charts should have the same number of rect elements")
+    
+    // Verify each bar has identical attributes
+    for (int i = 0; i < rects1.size(); i++) {
+      def rect1 = rects1[i]
+      def rect2 = rects2[i]
+      
+      assertEquals(rect1.x, rect2.x, 
+          "Bar ${i}: x position should be identical")
+      assertEquals(rect1.y, rect2.y, 
+          "Bar ${i}: y position should be identical")
+      assertEquals(rect1.width, rect2.width, 
+          "Bar ${i}: width should be identical")
+      assertEquals(rect1.height, rect2.height, 
+          "Bar ${i}: height should be identical")
+    }
 
     // The rendered output should be identical
     // (excluding any potential minor differences in whitespace or attribute order)
     // Compare the data-layer group content
     assertTrue(content1.contains('class="geomhistogram"'), "Chart 1 should have histogram class")
     assertTrue(content2.contains('class="geomhistogram"'), "Chart 2 should have histogram class")
+  }
+  
+  /**
+   * Helper method to extract rect element attributes from SVG content.
+   * Returns a list of maps containing x, y, width, height for each rect.
+   */
+  private List<Map<String, String>> extractRectAttributes(String svgContent) {
+    def rects = []
+    // Match rect elements and their attributes
+    def pattern = /<rect[^>]*>/
+    def matcher = (svgContent =~ pattern)
+    
+    matcher.each { rectTag ->
+      def attrs = [:]
+      
+      // Extract x attribute
+      def xMatch = (rectTag =~ /x="([^"]*)"/)
+      if (xMatch) attrs.x = xMatch[0][1]
+      
+      // Extract y attribute
+      def yMatch = (rectTag =~ /y="([^"]*)"/)
+      if (yMatch) attrs.y = yMatch[0][1]
+      
+      // Extract width attribute
+      def widthMatch = (rectTag =~ /width="([^"]*)"/)
+      if (widthMatch) attrs.width = widthMatch[0][1]
+      
+      // Extract height attribute
+      def heightMatch = (rectTag =~ /height="([^"]*)"/)
+      if (heightMatch) attrs.height = heightMatch[0][1]
+      
+      rects << attrs
+    }
+    
+    return rects
   }
 
   @Test
