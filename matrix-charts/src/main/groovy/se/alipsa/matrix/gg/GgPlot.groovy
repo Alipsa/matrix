@@ -686,7 +686,11 @@ class GgPlot {
    * Two-color fill gradient.
    */
   static ScaleColorGradient scale_fill_gradient(String low, String high) {
-    return new ScaleColorGradient(low: low, high: high, aesthetic: 'fill')
+    def params = [low: low, high: high]
+    if (!params.containsKey('aesthetic')) {
+      params.aesthetic = 'fill'
+    }
+    return new ScaleColorGradient(params)
   }
 
   /**
