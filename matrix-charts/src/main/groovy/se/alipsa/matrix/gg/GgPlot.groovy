@@ -640,8 +640,7 @@ class GgPlot {
    * Viridis discrete fill scale.
    */
   static ScaleColorViridis scale_fill_viridis_d(Map params = [:]) {
-    params.aesthetic = 'fill'
-    return new ScaleColorViridis(params)
+    return new ScaleColorViridis(params + [aesthetic: 'fill'])
   }
 
   // --- Fill scales ---
@@ -650,8 +649,7 @@ class GgPlot {
    * Manual fill scale for discrete data.
    */
   static ScaleColorManual scale_fill_manual(Map mappings) {
-    mappings.aesthetic = 'fill'
-    return new ScaleColorManual(mappings)
+    return new ScaleColorManual(mappings + [aesthetic: 'fill'])
   }
 
   /**
@@ -662,34 +660,28 @@ class GgPlot {
    * @param params Optional map with 'values' (list of colors), 'name', 'limits', 'breaks', 'labels'
    */
   static ScaleColorManual scale_fill_discrete(Map params = [:]) {
-    params.aesthetic = 'fill'
-    return new ScaleColorManual(params)
+    return new ScaleColorManual(params + [aesthetic: 'fill'])
   }
 
   /**
    * Continuous fill gradient scale.
    */
   static ScaleColorGradient scale_fill_gradient(Map params = [:]) {
-    params.aesthetic = 'fill'
-    return new ScaleColorGradient(params)
+    return new ScaleColorGradient(params + [aesthetic: 'fill'])
   }
 
   /**
    * Two-color fill gradient.
    */
   static ScaleColorGradient scale_fill_gradient(String low, String high) {
-    def params = [low: low, high: high]
-    params.aesthetic = 'fill'
-    return new ScaleColorGradient(params)
+    return new ScaleColorGradient([low: low, high: high, aesthetic: 'fill'])
   }
 
   /**
    * Diverging fill gradient with mid color.
    */
   static ScaleColorGradient scale_fill_gradient2(Map params = [:]) {
-    if (!params.mid) params.mid = 'white'
-    params.aesthetic = 'fill'
-    return new ScaleColorGradient(params)
+    return new ScaleColorGradient(params + [mid: params.mid ?: 'white', aesthetic: 'fill'])
   }
 
   /**
@@ -700,8 +692,7 @@ class GgPlot {
    * @param params Optional map with 'low', 'high', 'mid', 'midpoint', 'name', 'limits'
    */
   static ScaleColorGradient scale_fill_continuous(Map params = [:]) {
-    params.aesthetic = 'fill'
-    return new ScaleColorGradient(params)
+    return new ScaleColorGradient(params + [aesthetic: 'fill'])
   }
 
   static StatBin2d stat_bin_2d() {
