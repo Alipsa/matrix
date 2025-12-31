@@ -37,6 +37,7 @@ class CoordFixed extends CoordCartesian {
   double getRatio() {
     return ratio
   }
+
   CoordFixed() {}
 
   CoordFixed(double ratio) {
