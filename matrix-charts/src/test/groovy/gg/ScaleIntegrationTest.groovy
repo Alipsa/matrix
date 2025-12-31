@@ -1,5 +1,6 @@
 package gg
 
+import groovy.xml.XmlSlurper
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
@@ -445,5 +446,178 @@ class ScaleIntegrationTest {
     // Test that 0 is normalized to 1
     def scale5 = scale_color_viridis_d(direction: 0)
     assertEquals(1, scale5.direction)
+  }
+
+  @Test
+  void testDiscreteAndContinuousScaleFactoryMethods() {
+    // Test scale_color_discrete and scale_colour_discrete
+    def colorDiscrete = scale_color_discrete()
+    assertEquals('color', colorDiscrete.aesthetic)
+
+    def colourDiscrete = scale_colour_discrete()
+    assertEquals('color', colourDiscrete.aesthetic)
+
+    // Test scale_color_continuous and scale_colour_continuous
+    def colorContinuous = scale_color_continuous()
+    assertEquals('color', colorContinuous.aesthetic)
+
+    def colourContinuous = scale_colour_continuous()
+    assertEquals('color', colourContinuous.aesthetic)
+
+    // Test scale_fill_discrete
+    def fillDiscrete = scale_fill_discrete()
+    assertEquals('fill', fillDiscrete.aesthetic)
+
+    // Test scale_fill_continuous
+    def fillContinuous = scale_fill_continuous()
+    assertEquals('fill', fillContinuous.aesthetic)
+  }
+
+  @Test
+  void testDiscreteColorScaleWithChart() {
+    // Test that scale_colour_discrete works in a chart
+    def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length', color: 'Species')) +
+        geom_point() +
+        scale_colour_discrete()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+  }
+
+  @Test
+  void testContinuousColorScaleWithChart() {
+    // Test that scale_colour_continuous works in a chart
+    def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg', color: 'wt')) +
+        geom_point() +
+        scale_colour_continuous(low: 'yellow', high: 'red')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+  }
+
+  @Test
+  void testFillDiscreteScaleWithChart() {
+    // Test that scale_fill_discrete works in a chart
+    def data = Matrix.builder()
+        .columnNames('category', 'value')
+        .rows([
+            ['A', 10],
+            ['B', 20],
+            ['C', 30]
+        ])
+        .types(String, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'category', y: 'value', fill: 'category')) +
+        geom_col() +
+        scale_fill_discrete()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testFillContinuousScaleWithChart() {
+    // Test that scale_fill_continuous works in a chart
+    def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg', fill: 'wt')) +
+        geom_point() +
+        scale_fill_continuous(low: 'blue', high: 'green')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testHistogramWithAndWithoutAfterStat() {
+    // Test that ggplot(mpg, aes(x: 'displ')) + geom_histogram()
+    // generates identical result as
+    // ggplot(mpg, aes(x: 'displ', y: after_stat('count'))) + geom_histogram()
+
+    def mpg = Dataset.mpg()
+
+    // Chart without explicit y aesthetic (default behavior uses count)
+    def chart1 = ggplot(mpg, aes(x: 'displ')) + geom_histogram(bins: 10)
+    Svg svg1 = chart1.render()
+    assertNotNull(svg1)
+    String content1 = SvgWriter.toXml(svg1)
+
+    // Chart with explicit after_stat(count) for y
+    def chart2 = ggplot(mpg, aes(x: 'displ', y: after_stat('count'))) + geom_histogram(bins: 10)
+    Svg svg2 = chart2.render()
+    assertNotNull(svg2)
+    String content2 = SvgWriter.toXml(svg2)
+
+    // Both should produce histograms with bars (rect elements)
+    assertTrue(content1.contains('<rect'), "Chart 1 should contain histogram bars")
+    assertTrue(content2.contains('<rect'), "Chart 2 should contain histogram bars")
+
+    // Extract the histogram group content from both SVGs
+    // Both should have identical histogram content since they're rendering the same data
+    String histogramContent1 = extractHistogramGroupContent(content1)
+    String histogramContent2 = extractHistogramGroupContent(content2)
+
+    // Verify both have histogram content
+    assertFalse(histogramContent1.isEmpty(), "Chart 1 should have histogram content")
+    assertFalse(histogramContent2.isEmpty(), "Chart 2 should have histogram content")
+
+    // The histogram group content should be identical
+    assertEquals(histogramContent1, histogramContent2,
+        "Both charts should produce identical histogram content")
+
+    // Verify both have histogram class
+    assertTrue(content1.contains('class="geomhistogram"'), "Chart 1 should have histogram class")
+    assertTrue(content2.contains('class="geomhistogram"'), "Chart 2 should have histogram class")
+  }
+
+  /**
+   * Helper method to extract the geomhistogram group content from SVG.
+   * Uses XmlSlurper for proper XML parsing that handles nested groups correctly.
+   * Returns a normalized string representation of the histogram group's children.
+   */
+  private String extractHistogramGroupContent(String svgContent) {
+    def svg = new XmlSlurper().parseText(svgContent)
+    def histogramGroup = svg.depthFirst().find { node ->
+      node.name() == 'g' && node.@class?.toString()?.contains('geomhistogram')
+    }
+    if (histogramGroup) {
+      // Convert children to a normalized string for comparison
+      return histogramGroup.children().collect { child ->
+        groovy.xml.XmlUtil.serialize(child)
+      }.join('\n')
+    }
+    return ""
+  }
+
+  @Test
+  void testAfterStatFactoryMethod() {
+    // Test that after_stat() creates proper AfterStat objects
+    def afterCount = after_stat('count')
+    assertNotNull(afterCount)
+    assertEquals('count', afterCount.stat)
+
+    def afterDensity = after_stat('density')
+    assertEquals('density', afterDensity.stat)
+
+    // Test equality
+    def afterCount2 = after_stat('count')
+    assertEquals(afterCount, afterCount2)
+  }
+
+  @Test
+  void testAesWithAfterStat() {
+    // Test that Aes correctly identifies AfterStat values
+    def aesWithAfterStat = aes(x: 'displ', y: after_stat('count'))
+
+    assertTrue(aesWithAfterStat.isAfterStat('y'))
+    assertFalse(aesWithAfterStat.isAfterStat('x'))
+    assertEquals('count', aesWithAfterStat.getAfterStatName('y'))
+    assertNull(aesWithAfterStat.yColName)  // Should be null for AfterStat
+    assertEquals('displ', aesWithAfterStat.xColName)
   }
 }

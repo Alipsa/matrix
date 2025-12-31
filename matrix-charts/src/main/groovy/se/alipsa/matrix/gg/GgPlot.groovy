@@ -21,6 +21,7 @@ import se.alipsa.matrix.gg.geom.GeomVline
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFlip
@@ -100,6 +101,22 @@ class GgPlot {
    */
   static Identity I(Object value) {
     return new Identity(value)
+  }
+
+  /**
+   * Reference to a computed statistic for use in aesthetic mappings.
+   * Use: aes(y: after_stat('count')) to map the computed count from stat_bin.
+   *
+   * Common computed variables:
+   * - 'count': number of observations in each bin/group
+   * - 'density': density of observations
+   * - 'ncount': count normalized to maximum of 1
+   * - 'ndensity': density normalized to maximum of 1
+   *
+   * @param stat The name of the computed statistic
+   */
+  static AfterStat after_stat(String stat) {
+    return new AfterStat(stat)
   }
 
   // ============ Labels ============
@@ -527,6 +544,22 @@ class GgPlot {
   }
 
   /**
+   * Discrete color scale for categorical data.
+   * Uses a default color palette that maps categorical values to colors.
+   * This is the default scale used when mapping a discrete variable to color.
+   *
+   * @param params Optional map with 'values' (list of colors), 'name', 'limits', 'breaks', 'labels'
+   */
+  static ScaleColorManual scale_color_discrete(Map params = [:]) {
+    return new ScaleColorManual(params)
+  }
+
+  /** British spelling alias for scale_color_discrete */
+  static ScaleColorManual scale_colour_discrete(Map params = [:]) {
+    return scale_color_discrete(params)
+  }
+
+  /**
    * Continuous color gradient scale.
    * @param params Map with 'low', 'high', optionally 'mid' and 'midpoint'
    */
@@ -565,6 +598,22 @@ class GgPlot {
     return scale_color_gradient2(params)
   }
 
+  /**
+   * Continuous color scale for numeric data.
+   * This is the default scale used when mapping a continuous variable to color.
+   * Alias for scale_color_gradient().
+   *
+   * @param params Optional map with 'low', 'high', 'mid', 'midpoint', 'name', 'limits'
+   */
+  static ScaleColorGradient scale_color_continuous(Map params = [:]) {
+    return new ScaleColorGradient(params)
+  }
+
+  /** British spelling alias for scale_color_continuous */
+  static ScaleColorGradient scale_colour_continuous(Map params = [:]) {
+    return scale_color_continuous(params)
+  }
+
   // --- Viridis color scales ---
 
   /**
@@ -591,10 +640,7 @@ class GgPlot {
    * Viridis discrete fill scale.
    */
   static ScaleColorViridis scale_fill_viridis_d(Map params = [:]) {
-    if (!params.containsKey('aesthetic')) {
-      params.aesthetic = 'fill'
-    }
-    return new ScaleColorViridis(params)
+    return new ScaleColorViridis(params + [aesthetic: 'fill'])
   }
 
   // --- Fill scales ---
@@ -603,37 +649,50 @@ class GgPlot {
    * Manual fill scale for discrete data.
    */
   static ScaleColorManual scale_fill_manual(Map mappings) {
-    def scale = new ScaleColorManual(mappings)
-    scale.aesthetic = 'fill'
-    return scale
+    return new ScaleColorManual(mappings + [aesthetic: 'fill'])
+  }
+
+  /**
+   * Discrete fill scale for categorical data.
+   * Uses a default color palette that maps categorical values to fill colors.
+   * This is the default scale used when mapping a discrete variable to fill.
+   *
+   * @param params Optional map with 'values' (list of colors), 'name', 'limits', 'breaks', 'labels'
+   */
+  static ScaleColorManual scale_fill_discrete(Map params = [:]) {
+    return new ScaleColorManual(params + [aesthetic: 'fill'])
   }
 
   /**
    * Continuous fill gradient scale.
    */
   static ScaleColorGradient scale_fill_gradient(Map params = [:]) {
-    def scale = new ScaleColorGradient(params)
-    scale.aesthetic = 'fill'
-    return scale
+    return new ScaleColorGradient(params + [aesthetic: 'fill'])
   }
 
   /**
    * Two-color fill gradient.
    */
   static ScaleColorGradient scale_fill_gradient(String low, String high) {
-    def scale = new ScaleColorGradient(low: low, high: high)
-    scale.aesthetic = 'fill'
-    return scale
+    return new ScaleColorGradient([low: low, high: high, aesthetic: 'fill'])
   }
 
   /**
    * Diverging fill gradient with mid color.
    */
   static ScaleColorGradient scale_fill_gradient2(Map params = [:]) {
-    if (!params.mid) params.mid = 'white'
-    def scale = new ScaleColorGradient(params)
-    scale.aesthetic = 'fill'
-    return scale
+    return new ScaleColorGradient(params + [mid: params.containsKey('mid') ? params.mid : 'white', aesthetic: 'fill'])
+  }
+
+  /**
+   * Continuous fill scale for numeric data.
+   * This is the default scale used when mapping a continuous variable to fill.
+   * Alias for scale_fill_gradient().
+   *
+   * @param params Optional map with 'low', 'high', 'mid', 'midpoint', 'name', 'limits'
+   */
+  static ScaleColorGradient scale_fill_continuous(Map params = [:]) {
+    return new ScaleColorGradient(params + [aesthetic: 'fill'])
   }
 
   static StatBin2d stat_bin_2d() {

@@ -124,11 +124,30 @@ class Aes {
   }
 
   /**
-   * Extract column name from a value (returns null for Identity wrappers).
+   * Check if an aesthetic references a computed statistic (wrapped in AfterStat).
+   */
+  @CompileDynamic
+  boolean isAfterStat(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof AfterStat
+  }
+
+  /**
+   * Get the computed statistic name for an aesthetic (if it's an AfterStat wrapper).
+   */
+  @CompileDynamic
+  String getAfterStatName(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof AfterStat ? ((AfterStat) value).stat : null
+  }
+
+  /**
+   * Extract column name from a value (returns null for Identity and AfterStat wrappers).
    */
   private static String extractColName(def value) {
     if (value == null) return null
     if (value instanceof Identity) return null
+    if (value instanceof AfterStat) return null
     return value.toString()
   }
 

@@ -75,6 +75,7 @@ dependencies {
   compileOnly "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
 
   testImplementation libs.groovy
+  testImplementation libs.groovyXml
   //testImplementation "org.testfx:openjfx-monocle:jdk-11+26"
 
   testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"

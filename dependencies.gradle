@@ -8,6 +8,7 @@ dependencyResolutionManagement {
       library('groovyGinq', "org.apache.groovy:groovy-ginq:$groovyVersion")
       library('groovyJson', "org.apache.groovy:groovy-json:$groovyVersion")
       library('groovyTemplates', "org.apache.groovy:groovy-templates:$groovyVersion")
+      library('groovyXml', "org.apache.groovy:groovy-xml:$groovyVersion")
       library('groovyAnt', "org.apache.groovy:groovy-ant:$groovyVersion")
       library('groovyDoc', "org.apache.groovy:groovy-groovydoc:$groovyVersion")
       library('log4jApi', "org.apache.logging.log4j:log4j-api:2.25.2")

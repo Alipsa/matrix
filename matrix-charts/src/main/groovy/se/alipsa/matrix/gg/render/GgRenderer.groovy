@@ -664,10 +664,16 @@ class GgRenderer {
           // stat_boxplot produces ymin/ymax columns - include both for full y range
           data['y'].addAll(statData['ymin'] ?: [])
           data['y'].addAll(statData['ymax'] ?: [])
+        } else if (layerAes.isAfterStat('y')) {
+          // Explicit after_stat() reference - use the specified computed column
+          String statCol = layerAes.getAfterStatName('y')
+          if (statData.columnNames().contains(statCol)) {
+            data['y'].addAll(statData[statCol] ?: [])
+          }
         } else if (layerAes.yColName && statData.columnNames().contains(layerAes.yColName)) {
           data['y'].addAll(statData[layerAes.yColName] ?: [])
         } else if (statData.columnNames().contains('count')) {
-          // stat_count and stat_bin produce 'count' column for y values
+          // stat_count and stat_bin produce 'count' column for y values (default behavior)
           data['y'].addAll(statData['count'] ?: [])
         }
 
