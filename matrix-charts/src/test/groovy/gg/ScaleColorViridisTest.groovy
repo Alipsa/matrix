@@ -129,4 +129,42 @@ class ScaleColorViridisTest {
     assertNotEquals(lowColor, midColor)
     assertNotEquals(midColor, highColor)
   }
+
+  @Test
+  void testOnlyBeginProvidedIsValid() {
+    // When only begin is provided, it should validate against default end (1.0)
+    ScaleColorViridis scale = new ScaleColorViridis(begin: 0.3)
+    assertEquals(0.3d, scale.begin, 0.001d)
+    assertEquals(1.0d, scale.end, 0.001d) // Default end
+  }
+
+  @Test
+  void testOnlyEndProvidedIsValid() {
+    // When only end is provided, it should validate against default begin (0.0)
+    ScaleColorViridis scale = new ScaleColorViridis(end: 0.7)
+    assertEquals(0.0d, scale.begin, 0.001d) // Default begin
+    assertEquals(0.7d, scale.end, 0.001d)
+  }
+
+  @Test
+  void testOnlyBeginProvidedInvalidIfGreaterThanDefaultEnd() {
+    // begin > default end (1.0) should fail
+    Exception exception = assertThrows(IllegalArgumentException.class, {
+      new ScaleColorViridis(begin: 1.1)
+    })
+    // Should fail on range validation, not begin<=end validation
+    assertTrue(exception.message.contains('begin'))
+    assertTrue(exception.message.contains('[0, 1]'))
+  }
+
+  @Test
+  void testOnlyEndProvidedInvalidIfLessThanDefaultBegin() {
+    // This would never happen since default begin is 0.0 and end must be >= 0
+    // But we can test that end < 0 fails
+    Exception exception = assertThrows(IllegalArgumentException.class, {
+      new ScaleColorViridis(end: -0.1)
+    })
+    assertTrue(exception.message.contains('end'))
+    assertTrue(exception.message.contains('[0, 1]'))
+  }
 }
