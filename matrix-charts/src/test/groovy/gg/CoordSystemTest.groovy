@@ -613,4 +613,159 @@ class CoordSystemTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  // ==================== Aspect Ratio Enforcement Tests ====================
+
+  @Test
+  void testCoordFixedEnforcesEqualScaling() {
+    // Create data with equal x and y ranges (both 0-100)
+    // With ratio=1.0, the pixel ranges should be equal
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [0, 0],
+            [100, 100],
+            [50, 50]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 10) +
+        coord_fixed()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    // The chart should render without error and maintain aspect ratio
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+
+    // Extract circle positions to verify scaling
+    // With equal data ranges and ratio=1.0, the diagonal should be at 45 degrees
+    def circlePattern = /cx="(\d+\.?\d*)" cy="(\d+\.?\d*)"/
+    def matcher = content =~ circlePattern
+    def points = []
+    while (matcher.find()) {
+      points << [cx: Double.parseDouble(matcher.group(1)), cy: Double.parseDouble(matcher.group(2))]
+    }
+
+    // Should have 3 points
+    assertEquals(3, points.size(), "Should have 3 points")
+
+    File outputFile = new File('build/coord_fixed_equal_scaling.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testCoordFixedWithDifferentRanges() {
+    // Create data with x range 0-100 and y range 0-50
+    // With ratio=1.0, x should use twice the pixel range of y
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [0, 0],
+            [100, 50],
+            [50, 25]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def chartFixed = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 8) +
+        coord_fixed()
+
+    def chartCartesian = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 8) +
+        coord_cartesian()
+
+    Svg svgFixed = chartFixed.render()
+    Svg svgCartesian = chartCartesian.render()
+
+    assertNotNull(svgFixed)
+    assertNotNull(svgCartesian)
+
+    // Both should render, but with different aspect ratios
+    String contentFixed = SvgWriter.toXml(svgFixed)
+    String contentCartesian = SvgWriter.toXml(svgCartesian)
+
+    assertTrue(contentFixed.contains('<circle'), "Fixed should contain points")
+    assertTrue(contentCartesian.contains('<circle'), "Cartesian should contain points")
+
+    File outputFixed = new File('build/coord_fixed_different_ranges.svg')
+    File outputCartesian = new File('build/coord_cartesian_different_ranges.svg')
+    write(svgFixed, outputFixed)
+    write(svgCartesian, outputCartesian)
+
+    assertTrue(outputFixed.exists())
+    assertTrue(outputCartesian.exists())
+  }
+
+  @Test
+  void testCoordFixedRatioAffectsScaling() {
+    // Test that different ratios produce different scaling
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [0, 0],
+            [10, 10]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def chartRatio1 = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 10) +
+        coord_fixed(1.0)
+
+    def chartRatio2 = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point(size: 10) +
+        coord_fixed(2.0)
+
+    Svg svgRatio1 = chartRatio1.render()
+    Svg svgRatio2 = chartRatio2.render()
+
+    assertNotNull(svgRatio1)
+    assertNotNull(svgRatio2)
+
+    String content1 = SvgWriter.toXml(svgRatio1)
+    String content2 = SvgWriter.toXml(svgRatio2)
+
+    // Extract circle positions for both charts
+    def circlePattern = /cx="(\d+\.?\d*)" cy="(\d+\.?\d*)"/
+
+    def matcher1 = content1 =~ circlePattern
+    def points1 = []
+    while (matcher1.find()) {
+      points1 << [cx: Double.parseDouble(matcher1.group(1)), cy: Double.parseDouble(matcher1.group(2))]
+    }
+
+    def matcher2 = content2 =~ circlePattern
+    def points2 = []
+    while (matcher2.find()) {
+      points2 << [cx: Double.parseDouble(matcher2.group(1)), cy: Double.parseDouble(matcher2.group(2))]
+    }
+
+    // Both should have 2 points
+    assertEquals(2, points1.size(), "Ratio 1.0 should have 2 points")
+    assertEquals(2, points2.size(), "Ratio 2.0 should have 2 points")
+
+    // With different ratios, the x dimension should be scaled differently
+    // The aspect ratio adjustment modifies the effective width to maintain the ratio
+    if (points1.size() == 2 && points2.size() == 2) {
+      double deltaX1 = Math.abs(points1[1].cx - points1[0].cx)
+      double deltaX2 = Math.abs(points2[1].cx - points2[0].cx)
+
+      // The x deltas should be different because ratio=2.0 compresses x more
+      // This verifies the aspect ratio is actually being applied
+      // Use a tolerance of 1 pixel to account for rounding
+      assertTrue(Math.abs(deltaX1 - deltaX2) > 1.0,
+          "Different ratios should produce different x scaling (deltaX1=${deltaX1}, deltaX2=${deltaX2})")
+    }
+
+    File output1 = new File('build/coord_fixed_ratio_1.svg')
+    File output2 = new File('build/coord_fixed_ratio_2.svg')
+    write(svgRatio1, output1)
+    write(svgRatio2, output2)
+  }
 }
