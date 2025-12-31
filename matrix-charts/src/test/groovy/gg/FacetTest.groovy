@@ -4,9 +4,11 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
+import se.alipsa.matrix.gg.facet.FormulaParser
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -536,5 +538,250 @@ class FacetTest {
     FacetWrap facet4 = new FacetWrap(facets: 'cat', scales: 'free_y')
     assertFalse(facet4.isFreeX())
     assertTrue(facet4.isFreeY())
+  }
+
+  // ==================== Formula Parsing Tests ====================
+
+  @Test
+  void testFormulaParserBasic() {
+    // year ~ drv -> rows: ['year'], cols: ['drv']
+    def result = FormulaParser.parse('year ~ drv')
+    assertEquals(['year'], result.rows)
+    assertEquals(['drv'], result.cols)
+  }
+
+  @Test
+  void testFormulaParserRowsOnly() {
+    // year ~ . -> rows: ['year'], cols: []
+    def result = FormulaParser.parse('year ~ .')
+    assertEquals(['year'], result.rows)
+    assertTrue(result.cols.isEmpty())
+
+    // year ~ -> rows: ['year'], cols: []
+    def result2 = FormulaParser.parse('year ~')
+    assertEquals(['year'], result2.rows)
+    assertTrue(result2.cols.isEmpty())
+  }
+
+  @Test
+  void testFormulaParserColsOnly() {
+    // . ~ drv -> rows: [], cols: ['drv']
+    def result = FormulaParser.parse('. ~ drv')
+    assertTrue(result.rows.isEmpty())
+    assertEquals(['drv'], result.cols)
+
+    // ~ drv -> rows: [], cols: ['drv']
+    def result2 = FormulaParser.parse('~ drv')
+    assertTrue(result2.rows.isEmpty())
+    assertEquals(['drv'], result2.cols)
+  }
+
+  @Test
+  void testFormulaParserMultipleVariables() {
+    // year + cyl ~ drv -> rows: ['year', 'cyl'], cols: ['drv']
+    def result = FormulaParser.parse('year + cyl ~ drv')
+    assertEquals(['year', 'cyl'], result.rows)
+    assertEquals(['drv'], result.cols)
+
+    // year ~ drv + gear -> rows: ['year'], cols: ['drv', 'gear']
+    def result2 = FormulaParser.parse('year ~ drv + gear')
+    assertEquals(['year'], result2.rows)
+    assertEquals(['drv', 'gear'], result2.cols)
+
+    // Multiple on both sides
+    def result3 = FormulaParser.parse('a + b ~ c + d')
+    assertEquals(['a', 'b'], result3.rows)
+    assertEquals(['c', 'd'], result3.cols)
+  }
+
+  @Test
+  void testFormulaParserWhitespace() {
+    // Should handle various whitespace
+    def result = FormulaParser.parse('  year  ~  drv  ')
+    assertEquals(['year'], result.rows)
+    assertEquals(['drv'], result.cols)
+
+    def result2 = FormulaParser.parse('year+cyl~drv+gear')
+    assertEquals(['year', 'cyl'], result2.rows)
+    assertEquals(['drv', 'gear'], result2.cols)
+  }
+
+  @Test
+  void testFormulaParserInvalid() {
+    // Missing ~ should throw
+    assertThrows(IllegalArgumentException) {
+      FormulaParser.parse('year drv')
+    }
+
+    // Null should throw
+    assertThrows(IllegalArgumentException) {
+      FormulaParser.parse(null)
+    }
+  }
+
+  @Test
+  void testFacetGridStringConstructor() {
+    FacetGrid facet = new FacetGrid('year ~ drv')
+    assertEquals(['year'], facet.rows)
+    assertEquals(['drv'], facet.cols)
+  }
+
+  @Test
+  void testFacetGridFactoryWithFormula() {
+    def fg = facet_grid('year ~ drv')
+    assertTrue(fg instanceof FacetGrid)
+    assertEquals(['year'], fg.rows)
+    assertEquals(['drv'], fg.cols)
+  }
+
+  // ==================== ggplot2 Book Integration Tests ====================
+
+  @Test
+  void testFacetGridColumnsOnlyFormula() {
+    // From ggplot2 book: base + facet_grid(. ~ cyl)
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+        geom_point() +
+        facet_grid('. ~ cyl')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+    assertTrue(content.contains('panel-'), "Should contain panel groups")
+
+    File outputFile = new File('build/facet_grid_cols_only_formula.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFacetGridRowsOnlyFormula() {
+    // From ggplot2 book: base + facet_grid(drv ~ .)
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+        geom_point() +
+        facet_grid('drv ~ .')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+
+    File outputFile = new File('build/facet_grid_rows_only_formula.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFacetGridTwoVariablesFormula() {
+    // From ggplot2 book: base + facet_grid(drv ~ cyl)
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+        geom_point() +
+        facet_grid('drv ~ cyl')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+
+    File outputFile = new File('build/facet_grid_two_vars_formula.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFacetWrapWithNcol() {
+    // From ggplot2 book: base + facet_wrap(~class, ncol = 3)
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+        geom_point() +
+        facet_wrap(facets: 'class', ncol: 3)
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/facet_wrap_ncol.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFacetWrapWithNrow() {
+    // From ggplot2 book: base + facet_wrap(~class, nrow = 3)
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+        geom_point() +
+        facet_wrap(facets: 'class', nrow: 3)
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/facet_wrap_nrow.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFacetWrapWithVerticalDir() {
+    // From ggplot2 book: base + facet_wrap(~class, nrow = 3, dir = "v")
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+        geom_point() +
+        facet_wrap(facets: 'class', nrow: 3, dir: 'v')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/facet_wrap_vertical.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFacetWrapWithFreeScales() {
+    // From ggplot2 book: p + facet_wrap(~cyl, scales = "free")
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+        geom_point() +
+        facet_wrap(facets: 'cyl', scales: 'free')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    File outputFile = new File('build/facet_wrap_free_scales.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testFacetGridYearDrvFormula() {
+    // This is the exact example from facets.groovy
+    def mpg = Dataset.mpg()
+
+    def chart = ggplot(mpg, aes('cty', 'hwy')) +
+        geom_point() +
+        facet_grid('year ~ drv')
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('<circle'), "Should contain points")
+
+    File outputFile = new File('build/facet_grid_year_drv.svg')
+    write(svg, outputFile)
+    assertTrue(outputFile.exists())
   }
 }
