@@ -674,28 +674,35 @@ class GgRenderer {
         if (!scale.isTrained() && aestheticData[scale.aesthetic]) {
           scale.train(aestheticData[scale.aesthetic])
         }
-        // Set name from aesthetic mapping for legend title (if not already set by user)
-        if (!scale.name) {
-          String aes = scale.aesthetic == 'colour' ? 'color' : scale.aesthetic
+        // Helper to set name from aesthetic mapping for legend title
+        def setScaleNameFromAesthetic = { Scale s, String aestheticName, GgChart c ->
+          if (s.name) {
+            return
+          }
+          String aes = aestheticName == 'colour' ? 'color' : aestheticName
           // First check globalAes
-          if (aes == 'color' && chart.globalAes?.color && !chart.globalAes.isConstant('color')) {
-            scale.name = chart.globalAes.colorColName
-          } else if (aes == 'fill' && chart.globalAes?.fill && !chart.globalAes.isConstant('fill')) {
-            scale.name = chart.globalAes.fillColName
+          if (aes == 'color' && c.globalAes?.color && !c.globalAes.isConstant('color')) {
+            s.name = c.globalAes.colorColName
+          } else if (aes == 'fill' && c.globalAes?.fill && !c.globalAes.isConstant('fill')) {
+            s.name = c.globalAes.fillColName
           } else {
             // Check layer aesthetics for color/fill mappings
-            for (layer in chart.layers) {
+            for (layer in c.layers) {
               if (layer.aes != null) {
                 if (aes == 'color' && layer.aes.color && !layer.aes.isConstant('color')) {
-                  scale.name = layer.aes.colorColName
+                  s.name = layer.aes.colorColName
                   break
                 } else if (aes == 'fill' && layer.aes.fill && !layer.aes.isConstant('fill')) {
-                  scale.name = layer.aes.fillColName
+                  s.name = layer.aes.fillColName
                   break
                 }
               }
             }
           }
+        }
+        // Set name from aesthetic mapping for legend title (if not already set by user)
+        if (!scale.name) {
+          setScaleNameFromAesthetic(scale, scale.aesthetic as String, chart)
         }
         // Set range for position scales (respecting CoordFlip)
         if (scale.aesthetic == 'x' && scale instanceof ScaleContinuous) {
