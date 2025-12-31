@@ -176,19 +176,68 @@ class Aes {
     result.group = base.group
     result.label = base.label
     result.weight = base.weight
-    // Override with this Aes's non-null values
-    if (this.x != null) result.x = this.x
-    if (this.y != null) result.y = this.y
-    if (this.color != null) result.color = this.color
-    if (this.fill != null) result.fill = this.fill
-    if (this.size != null) result.size = this.size
-    if (this.shape != null) result.shape = this.shape
-    if (this.alpha != null) result.alpha = this.alpha
-    if (this.linetype != null) result.linetype = this.linetype
-    if (this.linewidth != null) result.linewidth = this.linewidth
-    if (this.group != null) result.group = this.group
-    if (this.label != null) result.label = this.label
-    if (this.weight != null) result.weight = this.weight
+    // Also copy column name tracking fields from base
+    result.xColName = base.xColName
+    result.yColName = base.yColName
+    result.colorColName = base.colorColName
+    result.fillColName = base.fillColName
+    result.sizeColName = base.sizeColName
+    result.shapeColName = base.shapeColName
+    result.alphaColName = base.alphaColName
+    result.linetypeColName = base.linetypeColName
+    result.linewidthColName = base.linewidthColName
+    result.groupColName = base.groupColName
+    result.labelColName = base.labelColName
+    result.weightColName = base.weightColName
+    // Override with this Aes's non-null values and corresponding column names
+    if (this.x != null) {
+      result.x = this.x
+      result.xColName = this.xColName
+    }
+    if (this.y != null) {
+      result.y = this.y
+      result.yColName = this.yColName
+    }
+    if (this.color != null) {
+      result.color = this.color
+      result.colorColName = this.colorColName
+    }
+    if (this.fill != null) {
+      result.fill = this.fill
+      result.fillColName = this.fillColName
+    }
+    if (this.size != null) {
+      result.size = this.size
+      result.sizeColName = this.sizeColName
+    }
+    if (this.shape != null) {
+      result.shape = this.shape
+      result.shapeColName = this.shapeColName
+    }
+    if (this.alpha != null) {
+      result.alpha = this.alpha
+      result.alphaColName = this.alphaColName
+    }
+    if (this.linetype != null) {
+      result.linetype = this.linetype
+      result.linetypeColName = this.linetypeColName
+    }
+    if (this.linewidth != null) {
+      result.linewidth = this.linewidth
+      result.linewidthColName = this.linewidthColName
+    }
+    if (this.group != null) {
+      result.group = this.group
+      result.groupColName = this.groupColName
+    }
+    if (this.label != null) {
+      result.label = this.label
+      result.labelColName = this.labelColName
+    }
+    if (this.weight != null) {
+      result.weight = this.weight
+      result.weightColName = this.weightColName
+    }
     return result
   }
 
