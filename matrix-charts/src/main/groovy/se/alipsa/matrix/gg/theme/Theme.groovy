@@ -131,6 +131,9 @@ class Theme implements Cloneable {
   /** Base line height */
   Number baseLineHeight = 1.2
 
+  /** Track properties explicitly set to null (e.g., element_blank()). */
+  Set<String> explicitNulls = new HashSet<>()
+
   @Override
   Theme clone() {
     Theme copy = super.clone() as Theme
@@ -143,6 +146,7 @@ class Theme implements Cloneable {
     if (legendPosition instanceof List) {
       copy.legendPosition = copyList(legendPosition as List)
     }
+    copy.explicitNulls = new HashSet<>(explicitNulls)
 
     copy.plotBackground = cloneRect(plotBackground)
     copy.plotTitle = cloneText(plotTitle)
@@ -229,8 +233,17 @@ class Theme implements Cloneable {
     Theme merged = this.clone() as Theme
     // Merge non-null properties from other
     other.properties.each { key, value ->
-      if (value != null && key != 'class') {
+      if (value != null && key != 'class' && key != 'explicitNulls') {
         merged.setProperty(key as String, value)
+        merged.explicitNulls.remove(key as String)
+      }
+    }
+    if (other.explicitNulls) {
+      other.explicitNulls.each { key ->
+        if (merged.hasProperty(key as String)) {
+          merged.setProperty(key as String, null)
+          merged.explicitNulls.add(key as String)
+        }
       }
     }
     return merged
@@ -242,8 +255,14 @@ class Theme implements Cloneable {
   Theme plus(Map modifications) {
     Theme modified = this.clone() as Theme
     modifications.each { key, value ->
-      if (modified.hasProperty(key as String)) {
-        modified.setProperty(key as String, value)
+      String k = key as String
+      if (modified.hasProperty(k)) {
+        modified.setProperty(k, value)
+        if (value == null) {
+          modified.explicitNulls.add(k)
+        } else {
+          modified.explicitNulls.remove(k)
+        }
       }
     }
     return modified
@@ -269,8 +288,10 @@ class ElementText {
 
   ElementText(Map params) {
     params.each { key, value ->
-      if (this.hasProperty(key as String)) {
-        this.setProperty(key as String, value)
+      String k = key as String
+      if (k == 'colour') k = 'color'
+      if (this.hasProperty(k)) {
+        this.setProperty(k, value)
       }
     }
   }

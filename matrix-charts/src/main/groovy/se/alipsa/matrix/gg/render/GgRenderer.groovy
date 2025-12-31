@@ -53,6 +53,10 @@ class GgRenderer {
   static final int LEGEND_WIDTH_PADDING = 15
   static final String DEFAULT_STRIP_FILL = '#D9D9D9'
   static final String DEFAULT_STRIP_STROKE = 'none'
+  static final int LEGEND_CONTINUOUS_BAR_WIDTH_VERTICAL = 15
+  static final int LEGEND_CONTINUOUS_BAR_HEIGHT_VERTICAL = 80
+  static final int LEGEND_CONTINUOUS_BAR_WIDTH_HORIZONTAL = 100
+  static final int LEGEND_CONTINUOUS_BAR_HEIGHT_HORIZONTAL = 15
 
   /**
    * Render a GgChart to an SVG.
@@ -92,7 +96,7 @@ class GgRenderer {
       Map<String, List> aestheticData = collectAestheticData(chart)
       if (aestheticData.x && aestheticData.y) {
         double[] adjusted = computeFixedAspectDimensionsWithExpansion(
-            aestheticData.x, aestheticData.y, plotWidth, plotHeight, coord as CoordFixed)
+            aestheticData.x, aestheticData.y, plotWidth, plotHeight, coord as CoordFixed, chart)
         effectiveWidth = (int) adjusted[0]
         effectiveHeight = (int) adjusted[1]
 
@@ -795,17 +799,20 @@ class GgRenderer {
 
   /**
    * Compute adjusted dimensions to enforce a fixed aspect ratio, accounting for scale expansion.
-   * This version applies the same 5% expansion that ScaleContinuous uses, ensuring the
-   * plot area matches the actual scale domain.
+   * This version applies the same expansion that ScaleContinuous uses (defaulting to
+   * its constants when no scale is provided), ensuring the plot area matches the actual
+   * scale domain.
    *
    * @param xData List of x values
    * @param yData List of y values
    * @param plotWidth Available plot width in pixels
    * @param plotHeight Available plot height in pixels
    * @param coord CoordFixed with ratio and optional xlim/ylim
+   * @param chart Chart (used to resolve expansion settings)
    * @return double[] with [effectiveWidth, effectiveHeight]
    */
-  private double[] computeFixedAspectDimensionsWithExpansion(List xData, List yData, int plotWidth, int plotHeight, CoordFixed coord) {
+  private double[] computeFixedAspectDimensionsWithExpansion(List xData, List yData, int plotWidth, int plotHeight,
+                                                             CoordFixed coord, GgChart chart) {
     double ratio = coord.ratio
 
     // Get numeric values only
@@ -835,15 +842,16 @@ class GgRenderer {
       yMax = yNums.max() as double
     }
 
-    // Apply 5% expansion (same as ScaleContinuous default)
+    // Apply expansion (same defaults as ScaleContinuous when not explicitly configured)
     double xDelta = xMax - xMin
     double yDelta = yMax - yMin
-    double expansion = 0.05
+    double[] xExpansion = resolveContinuousExpansion(chart, 'x')
+    double[] yExpansion = resolveContinuousExpansion(chart, 'y')
 
-    xMin = xMin - xDelta * expansion
-    xMax = xMax + xDelta * expansion
-    yMin = yMin - yDelta * expansion
-    yMax = yMax + yDelta * expansion
+    xMin = xMin - xDelta * xExpansion[0] - xExpansion[1]
+    xMax = xMax + xDelta * xExpansion[0] + xExpansion[1]
+    yMin = yMin - yDelta * yExpansion[0] - yExpansion[1]
+    yMax = yMax + yDelta * yExpansion[0] + yExpansion[1]
 
     double xDataRange = xMax - xMin
     double yDataRange = yMax - yMin
@@ -873,6 +881,23 @@ class GgRenderer {
     }
 
     return [effectiveWidth, effectiveHeight] as double[]
+  }
+
+  private double[] resolveContinuousExpansion(GgChart chart, String aesthetic) {
+    ScaleContinuous scale = chart.scales.find {
+      it instanceof ScaleContinuous && it.aesthetic == aesthetic
+    } as ScaleContinuous
+
+    if (scale == null) {
+      return [ScaleContinuous.DEFAULT_EXPAND_MULT, ScaleContinuous.DEFAULT_EXPAND_ADD] as double[]
+    }
+    if (scale.expand == null || scale.expand.size() < 2) {
+      return [0.0d, 0.0d] as double[]
+    }
+
+    double mult = scale.expand[0] != null ? (scale.expand[0] as double) : ScaleContinuous.DEFAULT_EXPAND_MULT
+    double add = scale.expand[1] != null ? (scale.expand[1] as double) : ScaleContinuous.DEFAULT_EXPAND_ADD
+    return [mult, add] as double[]
   }
 
   /**
@@ -1483,9 +1508,9 @@ class GgRenderer {
    */
   private int renderContinuousLegend(G group, ScaleContinuous scale, String aesthetic,
                                      int startX, int startY, boolean vertical, Theme theme) {
-    // For continuous scales, render a gradient color bar (25% larger than original)
-    int barWidth = vertical ? 19 : 125
-    int barHeight = vertical ? 100 : 19
+    // For continuous scales, render a gradient color bar with ggplot2-like defaults.
+    int barWidth = vertical ? LEGEND_CONTINUOUS_BAR_WIDTH_VERTICAL : LEGEND_CONTINUOUS_BAR_WIDTH_HORIZONTAL
+    int barHeight = vertical ? LEGEND_CONTINUOUS_BAR_HEIGHT_VERTICAL : LEGEND_CONTINUOUS_BAR_HEIGHT_HORIZONTAL
     int spacing = 5
 
     int x = startX

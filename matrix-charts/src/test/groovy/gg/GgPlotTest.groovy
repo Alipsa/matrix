@@ -141,6 +141,10 @@ class GgPlotTest {
         // Width may be larger than 800 to accommodate legend
         assertTrue(svgContent.contains('width="') && svgContent.contains('height="600"'),
             "Should have width and height attributes")
+        def widthMatcher = (svgContent =~ /width="(\d+)"/)
+        assertTrue(widthMatcher.find(), "Should include a numeric width attribute")
+        int widthValue = (widthMatcher.group(1) as String).toInteger()
+        assertTrue(widthValue >= 800, "Width should be at least the base 800px")
 
         // Verify there are circles (points)
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")

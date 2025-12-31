@@ -9,6 +9,9 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class ScaleContinuous extends Scale {
 
+  static final double DEFAULT_EXPAND_MULT = 0.05d
+  static final double DEFAULT_EXPAND_ADD = 0.0d
+
   /** Output range [min, max] */
   List<Number> range = [0, 1] as List<Number>
 
@@ -39,8 +42,8 @@ class ScaleContinuous extends Scale {
 
     // Apply expansion only when configured (ggplot2 default is mult=0.05, add=0).
     if (expand != null && expand.size() >= 2) {
-      Number mult = expand[0] != null ? expand[0] : 0.05
-      Number add = expand[1] != null ? expand[1] : 0
+      Number mult = expand[0] != null ? expand[0] : DEFAULT_EXPAND_MULT
+      Number add = expand[1] != null ? expand[1] : DEFAULT_EXPAND_ADD
       Number delta = max - min
       min = min - delta * mult - add
       max = max + delta * mult + add

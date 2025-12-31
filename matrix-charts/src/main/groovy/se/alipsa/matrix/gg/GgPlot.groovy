@@ -272,20 +272,60 @@ class GgPlot {
         // 'axis.line' applies to both X and Y
         theme.axisLineX = isBlank ? null : value as ElementLine
         theme.axisLineY = isBlank ? null : value as ElementLine
+        if (isBlank) {
+          theme.explicitNulls.add('axisLineX')
+          theme.explicitNulls.add('axisLineY')
+        } else {
+          theme.explicitNulls.remove('axisLineX')
+          theme.explicitNulls.remove('axisLineY')
+        }
       } else if (propName == 'axisTicks') {
         theme.axisTicksX = isBlank ? null : value as ElementLine
         theme.axisTicksY = isBlank ? null : value as ElementLine
+        if (isBlank) {
+          theme.explicitNulls.add('axisTicksX')
+          theme.explicitNulls.add('axisTicksY')
+        } else {
+          theme.explicitNulls.remove('axisTicksX')
+          theme.explicitNulls.remove('axisTicksY')
+        }
       } else if (propName == 'axisText') {
         theme.axisTextX = isBlank ? null : value as ElementText
         theme.axisTextY = isBlank ? null : value as ElementText
+        if (isBlank) {
+          theme.explicitNulls.add('axisTextX')
+          theme.explicitNulls.add('axisTextY')
+        } else {
+          theme.explicitNulls.remove('axisTextX')
+          theme.explicitNulls.remove('axisTextY')
+        }
       } else if (propName == 'axisTitle') {
         theme.axisTitleX = isBlank ? null : value as ElementText
         theme.axisTitleY = isBlank ? null : value as ElementText
+        if (isBlank) {
+          theme.explicitNulls.add('axisTitleX')
+          theme.explicitNulls.add('axisTitleY')
+        } else {
+          theme.explicitNulls.remove('axisTitleX')
+          theme.explicitNulls.remove('axisTitleY')
+        }
       } else if (propName == 'panelGrid') {
         theme.panelGridMajor = isBlank ? null : value as ElementLine
         theme.panelGridMinor = isBlank ? null : value as ElementLine
+        if (isBlank) {
+          theme.explicitNulls.add('panelGridMajor')
+          theme.explicitNulls.add('panelGridMinor')
+        } else {
+          theme.explicitNulls.remove('panelGridMajor')
+          theme.explicitNulls.remove('panelGridMinor')
+        }
       } else if (theme.hasProperty(propName)) {
         theme.setProperty(propName, effectiveValue)
+        if (isBlank) {
+          theme.explicitNulls.add(propName)
+        } else {
+          theme.explicitNulls.remove(propName)
+        }
       }
     }
     return theme
