@@ -591,9 +591,10 @@ class GgPlot {
    * Viridis discrete fill scale.
    */
   static ScaleColorViridis scale_fill_viridis_d(Map params = [:]) {
-    def scale = new ScaleColorViridis(params)
-    scale.aesthetic = 'fill'
-    return scale
+    if (!params.containsKey('aesthetic')) {
+      params.aesthetic = 'fill'
+    }
+    return new ScaleColorViridis(params)
   }
 
   // --- Fill scales ---
