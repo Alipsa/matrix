@@ -317,7 +317,7 @@ class ScaleIntegrationTest {
     List<String> plasmaColors = scalePlasma.getColors()
     List<String> cividisColors = scaleCividis.getColors()
 
-    // All palettes should generate the same number of colors (3 species in iris)
+    // Verify all palettes generate 3 colors
     assertEquals(3, magmaColors.size())
     assertEquals(3, plasmaColors.size())
     assertEquals(3, cividisColors.size())
