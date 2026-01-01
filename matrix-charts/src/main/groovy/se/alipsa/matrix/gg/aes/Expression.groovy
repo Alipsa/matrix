@@ -5,6 +5,8 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
+import java.util.concurrent.atomic.AtomicInteger
+
 /**
  * Wrapper for closure-based expressions in aesthetic mappings.
  * Use expr() or closures in aes() to compute derived values from data.
@@ -23,6 +25,8 @@ import se.alipsa.matrix.core.Row
 @CompileStatic
 class Expression {
 
+  private static final AtomicInteger NAME_COUNTER = new AtomicInteger(0)
+
   /** The closure that computes the value from row data */
   final Closure<Number> closure
 
@@ -38,7 +42,7 @@ class Expression {
       throw new IllegalArgumentException("Expression closure cannot be null")
     }
     this.closure = closure
-    this.name = name ?: ".expr.${System.identityHashCode(closure)}"
+    this.name = name ?: ".expr.${NAME_COUNTER.incrementAndGet()}"
   }
 
   /**
