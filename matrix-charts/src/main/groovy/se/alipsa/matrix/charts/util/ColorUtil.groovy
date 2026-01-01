@@ -23,6 +23,28 @@ class ColorUtil {
         return '#' + red + green + blue + alpha
     }
 
+    static String normalizeColor(String color) {
+        if (color == null) {
+            return null
+        }
+        String trimmed = color.trim()
+        if (trimmed.isEmpty()) {
+            return color
+        }
+        def matcher = trimmed =~ /(?i)gr[ae]y(\d{1,3})/
+        if (matcher.matches()) {
+            int pct = Integer.parseInt(matcher.group(1))
+            pct = Math.max(0, Math.min(100, pct))
+            int value = Math.round(255 * (pct / 100.0f))
+            String hex = pad(Integer.toHexString(value))
+            return "#${hex}${hex}${hex}"
+        }
+        if (trimmed.equalsIgnoreCase('grey') || trimmed.equalsIgnoreCase('gray')) {
+            return '#808080'
+        }
+        return color
+    }
+
     private static String pad(final String hex) {
         return (hex.length() == 1) ? "0" + hex : hex;
     }

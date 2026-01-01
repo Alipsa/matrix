@@ -7,6 +7,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.charts.util.ColorUtil
 
 /**
  * Contour geometry for drawing contour lines from 2D density/height data.
@@ -58,6 +59,7 @@ class GeomContour extends Geom {
     if (params.linetype) this.linetype = params.linetype as String
     if (params.bins != null) this.bins = params.bins as int
     if (params.binwidth != null) this.binwidth = params.binwidth as Number
+    this.color = ColorUtil.normalizeColor(this.color)
     this.params = params
   }
 
@@ -99,6 +101,7 @@ class GeomContour extends Geom {
       if (colorScale != null) {
         lineColor = colorScale.transform(level)?.toString() ?: this.color
       }
+      lineColor = ColorUtil.normalizeColor(lineColor)
 
       // Draw each contour line
       contours.each { List<double[]> contour ->

@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
@@ -47,9 +48,9 @@ class GeomArea extends Geom {
 
   GeomArea(Map params) {
     this()
-    if (params.fill) this.fill = params.fill as String
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
+    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
+    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
+    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
     if (params.linewidth != null) this.linewidth = params.linewidth as Number
     if (params.size != null) this.linewidth = params.size as Number
     if (params.alpha != null) this.alpha = params.alpha as Number
@@ -135,6 +136,7 @@ class GeomArea extends Geom {
     } else if (aes.fill instanceof Identity) {
       areaFill = (aes.fill as Identity).value.toString()
     }
+    areaFill = ColorUtil.normalizeColor(areaFill) ?: areaFill
 
     // Build SVG path
     StringBuilder d = new StringBuilder()
@@ -170,7 +172,8 @@ class GeomArea extends Geom {
 
     // Apply stroke if linewidth > 0
     if ((linewidth as double) > 0) {
-      path.stroke(color)
+      String strokeColor = ColorUtil.normalizeColor(color) ?: color
+      path.stroke(strokeColor)
       path.addAttribute('stroke-width', linewidth)
 
       String dashArray = getDashArray(linetype)

@@ -3,6 +3,7 @@ package se.alipsa.matrix.gg.geom
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
@@ -52,15 +53,15 @@ class GeomSmooth extends Geom {
 
   GeomSmooth(Map params) {
     this()
-    if (params.color) this.color = params.color
-    if (params.colour) this.color = params.colour
+    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
+    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
     if (params.size) this.size = params.size as Number
     if (params.linetype) this.linetype = params.linetype
     if (params.alpha) this.alpha = params.alpha as Number
     if (params.method) this.method = params.method
     if (params.n) this.n = params.n as int
     if (params.containsKey('se')) this.se = params.se
-    if (params.fill) this.fill = params.fill
+    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
     this.params = params
   }
 
@@ -79,6 +80,7 @@ class GeomSmooth extends Geom {
     if (aes.color instanceof Identity) {
       lineColor = (aes.color as Identity).value.toString()
     }
+    lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
 
     boolean hasBand = data.columnNames().containsAll(['ymin', 'ymax'])
 
@@ -126,7 +128,7 @@ class GeomSmooth extends Geom {
       }
       d << " Z"
       def band = group.addPath().d(d.toString())
-          .fill(fill)
+          .fill(ColorUtil.normalizeColor(fill) ?: fill)
           .stroke('none')
       band.addAttribute('fill-opacity', fillAlpha)
     }

@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
@@ -43,8 +44,8 @@ class GeomHline extends Geom {
   GeomHline(Map params) {
     this()
     if (params.yintercept != null) this.yintercept = params.yintercept
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
+    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
+    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
     if (params.linewidth != null) this.linewidth = params.linewidth as Number
     if (params.size != null) this.linewidth = params.size as Number
     if (params.linetype) this.linetype = params.linetype as String
@@ -93,12 +94,13 @@ class GeomHline extends Geom {
 
       double y = yPx as double
 
+      String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
           .x1(0)
           .y1(y as int)
           .x2(plotWidth)
           .y2(y as int)
-          .stroke(color)
+          .stroke(lineColor)
 
       line.addAttribute('stroke-width', linewidth)
 

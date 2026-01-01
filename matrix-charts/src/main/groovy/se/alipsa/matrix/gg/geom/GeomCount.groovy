@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
@@ -50,9 +51,9 @@ class GeomCount extends Geom {
 
   GeomCount(Map params) {
     this()
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
-    if (params.fill) this.fill = params.fill as String
+    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
+    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
+    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
     if (params.alpha != null) this.alpha = params.alpha as Number
     if (params.sizeMin != null) this.sizeMin = params.sizeMin as Number
     if (params.size_min != null) this.sizeMin = params.size_min as Number
@@ -138,6 +139,8 @@ class GeomCount extends Geom {
       if (cd.fill != null && fillScale != null) {
         pointFill = fillScale.transform(cd.fill)?.toString() ?: this.fill
       }
+      pointColor = ColorUtil.normalizeColor(pointColor) ?: pointColor
+      pointFill = ColorUtil.normalizeColor(pointFill) ?: pointFill
 
       // Draw the point
       drawPoint(group, cx, cy, size, pointFill, pointColor)

@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
@@ -37,9 +38,9 @@ class GeomPoint extends Geom {
 
   GeomPoint(Map params) {
     this()
-    if (params.color) this.color = params.color
-    if (params.colour) this.color = params.colour
-    if (params.fill) this.fill = params.fill
+    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
+    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
+    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
     if (params.size) this.size = params.size as Number
     if (params.shape) this.shape = params.shape
     if (params.alpha) this.alpha = params.alpha as Number
@@ -93,6 +94,7 @@ class GeomPoint extends Geom {
       } else if (aes.color instanceof Identity) {
         pointColor = (aes.color as Identity).value.toString()
       }
+      pointColor = ColorUtil.normalizeColor(pointColor) ?: pointColor
 
       // Determine size
       Number pointSize = this.size

@@ -429,9 +429,23 @@ class GgStat {
     String xCol = aes.xColName
     String yCol = aes.yColName
     String fun = params.fun ?: params.'fun.y' ?: 'mean'
+    String funData = params.'fun.data'
+    if (funData == null && params.funData) {
+      funData = params.funData as String
+    }
 
     if (yCol == null) {
       throw new IllegalArgumentException("stat_summary requires y aesthetic")
+    }
+
+    if (funData) {
+      switch (funData) {
+        case 'mean_cl_normal':
+          double level = params.level != null ? (params.level as double) : 0.95d
+          return meanClNormal(data, xCol, yCol, level)
+        default:
+          throw new IllegalArgumentException("Unknown summary function: $funData")
+      }
     }
 
     if (xCol != null) {
@@ -471,6 +485,51 @@ class GgStat {
       }
       return Matrix.builder().data([y: [result]]).build()
     }
+  }
+
+  private static Matrix meanClNormal(Matrix data, String xCol, String yCol, double level) {
+    if (xCol == null) {
+      return meanClNormalUngrouped(data, yCol, level)
+    }
+
+    Map<String, Matrix> groups = Stat.groupBy(data, xCol)
+    List<Map<String, Object>> rows = []
+    groups.each { groupKey, groupData ->
+      List<Number> values = groupData[yCol] as List<Number>
+      rows << meanClNormalRow(groupKey, values, xCol, yCol, level)
+    }
+    return Matrix.builder().mapList(rows).build()
+  }
+
+  private static Matrix meanClNormalUngrouped(Matrix data, String yCol, double level) {
+    List<Number> values = data[yCol] as List<Number>
+    Map<String, Object> row = meanClNormalRow('all', values, 'x', yCol, level)
+    return Matrix.builder().mapList([row]).build()
+  }
+
+  private static Map<String, Object> meanClNormalRow(Object groupKey, List<Number> values,
+                                                     String xCol, String yCol, double level) {
+    List<Number> numeric = values.findAll { it instanceof Number } as List<Number>
+    int n = numeric.size()
+    if (n == 0) {
+      return [(xCol): groupKey, (yCol): null, ymin: null, ymax: null]
+    }
+    BigDecimal mean = Stat.mean(numeric)
+    double ymin = mean as double
+    double ymax = mean as double
+    if (n > 1) {
+      double sd = Stat.sd(numeric, true) as double
+      double se = sd / Math.sqrt(n as double)
+      double tCrit = tCritical(n - 1, level)
+      ymin = (mean as double) - tCrit * se
+      ymax = (mean as double) + tCrit * se
+    }
+    return [
+        (xCol): groupKey,
+        (yCol): mean,
+        ymin: ymin,
+        ymax: ymax
+    ]
   }
 
   /**

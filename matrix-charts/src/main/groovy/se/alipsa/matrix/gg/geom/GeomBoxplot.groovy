@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.charts.util.ColorUtil
 
 /**
  * Box plot geometry for visualizing distributions through quartiles.
@@ -78,6 +79,11 @@ class GeomBoxplot extends Geom {
     if (params.outlier_color) this.outlierColor = params.outlier_color as String
     if (params.stapleWidth != null) this.stapleWidth = params.stapleWidth as Number
     if (params.staple_width != null) this.stapleWidth = params.staple_width as Number
+    this.fill = ColorUtil.normalizeColor(this.fill)
+    this.color = ColorUtil.normalizeColor(this.color)
+    if (this.outlierColor != null) {
+      this.outlierColor = ColorUtil.normalizeColor(this.outlierColor)
+    }
     this.params = params
   }
 
@@ -168,6 +174,9 @@ class GeomBoxplot extends Geom {
         boxColor = (aes.color as Identity).value.toString()
       }
 
+      boxFill = ColorUtil.normalizeColor(boxFill)
+      boxColor = ColorUtil.normalizeColor(boxColor)
+
       // Create a group for this boxplot
       G boxGroup = group.addG()
       boxGroup.styleClass('geom-boxplot')
@@ -244,6 +253,7 @@ class GeomBoxplot extends Geom {
       // Draw outliers
       if (outliers && outlierList != null) {
         String outlierCol = outlierColor ?: boxColor
+        outlierCol = ColorUtil.normalizeColor(outlierCol)
         List<?> outlierValues = outlierList instanceof List ? outlierList as List : []
 
         for (def outlier : outlierValues) {

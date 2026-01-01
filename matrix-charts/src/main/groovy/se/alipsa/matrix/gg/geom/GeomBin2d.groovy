@@ -7,6 +7,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.charts.util.ColorUtil
 
 /**
  * 2D binning geometry for creating heatmaps from point data.
@@ -67,6 +68,9 @@ class GeomBin2d extends Geom {
     if (params.drop != null) this.drop = params.drop as boolean
     if (params.fillColors) this.fillColors = params.fillColors as List<String>
     if (params.fill_colors) this.fillColors = params.fill_colors as List<String>
+    this.fill = ColorUtil.normalizeColor(this.fill)
+    this.color = ColorUtil.normalizeColor(this.color)
+    this.fillColors = this.fillColors.collect { ColorUtil.normalizeColor(it) }
     this.params = params
   }
 
@@ -184,6 +188,7 @@ class GeomBin2d extends Geom {
         } else {
           binFill = getFillColor(count, maxCount)
         }
+        binFill = ColorUtil.normalizeColor(binFill)
 
         def rect = group.addRect()
             .x(left)
@@ -193,7 +198,7 @@ class GeomBin2d extends Geom {
             .fill(binFill)
 
         if (color != null && (linewidth as double) > 0) {
-          rect.stroke(color)
+          rect.stroke(ColorUtil.normalizeColor(color))
           rect.addAttribute('stroke-width', linewidth)
         } else {
           rect.stroke('none')
