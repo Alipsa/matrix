@@ -659,7 +659,7 @@ class GgPlot {
 
   /**
    * Convenience wrapper for linear model regression line.
-   * Equivalent to geom_smooth with method='lm', se=false, and steelblue color.
+   * Equivalent to geom_smooth with method='lm', se=false, colour='steelblue' and alpha=0.5.
    *
    * Usage:
    * <pre>
