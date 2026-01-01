@@ -235,14 +235,29 @@ class GgStat {
     boolean se = params.se != false
     double level = params.level != null ? (params.level as double) : 0.95d
 
-    // Determine polynomial degree: check 'degree' param first, then parse formula
+    // Determine polynomial degree: check for conflicting 'degree' and 'formula' specifications
     int polyDegree
-    if (params.degree != null) {
+    String formula = params.formula as String
+    if (params.degree != null && formula != null) {
+      // Both degree and formula provided: ensure they are not in conflict
+      int explicitDegree = params.degree as int
+      Map<String, Object> formulaParsed = parseFormula(formula)
+      def formulaDegreeObj = formulaParsed.polyDegree
+      if (formulaDegreeObj != null) {
+        int formulaDegree = (formulaDegreeObj as int)
+        if (formulaDegree != explicitDegree) {
+          throw new IllegalArgumentException(
+            "Conflicting polynomial degrees: 'degree' parameter is " +
+              explicitDegree + " but 'formula' specifies degree " + formulaDegree
+          )
+        }
+      }
+      polyDegree = explicitDegree
+    } else if (params.degree != null) {
       // Direct degree parameter (Groovy-style shortcut)
       polyDegree = params.degree as int
     } else {
       // Parse formula string (R-style)
-      String formula = params.formula as String
       Map<String, Object> formulaParsed = parseFormula(formula)
       polyDegree = (formulaParsed.polyDegree ?: 1) as int
     }
