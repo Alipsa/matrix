@@ -8,10 +8,12 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Expression
+import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
+import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.facet.FacetGrid
@@ -29,6 +31,7 @@ import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.ScaleYDiscrete
 import se.alipsa.matrix.gg.stat.GgStat
 import se.alipsa.matrix.gg.theme.Theme
+import se.alipsa.matrix.gg.theme.ElementLine
 
 /**
  * Main rendering orchestrator for Grammar of Graphics plots.
@@ -152,7 +155,7 @@ class GgRenderer {
     // Draw panel background (use effective dimensions for CoordFixed)
     renderPanelBackground(plotArea, effectiveWidth, effectiveHeight, theme)
 
-    // 6. Draw grid lines (before data, use effective dimensions)
+    // 6. Draw grid lines before data.
     renderGridLines(plotArea, computedScales, effectiveWidth, effectiveHeight, theme, coord)
 
     // 7. Create data layer group with clip path matching effective dimensions
@@ -302,7 +305,7 @@ class GgRenderer {
         coord.plotHeight = panelHeight
       }
 
-      // Draw grid lines
+      // Draw grid lines before data.
       renderGridLines(contentGroup, panelScales, panelWidth, panelHeight, theme, coord)
 
       // Create data layer with clip path
@@ -468,6 +471,9 @@ class GgRenderer {
    */
   private void renderFacetAxes(G plotArea, Map<String, Scale> scales, int width, int height,
                                Theme theme, Coord coord, boolean showXLabels, boolean showYLabels) {
+    if (coord instanceof CoordPolar) {
+      return
+    }
     G axesGroup = plotArea.addG()
     axesGroup.id('axes')
 
@@ -633,9 +639,15 @@ class GgRenderer {
     List<Number> xRange = isFlipped ? [plotHeight, 0] as List<Number> : [0, plotWidth] as List<Number>
     List<Number> yRange = isFlipped ? [0, plotWidth] as List<Number> : [plotHeight, 0] as List<Number>
 
+    boolean isPolar = coord instanceof CoordPolar
+    String thetaAes = isPolar ? ((coord as CoordPolar).theta == 'y' ? 'y' : 'x') : null
+
     // Create x scale (auto-detect discrete vs continuous)
     if (aestheticData.x) {
       Scale xScale = createAutoScale('x', aestheticData.x)
+      if (isPolar && thetaAes == 'x' && xScale instanceof ScaleContinuous) {
+        (xScale as ScaleContinuous).expand = [0, 0] as List<Number>
+      }
       xScale.train(aestheticData.x)
       if (xScale instanceof ScaleContinuous) {
         (xScale as ScaleContinuous).range = xRange
@@ -648,6 +660,9 @@ class GgRenderer {
     // Create y scale (auto-detect discrete vs continuous)
     if (aestheticData.y) {
       Scale yScale = createAutoScale('y', aestheticData.y)
+      if (isPolar && thetaAes == 'y' && yScale instanceof ScaleContinuous) {
+        (yScale as ScaleContinuous).expand = [0, 0] as List<Number>
+      }
       yScale.train(aestheticData.y)
       if (yScale instanceof ScaleContinuous) {
         (yScale as ScaleContinuous).range = yRange
@@ -996,45 +1011,48 @@ class GgRenderer {
 
         // Apply stat transformation to get computed values
         Matrix statData = applyStats(exprData, resolvedLayerAes, layer)
+        // Apply position adjustment so scales reflect stacked/dodged coordinates
+        Matrix posData = layer.position != PositionType.IDENTITY ?
+            applyPosition(statData, resolvedLayerAes, layer) : statData
 
         // For x aesthetic: use xmin/xmax for histograms, otherwise use x column
-        if (statData.columnNames().contains('xmin') && statData.columnNames().contains('xmax')) {
+        if (posData.columnNames().contains('xmin') && posData.columnNames().contains('xmax')) {
           // stat_bin produces xmin/xmax columns - include both for full range
-          data['x'].addAll(statData['xmin'] ?: [])
-          data['x'].addAll(statData['xmax'] ?: [])
-        } else if (resolvedLayerAes.xColName && statData.columnNames().contains(resolvedLayerAes.xColName)) {
-          data['x'].addAll(statData[resolvedLayerAes.xColName] ?: [])
+          data['x'].addAll(posData['xmin'] ?: [])
+          data['x'].addAll(posData['xmax'] ?: [])
+        } else if (resolvedLayerAes.xColName && posData.columnNames().contains(resolvedLayerAes.xColName)) {
+          data['x'].addAll(posData[resolvedLayerAes.xColName] ?: [])
         }
 
         // For y aesthetic, check both the original y column and computed columns like 'count'
-        if (statData.columnNames().contains('ymin') && statData.columnNames().contains('ymax')) {
+        if (posData.columnNames().contains('ymin') && posData.columnNames().contains('ymax')) {
           // stat_boxplot produces ymin/ymax columns - include both for full y range
-          data['y'].addAll(statData['ymin'] ?: [])
-          data['y'].addAll(statData['ymax'] ?: [])
+          data['y'].addAll(posData['ymin'] ?: [])
+          data['y'].addAll(posData['ymax'] ?: [])
         } else if (resolvedLayerAes.isAfterStat('y')) {
           // Explicit after_stat() reference - use the specified computed column
           String statCol = resolvedLayerAes.getAfterStatName('y')
-          if (statData.columnNames().contains(statCol)) {
-            data['y'].addAll(statData[statCol] ?: [])
+          if (posData.columnNames().contains(statCol)) {
+            data['y'].addAll(posData[statCol] ?: [])
           }
-        } else if (resolvedLayerAes.yColName && statData.columnNames().contains(resolvedLayerAes.yColName)) {
-          data['y'].addAll(statData[resolvedLayerAes.yColName] ?: [])
-        } else if (statData.columnNames().contains('count')) {
+        } else if (resolvedLayerAes.yColName && posData.columnNames().contains(resolvedLayerAes.yColName)) {
+          data['y'].addAll(posData[resolvedLayerAes.yColName] ?: [])
+        } else if (posData.columnNames().contains('count')) {
           // stat_count and stat_bin produce 'count' column for y values (default behavior)
-          data['y'].addAll(statData['count'] ?: [])
+          data['y'].addAll(posData['count'] ?: [])
         }
 
         // For boxplot x-axis, use the computed 'x' column (group keys)
-        if (statData.columnNames().contains('x') && !statData.columnNames().contains('xmin')) {
+        if (posData.columnNames().contains('x') && !posData.columnNames().contains('xmin')) {
           // stat_boxplot produces 'x' column with group names (but not xmin/xmax like histograms)
-          data['x'].addAll(statData['x'] ?: [])
+          data['x'].addAll(posData['x'] ?: [])
         }
 
-        if (resolvedLayerAes.colorColName && statData.columnNames().contains(resolvedLayerAes.colorColName)) {
-          data['color'].addAll(statData[resolvedLayerAes.colorColName] ?: [])
+        if (resolvedLayerAes.colorColName && posData.columnNames().contains(resolvedLayerAes.colorColName)) {
+          data['color'].addAll(posData[resolvedLayerAes.colorColName] ?: [])
         }
-        if (resolvedLayerAes.fillColName && statData.columnNames().contains(resolvedLayerAes.fillColName)) {
-          data['fill'].addAll(statData[resolvedLayerAes.fillColName] ?: [])
+        if (resolvedLayerAes.fillColName && posData.columnNames().contains(resolvedLayerAes.fillColName)) {
+          data['fill'].addAll(posData[resolvedLayerAes.fillColName] ?: [])
         }
       }
     }
@@ -1067,6 +1085,10 @@ class GgRenderer {
    * Render grid lines.
    */
   private void renderGridLines(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme, Coord coord) {
+    if (coord instanceof CoordPolar) {
+      renderPolarGridLines(plotArea, scales, theme, coord as CoordPolar)
+      return
+    }
     G gridGroup = plotArea.addG()
     gridGroup.id('grid')
 
@@ -1128,6 +1150,114 @@ class GgRenderer {
         }
       }
     }
+  }
+
+  private void renderPolarGridLines(G plotArea, Map<String, Scale> scales, Theme theme, CoordPolar coord) {
+    G gridGroup = plotArea.addG()
+    gridGroup.id('grid')
+
+    ElementLine majorStyle = theme.panelGridMajor
+    if (majorStyle == null) return
+
+    String color = majorStyle.color ?: 'white'
+    Number size = majorStyle.size ?: 1
+
+    Scale thetaScale = coord.theta == 'y' ? scales['y'] : scales['x']
+    Scale radiusScale = coord.theta == 'y' ? scales['x'] : scales['y']
+
+    List<Number> center = coord.getCenter()
+    double cx = center[0] as double
+    double cy = center[1] as double
+    double maxRadius = coord.getMaxRadius()
+
+    if (thetaScale) {
+      List breaks = thetaScale.getComputedBreaks()
+      List<String> labels = thetaScale.getComputedLabels()
+      breaks.eachWithIndex { breakVal, int i ->
+        Double norm = normalizeFromScale(thetaScale, breakVal)
+        if (norm == null) return
+        if (isRangeReversed(thetaScale)) {
+          norm = 1.0d - norm
+        }
+        double angle = (coord.start as double) + norm * 2.0d * Math.PI
+        if (!coord.clockwise) {
+          angle = (coord.start as double) - norm * 2.0d * Math.PI
+        }
+        double x = cx + maxRadius * Math.sin(angle)
+        double y = cy - maxRadius * Math.cos(angle)
+        gridGroup.addLine(cx, cy, x, y)
+                 .stroke(color)
+                 .strokeWidth(size)
+
+        String label = i < labels.size() ? labels[i] : breakVal?.toString()
+        if (label != null && !label.isEmpty()) {
+          double labelRadius = maxRadius + (theme.axisTickLength ?: 5)
+          double lx = cx + labelRadius * Math.sin(angle)
+          double ly = cy - labelRadius * Math.cos(angle)
+          plotArea.addText(label)
+                  .x(lx)
+                  .y(ly)
+                  .textAnchor('middle')
+                  .fontSize(theme.axisTextY?.size ?: 9)
+                  .fill(theme.axisTextY?.color ?: '#4D4D4D')
+        }
+      }
+    }
+
+    if (radiusScale) {
+      radiusScale.getComputedBreaks().each { breakVal ->
+        Double norm = normalizeFromScale(radiusScale, breakVal)
+        if (norm == null) return
+        double r = norm * maxRadius
+        if (r <= 0.0d) return
+        gridGroup.addCircle()
+                 .cx(cx)
+                 .cy(cy)
+                 .r(r)
+                 .fill('none')
+                 .stroke(color)
+                 .strokeWidth(size)
+      }
+    }
+
+    // Always draw an outer ring to match ggplot2 polar grid appearance.
+    gridGroup.addCircle()
+             .cx(cx)
+             .cy(cy)
+             .r(maxRadius)
+             .fill('none')
+             .stroke(color)
+             .strokeWidth(size)
+  }
+
+  private Double normalizeFromScale(Scale scale, Object value) {
+    if (scale == null) return null
+    def transformed = scale.transform(value)
+    if (!(transformed instanceof Number)) return null
+    List<Number> range = null
+    if (scale instanceof ScaleContinuous) {
+      range = (scale as ScaleContinuous).range
+    } else if (scale instanceof ScaleDiscrete) {
+      range = (scale as ScaleDiscrete).range
+    }
+    if (range == null || range.size() < 2) return null
+    double min = Math.min(range[0] as double, range[1] as double)
+    double max = Math.max(range[0] as double, range[1] as double)
+    double span = max - min
+    if (span == 0.0d) return 0.0d
+    return ((transformed as double) - min) / span
+  }
+
+  private boolean isRangeReversed(Scale scale) {
+    if (scale == null) return false
+    List<Number> range = null
+    if (scale instanceof ScaleContinuous) {
+      range = (scale as ScaleContinuous).range
+    } else if (scale instanceof ScaleDiscrete) {
+      range = (scale as ScaleDiscrete).range
+    }
+    if (range == null || range.size() < 2) return false
+    return (range[0] as double) > (range[1] as double)
   }
 
   /**
@@ -1215,6 +1345,9 @@ class GgRenderer {
    * Render axes.
    */
   private void renderAxes(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme, Coord coord) {
+    if (coord instanceof CoordPolar) {
+      return
+    }
     G axesGroup = plotArea.addG()
     axesGroup.id('axes')
 
@@ -1330,8 +1463,13 @@ class GgRenderer {
          .fontSize(12)
     }
 
-    // X axis label - default to aesthetic x column name
-    String xLabel = chart.labels?.x ?: chart.globalAes?.x
+    // X axis label - default to aesthetic x column name unless explicitly set
+    String xLabel = null
+    if (chart.labels?.xSet) {
+      xLabel = chart.labels.x
+    } else {
+      xLabel = chart.globalAes?.x
+    }
     if (xLabel) {
       svg.addText(xLabel)
          .x(MARGIN_LEFT + plotWidth / 2)
@@ -1340,8 +1478,13 @@ class GgRenderer {
          .fontSize(12)
     }
 
-    // Y axis label - default to aesthetic y column name
-    String yLabel = chart.labels?.y ?: chart.globalAes?.y
+    // Y axis label - default to aesthetic y column name unless explicitly set
+    String yLabel = null
+    if (chart.labels?.ySet) {
+      yLabel = chart.labels.y
+    } else {
+      yLabel = chart.globalAes?.y
+    }
     if (yLabel) {
       svg.addText(yLabel)
          .x(20)
@@ -1731,7 +1874,7 @@ class GgRenderer {
     }
 
     // Check if any aesthetic is an expression
-    boolean hasExpressions = ALL_AESTHETICS.any { aes.isExpression(it) }
+    boolean hasExpressions = ALL_AESTHETICS.any { aes.isExpression(it) || aes.isFactor(it) }
 
     if (!hasExpressions) {
       return new EvaluatedAes(data, aes)
@@ -1764,6 +1907,10 @@ class GgRenderer {
    */
   @groovy.transform.CompileDynamic
   private Object evaluateAesthetic(Aes aes, String aesthetic, Matrix workData) {
+    if (aes.isFactor(aesthetic)) {
+      Factor factor = aes.getFactor(aesthetic)
+      return factor.addToMatrix(workData)
+    }
     if (aes.isExpression(aesthetic)) {
       Expression expr = aes.getExpression(aesthetic)
       return expr.addToMatrix(workData)

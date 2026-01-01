@@ -24,6 +24,7 @@ import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.Expression
+import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
@@ -66,6 +67,11 @@ import se.alipsa.matrix.gg.theme.Themes
 @CompileStatic
 class GgPlot {
 
+  /** Constants for convenience when converting R code */
+  static final def NULL = null
+  static final boolean TRUE = true
+  static final boolean FALSE = false
+
   // ============ Core functions ============
 
   static GgChart ggplot(Matrix data, Aes aes) {
@@ -85,6 +91,19 @@ class GgPlot {
     return new Aes(Arrays.asList(colNames))
   }
 
+  static Aes aes(Object x) {
+    Aes aes = new Aes()
+    aes.x = x
+    return aes
+  }
+
+  static Aes aes(Object x, Object y) {
+    Aes aes = new Aes()
+    aes.x = x
+    aes.y = y
+    return aes
+  }
+
   static Aes aes(List<String> colNames) {
     return new Aes(colNames)
   }
@@ -97,8 +116,17 @@ class GgPlot {
    * Create aesthetic mappings with positional x, y and additional named parameters.
    * Example: aes('cty', 'hwy', colour: 'class')
    */
-  static Aes aes(Map params, String x, String y) {
-    return new Aes(params, x, y)
+  static Aes aes(Map params, Object x) {
+    Aes aes = new Aes(params)
+    aes.x = x
+    return aes
+  }
+
+  static Aes aes(Map params, Object x, Object y) {
+    Aes aes = new Aes(params)
+    aes.x = x
+    aes.y = y
+    return aes
   }
 
   /**
@@ -147,6 +175,13 @@ class GgPlot {
     return new Expression(closure, name)
   }
 
+  /**
+   * Factor wrapper for categorical values in aesthetic mappings.
+   */
+  static Factor factor(Object value) {
+    return new Factor(value)
+  }
+
   // ============ Labels ============
 
   /**
@@ -157,8 +192,14 @@ class GgPlot {
     if (params.title) label.title = params.title
     if (params.subtitle) label.subTitle = params.subtitle
     if (params.caption) label.caption = params.caption
-    if (params.x) label.x = params.x
-    if (params.y) label.y = params.y
+    if (params.containsKey('x')) {
+      label.x = params.x as String
+      label.xSet = true
+    }
+    if (params.containsKey('y')) {
+      label.y = params.y as String
+      label.ySet = true
+    }
     if (params.colour || params.color) label.legendTitle = params.colour ?: params.color
     if (params.fill) label.legendTitle = params.fill
     return label
@@ -1032,8 +1073,8 @@ class GgPlot {
 
   static class As {
 
-    static List factor(List column) {
-      return ListConverter.toStrings(column)
+    static Factor factor(List column) {
+      return new Factor(ListConverter.toStrings(column))
     }
   }
 }

@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.gg.aes.Factor
 
 /**
  * Aesthetic mappings for ggplot charts.
@@ -151,6 +152,24 @@ class Aes {
   }
 
   /**
+   * Check if an aesthetic is a factor wrapper.
+   */
+  @CompileDynamic
+  boolean isFactor(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof Factor
+  }
+
+  /**
+   * Get the Factor wrapper for an aesthetic.
+   */
+  @CompileDynamic
+  Factor getFactor(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof Factor ? (Factor) value : null
+  }
+
+  /**
    * Get the Expression wrapper for an aesthetic.
    * Wraps raw Closures in Expression for convenience.
    */
@@ -174,6 +193,7 @@ class Aes {
     if (value instanceof Identity) return null
     if (value instanceof AfterStat) return null
     if (value instanceof Expression) return null
+    if (value instanceof Factor) return null
     if (value instanceof Closure) return null
     return value.toString()
   }

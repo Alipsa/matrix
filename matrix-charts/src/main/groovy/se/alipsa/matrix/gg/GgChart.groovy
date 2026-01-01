@@ -31,11 +31,6 @@ import se.alipsa.matrix.gg.theme.Theme
 @CompileStatic
 class GgChart {
 
-  /** Constants for convenience when converting R code */
-  static final def NULL = null
-  static final boolean TRUE = true
-  static final boolean FALSE = false
-
   /** Base dataset for the chart */
   Matrix data
 
@@ -207,7 +202,25 @@ class GgChart {
    * Set labels (title, subtitle, axis labels, etc.)
    */
   GgChart plus(Label labels) {
-    this.labels = labels
+    if (labels == null) {
+      return this
+    }
+    if (this.labels == null) {
+      this.labels = labels
+      return this
+    }
+    if (labels.title) this.labels.title = labels.title
+    if (labels.subTitle) this.labels.subTitle = labels.subTitle
+    if (labels.caption) this.labels.caption = labels.caption
+    if (labels.legendTitle) this.labels.legendTitle = labels.legendTitle
+    if (labels.xSet) {
+      this.labels.x = labels.x
+      this.labels.xSet = true
+    }
+    if (labels.ySet) {
+      this.labels.y = labels.y
+      this.labels.ySet = true
+    }
     return this
   }
 

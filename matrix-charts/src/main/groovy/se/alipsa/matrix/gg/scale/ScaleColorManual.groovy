@@ -22,11 +22,11 @@ class ScaleColorManual extends ScaleDiscrete {
   /** Color for NA/missing values */
   String naValue = 'grey50'
 
-  /** Default color palette (used when values not specified) */
-  private static final List<String> DEFAULT_PALETTE = [
-    '#F8766D', '#00BA38', '#619CFF', '#F564E3', '#00BFC4',
-    '#B79F00', '#DE8C00', '#7CAE00', '#00B4F0', '#C77CFF'
-  ]
+  private List<String> computedPalette = []
+
+  private static final double REF_X = 95.047d
+  private static final double REF_Y = 100.0d
+  private static final double REF_Z = 108.883d
 
   ScaleColorManual() {
     aesthetic = 'color'
@@ -42,10 +42,12 @@ class ScaleColorManual extends ScaleDiscrete {
       def v = params.values
       if (v instanceof List) {
         this.values = v.collect { it?.toString() }
+        this.computedPalette = []
       } else if (v instanceof Map) {
         this.namedValues = (v as Map).collectEntries { k, val ->
           [k, val?.toString()]
         } as Map<Object, String>
+        this.computedPalette = []
       }
     }
     if (params.name) this.name = params.name as String
@@ -56,6 +58,16 @@ class ScaleColorManual extends ScaleDiscrete {
     // Support 'colour' British spelling
     if (params.aesthetic == 'colour') this.aesthetic = 'color'
     else if (params.aesthetic) this.aesthetic = params.aesthetic as String
+  }
+
+  @Override
+  void train(List data) {
+    super.train(data)
+    if (values.isEmpty() && namedValues.isEmpty()) {
+      computedPalette = generateHuePalette(levels.size())
+    } else {
+      computedPalette = []
+    }
   }
 
   @Override
@@ -72,9 +84,15 @@ class ScaleColorManual extends ScaleDiscrete {
     int index = levels.indexOf(value)
     if (index < 0) return naValue
 
-    // Get color from values list or default palette
-    List<String> colorList = values.isEmpty() ? DEFAULT_PALETTE : values
-    return colorList[index % colorList.size()]
+    // Get color from values list or computed palette
+    if (!values.isEmpty()) {
+      return values[index % values.size()]
+    }
+    if (computedPalette.isEmpty()) {
+      computedPalette = generateHuePalette(levels.size())
+    }
+    if (index >= computedPalette.size()) return naValue
+    return computedPalette[index]
   }
 
   @Override
@@ -87,10 +105,19 @@ class ScaleColorManual extends ScaleDiscrete {
     if (namedEntry) return namedEntry.key
 
     // Check positional mapping
-    List<String> colorList = values.isEmpty() ? DEFAULT_PALETTE : values
-    int colorIndex = colorList.indexOf(value as String)
-    if (colorIndex >= 0 && colorIndex < levels.size()) {
-      return levels[colorIndex]
+    if (!values.isEmpty()) {
+      int colorIndex = values.indexOf(value as String)
+      if (colorIndex >= 0 && colorIndex < levels.size()) {
+        return levels[colorIndex]
+      }
+    } else {
+      if (computedPalette.isEmpty()) {
+        computedPalette = generateHuePalette(levels.size())
+      }
+      int colorIndex = computedPalette.indexOf(value as String)
+      if (colorIndex >= 0 && colorIndex < levels.size()) {
+        return levels[colorIndex]
+      }
     }
 
     return null
@@ -101,14 +128,26 @@ class ScaleColorManual extends ScaleDiscrete {
    */
   String getColorForIndex(int index) {
     if (index < 0) return naValue
-    List<String> colorList = values.isEmpty() ? DEFAULT_PALETTE : values
-    return colorList[index % colorList.size()]
+    if (!values.isEmpty()) {
+      return values[index % values.size()]
+    }
+    if (computedPalette.isEmpty()) {
+      computedPalette = generateHuePalette(levels.size())
+    }
+    if (index >= computedPalette.size()) return naValue
+    return computedPalette[index]
   }
 
   /**
    * Get all colors in order of levels.
    */
   List<String> getColors() {
+    if (values.isEmpty() && namedValues.isEmpty()) {
+      if (computedPalette.isEmpty()) {
+        computedPalette = generateHuePalette(levels.size())
+      }
+      return new ArrayList<>(computedPalette)
+    }
     return levels.collect { transform(it) as String }
   }
 
@@ -117,6 +156,7 @@ class ScaleColorManual extends ScaleDiscrete {
    */
   ScaleColorManual values(List<String> colors) {
     this.values = colors
+    this.computedPalette = []
     return this
   }
 
@@ -125,6 +165,62 @@ class ScaleColorManual extends ScaleDiscrete {
    */
   ScaleColorManual values(Map<Object, String> mapping) {
     this.namedValues = mapping
+    this.computedPalette = []
     return this
+  }
+
+  private static List<String> generateHuePalette(int n) {
+    if (n <= 0) return []
+    double start = 15.0d
+    double end = 375.0d
+    double step = (end - start) / n
+    List<String> colors = new ArrayList<>(n)
+    for (int i = 0; i < n; i++) {
+      double hue = start + step * i
+      hue = hue % 360.0d
+      colors << hclToHex(hue, 100.0d, 65.0d)
+    }
+    return colors
+  }
+
+  private static String hclToHex(double h, double c, double l) {
+    double hr = Math.toRadians(h)
+    double u = c * Math.cos(hr)
+    double v = c * Math.sin(hr)
+    if (l <= 0.0d) {
+      return '#000000'
+    }
+    double denom = REF_X + 15.0d * REF_Y + 3.0d * REF_Z
+    double u0 = (4.0d * REF_X) / denom
+    double v0 = (9.0d * REF_Y) / denom
+    double up = u / (13.0d * l) + u0
+    double vp = v / (13.0d * l) + v0
+    double y = l > 8.0d ? REF_Y * Math.pow((l + 16.0d) / 116.0d, 3.0d) : REF_Y * l / 903.3d
+    double x = 0.0d - (9.0d * y * up) / ((up - 4.0d) * vp - up * vp)
+    double z = (9.0d * y - 15.0d * vp * y - vp * x) / (3.0d * vp)
+    return xyzToHex(x, y, z)
+  }
+
+  private static String xyzToHex(double x, double y, double z) {
+    double xn = x / 100.0d
+    double yn = y / 100.0d
+    double zn = z / 100.0d
+    double r = 3.2406d * xn + -1.5372d * yn + -0.4986d * zn
+    double g = -0.9689d * xn + 1.8758d * yn + 0.0415d * zn
+    double b = 0.0557d * xn + -0.2040d * yn + 1.0570d * zn
+    r = gammaCorrect(r)
+    g = gammaCorrect(g)
+    b = gammaCorrect(b)
+    int ri = (int) Math.round(Math.max(0.0d, Math.min(1.0d, r)) * 255.0d)
+    int gi = (int) Math.round(Math.max(0.0d, Math.min(1.0d, g)) * 255.0d)
+    int bi = (int) Math.round(Math.max(0.0d, Math.min(1.0d, b)) * 255.0d)
+    return String.format('#%02X%02X%02X', ri, gi, bi)
+  }
+
+  private static double gammaCorrect(double c) {
+    if (c <= 0.0031308d) {
+      return 12.92d * c
+    }
+    return 1.055d * Math.pow(c, 1.0d / 2.4d) - 0.055d
   }
 }

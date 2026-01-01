@@ -86,6 +86,9 @@ class GgPosition {
 
     String xCol = aes.xColName
     String yCol = aes.yColName
+    if (yCol == null && data.columnNames().contains('count')) {
+      yCol = 'count'
+    }
     String groupCol = aes.groupColName ?: aes.fillColName ?: aes.colorColName
 
     if (xCol == null || yCol == null) {

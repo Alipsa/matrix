@@ -11,4 +11,7 @@ class Label {
   String x
   String y
   String legendTitle // called colour in ggplot2
+
+  boolean xSet = false
+  boolean ySet = false
 }

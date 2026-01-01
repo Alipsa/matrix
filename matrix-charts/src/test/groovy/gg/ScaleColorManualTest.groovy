@@ -59,6 +59,18 @@ class ScaleColorManualTest {
   }
 
   @Test
+  void testDefaultPaletteExpandsWithoutCycling() {
+    ScaleColorManual scale = new ScaleColorManual()
+    List<String> levels = (1..12).collect { "L${it}" }
+    scale.train(levels)
+
+    List<String> colors = levels.collect { scale.transform(it) as String }
+
+    assertEquals(12, colors.size())
+    assertEquals(12, colors.toSet().size())
+  }
+
+  @Test
   void testTransformWithUnknownValueReturnsNaColor() {
     ScaleColorManual scale = new ScaleColorManual(values: ['red', 'blue'], naValue: 'gray')
     scale.train(['A', 'B'])
