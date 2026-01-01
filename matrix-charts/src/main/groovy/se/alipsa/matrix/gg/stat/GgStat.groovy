@@ -196,6 +196,13 @@ class GgStat {
     String response = parts.length > 0 ? parts[0].trim() : 'y'
     String rhs = parts.length > 1 ? parts[1].trim() : 'x'
 
+    // Ensure both sides are non-empty after trimming; fall back to defaults if needed
+    if (response.isEmpty()) {
+      response = 'y'
+    }
+    if (rhs.isEmpty()) {
+      rhs = 'x'
+    }
     // Check for poly(x, n) pattern
     Matcher matcher = POLY_PATTERN.matcher(rhs)
     if (matcher.find()) {
