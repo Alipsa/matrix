@@ -7,6 +7,7 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
@@ -568,11 +569,16 @@ class GgRenderer {
 
     if (data == null || data.rowCount() == 0 || aes == null) return
 
+    // Evaluate closure expressions in aesthetics
+    EvaluatedAes evalResult = evaluateExpressions(data, aes)
+    Matrix exprData = evalResult.data
+    Aes resolvedAes = evalResult.aes
+
     // Apply statistical transformation
-    Matrix statData = applyStats(data, aes, layer)
+    Matrix statData = applyStats(exprData, resolvedAes, layer)
 
     // Apply position adjustment
-    Matrix posData = applyPosition(statData, aes, layer)
+    Matrix posData = applyPosition(statData, resolvedAes, layer)
 
     // Create layer group
     G layerGroup = dataLayer.addG()
@@ -580,7 +586,7 @@ class GgRenderer {
 
     // Render the geom
     if (layer.geom) {
-      layer.geom.render(layerGroup, posData, aes, scales, coord)
+      layer.geom.render(layerGroup, posData, resolvedAes, scales, coord)
     }
   }
 
@@ -983,16 +989,21 @@ class GgRenderer {
       }
 
       if (layerAes && layerData) {
+        // Evaluate expressions first
+        EvaluatedAes evalResult = evaluateExpressions(layerData, layerAes)
+        Matrix exprData = evalResult.data
+        Aes resolvedLayerAes = evalResult.aes
+
         // Apply stat transformation to get computed values
-        Matrix statData = applyStats(layerData, layerAes, layer)
+        Matrix statData = applyStats(exprData, resolvedLayerAes, layer)
 
         // For x aesthetic: use xmin/xmax for histograms, otherwise use x column
         if (statData.columnNames().contains('xmin') && statData.columnNames().contains('xmax')) {
           // stat_bin produces xmin/xmax columns - include both for full range
           data['x'].addAll(statData['xmin'] ?: [])
           data['x'].addAll(statData['xmax'] ?: [])
-        } else if (layerAes.xColName && statData.columnNames().contains(layerAes.xColName)) {
-          data['x'].addAll(statData[layerAes.xColName] ?: [])
+        } else if (resolvedLayerAes.xColName && statData.columnNames().contains(resolvedLayerAes.xColName)) {
+          data['x'].addAll(statData[resolvedLayerAes.xColName] ?: [])
         }
 
         // For y aesthetic, check both the original y column and computed columns like 'count'
@@ -1000,14 +1011,14 @@ class GgRenderer {
           // stat_boxplot produces ymin/ymax columns - include both for full y range
           data['y'].addAll(statData['ymin'] ?: [])
           data['y'].addAll(statData['ymax'] ?: [])
-        } else if (layerAes.isAfterStat('y')) {
+        } else if (resolvedLayerAes.isAfterStat('y')) {
           // Explicit after_stat() reference - use the specified computed column
-          String statCol = layerAes.getAfterStatName('y')
+          String statCol = resolvedLayerAes.getAfterStatName('y')
           if (statData.columnNames().contains(statCol)) {
             data['y'].addAll(statData[statCol] ?: [])
           }
-        } else if (layerAes.yColName && statData.columnNames().contains(layerAes.yColName)) {
-          data['y'].addAll(statData[layerAes.yColName] ?: [])
+        } else if (resolvedLayerAes.yColName && statData.columnNames().contains(resolvedLayerAes.yColName)) {
+          data['y'].addAll(statData[resolvedLayerAes.yColName] ?: [])
         } else if (statData.columnNames().contains('count')) {
           // stat_count and stat_bin produce 'count' column for y values (default behavior)
           data['y'].addAll(statData['count'] ?: [])
@@ -1019,11 +1030,11 @@ class GgRenderer {
           data['x'].addAll(statData['x'] ?: [])
         }
 
-        if (layerAes.colorColName && statData.columnNames().contains(layerAes.colorColName)) {
-          data['color'].addAll(statData[layerAes.colorColName] ?: [])
+        if (resolvedLayerAes.colorColName && statData.columnNames().contains(resolvedLayerAes.colorColName)) {
+          data['color'].addAll(statData[resolvedLayerAes.colorColName] ?: [])
         }
-        if (layerAes.fillColName && statData.columnNames().contains(layerAes.fillColName)) {
-          data['fill'].addAll(statData[layerAes.fillColName] ?: [])
+        if (resolvedLayerAes.fillColName && statData.columnNames().contains(resolvedLayerAes.fillColName)) {
+          data['fill'].addAll(statData[resolvedLayerAes.fillColName] ?: [])
         }
       }
     }
@@ -1137,11 +1148,16 @@ class GgRenderer {
 
     if (data == null || aes == null) return
 
+    // Evaluate closure expressions in aesthetics
+    EvaluatedAes evalResult = evaluateExpressions(data, aes)
+    Matrix exprData = evalResult.data
+    Aes resolvedAes = evalResult.aes
+
     // Apply statistical transformation
-    Matrix statData = applyStats(data, aes, layer)
+    Matrix statData = applyStats(exprData, resolvedAes, layer)
 
     // Apply position adjustment
-    Matrix posData = applyPosition(statData, aes, layer)
+    Matrix posData = applyPosition(statData, resolvedAes, layer)
 
     // Create layer group
     G layerGroup = dataLayer.addG()
@@ -1149,7 +1165,7 @@ class GgRenderer {
 
     // Render the geom
     if (layer.geom) {
-      layer.geom.render(layerGroup, posData, aes, scales, coord)
+      layer.geom.render(layerGroup, posData, resolvedAes, scales, coord)
     }
   }
 
@@ -1678,5 +1694,81 @@ class GgRenderer {
    */
   private Theme defaultTheme() {
     return se.alipsa.matrix.gg.GgPlot.theme_gray()
+  }
+
+  /**
+   * Result of evaluating expressions in aesthetics.
+   * Contains the modified data matrix and resolved aesthetics.
+   */
+  private static class EvaluatedAes {
+    Matrix data
+    Aes aes
+
+    EvaluatedAes(Matrix data, Aes aes) {
+      this.data = data
+      this.aes = aes
+    }
+  }
+
+  /** List of all aesthetic property names that can contain expressions */
+  private static final List<String> ALL_AESTHETICS = [
+    'x', 'y', 'color', 'fill', 'size', 'shape', 'alpha',
+    'linetype', 'linewidth', 'group', 'label', 'weight'
+  ]
+
+  /**
+   * Evaluate closure expressions in aesthetics and add computed columns to data.
+   * Returns a new Aes with expression references replaced by column names.
+   * Supports expressions in all aesthetics (x, y, color, fill, size, etc.).
+   *
+   * @param data The original data matrix
+   * @param aes The aesthetics (may contain closures or Expression wrappers)
+   * @return EvaluatedAes containing modified data and resolved aesthetics
+   */
+  private EvaluatedAes evaluateExpressions(Matrix data, Aes aes) {
+    if (aes == null) {
+      return new EvaluatedAes(data, aes)
+    }
+
+    // Check if any aesthetic is an expression
+    boolean hasExpressions = ALL_AESTHETICS.any { aes.isExpression(it) }
+
+    if (!hasExpressions) {
+      return new EvaluatedAes(data, aes)
+    }
+
+    // Clone the data matrix to avoid modifying the original
+    Matrix workData = data.clone()
+    Aes resolvedAes = new Aes()
+
+    // Evaluate expressions for all aesthetics
+    resolvedAes.x = evaluateAesthetic(aes, 'x', workData)
+    resolvedAes.y = evaluateAesthetic(aes, 'y', workData)
+    resolvedAes.color = evaluateAesthetic(aes, 'color', workData)
+    resolvedAes.fill = evaluateAesthetic(aes, 'fill', workData)
+    resolvedAes.size = evaluateAesthetic(aes, 'size', workData)
+    resolvedAes.shape = evaluateAesthetic(aes, 'shape', workData)
+    resolvedAes.alpha = evaluateAesthetic(aes, 'alpha', workData)
+    resolvedAes.linetype = evaluateAesthetic(aes, 'linetype', workData)
+    resolvedAes.linewidth = evaluateAesthetic(aes, 'linewidth', workData)
+    resolvedAes.group = evaluateAesthetic(aes, 'group', workData)
+    resolvedAes.label = evaluateAesthetic(aes, 'label', workData)
+    resolvedAes.weight = evaluateAesthetic(aes, 'weight', workData)
+
+    return new EvaluatedAes(workData, resolvedAes)
+  }
+
+  /**
+   * Evaluate a single aesthetic: if it's an expression, add the computed column
+   * to the data and return the column name; otherwise return the original value.
+   */
+  @groovy.transform.CompileDynamic
+  private Object evaluateAesthetic(Aes aes, String aesthetic, Matrix workData) {
+    if (aes.isExpression(aesthetic)) {
+      Expression expr = aes.getExpression(aesthetic)
+      return expr.addToMatrix(workData)
+    }
+    // Return the original value (could be column name, Identity, AfterStat, or null)
+    return aes."$aesthetic"
   }
 }

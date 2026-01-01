@@ -1,11 +1,17 @@
 package se.alipsa.matrix.gg.stat
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.stats.distribution.TDistribution
 import se.alipsa.matrix.stats.regression.LinearRegression
+import se.alipsa.matrix.stats.regression.PolynomialRegression
+import se.alipsa.matrix.stats.regression.RegressionUtils
+
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 /**
  * Consolidated statistical transformation utilities for ggplot.
@@ -169,15 +175,77 @@ class GgStat {
     return Matrix.builder().mapList(results).build()
   }
 
+  /** Pattern to parse poly(x, n) in formulas */
+  private static final Pattern POLY_PATTERN = Pattern.compile(/poly\s*\(\s*(\w+)\s*,\s*(\d+)\s*\)/)
+
+  /**
+   * Parse a regression formula to extract polynomial degree if present.
+   * Supports: "y ~ x" (linear), "y ~ poly(x, 2)" (quadratic), "y ~ poly(x, 3)" (cubic), etc.
+   *
+   * @param formula The formula string
+   * @return Map with keys: polyDegree (int, 1 for linear), response (String), predictor (String),
+   *   polyExplicit (boolean, true when formula includes poly(...))
+   */
+  static Map<String, Object> parseFormula(String formula) {
+    if (formula == null || formula.trim().isEmpty()) {
+      return [polyDegree: 1, response: 'y', predictor: 'x', polyExplicit: false]
+    }
+
+    String cleaned = formula.trim()
+
+    // Split on ~ if present, otherwise treat the whole string as predictor
+    boolean hasTilde = cleaned.contains('~')
+    String response
+    String rhs
+    if (hasTilde) {
+      String[] parts = cleaned.split('~', 2)
+      response = parts.length > 0 ? parts[0].trim() : 'y'
+      rhs = parts.length > 1 ? parts[1].trim() : 'x'
+    } else {
+      response = 'y'
+      rhs = cleaned
+    }
+
+    // Ensure both sides are non-empty after trimming; fall back to defaults if needed
+    if (response.isEmpty()) {
+      response = 'y'
+    }
+    if (rhs.isEmpty()) {
+      rhs = 'x'
+    }
+    // Check for poly(x, n) pattern
+    Matcher matcher = POLY_PATTERN.matcher(rhs)
+    if (matcher.find()) {
+      String predictor = matcher.group(1)
+      int degree = Integer.parseInt(matcher.group(2))
+      if (degree < 1) {
+        throw new IllegalArgumentException(
+          "Polynomial degree must be at least 1, got: $degree in formula '$formula'"
+        )
+      }
+      return [polyDegree: degree, response: response, predictor: predictor, polyExplicit: true]
+    }
+
+    // Simple linear: y ~ x
+    return [polyDegree: 1, response: response, predictor: rhs, polyExplicit: false]
+  }
+
   /**
    * Compute smoothed line (regression).
-   * Delegates to matrix-stats LinearRegression.
+   * Supports linear regression and polynomial regression via formula parameter.
    *
    * @param data Input matrix
    * @param aes Aesthetic mappings (uses x and y)
-   * @param params Map with optional: method ('lm', 'loess'), se (show confidence interval)
+   * @param params Map with optional:
+   *   - method ('lm'): regression method
+   *   - formula ('y ~ x'): formula string, supports poly(x, n)
+   *   - se: show confidence interval (default: true; set to false to hide)
+   *   - level (0.95): confidence level
+   *   - n (80): number of fitted points
+   *   - degree (1): polynomial degree; overrides degree parsed from formula if provided
    * @return Matrix with columns: x, y (fitted), ymin, ymax (if se=true)
    */
+  @CompileDynamic
   static Matrix smooth(Matrix data, Aes aes, Map params = [:]) {
     String xCol = aes.xColName
     String yCol = aes.yColName
@@ -189,6 +257,31 @@ class GgStat {
     String method = params.method ?: 'lm'
     boolean se = params.se != false
     double level = params.level != null ? (params.level as double) : 0.95d
+
+    // Determine polynomial degree: check for conflicting 'degree' and 'formula' specifications
+    int polyDegree
+    String formula = params.formula as String
+    if (params.degree != null && formula != null) {
+      // Both degree and formula provided: ensure they are not in conflict
+      int explicitDegree = params.degree as int
+      Map<String, Object> formulaParsed = parseFormula(formula)
+      int formulaDegree = (formulaParsed.polyDegree as int)
+      boolean formulaExplicit = (formulaParsed.polyExplicit as boolean)
+      if (formulaExplicit && formulaDegree != explicitDegree) {
+        throw new IllegalArgumentException(
+          "Conflicting polynomial degrees: 'degree' parameter is " +
+            explicitDegree + " but 'formula' specifies degree " + formulaDegree
+        )
+      }
+      polyDegree = explicitDegree
+    } else if (params.degree != null) {
+      // Direct degree parameter (Groovy-style shortcut)
+      polyDegree = params.degree as int
+    } else {
+      // Parse formula string (R-style)
+      Map<String, Object> formulaParsed = parseFormula(formula)
+      polyDegree = (formulaParsed.polyDegree ?: 1) as int
+    }
 
     List<Number> rawX = data[xCol] as List<Number>
     List<Number> rawY = data[yCol] as List<Number>
@@ -203,27 +296,39 @@ class GgStat {
         yValues << yVal
       }
     }
-    if (xValues.size() < 2) {
+
+    int minDataPoints = polyDegree + 1
+    if (xValues.size() < minDataPoints) {
       return Matrix.builder().columnNames(['x', 'y']).rows([]).build()
     }
 
-    // Use LinearRegression from matrix-stats
-    def regression = new LinearRegression(xValues, yValues)
+    // Choose regression model based on polynomial degree
+    def regression
+    if (polyDegree > 1) {
+      regression = new PolynomialRegression(xValues, yValues, polyDegree)
+    } else {
+      regression = new LinearRegression(xValues, yValues)
+    }
 
     // Generate fitted values
     Number xMin = Stat.min(xValues)
     Number xMax = Stat.max(xValues)
     int nPoints = (params.n ?: 80) as int
 
-    double sxx = 0.0d
-    double xBar = (xValues.sum() as double) / xValues.size()
-    xValues.each { Number val ->
-      double diff = (val as double) - xBar
-      sxx += diff * diff
-    }
-
     double sigma2 = 0.0d
-    if (se && xValues.size() > 2 && sxx > 0.0d) {
+    int dfResid = xValues.size() - (polyDegree + 1)
+    double sxx = 0.0d
+    double xBar = 0.0d
+    double[][] xtxInv = null
+    if (se && dfResid > 0) {
+      if (polyDegree == 1) {
+        xBar = (xValues.sum() as double) / xValues.size()
+        xValues.each { Number val ->
+          double diff = (val as double) - xBar
+          sxx += diff * diff
+        }
+      }
+
       double sse = 0.0d
       for (int i = 0; i < xValues.size(); i++) {
         double xi = xValues[i] as double
@@ -232,23 +337,42 @@ class GgStat {
         double resid = yi - yFit
         sse += resid * resid
       }
-      sigma2 = sse / (xValues.size() - 2)
+      sigma2 = sse / dfResid
       if (sigma2 <= 0.0d) {
         se = false
+      } else if (polyDegree == 1) {
+        if (sxx <= 0.0d) {
+          se = false
+        }
+      } else {
+        xtxInv = RegressionUtils.polynomialXtxInverse(xValues, polyDegree)
+        if (xtxInv == null) {
+          se = false
+        }
       }
     } else {
       se = false
     }
 
-    double tCrit = se ? tCritical(xValues.size() - 2, level) : 0.0d
+    double tCrit = se ? tCritical(dfResid, level) : 0.0d
 
     List<List<?>> results = []
     for (int i = 0; i < nPoints; i++) {
       Number x = xMin + (xMax - xMin) * i / (nPoints - 1)
       BigDecimal yFit = regression.predict(x)
       if (se) {
-        double dx = (x as double) - xBar
-        double seFit = Math.sqrt(sigma2 * (1.0d / xValues.size() + (dx * dx) / sxx))
+        double seFit
+        if (polyDegree == 1) {
+          double dx = (x as double) - xBar
+          seFit = Math.sqrt(sigma2 * (1.0d / xValues.size() + (dx * dx) / sxx))
+        } else {
+          double leverage = RegressionUtils.polynomialLeverage(
+            xtxInv,
+            (x as double),
+            polyDegree
+          )
+          seFit = Math.sqrt(sigma2 * Math.max(0.0d, leverage))
+        }
         BigDecimal margin = BigDecimal.valueOf(tCrit * seFit)
         BigDecimal yMin = yFit - margin
         BigDecimal yMax = yFit + margin
@@ -375,4 +499,5 @@ class GgStat {
     // Placeholder - needs implementation
     throw new UnsupportedOperationException("stat_contour not yet implemented")
   }
+
 }

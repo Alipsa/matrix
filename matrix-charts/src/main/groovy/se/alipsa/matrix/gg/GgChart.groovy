@@ -75,7 +75,7 @@ class GgChart {
     Aes layerAes = null
     if (geom.params) {
       // Copy params that are relevant for stats
-      ['method', 'n', 'se', 'level', 'formula', 'bins', 'binwidth', 'fun', 'fun.y'].each { key ->
+      ['method', 'n', 'se', 'level', 'formula', 'degree', 'bins', 'binwidth', 'fun', 'fun.y'].each { key ->
         if (geom.params.containsKey(key)) {
           statParams[key] = geom.params[key]
         }

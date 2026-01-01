@@ -219,4 +219,184 @@ class GgPlotTest {
         println("Wrote mtcars scatter plot to ${outputFile.absolutePath}")
     }
 
+    @Test
+    void testGeomLm() {
+        // Test the geom_lm convenience wrapper
+        def mpg = Dataset.mpg()
+
+        def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+            geom_point() +
+            geom_lm() +
+            labs(title: 'Engine Displacement vs Highway MPG')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+
+        // Verify points are rendered
+        assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
+
+        // Verify smooth line is rendered
+        assertTrue(svgContent.contains('<line'), "Should contain line elements for geom_lm")
+
+        // Write for inspection
+        File outputFile = new File('build/mpg_geom_lm.svg')
+        write(svg, outputFile)
+        println("Wrote mpg geom_lm plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testGeomLmWithPolynomial() {
+        // Test geom_lm with polynomial formula
+        def mpg = Dataset.mpg()
+
+        def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+            geom_point(alpha: 0.5) +
+            geom_lm(formula: 'y ~ poly(x, 2)', colour: 'red', linewidth: 1) +
+            labs(title: 'Polynomial Fit (degree 2)')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+
+        // Verify points and line are rendered
+        assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
+        assertTrue(svgContent.contains('<line'), "Should contain line elements for polynomial fit")
+        assertTrue(svgContent.contains('stroke="red"'), "Should have red color for polynomial line")
+
+        // Write for inspection
+        File outputFile = new File('build/mpg_polynomial.svg')
+        write(svg, outputFile)
+        println("Wrote mpg polynomial plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testExpressionInAes() {
+        // Test closure expression in aesthetics
+        def mpg = Dataset.mpg()
+
+        // Using expr() wrapper for clarity
+        def chart = ggplot(mpg, aes(x: 'displ', y: expr { 1.0 / it.hwy })) +
+            geom_point() +
+            labs(title: 'Displacement vs 1/Highway MPG', y: '1 / Highway MPG')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+
+        // Verify points are rendered
+        assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
+
+        // Write for inspection
+        File outputFile = new File('build/mpg_expression.svg')
+        write(svg, outputFile)
+        println("Wrote mpg expression plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testExpressionWithGeomLm() {
+        // Test combining expression in aes with geom_lm
+        def mpg = Dataset.mpg()
+
+        def chart = ggplot(mpg, aes(x: 'displ', y: expr { 1.0 / it.hwy })) +
+            geom_point() +
+            geom_lm() +
+            labs(title: 'Displacement vs 1/Highway MPG with Linear Fit')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+
+        // Verify both points and regression line are rendered
+        assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
+        assertTrue(svgContent.contains('<line'), "Should contain line elements for regression")
+
+        // Write for inspection
+        File outputFile = new File('build/mpg_expr_lm.svg')
+        write(svg, outputFile)
+        println("Wrote mpg expression+lm plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testExpressionWithPolynomial() {
+        // Full example: expression in aes with polynomial geom_lm
+        def mpg = Dataset.mpg()
+
+        def chart = ggplot(mpg, aes(x: 'displ', y: expr { 1.0 / it.hwy })) +
+            geom_point() +
+            geom_lm(formula: 'y ~ poly(x, 2)', linewidth: 1, colour: 'red') +
+            labs(title: 'Polynomial Fit on Transformed Data')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+
+        // Verify both points and regression line are rendered
+        assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
+        assertTrue(svgContent.contains('<line'), "Should contain line elements for polynomial")
+        assertTrue(svgContent.contains('stroke="red"'), "Should have red polynomial line")
+
+        // Write for inspection
+        File outputFile = new File('build/mpg_expr_polynomial.svg')
+        write(svg, outputFile)
+        println("Wrote mpg expression+polynomial plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testDegreeParameter() {
+        // Test using degree parameter instead of formula string
+        def mpg = Dataset.mpg()
+
+        // Using degree: 2 (Groovy-style) instead of formula: 'y ~ poly(x, 2)' (R-style)
+        def chart = ggplot(mpg, aes(x: 'displ', y: 'hwy')) +
+            geom_point(alpha: 0.5) +
+            geom_lm(degree: 2, colour: 'blue', linewidth: 1.5) +
+            labs(title: 'Polynomial Fit using degree parameter')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+
+        // Verify points and line are rendered
+        assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
+        assertTrue(svgContent.contains('<line'), "Should contain line elements for polynomial fit")
+        assertTrue(svgContent.contains('stroke="blue"'), "Should have blue color for polynomial line")
+
+        // Write for inspection
+        File outputFile = new File('build/mpg_degree_param.svg')
+        write(svg, outputFile)
+        println("Wrote mpg degree parameter plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testDegreeWithExpression() {
+        // Combine degree parameter with expression in aes
+        def mpg = Dataset.mpg()
+
+        def chart = ggplot(mpg, aes(x: 'displ', y: expr { 1.0 / it.hwy })) +
+            geom_point() +
+            geom_lm(degree: 2, colour: 'purple') +
+            labs(title: 'Degree 2 with Expression', y: '1 / Highway MPG')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+
+        assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
+        assertTrue(svgContent.contains('<line'), "Should contain line elements for polynomial")
+        assertTrue(svgContent.contains('stroke="purple"'), "Should have purple polynomial line")
+
+        // Write for inspection
+        File outputFile = new File('build/mpg_degree_expr.svg')
+        write(svg, outputFile)
+        println("Wrote mpg degree+expression plot to ${outputFile.absolutePath}")
+    }
+
 }

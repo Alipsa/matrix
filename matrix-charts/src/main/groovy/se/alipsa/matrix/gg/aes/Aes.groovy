@@ -142,12 +142,39 @@ class Aes {
   }
 
   /**
-   * Extract column name from a value (returns null for Identity and AfterStat wrappers).
+   * Check if an aesthetic is a closure-based expression.
+   */
+  @CompileDynamic
+  boolean isExpression(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof Expression || value instanceof Closure
+  }
+
+  /**
+   * Get the Expression wrapper for an aesthetic.
+   * Wraps raw Closures in Expression for convenience.
+   */
+  @CompileDynamic
+  Expression getExpression(String aesthetic) {
+    def value = this."$aesthetic"
+    if (value instanceof Expression) {
+      return (Expression) value
+    }
+    if (value instanceof Closure) {
+      return new Expression((Closure<Number>) value)
+    }
+    return null
+  }
+
+  /**
+   * Extract column name from a value (returns null for Identity, AfterStat, and Expression wrappers).
    */
   private static String extractColName(def value) {
     if (value == null) return null
     if (value instanceof Identity) return null
     if (value instanceof AfterStat) return null
+    if (value instanceof Expression) return null
+    if (value instanceof Closure) return null
     return value.toString()
   }
 

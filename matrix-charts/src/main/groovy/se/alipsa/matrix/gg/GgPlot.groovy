@@ -22,6 +22,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.AfterStat
+import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
@@ -121,6 +122,28 @@ class GgPlot {
    */
   static AfterStat after_stat(String stat) {
     return new AfterStat(stat)
+  }
+
+  /**
+   * Expression wrapper for closure-based transformations in aesthetic mappings.
+   * Use: aes(y: expr { 1.0 / it.hwy }) to compute values from row data.
+   *
+   * The closure receives a Row object and should return a numeric value.
+   *
+   * @param closure The closure that computes the value from row data
+   */
+  static Expression expr(Closure<Number> closure) {
+    return new Expression(closure)
+  }
+
+  /**
+   * Expression wrapper with custom column name.
+   *
+   * @param name The name for the computed column
+   * @param closure The closure that computes the value from row data
+   */
+  static Expression expr(String name, Closure<Number> closure) {
+    return new Expression(closure, name)
   }
 
   // ============ Labels ============
@@ -632,6 +655,49 @@ class GgPlot {
 
   static GeomSmooth geom_smooth(Map params) {
     return new GeomSmooth(params)
+  }
+
+  /**
+   * Convenience wrapper for linear model regression line.
+   * Equivalent to geom_smooth with method='lm', se=false, colour='steelblue' and alpha=0.5.
+   *
+   * Usage:
+   * <pre>
+   * ggplot(mpg, aes('displ', 'hwy')) + geom_point() + geom_lm()
+   * ggplot(mpg, aes('displ', 'hwy')) + geom_point() + geom_lm(degree: 2, colour: 'red')
+   * ggplot(mpg, aes('displ', 'hwy')) + geom_point() + geom_lm(formula: 'y ~ poly(x, 2)', colour: 'red')
+   * </pre>
+   */
+  static GeomSmooth geom_lm() {
+    return geom_lm([:])
+  }
+
+  /**
+   * Convenience wrapper for linear model regression line with custom parameters.
+   *
+   * @param params Map with optional:
+   *   - degree: polynomial degree (1=linear, 2=quadratic, 3=cubic, etc.) - Groovy shortcut
+   *   - formula: regression formula ('y ~ x' or 'y ~ poly(x, 2)') - R-style
+   *   - colour/color: line color (default: steelblue at 0.5 alpha)
+   *   - linewidth: line width (default: 2)
+   *   - se: show standard error band (default: false)
+   *   - any other geom_smooth parameters
+   */
+  static GeomSmooth geom_lm(Map params) {
+    Map defaults = [
+      se: false,
+      method: 'lm',
+      colour: 'steelblue',
+      alpha: 0.5,
+      linewidth: 2
+    ]
+    // Only add default formula if degree is not explicitly provided
+    if (!params.containsKey('degree')) {
+      defaults['formula'] = 'y ~ x'
+    }
+    // User params override defaults
+    Map merged = defaults + params
+    return new GeomSmooth(merged)
   }
 
   static GeomText geom_text() {
