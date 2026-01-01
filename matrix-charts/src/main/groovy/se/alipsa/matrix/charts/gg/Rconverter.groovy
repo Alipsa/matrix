@@ -658,7 +658,7 @@ class Rconverter {
         escaped = false
         continue
       }
-      if (ch == '\\\\') {
+      if (ch == ('\\' as char)) {
         escaped = true
         continue
       }
