@@ -126,7 +126,7 @@ class PolynomialRegression {
    */
   BigDecimal getCoefficient(int power) {
     if (power < 0 || power > degree) {
-      throw new IllegalArgumentException("Power must be between 0 and $degree")
+      throw new IllegalArgumentException("Power must be between 0 and $degree (inclusive)")
     }
     return BigDecimal.valueOf(coefficients[power])
   }
