@@ -91,12 +91,31 @@ class GgPlot {
     return new Aes(Arrays.asList(colNames))
   }
 
+  /**
+   * Create aesthetic mappings with positional x.
+   * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
+   *
+   * Example: aes('cty')
+   *
+   * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @return a new Aes instance
+   */
   static Aes aes(Object x) {
     Aes aes = new Aes()
     aes.x = x
     return aes
   }
 
+  /**
+   * Create aesthetic mappings with positional x and y.
+   * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
+   *
+   * Example: aes('cty', 'hwy')
+   *
+   * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @param y y mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @return a new Aes instance
+   */
   static Aes aes(Object x, Object y) {
     Aes aes = new Aes()
     aes.x = x
@@ -219,11 +238,11 @@ class GgPlot {
     if (params.subtitle) label.subTitle = params.subtitle
     if (params.caption) label.caption = params.caption
     if (params.containsKey('x')) {
-      label.x = params.x as String
+      label.x = params.x?.toString()
       label.xSet = true
     }
     if (params.containsKey('y')) {
-      label.y = params.y as String
+      label.y = params.y?.toString()
       label.ySet = true
     }
     if (params.colour || params.color) label.legendTitle = params.colour ?: params.color

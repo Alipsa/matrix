@@ -2,8 +2,6 @@ package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.gg.aes.Factor
-
 /**
  * Aesthetic mappings for ggplot charts.
  * Maps data columns to visual properties.

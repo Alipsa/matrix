@@ -136,11 +136,11 @@ class GeomHistogram extends Geom {
    * Get a default color from a discrete palette based on a value.
    */
   private String getDefaultColor(Object value) {
-      List<String> palette = [
-        '#F8766D', '#C49A00', '#53B400',
-        '#00C094', '#00B6EB', '#A58AFF',
-        '#FB61D7'
-      ]
+    List<String> palette = [
+      '#F8766D', '#C49A00', '#53B400',
+      '#00C094', '#00B6EB', '#A58AFF',
+      '#FB61D7'
+    ]
 
     int index = Math.abs(value.hashCode()) % palette.size()
     return palette[index]
