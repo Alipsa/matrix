@@ -1931,6 +1931,11 @@ class GgRenderer {
       Factor factor = aes.getFactor(aesthetic)
       return factor.addToMatrix(workData)
     }
+    def rawValue = aes."$aesthetic"
+    if (rawValue instanceof List) {
+      Factor factor = new Factor(rawValue as List)
+      return factor.addToMatrix(workData)
+    }
     if (aes.isExpression(aesthetic)) {
       Expression expr = aes.getExpression(aesthetic)
       return expr.addToMatrix(workData)

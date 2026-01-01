@@ -247,6 +247,12 @@ class CoordPolar extends Coord {
     return path.toString()
   }
 
+  /**
+   * Format numeric SVG coordinates with fixed precision.
+   *
+   * @param value numeric value
+   * @return formatted string with fixed decimal precision
+   */
   private static String formatNumber(double value) {
     return String.format(Locale.US, "%.3f", value)
   }

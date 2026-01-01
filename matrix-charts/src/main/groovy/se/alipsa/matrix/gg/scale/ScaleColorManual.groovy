@@ -93,6 +93,7 @@ class ScaleColorManual extends ScaleDiscrete {
     if (computedPalette.isEmpty()) {
       computedPalette = generateHuePalette(levels.size())
     }
+    // Guard against empty or stale palettes even if levels are populated.
     if (index >= computedPalette.size()) return naValue
     return computedPalette[index]
   }
@@ -171,6 +172,12 @@ class ScaleColorManual extends ScaleDiscrete {
     return this
   }
 
+  /**
+   * Generate a ggplot2-like hue palette in HCL space.
+   *
+   * @param n number of colors to generate
+   * @return list of hex RGB colors
+   */
   private static List<String> generateHuePalette(int n) {
     if (n <= 0) return []
     double start = 15.0d
@@ -185,9 +192,16 @@ class ScaleColorManual extends ScaleDiscrete {
     return colors
   }
 
-  // Convert CIELUV-derived HCL (Hue, Chroma, Luminance) to sRGB.
-  // Constants like 903.3, 116.0, 13.0, 4.0, 9.0, 15.0, 3.0, 8.0, 16.0
-  // come from the CIE L*u*v* / L*a*b* conversion formulas.
+  /**
+   * Convert CIELUV-derived HCL (Hue, Chroma, Luminance) to sRGB.
+   * Constants like 903.3, 116.0, 13.0, 4.0, 9.0, 15.0, 3.0, 8.0, 16.0
+   * come from the CIE L*u*v* / L*a*b* conversion formulas.
+   *
+   * @param h hue in degrees
+   * @param c chroma
+   * @param l luminance
+   * @return hex RGB string
+   */
   private static String hclToHex(double h, double c, double l) {
     double hr = Math.toRadians(h)
     double u = c * Math.cos(hr)
@@ -210,6 +224,14 @@ class ScaleColorManual extends ScaleDiscrete {
     return xyzToHex(x, y, z)
   }
 
+  /**
+   * Convert CIE XYZ to sRGB hex using D65 reference.
+   *
+   * @param x X component
+   * @param y Y component
+   * @param z Z component
+   * @return hex RGB string
+   */
   private static String xyzToHex(double x, double y, double z) {
     double xn = x / 100.0d
     double yn = y / 100.0d
@@ -226,6 +248,12 @@ class ScaleColorManual extends ScaleDiscrete {
     return String.format('#%02X%02X%02X', ri, gi, bi)
   }
 
+  /**
+   * Apply sRGB gamma correction to a linear RGB component.
+   *
+   * @param c linear RGB component
+   * @return gamma-corrected component
+   */
   private static double gammaCorrect(double c) {
     if (c <= 0.0031308d) {
       return 12.92d * c

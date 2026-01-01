@@ -113,8 +113,14 @@ class GgPlot {
   }
 
   /**
-   * Create aesthetic mappings with positional x, y and additional named parameters.
-   * Example: aes('cty', 'hwy', colour: 'class')
+   * Create aesthetic mappings with positional x and additional named parameters.
+   * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
+   *
+   * Example: aes([colour: 'class'], 'cty')
+   *
+   * @param params named aesthetic mappings (e.g., colour, fill, size)
+   * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @return a new Aes instance
    */
   static Aes aes(Map params, Object x) {
     Aes aes = new Aes(params)
@@ -122,6 +128,17 @@ class GgPlot {
     return aes
   }
 
+  /**
+   * Create aesthetic mappings with positional x, y and additional named parameters.
+   * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
+   *
+   * Example: aes([colour: 'class'], 'cty', 'hwy')
+   *
+   * @param params named aesthetic mappings (e.g., colour, fill, size)
+   * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @param y y mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @return a new Aes instance
+   */
   static Aes aes(Map params, Object x, Object y) {
     Aes aes = new Aes(params)
     aes.x = x
@@ -177,6 +194,15 @@ class GgPlot {
 
   /**
    * Factor wrapper for categorical values in aesthetic mappings.
+   * Accepts constants, column names, or lists of values aligned with the data rows.
+   *
+   * Examples:
+   * - factor(1)
+   * - factor('class')
+   * - factor(mtcars['cyl'])
+   *
+   * @param value constant, column name, or list of values
+   * @return a Factor wrapper
    */
   static Factor factor(Object value) {
     return new Factor(value)
@@ -1073,7 +1099,24 @@ class GgPlot {
 
   static class As {
 
-    static Factor factor(List column) {
+    /**
+     * Convert a column list to factor values (legacy helper).
+     * For ggplot mappings, prefer the top-level factor(...) helper.
+     *
+     * @param column list of values
+     * @return list of string values
+     */
+    static List<String> factor(List column) {
+      return ListConverter.toStrings(column)
+    }
+
+    /**
+     * Convert a column list to a Factor wrapper for ggplot aesthetics.
+     *
+     * @param column list of values
+     * @return Factor wrapper
+     */
+    static Factor factorWrap(List column) {
       return new Factor(ListConverter.toStrings(column))
     }
   }
