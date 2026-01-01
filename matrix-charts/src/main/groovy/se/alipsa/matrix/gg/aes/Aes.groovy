@@ -153,6 +153,9 @@ class Aes {
 
   /**
    * Check if an aesthetic is a factor wrapper.
+   *
+   * @param aesthetic the aesthetic name (e.g., 'x', 'fill')
+   * @return true if the aesthetic is backed by a Factor wrapper
    */
   @CompileDynamic
   boolean isFactor(String aesthetic) {
@@ -162,6 +165,9 @@ class Aes {
 
   /**
    * Get the Factor wrapper for an aesthetic.
+   *
+   * @param aesthetic the aesthetic name (e.g., 'x', 'fill')
+   * @return the Factor instance or null if not a factor mapping
    */
   @CompileDynamic
   Factor getFactor(String aesthetic) {

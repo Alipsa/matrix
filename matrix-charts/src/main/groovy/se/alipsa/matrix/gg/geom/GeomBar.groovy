@@ -177,6 +177,17 @@ class GeomBar extends Geom {
     return palette[index]
   }
 
+  /**
+   * Render bars using polar coordinates (pie/donut charts).
+   * This path rendering is separate from the cartesian bar logic because it
+   * converts stacked bar segments into arc slices.
+   *
+   * @param group SVG group to render into
+   * @param data data matrix (after stat/position transforms)
+   * @param aes aesthetic mappings
+   * @param scales computed scales
+   * @param coord polar coordinate system
+   */
   private void renderPolar(G group, Matrix data, Aes aes, Map<String, Scale> scales, CoordPolar coord) {
     String xCol = aes.xColName
     String yCol = data.columnNames().contains('count') ? 'count' : aes.yColName
@@ -225,7 +236,7 @@ class GeomBar extends Geom {
       }
       double total = values.sum(0.0d) as double
       if (total <= 0.0d) {
-        return
+        continue
       }
 
       double current = 0.0d

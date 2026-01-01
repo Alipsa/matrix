@@ -14,7 +14,6 @@ import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
-import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
@@ -1152,6 +1151,14 @@ class GgRenderer {
     }
   }
 
+  /**
+   * Render polar grid lines (spokes and rings) for theta/radius scales.
+   *
+   * @param plotArea plot group for the current panel
+   * @param scales computed scales
+   * @param theme active theme (grid line styling)
+   * @param coord polar coordinate system
+   */
   private void renderPolarGridLines(G plotArea, Map<String, Scale> scales, Theme theme, CoordPolar coord) {
     G gridGroup = plotArea.addG()
     gridGroup.id('grid')
@@ -1230,6 +1237,13 @@ class GgRenderer {
              .strokeWidth(size)
   }
 
+  /**
+   * Normalize a scale-transformed value into 0..1 based on its scale range.
+   *
+   * @param scale scale instance
+   * @param value data value to normalize
+   * @return normalized value or null if the scale/value cannot be normalized
+   */
   private Double normalizeFromScale(Scale scale, Object value) {
     if (scale == null) return null
     def transformed = scale.transform(value)
@@ -1248,6 +1262,12 @@ class GgRenderer {
     return ((transformed as double) - min) / span
   }
 
+  /**
+   * Check if a scale range is reversed (high to low).
+   *
+   * @param scale scale instance
+   * @return true when the range is reversed
+   */
   private boolean isRangeReversed(Scale scale) {
     if (scale == null) return false
     List<Number> range = null
