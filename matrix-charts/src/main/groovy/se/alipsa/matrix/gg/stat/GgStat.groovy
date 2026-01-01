@@ -208,6 +208,11 @@ class GgStat {
     if (matcher.find()) {
       String predictor = matcher.group(1)
       int degree = Integer.parseInt(matcher.group(2))
+      if (degree < 1) {
+        throw new IllegalArgumentException(
+          "Polynomial degree must be at least 1, got: $degree in formula '$formula'"
+        )
+      }
       return [polyDegree: degree, response: response, predictor: predictor]
     }
 

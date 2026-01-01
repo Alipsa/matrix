@@ -1710,9 +1710,16 @@ class GgRenderer {
     }
   }
 
+  /** List of all aesthetic property names that can contain expressions */
+  private static final List<String> ALL_AESTHETICS = [
+    'x', 'y', 'color', 'fill', 'size', 'shape', 'alpha',
+    'linetype', 'linewidth', 'group', 'label', 'weight'
+  ]
+
   /**
    * Evaluate closure expressions in aesthetics and add computed columns to data.
    * Returns a new Aes with expression references replaced by column names.
+   * Supports expressions in all aesthetics (x, y, color, fill, size, etc.).
    *
    * @param data The original data matrix
    * @param aes The aesthetics (may contain closures or Expression wrappers)
@@ -1724,7 +1731,7 @@ class GgRenderer {
     }
 
     // Check if any aesthetic is an expression
-    boolean hasExpressions = aes.isExpression('x') || aes.isExpression('y')
+    boolean hasExpressions = ALL_AESTHETICS.any { aes.isExpression(it) }
 
     if (!hasExpressions) {
       return new EvaluatedAes(data, aes)
@@ -1734,35 +1741,34 @@ class GgRenderer {
     Matrix workData = data.clone()
     Aes resolvedAes = new Aes()
 
-    // Copy non-expression aesthetics and evaluate expressions
-    if (aes.isExpression('x')) {
-      Expression expr = aes.getExpression('x')
-      String colName = expr.addToMatrix(workData)
-      resolvedAes.x = colName
-    } else {
-      resolvedAes.x = aes.x
-    }
-
-    if (aes.isExpression('y')) {
-      Expression expr = aes.getExpression('y')
-      String colName = expr.addToMatrix(workData)
-      resolvedAes.y = colName
-    } else {
-      resolvedAes.y = aes.y
-    }
-
-    // Copy remaining aesthetics unchanged
-    resolvedAes.color = aes.color
-    resolvedAes.fill = aes.fill
-    resolvedAes.size = aes.size
-    resolvedAes.shape = aes.shape
-    resolvedAes.alpha = aes.alpha
-    resolvedAes.linetype = aes.linetype
-    resolvedAes.linewidth = aes.linewidth
-    resolvedAes.group = aes.group
-    resolvedAes.label = aes.label
-    resolvedAes.weight = aes.weight
+    // Evaluate expressions for all aesthetics
+    resolvedAes.x = evaluateAesthetic(aes, 'x', workData)
+    resolvedAes.y = evaluateAesthetic(aes, 'y', workData)
+    resolvedAes.color = evaluateAesthetic(aes, 'color', workData)
+    resolvedAes.fill = evaluateAesthetic(aes, 'fill', workData)
+    resolvedAes.size = evaluateAesthetic(aes, 'size', workData)
+    resolvedAes.shape = evaluateAesthetic(aes, 'shape', workData)
+    resolvedAes.alpha = evaluateAesthetic(aes, 'alpha', workData)
+    resolvedAes.linetype = evaluateAesthetic(aes, 'linetype', workData)
+    resolvedAes.linewidth = evaluateAesthetic(aes, 'linewidth', workData)
+    resolvedAes.group = evaluateAesthetic(aes, 'group', workData)
+    resolvedAes.label = evaluateAesthetic(aes, 'label', workData)
+    resolvedAes.weight = evaluateAesthetic(aes, 'weight', workData)
 
     return new EvaluatedAes(workData, resolvedAes)
+  }
+
+  /**
+   * Evaluate a single aesthetic: if it's an expression, add the computed column
+   * to the data and return the column name; otherwise return the original value.
+   */
+  @groovy.transform.CompileDynamic
+  private Object evaluateAesthetic(Aes aes, String aesthetic, Matrix workData) {
+    if (aes.isExpression(aesthetic)) {
+      Expression expr = aes.getExpression(aesthetic)
+      return expr.addToMatrix(workData)
+    }
+    // Return the original value (could be column name, Identity, AfterStat, or null)
+    return aes."$aesthetic"
   }
 }

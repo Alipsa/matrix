@@ -43,10 +43,28 @@ class Expression {
 
   /**
    * Evaluate the expression for a single row.
+   * Returns null if the closure returns null or a non-numeric value.
+   * @throws RuntimeException if the closure throws an exception
    */
   @CompileDynamic
   Number evaluate(Row row) {
-    return closure.call(row) as Number
+    try {
+      def result = closure.call(row)
+      if (result == null) {
+        return null
+      }
+      if (result instanceof Number) {
+        return (Number) result
+      }
+      // Try to convert string to number
+      String str = result.toString()
+      if (str.contains('.')) {
+        return new BigDecimal(str)
+      }
+      return new BigInteger(str)
+    } catch (Exception e) {
+      throw new RuntimeException("Expression evaluation failed for row: ${e.message}", e)
+    }
   }
 
   /**
@@ -63,12 +81,22 @@ class Expression {
 
   /**
    * Add a computed column to the matrix based on this expression.
+   * If a column with the same name already exists, generates a unique name.
    * Returns the column name used.
    */
   String addToMatrix(Matrix data) {
     List<Number> values = evaluateAll(data)
-    data.addColumn(name, values)
-    return name
+    String colName = name
+    // Check if column already exists and generate unique name if needed
+    if (data.columnNames().contains(colName)) {
+      int suffix = 1
+      while (data.columnNames().contains("${colName}_${suffix}")) {
+        suffix++
+      }
+      colName = "${colName}_${suffix}"
+    }
+    data.addColumn(colName, values)
+    return colName
   }
 
   /**

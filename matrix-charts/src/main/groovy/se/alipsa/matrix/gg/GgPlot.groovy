@@ -685,13 +685,16 @@ class GgPlot {
    */
   static GeomSmooth geom_lm(Map params) {
     Map defaults = [
-      formula: 'y ~ x',
       se: false,
       method: 'lm',
       colour: 'steelblue',
       alpha: 0.5,
       linewidth: 2
     ]
+    // Only add default formula if degree is not explicitly provided
+    if (!params.containsKey('degree')) {
+      defaults['formula'] = 'y ~ x'
+    }
     // User params override defaults
     Map merged = defaults + params
     return new GeomSmooth(merged)
