@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.stats.distribution.TDistribution
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression
+import se.alipsa.matrix.stats.regression.RegressionUtils
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -182,19 +183,28 @@ class GgStat {
    * Supports: "y ~ x" (linear), "y ~ poly(x, 2)" (quadratic), "y ~ poly(x, 3)" (cubic), etc.
    *
    * @param formula The formula string
-   * @return Map with keys: polyDegree (int, 1 for linear), response (String), predictor (String)
+   * @return Map with keys: polyDegree (int, 1 for linear), response (String), predictor (String),
+   *   polyExplicit (boolean, true when formula includes poly(...))
    */
   static Map<String, Object> parseFormula(String formula) {
     if (formula == null || formula.trim().isEmpty()) {
-      return [polyDegree: 1, response: 'y', predictor: 'x']
+      return [polyDegree: 1, response: 'y', predictor: 'x', polyExplicit: false]
     }
 
     String cleaned = formula.trim()
 
-    // Split on ~
-    String[] parts = cleaned.split('~')
-    String response = parts.length > 0 ? parts[0].trim() : 'y'
-    String rhs = parts.length > 1 ? parts[1].trim() : 'x'
+    // Split on ~ if present, otherwise treat the whole string as predictor
+    boolean hasTilde = cleaned.contains('~')
+    String response
+    String rhs
+    if (hasTilde) {
+      String[] parts = cleaned.split('~', 2)
+      response = parts.length > 0 ? parts[0].trim() : 'y'
+      rhs = parts.length > 1 ? parts[1].trim() : 'x'
+    } else {
+      response = 'y'
+      rhs = cleaned
+    }
 
     // Ensure both sides are non-empty after trimming; fall back to defaults if needed
     if (response.isEmpty()) {
@@ -213,11 +223,11 @@ class GgStat {
           "Polynomial degree must be at least 1, got: $degree in formula '$formula'"
         )
       }
-      return [polyDegree: degree, response: response, predictor: predictor]
+      return [polyDegree: degree, response: response, predictor: predictor, polyExplicit: true]
     }
 
     // Simple linear: y ~ x
-    return [polyDegree: 1, response: response, predictor: rhs]
+    return [polyDegree: 1, response: response, predictor: rhs, polyExplicit: false]
   }
 
   /**
@@ -255,15 +265,13 @@ class GgStat {
       // Both degree and formula provided: ensure they are not in conflict
       int explicitDegree = params.degree as int
       Map<String, Object> formulaParsed = parseFormula(formula)
-      def formulaDegreeObj = formulaParsed.polyDegree
-      if (formulaDegreeObj != null) {
-        int formulaDegree = (formulaDegreeObj as int)
-        if (formulaDegree != explicitDegree) {
-          throw new IllegalArgumentException(
-            "Conflicting polynomial degrees: 'degree' parameter is " +
-              explicitDegree + " but 'formula' specifies degree " + formulaDegree
-          )
-        }
+      int formulaDegree = (formulaParsed.polyDegree as int)
+      boolean formulaExplicit = (formulaParsed.polyExplicit as boolean)
+      if (formulaExplicit && formulaDegree != explicitDegree) {
+        throw new IllegalArgumentException(
+          "Conflicting polynomial degrees: 'degree' parameter is " +
+            explicitDegree + " but 'formula' specifies degree " + formulaDegree
+        )
       }
       polyDegree = explicitDegree
     } else if (params.degree != null) {
@@ -307,18 +315,20 @@ class GgStat {
     Number xMax = Stat.max(xValues)
     int nPoints = (params.n ?: 80) as int
 
-    // Compute standard error components for linear regression
-    // Note: SE for polynomial regression is more complex; currently only supported for linear
-    double sxx = 0.0d
-    double xBar = (xValues.sum() as double) / xValues.size()
-    xValues.each { Number val ->
-      double diff = (val as double) - xBar
-      sxx += diff * diff
-    }
-
     double sigma2 = 0.0d
     int dfResid = xValues.size() - (polyDegree + 1)
-    if (se && dfResid > 0 && sxx > 0.0d && polyDegree == 1) {
+    double sxx = 0.0d
+    double xBar = 0.0d
+    double[][] xtxInv = null
+    if (se && dfResid > 0) {
+      if (polyDegree == 1) {
+        xBar = (xValues.sum() as double) / xValues.size()
+        xValues.each { Number val ->
+          double diff = (val as double) - xBar
+          sxx += diff * diff
+        }
+      }
+
       double sse = 0.0d
       for (int i = 0; i < xValues.size(); i++) {
         double xi = xValues[i] as double
@@ -330,11 +340,18 @@ class GgStat {
       sigma2 = sse / dfResid
       if (sigma2 <= 0.0d) {
         se = false
+      } else if (polyDegree == 1) {
+        if (sxx <= 0.0d) {
+          se = false
+        }
+      } else {
+        xtxInv = RegressionUtils.polynomialXtxInverse(xValues, polyDegree)
+        if (xtxInv == null) {
+          se = false
+        }
       }
     } else {
-      // Disable SE for polynomial (not yet implemented)
-      if (polyDegree > 1) se = false
-      if (dfResid <= 0) se = false
+      se = false
     }
 
     double tCrit = se ? tCritical(dfResid, level) : 0.0d
@@ -344,8 +361,18 @@ class GgStat {
       Number x = xMin + (xMax - xMin) * i / (nPoints - 1)
       BigDecimal yFit = regression.predict(x)
       if (se) {
-        double dx = (x as double) - xBar
-        double seFit = Math.sqrt(sigma2 * (1.0d / xValues.size() + (dx * dx) / sxx))
+        double seFit
+        if (polyDegree == 1) {
+          double dx = (x as double) - xBar
+          seFit = Math.sqrt(sigma2 * (1.0d / xValues.size() + (dx * dx) / sxx))
+        } else {
+          double leverage = RegressionUtils.polynomialLeverage(
+            xtxInv,
+            (x as double),
+            polyDegree
+          )
+          seFit = Math.sqrt(sigma2 * Math.max(0.0d, leverage))
+        }
         BigDecimal margin = BigDecimal.valueOf(tCrit * seFit)
         BigDecimal yMin = yFit - margin
         BigDecimal yMax = yFit + margin
@@ -472,4 +499,5 @@ class GgStat {
     // Placeholder - needs implementation
     throw new UnsupportedOperationException("stat_contour not yet implemented")
   }
+
 }

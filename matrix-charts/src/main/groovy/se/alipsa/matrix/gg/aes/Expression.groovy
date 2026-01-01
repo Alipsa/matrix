@@ -58,10 +58,14 @@ class Expression {
       }
       // Try to convert string to number
       String str = result.toString()
-      if (str.contains('.')) {
-        return new BigDecimal(str)
+      try {
+        if (str.contains('.')) {
+          return new BigDecimal(str)
+        }
+        return new BigInteger(str)
+      } catch (NumberFormatException ignored) {
+        return null
       }
-      return new BigInteger(str)
     } catch (Exception e) {
       throw new RuntimeException("Expression evaluation failed for row: ${e.message}", e)
     }

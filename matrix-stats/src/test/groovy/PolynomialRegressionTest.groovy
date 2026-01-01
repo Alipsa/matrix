@@ -102,9 +102,11 @@ class PolynomialRegressionTest {
     def y = [1, 4, 9]
 
     // Degree must be at least 1
-    assertThrows(IllegalArgumentException) {
+    def ex = assertThrows(IllegalArgumentException) {
       new PolynomialRegression(x, y, 0)
     }
+    assertTrue(ex.message.contains('at least 1'))
+    assertTrue(ex.message.contains('0'))
   }
 
   @Test
@@ -113,8 +115,10 @@ class PolynomialRegressionTest {
     def y = [1, 4]
 
     // Need more points than degree
-    assertThrows(IllegalArgumentException) {
+    def ex = assertThrows(IllegalArgumentException) {
       new PolynomialRegression(x, y, 2)
     }
+    assertTrue(ex.message.contains('at least 3'))
+    assertTrue(ex.message.contains('degree 2'))
   }
 }

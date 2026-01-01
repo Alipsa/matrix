@@ -157,4 +157,18 @@ class ExpressionTest {
     assertEquals(20, values[1] as int)
     assertEquals(30, values[2] as int)
   }
+
+  @Test
+  void testExpressionWithInvalidNumericConversion() {
+    def data = Matrix.builder()
+        .columnNames(['x'])
+        .rows([[1], [2]])
+        .build()
+
+    def expr = new Expression({ 'abc' })
+    def values = expr.evaluateAll(data)
+
+    assertNull(values[0])
+    assertNull(values[1])
+  }
 }

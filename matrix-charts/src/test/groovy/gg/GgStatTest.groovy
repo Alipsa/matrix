@@ -1,6 +1,8 @@
 package gg
 
 import org.junit.jupiter.api.Test
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.stat.GgStat
 
 import static org.junit.jupiter.api.Assertions.*
@@ -65,11 +67,11 @@ class GgStatTest {
 
   @Test
   void testParseFormulaNoTilde() {
-    // Formula without ~ should use the whole string as predictor
+    // Formula without ~ should treat the whole string as predictor
     def result = GgStat.parseFormula('x')
     assertEquals(1, result.polyDegree)
-    assertEquals('x', result.response)  // First part becomes response
-    assertEquals('x', result.predictor)  // Falls back to 'x'
+    assertEquals('y', result.response)  // Defaults to 'y'
+    assertEquals('x', result.predictor)
   }
 
   @Test
@@ -126,5 +128,20 @@ class GgStatTest {
   void testParseFormulaHighDegree() {
     def result = GgStat.parseFormula('y ~ poly(x, 10)')
     assertEquals(10, result.polyDegree)
+  }
+
+  @Test
+  void testSmoothDegreeWithFormulaNoPoly() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 1], [2, 4], [3, 9], [4, 16]])
+        .build()
+    def aes = new Aes(x: 'x', y: 'y')
+
+    def result = GgStat.smooth(data, aes, [degree: 2, formula: 'y ~ x', se: false, n: 5])
+
+    assertNotNull(result)
+    assertEquals(['x', 'y'], result.columnNames())
+    assertTrue(result.rowCount() > 0)
   }
 }

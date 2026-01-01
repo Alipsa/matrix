@@ -48,10 +48,13 @@ class PolynomialRegression {
       throw new IllegalArgumentException("Must have equal number of X and Y data points")
     }
     if (degree < 1) {
-      throw new IllegalArgumentException("Polynomial degree must be at least 1")
+      throw new IllegalArgumentException("Polynomial degree must be at least 1, got: $degree")
     }
     if (x.size() <= degree) {
-      throw new IllegalArgumentException("Need more data points than polynomial degree")
+      int minPoints = degree + 1
+      throw new IllegalArgumentException(
+        "Need at least ${minPoints} data points for polynomial of degree ${degree}, got: ${x.size()}"
+      )
     }
 
     this.degree = degree
