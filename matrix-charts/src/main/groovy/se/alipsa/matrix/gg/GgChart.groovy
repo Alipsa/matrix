@@ -9,7 +9,11 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.geom.Geom
+import se.alipsa.matrix.gg.geom.GeomBar
+import se.alipsa.matrix.gg.geom.GeomCol
+import se.alipsa.matrix.gg.geom.GeomErrorbar
 import se.alipsa.matrix.gg.geom.GeomPoint
+import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.StatType
@@ -26,6 +30,11 @@ import se.alipsa.matrix.gg.theme.Theme
  */
 @CompileStatic
 class GgChart {
+
+  /** Constants for convenience when converting R code */
+  static final def NULL = null
+  static final boolean TRUE = true
+  static final boolean FALSE = false
 
   /** Base dataset for the chart */
   Matrix data
@@ -57,6 +66,11 @@ class GgChart {
   /** Chart height in pixels */
   int height = 600
 
+  private static final Set<String> STAT_PARAM_KEYS = [
+      'method', 'n', 'se', 'level', 'formula', 'degree',
+      'bins', 'binwidth', 'fun', 'fun.y', 'fun.data'
+  ] as Set<String>
+
   /**
    * Create a new chart with data and global aesthetics.
    */
@@ -75,7 +89,7 @@ class GgChart {
     Aes layerAes = null
     if (geom.params) {
       // Copy params that are relevant for stats
-      ['method', 'n', 'se', 'level', 'formula', 'degree', 'bins', 'binwidth', 'fun', 'fun.y'].each { key ->
+      STAT_PARAM_KEYS.each { key ->
         if (geom.params.containsKey(key)) {
           statParams[key] = geom.params[key]
         }
@@ -98,6 +112,41 @@ class GgChart {
         statParams: statParams
     )
     layers << layer
+    return this
+  }
+
+  /**
+   * Add multiple components (geoms, stats, scales, themes, etc.) in a single step.
+   * Nested lists are flattened.
+   */
+  GgChart plus(Iterable<?> parts) {
+    if (parts == null) {
+      return this
+    }
+    parts.each { Object part ->
+      if (part == null) {
+        return
+      }
+      if (part instanceof Iterable) {
+        plus(part as Iterable<?>)
+      } else if (part instanceof Geom) {
+        plus(part as Geom)
+      } else if (part instanceof Theme) {
+        plus(part as Theme)
+      } else if (part instanceof Scale) {
+        plus(part as Scale)
+      } else if (part instanceof Facet) {
+        plus(part as Facet)
+      } else if (part instanceof Coord) {
+        plus(part as Coord)
+      } else if (part instanceof Label) {
+        plus(part as Label)
+      } else if (part instanceof Stat) {
+        plus(part as Stat)
+      } else {
+        throw new IllegalArgumentException("Unsupported gg component: ${part.getClass().name}")
+      }
+    }
     return this
   }
 
@@ -158,13 +207,23 @@ class GgChart {
       return this
     }
 
-    Map statParams = stat.params ? new LinkedHashMap<>(stat.params) : [:]
+    Map statParams = [:]
+    Map geomParams = [:]
+    if (stat.params) {
+      stat.params.each { key, value ->
+        if (STAT_PARAM_KEYS.contains(key as String)) {
+          statParams[key] = value
+        } else {
+          geomParams[key] = value
+        }
+      }
+    }
     Geom geom = null
-    Object geomParam = statParams.remove('geom')
+    Object geomParam = statParams.remove('geom') ?: geomParams.remove('geom')
     if (geomParam instanceof Geom) {
       geom = geomParam as Geom
     } else if (geomParam instanceof String) {
-      geom = geomFromName(geomParam as String)
+      geom = geomFromName(geomParam as String, geomParams)
     }
 
     Layer layer = new Layer(
@@ -179,15 +238,23 @@ class GgChart {
     return this
   }
 
-  private static Geom geomFromName(String name) {
+  private static Geom geomFromName(String name, Map params = [:]) {
     if (name == null) {
       return null
     }
     switch (name) {
       case 'point':
-        return new GeomPoint()
+        return params ? new GeomPoint(params) : new GeomPoint()
       case 'smooth':
-        return new GeomSmooth()
+        return params ? new GeomSmooth(params) : new GeomSmooth()
+      case 'bar':
+        return params ? new GeomBar(params) : new GeomBar()
+      case 'col':
+        return params ? new GeomCol(params) : new GeomCol()
+      case 'errorbar':
+        return params ? new GeomErrorbar(params) : new GeomErrorbar()
+      case 'segment':
+        return params ? new GeomSegment(params) : new GeomSegment()
       default:
         return null
     }

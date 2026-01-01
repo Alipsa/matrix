@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.geom.GeomBoxplot
 import se.alipsa.matrix.gg.geom.GeomContour
 import se.alipsa.matrix.gg.geom.GeomCount
 import se.alipsa.matrix.gg.geom.GeomDensity
+import se.alipsa.matrix.gg.geom.GeomErrorbar
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.geom.GeomHline
 import se.alipsa.matrix.gg.geom.GeomLabel
@@ -591,6 +592,14 @@ class GgPlot {
 
   static GeomDensity geom_density(Map params) {
     return new GeomDensity(params)
+  }
+
+  static GeomErrorbar geom_errorbar() {
+    return new GeomErrorbar()
+  }
+
+  static GeomErrorbar geom_errorbar(Map params) {
+    return new GeomErrorbar(params)
   }
 
   static GeomHistogram geom_histogram() {

@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
@@ -36,8 +37,8 @@ class GeomLine extends Geom {
 
   GeomLine(Map params) {
     this()
-    if (params.color) this.color = params.color
-    if (params.colour) this.color = params.colour
+    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
+    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
     if (params.size) this.size = params.size as Number
     if (params.linewidth) this.size = params.linewidth as Number
     if (params.linetype) this.linetype = params.linetype
@@ -118,6 +119,7 @@ class GeomLine extends Geom {
     } else if (aes.color instanceof Identity) {
       lineColor = (aes.color as Identity).value.toString()
     }
+    lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
 
     // Get stroke-dasharray for line type
     String dashArray = getDashArray(linetype)

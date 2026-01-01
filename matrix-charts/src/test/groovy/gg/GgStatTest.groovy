@@ -131,6 +131,36 @@ class GgStatTest {
   }
 
   @Test
+  void testSummaryMeanClNormal() {
+    def data = Matrix.builder()
+        .columnNames(['group', 'value'])
+        .rows([
+            ['A', 1],
+            ['A', 2],
+            ['A', 3],
+            ['B', 2],
+            ['B', 4],
+            ['B', 6]
+        ])
+        .build()
+    def aes = new Aes(x: 'group', y: 'value')
+
+    def result = GgStat.summary(data, aes, ['fun.data': 'mean_cl_normal'])
+
+    assertTrue(result.columnNames().containsAll(['group', 'value', 'ymin', 'ymax']))
+    assertEquals(2, result.rowCount())
+
+    def means = result['value'] as List<Number>
+    def ymin = result['ymin'] as List<Number>
+    def ymax = result['ymax'] as List<Number>
+
+    assertEquals(2.0d, means[0] as double, 0.0001d)
+    assertEquals(4.0d, means[1] as double, 0.0001d)
+    assertTrue(ymin[0] <= means[0] && ymax[0] >= means[0])
+    assertTrue(ymin[1] <= means[1] && ymax[1] >= means[1])
+  }
+
+  @Test
   void testSmoothDegreeWithFormulaNoPoly() {
     def data = Matrix.builder()
         .columnNames(['x', 'y'])

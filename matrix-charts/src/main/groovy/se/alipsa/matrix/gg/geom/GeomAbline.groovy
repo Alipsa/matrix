@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
@@ -47,8 +48,8 @@ class GeomAbline extends Geom {
     this()
     if (params.slope != null) this.slope = params.slope as Number
     if (params.intercept != null) this.intercept = params.intercept as Number
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
+    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
+    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
     if (params.linewidth != null) this.linewidth = params.linewidth as Number
     if (params.size != null) this.linewidth = params.size as Number
     if (params.linetype) this.linetype = params.linetype as String
@@ -114,12 +115,13 @@ class GeomAbline extends Geom {
 
       if (x1Px == null || x2Px == null || y1Px == null || y2Px == null) return
 
+      String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
           .x1(x1Px as int)
           .y1(y1Px as int)
           .x2(x2Px as int)
           .y2(y2Px as int)
-          .stroke(color)
+          .stroke(lineColor)
 
       line.addAttribute('stroke-width', linewidth)
 

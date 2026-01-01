@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.charts.util.ColorUtil
 
 /**
  * Violin geometry for showing kernel density estimates.
@@ -75,6 +76,8 @@ class GeomViolin extends Geom {
     if (params.draw_quantiles) this.draw_quantiles = params.draw_quantiles as List<Number>
     if (params.n != null) this.n = params.n as int
     if (params.adjust != null) this.adjust = params.adjust as Number
+    this.fill = ColorUtil.normalizeColor(this.fill)
+    this.color = ColorUtil.normalizeColor(this.color)
     this.params = params
   }
 
@@ -152,6 +155,7 @@ class GeomViolin extends Geom {
       if (fillCol && fillScale) {
         violinFill = fillScale.transform(xVal)?.toString() ?: this.fill
       }
+      violinFill = ColorUtil.normalizeColor(violinFill)
 
       // Build violin path (mirrored density)
       StringBuilder pathD = new StringBuilder()

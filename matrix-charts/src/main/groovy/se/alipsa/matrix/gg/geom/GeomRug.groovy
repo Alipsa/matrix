@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
@@ -48,8 +49,8 @@ class GeomRug extends Geom {
   GeomRug(Map params) {
     this()
     if (params.sides) this.sides = params.sides as String
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
+    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
+    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
     if (params.length != null) this.length = params.length as Number
     if (params.linewidth != null) this.linewidth = params.linewidth as Number
     if (params.size != null) this.linewidth = params.size as Number
@@ -147,12 +148,13 @@ class GeomRug extends Geom {
   }
 
   private void drawRugMark(G group, double x1, double y1, double x2, double y2, String rugColor) {
+    String strokeColor = ColorUtil.normalizeColor(rugColor) ?: rugColor
     def line = group.addLine()
         .x1(x1 as int)
         .y1(y1 as int)
         .x2(x2 as int)
         .y2(y2 as int)
-        .stroke(rugColor)
+        .stroke(strokeColor)
 
     line.addAttribute('stroke-width', linewidth)
 

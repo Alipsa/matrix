@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
@@ -60,8 +61,8 @@ class GeomSegment extends Geom {
     if (params.y != null) this.y = params.y as Number
     if (params.xend != null) this.xend = params.xend as Number
     if (params.yend != null) this.yend = params.yend as Number
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
+    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
+    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
     if (params.linewidth != null) this.linewidth = params.linewidth as Number
     if (params.size != null) this.linewidth = params.size as Number
     if (params.linetype) this.linetype = params.linetype as String
@@ -127,12 +128,13 @@ class GeomSegment extends Geom {
 
       if (x1Px == null || y1Px == null || x2Px == null || y2Px == null) return
 
+      String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
           .x1(x1Px as int)
           .y1(y1Px as int)
           .x2(x2Px as int)
           .y2(y2Px as int)
-          .stroke(color)
+          .stroke(lineColor)
 
       line.addAttribute('stroke-width', linewidth)
 
@@ -171,12 +173,13 @@ class GeomSegment extends Geom {
     double ay2 = y2 - size * Math.sin(angle + arrowAngle)
 
     // Draw arrowhead as two lines
+    String lineColor = ColorUtil.normalizeColor(color) ?: color
     def arrow1 = group.addLine()
         .x1(x2 as int)
         .y1(y2 as int)
         .x2(ax1 as int)
         .y2(ay1 as int)
-        .stroke(color)
+        .stroke(lineColor)
     arrow1.addAttribute('stroke-width', linewidth)
 
     def arrow2 = group.addLine()
@@ -184,7 +187,7 @@ class GeomSegment extends Geom {
         .y1(y2 as int)
         .x2(ax2 as int)
         .y2(ay2 as int)
-        .stroke(color)
+        .stroke(lineColor)
     arrow2.addAttribute('stroke-width', linewidth)
 
     // Apply alpha to arrows

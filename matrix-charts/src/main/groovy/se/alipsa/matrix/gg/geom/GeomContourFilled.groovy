@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.charts.util.ColorUtil
 
 /**
  * Filled contour geometry for drawing filled regions between contour levels.
@@ -41,6 +42,7 @@ class GeomContourFilled extends GeomContour {
     if (params.fillAlpha != null) this.fillAlpha = params.fillAlpha as Number
     if (params.fill_colors) this.fillColors = params.fill_colors as List<String>
     if (params.fillColors) this.fillColors = params.fillColors as List<String>
+    this.fillColors = this.fillColors.collect { ColorUtil.normalizeColor(it) }
   }
 
   @Override
@@ -217,13 +219,13 @@ class GeomContourFilled extends GeomContour {
     if (fillScale != null) {
       double midLevel = (lowLevel + highLevel) / 2
       def transformed = fillScale.transform(midLevel)
-      if (transformed != null) return transformed.toString()
+      if (transformed != null) return ColorUtil.normalizeColor(transformed.toString())
     }
 
     // Use default color palette
     int colorIdx = (int) (levelIdx * (fillColors.size() - 1) / Math.max(1, numBands - 1))
     colorIdx = Math.max(0, Math.min(colorIdx, fillColors.size() - 1))
-    return fillColors[colorIdx]
+    return ColorUtil.normalizeColor(fillColors[colorIdx])
   }
 
   /**
