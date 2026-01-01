@@ -227,6 +227,7 @@ class GgStat {
    *   - se (true): show confidence interval
    *   - level (0.95): confidence level
    *   - n (80): number of fitted points
+   *   - degree (1): polynomial degree; overrides degree parsed from formula if provided
    * @return Matrix with columns: x, y (fitted), ymin, ymax (if se=true)
    */
   @CompileDynamic
