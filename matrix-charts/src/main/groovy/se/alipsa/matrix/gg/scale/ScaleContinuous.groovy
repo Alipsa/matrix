@@ -9,14 +9,18 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class ScaleContinuous extends Scale {
 
+  static final double DEFAULT_EXPAND_MULT = 0.05d
+  static final double DEFAULT_EXPAND_ADD = 0.0d
+  static final double BREAK_TOLERANCE_RATIO = 0.001d  // Small epsilon for float comparisons.
+
   /** Output range [min, max] */
   List<Number> range = [0, 1] as List<Number>
 
   /** Domain computed from data [min, max] */
   protected List<Number> computedDomain = [0, 1] as List<Number>
 
-  /** Number of breaks to generate */
-  int nBreaks = 5
+  /** Number of breaks to generate (default 7; can be adjusted per scale). */
+  int nBreaks = 7
 
   @Override
   void train(List data) {
@@ -37,10 +41,10 @@ class ScaleContinuous extends Scale {
       max = limits[1] != null ? limits[1] as Number : max
     }
 
-    // Apply expansion
-    if (expand && expand.size() >= 2) {
-      Number mult = expand[0] != null ? expand[0] : 0.05
-      Number add = expand[1] != null ? expand[1] : 0
+    // Apply expansion only when configured (ggplot2 default is mult=0.05, add=0).
+    if (expand != null && expand.size() >= 2) {
+      Number mult = expand[0] != null ? expand[0] : DEFAULT_EXPAND_MULT
+      Number add = expand[1] != null ? expand[1] : DEFAULT_EXPAND_ADD
       Number delta = max - min
       min = min - delta * mult - add
       max = max + delta * mult + add
@@ -107,16 +111,25 @@ class ScaleContinuous extends Scale {
 
   /**
    * Generate nice round breaks for axis ticks.
+   * Based on Wilkinson's algorithm for nice axis labels.
    */
   private List<Number> generateNiceBreaks(double min, double max, int n) {
-    double range = niceNum(max - min, false)
-    double spacing = niceNum(range / (n - 1) as double, true)
+    if (max == min) return [min] as List<Number>
+
+    // Calculate nice spacing directly from the data range
+    double rawRange = max - min
+    double spacing = niceNum(rawRange / (n - 1) as double, true)
+
+    // Calculate nice min/max that are multiples of spacing
     double niceMin = Math.floor(min / spacing as double) * spacing
     double niceMax = Math.ceil(max / spacing as double) * spacing
 
     List<Number> breaks = []
-    for (double val = niceMin; val <= niceMax + spacing * 0.5; val += spacing) {
-      if (val >= min - spacing * 0.001 && val <= max + spacing * 0.001) {
+    // Generate breaks from niceMin to niceMax
+    double tolerance = spacing * BREAK_TOLERANCE_RATIO
+    for (double val = niceMin; val <= niceMax + tolerance; val += spacing) {
+      // Include all breaks within the expanded domain (with small tolerance)
+      if (val >= min - tolerance && val <= max + tolerance) {
         breaks << val
       }
     }

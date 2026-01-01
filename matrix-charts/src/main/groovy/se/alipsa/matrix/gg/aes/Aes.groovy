@@ -151,6 +151,72 @@ class Aes {
     return value.toString()
   }
 
+  /**
+   * Create a new Aes by merging this Aes with a base Aes.
+   * Values from this Aes override values from the base.
+   * This is used when a layer has its own aesthetic mappings that should
+   * override the global aesthetics.
+   * Note: merged aesthetics can still contain nulls and should be checked.
+   *
+   * @param base The base aesthetics (typically globalAes)
+   * @return A new Aes with merged values
+   */
+  Aes merge(Aes base) {
+    if (base == null) return this
+    Aes result = new Aes()
+    // Start with base values
+    result.x = base.x
+    result.y = base.y
+    result.color = base.color
+    result.fill = base.fill
+    result.size = base.size
+    result.shape = base.shape
+    result.alpha = base.alpha
+    result.linetype = base.linetype
+    result.linewidth = base.linewidth
+    result.group = base.group
+    result.label = base.label
+    result.weight = base.weight
+    // Override with this Aes's non-null values and corresponding column names
+    if (this.x != null) {
+      result.x = this.x
+    }
+    if (this.y != null) {
+      result.y = this.y
+    }
+    if (this.color != null) {
+      result.color = this.color
+    }
+    if (this.fill != null) {
+      result.fill = this.fill
+    }
+    if (this.size != null) {
+      result.size = this.size
+    }
+    if (this.shape != null) {
+      result.shape = this.shape
+    }
+    if (this.alpha != null) {
+      result.alpha = this.alpha
+    }
+    if (this.linetype != null) {
+      result.linetype = this.linetype
+    }
+    if (this.linewidth != null) {
+      result.linewidth = this.linewidth
+    }
+    if (this.group != null) {
+      result.group = this.group
+    }
+    if (this.label != null) {
+      result.label = this.label
+    }
+    if (this.weight != null) {
+      result.weight = this.weight
+    }
+    return result
+  }
+
   @Override
   String toString() {
     def parts = []
@@ -163,5 +229,3 @@ class Aes {
     return "Aes(${parts.join(', ')})"
   }
 }
-
-

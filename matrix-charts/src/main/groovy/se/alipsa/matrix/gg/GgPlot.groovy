@@ -40,6 +40,7 @@ import se.alipsa.matrix.gg.geom.GeomViolin
 import se.alipsa.matrix.gg.scale.ScaleColorGradient
 import se.alipsa.matrix.gg.scale.ScaleColorManual
 import se.alipsa.matrix.gg.scale.ScaleColorViridis
+import se.alipsa.matrix.gg.scale.ScaleColorViridisC
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
@@ -51,6 +52,7 @@ import se.alipsa.matrix.gg.stat.StatContourFilled
 import se.alipsa.matrix.gg.stat.StatCount
 import se.alipsa.matrix.gg.stat.StatSum
 import se.alipsa.matrix.gg.theme.Theme
+import se.alipsa.matrix.gg.theme.ElementBlank
 import se.alipsa.matrix.gg.theme.ElementLine
 import se.alipsa.matrix.gg.theme.ElementRect
 import se.alipsa.matrix.gg.theme.ElementText
@@ -251,15 +253,173 @@ class GgPlot {
 
   /**
    * Customize theme elements.
+   * Supports both camelCase (e.g., 'legendPosition') and dot-notation (e.g., 'legend.position').
    */
   static Theme theme(Map params) {
     Theme theme = new Theme()
     params.each { key, value ->
-      if (theme.hasProperty(key as String)) {
-        theme.setProperty(key as String, value)
+      String k = key as String
+
+      // Convert dot-notation to camelCase property names
+      String propName = convertThemeKey(k)
+
+      // element_blank() means remove the element (set to null)
+      boolean isBlank = value instanceof ElementBlank
+      def effectiveValue = isBlank ? null : value
+
+      // Handle properties that affect multiple elements
+      if (propName == 'axisLine') {
+        // 'axis.line' applies to both X and Y
+        theme.axisLineX = isBlank ? null : value as ElementLine
+        theme.axisLineY = isBlank ? null : value as ElementLine
+        if (isBlank) {
+          theme.explicitNulls.add('axisLineX')
+          theme.explicitNulls.add('axisLineY')
+        } else {
+          theme.explicitNulls.remove('axisLineX')
+          theme.explicitNulls.remove('axisLineY')
+        }
+      } else if (propName == 'axisTicks') {
+        theme.axisTicksX = isBlank ? null : value as ElementLine
+        theme.axisTicksY = isBlank ? null : value as ElementLine
+        if (isBlank) {
+          theme.explicitNulls.add('axisTicksX')
+          theme.explicitNulls.add('axisTicksY')
+        } else {
+          theme.explicitNulls.remove('axisTicksX')
+          theme.explicitNulls.remove('axisTicksY')
+        }
+      } else if (propName == 'axisText') {
+        theme.axisTextX = isBlank ? null : value as ElementText
+        theme.axisTextY = isBlank ? null : value as ElementText
+        if (isBlank) {
+          theme.explicitNulls.add('axisTextX')
+          theme.explicitNulls.add('axisTextY')
+        } else {
+          theme.explicitNulls.remove('axisTextX')
+          theme.explicitNulls.remove('axisTextY')
+        }
+      } else if (propName == 'axisTitle') {
+        theme.axisTitleX = isBlank ? null : value as ElementText
+        theme.axisTitleY = isBlank ? null : value as ElementText
+        if (isBlank) {
+          theme.explicitNulls.add('axisTitleX')
+          theme.explicitNulls.add('axisTitleY')
+        } else {
+          theme.explicitNulls.remove('axisTitleX')
+          theme.explicitNulls.remove('axisTitleY')
+        }
+      } else if (propName == 'panelGrid') {
+        theme.panelGridMajor = isBlank ? null : value as ElementLine
+        theme.panelGridMinor = isBlank ? null : value as ElementLine
+        if (isBlank) {
+          theme.explicitNulls.add('panelGridMajor')
+          theme.explicitNulls.add('panelGridMinor')
+        } else {
+          theme.explicitNulls.remove('panelGridMajor')
+          theme.explicitNulls.remove('panelGridMinor')
+        }
+      } else if (theme.hasProperty(propName)) {
+        theme.setProperty(propName, effectiveValue)
+        if (isBlank) {
+          theme.explicitNulls.add(propName)
+        } else {
+          theme.explicitNulls.remove(propName)
+        }
       }
     }
     return theme
+  }
+
+  /**
+   * Convert ggplot2 dot-notation theme keys to property names.
+   * e.g., 'legend.position' -> 'legendPosition'
+   *       'axis.line.x' -> 'axisLineX'
+   *       'axis.line.x.bottom' -> 'axisLineX'
+   * Note: axis-specific panel grid keys map to major/minor since per-axis grids
+   * are not yet modeled separately.
+   */
+  private static String convertThemeKey(String key) {
+    // Common mappings for dot-notation
+    Map<String, String> mappings = [
+      'legend.position': 'legendPosition',
+      'legend.direction': 'legendDirection',
+      'legend.background': 'legendBackground',
+      'legend.key': 'legendKey',
+      'legend.key.size': 'legendKeySize',
+      'legend.title': 'legendTitle',
+      'legend.text': 'legendText',
+      'legend.margin': 'legendMargin',
+      'axis.line': 'axisLine',
+      'axis.line.x': 'axisLineX',
+      'axis.line.y': 'axisLineY',
+      'axis.line.x.bottom': 'axisLineX',
+      'axis.line.x.top': 'axisLineX',
+      'axis.line.y.left': 'axisLineY',
+      'axis.line.y.right': 'axisLineY',
+      'axis.ticks': 'axisTicks',
+      'axis.ticks.x': 'axisTicksX',
+      'axis.ticks.y': 'axisTicksY',
+      'axis.text': 'axisText',
+      'axis.text.x': 'axisTextX',
+      'axis.text.y': 'axisTextY',
+      'axis.title': 'axisTitle',
+      'axis.title.x': 'axisTitleX',
+      'axis.title.y': 'axisTitleY',
+      'axis.ticks.length': 'axisTickLength',
+      'panel.background': 'panelBackground',
+      'panel.border': 'panelBorder',
+      'panel.grid': 'panelGrid',
+      'panel.grid.major': 'panelGridMajor',
+      'panel.grid.major.x': 'panelGridMajor',
+      'panel.grid.major.y': 'panelGridMajor',
+      'panel.grid.minor': 'panelGridMinor',
+      'panel.grid.minor.x': 'panelGridMinor',
+      'panel.grid.minor.y': 'panelGridMinor',
+      'panel.spacing': 'panelSpacing',
+      'plot.background': 'plotBackground',
+      'plot.title': 'plotTitle',
+      'plot.subtitle': 'plotSubtitle',
+      'plot.caption': 'plotCaption',
+      'plot.margin': 'plotMargin',
+      'strip.background': 'stripBackground',
+      'strip.text': 'stripText'
+    ]
+
+    return mappings.get(key, key)
+  }
+
+  // ============ Theme Element Helpers ============
+
+  /**
+   * Create a line element for theme customization.
+   * @param params Map with optional 'color'/'colour', 'size'/'linewidth', 'linetype', 'lineend'
+   */
+  static ElementLine element_line(Map params = [:]) {
+    return new ElementLine(params)
+  }
+
+  /**
+   * Create a text element for theme customization.
+   * @param params Map with optional 'family', 'face', 'size', 'color'/'colour', 'hjust', 'vjust', 'angle'
+   */
+  static ElementText element_text(Map params = [:]) {
+    return new ElementText(params)
+  }
+
+  /**
+   * Create a rectangle element for theme customization.
+   * @param params Map with optional 'fill', 'color'/'colour', 'size', 'linetype'
+   */
+  static ElementRect element_rect(Map params = [:]) {
+    return new ElementRect(params)
+  }
+
+  /**
+   * Create a blank element that removes the theme element.
+   */
+  static ElementBlank element_blank() {
+    return new ElementBlank()
   }
 
   // ============ Coordinates ============
@@ -697,6 +857,26 @@ class GgPlot {
    */
   static ScaleColorViridis scale_fill_viridis_d(Map params = [:]) {
     return new ScaleColorViridis(params + [aesthetic: 'fill'])
+  }
+
+  /**
+   * Viridis continuous color scale for numeric data.
+   * Maps numeric values to colors along the viridis palette.
+   */
+  static ScaleColorViridisC scale_color_viridis_c(Map params = [:]) {
+    return new ScaleColorViridisC(params)
+  }
+
+  /** British spelling alias for scale_color_viridis_c */
+  static ScaleColorViridisC scale_colour_viridis_c(Map params = [:]) {
+    return scale_color_viridis_c(params)
+  }
+
+  /**
+   * Viridis continuous fill scale for numeric data.
+   */
+  static ScaleColorViridisC scale_fill_viridis_c(Map params = [:]) {
+    return new ScaleColorViridisC(params + [aesthetic: 'fill'])
   }
 
   // --- Fill scales ---

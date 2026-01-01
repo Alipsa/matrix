@@ -42,15 +42,23 @@ class Themes {
 
   /**
    * Minimal theme with no background annotations.
+   * In ggplot2, theme_minimal has:
+   * - panel.background = element_blank() (transparent)
+   * - strip.background = element_blank() (transparent)
+   * - plot.background = element_blank() (transparent)
+   * - axis lines are light gray
    */
   static Theme minimal() {
     Theme theme = new Theme()
-    theme.panelBackground = new ElementRect(fill: 'white', color: null)
+    // Transparent backgrounds like ggplot2's theme_minimal
+    theme.panelBackground = new ElementRect(fill: 'none', color: null)
     theme.panelGridMajor = new ElementLine(color: '#D3D3D3', size: 0.5)
     theme.panelGridMinor = null  // No minor grid
-    theme.plotBackground = new ElementRect(fill: 'white', color: null)
+    theme.plotBackground = new ElementRect(fill: 'none', color: null)
     theme.axisLineX = new ElementLine(color: '#D3D3D3')
     theme.axisLineY = new ElementLine(color: '#D3D3D3')
+    // Strip backgrounds are transparent in theme_minimal
+    theme.stripBackground = new ElementRect(fill: 'none', color: null)
     return theme
   }
 }

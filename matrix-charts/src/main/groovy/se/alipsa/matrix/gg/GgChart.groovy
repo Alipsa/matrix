@@ -72,11 +72,19 @@ class GgChart {
   GgChart plus(Geom geom) {
     // Extract stat-related params from geom params
     Map statParams = [:]
+    Aes layerAes = null
     if (geom.params) {
       // Copy params that are relevant for stats
       ['method', 'n', 'se', 'level', 'formula', 'bins', 'binwidth', 'fun', 'fun.y'].each { key ->
         if (geom.params.containsKey(key)) {
           statParams[key] = geom.params[key]
+        }
+      }
+      // Extract mapping parameter as layer aes
+      if (geom.params.containsKey('mapping')) {
+        def mapping = geom.params['mapping']
+        if (mapping instanceof Aes) {
+          layerAes = mapping as Aes
         }
       }
     }
@@ -85,7 +93,7 @@ class GgChart {
         geom: geom,
         stat: geom.defaultStat,
         position: geom.defaultPosition,
-        aes: null,  // Will inherit from globalAes
+        aes: layerAes,  // Layer-specific aesthetics from mapping parameter
         params: geom.params ?: [:],
         statParams: statParams
     )
@@ -94,10 +102,17 @@ class GgChart {
   }
 
   /**
-   * Set the theme for the chart.
+   * Set or merge the theme for the chart.
+   * If a theme is already set, the new theme is merged with it
+   * (new theme's non-null properties override existing ones).
    */
   GgChart plus(Theme theme) {
-    this.theme = theme
+    if (this.theme == null) {
+      this.theme = theme
+    } else {
+      // Merge with existing theme
+      this.theme = this.theme + theme
+    }
     return this
   }
 

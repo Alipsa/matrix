@@ -19,7 +19,7 @@ class Scale {
   /** Explicit limits [min, max] - null means auto from data */
   List limits
 
-  /** Expansion factors [mult, add] applied to limits */
+  /** Expansion factors [mult, add] applied to limits (set to null to disable). */
   List<Number> expand = [0.05, 0] as List<Number>
 
   /** Explicit breaks (tick positions) - null means auto */

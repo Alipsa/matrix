@@ -8,7 +8,7 @@ import groovy.transform.CompileStatic
  * Controls all visual styling aspects of the chart.
  */
 @CompileStatic
-class Theme {
+class Theme implements Cloneable {
 
   // ============ Plot-level elements ============
 
@@ -131,6 +131,102 @@ class Theme {
   /** Base line height */
   Number baseLineHeight = 1.2
 
+  /** Track properties explicitly set to null (e.g., element_blank()). */
+  Set<String> explicitNulls = new HashSet<>()
+
+  @Override
+  Theme clone() {
+    Theme copy = super.clone() as Theme
+    copy.plotMargin = copyList(plotMargin)
+    copy.panelSpacing = copyList(panelSpacing)
+    copy.legendKeySize = copyList(legendKeySize)
+    copy.legendMargin = copyList(legendMargin)
+    copy.discreteColors = copyList(discreteColors)
+    copy.gradientColors = copyList(gradientColors)
+    if (legendPosition instanceof List) {
+      copy.legendPosition = copyList(legendPosition as List)
+    }
+    copy.explicitNulls = new HashSet<>(explicitNulls)
+
+    copy.plotBackground = cloneRect(plotBackground)
+    copy.plotTitle = cloneText(plotTitle)
+    copy.plotSubtitle = cloneText(plotSubtitle)
+    copy.plotCaption = cloneText(plotCaption)
+
+    copy.panelBackground = cloneRect(panelBackground)
+    copy.panelBorder = cloneRect(panelBorder)
+    copy.panelGridMajor = cloneLine(panelGridMajor)
+    copy.panelGridMinor = cloneLine(panelGridMinor)
+
+    copy.axisLineX = cloneLine(axisLineX)
+    copy.axisLineY = cloneLine(axisLineY)
+    copy.axisTicksX = cloneLine(axisTicksX)
+    copy.axisTicksY = cloneLine(axisTicksY)
+    copy.axisTextX = cloneText(axisTextX)
+    copy.axisTextY = cloneText(axisTextY)
+    copy.axisTitleX = cloneText(axisTitleX)
+    copy.axisTitleY = cloneText(axisTitleY)
+
+    copy.legendBackground = cloneRect(legendBackground)
+    copy.legendKey = cloneRect(legendKey)
+    copy.legendTitle = cloneText(legendTitle)
+    copy.legendText = cloneText(legendText)
+
+    copy.stripBackground = cloneRect(stripBackground)
+    copy.stripText = cloneText(stripText)
+
+    return copy
+  }
+
+  // Shallow copy is sufficient for the current lists (Numbers/Strings are immutable).
+  private static <T> List<T> copyList(List<T> source) {
+    if (source == null) {
+      return null
+    }
+    return new ArrayList<>(source) as List<T>
+  }
+
+  private static ElementText cloneText(ElementText text) {
+    if (text == null) {
+      return null
+    }
+    ElementText copy = new ElementText()
+    copy.family = text.family
+    copy.face = text.face
+    copy.size = text.size
+    copy.color = text.color
+    copy.hjust = text.hjust
+    copy.vjust = text.vjust
+    copy.angle = text.angle
+    copy.lineheight = text.lineheight
+    copy.margin = copyList(text.margin)
+    return copy
+  }
+
+  private static ElementLine cloneLine(ElementLine line) {
+    if (line == null) {
+      return null
+    }
+    ElementLine copy = new ElementLine()
+    copy.color = line.color
+    copy.size = line.size
+    copy.linetype = line.linetype
+    copy.lineend = line.lineend
+    return copy
+  }
+
+  private static ElementRect cloneRect(ElementRect rect) {
+    if (rect == null) {
+      return null
+    }
+    ElementRect copy = new ElementRect()
+    copy.fill = rect.fill
+    copy.color = rect.color
+    copy.size = rect.size
+    copy.linetype = rect.linetype
+    return copy
+  }
+
   /**
    * Create a copy of this theme with modifications.
    */
@@ -138,8 +234,17 @@ class Theme {
     Theme merged = this.clone() as Theme
     // Merge non-null properties from other
     other.properties.each { key, value ->
-      if (value != null && key != 'class') {
+      if (value != null && key != 'class' && key != 'explicitNulls') {
         merged.setProperty(key as String, value)
+        merged.explicitNulls.remove(key as String)
+      }
+    }
+    if (other.explicitNulls) {
+      other.explicitNulls.each { key ->
+        if (merged.hasProperty(key as String)) {
+          merged.setProperty(key as String, null)
+          merged.explicitNulls.add(key as String)
+        }
       }
     }
     return merged
@@ -151,8 +256,14 @@ class Theme {
   Theme plus(Map modifications) {
     Theme modified = this.clone() as Theme
     modifications.each { key, value ->
-      if (modified.hasProperty(key as String)) {
-        modified.setProperty(key as String, value)
+      String k = key as String
+      if (modified.hasProperty(k)) {
+        modified.setProperty(k, value)
+        if (value == null) {
+          modified.explicitNulls.add(k)
+        } else {
+          modified.explicitNulls.remove(k)
+        }
       }
     }
     return modified
@@ -178,8 +289,10 @@ class ElementText {
 
   ElementText(Map params) {
     params.each { key, value ->
-      if (this.hasProperty(key as String)) {
-        this.setProperty(key as String, value)
+      String k = key as String
+      if (k == 'colour') k = 'color'
+      if (this.hasProperty(k)) {
+        this.setProperty(k, value)
       }
     }
   }
@@ -199,8 +312,13 @@ class ElementLine {
 
   ElementLine(Map params) {
     params.each { key, value ->
-      if (this.hasProperty(key as String)) {
-        this.setProperty(key as String, value)
+      String k = key as String
+      // Handle aliases
+      if (k == 'colour') k = 'color'
+      else if (k == 'linewidth') k = 'size'
+
+      if (this.hasProperty(k)) {
+        this.setProperty(k, value)
       }
     }
   }
