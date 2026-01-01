@@ -38,7 +38,7 @@ class Expression {
       throw new IllegalArgumentException("Expression closure cannot be null")
     }
     this.closure = closure
-    this.name = name ?: "_expr_${System.identityHashCode(closure)}"
+    this.name = name ?: ".expr.${System.identityHashCode(closure)}"
   }
 
   /**
