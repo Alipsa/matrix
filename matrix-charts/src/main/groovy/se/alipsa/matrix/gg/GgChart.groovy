@@ -123,29 +123,43 @@ class GgChart {
     if (parts == null) {
       return this
     }
-    parts.each { Object part ->
+    for (Object part : parts) {
       if (part == null) {
-        return
+        continue
       }
       if (part instanceof Iterable) {
         plus(part as Iterable<?>)
-      } else if (part instanceof Geom) {
-        plus(part as Geom)
-      } else if (part instanceof Theme) {
-        plus(part as Theme)
-      } else if (part instanceof Scale) {
-        plus(part as Scale)
-      } else if (part instanceof Facet) {
-        plus(part as Facet)
-      } else if (part instanceof Coord) {
-        plus(part as Coord)
-      } else if (part instanceof Label) {
-        plus(part as Label)
-      } else if (part instanceof Stat) {
-        plus(part as Stat)
-      } else {
-        throw new IllegalArgumentException("Unsupported gg component: ${part.getClass().name}")
+        continue
       }
+      if (part instanceof Geom) {
+        plus(part as Geom)
+        continue
+      }
+      if (part instanceof Theme) {
+        plus(part as Theme)
+        continue
+      }
+      if (part instanceof Scale) {
+        plus(part as Scale)
+        continue
+      }
+      if (part instanceof Facet) {
+        plus(part as Facet)
+        continue
+      }
+      if (part instanceof Coord) {
+        plus(part as Coord)
+        continue
+      }
+      if (part instanceof Label) {
+        plus(part as Label)
+        continue
+      }
+      if (part instanceof Stat) {
+        plus(part as Stat)
+        continue
+      }
+      throw new IllegalArgumentException("Unsupported gg component: ${part.getClass().name}")
     }
     return this
   }
@@ -244,17 +258,17 @@ class GgChart {
     }
     switch (name) {
       case 'point':
-        return params ? new GeomPoint(params) : new GeomPoint()
+        return new GeomPoint(params ?: [:])
       case 'smooth':
-        return params ? new GeomSmooth(params) : new GeomSmooth()
+        return new GeomSmooth(params ?: [:])
       case 'bar':
-        return params ? new GeomBar(params) : new GeomBar()
+        return new GeomBar(params ?: [:])
       case 'col':
-        return params ? new GeomCol(params) : new GeomCol()
+        return new GeomCol(params ?: [:])
       case 'errorbar':
-        return params ? new GeomErrorbar(params) : new GeomErrorbar()
+        return new GeomErrorbar(params ?: [:])
       case 'segment':
-        return params ? new GeomSegment(params) : new GeomSegment()
+        return new GeomSegment(params ?: [:])
       default:
         return null
     }
