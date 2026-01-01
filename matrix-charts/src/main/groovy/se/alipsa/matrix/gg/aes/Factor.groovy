@@ -93,12 +93,20 @@ class Factor {
   }
 
   private static String defaultName(Object value) {
+    if (value == null) {
+      return "${DEFAULT_NAME}_null"
+    }
     if (value instanceof CharSequence) {
       String candidate = value.toString().trim()
-      if (!candidate.isEmpty()) {
-        return "${DEFAULT_NAME}_${candidate}"
+      if (candidate.isEmpty()) {
+        return "${DEFAULT_NAME}_blank"
       }
+      return "${DEFAULT_NAME}_${sanitizeName(candidate)}"
     }
-    return DEFAULT_NAME
+    return "${DEFAULT_NAME}_const_${sanitizeName(value.toString())}"
+  }
+
+  private static String sanitizeName(String candidate) {
+    return candidate.replaceAll(/[^A-Za-z0-9_]+/, '_')
   }
 }

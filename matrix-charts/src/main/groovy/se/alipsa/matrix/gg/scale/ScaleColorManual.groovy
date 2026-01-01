@@ -24,6 +24,8 @@ class ScaleColorManual extends ScaleDiscrete {
 
   private List<String> computedPalette = []
 
+  // D65 reference white point for CIE XYZ (used in CIELUV/CIELAB conversions).
+  // See: CIE standard illuminant D65 and CIE 1931 2° observer.
   private static final double REF_X = 95.047d
   private static final double REF_Y = 100.0d
   private static final double REF_Z = 108.883d
@@ -183,6 +185,9 @@ class ScaleColorManual extends ScaleDiscrete {
     return colors
   }
 
+  // Convert CIELUV-derived HCL (Hue, Chroma, Luminance) to sRGB.
+  // Constants like 903.3, 116.0, 13.0, 4.0, 9.0, 15.0, 3.0, 8.0, 16.0
+  // come from the CIE L*u*v* / L*a*b* conversion formulas.
   private static String hclToHex(double h, double c, double l) {
     double hr = Math.toRadians(h)
     double u = c * Math.cos(hr)
