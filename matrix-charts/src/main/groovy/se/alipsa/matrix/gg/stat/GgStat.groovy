@@ -224,7 +224,7 @@ class GgStat {
    * @param params Map with optional:
    *   - method ('lm'): regression method
    *   - formula ('y ~ x'): formula string, supports poly(x, n)
-   *   - se (true): show confidence interval
+   *   - se: show confidence interval (default: true; set to false to hide)
    *   - level (0.95): confidence level
    *   - n (80): number of fitted points
    *   - degree (1): polynomial degree; overrides degree parsed from formula if provided
