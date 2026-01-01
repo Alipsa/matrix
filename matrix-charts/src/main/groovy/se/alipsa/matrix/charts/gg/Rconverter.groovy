@@ -492,7 +492,7 @@ class Rconverter {
         escaped = false
         continue
       }
-      if (ch == '\\\\') {
+      if (ch == ('\\' as char)) {
         out.append(ch)
         escaped = true
         continue
