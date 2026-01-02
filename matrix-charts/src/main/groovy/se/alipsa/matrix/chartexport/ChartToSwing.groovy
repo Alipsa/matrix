@@ -9,6 +9,9 @@ class ChartToSwing {
     if (svgChart == null) {
       throw new IllegalArgumentException("svgChart must not be null");
     }
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart must not be null");
+    }
     new SvgPanel(svgChart)
   }
 
