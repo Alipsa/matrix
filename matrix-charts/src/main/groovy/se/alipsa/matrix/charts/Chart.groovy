@@ -1,6 +1,6 @@
 package se.alipsa.matrix.charts
 
-import se.alipsa.matrix.core.Matrix;
+import se.alipsa.matrix.core.Matrix
 
 /**
  * Represents a chart in some form.
@@ -23,20 +23,20 @@ abstract class Chart<T extends Chart> {
   protected AxisScale xAxisScale = null
   protected AxisScale yAxisScale = null
 
-  protected Legend legend;
+  protected Legend legend
 
   protected Style style = new Style()
 
   String getTitle() {
-    return title;
+    return title
   }
 
   List getCategorySeries() {
-    return categorySeries;
+    return categorySeries
   }
 
   List<List> getValueSeries() {
-    return valueSeries;
+    return valueSeries
   }
 
   static void validateSeries(Matrix[] series) {

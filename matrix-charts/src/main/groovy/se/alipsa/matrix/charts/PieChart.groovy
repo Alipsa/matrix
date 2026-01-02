@@ -1,6 +1,6 @@
 package se.alipsa.matrix.charts
 
-import se.alipsa.matrix.core.Matrix;
+import se.alipsa.matrix.core.Matrix
 
 
 class PieChart extends Chart<PieChart> {

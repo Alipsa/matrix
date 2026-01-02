@@ -3,7 +3,7 @@ package se.alipsa.matrix.charts
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime;
+import java.time.LocalTime
 
 /**
  * When plotting a chart we need to be able to determine whether the column is numeric or categorical

@@ -1,4 +1,4 @@
-package se.alipsa.matrix.charts;
+package se.alipsa.matrix.charts
 
 enum ChartType {
   STACKED,
