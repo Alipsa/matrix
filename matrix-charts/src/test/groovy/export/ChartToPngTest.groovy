@@ -7,6 +7,8 @@ import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
 
+import javax.imageio.ImageIO
+import java.awt.image.BufferedImage
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -38,7 +40,20 @@ class ChartToPngTest {
     File file = filePath.toFile()
     ChartToPng.export(chart, file)
     println("Exported png to ${file.absolutePath}")
+    
+    // Verify file exists
     assertTrue(file.exists())
+    
+    // Verify file size is greater than zero
+    assertTrue(file.length() > 0, "PNG file should not be empty")
+    
+    // Verify the image can be read successfully using ImageIO
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image, "PNG file should be readable by ImageIO")
+    
+    // Verify image dimensions are reasonable (greater than zero)
+    assertTrue(image.getWidth() > 0, "Image width should be greater than 0")
+    assertTrue(image.getHeight() > 0, "Image height should be greater than 0")
   }
 
   @Test
