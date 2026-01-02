@@ -61,6 +61,12 @@ class SvgPanel extends JPanel {
     double svgWidth = svgDocument.size().width
     double svgHeight = svgDocument.size().height
 
+    // Validate SVG dimensions to prevent division by zero
+    if (svgWidth <= 0 || svgHeight <= 0) {
+      g2d.dispose()
+      return
+    }
+
     double panelWidth = getWidth()
     double panelHeight = getHeight()
 
