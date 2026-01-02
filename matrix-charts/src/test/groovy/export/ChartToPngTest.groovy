@@ -2,6 +2,7 @@ package export
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
@@ -38,5 +39,33 @@ class ChartToPngTest {
     ChartToPng.export(chart, file)
     println("Exported png to ${file.absolutePath}")
     assertTrue(file.exists())
+  }
+
+  @Test
+  void testExportWithNullTargetFile_String() {
+    String svgContent = "<svg></svg>"
+    Exception exception = assertThrows(IllegalArgumentException.class, {
+      ChartToPng.export(svgContent, null)
+    })
+    assertEquals("targetFile cannot be null", exception.getMessage())
+  }
+
+  @Test
+  void testExportWithNullTargetFile_Svg() {
+    Svg svg = new Svg()
+    Exception exception = assertThrows(IllegalArgumentException.class, {
+      ChartToPng.export(svg, null)
+    })
+    assertEquals("targetFile cannot be null", exception.getMessage())
+  }
+
+  @Test
+  void testExportWithNullTargetFile_GgChart() {
+    def mpg = Dataset.mpg()
+    GgChart chart = ggplot(mpg, aes(x: 'cty', y: 'hwy')) + geom_point()
+    Exception exception = assertThrows(IllegalArgumentException.class, {
+      ChartToPng.export(chart, null)
+    })
+    assertEquals("targetFile cannot be null", exception.getMessage())
   }
 }
