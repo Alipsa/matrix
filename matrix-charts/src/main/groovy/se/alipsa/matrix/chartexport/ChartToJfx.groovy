@@ -21,7 +21,10 @@ class ChartToJfx {
    * @throws RuntimeException if the SVG content cannot be parsed or loaded
    */
   static SVGImage export(String svgChart) {
-    SVGLoader.load(svgChart)
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart must not be null");
+    }
+    return SVGLoader.load(svgChart)
   }
 
   /**
