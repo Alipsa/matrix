@@ -31,7 +31,10 @@ class ChartToSwing {
    * @return a {@link SvgPanel} displaying the rendered SVG chart
    */
   static SvgPanel export(Svg svgChart) {
-    export(svgChart.toXml())
+   if (svgChart == null) {
+     throw new IllegalArgumentException("svgChart must not be null");
+   }
+   export(svgChart.toXml())
   }
 
   /**
