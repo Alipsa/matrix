@@ -89,6 +89,9 @@ class Factor {
    */
   @Override
   String toString() {
+    if (value instanceof CharSequence) {
+      return "factor('${escapeValue(value.toString())}')"
+    }
     return "factor(${value})"
   }
 
@@ -104,6 +107,10 @@ class Factor {
       return "${DEFAULT_NAME}_${sanitizeName(candidate)}"
     }
     return "${DEFAULT_NAME}_const_${sanitizeName(value.toString())}"
+  }
+
+  private static String escapeValue(String value) {
+    return value.replace("\\", "\\\\").replace("'", "\\'")
   }
 
   private static String sanitizeName(String candidate) {

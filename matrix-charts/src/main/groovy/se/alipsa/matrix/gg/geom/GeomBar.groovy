@@ -210,8 +210,12 @@ class GeomBar extends Geom {
       if (fillCol && fillScale instanceof ScaleDiscrete) {
         List<Object> levels = (fillScale as ScaleDiscrete).levels
         if (!levels.isEmpty()) {
+          Map<Object, Integer> levelIndex = [:]
+          levels.eachWithIndex { level, int pos ->
+            levelIndex[level] = pos
+          }
           rows.sort { Row row ->
-            int pos = levels.indexOf(row[fillCol])
+            int pos = levelIndex.getOrDefault(row[fillCol], Integer.MAX_VALUE)
             return pos < 0 ? Integer.MAX_VALUE : pos
           }
         }

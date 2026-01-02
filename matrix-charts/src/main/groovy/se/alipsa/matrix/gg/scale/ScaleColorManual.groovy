@@ -180,6 +180,7 @@ class ScaleColorManual extends ScaleDiscrete {
    */
   private static List<String> generateHuePalette(int n) {
     if (n <= 0) return []
+    // ggplot2 hue palette defaults: h = [15, 375], c = 100, l = 65.
     double start = 15.0d
     double end = 375.0d
     double step = (end - start) / n
@@ -216,10 +217,13 @@ class ScaleColorManual extends ScaleDiscrete {
     double vp = v / (13.0d * l) + v0
     double y = l > 8.0d ? REF_Y * Math.pow((l + 16.0d) / 116.0d, 3.0d) : REF_Y * l / 903.3d
     double denom1 = ((up - 4.0d) * vp - up * vp)
-    if (Math.abs(denom1) < 1.0e-12d || Math.abs(vp) < 1.0e-12d) {
+    if (Math.abs(denom1) < 1.0e-9d || Math.abs(vp) < 1.0e-9d) {
       return '#000000'
     }
     double x = 0.0d - (9.0d * y * up) / denom1
+    if (!Double.isFinite(x) || Math.abs(x) > 1.0e6d) {
+      return '#000000'
+    }
     double z = (9.0d * y - 15.0d * vp * y - vp * x) / (3.0d * vp)
     return xyzToHex(x, y, z)
   }

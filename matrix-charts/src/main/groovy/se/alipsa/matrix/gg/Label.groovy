@@ -20,4 +20,14 @@ class Label {
   boolean xSet = false
   /** True when the y label was explicitly set via labs/ylab. */
   boolean ySet = false
+
+  void setX(String x) {
+    this.@x = x
+    this.xSet = true
+  }
+
+  void setY(String y) {
+    this.@y = y
+    this.ySet = true
+  }
 }

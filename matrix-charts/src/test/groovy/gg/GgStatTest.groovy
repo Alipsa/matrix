@@ -206,15 +206,16 @@ class GgStatTest {
       percentByKey[key] = percents[i]
     }
 
-    BigDecimal forty = new BigDecimal('40.00')
-    BigDecimal twenty = new BigDecimal('20.00')
+    BigDecimal sixtySix = new BigDecimal('66.67')
+    BigDecimal thirtyThree = new BigDecimal('33.33')
+    BigDecimal fifty = new BigDecimal('50.00')
     assertEquals(2, countByKey['compact|f'])
     assertEquals(1, countByKey['compact|r'])
     assertEquals(1, countByKey['suv|f'])
     assertEquals(1, countByKey['suv|4'])
-    assertEquals(forty, percentByKey['compact|f'])
-    assertEquals(twenty, percentByKey['compact|r'])
-    assertEquals(twenty, percentByKey['suv|f'])
-    assertEquals(twenty, percentByKey['suv|4'])
+    assertEquals(sixtySix, percentByKey['compact|f'])
+    assertEquals(thirtyThree, percentByKey['compact|r'])
+    assertEquals(fifty, percentByKey['suv|f'])
+    assertEquals(fifty, percentByKey['suv|4'])
   }
 }

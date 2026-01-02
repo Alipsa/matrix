@@ -52,10 +52,14 @@ class GgStat {
         List<Object> key = [xVal, fillVal]
         counts[key] = (counts[key] ?: 0) + 1
       }
-      int total = counts.values().sum(0) as int
+      Map<Object, Integer> totalsByX = [:].withDefault { 0 }
+      counts.each { key, count ->
+        totalsByX[key[0]] = totalsByX[key[0]] + count
+      }
       List<Map<String, Object>> rows = []
       counts.each { key, count ->
-        BigDecimal percent = total == 0 ? BigDecimal.ZERO : (count * 100.0 / total).setScale(2, RoundingMode.HALF_EVEN)
+        int totalForX = totalsByX[key[0]] as int
+        BigDecimal percent = totalForX == 0 ? BigDecimal.ZERO : (count * 100.0 / totalForX).setScale(2, RoundingMode.HALF_EVEN)
         rows << [
             (xCol): key[0],
             (fillCol): key[1],

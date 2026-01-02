@@ -23,6 +23,8 @@ import se.alipsa.matrix.gg.render.GgRenderer
 import se.alipsa.matrix.gg.stat.Stat
 import se.alipsa.matrix.gg.theme.Theme
 
+import java.util.Locale
+
 /**
  * Main chart container for Grammar of Graphics plots.
  * Collects layers, scales, coordinates, themes, and facets,
@@ -82,11 +84,18 @@ class GgChart {
     // Extract stat-related params from geom params
     Map statParams = [:]
     Aes layerAes = null
+    StatType statOverride = geom.defaultStat
     if (geom.params) {
       // Copy params that are relevant for stats
       STAT_PARAM_KEYS.each { key ->
         if (geom.params.containsKey(key)) {
           statParams[key] = geom.params[key]
+        }
+      }
+      if (geom.params.containsKey('stat')) {
+        StatType parsed = parseStatType(geom.params['stat'])
+        if (parsed != null) {
+          statOverride = parsed
         }
       }
       // Extract mapping parameter as layer aes
@@ -100,7 +109,7 @@ class GgChart {
 
     Layer layer = new Layer(
         geom: geom,
-        stat: geom.defaultStat,
+        stat: statOverride,
         position: geom.defaultPosition,
         aes: layerAes,  // Layer-specific aesthetics from mapping parameter
         params: geom.params ?: [:],
@@ -108,6 +117,43 @@ class GgChart {
     )
     layers << layer
     return this
+  }
+
+  private static StatType parseStatType(Object stat) {
+    if (stat == null) {
+      return null
+    }
+    if (stat instanceof StatType) {
+      return stat as StatType
+    }
+    if (stat instanceof Stat) {
+      return (stat as Stat).statType
+    }
+    if (stat instanceof CharSequence) {
+      switch (stat.toString().trim().toLowerCase(Locale.ROOT)) {
+        case 'identity':
+          return StatType.IDENTITY
+        case 'count':
+          return StatType.COUNT
+        case 'bin':
+          return StatType.BIN
+        case 'boxplot':
+          return StatType.BOXPLOT
+        case 'smooth':
+          return StatType.SMOOTH
+        case 'summary':
+          return StatType.SUMMARY
+        case 'density':
+          return StatType.DENSITY
+        case 'bin2d':
+          return StatType.BIN2D
+        case 'contour':
+          return StatType.CONTOUR
+        default:
+          throw new IllegalArgumentException("Unsupported stat: ${stat}")
+      }
+    }
+    throw new IllegalArgumentException("Unsupported stat type: ${stat.getClass().name}")
   }
 
   /**
