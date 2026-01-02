@@ -40,10 +40,16 @@ class ChartToPng {
   }
 
   static void export(Svg svgChart, File targetFile) throws IOException  {
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart cannot be null")
+    }
     export(svgChart.toXml(), targetFile)
   }
 
   static void export(GgChart chart, File targetFile) throws IOException  {
+    if (chart == null) {
+      throw new IllegalArgumentException("chart cannot be null")
+    }
     export(chart.render().toXml(), targetFile)
   }
 }
