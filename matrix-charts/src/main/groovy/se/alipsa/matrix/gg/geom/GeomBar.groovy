@@ -182,6 +182,24 @@ class GeomBar extends Geom {
    * This path rendering is separate from the cartesian bar logic because it
    * converts stacked bar segments into arc slices.
    *
+   * <p><b>Algorithm for converting stacked bars to pie slices:</b></p>
+   * <ol>
+   *   <li>Groups data rows by x aesthetic (each x value becomes a concentric ring)</li>
+   *   <li>Calculates ring dimensions: outer rings for first x groups, inner for later ones</li>
+   *   <li>For each ring, converts y values to proportional arc angles (0 to 2π radians)</li>
+   *   <li>Creates SVG path arcs for each segment using polar coordinate transformations</li>
+   *   <li>Applies fill colors from the fill scale or default palette</li>
+   * </ol>
+   *
+   * <p><b>Ordering behavior:</b></p>
+   * <ul>
+   *   <li>Rows within each x group are sorted by fill scale levels (if fill is discrete)</li>
+   *   <li>When coord.theta == 'y', rows are reversed to match ggplot2's counterclockwise
+   *       legend order (legend top-to-bottom maps to chart counterclockwise)</li>
+   *   <li>Missing fill levels sort last (Integer.MAX_VALUE position)</li>
+   *   <li>Arc angles are calculated cumulatively, starting at 0 radians</li>
+   * </ul>
+   *
    * @param group SVG group to render into
    * @param data data matrix (after stat/position transforms)
    * @param aes aesthetic mappings
