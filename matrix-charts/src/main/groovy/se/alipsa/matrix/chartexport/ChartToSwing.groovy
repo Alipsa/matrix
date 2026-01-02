@@ -39,7 +39,7 @@ class ChartToSwing {
    * <p>
    * The chart is rendered to SVG and delegated to {@link #export(String)}.
    *
-   * @param chart the {@link GgChart} to render as SVG
+   * @param svgChart the {@link GgChart} to render as SVG
    * @return a {@link SvgPanel} displaying the rendered chart
    */
   static SvgPanel export(GgChart svgChart) {
