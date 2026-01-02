@@ -24,7 +24,7 @@ class ChartToPng {
    */
   static void export(String svgChart, File targetFile) throws IOException {
     if (svgChart == null || svgChart.isEmpty()) {
-      throw new IllegalArgumentException("Invalid SVG content, cannot be null or empty")
+      throw new IllegalArgumentException("svgChart cannot be null or empty")
     }
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
