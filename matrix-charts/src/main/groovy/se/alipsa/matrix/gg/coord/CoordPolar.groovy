@@ -249,9 +249,14 @@ class CoordPolar extends Coord {
 
   /**
    * Format numeric SVG coordinates with fixed precision.
+   * <p>
+   * Uses fixed precision to ensure consistent decimal representation in SVG path data,
+   * avoiding floating-point artifacts and reducing file size. Three decimal places
+   * provides sub-pixel accuracy (0.001px) which is sufficient for typical display
+   * resolutions while keeping coordinates compact.
    *
-   * @param value numeric value
-   * @return formatted string with fixed decimal precision
+   * @param value numeric value to format
+   * @return formatted string with 3 decimal places
    */
   private static String formatNumber(double value) {
     return String.format(Locale.US, "%.3f", value)
