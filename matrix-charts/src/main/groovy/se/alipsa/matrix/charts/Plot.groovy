@@ -3,7 +3,7 @@ package se.alipsa.matrix.charts
 import se.alipsa.matrix.charts.jfx.JfxConverter
 import se.alipsa.matrix.charts.png.PngConverter
 
-import java.nio.file.Files;
+import java.nio.file.Files
 
 class Plot {
 

@@ -7,12 +7,6 @@ import se.alipsa.matrix.gg.GgChart
 
 class ChartToJfx {
 
-  static SVGImage export(String svgChart) {
-    if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null")
-    }
-    SVGLoader.load(svgChart)
-
   /**
    * Create a JavaFX {@link SVGImage} from an SVG document provided as a {@link String}.
    *
@@ -22,7 +16,7 @@ class ChartToJfx {
    */
   static SVGImage export(String svgChart) {
     if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null");
+      throw new IllegalArgumentException("svgChart must not be null")
     }
     return SVGLoader.load(svgChart)
   }

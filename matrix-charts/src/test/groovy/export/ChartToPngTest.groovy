@@ -1,7 +1,6 @@
 package export
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.datasets.Dataset
@@ -16,9 +15,6 @@ import static se.alipsa.matrix.gg.GgPlot.*
 import static org.junit.jupiter.api.Assertions.*
 
 class ChartToPngTest {
-
-  @TempDir
-  Path tempDir;
 
   @Test
   void testExportToPng() {

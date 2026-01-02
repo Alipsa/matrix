@@ -26,7 +26,7 @@ class HistogramTest {
     def chart = Histogram.create("mtcars.mpg", mtcars, 'mpg', 5)
 
     def expected = [6,12,8,2,4]
-    int i = 0;
+    int i = 0
     chart.ranges.each {
       assertEquals(expected[i], it.value)
       i++

@@ -43,11 +43,11 @@ class SvgPanel extends JPanel {
 
   @Override
   protected void paintComponent(Graphics g) {
-    super.paintComponent(g);
+    super.paintComponent(g)
 
-    if (svgDocument == null) return;
+    if (svgDocument == null) return
 
-    Graphics2D g2d = (Graphics2D) g.create();
+    Graphics2D g2d = (Graphics2D) g.create()
 
     // 1. Enable Anti-Aliasing for crisp edges
     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)

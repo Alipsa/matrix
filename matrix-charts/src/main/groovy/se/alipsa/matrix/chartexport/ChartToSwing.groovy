@@ -5,15 +5,6 @@ import se.alipsa.matrix.gg.GgChart
 
 class ChartToSwing {
 
-  static SvgPanel export(String svgChart) {
-    if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null");
-    }
-    if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null");
-    }
-    new SvgPanel(svgChart)
-
   /**
    * Create a {@link SvgPanel} from an SVG document represented as a string.
    *
@@ -21,6 +12,12 @@ class ChartToSwing {
    * @return a {@link SvgPanel} displaying the provided SVG content
    */
   static SvgPanel export(String svgChart) {
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart must not be null")
+    }
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart must not be null")
+    }
     new SvgPanel(svgChart)
   }
 
@@ -47,7 +44,7 @@ class ChartToSwing {
    */
   static SvgPanel export(GgChart chart) {
     if (chart == null) {
-      throw new IllegalArgumentException("chart must not be null");
+      throw new IllegalArgumentException("chart must not be null")
     }
     export(chart.render().toXml())
   }

@@ -15,10 +15,10 @@ class PngTest {
     static void init() {
         if (Boolean.getBoolean("headless")) {
             println("Enable monocle for headless testing")
-            System.setProperty("testfx.robot", "glass");
-            System.setProperty("testfx.headless", "true");
-            System.setProperty("prism.order", "sw");
-            System.setProperty("prism.text", "t2k");
+            System.setProperty("testfx.robot", "glass")
+            System.setProperty("testfx.headless", "true")
+            System.setProperty("prism.order", "sw")
+            System.setProperty("prism.text", "t2k")
         }
     }
 
