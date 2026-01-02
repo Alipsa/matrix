@@ -15,9 +15,6 @@ class ChartToSwing {
     if (svgChart == null) {
       throw new IllegalArgumentException("svgChart must not be null")
     }
-    if (svgChart == null) {
-      throw new IllegalArgumentException("svgChart must not be null")
-    }
     new SvgPanel(svgChart)
   }
 
@@ -31,6 +28,9 @@ class ChartToSwing {
    * @return a {@link SvgPanel} displaying the rendered SVG chart
    */
   static SvgPanel export(Svg svgChart) {
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart must not be null")
+    }
     export(svgChart.toXml())
   }
 

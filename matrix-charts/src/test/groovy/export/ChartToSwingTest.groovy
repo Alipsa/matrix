@@ -83,10 +83,10 @@ class ChartToSwingTest {
   @Test
   void testExportWithNullSvg() {
     Svg svg = null
-    // The Svg export method doesn't validate null, so it will throw NullPointerException
-    assertThrows(NullPointerException.class, {
+    Exception exception = assertThrows(IllegalArgumentException.class, {
       ChartToSwing.export(svg)
     })
+    assertEquals("svgChart must not be null", exception.getMessage())
   }
 
   @Test
