@@ -9,6 +9,8 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.stats.kde.Kernel
+import se.alipsa.matrix.stats.kde.KernelDensity
 
 /**
  * Density geometry for showing kernel density estimates.
@@ -40,7 +42,7 @@ class GeomDensity extends Geom {
   /** Bandwidth adjustment factor (multiplier for default bandwidth) */
   Number adjust = 1.0
 
-  /** Kernel type: 'gaussian' (only gaussian supported currently) */
+  /** Kernel type: 'gaussian', 'epanechnikov', 'uniform', or 'triangular' */
   String kernel = 'gaussian'
 
   /** Number of points for density estimation */
@@ -206,71 +208,29 @@ class GeomDensity extends Geom {
   }
 
   /**
-   * Compute kernel density estimate using Gaussian kernel.
+   * Compute kernel density estimate using the configured kernel.
+   * Delegates to the KernelDensity class from matrix-stats.
    */
   private List<double[]> computeKernelDensity(List<Number> values) {
     if (values.size() < 2) return []
 
-    double[] data = values.collect { it as double } as double[]
-    Arrays.sort(data)
-
-    double min = data[0]
-    double max = data[data.length - 1]
-    double range = max - min
-
-    if (range == 0) {
-      return [[min, 1.0] as double[]]
+    // Handle edge case where all values are identical
+    Set<Number> unique = new HashSet<>(values)
+    if (unique.size() == 1) {
+      Number val = values[0]
+      return [[val as double, 1.0d] as double[]]
     }
 
-    // Silverman's rule of thumb for bandwidth
-    double std = computeStd(data)
-    double iqr = computeIQR(data)
-    double bandwidth = 0.9 * Math.min(std, iqr / 1.34) * Math.pow(data.length, -0.2) * (adjust as double)
-
-    if (bandwidth <= 0) bandwidth = range / 10
-
-    // Extend range
-    double extension = trim ? 0.0 : range * 0.1
-    double evalMin = min - extension
-    double evalMax = max + extension
-
-    // Compute density
-    List<double[]> result = []
     int numPoints = Math.min(n, 256)
 
-    for (int i = 0; i < numPoints; i++) {
-      double x = evalMin + (evalMax - evalMin) * i / (numPoints - 1)
-      double density = 0
+    KernelDensity kde = new KernelDensity(values, [
+        kernel: kernel,
+        adjust: adjust,
+        n: numPoints,
+        trim: trim
+    ])
 
-      for (double d : data) {
-        double z = (x - d) / bandwidth
-        density += Math.exp(-0.5 * z * z) / (Math.sqrt(2 * Math.PI) * bandwidth)
-      }
-      density /= data.length
-
-      result << ([x, density] as double[])
-    }
-
-    return result
-  }
-
-  private double computeStd(double[] data) {
-    double mean = 0
-    for (double d : data) mean += d
-    mean /= data.length
-
-    double variance = 0
-    for (double d : data) variance += (d - mean) * (d - mean)
-    variance /= (data.length - 1)
-
-    return Math.sqrt(variance)
-  }
-
-  private double computeIQR(double[] data) {
-    int n = data.length
-    double q1 = data[(int)(n * 0.25)]
-    double q3 = data[(int)(n * 0.75)]
-    return q3 - q1
+    return kde.toPointList()
   }
 
   private String getDashArray(String type) {

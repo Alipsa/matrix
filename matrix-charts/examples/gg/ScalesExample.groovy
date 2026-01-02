@@ -11,7 +11,7 @@ ggsave("scales.svg", plot = p)
 @Grab('se.alipsa.matrix:matrix-core:3.5.1-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-charts:0.4.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2-SNAPSHOT')
-@Grab('se.alipsa.matrix:matrix-stats:2.2.1-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-stats:2.3.0-SNAPSHOT')
 
 import groovy.transform.SourceURI
 import static se.alipsa.matrix.gg.GgPlot.*

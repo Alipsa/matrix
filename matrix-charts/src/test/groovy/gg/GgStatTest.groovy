@@ -218,4 +218,161 @@ class GgStatTest {
     assertEquals(fifty, percentByKey['suv|f'])
     assertEquals(fifty, percentByKey['suv|4'])
   }
+
+  @Test
+  void testDensityBasic() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1.2], [2.3], [1.8], [2.1], [3.5], [2.9], [2.0], [2.5], [1.9], [2.2]])
+        .types(Double)
+        .build()
+
+    def aes = new Aes(x: 'value')
+    def result = GgStat.density(data, aes)
+
+    // Should have x and density columns
+    assertTrue(result.columnNames().containsAll(['x', 'density']),
+        "Result should have x and density columns, got: ${result.columnNames()}")
+
+    // Should have default 512 evaluation points
+    assertEquals(512, result.rowCount(), "Should have 512 evaluation points by default")
+
+    // All density values should be non-negative
+    List<Double> densities = result['density'] as List<Double>
+    densities.each { d ->
+      assertTrue(d >= 0, "Density should be non-negative")
+    }
+
+    // X values should be increasing
+    List<Double> xVals = result['x'] as List<Double>
+    for (int i = 1; i < xVals.size(); i++) {
+      assertTrue(xVals[i] > xVals[i-1], "X values should be increasing")
+    }
+  }
+
+  @Test
+  void testDensityWithKernel() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        .types(Double)
+        .build()
+
+    def aes = new Aes(x: 'value')
+
+    // Test with different kernels
+    ['gaussian', 'epanechnikov', 'uniform', 'triangular'].each { kernel ->
+      def result = GgStat.density(data, aes, [kernel: kernel, n: 100])
+      assertEquals(100, result.rowCount(), "Should have 100 points for kernel: $kernel")
+      assertTrue(result.columnNames().containsAll(['x', 'density']))
+    }
+  }
+
+  @Test
+  void testDensityWithAdjust() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        .types(Double)
+        .build()
+
+    def aes = new Aes(x: 'value')
+
+    // Higher adjust = smoother density (lower peak)
+    def result1 = GgStat.density(data, aes, [adjust: 0.5, n: 100])
+    def result2 = GgStat.density(data, aes, [adjust: 2.0, n: 100])
+
+    double max1 = (result1['density'] as List<Double>).max()
+    double max2 = (result2['density'] as List<Double>).max()
+
+    // Lower adjust should give higher peak (more detail)
+    assertTrue(max1 > max2, "Lower adjust should give higher peak density")
+  }
+
+  @Test
+  void testDensityGrouped() {
+    def data = Matrix.builder()
+        .columnNames(['value', 'group'])
+        .rows([
+            [1.0, 'A'], [2.0, 'A'], [3.0, 'A'], [2.5, 'A'], [1.5, 'A'],
+            [5.0, 'B'], [6.0, 'B'], [7.0, 'B'], [6.5, 'B'], [5.5, 'B']
+        ])
+        .types(Double, String)
+        .build()
+
+    def aes = new Aes(x: 'value', color: 'group')
+    def result = GgStat.density(data, aes, [n: 50])
+
+    // Should have x, density, and group columns
+    assertTrue(result.columnNames().containsAll(['x', 'density', 'group']),
+        "Grouped result should have x, density, group columns")
+
+    // Should have 50 points per group = 100 total
+    assertEquals(100, result.rowCount(), "Should have 50 points per group")
+
+    // Check that both groups are present
+    def groups = result['group'] as List<Object>
+    assertTrue(groups.contains('A'))
+    assertTrue(groups.contains('B'))
+  }
+
+  @Test
+  void testDensityWithCustomRange() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        .types(Double)
+        .build()
+
+    def aes = new Aes(x: 'value')
+    def result = GgStat.density(data, aes, [from: 0.0, to: 6.0, n: 61])
+
+    List<Double> xVals = result['x'] as List<Double>
+    assertEquals(0.0, xVals[0], 0.001, "Should start at 'from' value")
+    assertEquals(6.0, xVals[xVals.size()-1], 0.001, "Should end at 'to' value")
+  }
+
+  @Test
+  void testDensityEmptyData() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([])
+        .types(Double)
+        .build()
+
+    def aes = new Aes(x: 'value')
+    def result = GgStat.density(data, aes)
+
+    assertEquals(0, result.rowCount(), "Empty data should return empty result")
+  }
+
+  @Test
+  void testDensityInsufficientData() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1.0]])
+        .types(Double)
+        .build()
+
+    def aes = new Aes(x: 'value')
+    def result = GgStat.density(data, aes)
+
+    assertEquals(0, result.rowCount(), "Single point should return empty result")
+  }
+
+  @Test
+  void testDensityRequiresXAesthetic() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1.0], [2.0]])
+        .types(Double)
+        .build()
+
+    def aes = new Aes(y: 'value')  // Only y, no x
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.density(data, aes)
+    }
+    assertTrue(ex.message.contains('x aesthetic'))
+  }
 }

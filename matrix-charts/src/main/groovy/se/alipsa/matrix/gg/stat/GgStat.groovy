@@ -6,6 +6,8 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.stats.distribution.TDistribution
+import se.alipsa.matrix.stats.kde.Kernel
+import se.alipsa.matrix.stats.kde.KernelDensity
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression
 import se.alipsa.matrix.stats.regression.RegressionUtils
@@ -216,7 +218,7 @@ class GgStat {
    */
   static Map<String, Object> parseFormula(String formula) {
     if (formula == null || formula.trim().isEmpty()) {
-      return [polyDegree: 1, response: 'y', predictor: 'x', polyExplicit: false]
+      return [polyDegree: 1, response: 'y', predictor: 'x', polyExplicit: false] as Map<String, Object>
     }
 
     String cleaned = formula.trim()
@@ -562,11 +564,150 @@ class GgStat {
 
   /**
    * Kernel density estimation.
-   * TODO: Implement or delegate to Smile's KernelDensity
+   * Delegates to KernelDensity from matrix-stats.
+   *
+   * <p>Equivalent to R's stat_density():</p>
+   * <pre>
+   * # R equivalent
+   * ggplot(data, aes(x = value)) + stat_density(kernel = "gaussian")
+   * </pre>
+   *
+   * @param data Input matrix
+   * @param aes Aesthetic mappings (uses x for values, optionally color/fill/group for grouping)
+   * @param params Map with optional:
+   *   - kernel: kernel type ('gaussian', 'epanechnikov', 'uniform', 'triangular'), default 'gaussian'
+   *   - bw: bandwidth (overrides automatic selection)
+   *   - adjust: bandwidth adjustment factor (default 1.0)
+   *   - n: number of evaluation points (default 512)
+   *   - trim: trim density to data range (default false)
+   *   - from: custom range start
+   *   - to: custom range end
+   * @return Matrix with columns: x, density (and group column if grouping is used)
    */
   static Matrix density(Matrix data, Aes aes, Map params = [:]) {
-    // Placeholder - needs implementation
-    throw new UnsupportedOperationException("stat_density not yet implemented")
+    String xCol = aes.xColName
+    if (xCol == null) {
+      throw new IllegalArgumentException("stat_density requires x aesthetic")
+    }
+
+    // Determine grouping column
+    String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
+
+    // Build KDE parameters
+    Map<String, Object> kdeParams = [:]
+    if (params.kernel != null) {
+      kdeParams.kernel = params.kernel
+    }
+    if (params.bw != null) {
+      kdeParams.bandwidth = params.bw
+    }
+    if (params.adjust != null) {
+      kdeParams.adjust = params.adjust
+    }
+    if (params.n != null) {
+      kdeParams.n = params.n
+    }
+    if (params.trim != null) {
+      kdeParams.trim = params.trim
+    }
+    if (params.from != null) {
+      kdeParams.from = params.from
+    }
+    if (params.to != null) {
+      kdeParams.to = params.to
+    }
+
+    if (groupCol != null && data.columnNames().contains(groupCol)) {
+      // Grouped density estimation
+      return densityGrouped(data, xCol, groupCol, kdeParams)
+    } else {
+      // Ungrouped density estimation
+      return densityUngrouped(data, xCol, kdeParams)
+    }
+  }
+
+  /**
+   * Compute density for ungrouped data.
+   */
+  private static Matrix densityUngrouped(Matrix data, String xCol, Map<String, Object> kdeParams) {
+    List<Number> values = extractNumericValues(data, xCol)
+
+    if (values.size() < 2) {
+      return Matrix.builder()
+          .columnNames(['x', 'density'])
+          .rows([])
+          .types(Double, Double)
+          .build()
+    }
+
+    KernelDensity kde = new KernelDensity(values, kdeParams)
+    return kde.toMatrix()
+  }
+
+  /**
+   * Compute density for grouped data.
+   */
+  private static Matrix densityGrouped(Matrix data, String xCol, String groupCol, Map<String, Object> kdeParams) {
+    // Group data by the grouping column
+    Map<Object, List<Number>> groups = new LinkedHashMap<>()
+    data.each { row ->
+      Object groupKey = row[groupCol]
+      def xVal = row[xCol]
+      if (xVal instanceof Number) {
+        if (!groups.containsKey(groupKey)) {
+          groups[groupKey] = []
+        }
+        groups[groupKey] << (xVal as Number)
+      }
+    }
+
+    if (groups.isEmpty()) {
+      return Matrix.builder()
+          .columnNames(['x', 'density', groupCol])
+          .rows([])
+          .build()
+    }
+
+    // Compute density for each group and combine results
+    List<Map<String, Object>> allRows = []
+    groups.each { groupKey, values ->
+      if (values.size() >= 2) {
+        KernelDensity kde = new KernelDensity(values, kdeParams)
+        double[] xVals = kde.getX()
+        double[] densityVals = kde.getDensity()
+
+        for (int i = 0; i < xVals.length; i++) {
+          allRows << [
+              x: xVals[i],
+              density: densityVals[i],
+              (groupCol): groupKey
+          ]
+        }
+      }
+    }
+
+    if (allRows.isEmpty()) {
+      return Matrix.builder()
+          .columnNames(['x', 'density', groupCol])
+          .rows([])
+          .build()
+    }
+
+    return Matrix.builder().mapList(allRows).build()
+  }
+
+  /**
+   * Extract numeric values from a column, filtering out nulls and non-numeric values.
+   */
+  private static List<Number> extractNumericValues(Matrix data, String colName) {
+    List<Number> result = []
+    data.each { row ->
+      def val = row[colName]
+      if (val instanceof Number) {
+        result << (val as Number)
+      }
+    }
+    return result
   }
 
   /**

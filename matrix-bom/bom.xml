@@ -45,7 +45,7 @@
     <matrixSmileVersion>0.1.0-SNAPSHOT</matrixSmileVersion>
     <matrixSpreadsheetVersion>2.2.2-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.2.0</matrixSqlVersion>
-    <matrixStatsVersion>2.2.1-SNAPSHOT</matrixStatsVersion>
+    <matrixStatsVersion>2.3.0-SNAPSHOT</matrixStatsVersion>
     <matrixTablesawVersion>0.2.2-SNAPSHOT</matrixTablesawVersion>
     <matrixXChartVersion>0.2.3-SNAPSHOT</matrixXChartVersion>
   </properties>
@@ -59,6 +59,10 @@
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
+    </repository>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
     </repository>
   </repositories>
   <dependencyManagement>
