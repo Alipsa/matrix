@@ -26,7 +26,8 @@ import se.alipsa.groovy.svg.Svg
 URI sourceUri
 
 @Field
-File targetDir = new File(new File(sourceUri).parentFile.parentFile.parentFile, 'build')
+File targetDir = new File(new File(sourceUri).parentFile.parentFile.parentFile, 'build/examples/gg')
+targetDir.mkdirs()
 
 def mpg = Dataset.mpg()
 def geom_mean() {

@@ -22,7 +22,8 @@ import se.alipsa.groovy.svg.Svg
 URI sourceUri
 
 File subProjectDir = new File(sourceUri).parentFile.parentFile.parentFile
-File targetDir = new File(subProjectDir, 'build')
+File targetDir = new File(subProjectDir, 'build/examples/gg')
+targetDir.mkdirs()
 
 def mpg = Dataset.mpg()
 def chart = ggplot(mpg, aes('cty', 'hwy', colour: 'class')) +

@@ -21,7 +21,8 @@ import se.alipsa.groovy.svg.Svg
 @SourceURI
 URI sourceUri
 
-File targetDir = new File(new File(sourceUri).parentFile.parentFile.parentFile, 'build')
+File targetDir = new File(new File(sourceUri).parentFile.parentFile.parentFile, 'build/examples/gg')
+targetDir.mkdirs()
 
 def piechart(data, mapping) {
   ggplot(data, mapping) +
