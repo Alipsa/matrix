@@ -21,9 +21,7 @@ class SvgPanel extends JPanel {
    */
   SvgPanel(String svgContent) {
     if (svgContent == null || svgContent.isEmpty()) {
-      this.svgDocument = null
-      repaint()
-      return
+      throw new IllegalArgumentException("svgContent cannot be null or empty")
     }
 
     ByteArrayInputStream stream = new ByteArrayInputStream(
@@ -41,7 +39,6 @@ class SvgPanel extends JPanel {
     ))
     revalidate()
     repaint()
-
   }
 
   @Override
@@ -71,7 +68,7 @@ class SvgPanel extends JPanel {
     double panelHeight = getHeight()
 
     // Calculate aspect-preserving scale
-    double scale = Math.min(panelWidth / svgWidth, panelHeight / svgHeight);
+    double scale = Math.min(panelWidth / svgWidth, panelHeight / svgHeight)
 
     // Center the SVG
     double xOffset = (panelWidth - (svgWidth * scale)) / 2
