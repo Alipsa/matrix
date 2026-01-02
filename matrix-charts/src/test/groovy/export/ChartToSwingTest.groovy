@@ -110,9 +110,9 @@ class ChartToSwingTest {
 
   @Test
   void testExportWithInvalidSvg() {
-    PrintStream originalErr = System.err;
+    PrintStream originalErr = System.err
     // Redirect stderr to "nowhere"
-    System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+    System.setErr(new PrintStream(OutputStream.nullOutputStream()))
     try {
       Exception exception = assertThrows(IllegalArgumentException.class, {
         ChartToSwing.export("This is not valid SVG content")
@@ -120,7 +120,7 @@ class ChartToSwingTest {
       // The exception will be thrown by SvgPanel constructor when it fails to load
       assertTrue(exception.getMessage().contains("Failed to load SVG content"))
     } finally {
-      System.setErr(originalErr);
+      System.setErr(originalErr)
     }
   }
 }
