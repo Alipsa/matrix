@@ -17,8 +17,8 @@ class ChartToPng {
   /**
    * Export an SVG chart as a PNG image file.
    *
-   * @param svgChart the SVG content as a String
-   * @param targetFile the file where the PNG image will be written
+   * @param svgChart the SVG content as a {@link String}
+   * @param targetFile the {@link File} where the PNG image will be written
    * @throws IOException if an error occurs during file writing
    * @throws IllegalArgumentException if svgChart is null or empty, or targetFile is null, or if the SVG document is invalid
    */
@@ -51,10 +51,10 @@ class ChartToPng {
   }
 
   /**
-   * Export an Svg chart as a PNG image file.
+   * Export an {@link Svg} chart as a PNG image file.
    *
-   * @param svgChart the Svg object containing the chart
-   * @param targetFile the file where the PNG image will be written
+   * @param svgChart the {@link Svg} object containing the chart
+   * @param targetFile the {@link File} where the PNG image will be written
    * @throws IOException if an error occurs during file writing
    * @throws IllegalArgumentException if svgChart or targetFile is null
    */
@@ -69,10 +69,10 @@ class ChartToPng {
   }
 
   /**
-   * Export a GgChart as a PNG image file.
+   * Export a {@link GgChart} as a PNG image file.
    *
-   * @param chart the GgChart object to export
-   * @param targetFile the file where the PNG image will be written
+   * @param chart the {@link GgChart} object to export
+   * @param targetFile the {@link File} where the PNG image will be written
    * @throws IOException if an error occurs during file writing
    * @throws IllegalArgumentException if chart or targetFile is null
    */
