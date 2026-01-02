@@ -18,6 +18,9 @@ class ChartToPng {
     if (svgChart == null || svgChart.isEmpty()) {
       throw new IllegalArgumentException("Invalid SVG content, cannot be null or empty")
     }
+    if (targetFile == null) {
+      throw new IllegalArgumentException("targetFile cannot be null")
+    }
     SVGLoader loader = new SVGLoader()
     ByteArrayInputStream svgStream = new ByteArrayInputStream(svgChart.getBytes(StandardCharsets.UTF_8))
     SVGDocument svgDocument = loader.load(svgStream, null, LoaderContext.createDefault())
@@ -43,12 +46,18 @@ class ChartToPng {
     if (svgChart == null) {
       throw new IllegalArgumentException("svgChart cannot be null")
     }
+    if (targetFile == null) {
+      throw new IllegalArgumentException("targetFile cannot be null")
+    }
     export(svgChart.toXml(), targetFile)
   }
 
   static void export(GgChart chart, File targetFile) throws IOException  {
     if (chart == null) {
       throw new IllegalArgumentException("chart cannot be null")
+    }
+    if (targetFile == null) {
+      throw new IllegalArgumentException("targetFile cannot be null")
     }
     export(chart.render().toXml(), targetFile)
   }
