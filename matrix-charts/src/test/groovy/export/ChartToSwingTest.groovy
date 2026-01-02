@@ -2,6 +2,7 @@ package export
 
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgReader
 import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.datasets.Dataset
@@ -34,8 +35,7 @@ class ChartToSwingTest {
   @Test
   void testExportFromSvg() {
     // Create an Svg object
-    Svg svg = new Svg()
-    svg.append("""<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+    Svg svg = SvgReader.parse("""<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
       <rect x="10" y="10" width="180" height="130" fill="red" />
     </svg>""")
     
@@ -95,7 +95,7 @@ class ChartToSwingTest {
     Exception exception = assertThrows(IllegalArgumentException.class, {
       ChartToSwing.export(chart)
     })
-    assertEquals("chart must not be null", exception.getMessage())
+    assertEquals("svgChart must not be null", exception.getMessage())
   }
 
   @Test
@@ -110,11 +110,17 @@ class ChartToSwingTest {
 
   @Test
   void testExportWithInvalidSvg() {
-    String invalidSvgContent = "This is not valid SVG content"
-    Exception exception = assertThrows(IllegalArgumentException.class, {
-      ChartToSwing.export(invalidSvgContent)
-    })
-    // The exception will be thrown by SvgPanel constructor when it fails to load
-    assertTrue(exception.getMessage().contains("Failed to load SVG content"))
+    PrintStream originalErr = System.err;
+    // Redirect stderr to "nowhere"
+    System.setErr(new PrintStream(OutputStream.nullOutputStream()));
+    try {
+      Exception exception = assertThrows(IllegalArgumentException.class, {
+        ChartToSwing.export("This is not valid SVG content")
+      })
+      // The exception will be thrown by SvgPanel constructor when it fails to load
+      assertTrue(exception.getMessage().contains("Failed to load SVG content"))
+    } finally {
+      System.setErr(originalErr);
+    }
   }
 }

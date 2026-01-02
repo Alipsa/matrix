@@ -42,10 +42,26 @@ class ChartToSwing {
    * @param chart the {@link GgChart} to render as SVG
    * @return a {@link SvgPanel} displaying the rendered chart
    */
-  static SvgPanel export(GgChart chart) {
-    if (chart == null) {
-      throw new IllegalArgumentException("chart must not be null")
+  static SvgPanel export(GgChart svgChart) {
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart must not be null")
     }
-    export(chart.render().toXml())
+    export(svgChart.render().toXml())
+  }
+
+  static SvgPanel export(Object svgChart) {
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart must not be null")
+    }
+    if (svgChart instanceof CharSequence) {
+      return export(String.valueOf(svgChart))
+    }
+    if (svgChart instanceof Svg) {
+      return export((Svg) svgChart)
+    }
+    if (svgChart instanceof GgChart) {
+      return export((GgChart) svgChart)
+    }
+    throw new IllegalArgumentException("Unsupported chart type: " + svgChart.getClass().getName())
   }
 }

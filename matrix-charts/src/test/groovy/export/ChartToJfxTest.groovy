@@ -19,20 +19,22 @@ class ChartToJfxTest {
     </svg>"""
     
     SVGImage svgImage = ChartToJfx.export(svgContent)
-    
     assertNotNull(svgImage, "SVGImage should not be null")
-    assertNotNull(svgImage.getSVGDocument(), "SVG document should not be null")
+    assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
   }
 
   @Test
   void testExportFromSvg() {
     Svg svg = new Svg()
-    svg.rect(width: 200, height: 100, style: 'fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,0)')
+    svg.addRect()
+    .width(200)
+    .height(100)
+    .style( 'fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,0)')
     
     SVGImage svgImage = ChartToJfx.export(svg)
     
     assertNotNull(svgImage, "SVGImage should not be null")
-    assertNotNull(svgImage.getSVGDocument(), "SVG document should not be null")
+    assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
   }
 
   @Test
@@ -46,7 +48,7 @@ class ChartToJfxTest {
     SVGImage svgImage = ChartToJfx.export(chart)
     
     assertNotNull(svgImage, "SVGImage should not be null")
-    assertNotNull(svgImage.getSVGDocument(), "SVG document should not be null")
+    assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
   }
 
   @Test
@@ -59,9 +61,7 @@ class ChartToJfxTest {
 
   @Test
   void testExportWithNullSvg() {
-    // The export(Svg) method currently doesn't validate null, so it will throw NullPointerException
-    // when calling chart.toXml() on null
-    Exception exception = assertThrows(NullPointerException.class, {
+    Exception exception = assertThrows(IllegalArgumentException.class, {
       ChartToJfx.export((Svg) null)
     })
     assertNotNull(exception)
