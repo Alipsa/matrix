@@ -2,7 +2,9 @@ package gg
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.gg.aes.Factor
 
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -108,10 +110,36 @@ class GgPlotTest {
     }
 
     @Test
+    void testFactorConstant() {
+        def data = Matrix.builder()
+            .columnNames(['class'])
+            .rows([['a'], ['b'], ['a']])
+            .build()
+
+        def aesSpec = aes(factor(1), fill: 'class')
+        assertTrue(aesSpec.x instanceof Factor)
+
+        def chart = ggplot(data, aesSpec) + geom_bar()
+        Svg svg = chart.render()
+        assertNotNull(svg)
+        File outputFile = new File('build/factor_constant_test.svg')
+        write(svg, outputFile)
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<rect'), "Should render bars for factor(1)")
+    }
+
+    @Test
     void testPieChart() {
-        ggplot(mtcars, aes(x:"", y:"mpg", fill:"cyl")) \
-            + geom_bar(stat:"identity", width:1) \
+        def chart = ggplot(mtcars, aes(factor(1), fill: 'cyl')) \
+            + geom_bar(width:1) \
             + coord_polar(theta: "y", start:0)
+        assertTrue(chart.coord instanceof se.alipsa.matrix.gg.coord.CoordPolar)
+        Svg svg = chart.render()
+        assertNotNull(svg)
+        File outputFile = new File('build/pie_chart_test.svg')
+        write(svg, outputFile)
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<path'), "Pie chart should render arc paths")
 
         //mtcars %>%
         //dplyr::group_by(cyl) %>%

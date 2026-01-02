@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.coord
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import java.util.Locale
 
 /**
  * Polar coordinate system for creating pie charts, rose diagrams, and other circular plots.
@@ -230,19 +231,34 @@ class CoordPolar extends Coord {
 
     if (innerRadius > 0) {
       // Donut slice
-      path << "M ${x1 as int} ${y1 as int}"
-      path << " A ${outerRadius as int} ${outerRadius as int} 0 ${largeArc} ${sweepFlag} ${x2 as int} ${y2 as int}"
-      path << " L ${x3 as int} ${y3 as int}"
-      path << " A ${innerRadius as int} ${innerRadius as int} 0 ${largeArc} ${1 - sweepFlag} ${x4 as int} ${y4 as int}"
+      path << "M ${formatNumber(x1)} ${formatNumber(y1)}"
+      path << " A ${formatNumber(outerRadius)} ${formatNumber(outerRadius)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
+      path << " L ${formatNumber(x3)} ${formatNumber(y3)}"
+      path << " A ${formatNumber(innerRadius)} ${formatNumber(innerRadius)} 0 ${largeArc} ${1 - sweepFlag} ${formatNumber(x4)} ${formatNumber(y4)}"
       path << " Z"
     } else {
       // Pie slice
-      path << "M ${cx as int} ${cy as int}"
-      path << " L ${x1 as int} ${y1 as int}"
-      path << " A ${outerRadius as int} ${outerRadius as int} 0 ${largeArc} ${sweepFlag} ${x2 as int} ${y2 as int}"
+      path << "M ${formatNumber(cx)} ${formatNumber(cy)}"
+      path << " L ${formatNumber(x1)} ${formatNumber(y1)}"
+      path << " A ${formatNumber(outerRadius)} ${formatNumber(outerRadius)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
       path << " Z"
     }
 
     return path.toString()
+  }
+
+  /**
+   * Format numeric SVG coordinates with fixed precision.
+   * <p>
+   * Uses fixed precision to ensure consistent decimal representation in SVG path data,
+   * avoiding floating-point artifacts and reducing file size. Three decimal places
+   * provides sub-pixel accuracy (0.001px) which is sufficient for typical display
+   * resolutions while keeping coordinates compact.
+   *
+   * @param value numeric value to format
+   * @return formatted string with 3 decimal places
+   */
+  private static String formatNumber(double value) {
+    return String.format(Locale.US, "%.3f", value)
   }
 }

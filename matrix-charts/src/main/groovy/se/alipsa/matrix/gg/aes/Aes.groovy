@@ -2,7 +2,6 @@ package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
-
 /**
  * Aesthetic mappings for ggplot charts.
  * Maps data columns to visual properties.
@@ -151,6 +150,30 @@ class Aes {
   }
 
   /**
+   * Check if an aesthetic is a factor wrapper.
+   *
+   * @param aesthetic the aesthetic name (e.g., 'x', 'fill')
+   * @return true if the aesthetic is backed by a Factor wrapper
+   */
+  @CompileDynamic
+  boolean isFactor(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof Factor
+  }
+
+  /**
+   * Get the Factor wrapper for an aesthetic.
+   *
+   * @param aesthetic the aesthetic name (e.g., 'x', 'fill')
+   * @return the Factor instance or null if not a factor mapping
+   */
+  @CompileDynamic
+  Factor getFactor(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof Factor ? (Factor) value : null
+  }
+
+  /**
    * Get the Expression wrapper for an aesthetic.
    * Wraps raw Closures in Expression for convenience.
    */
@@ -174,6 +197,7 @@ class Aes {
     if (value instanceof Identity) return null
     if (value instanceof AfterStat) return null
     if (value instanceof Expression) return null
+    if (value instanceof Factor) return null
     if (value instanceof Closure) return null
     return value.toString()
   }

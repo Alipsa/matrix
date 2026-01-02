@@ -174,4 +174,48 @@ class GgStatTest {
     assertEquals(['x', 'y'], result.columnNames())
     assertTrue(result.rowCount() > 0)
   }
+
+  @Test
+  void testCountWithFillGrouping() {
+    def data = Matrix.builder()
+        .columnNames(['class', 'drv'])
+        .rows([
+            ['compact', 'f'],
+            ['compact', 'f'],
+            ['compact', 'r'],
+            ['suv', 'f'],
+            ['suv', '4']
+        ])
+        .build()
+
+    def aes = new Aes(x: 'class', fill: 'drv')
+    def result = GgStat.count(data, aes)
+
+    assertTrue(result.columnNames().containsAll(['class', 'drv', 'count', 'percent']))
+    assertEquals(4, result.rowCount())
+
+    Map<String, Integer> countByKey = [:]
+    Map<String, BigDecimal> percentByKey = [:]
+    List<Object> classes = result['class'] as List<Object>
+    List<Object> drvs = result['drv'] as List<Object>
+    List<Integer> counts = result['count'] as List<Integer>
+    List<BigDecimal> percents = result['percent'] as List<BigDecimal>
+    for (int i = 0; i < result.rowCount(); i++) {
+      String key = "${classes[i]}|${drvs[i]}"
+      countByKey[key] = counts[i]
+      percentByKey[key] = percents[i]
+    }
+
+    BigDecimal sixtySix = new BigDecimal('66.67')
+    BigDecimal thirtyThree = new BigDecimal('33.33')
+    BigDecimal fifty = new BigDecimal('50.00')
+    assertEquals(2, countByKey['compact|f'])
+    assertEquals(1, countByKey['compact|r'])
+    assertEquals(1, countByKey['suv|f'])
+    assertEquals(1, countByKey['suv|4'])
+    assertEquals(sixtySix, percentByKey['compact|f'])
+    assertEquals(thirtyThree, percentByKey['compact|r'])
+    assertEquals(fifty, percentByKey['suv|f'])
+    assertEquals(fifty, percentByKey['suv|4'])
+  }
 }

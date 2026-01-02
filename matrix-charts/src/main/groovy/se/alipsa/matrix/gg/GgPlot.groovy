@@ -24,6 +24,7 @@ import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.Expression
+import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
@@ -66,6 +67,11 @@ import se.alipsa.matrix.gg.theme.Themes
 @CompileStatic
 class GgPlot {
 
+  /** Constants for convenience when converting R code */
+  static final def NULL = null
+  static final boolean TRUE = true
+  static final boolean FALSE = false
+
   // ============ Core functions ============
 
   static GgChart ggplot(Matrix data, Aes aes) {
@@ -85,6 +91,38 @@ class GgPlot {
     return new Aes(Arrays.asList(colNames))
   }
 
+  /**
+   * Create aesthetic mappings with positional x.
+   * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
+   *
+   * Example: aes('cty')
+   *
+   * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @return a new Aes instance
+   */
+  static Aes aes(Object x) {
+    Aes aes = new Aes()
+    aes.x = x
+    return aes
+  }
+
+  /**
+   * Create aesthetic mappings with positional x and y.
+   * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
+   *
+   * Example: aes('cty', 'hwy')
+   *
+   * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @param y y mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @return a new Aes instance
+   */
+  static Aes aes(Object x, Object y) {
+    Aes aes = new Aes()
+    aes.x = x
+    aes.y = y
+    return aes
+  }
+
   static Aes aes(List<String> colNames) {
     return new Aes(colNames)
   }
@@ -94,11 +132,37 @@ class GgPlot {
   }
 
   /**
-   * Create aesthetic mappings with positional x, y and additional named parameters.
-   * Example: aes('cty', 'hwy', colour: 'class')
+   * Create aesthetic mappings with positional x and additional named parameters.
+   * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
+   *
+   * Example: aes([colour: 'class'], 'cty')
+   *
+   * @param params named aesthetic mappings (e.g., colour, fill, size)
+   * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @return a new Aes instance
    */
-  static Aes aes(Map params, String x, String y) {
-    return new Aes(params, x, y)
+  static Aes aes(Map params, Object x) {
+    Aes aes = new Aes(params)
+    aes.x = x
+    return aes
+  }
+
+  /**
+   * Create aesthetic mappings with positional x, y and additional named parameters.
+   * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
+   *
+   * Example: aes([colour: 'class'], 'cty', 'hwy')
+   *
+   * @param params named aesthetic mappings (e.g., colour, fill, size)
+   * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @param y y mapping (column name, Factor, Identity, AfterStat, or closure)
+   * @return a new Aes instance
+   */
+  static Aes aes(Map params, Object x, Object y) {
+    Aes aes = new Aes(params)
+    aes.x = x
+    aes.y = y
+    return aes
   }
 
   /**
@@ -147,6 +211,22 @@ class GgPlot {
     return new Expression(closure, name)
   }
 
+  /**
+   * Factor wrapper for categorical values in aesthetic mappings.
+   * Accepts constants, column names, or lists of values aligned with the data rows.
+   *
+   * Examples:
+   * - factor(1)
+   * - factor('class')
+   * - factor(mtcars['cyl'])
+   *
+   * @param value constant, column name, or list of values
+   * @return a Factor wrapper
+   */
+  static Factor factor(Object value) {
+    return new Factor(value)
+  }
+
   // ============ Labels ============
 
   /**
@@ -157,8 +237,14 @@ class GgPlot {
     if (params.title) label.title = params.title
     if (params.subtitle) label.subTitle = params.subtitle
     if (params.caption) label.caption = params.caption
-    if (params.x) label.x = params.x
-    if (params.y) label.y = params.y
+    if (params.containsKey('x')) {
+      label.x = params.x?.toString()
+      label.xSet = true
+    }
+    if (params.containsKey('y')) {
+      label.y = params.y?.toString()
+      label.ySet = true
+    }
     if (params.colour || params.color) label.legendTitle = params.colour ?: params.color
     if (params.fill) label.legendTitle = params.fill
     return label
@@ -1032,8 +1118,25 @@ class GgPlot {
 
   static class As {
 
-    static List factor(List column) {
+    /**
+     * Convert a column list to factor values (legacy helper).
+     * For ggplot mappings, prefer the top-level factor(...) helper.
+     *
+     * @param column list of values
+     * @return list of string values
+     */
+    static List<String> factor(List column) {
       return ListConverter.toStrings(column)
+    }
+
+    /**
+     * Convert a column list to a Factor wrapper for ggplot aesthetics.
+     *
+     * @param column list of values
+     * @return Factor wrapper
+     */
+    static Factor factorWrap(List column) {
+      return new Factor(ListConverter.toStrings(column))
     }
   }
 }

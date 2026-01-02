@@ -59,6 +59,18 @@ class ScaleColorManualTest {
   }
 
   @Test
+  void testDefaultPaletteExpandsWithoutCycling() {
+    ScaleColorManual scale = new ScaleColorManual()
+    List<String> levels = (1..12).collect { "L${it}" }
+    scale.train(levels)
+
+    List<String> colors = levels.collect { scale.transform(it) as String }
+
+    assertEquals(12, colors.size())
+    assertEquals(12, colors.toSet().size())
+  }
+
+  @Test
   void testTransformWithUnknownValueReturnsNaColor() {
     ScaleColorManual scale = new ScaleColorManual(values: ['red', 'blue'], naValue: 'gray')
     scale.train(['A', 'B'])
@@ -237,5 +249,49 @@ class ScaleColorManualTest {
 
     assertEquals('default', scale.transform('anything'))
     assertEquals(0, scale.getLevelCount())
+  }
+
+  @Test
+  void testGenerateHuePaletteSizes() {
+    def method = ScaleColorManual.class.getDeclaredMethod('generateHuePalette', int)
+    method.accessible = true
+
+    List<String> empty = method.invoke(null, 0) as List<String>
+    List<String> one = method.invoke(null, 1) as List<String>
+    List<String> seven = method.invoke(null, 7) as List<String>
+    List<String> twelve = method.invoke(null, 12) as List<String>
+    List<String> hundred = method.invoke(null, 100) as List<String>
+
+    assertTrue(empty.isEmpty())
+    assertEquals(1, one.size())
+    assertEquals(7, seven.size())
+    assertEquals(12, twelve.size())
+    assertEquals(100, hundred.size())
+
+    assertTrue(one[0].matches(/#[0-9A-F]{6}/))
+    assertTrue(seven.every { it.matches(/#[0-9A-F]{6}/) })
+  }
+
+  @Test
+  void testHclToHexLuminanceZero() {
+    def method = ScaleColorManual.class.getDeclaredMethod('hclToHex', double, double, double)
+    method.accessible = true
+
+    String color = method.invoke(null, 0.0d, 100.0d, 0.0d) as String
+    assertEquals('#000000', color)
+  }
+
+  @Test
+  void testGammaCorrectThreshold() {
+    def method = ScaleColorManual.class.getDeclaredMethod('gammaCorrect', double)
+    method.accessible = true
+
+    double input = 0.0031308d
+    double expected = 12.92d * input
+    double actual = method.invoke(null, input) as double
+    assertEquals(expected, actual, 1.0e-10d)
+
+    double one = method.invoke(null, 1.0d) as double
+    assertEquals(1.0d, one, 1.0e-9d)
   }
 }

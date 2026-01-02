@@ -10,6 +10,7 @@ import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression
 import se.alipsa.matrix.stats.regression.RegressionUtils
 
+import java.math.RoundingMode
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -42,6 +43,33 @@ class GgStat {
     if (xCol == null) {
       throw new IllegalArgumentException("stat_count requires x aesthetic")
     }
+    String fillCol = aes.fillColName
+    if (fillCol != null && data.columnNames().contains(fillCol)) {
+      Map<List<Object>, Integer> counts = new LinkedHashMap<>()
+      data.each { row ->
+        Object xVal = row[xCol]
+        Object fillVal = row[fillCol]
+        List<Object> key = [xVal, fillVal]
+        counts[key] = (counts[key] ?: 0) + 1
+      }
+      Map<Object, Integer> totalsByX = [:].withDefault { 0 }
+      counts.each { key, count ->
+        totalsByX[key[0]] = totalsByX[key[0]] + count
+      }
+      List<Map<String, Object>> rows = []
+      counts.each { key, count ->
+        int totalForX = totalsByX[key[0]] as int
+        BigDecimal percent = totalForX == 0 ? BigDecimal.ZERO : (count * 100.0 / totalForX).setScale(2, RoundingMode.HALF_EVEN)
+        rows << [
+            (xCol): key[0],
+            (fillCol): key[1],
+            count: count,
+            percent: percent
+        ]
+      }
+      return Matrix.builder().mapList(rows).build()
+    }
+
     // Delegate to matrix-core Stat.frequency
     Matrix freq = Stat.frequency(data[xCol])
     // Rename columns to match ggplot2 computed variables:

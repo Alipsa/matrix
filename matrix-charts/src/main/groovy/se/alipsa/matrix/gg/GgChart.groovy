@@ -23,6 +23,8 @@ import se.alipsa.matrix.gg.render.GgRenderer
 import se.alipsa.matrix.gg.stat.Stat
 import se.alipsa.matrix.gg.theme.Theme
 
+import java.util.Locale
+
 /**
  * Main chart container for Grammar of Graphics plots.
  * Collects layers, scales, coordinates, themes, and facets,
@@ -30,11 +32,6 @@ import se.alipsa.matrix.gg.theme.Theme
  */
 @CompileStatic
 class GgChart {
-
-  /** Constants for convenience when converting R code */
-  static final def NULL = null
-  static final boolean TRUE = true
-  static final boolean FALSE = false
 
   /** Base dataset for the chart */
   Matrix data
@@ -87,11 +84,18 @@ class GgChart {
     // Extract stat-related params from geom params
     Map statParams = [:]
     Aes layerAes = null
+    StatType statOverride = geom.defaultStat
     if (geom.params) {
       // Copy params that are relevant for stats
       STAT_PARAM_KEYS.each { key ->
         if (geom.params.containsKey(key)) {
           statParams[key] = geom.params[key]
+        }
+      }
+      if (geom.params.containsKey('stat')) {
+        StatType parsed = parseStatType(geom.params['stat'])
+        if (parsed != null) {
+          statOverride = parsed
         }
       }
       // Extract mapping parameter as layer aes
@@ -105,7 +109,7 @@ class GgChart {
 
     Layer layer = new Layer(
         geom: geom,
-        stat: geom.defaultStat,
+        stat: statOverride,
         position: geom.defaultPosition,
         aes: layerAes,  // Layer-specific aesthetics from mapping parameter
         params: geom.params ?: [:],
@@ -113,6 +117,59 @@ class GgChart {
     )
     layers << layer
     return this
+  }
+
+  /**
+   * Parse a stat specification into a StatType enum value.
+   * <p>
+   * This method accepts several input types:
+   * <ul>
+   *   <li>A {@link StatType} enum value (returned as-is)</li>
+   *   <li>A {@link Stat} object (extracts its statType property)</li>
+   *   <li>A string or CharSequence (case-insensitive matching to known stat names)</li>
+   * </ul>
+   * Supported stat names are: 'identity', 'count', 'bin', 'boxplot', 'smooth',
+   * 'summary', 'density', 'bin2d', and 'contour'.
+   *
+   * @param stat the stat specification to parse (may be null, StatType, Stat, or String)
+   * @return the corresponding StatType, or null if the input is null
+   * @throws IllegalArgumentException if the stat string is not recognized or the type is unsupported
+   */
+  private static StatType parseStatType(Object stat) {
+    if (stat == null) {
+      return null
+    }
+    if (stat instanceof StatType) {
+      return stat as StatType
+    }
+    if (stat instanceof Stat) {
+      return (stat as Stat).statType
+    }
+    if (stat instanceof CharSequence) {
+      switch (stat.toString().trim().toLowerCase(Locale.ROOT)) {
+        case 'identity':
+          return StatType.IDENTITY
+        case 'count':
+          return StatType.COUNT
+        case 'bin':
+          return StatType.BIN
+        case 'boxplot':
+          return StatType.BOXPLOT
+        case 'smooth':
+          return StatType.SMOOTH
+        case 'summary':
+          return StatType.SUMMARY
+        case 'density':
+          return StatType.DENSITY
+        case 'bin2d':
+          return StatType.BIN2D
+        case 'contour':
+          return StatType.CONTOUR
+        default:
+          throw new IllegalArgumentException("Unsupported stat: ${stat}")
+      }
+    }
+    throw new IllegalArgumentException("Unsupported stat type: ${stat.getClass().name}")
   }
 
   /**
@@ -207,7 +264,25 @@ class GgChart {
    * Set labels (title, subtitle, axis labels, etc.)
    */
   GgChart plus(Label labels) {
-    this.labels = labels
+    if (labels == null) {
+      return this
+    }
+    if (this.labels == null) {
+      this.labels = labels
+      return this
+    }
+    if (labels.title) this.labels.title = labels.title
+    if (labels.subTitle) this.labels.subTitle = labels.subTitle
+    if (labels.caption) this.labels.caption = labels.caption
+    if (labels.legendTitle) this.labels.legendTitle = labels.legendTitle
+    if (labels.xSet) {
+      this.labels.x = labels.x
+      this.labels.xSet = true
+    }
+    if (labels.ySet) {
+      this.labels.y = labels.y
+      this.labels.ySet = true
+    }
     return this
   }
 

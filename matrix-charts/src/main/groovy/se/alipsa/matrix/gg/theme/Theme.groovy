@@ -111,10 +111,9 @@ class Theme implements Cloneable {
 
   /** Default color palette for discrete scales */
   List<String> discreteColors = [
-      '#F8766D', '#00BA38', '#619CFF',  // ggplot2 defaults
-      '#F564E3', '#00BFC4', '#B79F00',
-      '#DE8C00', '#7CAE00', '#00B4F0',
-      '#C77CFF'
+      '#F8766D', '#C49A00', '#53B400',
+      '#00C094', '#00B6EB', '#A58AFF',
+      '#FB61D7'
   ]
 
   /** Default gradient colors [low, high] */

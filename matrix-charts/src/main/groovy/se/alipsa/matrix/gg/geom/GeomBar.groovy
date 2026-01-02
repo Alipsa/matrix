@@ -4,10 +4,13 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
+import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 
@@ -36,6 +39,7 @@ class GeomBar extends Geom {
 
   GeomBar() {
     defaultStat = StatType.COUNT
+    defaultPosition = PositionType.STACK
     requiredAes = ['x']
     defaultAes = [fill: '#595959', alpha: 1.0] as Map<String, Object>
   }
@@ -54,6 +58,11 @@ class GeomBar extends Geom {
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
     if (data == null || data.rowCount() == 0) return
+
+    if (coord instanceof CoordPolar) {
+      renderPolar(group, data, aes, scales, coord as CoordPolar)
+      return
+    }
 
     String xCol = aes.xColName
     // After stat_count, y values are in 'count' column
@@ -84,13 +93,22 @@ class GeomBar extends Geom {
 
       // Transform coordinates
       def xCenter = xScale?.transform(xVal)
-      def yTop = yScale?.transform(yVal)
-      def yBottom = yScale?.transform(0)
+      def yTop
+      def yBottom
+      if (data.columnNames().contains('ymin') && data.columnNames().contains('ymax')) {
+        Number yMinVal = row['ymin'] as Number
+        Number yMaxVal = row['ymax'] as Number
+        yTop = yScale?.transform(yMaxVal)
+        yBottom = yScale?.transform(yMinVal)
+      } else {
+        yTop = yScale?.transform(yVal)
+        yBottom = yScale?.transform(0)
+      }
 
       if (xCenter == null || yTop == null || yBottom == null) return
 
       double xPx = (xCenter as double) - barWidth / 2
-      double yPx = yTop as double
+      double yPx = Math.min(yTop as double, yBottom as double)
       double heightPx = Math.abs((yBottom as double) - (yTop as double))
 
       // Determine fill color
@@ -150,13 +168,135 @@ class GeomBar extends Geom {
    */
   protected String getDefaultColor(Object value) {
     List<String> palette = [
-        '#F8766D', '#00BA38', '#619CFF',
-        '#F564E3', '#00BFC4', '#B79F00',
-        '#DE8C00', '#7CAE00', '#00B4F0',
-        '#C77CFF'
+        '#F8766D', '#C49A00', '#53B400',
+        '#00C094', '#00B6EB', '#A58AFF',
+        '#FB61D7'
     ]
 
     int index = Math.abs(value.hashCode()) % palette.size()
     return palette[index]
+  }
+
+  /**
+   * Render bars using polar coordinates (pie/donut charts).
+   * This path rendering is separate from the cartesian bar logic because it
+   * converts stacked bar segments into arc slices.
+   *
+   * <p><b>Algorithm for converting stacked bars to pie slices:</b></p>
+   * <ol>
+   *   <li>Groups data rows by x aesthetic (each x value becomes a concentric ring)</li>
+   *   <li>Calculates ring dimensions: outer rings for first x groups, inner for later ones</li>
+   *   <li>For each ring, converts y values to proportional arc angles (0 to 2π radians)</li>
+   *   <li>Creates SVG path arcs for each segment using polar coordinate transformations</li>
+   *   <li>Applies fill colors from the fill scale or default palette</li>
+   * </ol>
+   *
+   * <p><b>Ordering behavior:</b></p>
+   * <ul>
+   *   <li>Rows within each x group are sorted by fill scale levels (if fill is discrete)</li>
+   *   <li>When coord.theta == 'y', rows are reversed to match ggplot2's counterclockwise
+   *       legend order (legend top-to-bottom maps to chart counterclockwise)</li>
+   *   <li>Missing fill levels sort last (Integer.MAX_VALUE position)</li>
+   *   <li>Arc angles are calculated cumulatively, starting at 0 radians</li>
+   * </ul>
+   *
+   * @param group SVG group to render into
+   * @param data data matrix (after stat/position transforms)
+   * @param aes aesthetic mappings
+   * @param scales computed scales
+   * @param coord polar coordinate system
+   */
+  private void renderPolar(G group, Matrix data, Aes aes, Map<String, Scale> scales, CoordPolar coord) {
+    String xCol = aes.xColName
+    String yCol = data.columnNames().contains('count') ? 'count' : aes.yColName
+    String fillCol = aes.fillColName
+
+    Scale fillScale = scales['fill'] ?: scales['color']
+
+    Map<Object, List<Row>> groups = [:].withDefault { [] }
+    data.each { row ->
+      Object key = xCol != null ? row[xCol] : null
+      groups[key] << row
+    }
+
+    double outerRadius = coord.getMaxRadius() * 0.9
+    int groupCount = groups.size()
+
+    int idx = 0
+    for (Map.Entry<Object, List<Row>> entry : groups.entrySet()) {
+      List<Row> rows = new ArrayList<>(entry.value)
+      if (fillCol && fillScale instanceof ScaleDiscrete) {
+        List<Object> levels = (fillScale as ScaleDiscrete).levels
+        if (!levels.isEmpty()) {
+          Map<Object, Integer> levelIndex = [:]
+          levels.eachWithIndex { level, int pos ->
+            levelIndex[level] = pos
+          }
+          rows.sort { Row row ->
+            int pos = levelIndex.getOrDefault(row[fillCol], Integer.MAX_VALUE)
+            return pos < 0 ? Integer.MAX_VALUE : pos
+          }
+        }
+      }
+      if (coord.theta == 'y') {
+        // Match ggplot2 slice order: legend order appears counterclockwise
+        rows = rows.reverse()
+      }
+      double ringSize = groupCount > 0 ? (outerRadius / (double) groupCount) : outerRadius
+      double groupOuter = outerRadius - (idx * ringSize)
+      double groupInner = Math.max(0.0d, groupOuter - ringSize)
+      idx++
+
+      List<Double> values = rows.collect { row ->
+        if (row['ymin'] != null && row['ymax'] != null) {
+          return ((row['ymax'] as Number).doubleValue() - (row['ymin'] as Number).doubleValue())
+        }
+        if (yCol != null && row[yCol] instanceof Number) {
+          return (row[yCol] as Number).doubleValue()
+        }
+        return 0.0d
+      }
+      double total = values.sum(0.0d) as double
+      if (total <= 0.0d) {
+        continue
+      }
+
+      double current = 0.0d
+      rows.eachWithIndex { row, int rowIdx ->
+        double value = values[rowIdx]
+        if (value <= 0.0d) {
+          return
+        }
+        double startAngle = (current / total) * 2 * Math.PI
+        double endAngle = ((current + value) / total) * 2 * Math.PI
+        current += value
+
+        String sliceFill = this.fill
+        if (fillCol && row[fillCol] != null) {
+          if (fillScale) {
+            sliceFill = fillScale.transform(row[fillCol])?.toString() ?: this.fill
+          } else {
+            sliceFill = getDefaultColor(row[fillCol])
+          }
+        } else if (aes.fill instanceof Identity) {
+          sliceFill = (aes.fill as Identity).value.toString()
+        }
+        sliceFill = ColorUtil.normalizeColor(sliceFill) ?: sliceFill
+
+        def path = group.addPath()
+            .d(coord.createArcPath(startAngle, endAngle, groupInner, groupOuter))
+            .fill(sliceFill)
+        if (color != null) {
+          String strokeColor = ColorUtil.normalizeColor(color) ?: color
+          path.stroke(strokeColor)
+          path.addAttribute('stroke-width', linewidth)
+        } else {
+          path.stroke('none')
+        }
+        if (alpha < 1.0) {
+          path.addAttribute('fill-opacity', alpha)
+        }
+      }
+    }
   }
 }
