@@ -14,6 +14,14 @@ import java.nio.charset.StandardCharsets
 
 class ChartToPng {
 
+  /**
+   * Export an SVG chart as a PNG image file.
+   *
+   * @param svgChart the SVG content as a String
+   * @param targetFile the file where the PNG image will be written
+   * @throws IOException if an error occurs during file writing
+   * @throws IllegalArgumentException if svgChart is null or empty, or targetFile is null, or if the SVG document is invalid
+   */
   static void export(String svgChart, File targetFile) throws IOException {
     if (svgChart == null || svgChart.isEmpty()) {
       throw new IllegalArgumentException("Invalid SVG content, cannot be null or empty")
@@ -42,6 +50,14 @@ class ChartToPng {
     ImageIO.write(image, "png", targetFile)
   }
 
+  /**
+   * Export an Svg chart as a PNG image file.
+   *
+   * @param svgChart the Svg object containing the chart
+   * @param targetFile the file where the PNG image will be written
+   * @throws IOException if an error occurs during file writing
+   * @throws IllegalArgumentException if svgChart or targetFile is null
+   */
   static void export(Svg svgChart, File targetFile) throws IOException  {
     if (svgChart == null) {
       throw new IllegalArgumentException("svgChart cannot be null")
@@ -52,6 +68,14 @@ class ChartToPng {
     export(svgChart.toXml(), targetFile)
   }
 
+  /**
+   * Export a GgChart as a PNG image file.
+   *
+   * @param chart the GgChart object to export
+   * @param targetFile the file where the PNG image will be written
+   * @throws IOException if an error occurs during file writing
+   * @throws IllegalArgumentException if chart or targetFile is null
+   */
   static void export(GgChart chart, File targetFile) throws IOException  {
     if (chart == null) {
       throw new IllegalArgumentException("chart cannot be null")
