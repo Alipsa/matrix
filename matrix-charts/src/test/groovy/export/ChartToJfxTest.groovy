@@ -65,6 +65,7 @@ class ChartToJfxTest {
       ChartToJfx.export((Svg) null)
     })
     assertNotNull(exception)
+    assertEquals("chart must not be null", exception.getMessage())
   }
 
   @Test
