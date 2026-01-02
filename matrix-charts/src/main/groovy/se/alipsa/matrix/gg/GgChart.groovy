@@ -119,6 +119,22 @@ class GgChart {
     return this
   }
 
+  /**
+   * Parse a stat specification into a StatType enum value.
+   * <p>
+   * This method accepts several input types:
+   * <ul>
+   *   <li>A {@link StatType} enum value (returned as-is)</li>
+   *   <li>A {@link Stat} object (extracts its statType property)</li>
+   *   <li>A string or CharSequence (case-insensitive matching to known stat names)</li>
+   * </ul>
+   * Supported stat names are: 'identity', 'count', 'bin', 'boxplot', 'smooth',
+   * 'summary', 'density', 'bin2d', and 'contour'.
+   *
+   * @param stat the stat specification to parse (may be null, StatType, Stat, or String)
+   * @return the corresponding StatType, or null if the input is null
+   * @throws IllegalArgumentException if the stat string is not recognized or the type is unsupported
+   */
   private static StatType parseStatType(Object stat) {
     if (stat == null) {
       return null
