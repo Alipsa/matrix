@@ -31,13 +31,14 @@ class SvgPanel extends JPanel {
     )
     this.svgDocument = loader.load(stream, null, LoaderContext.createDefault())
 
-    if (svgDocument != null) {
-      setPreferredSize(new Dimension(
-          (int) svgDocument.size().width,
-          (int) svgDocument.size().height
-      ))
+    if (svgDocument == null) {
+      throw new IllegalArgumentException("Failed to load SVG content: loader returned null (malformed or unsupported SVG).")
     }
 
+    setPreferredSize(new Dimension(
+        (int) svgDocument.size().width,
+        (int) svgDocument.size().height
+    ))
     revalidate()
     repaint()
 
