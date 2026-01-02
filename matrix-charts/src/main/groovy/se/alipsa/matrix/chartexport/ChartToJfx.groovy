@@ -29,7 +29,10 @@ class ChartToJfx {
    * @throws RuntimeException if the SVG representation of the chart cannot be parsed or loaded
    */
   static SVGImage export(Svg chart) {
-    SVGLoader.load(chart.toXml())
+    if (chart == null) {
+      throw new IllegalArgumentException("chart must not be null")
+    }
+    return SVGLoader.load(chart.toXml())
   }
 
   /**
