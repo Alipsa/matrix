@@ -2,7 +2,6 @@ package se.alipsa.matrix.gg
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
@@ -20,10 +19,8 @@ import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.render.GgRenderer
-import se.alipsa.matrix.gg.stat.Stat
+import se.alipsa.matrix.gg.stat.Stats
 import se.alipsa.matrix.gg.theme.Theme
-
-import java.util.Locale
 
 /**
  * Main chart container for Grammar of Graphics plots.
@@ -125,7 +122,7 @@ class GgChart {
    * This method accepts several input types:
    * <ul>
    *   <li>A {@link StatType} enum value (returned as-is)</li>
-   *   <li>A {@link Stat} object (extracts its statType property)</li>
+   *   <li>A {@link Stats} object (extracts its statType property)</li>
    *   <li>A string or CharSequence (case-insensitive matching to known stat names)</li>
    * </ul>
    * Supported stat names are: 'identity', 'count', 'bin', 'boxplot', 'smooth',
@@ -142,8 +139,8 @@ class GgChart {
     if (stat instanceof StatType) {
       return stat as StatType
     }
-    if (stat instanceof Stat) {
-      return (stat as Stat).statType
+    if (stat instanceof Stats) {
+      return (stat as Stats).statType
     }
     if (stat instanceof CharSequence) {
       switch (stat.toString().trim().toLowerCase(Locale.ROOT)) {
@@ -212,8 +209,8 @@ class GgChart {
         plus(part as Label)
         continue
       }
-      if (part instanceof Stat) {
-        plus(part as Stat)
+      if (part instanceof Stats) {
+        plus(part as Stats)
         continue
       }
       throw new IllegalArgumentException("Unsupported gg component: ${part.getClass().name}")
@@ -291,7 +288,7 @@ class GgChart {
    * Creates a new layer with the stat applied.
    * Note: In ggplot2, stats can create their own geom (e.g., stat_summary with geom: "line")
    */
-  GgChart plus(Stat stat) {
+  GgChart plus(Stats stat) {
     if (stat == null) {
       return this
     }

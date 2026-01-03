@@ -2,9 +2,9 @@ package se.alipsa.matrix.gg.stat
 
 import se.alipsa.matrix.gg.layer.StatType
 
-class StatCount extends Stat {
+class StatsCount extends Stats {
 
-  StatCount(Map params = [:]) {
+  StatsCount(Map params = [:]) {
     super(StatType.COUNT, params)
   }
 }

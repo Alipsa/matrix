@@ -2,9 +2,9 @@ package se.alipsa.matrix.gg.stat
 
 import se.alipsa.matrix.gg.layer.StatType
 
-class StatBoxplot extends Stat {
+class StatsBoxplot extends Stats {
 
-  StatBoxplot(Map params = [:]) {
+  StatsBoxplot(Map params = [:]) {
     super(StatType.BOXPLOT, params)
   }
 }

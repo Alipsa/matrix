@@ -4,12 +4,12 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.gg.layer.StatType
 
 @CompileStatic
-class Stat {
+class Stats {
 
   final StatType statType
   final Map params
 
-  Stat(StatType statType, Map params = [:]) {
+  Stats(StatType statType, Map params = [:]) {
     this.statType = statType
     this.params = params ?: [:]
   }

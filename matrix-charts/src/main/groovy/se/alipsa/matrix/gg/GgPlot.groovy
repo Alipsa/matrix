@@ -32,7 +32,6 @@ import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
-import se.alipsa.matrix.gg.facet.FormulaParser
 import se.alipsa.matrix.gg.geom.GeomAbline
 import se.alipsa.matrix.gg.geom.GeomArea
 import se.alipsa.matrix.gg.geom.GeomBar
@@ -48,12 +47,12 @@ import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.scale.ScaleYDiscrete
-import se.alipsa.matrix.gg.stat.StatBin2d
-import se.alipsa.matrix.gg.stat.StatBoxplot
-import se.alipsa.matrix.gg.stat.StatContour
-import se.alipsa.matrix.gg.stat.StatContourFilled
-import se.alipsa.matrix.gg.stat.StatCount
-import se.alipsa.matrix.gg.stat.StatSum
+import se.alipsa.matrix.gg.stat.StatsBin2D
+import se.alipsa.matrix.gg.stat.StatsBoxplot
+import se.alipsa.matrix.gg.stat.StatsContour
+import se.alipsa.matrix.gg.stat.StatsContourFilled
+import se.alipsa.matrix.gg.stat.StatsCount
+import se.alipsa.matrix.gg.stat.StatsSum
 import se.alipsa.matrix.gg.theme.Theme
 import se.alipsa.matrix.gg.theme.ElementBlank
 import se.alipsa.matrix.gg.theme.ElementLine
@@ -962,28 +961,28 @@ class GgPlot {
     return new ScaleColorGradient(params + [aesthetic: 'fill'])
   }
 
-  static StatBin2d stat_bin_2d() {
-    return new StatBin2d()
+  static StatsBin2D stat_bin_2d() {
+    return new StatsBin2D()
   }
 
-  static StatBoxplot stat_boxplot() {
-    return new StatBoxplot()
+  static StatsBoxplot stat_boxplot() {
+    return new StatsBoxplot()
   }
 
-  static StatContour stat_contour() {
-    return new StatContour()
+  static StatsContour stat_contour() {
+    return new StatsContour()
   }
 
-  static StatContourFilled stat_contour_filled() {
-    return new StatContourFilled()
+  static StatsContourFilled stat_contour_filled() {
+    return new StatsContourFilled()
   }
 
-  static StatCount stat_count() {
-    return new StatCount()
+  static StatsCount stat_count() {
+    return new StatsCount()
   }
 
-  static StatSum stat_summary(Map params) {
-    return new StatSum(params)
+  static StatsSum stat_summary(Map params) {
+    return new StatsSum(params)
   }
 
   static class As {

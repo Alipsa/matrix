@@ -4,9 +4,9 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.gg.layer.StatType
 
 @CompileStatic
-class StatBin2d extends Stat {
+class StatsBin2D extends Stats {
 
-  StatBin2d(Map params = [:]) {
+  StatsBin2D(Map params = [:]) {
     super(StatType.BIN2D, params)
   }
 }

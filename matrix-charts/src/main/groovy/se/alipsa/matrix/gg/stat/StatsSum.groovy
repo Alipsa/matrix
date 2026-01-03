@@ -2,9 +2,9 @@ package se.alipsa.matrix.gg.stat
 
 import se.alipsa.matrix.gg.layer.StatType
 
-class StatSum extends Stat {
+class StatsSum extends Stats {
 
-  StatSum(Map params = [:]) {
+  StatsSum(Map params = [:]) {
     super(StatType.SUMMARY, params)
   }
 }
