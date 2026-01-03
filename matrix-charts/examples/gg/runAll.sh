@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fail_count=0
 total_run=0
 
-for file in "$SCRIPT_DIR"/*.groovy; do
+for file in "$SCRIPT_DIR"/*Example.groovy; do
   if [ -f "$file" ]; then
     ((total_run++))
     echo "Running: $(basename "$file")"
