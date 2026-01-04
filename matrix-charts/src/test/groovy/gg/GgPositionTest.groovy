@@ -223,7 +223,7 @@ class GgPositionTest {
     // After dodging, the two boxes should have different x positions
     double x1 = (result['x'][0] as Number).doubleValue()
     double x2 = (result['x'][1] as Number).doubleValue()
-    assertNotEquals(x1, x2, 0.001, "Overlapping intervals should be dodged to different positions")
+    assertTrue(Math.abs(x1 - x2) > 0.001, "Overlapping intervals should be dodged to different positions")
   }
 
   @Test

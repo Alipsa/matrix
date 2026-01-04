@@ -224,8 +224,8 @@ class GgStat {
       Number whiskerLow = inliers.isEmpty() ? values.first() : inliers.min()
       Number whiskerHigh = inliers.isEmpty() ? values.last() : inliers.max()
 
-      // Compute x position: if we have explicit group and continuous x, use median of x values
-      // ggplot2 positions boxes at the median x value within each group
+      // Compute x position: if we have explicit group and continuous x, use center of x range
+      // ggplot2 positions boxes at the center (mean of min and max) of the x range within each group
       def xPosition
       Number xMin = null
       Number xMax = null
@@ -235,7 +235,7 @@ class GgStat {
           xValues.sort()
           xMin = xValues.first()
           xMax = xValues.last()
-          // Use mean of the x range for positioning (ggplot2 behavior)
+          // Use center of the x range for positioning
           xPosition = ((xMin as double) + (xMax as double)) / 2.0d
         }
       } else {
@@ -850,6 +850,14 @@ class GgStat {
 
   /**
    * Compute quantiles using the same method as ggplot2 (type = 7).
+   * This is a linear interpolation method where the kth quantile is computed as:
+   * (1-g)*x[j] + g*x[j+1], where j = floor((n-1)*p + 1) and g is the fractional part.
+   *
+   * @param sortedValues a list of numeric values that MUST be sorted in ascending order.
+   *        The caller is responsible for sorting before calling this method.
+   *        Passing unsorted values will produce incorrect results.
+   * @param prob the probability for the quantile, between 0 and 1 (e.g., 0.25 for Q1, 0.5 for median)
+   * @return the computed quantile value, or null if the input list is null or empty
    */
   private static Number quantileType7(List<Number> sortedValues, double prob) {
     if (sortedValues == null || sortedValues.isEmpty()) {

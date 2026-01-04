@@ -117,8 +117,13 @@ class CutWidth {
     }
 
     double minX = boundaryValue + Math.floor((minVal - boundaryValue) / w) * w
-    // Ensure maxX includes the bin boundary after maxVal
-    double maxX = maxVal + w
+    // Compute maxX as the first bin boundary at or after maxVal (avoids creating excess bins)
+    double maxX = Math.ceil((maxVal - minX) / w) * w + minX
+    // For closed-left bins [a,b), values equal to a break point need a bin starting there,
+    // so we need one more break to close the final bin
+    if (!closedRight) {
+      maxX += w
+    }
 
     List<Double> breaks = []
     double current = minX

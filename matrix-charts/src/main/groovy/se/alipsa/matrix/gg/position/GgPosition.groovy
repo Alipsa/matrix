@@ -291,8 +291,8 @@ class GgPosition {
       nonzero << (!isMissing && xmin != null && xmax != null && xmin != xmax)
     }
 
-    start = fillMissingDownUp(start)
-    end = fillMissingDownUp(end)
+    start = forwardBackwardFill(start)
+    end = forwardBackwardFill(end)
 
     List<Double> endShift = new ArrayList<>(n)
     if (n > 0) {
@@ -375,8 +375,15 @@ class GgPosition {
     return null
   }
 
-  private static List<Double> fillMissingDownUp(List<Double> values) {
+  /**
+   * Fill missing (null) values using bidirectional imputation:
+   * first forward-fill (propagate last known value forward),
+   * then backward-fill (propagate next known value backward).
+   * This ensures all nulls are filled if there's at least one non-null value.
+   */
+  private static List<Double> forwardBackwardFill(List<Double> values) {
     List<Double> result = new ArrayList<>(values)
+    // Forward fill: propagate last known value forward
     Double last = null
     for (int i = 0; i < result.size(); i++) {
       Double value = result[i]
@@ -386,6 +393,7 @@ class GgPosition {
         result[i] = last
       }
     }
+    // Backward fill: propagate next known value backward (fills leading nulls)
     Double next = null
     for (int i = result.size() - 1; i >= 0; i--) {
       Double value = result[i]
