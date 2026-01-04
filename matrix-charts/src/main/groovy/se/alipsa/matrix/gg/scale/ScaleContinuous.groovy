@@ -26,8 +26,8 @@ class ScaleContinuous extends Scale {
   void train(List data) {
     if (data == null || data.isEmpty()) return
 
-    // Filter to numeric values
-    List<Number> numericData = data.findAll { it instanceof Number } as List<Number>
+    // Filter to numeric values (including numeric strings)
+    List<Double> numericData = data.findResults { coerceToNumber(it) } as List<Double>
 
     if (numericData.isEmpty()) return
 
@@ -56,10 +56,10 @@ class ScaleContinuous extends Scale {
 
   @Override
   Object transform(Object value) {
-    if (value == null) return null
-    if (!(value instanceof Number)) return null
+    Double numeric = coerceToNumber(value)
+    if (numeric == null) return null
 
-    double v = value as double
+    double v = numeric
     double dMin = computedDomain[0] as double
     double dMax = computedDomain[1] as double
     double rMin = range[0] as double
@@ -75,10 +75,10 @@ class ScaleContinuous extends Scale {
 
   @Override
   Object inverse(Object value) {
-    if (value == null) return null
-    if (!(value instanceof Number)) return null
+    Double numeric = coerceToNumber(value)
+    if (numeric == null) return null
 
-    double v = value as double
+    double v = numeric
     double dMin = computedDomain[0] as double
     double dMax = computedDomain[1] as double
     double rMin = range[0] as double
@@ -173,6 +173,26 @@ class ScaleContinuous extends Scale {
       return String.valueOf((long) d)
     }
     return String.format('%.2g', d)
+  }
+
+  private static Double coerceToNumber(Object value) {
+    if (value == null) return null
+    if (value instanceof Number) {
+      double v = (value as Number).doubleValue()
+      return Double.isNaN(v) ? null : v
+    }
+    if (value instanceof CharSequence) {
+      String s = value.toString().trim()
+      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN') || s.equalsIgnoreCase('null')) {
+        return null
+      }
+      try {
+        return Double.parseDouble(s)
+      } catch (NumberFormatException ignored) {
+        return null
+      }
+    }
+    return null
   }
 
   /**
