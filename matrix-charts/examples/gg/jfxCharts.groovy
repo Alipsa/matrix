@@ -1,6 +1,6 @@
 /*
  * JavaFX application that runs all *Example.groovy scripts and displays
- * the generated SVG charts in a tabbed interface.
+ * the generated SVG charts in a list/detail viewer.
  */
 @GrabConfig(systemClassLoader=true)
 @Grab('se.alipsa.matrix:matrix-core:3.5.1-SNAPSHOT')
@@ -18,15 +18,15 @@ import javafx.geometry.Insets
 import javafx.scene.Node
 import javafx.scene.Scene
 import javafx.scene.control.Label
+import javafx.scene.control.ListCell
+import javafx.scene.control.ListView
 import javafx.scene.control.ScrollPane
-import javafx.scene.control.ToggleButton
-import javafx.scene.control.ToggleGroup
 import javafx.scene.layout.BorderPane
-import javafx.scene.layout.FlowPane
 import javafx.scene.layout.StackPane
 import javafx.stage.Stage
 import org.girod.javafx.svgimage.SVGImage
 import se.alipsa.matrix.chartexport.ChartToJfx
+import javafx.collections.FXCollections
 
 @SourceURI
 URI sourceUri
@@ -89,35 +89,35 @@ class ChartViewerApp extends Application {
         String svgFilesProp = System.getProperty('jfxCharts.svgFiles')
         List<File> svgFiles = svgFilesProp.split(File.pathSeparator).collect { new File(it) }
 
-        // FlowPane for wrapping tab buttons (multi-row like Swing)
-        FlowPane tabBar = new FlowPane()
-        tabBar.hgap = 4
-        tabBar.vgap = 4
-        tabBar.padding = new Insets(8)
-        tabBar.style = '-fx-background-color: #e0e0e0;'
+        // List of SVG files on the left
+        double listWidth = 200d
+        ListView<File> listView = new ListView<>(FXCollections.observableArrayList(svgFiles))
+        listView.prefWidth = listWidth
+        listView.cellFactory = { ListView<File> view ->
+            new ListCell<File>() {
+                @Override
+                protected void updateItem(File item, boolean empty) {
+                    super.updateItem(item, empty)
+                    if (empty || item == null) {
+                        setText(null)
+                    } else {
+                        setText(item.name.replace('.svg', ''))
+                    }
+                }
+            }
+        }
 
-        ToggleGroup toggleGroup = new ToggleGroup()
+        BorderPane listPane = new BorderPane(listView)
+        listPane.padding = new Insets(8)
 
-        // Content area that switches based on selected tab
+        // Content area that switches based on selected file
         StackPane contentArea = new StackPane()
 
-        // Map to store content for each tab
-        Map<ToggleButton, Node> tabContents = [:]
-
-        svgFiles.each { File svgFile ->
-            String svgContent = svgFile.text
-            String tabName = svgFile.name.replace('.svg', '')
-
-            ToggleButton tabButton = new ToggleButton(tabName)
-            tabButton.toggleGroup = toggleGroup
-            tabButton.style = '''
-                -fx-background-radius: 4 4 0 0;
-                -fx-padding: 6 12;
-                -fx-font-size: 12px;
-            '''
-
+        def showSvg = { File svgFile ->
             Node content
+            boolean resizeStage = false
             try {
+                String svgContent = svgFile.text
                 SVGImage svgImage = ChartToJfx.export(svgContent)
 
                 // Wrap in a StackPane for centering
@@ -128,40 +128,54 @@ class ChartViewerApp extends Application {
                 scrollPane.fitToWidth = true
                 scrollPane.fitToHeight = true
 
+                def bounds = svgImage.boundsInLocal
+                double svgWidth = bounds?.width ?: 0d
+                double svgHeight = bounds?.height ?: 0d
+                if (svgWidth <= 0d || svgHeight <= 0d) {
+                    svgWidth = 800d
+                    svgHeight = 600d
+                }
+                scrollPane.prefViewportWidth = svgWidth
+                scrollPane.prefViewportHeight = svgHeight
+                listView.prefHeight = svgHeight
+
                 content = scrollPane
                 println "  Loaded: ${svgFile.name}"
+                resizeStage = true
             } catch (Exception e) {
                 // Create an error label for failed SVGs
                 Label errorLabel = new Label("Failed to load SVG:\n${e.message}")
                 errorLabel.style = '-fx-text-fill: red; -fx-font-size: 14px;'
                 content = new StackPane(errorLabel)
-                tabButton.text = tabName + " (error)"
                 println "  Failed to load: ${svgFile.name} - ${e.message}"
             }
 
-            tabContents[tabButton] = content
-            tabBar.children.add(tabButton)
-        }
-
-        // Handle tab selection
-        toggleGroup.selectedToggleProperty().addListener { obs, oldVal, newVal ->
-            if (newVal != null) {
-                contentArea.children.clear()
-                contentArea.children.add(tabContents[newVal])
+            contentArea.children.clear()
+            contentArea.children.add(content)
+            if (resizeStage) {
+                Platform.runLater {
+                    primaryStage.sizeToScene()
+                }
             }
         }
 
-        // Select first tab (the listener will handle adding the content)
-        if (!tabBar.children.isEmpty()) {
-            ToggleButton firstTab = tabBar.children[0] as ToggleButton
-            firstTab.selected = true
+        // Handle list selection
+        listView.selectionModel.selectedItemProperty().addListener { obs, oldVal, newVal ->
+            if (newVal != null) {
+                showSvg(newVal)
+            }
+        }
+
+        // Select first item (the listener will handle adding the content)
+        if (!svgFiles.isEmpty()) {
+            listView.selectionModel.select(0)
         }
 
         BorderPane root = new BorderPane()
-        root.top = tabBar
+        root.left = listPane
         root.center = contentArea
 
-        Scene scene = new Scene(root, 900, 700)
+        Scene scene = new Scene(root)
         primaryStage.title = "Chart Examples Viewer (JavaFX)"
         primaryStage.scene = scene
         primaryStage.show()
