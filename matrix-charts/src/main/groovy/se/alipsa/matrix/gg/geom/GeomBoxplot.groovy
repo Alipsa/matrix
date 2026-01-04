@@ -3,6 +3,7 @@ package se.alipsa.matrix.gg.geom
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
@@ -144,7 +145,7 @@ class GeomBoxplot extends Geom {
     }
 
     // Render each boxplot
-    data.eachWithIndex { row, int idx ->
+    data.eachWithIndex { Row row, int idx ->
       def xVal = row['x']
       def ymin = row['ymin'] as Number
       def lower = row['lower'] as Number
@@ -161,38 +162,27 @@ class GeomBoxplot extends Geom {
 
       boolean discreteX = xScale instanceof ScaleDiscrete
 
-      double widthData
-      boolean usedBounds = false
-      // When xmin/xmax bounds are present, use them for pixel positioning (xCenter, halfWidth).
-      // This handles position_dodge2 adjusted bounds.
-      if (row['xmin'] instanceof Number && row['xmax'] instanceof Number && xScale != null) {
-        double xminData = (row['xmin'] as Number).doubleValue()
-        double xmaxData = (row['xmax'] as Number).doubleValue()
-        double centerData = (xminData + xmaxData) / 2.0d
-        xCenter = xScale.transform(centerData) as double
-        double leftPx = xScale.transform(xminData) as double
-        double rightPx = xScale.transform(xmaxData) as double
-        halfWidth = Math.abs(rightPx - leftPx) / 2.0d
-        widthData = xmaxData - xminData
-        usedBounds = true
-      }
-      // Width precedence for statistical width (used in varwidth scaling):
-      // 1. Explicit 'width' column from stat computation (e.g., varwidth)
-      // 2. 'xresolution' scaled by width parameter
-      // 3. Default width parameter
-      // This intentionally overwrites bounds-derived widthData because statistical width
-      // (from the stat phase) should take precedence for varwidth calculations.
-      if (row['width'] instanceof Number) {
-        widthData = (row['width'] as Number).doubleValue()
-      } else if (row['xresolution'] instanceof Number) {
-        widthData = (row['xresolution'] as Number).doubleValue() * (width as double)
-      } else {
-        widthData = (width as double)
-      }
+      Double xminData = row['xmin'] instanceof Number ? (row['xmin'] as Number).doubleValue() : null
+      Double xmaxData = row['xmax'] instanceof Number ? (row['xmax'] as Number).doubleValue() : null
+      Double boundsWidth = (xminData != null && xmaxData != null) ? (xmaxData - xminData) : null
+      Double centerData = (xminData != null && xmaxData != null) ? (xminData + xmaxData) / 2.0d : null
 
-      if (useVarwidth && row['relvarwidth'] instanceof Number && maxRelVarwidth > 0d) {
-        double rel = (row['relvarwidth'] as Number).doubleValue() / maxRelVarwidth
-        widthData = widthData * rel
+      double widthData = resolveWidthData(row, (width as Number).doubleValue(), useVarwidth, maxRelVarwidth, boundsWidth)
+      boolean usedBounds = false
+      // When xmin/xmax bounds are present (e.g., from position_dodge2), preserve their center
+      // and resolve a single width value so varwidth scaling matches the drawn width.
+      if (centerData != null && xScale != null) {
+        xCenter = xScale.transform(centerData) as double
+        if (widthData > 0d) {
+          double leftPx = xScale.transform(centerData - widthData / 2.0d) as double
+          double rightPx = xScale.transform(centerData + widthData / 2.0d) as double
+          halfWidth = Math.abs(rightPx - leftPx) / 2.0d
+        } else {
+          double leftPx = xScale.transform(xminData) as double
+          double rightPx = xScale.transform(xmaxData) as double
+          halfWidth = Math.abs(rightPx - leftPx) / 2.0d
+        }
+        usedBounds = true
       }
 
       if (!usedBounds) {
@@ -224,9 +214,10 @@ class GeomBoxplot extends Geom {
           }
           halfWidth = (plotWidth / Math.max(numBoxes, 1)) * widthData / 2
         } else {
-          // Fallback positioning
-          xCenter = (idx + 0.5) * 100
-          halfWidth = 30 * widthData
+          // Fallback positioning when no scale is available
+          double slotWidth = plotWidth / Math.max(numBoxes, 1)
+          xCenter = (idx + 0.5d) * slotWidth
+          halfWidth = (slotWidth * widthData) / 2.0d
         }
       }
 
@@ -371,6 +362,34 @@ class GeomBoxplot extends Geom {
         }
       }
     }
+  }
+
+  /**
+   * Resolve a boxplot width in data units, honoring stat-derived widths and optional varwidth scaling.
+   *
+   * @param row the row data providing optional width, xresolution, and relvarwidth columns
+   * @param defaultWidth fallback width in data units
+   * @param useVarwidth whether varwidth scaling should be applied
+   * @param maxRelVarwidth maximum relvarwidth value across rows (for normalization)
+   * @param boundsWidth optional width derived from xmin/xmax bounds (e.g., position-adjusted)
+   * @return resolved width in data units
+   */
+  static double resolveWidthData(Row row, double defaultWidth, boolean useVarwidth, double maxRelVarwidth, Double boundsWidth = null) {
+    double widthData
+    if (boundsWidth != null) {
+      widthData = boundsWidth
+    } else if (row['width'] instanceof Number) {
+      widthData = (row['width'] as Number).doubleValue()
+    } else if (row['xresolution'] instanceof Number) {
+      widthData = (row['xresolution'] as Number).doubleValue() * defaultWidth
+    } else {
+      widthData = defaultWidth
+    }
+    if (useVarwidth && row['relvarwidth'] instanceof Number && maxRelVarwidth > 0d) {
+      double rel = (row['relvarwidth'] as Number).doubleValue() / maxRelVarwidth
+      widthData = widthData * rel
+    }
+    return widthData
   }
 
   /**

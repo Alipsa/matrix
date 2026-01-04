@@ -122,6 +122,7 @@ class GgPosition {
       return data
     }
 
+    // Materialize rows into mutable maps for in-place position updates.
     List<Map<String, Object>> rows = []
     data.each { Row row ->
       rows << new LinkedHashMap<>(row.toMap())
@@ -163,7 +164,7 @@ class GgPosition {
       }
     }
 
-    // Sort by x and group for stable dodging
+    // Sort by x and group for stable dodging of overlapping intervals.
     Map<Object, Double> catPos = categoryPositions  // capture for closure
     rows.sort { a, b ->
       double ax
@@ -198,6 +199,7 @@ class GgPosition {
       return 0
     }
 
+    // Identify overlapping x-intervals and assign group ids.
     List<Integer> xids = findXOverlaps(rows)
     Map<Integer, List<Map<String, Object>>> byXid = [:].withDefault { [] }
     rows.eachWithIndex { Map<String, Object> row, int idx ->
@@ -207,6 +209,7 @@ class GgPosition {
     Map<Integer, Double> newx = [:]
     Map<Integer, Double> groupSize = [:]
     byXid.each { Integer xid, List<Map<String, Object>> bucket ->
+      // Compute the overall center and total width for each overlap group.
       // Filter to rows with valid xmin/xmax values
       List<Double> xminValues = bucket.findResults { it['xmin'] instanceof Number ? (it['xmin'] as Number).doubleValue() : null } as List<Double>
       List<Double> xmaxValues = bucket.findResults { it['xmax'] instanceof Number ? (it['xmax'] as Number).doubleValue() : null } as List<Double>
@@ -236,6 +239,7 @@ class GgPosition {
     }
 
     byXid.each { Integer xid, List<Map<String, Object>> bucket ->
+      // Lay out boxes left-to-right within each overlap group.
       Double centerX = newx[xid]
       Double size = groupSize[xid]
       if (centerX == null || size == null) {
@@ -254,6 +258,7 @@ class GgPosition {
     }
 
     if (byXid.any { it.value.size() > 1 }) {
+      // Apply padding by shrinking each box around its center.
       rows.each { Map<String, Object> row ->
         if (!(row['new_width'] instanceof Number) || !(row['x'] instanceof Number)) {
           return
@@ -266,6 +271,7 @@ class GgPosition {
       }
     }
 
+    // Clean up intermediate columns used during width calculations.
     rows.each { row ->
       row.remove('new_width')
     }
@@ -289,14 +295,16 @@ class GgPosition {
       Double xmax = toDouble(row['xmax'])
       start << xmin
       end << xmax
-      boolean isMissing = isNotNumericOrMissing(xmin) || isNotNumericOrMissing(xmax)
+      boolean isMissing = isInvalidForNumericPositioning(xmin) || isInvalidForNumericPositioning(xmax)
       missing << isMissing
       nonzero << (!isMissing && xmin != null && xmax != null && xmin != xmax)
     }
 
+    // Fill missing bounds so overlap detection stays consistent across NA stretches.
     start = forwardBackwardFill(start)
     end = forwardBackwardFill(end)
 
+    // Track the running maximum of previous interval ends to detect new overlap groups.
     List<Double> endShift = new ArrayList<>(n)
     if (n > 0) {
       endShift << end[0]
@@ -333,6 +341,7 @@ class GgPosition {
       overlaps << currentGroupId
     }
 
+    // Keep missing intervals in their own groups so they don't affect valid ranges.
     int maxOverlap = overlaps.isEmpty() ? 0 : overlaps.max()
     int missingIndex = 0
     for (int i = 0; i < n; i++) {
@@ -342,6 +351,7 @@ class GgPosition {
       }
     }
 
+    // Re-map group ids into a compact 1..k sequence.
     Map<Integer, Integer> mapping = [:]
     int next = 1
     List<Integer> result = new ArrayList<>(n)
@@ -355,11 +365,11 @@ class GgPosition {
   }
 
   /**
-   * Check if a value is not a valid numeric value for positioning.
+   * Check if a value is invalid for numeric positioning.
    * Returns true for null, NaN, or non-Number types (e.g., String).
    * This is used to identify values that cannot participate in numeric position calculations.
    */
-  private static boolean isNotNumericOrMissing(Object value) {
+  private static boolean isInvalidForNumericPositioning(Object value) {
     if (value == null) {
       return true
     }

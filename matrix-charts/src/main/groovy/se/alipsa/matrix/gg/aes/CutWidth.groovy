@@ -158,9 +158,12 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
       if (closedRight) {
         double boundaryPoint = minX + binIndex * w
         double diff = d - boundaryPoint
-        double scale = Math.max(1.0d, Math.max(Math.abs(d), Math.abs(boundaryPoint)))
-        double epsilon = 1e-10d * scale
-        if (Math.abs(diff) < epsilon && Math.abs(d - minX) >= epsilon) {
+        double epsilon = Math.max(Math.ulp(boundaryPoint), Math.ulp(d)) * 10.0d
+        boolean onBoundary = Math.abs(diff) <= epsilon
+        boolean atMinBoundary = Math.abs(d - minX) <= epsilon
+        // For closed-right bins, values exactly on a boundary belong to the previous bin,
+        // except for the minimum boundary which stays in the first bin.
+        if (onBoundary && !atMinBoundary) {
           binIndex -= 1
         }
       }

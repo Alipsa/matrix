@@ -5,6 +5,7 @@ import se.alipsa.groovy.svg.Defs
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.CutWidth
@@ -1064,47 +1065,49 @@ class GgRenderer {
 
         if (isBoxplot && posData.columnNames().contains('x')) {
           boolean hasBounds = posData.columnNames().contains('xmin') && posData.columnNames().contains('xmax')
+          GeomBoxplot geom = (GeomBoxplot) layer.geom
+          double widthValue = geom?.width != null ? (geom.width as Number).doubleValue() : 0.75d
+          boolean useVarwidth = geom?.varwidth == true
+          double maxRelVarwidth = 1.0d
+          if (useVarwidth && posData.columnNames().contains('relvarwidth')) {
+            List<Number> relValues = (posData['relvarwidth'] as List)
+                .findAll { it instanceof Number } as List<Number>
+            if (!relValues.isEmpty()) {
+              maxRelVarwidth = relValues.max() as double
+            }
+          }
           if (hasBounds) {
-            data['x'].addAll(posData['xmin'] ?: [])
-            data['x'].addAll(posData['xmax'] ?: [])
+            if (useVarwidth) {
+              posData.eachWithIndex { Row row, int idx ->
+                if (!(row['xmin'] instanceof Number) || !(row['xmax'] instanceof Number)) {
+                  return
+                }
+                double xmin = (row['xmin'] as Number).doubleValue()
+                double xmax = (row['xmax'] as Number).doubleValue()
+                double center = (xmin + xmax) / 2.0d
+                double widthData = GeomBoxplot.resolveWidthData(row, widthValue, useVarwidth, maxRelVarwidth, xmax - xmin)
+                if (widthData > 0d) {
+                  double half = widthData / 2.0d
+                  data['x'].add(center - half)
+                  data['x'].add(center + half)
+                }
+              }
+            } else {
+              data['x'].addAll(posData['xmin'] ?: [])
+              data['x'].addAll(posData['xmax'] ?: [])
+            }
           }
           def firstX = (posData['x'] as List)?.find { it != null }
           if (!hasBounds && firstX instanceof Number) {
-            GeomBoxplot geom = (GeomBoxplot) layer.geom
-            double widthValue = geom?.width != null ? (geom.width as Number).doubleValue() : 0.75d
-            boolean useVarwidth = geom?.varwidth == true
-            double maxRelVarwidth = 1.0d
-            if (useVarwidth && posData.columnNames().contains('relvarwidth')) {
-              List<Number> relValues = (posData['relvarwidth'] as List)
-                  .findAll { it instanceof Number } as List<Number>
-              if (!relValues.isEmpty()) {
-                maxRelVarwidth = relValues.max() as double
-              }
-            }
-
-            // Compute x bounds for scale domain calculation.
-            // This duplicates width logic from GeomBoxplot for scale training purposes.
-            // Complexity: O(n) with O(1) map lookups per row (not O(n*m)).
-            // Note: Moving to stat phase would require architectural changes to pass
-            // computed bounds through the pipeline, which isn't currently supported.
-            posData.eachWithIndex { row, int idx ->
+            // Compute x bounds for scale domain calculation using the same width resolution as GeomBoxplot.
+            // Complexity: O(n) with O(1) lookups per row.
+            posData.eachWithIndex { Row row, int idx ->
               def xVal = row['x']
               if (!(xVal instanceof Number)) return
 
-              Double widthData
-              if (row['width'] instanceof Number) {
-                widthData = ((Number) row['width']).doubleValue()
-              } else if (row['xresolution'] instanceof Number) {
-                widthData = ((Number) row['xresolution']).doubleValue() * widthValue
-              } else {
-                widthData = widthValue
-              }
-              if (useVarwidth && row['relvarwidth'] instanceof Number && maxRelVarwidth > 0d) {
-                double rel = ((Number) row['relvarwidth']).doubleValue() / maxRelVarwidth
-                widthData = widthData * rel
-              }
+              double widthData = GeomBoxplot.resolveWidthData(row, widthValue, useVarwidth, maxRelVarwidth, null)
 
-              if (widthData != null && widthData > 0d) {
+              if (widthData > 0d) {
                 double half = widthData / 2
                 data['x'].add(((Number) xVal).doubleValue() - half)
                 data['x'].add(((Number) xVal).doubleValue() + half)

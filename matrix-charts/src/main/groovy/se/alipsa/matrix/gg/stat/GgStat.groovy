@@ -23,6 +23,9 @@ import java.util.regex.Pattern
 @CompileStatic
 class GgStat {
 
+  private static final boolean VALIDATE_SORTED_QUANTILES =
+      Boolean.getBoolean('matrix.gg.validateQuantiles')
+
   /**
    * Identity transformation - returns data unchanged.
    * Default stat for most geoms.
@@ -857,6 +860,7 @@ class GgStat {
    * @param sortedValues a list of numeric values that MUST be sorted in ascending order.
    *        The caller is responsible for sorting before calling this method.
    *        Passing unsorted values will produce incorrect results.
+   *        Set system property matrix.gg.validateQuantiles=true to enable a sortedness check.
    * @param prob the probability for the quantile, between 0 and 1 (e.g., 0.25 for Q1, 0.5 for median)
    * @return the computed quantile value, or null if the input list is null or empty
    */
@@ -866,6 +870,9 @@ class GgStat {
     }
     if (sortedValues.size() == 1) {
       return sortedValues[0]
+    }
+    if (VALIDATE_SORTED_QUANTILES && !isSortedAscending(sortedValues)) {
+      throw new IllegalArgumentException('quantileType7 requires sortedValues in ascending order')
     }
     int n = sortedValues.size()
     double h = (n - 1) * prob + 1
@@ -884,6 +891,21 @@ class GgStat {
     double xj = sortedValues[j - 1] as double
     double xj1 = sortedValues[j] as double
     return xj + g * (xj1 - xj)
+  }
+
+  private static boolean isSortedAscending(List<Number> values) {
+    if (values == null || values.size() < 2) {
+      return true
+    }
+    double prev = (values[0] as Number).doubleValue()
+    for (int i = 1; i < values.size(); i++) {
+      double current = (values[i] as Number).doubleValue()
+      if (current < prev) {
+        return false
+      }
+      prev = current
+    }
+    return true
   }
 
 }
