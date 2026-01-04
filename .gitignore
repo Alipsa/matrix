@@ -8,6 +8,5 @@ build/
 /matrix-examples/AnalysisScenario1/analysis_results/
 **/out/**
 /matrix-examples/LinearRegression/cars.png
-/matrix-charts/examples/gg/ggplot2/boxplot.svg
-/matrix-charts/examples/gg/ggplot2/Rplots.pdf
-/matrix-charts/examples/gg/ggplot2/labels.svg
+/matrix-charts/examples/gg/ggplot2/*.svg
+/matrix-charts/examples/gg/ggplot2/*.pdf

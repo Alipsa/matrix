@@ -161,6 +161,43 @@ class GgStatTest {
   }
 
   @Test
+  void testSummaryMedianHiLow() {
+    def data = Matrix.builder()
+        .columnNames(['group', 'value'])
+        .rows([
+            ['A', 1],
+            ['A', 2],
+            ['A', 3],
+            ['A', 4],
+            ['B', 10],
+            ['B', 20],
+            ['B', 30],
+            ['B', 40]
+        ])
+        .build()
+    def aes = new Aes(x: 'group', y: 'value')
+
+    def result = GgStat.summary(data, aes, [
+        'fun.data': 'median_hilow',
+        'fun.args': ['conf.int': 0.5d]
+    ])
+
+    assertTrue(result.columnNames().containsAll(['group', 'value', 'ymin', 'ymax']))
+    assertEquals(2, result.rowCount())
+
+    def medians = result['value'] as List<Number>
+    def ymin = result['ymin'] as List<Number>
+    def ymax = result['ymax'] as List<Number>
+
+    assertEquals(2.5d, medians[0] as double, 0.0001d)
+    assertEquals(25.0d, medians[1] as double, 0.0001d)
+    assertEquals(1.75d, ymin[0] as double, 0.0001d)
+    assertEquals(17.5d, ymin[1] as double, 0.0001d)
+    assertEquals(3.25d, ymax[0] as double, 0.0001d)
+    assertEquals(32.5d, ymax[1] as double, 0.0001d)
+  }
+
+  @Test
   void testSmoothDegreeWithFormulaNoPoly() {
     def data = Matrix.builder()
         .columnNames(['x', 'y'])
