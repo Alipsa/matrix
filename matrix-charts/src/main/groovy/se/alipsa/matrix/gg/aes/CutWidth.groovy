@@ -104,7 +104,7 @@ class CutWidth {
     double maxVal = numericValues.max()
 
     // Calculate the starting boundary
-    // ggplot2's default: boundary = width/2, which centers bins on multiples of width
+    // ggplot2's default: boundary = width/2, which offsets bin boundaries by half the bin width
     if (boundary != null && center != null) {
       throw new IllegalArgumentException("Only one of boundary and center may be specified")
     }
