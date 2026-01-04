@@ -3,11 +3,14 @@ package se.alipsa.matrix.gg.geom
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.scale.ScaleDiscrete
 import se.alipsa.matrix.charts.util.ColorUtil
 
 /**
@@ -22,6 +25,10 @@ import se.alipsa.matrix.charts.util.ColorUtil
  * - upper: Q3 (75th percentile, top of box)
  * - ymax: upper whisker
  * - outliers: list of outlier values beyond whiskers
+ * - width: box width in data units
+ * - xmin/xmax: box width extents in data units
+ * - relvarwidth: relative width scaling factor (sqrt(n))
+ * - xresolution: minimum non-zero x resolution for width calculation
  */
 @CompileStatic
 class GeomBoxplot extends Geom {
@@ -41,6 +48,9 @@ class GeomBoxplot extends Geom {
   /** Width of boxes relative to spacing (0-1) */
   Number width = 0.75
 
+  /** Whether to scale box widths based on sample size (null/false = disabled, true = enabled) */
+  Boolean varwidth = null
+
   /** Whether to show outlier points */
   boolean outliers = true
 
@@ -54,12 +64,20 @@ class GeomBoxplot extends Geom {
   String outlierColor = null
 
   /** Width of whisker caps relative to box width */
-  Number stapleWidth = 0.5
+  Number stapleWidth = 0.0
 
   GeomBoxplot() {
     defaultStat = StatType.BOXPLOT
+    defaultPosition = PositionType.DODGE2
     requiredAes = ['y']  // x is optional for single boxplot
     defaultAes = [fill: 'white', color: 'black', alpha: 1.0] as Map<String, Object>
+  }
+
+  GeomBoxplot(Aes aes) {
+    this()
+    if (aes != null) {
+      this.params = [mapping: aes]
+    }
   }
 
   GeomBoxplot(Map params) {
@@ -70,6 +88,8 @@ class GeomBoxplot extends Geom {
     if (params.alpha != null) this.alpha = params.alpha as Number
     if (params.linewidth != null) this.linewidth = params.linewidth as Number
     if (params.width != null) this.width = params.width as Number
+    if (params.varwidth != null) this.varwidth = params.varwidth as Boolean
+    if (params.var_width != null) this.varwidth = params.var_width as Boolean
     if (params.outliers != null) this.outliers = params.outliers as boolean
     if (params.outlierSize != null) this.outlierSize = params.outlierSize as Number
     if (params.outlier_size != null) this.outlierSize = params.outlier_size as Number
@@ -91,7 +111,7 @@ class GeomBoxplot extends Geom {
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
     if (data == null || data.rowCount() == 0) return
 
-    // After stat_boxplot, data has: x, ymin, lower, middle, upper, ymax, outliers
+    // After stat_boxplot, data has: x, ymin, lower, middle, upper, ymax, outliers, width, n
     List<String> required = ['ymin', 'lower', 'middle', 'upper', 'ymax']
     for (String col : required) {
       if (!data.columnNames().contains(col)) {
@@ -107,12 +127,25 @@ class GeomBoxplot extends Geom {
     Scale fillScale = scales['fill']
     Scale colorScale = scales['color']
 
-    // Calculate box width based on number of groups and available space
     int numBoxes = data.rowCount()
-    double boxSpacing = numBoxes > 1 ? 1.0 : 0.5  // default spacing in data units
+    double plotWidth = 640  // default plot width
+    // Check if x values are numeric (continuous positioning)
+    boolean continuousX = false
+    if (data.columnNames().contains('x') && data.rowCount() > 0) {
+      def firstX = data['x'].find { it != null }
+      continuousX = firstX instanceof Number
+    }
+    boolean useVarwidth = varwidth == true
+    double maxRelVarwidth = 1.0d
+    if (useVarwidth && data.columnNames().contains('relvarwidth')) {
+      List<Number> relValues = (data['relvarwidth'] as List).findAll { it instanceof Number } as List<Number>
+      if (!relValues.isEmpty()) {
+        maxRelVarwidth = relValues.max() as double
+      }
+    }
 
     // Render each boxplot
-    data.eachWithIndex { row, int idx ->
+    data.eachWithIndex { Row row, int idx ->
       def xVal = row['x']
       def ymin = row['ymin'] as Number
       def lower = row['lower'] as Number
@@ -123,24 +156,69 @@ class GeomBoxplot extends Geom {
 
       if (lower == null || upper == null || middle == null) return
 
-      // Calculate x position - use index if x is categorical/string
+      // Calculate x position and width
       double xCenter
       double halfWidth
 
-      if (xScale != null) {
-        def transformed = xScale.transform(xVal)
-        if (transformed instanceof Number) {
-          xCenter = transformed as double
+      boolean discreteX = xScale instanceof ScaleDiscrete
+
+      Double xminData = row['xmin'] instanceof Number ? (row['xmin'] as Number).doubleValue() : null
+      Double xmaxData = row['xmax'] instanceof Number ? (row['xmax'] as Number).doubleValue() : null
+      Double boundsWidth = (xminData != null && xmaxData != null) ? (xmaxData - xminData) : null
+      Double centerData = (xminData != null && xmaxData != null) ? (xminData + xmaxData) / 2.0d : null
+
+      double widthData = resolveWidthData(row, (width as Number).doubleValue(), useVarwidth, maxRelVarwidth, boundsWidth)
+      boolean usedBounds = false
+      // When xmin/xmax bounds are present (e.g., from position_dodge2), preserve their center
+      // and resolve a single width value so varwidth scaling matches the drawn width.
+      if (centerData != null && xScale != null) {
+        xCenter = xScale.transform(centerData) as double
+        if (widthData > 0d) {
+          double leftPx = xScale.transform(centerData - widthData / 2.0d) as double
+          double rightPx = xScale.transform(centerData + widthData / 2.0d) as double
+          halfWidth = Math.abs(rightPx - leftPx) / 2.0d
         } else {
-          // For discrete scales, use index-based positioning
-          xCenter = xScale.transform(idx) as double
+          double leftPx = xScale.transform(xminData) as double
+          double rightPx = xScale.transform(xmaxData) as double
+          halfWidth = Math.abs(rightPx - leftPx) / 2.0d
         }
-        // Calculate width based on scale
-        double plotWidth = 640  // default plot width
-        halfWidth = (plotWidth / Math.max(numBoxes, 1)) * (width as double) / 2
-      } else {
-        xCenter = (idx + 0.5) * 100  // fallback positioning
-        halfWidth = 30 * (width as double)
+        usedBounds = true
+      }
+
+      if (!usedBounds) {
+        if (continuousX && xScale != null && xVal instanceof Number) {
+          xCenter = xScale.transform(xVal as Number) as double
+          if (widthData > 0) {
+            double leftPx = xScale.transform((xVal as Number).doubleValue() - widthData / 2) as double
+            double rightPx = xScale.transform((xVal as Number).doubleValue() + widthData / 2) as double
+            halfWidth = Math.abs(rightPx - leftPx) / 2
+          } else {
+            halfWidth = plotWidth / Math.max(numBoxes * 2, 1)
+          }
+        } else if (xScale != null && discreteX) {
+          def transformed = xScale.transform(xVal)
+          if (transformed instanceof Number) {
+            xCenter = transformed as double
+          } else {
+            xCenter = xScale.transform(idx) as double
+          }
+          double bandWidth = ((ScaleDiscrete) xScale).getBandwidth()
+          halfWidth = bandWidth * widthData / 2
+        } else if (xScale != null) {
+          // Categorical x without discrete scale support
+          def transformed = xScale.transform(xVal)
+          if (transformed instanceof Number) {
+            xCenter = transformed as double
+          } else {
+            xCenter = xScale.transform(idx) as double
+          }
+          halfWidth = (plotWidth / Math.max(numBoxes, 1)) * widthData / 2
+        } else {
+          // Fallback positioning when no scale is available
+          double slotWidth = plotWidth / Math.max(numBoxes, 1)
+          xCenter = (idx + 0.5d) * slotWidth
+          halfWidth = (slotWidth * widthData) / 2.0d
+        }
       }
 
       // Transform y coordinates
@@ -205,25 +283,26 @@ class GeomBoxplot extends Geom {
 
       // Draw whisker caps (horizontal lines at ymin and ymax)
       double capHalfWidth = halfWidth * (stapleWidth as double)
+      if ((stapleWidth as double) > 0d) {
+        if (ymin != null) {
+          boxGroup.addLine()
+              .x1((xCenter - capHalfWidth) as int)
+              .y1(yminPx as int)
+              .x2((xCenter + capHalfWidth) as int)
+              .y2(yminPx as int)
+              .stroke(boxColor)
+              .addAttribute('stroke-width', linewidth)
+        }
 
-      if (ymin != null) {
-        boxGroup.addLine()
-            .x1((xCenter - capHalfWidth) as int)
-            .y1(yminPx as int)
-            .x2((xCenter + capHalfWidth) as int)
-            .y2(yminPx as int)
-            .stroke(boxColor)
-            .addAttribute('stroke-width', linewidth)
-      }
-
-      if (ymax != null) {
-        boxGroup.addLine()
-            .x1((xCenter - capHalfWidth) as int)
-            .y1(ymaxPx as int)
-            .x2((xCenter + capHalfWidth) as int)
-            .y2(ymaxPx as int)
-            .stroke(boxColor)
-            .addAttribute('stroke-width', linewidth)
+        if (ymax != null) {
+          boxGroup.addLine()
+              .x1((xCenter - capHalfWidth) as int)
+              .y1(ymaxPx as int)
+              .x2((xCenter + capHalfWidth) as int)
+              .y2(ymaxPx as int)
+              .stroke(boxColor)
+              .addAttribute('stroke-width', linewidth)
+        }
       }
 
       // Draw box (from lower/Q1 to upper/Q3)
@@ -262,19 +341,20 @@ class GeomBoxplot extends Geom {
             double radius = (outlierSize as double) * 2
 
             if (outlierShape == 'circle') {
+              // ggplot2 renders outliers as filled circles
               def circle = boxGroup.addCircle()
                   .cx(xCenter as int)
                   .cy(outlierPx as int)
                   .r(radius)
-                  .fill('none')
+                  .fill(outlierCol)
                   .stroke(outlierCol)
               circle.addAttribute('stroke-width', linewidth)
             } else {
-              // Square or other shapes
+              // Square or other shapes - also filled
               boxGroup.addRect(radius * 2, radius * 2)
                   .x((xCenter - radius) as int)
                   .y((outlierPx - radius) as int)
-                  .fill('none')
+                  .fill(outlierCol)
                   .stroke(outlierCol)
                   .addAttribute('stroke-width', linewidth)
             }
@@ -282,6 +362,34 @@ class GeomBoxplot extends Geom {
         }
       }
     }
+  }
+
+  /**
+   * Resolve a boxplot width in data units, honoring stat-derived widths and optional varwidth scaling.
+   *
+   * @param row the row data providing optional width, xresolution, and relvarwidth columns
+   * @param defaultWidth fallback width in data units
+   * @param useVarwidth whether varwidth scaling should be applied
+   * @param maxRelVarwidth maximum relvarwidth value across rows (for normalization)
+   * @param boundsWidth optional width derived from xmin/xmax bounds (e.g., position-adjusted)
+   * @return resolved width in data units
+   */
+  static double resolveWidthData(Row row, double defaultWidth, boolean useVarwidth, double maxRelVarwidth, Double boundsWidth = null) {
+    double widthData
+    if (boundsWidth != null) {
+      widthData = boundsWidth
+    } else if (row['width'] instanceof Number) {
+      widthData = (row['width'] as Number).doubleValue()
+    } else if (row['xresolution'] instanceof Number) {
+      widthData = (row['xresolution'] as Number).doubleValue() * defaultWidth
+    } else {
+      widthData = defaultWidth
+    }
+    if (useVarwidth && row['relvarwidth'] instanceof Number && maxRelVarwidth > 0d) {
+      double rel = (row['relvarwidth'] as Number).doubleValue() / maxRelVarwidth
+      widthData = widthData * rel
+    }
+    return widthData
   }
 
   /**

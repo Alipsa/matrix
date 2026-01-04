@@ -174,6 +174,30 @@ class Aes {
   }
 
   /**
+   * Check if an aesthetic is a cut_width wrapper for binning continuous data.
+   *
+   * @param aesthetic the aesthetic name (e.g., 'group', 'x')
+   * @return true if the aesthetic is backed by a CutWidth wrapper
+   */
+  @CompileDynamic
+  boolean isCutWidth(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof CutWidth
+  }
+
+  /**
+   * Get the CutWidth wrapper for an aesthetic.
+   *
+   * @param aesthetic the aesthetic name (e.g., 'group', 'x')
+   * @return the CutWidth instance or null if not a cut_width mapping
+   */
+  @CompileDynamic
+  CutWidth getCutWidth(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof CutWidth ? (CutWidth) value : null
+  }
+
+  /**
    * Get the Expression wrapper for an aesthetic.
    * Wraps raw Closures in Expression for convenience.
    */
@@ -190,7 +214,7 @@ class Aes {
   }
 
   /**
-   * Extract column name from a value (returns null for Identity, AfterStat, and Expression wrappers).
+   * Extract column name from a value (returns null for Identity, AfterStat, Expression, Factor, and CutWidth wrappers).
    */
   private static String extractColName(def value) {
     if (value == null) return null
@@ -198,6 +222,7 @@ class Aes {
     if (value instanceof AfterStat) return null
     if (value instanceof Expression) return null
     if (value instanceof Factor) return null
+    if (value instanceof CutWidth) return null
     if (value instanceof Closure) return null
     return value.toString()
   }

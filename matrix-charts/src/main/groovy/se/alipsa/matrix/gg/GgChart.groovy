@@ -62,7 +62,7 @@ class GgChart {
 
   private static final Set<String> STAT_PARAM_KEYS = [
       'method', 'n', 'se', 'level', 'formula', 'degree',
-      'bins', 'binwidth', 'fun', 'fun.y', 'fun.data'
+      'bins', 'binwidth', 'fun', 'fun.y', 'fun.data', 'width', 'coef'
   ] as Set<String>
 
   /**

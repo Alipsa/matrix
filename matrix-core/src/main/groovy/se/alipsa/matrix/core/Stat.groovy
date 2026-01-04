@@ -573,14 +573,14 @@ class Stat {
 
     /**
      * IQR (inter quartile range) is a measure of the spread of the data
-     * (1st quartile - 3:rd quartile).
+     * (3rd quartile - 1st quartile).
      *
      * @param values a list of numbers to use
-     * @return the difference between the 1:st and 3:rd quartile
+     * @return the difference between the 3rd and 1st quartile (always positive)
      */
     static <T extends Number> T iqr(List<T> values) {
         def q = quartiles(values)
-        (q[0] - q[1]) as T
+        (q[1] - q[0]) as T
     }
 
     static <T> T min(List<T> list, boolean ignoreNonNumerics = false) {

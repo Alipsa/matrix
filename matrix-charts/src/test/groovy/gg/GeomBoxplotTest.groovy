@@ -5,8 +5,11 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.geom.GeomBoxplot
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.scale.ScaleXContinuous
+import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.stat.GgStat
 
 import static org.junit.jupiter.api.Assertions.*
@@ -25,6 +28,7 @@ class GeomBoxplotTest {
     assertEquals(1.0, geom.alpha)
     assertEquals(0.5, geom.linewidth)
     assertEquals(0.75, geom.width)
+    assertNull(geom.varwidth)
     assertTrue(geom.outliers)
     assertEquals(1.5, geom.outlierSize)
     assertEquals('circle', geom.outlierShape)
@@ -39,6 +43,7 @@ class GeomBoxplotTest {
         color: 'darkblue',
         alpha: 0.8,
         width: 0.5,
+        varwidth: true,
         outliers: false
     )
 
@@ -46,6 +51,7 @@ class GeomBoxplotTest {
     assertEquals('darkblue', geom.color)
     assertEquals(0.8, geom.alpha)
     assertEquals(0.5, geom.width)
+    assertEquals(true, geom.varwidth)
     assertFalse(geom.outliers)
   }
 
@@ -75,6 +81,41 @@ class GeomBoxplotTest {
     assertEquals('square', geom.outlierShape)
     assertEquals('green', geom.outlierColor)
     assertEquals(0.3, geom.stapleWidth)
+  }
+
+  @Test
+  void testGeomBoxplotUsesBoundsForWidth() {
+    def data = Matrix.builder().mapList([
+        [
+            x: 3,
+            xmin: 2,
+            xmax: 4,
+            ymin: 0,
+            lower: 2,
+            middle: 3,
+            upper: 5,
+            ymax: 6,
+            outliers: [],
+            width: 8
+        ]
+    ]).build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def xScale = new ScaleXContinuous(expand: [0, 0])
+    xScale.train([0, 10])
+    xScale.range = [0, 100]
+    def yScale = new ScaleYContinuous(expand: [0, 0])
+    yScale.train([0, 10])
+    yScale.range = [100, 0]
+
+    def svg = new Svg()
+    def group = svg.addG()
+    new GeomBoxplot().render(group, data, aes, [x: xScale, y: yScale], new CoordCartesian())
+
+    def xml = SvgWriter.toXmlPretty(svg)
+    def matcher = (xml =~ /<rect[^>]*?\swidth=\"([0-9.]+)\"/)
+    assertTrue(matcher.find())
+    assertEquals(20.0d, matcher.group(1).toDouble(), 0.0001d)
   }
 
   // ============== GgStat.boxplot() Tests ==============
@@ -112,6 +153,29 @@ class GeomBoxplotTest {
   }
 
   @Test
+  void testStatBoxplotQuantilesType7() {
+    def data = Matrix.builder()
+        .columnNames('group', 'value')
+        .rows([
+            ['A', 1], ['A', 2], ['A', 3], ['A', 4], ['A', 5],
+            ['A', 6], ['A', 7], ['A', 8], ['A', 9], ['A', 10]
+        ])
+        .types(String, Integer)
+        .build()
+
+    def aes = new Aes(x: 'group', y: 'value')
+    def boxplotData = GgStat.boxplot(data, aes)
+    def row = boxplotData.row(0)
+
+    assertEquals(1.0d, (row['ymin'] as Number).doubleValue(), 0.0001d)
+    assertEquals(3.25d, (row['lower'] as Number).doubleValue(), 0.0001d)
+    assertEquals(5.5d, (row['middle'] as Number).doubleValue(), 0.0001d)
+    assertEquals(7.75d, (row['upper'] as Number).doubleValue(), 0.0001d)
+    assertEquals(10.0d, (row['ymax'] as Number).doubleValue(), 0.0001d)
+    assertTrue((row['outliers'] as List).isEmpty(), "Should have no outliers")
+  }
+
+  @Test
   void testStatBoxplotMultipleGroups() {
     def data = Matrix.builder()
         .columnNames('category', 'measurement')
@@ -132,6 +196,29 @@ class GeomBoxplotTest {
     }
 
     assertEquals(3, boxplotData.rowCount(), "Should have 3 groups")
+    assertTrue(boxplotData.columnNames().contains('relvarwidth'), "Should have relvarwidth column")
+  }
+
+  @Test
+  void testStatBoxplotWhiskerUsesDataValues() {
+    def data = Matrix.builder()
+        .columnNames('group', 'value')
+        .rows([
+            ['A', 1], ['A', 2], ['A', 3], ['A', 4], ['A', 5],
+            ['A', 6], ['A', 7], ['A', 8], ['A', 9], ['A', 50]
+        ])
+        .types(String, Integer)
+        .build()
+
+    def aes = new Aes(x: 'group', y: 'value')
+    def boxplotData = GgStat.boxplot(data, aes)
+    def row = boxplotData.row(0)
+
+    assertEquals(1.0d, (row['ymin'] as Number).doubleValue(), 0.0001d)
+    assertEquals(9.0d, (row['ymax'] as Number).doubleValue(), 0.0001d)
+    def outliers = row['outliers'] as List
+    assertEquals(1, outliers.size(), "Should have exactly one outlier")
+    assertTrue(outliers.contains(50), "Outlier list should include 50")
   }
 
   @Test
@@ -218,6 +305,34 @@ class GeomBoxplotTest {
     File outputFile = new File('build/colored_boxplot.svg')
     write(svg, outputFile)
     assertTrue(outputFile.exists())
+  }
+
+  @Test
+  void testBoxplotVariableWidth() {
+    def data = Matrix.builder()
+        .columnNames('group', 'x', 'y')
+        .rows([
+            ['A', 1, 10], ['A', 2, 11], ['A', 3, 12], ['A', 4, 13], ['A', 5, 14],
+            ['B', 10, 20], ['B', 11, 21]
+        ])
+        .types(String, Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_boxplot(aes(group: 'group'))
+
+    Svg svg = chart.render()
+    String content = SvgWriter.toXml(svg)
+
+    // Match <rect width="..." - the width attribute comes first in our SVG output
+    def matcher = content =~ /(?s)<g class="geom-boxplot">.*?<rect width="([^"]+)"/
+    List<Double> widths = []
+    matcher.each { match ->
+      widths << (match[1] as String).toDouble()
+    }
+
+    assertTrue(widths.size() >= 2, "Should render multiple box widths")
+    assertTrue(widths.max() > widths.min(), "Box widths should vary with x range")
   }
 
   @Test
