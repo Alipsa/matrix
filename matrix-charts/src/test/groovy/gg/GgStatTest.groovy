@@ -375,4 +375,153 @@ class GgStatTest {
     }
     assertTrue(ex.message.contains('x aesthetic'))
   }
+
+  // ===== Tests for quantileType7 behavior (tested indirectly through boxplot) =====
+
+  /**
+   * Test quantile Type 7 calculation with known values.
+   * Type 7 uses linear interpolation: quantile = (1-g)*x[j] + g*x[j+1]
+   * where j = floor((n-1)*p + 1) and g is the fractional part.
+   */
+  @Test
+  void testBoxplotQuartilesType7() {
+    // Test data: 1, 2, 3, ..., 10
+    // For n=10, Type 7 quantiles:
+    // Q1 (p=0.25): h = (10-1)*0.25 + 1 = 3.25, j=3, g=0.25 → (1-0.25)*3 + 0.25*4 = 3.25
+    // Q2 (p=0.5):  h = (10-1)*0.5 + 1 = 5.5, j=5, g=0.5 → (1-0.5)*5 + 0.5*6 = 5.5
+    // Q3 (p=0.75): h = (10-1)*0.75 + 1 = 7.75, j=7, g=0.75 → (1-0.75)*7 + 0.75*8 = 7.75
+    def data = Matrix.builder()
+        .columnNames(['group', 'value'])
+        .rows([
+            ['A', 1], ['A', 2], ['A', 3], ['A', 4], ['A', 5],
+            ['A', 6], ['A', 7], ['A', 8], ['A', 9], ['A', 10]
+        ])
+        .build()
+
+    def aes = new Aes(x: 'group', y: 'value')
+    def result = GgStat.boxplot(data, aes)
+
+    assertEquals(1, result.rowCount())
+    assertEquals(3.25d, result['lower'][0] as double, 0.0001d, 'Q1 should use Type 7 interpolation')
+    assertEquals(5.5d, result['middle'][0] as double, 0.0001d, 'Median should use Type 7 interpolation')
+    assertEquals(7.75d, result['upper'][0] as double, 0.0001d, 'Q3 should use Type 7 interpolation')
+  }
+
+  /**
+   * Test quantile Type 7 with a single value (edge case).
+   */
+  @Test
+  void testBoxplotSingleValue() {
+    def data = Matrix.builder()
+        .columnNames(['group', 'value'])
+        .rows([['A', 5]])
+        .build()
+
+    def aes = new Aes(x: 'group', y: 'value')
+    def result = GgStat.boxplot(data, aes)
+
+    assertEquals(1, result.rowCount())
+    // Single value: all quartiles should equal that value
+    assertEquals(5d, result['lower'][0] as double, 0.0001d)
+    assertEquals(5d, result['middle'][0] as double, 0.0001d)
+    assertEquals(5d, result['upper'][0] as double, 0.0001d)
+  }
+
+  /**
+   * Test quantile Type 7 with two values (interpolation edge case).
+   */
+  @Test
+  void testBoxplotTwoValues() {
+    def data = Matrix.builder()
+        .columnNames(['group', 'value'])
+        .rows([['A', 0], ['A', 10]])
+        .build()
+
+    def aes = new Aes(x: 'group', y: 'value')
+    def result = GgStat.boxplot(data, aes)
+
+    assertEquals(1, result.rowCount())
+    // For n=2, Type 7: h = (2-1)*p + 1
+    // Q1: h = 1.25, j=1, g=0.25 → 0 + 0.25*(10-0) = 2.5
+    // Q2: h = 1.5, j=1, g=0.5 → 0 + 0.5*(10-0) = 5.0
+    // Q3: h = 1.75, j=1, g=0.75 → 0 + 0.75*(10-0) = 7.5
+    assertEquals(2.5d, result['lower'][0] as double, 0.0001d)
+    assertEquals(5.0d, result['middle'][0] as double, 0.0001d)
+    assertEquals(7.5d, result['upper'][0] as double, 0.0001d)
+  }
+
+  // ===== Tests for resolution behavior (tested indirectly through boxplot) =====
+
+  /**
+   * Test that xresolution is computed correctly for evenly spaced numeric x values.
+   */
+  @Test
+  void testBoxplotXresolutionEvenlySpaced() {
+    // X values: 1, 2, 3 (minimum difference = 1)
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([
+            [1, 10], [1, 20],
+            [2, 15], [2, 25],
+            [3, 12], [3, 22]
+        ])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.boxplot(data, aes)
+
+    assertEquals(3, result.rowCount())
+    // Each row should have xresolution = 1 (minimum spacing between x values)
+    result.each { row ->
+      assertEquals(1.0d, row['xresolution'] as double, 0.0001d,
+          'xresolution should be minimum spacing between x values')
+    }
+  }
+
+  /**
+   * Test xresolution with irregular spacing.
+   */
+  @Test
+  void testBoxplotXresolutionIrregularSpacing() {
+    // X values: 0, 2, 10 (minimum difference = 2)
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([
+            [0, 10], [0, 20],
+            [2, 15], [2, 25],
+            [10, 12], [10, 22]
+        ])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.boxplot(data, aes)
+
+    assertEquals(3, result.rowCount())
+    // xresolution should be 2 (minimum positive difference)
+    result.each { row ->
+      assertEquals(2.0d, row['xresolution'] as double, 0.0001d,
+          'xresolution should be minimum positive spacing')
+    }
+  }
+
+  /**
+   * Test xresolution with single x value (defaults to 1).
+   */
+  @Test
+  void testBoxplotXresolutionSingleX() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([
+            [5, 10], [5, 20], [5, 30]
+        ])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.boxplot(data, aes)
+
+    assertEquals(1, result.rowCount())
+    // With single x value, resolution defaults to 1
+    assertEquals(1.0d, result['xresolution'][0] as double, 0.0001d,
+        'xresolution should default to 1 for single x value')
+  }
 }

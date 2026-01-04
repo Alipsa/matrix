@@ -156,11 +156,12 @@ class GgStat {
 
   /**
    * Compute boxplot statistics.
-   * Delegates to Stat.quartiles(), Stat.iqr(), Stat.median().
+   * Uses quantile Type 7 (linear interpolation) to compute quartiles, matching ggplot2's behavior.
+   * IQR is computed as upper quartile - lower quartile using the same quantile method.
    *
    * When a group aesthetic is specified separately from x:
    * - Groups data by the group column for computing boxplot statistics
-   * - Computes median x value for each group for positioning (ggplot2 behavior)
+   * - Computes mean x value for each group for positioning (ggplot2 behavior)
    *
    * @param data Input matrix
    * @param aes Aesthetic mappings (uses group or x for grouping, y for values)

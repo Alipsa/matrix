@@ -1082,6 +1082,11 @@ class GgRenderer {
               }
             }
 
+            // Compute x bounds for scale domain calculation.
+            // This duplicates width logic from GeomBoxplot for scale training purposes.
+            // Complexity: O(n) with O(1) map lookups per row (not O(n*m)).
+            // Note: Moving to stat phase would require architectural changes to pass
+            // computed bounds through the pipeline, which isn't currently supported.
             posData.eachWithIndex { row, int idx ->
               def xVal = row['x']
               if (!(xVal instanceof Number)) return

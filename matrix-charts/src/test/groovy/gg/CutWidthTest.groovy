@@ -30,8 +30,11 @@ class CutWidthTest {
     String colName = cutWidth.addToMatrix(data)
     def labels = data[colName] as List<String>
 
-    assertEquals('[1.5,2.5]', labels[1], '2.5 should be in the bin ending at 2.5 (closed right includes boundary)')
-    assertEquals('(2.5,3.5]', labels[2], '3.5 should be in the bin ending at 3.5 (closed right includes boundary)')
+    // For closed-right, value 2.5 is included in the bin ending at 2.5 (right boundary included).
+    // The first bin uses [a,b] notation (both closed) as a special case to include the minimum.
+    assertEquals('[1.5,2.5]', labels[1], '2.5 should be in the first bin [1.5,2.5] (both brackets closed for first bin)')
+    // Subsequent bins use (a,b] notation (open left, closed right)
+    assertEquals('(2.5,3.5]', labels[2], '3.5 should be in bin (2.5,3.5] (standard closed-right notation)')
   }
 
   /**

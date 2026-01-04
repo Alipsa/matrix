@@ -163,6 +163,8 @@ class GeomBoxplot extends Geom {
 
       double widthData
       boolean usedBounds = false
+      // When xmin/xmax bounds are present, use them for pixel positioning (xCenter, halfWidth).
+      // This handles position_dodge2 adjusted bounds.
       if (row['xmin'] instanceof Number && row['xmax'] instanceof Number && xScale != null) {
         double xminData = (row['xmin'] as Number).doubleValue()
         double xmaxData = (row['xmax'] as Number).doubleValue()
@@ -174,6 +176,12 @@ class GeomBoxplot extends Geom {
         widthData = xmaxData - xminData
         usedBounds = true
       }
+      // Width precedence for statistical width (used in varwidth scaling):
+      // 1. Explicit 'width' column from stat computation (e.g., varwidth)
+      // 2. 'xresolution' scaled by width parameter
+      // 3. Default width parameter
+      // This intentionally overwrites bounds-derived widthData because statistical width
+      // (from the stat phase) should take precedence for varwidth calculations.
       if (row['width'] instanceof Number) {
         widthData = (row['width'] as Number).doubleValue()
       } else if (row['xresolution'] instanceof Number) {

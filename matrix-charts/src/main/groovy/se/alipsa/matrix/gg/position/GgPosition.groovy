@@ -221,6 +221,9 @@ class GgPosition {
       newx[xid] = center
       double total = 0d
       int n = bucket.size()
+      // Divide each element's width by the number of overlapping elements.
+      // This matches ggplot2's position_dodge2 with preserve="total" (the default),
+      // which keeps the total occupied width constant regardless of original widths.
       bucket.each { Map<String, Object> row ->
         double xminVal = row['xmin'] instanceof Number ? (row['xmin'] as Number).doubleValue() : 0d
         double xmaxVal = row['xmax'] instanceof Number ? (row['xmax'] as Number).doubleValue() : 0d
@@ -313,7 +316,7 @@ class GgPosition {
     }
 
     List<Integer> overlaps = new ArrayList<>(n)
-    int acc = 0
+    int currentGroupId = 0
     for (int i = 0; i < n; i++) {
       Double s = start[i]
       Double ePrev = endPrev[i]
@@ -325,9 +328,9 @@ class GgPosition {
         }
       }
       if (newGroup) {
-        acc += 1
+        currentGroupId += 1
       }
-      overlaps << acc
+      overlaps << currentGroupId
     }
 
     int maxOverlap = overlaps.isEmpty() ? 0 : overlaps.max()
