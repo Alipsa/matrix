@@ -824,29 +824,6 @@ class GgStat {
   }
 
   /**
-   * Parse a bin label like "(2.5, 3.5]" or "[2.5, 3.5)" and return the bin center.
-   * Returns null if the string is not a valid bin label.
-   */
-  private static Double parseBinCenter(Object groupKey) {
-    if (groupKey == null || !(groupKey instanceof String)) {
-      return null
-    }
-    String label = groupKey as String
-    // Match patterns like "(1.5,2.5]", "[1.5,2.5)", "(1,2]", etc.
-    def matcher = label =~ /^[\(\[]([-\d.]+)\s*,\s*([-\d.]+)[\)\]]$/
-    if (matcher.matches()) {
-      try {
-        double low = Double.parseDouble(matcher.group(1))
-        double high = Double.parseDouble(matcher.group(2))
-        return (low + high) / 2.0
-      } catch (NumberFormatException e) {
-        return null
-      }
-    }
-    return null
-  }
-
-  /**
    * Compute the minimum non-zero resolution in a numeric vector.
    * Mirrors ggplot2's resolution() behavior for continuous data.
    */
@@ -898,31 +875,6 @@ class GgStat {
     double xj = sortedValues[j - 1] as double
     double xj1 = sortedValues[j] as double
     return xj + g * (xj1 - xj)
-  }
-
-  /**
-   * Find the lowest data point within the lower fence.
-   */
-  private static Number findWhiskerLow(List<Number> sortedValues, double lowerFence) {
-    for (def value : sortedValues) {
-      if ((value as double) >= lowerFence) {
-        return value
-      }
-    }
-    return sortedValues[0]
-  }
-
-  /**
-   * Find the highest data point within the upper fence.
-   */
-  private static Number findWhiskerHigh(List<Number> sortedValues, double upperFence) {
-    for (int i = sortedValues.size() - 1; i >= 0; i--) {
-      def value = sortedValues[i]
-      if ((value as double) <= upperFence) {
-        return value
-      }
-    }
-    return sortedValues[sortedValues.size() - 1]
   }
 
 }

@@ -207,14 +207,24 @@ class GgPosition {
     Map<Integer, Double> newx = [:]
     Map<Integer, Double> groupSize = [:]
     byXid.each { Integer xid, List<Map<String, Object>> bucket ->
-      double minX = bucket.collect { (it['xmin'] as Number).doubleValue() }.min()
-      double maxX = bucket.collect { (it['xmax'] as Number).doubleValue() }.max()
+      // Filter to rows with valid xmin/xmax values
+      List<Double> xminValues = bucket.findResults { it['xmin'] instanceof Number ? (it['xmin'] as Number).doubleValue() : null } as List<Double>
+      List<Double> xmaxValues = bucket.findResults { it['xmax'] instanceof Number ? (it['xmax'] as Number).doubleValue() : null } as List<Double>
+      if (xminValues.isEmpty() || xmaxValues.isEmpty()) {
+        // No valid bounds in this bucket, skip processing
+        groupSize[xid] = 0d
+        return
+      }
+      double minX = xminValues.min()
+      double maxX = xmaxValues.max()
       double center = (minX + maxX) / 2.0d
       newx[xid] = center
       double total = 0d
       int n = bucket.size()
       bucket.each { Map<String, Object> row ->
-        double width = (row['xmax'] as Number).doubleValue() - (row['xmin'] as Number).doubleValue()
+        double xminVal = row['xmin'] instanceof Number ? (row['xmin'] as Number).doubleValue() : 0d
+        double xmaxVal = row['xmax'] instanceof Number ? (row['xmax'] as Number).doubleValue() : 0d
+        double width = xmaxVal - xminVal
         double newWidth = n > 0 ? width / n : 0d
         row['new_width'] = newWidth
         total += newWidth
@@ -223,19 +233,28 @@ class GgPosition {
     }
 
     byXid.each { Integer xid, List<Map<String, Object>> bucket ->
-      double start = newx[xid] - (groupSize[xid] / 2.0d)
+      Double centerX = newx[xid]
+      Double size = groupSize[xid]
+      if (centerX == null || size == null) {
+        // Skip buckets that weren't processed due to missing values
+        return
+      }
+      double start = centerX - (size / 2.0d)
       double cursor = start
       bucket.each { Map<String, Object> row ->
-        double newWidth = (row['new_width'] as Number).doubleValue()
+        double newWidth = row['new_width'] instanceof Number ? (row['new_width'] as Number).doubleValue() : 0d
         row['xmin'] = cursor
         row['xmax'] = cursor + newWidth
-        row['x'] = (((Number) row['xmin']).doubleValue() + ((Number) row['xmax']).doubleValue()) / 2.0d
+        row['x'] = (cursor + cursor + newWidth) / 2.0d
         cursor += newWidth
       }
     }
 
     if (byXid.any { it.value.size() > 1 }) {
       rows.each { Map<String, Object> row ->
+        if (!(row['new_width'] instanceof Number) || !(row['x'] instanceof Number)) {
+          return
+        }
         double newWidth = (row['new_width'] as Number).doubleValue()
         double padWidth = newWidth * (1.0d - padding)
         double center = (row['x'] as Number).doubleValue()
@@ -267,7 +286,7 @@ class GgPosition {
       Double xmax = toDouble(row['xmax'])
       start << xmin
       end << xmax
-      boolean isMissing = isMissingValue(xmin) || isMissingValue(xmax)
+      boolean isMissing = isNotNumericOrMissing(xmin) || isNotNumericOrMissing(xmax)
       missing << isMissing
       nonzero << (!isMissing && xmin != null && xmax != null && xmin != xmax)
     }
@@ -332,7 +351,12 @@ class GgPosition {
     return result
   }
 
-  private static boolean isMissingValue(Object value) {
+  /**
+   * Check if a value is not a valid numeric value for positioning.
+   * Returns true for null, NaN, or non-Number types (e.g., String).
+   * This is used to identify values that cannot participate in numeric position calculations.
+   */
+  private static boolean isNotNumericOrMissing(Object value) {
     if (value == null) {
       return true
     }

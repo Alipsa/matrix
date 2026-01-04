@@ -47,7 +47,7 @@ class GeomBoxplot extends Geom {
   /** Width of boxes relative to spacing (0-1) */
   Number width = 0.75
 
-  /** Whether to scale box widths based on sample size (auto when null) */
+  /** Whether to scale box widths based on sample size (null/false = disabled, true = enabled) */
   Boolean varwidth = null
 
   /** Whether to show outlier points */

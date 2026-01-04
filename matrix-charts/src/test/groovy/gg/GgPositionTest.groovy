@@ -150,4 +150,162 @@ class GgPositionTest {
     assertEquals(expected[1][0], xValues[1] as double, 1e-9)
     assertEquals(expected[1][1], yValues[1] as double, 1e-9)
   }
+
+  // ===== dodge2 tests =====
+
+  @Test
+  void testDodge2WithNumericX() {
+    // Create data with numeric x values and xmin/xmax
+    def data = Matrix.builder()
+        .columnNames('x', 'y', 'group', 'xmin', 'xmax')
+        .rows([
+            [1.0, 10, 'A', 0.5, 1.5],
+            [2.0, 20, 'B', 1.5, 2.5]
+        ])
+        .types(Double, Integer, String, Double, Double)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', group: 'group')
+    Matrix result = GgPosition.dodge2(data, aes, [:])
+
+    assertEquals(2, result.rowCount())
+    // xmin/xmax should be preserved or adjusted
+    assertTrue(result.columnNames().contains('xmin'))
+    assertTrue(result.columnNames().contains('xmax'))
+  }
+
+  @Test
+  void testDodge2WithCategoricalX() {
+    // Create data with categorical x values (no xmin/xmax)
+    def data = Matrix.builder()
+        .columnNames('x', 'y', 'group')
+        .rows([
+            ['A', 10, 'G1'],
+            ['B', 20, 'G2'],
+            ['C', 30, 'G3']
+        ])
+        .types(String, Integer, String)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', group: 'group')
+    Matrix result = GgPosition.dodge2(data, aes, [:])
+
+    assertEquals(3, result.rowCount())
+    // Should have computed xmin/xmax for categorical x
+    assertTrue(result.columnNames().contains('xmin'))
+    assertTrue(result.columnNames().contains('xmax'))
+
+    // Each category should have numeric xmin/xmax
+    result.each { row ->
+      assertNotNull(row['xmin'], "xmin should not be null")
+      assertNotNull(row['xmax'], "xmax should not be null")
+      assertTrue(row['xmin'] instanceof Number, "xmin should be numeric")
+      assertTrue(row['xmax'] instanceof Number, "xmax should be numeric")
+    }
+  }
+
+  @Test
+  void testDodge2WithOverlappingIntervals() {
+    // Create data with overlapping x intervals in the same position
+    def data = Matrix.builder()
+        .columnNames('x', 'y', 'group', 'xmin', 'xmax')
+        .rows([
+            [1.0, 10, 'A', 0.5, 1.5],
+            [1.0, 15, 'B', 0.5, 1.5]  // Same x position, different group
+        ])
+        .types(Double, Integer, String, Double, Double)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', group: 'group')
+    Matrix result = GgPosition.dodge2(data, aes, [:])
+
+    assertEquals(2, result.rowCount())
+    // After dodging, the two boxes should have different x positions
+    double x1 = (result['x'][0] as Number).doubleValue()
+    double x2 = (result['x'][1] as Number).doubleValue()
+    assertNotEquals(x1, x2, 0.001, "Overlapping intervals should be dodged to different positions")
+  }
+
+  @Test
+  void testDodge2WithNullXminXmax() {
+    // Create data where xmin/xmax need to be computed from x
+    def data = Matrix.builder()
+        .columnNames('x', 'y', 'group')
+        .rows([
+            [1.0, 10, 'A'],
+            [2.0, 20, 'B']
+        ])
+        .types(Double, Integer, String)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', group: 'group')
+
+    // Should not throw NullPointerException
+    Matrix result = GgPosition.dodge2(data, aes, [:])
+    assertNotNull(result)
+    assertEquals(2, result.rowCount())
+    // xmin/xmax should have been computed
+    assertTrue(result.columnNames().contains('xmin'))
+    assertTrue(result.columnNames().contains('xmax'))
+  }
+
+  @Test
+  void testDodge2WithPaddingParameter() {
+    // Create data with overlapping intervals
+    def data = Matrix.builder()
+        .columnNames('x', 'y', 'group', 'xmin', 'xmax')
+        .rows([
+            [1.0, 10, 'A', 0.5, 1.5],
+            [1.0, 15, 'B', 0.5, 1.5]
+        ])
+        .types(Double, Integer, String, Double, Double)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', group: 'group')
+
+    // Test with different padding values
+    Matrix resultNoPadding = GgPosition.dodge2(data, aes, [padding: 0.0])
+    Matrix resultWithPadding = GgPosition.dodge2(data, aes, [padding: 0.2])
+
+    // Both should produce valid results
+    assertNotNull(resultNoPadding)
+    assertNotNull(resultWithPadding)
+    assertEquals(2, resultNoPadding.rowCount())
+    assertEquals(2, resultWithPadding.rowCount())
+  }
+
+  @Test
+  void testDodge2WithEmptyData() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y', 'group')
+        .rows([])
+        .types(Double, Integer, String)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', group: 'group')
+    Matrix result = GgPosition.dodge2(data, aes, [:])
+
+    assertNotNull(result)
+    assertEquals(0, result.rowCount())
+  }
+
+  @Test
+  void testDodge2PreservesOtherColumns() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y', 'group', 'extra', 'xmin', 'xmax')
+        .rows([
+            [1.0, 10, 'A', 'value1', 0.5, 1.5],
+            [2.0, 20, 'B', 'value2', 1.5, 2.5]
+        ])
+        .types(Double, Integer, String, String, Double, Double)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', group: 'group')
+    Matrix result = GgPosition.dodge2(data, aes, [:])
+
+    // Should preserve the 'extra' column
+    assertTrue(result.columnNames().contains('extra'))
+    assertEquals('value1', result['extra'][0])
+    assertEquals('value2', result['extra'][1])
+  }
 }
