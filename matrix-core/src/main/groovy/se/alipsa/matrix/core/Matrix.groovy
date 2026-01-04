@@ -1871,7 +1871,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param to the value to replace with
    * @return this matrix (mutated) to allow for method chaining
    */
-  Matrix replace(Object from, Object to) {
+  Matrix replaceAll(Object from, Object to) {
     columns().each {
       Collections.replaceAll(it as List<Object>, from, to)
     }
