@@ -205,7 +205,14 @@ class CutWidth {
       return String.valueOf((long) d)
     }
     // Round to avoid floating point artifacts
-    return String.format("%.2f", d).replaceAll(/\.?0+$/, '')
+    String s = String.format("%.2f", d)
+    if (s.contains('.')) {
+      // Remove trailing zeros after the decimal point
+      s = s.replaceAll(/0+$/, '')
+      // If all decimals were zeros, remove the trailing decimal point
+      s = s.replaceAll(/\.$/, '')
+    }
+    return s
   }
 
   /**
