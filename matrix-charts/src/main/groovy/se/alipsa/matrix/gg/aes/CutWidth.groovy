@@ -196,7 +196,7 @@ class CutWidth {
    * Format a number, removing unnecessary decimal places.
    */
   private static String formatNumber(double d) {
-    if (d == Math.floor(d) && d < Long.MAX_VALUE) {
+    if (d >= Long.MIN_VALUE && d <= Long.MAX_VALUE && d == Math.floor(d)) {
       return String.valueOf((long) d)
     }
     // Round to avoid floating point artifacts
