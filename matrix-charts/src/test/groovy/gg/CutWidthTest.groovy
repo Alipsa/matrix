@@ -35,7 +35,7 @@ class CutWidthTest {
   }
 
   /**
-   * Values equal to the bin end should fall into the next bin when closed left.
+   * Values equal to the bin start are included in that bin when closed left.
    */
   @Test
   void testClosedLeftAssignsBoundaryToNextBin() {
