@@ -56,7 +56,7 @@ class CutWidth {
    * @param closedRight if true, bins are (a, b]; if false, bins are [a, b)
    */
   CutWidth(String column, Number width, Number center, Number boundary, boolean closedRight) {
-    if (column == null || column.isEmpty()) {
+    if (column == null || column.isBlank()) {
       throw new IllegalArgumentException("Column name cannot be null or empty")
     }
     if (width == null || width.doubleValue() <= 0) {
