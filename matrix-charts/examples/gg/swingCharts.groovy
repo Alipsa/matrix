@@ -94,6 +94,7 @@ SwingUtilities.invokeLater {
     listScrollPane.preferredSize = new Dimension(listWidth, 0)
 
     JPanel displayPanel = new JPanel(new BorderLayout())
+    File currentSelection = null
 
     def showSvg = { File svgFile ->
         displayPanel.removeAll()
@@ -122,13 +123,14 @@ SwingUtilities.invokeLater {
         }
         displayPanel.revalidate()
         displayPanel.repaint()
+        currentSelection = svgFile
         frame.pack()
     }
 
     fileList.addListSelectionListener { event ->
         if (!event.valueIsAdjusting) {
             File selected = fileList.selectedValue
-            if (selected != null) {
+            if (selected != null && selected != currentSelection) {
                 showSvg(selected)
             }
         }
@@ -138,6 +140,8 @@ SwingUtilities.invokeLater {
     splitPane.dividerLocation = listWidth
     frame.contentPane.add(splitPane, BorderLayout.CENTER)
     if (listModel.size() > 0) {
+        File firstFile = listModel.getElementAt(0)
+        showSvg(firstFile)
         fileList.selectedIndex = 0
     }
     frame.locationRelativeTo = null  // Center on screen

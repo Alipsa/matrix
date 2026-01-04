@@ -1,15 +1,17 @@
 /*
  * JavaFX application that runs all *Example.groovy scripts and displays
  * the generated SVG charts in a list/detail viewer.
+ * Run it with: JAVA_OPTS=--enable-native-access=ALL-UNNAMED && groovy jfxCharts.groovy
+ * If you are running this from another platform than linux, adjust the javafx platform grabs accordingly.
  */
 @GrabConfig(systemClassLoader=true)
 @Grab('se.alipsa.matrix:matrix-core:3.5.1-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-charts:0.4.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-stats:2.3.0-SNAPSHOT')
-@Grab('org.openjfx:javafx-base:23.0.2')
-@Grab('org.openjfx:javafx-graphics:23.0.2')
-@Grab('org.openjfx:javafx-controls:23.0.2')
+@Grab('org.openjfx:javafx-base:23.0.2:linux')
+@Grab('org.openjfx:javafx-graphics:23.0.2:linux')
+@Grab('org.openjfx:javafx-controls:23.0.2:linux')
 
 import groovy.transform.SourceURI
 import javafx.application.Application
