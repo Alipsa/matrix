@@ -22,6 +22,8 @@ class Themes {
     theme.panelBackground = new ElementRect(fill: 'white', color: null)
     theme.panelGridMajor = null  // No grid
     theme.panelGridMinor = null
+    theme.explicitNulls.add('panelGridMajor')
+    theme.explicitNulls.add('panelGridMinor')
     theme.plotBackground = new ElementRect(fill: 'white', color: null)
     theme.axisLineX = new ElementLine(color: 'black', size: 1)
     theme.axisLineY = new ElementLine(color: 'black', size: 1)
@@ -54,6 +56,7 @@ class Themes {
     theme.panelBackground = new ElementRect(fill: 'none', color: null)
     theme.panelGridMajor = new ElementLine(color: '#D3D3D3', size: 0.5)
     theme.panelGridMinor = null  // No minor grid
+    theme.explicitNulls.add('panelGridMinor')
     theme.plotBackground = new ElementRect(fill: 'none', color: null)
     theme.axisLineX = new ElementLine(color: '#D3D3D3')
     theme.axisLineY = new ElementLine(color: '#D3D3D3')

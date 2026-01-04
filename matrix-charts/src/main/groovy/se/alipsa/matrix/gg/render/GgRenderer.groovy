@@ -82,7 +82,10 @@ class GgRenderer {
    * Render a single (non-faceted) chart.
    */
   private Svg renderSingle(GgChart chart) {
-    Theme theme = chart.theme ?: defaultTheme()
+    Theme theme = defaultTheme()
+    if (chart.theme != null) {
+      theme = theme + chart.theme
+    }
 
     // Calculate initial plot area dimensions
     int plotX = MARGIN_LEFT
@@ -195,7 +198,10 @@ class GgRenderer {
     svg.height(chart.height)
     svg.viewBox("0 0 ${chart.width} ${chart.height}")
 
-    Theme theme = chart.theme ?: defaultTheme()
+    Theme theme = defaultTheme()
+    if (chart.theme != null) {
+      theme = theme + chart.theme
+    }
     Facet facet = chart.facet
 
     // 1. Draw background

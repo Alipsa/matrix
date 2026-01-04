@@ -551,7 +551,8 @@ class GgStat {
    *
    * @param data Input matrix
    * @param aes Aesthetic mappings
-   * @param params Map with: fun ('mean', 'median', 'sum', 'min', 'max')
+   * @param params Map with: fun ('mean', 'median', 'sum', 'min', 'max'),
+   *   fun.data ('mean_cl_normal', 'median_hilow'), fun.args (e.g. [conf.int: 0.5])
    * @return Matrix with summary values
    */
   static Matrix summary(Matrix data, Aes aes, Map params = [:]) {
@@ -561,6 +562,12 @@ class GgStat {
     String funData = params.'fun.data'
     if (funData == null && params.funData) {
       funData = params.funData as String
+    }
+    Map funArgs = [:]
+    if (params.'fun.args' instanceof Map) {
+      funArgs = params.'fun.args' as Map
+    } else if (params.funArgs instanceof Map) {
+      funArgs = params.funArgs as Map
     }
 
     if (yCol == null) {
@@ -572,6 +579,19 @@ class GgStat {
         case 'mean_cl_normal':
           double level = params.level != null ? (params.level as double) : 0.95d
           return meanClNormal(data, xCol, yCol, level)
+        case 'median_hilow':
+          double confInt = 0.95d
+          if (funArgs != null) {
+            if (funArgs.containsKey('conf.int')) {
+              confInt = (funArgs.'conf.int' as Number).doubleValue()
+            } else if (funArgs.containsKey('confInt')) {
+              confInt = (funArgs.confInt as Number).doubleValue()
+            }
+          }
+          if (confInt <= 0.0d || confInt > 1.0d || Double.isNaN(confInt)) {
+            throw new IllegalArgumentException("median_hilow requires conf.int in (0, 1]")
+          }
+          return medianHiLow(data, xCol, yCol, confInt)
         default:
           throw new IllegalArgumentException("Unknown summary function: $funData")
       }
@@ -658,6 +678,49 @@ class GgStat {
         (yCol): mean,
         ymin: ymin,
         ymax: ymax
+    ]
+  }
+
+  private static Matrix medianHiLow(Matrix data, String xCol, String yCol, double confInt) {
+    if (xCol == null) {
+      return medianHiLowUngrouped(data, yCol, confInt)
+    }
+
+    Map<String, Matrix> groups = Stat.groupBy(data, xCol)
+    List<Map<String, Object>> rows = []
+    groups.each { groupKey, groupData ->
+      List<Number> values = groupData[yCol] as List<Number>
+      rows << medianHiLowRow(groupKey, values, xCol, yCol, confInt)
+    }
+    return Matrix.builder().mapList(rows).build()
+  }
+
+  private static Matrix medianHiLowUngrouped(Matrix data, String yCol, double confInt) {
+    List<Number> values = data[yCol] as List<Number>
+    Map<String, Object> row = medianHiLowRow('all', values, 'x', yCol, confInt)
+    return Matrix.builder().mapList([row]).build()
+  }
+
+  private static Map<String, Object> medianHiLowRow(Object groupKey, List<Number> values,
+                                                    String xCol, String yCol, double confInt) {
+    List<Number> numeric = values.findAll { it instanceof Number } as List<Number>
+    if (numeric.isEmpty()) {
+      return [(xCol): groupKey, (yCol): null, ymin: null, ymax: null]
+    }
+    numeric.sort()
+
+    double alpha = (1.0d - confInt) / 2.0d
+    double lowerProb = Math.max(0.0d, Math.min(1.0d, alpha))
+    double upperProb = Math.max(0.0d, Math.min(1.0d, 1.0d - alpha))
+
+    Number median = quantileType7(numeric, 0.5d)
+    Number lower = quantileType7(numeric, lowerProb)
+    Number upper = quantileType7(numeric, upperProb)
+    return [
+        (xCol): groupKey,
+        (yCol): median,
+        ymin: lower,
+        ymax: upper
     ]
   }
 
