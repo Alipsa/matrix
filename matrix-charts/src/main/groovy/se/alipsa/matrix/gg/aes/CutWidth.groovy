@@ -154,8 +154,10 @@ class CutWidth {
       int binIndex = (int) Math.floor((d - minX) / w)
       if (closedRight) {
         double boundaryPoint = minX + binIndex * w
-        double epsilon = 1e-10d
-        if (Math.abs(d - boundaryPoint) < epsilon && Math.abs(d - minX) >= epsilon) {
+        double diff = d - boundaryPoint
+        double scale = Math.max(1.0d, Math.max(Math.abs(d), Math.abs(boundaryPoint)))
+        double epsilon = 1e-10d * scale
+        if (Math.abs(diff) < epsilon && Math.abs(d - minX) >= epsilon) {
           binIndex -= 1
         }
       }
