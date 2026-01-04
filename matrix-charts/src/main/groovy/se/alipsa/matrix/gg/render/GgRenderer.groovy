@@ -7,6 +7,7 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.coord.Coord
@@ -17,6 +18,7 @@ import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
+import se.alipsa.matrix.gg.geom.GeomBoxplot
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
@@ -1014,12 +1016,23 @@ class GgRenderer {
         Matrix posData = layer.position != PositionType.IDENTITY ?
             applyPosition(statData, resolvedLayerAes, layer) : statData
 
-        // For x aesthetic: use xmin/xmax for histograms, otherwise use x column
-        if (posData.columnNames().contains('xmin') && posData.columnNames().contains('xmax')) {
-          // stat_bin produces xmin/xmax columns - include both for full range
+        // For x aesthetic: use stat-computed columns appropriately
+        // For histograms: use xmin/xmax (bin boundaries) for scale
+        // For boxplots: use only x (median position) for scale - don't include data ranges
+        boolean isHistogramOrBar = layer.geom?.class?.simpleName in ['GeomBar', 'GeomCol', 'GeomHistogram']
+        boolean isBoxplot = layer.geom instanceof GeomBoxplot
+
+        if (posData.columnNames().contains('x')) {
+          // Use the 'x' column from stat output
+          data['x'].addAll(posData['x'] ?: [])
+        }
+        if (isHistogramOrBar && posData.columnNames().contains('xmin') && posData.columnNames().contains('xmax')) {
+          // For histograms/bars: include xmin/xmax to show full bar widths
           data['x'].addAll(posData['xmin'] ?: [])
           data['x'].addAll(posData['xmax'] ?: [])
-        } else if (resolvedLayerAes.xColName && posData.columnNames().contains(resolvedLayerAes.xColName)) {
+        } else if (!posData.columnNames().contains('x') &&
+                   resolvedLayerAes.xColName && posData.columnNames().contains(resolvedLayerAes.xColName)) {
+          // Fallback: use original x column if no stat-computed x exists
           data['x'].addAll(posData[resolvedLayerAes.xColName] ?: [])
         }
 
@@ -1028,6 +1041,14 @@ class GgRenderer {
           // stat_boxplot produces ymin/ymax columns - include both for full y range
           data['y'].addAll(posData['ymin'] ?: [])
           data['y'].addAll(posData['ymax'] ?: [])
+          // Also include outlier values so y-scale covers them
+          if (posData.columnNames().contains('outliers')) {
+            posData['outliers']?.each { outlierList ->
+              if (outlierList instanceof List) {
+                data['y'].addAll(outlierList.findAll { it instanceof Number })
+              }
+            }
+          }
         } else if (resolvedLayerAes.isAfterStat('y')) {
           // Explicit after_stat() reference - use the specified computed column
           String statCol = resolvedLayerAes.getAfterStatName('y')
@@ -1041,10 +1062,50 @@ class GgRenderer {
           data['y'].addAll(posData['count'] ?: [])
         }
 
-        // For boxplot x-axis, use the computed 'x' column (group keys)
-        if (posData.columnNames().contains('x') && !posData.columnNames().contains('xmin')) {
-          // stat_boxplot produces 'x' column with group names (but not xmin/xmax like histograms)
-          data['x'].addAll(posData['x'] ?: [])
+        if (isBoxplot && posData.columnNames().contains('x')) {
+          boolean hasBounds = posData.columnNames().contains('xmin') && posData.columnNames().contains('xmax')
+          if (hasBounds) {
+            data['x'].addAll(posData['xmin'] ?: [])
+            data['x'].addAll(posData['xmax'] ?: [])
+          }
+          def firstX = (posData['x'] as List)?.find { it != null }
+          if (!hasBounds && firstX instanceof Number) {
+            GeomBoxplot geom = (GeomBoxplot) layer.geom
+            double widthValue = geom?.width != null ? (geom.width as Number).doubleValue() : 0.75d
+            boolean useVarwidth = geom?.varwidth == true
+            double maxRelVarwidth = 1.0d
+            if (useVarwidth && posData.columnNames().contains('relvarwidth')) {
+              List<Number> relValues = (posData['relvarwidth'] as List)
+                  .findAll { it instanceof Number } as List<Number>
+              if (!relValues.isEmpty()) {
+                maxRelVarwidth = relValues.max() as double
+              }
+            }
+
+            posData.eachWithIndex { row, int idx ->
+              def xVal = row['x']
+              if (!(xVal instanceof Number)) return
+
+              Double widthData
+              if (row['width'] instanceof Number) {
+                widthData = ((Number) row['width']).doubleValue()
+              } else if (row['xresolution'] instanceof Number) {
+                widthData = ((Number) row['xresolution']).doubleValue() * widthValue
+              } else {
+                widthData = widthValue
+              }
+              if (useVarwidth && row['relvarwidth'] instanceof Number && maxRelVarwidth > 0d) {
+                double rel = ((Number) row['relvarwidth']).doubleValue() / maxRelVarwidth
+                widthData = widthData * rel
+              }
+
+              if (widthData != null && widthData > 0d) {
+                double half = widthData / 2
+                data['x'].add(((Number) xVal).doubleValue() - half)
+                data['x'].add(((Number) xVal).doubleValue() + half)
+              }
+            }
+          }
         }
 
         if (resolvedLayerAes.colorColName && posData.columnNames().contains(resolvedLayerAes.colorColName)) {
@@ -1331,7 +1392,7 @@ class GgRenderer {
       case StatType.BIN:
         return GgStat.bin(data, aes, layer.statParams)
       case StatType.BOXPLOT:
-        return GgStat.boxplot(data, aes)
+        return GgStat.boxplot(data, aes, layer.statParams)
       case StatType.SMOOTH:
         return GgStat.smooth(data, aes, layer.statParams)
       case StatType.SUMMARY:
@@ -1350,6 +1411,8 @@ class GgRenderer {
         return GgPosition.identity(data, aes)
       case PositionType.DODGE:
         return GgPosition.dodge(data, aes, layer.positionParams)
+      case PositionType.DODGE2:
+        return GgPosition.dodge2(data, aes, layer.positionParams)
       case PositionType.STACK:
         return GgPosition.stack(data, aes, layer.positionParams)
       case PositionType.FILL:
@@ -1893,8 +1956,8 @@ class GgRenderer {
       return new EvaluatedAes(data, aes)
     }
 
-    // Check if any aesthetic is an expression
-    boolean hasExpressions = ALL_AESTHETICS.any { aes.isExpression(it) || aes.isFactor(it) }
+    // Check if any aesthetic is an expression, factor, or cut_width
+    boolean hasExpressions = ALL_AESTHETICS.any { aes.isExpression(it) || aes.isFactor(it) || aes.isCutWidth(it) }
 
     if (!hasExpressions) {
       return new EvaluatedAes(data, aes)
@@ -1930,6 +1993,10 @@ class GgRenderer {
     if (aes.isFactor(aesthetic)) {
       Factor factor = aes.getFactor(aesthetic)
       return factor.addToMatrix(workData)
+    }
+    if (aes.isCutWidth(aesthetic)) {
+      CutWidth cutWidth = aes.getCutWidth(aesthetic)
+      return cutWidth.addToMatrix(workData)
     }
     def rawValue = aes."$aesthetic"
     if (rawValue instanceof List) {

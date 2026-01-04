@@ -23,6 +23,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.AfterStat
+import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
@@ -224,6 +225,41 @@ class GgPlot {
    */
   static Factor factor(Object value) {
     return new Factor(value)
+  }
+
+  /**
+   * Cut a continuous variable into bins of fixed width.
+   * Similar to ggplot2's cut_width function.
+   *
+   * Creates a categorical variable from a continuous column by dividing it
+   * into bins of the specified width. Useful for grouping continuous data
+   * in boxplots, histograms, and other visualizations.
+   *
+   * Examples:
+   * - cut_width('displ', 1)       - bins like (1,2], (2,3], etc.
+   * - cut_width('displ', 0.5)     - bins like (1,1.5], (1.5,2], etc.
+   *
+   * @param column the column name containing continuous values
+   * @param width the width of each bin
+   * @return a CutWidth wrapper
+   */
+  static CutWidth cut_width(String column, Number width) {
+    return new CutWidth(column, width)
+  }
+
+  /**
+   * Cut a continuous variable into bins of fixed width with additional options.
+   *
+   * @param column the column name containing continuous values
+   * @param width the width of each bin
+   * @param params optional map with 'center', 'boundary', or 'closed' ('right' or 'left')
+   * @return a CutWidth wrapper
+   */
+  static CutWidth cut_width(Map params, String column, Number width) {
+    Number center = params.center as Number
+    Number boundary = params.boundary as Number
+    boolean closedRight = params.closed != 'left'
+    return new CutWidth(column, width, center, boundary, closedRight)
   }
 
   // ============ Labels ============
@@ -503,6 +539,10 @@ class GgPlot {
 
   static GeomBoxplot geom_boxplot() {
     return new GeomBoxplot()
+  }
+
+  static GeomBoxplot geom_boxplot(Aes aes) {
+    return new GeomBoxplot(aes)
   }
 
   static GeomBoxplot geom_boxplot(Map params) {

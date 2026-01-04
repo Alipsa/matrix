@@ -158,51 +158,146 @@ class GgStat {
    * Compute boxplot statistics.
    * Delegates to Stat.quartiles(), Stat.iqr(), Stat.median().
    *
+   * When a group aesthetic is specified separately from x:
+   * - Groups data by the group column for computing boxplot statistics
+   * - Computes median x value for each group for positioning (ggplot2 behavior)
+   *
    * @param data Input matrix
-   * @param aes Aesthetic mappings (uses x for grouping, y for values)
-   * @return Matrix with columns: x, ymin, lower, middle, upper, ymax, outliers
+   * @param aes Aesthetic mappings (uses group or x for grouping, y for values)
+   * @return Matrix with columns: x, group, ymin, lower, middle, upper, ymax, outliers, n, relvarwidth, width, xmin, xmax, xresolution
    */
-  static Matrix boxplot(Matrix data, Aes aes) {
+  static Matrix boxplot(Matrix data, Aes aes, Map params = [:]) {
     String yCol = aes.yColName
     if (yCol == null) {
       throw new IllegalArgumentException("stat_boxplot requires y aesthetic")
     }
 
     String xCol = aes.xColName
+    String groupCol = aes.groupColName
 
-    // Group by x if present, otherwise compute for all data
+    // Determine grouping strategy
+    boolean hasExplicitGroup = groupCol != null && data.columnNames().contains(groupCol)
+    boolean hasContinuousX = xCol != null && data.columnNames().contains(xCol) && isNumericColumn(data, xCol)
+
+    // Use group aesthetic if present, otherwise fall back to x
+    String groupingCol = hasExplicitGroup ? groupCol : xCol
+
+    // Group by the grouping column if present, otherwise compute for all data
     Map<String, Matrix> groups
-    if (xCol != null) {
-      groups = Stat.groupBy(data, xCol)
+    if (groupingCol != null && data.columnNames().contains(groupingCol)) {
+      groups = Stat.groupBy(data, groupingCol)
     } else {
       groups = ['all': data]
     }
 
-    List<Map> results = groups.collect { groupKey, groupData ->
-      List<Number> values = groupData[yCol] as List<Number>
-      List<Number> quartiles = Stat.quartiles(values)
-      Number median = Stat.median(values)
-      Number iqr = Stat.iqr(values)
+    Double xResolution = null
+    if (hasContinuousX) {
+      List<Number> xValues = (data[xCol] as List).findAll { it instanceof Number } as List<Number>
+      xResolution = resolution(xValues)
+    }
+    double defaultWidth = params?.width instanceof Number ?
+        (params.width as Number).doubleValue() :
+        ((xResolution ?: 1.0d) * 0.75d)
+    double coef = params?.coef instanceof Number ? (params.coef as Number).doubleValue() : 1.5d
 
-      Number whiskerLow = Math.max(Stat.min(values) as double, (quartiles[0] - 1.5 * iqr) as double)
-      Number whiskerHigh = Math.min(Stat.max(values) as double, (quartiles[1] + 1.5 * iqr) as double)
+    List<Map> results = groups.collect { groupKey, groupData ->
+      List<Number> values = (groupData[yCol] as List).findAll { it instanceof Number } as List<Number>
+      if (values.isEmpty()) {
+        return null
+      }
+      values.sort()
+
+      Number lower = quantileType7(values, 0.25d)
+      Number middle = quantileType7(values, 0.5d)
+      Number upper = quantileType7(values, 0.75d)
+      Number iqr = (upper as double) - (lower as double)
+
+      double lowerFence = (lower as double) - coef * iqr
+      double upperFence = (upper as double) + coef * iqr
 
       List<Number> outliers = values.findAll { v ->
-        v < whiskerLow || v > whiskerHigh
+        (v as double) < lowerFence || (v as double) > upperFence
+      }
+      List<Number> inliers = values.findAll { v ->
+        (v as double) >= lowerFence && (v as double) <= upperFence
+      }
+      Number whiskerLow = inliers.isEmpty() ? values.first() : inliers.min()
+      Number whiskerHigh = inliers.isEmpty() ? values.last() : inliers.max()
+
+      // Compute x position: if we have explicit group and continuous x, use median of x values
+      // ggplot2 positions boxes at the median x value within each group
+      def xPosition
+      Number xMin = null
+      Number xMax = null
+      if (hasExplicitGroup && hasContinuousX) {
+        List<Number> xValues = (groupData[xCol] as List).findAll { it instanceof Number } as List<Number>
+        if (!xValues.isEmpty()) {
+          xValues.sort()
+          xMin = xValues.first()
+          xMax = xValues.last()
+          // Use mean of the x range for positioning (ggplot2 behavior)
+          xPosition = ((xMin as double) + (xMax as double)) / 2.0d
+        }
+      } else {
+        xPosition = groupKey
       }
 
-      [
-          x: groupKey,
+      double widthValue = defaultWidth
+      if (groupData.columnNames().contains('width')) {
+        def widthColVal = (groupData['width'] as List)?.find { it instanceof Number }
+        if (widthColVal instanceof Number) {
+          widthValue = (widthColVal as Number).doubleValue()
+        }
+      } else if (hasContinuousX && xMin != null && xMax != null) {
+        double range = (xMax as double) - (xMin as double)
+        if (range > 0d) {
+          widthValue = range * 0.9d
+        }
+      }
+      Number xmin = null
+      Number xmax = null
+      if (xPosition instanceof Number && widthValue > 0d) {
+        double half = widthValue / 2.0d
+        xmin = (xPosition as Number).doubleValue() - half
+        xmax = (xPosition as Number).doubleValue() + half
+      }
+
+      // Build result map - only include xmin/xmax if they have values
+      Map result = [
+          x: xPosition,
+          group: groupKey,
           ymin: whiskerLow,
-          lower: quartiles[0],
-          middle: median,
-          upper: quartiles[1],
+          lower: lower,
+          middle: middle,
+          upper: upper,
           ymax: whiskerHigh,
-          outliers: outliers
+          outliers: outliers,
+          n: values.size(),  // sample size for potential width scaling
+          relvarwidth: Math.sqrt(values.size()),
+          width: widthValue,
+          xresolution: xResolution
       ]
+      if (xmin != null && xmax != null) {
+        result['xmin'] = xmin
+        result['xmax'] = xmax
+      }
+      result
     } as List<Map>
 
-    return Matrix.builder().mapList(results).build()
+    List<Map> filtered = results.findAll { it != null } as List<Map>
+
+    return Matrix.builder().mapList(filtered).build()
+  }
+
+  /**
+   * Check if a column contains numeric values.
+   */
+  private static boolean isNumericColumn(Matrix data, String colName) {
+    if (!data.columnNames().contains(colName) || data.rowCount() == 0) {
+      return false
+    }
+    def firstNonNull = data[colName].find { it != null }
+    return firstNonNull instanceof Number
   }
 
   /** Pattern to parse poly(x, n) in formulas */
@@ -726,6 +821,108 @@ class GgStat {
   static Matrix contour(Matrix data, Aes aes, Map params = [:]) {
     // Placeholder - needs implementation
     throw new UnsupportedOperationException("stat_contour not yet implemented")
+  }
+
+  /**
+   * Parse a bin label like "(2.5, 3.5]" or "[2.5, 3.5)" and return the bin center.
+   * Returns null if the string is not a valid bin label.
+   */
+  private static Double parseBinCenter(Object groupKey) {
+    if (groupKey == null || !(groupKey instanceof String)) {
+      return null
+    }
+    String label = groupKey as String
+    // Match patterns like "(1.5,2.5]", "[1.5,2.5)", "(1,2]", etc.
+    def matcher = label =~ /^[\(\[]([-\d.]+)\s*,\s*([-\d.]+)[\)\]]$/
+    if (matcher.matches()) {
+      try {
+        double low = Double.parseDouble(matcher.group(1))
+        double high = Double.parseDouble(matcher.group(2))
+        return (low + high) / 2.0
+      } catch (NumberFormatException e) {
+        return null
+      }
+    }
+    return null
+  }
+
+  /**
+   * Compute the minimum non-zero resolution in a numeric vector.
+   * Mirrors ggplot2's resolution() behavior for continuous data.
+   */
+  private static Double resolution(List<Number> values) {
+    if (values == null || values.isEmpty()) {
+      return 1.0d
+    }
+    List<Double> uniques = values.findAll { it instanceof Number }
+        .collect { (it as Number).doubleValue() }
+        .unique()
+        .sort()
+    if (uniques.size() <= 1) {
+      return 1.0d
+    }
+    double minDiff = Double.MAX_VALUE
+    for (int i = 1; i < uniques.size(); i++) {
+      double diff = uniques[i] - uniques[i - 1]
+      if (diff > 0 && diff < minDiff) {
+        minDiff = diff
+      }
+    }
+    return minDiff == Double.MAX_VALUE ? 1.0d : minDiff
+  }
+
+  /**
+   * Compute quantiles using the same method as ggplot2 (type = 7).
+   */
+  private static Number quantileType7(List<Number> sortedValues, double prob) {
+    if (sortedValues == null || sortedValues.isEmpty()) {
+      return null
+    }
+    if (sortedValues.size() == 1) {
+      return sortedValues[0]
+    }
+    int n = sortedValues.size()
+    double h = (n - 1) * prob + 1
+    int j = (int) Math.floor(h)
+    double g = h - j
+
+    if (j <= 1) {
+      double x1 = sortedValues[0] as double
+      double x2 = sortedValues[1] as double
+      return x1 + g * (x2 - x1)
+    }
+    if (j >= n) {
+      return sortedValues[n - 1]
+    }
+
+    double xj = sortedValues[j - 1] as double
+    double xj1 = sortedValues[j] as double
+    return xj + g * (xj1 - xj)
+  }
+
+  /**
+   * Find the lowest data point within the lower fence.
+   */
+  private static Number findWhiskerLow(List<Number> sortedValues, double lowerFence) {
+    for (def value : sortedValues) {
+      if ((value as double) >= lowerFence) {
+        return value
+      }
+    }
+    return sortedValues[0]
+  }
+
+  /**
+   * Find the highest data point within the upper fence.
+   */
+  private static Number findWhiskerHigh(List<Number> sortedValues, double upperFence) {
+    for (int i = sortedValues.size() - 1; i >= 0; i--) {
+      def value = sortedValues[i]
+      if ((value as double) <= upperFence) {
+        return value
+      }
+    }
+    return sortedValues[sortedValues.size() - 1]
   }
 
 }

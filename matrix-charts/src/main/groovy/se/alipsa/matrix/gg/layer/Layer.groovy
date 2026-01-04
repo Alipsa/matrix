@@ -74,6 +74,8 @@ enum PositionType {
     IDENTITY,
     /** Side-by-side grouping */
     DODGE,
+    /** Dodge with overlap-aware widths (ggplot2 dodge2 behavior) */
+    DODGE2,
     /** Stacked positioning */
     STACK,
     /** Stacked to 100% */
