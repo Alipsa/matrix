@@ -127,27 +127,61 @@ class GgPosition {
       rows << new LinkedHashMap<>(row.toMap())
     }
 
-    // Ensure xmin/xmax exist (use widthParam if provided, otherwise default to x).
-    rows.each { Map<String, Object> row ->
-      if (!row.containsKey('xmin') || !row.containsKey('xmax')) {
+    // For categorical x values, build a mapping from category to numeric position
+    Map<Object, Double> categoryPositions = null
+    if (xCol != null) {
+      boolean hasNonNumericX = rows.any { Map<String, Object> row ->
         def xVal = row[xCol]
-        if (xVal instanceof Number) {
-          if (widthParam != null) {
-            double half = widthParam / 2.0d
-            row['xmin'] = (xVal as Number).doubleValue() - half
-            row['xmax'] = (xVal as Number).doubleValue() + half
-          } else {
-            row['xmin'] = (xVal as Number).doubleValue()
-            row['xmax'] = (xVal as Number).doubleValue()
-          }
+        xVal != null && !(xVal instanceof Number)
+      }
+      if (hasNonNumericX) {
+        List<Object> uniqueCategories = rows.collect { it[xCol] }.unique()
+        categoryPositions = [:]
+        uniqueCategories.eachWithIndex { Object cat, int idx ->
+          categoryPositions[cat] = idx as double
         }
       }
     }
 
+    // Ensure xmin/xmax exist (use widthParam if provided, otherwise default to x).
+    double defaultWidth = widthParam ?: 0.9d
+    rows.each { Map<String, Object> row ->
+      if (!row.containsKey('xmin') || !row.containsKey('xmax')) {
+        def xVal = row[xCol]
+        double numericX
+        if (xVal instanceof Number) {
+          numericX = (xVal as Number).doubleValue()
+        } else if (categoryPositions != null && categoryPositions.containsKey(xVal)) {
+          numericX = categoryPositions[xVal]
+        } else {
+          // Cannot determine numeric position, skip
+          return
+        }
+        double half = defaultWidth / 2.0d
+        row['xmin'] = numericX - half
+        row['xmax'] = numericX + half
+      }
+    }
+
     // Sort by x and group for stable dodging
+    Map<Object, Double> catPos = categoryPositions  // capture for closure
     rows.sort { a, b ->
-      double ax = (a[xCol] instanceof Number) ? (a[xCol] as Number).doubleValue() : 0d
-      double bx = (b[xCol] instanceof Number) ? (b[xCol] as Number).doubleValue() : 0d
+      double ax
+      double bx
+      if (a[xCol] instanceof Number) {
+        ax = (a[xCol] as Number).doubleValue()
+      } else if (catPos != null && catPos.containsKey(a[xCol])) {
+        ax = catPos[a[xCol]]
+      } else {
+        ax = 0d
+      }
+      if (b[xCol] instanceof Number) {
+        bx = (b[xCol] as Number).doubleValue()
+      } else if (catPos != null && catPos.containsKey(b[xCol])) {
+        bx = catPos[b[xCol]]
+      } else {
+        bx = 0d
+      }
       if (ax != bx) {
         return ax <=> bx
       }

@@ -324,7 +324,8 @@ class GeomBoxplotTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
 
-    def matcher = content =~ /(?s)<g class="geom-boxplot">.*?<rect[^>]*width="([^"]+)"/
+    // Match <rect width="..." - the width attribute comes first in our SVG output
+    def matcher = content =~ /(?s)<g class="geom-boxplot">.*?<rect width="([^"]+)"/
     List<Double> widths = []
     matcher.each { match ->
       widths << (match[1] as String).toDouble()

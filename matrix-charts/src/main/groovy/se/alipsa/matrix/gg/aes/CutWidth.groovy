@@ -117,7 +117,8 @@ class CutWidth {
     }
 
     double minX = boundaryValue + Math.floor((minVal - boundaryValue) / w) * w
-    double maxX = maxVal + (1 - 1e-8d) * w
+    // Ensure maxX includes the bin boundary after maxVal
+    double maxX = maxVal + w
 
     List<Double> breaks = []
     double current = minX
