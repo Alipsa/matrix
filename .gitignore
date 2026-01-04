@@ -9,3 +9,5 @@ build/
 **/out/**
 /matrix-examples/LinearRegression/cars.png
 /matrix-charts/examples/gg/ggplot2/boxplot.svg
+/matrix-charts/examples/gg/ggplot2/Rplots.pdf
+/matrix-charts/examples/gg/ggplot2/labels.svg
