@@ -79,6 +79,26 @@ class GgPlot {
   }
 
   /**
+   * Create a ggplot chart from a map containing data and mapping.
+   *
+   * Example: ggplot(data: df, mapping: aes(x: 'x', y: 'y'))
+   *
+   * @param params map with keys: data (Matrix) and mapping (Aes)
+   * @return a new GgChart instance
+   */
+  static GgChart ggplot(Map params) {
+    if (params == null) {
+      throw new IllegalArgumentException('ggplot requires data and mapping parameters')
+    }
+    Matrix data = params.data as Matrix
+    Aes mapping = params.mapping as Aes
+    if (data == null || mapping == null) {
+      throw new IllegalArgumentException('ggplot requires data (Matrix) and mapping (Aes)')
+    }
+    return new GgChart(data, mapping)
+  }
+
+  /**
    * Create aesthetic mappings.
    * All parameters are treated as column name mappings.
    * Use I(value) for constant values.
@@ -505,12 +525,32 @@ class GgPlot {
     return new GeomAbline()
   }
 
+  /**
+   * Create an abline geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomAbline instance
+   */
+  static GeomAbline geom_abline(Aes mapping) {
+    return geom_abline([mapping: mapping])
+  }
+
   static GeomAbline geom_abline(Map params) {
     return new GeomAbline(params)
   }
 
   static GeomArea geom_area() {
     return new GeomArea()
+  }
+
+  /**
+   * Create an area geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomArea instance
+   */
+  static GeomArea geom_area(Aes mapping) {
+    return geom_area([mapping: mapping])
   }
 
   static GeomArea geom_area(Map params) {
@@ -521,12 +561,32 @@ class GgPlot {
     return new GeomBar()
   }
 
+  /**
+   * Create a bar geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomBar instance
+   */
+  static GeomBar geom_bar(Aes mapping) {
+    return geom_bar([mapping: mapping])
+  }
+
   static GeomBar geom_bar(Map params) {
     return new GeomBar(params)
   }
 
   static GeomBin2d geom_bin_2d() {
     return new GeomBin2d()
+  }
+
+  /**
+   * Create a 2D bin geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomBin2d instance
+   */
+  static GeomBin2d geom_bin_2d(Aes mapping) {
+    return geom_bin_2d([mapping: mapping])
   }
 
   static GeomBin2d geom_bin_2d(Map params) {
@@ -541,8 +601,14 @@ class GgPlot {
     return new GeomBoxplot()
   }
 
-  static GeomBoxplot geom_boxplot(Aes aes) {
-    return new GeomBoxplot(aes)
+  /**
+   * Create a boxplot geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomBoxplot instance
+   */
+  static GeomBoxplot geom_boxplot(Aes mapping) {
+    return geom_boxplot([mapping: mapping])
   }
 
   static GeomBoxplot geom_boxplot(Map params) {
@@ -553,12 +619,32 @@ class GgPlot {
     return new GeomCol()
   }
 
+  /**
+   * Create a column geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomCol instance
+   */
+  static GeomCol geom_col(Aes mapping) {
+    return geom_col([mapping: mapping])
+  }
+
   static GeomCol geom_col(Map params) {
     return new GeomCol(params)
   }
 
   static GeomContour geom_contour() {
     return new GeomContour()
+  }
+
+  /**
+   * Create a contour geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomContour instance
+   */
+  static GeomContour geom_contour(Aes mapping) {
+    return geom_contour([mapping: mapping])
   }
 
   static GeomContour geom_contour(Map params) {
@@ -569,12 +655,32 @@ class GgPlot {
     return new GeomContourFilled()
   }
 
+  /**
+   * Create a filled contour geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomContourFilled instance
+   */
+  static GeomContourFilled geom_contour_filled(Aes mapping) {
+    return geom_contour_filled([mapping: mapping])
+  }
+
   static GeomContourFilled geom_contour_filled(Map params) {
     return new GeomContourFilled(params)
   }
 
   static GeomCount geom_count() {
     return new GeomCount()
+  }
+
+  /**
+   * Create a count geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomCount instance
+   */
+  static GeomCount geom_count(Aes mapping) {
+    return geom_count([mapping: mapping])
   }
 
   static GeomCount geom_count(Map params) {
@@ -585,12 +691,32 @@ class GgPlot {
     return new GeomDensity()
   }
 
+  /**
+   * Create a density geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomDensity instance
+   */
+  static GeomDensity geom_density(Aes mapping) {
+    return geom_density([mapping: mapping])
+  }
+
   static GeomDensity geom_density(Map params) {
     return new GeomDensity(params)
   }
 
   static GeomErrorbar geom_errorbar() {
     return new GeomErrorbar()
+  }
+
+  /**
+   * Create an errorbar geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomErrorbar instance
+   */
+  static GeomErrorbar geom_errorbar(Aes mapping) {
+    return geom_errorbar([mapping: mapping])
   }
 
   static GeomErrorbar geom_errorbar(Map params) {
@@ -601,12 +727,32 @@ class GgPlot {
     return new GeomHistogram()
   }
 
+  /**
+   * Create a histogram geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomHistogram instance
+   */
+  static GeomHistogram geom_histogram(Aes mapping) {
+    return geom_histogram([mapping: mapping])
+  }
+
   static GeomHistogram geom_histogram(Map params) {
     return new GeomHistogram(params)
   }
 
   static GeomHline geom_hline() {
     return new GeomHline()
+  }
+
+  /**
+   * Create a horizontal line geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomHline instance
+   */
+  static GeomHline geom_hline(Aes mapping) {
+    return geom_hline([mapping: mapping])
   }
 
   static GeomHline geom_hline(Map params) {
@@ -617,12 +763,32 @@ class GgPlot {
     return new GeomLabel()
   }
 
+  /**
+   * Create a label geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomLabel instance
+   */
+  static GeomLabel geom_label(Aes mapping) {
+    return geom_label([mapping: mapping])
+  }
+
   static GeomLabel geom_label(Map params) {
     return new GeomLabel(params)
   }
 
   static GeomLine geom_line() {
     return new GeomLine()
+  }
+
+  /**
+   * Create a line geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomLine instance
+   */
+  static GeomLine geom_line(Aes mapping) {
+    return geom_line([mapping: mapping])
   }
 
   static GeomLine geom_line(Map params) {
@@ -633,12 +799,34 @@ class GgPlot {
     return new GeomPoint()
   }
 
+  /**
+   * Create a point geom with a layer-specific aesthetic mapping.
+   *
+   * Example: geom_point(aes(color: 'species'))
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomPoint instance
+   */
+  static GeomPoint geom_point(Aes mapping) {
+    return geom_point([mapping: mapping])
+  }
+
   static GeomPoint geom_point(Map params) {
     return new GeomPoint(params)
   }
 
   static GeomRug geom_rug() {
     return new GeomRug()
+  }
+
+  /**
+   * Create a rug geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomRug instance
+   */
+  static GeomRug geom_rug(Aes mapping) {
+    return geom_rug([mapping: mapping])
   }
 
   static GeomRug geom_rug(Map params) {
@@ -649,12 +837,32 @@ class GgPlot {
     return new GeomSegment()
   }
 
+  /**
+   * Create a segment geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomSegment instance
+   */
+  static GeomSegment geom_segment(Aes mapping) {
+    return geom_segment([mapping: mapping])
+  }
+
   static GeomSegment geom_segment(Map params) {
     return new GeomSegment(params)
   }
 
   static GeomSmooth geom_smooth() {
     return new GeomSmooth()
+  }
+
+  /**
+   * Create a smooth geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomSmooth instance
+   */
+  static GeomSmooth geom_smooth(Aes mapping) {
+    return geom_smooth([mapping: mapping])
   }
 
   static GeomSmooth geom_smooth(Map params) {
@@ -674,6 +882,16 @@ class GgPlot {
    */
   static GeomSmooth geom_lm() {
     return geom_lm([:])
+  }
+
+  /**
+   * Convenience wrapper for linear model regression line with layer-specific aesthetics.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomSmooth instance
+   */
+  static GeomSmooth geom_lm(Aes mapping) {
+    return geom_lm([mapping: mapping])
   }
 
   /**
@@ -708,6 +926,16 @@ class GgPlot {
     return new GeomText()
   }
 
+  /**
+   * Create a text geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomText instance
+   */
+  static GeomText geom_text(Aes mapping) {
+    return geom_text([mapping: mapping])
+  }
+
   static GeomText geom_text(Map params) {
     return new GeomText(params)
   }
@@ -716,8 +944,14 @@ class GgPlot {
     return new GeomViolin()
   }
 
-  static GeomViolin geom_violin(Aes aes) {
-    return new GeomViolin(aes)
+  /**
+   * Create a violin geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomViolin instance
+   */
+  static GeomViolin geom_violin(Aes mapping) {
+    return geom_violin([mapping: mapping])
   }
 
   static GeomViolin geom_violin(Map params) {
@@ -726,6 +960,16 @@ class GgPlot {
 
   static GeomVline geom_vline() {
     return new GeomVline()
+  }
+
+  /**
+   * Create a vertical line geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomVline instance
+   */
+  static GeomVline geom_vline(Aes mapping) {
+    return geom_vline([mapping: mapping])
   }
 
   static GeomVline geom_vline(Map params) {

@@ -55,6 +55,7 @@ class GeomPoint extends Geom {
     String yCol = aes.yColName
     String colorCol = aes.colorColName
     String sizeCol = aes.size instanceof String ? aes.size : null
+    String shapeCol = aes.shape instanceof String ? aes.shape : null
 
     if (xCol == null || yCol == null) {
       throw new IllegalArgumentException("GeomPoint requires x and y aesthetics")
@@ -63,6 +64,7 @@ class GeomPoint extends Geom {
     Scale xScale = scales['x']
     Scale yScale = scales['y']
     Scale colorScale = scales['color']
+    Scale shapeScale = scales['shape']
 
     // Render each point
     data.each { row ->
@@ -104,17 +106,96 @@ class GeomPoint extends Geom {
         pointSize = (aes.size as Identity).value as Number
       }
 
-      // Draw the point
-      def circle = group.addCircle()
-          .cx(xPx)
-          .cy(yPx)
-          .r(pointSize)
-          .fill(pointColor)
-          .stroke(pointColor)
-
-      if (alpha < 1.0) {
-        circle.addAttribute('fill-opacity', alpha)
+      // Determine shape
+      String pointShape = this.shape
+      if (shapeCol && row[shapeCol] != null) {
+        pointShape = shapeScale?.transform(row[shapeCol])?.toString() ?: row[shapeCol].toString()
+      } else if (aes.shape instanceof Identity) {
+        pointShape = (aes.shape as Identity).value.toString()
       }
+
+      // Draw the point
+      drawPoint(group, xPx, yPx, (pointSize as Number).doubleValue(), pointColor, pointShape)
+    }
+  }
+
+  /**
+   * Draw a point of the specified shape.
+   */
+  private void drawPoint(G group, double cx, double cy, double radius, String color, String shape) {
+    double size = radius * 2
+    double halfSize = size / 2.0d
+
+    switch (shape?.toLowerCase()) {
+      case 'square':
+        def rect = group.addRect(size as int, size as int)
+            .x((cx - halfSize) as int)
+            .y((cy - halfSize) as int)
+            .fill(color)
+            .stroke(color)
+        if ((alpha as double) < 1.0) {
+          rect.addAttribute('fill-opacity', alpha)
+        }
+        break
+      case 'plus':
+      case 'cross':
+        def hLine = group.addLine((cx - halfSize) as int, cy as int, (cx + halfSize) as int, cy as int)
+            .stroke(color)
+        def vLine = group.addLine(cx as int, (cy - halfSize) as int, cx as int, (cy + halfSize) as int)
+            .stroke(color)
+        if (alpha < 1.0) {
+          hLine.addAttribute('stroke-opacity', alpha)
+          vLine.addAttribute('stroke-opacity', alpha)
+        }
+        break
+      case 'x':
+        def diag1 = group.addLine((cx - halfSize) as int, (cy - halfSize) as int, (cx + halfSize) as int, (cy + halfSize) as int)
+            .stroke(color)
+        def diag2 = group.addLine((cx - halfSize) as int, (cy + halfSize) as int, (cx + halfSize) as int, (cy - halfSize) as int)
+            .stroke(color)
+        if (alpha < 1.0) {
+          diag1.addAttribute('stroke-opacity', alpha)
+          diag2.addAttribute('stroke-opacity', alpha)
+        }
+        break
+      case 'triangle':
+        double h = size * Math.sqrt(3) / 2
+        double topY = cy - h * 2 / 3
+        double bottomY = cy + h / 3
+        double leftX = cx - halfSize
+        double rightX = cx + halfSize
+        String pathD = "M ${cx} ${topY as int} L ${leftX as int} ${bottomY as int} L ${rightX as int} ${bottomY as int} Z"
+        def path = group.addPath().d(pathD)
+            .fill(color)
+            .stroke(color)
+        if ((alpha as double) < 1.0) {
+          path.addAttribute('fill-opacity', alpha)
+        }
+        break
+      case 'diamond':
+        String diamond = "M ${cx} ${(cy - halfSize) as int} " +
+            "L ${(cx + halfSize) as int} ${cy} " +
+            "L ${cx} ${(cy + halfSize) as int} " +
+            "L ${(cx - halfSize) as int} ${cy} Z"
+        def diamondPath = group.addPath().d(diamond)
+            .fill(color)
+            .stroke(color)
+        if ((alpha as double) < 1.0) {
+          diamondPath.addAttribute('fill-opacity', alpha)
+        }
+        break
+      case 'circle':
+      default:
+        def circle = group.addCircle()
+            .cx(cx)
+            .cy(cy)
+            .r(radius)
+            .fill(color)
+            .stroke(color)
+        if (alpha < 1.0) {
+          circle.addAttribute('fill-opacity', alpha)
+        }
+        break
     }
   }
 

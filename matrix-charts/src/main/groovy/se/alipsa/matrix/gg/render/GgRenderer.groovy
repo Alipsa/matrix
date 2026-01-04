@@ -27,6 +27,7 @@ import se.alipsa.matrix.gg.position.GgPosition
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleContinuous
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
+import se.alipsa.matrix.gg.scale.ScaleShape
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
@@ -177,7 +178,7 @@ class GgRenderer {
     renderAxes(plotArea, computedScales, effectiveWidth, effectiveHeight, theme, coord)
 
     // 10. Draw title and labels
-    renderLabels(svg, chart, effectiveWidth, effectiveHeight, svgHeight)
+    renderLabels(svg, chart, effectiveWidth, effectiveHeight, svgHeight, theme)
 
     // 11. Draw legend (if needed)
     renderLegend(svg, computedScales, chart, theme)
@@ -360,7 +361,7 @@ class GgRenderer {
     }
 
     // 9. Draw title and labels
-    renderLabels(svg, chart, totalPlotWidth, totalPlotHeight, chart.height)
+    renderLabels(svg, chart, totalPlotWidth, totalPlotHeight, chart.height, theme)
 
     // 9. Draw legend (if needed)
     renderLegend(svg, globalScales, chart, theme)
@@ -696,6 +697,16 @@ class GgRenderer {
       scales['fill'] = fillScale
     }
 
+    // Create shape scale if shape data exists
+    if (aestheticData.shape) {
+      Scale shapeScale = createAutoScale('shape', aestheticData.shape)
+      shapeScale.train(aestheticData.shape)
+      if (chart.globalAes?.shape instanceof String) {
+        shapeScale.name = chart.globalAes.shape as String
+      }
+      scales['shape'] = shapeScale
+    }
+
     // Add user-specified scales (these override auto-detected scales)
     chart.scales.each { scale ->
       if (scale.aesthetic) {
@@ -937,6 +948,8 @@ class GgRenderer {
         return isDiscrete ? new ScaleXDiscrete() : new ScaleXContinuous()
       case 'y':
         return isDiscrete ? new ScaleYDiscrete() : new ScaleYContinuous()
+      case 'shape':
+        return new ScaleShape()
       case 'color':
       case 'colour':
       case 'fill':
@@ -1122,6 +1135,10 @@ class GgRenderer {
         if (resolvedLayerAes.fillColName && posData.columnNames().contains(resolvedLayerAes.fillColName)) {
           data['fill'].addAll(posData[resolvedLayerAes.fillColName] ?: [])
         }
+        if (resolvedLayerAes.shape instanceof String && posData.columnNames().contains(resolvedLayerAes.shape as String)) {
+          String shapeCol = resolvedLayerAes.shape as String
+          data['shape'].addAll(posData[shapeCol] ?: [])
+        }
       }
     }
 
@@ -1138,6 +1155,10 @@ class GgRenderer {
       }
       if (globalAes.fillColName) {
         data['fill'].addAll(chart.data[globalAes.fillColName] ?: [])
+      }
+      if (globalAes.shape instanceof String && chart.data.columnNames().contains(globalAes.shape as String)) {
+        String shapeCol = globalAes.shape as String
+        data['shape'].addAll(chart.data[shapeCol] ?: [])
       }
     }
 
@@ -1532,14 +1553,22 @@ class GgRenderer {
    * Render title and labels.
    * Labels default to the aesthetic column names if not explicitly set.
    */
-  private void renderLabels(Svg svg, GgChart chart, int plotWidth, int plotHeight, int svgHeight) {
+  private void renderLabels(Svg svg, GgChart chart, int plotWidth, int plotHeight, int svgHeight, Theme theme) {
+    double titleHjust = theme?.plotTitle?.hjust != null ? (theme.plotTitle.hjust as double) : 0.0d
+    double subtitleHjust = theme?.plotSubtitle?.hjust != null ?
+        (theme.plotSubtitle.hjust as double) : titleHjust
+    String titleAnchor = resolveTextAnchor(titleHjust)
+    String subtitleAnchor = resolveTextAnchor(subtitleHjust)
+    double titleX = MARGIN_LEFT + plotWidth * titleHjust
+    double subtitleX = MARGIN_LEFT + plotWidth * subtitleHjust
+
     // Title
     String title = chart.labels?.title
     if (title) {
       svg.addText(title)
-         .x(MARGIN_LEFT + plotWidth / 2)
+         .x(titleX)
          .y(30)
-         .textAnchor('middle')
+         .textAnchor(titleAnchor)
          .fontSize(16)
          .styleClass('chart-title')
     }
@@ -1548,9 +1577,9 @@ class GgRenderer {
     String subTitle = chart.labels?.subTitle
     if (subTitle) {
       svg.addText(subTitle)
-         .x(MARGIN_LEFT + plotWidth / 2)
+         .x(subtitleX)
          .y(50)
-         .textAnchor('middle')
+         .textAnchor(subtitleAnchor)
          .fontSize(12)
     }
 
@@ -1586,6 +1615,16 @@ class GgRenderer {
     }
   }
 
+  private String resolveTextAnchor(double hjust) {
+    if (hjust <= 0.25d) {
+      return 'start'
+    }
+    if (hjust >= 0.75d) {
+      return 'end'
+    }
+    return 'middle'
+  }
+
   /**
    * Render legend for color, fill, and other aesthetic scales.
    */
@@ -1607,6 +1646,19 @@ class GgRenderer {
     }
 
     if (legendScales.isEmpty()) return
+
+    ScaleDiscrete shapeScale = legendScales['shape'] instanceof ScaleDiscrete ?
+        (legendScales['shape'] as ScaleDiscrete) : null
+    ScaleDiscrete colorScale = legendScales['color'] instanceof ScaleDiscrete ?
+        (legendScales['color'] as ScaleDiscrete) :
+        (legendScales['colour'] instanceof ScaleDiscrete ? legendScales['colour'] as ScaleDiscrete : null)
+    if (colorScale == null && legendScales['fill'] instanceof ScaleDiscrete) {
+      colorScale = legendScales['fill'] as ScaleDiscrete
+    }
+    boolean mergeShapeIntoColor = shapeScale != null && colorScale != null && sameDiscreteLevels(shapeScale, colorScale)
+    if (mergeShapeIntoColor) {
+      legendScales = legendScales.findAll { key, value -> key != 'shape' }
+    }
 
     // Calculate legend position
     int plotWidth = chart.width - MARGIN_LEFT - MARGIN_RIGHT
@@ -1680,8 +1732,12 @@ class GgRenderer {
     // Render each legend scale
     legendScales.each { aesthetic, scale ->
       if (scale instanceof ScaleDiscrete) {
+        ScaleDiscrete shapeForColorKeys = mergeShapeIntoColor &&
+            (aesthetic == 'color' || aesthetic == 'colour' || aesthetic == 'fill') ? shapeScale : null
+        ScaleDiscrete colorForShapes = (!mergeShapeIntoColor && aesthetic == 'shape' &&
+            colorScale != null && sameDiscreteLevels(scale as ScaleDiscrete, colorScale)) ? colorScale : null
         currentY = renderDiscreteLegend(legendGroup, scale as ScaleDiscrete, aesthetic,
-            currentX, currentY, isVertical, theme, usesPoints)
+            currentX, currentY, isVertical, theme, usesPoints, shapeForColorKeys, colorForShapes)
       } else if (scale instanceof ScaleContinuous) {
         currentY = renderContinuousLegend(legendGroup, scale as ScaleContinuous, aesthetic,
             currentX, currentY, isVertical, theme)
@@ -1695,7 +1751,8 @@ class GgRenderer {
    */
   private int renderDiscreteLegend(G group, ScaleDiscrete scale, String aesthetic,
                                    int startX, int startY, boolean vertical, Theme theme,
-                                   boolean usesPoints = false) {
+                                   boolean usesPoints = false, ScaleDiscrete shapeScale = null,
+                                   ScaleDiscrete colorScale = null) {
     List<Number> keySize = theme.legendKeySize ?: [15, 15] as List<Number>
     int keyWidth = keySize[0].intValue()
     int keyHeight = keySize[1].intValue()
@@ -1708,23 +1765,34 @@ class GgRenderer {
     int x = startX
     int y = startY
 
+    boolean isColorKey = (aesthetic == 'color' || aesthetic == 'colour' || aesthetic == 'fill')
+    boolean isShapeKey = (aesthetic == 'shape')
+
     levels.eachWithIndex { level, int idx ->
-      // Get color for this level
+      // Get color for this level (for color/fill keys)
       String color = scale.transform(level)?.toString() ?: '#999999'
       String label = idx < labels.size() ? labels[idx] : level?.toString() ?: ''
 
       // Draw key (circle for points, rectangle otherwise)
-      if (aesthetic == 'color' || aesthetic == 'colour' || aesthetic == 'fill') {
+      if (isColorKey) {
         if (usesPoints) {
-          // Draw circle for point geoms
-          int radius = Math.min(keyWidth, keyHeight) / 2 as int
-          def circle = group.addCircle()
-              .cx(x + keyWidth / 2 as int)
-              .cy(y + keyHeight / 2 as int)
-              .r(radius - 1)  // Slightly smaller to fit in key area
-              .fill(color)
-          if (theme.legendKey?.color) {
-            circle.stroke(theme.legendKey.color)
+          String shape = shapeScale?.transform(level)?.toString()
+          if (shape) {
+            int centerX = x + (keyWidth / 2) as int
+            int centerY = y + (keyHeight / 2) as int
+            drawLegendShape(group, centerX, centerY,
+                Math.min(keyWidth, keyHeight), shape, color, theme.legendKey?.color)
+          } else {
+            // Draw circle for point geoms
+            int radius = Math.min(keyWidth, keyHeight) / 2 as int
+            def circle = group.addCircle()
+                .cx(x + keyWidth / 2 as int)
+                .cy(y + keyHeight / 2 as int)
+                .r(radius - 1)  // Slightly smaller to fit in key area
+                .fill(color)
+            if (theme.legendKey?.color) {
+              circle.stroke(theme.legendKey.color)
+            }
           }
         } else {
           // Draw rectangle for bar/area geoms
@@ -1736,6 +1804,13 @@ class GgRenderer {
             rect.stroke(theme.legendKey.color)
           }
         }
+      } else if (isShapeKey) {
+        String shape = scale.transform(level)?.toString() ?: 'circle'
+        String shapeColor = colorScale?.transform(level)?.toString() ?: (theme.legendKey?.color ?: 'black')
+        int centerX = x + (keyWidth / 2) as int
+        int centerY = y + (keyHeight / 2) as int
+        drawLegendShape(group, centerX, centerY,
+            Math.min(keyWidth, keyHeight), shape, shapeColor, theme.legendKey?.color)
       }
 
       // Draw label
@@ -1850,6 +1925,72 @@ class GgRenderer {
 
       return y + barHeight + 20
     }
+  }
+
+  private void drawLegendShape(G group, int centerX, int centerY, int size,
+                               String shape, String fillColor, String strokeColor) {
+    String stroke = strokeColor ?: fillColor
+    double halfSize = Math.max(2, size - 2) / 2.0d
+
+    switch (shape?.toLowerCase()) {
+      case 'square':
+        def rect = group.addRect((halfSize * 2) as int, (halfSize * 2) as int)
+            .x((centerX - halfSize) as int)
+            .y((centerY - halfSize) as int)
+            .fill(fillColor)
+            .stroke(stroke)
+        break
+      case 'plus':
+      case 'cross':
+        group.addLine((centerX - halfSize) as int, centerY as int, (centerX + halfSize) as int, centerY as int)
+            .stroke(stroke)
+        group.addLine(centerX as int, (centerY - halfSize) as int, centerX as int, (centerY + halfSize) as int)
+            .stroke(stroke)
+        break
+      case 'x':
+        group.addLine((centerX - halfSize) as int, (centerY - halfSize) as int, (centerX + halfSize) as int, (centerY + halfSize) as int)
+            .stroke(stroke)
+        group.addLine((centerX - halfSize) as int, (centerY + halfSize) as int, (centerX + halfSize) as int, (centerY - halfSize) as int)
+            .stroke(stroke)
+        break
+      case 'triangle':
+        double h = (halfSize * 2) * Math.sqrt(3) / 2
+        double topY = centerY - h * 2 / 3
+        double bottomY = centerY + h / 3
+        double leftX = centerX - halfSize
+        double rightX = centerX + halfSize
+        String pathD = "M ${centerX} ${topY as int} L ${leftX as int} ${bottomY as int} L ${rightX as int} ${bottomY as int} Z"
+        group.addPath().d(pathD)
+            .fill(fillColor)
+            .stroke(stroke)
+        break
+      case 'diamond':
+        String diamond = "M ${centerX} ${(centerY - halfSize) as int} " +
+            "L ${(centerX + halfSize) as int} ${centerY} " +
+            "L ${centerX} ${(centerY + halfSize) as int} " +
+            "L ${(centerX - halfSize) as int} ${centerY} Z"
+        group.addPath().d(diamond)
+            .fill(fillColor)
+            .stroke(stroke)
+        break
+      case 'circle':
+      default:
+        group.addCircle()
+            .cx(centerX)
+            .cy(centerY)
+            .r(halfSize as int)
+            .fill(fillColor)
+            .stroke(stroke)
+        break
+    }
+  }
+
+  private boolean sameDiscreteLevels(ScaleDiscrete left, ScaleDiscrete right) {
+    if (left == null || right == null) return false
+    List<Object> leftLevels = left.levels
+    List<Object> rightLevels = right.levels
+    if (leftLevels == null || rightLevels == null) return false
+    return leftLevels == rightLevels
   }
 
   /**
