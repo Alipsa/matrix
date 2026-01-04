@@ -122,11 +122,20 @@ class CutWidth {
 
     List<Double> breaks = []
     double current = minX
+    final int maxBins = 10_000
     int guard = 0
-    while (current <= maxX + (w * 1e-9d) && guard < 100000) {
+    while (current <= maxX + (w * 1e-9d) && guard < maxBins) {
       breaks << current
       current += w
       guard++
+    }
+    if (guard >= maxBins && current <= maxX + (w * 1e-9d)) {
+      throw new IllegalStateException(
+          "Exceeded maximum number of bins (" + maxBins +
+          ") while computing cut_width breaks. " +
+          "This likely indicates a problem with the binning parameters: " +
+          "width=" + w + ", minVal=" + minVal + ", maxVal=" + maxVal +
+          ", boundary=" + boundary + ", center=" + center)
     }
     if (breaks.size() < 2) {
       breaks << (minX + w)
