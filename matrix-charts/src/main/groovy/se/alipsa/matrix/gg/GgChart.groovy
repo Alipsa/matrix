@@ -54,6 +54,9 @@ class GgChart {
   /** Labels (title, subtitle, axis labels, etc.) */
   Label labels
 
+  /** Guide specifications for legends/colorbars */
+  Guides guides
+
   /** Chart width in pixels */
   int width = 800
 
@@ -193,6 +196,10 @@ class GgChart {
         plus(part as Theme)
         continue
       }
+      if (part instanceof Layer) {
+        plus(part as Layer)
+        continue
+      }
       if (part instanceof Scale) {
         plus(part as Scale)
         continue
@@ -207,6 +214,10 @@ class GgChart {
       }
       if (part instanceof Label) {
         plus(part as Label)
+        continue
+      }
+      if (part instanceof Guides) {
+        plus(part as Guides)
         continue
       }
       if (part instanceof Stats) {
@@ -230,6 +241,17 @@ class GgChart {
       // Merge with existing theme
       this.theme = this.theme + theme
     }
+    return this
+  }
+
+  /**
+   * Add a pre-built layer.
+   */
+  GgChart plus(Layer layer) {
+    if (layer == null) {
+      return this
+    }
+    layers << layer
     return this
   }
 
@@ -279,6 +301,21 @@ class GgChart {
     if (labels.ySet) {
       this.labels.y = labels.y
       this.labels.ySet = true
+    }
+    return this
+  }
+
+  /**
+   * Add guide specifications for legends/colorbars.
+   */
+  GgChart plus(Guides guides) {
+    if (guides == null) {
+      return this
+    }
+    if (this.guides == null) {
+      this.guides = guides
+    } else {
+      this.guides = this.guides + guides
     }
     return this
   }

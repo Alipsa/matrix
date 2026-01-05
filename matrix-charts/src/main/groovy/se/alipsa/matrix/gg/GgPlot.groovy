@@ -19,6 +19,14 @@ import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
 import se.alipsa.matrix.gg.geom.GeomText
 import se.alipsa.matrix.gg.geom.GeomVline
+import se.alipsa.matrix.gg.geom.GeomRibbon
+import se.alipsa.matrix.gg.geom.GeomTile
+import se.alipsa.matrix.gg.geom.GeomRect
+import se.alipsa.matrix.gg.geom.GeomPath
+import se.alipsa.matrix.gg.geom.GeomStep
+import se.alipsa.matrix.gg.geom.GeomPointrange
+import se.alipsa.matrix.gg.geom.GeomLinerange
+import se.alipsa.matrix.gg.geom.GeomCrossbar
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
@@ -44,16 +52,28 @@ import se.alipsa.matrix.gg.scale.ScaleColorGradient
 import se.alipsa.matrix.gg.scale.ScaleColorManual
 import se.alipsa.matrix.gg.scale.ScaleColorViridis
 import se.alipsa.matrix.gg.scale.ScaleColorViridisC
+import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.scale.ScaleYDiscrete
+import se.alipsa.matrix.gg.scale.ScaleXLog10
+import se.alipsa.matrix.gg.scale.ScaleYLog10
+import se.alipsa.matrix.gg.scale.ScaleXSqrt
+import se.alipsa.matrix.gg.scale.ScaleYSqrt
+import se.alipsa.matrix.gg.scale.ScaleXReverse
+import se.alipsa.matrix.gg.scale.ScaleYReverse
+import se.alipsa.matrix.gg.scale.ScaleXDate
+import se.alipsa.matrix.gg.scale.ScaleYDate
+import se.alipsa.matrix.gg.scale.ScaleXDatetime
+import se.alipsa.matrix.gg.scale.ScaleYDatetime
 import se.alipsa.matrix.gg.stat.StatsBin2D
 import se.alipsa.matrix.gg.stat.StatsBoxplot
 import se.alipsa.matrix.gg.stat.StatsContour
 import se.alipsa.matrix.gg.stat.StatsContourFilled
 import se.alipsa.matrix.gg.stat.StatsCount
 import se.alipsa.matrix.gg.stat.StatsSum
+import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.theme.Theme
 import se.alipsa.matrix.gg.theme.ElementBlank
 import se.alipsa.matrix.gg.theme.ElementLine
@@ -71,6 +91,8 @@ class GgPlot {
   static final def NULL = null
   static final boolean TRUE = true
   static final boolean FALSE = false
+  static final boolean T = true
+  static final boolean F = false
 
   // ============ Core functions ============
 
@@ -381,6 +403,235 @@ class GgPlot {
    */
   static CoordCartesian ylim(Number min, Number max) {
     return new CoordCartesian(ylim: [min, max])
+  }
+
+  // ============ Annotations ============
+
+  /**
+   * Add an annotation layer with fixed coordinates and values.
+   *
+   * @param geomType annotation geom type (e.g., 'text', 'rect', 'segment')
+   * @param params fixed coordinates and styling options
+   * @return a Layer with annotation data
+   */
+  static Layer annotate(String geomType, Map params) {
+    return new Annotate(geomType, params).toLayer()
+  }
+
+  /**
+   * Add an annotation layer using named parameters.
+   * Note: Map must come first for Groovy to collect named arguments.
+   *
+   * @param params fixed coordinates and styling options
+   * @param geomType annotation geom type (e.g., 'text', 'rect', 'segment')
+   * @return a Layer with annotation data
+   */
+  static Layer annotate(Map params, String geomType) {
+    return annotate(geomType, params)
+  }
+
+  // ============ Guide System ============
+
+  /**
+   * Control which guides appear for each aesthetic.
+   *
+   * Example: guides(color: 'none', fill: guide_colourbar())
+   *
+   * @param params map of aesthetic -> guide spec
+   * @return a Guides specification
+   */
+  static Guides guides(Map params) {
+    return new Guides(params)
+  }
+
+  /**
+   * Create a legend guide specification.
+   *
+   * @param params optional legend options
+   */
+  static Guide guide_legend(Map params = [:]) {
+    return new Guide('legend', params)
+  }
+
+  /**
+   * Create a colorbar guide specification (continuous color guide).
+   *
+   * @param params optional colorbar options
+   */
+  static Guide guide_colorbar(Map params = [:]) {
+    return new Guide('colorbar', params)
+  }
+
+  /** British spelling alias for guide_colorbar */
+  static Guide guide_colourbar(Map params = [:]) {
+    return guide_colorbar(params)
+  }
+
+  // ============ Limit helpers ============
+
+  /**
+   * Set multiple axis limits at once.
+   *
+   * Example: lims(x: [0, 10], y: [0, 5])
+   *
+   * @param params map containing x and/or y limits
+   * @return list of scale specifications
+   */
+  static List lims(Map params) {
+    if (params == null || params.isEmpty()) {
+      throw new IllegalArgumentException('lims requires at least one of x or y')
+    }
+    List scales = []
+    if (params.containsKey('x')) {
+      Scale xScale = buildLimitScale('x', params.x)
+      if (xScale != null) {
+        scales << xScale
+      }
+    }
+    if (params.containsKey('y')) {
+      Scale yScale = buildLimitScale('y', params.y)
+      if (yScale != null) {
+        scales << yScale
+      }
+    }
+    return scales
+  }
+
+  /**
+   * Expand axis limits to include specific values.
+   *
+   * Example: expand_limits(x: [0, 10], y: 100)
+   *
+   * @param params map containing x and/or y values
+   * @return a Layer with blank geometry to extend scales
+   */
+  static Layer expand_limits(Map params) {
+    if (params == null || params.isEmpty()) {
+      throw new IllegalArgumentException('expand_limits requires at least one of x or y')
+    }
+
+    List<String> columns = []
+    List<List<Object>> values = []
+    Map<String, Object> aesMap = [:]
+
+    if (params.containsKey('x')) {
+      columns << 'x'
+      values << coerceToList(params.x)
+      aesMap['x'] = 'x'
+    }
+    if (params.containsKey('y')) {
+      columns << 'y'
+      values << coerceToList(params.y)
+      aesMap['y'] = 'y'
+    }
+
+    if (columns.isEmpty()) {
+      throw new IllegalArgumentException('expand_limits requires at least one of x or y')
+    }
+
+    int nRows = 1
+    values.each { List<Object> val ->
+      nRows = Math.max(nRows, val.size())
+    }
+
+    List<List<Object>> expandedValues = values.collect { List<Object> val ->
+      if (val.size() == nRows) {
+        return val
+      }
+      if (val.size() == 1) {
+        return (0..<nRows).collect { val[0] }
+      }
+      throw new IllegalArgumentException('Inconsistent expand_limits vector lengths')
+    }
+
+    List<List<Object>> rows = (0..<nRows).collect { rowIdx ->
+      expandedValues.collect { it[rowIdx] }
+    }
+
+    Matrix data = Matrix.builder()
+        .columnNames(columns)
+        .rows(rows)
+        .build()
+
+    return new Layer(
+        geom: new GeomBlank(),
+        data: data,
+        aes: new Aes(aesMap),
+        inheritAes: false
+    )
+  }
+
+  private static Scale buildLimitScale(String aesthetic, Object limitSpec) {
+    if (limitSpec == null) {
+      return null
+    }
+    List values = coerceToList(limitSpec)
+    if (values == null || values.isEmpty()) {
+      return null
+    }
+
+    List nonNull = values.findAll { it != null }
+    boolean hasDateTime = nonNull.any { isDateTimeValue(it) }
+    boolean hasDateOnly = nonNull.any { it instanceof java.time.LocalDate }
+    boolean isNumeric = nonNull.isEmpty() || nonNull.every { it instanceof Number }
+    boolean usePair = values.size() <= 2
+
+    if ((hasDateTime || hasDateOnly) && usePair) {
+      List limits = toLimitPair(values)
+      if (aesthetic == 'x') {
+        return hasDateTime ? new ScaleXDatetime(limits: limits) : new ScaleXDate(limits: limits)
+      }
+      return hasDateTime ? new ScaleYDatetime(limits: limits) : new ScaleYDate(limits: limits)
+    }
+
+    if (isNumeric && usePair) {
+      List limits = toLimitPair(values)
+      if (aesthetic == 'x') {
+        return new ScaleXContinuous(limits: limits)
+      }
+      return new ScaleYContinuous(limits: limits)
+    }
+
+    if (aesthetic == 'x') {
+      return new ScaleXDiscrete(limits: values)
+    }
+    return new ScaleYDiscrete(limits: values)
+  }
+
+  private static List<Object> coerceToList(Object value) {
+    if (value == null) {
+      return [null]
+    }
+    if (value instanceof List) {
+      return value as List<Object>
+    }
+    if (value instanceof Object[]) {
+      return (value as Object[]).toList()
+    }
+    if (value instanceof Iterable) {
+      List<Object> result = []
+      (value as Iterable).each { result << it }
+      return result
+    }
+    return [value]
+  }
+
+  private static boolean isDateTimeValue(Object value) {
+    return value instanceof Date ||
+        value instanceof java.time.LocalDateTime ||
+        value instanceof java.time.Instant ||
+        value instanceof java.time.OffsetDateTime ||
+        value instanceof java.time.ZonedDateTime
+  }
+
+  private static List<Object> toLimitPair(List values) {
+    if (values.size() == 1) {
+      return [values[0], values[0]]
+    }
+    if (values.size() >= 2) {
+      return [values[0], values[1]]
+    }
+    return [null, null]
   }
 
   // ============ Themes ============
@@ -976,6 +1227,158 @@ class GgPlot {
     return new GeomVline(params)
   }
 
+  static GeomRibbon geom_ribbon() {
+    return new GeomRibbon()
+  }
+
+  /**
+   * Create a ribbon geom with a layer-specific aesthetic mapping.
+   * Ribbons display a filled area between ymin and ymax values.
+   *
+   * @param mapping aesthetic mapping for this layer (should include ymin and ymax)
+   * @return a new GeomRibbon instance
+   */
+  static GeomRibbon geom_ribbon(Aes mapping) {
+    return geom_ribbon([mapping: mapping])
+  }
+
+  static GeomRibbon geom_ribbon(Map params) {
+    return new GeomRibbon(params)
+  }
+
+  static GeomTile geom_tile() {
+    return new GeomTile()
+  }
+
+  /**
+   * Create a tile geom with a layer-specific aesthetic mapping.
+   * Tiles are rectangular shapes centered at x,y positions, commonly used for heatmaps.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomTile instance
+   */
+  static GeomTile geom_tile(Aes mapping) {
+    return geom_tile([mapping: mapping])
+  }
+
+  static GeomTile geom_tile(Map params) {
+    return new GeomTile(params)
+  }
+
+  static GeomRect geom_rect() {
+    return new GeomRect()
+  }
+
+  /**
+   * Create a rect geom with a layer-specific aesthetic mapping.
+   * Rectangles defined by xmin, xmax, ymin, ymax coordinates.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomRect instance
+   */
+  static GeomRect geom_rect(Aes mapping) {
+    return geom_rect([mapping: mapping])
+  }
+
+  static GeomRect geom_rect(Map params) {
+    return new GeomRect(params)
+  }
+
+  static GeomPath geom_path() {
+    return new GeomPath()
+  }
+
+  /**
+   * Create a path geom with a layer-specific aesthetic mapping.
+   * Unlike geom_line, geom_path connects points in data order (not sorted by x).
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomPath instance
+   */
+  static GeomPath geom_path(Aes mapping) {
+    return geom_path([mapping: mapping])
+  }
+
+  static GeomPath geom_path(Map params) {
+    return new GeomPath(params)
+  }
+
+  static GeomStep geom_step() {
+    return new GeomStep()
+  }
+
+  /**
+   * Create a step geom with a layer-specific aesthetic mapping.
+   * Step plots create staircase patterns, useful for visualizing stepwise changes.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomStep instance
+   */
+  static GeomStep geom_step(Aes mapping) {
+    return geom_step([mapping: mapping])
+  }
+
+  static GeomStep geom_step(Map params) {
+    return new GeomStep(params)
+  }
+
+  static GeomPointrange geom_pointrange() {
+    return new GeomPointrange()
+  }
+
+  /**
+   * Create a pointrange geom with a layer-specific aesthetic mapping.
+   * Displays a point with a vertical line range (ymin to ymax).
+   *
+   * @param mapping aesthetic mapping for this layer (should include ymin and ymax)
+   * @return a new GeomPointrange instance
+   */
+  static GeomPointrange geom_pointrange(Aes mapping) {
+    return geom_pointrange([mapping: mapping])
+  }
+
+  static GeomPointrange geom_pointrange(Map params) {
+    return new GeomPointrange(params)
+  }
+
+  static GeomLinerange geom_linerange() {
+    return new GeomLinerange()
+  }
+
+  /**
+   * Create a linerange geom with a layer-specific aesthetic mapping.
+   * Displays vertical line ranges (ymin to ymax) without end caps.
+   *
+   * @param mapping aesthetic mapping for this layer (should include ymin and ymax)
+   * @return a new GeomLinerange instance
+   */
+  static GeomLinerange geom_linerange(Aes mapping) {
+    return geom_linerange([mapping: mapping])
+  }
+
+  static GeomLinerange geom_linerange(Map params) {
+    return new GeomLinerange(params)
+  }
+
+  static GeomCrossbar geom_crossbar() {
+    return new GeomCrossbar()
+  }
+
+  /**
+   * Create a crossbar geom with a layer-specific aesthetic mapping.
+   * Displays a box from ymin to ymax with a horizontal line at y.
+   *
+   * @param mapping aesthetic mapping for this layer (should include ymin and ymax)
+   * @return a new GeomCrossbar instance
+   */
+  static GeomCrossbar geom_crossbar(Aes mapping) {
+    return geom_crossbar([mapping: mapping])
+  }
+
+  static GeomCrossbar geom_crossbar(Map params) {
+    return new GeomCrossbar(params)
+  }
+
   // ============ Faceting ============
 
   /**
@@ -1056,6 +1459,116 @@ class GgPlot {
    */
   static ScaleYDiscrete scale_y_discrete(Map params = [:]) {
     return new ScaleYDiscrete(params)
+  }
+
+  // --- Transformed position scales ---
+
+  /**
+   * Log10-transformed scale for x-axis.
+   * Useful for data spanning multiple orders of magnitude.
+   */
+  static ScaleXLog10 scale_x_log10(Map params = [:]) {
+    return new ScaleXLog10(params)
+  }
+
+  /**
+   * Log10-transformed scale for y-axis.
+   * Useful for data spanning multiple orders of magnitude.
+   */
+  static ScaleYLog10 scale_y_log10(Map params = [:]) {
+    return new ScaleYLog10(params)
+  }
+
+  /**
+   * Square root-transformed scale for x-axis.
+   * Useful for count data or to reduce right skew.
+   */
+  static ScaleXSqrt scale_x_sqrt(Map params = [:]) {
+    return new ScaleXSqrt(params)
+  }
+
+  /**
+   * Square root-transformed scale for y-axis.
+   * Useful for count data or to reduce right skew.
+   */
+  static ScaleYSqrt scale_y_sqrt(Map params = [:]) {
+    return new ScaleYSqrt(params)
+  }
+
+  /**
+   * Reversed scale for x-axis.
+   * High values appear on the left, low values on the right.
+   */
+  static ScaleXReverse scale_x_reverse(Map params = [:]) {
+    return new ScaleXReverse(params)
+  }
+
+  /**
+   * Reversed scale for y-axis.
+   * High values appear at the bottom, low values at the top.
+   */
+  static ScaleYReverse scale_y_reverse(Map params = [:]) {
+    return new ScaleYReverse(params)
+  }
+
+  // --- Date/time scales ---
+
+  /**
+   * Date scale for x-axis.
+   * Handles Date, LocalDate, LocalDateTime, and other temporal types.
+   *
+   * @param params Optional map with:
+   *   - name: axis label
+   *   - limits: list of [min, max] date values
+   *   - date_format/dateFormat/date_labels: date format pattern (default: 'yyyy-MM-dd')
+   *   - date_breaks/dateBreaks: break interval (e.g., '1 month', '2 weeks')
+   *   - position: 'bottom' (default) or 'top'
+   */
+  static ScaleXDate scale_x_date(Map params = [:]) {
+    return new ScaleXDate(params)
+  }
+
+  /**
+   * Date scale for y-axis.
+   * Handles Date, LocalDate, LocalDateTime, and other temporal types.
+   *
+   * @param params Optional map with:
+   *   - name: axis label
+   *   - limits: list of [min, max] date values
+   *   - date_format/dateFormat/date_labels: date format pattern (default: 'yyyy-MM-dd')
+   *   - date_breaks/dateBreaks: break interval (e.g., '1 month', '2 weeks')
+   */
+  static ScaleYDate scale_y_date(Map params = [:]) {
+    return new ScaleYDate(params)
+  }
+
+  /**
+   * DateTime scale for x-axis.
+   * Similar to scale_x_date but with hour/minute granularity for time display.
+   *
+   * @param params Optional map with:
+   *   - name: axis label
+   *   - limits: list of [min, max] datetime values
+   *   - date_format/dateFormat/date_labels: datetime format pattern (default: 'yyyy-MM-dd HH:mm')
+   *   - date_breaks/dateBreaks: break interval (e.g., '1 hour', '30 minutes')
+   *   - position: 'bottom' (default) or 'top'
+   */
+  static ScaleXDatetime scale_x_datetime(Map params = [:]) {
+    return new ScaleXDatetime(params)
+  }
+
+  /**
+   * DateTime scale for y-axis.
+   * Similar to scale_y_date but with hour/minute granularity for time display.
+   *
+   * @param params Optional map with:
+   *   - name: axis label
+   *   - limits: list of [min, max] datetime values
+   *   - date_format/dateFormat/date_labels: datetime format pattern (default: 'yyyy-MM-dd HH:mm')
+   *   - date_breaks/dateBreaks: break interval (e.g., '1 hour', '30 minutes')
+   */
+  static ScaleYDatetime scale_y_datetime(Map params = [:]) {
+    return new ScaleYDatetime(params)
   }
 
   // --- Color scales ---

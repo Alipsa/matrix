@@ -7,6 +7,8 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.gg.GgChart
+import se.alipsa.matrix.gg.Guide
+import se.alipsa.matrix.gg.Guides
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
@@ -25,6 +27,8 @@ import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.position.GgPosition
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.scale.ScaleColorGradient
+import se.alipsa.matrix.gg.scale.ScaleColorViridisC
 import se.alipsa.matrix.gg.scale.ScaleContinuous
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 import se.alipsa.matrix.gg.scale.ScaleShape
@@ -124,7 +128,7 @@ class GgRenderer {
     boolean legendOnRight = legendPos == 'right' ||
         (!(legendPos instanceof String) && !(legendPos instanceof List))
     if (legendOnRight) {
-      int legendWidth = estimateLegendWidth(computedScales, theme)
+      int legendWidth = estimateLegendWidth(computedScales, theme, chart)
       if (legendWidth > MARGIN_RIGHT) {
         // Legend needs more space than default margin provides
         int extraWidth = legendWidth - MARGIN_RIGHT + LEGEND_PLOT_GAP
@@ -1651,6 +1655,16 @@ class GgRenderer {
       return !v.domain.isEmpty()
     }
 
+    Map<String, String> guideTypes = [:]
+    legendScales = legendScales.findAll { aesthetic, scale ->
+      String guideType = resolveGuideType(aesthetic, scale, chart.guides)
+      if (guideType == 'none') {
+        return false
+      }
+      guideTypes[aesthetic] = guideType
+      return true
+    }
+
     if (legendScales.isEmpty()) return
 
     ScaleDiscrete shapeScale = legendScales['shape'] instanceof ScaleDiscrete ?
@@ -1737,6 +1751,7 @@ class GgRenderer {
 
     // Render each legend scale
     legendScales.each { aesthetic, scale ->
+      String guideType = guideTypes[aesthetic]
       if (scale instanceof ScaleDiscrete) {
         ScaleDiscrete shapeForColorKeys = mergeShapeIntoColor &&
             (aesthetic == 'color' || aesthetic == 'colour' || aesthetic == 'fill') ? shapeScale : null
@@ -1745,8 +1760,13 @@ class GgRenderer {
         currentY = renderDiscreteLegend(legendGroup, scale as ScaleDiscrete, aesthetic,
             currentX, currentY, isVertical, theme, usesPoints, shapeForColorKeys, colorForShapes)
       } else if (scale instanceof ScaleContinuous) {
-        currentY = renderContinuousLegend(legendGroup, scale as ScaleContinuous, aesthetic,
-            currentX, currentY, isVertical, theme)
+        if (guideType == 'legend') {
+          currentY = renderContinuousLegendAsDiscrete(legendGroup, scale as ScaleContinuous, aesthetic,
+              currentX, currentY, isVertical, theme)
+        } else {
+          currentY = renderContinuousLegend(legendGroup, scale as ScaleContinuous, aesthetic,
+              currentX, currentY, isVertical, theme)
+        }
       }
     }
   }
@@ -1933,6 +1953,52 @@ class GgRenderer {
     }
   }
 
+  /**
+   * Render legend for a continuous scale using discrete keys.
+   */
+  private int renderContinuousLegendAsDiscrete(G group, ScaleContinuous scale, String aesthetic,
+                                               int startX, int startY, boolean vertical, Theme theme) {
+    List<Number> breaks = scale.computedBreaks as List<Number>
+    if (breaks == null || breaks.isEmpty()) return startY
+
+    List<String> labels = scale.computedLabels ?: []
+    List<Number> keySize = theme.legendKeySize ?: [15, 15] as List<Number>
+    int keyWidth = keySize[0].intValue()
+    int keyHeight = keySize[1].intValue()
+    int spacing = 5
+    int textOffset = keyWidth + 8
+
+    int x = startX
+    int y = startY
+
+    breaks.eachWithIndex { Number breakVal, int idx ->
+      String color = scale.transform(breakVal)?.toString() ?: '#999999'
+      String label = idx < labels.size() ? labels[idx] : formatNumber(breakVal)
+
+      def rect = group.addRect(keyWidth, keyHeight)
+          .x(x)
+          .y(y)
+          .fill(color)
+      if (theme.legendKey?.color) {
+        rect.stroke(theme.legendKey.color)
+      }
+
+      group.addText(label ?: '')
+          .x(x + textOffset)
+          .y(y + keyHeight - 3)
+          .fontSize(theme.legendText?.size ?: 10)
+          .fill(theme.legendText?.color ?: 'black')
+
+      if (vertical) {
+        y += keyHeight + spacing
+      } else {
+        x += keyWidth + textOffset + (label?.length() ?: 0) * 6 + spacing
+      }
+    }
+
+    return y + (vertical ? 0 : keyHeight + spacing)
+  }
+
   private void drawLegendShape(G group, int centerX, int centerY, int size,
                                String shape, String fillColor, String strokeColor) {
     String stroke = strokeColor ?: fillColor
@@ -1999,17 +2065,75 @@ class GgRenderer {
     return leftLevels == rightLevels
   }
 
+  private String resolveGuideType(String aesthetic, Scale scale, Guides guides) {
+    Object spec = guides?.getSpec(aesthetic)
+    if (spec == null && scale?.guide != null) {
+      spec = scale.guide
+    }
+    String guideType = parseGuideType(spec)
+    if (guideType != null) {
+      return guideType
+    }
+    if (scale instanceof ScaleColorGradient) {
+      return normalizeGuideType((scale as ScaleColorGradient).guideType)
+    }
+    if (scale instanceof ScaleColorViridisC) {
+      return normalizeGuideType((scale as ScaleColorViridisC).guideType)
+    }
+    return null
+  }
+
+  private String parseGuideType(Object spec) {
+    if (spec == null) {
+      return null
+    }
+    if (spec instanceof Guide) {
+      return normalizeGuideType((spec as Guide).type)
+    }
+    if (spec instanceof CharSequence) {
+      return normalizeGuideType(spec.toString())
+    }
+    if (spec instanceof Boolean) {
+      return (spec as Boolean) ? null : 'none'
+    }
+    return normalizeGuideType(spec.toString())
+  }
+
+  private String normalizeGuideType(String type) {
+    if (type == null) {
+      return null
+    }
+    String value = type.toString().trim().toLowerCase()
+    if (value.isEmpty()) {
+      return null
+    }
+    if (value == 'colourbar') {
+      value = 'colorbar'
+    }
+    if (value == 'none' || value == 'false' || value == 'null') {
+      return 'none'
+    }
+    return value
+  }
+
   /**
    * Estimate the width needed for the legend based on scales and theme.
    * Returns 0 if no legend is needed.
    */
-  private int estimateLegendWidth(Map<String, Scale> scales, Theme theme) {
+  private int estimateLegendWidth(Map<String, Scale> scales, Theme theme, GgChart chart) {
     if (theme.legendPosition == 'none') return 0
 
     // Find scales that need legends
     List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape']
     Map<String, Scale> legendScales = scales.findAll { k, v ->
       legendAesthetics.contains(k) && v.isTrained()
+    }
+
+    if (legendScales.isEmpty()) return 0
+
+    Guides guides = chart?.guides
+    legendScales = legendScales.findAll { aesthetic, scale ->
+      resolveGuideType(aesthetic, scale, guides) != 'none'
     }
 
     if (legendScales.isEmpty()) return 0
