@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
+import java.util.Locale
 
 /**
  * Wrapper for binning continuous data into fixed-width intervals.
@@ -206,7 +207,7 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
       return String.valueOf((long) d)
     }
     // Round to avoid floating point artifacts
-    String s = String.format("%.2f", d)
+    String s = String.format(Locale.US, "%.2f", d)
     if (s.contains('.')) {
       // Remove trailing zeros after the decimal point
       s = s.replaceAll(/0+$/, '')
