@@ -561,4 +561,76 @@ class GgStatTest {
     assertEquals(1.0d, result['xresolution'][0] as double, 0.0001d,
         'xresolution should default to 1 for single x value')
   }
+
+  @Test
+  void testEcdfBasic() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1], [2], [3]])
+        .types(Integer)
+        .build()
+    def aes = new Aes(x: 'value')
+
+    def result = GgStat.ecdf(data, aes)
+
+    assertEquals(['x', 'y'], result.columnNames())
+    assertEquals(3, result.rowCount())
+    assertEquals(1, result['x'][0])
+    assertEquals(2, result['x'][1])
+    assertEquals(3, result['x'][2])
+    assertEquals(1.0d / 3.0d, result['y'][0] as double, 1.0e-9)
+    assertEquals(2.0d / 3.0d, result['y'][1] as double, 1.0e-9)
+    assertEquals(1.0d, result['y'][2] as double, 1.0e-9)
+  }
+
+  @Test
+  void testYDensityUsesYColumn() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1], [2], [3], [4], [5]])
+        .types(Integer)
+        .build()
+    def aes = new Aes(y: 'value')
+
+    def result = GgStat.ydensity(data, aes)
+
+    assertTrue(result.columnNames().containsAll(['y', 'density']))
+    assertTrue(result.rowCount() > 0)
+  }
+
+  @Test
+  void testQqProducesTheoreticalAndSample() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1], [2], [3], [4]])
+        .types(Integer)
+        .build()
+    def aes = new Aes(x: 'value')
+
+    def result = GgStat.qq(data, aes)
+
+    assertTrue(result.columnNames().containsAll(['x', 'y']))
+    assertEquals(4, result.rowCount())
+    List<Number> yValues = result['y'] as List<Number>
+    assertEquals([1, 2, 3, 4], yValues.collect { it as int })
+    List<Number> xValues = result['x'] as List<Number>
+    assertTrue((xValues.first() as double) < (xValues.last() as double))
+  }
+
+  @Test
+  void testQqLineProducesTwoPoints() {
+    def data = Matrix.builder()
+        .columnNames(['value'])
+        .rows([[1], [2], [3], [4]])
+        .types(Integer)
+        .build()
+    def aes = new Aes(x: 'value')
+
+    def result = GgStat.qqLine(data, aes)
+
+    assertTrue(result.columnNames().containsAll(['x', 'y']))
+    assertEquals(2, result.rowCount())
+    List<Number> xValues = result['x'] as List<Number>
+    assertTrue((xValues.first() as double) < (xValues.last() as double))
+  }
 }

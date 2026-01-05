@@ -17,6 +17,7 @@ import se.alipsa.matrix.gg.geom.GeomSmooth
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
+import se.alipsa.matrix.gg.position.Position
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.render.GgRenderer
 import se.alipsa.matrix.gg.stat.Stats
@@ -68,6 +69,15 @@ class GgChart {
       'bins', 'binwidth', 'fun', 'fun.y', 'fun.data', 'fun.args', 'width', 'coef'
   ] as Set<String>
 
+  private static final Map<PositionType, Set<String>> POSITION_PARAM_KEYS = [
+      (PositionType.DODGE): ['width'] as Set<String>,
+      (PositionType.DODGE2): ['width', 'padding', 'reverse'] as Set<String>,
+      (PositionType.STACK): ['reverse'] as Set<String>,
+      (PositionType.FILL): ['reverse'] as Set<String>,
+      (PositionType.JITTER): ['width', 'height', 'seed'] as Set<String>,
+      (PositionType.NUDGE): ['x', 'y'] as Set<String>
+  ] as Map<PositionType, Set<String>>
+
   /**
    * Create a new chart with data and global aesthetics.
    */
@@ -85,6 +95,8 @@ class GgChart {
     Map statParams = [:]
     Aes layerAes = null
     StatType statOverride = geom.defaultStat
+    PositionType positionOverride = geom.defaultPosition
+    Map positionParams = [:]
     if (geom.params) {
       // Copy params that are relevant for stats
       STAT_PARAM_KEYS.each { key ->
@@ -98,6 +110,16 @@ class GgChart {
           statOverride = parsed
         }
       }
+      if (geom.params.containsKey('position')) {
+        Position positionSpec = parsePositionSpec(geom.params['position'])
+        if (positionSpec != null) {
+          positionOverride = positionSpec.positionType
+          if (positionSpec.params) {
+            positionParams.putAll(positionSpec.params)
+          }
+        }
+      }
+      positionParams.putAll(extractPositionParams(positionOverride, geom.params, positionParams))
       // Extract mapping parameter as layer aes
       if (geom.params.containsKey('mapping')) {
         def mapping = geom.params['mapping']
@@ -110,10 +132,11 @@ class GgChart {
     Layer layer = new Layer(
         geom: geom,
         stat: statOverride,
-        position: geom.defaultPosition,
+        position: positionOverride,
         aes: layerAes,  // Layer-specific aesthetics from mapping parameter
         params: geom.params ?: [:],
-        statParams: statParams
+        statParams: statParams,
+        positionParams: positionParams
     )
     layers << layer
     return this
@@ -129,7 +152,7 @@ class GgChart {
    *   <li>A string or CharSequence (case-insensitive matching to known stat names)</li>
    * </ul>
    * Supported stat names are: 'identity', 'count', 'bin', 'boxplot', 'smooth',
-   * 'summary', 'density', 'bin2d', and 'contour'.
+   * 'summary', 'density', 'ydensity', 'bin2d', 'contour', 'ecdf', 'qq', and 'qq_line'.
    *
    * @param stat the stat specification to parse (may be null, StatType, Stat, or String)
    * @return the corresponding StatType, or null if the input is null
@@ -161,15 +184,84 @@ class GgChart {
           return StatType.SUMMARY
         case 'density':
           return StatType.DENSITY
+        case 'ydensity':
+          return StatType.YDENSITY
         case 'bin2d':
           return StatType.BIN2D
         case 'contour':
           return StatType.CONTOUR
+        case 'ecdf':
+          return StatType.ECDF
+        case 'qq':
+          return StatType.QQ
+        case 'qq_line':
+        case 'qqline':
+          return StatType.QQ_LINE
         default:
           throw new IllegalArgumentException("Unsupported stat: ${stat}")
       }
     }
     throw new IllegalArgumentException("Unsupported stat type: ${stat.getClass().name}")
+  }
+
+  private static Position parsePositionSpec(def position) {
+    if (position == null) {
+      return null
+    }
+    if (position instanceof Position) {
+      return position as Position
+    }
+    if (position instanceof PositionType) {
+      return new Position(position as PositionType)
+    }
+    if (position instanceof CharSequence) {
+      PositionType parsed = parsePositionType(position.toString())
+      if (parsed != null) {
+        return new Position(parsed)
+      }
+    }
+    return null
+  }
+
+  private static PositionType parsePositionType(String position) {
+    if (position == null) {
+      return null
+    }
+    switch (position.toLowerCase(Locale.ROOT)) {
+      case 'identity':
+        return PositionType.IDENTITY
+      case 'dodge':
+        return PositionType.DODGE
+      case 'dodge2':
+        return PositionType.DODGE2
+      case 'stack':
+        return PositionType.STACK
+      case 'fill':
+        return PositionType.FILL
+      case 'jitter':
+        return PositionType.JITTER
+      case 'nudge':
+        return PositionType.NUDGE
+      default:
+        return null
+    }
+  }
+
+  private static Map extractPositionParams(PositionType positionType, Map params, Map existing = [:]) {
+    if (positionType == null || params == null) {
+      return existing
+    }
+    Set<String> keys = POSITION_PARAM_KEYS[positionType]
+    if (keys == null || keys.isEmpty()) {
+      return existing
+    }
+    Map result = new LinkedHashMap<>(existing)
+    keys.each { key ->
+      if (params.containsKey(key) && !result.containsKey(key)) {
+        result[key] = params[key]
+      }
+    }
+    return result
   }
 
   /**

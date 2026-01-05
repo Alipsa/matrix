@@ -141,6 +141,24 @@ class Aes {
   }
 
   /**
+   * Check if an aesthetic references a scaled aesthetic (wrapped in AfterScale).
+   */
+  @CompileDynamic
+  boolean isAfterScale(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof AfterScale
+  }
+
+  /**
+   * Get the referenced aesthetic name for after_scale.
+   */
+  @CompileDynamic
+  String getAfterScaleName(String aesthetic) {
+    def value = this."$aesthetic"
+    return value instanceof AfterScale ? ((AfterScale) value).aesthetic : null
+  }
+
+  /**
    * Check if an aesthetic is a closure-based expression.
    */
   @CompileDynamic
@@ -214,12 +232,13 @@ class Aes {
   }
 
   /**
-   * Extract column name from a value (returns null for Identity, AfterStat, Expression, Factor, and CutWidth wrappers).
+   * Extract column name from a value (returns null for Identity, AfterStat, AfterScale, Expression, Factor, and CutWidth wrappers).
    */
   private static String extractColName(def value) {
     if (value == null) return null
     if (value instanceof Identity) return null
     if (value instanceof AfterStat) return null
+    if (value instanceof AfterScale) return null
     if (value instanceof Expression) return null
     if (value instanceof Factor) return null
     if (value instanceof CutWidth) return null

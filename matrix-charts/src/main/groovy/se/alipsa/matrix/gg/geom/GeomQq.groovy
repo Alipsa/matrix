@@ -7,14 +7,15 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
+import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
- * Point geometry for scatter plots.
- * Renders data points as circles.
+ * Q-Q plot points.
+ * Uses stat_qq to compute theoretical quantiles for comparison.
  */
 @CompileStatic
-class GeomPoint extends Geom {
+class GeomQq extends Geom {
 
   /** Default point color */
   String color = 'black'
@@ -31,12 +32,21 @@ class GeomPoint extends Geom {
   /** Default alpha (transparency) */
   Number alpha = 1.0
 
-  GeomPoint() {
-    requiredAes = ['x', 'y']
+  /**
+   * Create a Q-Q point geom with default settings.
+   */
+  GeomQq() {
+    defaultStat = StatType.QQ
+    requiredAes = ['x']
     defaultAes = [color: 'black', size: 3, alpha: 1.0] as Map<String, Object>
   }
 
-  GeomPoint(Map params) {
+  /**
+   * Create a Q-Q point geom with parameters.
+   *
+   * @param params geom parameters
+   */
+  GeomQq(Map params) {
     this()
     if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
     if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
@@ -51,14 +61,14 @@ class GeomPoint extends Geom {
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
     if (data == null || data.rowCount() == 0) return
 
-    String xCol = aes.xColName
-    String yCol = aes.yColName
+    String xCol = data.columnNames().contains('x') ? 'x' : aes.xColName
+    String yCol = data.columnNames().contains('y') ? 'y' : aes.yColName
     String colorCol = aes.colorColName
     String sizeCol = aes.size instanceof String ? aes.size : null
     String shapeCol = aes.shape instanceof String ? aes.shape : null
 
     if (xCol == null || yCol == null) {
-      throw new IllegalArgumentException("GeomPoint requires x and y aesthetics")
+      throw new IllegalArgumentException("GeomQq requires stat_qq output with x and y columns")
     }
 
     Scale xScale = scales['x']
@@ -68,31 +78,24 @@ class GeomPoint extends Geom {
     Scale shapeScale = scales['shape']
     Scale alphaScale = scales['alpha']
 
-    // Render each point
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
 
       if (xVal == null || yVal == null) return
 
-      // Transform to pixel coordinates using scales
-      // Scales handle both continuous (numeric) and discrete (string) values
       def xTransformed = xScale?.transform(xVal)
       def yTransformed = yScale?.transform(yVal)
-
-      // Skip if scale couldn't transform the value
       if (xTransformed == null || yTransformed == null) return
 
       double xPx = xTransformed as double
       double yPx = yTransformed as double
 
-      // Determine color
       String pointColor = this.color
       if (colorCol && row[colorCol] != null) {
         if (colorScale) {
           pointColor = colorScale.transform(row[colorCol])?.toString() ?: this.color
         } else {
-          // Use default color palette
           pointColor = getDefaultColor(row[colorCol])
         }
       } else if (aes.color instanceof Identity) {
@@ -100,13 +103,12 @@ class GeomPoint extends Geom {
       }
       pointColor = ColorUtil.normalizeColor(pointColor) ?: pointColor
 
-      // Determine size
       Number pointSize = this.size
       if (sizeCol && row[sizeCol] != null) {
         if (sizeScale) {
-          def scaled = sizeScale.transform(row[sizeCol])
-          if (scaled instanceof Number) {
-            pointSize = scaled as Number
+          def sized = sizeScale.transform(row[sizeCol])
+          if (sized instanceof Number) {
+            pointSize = sized as Number
           }
         } else if (row[sizeCol] instanceof Number) {
           pointSize = row[sizeCol] as Number
@@ -115,7 +117,6 @@ class GeomPoint extends Geom {
         pointSize = (aes.size as Identity).value as Number
       }
 
-      // Determine shape
       String pointShape = this.shape
       if (shapeCol && row[shapeCol] != null) {
         pointShape = shapeScale?.transform(row[shapeCol])?.toString() ?: row[shapeCol].toString()
@@ -123,30 +124,25 @@ class GeomPoint extends Geom {
         pointShape = (aes.shape as Identity).value.toString()
       }
 
-      // Determine alpha
       Number pointAlpha = this.alpha
       if (aes.alpha instanceof Identity) {
         pointAlpha = (aes.alpha as Identity).value as Number
       } else if (aes.alpha instanceof String && row[aes.alpha] != null) {
         if (alphaScale) {
-          def scaledAlpha = alphaScale.transform(row[aes.alpha])
-          if (scaledAlpha instanceof Number) {
-            pointAlpha = scaledAlpha as Number
+          def alphaVal = alphaScale.transform(row[aes.alpha])
+          if (alphaVal instanceof Number) {
+            pointAlpha = alphaVal as Number
           }
         } else if (row[aes.alpha] instanceof Number) {
           pointAlpha = row[aes.alpha] as Number
         }
       }
 
-      // Draw the point
       drawPoint(group, xPx, yPx, (pointSize as Number).doubleValue(), pointColor, pointShape,
           (pointAlpha as Number).doubleValue())
     }
   }
 
-  /**
-   * Draw a point of the specified shape.
-   */
   private void drawPoint(G group, double cx, double cy, double radius, String color, String shape, double alphaVal) {
     double size = radius * 2
     double halfSize = size / 2.0d
@@ -158,7 +154,7 @@ class GeomPoint extends Geom {
             .y((cy - halfSize) as int)
             .fill(color)
             .stroke(color)
-        if (alphaVal < 1.0) {
+        if (alphaVal < 1.0d) {
           rect.addAttribute('fill-opacity', alphaVal)
         }
         break
@@ -168,7 +164,7 @@ class GeomPoint extends Geom {
             .stroke(color)
         def vLine = group.addLine(cx as int, (cy - halfSize) as int, cx as int, (cy + halfSize) as int)
             .stroke(color)
-        if (alphaVal < 1.0) {
+        if (alphaVal < 1.0d) {
           hLine.addAttribute('stroke-opacity', alphaVal)
           vLine.addAttribute('stroke-opacity', alphaVal)
         }
@@ -178,7 +174,7 @@ class GeomPoint extends Geom {
             .stroke(color)
         def diag2 = group.addLine((cx - halfSize) as int, (cy + halfSize) as int, (cx + halfSize) as int, (cy - halfSize) as int)
             .stroke(color)
-        if (alphaVal < 1.0) {
+        if (alphaVal < 1.0d) {
           diag1.addAttribute('stroke-opacity', alphaVal)
           diag2.addAttribute('stroke-opacity', alphaVal)
         }
@@ -193,7 +189,7 @@ class GeomPoint extends Geom {
         def path = group.addPath().d(pathD)
             .fill(color)
             .stroke(color)
-        if (alphaVal < 1.0) {
+        if (alphaVal < 1.0d) {
           path.addAttribute('fill-opacity', alphaVal)
         }
         break
@@ -205,7 +201,7 @@ class GeomPoint extends Geom {
         def diamondPath = group.addPath().d(diamond)
             .fill(color)
             .stroke(color)
-        if (alphaVal < 1.0) {
+        if (alphaVal < 1.0d) {
           diamondPath.addAttribute('fill-opacity', alphaVal)
         }
         break
@@ -217,22 +213,18 @@ class GeomPoint extends Geom {
             .r(radius)
             .fill(color)
             .stroke(color)
-        if (alphaVal < 1.0) {
+        if (alphaVal < 1.0d) {
           circle.addAttribute('fill-opacity', alphaVal)
         }
         break
     }
   }
 
-  /**
-   * Get a default color from a discrete palette based on a value.
-   */
   private String getDefaultColor(Object value) {
-    // Default ggplot2-like color palette
     List<String> palette = [
-      '#F8766D', '#C49A00', '#53B400',
-      '#00C094', '#00B6EB', '#A58AFF',
-      '#FB61D7'
+        '#F8766D', '#C49A00', '#53B400',
+        '#00C094', '#00B6EB', '#A58AFF',
+        '#FB61D7'
     ]
 
     int index = Math.abs(value.hashCode()) % palette.size()

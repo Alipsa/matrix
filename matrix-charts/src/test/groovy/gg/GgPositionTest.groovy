@@ -121,6 +121,21 @@ class GgPositionTest {
   }
 
   @Test
+  void testNudgeAddsOffsets() {
+    Matrix data = sampleMatrix()
+    Aes aes = new Aes(x: 'x', y: 'y', group: 'group')
+
+    Matrix result = GgPosition.nudge(data, aes, [x: 0.5, y: -1.0])
+    List<Number> xValues = result['x'] as List<Number>
+    List<Number> yValues = result['y'] as List<Number>
+
+    assertEquals(1.5d, xValues[0] as double, 1e-9)
+    assertEquals(2.5d, xValues[2] as double, 1e-9)
+    assertEquals(1.0d, yValues[0] as double, 1e-9)
+    assertEquals(3.0d, yValues[2] as double, 1e-9)
+  }
+
+  @Test
   void testJitterUsesSeededRandom() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')

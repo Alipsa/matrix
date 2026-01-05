@@ -717,6 +717,26 @@ class GgRenderer {
       scales['shape'] = shapeScale
     }
 
+    // Create size scale if size data exists
+    if (aestheticData.size) {
+      Scale sizeScale = createAutoScale('size', aestheticData.size)
+      sizeScale.train(aestheticData.size)
+      if (chart.globalAes?.size instanceof String) {
+        sizeScale.name = chart.globalAes.size as String
+      }
+      scales['size'] = sizeScale
+    }
+
+    // Create alpha scale if alpha data exists
+    if (aestheticData.alpha) {
+      Scale alphaScale = createAutoScale('alpha', aestheticData.alpha)
+      alphaScale.train(aestheticData.alpha)
+      if (chart.globalAes?.alpha instanceof String) {
+        alphaScale.name = chart.globalAes.alpha as String
+      }
+      scales['alpha'] = alphaScale
+    }
+
     // Add user-specified scales (these override auto-detected scales)
     chart.scales.each { scale ->
       if (scale.aesthetic) {
@@ -735,6 +755,10 @@ class GgRenderer {
             s.name = c.globalAes.colorColName
           } else if (aes == 'fill' && c.globalAes?.fill && !c.globalAes.isConstant('fill')) {
             s.name = c.globalAes.fillColName
+          } else if (aes == 'size' && c.globalAes?.size instanceof String) {
+            s.name = c.globalAes.size as String
+          } else if (aes == 'alpha' && c.globalAes?.alpha instanceof String) {
+            s.name = c.globalAes.alpha as String
           } else {
             // Check layer aesthetics for color/fill mappings
             for (layer in c.layers) {
@@ -744,6 +768,12 @@ class GgRenderer {
                   break
                 } else if (aes == 'fill' && layer.aes.fill && !layer.aes.isConstant('fill')) {
                   s.name = layer.aes.fillColName
+                  break
+                } else if (aes == 'size' && layer.aes.size instanceof String) {
+                  s.name = layer.aes.size as String
+                  break
+                } else if (aes == 'alpha' && layer.aes.alpha instanceof String) {
+                  s.name = layer.aes.alpha as String
                   break
                 }
               }
@@ -960,6 +990,12 @@ class GgRenderer {
         return isDiscrete ? new ScaleYDiscrete() : new ScaleYContinuous()
       case 'shape':
         return new ScaleShape()
+      case 'size':
+        return isDiscrete ? new se.alipsa.matrix.gg.scale.ScaleSizeDiscrete()
+            : new se.alipsa.matrix.gg.scale.ScaleSizeContinuous()
+      case 'alpha':
+        return isDiscrete ? new se.alipsa.matrix.gg.scale.ScaleAlphaDiscrete()
+            : new se.alipsa.matrix.gg.scale.ScaleAlphaContinuous()
       case 'color':
       case 'colour':
       case 'fill':
@@ -1145,9 +1181,17 @@ class GgRenderer {
         if (resolvedLayerAes.fillColName && posData.columnNames().contains(resolvedLayerAes.fillColName)) {
           data['fill'].addAll(posData[resolvedLayerAes.fillColName] ?: [])
         }
+        if (resolvedLayerAes.size instanceof String && posData.columnNames().contains(resolvedLayerAes.size as String)) {
+          String sizeCol = resolvedLayerAes.size as String
+          data['size'].addAll(posData[sizeCol] ?: [])
+        }
         if (resolvedLayerAes.shape instanceof String && posData.columnNames().contains(resolvedLayerAes.shape as String)) {
           String shapeCol = resolvedLayerAes.shape as String
           data['shape'].addAll(posData[shapeCol] ?: [])
+        }
+        if (resolvedLayerAes.alpha instanceof String && posData.columnNames().contains(resolvedLayerAes.alpha as String)) {
+          String alphaCol = resolvedLayerAes.alpha as String
+          data['alpha'].addAll(posData[alphaCol] ?: [])
         }
       }
     }
@@ -1166,9 +1210,17 @@ class GgRenderer {
       if (globalAes.fillColName) {
         data['fill'].addAll(chart.data[globalAes.fillColName] ?: [])
       }
+      if (globalAes.size instanceof String && chart.data.columnNames().contains(globalAes.size as String)) {
+        String sizeCol = globalAes.size as String
+        data['size'].addAll(chart.data[sizeCol] ?: [])
+      }
       if (globalAes.shape instanceof String && chart.data.columnNames().contains(globalAes.shape as String)) {
         String shapeCol = globalAes.shape as String
         data['shape'].addAll(chart.data[shapeCol] ?: [])
+      }
+      if (globalAes.alpha instanceof String && chart.data.columnNames().contains(globalAes.alpha as String)) {
+        String alphaCol = globalAes.alpha as String
+        data['alpha'].addAll(chart.data[alphaCol] ?: [])
       }
     }
 
@@ -1430,12 +1482,22 @@ class GgRenderer {
         return GgStat.count(data, aes)
       case StatType.BIN:
         return GgStat.bin(data, aes, layer.statParams)
+      case StatType.DENSITY:
+        return GgStat.density(data, aes, layer.statParams)
+      case StatType.YDENSITY:
+        return GgStat.ydensity(data, aes, layer.statParams)
       case StatType.BOXPLOT:
         return GgStat.boxplot(data, aes, layer.statParams)
       case StatType.SMOOTH:
         return GgStat.smooth(data, aes, layer.statParams)
       case StatType.SUMMARY:
         return GgStat.summary(data, aes, layer.statParams)
+      case StatType.ECDF:
+        return GgStat.ecdf(data, aes, layer.statParams)
+      case StatType.QQ:
+        return GgStat.qq(data, aes, layer.statParams)
+      case StatType.QQ_LINE:
+        return GgStat.qqLine(data, aes, layer.statParams)
       default:
         return data
     }
@@ -1458,6 +1520,8 @@ class GgRenderer {
         return GgPosition.fill(data, aes, layer.positionParams)
       case PositionType.JITTER:
         return GgPosition.jitter(data, aes, layer.positionParams)
+      case PositionType.NUDGE:
+        return GgPosition.nudge(data, aes, layer.positionParams)
       default:
         return data
     }
@@ -1643,7 +1707,7 @@ class GgRenderer {
     if (theme.legendPosition == 'none') return
 
     // Find scales that need legends (color, fill, size - not x, y)
-    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape']
+    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape', 'alpha']
     Map<String, Scale> legendScales = scales.findAll { k, v ->
       if (!legendAesthetics.contains(k) || !v.isTrained()) return false
       // Check appropriate domain field based on scale type
@@ -1752,7 +1816,11 @@ class GgRenderer {
     // Render each legend scale
     legendScales.each { aesthetic, scale ->
       String guideType = guideTypes[aesthetic]
-      if (scale instanceof ScaleDiscrete) {
+      if (aesthetic == 'size') {
+        currentY = renderSizeLegend(legendGroup, scale, currentX, currentY, isVertical, theme)
+      } else if (aesthetic == 'alpha') {
+        currentY = renderAlphaLegend(legendGroup, scale, currentX, currentY, isVertical, theme)
+      } else if (scale instanceof ScaleDiscrete) {
         ScaleDiscrete shapeForColorKeys = mergeShapeIntoColor &&
             (aesthetic == 'color' || aesthetic == 'colour' || aesthetic == 'fill') ? shapeScale : null
         ScaleDiscrete colorForShapes = (!mergeShapeIntoColor && aesthetic == 'shape' &&
@@ -1999,6 +2067,125 @@ class GgRenderer {
     return y + (vertical ? 0 : keyHeight + spacing)
   }
 
+  private int renderSizeLegend(G group, Scale scale, int startX, int startY, boolean vertical, Theme theme) {
+    List values
+    List<String> labels
+    if (scale instanceof ScaleDiscrete) {
+      values = (scale as ScaleDiscrete).levels
+      labels = (scale as ScaleDiscrete).computedLabels ?: []
+    } else if (scale instanceof ScaleContinuous) {
+      values = (scale as ScaleContinuous).computedBreaks
+      labels = (scale as ScaleContinuous).computedLabels ?: []
+    } else {
+      return startY
+    }
+    if (values == null || values.isEmpty()) return startY
+
+    List<Number> keySize = theme.legendKeySize ?: [15, 15] as List<Number>
+    int keyWidth = keySize[0].intValue()
+    int keyHeight = keySize[1].intValue()
+    int spacing = 5
+    int textOffset = keyWidth + 8
+
+    List<Number> sizes = values.collect { val ->
+      def scaled = scale.transform(val)
+      scaled instanceof Number ? (scaled as Number) : null
+    }.findAll { it != null } as List<Number>
+    if (sizes.isEmpty()) return startY
+    double maxSize = sizes.max() as double
+    double maxRadius = Math.min(keyWidth, keyHeight) / 2.0d
+
+    int x = startX
+    int y = startY
+    values.eachWithIndex { value, int idx ->
+      def scaled = scale.transform(value)
+      if (!(scaled instanceof Number)) {
+        return
+      }
+      double radius = maxSize > 0d ? (scaled as Number).doubleValue() / maxSize * maxRadius : maxRadius / 2.0d
+      double centerX = x + keyWidth / 2.0d
+      double centerY = y + keyHeight / 2.0d
+      def circle = group.addCircle()
+          .cx(centerX)
+          .cy(centerY)
+          .r(Math.max(1.0d, radius))
+          .fill(theme.legendKey?.color ?: '#999999')
+      if (theme.legendKey?.color) {
+        circle.stroke(theme.legendKey.color)
+      }
+
+      String label = idx < labels.size() ? labels[idx] : value?.toString() ?: ''
+      group.addText(label)
+          .x(x + textOffset)
+          .y(y + keyHeight - 3)
+          .fontSize(theme.legendText?.size ?: 10)
+          .fill(theme.legendText?.color ?: 'black')
+
+      if (vertical) {
+        y += keyHeight + spacing
+      } else {
+        x += keyWidth + textOffset + label.length() * 6 + spacing
+      }
+    }
+
+    return y + (vertical ? 0 : keyHeight + spacing)
+  }
+
+  private int renderAlphaLegend(G group, Scale scale, int startX, int startY, boolean vertical, Theme theme) {
+    List values
+    List<String> labels
+    if (scale instanceof ScaleDiscrete) {
+      values = (scale as ScaleDiscrete).levels
+      labels = (scale as ScaleDiscrete).computedLabels ?: []
+    } else if (scale instanceof ScaleContinuous) {
+      values = (scale as ScaleContinuous).computedBreaks
+      labels = (scale as ScaleContinuous).computedLabels ?: []
+    } else {
+      return startY
+    }
+    if (values == null || values.isEmpty()) return startY
+
+    List<Number> keySize = theme.legendKeySize ?: [15, 15] as List<Number>
+    int keyWidth = keySize[0].intValue()
+    int keyHeight = keySize[1].intValue()
+    int spacing = 5
+    int textOffset = keyWidth + 8
+
+    int x = startX
+    int y = startY
+    values.eachWithIndex { value, int idx ->
+      def scaled = scale.transform(value)
+      if (!(scaled instanceof Number)) {
+        return
+      }
+      double alphaVal = (scaled as Number).doubleValue()
+      alphaVal = Math.max(0.0d, Math.min(1.0d, alphaVal))
+      def rect = group.addRect(keyWidth, keyHeight)
+          .x(x)
+          .y(y)
+          .fill(theme.legendKey?.color ?: '#999999')
+      rect.addAttribute('fill-opacity', alphaVal)
+      if (theme.legendKey?.color) {
+        rect.stroke(theme.legendKey.color)
+      }
+
+      String label = idx < labels.size() ? labels[idx] : value?.toString() ?: ''
+      group.addText(label)
+          .x(x + textOffset)
+          .y(y + keyHeight - 3)
+          .fontSize(theme.legendText?.size ?: 10)
+          .fill(theme.legendText?.color ?: 'black')
+
+      if (vertical) {
+        y += keyHeight + spacing
+      } else {
+        x += keyWidth + textOffset + label.length() * 6 + spacing
+      }
+    }
+
+    return y + (vertical ? 0 : keyHeight + spacing)
+  }
+
   private void drawLegendShape(G group, int centerX, int centerY, int size,
                                String shape, String fillColor, String strokeColor) {
     String stroke = strokeColor ?: fillColor
@@ -2077,6 +2264,9 @@ class GgRenderer {
     if (scale instanceof ScaleColorGradient) {
       return normalizeGuideType((scale as ScaleColorGradient).guideType)
     }
+    if (scale instanceof se.alipsa.matrix.gg.scale.ScaleColorGradientN) {
+      return normalizeGuideType((scale as se.alipsa.matrix.gg.scale.ScaleColorGradientN).guideType)
+    }
     if (scale instanceof ScaleColorViridisC) {
       return normalizeGuideType((scale as ScaleColorViridisC).guideType)
     }
@@ -2124,7 +2314,7 @@ class GgRenderer {
     if (theme.legendPosition == 'none') return 0
 
     // Find scales that need legends
-    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape']
+    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape', 'alpha']
     Map<String, Scale> legendScales = scales.findAll { k, v ->
       legendAesthetics.contains(k) && v.isTrained()
     }

@@ -72,6 +72,8 @@ class GeomStep extends Geom {
     String yCol = aes.yColName
     String groupCol = aes.groupColName ?: aes.colorColName
     String colorCol = aes.colorColName
+    String sizeCol = aes.size instanceof String ? aes.size as String : null
+    String alphaCol = aes.alpha instanceof String ? aes.alpha as String : null
 
     if (xCol == null || yCol == null) {
       throw new IllegalArgumentException("GeomStep requires x and y aesthetics")
@@ -80,6 +82,8 @@ class GeomStep extends Geom {
     Scale xScale = scales['x']
     Scale yScale = scales['y']
     Scale colorScale = scales['color']
+    Scale sizeScale = scales['size']
+    Scale alphaScale = scales['alpha']
 
     // Group data if a group aesthetic is specified
     Map<Object, List<Map>> groups = [:]
@@ -93,14 +97,15 @@ class GeomStep extends Geom {
 
     // Render each group as a separate step line
     groups.each { groupKey, rows ->
-      renderStep(group, rows, xCol, yCol, colorCol, groupKey,
-                 xScale, yScale, colorScale, aes)
+      renderStep(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
+                 xScale, yScale, colorScale, sizeScale, alphaScale, aes)
     }
   }
 
   private void renderStep(G group, List<Map> rows, String xCol, String yCol,
-                          String colorCol, Object groupKey,
-                          Scale xScale, Scale yScale, Scale colorScale, Aes aes) {
+                          String colorCol, String sizeCol, String alphaCol, Object groupKey,
+                          Scale xScale, Scale yScale, Scale colorScale,
+                          Scale sizeScale, Scale alphaScale, Aes aes) {
     // Sort rows by x value
     List<Map> sortedRows = sortRowsByX(rows, xCol)
 
@@ -139,6 +144,36 @@ class GeomStep extends Geom {
     }
     lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
 
+    Number lineSize = this.size
+    if (aes.size instanceof Identity) {
+      lineSize = (aes.size as Identity).value as Number
+    } else if (sizeCol && !sortedRows.isEmpty() && sortedRows[0][sizeCol] != null) {
+      def rawSize = sortedRows[0][sizeCol]
+      if (sizeScale) {
+        def scaled = sizeScale.transform(rawSize)
+        if (scaled instanceof Number) {
+          lineSize = scaled as Number
+        }
+      } else if (rawSize instanceof Number) {
+        lineSize = rawSize as Number
+      }
+    }
+
+    Number lineAlpha = this.alpha
+    if (aes.alpha instanceof Identity) {
+      lineAlpha = (aes.alpha as Identity).value as Number
+    } else if (alphaCol && !sortedRows.isEmpty() && sortedRows[0][alphaCol] != null) {
+      def rawAlpha = sortedRows[0][alphaCol]
+      if (alphaScale) {
+        def scaled = alphaScale.transform(rawAlpha)
+        if (scaled instanceof Number) {
+          lineAlpha = scaled as Number
+        }
+      } else if (rawAlpha instanceof Number) {
+        lineAlpha = rawAlpha as Number
+      }
+    }
+
     // Build step path based on direction
     StringBuilder d = new StringBuilder()
     double[] first = points[0]
@@ -176,7 +211,7 @@ class GeomStep extends Geom {
         .fill('none')
         .stroke(lineColor)
 
-    path.addAttribute('stroke-width', size)
+    path.addAttribute('stroke-width', lineSize)
 
     // Apply line type
     String dashArray = getDashArray(linetype)
@@ -185,8 +220,8 @@ class GeomStep extends Geom {
     }
 
     // Apply alpha
-    if ((alpha as double) < 1.0) {
-      path.addAttribute('stroke-opacity', alpha)
+    if ((lineAlpha as double) < 1.0) {
+      path.addAttribute('stroke-opacity', lineAlpha)
     }
   }
 

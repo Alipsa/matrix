@@ -59,10 +59,18 @@ enum StatType {
     SUMMARY,
     /** Kernel density estimation */
     DENSITY,
+    /** Density estimation for y values (violin/stat_ydensity) */
+    YDENSITY,
     /** 2D binning */
     BIN2D,
     /** Contour computation */
-    CONTOUR
+    CONTOUR,
+    /** Empirical cumulative distribution function */
+    ECDF,
+    /** Q-Q plot data */
+    QQ,
+    /** Q-Q plot reference line data */
+    QQ_LINE
 }
 
 /**
@@ -81,5 +89,7 @@ enum PositionType {
     /** Stacked to 100% */
     FILL,
     /** Random displacement */
-    JITTER
+    JITTER,
+    /** Fixed displacement */
+    NUDGE
 }

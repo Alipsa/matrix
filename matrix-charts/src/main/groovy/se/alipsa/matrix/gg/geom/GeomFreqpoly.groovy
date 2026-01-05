@@ -11,11 +11,11 @@ import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
- * Line geometry for line charts.
- * Connects data points with lines, optionally grouped by a variable.
+ * Frequency polygon geometry.
+ * Uses stat_bin to compute counts per bin and draws a line through the bin centers.
  */
 @CompileStatic
-class GeomLine extends Geom {
+class GeomFreqpoly extends Geom {
 
   /** Line color */
   String color = 'black'
@@ -29,20 +29,28 @@ class GeomLine extends Geom {
   /** Alpha transparency */
   Number alpha = 1.0
 
-  GeomLine() {
-    defaultStat = StatType.IDENTITY
-    requiredAes = ['x', 'y']
+  /**
+   * Create a frequency polygon geom with default settings.
+   */
+  GeomFreqpoly() {
+    defaultStat = StatType.BIN
+    requiredAes = ['x']
     defaultAes = [color: 'black', size: 1, linetype: 'solid'] as Map<String, Object>
   }
 
-  GeomLine(Map params) {
+  /**
+   * Create a frequency polygon geom with parameters.
+   *
+   * @param params geom parameters
+   */
+  GeomFreqpoly(Map params) {
     this()
     if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
     if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size) this.size = params.size as Number
-    if (params.linewidth) this.size = params.linewidth as Number
-    if (params.linetype) this.linetype = params.linetype
-    if (params.alpha) this.alpha = params.alpha as Number
+    if (params.size != null) this.size = params.size as Number
+    if (params.linewidth != null) this.size = params.linewidth as Number
+    if (params.linetype) this.linetype = params.linetype as String
+    if (params.alpha != null) this.alpha = params.alpha as Number
     this.params = params
   }
 
@@ -50,15 +58,15 @@ class GeomLine extends Geom {
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
     if (data == null || data.rowCount() < 2) return
 
-    String xCol = aes.xColName
-    String yCol = aes.yColName
+    String xCol = data.columnNames().contains('x') ? 'x' : aes.xColName
+    String yCol = resolveYColumn(data, aes)
     String groupCol = aes.groupColName ?: aes.colorColName
     String colorCol = aes.colorColName
     String sizeCol = aes.size instanceof String ? aes.size as String : null
     String alphaCol = aes.alpha instanceof String ? aes.alpha as String : null
 
     if (xCol == null || yCol == null) {
-      throw new IllegalArgumentException("GeomLine requires x and y aesthetics")
+      throw new IllegalArgumentException("GeomFreqpoly requires stat_bin output with x and count/density columns")
     }
 
     Scale xScale = scales['x']
@@ -67,7 +75,6 @@ class GeomLine extends Geom {
     Scale sizeScale = scales['size']
     Scale alphaScale = scales['alpha']
 
-    // Group data if a group aesthetic is specified
     Map<Object, List<Map>> groups = [:]
     data.each { row ->
       def groupKey = groupCol ? row[groupCol] : '__all__'
@@ -77,43 +84,66 @@ class GeomLine extends Geom {
       groups[groupKey] << row.toMap()
     }
 
-    // Render each group as a separate line
     groups.each { groupKey, rows ->
       renderLine(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
-                 xScale, yScale, colorScale, sizeScale, alphaScale, aes)
+          xScale, yScale, colorScale, sizeScale, alphaScale, aes)
     }
+  }
+
+  private String resolveYColumn(Matrix data, Aes aes) {
+    if (aes.isAfterStat('y')) {
+      String statCol = aes.getAfterStatName('y')
+      if (statCol && data.columnNames().contains(statCol)) {
+        return statCol
+      }
+    }
+    String yCol = aes.yColName
+    if (yCol && data.columnNames().contains(yCol)) {
+      return yCol
+    }
+    if (data.columnNames().contains('count')) {
+      return 'count'
+    }
+    if (data.columnNames().contains('density')) {
+      return 'density'
+    }
+    if (data.columnNames().contains('y')) {
+      return 'y'
+    }
+    return null
   }
 
   private void renderLine(G group, List<Map> rows, String xCol, String yCol,
                           String colorCol, String sizeCol, String alphaCol, Object groupKey,
                           Scale xScale, Scale yScale, Scale colorScale,
                           Scale sizeScale, Scale alphaScale, Aes aes) {
-    // Collect points and sort by x value
-    List<Map> sortedRows = sortRowsByX(rows, xCol)
+    List<Map> sortedRows = rows.sort { a, b ->
+      def xA = a[xCol]
+      def xB = b[xCol]
+      if (xA instanceof Number && xB instanceof Number) {
+        return (xA as Number) <=> (xB as Number)
+      }
+      if (xA instanceof Comparable && xB instanceof Comparable) {
+        return (xA as Comparable) <=> (xB as Comparable)
+      }
+      return xA?.toString() <=> xB?.toString()
+    }
 
-    // Collect transformed points
     List<double[]> points = []
     sortedRows.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
-
       if (xVal == null || yVal == null) return
 
-      // Transform using scales
       def xTransformed = xScale?.transform(xVal)
       def yTransformed = yScale?.transform(yVal)
-
       if (xTransformed == null || yTransformed == null) return
 
-      double xPx = xTransformed as double
-      double yPx = yTransformed as double
-
-      points << ([xPx, yPx] as double[])
+      points << ([xTransformed as double, yTransformed as double] as double[])
     }
 
     if (points.size() < 2) return
 
-    // Determine line color
     String lineColor = this.color
     if (colorCol && groupKey != '__all__') {
       if (colorScale) {
@@ -156,10 +186,8 @@ class GeomLine extends Geom {
       }
     }
 
-    // Get stroke-dasharray for line type
     String dashArray = getDashArray(linetype)
 
-    // Draw connected line segments
     for (int i = 0; i < points.size() - 1; i++) {
       double[] p1 = points[i]
       double[] p2 = points[i + 1]
@@ -171,60 +199,24 @@ class GeomLine extends Geom {
       if (dashArray) {
         line.addAttribute('stroke-dasharray', dashArray)
       }
-
       if ((lineAlpha as double) < 1.0) {
         line.addAttribute('stroke-opacity', lineAlpha)
       }
     }
   }
 
-  /**
-   * Sort rows by x value for proper line connection.
-   */
-  private List<Map> sortRowsByX(List<Map> rows, String xCol) {
-    return rows.sort { a, b ->
-      def xA = a[xCol]
-      def xB = b[xCol]
-
-      // Handle numeric comparison
-      if (xA instanceof Number && xB instanceof Number) {
-        return (xA as Number) <=> (xB as Number)
-      }
-
-      // Handle comparable types
-      if (xA instanceof Comparable && xB instanceof Comparable) {
-        return (xA as Comparable) <=> (xB as Comparable)
-      }
-
-      // Fall back to string comparison
-      return xA?.toString() <=> xB?.toString()
-    }
-  }
-
-  /**
-   * Convert line type to SVG stroke-dasharray.
-   */
   private String getDashArray(String type) {
-    switch (type) {
-      case 'dashed':
-        return '8,4'
-      case 'dotted':
-        return '2,2'
-      case 'dotdash':
-        return '2,2,8,2'
-      case 'longdash':
-        return '12,4'
-      case 'twodash':
-        return '4,2,8,2'
+    switch (type?.toLowerCase()) {
+      case 'dashed': return '8,4'
+      case 'dotted': return '2,2'
+      case 'dotdash': return '2,2,8,2'
+      case 'longdash': return '12,4'
+      case 'twodash': return '4,2,8,2'
       case 'solid':
-      default:
-        return null
+      default: return null
     }
   }
 
-  /**
-   * Get a default color from a discrete palette based on a value.
-   */
   private String getDefaultColor(Object value) {
     List<String> palette = [
         '#F8766D', '#C49A00', '#53B400',

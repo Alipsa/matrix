@@ -71,6 +71,8 @@ class GeomPath extends Geom {
     String yCol = aes.yColName
     String groupCol = aes.groupColName ?: aes.colorColName
     String colorCol = aes.colorColName
+    String sizeCol = aes.size instanceof String ? aes.size as String : null
+    String alphaCol = aes.alpha instanceof String ? aes.alpha as String : null
 
     if (xCol == null || yCol == null) {
       throw new IllegalArgumentException("GeomPath requires x and y aesthetics")
@@ -79,6 +81,8 @@ class GeomPath extends Geom {
     Scale xScale = scales['x']
     Scale yScale = scales['y']
     Scale colorScale = scales['color']
+    Scale sizeScale = scales['size']
+    Scale alphaScale = scales['alpha']
 
     // Group data if a group aesthetic is specified
     Map<Object, List<Map>> groups = new LinkedHashMap<>()  // Preserve insertion order
@@ -92,14 +96,15 @@ class GeomPath extends Geom {
 
     // Render each group as a separate path
     groups.each { groupKey, rows ->
-      renderPath(group, rows, xCol, yCol, colorCol, groupKey,
-                 xScale, yScale, colorScale, aes)
+      renderPath(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
+                 xScale, yScale, colorScale, sizeScale, alphaScale, aes)
     }
   }
 
   private void renderPath(G group, List<Map> rows, String xCol, String yCol,
-                          String colorCol, Object groupKey,
-                          Scale xScale, Scale yScale, Scale colorScale, Aes aes) {
+                          String colorCol, String sizeCol, String alphaCol, Object groupKey,
+                          Scale xScale, Scale yScale, Scale colorScale,
+                          Scale sizeScale, Scale alphaScale, Aes aes) {
     // DO NOT sort - preserve data order (this is the key difference from geom_line)
     List<double[]> points = []
     rows.each { row ->
@@ -135,6 +140,36 @@ class GeomPath extends Geom {
     }
     lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
 
+    Number lineSize = this.size
+    if (aes.size instanceof Identity) {
+      lineSize = (aes.size as Identity).value as Number
+    } else if (sizeCol && !rows.isEmpty() && rows[0][sizeCol] != null) {
+      def rawSize = rows[0][sizeCol]
+      if (sizeScale) {
+        def scaled = sizeScale.transform(rawSize)
+        if (scaled instanceof Number) {
+          lineSize = scaled as Number
+        }
+      } else if (rawSize instanceof Number) {
+        lineSize = rawSize as Number
+      }
+    }
+
+    Number lineAlpha = this.alpha
+    if (aes.alpha instanceof Identity) {
+      lineAlpha = (aes.alpha as Identity).value as Number
+    } else if (alphaCol && !rows.isEmpty() && rows[0][alphaCol] != null) {
+      def rawAlpha = rows[0][alphaCol]
+      if (alphaScale) {
+        def scaled = alphaScale.transform(rawAlpha)
+        if (scaled instanceof Number) {
+          lineAlpha = scaled as Number
+        }
+      } else if (rawAlpha instanceof Number) {
+        lineAlpha = rawAlpha as Number
+      }
+    }
+
     // Build SVG path
     StringBuilder d = new StringBuilder()
     double[] first = points[0]
@@ -151,7 +186,7 @@ class GeomPath extends Geom {
         .fill('none')
         .stroke(lineColor)
 
-    path.addAttribute('stroke-width', size)
+    path.addAttribute('stroke-width', lineSize)
     path.addAttribute('stroke-linecap', lineend)
     path.addAttribute('stroke-linejoin', linejoin)
 
@@ -162,8 +197,8 @@ class GeomPath extends Geom {
     }
 
     // Apply alpha
-    if ((alpha as double) < 1.0) {
-      path.addAttribute('stroke-opacity', alpha)
+    if ((lineAlpha as double) < 1.0) {
+      path.addAttribute('stroke-opacity', lineAlpha)
     }
   }
 
