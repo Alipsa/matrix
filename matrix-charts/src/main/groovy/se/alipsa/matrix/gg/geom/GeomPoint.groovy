@@ -54,8 +54,9 @@ class GeomPoint extends Geom {
     String xCol = aes.xColName
     String yCol = aes.yColName
     String colorCol = aes.colorColName
-    String sizeCol = aes.size instanceof String ? aes.size : null
-    String shapeCol = aes.shape instanceof String ? aes.shape : null
+    String sizeCol = aes.size instanceof String ? aes.size as String : null
+    String shapeCol = aes.shape instanceof String ? aes.shape as String : null
+    String alphaCol = aes.alpha instanceof String ? aes.alpha as String : null
 
     if (xCol == null || yCol == null) {
       throw new IllegalArgumentException("GeomPoint requires x and y aesthetics")
@@ -127,14 +128,14 @@ class GeomPoint extends Geom {
       Number pointAlpha = this.alpha
       if (aes.alpha instanceof Identity) {
         pointAlpha = (aes.alpha as Identity).value as Number
-      } else if (aes.alpha instanceof String && row[aes.alpha] != null) {
+      } else if (alphaCol && row[alphaCol] != null) {
         if (alphaScale) {
-          def scaledAlpha = alphaScale.transform(row[aes.alpha])
+          def scaledAlpha = alphaScale.transform(row[alphaCol])
           if (scaledAlpha instanceof Number) {
             pointAlpha = scaledAlpha as Number
           }
-        } else if (row[aes.alpha] instanceof Number) {
-          pointAlpha = row[aes.alpha] as Number
+        } else if (row[alphaCol] instanceof Number) {
+          pointAlpha = row[alphaCol] as Number
         }
       }
 

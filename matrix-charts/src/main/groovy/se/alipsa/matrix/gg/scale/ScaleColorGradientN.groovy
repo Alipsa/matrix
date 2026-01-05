@@ -100,8 +100,9 @@ class ScaleColorGradientN extends ScaleContinuous {
       stops << 0.0d
       return stops
     }
+    double step = 1.0d / (n - 1)
     for (int i = 0; i < n; i++) {
-      stops << (i / (double) (n - 1)) as double
+      stops << (i * step)
     }
     return stops
   }

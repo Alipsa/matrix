@@ -64,8 +64,9 @@ class GeomQq extends Geom {
     String xCol = data.columnNames().contains('x') ? 'x' : aes.xColName
     String yCol = data.columnNames().contains('y') ? 'y' : aes.yColName
     String colorCol = aes.colorColName
-    String sizeCol = aes.size instanceof String ? aes.size : null
-    String shapeCol = aes.shape instanceof String ? aes.shape : null
+    String sizeCol = aes.size instanceof String ? aes.size as String : null
+    String shapeCol = aes.shape instanceof String ? aes.shape as String : null
+    String alphaCol = aes.alpha instanceof String ? aes.alpha as String : null
 
     if (xCol == null || yCol == null) {
       throw new IllegalArgumentException("GeomQq requires stat_qq output with x and y columns")
@@ -127,14 +128,14 @@ class GeomQq extends Geom {
       Number pointAlpha = this.alpha
       if (aes.alpha instanceof Identity) {
         pointAlpha = (aes.alpha as Identity).value as Number
-      } else if (aes.alpha instanceof String && row[aes.alpha] != null) {
+      } else if (alphaCol && row[alphaCol] != null) {
         if (alphaScale) {
-          def alphaVal = alphaScale.transform(row[aes.alpha])
+          def alphaVal = alphaScale.transform(row[alphaCol])
           if (alphaVal instanceof Number) {
             pointAlpha = alphaVal as Number
           }
-        } else if (row[aes.alpha] instanceof Number) {
-          pointAlpha = row[aes.alpha] as Number
+        } else if (row[alphaCol] instanceof Number) {
+          pointAlpha = row[alphaCol] as Number
         }
       }
 
