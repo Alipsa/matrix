@@ -95,6 +95,8 @@ The matrix-charts gg implementation covers approximately 40-50% of ggplot2's fun
 
 ## Phase 2: Statistical Features (Medium Priority)
 
+Leverage matrix-stats or Stat from matrix core when possible. Avoid complex statistics calculations in matrix-stats, focusing instead on visualisation aspects; instead, add missing statistics to matrix stats.
+
 ### 2.1 Stats for Existing Geoms
 
 - 2.1.1 [ ] `stat_bin()` - Binning statistics for histograms
