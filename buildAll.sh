@@ -3,9 +3,11 @@ set -e
 
 # Check for Java version
 check_java_version() {
-  JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2)
-  echo "Detected Java version: $JAVA_VERSION"
-  if [[ "$JAVA_VERSION" == "21"* ]]; then
+  JAVA_VERSION_RAW=$(java -version 2>&1 | head -n 1)
+  JAVA_VERSION=$(echo "$JAVA_VERSION_RAW" | sed -n 's/.*"\([^"]*\)".*/\1/p')
+  JAVA_MAJOR_VERSION=${JAVA_VERSION%%.*}
+  echo "Detected Java version: $JAVA_VERSION (major: $JAVA_MAJOR_VERSION)"
+  if [[ "$JAVA_MAJOR_VERSION" == "21" ]]; then
     return 0
   else
     return 1
