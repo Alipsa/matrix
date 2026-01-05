@@ -10,3 +10,4 @@ build/
 /matrix-examples/LinearRegression/cars.png
 /matrix-charts/examples/gg/ggplot2/*.svg
 /matrix-charts/examples/gg/ggplot2/*.pdf
+/.gradle-user/

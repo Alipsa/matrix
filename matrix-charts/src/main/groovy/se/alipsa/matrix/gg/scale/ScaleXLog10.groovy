@@ -1,0 +1,211 @@
+package se.alipsa.matrix.gg.scale
+
+import groovy.transform.CompileStatic
+
+/**
+ * Log10-transformed continuous scale for the x-axis.
+ * Maps values using log10 transformation, useful for data spanning multiple orders of magnitude.
+ *
+ * Usage:
+ * - scale_x_log10() - basic log10 x-axis
+ * - scale_x_log10(limits: [1, 1000]) - with explicit limits (in data space)
+ *
+ * Note: Values <= 0 are filtered out since log10 is undefined for non-positive numbers.
+ */
+@CompileStatic
+class ScaleXLog10 extends ScaleContinuous {
+
+  /** Position of the x-axis: 'bottom' (default) or 'top' */
+  String position = 'bottom'
+
+  ScaleXLog10() {
+    aesthetic = 'x'
+  }
+
+  ScaleXLog10(Map params) {
+    aesthetic = 'x'
+    applyParams(params)
+  }
+
+  private void applyParams(Map params) {
+    if (params.name) this.name = params.name as String
+    if (params.limits) this.limits = params.limits as List
+    if (params.expand) this.expand = params.expand as List<Number>
+    if (params.breaks) this.breaks = params.breaks as List
+    if (params.labels) this.labels = params.labels as List<String>
+    if (params.position) this.position = params.position as String
+    if (params.nBreaks) this.nBreaks = params.nBreaks as int
+  }
+
+  @Override
+  void train(List data) {
+    if (data == null || data.isEmpty()) return
+
+    // Filter to positive numeric values (log10 is undefined for <= 0)
+    List<Double> numericData = data.findResults { coerceToPositiveNumber(it) } as List<Double>
+
+    if (numericData.isEmpty()) return
+
+    // Transform to log space
+    List<Double> logData = numericData.collect { Math.log10(it) } as List<Double>
+
+    // Compute min/max in log space
+    double min = logData.min() as double
+    double max = logData.max() as double
+
+    // Apply explicit limits if set (limits are in data space, convert to log space)
+    if (limits && limits.size() >= 2) {
+      if (limits[0] != null && (limits[0] as Number) > 0) {
+        min = Math.log10(limits[0] as double)
+      }
+      if (limits[1] != null && (limits[1] as Number) > 0) {
+        max = Math.log10(limits[1] as double)
+      }
+    }
+
+    // Apply expansion in log space
+    if (expand != null && expand.size() >= 2) {
+      Number mult = expand[0] != null ? expand[0] : DEFAULT_EXPAND_MULT
+      Number add = expand[1] != null ? expand[1] : DEFAULT_EXPAND_ADD
+      Number delta = max - min
+      min = min - delta * mult - add
+      max = max + delta * mult + add
+    }
+
+    computedDomain = [min, max]
+    trained = true
+  }
+
+  @Override
+  Object transform(Object value) {
+    Double numeric = coerceToPositiveNumber(value)
+    if (numeric == null) return null
+
+    // Transform to log space
+    double logValue = Math.log10(numeric)
+
+    double dMin = computedDomain[0] as double
+    double dMax = computedDomain[1] as double
+    double rMin = range[0] as double
+    double rMax = range[1] as double
+
+    if (dMax == dMin) return (rMin + rMax) / 2
+
+    // Linear interpolation in log space
+    double normalized = (logValue - dMin) / (dMax - dMin)
+    return rMin + normalized * (rMax - rMin)
+  }
+
+  @Override
+  Object inverse(Object value) {
+    Double numeric = coerceToNumber(value)
+    if (numeric == null) return null
+
+    double v = numeric
+    double dMin = computedDomain[0] as double
+    double dMax = computedDomain[1] as double
+    double rMin = range[0] as double
+    double rMax = range[1] as double
+
+    if (rMax == rMin) return Math.pow(10, (dMin + dMax) / 2)
+
+    // Inverse linear interpolation to log space
+    double normalized = (v - rMin) / (rMax - rMin)
+    double logValue = dMin + normalized * (dMax - dMin)
+
+    // Transform back from log space
+    return Math.pow(10, logValue)
+  }
+
+  @Override
+  List getComputedBreaks() {
+    if (breaks) return breaks
+
+    // Generate nice breaks in log space (powers of 10)
+    double logMin = computedDomain[0] as double
+    double logMax = computedDomain[1] as double
+
+    return generateLogBreaks(logMin, logMax)
+  }
+
+  /**
+   * Generate nice breaks for log scale (powers of 10 and intermediates).
+   */
+  private List<Number> generateLogBreaks(double logMin, double logMax) {
+    List<Number> breaks = []
+
+    int minPow = Math.floor(logMin) as int
+    int maxPow = Math.ceil(logMax) as int
+
+    // Generate breaks at powers of 10
+    for (int pow = minPow; pow <= maxPow; pow++) {
+      double val = Math.pow(10, pow)
+      double logVal = pow as double
+      if (logVal >= logMin && logVal <= logMax) {
+        breaks << val
+      }
+    }
+
+    // If too few breaks, add intermediate values (2, 5 multiples)
+    if (breaks.size() < 3) {
+      List<Number> intermediates = []
+      for (int pow = minPow; pow <= maxPow; pow++) {
+        for (double mult : [2d, 5d]) {
+          double val = mult * Math.pow(10, pow)
+          double logVal = Math.log10(val)
+          if (logVal >= logMin && logVal <= logMax) {
+            intermediates << val
+          }
+        }
+      }
+      breaks.addAll(intermediates)
+      breaks = breaks.sort() as List<Number>
+    }
+
+    return breaks
+  }
+
+  @Override
+  List<String> getComputedLabels() {
+    if (labels) return labels
+    return getComputedBreaks().collect { formatLogNumber(it as Number) }
+  }
+
+  private String formatLogNumber(Number n) {
+    if (n == null) return ''
+    double d = n as double
+    if (d >= 1 && d == Math.floor(d) && d < 1e10) {
+      return String.valueOf((long) d)
+    }
+    if (d < 1 && d > 0) {
+      return String.format('%.2g', d)
+    }
+    return String.format('%.0f', d)
+  }
+
+  private static Double coerceToPositiveNumber(Object value) {
+    Double num = coerceToNumber(value)
+    if (num == null || num <= 0) return null
+    return num
+  }
+
+  private static Double coerceToNumber(Object value) {
+    if (value == null) return null
+    if (value instanceof Number) {
+      double v = (value as Number).doubleValue()
+      return Double.isNaN(v) ? null : v
+    }
+    if (value instanceof CharSequence) {
+      String s = value.toString().trim()
+      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN')) {
+        return null
+      }
+      try {
+        return Double.parseDouble(s)
+      } catch (NumberFormatException ignored) {
+        return null
+      }
+    }
+    return null
+  }
+}
