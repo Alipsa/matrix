@@ -22,9 +22,14 @@ def majorOf = { String v ->
 
 allprojects {
   plugins.withType(MavenPublishPlugin).configureEach {
-    tasks.withType(PublishToMavenLocal).configureEach {
-      doLast {
-        println "🚀 Published ${project.name}: ${publication.groupId}:${publication.artifactId}:${publication.version}"
+    project.afterEvaluate {
+      def projectName = project.name
+      def publicationCoordinates = "${project.group}:${project.name}:${project.version}"
+      def publishMessage = "🚀 Published ${projectName}: ${publicationCoordinates}"
+      tasks.withType(PublishToMavenLocal).configureEach {
+        doLast {
+          println publishMessage
+        }
       }
     }
   }

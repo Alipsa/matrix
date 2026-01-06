@@ -123,22 +123,30 @@ tasks.register('antGroovydoc', DefaultTask) {
   group = 'documentation'
   description = 'Generate Groovydoc using Ant with custom config'
 
+  def outputDir = layout.buildDirectory.dir("groovydocant")
+  def groovySrcDirs = sourceSets.main.groovy.srcDirs
+  def compileClasspath = sourceSets.main.compileClasspath
+  def docTitle = "${project.name} ${project.version}"
+  def windowTitle = "${project.name} ${project.version}"
+
+  outputs.dir(outputDir)
+
   doLast {
-    def outputDir = layout.buildDirectory.dir("groovydocant").get().asFile
+    def outputDirFile = outputDir.get().asFile
 
     ant.taskdef(
         name: 'groovydoc',
         classname: 'org.codehaus.groovy.ant.Groovydoc',
-        classpath: sourceSets.main.compileClasspath.asPath
+        classpath: compileClasspath.asPath
     )
 
     ant.groovydoc(
-        destdir: outputDir,
-        sourcepath: sourceSets.main.groovy.srcDirs.join(':'),
+        destdir: outputDirFile,
+        sourcepath: groovySrcDirs.join(':'),
         packagenames: '*',
         javaVersion: 'JAVA_21',
-        doctitle: "${project.name} ${project.version}",
-        windowtitle: "${project.name} ${project.version}"
+        doctitle: docTitle,
+        windowtitle: windowTitle
     ) {
       // Does not work, groovydoc does not support modules e,g,
       //  URL will become https://docs.oracle.com/en/java/javase/21/docs/api/java/net/URL.html
