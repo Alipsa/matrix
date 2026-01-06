@@ -83,7 +83,7 @@ The project requires **JDK 21**. While some modules may work with higher JDK ver
 Since Matrix is a library, it makes sense to stay on java 21 to ensure compatibility across all modules for the foreseeable future.
 These constraints are enforced in `build.gradle` via dependency version ceiling rules.
 
-For more information see the the [tutorial](docs/tutorial/outline.md) and the readme file and test classes in each subproject.
+For more information see the [tutorial](docs/tutorial/outline.md) and the readme file and test classes in each subproject.
 <!---
 [Cookbook](docs/cookbook/cookbook.md)
 -->
