@@ -53,6 +53,7 @@ class ScaleNaValueTest {
     assertNull(ScaleUtils.coerceToNumber('NA'))
     assertNull(ScaleUtils.coerceToNumber('null'))
     assertNull(ScaleUtils.coerceToNumber('NULL'))
+    assertNull(ScaleUtils.coerceToNumber(Double.NaN))
     assertNull(ScaleUtils.coerceToNumber(Double.POSITIVE_INFINITY))
     assertNull(ScaleUtils.coerceToNumber(Double.NEGATIVE_INFINITY))
     assertNull(ScaleUtils.coerceToNumber(Float.POSITIVE_INFINITY))
