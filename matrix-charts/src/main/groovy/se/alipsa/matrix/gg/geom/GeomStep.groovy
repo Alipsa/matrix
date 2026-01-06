@@ -72,6 +72,8 @@ class GeomStep extends Geom {
     String yCol = aes.yColName
     String groupCol = aes.groupColName ?: aes.colorColName
     String colorCol = aes.colorColName
+    String sizeCol = aes.size instanceof String ? aes.size as String : null
+    String alphaCol = aes.alpha instanceof String ? aes.alpha as String : null
 
     if (xCol == null || yCol == null) {
       throw new IllegalArgumentException("GeomStep requires x and y aesthetics")
@@ -80,6 +82,8 @@ class GeomStep extends Geom {
     Scale xScale = scales['x']
     Scale yScale = scales['y']
     Scale colorScale = scales['color']
+    Scale sizeScale = scales['size']
+    Scale alphaScale = scales['alpha']
 
     // Group data if a group aesthetic is specified
     Map<Object, List<Map>> groups = [:]
@@ -93,14 +97,15 @@ class GeomStep extends Geom {
 
     // Render each group as a separate step line
     groups.each { groupKey, rows ->
-      renderStep(group, rows, xCol, yCol, colorCol, groupKey,
-                 xScale, yScale, colorScale, aes)
+      renderStep(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
+                 xScale, yScale, colorScale, sizeScale, alphaScale, aes)
     }
   }
 
   private void renderStep(G group, List<Map> rows, String xCol, String yCol,
-                          String colorCol, Object groupKey,
-                          Scale xScale, Scale yScale, Scale colorScale, Aes aes) {
+                          String colorCol, String sizeCol, String alphaCol, Object groupKey,
+                          Scale xScale, Scale yScale, Scale colorScale,
+                          Scale sizeScale, Scale alphaScale, Aes aes) {
     // Sort rows by x value
     List<Map> sortedRows = sortRowsByX(rows, xCol)
 
@@ -132,12 +137,15 @@ class GeomStep extends Geom {
       if (colorScale) {
         lineColor = colorScale.transform(groupKey)?.toString() ?: this.color
       } else {
-        lineColor = getDefaultColor(groupKey)
+        lineColor = GeomUtils.getDefaultColor(groupKey)
       }
     } else if (aes.color instanceof Identity) {
       lineColor = (aes.color as Identity).value.toString()
     }
     lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
+
+    Number lineSize = GeomUtils.extractLineSize(this.size, aes, sizeCol, sortedRows, sizeScale)
+    Number lineAlpha = GeomUtils.extractLineAlpha(this.alpha, aes, alphaCol, sortedRows, alphaScale)
 
     // Build step path based on direction
     StringBuilder d = new StringBuilder()
@@ -176,17 +184,17 @@ class GeomStep extends Geom {
         .fill('none')
         .stroke(lineColor)
 
-    path.addAttribute('stroke-width', size)
+    path.addAttribute('stroke-width', lineSize)
 
     // Apply line type
-    String dashArray = getDashArray(linetype)
+    String dashArray = GeomUtils.getDashArray(linetype)
     if (dashArray) {
       path.addAttribute('stroke-dasharray', dashArray)
     }
 
     // Apply alpha
-    if ((alpha as double) < 1.0) {
-      path.addAttribute('stroke-opacity', alpha)
+    if ((lineAlpha as double) < 1.0) {
+      path.addAttribute('stroke-opacity', lineAlpha)
     }
   }
 
@@ -208,34 +216,5 @@ class GeomStep extends Geom {
 
       return xA?.toString() <=> xB?.toString()
     }
-  }
-
-  /**
-   * Convert line type to SVG stroke-dasharray.
-   */
-  private String getDashArray(String type) {
-    switch (type?.toLowerCase()) {
-      case 'dashed': return '8,4'
-      case 'dotted': return '2,2'
-      case 'dotdash': return '2,2,8,2'
-      case 'longdash': return '12,4'
-      case 'twodash': return '4,2,8,2'
-      case 'solid':
-      default: return null
-    }
-  }
-
-  /**
-   * Get a default color from a discrete palette.
-   */
-  private String getDefaultColor(Object value) {
-    List<String> palette = [
-        '#F8766D', '#C49A00', '#53B400',
-        '#00C094', '#00B6EB', '#A58AFF',
-        '#FB61D7'
-    ]
-
-    int index = Math.abs(value.hashCode()) % palette.size()
-    return palette[index]
   }
 }

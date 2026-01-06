@@ -571,4 +571,45 @@ class GgPosition {
 
     return Matrix.builder().mapList(results).build()
   }
+
+  /**
+   * Nudge position - add a fixed offset to x and/or y.
+   *
+   * @param data Input matrix
+   * @param aes Aesthetic mappings
+   * @param params Map with optional: x (x nudge), y (y nudge)
+   * @return Matrix with nudged positions
+   */
+  static Matrix nudge(Matrix data, Aes aes, Map params = [:]) {
+    double nudgeX = params.x instanceof Number ? (params.x as Number).doubleValue() : 0.0d
+    double nudgeY = params.y instanceof Number ? (params.y as Number).doubleValue() : 0.0d
+
+    String xCol = aes.xColName
+    if (xCol == null && data.columnNames().contains('x')) {
+      xCol = 'x'
+    }
+    String yCol = aes.yColName
+    if (yCol == null && data.columnNames().contains('y')) {
+      yCol = 'y'
+    }
+
+    if (nudgeX == 0.0d && nudgeY == 0.0d) {
+      return data
+    }
+
+    List<Map<String, Object>> results = []
+    data.each { Row row ->
+      Map<String, Object> newRow = new LinkedHashMap<>(row.toMap())
+
+      if (xCol != null && newRow[xCol] instanceof Number) {
+        newRow[xCol] = (newRow[xCol] as Number).doubleValue() + nudgeX
+      }
+      if (yCol != null && newRow[yCol] instanceof Number) {
+        newRow[yCol] = (newRow[yCol] as Number).doubleValue() + nudgeY
+      }
+      results << newRow
+    }
+
+    return Matrix.builder().mapList(results).build()
+  }
 }

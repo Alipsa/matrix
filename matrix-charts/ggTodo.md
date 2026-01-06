@@ -99,57 +99,93 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 2.1 Stats for Existing Geoms
 
-- 2.1.1 [ ] `stat_bin()` - Binning statistics for histograms
-- 2.1.2 [ ] `stat_density()` - 1D kernel density estimation
-- 2.1.3 [ ] `stat_smooth()` - Smoothed conditional means
-- 2.1.4 [ ] `stat_ydensity()` - Density for violin plots
-- 2.1.5 [ ] `stat_ecdf()` - Empirical cumulative distribution function
+- 2.1.1 [x] `stat_bin()` - Binning statistics for histograms
+- 2.1.2 [x] `stat_density()` - 1D kernel density estimation
+- 2.1.3 [x] `stat_smooth()` - Smoothed conditional means
+- 2.1.4 [x] `stat_ydensity()` - Density for violin plots
+- 2.1.5 [x] `stat_ecdf()` - Empirical cumulative distribution function
 
 ### 2.2 New Statistical Geoms
 
-- 2.2.1 [ ] `geom_qq()` - Q-Q plot points
-- 2.2.2 [ ] `geom_qq_line()` - Q-Q plot reference line
-- 2.2.3 [ ] `stat_qq()` - Q-Q statistics
-- 2.2.4 [ ] `stat_qq_line()` - Q-Q line statistics
-- 2.2.5 [ ] `geom_freqpoly()` - Frequency polygon
-- 2.2.6 [ ] `geom_jitter()` - Convenience wrapper for jittered points
+- 2.2.1 [x] `geom_qq()` - Q-Q plot points
+- 2.2.2 [x] `geom_qq_line()` - Q-Q plot reference line
+- 2.2.3 [x] `stat_qq()` - Q-Q statistics
+- 2.2.4 [x] `stat_qq_line()` - Q-Q line statistics
+- 2.2.5 [x] `geom_freqpoly()` - Frequency polygon
+- 2.2.6 [x] `geom_jitter()` - Convenience wrapper for jittered points
 
 ### 2.3 Color Palette Scales
 
-- 2.3.1 [ ] `scale_colour_brewer()` / `scale_color_brewer()` - ColorBrewer palettes
-- 2.3.2 [ ] `scale_fill_brewer()` - ColorBrewer fill palettes
-- 2.3.3 [ ] `scale_colour_distiller()` / `scale_color_distiller()` - Continuous ColorBrewer
-- 2.3.4 [ ] `scale_fill_distiller()` - Continuous ColorBrewer fill
-- 2.3.5 [ ] `scale_colour_grey()` / `scale_color_grey()` - Greyscale palette
-- 2.3.6 [ ] `scale_fill_grey()` - Greyscale fill palette
-- 2.3.7 [ ] `scale_colour_gradientn()` / `scale_color_gradientn()` - N-color gradient
-- 2.3.8 [ ] `scale_fill_gradientn()` - N-color gradient fill
+- 2.3.1 [x] `scale_colour_brewer()` / `scale_color_brewer()` - ColorBrewer palettes
+- 2.3.2 [x] `scale_fill_brewer()` - ColorBrewer fill palettes
+- 2.3.3 [x] `scale_colour_distiller()` / `scale_color_distiller()` - Continuous ColorBrewer
+- 2.3.4 [x] `scale_fill_distiller()` - Continuous ColorBrewer fill
+- 2.3.5 [x] `scale_colour_grey()` / `scale_color_grey()` - Greyscale palette
+- 2.3.6 [x] `scale_fill_grey()` - Greyscale fill palette
+- 2.3.7 [x] `scale_colour_gradientn()` / `scale_color_gradientn()` - N-color gradient
+- 2.3.8 [x] `scale_fill_gradientn()` - N-color gradient fill
 
 ### 2.4 Alpha Scales
 
-- 2.4.1 [ ] `scale_alpha()` - Alpha transparency scale
-- 2.4.2 [ ] `scale_alpha_continuous()` - Continuous alpha scale
-- 2.4.3 [ ] `scale_alpha_discrete()` - Discrete alpha scale
-- 2.4.4 [ ] `scale_alpha_binned()` - Binned alpha scale
+- 2.4.1 [x] `scale_alpha()` - Alpha transparency scale
+- 2.4.2 [x] `scale_alpha_continuous()` - Continuous alpha scale
+- 2.4.3 [x] `scale_alpha_discrete()` - Discrete alpha scale
+- 2.4.4 [x] `scale_alpha_binned()` - Binned alpha scale
 
 ### 2.5 Size Scales
 
-- 2.5.1 [ ] `scale_size()` - Size scale
-- 2.5.2 [ ] `scale_size_continuous()` - Continuous size scale
-- 2.5.3 [ ] `scale_size_discrete()` - Discrete size scale
-- 2.5.4 [ ] `scale_size_binned()` - Binned size scale
-- 2.5.5 [ ] `scale_size_area()` - Size by area (proportional)
-- 2.5.6 [ ] `scale_radius()` - Size by radius
+- 2.5.1 [x] `scale_size()` - Size scale
+- 2.5.2 [x] `scale_size_continuous()` - Continuous size scale
+- 2.5.3 [x] `scale_size_discrete()` - Discrete size scale
+- 2.5.4 [x] `scale_size_binned()` - Binned size scale
+- 2.5.5 [x] `scale_size_area()` - Size by area (proportional)
+- 2.5.6 [x] `scale_radius()` - Size by radius
 
 ### 2.6 Position Adjustments
 
-- 2.6.1 [ ] `position_nudge()` - Nudge by fixed amount
+- 2.6.1 [x] `position_nudge()` - Nudge by fixed amount
 
 ### 2.7 Other Functions
 
-- 2.7.1 [ ] `expansion()` - Control axis expansion
-- 2.7.2 [ ] `vars()` - Quote facet variables
-- 2.7.3 [ ] `after_scale()` - Reference scaled aesthetics
+- 2.7.1 [x] `expansion()` - Control axis expansion
+- 2.7.2 [x] `vars()` - Quote facet variables
+- 2.7.3 [x] `after_scale()` - Reference scaled aesthetics
+
+### Phase 2 Test Coverage
+
+- [x] `stat_bin()`
+- [x] `stat_density()`
+- [x] `stat_smooth()`
+- [x] `stat_ydensity()`
+- [x] `stat_ecdf()`
+- [x] `stat_qq()`
+- [x] `stat_qq_line()`
+- [x] `geom_qq()`
+- [x] `geom_qq_line()`
+- [x] `geom_freqpoly()`
+- [x] `geom_jitter()`
+- [x] `scale_colour_brewer()` / `scale_color_brewer()`
+- [x] `scale_fill_brewer()`
+- [x] `scale_colour_distiller()` / `scale_color_distiller()`
+- [x] `scale_fill_distiller()`
+- [x] `scale_colour_grey()` / `scale_color_grey()`
+- [x] `scale_fill_grey()`
+- [x] `scale_colour_gradientn()` / `scale_color_gradientn()`
+- [x] `scale_fill_gradientn()`
+- [x] `scale_alpha()`
+- [x] `scale_alpha_continuous()`
+- [x] `scale_alpha_discrete()`
+- [x] `scale_alpha_binned()`
+- [x] `scale_size()`
+- [x] `scale_size_continuous()`
+- [x] `scale_size_discrete()`
+- [x] `scale_size_binned()`
+- [x] `scale_size_area()`
+- [x] `scale_radius()`
+- [x] `position_nudge()`
+- [x] `expansion()`
+- [x] `vars()`
+- [x] `after_scale()`
 
 ---
 

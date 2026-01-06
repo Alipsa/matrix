@@ -789,6 +789,316 @@ class GgStat {
   }
 
   /**
+   * Kernel density estimation using y values (stat_ydensity).
+   *
+   * @param data Input matrix
+   * @param aes Aesthetic mappings (uses y for values, optionally group for grouping)
+   * @param params Map with optional KDE parameters (see density())
+   * @return Matrix with columns: y, density (and group column if grouping is used)
+   */
+  static Matrix ydensity(Matrix data, Aes aes, Map params = [:]) {
+    String yCol = aes.yColName
+    if (yCol == null) {
+      throw new IllegalArgumentException("stat_ydensity requires y aesthetic")
+    }
+
+    String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
+    Aes yAes = new Aes([x: yCol, group: groupCol])
+    Matrix result = density(data, yAes, params)
+    if (result.columnNames().contains('x')) {
+      return result.renameColumn('x', 'y')
+    }
+    return result
+  }
+
+  /**
+   * Empirical cumulative distribution function.
+   *
+   * @param data Input matrix
+   * @param aes Aesthetic mappings (uses x for values, optional group)
+   * @param params Map with optional: pad (boolean, default false)
+   * @return Matrix with columns: x, y (and group column if grouping is used)
+   */
+  static Matrix ecdf(Matrix data, Aes aes, Map params = [:]) {
+    String xCol = aes.xColName
+    if (xCol == null) {
+      throw new IllegalArgumentException("stat_ecdf requires x aesthetic")
+    }
+
+    String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
+    boolean pad = params.pad == true
+
+    if (groupCol != null && data.columnNames().contains(groupCol)) {
+      Map<Object, List<Number>> groups = new LinkedHashMap<>()
+      data.each { row ->
+        def value = row[xCol]
+        if (value instanceof Number) {
+          Object key = row[groupCol]
+          if (!groups.containsKey(key)) {
+            groups[key] = []
+          }
+          groups[key] << (value as Number)
+        }
+      }
+      List<Map<String, Object>> rows = []
+      groups.each { key, values ->
+        rows.addAll(ecdfRows(values, 'x', groupCol, key, pad))
+      }
+      return Matrix.builder().mapList(rows).build()
+    }
+
+    List<Number> values = extractNumericValues(data, xCol)
+    List<Map<String, Object>> rows = ecdfRows(values, 'x', null, null, pad)
+    return Matrix.builder().mapList(rows).build()
+  }
+
+  private static List<Map<String, Object>> ecdfRows(List<Number> values, String xName,
+                                                    String groupCol, Object groupKey, boolean pad) {
+    if (values == null || values.isEmpty()) {
+      return []
+    }
+    List<Number> sorted = values.findAll { it instanceof Number } as List<Number>
+    sorted.sort()
+    int n = sorted.size()
+    List<Map<String, Object>> rows = []
+    if (pad) {
+      Map<String, Object> row = [(xName): sorted.first(), y: 0.0d]
+      if (groupCol) row[groupCol] = groupKey
+      rows << row
+    }
+    for (int i = 0; i < n; i++) {
+      double yVal = (i + 1) / (double) n
+      Map<String, Object> row = [(xName): sorted[i], y: yVal]
+      if (groupCol) row[groupCol] = groupKey
+      rows << row
+    }
+    return rows
+  }
+
+  /**
+   * Q-Q plot statistics for normal distribution.
+   *
+   * @param data Input matrix
+   * @param aes Aesthetic mappings (uses x for sample values, optional group)
+   * @param params Map with optional: distribution ('norm' only), sample (unused)
+   * @return Matrix with columns: x (theoretical), y (sample), and group if provided
+   */
+  static Matrix qq(Matrix data, Aes aes, Map params = [:]) {
+    String xCol = aes.xColName
+    if (xCol == null) {
+      throw new IllegalArgumentException("stat_qq requires x aesthetic")
+    }
+
+    String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
+    if (groupCol != null && data.columnNames().contains(groupCol)) {
+      Map<Object, List<Number>> groups = new LinkedHashMap<>()
+      data.each { row ->
+        def value = row[xCol]
+        if (value instanceof Number) {
+          Object key = row[groupCol]
+          if (!groups.containsKey(key)) {
+            groups[key] = []
+          }
+          groups[key] << (value as Number)
+        }
+      }
+      List<Map<String, Object>> rows = []
+      groups.each { key, values ->
+        rows.addAll(qqRows(values, groupCol, key))
+      }
+      return Matrix.builder().mapList(rows).build()
+    }
+
+    List<Number> values = extractNumericValues(data, xCol)
+    return Matrix.builder().mapList(qqRows(values, null, null)).build()
+  }
+
+  private static List<Map<String, Object>> qqRows(List<Number> values, String groupCol, Object groupKey) {
+    if (values == null || values.isEmpty()) {
+      return []
+    }
+    List<Double> sorted = values.findAll { it instanceof Number }
+        .collect { (it as Number).doubleValue() }
+        .sort()
+    int n = sorted.size()
+    List<Map<String, Object>> rows = []
+    for (int i = 0; i < n; i++) {
+      double p = (i + 0.5d) / n
+      double theoretical = normalQuantile(p)
+      Map<String, Object> row = [x: theoretical, y: sorted[i]]
+      if (groupCol) {
+        row[groupCol] = groupKey
+      }
+      rows << row
+    }
+    return rows
+  }
+
+  /**
+   * Q-Q line statistics for normal distribution.
+   *
+   * @param data Input matrix
+   * @param aes Aesthetic mappings (uses x for sample values, optional group)
+   * @param params Map with optional: distribution ('norm' only)
+   * @return Matrix with columns: x, y (line endpoints), and group if provided
+   */
+  static Matrix qqLine(Matrix data, Aes aes, Map params = [:]) {
+    String xCol = aes.xColName
+    if (xCol == null) {
+      throw new IllegalArgumentException("stat_qq_line requires x aesthetic")
+    }
+
+    String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
+    if (groupCol != null && data.columnNames().contains(groupCol)) {
+      Map<Object, List<Number>> groups = new LinkedHashMap<>()
+      data.each { row ->
+        def value = row[xCol]
+        if (value instanceof Number) {
+          Object key = row[groupCol]
+          if (!groups.containsKey(key)) {
+            groups[key] = []
+          }
+          groups[key] << (value as Number)
+        }
+      }
+      List<Map<String, Object>> rows = []
+      groups.each { key, values ->
+        rows.addAll(qqLineRows(values, groupCol, key))
+      }
+      return Matrix.builder().mapList(rows).build()
+    }
+
+    List<Number> values = extractNumericValues(data, xCol)
+    return Matrix.builder().mapList(qqLineRows(values, null, null)).build()
+  }
+
+  private static List<Map<String, Object>> qqLineRows(List<Number> values, String groupCol, Object groupKey) {
+    if (values == null || values.isEmpty()) {
+      return []
+    }
+    List<Number> numeric = values.findAll { it instanceof Number } as List<Number>
+    if (numeric.size() < 2) {
+      return []
+    }
+    numeric.sort()
+    int n = numeric.size()
+    double q1 = quantileType7(numeric, 0.25d) as double
+    double q3 = quantileType7(numeric, 0.75d) as double
+    double theoQ1 = normalQuantile(0.25d)
+    double theoQ3 = normalQuantile(0.75d)
+    double slope = (q3 - q1) / (theoQ3 - theoQ1)
+    double intercept = q1 - slope * theoQ1
+
+    // Clamp probabilities to prevent infinite values from normalQuantile
+    double minTheo = safeNormalQuantile(0.5d / n)
+    double maxTheo = safeNormalQuantile((n - 0.5d) / n)
+
+    Map<String, Object> start = [x: minTheo, y: slope * minTheo + intercept]
+    Map<String, Object> end = [x: maxTheo, y: slope * maxTheo + intercept]
+    if (groupCol) {
+      start[groupCol] = groupKey
+      end[groupCol] = groupKey
+    }
+    return [start, end]
+  }
+
+  /**
+   * Safe wrapper for normalQuantile that clamps probability values to prevent
+   * infinite return values from propagating to rendering code.
+   * <p>
+   * Clamps p to the range [QUANTILE_EPSILON, 1-QUANTILE_EPSILON] to ensure
+   * finite results that won't cause issues in coordinate transformations.
+   *
+   * @param p probability value
+   * @return finite quantile value
+   */
+  private static double safeNormalQuantile(double p) {
+    // Minimum probability to avoid extreme quantile values
+    // 1e-10 corresponds to approximately -6.4 standard deviations
+    final double QUANTILE_EPSILON = 1.0e-10d
+    double clampedP = Math.max(QUANTILE_EPSILON, Math.min(1.0d - QUANTILE_EPSILON, p))
+    return normalQuantile(clampedP)
+  }
+
+  /**
+   * Approximate inverse CDF for the standard normal distribution.
+   * Uses the Acklam rational approximation for good accuracy in the tails.
+   * <p>
+   * <b>Edge cases:</b>
+   * <ul>
+   *   <li>p &lt;= 0.0: Returns {@link Double#NEGATIVE_INFINITY}</li>
+   *   <li>p &gt;= 1.0: Returns {@link Double#POSITIVE_INFINITY}</li>
+   * </ul>
+   * <p>
+   * <b>Note:</b> Calling code should handle infinite return values appropriately,
+   * as they may propagate through calculations and cause issues in downstream
+   * processing (e.g., coordinate transformations, plotting bounds).
+   *
+   * @param p probability value, should be in range (0, 1) for finite results
+   * @return the quantile value, or +/-Infinity for edge cases
+   */
+  private static double normalQuantile(double p) {
+    if (p <= 0.0d) {
+      return Double.NEGATIVE_INFINITY
+    }
+    if (p >= 1.0d) {
+      return Double.POSITIVE_INFINITY
+    }
+
+    // Coefficients in rational approximations
+    double[] a = [
+        -3.969683028665376e+01,
+        2.209460984245205e+02,
+        -2.759285104469687e+02,
+        1.383577518672690e+02,
+        -3.066479806614716e+01,
+        2.506628277459239e+00
+    ] as double[]
+    double[] b = [
+        -5.447609879822406e+01,
+        1.615858368580409e+02,
+        -1.556989798598866e+02,
+        6.680131188771972e+01,
+        -1.328068155288572e+01
+    ] as double[]
+    double[] c = [
+        -7.784894002430293e-03,
+        -3.223964580411365e-01,
+        -2.400758277161838e+00,
+        -2.549732539343734e+00,
+        4.374664141464968e+00,
+        2.938163982698783e+00
+    ] as double[]
+    double[] d = [
+        7.784695709041462e-03,
+        3.224671290700398e-01,
+        2.445134137142996e+00,
+        3.754408661907416e+00
+    ] as double[]
+
+    double pLow = 0.02425d
+    double pHigh = 1.0d - pLow
+    double q
+    double r
+
+    if (p < pLow) {
+      q = Math.sqrt(-2.0d * Math.log(p))
+      return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+          ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1.0d)
+    }
+    if (p > pHigh) {
+      q = Math.sqrt(-2.0d * Math.log(1.0d - p))
+      return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
+          ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1.0d)
+    }
+
+    q = p - 0.5d
+    r = q * q
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
+        (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1.0d)
+  }
+
+  /**
    * Compute density for ungrouped data.
    */
   private static Matrix densityUngrouped(Matrix data, String xCol, Map<String, Object> kdeParams) {

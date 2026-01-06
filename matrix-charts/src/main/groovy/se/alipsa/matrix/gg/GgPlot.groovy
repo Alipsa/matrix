@@ -10,10 +10,14 @@ import se.alipsa.matrix.gg.geom.GeomContour
 import se.alipsa.matrix.gg.geom.GeomCount
 import se.alipsa.matrix.gg.geom.GeomDensity
 import se.alipsa.matrix.gg.geom.GeomErrorbar
+import se.alipsa.matrix.gg.geom.GeomFreqpoly
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.geom.GeomHline
+import se.alipsa.matrix.gg.geom.GeomJitter
 import se.alipsa.matrix.gg.geom.GeomLabel
 import se.alipsa.matrix.gg.geom.GeomLine
+import se.alipsa.matrix.gg.geom.GeomQq
+import se.alipsa.matrix.gg.geom.GeomQqLine
 import se.alipsa.matrix.gg.geom.GeomRug
 import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
@@ -30,6 +34,7 @@ import se.alipsa.matrix.gg.geom.GeomCrossbar
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.AfterScale
 import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
@@ -48,11 +53,25 @@ import se.alipsa.matrix.gg.geom.GeomCol
 import se.alipsa.matrix.gg.geom.GeomContourFilled
 import se.alipsa.matrix.gg.geom.GeomPoint
 import se.alipsa.matrix.gg.geom.GeomViolin
+import se.alipsa.matrix.gg.layer.PositionType
+import se.alipsa.matrix.gg.position.Position
 import se.alipsa.matrix.gg.scale.ScaleColorGradient
+import se.alipsa.matrix.gg.scale.ScaleColorGradientN
 import se.alipsa.matrix.gg.scale.ScaleColorManual
+import se.alipsa.matrix.gg.scale.ScaleColorBrewer
+import se.alipsa.matrix.gg.scale.ScaleColorDistiller
+import se.alipsa.matrix.gg.scale.ScaleColorGrey
 import se.alipsa.matrix.gg.scale.ScaleColorViridis
 import se.alipsa.matrix.gg.scale.ScaleColorViridisC
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.scale.ScaleAlphaContinuous
+import se.alipsa.matrix.gg.scale.ScaleAlphaDiscrete
+import se.alipsa.matrix.gg.scale.ScaleAlphaBinned
+import se.alipsa.matrix.gg.scale.ScaleSizeContinuous
+import se.alipsa.matrix.gg.scale.ScaleSizeDiscrete
+import se.alipsa.matrix.gg.scale.ScaleSizeBinned
+import se.alipsa.matrix.gg.scale.ScaleSizeArea
+import se.alipsa.matrix.gg.scale.ScaleRadius
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
@@ -68,11 +87,18 @@ import se.alipsa.matrix.gg.scale.ScaleYDate
 import se.alipsa.matrix.gg.scale.ScaleXDatetime
 import se.alipsa.matrix.gg.scale.ScaleYDatetime
 import se.alipsa.matrix.gg.stat.StatsBin2D
+import se.alipsa.matrix.gg.stat.StatsBin
 import se.alipsa.matrix.gg.stat.StatsBoxplot
 import se.alipsa.matrix.gg.stat.StatsContour
 import se.alipsa.matrix.gg.stat.StatsContourFilled
 import se.alipsa.matrix.gg.stat.StatsCount
+import se.alipsa.matrix.gg.stat.StatsDensity
+import se.alipsa.matrix.gg.stat.StatsSmooth
 import se.alipsa.matrix.gg.stat.StatsSum
+import se.alipsa.matrix.gg.stat.StatsYDensity
+import se.alipsa.matrix.gg.stat.StatsEcdf
+import se.alipsa.matrix.gg.stat.StatsQq
+import se.alipsa.matrix.gg.stat.StatsQqLine
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.theme.Theme
 import se.alipsa.matrix.gg.theme.ElementBlank
@@ -229,6 +255,68 @@ class GgPlot {
    */
   static AfterStat after_stat(String stat) {
     return new AfterStat(stat)
+  }
+
+  /**
+   * Create an after_scale reference for scaled aesthetics.
+   *
+   * @param aesthetic the scaled aesthetic name
+   * @return an AfterScale wrapper
+   */
+  static AfterScale after_scale(String aesthetic) {
+    return new AfterScale(aesthetic)
+  }
+
+  /**
+   * Create a position_nudge specification.
+   *
+   * @param params optional params with x and/or y offsets
+   * @return a Position instance for nudge adjustments
+   */
+  static Position position_nudge(Map params = [:]) {
+    return new Position(PositionType.NUDGE, params)
+  }
+
+  /**
+   * Create an expansion specification for continuous scales.
+   *
+   * @param params map with mult and/or add values
+   * @return list with [mult, add]
+   */
+  static List<Number> expansion(Map params = [:]) {
+    Number mult = params.mult as Number
+    Number add = params.add as Number
+    return [mult, add] as List<Number>
+  }
+
+  /**
+   * Create an expansion specification for continuous scales.
+   *
+   * @param mult multiplicative expansion
+   * @param add additive expansion
+   * @return list with [mult, add]
+   */
+  static List<Number> expansion(Number mult, Number add = null) {
+    return [mult, add] as List<Number>
+  }
+
+  /**
+   * Quote facet variables for facet helpers.
+   *
+   * @param vars facet variable names
+   * @return list of variable names
+   */
+  static List<String> vars(Object... vars) {
+    if (vars == null) return []
+    List<Object> flattened = []
+    vars.each { value ->
+      if (value instanceof Collection) {
+        flattened.addAll(value as Collection)
+      } else {
+        flattened << value
+      }
+    }
+    return flattened.findAll { it != null }.collect { it.toString() }
   }
 
   /**
@@ -956,6 +1044,36 @@ class GgPlot {
     return new GeomDensity(params)
   }
 
+  /**
+   * Create a frequency polygon geom.
+   * Uses stat_bin and draws a line through bin centers.
+   *
+   * @return a new GeomFreqpoly instance
+   */
+  static GeomFreqpoly geom_freqpoly() {
+    return new GeomFreqpoly()
+  }
+
+  /**
+   * Create a frequency polygon geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomFreqpoly instance
+   */
+  static GeomFreqpoly geom_freqpoly(Aes mapping) {
+    return geom_freqpoly([mapping: mapping])
+  }
+
+  /**
+   * Create a frequency polygon geom with parameters.
+   *
+   * @param params geom parameters
+   * @return a new GeomFreqpoly instance
+   */
+  static GeomFreqpoly geom_freqpoly(Map params) {
+    return new GeomFreqpoly(params)
+  }
+
   static GeomErrorbar geom_errorbar() {
     return new GeomErrorbar()
   }
@@ -1064,6 +1182,93 @@ class GgPlot {
 
   static GeomPoint geom_point(Map params) {
     return new GeomPoint(params)
+  }
+
+  /**
+   * Create a jittered point geom.
+   *
+   * @return a new GeomJitter instance
+   */
+  static GeomJitter geom_jitter() {
+    return new GeomJitter()
+  }
+
+  /**
+   * Create a jittered point geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomJitter instance
+   */
+  static GeomJitter geom_jitter(Aes mapping) {
+    return geom_jitter([mapping: mapping])
+  }
+
+  /**
+   * Create a jittered point geom with parameters.
+   *
+   * @param params geom parameters
+   * @return a new GeomJitter instance
+   */
+  static GeomJitter geom_jitter(Map params) {
+    return new GeomJitter(params)
+  }
+
+  /**
+   * Create a Q-Q plot point geom.
+   *
+   * @return a new GeomQq instance
+   */
+  static GeomQq geom_qq() {
+    return new GeomQq()
+  }
+
+  /**
+   * Create a Q-Q plot point geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomQq instance
+   */
+  static GeomQq geom_qq(Aes mapping) {
+    return geom_qq([mapping: mapping])
+  }
+
+  /**
+   * Create a Q-Q plot point geom with parameters.
+   *
+   * @param params geom parameters
+   * @return a new GeomQq instance
+   */
+  static GeomQq geom_qq(Map params) {
+    return new GeomQq(params)
+  }
+
+  /**
+   * Create a Q-Q plot reference line geom.
+   *
+   * @return a new GeomQqLine instance
+   */
+  static GeomQqLine geom_qq_line() {
+    return new GeomQqLine()
+  }
+
+  /**
+   * Create a Q-Q plot reference line geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomQqLine instance
+   */
+  static GeomQqLine geom_qq_line(Aes mapping) {
+    return geom_qq_line([mapping: mapping])
+  }
+
+  /**
+   * Create a Q-Q plot reference line geom with parameters.
+   *
+   * @param params geom parameters
+   * @return a new GeomQqLine instance
+   */
+  static GeomQqLine geom_qq_line(Map params) {
+    return new GeomQqLine(params)
   }
 
   static GeomRug geom_rug() {
@@ -1657,6 +1862,62 @@ class GgPlot {
     return scale_color_continuous(params)
   }
 
+  /**
+   * ColorBrewer discrete color scale.
+   *
+   * @param params Optional map with palette, type, n, direction
+   */
+  static ScaleColorBrewer scale_color_brewer(Map params = [:]) {
+    return new ScaleColorBrewer(params)
+  }
+
+  /** British spelling alias for scale_color_brewer */
+  static ScaleColorBrewer scale_colour_brewer(Map params = [:]) {
+    return scale_color_brewer(params)
+  }
+
+  /**
+   * ColorBrewer continuous color scale.
+   *
+   * @param params Optional map with palette, type, direction
+   */
+  static ScaleColorDistiller scale_color_distiller(Map params = [:]) {
+    return new ScaleColorDistiller(params)
+  }
+
+  /** British spelling alias for scale_color_distiller */
+  static ScaleColorDistiller scale_colour_distiller(Map params = [:]) {
+    return scale_color_distiller(params)
+  }
+
+  /**
+   * Greyscale discrete color scale.
+   *
+   * @param params Optional map with start, end, direction
+   */
+  static ScaleColorGrey scale_color_grey(Map params = [:]) {
+    return new ScaleColorGrey(params)
+  }
+
+  /** British spelling alias for scale_color_grey */
+  static ScaleColorGrey scale_colour_grey(Map params = [:]) {
+    return scale_color_grey(params)
+  }
+
+  /**
+   * Continuous multi-color gradient scale.
+   *
+   * @param params Map with colors/values and optional scale settings
+   */
+  static ScaleColorGradientN scale_color_gradientn(Map params = [:]) {
+    return new ScaleColorGradientN(params)
+  }
+
+  /** British spelling alias for scale_color_gradientn */
+  static ScaleColorGradientN scale_colour_gradientn(Map params = [:]) {
+    return scale_color_gradientn(params)
+  }
+
   // --- Viridis color scales ---
 
   /**
@@ -1758,6 +2019,120 @@ class GgPlot {
     return new ScaleColorGradient(params + [aesthetic: 'fill'])
   }
 
+  /**
+   * ColorBrewer discrete fill scale.
+   *
+   * @param params Optional map with palette, type, n, direction
+   */
+  static ScaleColorBrewer scale_fill_brewer(Map params = [:]) {
+    return new ScaleColorBrewer(params + [aesthetic: 'fill'])
+  }
+
+  /**
+   * ColorBrewer continuous fill scale.
+   *
+   * @param params Optional map with palette, type, direction
+   */
+  static ScaleColorDistiller scale_fill_distiller(Map params = [:]) {
+    return new ScaleColorDistiller(params + [aesthetic: 'fill'])
+  }
+
+  /**
+   * Greyscale discrete fill scale.
+   *
+   * @param params Optional map with start, end, direction
+   */
+  static ScaleColorGrey scale_fill_grey(Map params = [:]) {
+    return new ScaleColorGrey(params + [aesthetic: 'fill'])
+  }
+
+  /**
+   * Continuous multi-color fill gradient scale.
+   *
+   * @param params Map with colors/values and optional scale settings
+   */
+  static ScaleColorGradientN scale_fill_gradientn(Map params = [:]) {
+    return new ScaleColorGradientN(params + [aesthetic: 'fill'])
+  }
+
+  // --- Alpha scales ---
+
+  /**
+   * Alpha scale for mapped transparency.
+   *
+   * @param params optional scale parameters
+   */
+  static ScaleAlphaContinuous scale_alpha(Map params = [:]) {
+    return new ScaleAlphaContinuous(params)
+  }
+
+  /**
+   * Continuous alpha scale.
+   */
+  static ScaleAlphaContinuous scale_alpha_continuous(Map params = [:]) {
+    return new ScaleAlphaContinuous(params)
+  }
+
+  /**
+   * Discrete alpha scale.
+   */
+  static ScaleAlphaDiscrete scale_alpha_discrete(Map params = [:]) {
+    return new ScaleAlphaDiscrete(params)
+  }
+
+  /**
+   * Binned alpha scale for continuous data.
+   */
+  static ScaleAlphaBinned scale_alpha_binned(Map params = [:]) {
+    return new ScaleAlphaBinned(params)
+  }
+
+  // --- Size scales ---
+
+  /**
+   * Size scale for mapped sizes.
+   *
+   * @param params optional scale parameters
+   */
+  static ScaleSizeContinuous scale_size(Map params = [:]) {
+    return new ScaleSizeContinuous(params)
+  }
+
+  /**
+   * Continuous size scale.
+   */
+  static ScaleSizeContinuous scale_size_continuous(Map params = [:]) {
+    return new ScaleSizeContinuous(params)
+  }
+
+  /**
+   * Discrete size scale.
+   */
+  static ScaleSizeDiscrete scale_size_discrete(Map params = [:]) {
+    return new ScaleSizeDiscrete(params)
+  }
+
+  /**
+   * Binned size scale for continuous data.
+   */
+  static ScaleSizeBinned scale_size_binned(Map params = [:]) {
+    return new ScaleSizeBinned(params)
+  }
+
+  /**
+   * Size scale where area is proportional to the data.
+   */
+  static ScaleSizeArea scale_size_area(Map params = [:]) {
+    return new ScaleSizeArea(params)
+  }
+
+  /**
+   * Radius-based size scale.
+   */
+  static ScaleRadius scale_radius(Map params = [:]) {
+    return new ScaleRadius(params)
+  }
+
   static StatsBin2D stat_bin_2d() {
     return new StatsBin2D()
   }
@@ -1776,6 +2151,69 @@ class GgPlot {
 
   static StatsCount stat_count() {
     return new StatsCount()
+  }
+
+  /**
+   * Create a binning stat for histograms and frequency polygons.
+   *
+   * @param params optional stat parameters (e.g. bins, binwidth)
+   */
+  static StatsBin stat_bin(Map params = [:]) {
+    return new StatsBin(params)
+  }
+
+  /**
+   * Create a 1D density stat.
+   *
+   * @param params optional stat parameters (e.g. adjust, kernel)
+   */
+  static StatsDensity stat_density(Map params = [:]) {
+    return new StatsDensity(params)
+  }
+
+  /**
+   * Create a smoothing stat for fitted trend lines.
+   *
+   * @param params optional stat parameters (e.g. method, n, se)
+   */
+  static StatsSmooth stat_smooth(Map params = [:]) {
+    return new StatsSmooth(params)
+  }
+
+  /**
+   * Create a density stat using y values (for violin plots).
+   *
+   * @param params optional stat parameters (e.g. adjust, kernel)
+   */
+  static StatsYDensity stat_ydensity(Map params = [:]) {
+    return new StatsYDensity(params)
+  }
+
+  /**
+   * Create an empirical CDF stat.
+   *
+   * @param params optional stat parameters (e.g. pad)
+   */
+  static StatsEcdf stat_ecdf(Map params = [:]) {
+    return new StatsEcdf(params)
+  }
+
+  /**
+   * Create a Q-Q stat for normal distribution quantiles.
+   *
+   * @param params optional stat parameters
+   */
+  static StatsQq stat_qq(Map params = [:]) {
+    return new StatsQq(params)
+  }
+
+  /**
+   * Create a Q-Q line stat for normal distribution reference lines.
+   *
+   * @param params optional stat parameters
+   */
+  static StatsQqLine stat_qq_line(Map params = [:]) {
+    return new StatsQqLine(params)
   }
 
   static StatsSum stat_summary(Map params) {

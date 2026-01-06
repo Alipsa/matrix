@@ -1,6 +1,5 @@
 package se.alipsa.matrix.gg.aes
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 /**
  * Aesthetic mappings for ggplot charts.
@@ -105,47 +104,87 @@ class Aes {
   }
 
   /**
+   * Get the value of an aesthetic by name.
+   * This method provides type-safe access to aesthetic values without dynamic property access.
+   * <p>
+   * Supported aesthetic names: x, y, color, colour, fill, size, shape, alpha,
+   * linetype, linewidth, group, label, weight
+   *
+   * @param aesthetic the aesthetic name (e.g., 'x', 'y', 'color', 'fill', etc.)
+   * @return the value of the aesthetic, or null if not found or unknown aesthetic name
+   */
+  Object getAestheticValue(String aesthetic) {
+    switch (aesthetic) {
+      case 'x': return x
+      case 'y': return y
+      case 'color': return color
+      case 'colour': return color
+      case 'fill': return fill
+      case 'size': return size
+      case 'shape': return shape
+      case 'alpha': return alpha
+      case 'linetype': return linetype
+      case 'linewidth': return linewidth
+      case 'group': return group
+      case 'label': return label
+      case 'weight': return weight
+      default: return null
+    }
+  }
+
+  /**
    * Check if an aesthetic is a constant (wrapped in Identity) rather than a column mapping.
    */
-  @CompileDynamic
   boolean isConstant(String aesthetic) {
-    def value = this."$aesthetic"
+    def value = getAestheticValue(aesthetic)
     return value instanceof Identity
   }
 
   /**
    * Get the constant value for an aesthetic (if it's an Identity wrapper).
    */
-  @CompileDynamic
   def getConstantValue(String aesthetic) {
-    def value = this."$aesthetic"
-    return value instanceof Identity ? value.value : null
+    def value = getAestheticValue(aesthetic)
+    return value instanceof Identity ? ((Identity) value).value : null
   }
 
   /**
    * Check if an aesthetic references a computed statistic (wrapped in AfterStat).
    */
-  @CompileDynamic
   boolean isAfterStat(String aesthetic) {
-    def value = this."$aesthetic"
+    def value = getAestheticValue(aesthetic)
     return value instanceof AfterStat
   }
 
   /**
    * Get the computed statistic name for an aesthetic (if it's an AfterStat wrapper).
    */
-  @CompileDynamic
   String getAfterStatName(String aesthetic) {
-    def value = this."$aesthetic"
+    def value = getAestheticValue(aesthetic)
     return value instanceof AfterStat ? ((AfterStat) value).stat : null
+  }
+
+  /**
+   * Check if an aesthetic references a scaled aesthetic (wrapped in AfterScale).
+   */
+  boolean isAfterScale(String aesthetic) {
+    def value = getAestheticValue(aesthetic)
+    return value instanceof AfterScale
+  }
+
+  /**
+   * Get the referenced aesthetic name for after_scale.
+   */
+  String getAfterScaleName(String aesthetic) {
+    def value = getAestheticValue(aesthetic)
+    return value instanceof AfterScale ? ((AfterScale) value).aesthetic : null
   }
 
   /**
    * Check if an aesthetic is a closure-based expression.
    */
-  @CompileDynamic
   boolean isExpression(String aesthetic) {
-    def value = this."$aesthetic"
+    def value = getAestheticValue(aesthetic)
     return value instanceof Expression || value instanceof Closure
   }
 
@@ -155,9 +194,8 @@ class Aes {
    * @param aesthetic the aesthetic name (e.g., 'x', 'fill')
    * @return true if the aesthetic is backed by a Factor wrapper
    */
-  @CompileDynamic
   boolean isFactor(String aesthetic) {
-    def value = this."$aesthetic"
+    def value = getAestheticValue(aesthetic)
     return value instanceof Factor
   }
 
@@ -167,9 +205,8 @@ class Aes {
    * @param aesthetic the aesthetic name (e.g., 'x', 'fill')
    * @return the Factor instance or null if not a factor mapping
    */
-  @CompileDynamic
   Factor getFactor(String aesthetic) {
-    def value = this."$aesthetic"
+    def value = getAestheticValue(aesthetic)
     return value instanceof Factor ? (Factor) value : null
   }
 
@@ -179,9 +216,8 @@ class Aes {
    * @param aesthetic the aesthetic name (e.g., 'group', 'x')
    * @return true if the aesthetic is backed by a CutWidth wrapper
    */
-  @CompileDynamic
   boolean isCutWidth(String aesthetic) {
-    def value = this."$aesthetic"
+    def value = getAestheticValue(aesthetic)
     return value instanceof CutWidth
   }
 
@@ -191,9 +227,8 @@ class Aes {
    * @param aesthetic the aesthetic name (e.g., 'group', 'x')
    * @return the CutWidth instance or null if not a cut_width mapping
    */
-  @CompileDynamic
   CutWidth getCutWidth(String aesthetic) {
-    def value = this."$aesthetic"
+    def value = getAestheticValue(aesthetic)
     return value instanceof CutWidth ? (CutWidth) value : null
   }
 
@@ -201,9 +236,8 @@ class Aes {
    * Get the Expression wrapper for an aesthetic.
    * Wraps raw Closures in Expression for convenience.
    */
-  @CompileDynamic
   Expression getExpression(String aesthetic) {
-    def value = this."$aesthetic"
+    def value = getAestheticValue(aesthetic)
     if (value instanceof Expression) {
       return (Expression) value
     }
@@ -214,12 +248,13 @@ class Aes {
   }
 
   /**
-   * Extract column name from a value (returns null for Identity, AfterStat, Expression, Factor, and CutWidth wrappers).
+   * Extract column name from a value (returns null for Identity, AfterStat, AfterScale, Expression, Factor, and CutWidth wrappers).
    */
   private static String extractColName(def value) {
     if (value == null) return null
     if (value instanceof Identity) return null
     if (value instanceof AfterStat) return null
+    if (value instanceof AfterScale) return null
     if (value instanceof Expression) return null
     if (value instanceof Factor) return null
     if (value instanceof CutWidth) return null
