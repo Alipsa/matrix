@@ -163,7 +163,6 @@ class ScaleXSqrt extends ScaleContinuous {
   }
 
   private static BigDecimal niceNum(BigDecimal x, boolean round) {
-    if (x == null) return null
     if (x == 0) return 0
 
     BigDecimal exp = x.abs().log10().floor()
