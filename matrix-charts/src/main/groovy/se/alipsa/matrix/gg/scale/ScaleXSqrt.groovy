@@ -152,8 +152,8 @@ class ScaleXSqrt extends ScaleContinuous {
 
     List<Number> breaks = []
     BigDecimal tolerance = spacing * BREAK_TOLERANCE_RATIO
-    BigDecimal minBd = min as BigDecimal
-    BigDecimal maxBd = max as BigDecimal
+    BigDecimal minBd = min
+    BigDecimal maxBd = max
     for (BigDecimal val = niceMin; val <= niceMax + tolerance; val += spacing) {
       if (val >= minBd - tolerance && val <= maxBd + tolerance && val >= BigDecimal.ZERO) {
         breaks << val
