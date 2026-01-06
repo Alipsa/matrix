@@ -45,7 +45,7 @@ class ScaleAlphaDiscrete extends ScaleDiscrete {
   @Override
   void train(List data) {
     super.train(data)
-    computedValues = buildValues(levels.size())
+    computedValues = ScaleUtils.interpolateRange(levels.size(), range)
   }
 
   @Override
@@ -57,25 +57,9 @@ class ScaleAlphaDiscrete extends ScaleDiscrete {
     if (index < 0) return naValue
 
     if (computedValues.isEmpty()) {
-      computedValues = buildValues(levels.size())
+      computedValues = ScaleUtils.interpolateRange(levels.size(), range)
     }
     if (computedValues.isEmpty()) return naValue
     return computedValues[index % computedValues.size()]
-  }
-
-  private List<Number> buildValues(int n) {
-    if (n <= 0) return []
-    double rMin = range[0] as double
-    double rMax = range[1] as double
-    List<Number> values = []
-    if (n == 1) {
-      values << ((rMin + rMax) / 2.0d)
-      return values
-    }
-    for (int i = 0; i < n; i++) {
-      double t = i / (double) (n - 1)
-      values << (rMin + t * (rMax - rMin))
-    }
-    return values
   }
 }

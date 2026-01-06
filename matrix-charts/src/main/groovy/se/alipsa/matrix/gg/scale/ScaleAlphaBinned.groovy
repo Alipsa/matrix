@@ -48,7 +48,7 @@ class ScaleAlphaBinned extends ScaleContinuous {
 
   @Override
   Object transform(Object value) {
-    Double numeric = coerceToNumber(value)
+    Double numeric = ScaleUtils.coerceToNumber(value)
     if (numeric == null) return naValue
 
     double v = numeric
@@ -67,25 +67,5 @@ class ScaleAlphaBinned extends ScaleContinuous {
     double rMax = range[1] as double
     double t = idx / (double) (binsCount - 1)
     return rMin + t * (rMax - rMin)
-  }
-
-  private static Double coerceToNumber(Object value) {
-    if (value == null) return null
-    if (value instanceof Number) {
-      double v = (value as Number).doubleValue()
-      return Double.isNaN(v) ? null : v
-    }
-    if (value instanceof CharSequence) {
-      String s = value.toString().trim()
-      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN') || s.equalsIgnoreCase('null')) {
-        return null
-      }
-      try {
-        return Double.parseDouble(s)
-      } catch (NumberFormatException ignored) {
-        return null
-      }
-    }
-    return null
   }
 }

@@ -26,7 +26,7 @@ class ScaleSizeArea extends ScaleSizeContinuous {
 
   @Override
   Object transform(Object value) {
-    Double numeric = coerceToNumber(value)
+    Double numeric = ScaleUtils.coerceToNumber(value)
     if (numeric == null) return naValue
 
     double v = numeric

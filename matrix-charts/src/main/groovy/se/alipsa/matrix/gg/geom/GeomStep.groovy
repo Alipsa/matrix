@@ -137,42 +137,15 @@ class GeomStep extends Geom {
       if (colorScale) {
         lineColor = colorScale.transform(groupKey)?.toString() ?: this.color
       } else {
-        lineColor = getDefaultColor(groupKey)
+        lineColor = GeomUtils.getDefaultColor(groupKey)
       }
     } else if (aes.color instanceof Identity) {
       lineColor = (aes.color as Identity).value.toString()
     }
     lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
 
-    Number lineSize = this.size
-    if (aes.size instanceof Identity) {
-      lineSize = (aes.size as Identity).value as Number
-    } else if (sizeCol && !sortedRows.isEmpty() && sortedRows[0][sizeCol] != null) {
-      def rawSize = sortedRows[0][sizeCol]
-      if (sizeScale) {
-        def scaled = sizeScale.transform(rawSize)
-        if (scaled instanceof Number) {
-          lineSize = scaled as Number
-        }
-      } else if (rawSize instanceof Number) {
-        lineSize = rawSize as Number
-      }
-    }
-
-    Number lineAlpha = this.alpha
-    if (aes.alpha instanceof Identity) {
-      lineAlpha = (aes.alpha as Identity).value as Number
-    } else if (alphaCol && !sortedRows.isEmpty() && sortedRows[0][alphaCol] != null) {
-      def rawAlpha = sortedRows[0][alphaCol]
-      if (alphaScale) {
-        def scaled = alphaScale.transform(rawAlpha)
-        if (scaled instanceof Number) {
-          lineAlpha = scaled as Number
-        }
-      } else if (rawAlpha instanceof Number) {
-        lineAlpha = rawAlpha as Number
-      }
-    }
+    Number lineSize = GeomUtils.extractLineSize(this.size, aes, sizeCol, sortedRows, sizeScale)
+    Number lineAlpha = GeomUtils.extractLineAlpha(this.alpha, aes, alphaCol, sortedRows, alphaScale)
 
     // Build step path based on direction
     StringBuilder d = new StringBuilder()
@@ -214,7 +187,7 @@ class GeomStep extends Geom {
     path.addAttribute('stroke-width', lineSize)
 
     // Apply line type
-    String dashArray = getDashArray(linetype)
+    String dashArray = GeomUtils.getDashArray(linetype)
     if (dashArray) {
       path.addAttribute('stroke-dasharray', dashArray)
     }
@@ -243,34 +216,5 @@ class GeomStep extends Geom {
 
       return xA?.toString() <=> xB?.toString()
     }
-  }
-
-  /**
-   * Convert line type to SVG stroke-dasharray.
-   */
-  private String getDashArray(String type) {
-    switch (type?.toLowerCase()) {
-      case 'dashed': return '8,4'
-      case 'dotted': return '2,2'
-      case 'dotdash': return '2,2,8,2'
-      case 'longdash': return '12,4'
-      case 'twodash': return '4,2,8,2'
-      case 'solid':
-      default: return null
-    }
-  }
-
-  /**
-   * Get a default color from a discrete palette.
-   */
-  private String getDefaultColor(Object value) {
-    List<String> palette = [
-        '#F8766D', '#C49A00', '#53B400',
-        '#00C094', '#00B6EB', '#A58AFF',
-        '#FB61D7'
-    ]
-
-    int index = Math.abs(value.hashCode()) % palette.size()
-    return palette[index]
   }
 }

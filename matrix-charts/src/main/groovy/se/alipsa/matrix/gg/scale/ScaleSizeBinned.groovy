@@ -48,7 +48,7 @@ class ScaleSizeBinned extends ScaleContinuous {
 
   @Override
   Object transform(Object value) {
-    Double numeric = ScaleSizeContinuous.coerceToNumber(value)
+    Double numeric = ScaleUtils.coerceToNumber(value)
     if (numeric == null) return naValue
 
     double v = numeric

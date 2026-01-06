@@ -44,7 +44,7 @@ class ScaleSizeContinuous extends ScaleContinuous {
 
   @Override
   Object transform(Object value) {
-    Double numeric = coerceToNumber(value)
+    Double numeric = ScaleUtils.coerceToNumber(value)
     if (numeric == null) return naValue
 
     double v = numeric
@@ -57,25 +57,5 @@ class ScaleSizeContinuous extends ScaleContinuous {
 
     double normalized = (v - dMin) / (dMax - dMin)
     return rMin + normalized * (rMax - rMin)
-  }
-
-  protected static Double coerceToNumber(Object value) {
-    if (value == null) return null
-    if (value instanceof Number) {
-      double v = (value as Number).doubleValue()
-      return Double.isNaN(v) ? null : v
-    }
-    if (value instanceof CharSequence) {
-      String s = value.toString().trim()
-      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN') || s.equalsIgnoreCase('null')) {
-        return null
-      }
-      try {
-        return Double.parseDouble(s)
-      } catch (NumberFormatException ignored) {
-        return null
-      }
-    }
-    return null
   }
 }

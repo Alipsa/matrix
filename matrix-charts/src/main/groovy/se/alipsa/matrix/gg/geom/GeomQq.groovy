@@ -97,26 +97,14 @@ class GeomQq extends Geom {
         if (colorScale) {
           pointColor = colorScale.transform(row[colorCol])?.toString() ?: this.color
         } else {
-          pointColor = getDefaultColor(row[colorCol])
+          pointColor = GeomUtils.getDefaultColor(row[colorCol])
         }
       } else if (aes.color instanceof Identity) {
         pointColor = (aes.color as Identity).value.toString()
       }
       pointColor = ColorUtil.normalizeColor(pointColor) ?: pointColor
 
-      Number pointSize = this.size
-      if (sizeCol && row[sizeCol] != null) {
-        if (sizeScale) {
-          def sized = sizeScale.transform(row[sizeCol])
-          if (sized instanceof Number) {
-            pointSize = sized as Number
-          }
-        } else if (row[sizeCol] instanceof Number) {
-          pointSize = row[sizeCol] as Number
-        }
-      } else if (aes.size instanceof Identity) {
-        pointSize = (aes.size as Identity).value as Number
-      }
+      Number pointSize = GeomUtils.extractPointSize(this.size, aes, sizeCol, row.toMap(), sizeScale)
 
       String pointShape = this.shape
       if (shapeCol && row[shapeCol] != null) {
@@ -125,110 +113,10 @@ class GeomQq extends Geom {
         pointShape = (aes.shape as Identity).value.toString()
       }
 
-      Number pointAlpha = this.alpha
-      if (aes.alpha instanceof Identity) {
-        pointAlpha = (aes.alpha as Identity).value as Number
-      } else if (alphaCol && row[alphaCol] != null) {
-        if (alphaScale) {
-          def alphaVal = alphaScale.transform(row[alphaCol])
-          if (alphaVal instanceof Number) {
-            pointAlpha = alphaVal as Number
-          }
-        } else if (row[alphaCol] instanceof Number) {
-          pointAlpha = row[alphaCol] as Number
-        }
-      }
+      Number pointAlpha = GeomUtils.extractPointAlpha(this.alpha, aes, alphaCol, row.toMap(), alphaScale)
 
-      drawPoint(group, xPx, yPx, (pointSize as Number).doubleValue(), pointColor, pointShape,
+      GeomUtils.drawPoint(group, xPx, yPx, (pointSize as Number).doubleValue(), pointColor, pointShape,
           (pointAlpha as Number).doubleValue())
     }
-  }
-
-  private void drawPoint(G group, double cx, double cy, double radius, String color, String shape, double alphaVal) {
-    double size = radius * 2
-    double halfSize = size / 2.0d
-
-    switch (shape?.toLowerCase()) {
-      case 'square':
-        def rect = group.addRect(size as int, size as int)
-            .x((cx - halfSize) as int)
-            .y((cy - halfSize) as int)
-            .fill(color)
-            .stroke(color)
-        if (alphaVal < 1.0d) {
-          rect.addAttribute('fill-opacity', alphaVal)
-        }
-        break
-      case 'plus':
-      case 'cross':
-        def hLine = group.addLine((cx - halfSize) as int, cy as int, (cx + halfSize) as int, cy as int)
-            .stroke(color)
-        def vLine = group.addLine(cx as int, (cy - halfSize) as int, cx as int, (cy + halfSize) as int)
-            .stroke(color)
-        if (alphaVal < 1.0d) {
-          hLine.addAttribute('stroke-opacity', alphaVal)
-          vLine.addAttribute('stroke-opacity', alphaVal)
-        }
-        break
-      case 'x':
-        def diag1 = group.addLine((cx - halfSize) as int, (cy - halfSize) as int, (cx + halfSize) as int, (cy + halfSize) as int)
-            .stroke(color)
-        def diag2 = group.addLine((cx - halfSize) as int, (cy + halfSize) as int, (cx + halfSize) as int, (cy - halfSize) as int)
-            .stroke(color)
-        if (alphaVal < 1.0d) {
-          diag1.addAttribute('stroke-opacity', alphaVal)
-          diag2.addAttribute('stroke-opacity', alphaVal)
-        }
-        break
-      case 'triangle':
-        double h = size * Math.sqrt(3) / 2
-        double topY = cy - h * 2 / 3
-        double bottomY = cy + h / 3
-        double leftX = cx - halfSize
-        double rightX = cx + halfSize
-        String pathD = "M ${cx} ${topY as int} L ${leftX as int} ${bottomY as int} L ${rightX as int} ${bottomY as int} Z"
-        def path = group.addPath().d(pathD)
-            .fill(color)
-            .stroke(color)
-        if (alphaVal < 1.0d) {
-          path.addAttribute('fill-opacity', alphaVal)
-        }
-        break
-      case 'diamond':
-        String diamond = "M ${cx} ${(cy - halfSize) as int} " +
-            "L ${(cx + halfSize) as int} ${cy} " +
-            "L ${cx} ${(cy + halfSize) as int} " +
-            "L ${(cx - halfSize) as int} ${cy} Z"
-        def diamondPath = group.addPath().d(diamond)
-            .fill(color)
-            .stroke(color)
-        if (alphaVal < 1.0d) {
-          diamondPath.addAttribute('fill-opacity', alphaVal)
-        }
-        break
-      case 'circle':
-      default:
-        def circle = group.addCircle()
-            .cx(cx)
-            .cy(cy)
-            .r(radius)
-            .fill(color)
-            .stroke(color)
-        if (alphaVal < 1.0d) {
-          circle.addAttribute('fill-opacity', alphaVal)
-        }
-        break
-    }
-  }
-
-  private String getDefaultColor(Object value) {
-    List<String> palette = [
-        '#F8766D', '#C49A00', '#53B400',
-        '#00C094', '#00B6EB', '#A58AFF',
-        '#FB61D7'
-    ]
-
-    int index = Math.abs(value.hashCode()) % palette.size()
-    return palette[index]
   }
 }
