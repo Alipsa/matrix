@@ -21,8 +21,8 @@ import java.math.RoundingMode
 @CompileStatic
 class ScaleAlphaBinned extends ScaleContinuous {
 
-  /** Output range [min, max] for alpha values. */
-  List<Number> range = [0.2, 1.0] as List<Number>
+  /** Output range [min, max] for alpha values as BigDecimal. */
+  List<BigDecimal> range = [new BigDecimal('0.2'), BigDecimal.ONE]
 
   /** Number of bins. */
   int bins = 5
@@ -50,7 +50,7 @@ class ScaleAlphaBinned extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.range) this.range = params.range as List<Number>
+    if (params.range) this.range = (params.range as List).collect { it as BigDecimal } as List<BigDecimal>
     if (params.bins != null) this.bins = (params.bins as Number).intValue()
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
@@ -74,12 +74,13 @@ class ScaleAlphaBinned extends ScaleContinuous {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return naValue
 
-    BigDecimal dMin = computedDomain[0] as BigDecimal
-    BigDecimal dMax = computedDomain[1] as BigDecimal
-    BigDecimal rMin = range[0] as BigDecimal
-    BigDecimal rMax = range[1] as BigDecimal
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
+
     // When domain is constant, all values map to the midpoint of the range
-    if (dMax.compareTo(dMin) == 0) {
+    if (dMax == dMin) {
       return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
     }
 

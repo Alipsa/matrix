@@ -37,38 +37,36 @@ class ScaleXReverse extends ScaleContinuous {
 
   @Override
   Object transform(Object value) {
-    BigDecimal numeric = ScaleUtils.coerceToNumber(value)
-    if (numeric == null) return null
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return null
 
-    double v = numeric.doubleValue()
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
 
-    if (dMax == dMin) return (rMin + rMax) / 2
+    if (dMax == dMin) return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
 
     // REVERSED: Linear interpolation but inverted
-    double normalized = (v - dMin) / (dMax - dMin)
+    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
     // Instead of rMin + normalized * (rMax - rMin), we do rMax - normalized * (rMax - rMin)
     return rMax - normalized * (rMax - rMin)
   }
 
   @Override
   Object inverse(Object value) {
-    BigDecimal numeric = ScaleUtils.coerceToNumber(value)
-    if (numeric == null) return null
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return null
 
-    double v = numeric.doubleValue()
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
 
-    if (rMax == rMin) return (dMin + dMax) / 2
+    if (rMax == rMin) return (dMin + dMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
 
     // REVERSED: Inverse linear interpolation
-    double normalized = (rMax - v) / (rMax - rMin)
+    BigDecimal normalized = (rMax - v).divide((rMax - rMin), ScaleUtils.MATH_CONTEXT)
     return dMin + normalized * (dMax - dMin)
   }
 

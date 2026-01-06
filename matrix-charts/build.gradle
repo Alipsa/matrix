@@ -60,9 +60,7 @@ dependencies {
   compileOnly libs.groovy
   compileOnly project(':matrix-core')
   compileOnly project(':matrix-stats')
-  testImplementation project(':matrix-core')
-  testImplementation project(':matrix-stats')
-  testImplementation project(':matrix-datasets')
+  compileOnly project(':matrix-groovy-ext')
   api("se.alipsa.groovy:gsvg:0.4.0")
 
   // One of these is enough
@@ -81,6 +79,10 @@ dependencies {
   testImplementation libs.groovyXml
   //testImplementation "org.testfx:openjfx-monocle:jdk-11+26"
 
+  testImplementation project(':matrix-core')
+  testImplementation project(':matrix-stats')
+  testImplementation project(':matrix-datasets')
+  testImplementation project(':matrix-groovy-ext')
   testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"

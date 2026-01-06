@@ -435,7 +435,7 @@ class GgRenderer {
       if (key == 'x') {
         if (scale instanceof ScaleContinuous) {
           ScaleContinuous sc = scale as ScaleContinuous
-          sc.range = isFlipped ? [height, 0] as List<Number> : [0, width] as List<Number>
+          sc.range = isFlipped ? [height as BigDecimal, BigDecimal.ZERO] : [BigDecimal.ZERO, width as BigDecimal]
         } else if (scale instanceof ScaleDiscrete) {
           ScaleDiscrete sd = scale as ScaleDiscrete
           sd.range = isFlipped ? [height, 0] as List<Number> : [0, width] as List<Number>
@@ -443,7 +443,7 @@ class GgRenderer {
       } else if (key == 'y') {
         if (scale instanceof ScaleContinuous) {
           ScaleContinuous sc = scale as ScaleContinuous
-          sc.range = isFlipped ? [0, width] as List<Number> : [height, 0] as List<Number>
+          sc.range = isFlipped ? [BigDecimal.ZERO, width as BigDecimal] : [height as BigDecimal, BigDecimal.ZERO]
         } else if (scale instanceof ScaleDiscrete) {
           ScaleDiscrete sd = scale as ScaleDiscrete
           sd.range = isFlipped ? [0, width] as List<Number> : [height, 0] as List<Number>
@@ -663,7 +663,7 @@ class GgRenderer {
       }
       xScale.train(aestheticData.x)
       if (xScale instanceof ScaleContinuous) {
-        (xScale as ScaleContinuous).range = xRange
+        (xScale as ScaleContinuous).range = xRange.collect { it as BigDecimal } as List<BigDecimal>
       } else if (xScale instanceof ScaleDiscrete) {
         (xScale as ScaleDiscrete).range = xRange
       }
@@ -678,7 +678,7 @@ class GgRenderer {
       }
       yScale.train(aestheticData.y)
       if (yScale instanceof ScaleContinuous) {
-        (yScale as ScaleContinuous).range = yRange
+        (yScale as ScaleContinuous).range = yRange.collect { it as BigDecimal } as List<BigDecimal>
       } else if (yScale instanceof ScaleDiscrete) {
         (yScale as ScaleDiscrete).range = yRange
       }
@@ -786,11 +786,11 @@ class GgRenderer {
         }
         // Set range for position scales (respecting CoordFlip)
         if (scale.aesthetic == 'x' && scale instanceof ScaleContinuous) {
-          (scale as ScaleContinuous).range = xRange
+          (scale as ScaleContinuous).range = xRange.collect { it as BigDecimal } as List<BigDecimal>
         } else if (scale.aesthetic == 'x' && scale instanceof ScaleDiscrete) {
           (scale as ScaleDiscrete).range = xRange
         } else if (scale.aesthetic == 'y' && scale instanceof ScaleContinuous) {
-          (scale as ScaleContinuous).range = yRange
+          (scale as ScaleContinuous).range = yRange.collect { it as BigDecimal } as List<BigDecimal>
         } else if (scale.aesthetic == 'y' && scale instanceof ScaleDiscrete) {
           (scale as ScaleDiscrete).range = yRange
         }
@@ -966,14 +966,14 @@ class GgRenderer {
     } as ScaleContinuous
 
     if (scale == null) {
-      return [ScaleContinuous.DEFAULT_EXPAND_MULT, ScaleContinuous.DEFAULT_EXPAND_ADD] as double[]
+      return [ScaleContinuous.DEFAULT_EXPAND_MULT.doubleValue(), ScaleContinuous.DEFAULT_EXPAND_ADD.doubleValue()] as double[]
     }
     if (scale.expand == null || scale.expand.size() < 2) {
       return [0.0d, 0.0d] as double[]
     }
 
-    double mult = scale.expand[0] != null ? (scale.expand[0] as double) : ScaleContinuous.DEFAULT_EXPAND_MULT
-    double add = scale.expand[1] != null ? (scale.expand[1] as double) : ScaleContinuous.DEFAULT_EXPAND_ADD
+    double mult = scale.expand[0] != null ? (scale.expand[0] as double) : ScaleContinuous.DEFAULT_EXPAND_MULT.doubleValue()
+    double add = scale.expand[1] != null ? (scale.expand[1] as double) : ScaleContinuous.DEFAULT_EXPAND_ADD.doubleValue()
     return [mult, add] as double[]
   }
 
@@ -1400,15 +1400,17 @@ class GgRenderer {
     if (scale == null) return null
     def transformed = scale.transform(value)
     if (!(transformed instanceof Number)) return null
-    List<Number> range = null
+    List<? extends Number> range = null
     if (scale instanceof ScaleContinuous) {
       range = (scale as ScaleContinuous).range
     } else if (scale instanceof ScaleDiscrete) {
       range = (scale as ScaleDiscrete).range
     }
     if (range == null || range.size() < 2) return null
-    double min = Math.min(range[0] as double, range[1] as double)
-    double max = Math.max(range[0] as double, range[1] as double)
+    double r0 = range[0] as double
+    double r1 = range[1] as double
+    double min = Math.min(r0, r1)
+    double max = Math.max(r0, r1)
     double span = max - min
     if (span == 0.0d) return 0.0d
     return ((transformed as double) - min) / span
@@ -1422,7 +1424,7 @@ class GgRenderer {
    */
   private boolean isRangeReversed(Scale scale) {
     if (scale == null) return false
-    List<Number> range = null
+    List<? extends Number> range = null
     if (scale instanceof ScaleContinuous) {
       range = (scale as ScaleContinuous).range
     } else if (scale instanceof ScaleDiscrete) {

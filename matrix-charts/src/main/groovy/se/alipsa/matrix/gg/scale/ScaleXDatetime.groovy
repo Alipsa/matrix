@@ -98,7 +98,7 @@ class ScaleXDatetime extends ScaleContinuous {
 
     minEpochMillis = min
     maxEpochMillis = max
-    computedDomain = [min as Number, max as Number]
+    computedDomain = [min as BigDecimal, max as BigDecimal]
     trained = true
   }
 

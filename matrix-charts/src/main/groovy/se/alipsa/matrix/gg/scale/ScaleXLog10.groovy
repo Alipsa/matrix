@@ -46,28 +46,28 @@ class ScaleXLog10 extends ScaleContinuous {
 
     if (numericData.isEmpty()) return
 
-    // Transform to log space
-    List<Double> logData = numericData.collect { Math.log10(it) } as List<Double>
+    // Transform to log space and convert to BigDecimal
+    List<BigDecimal> logData = numericData.collect { Math.log10(it) as BigDecimal }
 
-    // Compute min/max in log space
-    double min = logData.min() as double
-    double max = logData.max() as double
+    // Compute min/max in log space as BigDecimal
+    BigDecimal min = logData.min()
+    BigDecimal max = logData.max()
 
     // Apply explicit limits if set (limits are in data space, convert to log space)
     if (limits && limits.size() >= 2) {
       if (limits[0] != null && (limits[0] as Number) > 0) {
-        min = Math.log10(limits[0] as double)
+        min = Math.log10(limits[0] as double) as BigDecimal
       }
       if (limits[1] != null && (limits[1] as Number) > 0) {
-        max = Math.log10(limits[1] as double)
+        max = Math.log10(limits[1] as double) as BigDecimal
       }
     }
 
-    // Apply expansion in log space
+    // Apply expansion in log space using BigDecimal arithmetic
     if (expand != null && expand.size() >= 2) {
-      Number mult = expand[0] != null ? expand[0] : DEFAULT_EXPAND_MULT
-      Number add = expand[1] != null ? expand[1] : DEFAULT_EXPAND_ADD
-      Number delta = max - min
+      BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
+      BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
+      BigDecimal delta = max - min
       min = min - delta * mult - add
       max = max + delta * mult + add
     }
@@ -84,63 +84,66 @@ class ScaleXLog10 extends ScaleContinuous {
     // Transform to log space
     double logValue = Math.log10(numeric)
 
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
 
-    if (dMax == dMin) return (rMin + rMax) / 2
+    if (dMax == dMin) return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
 
     // Linear interpolation in log space
-    double normalized = (logValue - dMin) / (dMax - dMin)
+    BigDecimal logVal = logValue as BigDecimal
+    BigDecimal normalized = (logVal - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
     return rMin + normalized * (rMax - rMin)
   }
 
   @Override
   Object inverse(Object value) {
-    BigDecimal numeric = ScaleUtils.coerceToNumber(value)
-    if (numeric == null) return null
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return null
 
-    double v = numeric.doubleValue()
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
 
-    if (rMax == rMin) return Math.pow(10, (dMin + dMax) / 2)
+    if (rMax == rMin) {
+      double midLog = (dMin + dMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT).doubleValue()
+      return Math.pow(10, midLog) as BigDecimal
+    }
 
     // Inverse linear interpolation to log space
-    double normalized = (v - rMin) / (rMax - rMin)
-    double logValue = dMin + normalized * (dMax - dMin)
+    BigDecimal normalized = (v - rMin).divide((rMax - rMin), ScaleUtils.MATH_CONTEXT)
+    BigDecimal logValue = dMin + normalized * (dMax - dMin)
 
-    // Transform back from log space
-    return Math.pow(10, logValue)
+    // Transform back from log space (returns BigDecimal)
+    return Math.pow(10, logValue.doubleValue()) as BigDecimal
   }
 
   @Override
   List getComputedBreaks() {
     if (breaks) return breaks
 
-    // Generate nice breaks in log space (powers of 10)
-    double logMin = computedDomain[0] as double
-    double logMax = computedDomain[1] as double
+    BigDecimal logMin = computedDomain[0]
+    BigDecimal logMax = computedDomain[1]
 
+    // Generate nice breaks in log space (powers of 10)
     return generateLogBreaks(logMin, logMax)
   }
 
   /**
    * Generate nice breaks for log scale (powers of 10 and intermediates).
    */
-  private List<Number> generateLogBreaks(double logMin, double logMax) {
+  private List<Number> generateLogBreaks(BigDecimal logMin, BigDecimal logMax) {
     List<Number> breaks = []
 
-    int minPow = Math.floor(logMin) as int
-    int maxPow = Math.ceil(logMax) as int
+    int minPow = logMin.floor().intValue()
+    int maxPow = logMax.ceil().intValue()
 
     // Generate breaks at powers of 10
     for (int pow = minPow; pow <= maxPow; pow++) {
-      double val = Math.pow(10, pow)
-      double logVal = pow as double
+      BigDecimal val = Math.pow(10, pow) as BigDecimal
+      BigDecimal logVal = pow as BigDecimal
       if (logVal >= logMin && logVal <= logMax) {
         breaks << val
       }
@@ -150,9 +153,9 @@ class ScaleXLog10 extends ScaleContinuous {
     if (breaks.size() < 3) {
       List<Number> intermediates = []
       for (int pow = minPow; pow <= maxPow; pow++) {
-        for (double mult : [2d, 5d]) {
-          double val = mult * Math.pow(10, pow)
-          double logVal = Math.log10(val)
+        for (BigDecimal mult : [2G, 5G]) {
+          BigDecimal val = mult * (Math.pow(10, pow) as BigDecimal)
+          BigDecimal logVal = Math.log10(val.doubleValue()) as BigDecimal
           if (logVal >= logMin && logVal <= logMax) {
             intermediates << val
           }

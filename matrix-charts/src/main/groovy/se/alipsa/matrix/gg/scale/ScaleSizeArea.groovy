@@ -30,12 +30,12 @@ class ScaleSizeArea extends ScaleSizeContinuous {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return naValue
 
-    BigDecimal dMin = computedDomain[0] as BigDecimal
-    BigDecimal dMax = computedDomain[1] as BigDecimal
-    BigDecimal rMin = range[0] as BigDecimal
-    BigDecimal rMax = range[1] as BigDecimal
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
 
-    if (dMax.compareTo(dMin) == 0) {
+    if (dMax == dMin) {
       BigDecimal midArea = (rMin * rMin + rMax * rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
       return midArea.sqrt(ScaleUtils.MATH_CONTEXT)
     }
