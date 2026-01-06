@@ -83,7 +83,7 @@ class ClassUtils {
    * Handles Byte, Short, Integer, Long, BigInteger, Float, Double, and BigDecimal
    * @param updated the "new" class to try to fit into the existing one
    * @param columnClass the existing class where the new class is trying to fit
-   * @return the the nearest common Number instance that can contain instances of both classes
+   * @return the nearest common Number instance that can contain instances of both classes
    */
   static Class<? extends Number> findNearestNumberClass(Class<? extends Number> updated, Class<? extends Number> columnClass) {
     Class<? extends Number> aToB = nearest(updated, columnClass)

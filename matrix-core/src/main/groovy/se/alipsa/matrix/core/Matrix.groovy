@@ -24,7 +24,7 @@ import static se.alipsa.matrix.core.util.ClassUtils.*
  * or matrix[column] for the whole column e.g.
  * <code>myMatrix[1]</code> for the second column, or <code>myMatrix['foo']</code> for the column named foo.
  *
- * Similarly, you use the the same notation to assign / change values e.g.
+ * Similarly, you use the same notation to assign / change values e.g.
  * <code>myMatrix[0,1] = 23</code> to assign the value 23 to the second variable of the first observation
  * or to assign / create a column <code> myMatrix['bar'] = [1..12]</code> to assign the range 1 to 12 to the column bar
  *
@@ -1274,7 +1274,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param row the observation to get
    * @param column the variable to get
-   * @param type the class that the the value should be converted to
+   * @param type the class that the value should be converted to
    * @return a value of the type specified
    */
   <T> T getAt(int row, int column, Class<T> type) {
@@ -1290,7 +1290,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param row the observation to get
    * @param columnName the variable to get
-   * @param type the class that the the value should be converted to
+   * @param type the class that the value should be converted to
    * @return a value of the type specified
    */
   <T> T getAt(int row, String columnName, Class<T> type) {
@@ -1306,7 +1306,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param row the observation to get
    * @param column the variable to get
-   * @param type the class that the the value should be converted to
+   * @param type the class that the value should be converted to
    * @param valIfNull value to replace a missing (null) value
    * @return a value of the type specified
    */
@@ -1318,7 +1318,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param row the observation to get
    * @param columnName the variable to get
-   * @param type the class that the the value should be converted to
+   * @param type the class that the value should be converted to
    * @param valIfNull value to replace a missing (null) value
    * @return
    */

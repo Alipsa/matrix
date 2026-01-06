@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.core.ValueConverter.asLocalDate
 
 /**
- * Note the the calls to content() is a decent way to check the integrity of the matrix and is there to ensure
+ * Note the calls to content() is a decent way to check the integrity of the matrix and is there to ensure
  * there is no exception from doing that
  */
 class MatrixBuilderTest {
