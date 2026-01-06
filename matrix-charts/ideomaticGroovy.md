@@ -15,7 +15,7 @@ Goals
 - Regression: `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/LinearRegression.groovy`, `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/PolynomialRegression.groovy`, `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/RegressionUtils.groovy`.
 - Distributions/KDE: `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/distribution/TDistribution.groovy`, `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/kde/KernelDensity.groovy` (and any helpers it uses, e.g. bandwidth selection, kernels).
 
-Plan
+## Plan
 1. Inventory and boundary decisions
 1.1 Audit numeric conversions in the above files and classify data-space vs render-space math. Data-space should prefer BigDecimal; render-space (pixels, JavaFX, SVG) can stay double with explicit conversions at boundaries.
 1.2 Identify API expectations in charts (e.g., `transform` return types used as `double` in tests) so return types can be adjusted without breaking callers.
