@@ -31,10 +31,10 @@ class BigDecimalExtension {
   }
 
   /**
-   * Returns the log10
+   * Returns the base-10 logarithm (log10) of this number as a BigDecimal.
    *
    * @param self the Number value
-   * @return  a BigDecimal representing the log10 of this value
+   * @return  a BigDecimal representing the base-10 logarithm (log10) of this value
    */
   static BigDecimal log10(Number self) {
     return Math.log10(self.doubleValue()) as BigDecimal
