@@ -26,7 +26,11 @@ class ScaleUtils {
         double v = (value as Number).doubleValue()
         if (Double.isNaN(v) || Double.isInfinite(v)) return null
       }
-      return new BigDecimal(value.toString())
+      try {
+        return new BigDecimal(value.toString())
+      } catch (NumberFormatException ignored) {
+        return null
+      }
     }
     if (value instanceof CharSequence) {
       String s = value.toString().trim()
