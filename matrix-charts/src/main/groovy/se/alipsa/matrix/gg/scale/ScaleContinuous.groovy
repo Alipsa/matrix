@@ -27,25 +27,27 @@ class ScaleContinuous extends Scale {
     if (data == null || data.isEmpty()) return
 
     // Filter to numeric values (including numeric strings)
-    List<Double> numericData = data.findResults { coerceToNumber(it) } as List<Double>
+    List<BigDecimal> numericData = data.findResults { ScaleUtils.coerceToNumber(it) } as List<BigDecimal>
 
     if (numericData.isEmpty()) return
 
     // Compute min/max
-    Number min = numericData.min()
-    Number max = numericData.max()
+    BigDecimal min = numericData.min()
+    BigDecimal max = numericData.max()
 
     // Apply explicit limits if set
     if (limits && limits.size() >= 2) {
-      min = limits[0] != null ? limits[0] as Number : min
-      max = limits[1] != null ? limits[1] as Number : max
+      BigDecimal limitMin = ScaleUtils.coerceToNumber(limits[0])
+      BigDecimal limitMax = ScaleUtils.coerceToNumber(limits[1])
+      if (limitMin != null) min = limitMin
+      if (limitMax != null) max = limitMax
     }
 
     // Apply expansion only when configured (ggplot2 default is mult=0.05, add=0).
     if (expand != null && expand.size() >= 2) {
-      Number mult = expand[0] != null ? expand[0] : DEFAULT_EXPAND_MULT
-      Number add = expand[1] != null ? expand[1] : DEFAULT_EXPAND_ADD
-      Number delta = max - min
+      BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : BigDecimal.valueOf(DEFAULT_EXPAND_MULT)
+      BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : BigDecimal.valueOf(DEFAULT_EXPAND_ADD)
+      BigDecimal delta = max - min
       min = min - delta * mult - add
       max = max + delta * mult + add
     }
@@ -56,39 +58,41 @@ class ScaleContinuous extends Scale {
 
   @Override
   Object transform(Object value) {
-    Double numeric = coerceToNumber(value)
-    if (numeric == null) return null
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return null
 
-    double v = numeric
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0] as BigDecimal
+    BigDecimal dMax = computedDomain[1] as BigDecimal
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
 
     // Handle edge case
-    if (dMax == dMin) return (rMin + rMax) / 2
+    if (dMax.compareTo(dMin) == 0) {
+      return (rMin + rMax).divide(BigDecimal.valueOf(2), ScaleUtils.MATH_CONTEXT)
+    }
 
     // Linear interpolation
-    double normalized = (v - dMin) / (dMax - dMin)
+    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
     return rMin + normalized * (rMax - rMin)
   }
 
   @Override
   Object inverse(Object value) {
-    Double numeric = coerceToNumber(value)
-    if (numeric == null) return null
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return null
 
-    double v = numeric
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0] as BigDecimal
+    BigDecimal dMax = computedDomain[1] as BigDecimal
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
 
     // Handle edge case
-    if (rMax == rMin) return (dMin + dMax) / 2
+    if (rMax.compareTo(rMin) == 0) {
+      return (dMin + dMax).divide(BigDecimal.valueOf(2), ScaleUtils.MATH_CONTEXT)
+    }
 
     // Inverse linear interpolation
-    double normalized = (v - rMin) / (rMax - rMin)
+    BigDecimal normalized = (v - rMin).divide((rMax - rMin), ScaleUtils.MATH_CONTEXT)
     return dMin + normalized * (dMax - dMin)
   }
 
@@ -96,11 +100,11 @@ class ScaleContinuous extends Scale {
   List getComputedBreaks() {
     if (breaks) return breaks
 
-    double min = computedDomain[0] as double
-    double max = computedDomain[1] as double
+    BigDecimal min = computedDomain[0] as BigDecimal
+    BigDecimal max = computedDomain[1] as BigDecimal
 
     // Generate nice breaks
-    return generateNiceBreaks(min, max, nBreaks)
+    return generateNiceBreaks(min.doubleValue(), max.doubleValue(), nBreaks)
   }
 
   @Override
@@ -173,26 +177,6 @@ class ScaleContinuous extends Scale {
       return String.valueOf((long) d)
     }
     return String.format('%.2g', d)
-  }
-
-  private static Double coerceToNumber(Object value) {
-    if (value == null) return null
-    if (value instanceof Number) {
-      double v = (value as Number).doubleValue()
-      return Double.isNaN(v) ? null : v
-    }
-    if (value instanceof CharSequence) {
-      String s = value.toString().trim()
-      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN') || s.equalsIgnoreCase('null')) {
-        return null
-      }
-      try {
-        return Double.parseDouble(s)
-      } catch (NumberFormatException ignored) {
-        return null
-      }
-    }
-    return null
   }
 
   /**

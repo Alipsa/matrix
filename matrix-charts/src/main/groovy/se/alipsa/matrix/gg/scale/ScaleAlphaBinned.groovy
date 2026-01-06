@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 /**
  * Binned alpha scale for continuous data.
+ * Missing or invalid values map to naValue (BigDecimal, nullable).
  * <p>
  * This scale divides the continuous input data into discrete bins and maps
  * each bin to an alpha transparency value within the specified range.
@@ -24,8 +25,8 @@ class ScaleAlphaBinned extends ScaleContinuous {
   /** Number of bins. */
   int bins = 5
 
-  /** Alpha value for NA/missing values. */
-  Number naValue = 1.0
+  /** Alpha value for NA/missing values (BigDecimal, nullable). */
+  BigDecimal naValue = 1.0G
 
   /**
    * Create a binned alpha scale with defaults.
@@ -53,7 +54,7 @@ class ScaleAlphaBinned extends ScaleContinuous {
     if (params.limits) this.limits = params.limits as List
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue != null) this.naValue = params.naValue as Number
+    if (params.naValue != null) this.naValue = ScaleUtils.coerceToNumber(params.naValue)
   }
 
   /**
@@ -68,25 +69,27 @@ class ScaleAlphaBinned extends ScaleContinuous {
    */
   @Override
   Object transform(Object value) {
-    Double numeric = ScaleUtils.coerceToNumber(value)
-    if (numeric == null) return naValue
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return naValue
 
-    double v = numeric
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
+    BigDecimal dMin = computedDomain[0] as BigDecimal
+    BigDecimal dMax = computedDomain[1] as BigDecimal
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
     // When domain is constant, all values map to the midpoint of the range
-    if (dMax == dMin) return (range[0] as double + range[1] as double) / 2.0d
+    if (dMax.compareTo(dMin) == 0) {
+      return (rMin + rMax).divide(BigDecimal.valueOf(2), ScaleUtils.MATH_CONTEXT)
+    }
 
-    double normalized = (v - dMin) / (dMax - dMin)
-    normalized = Math.max(0.0d, Math.min(1.0d, normalized))
+    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
+    normalized = normalized.max(BigDecimal.ZERO).min(BigDecimal.ONE)
 
     int binsCount = Math.max(1, bins)
-    int idx = Math.min(binsCount - 1, (int) Math.floor(normalized * binsCount))
-    if (binsCount == 1) return range[0]
+    if (binsCount == 1) return rMin
 
-    double rMin = range[0] as double
-    double rMax = range[1] as double
-    double t = idx / (double) (binsCount - 1)
+    BigDecimal scaled = normalized * BigDecimal.valueOf(binsCount)
+    int idx = Math.min(binsCount - 1, scaled.intValue())
+    BigDecimal t = BigDecimal.valueOf(idx).divide(BigDecimal.valueOf(binsCount - 1), ScaleUtils.MATH_CONTEXT)
     return rMin + t * (rMax - rMin)
   }
 }

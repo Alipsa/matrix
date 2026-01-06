@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 /**
  * Discrete alpha scale.
+ * Missing or invalid values map to naValue (BigDecimal, nullable).
  */
 @CompileStatic
 class ScaleAlphaDiscrete extends ScaleDiscrete {
@@ -11,8 +12,8 @@ class ScaleAlphaDiscrete extends ScaleDiscrete {
   /** Output range [min, max] for alpha values. */
   List<Number> range = [0.2, 1.0] as List<Number>
 
-  /** Alpha value for NA/missing values. */
-  Number naValue = 1.0
+  /** Alpha value for NA/missing values (BigDecimal, nullable). */
+  BigDecimal naValue = 1.0G
 
   private List<Number> computedValues = []
 
@@ -39,7 +40,7 @@ class ScaleAlphaDiscrete extends ScaleDiscrete {
     if (params.limits) this.limits = params.limits as List
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue != null) this.naValue = params.naValue as Number
+    if (params.naValue != null) this.naValue = ScaleUtils.coerceToNumber(params.naValue)
   }
 
   @Override
