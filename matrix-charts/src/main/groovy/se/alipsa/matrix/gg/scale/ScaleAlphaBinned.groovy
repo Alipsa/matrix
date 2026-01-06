@@ -4,6 +4,16 @@ import groovy.transform.CompileStatic
 
 /**
  * Binned alpha scale for continuous data.
+ * <p>
+ * This scale divides the continuous input data into discrete bins and maps
+ * each bin to an alpha transparency value within the specified range.
+ * <p>
+ * <b>Important edge case:</b> When the data domain is constant (all values are identical),
+ * the scale cannot compute a meaningful normalization. In this case, <em>any</em> input value
+ * (including values that differ from the domain value) will map to the midpoint of the
+ * output range. This behavior may be unexpected if you expect out-of-domain values to
+ * be rejected or treated differently. If stricter validation is required, consider
+ * pre-filtering the data or using a custom scale implementation.
  */
 @CompileStatic
 class ScaleAlphaBinned extends ScaleContinuous {

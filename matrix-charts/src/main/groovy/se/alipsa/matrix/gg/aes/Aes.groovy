@@ -106,11 +106,14 @@ class Aes {
   /**
    * Get the value of an aesthetic by name.
    * This method provides type-safe access to aesthetic values without dynamic property access.
+   * <p>
+   * Supported aesthetic names: x, y, color, colour, fill, size, shape, alpha,
+   * linetype, linewidth, group, label, weight
    *
    * @param aesthetic the aesthetic name (e.g., 'x', 'y', 'color', 'fill', etc.)
-   * @return the value of the aesthetic, or null if not found
+   * @return the value of the aesthetic, or null if not found or unknown aesthetic name
    */
-  private Object getAestheticValue(String aesthetic) {
+  Object getAestheticValue(String aesthetic) {
     switch (aesthetic) {
       case 'x': return x
       case 'y': return y

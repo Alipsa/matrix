@@ -989,8 +989,9 @@ class GgStat {
     double slope = (q3 - q1) / (theoQ3 - theoQ1)
     double intercept = q1 - slope * theoQ1
 
-    double minTheo = normalQuantile(0.5d / n)
-    double maxTheo = normalQuantile((n - 0.5d) / n)
+    // Clamp probabilities to prevent infinite values from normalQuantile
+    double minTheo = safeNormalQuantile(0.5d / n)
+    double maxTheo = safeNormalQuantile((n - 0.5d) / n)
 
     Map<String, Object> start = [x: minTheo, y: slope * minTheo + intercept]
     Map<String, Object> end = [x: maxTheo, y: slope * maxTheo + intercept]
@@ -999,6 +1000,24 @@ class GgStat {
       end[groupCol] = groupKey
     }
     return [start, end]
+  }
+
+  /**
+   * Safe wrapper for normalQuantile that clamps probability values to prevent
+   * infinite return values from propagating to rendering code.
+   * <p>
+   * Clamps p to the range [QUANTILE_EPSILON, 1-QUANTILE_EPSILON] to ensure
+   * finite results that won't cause issues in coordinate transformations.
+   *
+   * @param p probability value
+   * @return finite quantile value
+   */
+  private static double safeNormalQuantile(double p) {
+    // Minimum probability to avoid extreme quantile values
+    // 1e-10 corresponds to approximately -6.4 standard deviations
+    final double QUANTILE_EPSILON = 1.0e-10d
+    double clampedP = Math.max(QUANTILE_EPSILON, Math.min(1.0d - QUANTILE_EPSILON, p))
+    return normalQuantile(clampedP)
   }
 
   /**
