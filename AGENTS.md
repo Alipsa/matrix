@@ -34,4 +34,4 @@ When creating plans:
   2.1 [ ] Update `ScaleUtils.coerceToNumber` in `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleUtils.groovy` to return `BigDecimal` (or `null`), treating `NaN`, `null`, and blank values consistently.
   2.2 [ ] Remove duplicate `coerceToNumber` implementations in `ScaleContinuous`, `ScaleXLog10`, `ScaleXSqrt`, `ScaleXReverse` and route all conversions through `ScaleUtils`.
 ```
-- Use checkboxes `[ ]` for tasks that need to be done and `[x]` for completed tasks. A task is only done when the checkbox is marked as done. A checkbox is not marked as done until tests have been run successfully.
+- Use checkboxes `[ ]` for tasks that need to be done and `[x]` for completed tasks. A task is only done when the checkbox is marked as done. A checkbox is not marked as done until tests have been run successfully **and the specific test commands used (for example, `./gradlew :matrix-charts:test` or `./gradlew test`) have been recorded in the plan or PR description**.
