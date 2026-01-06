@@ -28,7 +28,7 @@ JDK 21 is required. Some modules (parquet/avro, charts, smile) enforce a maximum
 
 ## Planning
 When creating plans:
-- Always number individual tasks and issues. Use a Major, minor version scheme where the overall feature only gets the major version number and tasks under this get minor version numbers. For example:
+- Always number individual tasks and issues. Use a hierarchical task numbering scheme where the overall feature gets the major number and tasks under it get minor numbers. For example:
 ```
   2. Unify numeric coercion and NA handling 
   2.1 [ ] Update `ScaleUtils.coerceToNumber` in `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleUtils.groovy` to return `BigDecimal` (or `null`), treating `NaN`, `null`, and blank values consistently.
