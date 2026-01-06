@@ -5,7 +5,7 @@ Goals
 - Standardize numeric coercion, domain/range typing, and NA handling across scales so transforms are consistent and readable.
 - Update only matrix-stats methods used by matrix-charts (leave the rest untouched) while preserving behavior and performance boundaries.
 
-Primary targets in matrix-charts
+## Primary targets in matrix-charts
 - Numeric scale implementations: `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleContinuous.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleXLog10.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleXSqrt.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleXReverse.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleXDate.groovy`.
 - Size/alpha scales: `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleSizeContinuous.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleSizeBinned.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleSizeArea.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleSizeDiscrete.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleAlphaContinuous.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleAlphaBinned.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleAlphaDiscrete.groovy`.
 - Shared scale helpers: `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleUtils.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/Scale.groovy`.
