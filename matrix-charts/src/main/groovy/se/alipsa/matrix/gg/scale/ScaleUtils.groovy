@@ -35,7 +35,7 @@ class ScaleUtils {
     }
     if (value instanceof CharSequence) {
       String s = value.toString().trim()
-      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN')) {
+      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN') || s.equalsIgnoreCase('null')) {
         return null
       }
       try {
