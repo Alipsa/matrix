@@ -12,10 +12,10 @@ class AfterScale {
   final String aesthetic
 
   AfterScale(String aesthetic) {
-    if (!aesthetic) {
-      throw new IllegalArgumentException("aesthetic name cannot be null or empty")
+    if (aesthetic == null || aesthetic.trim().isEmpty()) {
+      throw new IllegalArgumentException("aesthetic name cannot be null, empty, or whitespace-only")
     }
-    this.aesthetic = aesthetic
+    this.aesthetic = aesthetic.trim()
   }
 
   /**

@@ -243,7 +243,8 @@ class GgChart {
       case 'nudge':
         return PositionType.NUDGE
       default:
-        return null
+        throw new IllegalArgumentException(
+            "Unknown position type: '${position}'. Supported types: identity, dodge, dodge2, stack, fill, jitter, nudge")
     }
   }
 

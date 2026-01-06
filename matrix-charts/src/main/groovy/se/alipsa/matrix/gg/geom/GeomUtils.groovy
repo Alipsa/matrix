@@ -149,7 +149,10 @@ class GeomUtils {
    */
   static Number extractLineSize(Number defaultSize, Aes aes, String sizeCol, List<Map> rows, Scale sizeScale) {
     if (aes.size instanceof Identity) {
-      return (aes.size as Identity).value as Number
+      def identityValue = (aes.size as Identity).value
+      if (identityValue != null) {
+        return identityValue as Number
+      }
     }
     if (sizeCol && !rows.isEmpty() && rows[0][sizeCol] != null) {
       def rawSize = rows[0][sizeCol]
@@ -178,7 +181,10 @@ class GeomUtils {
    */
   static Number extractLineAlpha(Number defaultAlpha, Aes aes, String alphaCol, List<Map> rows, Scale alphaScale) {
     if (aes.alpha instanceof Identity) {
-      return (aes.alpha as Identity).value as Number
+      def identityValue = (aes.alpha as Identity).value
+      if (identityValue != null) {
+        return identityValue as Number
+      }
     }
     if (alphaCol && !rows.isEmpty() && rows[0][alphaCol] != null) {
       def rawAlpha = rows[0][alphaCol]
@@ -215,7 +221,10 @@ class GeomUtils {
         return row[sizeCol] as Number
       }
     } else if (aes.size instanceof Identity) {
-      return (aes.size as Identity).value as Number
+      def identityValue = (aes.size as Identity).value
+      if (identityValue != null) {
+        return identityValue as Number
+      }
     }
     return defaultSize
   }
@@ -232,7 +241,10 @@ class GeomUtils {
    */
   static Number extractPointAlpha(Number defaultAlpha, Aes aes, String alphaCol, Map row, Scale alphaScale) {
     if (aes.alpha instanceof Identity) {
-      return (aes.alpha as Identity).value as Number
+      def identityValue = (aes.alpha as Identity).value
+      if (identityValue != null) {
+        return identityValue as Number
+      }
     }
     if (alphaCol && row[alphaCol] != null) {
       if (alphaScale) {

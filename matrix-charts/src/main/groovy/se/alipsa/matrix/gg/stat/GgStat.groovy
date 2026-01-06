@@ -1004,6 +1004,19 @@ class GgStat {
   /**
    * Approximate inverse CDF for the standard normal distribution.
    * Uses the Acklam rational approximation for good accuracy in the tails.
+   * <p>
+   * <b>Edge cases:</b>
+   * <ul>
+   *   <li>p &lt;= 0.0: Returns {@link Double#NEGATIVE_INFINITY}</li>
+   *   <li>p &gt;= 1.0: Returns {@link Double#POSITIVE_INFINITY}</li>
+   * </ul>
+   * <p>
+   * <b>Note:</b> Calling code should handle infinite return values appropriately,
+   * as they may propagate through calculations and cause issues in downstream
+   * processing (e.g., coordinate transformations, plotting bounds).
+   *
+   * @param p probability value, should be in range (0, 1) for finite results
+   * @return the quantile value, or +/-Infinity for edge cases
    */
   private static double normalQuantile(double p) {
     if (p <= 0.0d) {

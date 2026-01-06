@@ -46,6 +46,16 @@ class ScaleAlphaBinned extends ScaleContinuous {
     if (params.naValue != null) this.naValue = params.naValue as Number
   }
 
+  /**
+   * Transform a data value to an alpha value within the configured range.
+   * <p>
+   * Edge case: When all data values are identical (dMax == dMin), any input value
+   * maps to the midpoint of the range. This includes values that differ from the
+   * domain value, which may produce unexpected results if input validation is needed.
+   *
+   * @param value the data value to transform
+   * @return the alpha value, or naValue if the input is null/invalid
+   */
   @Override
   Object transform(Object value) {
     Double numeric = ScaleUtils.coerceToNumber(value)
@@ -54,6 +64,7 @@ class ScaleAlphaBinned extends ScaleContinuous {
     double v = numeric
     double dMin = computedDomain[0] as double
     double dMax = computedDomain[1] as double
+    // When domain is constant, all values map to the midpoint of the range
     if (dMax == dMin) return (range[0] as double + range[1] as double) / 2.0d
 
     double normalized = (v - dMin) / (dMax - dMin)
