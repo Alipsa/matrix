@@ -39,6 +39,7 @@
     <matrixCoreVersion>3.5.1-SNAPSHOT</matrixCoreVersion>
     <matrixCsvVersion>2.2.2-SNAPSHOT</matrixCsvVersion>
     <matrixDatasetsVersion>2.1.2-SNAPSHOT</matrixDatasetsVersion>
+    <matrixGrooxyExtVersion>0.1.0-SNAPSHOT</matrixGrooxyExtVersion>
     <matrixGsheetsVersion>0.1.0-SNAPSHOT</matrixGsheetsVersion>
     <matrixJsonVersion>2.1.2-SNAPSHOT</matrixJsonVersion>
     <matrixParquetVersion>0.4.0-SNAPSHOT</matrixParquetVersion>
@@ -65,48 +66,13 @@
     <dependencies>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-core</artifactId>
-        <version>${matrixCoreVersion}</version>
+        <artifactId>matrix-arff</artifactId>
+        <version>${matrixArffVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-stats</artifactId>
-        <version>${matrixStatsVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-sql</artifactId>
-        <version>${matrixSqlVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-datasets</artifactId>
-        <version>${matrixDatasetsVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-spreadsheet</artifactId>
-        <version>${matrixSpreadsheetVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-gsheets</artifactId>
-        <version>${matrixGsheetsVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-json</artifactId>
-        <version>${matrixJsonVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-csv</artifactId>
-        <version>${matrixCsvVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-parquet</artifactId>
-        <version>${matrixParquetVersion}</version>
+        <artifactId>matrix-avro</artifactId>
+        <version>${matrixAvroVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
@@ -120,8 +86,58 @@
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-xchart</artifactId>
-        <version>${matrixXChartVersion}</version>
+        <artifactId>matrix-core</artifactId>
+        <version>${matrixCoreVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-csv</artifactId>
+        <version>${matrixCsvVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-datasets</artifactId>
+        <version>${matrixDatasetsVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-groovy-ext</artifactId>
+        <version>${matrixGrooxyExtVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-gsheets</artifactId>
+        <version>${matrixGsheetsVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-json</artifactId>
+        <version>${matrixJsonVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-parquet</artifactId>
+        <version>${matrixParquetVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-smile</artifactId>
+        <version>${matrixSmileVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-spreadsheet</artifactId>
+        <version>${matrixSpreadsheetVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-sql</artifactId>
+        <version>${matrixSqlVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-stats</artifactId>
+        <version>${matrixStatsVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
@@ -130,18 +146,8 @@
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-avro</artifactId>
-        <version>${matrixAvroVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-arff</artifactId>
-        <version>${matrixArffVersion}</version>
-      </dependency>
-      <dependency>
-        <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-smile</artifactId>
-        <version>${matrixSmileVersion}</version>
+        <artifactId>matrix-xchart</artifactId>
+        <version>${matrixXChartVersion}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

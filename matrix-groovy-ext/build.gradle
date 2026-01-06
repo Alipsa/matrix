@@ -1,0 +1,153 @@
+plugins {
+  id 'groovy'
+  id('java-library')
+  id('signing')
+  id('maven-publish')
+  //id("se.alipsa.nexus-release-plugin") version "1.0.1"
+  id("se.alipsa.nexus-release-plugin") version '2.0.0'
+}
+
+group = 'se.alipsa.matrix'
+version = '0.1.0-SNAPSHOT' // remember to change Extension module info if changing version
+description = "Groovy extensions for the matrix library"
+
+repositories {
+  if (version.contains('SNAPSHOT')) {
+    mavenLocal()
+  }
+  mavenCentral()
+}
+
+JavaCompile javaCompile = compileJava {
+  options.release = 21
+  options.deprecation = true
+  options.compilerArgs << "-Xlint:unchecked"
+}
+
+compileGroovy {
+  options.deprecation = true
+}
+
+dependencies {
+  compileOnly libs.groovy
+  compileOnly libs.groovyAnt
+  compileOnly libs.groovyDoc
+  testImplementation testLibs.junitJupiterApi
+  testRuntimeOnly testLibs.junitJupiterEngine
+  testRuntimeOnly testLibs.junitPlatformLauncher
+  testImplementation libs.groovy
+}
+
+test {
+  useJUnitPlatform()
+}
+
+tasks.register('antGroovydoc', DefaultTask) {
+  group = 'documentation'
+  description = 'Generate Groovydoc using Ant with custom config'
+
+  def outputDir = layout.buildDirectory.dir("groovydocant")
+  def groovySrcDirs = sourceSets.main.groovy.srcDirs
+  def compileClasspath = sourceSets.main.compileClasspath
+  def docTitle = "${project.name} ${project.version}"
+  def windowTitle = "${project.name} ${project.version}"
+
+  outputs.dir(outputDir)
+
+  doLast {
+    def outputDirFile = outputDir.get().asFile
+
+    ant.taskdef(
+        name: 'groovydoc',
+        classname: 'org.codehaus.groovy.ant.Groovydoc',
+        classpath: compileClasspath.asPath
+    )
+
+    ant.groovydoc(
+        destdir: outputDirFile,
+        sourcepath: groovySrcDirs.join(':'),
+        packagenames: '*',
+        javaVersion: 'JAVA_21',
+        doctitle: docTitle,
+        windowtitle: windowTitle
+    ) {
+      // Does not work, groovydoc does not support modules e,g,
+      //  URL will become https://docs.oracle.com/en/java/javase/21/docs/api/java/net/URL.html
+      //  instead of https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/URL.html
+      //link packages: 'java.', href: 'https://docs.oracle.com/en/java/javase/21/docs/api/'
+      link packages:"groovy.,org.codehaus.groovy.", href: "http://docs.groovy-lang.org/latest/html/api/"
+    }
+  }
+}
+
+tasks.register('javadocJar', Jar) {
+  dependsOn tasks.named('antGroovydoc')
+  archiveClassifier.set('javadoc')
+  from layout.buildDirectory.dir("groovydocant")
+}
+
+tasks.register('sourcesJar', Jar) {
+  dependsOn tasks.named('classes')
+  archiveClassifier.set('sources')
+  from sourceSets.main.allSource
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      from components.java
+      artifact(javadocJar)
+      artifact(sourcesJar)
+      pom {
+        name = 'Matrix Groovy Extensions'
+        description = "${project.description}"
+        url = "https://github.com/Alipsa/matrix/matrix-groovy-ext"
+        properties = [
+            'maven.compiler.release': "${javaCompile.options.release.get()}"
+        ]
+        licenses {
+          license {
+            name = 'MIT License'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/master/LICENSE'
+          }
+        }
+        developers {
+          developer {
+            id = 'perNyfelt'
+            name = 'Per Nyfelt'
+          }
+        }
+        scm {
+          url = 'https://github.com/Alipsa/matrix/tree/master/matrix-groovy-ext'
+          connection = 'scm:git:https://github.com/Alipsa/matrix.git'
+          developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
+        }
+      }
+    }
+  }
+  if (project.ext.properties.sonatypeUsername) {
+    repositories {
+      maven {
+        credentials {
+          username = sonatypeUsername
+          password = sonatypePassword
+        }
+      }
+    }
+  }
+}
+
+signing {
+  if (project.properties['signing.keyId'] != null) {
+    //project.logger.lifecycle("Signing artifacts...")
+    sign publishing.publications.maven
+  } else {
+    project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")
+  }
+}
+
+nexusReleasePlugin {
+  userName = project.ext.properties.sonatypeUsername
+  password = project.ext.properties.sonatypePassword
+  mavenPublication = publishing.publications.maven
+}

@@ -128,22 +128,22 @@ class ScaleXLog10 extends ScaleContinuous {
     BigDecimal logMax = computedDomain[1]
 
     // Generate nice breaks in log space (powers of 10)
-    return generateLogBreaks(logMin.doubleValue(), logMax.doubleValue())
+    return generateLogBreaks(logMin, logMax)
   }
 
   /**
    * Generate nice breaks for log scale (powers of 10 and intermediates).
    */
-  private List<Number> generateLogBreaks(double logMin, double logMax) {
+  private List<Number> generateLogBreaks(BigDecimal logMin, BigDecimal logMax) {
     List<Number> breaks = []
 
-    int minPow = Math.floor(logMin) as int
-    int maxPow = Math.ceil(logMax) as int
+    int minPow = logMin.floor().intValue()
+    int maxPow = logMax.ceil().intValue()
 
     // Generate breaks at powers of 10
     for (int pow = minPow; pow <= maxPow; pow++) {
-      double val = Math.pow(10, pow)
-      double logVal = pow as double
+      BigDecimal val = Math.pow(10, pow) as BigDecimal
+      BigDecimal logVal = pow as BigDecimal
       if (logVal >= logMin && logVal <= logMax) {
         breaks << val
       }
@@ -153,9 +153,9 @@ class ScaleXLog10 extends ScaleContinuous {
     if (breaks.size() < 3) {
       List<Number> intermediates = []
       for (int pow = minPow; pow <= maxPow; pow++) {
-        for (double mult : [2d, 5d]) {
-          double val = mult * Math.pow(10, pow)
-          double logVal = Math.log10(val)
+        for (BigDecimal mult : [2G, 5G]) {
+          BigDecimal val = mult * (Math.pow(10, pow) as BigDecimal)
+          BigDecimal logVal = Math.log10(val.doubleValue()) as BigDecimal
           if (logVal >= logMin && logVal <= logMax) {
             intermediates << val
           }

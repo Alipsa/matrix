@@ -131,42 +131,45 @@ class ScaleXSqrt extends ScaleContinuous {
     BigDecimal dataMin = sqrtMin * sqrtMin
     BigDecimal dataMax = sqrtMax * sqrtMax
 
-    return generateNiceDataBreaks(dataMin.doubleValue(), dataMax.doubleValue(), nBreaks)
+    return generateNiceDataBreaks(dataMin, dataMax, nBreaks)
   }
 
   /**
    * Generate nice breaks in data space.
-   * Uses double internally for the "nice number" algorithm.
+   * Uses double for the "nice number" algorithm, BigDecimal for break values.
    */
-  private List<Number> generateNiceDataBreaks(double min, double max, int n) {
+  private static List<Number> generateNiceDataBreaks(BigDecimal min, BigDecimal max, int n) {
     if (max == min) return [min] as List<Number>
 
-    double rawRange = max - min
-    double spacing = niceNum(rawRange / (n - 1), true)
+    BigDecimal rawRange = max - min
+    BigDecimal spacing = niceNum(rawRange / (n - 1), true)
 
-    double niceMin = Math.floor(min / spacing) * spacing
-    double niceMax = Math.ceil(max / spacing) * spacing
+    BigDecimal niceMin = (min / spacing).floor() * spacing
+    BigDecimal niceMax = (max / spacing).ceil() * spacing
 
-    // Ensure we start at 0 or positive value for sqrt (use Groovy max)
-    niceMin = (niceMin as BigDecimal).max(BigDecimal.ZERO).doubleValue()
+    // Ensure we start at 0 or positive value for sqrt
+    niceMin = niceMin.max(BigDecimal.ZERO)
 
     List<Number> breaks = []
-    double tolerance = spacing * BREAK_TOLERANCE_RATIO
-    for (double val = niceMin; val <= niceMax + tolerance; val += spacing) {
-      if (val >= min - tolerance && val <= max + tolerance && val >= 0) {
+    BigDecimal tolerance = spacing * BREAK_TOLERANCE_RATIO
+    BigDecimal minBd = min as BigDecimal
+    BigDecimal maxBd = max as BigDecimal
+    for (BigDecimal val = niceMin; val <= niceMax + tolerance; val += spacing) {
+      if (val >= minBd - tolerance && val <= maxBd + tolerance && val >= BigDecimal.ZERO) {
         breaks << val
       }
     }
     return breaks
   }
 
-  private double niceNum(double x, boolean round) {
+  private static BigDecimal niceNum(BigDecimal x, boolean round) {
+    if (x == null) return null
     if (x == 0) return 0
 
-    double exp = Math.floor(Math.log10(Math.abs(x)))
-    double f = x / Math.pow(10, exp)
+    BigDecimal exp = x.abs().log10().floor()
+    BigDecimal f = x / (10 ** exp)
 
-    double nf
+    BigDecimal nf
     if (round) {
       if (f < 1.5) nf = 1
       else if (f < 3) nf = 2
@@ -179,14 +182,13 @@ class ScaleXSqrt extends ScaleContinuous {
       else nf = 10
     }
 
-    return nf * Math.pow(10, exp)
+    return nf * 10 ** exp
   }
 
-  private static Double coerceToNonNegativeNumber(Object value) {
+  private static BigDecimal coerceToNonNegativeNumber(Object value) {
     BigDecimal num = ScaleUtils.coerceToNumber(value)
     if (num == null) return null
-    double dv = num.doubleValue()
-    if (dv < 0) return null
-    return dv
+    if (num < 0) return null
+    return num
   }
 }

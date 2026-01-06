@@ -29,28 +29,41 @@ if ! check_java_version; then
   fi
 fi
 
+# --- Updated Argument Handling ---
+export RUN_EXTERNAL_TESTS=false
+export RUN_SLOW_TESTS=false
+
 if [[ "$1" == "--external" || "$1" == "-e" ]]; then
   export RUN_EXTERNAL_TESTS=true
   echo "External tests enabled"
+elif [[ "$1" == "--all" || "$1" == "-a" ]]; then
+  export RUN_EXTERNAL_TESTS=true
+  export RUN_SLOW_TESTS=true
+  echo "All tests (external and slow) enabled"
 fi
-export RUN_SLOW_TESTS=false
+# ---------------------------------
 
 localRepo=$(mvn help:evaluate -Dexpression=settings.localRepository -q -DforceStdout)
 if [[ -d "$localRepo/se/alipsa/matrix" ]]; then
   echo "Removing local cache in $localRepo/se/alipsa/matrix"
   rm -r "$localRepo/se/alipsa/matrix"
 fi
+
 echo "Locally publish bom"
 pushd matrix-bom
   mvn -f bom.xml install
 popd
+
 echo "Building and locally publishing matrix"
 ./gradlew build publishToMavenLocal
+
 echo "Verify bom"
 pushd matrix-bom
   mvn verify
 popd
-if [[ "$1" == "--external" || "$1" == "-e" ]]; then
-  unset RUN_EXTERNAL_TESTS
-fi
+
+# Clean up
+unset RUN_EXTERNAL_TESTS
+unset RUN_SLOW_TESTS
+
 echo "Done!"
