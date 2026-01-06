@@ -33,7 +33,7 @@ class ScaleNaValueTest {
   void testNaValueCoercionForSizeScales() {
     def cases = [
         [new ScaleSizeContinuous(naValue: 2.5d), new BigDecimal('2.5')],
-        [new ScaleSizeBinned(naValue: 3.25f), new BigDecimal('3.25')],
+        [new ScaleSizeBinned(naValue: 3.25d), new BigDecimal('3.25')],
         [new ScaleSizeDiscrete(naValue: 4), new BigDecimal('4')],
         [new ScaleSizeContinuous(naValue: '6.75'), new BigDecimal('6.75')]
     ]
