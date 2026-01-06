@@ -11,7 +11,7 @@ Goals
 - Shared scale helpers: `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleUtils.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/Scale.groovy`.
 - Non-scale math-heavy spots to convert to Groovy number methods where safe: `matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfXScatterChartConverter.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/ColorUtil.groovy`, `matrix-charts/src/main/groovy/se/alipsa/matrix/chartexport/SvgPanel.groovy`.
 
-Targeted matrix-stats methods used by matrix-charts
+## Targeted matrix-stats methods used by matrix-charts
 - Regression: `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/LinearRegression.groovy`, `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/PolynomialRegression.groovy`, `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/RegressionUtils.groovy`.
 - Distributions/KDE: `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/distribution/TDistribution.groovy`, `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/kde/KernelDensity.groovy` (and any helpers it uses, e.g. bandwidth selection, kernels).
 
