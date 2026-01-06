@@ -1,19 +1,50 @@
 # Charts
 Groovy library for creating graphs based on Matrix or [][] data
 
-add the following dependency to your gradle build script
+add the following dependencies to your gradle build script
 ```groovy
-implementation 'se.alipsa.matrix:charts:0.3.1'
+implementation(platform( 'se.alipsa.matrix:matrix-bom:2.4.0'))
+implementation 'se.alipsa.matrix-core'
+implementation 'se.alipsa.matrix:matrix-charts'
+implementation 'se.alipsa.matrix:matrix-stats'
+implementation 'se.alipsa.matrix:matrix-groovy-ext'
 ```
 
 ... or maven pom.xml
 ```xml
-<dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>charts</artifactId>
-    <version>0.3.1</version>
-</dependency>
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>se.alipsa.matrix</groupId>
+      <artifactId>matrix-bom</artifactId>
+      <version>2.4.0</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
 ```
+```xml
+<dependencies>
+  <dependency>
+    <groupId>se.alipsa.matrix</groupId>
+    <artifactId>matrix-charts</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>se.alipsa.matrix</groupId>
+    <artifactId>matrix-core</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>se.alipsa.matrix</groupId>
+    <artifactId>matrix-stats</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>se.alipsa.matrix</groupId>
+    <artifactId>matrix-groovy-ext</artifactId>
+  </dependency>
+</dependencies>
+```
+
 
 ## Example usage
 
