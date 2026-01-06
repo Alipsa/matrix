@@ -102,7 +102,7 @@
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-groovy-ext</artifactId>
-        <version>${matrixGrooxyExtVersion}</version>
+        <version>${matrixGroovyExtVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
