@@ -46,35 +46,33 @@ class ScaleXSqrt extends ScaleContinuous {
 
     if (numericData.isEmpty()) return
 
-    // Transform to sqrt space
-    List<Double> sqrtData = numericData.collect { Math.sqrt(it) }
+    // Transform to sqrt space and convert to BigDecimal
+    List<BigDecimal> sqrtData = numericData.collect { Math.sqrt(it) as BigDecimal }
 
-    // Compute min/max in sqrt space
-    double min = sqrtData.min()
-    double max = sqrtData.max()
+    // Compute min/max in sqrt space as BigDecimal
+    BigDecimal min = sqrtData.min()
+    BigDecimal max = sqrtData.max()
 
     // Apply explicit limits if set (limits are in data space, convert to sqrt space)
     if (limits && limits.size() >= 2) {
       if (limits[0] != null && (limits[0] as Number) >= 0) {
-        min = Math.sqrt(limits[0] as double)
+        min = Math.sqrt(limits[0] as double) as BigDecimal
       }
       if (limits[1] != null && (limits[1] as Number) >= 0) {
-        max = Math.sqrt(limits[1] as double)
+        max = Math.sqrt(limits[1] as double) as BigDecimal
       }
     }
 
-    // Apply expansion in sqrt space
+    // Apply expansion in sqrt space using BigDecimal arithmetic
     if (expand != null && expand.size() >= 2) {
       BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
       BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
-      BigDecimal delta = (max - min) as BigDecimal
-      BigDecimal minBd = (min as BigDecimal) - delta * mult - add
-      min = minBd.max(BigDecimal.ZERO).doubleValue()  // Can't go negative
-      max = (max as BigDecimal) + delta * mult + add
+      BigDecimal delta = max - min
+      min = (min - delta * mult - add).max(BigDecimal.ZERO)  // Can't go negative
+      max = max + delta * mult + add
     }
 
-    // Store as BigDecimal (sqrt-transformed values)
-    computedDomain = [min as BigDecimal, max as BigDecimal]
+    computedDomain = [min, max]
     trained = true
   }
 

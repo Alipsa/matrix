@@ -46,34 +46,33 @@ class ScaleXLog10 extends ScaleContinuous {
 
     if (numericData.isEmpty()) return
 
-    // Transform to log space
-    List<Double> logData = numericData.collect { Math.log10(it) }
+    // Transform to log space and convert to BigDecimal
+    List<BigDecimal> logData = numericData.collect { Math.log10(it) as BigDecimal }
 
-    // Compute min/max in log space
-    double min = logData.min()
-    double max = logData.max()
+    // Compute min/max in log space as BigDecimal
+    BigDecimal min = logData.min()
+    BigDecimal max = logData.max()
 
     // Apply explicit limits if set (limits are in data space, convert to log space)
     if (limits && limits.size() >= 2) {
       if (limits[0] != null && (limits[0] as Number) > 0) {
-        min = Math.log10(limits[0] as double)
+        min = Math.log10(limits[0] as double) as BigDecimal
       }
       if (limits[1] != null && (limits[1] as Number) > 0) {
-        max = Math.log10(limits[1] as double)
+        max = Math.log10(limits[1] as double) as BigDecimal
       }
     }
 
-    // Apply expansion in log space
+    // Apply expansion in log space using BigDecimal arithmetic
     if (expand != null && expand.size() >= 2) {
       BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
       BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
-      BigDecimal delta = (max - min) as BigDecimal
-      min = (min as BigDecimal) - delta * mult - add
-      max = (max as BigDecimal) + delta * mult + add
+      BigDecimal delta = max - min
+      min = min - delta * mult - add
+      max = max + delta * mult + add
     }
 
-    // Store as BigDecimal (log-transformed values)
-    computedDomain = [min as BigDecimal, max as BigDecimal]
+    computedDomain = [min, max]
     trained = true
   }
 
