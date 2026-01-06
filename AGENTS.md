@@ -18,10 +18,20 @@ Use Groovy 5.0.3 and target Java 21. Follow the existing 2-space indentation and
 Prefer idiomatic groovy constructs such as closures, `each`, `collect`, and `findAll` for collections. Use string interpolation (`"${var}"`) instead of concatenation when building strings. Default numeric type in groovy is BigDecimal, try to take advantage of that rather than converting to double/float. 
 
 ## Testing Guidelines
-JUnit Jupiter (JUnit 5) is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module’s `src/test` tree. Use `-PrunSlowTests=true` and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`).
+JUnit Jupiter (JUnit 5) is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module’s `src/test` tree. Use `-PrunSlowTests=true` and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).
 
 ## Commit & Pull Request Guidelines
 Commit messages in this repo are short, imperative summaries (e.g., “Fix …”, “Update …”, “Add …”), optionally mentioning the module. For pull requests, include a concise summary, list the modules touched, and record the tests you ran (with commands). Link relevant issues and add screenshots for visual/chart output changes.
 
 ## Environment & Constraints
 JDK 21 is required. Some modules (parquet/avro, charts, smile) enforce a maximum JDK 21 due to upstream dependencies, so keep toolchains aligned with that constraint.
+
+## Planning
+When creating plans:
+- Always number individual tasks and issues. Use a hierarchical task numbering scheme where the overall feature gets the major number and tasks under it get minor numbers. For example:
+```
+  2. Unify numeric coercion and NA handling 
+  2.1 [ ] Update `ScaleUtils.coerceToNumber` in `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleUtils.groovy` to return `BigDecimal` (or `null`), treating `NaN`, `null`, and blank values consistently.
+  2.2 [ ] Remove duplicate `coerceToNumber` implementations in `ScaleContinuous`, `ScaleXLog10`, `ScaleXSqrt`, `ScaleXReverse` and route all conversions through `ScaleUtils`.
+```
+- Use checkboxes `[ ]` for tasks that need to be done and `[x]` for completed tasks. A task is only done when the checkbox is marked as done. A checkbox is not marked as done until tests have been run successfully **and the specific test commands used (for example, `./gradlew :matrix-charts:test` or `./gradlew test`) have been recorded in the plan or PR description**.

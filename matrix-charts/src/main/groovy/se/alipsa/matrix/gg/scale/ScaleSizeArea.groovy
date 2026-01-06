@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 /**
  * Size scale where area is proportional to the data.
+ * Missing or invalid values map to naValue (BigDecimal, nullable) inherited from ScaleSizeContinuous.
  */
 @CompileStatic
 class ScaleSizeArea extends ScaleSizeContinuous {
@@ -26,24 +27,23 @@ class ScaleSizeArea extends ScaleSizeContinuous {
 
   @Override
   Object transform(Object value) {
-    Double numeric = ScaleUtils.coerceToNumber(value)
-    if (numeric == null) return naValue
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return naValue
 
-    double v = numeric
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0] as BigDecimal
+    BigDecimal dMax = computedDomain[1] as BigDecimal
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
 
-    if (dMax == dMin) {
-      double midArea = ((rMin * rMin) + (rMax * rMax)) / 2.0d
-      return Math.sqrt(midArea)
+    if (dMax.compareTo(dMin) == 0) {
+      BigDecimal midArea = (rMin * rMin + rMax * rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
+      return midArea.sqrt(ScaleUtils.MATH_CONTEXT)
     }
 
-    double normalized = (v - dMin) / (dMax - dMin)
-    double areaMin = rMin * rMin
-    double areaMax = rMax * rMax
-    double area = areaMin + normalized * (areaMax - areaMin)
-    return Math.sqrt(area)
+    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
+    BigDecimal areaMin = rMin * rMin
+    BigDecimal areaMax = rMax * rMax
+    BigDecimal area = areaMin + normalized * (areaMax - areaMin)
+    return area.sqrt(ScaleUtils.MATH_CONTEXT)
   }
 }

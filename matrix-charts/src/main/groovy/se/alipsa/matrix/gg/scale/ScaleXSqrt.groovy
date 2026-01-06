@@ -98,10 +98,10 @@ class ScaleXSqrt extends ScaleContinuous {
 
   @Override
   Object inverse(Object value) {
-    Double numeric = coerceToNumber(value)
+    BigDecimal numeric = ScaleUtils.coerceToNumber(value)
     if (numeric == null) return null
 
-    double v = numeric
+    double v = numeric.doubleValue()
     double dMin = computedDomain[0] as double
     double dMax = computedDomain[1] as double
     double rMin = range[0] as double
@@ -178,28 +178,10 @@ class ScaleXSqrt extends ScaleContinuous {
   }
 
   private static Double coerceToNonNegativeNumber(Object value) {
-    Double num = coerceToNumber(value)
-    if (num == null || num < 0) return null
-    return num
-  }
-
-  private static Double coerceToNumber(Object value) {
-    if (value == null) return null
-    if (value instanceof Number) {
-      double v = (value as Number).doubleValue()
-      return Double.isNaN(v) ? null : v
-    }
-    if (value instanceof CharSequence) {
-      String s = value.toString().trim()
-      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN')) {
-        return null
-      }
-      try {
-        return Double.parseDouble(s)
-      } catch (NumberFormatException ignored) {
-        return null
-      }
-    }
-    return null
+    BigDecimal num = ScaleUtils.coerceToNumber(value)
+    if (num == null) return null
+    double dv = num.doubleValue()
+    if (dv < 0) return null
+    return dv
   }
 }

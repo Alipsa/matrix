@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 /**
  * Radius-based size scale.
+ * Missing or invalid values map to naValue (BigDecimal, nullable) inherited from ScaleSizeContinuous.
  */
 @CompileStatic
 class ScaleRadius extends ScaleSizeContinuous {

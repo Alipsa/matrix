@@ -2,23 +2,41 @@ package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
 
+import java.math.MathContext
+
 /**
  * Utility methods for scale operations.
  */
 @CompileStatic
 class ScaleUtils {
 
+  static final BigDecimal TWO = BigDecimal.valueOf(2)
+  static final MathContext MATH_CONTEXT = MathContext.DECIMAL128
+
   /**
-   * Coerce a value to a Double, handling null, NaN, and string representations.
+   * Coerce a value to a BigDecimal, handling null/NaN and string representations.
    *
    * @param value the value to coerce
-   * @return the Double value, or null if the value cannot be converted
+   * @return the BigDecimal value, or null if the value cannot be converted
+   *
+   * String handling:
+   * - Trims input
+   * - Treats empty, 'NA', 'NaN', and 'null' (case-insensitive) as null
+   * - Otherwise attempts BigDecimal parsing; failures return null
    */
-  static Double coerceToNumber(Object value) {
+  static BigDecimal coerceToNumber(Object value) {
     if (value == null) return null
+    if (value instanceof BigDecimal) return value as BigDecimal
     if (value instanceof Number) {
-      double v = (value as Number).doubleValue()
-      return Double.isNaN(v) ? null : v
+      if (value instanceof Double || value instanceof Float) {
+        double v = (value as Number).doubleValue()
+        if (Double.isNaN(v) || Double.isInfinite(v)) return null
+      }
+      try {
+        return new BigDecimal(value.toString())
+      } catch (NumberFormatException ignored) {
+        return null
+      }
     }
     if (value instanceof CharSequence) {
       String s = value.toString().trim()
@@ -26,7 +44,7 @@ class ScaleUtils {
         return null
       }
       try {
-        return Double.parseDouble(s)
+        return new BigDecimal(s)
       } catch (NumberFormatException ignored) {
         return null
       }

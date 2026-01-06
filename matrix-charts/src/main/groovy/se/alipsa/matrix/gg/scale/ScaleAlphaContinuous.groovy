@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 /**
  * Continuous alpha scale.
+ * Missing or invalid values map to naValue (BigDecimal, nullable).
  */
 @CompileStatic
 class ScaleAlphaContinuous extends ScaleContinuous {
@@ -11,8 +12,8 @@ class ScaleAlphaContinuous extends ScaleContinuous {
   /** Output range [min, max] for alpha values. */
   List<Number> range = [0.1, 1.0] as List<Number>
 
-  /** Alpha value for NA/missing values. */
-  Number naValue = 1.0
+  /** Alpha value for NA/missing values (BigDecimal, nullable). */
+  BigDecimal naValue = 1.0G
 
   /**
    * Create a continuous alpha scale with defaults.
@@ -39,24 +40,27 @@ class ScaleAlphaContinuous extends ScaleContinuous {
     if (params.limits) this.limits = params.limits as List
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue != null) this.naValue = params.naValue as Number
+    if (params.naValue != null) this.naValue = ScaleUtils.coerceToNumber(params.naValue)
   }
 
   @Override
   Object transform(Object value) {
-    Double numeric = ScaleUtils.coerceToNumber(value)
-    if (numeric == null) return naValue
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return naValue
 
-    double v = numeric
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0] as BigDecimal
+    BigDecimal dMax = computedDomain[1] as BigDecimal
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
 
-    if (dMax == dMin) return (rMin + rMax) / 2.0d
+    if (dMax.compareTo(dMin) == 0) {
+      return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
+    }
 
-    double normalized = (v - dMin) / (dMax - dMin)
-    double mapped = rMin + normalized * (rMax - rMin)
-    return Math.max(Math.min(mapped, Math.max(rMin, rMax)), Math.min(rMin, rMax))
+    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
+    BigDecimal mapped = rMin + normalized * (rMax - rMin)
+    BigDecimal low = rMin.min(rMax)
+    BigDecimal high = rMin.max(rMax)
+    return mapped.max(low).min(high)
   }
 }

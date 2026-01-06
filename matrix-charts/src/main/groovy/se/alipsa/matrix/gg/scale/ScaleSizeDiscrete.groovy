@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 
 /**
  * Discrete size scale.
+ * Missing or invalid values map to naValue (BigDecimal, nullable).
  */
 @CompileStatic
 class ScaleSizeDiscrete extends ScaleDiscrete {
@@ -11,8 +12,8 @@ class ScaleSizeDiscrete extends ScaleDiscrete {
   /** Output range [min, max] for size values. */
   List<Number> range = [1.0, 6.0] as List<Number>
 
-  /** Size value for NA/missing values. */
-  Number naValue = 3.0
+  /** Size value for NA/missing values (BigDecimal, nullable). */
+  BigDecimal naValue = 3.0G
 
   private List<Number> computedValues = []
 
@@ -39,7 +40,7 @@ class ScaleSizeDiscrete extends ScaleDiscrete {
     if (params.limits) this.limits = params.limits as List
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue != null) this.naValue = params.naValue as Number
+    if (params.naValue != null) this.naValue = ScaleUtils.coerceToNumber(params.naValue)
   }
 
   @Override
