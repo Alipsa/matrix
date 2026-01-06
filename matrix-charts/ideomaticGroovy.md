@@ -52,7 +52,7 @@ Plan
 8.1 Run targeted tests: `./gradlew :matrix-charts:test` and, if matrix-stats behavior changes, `./gradlew :matrix-stats:test`.
 8.2 Manually verify a small set of scales with known expected values (continuous, log10, sqrt, size-binned) to ensure precision and NA behavior match the current semantics.
 
-Notes and constraints
+## Notes and constraints
 - Keep `@CompileStatic` on all touched classes; avoid dynamic `def` where it harms type safety.
 - Use BigDecimal for data-space computations but allow explicit `toDouble()` when crossing into rendering APIs (JavaFX, SVG) that require primitives.
 - Avoid sweeping refactors outside the listed files; focus on readability and idiomatic Groovy without altering the public API surface more than necessary.
