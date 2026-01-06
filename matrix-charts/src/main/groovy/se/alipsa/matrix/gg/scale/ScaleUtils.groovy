@@ -14,10 +14,15 @@ class ScaleUtils {
   static final MathContext MATH_CONTEXT = MathContext.DECIMAL128
 
   /**
-   * Coerce a value to a BigDecimal, handling null, NaN, and string representations.
+   * Coerce a value to a BigDecimal, handling null/NaN and string representations.
    *
    * @param value the value to coerce
    * @return the BigDecimal value, or null if the value cannot be converted
+   *
+   * String handling:
+   * - Trims input
+   * - Treats empty, 'NA', 'NaN', and 'null' (case-insensitive) as null
+   * - Otherwise attempts BigDecimal parsing; failures return null
    */
   static BigDecimal coerceToNumber(Object value) {
     if (value == null) return null
