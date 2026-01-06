@@ -54,7 +54,7 @@ class ScaleAlphaContinuous extends ScaleContinuous {
     BigDecimal rMax = range[1] as BigDecimal
 
     if (dMax.compareTo(dMin) == 0) {
-      return (rMin + rMax).divide(BigDecimal.valueOf(2), ScaleUtils.MATH_CONTEXT)
+      return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
     }
 
     BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)

@@ -2,6 +2,8 @@ package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
 
+import java.math.RoundingMode
+
 /**
  * Binned size scale for continuous data.
  * Missing or invalid values map to naValue (BigDecimal, nullable).
@@ -57,7 +59,7 @@ class ScaleSizeBinned extends ScaleContinuous {
     BigDecimal rMin = range[0] as BigDecimal
     BigDecimal rMax = range[1] as BigDecimal
     if (dMax.compareTo(dMin) == 0) {
-      return (rMin + rMax).divide(BigDecimal.valueOf(2), ScaleUtils.MATH_CONTEXT)
+      return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
     }
 
     BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
@@ -67,7 +69,7 @@ class ScaleSizeBinned extends ScaleContinuous {
     if (binsCount == 1) return rMin
 
     BigDecimal scaled = normalized * BigDecimal.valueOf(binsCount)
-    int idx = Math.min(binsCount - 1, scaled.intValue())
+    int idx = Math.min(binsCount - 1, scaled.setScale(0, RoundingMode.DOWN).intValue())
     BigDecimal t = BigDecimal.valueOf(idx).divide(BigDecimal.valueOf(binsCount - 1), ScaleUtils.MATH_CONTEXT)
     return rMin + t * (rMax - rMin)
   }

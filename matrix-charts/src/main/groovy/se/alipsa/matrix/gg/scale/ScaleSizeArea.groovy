@@ -36,7 +36,7 @@ class ScaleSizeArea extends ScaleSizeContinuous {
     BigDecimal rMax = range[1] as BigDecimal
 
     if (dMax.compareTo(dMin) == 0) {
-      BigDecimal midArea = (rMin * rMin + rMax * rMax).divide(BigDecimal.valueOf(2), ScaleUtils.MATH_CONTEXT)
+      BigDecimal midArea = (rMin * rMin + rMax * rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
       return midArea.sqrt(ScaleUtils.MATH_CONTEXT)
     }
 

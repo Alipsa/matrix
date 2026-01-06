@@ -68,7 +68,7 @@ class ScaleContinuous extends Scale {
 
     // Handle edge case
     if (dMax.compareTo(dMin) == 0) {
-      return (rMin + rMax).divide(BigDecimal.valueOf(2), ScaleUtils.MATH_CONTEXT)
+      return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
     }
 
     // Linear interpolation
@@ -88,7 +88,7 @@ class ScaleContinuous extends Scale {
 
     // Handle edge case
     if (rMax.compareTo(rMin) == 0) {
-      return (dMin + dMax).divide(BigDecimal.valueOf(2), ScaleUtils.MATH_CONTEXT)
+      return (dMin + dMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
     }
 
     // Inverse linear interpolation

@@ -10,6 +10,7 @@ import java.math.MathContext
 @CompileStatic
 class ScaleUtils {
 
+  static final BigDecimal TWO = BigDecimal.valueOf(2)
   static final MathContext MATH_CONTEXT = MathContext.DECIMAL128
 
   /**
@@ -34,7 +35,7 @@ class ScaleUtils {
     }
     if (value instanceof CharSequence) {
       String s = value.toString().trim()
-      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN') || s.equalsIgnoreCase('null')) {
+      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN')) {
         return null
       }
       try {
