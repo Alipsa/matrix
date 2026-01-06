@@ -58,19 +58,23 @@ class ScaleUtils {
    *
    * @param n the number of values to generate
    * @param range the output range [min, max]
-   * @return list of interpolated values
+   * @return list of interpolated Number values (as BigDecimal internally)
    */
-  static List<Number> interpolateRange(int n, List<Number> range) {
+  static List<Number> interpolateRange(int n, List<? extends Number> range) {
     if (n <= 0) return []
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
     List<Number> values = []
+
     if (n == 1) {
-      values << ((rMin + rMax) / 2.0d)
+      values << (rMin + rMax).divide(TWO, MATH_CONTEXT)
       return values
     }
+
+    BigDecimal divisor = BigDecimal.valueOf(n - 1)
     for (int i = 0; i < n; i++) {
-      double t = i / (double) (n - 1)
+      BigDecimal t = BigDecimal.valueOf(i).divide(divisor, MATH_CONTEXT)
       values << (rMin + t * (rMax - rMin))
     }
     return values

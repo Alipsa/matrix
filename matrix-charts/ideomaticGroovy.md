@@ -26,9 +26,9 @@ Goals
 2.3 [x] Standardize `naValue` in scales to `BigDecimal` (typed nullable) and document the contract in each scale class GroovyDoc.
 
 3. Convert scale domains/ranges to BigDecimal-first
-3.1 [ ] Update numeric scale properties to typed `List<BigDecimal>` (computed domain, range, limits) in `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleContinuous.groovy` and derived scales that override those fields.
-3.2 [ ] Use destructuring (`def (dMin, dMax) = computedDomain`, `def (rMin, rMax) = range`) and BigDecimal arithmetic (`**`, `.abs()`, `.min()`, `.max()`, `.round()`/`.setScale()` as needed).
-3.3 [ ] Replace `Math.min/Math.max/Math.floor/Math.ceil/Math.round` with Groovy number methods when operating on `BigDecimal` or `Number` (e.g., `normalized = normalized.max(0G).min(1G)`, `num.floor()`), and retain `Math` only for trig/log operations where there is no Groovy equivalent.
+3.1 [x] Update numeric scale properties to typed `List<BigDecimal>` (computed domain, range, limits) in `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleContinuous.groovy` and derived scales that override those fields.
+3.2 [x] Use BigDecimal arithmetic (`.divide()`, `.abs()`, `.min()`, `.max()`, `.setScale()`) in scale calculations. Note: Destructuring with typed variables is not supported in `@CompileStatic` mode, so indexed access is used instead.
+3.3 [x] Replace `Math.min/Math.max` with Groovy BigDecimal methods (`.min()`, `.max()`) when operating on `BigDecimal`, and retain `Math` for primitives (required in `@CompileStatic` mode) and trig/log operations. Tests passed: `./gradlew :matrix-charts:test -Pheadless=true`
 
 4. Refactor transform/inverse implementations to idiomatic Groovy
 4.1 [ ] Rewrite `transform`/`inverse` methods in all affected scales to follow the BigDecimal approach in the example, returning `BigDecimal` where feasible and only converting to `double` for downstream rendering needs.

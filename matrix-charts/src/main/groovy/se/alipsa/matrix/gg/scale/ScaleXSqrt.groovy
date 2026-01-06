@@ -47,11 +47,11 @@ class ScaleXSqrt extends ScaleContinuous {
     if (numericData.isEmpty()) return
 
     // Transform to sqrt space
-    List<Double> sqrtData = numericData.collect { Math.sqrt(it) } as List<Double>
+    List<Double> sqrtData = numericData.collect { Math.sqrt(it) }
 
     // Compute min/max in sqrt space
-    double min = sqrtData.min() as double
-    double max = sqrtData.max() as double
+    double min = sqrtData.min()
+    double max = sqrtData.max()
 
     // Apply explicit limits if set (limits are in data space, convert to sqrt space)
     if (limits && limits.size() >= 2) {
@@ -65,14 +65,16 @@ class ScaleXSqrt extends ScaleContinuous {
 
     // Apply expansion in sqrt space
     if (expand != null && expand.size() >= 2) {
-      Number mult = expand[0] != null ? expand[0] : DEFAULT_EXPAND_MULT
-      Number add = expand[1] != null ? expand[1] : DEFAULT_EXPAND_ADD
-      Number delta = max - min
-      min = Math.max(0, min - delta * mult - add)  // Can't go negative
-      max = max + delta * mult + add
+      BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
+      BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
+      BigDecimal delta = (max - min) as BigDecimal
+      BigDecimal minBd = (min as BigDecimal) - delta * mult - add
+      min = minBd.max(BigDecimal.ZERO).doubleValue()  // Can't go negative
+      max = (max as BigDecimal) + delta * mult + add
     }
 
-    computedDomain = [min, max]
+    // Store as BigDecimal (sqrt-transformed values)
+    computedDomain = [min as BigDecimal, max as BigDecimal]
     trained = true
   }
 
@@ -84,34 +86,37 @@ class ScaleXSqrt extends ScaleContinuous {
     // Transform to sqrt space
     double sqrtValue = Math.sqrt(numeric)
 
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
 
-    if (dMax == dMin) return (rMin + rMax) / 2
+    if (dMax == dMin) return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
 
     // Linear interpolation in sqrt space
-    double normalized = (sqrtValue - dMin) / (dMax - dMin)
+    BigDecimal sqrtVal = sqrtValue as BigDecimal
+    BigDecimal normalized = (sqrtVal - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
     return rMin + normalized * (rMax - rMin)
   }
 
   @Override
   Object inverse(Object value) {
-    BigDecimal numeric = ScaleUtils.coerceToNumber(value)
-    if (numeric == null) return null
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return null
 
-    double v = numeric.doubleValue()
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
 
-    if (rMax == rMin) return Math.pow((dMin + dMax) / 2, 2)
+    if (rMax == rMin) {
+      BigDecimal midSqrt = (dMin + dMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
+      return midSqrt * midSqrt
+    }
 
     // Inverse linear interpolation to sqrt space
-    double normalized = (v - rMin) / (rMax - rMin)
-    double sqrtValue = dMin + normalized * (dMax - dMin)
+    BigDecimal normalized = (v - rMin).divide((rMax - rMin), ScaleUtils.MATH_CONTEXT)
+    BigDecimal sqrtValue = dMin + normalized * (dMax - dMin)
 
     // Transform back from sqrt space
     return sqrtValue * sqrtValue
@@ -121,29 +126,31 @@ class ScaleXSqrt extends ScaleContinuous {
   List getComputedBreaks() {
     if (breaks) return breaks
 
-    // Generate nice breaks in data space, then transform
-    double sqrtMin = computedDomain[0] as double
-    double sqrtMax = computedDomain[1] as double
-    double dataMin = sqrtMin * sqrtMin
-    double dataMax = sqrtMax * sqrtMax
+    BigDecimal sqrtMin = computedDomain[0]
+    BigDecimal sqrtMax = computedDomain[1]
 
-    return generateNiceDataBreaks(dataMin, dataMax, nBreaks)
+    // Generate nice breaks in data space
+    BigDecimal dataMin = sqrtMin * sqrtMin
+    BigDecimal dataMax = sqrtMax * sqrtMax
+
+    return generateNiceDataBreaks(dataMin.doubleValue(), dataMax.doubleValue(), nBreaks)
   }
 
   /**
    * Generate nice breaks in data space.
+   * Uses double internally for the "nice number" algorithm.
    */
   private List<Number> generateNiceDataBreaks(double min, double max, int n) {
     if (max == min) return [min] as List<Number>
 
     double rawRange = max - min
-    double spacing = niceNum(rawRange / (n - 1) as double, true)
+    double spacing = niceNum(rawRange / (n - 1), true)
 
-    double niceMin = Math.floor(min / spacing as double) * spacing
-    double niceMax = Math.ceil(max / spacing as double) * spacing
+    double niceMin = Math.floor(min / spacing) * spacing
+    double niceMax = Math.ceil(max / spacing) * spacing
 
-    // Ensure we start at 0 or positive value for sqrt
-    niceMin = Math.max(0, niceMin)
+    // Ensure we start at 0 or positive value for sqrt (use Groovy max)
+    niceMin = (niceMin as BigDecimal).max(BigDecimal.ZERO).doubleValue()
 
     List<Number> breaks = []
     double tolerance = spacing * BREAK_TOLERANCE_RATIO

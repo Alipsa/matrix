@@ -9,15 +9,15 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class ScaleContinuous extends Scale {
 
-  static final double DEFAULT_EXPAND_MULT = 0.05d
-  static final double DEFAULT_EXPAND_ADD = 0.0d
+  static final BigDecimal DEFAULT_EXPAND_MULT = 0.05G
+  static final BigDecimal DEFAULT_EXPAND_ADD = 0G
   static final double BREAK_TOLERANCE_RATIO = 0.001d  // Small epsilon for float comparisons.
 
-  /** Output range [min, max] */
-  List<Number> range = [0, 1] as List<Number>
+  /** Output range [min, max] as BigDecimal values. */
+  List<BigDecimal> range = [BigDecimal.ZERO, BigDecimal.ONE]
 
-  /** Domain computed from data [min, max] */
-  protected List<Number> computedDomain = [0, 1] as List<Number>
+  /** Domain computed from data [min, max] as BigDecimal values. */
+  protected List<BigDecimal> computedDomain = [BigDecimal.ZERO, BigDecimal.ONE]
 
   /** Number of breaks to generate (default 7; can be adjusted per scale). */
   int nBreaks = 7
@@ -45,8 +45,8 @@ class ScaleContinuous extends Scale {
 
     // Apply expansion only when configured (ggplot2 default is mult=0.05, add=0).
     if (expand != null && expand.size() >= 2) {
-      BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : BigDecimal.valueOf(DEFAULT_EXPAND_MULT)
-      BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : BigDecimal.valueOf(DEFAULT_EXPAND_ADD)
+      BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
+      BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
       BigDecimal delta = max - min
       min = min - delta * mult - add
       max = max + delta * mult + add
@@ -61,13 +61,13 @@ class ScaleContinuous extends Scale {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return null
 
-    BigDecimal dMin = computedDomain[0] as BigDecimal
-    BigDecimal dMax = computedDomain[1] as BigDecimal
-    BigDecimal rMin = range[0] as BigDecimal
-    BigDecimal rMax = range[1] as BigDecimal
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
 
-    // Handle edge case
-    if (dMax.compareTo(dMin) == 0) {
+    // Handle edge case: zero-range domain
+    if (dMax == dMin) {
       return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
     }
 
@@ -81,13 +81,13 @@ class ScaleContinuous extends Scale {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return null
 
-    BigDecimal dMin = computedDomain[0] as BigDecimal
-    BigDecimal dMax = computedDomain[1] as BigDecimal
-    BigDecimal rMin = range[0] as BigDecimal
-    BigDecimal rMax = range[1] as BigDecimal
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+    BigDecimal rMin = range[0]
+    BigDecimal rMax = range[1]
 
-    // Handle edge case
-    if (rMax.compareTo(rMin) == 0) {
+    // Handle edge case: zero-range output
+    if (rMax == rMin) {
       return (dMin + dMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
     }
 
@@ -100,10 +100,10 @@ class ScaleContinuous extends Scale {
   List getComputedBreaks() {
     if (breaks) return breaks
 
-    BigDecimal min = computedDomain[0] as BigDecimal
-    BigDecimal max = computedDomain[1] as BigDecimal
+    BigDecimal min = computedDomain[0]
+    BigDecimal max = computedDomain[1]
 
-    // Generate nice breaks
+    // Generate nice breaks (uses double internally for "nice number" algorithm)
     return generateNiceBreaks(min.doubleValue(), max.doubleValue(), nBreaks)
   }
 
@@ -181,8 +181,10 @@ class ScaleContinuous extends Scale {
 
   /**
    * Get the computed domain [min, max].
+   *
+   * @return a list containing the domain minimum and maximum as BigDecimal values
    */
-  List<Number> getComputedDomain() {
+  List<BigDecimal> getComputedDomain() {
     return computedDomain
   }
 }
