@@ -62,6 +62,7 @@ Goals
 - Updated `ScaleContinuous.formatNumber()`: Now accepts BigDecimal-first formatting, properly handles integer detection using `scale()` and `stripTrailingZeros()`, returns clean integer strings for whole numbers
 - Updated `ScaleXLog10.formatLogNumber()`: Added comprehensive documentation explaining precision behavior, uses BigDecimal for consistent processing, documents that double precision is acceptable for log scale display
 - Added class-level precision documentation to `ScaleXLog10` and `ScaleXSqrt`: Explains that transform/inverse return BigDecimal, notes where Math.log10/Math.sqrt use double precision, clarifies that this is sufficient for visual display purposes
+- Changed `BREAK_TOLERANCE_RATIO` constant from `double` (0.001d) to `BigDecimal` (0.001G) for consistency with the BigDecimal migration, avoiding implicit conversions
 - All break generation methods now work with BigDecimal end-to-end: `ScaleContinuous`, `ScaleXLog10`, and `ScaleXSqrt` all generate breaks as BigDecimal values
 - All tests passed: `./gradlew :matrix-charts:test -Pheadless=true`
 

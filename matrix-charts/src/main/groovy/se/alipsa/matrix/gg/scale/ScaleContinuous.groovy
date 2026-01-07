@@ -11,7 +11,7 @@ class ScaleContinuous extends Scale {
 
   static final BigDecimal DEFAULT_EXPAND_MULT = 0.05G
   static final BigDecimal DEFAULT_EXPAND_ADD = 0G
-  static final double BREAK_TOLERANCE_RATIO = 0.001d  // Small epsilon for float comparisons.
+  static final BigDecimal BREAK_TOLERANCE_RATIO = 0.001G  // Small epsilon for break comparisons.
 
   /** Output range [min, max] as BigDecimal values. */
   List<BigDecimal> range = [BigDecimal.ZERO, BigDecimal.ONE]
