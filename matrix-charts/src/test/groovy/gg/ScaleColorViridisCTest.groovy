@@ -17,7 +17,7 @@ class ScaleColorViridisCTest {
     assertEquals(1, scale.direction)
     assertEquals(1.0d, scale.alpha, 0.001d)
     assertEquals('grey50', scale.naValue)
-    assertEquals([0, 0], scale.expand)
+    BaseTest.assertEquals([0, 0], scale.expand)
   }
 
   @Test

@@ -51,7 +51,7 @@ class ScaleXDate extends ScaleContinuous {
   private void applyParams(Map params) {
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List<Number>
+    if (params.expand) this.expand = params.expand as List
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
     if (params.position) this.position = params.position as String

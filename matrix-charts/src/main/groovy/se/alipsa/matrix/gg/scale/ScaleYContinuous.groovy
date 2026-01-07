@@ -28,7 +28,7 @@ class ScaleYContinuous extends ScaleContinuous {
   private void applyParams(Map params) {
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List<Number>
+    if (params.expand) this.expand = params.expand as List
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
     if (params.position) this.position = params.position as String
@@ -38,7 +38,7 @@ class ScaleYContinuous extends ScaleContinuous {
   /**
    * Convenience method to set limits.
    */
-  ScaleYContinuous limits(Number min, Number max) {
+  ScaleYContinuous limits(BigDecimal min, BigDecimal max) {
     this.limits = [min, max]
     return this
   }
@@ -46,7 +46,7 @@ class ScaleYContinuous extends ScaleContinuous {
   /**
    * Convenience method to set breaks.
    */
-  ScaleYContinuous breaks(List<Number> breaks) {
+  ScaleYContinuous breaks(List<BigDecimal> breaks) {
     this.breaks = breaks
     return this
   }
@@ -62,7 +62,7 @@ class ScaleYContinuous extends ScaleContinuous {
   /**
    * Convenience method to set expansion.
    */
-  ScaleYContinuous expand(Number mult, Number add = 0) {
+  ScaleYContinuous expand(BigDecimal mult, BigDecimal add = 0) {
     this.expand = [mult, add]
     return this
   }

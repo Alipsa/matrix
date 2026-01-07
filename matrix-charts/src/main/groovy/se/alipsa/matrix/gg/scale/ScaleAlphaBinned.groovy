@@ -35,7 +35,7 @@ class ScaleAlphaBinned extends ScaleContinuous {
    */
   ScaleAlphaBinned() {
     aesthetic = 'alpha'
-    expand = [0, 0] as List<Number>
+    expand = NO_EXPAND
   }
 
   /**
@@ -45,7 +45,7 @@ class ScaleAlphaBinned extends ScaleContinuous {
    */
   ScaleAlphaBinned(Map params) {
     aesthetic = 'alpha'
-    expand = [0, 0] as List<Number>
+    expand = ScaleContinuous.NO_EXPAND
     applyParams(params)
   }
 

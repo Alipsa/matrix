@@ -20,7 +20,7 @@ class ScaleSizeContinuous extends ScaleContinuous {
    */
   ScaleSizeContinuous() {
     aesthetic = 'size'
-    expand = [0, 0] as List<Number>
+    expand = NO_EXPAND
   }
 
   /**
@@ -30,7 +30,7 @@ class ScaleSizeContinuous extends ScaleContinuous {
    */
   ScaleSizeContinuous(Map params) {
     aesthetic = 'size'
-    expand = [0, 0] as List<Number>
+    expand = ScaleContinuous.NO_EXPAND
     applyParams(params)
   }
 

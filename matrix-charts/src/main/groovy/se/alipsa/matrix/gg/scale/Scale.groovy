@@ -11,25 +11,25 @@ import groovy.transform.CompileStatic
 class Scale {
 
   /** The aesthetic this scale applies to (x, y, color, fill, size, etc.) */
-  String aesthetic
+  protected String aesthetic
 
   /** Scale name (used in legend title) */
-  String name
+  protected String name
 
   /** Explicit limits [min, max] - null means auto from data */
-  List limits
+  protected List<BigDecimal> limits
 
   /** Expansion factors [mult, add] applied to limits (set to null to disable). */
-  List<Number> expand = [0.05, 0] as List<Number>
+  protected List<BigDecimal> expand = [0.05G, 0.0G]
 
   /** Explicit breaks (tick positions) - null means auto */
-  List breaks
+  protected List breaks
 
   /** Labels for breaks - null means format from breaks */
-  List<String> labels
+  protected List<String> labels
 
   /** Guide specification (legend/colorbar configuration) */
-  def guide
+  protected def guide
 
   /** Whether this scale has been trained on data */
   protected boolean trained = false
@@ -113,5 +113,87 @@ class Scale {
    */
   List getDomain() {
     return domain
+  }
+
+  void setAesthetic(String aesthetic) {
+    this.aesthetic = aesthetic
+  }
+
+  String getAesthetic() {
+    return aesthetic
+  }
+
+  void setExpand(List<? extends Number> vals) {
+    if (vals == null) {
+      this.expand = null
+    } else {
+    this.expand = vals.collect { it as BigDecimal }
+    }
+  }
+
+  List<BigDecimal> getExpand() {
+    return expand
+  }
+
+  void setRange(List<? extends Number> vals) {
+    this.range = vals.collect { it as BigDecimal }
+  }
+
+  List<BigDecimal> getRange() {
+    return range
+  }
+
+  void setGuide(guide) {
+    this.guide = guide
+  }
+
+  def getGuide() {
+    return guide
+  }
+
+  String getName() {
+    return name
+  }
+
+  Scale limits(Number... vals) {
+    if (vals == null) {
+      this.limits = null
+    }
+    else {
+      this.limits = vals.collect { it as BigDecimal }
+    }
+    this
+  }
+
+  Scale setLimits(List<? extends Number> vals) {
+    if (vals == null) {
+      this.limits = null
+    }
+    else {
+      this.limits = vals.collect { it as BigDecimal }
+    }
+    this
+  }
+
+  List<BigDecimal> getLimits() {
+    return limits
+  }
+
+  List<String> getLabels() {
+    return labels
+  }
+
+  Scale setLabels(List<String> labels) {
+    this.labels = labels
+    this
+  }
+
+  List getBreaks() {
+    return breaks
+  }
+
+  Scale setBreaks(List breaks) {
+    this.breaks = breaks
+    this
   }
 }

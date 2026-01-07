@@ -45,8 +45,8 @@ class ScaleContinuousTest {
   @Test
   void testTransformWithDifferentRange() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
-    scale.range = [100, 500] as List<Number>
+    scale.expand = [0, 0]
+    scale.range = [100, 500]
     scale.train([0, 10])
 
     // Domain: [0, 10] -> Range: [100, 500]
@@ -86,8 +86,8 @@ class ScaleContinuousTest {
   @Test
   void testInverseTransform() {
     ScaleContinuous scale = new ScaleContinuous()
-    scale.expand = [0, 0] as List<Number>
-    scale.range = [0, 100] as List<Number>
+    scale.expand = [0, 0]
+    scale.range = [0, 100]
     scale.train([0, 50])
 
     assertEquals(0.0, scale.inverse(0) as double, 0.01)
@@ -228,8 +228,8 @@ class ScaleContinuousTest {
     )
 
     assertEquals('X Axis', scale.name)
-    assertEquals([0, 100], scale.limits)
-    assertEquals(10, scale.nBreaks)
+    BaseTest.assertEquals([0, 100], scale.limits)
+    BaseTest.assertEquals(10, scale.nBreaks)
     assertEquals('top', scale.position)
   }
 
@@ -241,10 +241,10 @@ class ScaleContinuousTest {
         .labels(['Start', 'Middle', 'End'])
         .expand(0.05, 0)
 
-    assertEquals([0, 100], scale.limits)
-    assertEquals([0, 50, 100], scale.breaks)
+    BaseTest.assertEquals([0.0G, 100.0G], scale.limits)
+    BaseTest.assertEquals([0.0G, 50.0G, 100.0G], scale.breaks)
     assertEquals(['Start', 'Middle', 'End'], scale.labels)
-    assertEquals([0.05, 0], scale.expand)
+    BaseTest.assertEquals([0.05G, 0.0G], scale.expand)
   }
 
   // --- ScaleYContinuous Tests ---
@@ -277,7 +277,7 @@ class ScaleContinuousTest {
         .limits(0, 50)
         .expand(0.1, 5)
 
-    assertEquals([0, 50], scale.limits)
-    assertEquals([0.1, 5], scale.expand)
+    BaseTest.assertEquals([0, 50], scale.limits)
+    BaseTest.assertEquals([0.1, 5], scale.expand)
   }
 }

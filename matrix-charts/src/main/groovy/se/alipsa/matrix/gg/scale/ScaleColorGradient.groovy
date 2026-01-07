@@ -29,12 +29,12 @@ class ScaleColorGradient extends ScaleContinuous {
 
   ScaleColorGradient() {
     aesthetic = 'color'
-    expand = [0, 0] as List<Number>  // No expansion for color scales
+    expand = ScaleContinuous.NO_EXPAND  // No expansion for color scales
   }
 
   ScaleColorGradient(Map params) {
     aesthetic = 'color'
-    expand = [0, 0] as List<Number>
+    expand = ScaleContinuous.NO_EXPAND
     applyParams(params)
   }
 
@@ -59,27 +59,28 @@ class ScaleColorGradient extends ScaleContinuous {
     if (value == null) return naValue
     if (!(value instanceof Number)) return naValue
 
-    double v = value as double
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
+    double v = value as BigDecimal
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
 
     // Handle edge case
     if (dMax == dMin) return mid ?: interpolateColor(low, high, 0.5)
 
     // Normalize to 0-1
-    double normalized = (v - dMin) / (dMax - dMin)
-    normalized = Math.max(0, Math.min(1, normalized))  // Clamp
+    BigDecimal normalized = (v - dMin) / (dMax - dMin)
+
+    normalized = normalized.min(1.0G).max(0.0G)  // Clamp
 
     // Use diverging scale if mid is set
     if (mid && midpoint != null) {
-      double midNorm = (midpoint as double - dMin) / (dMax - dMin)
+      BigDecimal midNorm = (midpoint - dMin) / (dMax - dMin)
       if (normalized < midNorm) {
         // Interpolate between low and mid
-        double t = normalized / midNorm
+        BigDecimal t = normalized / midNorm
         return interpolateColor(low, mid, t)
       } else {
         // Interpolate between mid and high
-        double t = (normalized - midNorm) / (1 - midNorm)
+        BigDecimal t = (normalized - midNorm) / (1 - midNorm)
         return interpolateColor(mid, high, t)
       }
     }
@@ -95,7 +96,7 @@ class ScaleColorGradient extends ScaleContinuous {
    * @param t Interpolation factor (0-1)
    * @return Interpolated color as hex string
    */
-  private String interpolateColor(String color1, String color2, double t) {
+  private static String interpolateColor(String color1, String color2, BigDecimal t) {
     return ColorScaleUtil.interpolateColor(color1, color2, t)
   }
 
@@ -103,7 +104,7 @@ class ScaleColorGradient extends ScaleContinuous {
    * Parse a color string to RGB values.
    * Supports hex format (#RGB, #RRGGBB) and some named colors.
    */
-  private int[] parseColor(String color) {
+  private static int[] parseColor(String color) {
     return ColorScaleUtil.parseColor(color)
   }
 
@@ -128,7 +129,7 @@ class ScaleColorGradient extends ScaleContinuous {
    */
   ScaleColorGradient mid(String color, Number midpoint) {
     this.mid = color
-    this.midpoint = midpoint
+    this.midpoint = midpoint as BigDecimal
     return this
   }
 
@@ -136,7 +137,7 @@ class ScaleColorGradient extends ScaleContinuous {
    * Convenience method to set limits.
    */
   ScaleColorGradient limits(Number min, Number max) {
-    this.limits = [min, max]
+    this.limits = [min as BigDecimal, max as BigDecimal]
     return this
   }
 }

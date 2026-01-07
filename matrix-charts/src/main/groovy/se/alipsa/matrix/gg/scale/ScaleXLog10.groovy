@@ -36,7 +36,7 @@ class ScaleXLog10 extends ScaleContinuous {
   private void applyParams(Map params) {
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List<Number>
+    if (params.expand) this.expand = params.expand as List
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
     if (params.position) this.position = params.position as String
@@ -48,12 +48,12 @@ class ScaleXLog10 extends ScaleContinuous {
     if (data == null || data.isEmpty()) return
 
     // Filter to positive numeric values (log10 is undefined for <= 0)
-    List<Double> numericData = data.findResults { coerceToPositiveNumber(it) } as List<Double>
+    List<BigDecimal> numericData = data.findResults { coerceToPositiveNumber(it) } as List<BigDecimal>
 
     if (numericData.isEmpty()) return
 
     // Transform to log space and convert to BigDecimal
-    List<BigDecimal> logData = numericData.collect { Math.log10(it) as BigDecimal }
+    List<BigDecimal> logData = numericData.collect { it.log10() }
 
     // Compute min/max in log space as BigDecimal
     BigDecimal min = logData.min()
@@ -62,17 +62,17 @@ class ScaleXLog10 extends ScaleContinuous {
     // Apply explicit limits if set (limits are in data space, convert to log space)
     if (limits && limits.size() >= 2) {
       if (limits[0] != null && (limits[0] as Number) > 0) {
-        min = Math.log10(limits[0] as double) as BigDecimal
+        min = limits[0].log10()
       }
       if (limits[1] != null && (limits[1] as Number) > 0) {
-        max = Math.log10(limits[1] as double) as BigDecimal
+        max = limits[1].log10()
       }
     }
 
     // Apply expansion in log space using BigDecimal arithmetic
     if (expand != null && expand.size() >= 2) {
-      BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
-      BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
+      BigDecimal mult = (expand[0] != null) ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
+      BigDecimal add = (expand[1] != null) ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
       BigDecimal delta = max - min
       min = min - delta * mult - add
       max = max + delta * mult + add
@@ -84,11 +84,11 @@ class ScaleXLog10 extends ScaleContinuous {
 
   @Override
   Object transform(Object value) {
-    Double numeric = coerceToPositiveNumber(value)
+    BigDecimal numeric = coerceToPositiveNumber(value)
     if (numeric == null) return null
 
     // Transform to log space, then perform linear interpolation
-    BigDecimal logValue = Math.log10(numeric) as BigDecimal
+    BigDecimal logValue = numeric.log10()
     return ScaleUtils.linearTransform(logValue, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 
@@ -102,7 +102,7 @@ class ScaleXLog10 extends ScaleContinuous {
     if (logValue == null) return null
 
     // Transform back from log space using Groovy power operator
-    return 10 ** logValue
+    return (10 ** logValue) as BigDecimal
   }
 
   @Override
@@ -119,7 +119,7 @@ class ScaleXLog10 extends ScaleContinuous {
   /**
    * Generate nice breaks for log scale (powers of 10 and intermediates).
    */
-  private List<Number> generateLogBreaks(BigDecimal logMin, BigDecimal logMax) {
+  private static List<Number> generateLogBreaks(BigDecimal logMin, BigDecimal logMax) {
     List<Number> breaks = []
 
     int minPow = logMin.floor().intValue()
@@ -140,7 +140,7 @@ class ScaleXLog10 extends ScaleContinuous {
       for (int pow = minPow; pow <= maxPow; pow++) {
         for (BigDecimal mult : [2G, 5G]) {
           BigDecimal val = mult * (10 ** pow)
-          BigDecimal logVal = Math.log10(val.doubleValue()) as BigDecimal
+          BigDecimal logVal = val.log10()
           if (logVal >= logMin && logVal <= logMax) {
             intermediates << val
           }
@@ -193,11 +193,10 @@ class ScaleXLog10 extends ScaleContinuous {
     return String.format('%.0f', bd.doubleValue())
   }
 
-  private static Double coerceToPositiveNumber(Object value) {
+  private static BigDecimal coerceToPositiveNumber(Object value) {
     BigDecimal num = ScaleUtils.coerceToNumber(value)
     if (num == null) return null
-    double dv = num.doubleValue()
-    if (dv <= 0) return null
-    return dv
+    if (num <= 0) return null
+    return num
   }
 }

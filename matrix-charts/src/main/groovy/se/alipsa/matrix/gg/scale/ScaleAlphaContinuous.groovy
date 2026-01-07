@@ -20,7 +20,7 @@ class ScaleAlphaContinuous extends ScaleContinuous {
    */
   ScaleAlphaContinuous() {
     aesthetic = 'alpha'
-    expand = [0, 0] as List<Number>
+    expand = ScaleContinuous.NO_EXPAND
   }
 
   /**
@@ -30,7 +30,7 @@ class ScaleAlphaContinuous extends ScaleContinuous {
    */
   ScaleAlphaContinuous(Map params) {
     aesthetic = 'alpha'
-    expand = [0, 0] as List<Number>
+    expand = ScaleContinuous.NO_EXPAND
     applyParams(params)
   }
 

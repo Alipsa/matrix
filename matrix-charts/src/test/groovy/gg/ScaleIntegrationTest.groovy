@@ -221,7 +221,7 @@ class ScaleIntegrationTest {
         name: 'X Values'
     )
 
-    assertEquals([0, 100], xScale.limits)
+    BaseTest.assertEquals([0, 100], xScale.limits)
     assertEquals(10, xScale.nBreaks)
     assertEquals('X Values', xScale.name)
   }

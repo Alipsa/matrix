@@ -12,9 +12,10 @@ class ScaleContinuous extends Scale {
   static final BigDecimal DEFAULT_EXPAND_MULT = 0.05G
   static final BigDecimal DEFAULT_EXPAND_ADD = 0G
   static final BigDecimal BREAK_TOLERANCE_RATIO = 0.001G  // Small epsilon for break comparisons.
+  static final List<BigDecimal> NO_EXPAND = [0.0G, 0.0G]  // No expansion constant
 
   /** Output range [min, max] as BigDecimal values. */
-  List<BigDecimal> range = [BigDecimal.ZERO, BigDecimal.ONE]
+  protected List<BigDecimal> range = [BigDecimal.ZERO, BigDecimal.ONE]
 
   /** Domain computed from data [min, max] as BigDecimal values. */
   protected List<BigDecimal> computedDomain = [BigDecimal.ZERO, BigDecimal.ONE]
@@ -45,8 +46,8 @@ class ScaleContinuous extends Scale {
 
     // Apply expansion only when configured (ggplot2 default is mult=0.05, add=0).
     if (expand != null && expand.size() >= 2) {
-      BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
-      BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
+      BigDecimal mult = (expand[0] != null) ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
+      BigDecimal add = (expand[1] != null) ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
       BigDecimal delta = max - min
       min = min - delta * mult - add
       max = max + delta * mult + add
@@ -172,5 +173,13 @@ class ScaleContinuous extends Scale {
    */
   List<BigDecimal> getComputedDomain() {
     return computedDomain
+  }
+
+  void setRange(List<? extends Number> vals) {
+    this.range = vals.collect { it as BigDecimal }
+  }
+
+  List<BigDecimal> getRange() {
+    return range
   }
 }
