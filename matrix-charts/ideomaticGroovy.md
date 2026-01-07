@@ -27,11 +27,11 @@ Goals
 
 3. Convert scale domains/ranges to BigDecimal-first
 3.1 [x] Update numeric scale properties to typed `List<BigDecimal>` (computed domain, range, limits) in `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleContinuous.groovy` and derived scales that override those fields.
-3.2 [x] Use BigDecimal arithmetic (`.divide()`, `.abs()`, `.min()`, `.max()`, `.setScale()`) in scale calculations. Note: Destructuring with typed variables is not supported in `@CompileStatic` mode, so indexed access is used instead.
+3.2 [x] Use BigDecimal arithmetic (`.divide()`, `.abs()`, `.min()`, `.max()`, `.setScale(), `.floor()`, `.ceil()`, `.log10()`) in scale calculations. Note: Destructuring with typed variables is not supported in `@CompileStatic` mode, so indexed access is used instead.
 3.3 [x] Replace `Math.min/Math.max` with Groovy BigDecimal methods (`.min()`, `.max()`) when operating on `BigDecimal`, and retain `Math` for primitives (required in `@CompileStatic` mode) and trig/log operations. Tests passed: `./gradlew :matrix-charts:test -Pheadless=true`
 
 4. Refactor transform/inverse implementations to idiomatic Groovy
-4.1 [ ] Rewrite `transform`/`inverse` methods in all affected scales to follow the BigDecimal approach in the example, returning `BigDecimal` where feasible and only converting to `double` for downstream rendering needs.
+4.1 [ ] Rewrite `transform`/`inverse` methods in all affected scales to follow the BigDecimal approach in the example, returning `BigDecimal` where feasible.
 4.2 [ ] Consolidate repeated edge-case handling (zero-range, empty domain) into small private helpers in the scale base class or `ScaleUtils`.
 
 5. Update break generation and formatting

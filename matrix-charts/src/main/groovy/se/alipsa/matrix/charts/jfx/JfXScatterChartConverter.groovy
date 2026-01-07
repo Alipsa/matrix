@@ -5,7 +5,6 @@ import javafx.scene.chart.NumberAxis
 import javafx.scene.chart.XYChart
 import se.alipsa.matrix.charts.AxisScale
 import se.alipsa.matrix.charts.ScatterChart
-import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
 
@@ -38,21 +37,21 @@ class JfXScatterChartConverter {
   static Axis<Number> createAxis(AxisScale scale, List<? extends Number> series) {
     def axis
     if (scale == null) {
-      def start = Stat.min(series) as Double
+      def start = series.min()
       if (start > 0) {
-        start = Math.floor(start * 0.98)
+        start = (start * 0.98).floor()
       } else {
-        start = Math.ceil(start * 1.02)
+        start = (start * 1.02).ceil()
       }
-      def end = Stat.max(series) as Double
+      def end = series.max()
       if (end > 0) {
-        end = Math.ceil(end * 1.02)
+        end = end * 1.02.ceil()
       } else {
-        end = Math.floor(end * 0.98)
+        end = (end * 0.98).floor()
       }
       def step = (((end - start) / 12) as BigDecimal).setScale(1, RoundingMode.HALF_EVEN)
       if (step > 2) {
-        step = Math.round(step)
+        step = step.round()
       }
       //log.info("start = $start, end = $end, step = $step")
       axis = new NumberAxis(start, end, step)
