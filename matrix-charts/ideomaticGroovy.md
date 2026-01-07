@@ -31,12 +31,31 @@ Goals
 3.3 [x] Replace `Math.min/Math.max` with Groovy BigDecimal methods (`.min()`, `.max()`) when operating on `BigDecimal`, and retain `Math` for primitives (required in `@CompileStatic` mode) and trig/log operations. Tests passed: `./gradlew :matrix-charts:test -Pheadless=true`
 
 4. Refactor transform/inverse implementations to idiomatic Groovy
-4.1 [ ] Rewrite `transform`/`inverse` methods in all affected scales to follow the BigDecimal approach in the example, returning `BigDecimal` where feasible.
-4.2 [ ] Consolidate repeated edge-case handling (zero-range, empty domain) into small private helpers in the scale base class or `ScaleUtils`.
+4.1 [x] Rewrite `transform`/`inverse` methods in all affected scales to follow the BigDecimal approach in the example, returning `BigDecimal` where feasible.
+4.2 [x] Consolidate repeated edge-case handling (zero-range, empty domain) into small private helpers in the scale base class or `ScaleUtils`.
+
+**Section 4 Completed:**
+- Added helper methods to `ScaleUtils`:
+  - `linearTransform()`: Performs linear interpolation with zero-range domain handling
+  - `linearInverse()`: Performs inverse linear interpolation with zero-range output handling
+  - `linearTransformReversed()`: Reversed linear interpolation for ScaleXReverse
+  - `linearInverseReversed()`: Reversed inverse linear interpolation for ScaleXReverse
+  - `midpoint()`: Utility method for calculating midpoint of two BigDecimal values
+  - `niceNum()`: Extracted duplicate "nice number" algorithm from ScaleContinuous and ScaleXSqrt (Wilkinson's algorithm for readable axis tick values)
+- Updated all scale classes to use these helpers:
+  - `ScaleContinuous`: Now uses `linearTransform()` and `linearInverse()`, calls `ScaleUtils.niceNum()` for break generation
+  - `ScaleXLog10`: Uses helpers after log10 transformation (transform to log space → linearTransform), uses Groovy `**` power operator
+  - `ScaleXSqrt`: Uses helpers after sqrt transformation (transform to sqrt space → linearTransform), calls `ScaleUtils.niceNum()` for break generation
+  - `ScaleXReverse`: Uses reversed variants of the helpers
+  - `ScaleSizeContinuous`: Uses `linearTransform()` with naValue fallback
+  - `ScaleAlphaContinuous`: Uses `linearTransform()` with clamping and naValue fallback
+- Added comprehensive GroovyDoc to `ScaleContinuous.transform()` and `inverse()` explaining why return type must be `Object` (API compatibility with diverse subclasses: numeric scales return BigDecimal, color scales return String, etc.)
+- All tests passed: `./gradlew :matrix-charts:test -Pheadless=true`
+- Transform/inverse methods are now more concise and idiomatic, with edge cases and common algorithms centralized in ScaleUtils
 
 5. Update break generation and formatting
 5.1 [ ] In `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleContinuous.groovy`, decide which pieces stay in double (nice number algorithm, log operations) and explicitly convert to/from BigDecimal at the boundary to keep API consistent.
-5.2 [ ] For log/sqrt scales (`ScaleXLog10`, `ScaleXSqrt`), keep log/exp operations in double but return BigDecimal for final mapped values; document any precision caveats.
+5.2 [ ] For log/sqrt scales (`ScaleXLog10`, `ScaleXSqrt`), use BigDecimal instead of double where possible, return BigDecimal for final mapped values; document any precision caveats.
 
 6. Targeted matrix-stats adjustments
 6.1 [ ] In `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/LinearRegression.groovy`, replace `Math.sqrt` on BigDecimal-derived values with BigDecimal-aware equivalents (e.g., `BigDecimal.sqrt(MathContext)` or GDK helpers), and use Groovy collection ops (`collect`, `withIndex`) for readability.

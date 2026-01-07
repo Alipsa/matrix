@@ -56,44 +56,40 @@ class ScaleContinuous extends Scale {
     trained = true
   }
 
+  /**
+   * Transform a data value to the output range.
+   *
+   * Note: Return type is Object (not BigDecimal) for API compatibility with subclasses.
+   * ScaleContinuous serves as the base class for diverse scale types:
+   * - Numeric scales (this class, ScaleXLog10, ScaleSizeContinuous, etc.) return BigDecimal
+   * - Color scales (ScaleColorGradient, ScaleColorViridisC, etc.) return String
+   * - Date scales (ScaleXDate, ScaleXDatetime) may return other types
+   *
+   * The implementation is type-safe internally (uses BigDecimal arithmetic), but the
+   * return type must remain Object to support covariant return types in all subclasses.
+   *
+   * @param value the data value to transform
+   * @return the transformed value in the output range (BigDecimal for numeric scales, null if value is invalid)
+   */
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return null
-
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
-
-    // Handle edge case: zero-range domain
-    if (dMax == dMin) {
-      return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-    }
-
-    // Linear interpolation
-    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
-    return rMin + normalized * (rMax - rMin)
+    return ScaleUtils.linearTransform(v, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 
+  /**
+   * Inverse transform from output range back to data space.
+   *
+   * Note: Return type is Object (not BigDecimal) for API compatibility with subclasses.
+   * See {@link #transform(Object)} for explanation of why Object is used instead of BigDecimal.
+   *
+   * @param value the output value to inverse transform
+   * @return the data value (BigDecimal for numeric scales, null if value is invalid)
+   */
   @Override
   Object inverse(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return null
-
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
-
-    // Handle edge case: zero-range output
-    if (rMax == rMin) {
-      return (dMin + dMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-    }
-
-    // Inverse linear interpolation
-    BigDecimal normalized = (v - rMin).divide((rMax - rMin), ScaleUtils.MATH_CONTEXT)
-    return dMin + normalized * (dMax - dMin)
+    return ScaleUtils.linearInverse(v, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 
   @Override
@@ -121,49 +117,25 @@ class ScaleContinuous extends Scale {
     if (max == min) return [min] as List<Number>
 
     // Calculate nice spacing directly from the data range
-    double rawRange = max - min
-    double spacing = niceNum(rawRange / (n - 1) as double, true)
+    BigDecimal rawRange = (max - min) as BigDecimal
+    BigDecimal spacing = ScaleUtils.niceNum(rawRange / (n - 1), true)
 
     // Calculate nice min/max that are multiples of spacing
-    double niceMin = Math.floor(min / spacing as double) * spacing
-    double niceMax = Math.ceil(max / spacing as double) * spacing
+    BigDecimal niceMin = ((min as BigDecimal) / spacing).floor() * spacing
+    BigDecimal niceMax = ((max as BigDecimal) / spacing).ceil() * spacing
 
     List<Number> breaks = []
     // Generate breaks from niceMin to niceMax
-    double tolerance = spacing * BREAK_TOLERANCE_RATIO
-    for (double val = niceMin; val <= niceMax + tolerance; val += spacing) {
+    BigDecimal tolerance = spacing * BREAK_TOLERANCE_RATIO
+    BigDecimal minBd = min as BigDecimal
+    BigDecimal maxBd = max as BigDecimal
+    for (BigDecimal val = niceMin; val <= niceMax + tolerance; val += spacing) {
       // Include all breaks within the expanded domain (with small tolerance)
-      if (val >= min - tolerance && val <= max + tolerance) {
+      if (val >= minBd - tolerance && val <= maxBd + tolerance) {
         breaks << val
       }
     }
     return breaks
-  }
-
-  /**
-   * Find a "nice" number approximately equal to x.
-   * Round the number if round is true, otherwise take ceiling.
-   */
-  private double niceNum(double x, boolean round) {
-    if (x == 0) return 0
-
-    double exp = Math.floor(Math.log10(Math.abs(x)))
-    double f = x / Math.pow(10, exp)
-
-    double nf
-    if (round) {
-      if (f < 1.5) nf = 1
-      else if (f < 3) nf = 2
-      else if (f < 7) nf = 5
-      else nf = 10
-    } else {
-      if (f <= 1) nf = 1
-      else if (f <= 2) nf = 2
-      else if (f <= 5) nf = 5
-      else nf = 10
-    }
-
-    return nf * Math.pow(10, exp)
   }
 
   /**

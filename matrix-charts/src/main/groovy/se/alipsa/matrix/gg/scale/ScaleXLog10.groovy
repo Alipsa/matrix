@@ -81,20 +81,9 @@ class ScaleXLog10 extends ScaleContinuous {
     Double numeric = coerceToPositiveNumber(value)
     if (numeric == null) return null
 
-    // Transform to log space
-    double logValue = Math.log10(numeric)
-
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
-
-    if (dMax == dMin) return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-
-    // Linear interpolation in log space
-    BigDecimal logVal = logValue as BigDecimal
-    BigDecimal normalized = (logVal - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
-    return rMin + normalized * (rMax - rMin)
+    // Transform to log space, then perform linear interpolation
+    BigDecimal logValue = Math.log10(numeric) as BigDecimal
+    return ScaleUtils.linearTransform(logValue, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 
   @Override
@@ -102,22 +91,12 @@ class ScaleXLog10 extends ScaleContinuous {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return null
 
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
+    // Inverse linear interpolation in log space
+    BigDecimal logValue = ScaleUtils.linearInverse(v, computedDomain[0], computedDomain[1], range[0], range[1])
+    if (logValue == null) return null
 
-    if (rMax == rMin) {
-      double midLog = (dMin + dMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT).doubleValue()
-      return Math.pow(10, midLog) as BigDecimal
-    }
-
-    // Inverse linear interpolation to log space
-    BigDecimal normalized = (v - rMin).divide((rMax - rMin), ScaleUtils.MATH_CONTEXT)
-    BigDecimal logValue = dMin + normalized * (dMax - dMin)
-
-    // Transform back from log space (returns BigDecimal)
-    return Math.pow(10, logValue.doubleValue()) as BigDecimal
+    // Transform back from log space using Groovy power operator
+    return 10 ** logValue
   }
 
   @Override
@@ -142,7 +121,7 @@ class ScaleXLog10 extends ScaleContinuous {
 
     // Generate breaks at powers of 10
     for (int pow = minPow; pow <= maxPow; pow++) {
-      BigDecimal val = Math.pow(10, pow) as BigDecimal
+      BigDecimal val = 10 ** pow
       BigDecimal logVal = pow as BigDecimal
       if (logVal >= logMin && logVal <= logMax) {
         breaks << val
@@ -154,7 +133,7 @@ class ScaleXLog10 extends ScaleContinuous {
       List<Number> intermediates = []
       for (int pow = minPow; pow <= maxPow; pow++) {
         for (BigDecimal mult : [2G, 5G]) {
-          BigDecimal val = mult * (Math.pow(10, pow) as BigDecimal)
+          BigDecimal val = mult * (10 ** pow)
           BigDecimal logVal = Math.log10(val.doubleValue()) as BigDecimal
           if (logVal >= logMin && logVal <= logMax) {
             intermediates << val

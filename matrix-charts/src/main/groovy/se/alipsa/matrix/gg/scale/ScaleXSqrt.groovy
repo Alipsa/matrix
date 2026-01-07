@@ -78,23 +78,12 @@ class ScaleXSqrt extends ScaleContinuous {
 
   @Override
   Object transform(Object value) {
-    Double numeric = coerceToNonNegativeNumber(value)
+    BigDecimal numeric = coerceToNonNegativeNumber(value)
     if (numeric == null) return null
 
-    // Transform to sqrt space
-    double sqrtValue = Math.sqrt(numeric)
-
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
-
-    if (dMax == dMin) return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-
-    // Linear interpolation in sqrt space
-    BigDecimal sqrtVal = sqrtValue as BigDecimal
-    BigDecimal normalized = (sqrtVal - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
-    return rMin + normalized * (rMax - rMin)
+    // Transform to sqrt space, then perform linear interpolation
+    BigDecimal sqrtValue = Math.sqrt(numeric.doubleValue()) as BigDecimal
+    return ScaleUtils.linearTransform(sqrtValue, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 
   @Override
@@ -102,21 +91,11 @@ class ScaleXSqrt extends ScaleContinuous {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return null
 
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
+    // Inverse linear interpolation in sqrt space
+    BigDecimal sqrtValue = ScaleUtils.linearInverse(v, computedDomain[0], computedDomain[1], range[0], range[1])
+    if (sqrtValue == null) return null
 
-    if (rMax == rMin) {
-      BigDecimal midSqrt = (dMin + dMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-      return midSqrt * midSqrt
-    }
-
-    // Inverse linear interpolation to sqrt space
-    BigDecimal normalized = (v - rMin).divide((rMax - rMin), ScaleUtils.MATH_CONTEXT)
-    BigDecimal sqrtValue = dMin + normalized * (dMax - dMin)
-
-    // Transform back from sqrt space
+    // Transform back from sqrt space (square the value)
     return sqrtValue * sqrtValue
   }
 
@@ -136,13 +115,12 @@ class ScaleXSqrt extends ScaleContinuous {
 
   /**
    * Generate nice breaks in data space.
-   * Uses double for the "nice number" algorithm, BigDecimal for break values.
    */
   private static List<Number> generateNiceDataBreaks(BigDecimal min, BigDecimal max, int n) {
     if (max == min) return [min] as List<Number>
 
     BigDecimal rawRange = max - min
-    BigDecimal spacing = niceNum(rawRange / (n - 1), true)
+    BigDecimal spacing = ScaleUtils.niceNum(rawRange / (n - 1), true)
 
     BigDecimal niceMin = (min / spacing).floor() * spacing
     BigDecimal niceMax = (max / spacing).ceil() * spacing
@@ -160,28 +138,6 @@ class ScaleXSqrt extends ScaleContinuous {
       }
     }
     return breaks
-  }
-
-  private static BigDecimal niceNum(BigDecimal x, boolean round) {
-    if (x == 0) return 0
-
-    BigDecimal exp = x.abs().log10().floor()
-    BigDecimal f = x / (10 ** exp)
-
-    BigDecimal nf
-    if (round) {
-      if (f < 1.5) nf = 1
-      else if (f < 3) nf = 2
-      else if (f < 7) nf = 5
-      else nf = 10
-    } else {
-      if (f <= 1) nf = 1
-      else if (f <= 2) nf = 2
-      else if (f <= 5) nf = 5
-      else nf = 10
-    }
-
-    return nf * 10 ** exp
   }
 
   private static BigDecimal coerceToNonNegativeNumber(Object value) {

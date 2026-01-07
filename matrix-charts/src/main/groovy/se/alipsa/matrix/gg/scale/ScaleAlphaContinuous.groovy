@@ -48,19 +48,12 @@ class ScaleAlphaContinuous extends ScaleContinuous {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return naValue
 
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
+    BigDecimal mapped = ScaleUtils.linearTransform(v, computedDomain[0], computedDomain[1], range[0], range[1])
+    if (mapped == null) return naValue
 
-    if (dMax == dMin) {
-      return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-    }
-
-    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
-    BigDecimal mapped = rMin + normalized * (rMax - rMin)
-    BigDecimal low = rMin.min(rMax)
-    BigDecimal high = rMin.max(rMax)
+    // Clamp to range bounds
+    BigDecimal low = range[0].min(range[1])
+    BigDecimal high = range[0].max(range[1])
     return mapped.max(low).min(high)
   }
 }
