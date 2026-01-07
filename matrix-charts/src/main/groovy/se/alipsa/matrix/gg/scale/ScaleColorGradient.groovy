@@ -59,7 +59,7 @@ class ScaleColorGradient extends ScaleContinuous {
     if (value == null) return naValue
     if (!(value instanceof Number)) return naValue
 
-    double v = value as BigDecimal
+    BigDecimal v = value as BigDecimal
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]
 
