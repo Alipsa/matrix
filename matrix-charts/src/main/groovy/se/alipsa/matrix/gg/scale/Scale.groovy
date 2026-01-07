@@ -135,14 +135,6 @@ class Scale {
     return expand
   }
 
-  void setRange(List<? extends Number> vals) {
-    this.range = vals.collect { it as BigDecimal }
-  }
-
-  List<BigDecimal> getRange() {
-    return range
-  }
-
   void setGuide(guide) {
     this.guide = guide
   }

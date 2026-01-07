@@ -162,6 +162,14 @@ class ScaleDiscrete extends Scale {
     this.limits = limits
     this
   }
+
+  void setRange(List<? extends Number> vals) {
+    this.range = vals.collect{ it as Number }
+  }
+
+  List<Number> getRange() {
+    return range
+  }
 }
 
 
