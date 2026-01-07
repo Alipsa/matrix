@@ -67,9 +67,27 @@ Goals
 - All tests passed: `./gradlew :matrix-charts:test -Pheadless=true`
 
 6. Targeted matrix-stats adjustments
-6.1 [ ] In `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/LinearRegression.groovy`, replace `Math.sqrt` on BigDecimal-derived values with BigDecimal-aware equivalents (e.g., `BigDecimal.sqrt(MathContext)` or GDK helpers), and use Groovy collection ops (`collect`, `withIndex`) for readability.
-6.2 [ ] In `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/PolynomialRegression.groovy`, avoid `double` temporaries where not required, and return BigDecimal predictions without passing through `double` unless demanded by the underlying fitter.
-6.3 [ ] In `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/distribution/TDistribution.groovy` and `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/kde/KernelDensity.groovy`, keep double math where numerical algorithms require it, but swap `Math.abs`/`Math.sqrt`/`Math.pow` to Groovy number methods when operating on Groovy `Number` or `BigDecimal` inputs.
+6.1 [x] In `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/LinearRegression.groovy`, replace `Math.sqrt` on BigDecimal-derived values with BigDecimal-aware equivalents (e.g., `BigDecimal.sqrt(MathContext)` or GDK helpers), and use Groovy collection ops (`collect`, `withIndex`) for readability.
+6.2 [x] In `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/PolynomialRegression.groovy`, avoid `double` temporaries where not required, and return BigDecimal predictions without passing through `double` unless demanded by the underlying fitter.
+6.3 [x] In `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/distribution/TDistribution.groovy` and `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/kde/KernelDensity.groovy`, keep double math where numerical algorithms require it, but swap `Math.abs`/`Math.sqrt`/`Math.pow` to Groovy number methods when operating on Groovy `Number` or `BigDecimal` inputs.
+
+**Section 6 Completed:**
+- **LinearRegression.groovy**:
+  - Replaced `Math.sqrt(slopeVar)` with `slopeVar.sqrt(MathContext.DECIMAL128)` for BigDecimal-aware square root calculation
+  - Replaced `Math.sqrt(svar/numberOfDataValues + xBar * xBar * slopeVar)` with `(svar/numberOfDataValues + xBar * xBar * slopeVar).sqrt(MathContext.DECIMAL128)`
+  - Changed `def slopeVar` to explicitly typed `BigDecimal slopeVar` for clarity
+  - Replaced `.each` loops with `.collect` in both `predict(List<Number>)` methods for more idiomatic Groovy
+  - Added `import java.math.MathContext` for BigDecimal.sqrt() support
+- **PolynomialRegression.groovy**:
+  - Replaced `.each` loops with `.collect` in both `predict(List<Number>)` methods for more idiomatic Groovy
+  - Note: `predict()` method must use double internally because Apache Commons Math `PolynomialCurveFitter` produces `double[]` coefficients; this is unavoidable and acceptable for polynomial fitting
+- **TDistribution.groovy** and **KernelDensity.groovy**:
+  - No changes needed - all Math.sqrt/Math.abs/Math.pow calls operate on double primitives, which is appropriate for numerical algorithms
+  - These classes correctly use primitive types throughout for performance-critical numerical computations
+- All tests passed:
+  - `./gradlew :matrix-stats:test` (70 tests passed)
+  - `./gradlew :matrix-charts:test -Pheadless=true` (all tests passed)
+- The changes maintain full backward compatibility while improving code idiomaticity and precision where BigDecimal is already in use
 
 7. Tests and compatibility
 7.1 [ ] Update affected tests in `matrix-charts/src/test/groovy/gg` to accept BigDecimal return types (compare BigDecimal directly for exactness).

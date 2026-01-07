@@ -3,6 +3,7 @@ package se.alipsa.matrix.stats.regression
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 
+import java.math.MathContext
 import java.math.RoundingMode
 
 /**
@@ -82,9 +83,9 @@ class LinearRegression {
     int degreesOfFreedom = numberOfDataValues - 2
     r2 = ssr / yybar
     BigDecimal svar  = rss / degreesOfFreedom
-    def slopeVar = svar / xxbar
-    slopeStdErr = Math.sqrt(slopeVar)
-    interceptStdErr = Math.sqrt(svar/numberOfDataValues + xBar * xBar * slopeVar)
+    BigDecimal slopeVar = svar / xxbar
+    slopeStdErr = slopeVar.sqrt(MathContext.DECIMAL128)
+    interceptStdErr = (svar/numberOfDataValues + xBar * xBar * slopeVar).sqrt(MathContext.DECIMAL128)
   }
 
   BigDecimal predict(Number dependentVariable) {
@@ -96,19 +97,11 @@ class LinearRegression {
   }
 
   List<BigDecimal> predict(List<Number> dependentVariables) {
-    List<BigDecimal> predictions = []
-    dependentVariables.each {
-      predictions << predict(it)
-    }
-    return predictions
+    return dependentVariables.collect { predict(it) }
   }
 
   List<BigDecimal> predict(List<Number> dependentVariables, int numberOfDecimals) {
-    List<BigDecimal> predictions = []
-    dependentVariables.each {
-      predictions << predict(it, numberOfDecimals)
-    }
-    return predictions
+    return dependentVariables.collect { predict(it, numberOfDecimals) }
   }
 
   BigDecimal getSlope() {
