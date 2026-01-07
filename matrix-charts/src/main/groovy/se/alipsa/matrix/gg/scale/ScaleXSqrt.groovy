@@ -11,6 +11,12 @@ import groovy.transform.CompileStatic
  * - scale_x_sqrt(limits: [0, 100]) - with explicit limits (in data space)
  *
  * Note: Values < 0 are filtered out since sqrt is undefined for negative numbers.
+ *
+ * Precision behavior:
+ * - Transform and inverse methods return BigDecimal for consistency with other scales
+ * - Sqrt computation uses Math.sqrt (double precision) for the transformation
+ * - For typical chart data, double precision sqrt is sufficient for visual display
+ * - Break generation uses exact BigDecimal arithmetic in data space
  */
 @CompileStatic
 class ScaleXSqrt extends ScaleContinuous {

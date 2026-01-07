@@ -99,8 +99,8 @@ class ScaleContinuous extends Scale {
     BigDecimal min = computedDomain[0]
     BigDecimal max = computedDomain[1]
 
-    // Generate nice breaks (uses double internally for "nice number" algorithm)
-    return generateNiceBreaks(min.doubleValue(), max.doubleValue(), nBreaks)
+    // Generate nice breaks using BigDecimal arithmetic
+    return generateNiceBreaks(min, max, nBreaks)
   }
 
   @Override
@@ -112,26 +112,29 @@ class ScaleContinuous extends Scale {
   /**
    * Generate nice round breaks for axis ticks.
    * Based on Wilkinson's algorithm for nice axis labels.
+   *
+   * @param min the minimum value of the domain (BigDecimal)
+   * @param max the maximum value of the domain (BigDecimal)
+   * @param n the target number of breaks
+   * @return list of break values (as BigDecimal)
    */
-  private List<Number> generateNiceBreaks(double min, double max, int n) {
+  private List<Number> generateNiceBreaks(BigDecimal min, BigDecimal max, int n) {
     if (max == min) return [min] as List<Number>
 
     // Calculate nice spacing directly from the data range
-    BigDecimal rawRange = (max - min) as BigDecimal
+    BigDecimal rawRange = max - min
     BigDecimal spacing = ScaleUtils.niceNum(rawRange / (n - 1), true)
 
     // Calculate nice min/max that are multiples of spacing
-    BigDecimal niceMin = ((min as BigDecimal) / spacing).floor() * spacing
-    BigDecimal niceMax = ((max as BigDecimal) / spacing).ceil() * spacing
+    BigDecimal niceMin = (min / spacing).floor() * spacing
+    BigDecimal niceMax = (max / spacing).ceil() * spacing
 
     List<Number> breaks = []
     // Generate breaks from niceMin to niceMax
     BigDecimal tolerance = spacing * BREAK_TOLERANCE_RATIO
-    BigDecimal minBd = min as BigDecimal
-    BigDecimal maxBd = max as BigDecimal
     for (BigDecimal val = niceMin; val <= niceMax + tolerance; val += spacing) {
       // Include all breaks within the expanded domain (with small tolerance)
-      if (val >= minBd - tolerance && val <= maxBd + tolerance) {
+      if (val >= min - tolerance && val <= max + tolerance) {
         breaks << val
       }
     }
@@ -140,14 +143,25 @@ class ScaleContinuous extends Scale {
 
   /**
    * Format a number for display.
+   * Formats BigDecimal values for axis labels, removing trailing zeros for integers.
+   *
+   * @param n the number to format (typically BigDecimal from break generation)
+   * @return formatted string representation
    */
   private String formatNumber(Number n) {
     if (n == null) return ''
-    double d = n as double
-    // Remove trailing zeros
-    if (d == Math.floor(d) && d < 1e10) {
-      return String.valueOf((long) d)
+
+    // Convert to BigDecimal for consistent formatting
+    BigDecimal bd = n instanceof BigDecimal ? n as BigDecimal : new BigDecimal(n.toString())
+
+    // Check if it's an integer value
+    if (bd.scale() <= 0 || bd.stripTrailingZeros().scale() <= 0) {
+      // Format as integer
+      return bd.toBigInteger().toString()
     }
+
+    // Format with 2 significant figures for non-integers
+    double d = bd.doubleValue()
     return String.format('%.2g', d)
   }
 

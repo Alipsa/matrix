@@ -54,8 +54,16 @@ Goals
 - Transform/inverse methods are now more concise and idiomatic, with edge cases and common algorithms centralized in ScaleUtils
 
 5. Update break generation and formatting
-5.1 [ ] In `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleContinuous.groovy`, decide which pieces stay in double (nice number algorithm, log operations) and explicitly convert to/from BigDecimal at the boundary to keep API consistent.
-5.2 [ ] For log/sqrt scales (`ScaleXLog10`, `ScaleXSqrt`), use BigDecimal instead of double where possible, return BigDecimal for final mapped values; document any precision caveats.
+5.1 [x] In `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/scale/ScaleContinuous.groovy`, change double to BigDecimal and handle the downstream effects of api changes.
+5.2 [x] For log/sqrt scales (`ScaleXLog10`, `ScaleXSqrt`), use BigDecimal instead of double where possible, return BigDecimal for final mapped values; document any precision caveats.
+
+**Section 5 Completed:**
+- Updated `ScaleContinuous.generateNiceBreaks()`: Changed signature from `double min, double max` to `BigDecimal min, BigDecimal max`, eliminating unnecessary conversions to/from double
+- Updated `ScaleContinuous.formatNumber()`: Now accepts BigDecimal-first formatting, properly handles integer detection using `scale()` and `stripTrailingZeros()`, returns clean integer strings for whole numbers
+- Updated `ScaleXLog10.formatLogNumber()`: Added comprehensive documentation explaining precision behavior, uses BigDecimal for consistent processing, documents that double precision is acceptable for log scale display
+- Added class-level precision documentation to `ScaleXLog10` and `ScaleXSqrt`: Explains that transform/inverse return BigDecimal, notes where Math.log10/Math.sqrt use double precision, clarifies that this is sufficient for visual display purposes
+- All break generation methods now work with BigDecimal end-to-end: `ScaleContinuous`, `ScaleXLog10`, and `ScaleXSqrt` all generate breaks as BigDecimal values
+- All tests passed: `./gradlew :matrix-charts:test -Pheadless=true`
 
 6. Targeted matrix-stats adjustments
 6.1 [ ] In `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/regression/LinearRegression.groovy`, replace `Math.sqrt` on BigDecimal-derived values with BigDecimal-aware equivalents (e.g., `BigDecimal.sqrt(MathContext)` or GDK helpers), and use Groovy collection ops (`collect`, `withIndex`) for readability.
@@ -63,7 +71,7 @@ Goals
 6.3 [ ] In `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/distribution/TDistribution.groovy` and `matrix-stats/src/main/groovy/se/alipsa/matrix/stats/kde/KernelDensity.groovy`, keep double math where numerical algorithms require it, but swap `Math.abs`/`Math.sqrt`/`Math.pow` to Groovy number methods when operating on Groovy `Number` or `BigDecimal` inputs.
 
 7. Tests and compatibility
-7.1 [ ] Update affected tests in `matrix-charts/src/test/groovy/gg` to accept BigDecimal return types (use `as double` only where needed, or compare BigDecimal directly for exactness).
+7.1 [ ] Update affected tests in `matrix-charts/src/test/groovy/gg` to accept BigDecimal return types (compare BigDecimal directly for exactness).
 7.2 [ ] Add/adjust tests for `ScaleUtils.coerceToNumber` to validate BigDecimal parsing and NA handling.
 7.3 [ ] Ensure any matrix-stats changes still satisfy matrix-charts usage paths (kernel density, regression stats in `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/stat/GgStat.groovy`).
 
