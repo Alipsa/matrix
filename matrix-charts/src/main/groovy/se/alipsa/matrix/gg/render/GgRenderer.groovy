@@ -946,8 +946,8 @@ class GgRenderer {
     // We need to adjust either width or height to achieve this
 
     BigDecimal currentRatio = pxPerUnitY / pxPerUnitX
-    BigDecimal effectiveWidth = plotWidth as double
-    BigDecimal effectiveHeight = plotHeight as double
+    BigDecimal effectiveWidth = plotWidth as BigDecimal
+    BigDecimal effectiveHeight = plotHeight as BigDecimal
 
     if (currentRatio > ratio) {
       // Height is too large relative to width, reduce effective height
