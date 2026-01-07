@@ -22,13 +22,36 @@ def majorOf = { String v ->
 
 allprojects {
   plugins.withType(MavenPublishPlugin).configureEach {
-    project.afterEvaluate {
+    project.afterEvaluate {project ->
       def projectName = project.name
-      def publicationCoordinates = "${project.group}:${project.name}:${project.version}"
+      def projectGroup = project.group.toString()
+      def projectVersion = project.version.toString()
+      def publicationCoordinates = "${projectGroup}:${projectName}:${projectVersion}"
       def publishMessage = "🚀 Published ${projectName}: ${publicationCoordinates}"
       tasks.withType(PublishToMavenLocal).configureEach {
         doLast {
           println publishMessage
+          if (projectVersion.contains('-SNAPSHOT')) {
+            println "- Clearing Grapes cache for ${projectGroup}:${projectName} as it is a SNAPSHOT..."
+            try {
+              def userHome = System.getProperty("user.home")
+              // Grapes default layout: ~/.groovy/grapes/<group>/<module>
+              def grapeDir = new File(userHome, ".groovy/grapes/${projectGroup}/${projectName}")
+
+              if (grapeDir.exists()) {
+                // recursively delete directory
+                if (grapeDir.deleteDir()) {
+                  println "  🍇 Cleared Grapes cache for ${projectGroup}:${projectName}"
+                } else {
+                  println "  ⚠️ Found Grapes cache at ${grapeDir} but failed to delete it."
+                }
+              } else {
+                println "  🍇 ${projectGroup}:${projectName} is not cached in Grapes."
+              }
+            } catch (Exception e) {
+              println "  ⚠️ Error clearing Grapes cache: ${e.message}"
+            }
+          }
         }
       }
     }
