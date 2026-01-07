@@ -154,13 +154,13 @@ class ScaleContinuous extends Scale {
     // Convert to BigDecimal for consistent formatting
     BigDecimal bd = n instanceof BigDecimal ? n as BigDecimal : new BigDecimal(n.toString())
 
-    // Check if it's an integer value
-    if (bd.scale() <= 0 || bd.stripTrailingZeros().scale() <= 0) {
+    // Check if it's an integer value (after removing trailing zeros)
+    if (bd.stripTrailingZeros().scale() <= 0) {
       // Format as integer
       return bd.toBigInteger().toString()
     }
 
-    // Format with 2 significant figures for non-integers
+    // Format with 2 significant digits for non-integers
     double d = bd.doubleValue()
     return String.format('%.2g', d)
   }
