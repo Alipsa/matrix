@@ -11,6 +11,12 @@ import groovy.transform.CompileStatic
  * - scale_x_log10(limits: [1, 1000]) - with explicit limits (in data space)
  *
  * Note: Values <= 0 are filtered out since log10 is undefined for non-positive numbers.
+ *
+ * Precision behavior:
+ * - Transform and inverse methods return BigDecimal for consistency with other scales
+ * - Log10 computation uses Math.log10 (double precision) for the transformation
+ * - For typical chart data (values between 1e-10 and 1e10), double precision is sufficient
+ * - Break generation produces exact BigDecimal values (powers of 10: 1, 10, 100, etc.)
  */
 @CompileStatic
 class ScaleXLog10 extends ScaleContinuous {
@@ -153,16 +159,38 @@ class ScaleXLog10 extends ScaleContinuous {
     return getComputedBreaks().collect { formatLogNumber(it as Number) }
   }
 
+  /**
+   * Format a number for display on log scale axis.
+   * Handles powers of 10 and intermediate values, formatting appropriately.
+   *
+   * Note: Log scale breaks are returned as BigDecimal (powers of 10 in data space),
+   * but formatting uses double precision for display. This is acceptable because:
+   * - Log scale breaks are typically clean powers of 10 (1, 10, 100, etc.)
+   * - Intermediate values (2, 5 multiples) are representable in double precision
+   * - Any precision loss is insignificant for axis label display purposes
+   *
+   * @param n the number to format (typically BigDecimal from break generation)
+   * @return formatted string representation
+   */
   private String formatLogNumber(Number n) {
     if (n == null) return ''
-    double d = n as double
-    if (d >= 1 && d == Math.floor(d) && d < 1e10) {
-      return String.valueOf((long) d)
+
+    // Convert to BigDecimal for consistent processing
+    BigDecimal bd = n instanceof BigDecimal ? n as BigDecimal : new BigDecimal(n.toString())
+
+    // Check if it's an integer value (after removing trailing zeros)
+    if (bd.stripTrailingZeros().scale() <= 0) {
+      // Format as integer
+      return bd.toBigInteger().toString()
     }
-    if (d < 1 && d > 0) {
-      return String.format('%.2g', d)
+
+    // For fractional values (< 1), use general format
+    if (bd < BigDecimal.ONE) {
+      return String.format('%.2g', bd.doubleValue())
     }
-    return String.format('%.0f', d)
+
+    // For large non-integer values, format without decimals
+    return String.format('%.0f', bd.doubleValue())
   }
 
   private static Double coerceToPositiveNumber(Object value) {
