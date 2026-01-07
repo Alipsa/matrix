@@ -60,10 +60,16 @@ class BaseTest {
   static void assertIterableEquals(List expected, List actual, String message = '') {
     assertEqualsJUnit(expected.size(), actual.size(), "Size mismatch")
     for (int i = 0; i < expected.size(); i++) {
-      if (expected[i] instanceof Number || actual[i] instanceof Number) {
-        assertEquals(expected[i] as BigDecimal, actual[i] as BigDecimal, "Value mismatch at index $i, Expected ${expected[i]} but was ${actual[i]}")
-      } else if (expected[i] != actual[i]) {
-        fail(message ?: "Value mismatch at index $i, Expected ${expected[i]} but was ${actual[i]}")
+      def exp = expected[i]
+      def act = actual[i]
+      if (exp == null && act == null) return
+      if (exp == null || act == null) {
+        fail(message ?: "Value mismatch at index $i, Expected ${exp} but was ${act}")
+      }
+      if (exp instanceof Number || act instanceof Number) {
+        assertEquals(new BigDecimal(exp.toString()), new BigDecimal(act.toString()), "Value mismatch at index $i, Expected ${exp} but was ${act}")
+      } else if (exp != act) {
+        fail(message ?: "Value mismatch at index $i, Expected ${exp} but was ${act}")
       }
     }
   }
