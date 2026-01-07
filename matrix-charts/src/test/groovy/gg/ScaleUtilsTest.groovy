@@ -405,9 +405,37 @@ class ScaleUtilsTest {
 
   @Test
   void testNiceNumWithNegativeNumber() {
-    // -7.3: uses abs for exp/f calculation, result based on actual behavior
+    // -7.3: absX=7.3, exp=0, f=7.3, f>=7 so nf=10, result=-10
     BigDecimal result = ScaleUtils.niceNum(-7.3G, true)
-    assertEquals(1, result)
+    assertEquals(-10, result)
+  }
+
+  @Test
+  void testNiceNumWithNegativeSmallNumber() {
+    // -2.3: absX=2.3, exp=0, f=2.3, 1.5<=f<3 so nf=2, result=-2
+    BigDecimal result = ScaleUtils.niceNum(-2.3G, true)
+    assertEquals(-2, result)
+  }
+
+  @Test
+  void testNiceNumWithNegativeLargeNumber() {
+    // -73: absX=73, exp=1, f=7.3, f>=7 so nf=10, result=-100
+    BigDecimal result = ScaleUtils.niceNum(-73.0G, true)
+    assertEquals(-100, result)
+  }
+
+  @Test
+  void testNiceNumWithNegativeDecimal() {
+    // -0.073: absX=0.073, exp=-2, f=7.3, f>=7 so nf=10, result=-0.1
+    BigDecimal result = ScaleUtils.niceNum(-0.073G, true)
+    assertEquals(-0.1, result)
+  }
+
+  @Test
+  void testNiceNumCeilingModeWithNegative() {
+    // With round=false, -1.2: absX=1.2, f=1.2, f>1 so nf=2, result=-2
+    BigDecimal result = ScaleUtils.niceNum(-1.2G, false)
+    assertEquals(-2, result)
   }
 
   // ========== interpolateRange tests ==========

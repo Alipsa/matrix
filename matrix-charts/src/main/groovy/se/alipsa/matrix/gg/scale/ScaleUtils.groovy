@@ -204,8 +204,10 @@ class ScaleUtils {
   static BigDecimal niceNum(BigDecimal x, boolean round) {
     if (x == 0) return BigDecimal.ZERO
 
-    BigDecimal exp = x.abs().log10().floor()
-    BigDecimal f = x / (10 ** exp)
+    // Work with absolute value to avoid negative f in comparisons
+    BigDecimal absX = x.abs()
+    BigDecimal exp = absX.log10().floor()
+    BigDecimal f = absX / (10 ** exp)
 
     BigDecimal nf
     if (round) {
@@ -220,6 +222,8 @@ class ScaleUtils {
       else nf = 10
     }
 
-    return nf * (10 ** exp)
+    BigDecimal result = nf * (10 ** exp)
+    // Restore the sign
+    return x < 0 ? -result : result
   }
 }
