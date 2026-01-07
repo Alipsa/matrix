@@ -57,9 +57,9 @@ class GuideAnnotateLimitsTest {
     def yScale = limits.find { it.aesthetic == 'y' }
 
     assertTrue(xScale instanceof ScaleXContinuous)
-    assertEquals([0, 10], xScale.limits)
+    BaseTest.assertEquals([0, 10], xScale.limits)
     assertTrue(yScale instanceof ScaleYContinuous)
-    assertEquals([0, 5], yScale.limits)
+    BaseTest.assertEquals([0, 5], yScale.limits)
 
     def discrete = lims(x: ['a', 'b'])
     def xDiscrete = discrete.find { it.aesthetic == 'x' }

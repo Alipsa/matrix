@@ -36,7 +36,7 @@ class ScaleXSqrt extends ScaleContinuous {
   private void applyParams(Map params) {
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
-    if (params.expand) this.expand = params.expand as List<Number>
+    if (params.expand) this.expand = params.expand as List
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
     if (params.position) this.position = params.position as String
@@ -71,8 +71,8 @@ class ScaleXSqrt extends ScaleContinuous {
 
     // Apply expansion in sqrt space using BigDecimal arithmetic
     if (expand != null && expand.size() >= 2) {
-      BigDecimal mult = expand[0] != null ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
-      BigDecimal add = expand[1] != null ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
+      BigDecimal mult = (expand[0] != null) ? expand[0] as BigDecimal : DEFAULT_EXPAND_MULT
+      BigDecimal add = (expand[1] != null) ? expand[1] as BigDecimal : DEFAULT_EXPAND_ADD
       BigDecimal delta = max - min
       min = (min - delta * mult - add).max(BigDecimal.ZERO)  // Can't go negative
       max = max + delta * mult + add

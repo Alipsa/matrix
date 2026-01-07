@@ -109,7 +109,7 @@ class GgRenderer {
     if (coord instanceof CoordFixed) {
       Map<String, List> aestheticData = collectAestheticData(chart)
       if (aestheticData.x && aestheticData.y) {
-        double[] adjusted = computeFixedAspectDimensionsWithExpansion(
+        BigDecimal[] adjusted = computeFixedAspectDimensionsWithExpansion(
             aestheticData.x, aestheticData.y, plotWidth, plotHeight, coord as CoordFixed, chart)
         effectiveWidth = (int) adjusted[0]
         effectiveHeight = (int) adjusted[1]
@@ -659,7 +659,7 @@ class GgRenderer {
     if (aestheticData.x) {
       Scale xScale = createAutoScale('x', aestheticData.x)
       if (isPolar && thetaAes == 'x' && xScale instanceof ScaleContinuous) {
-        (xScale as ScaleContinuous).expand = [0, 0] as List<Number>
+        (xScale as ScaleContinuous).expand = ScaleContinuous.NO_EXPAND
       }
       xScale.train(aestheticData.x)
       if (xScale instanceof ScaleContinuous) {
@@ -674,7 +674,7 @@ class GgRenderer {
     if (aestheticData.y) {
       Scale yScale = createAutoScale('y', aestheticData.y)
       if (isPolar && thetaAes == 'y' && yScale instanceof ScaleContinuous) {
-        (yScale as ScaleContinuous).expand = [0, 0] as List<Number>
+        (yScale as ScaleContinuous).expand = ScaleContinuous.NO_EXPAND
       }
       yScale.train(aestheticData.y)
       if (yScale instanceof ScaleContinuous) {
@@ -887,67 +887,67 @@ class GgRenderer {
    * @param chart Chart (used to resolve expansion settings)
    * @return double[] with [effectiveWidth, effectiveHeight]
    */
-  private double[] computeFixedAspectDimensionsWithExpansion(List xData, List yData, int plotWidth, int plotHeight,
+  private BigDecimal[] computeFixedAspectDimensionsWithExpansion(List xData, List yData, int plotWidth, int plotHeight,
                                                              CoordFixed coord, GgChart chart) {
-    double ratio = coord.ratio
+    BigDecimal ratio = coord.ratio
 
     // Get numeric values only
-    List<Number> xNums = xData.findAll { it instanceof Number } as List<Number>
-    List<Number> yNums = yData.findAll { it instanceof Number } as List<Number>
+    List<BigDecimal> xNums = xData.findAll { it instanceof Number }.collect{ it as BigDecimal}
+    List<BigDecimal> yNums = yData.findAll { it instanceof Number }.collect{ it as BigDecimal}
 
     if (xNums.isEmpty() || yNums.isEmpty()) {
-      return [plotWidth, plotHeight] as double[]
+      return [plotWidth, plotHeight] as BigDecimal[]
     }
 
     // Compute data ranges - use xlim/ylim if specified, otherwise use data min/max
-    double xMin, xMax, yMin, yMax
+    BigDecimal xMin, xMax, yMin, yMax
 
     if (coord.xlim != null && coord.xlim.size() >= 2) {
-      xMin = coord.xlim[0] as double
-      xMax = coord.xlim[1] as double
+      xMin = coord.xlim[0] as BigDecimal
+      xMax = coord.xlim[1] as BigDecimal
     } else {
-      xMin = xNums.min() as double
-      xMax = xNums.max() as double
+      xMin = xNums.min() as BigDecimal
+      xMax = xNums.max() as BigDecimal
     }
 
     if (coord.ylim != null && coord.ylim.size() >= 2) {
-      yMin = coord.ylim[0] as double
-      yMax = coord.ylim[1] as double
+      yMin = coord.ylim[0] as BigDecimal
+      yMax = coord.ylim[1] as BigDecimal
     } else {
-      yMin = yNums.min() as double
-      yMax = yNums.max() as double
+      yMin = yNums.min() as BigDecimal
+      yMax = yNums.max() as BigDecimal
     }
 
     // Apply expansion per side (mult * range plus add) using ScaleContinuous defaults.
-    double xDelta = xMax - xMin
-    double yDelta = yMax - yMin
-    double[] xExpansion = resolveContinuousExpansion(chart, 'x')
-    double[] yExpansion = resolveContinuousExpansion(chart, 'y')
+    BigDecimal xDelta = xMax - xMin
+    BigDecimal yDelta = yMax - yMin
+    BigDecimal[] xExpansion = resolveContinuousExpansion(chart, 'x')
+    BigDecimal[] yExpansion = resolveContinuousExpansion(chart, 'y')
 
     xMin = xMin - xDelta * xExpansion[0] - xExpansion[1]
     xMax = xMax + xDelta * xExpansion[0] + xExpansion[1]
     yMin = yMin - yDelta * yExpansion[0] - yExpansion[1]
     yMax = yMax + yDelta * yExpansion[0] + yExpansion[1]
 
-    double xDataRange = xMax - xMin
-    double yDataRange = yMax - yMin
+    BigDecimal xDataRange = xMax - xMin
+    BigDecimal yDataRange = yMax - yMin
 
     // If the range collapses, keep original dimensions to avoid misleading scaling.
     if (xDataRange <= 0 || yDataRange <= 0) {
-      return [plotWidth, plotHeight] as double[]
+      return [plotWidth, plotHeight] as BigDecimal[]
     }
 
     // Current pixels per data unit
-    double pxPerUnitX = plotWidth / xDataRange
-    double pxPerUnitY = plotHeight / yDataRange
+    BigDecimal pxPerUnitX = plotWidth / xDataRange
+    BigDecimal pxPerUnitY = plotHeight / yDataRange
 
     // Desired: pxPerUnitY / pxPerUnitX = ratio
     // So: pxPerUnitY = ratio * pxPerUnitX
     // We need to adjust either width or height to achieve this
 
-    double currentRatio = pxPerUnitY / pxPerUnitX
-    double effectiveWidth = plotWidth as double
-    double effectiveHeight = plotHeight as double
+    BigDecimal currentRatio = pxPerUnitY / pxPerUnitX
+    BigDecimal effectiveWidth = plotWidth as BigDecimal
+    BigDecimal effectiveHeight = plotHeight as BigDecimal
 
     if (currentRatio > ratio) {
       // Height is too large relative to width, reduce effective height
@@ -957,24 +957,24 @@ class GgRenderer {
       effectiveWidth = (pxPerUnitY / ratio) * xDataRange
     }
 
-    return [effectiveWidth, effectiveHeight] as double[]
+    return [effectiveWidth, effectiveHeight] as BigDecimal[]
   }
 
-  private double[] resolveContinuousExpansion(GgChart chart, String aesthetic) {
+  private BigDecimal[] resolveContinuousExpansion(GgChart chart, String aesthetic) {
     ScaleContinuous scale = chart.scales.find {
       it instanceof ScaleContinuous && it.aesthetic == aesthetic
     } as ScaleContinuous
 
     if (scale == null) {
-      return [ScaleContinuous.DEFAULT_EXPAND_MULT.doubleValue(), ScaleContinuous.DEFAULT_EXPAND_ADD.doubleValue()] as double[]
+      return [ScaleContinuous.DEFAULT_EXPAND_MULT, ScaleContinuous.DEFAULT_EXPAND_ADD] as BigDecimal[]
     }
     if (scale.expand == null || scale.expand.size() < 2) {
-      return [0.0d, 0.0d] as double[]
+      return [0.0G, 0.0G] as BigDecimal[]
     }
 
-    double mult = scale.expand[0] != null ? (scale.expand[0] as double) : ScaleContinuous.DEFAULT_EXPAND_MULT.doubleValue()
-    double add = scale.expand[1] != null ? (scale.expand[1] as double) : ScaleContinuous.DEFAULT_EXPAND_ADD.doubleValue()
-    return [mult, add] as double[]
+    BigDecimal mult = scale.expand[0] != null ? (scale.expand[0]) : ScaleContinuous.DEFAULT_EXPAND_MULT
+    BigDecimal add = scale.expand[1] != null ? (scale.expand[1]) : ScaleContinuous.DEFAULT_EXPAND_ADD
+    return [mult, add] as BigDecimal[]
   }
 
   /**

@@ -16,13 +16,13 @@ class ColorScaleUtil {
    * @param t interpolation factor (0-1)
    * @return interpolated color as hex string
    */
-  static String interpolateColor(String color1, String color2, double t) {
+  static String interpolateColor(String color1, String color2, BigDecimal t) {
     int[] rgb1 = parseColor(color1)
     int[] rgb2 = parseColor(color2)
 
-    int r = (int) Math.round(rgb1[0] + t * (rgb2[0] - rgb1[0]))
-    int g = (int) Math.round(rgb1[1] + t * (rgb2[1] - rgb1[1]))
-    int b = (int) Math.round(rgb1[2] + t * (rgb2[2] - rgb1[2]))
+    int r = (int) (rgb1[0] + t * (rgb2[0] - rgb1[0])).round()
+    int g = (int) (rgb1[1] + t * (rgb2[1] - rgb1[1])).round()
+    int b = (int) (rgb1[2] + t * (rgb2[2] - rgb1[2])).round()
 
     r = Math.max(0, Math.min(255, r))
     g = Math.max(0, Math.min(255, g))

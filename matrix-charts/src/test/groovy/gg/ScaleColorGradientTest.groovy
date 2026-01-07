@@ -153,7 +153,7 @@ class ScaleColorGradientTest {
     assertEquals('#FF0000', scale.low)
     assertEquals('#00FF00', scale.high)
     assertEquals('Temperature', scale.name)
-    assertEquals([0, 50], scale.limits)
+    BaseTest.assertEquals([0, 50], scale.limits)
   }
 
   @Test
@@ -168,7 +168,7 @@ class ScaleColorGradientTest {
     assertEquals('#0000FF', scale.high)
     assertEquals('#FFFFFF', scale.mid)
     assertEquals(0, scale.midpoint)
-    assertEquals([-10, 10], scale.limits)
+    BaseTest.assertEquals([-10, 10], scale.limits)
   }
 
   @Test

@@ -18,6 +18,8 @@ class ScaleDiscrete extends Scale {
   /** Drop unused levels from the scale */
   boolean drop = true
 
+  List<Object> limits
+
   /** Optional ordering of levels */
   List<Object> orderLevels
 
@@ -154,5 +156,18 @@ class ScaleDiscrete extends Scale {
   void reset() {
     super.reset()
     levels = []
+  }
+
+  Scale setLimits(List limits) {
+    this.limits = limits
+    this
+  }
+
+  void setRange(List<? extends Number> vals) {
+    this.range = vals.collect{ it as Number }
+  }
+
+  List<Number> getRange() {
+    return range
   }
 }

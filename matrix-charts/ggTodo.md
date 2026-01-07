@@ -189,7 +189,7 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ---
 
-## Phase 3: Advanced Features (Lower Priority)
+## Phase 3: Advanced Features
 
 ### 3.1 Additional Geoms
 
@@ -261,7 +261,7 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ---
 
-## Phase 4: Specialized Features (Optional)
+## Phase 4: Specialized Features
 
 ### 4.1 Spatial/Map Support
 
@@ -336,13 +336,13 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ## Summary
 
-| Phase | Items | Focus |
-|-------|-------|-------|
-| Phase 1 | 22 items | Core functionality, transforms, dates, annotations |
-| Phase 2 | 28 items | Statistics, color palettes, size/alpha scales |
-| Phase 3 | 33 items | Advanced geoms, themes, secondary axes, facet labels |
-| Phase 4 | 42 items | Spatial, specialized binning, identity scales |
-| **Total** | **125 items** | |
+| Phase     | Items         | Focus                                                |
+|-----------|---------------|------------------------------------------------------|
+| Phase 1   | 22 items      | Core functionality, transforms, dates, annotations   |
+| Phase 2   | 28 items      | Statistics, color palettes, size/alpha scales        |
+| Phase 3   | 33 items      | Advanced geoms, themes, secondary axes, facet labels |
+| Phase 4   | 42 items      | Spatial, specialized binning, identity scales        |
+| **Total** | **125 items** |                                                      |
 
 ---
 

@@ -10,9 +10,9 @@ import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
- * Tests for Phase 1.2 transform scales: log10, sqrt, reverse
+ * Tests for transform scales: log10, sqrt, reverse
  */
-class ScaleTransformTest {
+class ScaleTransformTest extends BaseTest {
 
   // ============ ScaleXLog10 / ScaleYLog10 Tests ============
 
@@ -212,7 +212,7 @@ class ScaleTransformTest {
   @Test
   void testScaleXReverseTransform() {
     ScaleXReverse scale = new ScaleXReverse()
-    scale.range = [0, 100] as List<Number>
+    scale.range = [0, 100]
     scale.expand = null  // Disable expansion for exact test
     scale.train([0, 10, 20, 30])
 
@@ -330,7 +330,7 @@ class ScaleTransformTest {
     assertEquals('Log Scale', log10.name)
 
     def sqrt = scale_y_sqrt(limits: [0, 100])
-    assertEquals([0, 100], sqrt.limits)
+    BaseTest.assertIterableEquals([0, 100], sqrt.limits)
 
     def reverse = scale_x_reverse(position: 'top')
     assertEquals('top', reverse.position)

@@ -25,9 +25,11 @@ class ScaleColorViridisC extends ScaleContinuous {
   String option = 'viridis'
 
   /** Start of the color range (0-1) */
+  // TODO: change to BigDecimal
   double begin = 0.0
 
   /** End of the color range (0-1) */
+  // TODO: change to BigDecimal
   double end = 1.0
 
   /** Direction: 1 = normal, -1 = reversed */
@@ -75,12 +77,12 @@ class ScaleColorViridisC extends ScaleContinuous {
 
   ScaleColorViridisC() {
     aesthetic = 'color'
-    expand = [0, 0] as List<Number>  // No expansion for color scales
+    expand = NO_EXPAND  // No expansion for color scales
   }
 
   ScaleColorViridisC(Map params) {
     aesthetic = 'color'
-    expand = [0, 0] as List<Number>
+    expand = NO_EXPAND
     applyParams(params)
   }
 

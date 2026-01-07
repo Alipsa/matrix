@@ -27,25 +27,25 @@ class CoordFixed extends CoordCartesian {
    * A ratio of 0.5 means y is scaled at half of x.
    * A ratio of 2 means y is scaled at twice x.
    */
-  double ratio = 1.0
+  BigDecimal ratio = 1.0G
 
   /**
    * Returns the configured aspect ratio (y units per x unit).
    * This can be used by rendering or transformation logic to
    * enforce a fixed aspect ratio compared to CoordCartesian.
    */
-  double getRatio() {
+  BigDecimal getRatio() {
     return ratio
   }
 
   CoordFixed() {}
 
-  CoordFixed(double ratio) {
+  CoordFixed(BigDecimal ratio) {
     this.ratio = ratio
   }
 
   CoordFixed(Map params) {
     super(params)
-    if (params.ratio != null) this.ratio = params.ratio as double
+    if (params.ratio != null) this.ratio = params.ratio as BigDecimal
   }
 }

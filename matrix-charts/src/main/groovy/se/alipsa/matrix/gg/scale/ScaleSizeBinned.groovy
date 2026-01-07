@@ -25,7 +25,7 @@ class ScaleSizeBinned extends ScaleContinuous {
    */
   ScaleSizeBinned() {
     aesthetic = 'size'
-    expand = [0, 0] as List<Number>
+    expand = NO_EXPAND
   }
 
   /**
@@ -35,7 +35,7 @@ class ScaleSizeBinned extends ScaleContinuous {
    */
   ScaleSizeBinned(Map params) {
     aesthetic = 'size'
-    expand = [0, 0] as List<Number>
+    expand = ScaleContinuous.NO_EXPAND
     applyParams(params)
   }
 

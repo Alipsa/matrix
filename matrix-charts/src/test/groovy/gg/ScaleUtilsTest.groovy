@@ -3,46 +3,10 @@ package gg
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.gg.scale.ScaleUtils
 
-import static org.junit.jupiter.api.Assertions.assertEquals as assertEqualsJUnit
+
 import static org.junit.jupiter.api.Assertions.assertNull
-import static org.junit.jupiter.api.Assertions.fail
 
-class ScaleUtilsTest {
-
-  /**
-   * Custom assertEquals for BigDecimal that uses compareTo instead of equals.
-   * This compares numeric value only, ignoring scale differences.
-   *
-   * @param expected the expected BigDecimal value
-   * @param actual the actual BigDecimal value
-   * @param message optional failure message
-   */
-  static void assertEquals(BigDecimal expected, BigDecimal actual, String message = '') {
-    if (expected == null && actual == null) return
-    if (expected == null || actual == null) {
-      fail(message ?: "Expected ${expected} but was ${actual}")
-    }
-    if (expected.compareTo(actual) != 0) {
-      fail(message ?: "Expected ${expected} but was ${actual}")
-    }
-  }
-
-  /**
-   * Custom assertEquals overload that accepts Number as expected value.
-   * Converts the Number to BigDecimal before comparison.
-   *
-   * @param expected the expected numeric value
-   * @param actual the actual BigDecimal value
-   * @param message optional failure message
-   */
-  static void assertEquals(Number expected, BigDecimal actual, String message = '') {
-    assertEquals(expected as BigDecimal, actual, message)
-  }
-
-  // Delegate to JUnit's assertEquals for non-BigDecimal types
-  static void assertEquals(int expected, int actual) {
-    assertEqualsJUnit(expected, actual)
-  }
+class ScaleUtilsTest extends BaseTest {
 
   // ========== coerceToNumber tests ==========
 
