@@ -110,15 +110,11 @@ class PolynomialRegression {
   }
 
   List<BigDecimal> predict(List<Number> xVals) {
-    List<BigDecimal> predictions = []
-    xVals.each { predictions << predict(it) }
-    return predictions
+    return xVals.collect { predict(it) }
   }
 
   List<BigDecimal> predict(List<Number> xVals, int numberOfDecimals) {
-    List<BigDecimal> predictions = []
-    xVals.each { predictions << predict(it, numberOfDecimals) }
-    return predictions
+    return xVals.collect { predict(it, numberOfDecimals) }
   }
 
   /**
