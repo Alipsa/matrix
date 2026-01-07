@@ -61,9 +61,9 @@ class BaseTest {
     assertEqualsJUnit(expected.size(), actual.size(), "Size mismatch")
     for (int i = 0; i < expected.size(); i++) {
       if (expected[i] instanceof Number || actual[i] instanceof Number) {
-        assertEquals(expected[i] as BigDecimal, actual[i] as BigDecimal, "Value mismatch at index $i, Expected ${expected} but was ${actual})")
+        assertEquals(expected[i] as BigDecimal, actual[i] as BigDecimal, "Value mismatch at index $i, Expected ${expected[i]} but was ${actual[i]}")
       } else if (expected[i] != actual[i]) {
-        fail(message ?: "Expected ${expected} but was ${actual})")
+        fail(message ?: "Value mismatch at index $i, Expected ${expected[i]} but was ${actual[i]}")
       }
     }
   }
