@@ -89,8 +89,8 @@ class GeomQq extends Geom {
       def yTransformed = yScale?.transform(yVal)
       if (xTransformed == null || yTransformed == null) return
 
-      double xPx = xTransformed as double
-      double yPx = yTransformed as double
+      BigDecimal xPx = xTransformed as BigDecimal
+      BigDecimal yPx = yTransformed as BigDecimal
 
       String pointColor = this.color
       if (colorCol && row[colorCol] != null) {
@@ -115,8 +115,8 @@ class GeomQq extends Geom {
 
       Number pointAlpha = GeomUtils.extractPointAlpha(this.alpha, aes, alphaCol, row.toMap(), alphaScale)
 
-      GeomUtils.drawPoint(group, xPx, yPx, (pointSize as Number).doubleValue(), pointColor, pointShape,
-          (pointAlpha as Number).doubleValue())
+      GeomUtils.drawPoint(group, xPx, yPx, (pointSize as BigDecimal), pointColor, pointShape,
+          (pointAlpha as BigDecimal))
     }
   }
 }

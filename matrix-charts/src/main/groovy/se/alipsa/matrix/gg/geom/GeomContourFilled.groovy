@@ -72,7 +72,7 @@ class GeomContourFilled extends GeomContour {
     if (grid == null || grid.values.length < 2) return
 
     // Determine contour levels (including endpoints for filling)
-    List<Double> levels = computeFilledLevels(grid.zMin, grid.zMax)
+    List<BigDecimal> levels = computeFilledLevels(grid.zMin, grid.zMax)
     if (levels.size() < 2) return
 
     int nx = grid.xValues.length
@@ -80,8 +80,8 @@ class GeomContourFilled extends GeomContour {
 
     // For each level band, fill the cells
     for (int levelIdx = 0; levelIdx < levels.size() - 1; levelIdx++) {
-      double lowLevel = levels[levelIdx]
-      double highLevel = levels[levelIdx + 1]
+      BigDecimal lowLevel = levels[levelIdx]
+      BigDecimal highLevel = levels[levelIdx + 1]
 
       // Get fill color for this band
       String bandFill = getFillColor(levelIdx, levels.size() - 1, fillScale, lowLevel, highLevel)
@@ -89,36 +89,36 @@ class GeomContourFilled extends GeomContour {
       // Process each cell and fill based on level range
       for (int j = 0; j < ny - 1; j++) {
         for (int i = 0; i < nx - 1; i++) {
-          double[] cell = [
+          List<BigDecimal> cell = [
               grid.values[j][i],
               grid.values[j][i + 1],
               grid.values[j + 1][i + 1],
               grid.values[j + 1][i]
-          ] as double[]
+          ]
 
           // Skip if any value is NaN
-          if (cell.any { Double.isNaN(it) }) continue
+          if (cell.any { it == null }) continue
 
           // Skip if cell doesn't intersect this level band
-          double cellMin = cell.min()
-          double cellMax = cell.max()
+          BigDecimal cellMin = cell.min()
+          BigDecimal cellMax = cell.max()
           if (cellMax < lowLevel || cellMin >= highLevel) continue
 
           // Get cell coordinates
-          double x0 = grid.xValues[i]
-          double x1 = grid.xValues[i + 1]
-          double y0 = grid.yValues[j]
-          double y1 = grid.yValues[j + 1]
+          BigDecimal x0 = grid.xValues[i]
+          BigDecimal x1 = grid.xValues[i + 1]
+          BigDecimal y0 = grid.yValues[j]
+          BigDecimal y1 = grid.yValues[j + 1]
 
           // Generate filled polygon for this cell and level band
-          List<double[]> polygon = getFilledPolygon(cell, lowLevel, highLevel, x0, x1, y0, y1)
+          List<BigDecimal[]> polygon = getFilledPolygon(cell as BigDecimal[], lowLevel, highLevel, x0, x1, y0, y1)
           if (polygon.size() < 3) continue
 
           // Transform to pixel coordinates
           StringBuilder pathD = new StringBuilder()
           boolean first = true
 
-          for (double[] point : polygon) {
+          for (BigDecimal[] point : polygon) {
             def xPx = xScale?.transform(point[0])
             def yPx = yScale?.transform(point[1])
             if (xPx == null || yPx == null) continue
@@ -146,18 +146,18 @@ class GeomContourFilled extends GeomContour {
     }
 
     // Optionally draw contour lines on top
-    if ((linewidth as double) > 0) {
+    if ((linewidth as BigDecimal) > 0) {
       // Draw outlines at each level
       for (int levelIdx = 1; levelIdx < levels.size() - 1; levelIdx++) {
-        double level = levels[levelIdx]
-        List<List<double[]>> contours = marchingSquares(grid, level)
+        BigDecimal level = levels[levelIdx]
+        List<List<BigDecimal[]>> contours = marchingSquares(grid, level)
 
-        contours.each { List<double[]> contour ->
+        contours.each { List<BigDecimal[]> contour ->
           if (contour.size() < 2) return
 
           for (int i = 0; i < contour.size() - 1; i++) {
-            double[] p1 = contour[i]
-            double[] p2 = contour[i + 1]
+            BigDecimal[] p1 = contour[i]
+            BigDecimal[] p2 = contour[i + 1]
 
             def x1Px = xScale?.transform(p1[0])
             def y1Px = yScale?.transform(p1[1])
@@ -175,7 +175,7 @@ class GeomContourFilled extends GeomContour {
 
             line.addAttribute('stroke-width', linewidth * 0.5)
 
-            if ((alpha as double) < 1.0) {
+            if (alpha < 1.0) {
               line.addAttribute('stroke-opacity', alpha)
             }
           }
@@ -187,8 +187,8 @@ class GeomContourFilled extends GeomContour {
   /**
    * Compute levels for filled contours (includes min and max).
    */
-  private List<Double> computeFilledLevels(double zMin, double zMax) {
-    List<Double> levels = [zMin]
+  private List<BigDecimal> computeFilledLevels(BigDecimal zMin, BigDecimal zMax) {
+    List<BigDecimal> levels = [zMin]
     double range = zMax - zMin
 
     if (range == 0) {
@@ -197,12 +197,12 @@ class GeomContourFilled extends GeomContour {
 
     double step
     if (binwidth != null) {
-      step = binwidth as double
+      step = binwidth as BigDecimal
     } else {
       step = range / bins
     }
 
-    double level = zMin + step
+    BigDecimal level = zMin + step
     while (level < zMax) {
       levels << level
       level += step
@@ -215,9 +215,9 @@ class GeomContourFilled extends GeomContour {
   /**
    * Get fill color for a level band.
    */
-  private String getFillColor(int levelIdx, int numBands, Scale fillScale, double lowLevel, double highLevel) {
+  private String getFillColor(int levelIdx, int numBands, Scale fillScale, BigDecimal lowLevel, BigDecimal highLevel) {
     if (fillScale != null) {
-      double midLevel = (lowLevel + highLevel) / 2
+      BigDecimal midLevel = (lowLevel + highLevel) / 2
       def transformed = fillScale.transform(midLevel)
       if (transformed != null) return ColorUtil.normalizeColor(transformed.toString())
     }
@@ -232,14 +232,14 @@ class GeomContourFilled extends GeomContour {
    * Generate filled polygon for a cell within a level band.
    * Uses modified marching squares to create polygons instead of lines.
    */
-  private List<double[]> getFilledPolygon(double[] cell, double lowLevel, double highLevel,
-                                           double x0, double x1, double y0, double y1) {
-    List<double[]> points = []
+  private List<BigDecimal[]> getFilledPolygon(BigDecimal[] cell, BigDecimal lowLevel, BigDecimal highLevel,
+                                          BigDecimal x0, BigDecimal x1, BigDecimal y0, BigDecimal y1) {
+    List<BigDecimal[]> points = []
 
     // Clamp cell values to level band
-    double[] clamped = new double[4]
+    BigDecimal[] clamped = new BigDecimal[4]
     for (int i = 0; i < 4; i++) {
-      clamped[i] = Math.max(lowLevel, Math.min(highLevel, cell[i]))
+      clamped[i] = highLevel.min(cell[i]).max(lowLevel)
     }
 
     // Determine which corners are within the band
@@ -252,24 +252,24 @@ class GeomContourFilled extends GeomContour {
     // Corners: 0=bottom-left, 1=bottom-right, 2=top-right, 3=top-left
     // Edges: 0=bottom, 1=right, 2=top, 3=left
 
-    List<double[]> vertices = [
-        [x0, y0] as double[],  // corner 0
-        [x1, y0] as double[],  // corner 1
-        [x1, y1] as double[],  // corner 2
-        [x0, y1] as double[]   // corner 3
+    List<BigDecimal[]> vertices = [
+        [x0, y0] as BigDecimal[],  // corner 0
+        [x1, y0] as BigDecimal[],  // corner 1
+        [x1, y1] as BigDecimal[],  // corner 2
+        [x0, y1] as BigDecimal[]   // corner 3
     ]
 
     // Interpolation helper
-    Closure<double[]> interpolateEdge = { int corner1, int corner2, double level ->
-      double v1 = cell[corner1]
-      double v2 = cell[corner2]
+    Closure<BigDecimal[]> interpolateEdge = { int corner1, int corner2, BigDecimal level ->
+      BigDecimal v1 = cell[corner1]
+      BigDecimal v2 = cell[corner2]
       if (v1 == v2) return vertices[corner1]
 
-      double t = (level - v1) / (v2 - v1)
-      t = Math.max(0, Math.min(1, t))
-      double[] p1 = vertices[corner1]
-      double[] p2 = vertices[corner2]
-      return [p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])] as double[]
+      BigDecimal t = (level - v1) / (v2 - v1)
+      t = 1.0G.min(t).max(0.0G) //Math.max(0, Math.min(1, t))
+      BigDecimal[] p1 = vertices[corner1]
+      BigDecimal[] p2 = vertices[corner2]
+      return [p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])] as BigDecimal[]
     }
 
     // Walk around edges and collect boundary points
@@ -278,8 +278,8 @@ class GeomContourFilled extends GeomContour {
     for (int e = 0; e < 4; e++) {
       int c1 = edges[e][0]
       int c2 = edges[e][1]
-      double v1 = cell[c1]
-      double v2 = cell[c2]
+      BigDecimal v1 = cell[c1]
+      BigDecimal v2 = cell[c2]
 
       // Add corner if it's at or above lowLevel
       if (v1 >= lowLevel && v1 < highLevel) {
@@ -299,8 +299,8 @@ class GeomContourFilled extends GeomContour {
       // Check for level crossings along edge
       if ((v1 < lowLevel && v2 >= highLevel) || (v1 >= highLevel && v2 < lowLevel)) {
         // Edge crosses both levels
-        double[] pLow = interpolateEdge(c1, c2, lowLevel)
-        double[] pHigh = interpolateEdge(c1, c2, highLevel)
+        BigDecimal[] pLow = interpolateEdge(c1, c2, lowLevel)
+        BigDecimal[] pHigh = interpolateEdge(c1, c2, highLevel)
 
         if (v1 < v2) {
           // Going up: add low then high
@@ -313,19 +313,19 @@ class GeomContourFilled extends GeomContour {
         }
       } else if (v1 < lowLevel && v2 >= lowLevel && v2 < highLevel) {
         // Edge crosses low level going in
-        double[] p = interpolateEdge(c1, c2, lowLevel)
+        BigDecimal[] p = interpolateEdge(c1, c2, lowLevel)
         if (!containsPoint(points, p)) points << p
       } else if (v1 >= lowLevel && v1 < highLevel && v2 < lowLevel) {
         // Edge crosses low level going out
-        double[] p = interpolateEdge(c1, c2, lowLevel)
+        BigDecimal[] p = interpolateEdge(c1, c2, lowLevel)
         if (!containsPoint(points, p)) points << p
       } else if (v1 < highLevel && v2 >= highLevel) {
         // Edge crosses high level going out
-        double[] p = interpolateEdge(c1, c2, highLevel)
+        BigDecimal[] p = interpolateEdge(c1, c2, highLevel)
         if (!containsPoint(points, p)) points << p
       } else if (v1 >= highLevel && v2 < highLevel && v2 >= lowLevel) {
         // Edge crosses high level going in
-        double[] p = interpolateEdge(c1, c2, highLevel)
+        BigDecimal[] p = interpolateEdge(c1, c2, highLevel)
         if (!containsPoint(points, p)) points << p
       }
     }
@@ -334,20 +334,20 @@ class GeomContourFilled extends GeomContour {
     return removeDuplicatePoints(points)
   }
 
-  private boolean containsPoint(List<double[]> points, double[] p) {
-    for (double[] existing : points) {
-      if (Math.abs(existing[0] - p[0]) < 1e-10 && Math.abs(existing[1] - p[1]) < 1e-10) {
+  private boolean containsPoint(List<BigDecimal[]> points, BigDecimal[] p) {
+    for (BigDecimal[] existing : points) {
+      if ((existing[0] - p[0]).abs() < 1e-10 && (existing[1] - p[1]).abs() < 1e-10) {
         return true
       }
     }
     return false
   }
 
-  private List<double[]> removeDuplicatePoints(List<double[]> points) {
+  private List<BigDecimal[]> removeDuplicatePoints(List<BigDecimal[]> points) {
     if (points.size() <= 1) return points
 
-    List<double[]> result = []
-    for (double[] p : points) {
+    List<BigDecimal[]> result = []
+    for (BigDecimal[] p : points) {
       if (!containsPoint(result, p)) {
         result << p
       }

@@ -59,9 +59,9 @@ class GeomUtils {
    * @param shape shape name (circle, square, plus, cross, x, triangle, diamond)
    * @param alphaVal alpha transparency (0.0 - 1.0)
    */
-  static void drawPoint(G group, double cx, double cy, double radius, String color, String shape, double alphaVal) {
-    double size = radius * 2
-    double halfSize = size / 2.0d
+  static void drawPoint(G group, BigDecimal cx, BigDecimal cy, BigDecimal radius, String color, String shape, BigDecimal alphaVal) {
+    BigDecimal size = radius * 2
+    BigDecimal halfSize = size / 2.0d
 
     switch (shape?.toLowerCase()) {
       case 'square':
@@ -147,11 +147,11 @@ class GeomUtils {
    * @param sizeScale the size scale (may be null)
    * @return the resolved size value
    */
-  static Number extractLineSize(Number defaultSize, Aes aes, String sizeCol, List<Map> rows, Scale sizeScale) {
+  static BigDecimal extractLineSize(Number defaultSize, Aes aes, String sizeCol, List<Map> rows, Scale sizeScale) {
     if (aes.size instanceof Identity) {
       def identityValue = (aes.size as Identity).value
       if (identityValue != null) {
-        return identityValue as Number
+        return identityValue as BigDecimal
       }
     }
     if (sizeCol && !rows.isEmpty() && rows[0][sizeCol] != null) {
@@ -159,13 +159,13 @@ class GeomUtils {
       if (sizeScale) {
         def scaled = sizeScale.transform(rawSize)
         if (scaled instanceof Number) {
-          return scaled as Number
+          return scaled as BigDecimal
         }
       } else if (rawSize instanceof Number) {
-        return rawSize as Number
+        return rawSize as BigDecimal
       }
     }
-    return defaultSize
+    return defaultSize as BigDecimal
   }
 
   /**
@@ -179,11 +179,11 @@ class GeomUtils {
    * @param alphaScale the alpha scale (may be null)
    * @return the resolved alpha value
    */
-  static Number extractLineAlpha(Number defaultAlpha, Aes aes, String alphaCol, List<Map> rows, Scale alphaScale) {
+  static BigDecimal extractLineAlpha(Number defaultAlpha, Aes aes, String alphaCol, List<Map> rows, Scale alphaScale) {
     if (aes.alpha instanceof Identity) {
       def identityValue = (aes.alpha as Identity).value
       if (identityValue != null) {
-        return identityValue as Number
+        return identityValue as BigDecimal
       }
     }
     if (alphaCol && !rows.isEmpty() && rows[0][alphaCol] != null) {
@@ -191,13 +191,13 @@ class GeomUtils {
       if (alphaScale) {
         def scaled = alphaScale.transform(rawAlpha)
         if (scaled instanceof Number) {
-          return scaled as Number
+          return scaled as BigDecimal
         }
       } else if (rawAlpha instanceof Number) {
-        return rawAlpha as Number
+        return rawAlpha as BigDecimal
       }
     }
-    return defaultAlpha
+    return defaultAlpha as BigDecimal
   }
 
   /**
@@ -210,23 +210,23 @@ class GeomUtils {
    * @param sizeScale the size scale (may be null)
    * @return the resolved size value
    */
-  static Number extractPointSize(Number defaultSize, Aes aes, String sizeCol, Map row, Scale sizeScale) {
+  static BigDecimal extractPointSize(Number defaultSize, Aes aes, String sizeCol, Map row, Scale sizeScale) {
     if (sizeCol && row[sizeCol] != null) {
       if (sizeScale) {
         def scaled = sizeScale.transform(row[sizeCol])
         if (scaled instanceof Number) {
-          return scaled as Number
+          return scaled as BigDecimal
         }
       } else if (row[sizeCol] instanceof Number) {
-        return row[sizeCol] as Number
+        return row[sizeCol] as BigDecimal
       }
     } else if (aes.size instanceof Identity) {
       def identityValue = (aes.size as Identity).value
       if (identityValue != null) {
-        return identityValue as Number
+        return identityValue as BigDecimal
       }
     }
-    return defaultSize
+    return defaultSize as BigDecimal
   }
 
   /**
@@ -239,23 +239,23 @@ class GeomUtils {
    * @param alphaScale the alpha scale (may be null)
    * @return the resolved alpha value
    */
-  static Number extractPointAlpha(Number defaultAlpha, Aes aes, String alphaCol, Map row, Scale alphaScale) {
+  static BigDecimal extractPointAlpha(Number defaultAlpha, Aes aes, String alphaCol, Map row, Scale alphaScale) {
     if (aes.alpha instanceof Identity) {
       def identityValue = (aes.alpha as Identity).value
       if (identityValue != null) {
-        return identityValue as Number
+        return identityValue as BigDecimal
       }
     }
     if (alphaCol && row[alphaCol] != null) {
       if (alphaScale) {
         def scaled = alphaScale.transform(row[alphaCol])
         if (scaled instanceof Number) {
-          return scaled as Number
+          return scaled as BigDecimal
         }
       } else if (row[alphaCol] instanceof Number) {
-        return row[alphaCol] as Number
+        return row[alphaCol] as BigDecimal
       }
     }
-    return defaultAlpha
+    return defaultAlpha as BigDecimal
   }
 }

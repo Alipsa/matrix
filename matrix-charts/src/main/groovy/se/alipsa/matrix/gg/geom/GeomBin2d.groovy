@@ -90,18 +90,18 @@ class GeomBin2d extends Geom {
     Scale fillScale = scales['fill']
 
     // Collect numeric x,y values
-    List<double[]> points = []
-    double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE
-    double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE
+    List<BigDecimal[]> points = []
+    BigDecimal xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE
+    BigDecimal yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE
 
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
 
       if (xVal instanceof Number && yVal instanceof Number) {
-        double x = xVal as double
-        double y = yVal as double
-        points << ([x, y] as double[])
+        BigDecimal x = xVal as BigDecimal
+        BigDecimal y = yVal as BigDecimal
+        points << ([x, y] as BigDecimal[])
 
         if (x < xMin) xMin = x
         if (x > xMax) xMax = x
@@ -113,21 +113,21 @@ class GeomBin2d extends Geom {
     if (points.isEmpty()) return
 
     // Compute bin sizes
-    double xRange = xMax - xMin
-    double yRange = yMax - yMin
+    BigDecimal xRange = xMax - xMin
+    BigDecimal yRange = yMax - yMin
 
     // Prevent zero range
     if (xRange == 0) xRange = 1
     if (yRange == 0) yRange = 1
 
-    double binWidthX, binWidthY
+    BigDecimal binWidthX, binWidthY
     int nBinsX, nBinsY
 
     if (binwidth != null && binwidth.size() >= 2) {
       binWidthX = binwidth[0] as double
       binWidthY = binwidth[1] as double
-      nBinsX = Math.ceil(xRange / binWidthX) as int
-      nBinsY = Math.ceil(yRange / binWidthY) as int
+      nBinsX = (xRange / binWidthX).ceil() as int
+      nBinsY = (yRange / binWidthY).ceil() as int
     } else {
       nBinsX = bins
       nBinsY = bins
@@ -139,7 +139,7 @@ class GeomBin2d extends Geom {
     int[][] counts = new int[nBinsY][nBinsX]
     int maxCount = 0
 
-    for (double[] point : points) {
+    for (BigDecimal[] point : points) {
       int binX = Math.min((int) ((point[0] - xMin) / binWidthX), nBinsX - 1)
       int binY = Math.min((int) ((point[1] - yMin) / binWidthY), nBinsY - 1)
 
@@ -160,10 +160,10 @@ class GeomBin2d extends Geom {
         if (drop && count == 0) continue
 
         // Bin boundaries in data coordinates
-        double x0 = xMin + i * binWidthX
-        double x1 = x0 + binWidthX
-        double y0 = yMin + j * binWidthY
-        double y1 = y0 + binWidthY
+        BigDecimal x0 = xMin + i * binWidthX
+        BigDecimal x1 = x0 + binWidthX
+        BigDecimal y0 = yMin + j * binWidthY
+        BigDecimal y1 = y0 + binWidthY
 
         // Transform to pixel coordinates
         def x0Px = xScale?.transform(x0)
@@ -217,7 +217,7 @@ class GeomBin2d extends Geom {
   private String getFillColor(int count, int maxCount) {
     if (maxCount == 0 || count == 0) return fillColors[0]
 
-    double ratio = count / (double) maxCount
+    BigDecimal ratio = count / maxCount as BigDecimal
     int colorIdx = (int) (ratio * (fillColors.size() - 1))
     colorIdx = Math.max(0, Math.min(colorIdx, fillColors.size() - 1))
     return fillColors[colorIdx]

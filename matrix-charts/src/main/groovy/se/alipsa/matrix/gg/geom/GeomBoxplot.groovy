@@ -128,7 +128,7 @@ class GeomBoxplot extends Geom {
     Scale colorScale = scales['color']
 
     int numBoxes = data.rowCount()
-    double plotWidth = 640  // default plot width
+    BigDecimal plotWidth = 640 as BigDecimal  // default plot width
     // Check if x values are numeric (continuous positioning)
     boolean continuousX = false
     if (data.columnNames().contains('x') && data.rowCount() > 0) {
@@ -136,11 +136,11 @@ class GeomBoxplot extends Geom {
       continuousX = firstX instanceof Number
     }
     boolean useVarwidth = varwidth == true
-    double maxRelVarwidth = 1.0d
+    BigDecimal maxRelVarwidth = 1.0G
     if (useVarwidth && data.columnNames().contains('relvarwidth')) {
       List<Number> relValues = (data['relvarwidth'] as List).findAll { it instanceof Number } as List<Number>
       if (!relValues.isEmpty()) {
-        maxRelVarwidth = relValues.max() as double
+        maxRelVarwidth = relValues.max() as BigDecimal
       }
     }
 
@@ -162,12 +162,12 @@ class GeomBoxplot extends Geom {
 
       boolean discreteX = xScale instanceof ScaleDiscrete
 
-      Double xminData = row['xmin'] instanceof Number ? (row['xmin'] as Number).doubleValue() : null
-      Double xmaxData = row['xmax'] instanceof Number ? (row['xmax'] as Number).doubleValue() : null
-      Double boundsWidth = (xminData != null && xmaxData != null) ? (xmaxData - xminData) : null
-      Double centerData = (xminData != null && xmaxData != null) ? (xminData + xmaxData) / 2.0d : null
+      BigDecimal xminData = row['xmin'] instanceof Number ? (row['xmin'] as BigDecimal) : null
+      BigDecimal xmaxData = row['xmax'] instanceof Number ? (row['xmax'] as BigDecimal) : null
+      BigDecimal boundsWidth = (xminData != null && xmaxData != null) ? (xmaxData - xminData) : null
+      BigDecimal centerData = (xminData != null && xmaxData != null) ? (xminData + xmaxData) / 2.0d : null
 
-      double widthData = resolveWidthData(row, (width as Number).doubleValue(), useVarwidth, maxRelVarwidth, boundsWidth)
+      BigDecimal widthData = resolveWidthData(row, (width as BigDecimal), useVarwidth, maxRelVarwidth, boundsWidth)
       boolean usedBounds = false
       // When xmin/xmax bounds are present (e.g., from position_dodge2), preserve their center
       // and resolve a single width value so varwidth scaling matches the drawn width.
@@ -374,19 +374,19 @@ class GeomBoxplot extends Geom {
    * @param boundsWidth optional width derived from xmin/xmax bounds (e.g., position-adjusted)
    * @return resolved width in data units
    */
-  static double resolveWidthData(Row row, double defaultWidth, boolean useVarwidth, double maxRelVarwidth, Double boundsWidth = null) {
-    double widthData
+  static BigDecimal resolveWidthData(Row row, Number defaultWidth, boolean useVarwidth, Number maxRelVarwidth, Number boundsWidth = null) {
+    BigDecimal widthData
     if (boundsWidth != null) {
-      widthData = boundsWidth
+      widthData = boundsWidth as BigDecimal
     } else if (row['width'] instanceof Number) {
-      widthData = (row['width'] as Number).doubleValue()
+      widthData = (row['width'] as BigDecimal)
     } else if (row['xresolution'] instanceof Number) {
-      widthData = (row['xresolution'] as Number).doubleValue() * defaultWidth
+      widthData = (row['xresolution'] as BigDecimal) * defaultWidth
     } else {
       widthData = defaultWidth
     }
     if (useVarwidth && row['relvarwidth'] instanceof Number && maxRelVarwidth > 0d) {
-      double rel = (row['relvarwidth'] as Number).doubleValue() / maxRelVarwidth
+      BigDecimal rel = (row['relvarwidth'] as BigDecimal) / maxRelVarwidth
       widthData = widthData * rel
     }
     return widthData
@@ -402,7 +402,7 @@ class GeomBoxplot extends Geom {
       '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 }

@@ -90,11 +90,11 @@ class GeomContour extends Geom {
     if (grid == null || grid.values.length < 2) return
 
     // Determine contour levels
-    List<Double> levels = computeLevels(grid.zMin, grid.zMax)
+    List<BigDecimal> levels = computeLevels(grid.zMin, grid.zMax)
 
     // Generate and render contours for each level
-    levels.eachWithIndex { double level, int idx ->
-      List<List<double[]>> contours = marchingSquares(grid, level)
+    levels.eachWithIndex { BigDecimal level, int idx ->
+      List<List<BigDecimal[]>> contours = marchingSquares(grid, level)
 
       // Determine color (could be based on level)
       String lineColor = this.color
@@ -104,12 +104,12 @@ class GeomContour extends Geom {
       lineColor = ColorUtil.normalizeColor(lineColor)
 
       // Draw each contour line
-      contours.each { List<double[]> contour ->
+      contours.each { List<BigDecimal[]> contour ->
         if (contour.size() < 2) return
 
         for (int i = 0; i < contour.size() - 1; i++) {
-          double[] p1 = contour[i]
-          double[] p2 = contour[i + 1]
+          BigDecimal[] p1 = contour[i]
+          BigDecimal[] p2 = contour[i + 1]
 
           // Transform to pixel coordinates
           def x1Px = xScale?.transform(p1[0])
@@ -133,7 +133,7 @@ class GeomContour extends Geom {
             line.addAttribute('stroke-dasharray', dashArray)
           }
 
-          if ((alpha as double) < 1.0) {
+          if (alpha < 1.0) {
             line.addAttribute('stroke-opacity', alpha)
           }
         }
@@ -146,9 +146,9 @@ class GeomContour extends Geom {
    */
   protected GridData buildGrid(Matrix data, String xCol, String yCol, String zCol) {
     // Collect unique x and y values
-    Set<Double> xSet = new TreeSet<>()
-    Set<Double> ySet = new TreeSet<>()
-    Map<String, Double> zMap = [:]
+    Set<BigDecimal> xSet = new TreeSet<>()
+    Set<BigDecimal> ySet = new TreeSet<>()
+    Map<String, BigDecimal> zMap = [:]
 
     data.each { row ->
       def xVal = row[xCol]
@@ -156,46 +156,46 @@ class GeomContour extends Geom {
       def zVal = row[zCol]
 
       if (xVal instanceof Number && yVal instanceof Number && zVal instanceof Number) {
-        double x = xVal as double
-        double y = yVal as double
-        double z = zVal as double
+        BigDecimal x = xVal as BigDecimal
+        BigDecimal y = yVal as BigDecimal
+        BigDecimal z = zVal as BigDecimal
 
         xSet.add(x)
         ySet.add(y)
-        zMap["${x},${y}"] = z
+        zMap["${x},${y}".toString()] = z as BigDecimal
       }
     }
 
     if (xSet.size() < 2 || ySet.size() < 2) return null
 
-    List<Double> xValues = xSet.toList()
-    List<Double> yValues = ySet.toList()
+    List<BigDecimal> xValues = xSet.toList()
+    List<BigDecimal> yValues = ySet.toList()
 
     int nx = xValues.size()
     int ny = yValues.size()
 
-    double[][] values = new double[ny][nx]
-    double zMin = Double.MAX_VALUE
-    double zMax = -Double.MAX_VALUE
+    BigDecimal[][] values = new BigDecimal[ny][nx]
+    BigDecimal zMin = Double.MAX_VALUE
+    BigDecimal zMax = -Double.MAX_VALUE
 
     for (int j = 0; j < ny; j++) {
       for (int i = 0; i < nx; i++) {
         String key = "${xValues[i]},${yValues[j]}"
-        Double z = zMap[key]
+        BigDecimal z = zMap[key]
         if (z != null) {
           values[j][i] = z
           if (z < zMin) zMin = z
           if (z > zMax) zMax = z
         } else {
           // Interpolate or use NaN
-          values[j][i] = Double.NaN
+          values[j][i] = null
         }
       }
     }
 
     return new GridData(
-        xValues: xValues as double[],
-        yValues: yValues as double[],
+        xValues: xValues as BigDecimal[],
+        yValues: yValues as BigDecimal[],
         values: values,
         zMin: zMin,
         zMax: zMax
@@ -205,22 +205,22 @@ class GeomContour extends Geom {
   /**
    * Compute contour levels.
    */
-  private List<Double> computeLevels(double zMin, double zMax) {
-    List<Double> levels = []
-    double range = zMax - zMin
+  private List<BigDecimal> computeLevels(BigDecimal zMin, BigDecimal zMax) {
+    List<BigDecimal> levels = []
+    BigDecimal range = zMax - zMin
 
     if (range == 0) {
       return [zMin]
     }
 
-    double step
+    BigDecimal step
     if (binwidth != null) {
-      step = binwidth as double
+      step = binwidth as BigDecimal
     } else {
       step = range / bins
     }
 
-    double level = zMin + step
+    BigDecimal level = zMin + step
     while (level < zMax) {
       levels << level
       level += step
@@ -232,23 +232,23 @@ class GeomContour extends Geom {
   /**
    * Marching squares algorithm for contour generation.
    */
-  protected List<List<double[]>> marchingSquares(GridData grid, double level) {
-    List<List<double[]>> contours = []
+  protected List<List<BigDecimal[]>> marchingSquares(GridData grid, BigDecimal level) {
+    List<List<BigDecimal[]>> contours = []
     int nx = grid.xValues.length
     int ny = grid.yValues.length
 
     // Process each cell
     for (int j = 0; j < ny - 1; j++) {
       for (int i = 0; i < nx - 1; i++) {
-        double[] cell = [
+        BigDecimal[] cell = [
             grid.values[j][i],
             grid.values[j][i + 1],
             grid.values[j + 1][i + 1],
             grid.values[j + 1][i]
-        ] as double[]
+        ] as BigDecimal[]
 
         // Skip if any value is NaN
-        if (cell.any { Double.isNaN(it) }) continue
+        if (cell.any { it == null }) continue
 
         // Determine case (4-bit code based on which corners are above level)
         int code = 0
@@ -261,13 +261,13 @@ class GeomContour extends Geom {
         if (code == 0 || code == 15) continue
 
         // Get cell coordinates
-        double x0 = grid.xValues[i]
-        double x1 = grid.xValues[i + 1]
-        double y0 = grid.yValues[j]
-        double y1 = grid.yValues[j + 1]
+        BigDecimal x0 = grid.xValues[i]
+        BigDecimal x1 = grid.xValues[i + 1]
+        BigDecimal y0 = grid.yValues[j]
+        BigDecimal y1 = grid.yValues[j + 1]
 
         // Generate line segments for this cell
-        List<double[]> segments = getContourSegments(code, cell, level, x0, x1, y0, y1)
+        List<BigDecimal[]> segments = getContourSegments(code, cell, level, x0, x1, y0, y1)
         if (!segments.isEmpty()) {
           contours << segments
         }
@@ -280,58 +280,58 @@ class GeomContour extends Geom {
   /**
    * Get contour line segments for a cell based on marching squares case.
    */
-  private List<double[]> getContourSegments(int code, double[] cell, double level,
-                                             double x0, double x1, double y0, double y1) {
-    List<double[]> points = []
+  private List<BigDecimal[]> getContourSegments(int code, BigDecimal[] cell, BigDecimal level,
+                                            BigDecimal x0, BigDecimal x1, BigDecimal y0, BigDecimal y1) {
+    List<BigDecimal[]> points = []
 
     // Interpolation helper
-    Closure<Double> lerp = { double v0, double v1, double t0, double t1 ->
+    Closure<BigDecimal> lerp = { BigDecimal v0, BigDecimal v1, BigDecimal t0, BigDecimal t1 ->
       if (v1 == v0) return t0
       return t0 + (t1 - t0) * (level - v0) / (v1 - v0)
     }
 
     // Edge midpoints (interpolated)
-    double xTop = lerp(cell[0], cell[1], x0, x1)
-    double xBottom = lerp(cell[3], cell[2], x0, x1)
-    double yLeft = lerp(cell[0], cell[3], y0, y1)
-    double yRight = lerp(cell[1], cell[2], y0, y1)
+    BigDecimal xTop = lerp(cell[0], cell[1], x0, x1)
+    BigDecimal xBottom = lerp(cell[3], cell[2], x0, x1)
+    BigDecimal yLeft = lerp(cell[0], cell[3], y0, y1)
+    BigDecimal yRight = lerp(cell[1], cell[2], y0, y1)
 
     // Cases based on 4-bit code
     switch (code) {
       case 1: case 14:
-        points << ([xTop, y0] as double[])
-        points << ([x0, yLeft] as double[])
+        points << ([xTop, y0] as BigDecimal[])
+        points << ([x0, yLeft] as BigDecimal[])
         break
       case 2: case 13:
-        points << ([xTop, y0] as double[])
-        points << ([x1, yRight] as double[])
+        points << ([xTop, y0] as BigDecimal[])
+        points << ([x1, yRight] as BigDecimal[])
         break
       case 3: case 12:
-        points << ([x0, yLeft] as double[])
-        points << ([x1, yRight] as double[])
+        points << ([x0, yLeft] as BigDecimal[])
+        points << ([x1, yRight] as BigDecimal[])
         break
       case 4: case 11:
-        points << ([x1, yRight] as double[])
-        points << ([xBottom, y1] as double[])
+        points << ([x1, yRight] as BigDecimal[])
+        points << ([xBottom, y1] as BigDecimal[])
         break
       case 5:
         // Saddle point - two separate lines
-        points << ([xTop, y0] as double[])
-        points << ([x1, yRight] as double[])
+        points << ([xTop, y0] as BigDecimal[])
+        points << ([x1, yRight] as BigDecimal[])
         // Second line handled separately
         break
       case 6: case 9:
-        points << ([xTop, y0] as double[])
-        points << ([xBottom, y1] as double[])
+        points << ([xTop, y0] as BigDecimal[])
+        points << ([xBottom, y1] as BigDecimal[])
         break
       case 7: case 8:
-        points << ([x0, yLeft] as double[])
-        points << ([xBottom, y1] as double[])
+        points << ([x0, yLeft] as BigDecimal[])
+        points << ([xBottom, y1] as BigDecimal[])
         break
       case 10:
         // Saddle point - two separate lines
-        points << ([xTop, y0] as double[])
-        points << ([x0, yLeft] as double[])
+        points << ([xTop, y0] as BigDecimal[])
+        points << ([x0, yLeft] as BigDecimal[])
         // Second line handled separately
         break
     }
@@ -355,10 +355,10 @@ class GeomContour extends Geom {
    */
   @CompileStatic
   protected static class GridData {
-    double[] xValues
-    double[] yValues
-    double[][] values
-    double zMin
-    double zMax
+    BigDecimal[] xValues
+    BigDecimal[] yValues
+    BigDecimal[][] values
+    BigDecimal zMin
+    BigDecimal zMax
   }
 }

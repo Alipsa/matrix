@@ -82,7 +82,7 @@ class GeomBar extends Geom {
     Scale fillScale = scales['fill'] ?: scales['color']
 
     // Calculate bar width
-    double barWidth = calculateBarWidth(xScale)
+    BigDecimal barWidth = calculateBarWidth(xScale)
 
     // Render each bar
     data.each { row ->
@@ -147,13 +147,13 @@ class GeomBar extends Geom {
   /**
    * Calculate bar width based on scale bandwidth.
    */
-  protected double calculateBarWidth(Scale xScale) {
+  protected BigDecimal calculateBarWidth(Scale xScale) {
     if (width != null) {
       // User specified width as fraction
       if (xScale instanceof ScaleDiscrete) {
-        return (xScale as ScaleDiscrete).getBandwidth() * (width as double)
+        return (xScale as ScaleDiscrete).getBandwidth() * (width as BigDecimal)
       }
-      return 20 * (width as double)  // Fallback for continuous
+      return 20 * (width as BigDecimal)  // Fallback for continuous
     }
 
     // Default: 90% of bandwidth for discrete, 20px for continuous

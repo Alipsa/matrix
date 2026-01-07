@@ -84,8 +84,8 @@ class GeomPoint extends Geom {
       // Skip if scale couldn't transform the value
       if (xTransformed == null || yTransformed == null) return
 
-      double xPx = xTransformed as double
-      double yPx = yTransformed as double
+      BigDecimal xPx = xTransformed as BigDecimal
+      BigDecimal yPx = yTransformed as BigDecimal
 
       // Determine color
       String pointColor = this.color
@@ -102,7 +102,7 @@ class GeomPoint extends Geom {
       pointColor = ColorUtil.normalizeColor(pointColor) ?: pointColor
 
       // Determine size
-      Number pointSize = GeomUtils.extractPointSize(this.size, aes, sizeCol, row.toMap(), sizeScale)
+      BigDecimal pointSize = GeomUtils.extractPointSize(this.size, aes, sizeCol, row.toMap(), sizeScale)
 
       // Determine shape
       String pointShape = this.shape
@@ -113,11 +113,11 @@ class GeomPoint extends Geom {
       }
 
       // Determine alpha
-      Number pointAlpha = GeomUtils.extractPointAlpha(this.alpha, aes, alphaCol, row.toMap(), alphaScale)
+      BigDecimal pointAlpha = GeomUtils.extractPointAlpha(this.alpha, aes, alphaCol, row.toMap(), alphaScale)
 
       // Draw the point
-      GeomUtils.drawPoint(group, xPx, yPx, (pointSize as Number).doubleValue(), pointColor, pointShape,
-          (pointAlpha as Number).doubleValue())
+      GeomUtils.drawPoint(group, xPx, yPx, pointSize, pointColor, pointShape,
+          pointAlpha)
     }
   }
 }

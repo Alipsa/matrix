@@ -92,7 +92,7 @@ class GeomVline extends Geom {
       def xPx = xScale.transform(xVal)
       if (xPx == null) return
 
-      double x = xPx as double
+      BigDecimal x = xPx as BigDecimal
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
@@ -111,7 +111,7 @@ class GeomVline extends Geom {
       }
 
       // Apply alpha
-      if ((alpha as double) < 1.0) {
+      if ((alpha as BigDecimal) < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
     }

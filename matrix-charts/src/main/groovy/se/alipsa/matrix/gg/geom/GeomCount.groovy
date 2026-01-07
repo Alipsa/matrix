@@ -120,12 +120,12 @@ class GeomCount extends Geom {
       int cy = yPx as int
 
       // Calculate size based on count
-      double sizeRange = (sizeMax as double) - (sizeMin as double)
-      double size
+      BigDecimal sizeRange = (sizeMax as BigDecimal) - (sizeMin as BigDecimal)
+      BigDecimal size
       if (maxCount == 1) {
-        size = (sizeMin as double) + sizeRange / 2
+        size = (sizeMin as BigDecimal) + sizeRange / 2
       } else {
-        size = (sizeMin as double) + (cd.count - 1) * sizeRange / (maxCount - 1)
+        size = (sizeMin as BigDecimal) + (cd.count - 1) * sizeRange / (maxCount - 1)
       }
 
       // Determine colors
@@ -150,7 +150,7 @@ class GeomCount extends Geom {
   /**
    * Draw a point of the specified shape.
    */
-  private void drawPoint(G group, int cx, int cy, double size, String fillColor, String strokeColor) {
+  private void drawPoint(G group, int cx, int cy, Number size, String fillColor, String strokeColor) {
     double halfSize = size / 2
 
     switch (shape?.toLowerCase()) {
