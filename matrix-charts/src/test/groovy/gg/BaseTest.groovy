@@ -22,6 +22,16 @@ class BaseTest {
     }
   }
 
+  static void assertEquals(BigDecimal expected, BigDecimal actual, Number tolerance, String message = '') {
+    if (expected == null && actual == null) return
+    if (expected == null || actual == null) {
+      fail(message ?: "Expected ${expected} but was ${actual}")
+    }
+    if ((expected - actual).abs() > tolerance) {
+      fail(message ?: "Expected ${expected} but was ${actual}")
+    }
+  }
+
   /**
    * Custom assertEquals overload that accepts Number as expected value.
    * Converts the Number to BigDecimal before comparison.
@@ -32,6 +42,10 @@ class BaseTest {
    */
   static void assertEquals(Number expected, BigDecimal actual, String message = '') {
     assertEquals(expected as BigDecimal, actual, message)
+  }
+
+  static void assertEquals(Number expected, BigDecimal actual, Number tolerance, String message = '') {
+    assertEquals(expected as BigDecimal, actual, tolerance, message)
   }
 
   // Delegate to JUnit's assertEquals for non-BigDecimal types
