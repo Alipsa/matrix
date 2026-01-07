@@ -126,8 +126,9 @@ class Scale {
   void setExpand(List<? extends Number> vals) {
     if (vals == null) {
       this.expand = null
-    } else {
-    this.expand = vals.collect { it as BigDecimal }
+    }
+    else {
+      this.expand = vals.collect { it as BigDecimal }
     }
   }
 
