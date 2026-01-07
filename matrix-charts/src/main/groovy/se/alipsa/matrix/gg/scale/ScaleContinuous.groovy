@@ -160,7 +160,7 @@ class ScaleContinuous extends Scale {
       return bd.toBigInteger().toString()
     }
 
-    // Format with 2 significant figures for non-integers
+    // Format with 2 significant digits for non-integers
     double d = bd.doubleValue()
     return String.format('%.2g', d)
   }
