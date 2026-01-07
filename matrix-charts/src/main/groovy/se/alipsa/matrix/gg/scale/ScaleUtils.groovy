@@ -79,4 +79,151 @@ class ScaleUtils {
     }
     return values
   }
+
+  /**
+   * Perform linear interpolation from domain to range.
+   * Handles the zero-range domain edge case by returning the midpoint of the range.
+   *
+   * @param value the value to transform (in domain space)
+   * @param domainMin the minimum of the domain
+   * @param domainMax the maximum of the domain
+   * @param rangeMin the minimum of the range
+   * @param rangeMax the maximum of the range
+   * @return the transformed value in range space, or null if value is null
+   */
+  static BigDecimal linearTransform(BigDecimal value, BigDecimal domainMin, BigDecimal domainMax,
+                                     BigDecimal rangeMin, BigDecimal rangeMax) {
+    if (value == null) return null
+
+    // Handle edge case: zero-range domain
+    if (domainMax == domainMin) {
+      return (rangeMin + rangeMax).divide(TWO, MATH_CONTEXT)
+    }
+
+    // Linear interpolation
+    BigDecimal normalized = (value - domainMin).divide((domainMax - domainMin), MATH_CONTEXT)
+    return rangeMin + normalized * (rangeMax - rangeMin)
+  }
+
+  /**
+   * Perform inverse linear interpolation from range to domain.
+   * Handles the zero-range output edge case by returning the midpoint of the domain.
+   *
+   * @param value the value to inverse transform (in range space)
+   * @param domainMin the minimum of the domain
+   * @param domainMax the maximum of the domain
+   * @param rangeMin the minimum of the range
+   * @param rangeMax the maximum of the range
+   * @return the inverse transformed value in domain space, or null if value is null
+   */
+  static BigDecimal linearInverse(BigDecimal value, BigDecimal domainMin, BigDecimal domainMax,
+                                   BigDecimal rangeMin, BigDecimal rangeMax) {
+    if (value == null) return null
+
+    // Handle edge case: zero-range output
+    if (rangeMax == rangeMin) {
+      return (domainMin + domainMax).divide(TWO, MATH_CONTEXT)
+    }
+
+    // Inverse linear interpolation
+    BigDecimal normalized = (value - rangeMin).divide((rangeMax - rangeMin), MATH_CONTEXT)
+    return domainMin + normalized * (domainMax - domainMin)
+  }
+
+  /**
+   * Perform reversed linear interpolation from domain to range.
+   * Handles the zero-range domain edge case by returning the midpoint of the range.
+   *
+   * @param value the value to transform (in domain space)
+   * @param domainMin the minimum of the domain
+   * @param domainMax the maximum of the domain
+   * @param rangeMin the minimum of the range
+   * @param rangeMax the maximum of the range
+   * @return the transformed value in range space (reversed), or null if value is null
+   */
+  static BigDecimal linearTransformReversed(BigDecimal value, BigDecimal domainMin, BigDecimal domainMax,
+                                             BigDecimal rangeMin, BigDecimal rangeMax) {
+    if (value == null) return null
+
+    // Handle edge case: zero-range domain
+    if (domainMax == domainMin) {
+      return (rangeMin + rangeMax).divide(TWO, MATH_CONTEXT)
+    }
+
+    // Reversed linear interpolation: rMax - normalized * (rMax - rMin)
+    BigDecimal normalized = (value - domainMin).divide((domainMax - domainMin), MATH_CONTEXT)
+    return rangeMax - normalized * (rangeMax - rangeMin)
+  }
+
+  /**
+   * Perform reversed inverse linear interpolation from range to domain.
+   * Handles the zero-range output edge case by returning the midpoint of the domain.
+   *
+   * @param value the value to inverse transform (in range space)
+   * @param domainMin the minimum of the domain
+   * @param domainMax the maximum of the domain
+   * @param rangeMin the minimum of the range
+   * @param rangeMax the maximum of the range
+   * @return the inverse transformed value in domain space, or null if value is null
+   */
+  static BigDecimal linearInverseReversed(BigDecimal value, BigDecimal domainMin, BigDecimal domainMax,
+                                           BigDecimal rangeMin, BigDecimal rangeMax) {
+    if (value == null) return null
+
+    // Handle edge case: zero-range output
+    if (rangeMax == rangeMin) {
+      return (domainMin + domainMax).divide(TWO, MATH_CONTEXT)
+    }
+
+    // Reversed inverse linear interpolation
+    BigDecimal normalized = (rangeMax - value).divide((rangeMax - rangeMin), MATH_CONTEXT)
+    return domainMin + normalized * (domainMax - domainMin)
+  }
+
+  /**
+   * Calculate the midpoint of two BigDecimal values.
+   *
+   * @param a first value
+   * @param b second value
+   * @return the midpoint (a + b) / 2
+   */
+  static BigDecimal midpoint(BigDecimal a, BigDecimal b) {
+    return (a + b).divide(TWO, MATH_CONTEXT)
+  }
+
+  /**
+   * Find a "nice" number approximately equal to x for axis labeling.
+   * Based on Wilkinson's algorithm - rounds to 1, 2, 5, or 10 times a power of 10.
+   *
+   * This is useful for generating readable axis tick values (e.g., 0.5, 1, 2, 5, 10, 20, 50, 100).
+   *
+   * @param x the number to round
+   * @param round if true, round the number; if false, take the ceiling
+   * @return a "nice" number close to x
+   */
+  static BigDecimal niceNum(BigDecimal x, boolean round) {
+    if (x == 0) return BigDecimal.ZERO
+
+    // Work with absolute value to avoid negative f in comparisons
+    BigDecimal absX = x.abs()
+    BigDecimal exp = absX.log10().floor()
+    BigDecimal f = absX / (10 ** exp)
+
+    BigDecimal nf
+    if (round) {
+      if (f < 1.5) nf = 1
+      else if (f < 3) nf = 2
+      else if (f < 7) nf = 5
+      else nf = 10
+    } else {
+      if (f <= 1) nf = 1
+      else if (f <= 2) nf = 2
+      else if (f <= 5) nf = 5
+      else nf = 10
+    }
+
+    BigDecimal result = nf * (10 ** exp)
+    // Restore the sign
+    return x < 0 ? -result : result
+  }
 }

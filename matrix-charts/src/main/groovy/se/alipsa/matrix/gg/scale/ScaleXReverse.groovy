@@ -38,36 +38,13 @@ class ScaleXReverse extends ScaleContinuous {
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return null
-
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
-
-    if (dMax == dMin) return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-
-    // REVERSED: Linear interpolation but inverted
-    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
-    // Instead of rMin + normalized * (rMax - rMin), we do rMax - normalized * (rMax - rMin)
-    return rMax - normalized * (rMax - rMin)
+    return ScaleUtils.linearTransformReversed(v, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 
   @Override
   Object inverse(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
-    if (v == null) return null
-
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
-
-    if (rMax == rMin) return (dMin + dMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-
-    // REVERSED: Inverse linear interpolation
-    BigDecimal normalized = (rMax - v).divide((rMax - rMin), ScaleUtils.MATH_CONTEXT)
-    return dMin + normalized * (dMax - dMin)
+    return ScaleUtils.linearInverseReversed(v, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 
   @Override

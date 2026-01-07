@@ -48,16 +48,7 @@ class ScaleSizeContinuous extends ScaleContinuous {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return naValue
 
-    BigDecimal dMin = computedDomain[0]
-    BigDecimal dMax = computedDomain[1]
-    BigDecimal rMin = range[0]
-    BigDecimal rMax = range[1]
-
-    if (dMax == dMin) {
-      return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-    }
-
-    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
-    return rMin + normalized * (rMax - rMin)
+    BigDecimal result = ScaleUtils.linearTransform(v, computedDomain[0], computedDomain[1], range[0], range[1])
+    return result != null ? result : naValue
   }
 }
