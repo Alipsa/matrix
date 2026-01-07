@@ -847,8 +847,8 @@ class GgPlot {
    *
    * @param ratio Aspect ratio: y units per x unit (1.0 = equal scaling)
    */
-  static CoordFixed coord_fixed(double ratio) {
-    return new CoordFixed(ratio)
+  static CoordFixed coord_fixed(Number ratio) {
+    return new CoordFixed(ratio as BigDecimal)
   }
 
   /**
