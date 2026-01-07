@@ -90,7 +90,7 @@ class ScaleColorGradientN extends ScaleContinuous {
   private List<BigDecimal> resolveStops() {
     if (values != null && values.size() == colors.size()) {
       return values.collect { Number n ->
-        BigDecimal v = n != null ? (n as Number) : 0.0G
+        BigDecimal v = n != null ? (n as BigDecimal) : 0.0G
         v.min(1.0G).max(0.0G)
       } as List<BigDecimal>
     }
