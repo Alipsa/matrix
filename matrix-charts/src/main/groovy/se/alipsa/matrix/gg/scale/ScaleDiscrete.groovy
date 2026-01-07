@@ -171,5 +171,3 @@ class ScaleDiscrete extends Scale {
     return range
   }
 }
-
-
