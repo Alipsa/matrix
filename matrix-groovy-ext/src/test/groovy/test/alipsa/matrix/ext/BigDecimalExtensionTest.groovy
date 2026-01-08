@@ -92,7 +92,7 @@ class BigDecimalExtensionTest {
 
     // Test exp is inverse of log
     BigDecimal value = 5.0
-    BigDecimal logged = Math.log(value.doubleValue()) as BigDecimal
+    BigDecimal logged = value.log()
     BigDecimal recovered = logged.exp()
     assertEquals(value.doubleValue(), recovered.doubleValue(), 1e-10)
 
