@@ -1547,6 +1547,9 @@ class GgStat {
     // Parameters
     Number levelParam = params.level as Number ?: 0.95
     double level = levelParam as double
+    if (level <= 0d || level >= 1d) {
+      throw new IllegalArgumentException("stat_ellipse level must be between 0 and 1 (exclusive), was: $level")
+    }
     String type = params.type as String ?: 't'
     int segments = params.segments as Integer ?: 51
 
