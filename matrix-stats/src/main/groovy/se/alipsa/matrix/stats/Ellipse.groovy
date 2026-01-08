@@ -67,8 +67,13 @@ class Ellipse {
     // Eigenvalues and eigenvectors for rotation
     double trace = varX + varY
     double det = varX * varY - covXY * covXY
-    double lambda1 = trace / 2 + Math.sqrt((trace * trace) / 4 - det)
-    double lambda2 = trace / 2 - Math.sqrt((trace * trace) / 4 - det)
+    double discriminant = (trace * trace) / 4 - det
+    if (discriminant < 0) {
+      // Guard against small negative values due to numerical precision
+      discriminant = 0
+    }
+    double lambda1 = trace / 2 + Math.sqrt(discriminant)
+    double lambda2 = trace / 2 - Math.sqrt(discriminant)
 
     // Angle of rotation
     double theta
