@@ -1457,10 +1457,16 @@ class GgStat {
     int nBins
     if (params.binwidth != null) {
       binWidth = params.binwidth as BigDecimal
+      if (binWidth <= 0) {
+        throw new IllegalArgumentException("stat_summary_bin requires a positive binwidth, but was " + binWidth)
+      }
       nBins = (range / binWidth).ceil() as int
     } else {
       nBins = params.bins as Integer ?: 30
       binWidth = range / nBins
+      if (binWidth <= 0) {
+        throw new IllegalArgumentException("stat_summary_bin computed a non-positive binwidth " + binWidth + " from bins=" + nBins)
+      }
     }
 
     // Group points into bins
