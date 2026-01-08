@@ -279,10 +279,13 @@ class NumberExtension {
    *
    * // Instead of the more verbose:
    * BigDecimal side = area.sqrt(MathContext.DECIMAL64)
+   *
+   * // For higher precision (e.g., in matrix-stats):
+   * BigDecimal precise = area.sqrt(MathContext.DECIMAL128)
    * }</pre>
    *
    * @param self the BigDecimal value to take the square root of
-   * @return the square root as a BigDecimal
+   * @return the square root as a BigDecimal with DECIMAL64 precision
    * @see MathContext#DECIMAL64
    */
   static BigDecimal sqrt(BigDecimal self) {

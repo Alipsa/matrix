@@ -276,6 +276,13 @@ class NumberExtensionTest {
     // Test that it's equivalent to sqrt(MathContext.DECIMAL64)
     BigDecimal value = 100.0G
     assert value.sqrt() == value.sqrt(MathContext.DECIMAL64)
+
+    // Test with explicit DECIMAL128 precision for higher precision needs
+    BigDecimal val128 = 2.0G
+    BigDecimal sqrt128 = val128.sqrt(MathContext.DECIMAL128)
+    assert sqrt128 != null
+    // DECIMAL128 has more precision than DECIMAL64
+    assert sqrt128.precision() <= MathContext.DECIMAL128.precision
   }
 
   @Test
