@@ -919,7 +919,7 @@ class GgPlot {
    * - coord_trans(x: "log10") - log10 transform on x-axis
    * - coord_trans(y: "sqrt") - square root transform on y-axis
    * - coord_trans(x: "log10", y: "sqrt") - both axes transformed
-   * - coord_trans(x: [forward: {x -> x * x}, inverse: {x -> Math.sqrt(x)}]) - custom transformation
+   * - coord_trans(x: [forward: {x -> x * x}, inverse: {x -> x ** 0.5}]) - custom transformation
    */
   static CoordTrans coord_trans(Map params = [:]) {
     return new CoordTrans(params)
