@@ -28,10 +28,10 @@ class ColorUtil {
         }
         if (color.getClass().name == 'javafx.scene.paint.Color') {
             try {
-                double redValue = (color.getClass().getMethod('getRed').invoke(color) as Number).doubleValue()
-                double greenValue = (color.getClass().getMethod('getGreen').invoke(color) as Number).doubleValue()
-                double blueValue = (color.getClass().getMethod('getBlue').invoke(color) as Number).doubleValue()
-                double alphaValue = (color.getClass().getMethod('getOpacity').invoke(color) as Number).doubleValue()
+                double redValue = color.getClass().getMethod('getRed').invoke(color) as double
+                double greenValue = color.getClass().getMethod('getGreen').invoke(color) as double
+                double blueValue = color.getClass().getMethod('getBlue').invoke(color) as double
+                double alphaValue = color.getClass().getMethod('getOpacity').invoke(color) as double
                 final String red = pad(Integer.toHexString((int) Math.round(redValue * 255)))
                 final String green = pad(Integer.toHexString((int) Math.round(greenValue * 255)))
                 final String blue = pad(Integer.toHexString((int) Math.round(blueValue * 255)))

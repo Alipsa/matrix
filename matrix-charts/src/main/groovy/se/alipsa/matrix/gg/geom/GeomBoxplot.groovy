@@ -136,7 +136,7 @@ class GeomBoxplot extends Geom {
       continuousX = firstX instanceof Number
     }
     boolean useVarwidth = varwidth == true
-    BigDecimal maxRelVarwidth = 1.0G
+    BigDecimal maxRelVarwidth = 1.0
     if (useVarwidth && data.columnNames().contains('relvarwidth')) {
       List<Number> relValues = (data['relvarwidth'] as List).findAll { it instanceof Number } as List<Number>
       if (!relValues.isEmpty()) {

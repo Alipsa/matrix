@@ -97,10 +97,10 @@ class ScaleColorGradientN extends ScaleContinuous {
     int n = colors.size()
     List<BigDecimal> stops = new ArrayList<>(n)
     if (n == 1) {
-      stops << 0.0G
+      stops << 0.0
       return stops
     }
-    BigDecimal step = 1.0G / (n - 1)
+    BigDecimal step = 1.0 / (n - 1)
     for (int i = 0; i < n; i++) {
       stops << (i * step)
     }

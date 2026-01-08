@@ -229,8 +229,9 @@ area.sqrt()  // → 5.0 (uses MathContext.DECIMAL64)
 // Unit in last place (for epsilon calculations)
 BigDecimal epsilon = value.ulp() * 10
 
-// Min/max with chainable syntax
+// Min/max with chainable syntax - use integer literals for integer values
 BigDecimal binIndex = 0.max(value.min(100))  // Clamp to [0, 100]
+BigDecimal t = normalized.min(1).max(0)      // Clamp to [0, 1] - use 1 and 0, not 1.0 and 0.0
 
 // Works with mixed Number types
 BigDecimal result = someValue.min(breaks.size() - 2)

@@ -10,10 +10,10 @@ import groovy.transform.CompileStatic
 class ScaleSizeContinuous extends ScaleContinuous {
 
   /** Output range [min, max] for size values as BigDecimal. */
-  List<BigDecimal> range = [new BigDecimal('1.0'), new BigDecimal('6.0')]
+  List<BigDecimal> range = [1.0, 6.0]
 
   /** Size value for NA/missing values (BigDecimal, nullable). */
-  BigDecimal naValue = 3.0G
+  BigDecimal naValue = 3.0
 
   /**
    * Create a continuous size scale with defaults.

@@ -9,10 +9,10 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class ScaleContinuous extends Scale {
 
-  static final BigDecimal DEFAULT_EXPAND_MULT = 0.05G
-  static final BigDecimal DEFAULT_EXPAND_ADD = 0G
-  static final BigDecimal BREAK_TOLERANCE_RATIO = 0.001G  // Small epsilon for break comparisons.
-  static final List<BigDecimal> NO_EXPAND = [0.0G, 0.0G]  // No expansion constant
+  static final BigDecimal DEFAULT_EXPAND_MULT = 0.05
+  static final BigDecimal DEFAULT_EXPAND_ADD = 0
+  static final BigDecimal BREAK_TOLERANCE_RATIO = 0.001  // Small epsilon for break comparisons.
+  static final List<BigDecimal> NO_EXPAND = [0.0, 0.0]  // No expansion constant
 
   /** Output range [min, max] as BigDecimal values. */
   protected List<BigDecimal> range = [BigDecimal.ZERO, BigDecimal.ONE]
