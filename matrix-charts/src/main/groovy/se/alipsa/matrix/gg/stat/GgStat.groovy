@@ -1460,9 +1460,19 @@ class GgStat {
       if (binWidth <= 0) {
         throw new IllegalArgumentException("stat_summary_bin requires a positive binwidth, but was " + binWidth)
       }
+      if (binWidth <= 0) {
+        throw new IllegalArgumentException("binwidth must be positive, was " + binWidth)
+      }
       nBins = (range / binWidth).ceil() as int
     } else {
-      nBins = params.bins as Integer ?: 30
+      Integer binsParam = params.bins as Integer
+      if (binsParam == null) {
+        nBins = 30
+      } else if (binsParam <= 0) {
+        throw new IllegalArgumentException("bins must be positive, was " + binsParam)
+      } else {
+        nBins = binsParam
+      }
       binWidth = range / nBins
       if (binWidth <= 0) {
         throw new IllegalArgumentException("stat_summary_bin computed a non-positive binwidth " + binWidth + " from bins=" + nBins)
