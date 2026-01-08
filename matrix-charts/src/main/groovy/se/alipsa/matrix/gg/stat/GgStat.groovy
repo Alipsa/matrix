@@ -1369,6 +1369,9 @@ class GgStat {
     }
 
     int n = params.n as Integer ?: 101
+    if (n < 1) {
+      throw new IllegalArgumentException("stat_function parameter 'n' must be at least 1 but was " + n)
+    }
     if (n == 1) {
       BigDecimal x = xmin
       BigDecimal y = fun.call(x) as BigDecimal
