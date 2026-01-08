@@ -36,6 +36,33 @@ class BigDecimalExtensionTest {
   }
 
   @Test
+  void testLog() {
+    // Test log(e) = 1
+    BigDecimal e = Math.E as BigDecimal
+    BigDecimal logE = e.log()
+    assertEquals(1.0, logE.doubleValue(), 1e-10)
+
+    // Test log(1) = 0
+    BigDecimal one = 1.0
+    BigDecimal logOne = one.log()
+    assertEquals(0.0, logOne.doubleValue(), 1e-10)
+
+    // Test log(e^2) = 2
+    BigDecimal eSquared = (Math.E * Math.E) as BigDecimal
+    BigDecimal logESquared = eSquared.log()
+    assertEquals(2.0, logESquared.doubleValue(), 1e-10)
+
+    // Test log is inverse of exp
+    BigDecimal value = 5.0
+    BigDecimal logged = value.log()
+    BigDecimal recovered = logged.exp()
+    assertEquals(value.doubleValue(), recovered.doubleValue(), 1e-10)
+
+    // Test with extension syntax
+    assert 1.0.log() == 0.0
+  }
+
+  @Test
   void testLog10() {
     BigDecimal value = 1000G
     BigDecimal logValue = BigDecimalExtension.log10(value)
@@ -44,6 +71,34 @@ class BigDecimalExtensionTest {
     // Test with different values
     assert BigDecimalExtension.log10(100) == 2G
     assert BigDecimalExtension.log10(10.0) == 1G
+  }
+
+  @Test
+  void testExp() {
+    // Test exp(0) = 1
+    BigDecimal zero = 0.0
+    BigDecimal expZero = zero.exp()
+    assertEquals(1.0, expZero.doubleValue(), 1e-10)
+
+    // Test exp(1) = e
+    BigDecimal one = 1.0
+    BigDecimal expOne = one.exp()
+    assertEquals(Math.E, expOne.doubleValue(), 1e-10)
+
+    // Test exp(2)
+    BigDecimal two = 2.0
+    BigDecimal expTwo = two.exp()
+    assertEquals(Math.E * Math.E, expTwo.doubleValue(), 1e-10)
+
+    // Test exp is inverse of log
+    BigDecimal value = 5.0
+    BigDecimal logged = Math.log(value.doubleValue()) as BigDecimal
+    BigDecimal recovered = logged.exp()
+    assertEquals(value.doubleValue(), recovered.doubleValue(), 1e-10)
+
+    // Test with extension syntax
+    BigDecimal testVal = 0.0
+    assert testVal.exp() == 1.0
   }
 
   @Test
@@ -403,8 +458,12 @@ class BigDecimalExtensionTest {
     assert value.sqrt() > 0
     assert value.sin() != null
     assert value.cos() != null
+    assert value.exp() != null
+    assert value.log() != null
 
     // Verify Number types work with extension syntax
+    BigDecimal e = Math.E as BigDecimal
+    assert e.log() == 1.0
     assert 100.log10() == 2G
     assert 42.ulp() > 0
     assert 5.min(10.0G) == 5G

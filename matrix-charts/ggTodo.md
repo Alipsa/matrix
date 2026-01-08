@@ -221,7 +221,7 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 3.3 Coordinate Transforms
 
-- 3.3.1 [ ] `coord_trans()` - Arbitrary coordinate transformations
+- 3.3.1 [x] `coord_trans()` - Arbitrary coordinate transformations
 
 ### 3.4 Additional Themes
 

@@ -209,6 +209,44 @@ BigDecimal bd = value as BigDecimal
 double x = (value as Number).doubleValue()
 ```
 
+**Prefer operators over Math methods:**
+```groovy
+// Good - Idiomatic Groovy with operators
+BigDecimal power = x ** exponent
+BigDecimal squared = value ** 2
+BigDecimal sqrt = value ** 0.5
+BigDecimal reciprocal = 1 / value
+
+// Avoid - Java Math methods with unnecessary type conversions
+BigDecimal power = Math.pow(x as double, exponent as double) as BigDecimal
+BigDecimal squared = Math.pow(value as double, 2.0) as BigDecimal
+BigDecimal sqrt = Math.sqrt(value as double) as BigDecimal
+BigDecimal reciprocal = (1.0 / (value as double)) as BigDecimal
+```
+
+**Always prefer BigDecimal extension methods over Math methods:**
+```groovy
+// Good - Use extension methods from matrix-groovy-ext
+BigDecimal naturalLog = value.log()
+BigDecimal log10 = value.log10()
+BigDecimal exp = value.exp()
+BigDecimal squareRoot = value.sqrt()
+BigDecimal sine = angle.sin()
+BigDecimal cosine = angle.cos()
+
+// Avoid - Verbose Math methods with type conversions
+BigDecimal naturalLog = Math.log(value as double) as BigDecimal
+BigDecimal sine = Math.sin(angle as double) as BigDecimal
+```
+
+**If you need a Math operation not yet in BigDecimalExtension:**
+- First, add it to `matrix-groovy-ext/src/main/groovy/se/alipsa/matrix/ext/BigDecimalExtension.groovy`
+- Add corresponding tests to `BigDecimalExtensionTest.groovy`
+- Update CLAUDE.md to document the new extension
+- Then use it in your code
+
+This keeps the codebase consistent and improves readability for future code.
+
 ### BigDecimalExtension Methods
 
 The `matrix-groovy-ext` module provides extension methods for BigDecimal:
@@ -219,13 +257,30 @@ BigDecimal x = 3.7G
 x.floor()  // → 3.0
 x.ceil()   // → 4.0
 
+// Natural logarithm (ln)
+BigDecimal e = Math.E as BigDecimal
+e.log()  // → 1.0
+
 // Logarithm base 10
 BigDecimal value = 100G
 value.log10()  // → 2.0
 
+// Exponential function (e^x)
+BigDecimal x = 1.0
+x.exp()  // → 2.718281828... (Math.E)
+
 // Square root with default precision
 BigDecimal area = 25.0G
 area.sqrt()  // → 5.0 (uses MathContext.DECIMAL64)
+
+// Trigonometric functions (angles in radians)
+BigDecimal angle = Math.PI / 2 as BigDecimal
+angle.sin()  // → 1.0
+angle.cos()  // → 0.0
+
+// Inverse operations demonstrate composability
+BigDecimal testValue = 5.0
+testValue.log().exp()  // → 5.0 (log and exp are inverses)
 
 // Unit in last place (for epsilon calculations)
 BigDecimal epsilon = value.ulp() * 10
@@ -405,6 +460,23 @@ private static String createHexagonPath(Number cx, Number cy, Number width, Numb
 // Avoid - too specific
 private static String createHexagonPath(double cx, double cy, double width, double height) {
   // Forces caller to cast or convert
+}
+```
+
+**⚠️ @CompileStatic type checking with `**` operator:**
+When using `@CompileStatic`, the `**` operator may return `Number` instead of `BigDecimal`, causing type checking errors with typed collections. Use explicit variable assignment:
+```groovy
+// CompileStatic error - type inference fails
+List<BigDecimal> result = []
+for (int i = minExp; i <= maxExp; i++) {
+  result << (10 ** i)  // Error: Cannot add Number to List<BigDecimal>
+}
+
+// Solution - assign to typed variable first
+List<BigDecimal> result = []
+for (int i = minExp; i <= maxExp; i++) {
+  BigDecimal value = (10 ** i) as BigDecimal
+  result << value
 }
 ```
 

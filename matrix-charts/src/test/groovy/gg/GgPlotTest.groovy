@@ -615,4 +615,142 @@ class GgPlotTest {
         println("Wrote stat_function plot to ${outputFile.absolutePath}")
     }
 
+    @Test
+    void testCoordTransLog10() {
+        // Test log10 transformation on x-axis
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows([
+                [1, 1],
+                [10, 2],
+                [100, 3],
+                [1000, 4],
+                [10000, 5]
+            ])
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+            geom_point(size: 3) +
+            geom_line() +
+            coord_trans(x: 'log10') +
+            labs(title: 'Log10 Transformation on X-axis')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<circle') || svgContent.contains('<line'),
+                   "Should contain points or lines")
+
+        File outputFile = new File('build/test_coord_trans_log10.svg')
+        write(svg, outputFile)
+        println("Wrote coord_trans log10 plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testCoordTransSqrt() {
+        // Test sqrt transformation on y-axis
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows([
+                [1, 1],
+                [2, 4],
+                [3, 9],
+                [4, 16],
+                [5, 25]
+            ])
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+            geom_point(size: 3) +
+            geom_line() +
+            coord_trans(y: 'sqrt') +
+            labs(title: 'Square Root Transformation on Y-axis')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<circle'),
+                   "Should contain points")
+
+        File outputFile = new File('build/test_coord_trans_sqrt.svg')
+        write(svg, outputFile)
+        println("Wrote coord_trans sqrt plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testCoordTransBothAxes() {
+        // Test transformation on both axes
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows([
+                [1, 1],
+                [10, 4],
+                [100, 9],
+                [1000, 16]
+            ])
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+            geom_point(size: 3, color: 'blue') +
+            coord_trans(x: 'log10', y: 'sqrt') +
+            labs(title: 'Log10(X) and Sqrt(Y) Transformations')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<circle'),
+                   "Should contain points")
+
+        File outputFile = new File('build/test_coord_trans_both.svg')
+        write(svg, outputFile)
+        println("Wrote coord_trans both axes plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testCoordTransCustom() {
+        // Test custom transformation using closures
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows([
+                [1, 1],
+                [2, 2],
+                [3, 3],
+                [4, 4],
+                [5, 5]
+            ])
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+            geom_point(size: 3) +
+            geom_line() +
+            coord_trans(x: [forward: { x -> x * x }, inverse: { x -> Math.sqrt(x) }]) +
+            labs(title: 'Custom Transformation (x^2)')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        File outputFile = new File('build/test_coord_trans_custom.svg')
+        write(svg, outputFile)
+        println("Wrote coord_trans custom plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testCoordTransReverse() {
+        // Test reverse transformation
+        def chart = ggplot(mtcars, aes(x: 'wt', y: 'mpg')) +
+            geom_point() +
+            coord_trans(x: 'reverse') +
+            labs(title: 'Reversed X-axis')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        File outputFile = new File('build/test_coord_trans_reverse.svg')
+        write(svg, outputFile)
+        println("Wrote coord_trans reverse plot to ${outputFile.absolutePath}")
+    }
+
 }

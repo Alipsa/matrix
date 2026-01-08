@@ -53,6 +53,7 @@ import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.coord.CoordTrans
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
 import se.alipsa.matrix.gg.geom.GeomAbline
@@ -899,6 +900,29 @@ class GgPlot {
    */
   static CoordFixed coord_fixed(Map params) {
     return new CoordFixed(params)
+  }
+
+  /**
+   * Create a transformed coordinate system.
+   *
+   * Applies transformations to x and/or y coordinates.
+   * Available transformations: "identity", "log", "log10", "sqrt", "reverse", "reciprocal", "power"
+   *
+   * @param params transformation parameters:
+   *   - x: x-axis transformation (String, Map with forward/inverse closures, or Trans)
+   *   - y: y-axis transformation (String, Map with forward/inverse closures, or Trans)
+   *   - xlim: x-axis limits [min, max]
+   *   - ylim: y-axis limits [min, max]
+   * @return CoordTrans instance
+   *
+   * Examples:
+   * - coord_trans(x: "log10") - log10 transform on x-axis
+   * - coord_trans(y: "sqrt") - square root transform on y-axis
+   * - coord_trans(x: "log10", y: "sqrt") - both axes transformed
+   * - coord_trans(x: [forward: {x -> x * x}, inverse: {x -> Math.sqrt(x)}]) - custom transformation
+   */
+  static CoordTrans coord_trans(Map params = [:]) {
+    return new CoordTrans(params)
   }
 
   static GeomAbline geom_abline() {
