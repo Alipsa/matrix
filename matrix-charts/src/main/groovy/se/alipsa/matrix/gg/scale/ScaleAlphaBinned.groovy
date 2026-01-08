@@ -91,7 +91,7 @@ class ScaleAlphaBinned extends ScaleContinuous {
     if (binsCount == 1) return rMin
 
     BigDecimal scaled = normalized * binsCount
-    int idx = Math.min(binsCount - 1, scaled.setScale(0, RoundingMode.DOWN).intValue())
+    BigDecimal idx = (binsCount - 1).min(scaled.floor())
     BigDecimal t = idx / (binsCount - 1)
     return rMin + t * (rMax - rMin)
   }
