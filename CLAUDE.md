@@ -334,6 +334,79 @@ if (alpha < 1.0) {
 }
 ```
 
+**❌ Don't cast Number properties unnecessarily:**
+```groovy
+// Avoid - unnecessary casts
+BigDecimal result = i * dotDiameter * (stackratio as BigDecimal)
+BigDecimal width = hexWidth * (dotsize as BigDecimal) * 0.9
+
+// Prefer - let Groovy's type coercion work
+BigDecimal result = i * dotDiameter * stackratio
+BigDecimal width = hexWidth * dotsize * 0.9
+```
+
+**❌ Don't calculate unused variables:**
+```groovy
+// Avoid - yRange is calculated but never used
+BigDecimal xRange = xMax - xMin
+BigDecimal yRange = yMax - yMin  // Not used anywhere
+BigDecimal hexWidth = xRange / bins
+
+// Prefer - only calculate what you need
+BigDecimal xRange = xMax - xMin
+BigDecimal hexWidth = xRange / bins
+```
+
+**❌ Don't use Math.max/Math.min for array index clamping:**
+```groovy
+// Avoid - verbose with Math methods
+int rawIdx = (ratio * (fillColors.size() - 1)) as int
+int colorIdx = Math.max(0, Math.min(rawIdx, fillColors.size() - 1))
+
+// Prefer - idiomatic BigDecimal chaining
+BigDecimal rawIdx = ratio * (fillColors.size() - 1)
+BigDecimal colorIdx = 0.max(rawIdx.min(fillColors.size() - 1))
+```
+
+**✅ Use explicit types when needed for type checker:**
+```groovy
+// When calling methods on transformed values, provide explicit types
+BigDecimal p1 = binScale?.transform(sampleBinCenter) as BigDecimal
+BigDecimal p2 = binScale?.transform(sampleBinCenter + bw) as BigDecimal
+BigDecimal binWidthPx = (p2 - p1).abs()  // Now type checker understands p1 and p2
+
+// Avoid - type checker can't infer types
+def p1 = binScale?.transform(sampleBinCenter)
+def p2 = binScale?.transform(sampleBinCenter + bw)
+BigDecimal binWidthPx = (p2 - p1).abs()  // Error: cannot find method minus
+```
+
+**✅ Use .length for arrays, .size() for collections:**
+```groovy
+// Good - arrays use .length
+double[][] points = createPoints()
+for (int i = 1; i < points.length; i++) { }
+
+// Good - collections use .size()
+List<String> items = []
+for (int i = 0; i < items.size(); i++) { }
+```
+
+**✅ Prefer Number type in method signatures for flexibility:**
+```groovy
+// Good - accepts any Number type
+private static String createHexagonPath(Number cx, Number cy, Number width, Number height) {
+  BigDecimal w = width / 2
+  BigDecimal h = height / 2
+  // ...
+}
+
+// Avoid - too specific
+private static String createHexagonPath(double cx, double cy, double width, double height) {
+  // Forces caller to cast or convert
+}
+```
+
 ### When in Doubt
 
 Ask yourself:

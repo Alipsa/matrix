@@ -427,4 +427,81 @@ class GgPlotTest {
         println("Wrote mpg degree+expression plot to ${outputFile.absolutePath}")
     }
 
+    @Test
+    void testGeomHex() {
+        // Create sample data with x,y coordinates
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows((1..200).collect { [Math.random() * 10, Math.random() * 10] })
+            .build()
+
+        def chart = ggplot(data, aes('x', 'y')) +
+            geom_hex(bins: 10) +
+            labs(title: 'Hexagonal Binning Test')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<path'), "Should contain path elements for hexagons")
+
+        File outputFile = new File('build/test_geom_hex.svg')
+        write(svg, outputFile)
+        println("Wrote hexagonal binning plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testGeomDotplot() {
+        // Test with mtcars data
+        def chart = ggplot(mtcars, aes(x: 'mpg')) +
+            geom_dotplot(binwidth: 2) +
+            labs(title: 'Dotplot Test')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<circle'), "Should contain circle elements for dots")
+
+        File outputFile = new File('build/test_geom_dotplot.svg')
+        write(svg, outputFile)
+        println("Wrote dotplot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testGeomDensity2d() {
+        // Test with faithful dataset or mtcars
+        def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
+            geom_density_2d(bins: 8) +
+            labs(title: '2D Density Contours Test')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<path'), "Should contain path elements for contours")
+
+        File outputFile = new File('build/test_geom_density_2d.svg')
+        write(svg, outputFile)
+        println("Wrote 2D density contour plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testGeomDensity2dFilled() {
+        // Test with mtcars data
+        def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
+            geom_density_2d_filled(bins: 8, alpha: 0.7) +
+            labs(title: 'Filled 2D Density Contours Test')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<rect'), "Should contain rect elements for filled regions")
+
+        File outputFile = new File('build/test_geom_density_2d_filled.svg')
+        write(svg, outputFile)
+        println("Wrote filled 2D density contour plot to ${outputFile.absolutePath}")
+    }
+
 }

@@ -4,11 +4,15 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.gg.geom.GeomBin2d
+import se.alipsa.matrix.gg.geom.GeomHex
 import se.alipsa.matrix.gg.geom.GeomBlank
 import se.alipsa.matrix.gg.geom.GeomBoxplot
 import se.alipsa.matrix.gg.geom.GeomContour
 import se.alipsa.matrix.gg.geom.GeomCount
 import se.alipsa.matrix.gg.geom.GeomDensity
+import se.alipsa.matrix.gg.geom.GeomDensity2d
+import se.alipsa.matrix.gg.geom.GeomDensity2dFilled
+import se.alipsa.matrix.gg.geom.GeomDotplot
 import se.alipsa.matrix.gg.geom.GeomErrorbar
 import se.alipsa.matrix.gg.geom.GeomErrorbarh
 import se.alipsa.matrix.gg.geom.GeomFreqpoly
@@ -965,6 +969,24 @@ class GgPlot {
     return new GeomBin2d(params)
   }
 
+  static GeomHex geom_hex() {
+    return new GeomHex()
+  }
+
+  /**
+   * Create a hexagonal binning geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomHex instance
+   */
+  static GeomHex geom_hex(Aes mapping) {
+    return geom_hex([mapping: mapping])
+  }
+
+  static GeomHex geom_hex(Map params) {
+    return new GeomHex(params)
+  }
+
   static GeomBlank geom_blank() {
     return new GeomBlank()
   }
@@ -1075,6 +1097,60 @@ class GgPlot {
 
   static GeomDensity geom_density(Map params) {
     return new GeomDensity(params)
+  }
+
+  static GeomDotplot geom_dotplot() {
+    return new GeomDotplot()
+  }
+
+  /**
+   * Create a dot plot geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomDotplot instance
+   */
+  static GeomDotplot geom_dotplot(Aes mapping) {
+    return geom_dotplot([mapping: mapping])
+  }
+
+  static GeomDotplot geom_dotplot(Map params) {
+    return new GeomDotplot(params)
+  }
+
+  static GeomDensity2d geom_density_2d() {
+    return new GeomDensity2d()
+  }
+
+  /**
+   * Create a 2D density contour geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomDensity2d instance
+   */
+  static GeomDensity2d geom_density_2d(Aes mapping) {
+    return geom_density_2d([mapping: mapping])
+  }
+
+  static GeomDensity2d geom_density_2d(Map params) {
+    return new GeomDensity2d(params)
+  }
+
+  static GeomDensity2dFilled geom_density_2d_filled() {
+    return new GeomDensity2dFilled()
+  }
+
+  /**
+   * Create a filled 2D density contour geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomDensity2dFilled instance
+   */
+  static GeomDensity2dFilled geom_density_2d_filled(Aes mapping) {
+    return geom_density_2d_filled([mapping: mapping])
+  }
+
+  static GeomDensity2dFilled geom_density_2d_filled(Map params) {
+    return new GeomDensity2dFilled(params)
   }
 
   /**

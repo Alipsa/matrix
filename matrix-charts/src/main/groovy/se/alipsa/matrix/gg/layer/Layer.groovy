@@ -61,6 +61,8 @@ enum StatType {
     DENSITY,
     /** Density estimation for y values (violin/stat_ydensity) */
     YDENSITY,
+    /** 2D kernel density estimation */
+    DENSITY_2D,
     /** 2D binning */
     BIN2D,
     /** Contour computation */
