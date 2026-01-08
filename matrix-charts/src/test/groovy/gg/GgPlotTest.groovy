@@ -726,7 +726,7 @@ class GgPlotTest {
         def chart = ggplot(data, aes(x: 'x', y: 'y')) +
             geom_point(size: 3) +
             geom_line() +
-            coord_trans(x: [forward: { x -> x * x }, inverse: { x -> Math.sqrt(x) }]) +
+            coord_trans(x: [forward: { x -> x * x }, inverse: { x -> x ** 0.5 }]) +
             labs(title: 'Custom Transformation (x^2)')
 
         Svg svg = chart.render()
