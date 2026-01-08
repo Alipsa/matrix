@@ -1369,6 +1369,13 @@ class GgStat {
     }
 
     int n = params.n as Integer ?: 101
+    if (n == 1) {
+      BigDecimal x = xmin
+      BigDecimal y = fun.call(x) as BigDecimal
+      return Matrix.builder()
+          .data([x: [x], y: [y]])
+          .build()
+    }
     BigDecimal step = (xmax - xmin) / (n - 1)
 
     // Evaluate function at n points
