@@ -172,10 +172,10 @@ class GeomCurve extends Geom {
 
     // For cubic Bezier, use the same control point twice (gives smooth curve)
     // Or split the offset for smoother curves
-    BigDecimal cx1 = x1 + (cx - x1) * 0.67G
-    BigDecimal cy1 = y1 + (cy - y1) * 0.67G
-    BigDecimal cx2 = x2 + (cx - x2) * 0.67G
-    BigDecimal cy2 = y2 + (cy - y2) * 0.67G
+    BigDecimal cx1 = x1 + (cx - x1) * 0.67
+    BigDecimal cy1 = y1 + (cy - y1) * 0.67
+    BigDecimal cx2 = x2 + (cx - x2) * 0.67
+    BigDecimal cy2 = y2 + (cy - y2) * 0.67
 
     return [cx1, cy1, cx2, cy2]
   }
