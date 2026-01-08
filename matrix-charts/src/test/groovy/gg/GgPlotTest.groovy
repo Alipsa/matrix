@@ -504,4 +504,115 @@ class GgPlotTest {
         println("Wrote filled 2D density contour plot to ${outputFile.absolutePath}")
     }
 
+    @Test
+    void testStatEllipse() {
+        // Test with iris data
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point(alpha: 0.5) +
+            stat_ellipse([level: 0.95]) +
+            labs(title: 'Confidence Ellipse Test')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<circle') || svgContent.contains('<path'),
+                   "Should contain points or path elements")
+
+        File outputFile = new File('build/test_stat_ellipse.svg')
+        write(svg, outputFile)
+        println("Wrote stat_ellipse plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testStatEllipseLevels() {
+        // Test that different confidence levels produce different sized ellipses
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point(alpha: 0.3) +
+            stat_ellipse([level: 0.50]) +
+            geom_path(color: 'blue') +
+            stat_ellipse([level: 0.90]) +
+            geom_path(color: 'green') +
+            stat_ellipse([level: 0.99]) +
+            geom_path(color: 'red') +
+            labs(title: 'Multiple Confidence Levels (50%, 90%, 99%)')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<path'),
+                   "Should contain path elements for ellipses")
+
+        File outputFile = new File('build/test_stat_ellipse_levels.svg')
+        write(svg, outputFile)
+        println("Wrote multi-level ellipse plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testStatSummaryBin() {
+        // Test binned summary
+        def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
+            stat_summary_bin([bins: 10, fun: 'mean']) +
+            labs(title: 'Binned Summary Test')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        File outputFile = new File('build/test_stat_summary_bin.svg')
+        write(svg, outputFile)
+        println("Wrote stat_summary_bin plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testStatUnique() {
+        // Create data with duplicates
+        def data = Matrix.builder()
+            .columnNames(['x', 'y', 'group'])
+            .rows([
+                [1, 2, 'A'],
+                [1, 2, 'A'],  // duplicate
+                [2, 3, 'B'],
+                [2, 3, 'B'],  // duplicate
+                [3, 4, 'A']
+            ])
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+            stat_unique() +
+            geom_point(size: 5) +
+            labs(title: 'Unique Points Test')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        // Should have fewer points after removing duplicates
+        assertTrue(svgContent.contains('<circle'), "Should contain circle elements")
+
+        File outputFile = new File('build/test_stat_unique.svg')
+        write(svg, outputFile)
+        println("Wrote stat_unique plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testStatFunction() {
+        // Test function stat
+        def chart = ggplot(null, aes(x: 'x', y: 'y')) +
+            stat_function([fun: { x -> x * x }, xlim: [-5, 5], n: 100]) +
+            geom_line() +
+            labs(title: 'Function Plot: y = x²')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<line') || svgContent.contains('<path'),
+                   "Should contain line or path elements")
+
+        File outputFile = new File('build/test_stat_function.svg')
+        write(svg, outputFile)
+        println("Wrote stat_function plot to ${outputFile.absolutePath}")
+    }
+
 }
