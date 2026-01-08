@@ -117,7 +117,7 @@ class CutWidth {
       boundaryValue = boundary as BigDecimal
     }
 
-    BigDecimal minX = boundaryValue + ((minVal - boundaryValue).floor() / w) * w
+    BigDecimal minX = boundaryValue + (((minVal - boundaryValue) / w).floor() * w)
     // Compute maxX as the first bin boundary at or after maxVal (avoids creating excess bins)
     BigDecimal maxX = ((maxVal - minX) / w).ceil() * w + minX
     // For closed-left bins [a,b), values equal to a break point need a bin starting there,
