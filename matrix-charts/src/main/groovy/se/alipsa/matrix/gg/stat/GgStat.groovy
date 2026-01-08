@@ -1308,15 +1308,15 @@ class GgStat {
     }
 
     // Track seen combinations
-    Set<List<Object>> seen = new LinkedHashSet<>()
+    Set<String> seenKeys = new LinkedHashSet<>()
     List<Map<String, Object>> uniqueRows = []
 
     data.each { row ->
-      // Create key from relevant columns
-      List<Object> key = columns.collect { row[it] }
+      // Create key from relevant columns using a compact string representation
+      String key = columns.collect { row[it] }.join('\u0000')
 
-      if (!seen.contains(key)) {
-        seen.add(key)
+      if (!seenKeys.contains(key)) {
+        seenKeys.add(key)
         Map<String, Object> rowMap = [:]
         data.columnNames().each { col ->
           rowMap[col] = row[col]
