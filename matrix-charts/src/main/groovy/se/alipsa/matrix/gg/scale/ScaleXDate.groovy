@@ -123,7 +123,7 @@ class ScaleXDate extends ScaleContinuous {
 
   @Override
   Object inverse(Object value) {
-    Double numeric = value instanceof Number ? (value as Number).doubleValue() : null
+    Double numeric = value instanceof Number ? value as double : null
     if (numeric == null) return null
 
     double v = numeric

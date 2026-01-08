@@ -189,8 +189,8 @@ class GeomBoxplot extends Geom {
         if (continuousX && xScale != null && xVal instanceof Number) {
           xCenter = xScale.transform(xVal as Number) as double
           if (widthData > 0) {
-            double leftPx = xScale.transform((xVal as Number).doubleValue() - widthData / 2) as double
-            double rightPx = xScale.transform((xVal as Number).doubleValue() + widthData / 2) as double
+            double leftPx = xScale.transform((xVal as double) - widthData / 2) as double
+            double rightPx = xScale.transform((xVal as double) + widthData / 2) as double
             halfWidth = Math.abs(rightPx - leftPx) / 2
           } else {
             halfWidth = plotWidth / Math.max(numBoxes * 2, 1)

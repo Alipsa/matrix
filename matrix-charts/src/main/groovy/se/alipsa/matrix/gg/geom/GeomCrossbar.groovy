@@ -110,7 +110,7 @@ class GeomCrossbar extends Geom {
         double bandwidth = (xScale as ScaleDiscrete).getBandwidth()
         halfWidthPx = bandwidth * widthValue / 2.0d
       } else {
-        double xNum = (xVal as Number).doubleValue()
+        double xNum = xVal as double
         double halfWidthData = widthValue / 2.0d
         def xLeft = xScale.transform(xNum - halfWidthData)
         def xRight = xScale.transform(xNum + halfWidthData)
@@ -200,7 +200,7 @@ class GeomCrossbar extends Geom {
   }
 
   private double computeResolution(List<Number> values) {
-    List<Double> sorted = values.collect { it.doubleValue() }.unique().sort()
+    List<Double> sorted = values.collect { it as double }.unique().sort()
     if (sorted.size() < 2) {
       return 0.0d
     }

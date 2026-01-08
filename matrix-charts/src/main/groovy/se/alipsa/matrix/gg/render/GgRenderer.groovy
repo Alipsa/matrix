@@ -1125,7 +1125,7 @@ class GgRenderer {
         if (isBoxplot && posData.columnNames().contains('x')) {
           boolean hasBounds = posData.columnNames().contains('xmin') && posData.columnNames().contains('xmax')
           GeomBoxplot geom = (GeomBoxplot) layer.geom
-          double widthValue = geom?.width != null ? (geom.width as Number).doubleValue() : 0.75d
+          double widthValue = geom?.width != null ? geom.width as double : 0.75d
           boolean useVarwidth = geom?.varwidth == true
           double maxRelVarwidth = 1.0d
           if (useVarwidth && posData.columnNames().contains('relvarwidth')) {
@@ -1141,8 +1141,8 @@ class GgRenderer {
                 if (!(row['xmin'] instanceof Number) || !(row['xmax'] instanceof Number)) {
                   return
                 }
-                double xmin = (row['xmin'] as Number).doubleValue()
-                double xmax = (row['xmax'] as Number).doubleValue()
+                double xmin = row['xmin'] as double
+                double xmax = row['xmax'] as double
                 double center = (xmin + xmax) / 2.0d
                 double widthData = GeomBoxplot.resolveWidthData(row, widthValue, useVarwidth, maxRelVarwidth, xmax - xmin)
                 if (widthData > 0d) {
@@ -1168,8 +1168,8 @@ class GgRenderer {
 
               if (widthData > 0d) {
                 double half = widthData / 2
-                data['x'].add(((Number) xVal).doubleValue() - half)
-                data['x'].add(((Number) xVal).doubleValue() + half)
+                data['x'].add((xVal as double) - half)
+                data['x'].add((xVal as double) + half)
               }
             }
           }
@@ -2104,7 +2104,7 @@ class GgRenderer {
       if (!(scaled instanceof Number)) {
         return
       }
-      double radius = maxSize > 0d ? (scaled as Number).doubleValue() / maxSize * maxRadius : maxRadius / 2.0d
+      double radius = maxSize > 0d ? (scaled as double) / maxSize * maxRadius : maxRadius / 2.0d
       double centerX = x + keyWidth / 2.0d
       double centerY = y + keyHeight / 2.0d
       def circle = group.addCircle()
@@ -2160,7 +2160,7 @@ class GgRenderer {
       if (!(scaled instanceof Number)) {
         return
       }
-      double alphaVal = (scaled as Number).doubleValue()
+      double alphaVal = scaled as double
       alphaVal = Math.max(0.0d, Math.min(1.0d, alphaVal))
       def rect = group.addRect(keyWidth, keyHeight)
           .x(x)
@@ -2376,7 +2376,7 @@ class GgRenderer {
    */
   private String formatNumber(Number value) {
     if (value == null) return ''
-    double d = value.doubleValue()
+    double d = value as double
     if (d == Math.floor(d) && d < 1e6) {
       return String.valueOf((long) d)
     }

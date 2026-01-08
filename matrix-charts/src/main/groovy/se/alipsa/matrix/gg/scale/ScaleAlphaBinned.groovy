@@ -22,7 +22,7 @@ import java.math.RoundingMode
 class ScaleAlphaBinned extends ScaleContinuous {
 
   /** Output range [min, max] for alpha values as BigDecimal. */
-  List<BigDecimal> range = [new BigDecimal('0.2'), BigDecimal.ONE]
+  List<BigDecimal> range = [0.2G, BigDecimal.ONE]
 
   /** Number of bins. */
   int bins = 5
@@ -81,18 +81,18 @@ class ScaleAlphaBinned extends ScaleContinuous {
 
     // When domain is constant, all values map to the midpoint of the range
     if (dMax == dMin) {
-      return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
+      return (rMin + rMax) / 2
     }
 
-    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
+    BigDecimal normalized = (v - dMin) / (dMax - dMin)
     normalized = normalized.max(BigDecimal.ZERO).min(BigDecimal.ONE)
 
     int binsCount = Math.max(1, bins)
     if (binsCount == 1) return rMin
 
-    BigDecimal scaled = normalized * BigDecimal.valueOf(binsCount)
+    BigDecimal scaled = normalized * binsCount
     int idx = Math.min(binsCount - 1, scaled.setScale(0, RoundingMode.DOWN).intValue())
-    BigDecimal t = BigDecimal.valueOf(idx).divide(BigDecimal.valueOf(binsCount - 1), ScaleUtils.MATH_CONTEXT)
+    BigDecimal t = idx / (binsCount - 1)
     return rMin + t * (rMax - rMin)
   }
 }

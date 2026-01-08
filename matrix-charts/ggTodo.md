@@ -8,15 +8,15 @@ The matrix-charts gg implementation covers approximately 40-50% of ggplot2's fun
 
 ### What's Already Implemented
 
-| Category | Implemented | Status |
-|----------|-------------|--------|
-| **Geoms** | 31 | Good core coverage |
-| **Scales** | 18 core types | Good coverage |
-| **Stats** | 6 | Limited |
-| **Coords** | 4 | Good |
-| **Facets** | 2 | Complete |
-| **Positions** | 6 | Good |
-| **Themes** | 5 base themes | Good |
+| Category      | Implemented   | Status             |
+|---------------|---------------|--------------------|
+| **Geoms**     | 31            | Good core coverage |
+| **Scales**    | 18 core types | Good coverage      |
+| **Stats**     | 6             | Limited            |
+| **Coords**    | 4             | Good               |
+| **Facets**    | 2             | Complete           |
+| **Positions** | 6             | Good               |
+| **Themes**    | 5 base themes | Good               |
 
 ---
 

@@ -2,16 +2,11 @@ package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
 
-import java.math.MathContext
-
 /**
  * Utility methods for scale operations.
  */
 @CompileStatic
 class ScaleUtils {
-
-  static final BigDecimal TWO = BigDecimal.valueOf(2)
-  static final MathContext MATH_CONTEXT = MathContext.DECIMAL128
 
   /**
    * Coerce a value to a BigDecimal, handling null/NaN and string representations.
@@ -29,7 +24,7 @@ class ScaleUtils {
     if (value instanceof BigDecimal) return value as BigDecimal
     if (value instanceof Number) {
       if (value instanceof Double || value instanceof Float) {
-        double v = (value as Number).doubleValue()
+        double v = value as double
         if (Double.isNaN(v) || Double.isInfinite(v)) return null
       }
       try {
@@ -68,14 +63,15 @@ class ScaleUtils {
     List<Number> values = []
 
     if (n == 1) {
-      values << (rMin + rMax).divide(TWO, MATH_CONTEXT)
+      //values << (rMin + rMax).divide(TWO, MATH_CONTEXT)
+      values << (rMin + rMax) / 2
       return values
     }
 
-    BigDecimal divisor = BigDecimal.valueOf(n - 1)
+    def divisor = n - 1
     for (int i = 0; i < n; i++) {
-      BigDecimal t = BigDecimal.valueOf(i).divide(divisor, MATH_CONTEXT)
-      values << (rMin + t * (rMax - rMin))
+      BigDecimal t = i / divisor
+      values << rMin + t * (rMax - rMin)
     }
     return values
   }
@@ -97,11 +93,11 @@ class ScaleUtils {
 
     // Handle edge case: zero-range domain
     if (domainMax == domainMin) {
-      return (rangeMin + rangeMax).divide(TWO, MATH_CONTEXT)
+      return (rangeMin + rangeMax) / 2
     }
 
     // Linear interpolation
-    BigDecimal normalized = (value - domainMin).divide((domainMax - domainMin), MATH_CONTEXT)
+    BigDecimal normalized = (value - domainMin) / (domainMax - domainMin)
     return rangeMin + normalized * (rangeMax - rangeMin)
   }
 
@@ -122,11 +118,11 @@ class ScaleUtils {
 
     // Handle edge case: zero-range output
     if (rangeMax == rangeMin) {
-      return (domainMin + domainMax).divide(TWO, MATH_CONTEXT)
+      return (domainMin + domainMax) / 2
     }
 
     // Inverse linear interpolation
-    BigDecimal normalized = (value - rangeMin).divide((rangeMax - rangeMin), MATH_CONTEXT)
+    BigDecimal normalized = (value - rangeMin) / (rangeMax - rangeMin)
     return domainMin + normalized * (domainMax - domainMin)
   }
 
@@ -147,11 +143,11 @@ class ScaleUtils {
 
     // Handle edge case: zero-range domain
     if (domainMax == domainMin) {
-      return (rangeMin + rangeMax).divide(TWO, MATH_CONTEXT)
+      return (rangeMin + rangeMax) / 2
     }
 
     // Reversed linear interpolation: rMax - normalized * (rMax - rMin)
-    BigDecimal normalized = (value - domainMin).divide((domainMax - domainMin), MATH_CONTEXT)
+    BigDecimal normalized = (value - domainMin) / (domainMax - domainMin)
     return rangeMax - normalized * (rangeMax - rangeMin)
   }
 
@@ -172,11 +168,11 @@ class ScaleUtils {
 
     // Handle edge case: zero-range output
     if (rangeMax == rangeMin) {
-      return (domainMin + domainMax).divide(TWO, MATH_CONTEXT)
+      return (domainMin + domainMax) / 2
     }
 
     // Reversed inverse linear interpolation
-    BigDecimal normalized = (rangeMax - value).divide((rangeMax - rangeMin), MATH_CONTEXT)
+    BigDecimal normalized = (rangeMax - value) / (rangeMax - rangeMin)
     return domainMin + normalized * (domainMax - domainMin)
   }
 
@@ -188,7 +184,7 @@ class ScaleUtils {
    * @return the midpoint (a + b) / 2
    */
   static BigDecimal midpoint(BigDecimal a, BigDecimal b) {
-    return (a + b).divide(TWO, MATH_CONTEXT)
+    return (a + b) / 2
   }
 
   /**

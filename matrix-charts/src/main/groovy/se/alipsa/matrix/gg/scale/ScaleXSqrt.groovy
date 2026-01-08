@@ -88,7 +88,7 @@ class ScaleXSqrt extends ScaleContinuous {
     if (numeric == null) return null
 
     // Transform to sqrt space, then perform linear interpolation
-    BigDecimal sqrtValue = Math.sqrt(numeric.doubleValue()) as BigDecimal
+    BigDecimal sqrtValue = Math.sqrt(numeric as double) as BigDecimal
     return ScaleUtils.linearTransform(sqrtValue, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 

@@ -82,7 +82,7 @@ class GgPosition {
         Object group = row[groupCol]
         Object rawX = row[xCol]
         if (rawX instanceof Number && groupOffsets.containsKey(group)) {
-          row[xCol] = (rawX as Number).doubleValue() + groupOffsets[group]
+          row[xCol] = rawX + groupOffsets[group]
         }
         rows << row
       }
@@ -101,8 +101,8 @@ class GgPosition {
    * @return Matrix with adjusted x, xmin, xmax columns
    */
   static Matrix dodge2(Matrix data, Aes aes, Map params = [:]) {
-    Double widthParam = params.width instanceof Number ? (params.width as Number).doubleValue() : null
-    double padding = params.padding instanceof Number ? (params.padding as Number).doubleValue() : 0.1d
+    Double widthParam = params.width instanceof Number ? params.width as double : null
+    double padding = params.padding instanceof Number ? params.padding as double : 0.1d
     boolean reverse = params.reverse ?: false
 
     String xCol = aes.xColName
@@ -151,7 +151,7 @@ class GgPosition {
         def xVal = row[xCol]
         double numericX
         if (xVal instanceof Number) {
-          numericX = (xVal as Number).doubleValue()
+          numericX = xVal as double
         } else if (categoryPositions != null && categoryPositions.containsKey(xVal)) {
           numericX = categoryPositions[xVal]
         } else {
@@ -170,14 +170,14 @@ class GgPosition {
       double ax
       double bx
       if (a[xCol] instanceof Number) {
-        ax = (a[xCol] as Number).doubleValue()
+        ax = a[xCol] as double
       } else if (catPos != null && catPos.containsKey(a[xCol])) {
         ax = catPos[a[xCol]]
       } else {
         ax = 0d
       }
       if (b[xCol] instanceof Number) {
-        bx = (b[xCol] as Number).doubleValue()
+        bx = b[xCol] as double
       } else if (catPos != null && catPos.containsKey(b[xCol])) {
         bx = catPos[b[xCol]]
       } else {
@@ -211,8 +211,8 @@ class GgPosition {
     byXid.each { Integer xid, List<Map<String, Object>> bucket ->
       // Compute the overall center and total width for each overlap group.
       // Filter to rows with valid xmin/xmax values
-      List<Double> xminValues = bucket.findResults { it['xmin'] instanceof Number ? (it['xmin'] as Number).doubleValue() : null } as List<Double>
-      List<Double> xmaxValues = bucket.findResults { it['xmax'] instanceof Number ? (it['xmax'] as Number).doubleValue() : null } as List<Double>
+      List<Double> xminValues = bucket.findResults { it['xmin'] instanceof Number ? it['xmin'] as double : null } as List<Double>
+      List<Double> xmaxValues = bucket.findResults { it['xmax'] instanceof Number ? it['xmax'] as double : null } as List<Double>
       if (xminValues.isEmpty() || xmaxValues.isEmpty()) {
         // No valid bounds in this bucket, skip processing
         groupSize[xid] = 0d
@@ -228,8 +228,8 @@ class GgPosition {
       // This matches ggplot2's position_dodge2 with preserve="total" (the default),
       // which keeps the total occupied width constant regardless of original widths.
       bucket.each { Map<String, Object> row ->
-        double xminVal = row['xmin'] instanceof Number ? (row['xmin'] as Number).doubleValue() : 0d
-        double xmaxVal = row['xmax'] instanceof Number ? (row['xmax'] as Number).doubleValue() : 0d
+        double xminVal = row['xmin'] instanceof Number ? row['xmin'] as double : 0d
+        double xmaxVal = row['xmax'] instanceof Number ? row['xmax'] as double : 0d
         double width = xmaxVal - xminVal
         double newWidth = n > 0 ? width / n : 0d
         row['new_width'] = newWidth
@@ -249,7 +249,7 @@ class GgPosition {
       double start = centerX - (size / 2.0d)
       double cursor = start
       bucket.each { Map<String, Object> row ->
-        double newWidth = row['new_width'] instanceof Number ? (row['new_width'] as Number).doubleValue() : 0d
+        double newWidth = row['new_width'] instanceof Number ? row['new_width'] as double : 0d
         row['xmin'] = cursor
         row['xmax'] = cursor + newWidth
         row['x'] = (cursor + cursor + newWidth) / 2.0d
@@ -263,9 +263,9 @@ class GgPosition {
         if (!(row['new_width'] instanceof Number) || !(row['x'] instanceof Number)) {
           return
         }
-        double newWidth = (row['new_width'] as Number).doubleValue()
+        double newWidth = row['new_width'] as double
         double padWidth = newWidth * (1.0d - padding)
-        double center = (row['x'] as Number).doubleValue()
+        double center = row['x'] as double
         row['xmin'] = center - padWidth / 2.0d
         row['xmax'] = center + padWidth / 2.0d
       }
@@ -374,7 +374,7 @@ class GgPosition {
       return true
     }
     if (value instanceof Number) {
-      double v = (value as Number).doubleValue()
+      double v = value as double
       return Double.isNaN(v)
     }
     return true
@@ -382,7 +382,7 @@ class GgPosition {
 
   private static Double toDouble(Object value) {
     if (value instanceof Number) {
-      double v = (value as Number).doubleValue()
+      double v = value as double
       return Double.isNaN(v) ? null : v
     }
     return null
@@ -466,12 +466,12 @@ class GgPosition {
       orderedRows.each { row ->
         Map<String, Object> newRow = new LinkedHashMap<>(row)
         Object yRaw = row[yCol]
-        double yVal = yRaw instanceof Number ? (yRaw as Number).doubleValue() : 0.0d
+        double yVal = yRaw instanceof Number ? yRaw as double : 0.0d
         newRow['ymin'] = cumSum
         cumSum += yVal
         newRow['ymax'] = cumSum
-        double yMin = (newRow['ymin'] as Number).doubleValue()
-        double yMax = (newRow['ymax'] as Number).doubleValue()
+        double yMin = newRow['ymin'] as double
+        double yMax = newRow['ymax'] as double
         newRow['y'] = (yMin + yMax) / 2.0d  // Center of bar
         results << newRow
       }
@@ -507,7 +507,7 @@ class GgPosition {
     stacked.each { Row row ->
       Object xVal = row[xCol]
       Object yMaxRaw = row['ymax']
-      double ymax = yMaxRaw instanceof Number ? (yMaxRaw as Number).doubleValue() : 0.0d
+      double ymax = yMaxRaw instanceof Number ? yMaxRaw as double : 0.0d
       if (!maxByX.containsKey(xVal) || ymax > maxByX[xVal]) {
         maxByX[xVal] = ymax
       }
@@ -521,8 +521,8 @@ class GgPosition {
       double total = maxByX[xVal] ?: 1.0d
 
       if (total > 0) {
-        double yMin = (newRow['ymin'] as Number).doubleValue() / total
-        double yMax = (newRow['ymax'] as Number).doubleValue() / total
+        double yMin = (newRow['ymin'] as double) / total
+        double yMax = (newRow['ymax'] as double) / total
         newRow['ymin'] = yMin
         newRow['ymax'] = yMax
         newRow['y'] = (yMin + yMax) / 2.0d
@@ -558,12 +558,12 @@ class GgPosition {
 
       if (xCol != null && newRow[xCol] instanceof Number) {
         double jitterX = (random.nextDouble() - 0.5) * width
-        newRow[xCol] = (newRow[xCol] as Number).doubleValue() + jitterX
+        newRow[xCol] = (newRow[xCol] as double) + jitterX
       }
 
       if (yCol != null && newRow[yCol] instanceof Number) {
         double jitterY = (random.nextDouble() - 0.5) * height
-        newRow[yCol] = (newRow[yCol] as Number).doubleValue() + jitterY
+        newRow[yCol] = (newRow[yCol] as double) + jitterY
       }
 
       results << newRow
@@ -581,8 +581,8 @@ class GgPosition {
    * @return Matrix with nudged positions
    */
   static Matrix nudge(Matrix data, Aes aes, Map params = [:]) {
-    double nudgeX = params.x instanceof Number ? (params.x as Number).doubleValue() : 0.0d
-    double nudgeY = params.y instanceof Number ? (params.y as Number).doubleValue() : 0.0d
+    double nudgeX = params.x instanceof Number ? params.x as double : 0.0d
+    double nudgeY = params.y instanceof Number ? params.y as double : 0.0d
 
     String xCol = aes.xColName
     if (xCol == null && data.columnNames().contains('x')) {
@@ -602,10 +602,10 @@ class GgPosition {
       Map<String, Object> newRow = new LinkedHashMap<>(row.toMap())
 
       if (xCol != null && newRow[xCol] instanceof Number) {
-        newRow[xCol] = (newRow[xCol] as Number).doubleValue() + nudgeX
+        newRow[xCol] = (newRow[xCol] as double) + nudgeX
       }
       if (yCol != null && newRow[yCol] instanceof Number) {
-        newRow[yCol] = (newRow[yCol] as Number).doubleValue() + nudgeY
+        newRow[yCol] = (newRow[yCol] as double) + nudgeY
       }
       results << newRow
     }

@@ -82,8 +82,8 @@ class ScaleColorGrey extends ScaleDiscrete {
 
   private List<String> buildPalette(int n) {
     if (n <= 0) return []
-    double startVal = (start as Number).doubleValue()
-    double endVal = (end as Number).doubleValue()
+    double startVal = start as double
+    double endVal = end as double
     if (direction < 0) {
       double tmp = startVal
       startVal = endVal

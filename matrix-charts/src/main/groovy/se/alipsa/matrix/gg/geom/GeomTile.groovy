@@ -169,7 +169,7 @@ class GeomTile extends Geom {
     List<Number> values = data[col].findAll { it instanceof Number } as List<Number>
     if (values.size() < 2) return 1.0
 
-    List<Double> sorted = values.collect { it.doubleValue() }.unique().sort()
+    List<Double> sorted = values.collect { it as double }.unique().sort()
     if (sorted.size() < 2) return 1.0
 
     double minDiff = Double.POSITIVE_INFINITY

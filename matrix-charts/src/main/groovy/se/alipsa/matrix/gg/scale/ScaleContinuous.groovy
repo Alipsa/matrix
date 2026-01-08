@@ -162,7 +162,7 @@ class ScaleContinuous extends Scale {
     }
 
     // Format with 2 significant digits for non-integers
-    double d = bd.doubleValue()
+    double d = bd as double
     return String.format('%.2g', d)
   }
 

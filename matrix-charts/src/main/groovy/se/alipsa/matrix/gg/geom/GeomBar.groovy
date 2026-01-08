@@ -249,10 +249,10 @@ class GeomBar extends Geom {
 
       List<Double> values = rows.collect { row ->
         if (row['ymin'] != null && row['ymax'] != null) {
-          return ((row['ymax'] as Number).doubleValue() - (row['ymin'] as Number).doubleValue())
+          return ((row['ymax'] as double) - (row['ymin'] as double))
         }
         if (yCol != null && row[yCol] instanceof Number) {
-          return (row[yCol] as Number).doubleValue()
+          return row[yCol] as double
         }
         return 0.0d
       }
