@@ -205,12 +205,12 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 - 3.1.1 [x] `geom_polygon()` - Filled polygons
 - 3.1.2 [ ] `geom_hex()` - Hexagonal binning
 - 3.1.3 [ ] `geom_dotplot()` - Dot plots
-- 3.1.4 [ ] `geom_curve()` - Curved line segments
-- 3.1.5 [ ] `geom_spoke()` - Radial line segments from point
+- 3.1.4 [x] `geom_curve()` - Curved line segments
+- 3.1.5 [x] `geom_spoke()` - Radial line segments from point
 - 3.1.6 [ ] `geom_density_2d()` - 2D density contour lines
 - 3.1.7 [ ] `geom_density_2d_filled()` - Filled 2D density contours
 - 3.1.8 [x] `geom_errorbarh()` - Horizontal error bars
-- 3.1.9 [ ] `geom_raster()` - Fast rectangle rendering
+- 3.1.9 [x] `geom_raster()` - Fast rectangle rendering
 
 ### 3.2 Additional Stats
 

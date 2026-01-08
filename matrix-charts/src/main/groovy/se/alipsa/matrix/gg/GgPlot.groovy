@@ -22,10 +22,13 @@ import se.alipsa.matrix.gg.geom.GeomQqLine
 import se.alipsa.matrix.gg.geom.GeomRug
 import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
+import se.alipsa.matrix.gg.geom.GeomSpoke
+import se.alipsa.matrix.gg.geom.GeomCurve
 import se.alipsa.matrix.gg.geom.GeomText
 import se.alipsa.matrix.gg.geom.GeomVline
 import se.alipsa.matrix.gg.geom.GeomRibbon
 import se.alipsa.matrix.gg.geom.GeomTile
+import se.alipsa.matrix.gg.geom.GeomRaster
 import se.alipsa.matrix.gg.geom.GeomRect
 import se.alipsa.matrix.gg.geom.GeomPath
 import se.alipsa.matrix.gg.geom.GeomPolygon
@@ -1356,6 +1359,44 @@ class GgPlot {
     return new GeomSegment(params)
   }
 
+  static GeomSpoke geom_spoke() {
+    return new GeomSpoke()
+  }
+
+  /**
+   * Create a spoke geom with a layer-specific aesthetic mapping.
+   * Spokes are radial line segments defined by angle and radius.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomSpoke instance
+   */
+  static GeomSpoke geom_spoke(Aes mapping) {
+    return geom_spoke([mapping: mapping])
+  }
+
+  static GeomSpoke geom_spoke(Map params) {
+    return new GeomSpoke(params)
+  }
+
+  static GeomCurve geom_curve() {
+    return new GeomCurve()
+  }
+
+  /**
+   * Create a curve geom with a layer-specific aesthetic mapping.
+   * Curves are smooth curved line segments between two points.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomCurve instance
+   */
+  static GeomCurve geom_curve(Aes mapping) {
+    return geom_curve([mapping: mapping])
+  }
+
+  static GeomCurve geom_curve(Map params) {
+    return new GeomCurve(params)
+  }
+
   static GeomSmooth geom_smooth() {
     return new GeomSmooth()
   }
@@ -1517,6 +1558,25 @@ class GgPlot {
 
   static GeomTile geom_tile(Map params) {
     return new GeomTile(params)
+  }
+
+  static GeomRaster geom_raster() {
+    return new GeomRaster()
+  }
+
+  /**
+   * Create a raster geom with a layer-specific aesthetic mapping.
+   * Raster is optimized for regular grids (image data, heatmaps on regular grids).
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomRaster instance
+   */
+  static GeomRaster geom_raster(Aes mapping) {
+    return geom_raster([mapping: mapping])
+  }
+
+  static GeomRaster geom_raster(Map params) {
+    return new GeomRaster(params)
   }
 
   static GeomRect geom_rect() {
