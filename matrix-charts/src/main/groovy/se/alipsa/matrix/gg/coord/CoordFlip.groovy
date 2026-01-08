@@ -24,12 +24,6 @@ class CoordFlip extends Coord {
   /** Y-axis limits [min, max] - null means auto-detect from data */
   List<Number> ylim
 
-  /** Whether to expand the axis limits slightly beyond the data range */
-  boolean expand = true
-
-  /** Expansion multiplier (default 5% on each side) */
-  double expandMult = 0.05
-
   /** Plot width in pixels (set by renderer) */
   int plotWidth = 640
 
@@ -44,8 +38,6 @@ class CoordFlip extends Coord {
   CoordFlip(Map params) {
     if (params.xlim) this.xlim = params.xlim as List<Number>
     if (params.ylim) this.ylim = params.ylim as List<Number>
-    if (params.containsKey('expand')) this.expand = params.expand as boolean
-    if (params.expandMult) this.expandMult = params.expandMult as double
   }
 
   /**

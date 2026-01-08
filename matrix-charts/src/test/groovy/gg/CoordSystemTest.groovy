@@ -22,8 +22,6 @@ class CoordSystemTest {
     CoordFlip coord = new CoordFlip()
 
     assertTrue(coord.flipped)
-    assertTrue(coord.expand)
-    assertEquals(0.05, coord.expandMult)
     assertNull(coord.xlim)
     assertNull(coord.ylim)
   }
@@ -32,13 +30,11 @@ class CoordSystemTest {
   void testCoordFlipWithParams() {
     CoordFlip coord = new CoordFlip(
         xlim: [0, 10],
-        ylim: [0, 100],
-        expand: false
+        ylim: [0, 100]
     )
 
     assertEquals([0, 10], coord.xlim)
     assertEquals([0, 100], coord.ylim)
-    assertFalse(coord.expand)
   }
 
   @Test
@@ -446,8 +442,6 @@ class CoordSystemTest {
   void testCoordCartesianDefaults() {
     CoordCartesian coord = new CoordCartesian()
 
-    assertTrue(coord.expand)
-    assertEquals(0.05, coord.expandMult)
     assertNull(coord.xlim)
     assertNull(coord.ylim)
   }
@@ -456,13 +450,11 @@ class CoordSystemTest {
   void testCoordCartesianWithParams() {
     CoordCartesian coord = new CoordCartesian(
         xlim: [10, 30],
-        ylim: [0, 100],
-        expand: false
+        ylim: [0, 100]
     )
 
     assertEquals([10, 30], coord.xlim)
     assertEquals([0, 100], coord.ylim)
-    assertFalse(coord.expand)
   }
 
   @Test
@@ -499,7 +491,6 @@ class CoordSystemTest {
     CoordFixed coord = new CoordFixed()
 
     assertEquals(1.0, coord.ratio)
-    assertTrue(coord.expand)
     assertNull(coord.xlim)
     assertNull(coord.ylim)
   }
