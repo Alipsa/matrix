@@ -155,7 +155,7 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
 
       BigDecimal d = v as BigDecimal
       // Find which bin this value belongs to using ggplot2's cut_width breaks.
-      BigDecimal binIndex = (int) ((d - minX) / w).floor()
+      BigDecimal binIndex = ((d - minX) / w).floor()
       if (closedRight) {
         BigDecimal boundaryPoint = minX + binIndex * w
         BigDecimal diff = d - boundaryPoint
