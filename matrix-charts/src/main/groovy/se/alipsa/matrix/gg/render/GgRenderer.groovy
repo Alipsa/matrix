@@ -178,7 +178,7 @@ class GgRenderer {
 
     // 8. Render each layer
     chart.layers.each { layer ->
-      renderLayer(dataLayer, layer, chart, computedScales, coord, effectiveWidth, effectiveHeight)
+      renderLayer(dataLayer, layer, chart, computedScales, coord)
     }
 
     // 9. Draw axes (on top of data, use effective dimensions)
@@ -331,7 +331,7 @@ class GgRenderer {
 
       // Render each layer with filtered data
       chart.layers.each { layer ->
-        renderLayerWithData(dataLayer, layer, panelData, chart.globalAes, panelScales, coord, panelWidth, panelHeight)
+        renderLayerWithData(dataLayer, layer, panelData, chart.globalAes, panelScales, coord)
       }
 
       // Draw axes
@@ -576,8 +576,7 @@ class GgRenderer {
    * Render a layer with specific data (for faceted charts).
    */
   private void renderLayerWithData(G dataLayer, Layer layer, Matrix data, Aes globalAes,
-                                   Map<String, Scale> scales, Coord coord,
-                                   int plotWidth, int plotHeight) {
+                                   Map<String, Scale> scales, Coord coord) {
     // Merge layer aes with global aes when inheritAes is true (the default)
     Aes aes
     if (layer.inheritAes && layer.aes != null) {
@@ -1324,35 +1323,35 @@ class GgRenderer {
     Scale thetaScale = coord.theta == 'y' ? scales['y'] : scales['x']
     Scale radiusScale = coord.theta == 'y' ? scales['x'] : scales['y']
 
-    List<Number> center = coord.getCenter()
-    double cx = center[0] as double
-    double cy = center[1] as double
-    double maxRadius = coord.getMaxRadius()
+    List<BigDecimal> center = coord.getCenter()
+    BigDecimal cx = center[0]
+    BigDecimal cy = center[1]
+    BigDecimal maxRadius = coord.getMaxRadius()
 
     if (thetaScale) {
       List breaks = thetaScale.getComputedBreaks()
       List<String> labels = thetaScale.getComputedLabels()
       breaks.eachWithIndex { breakVal, int i ->
-        Double norm = normalizeFromScale(thetaScale, breakVal)
+        BigDecimal norm = normalizeFromScale(thetaScale, breakVal)
         if (norm == null) return
         if (isRangeReversed(thetaScale)) {
           norm = 1.0d - norm
         }
-        double angle = (coord.start as double) + norm * 2.0d * Math.PI
+        BigDecimal angle = coord.start + norm * 2.0d * Math.PI
         if (!coord.clockwise) {
-          angle = (coord.start as double) - norm * 2.0d * Math.PI
+          angle = coord.start - norm * 2.0d * Math.PI
         }
-        double x = cx + maxRadius * Math.sin(angle)
-        double y = cy - maxRadius * Math.cos(angle)
+        BigDecimal x = cx + maxRadius * angle.sin()
+        BigDecimal y = cy - maxRadius * angle.cos()
         gridGroup.addLine(cx, cy, x, y)
                  .stroke(color)
                  .strokeWidth(size)
 
         String label = i < labels.size() ? labels[i] : breakVal?.toString()
         if (label != null && !label.isEmpty()) {
-          double labelRadius = maxRadius + (theme.axisTickLength ?: 5)
-          double lx = cx + labelRadius * Math.sin(angle)
-          double ly = cy - labelRadius * Math.cos(angle)
+          BigDecimal labelRadius = maxRadius + (theme.axisTickLength ?: 5)
+          BigDecimal lx = cx + labelRadius * angle.sin()
+          BigDecimal ly = cy - labelRadius * angle.cos()
           plotArea.addText(label)
                   .x(lx)
                   .y(ly)
@@ -1365,10 +1364,10 @@ class GgRenderer {
 
     if (radiusScale) {
       radiusScale.getComputedBreaks().each { breakVal ->
-        Double norm = normalizeFromScale(radiusScale, breakVal)
+        BigDecimal norm = normalizeFromScale(radiusScale, breakVal)
         if (norm == null) return
-        double r = norm * maxRadius
-        if (r <= 0.0d) return
+        BigDecimal r = norm * maxRadius
+        if (r <= 0.0) return
         gridGroup.addCircle()
                  .cx(cx)
                  .cy(cy)
@@ -1396,7 +1395,7 @@ class GgRenderer {
    * @param value data value to normalize
    * @return normalized value or null if the scale/value cannot be normalized
    */
-  private Double normalizeFromScale(Scale scale, Object value) {
+  private BigDecimal normalizeFromScale(Scale scale, Object value) {
     if (scale == null) return null
     def transformed = scale.transform(value)
     if (!(transformed instanceof Number)) return null
@@ -1407,13 +1406,13 @@ class GgRenderer {
       range = (scale as ScaleDiscrete).range
     }
     if (range == null || range.size() < 2) return null
-    double r0 = range[0] as double
-    double r1 = range[1] as double
-    double min = Math.min(r0, r1)
-    double max = Math.max(r0, r1)
-    double span = max - min
+    BigDecimal r0 = range[0]
+    BigDecimal r1 = range[1]
+    BigDecimal min = r0.min(r1)
+    BigDecimal max = r0.max(r1)
+    BigDecimal span = max - min
     if (span == 0.0d) return 0.0d
-    return ((transformed as double) - min) / span
+    return (transformed - min) / span
   }
 
   /**
@@ -1431,15 +1430,14 @@ class GgRenderer {
       range = (scale as ScaleDiscrete).range
     }
     if (range == null || range.size() < 2) return false
-    return (range[0] as double) > (range[1] as double)
+    return range[0] > range[1]
   }
 
   /**
    * Render a single layer.
    */
   private void renderLayer(G dataLayer, Layer layer, GgChart chart,
-                           Map<String, Scale> scales, Coord coord,
-                           int plotWidth, int plotHeight) {
+                           Map<String, Scale> scales, Coord coord) {
     // Get the data for this layer
     Matrix data = layer.data ?: chart.data
     // Merge layer aes with global aes when inheritAes is true (the default)

@@ -2,10 +2,59 @@ package se.alipsa.matrix.ext
 
 import groovy.transform.CompileStatic
 
+import java.math.MathContext
 import java.math.RoundingMode
 
 /**
- * Extension methods for BigDecimal to support idiomatic Groovy floor(), ceil() and log10() operations.
+ * Extension methods for BigDecimal and Number to support idiomatic Groovy numeric operations.
+ *
+ * <p>This class provides extension methods that enable natural, chainable syntax for common
+ * numeric operations in Groovy, particularly useful for data processing and statistical computations.
+ *
+ * <h3>Available Operations</h3>
+ * <ul>
+ *   <li><b>Rounding:</b> floor(), ceil() - Round to integer values as BigDecimal</li>
+ *   <li><b>Logarithm:</b> log10() - Base-10 logarithm for any Number type</li>
+ *   <li><b>Square Root:</b> sqrt() - Square root with default DECIMAL64 precision</li>
+ *   <li><b>Trigonometry:</b> sin(), cos() - Sine and cosine for angles in radians</li>
+ *   <li><b>Precision:</b> ulp() - Unit in the last place for epsilon calculations</li>
+ *   <li><b>Comparison:</b> min(), max() - Chainable min/max operations supporting mixed types</li>
+ * </ul>
+ *
+ * <h3>Usage Examples</h3>
+ * <pre>{@code
+ * // Rounding operations
+ * BigDecimal x = 3.7G
+ * x.floor()  // → 3.0
+ * x.ceil()   // → 4.0
+ *
+ * // Logarithm
+ * BigDecimal value = 100G
+ * value.log10()  // → 2.0
+ *
+ * // Square root
+ * BigDecimal area = 25.0G
+ * area.sqrt()  // → 5.0
+ *
+ * // Trigonometric functions
+ * BigDecimal angle = Math.PI / 2 as BigDecimal
+ * angle.sin()  // → 1.0
+ * angle.cos()  // → 0.0
+ *
+ * // Unit in last place (for epsilon calculations)
+ * BigDecimal epsilon = value.ulp() * 10
+ *
+ * // Chainable min/max with mixed types
+ * BigDecimal binIndex = 0.max(value.min(100))  // Clamp to [0, 100]
+ * BigDecimal result = someValue.min(breaks.size() - 2)  // Works with Integer
+ * }</pre>
+ *
+ * <h3>Design Philosophy</h3>
+ * <p>These extensions prioritize readability and idiomatic Groovy syntax. They enable
+ * natural method chaining and work seamlessly with mixed numeric types (BigDecimal, Integer,
+ * Long, Double, etc.), automatically handling type conversions.
+ *
+ * @since 1.0
  */
 @CompileStatic
 class BigDecimalExtension {
@@ -108,5 +157,118 @@ class BigDecimalExtension {
   static BigDecimal max(Number self, BigDecimal other) {
     BigDecimal selfBD = self as BigDecimal
     return selfBD > other ? selfBD : other
+  }
+
+  /**
+   * Returns the smaller of this Number and the given Number.
+   * <p>
+   * This method enables natural comparison syntax for any Number types,
+   * including primitives like int, long, double, etc.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * int plotWidth = 640
+   * int plotHeight = 480
+   * BigDecimal radius = plotWidth.min(plotHeight) / 2  // → 240
+   * }</pre>
+   *
+   * @param self the Number value
+   * @param other the Number to compare with
+   * @return the smaller value as a BigDecimal
+   */
+  static BigDecimal min(Number self, Number other) {
+    BigDecimal selfBD = self as BigDecimal
+    BigDecimal otherBD = other as BigDecimal
+    return selfBD < otherBD ? selfBD : otherBD
+  }
+
+  /**
+   * Returns the larger of this Number and the given Number.
+   * <p>
+   * This method enables natural comparison syntax for any Number types,
+   * including primitives like int, long, double, etc.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * int width = 100
+   * int minWidth = 50
+   * BigDecimal result = width.max(minWidth)  // → 100
+   * }</pre>
+   *
+   * @param self the Number value
+   * @param other the Number to compare with
+   * @return the larger value as a BigDecimal
+   */
+  static BigDecimal max(Number self, Number other) {
+    BigDecimal selfBD = self as BigDecimal
+    BigDecimal otherBD = other as BigDecimal
+    return selfBD > otherBD ? selfBD : otherBD
+  }
+
+  /**
+   * Returns the square root of this BigDecimal value using DECIMAL64 precision.
+   * <p>
+   * This is a convenience method that provides a default MathContext for square root
+   * operations, making code more readable and concise.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal area = 25.0G
+   * BigDecimal side = area.sqrt()  // → 5.0
+   *
+   * // Instead of the more verbose:
+   * BigDecimal side = area.sqrt(MathContext.DECIMAL64)
+   * }</pre>
+   *
+   * @param self the BigDecimal value to take the square root of
+   * @return the square root as a BigDecimal
+   * @see MathContext#DECIMAL64
+   */
+  static BigDecimal sqrt(BigDecimal self) {
+    return self.sqrt(MathContext.DECIMAL64)
+  }
+
+  /**
+   * Returns the sine of this BigDecimal value (in radians).
+   * <p>
+   * This method wraps {@link Math#sin(double)} and returns the result as a BigDecimal
+   * for consistent type handling in Groovy numeric operations.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal angle = Math.PI / 2  // 90 degrees in radians
+   * BigDecimal result = angle.sin()  // → 1.0
+   *
+   * BigDecimal angle2 = 0G
+   * angle2.sin()  // → 0.0
+   * }</pre>
+   *
+   * @param self the angle in radians
+   * @return the sine of the angle as a BigDecimal
+   */
+  static BigDecimal sin(BigDecimal self) {
+    return Math.sin(self.doubleValue()) as BigDecimal
+  }
+
+  /**
+   * Returns the cosine of this BigDecimal value (in radians).
+   * <p>
+   * This method wraps {@link Math#cos(double)} and returns the result as a BigDecimal
+   * for consistent type handling in Groovy numeric operations.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal angle = 0G
+   * BigDecimal result = angle.cos()  // → 1.0
+   *
+   * BigDecimal angle2 = Math.PI
+   * angle2.cos()  // → -1.0
+   * }</pre>
+   *
+   * @param self the angle in radians
+   * @return the cosine of the angle as a BigDecimal
+   */
+  static BigDecimal cos(BigDecimal self) {
+    return Math.cos(self.doubleValue()) as BigDecimal
   }
 }

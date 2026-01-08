@@ -65,15 +65,15 @@ class CoordPolar extends Coord {
   /**
    * Get the center point of the polar plot in pixels.
    */
-  List<Number> getCenter() {
+  List<BigDecimal> getCenter() {
     return [plotWidth / 2, plotHeight / 2]
   }
 
   /**
    * Get the maximum radius that fits in the plot area.
    */
-  double getMaxRadius() {
-    return Math.min(plotWidth, plotHeight) / 2 * 0.9  // 90% to leave margin
+  BigDecimal getMaxRadius() {
+    return plotWidth.min(plotHeight) / 2 * 0.9  // 90% to leave margin
   }
 
   /**

@@ -102,11 +102,151 @@ Modules like matrix-smile use Groovy extension methods registered via `META-INF/
 
 ## Code Style
 
-- Use `@CompileStatic` annotation on classes for performance-critical code. 
+- Use `@CompileStatic` annotation on classes for performance-critical code.
 - Java compilation target: release 21
 - Groovy compiles both .java and .groovy files (no separate Java srcDir)
 - MIT License
 - **Always create or modify tests when adding or changing features** - tests go in `src/test/groovy/` using JUnit 5
+
+## Idiomatic Groovy Patterns
+
+### BigDecimal vs double
+**Primary Goal:** Write beautiful, easy-to-read, idiomatic Groovy code. Readability > precision optimization.
+
+**When to use BigDecimal:**
+- Business logic and data transformations
+- Scale operations (ranges, domains, transforms)
+- When numeric literals naturally appear in code (`1.0G`, `2.5G`)
+
+**When to use double:**
+- Geometric/coordinate calculations (pixels, angles, radii)
+- Rendering pipeline (SVG coordinates)
+- Math operations that naturally use primitives (sin, cos, atan2, sqrt on doubles)
+
+### Numeric Operations
+
+**Prefer idiomatic Groovy operators:**
+```groovy
+// Good - Natural Groovy operators
+BigDecimal result = (rMin + rMax) / 2
+BigDecimal t = i / (n - 1)
+BigDecimal power = 10 ** exponent
+
+// Avoid - Verbose Java-style
+BigDecimal result = (rMin + rMax).divide(TWO, MATH_CONTEXT)
+BigDecimal t = BigDecimal.valueOf(i).divide(BigDecimal.valueOf(n - 1), MATH_CONTEXT)
+BigDecimal power = BigDecimal.TEN.pow(exponent)
+```
+
+**Use BigDecimal literals with `G` suffix:**
+```groovy
+// Good
+List<BigDecimal> range = [1.0G, 6.0G]
+BigDecimal half = 0.5G
+
+// Avoid
+List<BigDecimal> range = [new BigDecimal('1.0'), new BigDecimal('6.0')]
+BigDecimal half = BigDecimal.valueOf(0.5)
+```
+
+**Use clean type coercion:**
+```groovy
+// Good - Idiomatic Groovy
+double x = value as double
+BigDecimal bd = value as BigDecimal
+
+// Avoid - Code smell
+double x = (value as Number).doubleValue()
+```
+
+### BigDecimalExtension Methods
+
+The `matrix-groovy-ext` module provides extension methods for BigDecimal:
+
+```groovy
+// Floor and ceiling (returns BigDecimal)
+BigDecimal x = 3.7G
+x.floor()  // → 3.0
+x.ceil()   // → 4.0
+
+// Logarithm base 10
+BigDecimal value = 100G
+value.log10()  // → 2.0
+
+// Square root with default precision
+BigDecimal area = 25.0G
+area.sqrt()  // → 5.0 (uses MathContext.DECIMAL64)
+
+// Unit in last place (for epsilon calculations)
+BigDecimal epsilon = value.ulp() * 10
+
+// Min/max with chainable syntax
+BigDecimal binIndex = 0.max(value.min(100))  // Clamp to [0, 100]
+
+// Works with mixed Number types
+BigDecimal result = someValue.min(breaks.size() - 2)
+```
+
+**When to use extension methods:**
+- Pattern appears 3+ times in a file
+- Extension is shorter AND clearer than original
+- Type conversions don't make it verbose
+- **NOT** when working with primitive doubles (avoid boxing overhead)
+
+**Example - Good use of extensions:**
+```groovy
+// Before - verbose
+double epsilon = Math.max(Math.ulp(boundaryPoint), Math.ulp(d)) * 10.0d
+
+// After - idiomatic with extensions
+BigDecimal epsilon = [boundaryPoint.ulp(), d.ulp()].max() * 10
+```
+
+**Example - Avoid extensions for doubles:**
+```groovy
+// Good - Math methods are clearer for double operations
+double normalized = Math.max(0, Math.min(1, value))
+
+// Avoid - verbose type conversions
+double normalized = (0G).max((value as BigDecimal).min(1G)) as double
+```
+
+### Anti-Patterns to Avoid
+
+**❌ Don't create unnecessary constants:**
+```groovy
+// Avoid
+static final BigDecimal TWO = 2.0G
+result = value.divide(TWO, MATH_CONTEXT)
+
+// Prefer
+result = value / 2
+```
+
+**❌ Don't use `.doubleValue()` (code smell):**
+```groovy
+// Avoid
+double x = (value as Number).doubleValue()
+
+// Prefer
+double x = value as double
+```
+
+**❌ Don't force BigDecimal where double is clearer:**
+```groovy
+// For coordinate/geometry operations, double is natural
+double px = cx + radius * Math.sin(angle)  // ✓ Clear
+double px = cx + (radius * (angle as BigDecimal).sin()) as double  // ✗ Verbose
+```
+
+### When in Doubt
+
+Ask yourself:
+1. **Does this make the code easier to read?** → Do it
+2. **Does this make the code harder to read?** → Don't do it
+3. **Is it about the same?** → Leave it alone
+
+The goal is beautiful Groovy code, not BigDecimal everywhere.
 
 ## Key Dependencies
 

@@ -2,8 +2,6 @@ package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
 
-import java.math.MathContext
-
 /**
  * Size scale where area is proportional to the data.
  * Missing or invalid values map to naValue (BigDecimal, nullable) inherited from ScaleSizeContinuous.
@@ -39,13 +37,13 @@ class ScaleSizeArea extends ScaleSizeContinuous {
 
     if (dMax == dMin) {
       BigDecimal midArea = (rMin * rMin + rMax * rMax) / 2
-      return midArea.sqrt(MathContext.DECIMAL64)
+      return midArea.sqrt()
     }
 
     BigDecimal normalized = (v - dMin) / (dMax - dMin)
     BigDecimal areaMin = rMin * rMin
     BigDecimal areaMax = rMax * rMax
     BigDecimal area = areaMin + normalized * (areaMax - areaMin)
-    return area.sqrt(MathContext.DECIMAL64)
+    return area.sqrt()
   }
 }

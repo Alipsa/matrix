@@ -20,6 +20,7 @@ p <- ggplot(
 ggsave("facets.svg", plot = p)
  */
 @Grab('se.alipsa.matrix:matrix-core:3.5.1-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-groovy-ext:0.1.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-charts:0.4.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-stats:2.3.0-SNAPSHOT')
