@@ -4,12 +4,17 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.gg.geom.GeomBin2d
+import se.alipsa.matrix.gg.geom.GeomHex
 import se.alipsa.matrix.gg.geom.GeomBlank
 import se.alipsa.matrix.gg.geom.GeomBoxplot
 import se.alipsa.matrix.gg.geom.GeomContour
 import se.alipsa.matrix.gg.geom.GeomCount
 import se.alipsa.matrix.gg.geom.GeomDensity
+import se.alipsa.matrix.gg.geom.GeomDensity2d
+import se.alipsa.matrix.gg.geom.GeomDensity2dFilled
+import se.alipsa.matrix.gg.geom.GeomDotplot
 import se.alipsa.matrix.gg.geom.GeomErrorbar
+import se.alipsa.matrix.gg.geom.GeomErrorbarh
 import se.alipsa.matrix.gg.geom.GeomFreqpoly
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.geom.GeomHline
@@ -21,12 +26,16 @@ import se.alipsa.matrix.gg.geom.GeomQqLine
 import se.alipsa.matrix.gg.geom.GeomRug
 import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
+import se.alipsa.matrix.gg.geom.GeomSpoke
+import se.alipsa.matrix.gg.geom.GeomCurve
 import se.alipsa.matrix.gg.geom.GeomText
 import se.alipsa.matrix.gg.geom.GeomVline
 import se.alipsa.matrix.gg.geom.GeomRibbon
 import se.alipsa.matrix.gg.geom.GeomTile
+import se.alipsa.matrix.gg.geom.GeomRaster
 import se.alipsa.matrix.gg.geom.GeomRect
 import se.alipsa.matrix.gg.geom.GeomPath
+import se.alipsa.matrix.gg.geom.GeomPolygon
 import se.alipsa.matrix.gg.geom.GeomStep
 import se.alipsa.matrix.gg.geom.GeomPointrange
 import se.alipsa.matrix.gg.geom.GeomLinerange
@@ -756,6 +765,34 @@ class GgPlot {
   }
 
   /**
+   * Completely blank theme - only data is displayed.
+   */
+  static Theme theme_void() {
+    return Themes.void_()
+  }
+
+  /**
+   * Light theme with light gray backgrounds and subtle grid lines.
+   */
+  static Theme theme_light() {
+    return Themes.light()
+  }
+
+  /**
+   * Dark theme with dark backgrounds and light text/grid lines.
+   */
+  static Theme theme_dark() {
+    return Themes.dark()
+  }
+
+  /**
+   * Line draw theme - crisp black lines on white background.
+   */
+  static Theme theme_linedraw() {
+    return Themes.linedraw()
+  }
+
+  /**
    * Customize theme elements.
    * Supports both camelCase (e.g., 'legendPosition') and dot-notation (e.g., 'legend.position').
    */
@@ -932,6 +969,24 @@ class GgPlot {
     return new GeomBin2d(params)
   }
 
+  static GeomHex geom_hex() {
+    return new GeomHex()
+  }
+
+  /**
+   * Create a hexagonal binning geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomHex instance
+   */
+  static GeomHex geom_hex(Aes mapping) {
+    return geom_hex([mapping: mapping])
+  }
+
+  static GeomHex geom_hex(Map params) {
+    return new GeomHex(params)
+  }
+
   static GeomBlank geom_blank() {
     return new GeomBlank()
   }
@@ -1044,6 +1099,60 @@ class GgPlot {
     return new GeomDensity(params)
   }
 
+  static GeomDotplot geom_dotplot() {
+    return new GeomDotplot()
+  }
+
+  /**
+   * Create a dot plot geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomDotplot instance
+   */
+  static GeomDotplot geom_dotplot(Aes mapping) {
+    return geom_dotplot([mapping: mapping])
+  }
+
+  static GeomDotplot geom_dotplot(Map params) {
+    return new GeomDotplot(params)
+  }
+
+  static GeomDensity2d geom_density_2d() {
+    return new GeomDensity2d()
+  }
+
+  /**
+   * Create a 2D density contour geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomDensity2d instance
+   */
+  static GeomDensity2d geom_density_2d(Aes mapping) {
+    return geom_density_2d([mapping: mapping])
+  }
+
+  static GeomDensity2d geom_density_2d(Map params) {
+    return new GeomDensity2d(params)
+  }
+
+  static GeomDensity2dFilled geom_density_2d_filled() {
+    return new GeomDensity2dFilled()
+  }
+
+  /**
+   * Create a filled 2D density contour geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomDensity2dFilled instance
+   */
+  static GeomDensity2dFilled geom_density_2d_filled(Aes mapping) {
+    return geom_density_2d_filled([mapping: mapping])
+  }
+
+  static GeomDensity2dFilled geom_density_2d_filled(Map params) {
+    return new GeomDensity2dFilled(params)
+  }
+
   /**
    * Create a frequency polygon geom.
    * Uses stat_bin and draws a line through bin centers.
@@ -1090,6 +1199,25 @@ class GgPlot {
 
   static GeomErrorbar geom_errorbar(Map params) {
     return new GeomErrorbar(params)
+  }
+
+  static GeomErrorbarh geom_errorbarh() {
+    return new GeomErrorbarh()
+  }
+
+  /**
+   * Create a horizontal error bar geom with a layer-specific aesthetic mapping.
+   * Horizontal error bars display x intervals at each y position.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomErrorbarh instance
+   */
+  static GeomErrorbarh geom_errorbarh(Aes mapping) {
+    return geom_errorbarh([mapping: mapping])
+  }
+
+  static GeomErrorbarh geom_errorbarh(Map params) {
+    return new GeomErrorbarh(params)
   }
 
   static GeomHistogram geom_histogram() {
@@ -1307,6 +1435,44 @@ class GgPlot {
     return new GeomSegment(params)
   }
 
+  static GeomSpoke geom_spoke() {
+    return new GeomSpoke()
+  }
+
+  /**
+   * Create a spoke geom with a layer-specific aesthetic mapping.
+   * Spokes are radial line segments defined by angle and radius.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomSpoke instance
+   */
+  static GeomSpoke geom_spoke(Aes mapping) {
+    return geom_spoke([mapping: mapping])
+  }
+
+  static GeomSpoke geom_spoke(Map params) {
+    return new GeomSpoke(params)
+  }
+
+  static GeomCurve geom_curve() {
+    return new GeomCurve()
+  }
+
+  /**
+   * Create a curve geom with a layer-specific aesthetic mapping.
+   * Curves are smooth curved line segments between two points.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomCurve instance
+   */
+  static GeomCurve geom_curve(Aes mapping) {
+    return geom_curve([mapping: mapping])
+  }
+
+  static GeomCurve geom_curve(Map params) {
+    return new GeomCurve(params)
+  }
+
   static GeomSmooth geom_smooth() {
     return new GeomSmooth()
   }
@@ -1470,6 +1636,25 @@ class GgPlot {
     return new GeomTile(params)
   }
 
+  static GeomRaster geom_raster() {
+    return new GeomRaster()
+  }
+
+  /**
+   * Create a raster geom with a layer-specific aesthetic mapping.
+   * Raster is optimized for regular grids (image data, heatmaps on regular grids).
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomRaster instance
+   */
+  static GeomRaster geom_raster(Aes mapping) {
+    return geom_raster([mapping: mapping])
+  }
+
+  static GeomRaster geom_raster(Map params) {
+    return new GeomRaster(params)
+  }
+
   static GeomRect geom_rect() {
     return new GeomRect()
   }
@@ -1506,6 +1691,25 @@ class GgPlot {
 
   static GeomPath geom_path(Map params) {
     return new GeomPath(params)
+  }
+
+  static GeomPolygon geom_polygon() {
+    return new GeomPolygon()
+  }
+
+  /**
+   * Create a polygon geom with a layer-specific aesthetic mapping.
+   * Polygons automatically close the path and fill the enclosed area.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomPolygon instance
+   */
+  static GeomPolygon geom_polygon(Aes mapping) {
+    return geom_polygon([mapping: mapping])
+  }
+
+  static GeomPolygon geom_polygon(Map params) {
+    return new GeomPolygon(params)
   }
 
   static GeomStep geom_step() {

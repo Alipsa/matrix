@@ -13,7 +13,7 @@ class ScaleSizeDiscrete extends ScaleDiscrete {
   List<Number> range = [1.0, 6.0] as List<Number>
 
   /** Size value for NA/missing values (BigDecimal, nullable). */
-  BigDecimal naValue = 3.0G
+  BigDecimal naValue = 3.0
 
   private List<Number> computedValues = []
 

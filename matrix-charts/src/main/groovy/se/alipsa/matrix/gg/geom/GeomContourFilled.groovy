@@ -266,7 +266,7 @@ class GeomContourFilled extends GeomContour {
       if (v1 == v2) return vertices[corner1]
 
       BigDecimal t = (level - v1) / (v2 - v1)
-      t = 1.0G.min(t).max(0.0G) //Math.max(0, Math.min(1, t))
+      t = t.min(1).max(0) // Clamp to [0, 1]
       BigDecimal[] p1 = vertices[corner1]
       BigDecimal[] p2 = vertices[corner2]
       return [p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])] as BigDecimal[]

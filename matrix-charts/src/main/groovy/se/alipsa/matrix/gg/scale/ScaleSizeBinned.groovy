@@ -12,13 +12,13 @@ import java.math.RoundingMode
 class ScaleSizeBinned extends ScaleContinuous {
 
   /** Output range [min, max] for size values as BigDecimal. */
-  List<BigDecimal> range = [1.0G, 6.0G]
+  List<BigDecimal> range = [1.0, 6.0]
 
   /** Number of bins. */
   int bins = 5
 
   /** Size value for NA/missing values (BigDecimal, nullable). */
-  BigDecimal naValue = 3.0G
+  BigDecimal naValue = 3.0
 
   /**
    * Create a binned size scale with defaults.

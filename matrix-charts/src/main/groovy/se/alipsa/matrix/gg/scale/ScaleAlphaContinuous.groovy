@@ -10,10 +10,10 @@ import groovy.transform.CompileStatic
 class ScaleAlphaContinuous extends ScaleContinuous {
 
   /** Output range [min, max] for alpha values as BigDecimal. */
-  List<BigDecimal> range = [new BigDecimal('0.1'), BigDecimal.ONE]
+  List<BigDecimal> range = [0.1, 1.0]
 
   /** Alpha value for NA/missing values (BigDecimal, nullable). */
-  BigDecimal naValue = 1.0G
+  BigDecimal naValue = 1.0
 
   /**
    * Create a continuous alpha scale with defaults.

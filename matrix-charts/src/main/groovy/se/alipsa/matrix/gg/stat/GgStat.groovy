@@ -502,7 +502,7 @@ class GgStat {
           )
           seFit = Math.sqrt(sigma2 * Math.max(0.0d, leverage))
         }
-        BigDecimal margin = BigDecimal.valueOf(tCrit * seFit)
+        BigDecimal margin = (tCrit * seFit) as BigDecimal
         BigDecimal yMin = yFit - margin
         BigDecimal yMax = yFit + margin
         results << [x as BigDecimal, yFit, yMin, yMax]

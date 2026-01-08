@@ -27,7 +27,7 @@ class CoordFixed extends CoordCartesian {
    * A ratio of 0.5 means y is scaled at half of x.
    * A ratio of 2 means y is scaled at twice x.
    */
-  BigDecimal ratio = 1.0G
+  BigDecimal ratio = 1.0
 
   /**
    * Returns the configured aspect ratio (y units per x unit).

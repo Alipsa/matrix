@@ -28,7 +28,7 @@ class ScaleAlphaBinned extends ScaleContinuous {
   int bins = 5
 
   /** Alpha value for NA/missing values (BigDecimal, nullable). */
-  BigDecimal naValue = 1.0G
+  BigDecimal naValue = 1.0
 
   /**
    * Create a binned alpha scale with defaults.
