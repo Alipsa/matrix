@@ -1570,7 +1570,11 @@ class GgStat {
       throw new IllegalArgumentException("stat_ellipse level must be between 0 and 1 (exclusive), was: $level")
     }
     String type = params.type as String ?: 't'
-    int segments = params.segments as Integer ?: 51
+    Integer segmentsParam = params.segments as Integer
+    int segments = segmentsParam ?: 51
+    if (segments < 3) {
+      throw new IllegalArgumentException("stat_ellipse segments must be at least 3, was: $segments")
+    }
 
     // Delegate to matrix-stats Ellipse class for calculation
     se.alipsa.matrix.stats.Ellipse.EllipseData result =
