@@ -587,7 +587,7 @@ class GgPlotTest {
         assertNotNull(svg)
 
         String svgContent = SvgWriter.toXml(svg)
-        // Should have fewer points after removing duplicates
+        // The test generates SVG successfully, verifying stat_unique runs without error
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements")
 
         File outputFile = new File('build/test_stat_unique.svg')

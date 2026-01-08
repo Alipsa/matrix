@@ -75,6 +75,10 @@ class Ellipse {
     double lambda1 = trace / 2 + Math.sqrt(discriminant)
     double lambda2 = trace / 2 - Math.sqrt(discriminant)
 
+    // Guard against negative eigenvalues (shouldn't happen but protect against numerical issues)
+    if (lambda1 < 0) lambda1 = 0
+    if (lambda2 < 0) lambda2 = 0
+
     // Angle of rotation
     double theta
     if (Math.abs(covXY) < 1e-10) {

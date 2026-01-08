@@ -586,7 +586,7 @@ class GgRenderer {
     }
 
     // Some stats can generate data from scratch even when input is null
-    boolean canGenerateData = layer.stat in [StatType.FUNCTION]
+    boolean canGenerateData = canGenerateDataFromNull(layer.stat)
     if (aes == null || ((data == null || data.rowCount() == 0) && !canGenerateData)) return
 
     // Evaluate closure expressions in aesthetics (skip if data is null for data-generating stats)
@@ -1074,7 +1074,7 @@ class GgRenderer {
       }
 
       // Some stats can generate data from scratch even when input is null
-      boolean canGenerateData = layer.stat in [StatType.FUNCTION]
+      boolean canGenerateData = canGenerateDataFromNull(layer.stat)
 
       if (layerAes && (layerData || canGenerateData)) {
         // Evaluate expressions first (skip if data is null for data-generating stats)
@@ -1470,7 +1470,7 @@ class GgRenderer {
     }
 
     // Some stats can generate data from scratch even when input is null
-    boolean canGenerateData = layer.stat in [StatType.FUNCTION]
+    boolean canGenerateData = canGenerateDataFromNull(layer.stat)
     if (aes == null || (data == null && !canGenerateData)) return
 
     // Evaluate closure expressions in aesthetics (skip if data is null for data-generating stats)
@@ -2428,6 +2428,15 @@ class GgRenderer {
    */
   private Theme defaultTheme() {
     return se.alipsa.matrix.gg.GgPlot.theme_gray()
+  }
+
+  /**
+   * Check if a stat type can generate data from scratch even when input data is null.
+   * @param statType the stat type to check
+   * @return true if this stat can generate data without input
+   */
+  private static boolean canGenerateDataFromNull(StatType statType) {
+    return statType in [StatType.FUNCTION]
   }
 
   /**
