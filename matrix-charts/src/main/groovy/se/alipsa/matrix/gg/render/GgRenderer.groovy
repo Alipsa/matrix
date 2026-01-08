@@ -1411,7 +1411,7 @@ class GgRenderer {
     BigDecimal min = r0.min(r1)
     BigDecimal max = r0.max(r1)
     BigDecimal span = max - min
-    if (span == 0.0d) return 0.0d
+    if (span == 0) return 0
     return (transformed - min) / span
   }
 

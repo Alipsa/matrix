@@ -92,7 +92,7 @@ class CutWidth {
   /**
    * Compute bin labels for each value in the list.
    */
-  private List<String> computeBins(List<?> values) {
+  List<String> computeBins(List<?> values) {
     BigDecimal w = width as BigDecimal
 
     List<BigDecimal> numericValues = values.findAll { it instanceof Number }
