@@ -1,6 +1,6 @@
-# CLAUDE.md
+# CLAUDE.md and copilot
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) and github copilot when working with code in this repository.
 
 ## Project Overview
 
@@ -51,19 +51,20 @@ RUN_EXTERNAL_TESTS=true ./gradlew test
 
 ## Module Structure
 
-| Module                 | Purpose                                                            |
-|------------------------|--------------------------------------------------------------------|
-| **matrix-core**        | Core Matrix/Grid classes, basic statistics, data conversion        |
-| **matrix-stats**       | Statistical tests (t-test, correlation, regression) using Smile ML |
-| **matrix-datasets**    | Common datasets (mtcars, iris, diamonds, etc.)                     |
-| **matrix-charts**      | Grammar of Graphics (ggplot2-style) charting with SVG output       |
-| **matrix-csv**         | Advanced CSV import/export via commons-csv                         |
-| **matrix-json**        | JSON import/export via Jackson                                     |
-| **matrix-spreadsheet** | Excel/OpenOffice import/export via Apache POI                      |
-| **matrix-sql**         | Database interaction via JDBC                                      |
-| **matrix-parquet**     | Parquet format support                                             |
-| **matrix-smile**       | Smile ML library integration                                       |
-| **matrix-bom**         | Bill of Materials for dependency management                        |
+| Module                 | Purpose                                                                   |
+|------------------------|---------------------------------------------------------------------------|
+| **matrix-core**        | Core Matrix/Grid classes, basic statistics, data conversion               |
+| **matrix-stats**       | Statistical tests (t-test, correlation, regression) using Smile ML        |
+| **matrix-datasets**    | Common datasets (mtcars, iris, diamonds, etc.)                            |
+| **matrix-charts**      | Grammar of Graphics (ggplot2-style) charting with SVG output              |
+| **matrix-csv**         | Advanced CSV import/export via commons-csv                                |
+| **matrix-groovy-ext**  | Groovy extensions to Number and BigDecimal enabling more ideomatic groovy |
+| **matrix-json**        | JSON import/export via Jackson                                            |
+| **matrix-spreadsheet** | Excel/OpenOffice import/export via Apache POI                             |
+| **matrix-sql**         | Database interaction via JDBC                                             |
+| **matrix-parquet**     | Parquet format support                                                    |
+| **matrix-smile**       | Smile ML library integration                                              |
+| **matrix-bom**         | Bill of Materials for dependency management                               |
 
 ## Architecture
 
