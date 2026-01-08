@@ -1384,7 +1384,19 @@ class GgStat {
 
     for (int i = 0; i < n; i++) {
       BigDecimal x = xmin + i * step
-      BigDecimal y = fun.call(x) as BigDecimal
+      BigDecimal y
+      try {
+        def result = fun.call(x)
+        if (!(result instanceof Number)) {
+          throw new IllegalArgumentException(
+              "stat_function 'fun' must return a Number but returned " +
+              "${result == null ? 'null' : result.getClass().name} for x=" + x
+          )
+        }
+        y = (result as BigDecimal)
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Error evaluating stat_function at x=" + x + ": " + e.message, e)
+      }
       xVals << x
       yVals << y
     }
