@@ -6,10 +6,12 @@ import java.math.MathContext
 import java.math.RoundingMode
 
 /**
- * Extension methods for BigDecimal and Number to support idiomatic Groovy numeric operations.
+ * Extension methods for Number types to support idiomatic Groovy numeric operations.
  *
  * <p>This class provides extension methods that enable natural, chainable syntax for common
  * numeric operations in Groovy, particularly useful for data processing and statistical computations.
+ * All methods work seamlessly with any Number type (Integer, Long, Double, BigDecimal, etc.),
+ * automatically handling type conversions and returning BigDecimal for precision.
  *
  * <h3>Available Operations</h3>
  * <ul>
@@ -24,12 +26,15 @@ import java.math.RoundingMode
  *
  * <h3>Usage Examples</h3>
  * <pre>{@code
- * // Rounding operations
- * BigDecimal x = 3.7G
- * x.floor()  // → 3.0
- * x.ceil()   // → 4.0
+ * // Works with any Number type
+ * Integer i = 100
+ * i.log10()  // → 2.0
  *
- * // Logarithm
+ * Double d = 3.7
+ * d.floor()  // → 3.0
+ * d.ceil()   // → 4.0
+ *
+ * // BigDecimal for precision
  * BigDecimal value = 100G
  * value.log10()  // → 2.0
  *
@@ -58,7 +63,7 @@ import java.math.RoundingMode
  * @since 1.0
  */
 @CompileStatic
-class BigDecimalExtension {
+class NumberExtension {
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -116,7 +121,7 @@ class BigDecimalExtension {
   }
 
   /**
-   * Returns Euler's number e raised to the power of this BigDecimal value.
+   * Returns Euler's number e raised to the power of this value.
    * <p>
    * This method provides the natural exponential function (exp), which is the inverse
    * of the natural logarithm. It uses the power operator with Math.E as the base.
@@ -131,13 +136,18 @@ class BigDecimalExtension {
    *
    * BigDecimal x3 = 2.0G
    * x3.exp()  // → 7.389056099...
+   *
+   * // Works with any Number type
+   * Integer i = 2
+   * i.exp()  // → 7.389056099...
    * }</pre>
    *
-   * @param self the exponent value
+   * @param self the exponent value (any Number type)
    * @return e raised to the power of this value, as a BigDecimal
    */
-  static BigDecimal exp(BigDecimal self) {
-    return Math.E ** self
+  static BigDecimal exp(Number self) {
+    BigDecimal val = self as BigDecimal
+    return Math.E ** val
   }
 
   /**

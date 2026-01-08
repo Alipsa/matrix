@@ -1,3 +1,3 @@
 moduleName=matrix-groovy-ext
 moduleVersion=0.1.0
-extensionClasses=se.alipsa.matrix.ext.BigDecimalExtension
+extensionClasses=se.alipsa.matrix.ext.NumberExtension

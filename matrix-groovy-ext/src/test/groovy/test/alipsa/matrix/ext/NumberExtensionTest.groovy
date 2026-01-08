@@ -1,38 +1,38 @@
 package test.alipsa.matrix.ext
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.ext.BigDecimalExtension
+import se.alipsa.matrix.ext.NumberExtension
 
 import java.math.MathContext
 
 import static org.junit.jupiter.api.Assertions.*
 
-class BigDecimalExtensionTest {
+class NumberExtensionTest {
 
   @Test
   void testFloor() {
     BigDecimal value = 3.7G
-    BigDecimal floored = BigDecimalExtension.floor(value)
+    BigDecimal floored = NumberExtension.floor(value)
     assert floored == 3G
 
     // Test negative values
-    assert BigDecimalExtension.floor(-3.7G) == -4G
+    assert NumberExtension.floor(-3.7G) == -4G
 
     // Test already integer
-    assert BigDecimalExtension.floor(5G) == 5G
+    assert NumberExtension.floor(5G) == 5G
   }
 
   @Test
   void testCeil() {
     BigDecimal value = 3.2G
-    BigDecimal ceiled = BigDecimalExtension.ceil(value)
+    BigDecimal ceiled = NumberExtension.ceil(value)
     assert ceiled == 4G
 
     // Test negative values
-    assert BigDecimalExtension.ceil(-3.2G) == -3G
+    assert NumberExtension.ceil(-3.2G) == -3G
 
     // Test already integer
-    assert BigDecimalExtension.ceil(5G) == 5G
+    assert NumberExtension.ceil(5G) == 5G
   }
 
   @Test
@@ -65,12 +65,12 @@ class BigDecimalExtensionTest {
   @Test
   void testLog10() {
     BigDecimal value = 1000G
-    BigDecimal logValue = BigDecimalExtension.log10(value)
+    BigDecimal logValue = NumberExtension.log10(value)
     assert logValue == 3G
 
     // Test with different values
-    assert BigDecimalExtension.log10(100) == 2G
-    assert BigDecimalExtension.log10(10.0) == 1G
+    assert NumberExtension.log10(100) == 2G
+    assert NumberExtension.log10(10.0) == 1G
   }
 
   @Test
@@ -99,12 +99,22 @@ class BigDecimalExtensionTest {
     // Test with extension syntax
     BigDecimal testVal = 0.0
     assert testVal.exp() == 1.0
+
+    // Test with different Number types (consistency with log/log10)
+    Integer intVal = 1
+    assertEquals(Math.E, intVal.exp().doubleValue(), 1e-10)
+
+    Long longVal = 2L
+    assertEquals(Math.E * Math.E, longVal.exp().doubleValue(), 1e-10)
+
+    Double doubleVal = 0.0
+    assertEquals(1.0, doubleVal.exp().doubleValue(), 1e-10)
   }
 
   @Test
   void testUlpBigDecimal() {
     BigDecimal value = 1.0G
-    BigDecimal ulpValue = BigDecimalExtension.ulp(value)
+    BigDecimal ulpValue = NumberExtension.ulp(value)
 
     // ulp should return a positive value
     assert ulpValue > 0
@@ -122,17 +132,17 @@ class BigDecimalExtensionTest {
   void testUlpNumber() {
     // Test with Integer
     Integer intValue = 42
-    BigDecimal ulpInt = BigDecimalExtension.ulp(intValue)
+    BigDecimal ulpInt = NumberExtension.ulp(intValue)
     assert ulpInt > 0
 
     // Test with Double
     Double doubleValue = 3.14
-    BigDecimal ulpDouble = BigDecimalExtension.ulp(doubleValue)
+    BigDecimal ulpDouble = NumberExtension.ulp(doubleValue)
     assert ulpDouble > 0
 
     // Test with Long
     Long longValue = 100L
-    BigDecimal ulpLong = BigDecimalExtension.ulp(longValue)
+    BigDecimal ulpLong = NumberExtension.ulp(longValue)
     assert ulpLong > 0
   }
 

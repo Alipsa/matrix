@@ -239,17 +239,17 @@ BigDecimal naturalLog = Math.log(value as double) as BigDecimal
 BigDecimal sine = Math.sin(angle as double) as BigDecimal
 ```
 
-**If you need a Math operation not yet in BigDecimalExtension:**
-- First, add it to `matrix-groovy-ext/src/main/groovy/se/alipsa/matrix/ext/BigDecimalExtension.groovy`
-- Add corresponding tests to `BigDecimalExtensionTest.groovy`
+**If you need a Math operation not yet in NumberExtension:**
+- First, add it to `matrix-groovy-ext/src/main/groovy/se/alipsa/matrix/ext/NumberExtension.groovy`
+- Add corresponding tests to `NumberExtensionTest.groovy`
 - Update CLAUDE.md to document the new extension
 - Then use it in your code
 
 This keeps the codebase consistent and improves readability for future code.
 
-### BigDecimalExtension Methods
+### NumberExtension Methods
 
-The `matrix-groovy-ext` module provides extension methods for BigDecimal:
+The `matrix-groovy-ext` module provides extension methods for Number types:
 
 ```groovy
 // Floor and ceiling (returns BigDecimal)
@@ -295,6 +295,7 @@ BigDecimal result = someValue.min(breaks.size() - 2)
 
 **When to use extension methods:**
 - Always preferred over java.lang.Math
+- All extension methods accept `Number` parameter, enabling seamless use with any numeric type (Integer, Long, Double, BigDecimal, etc.)
 - Type conversions don't make it verbose
 - **NOT** when working with primitive doubles (avoid boxing overhead) but consider refactoring the code to use BigDecimal instead
 
