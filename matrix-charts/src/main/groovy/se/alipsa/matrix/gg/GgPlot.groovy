@@ -906,7 +906,7 @@ class GgPlot {
    * Create a transformed coordinate system.
    *
    * Applies transformations to x and/or y coordinates.
-   * Available transformations: "identity", "log", "log10", "sqrt", "reverse", "reciprocal", "power"
+   * Available transformations: "identity", "log", "log10", "sqrt", "reverse", "reciprocal", "power", "asn"
    *
    * @param params transformation parameters:
    *   - x: x-axis transformation (String, Map with forward/inverse closures, or Trans)

@@ -165,24 +165,62 @@ class Transformations {
 
   /**
    * Power transformation (x^n).
+   *
+   * For odd integer exponents (1, 3, 5, etc.), both forward and inverse transformations
+   * correctly handle negative values. For example:
+   * - Forward: (-2)^3 = -8
+   * - Inverse: cbrt(-8) = -2
+   *
+   * For non-integer or even exponents, negative input values return null since the
+   * result would be complex (not a real number).
    */
   static class PowerTrans implements Trans {
     final BigDecimal exponent
+    final boolean isOddInteger
 
     PowerTrans(Number exponent) {
       this.exponent = exponent as BigDecimal
+      // Check if exponent is an odd integer
+      this.isOddInteger = isOddIntegerExponent(this.exponent)
+    }
+
+    private static boolean isOddIntegerExponent(BigDecimal exp) {
+      try {
+        int intValue = exp.intValueExact()
+        return intValue % 2 != 0
+      } catch (ArithmeticException ignored) {
+        return false  // Not an integer
+      }
     }
 
     @Override
     BigDecimal transform(Number x) {
       if (x == null) return null
-      return x ** exponent
+      BigDecimal val = x as BigDecimal
+      // For odd integer exponents, negative values are allowed
+      if (val < 0 && !isOddInteger) {
+        return null  // Negative base with non-odd-integer exponent is undefined for reals
+      }
+      return val ** exponent
     }
 
     @Override
     BigDecimal inverse(Number x) {
       if (x == null) return null
-      return x ** (1 / exponent)
+      BigDecimal val = x as BigDecimal
+
+      // For odd integer exponents, handle negative values specially
+      // since x ** (1/n) doesn't work for negative x in Java
+      if (val < 0) {
+        if (isOddInteger) {
+          // For odd roots: nth-root(-x) = -nth-root(x)
+          BigDecimal absResult = (-val) ** (1 / exponent)
+          return -absResult
+        } else {
+          return null  // Negative with non-odd-integer exponent is undefined
+        }
+      }
+      return val ** (1 / exponent)
     }
 
     @Override
