@@ -162,7 +162,7 @@ class GeomCurve extends Geom {
     }
 
     // Apply curvature
-    BigDecimal offset = dist * curvature * 0.5G
+    BigDecimal offset = dist * curvature * 0.5
     BigDecimal offsetX = px * offset
     BigDecimal offsetY = py * offset
 
