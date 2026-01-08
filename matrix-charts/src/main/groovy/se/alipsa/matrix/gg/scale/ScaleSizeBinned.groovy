@@ -12,7 +12,7 @@ import java.math.RoundingMode
 class ScaleSizeBinned extends ScaleContinuous {
 
   /** Output range [min, max] for size values as BigDecimal. */
-  List<BigDecimal> range = [new BigDecimal('1.0'), new BigDecimal('6.0')]
+  List<BigDecimal> range = [1.0G, 6.0G]
 
   /** Number of bins. */
   int bins = 5
@@ -60,18 +60,18 @@ class ScaleSizeBinned extends ScaleContinuous {
     BigDecimal rMax = range[1]
 
     if (dMax == dMin) {
-      return (rMin + rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
+      return (rMin + rMax) / 2
     }
 
-    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
+    BigDecimal normalized = (v - dMin) / (dMax - dMin)
     normalized = normalized.max(BigDecimal.ZERO).min(BigDecimal.ONE)
 
     int binsCount = Math.max(1, bins)
     if (binsCount == 1) return rMin
 
-    BigDecimal scaled = normalized * BigDecimal.valueOf(binsCount)
-    int idx = Math.min(binsCount - 1, scaled.setScale(0, RoundingMode.DOWN).intValue())
-    BigDecimal t = BigDecimal.valueOf(idx).divide(BigDecimal.valueOf(binsCount - 1), ScaleUtils.MATH_CONTEXT)
+    BigDecimal scaled = normalized * binsCount
+    BigDecimal idx = (binsCount - 1).min(scaled.floor())
+    BigDecimal t = idx / (binsCount - 1)
     return rMin + t * (rMax - rMin)
   }
 }

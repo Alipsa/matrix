@@ -36,14 +36,14 @@ class ScaleSizeArea extends ScaleSizeContinuous {
     BigDecimal rMax = range[1]
 
     if (dMax == dMin) {
-      BigDecimal midArea = (rMin * rMin + rMax * rMax).divide(ScaleUtils.TWO, ScaleUtils.MATH_CONTEXT)
-      return midArea.sqrt(ScaleUtils.MATH_CONTEXT)
+      BigDecimal midArea = (rMin * rMin + rMax * rMax) / 2
+      return midArea.sqrt()
     }
 
-    BigDecimal normalized = (v - dMin).divide((dMax - dMin), ScaleUtils.MATH_CONTEXT)
+    BigDecimal normalized = (v - dMin) / (dMax - dMin)
     BigDecimal areaMin = rMin * rMin
     BigDecimal areaMax = rMax * rMax
     BigDecimal area = areaMin + normalized * (areaMax - areaMin)
-    return area.sqrt(ScaleUtils.MATH_CONTEXT)
+    return area.sqrt()
   }
 }

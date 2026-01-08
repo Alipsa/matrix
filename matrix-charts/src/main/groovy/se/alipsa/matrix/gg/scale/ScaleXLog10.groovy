@@ -186,11 +186,11 @@ class ScaleXLog10 extends ScaleContinuous {
 
     // For fractional values (< 1), use general format
     if (bd < BigDecimal.ONE) {
-      return String.format('%.2g', bd.doubleValue())
+      return String.format('%.2g', bd as double)
     }
 
     // For large non-integer values, format without decimals
-    return String.format('%.0f', bd.doubleValue())
+    return String.format('%.0f', bd as double)
   }
 
   private static BigDecimal coerceToPositiveNumber(Object value) {

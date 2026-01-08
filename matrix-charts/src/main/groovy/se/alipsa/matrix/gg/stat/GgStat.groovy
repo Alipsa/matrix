@@ -116,7 +116,7 @@ class GgStat {
     Number range = (maxVal as double) - (minVal as double)
 
     // Handle edge case: all values are the same
-    if (range == 0 || range.doubleValue() == 0.0d) {
+    if (range == 0) {
       // Single bin containing all values
       return Matrix.builder()
           .columnNames(['x', 'xmin', 'xmax', 'count', 'density'])
@@ -200,9 +200,9 @@ class GgStat {
       xResolution = resolution(xValues)
     }
     double defaultWidth = params?.width instanceof Number ?
-        (params.width as Number).doubleValue() :
+        params.width as double :
         ((xResolution ?: 1.0d) * 0.75d)
-    double coef = params?.coef instanceof Number ? (params.coef as Number).doubleValue() : 1.5d
+    double coef = params?.coef instanceof Number ? params.coef as double : 1.5d
 
     List<Map> results = groups.collect { groupKey, groupData ->
       List<Number> values = (groupData[yCol] as List).findAll { it instanceof Number } as List<Number>
@@ -250,7 +250,7 @@ class GgStat {
       if (groupData.columnNames().contains('width')) {
         def widthColVal = (groupData['width'] as List)?.find { it instanceof Number }
         if (widthColVal instanceof Number) {
-          widthValue = (widthColVal as Number).doubleValue()
+          widthValue = widthColVal as double
         }
       } else if (hasContinuousX && xMin != null && xMax != null) {
         double range = (xMax as double) - (xMin as double)
@@ -262,8 +262,8 @@ class GgStat {
       Number xmax = null
       if (xPosition instanceof Number && widthValue > 0d) {
         double half = widthValue / 2.0d
-        xmin = (xPosition as Number).doubleValue() - half
-        xmax = (xPosition as Number).doubleValue() + half
+        xmin = (xPosition as double) - half
+        xmax = (xPosition as double) + half
       }
 
       // Build result map - only include xmin/xmax if they have values
@@ -462,7 +462,7 @@ class GgStat {
       for (int i = 0; i < xValues.size(); i++) {
         double xi = xValues[i] as double
         double yi = yValues[i] as double
-        double yFit = regression.predict(xi).doubleValue()
+        double yFit = regression.predict(xi) as double
         double resid = yi - yFit
         sse += resid * resid
       }
@@ -583,9 +583,9 @@ class GgStat {
           double confInt = 0.95d
           if (funArgs != null) {
             if (funArgs.containsKey('conf.int')) {
-              confInt = (funArgs.'conf.int' as Number).doubleValue()
+              confInt = funArgs.'conf.int' as double
             } else if (funArgs.containsKey('confInt')) {
-              confInt = (funArgs.confInt as Number).doubleValue()
+              confInt = funArgs.confInt as double
             }
           }
           if (confInt <= 0.0d || confInt > 1.0d || Double.isNaN(confInt)) {
@@ -918,7 +918,7 @@ class GgStat {
       return []
     }
     List<Double> sorted = values.findAll { it instanceof Number }
-        .collect { (it as Number).doubleValue() }
+        .collect { it as double }
         .sort()
     int n = sorted.size()
     List<Map<String, Object>> rows = []
@@ -1209,7 +1209,7 @@ class GgStat {
       return 1.0d
     }
     List<Double> uniques = values.findAll { it instanceof Number }
-        .collect { (it as Number).doubleValue() }
+        .collect { it as double }
         .unique()
         .sort()
     if (uniques.size() <= 1) {
@@ -1270,9 +1270,9 @@ class GgStat {
     if (values == null || values.size() < 2) {
       return true
     }
-    double prev = (values[0] as Number).doubleValue()
+    double prev = values[0] as double
     for (int i = 1; i < values.size(); i++) {
-      double current = (values[i] as Number).doubleValue()
+      double current = values[i] as double
       if (current < prev) {
         return false
       }

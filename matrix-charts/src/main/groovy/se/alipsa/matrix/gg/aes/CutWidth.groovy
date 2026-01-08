@@ -60,7 +60,7 @@ class CutWidth {
     if (column == null || column.isBlank()) {
       throw new IllegalArgumentException("Column name cannot be null or empty")
     }
-    if (width == null || width.doubleValue() <= 0) {
+    if (width == null || (width as double) <= 0) {
       throw new IllegalArgumentException("Width must be a positive number")
     }
     this.column = column
@@ -92,17 +92,17 @@ class CutWidth {
   /**
    * Compute bin labels for each value in the list.
    */
-  private List<String> computeBins(List<?> values) {
-    double w = width.doubleValue()
+  List<String> computeBins(List<?> values) {
+    BigDecimal w = width as BigDecimal
 
-    List<Double> numericValues = values.findAll { it instanceof Number }
-        .collect { ((Number) it).doubleValue() }
+    List<BigDecimal> numericValues = values.findAll { it instanceof Number }
+        .collect { it as BigDecimal }
     if (numericValues.isEmpty()) {
       return values.collect { null }
     }
 
-    double minVal = numericValues.min()
-    double maxVal = numericValues.max()
+    BigDecimal minVal = numericValues.min()
+    BigDecimal maxVal = numericValues.max()
 
     // Calculate the starting boundary
     // ggplot2's default: boundary = width/2, which offsets bin boundaries by half the bin width
@@ -110,24 +110,24 @@ class CutWidth {
       throw new IllegalArgumentException("Only one of boundary and center may be specified")
     }
 
-    double boundaryValue
+    BigDecimal boundaryValue
     if (boundary == null) {
-      boundaryValue = center == null ? (w / 2) : (center.doubleValue() - w / 2)
+      boundaryValue = center == null ? (w / 2) : (center - w / 2)
     } else {
-      boundaryValue = boundary.doubleValue()
+      boundaryValue = boundary as BigDecimal
     }
 
-    double minX = boundaryValue + Math.floor((minVal - boundaryValue) / w) * w
+    BigDecimal minX = boundaryValue + (((minVal - boundaryValue) / w).floor() * w)
     // Compute maxX as the first bin boundary at or after maxVal (avoids creating excess bins)
-    double maxX = Math.ceil((maxVal - minX) / w) * w + minX
+    BigDecimal maxX = ((maxVal - minX) / w).ceil() * w + minX
     // For closed-left bins [a,b), values equal to a break point need a bin starting there,
     // so we need one more break to close the final bin
     if (!closedRight) {
       maxX += w
     }
 
-    List<Double> breaks = []
-    double current = minX
+    List<BigDecimal> breaks = []
+    BigDecimal current = minX
     final int maxBins = 10_000
     int binCount = 0
     while (current <= maxX + (w * 1e-9d) && binCount < maxBins) {
@@ -153,24 +153,24 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
         continue
       }
 
-      double d = ((Number) v).doubleValue()
+      BigDecimal d = v as BigDecimal
       // Find which bin this value belongs to using ggplot2's cut_width breaks.
-      int binIndex = (int) Math.floor((d - minX) / w)
+      BigDecimal binIndex = ((d - minX) / w).floor()
       if (closedRight) {
-        double boundaryPoint = minX + binIndex * w
-        double diff = d - boundaryPoint
-        double epsilon = Math.max(Math.ulp(boundaryPoint), Math.ulp(d)) * 10.0d
-        boolean onBoundary = Math.abs(diff) <= epsilon
-        boolean atMinBoundary = Math.abs(d - minX) <= epsilon
+        BigDecimal boundaryPoint = minX + binIndex * w
+        BigDecimal diff = d - boundaryPoint
+        BigDecimal epsilon = [boundaryPoint.ulp(), d.ulp()].max() * 10.0d
+        boolean onBoundary = diff.abs() <= epsilon
+        boolean atMinBoundary = (d - minX).abs() <= epsilon
         // For closed-right bins, values exactly on a boundary belong to the previous bin,
         // except for the minimum boundary which stays in the first bin.
         if (onBoundary && !atMinBoundary) {
           binIndex -= 1
         }
       }
-      binIndex = Math.max(0, Math.min(binIndex, breaks.size() - 2))
-      double binStart = breaks[binIndex]
-      double binEnd = breaks[binIndex + 1]
+      binIndex = 0.max(binIndex.min(breaks.size() - 2))
+      BigDecimal binStart = breaks[binIndex]
+      BigDecimal binEnd = breaks[binIndex + 1]
 
       boolean isFirst = binIndex == 0
       String label = formatBinLabel(binStart, binEnd, isFirst)
@@ -183,7 +183,7 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
   /**
    * Format a bin label like "[1,2)" or "(1,2]" depending on closure.
    */
-  private String formatBinLabel(double start, double end, boolean isFirst) {
+  private String formatBinLabel(Number start, Number end, boolean isFirst) {
     String startStr = formatNumber(start)
     String endStr = formatNumber(end)
 
@@ -202,7 +202,8 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
   /**
    * Format a number, removing unnecessary decimal places.
    */
-  private static String formatNumber(double d) {
+  private static String formatNumber(Number n) {
+    double d = n as double
     if (d >= Long.MIN_VALUE && d <= Long.MAX_VALUE && d == Math.floor(d)) {
       return String.valueOf((long) d)
     }

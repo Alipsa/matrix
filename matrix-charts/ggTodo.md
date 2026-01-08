@@ -2,21 +2,30 @@
 
 This document tracks the implementation status of ggplot2 functions in the matrix-charts `se.alipsa.matrix.gg` package.
 
+## Philosophy
+
+**Primary Goal:** Write beautiful, easy-to-read, idiomatic Groovy code.
+
+- Leverage Groovy's default numeric type (BigDecimal) where it naturally fits.
+- Prefer readability over precision, and simplicity over micro-optimizations.
+- Make the code maintainable and Groovy-like
+- Add extensions to BigDecimalExtensions in the matrix-groovy-ext module when needed to allow writing the code in a more idiomatic groovy way
+
 ## Current Implementation Coverage
 
 The matrix-charts gg implementation covers approximately 40-50% of ggplot2's functionality.
 
 ### What's Already Implemented
 
-| Category | Implemented | Status |
-|----------|-------------|--------|
-| **Geoms** | 31 | Good core coverage |
-| **Scales** | 18 core types | Good coverage |
-| **Stats** | 6 | Limited |
-| **Coords** | 4 | Good |
-| **Facets** | 2 | Complete |
-| **Positions** | 6 | Good |
-| **Themes** | 5 base themes | Good |
+| Category      | Implemented   | Status             |
+|---------------|---------------|--------------------|
+| **Geoms**     | 31            | Good core coverage |
+| **Scales**    | 18 core types | Good coverage      |
+| **Stats**     | 6             | Limited            |
+| **Coords**    | 4             | Good               |
+| **Facets**    | 2             | Complete           |
+| **Positions** | 6             | Good               |
+| **Themes**    | 5 base themes | Good               |
 
 ---
 
