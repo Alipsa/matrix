@@ -1395,6 +1395,9 @@ class GgStat {
         }
         y = (result as BigDecimal)
       } catch (Exception e) {
+        if (e instanceof IllegalArgumentException) {
+          throw e
+        }
         throw new IllegalArgumentException("Error evaluating stat_function at x=" + x + ": " + e.message, e)
       }
       xVals << x
