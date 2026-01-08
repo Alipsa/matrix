@@ -7,9 +7,11 @@ import groovy.transform.CompileStatic
  * Transformed coordinate system.
  * Applies transformations to x and/or y coordinates independently.
  *
- * Unlike scale transformations which happen before mapping to pixels,
- * coordinate transformations happen in the coordinate space and affect
- * things like grid lines and aspect ratios.
+ * Coordinate transformations are applied to data values BEFORE scale training,
+ * so scales work in transformed space. This ensures:
+ * - Grid lines are evenly spaced in transformed space
+ * - Axis breaks are computed in transformed space
+ * - Axis labels show original (inverse-transformed) values
  *
  * Usage:
  * - coord_trans(x: "log10") - log10 transform on x-axis
@@ -25,6 +27,7 @@ import groovy.transform.CompileStatic
  * - "reverse" - reverse axis direction
  * - "reciprocal" or "inverse" - 1/x transformation
  * - "power" - power transformation (specify exponent parameter)
+ * - "asn" or "asin" - arcsine square root (for proportions)
  */
 @CompileStatic
 class CoordTrans extends Coord {
@@ -110,26 +113,93 @@ class CoordTrans extends Coord {
     if (params.expandMult) this.expandMult = params.expandMult as double
   }
 
+  /**
+   * Transform a data value using the x-axis transformation.
+   * This should be applied to data BEFORE scale training.
+   * @param x the data value to transform
+   * @return the transformed value, or null if transformation fails
+   */
+  BigDecimal transformX(Number x) {
+    return xTrans.transform(x)
+  }
+
+  /**
+   * Transform a data value using the y-axis transformation.
+   * This should be applied to data BEFORE scale training.
+   * @param y the data value to transform
+   * @return the transformed value, or null if transformation fails
+   */
+  BigDecimal transformY(Number y) {
+    return yTrans.transform(y)
+  }
+
+  /**
+   * Inverse transform a value using the x-axis transformation.
+   * Used to convert transformed break values back to original data space for labels.
+   * @param x the transformed value
+   * @return the original data value
+   */
+  BigDecimal inverseX(Number x) {
+    return xTrans.inverse(x)
+  }
+
+  /**
+   * Inverse transform a value using the y-axis transformation.
+   * Used to convert transformed break values back to original data space for labels.
+   * @param y the transformed value
+   * @return the original data value
+   */
+  BigDecimal inverseY(Number y) {
+    return yTrans.inverse(y)
+  }
+
+  /**
+   * Check if the x-axis has a non-identity transformation.
+   */
+  boolean hasXTransformation() {
+    return !(xTrans instanceof Transformations.IdentityTrans)
+  }
+
+  /**
+   * Check if the y-axis has a non-identity transformation.
+   */
+  boolean hasYTransformation() {
+    return !(yTrans instanceof Transformations.IdentityTrans)
+  }
+
+  /**
+   * Get custom breaks for x-axis if the transformation defines them.
+   * @param limits the data limits [min, max]
+   * @param n approximate number of breaks
+   * @return list of break points, or null to use default breaks
+   */
+  List<BigDecimal> getXBreaks(List<Number> limits, int n) {
+    return xTrans.breaks(limits, n)
+  }
+
+  /**
+   * Get custom breaks for y-axis if the transformation defines them.
+   * @param limits the data limits [min, max]
+   * @param n approximate number of breaks
+   * @return list of break points, or null to use default breaks
+   */
+  List<BigDecimal> getYBreaks(List<Number> limits, int n) {
+    return yTrans.breaks(limits, n)
+  }
+
   @CompileDynamic
   @Override
   List<Number> transform(Number x, Number y, Map<String, ?> scales) {
-    // Get x and y scales
+    // Data values have already been transformed before scale training,
+    // so scales work in transformed space. We just need to apply the scale
+    // transformation (transformed data -> pixels).
     def xScale = scales['x']
     def yScale = scales['y']
 
-    // First apply the scale transformation (data -> pixels in linear space)
     Number xPx = xScale ? xScale.transform(x) : x
     Number yPx = yScale ? yScale.transform(y) : y
 
-    // Then apply the coordinate transformation
-    // Note: This is a simplified approach. In a full implementation,
-    // transformations would be applied to the data space before scales,
-    // and the scales would work in transformed space.
-    // For now, we'll apply transformation directly.
-    Number xTransformed = xTrans.transform(xPx)
-    Number yTransformed = yTrans.transform(yPx)
-
-    return [xTransformed, yTransformed]
+    return [xPx, yPx]
   }
 
   @CompileDynamic
@@ -138,13 +208,13 @@ class CoordTrans extends Coord {
     def xScale = scales['x']
     def yScale = scales['y']
 
-    // First inverse the coordinate transformation
-    Number xLinear = xTrans.inverse(xPx)
-    Number yLinear = yTrans.inverse(yPx)
+    // Inverse scale transformation (pixels -> transformed data)
+    Number xTransformed = xScale ? xScale.inverse(xPx) : xPx
+    Number yTransformed = yScale ? yScale.inverse(yPx) : yPx
 
-    // Then inverse the scale transformation
-    Number x = xScale ? xScale.inverse(xLinear) : xLinear
-    Number y = yScale ? yScale.inverse(yLinear) : yLinear
+    // Inverse coordinate transformation (transformed data -> original data)
+    Number x = xTrans.inverse(xTransformed)
+    Number y = yTrans.inverse(yTransformed)
 
     return [x, y]
   }

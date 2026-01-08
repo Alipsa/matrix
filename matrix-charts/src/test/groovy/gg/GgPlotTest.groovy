@@ -753,4 +753,131 @@ class GgPlotTest {
         println("Wrote coord_trans reverse plot to ${outputFile.absolutePath}")
     }
 
+    @Test
+    void testCoordTransLog() {
+        // Test natural log transformation on y-axis
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows([
+                [1, Math.E],
+                [2, Math.E * Math.E],
+                [3, Math.E ** 3],
+                [4, Math.E ** 4]
+            ])
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+            geom_point(size: 3) +
+            geom_line() +
+            coord_trans(y: 'log') +
+            labs(title: 'Natural Log Transformation on Y-axis')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<circle') || svgContent.contains('<line'),
+                   "Should contain points or lines")
+
+        File outputFile = new File('build/test_coord_trans_log.svg')
+        write(svg, outputFile)
+        println("Wrote coord_trans log plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testCoordTransPower() {
+        // Test power transformation with explicit exponent
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows([
+                [1, 1],
+                [2, 2],
+                [3, 3],
+                [4, 4],
+                [5, 5]
+            ])
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+            geom_point(size: 3) +
+            geom_line() +
+            coord_trans(y: [name: 'power', exponent: 3]) +
+            labs(title: 'Power Transformation (y^3)')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<circle'),
+                   "Should contain points")
+
+        File outputFile = new File('build/test_coord_trans_power.svg')
+        write(svg, outputFile)
+        println("Wrote coord_trans power plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testCoordTransReciprocal() {
+        // Test reciprocal (1/x) transformation
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows([
+                [1, 10],
+                [2, 5],
+                [4, 2.5],
+                [5, 2],
+                [10, 1]
+            ])
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+            geom_point(size: 3) +
+            geom_line() +
+            coord_trans(x: 'reciprocal') +
+            labs(title: 'Reciprocal Transformation on X-axis')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<circle'),
+                   "Should contain points")
+
+        File outputFile = new File('build/test_coord_trans_reciprocal.svg')
+        write(svg, outputFile)
+        println("Wrote coord_trans reciprocal plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testCoordTransAsn() {
+        // Test arcsine square root transformation (for proportions)
+        def data = Matrix.builder()
+            .columnNames(['x', 'proportion'])
+            .rows([
+                [1, 0.1],
+                [2, 0.25],
+                [3, 0.5],
+                [4, 0.75],
+                [5, 0.9]
+            ])
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'proportion')) +
+            geom_point(size: 3) +
+            geom_line() +
+            coord_trans(y: 'asn') +
+            labs(title: 'Arcsine Square Root Transformation (for proportions)')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<circle'),
+                   "Should contain points")
+
+        File outputFile = new File('build/test_coord_trans_asn.svg')
+        write(svg, outputFile)
+        println("Wrote coord_trans asn plot to ${outputFile.absolutePath}")
+    }
+
 }

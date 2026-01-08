@@ -197,6 +197,39 @@ class Transformations {
   }
 
   /**
+   * Arcsine square root transformation.
+   * Commonly used for proportions/percentages (values between 0 and 1).
+   * Forward: asin(sqrt(x))
+   * Inverse: sin(x)^2
+   */
+  static class AsnTrans implements Trans {
+    @Override
+    BigDecimal transform(Number x) {
+      if (x == null) return null
+      BigDecimal val = x as BigDecimal
+      if (val < 0 || val > 1) return null
+      return Math.asin(Math.sqrt(val as double)) as BigDecimal
+    }
+
+    @Override
+    BigDecimal inverse(Number x) {
+      if (x == null) return null
+      double sinVal = Math.sin(x as double)
+      return (sinVal * sinVal) as BigDecimal
+    }
+
+    @Override
+    String getName() {
+      return "asn"
+    }
+
+    @Override
+    List<BigDecimal> breaks(List<Number> limits, int n) {
+      return null // Use default breaks
+    }
+  }
+
+  /**
    * Reciprocal transformation (1/x).
    */
   static class ReciprocalTrans implements Trans {
@@ -258,6 +291,9 @@ class Transformations {
           exp = 2
         }
         return new PowerTrans(exp)
+      case 'asn':
+      case 'asin':
+        return new AsnTrans()
       default:
         throw new IllegalArgumentException("Unknown transformation: $name")
     }

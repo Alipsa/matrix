@@ -18,6 +18,7 @@ import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.coord.CoordTrans
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
@@ -648,6 +649,33 @@ class GgRenderer {
     // Collect all data values for each aesthetic
     Map<String, List> aestheticData = collectAestheticData(chart)
 
+    // Apply coordinate transformations to data BEFORE scale training
+    // This ensures scales work in transformed space
+    boolean isCoordTrans = coord instanceof CoordTrans
+    CoordTrans coordTrans = isCoordTrans ? (coord as CoordTrans) : null
+
+    if (isCoordTrans && aestheticData.x && coordTrans.hasXTransformation()) {
+      // Transform x data values
+      aestheticData.x = aestheticData.x.collect { val ->
+        if (val == null) return null
+        if (val instanceof Number) {
+          return coordTrans.transformX(val as Number)
+        }
+        return val  // Keep non-numeric values unchanged (for discrete scales)
+      }.findAll { it != null }  // Remove nulls from failed transformations
+    }
+
+    if (isCoordTrans && aestheticData.y && coordTrans.hasYTransformation()) {
+      // Transform y data values
+      aestheticData.y = aestheticData.y.collect { val ->
+        if (val == null) return null
+        if (val instanceof Number) {
+          return coordTrans.transformY(val as Number)
+        }
+        return val  // Keep non-numeric values unchanged (for discrete scales)
+      }.findAll { it != null }  // Remove nulls from failed transformations
+    }
+
     // Determine if axes are flipped
     boolean isFlipped = coord instanceof CoordFlip
 
@@ -676,6 +704,10 @@ class GgRenderer {
       } else if (xScale instanceof ScaleDiscrete) {
         (xScale as ScaleDiscrete).range = xRange
       }
+      // Store coordinate transformation reference for label generation
+      if (isCoordTrans) {
+        xScale.coordTrans = coordTrans
+      }
       scales['x'] = xScale
     }
 
@@ -690,6 +722,10 @@ class GgRenderer {
         (yScale as ScaleContinuous).range = yRange.collect { it as BigDecimal } as List<BigDecimal>
       } else if (yScale instanceof ScaleDiscrete) {
         (yScale as ScaleDiscrete).range = yRange
+      }
+      // Store coordinate transformation reference for label generation
+      if (isCoordTrans) {
+        yScale.coordTrans = coordTrans
       }
       scales['y'] = yScale
     }

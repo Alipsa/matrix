@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.gg.coord.CoordTrans
 
 /**
  * Base class for scales.
@@ -36,6 +37,12 @@ class Scale {
 
   /** Computed domain from training */
   protected List domain = []
+
+  /**
+   * Reference to CoordTrans if coordinate transformations are being used.
+   * Used for inverse-transforming break values to display original data values as labels.
+   */
+  protected CoordTrans coordTrans
 
   /**
    * Train the scale on data to determine domain/range.
@@ -188,5 +195,17 @@ class Scale {
   Scale setBreaks(List breaks) {
     this.breaks = breaks
     this
+  }
+
+  void setCoordTrans(CoordTrans coordTrans) {
+    this.coordTrans = coordTrans
+  }
+
+  CoordTrans getCoordTrans() {
+    return coordTrans
+  }
+
+  void setName(String name) {
+    this.name = name
   }
 }

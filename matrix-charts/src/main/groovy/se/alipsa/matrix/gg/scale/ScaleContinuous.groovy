@@ -75,6 +75,20 @@ class ScaleContinuous extends Scale {
   @Override
   Object transform(Object value) {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return null
+
+    // If there's a coordinate transformation, apply it to the data value
+    // before the linear scale transformation. This ensures the scale works
+    // correctly since it was trained on transformed data.
+    if (coordTrans != null) {
+      if (aesthetic == 'x' && coordTrans.hasXTransformation()) {
+        v = coordTrans.transformX(v)
+      } else if (aesthetic == 'y' && coordTrans.hasYTransformation()) {
+        v = coordTrans.transformY(v)
+      }
+      if (v == null) return null  // Transformation failed (e.g., log of negative)
+    }
+
     return ScaleUtils.linearTransform(v, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 
@@ -107,7 +121,19 @@ class ScaleContinuous extends Scale {
   @Override
   List<String> getComputedLabels() {
     if (labels) return labels
-    return getComputedBreaks().collect { formatNumber(it as Number) }
+    // If there's a coordinate transformation, inverse-transform breaks to show original values
+    return getComputedBreaks().collect { breakVal ->
+      Number displayVal = breakVal as Number
+      if (coordTrans != null && displayVal != null) {
+        // Inverse transform to get original data value for the label
+        if (aesthetic == 'x' && coordTrans.hasXTransformation()) {
+          displayVal = coordTrans.inverseX(displayVal)
+        } else if (aesthetic == 'y' && coordTrans.hasYTransformation()) {
+          displayVal = coordTrans.inverseY(displayVal)
+        }
+      }
+      formatNumber(displayVal)
+    }
   }
 
   /**
