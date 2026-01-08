@@ -66,6 +66,103 @@ class Themes {
   }
 
   /**
+   * Completely blank theme - only data is displayed.
+   * All axes, grids, backgrounds, and annotations are removed.
+   */
+  static Theme void_() {
+    Theme theme = new Theme()
+    // Remove all backgrounds
+    theme.panelBackground = null
+    theme.plotBackground = null
+    theme.stripBackground = null
+    // Remove all grid lines
+    theme.panelGridMajor = null
+    theme.panelGridMinor = null
+    theme.panelBorder = null
+    // Remove all axes
+    theme.axisLineX = null
+    theme.axisLineY = null
+    theme.axisTicksX = null
+    theme.axisTicksY = null
+    theme.axisTextX = null
+    theme.axisTextY = null
+    theme.axisTitleX = null
+    theme.axisTitleY = null
+    // Mark elements as explicitly blank
+    theme.explicitNulls.addAll([
+        'panelBackground', 'plotBackground', 'stripBackground',
+        'panelGridMajor', 'panelGridMinor', 'panelBorder',
+        'axisLineX', 'axisLineY', 'axisTicksX', 'axisTicksY',
+        'axisTextX', 'axisTextY', 'axisTitleX', 'axisTitleY'
+    ])
+    return theme
+  }
+
+  /**
+   * Light theme with light gray backgrounds and subtle grid lines.
+   */
+  static Theme light() {
+    Theme theme = new Theme()
+    theme.panelBackground = new ElementRect(fill: 'white', color: '#CCCCCC', size: 0.5)
+    theme.panelGridMajor = new ElementLine(color: '#E5E5E5', size: 0.5)
+    theme.panelGridMinor = new ElementLine(color: '#F0F0F0', size: 0.25)
+    theme.plotBackground = new ElementRect(fill: 'white', color: null)
+    theme.stripBackground = new ElementRect(fill: '#E5E5E5', color: '#CCCCCC', size: 0.5)
+    theme.axisLineX = new ElementLine(color: '#CCCCCC', size: 0.5)
+    theme.axisLineY = new ElementLine(color: '#CCCCCC', size: 0.5)
+    theme.axisTicksX = new ElementLine(color: '#CCCCCC', size: 0.5)
+    theme.axisTicksY = new ElementLine(color: '#CCCCCC', size: 0.5)
+    return theme
+  }
+
+  /**
+   * Dark theme with dark backgrounds and light text/grid lines.
+   */
+  static Theme dark() {
+    Theme theme = new Theme()
+    theme.panelBackground = new ElementRect(fill: '#3B3B3B', color: '#666666', size: 0.5)
+    theme.panelGridMajor = new ElementLine(color: '#666666', size: 0.5)
+    theme.panelGridMinor = new ElementLine(color: '#555555', size: 0.25)
+    theme.plotBackground = new ElementRect(fill: '#222222', color: null)
+    theme.stripBackground = new ElementRect(fill: '#555555', color: '#666666', size: 0.5)
+    theme.axisLineX = new ElementLine(color: '#666666', size: 0.5)
+    theme.axisLineY = new ElementLine(color: '#666666', size: 0.5)
+    theme.axisTicksX = new ElementLine(color: '#666666', size: 0.5)
+    theme.axisTicksY = new ElementLine(color: '#666666', size: 0.5)
+    // Light colored text for readability on dark background
+    theme.axisTextX = new ElementText(color: '#CCCCCC')
+    theme.axisTextY = new ElementText(color: '#CCCCCC')
+    theme.axisTitleX = new ElementText(color: '#CCCCCC')
+    theme.axisTitleY = new ElementText(color: '#CCCCCC')
+    theme.plotTitle = new ElementText(color: '#CCCCCC')
+    theme.plotSubtitle = new ElementText(color: '#CCCCCC')
+    theme.plotCaption = new ElementText(color: '#CCCCCC')
+    theme.stripText = new ElementText(color: '#CCCCCC')
+    theme.legendText = new ElementText(color: '#CCCCCC')
+    theme.legendTitle = new ElementText(color: '#CCCCCC')
+    theme.legendBackground = new ElementRect(fill: '#3B3B3B', color: '#666666')
+    return theme
+  }
+
+  /**
+   * Line draw theme - crisp black lines on white background.
+   * Similar to theme_bw() but with thinner, crisper lines.
+   */
+  static Theme linedraw() {
+    Theme theme = new Theme()
+    theme.panelBackground = new ElementRect(fill: 'white', color: 'black', size: 0.5)
+    theme.panelGridMajor = new ElementLine(color: 'black', size: 0.25)
+    theme.panelGridMinor = new ElementLine(color: '#333333', size: 0.15)
+    theme.plotBackground = new ElementRect(fill: 'white', color: null)
+    theme.stripBackground = new ElementRect(fill: 'white', color: 'black', size: 0.5)
+    theme.axisLineX = new ElementLine(color: 'black', size: 0.5)
+    theme.axisLineY = new ElementLine(color: 'black', size: 0.5)
+    theme.axisTicksX = new ElementLine(color: 'black', size: 0.5)
+    theme.axisTicksY = new ElementLine(color: 'black', size: 0.5)
+    return theme
+  }
+
+  /**
    * Customize theme elements.
    * Supports both camelCase (e.g., 'legendPosition') and dot-notation (e.g., 'legend.position').
    */

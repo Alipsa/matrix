@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.geom.GeomContour
 import se.alipsa.matrix.gg.geom.GeomCount
 import se.alipsa.matrix.gg.geom.GeomDensity
 import se.alipsa.matrix.gg.geom.GeomErrorbar
+import se.alipsa.matrix.gg.geom.GeomErrorbarh
 import se.alipsa.matrix.gg.geom.GeomFreqpoly
 import se.alipsa.matrix.gg.geom.GeomHistogram
 import se.alipsa.matrix.gg.geom.GeomHline
@@ -27,6 +28,7 @@ import se.alipsa.matrix.gg.geom.GeomRibbon
 import se.alipsa.matrix.gg.geom.GeomTile
 import se.alipsa.matrix.gg.geom.GeomRect
 import se.alipsa.matrix.gg.geom.GeomPath
+import se.alipsa.matrix.gg.geom.GeomPolygon
 import se.alipsa.matrix.gg.geom.GeomStep
 import se.alipsa.matrix.gg.geom.GeomPointrange
 import se.alipsa.matrix.gg.geom.GeomLinerange
@@ -756,6 +758,34 @@ class GgPlot {
   }
 
   /**
+   * Completely blank theme - only data is displayed.
+   */
+  static Theme theme_void() {
+    return Themes.void_()
+  }
+
+  /**
+   * Light theme with light gray backgrounds and subtle grid lines.
+   */
+  static Theme theme_light() {
+    return Themes.light()
+  }
+
+  /**
+   * Dark theme with dark backgrounds and light text/grid lines.
+   */
+  static Theme theme_dark() {
+    return Themes.dark()
+  }
+
+  /**
+   * Line draw theme - crisp black lines on white background.
+   */
+  static Theme theme_linedraw() {
+    return Themes.linedraw()
+  }
+
+  /**
    * Customize theme elements.
    * Supports both camelCase (e.g., 'legendPosition') and dot-notation (e.g., 'legend.position').
    */
@@ -1090,6 +1120,25 @@ class GgPlot {
 
   static GeomErrorbar geom_errorbar(Map params) {
     return new GeomErrorbar(params)
+  }
+
+  static GeomErrorbarh geom_errorbarh() {
+    return new GeomErrorbarh()
+  }
+
+  /**
+   * Create a horizontal error bar geom with a layer-specific aesthetic mapping.
+   * Horizontal error bars display x intervals at each y position.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomErrorbarh instance
+   */
+  static GeomErrorbarh geom_errorbarh(Aes mapping) {
+    return geom_errorbarh([mapping: mapping])
+  }
+
+  static GeomErrorbarh geom_errorbarh(Map params) {
+    return new GeomErrorbarh(params)
   }
 
   static GeomHistogram geom_histogram() {
@@ -1506,6 +1555,25 @@ class GgPlot {
 
   static GeomPath geom_path(Map params) {
     return new GeomPath(params)
+  }
+
+  static GeomPolygon geom_polygon() {
+    return new GeomPolygon()
+  }
+
+  /**
+   * Create a polygon geom with a layer-specific aesthetic mapping.
+   * Polygons automatically close the path and fill the enclosed area.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomPolygon instance
+   */
+  static GeomPolygon geom_polygon(Aes mapping) {
+    return geom_polygon([mapping: mapping])
+  }
+
+  static GeomPolygon geom_polygon(Map params) {
+    return new GeomPolygon(params)
   }
 
   static GeomStep geom_step() {

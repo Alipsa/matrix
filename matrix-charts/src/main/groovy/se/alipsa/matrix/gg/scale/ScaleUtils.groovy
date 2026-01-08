@@ -63,7 +63,6 @@ class ScaleUtils {
     List<Number> values = []
 
     if (n == 1) {
-      //values << (rMin + rMax).divide(TWO, MATH_CONTEXT)
       values << (rMin + rMax) / 2
       return values
     }
