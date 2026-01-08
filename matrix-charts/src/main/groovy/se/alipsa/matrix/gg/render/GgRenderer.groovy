@@ -585,12 +585,22 @@ class GgRenderer {
       aes = layer.aes ?: globalAes
     }
 
-    if (data == null || data.rowCount() == 0 || aes == null) return
+    // Some stats can generate data from scratch even when input is null
+    boolean canGenerateData = canGenerateDataFromNull(layer.stat)
+    if (aes == null || ((data == null || data.rowCount() == 0) && !canGenerateData)) return
 
-    // Evaluate closure expressions in aesthetics
-    EvaluatedAes evalResult = evaluateExpressions(data, aes)
-    Matrix exprData = evalResult.data
-    Aes resolvedAes = evalResult.aes
+    // Evaluate closure expressions in aesthetics (skip if data is null for data-generating stats)
+    Matrix exprData
+    Aes resolvedAes
+    if (data && data.rowCount() > 0) {
+      EvaluatedAes evalResult = evaluateExpressions(data, aes)
+      exprData = evalResult.data
+      resolvedAes = evalResult.aes
+    } else {
+      // For data-generating stats with null input, use aesthetics as-is
+      exprData = null
+      resolvedAes = aes
+    }
 
     // Apply statistical transformation
     Matrix statData = applyStats(exprData, resolvedAes, layer)
@@ -1063,11 +1073,22 @@ class GgRenderer {
         hasBarGeom = true
       }
 
-      if (layerAes && layerData) {
-        // Evaluate expressions first
-        EvaluatedAes evalResult = evaluateExpressions(layerData, layerAes)
-        Matrix exprData = evalResult.data
-        Aes resolvedLayerAes = evalResult.aes
+      // Some stats can generate data from scratch even when input is null
+      boolean canGenerateData = canGenerateDataFromNull(layer.stat)
+
+      if (layerAes && (layerData || canGenerateData)) {
+        // Evaluate expressions first (skip if data is null for data-generating stats)
+        Matrix exprData
+        Aes resolvedLayerAes
+        if (layerData) {
+          EvaluatedAes evalResult = evaluateExpressions(layerData, layerAes)
+          exprData = evalResult.data
+          resolvedLayerAes = evalResult.aes
+        } else {
+          // For data-generating stats with null input, use aesthetics as-is
+          exprData = null
+          resolvedLayerAes = layerAes
+        }
 
         // Apply stat transformation to get computed values
         Matrix statData = applyStats(exprData, resolvedLayerAes, layer)
@@ -1448,12 +1469,22 @@ class GgRenderer {
       aes = layer.aes ?: chart.globalAes
     }
 
-    if (data == null || aes == null) return
+    // Some stats can generate data from scratch even when input is null
+    boolean canGenerateData = canGenerateDataFromNull(layer.stat)
+    if (aes == null || (data == null && !canGenerateData)) return
 
-    // Evaluate closure expressions in aesthetics
-    EvaluatedAes evalResult = evaluateExpressions(data, aes)
-    Matrix exprData = evalResult.data
-    Aes resolvedAes = evalResult.aes
+    // Evaluate closure expressions in aesthetics (skip if data is null for data-generating stats)
+    Matrix exprData
+    Aes resolvedAes
+    if (data) {
+      EvaluatedAes evalResult = evaluateExpressions(data, aes)
+      exprData = evalResult.data
+      resolvedAes = evalResult.aes
+    } else {
+      // For data-generating stats with null input, use aesthetics as-is
+      exprData = null
+      resolvedAes = aes
+    }
 
     // Apply statistical transformation
     Matrix statData = applyStats(exprData, resolvedAes, layer)
@@ -1498,6 +1529,14 @@ class GgRenderer {
         return GgStat.qq(data, aes, layer.statParams)
       case StatType.QQ_LINE:
         return GgStat.qqLine(data, aes, layer.statParams)
+      case StatType.ELLIPSE:
+        return GgStat.ellipse(data, aes, layer.statParams)
+      case StatType.SUMMARY_BIN:
+        return GgStat.summaryBin(data, aes, layer.statParams)
+      case StatType.UNIQUE:
+        return GgStat.unique(data, aes, layer.statParams)
+      case StatType.FUNCTION:
+        return GgStat.function(data, aes, layer.statParams)
       default:
         return data
     }
@@ -2389,6 +2428,15 @@ class GgRenderer {
    */
   private Theme defaultTheme() {
     return se.alipsa.matrix.gg.GgPlot.theme_gray()
+  }
+
+  /**
+   * Check if a stat type can generate data from scratch even when input data is null.
+   * @param statType the stat type to check
+   * @return true if this stat can generate data without input
+   */
+  private static boolean canGenerateDataFromNull(StatType statType) {
+    return statType in [StatType.FUNCTION]
   }
 
   /**

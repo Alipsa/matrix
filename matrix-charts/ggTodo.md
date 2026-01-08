@@ -4,8 +4,8 @@ This document tracks the implementation status of ggplot2 functions in the matri
 
 ## Philosophy
 
-**Primary Goal:** Write beautiful, easy-to-read, idiomatic Groovy code.
-
+**Primary Goal:** Code should be as closely compliant to R's ggplot2 behavior and api as possible
+**Secondary Goal:** Write beautiful, easy-to-read, idiomatic Groovy code.
 - Leverage Groovy's default numeric type (BigDecimal) where it naturally fits.
 - Prefer readability over precision, and simplicity over micro-optimizations.
 - Make the code maintainable and Groovy-like
@@ -214,10 +214,10 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 3.2 Additional Stats
 
-- 3.2.1 [ ] `stat_ellipse()` - Confidence ellipses for normal data
-- 3.2.2 [ ] `stat_summary_bin()` - Binned summaries
-- 3.2.3 [ ] `stat_unique()` - Remove duplicate observations
-- 3.2.4 [ ] `stat_function()` - Compute y from function of x
+- 3.2.1 [x] `stat_ellipse()` - Confidence ellipses for normal data
+- 3.2.2 [x] `stat_summary_bin()` - Binned summaries
+- 3.2.3 [x] `stat_unique()` - Remove duplicate observations
+- 3.2.4 [x] `stat_function()` - Compute y from function of x
 
 ### 3.3 Coordinate Transforms
 

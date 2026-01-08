@@ -72,7 +72,15 @@ enum StatType {
     /** Q-Q plot data */
     QQ,
     /** Q-Q plot reference line data */
-    QQ_LINE
+    QQ_LINE,
+    /** Confidence ellipse for bivariate normal data */
+    ELLIPSE,
+    /** Binned summary statistics */
+    SUMMARY_BIN,
+    /** Remove duplicate observations */
+    UNIQUE,
+    /** Compute y values from function of x */
+    FUNCTION
 }
 
 /**

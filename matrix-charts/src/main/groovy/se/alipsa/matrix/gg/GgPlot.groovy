@@ -102,8 +102,12 @@ import se.alipsa.matrix.gg.stat.StatsContour
 import se.alipsa.matrix.gg.stat.StatsContourFilled
 import se.alipsa.matrix.gg.stat.StatsCount
 import se.alipsa.matrix.gg.stat.StatsDensity
+import se.alipsa.matrix.gg.stat.StatsEllipse
+import se.alipsa.matrix.gg.stat.StatsFunction
 import se.alipsa.matrix.gg.stat.StatsSmooth
 import se.alipsa.matrix.gg.stat.StatsSum
+import se.alipsa.matrix.gg.stat.StatsSummaryBin
+import se.alipsa.matrix.gg.stat.StatsUnique
 import se.alipsa.matrix.gg.stat.StatsYDensity
 import se.alipsa.matrix.gg.stat.StatsEcdf
 import se.alipsa.matrix.gg.stat.StatsQq
@@ -2418,6 +2422,42 @@ class GgPlot {
    */
   static StatsQqLine stat_qq_line(Map params = [:]) {
     return new StatsQqLine(params)
+  }
+
+  /**
+   * Create a confidence ellipse stat for bivariate normal data.
+   *
+   * @param params stat parameters (level, type, segments)
+   */
+  static StatsEllipse stat_ellipse(Map params = [:]) {
+    return new StatsEllipse(params)
+  }
+
+  /**
+   * Create a binned summary stat.
+   *
+   * @param params stat parameters (bins, binwidth, fun)
+   */
+  static StatsSummaryBin stat_summary_bin(Map params = [:]) {
+    return new StatsSummaryBin(params)
+  }
+
+  /**
+   * Create a unique observations stat (removes duplicates).
+   *
+   * @param params stat parameters (columns)
+   */
+  static StatsUnique stat_unique(Map params = [:]) {
+    return new StatsUnique(params)
+  }
+
+  /**
+   * Create a function stat (computes y from function of x).
+   *
+   * @param params stat parameters (fun, xlim, n)
+   */
+  static StatsFunction stat_function(Map params = [:]) {
+    return new StatsFunction(params)
   }
 
   static StatsSum stat_summary(Map params) {

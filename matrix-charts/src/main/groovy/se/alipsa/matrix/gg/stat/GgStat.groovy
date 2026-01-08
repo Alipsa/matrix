@@ -1281,4 +1281,330 @@ class GgStat {
     return true
   }
 
+  /**
+   * Remove duplicate observations.
+   * Keeps only unique rows based on aesthetics.
+   *
+   * @param data Input matrix
+   * @param aes Aesthetic mappings (uses x, y, or all columns if none specified)
+   * @param params Map with optional columns to consider for uniqueness
+   * @return Matrix with duplicate rows removed
+   */
+  static Matrix unique(Matrix data, Aes aes, Map params = [:]) {
+    if (data == null || data.rowCount() == 0) return data
+
+    // Determine which columns to use for uniqueness
+    List<String> columns = []
+    if (params.columns) {
+      columns = params.columns as List<String>
+    } else {
+      // Use aesthetic columns if available
+      if (aes.xColName) columns << aes.xColName
+      if (aes.yColName) columns << aes.yColName
+      if (columns.isEmpty()) {
+        // Use all columns if no aesthetics specified
+        columns = data.columnNames()
+      }
+    }
+
+    // Track seen combinations
+    Set<List<Object>> seenKeys = new LinkedHashSet<>()
+    List<Map<String, Object>> uniqueRows = []
+
+    data.each { row ->
+      // Create key from relevant columns using the raw values to preserve null vs "null"
+      List<Object> key = columns.collect { row[it] } as List<Object>
+
+      if (!seenKeys.contains(key)) {
+        seenKeys.add(key)
+        Map<String, Object> rowMap = [:]
+        data.columnNames().each { col ->
+          rowMap[col] = row[col]
+        }
+        uniqueRows << rowMap
+      }
+    }
+
+    return Matrix.builder().mapList(uniqueRows).build()
+  }
+
+  /**
+   * Compute y values from function of x.
+   * Evaluates a mathematical function over a range of x values.
+   *
+   * @param data Input matrix (can be null/empty - function generates its own x values)
+   * @param aes Aesthetic mappings (x column used to determine range if provided)
+   * @param params Map with:
+   *   - fun: Closure that takes Number and returns Number (required)
+   *   - xlim: [min, max] range for x (optional, auto-detected from data if not provided)
+   *   - n: number of points to evaluate (default 101)
+   * @return Matrix with columns: x, y
+   */
+  static Matrix function(Matrix data, Aes aes, Map params = [:]) {
+    Closure<Number> fun = params.fun as Closure<Number>
+    if (fun == null) {
+      throw new IllegalArgumentException("stat_function requires 'fun' parameter (Closure)")
+    }
+
+    // Determine x range
+    BigDecimal xmin, xmax
+    if (params.xlim) {
+      List xlim = params.xlim as List
+      xmin = xlim[0] as BigDecimal
+      xmax = xlim[1] as BigDecimal
+    } else if (data != null && data.rowCount() > 0 && aes.xColName) {
+      // Get range from data
+      List<Number> xValues = data[aes.xColName].findAll { it instanceof Number } as List<Number>
+      if (!xValues.isEmpty()) {
+        xmin = xValues.min() as BigDecimal
+        xmax = xValues.max() as BigDecimal
+      } else {
+        xmin = 0
+        xmax = 1
+      }
+    } else {
+      // Default range
+      xmin = params.xmin as BigDecimal ?: 0
+      xmax = params.xmax as BigDecimal ?: 1
+    }
+
+    int n = params.n as Integer ?: 101
+    if (n < 1) {
+      throw new IllegalArgumentException("stat_function parameter 'n' must be at least 1 but was " + n)
+    }
+    if (n == 1) {
+      BigDecimal x = xmin
+      BigDecimal y = fun.call(x) as BigDecimal
+      return Matrix.builder()
+          .data([x: [x], y: [y]])
+          .build()
+    }
+    BigDecimal step = (xmax - xmin) / (n - 1)
+
+    // Evaluate function at n points
+    List<BigDecimal> xVals = []
+    List<BigDecimal> yVals = []
+
+    for (int i = 0; i < n; i++) {
+      BigDecimal x = xmin + i * step
+      BigDecimal y
+      try {
+        def result = fun.call(x)
+        if (!(result instanceof Number)) {
+          throw new IllegalArgumentException(
+              "stat_function 'fun' must return a Number but returned " +
+              "${result == null ? 'null' : result.getClass().name} for x=" + x
+          )
+        }
+        y = (result as BigDecimal)
+      } catch (Exception e) {
+        if (e instanceof IllegalArgumentException) {
+          throw e
+        }
+        throw new IllegalArgumentException("Error evaluating stat_function at x=" + x + ": " + e.message, e)
+      }
+      xVals << x
+      yVals << y
+    }
+
+    return Matrix.builder()
+        .data([x: xVals, y: yVals])
+        .build()
+  }
+
+  /**
+   * Binned summary statistics.
+   * Bins x values and computes summary statistics for y in each bin.
+   *
+   * @param data Input matrix
+   * @param aes Aesthetic mappings (requires x and y)
+   * @param params Map with:
+   *   - bins: number of bins (default 30)
+   *   - binwidth: width of bins (overrides bins)
+   *   - fun: summary function - 'mean', 'median', 'sum', 'min', 'max' (default 'mean')
+   *   - fun.data: Closure that takes List<Number> and returns Map<String, Number> for custom summaries
+   * @return Matrix with columns: x (bin center), xmin, xmax, y (summary), n (count)
+   */
+  static Matrix summaryBin(Matrix data, Aes aes, Map params = [:]) {
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+
+    if (xCol == null || yCol == null) {
+      throw new IllegalArgumentException("stat_summary_bin requires x and y aesthetics")
+    }
+
+    // Get numeric x and y values
+    List<Map<String, Number>> points = []
+    data.each { row ->
+      def xVal = row[xCol]
+      def yVal = row[yCol]
+      if (xVal instanceof Number && yVal instanceof Number) {
+        points << [x: xVal as Number, y: yVal as Number]
+      }
+    }
+
+    if (points.isEmpty()) {
+      return Matrix.builder().data([x: [], xmin: [], xmax: [], y: [], n: []]).build()
+    }
+
+    // Calculate bins
+    BigDecimal xMin = points.collect { it.x as BigDecimal }.min()
+    BigDecimal xMax = points.collect { it.x as BigDecimal }.max()
+    BigDecimal range = xMax - xMin
+    if (range == 0) range = 1
+
+    BigDecimal binWidth
+    int nBins
+    if (params.binwidth != null) {
+      binWidth = params.binwidth as BigDecimal
+      if (binWidth <= 0) {
+        throw new IllegalArgumentException("stat_summary_bin requires a positive binwidth, but was " + binWidth)
+      }
+      if (binWidth <= 0) {
+        throw new IllegalArgumentException("binwidth must be positive, was " + binWidth)
+      }
+      nBins = (range / binWidth).ceil() as int
+    } else {
+      Integer binsParam = params.bins as Integer
+      if (binsParam == null) {
+        nBins = 30
+      } else if (binsParam <= 0) {
+        throw new IllegalArgumentException("bins must be positive, was " + binsParam)
+      } else {
+        nBins = binsParam
+      }
+      binWidth = range / nBins
+      if (binWidth <= 0) {
+        throw new IllegalArgumentException("stat_summary_bin computed a non-positive binwidth " + binWidth + " from bins=" + nBins)
+      }
+    }
+
+    // Group points into bins
+    Map<Integer, List<Number>> binned = [:].withDefault { [] }
+    points.each { point ->
+      BigDecimal x = point.x as BigDecimal
+      int binIdx = ((x - xMin) / binWidth) as int
+      binIdx = Math.min(binIdx, nBins - 1)  // Handle edge case
+      binned[binIdx] << (point.y as Number)
+    }
+
+    // Compute summaries for each bin
+    String funType = params.fun as String ?: 'mean'
+    Closure<Map<String, Number>> funData = params.'fun.data' as Closure<Map<String, Number>>
+
+    List<BigDecimal> xVals = []
+    List<BigDecimal> xMinVals = []
+    List<BigDecimal> xMaxVals = []
+    List<BigDecimal> yVals = []
+    List<Integer> nVals = []
+
+    binned.each { int binIdx, List<Number> yValues ->
+      if (yValues.isEmpty()) return
+
+      BigDecimal binMin = xMin + binIdx * binWidth
+      BigDecimal binMax = binMin + binWidth
+      BigDecimal binCenter = binMin + binWidth / 2
+
+      xVals << binCenter
+      xMinVals << binMin
+      xMaxVals << binMax
+      nVals << yValues.size()
+
+      // Compute summary
+      if (funData) {
+        // Custom function
+        Map<String, Number> result = funData.call(yValues)
+        Number yValue = result.y ?: result.ymin ?: 0
+        yVals << (yValue as BigDecimal)
+      } else {
+        // Standard summary function
+        BigDecimal summary
+        switch (funType) {
+          case 'mean':
+            summary = Stat.mean(yValues)
+            break
+          case 'median':
+            summary = Stat.median(yValues)
+            break
+          case 'sum':
+            summary = Stat.sum(yValues)
+            break
+          case 'min':
+            summary = Stat.min(yValues)
+            break
+          case 'max':
+            summary = Stat.max(yValues)
+            break
+          default:
+            summary = Stat.mean(yValues)
+        }
+        yVals << summary
+      }
+    }
+
+    return Matrix.builder()
+        .data([
+            x: xVals,
+            xmin: xMinVals,
+            xmax: xMaxVals,
+            y: yVals,
+            n: nVals
+        ])
+        .build()
+  }
+
+  /**
+   * Confidence ellipse for bivariate normal data.
+   * Computes points on an ellipse representing a confidence region.
+   *
+   * @param data Input matrix
+   * @param aes Aesthetic mappings (requires x and y)
+   * @param params Map with:
+   *   - level: confidence level (default 0.95 for 95% confidence)
+   *   - type: 't' for Student's t, 'norm' for normal, 'euclid' for raw (default 't')
+   *   - segments: number of points on ellipse (default 51)
+   * @return Matrix with columns: x, y (points on ellipse)
+   */
+  static Matrix ellipse(Matrix data, Aes aes, Map params = [:]) {
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+
+    if (xCol == null || yCol == null) {
+      throw new IllegalArgumentException("stat_ellipse requires x and y aesthetics")
+    }
+
+    // Extract numeric x, y pairs
+    List<BigDecimal> xValues = []
+    List<BigDecimal> yValues = []
+    data.each { row ->
+      def xVal = row[xCol]
+      def yVal = row[yCol]
+      if (xVal instanceof Number && yVal instanceof Number) {
+        xValues << (xVal as BigDecimal)
+        yValues << (yVal as BigDecimal)
+      }
+    }
+
+    // Parameters
+    Number levelParam = params.level as Number ?: 0.95
+    double level = levelParam as double
+    if (level <= 0d || level >= 1d) {
+      throw new IllegalArgumentException("stat_ellipse level must be between 0 and 1 (exclusive), was: $level")
+    }
+    String type = params.type as String ?: 't'
+    Integer segmentsParam = params.segments as Integer
+    int segments = segmentsParam ?: 51
+    if (segments < 3) {
+      throw new IllegalArgumentException("stat_ellipse segments must be at least 3, was: $segments")
+    }
+
+    // Delegate to matrix-stats Ellipse class for calculation
+    se.alipsa.matrix.stats.Ellipse.EllipseData result =
+        se.alipsa.matrix.stats.Ellipse.calculate(xValues, yValues, level, type, segments)
+
+    return Matrix.builder()
+        .data([x: result.x, y: result.y])
+        .build()
+  }
+
 }
