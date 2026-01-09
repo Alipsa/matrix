@@ -205,7 +205,8 @@ class Scale {
     return coordTrans
   }
 
-  void setName(String name) {
+  Scale setName(String name) {
     this.name = name
+    this
   }
 }
