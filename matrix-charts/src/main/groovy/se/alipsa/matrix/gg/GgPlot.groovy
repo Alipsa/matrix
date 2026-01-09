@@ -3,6 +3,7 @@ package se.alipsa.matrix.gg
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.groovy.svg.utils.SvgMerger
 import se.alipsa.matrix.gg.geom.GeomBin2d
 import se.alipsa.matrix.gg.geom.GeomHex
 import se.alipsa.matrix.gg.geom.GeomBlank
@@ -117,6 +118,7 @@ import se.alipsa.matrix.gg.stat.StatsQq
 import se.alipsa.matrix.gg.stat.StatsQqLine
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.theme.Theme
+import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.gg.theme.ElementBlank
 import se.alipsa.matrix.gg.theme.ElementLine
 import se.alipsa.matrix.gg.theme.ElementRect
@@ -491,6 +493,70 @@ class GgPlot {
     if (params.width) chart.width = params.width as int
     if (params.height) chart.height = params.height as int
     write(chart, new File(filename))
+  }
+
+  /**
+   * Save one or more SVG objects to a file.
+   * If multiple SVGs are provided, they are stacked vertically in a container SVG.
+   * Supports .svg and .png file extensions.
+   *
+   * @param filePath Path to save the file (must end with .svg or .png)
+   * @param svgs One or more Svg objects to save
+   * @throws IllegalArgumentException if file extension is not .svg or .png
+   */
+  static void ggsave(String filePath, Svg... svgs) {
+    if (svgs == null || svgs.length == 0) {
+      throw new IllegalArgumentException("At least one SVG object must be provided")
+    }
+
+    File file = new File(filePath)
+
+    // Extract and validate file extension
+    int dotIndex = filePath.lastIndexOf('.')
+    if (dotIndex == -1 || dotIndex == filePath.length() - 1) {
+      throw new IllegalArgumentException("File path must have a valid extension (.svg or .png)")
+    }
+    String extension = filePath.substring(dotIndex + 1).toLowerCase()
+
+    Svg finalSvg
+    if (svgs.length == 1) {
+      // Single SVG - use as-is
+      finalSvg = svgs[0]
+    } else {
+      // Multiple SVGs - merge vertically using SvgMerger utility
+      finalSvg = SvgMerger.mergeVertically(svgs)
+    }
+
+    // Save based on file extension
+    if (extension == 'svg') {
+      write(finalSvg, file)
+    } else if (extension == 'png') {
+      ChartToPng.export(finalSvg, file)
+    } else {
+      throw new IllegalArgumentException("File extension must be .svg or .png, got: .${extension}")
+    }
+  }
+
+  /**
+   * Save one or more GgChart objects to a file.
+   * Charts are rendered to SVG and then saved.
+   * If multiple charts are provided, they are stacked vertically in a container SVG.
+   * Supports .svg and .png file extensions.
+   *
+   * @param filePath Path to save the file (must end with .svg or .png)
+   * @param charts One or more GgChart objects to save
+   * @throws IllegalArgumentException if file extension is not .svg or .png
+   */
+  static void ggsave(String filePath, GgChart... charts) {
+    if (charts == null || charts.length == 0) {
+      throw new IllegalArgumentException("At least one GgChart object must be provided")
+    }
+
+    // Render each chart to SVG
+    Svg[] svgs = charts.collect { it.render() } as Svg[]
+
+    // Delegate to SVG version
+    ggsave(filePath, svgs)
   }
 
   // ============ Axis limits ============
