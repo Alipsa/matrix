@@ -77,6 +77,14 @@ class ScaleShapeManual extends ScaleDiscrete {
     return DEFAULT_SHAPES[index % DEFAULT_SHAPES.size()]
   }
 
+  /**
+   * Find the first level that maps to the given shape.
+   * When shapes cycle (more levels than shapes), this returns the first level
+   * that transforms to the given shape value.
+   *
+   * @param value the shape name to find
+   * @return the first level that maps to this shape, or null if not found
+   */
   @Override
   Object inverse(Object value) {
     // Find the level that maps to this shape
@@ -86,17 +94,11 @@ class ScaleShapeManual extends ScaleDiscrete {
     def namedEntry = namedValues.find { k, v -> v == value }
     if (namedEntry) return namedEntry.key
 
-    // Check positional mapping
-    if (!values.isEmpty()) {
-      int shapeIndex = values.indexOf(value as String)
-      if (shapeIndex >= 0 && shapeIndex < levels.size()) {
-        return levels[shapeIndex]
-      }
-    } else {
-      // Check default shapes
-      int shapeIndex = DEFAULT_SHAPES.indexOf(value as String)
-      if (shapeIndex >= 0 && shapeIndex < levels.size()) {
-        return levels[shapeIndex]
+    // Iterate through all levels to find the first one that transforms to this shape
+    // This correctly handles cycled shapes
+    for (Object level : levels) {
+      if (transform(level) == value) {
+        return level
       }
     }
 

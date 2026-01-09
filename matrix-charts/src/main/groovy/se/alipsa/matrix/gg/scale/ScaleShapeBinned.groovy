@@ -26,7 +26,7 @@ class ScaleShapeBinned extends ScaleContinuous {
    */
   ScaleShapeBinned() {
     aesthetic = 'shape'
-    expand = NO_EXPAND
+    expand = ScaleContinuous.NO_EXPAND
   }
 
   /**

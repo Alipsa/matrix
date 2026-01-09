@@ -124,6 +124,28 @@ class ScaleShapeTest {
   }
 
   @Test
+  void testScaleShapeManualInverseWithCycledShapes() {
+    // Test that inverse correctly handles cycled shapes (more levels than shapes)
+    ScaleShapeManual scale = new ScaleShapeManual(values: ['triangle', 'diamond'])
+    scale.train(['A', 'B', 'C', 'D'])
+
+    // A maps to triangle (index 0 % 2 = 0)
+    // B maps to diamond (index 1 % 2 = 1)
+    // C maps to triangle (index 2 % 2 = 0) - cycled
+    // D maps to diamond (index 3 % 2 = 1) - cycled
+
+    // Verify transformations
+    assertEquals('triangle', scale.transform('A'))
+    assertEquals('diamond', scale.transform('B'))
+    assertEquals('triangle', scale.transform('C'))
+    assertEquals('diamond', scale.transform('D'))
+
+    // Inverse should return the FIRST level that maps to each shape
+    assertEquals('A', scale.inverse('triangle'))  // Not 'C'
+    assertEquals('B', scale.inverse('diamond'))   // Not 'D'
+  }
+
+  @Test
   void testScaleShapeManualGetShapeForIndex() {
     ScaleShapeManual scale = new ScaleShapeManual(values: ['square', 'circle'])
     scale.train(['A', 'B', 'C'])
