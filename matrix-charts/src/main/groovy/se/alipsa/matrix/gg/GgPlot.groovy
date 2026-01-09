@@ -585,7 +585,7 @@ class GgPlot {
   /**
    * Customize axis guide appearance and behavior.
    *
-   * Example: guides(x: guide_axis(angle: 45, check.overlap: true))
+   * Example: scale_x_continuous(guide: guide_axis(angle: 45, 'check.overlap': true))
    *
    * @param params optional axis customization parameters:
    *   - angle: Rotation angle for axis labels (default: 0)
