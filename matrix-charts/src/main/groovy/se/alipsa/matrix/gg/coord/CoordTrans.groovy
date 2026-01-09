@@ -182,9 +182,9 @@ class CoordTrans extends Coord {
   @CompileDynamic
   @Override
   List<Number> transform(Number x, Number y, Map<String, ?> scales) {
-    // Data values have already been transformed before scale training,
-    // so scales work in transformed space. We just need to apply the scale
-    // transformation (transformed data -> pixels).
+    // Scales have been trained in transformed coordinate space and will apply
+    // the coordinate transformation internally when transform() is called.
+    // Here we map original data values through the scales to pixel coordinates.
     def xScale = scales['x']
     def yScale = scales['y']
 
