@@ -590,7 +590,8 @@ class GgPlot {
    * @param params optional axis customization parameters:
    *   - angle: Rotation angle for axis labels (default: 0)
    *   - check.overlap (or checkOverlap): Hide overlapping labels (default: false)
-   *   - n.dodge (or nDodge): Number of rows for dodging labels (default: 1)
+   *   - n.dodge (or nDodge): Number of rows for dodging labels (default: 1).
+   *       Note: This parameter is currently recognized but not yet implemented and will be ignored.
    * @return an axis guide specification
    */
   static Guide guide_axis(Map params = [:]) {
