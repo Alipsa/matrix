@@ -252,10 +252,10 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 3.8 Shape Scales
 
-- 3.8.1 [ ] `scale_shape()` - Shape scale
-- 3.8.2 [ ] `scale_shape_discrete()` - Discrete shape scale
-- 3.8.3 [ ] `scale_shape_binned()` - Binned shape scale
-- 3.8.4 [ ] `scale_shape_manual()` - Manual shape mapping
+- 3.8.1 [x] `scale_shape()` - Shape scale
+- 3.8.2 [x] `scale_shape_discrete()` - Discrete shape scale
+- 3.8.3 [x] `scale_shape_binned()` - Binned shape scale
+- 3.8.4 [x] `scale_shape_manual()` - Manual shape mapping
 
 ### 3.9 Linetype Scales
 
