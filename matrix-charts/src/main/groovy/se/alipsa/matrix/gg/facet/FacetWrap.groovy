@@ -61,8 +61,6 @@ class FacetWrap extends Facet {
       // Accept both String and Labeller objects
       if (params.labeller instanceof Labeller || params.labeller instanceof String) {
         this.labeller = params.labeller
-      } else {
-        this.labeller = params.labeller as String
       }
     }
     if (params.containsKey('strip')) this.strip = params.strip as boolean
