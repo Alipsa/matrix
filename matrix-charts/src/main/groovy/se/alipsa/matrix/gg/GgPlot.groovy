@@ -84,6 +84,7 @@ import se.alipsa.matrix.gg.scale.ScaleSizeArea
 import se.alipsa.matrix.gg.scale.ScaleRadius
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
+import se.alipsa.matrix.gg.scale.SecondaryAxis
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.scale.ScaleYDiscrete
 import se.alipsa.matrix.gg.scale.ScaleXLog10
@@ -2006,6 +2007,103 @@ class GgPlot {
    */
   static ScaleYDatetime scale_y_datetime(Map params = [:]) {
     return new ScaleYDatetime(params)
+  }
+
+  // --- Secondary axes ---
+
+  /**
+   * Specify a secondary axis with a transformation of the primary axis (idiomatic Groovy style).
+   * <p>
+   * The secondary axis must have a one-to-one transformation of the primary axis.
+   * This means every value on the primary axis corresponds to exactly one value on the secondary axis.
+   * <p>
+   * Usage with scales:
+   * <pre>
+   *   // Celsius to Fahrenheit conversion (idiomatic Groovy style)
+   *   scale_y_continuous(sec.axis: sec_axis("Fahrenheit") { it * 1.8 + 32 })
+   *
+   *   // With custom breaks and labels
+   *   scale_x_continuous(sec.axis: sec_axis("Kilometers", breaks: [0, 5, 10, 15]) {
+   *     it / 1000
+   *   })
+   *
+   *   // Alternative syntax (closure first)
+   *   scale_y_continuous(sec.axis: sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit"))
+   * </pre>
+   *
+   * @param name Label for the secondary axis
+   * @param params Additional parameters (breaks, labels, guide) - defaults to empty map
+   * @param transform Closure that transforms primary axis values to secondary axis values
+   * @return SecondaryAxis configuration object
+   */
+  static SecondaryAxis sec_axis(String name, Map params = [:], Closure<BigDecimal> transform) {
+    Map allParams = [name: name] + params
+    return new SecondaryAxis(transform, allParams)
+  }
+
+  /**
+   * Handle Groovy named parameter syntax where Map comes first.
+   * This allows: sec_axis("Kilometers", breaks: [0, 5, 10]) { it / 1000 }
+   */
+  static SecondaryAxis sec_axis(Map params, String name, Closure<BigDecimal> transform) {
+    Map allParams = [name: name] + params
+    return new SecondaryAxis(transform, allParams)
+  }
+
+  /**
+   * Alternate signature for sec_axis (closure first, less idiomatic but supported).
+   *
+   * @param transform Closure that transforms primary axis values to secondary axis values
+   * @param params Additional parameters including name
+   * @return SecondaryAxis configuration object
+   */
+  static SecondaryAxis sec_axis(Closure<BigDecimal> transform, Map params = [:]) {
+    return new SecondaryAxis(transform, params)
+  }
+
+  /**
+   * Alternate signature for sec_axis that handles Groovy's named parameters with closure.
+   * This signature allows calling: sec_axis({ closure }, name: "label", ...)
+   * where Groovy treats the named params as a Map that comes before the closure.
+   */
+  static SecondaryAxis sec_axis(Map params, Closure<BigDecimal> transform) {
+    return new SecondaryAxis(transform, params)
+  }
+
+  /**
+   * Duplicate the primary axis on the opposite side.
+   * <p>
+   * This is a convenience function equivalent to sec_axis() with an identity transformation.
+   * It displays the same scale and labels on both sides of the plot.
+   * <p>
+   * Usage:
+   * <pre>
+   *   // Show y-axis on both left and right (no custom name)
+   *   scale_y_continuous(sec.axis: dup_axis())
+   *
+   *   // With custom name for the duplicated axis (idiomatic)
+   *   scale_x_continuous(sec.axis: dup_axis("Time (repeated)"))
+   *
+   *   // Alternative syntax
+   *   scale_x_continuous(sec.axis: dup_axis(name: "Time (repeated)"))
+   * </pre>
+   *
+   * @param name Optional label for the duplicated axis
+   * @return SecondaryAxis with identity transformation
+   */
+  static SecondaryAxis dup_axis(String name = null) {
+    Map params = name ? [name: name] : [:]
+    return new SecondaryAxis({ it as BigDecimal }, params)
+  }
+
+  /**
+   * Duplicate the primary axis with additional parameters.
+   *
+   * @param params Optional parameters (name, breaks, labels, guide)
+   * @return SecondaryAxis with identity transformation
+   */
+  static SecondaryAxis dup_axis(Map params) {
+    return new SecondaryAxis({ it as BigDecimal }, params)
   }
 
   // --- Color scales ---

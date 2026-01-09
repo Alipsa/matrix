@@ -494,11 +494,11 @@ class GgRenderer {
     boolean isFlipped = coord instanceof CoordFlip
 
     if (isFlipped) {
-      renderFacetYAxis(axesGroup, scales['x'], height, theme, showYLabels)
+      renderFacetYAxis(axesGroup, scales['x'], width, height, theme, showYLabels)
       renderFacetXAxis(axesGroup, scales['y'], width, height, theme, showXLabels)
     } else {
       renderFacetXAxis(axesGroup, scales['x'], width, height, theme, showXLabels)
-      renderFacetYAxis(axesGroup, scales['y'], height, theme, showYLabels)
+      renderFacetYAxis(axesGroup, scales['y'], width, height, theme, showYLabels)
     }
   }
 
@@ -541,7 +541,7 @@ class GgRenderer {
   /**
    * Render Y axis for facet panel.
    */
-  private void renderFacetYAxis(G axesGroup, Scale scale, int height, Theme theme, boolean showLabels) {
+  private void renderFacetYAxis(G axesGroup, Scale scale, int width, int height, Theme theme, boolean showLabels) {
     if (scale == null) return
 
     G yAxisGroup = axesGroup.addG()
@@ -1616,12 +1616,52 @@ class GgRenderer {
 
     if (isFlipped) {
       // For flipped coords: x data appears on left axis, y data appears on bottom axis
-      renderYAxis(axesGroup, scales['x'], height, theme)  // x scale on left (vertical)
+      renderYAxis(axesGroup, scales['x'], width, height, theme)  // x scale on left (vertical)
       renderXAxis(axesGroup, scales['y'], width, height, theme)  // y scale on bottom (horizontal)
+      renderSecondaryAxes(axesGroup, scales, width, height, theme, true)
     } else {
       // Normal: x on bottom, y on left
       renderXAxis(axesGroup, scales['x'], width, height, theme)
-      renderYAxis(axesGroup, scales['y'], height, theme)
+      renderYAxis(axesGroup, scales['y'], width, height, theme)
+      renderSecondaryAxes(axesGroup, scales, width, height, theme, false)
+    }
+  }
+
+  /**
+   * Render secondary axes if present.
+   *
+   * @param axesGroup The SVG group to add axes to
+   * @param scales The map of scales
+   * @param width Plot area width
+   * @param height Plot area height
+   * @param theme The theme
+   * @param isFlipped Whether coordinates are flipped
+   */
+  private void renderSecondaryAxes(G axesGroup, Map<String, Scale> scales, int width, int height, Theme theme, boolean isFlipped) {
+    // Render secondary x-axis if present
+    if (scales['x'] instanceof ScaleXContinuous) {
+      ScaleXContinuous xScale = scales['x'] as ScaleXContinuous
+      xScale.updateSecondaryScale()
+      if (xScale.secAxis != null) {
+        if (isFlipped) {
+          renderYAxis(axesGroup, xScale.secAxis, width, height, theme)  // secondary x on right (vertical)
+        } else {
+          renderXAxis(axesGroup, xScale.secAxis, width, height, theme)  // secondary x on top
+        }
+      }
+    }
+
+    // Render secondary y-axis if present
+    if (scales['y'] instanceof ScaleYContinuous) {
+      ScaleYContinuous yScale = scales['y'] as ScaleYContinuous
+      yScale.updateSecondaryScale()
+      if (yScale.secAxis != null) {
+        if (isFlipped) {
+          renderXAxis(axesGroup, yScale.secAxis, width, height, theme)  // secondary y on top (horizontal)
+        } else {
+          renderYAxis(axesGroup, yScale.secAxis, width, height, theme)  // secondary y on right
+        }
+      }
     }
   }
 
@@ -1631,9 +1671,21 @@ class GgRenderer {
   private void renderXAxis(G axesGroup, Scale scale, int width, int height, Theme theme) {
     if (scale == null) return
 
+    // Determine position: bottom (default) or top (for secondary axis)
+    String position = 'bottom'
+    if (scale instanceof ScaleXContinuous) {
+      position = ((ScaleXContinuous) scale).position ?: 'bottom'
+    } else if (scale instanceof ScaleYContinuous) {
+      // For flipped coords, y scale appears as horizontal axis
+      position = ((ScaleYContinuous) scale).position == 'left' ? 'bottom' : 'top'
+    }
+
+    boolean isTop = (position == 'top')
+    int yTranslate = isTop ? 0 : height
+
     G xAxisGroup = axesGroup.addG()
-    xAxisGroup.id('x-axis')
-    xAxisGroup.transform("translate(0, $height)")
+    xAxisGroup.id(isTop ? 'x-axis-top' : 'x-axis')
+    xAxisGroup.transform("translate(0, $yTranslate)")
 
     // Axis line
     xAxisGroup.addLine(0, 0, width, 0)
@@ -1648,15 +1700,17 @@ class GgRenderer {
       Double xPos = scale.transform(breakVal) as Double
       if (xPos == null) return  // Skip if transform returns null
 
-      // Tick mark
-      xAxisGroup.addLine(xPos, 0, xPos, theme.axisTickLength ?: 5)
+      // Tick mark (direction depends on position)
+      int tickDir = isTop ? -1 : 1
+      xAxisGroup.addLine(xPos, 0, xPos, tickDir * (theme.axisTickLength ?: 5))
                 .stroke('black')
 
-      // Label
+      // Label (position depends on axis position)
       String label = i < labels.size() ? labels[i] : breakVal.toString()
+      int labelY = isTop ? (-1 * (theme.axisTickLength ?: 5) - 3) : ((theme.axisTickLength ?: 5) + 15)
       xAxisGroup.addText(label)
                 .x(xPos)
-                .y((theme.axisTickLength ?: 5) + 15)
+                .y(labelY)
                 .textAnchor('middle')
                 .fontSize(theme.axisTextX?.size ?: 10)
     }
@@ -1665,11 +1719,25 @@ class GgRenderer {
   /**
    * Render the Y axis.
    */
-  private void renderYAxis(G axesGroup, Scale scale, int height, Theme theme) {
+  private void renderYAxis(G axesGroup, Scale scale, int width, int height, Theme theme) {
     if (scale == null) return
 
+    // Determine position: left (default) or right (for secondary axis)
+    String position = 'left'
+    if (scale instanceof ScaleYContinuous) {
+      position = ((ScaleYContinuous) scale).position ?: 'left'
+    } else if (scale instanceof ScaleXContinuous) {
+      // For flipped coords, x scale appears as vertical axis
+      position = ((ScaleXContinuous) scale).position == 'bottom' ? 'left' : 'right'
+    }
+
+    boolean isRight = (position == 'right')
+
     G yAxisGroup = axesGroup.addG()
-    yAxisGroup.id('y-axis')
+    yAxisGroup.id(isRight ? 'y-axis-right' : 'y-axis')
+    if (isRight) {
+      yAxisGroup.transform("translate($width, 0)")
+    }
 
     // Axis line
     yAxisGroup.addLine(0, 0, 0, height)
@@ -1684,17 +1752,26 @@ class GgRenderer {
       Double yPos = scale.transform(breakVal) as Double
       if (yPos == null) return  // Skip if transform returns null
 
-      // Tick mark
-      yAxisGroup.addLine(-1*(theme.axisTickLength ?: 5), yPos, 0, yPos)
+      // Tick mark (direction depends on position)
+      int tickDir = isRight ? 1 : -1
+      yAxisGroup.addLine(0, yPos, tickDir * (theme.axisTickLength ?: 5), yPos)
                 .stroke('black')
 
-      // Label
+      // Label (position depends on axis position)
       String label = i < labels.size() ? labels[i] : breakVal.toString()
-      yAxisGroup.addText(label)
-                .x(-1*(theme.axisTickLength ?: 5) - 5)
-                .y(yPos + 4)
-                .textAnchor('end')
-                .fontSize(theme.axisTextY?.size ?: 10)
+      if (isRight) {
+        yAxisGroup.addText(label)
+                  .x((theme.axisTickLength ?: 5) + 5)
+                  .y(yPos + 4)
+                  .textAnchor('start')
+                  .fontSize(theme.axisTextY?.size ?: 10)
+      } else {
+        yAxisGroup.addText(label)
+                  .x(-1 * (theme.axisTickLength ?: 5) - 5)
+                  .y(yPos + 4)
+                  .textAnchor('end')
+                  .fontSize(theme.axisTextY?.size ?: 10)
+      }
     }
   }
 

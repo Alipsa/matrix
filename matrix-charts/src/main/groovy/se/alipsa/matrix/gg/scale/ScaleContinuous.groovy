@@ -175,7 +175,7 @@ class ScaleContinuous extends Scale {
    * @param n the number to format (typically BigDecimal from break generation)
    * @return formatted string representation
    */
-  private String formatNumber(Number n) {
+  protected String formatNumber(Number n) {
     if (n == null) return ''
 
     // Convert to BigDecimal for consistent formatting
