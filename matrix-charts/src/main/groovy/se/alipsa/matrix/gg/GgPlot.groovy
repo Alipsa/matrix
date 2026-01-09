@@ -1991,12 +1991,26 @@ class GgPlot {
         if (text.length() <= width) {
           return text
         }
-        // Simple word wrapping: split into lines of max width
+        // Word wrapping: split into lines of max width
         List<String> lines = []
         String[] words = text.split(/\s+/)
         String currentLine = ''
         for (String word : words) {
-          if (currentLine.isEmpty()) {
+          // Handle words longer than width by breaking them
+          if (word.length() > width) {
+            // Flush current line if it has content
+            if (!currentLine.isEmpty()) {
+              lines.add(currentLine)
+              currentLine = ''
+            }
+            // Break long word into chunks
+            while (word.length() > width) {
+              lines.add(word.substring(0, width))
+              word = word.substring(width)
+            }
+            // Add remaining part as current line
+            currentLine = word
+          } else if (currentLine.isEmpty()) {
             currentLine = word
           } else if ((currentLine.length() + 1 + word.length()) <= width) {
             currentLine += ' ' + word

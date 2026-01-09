@@ -260,6 +260,9 @@ class FacetGrid extends Facet {
           for (int i = 0; i < rows.size() && i < valList.size(); i++) {
             valMap[rows[i]] = valList[i]
           }
+        } else if (!rows.isEmpty()) {
+          // Fallback: associate the first row with the string representation of the value
+          valMap[rows[0]] = val?.toString()
         }
         return (labeller as Labeller).label(valMap)
       }

@@ -103,6 +103,35 @@ class FacetLabellerTest {
   }
 
   @Test
+  void testLabelWrapGenWithLongWord() {
+    def labeller = label_wrap_gen(10)
+
+    // Word longer than width - should break the word
+    String longWord = labeller.label([cat: 'Supercalifragilisticexpialidocious'])
+    assertTrue(longWord.contains('\n'), "Long word should be broken into chunks")
+    String[] lines = longWord.split('\n')
+    // Each line should be exactly 10 characters (except possibly the last one)
+    for (int i = 0; i < lines.length - 1; i++) {
+      assertTrue(lines[i].length() <= 10, "Line ${i} should be <= 10 characters: '${lines[i]}'")
+    }
+    assertTrue(lines[lines.length - 1].length() <= 10, "Last line should be <= 10 characters")
+  }
+
+  @Test
+  void testLabelWrapGenMixedContent() {
+    def labeller = label_wrap_gen(15)
+
+    // Mix of normal words and long words
+    String mixed = labeller.label([cat: 'Short words and Supercalifragilisticexpialidocious combined'])
+    assertTrue(mixed.contains('\n'), "Mixed content should wrap")
+    String[] lines = mixed.split('\n')
+    // Verify no line exceeds the width
+    for (int i = 0; i < lines.length; i++) {
+      assertTrue(lines[i].length() <= 15, "Line ${i} should be <= 15 characters: '${lines[i]}'")
+    }
+  }
+
+  @Test
   void testLabelParsed() {
     def labeller = label_parsed()
 

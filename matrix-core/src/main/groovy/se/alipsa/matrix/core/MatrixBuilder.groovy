@@ -327,8 +327,8 @@ class MatrixBuilder {
    * @param firstRowAsHeader
    * @return
    */
-  MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
-    data(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader)
+  MatrixBuilder data(File file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
+    data(Files.newInputStream(file.toPath()), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
       int endIdx = file.name.length()
       if (file.name.contains('.')) {
@@ -349,8 +349,8 @@ class MatrixBuilder {
    * @param firstRowAsHeader
    * @return
    */
-  MatrixBuilder data(Path file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
-    data(Files.newInputStream(file), delimiter, stringQuote, firstRowAsHeader)
+  MatrixBuilder data(Path file, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
+    data(Files.newInputStream(file), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     if (noName()) {
       String fileName = file.getFileName().toString()
       int endIdx = fileName.length()
@@ -373,7 +373,7 @@ class MatrixBuilder {
    * @param firstRowAsHeader
    * @return
    */
-  MatrixBuilder data(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
+  MatrixBuilder data(URL url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
     try (InputStream inputStream = url.openStream()) {
       String n = url.getFile() == null ? url.getPath() : url.getFile()
       if (n.contains('/')) {
@@ -382,7 +382,7 @@ class MatrixBuilder {
       if (n.contains('.')) {
         n = n.substring(0, n.lastIndexOf('.'))
       }
-      data(inputStream, delimiter, stringQuote, firstRowAsHeader)
+      data(inputStream, delimiter, stringQuote, firstRowAsHeader, nullStrings)
       if (noName()) {
         matrixName(n)
       }
@@ -402,8 +402,8 @@ class MatrixBuilder {
    * @param firstRowAsHeader if true, the first row is used as header, default is true
    * @return this builder
    */
-  MatrixBuilder data(String url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
-    data(new URI(url).toURL(), delimiter, stringQuote, firstRowAsHeader)
+  MatrixBuilder data(String url, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
+    data(new URI(url).toURL(), delimiter, stringQuote, firstRowAsHeader, nullStrings)
   }
 
   /**
@@ -416,7 +416,7 @@ class MatrixBuilder {
    * @param firstRowAsHeader
    * @return
    */
-  MatrixBuilder data(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true) {
+  MatrixBuilder data(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
     try (InputStreamReader reader = new InputStreamReader(inputStream)) {
       List<List<String>> data = []
       final boolean stripQuotes = stringQuote != ''
@@ -432,6 +432,9 @@ class MatrixBuilder {
             value = (val.replaceAll(~/^$stringQuote|$stringQuote$/, '').trim())
           } else {
             value = val.trim()
+          }
+          if (nullStrings.contains(value)) {
+            value = null
           }
           row.add(value)
         }
