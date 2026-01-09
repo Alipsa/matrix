@@ -6,15 +6,18 @@ import java.math.MathContext
 import java.math.RoundingMode
 
 /**
- * Extension methods for BigDecimal and Number to support idiomatic Groovy numeric operations.
+ * Extension methods for Number types to support idiomatic Groovy numeric operations.
  *
  * <p>This class provides extension methods that enable natural, chainable syntax for common
  * numeric operations in Groovy, particularly useful for data processing and statistical computations.
+ * All methods work seamlessly with any Number type (Integer, Long, Double, BigDecimal, etc.),
+ * automatically handling type conversions and returning BigDecimal for precision.
  *
  * <h3>Available Operations</h3>
  * <ul>
  *   <li><b>Rounding:</b> floor(), ceil() - Round to integer values as BigDecimal</li>
- *   <li><b>Logarithm:</b> log10() - Base-10 logarithm for any Number type</li>
+ *   <li><b>Logarithm:</b> log() - Natural logarithm (ln), log10() - Base-10 logarithm</li>
+ *   <li><b>Exponential:</b> exp() - Natural exponential function (e^x)</li>
  *   <li><b>Square Root:</b> sqrt() - Square root with default DECIMAL64 precision</li>
  *   <li><b>Trigonometry:</b> sin(), cos() - Sine and cosine for angles in radians</li>
  *   <li><b>Precision:</b> ulp() - Unit in the last place for epsilon calculations</li>
@@ -23,12 +26,15 @@ import java.math.RoundingMode
  *
  * <h3>Usage Examples</h3>
  * <pre>{@code
- * // Rounding operations
- * BigDecimal x = 3.7G
- * x.floor()  // → 3.0
- * x.ceil()   // → 4.0
+ * // Works with any Number type
+ * Integer i = 100
+ * i.log10()  // → 2.0
  *
- * // Logarithm
+ * Double d = 3.7
+ * d.floor()  // → 3.0
+ * d.ceil()   // → 4.0
+ *
+ * // BigDecimal for precision
  * BigDecimal value = 100G
  * value.log10()  // → 2.0
  *
@@ -57,7 +63,7 @@ import java.math.RoundingMode
  * @since 1.0
  */
 @CompileStatic
-class BigDecimalExtension {
+class NumberExtension {
 
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
@@ -80,6 +86,31 @@ class BigDecimalExtension {
   }
 
   /**
+   * Returns the natural logarithm (ln) of this number as a BigDecimal.
+   * <p>
+   * This method computes the natural logarithm (base e) of the given value.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal e = Math.E as BigDecimal
+   * e.log()  // → 1.0
+   *
+   * BigDecimal value = 10.0
+   * value.log()  // → 2.302585...
+   *
+   * // log is inverse of exp
+   * BigDecimal x = 5.0
+   * x.log().exp()  // → 5.0
+   * }</pre>
+   *
+   * @param self the Number value
+   * @return a BigDecimal representing the natural logarithm of this value
+   */
+  static BigDecimal log(Number self) {
+    return Math.log(self.doubleValue()) as BigDecimal
+  }
+
+  /**
    * Returns the base-10 logarithm (log10) of this number as a BigDecimal.
    *
    * @param self the Number value
@@ -87,6 +118,36 @@ class BigDecimalExtension {
    */
   static BigDecimal log10(Number self) {
     return Math.log10(self.doubleValue()) as BigDecimal
+  }
+
+  /**
+   * Returns Euler's number e raised to the power of this value.
+   * <p>
+   * This method provides the natural exponential function (exp), which is the inverse
+   * of the natural logarithm. It uses the power operator with Math.E as the base.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal x = 1.0G
+   * x.exp()  // → 2.718281828... (Math.E)
+   *
+   * BigDecimal x2 = 0G
+   * x2.exp()  // → 1.0
+   *
+   * BigDecimal x3 = 2.0G
+   * x3.exp()  // → 7.389056099...
+   *
+   * // Works with any Number type
+   * Integer i = 2
+   * i.exp()  // → 7.389056099...
+   * }</pre>
+   *
+   * @param self the exponent value (any Number type)
+   * @return e raised to the power of this value, as a BigDecimal
+   */
+  static BigDecimal exp(Number self) {
+    BigDecimal val = self as BigDecimal
+    return Math.E ** val
   }
 
   /**
@@ -218,10 +279,13 @@ class BigDecimalExtension {
    *
    * // Instead of the more verbose:
    * BigDecimal side = area.sqrt(MathContext.DECIMAL64)
+   *
+   * // For higher precision (e.g., in matrix-stats):
+   * BigDecimal precise = area.sqrt(MathContext.DECIMAL128)
    * }</pre>
    *
    * @param self the BigDecimal value to take the square root of
-   * @return the square root as a BigDecimal
+   * @return the square root as a BigDecimal with DECIMAL64 precision
    * @see MathContext#DECIMAL64
    */
   static BigDecimal sqrt(BigDecimal self) {

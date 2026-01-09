@@ -28,11 +28,15 @@ import se.alipsa.matrix.xchart.PieChart
 import se.alipsa.matrix.smile.SmileUtil
 import se.alipsa.matrix.smile.stats.SmileStats
 import smile.data.DataFrame
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
 
 import java.nio.charset.StandardCharsets
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * We do some basic tests for each module to verify they work together.
@@ -206,5 +210,54 @@ class MatrixModulesTest {
     def corTest = SmileStats.correlationTest(mtcars, 'mpg', 'wt')
     assertTrue(corTest.cor() < 0, "mpg and wt should be negatively correlated")
     assertTrue(corTest.pvalue() < 0.05, "Correlation should be significant")
+  }
+
+  @Test
+  void testCharts() {
+    // Test ggplot2-style charting
+    Matrix mtcars = Dataset.mtcars()
+    def chart = ggplot(mtcars, aes(x: 'wt', y: 'mpg', color: 'cyl')) +
+        geom_point() +
+        labs(title: 'MPG vs Weight')
+
+    // Verify chart is created
+    assertNotNull(chart, "Chart should be created")
+    assertNotNull(chart.data, "Chart should have data")
+    assertEquals('MPG vs Weight', chart.labels.title, "Chart should have correct title")
+
+    // Render to SVG to verify full pipeline works
+    Svg svgObj = chart.render()
+    String svg = SvgWriter.toXml(svgObj)
+    assertTrue(svg.contains('<svg'), "Output should contain SVG tag")
+    assertTrue(svg.contains('MPG vs Weight'), "SVG should contain title")
+  }
+
+  @Test
+  void testGroovyExt() {
+    // Test NumberExtension methods work with different Number types
+
+    // Test with Integer
+    Integer i = 100
+    assertEquals(2.0, i.log10().doubleValue(), 0.0001, "log10(100) should be 2")
+
+    // Test with BigDecimal (floor/ceil only work with BigDecimal)
+    BigDecimal bd = 3.7G
+    assertEquals(3.0, bd.floor().doubleValue(), 0.0001, "floor(3.7) should be 3")
+    assertEquals(4.0, bd.ceil().doubleValue(), 0.0001, "ceil(3.7) should be 4")
+
+    // Test sqrt
+    BigDecimal bd2 = 25.0G
+    assertEquals(5.0, bd2.sqrt().doubleValue(), 0.0001, "sqrt(25) should be 5")
+
+    // Test exp and log are inverses
+    BigDecimal x = 2.0
+    BigDecimal logged = x.log()
+    BigDecimal recovered = logged.exp()
+    assertEquals(x.doubleValue(), recovered.doubleValue(), 0.0001, "exp(log(x)) should equal x")
+
+    // Test trigonometric functions
+    BigDecimal angle = Math.PI / 2 as BigDecimal
+    assertEquals(1.0, angle.sin().doubleValue(), 0.0001, "sin(π/2) should be 1")
+    assertEquals(0.0, angle.cos().doubleValue(), 0.0001, "cos(π/2) should be 0")
   }
 }
