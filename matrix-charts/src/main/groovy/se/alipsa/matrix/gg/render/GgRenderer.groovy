@@ -1696,6 +1696,10 @@ class GgRenderer {
     Map guideParams = extractGuideParams(scale?.guide)
     Number angle = guideParams.angle as Number ?: 0
     boolean checkOverlap = guideParams['check.overlap'] as Boolean ?: guideParams.checkOverlap as Boolean ?: false
+    // Calculate minimum spacing based on font size if not specified
+    // Default: 4x font size to account for typical character width
+    Number fontSize = (theme.axisTextX?.size ?: 10) as Number
+    Number minSpacing = guideParams['min.spacing'] as Number ?: guideParams.minSpacing as Number ?: (fontSize.intValue() * 4)
 
     // Ticks and labels - works for both continuous and discrete scales
     List breaks = scale.getComputedBreaks()
@@ -1707,7 +1711,7 @@ class GgRenderer {
       if (xPos == null) return  // Skip if transform returns null
 
       // Check overlap if requested
-      if (checkOverlap && shouldSkipForOverlap(xPos as Number, renderedPositions as List<Number>, 40)) {
+      if (checkOverlap && shouldSkipForOverlap(xPos as Number, renderedPositions as List<Number>, minSpacing)) {
         return  // Skip this label
       }
       renderedPositions << xPos
@@ -1773,6 +1777,10 @@ class GgRenderer {
     Map guideParams = extractGuideParams(scale?.guide)
     Number angle = guideParams.angle as Number ?: 0
     boolean checkOverlap = guideParams['check.overlap'] as Boolean ?: guideParams.checkOverlap as Boolean ?: false
+    // Calculate minimum spacing based on font size if not specified
+    // Default: 2x font size for vertical spacing (labels are closer vertically)
+    Number fontSize = (theme.axisTextY?.size ?: 10) as Number
+    Number minSpacing = guideParams['min.spacing'] as Number ?: guideParams.minSpacing as Number ?: (fontSize.intValue() * 2)
 
     // Ticks and labels - works for both continuous and discrete scales
     List breaks = scale.getComputedBreaks()
@@ -1784,7 +1792,7 @@ class GgRenderer {
       if (yPos == null) return  // Skip if transform returns null
 
       // Check overlap if requested
-      if (checkOverlap && shouldSkipForOverlap(yPos as Number, renderedPositions as List<Number>, 20 as Number)) {
+      if (checkOverlap && shouldSkipForOverlap(yPos as Number, renderedPositions as List<Number>, minSpacing)) {
         return  // Skip this label
       }
       renderedPositions << yPos
