@@ -87,6 +87,8 @@ import se.alipsa.matrix.gg.scale.ScaleRadius
 import se.alipsa.matrix.gg.scale.ScaleShape
 import se.alipsa.matrix.gg.scale.ScaleShapeManual
 import se.alipsa.matrix.gg.scale.ScaleShapeBinned
+import se.alipsa.matrix.gg.scale.ScaleLinetype
+import se.alipsa.matrix.gg.scale.ScaleLinetypeManual
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.SecondaryAxis
@@ -2784,6 +2786,35 @@ class GgPlot {
    */
   static ScaleShapeManual scale_shape_manual(Map params = [:]) {
     return new ScaleShapeManual(params)
+  }
+
+  /**
+   * Linetype scale for line geometries.
+   *
+   * Available linetypes: solid, dashed, dotted, dotdash, longdash, twodash
+   *
+   * @param params optional scale parameters (name, limits, breaks, labels, linetypes)
+   */
+  static ScaleLinetype scale_linetype(Map params = [:]) {
+    return new ScaleLinetype(params)
+  }
+
+  /**
+   * Discrete linetype scale (alias for scale_linetype).
+   */
+  static ScaleLinetype scale_linetype_discrete(Map params = [:]) {
+    return new ScaleLinetype(params)
+  }
+
+  /**
+   * Manual linetype scale for custom linetype mappings.
+   *
+   * Usage:
+   * scale_linetype_manual(values: ['solid', 'dashed', 'dotted'])  // Map by order
+   * scale_linetype_manual(values: [cat1: 'solid', cat2: 'dashed'])  // Map by name
+   */
+  static ScaleLinetypeManual scale_linetype_manual(Map params = [:]) {
+    return new ScaleLinetypeManual(params)
   }
 
   static StatsBin2D stat_bin_2d() {

@@ -58,6 +58,8 @@ class Aes {
   String getColorColName() { extractColName(color) }
   String getFillColName() { extractColName(fill) }
   String getGroupColName() { extractColName(group) }
+  String getLinetypeColName() { extractColName(linetype) }
+  String getShapeColName() { extractColName(shape) }
 
   Aes() {}
 

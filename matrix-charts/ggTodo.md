@@ -259,9 +259,9 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 3.9 Linetype Scales
 
-- 3.9.1 [ ] `scale_linetype()` - Linetype scale
-- 3.9.2 [ ] `scale_linetype_discrete()` - Discrete linetype scale
-- 3.9.3 [ ] `scale_linetype_manual()` - Manual linetype mapping
+- 3.9.1 [x] `scale_linetype()` - Linetype scale
+- 3.9.2 [x] `scale_linetype_discrete()` - Discrete linetype scale
+- 3.9.3 [x] `scale_linetype_manual()` - Manual linetype mapping
 
 ### 3.10 Annotation Enhancements
 

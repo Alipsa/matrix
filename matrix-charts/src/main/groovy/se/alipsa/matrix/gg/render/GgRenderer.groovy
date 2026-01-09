@@ -33,6 +33,7 @@ import se.alipsa.matrix.gg.scale.ScaleColorViridisC
 import se.alipsa.matrix.gg.scale.ScaleContinuous
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 import se.alipsa.matrix.gg.scale.ScaleShape
+import se.alipsa.matrix.gg.scale.ScaleLinetype
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
@@ -782,6 +783,16 @@ class GgRenderer {
       scales['alpha'] = alphaScale
     }
 
+    // Create linetype scale if linetype data exists
+    if (aestheticData.linetype) {
+      Scale linetypeScale = createAutoScale('linetype', aestheticData.linetype)
+      linetypeScale.train(aestheticData.linetype)
+      if (chart.globalAes?.linetype instanceof String) {
+        linetypeScale.name = chart.globalAes.linetype as String
+      }
+      scales['linetype'] = linetypeScale
+    }
+
     // Add user-specified scales (these override auto-detected scales)
     chart.scales.each { scale ->
       if (scale.aesthetic) {
@@ -1035,6 +1046,8 @@ class GgRenderer {
         return isDiscrete ? new ScaleYDiscrete() : new ScaleYContinuous()
       case 'shape':
         return new ScaleShape()
+      case 'linetype':
+        return new ScaleLinetype()
       case 'size':
         return isDiscrete ? new se.alipsa.matrix.gg.scale.ScaleSizeDiscrete()
             : new se.alipsa.matrix.gg.scale.ScaleSizeContinuous()
@@ -1249,6 +1262,10 @@ class GgRenderer {
           String alphaCol = resolvedLayerAes.alpha as String
           data['alpha'].addAll(posData[alphaCol] ?: [])
         }
+        if (resolvedLayerAes.linetype instanceof String && posData.columnNames().contains(resolvedLayerAes.linetype as String)) {
+          String linetypeCol = resolvedLayerAes.linetype as String
+          data['linetype'].addAll(posData[linetypeCol] ?: [])
+        }
       }
     }
 
@@ -1277,6 +1294,10 @@ class GgRenderer {
       if (globalAes.alpha instanceof String && chart.data.columnNames().contains(globalAes.alpha as String)) {
         String alphaCol = globalAes.alpha as String
         data['alpha'].addAll(chart.data[alphaCol] ?: [])
+      }
+      if (globalAes.linetype instanceof String && chart.data.columnNames().contains(globalAes.linetype as String)) {
+        String linetypeCol = globalAes.linetype as String
+        data['linetype'].addAll(chart.data[linetypeCol] ?: [])
       }
     }
 
@@ -1920,7 +1941,7 @@ class GgRenderer {
     if (theme.legendPosition == 'none') return
 
     // Find scales that need legends (color, fill, size - not x, y)
-    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape', 'alpha']
+    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape', 'alpha', 'linetype']
     Map<String, Scale> legendScales = scales.findAll { k, v ->
       if (!legendAesthetics.contains(k) || !v.isTrained()) return false
       // Check appropriate domain field based on scale type
@@ -2570,7 +2591,7 @@ class GgRenderer {
     if (theme.legendPosition == 'none') return 0
 
     // Find scales that need legends
-    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape', 'alpha']
+    List<String> legendAesthetics = ['color', 'colour', 'fill', 'size', 'shape', 'alpha', 'linetype']
     Map<String, Scale> legendScales = scales.findAll { k, v ->
       legendAesthetics.contains(k) && v.isTrained()
     }
