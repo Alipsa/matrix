@@ -294,6 +294,9 @@ class FacetGrid extends Facet {
           for (int i = 0; i < cols.size() && i < valList.size(); i++) {
             valMap[cols[i]] = valList[i]
           }
+        } else if (!cols.isEmpty()) {
+          // Fallback: associate the first column with the string representation of the value
+          valMap[cols[0]] = val?.toString()
         }
         return (labeller as Labeller).label(valMap)
       }
