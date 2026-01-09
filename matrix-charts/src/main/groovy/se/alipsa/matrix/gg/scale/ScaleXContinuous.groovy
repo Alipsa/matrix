@@ -47,14 +47,18 @@ class ScaleXContinuous extends ScaleContinuous {
    */
   private ScaleXContinuous createSecondaryScale(SecondaryAxis spec) {
     ScaleXContinuous secondary = new ScaleXContinuous() {
+      // Store spec as field to avoid GC/serialization issues
+      private final SecondaryAxis secondarySpec = spec
+
       @Override
       List getComputedBreaks() {
-        // If spec has explicit breaks, inverse-transform them to primary scale units
-        // so they appear at the correct pixel positions
-        if (spec.breaks) {
-          // Explicit breaks are in secondary scale units, need to find corresponding primary values
-          // This is complex - for now, just use them as-is (user must provide in primary units)
-          return spec.breaks
+        // If spec has explicit breaks in secondary units, inverse-transform them to primary units
+        if (secondarySpec.breaks) {
+          List<BigDecimal> primaryDomain = ScaleXContinuous.this.getComputedDomain()
+          return secondarySpec.breaks.collect { secondaryBreak ->
+            // Inverse-transform from secondary to primary units
+            secondarySpec.inverseTransform(secondaryBreak, primaryDomain[0], primaryDomain[1])
+          }.findAll { it != null }  // Filter out any nulls from failed inversions
         }
         // Use the same breaks as the primary scale (in primary scale units)
         // This ensures the tick marks appear at the same positions
@@ -64,24 +68,15 @@ class ScaleXContinuous extends ScaleContinuous {
       @Override
       List<String> getComputedLabels() {
         // If spec has explicit labels, use them
-        if (spec.labels) {
-          return spec.labels
+        if (secondarySpec.labels) {
+          return secondarySpec.labels
         }
         // Transform the primary breaks to secondary scale and format
         List primaryBreaks = getComputedBreaks()
         return primaryBreaks.collect { breakVal ->
-          BigDecimal transformed = spec.applyTransform(breakVal as Number)
-          formatNumber(transformed)
+          BigDecimal transformed = secondarySpec.applyTransform(breakVal as Number)
+          ScaleXContinuous.this.formatNumber(transformed)
         }
-      }
-
-      private String formatNumber(Number n) {
-        if (n == null) return ''
-        BigDecimal bd = n instanceof BigDecimal ? n as BigDecimal : new BigDecimal(n.toString())
-        if (bd.stripTrailingZeros().scale() <= 0) {
-          return bd.toBigInteger().toString()
-        }
-        return String.format('%.2g', bd as double)
       }
     }
 

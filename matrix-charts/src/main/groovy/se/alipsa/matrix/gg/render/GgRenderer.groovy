@@ -1618,39 +1618,47 @@ class GgRenderer {
       // For flipped coords: x data appears on left axis, y data appears on bottom axis
       renderYAxis(axesGroup, scales['x'], width, height, theme)  // x scale on left (vertical)
       renderXAxis(axesGroup, scales['y'], width, height, theme)  // y scale on bottom (horizontal)
-
-      // Render secondary axes if present
-      if (scales['x'] instanceof ScaleXContinuous) {
-        ScaleXContinuous xScale = scales['x'] as ScaleXContinuous
-        xScale.updateSecondaryScale()
-        if (xScale.secAxis != null) {
-          renderYAxis(axesGroup, xScale.secAxis, width, height, theme)  // secondary x on right (vertical)
-        }
-      }
-      if (scales['y'] instanceof ScaleYContinuous) {
-        ScaleYContinuous yScale = scales['y'] as ScaleYContinuous
-        yScale.updateSecondaryScale()
-        if (yScale.secAxis != null) {
-          renderXAxis(axesGroup, yScale.secAxis, width, height, theme)  // secondary y on top (horizontal)
-        }
-      }
+      renderSecondaryAxes(axesGroup, scales, width, height, theme, true)
     } else {
       // Normal: x on bottom, y on left
       renderXAxis(axesGroup, scales['x'], width, height, theme)
       renderYAxis(axesGroup, scales['y'], width, height, theme)
+      renderSecondaryAxes(axesGroup, scales, width, height, theme, false)
+    }
+  }
 
-      // Render secondary axes if present
-      if (scales['x'] instanceof ScaleXContinuous) {
-        ScaleXContinuous xScale = scales['x'] as ScaleXContinuous
-        xScale.updateSecondaryScale()
-        if (xScale.secAxis != null) {
+  /**
+   * Render secondary axes if present.
+   *
+   * @param axesGroup The SVG group to add axes to
+   * @param scales The map of scales
+   * @param width Plot area width
+   * @param height Plot area height
+   * @param theme The theme
+   * @param isFlipped Whether coordinates are flipped
+   */
+  private void renderSecondaryAxes(G axesGroup, Map<String, Scale> scales, int width, int height, Theme theme, boolean isFlipped) {
+    // Render secondary x-axis if present
+    if (scales['x'] instanceof ScaleXContinuous) {
+      ScaleXContinuous xScale = scales['x'] as ScaleXContinuous
+      xScale.updateSecondaryScale()
+      if (xScale.secAxis != null) {
+        if (isFlipped) {
+          renderYAxis(axesGroup, xScale.secAxis, width, height, theme)  // secondary x on right (vertical)
+        } else {
           renderXAxis(axesGroup, xScale.secAxis, width, height, theme)  // secondary x on top
         }
       }
-      if (scales['y'] instanceof ScaleYContinuous) {
-        ScaleYContinuous yScale = scales['y'] as ScaleYContinuous
-        yScale.updateSecondaryScale()
-        if (yScale.secAxis != null) {
+    }
+
+    // Render secondary y-axis if present
+    if (scales['y'] instanceof ScaleYContinuous) {
+      ScaleYContinuous yScale = scales['y'] as ScaleYContinuous
+      yScale.updateSecondaryScale()
+      if (yScale.secAxis != null) {
+        if (isFlipped) {
+          renderXAxis(axesGroup, yScale.secAxis, width, height, theme)  // secondary y on top (horizontal)
+        } else {
           renderYAxis(axesGroup, yScale.secAxis, width, height, theme)  // secondary y on right
         }
       }

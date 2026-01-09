@@ -27,7 +27,11 @@ class SecondaryAxis {
   /** Labels for the breaks (optional) */
   List<String> labels
 
-  /** Guide specification for this axis (optional) */
+  /**
+   * Guide specification for this axis (optional).
+   * Currently not implemented - reserved for future use to control axis appearance.
+   * In ggplot2, this can be used to specify guide_axis() parameters.
+   */
   def guide
 
   /**
@@ -90,5 +94,84 @@ class SecondaryAxis {
     }
     BigDecimal bdValue = value as BigDecimal
     return transform.call(bdValue)
+  }
+
+  /**
+   * Numerically compute the inverse transformation for a secondary axis value.
+   * Uses binary search to find the primary value that transforms to the given secondary value.
+   * This works for monotonic transformations.
+   *
+   * @param secondaryValue Value in secondary axis units
+   * @param primaryMin Minimum value to search in primary axis units
+   * @param primaryMax Maximum value to search in primary axis units
+   * @param tolerance Tolerance for convergence (default 1e-6)
+   * @param maxIterations Maximum iterations (default 50)
+   * @return Primary axis value that transforms to secondaryValue, or null if not found
+   */
+  BigDecimal inverseTransform(Number secondaryValue, Number primaryMin, Number primaryMax,
+                              BigDecimal tolerance = 1e-6, int maxIterations = 50) {
+    if (secondaryValue == null || primaryMin == null || primaryMax == null) {
+      return null
+    }
+    if (transform == null) {
+      return secondaryValue as BigDecimal
+    }
+
+    BigDecimal target = secondaryValue as BigDecimal
+    BigDecimal min = primaryMin as BigDecimal
+    BigDecimal max = primaryMax as BigDecimal
+
+    // Check if transformation is monotonic increasing or decreasing
+    BigDecimal fMin = applyTransform(min)
+    BigDecimal fMax = applyTransform(max)
+
+    if (fMin == null || fMax == null) {
+      return null
+    }
+
+    boolean increasing = fMax > fMin
+
+    // Check if target is within range
+    if (increasing) {
+      if (target < fMin || target > fMax) {
+        return null
+      }
+    } else {
+      if (target > fMin || target < fMax) {
+        return null
+      }
+    }
+
+    // Binary search
+    for (int i = 0; i < maxIterations; i++) {
+      BigDecimal mid = (min + max) / 2
+      BigDecimal fMid = applyTransform(mid)
+
+      if (fMid == null) {
+        return null
+      }
+
+      BigDecimal diff = (fMid - target).abs()
+      if (diff < tolerance) {
+        return mid
+      }
+
+      if (increasing) {
+        if (fMid < target) {
+          min = mid
+        } else {
+          max = mid
+        }
+      } else {
+        if (fMid > target) {
+          min = mid
+        } else {
+          max = mid
+        }
+      }
+    }
+
+    // Return best approximation
+    return (min + max) / 2
   }
 }

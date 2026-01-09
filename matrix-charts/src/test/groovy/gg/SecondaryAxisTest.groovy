@@ -327,4 +327,121 @@ class SecondaryAxisTest {
     Svg svg = chart.render()
     assertNotNull(svg)
   }
+
+  @Test
+  void testSecondaryAxisWithCoordFlip() {
+    // Test secondary axes with flipped coordinates
+    Matrix mtcars = Dataset.mtcars()
+
+    def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
+      geom_point() +
+      scale_y_continuous('sec.axis': sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit")) +
+      coord_flip()
+
+    assertNotNull(chart)
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    // Check that the SVG is generated
+    String svgString = svg.toString()
+    assertTrue(svgString.contains('svg'))
+  }
+
+  @Test
+  void testDuplicateAxisWithCoordFlip() {
+    // Test duplicate axis with flipped coordinates
+    Matrix mtcars = Dataset.mtcars()
+
+    def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
+      geom_point() +
+      scale_x_continuous('sec.axis': dup_axis("HP (repeated)")) +
+      coord_flip()
+
+    assertNotNull(chart)
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.toString().contains('svg'))
+  }
+
+  @Test
+  void testBothSecondaryAxesWithCoordFlip() {
+    // Test both x and y secondary axes with flipped coordinates
+    Matrix mtcars = Dataset.mtcars()
+
+    def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
+      geom_point() +
+      scale_x_continuous('sec.axis': dup_axis("HP (repeated)")) +
+      scale_y_continuous('sec.axis': sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit")) +
+      coord_flip()
+
+    assertNotNull(chart)
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.toString().contains('svg'))
+  }
+
+  @Test
+  void testSecondaryAxisWithExplicitBreaksInSecondaryUnits() {
+    // Test that explicit breaks are specified in secondary units (e.g., Fahrenheit)
+    // and are correctly inverse-transformed to primary units (Celsius)
+    Matrix data = Matrix.builder()
+      .columnNames('celsius', 'value')
+      .columns([[0, 10, 20, 30, 40, 50], [1, 2, 3, 4, 5, 6]])
+      .build()
+
+    // Celsius to Fahrenheit: F = C * 1.8 + 32
+    // Expected breaks in Fahrenheit: [32, 68, 104] correspond to [0, 20, 40] Celsius
+    def chart = ggplot(data, aes(x: 'celsius', y: 'value')) +
+      geom_point() +
+      scale_x_continuous(
+        'sec.axis': sec_axis(
+          { it * 1.8 + 32 },
+          name: "Fahrenheit",
+          breaks: [32, 68, 104]  // These are in Fahrenheit (secondary units)
+        )
+      )
+
+    assertNotNull(chart)
+    Svg svg = chart.render()
+    assertNotNull(svg)
+
+    // The chart should render without errors
+    assertTrue(svg.toString().contains('svg'))
+  }
+
+  @Test
+  void testInverseTransformForLinearFunction() {
+    // Test the inverse transformation for a simple linear function
+    SecondaryAxis secAxis = sec_axis({ it * 2 + 10 }, name: "Doubled")
+
+    // For f(x) = 2x + 10:
+    // f(0) = 10, so inverse(10) should be ~0
+    // f(5) = 20, so inverse(20) should be ~5
+    // f(10) = 30, so inverse(30) should be ~10
+    BigDecimal result1 = secAxis.inverseTransform(10, 0, 20)
+    BigDecimal result2 = secAxis.inverseTransform(20, 0, 20)
+    BigDecimal result3 = secAxis.inverseTransform(30, 0, 20)
+
+    assertEquals(0, result1, 0.001)
+    assertEquals(5, result2, 0.001)
+    assertEquals(10, result3, 0.001)
+  }
+
+  @Test
+  void testInverseTransformForCelsiusToFahrenheit() {
+    // Test inverse transformation for Celsius to Fahrenheit
+    SecondaryAxis secAxis = sec_axis({ it * 1.8 + 32 }, name: "Fahrenheit")
+
+    // F = C * 1.8 + 32
+    // 32°F should give 0°C
+    // 68°F should give 20°C
+    // 212°F should give 100°C
+    BigDecimal result1 = secAxis.inverseTransform(32, -20, 120)
+    BigDecimal result2 = secAxis.inverseTransform(68, -20, 120)
+    BigDecimal result3 = secAxis.inverseTransform(212, -20, 120)
+
+    assertEquals(0, result1, 0.01)
+    assertEquals(20, result2, 0.01)
+    assertEquals(100, result3, 0.01)
+  }
 }
