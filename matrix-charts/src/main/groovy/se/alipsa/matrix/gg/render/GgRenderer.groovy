@@ -1776,7 +1776,7 @@ class GgRenderer {
     // Extract guide parameters
     Map guideParams = extractGuideParams(scale?.guide)
     Number angle = guideParams.angle as Number ?: 0
-    boolean checkOverlap = guideParams['check.overlap'] as Boolean ?: guideParams.checkOverlap as Boolean ?: false
+    boolean checkOverlap = (guideParams['check.overlap'] ?: guideParams.checkOverlap) as Boolean ?: false
     // Calculate minimum spacing based on font size if not specified
     // Default: 2x font size for vertical spacing (labels are closer vertically)
     Number fontSize = (theme.axisTextY?.size ?: 10) as Number
