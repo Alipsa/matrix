@@ -6,7 +6,7 @@ AmesHousing <- read.csv("https://raw.githubusercontent.com/ds4stats/r-tutorials/
 p <- ggplot(data=AmesHousing) +
       geom_histogram(mapping = aes(SalePrice/100000),
           breaks=seq(0, 7, by = 1), col="red", fill="lightblue") +
-      geom_density(mapping = aes(x=SalePrice/100000, y = (..count..)))  +
+      geom_density(mapping = aes(x=SalePrice/100000, y = after_stat(count)))  +
       labs(title="Figure 9: Housing Prices in Ames, Iowa (in $100,000)",
           x="Sale Price of Individual Homes")
 
@@ -22,7 +22,7 @@ ggsave("amesHousing_figure10.svg", plot = p)
 p <- ggplot(data=AmesHousing) +
   geom_point(aes(x=log(GrLivArea), y=log(SalePrice), color=KitchenQual),shape=2, size=2) +
   geom_smooth(aes(x=log(GrLivArea), y=log(SalePrice), color=KitchenQual),
-          method=loess, size=1) +
+          method=loess, linewidth=1) +
   labs(title="Figure 11: Housing Prices in Ames, Iowa")
 
 ggsave("amesHousing_figure11.svg", plot = p)
