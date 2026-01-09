@@ -21,6 +21,7 @@ class Transformations {
     @Override
     BigDecimal inverse(Number x) {
       if (x == null) return null
+      if (x == null) return null
       return x as BigDecimal
     }
 
