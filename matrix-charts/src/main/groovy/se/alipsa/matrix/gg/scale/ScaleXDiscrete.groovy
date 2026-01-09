@@ -32,6 +32,7 @@ class ScaleXDiscrete extends ScaleDiscrete {
     if (params.position) this.position = params.position as String
     if (params.drop != null) this.drop = params.drop as boolean
     if (params.expand) this.discreteExpand = params.expand as List<Number>
+    if (params.guide) this.guide = params.guide
   }
 
   @Override

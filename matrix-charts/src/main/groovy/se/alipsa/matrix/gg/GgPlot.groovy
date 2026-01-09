@@ -570,6 +570,50 @@ class GgPlot {
     return guide_colorbar(params)
   }
 
+  /**
+   * Suppress guide display for an aesthetic.
+   * Convenience function equivalent to using the string 'none'.
+   *
+   * Example: guides(color: guide_none())
+   *
+   * @return a Guide specification with type 'none'
+   */
+  static Guide guide_none() {
+    return new Guide('none')
+  }
+
+  /**
+   * Customize axis guide appearance and behavior.
+   *
+   * Example: scale_x_continuous(guide: guide_axis(angle: 45, 'check.overlap': true))
+   *
+   * @param params optional axis customization parameters:
+   *   - angle: Rotation angle for axis labels (default: 0)
+   *   - check.overlap (or checkOverlap): Hide overlapping labels (default: false)
+   *   - min.spacing (or minSpacing): Minimum spacing between labels in pixels for overlap checking.
+   *       Default: 4x font size for X-axis, 2x font size for Y-axis
+   *   - n.dodge (or nDodge): Number of rows for dodging labels (default: 1).
+   *       Note: This parameter is currently recognized but not yet implemented and will be ignored.
+   * @return an axis guide specification
+   */
+  static Guide guide_axis(Map params = [:]) {
+    return new Guide('axis', params)
+  }
+
+  /**
+   * Create a binned legend guide for discrete breaks.
+   * Used with binned scales to show breaks as bins rather than points.
+   *
+   * Example: guides(color: guide_bins())
+   *
+   * @param params optional binned legend options (currently experimental):
+   *   - show.limits: Intended to show labels for limits (currently not implemented/ignored)
+   * @return a binned legend guide specification
+   */
+  static Guide guide_bins(Map params = [:]) {
+    return new Guide('bins', params)
+  }
+
   // ============ Limit helpers ============
 
   /**
