@@ -196,6 +196,57 @@ class GgSaveTest {
   }
 
   @Test
+  void testGgSaveNoExtension() {
+    def svg = new Svg()
+    svg.width(200)
+    svg.height(100)
+
+    File noExtFile = tempDir.resolve("test_no_extension").toFile()
+
+    def exception = assertThrows(IllegalArgumentException.class) {
+      ggsave(noExtFile.absolutePath, svg)
+    }
+
+    assertTrue(exception.message.contains("File path must have a valid extension"),
+        "Should throw error for file without extension")
+  }
+
+  @Test
+  void testGgSaveTrailingDot() {
+    def svg = new Svg()
+    svg.width(200)
+    svg.height(100)
+
+    File trailingDotFile = tempDir.resolve("test.").toFile()
+
+    def exception = assertThrows(IllegalArgumentException.class) {
+      ggsave(trailingDotFile.absolutePath, svg)
+    }
+
+    assertTrue(exception.message.contains("File path must have a valid extension"),
+        "Should throw error for file with trailing dot but no extension")
+  }
+
+  @Test
+  void testGgSaveChartNoExtension() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 3], [3, 1]])
+        .types(Integer, Integer)
+        .build()
+
+    GgChart chart = ggplot(data, aes(x: 'x', y: 'y')) + geom_point()
+    File noExtFile = tempDir.resolve("chart_no_ext").toFile()
+
+    def exception = assertThrows(IllegalArgumentException.class) {
+      ggsave(noExtFile.absolutePath, chart)
+    }
+
+    assertTrue(exception.message.contains("File path must have a valid extension"),
+        "Should throw error for chart save without extension")
+  }
+
+  @Test
   void testGgSaveNoSvgs() {
     File svgFile = tempDir.resolve("empty.svg").toFile()
 

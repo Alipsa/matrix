@@ -511,7 +511,13 @@ class GgPlot {
     }
 
     File file = new File(filePath)
-    String extension = filePath.substring(filePath.lastIndexOf('.') + 1).toLowerCase()
+
+    // Extract and validate file extension
+    int dotIndex = filePath.lastIndexOf('.')
+    if (dotIndex == -1 || dotIndex == filePath.length() - 1) {
+      throw new IllegalArgumentException("File path must have a valid extension (.svg or .png)")
+    }
+    String extension = filePath.substring(dotIndex + 1).toLowerCase()
 
     Svg finalSvg
     if (svgs.length == 1) {
