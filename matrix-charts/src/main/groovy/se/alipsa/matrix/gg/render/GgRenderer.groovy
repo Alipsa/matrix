@@ -1692,13 +1692,25 @@ class GgRenderer {
               .stroke(theme.axisLineX?.color ?: 'black')
               .strokeWidth(theme.axisLineX?.size ?: 1)
 
+    // Extract guide parameters
+    Map guideParams = extractGuideParams(scale?.guide)
+    Number angle = guideParams.angle as Number ?: 0
+    boolean checkOverlap = guideParams['check.overlap'] as Boolean ?: guideParams.checkOverlap as Boolean ?: false
+
     // Ticks and labels - works for both continuous and discrete scales
     List breaks = scale.getComputedBreaks()
     List<String> labels = scale.getComputedLabels()
 
+    List<Double> renderedPositions = []
     breaks.eachWithIndex { breakVal, i ->
       Double xPos = scale.transform(breakVal) as Double
       if (xPos == null) return  // Skip if transform returns null
+
+      // Check overlap if requested
+      if (checkOverlap && shouldSkipForOverlap(xPos as Number, renderedPositions as List<Number>, 40 as Number)) {
+        return  // Skip this label
+      }
+      renderedPositions << xPos
 
       // Tick mark (direction depends on position)
       int tickDir = isTop ? -1 : 1
@@ -1708,11 +1720,18 @@ class GgRenderer {
       // Label (position depends on axis position)
       String label = i < labels.size() ? labels[i] : breakVal.toString()
       int labelY = isTop ? (-1 * (theme.axisTickLength ?: 5) - 3) : ((theme.axisTickLength ?: 5) + 15)
-      xAxisGroup.addText(label)
+      def text = xAxisGroup.addText(label)
                 .x(xPos)
                 .y(labelY)
-                .textAnchor('middle')
                 .fontSize(theme.axisTextX?.size ?: 10)
+
+      // Apply rotation if specified
+      if (angle != 0) {
+        text.transform("rotate($angle, $xPos, $labelY)")
+        text.textAnchor(angle > 0 ? 'end' : 'start')
+      } else {
+        text.textAnchor('middle')
+      }
     }
   }
 
@@ -1744,13 +1763,25 @@ class GgRenderer {
               .stroke(theme.axisLineY?.color ?: 'black')
               .strokeWidth(theme.axisLineY?.size ?: 1)
 
+    // Extract guide parameters
+    Map guideParams = extractGuideParams(scale?.guide)
+    Number angle = guideParams.angle as Number ?: 0
+    boolean checkOverlap = guideParams['check.overlap'] as Boolean ?: guideParams.checkOverlap as Boolean ?: false
+
     // Ticks and labels - works for both continuous and discrete scales
     List breaks = scale.getComputedBreaks()
     List<String> labels = scale.getComputedLabels()
 
+    List<Double> renderedPositions = []
     breaks.eachWithIndex { breakVal, i ->
       Double yPos = scale.transform(breakVal) as Double
       if (yPos == null) return  // Skip if transform returns null
+
+      // Check overlap if requested
+      if (checkOverlap && shouldSkipForOverlap(yPos as Number, renderedPositions as List<Number>, 20 as Number)) {
+        return  // Skip this label
+      }
+      renderedPositions << yPos
 
       // Tick mark (direction depends on position)
       int tickDir = isRight ? 1 : -1
@@ -1760,17 +1791,33 @@ class GgRenderer {
       // Label (position depends on axis position)
       String label = i < labels.size() ? labels[i] : breakVal.toString()
       if (isRight) {
-        yAxisGroup.addText(label)
+        def text = yAxisGroup.addText(label)
                   .x((theme.axisTickLength ?: 5) + 5)
                   .y(yPos + 4)
-                  .textAnchor('start')
                   .fontSize(theme.axisTextY?.size ?: 10)
+
+        // Apply rotation if specified (Y axis rotation is less common but supported)
+        if (angle != 0) {
+          int labelX = (theme.axisTickLength ?: 5) + 5
+          text.transform("rotate($angle, $labelX, $yPos)")
+          text.textAnchor(angle > 0 ? 'end' : 'start')
+        } else {
+          text.textAnchor('start')
+        }
       } else {
-        yAxisGroup.addText(label)
+        def text = yAxisGroup.addText(label)
                   .x(-1 * (theme.axisTickLength ?: 5) - 5)
                   .y(yPos + 4)
-                  .textAnchor('end')
                   .fontSize(theme.axisTextY?.size ?: 10)
+
+        // Apply rotation if specified
+        if (angle != 0) {
+          int labelX = -1 * (theme.axisTickLength ?: 5) - 5
+          text.transform("rotate($angle, $labelX, $yPos)")
+          text.textAnchor(angle > 0 ? 'start' : 'end')
+        } else {
+          text.textAnchor('end')
+        }
       }
     }
   }
@@ -2455,7 +2502,50 @@ class GgRenderer {
     if (value == 'none' || value == 'false' || value == 'null') {
       return 'none'
     }
+    // Note: 'bins' is recognized and currently rendered as 'legend'
+    // Future enhancement: implement specialized binned legend rendering
+    if (value == 'bins') {
+      return 'legend'  // Render as regular legend for now
+    }
     return value
+  }
+
+  /**
+   * Extract guide parameters from a guide specification.
+   *
+   * @param guideSpec the guide specification (can be Guide, Map, or null)
+   * @return Map of parameters (empty if none found)
+   */
+  private Map extractGuideParams(Object guideSpec) {
+    if (guideSpec == null) {
+      return [:]
+    }
+    if (guideSpec instanceof Guide) {
+      return (guideSpec as Guide).params ?: [:]
+    }
+    if (guideSpec instanceof Map) {
+      return guideSpec as Map
+    }
+    return [:]
+  }
+
+  /**
+   * Check if a position should be skipped to avoid overlap with previously rendered labels.
+   *
+   * @param position the current position to check
+   * @param renderedPositions list of previously rendered positions
+   * @param minSpacing minimum spacing between labels (in pixels)
+   * @return true if this position should be skipped
+   */
+  private boolean shouldSkipForOverlap(Number position, List<Number> renderedPositions, Number minSpacing) {
+    if (renderedPositions.isEmpty()) {
+      return false
+    }
+    BigDecimal pos = position as BigDecimal
+    BigDecimal spacing = minSpacing as BigDecimal
+    return renderedPositions.any { prev ->
+      (pos - (prev as BigDecimal)).abs() < spacing
+    }
   }
 
   /**

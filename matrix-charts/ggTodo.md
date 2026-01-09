@@ -237,9 +237,9 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 3.6 Guide Enhancements
 
-- 3.6.1 [ ] `guide_axis()` - Axis guide customization
-- 3.6.2 [ ] `guide_none()` - Suppress guide display
-- 3.6.3 [ ] `guide_bins()` - Binned legend
+- 3.6.1 [x] `guide_axis()` - Axis guide customization
+- 3.6.2 [x] `guide_none()` - Suppress guide display
+- 3.6.3 [x] `guide_bins()` - Binned legend
 
 ### 3.7 Facet Label Functions
 

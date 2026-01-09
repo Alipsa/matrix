@@ -32,6 +32,7 @@ class ScaleXContinuous extends ScaleContinuous {
     if (params.labels) this.labels = params.labels as List<String>
     if (params.position) this.position = params.position as String
     if (params.nBreaks) this.nBreaks = params.nBreaks as int
+    if (params.guide) this.guide = params.guide
 
     // Handle secondary axis specification
     if (params.sec_axis || params.secAxis || params['sec.axis']) {
