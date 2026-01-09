@@ -56,6 +56,7 @@ import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.coord.CoordTrans
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
+import se.alipsa.matrix.gg.facet.Labeller
 import se.alipsa.matrix.gg.geom.GeomAbline
 import se.alipsa.matrix.gg.geom.GeomArea
 import se.alipsa.matrix.gg.geom.GeomBar
@@ -1909,6 +1910,169 @@ class GgPlot {
    */
   static FacetGrid facet_grid(String formula) {
     return new FacetGrid(formula)
+  }
+
+  // ============ Facet Labellers ============
+
+  /**
+   * Create a labeller that displays variable values only (default).
+   *
+   * Example:
+   *   facet_wrap('category', labeller: label_value())
+   *   // Labels: "A", "B", "C"
+   *
+   * @param multiLine Whether to display multiple variables on separate lines
+   * @return Labeller that shows only values
+   */
+  static Labeller label_value(boolean multiLine = true) {
+    return new Labeller({ Map<String, Object> values ->
+      List<String> parts = values.values().collect { it?.toString() ?: '' }
+      return multiLine ? parts.join('\n') : parts.join(', ')
+    }, multiLine)
+  }
+
+  /**
+   * Create a labeller that displays both variable names and values.
+   *
+   * Example:
+   *   facet_wrap('category', labeller: label_both())
+   *   // Labels: "category: A", "category: B", "category: C"
+   *
+   * @param sep Separator between variable name and value (default: ": ")
+   * @param multiLine Whether to display multiple variables on separate lines
+   * @return Labeller that shows "var: value" format
+   */
+  static Labeller label_both(String sep = ': ', boolean multiLine = true) {
+    return new Labeller({ Map<String, Object> values ->
+      List<String> parts = values.collect { k, v -> "${k}${sep}${v?.toString() ?: ''}".toString() }
+      return multiLine ? parts.join('\n') : parts.join(', ')
+    }, multiLine)
+  }
+
+  /**
+   * Create a context-aware labeller that adapts based on faceting complexity.
+   * Uses label_value() for single-variable faceting and label_both() for multiple variables.
+   *
+   * Example:
+   *   facet_wrap('category', labeller: label_context())    // Shows: "A", "B", "C"
+   *   facet_wrap(['cat', 'type'], labeller: label_context()) // Shows: "cat: A\ntype: X"
+   *
+   * @param multiLine Whether to display multiple variables on separate lines
+   * @return Context-aware labeller
+   */
+  static Labeller label_context(boolean multiLine = true) {
+    return new Labeller({ Map<String, Object> values ->
+      if (values.size() == 1) {
+        // Single variable: use value only
+        return values.values().first()?.toString() ?: ''
+      } else {
+        // Multiple variables: use both
+        List<String> parts = values.collect { k, v -> "${k}: ${v?.toString() ?: ''}".toString() }
+        return multiLine ? parts.join('\n') : parts.join(', ')
+      }
+    }, multiLine)
+  }
+
+  /**
+   * Create a labeller that wraps long labels to a specified width.
+   *
+   * Example:
+   *   facet_wrap('long_category_name', labeller: label_wrap_gen(15))
+   *   // Wraps labels longer than 15 characters
+   *
+   * @param width Maximum width in characters before wrapping (default: 25)
+   * @param multiLine Whether to display multiple variables on separate lines
+   * @return Labeller that wraps long text
+   */
+  static Labeller label_wrap_gen(int width = 25, boolean multiLine = true) {
+    return new Labeller({ Map<String, Object> values ->
+      List<String> parts = values.values().collect { Object val ->
+        String text = val?.toString() ?: ''
+        if (text.length() <= width) {
+          return text
+        }
+        // Simple word wrapping: split into lines of max width
+        List<String> lines = []
+        String[] words = text.split(/\s+/)
+        String currentLine = ''
+        for (String word : words) {
+          if (currentLine.isEmpty()) {
+            currentLine = word
+          } else if ((currentLine.length() + 1 + word.length()) <= width) {
+            currentLine += ' ' + word
+          } else {
+            lines.add(currentLine)
+            currentLine = word
+          }
+        }
+        if (!currentLine.isEmpty()) {
+          lines.add(currentLine)
+        }
+        return lines.join('\n')
+      }
+      return multiLine ? parts.join('\n\n') : parts.join(', ')
+    }, multiLine)
+  }
+
+  /**
+   * Create a labeller for parsing labels as mathematical expressions.
+   * Note: In the current implementation, this returns labels as-is without parsing.
+   * Future versions may support plotmath-style expression rendering.
+   *
+   * Example:
+   *   facet_wrap('alpha', labeller: label_parsed())
+   *   // Future: could render Greek letter alpha
+   *
+   * @param multiLine Whether to display multiple variables on separate lines
+   * @return Labeller for parsed expressions
+   */
+  static Labeller label_parsed(boolean multiLine = true) {
+    // For now, just return the label as-is
+    // In the future, this could support expression parsing/rendering
+    return new Labeller({ Map<String, Object> values ->
+      List<String> parts = values.values().collect { it?.toString() ?: '' }
+      return multiLine ? parts.join('\n') : parts.join(', ')
+    }, multiLine)
+  }
+
+  /**
+   * Construct a composite labeller specification with different labellers for different variables.
+   *
+   * Examples:
+   *   // Use label_both for 'cyl', label_value for others
+   *   facet_grid(rows: 'cyl', cols: 'gear', labeller: labeller(cyl: label_both()))
+   *
+   *   // Different labellers for different variables
+   *   facet_grid(rows: 'cyl', cols: 'gear',
+   *              labeller: labeller(cyl: label_both(), gear: label_value()))
+   *
+   * @param params Named arguments mapping variable names to Labeller objects
+   * @param args Map that may contain '.default' for unspecified variables and '.multi_line'
+   * @return Composite labeller
+   */
+  static Labeller labeller(Map params) {
+    Map<String, Labeller> variableLabellers = [:]
+    Labeller defaultLabeller = null
+    boolean multiLine = true
+
+    params.each { key, value ->
+      if (key == '.default' || key == 'default') {
+        if (value instanceof Labeller) {
+          defaultLabeller = value as Labeller
+        }
+      } else if (key == '.multi_line' || key == 'multiLine' || key == 'multi_line') {
+        multiLine = value as boolean
+      } else if (value instanceof Labeller) {
+        variableLabellers[key as String] = value as Labeller
+      }
+    }
+
+    // Use label_value as default if not specified
+    if (defaultLabeller == null) {
+      defaultLabeller = label_value(multiLine)
+    }
+
+    return new Labeller(variableLabellers, defaultLabeller, multiLine)
   }
 
   // ============ Scales ============

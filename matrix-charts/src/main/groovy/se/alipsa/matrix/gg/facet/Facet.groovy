@@ -17,8 +17,8 @@ abstract class Facet {
   /** Whether to use fixed space for panels or let them vary */
   String space = 'fixed'  // 'fixed', 'free', 'free_x', 'free_y'
 
-  /** Label position: 'top', 'bottom', 'left', 'right', 'both' */
-  String labeller = 'value'
+  /** Labeller specification - can be a String ('value', 'both') or a Labeller object */
+  Object labeller = 'value'
 
   /** Whether to include facet strips/labels */
   boolean strip = true
@@ -69,6 +69,12 @@ abstract class Facet {
    * Get the panel title/label for display.
    */
   String getPanelLabel(Map<String, Object> panelValues) {
+    // If labeller is a Labeller object, use it
+    if (labeller instanceof Labeller) {
+      return (labeller as Labeller).label(panelValues)
+    }
+
+    // Otherwise, use string-based labelling (backward compatibility)
     if (labeller == 'value') {
       return panelValues.values().collect { it?.toString() ?: '' }.join(', ')
     } else if (labeller == 'both') {

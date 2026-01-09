@@ -58,7 +58,14 @@ class FacetGrid extends Facet {
 
     if (params.scales) this.scales = params.scales as String
     if (params.space) this.space = params.space as String
-    if (params.labeller) this.labeller = params.labeller as String
+    if (params.labeller) {
+      // Accept both String and Labeller objects
+      if (params.labeller instanceof Labeller || params.labeller instanceof String) {
+        this.labeller = params.labeller
+      } else {
+        this.labeller = params.labeller as String
+      }
+    }
     if (params.containsKey('strip')) this.strip = params.strip as boolean
     if (params.containsKey('margins')) this.margins = params.margins as boolean
     if (params.panelSpacing != null) this.panelSpacing = params.panelSpacing as int
@@ -240,6 +247,25 @@ class FacetGrid extends Facet {
       return ''
     }
     Object val = rowVals[rowIndex]
+
+    // If labeller is a Labeller object, use it
+    if (labeller instanceof Labeller) {
+      if (rows.size() == 1) {
+        return (labeller as Labeller).label(rows[0], val)
+      } else {
+        // Multiple row variables - create map
+        Map<String, Object> valMap = [:]
+        if (val instanceof List) {
+          List valList = val as List
+          for (int i = 0; i < rows.size() && i < valList.size(); i++) {
+            valMap[rows[i]] = valList[i]
+          }
+        }
+        return (labeller as Labeller).label(valMap)
+      }
+    }
+
+    // String-based labelling (backward compatibility)
     if (labeller == 'both' && rows.size() == 1) {
       return "${rows[0]}: ${val}"
     }
@@ -255,6 +281,25 @@ class FacetGrid extends Facet {
       return ''
     }
     Object val = colVals[colIndex]
+
+    // If labeller is a Labeller object, use it
+    if (labeller instanceof Labeller) {
+      if (cols.size() == 1) {
+        return (labeller as Labeller).label(cols[0], val)
+      } else {
+        // Multiple column variables - create map
+        Map<String, Object> valMap = [:]
+        if (val instanceof List) {
+          List valList = val as List
+          for (int i = 0; i < cols.size() && i < valList.size(); i++) {
+            valMap[cols[i]] = valList[i]
+          }
+        }
+        return (labeller as Labeller).label(valMap)
+      }
+    }
+
+    // String-based labelling (backward compatibility)
     if (labeller == 'both' && cols.size() == 1) {
       return "${cols[0]}: ${val}"
     }

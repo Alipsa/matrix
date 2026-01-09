@@ -57,7 +57,14 @@ class FacetWrap extends Facet {
     if (params.scales) this.scales = params.scales as String
     if (params.dir) this.dir = params.dir as String
     if (params.containsKey('drop')) this.drop = params.drop as boolean
-    if (params.labeller) this.labeller = params.labeller as String
+    if (params.labeller) {
+      // Accept both String and Labeller objects
+      if (params.labeller instanceof Labeller || params.labeller instanceof String) {
+        this.labeller = params.labeller
+      } else {
+        this.labeller = params.labeller as String
+      }
+    }
     if (params.containsKey('strip')) this.strip = params.strip as boolean
   }
 
