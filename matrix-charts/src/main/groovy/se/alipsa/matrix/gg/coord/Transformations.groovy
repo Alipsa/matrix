@@ -14,11 +14,13 @@ class Transformations {
   static class IdentityTrans implements Trans {
     @Override
     BigDecimal transform(Number x) {
+      if (x == null) return null
       return x as BigDecimal
     }
 
     @Override
     BigDecimal inverse(Number x) {
+      if (x == null) return null
       return x as BigDecimal
     }
 
