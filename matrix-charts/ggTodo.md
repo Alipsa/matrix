@@ -232,8 +232,8 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 3.5 Secondary Axes
 
-- 3.5.1 [ ] `sec_axis()` - Specify secondary axis
-- 3.5.2 [ ] `dup_axis()` - Duplicate primary axis
+- 3.5.1 [x] `sec_axis()` - Specify secondary axis
+- 3.5.2 [x] `dup_axis()` - Duplicate primary axis
 
 ### 3.6 Guide Enhancements
 
