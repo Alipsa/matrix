@@ -603,8 +603,8 @@ class GgPlot {
    *
    * Example: guides(color: guide_bins())
    *
-   * @param params optional binned legend options:
-   *   - show.limits: Show labels for the limits (default: true)
+   * @param params optional binned legend options (currently experimental):
+   *   - show.limits: Intended to show labels for limits (currently not implemented/ignored)
    * @return a binned legend guide specification
    */
   static Guide guide_bins(Map params = [:]) {
