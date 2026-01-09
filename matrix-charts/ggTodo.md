@@ -243,12 +243,12 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 3.7 Facet Label Functions
 
-- 3.7.1 [ ] `labeller()` - Construct labelling function
-- 3.7.2 [ ] `label_value()` - Label with variable value only
-- 3.7.3 [ ] `label_both()` - Label with variable name and value
-- 3.7.4 [ ] `label_context()` - Context-aware labels
-- 3.7.5 [ ] `label_parsed()` - Parse labels as expressions
-- 3.7.6 [ ] `label_wrap_gen()` - Wrap long labels
+- 3.7.1 [x] `labeller()` - Construct labelling function
+- 3.7.2 [x] `label_value()` - Label with variable value only
+- 3.7.3 [x] `label_both()` - Label with variable name and value
+- 3.7.4 [x] `label_context()` - Context-aware labels
+- 3.7.5 [x] `label_parsed()` - Parse labels as expressions
+- 3.7.6 [x] `label_wrap_gen()` - Wrap long labels
 
 ### 3.8 Shape Scales
 
