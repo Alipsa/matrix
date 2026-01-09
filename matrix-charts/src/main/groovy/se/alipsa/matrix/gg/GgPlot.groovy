@@ -2046,8 +2046,8 @@ class GgPlot {
    *   facet_grid(rows: 'cyl', cols: 'gear',
    *              labeller: labeller(cyl: label_both(), gear: label_value()))
    *
-   * @param params Named arguments mapping variable names to Labeller objects
-   * @param args Map that may contain '.default' for unspecified variables and '.multi_line'
+   * @param params Named arguments mapping variable names to Labeller objects; may contain
+   *               '.default' for unspecified variables and '.multi_line' to control multi-line labels
    * @return Composite labeller
    */
   static Labeller labeller(Map params) {
