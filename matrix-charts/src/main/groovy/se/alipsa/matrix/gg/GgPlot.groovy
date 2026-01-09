@@ -2,7 +2,6 @@ package se.alipsa.matrix.gg
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.groovy.svg.utils.SvgMerger
 import se.alipsa.matrix.gg.geom.GeomBin2d
