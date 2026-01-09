@@ -1707,7 +1707,7 @@ class GgRenderer {
       if (xPos == null) return  // Skip if transform returns null
 
       // Check overlap if requested
-      if (checkOverlap && shouldSkipForOverlap(xPos as Number, renderedPositions as List<Number>, 40 as Number)) {
+      if (checkOverlap && shouldSkipForOverlap(xPos as Number, renderedPositions as List<Number>, 40)) {
         return  // Skip this label
       }
       renderedPositions << xPos
