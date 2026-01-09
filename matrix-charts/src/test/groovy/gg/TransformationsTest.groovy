@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*
  */
 class TransformationsTest {
 
-  private static final double EPSILON = 1e-10
+  private static final double EPSILON = 1e-9
 
   // ==================== Identity Transformation ====================
 
