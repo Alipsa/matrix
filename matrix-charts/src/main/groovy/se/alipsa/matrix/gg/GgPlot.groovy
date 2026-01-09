@@ -84,6 +84,9 @@ import se.alipsa.matrix.gg.scale.ScaleSizeDiscrete
 import se.alipsa.matrix.gg.scale.ScaleSizeBinned
 import se.alipsa.matrix.gg.scale.ScaleSizeArea
 import se.alipsa.matrix.gg.scale.ScaleRadius
+import se.alipsa.matrix.gg.scale.ScaleShape
+import se.alipsa.matrix.gg.scale.ScaleShapeManual
+import se.alipsa.matrix.gg.scale.ScaleShapeBinned
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.SecondaryAxis
@@ -2749,6 +2752,38 @@ class GgPlot {
    */
   static ScaleRadius scale_radius(Map params = [:]) {
     return new ScaleRadius(params)
+  }
+
+  // --- Shape scales ---
+
+  /**
+   * Shape scale for mapped shapes.
+   *
+   * @param params optional scale parameters
+   */
+  static ScaleShape scale_shape(Map params = [:]) {
+    return new ScaleShape(params)
+  }
+
+  /**
+   * Discrete shape scale (alias for scale_shape).
+   */
+  static ScaleShape scale_shape_discrete(Map params = [:]) {
+    return new ScaleShape(params)
+  }
+
+  /**
+   * Binned shape scale for continuous data.
+   */
+  static ScaleShapeBinned scale_shape_binned(Map params = [:]) {
+    return new ScaleShapeBinned(params)
+  }
+
+  /**
+   * Manual shape scale for custom shape mappings.
+   */
+  static ScaleShapeManual scale_shape_manual(Map params = [:]) {
+    return new ScaleShapeManual(params)
   }
 
   static StatsBin2D stat_bin_2d() {
