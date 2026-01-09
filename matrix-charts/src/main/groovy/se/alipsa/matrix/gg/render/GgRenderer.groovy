@@ -1728,7 +1728,13 @@ class GgRenderer {
       // Apply rotation if specified
       if (angle != 0) {
         text.transform("rotate($angle, $xPos, $labelY)")
-        text.textAnchor(angle > 0 ? 'end' : 'start')
+        // For bottom axis: positive angles anchor at 'end', negative at 'start'.
+        // For top axis: reverse the logic so labels align visually as expected.
+        if (isTop) {
+          text.textAnchor(angle > 0 ? 'start' : 'end')
+        } else {
+          text.textAnchor(angle > 0 ? 'end' : 'start')
+        }
       } else {
         text.textAnchor('middle')
       }
