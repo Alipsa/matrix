@@ -1736,4 +1736,269 @@ class GgStat {
         .build()
   }
 
+  /**
+   * Hexagonal binning - divides the plotting area into hexagonal bins and counts observations.
+   *
+   * @param data Input matrix with x and y columns
+   * @param aes Aesthetic mappings
+   * @param params Optional parameters: bins (default 30), binwidth
+   * @return Matrix with columns: x (hex center), y (hex center), count
+   */
+  static Matrix binHex(Matrix data, Aes aes, Map params = [:]) {
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+
+    if (xCol == null || yCol == null) {
+      throw new IllegalArgumentException("stat_bin_hex requires x and y aesthetics")
+    }
+
+    // Collect numeric x,y values
+    List<BigDecimal[]> points = []
+    BigDecimal xMin = Double.MAX_VALUE
+    BigDecimal xMax = -Double.MAX_VALUE
+    BigDecimal yMin = Double.MAX_VALUE
+    BigDecimal yMax = -Double.MAX_VALUE
+
+    data.each { row ->
+      def xVal = row[xCol]
+      def yVal = row[yCol]
+
+      if (xVal instanceof Number && yVal instanceof Number) {
+        BigDecimal x = xVal as BigDecimal
+        BigDecimal y = yVal as BigDecimal
+        points << ([x, y] as BigDecimal[])
+
+        if (x < xMin) xMin = x
+        if (x > xMax) xMax = x
+        if (y < yMin) yMin = y
+        if (y > yMax) yMax = y
+      }
+    }
+
+    if (points.isEmpty()) {
+      return Matrix.builder().data([x: [], y: [], count: []]).build()
+    }
+
+    // Compute hex dimensions
+    BigDecimal xRange = xMax - xMin
+    if (xRange == 0) xRange = 1
+
+    BigDecimal hexWidth
+    if (params.binwidth != null) {
+      hexWidth = params.binwidth as BigDecimal
+    } else {
+      int bins = (params.bins as Integer) ?: 30
+      hexWidth = xRange / bins
+    }
+
+    // For regular hexagons (flat-top), height = width * sqrt(3) / 2
+    BigDecimal hexHeight = hexWidth * (Math.sqrt(3) / 2)
+
+    // Hexagon spacing
+    BigDecimal dx = hexWidth * 0.75  // horizontal spacing between hex centers
+    BigDecimal dy = hexHeight        // vertical spacing between hex centers
+
+    // Count points in each hexagon
+    Map<String, Integer> hexCounts = [:] as Map<String, Integer>
+
+    for (BigDecimal[] point : points) {
+      // Find hexagon coordinates for this point
+      int[] hexCoord = pointToHex(point[0], point[1], xMin, yMin, dx, dy)
+      String hexKey = "${hexCoord[0]},${hexCoord[1]}"
+      hexCounts[hexKey] = (hexCounts[hexKey] ?: 0) + 1
+    }
+
+    // Build result matrix
+    List<BigDecimal> xVals = []
+    List<BigDecimal> yVals = []
+    List<Integer> countVals = []
+
+    hexCounts.each { String key, Integer count ->
+      def coords = key.split(',')
+      int col = coords[0] as int
+      int row = coords[1] as int
+
+      // Calculate hexagon center
+      BigDecimal hexX = xMin + col * dx
+      BigDecimal hexY = yMin + row * dy
+
+      // Offset every other row
+      if (row % 2 == 1) {
+        hexX = hexX + dx / 2
+      }
+
+      xVals << hexX
+      yVals << hexY
+      countVals << count
+    }
+
+    return Matrix.builder()
+        .data([x: xVals, y: yVals, count: countVals])
+        .build()
+  }
+
+  /**
+   * Hexagonal summary statistics - divides the plotting area into hexagonal bins
+   * and computes summary statistics for a z variable in each bin.
+   *
+   * @param data Input matrix with x, y, and z columns
+   * @param aes Aesthetic mappings (requires x, y, and typically z or a fill aesthetic)
+   * @param params Optional parameters: bins, binwidth, fun, fun.data
+   * @return Matrix with columns: x (hex center), y (hex center), value (summary statistic)
+   */
+  static Matrix summaryHex(Matrix data, Aes aes, Map params = [:]) {
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+    String zCol = aes.fillColName ?: aes.colorColName
+
+    if (xCol == null || yCol == null) {
+      throw new IllegalArgumentException("stat_summary_hex requires x and y aesthetics")
+    }
+    if (zCol == null) {
+      throw new IllegalArgumentException("stat_summary_hex requires fill or color aesthetic for the summary variable")
+    }
+
+    // Collect numeric x,y,z values
+    List<Map<String, BigDecimal>> points = []
+    BigDecimal xMin = Double.MAX_VALUE
+    BigDecimal xMax = -Double.MAX_VALUE
+    BigDecimal yMin = Double.MAX_VALUE
+    BigDecimal yMax = -Double.MAX_VALUE
+
+    data.each { row ->
+      def xVal = row[xCol]
+      def yVal = row[yCol]
+      def zVal = row[zCol]
+
+      if (xVal instanceof Number && yVal instanceof Number && zVal instanceof Number) {
+        BigDecimal x = xVal as BigDecimal
+        BigDecimal y = yVal as BigDecimal
+        BigDecimal z = zVal as BigDecimal
+        points << [x: x, y: y, z: z]
+
+        if (x < xMin) xMin = x
+        if (x > xMax) xMax = x
+        if (y < yMin) yMin = y
+        if (y > yMax) yMax = y
+      }
+    }
+
+    if (points.isEmpty()) {
+      return Matrix.builder().data([x: [], y: [], value: []]).build()
+    }
+
+    // Compute hex dimensions
+    BigDecimal xRange = xMax - xMin
+    if (xRange == 0) xRange = 1
+
+    BigDecimal hexWidth
+    if (params.binwidth != null) {
+      hexWidth = params.binwidth as BigDecimal
+    } else {
+      int bins = (params.bins as Integer) ?: 30
+      hexWidth = xRange / bins
+    }
+
+    // For regular hexagons (flat-top), height = width * sqrt(3) / 2
+    BigDecimal hexHeight = hexWidth * (Math.sqrt(3) / 2)
+
+    // Hexagon spacing
+    BigDecimal dx = hexWidth * 0.75
+    BigDecimal dy = hexHeight
+
+    // Group points by hexagon
+    Map<String, List<BigDecimal>> hexValues = [:].withDefault { [] }
+
+    for (Map<String, BigDecimal> point : points) {
+      // Find hexagon coordinates for this point
+      int[] hexCoord = pointToHex(point.x, point.y, xMin, yMin, dx, dy)
+      String hexKey = "${hexCoord[0]},${hexCoord[1]}"
+      hexValues[hexKey] << point.z
+    }
+
+    // Compute summaries for each bin
+    String funType = params.fun as String ?: 'mean'
+    Closure<Map<String, Number>> funData = params.'fun.data' as Closure<Map<String, Number>>
+
+    List<BigDecimal> xVals = []
+    List<BigDecimal> yVals = []
+    List<BigDecimal> valueVals = []
+
+    hexValues.each { String key, List<BigDecimal> zValues ->
+      if (zValues.isEmpty()) return
+
+      def coords = key.split(',')
+      int col = coords[0] as int
+      int row = coords[1] as int
+
+      // Calculate hexagon center
+      BigDecimal hexX = xMin + col * dx
+      BigDecimal hexY = yMin + row * dy
+
+      // Offset every other row
+      if (row % 2 == 1) {
+        hexX = hexX + dx / 2
+      }
+
+      xVals << hexX
+      yVals << hexY
+
+      // Compute summary
+      if (funData) {
+        // Custom function
+        Map<String, Number> result = funData.call(zValues)
+        Number value = result.y ?: result.value ?: 0
+        valueVals << (value as BigDecimal)
+      } else {
+        // Standard summary function
+        BigDecimal summary
+        switch (funType) {
+          case 'mean':
+            summary = Stat.mean(zValues)
+            break
+          case 'median':
+            summary = Stat.median(zValues)
+            break
+          case 'sum':
+            summary = Stat.sum(zValues)
+            break
+          case 'min':
+            summary = zValues.min()
+            break
+          case 'max':
+            summary = zValues.max()
+            break
+          default:
+            throw new IllegalArgumentException("Unknown summary function: $funType")
+        }
+        valueVals << summary
+      }
+    }
+
+    return Matrix.builder()
+        .data([x: xVals, y: yVals, value: valueVals])
+        .build()
+  }
+
+  /**
+   * Convert a point to hexagon grid coordinates.
+   * Returns [col, row] in the hexagonal grid.
+   */
+  private static int[] pointToHex(BigDecimal x, BigDecimal y, BigDecimal xMin, BigDecimal yMin,
+                                   BigDecimal dx, BigDecimal dy) {
+    BigDecimal relX = x - xMin
+    BigDecimal relY = y - yMin
+
+    // Approximate column and row
+    int row = (relY / dy).round() as int
+    int col = (relX / dx).round() as int
+
+    // Adjust column for odd rows
+    if (row % 2 == 1) {
+      col = ((relX - dx / 2) / dx).round() as int
+    }
+
+    return [col, row] as int[]
+  }
+
 }

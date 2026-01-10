@@ -288,8 +288,8 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.2 Hexagonal Binning
 
-- 4.2.1 [ ] `stat_bin_hex()` - Hexagonal binning statistics
-- 4.2.2 [ ] `stat_summary_hex()` - Hexagonal summary statistics
+- 4.2.1 [x] `stat_bin_hex()` - Hexagonal binning statistics
+- 4.2.2 [x] `stat_summary_hex()` - Hexagonal summary statistics
 
 ### 4.3 Quantile Regression
 

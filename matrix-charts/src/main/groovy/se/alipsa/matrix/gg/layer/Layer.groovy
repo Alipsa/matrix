@@ -65,6 +65,10 @@ enum StatType {
     DENSITY_2D,
     /** 2D binning */
     BIN2D,
+    /** Hexagonal binning */
+    BIN_HEX,
+    /** Hexagonal summary statistics */
+    SUMMARY_HEX,
     /** Contour computation */
     CONTOUR,
     /** Empirical cumulative distribution function */

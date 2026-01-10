@@ -880,4 +880,106 @@ class GgPlotTest {
         println("Wrote coord_trans asn plot to ${outputFile.absolutePath}")
     }
 
+    @Test
+    void testStatBinHex() {
+        // Test hexagonal binning stat with random data
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows((1..200).collect { [Math.random() * 10, Math.random() * 10] })
+            .build()
+
+        def chart = ggplot(data, aes('x', 'y')) +
+            stat_bin_hex(bins: 10) +
+            geom_point(size: 2, alpha: 0.5) +
+            labs(title: 'stat_bin_hex Test')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+        assertTrue(svgContent.contains('<path') || svgContent.contains('<circle'),
+                   "Should contain path elements for hexagons or circle elements for points")
+
+        File outputFile = new File('build/test_stat_bin_hex.svg')
+        write(svg, outputFile)
+        println("Wrote stat_bin_hex plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testStatBinHexWithMtcars() {
+        // Test hexagonal binning with mtcars dataset
+        def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
+            stat_bin_hex(bins: 8) +
+            labs(title: 'Hexagonal Binning: HP vs MPG')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        File outputFile = new File('build/test_stat_bin_hex_mtcars.svg')
+        write(svg, outputFile)
+        println("Wrote stat_bin_hex mtcars plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testStatSummaryHex() {
+        // Test hexagonal summary stat - compute mean of z in each hex bin
+        def data = Matrix.builder()
+            .columnNames(['x', 'y', 'z'])
+            .rows((1..200).collect {
+                def x = Math.random() * 10
+                def y = Math.random() * 10
+                def z = x + y + (Math.random() * 2 - 1) // z correlates with x+y plus noise
+                [x, y, z]
+            })
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y', fill: 'z')) +
+            stat_summary_hex(bins: 8, fun: 'mean') +
+            labs(title: 'stat_summary_hex Test - Mean Z value')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        File outputFile = new File('build/test_stat_summary_hex.svg')
+        write(svg, outputFile)
+        println("Wrote stat_summary_hex plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testStatSummaryHexWithMtcars() {
+        // Test hexagonal summary with mtcars - mean weight in hp/mpg bins
+        def chart = ggplot(mtcars, aes(x: 'hp', y: 'mpg', fill: 'wt')) +
+            stat_summary_hex(bins: 6, fun: 'mean') +
+            labs(title: 'Hexagonal Summary: Mean Weight by HP/MPG')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        File outputFile = new File('build/test_stat_summary_hex_mtcars.svg')
+        write(svg, outputFile)
+        println("Wrote stat_summary_hex mtcars plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
+    void testStatSummaryHexMedian() {
+        // Test hexagonal summary with median function
+        def data = Matrix.builder()
+            .columnNames(['x', 'y', 'value'])
+            .rows((1..150).collect {
+                [Math.random() * 5, Math.random() * 5, Math.random() * 100]
+            })
+            .build()
+
+        def chart = ggplot(data, aes(x: 'x', y: 'y', fill: 'value')) +
+            stat_summary_hex(bins: 6, fun: 'median') +
+            labs(title: 'Hexagonal Summary: Median Values')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        File outputFile = new File('build/test_stat_summary_hex_median.svg')
+        write(svg, outputFile)
+        println("Wrote stat_summary_hex median plot to ${outputFile.absolutePath}")
+    }
+
 }

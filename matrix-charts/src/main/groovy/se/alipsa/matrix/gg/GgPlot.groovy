@@ -114,6 +114,7 @@ import se.alipsa.matrix.gg.scale.ScaleXDatetime
 import se.alipsa.matrix.gg.scale.ScaleYDatetime
 import se.alipsa.matrix.gg.stat.StatsBin2D
 import se.alipsa.matrix.gg.stat.StatsBin
+import se.alipsa.matrix.gg.stat.StatsBinHex
 import se.alipsa.matrix.gg.stat.StatsBoxplot
 import se.alipsa.matrix.gg.stat.StatsContour
 import se.alipsa.matrix.gg.stat.StatsContourFilled
@@ -126,6 +127,7 @@ import se.alipsa.matrix.gg.stat.StatsSfCoordinates
 import se.alipsa.matrix.gg.stat.StatsSmooth
 import se.alipsa.matrix.gg.stat.StatsSum
 import se.alipsa.matrix.gg.stat.StatsSummaryBin
+import se.alipsa.matrix.gg.stat.StatsSummaryHex
 import se.alipsa.matrix.gg.stat.StatsUnique
 import se.alipsa.matrix.gg.stat.StatsYDensity
 import se.alipsa.matrix.gg.stat.StatsEcdf
@@ -3067,6 +3069,17 @@ class GgPlot {
     return new StatsBin2D()
   }
 
+  /**
+   * Create a hexagonal binning stat.
+   * Divides the plotting area into hexagonal bins and counts observations in each bin.
+   *
+   * @param params stat parameters (bins, binwidth)
+   * @return StatsBinHex instance
+   */
+  static StatsBinHex stat_bin_hex(Map params = [:]) {
+    return new StatsBinHex(params)
+  }
+
   static StatsBoxplot stat_boxplot() {
     return new StatsBoxplot()
   }
@@ -3162,6 +3175,17 @@ class GgPlot {
    */
   static StatsSummaryBin stat_summary_bin(Map params = [:]) {
     return new StatsSummaryBin(params)
+  }
+
+  /**
+   * Create a hexagonal summary stat.
+   * Divides the plotting area into hexagonal bins and computes summary statistics for each bin.
+   *
+   * @param params stat parameters (bins, binwidth, fun, fun.data)
+   * @return StatsSummaryHex instance
+   */
+  static StatsSummaryHex stat_summary_hex(Map params = [:]) {
+    return new StatsSummaryHex(params)
   }
 
   /**
