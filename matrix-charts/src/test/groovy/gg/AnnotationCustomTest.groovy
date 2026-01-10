@@ -203,4 +203,31 @@ class AnnotationCustomTest {
     assertTrue(svgContent.contains('<circle'))
     assertTrue(svgContent.contains('<text'))
   }
+
+  @Test
+  void testCustomMalformedSvgString() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 1], [2, 2], [3, 3]])
+        .build()
+
+    // Test with malformed SVG markup (unclosed tag)
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        annotation_custom(
+            grob: '<rect width="100" height="50"',  // Missing closing >
+            xmin: 1, xmax: 2, ymin: 1, ymax: 2
+        )
+
+    assertNotNull(chart)
+
+    // Rendering should throw IllegalArgumentException with helpful message
+    def exception = assertThrows(IllegalArgumentException) {
+      chart.render()
+    }
+
+    assertTrue(exception.message.contains('Failed to parse SVG string'))
+    assertTrue(exception.message.contains('annotation_custom'))
+    assertTrue(exception.message.contains('valid'))
+  }
 }

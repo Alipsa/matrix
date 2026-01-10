@@ -131,6 +131,9 @@ class GeomLogticks extends Geom {
   /**
    * Generate tick positions for logarithmic scale.
    * Returns list of maps with 'value' (in data space) and 'type' (major/intermediate/minor).
+   *
+   * For base 2 and other small bases (< 4), only major ticks are generated because
+   * there are no intermediate integer multiples between powers.
    */
   private List<Map> generateLogTickPositions(BigDecimal logMin, BigDecimal logMax, int base) {
     List<Map> ticks = []
@@ -147,12 +150,16 @@ class GeomLogticks extends Geom {
       }
 
       // Intermediate and minor ticks (multiples of base^pow)
-      for (int mult = 2; mult < base; mult++) {
-        BigDecimal value = mult * (base ** pow)
-        BigDecimal logValue = value.log(base)
-        if (logValue >= logMin && logValue <= logMax) {
-          String type = (mult == 2 || mult == 5) ? 'intermediate' : 'minor'
-          ticks << [value: value, type: type]
+      // Only generate for bases >= 4 where intermediate multiples exist
+      // For base 2 or 3, there are no meaningful intermediate/minor ticks
+      if (base >= 4) {
+        for (int mult = 2; mult < base; mult++) {
+          BigDecimal value = mult * (base ** pow)
+          BigDecimal logValue = value.log(base)
+          if (logValue >= logMin && logValue <= logMax) {
+            String type = (mult == 2 || mult == 5) ? 'intermediate' : 'minor'
+            ticks << [value: value, type: type]
+          }
         }
       }
     }

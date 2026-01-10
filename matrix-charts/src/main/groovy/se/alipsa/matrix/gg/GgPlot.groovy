@@ -641,12 +641,20 @@ class GgPlot {
    * The custom annotation does not affect scale limits and remains static across facets.
    * Position defaults (-Inf/Inf) fill the entire plot panel.
    *
-   * Example with Closure:
+   * IMPORTANT: The bounds map contains DATA-SPACE coordinates (xmin, xmax, ymin, ymax),
+   * not pixel coordinates. To position elements in pixel space, transform the data
+   * coordinates using the scales parameter:
+   *
+   * Example with proper coordinate transformation:
    * annotation_custom(
-   *   grob: { G g, Map bounds ->
-   *     g.addRect().x(bounds.xmin as int).y(bounds.ymin as int)
-   *       .width((bounds.xmax - bounds.xmin) as int)
-   *       .height((bounds.ymax - bounds.ymin) as int)
+   *   grob: { G g, Map bounds, Map scales ->
+   *     // Transform data coordinates to pixel coordinates
+   *     def x1 = scales['x'].transform(bounds.xmin) as int
+   *     def x2 = scales['x'].transform(bounds.xmax) as int
+   *     def y1 = scales['y'].transform(bounds.ymin) as int
+   *     def y2 = scales['y'].transform(bounds.ymax) as int
+   *     g.addRect().x(x1).y(y1)
+   *       .width(x2 - x1).height(y2 - y1)
    *       .fill('red').addAttribute('opacity', 0.2)
    *   },
    *   xmin: 1, xmax: 3, ymin: 5, ymax: 10

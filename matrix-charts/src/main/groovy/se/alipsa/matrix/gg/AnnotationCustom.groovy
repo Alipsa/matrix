@@ -51,10 +51,16 @@ import se.alipsa.matrix.gg.layer.StatType
  *
  * Parameters:
  * - grob: (required) Closure, SvgElement, or String containing SVG markup
- * - xmin: minimum x position (default: -Inf, fills from left edge)
- * - xmax: maximum x position (default: Inf, fills to right edge)
- * - ymin: minimum y position (default: -Inf, fills from bottom edge)
- * - ymax: maximum y position (default: Inf, fills to top edge)
+ * - xmin: minimum x position in data coordinates (default: -Inf, fills from left edge)
+ * - xmax: maximum x position in data coordinates (default: Inf, fills to right edge)
+ * - ymin: minimum y position in data coordinates (default: -Inf, fills from lower values)
+ * - ymax: maximum y position in data coordinates (default: Inf, fills to higher values)
+ *
+ * Note: Position parameters are in DATA-SPACE coordinates, not pixel/screen coordinates.
+ * The coordinate system follows standard plotting conventions where:
+ * - x increases from left to right
+ * - y increases from bottom to top in data space (though rendered top-to-bottom in SVG)
+ * For pixel-level control, use a Closure grob and transform coordinates via the scales parameter.
  */
 @CompileStatic
 class AnnotationCustom {

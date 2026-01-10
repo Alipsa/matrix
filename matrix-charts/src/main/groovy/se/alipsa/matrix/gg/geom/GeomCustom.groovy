@@ -92,13 +92,14 @@ class GeomCustom extends Geom {
 
   /**
    * Get position value from data matrix.
+   * Returns INFINITY_MARKER for missing or null values to indicate infinite bounds.
    */
   private static BigDecimal getPositionValue(Matrix data, String colName, int rowIdx) {
     if (data == null || !data.columnNames().contains(colName)) {
-      return Double.NEGATIVE_INFINITY as BigDecimal
+      return -se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
     }
     Object value = data[colName][rowIdx]
-    if (value == null) return Double.NEGATIVE_INFINITY as BigDecimal
+    if (value == null) return -se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
     return value as BigDecimal
   }
 
@@ -135,13 +136,16 @@ class GeomCustom extends Geom {
    * Render a gsvg SvgElement.
    * The element is cloned into the group with positioning transform.
    * Uses gsvg 0.5.0's element.clone() capability for proper element copying.
+   *
+   * Note: The bounds map contains data-space coordinates. For pixel-based positioning,
+   * users should transform coordinates using scales in their closure-based grobs.
+   * SvgElements are positioned at the data-space origin without transformation.
    */
   private static void renderSvgElement(G group, SvgElement element, Map<String, BigDecimal> bounds) {
-    // Create a nested group with positioning
+    // Create a nested group for the custom content
+    // Note: We don't apply transform here because SvgElements typically have their own
+    // internal coordinate system. Users can wrap in a closure if transformation is needed.
     G customGroup = group.addG()
-    BigDecimal xPos = bounds.xmin
-    BigDecimal yPos = bounds.ymin
-    customGroup.addAttribute('transform', "translate(${xPos as int},${yPos as int})")
 
     // Clone the element into the custom group to avoid modifying the original
     element.clone(customGroup)
@@ -151,13 +155,12 @@ class GeomCustom extends Geom {
    * Render raw SVG string.
    * Parses the SVG markup and inserts it into the group with positioning transform.
    * Uses gsvg 0.5.0's SvgReader.parse() capability for parsing SVG strings.
+   *
+   * @throws IllegalArgumentException if the SVG markup is malformed or cannot be parsed
    */
   private static void renderSvgString(G group, String svgString, Map<String, BigDecimal> bounds) {
-    // Create a nested group with positioning
+    // Create a nested group for the custom content
     G customGroup = group.addG()
-    BigDecimal xPos = bounds.xmin
-    BigDecimal yPos = bounds.ymin
-    customGroup.addAttribute('transform', "translate(${xPos as int},${yPos as int})")
 
     // Wrap the SVG string in a proper SVG document if it's not already wrapped
     String wrappedSvg = svgString.trim()
@@ -165,11 +168,18 @@ class GeomCustom extends Geom {
       wrappedSvg = "<svg xmlns=\"http://www.w3.org/2000/svg\">${wrappedSvg}</svg>"
     }
 
-    // Parse the SVG string using gsvg's SvgReader
-    Svg parsedSvg = SvgReader.parse(wrappedSvg)
+    try {
+      // Parse the SVG string using gsvg's SvgReader
+      Svg parsedSvg = SvgReader.parse(wrappedSvg)
 
-    // Clone the parsed SVG directly into the custom group
-    // The clone() method will copy all child elements
-    parsedSvg.clone(customGroup)
+      // Clone the parsed SVG directly into the custom group
+      // The clone() method will copy all child elements
+      parsedSvg.clone(customGroup)
+    } catch (Exception e) {
+      throw new IllegalArgumentException(
+          "Failed to parse SVG string for annotation_custom. " +
+          "Please check that the SVG markup is valid. " +
+          "Error: ${e.message}", e)
+    }
   }
 }
