@@ -13,7 +13,8 @@ import se.alipsa.matrix.gg.layer.StatType
  *
  * The grob can be:
  * - A Closure that receives (G group, Map bounds) or (G group, Map bounds, Map scales, Coord coord) and renders SVG
- * - A gsvg SvgElement (Rect, Circle, etc.) - **Note:** Full support pending
+ * - A gsvg SvgElement (Rect, Circle, etc.) that will be cloned into position
+ * - A String containing raw SVG markup that will be parsed and inserted
  *
  * Position parameters (xmin, xmax, ymin, ymax) support infinite values:
  * - -Inf/Inf are replaced with the full panel extent
@@ -21,8 +22,9 @@ import se.alipsa.matrix.gg.layer.StatType
  *
  * The custom annotation does not affect scale training or axis limits.
  *
- * Usage:
+ * Usage examples:
  * <pre>{@code
+ * // Closure-based grob (recommended for complex graphics)
  * def chart = ggplot(data, aes('x', 'y')) +
  *   geom_point() +
  *   annotation_custom(
@@ -37,17 +39,22 @@ import se.alipsa.matrix.gg.layer.StatType
  *     },
  *     xmin: 1, xmax: 3, ymin: 5, ymax: 10
  *   )
+ *
+ * // SVG string grob
+ * def chart2 = ggplot(data, aes('x', 'y')) +
+ *   geom_point() +
+ *   annotation_custom(
+ *     grob: '<rect width="100" height="50" fill="blue" opacity="0.3"/>',
+ *     xmin: 2, xmax: 4, ymin: 3, ymax: 7
+ *   )
  * }</pre>
  *
  * Parameters:
- * - grob: (required) Closure that renders SVG elements
+ * - grob: (required) Closure, SvgElement, or String containing SVG markup
  * - xmin: minimum x position (default: -Inf, fills from left edge)
  * - xmax: maximum x position (default: Inf, fills to right edge)
  * - ymin: minimum y position (default: -Inf, fills from bottom edge)
  * - ymax: maximum y position (default: Inf, fills to top edge)
- *
- * Note: Future versions may support additional grob types (gsvg SvgElement, SVG strings).
- * Currently, Closure-based grobs provide full flexibility for custom rendering.
  */
 @CompileStatic
 class AnnotationCustom {

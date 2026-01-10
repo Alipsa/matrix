@@ -145,4 +145,62 @@ class AnnotationCustomTest {
 
     assertTrue(exception.message.contains('grob'))
   }
+
+  @Test
+  void testCustomSvgString() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 1], [2, 2], [3, 3], [4, 4]])
+        .build()
+
+    // Test with SVG string grob
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        annotation_custom(
+            grob: '<rect width="100" height="50" fill="purple" opacity="0.4"/>',
+            xmin: 1.5, xmax: 3.5, ymin: 1.5, ymax: 3.5
+        )
+
+    assertNotNull(chart)
+    assertEquals(2, chart.layers.size())
+
+    // Render to ensure SVG string parsing works
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    String svgContent = SvgWriter.toXml(svg)
+    assertTrue(svgContent.contains('<rect'))
+    assertTrue(svgContent.contains('purple'))
+  }
+
+  @Test
+  void testCustomSvgStringComplex() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 1], [2, 2], [3, 3]])
+        .build()
+
+    // Test with more complex SVG markup containing multiple elements
+    def svgMarkup = '''
+      <g>
+        <circle cx="50" cy="50" r="20" fill="red"/>
+        <text x="50" y="50" text-anchor="middle" fill="white">Test</text>
+      </g>
+    '''
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        annotation_custom(
+            grob: svgMarkup,
+            xmin: 1, xmax: 2, ymin: 1, ymax: 2
+        )
+
+    assertNotNull(chart)
+
+    // Render and verify
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    String svgContent = SvgWriter.toXml(svg)
+    assertTrue(svgContent.contains('<circle'))
+    assertTrue(svgContent.contains('<text'))
+  }
 }

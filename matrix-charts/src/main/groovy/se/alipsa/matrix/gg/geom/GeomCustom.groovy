@@ -2,7 +2,9 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.SvgElement
+import se.alipsa.groovy.svg.io.SvgReader
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
@@ -11,18 +13,19 @@ import se.alipsa.matrix.gg.scale.Scale
 
 /**
  * Custom graphical object (grob) geometry.
- * Renders custom SVG elements via closures at specified positions.
+ * Renders custom SVG elements via closures, SvgElements, or SVG strings at specified positions.
  *
  * The grob is positioned within bounds (xmin, xmax, ymin, ymax) and does not affect scale limits.
  * Infinite bounds (-Inf/Inf) are replaced with the full panel extent.
  *
- * Currently supported grob types:
- * - Closure: Full support for rendering custom SVG via gsvg API
- * - SvgElement: Partial support (may require gsvg 0.5.0 enhancements)
- * - String: Not yet implemented (planned for future release)
+ * Supported grob types:
+ * - Closure: Flexible rendering using gsvg API (recommended for complex graphics)
+ * - SvgElement: Direct gsvg elements (cloned into position)
+ * - String: Raw SVG markup (parsed and inserted)
  *
  * Usage:
- * - annotation_custom(grob: { G g, Map b -> g.addRect()... }, xmin: 1, xmax: 3, ymin: 5, ymax: 10)
+ * - Closure: annotation_custom(grob: { G g, Map b -> g.addRect()... }, xmin: 1, xmax: 3, ymin: 5, ymax: 10)
+ * - String: annotation_custom(grob: '<rect width="100" height="50" fill="red"/>', xmin: 1, xmax: 3)
  */
 @CompileStatic
 class GeomCustom extends Geom {
@@ -77,17 +80,13 @@ class GeomCustom extends Geom {
     if (grob instanceof Closure) {
       renderClosure(group, grob as Closure, bounds, scales, coord)
     } else if (grob instanceof SvgElement) {
-      // SvgElement support requires gsvg 0.5.0 enhancements
       renderSvgElement(group, grob as SvgElement, bounds)
     } else if (grob instanceof String) {
-      // SVG string parsing not yet implemented
-      throw new UnsupportedOperationException(
-          "SVG string grobs are not yet supported. " +
-          "Please use a Closure-based grob instead.")
+      renderSvgString(group, grob as String, bounds)
     } else {
       throw new IllegalArgumentException(
           "Unsupported grob type: ${grob.class.name}. " +
-          "Expected Closure (or SvgElement with limitations).")
+          "Expected Closure, SvgElement, or String.")
     }
   }
 
@@ -134,10 +133,8 @@ class GeomCustom extends Geom {
 
   /**
    * Render a gsvg SvgElement.
-   * The element is added to the group with positioning transform.
-   *
-   * Note: This implementation may require enhancements based on gsvg 0.5.0 capabilities.
-   * Consider investigating gsvg's built-in methods for copying/cloning SVG elements.
+   * The element is cloned into the group with positioning transform.
+   * Uses gsvg 0.5.0's element.clone() capability for proper element copying.
    */
   private static void renderSvgElement(G group, SvgElement element, Map<String, BigDecimal> bounds) {
     // Create a nested group with positioning
@@ -146,24 +143,33 @@ class GeomCustom extends Geom {
     BigDecimal yPos = bounds.ymin
     customGroup.addAttribute('transform', "translate(${xPos as int},${yPos as int})")
 
-    // TODO: Investigate gsvg 0.5.0 capabilities for proper element copying
-    // The gsvg library may provide built-in support for this operation
-    customGroup.add(element)
+    // Clone the element into the custom group to avoid modifying the original
+    element.clone(customGroup)
   }
 
   /**
    * Render raw SVG string.
-   * Not yet implemented - proper SVG parsing is required.
-   *
-   * Future implementation should investigate gsvg 0.5.0 capabilities for:
-   * - Parsing SVG strings into elements
-   * - Copying entire SVG content to a new node
-   *
-   * For now, this throws UnsupportedOperationException (see render method).
+   * Parses the SVG markup and inserts it into the group with positioning transform.
+   * Uses gsvg 0.5.0's SvgReader.parse() capability for parsing SVG strings.
    */
   private static void renderSvgString(G group, String svgString, Map<String, BigDecimal> bounds) {
-    throw new UnsupportedOperationException(
-        "SVG string rendering requires proper SVG parsing implementation. " +
-        "Use Closure-based grobs for custom rendering.")
+    // Create a nested group with positioning
+    G customGroup = group.addG()
+    BigDecimal xPos = bounds.xmin
+    BigDecimal yPos = bounds.ymin
+    customGroup.addAttribute('transform', "translate(${xPos as int},${yPos as int})")
+
+    // Wrap the SVG string in a proper SVG document if it's not already wrapped
+    String wrappedSvg = svgString.trim()
+    if (!wrappedSvg.startsWith('<svg')) {
+      wrappedSvg = "<svg xmlns=\"http://www.w3.org/2000/svg\">${wrappedSvg}</svg>"
+    }
+
+    // Parse the SVG string using gsvg's SvgReader
+    Svg parsedSvg = SvgReader.parse(wrappedSvg)
+
+    // Clone the parsed SVG directly into the custom group
+    // The clone() method will copy all child elements
+    parsedSvg.clone(customGroup)
   }
 }
