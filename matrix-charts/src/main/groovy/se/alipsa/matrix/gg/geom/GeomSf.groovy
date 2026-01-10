@@ -69,8 +69,9 @@ class GeomSf extends Geom {
     // Check for stat_sf preprocessing
     if (!data.columnNames().contains('__sf_type')) {
       throw new IllegalStateException(
-          "geom_sf requires stat_sf - data must contain '__sf_type' column. " +
-          "Ensure stat='sf' is set or use stat_sf() explicitly.")
+          "geom_sf requires geometry data processed by stat_sf. " +
+          "The data is missing the '__sf_type' column. " +
+          "If using stat='identity', change to stat='sf' or remove the stat parameter.")
     }
 
     Aes resolvedAes = resolveAes(aes)

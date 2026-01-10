@@ -146,8 +146,8 @@ class GeomSfTest {
   }
 
   @Test
-  void testGeomMapUnmatchedIdsWarning() {
-    // Data has ID 'B' which doesn't exist in map - should warn but still render
+  void testGeomMapUnmatchedIds() {
+    // Data has ID 'B' which doesn't exist in map - rendering should still succeed
     def mapData = Matrix.builder()
         .data([
             x: [0, 1, 1, 0, 0],

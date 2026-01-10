@@ -38,7 +38,7 @@ class CoordMap extends CoordTrans {
         })
         this.yTrans = Transformations.fromClosures({ Number y ->
           double lat = y as double
-          // Clamp to Web Mercator limit (±85.05°) to avoid infinity near poles
+          // Clamp extreme latitudes to prevent tan() approaching infinity near poles
           if (Math.abs(lat) > 85.05d) {
             lat = Math.signum(lat) * 85.05d
           }
