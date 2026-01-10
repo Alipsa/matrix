@@ -1752,51 +1752,21 @@ class GgStat {
       throw new IllegalArgumentException("stat_bin_hex requires x and y aesthetics")
     }
 
-    // Collect numeric x,y values
-    List<BigDecimal[]> points = []
-    BigDecimal xMin = Double.MAX_VALUE
-    BigDecimal xMax = -Double.MAX_VALUE
-    BigDecimal yMin = Double.MAX_VALUE
-    BigDecimal yMax = -Double.MAX_VALUE
-
-    data.each { row ->
-      def xVal = row[xCol]
-      def yVal = row[yCol]
-
-      if (xVal instanceof Number && yVal instanceof Number) {
-        BigDecimal x = xVal as BigDecimal
-        BigDecimal y = yVal as BigDecimal
-        points << ([x, y] as BigDecimal[])
-
-        if (x < xMin) xMin = x
-        if (x > xMax) xMax = x
-        if (y < yMin) yMin = y
-        if (y > yMax) yMax = y
-      }
-    }
+    // Collect numeric x,y values and compute bounds
+    def result = collectXYPointsAndBounds(data, xCol, yCol)
+    List<BigDecimal[]> points = result.points as List<BigDecimal[]>
+    BigDecimal xMin = result.xMin as BigDecimal
+    BigDecimal yMin = result.yMin as BigDecimal
+    BigDecimal xMax = result.xMax as BigDecimal
 
     if (points.isEmpty()) {
       return Matrix.builder().data([x: [], y: [], count: []]).build()
     }
 
     // Compute hex dimensions
-    BigDecimal xRange = xMax - xMin
-    if (xRange == 0) xRange = 1
-
-    BigDecimal hexWidth
-    if (params.binwidth != null) {
-      hexWidth = params.binwidth as BigDecimal
-    } else {
-      int bins = (params.bins as Integer) ?: 30
-      hexWidth = xRange / bins
-    }
-
-    // For regular hexagons (flat-top), height = width * sqrt(3) / 2
-    BigDecimal hexHeight = hexWidth * (Math.sqrt(3) / 2)
-
-    // Hexagon spacing
-    BigDecimal dx = hexWidth * 0.75  // horizontal spacing between hex centers
-    BigDecimal dy = hexHeight        // vertical spacing between hex centers
+    def hexDims = computeHexDimensions(xMax - xMin, params)
+    BigDecimal dx = hexDims.dx as BigDecimal
+    BigDecimal dy = hexDims.dy as BigDecimal
 
     // Count points in each hexagon
     Map<String, Integer> hexCounts = [:] as Map<String, Integer>
@@ -1814,21 +1784,9 @@ class GgStat {
     List<Integer> countVals = []
 
     hexCounts.each { String key, Integer count ->
-      def coords = key.split(',')
-      int col = coords[0] as int
-      int row = coords[1] as int
-
-      // Calculate hexagon center
-      BigDecimal hexX = xMin + col * dx
-      BigDecimal hexY = yMin + row * dy
-
-      // Offset every other row
-      if (row % 2 == 1) {
-        hexX = hexX + dx / 2
-      }
-
-      xVals << hexX
-      yVals << hexY
+      def center = hexKeyToCenter(key, xMin, yMin, dx, dy)
+      xVals << (center.x as BigDecimal)
+      yVals << (center.y as BigDecimal)
       countVals << count
     }
 
@@ -1858,7 +1816,101 @@ class GgStat {
       throw new IllegalArgumentException("stat_summary_hex requires fill or color aesthetic for the summary variable")
     }
 
-    // Collect numeric x,y,z values
+    // Collect numeric x,y,z values and compute bounds
+    def result = collectXYZPointsAndBounds(data, xCol, yCol, zCol)
+    List<Map<String, BigDecimal>> points = result.points as List<Map<String, BigDecimal>>
+    BigDecimal xMin = result.xMin as BigDecimal
+    BigDecimal yMin = result.yMin as BigDecimal
+    BigDecimal xMax = result.xMax as BigDecimal
+
+    if (points.isEmpty()) {
+      return Matrix.builder().data([x: [], y: [], value: []]).build()
+    }
+
+    // Compute hex dimensions
+    def hexDims = computeHexDimensions(xMax - xMin, params)
+    BigDecimal dx = hexDims.dx as BigDecimal
+    BigDecimal dy = hexDims.dy as BigDecimal
+
+    // Group points by hexagon
+    Map<String, List<BigDecimal>> hexValues = [:].withDefault { [] }
+
+    for (Map<String, BigDecimal> point : points) {
+      // Find hexagon coordinates for this point
+      int[] hexCoord = pointToHex(point.x, point.y, xMin, yMin, dx, dy)
+      String hexKey = "${hexCoord[0]},${hexCoord[1]}"
+      hexValues[hexKey] << point.z
+    }
+
+    // Compute summaries for each bin
+    String funType = params.fun as String ?: 'mean'
+    Closure<Map<String, Number>> funData = params.'fun.data' as Closure<Map<String, Number>>
+
+    List<BigDecimal> xVals = []
+    List<BigDecimal> yVals = []
+    List<BigDecimal> valueVals = []
+
+    hexValues.each { String key, List<BigDecimal> zValues ->
+      if (zValues.isEmpty()) return
+
+      def center = hexKeyToCenter(key, xMin, yMin, dx, dy)
+      xVals << (center.x as BigDecimal)
+      yVals << (center.y as BigDecimal)
+
+      // Compute summary
+      BigDecimal summaryValue = computeHexSummary(zValues, funType, funData)
+      valueVals << summaryValue
+    }
+
+    return Matrix.builder()
+        .data([x: xVals, y: yVals, value: valueVals])
+        .build()
+  }
+
+  /**
+   * Helper: Collect x,y points from data and compute bounds.
+   *
+   * @param data Matrix containing the data
+   * @param xCol Name of x column
+   * @param yCol Name of y column
+   * @return Map with points (List<BigDecimal[]>), xMin, xMax, yMin, yMax
+   */
+  private static Map<String, Object> collectXYPointsAndBounds(Matrix data, String xCol, String yCol) {
+    List<BigDecimal[]> points = []
+    BigDecimal xMin = Double.MAX_VALUE
+    BigDecimal xMax = -Double.MAX_VALUE
+    BigDecimal yMin = Double.MAX_VALUE
+    BigDecimal yMax = -Double.MAX_VALUE
+
+    data.each { row ->
+      def xVal = row[xCol]
+      def yVal = row[yCol]
+
+      if (xVal instanceof Number && yVal instanceof Number) {
+        BigDecimal x = xVal as BigDecimal
+        BigDecimal y = yVal as BigDecimal
+        points << ([x, y] as BigDecimal[])
+
+        if (x < xMin) xMin = x
+        if (x > xMax) xMax = x
+        if (y < yMin) yMin = y
+        if (y > yMax) yMax = y
+      }
+    }
+
+    return [points: points, xMin: xMin, xMax: xMax, yMin: yMin, yMax: yMax]
+  }
+
+  /**
+   * Helper: Collect x,y,z points from data and compute x,y bounds.
+   *
+   * @param data Matrix containing the data
+   * @param xCol Name of x column
+   * @param yCol Name of y column
+   * @param zCol Name of z column
+   * @return Map with points (List<Map<String,BigDecimal>>), xMin, xMax, yMin, yMax
+   */
+  private static Map<String, Object> collectXYZPointsAndBounds(Matrix data, String xCol, String yCol, String zCol) {
     List<Map<String, BigDecimal>> points = []
     BigDecimal xMin = Double.MAX_VALUE
     BigDecimal xMax = -Double.MAX_VALUE
@@ -1883,101 +1935,108 @@ class GgStat {
       }
     }
 
-    if (points.isEmpty()) {
-      return Matrix.builder().data([x: [], y: [], value: []]).build()
-    }
+    return [points: points, xMin: xMin, xMax: xMax, yMin: yMin, yMax: yMax]
+  }
 
-    // Compute hex dimensions
-    BigDecimal xRange = xMax - xMin
-    if (xRange == 0) xRange = 1
+  /**
+   * Helper: Compute hexagon dimensions from x range and parameters.
+   *
+   * @param xRange The range of x values
+   * @param params Parameters containing bins or binwidth
+   * @return Map with dx (horizontal spacing) and dy (vertical spacing)
+   */
+  private static Map<String, BigDecimal> computeHexDimensions(BigDecimal xRange, Map params) {
+    BigDecimal adjustedRange = xRange == 0 ? 1 : xRange
 
     BigDecimal hexWidth
     if (params.binwidth != null) {
       hexWidth = params.binwidth as BigDecimal
     } else {
       int bins = (params.bins as Integer) ?: 30
-      hexWidth = xRange / bins
+      hexWidth = adjustedRange / bins
     }
 
     // For regular hexagons (flat-top), height = width * sqrt(3) / 2
     BigDecimal hexHeight = hexWidth * (Math.sqrt(3) / 2)
 
     // Hexagon spacing
-    BigDecimal dx = hexWidth * 0.75
-    BigDecimal dy = hexHeight
+    BigDecimal dx = hexWidth * 0.75  // horizontal spacing between hex centers
+    BigDecimal dy = hexHeight        // vertical spacing between hex centers
 
-    // Group points by hexagon
-    Map<String, List<BigDecimal>> hexValues = [:].withDefault { [] }
+    return [dx: dx, dy: dy]
+  }
 
-    for (Map<String, BigDecimal> point : points) {
-      // Find hexagon coordinates for this point
-      int[] hexCoord = pointToHex(point.x, point.y, xMin, yMin, dx, dy)
-      String hexKey = "${hexCoord[0]},${hexCoord[1]}"
-      hexValues[hexKey] << point.z
+  /**
+   * Helper: Convert hex grid key to center coordinates.
+   *
+   * @param key Hex key in format "col,row"
+   * @param xMin Minimum x value (origin)
+   * @param yMin Minimum y value (origin)
+   * @param dx Horizontal spacing
+   * @param dy Vertical spacing
+   * @return Map with x and y center coordinates
+   */
+  private static Map<String, BigDecimal> hexKeyToCenter(String key, BigDecimal xMin, BigDecimal yMin,
+                                                         BigDecimal dx, BigDecimal dy) {
+    def coords = key.split(',')
+    int col = coords[0] as int
+    int row = coords[1] as int
+
+    // Calculate hexagon center
+    BigDecimal hexX = xMin + col * dx
+    BigDecimal hexY = yMin + row * dy
+
+    // Offset every other row
+    if (row % 2 == 1) {
+      hexX = hexX + dx / 2
     }
 
-    // Compute summaries for each bin
-    String funType = params.fun as String ?: 'mean'
-    Closure<Map<String, Number>> funData = params.'fun.data' as Closure<Map<String, Number>>
+    return [x: hexX, y: hexY]
+  }
 
-    List<BigDecimal> xVals = []
-    List<BigDecimal> yVals = []
-    List<BigDecimal> valueVals = []
-
-    hexValues.each { String key, List<BigDecimal> zValues ->
-      if (zValues.isEmpty()) return
-
-      def coords = key.split(',')
-      int col = coords[0] as int
-      int row = coords[1] as int
-
-      // Calculate hexagon center
-      BigDecimal hexX = xMin + col * dx
-      BigDecimal hexY = yMin + row * dy
-
-      // Offset every other row
-      if (row % 2 == 1) {
-        hexX = hexX + dx / 2
+  /**
+   * Helper: Compute summary statistic for a hex bin.
+   *
+   * @param zValues List of z values in the bin
+   * @param funType Type of summary function ('mean', 'median', 'sum', 'min', 'max')
+   * @param funData Optional custom function closure
+   * @return Summary value
+   */
+  private static BigDecimal computeHexSummary(List<BigDecimal> zValues, String funType,
+                                               Closure<Map<String, Number>> funData) {
+    if (funData) {
+      // Custom function
+      Map<String, Number> result = funData.call(zValues)
+      if (!result.containsKey('y') && !result.containsKey('value')) {
+        throw new IllegalArgumentException(
+            "Custom summary function must return a map with 'y' or 'value' key, got keys: ${result.keySet()}")
       }
-
-      xVals << hexX
-      yVals << hexY
-
-      // Compute summary
-      if (funData) {
-        // Custom function
-        Map<String, Number> result = funData.call(zValues)
-        Number value = result.y ?: result.value ?: 0
-        valueVals << (value as BigDecimal)
-      } else {
-        // Standard summary function
-        BigDecimal summary
-        switch (funType) {
-          case 'mean':
-            summary = Stat.mean(zValues)
-            break
-          case 'median':
-            summary = Stat.median(zValues)
-            break
-          case 'sum':
-            summary = Stat.sum(zValues)
-            break
-          case 'min':
-            summary = zValues.min()
-            break
-          case 'max':
-            summary = zValues.max()
-            break
-          default:
-            throw new IllegalArgumentException("Unknown summary function: $funType")
-        }
-        valueVals << summary
+      Number value = result.y ?: result.value
+      return value as BigDecimal
+    } else {
+      // Standard summary function
+      BigDecimal summary
+      switch (funType) {
+        case 'mean':
+          summary = Stat.mean(zValues)
+          break
+        case 'median':
+          summary = Stat.median(zValues)
+          break
+        case 'sum':
+          summary = Stat.sum(zValues)
+          break
+        case 'min':
+          summary = zValues.min()
+          break
+        case 'max':
+          summary = zValues.max()
+          break
+        default:
+          throw new IllegalArgumentException("Unknown summary function: $funType")
       }
+      return summary
     }
-
-    return Matrix.builder()
-        .data([x: xVals, y: yVals, value: valueVals])
-        .build()
   }
 
   /**

@@ -1007,4 +1007,28 @@ class GgStatTest {
       assertTrue(value > 0, "All summary values should be positive")
     }
   }
+
+  @Test
+  void testSummaryHexCustomFunctionMissingKeys() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'value'])
+        .rows([
+            [0, 0, 10], [0, 0, 20]
+        ])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'value')
+
+    // Custom function that returns wrong keys
+    def badFun = { List<BigDecimal> vals ->
+      return [wrong_key: vals.size()]  // Neither 'y' nor 'value'
+    }
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.summaryHex(data, aes, [bins: 2, 'fun.data': badFun])
+    }
+    assertTrue(ex.message.contains('y') || ex.message.contains('value'),
+        "Error message should mention required keys")
+  }
 }
