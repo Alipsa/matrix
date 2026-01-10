@@ -15,17 +15,22 @@ import se.alipsa.matrix.gg.scale.Scale
  * Custom graphical object (grob) geometry.
  * Renders custom SVG elements via closures, SvgElements, or SVG strings at specified positions.
  *
- * The grob is positioned within bounds (xmin, xmax, ymin, ymax) and does not affect scale limits.
- * Infinite bounds (-Inf/Inf) are replaced with the full panel extent.
+ * The grob is positioned within bounds (xmin, xmax, ymin, ymax) specified in DATA coordinates.
+ * These bounds are automatically transformed to PIXEL coordinates before being passed to closures.
+ * Infinite bounds (-Inf/Inf) fill the entire plot panel.
  *
  * Supported grob types:
- * - Closure: Flexible rendering using gsvg API (recommended for complex graphics)
+ * - Closure: Receives (G group, Map bounds) where bounds contains PIXEL coordinates
+ *            Signature can be 2-4 params: (G, Map) or (G, Map, Map scales, Coord)
  * - SvgElement: Direct gsvg elements (cloned into position)
  * - String: Raw SVG markup (parsed and inserted)
  *
  * Usage:
- * - Closure: annotation_custom(grob: { G g, Map b -> g.addRect()... }, xmin: 1, xmax: 3, ymin: 5, ymax: 10)
+ * - Closure: annotation_custom(grob: { G g, Map b -> g.addRect().x(b.xmin as int)... }, xmin: 1, xmax: 3)
  * - String: annotation_custom(grob: '<rect width="100" height="50" fill="red"/>', xmin: 1, xmax: 3)
+ *
+ * Note: Position parameters (xmin, xmax, ymin, ymax) are specified in DATA coordinates.
+ *       The bounds map passed to closures contains the transformed PIXEL coordinates.
  */
 @CompileStatic
 class GeomCustom extends Geom {
@@ -53,27 +58,35 @@ class GeomCustom extends Geom {
     Scale yScale = scales['y']
     if (xScale == null || yScale == null) return
 
-    // Get position bounds from data
+    // Get position bounds from data (in data-space coordinates)
     BigDecimal xmin = getPositionValue(data, 'xmin', 0)
     BigDecimal xmax = getPositionValue(data, 'xmax', 0)
     BigDecimal ymin = getPositionValue(data, 'ymin', 0)
     BigDecimal ymax = getPositionValue(data, 'ymax', 0)
 
-    // Handle infinite values - use full panel extent
-    List<BigDecimal> xRange = (xScale as se.alipsa.matrix.gg.scale.ScaleContinuous).getRange()
-    List<BigDecimal> yRange = (yScale as se.alipsa.matrix.gg.scale.ScaleContinuous).getRange()
+    // Handle infinite values - use full panel extent in DATA-SPACE
+    // (We need domain, not range, because we'll transform to pixels later)
+    List<BigDecimal> xDomain = (xScale as se.alipsa.matrix.gg.scale.ScaleContinuous).getComputedDomain()
+    List<BigDecimal> yDomain = (yScale as se.alipsa.matrix.gg.scale.ScaleContinuous).getComputedDomain()
 
-    if (isInfinite(xmin)) xmin = xRange[0]
-    if (isInfinite(xmax)) xmax = xRange[1]
-    if (isInfinite(ymin)) ymin = yRange[0]
-    if (isInfinite(ymax)) ymax = yRange[1]
+    if (isInfinite(xmin)) xmin = xDomain[0]
+    if (isInfinite(xmax)) xmax = xDomain[1]
+    if (isInfinite(ymin)) ymin = yDomain[0]
+    if (isInfinite(ymax)) ymax = yDomain[1]
 
-    // Create bounds map for closure
+    // Transform ALL bounds from data-space to pixel-space for consistency
+    // This ensures the closure always receives pixel coordinates
+    BigDecimal xminPx = xScale.transform(xmin) as BigDecimal
+    BigDecimal xmaxPx = xScale.transform(xmax) as BigDecimal
+    BigDecimal yminPx = yScale.transform(ymin) as BigDecimal
+    BigDecimal ymaxPx = yScale.transform(ymax) as BigDecimal
+
+    // Create bounds map with PIXEL coordinates
     Map<String, BigDecimal> bounds = [
-        xmin: xmin,
-        xmax: xmax,
-        ymin: ymin,
-        ymax: ymax
+        xmin: xminPx,
+        xmax: xmaxPx,
+        ymin: yminPx,
+        ymax: ymaxPx
     ]
 
     // Render grob based on type

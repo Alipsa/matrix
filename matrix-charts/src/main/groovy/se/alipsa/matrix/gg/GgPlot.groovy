@@ -641,27 +641,25 @@ class GgPlot {
    * The custom annotation does not affect scale limits and remains static across facets.
    * Position defaults (-Inf/Inf) fill the entire plot panel.
    *
-   * IMPORTANT: The bounds map contains DATA-SPACE coordinates (xmin, xmax, ymin, ymax),
-   * not pixel coordinates. To position elements in pixel space, transform the data
-   * coordinates using the scales parameter:
+   * Position parameters are specified in DATA coordinates (e.g., xmin: 1, xmax: 3).
+   * The bounds map passed to closures contains PIXEL coordinates (already transformed).
    *
-   * Example with proper coordinate transformation:
+   * Example - bounds already in pixels, ready to use:
    * annotation_custom(
-   *   grob: { G g, Map bounds, Map scales ->
-   *     // Transform data coordinates to pixel coordinates
-   *     def x1 = scales['x'].transform(bounds.xmin) as int
-   *     def x2 = scales['x'].transform(bounds.xmax) as int
-   *     def y1 = scales['y'].transform(bounds.ymin) as int
-   *     def y2 = scales['y'].transform(bounds.ymax) as int
-   *     g.addRect().x(x1).y(y1)
-   *       .width(x2 - x1).height(y2 - y1)
+   *   grob: { G g, Map bounds ->
+   *     // bounds contains PIXEL coordinates, use directly
+   *     g.addRect()
+   *       .x(bounds.xmin as int)
+   *       .y(bounds.ymin as int)
+   *       .width((bounds.xmax - bounds.xmin) as int)
+   *       .height((bounds.ymax - bounds.ymin) as int)
    *       .fill('red').addAttribute('opacity', 0.2)
    *   },
-   *   xmin: 1, xmax: 3, ymin: 5, ymax: 10
+   *   xmin: 1, xmax: 3, ymin: 5, ymax: 10  // DATA coordinates
    * )
    *
    * @param params required: grob (Closure, gsvg Element, or String)
-   *               optional: xmin, xmax, ymin, ymax (default: -Inf to Inf)
+   *               optional: xmin, xmax, ymin, ymax in DATA coordinates (default: -Inf to Inf)
    * @return a Layer with custom graphical object
    */
   static Layer annotation_custom(Map params) {
