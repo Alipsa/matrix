@@ -12,8 +12,8 @@ import se.alipsa.matrix.gg.layer.StatType
  *
  * This annotation detects log-scaled axes and generates tick marks at:
  * - Major positions: powers of the base (1, 10, 100, ...)
- * - Intermediate positions: 2 and 5 multiples (2, 5, 20, 50, ...)
- * - Minor positions: other integer multiples (3, 4, 6, 7, 8, 9, ...)
+ * - Intermediate positions: 2 and 5 multiples between major ticks (2, 5, 20, 50, ...)
+ * - Minor positions: other integer multiples between major ticks (3, 4, 6, 7, 8, 9, ...)
  *
  * Usage:
  * <pre>{@code
