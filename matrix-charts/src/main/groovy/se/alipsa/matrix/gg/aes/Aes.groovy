@@ -51,6 +51,12 @@ class Aes {
   /** Weight for statistical computations - column name */
   def weight
 
+  // Spatial
+  /** Geometry column - column name or I(value) */
+  def geometry
+  /** Map id column for geom_map - column name or I(value) */
+  def map_id
+
   // Legacy property names for backward compatibility
   // Using lowercase after 'get' so Groovy maps to xColName, not XColName
   String getxColName() { extractColName(x) }
@@ -60,6 +66,8 @@ class Aes {
   String getGroupColName() { extractColName(group) }
   String getLinetypeColName() { extractColName(linetype) }
   String getShapeColName() { extractColName(shape) }
+  String getGeometryColName() { extractColName(geometry) }
+  String getMapIdColName() { extractColName(map_id) }
 
   Aes() {}
 
@@ -91,6 +99,8 @@ class Aes {
     group = params.group
     label = params.label
     weight = params.weight
+    geometry = params.geometry
+    map_id = params.map_id ?: params.mapId
   }
 
   /**
@@ -110,7 +120,7 @@ class Aes {
    * This method provides type-safe access to aesthetic values without dynamic property access.
    * <p>
    * Supported aesthetic names: x, y, color, colour, fill, size, shape, alpha,
-   * linetype, linewidth, group, label, weight
+   * linetype, linewidth, group, label, weight, geometry, map_id
    *
    * @param aesthetic the aesthetic name (e.g., 'x', 'y', 'color', 'fill', etc.)
    * @return the value of the aesthetic, or null if not found or unknown aesthetic name
@@ -130,6 +140,8 @@ class Aes {
       case 'group': return group
       case 'label': return label
       case 'weight': return weight
+      case 'geometry': return geometry
+      case 'map_id': return map_id
       default: return null
     }
   }
@@ -290,6 +302,8 @@ class Aes {
     result.group = base.group
     result.label = base.label
     result.weight = base.weight
+    result.geometry = base.geometry
+    result.map_id = base.map_id
     // Override with this Aes's non-null values and corresponding column names
     if (this.x != null) {
       result.x = this.x
@@ -327,6 +341,12 @@ class Aes {
     if (this.weight != null) {
       result.weight = this.weight
     }
+    if (this.geometry != null) {
+      result.geometry = this.geometry
+    }
+    if (this.map_id != null) {
+      result.map_id = this.map_id
+    }
     return result
   }
 
@@ -339,6 +359,8 @@ class Aes {
     if (fill != null) parts << "fillCol=$fill"
     if (size != null) parts << "size=$size"
     if (group != null) parts << "group=$group"
+    if (geometry != null) parts << "geometry=$geometry"
+    if (map_id != null) parts << "map_id=$map_id"
     return "Aes(${parts.join(', ')})"
   }
 }

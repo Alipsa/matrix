@@ -80,7 +80,11 @@ enum StatType {
     /** Remove duplicate observations */
     UNIQUE,
     /** Compute y values from function of x */
-    FUNCTION
+    FUNCTION,
+    /** Expand simple feature geometries to x/y coordinates */
+    SF,
+    /** Representative coordinates for simple feature labels */
+    SF_COORDINATES
 }
 
 /**

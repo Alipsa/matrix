@@ -66,7 +66,8 @@ class GgChart {
 
   private static final Set<String> STAT_PARAM_KEYS = [
       'method', 'n', 'se', 'level', 'formula', 'degree',
-      'bins', 'binwidth', 'fun', 'fun.y', 'fun.data', 'fun.args', 'width', 'coef'
+      'bins', 'binwidth', 'fun', 'fun.y', 'fun.data', 'fun.args', 'width', 'coef',
+      'geometry'
   ] as Set<String>
 
   private static final Map<PositionType, Set<String>> POSITION_PARAM_KEYS = [
@@ -152,7 +153,8 @@ class GgChart {
    *   <li>A string or CharSequence (case-insensitive matching to known stat names)</li>
    * </ul>
    * Supported stat names are: 'identity', 'count', 'bin', 'boxplot', 'smooth',
-   * 'summary', 'density', 'ydensity', 'bin2d', 'contour', 'ecdf', 'qq', and 'qq_line'.
+   * 'summary', 'density', 'ydensity', 'bin2d', 'contour', 'ecdf', 'qq', 'qq_line',
+   * 'unique', 'function', 'sf', and 'sf_coordinates'.
    *
    * @param stat the stat specification to parse (may be null, StatType, Stat, or String)
    * @return the corresponding StatType, or null if the input is null
@@ -197,6 +199,15 @@ class GgChart {
         case 'qq_line':
         case 'qqline':
           return StatType.QQ_LINE
+        case 'unique':
+          return StatType.UNIQUE
+        case 'function':
+          return StatType.FUNCTION
+        case 'sf':
+          return StatType.SF
+        case 'sf_coordinates':
+        case 'sf_coords':
+          return StatType.SF_COORDINATES
         default:
           throw new IllegalArgumentException("Unsupported stat: ${stat}")
       }

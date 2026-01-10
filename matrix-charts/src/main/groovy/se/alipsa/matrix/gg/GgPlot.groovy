@@ -1,5 +1,6 @@
 package se.alipsa.matrix.gg
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
@@ -22,6 +23,7 @@ import se.alipsa.matrix.gg.geom.GeomHline
 import se.alipsa.matrix.gg.geom.GeomJitter
 import se.alipsa.matrix.gg.geom.GeomLabel
 import se.alipsa.matrix.gg.geom.GeomLine
+import se.alipsa.matrix.gg.geom.GeomMap
 import se.alipsa.matrix.gg.geom.GeomQq
 import se.alipsa.matrix.gg.geom.GeomQqLine
 import se.alipsa.matrix.gg.geom.GeomRug
@@ -37,6 +39,9 @@ import se.alipsa.matrix.gg.geom.GeomRaster
 import se.alipsa.matrix.gg.geom.GeomRect
 import se.alipsa.matrix.gg.geom.GeomPath
 import se.alipsa.matrix.gg.geom.GeomPolygon
+import se.alipsa.matrix.gg.geom.GeomSf
+import se.alipsa.matrix.gg.geom.GeomSfLabel
+import se.alipsa.matrix.gg.geom.GeomSfText
 import se.alipsa.matrix.gg.geom.GeomStep
 import se.alipsa.matrix.gg.geom.GeomPointrange
 import se.alipsa.matrix.gg.geom.GeomLinerange
@@ -53,7 +58,10 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
+import se.alipsa.matrix.gg.coord.CoordMap
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.coord.CoordQuickmap
+import se.alipsa.matrix.gg.coord.CoordSf
 import se.alipsa.matrix.gg.coord.CoordTrans
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
@@ -113,6 +121,8 @@ import se.alipsa.matrix.gg.stat.StatsCount
 import se.alipsa.matrix.gg.stat.StatsDensity
 import se.alipsa.matrix.gg.stat.StatsEllipse
 import se.alipsa.matrix.gg.stat.StatsFunction
+import se.alipsa.matrix.gg.stat.StatsSf
+import se.alipsa.matrix.gg.stat.StatsSfCoordinates
 import se.alipsa.matrix.gg.stat.StatsSmooth
 import se.alipsa.matrix.gg.stat.StatsSum
 import se.alipsa.matrix.gg.stat.StatsSummaryBin
@@ -669,6 +679,68 @@ class GgPlot {
     return new AnnotationCustom(params).toLayer()
   }
 
+  /**
+   * Add a map annotation layer using map polygon data.
+   *
+   * @param params required: map (Matrix). Optional: mapping, data, styling
+   * @return a Layer with map annotation
+   */
+  static Layer annotation_map(Map params) {
+    GeomMap geom = new GeomMap(params)
+    Aes mapping = params?.mapping instanceof Aes ? params.mapping as Aes : null
+    Matrix data = params?.data instanceof Matrix ? params.data as Matrix : null
+    return new Layer(
+        geom: geom,
+        data: data,
+        aes: mapping,
+        stat: geom.defaultStat,
+        position: geom.defaultPosition,
+        params: geom.params ?: [:],
+        statParams: [:],
+        positionParams: [:],
+        inheritAes: false
+    )
+  }
+
+  /**
+   * Convenience wrapper for map borders using matrix-datasets map data.
+   *
+   * @param datasetName map dataset name (e.g. 'world', 'state')
+   * @param region optional region filter
+   * @param exact whether to match dataset name exactly
+   * @param params additional styling parameters for geom_map/annotation_map
+   * @return a Layer with map borders
+   */
+  @CompileDynamic
+  static Layer borders(String datasetName, String region = null, boolean exact = false, Map params = [:]) {
+    Class datasetClass
+    try {
+      datasetClass = Class.forName('se.alipsa.matrix.datasets.Dataset')
+    } catch (ClassNotFoundException e) {
+      throw new IllegalArgumentException('borders() requires matrix-datasets on the classpath')
+    }
+    def mapData = datasetClass.getMethod('mapData', String, String, boolean).invoke(null, datasetName, region, exact)
+    if (!(mapData instanceof Matrix)) {
+      throw new IllegalArgumentException('borders() could not load map data')
+    }
+    Map allParams = new LinkedHashMap<>(params ?: [:])
+    allParams.map = mapData
+    return annotation_map(allParams)
+  }
+
+  /**
+   * Convenience wrapper for map borders when map data is already available.
+   *
+   * @param mapData map polygon data
+   * @param params additional styling parameters for geom_map/annotation_map
+   * @return a Layer with map borders
+   */
+  static Layer borders(Matrix mapData, Map params = [:]) {
+    Map allParams = new LinkedHashMap<>(params ?: [:])
+    allParams.map = mapData
+    return annotation_map(allParams)
+  }
+
   // ============ Guide System ============
 
   /**
@@ -1104,6 +1176,43 @@ class GgPlot {
    */
   static CoordTrans coord_trans(Map params = [:]) {
     return new CoordTrans(params)
+  }
+
+  /**
+   * Coordinate system for simple feature data.
+   */
+  static CoordSf coord_sf() {
+    return new CoordSf()
+  }
+
+  /**
+   * Coordinate system for simple feature data with optional parameters.
+   */
+  static CoordSf coord_sf(Map params) {
+    return new CoordSf(params)
+  }
+
+  /**
+   * Map projection coordinate system.
+   *
+   * @param params projection parameters (projection, xlim, ylim)
+   */
+  static CoordMap coord_map(Map params = [:]) {
+    return new CoordMap(params)
+  }
+
+  /**
+   * Quick map coordinate system with approximate aspect ratio.
+   */
+  static CoordQuickmap coord_quickmap() {
+    return new CoordQuickmap()
+  }
+
+  /**
+   * Quick map coordinate system with optional parameters.
+   */
+  static CoordQuickmap coord_quickmap(Map params) {
+    return new CoordQuickmap(params)
   }
 
   static GeomAbline geom_abline() {
@@ -1919,6 +2028,79 @@ class GgPlot {
 
   static GeomPolygon geom_polygon(Map params) {
     return new GeomPolygon(params)
+  }
+
+  static GeomSf geom_sf() {
+    return new GeomSf()
+  }
+
+  /**
+   * Create an sf geom with a layer-specific aesthetic mapping.
+   * Uses the geometry aesthetic to expand WKT into x/y coordinates.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomSf instance
+   */
+  static GeomSf geom_sf(Aes mapping) {
+    return geom_sf([mapping: mapping])
+  }
+
+  static GeomSf geom_sf(Map params) {
+    return new GeomSf(params)
+  }
+
+  static GeomSfText geom_sf_text() {
+    return new GeomSfText()
+  }
+
+  /**
+   * Create an sf text geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomSfText instance
+   */
+  static GeomSfText geom_sf_text(Aes mapping) {
+    return geom_sf_text([mapping: mapping])
+  }
+
+  static GeomSfText geom_sf_text(Map params) {
+    return new GeomSfText(params)
+  }
+
+  static GeomSfLabel geom_sf_label() {
+    return new GeomSfLabel()
+  }
+
+  /**
+   * Create an sf label geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomSfLabel instance
+   */
+  static GeomSfLabel geom_sf_label(Aes mapping) {
+    return geom_sf_label([mapping: mapping])
+  }
+
+  static GeomSfLabel geom_sf_label(Map params) {
+    return new GeomSfLabel(params)
+  }
+
+  static GeomMap geom_map() {
+    return new GeomMap()
+  }
+
+  /**
+   * Create a map geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer (map_id, fill, color, etc.)
+   * @return a new GeomMap instance
+   */
+  static GeomMap geom_map(Aes mapping) {
+    return geom_map([mapping: mapping])
+  }
+
+  static GeomMap geom_map(Map params) {
+    return new GeomMap(params)
   }
 
   static GeomStep geom_step() {
@@ -2989,6 +3171,24 @@ class GgPlot {
    */
   static StatsUnique stat_unique(Map params = [:]) {
     return new StatsUnique(params)
+  }
+
+  /**
+   * Create a simple feature stat that expands WKT geometry into x/y coordinates.
+   *
+   * @param params stat parameters (geometry column override)
+   */
+  static StatsSf stat_sf(Map params = [:]) {
+    return new StatsSf(params)
+  }
+
+  /**
+   * Create a simple feature stat that computes representative coordinates for labels.
+   *
+   * @param params stat parameters (geometry column override)
+   */
+  static StatsSfCoordinates stat_sf_coordinates(Map params = [:]) {
+    return new StatsSfCoordinates(params)
   }
 
   /**

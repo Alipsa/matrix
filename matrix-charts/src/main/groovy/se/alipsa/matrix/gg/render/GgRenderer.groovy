@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.coord.CoordTrans
+import se.alipsa.matrix.gg.coord.CoordQuickmap
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
@@ -870,7 +871,7 @@ class GgRenderer {
    * @return double[] with [effectiveWidth, effectiveHeight]
    */
   private double[] computeFixedAspectDimensions(List xData, List yData, int plotWidth, int plotHeight, CoordFixed coord) {
-    double ratio = coord.ratio
+    double ratio = resolveFixedAspectRatio(yData, coord)
 
     // Get numeric values only
     List<Number> xNums = xData.findAll { it instanceof Number } as List<Number>
@@ -945,7 +946,7 @@ class GgRenderer {
    */
   private BigDecimal[] computeFixedAspectDimensionsWithExpansion(List xData, List yData, int plotWidth, int plotHeight,
                                                              CoordFixed coord, GgChart chart) {
-    BigDecimal ratio = coord.ratio
+    BigDecimal ratio = resolveFixedAspectRatio(yData, coord) as BigDecimal
 
     // Get numeric values only
     List<BigDecimal> xNums = xData.findAll { it instanceof Number }.collect{ it as BigDecimal}
@@ -1014,6 +1015,21 @@ class GgRenderer {
     }
 
     return [effectiveWidth, effectiveHeight] as BigDecimal[]
+  }
+
+  private double resolveFixedAspectRatio(List yData, CoordFixed coord) {
+    double ratio = coord.ratio as double
+    if (coord instanceof CoordQuickmap) {
+      List<Number> yNums = yData?.findAll { it instanceof Number } as List<Number>
+      if (yNums != null && !yNums.isEmpty()) {
+        double meanLat = (yNums.sum() as double) / yNums.size()
+        double cosVal = Math.cos(Math.toRadians(meanLat))
+        if (cosVal != 0d) {
+          ratio = 1d / cosVal
+        }
+      }
+    }
+    return ratio
   }
 
   private BigDecimal[] resolveContinuousExpansion(GgChart chart, String aesthetic) {
@@ -1594,6 +1610,10 @@ class GgRenderer {
         return GgStat.unique(data, aes, layer.statParams)
       case StatType.FUNCTION:
         return GgStat.function(data, aes, layer.statParams)
+      case StatType.SF:
+        return GgStat.sf(data, aes, layer.statParams)
+      case StatType.SF_COORDINATES:
+        return GgStat.sfCoordinates(data, aes, layer.statParams)
       default:
         return data
     }

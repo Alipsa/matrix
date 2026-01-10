@@ -11,6 +11,10 @@ import se.alipsa.matrix.stats.kde.KernelDensity
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression
 import se.alipsa.matrix.stats.regression.RegressionUtils
+import se.alipsa.matrix.gg.sf.SfGeometry
+import se.alipsa.matrix.gg.sf.SfGeometryUtils
+import se.alipsa.matrix.gg.sf.SfPoint
+import se.alipsa.matrix.gg.sf.WktReader
 
 import java.math.RoundingMode
 import java.util.regex.Matcher
@@ -32,6 +36,131 @@ class GgStat {
    */
   static Matrix identity(Matrix data, Aes aes) {
     return data
+  }
+
+  /**
+   * Expand WKT geometries into x/y coordinate rows for spatial rendering.
+   *
+   * @param data Input matrix containing a geometry column
+   * @param aes Aesthetic mappings (uses geometry if provided)
+   * @param params Optional params (geometry column override)
+   * @return Matrix with x/y coordinates and SF grouping metadata
+   */
+  static Matrix sf(Matrix data, Aes aes, Map params = [:]) {
+    if (data == null || data.rowCount() == 0) {
+      return Matrix.builder().rows([]).build()
+    }
+
+    String geometryCol = resolveGeometryColumn(data, aes, params)
+    List<Map<String, Object>> rows = []
+
+    data.eachWithIndex { row, int idx ->
+      Object geomVal = row[geometryCol]
+      if (geomVal == null) return
+
+      SfGeometry geometry = toGeometry(geomVal)
+      if (geometry == null || geometry.empty) return
+
+      int partIndex = 0
+      geometry.shapes.each { shape ->
+        int ringIndex = 0
+        shape.rings.each { ring ->
+          String shapeType = (shape.type ?: geometry.type)?.toString()
+          ring.points.each { point ->
+            Map<String, Object> rowMap = new LinkedHashMap<>(row.toMap())
+            rowMap.put('x', point.x)
+            rowMap.put('y', point.y)
+            rowMap.put('__sf_id', idx)
+            rowMap.put('__sf_part', partIndex)
+            rowMap.put('__sf_ring', ringIndex)
+            rowMap.put('__sf_hole', ring.hole)
+            rowMap.put('__sf_type', shapeType)
+            rowMap.put('__sf_group', "${idx}:${partIndex}:${ringIndex}".toString())
+            rows << rowMap
+          }
+          ringIndex++
+        }
+        partIndex++
+      }
+    }
+
+    return Matrix.builder().mapList(rows).build()
+  }
+
+  /**
+   * Compute representative points from WKT geometries for labeling.
+   *
+   * @param data Input matrix containing a geometry column
+   * @param aes Aesthetic mappings (uses geometry if provided)
+   * @param params Optional params (geometry column override)
+   * @return Matrix with x/y coordinates and SF metadata
+   */
+  static Matrix sfCoordinates(Matrix data, Aes aes, Map params = [:]) {
+    if (data == null || data.rowCount() == 0) {
+      return Matrix.builder().rows([]).build()
+    }
+
+    String geometryCol = resolveGeometryColumn(data, aes, params)
+    List<Map<String, Object>> rows = []
+
+    data.eachWithIndex { row, int idx ->
+      Object geomVal = row[geometryCol]
+      if (geomVal == null) return
+
+      SfGeometry geometry = toGeometry(geomVal)
+      if (geometry == null || geometry.empty) return
+
+      SfPoint point = SfGeometryUtils.representativePoint(geometry)
+      if (point == null) return
+
+      Map<String, Object> rowMap = new LinkedHashMap<>(row.toMap())
+      rowMap.put('x', point.x)
+      rowMap.put('y', point.y)
+      rowMap.put('__sf_id', idx)
+      rowMap.put('__sf_type', geometry.type.toString())
+      rows << rowMap
+    }
+
+    return Matrix.builder().mapList(rows).build()
+  }
+
+  private static String resolveGeometryColumn(Matrix data, Aes aes, Map params) {
+    String col = aes?.geometryColName
+    if (col != null) {
+      requireColumn(data, col, 'aes(geometry: ...)')
+      return col
+    }
+
+    Object paramGeom = params?.geometry
+    if (paramGeom != null) {
+      col = paramGeom.toString()
+      requireColumn(data, col, 'geom_sf(geometry: ...)')
+      return col
+    }
+
+    Object metaGeom = data.metaData?.get('geometryColumn')
+    if (metaGeom != null) {
+      col = metaGeom.toString()
+      requireColumn(data, col, 'metaData.geometryColumn')
+      return col
+    }
+
+    col = 'geometry'
+    requireColumn(data, col, 'default geometry column')
+    return col
+  }
+
+  private static void requireColumn(Matrix data, String col, String source) {
+    if (!data.columnNames().contains(col)) {
+      throw new IllegalArgumentException("Geometry column '$col' from $source not found in data")
+    }
+  }
+
+  private static SfGeometry toGeometry(Object value) {
+    if (value instanceof SfGeometry) {
+      return (SfGeometry) value
+    }
+    return WktReader.parse(value.toString())
   }
 
   /**

@@ -274,17 +274,17 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.1 Spatial/Map Support
 
-- 4.1.1 [ ] `geom_sf()` - Simple Features geometry
-- 4.1.2 [ ] `geom_sf_text()` - Text labels for SF
-- 4.1.3 [ ] `geom_sf_label()` - Labels with background for SF
-- 4.1.4 [ ] `stat_sf()` - SF statistics
-- 4.1.5 [ ] `stat_sf_coordinates()` - Extract SF coordinates
-- 4.1.6 [ ] `coord_sf()` - Coordinate system for SF
-- 4.1.7 [ ] `coord_map()` - Map projections
-- 4.1.8 [ ] `coord_quickmap()` - Quick map approximation
-- 4.1.9 [ ] `geom_map()` - Polygon maps
-- 4.1.10 [ ] `annotation_map()` - Map annotation
-- 4.1.11 [ ] `borders()` - Map borders
+- 4.1.1 [x] `geom_sf()` - Simple Features geometry
+- 4.1.2 [x] `geom_sf_text()` - Text labels for SF
+- 4.1.3 [x] `geom_sf_label()` - Labels with background for SF
+- 4.1.4 [x] `stat_sf()` - SF statistics
+- 4.1.5 [x] `stat_sf_coordinates()` - Extract SF coordinates
+- 4.1.6 [x] `coord_sf()` - Coordinate system for SF
+- 4.1.7 [x] `coord_map()` - Map projections
+- 4.1.8 [x] `coord_quickmap()` - Quick map approximation
+- 4.1.9 [x] `geom_map()` - Polygon maps
+- 4.1.10 [x] `annotation_map()` - Map annotation
+- 4.1.11 [x] `borders()` - Map borders
 
 ### 4.2 Hexagonal Binning
 
