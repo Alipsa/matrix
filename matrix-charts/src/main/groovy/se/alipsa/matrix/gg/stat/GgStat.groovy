@@ -1983,6 +1983,14 @@ class GgStat {
   /**
    * Convert a point to hexagon grid coordinates.
    * Returns [col, row] in the hexagonal grid.
+   *
+   * @param x    the x-coordinate of the point in data space
+   * @param y    the y-coordinate of the point in data space
+   * @param xMin the minimum x value (origin) of the hex grid
+   * @param yMin the minimum y value (origin) of the hex grid
+   * @param dx   the horizontal spacing between hexagon centers
+   * @param dy   the vertical spacing between hexagon centers
+   * @return an array [col, row] giving the hex grid column and row indices
    */
   private static int[] pointToHex(BigDecimal x, BigDecimal y, BigDecimal xMin, BigDecimal yMin,
                                    BigDecimal dx, BigDecimal dy) {
