@@ -1031,4 +1031,102 @@ class GgStatTest {
     assertTrue(ex.message.contains('y') || ex.message.contains('value'),
         "Error message should mention required keys")
   }
+
+  // ============== Parameter Validation Tests ==============
+
+  @Test
+  void testBinHexInvalidBinsZero() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[0, 0], [1, 1]])
+        .types(Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.binHex(data, aes, [bins: 0])
+    }
+    assertTrue(ex.message.contains('positive') && ex.message.contains('0'))
+  }
+
+  @Test
+  void testBinHexInvalidBinsNegative() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[0, 0], [1, 1]])
+        .types(Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.binHex(data, aes, [bins: -5])
+    }
+    assertTrue(ex.message.contains('positive') && ex.message.contains('-5'))
+  }
+
+  @Test
+  void testBinHexInvalidBinwidthZero() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[0, 0], [1, 1]])
+        .types(Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.binHex(data, aes, [binwidth: 0])
+    }
+    assertTrue(ex.message.contains('positive') && ex.message.contains('0'))
+  }
+
+  @Test
+  void testBinHexInvalidBinwidthNegative() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[0, 0], [1, 1]])
+        .types(Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.binHex(data, aes, [binwidth: -2.5])
+    }
+    assertTrue(ex.message.contains('positive'))
+  }
+
+  @Test
+  void testSummaryHexInvalidBinsZero() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'z'])
+        .rows([[0, 0, 10], [1, 1, 20]])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'z')
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.summaryHex(data, aes, [bins: 0])
+    }
+    assertTrue(ex.message.contains('positive') && ex.message.contains('0'))
+  }
+
+  @Test
+  void testSummaryHexInvalidBinwidthNegative() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'z'])
+        .rows([[0, 0, 10], [1, 1, 20]])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'z')
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.summaryHex(data, aes, [binwidth: -1.0])
+    }
+    assertTrue(ex.message.contains('positive'))
+  }
 }

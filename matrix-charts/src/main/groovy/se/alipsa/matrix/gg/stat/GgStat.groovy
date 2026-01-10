@@ -1951,8 +1951,19 @@ class GgStat {
     BigDecimal hexWidth
     if (params.binwidth != null) {
       hexWidth = params.binwidth as BigDecimal
+      if (hexWidth <= 0) {
+        throw new IllegalArgumentException("binwidth must be positive, was $hexWidth")
+      }
     } else {
-      int bins = (params.bins as Integer) ?: 30
+      Integer binsParam = params.bins as Integer
+      int bins
+      if (binsParam == null) {
+        bins = 30
+      } else if (binsParam <= 0) {
+        throw new IllegalArgumentException("bins must be positive, was $binsParam")
+      } else {
+        bins = binsParam
+      }
       hexWidth = adjustedRange / bins
     }
 
