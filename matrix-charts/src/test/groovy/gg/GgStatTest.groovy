@@ -633,4 +633,378 @@ class GgStatTest {
     List<Number> xValues = result['x'] as List<Number>
     assertTrue((xValues.first() as double) < (xValues.last() as double))
   }
+
+  // ============== Hexagonal Binning Tests ==============
+
+  @Test
+  void testBinHexBasic() {
+    // Create a simple 4x4 grid of points
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([
+            [0, 0], [1, 0], [2, 0], [3, 0],
+            [0, 1], [1, 1], [2, 1], [3, 1],
+            [0, 2], [1, 2], [2, 2], [3, 2],
+            [0, 3], [1, 3], [2, 3], [3, 3]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.binHex(data, aes, [bins: 3])
+
+    // Verify correct columns
+    assertTrue(result.columnNames().containsAll(['x', 'y', 'count']),
+        "Result should have x, y, count columns, got: ${result.columnNames()}")
+
+    // Should have bins (exact count depends on hexagonal grid layout)
+    assertTrue(result.rowCount() > 0, "Should have at least one hex bin")
+
+    // All counts should be positive
+    List<Integer> counts = result['count'] as List<Integer>
+    counts.each { count ->
+      assertTrue(count > 0, "All bin counts should be positive")
+    }
+
+    // Total count should equal input points
+    int totalCount = counts.sum() as int
+    assertEquals(16, totalCount, "Total count should equal number of input points")
+  }
+
+  @Test
+  void testBinHexWithBins() {
+    // Create evenly distributed data to have predictable binning
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([
+            [0, 0], [1, 0], [2, 0], [3, 0],
+            [0, 1], [1, 1], [2, 1], [3, 1],
+            [0, 2], [1, 2], [2, 2], [3, 2],
+            [0, 3], [1, 3], [2, 3], [3, 3],
+            [0, 4], [1, 4], [2, 4], [3, 4]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+
+    def result5 = GgStat.binHex(data, aes, [bins: 5])
+    def result10 = GgStat.binHex(data, aes, [bins: 10])
+
+    // Both should have correct columns
+    assertTrue(result5.columnNames().containsAll(['x', 'y', 'count']))
+    assertTrue(result10.columnNames().containsAll(['x', 'y', 'count']))
+
+    // Total count should be preserved
+    assertEquals(20, (result5['count'] as List<Integer>).sum() as int)
+    assertEquals(20, (result10['count'] as List<Integer>).sum() as int)
+  }
+
+  @Test
+  void testBinHexWithBinwidth() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([
+            [0, 0], [1, 0], [2, 0],
+            [0, 1], [1, 1], [2, 1],
+            [0, 2], [1, 2], [2, 2]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.binHex(data, aes, [binwidth: 1.5])
+
+    assertTrue(result.columnNames().containsAll(['x', 'y', 'count']))
+    assertTrue(result.rowCount() > 0, "Should have hex bins with specified binwidth")
+
+    // Total count should equal input
+    List<Integer> counts = result['count'] as List<Integer>
+    assertEquals(9, counts.sum() as int, "Total count should match input size")
+  }
+
+  @Test
+  void testBinHexEmptyData() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([])
+        .types(Double, Double)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.binHex(data, aes)
+
+    assertEquals(0, result.rowCount(), "Empty data should produce empty result")
+    assertTrue(result.columnNames().containsAll(['x', 'y', 'count']))
+  }
+
+  @Test
+  void testBinHexSinglePoint() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[5, 10]])
+        .types(Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.binHex(data, aes)
+
+    assertEquals(1, result.rowCount(), "Single point should create one hex bin")
+    assertEquals(1, result['count'][0], "Count should be 1")
+  }
+
+  @Test
+  void testBinHexAllPointsInOneHex() {
+    // All points very close together - should fall in few bins
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([
+            [5.0, 5.0], [5.01, 5.01], [5.02, 5.02],
+            [5.01, 5.0], [5.0, 5.01]
+        ])
+        .types(Double, Double)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.binHex(data, aes, [bins: 3])
+
+    // Points are close but may fall in adjacent hexes depending on alignment
+    // Just verify total count is preserved
+    List<Integer> counts = result['count'] as List<Integer>
+    assertEquals(5, counts.sum() as int, "Total count should equal input size")
+    assertTrue(result.rowCount() > 0, "Should have at least one hex bin")
+  }
+
+  @Test
+  void testBinHexRequiresXAndY() {
+    def data = Matrix.builder()
+        .columnNames(['x'])
+        .rows([[1], [2]])
+        .types(Integer)
+        .build()
+
+    def aes = new Aes(x: 'x')  // Only x, no y
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.binHex(data, aes)
+    }
+    assertTrue(ex.message.contains('x and y aesthetics'))
+  }
+
+  // ============== Hexagonal Summary Tests ==============
+
+  @Test
+  void testSummaryHexMean() {
+    // Create points with known z values
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'z'])
+        .rows([
+            [0, 0, 10], [0, 0, 20],  // Two points in same hex, mean=15
+            [5, 5, 100], [5, 5, 200]  // Two points in another hex, mean=150
+        ])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'z')
+    def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'mean'])
+
+    // Verify correct columns
+    assertTrue(result.columnNames().containsAll(['x', 'y', 'value']),
+        "Result should have x, y, value columns, got: ${result.columnNames()}")
+
+    // Should have 2 hex bins
+    assertEquals(2, result.rowCount(), "Should have 2 hex bins")
+
+    // Check mean values
+    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> sortedValues = values.sort()
+
+    assertEquals(15.0, sortedValues[0] as double, 0.001, "First hex mean should be 15")
+    assertEquals(150.0, sortedValues[1] as double, 0.001, "Second hex mean should be 150")
+  }
+
+  @Test
+  void testSummaryHexMedian() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'value'])
+        .rows([
+            [0, 0, 1], [0, 0, 2], [0, 0, 3], [0, 0, 100],  // Median=2.5
+            [5, 5, 10], [5, 5, 20]  // Median=15
+        ])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'value')
+    def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'median'])
+
+    assertEquals(2, result.rowCount())
+    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> sortedValues = values.sort()
+
+    assertEquals(2.5, sortedValues[0] as double, 0.001, "Median should handle outliers")
+    assertEquals(15.0, sortedValues[1] as double, 0.001)
+  }
+
+  @Test
+  void testSummaryHexSum() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'value'])
+        .rows([
+            [0, 0, 10], [0, 0, 20], [0, 0, 30],  // Sum=60
+            [5, 5, 5], [5, 5, 10]  // Sum=15
+        ])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'value')
+    def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'sum'])
+
+    assertEquals(2, result.rowCount())
+    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    List<BigDecimal> sortedValues = values.sort()
+
+    assertEquals(15.0, sortedValues[0] as double, 0.001)
+    assertEquals(60.0, sortedValues[1] as double, 0.001)
+  }
+
+  @Test
+  void testSummaryHexMin() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'value'])
+        .rows([
+            [0, 0, 10], [0, 0, 20], [0, 0, 5],  // Min=5
+            [5, 5, 100], [5, 5, 50]  // Min=50
+        ])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'value')
+    def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'min'])
+
+    assertEquals(2, result.rowCount())
+    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    assertTrue(values.contains(5 as BigDecimal))
+    assertTrue(values.contains(50 as BigDecimal))
+  }
+
+  @Test
+  void testSummaryHexMax() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'value'])
+        .rows([
+            [0, 0, 10], [0, 0, 20], [0, 0, 30],  // Max=30
+            [5, 5, 100], [5, 5, 200]  // Max=200
+        ])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'value')
+    def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'max'])
+
+    assertEquals(2, result.rowCount())
+    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    assertTrue(values.contains(30 as BigDecimal))
+    assertTrue(values.contains(200 as BigDecimal))
+  }
+
+  @Test
+  void testSummaryHexWithCustomFunction() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'value'])
+        .rows([
+            [0, 0, 10], [0, 0, 20],
+            [5, 5, 100], [5, 5, 200]
+        ])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'value')
+
+    // Custom function: return the count as the value
+    def customFun = { List<BigDecimal> vals ->
+      return [value: vals.size()]
+    }
+
+    def result = GgStat.summaryHex(data, aes, [bins: 2, 'fun.data': customFun])
+
+    assertEquals(2, result.rowCount())
+    List<BigDecimal> values = result['value'] as List<BigDecimal>
+
+    // Both hexes should have count=2
+    assertTrue(values.every { it == 2 as BigDecimal }, "Custom function should return count")
+  }
+
+  @Test
+  void testSummaryHexWithColorAesthetic() {
+    // Test that summaryHex can use color aesthetic when fill is not available
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'z'])
+        .rows([
+            [0, 0, 10], [0, 0, 20],
+            [5, 5, 30], [5, 5, 40]
+        ])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', color: 'z')  // Using color instead of fill
+    def result = GgStat.summaryHex(data, aes, [bins: 2, fun: 'mean'])
+
+    assertEquals(2, result.rowCount())
+    assertTrue(result.columnNames().containsAll(['x', 'y', 'value']))
+  }
+
+  @Test
+  void testSummaryHexEmptyData() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'z'])
+        .rows([])
+        .types(Double, Double, Double)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'z')
+    def result = GgStat.summaryHex(data, aes)
+
+    assertEquals(0, result.rowCount(), "Empty data should produce empty result")
+    assertTrue(result.columnNames().containsAll(['x', 'y', 'value']))
+  }
+
+  @Test
+  void testSummaryHexRequiresZVariable() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2], [3, 4]])
+        .types(Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')  // No fill or color
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.summaryHex(data, aes)
+    }
+    assertTrue(ex.message.contains('fill or color aesthetic'))
+  }
+
+  @Test
+  void testSummaryHexWithBinwidth() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y', 'value'])
+        .rows([
+            [0, 0, 10], [1, 1, 20],
+            [5, 5, 30], [6, 6, 40]
+        ])
+        .types(Integer, Integer, Integer)
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y', fill: 'value')
+    def result = GgStat.summaryHex(data, aes, [binwidth: 2.0, fun: 'mean'])
+
+    assertTrue(result.rowCount() > 0)
+    assertTrue(result.columnNames().containsAll(['x', 'y', 'value']))
+
+    // Verify all values are computed correctly
+    List<BigDecimal> values = result['value'] as List<BigDecimal>
+    values.each { value ->
+      assertTrue(value > 0, "All summary values should be positive")
+    }
+  }
 }
