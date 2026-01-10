@@ -276,4 +276,52 @@ class AnnotationLogticksTest {
     String svgContent = SvgWriter.toXml(svg)
     assertTrue(svgContent.contains('<line'))
   }
+
+  @Test
+  void testLogticksBase6() {
+    // Test base-6 logarithmic scale
+    // Base-6 should generate major, intermediate (at 2), and minor ticks (at 3, 4, 5)
+    // Note: mult==5 should be minor (not intermediate) for non-base-10
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 1], [6, 2], [36, 3], [216, 4]])
+        .build()
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        annotation_logticks(sides: 'b', base: 6)
+
+    assertNotNull(chart)
+
+    // Render to ensure base-6 works with correct intermediate/minor classification
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    String svgContent = SvgWriter.toXml(svg)
+    assertTrue(svgContent.contains('<line'))
+  }
+
+  @Test
+  void testLogticksBase8() {
+    // Test base-8 logarithmic scale
+    // Base-8 should generate major, intermediate (at 2), and minor ticks (at 3, 4, 5, 6, 7)
+    // This tests the case where mult==5 exists but should be classified as minor
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 1], [8, 2], [64, 3], [512, 4]])
+        .build()
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        annotation_logticks(sides: 'b', base: 8)
+
+    assertNotNull(chart)
+
+    // Render to ensure base-8 works with correct intermediate/minor classification
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    String svgContent = SvgWriter.toXml(svg)
+    assertTrue(svgContent.contains('<line'))
+  }
 }

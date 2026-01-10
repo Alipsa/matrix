@@ -10,10 +10,14 @@ import se.alipsa.matrix.gg.layer.StatType
  * Annotation for logarithmic tick marks.
  * Automatically adds tick marks at appropriate positions for log-scaled axes.
  *
- * This annotation detects log-scaled axes and generates tick marks at:
+ * This annotation detects log-scaled axes and generates tick marks at (for base 10):
  * - Major positions: powers of the base (1, 10, 100, ...)
  * - Intermediate positions: 2 and 5 multiples between major ticks (2, 5, 20, 50, ...)
+ *   Note: For base 10, both mult==2 and mult==5 are intermediate. For other bases >= 4,
+ *   only mult==2 is intermediate; mult==5 is minor (if it exists in the range).
  * - Minor positions: other integer multiples between major ticks (3, 4, 6, 7, 8, 9, ...)
+ *
+ * For bases 2 and 3, only major ticks are generated (no intermediate or minor ticks).
  *
  * Usage:
  * <pre>{@code

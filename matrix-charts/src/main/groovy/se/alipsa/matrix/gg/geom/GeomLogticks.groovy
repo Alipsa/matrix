@@ -161,7 +161,14 @@ class GeomLogticks extends Geom {
           BigDecimal value = mult * (base ** pow)
           BigDecimal logValue = value.log(base)
           if (logValue >= logMin && logValue <= logMax) {
-            String type = (mult == 2 || mult == 5) ? 'intermediate' : 'minor'
+            // For base 10, both 2 and 5 are intermediate ticks (visually significant)
+            // For other bases, only 2 is intermediate (5 is minor or may not exist)
+            String type
+            if (base == 10) {
+              type = (mult == 2 || mult == 5) ? 'intermediate' : 'minor'
+            } else {
+              type = (mult == 2) ? 'intermediate' : 'minor'
+            }
             ticks << [value: value, type: type]
           }
         }

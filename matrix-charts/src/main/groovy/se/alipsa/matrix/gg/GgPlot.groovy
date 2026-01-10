@@ -609,10 +609,13 @@ class GgPlot {
    * Add logarithmic tick marks to plot.
    * Automatically detects log-scaled axes and generates tick marks at appropriate positions.
    *
-   * Tick marks are generated for:
+   * Tick marks are generated for (base 10 example):
    * - Major positions: powers of the base (1, 10, 100, ...)
-   * - Intermediate ticks: 2 and 5 multiples (2, 5, 20, 50, ...)
+   * - Intermediate ticks: 2 and 5 multiples (2, 5, 20, 50, ...) for base 10
+   *   For other bases >= 4, only mult==2 is intermediate; mult==5 is minor (if it exists)
    * - Minor ticks: other integers (3, 4, 6, 7, 8, 9, ...)
+   *
+   * For bases 2 and 3, only major ticks are generated.
    *
    * Example: annotation_logticks(sides: 'bl', base: 10)
    *

@@ -182,6 +182,18 @@ class GeomCustom extends Geom {
    * Parses the SVG markup and inserts it into the group with positioning transform.
    * Uses gsvg 0.5.0's SvgReader.parse() capability for parsing SVG strings.
    *
+   * SECURITY WARNING: This method accepts arbitrary SVG markup and embeds it directly
+   * in the output without sanitization. Only use TRUSTED, STATIC SVG strings from your
+   * own codebase. NEVER pass user-controlled input (HTTP parameters, form data, database
+   * content from untrusted sources) to this method, as it can lead to XSS vulnerabilities
+   * when the resulting SVG is rendered in a browser.
+   *
+   * For dynamic content, use Closure-based grobs instead, which provide programmatic
+   * control over SVG element creation.
+   *
+   * @param group the SVG group to render into
+   * @param svgString TRUSTED, STATIC SVG markup string (never user input!)
+   * @param bounds the pixel coordinate bounds (not used for SVG strings)
    * @throws IllegalArgumentException if the SVG markup is malformed or cannot be parsed
    */
   private static void renderSvgString(G group, String svgString, Map<String, BigDecimal> bounds) {
