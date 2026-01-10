@@ -66,6 +66,13 @@ class GeomSf extends Geom {
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
     if (data == null || data.rowCount() == 0) return
 
+    // Check for stat_sf preprocessing
+    if (!data.columnNames().contains('__sf_type')) {
+      throw new IllegalStateException(
+          "geom_sf requires stat_sf - data must contain '__sf_type' column. " +
+          "Ensure stat='sf' is set or use stat_sf() explicitly.")
+    }
+
     Aes resolvedAes = resolveAes(aes)
     Map<String, List<Map<String, Object>>> buckets = [
         'point': [],

@@ -104,4 +104,64 @@ class GeomSfTest {
     Svg svg = chart.render()
     assertNotNull(svg, 'geom_map should render polygon data')
   }
+
+  @Test
+  void testGeomSfMultiPolygon() {
+    def data = Matrix.builder()
+        .data([geometry: ['MULTIPOLYGON (((0 0, 1 0, 1 1, 0 0)), ((2 2, 3 2, 3 3, 2 2)))']])
+        .build()
+    def chart = ggplot(data, aes(geometry: 'geometry')) + geom_sf()
+    Svg svg = chart.render()
+    assertNotNull(svg, 'geom_sf should render MULTIPOLYGON')
+  }
+
+  @Test
+  void testGeomSfMultiPoint() {
+    def data = Matrix.builder()
+        .data([geometry: ['MULTIPOINT ((0 0), (1 1), (2 2))']])
+        .build()
+    def chart = ggplot(data, aes(geometry: 'geometry')) + geom_sf()
+    Svg svg = chart.render()
+    assertNotNull(svg, 'geom_sf should render MULTIPOINT')
+  }
+
+  @Test
+  void testGeomSfMultiLinestring() {
+    def data = Matrix.builder()
+        .data([geometry: ['MULTILINESTRING ((0 0, 1 1), (2 2, 3 3))']])
+        .build()
+    def chart = ggplot(data, aes(geometry: 'geometry')) + geom_sf()
+    Svg svg = chart.render()
+    assertNotNull(svg, 'geom_sf should render MULTILINESTRING')
+  }
+
+  @Test
+  void testGeomSfEmptyGeometry() {
+    def data = Matrix.builder()
+        .data([geometry: ['POINT EMPTY', 'POINT (1 1)']])
+        .build()
+    def chart = ggplot(data, aes(geometry: 'geometry')) + geom_sf()
+    Svg svg = chart.render()
+    assertNotNull(svg, 'geom_sf should handle EMPTY geometries')
+  }
+
+  @Test
+  void testGeomMapUnmatchedIdsWarning() {
+    // Data has ID 'B' which doesn't exist in map - should warn but still render
+    def mapData = Matrix.builder()
+        .data([
+            x: [0, 1, 1, 0, 0],
+            y: [0, 0, 1, 1, 0],
+            group: [1, 1, 1, 1, 1],
+            region: ['A', 'A', 'A', 'A', 'A']
+        ])
+        .build()
+    def data = Matrix.builder()
+        .data([region: ['A', 'B'], value: [10, 20]])
+        .build()
+    def chart = ggplot(data, aes(map_id: 'region', fill: 'value')) +
+        geom_map(map: mapData)
+    Svg svg = chart.render()
+    assertNotNull(svg, 'geom_map should render matched IDs and warn about unmatched')
+  }
 }
