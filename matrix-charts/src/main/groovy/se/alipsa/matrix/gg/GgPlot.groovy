@@ -611,8 +611,8 @@ class GgPlot {
    *
    * Tick marks are generated for:
    * - Major positions: powers of the base (1, 10, 100, ...)
-   * - Intermediate positions: 2 and 5 multiples (2, 5, 20, 50, ...)
-   * - Minor positions: other integer multiples (3, 4, 6, 7, 8, 9, ...)
+   * - Intermediate ticks: 2 and 5 multiples (2, 5, 20, 50, ...)
+   * - Minor ticks: other integers (3, 4, 6, 7, 8, 9, ...)
    *
    * Example: annotation_logticks(sides: 'bl', base: 10)
    *
