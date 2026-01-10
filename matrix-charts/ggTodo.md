@@ -265,8 +265,8 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 3.10 Annotation Enhancements
 
-- 3.10.1 [ ] `annotation_logticks()` - Log tick mark annotations
-- 3.10.2 [ ] `annotation_custom()` - Custom grob annotations
+- 3.10.1 [x] `annotation_logticks()` - Log tick mark annotations
+- 3.10.2 [x] `annotation_custom()` - Custom grob annotations
 
 ---
 

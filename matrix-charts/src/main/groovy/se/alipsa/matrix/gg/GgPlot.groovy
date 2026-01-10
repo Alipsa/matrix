@@ -605,6 +605,61 @@ class GgPlot {
     return annotate(geomType, params)
   }
 
+  /**
+   * Add logarithmic tick marks to plot.
+   * Automatically detects log-scaled axes and generates tick marks at appropriate positions.
+   *
+   * Tick marks are generated for:
+   * - Major positions: powers of the base (1, 10, 100, ...)
+   * - Intermediate positions: 2 and 5 multiples (2, 5, 20, 50, ...)
+   * - Minor positions: other integer multiples (3, 4, 6, 7, 8, 9, ...)
+   *
+   * Example: annotation_logticks(sides: 'bl', base: 10)
+   *
+   * @param params optional parameters:
+   *   - base: logarithmic base (default: 10)
+   *   - sides: which sides to draw ticks: 't' (top), 'r' (right), 'b' (bottom), 'l' (left) (default: 'bl')
+   *   - outside: whether ticks extend outside plot area (default: false)
+   *   - scaled: whether data is already log-transformed (default: true)
+   *   - short: length of minor tick marks in pixels (default: 1.5)
+   *   - mid: length of intermediate tick marks in pixels (default: 2.25)
+   *   - long: length of major tick marks in pixels (default: 4.5)
+   *   - colour/color: tick color (default: 'black')
+   *   - linewidth: tick line width (default: 0.5)
+   *   - linetype: tick line type (default: 'solid')
+   *   - alpha: transparency 0-1 (default: 1.0)
+   * @return a Layer with log tick marks
+   */
+  static Layer annotation_logticks(Map params = [:]) {
+    return new AnnotationLogticks(params).toLayer()
+  }
+
+  /**
+   * Add custom graphical object (grob) to plot.
+   * The grob can be a Closure, gsvg Element, or SVG String.
+   *
+   * The custom annotation does not affect scale limits and remains static across facets.
+   * Position defaults (-Inf/Inf) fill the entire plot panel.
+   *
+   * Example with Closure:
+   * annotation_custom(
+   *   grob: { G g, Map bounds ->
+   *     g.addRect().x(bounds.xmin as int).y(bounds.ymin as int)
+   *       .width((bounds.xmax - bounds.xmin) as int)
+   *       .height((bounds.ymax - bounds.ymin) as int)
+   *       .fill('red').addAttribute('opacity', 0.2)
+   *   },
+   *   xmin: 1, xmax: 3, ymin: 5, ymax: 10
+   * )
+   *
+   * @param params required: grob (Closure, gsvg Element, or String)
+   *               optional: xmin, xmax, ymin, ymax (default: -Inf to Inf)
+   * @return a Layer with custom graphical object
+   */
+  static Layer annotation_custom(Map params) {
+    return new AnnotationCustom(params).toLayer()
+  }
+
   // ============ Guide System ============
 
   /**

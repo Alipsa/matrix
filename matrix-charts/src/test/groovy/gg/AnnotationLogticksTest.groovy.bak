@@ -1,0 +1,313 @@
+package gg
+
+import org.junit.jupiter.api.Test
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.layer.Layer
+
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+
+/**
+ * Test annotation_logticks() functionality.
+ */
+class AnnotationLogticksTest {
+
+  @Test
+  void testLogticksOnXAxis() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 1], [10, 2], [100, 3], [1000, 4]])
+        .build()
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        annotation_logticks(sides: 'b')
+
+    assertNotNull(chart)
+    assertEquals(2, chart.layers.size())
+
+    // Verify the logticks layer
+    def logticksLayer = chart.layers[1]
+    assertNotNull(logticksLayer)
+    assertNotNull(logticksLayer.geom)
+    assertEquals('GeomLogticks', logticksLayer.geom.class.simpleName)
+    assertFalse(logticksLayer.inheritAes)
+
+    // Render to ensure no errors
+    def svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.contains('<svg'))
+    assertTrue(svg.contains('</svg>'))
+  }
+
+  @Test
+  void testLogticksOnYAxis() {
+    def data = Matrix.of([
+        'x': [1, 2, 3, 4],
+        'y': [1, 10, 100, 1000]
+    ])
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_y_log10() +
+        annotation_logticks(sides: 'l')
+
+    assertNotNull(chart)
+    assertEquals(2, chart.layers.size())
+
+    // Render to ensure no errors
+    def svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.contains('<svg'))
+  }
+
+  @Test
+  void testLogticksBothAxes() {
+    def data = Matrix.of([
+        'x': [1, 10, 100],
+        'y': [1, 10, 100]
+    ])
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        scale_y_log10() +
+        annotation_logticks(sides: 'bl')
+
+    assertNotNull(chart)
+    assertEquals(2, chart.layers.size())
+
+    // Render to ensure no errors
+    def svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.contains('<line'))
+  }
+
+  @Test
+  void testLogticksDifferentSides() {
+    def data = Matrix.of([
+        'x': [1, 10, 100],
+        'y': [1, 10, 100]
+    ])
+
+    // Test top side
+    def chartTop = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        annotation_logticks(sides: 't')
+
+    def svgTop = chartTop.render()
+    assertNotNull(svgTop)
+
+    // Test right side
+    def chartRight = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_y_log10() +
+        annotation_logticks(sides: 'r')
+
+    def svgRight = chartRight.render()
+    assertNotNull(svgRight)
+
+    // Test all sides
+    def chartAll = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        scale_y_log10() +
+        annotation_logticks(sides: 'trbl')
+
+    def svgAll = chartAll.render()
+    assertNotNull(svgAll)
+    assertTrue(svgAll.contains('<line'))
+  }
+
+  @Test
+  void testLogticksCustomLengths() {
+    def data = Matrix.of([
+        'x': [1, 10, 100, 1000],
+        'y': [1, 2, 3, 4]
+    ])
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        annotation_logticks(
+            sides: 'b',
+            short: 2.0,
+            mid: 4.0,
+            long: 6.0
+        )
+
+    assertNotNull(chart)
+
+    // Render to ensure custom lengths are accepted
+    def svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testLogticksNoLogScale() {
+    def data = Matrix.of([
+        'x': [1, 2, 3, 4],
+        'y': [1, 2, 3, 4]
+    ])
+
+    // Without log scales, logticks should render but produce no ticks
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        annotation_logticks(sides: 'bl')
+
+    assertNotNull(chart)
+
+    // Render should complete without errors
+    def svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testLogticksCustomColor() {
+    def data = Matrix.of([
+        'x': [1, 10, 100],
+        'y': [1, 2, 3]
+    ])
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        annotation_logticks(
+            sides: 'b',
+            colour: 'red',
+            linewidth: 1.5,
+            alpha: 0.7
+        )
+
+    assertNotNull(chart)
+
+    def svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.contains('<line'))
+  }
+
+  @Test
+  void testLogticksWithLinetype() {
+    def data = Matrix.of([
+        'x': [1, 10, 100, 1000],
+        'y': [1, 2, 3, 4]
+    ])
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        annotation_logticks(
+            sides: 'b',
+            linetype: 'dashed'
+        )
+
+    assertNotNull(chart)
+
+    def svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.contains('stroke-dasharray'))
+  }
+
+  @Test
+  void testLogticksLayer() {
+    def data = Matrix.of([
+        'x': [1, 10, 100],
+        'y': [1, 2, 3]
+    ])
+
+    Layer layer = annotation_logticks(sides: 'b', base: 10)
+
+    assertNotNull(layer)
+    assertNotNull(layer.geom)
+    assertEquals('GeomLogticks', layer.geom.class.simpleName)
+    assertNull(layer.data)
+    assertNull(layer.aes)
+    assertFalse(layer.inheritAes)
+  }
+
+  @Test
+  void testLogticksWithOtherAnnotations() {
+    def data = Matrix.of([
+        'x': [1, 10, 100, 1000],
+        'y': [1, 2, 3, 4]
+    ])
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        scale_y_log10() +
+        annotation_logticks(sides: 'bl') +
+        annotate('text', x: 10, y: 2, label: 'Note')
+
+    assertNotNull(chart)
+    assertEquals(3, chart.layers.size())
+
+    def svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.contains('<text'))
+  }
+
+  @Test
+  void testLogticksDefaultParameters() {
+    def data = Matrix.of([
+        'x': [1, 10, 100],
+        'y': [1, 10, 100]
+    ])
+
+    // Test with default parameters (sides: 'bl', base: 10)
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        scale_y_log10() +
+        annotation_logticks()
+
+    assertNotNull(chart)
+
+    def svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.contains('<line'))
+  }
+
+  @Test
+  void testLogticksOutside() {
+    def data = Matrix.of([
+        'x': [1, 10, 100, 1000],
+        'y': [1, 2, 3, 4]
+    ])
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10() +
+        annotation_logticks(
+            sides: 'b',
+            outside: true
+        )
+
+    assertNotNull(chart)
+
+    // Render to ensure outside parameter is accepted
+    def svg = chart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testLogticksWithLimits() {
+    def data = Matrix.of([
+        'x': [1, 10, 100, 1000],
+        'y': [1, 2, 3, 4]
+    ])
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        scale_x_log10(limits: [1, 1000]) +
+        annotation_logticks(sides: 'b')
+
+    assertNotNull(chart)
+
+    def svg = chart.render()
+    assertNotNull(svg)
+    assertTrue(svg.contains('<line'))
+  }
+}
