@@ -11,15 +11,18 @@ import se.alipsa.matrix.gg.scale.Scale
 
 /**
  * Custom graphical object (grob) geometry.
- * Renders custom SVG elements, closures, or SVG strings at specified positions.
+ * Renders custom SVG elements via closures at specified positions.
  *
  * The grob is positioned within bounds (xmin, xmax, ymin, ymax) and does not affect scale limits.
  * Infinite bounds (-Inf/Inf) are replaced with the full panel extent.
  *
+ * Currently supported grob types:
+ * - Closure: Full support for rendering custom SVG via gsvg API
+ * - SvgElement: Partial support (may require gsvg 0.5.0 enhancements)
+ * - String: Not yet implemented (planned for future release)
+ *
  * Usage:
- * - annotation_custom(grob: {...}, xmin: 1, xmax: 3, ymin: 5, ymax: 10)
- * - annotation_custom(grob: svgElement)
- * - annotation_custom(grob: "<circle ... />")
+ * - annotation_custom(grob: { G g, Map b -> g.addRect()... }, xmin: 1, xmax: 3, ymin: 5, ymax: 10)
  */
 @CompileStatic
 class GeomCustom extends Geom {
@@ -74,13 +77,17 @@ class GeomCustom extends Geom {
     if (grob instanceof Closure) {
       renderClosure(group, grob as Closure, bounds, scales, coord)
     } else if (grob instanceof SvgElement) {
+      // SvgElement support requires gsvg 0.5.0 enhancements
       renderSvgElement(group, grob as SvgElement, bounds)
     } else if (grob instanceof String) {
-      renderSvgString(group, grob as String, bounds)
+      // SVG string parsing not yet implemented
+      throw new UnsupportedOperationException(
+          "SVG string grobs are not yet supported. " +
+          "Please use a Closure-based grob instead.")
     } else {
       throw new IllegalArgumentException(
           "Unsupported grob type: ${grob.class.name}. " +
-          "Expected Closure, SvgElement, or String.")
+          "Expected Closure (or SvgElement with limitations).")
     }
   }
 
@@ -102,7 +109,7 @@ class GeomCustom extends Geom {
   private static boolean isInfinite(BigDecimal value) {
     if (value == null) return true
     // Check for our special infinity marker values
-    return value.abs() >= 999999999999G
+    return value.abs() >= se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
   }
 
   /**
@@ -128,6 +135,9 @@ class GeomCustom extends Geom {
   /**
    * Render a gsvg SvgElement.
    * The element is added to the group with positioning transform.
+   *
+   * Note: This implementation may require enhancements based on gsvg 0.5.0 capabilities.
+   * Consider investigating gsvg's built-in methods for copying/cloning SVG elements.
    */
   private static void renderSvgElement(G group, SvgElement element, Map<String, BigDecimal> bounds) {
     // Create a nested group with positioning
@@ -136,26 +146,24 @@ class GeomCustom extends Geom {
     BigDecimal yPos = bounds.ymin
     customGroup.addAttribute('transform', "translate(${xPos as int},${yPos as int})")
 
-    // Add the element to the group
+    // TODO: Investigate gsvg 0.5.0 capabilities for proper element copying
+    // The gsvg library may provide built-in support for this operation
     customGroup.add(element)
   }
 
   /**
    * Render raw SVG string.
-   * The string is wrapped in a group with positioning.
+   * Not yet implemented - proper SVG parsing is required.
    *
-   * Note: This is a simplified implementation. Proper SVG parsing would be needed
-   * for full production use. For now, we add a placeholder.
+   * Future implementation should investigate gsvg 0.5.0 capabilities for:
+   * - Parsing SVG strings into elements
+   * - Copying entire SVG content to a new node
+   *
+   * For now, this throws UnsupportedOperationException (see render method).
    */
   private static void renderSvgString(G group, String svgString, Map<String, BigDecimal> bounds) {
-    // Create a nested group with positioning
-    G customGroup = group.addG()
-    BigDecimal xPos = bounds.xmin
-    BigDecimal yPos = bounds.ymin
-    customGroup.addAttribute('transform', "translate(${xPos as int},${yPos as int})")
-
-    // For now, just add the string directly as title for debugging
-    // A full implementation would parse and inject the SVG
-    customGroup.addAttribute('data-custom-svg', svgString)
+    throw new UnsupportedOperationException(
+        "SVG string rendering requires proper SVG parsing implementation. " +
+        "Use Closure-based grobs for custom rendering.")
   }
 }

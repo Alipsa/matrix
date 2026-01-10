@@ -12,9 +12,8 @@ import se.alipsa.matrix.gg.layer.StatType
  * Allows adding arbitrary SVG content to plots at specified positions.
  *
  * The grob can be:
- * - A Closure that receives (G group, Map bounds, Map scales, Coord coord) and renders SVG
- * - A gsvg SvgElement (Rect, Circle, etc.)
- * - A String containing raw SVG markup
+ * - A Closure that receives (G group, Map bounds) or (G group, Map bounds, Map scales, Coord coord) and renders SVG
+ * - A gsvg SvgElement (Rect, Circle, etc.) - **Note:** Full support pending
  *
  * Position parameters (xmin, xmax, ymin, ymax) support infinite values:
  * - -Inf/Inf are replaced with the full panel extent
@@ -41,11 +40,14 @@ import se.alipsa.matrix.gg.layer.StatType
  * }</pre>
  *
  * Parameters:
- * - grob: (required) Closure, SvgElement, or String containing custom graphics
+ * - grob: (required) Closure that renders SVG elements
  * - xmin: minimum x position (default: -Inf, fills from left edge)
  * - xmax: maximum x position (default: Inf, fills to right edge)
  * - ymin: minimum y position (default: -Inf, fills from bottom edge)
  * - ymax: maximum y position (default: Inf, fills to top edge)
+ *
+ * Note: Future versions may support additional grob types (gsvg SvgElement, SVG strings).
+ * Currently, Closure-based grobs provide full flexibility for custom rendering.
  */
 @CompileStatic
 class AnnotationCustom {
@@ -112,17 +114,17 @@ class AnnotationCustom {
   private static BigDecimal handleInfValue(Object value, boolean isMin) {
     if (value == null) {
       // Use extreme values as markers for infinity that BigDecimal can handle
-      return isMin ? -999999999999G : 999999999999G
+      return isMin ? -AnnotationConstants.INFINITY_MARKER : AnnotationConstants.INFINITY_MARKER
     }
 
     // Handle string representations of infinity
     if (value instanceof String) {
       String str = (value as String).toLowerCase()
       if (str == 'inf' || str == '+inf') {
-        return 999999999999G  // Positive infinity marker
+        return AnnotationConstants.INFINITY_MARKER
       }
       if (str == '-inf') {
-        return -999999999999G  // Negative infinity marker
+        return -AnnotationConstants.INFINITY_MARKER
       }
       // Try to parse as number
       try {
@@ -136,7 +138,7 @@ class AnnotationCustom {
     if (value instanceof Number) {
       double d = (value as Number).doubleValue()
       if (Double.isInfinite(d)) {
-        return d > 0 ? 999999999999G : -999999999999G
+        return d > 0 ? AnnotationConstants.INFINITY_MARKER : -AnnotationConstants.INFINITY_MARKER
       }
       return value as BigDecimal
     }

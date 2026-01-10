@@ -3,6 +3,7 @@ build/
 .idea/
 .DS_Store
 .Rhistory
+*.bak
 
 /matrix-bom/target/
 /matrix-sql/derby.log

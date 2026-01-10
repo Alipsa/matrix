@@ -111,6 +111,34 @@ class NumberExtension {
   }
 
   /**
+   * Returns the logarithm of this number to the specified base as a BigDecimal.
+   * <p>
+   * This method computes log_base(value) using the change of base formula:
+   * log_base(value) = ln(value) / ln(base)
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal value = 8.0
+   * value.log(2)  // → 3.0 (log base 2 of 8)
+   *
+   * BigDecimal value2 = 1000.0
+   * value2.log(10)  // → 3.0 (log base 10 of 1000)
+   *
+   * BigDecimal value3 = 27.0
+   * value3.log(3)  // → 3.0 (log base 3 of 27)
+   * }</pre>
+   *
+   * @param self the Number value
+   * @param base the logarithm base
+   * @return a BigDecimal representing the logarithm of this value to the specified base
+   */
+  static BigDecimal log(Number self, Number base) {
+    double valueLog = Math.log(self.doubleValue())
+    double baseLog = Math.log(base.doubleValue())
+    return (valueLog / baseLog) as BigDecimal
+  }
+
+  /**
    * Returns the base-10 logarithm (log10) of this number as a BigDecimal.
    *
    * @param self the Number value

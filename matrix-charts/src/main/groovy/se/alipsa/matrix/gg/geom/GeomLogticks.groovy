@@ -149,7 +149,7 @@ class GeomLogticks extends Geom {
       // Intermediate and minor ticks (multiples of base^pow)
       for (int mult = 2; mult < base; mult++) {
         BigDecimal value = mult * (base ** pow)
-        BigDecimal logValue = value.log10()
+        BigDecimal logValue = value.log(base)
         if (logValue >= logMin && logValue <= logMax) {
           String type = (mult == 2 || mult == 5) ? 'intermediate' : 'minor'
           ticks << [value: value, type: type]
