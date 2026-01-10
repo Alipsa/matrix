@@ -152,6 +152,15 @@ class GeomMap extends Geom {
       }
     }
 
+    // Check for data IDs that don't exist in the map
+    Set<Object> mapIds = map[resolvedMapIdCol].toSet()
+    Set<Object> unmatchedDataIds = dataById.keySet() - mapIds
+    if (unmatchedDataIds) {
+      String preview = unmatchedDataIds.take(5).collect { it.toString() }.join(', ')
+      String suffix = unmatchedDataIds.size() > 5 ? '...' : ''
+      System.err.println("geom_map warning: ${unmatchedDataIds.size()} data ID(s) not found in map: ${preview}${suffix}")
+    }
+
     List<Map<String, Object>> rows = []
     map.each { mapRow ->
       Map<String, Object> rowMap = new LinkedHashMap<>(mapRow.toMap())
