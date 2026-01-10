@@ -21,10 +21,14 @@ import se.alipsa.matrix.gg.scale.ScaleYLog10
  * - annotation_logticks(sides: 'trbl') - all four sides
  * - annotation_logticks(base: 2) - base-2 logarithmic ticks
  *
- * Tick types:
- * - Major: powers of base (1, 10, 100, ...)
- * - Intermediate: 2 and 5 multiples of powers (2, 5, 20, 50, ...)
- * - Minor: other integers (3, 4, 6, 7, 8, 9, ...)
+ * Tick types (for base >= 4):
+ * - Major: powers of base (e.g., 1, 10, 100, ... for base 10)
+ * - Intermediate: multiples at 2 and 5 (e.g., 2, 5, 20, 50, ... for base 10)
+ *   Note: For base 10, both 2 and 5 are intermediate. For other bases >= 4,
+ *   only mult==2 is intermediate, and mult==5 is minor (if base > 5).
+ * - Minor: other integer multiples (e.g., 3, 4, 6, 7, 8, 9, ... for base 10)
+ *
+ * For bases 2 and 3, only major ticks are generated (no intermediate/minor ticks).
  */
 @CompileStatic
 class GeomLogticks extends Geom {

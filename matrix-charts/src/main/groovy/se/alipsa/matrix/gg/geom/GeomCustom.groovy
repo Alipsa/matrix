@@ -105,14 +105,26 @@ class GeomCustom extends Geom {
 
   /**
    * Get position value from data matrix.
-   * Returns INFINITY_MARKER for missing or null values to indicate infinite bounds.
+   * Returns appropriate INFINITY_MARKER for missing or null values based on column name:
+   * - Negative infinity for 'min' columns (xmin, ymin)
+   * - Positive infinity for 'max' columns (xmax, ymax)
+   *
+   * This ensures that default infinite bounds expand to fill the entire panel correctly.
    */
   private static BigDecimal getPositionValue(Matrix data, String colName, int rowIdx) {
     if (data == null || !data.columnNames().contains(colName)) {
-      return -se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
+      // Determine if this is a min or max bound based on column name
+      boolean isMinBound = colName?.toLowerCase()?.contains('min') ?: true
+      return isMinBound ? -se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
+                        : se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
     }
     Object value = data[colName][rowIdx]
-    if (value == null) return -se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
+    if (value == null) {
+      // Determine if this is a min or max bound based on column name
+      boolean isMinBound = colName?.toLowerCase()?.contains('min') ?: true
+      return isMinBound ? -se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
+                        : se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
+    }
     return value as BigDecimal
   }
 
@@ -147,12 +159,13 @@ class GeomCustom extends Geom {
 
   /**
    * Render a gsvg SvgElement.
-   * The element is cloned into the group with positioning transform.
+   * The element is cloned into the group without positioning transform.
    * Uses gsvg 0.5.0's element.clone() capability for proper element copying.
    *
-   * Note: The bounds map contains data-space coordinates. For pixel-based positioning,
-   * users should transform coordinates using scales in their closure-based grobs.
-   * SvgElements are positioned at the data-space origin without transformation.
+   * Note: The bounds parameter contains pixel coordinates (for API consistency with closures)
+   * but is not used in SvgElement rendering. SvgElements are cloned directly into the group
+   * without transformation, as they typically have their own internal coordinate system.
+   * For positioned rendering with bounds, use a Closure-based grob instead.
    */
   private static void renderSvgElement(G group, SvgElement element, Map<String, BigDecimal> bounds) {
     // Create a nested group for the custom content
