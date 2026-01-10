@@ -74,6 +74,85 @@ class NumberExtensionTest {
   }
 
   @Test
+  void testLogWithBase() {
+    // Test logarithm with custom base
+    BigDecimal value = 8.0
+    BigDecimal log2Result = value.log(2)
+    assertEquals(3.0, log2Result.doubleValue(), 0.00001, "log base 2 of 8 should be 3")
+
+    // Test base 3
+    BigDecimal value2 = 27.0
+    BigDecimal log3Result = value2.log(3)
+    assertEquals(3.0, log3Result.doubleValue(), 0.00001, "log base 3 of 27 should be 3")
+
+    // Test base 10 (should match log10())
+    BigDecimal value3 = 1000.0
+    BigDecimal logBase10 = value3.log(10)
+    BigDecimal log10Direct = value3.log10()
+    assertEquals(log10Direct.doubleValue(), logBase10.doubleValue(), 0.00001,
+        "log(value, 10) should equal log10(value)")
+
+    // Test with natural base e
+    BigDecimal valueE = Math.E as BigDecimal
+    BigDecimal logE = valueE.log(Math.E)
+    assertEquals(1.0, logE.doubleValue(), 0.00001, "log base e of e should be 1")
+
+    // Test with extension syntax
+    assert 8.0.log(2) == 3.0
+  }
+
+  @Test
+  void testLogNegativeValueThrows() {
+    // Test that log throws for negative values
+    def exception = assertThrows(IllegalArgumentException) {
+      (-5.0).log()
+    }
+    assertTrue(exception.message.contains('non-positive'))
+
+    // Test log with base
+    exception = assertThrows(IllegalArgumentException) {
+      (-10.0).log(2)
+    }
+    assertTrue(exception.message.contains('non-positive'))
+  }
+
+  @Test
+  void testLogZeroValueThrows() {
+    // Test that log throws for zero
+    def exception = assertThrows(IllegalArgumentException) {
+      (0.0).log()
+    }
+    assertTrue(exception.message.contains('non-positive'))
+
+    // Test log with base
+    exception = assertThrows(IllegalArgumentException) {
+      (0.0).log(10)
+    }
+    assertTrue(exception.message.contains('non-positive'))
+  }
+
+  @Test
+  void testLogInvalidBaseThrows() {
+    // Test base of 1 (undefined)
+    def exception = assertThrows(IllegalArgumentException) {
+      (10.0).log(1)
+    }
+    assertTrue(exception.message.contains('cannot be 1') || exception.message.contains('undefined'))
+
+    // Test negative base
+    exception = assertThrows(IllegalArgumentException) {
+      (10.0).log(-2)
+    }
+    assertTrue(exception.message.contains('must be positive'))
+
+    // Test base of 0
+    exception = assertThrows(IllegalArgumentException) {
+      (10.0).log(0)
+    }
+    assertTrue(exception.message.contains('must be positive'))
+  }
+
+  @Test
   void testExp() {
     // Test exp(0) = 1
     BigDecimal zero = 0.0

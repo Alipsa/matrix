@@ -3,6 +3,7 @@ build/
 .idea/
 .DS_Store
 .Rhistory
+*.bak
 
 /matrix-bom/target/
 /matrix-sql/derby.log
@@ -13,3 +14,4 @@ build/
 /matrix-charts/examples/gg/ggplot2/*.pdf
 /.gradle-user/
 
+/agent-api.log

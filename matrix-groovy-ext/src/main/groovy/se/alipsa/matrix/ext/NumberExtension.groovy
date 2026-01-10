@@ -103,11 +103,58 @@ class NumberExtension {
    * x.log().exp()  // → 5.0
    * }</pre>
    *
-   * @param self the Number value
+   * @param self the Number value (must be positive)
    * @return a BigDecimal representing the natural logarithm of this value
+   * @throws IllegalArgumentException if self is not positive (value <= 0)
    */
   static BigDecimal log(Number self) {
-    return Math.log(self.doubleValue()) as BigDecimal
+    double value = self.doubleValue()
+    if (value <= 0) {
+      throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
+    }
+    return Math.log(value) as BigDecimal
+  }
+
+  /**
+   * Returns the logarithm of this number to the specified base as a BigDecimal.
+   * <p>
+   * This method computes log_base(value) using the change of base formula:
+   * log_base(value) = ln(value) / ln(base)
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal value = 8.0
+   * value.log(2)  // → 3.0 (log base 2 of 8)
+   *
+   * BigDecimal value2 = 1000.0
+   * value2.log(10)  // → 3.0 (log base 10 of 1000)
+   *
+   * BigDecimal value3 = 27.0
+   * value3.log(3)  // → 3.0 (log base 3 of 27)
+   * }</pre>
+   *
+   * @param self the Number value (must be positive)
+   * @param base the logarithm base (must be positive and not equal to 1)
+   * @return a BigDecimal representing the logarithm of this value to the specified base
+   * @throws IllegalArgumentException if self <= 0, base <= 0, or base == 1
+   */
+  static BigDecimal log(Number self, Number base) {
+    double value = self.doubleValue()
+    double baseValue = base.doubleValue()
+
+    if (value <= 0) {
+      throw new IllegalArgumentException("Logarithm is undefined for non-positive values: ${self}")
+    }
+    if (baseValue <= 0) {
+      throw new IllegalArgumentException("Logarithm base must be positive: ${base}")
+    }
+    if (baseValue == 1.0) {
+      throw new IllegalArgumentException("Logarithm base cannot be 1: log base 1 is undefined")
+    }
+
+    double valueLog = Math.log(value)
+    double baseLog = Math.log(baseValue)
+    return (valueLog / baseLog) as BigDecimal
   }
 
   /**
