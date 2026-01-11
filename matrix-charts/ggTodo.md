@@ -321,8 +321,8 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.7 Time Scales
 
-- 4.7.1 [ ] `scale_x_time()` - Time-of-day scale for x-axis
-- 4.7.2 [ ] `scale_y_time()` - Time-of-day scale for y-axis
+- 4.7.1 [x] `scale_x_time()` - Time-of-day scale for x-axis
+- 4.7.2 [x] `scale_y_time()` - Time-of-day scale for y-axis
 
 ### 4.8 Advanced Guides
 
