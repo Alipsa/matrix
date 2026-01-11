@@ -1606,6 +1606,10 @@ class GgRenderer {
         return GgStat.ellipse(data, aes, layer.statParams)
       case StatType.SUMMARY_BIN:
         return GgStat.summaryBin(data, aes, layer.statParams)
+      case StatType.BIN_HEX:
+        return GgStat.binHex(data, aes, layer.statParams)
+      case StatType.SUMMARY_HEX:
+        return GgStat.summaryHex(data, aes, layer.statParams)
       case StatType.UNIQUE:
         return GgStat.unique(data, aes, layer.statParams)
       case StatType.FUNCTION:
