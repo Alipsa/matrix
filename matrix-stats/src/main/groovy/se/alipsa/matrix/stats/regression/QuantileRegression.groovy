@@ -123,39 +123,11 @@ class QuantileRegression {
     double[] x = xValues.collect { it as double } as double[]
     double[] y = yValues.collect { it as double } as double[]
 
-    // We have 2 + 2*n variables: [intercept, slope, u1+, u1-, u2+, u2-, ..., un+, un-]
-    int numVars = 2 + 2 * n
-
-    // Objective function coefficients
-    // c = [0, 0, τ, 1-τ, τ, 1-τ, ..., τ, 1-τ]
-    double[] objective = new double[numVars]
-    objective[0] = 0.0 // intercept has no cost
-    objective[1] = 0.0 // slope has no cost
-    for (int i = 0; i < n; i++) {
-      objective[2 + 2*i] = tauDouble      // u+ gets weight τ
-      objective[2 + 2*i + 1] = 1.0 - tauDouble  // u- gets weight (1-τ)
-    }
-
-    // Constraints: For each observation i: yi = β0 + β1*xi + ui+ - ui-
-    // Rearranged: β0 + β1*xi + ui+ - ui- = yi
-    LinearObjectiveFunction objFunc = new LinearObjectiveFunction(objective, 0.0)
-
-    List<LinearConstraint> constraints = []
-    for (int i = 0; i < n; i++) {
-      double[] coeffs = new double[numVars]
-      coeffs[0] = 1.0      // intercept
-      coeffs[1] = x[i]     // slope * x[i]
-      coeffs[2 + 2*i] = 1.0      // u+[i]
-      coeffs[2 + 2*i + 1] = -1.0 // -u-[i]
-
-      constraints << new LinearConstraint(coeffs, Relationship.EQ, y[i])
-    }
-
     // Apache Commons Math SimplexSolver requires all variables to be >= 0,
     // but the intercept and slope should be allowed to take negative values.
     // To handle this, we reformulate: let intercept = β0+ - β0- and slope = β1+ - β1-,
     // and keep residuals as non-negative variables u+ and u- for each observation.
-    // New variables: [β0+, β0-, β1+, β1-, u1+, u1-, u2+, u2-, ..., un+, un-]
+    // Variables: [β0+, β0-, β1+, β1-, u1+, u1-, u2+, u2-, ..., un+, un-]
     // Total variables: 4 + 2*n
     int numVarsReformulated = 4 + 2 * n
     double[] objectiveReformulated = new double[numVarsReformulated]
