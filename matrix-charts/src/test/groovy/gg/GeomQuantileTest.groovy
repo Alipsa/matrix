@@ -1,6 +1,7 @@
 package gg
 
 import org.junit.jupiter.api.Test
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 
@@ -24,7 +25,7 @@ class GeomQuantileTest {
     assertNotNull(chart)
     def svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('<svg'))
+    assertTrue(SvgWriter.toXml(svg).contains('<svg'))
   }
 
   @Test
@@ -41,7 +42,7 @@ class GeomQuantileTest {
     assertNotNull(chart)
     def svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('<svg'))
+    assertTrue(SvgWriter.toXml(svg).contains('<svg'))
   }
 
   @Test
@@ -58,7 +59,7 @@ class GeomQuantileTest {
     assertNotNull(chart)
     def svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('<svg'))
+    assertTrue(SvgWriter.toXml(svg).contains('<svg'))
   }
 
   @Test
@@ -74,7 +75,7 @@ class GeomQuantileTest {
     assertNotNull(chart)
     def svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('<svg'))
+    assertTrue(SvgWriter.toXml(svg).contains('<svg'))
   }
 
   @Test
@@ -105,7 +106,7 @@ class GeomQuantileTest {
     assertNotNull(chart)
     def svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('stroke-dasharray'))
+    assertTrue(SvgWriter.toXml(svg).contains('stroke-dasharray'))
   }
 
   @Test
@@ -136,7 +137,7 @@ class GeomQuantileTest {
     assertNotNull(chart)
     def svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('stroke-opacity'))
+    assertTrue(SvgWriter.toXml(svg).contains('stroke-opacity'))
   }
 
   @Test
@@ -254,7 +255,7 @@ class GeomQuantileTest {
     assertNotNull(chart)
     def svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('<svg'))
+    assertTrue(SvgWriter.toXml(svg).contains('<svg'))
   }
 
   @Test
@@ -275,6 +276,6 @@ class GeomQuantileTest {
     assertNotNull(chart)
     def svg = chart.render()
     assertNotNull(svg)
-    assertTrue(svg.toString().contains('Quantile Regression Test'))
+    assertTrue(SvgWriter.toXml(svg).contains('Quantile Regression Test'))
   }
 }
