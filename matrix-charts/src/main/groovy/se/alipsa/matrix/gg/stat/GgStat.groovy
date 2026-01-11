@@ -698,30 +698,30 @@ class GgStat {
     if (data == null || data.rowCount() == 0) {
       return Matrix.builder()
           .columnNames(['x', 'y', 'quantile', 'group'])
-          .rows([])
           .types([BigDecimal, BigDecimal, BigDecimal, Integer])
           .build()
     }
 
-    // Extract numeric x,y values (filter non-numeric)
+    // Extract numeric x,y values, filtering out any null or non-numeric entries
+    // while keeping x and y synchronized (same indices after filtering)
     List<Number> xValues = []
     List<Number> yValues = []
-    List<Number> rawX = data[xCol] as List<Number>
-    List<Number> rawY = data[yCol] as List<Number>
+    List<?> rawX = data[xCol] as List<?>
+    List<?> rawY = data[yCol] as List<?>
     int maxIdx = Math.min(rawX?.size() ?: 0, rawY?.size() ?: 0)
     for (int i = 0; i < maxIdx; i++) {
       def xVal = rawX[i]
       def yVal = rawY[i]
+      // Filter pairs where both values are numeric (handles nulls and type mismatches)
       if (xVal instanceof Number && yVal instanceof Number) {
-        xValues << xVal
-        yValues << yVal
+        xValues << (xVal as Number)
+        yValues << (yVal as Number)
       }
     }
 
     if (xValues.size() < 2) {
       return Matrix.builder()
           .columnNames(['x', 'y', 'quantile', 'group'])
-          .rows([])
           .types([BigDecimal, BigDecimal, BigDecimal, Integer])
           .build()
     }
@@ -729,7 +729,14 @@ class GgStat {
     // Generate fitted values at n points
     Number xMin = Stat.min(xValues)
     Number xMax = Stat.max(xValues)
-    int nPoints = (params.n ?: 80) as int
+    int nPoints = params.n != null ? (params.n as int) : 80
+
+    // Validate nPoints to prevent division by zero
+    if (nPoints < 2) {
+      throw new IllegalArgumentException(
+        "Parameter 'n' must be at least 2 to generate a line. Got n=${nPoints}."
+      )
+    }
 
     // Build results for all quantiles
     List<List<?>> results = []

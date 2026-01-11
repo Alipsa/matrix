@@ -67,7 +67,7 @@ class GgChart {
   private static final Set<String> STAT_PARAM_KEYS = [
       'method', 'n', 'se', 'level', 'formula', 'degree',
       'bins', 'binwidth', 'fun', 'fun.y', 'fun.data', 'fun.args', 'width', 'coef',
-      'geometry'
+      'geometry', 'quantiles'
   ] as Set<String>
 
   private static final Map<PositionType, Set<String>> POSITION_PARAM_KEYS = [

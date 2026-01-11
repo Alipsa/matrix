@@ -1314,4 +1314,32 @@ class GgStatTest {
     // Should have 5 points (n=5) for 1 quantile
     assertEquals(5, result.rowCount())
   }
+
+  @Test
+  void testQuantileInvalidN() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2], [2, 4], [3, 6]])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+
+    // n = 0 should throw
+    def ex1 = assertThrows(IllegalArgumentException) {
+      GgStat.quantile(data, aes, [n: 0])
+    }
+    assertTrue(ex1.message.contains('must be at least 2'))
+
+    // n = 1 should throw (would cause division by zero)
+    def ex2 = assertThrows(IllegalArgumentException) {
+      GgStat.quantile(data, aes, [n: 1])
+    }
+    assertTrue(ex2.message.contains('must be at least 2'))
+
+    // Negative n should throw
+    def ex3 = assertThrows(IllegalArgumentException) {
+      GgStat.quantile(data, aes, [n: -5])
+    }
+    assertTrue(ex3.message.contains('must be at least 2'))
+  }
 }

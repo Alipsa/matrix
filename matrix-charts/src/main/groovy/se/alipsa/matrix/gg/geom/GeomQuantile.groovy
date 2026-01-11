@@ -88,10 +88,22 @@ class GeomQuantile extends Geom {
     String dashArray = getDashArray(linetype)
 
     // Group by 'group' column (one group per quantile)
+    // Data should come from GgStat.quantile() with columns: x, y, quantile, group
+    if (!data.columnNames().containsAll(['x', 'y', 'group'])) {
+      // Stat transformation failed or returned unexpected structure - skip rendering
+      return
+    }
+
     Map<Integer, List<Map>> groups = [:].withDefault { [] }
     data.each { row ->
-      Integer grp = row['group'] as Integer
-      groups[grp] << [x: row['x'], y: row['y']]
+      def grpVal = row['group']
+      def xVal = row['x']
+      def yVal = row['y']
+      // Skip rows with missing values
+      if (grpVal == null || xVal == null || yVal == null) return
+
+      Integer grp = grpVal as Integer
+      groups[grp] << [x: xVal, y: yVal]
     }
 
     // Render each quantile line
