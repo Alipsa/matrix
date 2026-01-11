@@ -27,6 +27,22 @@ class ScaleXBinnedTest {
   }
 
   @Test
+  void testBinsValidationRejectsZero() {
+    def exception = assertThrows(IllegalArgumentException) {
+      new ScaleXBinned(bins: 0)
+    }
+    assertTrue(exception.message.contains('bins must be at least 1'))
+  }
+
+  @Test
+  void testBinsValidationRejectsNegative() {
+    def exception = assertThrows(IllegalArgumentException) {
+      new ScaleXBinned(bins: -5)
+    }
+    assertTrue(exception.message.contains('bins must be at least 1'))
+  }
+
+  @Test
   void testDefaultRight() {
     def scale = new ScaleXBinned()
     assertTrue(scale.right)
