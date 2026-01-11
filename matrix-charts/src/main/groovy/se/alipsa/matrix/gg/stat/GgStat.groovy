@@ -10,6 +10,7 @@ import se.alipsa.matrix.stats.kde.Kernel
 import se.alipsa.matrix.stats.kde.KernelDensity
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression
+import se.alipsa.matrix.stats.regression.QuantileRegression
 import se.alipsa.matrix.stats.regression.RegressionUtils
 import se.alipsa.matrix.gg.sf.SfGeometry
 import se.alipsa.matrix.gg.sf.SfGeometryUtils
@@ -651,6 +652,111 @@ class GgStat {
         .columnNames(['x', 'y'])
         .rows(results)
         .types([BigDecimal, BigDecimal])
+        .build()
+  }
+
+  /**
+   * Compute quantile regression lines.
+   *
+   * Quantile regression estimates conditional quantiles rather than the conditional mean.
+   * This method fits separate regression lines for each specified quantile.
+   *
+   * The computation is delegated to QuantileRegression class in matrix-stats, which uses
+   * the Barrodale-Roberts simplex algorithm to solve the linear programming formulation.
+   *
+   * @param data Input matrix with data
+   * @param aes Aesthetic mappings (uses x and y)
+   * @param params Map with optional parameters:
+   *   - quantiles: List of quantiles to fit, e.g. [0.25, 0.5, 0.75] (default)
+   *   - n: Number of fitted points to generate (default: 80)
+   * @return Matrix with columns:
+   *   - x: Fitted x values (BigDecimal)
+   *   - y: Fitted y values (BigDecimal)
+   *   - quantile: The tau value for this line (BigDecimal)
+   *   - group: Integer group index (0, 1, 2... for each quantile)
+   */
+  @CompileDynamic
+  static Matrix quantile(Matrix data, Aes aes, Map params = [:]) {
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+
+    if (!xCol || !yCol) {
+      throw new IllegalArgumentException("stat_quantile requires x and y aesthetics")
+    }
+
+    // Extract quantiles parameter (default: [0.25, 0.5, 0.75])
+    List<Number> quantiles = params.quantiles as List<Number> ?: [0.25, 0.5, 0.75]
+
+    // Validate quantiles in (0, 1)
+    for (Number tau : quantiles) {
+      if (tau <= 0 || tau >= 1) {
+        throw new IllegalArgumentException("Quantiles must be in (0, 1), got: ${tau}")
+      }
+    }
+
+    // Check if data is empty
+    if (data == null || data.rowCount() == 0) {
+      return Matrix.builder()
+          .columnNames(['x', 'y', 'quantile', 'group'])
+          .types([BigDecimal, BigDecimal, BigDecimal, Integer])
+          .build()
+    }
+
+    // Extract numeric x,y values, filtering out any null or non-numeric entries
+    // while keeping x and y synchronized (same indices after filtering)
+    List<Number> xValues = []
+    List<Number> yValues = []
+    List<?> rawX = data[xCol] as List<?>
+    List<?> rawY = data[yCol] as List<?>
+    int maxIdx = Math.min(rawX?.size() ?: 0, rawY?.size() ?: 0)
+    for (int i = 0; i < maxIdx; i++) {
+      def xVal = rawX[i]
+      def yVal = rawY[i]
+      // Filter pairs where both values are numeric (handles nulls and type mismatches)
+      if (xVal instanceof Number && yVal instanceof Number) {
+        xValues << (xVal as Number)
+        yValues << (yVal as Number)
+      }
+    }
+
+    if (xValues.size() < 2) {
+      return Matrix.builder()
+          .columnNames(['x', 'y', 'quantile', 'group'])
+          .types([BigDecimal, BigDecimal, BigDecimal, Integer])
+          .build()
+    }
+
+    // Generate fitted values at n points
+    Number xMin = Stat.min(xValues)
+    Number xMax = Stat.max(xValues)
+    int nPoints = params.n != null ? (params.n as int) : 80
+
+    // Validate nPoints to prevent division by zero
+    if (nPoints < 2) {
+      throw new IllegalArgumentException(
+        "Parameter 'n' must be at least 2 to generate a line. Got n=${nPoints}."
+      )
+    }
+
+    // Build results for all quantiles
+    List<List<?>> results = []
+
+    quantiles.eachWithIndex { Number tau, int groupIdx ->
+      // Create regression instance (matrix-stats class - does all the math)
+      QuantileRegression qr = new QuantileRegression(xValues, yValues, tau)
+
+      // Generate fitted points using the regression (just calls predict)
+      for (int i = 0; i < nPoints; i++) {
+        BigDecimal x = xMin + (xMax - xMin) * i / (nPoints - 1)
+        BigDecimal yFit = qr.predict(x)  // QuantileRegression does the work
+        results << [x, yFit, tau as BigDecimal, groupIdx]
+      }
+    }
+
+    return Matrix.builder()
+        .columnNames(['x', 'y', 'quantile', 'group'])
+        .rows(results)
+        .types([BigDecimal, BigDecimal, BigDecimal, Integer])
         .build()
   }
 

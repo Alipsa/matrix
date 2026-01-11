@@ -26,6 +26,7 @@ import se.alipsa.matrix.gg.geom.GeomLine
 import se.alipsa.matrix.gg.geom.GeomMap
 import se.alipsa.matrix.gg.geom.GeomQq
 import se.alipsa.matrix.gg.geom.GeomQqLine
+import se.alipsa.matrix.gg.geom.GeomQuantile
 import se.alipsa.matrix.gg.geom.GeomRug
 import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
@@ -133,6 +134,7 @@ import se.alipsa.matrix.gg.stat.StatsYDensity
 import se.alipsa.matrix.gg.stat.StatsEcdf
 import se.alipsa.matrix.gg.stat.StatsQq
 import se.alipsa.matrix.gg.stat.StatsQqLine
+import se.alipsa.matrix.gg.stat.StatsQuantile
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.theme.Theme
 import se.alipsa.matrix.chartexport.ChartToPng
@@ -1809,6 +1811,71 @@ class GgPlot {
 
   static GeomSmooth geom_smooth(Map params) {
     return new GeomSmooth(params)
+  }
+
+  /**
+   * Add quantile regression lines to the plot.
+   *
+   * Quantile regression fits lines that estimate conditional quantiles
+   * rather than the conditional mean (as in ordinary least squares).
+   *
+   * Usage:
+   * <pre>
+   * // Default: fit 25th, 50th, and 75th percentiles
+   * ggplot(mpg, aes('displ', 'hwy')) + geom_point() + geom_quantile()
+   *
+   * // Fit only the median (50th percentile)
+   * ggplot(mpg, aes('displ', 'hwy')) + geom_point() + geom_quantile(quantiles: [0.5])
+   *
+   * // Fit 10th, 50th, and 90th percentiles with custom styling
+   * ggplot(mpg, aes('displ', 'hwy')) + geom_point() +
+   *   geom_quantile(quantiles: [0.1, 0.5, 0.9], color: 'blue', linetype: 'dashed')
+   * </pre>
+   *
+   * @return a new GeomQuantile instance with default parameters
+   */
+  static GeomQuantile geom_quantile() {
+    return new GeomQuantile()
+  }
+
+  /**
+   * Add quantile regression lines with custom parameters.
+   *
+   * @param params Map of parameters:
+   *   - quantiles: List of quantiles to fit (default: [0.25, 0.5, 0.75])
+   *   - color/colour: Line color
+   *   - size: Line width
+   *   - linetype: 'solid', 'dashed', 'dotted', etc.
+   *   - alpha: Transparency (0-1)
+   *   - n: Number of fitted points (default: 80)
+   * @return a new GeomQuantile instance
+   */
+  static GeomQuantile geom_quantile(Map params) {
+    return new GeomQuantile(params)
+  }
+
+  /**
+   * Quantile regression statistical transformation.
+   *
+   * This is typically used with geom_line() or other geoms that need
+   * quantile regression data.
+   *
+   * @return a new StatsQuantile instance
+   */
+  static StatsQuantile stat_quantile() {
+    return new StatsQuantile()
+  }
+
+  /**
+   * Quantile regression statistical transformation with custom parameters.
+   *
+   * @param params Map of parameters:
+   *   - quantiles: List of quantiles to fit (default: [0.25, 0.5, 0.75])
+   *   - n: Number of fitted points (default: 80)
+   * @return a new StatsQuantile instance
+   */
+  static StatsQuantile stat_quantile(Map params) {
+    return new StatsQuantile(params)
   }
 
   /**

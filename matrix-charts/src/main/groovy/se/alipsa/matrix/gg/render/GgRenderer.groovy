@@ -1594,6 +1594,8 @@ class GgRenderer {
         return GgStat.boxplot(data, aes, layer.statParams)
       case StatType.SMOOTH:
         return GgStat.smooth(data, aes, layer.statParams)
+      case StatType.QUANTILE:
+        return GgStat.quantile(data, aes, layer.statParams)
       case StatType.SUMMARY:
         return GgStat.summary(data, aes, layer.statParams)
       case StatType.ECDF:
