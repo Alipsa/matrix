@@ -117,6 +117,20 @@ class ScaleColorStepsN extends ScaleContinuous {
 
   ScaleColorStepsN colors(List<String> colors) {
     this.colors = colors
+    // Regenerate values to match new color count
+    if (colors) {
+      values = []
+      int n = colors.size()
+      for (int i = 0; i < n; i++) {
+        BigDecimal position
+        if (n > 1) {
+          position = new BigDecimal(i).divide(new BigDecimal(n - 1), java.math.MathContext.DECIMAL64)
+        } else {
+          position = 0.5
+        }
+        values << position
+      }
+    }
     return this
   }
 

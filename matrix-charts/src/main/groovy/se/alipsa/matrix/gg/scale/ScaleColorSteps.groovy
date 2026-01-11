@@ -42,6 +42,9 @@ class ScaleColorSteps extends ScaleContinuous {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return naValue
 
+    if (!colors || colors.isEmpty()) return naValue
+    if (colors.size() == 1) return colors[0]
+
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]
 
@@ -97,6 +100,8 @@ class ScaleColorSteps extends ScaleContinuous {
 
   ScaleColorSteps bins(int n) {
     this.bins = n
+    // Regenerate color palette to match new bin count
+    this.colors = generateSequentialPalette(low, high, n)
     return this
   }
 }

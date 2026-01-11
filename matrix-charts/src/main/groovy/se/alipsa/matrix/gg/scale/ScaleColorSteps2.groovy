@@ -44,6 +44,9 @@ class ScaleColorSteps2 extends ScaleContinuous {
     BigDecimal v = ScaleUtils.coerceToNumber(value)
     if (v == null) return naValue
 
+    if (!colors || colors.isEmpty()) return naValue
+    if (colors.size() == 1) return colors[0]
+
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]
 
