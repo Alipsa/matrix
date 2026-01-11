@@ -6,18 +6,31 @@ import groovy.transform.CompileStatic
  * Binned n-color scale - bins continuous values and maps to a custom color palette.
  *
  * Most flexible binned scale, accepting any number of colors with optional
- * custom positioning. Useful for custom color schemes and brand-specific palettes.
+ * custom positioning. The colors define a gradient, and bins are sampled from
+ * that gradient with interpolation. The number of bins and colors can differ.
+ *
+ * Useful for custom color schemes and brand-specific palettes.
  *
  * Example:
  * <pre>
- * // 5 bins with 4-color palette
+ * // 5 bins sampled from 4-color gradient (colors are interpolated)
  * scale_color_stepsn(bins: 5, colors: ['red', 'yellow', 'green', 'blue'])
  *
- * // Custom color positions
+ * // To get exactly these 4 colors without interpolation, use bins: 4
+ * scale_color_stepsn(bins: 4, colors: ['red', 'yellow', 'green', 'blue'])
+ *
+ * // 10 bins sampled from a 2-color gradient (red → blue)
+ * scale_color_stepsn(bins: 10, colors: ['red', 'blue'])
+ *
+ * // Custom color positions for non-uniform gradient
  * scale_color_stepsn(bins: 10,
  *                    colors: ['#440154', '#31688e', '#35b779', '#fde724'],
  *                    values: [0.0, 0.33, 0.67, 1.0])
  * </pre>
+ *
+ * @param bins Number of discrete color bins to create
+ * @param colors Color palette defining the gradient (can be any size)
+ * @param values Optional positions for each color in [0,1] range
  */
 @CompileStatic
 class ScaleColorStepsN extends ScaleContinuous {

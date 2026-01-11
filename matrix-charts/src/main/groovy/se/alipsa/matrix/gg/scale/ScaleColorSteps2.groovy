@@ -7,15 +7,28 @@ import groovy.transform.CompileStatic
  *
  * Diverging scales are useful for visualizing data where both extremes are important
  * and there's a meaningful center point (e.g., temperature anomalies, profit/loss).
+ * Each bin maps directly to one color from the palette (no interpolation).
+ *
+ * The number of bins always equals the number of colors in the palette.
+ * Bin count is automatically adjusted to odd numbers for symmetric diverging palettes.
  *
  * Example:
  * <pre>
- * // 9 bins diverging from blue through white to red
+ * // Generate 9 colors diverging from blue→white→red (creates 9 bins)
  * scale_color_steps2(bins: 9, low: 'blue', mid: 'white', high: 'red')
  *
- * // Set specific midpoint value
+ * // Even bins adjusted to odd: 6 → 7 bins for symmetry
+ * scale_color_steps2(bins: 6, low: 'red', mid: 'yellow', high: 'green')
+ *
+ * // Set specific midpoint value in data units
  * scale_color_steps2(bins: 7, midpoint: 50)
  * </pre>
+ *
+ * @param bins Number of colors to generate (adjusted to odd if even)
+ * @param low Color for minimum values (left side)
+ * @param mid Color for midpoint (center)
+ * @param high Color for maximum values (right side)
+ * @param midpoint Data value at center (default: mean of data range)
  */
 @CompileStatic
 class ScaleColorSteps2 extends ScaleContinuous {

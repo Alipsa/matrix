@@ -3006,14 +3006,15 @@ class GgPlot {
 
   /**
    * Binned sequential color scale - maps continuous values to discrete color steps.
+   * Each bin maps to one color (no interpolation). Bin count = color count.
    *
    * Example:
    * <pre>
-   * scale_color_steps(bins: 7, low: 'white', high: 'darkblue')
-   * scale_color_steps(colors: ['#ffffcc', '#a1dab4', '#41b6c4', '#225ea8'])
+   * scale_color_steps(bins: 7, low: 'white', high: 'darkblue')  // 7 bins, 7 colors
+   * scale_color_steps(colors: ['#ffffcc', '#a1dab4', '#41b6c4', '#225ea8'])  // 4 bins, 4 colors
    * </pre>
    *
-   * @param params scale parameters (bins, low, high, colors, naValue, name, limits, breaks, labels)
+   * @param params scale parameters (bins, low, high, colors, naValue, name, limits, breaks, labels, guide)
    */
   static ScaleColorSteps scale_color_steps(Map params = [:]) {
     return new ScaleColorSteps(params)
@@ -3035,14 +3036,15 @@ class GgPlot {
 
   /**
    * Binned diverging color scale - splits at midpoint with two color ranges.
+   * Each bin maps to one color (no interpolation). Bin count adjusted to odd for symmetry.
    *
    * Example:
    * <pre>
-   * scale_color_steps2(bins: 9, low: 'blue', mid: 'white', high: 'red')
-   * scale_color_steps2(bins: 7, midpoint: 50)  // Set specific midpoint value
+   * scale_color_steps2(bins: 9, low: 'blue', mid: 'white', high: 'red')  // 9 bins (odd)
+   * scale_color_steps2(bins: 6, midpoint: 50)  // 7 bins (6→7 for symmetry)
    * </pre>
    *
-   * @param params scale parameters (bins, low, mid, high, midpoint, colors, naValue, name, limits, breaks, labels)
+   * @param params scale parameters (bins, low, mid, high, midpoint, colors, naValue, name, limits, breaks, labels, guide)
    */
   static ScaleColorSteps2 scale_color_steps2(Map params = [:]) {
     return new ScaleColorSteps2(params)
@@ -3064,15 +3066,17 @@ class GgPlot {
 
   /**
    * Binned n-color scale - maps continuous values to bins from a custom palette.
+   * Supports color interpolation - bins can differ from color count.
    *
    * Example:
    * <pre>
-   * scale_color_stepsn(bins: 5, colors: ['red', 'yellow', 'green', 'blue'])
+   * scale_color_stepsn(bins: 5, colors: ['red', 'yellow', 'green', 'blue'])  // 5 bins from 4-color gradient
+   * scale_color_stepsn(bins: 10, colors: ['red', 'blue'])  // 10 bins interpolated red→blue
    * scale_color_stepsn(bins: 10, colors: ['#440154', '#31688e', '#35b779', '#fde724'],
-   *                    values: [0.0, 0.33, 0.67, 1.0])
+   *                    values: [0.0, 0.33, 0.67, 1.0])  // Custom color positions
    * </pre>
    *
-   * @param params scale parameters (bins, colors, values, naValue, name, limits, breaks, labels)
+   * @param params scale parameters (bins, colors, values, naValue, name, limits, breaks, labels, guide)
    */
   static ScaleColorStepsN scale_color_stepsn(Map params = [:]) {
     return new ScaleColorStepsN(params)

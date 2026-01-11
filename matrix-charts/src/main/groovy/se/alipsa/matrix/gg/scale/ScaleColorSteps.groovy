@@ -7,16 +7,26 @@ import groovy.transform.CompileStatic
  *
  * Unlike gradient scales which create smooth color transitions, binned scales
  * map continuous values to a fixed number of discrete color bins/steps.
+ * Each bin maps directly to one color from the palette (no interpolation).
+ *
+ * The number of bins always equals the number of colors in the palette.
  * Useful for choropleth maps and categorical data visualization.
  *
  * Example:
  * <pre>
- * // 7 bins from white to dark blue
+ * // Generate 7 colors from white to dark blue (creates 7 bins)
  * scale_color_steps(bins: 7, low: 'white', high: 'darkblue')
  *
- * // Custom color palette
+ * // Custom 4-color palette (creates 4 bins, one per color)
  * scale_color_steps(colors: ['#ffffcc', '#a1dab4', '#41b6c4', '#225ea8'])
+ *
+ * // For flexible bin counts with interpolation, use scale_color_stepsn()
  * </pre>
+ *
+ * @param bins Number of colors to generate from low→high gradient
+ * @param low Starting color for auto-generated palette
+ * @param high Ending color for auto-generated palette
+ * @param colors Custom color palette (overrides low/high; bin count = color count)
  */
 @CompileStatic
 class ScaleColorSteps extends ScaleContinuous {
