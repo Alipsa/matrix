@@ -30,6 +30,8 @@ class ScaleColorSteps extends ScaleContinuous {
   private boolean customColors = false  // Track if colors were user-provided
 
   ScaleColorSteps(Map params = [:]) {
+    aesthetic = 'color'
+    expand = ScaleContinuous.NO_EXPAND  // No expansion for color scales
     applyParams(params)
 
     // Generate color palette if not provided
@@ -81,15 +83,21 @@ class ScaleColorSteps extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.aesthetic == 'colour') this.aesthetic = 'color'
+    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
     if (params.bins != null) this.bins = (params.bins as Number).intValue()
     if (params.containsKey('colors')) {
       this.colors = params.colors as List<String>
       this.customColors = true
     }
+    if (params.containsKey('colours')) {
+      this.colors = params.colours as List<String>
+      this.customColors = true
+    }
     if (params.low) this.low = params.low as String
     if (params.high) this.high = params.high as String
     if (params.naValue) this.naValue = params.naValue as String
+    if (params.guide) this.guideType = params.guide as String
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
     if (params.breaks) this.breaks = params.breaks as List

@@ -29,6 +29,8 @@ class ScaleColorStepsN extends ScaleContinuous {
   String guideType = 'bins'
 
   ScaleColorStepsN(Map params = [:]) {
+    aesthetic = 'color'
+    expand = ScaleContinuous.NO_EXPAND  // No expansion for color scales
     applyParams(params)
 
     // If values not specified, auto-generate equally spaced
@@ -94,11 +96,14 @@ class ScaleColorStepsN extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.aesthetic == 'colour') this.aesthetic = 'color'
+    else if (params.aesthetic) this.aesthetic = params.aesthetic as String
     if (params.bins != null) this.bins = (params.bins as Number).intValue()
     if (params.containsKey('colors')) this.colors = params.colors as List<String>
+    if (params.containsKey('colours')) this.colors = params.colours as List<String>
     if (params.containsKey('values')) this.values = params.values as List<BigDecimal>
     if (params.naValue) this.naValue = params.naValue as String
+    if (params.guide) this.guideType = params.guide as String
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
     if (params.breaks) this.breaks = params.breaks as List
