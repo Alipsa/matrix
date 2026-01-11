@@ -293,8 +293,8 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.3 Quantile Regression
 
-- 4.3.1 [ ] `geom_quantile()` - Quantile regression lines
-- 4.3.2 [ ] `stat_quantile()` - Quantile regression statistics
+- 4.3.1 [x] `geom_quantile()` - Quantile regression lines
+- 4.3.2 [x] `stat_quantile()` - Quantile regression statistics
 
 ### 4.4 Identity Scales
 

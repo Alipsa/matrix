@@ -55,6 +55,8 @@ enum StatType {
     BOXPLOT,
     /** Smoothing/regression lines */
     SMOOTH,
+    /** Quantile regression lines */
+    QUANTILE,
     /** Summary statistics (mean, median, etc.) */
     SUMMARY,
     /** Kernel density estimation */

@@ -1129,4 +1129,189 @@ class GgStatTest {
     }
     assertTrue(ex.message.contains('positive'))
   }
+
+  @Test
+  void testQuantileStat() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2], [2, 4], [3, 6], [4, 8], [5, 10]])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.quantile(data, aes, [:])
+
+    assertNotNull(result)
+    assertTrue(result.rowCount() > 0)
+    assertEquals(['x', 'y', 'quantile', 'group'], result.columnNames())
+  }
+
+  @Test
+  void testQuantileWithDifferentTaus() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2], [2, 4], [3, 6], [4, 8], [5, 10]])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.quantile(data, aes, [quantiles: [0.1, 0.5, 0.9], n: 10])
+
+    assertNotNull(result)
+    assertTrue(result.rowCount() > 0)
+
+    // Should have 3 quantiles * 10 points = 30 rows
+    assertEquals(30, result.rowCount())
+
+    // Check that we have all three quantiles
+    def quantileValues = result['quantile'].unique()
+    assertEquals(3, quantileValues.size())
+    assertTrue(quantileValues.contains(0.1 as BigDecimal))
+    assertTrue(quantileValues.contains(0.5 as BigDecimal))
+    assertTrue(quantileValues.contains(0.9 as BigDecimal))
+
+    // Check that we have 3 groups (one per quantile)
+    def groupValues = result['group'].unique()
+    assertEquals(3, groupValues.size())
+  }
+
+  @Test
+  void testQuantileColumnNames() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2], [2, 4], [3, 6]])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.quantile(data, aes, [:])
+
+    assertEquals(['x', 'y', 'quantile', 'group'], result.columnNames())
+  }
+
+  @Test
+  void testQuantileGrouping() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2], [2, 4], [3, 6]])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.quantile(data, aes, [quantiles: [0.25, 0.75]])
+
+    // Should have 2 groups
+    def groups = result['group'].unique()
+    assertEquals(2, groups.size())
+
+    // Group 0 should be tau=0.25, group 1 should be tau=0.75
+    def group0Rows = result.findAll { it['group'] == 0 }
+    def group1Rows = result.findAll { it['group'] == 1 }
+
+    assertTrue(group0Rows.size() > 0)
+    assertTrue(group1Rows.size() > 0)
+
+    // All rows in group 0 should have quantile = 0.25
+    assertTrue(group0Rows.every { it['quantile'] == 0.25 as BigDecimal })
+
+    // All rows in group 1 should have quantile = 0.75
+    assertTrue(group1Rows.every { it['quantile'] == 0.75 as BigDecimal })
+  }
+
+  @Test
+  void testQuantileInvalidTau() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2], [2, 4]])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+
+    // Test tau = 0
+    def ex1 = assertThrows(IllegalArgumentException) {
+      GgStat.quantile(data, aes, [quantiles: [0.0]])
+    }
+    assertTrue(ex1.message.contains('must be in (0, 1)'))
+
+    // Test tau = 1
+    def ex2 = assertThrows(IllegalArgumentException) {
+      GgStat.quantile(data, aes, [quantiles: [1.0]])
+    }
+    assertTrue(ex2.message.contains('must be in (0, 1)'))
+
+    // Test tau > 1
+    def ex3 = assertThrows(IllegalArgumentException) {
+      GgStat.quantile(data, aes, [quantiles: [1.5]])
+    }
+    assertTrue(ex3.message.contains('must be in (0, 1)'))
+
+    // Test tau < 0
+    def ex4 = assertThrows(IllegalArgumentException) {
+      GgStat.quantile(data, aes, [quantiles: [-0.5]])
+    }
+    assertTrue(ex4.message.contains('must be in (0, 1)'))
+  }
+
+  @Test
+  void testQuantileEmptyData() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.quantile(data, aes, [:])
+
+    assertNotNull(result)
+    assertEquals(0, result.rowCount())
+    assertEquals(['x', 'y', 'quantile', 'group'], result.columnNames())
+  }
+
+  @Test
+  void testQuantileInsufficientData() {
+    // Only one point - should return empty result
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2]])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.quantile(data, aes, [:])
+
+    assertNotNull(result)
+    assertEquals(0, result.rowCount())
+  }
+
+  @Test
+  void testQuantileMissingAesthetics() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2], [2, 4]])
+        .build()
+
+    // Missing x
+    def aes1 = new Aes(y: 'y')
+    def ex1 = assertThrows(IllegalArgumentException) {
+      GgStat.quantile(data, aes1, [:])
+    }
+    assertTrue(ex1.message.contains('requires x and y aesthetics'))
+
+    // Missing y
+    def aes2 = new Aes(x: 'x')
+    def ex2 = assertThrows(IllegalArgumentException) {
+      GgStat.quantile(data, aes2, [:])
+    }
+    assertTrue(ex2.message.contains('requires x and y aesthetics'))
+  }
+
+  @Test
+  void testQuantileCustomN() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 2], [2, 4], [3, 6]])
+        .build()
+
+    def aes = new Aes(x: 'x', y: 'y')
+    def result = GgStat.quantile(data, aes, [quantiles: [0.5], n: 5])
+
+    assertNotNull(result)
+    // Should have 5 points (n=5) for 1 quantile
+    assertEquals(5, result.rowCount())
+  }
 }
