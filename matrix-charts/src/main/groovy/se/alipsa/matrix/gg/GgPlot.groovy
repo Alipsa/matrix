@@ -124,6 +124,8 @@ import se.alipsa.matrix.gg.scale.ScaleXDate
 import se.alipsa.matrix.gg.scale.ScaleYDate
 import se.alipsa.matrix.gg.scale.ScaleXDatetime
 import se.alipsa.matrix.gg.scale.ScaleYDatetime
+import se.alipsa.matrix.gg.scale.ScaleXTime
+import se.alipsa.matrix.gg.scale.ScaleYTime
 import se.alipsa.matrix.gg.stat.StatsBin2D
 import se.alipsa.matrix.gg.stat.StatsBin
 import se.alipsa.matrix.gg.stat.StatsBinHex
@@ -2665,6 +2667,53 @@ class GgPlot {
    */
   static ScaleYDatetime scale_y_datetime(Map params = [:]) {
     return new ScaleYDatetime(params)
+  }
+
+  /**
+   * Time-of-day scale for x-axis.
+   * Handles LocalTime values representing times within a 24-hour cycle (00:00:00 to 23:59:59).
+   *
+   * @param params Optional map with:
+   *   - name: axis label
+   *   - limits: list of [min, max] time values (LocalTime or ISO time strings)
+   *   - time_format/timeFormat: time format pattern (default: 'HH:mm')
+   *   - time_breaks/timeBreaks: break interval (e.g., '1 hour', '30 minutes', '15 seconds')
+   *   - position: 'bottom' (default) or 'top'
+   *
+   * @example
+   * // Hourly time series
+   * ggplot(data, aes(x: 'time', y: 'value')) +
+   *   geom_line() +
+   *   scale_x_time(time_breaks: '2 hours')
+   *
+   * // 12-hour format with AM/PM
+   * ggplot(data, aes(x: 'time', y: 'count')) +
+   *   geom_point() +
+   *   scale_x_time(time_format: 'h:mm a')
+   */
+  static ScaleXTime scale_x_time(Map params = [:]) {
+    return new ScaleXTime(params)
+  }
+
+  /**
+   * Time-of-day scale for y-axis.
+   * Handles LocalTime values representing times within a 24-hour cycle (00:00:00 to 23:59:59).
+   *
+   * @param params Optional map with:
+   *   - name: axis label
+   *   - limits: list of [min, max] time values (LocalTime or ISO time strings)
+   *   - time_format/timeFormat: time format pattern (default: 'HH:mm')
+   *   - time_breaks/timeBreaks: break interval (e.g., '1 hour', '30 minutes', '15 seconds')
+   *   - position: 'left' (default) or 'right'
+   *
+   * @example
+   * // Time-based categorical chart
+   * ggplot(data, aes(x: 'category', y: 'time')) +
+   *   geom_point() +
+   *   scale_y_time(time_breaks: '30 minutes', time_format: 'HH:mm:ss')
+   */
+  static ScaleYTime scale_y_time(Map params = [:]) {
+    return new ScaleYTime(params)
   }
 
   // --- Secondary axes ---
