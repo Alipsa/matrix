@@ -643,6 +643,36 @@ class ScaleTimeTest {
   }
 
   @Test
+  void testInvalidExpandEmptyList() {
+    // expand must have exactly 2 elements
+    def exception = assertThrows(IllegalArgumentException) {
+      new ScaleXTime(expand: [])
+    }
+    assertTrue(exception.message.contains('expand must have exactly 2 elements'))
+    assertTrue(exception.message.contains('got 0'))
+  }
+
+  @Test
+  void testInvalidExpandSingleElement() {
+    // expand must have exactly 2 elements, not 1
+    def exception = assertThrows(IllegalArgumentException) {
+      new ScaleXTime(expand: [0.1])
+    }
+    assertTrue(exception.message.contains('expand must have exactly 2 elements'))
+    assertTrue(exception.message.contains('got 1'))
+  }
+
+  @Test
+  void testInvalidExpandTooManyElements() {
+    // expand must have exactly 2 elements, not 3
+    def exception = assertThrows(IllegalArgumentException) {
+      new ScaleXTime(expand: [0.1, 100, 200])
+    }
+    assertTrue(exception.message.contains('expand must have exactly 2 elements'))
+    assertTrue(exception.message.contains('got 3'))
+  }
+
+  @Test
   void testAestheticIsX() {
     def scale = new ScaleXTime()
     assertEquals('x', scale.aesthetic)

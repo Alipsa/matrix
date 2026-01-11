@@ -34,7 +34,12 @@ class ScaleXTime extends ScaleContinuous {
   /** Maximum time in the domain (as seconds since midnight) */
   protected long maxSecondsSinceMidnight = 0
 
-  /** Raw time limits (not converted to BigDecimal) */
+  /**
+   * Time-specific limits storage.
+   * The parent Scale class declares limits as List<BigDecimal>, which causes type coercion
+   * failures with @CompileStatic when storing LocalTime or String time values.
+   * This separate field avoids the type mismatch while maintaining the same functionality.
+   */
   private List timeLimits = null
 
   ScaleXTime() {
@@ -51,11 +56,16 @@ class ScaleXTime extends ScaleContinuous {
 
   private void applyParams(Map params) {
     if (params.name) this.name = params.name as String
-    if (params.limits) {
-      // Store in our own property, not the parent's limits
-      this.timeLimits = params.limits as List
+    if (params.limits) this.timeLimits = params.limits as List
+    if (params.containsKey('expand')) {
+      List expandList = params.expand as List
+      if (expandList != null && expandList.size() != 2) {
+        throw new IllegalArgumentException(
+          "expand must have exactly 2 elements [multiplicative, additive], got ${expandList.size()}"
+        )
+      }
+      this.expand = expandList
     }
-    if (params.expand) this.expand = params.expand as List
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
     if (params.position) this.position = params.position as String
