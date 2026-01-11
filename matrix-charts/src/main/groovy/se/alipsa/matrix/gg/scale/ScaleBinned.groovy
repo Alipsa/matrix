@@ -78,12 +78,16 @@ abstract class ScaleBinned extends ScaleContinuous {
       this.bins = requestedBins
     }
 
-    if (params.right != null) {
+    if (params.containsKey('right')) {
       this.right = params.right as boolean
     }
 
-    if (params.showLimits != null || params['show.limits'] != null) {
-      this.showLimits = (params.showLimits ?: params['show.limits']) as boolean
+    // Use explicit containsKey checks to properly handle boolean false values
+    // (Elvis operator treats false as falsy in some Groovy versions)
+    if (params.containsKey('showLimits')) {
+      this.showLimits = params.showLimits as boolean
+    } else if (params.containsKey('show.limits')) {
+      this.showLimits = params['show.limits'] as boolean
     }
   }
 
@@ -201,6 +205,9 @@ abstract class ScaleBinned extends ScaleContinuous {
 
     // Edge case: minimum value with right=true
     if (right && value == binBoundaries[0]) return 0
+
+    // Edge case: maximum value with right=false
+    if (!right && value == binBoundaries[binBoundaries.size() - 1]) return actualBins - 1
 
     return -1
   }

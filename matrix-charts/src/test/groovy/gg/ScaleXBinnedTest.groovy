@@ -381,6 +381,45 @@ class ScaleXBinnedTest {
   }
 
   @Test
+  void testMaximumValueWithRightFalse() {
+    def scale = new ScaleXBinned(bins: 2, right: false, expand: [0, 0])
+    scale.train([0, 10])
+    scale.setRange([0, 100])
+
+    // Bins: [0, 5), [5, 10)
+    // Value 10 should be in last bin (edge case handling)
+    def pos = scale.transform(10) as double
+    assertEquals(75, pos, 1.0)  // Bin 1 center at 7.5
+  }
+
+  @Test
+  void testShowLimitsFalseIsRespected() {
+    def scale = new ScaleXBinned(bins: 4, showLimits: false, expand: [0, 0])
+    scale.train([0, 100])
+
+    assertFalse(scale.showLimits)
+    List breaks = scale.getComputedBreaks()
+    // Should have interior boundaries only, not limits
+    assertEquals(3, breaks.size())
+  }
+
+  @Test
+  void testShowLimitsFalseNotOverriddenByDotNotation() {
+    // Test that showLimits: false isn't overridden by 'show.limits'
+    def params = [
+      bins: 4,
+      showLimits: false,
+      'show.limits': true,  // Should be ignored since showLimits is present
+      expand: [0, 0]
+    ]
+    def scale = new ScaleXBinned(params)
+    scale.train([0, 100])
+
+    // showLimits should be false (not overridden by show.limits)
+    assertFalse(scale.showLimits)
+  }
+
+  @Test
   void testBinBoundariesWithOddBinCount() {
     def scale = new ScaleXBinned(bins: 5, expand: [0, 0])
     scale.train([0, 50])
