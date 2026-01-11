@@ -151,15 +151,12 @@ class QuantileRegression {
       constraints << new LinearConstraint(coeffs, Relationship.EQ, y[i])
     }
 
-    // All variables must be >= 0 (but intercept and slope can be negative, so we need to handle this)
-    // Actually, we need to reformulate: let intercept = β0+ - β0-, slope = β1+ - β1-
-    // For simplicity, we'll use unbounded variables for β0 and β1, and bounds for residuals
-
-    // Apache Commons Math SimplexSolver requires all variables >= 0
-    // We need to split β0 and β1 into positive and negative parts
+    // Apache Commons Math SimplexSolver requires all variables to be >= 0,
+    // but the intercept and slope should be allowed to take negative values.
+    // To handle this, we reformulate: let intercept = β0+ - β0- and slope = β1+ - β1-,
+    // and keep residuals as non-negative variables u+ and u- for each observation.
     // New variables: [β0+, β0-, β1+, β1-, u1+, u1-, u2+, u2-, ..., un+, un-]
     // Total variables: 4 + 2*n
-
     int numVarsReformulated = 4 + 2 * n
     double[] objectiveReformulated = new double[numVarsReformulated]
     objectiveReformulated[0] = 0.0  // β0+
