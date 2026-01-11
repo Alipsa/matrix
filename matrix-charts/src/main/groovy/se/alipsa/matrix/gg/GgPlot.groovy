@@ -3042,7 +3042,7 @@ class GgPlot {
    * scale_color_steps2(bins: 7, midpoint: 50)  // Set specific midpoint value
    * </pre>
    *
-   * @param params scale parameters (bins, low, mid, high, midpoint, colors, naValue)
+   * @param params scale parameters (bins, low, mid, high, midpoint, colors, naValue, name, limits, breaks, labels)
    */
   static ScaleColorSteps2 scale_color_steps2(Map params = [:]) {
     return new ScaleColorSteps2(params)
