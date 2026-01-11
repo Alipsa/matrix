@@ -17,7 +17,7 @@ class ScaleYTime extends ScaleXTime {
   ScaleYTime() {
     super()
     aesthetic = 'y'
-    position = 'left'  // Always set to left for Y-axis
+    position = 'left'  // Default position is left for Y-axis unless explicitly overridden
   }
 
   ScaleYTime(Map params) {
