@@ -208,8 +208,8 @@ class QuantileRegression {
     } catch (Exception e) {
       throw new RuntimeException(
         "Failed to solve quantile regression for tau=${tau}. " +
-        "This may be due to numerical instability or degenerate data. " +
-        "Error: ${e.message}", e
+        "Check that the input data is not collinear, degenerate, or ill-conditioned.",
+        e
       )
     }
   }
