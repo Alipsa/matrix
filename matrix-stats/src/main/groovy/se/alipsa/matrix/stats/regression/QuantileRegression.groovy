@@ -17,8 +17,8 @@ import java.math.RoundingMode
  * ρ_τ(u) = u * (τ - I(u < 0))
  * where I(u < 0) is an indicator function that is 1 when u < 0, and 0 otherwise.
  *
- * This implementation uses the Barrodale-Roberts simplex algorithm for solving the
- * linear programming formulation of quantile regression.
+ * This implementation solves the linear programming formulation of quantile regression
+ * using a simplex-based method (via Apache Commons Math's SimplexSolver).
  *
  * Example:
  * <pre>
