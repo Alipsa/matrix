@@ -316,8 +316,8 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.6 Binned Position Scales
 
-- 4.6.1 [ ] `scale_x_binned()` - Binned x-axis
-- 4.6.2 [ ] `scale_y_binned()` - Binned y-axis
+- 4.6.1 [x] `scale_x_binned()` - Binned x-axis
+- 4.6.2 [x] `scale_y_binned()` - Binned y-axis
 
 ### 4.7 Time Scales
 
