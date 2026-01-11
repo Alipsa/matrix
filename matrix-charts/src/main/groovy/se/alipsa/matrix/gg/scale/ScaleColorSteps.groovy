@@ -27,6 +27,7 @@ class ScaleColorSteps extends ScaleContinuous {
   String high = '#56B1F7'  // Default: light blue
   String naValue = 'grey50'
   String guideType = 'bins'  // Use binned legend
+  private boolean customColors = false  // Track if colors were user-provided
 
   ScaleColorSteps(Map params = [:]) {
     applyParams(params)
@@ -57,8 +58,8 @@ class ScaleColorSteps extends ScaleContinuous {
     BigDecimal normalized = (v - dMin) / (dMax - dMin)
     normalized = 0.max(normalized.min(1))
 
-    // Calculate bin index
-    int binsCount = Math.max(1, bins)
+    // Calculate bin index using color count for consistency
+    int binsCount = Math.max(1, colors.size())
     if (binsCount == 1) return colors[0]
 
     BigDecimal scaled = normalized * binsCount
@@ -67,7 +68,7 @@ class ScaleColorSteps extends ScaleContinuous {
     binIndex = Math.max(binIndex, 0)
 
     // Get color from palette
-    return colors[binIndex % colors.size()]
+    return colors[binIndex]
   }
 
   private List<String> generateSequentialPalette(String lowColor, String highColor, int n) {
@@ -82,7 +83,10 @@ class ScaleColorSteps extends ScaleContinuous {
   private void applyParams(Map params) {
     if (params.aesthetic) this.aesthetic = params.aesthetic as String
     if (params.bins != null) this.bins = (params.bins as Number).intValue()
-    if (params.colors) this.colors = params.colors as List<String>
+    if (params.containsKey('colors')) {
+      this.colors = params.colors as List<String>
+      this.customColors = true
+    }
     if (params.low) this.low = params.low as String
     if (params.high) this.high = params.high as String
     if (params.naValue) this.naValue = params.naValue as String
@@ -95,13 +99,16 @@ class ScaleColorSteps extends ScaleContinuous {
   // Fluent API
   ScaleColorSteps colors(List<String> colors) {
     this.colors = colors
+    this.customColors = true
     return this
   }
 
   ScaleColorSteps bins(int n) {
     this.bins = n
-    // Regenerate color palette to match new bin count
-    this.colors = generateSequentialPalette(low, high, n)
+    // Only regenerate palette if colors weren't custom-set
+    if (!customColors) {
+      this.colors = generateSequentialPalette(low, high, n)
+    }
     return this
   }
 }

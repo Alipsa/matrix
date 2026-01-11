@@ -106,7 +106,7 @@ class ScaleColorSteps2 extends ScaleContinuous {
   private void applyParams(Map params) {
     if (params.aesthetic) this.aesthetic = params.aesthetic as String
     if (params.bins != null) this.bins = (params.bins as Number).intValue()
-    if (params.colors) this.colors = params.colors as List<String>
+    if (params.containsKey('colors')) this.colors = params.colors as List<String>
     if (params.low) this.low = params.low as String
     if (params.mid) this.mid = params.mid as String
     if (params.high) this.high = params.high as String

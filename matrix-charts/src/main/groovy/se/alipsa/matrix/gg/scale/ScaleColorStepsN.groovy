@@ -33,17 +33,7 @@ class ScaleColorStepsN extends ScaleContinuous {
 
     // If values not specified, auto-generate equally spaced
     if (!values && colors) {
-      values = []
-      int n = colors.size()
-      for (int i = 0; i < n; i++) {
-        BigDecimal position
-        if (n > 1) {
-          position = new BigDecimal(i).divide(new BigDecimal(n - 1), java.math.MathContext.DECIMAL64)
-        } else {
-          position = 0.5
-        }
-        values << position
-      }
+      values = generateEquallySpacedValues(colors.size())
     }
   }
 
@@ -67,7 +57,7 @@ class ScaleColorStepsN extends ScaleContinuous {
     BigDecimal normalized = (v - dMin) / (dMax - dMin)
     normalized = 0.max(normalized.min(1))
 
-    // Calculate bin index
+    // Calculate bin index using bins parameter (user-configurable bin count)
     int binsCount = Math.max(1, bins)
     if (binsCount == 1) return colors[0]
 
@@ -119,19 +109,23 @@ class ScaleColorStepsN extends ScaleContinuous {
     this.colors = colors
     // Regenerate values to match new color count
     if (colors) {
-      values = []
-      int n = colors.size()
-      for (int i = 0; i < n; i++) {
-        BigDecimal position
-        if (n > 1) {
-          position = new BigDecimal(i).divide(new BigDecimal(n - 1), java.math.MathContext.DECIMAL64)
-        } else {
-          position = 0.5
-        }
-        values << position
-      }
+      values = generateEquallySpacedValues(colors.size())
     }
     return this
+  }
+
+  private List<BigDecimal> generateEquallySpacedValues(int n) {
+    List<BigDecimal> result = []
+    for (int i = 0; i < n; i++) {
+      BigDecimal position
+      if (n > 1) {
+        position = new BigDecimal(i).divide(new BigDecimal(n - 1), java.math.MathContext.DECIMAL64)
+      } else {
+        position = 0.5
+      }
+      result << position
+    }
+    return result
   }
 
   ScaleColorStepsN values(List<BigDecimal> values) {
