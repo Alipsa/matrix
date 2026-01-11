@@ -112,6 +112,8 @@ import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.SecondaryAxis
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.scale.ScaleYDiscrete
+import se.alipsa.matrix.gg.scale.ScaleXBinned
+import se.alipsa.matrix.gg.scale.ScaleYBinned
 import se.alipsa.matrix.gg.scale.ScaleXLog10
 import se.alipsa.matrix.gg.scale.ScaleYLog10
 import se.alipsa.matrix.gg.scale.ScaleXSqrt
@@ -2514,6 +2516,45 @@ class GgPlot {
    */
   static ScaleYDiscrete scale_y_discrete(Map params = [:]) {
     return new ScaleYDiscrete(params)
+  }
+
+  /**
+   * Binned position scale for x-axis.
+   * Divides continuous data into equal-width bins and maps values to bin centers.
+   * <p>
+   * This scale is useful for creating histogram-like visualizations with discrete geoms
+   * or for discretizing continuous position data. Values within the same bin are mapped
+   * to the same position (the bin center), creating distinct groupings.
+   * <p>
+   * Example:
+   * <pre>
+   * def chart = ggplot(data, aes(x: 'value', y: 'count')) +
+   *   geom_point() +
+   *   scale_x_binned(bins: 10)
+   * </pre>
+   *
+   * @param params scale parameters:
+   *   - bins: Number of bins (default: 10)
+   *   - right: Close bins on right (true, default) or left (false)
+   *   - showLimits: Show scale limits as ticks (default: false)
+   *   - limits, breaks, labels, expand, position, guide, name (standard scale params)
+   * @return ScaleXBinned instance
+   */
+  static ScaleXBinned scale_x_binned(Map params = [:]) {
+    return new ScaleXBinned(params)
+  }
+
+  /**
+   * Binned position scale for y-axis.
+   * Divides continuous data into equal-width bins and maps values to bin centers.
+   * <p>
+   * See {@link #scale_x_binned(Map)} for details.
+   *
+   * @param params scale parameters (same as scale_x_binned)
+   * @return ScaleYBinned instance
+   */
+  static ScaleYBinned scale_y_binned(Map params = [:]) {
+    return new ScaleYBinned(params)
   }
 
   // --- Transformed position scales ---
