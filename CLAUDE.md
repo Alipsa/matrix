@@ -49,6 +49,74 @@ RUN_EXTERNAL_TESTS=true ./gradlew test
 ./gradlew :matrix-charts:test -Pheadless=true
 ```
 
+## Testing Patterns
+
+### Testing SVG Chart Output (matrix-charts)
+
+**IMPORTANT:** When testing chart rendering in matrix-charts, you MUST use `SvgWriter.toXml()` to convert SVG objects to strings for assertions. **DO NOT use `svg.toString()`** - it returns the Java object representation (`"se.alipsa.groovy.svg.Svg@hashcode"`), not the SVG XML content.
+
+#### Correct Pattern
+
+```groovy
+import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.matrix.core.Matrix
+import static se.alipsa.matrix.gg.GgPlot.*
+
+@Test
+void testChartRendering() {
+  def data = Matrix.builder()
+      .columnNames(['x', 'y'])
+      .rows([[1, 2], [2, 4], [3, 6]])
+      .build()
+
+  def chart = ggplot(data, aes(x: 'x', y: 'y')) + geom_line()
+  def svg = chart.render()
+
+  // ✅ CORRECT - Use SvgWriter.toXml() to get SVG XML content
+  String svgContent = SvgWriter.toXml(svg)
+  assertTrue(svgContent.contains('<svg'))
+  assertTrue(svgContent.contains('</svg>'))
+  assertTrue(svgContent.contains('<line'))
+}
+```
+
+#### Incorrect Pattern (DO NOT USE)
+
+```groovy
+@Test
+void testChartRendering() {
+  def chart = ggplot(data, aes(x: 'x', y: 'y')) + geom_line()
+  def svg = chart.render()
+
+  // ❌ WRONG - svg.toString() returns "se.alipsa.groovy.svg.Svg@66933239"
+  assertTrue(svg.toString().contains('<svg'))  // Will FAIL!
+}
+```
+
+#### Why Not Navigate the SVG Object Model?
+
+While it's theoretically possible to navigate the SVG object model directly (accessing children, elements, attributes), **string-based assertions are preferred** for these reasons:
+
+1. **Simplicity**: String assertions are straightforward and easy to read
+2. **Completeness**: Testing the XML ensures the entire rendering pipeline works end-to-end
+3. **Regression detection**: String content catches formatting and structure changes
+4. **Real-world validation**: Tests verify what would actually be output to users
+5. **Library independence**: Tests don't depend on gsvg's internal object structure
+
+However, if you need to test specific SVG elements or attributes programmatically, you can use `SvgReader.fromXml()` to parse the XML and navigate the resulting object model.
+
+#### Required Imports for Chart Tests
+
+```groovy
+import org.junit.jupiter.api.Test
+import se.alipsa.groovy.svg.io.SvgWriter  // ← Always include for chart tests
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.aes.Aes
+
+import static org.junit.jupiter.api.Assertions.*
+import static se.alipsa.matrix.gg.GgPlot.*
+```
+
 ## Module Structure
 
 | Module                 | Purpose                                                                   |
