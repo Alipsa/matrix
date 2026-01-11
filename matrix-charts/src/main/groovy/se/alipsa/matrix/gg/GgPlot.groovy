@@ -98,6 +98,12 @@ import se.alipsa.matrix.gg.scale.ScaleShapeManual
 import se.alipsa.matrix.gg.scale.ScaleShapeBinned
 import se.alipsa.matrix.gg.scale.ScaleLinetype
 import se.alipsa.matrix.gg.scale.ScaleLinetypeManual
+import se.alipsa.matrix.gg.scale.ScaleColorIdentity
+import se.alipsa.matrix.gg.scale.ScaleFillIdentity
+import se.alipsa.matrix.gg.scale.ScaleSizeIdentity
+import se.alipsa.matrix.gg.scale.ScaleAlphaIdentity
+import se.alipsa.matrix.gg.scale.ScaleShapeIdentity
+import se.alipsa.matrix.gg.scale.ScaleLinetypeIdentity
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleXDiscrete
 import se.alipsa.matrix.gg.scale.SecondaryAxis
@@ -3130,6 +3136,87 @@ class GgPlot {
    */
   static ScaleLinetypeManual scale_linetype_manual(Map params = [:]) {
     return new ScaleLinetypeManual(params)
+  }
+
+  // --- Identity scales ---
+
+  /**
+   * Identity scale for color - uses data values directly without mapping.
+   *
+   * When the data contains color values (e.g., 'red', 'blue', '#FF0000'), this scale
+   * uses those exact values rather than mapping them through a palette.
+   *
+   * @param params optional scale parameters (naValue, name, guide)
+   */
+  static ScaleColorIdentity scale_color_identity(Map params = [:]) {
+    return new ScaleColorIdentity(params)
+  }
+
+  /**
+   * Identity scale for colour (British spelling alias).
+   */
+  static ScaleColorIdentity scale_colour_identity(Map params = [:]) {
+    return scale_color_identity(params)
+  }
+
+  /**
+   * Identity scale for fill - uses data values directly without mapping.
+   *
+   * When the data contains color values for fill, this scale uses those exact values
+   * rather than mapping them through a palette.
+   *
+   * @param params optional scale parameters (naValue, name, guide)
+   */
+  static ScaleFillIdentity scale_fill_identity(Map params = [:]) {
+    return new ScaleFillIdentity(params)
+  }
+
+  /**
+   * Identity scale for size - uses data values directly without mapping.
+   *
+   * When the data contains numeric size values, this scale uses those exact values
+   * rather than mapping them through a range.
+   *
+   * @param params optional scale parameters (naValue, name, guide)
+   */
+  static ScaleSizeIdentity scale_size_identity(Map params = [:]) {
+    return new ScaleSizeIdentity(params)
+  }
+
+  /**
+   * Identity scale for alpha - uses data values directly without mapping.
+   *
+   * When the data contains numeric alpha/transparency values, this scale uses those
+   * exact values rather than mapping them through a range. Values are clamped to [0, 1].
+   *
+   * @param params optional scale parameters (naValue, name, guide)
+   */
+  static ScaleAlphaIdentity scale_alpha_identity(Map params = [:]) {
+    return new ScaleAlphaIdentity(params)
+  }
+
+  /**
+   * Identity scale for shape - uses data values directly without mapping.
+   *
+   * When the data contains shape names (e.g., 'circle', 'square', 'triangle'), this scale
+   * uses those exact values rather than mapping them from a palette.
+   *
+   * @param params optional scale parameters (naValue, name, guide)
+   */
+  static ScaleShapeIdentity scale_shape_identity(Map params = [:]) {
+    return new ScaleShapeIdentity(params)
+  }
+
+  /**
+   * Identity scale for linetype - uses data values directly without mapping.
+   *
+   * When the data contains linetype names (e.g., 'solid', 'dashed', 'dotted'), this scale
+   * uses those exact values rather than mapping them from a palette.
+   *
+   * @param params optional scale parameters (naValue, name, guide)
+   */
+  static ScaleLinetypeIdentity scale_linetype_identity(Map params = [:]) {
+    return new ScaleLinetypeIdentity(params)
   }
 
   static StatsBin2D stat_bin_2d() {
