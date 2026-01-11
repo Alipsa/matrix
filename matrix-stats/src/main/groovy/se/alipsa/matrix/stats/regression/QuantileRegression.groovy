@@ -13,7 +13,8 @@ import java.math.RoundingMode
  * Quantile Regression implements linear regression that estimates conditional quantiles
  * rather than the conditional mean (as in OLS regression).
  *
- * For a given quantile τ (tau), the regression line minimizes the asymmetric loss function:
+ * For a given quantile tau (denoted mathematically as τ), the regression line minimizes
+ * the asymmetric loss function:
  * ρ_τ(u) = u * (τ - I(u < 0))
  * where I(u < 0) is an indicator function that is 1 when u < 0, and 0 otherwise.
  *

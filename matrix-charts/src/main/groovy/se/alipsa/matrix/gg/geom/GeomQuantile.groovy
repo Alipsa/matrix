@@ -139,15 +139,17 @@ class GeomQuantile extends Geom {
 
   /**
    * Convert line type to SVG stroke-dasharray.
+   * Returns null for 'solid' or unknown line types (no dash pattern).
    */
   private String getDashArray(String type) {
-    final Map<String, String> dashArrays = [
-        dashed: '8,4',
-        dotted: '2,2',
-        dotdash: '2,2,8,2',
-        longdash: '12,4',
-        twodash: '4,2,8,2'
-    ]
-    dashArrays[type?.toLowerCase()]
+    switch (type?.toLowerCase()) {
+      case 'dashed': return '8,4'
+      case 'dotted': return '2,2'
+      case 'dotdash': return '2,2,8,2'
+      case 'longdash': return '12,4'
+      case 'twodash': return '4,2,8,2'
+      case 'solid':
+      default: return null
+    }
   }
 }
