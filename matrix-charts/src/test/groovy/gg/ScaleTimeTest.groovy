@@ -215,7 +215,11 @@ class ScaleTimeTest {
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
     assertTrue(breaks.every { it instanceof LocalTime })
-    // Should have 10-second breaks
+    // Verify 10-second breaks
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(10, interval)
+    }
   }
 
   @Test
@@ -226,6 +230,11 @@ class ScaleTimeTest {
 
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
+    // Verify 10-second breaks for 1-minute span
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(10, interval)
+    }
   }
 
   @Test
@@ -236,7 +245,11 @@ class ScaleTimeTest {
 
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
-    // Should have 30-second or 1-minute breaks
+    // Verify 30-second breaks for 5-minute span
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(30, interval)
+    }
   }
 
   @Test
@@ -247,7 +260,11 @@ class ScaleTimeTest {
 
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
-    // Should have 10-minute breaks
+    // Verify 10-minute breaks for 1-hour span
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(600, interval)  // 10 minutes = 600 seconds
+    }
   }
 
   @Test
@@ -258,7 +275,11 @@ class ScaleTimeTest {
 
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
-    // Should have 15-minute breaks
+    // Verify 15-minute breaks for 2-hour span
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(900, interval)  // 15 minutes = 900 seconds
+    }
   }
 
   @Test
@@ -269,7 +290,11 @@ class ScaleTimeTest {
 
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
-    // Should have 30-minute breaks
+    // Verify 30-minute breaks for 6-hour span
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(1800, interval)  // 30 minutes = 1800 seconds
+    }
   }
 
   @Test
@@ -280,7 +305,11 @@ class ScaleTimeTest {
 
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
-    // Should have 1-hour breaks
+    // Verify 1-hour breaks for 12-hour span
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(3600, interval)  // 1 hour = 3600 seconds
+    }
   }
 
   @Test
@@ -291,7 +320,11 @@ class ScaleTimeTest {
 
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
-    // Should have 2-hour breaks
+    // Verify 2-hour breaks for full-day span
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(7200, interval)  // 2 hours = 7200 seconds
+    }
   }
 
   @Test
@@ -313,7 +346,14 @@ class ScaleTimeTest {
 
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
-    // Should have breaks at 9:00, 9:15, 9:30, ..., 12:00
+    // Verify breaks at 9:00, 9:15, 9:30, ..., 12:00
+    assertTrue(breaks.size() >= 5)  // At least 9:00, 9:15, 9:30, ..., 12:00
+    assertEquals(LocalTime.of(9, 0), breaks[0])
+    // Verify 15-minute intervals
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(900, interval)  // 15 minutes = 900 seconds
+    }
   }
 
   @Test
@@ -324,7 +364,14 @@ class ScaleTimeTest {
 
     List breaks = scale.getComputedBreaks()
     assertFalse(breaks.isEmpty())
-    // Should have breaks at 8:00, 10:00, 12:00, 14:00, 16:00, 18:00
+    // Verify breaks at 8:00, 10:00, 12:00, 14:00, 16:00, 18:00
+    assertTrue(breaks.size() >= 5)
+    assertEquals(LocalTime.of(8, 0), breaks[0])
+    // Verify 2-hour intervals
+    if (breaks.size() >= 2) {
+      long interval = java.time.Duration.between(breaks[0] as LocalTime, breaks[1] as LocalTime).getSeconds()
+      assertEquals(7200, interval)  // 2 hours = 7200 seconds
+    }
   }
 
   @Test
@@ -640,6 +687,18 @@ class ScaleTimeTest {
     // Should be clamped to [0, 86399]
     assertEquals(0, scale.minSecondsSinceMidnight)
     assertTrue(scale.maxSecondsSinceMidnight <= 86399)
+  }
+
+  @Test
+  void testExpandNull() {
+    // expand: null should be explicitly allowed (disables expansion)
+    def scale = new ScaleXTime(expand: null)
+    def times = [LocalTime.of(10, 0), LocalTime.of(14, 0)]
+    scale.train(times)
+
+    // Should have no expansion
+    assertEquals(10 * 3600, scale.minSecondsSinceMidnight)
+    assertEquals(14 * 3600, scale.maxSecondsSinceMidnight)
   }
 
   @Test

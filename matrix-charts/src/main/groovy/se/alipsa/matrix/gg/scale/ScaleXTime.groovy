@@ -36,9 +36,11 @@ class ScaleXTime extends ScaleContinuous {
 
   /**
    * Time-specific limits storage.
-   * The parent Scale class declares limits as List<BigDecimal>, which causes type coercion
-   * failures with @CompileStatic when storing LocalTime or String time values.
-   * This separate field avoids the type mismatch while maintaining the same functionality.
+   * Cannot use parent's limits field because the parent Scale class defines
+   * setLimits(List<? extends Number>) which calls vals.collect { it as BigDecimal }.
+   * This setter is triggered when assigning this.limits = ..., causing type coercion
+   * failures when limits contain LocalTime or String values (demonstrated by test failures).
+   * Using a separate field avoids triggering the setter.
    */
   private List timeLimits = null
 
@@ -58,13 +60,18 @@ class ScaleXTime extends ScaleContinuous {
     if (params.name) this.name = params.name as String
     if (params.limits) this.timeLimits = params.limits as List
     if (params.containsKey('expand')) {
-      List expandList = params.expand as List
-      if (expandList != null && expandList.size() != 2) {
-        throw new IllegalArgumentException(
-          "expand must have exactly 2 elements [multiplicative, additive], got ${expandList.size()}"
-        )
+      def expandValue = params.expand
+      if (expandValue != null) {
+        List expandList = expandValue as List
+        if (expandList.size() != 2) {
+          throw new IllegalArgumentException(
+            "expand must have exactly 2 elements [multiplicative, additive], got ${expandList.size()}"
+          )
+        }
+        this.expand = expandList
+      } else {
+        this.expand = null
       }
-      this.expand = expandList
     }
     if (params.breaks) this.breaks = params.breaks as List
     if (params.labels) this.labels = params.labels as List<String>
