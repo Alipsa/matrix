@@ -3013,7 +3013,7 @@ class GgPlot {
    * scale_color_steps(colors: ['#ffffcc', '#a1dab4', '#41b6c4', '#225ea8'])
    * </pre>
    *
-   * @param params scale parameters (bins, low, high, colors, naValue, name, limits)
+   * @param params scale parameters (bins, low, high, colors, naValue, name, limits, breaks, labels)
    */
   static ScaleColorSteps scale_color_steps(Map params = [:]) {
     return new ScaleColorSteps(params)
