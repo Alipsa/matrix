@@ -349,6 +349,79 @@ class ScaleTimeTest {
     assertEquals(LocalTime.of(14, 0), breaks[1])
   }
 
+  @Test
+  void testInvalidTimeBreaksSpecification() {
+    // Invalid unit should throw IllegalArgumentException
+    def exception = assertThrows(IllegalArgumentException) {
+      def scale = new ScaleXTime(time_breaks: '5 days')
+      def times = [LocalTime.of(9, 0), LocalTime.of(17, 0)]
+      scale.train(times)
+      scale.getComputedBreaks()  // Triggers break generation
+    }
+    assertTrue(exception.message.contains('Invalid time unit'))
+    assertTrue(exception.message.contains('days'))
+  }
+
+  @Test
+  void testInvalidTimeBreaksUnit() {
+    // Another invalid unit
+    def exception = assertThrows(IllegalArgumentException) {
+      def scale = new ScaleXTime(time_breaks: '30 milliseconds')
+      def times = [LocalTime.of(9, 0), LocalTime.of(17, 0)]
+      scale.train(times)
+      scale.getComputedBreaks()
+    }
+    assertTrue(exception.message.contains('Invalid time unit'))
+  }
+
+  @Test
+  void testOutOfOrderCustomBreaks() {
+    // User-specified breaks don't need to be sorted - they're used as-is
+    def scale = new ScaleXTime(breaks: [LocalTime.of(15, 0), LocalTime.of(9, 0), LocalTime.of(12, 0)])
+    def times = [LocalTime.of(8, 0), LocalTime.of(16, 0)]
+    scale.train(times)
+
+    List breaks = scale.getComputedBreaks()
+    // Should return breaks in the order specified by user
+    assertEquals(3, breaks.size())
+    assertEquals(LocalTime.of(15, 0), breaks[0])
+    assertEquals(LocalTime.of(9, 0), breaks[1])
+    assertEquals(LocalTime.of(12, 0), breaks[2])
+  }
+
+  @Test
+  void testTimeSpanNearMidnight() {
+    // Test break generation when times are close to end of day (23:00 to 23:59)
+    def scale = new ScaleXTime(time_breaks: '15 minutes')
+    def times = [LocalTime.of(23, 0), LocalTime.of(23, 59)]
+    scale.train(times)
+
+    List breaks = scale.getComputedBreaks()
+    assertFalse(breaks.isEmpty())
+    // Should have breaks at 23:00, 23:15, 23:30, 23:45
+    assertTrue(breaks.size() >= 3)
+    assertEquals(LocalTime.of(23, 0), breaks[0])
+    assertTrue(breaks.every { (it as LocalTime).hour == 23 })  // All should be in hour 23
+    // Verify no wrapping past midnight
+    assertFalse(breaks.any { (it as LocalTime) == LocalTime.MIDNIGHT })
+  }
+
+  @Test
+  void testAutoBreaksNearMidnight() {
+    // Test auto break generation near end of day
+    def scale = new ScaleXTime()
+    def times = [LocalTime.of(22, 0), LocalTime.of(23, 59)]
+    scale.train(times)
+
+    List breaks = scale.getComputedBreaks()
+    assertFalse(breaks.isEmpty())
+    // All breaks should be within the 22:00-23:59 range
+    assertTrue(breaks.every {
+      LocalTime t = it as LocalTime
+      !t.isBefore(LocalTime.of(22, 0)) && !t.isAfter(LocalTime.of(23, 59))
+    })
+  }
+
   // --- Formatting and labels tests ---
 
   @Test

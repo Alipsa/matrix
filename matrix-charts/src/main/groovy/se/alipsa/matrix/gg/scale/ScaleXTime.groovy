@@ -102,7 +102,7 @@ class ScaleXTime extends ScaleContinuous {
       long delta = max - min
       min = (long)(min - delta * mult - add)  // add is in seconds
       max = (long)(max + delta * mult + add)
-      // Clamp to valid time range [0, 86400)
+      // Clamp to valid time range [0, 86399]
       min = Math.max(0, min)
       max = Math.min(86399, max)
     }
@@ -239,12 +239,23 @@ class ScaleXTime extends ScaleContinuous {
   }
 
   private ChronoUnit parseUnit(String unitStr) {
-    String u = unitStr.toLowerCase().replaceAll('s$', '')  // Remove plural 's'
+    String u = unitStr.toLowerCase().trim()
+
+    // Handle both singular and plural forms explicitly
     switch (u) {
-      case 'second': return ChronoUnit.SECONDS
-      case 'minute': return ChronoUnit.MINUTES
-      case 'hour': return ChronoUnit.HOURS
-      default: return ChronoUnit.MINUTES
+      case 'second':
+      case 'seconds':
+        return ChronoUnit.SECONDS
+      case 'minute':
+      case 'minutes':
+        return ChronoUnit.MINUTES
+      case 'hour':
+      case 'hours':
+        return ChronoUnit.HOURS
+      default:
+        throw new IllegalArgumentException(
+          "Invalid time unit '${unitStr}'. Supported units: second/seconds, minute/minutes, hour/hours"
+        )
     }
   }
 
@@ -253,17 +264,29 @@ class ScaleXTime extends ScaleContinuous {
 
     // Round min to appropriate boundary
     LocalTime current = roundTimeToUnit(minTime, unit, step)
+    boolean seenMidnight = false
 
     while (!current.isAfter(maxTime)) {
       if (!current.isBefore(minTime)) {
         breaks << current
       }
-      current = advanceTime(current, unit, step)
 
-      // Prevent infinite loop for times crossing midnight boundary
-      if (current == LocalTime.MIDNIGHT && breaks.contains(LocalTime.MIDNIGHT)) {
+      LocalTime next = advanceTime(current, unit, step)
+
+      // Detect wrapping past midnight (next is before current) or reaching null (out of bounds)
+      if (next == null || next.isBefore(current)) {
         break
       }
+
+      // Prevent infinite loop if we see midnight twice
+      if (next == LocalTime.MIDNIGHT) {
+        if (seenMidnight) {
+          break
+        }
+        seenMidnight = true
+      }
+
+      current = next
     }
 
     return breaks
@@ -296,14 +319,18 @@ class ScaleXTime extends ScaleContinuous {
     switch (unit) {
       case ChronoUnit.SECONDS:
         long newSeconds = time.toSecondOfDay() + step
-        if (newSeconds >= 86400) return LocalTime.MAX  // Don't wrap to next day
+        if (newSeconds >= 86400) return null  // Exceeds valid time range
         return LocalTime.ofSecondOfDay(newSeconds)
       case ChronoUnit.MINUTES:
-        return time.plusMinutes(step)
+        long totalSeconds = time.toSecondOfDay() + (step * 60L)
+        if (totalSeconds >= 86400) return null  // Would wrap past midnight
+        return LocalTime.ofSecondOfDay(totalSeconds)
       case ChronoUnit.HOURS:
-        return time.plusHours(step)
+        long secondsFromHours = time.toSecondOfDay() + (step * 3600L)
+        if (secondsFromHours >= 86400) return null  // Would wrap past midnight
+        return LocalTime.ofSecondOfDay(secondsFromHours)
       default:
-        return time.plusMinutes(step)
+        throw new IllegalArgumentException("Unsupported ChronoUnit: ${unit}")
     }
   }
 
