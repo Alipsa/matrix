@@ -307,12 +307,12 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.5 Binned Color Scales
 
-- 4.5.1 [ ] `scale_colour_steps()` / `scale_color_steps()` - Binned sequential colors
-- 4.5.2 [ ] `scale_fill_steps()` - Binned sequential fill
-- 4.5.3 [ ] `scale_colour_steps2()` / `scale_color_steps2()` - Binned diverging colors
-- 4.5.4 [ ] `scale_fill_steps2()` - Binned diverging fill
-- 4.5.5 [ ] `scale_colour_stepsn()` / `scale_color_stepsn()` - Binned n-color
-- 4.5.6 [ ] `scale_fill_stepsn()` - Binned n-color fill
+- 4.5.1 [x] `scale_colour_steps()` / `scale_color_steps()` - Binned sequential colors
+- 4.5.2 [x] `scale_fill_steps()` - Binned sequential fill
+- 4.5.3 [x] `scale_colour_steps2()` / `scale_color_steps2()` - Binned diverging colors
+- 4.5.4 [x] `scale_fill_steps2()` - Binned diverging fill
+- 4.5.5 [x] `scale_colour_stepsn()` / `scale_color_stepsn()` - Binned n-color
+- 4.5.6 [x] `scale_fill_stepsn()` - Binned n-color fill
 
 ### 4.6 Binned Position Scales
 

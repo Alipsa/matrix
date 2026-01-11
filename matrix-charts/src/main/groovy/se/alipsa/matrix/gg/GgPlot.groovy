@@ -78,6 +78,9 @@ import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.position.Position
 import se.alipsa.matrix.gg.scale.ScaleColorGradient
 import se.alipsa.matrix.gg.scale.ScaleColorGradientN
+import se.alipsa.matrix.gg.scale.ScaleColorSteps
+import se.alipsa.matrix.gg.scale.ScaleColorSteps2
+import se.alipsa.matrix.gg.scale.ScaleColorStepsN
 import se.alipsa.matrix.gg.scale.ScaleColorManual
 import se.alipsa.matrix.gg.scale.ScaleColorBrewer
 import se.alipsa.matrix.gg.scale.ScaleColorDistiller
@@ -2997,6 +3000,96 @@ class GgPlot {
    */
   static ScaleColorGradientN scale_fill_gradientn(Map params = [:]) {
     return new ScaleColorGradientN(params + [aesthetic: 'fill'])
+  }
+
+  // --- Binned Color Scales ---
+
+  /**
+   * Binned sequential color scale - maps continuous values to discrete color steps.
+   *
+   * Example:
+   * <pre>
+   * scale_color_steps(bins: 7, low: 'white', high: 'darkblue')
+   * scale_color_steps(colors: ['#ffffcc', '#a1dab4', '#41b6c4', '#225ea8'])
+   * </pre>
+   *
+   * @param params scale parameters (bins, low, high, colors, naValue, name, limits)
+   */
+  static ScaleColorSteps scale_color_steps(Map params = [:]) {
+    return new ScaleColorSteps(params)
+  }
+
+  /**
+   * Binned sequential colour scale (British spelling alias).
+   */
+  static ScaleColorSteps scale_colour_steps(Map params = [:]) {
+    return scale_color_steps(params)
+  }
+
+  /**
+   * Binned sequential fill scale.
+   */
+  static ScaleColorSteps scale_fill_steps(Map params = [:]) {
+    return new ScaleColorSteps(params + [aesthetic: 'fill'])
+  }
+
+  /**
+   * Binned diverging color scale - splits at midpoint with two color ranges.
+   *
+   * Example:
+   * <pre>
+   * scale_color_steps2(bins: 9, low: 'blue', mid: 'white', high: 'red')
+   * scale_color_steps2(bins: 7, midpoint: 50)  // Set specific midpoint value
+   * </pre>
+   *
+   * @param params scale parameters (bins, low, mid, high, midpoint, colors, naValue)
+   */
+  static ScaleColorSteps2 scale_color_steps2(Map params = [:]) {
+    return new ScaleColorSteps2(params)
+  }
+
+  /**
+   * Binned diverging colour scale (British spelling alias).
+   */
+  static ScaleColorSteps2 scale_colour_steps2(Map params = [:]) {
+    return scale_color_steps2(params)
+  }
+
+  /**
+   * Binned diverging fill scale.
+   */
+  static ScaleColorSteps2 scale_fill_steps2(Map params = [:]) {
+    return new ScaleColorSteps2(params + [aesthetic: 'fill'])
+  }
+
+  /**
+   * Binned n-color scale - maps continuous values to bins from a custom palette.
+   *
+   * Example:
+   * <pre>
+   * scale_color_stepsn(bins: 5, colors: ['red', 'yellow', 'green', 'blue'])
+   * scale_color_stepsn(bins: 10, colors: ['#440154', '#31688e', '#35b779', '#fde724'],
+   *                    values: [0.0, 0.33, 0.67, 1.0])
+   * </pre>
+   *
+   * @param params scale parameters (bins, colors, values, naValue, name, limits)
+   */
+  static ScaleColorStepsN scale_color_stepsn(Map params = [:]) {
+    return new ScaleColorStepsN(params)
+  }
+
+  /**
+   * Binned n-colour scale (British spelling alias).
+   */
+  static ScaleColorStepsN scale_colour_stepsn(Map params = [:]) {
+    return scale_color_stepsn(params)
+  }
+
+  /**
+   * Binned n-color fill scale.
+   */
+  static ScaleColorStepsN scale_fill_stepsn(Map params = [:]) {
+    return new ScaleColorStepsN(params + [aesthetic: 'fill'])
   }
 
   // --- Alpha scales ---

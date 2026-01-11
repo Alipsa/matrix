@@ -1,0 +1,102 @@
+package se.alipsa.matrix.gg.scale
+
+import groovy.transform.CompileStatic
+
+/**
+ * Binned sequential color scale - divides continuous range into discrete color bins.
+ *
+ * Unlike gradient scales which create smooth color transitions, binned scales
+ * map continuous values to a fixed number of discrete color bins/steps.
+ * Useful for choropleth maps and categorical data visualization.
+ *
+ * Example:
+ * <pre>
+ * // 7 bins from white to dark blue
+ * scale_color_steps(bins: 7, low: 'white', high: 'darkblue')
+ *
+ * // Custom color palette
+ * scale_color_steps(colors: ['#ffffcc', '#a1dab4', '#41b6c4', '#225ea8'])
+ * </pre>
+ */
+@CompileStatic
+class ScaleColorSteps extends ScaleContinuous {
+  String aesthetic = 'color'
+  int bins = 5
+  List<String> colors
+  String low = '#132B43'   // Default: dark blue
+  String high = '#56B1F7'  // Default: light blue
+  String naValue = 'grey50'
+  String guideType = 'bins'  // Use binned legend
+
+  ScaleColorSteps(Map params = [:]) {
+    applyParams(params)
+
+    // Generate color palette if not provided
+    if (!colors) {
+      colors = generateSequentialPalette(low, high, bins)
+    }
+  }
+
+  @Override
+  Object transform(Object value) {
+    BigDecimal v = ScaleUtils.coerceToNumber(value)
+    if (v == null) return naValue
+
+    BigDecimal dMin = computedDomain[0]
+    BigDecimal dMax = computedDomain[1]
+
+    // Edge case: constant domain
+    if (dMax == dMin) {
+      return colors[colors.size() / 2]
+    }
+
+    // Normalize to [0, 1]
+    BigDecimal normalized = (v - dMin) / (dMax - dMin)
+    normalized = 0.max(normalized.min(1))
+
+    // Calculate bin index
+    int binsCount = Math.max(1, bins)
+    if (binsCount == 1) return colors[0]
+
+    BigDecimal scaled = normalized * binsCount
+    int binIndex = scaled.floor() as int
+    binIndex = Math.min(binIndex, binsCount - 1)
+    binIndex = Math.max(binIndex, 0)
+
+    // Get color from palette
+    return colors[binIndex % colors.size()]
+  }
+
+  private List<String> generateSequentialPalette(String lowColor, String highColor, int n) {
+    List<String> palette = []
+    for (int i = 0; i < n; i++) {
+      BigDecimal t = n > 1 ? (i / (n - 1)) : 0.5
+      palette << ColorScaleUtil.interpolateColor(lowColor, highColor, t)
+    }
+    return palette
+  }
+
+  private void applyParams(Map params) {
+    if (params.aesthetic) this.aesthetic = params.aesthetic as String
+    if (params.bins != null) this.bins = (params.bins as Number).intValue()
+    if (params.colors) this.colors = params.colors as List<String>
+    if (params.low) this.low = params.low as String
+    if (params.high) this.high = params.high as String
+    if (params.naValue) this.naValue = params.naValue as String
+    if (params.name) this.name = params.name as String
+    if (params.limits) this.limits = params.limits as List
+    if (params.breaks) this.breaks = params.breaks as List
+    if (params.labels) this.labels = params.labels as List<String>
+  }
+
+  // Fluent API
+  ScaleColorSteps colors(List<String> colors) {
+    this.colors = colors
+    return this
+  }
+
+  ScaleColorSteps bins(int n) {
+    this.bins = n
+    return this
+  }
+}
