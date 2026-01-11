@@ -298,12 +298,12 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.4 Identity Scales
 
-- 4.4.1 [ ] `scale_colour_identity()` / `scale_color_identity()` - Use color values directly
-- 4.4.2 [ ] `scale_fill_identity()` - Use fill values directly
-- 4.4.3 [ ] `scale_size_identity()` - Use size values directly
-- 4.4.4 [ ] `scale_shape_identity()` - Use shape values directly
-- 4.4.5 [ ] `scale_linetype_identity()` - Use linetype values directly
-- 4.4.6 [ ] `scale_alpha_identity()` - Use alpha values directly
+- 4.4.1 [x] `scale_colour_identity()` / `scale_color_identity()` - Use color values directly
+- 4.4.2 [x] `scale_fill_identity()` - Use fill values directly
+- 4.4.3 [x] `scale_size_identity()` - Use size values directly
+- 4.4.4 [x] `scale_shape_identity()` - Use shape values directly
+- 4.4.5 [x] `scale_linetype_identity()` - Use linetype values directly
+- 4.4.6 [x] `scale_alpha_identity()` - Use alpha values directly
 
 ### 4.5 Binned Color Scales
 
