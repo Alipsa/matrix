@@ -73,6 +73,13 @@ class GgRenderer {
   static final int LEGEND_CONTINUOUS_BAR_WIDTH_HORIZONTAL = 100
   static final int LEGEND_CONTINUOUS_BAR_HEIGHT_HORIZONTAL = 15
 
+  // Utility renderers
+  private final RenderContext context = new RenderContext()
+  private final AxisRenderer axisRenderer = new AxisRenderer(context)
+  private final GridRenderer gridRenderer = new GridRenderer(context)
+  private final FacetRenderer facetRenderer = new FacetRenderer()
+  private final LegendRenderer legendRenderer = new LegendRenderer(context)
+
   /**
    * Render a GgChart to an SVG.
    * @param chart The chart specification
@@ -170,7 +177,7 @@ class GgRenderer {
     renderPanelBackground(plotArea, effectiveWidth, effectiveHeight, theme)
 
     // 6. Draw grid lines before data.
-    renderGridLines(plotArea, computedScales, effectiveWidth, effectiveHeight, theme, coord)
+    gridRenderer.renderGridLines(plotArea, computedScales, effectiveWidth, effectiveHeight, theme, coord)
 
     // 7. Create data layer group with clip path matching effective dimensions
     G dataLayer = plotArea.addG()
@@ -186,13 +193,13 @@ class GgRenderer {
     }
 
     // 9. Draw axes (on top of data, use effective dimensions)
-    renderAxes(plotArea, computedScales, effectiveWidth, effectiveHeight, theme, coord)
+    axisRenderer.renderAxes(plotArea, computedScales, effectiveWidth, effectiveHeight, theme, coord)
 
     // 10. Draw title and labels
     renderLabels(svg, chart, effectiveWidth, effectiveHeight, svgHeight, theme)
 
     // 11. Draw legend (if needed)
-    renderLegend(svg, computedScales, chart, theme)
+    legendRenderer.renderLegend(svg, computedScales, chart, theme)
 
     return svg
   }
@@ -290,7 +297,7 @@ class GgRenderer {
 
       // Render strip label (if enabled and FacetWrap only - FacetGrid has separate strips)
       if (facet.strip && !isFacetGrid) {
-        renderFacetStrip(panelGroup, facet.getPanelLabel(panelValues), panelWidth, perPanelStripHeight, theme)
+        facetRenderer.renderFacetStrip(panelGroup, facet.getPanelLabel(panelValues), panelWidth, perPanelStripHeight, theme)
       }
 
       // Create panel content group (below strip for FacetWrap)
@@ -323,7 +330,7 @@ class GgRenderer {
       }
 
       // Draw grid lines before data.
-      renderGridLines(contentGroup, panelScales, panelWidth, panelHeight, theme, coord)
+      gridRenderer.renderGridLines(contentGroup, panelScales, panelWidth, panelHeight, theme, coord)
 
       // Create data layer with clip path
       G dataLayer = contentGroup.addG()
@@ -344,7 +351,7 @@ class GgRenderer {
       // Only draw x-axis labels on bottom row
       boolean showXLabels = (row == nrow - 1)
 
-      renderFacetAxes(contentGroup, panelScales, panelWidth, panelHeight, theme, coord, showXLabels, showYLabels)
+      facetRenderer.renderFacetAxes(contentGroup, panelScales, panelWidth, panelHeight, theme, showXLabels, showYLabels)
     }
 
     // 8. Render FacetGrid strips (column strips at top, row strips at right)
@@ -357,7 +364,7 @@ class GgRenderer {
           G colStripGroup = svg.addG()
           colStripGroup.id("col-strip-${c}")
           colStripGroup.transform("translate($stripX, $stripY)")
-          renderFacetStrip(colStripGroup, fg.getColLabel(c, chart.data), panelWidth, colStripHeight, theme)
+          facetRenderer.renderFacetStrip(colStripGroup, fg.getColLabel(c, chart.data), panelWidth, colStripHeight, theme)
         }
       }
 
@@ -369,7 +376,7 @@ class GgRenderer {
           G rowStripGroup = svg.addG()
           rowStripGroup.id("row-strip-${r}")
           rowStripGroup.transform("translate($stripX, $stripY)")
-          renderFacetStripRotated(rowStripGroup, fg.getRowLabel(r, chart.data), rowStripWidth, panelHeight, theme)
+          facetRenderer.renderFacetStripRotated(rowStripGroup, fg.getRowLabel(r, chart.data), rowStripWidth, panelHeight, theme)
         }
       }
     }
@@ -378,7 +385,7 @@ class GgRenderer {
     renderLabels(svg, chart, totalPlotWidth, totalPlotHeight, chart.height, theme)
 
     // 9. Draw legend (if needed)
-    renderLegend(svg, globalScales, chart, theme)
+    legendRenderer.renderLegend(svg, globalScales, chart, theme)
 
     return svg
   }
