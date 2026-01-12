@@ -8,6 +8,7 @@ import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.coord.CoordRadial
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
@@ -58,6 +59,11 @@ class GeomBar extends Geom {
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
     if (data == null || data.rowCount() == 0) return
+
+    if (coord instanceof CoordRadial) {
+      renderRadial(group, data, aes, scales, coord as CoordRadial)
+      return
+    }
 
     if (coord instanceof CoordPolar) {
       renderPolar(group, data, aes, scales, coord as CoordPolar)
@@ -206,6 +212,105 @@ class GeomBar extends Geom {
    * @param scales computed scales
    * @param coord polar coordinate system
    */
+  private void renderRadial(G group, Matrix data, Aes aes, Map<String, Scale> scales, CoordRadial coord) {
+    String xCol = aes.xColName
+    String yCol = data.columnNames().contains('count') ? 'count' : aes.yColName
+    String fillCol = aes.fillColName
+
+    Scale fillScale = scales['fill'] ?: scales['color']
+
+    Map<Object, List<Row>> groups = [:].withDefault { [] }
+    data.each { row ->
+      Object key = xCol != null ? row[xCol] : null
+      groups[key] << row
+    }
+
+    double outerRadius = coord.getMaxRadius() as double
+    double innerOffset = coord.getInnerRadiusPx() as double
+    innerOffset = Math.max(0.0d, Math.min(innerOffset, outerRadius))
+    double availableRadius = Math.max(0.0d, outerRadius - innerOffset)
+    int groupCount = groups.size()
+
+    double span = coord.getAngularSpan() as double
+
+    int idx = 0
+    for (Map.Entry<Object, List<Row>> entry : groups.entrySet()) {
+      List<Row> rows = new ArrayList<>(entry.value)
+      if (fillCol && fillScale instanceof ScaleDiscrete) {
+        List<Object> levels = (fillScale as ScaleDiscrete).levels
+        if (!levels.isEmpty()) {
+          Map<Object, Integer> levelIndex = [:]
+          levels.eachWithIndex { level, int pos ->
+            levelIndex[level] = pos
+          }
+          rows.sort { Row row ->
+            int pos = levelIndex.getOrDefault(row[fillCol], Integer.MAX_VALUE)
+            return pos < 0 ? Integer.MAX_VALUE : pos
+          }
+        }
+      }
+      if (coord.theta == 'y') {
+        rows = rows.reverse()
+      }
+
+      double ringSize = groupCount > 0 ? (availableRadius / (double) groupCount) : availableRadius
+      double groupOuter = outerRadius - (idx * ringSize)
+      double groupInner = Math.max(innerOffset, groupOuter - ringSize)
+      idx++
+
+      List<Double> values = rows.collect { row ->
+        if (row['ymin'] != null && row['ymax'] != null) {
+          return ((row['ymax'] as double) - (row['ymin'] as double))
+        }
+        if (yCol != null && row[yCol] instanceof Number) {
+          return row[yCol] as double
+        }
+        return 0.0d
+      }
+      double total = values.sum(0.0d) as double
+      if (total <= 0.0d) {
+        continue
+      }
+
+      double current = 0.0d
+      rows.eachWithIndex { row, int rowIdx ->
+        double value = values[rowIdx]
+        if (value <= 0.0d) {
+          return
+        }
+        double startAngle = (current / total) * span
+        double endAngle = ((current + value) / total) * span
+        current += value
+
+        String sliceFill = this.fill
+        if (fillCol && row[fillCol] != null) {
+          if (fillScale) {
+            sliceFill = fillScale.transform(row[fillCol])?.toString() ?: this.fill
+          } else {
+            sliceFill = getDefaultColor(row[fillCol])
+          }
+        } else if (aes.fill instanceof Identity) {
+          sliceFill = (aes.fill as Identity).value.toString()
+        }
+        sliceFill = ColorUtil.normalizeColor(sliceFill) ?: sliceFill
+
+        def path = group.addPath()
+            .d(coord.createArcPath(startAngle, endAngle, groupInner, groupOuter))
+            .fill(sliceFill)
+        if (color != null) {
+          String strokeColor = ColorUtil.normalizeColor(color) ?: color
+          path.stroke(strokeColor)
+          path.addAttribute('stroke-width', linewidth)
+        } else {
+          path.stroke('none')
+        }
+        if (alpha < 1.0) {
+          path.addAttribute('fill-opacity', alpha)
+        }
+      }
+    }
+  }
+
   private void renderPolar(G group, Matrix data, Aes aes, Map<String, Scale> scales, CoordPolar coord) {
     String xCol = aes.xColName
     String yCol = data.columnNames().contains('count') ? 'count' : aes.yColName

@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.coord.CoordRadial
 import se.alipsa.matrix.gg.coord.CoordTrans
 import se.alipsa.matrix.gg.coord.CoordQuickmap
 import se.alipsa.matrix.gg.facet.Facet
@@ -164,6 +165,9 @@ class GgRenderer {
     } else if (coord instanceof CoordPolar) {
       coord.plotWidth = effectiveWidth
       coord.plotHeight = effectiveHeight
+    } else if (coord instanceof CoordRadial) {
+      coord.plotWidth = effectiveWidth
+      coord.plotHeight = effectiveHeight
     }
 
     // 2. Setup plot area group
@@ -180,10 +184,12 @@ class GgRenderer {
     // 7. Create data layer group with clip path matching effective dimensions
     G dataLayer = plotArea.addG()
     dataLayer.id('data-layer')
-    Defs defs = svg.addDefs()
-    def clipPath = defs.addClipPath().id('plot-clip')
-    clipPath.addRect(effectiveWidth, effectiveHeight).x(0).y(0)
-    dataLayer.addAttribute('clip-path', 'url(#plot-clip)')
+    if (shouldClip(coord)) {
+      Defs defs = svg.addDefs()
+      def clipPath = defs.addClipPath().id('plot-clip')
+      clipPath.addRect(effectiveWidth, effectiveHeight).x(0).y(0)
+      dataLayer.addAttribute('clip-path', 'url(#plot-clip)')
+    }
 
     // 8. Render each layer
     chart.layers.each { layer ->
@@ -325,6 +331,9 @@ class GgRenderer {
       } else if (coord instanceof CoordPolar) {
         coord.plotWidth = panelWidth
         coord.plotHeight = panelHeight
+      } else if (coord instanceof CoordRadial) {
+        coord.plotWidth = panelWidth
+        coord.plotHeight = panelHeight
       }
 
       // Draw grid lines before data.
@@ -333,10 +342,12 @@ class GgRenderer {
       // Create data layer with clip path
       G dataLayer = contentGroup.addG()
       dataLayer.id("data-layer-${row}-${col}")
-      String clipId = "panel-clip-${row}-${col}"
-      def clipPath = defs.addClipPath().id(clipId)
-      clipPath.addRect(panelWidth, panelHeight).x(0).y(0)
-      dataLayer.addAttribute('clip-path', "url(#${clipId})")
+      if (shouldClip(coord)) {
+        String clipId = "panel-clip-${row}-${col}"
+        def clipPath = defs.addClipPath().id(clipId)
+        clipPath.addRect(panelWidth, panelHeight).x(0).y(0)
+        dataLayer.addAttribute('clip-path', "url(#${clipId})")
+      }
 
       // Render each layer with filtered data
       chart.layers.each { layer ->
@@ -562,12 +573,20 @@ class GgRenderer {
     List<Number> yRange = isFlipped ? [0, plotWidth] as List<Number> : [plotHeight, 0] as List<Number>
 
     boolean isPolar = coord instanceof CoordPolar
-    String thetaAes = isPolar ? ((coord as CoordPolar).theta == 'y' ? 'y' : 'x') : null
+    boolean isRadial = coord instanceof CoordRadial
+    String thetaAes = null
+    if (isPolar) {
+      thetaAes = ((coord as CoordPolar).theta == 'y' ? 'y' : 'x')
+    } else if (isRadial) {
+      thetaAes = ((coord as CoordRadial).theta == 'y' ? 'y' : 'x')
+    }
 
     // Create x scale (auto-detect discrete vs continuous)
     if (aestheticData.x) {
       Scale xScale = createAutoScale('x', aestheticData.x)
       if (isPolar && thetaAes == 'x' && xScale instanceof ScaleContinuous) {
+        (xScale as ScaleContinuous).expand = ScaleContinuous.NO_EXPAND
+      } else if (isRadial && !((coord as CoordRadial).expand) && xScale instanceof ScaleContinuous) {
         (xScale as ScaleContinuous).expand = ScaleContinuous.NO_EXPAND
       }
       xScale.train(aestheticData.x)
@@ -587,6 +606,8 @@ class GgRenderer {
     if (aestheticData.y) {
       Scale yScale = createAutoScale('y', aestheticData.y)
       if (isPolar && thetaAes == 'y' && yScale instanceof ScaleContinuous) {
+        (yScale as ScaleContinuous).expand = ScaleContinuous.NO_EXPAND
+      } else if (isRadial && !((coord as CoordRadial).expand) && yScale instanceof ScaleContinuous) {
         (yScale as ScaleContinuous).expand = ScaleContinuous.NO_EXPAND
       }
       yScale.train(aestheticData.y)
@@ -1241,6 +1262,16 @@ class GgRenderer {
     if (layer.geom) {
       layer.geom.render(layerGroup, posData, resolvedAes, scales, coord)
     }
+  }
+
+  private boolean shouldClip(def coord) {
+    if (coord instanceof CoordPolar) {
+      return (coord as CoordPolar).clip
+    }
+    if (coord instanceof CoordRadial) {
+      return (coord as CoordRadial).clip
+    }
+    return true
   }
 
   /**
