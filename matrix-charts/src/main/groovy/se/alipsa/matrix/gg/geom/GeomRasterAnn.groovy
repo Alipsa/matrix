@@ -75,6 +75,11 @@ class GeomRasterAnn extends Geom {
     BigDecimal ymax = getPositionValue(data, 'ymax', 0)
 
     // Handle infinite values - use full panel extent in DATA-SPACE
+    // Requires continuous scales for domain access
+    if (!(xScale instanceof ScaleContinuous) || !(yScale instanceof ScaleContinuous)) {
+      // Cannot render raster annotation with non-continuous scales
+      return
+    }
     List<BigDecimal> xDomain = (xScale as ScaleContinuous).computedDomain
     List<BigDecimal> yDomain = (yScale as ScaleContinuous).computedDomain
 
@@ -91,9 +96,17 @@ class GeomRasterAnn extends Geom {
 
     // Calculate raster dimensions
     int numRows = raster.size()
-    int numCols = raster[0].size()
+    if (numRows == 0) return
 
-    if (numRows == 0 || numCols == 0) return
+    // Find the first non-empty row to determine column count
+    int numCols = 0
+    for (List<String> row : raster) {
+      if (row != null && !row.isEmpty()) {
+        numCols = row.size()
+        break
+      }
+    }
+    if (numCols == 0) return
 
     // Calculate cell dimensions in pixels
     BigDecimal totalWidth = (xmaxPx - xminPx).abs()
@@ -113,9 +126,10 @@ class GeomRasterAnn extends Geom {
     }
 
     // Render each cell
-    // Row 0 is at the top (ymin pixel position), consistent with image conventions
+    // Row 0 is rendered at the top (minimum Y pixel position in SVG coordinates)
     for (int row = 0; row < numRows; row++) {
       List<String> rowData = raster[row]
+      if (rowData == null || rowData.isEmpty()) continue
       for (int col = 0; col < numCols; col++) {
         if (col >= rowData.size()) continue
 

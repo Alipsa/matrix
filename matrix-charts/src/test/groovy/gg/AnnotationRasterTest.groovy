@@ -416,6 +416,66 @@ class AnnotationRasterTest {
   }
 
   @Test
+  void testRasterWithEmptyRows() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 1], [2, 2], [3, 3]])
+        .build()
+
+    // Raster with empty rows should not cause errors
+    def raster = [
+        [],                           // Empty first row
+        ['red', 'green', 'blue'],     // Valid row
+        [],                           // Empty middle row
+        ['yellow', 'purple', 'orange'] // Valid row
+    ]
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        annotation_raster(
+            raster: raster,
+            xmin: 1, xmax: 3,
+            ymin: 1, ymax: 3
+        )
+
+    assertNotNull(chart)
+
+    // Should render without errors, skipping empty rows
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    String svgContent = SvgWriter.toXml(svg)
+    assertTrue(svgContent.contains('<svg'))
+    assertTrue(svgContent.contains('<rect'))
+  }
+
+  @Test
+  void testRasterWithAllEmptyRows() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 1], [2, 2]])
+        .build()
+
+    // Raster with all empty rows should not cause errors
+    def raster = [[], [], []]
+
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_point() +
+        annotation_raster(
+            raster: raster,
+            xmin: 1, xmax: 2,
+            ymin: 1, ymax: 2
+        )
+
+    assertNotNull(chart)
+
+    // Should render without errors (no rects since all rows empty)
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    String svgContent = SvgWriter.toXml(svg)
+    assertTrue(svgContent.contains('<svg'))
+  }
+
+  @Test
   void testStringInfinityBounds() {
     def data = Matrix.builder()
         .columnNames(['x', 'y'])
