@@ -2817,14 +2817,14 @@ class GgRenderer {
       // Show min/max labels by default
       if (vertical) {
         // Min at bottom
-        group.addText(displayLabels.first() ?: formatNumber(displayBreaks.first()))
+        group.addText(!displayLabels.isEmpty() ? displayLabels.first() : formatNumber(displayBreaks.first()))
             .x(x + barWidth + 5)
             .y(y + barHeight)
             .fontSize(theme.legendText?.size ?: 9)
             .fill(theme.legendText?.color ?: 'black')
 
         // Max at top
-        group.addText(displayLabels.last() ?: formatNumber(displayBreaks.last()))
+        group.addText(!displayLabels.isEmpty() ? displayLabels.last() : formatNumber(displayBreaks.last()))
             .x(x + barWidth + 5)
             .y(y + 10)
             .fontSize(theme.legendText?.size ?: 9)
@@ -2833,14 +2833,14 @@ class GgRenderer {
         return y + barHeight + spacing
       } else {
         // Min at left
-        group.addText(displayLabels.first() ?: formatNumber(displayBreaks.first()))
+        group.addText(!displayLabels.isEmpty() ? displayLabels.first() : formatNumber(displayBreaks.first()))
             .x(x)
             .y(y + barHeight + 12)
             .fontSize(theme.legendText?.size ?: 9)
             .fill(theme.legendText?.color ?: 'black')
 
         // Max at right
-        group.addText(displayLabels.last() ?: formatNumber(displayBreaks.last()))
+        group.addText(!displayLabels.isEmpty() ? displayLabels.last() : formatNumber(displayBreaks.last()))
             .x(x + barWidth - 20)
             .y(y + barHeight + 12)
             .fontSize(theme.legendText?.size ?: 9)
