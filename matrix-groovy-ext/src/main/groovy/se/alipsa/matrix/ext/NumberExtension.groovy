@@ -65,6 +65,8 @@ import java.math.RoundingMode
 @CompileStatic
 class NumberExtension {
 
+  static final BigDecimal PI = Math.PI as BigDecimal
+  static final BigDecimal E = Math.E as BigDecimal
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
    *
@@ -194,7 +196,7 @@ class NumberExtension {
    */
   static BigDecimal exp(Number self) {
     BigDecimal val = self as BigDecimal
-    return Math.E ** val
+    return E ** val
   }
 
   /**
@@ -381,5 +383,25 @@ class NumberExtension {
    */
   static BigDecimal cos(BigDecimal self) {
     return Math.cos(self.doubleValue()) as BigDecimal
+  }
+
+  /**
+   * Converts this BigDecimal value from radians to degrees.
+   *
+   * @param self the angle in radians
+   * @return the angle in degrees as a BigDecimal
+   */
+  static BigDecimal toDegrees(BigDecimal self) {
+    return self * 180.0 / PI
+  }
+
+  /**
+   * Converts this BigDecimal value from degrees to radians.
+   *
+   * @param self the angle in degrees
+   * @return the angle in radians as a BigDecimal
+   */
+  static BigDecimal toRadians(BigDecimal self) {
+    return self * Math.PI / 180.0
   }
 }

@@ -569,4 +569,34 @@ class NumberExtensionTest {
     assert 100.min(50) == 50G
     assert 100.max(50) == 100G
   }
+
+  @Test
+  void testToDegrees() {
+    BigDecimal radians = Math.PI as BigDecimal
+    BigDecimal degrees = NumberExtension.toDegrees(radians)
+    assertEquals(180.0, degrees.doubleValue(), 1e-10)
+
+    radians = (Math.PI / 2) as BigDecimal
+    degrees = NumberExtension.toDegrees(radians)
+    assertEquals(90.0, degrees.doubleValue(), 1e-10)
+
+    // Test with extension syntax
+    radians = (Math.PI / 4) as BigDecimal
+    degrees = radians.toDegrees()
+    assertEquals(45.0, degrees.doubleValue(), 1e-10)
+  }
+
+  @Test
+  void testToRadians() {
+    BigDecimal degrees = 180.0G
+    BigDecimal radians = NumberExtension.toRadians(degrees)
+    assertEquals(Math.PI, radians.doubleValue(), 1e-10)
+    degrees = 90.0G
+    radians = NumberExtension.toRadians(degrees)
+    assertEquals(Math.PI / 2, radians.doubleValue(), 1e-10)
+    // Test with extension syntax
+    degrees = 45.0G
+    radians = degrees.toRadians()
+    assertEquals(Math.PI / 4, radians.doubleValue(), 1e-10)
+  }
 }
