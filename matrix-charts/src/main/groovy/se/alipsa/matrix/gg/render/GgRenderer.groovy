@@ -2766,11 +2766,11 @@ class GgRenderer {
         // Skip to border and labels rendering
       } else {
 
-      int accumulatedHeight = 0
-      int accumulatedWidth = 0
+        int accumulatedHeight = 0
+        int accumulatedWidth = 0
 
-      for (int i = 0; i < numBins; i++) {
-        BigDecimal lower = displayBreaks[i] as BigDecimal
+        for (int i = 0; i < numBins; i++) {
+          BigDecimal lower = displayBreaks[i] as BigDecimal
         BigDecimal upper = displayBreaks[i + 1] as BigDecimal
         BigDecimal midpoint = (lower + upper) / 2
         BigDecimal binDataRange = upper - lower
