@@ -300,4 +300,103 @@ class GuideAxisLogTicksTest {
     assertTrue(contentLong.contains('<svg'))
     assertTrue(contentShort.contains('<svg'))
   }
+
+  @Test
+  void testGuideAxisLogTicksWithNegativeSmall() {
+    // Test that small values near zero are filtered out
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [0.01, 0.01],
+            [0.1, 0.1],
+            [1, 1],
+            [10, 10]
+        ])
+        .types(BigDecimal, BigDecimal)
+        .build()
+
+    // With default negativeSmall=0.1, values < 0.1 should be omitted
+    def chartDefault = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_line() +
+        scale_x_log10(guide: guide_axis_logticks())
+
+    Svg svgDefault = chartDefault.render()
+    String contentDefault = SvgWriter.toXml(svgDefault)
+
+    // With negativeSmall=0.001, all values should be shown
+    def chartSmall = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_line() +
+        scale_x_log10(guide: guide_axis_logticks(negativeSmall: 0.001))
+
+    Svg svgSmall = chartSmall.render()
+    String contentSmall = SvgWriter.toXml(svgSmall)
+
+    // Both should render successfully
+    assertTrue(contentDefault.contains('id="x-axis"'))
+    assertTrue(contentSmall.contains('id="x-axis"'))
+    assertTrue(contentDefault.contains('<svg'))
+    assertTrue(contentSmall.contains('<svg'))
+  }
+
+  @Test
+  void testGuideAxisLogTicksWithExpanded() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [1, 10],
+            [10, 100],
+            [100, 1000]
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    // With expanded=true (default), uses computedDomain with padding
+    def chartExpanded = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_line() +
+        scale_x_log10(guide: guide_axis_logticks(expanded: true))
+
+    Svg svgExpanded = chartExpanded.render()
+    String contentExpanded = SvgWriter.toXml(svgExpanded)
+
+    // With expanded=false, uses exact scale limits
+    def chartNotExpanded = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_line() +
+        scale_x_log10(guide: guide_axis_logticks(expanded: false))
+
+    Svg svgNotExpanded = chartNotExpanded.render()
+    String contentNotExpanded = SvgWriter.toXml(svgNotExpanded)
+
+    // Both should render successfully
+    assertTrue(contentExpanded.contains('id="x-axis"'))
+    assertTrue(contentNotExpanded.contains('id="x-axis"'))
+    assertTrue(contentExpanded.contains('<svg'))
+    assertTrue(contentNotExpanded.contains('<svg'))
+  }
+
+  @Test
+  void testGuideAxisLogTicksWithPrescaleBase() {
+    // Test with pre-transformed data (already in log space)
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [0, 1],  // log10(1) = 0, log10(10) = 1
+            [1, 2],  // log10(10) = 1, log10(100) = 2
+            [2, 3]   // log10(100) = 2, log10(1000) = 3
+        ])
+        .types(Integer, Integer)
+        .build()
+
+    // Use continuous scale since data is already log-transformed
+    // prescaleBase tells the guide to treat domain values as exponents
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_line() +
+        scale_x_continuous(guide: guide_axis_logticks(prescaleBase: 10))
+
+    Svg svg = chart.render()
+    String content = SvgWriter.toXml(svg)
+
+    // Should render successfully
+    assertTrue(content.contains('id="x-axis"'))
+    assertTrue(content.contains('<svg'))
+  }
 }

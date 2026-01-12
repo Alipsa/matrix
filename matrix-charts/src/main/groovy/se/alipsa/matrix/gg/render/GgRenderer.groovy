@@ -1933,16 +1933,30 @@ class GgRenderer {
     BigDecimal shortMult = (guideParams.short != null ? guideParams.short : 0.75) as BigDecimal
     BigDecimal baseTickLength = (theme.axisTickLength ?: 5) as BigDecimal
 
-    // Get domain from scale
-    List domain = scale.computedDomain
+    // Additional parameters
+    BigDecimal prescaleBase = (guideParams['prescale.base'] ?: guideParams.prescaleBase) as BigDecimal
+    BigDecimal negativeSmall = ((guideParams['negative.small'] ?: guideParams.negativeSmall) ?: 0.1) as BigDecimal
+    boolean expanded = (guideParams.expanded != null) ? (guideParams.expanded as boolean) : true
+
+    // Get domain from scale (use limits if not expanded, otherwise use computedDomain)
+    List domain = expanded ? scale.computedDomain : scale.limits
     if (domain == null || domain.size() < 2) return
 
     BigDecimal minVal = domain[0] as BigDecimal
     BigDecimal maxVal = domain[1] as BigDecimal
 
     // Calculate log range
-    int minExp = minVal.log10().floor().intValue()
-    int maxExp = maxVal.log10().ceil().intValue()
+    // If prescaleBase is set, domain values are already in log space
+    int minExp, maxExp
+    if (prescaleBase != null) {
+      // Data is pre-transformed, domain values are log values
+      minExp = minVal.floor().intValue()
+      maxExp = maxVal.ceil().intValue()
+    } else {
+      // Data is in original space, calculate log
+      minExp = minVal.log10().floor().intValue()
+      maxExp = maxVal.log10().ceil().intValue()
+    }
 
     // Get labels for major ticks (powers of 10)
     List<String> labels = scale.computedLabels ?: []
@@ -1953,7 +1967,7 @@ class GgRenderer {
       BigDecimal decade = 10 ** exp
 
       // Long tick at power of 10 (with label)
-      if (decade >= minVal && decade <= maxVal) {
+      if (decade >= minVal && decade <= maxVal && decade.abs() >= negativeSmall) {
         Double xPos = scale.transform(decade) as Double
         if (xPos != null) {
           int tickDir = isTop ? -1 : 1
@@ -1976,7 +1990,7 @@ class GgRenderer {
       // Mid ticks at 2×, 5× (no labels)
       for (BigDecimal mult : [2, 5]) {
         BigDecimal value = mult * decade
-        if (value >= minVal && value <= maxVal) {
+        if (value >= minVal && value <= maxVal && value.abs() >= negativeSmall) {
           Double xPos = scale.transform(value) as Double
           if (xPos != null) {
             int tickDir = isTop ? -1 : 1
@@ -1990,7 +2004,7 @@ class GgRenderer {
       // Short ticks at other multiples (no labels)
       for (int mult : [3, 4, 6, 7, 8, 9]) {
         BigDecimal value = mult * decade
-        if (value >= minVal && value <= maxVal) {
+        if (value >= minVal && value <= maxVal && value.abs() >= negativeSmall) {
           Double xPos = scale.transform(value) as Double
           if (xPos != null) {
             int tickDir = isTop ? -1 : 1
@@ -2037,16 +2051,30 @@ class GgRenderer {
     BigDecimal shortMult = (guideParams.short != null ? guideParams.short : 0.75) as BigDecimal
     BigDecimal baseTickLength = (theme.axisTickLength ?: 5) as BigDecimal
 
-    // Get domain from scale
-    List domain = scale.computedDomain
+    // Additional parameters
+    BigDecimal prescaleBase = (guideParams['prescale.base'] ?: guideParams.prescaleBase) as BigDecimal
+    BigDecimal negativeSmall = ((guideParams['negative.small'] ?: guideParams.negativeSmall) ?: 0.1) as BigDecimal
+    boolean expanded = (guideParams.expanded != null) ? (guideParams.expanded as boolean) : true
+
+    // Get domain from scale (use limits if not expanded, otherwise use computedDomain)
+    List domain = expanded ? scale.computedDomain : scale.limits
     if (domain == null || domain.size() < 2) return
 
     BigDecimal minVal = domain[0] as BigDecimal
     BigDecimal maxVal = domain[1] as BigDecimal
 
     // Calculate log range
-    int minExp = minVal.log10().floor().intValue()
-    int maxExp = maxVal.log10().ceil().intValue()
+    // If prescaleBase is set, domain values are already in log space
+    int minExp, maxExp
+    if (prescaleBase != null) {
+      // Data is pre-transformed, domain values are log values
+      minExp = minVal.floor().intValue()
+      maxExp = maxVal.ceil().intValue()
+    } else {
+      // Data is in original space, calculate log
+      minExp = minVal.log10().floor().intValue()
+      maxExp = maxVal.log10().ceil().intValue()
+    }
 
     // Get labels for major ticks (powers of 10)
     List<String> labels = scale.computedLabels ?: []
@@ -2057,7 +2085,7 @@ class GgRenderer {
       BigDecimal decade = 10 ** exp
 
       // Long tick at power of 10 (with label)
-      if (decade >= minVal && decade <= maxVal) {
+      if (decade >= minVal && decade <= maxVal && decade.abs() >= negativeSmall) {
         Double yPos = scale.transform(decade) as Double
         if (yPos != null) {
           int tickDir = isRight ? 1 : -1
@@ -2088,7 +2116,7 @@ class GgRenderer {
       // Mid ticks at 2×, 5× (no labels)
       for (BigDecimal mult : [2, 5]) {
         BigDecimal value = mult * decade
-        if (value >= minVal && value <= maxVal) {
+        if (value >= minVal && value <= maxVal && value.abs() >= negativeSmall) {
           Double yPos = scale.transform(value) as Double
           if (yPos != null) {
             int tickDir = isRight ? 1 : -1
@@ -2102,7 +2130,7 @@ class GgRenderer {
       // Short ticks at other multiples (no labels)
       for (int mult : [3, 4, 6, 7, 8, 9]) {
         BigDecimal value = mult * decade
-        if (value >= minVal && value <= maxVal) {
+        if (value >= minVal && value <= maxVal && value.abs() >= negativeSmall) {
           Double yPos = scale.transform(value) as Double
           if (yPos != null) {
             int tickDir = isRight ? 1 : -1
@@ -2402,11 +2430,8 @@ class GgRenderer {
           scales: scales
         ]
 
-        // Call user's closure
-        Object result = closure.call(context)
-
-        // If closure returned an element or elements, ensure they're added
-        // (Most closures will add directly to context.svg, so result may be null)
+        // Call user's closure (result intentionally unused - closures add directly to context.svg)
+        closure.call(context)
       }
     } catch (Exception e) {
       // Log error and render placeholder

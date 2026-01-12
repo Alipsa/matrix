@@ -870,14 +870,18 @@ class GgPlot {
    *
    * Example: scale_x_log10(guide: guide_axis_logticks())
    * Example: scale_y_log10(guide: guide_axis_logticks(long: 3.0, mid: 2.0, short: 1.0))
+   * Example: scale_x_log10(guide: guide_axis_logticks(negativeSmall: 0.01)) // Show ticks down to 0.01
    *
    * @param params optional parameters:
    *   - long (Number, default: 2.25): Multiplier for long ticks (powers of 10)
    *   - mid (Number, default: 1.5): Multiplier for mid ticks (2×, 5× multiples)
    *   - short (Number, default: 0.75): Multiplier for short ticks (other values)
-   *   - prescaleBase or prescale.base (Number, default: null): Log base if data pre-transformed
-   *   - negativeSmall or negative.small (Number, default: 0.1): Min absolute value for ticks
-   *   - expanded (Boolean, default: true): Use expanded range vs scale limits
+   *   - prescaleBase or prescale.base (Number, default: null): If data is already log-transformed,
+   *     specify the base used (e.g., 10). When set, domain values are treated as exponents.
+   *   - negativeSmall or negative.small (Number, default: 0.1): Minimum absolute value to display.
+   *     Ticks with |value| < negativeSmall are omitted (prevents clutter near zero).
+   *   - expanded (Boolean, default: true): If true, use the expanded axis range (with padding).
+   *     If false, use the exact scale limits.
    * @return a logarithmic tick axis guide specification
    */
   static Guide guide_axis_logticks(Map params = [:]) {
