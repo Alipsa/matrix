@@ -45,8 +45,8 @@ class FacetRenderer {
          .stroke(theme.stripBackground?.color ?: 'none')
 
     // Strip text (rotated 90 degrees clockwise to match ggplot2)
-    int centerX = (width / 2) as int
-    int centerY = (height / 2) as int
+    BigDecimal centerX = (width / 2).round()
+    BigDecimal centerY = (height / 2).round()
     group.addText(label)
          .x(centerX)
          .y(centerY + 4)
