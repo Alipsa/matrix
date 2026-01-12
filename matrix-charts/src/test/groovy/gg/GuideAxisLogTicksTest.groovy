@@ -302,7 +302,7 @@ class GuideAxisLogTicksTest {
   }
 
   @Test
-  void testGuideAxisLogTicksWithNegativeSmall() {
+  void testGuideAxisLogTicksWithMinAbsValue() {
     // Test that small values near zero are filtered out
     def data = Matrix.builder()
         .columnNames('x', 'y')
@@ -315,7 +315,7 @@ class GuideAxisLogTicksTest {
         .types(BigDecimal, BigDecimal)
         .build()
 
-    // With default negativeSmall=0.1, values < 0.1 should be omitted
+    // With default minAbsValue=0.1, values < 0.1 should be omitted
     def chartDefault = ggplot(data, aes(x: 'x', y: 'y')) +
         geom_line() +
         scale_x_log10(guide: guide_axis_logticks())
@@ -323,10 +323,10 @@ class GuideAxisLogTicksTest {
     Svg svgDefault = chartDefault.render()
     String contentDefault = SvgWriter.toXml(svgDefault)
 
-    // With negativeSmall=0.001, all values should be shown
+    // With minAbsValue=0.001, all values should be shown
     def chartSmall = ggplot(data, aes(x: 'x', y: 'y')) +
         geom_line() +
-        scale_x_log10(guide: guide_axis_logticks(negativeSmall: 0.001))
+        scale_x_log10(guide: guide_axis_logticks(minAbsValue: 0.001))
 
     Svg svgSmall = chartSmall.render()
     String contentSmall = SvgWriter.toXml(svgSmall)

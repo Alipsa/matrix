@@ -1931,7 +1931,9 @@ class GgRenderer {
 
     // Additional parameters
     BigDecimal prescaleBase = (guideParams['prescale.base'] ?: guideParams.prescaleBase) as BigDecimal
-    BigDecimal negativeSmall = ((guideParams['negative.small'] ?: guideParams.negativeSmall) ?: 0.1) as BigDecimal
+    // Support both old name (negativeSmall) and new name (minAbsValue) for backward compatibility
+    BigDecimal minAbsValue = ((guideParams.minAbsValue ?: guideParams['min.abs.value'] ?:
+                               guideParams.negativeSmall ?: guideParams['negative.small']) ?: 0.1) as BigDecimal
     boolean expanded = (guideParams.expanded != null) ? (guideParams.expanded as boolean) : true
 
     // Get domain from scale
@@ -1947,6 +1949,11 @@ class GgRenderer {
       minExp = minVal.floor().intValue()
       maxExp = maxVal.ceil().intValue()
     } else {
+      // Validate that values are positive before computing logarithms
+      if (minVal <= 0 || maxVal <= 0) {
+        // Cannot compute logarithmic ticks for non-positive values
+        return ticks
+      }
       minExp = minVal.log10().floor().intValue()
       maxExp = maxVal.log10().ceil().intValue()
     }
@@ -1959,10 +1966,10 @@ class GgRenderer {
       boolean showDecade
       BigDecimal transformValue
       if (prescaleBase != null) {
-        showDecade = exp >= minVal && exp <= maxVal && decade.abs() >= negativeSmall
+        showDecade = exp >= minVal && exp <= maxVal && decade.abs() >= minAbsValue
         transformValue = exp
       } else {
-        showDecade = decade >= minVal && decade <= maxVal && decade.abs() >= negativeSmall
+        showDecade = decade >= minVal && decade <= maxVal && decade.abs() >= minAbsValue
         transformValue = decade
       }
 
@@ -1978,10 +1985,10 @@ class GgRenderer {
         boolean showTick
         BigDecimal tickTransformValue
         if (prescaleBase != null) {
-          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= minAbsValue
           tickTransformValue = logValue
         } else {
-          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
+          showTick = value >= minVal && value <= maxVal && value.abs() >= minAbsValue
           tickTransformValue = value
         }
 
@@ -1998,10 +2005,10 @@ class GgRenderer {
         boolean showTick
         BigDecimal tickTransformValue
         if (prescaleBase != null) {
-          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= minAbsValue
           tickTransformValue = logValue
         } else {
-          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
+          showTick = value >= minVal && value <= maxVal && value.abs() >= minAbsValue
           tickTransformValue = value
         }
 
