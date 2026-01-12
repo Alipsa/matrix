@@ -402,6 +402,6 @@ class NumberExtension {
    * @return the angle in radians as a BigDecimal
    */
   static BigDecimal toRadians(BigDecimal self) {
-    return self * Math.PI / 180.0
+    return self * PI / 180.0
   }
 }
