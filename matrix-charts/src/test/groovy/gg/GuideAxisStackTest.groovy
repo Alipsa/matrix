@@ -221,7 +221,13 @@ class GuideAxisStackTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
     assertTrue(content.contains('id="x-axis"'))
-    assertTrue(content.contains('transform="rotate(30'))
-    assertTrue(content.contains('transform="rotate(60'))
+
+    // Check for rotate transforms with multiple patterns to handle different SVG formatting:
+    // - "rotate(30," - angle with comma-separated center point
+    // - "rotate(30 " - angle with space-separated center point
+    // - "rotate(30)" - angle only, no center point
+    // This prevents false positives (e.g., matching 130 or 230) while handling format variations
+    assertTrue(content.contains('transform="rotate(30,') || content.contains('transform="rotate(30 ') || content.contains('transform="rotate(30)"'))
+    assertTrue(content.contains('transform="rotate(60,') || content.contains('transform="rotate(60 ') || content.contains('transform="rotate(60)"'))
   }
 }

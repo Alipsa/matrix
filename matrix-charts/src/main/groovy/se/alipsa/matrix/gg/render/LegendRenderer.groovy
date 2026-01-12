@@ -102,25 +102,25 @@ class LegendRenderer {
 
     // Determine legend position
     switch (theme.legendPosition) {
-      case 'right':
+      case 'right' -> {
         legendX = chart.width - MARGIN_RIGHT + LEGEND_PLOT_GAP
         legendY = MARGIN_TOP + 20
-        break
-      case 'left':
+      }
+      case 'left' -> {
         legendX = 10
         legendY = MARGIN_TOP + 20
-        break
-      case 'top':
+      }
+      case 'top' -> {
         legendX = MARGIN_LEFT
         legendY = 10
         isVertical = false
-        break
-      case 'bottom':
+      }
+      case 'bottom' -> {
         legendX = MARGIN_LEFT
         legendY = chart.height - 40
         isVertical = false
-        break
-      default:
+      }
+      default -> {
         // Custom position [x, y] or default to right
         if (theme.legendPosition instanceof List && (theme.legendPosition as List).size() >= 2) {
           List pos = theme.legendPosition as List
@@ -130,6 +130,7 @@ class LegendRenderer {
           legendX = chart.width - MARGIN_RIGHT + LEGEND_PLOT_GAP
           legendY = MARGIN_TOP + 20
         }
+      }
     }
 
     // Create legend group
