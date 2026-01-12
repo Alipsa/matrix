@@ -326,11 +326,11 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.8 Advanced Guides
 
-- 4.8.1 [ ] `guide_coloursteps()` / `guide_colorsteps()` - Stepped color guide
-- 4.8.2 [ ] `guide_axis_logticks()` - Log-scale axis with ticks
-- 4.8.3 [ ] `guide_axis_stack()` - Stacked axes
-- 4.8.4 [ ] `guide_axis_theta()` - Angular axis for polar coords
-- 4.8.5 [ ] `guide_custom()` - Custom guide implementation
+- 4.8.1 [x] `guide_coloursteps()` / `guide_colorsteps()` - Stepped color guide ✅
+- 4.8.2 [x] `guide_axis_logticks()` - Log-scale axis with ticks ✅
+- 4.8.3 [ ] `guide_axis_stack()` - Stacked axes (factory methods added, rendering pending)
+- 4.8.4 [ ] `guide_axis_theta()` - Angular axis for polar coords (factory method added, rendering pending)
+- 4.8.5 [x] `guide_custom()` - Custom guide implementation ✅
 
 ### 4.9 Miscellaneous
 

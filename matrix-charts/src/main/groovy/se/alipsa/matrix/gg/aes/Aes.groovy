@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileStatic
+
 /**
  * Aesthetic mappings for ggplot charts.
  * Maps data columns to visual properties.
@@ -60,13 +61,21 @@ class Aes {
   // Legacy property names for backward compatibility
   // Using lowercase after 'get' so Groovy maps to xColName, not XColName
   String getxColName() { extractColName(x) }
+
   String getyColName() { extractColName(y) }
+
   String getColorColName() { extractColName(color) }
+
   String getFillColName() { extractColName(fill) }
+
   String getGroupColName() { extractColName(group) }
+
   String getLinetypeColName() { extractColName(linetype) }
+
   String getShapeColName() { extractColName(shape) }
+
   String getGeometryColName() { extractColName(geometry) }
+
   String getMapIdColName() { extractColName(map_id) }
 
   Aes() {}

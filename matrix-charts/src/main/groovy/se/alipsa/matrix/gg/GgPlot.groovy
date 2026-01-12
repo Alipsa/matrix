@@ -839,6 +839,135 @@ class GgPlot {
     return new Guide('bins', params)
   }
 
+  /**
+   * Create a stepped color guide for binned continuous scales.
+   * Displays discrete color blocks instead of a smooth gradient.
+   *
+   * Example: guides(color: guide_coloursteps())
+   * Example: scale_color_steps(bins: 5) + guides(color: guide_coloursteps(evenSteps: false))
+   *
+   * @param params optional parameters:
+   *   - evenSteps or even.steps (Boolean, default: true): Equal-sized bins vs proportional to data range
+   *   - showLimits or show.limits (Boolean, default: null): Show scale limit labels
+   *   - reverse (Boolean, default: false): Reverse colorbar direction
+   *   - barwidth: Custom bar width (overrides theme default)
+   *   - barheight: Custom bar height (overrides theme default)
+   * @return a stepped color guide specification
+   */
+  static Guide guide_coloursteps(Map params = [:]) {
+    return new Guide('coloursteps', params)
+  }
+
+  /** American spelling alias for guide_coloursteps */
+  static Guide guide_colorsteps(Map params = [:]) {
+    return guide_coloursteps(params)
+  }
+
+  /**
+   * Create a logarithmic tick mark axis guide with varying tick densities.
+   * Displays major ticks at powers of 10, mid ticks at 2× and 5× multiples,
+   * and short ticks at intermediate values.
+   *
+   * Example: scale_x_log10(guide: guide_axis_logticks())
+   * Example: scale_y_log10(guide: guide_axis_logticks(long: 3.0, mid: 2.0, short: 1.0))
+   * Example: scale_x_log10(guide: guide_axis_logticks(negativeSmall: 0.01)) // Show ticks down to 0.01
+   *
+   * @param params optional parameters:
+   *   - long (Number, default: 2.25): Multiplier for long ticks (powers of 10)
+   *   - mid (Number, default: 1.5): Multiplier for mid ticks (2×, 5× multiples)
+   *   - short (Number, default: 0.75): Multiplier for short ticks (other values)
+   *   - prescaleBase or prescale.base (Number, default: null): If data is already log-transformed,
+   *     specify the base used (e.g., 10). When set, domain values are treated as exponents.
+   *   - negativeSmall or negative.small (Number, default: 0.1): Minimum absolute value threshold
+   *     for displaying ticks. When scale limits include 0 or negative numbers, this determines
+   *     the smallest absolute value that will be marked with a tick. Ticks where |value| < negativeSmall
+   *     are omitted to prevent visual clutter near zero.
+   *     Note: Despite the name, this applies to all small absolute values, not just negative numbers.
+   *     The parameter name comes from R's ggplot2 API for compatibility.
+   *   - expanded (Boolean, default: true): If true, use the expanded axis range (with padding).
+   *     If false, use the exact scale limits.
+   * @return a logarithmic tick axis guide specification
+   */
+  static Guide guide_axis_logticks(Map params = [:]) {
+    return new Guide('axis_logticks', params)
+  }
+
+  /**
+   * Create a circular axis guide for polar coordinates.
+   * Displays axis labels around the perimeter of polar plots.
+   *
+   * Example: coord_polar(theta: 'x') + scale_x_continuous(guide: guide_axis_theta())
+   *
+   * @param params optional parameters:
+   *   - angle (Number, default: 0): Label rotation angle
+   *   - minorTicks or minor.ticks (Boolean, default: false): Show minor tick marks
+   *   - cap (String, default: 'none'): Cap style for axis line
+   * @return a theta axis guide specification for polar coordinates
+   */
+  static Guide guide_axis_theta(Map params = [:]) {
+    return new Guide('axis_theta', params)
+  }
+
+  /**
+   * Create a custom guide with user-defined rendering.
+   * Accepts a Groovy closure that receives rendering context and creates SVG elements.
+   *
+   * Example with closure:
+   *   guide_custom({ context ->
+   *     context.svg.addRect(30, 20).x(context.x).y(context.y).fill('red')
+   *     context.svg.addText('Custom').x(context.x + 5).y(context.y + 15)
+   *   }, width: 40, height: 30)
+   *
+   * The closure receives a context map with:
+   *   - svg: Parent SVG/G element to append to
+   *   - x, y: Position to render at (pixels)
+   *   - width, height: Allocated dimensions
+   *   - theme: Theme object
+   *   - scales: Map of scales by aesthetic
+   *
+   * @param renderClosure Groovy closure for custom rendering
+   * @param params optional parameters:
+   *   - width (Number, default: 50): Allocated width
+   *   - height (Number, default: 50): Allocated height
+   *   - title (String, default: null): Optional title
+   *   - position (String, default: 'right'): Legend position
+   * @return a custom guide specification
+   */
+  static Guide guide_custom(Closure renderClosure, Map params = [:]) {
+    if (renderClosure == null) {
+      throw new IllegalArgumentException("guide_custom requires a renderClosure parameter")
+    }
+    return new Guide('custom', [renderClosure: renderClosure] + params)
+  }
+
+  /**
+   * Create a stacked axis guide that displays multiple axis guides on the same side.
+   *
+   * Example: scale_x_continuous(guide: guide_axis_stack(guide_axis(), guide_axis(angle: 45)))
+   *
+   * @param first First guide (closest to panel), can be Guide object or string like 'axis'
+   * @param params optional parameters:
+   *   - additional (List): Additional guides to stack outward
+   *   - spacing (Number, default: 5): Pixel spacing between guides
+   * @return a stacked axis guide specification
+   */
+  static Guide guide_axis_stack(Object first, Map params = [:]) {
+    return new Guide('axis_stack', [first: first] + params)
+  }
+
+  /**
+   * Create a stacked axis guide with multiple guides (overloaded version).
+   *
+   * Example: guide_axis_stack(guide_axis(), guide_axis(angle: 45), guide_axis(angle: 90))
+   *
+   * @param first First guide
+   * @param additional Additional guides as varargs
+   * @return a stacked axis guide specification
+   */
+  static Guide guide_axis_stack(Object first, Object... additional) {
+    return new Guide('axis_stack', [first: first, additional: additional as List])
+  }
+
   // ============ Limit helpers ============
 
   /**
@@ -1119,11 +1248,11 @@ class GgPlot {
   }
 
   /**
-   * @param theta: variable to map angle to (x or y)
-   * @param start: Offset of starting point from 12 o'clock in radians.
+   * @param theta : variable to map angle to (x or y)
+   * @param start : Offset of starting point from 12 o'clock in radians.
    * Offset is applied clockwise or anticlockwise depending on value of direction.
-   * @param direction: 1, clockwise; -1, anticlockwise
-   * @param clip: Should drawing be clipped to the extent of the plot panel? A setting of "on"
+   * @param direction : 1, clockwise; -1, anticlockwise
+   * @param clip : Should drawing be clipped to the extent of the plot panel? A setting of "on"
    * (the default) means yes, and a setting of "off" means no.
    */
   static CoordPolar coord_polar(String theta = "x", BigDecimal start = 0, Integer direction = 1, String clip = "on") {
@@ -1929,11 +2058,11 @@ class GgPlot {
    */
   static GeomSmooth geom_lm(Map params) {
     Map defaults = [
-      se: false,
-      method: 'lm',
-      colour: 'steelblue',
-      alpha: 0.5,
-      linewidth: 2
+        se       : false,
+        method   : 'lm',
+        colour   : 'steelblue',
+        alpha    : 0.5,
+        linewidth: 2
     ]
     // Only add default formula if degree is not explicitly provided
     if (!params.containsKey('degree')) {

@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.render
 
 import groovy.transform.CompileStatic
+import groovy.transform.TypeCheckingMode
 import se.alipsa.groovy.svg.Defs
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
@@ -1718,6 +1719,14 @@ class GgRenderer {
   private void renderXAxis(G axesGroup, Scale scale, int width, int height, Theme theme) {
     if (scale == null) return
 
+    // Check for log ticks guide
+    String guideType = parseGuideType(scale?.guide)
+    if (guideType == 'axis_logticks') {
+      Map guideParams = extractGuideParams(scale?.guide)
+      renderXAxisLogTicks(axesGroup, scale, width, height, theme, guideParams)
+      return
+    }
+
     // Determine position: bottom (default) or top (for secondary axis)
     String position = 'bottom'
     if (scale instanceof ScaleXContinuous) {
@@ -1797,6 +1806,14 @@ class GgRenderer {
    */
   private void renderYAxis(G axesGroup, Scale scale, int width, int height, Theme theme) {
     if (scale == null) return
+
+    // Check for log ticks guide
+    String guideType = parseGuideType(scale?.guide)
+    if (guideType == 'axis_logticks') {
+      Map guideParams = extractGuideParams(scale?.guide)
+      renderYAxisLogTicks(axesGroup, scale, width, height, theme, guideParams)
+      return
+    }
 
     // Determine position: left (default) or right (for secondary axis)
     String position = 'left'
@@ -1878,6 +1895,270 @@ class GgRenderer {
           text.textAnchor(angle > 0 ? 'start' : 'end')
         } else {
           text.textAnchor('end')
+        }
+      }
+    }
+  }
+
+  /**
+   * Data class for logarithmic tick information.
+   */
+  @CompileStatic
+  private static class LogTickInfo {
+    BigDecimal transformValue
+    BigDecimal displayValue  // The actual value to show in labels
+    String tickType  // 'long', 'mid', or 'short'
+    BigDecimal tickMultiplier
+
+    LogTickInfo(BigDecimal transformValue, BigDecimal displayValue, String tickType, BigDecimal tickMultiplier) {
+      this.transformValue = transformValue
+      this.displayValue = displayValue
+      this.tickType = tickType
+      this.tickMultiplier = tickMultiplier
+    }
+  }
+
+  /**
+   * Calculate logarithmic tick positions for an axis.
+   * Extracted to avoid duplication between X and Y axis rendering.
+   *
+   * @return List of LogTickInfo objects containing tick positions and types
+   */
+  @CompileStatic(TypeCheckingMode.SKIP)
+  private List<LogTickInfo> calculateLogTicks(Scale scale, Map guideParams, BigDecimal longMult,
+                                               BigDecimal midMult, BigDecimal shortMult) {
+    List<LogTickInfo> ticks = []
+
+    // Additional parameters
+    BigDecimal prescaleBase = (guideParams['prescale.base'] ?: guideParams.prescaleBase) as BigDecimal
+    BigDecimal negativeSmall = ((guideParams['negative.small'] ?: guideParams.negativeSmall) ?: 0.1) as BigDecimal
+    boolean expanded = (guideParams.expanded != null) ? (guideParams.expanded as boolean) : true
+
+    // Get domain from scale
+    List domain = expanded ? scale.computedDomain : scale.limits
+    if (domain == null || domain.size() < 2) return ticks
+
+    BigDecimal minVal = domain[0] as BigDecimal
+    BigDecimal maxVal = domain[1] as BigDecimal
+
+    // Calculate log range
+    int minExp, maxExp
+    if (prescaleBase != null) {
+      minExp = minVal.floor().intValue()
+      maxExp = maxVal.ceil().intValue()
+    } else {
+      // Validate that values are positive before computing logarithms
+      if (minVal <= 0 || maxVal <= 0) {
+        // Cannot compute logarithmic ticks for non-positive values
+        return ticks
+      }
+      minExp = minVal.log10().floor().intValue()
+      maxExp = maxVal.log10().ceil().intValue()
+    }
+
+    // Generate ticks for each decade
+    for (int exp = minExp; exp <= maxExp; exp++) {
+      BigDecimal decade = 10 ** exp
+
+      // Long tick at power of 10
+      boolean showDecade
+      BigDecimal transformValue
+      if (prescaleBase != null) {
+        showDecade = exp >= minVal && exp <= maxVal && decade.abs() >= negativeSmall
+        transformValue = exp
+      } else {
+        showDecade = decade >= minVal && decade <= maxVal && decade.abs() >= negativeSmall
+        transformValue = decade
+      }
+
+      if (showDecade) {
+        ticks << new LogTickInfo(transformValue, decade, 'long', longMult)
+      }
+
+      // Mid ticks at 2×, 5×
+      for (BigDecimal mult : [2, 5]) {
+        BigDecimal value = mult * decade
+        BigDecimal logValue = prescaleBase != null ? value.log10() : null
+
+        boolean showTick
+        BigDecimal tickTransformValue
+        if (prescaleBase != null) {
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = logValue
+        } else {
+          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = value
+        }
+
+        if (showTick) {
+          ticks << new LogTickInfo(tickTransformValue, value, 'mid', midMult)
+        }
+      }
+
+      // Short ticks at other multiples
+      for (int mult : [3, 4, 6, 7, 8, 9]) {
+        BigDecimal value = mult * decade
+        BigDecimal logValue = prescaleBase != null ? value.log10() : null
+
+        boolean showTick
+        BigDecimal tickTransformValue
+        if (prescaleBase != null) {
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = logValue
+        } else {
+          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = value
+        }
+
+        if (showTick) {
+          ticks << new LogTickInfo(tickTransformValue, value, 'short', shortMult)
+        }
+      }
+    }
+
+    return ticks
+  }
+
+  /**
+   * Render X axis with logarithmic tick marks at varying densities.
+   */
+  @CompileStatic(TypeCheckingMode.SKIP)
+  private void renderXAxisLogTicks(G axesGroup, Scale scale, int width, int height, Theme theme, Map guideParams) {
+    if (scale == null) return
+
+    // Determine position
+    String position = 'bottom'
+    if (scale instanceof ScaleXContinuous) {
+      position = ((ScaleXContinuous) scale).position ?: 'bottom'
+    } else if (scale instanceof ScaleYContinuous) {
+      position = ((ScaleYContinuous) scale).position == 'left' ? 'bottom' : 'top'
+    }
+
+    boolean isTop = (position == 'top')
+    int yTranslate = isTop ? 0 : height
+
+    G xAxisGroup = axesGroup.addG()
+    xAxisGroup.id(isTop ? 'x-axis-top' : 'x-axis')
+    xAxisGroup.transform("translate(0, $yTranslate)")
+
+    // Axis line
+    xAxisGroup.addLine(0, 0, width, 0)
+              .stroke(theme.axisLineX?.color ?: 'black')
+              .strokeWidth(theme.axisLineX?.size ?: 1)
+
+    // Extract log tick parameters
+    BigDecimal longMult = (guideParams.long != null ? guideParams.long : 2.25) as BigDecimal
+    BigDecimal midMult = (guideParams.mid != null ? guideParams.mid : 1.5) as BigDecimal
+    BigDecimal shortMult = (guideParams.short != null ? guideParams.short : 0.75) as BigDecimal
+    BigDecimal baseTickLength = (theme.axisTickLength ?: 5) as BigDecimal
+
+    // Get labels and breaks for tick labeling
+    List<String> labels = scale.computedLabels ?: []
+    List breaks = scale.computedBreaks ?: []
+    BigDecimal prescaleBase = (guideParams['prescale.base'] ?: guideParams.prescaleBase) as BigDecimal
+
+    // Calculate all tick positions using shared helper
+    List<LogTickInfo> ticks = calculateLogTicks(scale, guideParams, longMult, midMult, shortMult)
+
+    // Render each tick
+    for (LogTickInfo tick : ticks) {
+      Double xPos = scale.transform(tick.transformValue) as Double
+      if (xPos != null) {
+        int tickDir = isTop ? -1 : 1
+        BigDecimal tickLength = baseTickLength * tick.tickMultiplier
+
+        // Draw tick line
+        xAxisGroup.addLine(xPos, 0, xPos, tickDir * tickLength)
+                  .stroke('black')
+
+        // Add label for long ticks only
+        if (tick.tickType == 'long') {
+          int breakIndex = breaks.indexOf(prescaleBase != null ? tick.transformValue : tick.displayValue)
+          String label = (breakIndex >= 0 && breakIndex < labels.size()) ?
+              labels[breakIndex] : tick.displayValue.toString()
+          int labelY = isTop ? (-1 * tickLength.intValue() - 3) : (tickLength.intValue() + 15)
+          xAxisGroup.addText(label)
+                    .x(xPos)
+                    .y(labelY)
+                    .fontSize(theme.axisTextX?.size ?: 10)
+                    .textAnchor('middle')
+        }
+      }
+    }
+  }
+
+  /**
+   * Render Y axis with logarithmic tick marks at varying densities.
+   */
+  @CompileStatic(TypeCheckingMode.SKIP)
+  private void renderYAxisLogTicks(G axesGroup, Scale scale, int width, int height, Theme theme, Map guideParams) {
+    if (scale == null) return
+
+    // Determine position
+    String position = 'left'
+    if (scale instanceof ScaleYContinuous) {
+      position = ((ScaleYContinuous) scale).position ?: 'left'
+    } else if (scale instanceof ScaleXContinuous) {
+      position = ((ScaleXContinuous) scale).position == 'bottom' ? 'left' : 'right'
+    }
+
+    boolean isRight = (position == 'right')
+
+    G yAxisGroup = axesGroup.addG()
+    yAxisGroup.id(isRight ? 'y-axis-right' : 'y-axis')
+    if (isRight) {
+      yAxisGroup.transform("translate($width, 0)")
+    }
+
+    // Axis line
+    yAxisGroup.addLine(0, 0, 0, height)
+              .stroke(theme.axisLineY?.color ?: 'black')
+              .strokeWidth(theme.axisLineY?.size ?: 1)
+
+    // Extract log tick parameters
+    BigDecimal longMult = (guideParams.long != null ? guideParams.long : 2.25) as BigDecimal
+    BigDecimal midMult = (guideParams.mid != null ? guideParams.mid : 1.5) as BigDecimal
+    BigDecimal shortMult = (guideParams.short != null ? guideParams.short : 0.75) as BigDecimal
+    BigDecimal baseTickLength = (theme.axisTickLength ?: 5) as BigDecimal
+
+    // Get labels and breaks for tick labeling
+    List<String> labels = scale.computedLabels ?: []
+    List breaks = scale.computedBreaks ?: []
+    BigDecimal prescaleBase = (guideParams['prescale.base'] ?: guideParams.prescaleBase) as BigDecimal
+
+    // Calculate all tick positions using shared helper
+    List<LogTickInfo> ticks = calculateLogTicks(scale, guideParams, longMult, midMult, shortMult)
+
+    // Render each tick
+    for (LogTickInfo tick : ticks) {
+      Double yPos = scale.transform(tick.transformValue) as Double
+      if (yPos != null) {
+        int tickDir = isRight ? 1 : -1
+        BigDecimal tickLength = baseTickLength * tick.tickMultiplier
+
+        // Draw tick line
+        yAxisGroup.addLine(0, yPos, tickDir * tickLength, yPos)
+                  .stroke('black')
+
+        // Add label for long ticks only
+        if (tick.tickType == 'long') {
+          int breakIndex = breaks.indexOf(prescaleBase != null ? tick.transformValue : tick.displayValue)
+          String label = (breakIndex >= 0 && breakIndex < labels.size()) ?
+              labels[breakIndex] : tick.displayValue.toString()
+
+          if (isRight) {
+            yAxisGroup.addText(label)
+                      .x(tickLength.intValue() + 5)
+                      .y(yPos + 4)
+                      .fontSize(theme.axisTextY?.size ?: 10)
+                      .textAnchor('start')
+          } else {
+            yAxisGroup.addText(label)
+                      .x(-1 * tickLength.intValue() - 5)
+                      .y(yPos + 4)
+                      .fontSize(theme.axisTextY?.size ?: 10)
+                      .textAnchor('end')
+          }
         }
       }
     }
@@ -1989,7 +2270,16 @@ class GgRenderer {
       return true
     }
 
-    if (legendScales.isEmpty()) return
+    // Check if there are any custom guides to render
+    boolean hasCustomGuides = false
+    if (chart.guides != null) {
+      hasCustomGuides = chart.guides.specs.any { aesthetic, guide ->
+        guide instanceof Guide && guide.type == 'custom'
+      }
+    }
+
+    // Only return early if there are no legend scales AND no custom guides
+    if (legendScales.isEmpty() && !hasCustomGuides) return
 
     ScaleDiscrete shapeScale = legendScales['shape'] instanceof ScaleDiscrete ?
         (legendScales['shape'] as ScaleDiscrete) : null
@@ -2049,7 +2339,7 @@ class GgRenderer {
     legendGroup.transform("translate($legendX, $legendY)")
 
     // Get legend title from chart labels or scale name
-    String legendTitle = chart.labels?.legendTitle ?: legendScales.values().first()?.name
+    String legendTitle = determineLegendTitle(chart, legendScales)
 
     int currentY = 0
     int currentX = 0
@@ -2091,12 +2381,115 @@ class GgRenderer {
         if (guideType == 'legend') {
           currentY = renderContinuousLegendAsDiscrete(legendGroup, scale as ScaleContinuous, aesthetic,
               currentX, currentY, isVertical, theme)
+        } else if (guideType == 'coloursteps' || guideType == 'colorsteps') {
+          Map guideParams = extractGuideParams(scale?.guide)
+          currentY = renderColorStepsLegend(legendGroup, scale as ScaleContinuous, aesthetic,
+              currentX, currentY, isVertical, theme, guideParams)
         } else {
           currentY = renderContinuousLegend(legendGroup, scale as ScaleContinuous, aesthetic,
               currentX, currentY, isVertical, theme)
         }
       }
     }
+
+    // Render custom guides if specified
+    if (chart.guides != null) {
+      chart.guides.specs.each { aesthetic, guide ->
+        if (guide instanceof Guide && guide.type == 'custom') {
+          currentY = renderCustomGuide(legendGroup, guide, aesthetic, currentX, currentY, scales, theme)
+        }
+      }
+    }
+  }
+
+  /**
+   * Determine the legend title from chart labels or scale name.
+   * @param chart the chart specification
+   * @param legendScales map of scales that need legends
+   * @return legend title string or null
+   */
+  @CompileStatic
+  private String determineLegendTitle(GgChart chart, Map<String, Scale> legendScales) {
+    if (chart.labels?.legendTitle) {
+      return chart.labels.legendTitle
+    }
+    if (!legendScales.isEmpty()) {
+      return legendScales.values().first()?.name
+    }
+    return null
+  }
+
+  /**
+   * Render a custom guide with user-defined closure.
+   */
+  @CompileStatic(TypeCheckingMode.SKIP)
+  private int renderCustomGuide(G parentGroup, Guide customGuide, String aesthetic, int startX, int startY,
+                                Map<String, Scale> scales, Theme theme) {
+    Map params = customGuide.params ?: [:]
+
+    // Allocate dimensions
+    int width = (params.width != null ? params.width : 50) as int
+    int height = (params.height != null ? params.height : 50) as int
+    int spacing = 10
+
+    int currentY = startY
+
+    // Render title if provided
+    if (params.title) {
+      int titleFontSize = (theme.legendTitle?.size ?: 11) as int
+      def titleText = parentGroup.addText(params.title as String)
+          .x(startX)
+          .y(currentY + titleFontSize)
+          .addAttribute('font-weight', 'bold')
+          .fontSize(titleFontSize)
+      if (theme.legendTitle?.color) {
+        titleText.fill(theme.legendTitle.color)
+      }
+      currentY += titleFontSize + 5
+    }
+
+    // Create group for custom content
+    G customGroup = parentGroup.addG()
+    customGroup.id("custom-guide-${aesthetic}")
+
+    try {
+      if (params.renderClosure) {
+        Closure closure = params.renderClosure as Closure
+
+        // Build context map for closure
+        Map context = [
+          svg: customGroup,
+          x: startX,
+          y: currentY,
+          width: width,
+          height: height,
+          theme: theme,
+          scales: scales
+        ]
+
+        // Call user's closure - return value ignored as closure adds elements to context.svg
+        closure.call(context)
+      }
+    } catch (Exception e) {
+      // Log error and render placeholder
+      println "Warning: Custom guide rendering failed: ${e.message}"
+      e.printStackTrace()
+
+      // Render error placeholder
+      customGroup.addRect(width, 20)
+                 .x(startX)
+                 .y(currentY)
+                 .fill('#ffcccc')
+                 .stroke('#cc0000')
+
+      customGroup.addText("Error rendering custom guide")
+                 .x(startX + 5)
+                 .y(currentY + 14)
+                 .fontSize(9)
+                 .fill('#cc0000')
+    }
+
+    return currentY + height + spacing
   }
 
   /**
@@ -2278,6 +2671,190 @@ class GgRenderer {
           .fill(theme.legendText?.color ?: 'black')
 
       return y + barHeight + 20
+    }
+  }
+
+  /**
+   * Helper method to render even-sized color steps.
+   * Extracted to avoid duplication between evenSteps and totalRange==0 fallback.
+   */
+  @CompileStatic
+  private void renderEvenColorSteps(G group, ScaleContinuous scale, List<Number> displayBreaks,
+                                    int numBins, int x, int y, int barWidth, int barHeight,
+                                    boolean vertical, boolean reverse) {
+    for (int i = 0; i < numBins; i++) {
+      BigDecimal lower = displayBreaks[i] as BigDecimal
+      BigDecimal upper = displayBreaks[i + 1] as BigDecimal
+      BigDecimal midpoint = (lower + upper) / 2
+      String color = scale.transform(midpoint)?.toString() ?: '#999999'
+
+      if (vertical) {
+        BigDecimal binHeight = barHeight / numBins
+        int stepHeight = binHeight.intValue()
+        int stepY = reverse ? (y + i * stepHeight) : (y + barHeight - (i + 1) * stepHeight)
+
+        group.addRect(barWidth, stepHeight + 1)
+            .x(x)
+            .y(stepY)
+            .fill(color)
+            .stroke('none')
+      } else {
+        BigDecimal binWidth = barWidth / numBins
+        int stepWidth = binWidth.intValue()
+        int stepX = x + i * stepWidth
+
+        group.addRect(stepWidth + 1, barHeight)
+            .x(stepX)
+            .y(y)
+            .fill(color)
+            .stroke('none')
+      }
+    }
+  }
+
+  /**
+   * Render stepped color legend for binned continuous scales.
+   * Displays discrete color blocks instead of a smooth gradient.
+   */
+  @CompileStatic
+  private int renderColorStepsLegend(G group, ScaleContinuous scale, String aesthetic,
+                                     int startX, int startY, boolean vertical, Theme theme,
+                                     Map guideParams) {
+    // Extract parameters
+    boolean evenSteps = (guideParams['even.steps'] != null ? guideParams['even.steps'] :
+                         guideParams.evenSteps != null ? guideParams.evenSteps : true) as boolean
+    Boolean showLimits = guideParams['show.limits'] != null ? guideParams['show.limits'] as Boolean :
+                         guideParams.showLimits as Boolean
+    boolean reverse = (guideParams.reverse ?: false) as boolean
+
+    // Bar dimensions
+    int barWidth = vertical ? LEGEND_CONTINUOUS_BAR_WIDTH_VERTICAL : LEGEND_CONTINUOUS_BAR_WIDTH_HORIZONTAL
+    int barHeight = vertical ? LEGEND_CONTINUOUS_BAR_HEIGHT_VERTICAL : LEGEND_CONTINUOUS_BAR_HEIGHT_HORIZONTAL
+
+    // Override with custom dimensions if provided
+    if (guideParams.barwidth != null) {
+      barWidth = guideParams.barwidth as int
+    }
+    if (guideParams.barheight != null) {
+      barHeight = guideParams.barheight as int
+    }
+
+    int spacing = 5
+    int x = startX
+    int y = startY
+
+    // Get breaks from scale
+    List breaks = scale.computedBreaks
+    if (breaks == null || breaks.size() < 2) return y
+
+    List<String> labels = scale.computedLabels ?: []
+    int numBins = breaks.size() - 1
+
+    // Reverse breaks and labels if requested to maintain correspondence
+    List<Number> displayBreaks = reverse ? breaks.reverse(false) as List<Number> : breaks as List<Number>
+    List<String> displayLabels = reverse ? labels.reverse(false) as List<String> : labels
+
+    // Calculate bin positions and colors
+    if (evenSteps) {
+      // Equal visual size for all bins
+      renderEvenColorSteps(group, scale, displayBreaks, numBins, x, y, barWidth, barHeight, vertical, reverse)
+    } else {
+      // Proportional to data range
+      BigDecimal minVal = displayBreaks[0] as BigDecimal
+      BigDecimal maxVal = displayBreaks.last() as BigDecimal
+      BigDecimal totalRange = maxVal - minVal
+
+      // Defensive check for zero range (all breaks have same value)
+      if (totalRange == 0) {
+        // Fall back to even steps rendering
+        renderEvenColorSteps(group, scale, displayBreaks, numBins, x, y, barWidth, barHeight, vertical, reverse)
+      } else {
+
+        int accumulatedHeight = 0
+        int accumulatedWidth = 0
+
+        for (int i = 0; i < numBins; i++) {
+          BigDecimal lower = displayBreaks[i] as BigDecimal
+        BigDecimal upper = displayBreaks[i + 1] as BigDecimal
+        BigDecimal midpoint = (lower + upper) / 2
+        BigDecimal binDataRange = upper - lower
+        String color = scale.transform(midpoint)?.toString() ?: '#999999'
+
+        if (vertical) {
+          BigDecimal binHeight = barHeight * (binDataRange / totalRange)
+          int stepHeight = binHeight.intValue()
+          int stepY = reverse ? (y + accumulatedHeight) : (y + barHeight - accumulatedHeight - stepHeight)
+
+          group.addRect(barWidth, stepHeight + 1)
+              .x(x)
+              .y(stepY)
+              .fill(color)
+              .stroke('none')
+
+          accumulatedHeight += stepHeight
+        } else {
+          BigDecimal binWidth = barWidth * (binDataRange / totalRange)
+          int stepWidth = binWidth.intValue()
+          int stepX = x + accumulatedWidth
+
+          group.addRect(stepWidth + 1, barHeight)
+              .x(stepX)
+              .y(y)
+              .fill(color)
+              .stroke('none')
+
+          accumulatedWidth += stepWidth
+        }
+      }
+      } // end else (totalRange != 0)
+    }
+
+    // Draw border around the bar
+    group.addRect(barWidth, barHeight)
+        .x(x)
+        .y(y)
+        .fill('none')
+        .stroke(theme.legendKey?.color ?: '#333333')
+
+    // Draw labels
+    if (showLimits || showLimits == null) {
+      // Show min/max labels by default
+      if (vertical) {
+        // Min at bottom
+        group.addText(!displayLabels.isEmpty() ? displayLabels.first() : formatNumber(displayBreaks.first()))
+            .x(x + barWidth + 5)
+            .y(y + barHeight)
+            .fontSize(theme.legendText?.size ?: 9)
+            .fill(theme.legendText?.color ?: 'black')
+
+        // Max at top
+        group.addText(!displayLabels.isEmpty() ? displayLabels.last() : formatNumber(displayBreaks.last()))
+            .x(x + barWidth + 5)
+            .y(y + 10)
+            .fontSize(theme.legendText?.size ?: 9)
+            .fill(theme.legendText?.color ?: 'black')
+
+        return y + barHeight + spacing
+      } else {
+        // Min at left
+        group.addText(!displayLabels.isEmpty() ? displayLabels.first() : formatNumber(displayBreaks.first()))
+            .x(x)
+            .y(y + barHeight + 12)
+            .fontSize(theme.legendText?.size ?: 9)
+            .fill(theme.legendText?.color ?: 'black')
+
+        // Max at right
+        group.addText(!displayLabels.isEmpty() ? displayLabels.last() : formatNumber(displayBreaks.last()))
+            .x(x + barWidth - 20)
+            .y(y + barHeight + 12)
+            .fontSize(theme.legendText?.size ?: 9)
+            .fill(theme.legendText?.color ?: 'black')
+
+        return y + barHeight + 20
+      }
+    } else {
+      // No labels
+      return y + barHeight + spacing
     }
   }
 
