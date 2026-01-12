@@ -349,7 +349,7 @@ BigDecimal sine = Math.sin(angle as double) as BigDecimal
 **If you need a Math operation not yet in NumberExtension:**
 - First, add it to `matrix-groovy-ext/src/main/groovy/se/alipsa/matrix/ext/NumberExtension.groovy`
 - Add corresponding tests to `NumberExtensionTest.groovy`
-- Update CLAUDE.md to document the new extension
+- Update AGENTS.md to document the new extension
 - Then use it in your code
 
 This keeps the codebase consistent and improves readability for future code.
