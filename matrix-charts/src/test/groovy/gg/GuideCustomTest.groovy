@@ -69,7 +69,7 @@ class GuideCustomTest {
     String content = SvgWriter.toXml(svg)
     assertTrue(content.contains('Custom'))
     assertTrue(content.contains('fill="red"'))
-    assertTrue(content.contains('id="custom-guide"'))
+    assertTrue(content.contains('id="custom-guide-custom"'))
   }
 
   @Test

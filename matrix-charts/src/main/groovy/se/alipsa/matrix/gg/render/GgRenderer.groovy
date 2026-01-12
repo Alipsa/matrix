@@ -2391,7 +2391,7 @@ class GgRenderer {
     if (chart.guides != null) {
       chart.guides.specs.each { aesthetic, guide ->
         if (guide instanceof Guide && guide.type == 'custom') {
-          currentY = renderCustomGuide(legendGroup, guide, currentX, currentY, scales, theme)
+          currentY = renderCustomGuide(legendGroup, guide, aesthetic, currentX, currentY, scales, theme)
         }
       }
     }
@@ -2418,7 +2418,7 @@ class GgRenderer {
    * Render a custom guide with user-defined closure.
    */
   @CompileStatic(TypeCheckingMode.SKIP)
-  private int renderCustomGuide(G parentGroup, Guide customGuide, int startX, int startY,
+  private int renderCustomGuide(G parentGroup, Guide customGuide, String aesthetic, int startX, int startY,
                                 Map<String, Scale> scales, Theme theme) {
     Map params = customGuide.params ?: [:]
 
@@ -2445,7 +2445,7 @@ class GgRenderer {
 
     // Create group for custom content
     G customGroup = parentGroup.addG()
-    customGroup.id('custom-guide')
+    customGroup.id("custom-guide-${aesthetic}")
 
     try {
       if (params.renderClosure) {
@@ -2746,8 +2746,8 @@ class GgRenderer {
     int numBins = breaks.size() - 1
 
     // Reverse breaks and labels if requested to maintain correspondence
-    List<Number> displayBreaks = reverse ? breaks.reverse() as List<Number> : breaks as List<Number>
-    List<String> displayLabels = reverse ? labels.reverse() as List<String> : labels
+    List<Number> displayBreaks = reverse ? breaks.reverse(false) as List<Number> : breaks as List<Number>
+    List<String> displayLabels = reverse ? labels.reverse(false) as List<String> : labels
 
     // Calculate bin positions and colors
     if (evenSteps) {
@@ -2763,7 +2763,6 @@ class GgRenderer {
       if (totalRange == 0) {
         // Fall back to even steps rendering
         renderEvenColorSteps(group, scale, displayBreaks, numBins, x, y, barWidth, barHeight, vertical, reverse)
-        // Skip to border and labels rendering
       } else {
 
         int accumulatedHeight = 0
@@ -2850,7 +2849,7 @@ class GgRenderer {
       }
     } else {
       // No labels
-      return vertical ? y + barHeight + spacing : y + barHeight + spacing
+      return y + barHeight + spacing
     }
   }
 
