@@ -59,20 +59,20 @@ class GeomCustom extends Geom {
     if (xScale == null || yScale == null) return
 
     // Get position bounds from data (in data-space coordinates)
-    BigDecimal xmin = getPositionValue(data, 'xmin', 0)
-    BigDecimal xmax = getPositionValue(data, 'xmax', 0)
-    BigDecimal ymin = getPositionValue(data, 'ymin', 0)
-    BigDecimal ymax = getPositionValue(data, 'ymax', 0)
+    BigDecimal xmin = se.alipsa.matrix.gg.AnnotationConstants.getPositionValue(data, 'xmin', 0)
+    BigDecimal xmax = se.alipsa.matrix.gg.AnnotationConstants.getPositionValue(data, 'xmax', 0)
+    BigDecimal ymin = se.alipsa.matrix.gg.AnnotationConstants.getPositionValue(data, 'ymin', 0)
+    BigDecimal ymax = se.alipsa.matrix.gg.AnnotationConstants.getPositionValue(data, 'ymax', 0)
 
     // Handle infinite values - use full panel extent in DATA-SPACE
     // (We need domain, not range, because we'll transform to pixels later)
     List<BigDecimal> xDomain = (xScale as se.alipsa.matrix.gg.scale.ScaleContinuous).getComputedDomain()
     List<BigDecimal> yDomain = (yScale as se.alipsa.matrix.gg.scale.ScaleContinuous).getComputedDomain()
 
-    if (isInfinite(xmin)) xmin = xDomain[0]
-    if (isInfinite(xmax)) xmax = xDomain[1]
-    if (isInfinite(ymin)) ymin = yDomain[0]
-    if (isInfinite(ymax)) ymax = yDomain[1]
+    if (se.alipsa.matrix.gg.AnnotationConstants.isInfinite(xmin)) xmin = xDomain[0]
+    if (se.alipsa.matrix.gg.AnnotationConstants.isInfinite(xmax)) xmax = xDomain[1]
+    if (se.alipsa.matrix.gg.AnnotationConstants.isInfinite(ymin)) ymin = yDomain[0]
+    if (se.alipsa.matrix.gg.AnnotationConstants.isInfinite(ymax)) ymax = yDomain[1]
 
     // Transform ALL bounds from data-space to pixel-space for consistency
     // This ensures the closure always receives pixel coordinates
@@ -101,40 +101,6 @@ class GeomCustom extends Geom {
           "Unsupported grob type: ${grob.class.name}. " +
           "Expected Closure, SvgElement, or String.")
     }
-  }
-
-  /**
-   * Get position value from data matrix.
-   * Returns appropriate INFINITY_MARKER for missing or null values based on column name:
-   * - Negative infinity for 'min' columns (xmin, ymin)
-   * - Positive infinity for 'max' columns (xmax, ymax)
-   *
-   * This ensures that default infinite bounds expand to fill the entire panel correctly.
-   */
-  private static BigDecimal getPositionValue(Matrix data, String colName, int rowIdx) {
-    if (data == null || !data.columnNames().contains(colName)) {
-      // Determine if this is a min or max bound based on column name
-      boolean isMinBound = colName?.toLowerCase()?.contains('min') ?: true
-      return isMinBound ? -se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
-                        : se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
-    }
-    Object value = data[colName][rowIdx]
-    if (value == null) {
-      // Determine if this is a min or max bound based on column name
-      boolean isMinBound = colName?.toLowerCase()?.contains('min') ?: true
-      return isMinBound ? -se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
-                        : se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
-    }
-    return value as BigDecimal
-  }
-
-  /**
-   * Check if a value represents infinity (using our marker values).
-   */
-  private static boolean isInfinite(BigDecimal value) {
-    if (value == null) return true
-    // Check for our special infinity marker values
-    return value.abs() >= se.alipsa.matrix.gg.AnnotationConstants.INFINITY_MARKER
   }
 
   /**

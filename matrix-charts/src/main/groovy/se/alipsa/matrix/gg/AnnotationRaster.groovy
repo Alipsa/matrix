@@ -79,10 +79,10 @@ class AnnotationRaster {
     }
 
     // Get position bounds with defaults
-    BigDecimal xmin = handleInfValue(params.xmin, true)
-    BigDecimal xmax = handleInfValue(params.xmax, false)
-    BigDecimal ymin = handleInfValue(params.ymin, true)
-    BigDecimal ymax = handleInfValue(params.ymax, false)
+    BigDecimal xmin = AnnotationConstants.handleInfValue(params.xmin, true)
+    BigDecimal xmax = AnnotationConstants.handleInfValue(params.xmax, false)
+    BigDecimal ymin = AnnotationConstants.handleInfValue(params.ymin, true)
+    BigDecimal ymax = AnnotationConstants.handleInfValue(params.ymax, false)
 
     // Create data matrix with bounds
     this.data = Matrix.builder()
@@ -111,48 +111,5 @@ class AnnotationRaster {
         params: [:],
         inheritAes: false  // Annotations never inherit global aesthetics
     )
-  }
-
-  /**
-   * Handle infinite position values.
-   * Converts null, 'Inf', '-Inf' to appropriate infinity constants.
-   *
-   * @param value the input value
-   * @param isMin whether this is a minimum bound (affects default for null)
-   * @return BigDecimal representing the position or infinity marker
-   */
-  private static BigDecimal handleInfValue(Object value, boolean isMin) {
-    if (value == null) {
-      return isMin ? -AnnotationConstants.INFINITY_MARKER : AnnotationConstants.INFINITY_MARKER
-    }
-
-    // Handle string representations of infinity
-    if (value instanceof String) {
-      String str = (value as String).toLowerCase()
-      if (str == 'inf' || str == '+inf') {
-        return AnnotationConstants.INFINITY_MARKER
-      }
-      if (str == '-inf') {
-        return -AnnotationConstants.INFINITY_MARKER
-      }
-      // Try to parse as number
-      try {
-        return new BigDecimal(str)
-      } catch (NumberFormatException e) {
-        throw new IllegalArgumentException("Invalid position value: ${value}")
-      }
-    }
-
-    // Handle numeric infinity
-    if (value instanceof Number) {
-      double d = (value as Number).doubleValue()
-      if (Double.isInfinite(d)) {
-        return d > 0 ? AnnotationConstants.INFINITY_MARKER : -AnnotationConstants.INFINITY_MARKER
-      }
-      return value as BigDecimal
-    }
-
-    // Default conversion
-    return value as BigDecimal
   }
 }

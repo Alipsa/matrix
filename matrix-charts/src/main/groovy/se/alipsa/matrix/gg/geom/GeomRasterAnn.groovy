@@ -69,10 +69,10 @@ class GeomRasterAnn extends Geom {
     if (xScale == null || yScale == null) return
 
     // Get position bounds from data (in data-space coordinates)
-    BigDecimal xmin = getPositionValue(data, 'xmin', 0)
-    BigDecimal xmax = getPositionValue(data, 'xmax', 0)
-    BigDecimal ymin = getPositionValue(data, 'ymin', 0)
-    BigDecimal ymax = getPositionValue(data, 'ymax', 0)
+    BigDecimal xmin = AnnotationConstants.getPositionValue(data, 'xmin', 0)
+    BigDecimal xmax = AnnotationConstants.getPositionValue(data, 'xmax', 0)
+    BigDecimal ymin = AnnotationConstants.getPositionValue(data, 'ymin', 0)
+    BigDecimal ymax = AnnotationConstants.getPositionValue(data, 'ymax', 0)
 
     // Handle infinite values - use full panel extent in DATA-SPACE
     // Requires continuous scales for domain access
@@ -83,10 +83,10 @@ class GeomRasterAnn extends Geom {
     List<BigDecimal> xDomain = (xScale as ScaleContinuous).computedDomain
     List<BigDecimal> yDomain = (yScale as ScaleContinuous).computedDomain
 
-    if (isInfinite(xmin)) xmin = xDomain[0]
-    if (isInfinite(xmax)) xmax = xDomain[1]
-    if (isInfinite(ymin)) ymin = yDomain[0]
-    if (isInfinite(ymax)) ymax = yDomain[1]
+    if (AnnotationConstants.isInfinite(xmin)) xmin = xDomain[0]
+    if (AnnotationConstants.isInfinite(xmax)) xmax = xDomain[1]
+    if (AnnotationConstants.isInfinite(ymin)) ymin = yDomain[0]
+    if (AnnotationConstants.isInfinite(ymax)) ymax = yDomain[1]
 
     // Transform bounds from data-space to pixel-space
     BigDecimal xminPx = xScale.transform(xmin) as BigDecimal
@@ -202,30 +202,5 @@ class GeomRasterAnn extends Geom {
       throw new IllegalArgumentException(
           "Raster row must be a list or array of colors, got: ${row.class.name}")
     }
-  }
-
-  /**
-   * Get position value from data matrix.
-   * Returns appropriate INFINITY_MARKER for missing or null values.
-   */
-  private static BigDecimal getPositionValue(Matrix data, String colName, int rowIdx) {
-    if (data == null || !data.columnNames().contains(colName)) {
-      boolean isMinBound = colName?.toLowerCase()?.contains('min') ?: true
-      return isMinBound ? -AnnotationConstants.INFINITY_MARKER : AnnotationConstants.INFINITY_MARKER
-    }
-    Object value = data[colName][rowIdx]
-    if (value == null) {
-      boolean isMinBound = colName?.toLowerCase()?.contains('min') ?: true
-      return isMinBound ? -AnnotationConstants.INFINITY_MARKER : AnnotationConstants.INFINITY_MARKER
-    }
-    return value as BigDecimal
-  }
-
-  /**
-   * Check if a value represents infinity (using marker values).
-   */
-  private static boolean isInfinite(BigDecimal value) {
-    if (value == null) return true
-    return value.abs() >= AnnotationConstants.INFINITY_MARKER
   }
 }
