@@ -906,7 +906,7 @@ class GgPlot {
    *
    * Example with closure:
    *   guide_custom({ context ->
-   *     context.svg.addRect().x(context.x).y(context.y).width(30).height(20).fill('red')
+   *     context.svg.addRect(30, 20).x(context.x).y(context.y).fill('red')
    *     context.svg.addText('Custom').x(context.x + 5).y(context.y + 15)
    *   }, width: 40, height: 30)
    *
