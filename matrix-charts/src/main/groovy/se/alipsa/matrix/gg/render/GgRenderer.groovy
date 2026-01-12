@@ -1966,9 +1966,23 @@ class GgRenderer {
     for (int exp = minExp; exp <= maxExp; exp++) {
       BigDecimal decade = 10 ** exp
 
+      // When prescaleBase is set, domain values are in log space (exponents)
+      // When not set, domain values are in original value space
+      boolean showDecade
+      BigDecimal transformValue
+      if (prescaleBase != null) {
+        // Compare exponent against log-space domain
+        showDecade = exp >= minVal && exp <= maxVal && decade.abs() >= negativeSmall
+        transformValue = exp  // Transform the exponent directly
+      } else {
+        // Compare actual value against value-space domain
+        showDecade = decade >= minVal && decade <= maxVal && decade.abs() >= negativeSmall
+        transformValue = decade  // Transform the actual value
+      }
+
       // Long tick at power of 10 (with label)
-      if (decade >= minVal && decade <= maxVal && decade.abs() >= negativeSmall) {
-        Double xPos = scale.transform(decade) as Double
+      if (showDecade) {
+        Double xPos = scale.transform(transformValue) as Double
         if (xPos != null) {
           int tickDir = isTop ? -1 : 1
           BigDecimal tickLength = baseTickLength * longMult
@@ -1976,7 +1990,7 @@ class GgRenderer {
                     .stroke('black')
 
           // Add label for long ticks
-          int breakIndex = breaks.indexOf(decade)
+          int breakIndex = breaks.indexOf(prescaleBase != null ? transformValue : decade)
           String label = (breakIndex >= 0 && breakIndex < labels.size()) ? labels[breakIndex] : decade.toString()
           int labelY = isTop ? (-1 * tickLength.intValue() - 3) : (tickLength.intValue() + 15)
           xAxisGroup.addText(label)
@@ -1990,8 +2004,21 @@ class GgRenderer {
       // Mid ticks at 2×, 5× (no labels)
       for (BigDecimal mult : [2, 5]) {
         BigDecimal value = mult * decade
-        if (value >= minVal && value <= maxVal && value.abs() >= negativeSmall) {
-          Double xPos = scale.transform(value) as Double
+        BigDecimal logValue = prescaleBase != null ? (mult * decade).log10() : null
+
+        boolean showTick
+        BigDecimal tickTransformValue
+        if (prescaleBase != null) {
+          // For pre-transformed data, calculate log of the multiplied value
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = logValue
+        } else {
+          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = value
+        }
+
+        if (showTick) {
+          Double xPos = scale.transform(tickTransformValue) as Double
           if (xPos != null) {
             int tickDir = isTop ? -1 : 1
             BigDecimal tickLength = baseTickLength * midMult
@@ -2004,8 +2031,20 @@ class GgRenderer {
       // Short ticks at other multiples (no labels)
       for (int mult : [3, 4, 6, 7, 8, 9]) {
         BigDecimal value = mult * decade
-        if (value >= minVal && value <= maxVal && value.abs() >= negativeSmall) {
-          Double xPos = scale.transform(value) as Double
+        BigDecimal logValue = prescaleBase != null ? (mult * decade).log10() : null
+
+        boolean showTick
+        BigDecimal tickTransformValue
+        if (prescaleBase != null) {
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = logValue
+        } else {
+          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = value
+        }
+
+        if (showTick) {
+          Double xPos = scale.transform(tickTransformValue) as Double
           if (xPos != null) {
             int tickDir = isTop ? -1 : 1
             BigDecimal tickLength = baseTickLength * shortMult
@@ -2084,9 +2123,23 @@ class GgRenderer {
     for (int exp = minExp; exp <= maxExp; exp++) {
       BigDecimal decade = 10 ** exp
 
+      // When prescaleBase is set, domain values are in log space (exponents)
+      // When not set, domain values are in original value space
+      boolean showDecade
+      BigDecimal transformValue
+      if (prescaleBase != null) {
+        // Compare exponent against log-space domain
+        showDecade = exp >= minVal && exp <= maxVal && decade.abs() >= negativeSmall
+        transformValue = exp  // Transform the exponent directly
+      } else {
+        // Compare actual value against value-space domain
+        showDecade = decade >= minVal && decade <= maxVal && decade.abs() >= negativeSmall
+        transformValue = decade  // Transform the actual value
+      }
+
       // Long tick at power of 10 (with label)
-      if (decade >= minVal && decade <= maxVal && decade.abs() >= negativeSmall) {
-        Double yPos = scale.transform(decade) as Double
+      if (showDecade) {
+        Double yPos = scale.transform(transformValue) as Double
         if (yPos != null) {
           int tickDir = isRight ? 1 : -1
           BigDecimal tickLength = baseTickLength * longMult
@@ -2094,7 +2147,7 @@ class GgRenderer {
                     .stroke('black')
 
           // Add label for long ticks
-          int breakIndex = breaks.indexOf(decade)
+          int breakIndex = breaks.indexOf(prescaleBase != null ? transformValue : decade)
           String label = (breakIndex >= 0 && breakIndex < labels.size()) ? labels[breakIndex] : decade.toString()
 
           if (isRight) {
@@ -2116,8 +2169,21 @@ class GgRenderer {
       // Mid ticks at 2×, 5× (no labels)
       for (BigDecimal mult : [2, 5]) {
         BigDecimal value = mult * decade
-        if (value >= minVal && value <= maxVal && value.abs() >= negativeSmall) {
-          Double yPos = scale.transform(value) as Double
+        BigDecimal logValue = prescaleBase != null ? (mult * decade).log10() : null
+
+        boolean showTick
+        BigDecimal tickTransformValue
+        if (prescaleBase != null) {
+          // For pre-transformed data, calculate log of the multiplied value
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = logValue
+        } else {
+          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = value
+        }
+
+        if (showTick) {
+          Double yPos = scale.transform(tickTransformValue) as Double
           if (yPos != null) {
             int tickDir = isRight ? 1 : -1
             BigDecimal tickLength = baseTickLength * midMult
@@ -2130,8 +2196,20 @@ class GgRenderer {
       // Short ticks at other multiples (no labels)
       for (int mult : [3, 4, 6, 7, 8, 9]) {
         BigDecimal value = mult * decade
-        if (value >= minVal && value <= maxVal && value.abs() >= negativeSmall) {
-          Double yPos = scale.transform(value) as Double
+        BigDecimal logValue = prescaleBase != null ? (mult * decade).log10() : null
+
+        boolean showTick
+        BigDecimal tickTransformValue
+        if (prescaleBase != null) {
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = logValue
+        } else {
+          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
+          tickTransformValue = value
+        }
+
+        if (showTick) {
+          Double yPos = scale.transform(tickTransformValue) as Double
           if (yPos != null) {
             int tickDir = isRight ? 1 : -1
             BigDecimal tickLength = baseTickLength * shortMult
@@ -2691,8 +2769,9 @@ class GgRenderer {
     List<String> labels = scale.computedLabels ?: []
     int numBins = breaks.size() - 1
 
-    // Reverse breaks if requested
+    // Reverse breaks and labels if requested to maintain correspondence
     List<Number> displayBreaks = reverse ? breaks.reverse() as List<Number> : breaks as List<Number>
+    List<String> displayLabels = reverse ? labels.reverse() as List<String> : labels
 
     // Calculate bin positions and colors
     if (evenSteps) {
@@ -2731,6 +2810,38 @@ class GgRenderer {
       BigDecimal maxVal = displayBreaks.last() as BigDecimal
       BigDecimal totalRange = maxVal - minVal
 
+      // Defensive check for zero range (all breaks have same value)
+      if (totalRange == 0) {
+        // Fall back to even steps rendering
+        for (int i = 0; i < numBins; i++) {
+          BigDecimal midpoint = (displayBreaks[i] as BigDecimal + displayBreaks[i + 1] as BigDecimal) / 2
+          String color = scale.transform(midpoint)?.toString() ?: '#999999'
+
+          if (vertical) {
+            BigDecimal binHeight = barHeight / numBins
+            int stepHeight = binHeight.intValue()
+            int stepY = reverse ? (y + i * stepHeight) : (y + barHeight - (i + 1) * stepHeight)
+
+            group.addRect(barWidth, stepHeight + 1)
+                .x(x)
+                .y(stepY)
+                .fill(color)
+                .stroke('none')
+          } else {
+            BigDecimal binWidth = barWidth / numBins
+            int stepWidth = binWidth.intValue()
+            int stepX = x + i * stepWidth
+
+            group.addRect(stepWidth + 1, barHeight)
+                .x(stepX)
+                .y(y)
+                .fill(color)
+                .stroke('none')
+          }
+        }
+        // Skip to border and labels rendering
+      } else {
+
       int accumulatedHeight = 0
       int accumulatedWidth = 0
 
@@ -2767,6 +2878,7 @@ class GgRenderer {
           accumulatedWidth += stepWidth
         }
       }
+      } // end else (totalRange != 0)
     }
 
     // Draw border around the bar
@@ -2781,14 +2893,14 @@ class GgRenderer {
       // Show min/max labels by default
       if (vertical) {
         // Min at bottom
-        group.addText(labels.first() ?: formatNumber(displayBreaks.first()))
+        group.addText(displayLabels.first() ?: formatNumber(displayBreaks.first()))
             .x(x + barWidth + 5)
             .y(y + barHeight)
             .fontSize(theme.legendText?.size ?: 9)
             .fill(theme.legendText?.color ?: 'black')
 
         // Max at top
-        group.addText(labels.last() ?: formatNumber(displayBreaks.last()))
+        group.addText(displayLabels.last() ?: formatNumber(displayBreaks.last()))
             .x(x + barWidth + 5)
             .y(y + 10)
             .fontSize(theme.legendText?.size ?: 9)
@@ -2797,14 +2909,14 @@ class GgRenderer {
         return y + barHeight + spacing
       } else {
         // Min at left
-        group.addText(labels.first() ?: formatNumber(displayBreaks.first()))
+        group.addText(displayLabels.first() ?: formatNumber(displayBreaks.first()))
             .x(x)
             .y(y + barHeight + 12)
             .fontSize(theme.legendText?.size ?: 9)
             .fill(theme.legendText?.color ?: 'black')
 
         // Max at right
-        group.addText(labels.last() ?: formatNumber(displayBreaks.last()))
+        group.addText(displayLabels.last() ?: formatNumber(displayBreaks.last()))
             .x(x + barWidth - 20)
             .y(y + barHeight + 12)
             .fontSize(theme.legendText?.size ?: 9)
