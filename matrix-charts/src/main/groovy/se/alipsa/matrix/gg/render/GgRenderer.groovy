@@ -2430,7 +2430,7 @@ class GgRenderer {
           scales: scales
         ]
 
-        // Call user's closure (result intentionally unused - closures add directly to context.svg)
+        // Call user's closure - return value ignored as closure adds elements to context.svg
         closure.call(context)
       }
     } catch (Exception e) {
