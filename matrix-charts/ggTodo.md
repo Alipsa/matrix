@@ -328,18 +328,17 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 - 4.8.1 [x] `guide_coloursteps()` / `guide_colorsteps()` - Stepped color guide ✅
 - 4.8.2 [x] `guide_axis_logticks()` - Log-scale axis with ticks ✅
-- 4.8.3 [ ] `guide_axis_stack()` - Stacked axes (factory methods added, rendering pending)
-- 4.8.4 [ ] `guide_axis_theta()` - Angular axis for polar coords (factory method added, rendering pending)
+- 4.8.3 [x] `guide_axis_stack()` - Stacked axes ✅
+- 4.8.4 [x] `guide_axis_theta()` - Angular axis for polar coords ✅
 - 4.8.5 [x] `guide_custom()` - Custom guide implementation ✅
 
 ### 4.9 Miscellaneous
 
-- 4.9.1 [ ] `qplot()` / `quickplot()` - Quick plotting function
-- 4.9.2 [ ] `annotation_raster()` - Raster image annotations
-- 4.9.3 [ ] `coord_radial()` - Modern polar alternative
-- 4.9.4 [ ] `geom_function()` - Draw arbitrary function
-- 4.9.5 [ ] `theme_test()` - Testing theme
-- 4.9.6 [ ] `scale_colour_fermenter()` / `scale_fill_fermenter()` - Binned ColorBrewer
+- 4.9.1 [ ] `annotation_raster()` - Raster image annotations
+- 4.9.2 [ ] `coord_radial()` - Modern polar alternative
+- 4.9.3 [ ] `geom_function()` - Draw arbitrary function
+- 4.9.4 [ ] `theme_test()` - Testing theme
+- 4.9.5 [ ] `scale_colour_fermenter()` / `scale_fill_fermenter()` - Binned ColorBrewer
 
 ---
 
