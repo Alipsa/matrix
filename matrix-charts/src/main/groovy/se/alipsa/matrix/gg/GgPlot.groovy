@@ -870,7 +870,7 @@ class GgPlot {
    *
    * Example: scale_x_log10(guide: guide_axis_logticks())
    * Example: scale_y_log10(guide: guide_axis_logticks(long: 3.0, mid: 2.0, short: 1.0))
-   * Example: scale_x_log10(guide: guide_axis_logticks(minAbsValue: 0.01)) // Show ticks down to 0.01
+   * Example: scale_x_log10(guide: guide_axis_logticks(negativeSmall: 0.01)) // Show ticks down to 0.01
    *
    * @param params optional parameters:
    *   - long (Number, default: 2.25): Multiplier for long ticks (powers of 10)
@@ -878,9 +878,12 @@ class GgPlot {
    *   - short (Number, default: 0.75): Multiplier for short ticks (other values)
    *   - prescaleBase or prescale.base (Number, default: null): If data is already log-transformed,
    *     specify the base used (e.g., 10). When set, domain values are treated as exponents.
-   *   - minAbsValue or min.abs.value (Number, default: 0.1): Minimum absolute value threshold.
-   *     Ticks with |value| < minAbsValue are omitted (prevents visual clutter near zero).
-   *     Note: The old parameter names negativeSmall/negative.small are still supported for backward compatibility.
+   *   - negativeSmall or negative.small (Number, default: 0.1): Minimum absolute value threshold
+   *     for displaying ticks. When scale limits include 0 or negative numbers, this determines
+   *     the smallest absolute value that will be marked with a tick. Ticks where |value| < negativeSmall
+   *     are omitted to prevent visual clutter near zero.
+   *     Note: Despite the name, this applies to all small absolute values, not just negative numbers.
+   *     The parameter name comes from R's ggplot2 API for compatibility.
    *   - expanded (Boolean, default: true): If true, use the expanded axis range (with padding).
    *     If false, use the exact scale limits.
    * @return a logarithmic tick axis guide specification

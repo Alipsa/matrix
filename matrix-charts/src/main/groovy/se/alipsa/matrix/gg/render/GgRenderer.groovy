@@ -1931,9 +1931,7 @@ class GgRenderer {
 
     // Additional parameters
     BigDecimal prescaleBase = (guideParams['prescale.base'] ?: guideParams.prescaleBase) as BigDecimal
-    // Support both old name (negativeSmall) and new name (minAbsValue) for backward compatibility
-    BigDecimal minAbsValue = ((guideParams.minAbsValue ?: guideParams['min.abs.value'] ?:
-                               guideParams.negativeSmall ?: guideParams['negative.small']) ?: 0.1) as BigDecimal
+    BigDecimal negativeSmall = ((guideParams['negative.small'] ?: guideParams.negativeSmall) ?: 0.1) as BigDecimal
     boolean expanded = (guideParams.expanded != null) ? (guideParams.expanded as boolean) : true
 
     // Get domain from scale
@@ -1966,10 +1964,10 @@ class GgRenderer {
       boolean showDecade
       BigDecimal transformValue
       if (prescaleBase != null) {
-        showDecade = exp >= minVal && exp <= maxVal && decade.abs() >= minAbsValue
+        showDecade = exp >= minVal && exp <= maxVal && decade.abs() >= negativeSmall
         transformValue = exp
       } else {
-        showDecade = decade >= minVal && decade <= maxVal && decade.abs() >= minAbsValue
+        showDecade = decade >= minVal && decade <= maxVal && decade.abs() >= negativeSmall
         transformValue = decade
       }
 
@@ -1985,10 +1983,10 @@ class GgRenderer {
         boolean showTick
         BigDecimal tickTransformValue
         if (prescaleBase != null) {
-          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= minAbsValue
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
           tickTransformValue = logValue
         } else {
-          showTick = value >= minVal && value <= maxVal && value.abs() >= minAbsValue
+          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
           tickTransformValue = value
         }
 
@@ -2005,10 +2003,10 @@ class GgRenderer {
         boolean showTick
         BigDecimal tickTransformValue
         if (prescaleBase != null) {
-          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= minAbsValue
+          showTick = logValue >= minVal && logValue <= maxVal && value.abs() >= negativeSmall
           tickTransformValue = logValue
         } else {
-          showTick = value >= minVal && value <= maxVal && value.abs() >= minAbsValue
+          showTick = value >= minVal && value <= maxVal && value.abs() >= negativeSmall
           tickTransformValue = value
         }
 
