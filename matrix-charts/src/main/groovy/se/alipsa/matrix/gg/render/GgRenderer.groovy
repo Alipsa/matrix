@@ -2318,8 +2318,7 @@ class GgRenderer {
     legendGroup.transform("translate($legendX, $legendY)")
 
     // Get legend title from chart labels or scale name
-    String legendTitle = chart.labels?.legendTitle ?:
-        (!legendScales.isEmpty() ? legendScales.values().first()?.name : null)
+    String legendTitle = determineLegendTitle(chart, legendScales)
 
     int currentY = 0
     int currentX = 0
@@ -2380,6 +2379,23 @@ class GgRenderer {
         }
       }
     }
+  }
+
+  /**
+   * Determine the legend title from chart labels or scale name.
+   * @param chart the chart specification
+   * @param legendScales map of scales that need legends
+   * @return legend title string or null
+   */
+  @CompileStatic
+  private String determineLegendTitle(GgChart chart, Map<String, Scale> legendScales) {
+    if (chart.labels?.legendTitle) {
+      return chart.labels.legendTitle
+    }
+    if (!legendScales.isEmpty()) {
+      return legendScales.values().first()?.name
+    }
+    return null
   }
 
   /**

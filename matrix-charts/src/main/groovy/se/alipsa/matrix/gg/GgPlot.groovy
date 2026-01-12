@@ -930,6 +930,9 @@ class GgPlot {
    * @return a custom guide specification
    */
   static Guide guide_custom(Closure renderClosure, Map params = [:]) {
+    if (renderClosure == null) {
+      throw new IllegalArgumentException("guide_custom requires a renderClosure parameter")
+    }
     return new Guide('custom', [renderClosure: renderClosure] + params)
   }
 

@@ -20,6 +20,15 @@ class GuideCustomTest {
   }
 
   @Test
+  void testGuideCustomRequiresClosure() {
+    // Should throw IllegalArgumentException when renderClosure is null
+    def exception = assertThrows(IllegalArgumentException.class) {
+      guide_custom(null)
+    }
+    assertTrue(exception.message.contains("guide_custom requires a renderClosure parameter"))
+  }
+
+  @Test
   void testGuideCustomWithParameters() {
     def closure = { context -> }
     def guide = guide_custom(closure, [width: 100, height: 80, title: 'My Guide'])
