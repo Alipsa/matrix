@@ -4,10 +4,10 @@ This document tracks the implementation status of ggplot2 functions in the matri
 
 ## Philosophy
 
-**Primary Goal:** Code should be as closely compliant to R's ggplot2 behavior and api as possible
+**Primary Goal:** Code should be as closely compliant to R's ggplot2 behaviour and api as possible
 **Secondary Goal:** Write beautiful, easy-to-read, idiomatic Groovy code.
 - Leverage Groovy's default numeric type (BigDecimal) where it naturally fits.
-- Prefer readability over precision, and simplicity over micro-optimizations.
+- Prefer readability over precision, and simplicity over micro-optimisations.
 - Make the code maintainable and Groovy-like
 - Add extensions to BigDecimalExtensions in the matrix-groovy-ext module when needed to allow writing the code in a more idiomatic groovy way
 
@@ -334,7 +334,7 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.9 Miscellaneous
 
-- 4.9.1 [ ] `annotation_raster()` - Raster image annotations
+- 4.9.1 [x] `annotation_raster()` - Raster image annotations
 - 4.9.2 [ ] `coord_radial()` - Modern polar alternative
 - 4.9.3 [ ] `geom_function()` - Draw arbitrary function
 - 4.9.4 [ ] `theme_test()` - Testing theme

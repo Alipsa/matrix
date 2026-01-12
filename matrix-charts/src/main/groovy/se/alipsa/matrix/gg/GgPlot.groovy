@@ -697,6 +697,33 @@ class GgPlot {
   }
 
   /**
+   * Annotation: raster image at fixed position.
+   *
+   * Renders a pre-colored raster (2D grid of colors) at specified positions.
+   * Unlike geom_raster(), this annotation does not affect axis scales
+   * and expects colors to already be present in the raster data.
+   *
+   * Row 0 of the raster is rendered at the top (ymax), consistent with image conventions.
+   *
+   * Example:
+   * <pre>{@code
+   * def raster = [
+   *   ['red', 'green', 'blue'],
+   *   ['yellow', 'purple', 'orange']
+   * ]
+   * annotation_raster(raster: raster, xmin: 0, xmax: 10, ymin: 0, ymax: 5)
+   * }</pre>
+   *
+   * @param params required: raster (2D list/array of color strings)
+   *               optional: xmin, xmax, ymin, ymax (default: -Inf to Inf)
+   *                        interpolate (default: false)
+   * @return a Layer with raster annotation
+   */
+  static Layer annotation_raster(Map params) {
+    return new AnnotationRaster(params).toLayer()
+  }
+
+  /**
    * Add a map annotation layer using map polygon data.
    *
    * @param params required: map (Matrix). Optional: mapping, data, styling
