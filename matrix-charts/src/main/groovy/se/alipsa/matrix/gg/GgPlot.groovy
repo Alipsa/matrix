@@ -839,6 +839,124 @@ class GgPlot {
     return new Guide('bins', params)
   }
 
+  /**
+   * Create a stepped color guide for binned continuous scales.
+   * Displays discrete color blocks instead of a smooth gradient.
+   *
+   * Example: guides(color: guide_coloursteps())
+   * Example: scale_color_steps(bins: 5) + guides(color: guide_coloursteps(evenSteps: false))
+   *
+   * @param params optional parameters:
+   *   - evenSteps or even.steps (Boolean, default: true): Equal-sized bins vs proportional to data range
+   *   - showLimits or show.limits (Boolean, default: null): Show scale limit labels
+   *   - reverse (Boolean, default: false): Reverse colorbar direction
+   *   - barwidth: Custom bar width (overrides theme default)
+   *   - barheight: Custom bar height (overrides theme default)
+   * @return a stepped color guide specification
+   */
+  static Guide guide_coloursteps(Map params = [:]) {
+    return new Guide('coloursteps', params)
+  }
+
+  /** American spelling alias for guide_coloursteps */
+  static Guide guide_colorsteps(Map params = [:]) {
+    return guide_coloursteps(params)
+  }
+
+  /**
+   * Create a logarithmic tick mark axis guide with varying tick densities.
+   * Displays major ticks at powers of 10, mid ticks at 2× and 5× multiples,
+   * and short ticks at intermediate values.
+   *
+   * Example: scale_x_log10(guide: guide_axis_logticks())
+   * Example: scale_y_log10(guide: guide_axis_logticks(long: 3.0, mid: 2.0, short: 1.0))
+   *
+   * @param params optional parameters:
+   *   - long (Number, default: 2.25): Multiplier for long ticks (powers of 10)
+   *   - mid (Number, default: 1.5): Multiplier for mid ticks (2×, 5× multiples)
+   *   - short (Number, default: 0.75): Multiplier for short ticks (other values)
+   *   - prescaleBase or prescale.base (Number, default: null): Log base if data pre-transformed
+   *   - negativeSmall or negative.small (Number, default: 0.1): Min absolute value for ticks
+   *   - expanded (Boolean, default: true): Use expanded range vs scale limits
+   * @return a logarithmic tick axis guide specification
+   */
+  static Guide guide_axis_logticks(Map params = [:]) {
+    return new Guide('axis_logticks', params)
+  }
+
+  /**
+   * Create a circular axis guide for polar coordinates.
+   * Displays axis labels around the perimeter of polar plots.
+   *
+   * Example: coord_polar(theta: 'x') + scale_x_continuous(guide: guide_axis_theta())
+   *
+   * @param params optional parameters:
+   *   - angle (Number, default: 0): Label rotation angle
+   *   - minorTicks or minor.ticks (Boolean, default: false): Show minor tick marks
+   *   - cap (String, default: 'none'): Cap style for axis line
+   * @return a theta axis guide specification for polar coordinates
+   */
+  static Guide guide_axis_theta(Map params = [:]) {
+    return new Guide('axis_theta', params)
+  }
+
+  /**
+   * Create a custom guide with user-defined rendering.
+   * Accepts a Groovy closure that receives rendering context and creates SVG elements.
+   *
+   * Example with closure:
+   *   guide_custom({ context ->
+   *     context.svg.addRect().x(context.x).y(context.y).width(30).height(20).fill('red')
+   *     context.svg.addText('Custom').x(context.x + 5).y(context.y + 15)
+   *   }, width: 40, height: 30)
+   *
+   * The closure receives a context map with:
+   *   - svg: Parent SVG/G element to append to
+   *   - x, y: Position to render at (pixels)
+   *   - width, height: Allocated dimensions
+   *   - theme: Theme object
+   *   - scales: Map of scales by aesthetic
+   *
+   * @param renderClosure Groovy closure for custom rendering
+   * @param params optional parameters:
+   *   - width (Number, default: 50): Allocated width
+   *   - height (Number, default: 50): Allocated height
+   *   - title (String, default: null): Optional title
+   *   - position (String, default: 'right'): Legend position
+   * @return a custom guide specification
+   */
+  static Guide guide_custom(Closure renderClosure, Map params = [:]) {
+    return new Guide('custom', [renderClosure: renderClosure] + params)
+  }
+
+  /**
+   * Create a stacked axis guide that displays multiple axis guides on the same side.
+   *
+   * Example: scale_x_continuous(guide: guide_axis_stack(guide_axis(), guide_axis(angle: 45)))
+   *
+   * @param first First guide (closest to panel), can be Guide object or string like 'axis'
+   * @param params optional parameters:
+   *   - additional (List): Additional guides to stack outward
+   *   - spacing (Number, default: 5): Pixel spacing between guides
+   * @return a stacked axis guide specification
+   */
+  static Guide guide_axis_stack(Object first, Map params = [:]) {
+    return new Guide('axis_stack', [first: first] + params)
+  }
+
+  /**
+   * Create a stacked axis guide with multiple guides (overloaded version).
+   *
+   * Example: guide_axis_stack(guide_axis(), guide_axis(angle: 45), guide_axis(angle: 90))
+   *
+   * @param first First guide
+   * @param additional Additional guides as varargs
+   * @return a stacked axis guide specification
+   */
+  static Guide guide_axis_stack(Object first, Object... additional) {
+    return new Guide('axis_stack', [first: first, additional: additional as List])
+  }
+
   // ============ Limit helpers ============
 
   /**
