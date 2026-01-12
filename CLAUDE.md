@@ -549,6 +549,72 @@ for (int i = minExp; i <= maxExp; i++) {
 }
 ```
 
+### Modern Switch Expressions (JDK 14+ / Groovy 5+)
+
+**IMPORTANT:** With Groovy 5.0.3 and JDK 21, always use modern switch expression syntax with arrow (`->`) instead of old-style colon (`:`) with `break` statements.
+
+**✅ Use modern switch expressions:**
+```groovy
+// Good - Modern arrow syntax (JDK 14+)
+switch (shape?.toLowerCase()) {
+  case 'square' -> {
+    group.addRect(size, size)
+        .x(x).y(y)
+        .fill(color)
+  }
+  case 'plus', 'cross' -> {  // Multiple cases combined
+    group.addLine(x1, y1, x2, y2).stroke(color)
+    group.addLine(x3, y3, x4, y4).stroke(color)
+  }
+  case 'circle' -> {
+    group.addCircle()
+        .cx(cx).cy(cy)
+        .r(radius)
+  }
+  default -> {
+    // Default case
+    group.addCircle().cx(cx).cy(cy).r(5)
+  }
+}
+```
+
+**❌ Avoid old-style switch with break:**
+```groovy
+// Avoid - Old colon syntax with break statements
+switch (shape?.toLowerCase()) {
+  case 'square':
+    group.addRect(size, size)
+        .x(x).y(y)
+        .fill(color)
+    break
+  case 'plus':
+  case 'cross':
+    group.addLine(x1, y1, x2, y2).stroke(color)
+    group.addLine(x3, y3, x4, y4).stroke(color)
+    break
+  case 'circle':
+  default:
+    group.addCircle().cx(cx).cy(cy).r(5)
+    break
+}
+```
+
+**Benefits of modern switch expressions:**
+- No `break` statements needed (eliminates fallthrough bugs)
+- Multiple cases can be combined on one line with commas
+- Clearer intent with arrow syntax
+- More concise and readable
+- Compiler enforces exhaustiveness
+
+**When refactoring existing code:**
+When you encounter old-style switch statements during code modifications:
+1. **Always modernize them** to use arrow syntax
+2. Combine multiple cases using comma separation (`case 'a', 'b' ->`)
+3. Remove all `break` statements
+4. Ensure each case block is wrapped in `{ }` for multi-statement blocks
+
+This applies to any switch statement you touch, even if the primary task is something else. Keeping the codebase modern and consistent is a continuous improvement goal.
+
 ### When in Doubt
 
 Ask yourself:

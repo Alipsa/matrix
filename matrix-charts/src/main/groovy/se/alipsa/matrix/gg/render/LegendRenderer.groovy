@@ -321,16 +321,16 @@ class LegendRenderer {
         if (usesPoints) {
           String shape = shapeScale?.transform(level)?.toString()
           if (shape) {
-            int centerX = x + (keyWidth / 2) as int
-            int centerY = y + (keyHeight / 2) as int
+            BigDecimal centerX = (x + keyWidth / 2).round()
+            BigDecimal centerY = (y + keyHeight / 2).round()
             drawLegendShape(group, centerX, centerY,
                 Math.min(keyWidth, keyHeight), shape, color, theme.legendKey?.color)
           } else {
             // Draw circle for point geoms
-            int radius = Math.min(keyWidth, keyHeight) / 2 as int
+            BigDecimal radius = (Math.min(keyWidth, keyHeight) / 2).round()
             def circle = group.addCircle()
-                .cx(x + keyWidth / 2 as int)
-                .cy(y + keyHeight / 2 as int)
+                .cx((x + keyWidth / 2).round())
+                .cy((y + keyHeight / 2).round())
                 .r(radius - 1)  // Slightly smaller to fit in key area
                 .fill(color)
             if (theme.legendKey?.color) {
@@ -350,8 +350,8 @@ class LegendRenderer {
       } else if (isShapeKey) {
         String shape = scale.transform(level)?.toString() ?: 'circle'
         String shapeColor = colorScale?.transform(level)?.toString() ?: (theme.legendKey?.color ?: 'black')
-        int centerX = x + (keyWidth / 2) as int
-        int centerY = y + (keyHeight / 2) as int
+        BigDecimal centerX = (x + keyWidth / 2).round()
+        BigDecimal centerY = (y + keyHeight / 2).round()
         drawLegendShape(group, centerX, centerY,
             Math.min(keyWidth, keyHeight), shape, shapeColor, theme.legendKey?.color)
       }
@@ -728,23 +728,23 @@ class LegendRenderer {
       scaled instanceof Number ? (scaled as Number) : null
     }.findAll { it != null } as List<Number>
     if (sizes.isEmpty()) return startY
-    double maxSize = sizes.max() as double
-    double maxRadius = Math.min(keyWidth, keyHeight) / 2.0d
+    BigDecimal maxSize = sizes.max() as BigDecimal
+    BigDecimal maxRadius = Math.min(keyWidth, keyHeight) / 2.0
 
     int x = startX
     int y = startY
     values.eachWithIndex { value, int idx ->
-      def scaled = scale.transform(value)
-      if (!(scaled instanceof Number)) {
+      BigDecimal scaled = scale.transform(value) as BigDecimal
+      if (scaled == null) {
         return
       }
-      double radius = maxSize > 0d ? (scaled as double) / maxSize * maxRadius : maxRadius / 2.0d
-      double centerX = x + keyWidth / 2.0d
-      double centerY = y + keyHeight / 2.0d
+      BigDecimal radius = maxSize > 0 ? scaled / maxSize * maxRadius : maxRadius / 2.0
+      BigDecimal centerX = x + keyWidth / 2.0
+      BigDecimal centerY = y + keyHeight / 2.0
       def circle = group.addCircle()
           .cx(centerX)
           .cy(centerY)
-          .r(Math.max(1.0d, radius))
+          .r(radius.max(1.0))
           .fill(theme.legendKey?.color ?: '#999999')
       if (theme.legendKey?.color) {
         circle.stroke(theme.legendKey.color)
@@ -793,12 +793,11 @@ class LegendRenderer {
     int x = startX
     int y = startY
     values.eachWithIndex { value, int idx ->
-      def scaled = scale.transform(value)
-      if (!(scaled instanceof Number)) {
+      BigDecimal scaled = scale.transform(value) as BigDecimal
+      if (scaled == null) {
         return
       }
-      double alphaVal = scaled as double
-      alphaVal = Math.max(0.0d, Math.min(1.0d, alphaVal))
+      BigDecimal alphaVal = scaled.min(1).max(0)
       def rect = group.addRect(keyWidth, keyHeight)
           .x(x)
           .y(y)
@@ -828,61 +827,61 @@ class LegendRenderer {
   /**
    * Helper method to draw different legend shapes.
    */
-  private void drawLegendShape(G group, int centerX, int centerY, int size,
+  private void drawLegendShape(G group, Number centerX, Number centerY, int size,
                                String shape, String fillColor, String strokeColor) {
     String stroke = strokeColor ?: fillColor
-    double halfSize = Math.max(2, size - 2) / 2.0d
+    BigDecimal halfSize = 2.max(size - 2) / 2.0
+    BigDecimal cx = centerX as BigDecimal
+    BigDecimal cy = centerY as BigDecimal
 
     switch (shape?.toLowerCase()) {
-      case 'square':
-        def rect = group.addRect((halfSize * 2) as int, (halfSize * 2) as int)
-            .x((centerX - halfSize) as int)
-            .y((centerY - halfSize) as int)
+      case 'square' -> {
+        group.addRect((halfSize * 2).round(), (halfSize * 2).round())
+            .x((cx - halfSize).round())
+            .y((cy - halfSize).round())
             .fill(fillColor)
             .stroke(stroke)
-        break
-      case 'plus':
-      case 'cross':
-        group.addLine((centerX - halfSize) as int, centerY as int, (centerX + halfSize) as int, centerY as int)
+      }
+      case 'plus', 'cross' -> {
+        group.addLine((cx - halfSize).round(), cy.round(), (cx + halfSize).round(), cy.round())
             .stroke(stroke)
-        group.addLine(centerX as int, (centerY - halfSize) as int, centerX as int, (centerY + halfSize) as int)
+        group.addLine(cx.round(), (cy - halfSize).round(), cx.round(), (cy + halfSize).round())
             .stroke(stroke)
-        break
-      case 'x':
-        group.addLine((centerX - halfSize) as int, (centerY - halfSize) as int, (centerX + halfSize) as int, (centerY + halfSize) as int)
+      }
+      case 'x' -> {
+        group.addLine((cx - halfSize).round(), (cy - halfSize).round(), (cx + halfSize).round(), (cy + halfSize).round())
             .stroke(stroke)
-        group.addLine((centerX - halfSize) as int, (centerY + halfSize) as int, (centerX + halfSize) as int, (centerY - halfSize) as int)
+        group.addLine((cx - halfSize).round(), (cy + halfSize).round(), (cx + halfSize).round(), (cy - halfSize).round())
             .stroke(stroke)
-        break
-      case 'triangle':
-        double h = (halfSize * 2) * Math.sqrt(3) / 2
-        double topY = centerY - h * 2 / 3
-        double bottomY = centerY + h / 3
-        double leftX = centerX - halfSize
-        double rightX = centerX + halfSize
-        String pathD = "M ${centerX} ${topY as int} L ${leftX as int} ${bottomY as int} L ${rightX as int} ${bottomY as int} Z"
+      }
+      case 'triangle' -> {
+        BigDecimal h = (halfSize * 2) * (3 as BigDecimal).sqrt() / 2
+        BigDecimal topY = cy - h * 2 / 3
+        BigDecimal bottomY = cy + h / 3
+        BigDecimal leftX = cx - halfSize
+        BigDecimal rightX = cx + halfSize
+        String pathD = "M ${cx.round()} ${topY.round()} L ${leftX.round()} ${bottomY.round()} L ${rightX.round()} ${bottomY.round()} Z"
         group.addPath().d(pathD)
             .fill(fillColor)
             .stroke(stroke)
-        break
-      case 'diamond':
-        String diamond = "M ${centerX} ${(centerY - halfSize) as int} " +
-            "L ${(centerX + halfSize) as int} ${centerY} " +
-            "L ${centerX} ${(centerY + halfSize) as int} " +
-            "L ${(centerX - halfSize) as int} ${centerY} Z"
+      }
+      case 'diamond' -> {
+        String diamond = "M ${cx.round()} ${(cy - halfSize).round()} " +
+            "L ${(cx + halfSize).round()} ${cy.round()} " +
+            "L ${cx.round()} ${(cy + halfSize).round()} " +
+            "L ${(cx - halfSize).round()} ${cy.round()} Z"
         group.addPath().d(diamond)
             .fill(fillColor)
             .stroke(stroke)
-        break
-      case 'circle':
-      default:
+      }
+      default -> {
         group.addCircle()
             .cx(centerX)
             .cy(centerY)
-            .r(halfSize as int)
+            .r(halfSize.round())
             .fill(fillColor)
             .stroke(stroke)
-        break
+      }
     }
   }
 

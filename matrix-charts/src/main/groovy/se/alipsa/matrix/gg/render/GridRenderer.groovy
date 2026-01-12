@@ -26,7 +26,7 @@ class GridRenderer {
   /**
    * Render grid lines based on coordinate system.
    */
-  void renderGridLines(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme, def coord) {
+  void renderGridLines(G plotArea, Map<String, Scale> scales, Number width, Number height, Theme theme, def coord) {
     if (coord instanceof CoordPolar) {
       renderPolarGridLines(plotArea, scales, theme, coord as CoordPolar)
       return
@@ -51,7 +51,7 @@ class GridRenderer {
   /**
    * Render major grid lines.
    */
-  private void renderMajorGridLines(G gridGroup, Map<String, Scale> scales, int width, int height,
+  private void renderMajorGridLines(G gridGroup, Map<String, Scale> scales, Number width, Number height,
                                      ElementLine style, def coord) {
     String color = style.color ?: '#E0E0E0'
     Number size = style.size ?: 0.5
@@ -90,16 +90,16 @@ class GridRenderer {
   /**
    * Render minor grid lines.
    */
-  private void renderMinorGridLines(G gridGroup, Map<String, Scale> scales, int width, int height,
+  private void renderMinorGridLines(G gridGroup, Map<String, Scale> scales, Number width, Number height,
                                      ElementLine style, def coord) {
     String color = style.color ?: '#F0F0F0'
     Number size = style.size ?: 0.25
 
     boolean isFlipped = coord instanceof CoordFlip
 
-    // Generate minor breaks for continuous scales only
+    // Generate minor breaks for continuous numeric scales only (not date/time scales)
     Scale xScale = isFlipped ? scales['y'] : scales['x']
-    if (xScale instanceof ScaleContinuous) {
+    if (xScale instanceof ScaleContinuous && shouldGenerateMinorBreaks(xScale)) {
       List<BigDecimal> minorBreaks = generateMinorBreaks(xScale as ScaleContinuous)
       minorBreaks.each { breakVal ->
         Number xPos = xScale.transform(breakVal) as Number
@@ -112,7 +112,7 @@ class GridRenderer {
     }
 
     Scale yScale = isFlipped ? scales['x'] : scales['y']
-    if (yScale instanceof ScaleContinuous) {
+    if (yScale instanceof ScaleContinuous && shouldGenerateMinorBreaks(yScale)) {
       List<BigDecimal> minorBreaks = generateMinorBreaks(yScale as ScaleContinuous)
       minorBreaks.each { breakVal ->
         Number yPos = yScale.transform(breakVal) as Number
@@ -123,6 +123,15 @@ class GridRenderer {
         }
       }
     }
+  }
+
+  /**
+   * Check if a scale should have minor breaks generated.
+   * Date/time scales should not have minor breaks.
+   */
+  private boolean shouldGenerateMinorBreaks(Scale scale) {
+    String className = scale.getClass().simpleName
+    return !className.contains('Date') && !className.contains('Time')
   }
 
   /**

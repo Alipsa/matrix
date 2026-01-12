@@ -13,16 +13,19 @@ import se.alipsa.matrix.gg.theme.Theme
 @CompileStatic
 class FacetRenderer {
 
+  private static final String DEFAULT_STRIP_FILL = '#D9D9D9'
+  private static final String DEFAULT_STRIP_STROKE = 'none'
+
   /**
    * Render a horizontal facet strip label.
    */
-  void renderFacetStrip(G group, String label, int width, int height, Theme theme) {
+  void renderFacetStrip(G group, String label, Number width, Number height, Theme theme) {
     // Strip background
     group.addRect(width, height)
          .x(0)
          .y(0)
-         .fill(theme.stripBackground?.fill ?: '#E0E0E0')
-         .stroke(theme.stripBackground?.color ?: 'none')
+         .fill(resolveStripFill(theme))
+         .stroke(resolveStripStroke(theme))
 
     // Strip text
     group.addText(label)
@@ -36,13 +39,13 @@ class FacetRenderer {
   /**
    * Render a vertical (rotated) facet strip label.
    */
-  void renderFacetStripRotated(G group, String label, int width, int height, Theme theme) {
+  void renderFacetStripRotated(G group, String label, Number width, Number height, Theme theme) {
     // Strip background
     group.addRect(width, height)
          .x(0)
          .y(0)
-         .fill(theme.stripBackground?.fill ?: '#E0E0E0')
-         .stroke(theme.stripBackground?.color ?: 'none')
+         .fill(resolveStripFill(theme))
+         .stroke(resolveStripStroke(theme))
 
     // Strip text (rotated 90 degrees clockwise to match ggplot2)
     BigDecimal centerX = (width / 2).round()
@@ -59,7 +62,7 @@ class FacetRenderer {
   /**
    * Render axes for a facet panel.
    */
-  void renderFacetAxes(G plotArea, Map<String, Scale> scales, int width, int height,
+  void renderFacetAxes(G plotArea, Map<String, Scale> scales, Number width, Number height,
                        Theme theme, boolean showXLabels, boolean showYLabels) {
     G axesGroup = plotArea.addG()
     axesGroup.id('axes')
@@ -71,14 +74,14 @@ class FacetRenderer {
 
     // Y-axis
     if (scales['y'] != null) {
-      renderFacetYAxis(axesGroup, scales['y'], width, height, theme, showYLabels)
+      renderFacetYAxis(axesGroup, scales['y'], height, theme, showYLabels)
     }
   }
 
   /**
    * Render X-axis for a facet panel.
    */
-  private void renderFacetXAxis(G axesGroup, Scale scale, int width, int height, Theme theme, boolean showLabels) {
+  private void renderFacetXAxis(G axesGroup, Scale scale, Number width, Number height, Theme theme, boolean showLabels) {
     G xAxisGroup = axesGroup.addG()
     xAxisGroup.id('x-axis')
     xAxisGroup.transform("translate(0, $height)")
@@ -115,7 +118,7 @@ class FacetRenderer {
   /**
    * Render Y-axis for a facet panel.
    */
-  private void renderFacetYAxis(G axesGroup, Scale scale, int width, int height, Theme theme, boolean showLabels) {
+  private void renderFacetYAxis(G axesGroup, Scale scale, Number height, Theme theme, boolean showLabels) {
     G yAxisGroup = axesGroup.addG()
     yAxisGroup.id('y-axis')
 
@@ -146,5 +149,29 @@ class FacetRenderer {
                   .textAnchor('end')
       }
     }
+  }
+
+  /**
+   * Resolve strip fill color, falling back to default only when unset.
+   * Preserves explicit values like 'none'.
+   */
+  private String resolveStripFill(Theme theme) {
+    String fill = theme.stripBackground?.fill
+    if (fill == null) {
+      return DEFAULT_STRIP_FILL
+    }
+    return fill
+  }
+
+  /**
+   * Resolve strip stroke color, falling back to default only when unset.
+   * Preserves explicit values like 'none'.
+   */
+  private String resolveStripStroke(Theme theme) {
+    String stroke = theme.stripBackground?.color
+    if (stroke == null) {
+      return DEFAULT_STRIP_STROKE
+    }
+    return stroke
   }
 }

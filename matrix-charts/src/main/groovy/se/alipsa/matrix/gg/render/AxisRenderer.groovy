@@ -30,7 +30,7 @@ class AxisRenderer {
    */
   void renderAxes(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme, def coord) {
     if (coord instanceof CoordPolar) {
-      renderPolarAxes(plotArea, scales, coord as CoordPolar, theme, width, height)
+      renderPolarAxes(plotArea, scales, coord as CoordPolar, theme)
       return
     }
     G axesGroup = plotArea.addG()
@@ -45,13 +45,13 @@ class AxisRenderer {
       String yGuideType = context.parseGuideType(scales['y']?.guide)
 
       if (xGuideType == 'axis_stack') {
-        renderStackedYAxis(axesGroup, scales['x'], width, height, theme, true)  // x scale on left (vertical)
+        renderStackedYAxis(axesGroup, scales['x'], width, height, theme)  // x scale on left (vertical)
       } else {
         renderYAxis(axesGroup, scales['x'], width, height, theme)  // x scale on left (vertical)
       }
 
       if (yGuideType == 'axis_stack') {
-        renderStackedXAxis(axesGroup, scales['y'], width, height, theme, false)  // y scale on bottom (horizontal)
+        renderStackedXAxis(axesGroup, scales['y'], width, height, theme)  // y scale on bottom (horizontal)
       } else {
         renderXAxis(axesGroup, scales['y'], width, height, theme)  // y scale on bottom (horizontal)
       }
@@ -64,13 +64,13 @@ class AxisRenderer {
       String yGuideType = context.parseGuideType(scales['y']?.guide)
 
       if (xGuideType == 'axis_stack') {
-        renderStackedXAxis(axesGroup, scales['x'], width, height, theme, false)
+        renderStackedXAxis(axesGroup, scales['x'], width, height, theme)
       } else {
         renderXAxis(axesGroup, scales['x'], width, height, theme)
       }
 
       if (yGuideType == 'axis_stack') {
-        renderStackedYAxis(axesGroup, scales['y'], width, height, theme, false)
+        renderStackedYAxis(axesGroup, scales['y'], width, height, theme)
       } else {
         renderYAxis(axesGroup, scales['y'], width, height, theme)
       }
@@ -83,17 +83,15 @@ class AxisRenderer {
    * Render axes for polar coordinates.
    */
   @CompileStatic
-  private void renderPolarAxes(G plotArea, Map<String, Scale> scales, CoordPolar coord,
-                                Theme theme, int width, int height) {
+  private void renderPolarAxes(G plotArea, Map<String, Scale> scales, CoordPolar coord, Theme theme) {
     Scale thetaScale = coord.theta == 'x' ? scales['x'] : scales['y']
-    Scale radialScale = coord.theta == 'x' ? scales['y'] : scales['x']
 
     String guideType = context.parseGuideType(thetaScale?.guide)
 
     // Render theta axis if guide is specified
     if (guideType && guideType != 'none') {
       Map guideParams = context.extractGuideParams(thetaScale?.guide)
-      renderThetaAxis(plotArea, thetaScale, coord, theme, guideParams, width, height)
+      renderThetaAxis(plotArea, thetaScale, coord, theme, guideParams)
     }
 
     // Radial grid/axis rendering is handled by GridRenderer
@@ -103,11 +101,10 @@ class AxisRenderer {
    * Render theta (angular) axis for polar coordinates.
    */
   @CompileStatic
-  private void renderThetaAxis(G plotArea, Scale scale, CoordPolar coord, Theme theme,
-                                Map guideParams, int width, int height) {
+  private void renderThetaAxis(G plotArea, Scale scale, CoordPolar coord, Theme theme, Map guideParams) {
     // Get parameters
-    BigDecimal angle = (guideParams.angle ?: 0) as BigDecimal
-    boolean minorTicks = (guideParams['minor.ticks'] ?: guideParams.minorTicks ?: false) as boolean
+    BigDecimal labelAngle = (guideParams.angle ?: 0) as BigDecimal
+    boolean showMinorTicks = (guideParams['minor.ticks'] ?: guideParams.minorTicks ?: false) as boolean
     String cap = (guideParams.cap ?: 'none') as String
 
     // Calculate positioning
@@ -127,7 +124,7 @@ class AxisRenderer {
     G axisGroup = plotArea.addG()
     axisGroup.id('theta-axis')
 
-    // Render ticks and labels
+    // Render major ticks and labels
     breaks.eachWithIndex { breakVal, int i ->
       // Normalize break value to [0, 1]
       BigDecimal norm = context.normalizeFromScale(scale, breakVal)
@@ -144,7 +141,7 @@ class AxisRenderer {
         theta = coord.start - norm * 2 * Math.PI
       }
 
-      // Draw tick mark (radial line from circle edge outward)
+      // Draw major tick mark (radial line from circle edge outward)
       BigDecimal tickOuter = maxRadius + tickLength
       BigDecimal x1 = cx + maxRadius * theta.sin()
       BigDecimal y1 = cy - maxRadius * theta.cos()
@@ -163,13 +160,55 @@ class AxisRenderer {
         // Calculate text anchor based on angular position
         String textAnchor = calculatePolarTextAnchor(theta)
 
-        axisGroup.addText(labels[i])
+        def textElement = axisGroup.addText(labels[i])
                  .x(labelX)
                  .y(labelY)
                  .fontSize(theme.axisTextX?.size ?: 10)
                  .fill(theme.axisTextX?.color ?: 'black')
                  .textAnchor(textAnchor)
                  .dominantBaseline('middle')
+
+        // Apply label rotation if specified
+        if (labelAngle != 0) {
+          textElement.transform("rotate($labelAngle, $labelX, $labelY)")
+        }
+      }
+    }
+
+    // Render minor ticks if requested
+    if (showMinorTicks && breaks.size() >= 2) {
+      for (int i = 0; i < breaks.size() - 1; i++) {
+        // Calculate 4 minor ticks between each pair of major ticks
+        for (int j = 1; j <= 4; j++) {
+          BigDecimal minorNorm = context.normalizeFromScale(scale, breaks[i]) +
+                                  (context.normalizeFromScale(scale, breaks[i + 1]) -
+                                   context.normalizeFromScale(scale, breaks[i])) * j / 5
+
+          if (minorNorm == null) continue
+
+          // Adjust for reversed scales
+          if (context.isRangeReversed(scale)) {
+            minorNorm = 1.0 - minorNorm
+          }
+
+          // Calculate angle for minor tick
+          BigDecimal minorTheta = coord.start + minorNorm * 2 * Math.PI
+          if (!coord.clockwise) {
+            minorTheta = coord.start - minorNorm * 2 * Math.PI
+          }
+
+          // Draw shorter minor tick mark
+          BigDecimal minorTickLength = tickLength * 0.5
+          BigDecimal minorTickOuter = maxRadius + minorTickLength
+          BigDecimal mx1 = cx + maxRadius * minorTheta.sin()
+          BigDecimal my1 = cy - maxRadius * minorTheta.cos()
+          BigDecimal mx2 = cx + minorTickOuter * minorTheta.sin()
+          BigDecimal my2 = cy - minorTickOuter * minorTheta.cos()
+
+          axisGroup.addLine(mx1, my1, mx2, my2)
+                   .stroke(theme.axisLineX?.color ?: 'black')
+                   .strokeWidth((theme.axisLineX?.size ?: 0.5) * 0.75)
+        }
       }
     }
 
@@ -248,7 +287,7 @@ class AxisRenderer {
   /**
    * Render the X axis.
    */
-  private void renderXAxis(G axesGroup, Scale scale, int width, int height, Theme theme, int offsetY = 0, Guide overrideGuide = null) {
+  private void renderXAxis(G axesGroup, Scale scale, int width, int height, Theme theme, Number offsetY = 0, Guide overrideGuide = null) {
     if (scale == null) return
 
     // Use override guide if provided, otherwise use scale's guide
@@ -272,7 +311,7 @@ class AxisRenderer {
     }
 
     boolean isTop = (position == 'top')
-    int yTranslate = isTop ? -offsetY : height + offsetY
+    def yTranslate = isTop ? -(offsetY as BigDecimal) : height + offsetY
 
     G xAxisGroup = axesGroup.addG()
     xAxisGroup.id(isTop ? 'x-axis-top' : 'x-axis')
@@ -339,7 +378,7 @@ class AxisRenderer {
   /**
    * Render the Y axis.
    */
-  private void renderYAxis(G axesGroup, Scale scale, int width, int height, Theme theme, int offsetX = 0, Guide overrideGuide = null) {
+  private void renderYAxis(G axesGroup, Scale scale, int width, int height, Theme theme, Number offsetX = 0, Guide overrideGuide = null) {
     if (scale == null) return
 
     // Use override guide if provided, otherwise use scale's guide
@@ -363,7 +402,7 @@ class AxisRenderer {
     }
 
     boolean isRight = (position == 'right')
-    int xTranslate = isRight ? width + offsetX : -offsetX
+    def xTranslate = isRight ? width + offsetX : -(offsetX as BigDecimal)
 
     G yAxisGroup = axesGroup.addG()
     yAxisGroup.id(isRight ? 'y-axis-right' : 'y-axis')
@@ -441,7 +480,7 @@ class AxisRenderer {
    * Render stacked X axes.
    */
   @CompileStatic
-  private void renderStackedXAxis(G axesGroup, Scale scale, int width, int height, Theme theme, boolean isTop) {
+  private void renderStackedXAxis(G axesGroup, Scale scale, int width, int height, Theme theme) {
     Map params = context.extractGuideParams(scale?.guide)
 
     // Extract stacked guides
@@ -450,15 +489,15 @@ class AxisRenderer {
     List<Object> allGuides = [first] + additional
 
     // Get spacing parameter
-    int spacing = (params.spacing ?: 5) as int
+    Number spacing = (params.spacing ?: 5) as Number
 
     // Calculate offset increment
-    int tickLength = (theme.axisTickLength ?: 5) as int
-    int labelHeight = (theme.axisTextX?.size ?: 10) as int
-    int offsetIncrement = tickLength + labelHeight + spacing + 5  // +5 for padding
+    Number tickLength = (theme.axisTickLength ?: 5) as Number
+    Number labelHeight = (theme.axisTextX?.size ?: 10) as Number
+    Number offsetIncrement = tickLength + labelHeight + spacing + 5  // +5 for padding
 
     // Render each stacked guide
-    int currentOffset = 0
+    Number currentOffset = 0
     allGuides.each { guideSpec ->
       // Parse guide specification
       Guide childGuide
@@ -482,7 +521,7 @@ class AxisRenderer {
    * Render stacked Y axes.
    */
   @CompileStatic
-  private void renderStackedYAxis(G axesGroup, Scale scale, int width, int height, Theme theme, boolean isLeft) {
+  private void renderStackedYAxis(G axesGroup, Scale scale, int width, int height, Theme theme) {
     Map params = context.extractGuideParams(scale?.guide)
 
     // Extract stacked guides
@@ -491,15 +530,15 @@ class AxisRenderer {
     List<Object> allGuides = [first] + additional
 
     // Get spacing parameter
-    int spacing = (params.spacing ?: 5) as int
+    Number spacing = (params.spacing ?: 5) as Number
 
     // Calculate offset increment
-    int tickLength = (theme.axisTickLength ?: 5) as int
-    int labelWidth = 40  // Approximate max label width - could be calculated more precisely
-    int offsetIncrement = tickLength + labelWidth + spacing
+    Number tickLength = (theme.axisTickLength ?: 5) as Number
+    Number labelWidth = 40  // Approximate max label width - could be calculated more precisely
+    Number offsetIncrement = tickLength + labelWidth + spacing
 
     // Render each stacked guide
-    int currentOffset = 0
+    Number currentOffset = 0
     allGuides.each { guideSpec ->
       // Parse guide specification
       Guide childGuide
