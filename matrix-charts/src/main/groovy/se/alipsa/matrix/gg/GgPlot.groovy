@@ -1244,11 +1244,11 @@ class GgPlot {
   }
 
   /**
-   * @param theta: variable to map angle to (x or y)
-   * @param start: Offset of starting point from 12 o'clock in radians.
+   * @param theta : variable to map angle to (x or y)
+   * @param start : Offset of starting point from 12 o'clock in radians.
    * Offset is applied clockwise or anticlockwise depending on value of direction.
-   * @param direction: 1, clockwise; -1, anticlockwise
-   * @param clip: Should drawing be clipped to the extent of the plot panel? A setting of "on"
+   * @param direction : 1, clockwise; -1, anticlockwise
+   * @param clip : Should drawing be clipped to the extent of the plot panel? A setting of "on"
    * (the default) means yes, and a setting of "off" means no.
    */
   static CoordPolar coord_polar(String theta = "x", BigDecimal start = 0, Integer direction = 1, String clip = "on") {
@@ -2054,11 +2054,11 @@ class GgPlot {
    */
   static GeomSmooth geom_lm(Map params) {
     Map defaults = [
-      se: false,
-      method: 'lm',
-      colour: 'steelblue',
-      alpha: 0.5,
-      linewidth: 2
+        se       : false,
+        method   : 'lm',
+        colour   : 'steelblue',
+        alpha    : 0.5,
+        linewidth: 2
     ]
     // Only add default formula if degree is not explicitly provided
     if (!params.containsKey('degree')) {
