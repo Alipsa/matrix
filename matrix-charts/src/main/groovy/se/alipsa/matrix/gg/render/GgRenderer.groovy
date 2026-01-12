@@ -2712,7 +2712,7 @@ class GgRenderer {
     } else {
       // Proportional to data range
       BigDecimal minVal = displayBreaks[0] as BigDecimal
-      BigDecimal maxVal = displayBreaks[-1] as BigDecimal
+      BigDecimal maxVal = displayBreaks.last() as BigDecimal
       BigDecimal totalRange = maxVal - minVal
 
       int accumulatedHeight = 0
