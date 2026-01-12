@@ -1665,13 +1665,41 @@ class GgRenderer {
 
     if (isFlipped) {
       // For flipped coords: x data appears on left axis, y data appears on bottom axis
-      renderYAxis(axesGroup, scales['x'], width, height, theme)  // x scale on left (vertical)
-      renderXAxis(axesGroup, scales['y'], width, height, theme)  // y scale on bottom (horizontal)
+      // Check for stacked axes
+      String xGuideType = parseGuideType(scales['x']?.guide)
+      String yGuideType = parseGuideType(scales['y']?.guide)
+
+      if (xGuideType == 'axis_stack') {
+        renderStackedYAxis(axesGroup, scales['x'], width, height, theme, true)  // x scale on left (vertical)
+      } else {
+        renderYAxis(axesGroup, scales['x'], width, height, theme)  // x scale on left (vertical)
+      }
+
+      if (yGuideType == 'axis_stack') {
+        renderStackedXAxis(axesGroup, scales['y'], width, height, theme, false)  // y scale on bottom (horizontal)
+      } else {
+        renderXAxis(axesGroup, scales['y'], width, height, theme)  // y scale on bottom (horizontal)
+      }
+
       renderSecondaryAxes(axesGroup, scales, width, height, theme, true)
     } else {
       // Normal: x on bottom, y on left
-      renderXAxis(axesGroup, scales['x'], width, height, theme)
-      renderYAxis(axesGroup, scales['y'], width, height, theme)
+      // Check for stacked axes
+      String xGuideType = parseGuideType(scales['x']?.guide)
+      String yGuideType = parseGuideType(scales['y']?.guide)
+
+      if (xGuideType == 'axis_stack') {
+        renderStackedXAxis(axesGroup, scales['x'], width, height, theme, false)
+      } else {
+        renderXAxis(axesGroup, scales['x'], width, height, theme)
+      }
+
+      if (yGuideType == 'axis_stack') {
+        renderStackedYAxis(axesGroup, scales['y'], width, height, theme, false)
+      } else {
+        renderYAxis(axesGroup, scales['y'], width, height, theme)
+      }
+
       renderSecondaryAxes(axesGroup, scales, width, height, theme, false)
     }
   }
@@ -1869,14 +1897,20 @@ class GgRenderer {
 
   /**
    * Render the X axis.
+   *
+   * @param offsetY Vertical offset for stacked axes (default 0)
+   * @param overrideGuide Optional guide to use instead of scale.guide (for stacked axes)
    */
-  private void renderXAxis(G axesGroup, Scale scale, int width, int height, Theme theme) {
+  private void renderXAxis(G axesGroup, Scale scale, int width, int height, Theme theme, int offsetY = 0, Guide overrideGuide = null) {
     if (scale == null) return
 
+    // Use override guide if provided, otherwise use scale's guide
+    def effectiveGuide = overrideGuide ?: scale?.guide
+
     // Check for log ticks guide
-    String guideType = parseGuideType(scale?.guide)
+    String guideType = parseGuideType(effectiveGuide)
     if (guideType == 'axis_logticks') {
-      Map guideParams = extractGuideParams(scale?.guide)
+      Map guideParams = extractGuideParams(effectiveGuide)
       renderXAxisLogTicks(axesGroup, scale, width, height, theme, guideParams)
       return
     }
@@ -1891,7 +1925,7 @@ class GgRenderer {
     }
 
     boolean isTop = (position == 'top')
-    int yTranslate = isTop ? 0 : height
+    int yTranslate = isTop ? -offsetY : height + offsetY
 
     G xAxisGroup = axesGroup.addG()
     xAxisGroup.id(isTop ? 'x-axis-top' : 'x-axis')
@@ -1903,7 +1937,7 @@ class GgRenderer {
               .strokeWidth(theme.axisLineX?.size ?: 1)
 
     // Extract guide parameters
-    Map guideParams = extractGuideParams(scale?.guide)
+    Map guideParams = extractGuideParams(effectiveGuide)
     Number angle = guideParams.angle as Number ?: 0
     boolean checkOverlap = (guideParams['check.overlap'] ?: guideParams.checkOverlap) as Boolean ?: false
     // Calculate minimum spacing based on font size if not specified
@@ -1957,14 +1991,20 @@ class GgRenderer {
 
   /**
    * Render the Y axis.
+   *
+   * @param offsetX Horizontal offset for stacked axes (default 0)
+   * @param overrideGuide Optional guide to use instead of scale.guide (for stacked axes)
    */
-  private void renderYAxis(G axesGroup, Scale scale, int width, int height, Theme theme) {
+  private void renderYAxis(G axesGroup, Scale scale, int width, int height, Theme theme, int offsetX = 0, Guide overrideGuide = null) {
     if (scale == null) return
 
+    // Use override guide if provided, otherwise use scale's guide
+    def effectiveGuide = overrideGuide ?: scale?.guide
+
     // Check for log ticks guide
-    String guideType = parseGuideType(scale?.guide)
+    String guideType = parseGuideType(effectiveGuide)
     if (guideType == 'axis_logticks') {
-      Map guideParams = extractGuideParams(scale?.guide)
+      Map guideParams = extractGuideParams(effectiveGuide)
       renderYAxisLogTicks(axesGroup, scale, width, height, theme, guideParams)
       return
     }
@@ -1979,12 +2019,11 @@ class GgRenderer {
     }
 
     boolean isRight = (position == 'right')
+    int xTranslate = isRight ? width + offsetX : -offsetX
 
     G yAxisGroup = axesGroup.addG()
     yAxisGroup.id(isRight ? 'y-axis-right' : 'y-axis')
-    if (isRight) {
-      yAxisGroup.transform("translate($width, 0)")
-    }
+    yAxisGroup.transform("translate($xTranslate, 0)")
 
     // Axis line
     yAxisGroup.addLine(0, 0, 0, height)
@@ -1992,7 +2031,7 @@ class GgRenderer {
               .strokeWidth(theme.axisLineY?.size ?: 1)
 
     // Extract guide parameters
-    Map guideParams = extractGuideParams(scale?.guide)
+    Map guideParams = extractGuideParams(effectiveGuide)
     Number angle = guideParams.angle as Number ?: 0
     boolean checkOverlap = (guideParams['check.overlap'] ?: guideParams.checkOverlap) as Boolean ?: false
     // Calculate minimum spacing based on font size if not specified
@@ -2051,6 +2090,102 @@ class GgRenderer {
           text.textAnchor('end')
         }
       }
+    }
+  }
+
+  /**
+   * Render stacked X axes.
+   *
+   * @param axesGroup The SVG group to add axes to
+   * @param scale The scale with axis_stack guide
+   * @param width Plot area width
+   * @param height Plot area height
+   * @param theme The theme
+   * @param isTop Whether this is a top axis
+   */
+  @CompileStatic
+  private void renderStackedXAxis(G axesGroup, Scale scale, int width, int height, Theme theme, boolean isTop) {
+    Map params = extractGuideParams(scale?.guide)
+
+    // Extract stacked guides
+    Object first = params.first
+    List additional = params.additional as List ?: []
+    List<Object> allGuides = [first] + additional
+
+    // Get spacing parameter
+    int spacing = (params.spacing ?: 5) as int
+
+    // Calculate offset increment
+    int tickLength = (theme.axisTickLength ?: 5) as int
+    int labelHeight = (theme.axisTextX?.size ?: 10) as int
+    int offsetIncrement = tickLength + labelHeight + spacing + 5  // +5 for padding
+
+    // Render each stacked guide
+    int currentOffset = 0
+    allGuides.each { guideSpec ->
+      // Parse guide specification
+      Guide childGuide
+      if (guideSpec instanceof Guide) {
+        childGuide = guideSpec
+      } else if (guideSpec instanceof String) {
+        childGuide = new Guide(guideSpec, [:])
+      } else {
+        childGuide = new Guide('axis', [:])
+      }
+
+      // Render axis with current offset and override guide
+      renderXAxis(axesGroup, scale, width, height, theme, currentOffset, childGuide)
+
+      // Increment offset for next guide
+      currentOffset += offsetIncrement
+    }
+  }
+
+  /**
+   * Render stacked Y axes.
+   *
+   * @param axesGroup The SVG group to add axes to
+   * @param scale The scale with axis_stack guide
+   * @param width Plot area width
+   * @param height Plot area height
+   * @param theme The theme
+   * @param isLeft Whether this is a left axis
+   */
+  @CompileStatic
+  private void renderStackedYAxis(G axesGroup, Scale scale, int width, int height, Theme theme, boolean isLeft) {
+    Map params = extractGuideParams(scale?.guide)
+
+    // Extract stacked guides
+    Object first = params.first
+    List additional = params.additional as List ?: []
+    List<Object> allGuides = [first] + additional
+
+    // Get spacing parameter
+    int spacing = (params.spacing ?: 5) as int
+
+    // Calculate offset increment
+    int tickLength = (theme.axisTickLength ?: 5) as int
+    int labelWidth = 40  // Approximate max label width - could be calculated more precisely
+    int offsetIncrement = tickLength + labelWidth + spacing
+
+    // Render each stacked guide
+    int currentOffset = 0
+    allGuides.each { guideSpec ->
+      // Parse guide specification
+      Guide childGuide
+      if (guideSpec instanceof Guide) {
+        childGuide = guideSpec
+      } else if (guideSpec instanceof String) {
+        childGuide = new Guide(guideSpec, [:])
+      } else {
+        childGuide = new Guide('axis', [:])
+      }
+
+      // Render axis with current offset and override guide
+      renderYAxis(axesGroup, scale, width, height, theme, currentOffset, childGuide)
+
+      // Increment offset for next guide
+      currentOffset += offsetIncrement
     }
   }
 
