@@ -334,12 +334,11 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 
 ### 4.9 Miscellaneous
 
-- 4.9.1 [ ] `qplot()` / `quickplot()` - Quick plotting function
-- 4.9.2 [ ] `annotation_raster()` - Raster image annotations
-- 4.9.3 [ ] `coord_radial()` - Modern polar alternative
-- 4.9.4 [ ] `geom_function()` - Draw arbitrary function
-- 4.9.5 [ ] `theme_test()` - Testing theme
-- 4.9.6 [ ] `scale_colour_fermenter()` / `scale_fill_fermenter()` - Binned ColorBrewer
+- 4.9.1 [ ] `annotation_raster()` - Raster image annotations
+- 4.9.2 [ ] `coord_radial()` - Modern polar alternative
+- 4.9.3 [ ] `geom_function()` - Draw arbitrary function
+- 4.9.4 [ ] `theme_test()` - Testing theme
+- 4.9.5 [ ] `scale_colour_fermenter()` / `scale_fill_fermenter()` - Binned ColorBrewer
 
 ---
 

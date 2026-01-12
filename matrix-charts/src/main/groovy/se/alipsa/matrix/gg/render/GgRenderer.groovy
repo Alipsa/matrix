@@ -1655,6 +1655,7 @@ class GgRenderer {
    */
   private void renderAxes(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme, Coord coord) {
     if (coord instanceof CoordPolar) {
+      renderPolarAxes(plotArea, scales, coord as CoordPolar, theme, width, height)
       return
     }
     G axesGroup = plotArea.addG()
@@ -1672,6 +1673,159 @@ class GgRenderer {
       renderXAxis(axesGroup, scales['x'], width, height, theme)
       renderYAxis(axesGroup, scales['y'], width, height, theme)
       renderSecondaryAxes(axesGroup, scales, width, height, theme, false)
+    }
+  }
+
+  /**
+   * Render axes for polar coordinates.
+   *
+   * @param plotArea The SVG group to add axes to
+   * @param scales The map of scales
+   * @param coord The polar coordinate system
+   * @param theme The theme
+   * @param width Plot area width
+   * @param height Plot area height
+   */
+  @CompileStatic
+  private void renderPolarAxes(G plotArea, Map<String, Scale> scales, CoordPolar coord,
+                                Theme theme, int width, int height) {
+    Scale thetaScale = coord.theta == 'x' ? scales['x'] : scales['y']
+    Scale radialScale = coord.theta == 'x' ? scales['y'] : scales['x']
+
+    String guideType = parseGuideType(thetaScale?.guide)
+
+    // Render theta axis if guide is specified
+    if (guideType && guideType != 'none') {
+      Map guideParams = extractGuideParams(thetaScale?.guide)
+      renderThetaAxis(plotArea, thetaScale, coord, theme, guideParams, width, height)
+    }
+
+    // Radial grid/axis rendering is handled by renderPolarGridLines
+  }
+
+  /**
+   * Render theta (angular) axis for polar coordinates.
+   *
+   * @param plotArea The SVG group to add axis to
+   * @param scale The theta scale
+   * @param coord The polar coordinate system
+   * @param theme The theme
+   * @param guideParams Parameters from the guide specification
+   * @param width Plot area width
+   * @param height Plot area height
+   */
+  @CompileStatic
+  private void renderThetaAxis(G plotArea, Scale scale, CoordPolar coord, Theme theme,
+                                Map guideParams, int width, int height) {
+    // Get parameters
+    BigDecimal angle = (guideParams.angle ?: 0) as BigDecimal
+    boolean minorTicks = (guideParams['minor.ticks'] ?: guideParams.minorTicks ?: false) as boolean
+    String cap = (guideParams.cap ?: 'none') as String
+
+    // Calculate positioning
+    BigDecimal maxRadius = coord.getMaxRadius()
+    List<BigDecimal> center = coord.getCenter()
+    BigDecimal cx = center[0]
+    BigDecimal cy = center[1]
+    BigDecimal tickLength = (theme.axisTickLength ?: 5) as BigDecimal
+    BigDecimal labelOffset = tickLength + 5
+    BigDecimal labelRadius = maxRadius + labelOffset
+
+    // Get breaks and labels from scale
+    List breaks = scale.getComputedBreaks()
+    List<String> labels = scale.getComputedLabels()
+
+    // Create axis group
+    G axisGroup = plotArea.addG()
+    axisGroup.id('theta-axis')
+
+    // Render ticks and labels
+    breaks.eachWithIndex { breakVal, int i ->
+      // Normalize break value to [0, 1]
+      BigDecimal norm = normalizeFromScale(scale, breakVal)
+      if (norm == null) return
+
+      // Adjust for reversed scales
+      if (isRangeReversed(scale)) {
+        norm = 1.0 - norm
+      }
+
+      // Calculate angle, accounting for start offset and direction
+      BigDecimal theta = coord.start + norm * 2 * Math.PI
+      if (!coord.clockwise) {
+        theta = coord.start - norm * 2 * Math.PI
+      }
+
+      // Draw tick mark (radial line from circle edge outward)
+      BigDecimal tickOuter = maxRadius + tickLength
+      BigDecimal x1 = cx + maxRadius * theta.sin()
+      BigDecimal y1 = cy - maxRadius * theta.cos()
+      BigDecimal x2 = cx + tickOuter * theta.sin()
+      BigDecimal y2 = cy - tickOuter * theta.cos()
+
+      axisGroup.addLine(x1, y1, x2, y2)
+               .stroke(theme.axisLineX?.color ?: 'black')
+               .strokeWidth(theme.axisLineX?.size ?: 0.5)
+
+      // Add label
+      if (i < labels.size()) {
+        BigDecimal labelX = cx + labelRadius * theta.sin()
+        BigDecimal labelY = cy - labelRadius * theta.cos()
+
+        // Calculate text anchor based on angular position
+        String textAnchor = calculatePolarTextAnchor(theta)
+
+        axisGroup.addText(labels[i])
+                 .x(labelX)
+                 .y(labelY)
+                 .fontSize(theme.axisTextX?.size ?: 10)
+                 .fill(theme.axisTextX?.color ?: 'black')
+                 .textAnchor(textAnchor)
+                 .dominantBaseline('middle')
+      }
+    }
+
+    // Optionally draw outer circle (axis line)
+    if (cap != 'none') {
+      axisGroup.addCircle()
+               .cx(cx)
+               .cy(cy)
+               .r(maxRadius)
+               .fill('none')
+               .stroke(theme.axisLineX?.color ?: 'black')
+               .strokeWidth(theme.axisLineX?.size ?: 0.5)
+    }
+  }
+
+  /**
+   * Calculate text anchor for polar axis labels based on angular position.
+   *
+   * @param theta Angle in radians
+   * @return Text anchor value ('start', 'middle', or 'end')
+   */
+  @CompileStatic
+  private String calculatePolarTextAnchor(BigDecimal theta) {
+    // Normalize angle to [0, 2π)
+    BigDecimal normalizedTheta = theta % (2 * Math.PI)
+    if (normalizedTheta < 0) {
+      normalizedTheta += 2 * Math.PI
+    }
+
+    // Divide into sectors for text anchoring
+    // Top (around 12 o'clock): middle
+    // Right (3 o'clock): start
+    // Bottom (6 o'clock): middle
+    // Left (9 o'clock): end
+    BigDecimal piOver4 = Math.PI / 4
+
+    if (normalizedTheta < piOver4 || normalizedTheta >= 7 * piOver4) {
+      return 'middle'  // Top
+    } else if (normalizedTheta < 3 * piOver4) {
+      return 'start'   // Right
+    } else if (normalizedTheta < 5 * piOver4) {
+      return 'middle'  // Bottom
+    } else {
+      return 'end'     // Left
     }
   }
 
