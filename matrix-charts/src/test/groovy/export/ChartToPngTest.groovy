@@ -30,12 +30,12 @@ class ChartToPngTest {
     Path svgPath = buildDir.resolve("testExportToPng.svg")
     File svgFile = svgPath.toFile()
     write(chart, svgFile)
-    println("Exported svg to ${svgFile.absolutePath}")
+    //println("Exported svg to ${svgFile.absolutePath}")
     assertTrue(svgFile.exists())
     Path filePath = buildDir.resolve("testExportToPng.png")
     File file = filePath.toFile()
     ChartToPng.export(chart, file)
-    println("Exported png to ${file.absolutePath}")
+    //println("Exported png to ${file.absolutePath}")
     
     // Verify file exists
     assertTrue(file.exists())

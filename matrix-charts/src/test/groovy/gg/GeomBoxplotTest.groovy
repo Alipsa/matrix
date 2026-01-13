@@ -134,6 +134,7 @@ class GeomBoxplotTest {
     def aes = new Aes(x: 'group', y: 'value')
     def boxplotData = GgStat.boxplot(data, aes)
 
+    /*
     println "Boxplot data:"
     println "Columns: ${boxplotData.columnNames()}"
     boxplotData.each { row ->
@@ -141,7 +142,7 @@ class GeomBoxplotTest {
               "middle=${row['middle']}, upper=${row['upper']}, ymax=${row['ymax']}, " +
               "outliers=${row['outliers']}"
     }
-
+    */
     assertTrue(boxplotData.columnNames().contains('x'), "Should have x column")
     assertTrue(boxplotData.columnNames().contains('ymin'), "Should have ymin column")
     assertTrue(boxplotData.columnNames().contains('lower'), "Should have lower column")
@@ -190,10 +191,11 @@ class GeomBoxplotTest {
     def aes = new Aes(x: 'category', y: 'measurement')
     def boxplotData = GgStat.boxplot(data, aes)
 
+    /*
     println "Multiple groups boxplot:"
     boxplotData.each { row ->
       println "  ${row['x']}: median=${row['middle']}"
-    }
+    }*/
 
     assertEquals(3, boxplotData.rowCount(), "Should have 3 groups")
     assertTrue(boxplotData.columnNames().contains('relvarwidth'), "Should have relvarwidth column")
@@ -239,7 +241,7 @@ class GeomBoxplotTest {
     def boxplotData = GgStat.boxplot(data, aes)
 
     def outliers = boxplotData.row(0)['outliers']
-    println "Outliers found: ${outliers}"
+    //println "Outliers found: ${outliers}"
 
     assertNotNull(outliers, "Should have outliers")
     assertTrue(outliers instanceof List, "Outliers should be a list")

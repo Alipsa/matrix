@@ -67,11 +67,11 @@ class GeomHistogramTest {
     def aes = new Aes(x: 'value')
     def binned = GgStat.bin(data, aes, [bins: 5])
 
-    println "Binned data:"
-    println "Columns: ${binned.columnNames()}"
-    binned.each { row ->
-      println "  x=${row['x']}, xmin=${row['xmin']}, xmax=${row['xmax']}, count=${row['count']}"
-    }
+    //println "Binned data:"
+    //println "Columns: ${binned.columnNames()}"
+    //binned.each { row ->
+    //  println "  x=${row['x']}, xmin=${row['xmin']}, xmax=${row['xmax']}, count=${row['count']}"
+    //}
 
     assertTrue(binned.columnNames().contains('x'), "Should have x column")
     assertTrue(binned.columnNames().contains('xmin'), "Should have xmin column")
@@ -95,10 +95,10 @@ class GeomHistogramTest {
     def aes = new Aes(x: 'value')
     def binned = GgStat.bin(data, aes, [binwidth: 2])
 
-    println "Binned with binwidth=2:"
+    /*println "Binned with binwidth=2:"
     binned.each { row ->
       println "  xmin=${row['xmin']}, xmax=${row['xmax']}, count=${row['count']}"
-    }
+    }*/
 
     // With binwidth=2 over range 0-9, we expect 5 bins
     assertEquals(5, binned.rowCount(), "Should have 5 bins with binwidth=2")

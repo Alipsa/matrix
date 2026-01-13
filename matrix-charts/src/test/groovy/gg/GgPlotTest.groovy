@@ -188,7 +188,7 @@ class GgPlotTest {
         File outputFile = new File('build/iris_scatter.svg')
         write(svg, outputFile)
         assertTrue(outputFile.exists(), "Output file should exist")
-        println("Wrote scatter plot to ${outputFile.absolutePath}")
+        //println("Wrote scatter plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -217,7 +217,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/mpg_scatter_smooth.svg')
         write(svg, outputFile)
-        println("Wrote mpg scatter+smooth plot to ${outputFile.absolutePath}")
+        //println("Wrote mpg scatter+smooth plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -244,7 +244,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/mtcars_scatter.svg')
         write(svg, outputFile)
-        println("Wrote mtcars scatter plot to ${outputFile.absolutePath}")
+        //println("Wrote mtcars scatter plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -271,7 +271,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/mpg_geom_lm.svg')
         write(svg, outputFile)
-        println("Wrote mpg geom_lm plot to ${outputFile.absolutePath}")
+        //println("Wrote mpg geom_lm plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -297,7 +297,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/mpg_polynomial.svg')
         write(svg, outputFile)
-        println("Wrote mpg polynomial plot to ${outputFile.absolutePath}")
+        //println("Wrote mpg polynomial plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -321,7 +321,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/mpg_expression.svg')
         write(svg, outputFile)
-        println("Wrote mpg expression plot to ${outputFile.absolutePath}")
+        //println("Wrote mpg expression plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -346,7 +346,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/mpg_expr_lm.svg')
         write(svg, outputFile)
-        println("Wrote mpg expression+lm plot to ${outputFile.absolutePath}")
+        //println("Wrote mpg expression+lm plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -372,7 +372,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/mpg_expr_polynomial.svg')
         write(svg, outputFile)
-        println("Wrote mpg expression+polynomial plot to ${outputFile.absolutePath}")
+        //println("Wrote mpg expression+polynomial plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -395,7 +395,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/function_sine.svg')
         write(svg, outputFile)
-        println("Wrote sine function plot to ${outputFile.absolutePath}")
+        //println("Wrote sine function plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -422,7 +422,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/mpg_degree_param.svg')
         write(svg, outputFile)
-        println("Wrote mpg degree parameter plot to ${outputFile.absolutePath}")
+        //println("Wrote mpg degree parameter plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -447,7 +447,7 @@ class GgPlotTest {
         // Write for inspection
         File outputFile = new File('build/mpg_degree_expr.svg')
         write(svg, outputFile)
-        println("Wrote mpg degree+expression plot to ${outputFile.absolutePath}")
+        //println("Wrote mpg degree+expression plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -470,7 +470,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_geom_hex.svg')
         write(svg, outputFile)
-        println("Wrote hexagonal binning plot to ${outputFile.absolutePath}")
+        //println("Wrote hexagonal binning plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -488,7 +488,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_geom_dotplot.svg')
         write(svg, outputFile)
-        println("Wrote dotplot to ${outputFile.absolutePath}")
+        //println("Wrote dotplot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -506,7 +506,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_geom_density_2d.svg')
         write(svg, outputFile)
-        println("Wrote 2D density contour plot to ${outputFile.absolutePath}")
+        //println("Wrote 2D density contour plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -524,7 +524,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_geom_density_2d_filled.svg')
         write(svg, outputFile)
-        println("Wrote filled 2D density contour plot to ${outputFile.absolutePath}")
+        //println("Wrote filled 2D density contour plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -544,7 +544,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_ellipse.svg')
         write(svg, outputFile)
-        println("Wrote stat_ellipse plot to ${outputFile.absolutePath}")
+        //println("Wrote stat_ellipse plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -569,7 +569,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_ellipse_levels.svg')
         write(svg, outputFile)
-        println("Wrote multi-level ellipse plot to ${outputFile.absolutePath}")
+        //println("Wrote multi-level ellipse plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -584,7 +584,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_summary_bin.svg')
         write(svg, outputFile)
-        println("Wrote stat_summary_bin plot to ${outputFile.absolutePath}")
+        //println("Wrote stat_summary_bin plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -615,7 +615,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_unique.svg')
         write(svg, outputFile)
-        println("Wrote stat_unique plot to ${outputFile.absolutePath}")
+        //println("Wrote stat_unique plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -635,7 +635,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_function.svg')
         write(svg, outputFile)
-        println("Wrote stat_function plot to ${outputFile.absolutePath}")
+        //println("Wrote stat_function plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -667,7 +667,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_coord_trans_log10.svg')
         write(svg, outputFile)
-        println("Wrote coord_trans log10 plot to ${outputFile.absolutePath}")
+        //println("Wrote coord_trans log10 plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -699,7 +699,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_coord_trans_sqrt.svg')
         write(svg, outputFile)
-        println("Wrote coord_trans sqrt plot to ${outputFile.absolutePath}")
+        //println("Wrote coord_trans sqrt plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -729,7 +729,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_coord_trans_both.svg')
         write(svg, outputFile)
-        println("Wrote coord_trans both axes plot to ${outputFile.absolutePath}")
+        //println("Wrote coord_trans both axes plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -757,7 +757,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_coord_trans_custom.svg')
         write(svg, outputFile)
-        println("Wrote coord_trans custom plot to ${outputFile.absolutePath}")
+        //println("Wrote coord_trans custom plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -773,7 +773,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_coord_trans_reverse.svg')
         write(svg, outputFile)
-        println("Wrote coord_trans reverse plot to ${outputFile.absolutePath}")
+        //println("Wrote coord_trans reverse plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -804,7 +804,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_coord_trans_log.svg')
         write(svg, outputFile)
-        println("Wrote coord_trans log plot to ${outputFile.absolutePath}")
+        //println("Wrote coord_trans log plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -836,7 +836,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_coord_trans_power.svg')
         write(svg, outputFile)
-        println("Wrote coord_trans power plot to ${outputFile.absolutePath}")
+        //println("Wrote coord_trans power plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -868,7 +868,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_coord_trans_reciprocal.svg')
         write(svg, outputFile)
-        println("Wrote coord_trans reciprocal plot to ${outputFile.absolutePath}")
+        //println("Wrote coord_trans reciprocal plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -900,7 +900,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_coord_trans_asn.svg')
         write(svg, outputFile)
-        println("Wrote coord_trans asn plot to ${outputFile.absolutePath}")
+        //println("Wrote coord_trans asn plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -925,7 +925,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_bin_hex.svg')
         write(svg, outputFile)
-        println("Wrote stat_bin_hex plot to ${outputFile.absolutePath}")
+        //println("Wrote stat_bin_hex plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -940,7 +940,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_bin_hex_mtcars.svg')
         write(svg, outputFile)
-        println("Wrote stat_bin_hex mtcars plot to ${outputFile.absolutePath}")
+        //println("Wrote stat_bin_hex mtcars plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -965,7 +965,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_summary_hex.svg')
         write(svg, outputFile)
-        println("Wrote stat_summary_hex plot to ${outputFile.absolutePath}")
+        //println("Wrote stat_summary_hex plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -980,7 +980,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_summary_hex_mtcars.svg')
         write(svg, outputFile)
-        println("Wrote stat_summary_hex mtcars plot to ${outputFile.absolutePath}")
+        //println("Wrote stat_summary_hex mtcars plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -1002,7 +1002,7 @@ class GgPlotTest {
 
         File outputFile = new File('build/test_stat_summary_hex_median.svg')
         write(svg, outputFile)
-        println("Wrote stat_summary_hex median plot to ${outputFile.absolutePath}")
+        //println("Wrote stat_summary_hex median plot to ${outputFile.absolutePath}")
     }
 
 }

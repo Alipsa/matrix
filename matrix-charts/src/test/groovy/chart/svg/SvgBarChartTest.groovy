@@ -61,6 +61,6 @@ class SvgBarChartTest {
     SvgBarChart svgBarChart = new SvgBarChart(barChart, 640, 480)
     File file = new File("build/svgBarChart.svg")
     file.write(svgBarChart.asString(true))
-    println "wrote $file.absolutePath"
+    //println "wrote $file.absolutePath"
   }
 }
