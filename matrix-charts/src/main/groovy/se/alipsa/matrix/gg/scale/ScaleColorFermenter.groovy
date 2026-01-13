@@ -251,7 +251,7 @@ class ScaleColorFermenter extends ScaleContinuous {
    *
    * Uses half-open intervals [lower, upper) for all bins except the last.
    * The last bin uses a closed interval to ensure values exactly equal to
-   * the maximum boundary are included (handled by the check on line 254-256).
+   * the maximum boundary are included (handled by the check on line 260-262).
    *
    * This matches ggplot2's binning behavior for scale_*_fermenter().
    */
