@@ -117,7 +117,7 @@ class GgRenderer {
     int svgHeight = chart.height
 
     if (coord instanceof CoordFixed) {
-      Map<String, List> aestheticData = collectAestheticData(chart)
+      Map<String, List> aestheticData = collectAestheticData(chart, coord)
       if (aestheticData.x && aestheticData.y) {
         BigDecimal[] adjusted = computeFixedAspectDimensionsWithExpansion(
             aestheticData.x, aestheticData.y, plotWidth, plotHeight, coord as CoordFixed, chart)
@@ -487,7 +487,7 @@ class GgRenderer {
     }
 
     // Apply statistical transformation
-    Matrix statData = applyStats(exprData, resolvedAes, layer)
+    Matrix statData = applyStats(exprData, resolvedAes, layer, coord)
 
     // Apply position adjustment
     Matrix posData = applyPosition(statData, resolvedAes, layer)
@@ -530,7 +530,7 @@ class GgRenderer {
     Map<String, Scale> scales = [:]
 
     // Collect all data values for each aesthetic
-    Map<String, List> aestheticData = collectAestheticData(chart)
+    Map<String, List> aestheticData = collectAestheticData(chart, coord)
 
     // Apply coordinate transformations to data BEFORE scale training
     // This ensures scales work in transformed space
@@ -1007,7 +1007,7 @@ class GgRenderer {
    * For layers with stat transformations that compute y values (like stat_count),
    * we need to apply the stat first to get the computed values.
    */
-  private Map<String, List> collectAestheticData(GgChart chart) {
+  private Map<String, List> collectAestheticData(GgChart chart, Coord coord) {
     Map<String, List> data = [:].withDefault { [] }
 
     Aes globalAes = chart.globalAes
@@ -1032,22 +1032,24 @@ class GgRenderer {
       // Some stats can generate data from scratch even when input is null
       boolean canGenerateData = canGenerateDataFromNull(layer.stat)
 
-      if (layerAes && (layerData || canGenerateData)) {
+      // Process layer if:  - It has aesthetics and (has data OR can generate data)
+      // - OR it can generate data from null (even without aesthetics)
+      if ((layerAes && (layerData || canGenerateData)) || (canGenerateData && !layerData)) {
         // Evaluate expressions first (skip if data is null for data-generating stats)
         Matrix exprData
         Aes resolvedLayerAes
-        if (layerData) {
+        if (layerData && layerAes) {
           EvaluatedAes evalResult = evaluateExpressions(layerData, layerAes)
           exprData = evalResult.data
           resolvedLayerAes = evalResult.aes
         } else {
-          // For data-generating stats with null input, use aesthetics as-is
+          // For data-generating stats with null input, use aesthetics as-is (or empty if null)
           exprData = null
-          resolvedLayerAes = layerAes
+          resolvedLayerAes = layerAes ?: new Aes()
         }
 
         // Apply stat transformation to get computed values
-        Matrix statData = applyStats(exprData, resolvedLayerAes, layer)
+        Matrix statData = applyStats(exprData, resolvedLayerAes, layer, coord)
         // Apply position adjustment so scales reflect stacked/dodged coordinates
         Matrix posData = layer.position != PositionType.IDENTITY ?
             applyPosition(statData, resolvedLayerAes, layer) : statData
@@ -1096,6 +1098,9 @@ class GgRenderer {
         } else if (posData.columnNames().contains('count')) {
           // stat_count and stat_bin produce 'count' column for y values (default behavior)
           data['y'].addAll(posData['count'] ?: [])
+        } else if (posData.columnNames().contains('y')) {
+          // Fallback: use 'y' column if it exists (e.g., from stat_function)
+          data['y'].addAll(posData['y'] ?: [])
         }
 
         if (isBoxplot && posData.columnNames().contains('x')) {
@@ -1233,7 +1238,12 @@ class GgRenderer {
 
     // Some stats can generate data from scratch even when input is null
     boolean canGenerateData = canGenerateDataFromNull(layer.stat)
-    if (aes == null || (data == null && !canGenerateData)) return
+    // For data-generating stats like FUNCTION, we don't need aesthetics
+    if (!canGenerateData && (aes == null || data == null)) return
+    if (canGenerateData && data == null && aes == null) {
+      // For data-generating stats without data, create empty aes to allow processing
+      aes = new Aes()
+    }
 
     // Evaluate closure expressions in aesthetics (skip if data is null for data-generating stats)
     Matrix exprData
@@ -1249,7 +1259,7 @@ class GgRenderer {
     }
 
     // Apply statistical transformation
-    Matrix statData = applyStats(exprData, resolvedAes, layer)
+    Matrix statData = applyStats(exprData, resolvedAes, layer, coord)
 
     // Apply position adjustment
     Matrix posData = applyPosition(statData, resolvedAes, layer)
@@ -1277,7 +1287,7 @@ class GgRenderer {
   /**
    * Apply statistical transformation to data.
    */
-  private Matrix applyStats(Matrix data, Aes aes, Layer layer) {
+  private Matrix applyStats(Matrix data, Aes aes, Layer layer, Coord coord) {
     switch (layer.stat) {
       case StatType.IDENTITY:
         return GgStat.identity(data, aes)
@@ -1314,7 +1324,15 @@ class GgRenderer {
       case StatType.UNIQUE:
         return GgStat.unique(data, aes, layer.statParams)
       case StatType.FUNCTION:
-        return GgStat.function(data, aes, layer.statParams)
+        // For FUNCTION stat, inject xlim from coordinate system if not explicitly provided
+        Map funcParams = new HashMap(layer.statParams)
+        if (!funcParams.containsKey('xlim') && coord instanceof CoordCartesian) {
+          CoordCartesian cartesian = coord as CoordCartesian
+          if (cartesian.xlim) {
+            funcParams.xlim = cartesian.xlim
+          }
+        }
+        return GgStat.function(data, aes, funcParams)
       case StatType.SF:
         return GgStat.sf(data, aes, layer.statParams)
       case StatType.SF_COORDINATES:

@@ -376,6 +376,29 @@ class GgPlotTest {
     }
 
     @Test
+    void testGeomFunction() {
+        // Test geom_function for drawing mathematical functions
+        def chart = ggplot(null, null) +
+            xlim(0, 2*Math.PI) +
+            geom_function(fun: { x -> Math.sin(x) }, color: 'steelblue')
+
+        Svg svg = chart.render()
+        assertNotNull(svg)
+
+        String svgContent = SvgWriter.toXml(svg)
+
+        // Verify path element is rendered
+        assertTrue(svgContent.contains('<svg'), "Should contain svg element")
+        assertTrue(svgContent.contains('<path'), "Should contain path element for function")
+        assertTrue(svgContent.contains('stroke'), "Should have stroke attribute")
+
+        // Write for inspection
+        File outputFile = new File('build/function_sine.svg')
+        write(svg, outputFile)
+        println("Wrote sine function plot to ${outputFile.absolutePath}")
+    }
+
+    @Test
     void testDegreeParameter() {
         // Test using degree parameter instead of formula string
         def mpg = Dataset.mpg()
