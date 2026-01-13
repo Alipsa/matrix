@@ -6,11 +6,13 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.gg.Guide
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.coord.CoordRadial
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleContinuous
 import se.alipsa.matrix.gg.scale.ScaleXContinuous
 import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.theme.Theme
+import java.util.Locale
 
 /**
  * Utility class for rendering axes in ggplot charts.
@@ -29,6 +31,10 @@ class AxisRenderer {
    * Render axes based on coordinate system.
    */
   void renderAxes(G plotArea, Map<String, Scale> scales, int width, int height, Theme theme, def coord) {
+    if (coord instanceof CoordRadial) {
+      renderRadialAxes(plotArea, scales, coord as CoordRadial, theme)
+      return
+    }
     if (coord instanceof CoordPolar) {
       renderPolarAxes(plotArea, scales, coord as CoordPolar, theme)
       return
@@ -76,6 +82,196 @@ class AxisRenderer {
       }
 
       renderSecondaryAxes(axesGroup, scales, width, height, theme, false)
+    }
+  }
+
+  /**
+   * Render axes for radial coordinates.
+   */
+  @CompileStatic
+  private void renderRadialAxes(G plotArea, Map<String, Scale> scales, CoordRadial coord, Theme theme) {
+    Scale thetaScale = coord.theta == 'x' ? scales['x'] : scales['y']
+    Scale radiusScale = coord.theta == 'x' ? scales['y'] : scales['x']
+
+    String thetaGuideType = context.parseGuideType(thetaScale?.guide)
+    if (thetaGuideType && thetaGuideType != 'none') {
+      Map guideParams = context.extractGuideParams(thetaScale?.guide)
+      renderRadialThetaAxis(plotArea, thetaScale, coord, theme, guideParams)
+    }
+
+    String radiusGuideType = context.parseGuideType(radiusScale?.guide)
+    if (radiusScale && radiusGuideType != 'none') {
+      renderRadialRadiusAxis(plotArea, radiusScale, coord, theme)
+    }
+  }
+
+  /**
+   * Render theta (angular) axis for radial coordinates.
+   */
+  @CompileStatic
+  private void renderRadialThetaAxis(G plotArea, Scale scale, CoordRadial coord, Theme theme, Map guideParams) {
+    BigDecimal labelAngle = (guideParams.angle ?: 0) as BigDecimal
+    boolean showMinorTicks = (guideParams['minor.ticks'] ?: guideParams.minorTicks ?: false) as boolean
+    String cap = (guideParams.cap ?: 'none') as String
+
+    BigDecimal maxRadius = coord.getMaxRadius()
+    List<BigDecimal> center = coord.getCenter()
+    BigDecimal cx = center[0]
+    BigDecimal cy = center[1]
+    BigDecimal tickLength = (theme.axisTickLength ?: 5) as BigDecimal
+    BigDecimal labelOffset = tickLength + 5
+    BigDecimal labelRadius = maxRadius + labelOffset
+
+    BigDecimal span = coord.getAngularSpan()
+    BigDecimal base = coord.getAngularRange()[0]
+
+    List breaks = scale.getComputedBreaks()
+    List<String> labels = scale.getComputedLabels()
+
+    G axisGroup = plotArea.addG()
+    axisGroup.id('theta-axis')
+
+    breaks.eachWithIndex { breakVal, int i ->
+      BigDecimal norm = context.normalizeFromScale(scale, breakVal)
+      if (norm == null) return
+      if (context.isRangeReversed(scale)) {
+        norm = 1.0 - norm
+      }
+
+      BigDecimal theta = coord.clockwise ? (base + norm * span) : (base - norm * span)
+
+      BigDecimal tickOuter = maxRadius + tickLength
+      BigDecimal x1 = cx + maxRadius * theta.sin()
+      BigDecimal y1 = cy - maxRadius * theta.cos()
+      BigDecimal x2 = cx + tickOuter * theta.sin()
+      BigDecimal y2 = cy - tickOuter * theta.cos()
+
+      axisGroup.addLine(x1, y1, x2, y2)
+               .stroke(theme.axisLineX?.color ?: 'black')
+               .strokeWidth(theme.axisLineX?.size ?: 0.5)
+
+      if (i < labels.size()) {
+        BigDecimal labelX = cx + labelRadius * theta.sin()
+        BigDecimal labelY = cy - labelRadius * theta.cos()
+
+        String textAnchor = calculatePolarTextAnchor(theta)
+
+        def textElement = axisGroup.addText(labels[i])
+            .x(labelX)
+            .y(labelY)
+            .fontSize(theme.axisTextX?.size ?: 10)
+            .fill(theme.axisTextX?.color ?: 'black')
+            .textAnchor(textAnchor)
+            .dominantBaseline('middle')
+
+        BigDecimal rotation = coord.rotateAngle ? coord.getTextRotation(norm) : 0
+        rotation += labelAngle
+        if (rotation != 0) {
+          textElement.transform("rotate($rotation, $labelX, $labelY)")
+        }
+      }
+    }
+
+    if (showMinorTicks && breaks.size() >= 2) {
+      for (int i = 0; i < breaks.size() - 1; i++) {
+        BigDecimal startNorm = context.normalizeFromScale(scale, breaks[i])
+        BigDecimal endNorm = context.normalizeFromScale(scale, breaks[i + 1])
+        if (startNorm == null || endNorm == null) continue
+        for (int j = 1; j <= 4; j++) {
+          BigDecimal minorNorm = startNorm + (endNorm - startNorm) * j / 5
+          if (context.isRangeReversed(scale)) {
+            minorNorm = 1.0 - minorNorm
+          }
+          BigDecimal minorTheta = coord.clockwise ? (base + minorNorm * span) : (base - minorNorm * span)
+          BigDecimal minorTickLength = tickLength * 0.5
+          BigDecimal minorTickOuter = maxRadius + minorTickLength
+          BigDecimal mx1 = cx + maxRadius * minorTheta.sin()
+          BigDecimal my1 = cy - maxRadius * minorTheta.cos()
+          BigDecimal mx2 = cx + minorTickOuter * minorTheta.sin()
+          BigDecimal my2 = cy - minorTickOuter * minorTheta.cos()
+
+          axisGroup.addLine(mx1, my1, mx2, my2)
+              .stroke(theme.axisLineX?.color ?: 'black')
+              .strokeWidth((theme.axisLineX?.size ?: 0.5) * 0.75)
+        }
+      }
+    }
+
+    if (cap != 'none') {
+      addRadialArc(axisGroup, coord, maxRadius, theme.axisLineX?.color ?: 'black',
+          theme.axisLineX?.size ?: 0.5)
+    }
+  }
+
+  /**
+   * Render r-axis labels for radial coordinates.
+   */
+  @CompileStatic
+  private void renderRadialRadiusAxis(G plotArea, Scale scale, CoordRadial coord, Theme theme) {
+    BigDecimal maxRadius = coord.getMaxRadius()
+    BigDecimal innerRadius = coord.getInnerRadiusPx()
+    List<BigDecimal> center = coord.getCenter()
+    BigDecimal cx = center[0]
+    BigDecimal cy = center[1]
+
+    BigDecimal axisAngle = coord.getAngularRange()[0]
+    boolean inside = coord.rAxisInside != null ? coord.rAxisInside : false
+
+    BigDecimal tickLength = (theme.axisTickLength ?: 5) as BigDecimal
+    BigDecimal labelOffset = tickLength + 4
+
+    G axisGroup = plotArea.addG()
+    axisGroup.id('radius-axis')
+
+    BigDecimal axisStart = innerRadius
+    BigDecimal axisEnd = maxRadius
+    BigDecimal ax1 = cx + axisStart * axisAngle.sin()
+    BigDecimal ay1 = cy - axisStart * axisAngle.cos()
+    BigDecimal ax2 = cx + axisEnd * axisAngle.sin()
+    BigDecimal ay2 = cy - axisEnd * axisAngle.cos()
+
+    axisGroup.addLine(ax1, ay1, ax2, ay2)
+        .stroke(theme.axisLineY?.color ?: 'black')
+        .strokeWidth(theme.axisLineY?.size ?: 0.5)
+
+    List breaks = scale.getComputedBreaks()
+    List<String> labels = scale.getComputedLabels()
+
+    breaks.eachWithIndex { breakVal, int i ->
+      BigDecimal norm = context.normalizeFromScale(scale, breakVal)
+      if (norm == null) return
+      if (context.isRangeReversed(scale)) {
+        norm = 1.0 - norm
+      }
+
+      BigDecimal radius = innerRadius + norm * (maxRadius - innerRadius)
+      BigDecimal tickOuter = radius + (inside ? -tickLength : tickLength)
+      BigDecimal tx1 = cx + radius * axisAngle.sin()
+      BigDecimal ty1 = cy - radius * axisAngle.cos()
+      BigDecimal tx2 = cx + tickOuter * axisAngle.sin()
+      BigDecimal ty2 = cy - tickOuter * axisAngle.cos()
+
+      axisGroup.addLine(tx1, ty1, tx2, ty2)
+          .stroke(theme.axisLineY?.color ?: 'black')
+          .strokeWidth(theme.axisLineY?.size ?: 0.5)
+
+      if (i < labels.size()) {
+        BigDecimal labelRadius = radius + (inside ? -labelOffset : labelOffset)
+        if (inside && labelRadius < innerRadius) {
+          labelRadius = innerRadius
+        }
+        BigDecimal labelX = cx + labelRadius * axisAngle.sin()
+        BigDecimal labelY = cy - labelRadius * axisAngle.cos()
+        String textAnchor = calculatePolarTextAnchor(axisAngle)
+
+        axisGroup.addText(labels[i])
+            .x(labelX)
+            .y(labelY)
+            .fontSize(theme.axisTextY?.size ?: 10)
+            .fill(theme.axisTextY?.color ?: 'black')
+            .textAnchor(textAnchor)
+            .dominantBaseline('middle')
+      }
     }
   }
 
@@ -251,6 +447,49 @@ class AxisRenderer {
     } else {
       return 'end'     // Left
     }
+  }
+
+  @CompileStatic
+  private void addRadialArc(G axisGroup, CoordRadial coord, BigDecimal radius, String color, Number size) {
+    BigDecimal span = coord.getAngularSpan()
+    double spanVal = span as double
+    double fullCircle = 2 * Math.PI
+    if (Math.abs(spanVal - fullCircle) < 0.0001d) {
+      List<BigDecimal> center = coord.getCenter()
+      axisGroup.addCircle()
+          .cx(center[0])
+          .cy(center[1])
+          .r(radius)
+          .fill('none')
+          .stroke(color)
+          .strokeWidth(size)
+      return
+    }
+
+    List<BigDecimal> center = coord.getCenter()
+    double cx = center[0] as double
+    double cy = center[1] as double
+    double startRad = (coord.getAngularRange()[0]) as double
+    double endRad = (coord.getAngularRange()[1]) as double
+
+    double x1 = cx + (radius as double) * Math.sin(startRad)
+    double y1 = cy - (radius as double) * Math.cos(startRad)
+    double x2 = cx + (radius as double) * Math.sin(endRad)
+    double y2 = cy - (radius as double) * Math.cos(endRad)
+
+    int largeArc = spanVal > Math.PI ? 1 : 0
+    int sweepFlag = coord.clockwise ? 1 : 0
+    String path = "M ${formatNumber(x1)} ${formatNumber(y1)} A ${formatNumber(radius as double)} ${formatNumber(radius as double)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
+
+    axisGroup.addPath()
+        .d(path)
+        .fill('none')
+        .stroke(color)
+        .strokeWidth(size)
+  }
+
+  private static String formatNumber(double value) {
+    return String.format(Locale.US, "%.3f", value)
   }
 
   /**

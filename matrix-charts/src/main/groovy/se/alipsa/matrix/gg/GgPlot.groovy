@@ -61,6 +61,7 @@ import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordMap
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.coord.CoordRadial
 import se.alipsa.matrix.gg.coord.CoordQuickmap
 import se.alipsa.matrix.gg.coord.CoordSf
 import se.alipsa.matrix.gg.coord.CoordTrans
@@ -1288,6 +1289,21 @@ class GgPlot {
 
   static CoordPolar coord_polar(Map params) {
     return new CoordPolar(params)
+  }
+
+  /**
+   * Modern radial coordinate system for circular plots.
+   *
+   * Unlike coord_polar(), coord_radial() supports:
+   * - Partial circles via start/end parameters
+   * - Inner radius for donut-style plots
+   * - Automatic text rotation with rotateAngle
+   *
+   * @param params optional parameters (theta, start, end, innerRadius, expand, direction, rotateAngle)
+   * @return CoordRadial instance
+   */
+  static CoordRadial coord_radial(Map params = [:]) {
+    return new CoordRadial(params)
   }
 
   /**
