@@ -30,7 +30,7 @@ class ScaleColorFermenterTest {
     assertNotNull(colors)
     assertFalse(colors.isEmpty())
     // Blues palette has 9 colors
-    assertTrue(colors.size() <= 9)
+    assertEquals(9, colors.size(), "Blues palette should have exactly 9 colors")
   }
 
   @Test
