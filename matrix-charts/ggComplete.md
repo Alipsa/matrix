@@ -1,8 +1,10 @@
 # ggplot2 Completion Plan
 
-**Goal:** Achieve 100% ggplot2 API compliance for core features by implementing remaining missing functions and creating necessary aliases.
+**Goal:** Achieve 100% ggplot2 core API compliance by implementing all commonly-used missing functions and creating necessary aliases.
 
-**Status:** Currently at ~85-90% coverage. This plan addresses the remaining 10-15% to reach full compliance.
+**Scope:** This plan covers core ggplot2 features (Priority 1-2). Extension package features and rarely-used specialty geoms (Priority 3) are documented but deferred.
+
+**Status:** Currently at ~85-90% coverage. This plan addresses Priority 1-2 features to reach 100% coverage of commonly-used ggplot2 functionality.
 
 ---
 
@@ -12,9 +14,14 @@ This document analyzes 18 missing or inconsistent ggplot2 features and provides 
 
 - **Priority 1 (Quick Wins):** 6 simple aliases - can be completed in <1 day
 - **Priority 2 (Medium Effort):** 5 moderate features - 1-3 days each
-- **Priority 3 (Low Priority):** 7 rarely-used or extension features - optional
+- **Priority 3 (Low Priority):** 7 rarely-used or extension features - deferred to future work
 
 **Total Estimated Effort:** 2-3 weeks for Priority 1-2 features
+
+**Definition of "Core API Compliance":**
+- Priority 1-2 = Core ggplot2 features used in 95%+ of real-world plots
+- Priority 3 = Extension packages, specialty visualizations, internal functions
+- Achieving 100% of Priority 1-2 = Full core API compliance
 
 **Code Style:** All code examples follow the idiomatic Groovy patterns documented in AGENTS.md, including:
 - BigDecimal/Number types instead of primitives
@@ -1029,12 +1036,12 @@ These are niche scales for specific edge cases.
 **Goal:** Achieve immediate compliance gains with minimal effort
 
 **Tasks:**
-1. [ ] Add `geom_bin2d()` alias (5 min)
-2. [ ] Add `geom_density2d()` and `geom_density2d_filled()` aliases (10 min)
-3. [ ] Add `stat_bin2d()` alias (5 min)
-4. [ ] Add `stat_density2d()` alias if needed (5 min)
-5. [ ] Verify/add `annotation_raster()` factory method (15 min)
-6. [ ] Audit color/colour alias coverage (30 min)
+1. [x] Add `geom_bin2d()` alias (5 min) ✅
+2. [x] Add `geom_density2d()` and `geom_density2d_filled()` aliases (10 min) ✅
+3. [x] Add `stat_bin2d()` alias (5 min) ✅
+4. [x] Add `stat_density2d()` alias if needed (5 min) ✅ (Not needed - no base implementation)
+5. [x] Verify/add `annotation_raster()` factory method (15 min) ✅ (Already exists)
+6. [x] Audit color/colour alias coverage (30 min) ✅ (All present)
 
 **Total Effort:** 2-3 hours
 **Impact:** HIGH - Common function names, immediate ggplot2 compatibility
@@ -1190,28 +1197,32 @@ For visual features (scales, themes):
 ## Success Criteria
 
 ### Phase 1 (Aliases)
-- ✅ All aliases callable and functional
-- ✅ Aliases delegate to correct implementations
-- ✅ Tests pass
-- ✅ Documentation updated
+- [x] All aliases callable and functional ✅
+- [x] Aliases delegate to correct implementations ✅
+- [x] Tests pass ✅
+- [x] Documentation updated ✅
 
 ### Phase 2 (Global Theme)
-- ✅ theme_get/set/update work correctly
-- ✅ Thread-safe implementation verified
-- ✅ Global theme affects new plots
-- ✅ Can restore previous theme
+- [ ] theme_get/set/update work correctly
+- [ ] Thread-safe implementation verified
+- [ ] Global theme affects new plots
+- [ ] Can restore previous theme
 
 ### Phase 3 (Color Hue Scale)
-- ✅ Generates evenly-spaced colors
-- ✅ Colors match ggplot2 reasonably well
-- ✅ Customization parameters work
-- ✅ Integrates with existing scale system
+- [ ] Generates evenly-spaced colors
+- [ ] Colors match ggplot2 reasonably well
+- [ ] Customization parameters work
+- [ ] Integrates with existing scale system
+
+**Important**: Halt development at each Phase so we can commit and do code reviews before continuing on a new branch for the next phase
+after the current phase has been merged to main.
 
 ### Overall Success
-- ✅ ~95%+ ggplot2 core API coverage
-- ✅ All commonly-used features implemented
-- ✅ No regressions in existing functionality
-- ✅ Documentation complete and accurate
+- [ ] 100% ggplot2 core API coverage (Priority 1-2 features complete)
+- [ ] All commonly-used ggplot2 features implemented
+- [ ] No regressions in existing functionality
+- [ ] Documentation complete and accurate
+- [ ] Priority 3 features documented with implementation guidance for future work
 
 ---
 
