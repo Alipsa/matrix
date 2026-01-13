@@ -50,6 +50,9 @@ class ScaleColorFermenter extends ScaleContinuous {
   /** Guide type (default: 'coloursteps' for binned legend) */
   String guideType = 'coloursteps'
 
+  /** Track whether nBreaks was explicitly set by user (vs using default) */
+  private boolean nBreaksExplicitlySet = false
+
   /** Computed colors from ColorBrewer palette */
   private List<String> paletteColors = []
 
@@ -83,7 +86,14 @@ class ScaleColorFermenter extends ScaleContinuous {
     if (params.palette != null) this.palette = params.palette.toString()
     if (params.type) this.type = params.type as String
     if (params.direction != null) this.direction = (params.direction as Number).intValue()
-    if (params.naValue) this.naValue = params.naValue as String
+
+    // Handle na.value parameter (support both dot notation and camelCase)
+    if (params.containsKey('na.value')) {
+      this.naValue = params['na.value'] as String
+    } else if (params.naValue) {
+      this.naValue = params.naValue as String
+    }
+
     if (params.guide) this.guideType = params.guide as String
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
@@ -93,8 +103,10 @@ class ScaleColorFermenter extends ScaleContinuous {
     // Handle n.breaks parameter (overrides default from parent class)
     if (params.containsKey('n.breaks')) {
       this.nBreaks = (params['n.breaks'] as Number).intValue()
+      this.nBreaksExplicitlySet = true
     } else if (params.containsKey('nBreaks')) {
       this.nBreaks = (params.nBreaks as Number).intValue()
+      this.nBreaksExplicitlySet = true
     }
   }
 
@@ -118,8 +130,8 @@ class ScaleColorFermenter extends ScaleContinuous {
     }
 
     // Check if requested breaks exceeds palette size
-    if (nBreaks > 0 && nBreaks > paletteColors.size()) {
-      println "Warning: Number of breaks (${nBreaks}) exceeds palette size (${paletteColors.size()}). Some colors will be repeated or not displayed."
+    if (nBreaksExplicitlySet && nBreaks > paletteColors.size()) {
+      System.err.println "Warning: Number of breaks (${nBreaks}) exceeds palette size (${paletteColors.size()}). Using maximum of ${paletteColors.size()} colors from palette."
     }
   }
 
@@ -161,8 +173,8 @@ class ScaleColorFermenter extends ScaleContinuous {
     BigDecimal dMin = computedDomain[0]
     BigDecimal dMax = computedDomain[1]
 
-    // Determine number of bins (use palette size if nBreaks not set or is default)
-    int numBins = (nBreaks > 0 && nBreaks != 7) ? nBreaks : paletteColors.size()
+    // Determine number of bins (use palette size if nBreaks not explicitly set)
+    int numBins = nBreaksExplicitlySet ? nBreaks : paletteColors.size()
     numBins = Math.max(1, Math.min(numBins, paletteColors.size()))
 
     // Create bin boundaries (numBins + 1 boundaries)
@@ -223,7 +235,7 @@ class ScaleColorFermenter extends ScaleContinuous {
       loadPalette()
     }
     // Return only the colors actually used for bins
-    int numBins = (nBreaks > 0 && nBreaks != 7) ?
+    int numBins = nBreaksExplicitlySet ?
                   Math.min(nBreaks, paletteColors.size()) :
                   paletteColors.size()
     return paletteColors.take(numBins)

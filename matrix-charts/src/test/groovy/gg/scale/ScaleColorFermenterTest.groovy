@@ -153,6 +153,37 @@ class ScaleColorFermenterTest {
   }
 
   @Test
+  void testWarningWhenNBreaksExceedsPaletteSize() {
+    // Test: Warning is issued when nBreaks exceeds palette size
+    // Capture stderr output
+    def originalErr = System.err
+    def errStream = new ByteArrayOutputStream()
+    System.err = new PrintStream(errStream)
+
+    try {
+      // Blues palette has 9 colors - request 15 breaks
+      def scale = new ScaleColorFermenter([palette: 'Blues', 'n.breaks': 15])
+
+      // Convert stderr output to string
+      String errOutput = errStream.toString()
+
+      // Should have warning message
+      assertTrue(errOutput.contains('Warning'), "Should contain warning message")
+      assertTrue(errOutput.contains('Number of breaks (15)'), "Should mention requested 15 breaks")
+      assertTrue(errOutput.contains('palette size (9)'), "Should mention palette size of 9")
+      assertTrue(errOutput.contains('Using maximum of 9 colors'), "Should mention using maximum of 9 colors")
+
+      // Should still work correctly - using max palette size
+      def colors = scale.getColors()
+      assertEquals(9, colors.size(), "Should use maximum palette size (9) instead of requested 15")
+
+    } finally {
+      // Restore stderr
+      System.err = originalErr
+    }
+  }
+
+  @Test
   void testWithDivergingData() {
     // Test: Diverging palette with data centered around zero
     def data = Matrix.builder()
