@@ -13,13 +13,24 @@ import groovy.transform.CompileStatic
  * fermenter uses the palette colors as-is for bins. If the number of bins exceeds
  * the palette size, a warning is issued.
  *
+ * <b>Direction Default:</b> The default direction is -1 (reversed), which matches
+ * ggplot2's behavior. This differs from scale_color_brewer() (which uses direction=1)
+ * because continuous and binned scales conventionally show darker colors for higher
+ * values. Use direction=1 to reverse this behavior.
+ *
+ * <b>Palette Type:</b> The type parameter accepts both short ('seq', 'div', 'qual')
+ * and long forms ('sequential', 'diverging', 'qualitative').
+ *
  * Usage:
  * <pre>
  * // Sequential Blues palette with default bins
  * scale_color_fermenter(palette: 'Blues')
  *
- * // Diverging Spectral palette, reversed
- * scale_fill_fermenter(type: 'div', palette: 'Spectral', direction: 1)
+ * // Palette by numeric index (1-based)
+ * scale_color_fermenter(type: 'div', palette: 3)  // 3rd diverging palette
+ *
+ * // Diverging Spectral palette, normal direction
+ * scale_fill_fermenter(type: 'diverging', palette: 'Spectral', direction: 1)
  *
  * // Custom number of breaks
  * scale_color_fermenter(palette: 'Reds', 'n.breaks': 5)
@@ -65,6 +76,7 @@ class ScaleColorFermenter extends ScaleContinuous {
   ScaleColorFermenter() {
     super()
     expand = ScaleContinuous.NO_EXPAND  // No expansion for color scales
+    loadPalette()  // Load default palette to ensure paletteColors is initialized
   }
 
   /**
@@ -83,8 +95,27 @@ class ScaleColorFermenter extends ScaleContinuous {
     if (params.aesthetic == 'colour') this.aesthetic = 'color'
     else if (params.aesthetic) this.aesthetic = params.aesthetic as String
 
-    if (params.palette != null) this.palette = params.palette.toString()
+    // Handle type first (needed for numeric palette resolution)
     if (params.type) this.type = params.type as String
+
+    // Handle palette parameter (string name or numeric index)
+    if (params.palette != null) {
+      if (params.palette instanceof Number) {
+        // Numeric palette index (1-based)
+        int index = (params.palette as Number).intValue()
+        String resolvedName = BrewerPalettes.getPaletteNameByIndex(this.type ?: 'seq', index)
+        if (resolvedName != null) {
+          this.palette = resolvedName
+        } else {
+          System.err.println "Warning: Palette index ${index} is out of range for type '${this.type ?: 'seq'}'. Using default palette."
+          this.palette = null  // Will use type-based default
+        }
+      } else {
+        // String palette name
+        this.palette = params.palette.toString()
+      }
+    }
+
     if (params.direction != null) this.direction = (params.direction as Number).intValue()
 
     // Handle na.value parameter (support both dot notation and camelCase)
@@ -161,6 +192,12 @@ class ScaleColorFermenter extends ScaleContinuous {
   @Override
   void train(List data) {
     super.train(data)
+
+    // Ensure palette is loaded before computing bins
+    if (paletteColors.isEmpty()) {
+      loadPalette()
+    }
+
     computeBinBoundaries()
   }
 
@@ -211,6 +248,12 @@ class ScaleColorFermenter extends ScaleContinuous {
 
   /**
    * Find which bin a value falls into based on bin boundaries.
+   *
+   * Uses half-open intervals [lower, upper) for all bins except the last.
+   * The last bin uses a closed interval to ensure values exactly equal to
+   * the maximum boundary are included (handled by the check on line 254-256).
+   *
+   * This matches ggplot2's binning behavior for scale_*_fermenter().
    */
   private int findBinIndex(BigDecimal value) {
     if (value <= binBoundaries[0]) return 0

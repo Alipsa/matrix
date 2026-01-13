@@ -3200,9 +3200,9 @@ class GgPlot {
    * the exact palette colors for bins.
    *
    * Parameters:
-   * - type: Palette type - "seq" (sequential), "div" (diverging), or "qual" (qualitative)
-   * - palette: Palette name or number (e.g., "Blues", "Spectral", 1, 2, etc.)
-   * - direction: 1 for normal, -1 for reversed (default: -1)
+   * - type: Palette type - "seq"/"sequential", "div"/"diverging", or "qual"/"qualitative" (default: "seq")
+   * - palette: Palette name (e.g., "Blues", "Spectral") or 1-based numeric index (e.g., 1, 2, 3)
+   * - direction: 1 for normal, -1 for reversed (default: -1 to match ggplot2)
    * - na.value: Color for NA values (default: "grey50")
    * - guide: Guide type (default: "coloursteps")
    * - n.breaks: Number of bins (default: palette size)
