@@ -1226,6 +1226,29 @@ class GgPlot {
   }
 
   /**
+   * Test theme for visual unit tests.
+   *
+   * A theme designed for visual unit tests that should remain stable over time.
+   * It provides a minimal baseline with no grid lines or axis lines, focusing
+   * on data presentation for consistent test results.
+   *
+   * Key characteristics:
+   * - White background with subtle panel border
+   * - NO grid lines
+   * - NO axis lines
+   * - Visible axis ticks and labels
+   * - Intentionally stable for testing purposes
+   *
+   * @param baseSize base font size (default: 11)
+   * @param baseFamily base font family (default: 'sans-serif')
+   * @return Theme configured for visual testing
+   * @see Themes#test(Number, String)
+   */
+  static Theme theme_test(Number baseSize = 11, String baseFamily = 'sans-serif') {
+    return Themes.test(baseSize, baseFamily)
+  }
+
+  /**
    * Customize theme elements.
    * Supports both camelCase (e.g., 'legendPosition') and dot-notation (e.g., 'legend.position').
    */
