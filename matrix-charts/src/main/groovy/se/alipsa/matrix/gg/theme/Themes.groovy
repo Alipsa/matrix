@@ -163,6 +163,136 @@ class Themes {
   }
 
   /**
+   * Test theme for visual unit tests.
+   *
+   * A theme designed for visual unit tests. It should ideally never change
+   * except for new features. This theme provides a stable, minimal baseline
+   * for testing visual outputs.
+   *
+   * Characteristics:
+   * - White background with subtle gray panel border
+   * - NO grid lines (both major and minor are blank)
+   * - NO axis lines
+   * - Visible axis ticks and labels
+   * - Minimal decoration for testing stability
+   *
+   * @param baseSize base font size (default: 11)
+   * @param baseFamily base font family (default: 'sans-serif')
+   * @return Theme configured for visual testing
+   */
+  static Theme test(Number baseSize = 11, String baseFamily = 'sans-serif') {
+    Theme theme = new Theme()
+
+    // Set base font properties
+    theme.baseSize = baseSize
+    theme.baseFamily = baseFamily ?: 'sans-serif'
+
+    // Calculate derived sizes
+    Number baseLineSize = baseSize / 22.0
+    Number baseRectSize = baseSize / 22.0
+
+    // Background: white with subtle gray border
+    theme.panelBackground = new ElementRect(
+        fill: 'white',
+        color: '#CCCCCC',
+        size: baseRectSize
+    )
+    theme.plotBackground = new ElementRect(fill: 'white', color: null)
+
+    // NO grid lines - this is a key characteristic for testing
+    theme.panelGridMajor = null
+    theme.panelGridMinor = null
+    theme.explicitNulls.add('panelGridMajor')
+    theme.explicitNulls.add('panelGridMinor')
+
+    // NO axis lines - another key testing characteristic
+    theme.axisLineX = null
+    theme.axisLineY = null
+    theme.explicitNulls.add('axisLineX')
+    theme.explicitNulls.add('axisLineY')
+
+    // Axis ticks: visible with subtle gray color
+    theme.axisTicksX = new ElementLine(
+        color: '#333333',
+        size: baseLineSize
+    )
+    theme.axisTicksY = new ElementLine(
+        color: '#333333',
+        size: baseLineSize
+    )
+
+    // Axis text: black, standard size
+    theme.axisTextX = new ElementText(
+        color: 'black',
+        size: baseSize * 0.8,
+        family: baseFamily
+    )
+    theme.axisTextY = new ElementText(
+        color: 'black',
+        size: baseSize * 0.8,
+        family: baseFamily
+    )
+
+    // Axis titles: black, standard size
+    theme.axisTitleX = new ElementText(
+        color: 'black',
+        size: baseSize * 0.9,
+        family: baseFamily
+    )
+    theme.axisTitleY = new ElementText(
+        color: 'black',
+        size: baseSize * 0.9,
+        family: baseFamily
+    )
+
+    // Plot titles
+    theme.plotTitle = new ElementText(
+        color: 'black',
+        size: baseSize * 1.2,
+        family: baseFamily,
+        face: 'bold'
+    )
+    theme.plotSubtitle = new ElementText(
+        color: '#333333',
+        size: baseSize,
+        family: baseFamily
+    )
+    theme.plotCaption = new ElementText(
+        color: '#666666',
+        size: baseSize * 0.8,
+        family: baseFamily
+    )
+
+    // Strip (facet labels): white background with border
+    theme.stripBackground = new ElementRect(
+        fill: 'white',
+        color: '#CCCCCC',
+        size: baseRectSize
+    )
+    theme.stripText = new ElementText(
+        color: 'black',
+        size: baseSize * 0.9,
+        family: baseFamily
+    )
+
+    // Legend: standard settings
+    theme.legendBackground = new ElementRect(fill: 'white', color: null)
+    theme.legendKey = new ElementRect(fill: 'white', color: null)
+    theme.legendText = new ElementText(
+        color: 'black',
+        size: baseSize * 0.8,
+        family: baseFamily
+    )
+    theme.legendTitle = new ElementText(
+        color: 'black',
+        size: baseSize * 0.9,
+        family: baseFamily
+    )
+
+    return theme
+  }
+
+  /**
    * Customize theme elements.
    * Supports both camelCase (e.g., 'legendPosition') and dot-notation (e.g., 'legend.position').
    */
