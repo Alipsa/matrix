@@ -102,7 +102,7 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
 
   @Test
   void testScaleSizeContinuousPrecision() {
-    println "\n=== ScaleSizeContinuous Precision Test ==="
+    //println "\n=== ScaleSizeContinuous Precision Test ==="
 
     ScaleSizeContinuous scale = new ScaleSizeContinuous()
     scale.range = [1, 10] as List<BigDecimal>
