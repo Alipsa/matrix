@@ -86,6 +86,7 @@ import se.alipsa.matrix.gg.scale.ScaleColorStepsN
 import se.alipsa.matrix.gg.scale.ScaleColorManual
 import se.alipsa.matrix.gg.scale.ScaleColorBrewer
 import se.alipsa.matrix.gg.scale.ScaleColorDistiller
+import se.alipsa.matrix.gg.scale.ScaleColorFermenter
 import se.alipsa.matrix.gg.scale.ScaleColorGrey
 import se.alipsa.matrix.gg.scale.ScaleColorViridis
 import se.alipsa.matrix.gg.scale.ScaleColorViridisC
@@ -3192,6 +3193,35 @@ class GgPlot {
   }
 
   /**
+   * Binned ColorBrewer scale for continuous color data.
+   *
+   * Creates discrete color bins using ColorBrewer palettes WITHOUT interpolation.
+   * Unlike scale_color_distiller() which interpolates colors, fermenter uses
+   * the exact palette colors for bins.
+   *
+   * Parameters:
+   * - type: Palette type - "seq"/"sequential", "div"/"diverging", or "qual"/"qualitative" (default: "seq")
+   * - palette: Palette name (e.g., "Blues", "Spectral") or 1-based numeric index (e.g., 1, 2, 3)
+   * - direction: 1 for normal, -1 for reversed (default: -1 to match ggplot2)
+   * - na.value: Color for NA values (default: "grey50")
+   * - guide: Guide type (default: "coloursteps")
+   * - n.breaks: Number of bins (default: palette size)
+   *
+   * @param params Optional map with palette, type, direction, etc.
+   * @return ScaleColorFermenter instance
+   * @see #scale_color_distiller(Map)
+   * @see #scale_color_brewer(Map)
+   */
+  static ScaleColorFermenter scale_color_fermenter(Map params = [:]) {
+    return new ScaleColorFermenter(params)
+  }
+
+  /** British spelling alias for scale_color_fermenter */
+  static ScaleColorFermenter scale_colour_fermenter(Map params = [:]) {
+    return scale_color_fermenter(params)
+  }
+
+  /**
    * Greyscale discrete color scale.
    *
    * @param params Optional map with start, end, direction
@@ -3336,6 +3366,19 @@ class GgPlot {
    */
   static ScaleColorDistiller scale_fill_distiller(Map params = [:]) {
     return new ScaleColorDistiller(params + [aesthetic: 'fill'])
+  }
+
+  /**
+   * Binned ColorBrewer scale for continuous fill data.
+   *
+   * Creates discrete fill color bins using ColorBrewer palettes WITHOUT interpolation.
+   *
+   * @param params Optional map with palette, type, direction, etc.
+   * @return ScaleColorFermenter instance configured for fill aesthetic
+   * @see #scale_color_fermenter(Map)
+   */
+  static ScaleColorFermenter scale_fill_fermenter(Map params = [:]) {
+    return new ScaleColorFermenter(params + [aesthetic: 'fill'])
   }
 
   /**

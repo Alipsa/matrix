@@ -338,7 +338,7 @@ Leverage matrix-stats or Stat from matrix core when possible. Avoid complex stat
 - 4.9.2 [x] `coord_radial()` - Modern polar alternative
 - 4.9.3 [x] `geom_function()` - Draw arbitrary function
 - 4.9.4 [x] `theme_test()` - Testing theme
-- 4.9.5 [ ] `scale_colour_fermenter()` / `scale_fill_fermenter()` - Binned ColorBrewer
+- 4.9.5 [x] `scale_colour_fermenter()` / `scale_fill_fermenter()` - Binned ColorBrewer
 
 ---
 

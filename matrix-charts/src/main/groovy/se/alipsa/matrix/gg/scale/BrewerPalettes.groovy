@@ -65,6 +65,45 @@ class BrewerPalettes {
   }
 
   /**
+   * Get list of palette names for a given type.
+   *
+   * @param type 'seq', 'div', or 'qual'
+   * @return list of palette names for that type
+   */
+  static List<String> getPaletteNamesForType(String type) {
+    switch (type?.toLowerCase()) {
+      case 'seq':
+      case 'sequential':
+        return ['blues', 'greens', 'greys', 'oranges', 'purples', 'reds',
+                'bugn', 'bupu', 'gnbu', 'orrd', 'pubu', 'pubugn', 'purd', 'rdpu',
+                'ylgn', 'ylgnbu', 'ylorbr', 'ylorrd']
+      case 'div':
+      case 'diverging':
+        return ['brbg', 'piyg', 'prgn', 'puor', 'rdbu', 'rdgy', 'rdylbu', 'rdylgn', 'spectral']
+      case 'qual':
+      case 'qualitative':
+        return ['accent', 'dark2', 'paired', 'pastel1', 'pastel2', 'set1', 'set2', 'set3']
+      default:
+        return []
+    }
+  }
+
+  /**
+   * Get a palette by numeric index for a given type.
+   *
+   * @param type 'seq', 'div', or 'qual'
+   * @param index 1-based palette index
+   * @return palette name or null if index is out of range
+   */
+  static String getPaletteNameByIndex(String type, int index) {
+    List<String> names = getPaletteNamesForType(type)
+    if (index < 1 || index > names.size()) {
+      return null
+    }
+    return names[index - 1]  // Convert from 1-based to 0-based
+  }
+
+  /**
    * Select a palette with a target size and optional direction.
    *
    * @param name palette name
