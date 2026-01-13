@@ -1239,7 +1239,7 @@ class GgRenderer {
     boolean canGenerateData = canGenerateDataFromNull(layer.stat)
     // For data-generating stats like FUNCTION, we don't need aesthetics
     if (!canGenerateData && (aes == null || data == null)) return
-    if (canGenerateData && data == null && aes == null) {
+    if (data == null && aes == null) {
       // For data-generating stats without data, create empty aes to allow processing
       aes = new Aes()
     }
