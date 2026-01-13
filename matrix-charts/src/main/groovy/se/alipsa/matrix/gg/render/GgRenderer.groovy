@@ -1032,7 +1032,7 @@ class GgRenderer {
       // Some stats can generate data from scratch even when input is null
       boolean canGenerateData = canGenerateDataFromNull(layer.stat)
 
-      // Process layer if:  - It has aesthetics and (has data OR can generate data)
+      // Process layer if: - It has aesthetics and (has data OR can generate data)
       // - OR it can generate data from null (even without aesthetics)
       if ((layerAes && (layerData || canGenerateData)) || (canGenerateData && !layerData)) {
         // Evaluate expressions first (skip if data is null for data-generating stats)
