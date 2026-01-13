@@ -10,6 +10,12 @@ import static org.junit.jupiter.api.Assertions.*
 class NumberExtensionTest {
 
   @Test
+  void testConstants() {
+    assertEquals(NumberExtension.E.doubleValue(), Math.E, 1e-16)
+    assertEquals(NumberExtension.PI.doubleValue(), Math.PI, 1e-16)
+  }
+
+  @Test
   void testFloor() {
     BigDecimal value = 3.7G
     BigDecimal floored = NumberExtension.floor(value)
