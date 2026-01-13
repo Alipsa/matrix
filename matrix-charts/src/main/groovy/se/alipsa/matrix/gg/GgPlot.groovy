@@ -32,6 +32,7 @@ import se.alipsa.matrix.gg.geom.GeomSegment
 import se.alipsa.matrix.gg.geom.GeomSmooth
 import se.alipsa.matrix.gg.geom.GeomSpoke
 import se.alipsa.matrix.gg.geom.GeomCurve
+import se.alipsa.matrix.gg.geom.GeomFunction
 import se.alipsa.matrix.gg.geom.GeomText
 import se.alipsa.matrix.gg.geom.GeomVline
 import se.alipsa.matrix.gg.geom.GeomRibbon
@@ -1978,6 +1979,74 @@ class GgPlot {
 
   static GeomCurve geom_curve(Map params) {
     return new GeomCurve(params)
+  }
+
+  /**
+   * Draw a function as a continuous curve.
+   *
+   * Computes and draws a function as a continuous curve. This makes it easy to
+   * superimpose a function on top of an existing plot. The function is called
+   * with a grid of evenly spaced values along the x axis, and the results are
+   * drawn with a line.
+   *
+   * Usage:
+   * <pre>
+   * // Basic usage with stat_function
+   * ggplot() + xlim(0, 2*Math.PI) + geom_function(fun: { x -> Math.sin(x) })
+   *
+   * // With styling
+   * ggplot() + xlim(-5, 5) +
+   *   geom_function(
+   *     fun: { x -> Math.exp(-x*x/2) / Math.sqrt(2*Math.PI) },
+   *     color: 'red',
+   *     linewidth: 1.5
+   *   )
+   *
+   * // Overlay on existing data
+   * ggplot(data, aes(x: 'x', y: 'y')) +
+   *   geom_point() +
+   *   geom_function(fun: { x -> x**2 }, color: 'blue')
+   * </pre>
+   *
+   * @return a new GeomFunction instance
+   * @see #stat_function(Map)
+   */
+  static GeomFunction geom_function() {
+    return new GeomFunction()
+  }
+
+  /**
+   * Create a function geom with a layer-specific aesthetic mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomFunction instance
+   */
+  static GeomFunction geom_function(Aes mapping) {
+    return geom_function([mapping: mapping])
+  }
+
+  /**
+   * Draw a function as a continuous curve with parameters.
+   *
+   * Parameters:
+   * - mapping: Aesthetic mapping (optional)
+   * - color/colour: Line color (default: 'black')
+   * - size/linewidth: Line width (default: 0.5)
+   * - linetype: Line type - 'solid', 'dashed', 'dotted', etc. (default: 'solid')
+   * - alpha: Transparency (0-1, default: 1.0)
+   * - lineend: Line end style - 'butt', 'round', 'square' (default: 'butt')
+   * - linejoin: Line join style - 'round', 'mitre', 'bevel' (default: 'round')
+   *
+   * When used with stat_function (automatically applied):
+   * - fun: Closure&lt;Number&gt; - Function to evaluate
+   * - xlim: List [xmin, xmax] - Range for function (default: from data/scales)
+   * - n: Integer - Number of points to evaluate (default: 101)
+   *
+   * @param params Map of parameters
+   * @return a new GeomFunction instance
+   */
+  static GeomFunction geom_function(Map params) {
+    return new GeomFunction(params)
   }
 
   static GeomSmooth geom_smooth() {
