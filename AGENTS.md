@@ -15,7 +15,30 @@ This is a Gradle multi-module Groovy/Java project. Each module lives in a `matri
 
 ## Coding Style & Naming Conventions
 Use Groovy 5.0.3 and target Java 21. Follow the existing 2-space indentation and import style in each file. Prefer `@CompileStatic` and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted. Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories. Always add GroovyDoc for public classes and public methods. There is no enforced formatter, so match the surrounding file conventions.
-Prefer idiomatic groovy constructs such as closures, `each`, `collect`, and `findAll` for collections. Use string interpolation (`"${var}"`) instead of concatenation when building strings. Default numeric type in groovy is BigDecimal, try to take advantage of that rather than converting to double/float. 
+Prefer idiomatic groovy constructs such as closures, `each`, `collect`, and `findAll` for collections. Use string interpolation (`"${var}"`) instead of concatenation when building strings. Default numeric type in groovy is BigDecimal, try to take advantage of that rather than converting to double/float.
+
+## DRY Principle (Don't Repeat Yourself)
+**CRITICAL:** Avoid code duplication at all costs. Before implementing functionality, check if similar code already exists in the codebase. If you find duplicated code (identical or near-identical methods, constants, or logic in multiple files):
+
+1. **Extract to Utility Class**: Create a shared utility class in an appropriate package to hold the common functionality. For example:
+   - Color conversion logic → `ColorSpaceUtil` in the same package
+   - Math utilities → `MathUtil` in a common utilities package
+   - String processing → `StringUtil` in a common utilities package
+
+2. **Update All References**: When extracting shared code, update ALL files that were using the duplicated code to use the new utility class. Don't leave any instances of the old duplicated code behind.
+
+3. **Update Tests**: When moving code to a utility class, update any tests that were testing the old private methods to test the new utility class methods instead.
+
+4. **Common Examples of Duplication to Avoid**:
+   - Constants (like color space reference values, magic numbers, default values)
+   - Conversion functions (color space, coordinate, unit conversions)
+   - Validation logic (input checking, bounds checking, type validation)
+   - Mathematical calculations used in multiple places
+   - Parsing/formatting logic
+
+5. **Check Before You Copy**: Before copying a method or code block from one file to another, ask: "Should this be shared?" If the answer is yes or maybe, extract it to a utility class instead of duplicating it.
+
+**Example**: If you're implementing HCL color conversion and find similar code already exists in `ScaleColorManual`, don't copy it—extract it to a `ColorSpaceUtil` class that both can use.
 
 ## Testing Guidelines
 JUnit Jupiter (JUnit 5) is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module’s `src/test` tree. Use `-PrunSlowTests=true` and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).

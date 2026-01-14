@@ -88,6 +88,7 @@ import se.alipsa.matrix.gg.scale.ScaleColorBrewer
 import se.alipsa.matrix.gg.scale.ScaleColorDistiller
 import se.alipsa.matrix.gg.scale.ScaleColorFermenter
 import se.alipsa.matrix.gg.scale.ScaleColorGrey
+import se.alipsa.matrix.gg.scale.ScaleColorHue
 import se.alipsa.matrix.gg.scale.ScaleColorViridis
 import se.alipsa.matrix.gg.scale.ScaleColorViridisC
 import se.alipsa.matrix.gg.scale.Scale
@@ -3295,6 +3296,50 @@ class GgPlot {
   /** British spelling alias for scale_color_discrete */
   static ScaleColorManual scale_colour_discrete(Map params = [:]) {
     return scale_color_discrete(params)
+  }
+
+  /**
+   * Evenly spaced colors from the HCL color wheel.
+   * This is ggplot2's default discrete color scale.
+   *
+   * Generates colors by selecting evenly-spaced hues around the color wheel
+   * with fixed chroma and luminance for perceptual uniformity.
+   *
+   * @param params Optional parameters:
+   *   - h: Hue range [min, max] in degrees (default: [15, 375])
+   *   - c: Chroma/saturation (default: 100)
+   *   - l: Luminance/lightness (default: 65)
+   *   - h.start: Starting hue (shifts the range)
+   *   - direction: 1 (clockwise) or -1 (counter-clockwise)
+   *   - name, limits, breaks, labels: Standard scale parameters
+   * @return Color hue scale
+   *
+   * @example
+   * <pre>
+   * scale_color_hue()  // Default settings
+   * scale_color_hue(h: [0, 360], c: 50, l: 70)  // Custom parameters
+   * scale_color_hue('h.start': 90, direction: -1)  // Start at 90°, counter-clockwise
+   * </pre>
+   */
+  static ScaleColorHue scale_color_hue(Map params = [:]) {
+    return new ScaleColorHue('color', params)
+  }
+
+  /** British spelling alias for scale_color_hue */
+  static ScaleColorHue scale_colour_hue(Map params = [:]) {
+    return scale_color_hue(params)
+  }
+
+  /**
+   * Evenly spaced fill colors from the HCL color wheel.
+   * Fill aesthetic version of scale_color_hue.
+   *
+   * @param params Same parameters as scale_color_hue
+   * @return Fill color hue scale
+   * @see #scale_color_hue(Map)
+   */
+  static ScaleColorHue scale_fill_hue(Map params = [:]) {
+    return new ScaleColorHue('fill', params)
   }
 
   /**

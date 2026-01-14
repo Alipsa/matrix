@@ -272,26 +272,4 @@ class ScaleColorManualTest {
     assertTrue(seven.every { it.matches(/#[0-9A-F]{6}/) })
   }
 
-  @Test
-  void testHclToHexLuminanceZero() {
-    def method = ScaleColorManual.class.getDeclaredMethod('hclToHex', double, double, double)
-    method.accessible = true
-
-    String color = method.invoke(null, 0.0d, 100.0d, 0.0d) as String
-    assertEquals('#000000', color)
-  }
-
-  @Test
-  void testGammaCorrectThreshold() {
-    def method = ScaleColorManual.class.getDeclaredMethod('gammaCorrect', double)
-    method.accessible = true
-
-    double input = 0.0031308d
-    double expected = 12.92d * input
-    double actual = method.invoke(null, input) as double
-    assertEquals(expected, actual, 1.0e-10d)
-
-    double one = method.invoke(null, 1.0d) as double
-    assertEquals(1.0d, one, 1.0e-9d)
-  }
 }

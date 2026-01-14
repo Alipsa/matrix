@@ -20,7 +20,8 @@ class ScaleColorGrey extends ScaleDiscrete {
   /** Color for NA/missing values. */
   String naValue = 'grey50'
 
-  private List<String> computedPalette = []
+  /** Generated color palette (Map for O(1) lookup) */
+  private Map<String, String> palette = [:]
 
   /**
    * Create a greyscale with defaults.
@@ -55,32 +56,36 @@ class ScaleColorGrey extends ScaleDiscrete {
   @Override
   void train(List data) {
     super.train(data)
-    computedPalette = buildPalette(levels.size())
+    generatePalette()
+  }
+
+  /**
+   * Generate color palette based on current levels.
+   */
+  private void generatePalette() {
+    if (domain == null || domain.isEmpty()) {
+      palette = [:]
+      return
+    }
+
+    int n = domain.size()
+    List<String> colors = buildGreyPalette(n)
+    palette = buildPaletteMap(colors)
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    if (levels.isEmpty()) return naValue
-
-    int index = levels.indexOf(value)
-    if (index < 0) return naValue
-
-    if (computedPalette.isEmpty()) {
-      computedPalette = buildPalette(levels.size())
-    }
-    if (computedPalette.isEmpty()) return naValue
-    return computedPalette[index % computedPalette.size()]
+    return lookupColor(palette, value, naValue)
   }
 
   List<String> getColors() {
-    if (computedPalette.isEmpty()) {
-      computedPalette = buildPalette(levels.size())
+    if (palette.isEmpty()) {
+      generatePalette()
     }
-    return new ArrayList<>(computedPalette)
+    return getColorsFromPalette(palette, naValue)
   }
 
-  private List<String> buildPalette(int n) {
+  private List<String> buildGreyPalette(int n) {
     if (n <= 0) return []
     double startVal = start as double
     double endVal = end as double

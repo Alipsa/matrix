@@ -23,7 +23,8 @@ class ScaleColorBrewer extends ScaleDiscrete {
   /** Color for NA/missing values. */
   String naValue = 'grey50'
 
-  private List<String> computedPalette = []
+  /** Generated color mapping (Map for O(1) lookup) */
+  private Map<String, String> paletteMap = [:]
 
   /**
    * Create a ColorBrewer scale with defaults.
@@ -59,35 +60,34 @@ class ScaleColorBrewer extends ScaleDiscrete {
   @Override
   void train(List data) {
     super.train(data)
-    int count = n != null ? n : levels.size()
+    generatePalette()
+  }
+
+  /**
+   * Generate color palette based on current levels.
+   */
+  private void generatePalette() {
+    if (domain == null || domain.isEmpty()) {
+      paletteMap = [:]
+      return
+    }
+
+    int count = n != null ? n : domain.size()
     String resolvedPalette = resolvePaletteName()
-    computedPalette = BrewerPalettes.selectPalette(resolvedPalette, count, direction)
+    List<String> colors = BrewerPalettes.selectPalette(resolvedPalette, count, direction)
+    paletteMap = buildPaletteMap(colors)
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    if (levels.isEmpty()) return naValue
-
-    int index = levels.indexOf(value)
-    if (index < 0) return naValue
-
-    if (computedPalette.isEmpty()) {
-      int count = n != null ? n : levels.size()
-      String resolvedPalette = resolvePaletteName()
-      computedPalette = BrewerPalettes.selectPalette(resolvedPalette, count, direction)
-    }
-    if (computedPalette.isEmpty()) return naValue
-    return computedPalette[index % computedPalette.size()]
+    return lookupColor(paletteMap, value, naValue)
   }
 
   List<String> getColors() {
-    if (computedPalette.isEmpty()) {
-      int count = n != null ? n : levels.size()
-      String resolvedPalette = resolvePaletteName()
-      computedPalette = BrewerPalettes.selectPalette(resolvedPalette, count, direction)
+    if (paletteMap.isEmpty()) {
+      generatePalette()
     }
-    return new ArrayList<>(computedPalette)
+    return getColorsFromPalette(paletteMap, naValue)
   }
 
   private String resolvePaletteName() {

@@ -39,8 +39,8 @@ class ScaleColorViridis extends ScaleDiscrete {
   /** Alpha transparency (0-1) */
   double alpha = 1.0
 
-  /** Cached colors for current levels */
-  private List<String> computedColors = []
+  /** Generated color mapping (Map for O(1) lookup) */
+  private Map<String, String> paletteMap = [:]
 
   // Viridis palette key colors (used for smooth interpolation)
   // Each palette is defined with approximately 12–20 discrete colors
@@ -148,8 +148,21 @@ class ScaleColorViridis extends ScaleDiscrete {
   @Override
   void train(List data) {
     super.train(data)
-    // Compute colors after training so we know the number of levels
-    computedColors = generateColors(levels.size())
+    generatePalette()
+  }
+
+  /**
+   * Generate color palette based on current levels.
+   */
+  private void generatePalette() {
+    if (domain == null || domain.isEmpty()) {
+      paletteMap = [:]
+      return
+    }
+
+    int n = domain.size()
+    List<String> colors = generateColors(n)
+    paletteMap = buildPaletteMap(colors)
   }
 
   /**
@@ -259,43 +272,41 @@ class ScaleColorViridis extends ScaleDiscrete {
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    if (levels.isEmpty()) return naValue
-
-    int index = levels.indexOf(value)
-    if (index < 0) return naValue
-
-    return computedColors.isEmpty() ? naValue : computedColors[index % computedColors.size()]
+    return lookupColor(paletteMap, value, naValue)
   }
 
   @Override
   Object inverse(Object value) {
     if (value == null) return null
-    int colorIndex = computedColors.indexOf(value as String)
-    if (colorIndex >= 0 && colorIndex < levels.size()) {
-      return levels[colorIndex]
-    }
-    return null
+    // Find the level that maps to this color
+    def entry = paletteMap.find { k, v -> v == value }
+    return entry?.key
   }
 
   /**
    * Get the color for a specific level index.
+   * Supports wrapping (index % levels.size()) for indices beyond range.
    */
   String getColorForIndex(int index) {
-    if (index < 0 || computedColors.isEmpty()) return naValue
-    return computedColors[index % computedColors.size()]
+    if (index < 0 || levels.isEmpty()) return naValue
+    // Support wrapping for indices beyond range
+    int wrappedIndex = index % levels.size()
+    return transform(levels[wrappedIndex]) as String
   }
 
   /**
    * Get all computed colors in order of levels.
    */
   List<String> getColors() {
-    return computedColors
+    if (paletteMap.isEmpty()) {
+      generatePalette()
+    }
+    return getColorsFromPalette(paletteMap, naValue)
   }
 
   @Override
   void reset() {
     super.reset()
-    computedColors = []
+    paletteMap = [:]
   }
 }
