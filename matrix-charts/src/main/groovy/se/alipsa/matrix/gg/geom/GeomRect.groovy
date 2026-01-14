@@ -81,18 +81,23 @@ class GeomRect extends Geom {
       if (xminVal == null || xmaxVal == null || yminVal == null || ymaxVal == null) return
 
       // Transform coordinates
-      def xminPx = xScale?.transform(xminVal)
-      def xmaxPx = xScale?.transform(xmaxVal)
-      def yminPx = yScale?.transform(yminVal)
-      def ymaxPx = yScale?.transform(ymaxVal)
+      Number xminPx = xScale?.transform(xminVal) as Number
+      Number xmaxPx = xScale?.transform(xmaxVal) as Number
+      Number yminPx = yScale?.transform(yminVal) as Number
+      Number ymaxPx = yScale?.transform(ymaxVal) as Number
 
       if (xminPx == null || xmaxPx == null || yminPx == null || ymaxPx == null) return
 
       // Calculate rectangle bounds (note: in SVG, y increases downward)
-      double x = Math.min(xminPx as double, xmaxPx as double)
-      double y = Math.min(yminPx as double, ymaxPx as double)
-      double w = Math.abs((xmaxPx as double) - (xminPx as double))
-      double h = Math.abs((ymaxPx as double) - (yminPx as double))
+      BigDecimal xminBd = xminPx as BigDecimal
+      BigDecimal xmaxBd = xmaxPx as BigDecimal
+      BigDecimal yminBd = yminPx as BigDecimal
+      BigDecimal ymaxBd = ymaxPx as BigDecimal
+
+      BigDecimal x = xminBd.min(xmaxBd)
+      BigDecimal y = yminBd.min(ymaxBd)
+      BigDecimal w = (xmaxBd - xminBd).abs()
+      BigDecimal h = (ymaxBd - yminBd).abs()
 
       // Determine fill color
       String rectFill = this.fill
@@ -109,19 +114,19 @@ class GeomRect extends Geom {
 
       // Draw the rectangle
       def rect = group.addRect()
-          .x(x as int)
-          .y(y as int)
-          .width(w as int)
-          .height(h as int)
+          .x(x)
+          .y(y)
+          .width(w)
+          .height(h)
           .fill(rectFill)
 
       // Apply alpha
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         rect.addAttribute('fill-opacity', alpha)
       }
 
       // Apply stroke
-      if (color != null && (linewidth as double) > 0) {
+      if (color != null && linewidth > 0) {
         String strokeColor = ColorUtil.normalizeColor(color) ?: color
         rect.stroke(strokeColor)
         rect.addAttribute('stroke-width', linewidth)
@@ -140,14 +145,13 @@ class GeomRect extends Geom {
    * Convert line type to SVG stroke-dasharray.
    */
   private String getDashArray(String type) {
-    switch (type?.toLowerCase()) {
-      case 'dashed': return '8,4'
-      case 'dotted': return '2,2'
-      case 'dotdash': return '2,2,8,2'
-      case 'longdash': return '12,4'
-      case 'twodash': return '4,2,8,2'
-      case 'solid':
-      default: return null
+    return switch (type?.toLowerCase()) {
+      case 'dashed' -> '8,4'
+      case 'dotted' -> '2,2'
+      case 'dotdash' -> '2,2,8,2'
+      case 'longdash' -> '12,4'
+      case 'twodash' -> '4,2,8,2'
+      default -> null
     }
   }
 
@@ -161,7 +165,7 @@ class GeomRect extends Geom {
       '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 }
