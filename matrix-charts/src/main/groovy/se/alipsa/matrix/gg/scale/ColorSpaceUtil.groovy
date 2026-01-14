@@ -11,9 +11,9 @@ class ColorSpaceUtil {
 
   // D65 reference white point for CIE XYZ (used in CIELUV conversions)
   // See: CIE standard illuminant D65 and CIE 1931 2° observer
-  private static final double REF_X = 95.047d
-  private static final double REF_Y = 100.0d
-  private static final double REF_Z = 108.883d
+  private static final BigDecimal REF_X = 95.047
+  private static final BigDecimal REF_Y = 100.0
+  private static final BigDecimal REF_Z = 108.883
 
   /**
    * Convert CIELUV-derived HCL (Hue, Chroma, Luminance) to sRGB.
@@ -28,38 +28,38 @@ class ColorSpaceUtil {
    */
   static String hclToHex(Number h, Number c, Number l) {
     // Convert HCL cylindrical coordinates to CIELUV Cartesian
-    double hr = Math.toRadians(h as double)
-    double u = (c as double) * Math.cos(hr)
-    double v = (c as double) * Math.sin(hr)
-    double lVal = l as double
+    BigDecimal hr = (h as BigDecimal).toRadians()
+    BigDecimal u = (c as BigDecimal) * hr.cos()
+    BigDecimal v = (c as BigDecimal) * hr.sin()
+    BigDecimal lVal = l as BigDecimal
 
-    if (lVal <= 0.0d) {
+    if (lVal <= 0) {
       return '#000000'
     }
 
     // Convert CIELUV to CIE XYZ using D65 white point
-    double denom = REF_X + 15.0d * REF_Y + 3.0d * REF_Z
-    double u0 = (4.0d * REF_X) / denom
-    double v0 = (9.0d * REF_Y) / denom
+    BigDecimal denom = REF_X + 15 * REF_Y + 3 * REF_Z
+    BigDecimal u0 = (4 * REF_X) / denom
+    BigDecimal v0 = (9 * REF_Y) / denom
 
-    double up = u / (13.0d * lVal) + u0
-    double vp = v / (13.0d * lVal) + v0
+    BigDecimal up = u / (13 * lVal) + u0
+    BigDecimal vp = v / (13 * lVal) + v0
 
     // Y component (luminance)
-    double y = lVal > 8.0d ? REF_Y * Math.pow((lVal + 16.0d) / 116.0d, 3.0d) : REF_Y * lVal / 903.3d
+    BigDecimal y = lVal > 8 ? REF_Y * ((lVal + 16) / 116) ** 3 : REF_Y * lVal / 903.3
 
     // X and Z components
-    double denom1 = ((up - 4.0d) * vp - up * vp)
-    if (Math.abs(denom1) < 1.0e-9d || Math.abs(vp) < 1.0e-9d) {
+    BigDecimal denom1 = (up - 4) * vp - up * vp
+    if (denom1.abs() < 1.0e-9 || vp.abs() < 1.0e-9) {
       return '#000000'
     }
 
-    double x = 0.0d - (9.0d * y * up) / denom1
-    if (!Double.isFinite(x) || Math.abs(x) > 1.0e6d) {
+    BigDecimal x = -(9 * y * up) / denom1
+    if (x.abs() > 1.0e6) {
       return '#000000'
     }
 
-    double z = (9.0d * y - 15.0d * vp * y - vp * x) / (3.0d * vp)
+    BigDecimal z = (9 * y - 15 * vp * y - vp * x) / (3 * vp)
 
     return xyzToHex(x, y, z)
   }
@@ -72,16 +72,16 @@ class ColorSpaceUtil {
    * @param z Z component
    * @return hex RGB string
    */
-  private static String xyzToHex(double x, double y, double z) {
+  private static String xyzToHex(BigDecimal x, BigDecimal y, BigDecimal z) {
     // Normalize to 0-1 range
-    double xn = x / 100.0d
-    double yn = y / 100.0d
-    double zn = z / 100.0d
+    BigDecimal xn = x / 100
+    BigDecimal yn = y / 100
+    BigDecimal zn = z / 100
 
     // XYZ to linear RGB (sRGB D65)
-    double r = 3.2406d * xn + -1.5372d * yn + -0.4986d * zn
-    double g = -0.9689d * xn + 1.8758d * yn + 0.0415d * zn
-    double b = 0.0557d * xn + -0.2040d * yn + 1.0570d * zn
+    BigDecimal r = 3.2406 * xn - 1.5372 * yn - 0.4986 * zn
+    BigDecimal g = -0.9689 * xn + 1.8758 * yn + 0.0415 * zn
+    BigDecimal b = 0.0557 * xn - 0.2040 * yn + 1.0570 * zn
 
     // Apply gamma correction
     r = gammaCorrect(r)
@@ -89,9 +89,9 @@ class ColorSpaceUtil {
     b = gammaCorrect(b)
 
     // Clamp to [0, 1] and convert to 0-255
-    int ri = (int) Math.round(Math.max(0.0d, Math.min(1.0d, r)) * 255.0d)
-    int gi = (int) Math.round(Math.max(0.0d, Math.min(1.0d, g)) * 255.0d)
-    int bi = (int) Math.round(Math.max(0.0d, Math.min(1.0d, b)) * 255.0d)
+    int ri = (0.max(r.min(1)) * 255).round() as int
+    int gi = (0.max(g.min(1)) * 255).round() as int
+    int bi = (0.max(b.min(1)) * 255).round() as int
 
     return String.format('#%02X%02X%02X', ri, gi, bi)
   }
@@ -102,10 +102,10 @@ class ColorSpaceUtil {
    * @param c linear RGB component
    * @return gamma-corrected component in [0, 1]
    */
-  private static double gammaCorrect(double c) {
-    if (c <= 0.0031308d) {
-      return 12.92d * c
+  private static BigDecimal gammaCorrect(BigDecimal c) {
+    if (c <= 0.0031308) {
+      return 12.92 * c
     }
-    return 1.055d * Math.pow(c, 1.0d / 2.4d) - 0.055d
+    return 1.055 * (c ** (1 / 2.4)) - 0.055
   }
 }

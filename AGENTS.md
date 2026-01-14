@@ -360,12 +360,14 @@ BigDecimal naturalLog = value.log()
 BigDecimal log10 = value.log10()
 BigDecimal exp = value.exp()
 BigDecimal squareRoot = value.sqrt()
+BigDecimal radians = degrees.toRadians()
+BigDecimal degrees = radians.toDegrees()
 BigDecimal sine = angle.sin()
 BigDecimal cosine = angle.cos()
-BigDecimal degrees = angle.toDegrees()
 
 // Avoid - Verbose Math methods with type conversions
 BigDecimal naturalLog = Math.log(value as double) as BigDecimal
+BigDecimal radians = Math.toRadians(degrees as double) as BigDecimal
 BigDecimal sine = Math.sin(angle as double) as BigDecimal
 ```
 
@@ -407,6 +409,12 @@ area.sqrt()  // -> 5.0 (uses MathContext.DECIMAL64)
 BigDecimal angle = Math.PI / 2 as BigDecimal
 angle.sin()  // -> 1.0
 angle.cos()  // -> 0.0
+
+// Angle conversions
+BigDecimal degrees = 180.0
+degrees.toRadians()  // -> 3.14159... (Math.PI)
+BigDecimal radians = Math.PI as BigDecimal
+radians.toDegrees()  // -> 180.0
 
 // Inverse operations demonstrate composability
 BigDecimal testValue = 5.0
