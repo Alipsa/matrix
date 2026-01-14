@@ -20,7 +20,8 @@ class ScaleColorGrey extends ScaleDiscrete {
   /** Color for NA/missing values. */
   String naValue = 'grey50'
 
-  private List<String> computedPalette = []
+  /** Generated color palette (Map for O(1) lookup) */
+  private Map<Object, String> palette = [:]
 
   /**
    * Create a greyscale with defaults.
@@ -55,29 +56,51 @@ class ScaleColorGrey extends ScaleDiscrete {
   @Override
   void train(List data) {
     super.train(data)
-    computedPalette = buildPalette(levels.size())
+    generatePalette()
+  }
+
+  /**
+   * Generate color palette based on current levels.
+   */
+  private void generatePalette() {
+    if (domain == null || domain.isEmpty()) {
+      palette = [:]
+      return
+    }
+
+    int n = domain.size()
+    List<String> colors = buildPalette(n)
+
+    palette = [:]
+    domain.eachWithIndex { value, idx ->
+      // Convert to String to handle GString vs String key mismatch
+      palette[value.toString()] = colors[idx]
+    }
   }
 
   @Override
   Object transform(Object value) {
     if (value == null) return naValue
-    if (levels.isEmpty()) return naValue
-
-    int index = levels.indexOf(value)
-    if (index < 0) return naValue
-
-    if (computedPalette.isEmpty()) {
-      computedPalette = buildPalette(levels.size())
+    // Convert to String to handle GString vs String key mismatch
+    String key = value.toString()
+    if (palette.containsKey(key)) {
+      return palette[key]
     }
-    if (computedPalette.isEmpty()) return naValue
-    return computedPalette[index % computedPalette.size()]
+    return naValue
   }
 
   List<String> getColors() {
-    if (computedPalette.isEmpty()) {
-      computedPalette = buildPalette(levels.size())
+    if (levels.isEmpty()) return []
+    if (palette.isEmpty()) {
+      generatePalette()
     }
-    return new ArrayList<>(computedPalette)
+    List<String> result = []
+    for (Object level : levels) {
+      // Convert to String to handle GString vs String key mismatch
+      String color = palette.get(level.toString())
+      result.add(color != null ? color : naValue)
+    }
+    return result
   }
 
   private List<String> buildPalette(int n) {

@@ -23,7 +23,8 @@ class ScaleColorBrewer extends ScaleDiscrete {
   /** Color for NA/missing values. */
   String naValue = 'grey50'
 
-  private List<String> computedPalette = []
+  /** Generated color mapping (Map for O(1) lookup) */
+  private Map<Object, String> paletteMap = [:]
 
   /**
    * Create a ColorBrewer scale with defaults.
@@ -59,35 +60,52 @@ class ScaleColorBrewer extends ScaleDiscrete {
   @Override
   void train(List data) {
     super.train(data)
-    int count = n != null ? n : levels.size()
+    generatePalette()
+  }
+
+  /**
+   * Generate color palette based on current levels.
+   */
+  private void generatePalette() {
+    if (domain == null || domain.isEmpty()) {
+      paletteMap = [:]
+      return
+    }
+
+    int count = n != null ? n : domain.size()
     String resolvedPalette = resolvePaletteName()
-    computedPalette = BrewerPalettes.selectPalette(resolvedPalette, count, direction)
+    List<String> colors = BrewerPalettes.selectPalette(resolvedPalette, count, direction)
+
+    paletteMap = [:]
+    domain.eachWithIndex { value, idx ->
+      // Convert to String to handle GString vs String key mismatch
+      paletteMap[value.toString()] = colors[idx % colors.size()]
+    }
   }
 
   @Override
   Object transform(Object value) {
     if (value == null) return naValue
-    if (levels.isEmpty()) return naValue
-
-    int index = levels.indexOf(value)
-    if (index < 0) return naValue
-
-    if (computedPalette.isEmpty()) {
-      int count = n != null ? n : levels.size()
-      String resolvedPalette = resolvePaletteName()
-      computedPalette = BrewerPalettes.selectPalette(resolvedPalette, count, direction)
+    // Convert to String to handle GString vs String key mismatch
+    String key = value.toString()
+    if (paletteMap.containsKey(key)) {
+      return paletteMap[key]
     }
-    if (computedPalette.isEmpty()) return naValue
-    return computedPalette[index % computedPalette.size()]
+    return naValue
   }
 
   List<String> getColors() {
-    if (computedPalette.isEmpty()) {
-      int count = n != null ? n : levels.size()
-      String resolvedPalette = resolvePaletteName()
-      computedPalette = BrewerPalettes.selectPalette(resolvedPalette, count, direction)
+    if (levels.isEmpty()) return []
+    if (paletteMap.isEmpty()) {
+      generatePalette()
     }
-    return new ArrayList<>(computedPalette)
+    List<String> result = []
+    for (Object level : levels) {
+      // Convert to String to handle GString vs String key mismatch
+      String color = paletteMap.get(level.toString())
+      result.add(color != null ? color : naValue)
+    }
+    return result
   }
 
   private String resolvePaletteName() {
