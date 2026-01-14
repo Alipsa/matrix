@@ -89,8 +89,9 @@ class GlobalThemeTest {
     def old2 = theme_replace(minimal)
     def theme2 = theme_get()
 
-    // Both should produce same result
-    assertEquals(theme1.class, theme2.class)
+    // Both should produce same result - compare distinctive properties
+    assertEquals(theme1.panelBackground?.fill, theme2.panelBackground?.fill)
+    assertEquals('none', theme2.panelBackground?.fill) // Verify it's actually minimal
   }
 
   @Test
@@ -209,12 +210,12 @@ class GlobalThemeTest {
     // Set another theme
     def old2 = theme_set(theme_dark())
 
-    // Restore to minimal
+    // Restore to minimal - verify by checking distinctive property
     theme_set(old2)
-    assertEquals(theme_minimal().class, theme_get().class)
+    assertEquals('none', theme_get().panelBackground?.fill) // Minimal has 'none'
 
-    // Restore to original
+    // Restore to original - verify by checking distinctive property
     theme_set(old1)
-    assertEquals(original.class, theme_get().class)
+    assertEquals(original.panelBackground?.fill, theme_get().panelBackground?.fill)
   }
 }
