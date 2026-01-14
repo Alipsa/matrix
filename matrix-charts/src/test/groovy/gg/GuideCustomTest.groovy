@@ -271,13 +271,19 @@ class GuideCustomTest {
         geom_point() +
         guides(custom: brokenGuide)
 
-    // Should not throw - error should be caught
-    Svg svg = chart.render()
-    String content = SvgWriter.toXml(svg)
+    def orgErr = System.err
+    System.err = new PrintStream(new ByteArrayOutputStream()) // Suppress error output
+    try {
+      // Should not throw - error should be caught
+      Svg svg = chart.render()
+      String content = SvgWriter.toXml(svg)
 
-    // Should contain error placeholder
-    assertTrue(content.contains('Error rendering custom guide'))
-    assertTrue(content.contains('fill="#ffcccc"'))
+      // Should contain error placeholder
+      assertTrue(content.contains('Error rendering custom guide'))
+      assertTrue(content.contains('fill="#ffcccc"'))
+    } finally {
+      System.err = orgErr
+    }
   }
 
   @Test

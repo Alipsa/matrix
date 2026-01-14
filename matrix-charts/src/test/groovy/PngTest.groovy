@@ -36,7 +36,7 @@ class PngTest {
         BarChart chart = BarChart.createVertical("Salaries", empData, "emp_name", ChartType.BASIC, "salary")
         try {
             Plot.png(chart, file, 600, 400)
-            println("Wrote $file")
+            //println("Wrote $file")
             assertTrue(file.exists())
             file.delete()
         } catch (UnsatisfiedLinkError | NoClassDefFoundError e) {
@@ -63,7 +63,7 @@ class PngTest {
         AreaChart chart = AreaChart.create("Salaries", empData, "emp_name", "salary")
         try {
             Plot.png(chart, file, 1024, 768)
-            println("Wrote $file")
+            //println("Wrote $file")
             assertTrue(file.exists())
             file.delete()
         } catch (UnsatisfiedLinkError | NoClassDefFoundError e) {

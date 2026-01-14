@@ -21,21 +21,21 @@ class HistogramDebugTest {
         .types(Integer)
         .build()
 
-    println "Original data:"
-    println "  Columns: ${data.columnNames()}"
-    println "  Rows: ${data.rowCount()}"
-    println "  Data column x: ${data['x']}"
+    //println "Original data:"
+    //println "  Columns: ${data.columnNames()}"
+    //println "  Rows: ${data.rowCount()}"
+    //println "  Data column x: ${data['x']}"
 
     // Test stat_bin directly
     try {
       def aes = new Aes(x: 'x')
-      println "\nCalling GgStat.bin with aes.xColName=${aes.xColName}"
+      //println "\nCalling GgStat.bin with aes.xColName=${aes.xColName}"
       def binned = GgStat.bin(data, aes, [bins: 5])
-      println "\nBinned data:"
-      println "  Columns: ${binned.columnNames()}"
-      println "  Rows: ${binned.rowCount()}"
+      //println "\nBinned data:"
+      //println "  Columns: ${binned.columnNames()}"
+      //println "  Rows: ${binned.rowCount()}"
     } catch (Exception e) {
-      println "\nException during stat_bin:"
+      //println "\nException during stat_bin:"
       e.printStackTrace()
       throw e
     }

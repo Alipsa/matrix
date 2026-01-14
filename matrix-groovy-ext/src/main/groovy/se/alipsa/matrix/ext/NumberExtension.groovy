@@ -65,8 +65,11 @@ import java.math.RoundingMode
 @CompileStatic
 class NumberExtension {
 
-  static final BigDecimal PI = Math.PI as BigDecimal
-  static final BigDecimal E = Math.E as BigDecimal
+  /** π to 16 digits is 3.1415926535897932, is precise enough for most scientific calculations */
+  static final BigDecimal PI = 3.1415926535897932
+  /** e (eulers number) to 30 digits is 2.718281828459045235360287471352, 16 is enough for practical use */
+  static final BigDecimal E = 2.7182818284590452
+
   /**
    * Returns the largest integer value less than or equal to this BigDecimal.
    *
