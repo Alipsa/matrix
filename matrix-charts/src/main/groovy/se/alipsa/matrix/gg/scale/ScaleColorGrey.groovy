@@ -73,7 +73,7 @@ class ScaleColorGrey extends ScaleDiscrete {
 
     palette = [:]
     domain.eachWithIndex { value, idx ->
-      // Convert to String to handle GString vs String key mismatch
+      // Use toString() to ensure consistent String keys (handles GString vs String)
       palette[value.toString()] = colors[idx]
     }
   }
@@ -81,7 +81,7 @@ class ScaleColorGrey extends ScaleDiscrete {
   @Override
   Object transform(Object value) {
     if (value == null) return naValue
-    // Convert to String to handle GString vs String key mismatch
+    // Use toString() to match storage format
     String key = value.toString()
     if (palette.containsKey(key)) {
       return palette[key]
@@ -96,7 +96,7 @@ class ScaleColorGrey extends ScaleDiscrete {
     }
     List<String> result = []
     for (Object level : levels) {
-      // Convert to String to handle GString vs String key mismatch
+      // Use toString() to match storage format
       String color = palette.get(level.toString())
       result.add(color != null ? color : naValue)
     }

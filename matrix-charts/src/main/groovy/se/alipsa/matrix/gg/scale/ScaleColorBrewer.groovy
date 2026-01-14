@@ -78,7 +78,7 @@ class ScaleColorBrewer extends ScaleDiscrete {
 
     paletteMap = [:]
     domain.eachWithIndex { value, idx ->
-      // Convert to String to handle GString vs String key mismatch
+      // Use toString() to ensure consistent String keys (handles GString vs String)
       paletteMap[value.toString()] = colors[idx % colors.size()]
     }
   }
@@ -86,7 +86,7 @@ class ScaleColorBrewer extends ScaleDiscrete {
   @Override
   Object transform(Object value) {
     if (value == null) return naValue
-    // Convert to String to handle GString vs String key mismatch
+    // Use toString() to match storage format
     String key = value.toString()
     if (paletteMap.containsKey(key)) {
       return paletteMap[key]
@@ -101,7 +101,7 @@ class ScaleColorBrewer extends ScaleDiscrete {
     }
     List<String> result = []
     for (Object level : levels) {
-      // Convert to String to handle GString vs String key mismatch
+      // Use toString() to match storage format
       String color = paletteMap.get(level.toString())
       result.add(color != null ? color : naValue)
     }

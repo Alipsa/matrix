@@ -1122,9 +1122,11 @@ Results: SUCCESS (1519 tests, 1519 passed, 0 failed, 0 skipped)
 **Implementation Notes:**
 - Full HCL (CIELUV) color space conversion implemented for perceptually uniform colors
 - Reused existing HCL conversion code from ScaleColorManual (hclToHex, xyzToHex, gammaCorrect)
-- Fixed GString vs String key mismatch issue in palette lookups by converting to String
+- Uses Map-based palette lookup for O(1) performance (consistent with other discrete scales)
+- Handles GString vs String mismatch by using toString() for Map keys (necessary for string interpolation in domain values)
 - Supports all ggplot2 parameters: h (hue range), c (chroma), l (luminance), h.start, direction
 - British spelling aliases included (scale_colour_hue)
+- Includes reset() method to clear palette state
 
 **Deliverables:**
 - ✅ ScaleColorHue class extending ScaleDiscrete
