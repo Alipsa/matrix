@@ -130,6 +130,9 @@ class Theme implements Cloneable {
   /** Base line height */
   Number baseLineHeight = 1.2
 
+  /** Theme name for identification (e.g., 'gray', 'minimal', 'dark') */
+  String themeName
+
   /** Track properties explicitly set to null (e.g., element_blank()). */
   Set<String> explicitNulls = new HashSet<>()
 

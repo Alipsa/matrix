@@ -173,6 +173,10 @@ class GgPlot {
   static final boolean T = true
   static final boolean F = false
 
+  /** Global default theme (thread-local for thread safety) */
+  private static final ThreadLocal<Theme> GLOBAL_THEME =
+      ThreadLocal.withInitial { Themes.gray() }
+
   // ============ Core functions ============
 
   static GgChart ggplot(Matrix data, Aes aes) {
@@ -1254,7 +1258,91 @@ class GgPlot {
    * Supports both camelCase (e.g., 'legendPosition') and dot-notation (e.g., 'legend.position').
    */
   static Theme theme(Map params) {
-    Themes.theme(params)
+    return Themes.theme(params)
+  }
+
+  /**
+   * Get the current global default theme.
+   * This theme is used as the default for new plots when no theme is specified.
+   *
+   * @return The current global theme (never null, defaults to theme_gray())
+   *
+   * @example
+   * <pre>
+   * def currentTheme = theme_get()
+   * println "Current theme: ${currentTheme.class.simpleName}"
+   * </pre>
+   */
+  static Theme theme_get() {
+    return GLOBAL_THEME.get()
+  }
+
+  /**
+   * Set the global default theme for all new plots.
+   * Returns the previous theme to allow restoration.
+   *
+   * @param newTheme The theme to set as global default (must not be null)
+   * @return The previous global theme
+   * @throws IllegalArgumentException if newTheme is null
+   *
+   * @example
+   * <pre>
+   * // Set minimal theme globally
+   * def oldTheme = theme_set(theme_minimal())
+   *
+   * // All new plots will use minimal theme
+   * def p1 = ggplot(data, aes('x', 'y')) + geom_point()
+   *
+   * // Restore previous theme
+   * theme_set(oldTheme)
+   * </pre>
+   */
+  static Theme theme_set(Theme newTheme) {
+    if (newTheme == null) {
+      throw new IllegalArgumentException('theme_set requires non-null theme')
+    }
+    Theme old = GLOBAL_THEME.get()
+    GLOBAL_THEME.set(newTheme)
+    return old
+  }
+
+  /**
+   * Update the current global theme with new elements.
+   * This modifies the existing global theme by merging updates rather than replacing it.
+   *
+   * @param params Theme element updates (same parameters as theme())
+   * @return The updated global theme
+   *
+   * @example
+   * <pre>
+   * // Update global theme to hide axis text
+   * theme_update(axis_text: element_blank())
+   *
+   * // Update multiple elements
+   * theme_update([
+   *   'plot.title': element_text(size: 16, face: 'bold'),
+   *   'legend.position': 'bottom'
+   * ])
+   * </pre>
+   */
+  static Theme theme_update(Map params) {
+    Theme current = GLOBAL_THEME.get()
+    Theme updates = theme(params)
+    Theme merged = current + updates
+    GLOBAL_THEME.set(merged)
+    return merged
+  }
+
+  /**
+   * Replace the current global theme completely (alias for theme_set).
+   * In R ggplot2, theme_replace is identical to theme_set.
+   *
+   * @param newTheme The new theme
+   * @return The previous theme
+   * @see #theme_set(Theme)
+   */
+  static Theme theme_replace(Theme newTheme) {
+    return theme_set(newTheme)
   }
 
   // ============ Theme Element Helpers ============

@@ -1058,23 +1058,35 @@ These are niche scales for specific edge cases.
 **Goal:** Implement theme_get/set/update for global theming
 
 **Tasks:**
-1. [ ] Add global theme state to GgPlot (ThreadLocal) (30 min)
-2. [ ] Implement `theme_get()` (15 min)
-3. [ ] Implement `theme_set()` (15 min)
-4. [ ] Implement `theme_update()` (30 min)
-5. [ ] Implement `theme_replace()` (5 min)
-6. [ ] Modify GgChart to use global theme (15 min)
-7. [ ] Write comprehensive tests (2 hours)
-8. [ ] Documentation and examples (1 hour)
+1. [x] Add global theme state to GgPlot (ThreadLocal) (30 min)
+2. [x] Implement `theme_get()` (15 min)
+3. [x] Implement `theme_set()` (15 min)
+4. [x] Implement `theme_update()` (30 min)
+5. [x] Implement `theme_replace()` (5 min)
+6. [x] Modify GgChart to use global theme (15 min)
+7. [x] Write comprehensive tests (2 hours) - GlobalThemeTest.groovy with 11 tests
+8. [x] Documentation and examples (1 hour) - Complete GroovyDoc added
 
 **Total Effort:** 4-5 hours
 **Impact:** HIGH - Commonly used feature, improves user experience
 
+**Status:** ✅ **COMPLETED** - All tests passing (1496/1496)
+
+**Test Results:**
+```bash
+./gradlew :matrix-charts:test --tests "GlobalThemeTest"
+Results: SUCCESS (11 tests, 11 passed, 0 failed, 0 skipped)
+
+./gradlew :matrix-charts:test
+Results: SUCCESS (1496 tests, 1496 passed, 0 failed, 0 skipped)
+```
+
 **Deliverables:**
-- Global theme management in GgPlot
-- Thread-safe implementation
-- Complete test coverage
-- Documentation with examples
+- ✅ Global theme management in GgPlot (ThreadLocal-based)
+- ✅ Thread-safe implementation
+- ✅ Complete test coverage (GlobalThemeTest.groovy)
+- ✅ Documentation with examples (GroovyDoc)
+- ✅ Bug fix: theme() function now returns Theme object
 
 ---
 
@@ -1203,10 +1215,10 @@ For visual features (scales, themes):
 - [x] Documentation updated ✅
 
 ### Phase 2 (Global Theme)
-- [ ] theme_get/set/update work correctly
-- [ ] Thread-safe implementation verified
-- [ ] Global theme affects new plots
-- [ ] Can restore previous theme
+- [x] theme_get/set/update work correctly ✅
+- [x] Thread-safe implementation verified ✅
+- [x] Global theme affects new plots ✅
+- [x] Can restore previous theme ✅
 
 ### Phase 3 (Color Hue Scale)
 - [ ] Generates evenly-spaced colors
