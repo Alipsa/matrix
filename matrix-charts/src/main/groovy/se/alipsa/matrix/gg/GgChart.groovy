@@ -85,6 +85,7 @@ class GgChart {
   GgChart(Matrix data, Aes aes) {
     this.data = data
     this.globalAes = aes
+    this.theme = GgPlot.theme_get()
   }
 
   /**
