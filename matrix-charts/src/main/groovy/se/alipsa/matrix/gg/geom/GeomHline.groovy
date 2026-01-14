@@ -89,17 +89,15 @@ class GeomHline extends Geom {
 
     // Draw horizontal lines
     yValues.unique().each { Number yVal ->
-      def yPx = yScale.transform(yVal)
+      Number yPx = yScale.transform(yVal) as Number
       if (yPx == null) return
-
-      double y = yPx as double
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
           .x1(0)
-          .y1(y as int)
+          .y1(yPx)
           .x2(plotWidth)
-          .y2(y as int)
+          .y2(yPx)
           .stroke(lineColor)
 
       line.addAttribute('stroke-width', linewidth)
@@ -111,7 +109,7 @@ class GeomHline extends Geom {
       }
 
       // Apply alpha
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
     }
@@ -121,13 +119,13 @@ class GeomHline extends Geom {
    * Convert line type name to SVG stroke-dasharray value.
    */
   private String getLineDashArray(String type) {
-    switch (type?.toLowerCase()) {
-      case 'dashed': return '5,5'
-      case 'dotted': return '2,2'
-      case 'longdash': return '10,5'
-      case 'twodash': return '10,5,2,5'
-      case 'solid':
-      default: return null
+    return switch (type?.toLowerCase()) {
+      case 'dashed' -> '5,5'
+      case 'dotted' -> '2,2'
+      case 'longdash' -> '10,5'
+      case 'twodash' -> '10,5,2,5'
+      case 'solid' -> null
+      default -> null
     }
   }
 }
