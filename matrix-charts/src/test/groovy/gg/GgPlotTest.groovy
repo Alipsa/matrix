@@ -1034,7 +1034,7 @@ class GgPlotTest {
 
     @Test
     void testGeomDensity2dAlias() {
-        // Test that geom_density2d() (no underscore) works as alias for geom_density_2d()
+        // Test that geom_density2d() (no underscore between 'density' and '2d') works as alias for geom_density_2d()
         def data = Matrix.builder()
             .columnNames(['x', 'y'])
             .rows((1..100).collect { [Math.random() * 5, Math.random() * 5] })
