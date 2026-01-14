@@ -15,6 +15,8 @@ import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 /**
  * Bar geometry for bar charts (counts/frequencies).
  * Uses stat_count by default to count observations in each category.
@@ -98,24 +100,24 @@ class GeomBar extends Geom {
       if (xVal == null || yVal == null) return
 
       // Transform coordinates
-      def xCenter = xScale?.transform(xVal)
-      def yTop
-      def yBottom
+      BigDecimal xCenter = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yTop
+      BigDecimal yBottom
       if (data.columnNames().contains('ymin') && data.columnNames().contains('ymax')) {
         Number yMinVal = row['ymin'] as Number
         Number yMaxVal = row['ymax'] as Number
-        yTop = yScale?.transform(yMaxVal)
-        yBottom = yScale?.transform(yMinVal)
+        yTop = yScale?.transform(yMaxVal) as BigDecimal
+        yBottom = yScale?.transform(yMinVal) as BigDecimal
       } else {
-        yTop = yScale?.transform(yVal)
-        yBottom = yScale?.transform(0)
+        yTop = yScale?.transform(yVal) as BigDecimal
+        yBottom = yScale?.transform(0) as BigDecimal
       }
 
       if (xCenter == null || yTop == null || yBottom == null) return
 
-      double xPx = (xCenter as double) - barWidth / 2
-      double yPx = Math.min(yTop as double, yBottom as double)
-      double heightPx = Math.abs((yBottom as double) - (yTop as double))
+      BigDecimal xPx = xCenter - barWidth / 2
+      BigDecimal yPx = yTop.min(yBottom)
+      BigDecimal heightPx = (yBottom - yTop).abs()
 
       // Determine fill color
       String barFill = this.fill
@@ -179,7 +181,7 @@ class GeomBar extends Geom {
         '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 
@@ -227,8 +229,8 @@ class GeomBar extends Geom {
 
     double outerRadius = coord.getMaxRadius() as double
     double innerOffset = coord.getInnerRadiusPx() as double
-    innerOffset = Math.max(0.0d, Math.min(innerOffset, outerRadius))
-    double availableRadius = Math.max(0.0d, outerRadius - innerOffset)
+    innerOffset = innerOffset.min(outerRadius).max(0.0d)
+    double availableRadius = (outerRadius - innerOffset).max(0.0d)
     int groupCount = groups.size()
 
     double span = coord.getAngularSpan() as double
@@ -255,7 +257,7 @@ class GeomBar extends Geom {
 
       double ringSize = groupCount > 0 ? (availableRadius / (double) groupCount) : availableRadius
       double groupOuter = outerRadius - (idx * ringSize)
-      double groupInner = Math.max(innerOffset, groupOuter - ringSize)
+      double groupInner = (groupOuter - ringSize).max(innerOffset)
       idx++
 
       List<Double> values = rows.collect { row ->
@@ -349,7 +351,7 @@ class GeomBar extends Geom {
       }
       double ringSize = groupCount > 0 ? (outerRadius / (double) groupCount) : outerRadius
       double groupOuter = outerRadius - (idx * ringSize)
-      double groupInner = Math.max(0.0d, groupOuter - ringSize)
+      double groupInner = (groupOuter - ringSize).max(0.0d)
       idx++
 
       List<Double> values = rows.collect { row ->
@@ -372,8 +374,8 @@ class GeomBar extends Geom {
         if (value <= 0.0d) {
           return
         }
-        double startAngle = (current / total) * 2 * Math.PI
-        double endAngle = ((current + value) / total) * 2 * Math.PI
+        double startAngle = (current / total) * 2 * PI
+        double endAngle = ((current + value) / total) * 2 * PI
         current += value
 
         String sliceFill = this.fill
