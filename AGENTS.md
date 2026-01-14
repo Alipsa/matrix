@@ -573,6 +573,19 @@ BigDecimal rawIdx = ratio * (fillColors.size() - 1)
 BigDecimal colorIdx = 0.max(rawIdx.min(fillColors.size() - 1))
 ```
 
+**Declare types at definition to avoid repeated casts:**
+```groovy
+// Good - type declared once at definition, no casts needed later
+Number x1Px = xScale.transform(seg.x) as Number
+Number y1Px = yScale.transform(seg.y) as Number
+line.x1(x1Px).y1(y1Px)  // Clean, no casts needed
+
+// Avoid - repeated casts throughout the code
+def x1Px = xScale.transform(seg.x)
+def y1Px = yScale.transform(seg.y)
+line.x1(x1Px as Number).y1(y1Px as Number)  // Repetitive
+```
+
 **Use explicit types when needed for type checker:**
 ```groovy
 // When calling methods on transformed values, provide explicit types
