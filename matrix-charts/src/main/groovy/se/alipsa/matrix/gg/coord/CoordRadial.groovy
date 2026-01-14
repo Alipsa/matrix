@@ -227,7 +227,7 @@ class CoordRadial extends Coord {
    * @param outerRadius Outer radius
    * @return SVG path string
    */
-  String createArcPath(double startAngle, double endAngle, double innerRadius, double outerRadius) {
+  String createArcPath(Number startAngle, Number endAngle, Number innerRadius, Number outerRadius) {
     List<BigDecimal> center = getCenter()
     BigDecimal cx = center[0]
     BigDecimal cy = center[1]
@@ -240,15 +240,18 @@ class CoordRadial extends Coord {
     BigDecimal adjStart = clockwise ? (base + startOffset) : (base - startOffset)
     BigDecimal adjEnd = clockwise ? (base + endOffset) : (base - endOffset)
 
-    BigDecimal x1 = cx + outerRadius * adjStart.sin()
-    BigDecimal y1 = cy - outerRadius * adjStart.cos()
-    BigDecimal x2 = cx + outerRadius * adjEnd.sin()
-    BigDecimal y2 = cy - outerRadius * adjEnd.cos()
+    BigDecimal outerR = outerRadius as BigDecimal
+    BigDecimal innerR = innerRadius as BigDecimal
 
-    BigDecimal x3 = cx + innerRadius * adjEnd.sin()
-    BigDecimal y3 = cy - innerRadius * adjEnd.cos()
-    BigDecimal x4 = cx + innerRadius * adjStart.sin()
-    BigDecimal y4 = cy - innerRadius * adjStart.cos()
+    BigDecimal x1 = cx + outerR * adjStart.sin()
+    BigDecimal y1 = cy - outerR * adjStart.cos()
+    BigDecimal x2 = cx + outerR * adjEnd.sin()
+    BigDecimal y2 = cy - outerR * adjEnd.cos()
+
+    BigDecimal x3 = cx + innerR * adjEnd.sin()
+    BigDecimal y3 = cy - innerR * adjEnd.cos()
+    BigDecimal x4 = cx + innerR * adjStart.sin()
+    BigDecimal y4 = cy - innerR * adjStart.cos()
 
     BigDecimal angleDiff = (endOffset - startOffset).abs()
     int largeArc = angleDiff > PI ? 1 : 0
@@ -256,16 +259,16 @@ class CoordRadial extends Coord {
 
     StringBuilder path = new StringBuilder()
 
-    if (innerRadius > 0) {
+    if (innerR > 0) {
       path << "M ${formatNumber(x1)} ${formatNumber(y1)}"
-      path << " A ${formatNumber(outerRadius)} ${formatNumber(outerRadius)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
+      path << " A ${formatNumber(outerR)} ${formatNumber(outerR)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
       path << " L ${formatNumber(x3)} ${formatNumber(y3)}"
-      path << " A ${formatNumber(innerRadius)} ${formatNumber(innerRadius)} 0 ${largeArc} ${1 - sweepFlag} ${formatNumber(x4)} ${formatNumber(y4)}"
+      path << " A ${formatNumber(innerR)} ${formatNumber(innerR)} 0 ${largeArc} ${1 - sweepFlag} ${formatNumber(x4)} ${formatNumber(y4)}"
       path << " Z"
     } else {
       path << "M ${formatNumber(cx)} ${formatNumber(cy)}"
       path << " L ${formatNumber(x1)} ${formatNumber(y1)}"
-      path << " A ${formatNumber(outerRadius)} ${formatNumber(outerRadius)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
+      path << " A ${formatNumber(outerR)} ${formatNumber(outerR)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
       path << " Z"
     }
 
