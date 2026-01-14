@@ -161,7 +161,7 @@ class CoordPolar extends Coord {
     BigDecimal dy = cy - (py as BigDecimal)  // Invert y for SVG
 
     BigDecimal radius = (dx ** 2 + dy ** 2).sqrt()
-    BigDecimal angle = Math.atan2(dx as double, dy as double) as BigDecimal  // Note: atan2(x,y) for our angle convention
+    BigDecimal angle = dx.atan2(dy) // Note: atan2(x,y) for our angle convention
 
     // Adjust for start offset and direction
     if (!clockwise) {

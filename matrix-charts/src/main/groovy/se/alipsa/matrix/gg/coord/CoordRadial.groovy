@@ -4,6 +4,8 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import java.util.Locale
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 /**
  * Radial coordinate system for circular plots with support for partial arcs and inner radius.
  *
@@ -83,12 +85,7 @@ class CoordRadial extends Coord {
       theta = 'x'
     }
 
-    if (innerRadius < 0) {
-      innerRadius = 0
-    }
-    if (innerRadius > 1) {
-      innerRadius = 1
-    }
+    innerRadius = innerRadius.min(1).max(0)
   }
 
   /**
@@ -116,7 +113,7 @@ class CoordRadial extends Coord {
    * Get the angular range in radians.
    */
   List<BigDecimal> getAngularRange() {
-    BigDecimal fullCircle = (2.0d * Math.PI) as BigDecimal
+    BigDecimal fullCircle = 2 * PI
     BigDecimal effectiveEnd = (end != null) ? end : (start + fullCircle)
     return [start, effectiveEnd]
   }
@@ -181,7 +178,7 @@ class CoordRadial extends Coord {
     BigDecimal dy = cy - (py as BigDecimal)
 
     BigDecimal radius = (dx * dx + dy * dy).sqrt()
-    BigDecimal angle = Math.atan2(dx as double, dy as double) as BigDecimal
+    BigDecimal angle = dx.atan2(dy)
 
     if (!clockwise) {
       angle = -angle
@@ -190,20 +187,20 @@ class CoordRadial extends Coord {
 
     double angleVal = angle as double
     double spanVal = getAngularSpan() as double
-    double fullCircle = 2 * Math.PI
+    double fullCircle = 2 * PI
 
     while (angleVal < 0) angleVal += fullCircle
     while (angleVal >= fullCircle) angleVal -= fullCircle
 
-    double thetaNormVal = spanVal == 0 ? 0.0d : angleVal / spanVal
+    double thetaNormVal = spanVal == 0 ? 0.0 : angleVal / spanVal
     BigDecimal thetaNorm = thetaNormVal as BigDecimal
-    thetaNorm = 0.max(thetaNorm.min(1))
+    thetaNorm = thetaNorm.min(1).max(0)
 
     BigDecimal minRadius = getInnerRadiusPx()
     BigDecimal maxRadius = getMaxRadius()
     BigDecimal denom = maxRadius - minRadius
     BigDecimal rNorm = denom == 0 ? 0 : (radius - minRadius) / denom
-    rNorm = 0.max(rNorm.min(1))
+    rNorm = rNorm.min(1).max(0)
 
     def xScale = scales['x']
     def yScale = scales['y']
@@ -232,32 +229,29 @@ class CoordRadial extends Coord {
    */
   String createArcPath(double startAngle, double endAngle, double innerRadius, double outerRadius) {
     List<BigDecimal> center = getCenter()
-    double cx = center[0] as double
-    double cy = center[1] as double
+    BigDecimal cx = center[0]
+    BigDecimal cy = center[1]
 
     BigDecimal span = getAngularSpan()
-    BigDecimal startOffset = (startAngle as BigDecimal).max(0).min(span)
-    BigDecimal endOffset = (endAngle as BigDecimal).max(0).min(span)
+    BigDecimal startOffset = (startAngle as BigDecimal).min(span).max(0)
+    BigDecimal endOffset = (endAngle as BigDecimal).min(span).max(0)
 
     BigDecimal base = getAngularRange()[0]
     BigDecimal adjStart = clockwise ? (base + startOffset) : (base - startOffset)
     BigDecimal adjEnd = clockwise ? (base + endOffset) : (base - endOffset)
 
-    double startRad = adjStart as double
-    double endRad = adjEnd as double
+    BigDecimal x1 = cx + outerRadius * adjStart.sin()
+    BigDecimal y1 = cy - outerRadius * adjStart.cos()
+    BigDecimal x2 = cx + outerRadius * adjEnd.sin()
+    BigDecimal y2 = cy - outerRadius * adjEnd.cos()
 
-    double x1 = cx + outerRadius * Math.sin(startRad)
-    double y1 = cy - outerRadius * Math.cos(startRad)
-    double x2 = cx + outerRadius * Math.sin(endRad)
-    double y2 = cy - outerRadius * Math.cos(endRad)
+    BigDecimal x3 = cx + innerRadius * adjEnd.sin()
+    BigDecimal y3 = cy - innerRadius * adjEnd.cos()
+    BigDecimal x4 = cx + innerRadius * adjStart.sin()
+    BigDecimal y4 = cy - innerRadius * adjStart.cos()
 
-    double x3 = cx + innerRadius * Math.sin(endRad)
-    double y3 = cy - innerRadius * Math.cos(endRad)
-    double x4 = cx + innerRadius * Math.sin(startRad)
-    double y4 = cy - innerRadius * Math.cos(startRad)
-
-    double angleDiff = (endOffset - startOffset).abs() as double
-    int largeArc = angleDiff > Math.PI ? 1 : 0
+    BigDecimal angleDiff = (endOffset - startOffset).abs()
+    int largeArc = angleDiff > PI ? 1 : 0
     int sweepFlag = clockwise ? 1 : 0
 
     StringBuilder path = new StringBuilder()
@@ -303,7 +297,7 @@ class CoordRadial extends Coord {
     if (scale == null) return value as BigDecimal
 
     def transformed = scale.transform(value)
-    if (!(transformed instanceof Number)) return 0.0
+    if (!(transformed instanceof Number)) return 0
 
     def range = scale.range
     if (range == null || range.size() < 2) return transformed as BigDecimal
@@ -312,16 +306,16 @@ class CoordRadial extends Coord {
     BigDecimal max = range[1] as BigDecimal
     BigDecimal rangeSize = (max - min).abs()
 
-    if (rangeSize == 0) return 0.0
+    if (rangeSize == 0) return 0
 
-    BigDecimal low = min < max ? min : max
+    BigDecimal low = min.min(max)
     return ((transformed as BigDecimal) - low) / rangeSize
   }
 
   /**
    * Format numeric SVG coordinates with fixed precision.
    */
-  private static String formatNumber(double value) {
-    return String.format(Locale.US, "%.3f", value)
+  private static String formatNumber(Number value) {
+    return String.format(Locale.US, "%.3f", value as double)
   }
 }

@@ -165,7 +165,7 @@ class GeomSegment extends Geom {
     // Calculate angle of the line
     BigDecimal dy = (y2 as BigDecimal) - (y1 as BigDecimal)
     BigDecimal dx = (x2 as BigDecimal) - (x1 as BigDecimal)
-    BigDecimal angle = Math.atan2(dy as double, dx as double) as BigDecimal
+    BigDecimal angle = dy.atan2(dx)
     BigDecimal arrowAngle = PI / 6  // 30 degrees
     BigDecimal size = arrowSize as BigDecimal
 
