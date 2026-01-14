@@ -106,8 +106,7 @@ class ScaleColorHue extends ScaleDiscrete {
   private List<String> generateHueColors(int n) {
     if (n == 0) return []
     if (n == 1) {
-      double hue = hueRange[0] as double
-      return [ColorSpaceUtil.hclToHex(hue, chroma as double, luminance as double)]
+      return [ColorSpaceUtil.hclToHex(hueRange[0], chroma, luminance)]
     }
 
     double hueMin = hueRange[0] as double
@@ -116,18 +115,12 @@ class ScaleColorHue extends ScaleDiscrete {
 
     List<String> colors = []
     for (int i = 0; i < n; i++) {
-      double hue
-      if (direction < 0) {
-        hue = hueMax - i * hueSpan
-      } else {
-        hue = hueMin + i * hueSpan
-      }
+      double hue = direction < 0 ? hueMax - i * hueSpan : hueMin + i * hueSpan
       // Normalize to 0-360
       hue = hue % 360.0d
       if (hue < 0) hue += 360.0d
 
-      String color = ColorSpaceUtil.hclToHex(hue, chroma as double, luminance as double)
-      colors.add(color)
+      colors << ColorSpaceUtil.hclToHex(hue, chroma, luminance)
     }
 
     return colors

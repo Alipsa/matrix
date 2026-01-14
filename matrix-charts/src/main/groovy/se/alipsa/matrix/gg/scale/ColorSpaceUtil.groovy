@@ -26,13 +26,14 @@ class ColorSpaceUtil {
    * @param l luminance (lightness, 0-100)
    * @return hex RGB string (e.g., '#FF0000')
    */
-  static String hclToHex(double h, double c, double l) {
+  static String hclToHex(Number h, Number c, Number l) {
     // Convert HCL cylindrical coordinates to CIELUV Cartesian
-    double hr = Math.toRadians(h)
-    double u = c * Math.cos(hr)
-    double v = c * Math.sin(hr)
+    double hr = Math.toRadians(h as double)
+    double u = (c as double) * Math.cos(hr)
+    double v = (c as double) * Math.sin(hr)
+    double lVal = l as double
 
-    if (l <= 0.0d) {
+    if (lVal <= 0.0d) {
       return '#000000'
     }
 
@@ -41,11 +42,11 @@ class ColorSpaceUtil {
     double u0 = (4.0d * REF_X) / denom
     double v0 = (9.0d * REF_Y) / denom
 
-    double up = u / (13.0d * l) + u0
-    double vp = v / (13.0d * l) + v0
+    double up = u / (13.0d * lVal) + u0
+    double vp = v / (13.0d * lVal) + v0
 
     // Y component (luminance)
-    double y = l > 8.0d ? REF_Y * Math.pow((l + 16.0d) / 116.0d, 3.0d) : REF_Y * l / 903.3d
+    double y = lVal > 8.0d ? REF_Y * Math.pow((lVal + 16.0d) / 116.0d, 3.0d) : REF_Y * lVal / 903.3d
 
     // X and Z components
     double denom1 = ((up - 4.0d) * vp - up * vp)
