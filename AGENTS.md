@@ -384,36 +384,46 @@ This keeps the codebase consistent and improves readability for future code.
 The `matrix-groovy-ext` module provides extension methods for Number types:
 
 ```groovy
+// Mathematical constants (already BigDecimal, use these instead of Math.PI/Math.E)
+import static se.alipsa.matrix.ext.NumberExtension.PI
+import static se.alipsa.matrix.ext.NumberExtension.E
+
+BigDecimal circumference = 2 * PI * radius
+BigDecimal naturalLog = E.log()  // -> 1.0
+
 // Floor and ceiling (returns BigDecimal)
 BigDecimal x = 3.7G
 x.floor()  // -> 3.0
 x.ceil()   // -> 4.0
 
 // Natural logarithm (ln)
-BigDecimal e = Math.E as BigDecimal
-e.log()  // -> 1.0
+E.log()  // -> 1.0
+BigDecimal value = 10.0
+value.log()  // -> 2.302585...
 
 // Logarithm base 10
-BigDecimal value = 100G
-value.log10()  // -> 2.0
+BigDecimal value2 = 100.0
+value2.log10()  // -> 2.0
 
 // Exponential function (e^x)
 BigDecimal x = 1.0
-x.exp()  // -> 2.718281828... (Math.E)
+x.exp()  // -> 2.718281828... (E)
 
 // Square root with default precision
 BigDecimal area = 25.0G
 area.sqrt()  // -> 5.0 (uses MathContext.DECIMAL64)
 
 // Trigonometric functions (angles in radians)
-BigDecimal angle = Math.PI / 2 as BigDecimal
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
+BigDecimal angle = PI / 2
 angle.sin()  // -> 1.0
 angle.cos()  // -> 0.0
 
 // Angle conversions
 BigDecimal degrees = 180.0
-degrees.toRadians()  // -> 3.14159... (Math.PI)
-BigDecimal radians = Math.PI as BigDecimal
+degrees.toRadians()  // -> 3.14159... (PI)
+BigDecimal radians = PI
 radians.toDegrees()  // -> 180.0
 
 // Inverse operations demonstrate composability
