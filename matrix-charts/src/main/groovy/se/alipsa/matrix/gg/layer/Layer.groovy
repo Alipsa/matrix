@@ -71,6 +71,8 @@ enum StatType {
     BIN_HEX,
     /** Hexagonal summary statistics */
     SUMMARY_HEX,
+    /** 2D rectangular binned summary statistics */
+    SUMMARY_2D,
     /** Contour computation */
     CONTOUR,
     /** Empirical cumulative distribution function */

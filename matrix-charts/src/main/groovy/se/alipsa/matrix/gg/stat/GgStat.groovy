@@ -1974,6 +1974,117 @@ class GgStat {
   }
 
   /**
+   * 2D rectangular binned summary statistics - divides the plotting area into rectangular bins
+   * and computes summary statistics for a z variable in each bin.
+   *
+   * @param data Input matrix with x, y, and z columns
+   * @param aes Aesthetic mappings (requires x, y, and fill or color for z)
+   * @param params Optional parameters: bins, binwidth, fun, fun.data
+   * @return Matrix with columns: x (bin center), y (bin center), value (summary statistic)
+   */
+  static Matrix summary2d(Matrix data, Aes aes, Map params = [:]) {
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+    String zCol = aes.fillColName ?: aes.colorColName
+
+    if (xCol == null || yCol == null) {
+      throw new IllegalArgumentException("stat_summary_2d requires x and y aesthetics")
+    }
+    if (zCol == null) {
+      throw new IllegalArgumentException("stat_summary_2d requires fill or color aesthetic for the summary variable")
+    }
+
+    // Collect numeric x,y,z values and compute bounds
+    def result = collectXYZPointsAndBounds(data, xCol, yCol, zCol)
+    List<Map<String, BigDecimal>> points = result.points as List<Map<String, BigDecimal>>
+    BigDecimal xMin = result.xMin as BigDecimal
+    BigDecimal yMin = result.yMin as BigDecimal
+    BigDecimal xMax = result.xMax as BigDecimal
+    BigDecimal yMax = result.yMax as BigDecimal
+
+    if (points.isEmpty()) {
+      return Matrix.builder().data([x: [], y: [], value: []]).build()
+    }
+
+    // Calculate bin widths
+    BigDecimal xRange = xMax - xMin
+    BigDecimal yRange = yMax - yMin
+    if (xRange == 0) xRange = 1
+    if (yRange == 0) yRange = 1
+
+    BigDecimal xBinWidth, yBinWidth
+    int xNBins, yNBins
+
+    if (params.binwidth != null) {
+      xBinWidth = params.binwidth as BigDecimal
+      yBinWidth = params.binwidth as BigDecimal
+      if (xBinWidth <= 0) {
+        throw new IllegalArgumentException("binwidth must be positive, was $xBinWidth")
+      }
+      xNBins = (xRange / xBinWidth).ceil() as int
+      yNBins = (yRange / yBinWidth).ceil() as int
+    } else {
+      Integer binsParam = params.bins as Integer
+      int bins
+      if (binsParam == null) {
+        bins = 30
+      } else if (binsParam <= 0) {
+        throw new IllegalArgumentException("bins must be positive, was $binsParam")
+      } else {
+        bins = binsParam
+      }
+      xNBins = yNBins = bins
+      xBinWidth = xRange / xNBins
+      yBinWidth = yRange / yNBins
+    }
+
+    // Group points by grid cell
+    Map<String, List<BigDecimal>> gridValues = [:].withDefault { [] }
+
+    for (Map<String, BigDecimal> point : points) {
+      int xBinIdx = ((point.x - xMin) / xBinWidth) as int
+      int yBinIdx = ((point.y - yMin) / yBinWidth) as int
+
+      // Clamp to valid range
+      xBinIdx = Math.max(0, Math.min(xBinIdx, xNBins - 1))
+      yBinIdx = Math.max(0, Math.min(yBinIdx, yNBins - 1))
+
+      String gridKey = "${xBinIdx},${yBinIdx}"
+      gridValues[gridKey] << point.z
+    }
+
+    // Compute summaries for each grid cell
+    String funType = params.fun as String ?: 'mean'
+    Closure<Map<String, Number>> funData = params.'fun.data' as Closure<Map<String, Number>>
+
+    List<BigDecimal> xVals = []
+    List<BigDecimal> yVals = []
+    List<BigDecimal> valueVals = []
+
+    gridValues.each { String key, List<BigDecimal> zValues ->
+      if (zValues.isEmpty()) return
+
+      String[] coords = key.split(',')
+      int xBinIdx = coords[0] as int
+      int yBinIdx = coords[1] as int
+
+      BigDecimal xCenter = xMin + xBinIdx * xBinWidth + xBinWidth / 2
+      BigDecimal yCenter = yMin + yBinIdx * yBinWidth + yBinWidth / 2
+
+      xVals << xCenter
+      yVals << yCenter
+
+      // Reuse computeHexSummary - it's generic despite the name
+      BigDecimal summaryValue = computeHexSummary(zValues, funType, funData)
+      valueVals << summaryValue
+    }
+
+    return Matrix.builder()
+        .data([x: xVals, y: yVals, value: valueVals])
+        .build()
+  }
+
+  /**
    * Helper: Collect x,y points from data and compute bounds.
    *
    * @param data Matrix containing the data
