@@ -3,6 +3,7 @@ package se.alipsa.matrix.gg.geom
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
@@ -271,8 +272,10 @@ class GeomViolin extends Geom {
     }
 
     // Silverman's rule of thumb for bandwidth
-    BigDecimal std = computeStd(data)
-    BigDecimal iqr = computeIQR(data)
+    Number stdNum = Stat.sd(data)
+    Number iqrNum = Stat.iqr(data)
+    BigDecimal std = new BigDecimal(stdNum.toString())
+    BigDecimal iqr = new BigDecimal(iqrNum.toString())
     // Use Math.pow for fractional power (BigDecimal.pow only accepts int)
     BigDecimal sizePower = Math.pow(data.size() as double, -0.2 as double) as BigDecimal
     BigDecimal bandwidth = (0.9 as BigDecimal) * std.min(iqr / 1.34) * sizePower * (adjust as BigDecimal)
@@ -303,25 +306,6 @@ class GeomViolin extends Geom {
     }
 
     return result
-  }
-
-  private BigDecimal computeStd(List<BigDecimal> data) {
-    BigDecimal mean = 0
-    for (BigDecimal d : data) mean += d
-    mean /= data.size()
-
-    BigDecimal variance = 0
-    for (BigDecimal d : data) variance += (d - mean) * (d - mean)
-    variance /= (data.size() - 1)
-
-    return variance.sqrt()
-  }
-
-  private BigDecimal computeIQR(List<BigDecimal> data) {
-    int n = data.size()
-    BigDecimal q1 = data[(n * 0.25) as int]
-    BigDecimal q3 = data[(n * 0.75) as int]
-    return q3 - q1
   }
 
   private BigDecimal getQuantile(List<Number> sorted, BigDecimal q) {
