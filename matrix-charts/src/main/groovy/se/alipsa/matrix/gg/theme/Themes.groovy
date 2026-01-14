@@ -7,6 +7,7 @@ class Themes {
    */
   static Theme gray() {
     Theme theme = new Theme()
+    theme.themeName = 'gray'
     theme.panelBackground = new ElementRect(fill: '#EBEBEB', color: null)
     theme.panelGridMajor = new ElementLine(color: 'white', size: 1)
     theme.panelGridMinor = new ElementLine(color: 'white', size: 0.5)
@@ -19,6 +20,7 @@ class Themes {
    */
   static Theme classic() {
     Theme theme = new Theme()
+    theme.themeName = 'classic'
     theme.panelBackground = new ElementRect(fill: 'white', color: null)
     theme.panelGridMajor = null  // No grid
     theme.panelGridMinor = null
@@ -35,6 +37,7 @@ class Themes {
    */
   static Theme bw() {
     Theme theme = new Theme()
+    theme.themeName = 'bw'
     theme.panelBackground = new ElementRect(fill: 'white', color: 'black')
     theme.panelGridMajor = new ElementLine(color: '#D3D3D3', size: 0.5)
     theme.panelGridMinor = new ElementLine(color: '#E5E5E5', size: 0.25)
@@ -52,6 +55,7 @@ class Themes {
    */
   static Theme minimal() {
     Theme theme = new Theme()
+    theme.themeName = 'minimal'
     // Transparent backgrounds like ggplot2's theme_minimal
     theme.panelBackground = new ElementRect(fill: 'none', color: null)
     theme.panelGridMajor = new ElementLine(color: '#D3D3D3', size: 0.5)
@@ -71,6 +75,7 @@ class Themes {
    */
   static Theme void_() {
     Theme theme = new Theme()
+    theme.themeName = 'void'
     // Remove all backgrounds
     theme.panelBackground = null
     theme.plotBackground = null
@@ -103,6 +108,7 @@ class Themes {
    */
   static Theme light() {
     Theme theme = new Theme()
+    theme.themeName = 'light'
     theme.panelBackground = new ElementRect(fill: 'white', color: '#CCCCCC', size: 0.5)
     theme.panelGridMajor = new ElementLine(color: '#E5E5E5', size: 0.5)
     theme.panelGridMinor = new ElementLine(color: '#F0F0F0', size: 0.25)
@@ -120,6 +126,7 @@ class Themes {
    */
   static Theme dark() {
     Theme theme = new Theme()
+    theme.themeName = 'dark'
     theme.panelBackground = new ElementRect(fill: '#3B3B3B', color: '#666666', size: 0.5)
     theme.panelGridMajor = new ElementLine(color: '#666666', size: 0.5)
     theme.panelGridMinor = new ElementLine(color: '#555555', size: 0.25)
@@ -150,6 +157,7 @@ class Themes {
    */
   static Theme linedraw() {
     Theme theme = new Theme()
+    theme.themeName = 'linedraw'
     theme.panelBackground = new ElementRect(fill: 'white', color: 'black', size: 0.5)
     theme.panelGridMajor = new ElementLine(color: 'black', size: 0.25)
     theme.panelGridMinor = new ElementLine(color: '#333333', size: 0.15)
@@ -182,6 +190,7 @@ class Themes {
    */
   static Theme test(Number baseSize = 11, String baseFamily = 'sans-serif') {
     Theme theme = new Theme()
+    theme.themeName = 'test'
 
     // Set base font properties
     theme.baseSize = baseSize

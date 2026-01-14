@@ -37,6 +37,7 @@ class GlobalThemeTest {
     def theme = theme_get()
     assertNotNull(theme, 'theme_get should never return null')
     // Default is gray theme
+    assertEquals('gray', theme.themeName)
     assertNotNull(theme.panelBackground)
   }
 
@@ -46,12 +47,12 @@ class GlobalThemeTest {
 
     // Verify old theme returned
     assertNotNull(oldTheme)
+    assertEquals('gray', oldTheme.themeName) // Default is gray
 
     // Verify new theme is active
     def currentTheme = theme_get()
     assertNotNull(currentTheme)
-    // Minimal theme has different panel background than gray
-    assertNotEquals(oldTheme.panelBackground, currentTheme.panelBackground)
+    assertEquals('minimal', currentTheme.themeName)
   }
 
   @Test
@@ -89,9 +90,9 @@ class GlobalThemeTest {
     def old2 = theme_replace(minimal)
     def theme2 = theme_get()
 
-    // Both should produce same result - compare distinctive properties
-    assertEquals(theme1.panelBackground?.fill, theme2.panelBackground?.fill)
-    assertEquals('none', theme2.panelBackground?.fill) // Verify it's actually minimal
+    // Both should produce same result - compare theme names
+    assertEquals(theme1.themeName, theme2.themeName)
+    assertEquals('minimal', theme2.themeName)
   }
 
   @Test
@@ -107,9 +108,7 @@ class GlobalThemeTest {
 
     // Chart should have minimal theme
     assertNotNull(chart.theme)
-    // Verify it's not the default gray theme by checking a characteristic property
-    // Minimal has transparent panel background, gray has filled one
-    assertNotEquals(theme_gray().panelBackground?.fill, chart.theme.panelBackground?.fill)
+    assertEquals('minimal', chart.theme.themeName)
   }
 
   @Test
@@ -127,9 +126,7 @@ class GlobalThemeTest {
 
     // Chart should have dark theme, not minimal
     assertNotNull(chart.theme)
-    // Dark theme has specific characteristics (dark background)
-    assertNotNull(chart.theme.plotBackground)
-    assertEquals('#222222', chart.theme.plotBackground.fill)
+    assertEquals('dark', chart.theme.themeName)
   }
 
   @Test
@@ -157,16 +154,14 @@ class GlobalThemeTest {
 
     // Main thread theme should be unchanged
     def stillMainTheme = theme_get()
-    assertEquals(mainTheme.class, stillMainTheme.class)
+    assertEquals(mainTheme.themeName, stillMainTheme.themeName)
+    assertEquals('gray', stillMainTheme.themeName)
 
     // Thread should have changed its own theme
     assertNotNull(threadThemeCapture[0])
     assertNotNull(threadChangedThemeCapture[0])
-    // Compare actual theme properties, not classes (both are Theme class)
-    assertNotEquals(
-        threadThemeCapture[0].panelBackground?.fill,
-        threadChangedThemeCapture[0].panelBackground?.fill
-    )
+    assertEquals('gray', threadThemeCapture[0].themeName)
+    assertEquals('minimal', threadChangedThemeCapture[0].themeName)
   }
 
   @Test
@@ -178,6 +173,20 @@ class GlobalThemeTest {
     assertTrue(customTheme instanceof Theme)
     assertNotNull(customTheme.plotTitle)
     assertEquals('red', customTheme.plotTitle.color)
+  }
+
+  @Test
+  void testPredefinedThemesHaveNames() {
+    // Verify all predefined themes have themeName set
+    assertEquals('gray', theme_gray().themeName)
+    assertEquals('minimal', theme_minimal().themeName)
+    assertEquals('bw', theme_bw().themeName)
+    assertEquals('classic', theme_classic().themeName)
+    assertEquals('void', theme_void().themeName)
+    assertEquals('light', theme_light().themeName)
+    assertEquals('dark', theme_dark().themeName)
+    assertEquals('linedraw', theme_linedraw().themeName)
+    assertEquals('test', theme_test().themeName)
   }
 
   @Test
@@ -210,12 +219,12 @@ class GlobalThemeTest {
     // Set another theme
     def old2 = theme_set(theme_dark())
 
-    // Restore to minimal - verify by checking distinctive property
+    // Restore to minimal - verify by checking theme name
     theme_set(old2)
-    assertEquals('none', theme_get().panelBackground?.fill) // Minimal has 'none'
+    assertEquals('minimal', theme_get().themeName)
 
-    // Restore to original - verify by checking distinctive property
+    // Restore to original - verify by checking theme name
     theme_set(old1)
-    assertEquals(original.panelBackground?.fill, theme_get().panelBackground?.fill)
+    assertEquals(original.themeName, theme_get().themeName)
   }
 }
