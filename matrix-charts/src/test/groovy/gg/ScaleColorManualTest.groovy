@@ -274,16 +274,15 @@ class ScaleColorManualTest {
 
   @Test
   void testHclToHexLuminanceZero() {
-    def method = ScaleColorManual.class.getDeclaredMethod('hclToHex', double, double, double)
-    method.accessible = true
-
-    String color = method.invoke(null, 0.0d, 100.0d, 0.0d) as String
+    // Test ColorSpaceUtil directly since color conversion was extracted
+    String color = se.alipsa.matrix.gg.scale.ColorSpaceUtil.hclToHex(0.0d, 100.0d, 0.0d)
     assertEquals('#000000', color)
   }
 
   @Test
   void testGammaCorrectThreshold() {
-    def method = ScaleColorManual.class.getDeclaredMethod('gammaCorrect', double)
+    // Test ColorSpaceUtil.gammaCorrect using reflection since it's private
+    def method = se.alipsa.matrix.gg.scale.ColorSpaceUtil.class.getDeclaredMethod('gammaCorrect', double)
     method.accessible = true
 
     double input = 0.0031308d
