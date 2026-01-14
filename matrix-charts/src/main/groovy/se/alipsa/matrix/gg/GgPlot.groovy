@@ -146,6 +146,7 @@ import se.alipsa.matrix.gg.stat.StatsSmooth
 import se.alipsa.matrix.gg.stat.StatsSum
 import se.alipsa.matrix.gg.stat.StatsSummaryBin
 import se.alipsa.matrix.gg.stat.StatsSummaryHex
+import se.alipsa.matrix.gg.stat.StatsSummary2d
 import se.alipsa.matrix.gg.stat.StatsUnique
 import se.alipsa.matrix.gg.stat.StatsYDensity
 import se.alipsa.matrix.gg.stat.StatsEcdf
@@ -4078,6 +4079,30 @@ class GgPlot {
    */
   static StatsSummaryHex stat_summary_hex(Map params = [:]) {
     return new StatsSummaryHex(params)
+  }
+
+  /**
+   * Create a 2D rectangular binned summary stat.
+   * Divides the plotting area into rectangular bins and computes summary statistics for each bin.
+   *
+   * @param params stat parameters:
+   *   - bins: number of bins in each direction (default: 30)
+   *   - binwidth: width of bins in data units
+   *   - fun: summary function - 'mean', 'median', 'sum', 'min', 'max' (default: 'mean')
+   *   - fun.data: custom summary closure
+   * @return StatsSummary2d instance
+   */
+  static StatsSummary2d stat_summary_2d(Map params = [:]) {
+    return new StatsSummary2d(params)
+  }
+
+  /**
+   * Alias for stat_summary_2d for ggplot2 compatibility.
+   *
+   * @see #stat_summary_2d(Map)
+   */
+  static StatsSummary2d stat_summary2d(Map params = [:]) {
+    return new StatsSummary2d(params)
   }
 
   /**

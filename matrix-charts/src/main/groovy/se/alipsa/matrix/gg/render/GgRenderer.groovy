@@ -1320,6 +1320,8 @@ class GgRenderer {
         return GgStat.binHex(data, aes, layer.statParams)
       case StatType.SUMMARY_HEX:
         return GgStat.summaryHex(data, aes, layer.statParams)
+      case StatType.SUMMARY_2D:
+        return GgStat.summary2d(data, aes, layer.statParams)
       case StatType.UNIQUE:
         return GgStat.unique(data, aes, layer.statParams)
       case StatType.FUNCTION:
