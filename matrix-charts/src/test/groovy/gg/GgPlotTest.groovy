@@ -1005,4 +1005,93 @@ class GgPlotTest {
         //println("Wrote stat_summary_hex median plot to ${outputFile.absolutePath}")
     }
 
+    // ========== Phase 1: ggplot2 API Compatibility Alias Tests ==========
+
+    @Test
+    void testGeomBin2dAlias() {
+        // Test that geom_bin2d() (ggplot2-style name with no underscore between 'bin' and '2d') works as alias for geom_bin_2d()
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows((1..100).collect { [Math.random() * 5, Math.random() * 5] })
+            .build()
+
+        def chart1 = ggplot(data, aes(x: 'x', y: 'y')) + geom_bin2d()
+        def chart2 = ggplot(data, aes(x: 'x', y: 'y')) + geom_bin_2d()
+
+        Svg svg1 = chart1.render()
+        Svg svg2 = chart2.render()
+
+        assertNotNull(svg1)
+        assertNotNull(svg2)
+
+        // Both should produce similar output (just check they render without error)
+        String svgContent1 = SvgWriter.toXml(svg1)
+        String svgContent2 = SvgWriter.toXml(svg2)
+
+        assertTrue(svgContent1.contains('<svg'))
+        assertTrue(svgContent2.contains('<svg'))
+    }
+
+    @Test
+    void testGeomDensity2dAlias() {
+        // Test that geom_density2d() (no underscore between 'density' and '2d') works as alias for geom_density_2d()
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows((1..100).collect { [Math.random() * 5, Math.random() * 5] })
+            .build()
+
+        def chart1 = ggplot(data, aes(x: 'x', y: 'y')) + geom_density2d()
+        def chart2 = ggplot(data, aes(x: 'x', y: 'y')) + geom_density_2d()
+
+        Svg svg1 = chart1.render()
+        Svg svg2 = chart2.render()
+
+        assertNotNull(svg1)
+        assertNotNull(svg2)
+
+        String svgContent1 = SvgWriter.toXml(svg1)
+        String svgContent2 = SvgWriter.toXml(svg2)
+
+        assertTrue(svgContent1.contains('<svg'))
+        assertTrue(svgContent2.contains('<svg'))
+    }
+
+    @Test
+    void testGeomDensity2dFilledAlias() {
+        // Test that geom_density2d_filled() (no underscore between 'density' and '2d') works as alias for geom_density_2d_filled()
+        def data = Matrix.builder()
+            .columnNames(['x', 'y'])
+            .rows((1..100).collect { [Math.random() * 5, Math.random() * 5] })
+            .build()
+
+        def chart1 = ggplot(data, aes(x: 'x', y: 'y')) + geom_density2d_filled()
+        def chart2 = ggplot(data, aes(x: 'x', y: 'y')) + geom_density_2d_filled()
+
+        Svg svg1 = chart1.render()
+        Svg svg2 = chart2.render()
+
+        assertNotNull(svg1)
+        assertNotNull(svg2)
+
+        String svgContent1 = SvgWriter.toXml(svg1)
+        String svgContent2 = SvgWriter.toXml(svg2)
+
+        assertTrue(svgContent1.contains('<svg'))
+        assertTrue(svgContent2.contains('<svg'))
+    }
+
+    @Test
+    void testStatBin2dAlias() {
+        // Test that stat_bin2d() (no underscore) works as alias for stat_bin_2d()
+        def statAlias = stat_bin2d()
+        def statOriginal = stat_bin_2d()
+
+        assertNotNull(statAlias)
+        assertNotNull(statOriginal)
+
+        // Both should be StatsBin2D instances
+        assertTrue(statAlias.class.name.contains('StatsBin2D'))
+        assertTrue(statOriginal.class.name.contains('StatsBin2D'))
+    }
+
 }

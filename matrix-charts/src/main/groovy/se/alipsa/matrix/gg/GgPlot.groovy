@@ -1501,6 +1501,40 @@ class GgPlot {
     return new GeomBin2d(params)
   }
 
+  /**
+   * Alias for geom_bin_2d() for ggplot2 API compatibility.
+   * Divides the plane into rectangles, counts the number of cases in each rectangle,
+   * and displays the counts as a heatmap.
+   *
+   * @return a new GeomBin2d instance
+   * @see #geom_bin_2d()
+   */
+  static GeomBin2d geom_bin2d() {
+    return geom_bin_2d()
+  }
+
+  /**
+   * Alias for geom_bin_2d() for ggplot2 API compatibility.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomBin2d instance
+   * @see #geom_bin_2d(Aes)
+   */
+  static GeomBin2d geom_bin2d(Aes mapping) {
+    return geom_bin_2d(mapping)
+  }
+
+  /**
+   * Alias for geom_bin_2d() for ggplot2 API compatibility.
+   *
+   * @param params parameters for the geom
+   * @return a new GeomBin2d instance
+   * @see #geom_bin_2d(Map)
+   */
+  static GeomBin2d geom_bin2d(Map params) {
+    return geom_bin_2d(params)
+  }
+
   static GeomHex geom_hex() {
     return new GeomHex()
   }
@@ -1667,6 +1701,39 @@ class GgPlot {
     return new GeomDensity2d(params)
   }
 
+  /**
+   * Alias for geom_density_2d() for ggplot2 API compatibility.
+   * Perform 2D kernel density estimation and display the results as contours.
+   *
+   * @return a new GeomDensity2d instance
+   * @see #geom_density_2d()
+   */
+  static GeomDensity2d geom_density2d() {
+    return geom_density_2d()
+  }
+
+  /**
+   * Alias for geom_density_2d() for ggplot2 API compatibility.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomDensity2d instance
+   * @see #geom_density_2d(Aes)
+   */
+  static GeomDensity2d geom_density2d(Aes mapping) {
+    return geom_density_2d(mapping)
+  }
+
+  /**
+   * Alias for geom_density_2d() for ggplot2 API compatibility.
+   *
+   * @param params parameters for the geom
+   * @return a new GeomDensity2d instance
+   * @see #geom_density_2d(Map)
+   */
+  static GeomDensity2d geom_density2d(Map params) {
+    return geom_density_2d(params)
+  }
+
   static GeomDensity2dFilled geom_density_2d_filled() {
     return new GeomDensity2dFilled()
   }
@@ -1683,6 +1750,39 @@ class GgPlot {
 
   static GeomDensity2dFilled geom_density_2d_filled(Map params) {
     return new GeomDensity2dFilled(params)
+  }
+
+  /**
+   * Alias for geom_density_2d_filled() for ggplot2 API compatibility.
+   * Perform 2D kernel density estimation and display filled contours.
+   *
+   * @return a new GeomDensity2dFilled instance
+   * @see #geom_density_2d_filled()
+   */
+  static GeomDensity2dFilled geom_density2d_filled() {
+    return geom_density_2d_filled()
+  }
+
+  /**
+   * Alias for geom_density_2d_filled() for ggplot2 API compatibility.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomDensity2dFilled instance
+   * @see #geom_density_2d_filled(Aes)
+   */
+  static GeomDensity2dFilled geom_density2d_filled(Aes mapping) {
+    return geom_density_2d_filled(mapping)
+  }
+
+  /**
+   * Alias for geom_density_2d_filled() for ggplot2 API compatibility.
+   *
+   * @param params parameters for the geom
+   * @return a new GeomDensity2dFilled instance
+   * @see #geom_density_2d_filled(Map)
+   */
+  static GeomDensity2dFilled geom_density2d_filled(Map params) {
+    return geom_density_2d_filled(params)
   }
 
   /**
@@ -3715,6 +3815,17 @@ class GgPlot {
 
   static StatsBin2D stat_bin_2d() {
     return new StatsBin2D()
+  }
+
+  /**
+   * Alias for stat_bin_2d() for ggplot2 API compatibility.
+   * Compute 2D rectangular binning statistics.
+   *
+   * @return a new StatsBin2D instance
+   * @see #stat_bin_2d()
+   */
+  static StatsBin2D stat_bin2d() {
+    return stat_bin_2d()
   }
 
   /**
