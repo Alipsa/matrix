@@ -123,19 +123,19 @@ class GeomSegment extends Geom {
 
     // Draw segments
     segments.each { Map<String, Number> seg ->
-      def x1Px = xScale.transform(seg.x)
-      def y1Px = yScale.transform(seg.y)
-      def x2Px = xScale.transform(seg.xend)
-      def y2Px = yScale.transform(seg.yend)
+      Number x1Px = xScale.transform(seg.x) as Number
+      Number y1Px = yScale.transform(seg.y) as Number
+      Number x2Px = xScale.transform(seg.xend) as Number
+      Number y2Px = yScale.transform(seg.yend) as Number
 
       if (x1Px == null || y1Px == null || x2Px == null || y2Px == null) return
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
-          .x1(x1Px as Number)
-          .y1(y1Px as Number)
-          .x2(x2Px as Number)
-          .y2(y2Px as Number)
+          .x1(x1Px)
+          .y1(y1Px)
+          .x2(x2Px)
+          .y2(y2Px)
           .stroke(lineColor)
 
       line.addAttribute('stroke-width', linewidth)
@@ -153,7 +153,7 @@ class GeomSegment extends Geom {
 
       // Draw arrow if requested
       if (arrow) {
-        drawArrow(group, x2Px as Number, y2Px as Number, x1Px as Number, y1Px as Number)
+        drawArrow(group, x2Px, y2Px, x1Px, y1Px)
       }
     }
   }
@@ -178,18 +178,18 @@ class GeomSegment extends Geom {
     // Draw arrowhead as two lines
     String lineColor = ColorUtil.normalizeColor(color) ?: color
     def arrow1 = group.addLine()
-        .x1(x2 as Number)
-        .y1(y2 as Number)
-        .x2(ax1 as Number)
-        .y2(ay1 as Number)
+        .x1(x2)
+        .y1(y2)
+        .x2(ax1)
+        .y2(ay1)
         .stroke(lineColor)
     arrow1.addAttribute('stroke-width', linewidth)
 
     def arrow2 = group.addLine()
-        .x1(x2 as Number)
-        .y1(y2 as Number)
-        .x2(ax2 as Number)
-        .y2(ay2 as Number)
+        .x1(x2)
+        .y1(y2)
+        .x2(ax2)
+        .y2(ay2)
         .stroke(lineColor)
     arrow2.addAttribute('stroke-width', linewidth)
 
