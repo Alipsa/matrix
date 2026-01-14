@@ -40,7 +40,7 @@ class ScaleColorViridis extends ScaleDiscrete {
   double alpha = 1.0
 
   /** Generated color mapping (Map for O(1) lookup) */
-  private Map<Object, String> paletteMap = [:]
+  private Map<String, String> paletteMap = [:]
 
   // Viridis palette key colors (used for smooth interpolation)
   // Each palette is defined with approximately 12–20 discrete colors
@@ -162,12 +162,7 @@ class ScaleColorViridis extends ScaleDiscrete {
 
     int n = domain.size()
     List<String> colors = generateColors(n)
-
-    paletteMap = [:]
-    domain.eachWithIndex { value, idx ->
-      // Use toString() to ensure consistent String keys (handles GString vs String)
-      paletteMap[value.toString()] = colors[idx]
-    }
+    paletteMap = buildPaletteMap(colors)
   }
 
   /**
@@ -277,13 +272,7 @@ class ScaleColorViridis extends ScaleDiscrete {
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    // Use toString() to match storage format
-    String key = value.toString()
-    if (paletteMap.containsKey(key)) {
-      return paletteMap[key]
-    }
-    return naValue
+    return lookupColor(paletteMap, value, naValue)
   }
 
   @Override
@@ -309,17 +298,10 @@ class ScaleColorViridis extends ScaleDiscrete {
    * Get all computed colors in order of levels.
    */
   List<String> getColors() {
-    if (levels.isEmpty()) return []
     if (paletteMap.isEmpty()) {
       generatePalette()
     }
-    List<String> result = []
-    for (Object level : levels) {
-      // Use toString() to match storage format
-      String color = paletteMap.get(level.toString())
-      result.add(color != null ? color : naValue)
-    }
-    return result
+    return getColorsFromPalette(paletteMap, naValue)
   }
 
   @Override

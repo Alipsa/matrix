@@ -98,8 +98,7 @@ class ColorSpaceUtilTest {
     assertNotNull(color)
     assertTrue(color.matches(/#[0-9A-F]{6}/))
 
-    // ggplot2 first color is approximately #F8766D
-    // Allow some tolerance in color matching due to conversion differences
+    // ggplot2 first color is #F8766D - verify exact match
     assertEquals('#F8766D', color.toUpperCase())
   }
 }

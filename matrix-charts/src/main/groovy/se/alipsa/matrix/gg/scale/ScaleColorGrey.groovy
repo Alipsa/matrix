@@ -21,7 +21,7 @@ class ScaleColorGrey extends ScaleDiscrete {
   String naValue = 'grey50'
 
   /** Generated color palette (Map for O(1) lookup) */
-  private Map<Object, String> palette = [:]
+  private Map<String, String> palette = [:]
 
   /**
    * Create a greyscale with defaults.
@@ -69,41 +69,23 @@ class ScaleColorGrey extends ScaleDiscrete {
     }
 
     int n = domain.size()
-    List<String> colors = buildPalette(n)
-
-    palette = [:]
-    domain.eachWithIndex { value, idx ->
-      // Use toString() to ensure consistent String keys (handles GString vs String)
-      palette[value.toString()] = colors[idx]
-    }
+    List<String> colors = buildGreyPalette(n)
+    palette = buildPaletteMap(colors)
   }
 
   @Override
   Object transform(Object value) {
-    if (value == null) return naValue
-    // Use toString() to match storage format
-    String key = value.toString()
-    if (palette.containsKey(key)) {
-      return palette[key]
-    }
-    return naValue
+    return lookupColor(palette, value, naValue)
   }
 
   List<String> getColors() {
-    if (levels.isEmpty()) return []
     if (palette.isEmpty()) {
       generatePalette()
     }
-    List<String> result = []
-    for (Object level : levels) {
-      // Use toString() to match storage format
-      String color = palette.get(level.toString())
-      result.add(color != null ? color : naValue)
-    }
-    return result
+    return getColorsFromPalette(palette, naValue)
   }
 
-  private List<String> buildPalette(int n) {
+  private List<String> buildGreyPalette(int n) {
     if (n <= 0) return []
     double startVal = start as double
     double endVal = end as double

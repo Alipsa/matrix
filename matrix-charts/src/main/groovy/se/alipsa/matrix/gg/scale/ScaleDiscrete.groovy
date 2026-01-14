@@ -158,6 +158,55 @@ class ScaleDiscrete extends Scale {
     levels = []
   }
 
+  /**
+   * Build a palette map from domain values to colors.
+   * Uses toString() on keys to ensure consistent lookup (handles GString vs String).
+   *
+   * @param colors list of colors corresponding to domain values
+   * @return map from string keys to colors
+   */
+  protected Map<String, String> buildPaletteMap(List<String> colors) {
+    if (domain == null || domain.isEmpty() || colors == null || colors.isEmpty()) {
+      return [:]
+    }
+    Map<String, String> palette = [:]
+    domain.eachWithIndex { value, idx ->
+      palette[value.toString()] = colors[idx % colors.size()]
+    }
+    return palette
+  }
+
+  /**
+   * Look up a color in a palette map using toString() for consistent key matching.
+   *
+   * @param palette the palette map to look up in
+   * @param value the value to look up
+   * @param naValue the default value if not found
+   * @return the color or naValue if not found
+   */
+  protected String lookupColor(Map<String, String> palette, Object value, String naValue) {
+    if (value == null) return naValue
+    String key = value.toString()
+    return palette.containsKey(key) ? palette[key] : naValue
+  }
+
+  /**
+   * Get colors in order of levels from a palette map.
+   *
+   * @param palette the palette map to get colors from
+   * @param naValue the default value for missing colors
+   * @return list of colors in level order
+   */
+  protected List<String> getColorsFromPalette(Map<String, String> palette, String naValue) {
+    if (levels.isEmpty()) return []
+    List<String> result = []
+    for (Object level : levels) {
+      String color = palette.get(level.toString())
+      result.add(color != null ? color : naValue)
+    }
+    return result
+  }
+
   Scale setLimits(List limits) {
     this.limits = limits
     this
