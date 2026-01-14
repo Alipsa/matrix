@@ -485,6 +485,8 @@ class NumberExtensionTest {
     BigDecimal piOver6 = (Math.PI / 6) as BigDecimal
     BigDecimal sinPiOver6 = piOver6.sin()
     assertEquals(0.5, sinPiOver6.doubleValue(), 1e-10)
+
+    assertEquals(Math.sin(12.2), NumberExtension.sin(12.2).doubleValue(), 1e-12)
   }
 
   @Test
@@ -604,5 +606,23 @@ class NumberExtensionTest {
     degrees = 45.0G
     radians = degrees.toRadians()
     assertEquals(Math.PI / 4, radians.doubleValue(), 1e-10)
+  }
+
+  @Test
+  void testAtan() {
+    assertEquals(Math.atan(12.2), NumberExtension.atan(12.2).doubleValue(), 1e-12)
+    assertEquals(Math.atan(11), NumberExtension.atan(11).doubleValue(), 1e-12)
+  }
+
+  @Test
+  void testAtan2() {
+    assertEquals(Math.atan2(12.2, 6.4), NumberExtension.atan2(12.2, 6.4).doubleValue(), 1e-12)
+    assertEquals(Math.atan2(15, 6), NumberExtension.atan2(15, 6).doubleValue(), 1e-12)
+  }
+
+  @Test
+  void testTan() {
+    assertEquals(Math.tan(12.2), NumberExtension.tan(12.2).doubleValue(), 1e-10)
+    assertEquals(Math.tan(11), NumberExtension.tan(11).doubleValue(), 1e-10)
   }
 }
