@@ -84,17 +84,17 @@ class GeomHistogram extends Geom {
       if (xmin == null || xmax == null || count == null) return
 
       // Transform coordinates
-      def xLeft = xScale?.transform(xmin)
-      def xRight = xScale?.transform(xmax)
-      def yTop = yScale?.transform(count)
-      def yBottom = yScale?.transform(0)
+      BigDecimal xLeft = xScale?.transform(xmin) as BigDecimal
+      BigDecimal xRight = xScale?.transform(xmax) as BigDecimal
+      BigDecimal yTop = yScale?.transform(count) as BigDecimal
+      BigDecimal yBottom = yScale?.transform(0) as BigDecimal
 
       if (xLeft == null || xRight == null || yTop == null || yBottom == null) return
 
-      double xPx = xLeft as double
-      double widthPx = (xRight as double) - (xLeft as double)
-      double yPx = yTop as double
-      double heightPx = Math.abs((yBottom as double) - (yTop as double))
+      BigDecimal xPx = xLeft
+      BigDecimal widthPx = xRight - xLeft
+      BigDecimal yPx = yTop
+      BigDecimal heightPx = (yBottom - yTop).abs()
 
       // Skip empty bins
       if (heightPx <= 0) return
@@ -142,7 +142,7 @@ class GeomHistogram extends Geom {
       '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 }
