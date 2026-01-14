@@ -24,7 +24,7 @@ class ScaleColorBrewer extends ScaleDiscrete {
   String naValue = 'grey50'
 
   /** Generated color mapping (Map for O(1) lookup) */
-  private Map<Object, String> paletteMap = [:]
+  private Map<String, String> paletteMap = [:]
 
   /**
    * Create a ColorBrewer scale with defaults.
@@ -78,16 +78,14 @@ class ScaleColorBrewer extends ScaleDiscrete {
 
     paletteMap = [:]
     domain.eachWithIndex { value, idx ->
-      // Use toString() to ensure consistent String keys (handles GString vs String)
-      paletteMap[value.toString()] = colors[idx % colors.size()]
+      paletteMap[value as String] = colors[idx % colors.size()]
     }
   }
 
   @Override
   Object transform(Object value) {
     if (value == null) return naValue
-    // Use toString() to match storage format
-    String key = value.toString()
+    String key = value as String
     if (paletteMap.containsKey(key)) {
       return paletteMap[key]
     }
@@ -101,8 +99,7 @@ class ScaleColorBrewer extends ScaleDiscrete {
     }
     List<String> result = []
     for (Object level : levels) {
-      // Use toString() to match storage format
-      String color = paletteMap.get(level.toString())
+      String color = paletteMap.get(level as String)
       result.add(color != null ? color : naValue)
     }
     return result

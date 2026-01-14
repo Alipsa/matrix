@@ -35,7 +35,7 @@ class ScaleColorHue extends ScaleDiscrete {
   String naValue = 'grey50'
 
   /** Generated color palette */
-  private Map<Object, String> palette = [:]
+  private Map<String, String> palette = [:]
 
   ScaleColorHue() {
     aesthetic = 'color'
@@ -96,8 +96,7 @@ class ScaleColorHue extends ScaleDiscrete {
 
     palette = [:]
     domain.eachWithIndex { value, idx ->
-      // Use toString() to ensure consistent String keys (handles GString vs String)
-      palette[value.toString()] = colors[idx]
+      palette[value as String] = colors[idx]
     }
   }
 
@@ -137,8 +136,7 @@ class ScaleColorHue extends ScaleDiscrete {
   @Override
   Object transform(Object value) {
     if (value == null) return naValue
-    // Use toString() to match storage format
-    String key = value.toString()
+    String key = value as String
     if (palette.containsKey(key)) {
       return palette[key]
     }
@@ -163,8 +161,7 @@ class ScaleColorHue extends ScaleDiscrete {
     }
     List<String> result = []
     for (Object level : levels) {
-      // Use toString() to match storage format
-      String color = palette.get(level.toString())
+      String color = palette.get(level as String)
       result.add(color != null ? color : naValue)
     }
     return result
