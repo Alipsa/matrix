@@ -98,8 +98,8 @@ class GeomSmooth extends Geom {
       if (xVal == null || yVal == null) return
       if (!(xVal instanceof Number) || !(yVal instanceof Number)) return
 
-      double xPx = (xScale?.transform(xVal) ?: xVal) as double
-      double yPx = (yScale?.transform(yVal) ?: yVal) as double
+      Number xPx = (xScale?.transform(xVal) ?: xVal) as Number
+      Number yPx = (yScale?.transform(yVal) ?: yVal) as Number
 
       points << [xPx, yPx]
 
@@ -107,8 +107,8 @@ class GeomSmooth extends Geom {
         def yMinVal = row['ymin']
         def yMaxVal = row['ymax']
         if (yMinVal instanceof Number && yMaxVal instanceof Number) {
-          double yMinPx = (yScale?.transform(yMinVal) ?: yMinVal) as double
-          double yMaxPx = (yScale?.transform(yMaxVal) ?: yMaxVal) as double
+          Number yMinPx = (yScale?.transform(yMinVal) ?: yMinVal) as Number
+          Number yMaxPx = (yScale?.transform(yMaxVal) ?: yMaxVal) as Number
           upper << [xPx, yMaxPx]
           lower << [xPx, yMinPx]
         }
@@ -156,20 +156,14 @@ class GeomSmooth extends Geom {
    * Convert line type to SVG stroke-dasharray.
    */
   private String getDashArray(String type) {
-    switch (type) {
-      case 'dashed':
-        return '8,4'
-      case 'dotted':
-        return '2,2'
-      case 'dotdash':
-        return '2,2,8,2'
-      case 'longdash':
-        return '12,4'
-      case 'twodash':
-        return '4,2,8,2'
-      case 'solid':
-      default:
-        return null
+    return switch (type) {
+      case 'dashed' -> '8,4'
+      case 'dotted' -> '2,2'
+      case 'dotdash' -> '2,2,8,2'
+      case 'longdash' -> '12,4'
+      case 'twodash' -> '4,2,8,2'
+      case 'solid' -> null
+      default -> null
     }
   }
 }
