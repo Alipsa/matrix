@@ -227,10 +227,10 @@ class GeomBar extends Geom {
       groups[key] << row
     }
 
-    double outerRadius = coord.getMaxRadius() as double
-    double innerOffset = coord.getInnerRadiusPx() as double
-    innerOffset = innerOffset.min(outerRadius).max(0.0d)
-    double availableRadius = (outerRadius - innerOffset).max(0.0d)
+    BigDecimal outerRadius = coord.getMaxRadius() as BigDecimal
+    BigDecimal innerOffset = coord.getInnerRadiusPx() as BigDecimal
+    innerOffset = innerOffset.min(outerRadius).max(0.0)
+    BigDecimal availableRadius = (outerRadius - innerOffset).max(0.0)
     int groupCount = groups.size()
 
     double span = coord.getAngularSpan() as double
@@ -255,29 +255,29 @@ class GeomBar extends Geom {
         rows = rows.reverse()
       }
 
-      double ringSize = groupCount > 0 ? (availableRadius / (double) groupCount) : availableRadius
-      double groupOuter = outerRadius - (idx * ringSize)
-      double groupInner = (groupOuter - ringSize).max(innerOffset)
+      BigDecimal ringSize = groupCount > 0 ? availableRadius / groupCount : availableRadius
+      BigDecimal groupOuter = outerRadius - (idx * ringSize)
+      BigDecimal groupInner = (groupOuter - ringSize).max(innerOffset)
       idx++
 
       List<Double> values = rows.collect { row ->
         if (row['ymin'] != null && row['ymax'] != null) {
-          return ((row['ymax'] as double) - (row['ymin'] as double))
+          return ((row['ymax'] as double) - (row['ymin'] as double)) as double
         }
         if (yCol != null && row[yCol] instanceof Number) {
           return row[yCol] as double
         }
-        return 0.0d
+        return 0.0 as double
       }
-      double total = values.sum(0.0d) as double
-      if (total <= 0.0d) {
+      double total = values.sum(0.0) as double
+      if (total <= 0.0) {
         continue
       }
 
-      double current = 0.0d
+      double current = 0.0
       rows.eachWithIndex { row, int rowIdx ->
         double value = values[rowIdx]
-        if (value <= 0.0d) {
+        if (value <= 0.0) {
           return
         }
         double startAngle = (current / total) * span
@@ -326,7 +326,7 @@ class GeomBar extends Geom {
       groups[key] << row
     }
 
-    double outerRadius = coord.getMaxRadius() * 0.9
+    BigDecimal outerRadius = coord.getMaxRadius() * 0.9
     int groupCount = groups.size()
 
     int idx = 0
@@ -349,29 +349,29 @@ class GeomBar extends Geom {
         // Match ggplot2 slice order: legend order appears counterclockwise
         rows = rows.reverse()
       }
-      double ringSize = groupCount > 0 ? (outerRadius / (double) groupCount) : outerRadius
-      double groupOuter = outerRadius - (idx * ringSize)
-      double groupInner = (groupOuter - ringSize).max(0.0d)
+      BigDecimal ringSize = groupCount > 0 ? outerRadius / groupCount : outerRadius
+      BigDecimal groupOuter = outerRadius - (idx * ringSize)
+      BigDecimal groupInner = (groupOuter - ringSize).max(0.0)
       idx++
 
       List<Double> values = rows.collect { row ->
         if (row['ymin'] != null && row['ymax'] != null) {
-          return ((row['ymax'] as double) - (row['ymin'] as double))
+          return ((row['ymax'] as double) - (row['ymin'] as double)) as double
         }
         if (yCol != null && row[yCol] instanceof Number) {
           return row[yCol] as double
         }
-        return 0.0d
+        return 0.0 as double
       }
-      double total = values.sum(0.0d) as double
-      if (total <= 0.0d) {
+      double total = values.sum(0.0) as double
+      if (total <= 0.0) {
         continue
       }
 
-      double current = 0.0d
+      double current = 0.0
       rows.eachWithIndex { row, int rowIdx ->
         double value = values[rowIdx]
-        if (value <= 0.0d) {
+        if (value <= 0.0) {
           return
         }
         double startAngle = (current / total) * 2 * PI
