@@ -22,34 +22,34 @@ import static se.alipsa.matrix.ext.NumberExtension.PI
 class GeomSegment extends Geom {
 
   /** Starting x coordinate */
-  Number x
+  BigDecimal x
 
   /** Starting y coordinate */
-  Number y
+  BigDecimal y
 
   /** Ending x coordinate */
-  Number xend
+  BigDecimal xend
 
   /** Ending y coordinate */
-  Number yend
+  BigDecimal yend
 
   /** Line color */
   String color = 'black'
 
   /** Line width */
-  Number linewidth = 1
+  BigDecimal linewidth = 1
 
   /** Line type: 'solid', 'dashed', 'dotted', 'longdash', 'twodash' */
   String linetype = 'solid'
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Arrow at end of segment */
   boolean arrow = false
 
   /** Arrow size (width in pixels) */
-  Number arrowSize = 10
+  BigDecimal arrowSize = 10
 
   GeomSegment() {
     defaultStat = StatType.IDENTITY
@@ -59,18 +59,17 @@ class GeomSegment extends Geom {
 
   GeomSegment(Map params) {
     this()
-    if (params.x != null) this.x = params.x as Number
-    if (params.y != null) this.y = params.y as Number
-    if (params.xend != null) this.xend = params.xend as Number
-    if (params.yend != null) this.yend = params.yend as Number
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    if (params.x != null) this.x = params.x as BigDecimal
+    if (params.y != null) this.y = params.y as BigDecimal
+    if (params.xend != null) this.xend = params.xend as BigDecimal
+    if (params.yend != null) this.yend = params.yend as BigDecimal
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
+    if (params.size != null) this.linewidth = params.size as BigDecimal
+    this.linetype = params.linetype as String ?: this.linetype
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
     if (params.arrow != null) this.arrow = params.arrow as boolean
-    if (params.arrowSize != null) this.arrowSize = params.arrowSize as Number
+    if (params.arrowSize != null) this.arrowSize = params.arrowSize as BigDecimal
     this.params = params
   }
 
@@ -81,7 +80,7 @@ class GeomSegment extends Geom {
     if (xScale == null || yScale == null) return
 
     // Collect segments
-    List<Map<String, Number>> segments = []
+    List<Map<String, BigDecimal>> segments = []
 
     // From parameters
     if (x != null && y != null && xend != null && yend != null) {
@@ -109,10 +108,10 @@ class GeomSegment extends Geom {
           if (xVal instanceof Number && yVal instanceof Number &&
               xendVal instanceof Number && yendVal instanceof Number) {
             segments << [
-                x: xVal as Number,
-                y: yVal as Number,
-                xend: xendVal as Number,
-                yend: yendVal as Number
+                x: xVal as BigDecimal,
+                y: yVal as BigDecimal,
+                xend: xendVal as BigDecimal,
+                yend: yendVal as BigDecimal
             ]
           }
         }
@@ -122,11 +121,11 @@ class GeomSegment extends Geom {
     if (segments.isEmpty()) return
 
     // Draw segments
-    segments.each { Map<String, Number> seg ->
-      Number x1Px = xScale.transform(seg.x) as Number
-      Number y1Px = yScale.transform(seg.y) as Number
-      Number x2Px = xScale.transform(seg.xend) as Number
-      Number y2Px = yScale.transform(seg.yend) as Number
+    segments.each { Map<String, BigDecimal> seg ->
+      BigDecimal x1Px = xScale.transform(seg.x) as BigDecimal
+      BigDecimal y1Px = yScale.transform(seg.y) as BigDecimal
+      BigDecimal x2Px = xScale.transform(seg.xend) as BigDecimal
+      BigDecimal y2Px = yScale.transform(seg.yend) as BigDecimal
 
       if (x1Px == null || y1Px == null || x2Px == null || y2Px == null) return
 
@@ -161,19 +160,19 @@ class GeomSegment extends Geom {
   /**
    * Draw an arrowhead at the end point.
    */
-  private void drawArrow(G group, Number x2, Number y2, Number x1, Number y1) {
+  private void drawArrow(G group, BigDecimal x2, BigDecimal y2, BigDecimal x1, BigDecimal y1) {
     // Calculate angle of the line
-    BigDecimal dy = (y2 as BigDecimal) - (y1 as BigDecimal)
-    BigDecimal dx = (x2 as BigDecimal) - (x1 as BigDecimal)
+    BigDecimal dy = y2 - y1
+    BigDecimal dx = x2 - x1
     BigDecimal angle = dy.atan2(dx)
     BigDecimal arrowAngle = PI / 6  // 30 degrees
-    BigDecimal size = arrowSize as BigDecimal
+    BigDecimal size = arrowSize
 
     // Calculate arrowhead points
-    BigDecimal ax1 = (x2 as BigDecimal) - size * (angle - arrowAngle).cos()
-    BigDecimal ay1 = (y2 as BigDecimal) - size * (angle - arrowAngle).sin()
-    BigDecimal ax2 = (x2 as BigDecimal) - size * (angle + arrowAngle).cos()
-    BigDecimal ay2 = (y2 as BigDecimal) - size * (angle + arrowAngle).sin()
+    BigDecimal ax1 = x2 - size * (angle - arrowAngle).cos()
+    BigDecimal ay1 = y2 - size * (angle - arrowAngle).sin()
+    BigDecimal ax2 = x2 - size * (angle + arrowAngle).cos()
+    BigDecimal ay2 = y2 - size * (angle + arrowAngle).sin()
 
     // Draw arrowhead as two lines
     String lineColor = ColorUtil.normalizeColor(color) ?: color

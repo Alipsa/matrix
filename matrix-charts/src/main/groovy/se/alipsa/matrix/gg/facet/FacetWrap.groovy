@@ -54,8 +54,8 @@ class FacetWrap extends Facet {
     }
     if (params.ncol != null) this.ncol = params.ncol as Integer
     if (params.nrow != null) this.nrow = params.nrow as Integer
-    if (params.scales) this.scales = params.scales as String
-    if (params.dir) this.dir = params.dir as String
+    this.scales = params.scales as String ?: this.scales
+    this.dir = params.dir as String ?: this.dir
     if (params.containsKey('drop')) this.drop = params.drop as boolean
     if (params.labeller) {
       // Accept both String and Labeller objects
@@ -89,15 +89,15 @@ class FacetWrap extends Facet {
     } else if (ncol != null) {
       // Only ncol specified
       numCols = ncol
-      numRows = Math.ceil(n / (double) numCols) as int
+      numRows = (n / numCols).ceil() as int
     } else if (nrow != null) {
       // Only nrow specified
       numRows = nrow
-      numCols = Math.ceil(n / (double) numRows) as int
+      numCols = (n / numRows).ceil() as int
     } else {
       // Auto-compute: try to make it roughly square
-      numCols = Math.ceil(Math.sqrt(n)) as int
-      numRows = Math.ceil(n / (double) numCols) as int
+      numCols = (n as BigDecimal).sqrt().ceil() as int
+      numRows = (n / numCols).ceil() as int
     }
 
     return [nrow: numRows, ncol: numCols]
@@ -156,12 +156,12 @@ class FacetWrap extends Facet {
     if (dir == 'v') {
       // Fill vertically first
       int numRows = layout.nrow
-      int col = index / numRows as int
+      int col = index.intdiv(numRows)
       int row = index % numRows
       return [row: row, col: col]
     } else {
       // Fill horizontally first (default)
-      int row = index / numCols as int
+      int row = index.intdiv(numCols)
       int col = index % numCols
       return [row: row, col: col]
     }

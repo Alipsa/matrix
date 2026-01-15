@@ -344,6 +344,10 @@ class NumberExtension {
     return self.sqrt(MathContext.DECIMAL64)
   }
 
+  static BigDecimal sqrt(Number self) {
+    return sqrt(self as BigDecimal)
+  }
+
   /**
    * Returns the sine of this BigDecimal value (in radians).
    * <p>

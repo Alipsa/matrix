@@ -26,13 +26,13 @@ class ScaleYDiscrete extends ScaleDiscrete {
   }
 
   private void applyParams(Map params) {
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.position) this.position = params.position as String
+    this.name = params.name as String ?: this.name
+    this.limits = params.limits as List ?: this.limits
+    this.breaks = params.breaks as List ?: this.breaks
+    this.labels = params.labels as List<String> ?: this.labels
+    this.position = params.position as String ?: this.position
     if (params.drop != null) this.drop = params.drop as boolean
-    if (params.expand) this.discreteExpand = params.expand as List<Number>
+    this.discreteExpand = params.expand as List<Number> ?: this.discreteExpand
   }
 
   @Override
@@ -46,17 +46,17 @@ class ScaleYDiscrete extends ScaleDiscrete {
     // Map to position within range with discrete expansion
     // Note: For y-axis, range[0] is typically the bottom (larger pixel value)
     // and range[1] is the top (0 or smaller pixel value) due to SVG inversion
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
 
     // Apply discrete expansion
-    double mult = discreteExpand[0] as double
-    double add = discreteExpand[1] as double
-    double totalHeight = Math.abs(rMax - rMin)
-    double expandedPadding = totalHeight * mult + add * getBandwidthUnexpanded()
+    BigDecimal mult = discreteExpand[0] as BigDecimal
+    BigDecimal add = discreteExpand[1] as BigDecimal
+    BigDecimal totalHeight = (rMax - rMin).abs()
+    BigDecimal expandedPadding = totalHeight * mult + add * getBandwidthUnexpanded()
 
     // Adjust bounds (accounting for SVG y-inversion)
-    double adjustedMin, adjustedMax
+    BigDecimal adjustedMin, adjustedMax
     if (rMin > rMax) {
       // Typical SVG case: rMin = plotHeight, rMax = 0
       adjustedMin = rMin - expandedPadding / 2
@@ -70,32 +70,32 @@ class ScaleYDiscrete extends ScaleDiscrete {
       return (adjustedMin + adjustedMax) / 2
     }
 
-    double bandWidth = (adjustedMax - adjustedMin) / levels.size()
+    BigDecimal bandWidth = (adjustedMax - adjustedMin) / levels.size()
     return adjustedMin + bandWidth * (index + 0.5)
   }
 
   /**
    * Get bandwidth without expansion applied.
    */
-  private double getBandwidthUnexpanded() {
+  private BigDecimal getBandwidthUnexpanded() {
     if (levels.isEmpty()) return 0
-    double rMin = range[0] as double
-    double rMax = range[1] as double
-    return Math.abs(rMax - rMin) / (levels.size() + 1)
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
+    return (rMax - rMin).abs() / (levels.size() + 1)
   }
 
   @Override
-  double getBandwidth() {
+  BigDecimal getBandwidth() {
     if (levels.isEmpty()) return 0
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
 
     // Apply discrete expansion
-    double mult = discreteExpand[0] as double
-    double add = discreteExpand[1] as double
-    double totalHeight = Math.abs(rMax - rMin)
-    double expandedPadding = totalHeight * mult + add * getBandwidthUnexpanded()
-    double adjustedHeight = totalHeight - expandedPadding
+    BigDecimal mult = discreteExpand[0] as BigDecimal
+    BigDecimal add = discreteExpand[1] as BigDecimal
+    BigDecimal totalHeight = (rMax - rMin).abs()
+    BigDecimal expandedPadding = totalHeight * mult + add * getBandwidthUnexpanded()
+    BigDecimal adjustedHeight = totalHeight - expandedPadding
 
     return adjustedHeight / levels.size()
   }

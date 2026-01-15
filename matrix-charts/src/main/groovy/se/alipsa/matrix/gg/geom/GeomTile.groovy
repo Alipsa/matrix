@@ -32,16 +32,16 @@ class GeomTile extends Geom {
   String color = 'white'
 
   /** Line width for tile borders */
-  Number linewidth = 0.5
+  BigDecimal linewidth = 0.5
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Tile width (null for auto-calculation based on data resolution) */
-  Number width = null
+  BigDecimal width = null
 
   /** Tile height (null for auto-calculation based on data resolution) */
-  Number height = null
+  BigDecimal height = null
 
   GeomTile() {
     defaultStat = StatType.IDENTITY
@@ -51,14 +51,13 @@ class GeomTile extends Geom {
 
   GeomTile(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.width != null) this.width = params.width as Number
-    if (params.height != null) this.height = params.height as Number
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
+    if (params.size != null) this.linewidth = params.size as BigDecimal
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.width != null) this.width = params.width as BigDecimal
+    if (params.height != null) this.height = params.height as BigDecimal
     this.params = params
   }
 
@@ -79,8 +78,8 @@ class GeomTile extends Geom {
     Scale fillScale = scales['fill'] ?: scales['color']
 
     // Calculate tile dimensions based on data resolution if not specified
-    double tileWidth = this.width != null ? (this.width as double) : calculateResolution(data, xCol)
-    double tileHeight = this.height != null ? (this.height as double) : calculateResolution(data, yCol)
+    BigDecimal tileWidth = this.width ?: calculateResolution(data, xCol)
+    BigDecimal tileHeight = this.height ?: calculateResolution(data, yCol)
 
     data.each { row ->
       def xVal = row[xCol]
@@ -90,30 +89,26 @@ class GeomTile extends Geom {
       if (xVal == null || yVal == null) return
 
       // Get center position
-      def xCenter = xScale?.transform(xVal)
-      def yCenter = yScale?.transform(yVal)
+      BigDecimal xCenterPx = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yCenterPx = yScale?.transform(yVal) as BigDecimal
 
-      if (xCenter == null || yCenter == null) return
-
-      // Calculate tile bounds in pixel space
-      double xCenterPx = xCenter as double
-      double yCenterPx = yCenter as double
+      if (xCenterPx == null || yCenterPx == null) return
 
       // Calculate half-widths in data space, then transform to get pixel dimensions
-      double halfW, halfH
+      BigDecimal halfW, halfH
       if (xVal instanceof Number) {
-        def xLeft = xScale?.transform((xVal as Number) - tileWidth / 2)
-        def xRight = xScale?.transform((xVal as Number) + tileWidth / 2)
-        halfW = xLeft != null && xRight != null ? Math.abs((xRight as double) - (xLeft as double)) / 2 : 20
+        BigDecimal xLeft = xScale?.transform((xVal as BigDecimal) - tileWidth / 2) as BigDecimal
+        BigDecimal xRight = xScale?.transform((xVal as BigDecimal) + tileWidth / 2) as BigDecimal
+        halfW = xLeft != null && xRight != null ? (xRight - xLeft).abs() / 2 : 20
       } else {
         // For discrete scales, use bandwidth
         halfW = 20
       }
 
       if (yVal instanceof Number) {
-        def yBottom = yScale?.transform((yVal as Number) - tileHeight / 2)
-        def yTop = yScale?.transform((yVal as Number) + tileHeight / 2)
-        halfH = yBottom != null && yTop != null ? Math.abs((yTop as double) - (yBottom as double)) / 2 : 20
+        BigDecimal yBottom = yScale?.transform((yVal as BigDecimal) - tileHeight / 2) as BigDecimal
+        BigDecimal yTop = yScale?.transform((yVal as BigDecimal) + tileHeight / 2) as BigDecimal
+        halfH = yBottom != null && yTop != null ? (yTop - yBottom).abs() / 2 : 20
       } else {
         halfH = 20
       }
@@ -134,25 +129,25 @@ class GeomTile extends Geom {
       tileFill = ColorUtil.normalizeColor(tileFill) ?: tileFill
 
       // Draw the tile
-      double x = xCenterPx - halfW
-      double y = yCenterPx - halfH
-      double w = halfW * 2
-      double h = halfH * 2
+      BigDecimal x = xCenterPx - halfW
+      BigDecimal y = yCenterPx - halfH
+      BigDecimal w = halfW * 2
+      BigDecimal h = halfH * 2
 
       def rect = group.addRect()
-          .x(x as int)
-          .y(y as int)
-          .width(w as int)
-          .height(h as int)
+          .x(x)
+          .y(y)
+          .width(w)
+          .height(h)
           .fill(tileFill)
 
       // Apply alpha
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         rect.addAttribute('fill-opacity', alpha)
       }
 
       // Apply stroke
-      if (color != null && (linewidth as double) > 0) {
+      if (color != null && linewidth > 0) {
         String strokeColor = ColorUtil.normalizeColor(color) ?: color
         rect.stroke(strokeColor)
         rect.addAttribute('stroke-width', linewidth)
@@ -165,22 +160,22 @@ class GeomTile extends Geom {
   /**
    * Calculate the resolution (minimum difference between adjacent values) in a column.
    */
-  private double calculateResolution(Matrix data, String col) {
+  private BigDecimal calculateResolution(Matrix data, String col) {
     List<Number> values = data[col].findAll { it instanceof Number } as List<Number>
     if (values.size() < 2) return 1.0
 
-    List<Double> sorted = values.collect { it as double }.unique().sort()
+    List<BigDecimal> sorted = values.collect { it as BigDecimal }.unique().sort()
     if (sorted.size() < 2) return 1.0
 
-    double minDiff = Double.POSITIVE_INFINITY
+    BigDecimal minDiff = null
     for (int i = 1; i < sorted.size(); i++) {
-      double diff = sorted[i] - sorted[i - 1]
-      if (diff > 0 && diff < minDiff) {
+      BigDecimal diff = sorted[i] - sorted[i - 1]
+      if (diff > 0 && (minDiff == null || diff < minDiff)) {
         minDiff = diff
       }
     }
 
-    return Double.isInfinite(minDiff) ? 1.0d : (minDiff as double)
+    return minDiff ?: 1.0
   }
 
   /**
@@ -193,7 +188,7 @@ class GeomTile extends Geom {
       '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 }

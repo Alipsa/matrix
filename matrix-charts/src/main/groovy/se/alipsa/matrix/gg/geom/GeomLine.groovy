@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.geom.Point
 
 /**
  * Line geometry for line charts.
@@ -21,13 +22,13 @@ class GeomLine extends Geom {
   String color = 'black'
 
   /** Line width */
-  Number size = 1
+  BigDecimal size = 1
 
   /** Line type (solid, dashed, dotted, dotdash, longdash, twodash) */
   String linetype = 'solid'
 
   /** Alpha transparency */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   GeomLine() {
     defaultStat = StatType.IDENTITY
@@ -37,12 +38,11 @@ class GeomLine extends Geom {
 
   GeomLine(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size) this.size = params.size as Number
-    if (params.linewidth) this.size = params.linewidth as Number
-    if (params.linetype) this.linetype = params.linetype
-    if (params.alpha) this.alpha = params.alpha as Number
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.size != null) this.size = params.size as BigDecimal
+    if (params.linewidth != null) this.size = params.linewidth as BigDecimal
+    this.linetype = params.linetype as String ?: this.linetype
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
     this.params = params
   }
 
@@ -67,19 +67,14 @@ class GeomLine extends Geom {
     Scale sizeScale = scales['size']
     Scale alphaScale = scales['alpha']
 
-    // Group data if a group aesthetic is specified
-    Map<Object, List<Map>> groups = [:]
-    data.each { row ->
-      def groupKey = groupCol ? row[groupCol] : '__all__'
-      if (!groups.containsKey(groupKey)) {
-        groups[groupKey] = []
-      }
-      groups[groupKey] << row.toMap()
+    // Group data if a group aesthetic is specified - use idiomatic groupBy
+    def groups = data.rows().groupBy { row ->
+      groupCol ? row[groupCol] : '__all__'
     }
 
     // Render each group as a separate line
     groups.each { groupKey, rows ->
-      renderLine(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
+      renderLine(group, rows*.toMap(), xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
                  xScale, yScale, colorScale, sizeScale, alphaScale, aes)
     }
   }
@@ -91,25 +86,19 @@ class GeomLine extends Geom {
     // Collect points and sort by x value
     List<Map> sortedRows = sortRowsByX(rows, xCol)
 
-    // Collect transformed points
-    List<double[]> points = []
-    sortedRows.each { row ->
+    // Collect transformed points - use idiomatic collect instead of each
+    List<Point> points = sortedRows.collect { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
-
-      if (xVal == null || yVal == null) return
+      if (xVal == null || yVal == null) return null
 
       // Transform using scales
-      def xTransformed = xScale?.transform(xVal)
-      def yTransformed = yScale?.transform(yVal)
+      Number xTransformed = xScale?.transform(xVal) as Number
+      Number yTransformed = yScale?.transform(yVal) as Number
+      if (xTransformed == null || yTransformed == null) return null
 
-      if (xTransformed == null || yTransformed == null) return
-
-      double xPx = xTransformed as double
-      double yPx = yTransformed as double
-
-      points << ([xPx, yPx] as double[])
-    }
+      new Point(xTransformed, yTransformed)
+    }.findAll() // Remove nulls
 
     if (points.size() < 2) return
 
@@ -126,18 +115,18 @@ class GeomLine extends Geom {
     }
     lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
 
-    Number lineSize = GeomUtils.extractLineSize(this.size, aes, sizeCol, rows, sizeScale)
-    Number lineAlpha = GeomUtils.extractLineAlpha(this.alpha, aes, alphaCol, rows, alphaScale)
+    BigDecimal lineSize = GeomUtils.extractLineSize(this.size, aes, sizeCol, rows, sizeScale)
+    BigDecimal lineAlpha = GeomUtils.extractLineAlpha(this.alpha, aes, alphaCol, rows, alphaScale)
 
     // Get stroke-dasharray for line type
     String dashArray = GeomUtils.getDashArray(linetype)
 
     // Draw connected line segments
     for (int i = 0; i < points.size() - 1; i++) {
-      double[] p1 = points[i]
-      double[] p2 = points[i + 1]
+      Point p1 = points[i]
+      Point p2 = points[i + 1]
 
-      def line = group.addLine(p1[0], p1[1], p2[0], p2[1])
+      def line = group.addLine(p1.x, p1.y, p2.x, p2.y)
           .stroke(lineColor)
           .strokeWidth(lineSize)
 
@@ -145,7 +134,7 @@ class GeomLine extends Geom {
         line.addAttribute('stroke-dasharray', dashArray)
       }
 
-      if ((lineAlpha as double) < 1.0) {
+      if (lineAlpha < 1.0) {
         line.addAttribute('stroke-opacity', lineAlpha)
       }
     }

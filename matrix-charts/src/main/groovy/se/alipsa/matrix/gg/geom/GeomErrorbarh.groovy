@@ -107,7 +107,7 @@ class GeomErrorbarh extends Geom {
         def yBottom = yScale.transform(yNum - halfHeightData)
         def yTop = yScale.transform(yNum + halfHeightData)
         if (yBottom == null || yTop == null) return
-        halfHeightPx = Math.abs((yTop as double) - (yBottom as double)) / 2.0d
+        halfHeightPx = ((yTop as BigDecimal) - (yBottom as BigDecimal)).abs() / 2
       }
 
       // Draw horizontal error bar: horizontal line and vertical end caps

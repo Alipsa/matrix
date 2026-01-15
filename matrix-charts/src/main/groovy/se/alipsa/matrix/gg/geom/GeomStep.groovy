@@ -35,13 +35,13 @@ class GeomStep extends Geom {
   String color = 'black'
 
   /** Line width */
-  Number size = 1
+  BigDecimal size = 1
 
   /** Line type (solid, dashed, dotted, dotdash, longdash, twodash) */
   String linetype = 'solid'
 
   /** Alpha transparency */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Step direction: 'hv' (horizontal-vertical), 'vh' (vertical-horizontal), 'mid' (midpoint) */
   String direction = 'hv'
@@ -54,13 +54,12 @@ class GeomStep extends Geom {
 
   GeomStep(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size != null) this.size = params.size as Number
-    if (params.linewidth != null) this.size = params.linewidth as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.direction) this.direction = params.direction as String
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.size != null) this.size = params.size as BigDecimal
+    if (params.linewidth != null) this.size = params.linewidth as BigDecimal
+    this.linetype = params.linetype as String ?: this.linetype
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    this.direction = params.direction as String ?: this.direction
     this.params = params
   }
 
@@ -86,14 +85,11 @@ class GeomStep extends Geom {
     Scale alphaScale = scales['alpha']
 
     // Group data if a group aesthetic is specified
-    Map<Object, List<Map>> groups = [:]
-    data.each { row ->
-      def groupKey = groupCol ? row[groupCol] : '__all__'
-      if (!groups.containsKey(groupKey)) {
-        groups[groupKey] = []
-      }
-      groups[groupKey] << row.toMap()
-    }
+    Map<Object, List<Map>> groups = data.rows()
+        .groupBy { row -> groupCol ? row[groupCol] : '__all__' }
+        .collectEntries { groupKey, rows ->
+          [(groupKey): rows.collect { it.toMap() }]
+        } as Map<Object, List<Map>>
 
     // Render each group as a separate step line
     groups.each { groupKey, rows ->
@@ -110,7 +106,7 @@ class GeomStep extends Geom {
     List<Map> sortedRows = sortRowsByX(rows, xCol)
 
     // Collect transformed points
-    List<double[]> points = []
+    List<Point> points = []
     sortedRows.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
@@ -118,15 +114,12 @@ class GeomStep extends Geom {
       if (xVal == null || yVal == null) return
 
       // Transform using scales
-      def xTransformed = xScale?.transform(xVal)
-      def yTransformed = yScale?.transform(yVal)
+      BigDecimal xPx = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yPx = yScale?.transform(yVal) as BigDecimal
 
-      if (xTransformed == null || yTransformed == null) return
+      if (xPx == null || yPx == null) return
 
-      double xPx = xTransformed as double
-      double yPx = yTransformed as double
-
-      points << ([xPx, yPx] as double[])
+      points << new Point(xPx, yPx)
     }
 
     if (points.size() < 2) return
@@ -144,36 +137,36 @@ class GeomStep extends Geom {
     }
     lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
 
-    Number lineSize = GeomUtils.extractLineSize(this.size, aes, sizeCol, sortedRows, sizeScale)
-    Number lineAlpha = GeomUtils.extractLineAlpha(this.alpha, aes, alphaCol, sortedRows, alphaScale)
+    BigDecimal lineSize = GeomUtils.extractLineSize(this.size, aes, sizeCol, sortedRows, sizeScale)
+    BigDecimal lineAlpha = GeomUtils.extractLineAlpha(this.alpha, aes, alphaCol, sortedRows, alphaScale)
 
     // Build step path based on direction
     StringBuilder d = new StringBuilder()
-    double[] first = points[0]
-    d << "M ${first[0]} ${first[1]}"
+    Point first = points[0]
+    d << "M ${first.x} ${first.y}"
 
     for (int i = 1; i < points.size(); i++) {
-      double[] prev = points[i - 1]
-      double[] curr = points[i]
+      Point prev = points[i - 1]
+      Point curr = points[i]
 
       switch (direction.toLowerCase()) {
         case 'vh':
           // Vertical first, then horizontal
-          d << " L ${prev[0]} ${curr[1]}"
-          d << " L ${curr[0]} ${curr[1]}"
+          d << " L ${prev.x} ${curr.y}"
+          d << " L ${curr.x} ${curr.y}"
           break
         case 'mid':
           // Step at midpoint
-          double midX = (prev[0] + curr[0]) / 2
-          d << " L ${midX} ${prev[1]}"
-          d << " L ${midX} ${curr[1]}"
-          d << " L ${curr[0]} ${curr[1]}"
+          BigDecimal midX = (prev.x as BigDecimal + curr.x as BigDecimal) / 2
+          d << " L ${midX} ${prev.y}"
+          d << " L ${midX} ${curr.y}"
+          d << " L ${curr.x} ${curr.y}"
           break
         case 'hv':
         default:
           // Horizontal first, then vertical (default)
-          d << " L ${curr[0]} ${prev[1]}"
-          d << " L ${curr[0]} ${curr[1]}"
+          d << " L ${curr.x} ${prev.y}"
+          d << " L ${curr.x} ${curr.y}"
           break
       }
     }
@@ -193,7 +186,7 @@ class GeomStep extends Geom {
     }
 
     // Apply alpha
-    if ((lineAlpha as double) < 1.0) {
+    if (lineAlpha < 1.0) {
       path.addAttribute('stroke-opacity', lineAlpha)
     }
   }

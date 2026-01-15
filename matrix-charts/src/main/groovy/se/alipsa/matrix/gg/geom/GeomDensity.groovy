@@ -24,6 +24,20 @@ import se.alipsa.matrix.stats.kde.KernelDensity
 @CompileStatic
 class GeomDensity extends Geom {
 
+  /**
+   * Data class to hold kernel density estimation points.
+   */
+  @CompileStatic
+  static class DensityPoint {
+    final BigDecimal position
+    final BigDecimal density
+
+    DensityPoint(BigDecimal position, BigDecimal density) {
+      this.position = position
+      this.density = density
+    }
+  }
+
   /** Fill color (null for no fill) */
   String fill
 
@@ -31,16 +45,16 @@ class GeomDensity extends Geom {
   String color = 'black'
 
   /** Line width */
-  Number linewidth = 1
+  BigDecimal linewidth = 1
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Line type: 'solid', 'dashed', 'dotted', etc. */
   String linetype = 'solid'
 
   /** Bandwidth adjustment factor (multiplier for default bandwidth) */
-  Number adjust = 1.0
+  BigDecimal adjust = 1.0
 
   /** Kernel type: 'gaussian', 'epanechnikov', 'uniform', or 'triangular' */
   String kernel = 'gaussian'
@@ -59,16 +73,14 @@ class GeomDensity extends Geom {
 
   GeomDensity(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.adjust != null) this.adjust = params.adjust as Number
-    if (params.kernel) this.kernel = params.kernel as String
-    if (params.n != null) this.n = params.n as int
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    this.linewidth = (params.linewidth ?: params.size) as BigDecimal ?: this.linewidth
+    this.alpha = params.alpha as BigDecimal ?: this.alpha
+    this.linetype = params.linetype as String ?: this.linetype
+    this.adjust = params.adjust as BigDecimal ?: this.adjust
+    this.kernel = params.kernel as String ?: this.kernel
+    this.n = params.n as Integer ?: this.n
     if (params.trim != null) this.trim = params.trim as boolean
     this.params = params
   }
@@ -92,29 +104,24 @@ class GeomDensity extends Geom {
     Scale fillScale = scales['fill']
 
     // Group data if needed
-    Map<Object, List<Number>> groups = [:]
-    data.each { row ->
-      def xVal = row[xCol]
-      if (xVal == null || !(xVal instanceof Number)) return
-
-      def groupKey = groupCol ? row[groupCol] : '__all__'
-      if (!groups.containsKey(groupKey)) {
-        groups[groupKey] = []
-      }
-      groups[groupKey] << (xVal as Number)
-    }
+    Map<Object, List<Number>> groups = data.rows()
+        .findAll { row -> row[xCol] != null && row[xCol] instanceof Number }
+        .groupBy { row -> groupCol ? row[groupCol] : '__all__' }
+        .collectEntries { groupKey, rows ->
+          [(groupKey): rows.collect { row -> row[xCol] as Number }]
+        } as Map<Object, List<Number>>
 
     if (groups.isEmpty()) return
 
     // Compute density for each group
-    groups.each { groupKey, xValues ->
+    groups.each { groupKey, List<Number> xValues ->
       if (xValues.size() < 3) return
 
-      List<double[]> density = computeKernelDensity(xValues)
+      List<DensityPoint> density = computeKernelDensity(xValues)
       if (density.isEmpty()) return
 
       // Find max density for y-scale training if not already set
-      double maxDensity = density.max { it[1] }[1]
+      BigDecimal maxDensity = density.max { it.density }.density
 
       // Determine colors
       String lineColor = this.color
@@ -135,22 +142,21 @@ class GeomDensity extends Geom {
       areaFill = areaFill != null ? (ColorUtil.normalizeColor(areaFill) ?: areaFill) : null
 
       // Build path
-      List<double[]> transformedPoints = []
-      density.each { double[] point ->
-        def xPx = xScale?.transform(point[0])
+      List<DensityPoint> transformedPoints = []
+      density.each { DensityPoint point ->
+        BigDecimal xPx = xScale?.transform(point.position) as BigDecimal
         // Scale y to pixel space - density values are typically small
         // Use yScale if available, otherwise scale to plot height
-        double yPx
+        BigDecimal yPx
         if (yScale != null) {
-          def yTransformed = yScale.transform(point[1])
-          yPx = yTransformed != null ? yTransformed as double : 0
+          yPx = yScale.transform(point.density) as BigDecimal
         } else {
           // Default: scale to 480px plot height with max density at ~80% height
-          yPx = 480 - (point[1] / maxDensity) * 480 * 0.8
+          yPx = 480 - (point.density / maxDensity) * 480 * 0.8
         }
 
-        if (xPx != null) {
-          transformedPoints << ([xPx as double, yPx] as double[])
+        if (xPx != null && yPx != null) {
+          transformedPoints << new DensityPoint(xPx, yPx)
         }
       }
 
@@ -159,38 +165,38 @@ class GeomDensity extends Geom {
       // Draw filled area if fill is specified
       if (areaFill != null) {
         StringBuilder areaPath = new StringBuilder()
-        double[] first = transformedPoints[0]
-        double[] last = transformedPoints[transformedPoints.size() - 1]
+        DensityPoint first = transformedPoints[0]
+        DensityPoint last = transformedPoints[transformedPoints.size() - 1]
 
         // Get baseline (bottom of plot or y=0)
-        double baseline = 480  // default
+        BigDecimal baseline = 480  // default
 
-        areaPath << "M ${first[0]} ${baseline}"
-        transformedPoints.each { double[] pt ->
-          areaPath << " L ${pt[0]} ${pt[1]}"
+        areaPath << "M ${first.position} ${baseline}"
+        transformedPoints.each { DensityPoint pt ->
+          areaPath << " L ${pt.position} ${pt.density}"
         }
-        areaPath << " L ${last[0]} ${baseline}"
+        areaPath << " L ${last.position} ${baseline}"
         areaPath << " Z"
 
         def area = group.addPath().d(areaPath.toString())
             .fill(areaFill)
             .stroke('none')
 
-        if ((alpha as double) < 1.0) {
+        if (alpha < 1.0) {
           area.addAttribute('fill-opacity', alpha)
         }
       }
 
       // Draw line
       for (int i = 0; i < transformedPoints.size() - 1; i++) {
-        double[] p1 = transformedPoints[i]
-        double[] p2 = transformedPoints[i + 1]
+        DensityPoint p1 = transformedPoints[i]
+        DensityPoint p2 = transformedPoints[i + 1]
 
         def line = group.addLine()
-            .x1(p1[0] as int)
-            .y1(p1[1] as int)
-            .x2(p2[0] as int)
-            .y2(p2[1] as int)
+            .x1(p1.position)
+            .y1(p1.density)
+            .x2(p2.position)
+            .y2(p2.density)
             .stroke(lineColor)
 
         line.addAttribute('stroke-width', linewidth)
@@ -200,7 +206,7 @@ class GeomDensity extends Geom {
           line.addAttribute('stroke-dasharray', dashArray)
         }
 
-        if ((alpha as double) < 1.0 && areaFill == null) {
+        if (alpha < 1.0 && areaFill == null) {
           line.addAttribute('stroke-opacity', alpha)
         }
       }
@@ -211,17 +217,17 @@ class GeomDensity extends Geom {
    * Compute kernel density estimate using the configured kernel.
    * Delegates to the KernelDensity class from matrix-stats.
    */
-  private List<double[]> computeKernelDensity(List<Number> values) {
+  private List<DensityPoint> computeKernelDensity(List<Number> values) {
     if (values.size() < 2) return []
 
     // Handle edge case where all values are identical
     Set<Number> unique = new HashSet<>(values)
     if (unique.size() == 1) {
-      Number val = values[0]
-      return [[val as double, 1.0d] as double[]]
+      BigDecimal val = values[0] as BigDecimal
+      return [new DensityPoint(val, 1.0)]
     }
 
-    int numPoints = Math.min(n, 256)
+    int numPoints = [n, 256].min()
 
     KernelDensity kde = new KernelDensity(values, [
         kernel: kernel,
@@ -230,7 +236,10 @@ class GeomDensity extends Geom {
         trim: trim
     ])
 
-    return kde.toPointList()
+    // Convert from double[] arrays to DensityPoint objects
+    return kde.toPointList().collect { double[] point ->
+      new DensityPoint(point[0] as BigDecimal, point[1] as BigDecimal)
+    }
   }
 
   private String getDashArray(String type) {

@@ -180,29 +180,28 @@ class GgStat {
     }
     String fillCol = aes.fillColName
     if (fillCol != null && data.columnNames().contains(fillCol)) {
-      Map<List<Object>, Integer> counts = new LinkedHashMap<>()
-      data.each { row ->
-        Object xVal = row[xCol]
-        Object fillVal = row[fillCol]
-        List<Object> key = [xVal, fillVal]
-        counts[key] = (counts[key] ?: 0) + 1
-      }
-      Map<Object, Integer> totalsByX = [:].withDefault { 0 }
-      counts.each { key, count ->
-        totalsByX[key[0]] = totalsByX[key[0]] + count
-      }
-      List<Map<String, Object>> rows = []
-      counts.each { key, count ->
-        int totalForX = totalsByX[key[0]] as int
+      // Group by [xVal, fillVal] and count
+      Map<List<Object>, List> groups = data.rows()
+          .groupBy { row -> [row[xCol], row[fillCol]] }
+
+      // Calculate totals by x for percentage calculation
+      Map<Object, Integer> totalsByX = data.rows()
+          .groupBy { row -> row[xCol] }
+          .collectEntries { xVal, xRows -> [(xVal): xRows.size()] } as Map<Object, Integer>
+
+      // Build result rows
+      List<Map> rows = groups.collect { key, groupRows ->
+        int count = groupRows.size()
+        int totalForX = totalsByX[key[0]] ?: 0
         BigDecimal percent = totalForX == 0 ? BigDecimal.ZERO : (count * 100.0 / totalForX).setScale(2, RoundingMode.HALF_EVEN)
-        rows << [
+        [
             (xCol): key[0],
             (fillCol): key[1],
             count: count,
             percent: percent
-        ]
+        ] as Map<String, Object>
       }
-      return Matrix.builder().mapList(rows).build()
+      return Matrix.builder().mapList(rows as List<Map<String, Object>>).build()
     }
 
     // Delegate to matrix-core Stat.frequency
@@ -241,9 +240,9 @@ class GgStat {
     Number binwidth = params.binwidth as Number
 
     // Calculate bin edges
-    Number minVal = Stat.min(values)
-    Number maxVal = Stat.max(values)
-    Number range = (maxVal as double) - (minVal as double)
+    BigDecimal minVal = Stat.min(values) as BigDecimal
+    BigDecimal maxVal = Stat.max(values) as BigDecimal
+    BigDecimal range = maxVal - minVal
 
     // Handle edge case: all values are the same
     if (range == 0) {
@@ -255,25 +254,28 @@ class GgStat {
           .build()
     }
 
+    BigDecimal binwidthBD
     if (binwidth == null) {
-      binwidth = range / bins
+      binwidthBD = range / bins
     } else {
-      bins = Math.ceil(range / (binwidth as double)) as int
+      binwidthBD = binwidth as BigDecimal
+      bins = (range / binwidthBD).ceil().intValue()
       if (bins == 0) bins = 1
     }
 
     // Create bin counts
     List<Map> results = []
     for (int i = 0; i < bins; i++) {
-      Number xmin = (minVal as double) + i * (binwidth as double)
-      Number xmax = (minVal as double) + (i + 1) * (binwidth as double)
-      Number center = ((xmin as double) + (xmax as double)) / 2
+      BigDecimal xmin = minVal + i * binwidthBD
+      BigDecimal xmax = minVal + (i + 1) * binwidthBD
+      BigDecimal center = (xmin + xmax) / 2
 
-      int count = (int) values.count { v ->
-        (v as double) >= (xmin as double) && (i == bins - 1 ? (v as double) <= (xmax as double) : (v as double) < (xmax as double))
-      }
+      int count = values.count { Number v ->
+        BigDecimal vBD = v as BigDecimal
+        vBD >= xmin && (i == bins - 1 ? vBD <= xmax : vBD < xmax)
+      } as int
 
-      double density = count / (values.size() * (binwidth as double))
+      BigDecimal density = count / (values.size() * binwidthBD)
 
       results << [
           x: center,
@@ -324,15 +326,15 @@ class GgStat {
       groups = ['all': data]
     }
 
-    Double xResolution = null
+    BigDecimal xResolution = null
     if (hasContinuousX) {
       List<Number> xValues = (data[xCol] as List).findAll { it instanceof Number } as List<Number>
-      xResolution = resolution(xValues)
+      xResolution = resolution(xValues) as BigDecimal
     }
-    double defaultWidth = params?.width instanceof Number ?
-        params.width as double :
-        ((xResolution ?: 1.0d) * 0.75d)
-    double coef = params?.coef instanceof Number ? params.coef as double : 1.5d
+    BigDecimal defaultWidth = params?.width instanceof Number ?
+        params.width as BigDecimal :
+        ((xResolution ?: 1.0) * 0.75)
+    BigDecimal coef = params?.coef instanceof Number ? params.coef as BigDecimal : 1.5
 
     List<Map> results = groups.collect { groupKey, groupData ->
       List<Number> values = (groupData[yCol] as List).findAll { it instanceof Number } as List<Number>
@@ -341,19 +343,21 @@ class GgStat {
       }
       values.sort()
 
-      Number lower = quantileType7(values, 0.25d)
-      Number middle = quantileType7(values, 0.5d)
-      Number upper = quantileType7(values, 0.75d)
-      Number iqr = (upper as double) - (lower as double)
+      BigDecimal lower = quantileType7(values, 0.25) as BigDecimal
+      BigDecimal middle = quantileType7(values, 0.5) as BigDecimal
+      BigDecimal upper = quantileType7(values, 0.75) as BigDecimal
+      BigDecimal iqr = upper - lower
 
-      double lowerFence = (lower as double) - coef * iqr
-      double upperFence = (upper as double) + coef * iqr
+      BigDecimal lowerFence = lower - coef * iqr
+      BigDecimal upperFence = upper + coef * iqr
 
-      List<Number> outliers = values.findAll { v ->
-        (v as double) < lowerFence || (v as double) > upperFence
+      List<Number> outliers = values.findAll { Number v ->
+        BigDecimal vBD = v as BigDecimal
+        vBD < lowerFence || vBD > upperFence
       }
-      List<Number> inliers = values.findAll { v ->
-        (v as double) >= lowerFence && (v as double) <= upperFence
+      List<Number> inliers = values.findAll { Number v ->
+        BigDecimal vBD = v as BigDecimal
+        vBD >= lowerFence && vBD <= upperFence
       }
       Number whiskerLow = inliers.isEmpty() ? values.first() : inliers.min()
       Number whiskerHigh = inliers.isEmpty() ? values.last() : inliers.max()
@@ -361,39 +365,39 @@ class GgStat {
       // Compute x position: if we have explicit group and continuous x, use center of x range
       // ggplot2 positions boxes at the center (mean of min and max) of the x range within each group
       def xPosition
-      Number xMin = null
-      Number xMax = null
+      BigDecimal xMin = null
+      BigDecimal xMax = null
       if (hasExplicitGroup && hasContinuousX) {
         List<Number> xValues = (groupData[xCol] as List).findAll { it instanceof Number } as List<Number>
         if (!xValues.isEmpty()) {
           xValues.sort()
-          xMin = xValues.first()
-          xMax = xValues.last()
+          xMin = xValues.first() as BigDecimal
+          xMax = xValues.last() as BigDecimal
           // Use center of the x range for positioning
-          xPosition = ((xMin as double) + (xMax as double)) / 2.0d
+          xPosition = (xMin + xMax) / 2
         }
       } else {
         xPosition = groupKey
       }
 
-      double widthValue = defaultWidth
+      BigDecimal widthValue = defaultWidth
       if (groupData.columnNames().contains('width')) {
         def widthColVal = (groupData['width'] as List)?.find { it instanceof Number }
         if (widthColVal instanceof Number) {
-          widthValue = widthColVal as double
+          widthValue = widthColVal as BigDecimal
         }
       } else if (hasContinuousX && xMin != null && xMax != null) {
-        double range = (xMax as double) - (xMin as double)
-        if (range > 0d) {
-          widthValue = range * 0.9d
+        BigDecimal range = xMax - xMin
+        if (range > 0) {
+          widthValue = range * 0.9
         }
       }
-      Number xmin = null
-      Number xmax = null
-      if (xPosition instanceof Number && widthValue > 0d) {
-        double half = widthValue / 2.0d
-        xmin = (xPosition as double) - half
-        xmax = (xPosition as double) + half
+      BigDecimal xmin = null
+      BigDecimal xmax = null
+      if (xPosition instanceof Number && widthValue > 0) {
+        BigDecimal half = widthValue / 2
+        xmin = (xPosition as BigDecimal) - half
+        xmax = (xPosition as BigDecimal) + half
       }
 
       // Build result map - only include xmin/xmax if they have values
@@ -546,7 +550,7 @@ class GgStat {
     List<Number> rawY = data[yCol] as List<Number>
     List<Number> xValues = []
     List<Number> yValues = []
-    int maxIdx = Math.min(rawX?.size() ?: 0, rawY?.size() ?: 0)
+    int maxIdx = (rawX?.size() ?: 0).min(rawY?.size() ?: 0)
     for (int i = 0; i < maxIdx; i++) {
       def xVal = rawX[i]
       def yVal = rawY[i]
@@ -1064,20 +1068,15 @@ class GgStat {
     boolean pad = params.pad == true
 
     if (groupCol != null && data.columnNames().contains(groupCol)) {
-      Map<Object, List<Number>> groups = new LinkedHashMap<>()
-      data.each { row ->
-        def value = row[xCol]
-        if (value instanceof Number) {
-          Object key = row[groupCol]
-          if (!groups.containsKey(key)) {
-            groups[key] = []
-          }
-          groups[key] << (value as Number)
-        }
-      }
-      List<Map<String, Object>> rows = []
-      groups.each { key, values ->
-        rows.addAll(ecdfRows(values, 'x', groupCol, key, pad))
+      Map<Object, List<Number>> groups = data.rows()
+          .findAll { row -> row[xCol] instanceof Number }
+          .groupBy { row -> row[groupCol] }
+          .collectEntries { key, groupRows ->
+            [(key): groupRows.collect { row -> row[xCol] as Number }]
+          } as Map<Object, List<Number>>
+
+      List<Map<String, Object>> rows = groups.collectMany { key, values ->
+        ecdfRows(values, 'x', groupCol, key, pad)
       }
       return Matrix.builder().mapList(rows).build()
     }
@@ -1126,20 +1125,15 @@ class GgStat {
 
     String groupCol = aes.groupColName ?: aes.colorColName ?: aes.fillColName
     if (groupCol != null && data.columnNames().contains(groupCol)) {
-      Map<Object, List<Number>> groups = new LinkedHashMap<>()
-      data.each { row ->
-        def value = row[xCol]
-        if (value instanceof Number) {
-          Object key = row[groupCol]
-          if (!groups.containsKey(key)) {
-            groups[key] = []
-          }
-          groups[key] << (value as Number)
-        }
-      }
-      List<Map<String, Object>> rows = []
-      groups.each { key, values ->
-        rows.addAll(qqRows(values, groupCol, key))
+      Map<Object, List<Number>> groups = data.rows()
+          .findAll { row -> row[xCol] instanceof Number }
+          .groupBy { row -> row[groupCol] }
+          .collectEntries { key, groupRows ->
+            [(key): groupRows.collect { row -> row[xCol] as Number }]
+          } as Map<Object, List<Number>>
+
+      List<Map<String, Object>> rows = groups.collectMany { key, values ->
+        qqRows(values, groupCol, key)
       }
       return Matrix.builder().mapList(rows).build()
     }
@@ -1450,14 +1444,14 @@ class GgStat {
     if (uniques.size() <= 1) {
       return 1.0d
     }
-    double minDiff = Double.MAX_VALUE
+    Double minDiff = null
     for (int i = 1; i < uniques.size(); i++) {
       double diff = uniques[i] - uniques[i - 1]
-      if (diff > 0 && diff < minDiff) {
+      if (diff > 0 && (minDiff == null || diff < minDiff)) {
         minDiff = diff
       }
     }
-    return minDiff == Double.MAX_VALUE ? 1.0d : minDiff
+    return minDiff ?: 1.0d
   }
 
   /**
@@ -1860,7 +1854,7 @@ class GgStat {
 
     // Collect numeric x,y values and compute bounds
     def result = collectXYPointsAndBounds(data, xCol, yCol)
-    List<BigDecimal[]> points = result.points as List<BigDecimal[]>
+    List<se.alipsa.matrix.gg.geom.Point> points = result.points as List<se.alipsa.matrix.gg.geom.Point>
     BigDecimal xMin = result.xMin as BigDecimal
     BigDecimal yMin = result.yMin as BigDecimal
     BigDecimal xMax = result.xMax as BigDecimal
@@ -1877,9 +1871,9 @@ class GgStat {
     // Count points in each hexagon
     Map<String, Integer> hexCounts = [:] as Map<String, Integer>
 
-    for (BigDecimal[] point : points) {
+    for (se.alipsa.matrix.gg.geom.Point point : points) {
       // Find hexagon coordinates for this point
-      int[] hexCoord = pointToHex(point[0], point[1], xMin, yMin, dx, dy)
+      int[] hexCoord = pointToHex(point.x as BigDecimal, point.y as BigDecimal, xMin, yMin, dx, dy)
       String hexKey = "${hexCoord[0]},${hexCoord[1]}"
       hexCounts[hexKey] = (hexCounts[hexKey] ?: 0) + 1
     }
@@ -2093,11 +2087,11 @@ class GgStat {
    * @return Map with points (List<BigDecimal[]>), xMin, xMax, yMin, yMax
    */
   private static Map<String, Object> collectXYPointsAndBounds(Matrix data, String xCol, String yCol) {
-    List<BigDecimal[]> points = []
-    BigDecimal xMin = Double.MAX_VALUE
-    BigDecimal xMax = -Double.MAX_VALUE
-    BigDecimal yMin = Double.MAX_VALUE
-    BigDecimal yMax = -Double.MAX_VALUE
+    List<se.alipsa.matrix.gg.geom.Point> points = []
+    BigDecimal xMin = null
+    BigDecimal xMax = null
+    BigDecimal yMin = null
+    BigDecimal yMax = null
 
     data.each { row ->
       def xVal = row[xCol]
@@ -2106,12 +2100,12 @@ class GgStat {
       if (xVal instanceof Number && yVal instanceof Number) {
         BigDecimal x = xVal as BigDecimal
         BigDecimal y = yVal as BigDecimal
-        points << ([x, y] as BigDecimal[])
+        points << new se.alipsa.matrix.gg.geom.Point(x, y)
 
-        if (x < xMin) xMin = x
-        if (x > xMax) xMax = x
-        if (y < yMin) yMin = y
-        if (y > yMax) yMax = y
+        xMin = xMin == null ? x : xMin.min(x)
+        xMax = xMax == null ? x : xMax.max(x)
+        yMin = yMin == null ? y : yMin.min(y)
+        yMax = yMax == null ? y : yMax.max(y)
       }
     }
 
@@ -2129,10 +2123,10 @@ class GgStat {
    */
   private static Map<String, Object> collectXYZPointsAndBounds(Matrix data, String xCol, String yCol, String zCol) {
     List<Map<String, BigDecimal>> points = []
-    BigDecimal xMin = Double.MAX_VALUE
-    BigDecimal xMax = -Double.MAX_VALUE
-    BigDecimal yMin = Double.MAX_VALUE
-    BigDecimal yMax = -Double.MAX_VALUE
+    BigDecimal xMin = null
+    BigDecimal xMax = null
+    BigDecimal yMin = null
+    BigDecimal yMax = null
 
     data.each { row ->
       def xVal = row[xCol]
@@ -2145,10 +2139,10 @@ class GgStat {
         BigDecimal z = zVal as BigDecimal
         points << [x: x, y: y, z: z]
 
-        if (x < xMin) xMin = x
-        if (x > xMax) xMax = x
-        if (y < yMin) yMin = y
-        if (y > yMax) yMax = y
+        xMin = xMin == null ? x : xMin.min(x)
+        xMax = xMax == null ? x : xMax.max(x)
+        yMin = yMin == null ? y : yMin.min(y)
+        yMax = yMax == null ? y : yMax.max(y)
       }
     }
 

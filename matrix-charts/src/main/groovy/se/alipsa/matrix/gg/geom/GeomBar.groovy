@@ -32,10 +32,10 @@ class GeomBar extends Geom {
   String color = null
 
   /** Bar width as fraction of bandwidth (0-1), null = auto */
-  Number width = null
+  BigDecimal width = null
 
   /** Alpha transparency */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Outline width */
   Number linewidth = 0.5
@@ -49,12 +49,11 @@ class GeomBar extends Geom {
 
   GeomBar(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.width) this.width = params.width as Number
-    if (params.alpha) this.alpha = params.alpha as Number
-    if (params.linewidth) this.linewidth = params.linewidth as Number
+    this.fill = ColorUtil.normalizeColor(params.fill as String) ?: this.fill
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    this.width = params.width as BigDecimal ?: this.width
+    this.alpha = params.alpha as BigDecimal ?: this.alpha
+    this.linewidth = params.linewidth as Number ?: this.linewidth
     this.params = params
   }
 
@@ -159,9 +158,9 @@ class GeomBar extends Geom {
     if (width != null) {
       // User specified width as fraction
       if (xScale instanceof ScaleDiscrete) {
-        return (xScale as ScaleDiscrete).getBandwidth() * (width as BigDecimal)
+        return (xScale as ScaleDiscrete).getBandwidth() * width
       }
-      return 20 * (width as BigDecimal)  // Fallback for continuous
+      return 20 * width  // Fallback for continuous
     }
 
     // Default: 90% of bandwidth for discrete, 20px for continuous
@@ -221,19 +220,17 @@ class GeomBar extends Geom {
 
     Scale fillScale = scales['fill'] ?: scales['color']
 
-    Map<Object, List<Row>> groups = [:].withDefault { [] }
-    data.each { row ->
-      Object key = xCol != null ? row[xCol] : null
-      groups[key] << row
+    def groups = data.rows().groupBy { row ->
+      xCol != null ? row[xCol] : null
     }
 
-    BigDecimal outerRadius = coord.getMaxRadius() as BigDecimal
-    BigDecimal innerOffset = coord.getInnerRadiusPx() as BigDecimal
+    BigDecimal outerRadius = coord.getMaxRadius()
+    BigDecimal innerOffset = coord.getInnerRadiusPx()
     innerOffset = innerOffset.min(outerRadius).max(0.0)
     BigDecimal availableRadius = (outerRadius - innerOffset).max(0.0)
     int groupCount = groups.size()
 
-    double span = coord.getAngularSpan() as double
+    BigDecimal span = coord.getAngularSpan()
 
     int idx = 0
     for (Map.Entry<Object, List<Row>> entry : groups.entrySet()) {
@@ -241,9 +238,8 @@ class GeomBar extends Geom {
       if (fillCol && fillScale instanceof ScaleDiscrete) {
         List<Object> levels = (fillScale as ScaleDiscrete).levels
         if (!levels.isEmpty()) {
-          Map<Object, Integer> levelIndex = [:]
-          levels.eachWithIndex { level, int pos ->
-            levelIndex[level] = pos
+          Map<Object, Integer> levelIndex = levels.withIndex().collectEntries { level, pos ->
+            [(level): pos]
           }
           rows.sort { Row row ->
             int pos = levelIndex.getOrDefault(row[fillCol], Integer.MAX_VALUE)
@@ -260,28 +256,28 @@ class GeomBar extends Geom {
       BigDecimal groupInner = (groupOuter - ringSize).max(innerOffset)
       idx++
 
-      List<Double> values = rows.collect { row ->
+      def values = rows.collect { row ->
         if (row['ymin'] != null && row['ymax'] != null) {
-          return ((row['ymax'] as double) - (row['ymin'] as double)) as double
+          return (row['ymax'] as Number) - (row['ymin'] as Number)
         }
         if (yCol != null && row[yCol] instanceof Number) {
-          return row[yCol] as double
+          return row[yCol] as Number
         }
-        return 0.0 as double
+        return 0.0
       }
-      double total = values.sum(0.0) as double
+      BigDecimal total = values.sum(0.0) as BigDecimal
       if (total <= 0.0) {
         continue
       }
 
-      double current = 0.0
+      BigDecimal current = 0.0
       rows.eachWithIndex { row, int rowIdx ->
-        double value = values[rowIdx]
+        BigDecimal value = values[rowIdx] as BigDecimal
         if (value <= 0.0) {
           return
         }
-        double startAngle = (current / total) * span
-        double endAngle = ((current + value) / total) * span
+        BigDecimal startAngle = (current / total) * span
+        BigDecimal endAngle = ((current + value) / total) * span
         current += value
 
         String sliceFill = this.fill
@@ -320,10 +316,8 @@ class GeomBar extends Geom {
 
     Scale fillScale = scales['fill'] ?: scales['color']
 
-    Map<Object, List<Row>> groups = [:].withDefault { [] }
-    data.each { row ->
-      Object key = xCol != null ? row[xCol] : null
-      groups[key] << row
+    def groups = data.rows().groupBy { row ->
+      xCol != null ? row[xCol] : null
     }
 
     BigDecimal outerRadius = coord.getMaxRadius() * 0.9
@@ -335,9 +329,8 @@ class GeomBar extends Geom {
       if (fillCol && fillScale instanceof ScaleDiscrete) {
         List<Object> levels = (fillScale as ScaleDiscrete).levels
         if (!levels.isEmpty()) {
-          Map<Object, Integer> levelIndex = [:]
-          levels.eachWithIndex { level, int pos ->
-            levelIndex[level] = pos
+          Map<Object, Integer> levelIndex = levels.withIndex().collectEntries { level, pos ->
+            [(level): pos]
           }
           rows.sort { Row row ->
             int pos = levelIndex.getOrDefault(row[fillCol], Integer.MAX_VALUE)
@@ -354,28 +347,28 @@ class GeomBar extends Geom {
       BigDecimal groupInner = (groupOuter - ringSize).max(0.0)
       idx++
 
-      List<Double> values = rows.collect { row ->
+      def values = rows.collect { row ->
         if (row['ymin'] != null && row['ymax'] != null) {
-          return ((row['ymax'] as double) - (row['ymin'] as double)) as double
+          return (row['ymax'] as Number) - (row['ymin'] as Number)
         }
         if (yCol != null && row[yCol] instanceof Number) {
-          return row[yCol] as double
+          return row[yCol] as Number
         }
-        return 0.0 as double
+        return 0.0
       }
-      double total = values.sum(0.0) as double
+      BigDecimal total = values.sum(0.0) as BigDecimal
       if (total <= 0.0) {
         continue
       }
 
-      double current = 0.0
+      BigDecimal current = 0.0
       rows.eachWithIndex { row, int rowIdx ->
-        double value = values[rowIdx]
+        BigDecimal value = values[rowIdx] as BigDecimal
         if (value <= 0.0) {
           return
         }
-        double startAngle = (current / total) * 2 * PI
-        double endAngle = ((current + value) / total) * 2 * PI
+        BigDecimal startAngle = (current / total) * 2 * PI
+        BigDecimal endAngle = ((current + value) / total) * 2 * PI
         current += value
 
         String sliceFill = this.fill

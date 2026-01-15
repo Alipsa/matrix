@@ -12,6 +12,8 @@ import se.alipsa.matrix.gg.theme.ElementLine
 import se.alipsa.matrix.gg.theme.Theme
 import java.util.Locale
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 /**
  * Utility class for rendering grid lines in ggplot charts.
  * Handles both regular Cartesian grids and polar coordinate grids.
@@ -194,9 +196,9 @@ class GridRenderer {
         if (context.isRangeReversed(thetaScale)) {
           norm = 1.0 - norm
         }
-        BigDecimal angle = coord.start + norm * 2.0d * Math.PI
+        BigDecimal angle = coord.start + norm * 2.0d * PI
         if (!coord.clockwise) {
-          angle = coord.start - norm * 2.0d * Math.PI
+          angle = coord.start - norm * 2.0d * PI
         }
         BigDecimal x = cx + maxRadius * angle.sin()
         BigDecimal y = cy - maxRadius * angle.cos()
@@ -273,7 +275,8 @@ class GridRenderer {
     BigDecimal base = coord.getAngularRange()[0]
 
     double spanVal = span as double
-    boolean fullCircle = Math.abs(spanVal - 2 * Math.PI) < 0.0001d
+    double diff = spanVal - 2 * PI
+    boolean fullCircle = (diff as BigDecimal).abs() < 0.0001d
 
     String thetaGuideType = context.parseGuideType(thetaScale?.guide)
     boolean renderThetaLabels = (thetaGuideType == null || thetaGuideType == 'none')
@@ -388,13 +391,13 @@ class GridRenderer {
     double startRad = coord.getAngularRange()[0] as double
     double endRad = coord.getAngularRange()[1] as double
 
-    double x1 = cx + (radius as double) * Math.sin(startRad)
-    double y1 = cy - (radius as double) * Math.cos(startRad)
-    double x2 = cx + (radius as double) * Math.sin(endRad)
-    double y2 = cy - (radius as double) * Math.cos(endRad)
+    double x1 = cx + (radius as double) * (startRad as BigDecimal).sin()
+    double y1 = cy - (radius as double) * (startRad as BigDecimal).cos()
+    double x2 = cx + (radius as double) * (endRad as BigDecimal).sin()
+    double y2 = cy - (radius as double) * (endRad as BigDecimal).cos()
 
     double spanVal = coord.getAngularSpan() as double
-    int largeArc = spanVal > Math.PI ? 1 : 0
+    int largeArc = spanVal > PI ? 1 : 0
     int sweepFlag = coord.clockwise ? 1 : 0
 
     return "M ${formatNumber(x1)} ${formatNumber(y1)} A ${formatNumber(radius as double)} ${formatNumber(radius as double)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"

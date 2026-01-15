@@ -36,10 +36,10 @@ class GeomBin2d extends Geom {
   String color = 'white'
 
   /** Border width */
-  Number linewidth = 0.5
+  BigDecimal linewidth = 0.5
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Whether to drop bins with zero count */
   boolean drop = true
@@ -58,16 +58,14 @@ class GeomBin2d extends Geom {
 
   GeomBin2d(Map params) {
     this()
-    if (params.bins != null) this.bins = params.bins as int
-    if (params.binwidth) this.binwidth = params.binwidth as List<Number>
-    if (params.fill) this.fill = params.fill as String
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    this.bins = params.bins as Integer ?: this.bins
+    this.binwidth = params.binwidth as List<Number> ?: this.binwidth
+    this.fill = params.fill as String ?: this.fill
+    this.color = (params.color ?: params.colour) as String ?: this.color
+    this.linewidth = params.linewidth as BigDecimal ?: this.linewidth
+    this.alpha = params.alpha as BigDecimal ?: this.alpha
     if (params.drop != null) this.drop = params.drop as boolean
-    if (params.fillColors) this.fillColors = params.fillColors as List<String>
-    if (params.fill_colors) this.fillColors = params.fill_colors as List<String>
+    this.fillColors = (params.fillColors ?: params.fill_colors) as List<String> ?: this.fillColors
     this.fill = ColorUtil.normalizeColor(this.fill)
     this.color = ColorUtil.normalizeColor(this.color)
     this.fillColors = this.fillColors.collect { ColorUtil.normalizeColor(it) }
@@ -91,8 +89,8 @@ class GeomBin2d extends Geom {
 
     // Collect numeric x,y values
     List<BigDecimal[]> points = []
-    BigDecimal xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE
-    BigDecimal yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE
+    BigDecimal xMin = null, xMax = null
+    BigDecimal yMin = null, yMax = null
 
     data.each { row ->
       def xVal = row[xCol]
@@ -103,10 +101,10 @@ class GeomBin2d extends Geom {
         BigDecimal y = yVal as BigDecimal
         points << ([x, y] as BigDecimal[])
 
-        if (x < xMin) xMin = x
-        if (x > xMax) xMax = x
-        if (y < yMin) yMin = y
-        if (y > yMax) yMax = y
+        xMin = xMin == null ? x : xMin.min(x)
+        xMax = xMax == null ? x : xMax.max(x)
+        yMin = yMin == null ? y : yMin.min(y)
+        yMax = yMax == null ? y : yMax.max(y)
       }
     }
 
@@ -124,8 +122,8 @@ class GeomBin2d extends Geom {
     int nBinsX, nBinsY
 
     if (binwidth != null && binwidth.size() >= 2) {
-      binWidthX = binwidth[0] as double
-      binWidthY = binwidth[1] as double
+      binWidthX = binwidth[0] as BigDecimal
+      binWidthY = binwidth[1] as BigDecimal
       nBinsX = (xRange / binWidthX).ceil() as int
       nBinsY = (yRange / binWidthY).ceil() as int
     } else {
@@ -140,8 +138,8 @@ class GeomBin2d extends Geom {
     int maxCount = 0
 
     for (BigDecimal[] point : points) {
-      int binX = Math.min((int) ((point[0] - xMin) / binWidthX), nBinsX - 1)
-      int binY = Math.min((int) ((point[1] - yMin) / binWidthY), nBinsY - 1)
+      int binX = ((((point[0] - xMin) / binWidthX) as int).min(nBinsX - 1)) as int
+      int binY = ((((point[1] - yMin) / binWidthY) as int).min(nBinsY - 1)) as int
 
       if (binX >= 0 && binX < nBinsX && binY >= 0 && binY < nBinsY) {
         counts[binY][binX]++
@@ -166,20 +164,20 @@ class GeomBin2d extends Geom {
         BigDecimal y1 = y0 + binWidthY
 
         // Transform to pixel coordinates
-        def x0Px = xScale?.transform(x0)
-        def x1Px = xScale?.transform(x1)
-        def y0Px = yScale?.transform(y0)
-        def y1Px = yScale?.transform(y1)
+        BigDecimal x0Px = xScale?.transform(x0) as BigDecimal
+        BigDecimal x1Px = xScale?.transform(x1) as BigDecimal
+        BigDecimal y0Px = yScale?.transform(y0) as BigDecimal
+        BigDecimal y1Px = yScale?.transform(y1) as BigDecimal
 
         if (x0Px == null || x1Px == null || y0Px == null || y1Px == null) continue
 
-        int left = Math.min(x0Px as int, x1Px as int)
-        int right = Math.max(x0Px as int, x1Px as int)
-        int top = Math.min(y0Px as int, y1Px as int)
-        int bottom = Math.max(y0Px as int, y1Px as int)
+        BigDecimal left = x0Px.min(x1Px)
+        BigDecimal right = x0Px.max(x1Px)
+        BigDecimal top = y0Px.min(y1Px)
+        BigDecimal bottom = y0Px.max(y1Px)
 
-        int width = Math.max(1, right - left)
-        int height = Math.max(1, bottom - top)
+        BigDecimal width = 1.max(right - left)
+        BigDecimal height = 1.max(bottom - top)
 
         // Get fill color based on count
         String binFill
@@ -197,14 +195,14 @@ class GeomBin2d extends Geom {
             .height(height)
             .fill(binFill)
 
-        if (color != null && (linewidth as double) > 0) {
+        if (color != null && linewidth > 0) {
           rect.stroke(ColorUtil.normalizeColor(color))
           rect.addAttribute('stroke-width', linewidth)
         } else {
           rect.stroke('none')
         }
 
-        if ((alpha as double) < 1.0) {
+        if (alpha < 1.0) {
           rect.addAttribute('fill-opacity', alpha)
         }
       }
@@ -217,9 +215,9 @@ class GeomBin2d extends Geom {
   private String getFillColor(int count, int maxCount) {
     if (maxCount == 0 || count == 0) return fillColors[0]
 
-    BigDecimal ratio = count / maxCount as BigDecimal
-    int colorIdx = (int) (ratio * (fillColors.size() - 1))
-    colorIdx = Math.max(0, Math.min(colorIdx, fillColors.size() - 1))
+    BigDecimal ratio = (count / maxCount) as BigDecimal
+    int colorIdx = (ratio * (fillColors.size() - 1)) as int
+    colorIdx = (0.max(colorIdx.min(fillColors.size() - 1))) as int
     return fillColors[colorIdx]
   }
 }

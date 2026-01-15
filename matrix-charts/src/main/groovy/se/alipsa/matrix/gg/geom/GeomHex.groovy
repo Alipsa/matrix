@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.gg.geom.Point
 
 /**
  * Hexagonal binning geometry for creating hexbin plots from point data.
@@ -27,7 +28,7 @@ class GeomHex extends Geom {
   int bins = 30
 
   /** Hexagon width (overrides bins if set) */
-  Number binwidth
+  BigDecimal binwidth
 
   /** Fill color for hexagons (used if no fill scale) */
   String fill = 'steelblue'
@@ -36,10 +37,10 @@ class GeomHex extends Geom {
   String color = 'white'
 
   /** Border width */
-  Number linewidth = 0.5
+  BigDecimal linewidth = 0.5
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Whether to drop bins with zero count */
   boolean drop = true
@@ -59,15 +60,13 @@ class GeomHex extends Geom {
   GeomHex(Map params) {
     this()
     if (params.bins != null) this.bins = params.bins as int
-    if (params.binwidth != null) this.binwidth = params.binwidth as Number
-    if (params.fill) this.fill = params.fill as String
-    if (params.color) this.color = params.color as String
-    if (params.colour) this.color = params.colour as String
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    if (params.binwidth != null) this.binwidth = params.binwidth as BigDecimal
+    this.fill = params.fill as String ?: this.fill
+    this.color = (params.color ?: params.colour) as String ?: this.color
+    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
     if (params.drop != null) this.drop = params.drop as boolean
-    if (params.fillColors) this.fillColors = params.fillColors as List<String>
-    if (params.fill_colors) this.fillColors = params.fill_colors as List<String>
+    this.fillColors = (params.fillColors ?: params.fill_colors) as List<String> ?: this.fillColors
     this.fill = ColorUtil.normalizeColor(this.fill)
     this.color = ColorUtil.normalizeColor(this.color)
     this.fillColors = this.fillColors.collect { ColorUtil.normalizeColor(it) }
@@ -90,9 +89,9 @@ class GeomHex extends Geom {
     Scale fillScale = scales['fill']
 
     // Collect numeric x,y values
-    List<BigDecimal[]> points = []
-    BigDecimal xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE
-    BigDecimal yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE
+    List<Point> points = []
+    BigDecimal xMin = null, xMax = null
+    BigDecimal yMin = null, yMax = null
 
     data.each { row ->
       def xVal = row[xCol]
@@ -101,12 +100,12 @@ class GeomHex extends Geom {
       if (xVal instanceof Number && yVal instanceof Number) {
         BigDecimal x = xVal as BigDecimal
         BigDecimal y = yVal as BigDecimal
-        points << ([x, y] as BigDecimal[])
+        points << new Point(x, y)
 
-        if (x < xMin) xMin = x
-        if (x > xMax) xMax = x
-        if (y < yMin) yMin = y
-        if (y > yMax) yMax = y
+        xMin = xMin == null ? x : xMin.min(x)
+        xMax = xMax == null ? x : xMax.max(x)
+        yMin = yMin == null ? y : yMin.min(y)
+        yMax = yMax == null ? y : yMax.max(y)
       }
     }
 
@@ -121,13 +120,13 @@ class GeomHex extends Geom {
     // Hexagon geometry: width and height
     BigDecimal hexWidth
     if (binwidth != null) {
-      hexWidth = binwidth as BigDecimal
+      hexWidth = binwidth
     } else {
       hexWidth = xRange / bins
     }
 
     // For regular hexagons (flat-top), height = width * sqrt(3) / 2
-    BigDecimal hexHeight = hexWidth * (Math.sqrt(3) / 2)
+    BigDecimal hexHeight = hexWidth * ((3 as BigDecimal).sqrt() / 2)
 
     // Hexagon spacing
     BigDecimal dx = hexWidth * 0.75  // horizontal spacing between hex centers
@@ -137,9 +136,9 @@ class GeomHex extends Geom {
     Map<String, Integer> hexCounts = [:] as Map<String, Integer>
     int maxCount = 0
 
-    for (BigDecimal[] point : points) {
+    for (Point point : points) {
       // Find hexagon coordinates for this point
-      def hexCoord = pointToHex(point[0], point[1], xMin, yMin, dx, dy)
+      int[] hexCoord = pointToHex(point.x as BigDecimal, point.y as BigDecimal, xMin, yMin, dx, dy)
       String hexKey = "${hexCoord[0]},${hexCoord[1]}"
 
       hexCounts[hexKey] = (hexCounts[hexKey] ?: 0) + 1
@@ -241,24 +240,24 @@ class GeomHex extends Geom {
   /**
    * Create SVG path data for a flat-top hexagon.
    */
-  private static String createHexagonPath(Number cx, Number cy, Number width, Number height) {
+  private static String createHexagonPath(BigDecimal cx, BigDecimal cy, BigDecimal width, BigDecimal height) {
     // For flat-top hexagon
     BigDecimal w = width / 2
     BigDecimal h = height / 2
 
     // Six vertices of hexagon (flat-top)
-    BigDecimal[][] points = [
-        [cx - w / 2, cy - h] as BigDecimal[],      // top left
-        [cx + w / 2, cy - h] as BigDecimal[],      // top right
-        [cx + w, cy] as BigDecimal[],              // right
-        [cx + w / 2, cy + h] as BigDecimal[],      // bottom right
-        [cx - w / 2, cy + h] as BigDecimal[],      // bottom left
-        [cx - w, cy] as BigDecimal[]               // left
+    List<Point> points = [
+        new Point(cx - w / 2, cy - h),      // top left
+        new Point(cx + w / 2, cy - h),      // top right
+        new Point(cx + w, cy),              // right
+        new Point(cx + w / 2, cy + h),      // bottom right
+        new Point(cx - w / 2, cy + h),      // bottom left
+        new Point(cx - w, cy)               // left
     ]
 
-    StringBuilder path = new StringBuilder("M ${points[0][0]},${points[0][1]}")
-    for (int i = 1; i < points.length; i++) {
-      path.append(" L ${points[i][0]},${points[i][1]}")
+    StringBuilder path = new StringBuilder("M ${points[0].x},${points[0].y}")
+    for (int i = 1; i < points.size(); i++) {
+      path.append(" L ${points[i].x},${points[i].y}")
     }
     path.append(" Z")
 

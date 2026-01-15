@@ -24,9 +24,9 @@ class ColorScaleUtil {
     int g = (int) (rgb1[1] + t * (rgb2[1] - rgb1[1])).round()
     int b = (int) (rgb1[2] + t * (rgb2[2] - rgb1[2])).round()
 
-    r = Math.max(0, Math.min(255, r))
-    g = Math.max(0, Math.min(255, g))
-    b = Math.max(0, Math.min(255, b))
+    r = 0.max(r.min(255)).intValue()
+    g = 0.max(g.min(255)).intValue()
+    b = 0.max(b.min(255)).intValue()
 
     return String.format('#%02X%02X%02X', r, g, b)
   }

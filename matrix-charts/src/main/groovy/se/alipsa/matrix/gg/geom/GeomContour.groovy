@@ -162,7 +162,7 @@ class GeomContour extends Geom {
 
         xSet.add(x)
         ySet.add(y)
-        zMap["${x},${y}".toString()] = z as BigDecimal
+        zMap["${x},${y}"] = z
       }
     }
 
@@ -175,8 +175,8 @@ class GeomContour extends Geom {
     int ny = yValues.size()
 
     BigDecimal[][] values = new BigDecimal[ny][nx]
-    BigDecimal zMin = Double.MAX_VALUE
-    BigDecimal zMax = -Double.MAX_VALUE
+    BigDecimal zMin = null
+    BigDecimal zMax = null
 
     for (int j = 0; j < ny; j++) {
       for (int i = 0; i < nx; i++) {
@@ -184,8 +184,8 @@ class GeomContour extends Geom {
         BigDecimal z = zMap[key]
         if (z != null) {
           values[j][i] = z
-          if (z < zMin) zMin = z
-          if (z > zMax) zMax = z
+          zMin = zMin == null ? z : zMin.min(z)
+          zMax = zMax == null ? z : zMax.max(z)
         } else {
           // Interpolate or use NaN
           values[j][i] = null

@@ -276,8 +276,8 @@ class GeomViolin extends Geom {
     Number iqrNum = Stat.iqr(data)
     BigDecimal std = new BigDecimal(stdNum.toString())
     BigDecimal iqr = new BigDecimal(iqrNum.toString())
-    // Use Math.pow for fractional power (BigDecimal.pow only accepts int)
-    BigDecimal sizePower = Math.pow(data.size() as double, -0.2 as double) as BigDecimal
+    // Use ** operator for fractional power
+    BigDecimal sizePower = (data.size() as BigDecimal) ** -0.2
     BigDecimal bandwidth = (0.9 as BigDecimal) * std.min(iqr / 1.34) * sizePower * (adjust as BigDecimal)
 
     if (bandwidth <= 0) bandwidth = range / 10

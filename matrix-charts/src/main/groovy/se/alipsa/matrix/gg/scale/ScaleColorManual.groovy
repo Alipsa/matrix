@@ -175,12 +175,12 @@ class ScaleColorManual extends ScaleDiscrete {
   private static List<String> generateHuePalette(int n) {
     if (n <= 0) return []
     // ggplot2 hue palette defaults: h = [15, 375], c = 100, l = 65.
-    double start = 15.0
-    double end = 375.0
-    double step = (end - start) / n
+    BigDecimal start = 15.0
+    BigDecimal end = 375.0
+    BigDecimal step = (end - start) / n
     List<String> colors = new ArrayList<>(n)
     for (int i = 0; i < n; i++) {
-      double hue = start + step * i
+      BigDecimal hue = start + step * i
       hue = hue % 360.0
       colors << ColorSpaceUtil.hclToHex(hue, 100, 65)
     }

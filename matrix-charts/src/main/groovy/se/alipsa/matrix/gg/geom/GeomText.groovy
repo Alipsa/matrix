@@ -25,7 +25,7 @@ class GeomText extends Geom {
   String color = 'black'
 
   /** Font size in pixels */
-  Number size = 10
+  BigDecimal size = 10
 
   /** Font family */
   String family = 'sans-serif'
@@ -34,22 +34,22 @@ class GeomText extends Geom {
   String fontface = 'normal'
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Horizontal adjustment: 0=left, 0.5=center, 1=right */
-  Number hjust = 0.5
+  BigDecimal hjust = 0.5
 
   /** Vertical adjustment: 0=bottom, 0.5=middle, 1=top */
-  Number vjust = 0.5
+  BigDecimal vjust = 0.5
 
   /** Rotation angle in degrees */
-  Number angle = 0
+  BigDecimal angle = 0
 
   /** Nudge x offset in data units */
-  Number nudge_x = 0
+  BigDecimal nudge_x = 0
 
   /** Nudge y offset in data units */
-  Number nudge_y = 0
+  BigDecimal nudge_y = 0
 
   /** Fixed label text (if not mapping from data) */
   String label
@@ -62,18 +62,17 @@ class GeomText extends Geom {
 
   GeomText(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size != null) this.size = params.size as Number
-    if (params.family) this.family = params.family as String
-    if (params.fontface) this.fontface = params.fontface as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.hjust != null) this.hjust = params.hjust as Number
-    if (params.vjust != null) this.vjust = params.vjust as Number
-    if (params.angle != null) this.angle = params.angle as Number
-    if (params.nudge_x != null) this.nudge_x = params.nudge_x as Number
-    if (params.nudge_y != null) this.nudge_y = params.nudge_y as Number
-    if (params.label) this.label = params.label as String
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.size != null) this.size = params.size as BigDecimal
+    this.family = params.family as String ?: this.family
+    this.fontface = params.fontface as String ?: this.fontface
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.hjust != null) this.hjust = params.hjust as BigDecimal
+    if (params.vjust != null) this.vjust = params.vjust as BigDecimal
+    if (params.angle != null) this.angle = params.angle as BigDecimal
+    if (params.nudge_x != null) this.nudge_x = params.nudge_x as BigDecimal
+    if (params.nudge_y != null) this.nudge_y = params.nudge_y as BigDecimal
+    this.label = params.label as String ?: this.label
     this.params = params
   }
 
@@ -115,17 +114,14 @@ class GeomText extends Geom {
       if (labelText == null || labelText.isEmpty()) return
 
       // Transform coordinates
-      def xTransformed = xScale?.transform(xVal)
-      def yTransformed = yScale?.transform(yVal)
+      BigDecimal xPx = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yPx = yScale?.transform(yVal) as BigDecimal
 
-      if (xTransformed == null || yTransformed == null) return
-
-      double xPx = xTransformed as double
-      double yPx = yTransformed as double
+      if (xPx == null || yPx == null) return
 
       // Apply nudge (simple pixel offset - could be data units for more accuracy)
-      xPx += (nudge_x as double) * 10  // approximate scaling
-      yPx -= (nudge_y as double) * 10  // y increases downward in SVG
+      xPx += nudge_x * 10  // approximate scaling
+      yPx -= nudge_y * 10  // y increases downward in SVG
 
       // Determine text color
       String textColor = this.color
@@ -140,15 +136,15 @@ class GeomText extends Geom {
       textColor = ColorUtil.normalizeColor(textColor) ?: textColor
 
       // Calculate text anchor based on hjust
-      String textAnchor = getTextAnchor(hjust as double)
+      String textAnchor = getTextAnchor(hjust)
 
       // Calculate dominant-baseline based on vjust
-      String dominantBaseline = getDominantBaseline(vjust as double)
+      String dominantBaseline = getDominantBaseline(vjust)
 
       // Create text element
       def text = group.addText(labelText)
-          .x(xPx as int)
-          .y(yPx as int)
+          .x(xPx)
+          .y(yPx)
           .fill(textColor)
 
       text.addAttribute('font-size', size)
@@ -166,13 +162,12 @@ class GeomText extends Geom {
       }
 
       // Apply rotation
-      double angleVal = angle as double
-      if (angleVal != 0) {
-        text.addAttribute('transform', "rotate(${-angleVal}, ${xPx as int}, ${yPx as int})")
+      if (angle != 0) {
+        text.addAttribute('transform', "rotate(${-angle}, ${xPx}, ${yPx})")
       }
 
       // Apply alpha
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         text.addAttribute('fill-opacity', alpha)
       }
     }
@@ -181,7 +176,7 @@ class GeomText extends Geom {
   /**
    * Convert hjust to SVG text-anchor.
    */
-  private String getTextAnchor(double hjust) {
+  private String getTextAnchor(BigDecimal hjust) {
     if (hjust <= 0.25) return 'start'
     if (hjust >= 0.75) return 'end'
     return 'middle'
@@ -190,7 +185,7 @@ class GeomText extends Geom {
   /**
    * Convert vjust to SVG dominant-baseline.
    */
-  private String getDominantBaseline(double vjust) {
+  private String getDominantBaseline(BigDecimal vjust) {
     if (vjust <= 0.25) return 'text-after-edge'  // bottom
     if (vjust >= 0.75) return 'text-before-edge'  // top
     return 'middle'

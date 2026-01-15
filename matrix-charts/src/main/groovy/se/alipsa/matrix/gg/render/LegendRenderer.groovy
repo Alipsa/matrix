@@ -225,8 +225,8 @@ class LegendRenderer {
     Map params = customGuide.params ?: [:]
 
     // Allocate dimensions
-    int width = (params.width != null ? params.width : 50) as int
-    int height = (params.height != null ? params.height : 50) as int
+    int width = (params.width ?: 50) as int
+    int height = (params.height ?: 50) as int
     int spacing = 10
 
     int currentY = startY
@@ -325,10 +325,10 @@ class LegendRenderer {
             BigDecimal centerX = (x + keyWidth / 2).round()
             BigDecimal centerY = (y + keyHeight / 2).round()
             drawLegendShape(group, centerX, centerY,
-                Math.min(keyWidth, keyHeight), shape, color, theme.legendKey?.color)
+                keyWidth.min(keyHeight) as int, shape, color, theme.legendKey?.color)
           } else {
             // Draw circle for point geoms
-            BigDecimal radius = (Math.min(keyWidth, keyHeight) / 2).round()
+            BigDecimal radius = (keyWidth.min(keyHeight) / 2).round()
             def circle = group.addCircle()
                 .cx((x + keyWidth / 2).round())
                 .cy((y + keyHeight / 2).round())
@@ -354,7 +354,7 @@ class LegendRenderer {
         BigDecimal centerX = (x + keyWidth / 2).round()
         BigDecimal centerY = (y + keyHeight / 2).round()
         drawLegendShape(group, centerX, centerY,
-            Math.min(keyWidth, keyHeight), shape, shapeColor, theme.legendKey?.color)
+            keyWidth.min(keyHeight) as int, shape, shapeColor, theme.legendKey?.color)
       }
 
       // Draw label
@@ -518,10 +518,8 @@ class LegendRenderer {
                                      int startX, int startY, boolean vertical, Theme theme,
                                      Map guideParams) {
     // Extract parameters
-    boolean evenSteps = (guideParams['even.steps'] != null ? guideParams['even.steps'] :
-                         guideParams.evenSteps != null ? guideParams.evenSteps : true) as boolean
-    Boolean showLimits = guideParams['show.limits'] != null ? guideParams['show.limits'] as Boolean :
-                         guideParams.showLimits as Boolean
+    boolean evenSteps = (guideParams['even.steps'] ?: guideParams.evenSteps ?: true) as boolean
+    Boolean showLimits = (guideParams['show.limits'] ?: guideParams.showLimits) as Boolean
     boolean reverse = (guideParams.reverse ?: false) as boolean
 
     // Bar dimensions
@@ -730,7 +728,7 @@ class LegendRenderer {
     }.findAll { it != null } as List<Number>
     if (sizes.isEmpty()) return startY
     BigDecimal maxSize = sizes.max() as BigDecimal
-    BigDecimal maxRadius = Math.min(keyWidth, keyHeight) / 2.0
+    BigDecimal maxRadius = keyWidth.min(keyHeight) / 2
 
     int x = startX
     int y = startY
@@ -856,7 +854,7 @@ class LegendRenderer {
             .stroke(stroke)
       }
       case 'triangle' -> {
-        BigDecimal h = (halfSize * 2) * (3 as BigDecimal).sqrt() / 2
+        BigDecimal h = (halfSize * 2) * 3.sqrt() / 2
         BigDecimal topY = cy - h * 2 / 3
         BigDecimal bottomY = cy + h / 3
         BigDecimal leftX = cx - halfSize

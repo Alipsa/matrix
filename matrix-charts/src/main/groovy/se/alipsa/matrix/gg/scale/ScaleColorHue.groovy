@@ -65,9 +65,9 @@ class ScaleColorHue extends ScaleDiscrete {
     }
     if (params.containsKey('h.start')) {
       // h.start shifts the hue range
-      Number start = params['h.start'] as Number
-      Number span = (hueRange[1] as double) - (hueRange[0] as double)
-      this.hueRange = [start, (start as double) + span]
+      BigDecimal start = params['h.start'] as BigDecimal
+      BigDecimal span = (hueRange[1] as BigDecimal) - (hueRange[0] as BigDecimal)
+      this.hueRange = [start, start + span]
     }
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
@@ -102,27 +102,27 @@ class ScaleColorHue extends ScaleDiscrete {
   private List<String> generateHueColors(int n) {
     if (n == 0) return []
     if (n == 1) {
-      double hue = hueRange[0] as double
-      return [ColorSpaceUtil.hclToHex(hue, chroma as double, luminance as double)]
+      BigDecimal hue = hueRange[0] as BigDecimal
+      return [ColorSpaceUtil.hclToHex(hue, chroma, luminance)]
     }
 
-    double hueMin = hueRange[0] as double
-    double hueMax = hueRange[1] as double
-    double hueSpan = (hueMax - hueMin) / n
+    BigDecimal hueMin = hueRange[0] as BigDecimal
+    BigDecimal hueMax = hueRange[1] as BigDecimal
+    BigDecimal hueSpan = (hueMax - hueMin) / n
 
     List<String> colors = []
     for (int i = 0; i < n; i++) {
-      double hue
+      BigDecimal hue
       if (direction < 0) {
         hue = hueMax - i * hueSpan
       } else {
         hue = hueMin + i * hueSpan
       }
       // Normalize to 0-360
-      hue = hue % 360.0d
-      if (hue < 0) hue += 360.0d
+      hue = hue % 360
+      if (hue < 0) hue += 360
 
-      String color = ColorSpaceUtil.hclToHex(hue, chroma as double, luminance as double)
+      String color = ColorSpaceUtil.hclToHex(hue, chroma, luminance)
       colors.add(color)
     }
 

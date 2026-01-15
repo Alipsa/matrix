@@ -185,15 +185,13 @@ class CoordRadial extends Coord {
     }
     angle = angle - start
 
-    double angleVal = angle as double
-    double spanVal = getAngularSpan() as double
-    double fullCircle = 2 * PI
+    BigDecimal spanVal = getAngularSpan()
+    BigDecimal fullCircle = 2 * PI
 
-    while (angleVal < 0) angleVal += fullCircle
-    while (angleVal >= fullCircle) angleVal -= fullCircle
+    while (angle < 0) angle += fullCircle
+    while (angle >= fullCircle) angle -= fullCircle
 
-    double thetaNormVal = spanVal == 0 ? 0.0 : angleVal / spanVal
-    BigDecimal thetaNorm = thetaNormVal as BigDecimal
+    BigDecimal thetaNorm = spanVal == 0 ? 0 : angle / spanVal
     thetaNorm = thetaNorm.min(1).max(0)
 
     BigDecimal minRadius = getInnerRadiusPx()

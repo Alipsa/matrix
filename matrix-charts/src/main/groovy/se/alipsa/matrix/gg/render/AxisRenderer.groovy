@@ -14,6 +14,8 @@ import se.alipsa.matrix.gg.scale.ScaleYContinuous
 import se.alipsa.matrix.gg.theme.Theme
 import java.util.Locale
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 /**
  * Utility class for rendering axes in ggplot charts.
  * Handles regular axes, polar axes, stacked axes, and logarithmic tick axes.
@@ -332,9 +334,9 @@ class AxisRenderer {
       }
 
       // Calculate angle, accounting for start offset and direction
-      BigDecimal theta = coord.start + norm * 2 * Math.PI
+      BigDecimal theta = coord.start + norm * 2 * PI
       if (!coord.clockwise) {
-        theta = coord.start - norm * 2 * Math.PI
+        theta = coord.start - norm * 2 * PI
       }
 
       // Draw major tick mark (radial line from circle edge outward)
@@ -388,9 +390,9 @@ class AxisRenderer {
           }
 
           // Calculate angle for minor tick
-          BigDecimal minorTheta = coord.start + minorNorm * 2 * Math.PI
+          BigDecimal minorTheta = coord.start + minorNorm * 2 * PI
           if (!coord.clockwise) {
-            minorTheta = coord.start - minorNorm * 2 * Math.PI
+            minorTheta = coord.start - minorNorm * 2 * PI
           }
 
           // Draw shorter minor tick mark
@@ -426,9 +428,9 @@ class AxisRenderer {
   @CompileStatic
   private String calculatePolarTextAnchor(BigDecimal theta) {
     // Normalize angle to [0, 2π)
-    BigDecimal normalizedTheta = theta % (2 * Math.PI)
+    BigDecimal normalizedTheta = theta % (2 * PI)
     if (normalizedTheta < 0) {
-      normalizedTheta += 2 * Math.PI
+      normalizedTheta += 2 * PI
     }
 
     // Divide into sectors for text anchoring
@@ -436,7 +438,7 @@ class AxisRenderer {
     // Right (3 o'clock): start
     // Bottom (6 o'clock): middle
     // Left (9 o'clock): end
-    BigDecimal piOver4 = Math.PI / 4
+    BigDecimal piOver4 = PI / 4
 
     if (normalizedTheta < piOver4 || normalizedTheta >= 7 * piOver4) {
       return 'middle'  // Top
@@ -453,8 +455,8 @@ class AxisRenderer {
   private void addRadialArc(G axisGroup, CoordRadial coord, BigDecimal radius, String color, Number size) {
     BigDecimal span = coord.getAngularSpan()
     double spanVal = span as double
-    double fullCircle = 2 * Math.PI
-    if (Math.abs(spanVal - fullCircle) < 0.0001d) {
+    double fullCircle = 2 * PI
+    if ((spanVal - fullCircle).abs() < 0.0001d) {
       List<BigDecimal> center = coord.getCenter()
       axisGroup.addCircle()
           .cx(center[0])
@@ -472,12 +474,12 @@ class AxisRenderer {
     double startRad = (coord.getAngularRange()[0]) as double
     double endRad = (coord.getAngularRange()[1]) as double
 
-    double x1 = cx + (radius as double) * Math.sin(startRad)
-    double y1 = cy - (radius as double) * Math.cos(startRad)
-    double x2 = cx + (radius as double) * Math.sin(endRad)
-    double y2 = cy - (radius as double) * Math.cos(endRad)
+    double x1 = cx + (radius as double) * (startRad as BigDecimal).sin()
+    double y1 = cy - (radius as double) * (startRad as BigDecimal).cos()
+    double x2 = cx + (radius as double) * (endRad as BigDecimal).sin()
+    double y2 = cy - (radius as double) * (endRad as BigDecimal).cos()
 
-    int largeArc = spanVal > Math.PI ? 1 : 0
+    int largeArc = spanVal > PI ? 1 : 0
     int sweepFlag = coord.clockwise ? 1 : 0
     String path = "M ${formatNumber(x1)} ${formatNumber(y1)} A ${formatNumber(radius as double)} ${formatNumber(radius as double)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
 

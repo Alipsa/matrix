@@ -60,7 +60,7 @@ class CutWidth {
     if (column == null || column.isBlank()) {
       throw new IllegalArgumentException("Column name cannot be null or empty")
     }
-    if (width == null || (width as double) <= 0) {
+    if (width == null || width <= 0) {
       throw new IllegalArgumentException("Width must be a positive number")
     }
     this.column = column

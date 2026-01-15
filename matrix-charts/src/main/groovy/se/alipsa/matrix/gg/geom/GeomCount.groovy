@@ -29,19 +29,19 @@ class GeomCount extends Geom {
   String fill = 'steelblue'
 
   /** Alpha transparency (0-1) */
-  Number alpha = 0.7
+  BigDecimal alpha = 0.7
 
   /** Minimum point size (for count=1) */
-  Number sizeMin = 3
+  BigDecimal sizeMin = 3
 
   /** Maximum point size (for max count) */
-  Number sizeMax = 15
+  BigDecimal sizeMax = 15
 
   /** Point shape: 'circle', 'square', 'triangle' */
   String shape = 'circle'
 
   /** Stroke width for point border */
-  Number stroke = 1
+  BigDecimal stroke = 1
 
   GeomCount() {
     defaultStat = StatType.IDENTITY  // We compute counts internally
@@ -51,16 +51,13 @@ class GeomCount extends Geom {
 
   GeomCount(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.sizeMin != null) this.sizeMin = params.sizeMin as Number
-    if (params.size_min != null) this.sizeMin = params.size_min as Number
-    if (params.sizeMax != null) this.sizeMax = params.sizeMax as Number
-    if (params.size_max != null) this.sizeMax = params.size_max as Number
-    if (params.shape) this.shape = params.shape as String
-    if (params.stroke != null) this.stroke = params.stroke as Number
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
+    this.alpha = params.alpha as BigDecimal ?: this.alpha
+    this.sizeMin = (params.sizeMin ?: params.size_min) as BigDecimal ?: this.sizeMin
+    this.sizeMax = (params.sizeMax ?: params.size_max) as BigDecimal ?: this.sizeMax
+    this.shape = params.shape as String ?: this.shape
+    this.stroke = params.stroke as BigDecimal ?: this.stroke
     this.params = params
   }
 
@@ -83,25 +80,19 @@ class GeomCount extends Geom {
     Scale fillScale = scales['fill']
 
     // Count occurrences at each unique (x, y) location
-    Map<String, CountData> counts = [:]
-
-    data.each { row ->
-      def xVal = row[xCol]
-      def yVal = row[yCol]
-      if (xVal == null || yVal == null) return
-
-      String key = "${xVal}|${yVal}"
-      if (!counts.containsKey(key)) {
-        counts[key] = new CountData(
-            x: xVal,
-            y: yVal,
-            count: 0,
-            color: colorCol ? row[colorCol] : null,
-            fill: fillCol ? row[fillCol] : null
-        )
-      }
-      counts[key].count++
-    }
+    Map<String, CountData> counts = data.rows()
+        .findAll { row -> row[xCol] != null && row[yCol] != null }
+        .groupBy { row -> "${row[xCol]}|${row[yCol]}" }
+        .collectEntries { key, rows ->
+          def firstRow = rows[0]
+          [(key): new CountData(
+              x: firstRow[xCol],
+              y: firstRow[yCol],
+              count: rows.size(),
+              color: colorCol ? firstRow[colorCol] : null,
+              fill: fillCol ? firstRow[fillCol] : null
+          )]
+        } as Map<String, CountData>
 
     if (counts.isEmpty()) return
 
@@ -111,21 +102,18 @@ class GeomCount extends Geom {
 
     // Render each unique location as a sized point
     counts.values().each { CountData cd ->
-      def xPx = xScale?.transform(cd.x)
-      def yPx = yScale?.transform(cd.y)
+      BigDecimal xPx = xScale?.transform(cd.x) as BigDecimal
+      BigDecimal yPx = yScale?.transform(cd.y) as BigDecimal
 
       if (xPx == null || yPx == null) return
 
-      int cx = xPx as int
-      int cy = yPx as int
-
       // Calculate size based on count
-      BigDecimal sizeRange = (sizeMax as BigDecimal) - (sizeMin as BigDecimal)
+      BigDecimal sizeRange = sizeMax - sizeMin
       BigDecimal size
       if (maxCount == 1) {
-        size = (sizeMin as BigDecimal) + sizeRange / 2
+        size = sizeMin + sizeRange / 2
       } else {
-        size = (sizeMin as BigDecimal) + (cd.count - 1) * sizeRange / (maxCount - 1)
+        size = sizeMin + (cd.count - 1) * sizeRange / (maxCount - 1)
       }
 
       // Determine colors
@@ -143,44 +131,44 @@ class GeomCount extends Geom {
       pointFill = ColorUtil.normalizeColor(pointFill) ?: pointFill
 
       // Draw the point
-      drawPoint(group, cx, cy, size, pointFill, pointColor)
+      drawPoint(group, xPx, yPx, size, pointFill, pointColor)
     }
   }
 
   /**
    * Draw a point of the specified shape.
    */
-  private void drawPoint(G group, int cx, int cy, Number size, String fillColor, String strokeColor) {
-    double halfSize = size / 2
+  private void drawPoint(G group, BigDecimal cx, BigDecimal cy, BigDecimal size, String fillColor, String strokeColor) {
+    BigDecimal halfSize = size / 2
 
     switch (shape?.toLowerCase()) {
       case 'square':
         def rect = group.addRect()
-            .x((cx - halfSize) as int)
-            .y((cy - halfSize) as int)
-            .width(size as int)
-            .height(size as int)
+            .x(cx - halfSize)
+            .y(cy - halfSize)
+            .width(size)
+            .height(size)
             .fill(fillColor)
             .stroke(strokeColor)
         rect.addAttribute('stroke-width', stroke)
-        if ((alpha as double) < 1.0) {
+        if (alpha < 1.0) {
           rect.addAttribute('fill-opacity', alpha)
         }
         break
 
       case 'triangle':
         // Equilateral triangle pointing up - use path instead of polygon
-        double h = size * Math.sqrt(3) / 2
-        double topY = cy - h * 2 / 3
-        double bottomY = cy + h / 3
-        double leftX = cx - halfSize
-        double rightX = cx + halfSize
-        String pathD = "M ${cx} ${topY as int} L ${leftX as int} ${bottomY as int} L ${rightX as int} ${bottomY as int} Z"
+        BigDecimal h = size * 3.0.sqrt() / 2
+        BigDecimal topY = cy - h * 2 / 3
+        BigDecimal bottomY = cy + h / 3
+        BigDecimal leftX = cx - halfSize
+        BigDecimal rightX = cx + halfSize
+        String pathD = "M ${cx} ${topY} L ${leftX} ${bottomY} L ${rightX} ${bottomY} Z"
         def path = group.addPath().d(pathD)
             .fill(fillColor)
             .stroke(strokeColor)
         path.addAttribute('stroke-width', stroke)
-        if ((alpha as double) < 1.0) {
+        if (alpha < 1.0) {
           path.addAttribute('fill-opacity', alpha)
         }
         break
@@ -190,11 +178,11 @@ class GeomCount extends Geom {
         def circle = group.addCircle()
             .cx(cx)
             .cy(cy)
-            .r(halfSize as int)
+            .r(halfSize)
             .fill(fillColor)
             .stroke(strokeColor)
         circle.addAttribute('stroke-width', stroke)
-        if ((alpha as double) < 1.0) {
+        if (alpha < 1.0) {
           circle.addAttribute('fill-opacity', alpha)
         }
         break

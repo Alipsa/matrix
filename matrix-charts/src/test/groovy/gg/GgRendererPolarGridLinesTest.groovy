@@ -4,6 +4,7 @@ import groovy.xml.XmlSlurper
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
+import se.alipsa.matrix.gg.coord.CoordPolar
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -58,12 +59,12 @@ class GgRendererPolarGridLinesTest {
 
     double x = zeroLabel.@x.toString() as double
     double y = zeroLabel.@y.toString() as double
-    def center = (chart.coord as se.alipsa.matrix.gg.coord.CoordPolar).getCenter()
+    def center = (chart.coord as CoordPolar).getCenter()
     double cx = center[0] as double
     double cy = center[1] as double
 
     double dist = Math.sqrt(Math.pow(x - cx, 2.0d) + Math.pow(y - cy, 2.0d))
-    double maxRadius = (chart.coord as se.alipsa.matrix.gg.coord.CoordPolar).getMaxRadius()
+    double maxRadius = (chart.coord as CoordPolar).getMaxRadius()
     assertTrue(dist > maxRadius)
   }
 }

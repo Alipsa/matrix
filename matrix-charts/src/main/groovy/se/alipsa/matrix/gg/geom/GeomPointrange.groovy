@@ -29,16 +29,16 @@ class GeomPointrange extends Geom {
   String color = 'black'
 
   /** Point size (diameter) */
-  Number size = 4
+  BigDecimal size = 4
 
   /** Line width for the range line */
-  Number linewidth = 1
+  BigDecimal linewidth = 1
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Point shape */
-  Number shape = 19  // filled circle
+  BigDecimal shape = 19  // filled circle
 
   /** Fill color for the point (for fillable shapes) */
   String fill = null
@@ -51,13 +51,12 @@ class GeomPointrange extends Geom {
 
   GeomPointrange(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size != null) this.size = params.size as Number
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.shape != null) this.shape = params.shape as Number
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.size != null) this.size = params.size as BigDecimal
+    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.shape != null) this.shape = params.shape as BigDecimal
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
     this.params = params
   }
 
@@ -85,17 +84,12 @@ class GeomPointrange extends Geom {
       if (xVal == null || yVal == null) return
       if (yminVal == null || ymaxVal == null) return
 
-      def xPx = xScale?.transform(xVal)
-      def yPx = yScale?.transform(yVal)
-      def yMinPx = yScale?.transform(yminVal)
-      def yMaxPx = yScale?.transform(ymaxVal)
+      BigDecimal xCenter = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yCenter = yScale?.transform(yVal) as BigDecimal
+      BigDecimal yMin = yScale?.transform(yminVal) as BigDecimal
+      BigDecimal yMax = yScale?.transform(ymaxVal) as BigDecimal
 
-      if (xPx == null || yPx == null || yMinPx == null || yMaxPx == null) return
-
-      double xCenter = xPx as double
-      double yCenter = yPx as double
-      double yMin = yMinPx as double
-      double yMax = yMaxPx as double
+      if (xCenter == null || yCenter == null || yMin == null || yMax == null) return
 
       // Determine color
       String pointColor = this.color
@@ -112,32 +106,32 @@ class GeomPointrange extends Geom {
 
       // Draw the vertical line (range)
       def line = group.addLine()
-          .x1(xCenter as int)
-          .y1(yMin as int)
-          .x2(xCenter as int)
-          .y2(yMax as int)
+          .x1(xCenter)
+          .y1(yMin)
+          .x2(xCenter)
+          .y2(yMax)
           .stroke(pointColor)
 
       line.addAttribute('stroke-width', linewidth)
 
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
 
       // Draw the point
-      double radius = (size as double) / 2
+      BigDecimal radius = size / 2
       String pointFill = fill ?: pointColor
 
       def circle = group.addCircle()
-          .cx(xCenter as int)
-          .cy(yCenter as int)
-          .r(radius as int)
+          .cx(xCenter)
+          .cy(yCenter)
+          .r(radius)
           .fill(pointFill)
           .stroke(pointColor)
 
       circle.addAttribute('stroke-width', 1)
 
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         circle.addAttribute('fill-opacity', alpha)
         circle.addAttribute('stroke-opacity', alpha)
       }
@@ -154,7 +148,7 @@ class GeomPointrange extends Geom {
       '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 }

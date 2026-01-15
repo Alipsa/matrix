@@ -128,7 +128,7 @@ class GeomBoxplot extends Geom {
     Scale colorScale = scales['color']
 
     int numBoxes = data.rowCount()
-    BigDecimal plotWidth = 640 as BigDecimal  // default plot width
+    BigDecimal plotWidth = 640  // default plot width
     // Check if x values are numeric (continuous positioning)
     boolean continuousX = false
     if (data.columnNames().contains('x') && data.rowCount() > 0) {

@@ -189,13 +189,13 @@ class GeomContourFilled extends GeomContour {
    */
   private List<BigDecimal> computeFilledLevels(BigDecimal zMin, BigDecimal zMax) {
     List<BigDecimal> levels = [zMin]
-    double range = zMax - zMin
+    BigDecimal range = zMax - zMin
 
     if (range == 0) {
       return [zMin, zMin + 1]
     }
 
-    double step
+    BigDecimal step
     if (binwidth != null) {
       step = binwidth as BigDecimal
     } else {
