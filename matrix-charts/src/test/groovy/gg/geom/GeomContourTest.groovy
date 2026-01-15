@@ -312,6 +312,23 @@ class GeomContourTest {
     assertEquals(0.5, filledParams.fillAlpha)
   }
 
+  @Test
+  void testGeomContourfAlias() {
+    // geom_contourf should be an alias for geom_contour_filled
+    def contourf1 = geom_contourf()
+    assertNotNull(contourf1)
+    assertTrue(contourf1 instanceof GeomContourFilled)
+
+    def contourf2 = geom_contourf(bins: 12, fillAlpha: 0.6)
+    assertEquals(12, contourf2.bins)
+    assertEquals(0.6, contourf2.fillAlpha)
+
+    // Test with aesthetic mapping
+    def contourf3 = geom_contourf(aes(x: 'x', y: 'y'))
+    assertNotNull(contourf3)
+    assertTrue(contourf3 instanceof GeomContourFilled)
+  }
+
   // ==================== Edge Cases ====================
 
   @Test

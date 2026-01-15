@@ -1719,6 +1719,24 @@ class GgPlot {
     return new GeomContourFilled(params)
   }
 
+  /**
+   * Alias for geom_contour_filled() for ggplot2 compatibility.
+   * Draws filled contours from 3D data.
+   *
+   * @see #geom_contour_filled()
+   */
+  static GeomContourFilled geom_contourf() {
+    return geom_contour_filled()
+  }
+
+  static GeomContourFilled geom_contourf(Aes mapping) {
+    return geom_contour_filled(mapping)
+  }
+
+  static GeomContourFilled geom_contourf(Map params) {
+    return geom_contour_filled(params)
+  }
+
   static GeomCount geom_count() {
     return new GeomCount()
   }
