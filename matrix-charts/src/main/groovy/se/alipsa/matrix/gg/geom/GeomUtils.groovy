@@ -44,7 +44,7 @@ class GeomUtils {
    * @return a hex color string
    */
   static String getDefaultColor(Object value) {
-    int index = Math.abs(value.hashCode()) % DEFAULT_PALETTE.size()
+    int index = value.hashCode().abs() % DEFAULT_PALETTE.size()
     return DEFAULT_PALETTE[index]
   }
 
@@ -96,7 +96,7 @@ class GeomUtils {
         }
         break
       case 'triangle':
-        double h = size * Math.sqrt(3) / 2
+        double h = size * 3.sqrt() / 2
         double topY = cy - h * 2 / 3
         double bottomY = cy + h / 3
         double leftX = cx - halfSize

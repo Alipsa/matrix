@@ -92,7 +92,9 @@ enum StatType {
     /** Expand simple feature geometries to x/y coordinates */
     SF,
     /** Representative coordinates for simple feature labels */
-    SF_COORDINATES
+    SF_COORDINATES,
+    /** Convert angle/radius to x/y endpoints for spoke segments */
+    SPOKE
 }
 
 /**

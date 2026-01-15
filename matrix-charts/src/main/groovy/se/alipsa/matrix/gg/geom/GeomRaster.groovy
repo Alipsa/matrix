@@ -113,8 +113,8 @@ class GeomRaster extends Geom {
 
       double x = xLeft as double
       double y = yTop as double
-      double w = Math.abs((xRight as double) - (xLeft as double))
-      double h = Math.abs((yBottom as double) - (yTop as double))
+      double w = ((xRight as BigDecimal) - (xLeft as BigDecimal)).abs() as double
+      double h = ((yBottom as BigDecimal) - (yTop as BigDecimal)).abs() as double
 
       // Determine fill color
       String cellFill = this.fill

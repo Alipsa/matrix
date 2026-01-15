@@ -95,32 +95,32 @@ class GeomAbline extends Geom {
     List<Number> xDomain = getScaleDomain(xScale)
     if (xDomain == null || xDomain.size() < 2) return
 
-    double xMin = xDomain[0] as double
-    double xMax = xDomain[1] as double
+    BigDecimal xMin = xDomain[0] as BigDecimal
+    BigDecimal xMax = xDomain[1] as BigDecimal
 
     // Draw lines
     lines.unique().each { Map<String, Number> lineParams ->
-      double s = lineParams.slope as double
-      double ic = lineParams.intercept as double
+      BigDecimal s = lineParams.slope as BigDecimal
+      BigDecimal ic = lineParams.intercept as BigDecimal
 
       // Calculate y values at x domain boundaries
-      double y1 = s * xMin + ic
-      double y2 = s * xMax + ic
+      BigDecimal y1 = s * xMin + ic
+      BigDecimal y2 = s * xMax + ic
 
       // Transform to pixel coordinates
-      def x1Px = xScale.transform(xMin)
-      def x2Px = xScale.transform(xMax)
-      def y1Px = yScale.transform(y1)
-      def y2Px = yScale.transform(y2)
+      Number x1Px = xScale.transform(xMin) as Number
+      Number x2Px = xScale.transform(xMax) as Number
+      Number y1Px = yScale.transform(y1) as Number
+      Number y2Px = yScale.transform(y2) as Number
 
       if (x1Px == null || x2Px == null || y1Px == null || y2Px == null) return
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
-          .x1(x1Px as int)
-          .y1(y1Px as int)
-          .x2(x2Px as int)
-          .y2(y2Px as int)
+          .x1(x1Px)
+          .y1(y1Px)
+          .x2(x2Px)
+          .y2(y2Px)
           .stroke(lineColor)
 
       line.addAttribute('stroke-width', linewidth)
@@ -132,7 +132,7 @@ class GeomAbline extends Geom {
       }
 
       // Apply alpha
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
     }
@@ -161,13 +161,12 @@ class GeomAbline extends Geom {
    * Convert line type name to SVG stroke-dasharray value.
    */
   private String getLineDashArray(String type) {
-    switch (type?.toLowerCase()) {
-      case 'dashed': return '5,5'
-      case 'dotted': return '2,2'
-      case 'longdash': return '10,5'
-      case 'twodash': return '10,5,2,5'
-      case 'solid':
-      default: return null
+    return switch (type?.toLowerCase()) {
+      case 'dashed' -> '5,5'
+      case 'dotted' -> '2,2'
+      case 'longdash' -> '10,5'
+      case 'twodash' -> '10,5,2,5'
+      default -> null
     }
   }
 }

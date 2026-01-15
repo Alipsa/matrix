@@ -53,7 +53,7 @@ class ScaleXSqrt extends ScaleContinuous {
     if (numericData.isEmpty()) return
 
     // Transform to sqrt space and convert to BigDecimal
-    List<BigDecimal> sqrtData = numericData.collect { Math.sqrt(it) as BigDecimal }
+    List<BigDecimal> sqrtData = numericData.collect { (it as BigDecimal).sqrt() }
 
     // Compute min/max in sqrt space as BigDecimal
     BigDecimal min = sqrtData.min()
@@ -62,10 +62,10 @@ class ScaleXSqrt extends ScaleContinuous {
     // Apply explicit limits if set (limits are in data space, convert to sqrt space)
     if (limits && limits.size() >= 2) {
       if (limits[0] != null && (limits[0] as Number) >= 0) {
-        min = Math.sqrt(limits[0] as double) as BigDecimal
+        min = (limits[0] as BigDecimal).sqrt()
       }
       if (limits[1] != null && (limits[1] as Number) >= 0) {
-        max = Math.sqrt(limits[1] as double) as BigDecimal
+        max = (limits[1] as BigDecimal).sqrt()
       }
     }
 
@@ -88,7 +88,7 @@ class ScaleXSqrt extends ScaleContinuous {
     if (numeric == null) return null
 
     // Transform to sqrt space, then perform linear interpolation
-    BigDecimal sqrtValue = Math.sqrt(numeric as double) as BigDecimal
+    BigDecimal sqrtValue = (numeric as BigDecimal).sqrt()
     return ScaleUtils.linearTransform(sqrtValue, computedDomain[0], computedDomain[1], range[0], range[1])
   }
 

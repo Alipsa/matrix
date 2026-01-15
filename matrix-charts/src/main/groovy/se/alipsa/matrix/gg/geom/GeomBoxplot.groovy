@@ -128,7 +128,7 @@ class GeomBoxplot extends Geom {
     Scale colorScale = scales['color']
 
     int numBoxes = data.rowCount()
-    BigDecimal plotWidth = 640 as BigDecimal  // default plot width
+    BigDecimal plotWidth = 640  // default plot width
     // Check if x values are numeric (continuous positioning)
     boolean continuousX = false
     if (data.columnNames().contains('x') && data.rowCount() > 0) {
@@ -157,8 +157,8 @@ class GeomBoxplot extends Geom {
       if (lower == null || upper == null || middle == null) return
 
       // Calculate x position and width
-      double xCenter
-      double halfWidth
+      BigDecimal xCenter
+      BigDecimal halfWidth
 
       boolean discreteX = xScale instanceof ScaleDiscrete
 
@@ -172,61 +172,61 @@ class GeomBoxplot extends Geom {
       // When xmin/xmax bounds are present (e.g., from position_dodge2), preserve their center
       // and resolve a single width value so varwidth scaling matches the drawn width.
       if (centerData != null && xScale != null) {
-        xCenter = xScale.transform(centerData) as double
+        xCenter = xScale.transform(centerData) as BigDecimal
         if (widthData > 0d) {
-          double leftPx = xScale.transform(centerData - widthData / 2.0d) as double
-          double rightPx = xScale.transform(centerData + widthData / 2.0d) as double
-          halfWidth = Math.abs(rightPx - leftPx) / 2.0d
+          BigDecimal leftPx = xScale.transform(centerData - widthData / 2.0d) as BigDecimal
+          BigDecimal rightPx = xScale.transform(centerData + widthData / 2.0d) as BigDecimal
+          halfWidth = (rightPx - leftPx).abs() / 2.0d
         } else {
-          double leftPx = xScale.transform(xminData) as double
-          double rightPx = xScale.transform(xmaxData) as double
-          halfWidth = Math.abs(rightPx - leftPx) / 2.0d
+          BigDecimal leftPx = xScale.transform(xminData) as BigDecimal
+          BigDecimal rightPx = xScale.transform(xmaxData) as BigDecimal
+          halfWidth = (rightPx - leftPx).abs() / 2.0d
         }
         usedBounds = true
       }
 
       if (!usedBounds) {
         if (continuousX && xScale != null && xVal instanceof Number) {
-          xCenter = xScale.transform(xVal as Number) as double
+          xCenter = xScale.transform(xVal as Number) as BigDecimal
           if (widthData > 0) {
-            double leftPx = xScale.transform((xVal as double) - widthData / 2) as double
-            double rightPx = xScale.transform((xVal as double) + widthData / 2) as double
-            halfWidth = Math.abs(rightPx - leftPx) / 2
+            BigDecimal leftPx = xScale.transform((xVal as BigDecimal) - widthData / 2) as BigDecimal
+            BigDecimal rightPx = xScale.transform((xVal as BigDecimal) + widthData / 2) as BigDecimal
+            halfWidth = (rightPx - leftPx).abs() / 2
           } else {
-            halfWidth = plotWidth / Math.max(numBoxes * 2, 1)
+            halfWidth = plotWidth / (numBoxes * 2).max(1)
           }
         } else if (xScale != null && discreteX) {
           def transformed = xScale.transform(xVal)
           if (transformed instanceof Number) {
-            xCenter = transformed as double
+            xCenter = transformed as BigDecimal
           } else {
-            xCenter = xScale.transform(idx) as double
+            xCenter = xScale.transform(idx) as BigDecimal
           }
-          double bandWidth = ((ScaleDiscrete) xScale).getBandwidth()
+          BigDecimal bandWidth = ((ScaleDiscrete) xScale).getBandwidth()
           halfWidth = bandWidth * widthData / 2
         } else if (xScale != null) {
           // Categorical x without discrete scale support
           def transformed = xScale.transform(xVal)
           if (transformed instanceof Number) {
-            xCenter = transformed as double
+            xCenter = transformed as BigDecimal
           } else {
-            xCenter = xScale.transform(idx) as double
+            xCenter = xScale.transform(idx) as BigDecimal
           }
-          halfWidth = (plotWidth / Math.max(numBoxes, 1)) * widthData / 2
+          halfWidth = (plotWidth / numBoxes.max(1)) * widthData / 2
         } else {
           // Fallback positioning when no scale is available
-          double slotWidth = plotWidth / Math.max(numBoxes, 1)
-          xCenter = (idx + 0.5d) * slotWidth
-          halfWidth = (slotWidth * widthData) / 2.0d
+          BigDecimal slotWidth = plotWidth / numBoxes.max(1)
+          xCenter = (idx + 0.5) * slotWidth
+          halfWidth = (slotWidth * widthData) / 2.0
         }
       }
 
       // Transform y coordinates
-      double yminPx = yScale?.transform(ymin) as double
-      double lowerPx = yScale?.transform(lower) as double
-      double middlePx = yScale?.transform(middle) as double
-      double upperPx = yScale?.transform(upper) as double
-      double ymaxPx = yScale?.transform(ymax) as double
+      BigDecimal yminPx = yScale?.transform(ymin) as BigDecimal
+      BigDecimal lowerPx = yScale?.transform(lower) as BigDecimal
+      BigDecimal middlePx = yScale?.transform(middle) as BigDecimal
+      BigDecimal upperPx = yScale?.transform(upper) as BigDecimal
+      BigDecimal ymaxPx = yScale?.transform(ymax) as BigDecimal
 
       // Determine colors
       String boxFill = this.fill
@@ -262,10 +262,10 @@ class GeomBoxplot extends Geom {
       // Draw lower whisker line (from ymin to lower)
       if (ymin != null && yminPx != lowerPx) {
         boxGroup.addLine()
-            .x1(xCenter as int)
-            .y1(yminPx as int)
-            .x2(xCenter as int)
-            .y2(lowerPx as int)
+            .x1(xCenter)
+            .y1(yminPx)
+            .x2(xCenter)
+            .y2(lowerPx)
             .stroke(boxColor)
             .addAttribute('stroke-width', linewidth)
       }
@@ -273,59 +273,59 @@ class GeomBoxplot extends Geom {
       // Draw upper whisker line (from upper to ymax)
       if (ymax != null && ymaxPx != upperPx) {
         boxGroup.addLine()
-            .x1(xCenter as int)
-            .y1(upperPx as int)
-            .x2(xCenter as int)
-            .y2(ymaxPx as int)
+            .x1(xCenter)
+            .y1(upperPx)
+            .x2(xCenter)
+            .y2(ymaxPx)
             .stroke(boxColor)
             .addAttribute('stroke-width', linewidth)
       }
 
       // Draw whisker caps (horizontal lines at ymin and ymax)
-      double capHalfWidth = halfWidth * (stapleWidth as double)
-      if ((stapleWidth as double) > 0d) {
+      BigDecimal capHalfWidth = halfWidth * (stapleWidth as BigDecimal)
+      if (stapleWidth > 0d) {
         if (ymin != null) {
           boxGroup.addLine()
-              .x1((xCenter - capHalfWidth) as int)
-              .y1(yminPx as int)
-              .x2((xCenter + capHalfWidth) as int)
-              .y2(yminPx as int)
+              .x1(xCenter - capHalfWidth)
+              .y1(yminPx)
+              .x2(xCenter + capHalfWidth)
+              .y2(yminPx)
               .stroke(boxColor)
               .addAttribute('stroke-width', linewidth)
         }
 
         if (ymax != null) {
           boxGroup.addLine()
-              .x1((xCenter - capHalfWidth) as int)
-              .y1(ymaxPx as int)
-              .x2((xCenter + capHalfWidth) as int)
-              .y2(ymaxPx as int)
+              .x1(xCenter - capHalfWidth)
+              .y1(ymaxPx)
+              .x2(xCenter + capHalfWidth)
+              .y2(ymaxPx)
               .stroke(boxColor)
               .addAttribute('stroke-width', linewidth)
         }
       }
 
       // Draw box (from lower/Q1 to upper/Q3)
-      double boxTop = Math.min(lowerPx, upperPx)
-      double boxHeight = Math.abs(upperPx - lowerPx)
+      BigDecimal boxTop = lowerPx.min(upperPx)
+      BigDecimal boxHeight = (upperPx - lowerPx).abs()
 
       def rect = boxGroup.addRect(halfWidth * 2, boxHeight)
-          .x((xCenter - halfWidth) as int)
-          .y(boxTop as int)
+          .x(xCenter - halfWidth)
+          .y(boxTop)
           .fill(boxFill)
           .stroke(boxColor)
       rect.addAttribute('stroke-width', linewidth)
 
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         rect.addAttribute('fill-opacity', alpha)
       }
 
       // Draw median line
       boxGroup.addLine()
-          .x1((xCenter - halfWidth) as int)
-          .y1(middlePx as int)
-          .x2((xCenter + halfWidth) as int)
-          .y2(middlePx as int)
+          .x1(xCenter - halfWidth)
+          .y1(middlePx)
+          .x2(xCenter + halfWidth)
+          .y2(middlePx)
           .stroke(boxColor)
           .addAttribute('stroke-width', linewidth * 1.5)
 
@@ -337,14 +337,14 @@ class GeomBoxplot extends Geom {
 
         for (def outlier : outlierValues) {
           if (outlier instanceof Number) {
-            double outlierPx = yScale?.transform(outlier as Number) as double
-            double radius = (outlierSize as double) * 2
+            BigDecimal outlierPx = yScale?.transform(outlier as Number) as BigDecimal
+            BigDecimal radius = (outlierSize as BigDecimal) * 2
 
             if (outlierShape == 'circle') {
               // ggplot2 renders outliers as filled circles
               def circle = boxGroup.addCircle()
-                  .cx(xCenter as int)
-                  .cy(outlierPx as int)
+                  .cx(xCenter)
+                  .cy(outlierPx)
                   .r(radius)
                   .fill(outlierCol)
                   .stroke(outlierCol)
@@ -352,8 +352,8 @@ class GeomBoxplot extends Geom {
             } else {
               // Square or other shapes - also filled
               boxGroup.addRect(radius * 2, radius * 2)
-                  .x((xCenter - radius) as int)
-                  .y((outlierPx - radius) as int)
+                  .x(xCenter - radius)
+                  .y(outlierPx - radius)
                   .fill(outlierCol)
                   .stroke(outlierCol)
                   .addAttribute('stroke-width', linewidth)

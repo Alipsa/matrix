@@ -485,6 +485,8 @@ class NumberExtensionTest {
     BigDecimal piOver6 = (Math.PI / 6) as BigDecimal
     BigDecimal sinPiOver6 = piOver6.sin()
     assertEquals(0.5, sinPiOver6.doubleValue(), 1e-10)
+
+    assertEquals(Math.sin(12.2), NumberExtension.sin(12.2).doubleValue(), 1e-12)
   }
 
   @Test
@@ -562,6 +564,7 @@ class NumberExtensionTest {
     assert value.cos() != null
     assert value.exp() != null
     assert value.log() != null
+    assert value.atan2(1.0) != null
 
     // Verify Number types work with extension syntax
     BigDecimal e = Math.E as BigDecimal
@@ -574,6 +577,73 @@ class NumberExtensionTest {
     // Verify Number.min/max(Number)
     assert 100.min(50) == 50G
     assert 100.max(50) == 100G
+  }
+
+  @Test
+  void testTan() {
+    assertEquals(Math.tan(12.2), NumberExtension.tan(12.2).doubleValue(), 1e-10)
+    assertEquals(Math.tan(11), NumberExtension.tan(11).doubleValue(), 1e-10)
+  }
+
+  @Test
+  void testAtan() {
+    assertEquals(Math.atan(12.2), NumberExtension.atan(12.2).doubleValue(), 1e-12)
+    assertEquals(Math.atan(11), NumberExtension.atan(11).doubleValue(), 1e-12)
+  }
+
+  @Test
+  void testAtan2() {
+    // Test atan2(1, 1) = π/4 (45 degrees)
+    BigDecimal y = 1.0
+    BigDecimal x = 1.0
+    BigDecimal angle = y.atan2(x)
+    assertEquals(Math.PI / 4, angle.doubleValue(), 1e-10)
+
+    // Test atan2(1, 0) = π/2 (90 degrees - pointing up)
+    angle = (1.0).atan2(0.0)
+    assertEquals(Math.PI / 2, angle.doubleValue(), 1e-10)
+
+    // Test atan2(0, 1) = 0 (0 degrees - pointing right)
+    angle = (0.0).atan2(1.0)
+    assertEquals(0.0, angle.doubleValue(), 1e-10)
+
+    // Test atan2(-1, -1) = -3π/4 (pointing to third quadrant)
+    angle = (-1.0).atan2(-1.0)
+    assertEquals(-3 * Math.PI / 4, angle.doubleValue(), 1e-10)
+
+    // Test practical use case: angle of line from (1, 1) to (5, 4)
+    BigDecimal dy = 4 - 1  // 3
+    BigDecimal dx = 5 - 1  // 4
+    angle = dy.atan2(dx)
+    // This should be atan(3/4) = atan(0.75)
+    assertEquals(Math.atan2(3.0, 4.0), angle.doubleValue(), 1e-10)
+
+    assertEquals(Math.atan2(12.2, 6.4), NumberExtension.atan2(12.2, 6.4).doubleValue(), 1e-12)
+    assertEquals(Math.atan2(15, 6), NumberExtension.atan2(15, 6).doubleValue(), 1e-12)
+
+    // Test with extension syntax
+    assert (1.0).atan2(1.0).doubleValue() == Math.atan2(1.0, 1.0)
+  }
+
+  @Test
+  void testAtan2WithMixedTypes() {
+    // Test with Integer
+    Integer yi = 3
+    Integer xi = 4
+    BigDecimal angle = yi.atan2(xi)
+    assertEquals(Math.atan2(3.0, 4.0), angle.doubleValue(), 1e-10)
+
+    // Test with Long
+    Long yL = 1L
+    Long xL = 1L
+    angle = yL.atan2(xL)
+    assertEquals(Math.PI / 4, angle.doubleValue(), 1e-10)
+
+    // Test mixed types
+    Double yD = 1.0
+    Integer xI = 1
+    angle = yD.atan2(xI)
+    assertEquals(Math.PI / 4, angle.doubleValue(), 1e-10)
   }
 
   @Test

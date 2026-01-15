@@ -87,29 +87,29 @@ class ScaleColorGrey extends ScaleDiscrete {
 
   private List<String> buildGreyPalette(int n) {
     if (n <= 0) return []
-    double startVal = start as double
-    double endVal = end as double
+    BigDecimal startVal = start as BigDecimal
+    BigDecimal endVal = end as BigDecimal
     if (direction < 0) {
-      double tmp = startVal
+      BigDecimal tmp = startVal
       startVal = endVal
       endVal = tmp
     }
     List<String> palette = []
     if (n == 1) {
-      palette << greyHex((startVal + endVal) / 2.0d)
+      palette << greyHex((startVal + endVal) / 2)
       return palette
     }
     for (int i = 0; i < n; i++) {
-      double t = i / (double) (n - 1)
-      double val = startVal + t * (endVal - startVal)
+      BigDecimal t = i / (n - 1)
+      BigDecimal val = startVal + t * (endVal - startVal)
       palette << greyHex(val)
     }
     return palette
   }
 
-  private static String greyHex(double value) {
-    double clamped = Math.max(0.0d, Math.min(1.0d, value))
-    int v = (int) Math.round(clamped * 255.0d)
+  private static String greyHex(BigDecimal value) {
+    BigDecimal clamped = 0.max(value.min(1))
+    int v = (clamped * 255).round().intValue()
     return String.format('#%02X%02X%02X', v, v, v)
   }
 }

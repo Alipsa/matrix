@@ -81,8 +81,8 @@ class GeomDensity2d extends Geom {
 
     // Collect data points
     List<BigDecimal[]> points = []
-    BigDecimal xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE
-    BigDecimal yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE
+    BigDecimal xMin = null, xMax = null
+    BigDecimal yMin = null, yMax = null
 
     data.each { row ->
       def xVal = row[xCol]
@@ -93,10 +93,10 @@ class GeomDensity2d extends Geom {
         BigDecimal y = yVal as BigDecimal
         points << ([x, y] as BigDecimal[])
 
-        if (x < xMin) xMin = x
-        if (x > xMax) xMax = x
-        if (y < yMin) yMin = y
-        if (y > yMax) yMax = y
+        xMin = xMin == null ? x : xMin.min(x)
+        xMax = xMax == null ? x : xMax.max(x)
+        yMin = yMin == null ? y : yMin.min(y)
+        yMax = yMax == null ? y : yMax.max(y)
       }
     }
 
@@ -108,8 +108,8 @@ class GeomDensity2d extends Geom {
       hx = h[0] as BigDecimal
       hy = h[1] as BigDecimal
     } else {
-      hx = calculateBandwidth(points.collect { it[0] })
-      hy = calculateBandwidth(points.collect { it[1] })
+      hx = calculateBandwidth(points*.getAt(0))
+      hy = calculateBandwidth(points*.getAt(1))
     }
 
     // Create density grid

@@ -89,16 +89,14 @@ class GeomVline extends Geom {
 
     // Draw vertical lines
     xValues.unique().each { Number xVal ->
-      def xPx = xScale.transform(xVal)
+      Number xPx = xScale.transform(xVal) as Number
       if (xPx == null) return
-
-      BigDecimal x = xPx as BigDecimal
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
-          .x1(x as int)
+          .x1(xPx)
           .y1(0)
-          .x2(x as int)
+          .x2(xPx)
           .y2(plotHeight)
           .stroke(lineColor)
 
@@ -111,7 +109,7 @@ class GeomVline extends Geom {
       }
 
       // Apply alpha
-      if ((alpha as BigDecimal) < 1.0) {
+      if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
     }
@@ -121,13 +119,12 @@ class GeomVline extends Geom {
    * Convert line type name to SVG stroke-dasharray value.
    */
   private String getLineDashArray(String type) {
-    switch (type?.toLowerCase()) {
-      case 'dashed': return '5,5'
-      case 'dotted': return '2,2'
-      case 'longdash': return '10,5'
-      case 'twodash': return '10,5,2,5'
-      case 'solid':
-      default: return null
+    return switch (type?.toLowerCase()) {
+      case 'dashed' -> '5,5'
+      case 'dotted' -> '2,2'
+      case 'longdash' -> '10,5'
+      case 'twodash' -> '10,5,2,5'
+      default -> null
     }
   }
 }

@@ -45,7 +45,7 @@ class Transformations {
       if (x == null) return null
       BigDecimal val = x as BigDecimal
       if (val <= 0) return null
-      return (val as double).log10() as BigDecimal
+      return val.log10()
     }
 
     @Override
@@ -63,8 +63,8 @@ class Transformations {
     List<BigDecimal> breaks(List<Number> limits, int n) {
       if (limits == null || limits.size() < 2) return null
 
-      BigDecimal min = ((limits[0] as double).max(1e-10)).log10() as BigDecimal
-      BigDecimal max = (limits[1] as double).log10() as BigDecimal
+      BigDecimal min = (limits[0] as BigDecimal).max(0.0000000001).log10()
+      BigDecimal max = (limits[1] as BigDecimal).log10()
 
       // Generate breaks at powers of 10
       int minExp = min.floor() as int
@@ -249,14 +249,14 @@ class Transformations {
       if (x == null) return null
       BigDecimal val = x as BigDecimal
       if (val < 0 || val > 1) return null
-      return Math.asin(Math.sqrt(val as double)) as BigDecimal
+      return Math.asin(val.sqrt() as double) as BigDecimal
     }
 
     @Override
     BigDecimal inverse(Number x) {
       if (x == null) return null
-      double sinVal = Math.sin(x as double)
-      return (sinVal * sinVal) as BigDecimal
+      BigDecimal sinVal = (x as BigDecimal).sin()
+      return sinVal * sinVal
     }
 
     @Override

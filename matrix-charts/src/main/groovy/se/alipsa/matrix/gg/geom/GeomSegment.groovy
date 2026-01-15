@@ -9,6 +9,8 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 /**
  * Line segment geometry for drawing lines from (x, y) to (xend, yend).
  *
@@ -20,34 +22,34 @@ import se.alipsa.matrix.gg.scale.Scale
 class GeomSegment extends Geom {
 
   /** Starting x coordinate */
-  Number x
+  BigDecimal x
 
   /** Starting y coordinate */
-  Number y
+  BigDecimal y
 
   /** Ending x coordinate */
-  Number xend
+  BigDecimal xend
 
   /** Ending y coordinate */
-  Number yend
+  BigDecimal yend
 
   /** Line color */
   String color = 'black'
 
   /** Line width */
-  Number linewidth = 1
+  BigDecimal linewidth = 1
 
   /** Line type: 'solid', 'dashed', 'dotted', 'longdash', 'twodash' */
   String linetype = 'solid'
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Arrow at end of segment */
   boolean arrow = false
 
   /** Arrow size (width in pixels) */
-  Number arrowSize = 10
+  BigDecimal arrowSize = 10
 
   GeomSegment() {
     defaultStat = StatType.IDENTITY
@@ -57,18 +59,17 @@ class GeomSegment extends Geom {
 
   GeomSegment(Map params) {
     this()
-    if (params.x != null) this.x = params.x as Number
-    if (params.y != null) this.y = params.y as Number
-    if (params.xend != null) this.xend = params.xend as Number
-    if (params.yend != null) this.yend = params.yend as Number
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    if (params.x != null) this.x = params.x as BigDecimal
+    if (params.y != null) this.y = params.y as BigDecimal
+    if (params.xend != null) this.xend = params.xend as BigDecimal
+    if (params.yend != null) this.yend = params.yend as BigDecimal
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
+    if (params.size != null) this.linewidth = params.size as BigDecimal
+    this.linetype = params.linetype as String ?: this.linetype
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
     if (params.arrow != null) this.arrow = params.arrow as boolean
-    if (params.arrowSize != null) this.arrowSize = params.arrowSize as Number
+    if (params.arrowSize != null) this.arrowSize = params.arrowSize as BigDecimal
     this.params = params
   }
 
@@ -79,7 +80,7 @@ class GeomSegment extends Geom {
     if (xScale == null || yScale == null) return
 
     // Collect segments
-    List<Map<String, Number>> segments = []
+    List<Map<String, BigDecimal>> segments = []
 
     // From parameters
     if (x != null && y != null && xend != null && yend != null) {
@@ -107,10 +108,10 @@ class GeomSegment extends Geom {
           if (xVal instanceof Number && yVal instanceof Number &&
               xendVal instanceof Number && yendVal instanceof Number) {
             segments << [
-                x: xVal as Number,
-                y: yVal as Number,
-                xend: xendVal as Number,
-                yend: yendVal as Number
+                x: xVal as BigDecimal,
+                y: yVal as BigDecimal,
+                xend: xendVal as BigDecimal,
+                yend: yendVal as BigDecimal
             ]
           }
         }
@@ -120,20 +121,20 @@ class GeomSegment extends Geom {
     if (segments.isEmpty()) return
 
     // Draw segments
-    segments.each { Map<String, Number> seg ->
-      def x1Px = xScale.transform(seg.x)
-      def y1Px = yScale.transform(seg.y)
-      def x2Px = xScale.transform(seg.xend)
-      def y2Px = yScale.transform(seg.yend)
+    segments.each { Map<String, BigDecimal> seg ->
+      BigDecimal x1Px = xScale.transform(seg.x) as BigDecimal
+      BigDecimal y1Px = yScale.transform(seg.y) as BigDecimal
+      BigDecimal x2Px = xScale.transform(seg.xend) as BigDecimal
+      BigDecimal y2Px = yScale.transform(seg.yend) as BigDecimal
 
       if (x1Px == null || y1Px == null || x2Px == null || y2Px == null) return
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
-          .x1(x1Px as int)
-          .y1(y1Px as int)
-          .x2(x2Px as int)
-          .y2(y2Px as int)
+          .x1(x1Px)
+          .y1(y1Px)
+          .x2(x2Px)
+          .y2(y2Px)
           .stroke(lineColor)
 
       line.addAttribute('stroke-width', linewidth)
@@ -145,14 +146,13 @@ class GeomSegment extends Geom {
       }
 
       // Apply alpha
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
 
       // Draw arrow if requested
       if (arrow) {
-        drawArrow(group, x2Px as double, y2Px as double,
-                  x1Px as double, y1Px as double)
+        drawArrow(group, x2Px, y2Px, x1Px, y1Px)
       }
     }
   }
@@ -160,38 +160,40 @@ class GeomSegment extends Geom {
   /**
    * Draw an arrowhead at the end point.
    */
-  private void drawArrow(G group, double x2, double y2, double x1, double y1) {
+  private void drawArrow(G group, BigDecimal x2, BigDecimal y2, BigDecimal x1, BigDecimal y1) {
     // Calculate angle of the line
-    double angle = Math.atan2(y2 - y1, x2 - x1)
-    double arrowAngle = Math.PI / 6  // 30 degrees
-    double size = arrowSize as double
+    BigDecimal dy = y2 - y1
+    BigDecimal dx = x2 - x1
+    BigDecimal angle = dy.atan2(dx)
+    BigDecimal arrowAngle = PI / 6  // 30 degrees
+    BigDecimal size = arrowSize
 
     // Calculate arrowhead points
-    double ax1 = x2 - size * Math.cos(angle - arrowAngle)
-    double ay1 = y2 - size * Math.sin(angle - arrowAngle)
-    double ax2 = x2 - size * Math.cos(angle + arrowAngle)
-    double ay2 = y2 - size * Math.sin(angle + arrowAngle)
+    BigDecimal ax1 = x2 - size * (angle - arrowAngle).cos()
+    BigDecimal ay1 = y2 - size * (angle - arrowAngle).sin()
+    BigDecimal ax2 = x2 - size * (angle + arrowAngle).cos()
+    BigDecimal ay2 = y2 - size * (angle + arrowAngle).sin()
 
     // Draw arrowhead as two lines
     String lineColor = ColorUtil.normalizeColor(color) ?: color
     def arrow1 = group.addLine()
-        .x1(x2 as int)
-        .y1(y2 as int)
-        .x2(ax1 as int)
-        .y2(ay1 as int)
+        .x1(x2)
+        .y1(y2)
+        .x2(ax1)
+        .y2(ay1)
         .stroke(lineColor)
     arrow1.addAttribute('stroke-width', linewidth)
 
     def arrow2 = group.addLine()
-        .x1(x2 as int)
-        .y1(y2 as int)
-        .x2(ax2 as int)
-        .y2(ay2 as int)
+        .x1(x2)
+        .y1(y2)
+        .x2(ax2)
+        .y2(ay2)
         .stroke(lineColor)
     arrow2.addAttribute('stroke-width', linewidth)
 
     // Apply alpha to arrows
-    if ((alpha as double) < 1.0) {
+    if (alpha < 1.0) {
       arrow1.addAttribute('stroke-opacity', alpha)
       arrow2.addAttribute('stroke-opacity', alpha)
     }
@@ -202,12 +204,12 @@ class GeomSegment extends Geom {
    */
   private String getLineDashArray(String type) {
     switch (type?.toLowerCase()) {
-      case 'dashed': return '5,5'
-      case 'dotted': return '2,2'
-      case 'longdash': return '10,5'
-      case 'twodash': return '10,5,2,5'
-      case 'solid':
-      default: return null
+      case 'dashed' -> '5,5'
+      case 'dotted' -> '2,2'
+      case 'longdash' -> '10,5'
+      case 'twodash' -> '10,5,2,5'
+      case 'solid', null -> null
+      default -> null
     }
   }
 }

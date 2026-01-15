@@ -73,13 +73,12 @@ class ScaleColorStepsN extends ScaleContinuous {
     normalized = 0.max(normalized.min(1))
 
     // Calculate bin index using bins parameter (user-configurable bin count)
-    int binsCount = Math.max(1, bins)
+    int binsCount = 1.max(bins).intValue()
     if (binsCount == 1) return colors[0]
 
     BigDecimal scaled = normalized * binsCount
-    int binIndex = scaled.floor() as int
-    binIndex = Math.min(binIndex, binsCount - 1)
-    binIndex = Math.max(binIndex, 0)
+    int binIndex = scaled.floor().intValue()
+    binIndex = 0.max(binIndex.min(binsCount - 1)).intValue()
 
     // Map bin to color palette position
     BigDecimal binPosition = binsCount > 1 ? (binIndex / (binsCount - 1)) : 0.5

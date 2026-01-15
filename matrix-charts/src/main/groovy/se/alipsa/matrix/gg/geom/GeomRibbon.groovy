@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.geom.Point
 
 /**
  * Ribbon geometry for displaying confidence bands or ranges.
@@ -31,10 +32,10 @@ class GeomRibbon extends Geom {
   String color = null
 
   /** Line width for outline (0 for no outline) */
-  Number linewidth = 0
+  BigDecimal linewidth = 0
 
   /** Alpha transparency (0-1) */
-  Number alpha = 0.5
+  BigDecimal alpha = 0.5
 
   /** Line type for outline */
   String linetype = 'solid'
@@ -47,13 +48,12 @@ class GeomRibbon extends Geom {
 
   GeomRibbon(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.linetype) this.linetype = params.linetype as String
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
+    this.color = params.color ? ColorUtil.normalizeColor((params.color ?: params.colour) as String) : this.color
+    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
+    if (params.size != null) this.linewidth = params.size as BigDecimal
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    this.linetype = params.linetype as String ?: this.linetype
     this.params = params
   }
 
@@ -76,14 +76,11 @@ class GeomRibbon extends Geom {
     Scale fillScale = scales['fill'] ?: scales['color']
 
     // Group data if a group aesthetic is specified
-    Map<Object, List<Map>> groups = [:]
-    data.each { row ->
-      def groupKey = groupCol ? row[groupCol] : '__all__'
-      if (!groups.containsKey(groupKey)) {
-        groups[groupKey] = []
-      }
-      groups[groupKey] << row.toMap()
-    }
+    Map<Object, List<Map>> groups = data.rows()
+        .groupBy { row -> groupCol ? row[groupCol] : '__all__' }
+        .collectEntries { groupKey, rows ->
+          [(groupKey): rows.collect { it.toMap() }]
+        } as Map<Object, List<Map>>
 
     // Render each group as a separate ribbon
     groups.each { groupKey, rows ->
@@ -99,8 +96,8 @@ class GeomRibbon extends Geom {
     List<Map> sortedRows = sortRowsByX(rows, xCol)
 
     // Collect transformed points for upper and lower bounds
-    List<double[]> upperPoints = []
-    List<double[]> lowerPoints = []
+    List<Point> upperPoints = []
+    List<Point> lowerPoints = []
 
     sortedRows.each { row ->
       def xVal = row[xCol]
@@ -110,18 +107,14 @@ class GeomRibbon extends Geom {
       if (xVal == null || yminVal == null || ymaxVal == null) return
 
       // Transform using scales
-      def xTransformed = xScale?.transform(xVal)
-      def yminTransformed = yScale?.transform(yminVal)
-      def ymaxTransformed = yScale?.transform(ymaxVal)
+      BigDecimal xPx = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yminPx = yScale?.transform(yminVal) as BigDecimal
+      BigDecimal ymaxPx = yScale?.transform(ymaxVal) as BigDecimal
 
-      if (xTransformed == null || yminTransformed == null || ymaxTransformed == null) return
+      if (xPx == null || yminPx == null || ymaxPx == null) return
 
-      double xPx = xTransformed as double
-      double yminPx = yminTransformed as double
-      double ymaxPx = ymaxTransformed as double
-
-      upperPoints << ([xPx, ymaxPx] as double[])
-      lowerPoints << ([xPx, yminPx] as double[])
+      upperPoints << new Point(xPx, ymaxPx)
+      lowerPoints << new Point(xPx, yminPx)
     }
 
     if (upperPoints.size() < 2) return
@@ -143,19 +136,19 @@ class GeomRibbon extends Geom {
     StringBuilder d = new StringBuilder()
 
     // Start at first upper point
-    double[] firstUpper = upperPoints[0]
-    d << "M ${firstUpper[0]} ${firstUpper[1]}"
+    Point firstUpper = upperPoints[0]
+    d << "M ${firstUpper.x} ${firstUpper.y}"
 
     // Line to each subsequent upper point
     for (int i = 1; i < upperPoints.size(); i++) {
-      double[] pt = upperPoints[i]
-      d << " L ${pt[0]} ${pt[1]}"
+      Point pt = upperPoints[i]
+      d << " L ${pt.x} ${pt.y}"
     }
 
     // Line to last lower point and back along lower bound
     for (int i = lowerPoints.size() - 1; i >= 0; i--) {
-      double[] pt = lowerPoints[i]
-      d << " L ${pt[0]} ${pt[1]}"
+      Point pt = lowerPoints[i]
+      d << " L ${pt.x} ${pt.y}"
     }
 
     // Close path
@@ -166,12 +159,12 @@ class GeomRibbon extends Geom {
         .fill(ribbonFill)
 
     // Apply alpha
-    if ((alpha as double) < 1.0) {
+    if (alpha < 1.0) {
       path.addAttribute('fill-opacity', alpha)
     }
 
     // Apply stroke if color is specified and linewidth > 0
-    if (color != null && (linewidth as double) > 0) {
+    if (color != null && linewidth > 0) {
       String strokeColor = ColorUtil.normalizeColor(color) ?: color
       path.stroke(strokeColor)
       path.addAttribute('stroke-width', linewidth)
@@ -230,7 +223,7 @@ class GeomRibbon extends Geom {
       '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 }

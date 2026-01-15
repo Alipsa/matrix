@@ -25,7 +25,7 @@ class Theme implements Cloneable {
   ElementText plotCaption
 
   /** Plot margins [top, right, bottom, left] in pixels */
-  List<Number> plotMargin = [10, 10, 10, 10] as List<Number>
+  List<Number> plotMargin = [10, 10, 10, 10]
 
   // ============ Panel elements ============
 
@@ -42,7 +42,7 @@ class Theme implements Cloneable {
   ElementLine panelGridMinor
 
   /** Panel spacing for faceted plots */
-  List<Number> panelSpacing = [5, 5] as List<Number>
+  List<Number> panelSpacing = [5, 5]
 
   // ============ Axis elements ============
 
@@ -88,7 +88,7 @@ class Theme implements Cloneable {
   ElementRect legendKey
 
   /** Legend key size [width, height] */
-  List<Number> legendKeySize = [20, 20] as List<Number>
+  List<Number> legendKeySize = [20, 20]
 
   /** Legend title styling */
   ElementText legendTitle
@@ -97,7 +97,7 @@ class Theme implements Cloneable {
   ElementText legendText
 
   /** Legend margin */
-  List<Number> legendMargin = [5, 5, 5, 5] as List<Number>
+  List<Number> legendMargin = [5, 5, 5, 5]
 
   // ============ Strip elements (for facets) ============
 
@@ -185,7 +185,7 @@ class Theme implements Cloneable {
     if (source == null) {
       return null
     }
-    return new ArrayList<>(source) as List<T>
+    return new ArrayList<>(source)
   }
 
   private static ElementText cloneText(ElementText text) {
@@ -285,7 +285,7 @@ class ElementText {
   Number vjust = 0.5  // Vertical justification
   Number angle = 0    // Rotation angle in degrees
   Number lineheight
-  List<Number> margin = [0, 0, 0, 0] as List<Number>
+  List<Number> margin = [0, 0, 0, 0]
 
   ElementText() {}
 

@@ -86,8 +86,8 @@ class GeomDensity2dFilled extends Geom {
 
     // Collect data points
     List<BigDecimal[]> points = []
-    BigDecimal xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE
-    BigDecimal yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE
+    BigDecimal xMin = null, xMax = null
+    BigDecimal yMin = null, yMax = null
 
     data.each { row ->
       def xVal = row[xCol]
@@ -98,10 +98,10 @@ class GeomDensity2dFilled extends Geom {
         BigDecimal y = yVal as BigDecimal
         points << ([x, y] as BigDecimal[])
 
-        if (x < xMin) xMin = x
-        if (x > xMax) xMax = x
-        if (y < yMin) yMin = y
-        if (y > yMax) yMax = y
+        xMin = xMin == null ? x : xMin.min(x)
+        xMax = xMax == null ? x : xMax.max(x)
+        yMin = yMin == null ? y : yMin.min(y)
+        yMax = yMax == null ? y : yMax.max(y)
       }
     }
 
@@ -113,8 +113,8 @@ class GeomDensity2dFilled extends Geom {
       hx = h[0] as BigDecimal
       hy = h[1] as BigDecimal
     } else {
-      hx = GeomDensity2d.calculateBandwidth(points.collect { it[0] })
-      hy = GeomDensity2d.calculateBandwidth(points.collect { it[1] })
+      hx = GeomDensity2d.calculateBandwidth(points*.getAt(0))
+      hy = GeomDensity2d.calculateBandwidth(points*.getAt(1))
     }
 
     // Create density grid
@@ -171,13 +171,13 @@ class GeomDensity2dFilled extends Geom {
 
         if (x0Px == null || x1Px == null || y0Px == null || y1Px == null) continue
 
-        int left = Math.min(x0Px as int, x1Px as int)
-        int right = Math.max(x0Px as int, x1Px as int)
-        int top = Math.min(y0Px as int, y1Px as int)
-        int bottom = Math.max(y0Px as int, y1Px as int)
+        int left = (x0Px as BigDecimal).min(x1Px as BigDecimal).intValue()
+        int right = (x0Px as BigDecimal).max(x1Px as BigDecimal).intValue()
+        int top = (y0Px as BigDecimal).min(y1Px as BigDecimal).intValue()
+        int bottom = (y0Px as BigDecimal).max(y1Px as BigDecimal).intValue()
 
-        int width = Math.max(1, right - left)
-        int height = Math.max(1, bottom - top)
+        int width = 1.max(right - left).intValue()
+        int height = 1.max(bottom - top).intValue()
 
         // Draw filled rectangle
         def rect = group.addRect()

@@ -28,7 +28,7 @@ class GeomLabel extends Geom {
   String fill = 'white'
 
   /** Font size in pixels */
-  Number size = 10
+  BigDecimal size = 10
 
   /** Font family */
   String family = 'sans-serif'
@@ -37,31 +37,31 @@ class GeomLabel extends Geom {
   String fontface = 'normal'
 
   /** Alpha transparency for fill (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Horizontal adjustment: 0=left, 0.5=center, 1=right */
-  Number hjust = 0.5
+  BigDecimal hjust = 0.5
 
   /** Vertical adjustment: 0=bottom, 0.5=middle, 1=top */
-  Number vjust = 0.5
+  BigDecimal vjust = 0.5
 
   /** Rotation angle in degrees */
-  Number angle = 0
+  BigDecimal angle = 0
 
   /** Nudge x offset in data units */
-  Number nudge_x = 0
+  BigDecimal nudge_x = 0
 
   /** Nudge y offset in data units */
-  Number nudge_y = 0
+  BigDecimal nudge_y = 0
 
   /** Padding around text in pixels */
-  Number label_padding = 4
+  BigDecimal label_padding = 4
 
   /** Corner radius for rounded rectangles */
-  Number label_r = 2
+  BigDecimal label_r = 2
 
   /** Border line width */
-  Number label_size = 0.5
+  BigDecimal label_size = 0.5
 
   /** Fixed label text (if not mapping from data) */
   String label
@@ -74,22 +74,21 @@ class GeomLabel extends Geom {
 
   GeomLabel(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.size != null) this.size = params.size as Number
-    if (params.family) this.family = params.family as String
-    if (params.fontface) this.fontface = params.fontface as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.hjust != null) this.hjust = params.hjust as Number
-    if (params.vjust != null) this.vjust = params.vjust as Number
-    if (params.angle != null) this.angle = params.angle as Number
-    if (params.nudge_x != null) this.nudge_x = params.nudge_x as Number
-    if (params.nudge_y != null) this.nudge_y = params.nudge_y as Number
-    if (params.label_padding != null) this.label_padding = params.label_padding as Number
-    if (params.label_r != null) this.label_r = params.label_r as Number
-    if (params.label_size != null) this.label_size = params.label_size as Number
-    if (params.label) this.label = params.label as String
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
+    if (params.size != null) this.size = params.size as BigDecimal
+    this.family = params.family as String ?: this.family
+    this.fontface = params.fontface as String ?: this.fontface
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.hjust != null) this.hjust = params.hjust as BigDecimal
+    if (params.vjust != null) this.vjust = params.vjust as BigDecimal
+    if (params.angle != null) this.angle = params.angle as BigDecimal
+    if (params.nudge_x != null) this.nudge_x = params.nudge_x as BigDecimal
+    if (params.nudge_y != null) this.nudge_y = params.nudge_y as BigDecimal
+    if (params.label_padding != null) this.label_padding = params.label_padding as BigDecimal
+    if (params.label_r != null) this.label_r = params.label_r as BigDecimal
+    if (params.label_size != null) this.label_size = params.label_size as BigDecimal
+    this.label = params.label as String ?: this.label
     this.params = params
   }
 
@@ -133,17 +132,14 @@ class GeomLabel extends Geom {
       if (labelText == null || labelText.isEmpty()) return
 
       // Transform coordinates
-      def xTransformed = xScale?.transform(xVal)
-      def yTransformed = yScale?.transform(yVal)
+      BigDecimal xPx = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yPx = yScale?.transform(yVal) as BigDecimal
 
-      if (xTransformed == null || yTransformed == null) return
-
-      double xPx = xTransformed as double
-      double yPx = yTransformed as double
+      if (xPx == null || yPx == null) return
 
       // Apply nudge
-      xPx += (nudge_x as double) * 10
-      yPx -= (nudge_y as double) * 10
+      xPx += nudge_x * 10
+      yPx -= nudge_y * 10
 
       // Determine colors
       String textColor = this.color
@@ -170,54 +166,51 @@ class GeomLabel extends Geom {
       bgFill = ColorUtil.normalizeColor(bgFill) ?: bgFill
 
       // Estimate text dimensions (approximate)
-      double fontSize = size as double
-      double textWidth = labelText.length() * fontSize * 0.6
-      double textHeight = fontSize * 1.2
+      BigDecimal textWidth = labelText.length() * size * 0.6
+      BigDecimal textHeight = size * 1.2
 
       // Calculate background rect position based on hjust/vjust
-      double padding = label_padding as double
-      double rectWidth = textWidth + padding * 2
-      double rectHeight = textHeight + padding * 2
+      BigDecimal rectWidth = textWidth + label_padding * 2
+      BigDecimal rectHeight = textHeight + label_padding * 2
 
-      double rectX = xPx - rectWidth * (hjust as double)
-      double rectY = yPx - rectHeight * (1 - vjust as double)
+      BigDecimal rectX = xPx - rectWidth * hjust
+      BigDecimal rectY = yPx - rectHeight * (1 - vjust)
 
       // Create a group for label if rotation is needed
       G labelGroup = group
-      double angleVal = angle as double
-      if (angleVal != 0) {
+      if (angle != 0) {
         labelGroup = group.addG()
-        labelGroup.addAttribute('transform', "rotate(${-angleVal}, ${xPx as int}, ${yPx as int})")
+        labelGroup.addAttribute('transform', "rotate(${-angle}, ${xPx}, ${yPx})")
       }
 
       // Draw background rectangle
       def rect = labelGroup.addRect()
-          .x(rectX as int)
-          .y(rectY as int)
-          .width(rectWidth as int)
-          .height(rectHeight as int)
+          .x(rectX)
+          .y(rectY)
+          .width(rectWidth)
+          .height(rectHeight)
           .fill(bgFill)
           .stroke(textColor)
 
       rect.addAttribute('stroke-width', label_size)
 
-      if ((label_r as double) > 0) {
-        rect.rx(label_r as int)
-        rect.ry(label_r as int)
+      if (label_r > 0) {
+        rect.rx(label_r)
+        rect.ry(label_r)
       }
 
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         rect.addAttribute('fill-opacity', alpha)
       }
 
       // Calculate text position (center of rect)
-      double textX = rectX + rectWidth / 2
-      double textY = rectY + rectHeight / 2
+      BigDecimal textX = rectX + rectWidth / 2
+      BigDecimal textY = rectY + rectHeight / 2
 
       // Create text element
       def text = labelGroup.addText(labelText)
-          .x(textX as int)
-          .y(textY as int)
+          .x(textX)
+          .y(textY)
           .fill(textColor)
 
       text.addAttribute('font-size', size)

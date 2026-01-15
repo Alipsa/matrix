@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.geom.Point
 
 /**
  * Polygon geometry for closed filled shapes.
@@ -33,13 +34,13 @@ class GeomPolygon extends Geom {
   String color = 'black'
 
   /** Border width */
-  Number size = 1
+  BigDecimal size = 1
 
   /** Line type (solid, dashed, dotted, dotdash, longdash, twodash) */
   String linetype = 'solid'
 
   /** Alpha transparency */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Line end style (butt, round, square) */
   String lineend = 'butt'
@@ -55,15 +56,14 @@ class GeomPolygon extends Geom {
 
   GeomPolygon(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.size != null) this.size = params.size as Number
-    if (params.linewidth != null) this.size = params.linewidth as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.lineend) this.lineend = params.lineend as String
-    if (params.linejoin) this.linejoin = params.linejoin as String
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.size != null) this.size = params.size as BigDecimal
+    if (params.linewidth != null) this.size = params.linewidth as BigDecimal
+    this.linetype = params.linetype as String ?: this.linetype
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    this.lineend = params.lineend as String ?: this.lineend
+    this.linejoin = params.linejoin as String ?: this.linejoin
     this.params = params
   }
 
@@ -91,14 +91,11 @@ class GeomPolygon extends Geom {
     Scale alphaScale = scales['alpha']
 
     // Group data if a group aesthetic is specified
-    Map<Object, List<Map>> groups = new LinkedHashMap<>()  // Preserve insertion order
-    data.each { row ->
-      def groupKey = groupCol ? row[groupCol] : '__all__'
-      if (!groups.containsKey(groupKey)) {
-        groups[groupKey] = []
-      }
-      groups[groupKey] << row.toMap()
-    }
+    Map<Object, List<Map>> groups = data.rows()
+        .groupBy { row -> groupCol ? row[groupCol] : '__all__' }
+        .collectEntries { groupKey, rows ->
+          [(groupKey): rows.collect { it.toMap() }]
+        } as Map<Object, List<Map>>
 
     // Render each group as a separate polygon
     groups.each { groupKey, rows ->
@@ -112,24 +109,20 @@ class GeomPolygon extends Geom {
                             Scale xScale, Scale yScale, Scale fillScale, Scale colorScale,
                             Scale sizeScale, Scale alphaScale, Aes aes) {
     // DO NOT sort - preserve data order
-    List<double[]> points = []
-    rows.each { row ->
+    List<Point> points = rows.collect { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
 
-      if (xVal == null || yVal == null) return
+      if (xVal == null || yVal == null) return null
 
       // Transform using scales
-      def xTransformed = xScale?.transform(xVal)
-      def yTransformed = yScale?.transform(yVal)
+      BigDecimal xPx = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yPx = yScale?.transform(yVal) as BigDecimal
 
-      if (xTransformed == null || yTransformed == null) return
+      if (xPx == null || yPx == null) return null
 
-      double xPx = xTransformed as double
-      double yPx = yTransformed as double
-
-      points << ([xPx, yPx] as double[])
-    }
+      new Point(xPx, yPx)
+    }.findAll()
 
     if (points.size() < 3) return  // Need at least 3 points
 
@@ -159,17 +152,17 @@ class GeomPolygon extends Geom {
     }
     borderColor = ColorUtil.normalizeColor(borderColor) ?: borderColor
 
-    Number lineSize = GeomUtils.extractLineSize(this.size, aes, sizeCol, rows, sizeScale)
-    Number polygonAlpha = GeomUtils.extractLineAlpha(this.alpha, aes, alphaCol, rows, alphaScale)
+    BigDecimal lineSize = GeomUtils.extractLineSize(this.size, aes, sizeCol, rows, sizeScale)
+    BigDecimal polygonAlpha = GeomUtils.extractLineAlpha(this.alpha, aes, alphaCol, rows, alphaScale)
 
     // Build SVG path (closed polygon)
     StringBuilder d = new StringBuilder()
-    double[] first = points[0]
-    d << "M ${first[0]} ${first[1]}"
+    Point first = points[0]
+    d << "M ${first.x} ${first.y}"
 
     for (int i = 1; i < points.size(); i++) {
-      double[] pt = points[i]
-      d << " L ${pt[0]} ${pt[1]}"
+      Point pt = points[i]
+      d << " L ${pt.x} ${pt.y}"
     }
     d << " Z"  // Close the path
 
@@ -190,7 +183,7 @@ class GeomPolygon extends Geom {
     }
 
     // Apply alpha
-    if ((polygonAlpha as double) < 1.0) {
+    if (polygonAlpha < 1.0) {
       path.addAttribute('opacity', polygonAlpha)
     }
   }

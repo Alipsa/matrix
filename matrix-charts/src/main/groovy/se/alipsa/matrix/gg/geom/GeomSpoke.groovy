@@ -114,8 +114,8 @@ class GeomSpoke extends Geom {
       double y0 = y0Px as double
 
       // Calculate end point in data space
-      double xEnd = (xVal as double) + rad * Math.cos(angle)
-      double yEnd = (yVal as double) + rad * Math.sin(angle)
+      double xEnd = (xVal as double) + rad * (angle as BigDecimal).cos()
+      double yEnd = (yVal as double) + rad * (angle as BigDecimal).sin()
 
       // Transform end point
       def x1Px = xScale.transform(xEnd)

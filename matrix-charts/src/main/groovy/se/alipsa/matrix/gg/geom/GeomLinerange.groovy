@@ -29,13 +29,13 @@ class GeomLinerange extends Geom {
   String color = 'black'
 
   /** Line width */
-  Number linewidth = 1
+  BigDecimal linewidth = 1
 
   /** Line type (solid, dashed, dotted, etc.) */
   String linetype = 'solid'
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   GeomLinerange() {
     defaultStat = StatType.IDENTITY
@@ -45,12 +45,11 @@ class GeomLinerange extends Geom {
 
   GeomLinerange(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
+    if (params.size != null) this.linewidth = params.size as BigDecimal
+    this.linetype = params.linetype as String ?: this.linetype
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
     this.params = params
   }
 
@@ -75,15 +74,11 @@ class GeomLinerange extends Geom {
 
       if (xVal == null || yminVal == null || ymaxVal == null) return
 
-      def xPx = xScale?.transform(xVal)
-      def yMinPx = yScale?.transform(yminVal)
-      def yMaxPx = yScale?.transform(ymaxVal)
+      BigDecimal xCenter = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yMin = yScale?.transform(yminVal) as BigDecimal
+      BigDecimal yMax = yScale?.transform(ymaxVal) as BigDecimal
 
-      if (xPx == null || yMinPx == null || yMaxPx == null) return
-
-      double xCenter = xPx as double
-      double yMin = yMinPx as double
-      double yMax = yMaxPx as double
+      if (xCenter == null || yMin == null || yMax == null) return
 
       // Determine color
       String lineColor = this.color
@@ -100,10 +95,10 @@ class GeomLinerange extends Geom {
 
       // Draw the vertical line
       def line = group.addLine()
-          .x1(xCenter as int)
-          .y1(yMin as int)
-          .x2(xCenter as int)
-          .y2(yMax as int)
+          .x1(xCenter)
+          .y1(yMin)
+          .x2(xCenter)
+          .y2(yMax)
           .stroke(lineColor)
 
       line.addAttribute('stroke-width', linewidth)
@@ -114,7 +109,7 @@ class GeomLinerange extends Geom {
         line.addAttribute('stroke-dasharray', dashArray)
       }
 
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
     }
@@ -145,7 +140,7 @@ class GeomLinerange extends Geom {
       '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 }

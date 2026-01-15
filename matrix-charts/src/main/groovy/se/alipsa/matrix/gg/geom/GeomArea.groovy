@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.geom.Point
 
 /**
  * Area geometry for area charts.
@@ -29,10 +30,10 @@ class GeomArea extends Geom {
   String color = 'black'
 
   /** Line width for outline (0 for no outline) */
-  Number linewidth = 0.5
+  BigDecimal linewidth = 0.5
 
   /** Alpha transparency (0-1) */
-  Number alpha = 0.7
+  BigDecimal alpha = 0.7
 
   /** Line type for outline */
   String linetype = 'solid'
@@ -48,14 +49,12 @@ class GeomArea extends Geom {
 
   GeomArea(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.position) this.position = params.position as String
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    this.linewidth = (params.linewidth ?: params.size) as BigDecimal ?: this.linewidth
+    this.alpha = params.alpha as BigDecimal ?: this.alpha
+    this.linetype = params.linetype as String ?: this.linetype
+    this.position = params.position as String ?: this.position
     this.params = params
   }
 
@@ -77,21 +76,16 @@ class GeomArea extends Geom {
     Scale fillScale = scales['fill'] ?: scales['color']
 
     // Get baseline y position (typically y=0 or bottom of plot)
-    double baselineY = getBaselineY(yScale)
+    BigDecimal baselineY = getBaselineY(yScale)
 
     // Group data if a group aesthetic is specified
-    Map<Object, List<Map>> groups = [:]
-    data.each { row ->
-      def groupKey = groupCol ? row[groupCol] : '__all__'
-      if (!groups.containsKey(groupKey)) {
-        groups[groupKey] = []
-      }
-      groups[groupKey] << row.toMap()
+    def groups = data.rows().groupBy { row ->
+      groupCol ? row[groupCol] : '__all__'
     }
 
     // Render each group as a separate area
     groups.each { groupKey, rows ->
-      renderArea(group, rows, xCol, yCol, fillCol, groupKey,
+      renderArea(group, rows*.toMap(), xCol, yCol, fillCol, groupKey,
                  xScale, yScale, fillScale, baselineY, aes)
     }
   }
@@ -99,29 +93,25 @@ class GeomArea extends Geom {
   private void renderArea(G group, List<Map> rows, String xCol, String yCol,
                           String fillCol, Object groupKey,
                           Scale xScale, Scale yScale, Scale fillScale,
-                          double baselineY, Aes aes) {
+                          BigDecimal baselineY, Aes aes) {
     // Sort rows by x value
     List<Map> sortedRows = sortRowsByX(rows, xCol)
 
     // Collect transformed points
-    List<double[]> points = []
-    sortedRows.each { row ->
+    List<Point> points = sortedRows.collect { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
 
-      if (xVal == null || yVal == null) return
+      if (xVal == null || yVal == null) return null
 
       // Transform using scales
-      def xTransformed = xScale?.transform(xVal)
-      def yTransformed = yScale?.transform(yVal)
+      Number xTransformed = xScale?.transform(xVal) as Number
+      Number yTransformed = yScale?.transform(yVal) as Number
 
-      if (xTransformed == null || yTransformed == null) return
+      if (xTransformed == null || yTransformed == null) return null
 
-      double xPx = xTransformed as double
-      double yPx = yTransformed as double
-
-      points << ([xPx, yPx] as double[])
-    }
+      new Point(xTransformed, yTransformed)
+    }.findAll()  // Remove nulls
 
     if (points.size() < 2) return
 
@@ -142,21 +132,21 @@ class GeomArea extends Geom {
     StringBuilder d = new StringBuilder()
 
     // Start at first point
-    double[] firstPoint = points[0]
-    d << "M ${firstPoint[0]} ${firstPoint[1]}"
+    Point firstPoint = points[0]
+    d << "M ${firstPoint.x} ${firstPoint.y}"
 
     // Line to each subsequent point
     for (int i = 1; i < points.size(); i++) {
-      double[] pt = points[i]
-      d << " L ${pt[0]} ${pt[1]}"
+      Point pt = points[i]
+      d << " L ${pt.x} ${pt.y}"
     }
 
     // Line down to baseline at last x
-    double[] lastPoint = points[points.size()-1]
-    d << " L ${lastPoint[0]} ${baselineY}"
+    Point lastPoint = points[points.size()-1]
+    d << " L ${lastPoint.x} ${baselineY}"
 
     // Line along baseline back to first x
-    d << " L ${firstPoint[0]} ${baselineY}"
+    d << " L ${firstPoint.x} ${baselineY}"
 
     // Close path
     d << " Z"
@@ -166,12 +156,12 @@ class GeomArea extends Geom {
         .fill(areaFill)
 
     // Apply alpha
-    if ((alpha as double) < 1.0) {
+    if (alpha < 1.0) {
       path.addAttribute('fill-opacity', alpha)
     }
 
     // Apply stroke if linewidth > 0
-    if ((linewidth as double) > 0) {
+    if (linewidth > 0) {
       String strokeColor = ColorUtil.normalizeColor(color) ?: color
       path.stroke(strokeColor)
       path.addAttribute('stroke-width', linewidth)
@@ -188,12 +178,12 @@ class GeomArea extends Geom {
   /**
    * Get the baseline y coordinate (bottom of plot area or y=0).
    */
-  private double getBaselineY(Scale yScale) {
+  private BigDecimal getBaselineY(Scale yScale) {
     // Try to transform y=0 to get the baseline
     if (yScale != null) {
       def baseline = yScale.transform(0)
       if (baseline != null) {
-        return baseline as double
+        return baseline as BigDecimal
       }
     }
     // Default: assume 480px plot height (bottom of plot)
@@ -245,7 +235,7 @@ class GeomArea extends Geom {
       '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 }

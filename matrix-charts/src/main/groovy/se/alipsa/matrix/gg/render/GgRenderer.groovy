@@ -914,7 +914,7 @@ class GgRenderer {
       List<Number> yNums = yData?.findAll { it instanceof Number } as List<Number>
       if (yNums != null && !yNums.isEmpty()) {
         double meanLat = (yNums.sum() as double) / yNums.size()
-        double cosVal = Math.cos(Math.toRadians(meanLat))
+        double cosVal = (meanLat as BigDecimal).toRadians().cos()
         if (cosVal != 0d) {
           ratio = 1d / cosVal
         }

@@ -72,10 +72,10 @@ class GeomRug extends Geom {
     Scale colorScale = scales['color']
 
     // Default plot dimensions
-    int plotWidth = 640
-    int plotHeight = 480
+    BigDecimal plotWidth = 640
+    BigDecimal plotHeight = 480
 
-    double rugLength = length as double
+    BigDecimal rugLength = length as BigDecimal
 
     // Collect x values for bottom/top rugs
     if ((sides.contains('b') || sides.contains('t')) && xCol != null && xScale != null) {
@@ -83,25 +83,23 @@ class GeomRug extends Geom {
         def xVal = row[xCol]
         if (xVal == null) return
 
-        def xTransformed = xScale.transform(xVal)
-        if (xTransformed == null) return
-
-        double xPx = xTransformed as double
+        BigDecimal xPx = xScale.transform(xVal) as BigDecimal
+        if (xPx == null) return
 
         // Determine color
         String rugColor = getRugColor(row, colorCol, colorScale)
 
         // Bottom rug
         if (sides.contains('b')) {
-          double y1 = outside ? (plotHeight as double) : (plotHeight - rugLength) as double
-          double y2 = plotHeight as double
+          BigDecimal y1 = outside ? plotHeight : plotHeight - rugLength
+          BigDecimal y2 = plotHeight
           drawRugMark(group, xPx, y1, xPx, y2, rugColor)
         }
 
         // Top rug
         if (sides.contains('t')) {
-          double y1 = 0
-          double y2 = outside ? 0 : rugLength
+          BigDecimal y1 = 0
+          BigDecimal y2 = outside ? 0 : rugLength
           drawRugMark(group, xPx, y1, xPx, y2, rugColor)
         }
       }
@@ -113,25 +111,23 @@ class GeomRug extends Geom {
         def yVal = row[yCol]
         if (yVal == null) return
 
-        def yTransformed = yScale.transform(yVal)
-        if (yTransformed == null) return
-
-        double yPx = yTransformed as double
+        BigDecimal yPx = yScale.transform(yVal) as BigDecimal
+        if (yPx == null) return
 
         // Determine color
         String rugColor = getRugColor(row, colorCol, colorScale)
 
         // Left rug
         if (sides.contains('l')) {
-          double x1 = outside ? 0 : 0
-          double x2 = rugLength
+          BigDecimal x1 = 0
+          BigDecimal x2 = rugLength
           drawRugMark(group, x1, yPx, x2, yPx, rugColor)
         }
 
         // Right rug
         if (sides.contains('r')) {
-          double x1 = plotWidth - rugLength
-          double x2 = plotWidth
+          BigDecimal x1 = plotWidth - rugLength
+          BigDecimal x2 = plotWidth
           drawRugMark(group, x1, yPx, x2, yPx, rugColor)
         }
       }
@@ -147,18 +143,18 @@ class GeomRug extends Geom {
     return this.color
   }
 
-  private void drawRugMark(G group, double x1, double y1, double x2, double y2, String rugColor) {
+  private void drawRugMark(G group, Number x1, Number y1, Number x2, Number y2, String rugColor) {
     String strokeColor = ColorUtil.normalizeColor(rugColor) ?: rugColor
     def line = group.addLine()
-        .x1(x1 as int)
-        .y1(y1 as int)
-        .x2(x2 as int)
-        .y2(y2 as int)
+        .x1(x1)
+        .y1(y1)
+        .x2(x2)
+        .y2(y2)
         .stroke(strokeColor)
 
     line.addAttribute('stroke-width', linewidth)
 
-    if ((alpha as double) < 1.0) {
+    if (alpha < 1.0) {
       line.addAttribute('stroke-opacity', alpha)
     }
   }

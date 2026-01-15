@@ -344,6 +344,10 @@ class NumberExtension {
     return self.sqrt(MathContext.DECIMAL64)
   }
 
+  static BigDecimal sqrt(Number self) {
+    return sqrt(self as BigDecimal)
+  }
+
   /**
    * Returns the sine of this BigDecimal value (in radians).
    * <p>
@@ -363,7 +367,32 @@ class NumberExtension {
    * @return the sine of the angle as a BigDecimal
    */
   static BigDecimal sin(BigDecimal self) {
-    return Math.sin(self.doubleValue()) as BigDecimal
+    //return Math.sin(self.doubleValue()) as BigDecimal
+    // Normalize x to range [-2PI, 2PI] to keep series fast
+    // (Optional but recommended for large angles)
+    BigDecimal twoPi = PI * 2
+    if (self > twoPi || self < -twoPi) {
+      self = self % twoPi
+    }
+
+    BigDecimal result = self
+    BigDecimal term = self
+    BigDecimal xSquared = self ** 2
+    int iteration = 1
+    BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
+
+    while (true) {
+      // term = term * (-x^2) / ((2n)(2n+1))
+      term = (term * xSquared).negate()
+      BigDecimal divisor = (2 * iteration) * (2 * iteration + 1)
+      term = term / divisor
+
+      if (term.abs() < threshold) break
+
+      result = result + term
+      iteration++
+    }
+    return result
   }
 
   /**
@@ -385,8 +414,31 @@ class NumberExtension {
    * @return the cosine of the angle as a BigDecimal
    */
   static BigDecimal cos(BigDecimal self) {
-    return Math.cos(self.doubleValue()) as BigDecimal
+    BigDecimal twoPi = PI * 2
+    if (self > twoPi || self < -twoPi) {
+      self = self % twoPi
+    }
+
+    BigDecimal result = BigDecimal.ONE
+    BigDecimal term = BigDecimal.ONE
+    BigDecimal xSquared = self ** 2
+    int iteration = 1
+    BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
+
+    while (true) {
+      // term = term * (-x^2) / ((2n-1)(2n))
+      term = (term * xSquared).negate()
+      BigDecimal divisor = (2 * iteration - 1) * (2 * iteration)
+      term = term / divisor
+
+      if (term.abs() < threshold) break
+
+      result = result + term
+      iteration++
+    }
+    return result
   }
+
 
   /**
    * Converts this BigDecimal value from radians to degrees.
@@ -406,5 +458,151 @@ class NumberExtension {
    */
   static BigDecimal toRadians(BigDecimal self) {
     return self * PI / 180.0
+  }
+
+  static BigDecimal tan(Number self) {
+    tan(self as BigDecimal)
+  }
+
+  static BigDecimal tan(BigDecimal self) {
+    BigDecimal sinVal = sin(self)
+    BigDecimal cosVal = cos(self)
+
+    if (cosVal == 0) {
+      throw new ArithmeticException("Tangent undefined (cos is 0)")
+    }
+
+    return sinVal / cosVal
+  }
+
+
+  /**
+   * Returns the arctangent (inverse tangent) of this Number as a BigDecimal.
+   * <p>
+   * This is a convenience wrapper that converts the Number to BigDecimal.
+   *
+   * @param self the Number value
+   * @return the arctangent of the value
+   */
+  static BigDecimal atan(Number self) {
+    return atan(self as BigDecimal)
+  }
+
+  /**
+   * Returns the arctangent of this BigDecimal with the DECIMAL64 precision.
+   * <p>
+   * Implements the arctangent using the argument reduction identity:
+   * arctan(x) = 2 * arctan( x / (1 + sqrt(1 + x^2)) )
+   * followed by a Taylor series expansion once x is sufficiently small.
+   * This avoids converting to double and maintains high precision.
+   *
+   * @param self the BigDecimal value
+   * @param mc the MathContext to use for precision and rounding
+   * @return the arctangent of the value
+   */
+  static BigDecimal atan(BigDecimal self) {
+    if (self == 0) return BigDecimal.ZERO
+
+    // Handle negative input: atan(-x) = -atan(x)
+    if (self < 0) {
+      return atan(self.negate()).negate()
+    }
+
+    BigDecimal x = self
+    BigDecimal multiplier = BigDecimal.ONE
+
+    // 1. Argument Reduction
+    // We shrink 'x' until it is small enough (< 0.5) for the Taylor series.
+    // BUG FIX: changed condition from (x > 0) to (x > 0.5) to prevent infinite loop
+    while (x > 0.5) {
+      // Identity: newX = x / (1 + sqrt(1 + x^2))
+      BigDecimal xSquared = x ** 2
+      BigDecimal root = sqrt((1 + xSquared))
+      BigDecimal denominator = 1 + root
+
+      x = x / denominator
+      multiplier = multiplier * 2
+    }
+
+    // 2. Taylor Series: x - x^3/3 + x^5/5 - x^7/7 ...
+    BigDecimal result = x
+    BigDecimal xSquared = x ** 2
+    BigDecimal term = x
+    int iteration = 1
+
+    // Threshold: stop when changes are smaller than the precision we care about
+    BigDecimal threshold = new BigDecimal("1e-" + MathContext.DECIMAL64.getPrecision())
+
+    while (true) {
+      // Calculate next numerator term: term * -x^2
+      term = (term * xSquared).negate()
+
+      // Calculate divisor: 2k + 1 (3, 5, 7...)
+      BigDecimal divisor = 2 * iteration + 1
+      BigDecimal step = term / divisor
+
+      if (step.abs() < threshold) {
+        break
+      }
+      result = result + step
+      iteration++
+    }
+    return result * multiplier
+  }
+
+  static BigDecimal atan2(Number y, Number x) {
+    atan2(y as BigDecimal, x as BigDecimal)
+  }
+
+  /**
+   * Returns the angle theta (in radians) from the conversion of rectangular coordinates (x, y) to polar coordinates (r, theta).
+   * This method computes the angle in radians between the positive x-axis and the point (x, y).
+   * <p>
+   * This is the two-argument arctangent function, which handles all four quadrants correctly.
+   * The result is in the range -π to π.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * // Calculate angle of line from (1, 1) to (5, 4)
+   * BigDecimal dy = 4 - 1  // 3
+   * BigDecimal dx = 5 - 1  // 4
+   * BigDecimal angle = dy.atan2(dx)  // Angle in radians
+   *
+   * // Instead of:
+   * // double angle = Math.atan2(dy, dx)
+   *
+   * // Works with any Number types
+   * Number y = 1.0
+   * Number x = 1.0
+   * y.atan2(x)  // → π/4 (45 degrees)
+   * }</pre>
+   *
+   * @param self the ordinate coordinate (y)
+   * @param x the abscissa coordinate (x)
+   * @return the angle theta from polar coordinate (r, theta) in radians, as a BigDecimal
+   */
+  static BigDecimal atan2(BigDecimal y, BigDecimal x) {
+    // 1. Handle special cases (x=0, y=0) to avoid division by zero
+    if (x == 0) {
+      if (y > 0) return PI / 2
+      if (y < 0) return (PI / 2).negate()
+      throw new ArithmeticException("atan2 undefined for x=0, y=0");
+    }
+
+    // 2. Calculate the ratio z = y/x
+    BigDecimal z = y / x
+
+    // 3. Calculate raw atan(z)
+    BigDecimal result = atan(z)
+
+    // 4. Adjust for Quadrants
+    if (x  < 0) {
+      if (y >= 0) {
+        result = result + PI
+      } else {
+        result = result - PI
+      }
+    }
+    return result
   }
 }

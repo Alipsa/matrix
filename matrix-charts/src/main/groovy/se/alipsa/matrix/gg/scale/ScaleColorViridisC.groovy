@@ -25,12 +25,10 @@ class ScaleColorViridisC extends ScaleContinuous {
   String option = 'viridis'
 
   /** Start of the color range (0-1) */
-  // TODO: change to BigDecimal
-  double begin = 0.0
+  BigDecimal begin = 0.0
 
   /** End of the color range (0-1) */
-  // TODO: change to BigDecimal
-  double end = 1.0
+  BigDecimal end = 1.0
 
   /** Direction: 1 = normal, -1 = reversed */
   int direction = 1
@@ -39,7 +37,7 @@ class ScaleColorViridisC extends ScaleContinuous {
   String naValue = 'grey50'
 
   /** Alpha transparency (0-1) */
-  double alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Guide type: 'colorbar' or 'legend' */
   String guideType = 'colorbar'
@@ -87,31 +85,31 @@ class ScaleColorViridisC extends ScaleContinuous {
   }
 
   private void applyParams(Map params) {
-    if (params.option) this.option = normalizeOption(params.option as String)
-    if (params.begin != null) this.begin = validateRange(params.begin as double, 'begin')
-    if (params.end != null) this.end = validateRange(params.end as double, 'end')
+    this.option = params.option ? normalizeOption(params.option as String) : this.option
+    if (params.begin != null) this.begin = validateRange(params.begin as BigDecimal, 'begin')
+    if (params.end != null) this.end = validateRange(params.end as BigDecimal, 'end')
     if (this.begin > this.end) {
       throw new IllegalArgumentException("begin (${this.begin}) must be less than or equal to end (${this.end})")
     }
     if (params.direction != null) this.direction = normalizeDirection(params.direction as int)
-    if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as double)
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
-    if (params.guide) this.guideType = params.guide as String
+    if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as BigDecimal)
+    this.name = params.name as String ?: this.name
+    this.limits = params.limits as List ?: this.limits
+    this.breaks = params.breaks as List ?: this.breaks
+    this.labels = params.labels as List<String> ?: this.labels
+    this.naValue = params.naValue as String ?: this.naValue
+    this.guideType = params.guide as String ?: this.guideType
     // Support 'colour' British spelling
     if (params.aesthetic == 'colour') this.aesthetic = 'color'
     else if (params.aesthetic) this.aesthetic = params.aesthetic as String
   }
 
-  private double normalizeAlpha(double a) {
-    return Math.max(0.0d, Math.min(1.0d, a))
+  private BigDecimal normalizeAlpha(BigDecimal a) {
+    return 0.0.max(1.0.min(a))
   }
 
-  private double validateRange(double value, String paramName) {
-    if (value < 0.0d || value > 1.0d) {
+  private BigDecimal validateRange(BigDecimal value, String paramName) {
+    if (value < 0.0 || value > 1.0) {
       throw new IllegalArgumentException("${paramName} must be in range [0, 1], got: ${value}")
     }
     return value
@@ -140,21 +138,21 @@ class ScaleColorViridisC extends ScaleContinuous {
     if (value == null) return naValue
     if (!(value instanceof Number)) return naValue
 
-    double v = value as double
-    double dMin = computedDomain[0] as double
-    double dMax = computedDomain[1] as double
+    BigDecimal v = value as BigDecimal
+    BigDecimal dMin = computedDomain[0] as BigDecimal
+    BigDecimal dMax = computedDomain[1] as BigDecimal
 
     // Handle edge case
     if (dMax == dMin) return interpolatePalette(0.5)
 
     // Normalize to 0-1
-    double normalized = (v - dMin) / (dMax - dMin)
-    normalized = Math.max(0, Math.min(1, normalized))  // Clamp
+    BigDecimal normalized = (v - dMin) / (dMax - dMin)
+    normalized = 0.max(1.min(normalized))  // Clamp
 
     // Apply begin/end range and direction
-    double actualBegin = direction > 0 ? begin : end
-    double actualEnd = direction > 0 ? end : begin
-    double pos = actualBegin + normalized * (actualEnd - actualBegin)
+    BigDecimal actualBegin = direction > 0 ? begin : end
+    BigDecimal actualEnd = direction > 0 ? end : begin
+    BigDecimal pos = actualBegin + normalized * (actualEnd - actualBegin)
 
     return interpolatePalette(pos)
   }
@@ -162,45 +160,47 @@ class ScaleColorViridisC extends ScaleContinuous {
   /**
    * Interpolate a color at position t (0-1) from the palette.
    */
-  private String interpolatePalette(double t) {
+  private String interpolatePalette(BigDecimal t) {
     List<String> palette = PALETTES[option] ?: PALETTES['viridis']
 
     // Clamp t to valid range
-    t = Math.max(0, Math.min(1, t))
+    t = 0.max(1.min(t))
 
     // Find the two palette colors to interpolate between
-    double scaledPos = t * (palette.size() - 1)
-    int lowIndex = (int) Math.floor(scaledPos)
-    int highIndex = (int) Math.ceil(scaledPos)
+    BigDecimal scaledPos = t * (palette.size() - 1)
+    int lowIndex = scaledPos.floor() as int
+    int highIndex = scaledPos.ceil() as int
 
     // Clamp indices
-    lowIndex = Math.max(0, Math.min(lowIndex, palette.size() - 1))
-    highIndex = Math.max(0, Math.min(highIndex, palette.size() - 1))
+    lowIndex = [0, lowIndex, palette.size() - 1].sort()[1]
+    highIndex = [0, highIndex, palette.size() - 1].sort()[1]
 
     if (lowIndex == highIndex) {
       return applyAlpha(palette[lowIndex])
     }
 
     // Interpolate
-    double localT = scaledPos - lowIndex
+    BigDecimal localT = scaledPos - lowIndex
     return applyAlpha(interpolateColor(palette[lowIndex], palette[highIndex], localT))
   }
 
   /**
    * Interpolate between two hex colors.
    */
-  private String interpolateColor(String color1, String color2, double t) {
+  private String interpolateColor(String color1, String color2, BigDecimal t) {
     int[] rgb1 = parseHex(color1)
     int[] rgb2 = parseHex(color2)
 
-    int r = (int) Math.round(rgb1[0] + t * (rgb2[0] - rgb1[0]))
-    int g = (int) Math.round(rgb1[1] + t * (rgb2[1] - rgb1[1]))
-    int b = (int) Math.round(rgb1[2] + t * (rgb2[2] - rgb1[2]))
+    int r = (rgb1[0] + t * (rgb2[0] - rgb1[0])).round() as int
+    int g = (rgb1[1] + t * (rgb2[1] - rgb1[1])).round() as int
+    int b = (rgb1[2] + t * (rgb2[2] - rgb1[2])).round() as int
 
-    return String.format('#%02x%02x%02x',
-        Math.max(0, Math.min(255, r)),
-        Math.max(0, Math.min(255, g)),
-        Math.max(0, Math.min(255, b)))
+    // Clamp to valid RGB range
+    r = [0, r, 255].sort()[1]
+    g = [0, g, 255].sort()[1]
+    b = [0, b, 255].sort()[1]
+
+    return String.format('#%02x%02x%02x', r, g, b)
   }
 
   /**
@@ -220,13 +220,13 @@ class ScaleColorViridisC extends ScaleContinuous {
    */
   private String applyAlpha(String color) {
     if (color == null) return null
-    if (alpha >= 1.0d) return color
+    if (alpha >= 1.0) return color
 
     String hex = color.startsWith('#') ? color.substring(1) : color
     if (hex.length() != 6) return color
 
-    double clampedAlpha = Math.max(0.0d, Math.min(1.0d, alpha))
-    int alphaInt = (int) Math.round(clampedAlpha * 255.0d)
+    BigDecimal clampedAlpha = 0.0.max(1.0.min(alpha))
+    int alphaInt = (clampedAlpha * 255.0).round() as int
     String alphaHex = String.format('%02x', alphaInt)
 
     return '#' + hex + alphaHex

@@ -33,16 +33,16 @@ class GeomCrossbar extends Geom {
   String color = 'black'
 
   /** Line width */
-  Number linewidth = 1
+  BigDecimal linewidth = 1
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Width of the crossbar (as fraction of bandwidth for discrete, or data units for continuous) */
-  Number width = null
+  BigDecimal width = null
 
   /** Fatten factor for the middle line (multiplier on linewidth) */
-  Number fatten = 2.5
+  BigDecimal fatten = 2.5
 
   GeomCrossbar() {
     defaultStat = StatType.IDENTITY
@@ -52,14 +52,13 @@ class GeomCrossbar extends Geom {
 
   GeomCrossbar(Map params) {
     this()
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.alpha != null) this.alpha = params.alpha as Number
-    if (params.width != null) this.width = params.width as Number
-    if (params.fatten != null) this.fatten = params.fatten as Number
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    if (params.linewidth != null) this.linewidth = params.linewidth as BigDecimal
+    if (params.size != null) this.linewidth = params.size as BigDecimal
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
+    if (params.width != null) this.width = params.width as BigDecimal
+    if (params.fatten != null) this.fatten = params.fatten as BigDecimal
     this.params = params
   }
 
@@ -79,8 +78,8 @@ class GeomCrossbar extends Geom {
     Scale fillScale = scales['fill']
     Scale colorScale = scales['color']
 
-    double defaultWidth = resolveDefaultWidth(xScale, data, xCol)
-    double widthValue = width != null ? (width as double) : defaultWidth
+    BigDecimal defaultWidth = resolveDefaultWidth(xScale, data, xCol)
+    BigDecimal widthValue = width ?: defaultWidth
 
     data.each { row ->
       def xVal = row[xCol]
@@ -92,30 +91,25 @@ class GeomCrossbar extends Geom {
 
       if (xVal == null || yVal == null || yminVal == null || ymaxVal == null) return
 
-      def xPx = xScale?.transform(xVal)
-      def yPx = yScale?.transform(yVal)
-      def yMinPx = yScale?.transform(yminVal)
-      def yMaxPx = yScale?.transform(ymaxVal)
+      BigDecimal xCenter = xScale?.transform(xVal) as BigDecimal
+      BigDecimal yCenter = yScale?.transform(yVal) as BigDecimal
+      BigDecimal yMin = yScale?.transform(yminVal) as BigDecimal
+      BigDecimal yMax = yScale?.transform(ymaxVal) as BigDecimal
 
-      if (xPx == null || yPx == null || yMinPx == null || yMaxPx == null) return
-
-      double xCenter = xPx as double
-      double yCenter = yPx as double
-      double yMin = yMinPx as double
-      double yMax = yMaxPx as double
+      if (xCenter == null || yCenter == null || yMin == null || yMax == null) return
 
       // Calculate half width in pixels
-      double halfWidthPx
+      BigDecimal halfWidthPx
       if (xScale instanceof ScaleDiscrete) {
-        double bandwidth = (xScale as ScaleDiscrete).getBandwidth()
-        halfWidthPx = bandwidth * widthValue / 2.0d
+        BigDecimal bandwidth = (xScale as ScaleDiscrete).getBandwidth()
+        halfWidthPx = bandwidth * widthValue / 2
       } else {
-        double xNum = xVal as double
-        double halfWidthData = widthValue / 2.0d
-        def xLeft = xScale.transform(xNum - halfWidthData)
-        def xRight = xScale.transform(xNum + halfWidthData)
+        BigDecimal xNum = xVal as BigDecimal
+        BigDecimal halfWidthData = widthValue / 2
+        BigDecimal xLeft = xScale.transform(xNum - halfWidthData) as BigDecimal
+        BigDecimal xRight = xScale.transform(xNum + halfWidthData) as BigDecimal
         if (xLeft == null || xRight == null) return
-        halfWidthPx = Math.abs((xRight as double) - (xLeft as double)) / 2.0d
+        halfWidthPx = (xRight - xLeft).abs() / 2
       }
 
       // Determine fill color
@@ -145,16 +139,16 @@ class GeomCrossbar extends Geom {
       boxStroke = ColorUtil.normalizeColor(boxStroke) ?: boxStroke
 
       // Draw the box (rectangle from ymin to ymax)
-      double boxX = xCenter - halfWidthPx
-      double boxY = Math.min(yMin, yMax)
-      double boxWidth = halfWidthPx * 2
-      double boxHeight = Math.abs(yMax - yMin)
+      BigDecimal boxX = xCenter - halfWidthPx
+      BigDecimal boxY = yMin.min(yMax)
+      BigDecimal boxWidth = halfWidthPx * 2
+      BigDecimal boxHeight = (yMax - yMin).abs()
 
       def rect = group.addRect()
-          .x(boxX as int)
-          .y(boxY as int)
-          .width(boxWidth as int)
-          .height(boxHeight as int)
+          .x(boxX)
+          .y(boxY)
+          .width(boxWidth)
+          .height(boxHeight)
           .stroke(boxStroke)
 
       rect.addAttribute('stroke-width', linewidth)
@@ -165,53 +159,53 @@ class GeomCrossbar extends Geom {
         rect.fill('none')
       }
 
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         if (boxFill) rect.addAttribute('fill-opacity', alpha)
         rect.addAttribute('stroke-opacity', alpha)
       }
 
       // Draw the middle line (at y position, with fattened stroke)
-      double middleLineWidth = (linewidth as double) * (fatten as double)
+      BigDecimal middleLineWidth = linewidth * fatten
       def line = group.addLine()
-          .x1((xCenter - halfWidthPx) as int)
-          .y1(yCenter as int)
-          .x2((xCenter + halfWidthPx) as int)
-          .y2(yCenter as int)
+          .x1(xCenter - halfWidthPx)
+          .y1(yCenter)
+          .x2(xCenter + halfWidthPx)
+          .y2(yCenter)
           .stroke(boxStroke)
 
       line.addAttribute('stroke-width', middleLineWidth)
 
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
     }
   }
 
-  private double resolveDefaultWidth(Scale xScale, Matrix data, String xCol) {
+  private BigDecimal resolveDefaultWidth(Scale xScale, Matrix data, String xCol) {
     if (xScale instanceof ScaleDiscrete) {
-      return 0.9d
+      return 0.9
     }
     List<Number> values = data[xCol].findAll { it instanceof Number } as List<Number>
     if (values.isEmpty()) {
-      return 0.9d
+      return 0.9
     }
-    double resolution = computeResolution(values)
-    return resolution > 0.0d ? resolution * 0.9d : 0.9d
+    BigDecimal resolution = computeResolution(values)
+    return resolution > 0 ? resolution * 0.9 : 0.9
   }
 
-  private double computeResolution(List<Number> values) {
-    List<Double> sorted = values.collect { it as double }.unique().sort()
+  private BigDecimal computeResolution(List<Number> values) {
+    List<BigDecimal> sorted = values.collect { it as BigDecimal }.unique().sort()
     if (sorted.size() < 2) {
-      return 0.0d
+      return 0
     }
-    double minDiff = Double.POSITIVE_INFINITY
+    BigDecimal minDiff = null
     for (int i = 1; i < sorted.size(); i++) {
-      double diff = sorted[i] - sorted[i - 1]
-      if (diff > 0 && diff < minDiff) {
+      BigDecimal diff = sorted[i] - sorted[i - 1]
+      if (diff > 0 && (minDiff == null || diff < minDiff)) {
         minDiff = diff
       }
     }
-    return Double.isInfinite(minDiff) ? 0.0d : minDiff
+    return minDiff ?: 0
   }
 
   /**
@@ -224,7 +218,7 @@ class GeomCrossbar extends Geom {
       '#FB61D7'
     ]
 
-    int index = Math.abs(value.hashCode()) % palette.size()
+    int index = value.hashCode().abs() % palette.size()
     return palette[index]
   }
 }

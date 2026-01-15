@@ -18,19 +18,19 @@ import se.alipsa.matrix.gg.scale.ScaleDiscrete
 class GeomErrorbar extends Geom {
 
   /** Bar width as fraction of bandwidth (discrete) or data units (continuous) */
-  Number width = null
+  BigDecimal width = null
 
   /** Line color */
   String color = 'black'
 
   /** Line width */
-  Number linewidth = 1
+  BigDecimal linewidth = 1
 
   /** Line type */
   String linetype = 'solid'
 
   /** Alpha transparency (0-1) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   GeomErrorbar() {
     defaultStat = StatType.IDENTITY
@@ -40,13 +40,11 @@ class GeomErrorbar extends Geom {
 
   GeomErrorbar(Map params) {
     this()
-    if (params.width != null) this.width = params.width as Number
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.linewidth != null) this.linewidth = params.linewidth as Number
-    if (params.size != null) this.linewidth = params.size as Number
-    if (params.linetype) this.linetype = params.linetype as String
-    if (params.alpha != null) this.alpha = params.alpha as Number
+    this.width = params.width as BigDecimal ?: this.width
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    this.linewidth = (params.linewidth ?: params.size) as BigDecimal ?: this.linewidth
+    this.linetype = params.linetype as String ?: this.linetype
+    this.alpha = params.alpha as BigDecimal ?: this.alpha
     this.params = params
   }
 
@@ -66,8 +64,8 @@ class GeomErrorbar extends Geom {
     Scale yScale = scales['y']
     if (xScale == null || yScale == null) return
 
-    double defaultWidth = resolveDefaultWidth(xScale, data, xCol)
-    double widthValue = width != null ? (width as double) : defaultWidth
+    BigDecimal defaultWidth = resolveDefaultWidth(xScale, data, xCol)
+    BigDecimal widthValue = width ?: defaultWidth
 
     data.each { row ->
       def xVal = row[xCol]
@@ -83,21 +81,21 @@ class GeomErrorbar extends Geom {
 
       if (xCenter == null || yMinPx == null || yMaxPx == null) return
 
-      double xCenterPx = xCenter as double
-      double yMin = yMinPx as double
-      double yMax = yMaxPx as double
+      BigDecimal xCenterPx = xCenter as BigDecimal
+      BigDecimal yMin = yMinPx as BigDecimal
+      BigDecimal yMax = yMaxPx as BigDecimal
 
-      double halfWidthPx
+      BigDecimal halfWidthPx
       if (xScale instanceof ScaleDiscrete) {
-        double bandwidth = (xScale as ScaleDiscrete).getBandwidth()
-        halfWidthPx = bandwidth * (widthValue as double) / 2.0d
+        BigDecimal bandwidth = (xScale as ScaleDiscrete).getBandwidth()
+        halfWidthPx = bandwidth * widthValue / 2.0
       } else {
-        double xNum = xVal as double
-        double halfWidthData = widthValue / 2.0d
+        BigDecimal xNum = xVal as BigDecimal
+        BigDecimal halfWidthData = widthValue / 2.0
         def xLeft = xScale.transform(xNum - halfWidthData)
         def xRight = xScale.transform(xNum + halfWidthData)
         if (xLeft == null || xRight == null) return
-        halfWidthPx = Math.abs((xRight as double) - (xLeft as double)) / 2.0d
+        halfWidthPx = ((xRight as BigDecimal) - (xLeft as BigDecimal)).abs() / 2.0
       }
 
       drawLine(group, xCenterPx, yMin, xCenterPx, yMax)
@@ -106,34 +104,34 @@ class GeomErrorbar extends Geom {
     }
   }
 
-  private double resolveDefaultWidth(Scale xScale, Matrix data, String xCol) {
+  private BigDecimal resolveDefaultWidth(Scale xScale, Matrix data, String xCol) {
     if (xScale instanceof ScaleDiscrete) {
-      return 0.9d
+      return 0.9
     }
     List<Number> values = data[xCol].findAll { it instanceof Number } as List<Number>
     if (values.isEmpty()) {
-      return 0.9d
+      return 0.9
     }
-    double resolution = computeResolution(values)
-    return resolution > 0.0d ? resolution * 0.9d : 0.9d
+    BigDecimal resolution = computeResolution(values)
+    return resolution > 0.0 ? resolution * 0.9 : 0.9
   }
 
-  private double computeResolution(List<Number> values) {
-    List<Double> sorted = values.collect { it as double }.unique().sort()
+  private BigDecimal computeResolution(List<Number> values) {
+    def sorted = values.collect { it as BigDecimal }.unique().sort()
     if (sorted.size() < 2) {
-      return 0.0d
+      return 0.0
     }
-    double minDiff = Double.POSITIVE_INFINITY
+    BigDecimal minDiff = null
     for (int i = 1; i < sorted.size(); i++) {
-      double diff = sorted[i] - sorted[i - 1]
-      if (diff > 0 && diff < minDiff) {
+      BigDecimal diff = sorted[i] - sorted[i - 1]
+      if (diff > 0 && (minDiff == null || diff < minDiff)) {
         minDiff = diff
       }
     }
-    return Double.isInfinite(minDiff) ? 0.0d : minDiff
+    return minDiff ?: 0.0
   }
 
-  private void drawLine(G group, double x1, double y1, double x2, double y2) {
+  private void drawLine(G group, BigDecimal x1, BigDecimal y1, BigDecimal x2, BigDecimal y2) {
     String lineColor = ColorUtil.normalizeColor(color) ?: color
     def line = group.addLine()
         .x1(x1 as int)
@@ -147,7 +145,7 @@ class GeomErrorbar extends Geom {
     if (dashArray) {
       line.addAttribute('stroke-dasharray', dashArray)
     }
-    if ((alpha as double) < 1.0d) {
+    if (alpha < 1.0) {
       line.addAttribute('stroke-opacity', alpha)
     }
   }

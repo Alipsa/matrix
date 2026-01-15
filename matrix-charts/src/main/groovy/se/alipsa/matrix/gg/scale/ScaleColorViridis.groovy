@@ -25,10 +25,10 @@ class ScaleColorViridis extends ScaleDiscrete {
   String option = 'viridis'
 
   /** Start of the color range (0-1) */
-  double begin = 0.0
+  BigDecimal begin = 0.0
 
   /** End of the color range (0-1) */
-  double end = 1.0
+  BigDecimal end = 1.0
 
   /** Direction: 1 = normal, -1 = reversed */
   int direction = 1
@@ -37,7 +37,7 @@ class ScaleColorViridis extends ScaleDiscrete {
   String naValue = 'grey50'
 
   /** Alpha transparency (0-1) */
-  double alpha = 1.0
+  BigDecimal alpha = 1.0
 
   /** Generated color mapping (Map for O(1) lookup) */
   private Map<String, String> paletteMap = [:]
@@ -83,22 +83,16 @@ class ScaleColorViridis extends ScaleDiscrete {
     applyParams(params)
   }
 
-  private double normalizeAlpha(double a) {
-    if (a < 0.0d) {
-      return 0.0d
-    }
-    if (a > 1.0d) {
-      return 1.0d
-    }
-    return a
+  private BigDecimal normalizeAlpha(BigDecimal a) {
+    return 0.0.max(1.0.min(a))
   }
 
   /**
    * Validate and normalize begin/end parameters to [0, 1] range.
    * Throws IllegalArgumentException if the value is outside the valid range.
    */
-  private double validateRange(double value, String paramName) {
-    if (value < 0.0d || value > 1.0d) {
+  private BigDecimal validateRange(BigDecimal value, String paramName) {
+    if (value < 0.0 || value > 1.0) {
       throw new IllegalArgumentException("${paramName} must be in range [0, 1], got: ${value}")
     }
     return value
@@ -109,20 +103,20 @@ class ScaleColorViridis extends ScaleDiscrete {
   }
 
   private void applyParams(Map params) {
-    if (params.option) this.option = normalizeOption(params.option as String)
-    if (params.begin != null) this.begin = validateRange(params.begin as double, 'begin')
-    if (params.end != null) this.end = validateRange(params.end as double, 'end')
+    this.option = params.option ? normalizeOption(params.option as String) : this.option
+    if (params.begin != null) this.begin = validateRange(params.begin as BigDecimal, 'begin')
+    if (params.end != null) this.end = validateRange(params.end as BigDecimal, 'end')
     // Validate that begin <= end after both are set
     if (this.begin > this.end) {
       throw new IllegalArgumentException("begin (${this.begin}) must be less than or equal to end (${this.end})")
     }
     if (params.direction != null) this.direction = normalizeDirection(params.direction as int)
-    if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as double)
-    if (params.name) this.name = params.name as String
-    if (params.limits) this.limits = params.limits as List
-    if (params.breaks) this.breaks = params.breaks as List
-    if (params.labels) this.labels = params.labels as List<String>
-    if (params.naValue) this.naValue = params.naValue as String
+    if (params.alpha != null) this.alpha = normalizeAlpha(params.alpha as BigDecimal)
+    this.name = params.name as String ?: this.name
+    this.limits = params.limits as List ?: this.limits
+    this.breaks = params.breaks as List ?: this.breaks
+    this.labels = params.labels as List<String> ?: this.labels
+    this.naValue = params.naValue as String ?: this.naValue
     // Support 'colour' British spelling
     if (params.aesthetic == 'colour') this.aesthetic = 'color'
     else if (params.aesthetic) this.aesthetic = params.aesthetic as String
@@ -175,14 +169,14 @@ class ScaleColorViridis extends ScaleDiscrete {
     List<String> result = []
 
     // Calculate actual begin/end based on direction
-    double actualBegin = direction > 0 ? begin : end
-    double actualEnd = direction > 0 ? end : begin
+    BigDecimal actualBegin = direction > 0 ? begin : end
+    BigDecimal actualEnd = direction > 0 ? end : begin
 
     for (int i = 0; i < n; i++) {
       // Calculate position in 0-1 range
-      double t = n == 1 ? 0.5d : (i as double) / (n - 1)
+      BigDecimal t = n == 1 ? 0.5 : i / (n - 1)
       // Map to begin-end range
-      double pos = actualBegin + t * (actualEnd - actualBegin)
+      BigDecimal pos = actualBegin + t * (actualEnd - actualBegin)
       // Get interpolated color
       result << interpolatePalette(palette, pos)
     }
@@ -193,43 +187,45 @@ class ScaleColorViridis extends ScaleDiscrete {
   /**
    * Interpolate a color at position t (0-1) from the palette.
    */
-  private String interpolatePalette(List<String> palette, double t) {
+  private String interpolatePalette(List<String> palette, BigDecimal t) {
     // Clamp t to valid range
-    t = Math.max(0, Math.min(1, t))
+    t = 0.max(1.min(t))
 
     // Find the two palette colors to interpolate between
-    double scaledPos = t * (palette.size() - 1)
-    int lowIndex = (int) Math.floor(scaledPos)
-    int highIndex = (int) Math.ceil(scaledPos)
+    BigDecimal scaledPos = t * (palette.size() - 1)
+    int lowIndex = scaledPos.floor() as int
+    int highIndex = scaledPos.ceil() as int
 
     // Clamp indices
-    lowIndex = Math.max(0, Math.min(lowIndex, palette.size() - 1))
-    highIndex = Math.max(0, Math.min(highIndex, palette.size() - 1))
+    lowIndex = [0, lowIndex, palette.size() - 1].sort()[1]
+    highIndex = [0, highIndex, palette.size() - 1].sort()[1]
 
     if (lowIndex == highIndex) {
       return applyAlpha(palette[lowIndex])
     }
 
     // Interpolate
-    double localT = scaledPos - lowIndex
+    BigDecimal localT = scaledPos - lowIndex
     return applyAlpha(interpolateColor(palette[lowIndex], palette[highIndex], localT))
   }
 
   /**
    * Interpolate between two hex colors.
    */
-  private String interpolateColor(String color1, String color2, double t) {
+  private String interpolateColor(String color1, String color2, BigDecimal t) {
     int[] rgb1 = parseHex(color1)
     int[] rgb2 = parseHex(color2)
 
-    int r = (int) Math.round(rgb1[0] + t * (rgb2[0] - rgb1[0]))
-    int g = (int) Math.round(rgb1[1] + t * (rgb2[1] - rgb1[1]))
-    int b = (int) Math.round(rgb1[2] + t * (rgb2[2] - rgb1[2]))
+    int r = (rgb1[0] + t * (rgb2[0] - rgb1[0])).round() as int
+    int g = (rgb1[1] + t * (rgb2[1] - rgb1[1])).round() as int
+    int b = (rgb1[2] + t * (rgb2[2] - rgb1[2])).round() as int
 
-    return String.format('#%02X%02X%02X',
-        Math.max(0, Math.min(255, r)),
-        Math.max(0, Math.min(255, g)),
-        Math.max(0, Math.min(255, b)))
+    // Clamp to valid RGB range
+    r = [0, r, 255].sort()[1]
+    g = [0, g, 255].sort()[1]
+    b = [0, b, 255].sort()[1]
+
+    return String.format('#%02X%02X%02X', r, g, b)
   }
 
   /**
@@ -253,7 +249,7 @@ class ScaleColorViridis extends ScaleDiscrete {
       return null
     }
     // Preserve existing behavior when alpha is fully opaque or higher
-    if (alpha >= 1.0d) {
+    if (alpha >= 1.0) {
       return color
     }
 
@@ -263,8 +259,8 @@ class ScaleColorViridis extends ScaleDiscrete {
       return color
     }
 
-    double clampedAlpha = Math.max(0.0d, Math.min(1.0d, alpha))
-    int alphaInt = (int) Math.round(clampedAlpha * 255.0d)
+    BigDecimal clampedAlpha = 0.0.max(1.0.min(alpha))
+    int alphaInt = (clampedAlpha * 255.0).round() as int
     String alphaHex = String.format('%02X', alphaInt)
 
     return '#' + hex + alphaHex

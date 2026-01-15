@@ -23,13 +23,13 @@ class GeomPoint extends Geom {
   String fill = 'black'
 
   /** Default point size (radius) */
-  Number size = 3
+  BigDecimal size = 3
 
   /** Default point shape */
   String shape = 'circle'
 
   /** Default alpha (transparency) */
-  Number alpha = 1.0
+  BigDecimal alpha = 1.0
 
   GeomPoint() {
     requiredAes = ['x', 'y']
@@ -38,12 +38,11 @@ class GeomPoint extends Geom {
 
   GeomPoint(Map params) {
     this()
-    if (params.color) this.color = ColorUtil.normalizeColor(params.color as String)
-    if (params.colour) this.color = ColorUtil.normalizeColor(params.colour as String)
-    if (params.fill) this.fill = ColorUtil.normalizeColor(params.fill as String)
-    if (params.size) this.size = params.size as Number
-    if (params.shape) this.shape = params.shape
-    if (params.alpha) this.alpha = params.alpha as Number
+    this.color = ColorUtil.normalizeColor((params.color ?: params.colour) as String) ?: this.color
+    this.fill = params.fill ? ColorUtil.normalizeColor(params.fill as String) : this.fill
+    if (params.size != null) this.size = params.size as BigDecimal
+    this.shape = params.shape as String ?: this.shape
+    if (params.alpha != null) this.alpha = params.alpha as BigDecimal
     this.params = params
   }
 

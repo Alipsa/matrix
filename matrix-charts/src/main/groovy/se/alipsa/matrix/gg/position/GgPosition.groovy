@@ -31,7 +31,7 @@ class GgPosition {
    * @return Matrix with adjusted x positions
    */
   static Matrix dodge(Matrix data, Aes aes, Map params = [:]) {
-    double width = (params.width ?: 0.9) as double
+    BigDecimal width = params.width as BigDecimal ?: 0.9
 
     String xCol = aes.xColName
     if (xCol == null || !data.columnNames().contains(xCol)) {
@@ -51,16 +51,11 @@ class GgPosition {
     }
 
     // Group rows by x value and dodge within each x group
-    Map<Object, List<Map<String, Object>>> byX = new LinkedHashMap<>()
-    data.each { Row row ->
-      Object xVal = row[xCol]
-      List<Map<String, Object>> bucket = byX.get(xVal)
-      if (bucket == null) {
-        bucket = []
-        byX.put(xVal, bucket)
-      }
-      bucket << new LinkedHashMap<>(row.toMap())
-    }
+    Map<Object, List<Map<String, Object>>> byX = data.rows()
+        .groupBy { row -> row[xCol] }
+        .collectEntries { xVal, rows ->
+          [(xVal): rows.collect { new LinkedHashMap<>(it.toMap()) }]
+        } as Map<Object, List<Map<String, Object>>>
 
     List<Map<String, Object>> rows = []
     byX.each { Object xVal, List<Map<String, Object>> bucket ->
@@ -71,10 +66,10 @@ class GgPosition {
         return
       }
 
-      double groupWidth = width / nGroups
-      Map<Object, Double> groupOffsets = new LinkedHashMap<>()
+      BigDecimal groupWidth = width / nGroups
+      Map<Object, BigDecimal> groupOffsets = new LinkedHashMap<>()
       groups.eachWithIndex { Object group, int i ->
-        double offset = (-width / 2.0d) + (groupWidth / 2.0d) + (i * groupWidth)
+        BigDecimal offset = (-width / 2) + (groupWidth / 2) + (i * groupWidth)
         groupOffsets.put(group, offset)
       }
 
@@ -101,8 +96,8 @@ class GgPosition {
    * @return Matrix with adjusted x, xmin, xmax columns
    */
   static Matrix dodge2(Matrix data, Aes aes, Map params = [:]) {
-    Double widthParam = params.width instanceof Number ? params.width as double : null
-    double padding = params.padding instanceof Number ? params.padding as double : 0.1d
+    BigDecimal widthParam = params.width instanceof Number ? params.width as BigDecimal : null
+    BigDecimal padding = params.padding instanceof Number ? params.padding as BigDecimal : 0.1
     boolean reverse = params.reverse ?: false
 
     String xCol = aes.xColName
@@ -129,7 +124,7 @@ class GgPosition {
     }
 
     // For categorical x values, build a mapping from category to numeric position
-    Map<Object, Double> categoryPositions = null
+    Map<Object, BigDecimal> categoryPositions = null
     if (xCol != null) {
       boolean hasNonNumericX = rows.any { Map<String, Object> row ->
         def xVal = row[xCol]
@@ -139,49 +134,49 @@ class GgPosition {
         List<Object> uniqueCategories = rows.collect { it[xCol] }.unique()
         categoryPositions = [:]
         uniqueCategories.eachWithIndex { Object cat, int idx ->
-          categoryPositions[cat] = idx as double
+          categoryPositions[cat] = idx as BigDecimal
         }
       }
     }
 
     // Ensure xmin/xmax exist (use widthParam if provided, otherwise default to x).
-    double defaultWidth = widthParam ?: 0.9d
+    BigDecimal defaultWidth = widthParam ?: 0.9
     rows.each { Map<String, Object> row ->
       if (!row.containsKey('xmin') || !row.containsKey('xmax')) {
         def xVal = row[xCol]
-        double numericX
+        BigDecimal numericX
         if (xVal instanceof Number) {
-          numericX = xVal as double
+          numericX = xVal as BigDecimal
         } else if (categoryPositions != null && categoryPositions.containsKey(xVal)) {
           numericX = categoryPositions[xVal]
         } else {
           // Cannot determine numeric position, skip
           return
         }
-        double half = defaultWidth / 2.0d
+        BigDecimal half = defaultWidth / 2
         row['xmin'] = numericX - half
         row['xmax'] = numericX + half
       }
     }
 
     // Sort by x and group for stable dodging of overlapping intervals.
-    Map<Object, Double> catPos = categoryPositions  // capture for closure
+    Map<Object, BigDecimal> catPos = categoryPositions  // capture for closure
     rows.sort { a, b ->
-      double ax
-      double bx
+      BigDecimal ax
+      BigDecimal bx
       if (a[xCol] instanceof Number) {
-        ax = a[xCol] as double
+        ax = a[xCol] as BigDecimal
       } else if (catPos != null && catPos.containsKey(a[xCol])) {
         ax = catPos[a[xCol]]
       } else {
-        ax = 0d
+        ax = 0
       }
       if (b[xCol] instanceof Number) {
-        bx = b[xCol] as double
+        bx = b[xCol] as BigDecimal
       } else if (catPos != null && catPos.containsKey(b[xCol])) {
         bx = catPos[b[xCol]]
       } else {
-        bx = 0d
+        bx = 0
       }
       if (ax != bx) {
         return ax <=> bx
@@ -206,32 +201,32 @@ class GgPosition {
       byXid[xids[idx]] << row
     }
 
-    Map<Integer, Double> newx = [:]
-    Map<Integer, Double> groupSize = [:]
+    Map<Integer, BigDecimal> newx = [:]
+    Map<Integer, BigDecimal> groupSize = [:]
     byXid.each { Integer xid, List<Map<String, Object>> bucket ->
       // Compute the overall center and total width for each overlap group.
       // Filter to rows with valid xmin/xmax values
-      List<Double> xminValues = bucket.findResults { it['xmin'] instanceof Number ? it['xmin'] as double : null } as List<Double>
-      List<Double> xmaxValues = bucket.findResults { it['xmax'] instanceof Number ? it['xmax'] as double : null } as List<Double>
+      List<BigDecimal> xminValues = bucket.findResults { it['xmin'] instanceof Number ? it['xmin'] as BigDecimal : null } as List<BigDecimal>
+      List<BigDecimal> xmaxValues = bucket.findResults { it['xmax'] instanceof Number ? it['xmax'] as BigDecimal : null } as List<BigDecimal>
       if (xminValues.isEmpty() || xmaxValues.isEmpty()) {
         // No valid bounds in this bucket, skip processing
-        groupSize[xid] = 0d
+        groupSize[xid] = BigDecimal.ZERO
         return
       }
-      double minX = xminValues.min()
-      double maxX = xmaxValues.max()
-      double center = (minX + maxX) / 2.0d
+      BigDecimal minX = xminValues.min()
+      BigDecimal maxX = xmaxValues.max()
+      BigDecimal center = (minX + maxX) / 2
       newx[xid] = center
-      double total = 0d
+      BigDecimal total = 0
       int n = bucket.size()
       // Divide each element's width by the number of overlapping elements.
       // This matches ggplot2's position_dodge2 with preserve="total" (the default),
       // which keeps the total occupied width constant regardless of original widths.
       bucket.each { Map<String, Object> row ->
-        double xminVal = row['xmin'] instanceof Number ? row['xmin'] as double : 0d
-        double xmaxVal = row['xmax'] instanceof Number ? row['xmax'] as double : 0d
-        double width = xmaxVal - xminVal
-        double newWidth = n > 0 ? width / n : 0d
+        BigDecimal xminVal = row['xmin'] instanceof Number ? row['xmin'] as BigDecimal : 0
+        BigDecimal xmaxVal = row['xmax'] instanceof Number ? row['xmax'] as BigDecimal : 0
+        BigDecimal width = xmaxVal - xminVal
+        BigDecimal newWidth = n > 0 ? width / n : 0
         row['new_width'] = newWidth
         total += newWidth
       }
@@ -240,19 +235,19 @@ class GgPosition {
 
     byXid.each { Integer xid, List<Map<String, Object>> bucket ->
       // Lay out boxes left-to-right within each overlap group.
-      Double centerX = newx[xid]
-      Double size = groupSize[xid]
+      BigDecimal centerX = newx[xid]
+      BigDecimal size = groupSize[xid]
       if (centerX == null || size == null) {
         // Skip buckets that weren't processed due to missing values
         return
       }
-      double start = centerX - (size / 2.0d)
-      double cursor = start
+      BigDecimal start = centerX - (size / 2)
+      BigDecimal cursor = start
       bucket.each { Map<String, Object> row ->
-        double newWidth = row['new_width'] instanceof Number ? row['new_width'] as double : 0d
+        BigDecimal newWidth = row['new_width'] instanceof Number ? row['new_width'] as BigDecimal : 0
         row['xmin'] = cursor
         row['xmax'] = cursor + newWidth
-        row['x'] = (cursor + cursor + newWidth) / 2.0d
+        row['x'] = (cursor + cursor + newWidth) / 2
         cursor += newWidth
       }
     }
@@ -263,11 +258,11 @@ class GgPosition {
         if (!(row['new_width'] instanceof Number) || !(row['x'] instanceof Number)) {
           return
         }
-        double newWidth = row['new_width'] as double
-        double padWidth = newWidth * (1.0d - padding)
-        double center = row['x'] as double
-        row['xmin'] = center - padWidth / 2.0d
-        row['xmax'] = center + padWidth / 2.0d
+        BigDecimal newWidth = row['new_width'] as BigDecimal
+        BigDecimal padWidth = newWidth * (1 - padding)
+        BigDecimal center = row['x'] as BigDecimal
+        row['xmin'] = center - padWidth / 2
+        row['xmax'] = center + padWidth / 2
       }
     }
 
@@ -286,13 +281,13 @@ class GgPosition {
     int n = rows.size()
     if (n == 0) return []
 
-    List<Double> start = new ArrayList<>(n)
-    List<Double> end = new ArrayList<>(n)
+    List<BigDecimal> start = new ArrayList<>(n)
+    List<BigDecimal> end = new ArrayList<>(n)
     List<Boolean> nonzero = new ArrayList<>(n)
     List<Boolean> missing = new ArrayList<>(n)
     rows.each { Map<String, Object> row ->
-      Double xmin = toDouble(row['xmin'])
-      Double xmax = toDouble(row['xmax'])
+      BigDecimal xmin = toBigDecimal(row['xmin'])
+      BigDecimal xmax = toBigDecimal(row['xmax'])
       start << xmin
       end << xmax
       boolean isMissing = isInvalidForNumericPositioning(xmin) || isInvalidForNumericPositioning(xmax)
@@ -305,20 +300,20 @@ class GgPosition {
     end = forwardBackwardFill(end)
 
     // Track the running maximum of previous interval ends to detect new overlap groups.
-    List<Double> endShift = new ArrayList<>(n)
+    List<BigDecimal> endShift = new ArrayList<>(n)
     if (n > 0) {
       endShift << end[0]
       for (int i = 0; i < n - 1; i++) {
         endShift << end[i]
       }
     }
-    List<Double> endPrev = new ArrayList<>(n)
-    Double currentMax = null
-    endShift.each { Double value ->
+    List<BigDecimal> endPrev = new ArrayList<>(n)
+    BigDecimal currentMax = null
+    endShift.each { BigDecimal value ->
       if (currentMax == null) {
         currentMax = value
       } else if (value != null) {
-        currentMax = Math.max(currentMax, value)
+        currentMax = currentMax.max(value)
       }
       endPrev << currentMax
     }
@@ -326,8 +321,8 @@ class GgPosition {
     List<Integer> overlaps = new ArrayList<>(n)
     int currentGroupId = 0
     for (int i = 0; i < n; i++) {
-      Double s = start[i]
-      Double ePrev = endPrev[i]
+      BigDecimal s = start[i]
+      BigDecimal ePrev = endPrev[i]
       boolean nz = nonzero[i]
       boolean newGroup = false
       if (s != null && ePrev != null) {
@@ -374,16 +369,19 @@ class GgPosition {
       return true
     }
     if (value instanceof Number) {
-      double v = value as double
-      return Double.isNaN(v)
+      BigDecimal v = value as BigDecimal
+      return v == null
     }
     return true
   }
 
-  private static Double toDouble(Object value) {
+  private static BigDecimal toBigDecimal(Object value) {
     if (value instanceof Number) {
-      double v = value as double
-      return Double.isNaN(v) ? null : v
+      try {
+        return value as BigDecimal
+      } catch (Exception e) {
+        return null
+      }
     }
     return null
   }
@@ -394,12 +392,12 @@ class GgPosition {
    * then backward-fill (propagate next known value backward).
    * This ensures all nulls are filled if there's at least one non-null value.
    */
-  private static List<Double> forwardBackwardFill(List<Double> values) {
-    List<Double> result = new ArrayList<>(values)
+  private static List<BigDecimal> forwardBackwardFill(List<BigDecimal> values) {
+    List<BigDecimal> result = new ArrayList<>(values)
     // Forward fill: propagate last known value forward
-    Double last = null
+    BigDecimal last = null
     for (int i = 0; i < result.size(); i++) {
-      Double value = result[i]
+      BigDecimal value = result[i]
       if (value != null) {
         last = value
       } else if (last != null) {
@@ -407,9 +405,9 @@ class GgPosition {
       }
     }
     // Backward fill: propagate next known value backward (fills leading nulls)
-    Double next = null
+    BigDecimal next = null
     for (int i = result.size() - 1; i >= 0; i--) {
-      Double value = result[i]
+      BigDecimal value = result[i]
       if (value != null) {
         next = value
       } else if (next != null) {
@@ -443,16 +441,11 @@ class GgPosition {
     }
 
     // Group by x value
-    Map<Object, List<Map<String, Object>>> byX = new LinkedHashMap<>()
-    data.each { Row row ->
-      Object xVal = row[xCol]
-      List<Map<String, Object>> bucket = byX.get(xVal)
-      if (bucket == null) {
-        bucket = []
-        byX.put(xVal, bucket)
-      }
-      bucket << new LinkedHashMap<>(row.toMap())
-    }
+    Map<Object, List<Map<String, Object>>> byX = data.rows()
+        .groupBy { row -> row[xCol] }
+        .collectEntries { xVal, rows ->
+          [(xVal): rows.collect { new LinkedHashMap<>(it.toMap()) }]
+        } as Map<Object, List<Map<String, Object>>>
 
     // Stack within each x group
     List<Map<String, Object>> results = []
@@ -461,18 +454,18 @@ class GgPosition {
       if (reverse) {
         orderedRows = new ArrayList<>(rows).reverse()
       }
-      double cumSum = 0
+      BigDecimal cumSum = 0
 
       orderedRows.each { row ->
         Map<String, Object> newRow = new LinkedHashMap<>(row)
         Object yRaw = row[yCol]
-        double yVal = yRaw instanceof Number ? yRaw as double : 0.0d
+        BigDecimal yVal = yRaw instanceof Number ? yRaw as BigDecimal : 0
         newRow['ymin'] = cumSum
         cumSum += yVal
         newRow['ymax'] = cumSum
-        double yMin = newRow['ymin'] as double
-        double yMax = newRow['ymax'] as double
-        newRow['y'] = (yMin + yMax) / 2.0d  // Center of bar
+        BigDecimal yMin = newRow['ymin'] as BigDecimal
+        BigDecimal yMax = newRow['ymax'] as BigDecimal
+        newRow['y'] = (yMin + yMax) / 2  // Center of bar
         results << newRow
       }
     }
@@ -503,11 +496,11 @@ class GgPosition {
     Matrix stacked = stack(data, aes, params)
 
     // Get max for each x group
-    Map<Object, Double> maxByX = new LinkedHashMap<>()
+    Map<Object, BigDecimal> maxByX = new LinkedHashMap<>()
     stacked.each { Row row ->
       Object xVal = row[xCol]
       Object yMaxRaw = row['ymax']
-      double ymax = yMaxRaw instanceof Number ? yMaxRaw as double : 0.0d
+      BigDecimal ymax = yMaxRaw instanceof Number ? yMaxRaw as BigDecimal : 0
       if (!maxByX.containsKey(xVal) || ymax > maxByX[xVal]) {
         maxByX[xVal] = ymax
       }
@@ -518,14 +511,14 @@ class GgPosition {
     stacked.each { Row row ->
       Map<String, Object> newRow = new LinkedHashMap<>(row.toMap())
       Object xVal = row[xCol]
-      double total = maxByX[xVal] ?: 1.0d
+      BigDecimal total = maxByX[xVal] ?: 1
 
       if (total > 0) {
-        double yMin = (newRow['ymin'] as double) / total
-        double yMax = (newRow['ymax'] as double) / total
+        BigDecimal yMin = (newRow['ymin'] as BigDecimal) / total
+        BigDecimal yMax = (newRow['ymax'] as BigDecimal) / total
         newRow['ymin'] = yMin
         newRow['ymax'] = yMax
-        newRow['y'] = (yMin + yMax) / 2.0d
+        newRow['y'] = (yMin + yMax) / 2
       }
       results << newRow
     }
@@ -543,8 +536,8 @@ class GgPosition {
    * @return Matrix with jittered positions
    */
   static Matrix jitter(Matrix data, Aes aes, Map params = [:]) {
-    double width = (params.width ?: 0.4) as double
-    double height = (params.height ?: 0.4) as double
+    BigDecimal width = params.width as BigDecimal ?: 0.4
+    BigDecimal height = params.height as BigDecimal ?: 0.4
     Long seed = params.seed as Long
 
     Random random = seed != null ? new Random(seed) : new Random()
@@ -557,13 +550,13 @@ class GgPosition {
       Map<String, Object> newRow = new LinkedHashMap<>(row.toMap())
 
       if (xCol != null && newRow[xCol] instanceof Number) {
-        double jitterX = (random.nextDouble() - 0.5) * width
-        newRow[xCol] = (newRow[xCol] as double) + jitterX
+        BigDecimal jitterX = (random.nextDouble() - 0.5) * width
+        newRow[xCol] = (newRow[xCol] as BigDecimal) + jitterX
       }
 
       if (yCol != null && newRow[yCol] instanceof Number) {
-        double jitterY = (random.nextDouble() - 0.5) * height
-        newRow[yCol] = (newRow[yCol] as double) + jitterY
+        BigDecimal jitterY = (random.nextDouble() - 0.5) * height
+        newRow[yCol] = (newRow[yCol] as BigDecimal) + jitterY
       }
 
       results << newRow
@@ -581,8 +574,8 @@ class GgPosition {
    * @return Matrix with nudged positions
    */
   static Matrix nudge(Matrix data, Aes aes, Map params = [:]) {
-    double nudgeX = params.x instanceof Number ? params.x as double : 0.0d
-    double nudgeY = params.y instanceof Number ? params.y as double : 0.0d
+    BigDecimal nudgeX = params.x instanceof Number ? params.x as BigDecimal : 0
+    BigDecimal nudgeY = params.y instanceof Number ? params.y as BigDecimal : 0
 
     String xCol = aes.xColName
     if (xCol == null && data.columnNames().contains('x')) {
@@ -593,7 +586,7 @@ class GgPosition {
       yCol = 'y'
     }
 
-    if (nudgeX == 0.0d && nudgeY == 0.0d) {
+    if (nudgeX == 0 && nudgeY == 0) {
       return data
     }
 
@@ -602,10 +595,10 @@ class GgPosition {
       Map<String, Object> newRow = new LinkedHashMap<>(row.toMap())
 
       if (xCol != null && newRow[xCol] instanceof Number) {
-        newRow[xCol] = (newRow[xCol] as double) + nudgeX
+        newRow[xCol] = (newRow[xCol] as BigDecimal) + nudgeX
       }
       if (yCol != null && newRow[yCol] instanceof Number) {
-        newRow[yCol] = (newRow[yCol] as double) + nudgeY
+        newRow[yCol] = (newRow[yCol] as BigDecimal) + nudgeY
       }
       results << newRow
     }

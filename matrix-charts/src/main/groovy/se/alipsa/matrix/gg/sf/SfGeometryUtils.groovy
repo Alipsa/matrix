@@ -122,6 +122,6 @@ class SfGeometryUtils {
     }
     cx /= (6d * area)
     cy /= (6d * area)
-    return [cx, cy, Math.abs(area)] as double[]
+    return [cx, cy, area.abs()] as double[]
   }
 }

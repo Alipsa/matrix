@@ -71,8 +71,8 @@ class ScaleDiscrete extends Scale {
     if (index < 0) return null
 
     // Map to position within range
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
 
     if (levels.size() == 1) {
       return (rMin + rMax) / 2
@@ -80,7 +80,7 @@ class ScaleDiscrete extends Scale {
 
     // Calculate position with padding on each side
     // This creates bands with the value centered in each band
-    double bandWidth = (rMax - rMin) / levels.size()
+    BigDecimal bandWidth = (rMax - rMin) / levels.size()
     return rMin + bandWidth * (index + 0.5)
   }
 
@@ -90,18 +90,18 @@ class ScaleDiscrete extends Scale {
     if (!(value instanceof Number)) return null
     if (levels.isEmpty()) return null
 
-    double v = value as double
-    double rMin = range[0] as double
-    double rMax = range[1] as double
+    BigDecimal v = value as BigDecimal
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
 
     if (rMax == rMin) return levels[0]
 
     // Find which band this value falls into
-    double bandWidth = (rMax - rMin) / levels.size()
-    int index = (int) Math.floor((v - rMin) / bandWidth)
+    BigDecimal bandWidth = (rMax - rMin) / levels.size()
+    int index = ((v - rMin) / bandWidth).floor() as int
 
     // Clamp to valid index range
-    index = Math.max(0, Math.min(index, levels.size() - 1))
+    index = [0, index, levels.size() - 1].sort()[1]
     return levels[index]
   }
 
@@ -121,20 +121,20 @@ class ScaleDiscrete extends Scale {
    * Get the bandwidth (width of each category band).
    * Useful for bar chart width calculations.
    */
-  double getBandwidth() {
+  BigDecimal getBandwidth() {
     if (levels.isEmpty()) return 0
-    double rMin = range[0] as double
-    double rMax = range[1] as double
-    return Math.abs(rMax - rMin) / levels.size()
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal rMax = range[1] as BigDecimal
+    return (rMax - rMin).abs() / levels.size()
   }
 
   /**
    * Get the position of a level by index.
    */
-  double getPositionByIndex(int index) {
+  BigDecimal getPositionByIndex(int index) {
     if (index < 0 || index >= levels.size()) return 0
-    double rMin = range[0] as double
-    double bandWidth = getBandwidth()
+    BigDecimal rMin = range[0] as BigDecimal
+    BigDecimal bandWidth = getBandwidth()
     return rMin + bandWidth * (index + 0.5)
   }
 
@@ -169,11 +169,9 @@ class ScaleDiscrete extends Scale {
     if (domain == null || domain.isEmpty() || colors == null || colors.isEmpty()) {
       return [:]
     }
-    Map<String, String> palette = [:]
-    domain.eachWithIndex { value, idx ->
-      palette[value.toString()] = colors[idx % colors.size()]
-    }
-    return palette
+    return domain.withIndex().collectEntries { value, idx ->
+      [(value.toString()): colors[idx % colors.size()]]
+    } as Map<String, String>
   }
 
   /**
@@ -199,12 +197,9 @@ class ScaleDiscrete extends Scale {
    */
   protected List<String> getColorsFromPalette(Map<String, String> palette, String naValue) {
     if (levels.isEmpty()) return []
-    List<String> result = []
-    for (Object level : levels) {
-      String color = palette.get(level.toString())
-      result.add(color != null ? color : naValue)
+    return levels.collect { Object level ->
+      palette.get(level.toString()) ?: naValue
     }
-    return result
   }
 
   Scale setLimits(List limits) {
