@@ -9,6 +9,8 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 /**
  * Line segment geometry for drawing lines from (x, y) to (xend, yend).
  *
@@ -121,19 +123,19 @@ class GeomSegment extends Geom {
 
     // Draw segments
     segments.each { Map<String, Number> seg ->
-      def x1Px = xScale.transform(seg.x)
-      def y1Px = yScale.transform(seg.y)
-      def x2Px = xScale.transform(seg.xend)
-      def y2Px = yScale.transform(seg.yend)
+      Number x1Px = xScale.transform(seg.x) as Number
+      Number y1Px = yScale.transform(seg.y) as Number
+      Number x2Px = xScale.transform(seg.xend) as Number
+      Number y2Px = yScale.transform(seg.yend) as Number
 
       if (x1Px == null || y1Px == null || x2Px == null || y2Px == null) return
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
-          .x1(x1Px as int)
-          .y1(y1Px as int)
-          .x2(x2Px as int)
-          .y2(y2Px as int)
+          .x1(x1Px)
+          .y1(y1Px)
+          .x2(x2Px)
+          .y2(y2Px)
           .stroke(lineColor)
 
       line.addAttribute('stroke-width', linewidth)
@@ -145,14 +147,13 @@ class GeomSegment extends Geom {
       }
 
       // Apply alpha
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
 
       // Draw arrow if requested
       if (arrow) {
-        drawArrow(group, x2Px as double, y2Px as double,
-                  x1Px as double, y1Px as double)
+        drawArrow(group, x2Px, y2Px, x1Px, y1Px)
       }
     }
   }
@@ -160,38 +161,40 @@ class GeomSegment extends Geom {
   /**
    * Draw an arrowhead at the end point.
    */
-  private void drawArrow(G group, double x2, double y2, double x1, double y1) {
+  private void drawArrow(G group, Number x2, Number y2, Number x1, Number y1) {
     // Calculate angle of the line
-    double angle = Math.atan2(y2 - y1, x2 - x1)
-    double arrowAngle = Math.PI / 6  // 30 degrees
-    double size = arrowSize as double
+    BigDecimal dy = (y2 as BigDecimal) - (y1 as BigDecimal)
+    BigDecimal dx = (x2 as BigDecimal) - (x1 as BigDecimal)
+    BigDecimal angle = dy.atan2(dx)
+    BigDecimal arrowAngle = PI / 6  // 30 degrees
+    BigDecimal size = arrowSize as BigDecimal
 
     // Calculate arrowhead points
-    double ax1 = x2 - size * Math.cos(angle - arrowAngle)
-    double ay1 = y2 - size * Math.sin(angle - arrowAngle)
-    double ax2 = x2 - size * Math.cos(angle + arrowAngle)
-    double ay2 = y2 - size * Math.sin(angle + arrowAngle)
+    BigDecimal ax1 = (x2 as BigDecimal) - size * (angle - arrowAngle).cos()
+    BigDecimal ay1 = (y2 as BigDecimal) - size * (angle - arrowAngle).sin()
+    BigDecimal ax2 = (x2 as BigDecimal) - size * (angle + arrowAngle).cos()
+    BigDecimal ay2 = (y2 as BigDecimal) - size * (angle + arrowAngle).sin()
 
     // Draw arrowhead as two lines
     String lineColor = ColorUtil.normalizeColor(color) ?: color
     def arrow1 = group.addLine()
-        .x1(x2 as int)
-        .y1(y2 as int)
-        .x2(ax1 as int)
-        .y2(ay1 as int)
+        .x1(x2)
+        .y1(y2)
+        .x2(ax1)
+        .y2(ay1)
         .stroke(lineColor)
     arrow1.addAttribute('stroke-width', linewidth)
 
     def arrow2 = group.addLine()
-        .x1(x2 as int)
-        .y1(y2 as int)
-        .x2(ax2 as int)
-        .y2(ay2 as int)
+        .x1(x2)
+        .y1(y2)
+        .x2(ax2)
+        .y2(ay2)
         .stroke(lineColor)
     arrow2.addAttribute('stroke-width', linewidth)
 
     // Apply alpha to arrows
-    if ((alpha as double) < 1.0) {
+    if (alpha < 1.0) {
       arrow1.addAttribute('stroke-opacity', alpha)
       arrow2.addAttribute('stroke-opacity', alpha)
     }
@@ -202,12 +205,12 @@ class GeomSegment extends Geom {
    */
   private String getLineDashArray(String type) {
     switch (type?.toLowerCase()) {
-      case 'dashed': return '5,5'
-      case 'dotted': return '2,2'
-      case 'longdash': return '10,5'
-      case 'twodash': return '10,5,2,5'
-      case 'solid':
-      default: return null
+      case 'dashed' -> '5,5'
+      case 'dotted' -> '2,2'
+      case 'longdash' -> '10,5'
+      case 'twodash' -> '10,5,2,5'
+      case 'solid' -> null
+      default -> null
     }
   }
 }

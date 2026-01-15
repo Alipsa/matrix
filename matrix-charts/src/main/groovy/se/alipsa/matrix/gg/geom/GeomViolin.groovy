@@ -3,12 +3,15 @@ package se.alipsa.matrix.gg.geom
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
+
+import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Violin geometry for showing kernel density estimates.
@@ -21,6 +24,20 @@ import se.alipsa.matrix.charts.util.ColorUtil
  */
 @CompileStatic
 class GeomViolin extends Geom {
+
+  /**
+   * Data class to hold kernel density estimation points.
+   */
+  @CompileStatic
+  static class DensityPoint {
+    final BigDecimal position
+    final BigDecimal density
+
+    DensityPoint(BigDecimal position, BigDecimal density) {
+      this.position = position
+      this.density = density
+    }
+  }
 
   /** Fill color */
   String fill = 'gray'
@@ -113,30 +130,32 @@ class GeomViolin extends Geom {
     if (groups.isEmpty()) return
 
     // Calculate max density for scaling
-    double maxDensity = 0
-    Map<Object, List<double[]>> densityData = [:]
+    BigDecimal maxDensity = 0
+    Map<Object, List<DensityPoint>> densityData = [:]
 
     groups.each { xVal, yValues ->
       if (yValues.size() < 3) return
 
-      List<double[]> density = computeKernelDensity(yValues)
+      List<DensityPoint> density = computeKernelDensity(yValues)
       densityData[xVal] = density
 
-      density.each { double[] point ->
-        if (point[1] > maxDensity) maxDensity = point[1]
+      density.each { DensityPoint point ->
+        if (point.density > maxDensity) maxDensity = point.density
       }
     }
 
     if (maxDensity == 0) return
 
     // Get violin width in pixels
-    double violinWidth = 50  // Default pixel width
+    BigDecimal violinWidth = 50  // Default pixel width
     if (xScale != null) {
       // Try to get width from scale spacing
-      def testX1 = xScale.transform(0)
-      def testX2 = xScale.transform(1)
+      Number testX1 = xScale.transform(0) as Number
+      Number testX2 = xScale.transform(1) as Number
       if (testX1 != null && testX2 != null) {
-        violinWidth = Math.abs((testX2 as double) - (testX1 as double)) * 0.4 * (width as double)
+        BigDecimal test1 = testX1 as BigDecimal
+        BigDecimal test2 = testX2 as BigDecimal
+        violinWidth = (test2 - test1).abs() * 0.4 * (width as BigDecimal)
       }
     }
 
@@ -145,10 +164,10 @@ class GeomViolin extends Geom {
       if (density.isEmpty()) return
 
       // Get center x position
-      def xCenter = xScale?.transform(xVal)
+      Number xCenter = xScale?.transform(xVal) as Number
       if (xCenter == null) return
 
-      double centerX = xCenter as double
+      BigDecimal centerX = xCenter as BigDecimal
 
       // Determine fill color
       String violinFill = this.fill
@@ -163,15 +182,15 @@ class GeomViolin extends Geom {
       // Right half (top to bottom)
       boolean first = true
       for (int i = 0; i < density.size(); i++) {
-        double[] point = density[i]
-        double yData = point[0]
-        double densityVal = point[1]
+        DensityPoint point = density[i]
+        BigDecimal yData = point.position
+        BigDecimal densityVal = point.density
 
-        def yPx = yScale?.transform(yData)
+        Number yPx = yScale?.transform(yData) as Number
         if (yPx == null) continue
 
-        double y = yPx as double
-        double halfWidth = (densityVal / maxDensity) * violinWidth
+        BigDecimal y = yPx as BigDecimal
+        BigDecimal halfWidth = (densityVal / maxDensity) * violinWidth
 
         if (first) {
           pathD << "M ${centerX + halfWidth} ${y}"
@@ -183,15 +202,15 @@ class GeomViolin extends Geom {
 
       // Left half (bottom to top, mirrored)
       for (int i = density.size() - 1; i >= 0; i--) {
-        double[] point = density[i]
-        double yData = point[0]
-        double densityVal = point[1]
+        DensityPoint point = density[i]
+        BigDecimal yData = point.position
+        BigDecimal densityVal = point.density
 
-        def yPx = yScale?.transform(yData)
+        Number yPx = yScale?.transform(yData) as Number
         if (yPx == null) continue
 
-        double y = yPx as double
-        double halfWidth = (densityVal / maxDensity) * violinWidth
+        BigDecimal y = yPx as BigDecimal
+        BigDecimal halfWidth = (densityVal / maxDensity) * violinWidth
 
         pathD << " L ${centerX - halfWidth} ${y}"
       }
@@ -205,7 +224,7 @@ class GeomViolin extends Geom {
 
       path.addAttribute('stroke-width', linewidth)
 
-      if ((alpha as double) < 1.0) {
+      if (alpha < 1.0) {
         path.addAttribute('fill-opacity', alpha)
       }
 
@@ -215,18 +234,18 @@ class GeomViolin extends Geom {
         List<Number> sorted = yValues.sort()
 
         draw_quantiles.each { Number q ->
-          double quantileY = getQuantile(sorted, q as double)
-          def qYPx = yScale?.transform(quantileY)
+          BigDecimal quantileY = getQuantile(sorted, q as BigDecimal)
+          Number qYPx = yScale?.transform(quantileY) as Number
           if (qYPx != null) {
-            double yPos = qYPx as double
+            BigDecimal yPos = qYPx as BigDecimal
             // Find density at this y position
-            double densityAtQ = interpolateDensity(density, quantileY) / maxDensity * violinWidth
+            BigDecimal densityAtQ = interpolateDensity(density, quantileY) / maxDensity * violinWidth
 
             def qLine = group.addLine()
-                .x1((centerX - densityAtQ) as int)
-                .y1(yPos as int)
-                .x2((centerX + densityAtQ) as int)
-                .y2(yPos as int)
+                .x1(centerX - densityAtQ)
+                .y1(yPos)
+                .x2(centerX + densityAtQ)
+                .y2(yPos)
                 .stroke(color)
             qLine.addAttribute('stroke-width', linewidth)
           }
@@ -238,94 +257,81 @@ class GeomViolin extends Geom {
   /**
    * Compute kernel density estimate using Gaussian kernel.
    */
-  private List<double[]> computeKernelDensity(List<Number> values) {
+  private List<DensityPoint> computeKernelDensity(List<Number> values) {
     if (values.size() < 2) return []
 
-    double[] data = values.collect { it as double } as double[]
-    Arrays.sort(data)
+    List<BigDecimal> data = values.collect { it as BigDecimal }.sort()
 
-    double min = data[0]
-    double max = data[data.length - 1]
-    double range = max - min
+    BigDecimal min = data[0]
+    BigDecimal max = data[data.size() - 1]
+    BigDecimal range = max - min
 
     if (range == 0) {
       // All values are the same
-      return [[min, 1.0] as double[]]
+      return [new DensityPoint(min, 1.0)]
     }
 
     // Silverman's rule of thumb for bandwidth
-    double std = computeStd(data)
-    double iqr = computeIQR(data)
-    double bandwidth = 0.9 * Math.min(std, iqr / 1.34) * Math.pow(data.length, -0.2) * (adjust as double)
+    Number stdNum = Stat.sd(data)
+    Number iqrNum = Stat.iqr(data)
+    BigDecimal std = new BigDecimal(stdNum.toString())
+    BigDecimal iqr = new BigDecimal(iqrNum.toString())
+    // Use Math.pow for fractional power (BigDecimal.pow only accepts int)
+    BigDecimal sizePower = Math.pow(data.size() as double, -0.2 as double) as BigDecimal
+    BigDecimal bandwidth = (0.9 as BigDecimal) * std.min(iqr / 1.34) * sizePower * (adjust as BigDecimal)
 
     if (bandwidth <= 0) bandwidth = range / 10
 
     // Extend range slightly
-    double extension = trim ? 0.0 : range * 0.1
-    double evalMin = min - extension
-    double evalMax = max + extension
+    BigDecimal extension = trim ? 0 : range * 0.1
+    BigDecimal evalMin = min - extension
+    BigDecimal evalMax = max + extension
 
     // Compute density at n points
-    List<double[]> result = []
-    int numPoints = Math.min(n, 256)  // Limit for performance
+    List<DensityPoint> result = []
+    int numPoints = ([n, 256].min()) as int  // Limit for performance
 
     for (int i = 0; i < numPoints; i++) {
-      double x = evalMin + (evalMax - evalMin) * i / (numPoints - 1)
-      double density = 0
+      BigDecimal x = evalMin + (evalMax - evalMin) * i / (numPoints - 1)
+      BigDecimal density = 0
 
-      for (double d : data) {
-        double z = (x - d) / bandwidth
-        density += Math.exp(-0.5 * z * z) / (Math.sqrt(2 * Math.PI) * bandwidth)
+      for (BigDecimal d : data) {
+        BigDecimal z = (x - d) / bandwidth
+        BigDecimal sqrtTwoPi = (2 * PI).sqrt()
+        density += (-0.5 * z * z).exp() / (sqrtTwoPi * bandwidth)
       }
-      density /= data.length
+      density /= data.size()
 
-      result << ([x, density] as double[])
+      result << new DensityPoint(x, density)
     }
 
     return result
   }
 
-  private double computeStd(double[] data) {
-    double mean = 0
-    for (double d : data) mean += d
-    mean /= data.length
-
-    double variance = 0
-    for (double d : data) variance += (d - mean) * (d - mean)
-    variance /= (data.length - 1)
-
-    return Math.sqrt(variance)
-  }
-
-  private double computeIQR(double[] data) {
-    int n = data.length
-    double q1 = data[(int)(n * 0.25)]
-    double q3 = data[(int)(n * 0.75)]
-    return q3 - q1
-  }
-
-  private double getQuantile(List<Number> sorted, double q) {
+  private BigDecimal getQuantile(List<Number> sorted, BigDecimal q) {
     int n = sorted.size()
-    double index = q * (n - 1)
-    int lower = (int) index
-    int upper = Math.min(lower + 1, n - 1)
-    double frac = index - lower
-    return (sorted[lower] as double) * (1 - frac) + (sorted[upper] as double) * frac
+    BigDecimal index = q * (n - 1)
+    int lower = index as int
+    int upper = ([lower + 1, n - 1].min()) as int
+    BigDecimal frac = index - lower
+    return (sorted[lower] as BigDecimal) * (1 - frac) + (sorted[upper] as BigDecimal) * frac
   }
 
-  private double interpolateDensity(List<double[]> density, double y) {
+  private BigDecimal interpolateDensity(List<DensityPoint> density, BigDecimal y) {
     if (density.isEmpty()) return 0
 
     // Find surrounding points
     for (int i = 0; i < density.size() - 1; i++) {
-      if (y >= density[i][0] && y <= density[i + 1][0]) {
-        double frac = (y - density[i][0]) / (density[i + 1][0] - density[i][0])
-        return density[i][1] * (1 - frac) + density[i + 1][1] * frac
+      DensityPoint curr = density[i]
+      DensityPoint next = density[i + 1]
+      if (y >= curr.position && y <= next.position) {
+        BigDecimal frac = (y - curr.position) / (next.position - curr.position)
+        return curr.density * (1 - frac) + next.density * frac
       }
     }
 
     // Return closest endpoint
-    if (y < density[0][0]) return density[0][1]
-    return density[density.size() - 1][1]
+    if (y < density[0].position) return density[0].density
+    return density[density.size() - 1].density
   }
 }

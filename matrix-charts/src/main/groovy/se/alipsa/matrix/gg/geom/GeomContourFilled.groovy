@@ -119,15 +119,15 @@ class GeomContourFilled extends GeomContour {
           boolean first = true
 
           for (BigDecimal[] point : polygon) {
-            def xPx = xScale?.transform(point[0])
-            def yPx = yScale?.transform(point[1])
+            Number xPx = xScale?.transform(point[0]) as Number
+            Number yPx = yScale?.transform(point[1]) as Number
             if (xPx == null || yPx == null) continue
 
             if (first) {
-              pathD << "M ${xPx as int} ${yPx as int}"
+              pathD << "M ${xPx} ${yPx}"
               first = false
             } else {
-              pathD << " L ${xPx as int} ${yPx as int}"
+              pathD << " L ${xPx} ${yPx}"
             }
           }
           pathD << " Z"
@@ -137,7 +137,7 @@ class GeomContourFilled extends GeomContour {
                 .fill(bandFill)
                 .stroke('none')
 
-            if ((fillAlpha as double) < 1.0) {
+            if (fillAlpha < 1.0) {
               path.addAttribute('fill-opacity', fillAlpha)
             }
           }
@@ -146,7 +146,7 @@ class GeomContourFilled extends GeomContour {
     }
 
     // Optionally draw contour lines on top
-    if ((linewidth as BigDecimal) > 0) {
+    if (linewidth > 0) {
       // Draw outlines at each level
       for (int levelIdx = 1; levelIdx < levels.size() - 1; levelIdx++) {
         BigDecimal level = levels[levelIdx]
@@ -159,18 +159,18 @@ class GeomContourFilled extends GeomContour {
             BigDecimal[] p1 = contour[i]
             BigDecimal[] p2 = contour[i + 1]
 
-            def x1Px = xScale?.transform(p1[0])
-            def y1Px = yScale?.transform(p1[1])
-            def x2Px = xScale?.transform(p2[0])
-            def y2Px = yScale?.transform(p2[1])
+            Number x1Px = xScale?.transform(p1[0]) as Number
+            Number y1Px = yScale?.transform(p1[1]) as Number
+            Number x2Px = xScale?.transform(p2[0]) as Number
+            Number y2Px = yScale?.transform(p2[1]) as Number
 
             if (x1Px == null || y1Px == null || x2Px == null || y2Px == null) continue
 
             def line = group.addLine()
-                .x1(x1Px as int)
-                .y1(y1Px as int)
-                .x2(x2Px as int)
-                .y2(y2Px as int)
+                .x1(x1Px)
+                .y1(y1Px)
+                .x2(x2Px)
+                .y2(y2Px)
                 .stroke(color)
 
             line.addAttribute('stroke-width', linewidth * 0.5)
@@ -223,8 +223,8 @@ class GeomContourFilled extends GeomContour {
     }
 
     // Use default color palette
-    int colorIdx = (int) (levelIdx * (fillColors.size() - 1) / Math.max(1, numBands - 1))
-    colorIdx = Math.max(0, Math.min(colorIdx, fillColors.size() - 1))
+    int colorIdx = (levelIdx * (fillColors.size() - 1) / 1.max(numBands - 1)) as int
+    colorIdx = colorIdx.min(fillColors.size() - 1).max(0) as int
     return ColorUtil.normalizeColor(fillColors[colorIdx])
   }
 

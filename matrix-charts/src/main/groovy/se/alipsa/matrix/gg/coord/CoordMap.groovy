@@ -4,6 +4,8 @@ import groovy.transform.CompileStatic
 
 import java.util.Locale
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 /**
  * Map projection coordinate system for lon/lat data.
  * Provides basic projections without external dependencies.
@@ -30,32 +32,30 @@ class CoordMap extends CoordTrans {
   private void applyProjection(String projection) {
     String proj = projection?.toLowerCase(Locale.ROOT) ?: 'mercator'
     switch (proj) {
-      case 'mercator':
+      case 'mercator' -> {
         this.xTrans = Transformations.fromClosures({ Number x ->
-          Math.toRadians(x as double)
+          (x as BigDecimal).toRadians()
         }, { Number x ->
-          Math.toDegrees(x as double)
+          (x as BigDecimal).toDegrees()
         })
         this.yTrans = Transformations.fromClosures({ Number y ->
-          double lat = y as double
+          BigDecimal lat = y as BigDecimal
           // Clamp extreme latitudes to prevent tan() approaching infinity near poles
-          if (Math.abs(lat) > 85.05d) {
-            lat = Math.signum(lat) * 85.05d
+          if (lat.abs() > 85.05) {
+            lat = lat.signum() * 85.05
           }
-          double rad = Math.toRadians(lat)
-          Math.log(Math.tan(Math.PI / 4d + rad / 2d))
+          BigDecimal rad = lat.toRadians()
+          (PI / 4 + rad / 2).tan().log()
         }, { Number y ->
-          double v = y as double
-          Math.toDegrees(2d * Math.atan(Math.exp(v)) - Math.PI / 2d)
+          BigDecimal v = y as BigDecimal
+          (2 * v.exp().atan() - PI / 2).toDegrees()
         })
-        break
-      case 'equirectangular':
-      case 'identity':
+      }
+      case 'equirectangular', 'identity' -> {
         this.xTrans = new Transformations.IdentityTrans()
         this.yTrans = new Transformations.IdentityTrans()
-        break
-      default:
-        throw new IllegalArgumentException("Unsupported projection: $projection")
+      }
+      default -> throw new IllegalArgumentException("Unsupported projection: $projection")
     }
   }
 }

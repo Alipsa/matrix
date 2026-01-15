@@ -2,7 +2,10 @@ package se.alipsa.matrix.gg.coord
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+
 import java.util.Locale
+
+import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Polar coordinate system for creating pie charts, rose diagrams, and other circular plots.
@@ -14,7 +17,7 @@ import java.util.Locale
  * Usage:
  * - coord_polar() - default: x maps to angle
  * - coord_polar(theta: 'y') - y maps to angle instead
- * - coord_polar(start: Math.PI/2) - rotate starting position
+ * - coord_polar(start: PI/2) - rotate starting position
  *
  * Example (pie chart):
  * ggplot(data, aes(x: '', y: 'value', fill: 'category')) +
@@ -92,31 +95,31 @@ class CoordPolar extends Coord {
     Number yNorm = yScale ? getNormalizedValue(y, yScale) : (y ?: 0)
 
     // Determine which is theta (angle) and which is r (radius)
-    double thetaValue, rValue
+    BigDecimal thetaValue, rValue
     if (theta == 'y') {
-      thetaValue = yNorm as double
-      rValue = xNorm as double
+      thetaValue = yNorm
+      rValue = xNorm
     } else {
-      thetaValue = xNorm as double
-      rValue = yNorm as double
+      thetaValue = xNorm
+      rValue = yNorm
     }
 
     // Convert to polar
-    double angle = (start as double) + thetaValue * 2 * Math.PI
+    BigDecimal angle = start + thetaValue * 2 * PI
     if (!clockwise) {
-      angle = (start as double) - thetaValue * 2 * Math.PI
+      angle = start - thetaValue * 2 * PI
     }
 
-    double radius = rValue * getMaxRadius()
+    BigDecimal radius = rValue * getMaxRadius()
 
     // Convert polar to Cartesian pixel coordinates
     def center = getCenter()
-    double cx = center[0] as double
-    double cy = center[1] as double
+    BigDecimal cx = center[0]
+    BigDecimal cy = center[1]
 
     // In SVG, y increases downward, so adjust angle accordingly
-    double px = cx + radius * Math.sin(angle)
-    double py = cy - radius * Math.cos(angle)
+    BigDecimal px = cx + radius * angle.sin()
+    BigDecimal py = cy - radius * angle.cos()
 
     return [px, py]
   }
@@ -125,8 +128,8 @@ class CoordPolar extends Coord {
    * Get a normalized value (0-1) from a scale.
    */
   @CompileDynamic
-  private double getNormalizedValue(Number value, def scale) {
-    if (scale == null) return value as double
+  private BigDecimal getNormalizedValue(Number value, def scale) {
+    if (scale == null) return value as BigDecimal
 
     // Get the transformed pixel value
     def transformed = scale.transform(value)
@@ -134,16 +137,16 @@ class CoordPolar extends Coord {
 
     // Get the range to normalize
     def range = scale.range
-    if (range == null || range.size() < 2) return transformed as double
+    if (range == null || range.size() < 2) return transformed as BigDecimal
 
-    double min = range[0] as double
-    double max = range[1] as double
-    double rangeSize = Math.abs(max - min)
+    BigDecimal min = range[0] as BigDecimal
+    BigDecimal max = range[1] as BigDecimal
+    BigDecimal rangeSize = (max - min).abs()
 
     if (rangeSize == 0) return 0
 
     // Normalize to 0-1
-    return ((transformed as double) - Math.min(min, max)) / rangeSize
+    return ((transformed as BigDecimal) - min.min(max)) / rangeSize
   }
 
   @CompileDynamic
@@ -151,27 +154,27 @@ class CoordPolar extends Coord {
   List<Number> inverse(Number px, Number py, Map<String, ?> scales) {
     // Convert pixel coordinates back to data coordinates
     def center = getCenter()
-    double cx = center[0] as double
-    double cy = center[1] as double
+    BigDecimal cx = center[0]
+    BigDecimal cy = center[1]
 
-    double dx = (px as double) - cx
-    double dy = cy - (py as double)  // Invert y for SVG
+    BigDecimal dx = (px as BigDecimal) - cx
+    BigDecimal dy = cy - (py as BigDecimal)  // Invert y for SVG
 
-    double radius = Math.sqrt(dx * dx + dy * dy)
-    double angle = Math.atan2(dx, dy)  // Note: atan2(x,y) for our angle convention
+    BigDecimal radius = (dx ** 2 + dy ** 2).sqrt()
+    BigDecimal angle = dx.atan2(dy) // Note: atan2(x,y) for our angle convention
 
     // Adjust for start offset and direction
     if (!clockwise) {
       angle = -angle
     }
-    angle = angle - (start as double)
+    angle = angle - start
 
     // Normalize angle to 0-2π
-    while (angle < 0) angle += 2 * Math.PI
-    while (angle >= 2 * Math.PI) angle -= 2 * Math.PI
+    while (angle < 0) angle += 2 * PI
+    while (angle >= 2 * PI) angle -= 2 * PI
 
-    double thetaNorm = angle / (2 * Math.PI)
-    double rNorm = radius / getMaxRadius()
+    BigDecimal thetaNorm = angle / (2 * PI)
+    BigDecimal rNorm = radius / getMaxRadius()
 
     // Convert back using scales
     def xScale = scales['x']
@@ -197,34 +200,37 @@ class CoordPolar extends Coord {
    * @param outerRadius Outer radius
    * @return SVG path string
    */
-  String createArcPath(double startAngle, double endAngle, double innerRadius, double outerRadius) {
+  String createArcPath(Number startAngle, Number endAngle, Number innerRadius, Number outerRadius) {
     def center = getCenter()
-    double cx = center[0] as double
-    double cy = center[1] as double
+    BigDecimal cx = center[0]
+    BigDecimal cy = center[1]
 
     // Adjust angles for SVG coordinate system and apply start offset
-    double adjStart = (start as double) + startAngle
-    double adjEnd = (start as double) + endAngle
+    BigDecimal adjStart = start + (startAngle as BigDecimal)
+    BigDecimal adjEnd = start + (endAngle as BigDecimal)
 
     if (!clockwise) {
-      adjStart = (start as double) - startAngle
-      adjEnd = (start as double) - endAngle
+      adjStart = start - (startAngle as BigDecimal)
+      adjEnd = start - (endAngle as BigDecimal)
     }
 
-    // Calculate arc endpoints
-    double x1 = cx + outerRadius * Math.sin(adjStart)
-    double y1 = cy - outerRadius * Math.cos(adjStart)
-    double x2 = cx + outerRadius * Math.sin(adjEnd)
-    double y2 = cy - outerRadius * Math.cos(adjEnd)
+    BigDecimal outerR = outerRadius as BigDecimal
+    BigDecimal innerR = innerRadius as BigDecimal
 
-    double x3 = cx + innerRadius * Math.sin(adjEnd)
-    double y3 = cy - innerRadius * Math.cos(adjEnd)
-    double x4 = cx + innerRadius * Math.sin(adjStart)
-    double y4 = cy - innerRadius * Math.cos(adjStart)
+    // Calculate arc endpoints
+    BigDecimal x1 = cx + outerR * adjStart.sin()
+    BigDecimal y1 = cy - outerR * adjStart.cos()
+    BigDecimal x2 = cx + outerR * adjEnd.sin()
+    BigDecimal y2 = cy - outerR * adjEnd.cos()
+
+    BigDecimal x3 = cx + innerR * adjEnd.sin()
+    BigDecimal y3 = cy - innerR * adjEnd.cos()
+    BigDecimal x4 = cx + innerR * adjStart.sin()
+    BigDecimal y4 = cy - innerR * adjStart.cos()
 
     // Determine if arc is greater than 180 degrees
-    double angleDiff = Math.abs(endAngle - startAngle)
-    int largeArc = angleDiff > Math.PI ? 1 : 0
+    BigDecimal angleDiff = ((endAngle as BigDecimal) - (startAngle as BigDecimal)).abs()
+    int largeArc = angleDiff > PI ? 1 : 0
     int sweepFlag = clockwise ? 1 : 0
 
     StringBuilder path = new StringBuilder()
@@ -232,15 +238,15 @@ class CoordPolar extends Coord {
     if (innerRadius > 0) {
       // Donut slice
       path << "M ${formatNumber(x1)} ${formatNumber(y1)}"
-      path << " A ${formatNumber(outerRadius)} ${formatNumber(outerRadius)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
+      path << " A ${formatNumber(outerR)} ${formatNumber(outerR)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
       path << " L ${formatNumber(x3)} ${formatNumber(y3)}"
-      path << " A ${formatNumber(innerRadius)} ${formatNumber(innerRadius)} 0 ${largeArc} ${1 - sweepFlag} ${formatNumber(x4)} ${formatNumber(y4)}"
+      path << " A ${formatNumber(innerR)} ${formatNumber(innerR)} 0 ${largeArc} ${1 - sweepFlag} ${formatNumber(x4)} ${formatNumber(y4)}"
       path << " Z"
     } else {
       // Pie slice
       path << "M ${formatNumber(cx)} ${formatNumber(cy)}"
       path << " L ${formatNumber(x1)} ${formatNumber(y1)}"
-      path << " A ${formatNumber(outerRadius)} ${formatNumber(outerRadius)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
+      path << " A ${formatNumber(outerR)} ${formatNumber(outerR)} 0 ${largeArc} ${sweepFlag} ${formatNumber(x2)} ${formatNumber(y2)}"
       path << " Z"
     }
 
@@ -258,7 +264,7 @@ class CoordPolar extends Coord {
    * @param value numeric value to format
    * @return formatted string with 3 decimal places
    */
-  private static String formatNumber(double value) {
-    return String.format(Locale.US, "%.3f", value)
+  private static String formatNumber(Number value) {
+    return String.format(Locale.US, "%.3f", value as double)
   }
 }
