@@ -39,6 +39,7 @@ import se.alipsa.matrix.gg.geom.GeomRibbon
 import se.alipsa.matrix.gg.geom.GeomTile
 import se.alipsa.matrix.gg.geom.GeomRaster
 import se.alipsa.matrix.gg.geom.GeomRect
+import se.alipsa.matrix.gg.geom.GeomParallel
 import se.alipsa.matrix.gg.geom.GeomPath
 import se.alipsa.matrix.gg.geom.GeomPolygon
 import se.alipsa.matrix.gg.geom.GeomSf
@@ -143,6 +144,7 @@ import se.alipsa.matrix.gg.stat.StatsFunction
 import se.alipsa.matrix.gg.stat.StatsSf
 import se.alipsa.matrix.gg.stat.StatsSfCoordinates
 import se.alipsa.matrix.gg.stat.StatsSmooth
+import se.alipsa.matrix.gg.stat.StatsSpoke
 import se.alipsa.matrix.gg.stat.StatsSum
 import se.alipsa.matrix.gg.stat.StatsSummaryBin
 import se.alipsa.matrix.gg.stat.StatsSummaryHex
@@ -2566,6 +2568,32 @@ class GgPlot {
     return new GeomPath(params)
   }
 
+  /**
+   * Create a parallel coordinates plot for multivariate data visualization.
+   * Each variable gets a vertical axis, and observations are shown as polylines.
+   *
+   * @return a new GeomParallel instance
+   *
+   * @example
+   * <pre>
+   * // Basic parallel coordinates
+   * ggplot(iris) + geom_parallel()
+   *
+   * // Specific columns
+   * ggplot(mtcars) + geom_parallel(vars: ['mpg', 'hp', 'wt'])
+   *
+   * // Colored by group
+   * ggplot(iris, aes(color: 'Species')) + geom_parallel()
+   * </pre>
+   */
+  static GeomParallel geom_parallel() {
+    return new GeomParallel()
+  }
+
+  static GeomParallel geom_parallel(Map params) {
+    return new GeomParallel(params)
+  }
+
   static GeomPolygon geom_polygon() {
     return new GeomPolygon()
   }
@@ -4161,6 +4189,24 @@ class GgPlot {
 
   static StatsSum stat_summary(Map params) {
     return new StatsSum(params)
+  }
+
+  /**
+   * Spoke stat for converting angle/radius to line segment endpoints.
+   * Used with geom_spoke() to create radial line segments from a point.
+   *
+   * @param params stat parameters: angle (column name), radius (column name)
+   * @return StatsSpoke instance
+   *
+   * @example
+   * <pre>
+   * // Create spoke plot from wind data
+   * ggplot(windData, aes('x', 'y')) +
+   *   stat_spoke(angle: 'direction', radius: 'speed')
+   * </pre>
+   */
+  static StatsSpoke stat_spoke(Map params = [:]) {
+    return new StatsSpoke(params)
   }
 
   static class As {

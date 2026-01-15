@@ -165,4 +165,35 @@ class GeomSpokeTest {
     Svg svg = chart.render()
     assertNotNull(svg, 'Spokes with default radius should render')
   }
+
+  @Test
+  void testStatSpoke() {
+    // Test stat_spoke() factory method
+    def data = Matrix.builder()
+        .data([
+            x: [0, 0, 0, 0],
+            y: [0, 0, 0, 0],
+            direction: [0, Math.PI / 2, Math.PI, 3 * Math.PI / 2],
+            speed: [1.0, 1.5, 0.8, 1.2]
+        ])
+        .types(Integer, Integer, BigDecimal, BigDecimal)
+        .build()
+
+    // Using stat_spoke with custom column names
+    def chart = ggplot(data, aes('x', 'y')) +
+        geom_spoke() +
+        stat_spoke(angle: 'direction', radius: 'speed')
+
+    Svg svg = chart.render()
+    assertNotNull(svg, 'stat_spoke() should work with custom column names')
+  }
+
+  @Test
+  void testStatSpokeFactory() {
+    // Verify stat_spoke factory creates correct instance
+    def stat = stat_spoke(angle: 'theta', radius: 'r')
+    assertNotNull(stat, 'stat_spoke should create instance')
+    assertEquals('theta', stat.params.angle, 'Should preserve angle parameter')
+    assertEquals('r', stat.params.radius, 'Should preserve radius parameter')
+  }
 }

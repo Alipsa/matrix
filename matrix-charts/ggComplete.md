@@ -916,29 +916,45 @@ Results: SUCCESS (1 test, 1 passed, 0 failed, 0 skipped)
 
 ### 3.2 `geom_parallel()` - Parallel Coordinates Plot
 
-**Status:** ❌ Not implemented
-**Effort:** 3-5 days
+**Status:** ✅ **COMPLETED**
+**Effort:** 3-4 hours (actual)
 **Complexity:** High
 **Priority:** LOW - Specialized multivariate visualization
 
-**Analysis:**
+**Implementation:**
 
 Parallel coordinates plots display multivariate data by drawing a vertical axis for each variable and connecting values across axes with lines.
 
-**Challenges:**
-- Complex layout calculations
-- Axis positioning and scaling
-- Line routing
-- Interaction (brushing, highlighting)
+**Features implemented:**
+- Automatic selection of numeric columns
+- Multiple scaling methods: 'uniminmax' (default), 'globalminmax', 'center', 'std', 'none'
+- Color grouping support via aes(color: 'column')
+- Customizable transparency and line width
+- Automatic axis rendering with variable names and min/max labels
+- Variable selection via `vars` parameter
 
-**Alternative:**
-- Users can create parallel coordinate plots using faceting + custom transformations
-- Extension package territory (GGobi, plotly)
+**Test Results:**
+```bash
+./gradlew :matrix-charts:test --tests "GeomParallelTest"
+Results: SUCCESS (14 tests, 14 passed, 0 failed, 0 skipped)
+```
 
-**Recommendation:**
-- **DEFER** - Extension package feature
-- Very specialized use case
-- Consider as future enhancement if demand exists
+**Usage:**
+```groovy
+// All numeric columns
+ggplot(iris, aes()) + geom_parallel()
+
+// Specific columns
+ggplot(mtcars, aes()) + geom_parallel(vars: ['mpg', 'hp', 'wt'])
+
+// Colored by group
+ggplot(iris, aes(color: 'Species')) + geom_parallel()
+
+// Custom styling
+ggplot(data, aes()) + geom_parallel(alpha: 0.3, linewidth: 1, scale: 'std')
+```
+
+**Location:** GeomParallel.groovy (345 lines), factory methods in GgPlot.groovy
 
 ---
 
@@ -967,19 +983,36 @@ Parallel coordinates plots display multivariate data by drawing a vertical axis 
 
 ### 3.4 `stat_spoke()` - Spoke Statistics
 
-**Status:** ❌ Not implemented
-**Effort:** 2-3 hours
+**Status:** ✅ **COMPLETED**
+**Effort:** 1 hour (actual)
 **Complexity:** Low
 **Priority:** LOW - `geom_spoke()` already exists
 
-**Analysis:**
+**Implementation:**
 
-`geom_spoke()` is already implemented. `stat_spoke()` would be a separate stat, but in ggplot2, spoke typically uses `stat_identity`.
+`stat_spoke()` provides semantic consistency with ggplot2's API. While the transformation happens in `geom_spoke()`, having the stat available allows users to follow ggplot2 patterns.
 
-**Action:**
-Check if needed or if `stat_identity` + `geom_spoke()` covers all cases.
+**Features implemented:**
+- StatsSpoke class extending Stats
+- stat_spoke() factory method
+- Support for angle and radius parameters
+- Full integration with geom_spoke()
 
-**Recommendation:** **LOW PRIORITY** - Verify need first
+**Test Results:**
+```bash
+./gradlew :matrix-charts:test --tests "GeomSpokeTest.testStatSpoke*"
+Results: SUCCESS (2 tests, 2 passed, 0 failed, 0 skipped)
+```
+
+**Usage:**
+```groovy
+// Using stat_spoke with custom column names
+ggplot(windData, aes('x', 'y')) +
+  geom_spoke() +
+  stat_spoke(angle: 'direction', radius: 'speed')
+```
+
+**Location:** StatsSpoke.groovy, StatType.SPOKE, factory method in GgPlot.groovy
 
 ---
 
