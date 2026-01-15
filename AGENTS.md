@@ -426,6 +426,17 @@ degrees.toRadians()  // -> 3.14159... (PI)
 BigDecimal radians = PI
 radians.toDegrees()  // -> 180.0
 
+// Tangent and arctangent functions
+BigDecimal x = PI / 4
+x.tan()  // -> 1.0 (tan of 45°)
+x.atan()  // -> arctangent
+
+// Two-argument arctangent (atan2) - angle from rectangular to polar coordinates
+BigDecimal dy = 3.0
+BigDecimal dx = 4.0
+BigDecimal angle = dy.atan2(dx)  // -> angle in radians
+// Instead of: Math.atan2(dy, dx)
+
 // Inverse operations demonstrate composability
 BigDecimal testValue = 5.0
 testValue.log().exp()  // -> 5.0 (log and exp are inverses)

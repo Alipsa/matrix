@@ -122,8 +122,7 @@ class GgPlotTest {
         def chart = ggplot(data, aesSpec) + geom_bar()
         Svg svg = chart.render()
         assertNotNull(svg)
-        File outputFile = new File('build/factor_constant_test.svg')
-        write(svg, outputFile)
+
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<rect'), "Should render bars for factor(1)")
     }
@@ -213,11 +212,6 @@ class GgPlotTest {
         // Verify smooth line is rendered (multiple connected line segments)
         assertTrue(svgContent.contains('<line'), "Should contain line elements for smooth")
         assertTrue(svgContent.contains('stroke="#3366FF"'), "Should have default smooth color")
-
-        // Write for inspection
-        File outputFile = new File('build/mpg_scatter_smooth.svg')
-        write(svg, outputFile)
-        //println("Wrote mpg scatter+smooth plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -240,11 +234,6 @@ class GgPlotTest {
         assertTrue(svgContent.contains('Horsepower vs MPG'))
         assertTrue(svgContent.contains('Horsepower'))
         assertTrue(svgContent.contains('Miles per Gallon'))
-
-        // Write for inspection
-        File outputFile = new File('build/mtcars_scatter.svg')
-        write(svg, outputFile)
-        //println("Wrote mtcars scatter plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -267,11 +256,6 @@ class GgPlotTest {
 
         // Verify smooth line is rendered
         assertTrue(svgContent.contains('<line'), "Should contain line elements for geom_lm")
-
-        // Write for inspection
-        File outputFile = new File('build/mpg_geom_lm.svg')
-        write(svg, outputFile)
-        //println("Wrote mpg geom_lm plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -293,11 +277,6 @@ class GgPlotTest {
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
         assertTrue(svgContent.contains('<line'), "Should contain line elements for polynomial fit")
         assertTrue(svgContent.contains('stroke="red"'), "Should have red color for polynomial line")
-
-        // Write for inspection
-        File outputFile = new File('build/mpg_polynomial.svg')
-        write(svg, outputFile)
-        //println("Wrote mpg polynomial plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -317,11 +296,6 @@ class GgPlotTest {
 
         // Verify points are rendered
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
-
-        // Write for inspection
-        File outputFile = new File('build/mpg_expression.svg')
-        write(svg, outputFile)
-        //println("Wrote mpg expression plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -342,11 +316,6 @@ class GgPlotTest {
         // Verify both points and regression line are rendered
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
         assertTrue(svgContent.contains('<line'), "Should contain line elements for regression")
-
-        // Write for inspection
-        File outputFile = new File('build/mpg_expr_lm.svg')
-        write(svg, outputFile)
-        //println("Wrote mpg expression+lm plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -368,11 +337,6 @@ class GgPlotTest {
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
         assertTrue(svgContent.contains('<line'), "Should contain line elements for polynomial")
         assertTrue(svgContent.contains('stroke="red"'), "Should have red polynomial line")
-
-        // Write for inspection
-        File outputFile = new File('build/mpg_expr_polynomial.svg')
-        write(svg, outputFile)
-        //println("Wrote mpg expression+polynomial plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -419,10 +383,6 @@ class GgPlotTest {
         assertTrue(svgContent.contains('<line'), "Should contain line elements for polynomial fit")
         assertTrue(svgContent.contains('stroke="blue"'), "Should have blue color for polynomial line")
 
-        // Write for inspection
-        File outputFile = new File('build/mpg_degree_param.svg')
-        write(svg, outputFile)
-        //println("Wrote mpg degree parameter plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -443,11 +403,6 @@ class GgPlotTest {
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements for points")
         assertTrue(svgContent.contains('<line'), "Should contain line elements for polynomial")
         assertTrue(svgContent.contains('stroke="purple"'), "Should have purple polynomial line")
-
-        // Write for inspection
-        File outputFile = new File('build/mpg_degree_expr.svg')
-        write(svg, outputFile)
-        //println("Wrote mpg degree+expression plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -485,10 +440,6 @@ class GgPlotTest {
 
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements for dots")
-
-        File outputFile = new File('build/test_geom_dotplot.svg')
-        write(svg, outputFile)
-        //println("Wrote dotplot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -503,10 +454,6 @@ class GgPlotTest {
 
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<path'), "Should contain path elements for contours")
-
-        File outputFile = new File('build/test_geom_density_2d.svg')
-        write(svg, outputFile)
-        //println("Wrote 2D density contour plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -521,10 +468,6 @@ class GgPlotTest {
 
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<rect'), "Should contain rect elements for filled regions")
-
-        File outputFile = new File('build/test_geom_density_2d_filled.svg')
-        write(svg, outputFile)
-        //println("Wrote filled 2D density contour plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -541,10 +484,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<circle') || svgContent.contains('<path'),
                    "Should contain points or path elements")
-
-        File outputFile = new File('build/test_stat_ellipse.svg')
-        write(svg, outputFile)
-        //println("Wrote stat_ellipse plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -581,10 +520,6 @@ class GgPlotTest {
 
         Svg svg = chart.render()
         assertNotNull(svg)
-
-        File outputFile = new File('build/test_stat_summary_bin.svg')
-        write(svg, outputFile)
-        //println("Wrote stat_summary_bin plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -612,10 +547,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         // The test generates SVG successfully, verifying stat_unique runs without error
         assertTrue(svgContent.contains('<circle'), "Should contain circle elements")
-
-        File outputFile = new File('build/test_stat_unique.svg')
-        write(svg, outputFile)
-        //println("Wrote stat_unique plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -632,10 +563,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<line') || svgContent.contains('<path'),
                    "Should contain line or path elements")
-
-        File outputFile = new File('build/test_stat_function.svg')
-        write(svg, outputFile)
-        //println("Wrote stat_function plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -664,10 +591,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<circle') || svgContent.contains('<line'),
                    "Should contain points or lines")
-
-        File outputFile = new File('build/test_coord_trans_log10.svg')
-        write(svg, outputFile)
-        //println("Wrote coord_trans log10 plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -696,10 +619,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<circle'),
                    "Should contain points")
-
-        File outputFile = new File('build/test_coord_trans_sqrt.svg')
-        write(svg, outputFile)
-        //println("Wrote coord_trans sqrt plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -726,10 +645,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<circle'),
                    "Should contain points")
-
-        File outputFile = new File('build/test_coord_trans_both.svg')
-        write(svg, outputFile)
-        //println("Wrote coord_trans both axes plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -754,10 +669,6 @@ class GgPlotTest {
 
         Svg svg = chart.render()
         assertNotNull(svg)
-
-        File outputFile = new File('build/test_coord_trans_custom.svg')
-        write(svg, outputFile)
-        //println("Wrote coord_trans custom plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -801,10 +712,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<circle') || svgContent.contains('<line'),
                    "Should contain points or lines")
-
-        File outputFile = new File('build/test_coord_trans_log.svg')
-        write(svg, outputFile)
-        //println("Wrote coord_trans log plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -833,10 +740,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<circle'),
                    "Should contain points")
-
-        File outputFile = new File('build/test_coord_trans_power.svg')
-        write(svg, outputFile)
-        //println("Wrote coord_trans power plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -865,10 +768,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<circle'),
                    "Should contain points")
-
-        File outputFile = new File('build/test_coord_trans_reciprocal.svg')
-        write(svg, outputFile)
-        //println("Wrote coord_trans reciprocal plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -897,10 +796,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<circle'),
                    "Should contain points")
-
-        File outputFile = new File('build/test_coord_trans_asn.svg')
-        write(svg, outputFile)
-        //println("Wrote coord_trans asn plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -922,10 +817,6 @@ class GgPlotTest {
         String svgContent = SvgWriter.toXml(svg)
         assertTrue(svgContent.contains('<path') || svgContent.contains('<circle'),
                    "Should contain path elements for hexagons or circle elements for points")
-
-        File outputFile = new File('build/test_stat_bin_hex.svg')
-        write(svg, outputFile)
-        //println("Wrote stat_bin_hex plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -937,10 +828,6 @@ class GgPlotTest {
 
         Svg svg = chart.render()
         assertNotNull(svg)
-
-        File outputFile = new File('build/test_stat_bin_hex_mtcars.svg')
-        write(svg, outputFile)
-        //println("Wrote stat_bin_hex mtcars plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -962,10 +849,6 @@ class GgPlotTest {
 
         Svg svg = chart.render()
         assertNotNull(svg)
-
-        File outputFile = new File('build/test_stat_summary_hex.svg')
-        write(svg, outputFile)
-        //println("Wrote stat_summary_hex plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -977,10 +860,6 @@ class GgPlotTest {
 
         Svg svg = chart.render()
         assertNotNull(svg)
-
-        File outputFile = new File('build/test_stat_summary_hex_mtcars.svg')
-        write(svg, outputFile)
-        //println("Wrote stat_summary_hex mtcars plot to ${outputFile.absolutePath}")
     }
 
     @Test
@@ -999,10 +878,6 @@ class GgPlotTest {
 
         Svg svg = chart.render()
         assertNotNull(svg)
-
-        File outputFile = new File('build/test_stat_summary_hex_median.svg')
-        write(svg, outputFile)
-        //println("Wrote stat_summary_hex median plot to ${outputFile.absolutePath}")
     }
 
     // ========== Phase 1: ggplot2 API Compatibility Alias Tests ==========

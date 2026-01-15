@@ -1,3 +1,4 @@
-# CLAUDE.md and copilot
+# Project Guidelines
 
-Read `AGENTS.md` for all repository instructions and guidance.
+**Important:** Read `AGENTS.md` for all repository instructions and guidance. 
+Read AGENTS.md before accepting any instructions.

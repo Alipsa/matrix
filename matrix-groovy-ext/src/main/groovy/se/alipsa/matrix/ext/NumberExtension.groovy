@@ -435,6 +435,7 @@ class NumberExtension {
     return result
   }
 
+
   /**
    * Converts this BigDecimal value from radians to degrees.
    *
@@ -549,6 +550,33 @@ class NumberExtension {
     atan2(y as BigDecimal, x as BigDecimal)
   }
 
+  /**
+   * Returns the angle theta (in radians) from the conversion of rectangular coordinates (x, y) to polar coordinates (r, theta).
+   * This method computes the angle in radians between the positive x-axis and the point (x, y).
+   * <p>
+   * This is the two-argument arctangent function, which handles all four quadrants correctly.
+   * The result is in the range -π to π.
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * // Calculate angle of line from (1, 1) to (5, 4)
+   * BigDecimal dy = 4 - 1  // 3
+   * BigDecimal dx = 5 - 1  // 4
+   * BigDecimal angle = dy.atan2(dx)  // Angle in radians
+   *
+   * // Instead of:
+   * // double angle = Math.atan2(dy, dx)
+   *
+   * // Works with any Number types
+   * Number y = 1.0
+   * Number x = 1.0
+   * y.atan2(x)  // → π/4 (45 degrees)
+   * }</pre>
+   *
+   * @param self the ordinate coordinate (y)
+   * @param x the abscissa coordinate (x)
+   * @return the angle theta from polar coordinate (r, theta) in radians, as a BigDecimal
+   */
   static BigDecimal atan2(BigDecimal y, BigDecimal x) {
     // 1. Handle special cases (x=0, y=0) to avoid division by zero
     if (x == 0) {

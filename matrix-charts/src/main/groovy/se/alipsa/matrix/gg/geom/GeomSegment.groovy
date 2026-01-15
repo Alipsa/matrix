@@ -209,7 +209,7 @@ class GeomSegment extends Geom {
       case 'dotted' -> '2,2'
       case 'longdash' -> '10,5'
       case 'twodash' -> '10,5,2,5'
-      case 'solid' -> null
+      case 'solid', null -> null
       default -> null
     }
   }
