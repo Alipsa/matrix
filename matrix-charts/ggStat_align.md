@@ -137,9 +137,9 @@ This creates a plot where:
 **Required:**
 - `x` - X position
 - `y` - Y position
-- `mag` or `magnitude` - Magnitude value (typically non-negative)
 
 **Optional:**
+- `mag` or `magnitude` - Magnitude value (typically non-negative); when omitted, points are drawn with default size
 - `size` - Point size (often mapped to magnitude)
 - `color` - Point color (often mapped to magnitude for heat-map effect)
 - `fill` - Fill color for filled shapes
