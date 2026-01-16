@@ -235,10 +235,10 @@ ggplot(data, aes(x, y, color = col)) + geom_point() + scale_color_identity()
 
 **Current behavior:**
 - **Alpha**: Values are clamped to [0, 1] range ✓
-- **Size**: No explicit clamping (could receive negative values)
+- **Size**: Values are clamped to a minimum of 0.1 for visibility ✓
 
 **Recommendation:**
-- **Size**: Add validation to ensure non-negative values (or clamp to minimum)
+- **Size**: Document that values are clamped to a minimum of 0.1 and define the intended valid range
 - **Alpha**: Current clamping is correct ✓
 - Document the valid ranges for each scale type
 
