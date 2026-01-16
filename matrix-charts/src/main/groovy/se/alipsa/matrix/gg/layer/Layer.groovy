@@ -94,7 +94,9 @@ enum StatType {
     /** Representative coordinates for simple feature labels */
     SF_COORDINATES,
     /** Convert angle/radius to x/y endpoints for spoke segments */
-    SPOKE
+    SPOKE,
+    /** Align groups to common x-coordinates via interpolation (for stacked area charts) */
+    ALIGN
 }
 
 /**

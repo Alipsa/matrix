@@ -8,6 +8,9 @@ import groovy.transform.CompileStatic
  * When the data contains shape names (e.g., 'circle', 'square', 'triangle'), this scale
  * uses those exact values rather than mapping them from a palette.
  *
+ * Supported shapes: 'circle', 'square', 'triangle', 'diamond', 'plus', 'cross', 'x'.
+ * Unknown shapes will fall back to the naValue (default: 'circle').
+ *
  * Example:
  * <pre>
  * // Data has a column 'pointShape' with values ['circle', 'square', 'triangle']

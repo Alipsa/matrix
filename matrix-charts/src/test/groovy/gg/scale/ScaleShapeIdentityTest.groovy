@@ -104,4 +104,47 @@ class ScaleShapeIdentityTest {
     // Custom/unknown shapes should pass through
     assertEquals('myCustomShape', scale.transform('myCustomShape'))
   }
+
+  // Edge case tests
+
+  @Test
+  void testEmptyString() {
+    def scale = new ScaleShapeIdentity()
+    // Empty string should convert to string
+    assertEquals('', scale.transform(''))
+  }
+
+  @Test
+  void testBooleanValue() {
+    def scale = new ScaleShapeIdentity()
+    // Boolean values should convert to string
+    assertEquals('true', scale.transform(true))
+    assertEquals('false', scale.transform(false))
+  }
+
+  @Test
+  void testCaseInsensitivity() {
+    def scale = new ScaleShapeIdentity()
+    // Shape names should pass through with original case
+    assertEquals('CIRCLE', scale.transform('CIRCLE'))
+    assertEquals('Circle', scale.transform('Circle'))
+    assertEquals('cIrClE', scale.transform('cIrClE'))
+  }
+
+  @Test
+  void testWhitespace() {
+    def scale = new ScaleShapeIdentity()
+    // Whitespace should be preserved
+    assertEquals(' circle ', scale.transform(' circle '))
+    assertEquals('  square', scale.transform('  square'))
+  }
+
+  @Test
+  void testInvalidShape() {
+    def scale = new ScaleShapeIdentity()
+    // Invalid/unknown shape names should pass through
+    // (rendering layer will handle fallback to circle)
+    assertEquals('not_a_shape', scale.transform('not_a_shape'))
+    assertEquals('123abc', scale.transform('123abc'))
+  }
 }

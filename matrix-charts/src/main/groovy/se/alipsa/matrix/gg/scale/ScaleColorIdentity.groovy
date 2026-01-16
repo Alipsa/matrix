@@ -9,6 +9,15 @@ import se.alipsa.matrix.charts.util.ColorUtil
  * When the data contains color values (e.g., 'red', 'blue', '#FF0000'), this scale
  * uses those exact values rather than mapping them through a palette.
  *
+ * Supported color formats:
+ * <ul>
+ *   <li>Named colors: 'red', 'blue', 'green', etc. (standard SVG/CSS color names)</li>
+ *   <li>Hex colors: '#RGB', '#RRGGBB', or '#RRGGBBAA'</li>
+ *   <li>Gray shades: 'grey50', 'gray75', etc. (0-100)</li>
+ * </ul>
+ *
+ * Invalid colors will fall back to the naValue (default: 'grey50').
+ *
  * Example:
  * <pre>
  * // Data has a column 'pointColor' with values ['red', 'blue', 'green']
