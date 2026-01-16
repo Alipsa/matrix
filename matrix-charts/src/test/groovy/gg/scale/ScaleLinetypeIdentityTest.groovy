@@ -104,4 +104,63 @@ class ScaleLinetypeIdentityTest {
     assertEquals('1', scale.transform(1))
     assertEquals('2', scale.transform(2))
   }
+
+  // Edge case tests
+
+  @Test
+  void testCustomDashPattern() {
+    def scale = new ScaleLinetypeIdentity()
+    // Custom SVG dash patterns should pass through
+    assertEquals('5,5', scale.transform('5,5'))
+    assertEquals('10,5,2,5', scale.transform('10,5,2,5'))
+    assertEquals('2,2,8,2', scale.transform('2,2,8,2'))
+  }
+
+  @Test
+  void testEmptyString() {
+    def scale = new ScaleLinetypeIdentity()
+    // Empty string should convert to string
+    assertEquals('', scale.transform(''))
+  }
+
+  @Test
+  void testBooleanValue() {
+    def scale = new ScaleLinetypeIdentity()
+    // Boolean values should convert to string
+    assertEquals('true', scale.transform(true))
+    assertEquals('false', scale.transform(false))
+  }
+
+  @Test
+  void testCaseVariations() {
+    def scale = new ScaleLinetypeIdentity()
+    // Linetype names should pass through with original case
+    assertEquals('SOLID', scale.transform('SOLID'))
+    assertEquals('Dashed', scale.transform('Dashed'))
+    assertEquals('DotTed', scale.transform('DotTed'))
+  }
+
+  @Test
+  void testWhitespace() {
+    def scale = new ScaleLinetypeIdentity()
+    // Whitespace should be preserved
+    assertEquals(' solid ', scale.transform(' solid '))
+    assertEquals('  dashed', scale.transform('  dashed'))
+  }
+
+  @Test
+  void testInvalidLinetype() {
+    def scale = new ScaleLinetypeIdentity()
+    // Invalid/unknown linetype names should pass through
+    // (rendering layer will handle fallback to solid)
+    assertEquals('invalid_type', scale.transform('invalid_type'))
+    assertEquals('xyz123', scale.transform('xyz123'))
+  }
+
+  @Test
+  void testBlankLinetype() {
+    def scale = new ScaleLinetypeIdentity()
+    // 'blank' is a valid linetype (no line drawn)
+    assertEquals('blank', scale.transform('blank'))
+  }
 }

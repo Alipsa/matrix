@@ -100,4 +100,61 @@ class ScaleSizeIdentityTest {
     def scale = new ScaleSizeIdentity()
     assertEquals(12.75 as BigDecimal, scale.transform(12.75G))
   }
+
+  // Edge case tests
+
+  @Test
+  void testNegativeValue() {
+    def scale = new ScaleSizeIdentity()
+    // Negative values should be clamped to 0.1
+    assertEquals(0.1 as BigDecimal, scale.transform(-5))
+    assertEquals(0.1 as BigDecimal, scale.transform(-0.5))
+  }
+
+  @Test
+  void testZeroValue() {
+    def scale = new ScaleSizeIdentity()
+    // Zero should be clamped to 0.1 for visibility
+    assertEquals(0.1 as BigDecimal, scale.transform(0))
+    assertEquals(0.1 as BigDecimal, scale.transform(0.0))
+  }
+
+  @Test
+  void testVerySmallPositiveValue() {
+    def scale = new ScaleSizeIdentity()
+    // Values less than 0.1 should be clamped
+    assertEquals(0.1 as BigDecimal, scale.transform(0.05))
+    assertEquals(0.1 as BigDecimal, scale.transform(0.001))
+  }
+
+  @Test
+  void testNonNumericString() {
+    def scale = new ScaleSizeIdentity()
+    // Non-numeric strings should fall back to naValue
+    assertEquals(3.0 as BigDecimal, scale.transform('abc'))
+    assertEquals(3.0 as BigDecimal, scale.transform('not a number'))
+  }
+
+  @Test
+  void testEmptyString() {
+    def scale = new ScaleSizeIdentity()
+    // Empty string should fall back to naValue
+    assertEquals(3.0 as BigDecimal, scale.transform(''))
+  }
+
+  @Test
+  void testBooleanValue() {
+    def scale = new ScaleSizeIdentity()
+    // Boolean values should fall back to naValue
+    assertEquals(3.0 as BigDecimal, scale.transform(true))
+    assertEquals(3.0 as BigDecimal, scale.transform(false))
+  }
+
+  @Test
+  void testVeryLargeValue() {
+    def scale = new ScaleSizeIdentity()
+    // Very large values should be accepted as-is
+    def result = scale.transform(1000)
+    assertEquals(1000 as BigDecimal, result)
+  }
 }

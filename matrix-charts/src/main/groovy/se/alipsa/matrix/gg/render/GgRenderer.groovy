@@ -1338,6 +1338,8 @@ class GgRenderer {
         return GgStat.sf(data, aes, layer.statParams)
       case StatType.SF_COORDINATES:
         return GgStat.sfCoordinates(data, aes, layer.statParams)
+      case StatType.ALIGN:
+        return GgStat.align(data, aes, layer.statParams)
       default:
         return data
     }

@@ -29,6 +29,13 @@ class ScaleSizeIdentity extends Scale {
   Object transform(Object value) {
     if (value == null) return naValue
     BigDecimal result = ScaleUtils.coerceToNumber(value)
-    return result != null ? result : naValue
+    if (result == null) return naValue
+
+    // Clamp negative values to minimum size (0.1 to ensure visibility)
+    if (result < 0.1) {
+      return 0.1
+    }
+
+    return result
   }
 }

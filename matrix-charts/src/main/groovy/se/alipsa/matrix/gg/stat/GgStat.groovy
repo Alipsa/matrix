@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.scale.ScaleUtils
 import se.alipsa.matrix.stats.distribution.TDistribution
 import se.alipsa.matrix.stats.kde.Kernel
 import se.alipsa.matrix.stats.kde.KernelDensity
@@ -2288,6 +2289,227 @@ class GgStat {
     }
 
     return [col, row] as int[]
+  }
+
+  /**
+   * Align data groups to a common set of x-coordinates via linear interpolation.
+   * Used primarily for stacked area charts where groups have different x-values.
+   *
+   * This stat creates a union of all x-values across all groups, then interpolates
+   * y-values for each group at those common x-coordinates. This ensures smooth stacking.
+   *
+   * @param data the input data Matrix
+   * @param aes the aesthetic mappings (must include x and y)
+   * @param params optional parameters (currently unused)
+   * @return Matrix with aligned data (all groups have same x-values)
+   */
+  @CompileDynamic
+  static Matrix align(Matrix data, Aes aes, Map params = [:]) {
+    if (data == null || data.rowCount() == 0) return data
+
+    // 1. Extract column names
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+    String groupCol = aes.fillColName ?: aes.groupColName ?: aes.colorColName
+
+    if (!xCol || !yCol) {
+      return data  // Require x and y
+    }
+
+    // Verify columns exist in data
+    if (!data.columnNames().contains(xCol) || !data.columnNames().contains(yCol)) {
+      return data  // Return original if columns missing
+    }
+
+    // 2. Collect all unique x-values across all groups
+    Set<BigDecimal> allXValues = new TreeSet<>()
+    data.each { row ->
+      def xVal = ScaleUtils.coerceToNumber(row[xCol])
+      if (xVal != null) {
+        allXValues.add(xVal)
+      }
+    }
+
+    if (allXValues.size() <= 1) {
+      return data  // No alignment needed
+    }
+
+    // 3. Group data by group column (or single group)
+    def groups = data.rows().groupBy { row ->
+      groupCol ? row[groupCol] : '__all__'
+    }
+
+    // 4. For each group, interpolate y-values at all x-coordinates
+    List<Map> alignedRows = []
+    groups.each { groupKey, rows ->
+      // Sort by x (rows is a List but type checking doesn't see it as List<Map>)
+      def sortedRows = rows.sort(false) { a, b ->
+        def aNum = ScaleUtils.coerceToNumber(a[xCol])
+        def bNum = ScaleUtils.coerceToNumber(b[xCol])
+        if (aNum == null && bNum == null) return 0
+        if (aNum == null) return -1
+        if (bNum == null) return 1
+        return aNum <=> bNum
+      }
+
+      // Filter out rows with null x or y
+      def validRows = sortedRows.findAll { row ->
+        ScaleUtils.coerceToNumber(row[xCol]) != null &&
+            ScaleUtils.coerceToNumber(row[yCol]) != null
+      }
+
+      if (validRows.isEmpty()) return
+
+      // Create interpolated points for each x-value in the union
+      allXValues.each { targetX ->
+        Map newRow = [:]
+
+        // Copy group identifier
+        if (groupCol) {
+          newRow[groupCol] = groupKey != '__all__' ? groupKey : null
+        }
+
+        // Set x value
+        newRow[xCol] = targetX
+
+        // Interpolate y value
+        BigDecimal yValue = interpolateY(validRows, xCol, yCol, targetX)
+        newRow[yCol] = yValue
+
+        // Copy other columns from nearest row (preserve additional aesthetics)
+        copyOtherColumns(newRow, validRows, xCol, targetX, [xCol, yCol, groupCol] as Set)
+
+        alignedRows << newRow
+      }
+    }
+
+    // 5. Build result matrix
+    if (alignedRows.isEmpty()) {
+      return data
+    }
+
+    return Matrix.builder()
+        .mapList(alignedRows)
+        .build()
+  }
+
+  /**
+   * Linearly interpolate y-value at targetX based on surrounding points.
+   * Handles edge cases: extrapolation at boundaries uses nearest value.
+   *
+   * @param rows sorted list of data rows (must be sorted by x)
+   * @param xCol x column name
+   * @param yCol y column name
+   * @param targetX x-coordinate to interpolate at
+   * @return interpolated y-value
+   */
+  @CompileDynamic
+  private static BigDecimal interpolateY(List rows, String xCol, String yCol, BigDecimal targetX) {
+    if (rows.isEmpty()) return null
+
+    // Find surrounding points
+    def before = null
+    def after = null
+
+    for (int i = 0; i < rows.size(); i++) {
+      BigDecimal rowX = ScaleUtils.coerceToNumber(rows[i][xCol])
+      if (rowX == null) continue
+
+      if (rowX <= targetX) {
+        before = rows[i]
+      }
+      if (rowX >= targetX && after == null) {
+        after = rows[i]
+        break
+      }
+    }
+
+    // Edge case: targetX is exactly at a data point
+    if (before != null) {
+      BigDecimal beforeX = ScaleUtils.coerceToNumber(before[xCol])
+      if (beforeX == targetX) {
+        return ScaleUtils.coerceToNumber(before[yCol])
+      }
+    }
+    if (after != null) {
+      BigDecimal afterX = ScaleUtils.coerceToNumber(after[xCol])
+      if (afterX == targetX) {
+        return ScaleUtils.coerceToNumber(after[yCol])
+      }
+    }
+
+    // Case 1: targetX is before all data points (extrapolate using first point)
+    if (before == null && after != null) {
+      return ScaleUtils.coerceToNumber(after[yCol])
+    }
+
+    // Case 2: targetX is after all data points (extrapolate using last point)
+    if (before != null && after == null) {
+      return ScaleUtils.coerceToNumber(before[yCol])
+    }
+
+    // Case 3: Linear interpolation between before and after
+    if (before != null && after != null) {
+      BigDecimal x0 = ScaleUtils.coerceToNumber(before[xCol])
+      BigDecimal y0 = ScaleUtils.coerceToNumber(before[yCol])
+      BigDecimal x1 = ScaleUtils.coerceToNumber(after[xCol])
+      BigDecimal y1 = ScaleUtils.coerceToNumber(after[yCol])
+
+      if (x0 == null || y0 == null || x1 == null || y1 == null) {
+        return y0 ?: y1  // Fallback to available value
+      }
+
+      if (x1 == x0) {
+        // Avoid division by zero (points have same x)
+        return (y0 + y1) / 2
+      }
+
+      // Linear interpolation formula: y = y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+      BigDecimal t = (targetX - x0) / (x1 - x0)
+      return y0 + (y1 - y0) * t
+    }
+
+    // Fallback: no valid data
+    return null
+  }
+
+  /**
+   * Copy additional columns from the nearest row to preserve aesthetics.
+   *
+   * @param targetRow the row being constructed
+   * @param sourceRows the list of source rows (sorted by x)
+   * @param xCol x column name
+   * @param targetX x-coordinate of target row
+   * @param excludeCols columns to skip (already set)
+   */
+  @CompileDynamic
+  private static void copyOtherColumns(Map targetRow, List sourceRows,
+                                       String xCol, BigDecimal targetX, Set<String> excludeCols) {
+    if (sourceRows.isEmpty()) return
+
+    // Find nearest row by x-distance
+    def nearest = sourceRows[0]
+    BigDecimal minDist = null
+
+    sourceRows.each { row ->
+      BigDecimal rowX = ScaleUtils.coerceToNumber(row[xCol])
+      if (rowX != null) {
+        BigDecimal dist = (rowX - targetX).abs()
+        if (minDist == null || dist < minDist) {
+          minDist = dist
+          nearest = row
+        }
+      }
+    }
+
+    // Copy all columns except those already set
+    // Convert to Map if it's a Row object
+    def nearestMap = (nearest instanceof Map) ? nearest : nearest.toMap()
+    nearestMap.each { key, value ->
+      if (!excludeCols.contains(key) && !targetRow.containsKey(key)) {
+        targetRow[key] = value
+      }
+    }
   }
 
 }

@@ -42,7 +42,7 @@ class GeomArea extends Geom {
   String position = 'stack'
 
   GeomArea() {
-    defaultStat = StatType.IDENTITY
+    defaultStat = StatType.ALIGN
     requiredAes = ['x', 'y']
     defaultAes = [fill: 'gray', color: 'black', alpha: 0.7] as Map<String, Object>
   }

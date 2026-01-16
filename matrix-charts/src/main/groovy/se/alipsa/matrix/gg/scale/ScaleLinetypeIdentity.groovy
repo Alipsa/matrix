@@ -8,6 +8,10 @@ import groovy.transform.CompileStatic
  * When the data contains linetype names (e.g., 'solid', 'dashed', 'dotted'), this scale
  * uses those exact values rather than mapping them from a palette.
  *
+ * Supported linetypes: 'solid', 'dashed', 'dotted', 'longdash', 'twodash'.
+ * Custom SVG dash patterns (e.g., '5,5' or '10,5,2,5') are also supported.
+ * Unknown linetypes will fall back to the naValue (default: 'solid').
+ *
  * Example:
  * <pre>
  * // Data has a column 'lineStyle' with values ['solid', 'dashed', 'dotted']

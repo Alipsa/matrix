@@ -126,4 +126,97 @@ class ScaleColorIdentityTest {
     assertNotNull(result)
     assertEquals('unknowncolor123', result)
   }
+
+  // Edge case tests
+
+  @Test
+  void testGreyShades() {
+    def scale = new ScaleColorIdentity()
+    // grey50, gray75, etc. should be normalized to hex
+    def grey50 = scale.transform('grey50')
+    assertNotNull(grey50)
+    assertTrue(grey50.toString().startsWith('#'))
+
+    def gray75 = scale.transform('gray75')
+    assertNotNull(gray75)
+    assertTrue(gray75.toString().startsWith('#'))
+  }
+
+  @Test
+  void testHexColorVariations() {
+    def scale = new ScaleColorIdentity()
+    // Various hex formats should pass through
+    assertEquals('#F00', scale.transform('#F00'))  // 3-digit
+    assertEquals('#FF0000', scale.transform('#FF0000'))  // 6-digit
+    assertEquals('#FF000080', scale.transform('#FF000080'))  // 8-digit with alpha
+  }
+
+  @Test
+  void testInvalidHexColor() {
+    def scale = new ScaleColorIdentity()
+    // Invalid hex colors should be returned as-is (SVG will handle)
+    assertEquals('#GGG', scale.transform('#GGG'))
+    assertEquals('#12', scale.transform('#12'))
+    assertEquals('#ZZZZZ', scale.transform('#ZZZZZ'))
+  }
+
+  @Test
+  void testEmptyString() {
+    def scale = new ScaleColorIdentity()
+    // Empty string should be returned
+    def result = scale.transform('')
+    assertNotNull(result)
+    assertEquals('', result)
+  }
+
+  @Test
+  void testBooleanValue() {
+    def scale = new ScaleColorIdentity()
+    // Boolean values should convert to string
+    assertEquals('true', scale.transform(true))
+    assertEquals('false', scale.transform(false))
+  }
+
+  @Test
+  void testNumericValue() {
+    def scale = new ScaleColorIdentity()
+    // Numeric values should convert to string
+    assertEquals('123', scale.transform(123))
+    assertEquals('42', scale.transform(42))
+  }
+
+  @Test
+  void testWhitespace() {
+    def scale = new ScaleColorIdentity()
+    // Whitespace should be handled by normalizeColor
+    def result = scale.transform(' red ')
+    assertNotNull(result)
+    // normalizeColor trims, so we expect 'red' or normalized value
+    assertTrue(result == 'red' || result == ' red ')
+  }
+
+  @Test
+  void testCaseInsensitivity() {
+    def scale = new ScaleColorIdentity()
+    // Named colors in various cases
+    assertEquals('RED', scale.transform('RED'))
+    assertEquals('Blue', scale.transform('Blue'))
+    assertEquals('GrEeN', scale.transform('GrEeN'))
+  }
+
+  @Test
+  void testRGBFormat() {
+    def scale = new ScaleColorIdentity()
+    // RGB format should pass through (SVG supports it)
+    assertEquals('rgb(255,0,0)', scale.transform('rgb(255,0,0)'))
+    assertEquals('rgba(0,255,0,0.5)', scale.transform('rgba(0,255,0,0.5)'))
+  }
+
+  @Test
+  void testHSLFormat() {
+    def scale = new ScaleColorIdentity()
+    // HSL format should pass through (SVG supports it)
+    assertEquals('hsl(120,100%,50%)', scale.transform('hsl(120,100%,50%)'))
+    assertEquals('hsla(240,100%,50%,0.5)', scale.transform('hsla(240,100%,50%,0.5)'))
+  }
 }

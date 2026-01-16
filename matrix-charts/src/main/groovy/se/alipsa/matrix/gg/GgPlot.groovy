@@ -23,6 +23,7 @@ import se.alipsa.matrix.gg.geom.GeomHline
 import se.alipsa.matrix.gg.geom.GeomJitter
 import se.alipsa.matrix.gg.geom.GeomLabel
 import se.alipsa.matrix.gg.geom.GeomLine
+import se.alipsa.matrix.gg.geom.GeomMag
 import se.alipsa.matrix.gg.geom.GeomMap
 import se.alipsa.matrix.gg.geom.GeomQq
 import se.alipsa.matrix.gg.geom.GeomQqLine
@@ -131,6 +132,7 @@ import se.alipsa.matrix.gg.scale.ScaleXDatetime
 import se.alipsa.matrix.gg.scale.ScaleYDatetime
 import se.alipsa.matrix.gg.scale.ScaleXTime
 import se.alipsa.matrix.gg.scale.ScaleYTime
+import se.alipsa.matrix.gg.stat.StatsAlign
 import se.alipsa.matrix.gg.stat.StatsBin2D
 import se.alipsa.matrix.gg.stat.StatsBin
 import se.alipsa.matrix.gg.stat.StatsBinHex
@@ -2196,6 +2198,31 @@ class GgPlot {
     return new GeomSpoke(params)
   }
 
+  /**
+   * Create a magnitude geom for vector field visualization.
+   * Renders vector magnitudes at specified (x,y) locations using size and/or color.
+   *
+   * @return a new GeomMag instance
+   */
+  static GeomMag geom_mag() {
+    return new GeomMag()
+  }
+
+  /**
+   * Create a magnitude geom with a layer-specific aesthetic mapping.
+   * Useful for visualizing vector field magnitudes in physics, fluid dynamics, etc.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a new GeomMag instance
+   */
+  static GeomMag geom_mag(Aes mapping) {
+    return geom_mag([mapping: mapping])
+  }
+
+  static GeomMag geom_mag(Map params) {
+    return new GeomMag(params)
+  }
+
   static GeomCurve geom_curve() {
     return new GeomCurve()
   }
@@ -4207,6 +4234,27 @@ class GgPlot {
    */
   static StatsSpoke stat_spoke(Map params = [:]) {
     return new StatsSpoke(params)
+  }
+
+  /**
+   * Align groups to common x-coordinates via interpolation.
+   * Used primarily for stacked area charts.
+   *
+   * Creates a union of all x-values across groups and interpolates y-values
+   * at those coordinates. This enables smooth stacking even when groups have
+   * misaligned data points.
+   *
+   * <pre>
+   * // Disable default alignment in geom_area
+   * ggplot(data, aes(x: 'time', y: 'value', fill: 'group')) +
+   *   geom_area(stat: 'identity')  // No interpolation
+   * </pre>
+   *
+   * @param params stat parameters (currently unused)
+   * @return StatsAlign instance
+   */
+  static StatsAlign stat_align(Map params = [:]) {
+    return new StatsAlign(params)
   }
 
   static class As {
