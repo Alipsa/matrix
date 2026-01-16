@@ -207,7 +207,7 @@ class GeomMag extends Geom {
   private static String interpolateColor(String color1, String color2, BigDecimal t) {
     // Simple RGB interpolation (not perceptually uniform, but adequate for basic use)
     // Normalize t to [0, 1]
-    BigDecimal normalized = 0.0.max(1.0.min(t))
+    BigDecimal normalized = t.max(0.0).min(1.0)
 
     // Map color names to approximate RGB
     Map<String, List<Integer>> colorMap = [
