@@ -14,7 +14,7 @@ It is primarily used as the default statistic for **`geom_area()`** to ensure th
 
 In a stacked area chart, every layer (group) is stacked on top of the one below it. For this to work mathematically, every group must have a y-value defined for every x-value present in the plot.
 
-If your data is "misaligned"—for example, Group A has a data point at  but Group B does not—`ggplot2` cannot stack them directly because there is no value for Group B to add to Group A at that specific x-coordinate.
+If your data is "misaligned"—for example, Group A has a data point at x = 2 but Group B does not—`ggplot2` cannot stack them directly because there is no value for Group B to add to Group A at that specific x-coordinate.
 
 ### How `stat_align()` Works
 
