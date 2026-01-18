@@ -63,7 +63,8 @@ dependencies {
   compileOnly project(':matrix-core')
   compileOnly project(':matrix-stats')
   compileOnly project(':matrix-groovy-ext')
-  api("se.alipsa.groovy:gsvg:0.9.0")
+  api("se.alipsa.groovy:gsvg:1.0.0")
+  api("se.alipsa.groovy:gsvg-export:1.0.0")
 
   // One of these is enough
   //implementation "org.jfree:jfreechart:1.5.6"
