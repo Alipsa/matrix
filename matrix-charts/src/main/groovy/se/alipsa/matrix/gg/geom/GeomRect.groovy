@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -59,6 +60,11 @@ class GeomRect extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xminCol = params?.get('xmin')?.toString() ?: 'xmin'
@@ -71,6 +77,7 @@ class GeomRect extends Geom {
     Scale yScale = scales['y']
     Scale fillScale = scales['fill'] ?: scales['color']
 
+    int elementIndex = 0
     data.each { row ->
       def xminVal = row[xminCol]
       def xmaxVal = row[xmaxCol]
@@ -78,7 +85,10 @@ class GeomRect extends Geom {
       def ymaxVal = row[ymaxCol]
       def fillVal = fillCol ? row[fillCol] : null
 
-      if (xminVal == null || xmaxVal == null || yminVal == null || ymaxVal == null) return
+      if (xminVal == null || xmaxVal == null || yminVal == null || ymaxVal == null) {
+        elementIndex++
+        return
+      }
 
       // Transform coordinates
       Number xminPx = xScale?.transform(xminVal) as Number
@@ -86,7 +96,10 @@ class GeomRect extends Geom {
       Number yminPx = yScale?.transform(yminVal) as Number
       Number ymaxPx = yScale?.transform(ymaxVal) as Number
 
-      if (xminPx == null || xmaxPx == null || yminPx == null || ymaxPx == null) return
+      if (xminPx == null || xmaxPx == null || yminPx == null || ymaxPx == null) {
+        elementIndex++
+        return
+      }
 
       // Calculate rectangle bounds (note: in SVG, y increases downward)
       BigDecimal xminBd = xminPx as BigDecimal
@@ -138,6 +151,10 @@ class GeomRect extends Geom {
       } else {
         rect.stroke('none')
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(rect, ctx, 'rect', 'gg-rect', elementIndex)
+      elementIndex++
     }
   }
 

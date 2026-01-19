@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.geom.Point
 
@@ -69,6 +70,11 @@ class GeomPolygon extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 3) return  // Need at least 3 points for a polygon
 
     String xCol = aes.xColName
@@ -98,16 +104,18 @@ class GeomPolygon extends Geom {
         } as Map<Object, List<Map>>
 
     // Render each group as a separate polygon
+    int elementIndex = 0
     groups.each { groupKey, rows ->
       renderPolygon(group, rows, xCol, yCol, fillCol, colorCol, sizeCol, alphaCol, groupKey,
-                   xScale, yScale, fillScale, colorScale, sizeScale, alphaScale, aes)
+                   xScale, yScale, fillScale, colorScale, sizeScale, alphaScale, aes, ctx, elementIndex)
+      elementIndex++
     }
   }
 
   private void renderPolygon(G group, List<Map> rows, String xCol, String yCol,
                             String fillCol, String colorCol, String sizeCol, String alphaCol, Object groupKey,
                             Scale xScale, Scale yScale, Scale fillScale, Scale colorScale,
-                            Scale sizeScale, Scale alphaScale, Aes aes) {
+                            Scale sizeScale, Scale alphaScale, Aes aes, RenderContext ctx, int elementIndex) {
     // DO NOT sort - preserve data order
     List<Point> points = rows.collect { row ->
       def xVal = row[xCol]
@@ -186,5 +194,8 @@ class GeomPolygon extends Geom {
     if (polygonAlpha < 1.0) {
       path.addAttribute('opacity', polygonAlpha)
     }
+
+    // Apply CSS attributes
+    GeomUtils.applyAttributes(path, ctx, 'polygon', 'gg-polygon', elementIndex)
   }
 }

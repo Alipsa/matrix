@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.gg.geom.Point
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * Hexagonal binning geometry for creating hexbin plots from point data.
@@ -75,6 +76,11 @@ class GeomHex extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 1) return
 
     String xCol = aes.xColName
@@ -149,6 +155,7 @@ class GeomHex extends Geom {
 
     if (maxCount == 0) return
 
+    int elementIndex = 0
     // Render hexagons
     hexCounts.each { String key, Integer count ->
       if (drop && count == 0) return
@@ -213,6 +220,10 @@ class GeomHex extends Geom {
       if (alpha < 1.0) {
         path.addAttribute('fill-opacity', alpha)
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(path, ctx, 'hex', 'gg-hex', elementIndex)
+      elementIndex++
     }
   }
 

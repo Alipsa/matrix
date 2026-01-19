@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleUtils
 
@@ -63,7 +64,7 @@ class GeomMag extends Geom {
   }
 
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xCol = aes.xColName
@@ -102,6 +103,7 @@ class GeomMag extends Geom {
     }
 
     // Render each point
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
@@ -170,7 +172,10 @@ class GeomMag extends Geom {
       BigDecimal pointAlpha = GeomUtils.extractPointAlpha(this.alpha, aes, alphaCol, row.toMap(), alphaScale)
 
       // Draw the point
+      // Note: GeomUtils.drawPoint returns void, so CSS attributes cannot be applied to mag points
+      // until GeomUtils.drawPoint is refactored to return the created element(s)
       GeomUtils.drawPoint(group, xPx, yPx, pointSize, pointColor, pointShape, pointAlpha)
+      elementIndex++
     }
   }
 

@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 
@@ -64,6 +65,11 @@ class GeomCrossbar extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xCol = aes?.xColName ?: 'x'
@@ -81,6 +87,7 @@ class GeomCrossbar extends Geom {
     BigDecimal defaultWidth = resolveDefaultWidth(xScale, data, xCol)
     BigDecimal widthValue = width ?: defaultWidth
 
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
@@ -89,14 +96,20 @@ class GeomCrossbar extends Geom {
       def fillVal = fillCol ? row[fillCol] : null
       def colorVal = colorCol ? row[colorCol] : null
 
-      if (xVal == null || yVal == null || yminVal == null || ymaxVal == null) return
+      if (xVal == null || yVal == null || yminVal == null || ymaxVal == null) {
+        elementIndex++
+        return
+      }
 
       BigDecimal xCenter = xScale?.transform(xVal) as BigDecimal
       BigDecimal yCenter = yScale?.transform(yVal) as BigDecimal
       BigDecimal yMin = yScale?.transform(yminVal) as BigDecimal
       BigDecimal yMax = yScale?.transform(ymaxVal) as BigDecimal
 
-      if (xCenter == null || yCenter == null || yMin == null || yMax == null) return
+      if (xCenter == null || yCenter == null || yMin == null || yMax == null) {
+        elementIndex++
+        return
+      }
 
       // Calculate half width in pixels
       BigDecimal halfWidthPx
@@ -108,7 +121,10 @@ class GeomCrossbar extends Geom {
         BigDecimal halfWidthData = widthValue / 2
         BigDecimal xLeft = xScale.transform(xNum - halfWidthData) as BigDecimal
         BigDecimal xRight = xScale.transform(xNum + halfWidthData) as BigDecimal
-        if (xLeft == null || xRight == null) return
+        if (xLeft == null || xRight == null) {
+          elementIndex++
+          return
+        }
         halfWidthPx = (xRight - xLeft).abs() / 2
       }
 
@@ -164,6 +180,9 @@ class GeomCrossbar extends Geom {
         rect.addAttribute('stroke-opacity', alpha)
       }
 
+      // Apply CSS attributes to rectangle
+      GeomUtils.applyAttributes(rect, ctx, 'crossbar', 'gg-crossbar', elementIndex)
+
       // Draw the middle line (at y position, with fattened stroke)
       BigDecimal middleLineWidth = linewidth * fatten
       def line = group.addLine()
@@ -178,6 +197,11 @@ class GeomCrossbar extends Geom {
       if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
+
+      // Apply CSS attributes to middle line
+      GeomUtils.applyAttributes(line, ctx, 'crossbar', 'gg-crossbar', elementIndex)
+
+      elementIndex++
     }
   }
 

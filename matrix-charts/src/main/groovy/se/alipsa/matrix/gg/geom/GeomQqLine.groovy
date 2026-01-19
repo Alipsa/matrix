@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -55,7 +56,7 @@ class GeomQqLine extends Geom {
   }
 
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 2) return
 
     String xCol = data.columnNames().contains('x') ? 'x' : aes.xColName
@@ -84,16 +85,17 @@ class GeomQqLine extends Geom {
       groups[groupKey] << row.toMap()
     }
 
+    int elementIndex = 0
     groups.each { groupKey, rows ->
-      renderLine(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
-          xScale, yScale, colorScale, sizeScale, alphaScale, aes)
+      elementIndex = renderLine(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
+          xScale, yScale, colorScale, sizeScale, alphaScale, aes, ctx, elementIndex)
     }
   }
 
-  private void renderLine(G group, List<Map> rows, String xCol, String yCol,
+  private int renderLine(G group, List<Map> rows, String xCol, String yCol,
                           String colorCol, String sizeCol, String alphaCol, Object groupKey,
                           Scale xScale, Scale yScale, Scale colorScale,
-                          Scale sizeScale, Scale alphaScale, Aes aes) {
+                          Scale sizeScale, Scale alphaScale, Aes aes, RenderContext ctx, int elementIndex) {
     List<Map> sortedRows = rows.sort { a, b ->
       def xA = a[xCol]
       def xB = b[xCol]
@@ -152,6 +154,11 @@ class GeomQqLine extends Geom {
       if ((lineAlpha as double) < 1.0) {
         line.addAttribute('stroke-opacity', lineAlpha)
       }
+
+      GeomUtils.applyAttributes(line, ctx, 'qq-line', 'gg-qq-line', elementIndex)
+      elementIndex++
     }
+
+    return elementIndex
   }
 }

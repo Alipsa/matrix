@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -55,6 +56,11 @@ class GeomHline extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     Scale yScale = scales['y']
     if (yScale == null) return
 
@@ -88,9 +94,13 @@ class GeomHline extends Geom {
     if (yValues.isEmpty()) return
 
     // Draw horizontal lines
+    int elementIndex = 0
     yValues.unique().each { Number yVal ->
       Number yPx = yScale.transform(yVal) as Number
-      if (yPx == null) return
+      if (yPx == null) {
+        elementIndex++
+        return
+      }
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
@@ -112,6 +122,10 @@ class GeomHline extends Geom {
       if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(line, ctx, 'hline', 'gg-hline', elementIndex)
+      elementIndex++
     }
   }
 

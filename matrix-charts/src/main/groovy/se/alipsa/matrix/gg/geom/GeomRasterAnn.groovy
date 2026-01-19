@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.AnnotationConstants
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleContinuous
 
@@ -61,7 +62,7 @@ class GeomRasterAnn extends Geom {
   }
 
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (raster == null || raster.isEmpty()) return
 
     Scale xScale = scales['x']
@@ -127,6 +128,7 @@ class GeomRasterAnn extends Geom {
 
     // Render each cell
     // Row 0 is rendered at the top (minimum Y pixel position in SVG coordinates)
+    int elementIndex = 0
     for (int row = 0; row < numRows; row++) {
       List<String> rowData = raster[row]
       if (rowData == null || rowData.isEmpty()) continue
@@ -143,13 +145,16 @@ class GeomRasterAnn extends Geom {
         BigDecimal y = startY + row * cellHeight
 
         // Render cell as rectangle (no stroke for performance)
-        rasterGroup.addRect()
+        def rect = rasterGroup.addRect()
             .x(x as int)
             .y(y as int)
             .width((cellWidth as int).max(1))
             .height((cellHeight as int).max(1))
             .fill(normalizedColor)
             .addAttribute('stroke', 'none')
+
+        GeomUtils.applyAttributes(rect, ctx, 'raster-ann', 'gg-raster-ann', elementIndex)
+        elementIndex++
       }
     }
   }

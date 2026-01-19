@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * Label geometry for adding text labels with backgrounds to plots.
@@ -94,6 +95,11 @@ class GeomLabel extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xCol = aes.xColName
@@ -112,11 +118,15 @@ class GeomLabel extends Geom {
     Scale fillScale = scales['fill']
 
     // Render each label
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
 
-      if (xVal == null || yVal == null) return
+      if (xVal == null || yVal == null) {
+        elementIndex++
+        return
+      }
 
       // Get label text
       String labelText = this.label
@@ -129,13 +139,19 @@ class GeomLabel extends Geom {
         labelText = (aes.label as Identity).value?.toString()
       }
 
-      if (labelText == null || labelText.isEmpty()) return
+      if (labelText == null || labelText.isEmpty()) {
+        elementIndex++
+        return
+      }
 
       // Transform coordinates
       BigDecimal xPx = xScale?.transform(xVal) as BigDecimal
       BigDecimal yPx = yScale?.transform(yVal) as BigDecimal
 
-      if (xPx == null || yPx == null) return
+      if (xPx == null || yPx == null) {
+        elementIndex++
+        return
+      }
 
       // Apply nudge
       xPx += nudge_x * 10
@@ -226,6 +242,11 @@ class GeomLabel extends Geom {
         text.addAttribute('font-weight', 'bold')
         text.addAttribute('font-style', 'italic')
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(rect, ctx, 'label', 'gg-label', elementIndex)
+      GeomUtils.applyAttributes(text, ctx, 'label', 'gg-label', elementIndex)
+      elementIndex++
     }
   }
 }

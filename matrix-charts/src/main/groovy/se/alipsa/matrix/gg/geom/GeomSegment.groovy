@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 import static se.alipsa.matrix.ext.NumberExtension.PI
@@ -75,6 +76,11 @@ class GeomSegment extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     Scale xScale = scales['x']
     Scale yScale = scales['y']
     if (xScale == null || yScale == null) return
@@ -121,13 +127,17 @@ class GeomSegment extends Geom {
     if (segments.isEmpty()) return
 
     // Draw segments
+    int elementIndex = 0
     segments.each { Map<String, BigDecimal> seg ->
       BigDecimal x1Px = xScale.transform(seg.x) as BigDecimal
       BigDecimal y1Px = yScale.transform(seg.y) as BigDecimal
       BigDecimal x2Px = xScale.transform(seg.xend) as BigDecimal
       BigDecimal y2Px = yScale.transform(seg.yend) as BigDecimal
 
-      if (x1Px == null || y1Px == null || x2Px == null || y2Px == null) return
+      if (x1Px == null || y1Px == null || x2Px == null || y2Px == null) {
+        elementIndex++
+        return
+      }
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
@@ -149,6 +159,10 @@ class GeomSegment extends Geom {
       if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(line, ctx, 'segment', 'gg-segment', elementIndex)
+      elementIndex++
 
       // Draw arrow if requested
       if (arrow) {

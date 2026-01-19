@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
 
@@ -100,6 +101,11 @@ class GeomViolin extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 3) return
 
     String xCol = aes.xColName
@@ -159,6 +165,7 @@ class GeomViolin extends Geom {
       }
     }
 
+    int elementIndex = 0
     // Render each violin
     densityData.each { xVal, density ->
       if (density.isEmpty()) return
@@ -228,6 +235,9 @@ class GeomViolin extends Geom {
         path.addAttribute('fill-opacity', alpha)
       }
 
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(path, ctx, 'violin', 'gg-violin', elementIndex)
+
       // Draw quantile lines if requested
       if (!draw_quantiles.isEmpty()) {
         List<Number> yValues = groups[xVal]
@@ -251,6 +261,8 @@ class GeomViolin extends Geom {
           }
         }
       }
+
+      elementIndex++
     }
   }
 

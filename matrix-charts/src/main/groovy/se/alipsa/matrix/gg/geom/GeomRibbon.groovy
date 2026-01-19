@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.geom.Point
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * Ribbon geometry for displaying confidence bands or ranges.
@@ -59,6 +60,11 @@ class GeomRibbon extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 2) return
 
     String xCol = aes.xColName
@@ -83,15 +89,18 @@ class GeomRibbon extends Geom {
         } as Map<Object, List<Map>>
 
     // Render each group as a separate ribbon
+    int elementIndex = 0
     groups.each { groupKey, rows ->
       renderRibbon(group, rows, xCol, yminCol, ymaxCol, fillCol, groupKey,
-                   xScale, yScale, fillScale, aes)
+                   xScale, yScale, fillScale, aes, ctx, elementIndex)
+      elementIndex++
     }
   }
 
   private void renderRibbon(G group, List<Map> rows, String xCol, String yminCol, String ymaxCol,
                             String fillCol, Object groupKey,
-                            Scale xScale, Scale yScale, Scale fillScale, Aes aes) {
+                            Scale xScale, Scale yScale, Scale fillScale, Aes aes,
+                            RenderContext ctx, int elementIndex) {
     // Sort rows by x value
     List<Map> sortedRows = sortRowsByX(rows, xCol)
 
@@ -176,6 +185,9 @@ class GeomRibbon extends Geom {
     } else {
       path.stroke('none')
     }
+
+    // Apply CSS attributes
+    GeomUtils.applyAttributes(path, ctx, 'ribbon', 'gg-ribbon', elementIndex)
   }
 
   /**

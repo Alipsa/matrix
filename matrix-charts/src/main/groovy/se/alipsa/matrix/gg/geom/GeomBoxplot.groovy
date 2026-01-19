@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 import se.alipsa.matrix.charts.util.ColorUtil
@@ -109,6 +110,11 @@ class GeomBoxplot extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     // After stat_boxplot, data has: x, ymin, lower, middle, upper, ymax, outliers, width, n
@@ -144,6 +150,7 @@ class GeomBoxplot extends Geom {
       }
     }
 
+    int elementIndex = 0
     // Render each boxplot
     data.eachWithIndex { Row row, int idx ->
       def xVal = row['x']
@@ -320,6 +327,9 @@ class GeomBoxplot extends Geom {
         rect.addAttribute('fill-opacity', alpha)
       }
 
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(rect, ctx, 'boxplot', 'gg-boxplot', elementIndex)
+
       // Draw median line
       boxGroup.addLine()
           .x1(xCenter - halfWidth)
@@ -361,6 +371,8 @@ class GeomBoxplot extends Geom {
           }
         }
       }
+
+      elementIndex++
     }
   }
 

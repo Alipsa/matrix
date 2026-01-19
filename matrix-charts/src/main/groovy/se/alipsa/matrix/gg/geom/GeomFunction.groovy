@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -83,7 +84,7 @@ class GeomFunction extends Geom {
   }
 
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 2) return
 
     // stat_function generates columns named 'x' and 'y'
@@ -121,16 +122,17 @@ class GeomFunction extends Geom {
     }
 
     // Render each group as a separate path
+    int elementIndex = 0
     groups.each { groupKey, rows ->
-      renderFunction(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
-                     xScale, yScale, colorScale, sizeScale, alphaScale, aes)
+      elementIndex = renderFunction(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
+                     xScale, yScale, colorScale, sizeScale, alphaScale, aes, ctx, elementIndex)
     }
   }
 
-  private void renderFunction(G group, List<Map> rows, String xCol, String yCol,
+  private int renderFunction(G group, List<Map> rows, String xCol, String yCol,
                               String colorCol, String sizeCol, String alphaCol, Object groupKey,
                               Scale xScale, Scale yScale, Scale colorScale,
-                              Scale sizeScale, Scale alphaScale, Aes aes) {
+                              Scale sizeScale, Scale alphaScale, Aes aes, RenderContext ctx, int elementIndex) {
     // Function data is already in order - DO NOT sort
     List<double[]> points = []
     rows.each { row ->
@@ -199,5 +201,10 @@ class GeomFunction extends Geom {
     if ((lineAlpha as double) < 1.0) {
       path.addAttribute('stroke-opacity', lineAlpha)
     }
+
+    GeomUtils.applyAttributes(path, ctx, 'function', 'gg-function', elementIndex)
+    elementIndex++
+
+    return elementIndex
   }
 }

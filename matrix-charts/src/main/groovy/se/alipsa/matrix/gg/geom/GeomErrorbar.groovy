@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 
@@ -50,6 +51,11 @@ class GeomErrorbar extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xCol = aes?.xColName ?: 'x'
@@ -67,19 +73,29 @@ class GeomErrorbar extends Geom {
     BigDecimal defaultWidth = resolveDefaultWidth(xScale, data, xCol)
     BigDecimal widthValue = width ?: defaultWidth
 
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yminVal = row[yminCol]
       def ymaxVal = row[ymaxCol]
 
-      if (!(xVal instanceof Number) && !(xScale instanceof ScaleDiscrete)) return
-      if (!(yminVal instanceof Number) || !(ymaxVal instanceof Number)) return
+      if (!(xVal instanceof Number) && !(xScale instanceof ScaleDiscrete)) {
+        elementIndex++
+        return
+      }
+      if (!(yminVal instanceof Number) || !(ymaxVal instanceof Number)) {
+        elementIndex++
+        return
+      }
 
       def xCenter = xScale.transform(xVal)
       def yMinPx = yScale.transform(yminVal)
       def yMaxPx = yScale.transform(ymaxVal)
 
-      if (xCenter == null || yMinPx == null || yMaxPx == null) return
+      if (xCenter == null || yMinPx == null || yMaxPx == null) {
+        elementIndex++
+        return
+      }
 
       BigDecimal xCenterPx = xCenter as BigDecimal
       BigDecimal yMin = yMinPx as BigDecimal
@@ -94,13 +110,17 @@ class GeomErrorbar extends Geom {
         BigDecimal halfWidthData = widthValue / 2.0
         def xLeft = xScale.transform(xNum - halfWidthData)
         def xRight = xScale.transform(xNum + halfWidthData)
-        if (xLeft == null || xRight == null) return
+        if (xLeft == null || xRight == null) {
+          elementIndex++
+          return
+        }
         halfWidthPx = ((xRight as BigDecimal) - (xLeft as BigDecimal)).abs() / 2.0
       }
 
-      drawLine(group, xCenterPx, yMin, xCenterPx, yMax)
-      drawLine(group, xCenterPx - halfWidthPx, yMin, xCenterPx + halfWidthPx, yMin)
-      drawLine(group, xCenterPx - halfWidthPx, yMax, xCenterPx + halfWidthPx, yMax)
+      drawLine(group, xCenterPx, yMin, xCenterPx, yMax, ctx, elementIndex)
+      drawLine(group, xCenterPx - halfWidthPx, yMin, xCenterPx + halfWidthPx, yMin, ctx, elementIndex)
+      drawLine(group, xCenterPx - halfWidthPx, yMax, xCenterPx + halfWidthPx, yMax, ctx, elementIndex)
+      elementIndex++
     }
   }
 
@@ -131,7 +151,7 @@ class GeomErrorbar extends Geom {
     return minDiff ?: 0.0
   }
 
-  private void drawLine(G group, BigDecimal x1, BigDecimal y1, BigDecimal x2, BigDecimal y2) {
+  private void drawLine(G group, BigDecimal x1, BigDecimal y1, BigDecimal x2, BigDecimal y2, RenderContext ctx, int elementIndex) {
     String lineColor = ColorUtil.normalizeColor(color) ?: color
     def line = group.addLine()
         .x1(x1 as int)
@@ -148,6 +168,9 @@ class GeomErrorbar extends Geom {
     if (alpha < 1.0) {
       line.addAttribute('stroke-opacity', alpha)
     }
+
+    // Apply CSS attributes
+    GeomUtils.applyAttributes(line, ctx, 'errorbar', 'gg-errorbar', elementIndex)
   }
 
   private String getLineDashArray(String type) {

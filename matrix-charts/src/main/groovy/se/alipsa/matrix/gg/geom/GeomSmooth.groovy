@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -68,6 +69,12 @@ class GeomSmooth extends Geom {
   @CompileDynamic
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @CompileDynamic
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 2) return
 
     // The data has already been transformed by GgStat.smooth()
@@ -117,6 +124,7 @@ class GeomSmooth extends Geom {
 
     if (points.size() < 2) return
 
+    int elementIndex = 0
     if (hasBand && upper.size() > 1 && lower.size() == upper.size()) {
       StringBuilder d = new StringBuilder()
       d << "M ${upper[0][0]} ${upper[0][1]}"
@@ -131,6 +139,10 @@ class GeomSmooth extends Geom {
           .fill(ColorUtil.normalizeColor(fill) ?: fill)
           .stroke('none')
       band.addAttribute('fill-opacity', fillAlpha)
+
+      // Apply CSS attributes to band
+      GeomUtils.applyAttributes(band, ctx, 'smooth', 'gg-smooth', elementIndex)
+      elementIndex++
     }
 
     // Draw connected line segments
@@ -149,6 +161,10 @@ class GeomSmooth extends Geom {
       if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
+
+      // Apply CSS attributes to line segments
+      GeomUtils.applyAttributes(line, ctx, 'smooth', 'gg-smooth', elementIndex)
+      elementIndex++
     }
   }
 

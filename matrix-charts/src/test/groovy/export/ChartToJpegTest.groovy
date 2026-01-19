@@ -1,0 +1,77 @@
+package export
+
+import org.junit.jupiter.api.Test
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.matrix.chartexport.ChartToJpeg
+import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.gg.GgChart
+
+import javax.imageio.ImageIO
+import java.awt.image.BufferedImage
+import java.nio.file.Path
+import java.nio.file.Paths
+
+import static se.alipsa.matrix.gg.GgPlot.*
+import static org.junit.jupiter.api.Assertions.*
+
+class ChartToJpegTest {
+
+  @Test
+  void testExportToJpeg() {
+    def mpg = Dataset.mpg()
+    GgChart chart = ggplot(mpg, aes(x: 'cty', y: 'hwy')) +
+        geom_point() +
+        geom_smooth(method: 'lm') +
+        labs(title: 'City vs Highway MPG', x: 'City MPG', y: 'Highway MPG')
+    Svg svg = chart.render()
+
+    Path classLocation = Paths.get(
+        getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
+    )
+    Path buildDir = classLocation.getParent().getParent().getParent()
+    Path filePath = buildDir.resolve("testExportToJpeg.jpg")
+    File file = filePath.toFile()
+
+    ChartToJpeg.export(svg, file, 0.9)
+
+    // Verify file exists
+    assertTrue(file.exists())
+
+    // Verify file size is greater than zero
+    assertTrue(file.length() > 0, "JPEG file should not be empty")
+
+    // Verify the image can be read successfully using ImageIO
+    BufferedImage image = ImageIO.read(file)
+    assertNotNull(image, "JPEG file should be readable by ImageIO")
+
+    // Verify image dimensions are reasonable (greater than zero)
+    assertTrue(image.getWidth() > 0, "Image width should be greater than 0")
+    assertTrue(image.getHeight() > 0, "Image height should be greater than 0")
+  }
+
+  @Test
+  void testExportWithNullSvgChart() {
+    Path classLocation = Paths.get(
+        getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
+    )
+    Path buildDir = classLocation.getParent().getParent().getParent()
+    File file = buildDir.resolve("testNullSvg.jpg").toFile()
+
+    Exception exception = assertThrows(IllegalArgumentException.class, {
+      ChartToJpeg.export(null, file, 0.9)
+    })
+    assertEquals("svgChart must not be null", exception.getMessage())
+  }
+
+  @Test
+  void testExportWithNullTargetFile() {
+    def mpg = Dataset.mpg()
+    GgChart chart = ggplot(mpg, aes(x: 'cty', y: 'hwy')) + geom_point()
+    Svg svg = chart.render()
+
+    Exception exception = assertThrows(IllegalArgumentException.class, {
+      ChartToJpeg.export(svg, null, 0.9)
+    })
+    assertEquals("targetFile cannot be null", exception.getMessage())
+  }
+}

@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 
@@ -55,6 +56,11 @@ class GeomErrorbarh extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String yCol = aes?.yColName ?: 'y'
@@ -72,6 +78,7 @@ class GeomErrorbarh extends Geom {
     double defaultHeight = resolveDefaultHeight(yScale, data, yCol)
     double heightValue = height != null ? (height as double) : defaultHeight
 
+    int elementIndex = 0
     data.each { row ->
       def yVal = row[yCol]
       def xminVal = row[xminCol]
@@ -83,15 +90,22 @@ class GeomErrorbarh extends Geom {
         // Discrete y scale - any value is ok
       } else if (!(yVal instanceof Number)) {
         // Continuous y scale requires numeric value
+        elementIndex++
         return
       }
-      if (!(xminVal instanceof Number) || !(xmaxVal instanceof Number)) return
+      if (!(xminVal instanceof Number) || !(xmaxVal instanceof Number)) {
+        elementIndex++
+        return
+      }
 
       def yCenter = yScale.transform(yVal)
       def xMinPx = xScale.transform(xminVal)
       def xMaxPx = xScale.transform(xmaxVal)
 
-      if (yCenter == null || xMinPx == null || xMaxPx == null) return
+      if (yCenter == null || xMinPx == null || xMaxPx == null) {
+        elementIndex++
+        return
+      }
 
       double yCenterPx = yCenter as double
       double xMin = xMinPx as double
@@ -106,14 +120,18 @@ class GeomErrorbarh extends Geom {
         double halfHeightData = heightValue / 2.0d
         def yBottom = yScale.transform(yNum - halfHeightData)
         def yTop = yScale.transform(yNum + halfHeightData)
-        if (yBottom == null || yTop == null) return
+        if (yBottom == null || yTop == null) {
+          elementIndex++
+          return
+        }
         halfHeightPx = ((yTop as BigDecimal) - (yBottom as BigDecimal)).abs() / 2
       }
 
       // Draw horizontal error bar: horizontal line and vertical end caps
-      drawLine(group, xMin, yCenterPx, xMax, yCenterPx)  // Main horizontal line
-      drawLine(group, xMin, yCenterPx - halfHeightPx, xMin, yCenterPx + halfHeightPx)  // Left cap
-      drawLine(group, xMax, yCenterPx - halfHeightPx, xMax, yCenterPx + halfHeightPx)  // Right cap
+      drawLine(group, xMin, yCenterPx, xMax, yCenterPx, ctx, elementIndex)  // Main horizontal line
+      drawLine(group, xMin, yCenterPx - halfHeightPx, xMin, yCenterPx + halfHeightPx, ctx, elementIndex)  // Left cap
+      drawLine(group, xMax, yCenterPx - halfHeightPx, xMax, yCenterPx + halfHeightPx, ctx, elementIndex)  // Right cap
+      elementIndex++
     }
   }
 
@@ -144,7 +162,7 @@ class GeomErrorbarh extends Geom {
     return Double.isInfinite(minDiff) ? 0.0d : minDiff
   }
 
-  private void drawLine(G group, double x1, double y1, double x2, double y2) {
+  private void drawLine(G group, double x1, double y1, double x2, double y2, RenderContext ctx, int elementIndex) {
     String lineColor = ColorUtil.normalizeColor(color) ?: color
     def line = group.addLine()
         .x1(x1 as int)
@@ -161,6 +179,9 @@ class GeomErrorbarh extends Geom {
     if ((alpha as double) < 1.0d) {
       line.addAttribute('stroke-opacity', alpha)
     }
+
+    // Apply CSS attributes
+    GeomUtils.applyAttributes(line, ctx, 'errorbarh', 'gg-errorbarh', elementIndex)
   }
 
   private String getLineDashArray(String type) {

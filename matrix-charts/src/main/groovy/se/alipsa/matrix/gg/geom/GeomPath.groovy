@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.geom.Point
 
@@ -65,6 +66,11 @@ class GeomPath extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 2) return
 
     String xCol = aes.xColName
@@ -92,16 +98,18 @@ class GeomPath extends Geom {
         } as Map<Object, List<Map>>
 
     // Render each group as a separate path
+    int elementIndex = 0
     groups.each { groupKey, rows ->
       renderPath(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
-                 xScale, yScale, colorScale, sizeScale, alphaScale, aes)
+                 xScale, yScale, colorScale, sizeScale, alphaScale, aes, ctx, elementIndex)
+      elementIndex++
     }
   }
 
   private void renderPath(G group, List<Map> rows, String xCol, String yCol,
                           String colorCol, String sizeCol, String alphaCol, Object groupKey,
                           Scale xScale, Scale yScale, Scale colorScale,
-                          Scale sizeScale, Scale alphaScale, Aes aes) {
+                          Scale sizeScale, Scale alphaScale, Aes aes, RenderContext ctx, int elementIndex) {
     // DO NOT sort - preserve data order (this is the key difference from geom_line)
     List<Point> points = rows.collect { row ->
       def xVal = row[xCol]
@@ -169,5 +177,8 @@ class GeomPath extends Geom {
     if (lineAlpha < 1.0) {
       path.addAttribute('stroke-opacity', lineAlpha)
     }
+
+    // Apply CSS attributes
+    GeomUtils.applyAttributes(path, ctx, 'path', 'gg-path', elementIndex)
   }
 }

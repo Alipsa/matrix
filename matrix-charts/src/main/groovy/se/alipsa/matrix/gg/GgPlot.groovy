@@ -479,6 +479,35 @@ class GgPlot {
   }
 
   /**
+   * Create CSS attribute configuration for SVG elements.
+   * <p>
+   * This helper method creates a {@link CssAttributeConfig} object that controls
+   * whether CSS classes, IDs, and data attributes are added to SVG elements during
+   * chart rendering.
+   * <p>
+   * <strong>Usage:</strong>
+   * <pre>
+   * // Enable CSS attributes with default settings
+   * ggplot(data, aes(x: 'x', y: 'y')) +
+   *   css_attributes(enabled: true) +
+   *   geom_point()
+   *
+   * // Enable with custom chart prefix
+   * ggplot(data, aes(x: 'x', y: 'y')) +
+   *   css_attributes(enabled: true, chartIdPrefix: 'iris') +
+   *   geom_point()
+   * </pre>
+   *
+   * @param params configuration parameters (enabled, includeClasses, includeIds,
+   *               includeDataAttributes, chartIdPrefix, idPrefix)
+   * @return a CssAttributeConfig object
+   * @see CssAttributeConfig
+   */
+  static CssAttributeConfig css_attributes(Map params) {
+    return new CssAttributeConfig(params)
+  }
+
+  /**
    * Set x-axis label.
    */
   static Label xlab(String label) {

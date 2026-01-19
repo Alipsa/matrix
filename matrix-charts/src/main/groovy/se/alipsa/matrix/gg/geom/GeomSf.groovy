@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -63,7 +64,7 @@ class GeomSf extends Geom {
    * @param coord coordinate system
    */
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     // Check for stat_sf preprocessing
@@ -111,7 +112,7 @@ class GeomSf extends Geom {
           linetype: linetype,
           alpha: alpha
       ])
-      polygon.render(group, Matrix.builder().mapList(buckets['polygon']).build(), resolvedAes, scales, coord)
+      polygon.render(group, Matrix.builder().mapList(buckets['polygon']).build(), resolvedAes, scales, coord, ctx)
     }
 
     if (!buckets['line'].isEmpty()) {
@@ -121,7 +122,7 @@ class GeomSf extends Geom {
           linetype: linetype,
           alpha: alpha
       ])
-      path.render(group, Matrix.builder().mapList(buckets['line']).build(), resolvedAes, scales, coord)
+      path.render(group, Matrix.builder().mapList(buckets['line']).build(), resolvedAes, scales, coord, ctx)
     }
 
     if (!buckets['point'].isEmpty()) {
@@ -132,7 +133,7 @@ class GeomSf extends Geom {
           alpha: alpha,
           shape: shape
       ])
-      point.render(group, Matrix.builder().mapList(buckets['point']).build(), resolvedAes, scales, coord)
+      point.render(group, Matrix.builder().mapList(buckets['point']).build(), resolvedAes, scales, coord, ctx)
     }
   }
 

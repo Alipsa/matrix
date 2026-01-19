@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * Text geometry for adding text labels to plots.
@@ -78,6 +79,11 @@ class GeomText extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xCol = aes.xColName
@@ -94,11 +100,15 @@ class GeomText extends Geom {
     Scale colorScale = scales['color']
 
     // Render each text label
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
 
-      if (xVal == null || yVal == null) return
+      if (xVal == null || yVal == null) {
+        elementIndex++
+        return
+      }
 
       // Get label text
       String labelText = this.label
@@ -111,13 +121,19 @@ class GeomText extends Geom {
         labelText = (aes.label as Identity).value?.toString()
       }
 
-      if (labelText == null || labelText.isEmpty()) return
+      if (labelText == null || labelText.isEmpty()) {
+        elementIndex++
+        return
+      }
 
       // Transform coordinates
       BigDecimal xPx = xScale?.transform(xVal) as BigDecimal
       BigDecimal yPx = yScale?.transform(yVal) as BigDecimal
 
-      if (xPx == null || yPx == null) return
+      if (xPx == null || yPx == null) {
+        elementIndex++
+        return
+      }
 
       // Apply nudge (simple pixel offset - could be data units for more accuracy)
       xPx += nudge_x * 10  // approximate scaling
@@ -170,6 +186,10 @@ class GeomText extends Geom {
       if (alpha < 1.0) {
         text.addAttribute('fill-opacity', alpha)
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(text, ctx, 'text', 'gg-text', elementIndex)
+      elementIndex++
     }
   }
 

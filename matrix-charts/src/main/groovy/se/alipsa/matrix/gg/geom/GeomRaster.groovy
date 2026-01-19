@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -63,7 +64,7 @@ class GeomRaster extends Geom {
   }
 
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xCol = aes.xColName
@@ -82,6 +83,7 @@ class GeomRaster extends Geom {
     double cellWidth = this.width != null ? (this.width as double) : calculateResolution(data, xCol)
     double cellHeight = this.height != null ? (this.height as double) : calculateResolution(data, yCol)
 
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
@@ -142,6 +144,9 @@ class GeomRaster extends Geom {
 
       // No stroke by default (optimized for performance)
       rect.addAttribute('stroke', 'none')
+
+      GeomUtils.applyAttributes(rect, ctx, 'raster', 'gg-raster', elementIndex)
+      elementIndex++
     }
   }
 

@@ -1,4 +1,4 @@
-package se.alipsa.matrix.charts.gg
+package se.alipsa.matrix.gg.util
 
 import groovy.transform.CompileStatic
 

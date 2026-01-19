@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -135,6 +136,88 @@ class GeomCount extends Geom {
     }
   }
 
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
+    if (data == null || data.rowCount() < 1) return
+
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+    String colorCol = aes.colorColName
+    String fillCol = aes.fillColName
+
+    if (xCol == null || yCol == null) {
+      throw new IllegalArgumentException("GeomCount requires x and y aesthetics")
+    }
+
+    Scale xScale = scales['x']
+    Scale yScale = scales['y']
+    Scale colorScale = scales['color']
+    Scale fillScale = scales['fill']
+
+    // Count occurrences at each unique (x, y) location
+    Map<String, CountData> counts = data.rows()
+        .findAll { row -> row[xCol] != null && row[yCol] != null }
+        .groupBy { row -> "${row[xCol]}|${row[yCol]}" }
+        .collectEntries { key, rows ->
+          def firstRow = rows[0]
+          [(key): new CountData(
+              x: firstRow[xCol],
+              y: firstRow[yCol],
+              count: rows.size(),
+              color: colorCol ? firstRow[colorCol] : null,
+              fill: fillCol ? firstRow[fillCol] : null
+          )]
+        } as Map<String, CountData>
+
+    if (counts.isEmpty()) return
+
+    // Find max count for size scaling
+    int maxCount = counts.values().max { it.count }.count
+    if (maxCount == 0) return
+
+    int elementIndex = 0
+    // Render each unique location as a sized point
+    counts.values().each { CountData cd ->
+      BigDecimal xPx = xScale?.transform(cd.x) as BigDecimal
+      BigDecimal yPx = yScale?.transform(cd.y) as BigDecimal
+
+      if (xPx == null || yPx == null) {
+        elementIndex++
+        return
+      }
+
+      // Calculate size based on count
+      BigDecimal sizeRange = sizeMax - sizeMin
+      BigDecimal size
+      if (maxCount == 1) {
+        size = sizeMin + sizeRange / 2
+      } else {
+        size = sizeMin + (cd.count - 1) * sizeRange / (maxCount - 1)
+      }
+
+      // Determine colors
+      String pointColor = this.color
+      String pointFill = this.fill
+
+      if (cd.color != null && colorScale != null) {
+        pointColor = colorScale.transform(cd.color)?.toString() ?: this.color
+      }
+
+      if (cd.fill != null && fillScale != null) {
+        pointFill = fillScale.transform(cd.fill)?.toString() ?: this.fill
+      }
+      pointColor = ColorUtil.normalizeColor(pointColor) ?: pointColor
+      pointFill = ColorUtil.normalizeColor(pointFill) ?: pointFill
+
+      // Draw the point
+      def pointElement = drawPointWithContext(group, xPx, yPx, size, pointFill, pointColor)
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(pointElement, ctx, 'count', 'gg-count', elementIndex)
+      elementIndex++
+    }
+  }
+
   /**
    * Draw a point of the specified shape.
    */
@@ -186,6 +269,60 @@ class GeomCount extends Geom {
           circle.addAttribute('fill-opacity', alpha)
         }
         break
+    }
+  }
+
+  /**
+   * Draw a point of the specified shape and return it for CSS attribute application.
+   */
+  private se.alipsa.groovy.svg.SvgElement drawPointWithContext(G group, BigDecimal cx, BigDecimal cy, BigDecimal size, String fillColor, String strokeColor) {
+    BigDecimal halfSize = size / 2
+
+    switch (shape?.toLowerCase()) {
+      case 'square':
+        def rect = group.addRect()
+            .x(cx - halfSize)
+            .y(cy - halfSize)
+            .width(size)
+            .height(size)
+            .fill(fillColor)
+            .stroke(strokeColor)
+        rect.addAttribute('stroke-width', stroke)
+        if (alpha < 1.0) {
+          rect.addAttribute('fill-opacity', alpha)
+        }
+        return rect
+
+      case 'triangle':
+        // Equilateral triangle pointing up - use path instead of polygon
+        BigDecimal h = size * 3.0.sqrt() / 2
+        BigDecimal topY = cy - h * 2 / 3
+        BigDecimal bottomY = cy + h / 3
+        BigDecimal leftX = cx - halfSize
+        BigDecimal rightX = cx + halfSize
+        String pathD = "M ${cx} ${topY} L ${leftX} ${bottomY} L ${rightX} ${bottomY} Z"
+        def path = group.addPath().d(pathD)
+            .fill(fillColor)
+            .stroke(strokeColor)
+        path.addAttribute('stroke-width', stroke)
+        if (alpha < 1.0) {
+          path.addAttribute('fill-opacity', alpha)
+        }
+        return path
+
+      case 'circle':
+      default:
+        def circle = group.addCircle()
+            .cx(cx)
+            .cy(cy)
+            .r(halfSize)
+            .fill(fillColor)
+            .stroke(strokeColor)
+        circle.addAttribute('stroke-width', stroke)
+        if (alpha < 1.0) {
+          circle.addAttribute('fill-opacity', alpha)
+        }
+        return circle
     }
   }
 

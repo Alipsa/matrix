@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.geom.Point
 
@@ -84,16 +85,52 @@ class GeomArea extends Geom {
     }
 
     // Render each group as a separate area
+    int elementIndex = 0
     groups.each { groupKey, rows ->
       renderArea(group, rows*.toMap(), xCol, yCol, fillCol, groupKey,
-                 xScale, yScale, fillScale, baselineY, aes)
+                 xScale, yScale, fillScale, baselineY, aes, null, elementIndex)
+      elementIndex++
+    }
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
+    if (data == null || data.rowCount() < 2) return
+
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+    String groupCol = aes.groupColName ?: aes.fillColName
+    String fillCol = aes.fillColName
+
+    if (xCol == null || yCol == null) {
+      throw new IllegalArgumentException("GeomArea requires x and y aesthetics")
+    }
+
+    Scale xScale = scales['x']
+    Scale yScale = scales['y']
+    Scale fillScale = scales['fill'] ?: scales['color']
+
+    // Get baseline y position (typically y=0 or bottom of plot)
+    BigDecimal baselineY = getBaselineY(yScale)
+
+    // Group data if a group aesthetic is specified
+    def groups = data.rows().groupBy { row ->
+      groupCol ? row[groupCol] : '__all__'
+    }
+
+    // Render each group as a separate area
+    int elementIndex = 0
+    groups.each { groupKey, rows ->
+      renderArea(group, rows*.toMap(), xCol, yCol, fillCol, groupKey,
+                 xScale, yScale, fillScale, baselineY, aes, ctx, elementIndex)
+      elementIndex++
     }
   }
 
   private void renderArea(G group, List<Map> rows, String xCol, String yCol,
                           String fillCol, Object groupKey,
                           Scale xScale, Scale yScale, Scale fillScale,
-                          BigDecimal baselineY, Aes aes) {
+                          BigDecimal baselineY, Aes aes, RenderContext ctx, int elementIndex) {
     // Sort rows by x value
     List<Map> sortedRows = sortRowsByX(rows, xCol)
 
@@ -172,6 +209,11 @@ class GeomArea extends Geom {
       }
     } else {
       path.stroke('none')
+    }
+
+    // Apply CSS attributes
+    if (ctx != null) {
+      GeomUtils.applyAttributes(path, ctx, 'area', 'gg-area', elementIndex)
     }
   }
 

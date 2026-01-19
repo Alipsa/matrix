@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * Step geometry for step plots (staircase pattern).
@@ -65,6 +66,11 @@ class GeomStep extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 2) return
 
     String xCol = aes.xColName
@@ -92,16 +98,19 @@ class GeomStep extends Geom {
         } as Map<Object, List<Map>>
 
     // Render each group as a separate step line
+    int elementIndex = 0
     groups.each { groupKey, rows ->
       renderStep(group, rows, xCol, yCol, colorCol, sizeCol, alphaCol, groupKey,
-                 xScale, yScale, colorScale, sizeScale, alphaScale, aes)
+                 xScale, yScale, colorScale, sizeScale, alphaScale, aes, ctx, elementIndex)
+      elementIndex++
     }
   }
 
   private void renderStep(G group, List<Map> rows, String xCol, String yCol,
                           String colorCol, String sizeCol, String alphaCol, Object groupKey,
                           Scale xScale, Scale yScale, Scale colorScale,
-                          Scale sizeScale, Scale alphaScale, Aes aes) {
+                          Scale sizeScale, Scale alphaScale, Aes aes,
+                          RenderContext ctx, int elementIndex) {
     // Sort rows by x value
     List<Map> sortedRows = sortRowsByX(rows, xCol)
 
@@ -189,6 +198,9 @@ class GeomStep extends Geom {
     if (lineAlpha < 1.0) {
       path.addAttribute('stroke-opacity', lineAlpha)
     }
+
+    // Apply CSS attributes
+    GeomUtils.applyAttributes(path, ctx, 'step', 'gg-step', elementIndex)
   }
 
   /**

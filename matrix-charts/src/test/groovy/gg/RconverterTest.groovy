@@ -1,7 +1,7 @@
 package gg
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.charts.gg.Rconverter
+import se.alipsa.matrix.gg.util.Rconverter
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 

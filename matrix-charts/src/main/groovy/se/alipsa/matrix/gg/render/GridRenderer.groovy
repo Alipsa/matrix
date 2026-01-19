@@ -74,6 +74,7 @@ class GridRenderer {
         Number xPos = xScale.transform(breakVal) as Number
         if (xPos != null) {
           gridGroup.addLine(xPos, 0, xPos, height)
+                   .styleClass('gg-grid-major')
                    .stroke(color)
                    .strokeWidth(size)
         }
@@ -88,6 +89,7 @@ class GridRenderer {
         Number yPos = yScale.transform(breakVal) as Number
         if (yPos != null) {
           gridGroup.addLine(0, yPos, width, yPos)
+                   .styleClass('gg-grid-major')
                    .stroke(color)
                    .strokeWidth(size)
         }
@@ -113,6 +115,7 @@ class GridRenderer {
         Number xPos = xScale.transform(breakVal) as Number
         if (xPos != null) {
           gridGroup.addLine(xPos, 0, xPos, height)
+                   .styleClass('gg-grid-minor')
                    .stroke(color)
                    .strokeWidth(size)
         }
@@ -126,6 +129,7 @@ class GridRenderer {
         Number yPos = yScale.transform(breakVal) as Number
         if (yPos != null) {
           gridGroup.addLine(0, yPos, width, yPos)
+                   .styleClass('gg-grid-minor')
                    .stroke(color)
                    .strokeWidth(size)
         }
@@ -203,6 +207,7 @@ class GridRenderer {
         BigDecimal x = cx + maxRadius * angle.sin()
         BigDecimal y = cy - maxRadius * angle.cos()
         gridGroup.addLine(cx, cy, x, y)
+                 .styleClass('gg-grid-major')
                  .stroke(color)
                  .strokeWidth(size)
 
@@ -297,6 +302,7 @@ class GridRenderer {
         BigDecimal y2 = cy - maxRadius * angle.cos()
 
         gridGroup.addLine(x1, y1, x2, y2)
+            .styleClass('gg-grid-major')
             .stroke(color)
             .strokeWidth(size)
 
