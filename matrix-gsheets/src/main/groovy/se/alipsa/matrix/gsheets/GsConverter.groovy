@@ -1,11 +1,10 @@
 package se.alipsa.matrix.gsheets
 
-import se.alipsa.matrix.core.ValueConverter
-
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 class GsConverter {
@@ -16,7 +15,7 @@ class GsConverter {
 
   private GsConverter() {}
 
-  static LocalDate asLocalDate(Object o) {
+  static LocalDate asLocalDate(Object o, DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE) {
     if (o == null) {
       return null
     }
@@ -26,9 +25,9 @@ class GsConverter {
       return asLocalDate((Number) o)
     } else {
       try {
-        return LocalDate.parse(o.toString())
+        return LocalDate.parse(o.toString(), formatter)
       } catch (Exception ignore) {
-        return asLocalDate(new BigDecimal(o.toString()))
+        return asLocalDate(new BigDecimal(o.toString().replace(' ', '')))
       }
     }
   }
@@ -49,16 +48,16 @@ class GsConverter {
     return dates
   }
 
-  static LocalDateTime asLocalDateTime(Object o) {
+  static LocalDateTime asLocalDateTime(Object o, DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME) {
     if (o instanceof LocalDateTime) {
       return (LocalDateTime) o
     } else if (o instanceof Number) {
       return asLocalDateTime((Number) o)
     } else {
       try {
-        return LocalDateTime.parse(o.toString())
+        return LocalDateTime.parse(o.toString(), formatter)
       } catch (Exception ignore) {
-        return asLocalDateTime(new BigDecimal(o.toString()))
+        return asLocalDateTime(new BigDecimal(o.toString().replace(' ', '')))
       }
     }
   }

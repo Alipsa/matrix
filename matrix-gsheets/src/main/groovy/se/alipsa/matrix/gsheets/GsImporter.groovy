@@ -1,7 +1,9 @@
 package se.alipsa.matrix.gsheets
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler
 import com.google.api.client.json.gson.GsonFactory
+import com.google.api.client.util.ExponentialBackOff
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.http.HttpCredentialsAdapter
@@ -60,10 +62,19 @@ class GsImporter {
       }
       fillListToSize(row, ncol)
     }
-    List<String> headers
+    List<String> headers = []
     if (firstRowAsColumnNames) {
       List<Object> firstRow = values.remove(0)
-      headers = firstRow.collect { String.valueOf(it) }
+      for (int i = 0; i < ncol; i++) {
+        def val = firstRow.get(i)
+        def colName
+        if (val == null || val.toString().trim().isEmpty()) {
+          colName = 'c' + i
+        } else {
+          colName = String.valueOf(val)
+        }
+        headers << colName
+      }
     } else {
       headers = Matrix.anonymousHeader(ncol)
     }
@@ -89,19 +100,30 @@ class GsImporter {
         .setApplicationName("Groovy Sheets Reader")
         .build()
 
-    def response = sheetsService
+    def request = sheetsService
         .spreadsheets()
         .values()
         .get(sheetId, range)
         .setValueRenderOption('FORMATTED_VALUE')
-        .execute()
+
+    def response = request.execute()
     List<List<Object>> values = response.getValues()
     int ncol = GsUtil.columnCountForRange(range)
 
-    List<String> headers
+    List<String> headers = []
     if (firstRowAsColumnNames) {
       List<Object> firstRow = values.remove(0)
-      headers = firstRow.collect { String.valueOf(it) }
+      //headers = firstRow.collect { String.valueOf(it) }
+      for (int i = 0; i < ncol; i++) {
+        def val = firstRow.get(i)
+        def colName
+        if (val == null || val.toString().trim().isEmpty()) {
+          colName = 'c' + i
+        } else {
+          colName = String.valueOf(val)
+        }
+        headers << colName
+      }
     } else {
       headers = Matrix.anonymousHeader(ncol)
     }
@@ -110,11 +132,17 @@ class GsImporter {
     List<List<String>> rows = []
     values.each {valueRow ->
       List<String> row = []
-      valueRow.each { cell ->
-        if (cell == '' || cell == null) {
-          row << null
+      for (int i = 0; i < ncol; i++) {
+        if (i < valueRow.size()) {
+          def cell = valueRow.get(i)
+          if (cell == '' || cell == null) {
+            row << null
+          } else {
+            row << String.valueOf(cell)
+          }
         } else {
-          row << String.valueOf(cell)
+          // Pad missing trailing columns with null
+          row << null
         }
       }
       rows << row

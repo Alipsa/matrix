@@ -29,6 +29,11 @@ class GsUtilTest {
     def multiColumns = columnCountForRange(multiRange)
     //println "The number of columns in the multi-letter range is: ${multiColumns}"
     assertEquals(28, multiColumns)
+
+    range = "'Amorteringsfrihet '!A1:L16"
+    columns = columnCountForRange(range)
+    //println "The number of columns in the range is: ${columns}"
+    assertEquals(12, columns)
   }
 
 }

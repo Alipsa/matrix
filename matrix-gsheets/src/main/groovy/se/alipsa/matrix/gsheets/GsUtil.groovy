@@ -4,7 +4,9 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
+import com.google.api.services.sheets.v4.Sheets
 import com.google.auth.http.HttpCredentialsAdapter
+import com.google.auth.oauth2.GoogleCredentials
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -79,5 +81,31 @@ class GsUtil {
       number = number * 26 + (colName.charAt(i) - ('A' as char - 1))
     }
     return number
+  }
+
+  static List<String> getSheetNames(String spreadsheetId, GoogleCredentials credentials = null) {
+    def transport = GoogleNetHttpTransport.newTrustedTransport()
+    def gsonFactory = GsonFactory.getDefaultInstance()
+
+    if (credentials == null) {
+      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
+    }
+
+    def sheetsService = new Sheets.Builder(
+        transport,
+        gsonFactory,
+        new HttpCredentialsAdapter(credentials))
+        .setApplicationName("Groovy Sheets Reader")
+        .build()
+
+    // Fetch the spreadsheet metadata (this includes the list of sheets)
+    def spreadsheet = sheetsService.spreadsheets().get(spreadsheetId).execute()
+
+    List<String> names = []
+    spreadsheet.getSheets().each { sheet ->
+      names.add(sheet.getProperties().getTitle())
+    }
+
+    return names
   }
 }
