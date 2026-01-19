@@ -1,5 +1,6 @@
 package test.alipsa.matrix.gsheets
 
+import com.google.api.services.drive.Drive
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.Sheet
 import com.google.api.services.sheets.v4.model.SheetProperties
@@ -190,5 +191,71 @@ class GsUtilMockedTest {
     assertEquals("日本語シート", sheetNames[0])
     assertEquals("Données françaises", sheetNames[1])
     assertEquals("Datos españoles", sheetNames[2])
+  }
+
+  @Test
+  void testDeleteSheetSuccess() {
+    // Create mock Drive service and related objects
+    def driveService = mock(Drive)
+    def files = mock(Drive.Files)
+    def deleteRequest = mock(Drive.Files.Delete)
+
+    // Setup mock behavior - execute() is void, so use doNothing()
+    when(driveService.files()).thenReturn(files)
+    when(files.delete(anyString())).thenReturn(deleteRequest)
+    doNothing().when(deleteRequest).execute()
+
+    // Test the method - should not throw exception
+    assertDoesNotThrow({ deleteSheet("test-spreadsheet-id", driveService) } as org.junit.jupiter.api.function.Executable)
+
+    // Verify interactions
+    verify(driveService).files()
+    verify(files).delete("test-spreadsheet-id")
+    verify(deleteRequest).execute()
+  }
+
+  @Test
+  void testDeleteSheetFailure() {
+    // Create mock Drive service that throws IOException
+    def driveService = mock(Drive)
+    def files = mock(Drive.Files)
+    def deleteRequest = mock(Drive.Files.Delete)
+
+    // Setup mock to throw IOException
+    when(driveService.files()).thenReturn(files)
+    when(files.delete(anyString())).thenReturn(deleteRequest)
+    when(deleteRequest.execute()).thenThrow(new IOException("File not found"))
+
+    // Test the method - should throw SheetOperationException
+    def exception = assertThrows(se.alipsa.matrix.gsheets.SheetOperationException, () ->
+      deleteSheet("non-existent-id", driveService)
+    )
+
+    // Verify exception details
+    assertEquals("delete", exception.operation)
+    assertEquals("non-existent-id", exception.spreadsheetId)
+
+    // Verify interactions
+    verify(driveService).files()
+    verify(files).delete("non-existent-id")
+    verify(deleteRequest).execute()
+  }
+
+  @Test
+  void testDeleteSheetWithNullDriveService() {
+    assertThrows(IllegalArgumentException, () -> deleteSheet("some-id", (Drive)null))
+  }
+
+  @Test
+  void testDeleteSheetWithNullSpreadsheetIdAndDriveService() {
+    def driveService = mock(Drive)
+    assertThrows(IllegalArgumentException, () -> deleteSheet(null, driveService))
+  }
+
+  @Test
+  void testDeleteSheetWithEmptySpreadsheetIdAndDriveService() {
+    def driveService = mock(Drive)
+    assertThrows(IllegalArgumentException, () -> deleteSheet("", driveService))
+    assertThrows(IllegalArgumentException, () -> deleteSheet("  ", driveService))
   }
 }

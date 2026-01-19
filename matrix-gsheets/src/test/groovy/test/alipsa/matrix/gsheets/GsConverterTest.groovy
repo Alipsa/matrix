@@ -155,4 +155,83 @@ class GsConverterTest {
     // Test with multiple spaces
     assertEquals(LocalDateTime.parse('2022-01-14T12:33:20'), asLocalDateTime('4 4 5 7 5.5231481481'))
   }
+
+  // Error case tests
+  @Test
+  void testAsLocalDateWithNull() {
+    assertNull(asLocalDate(null))
+  }
+
+  @Test
+  void testAsLocalDateTimeWithNull() {
+    assertNull(asLocalDateTime(null))
+  }
+
+  @Test
+  void testAsLocalTimeWithNull() {
+    assertNull(asLocalTime(null))
+  }
+
+  @Test
+  void testAsLocalDateWithInvalidString() {
+    assertThrows(IllegalArgumentException, () -> asLocalDate('not-a-date'))
+    assertThrows(IllegalArgumentException, () -> asLocalDate('invalid'))
+    assertThrows(IllegalArgumentException, () -> asLocalDate('2024-13-45'))
+  }
+
+  @Test
+  void testAsLocalDateTimeWithInvalidString() {
+    assertThrows(IllegalArgumentException, () -> asLocalDateTime('not-a-datetime'))
+    assertThrows(IllegalArgumentException, () -> asLocalDateTime('invalid'))
+    assertThrows(IllegalArgumentException, () -> asLocalDateTime('2024-13-45T25:99:99'))
+  }
+
+  @Test
+  void testAsLocalTimeWithInvalidString() {
+    assertThrows(IllegalArgumentException, () -> asLocalTime('not-a-time'))
+    assertThrows(IllegalArgumentException, () -> asLocalTime('invalid'))
+    assertThrows(IllegalArgumentException, () -> asLocalTime('25:99:99'))
+  }
+
+  @Test
+  void testAsSerialWithNull() {
+    // asSerial(Date) should return null for null input
+    assertNull(asSerial((Date)null))
+  }
+
+  @Test
+  void testAsSerialWithNullLocalDate() {
+    assertThrows(IllegalArgumentException, () -> asSerial((LocalDate)null))
+  }
+
+  @Test
+  void testAsSerialWithNullLocalDateTime() {
+    assertThrows(IllegalArgumentException, () -> asSerial((LocalDateTime)null))
+  }
+
+  @Test
+  void testAsSerialWithInvalidObject() {
+    assertThrows(IllegalArgumentException, () -> asSerial("not a date object"))
+    assertThrows(IllegalArgumentException, () -> asSerial(123))
+  }
+
+  @Test
+  void testToLocalDatesWithNull() {
+    assertNull(toLocalDates(null))
+  }
+
+  @Test
+  void testToLocalDateTimesWithNull() {
+    assertNull(GsConverter.toLocalDateTimes(null))
+  }
+
+  @Test
+  void testToLocalTimesWithNull() {
+    assertNull(GsConverter.toLocalTimes(null))
+  }
+
+  @Test
+  void testToSerialsWithNull() {
+    assertNull(GsConverter.toSerials(null))
+  }
 }

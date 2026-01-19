@@ -109,4 +109,82 @@ class GsUtilTest {
     }
   }
 
+  // Error case tests
+  @Test
+  void testColumnCountForRangeWithNull() {
+    assertThrows(IllegalArgumentException, () -> columnCountForRange(null))
+  }
+
+  @Test
+  void testColumnCountForRangeWithEmpty() {
+    assertThrows(IllegalArgumentException, () -> columnCountForRange(''))
+    assertThrows(IllegalArgumentException, () -> columnCountForRange('  '))
+  }
+
+  @Test
+  void testColumnCountForRangeWithInvalidFormat() {
+    // Missing colon
+    assertThrows(IllegalArgumentException, () -> columnCountForRange('A1'))
+    assertThrows(IllegalArgumentException, () -> columnCountForRange('Sheet1!A1'))
+
+    // Invalid format - too many colons
+    assertThrows(IllegalArgumentException, () -> columnCountForRange('A1:B2:C3'))
+  }
+
+  @Test
+  void testAsColumnNumberWithNull() {
+    assertThrows(IllegalArgumentException, () -> asColumnNumber(null))
+  }
+
+  @Test
+  void testAsColumnNumberWithEmpty() {
+    assertThrows(IllegalArgumentException, () -> asColumnNumber(''))
+    assertThrows(IllegalArgumentException, () -> asColumnNumber('  '))
+  }
+
+  @Test
+  void testAsColumnNumberWithInvalidCharacters() {
+    assertThrows(IllegalArgumentException, () -> asColumnNumber('A1'))
+    assertThrows(IllegalArgumentException, () -> asColumnNumber('123'))
+    assertThrows(IllegalArgumentException, () -> asColumnNumber('A-B'))
+    assertThrows(IllegalArgumentException, () -> asColumnNumber('A$B'))
+  }
+
+  @Test
+  void testDeleteSheetWithNull() {
+    assertThrows(IllegalArgumentException, () -> deleteSheet(null))
+  }
+
+  @Test
+  void testDeleteSheetWithEmpty() {
+    assertThrows(IllegalArgumentException, () -> deleteSheet(''))
+    assertThrows(IllegalArgumentException, () -> deleteSheet('  '))
+  }
+
+  @Test
+  void testGetSheetNamesWithNull() {
+    assertThrows(IllegalArgumentException, () -> getSheetNames(null))
+  }
+
+  @Test
+  void testGetSheetNamesWithEmpty() {
+    assertThrows(IllegalArgumentException, () -> getSheetNames(''))
+    assertThrows(IllegalArgumentException, () -> getSheetNames('  '))
+  }
+
+  @Test
+  void testAsColumnNumberValidInputs() {
+    // Test valid column names
+    assertEquals(1, asColumnNumber('A'))
+    assertEquals(26, asColumnNumber('Z'))
+    assertEquals(27, asColumnNumber('AA'))
+    assertEquals(702, asColumnNumber('ZZ'))
+    assertEquals(703, asColumnNumber('AAA'))
+
+    // Test lowercase is converted to uppercase
+    assertEquals(1, asColumnNumber('a'))
+    assertEquals(26, asColumnNumber('z'))
+    assertEquals(27, asColumnNumber('aa'))
+  }
+
 }

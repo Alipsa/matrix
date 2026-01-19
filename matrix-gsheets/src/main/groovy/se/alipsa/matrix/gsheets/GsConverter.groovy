@@ -1,13 +1,19 @@
 package se.alipsa.matrix.gsheets
 
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
+
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 
 class GsConverter {
+
+  private static Logger log = LogManager.getLogger(GsConverter)
 
   private static long secondsInDay = 24 * 60 * 60
   private static LocalDateTime epochDateTime = LocalDateTime.of(1899, 12, 30, 0, 0, 0)
@@ -26,8 +32,15 @@ class GsConverter {
     } else {
       try {
         return LocalDate.parse(o.toString(), formatter)
-      } catch (Exception ignore) {
-        return asLocalDate(new BigDecimal(o.toString().replace(' ', '')))
+      } catch (DateTimeParseException e) {
+        // Try parsing as a numeric serial value
+        log.warn("Failed to parse '{}' as date with formatter {}, attempting numeric conversion: {}",
+                 o, formatter, e.getMessage())
+        try {
+          return asLocalDate(new BigDecimal(o.toString().replace(' ', '')))
+        } catch (NumberFormatException nfe) {
+          throw new IllegalArgumentException("Cannot convert '${o}' to LocalDate: not a valid date format or numeric value", nfe)
+        }
       }
     }
   }
@@ -49,6 +62,9 @@ class GsConverter {
   }
 
   static LocalDateTime asLocalDateTime(Object o, DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME) {
+    if (o == null) {
+      return null
+    }
     if (o instanceof LocalDateTime) {
       return (LocalDateTime) o
     } else if (o instanceof Number) {
@@ -56,8 +72,15 @@ class GsConverter {
     } else {
       try {
         return LocalDateTime.parse(o.toString(), formatter)
-      } catch (Exception ignore) {
-        return asLocalDateTime(new BigDecimal(o.toString().replace(' ', '')))
+      } catch (DateTimeParseException e) {
+        // Try parsing as a numeric serial value
+        log.warn("Failed to parse '{}' as datetime with formatter {}, attempting numeric conversion: {}",
+                 o, formatter, e.getMessage())
+        try {
+          return asLocalDateTime(new BigDecimal(o.toString().replace(' ', '')))
+        } catch (NumberFormatException nfe) {
+          throw new IllegalArgumentException("Cannot convert '${o}' to LocalDateTime: not a valid datetime format or numeric value", nfe)
+        }
       }
     }
   }
@@ -91,6 +114,9 @@ class GsConverter {
   }
 
   static asLocalTime(Object o) {
+    if (o == null) {
+      return null
+    }
     if (o instanceof LocalTime) {
       return (LocalTime) o
     } else if(o instanceof Number) {
@@ -98,8 +124,14 @@ class GsConverter {
     } else {
       try {
         return LocalTime.parse(o.toString())
-      } catch (Exception ignore) {
-        return asLocalTime(new BigDecimal(o.toString()))
+      } catch (DateTimeParseException e) {
+        // Try parsing as a numeric serial value
+        log.warn("Failed to parse '{}' as time, attempting numeric conversion: {}", o, e.getMessage())
+        try {
+          return asLocalTime(new BigDecimal(o.toString()))
+        } catch (NumberFormatException nfe) {
+          throw new IllegalArgumentException("Cannot convert '${o}' to LocalTime: not a valid time format or numeric value", nfe)
+        }
       }
     }
   }
