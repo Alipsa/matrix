@@ -110,14 +110,20 @@ class GsUtil {
    * @return List of sheet names
    */
   static List<String> getSheetNames(String spreadsheetId, Sheets sheetsService) {
-    // Fetch the spreadsheet metadata (this includes the list of sheets)
-    def spreadsheet = sheetsService.spreadsheets().get(spreadsheetId).execute()
+    try {
+      // Fetch the spreadsheet metadata (this includes the list of sheets)
+      def spreadsheet = sheetsService.spreadsheets().get(spreadsheetId).execute()
 
-    List<String> names = []
-    spreadsheet.getSheets().each { sheet ->
-      names.add(sheet.getProperties().getTitle())
+      List<String> names = []
+      spreadsheet.getSheets().each { sheet ->
+        names.add(sheet.getProperties().getTitle())
+      }
+
+      return names
+    } catch (Exception e) {
+      def log = LogManager.getLogger(GsUtil)
+      log.error("Failed to retrieve sheet names for spreadsheetId '{}'", spreadsheetId, e)
+      throw e
     }
-
-    return names
   }
 }
