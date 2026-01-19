@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -133,6 +134,84 @@ class GeomQuantile extends Geom {
         if (alpha < 1.0) {
           line.addAttribute('stroke-opacity', alpha)
         }
+      }
+    }
+  }
+
+  @CompileDynamic
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
+    if (data == null || data.rowCount() < 2) return
+
+    // The data has already been transformed by GgStat.quantile()
+    // It contains columns: x, y, quantile, group
+    Scale xScale = scales['x']
+    Scale yScale = scales['y']
+
+    // Determine line color
+    String lineColor = this.color
+    if (aes.color instanceof Identity) {
+      lineColor = (aes.color as Identity).value.toString()
+    }
+    lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
+
+    // Get stroke-dasharray for line type
+    String dashArray = getDashArray(linetype)
+
+    // Group by 'group' column (one group per quantile)
+    // Data should come from GgStat.quantile() with columns: x, y, quantile, group
+    if (!data.columnNames().containsAll(['x', 'y', 'group'])) {
+      // Stat transformation failed or returned unexpected structure - skip rendering
+      return
+    }
+
+    Map<Integer, List<Map>> groups = [:].withDefault { [] }
+    data.each { row ->
+      def grpVal = row['group']
+      def xVal = row['x']
+      def yVal = row['y']
+      // Skip rows with missing values
+      if (grpVal == null || xVal == null || yVal == null) return
+
+      Integer grp = grpVal as Integer
+      groups[grp] << [x: xVal, y: yVal]
+    }
+
+    int elementIndex = 0
+    // Render each quantile line
+    groups.each { Integer grpIdx, List<Map> points ->
+      if (points.size() < 2) {
+        elementIndex++
+        return
+      }
+
+      // Transform to pixel coordinates
+      List<List<Number>> pixelPoints = points.collect { Map pt ->
+        double xPx = (xScale?.transform(pt.x) ?: pt.x) as double
+        double yPx = (yScale?.transform(pt.y) ?: pt.y) as double
+        [xPx, yPx]
+      }
+
+      // Draw connected line segments
+      for (int i = 0; i < pixelPoints.size() - 1; i++) {
+        def p1 = pixelPoints[i]
+        def p2 = pixelPoints[i + 1]
+
+        def line = group.addLine(p1[0], p1[1], p2[0], p2[1])
+            .stroke(lineColor)
+            .strokeWidth(size)
+
+        if (dashArray) {
+          line.addAttribute('stroke-dasharray', dashArray)
+        }
+
+        if (alpha < 1.0) {
+          line.addAttribute('stroke-opacity', alpha)
+        }
+
+        // Apply CSS attributes
+        GeomUtils.applyAttributes(line, ctx, 'quantile', 'gg-quantile', elementIndex)
+        elementIndex++
       }
     }
   }

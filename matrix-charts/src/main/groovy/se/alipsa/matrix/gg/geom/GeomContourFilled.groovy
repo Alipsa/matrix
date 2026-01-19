@@ -7,6 +7,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * Filled contour geometry for drawing filled regions between contour levels.
@@ -47,6 +48,11 @@ class GeomContourFilled extends GeomContour {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 4) return
 
     String xCol = aes.xColName
@@ -78,6 +84,7 @@ class GeomContourFilled extends GeomContour {
     int nx = grid.xValues.length
     int ny = grid.yValues.length
 
+    int elementIndex = 0
     // For each level band, fill the cells
     for (int levelIdx = 0; levelIdx < levels.size() - 1; levelIdx++) {
       BigDecimal lowLevel = levels[levelIdx]
@@ -140,6 +147,10 @@ class GeomContourFilled extends GeomContour {
             if (fillAlpha < 1.0) {
               path.addAttribute('fill-opacity', fillAlpha)
             }
+
+            // Apply CSS attributes
+            GeomUtils.applyAttributes(path, ctx, 'contour-filled', 'gg-contour-filled', elementIndex)
+            elementIndex++
           }
         }
       }
@@ -178,6 +189,10 @@ class GeomContourFilled extends GeomContour {
             if (alpha < 1.0) {
               line.addAttribute('stroke-opacity', alpha)
             }
+
+            // Apply CSS attributes
+            GeomUtils.applyAttributes(line, ctx, 'contour-filled', 'gg-contour-filled', elementIndex)
+            elementIndex++
           }
         }
       }

@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -55,6 +56,11 @@ class GeomVline extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     Scale xScale = scales['x']
     if (xScale == null) return
 
@@ -88,9 +94,13 @@ class GeomVline extends Geom {
     if (xValues.isEmpty()) return
 
     // Draw vertical lines
+    int elementIndex = 0
     xValues.unique().each { Number xVal ->
       Number xPx = xScale.transform(xVal) as Number
-      if (xPx == null) return
+      if (xPx == null) {
+        elementIndex++
+        return
+      }
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
@@ -112,6 +122,10 @@ class GeomVline extends Geom {
       if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(line, ctx, 'vline', 'gg-vline', elementIndex)
+      elementIndex++
     }
   }
 

@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.stats.kde.Kernel
 import se.alipsa.matrix.stats.kde.KernelDensity
@@ -87,6 +88,11 @@ class GeomDensity extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 3) return
 
     String xCol = aes.xColName
@@ -113,6 +119,7 @@ class GeomDensity extends Geom {
 
     if (groups.isEmpty()) return
 
+    int elementIndex = 0
     // Compute density for each group
     groups.each { groupKey, List<Number> xValues ->
       if (xValues.size() < 3) return
@@ -185,6 +192,9 @@ class GeomDensity extends Geom {
         if (alpha < 1.0) {
           area.addAttribute('fill-opacity', alpha)
         }
+
+        // Apply CSS attributes to filled area
+        GeomUtils.applyAttributes(area, ctx, 'density', 'gg-density', elementIndex)
       }
 
       // Draw line
@@ -209,7 +219,12 @@ class GeomDensity extends Geom {
         if (alpha < 1.0 && areaFill == null) {
           line.addAttribute('stroke-opacity', alpha)
         }
+
+        // Apply CSS attributes to line segments
+        GeomUtils.applyAttributes(line, ctx, 'density', 'gg-density', elementIndex)
       }
+
+      elementIndex++
     }
   }
 

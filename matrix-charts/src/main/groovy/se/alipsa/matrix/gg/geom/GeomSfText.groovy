@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -37,9 +38,9 @@ class GeomSfText extends GeomText {
    * @param coord coordinate system
    */
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     Aes resolvedAes = resolveAes(aes)
-    super.render(group, data, resolvedAes, scales, coord)
+    super.render(group, data, resolvedAes, scales, coord, ctx)
   }
 
   private static Aes resolveAes(Aes aes) {

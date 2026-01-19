@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -134,6 +135,103 @@ class GeomRug extends Geom {
     }
   }
 
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
+    if (data == null || data.rowCount() == 0) return
+
+    String xCol = aes.xColName
+    String yCol = aes.yColName
+    String colorCol = aes.colorColName
+
+    Scale xScale = scales['x']
+    Scale yScale = scales['y']
+    Scale colorScale = scales['color']
+
+    // Default plot dimensions
+    BigDecimal plotWidth = 640
+    BigDecimal plotHeight = 480
+
+    BigDecimal rugLength = length as BigDecimal
+
+    int elementIndex = 0
+
+    // Collect x values for bottom/top rugs
+    if ((sides.contains('b') || sides.contains('t')) && xCol != null && xScale != null) {
+      data.each { row ->
+        def xVal = row[xCol]
+        if (xVal == null) {
+          elementIndex++
+          return
+        }
+
+        BigDecimal xPx = xScale.transform(xVal) as BigDecimal
+        if (xPx == null) {
+          elementIndex++
+          return
+        }
+
+        // Determine color
+        String rugColor = getRugColor(row, colorCol, colorScale)
+
+        // Bottom rug
+        if (sides.contains('b')) {
+          BigDecimal y1 = outside ? plotHeight : plotHeight - rugLength
+          BigDecimal y2 = plotHeight
+          def line = drawRugMarkWithContext(group, xPx, y1, xPx, y2, rugColor)
+          GeomUtils.applyAttributes(line, ctx, 'rug', 'gg-rug', elementIndex)
+        }
+
+        // Top rug
+        if (sides.contains('t')) {
+          BigDecimal y1 = 0
+          BigDecimal y2 = outside ? 0 : rugLength
+          def line = drawRugMarkWithContext(group, xPx, y1, xPx, y2, rugColor)
+          GeomUtils.applyAttributes(line, ctx, 'rug', 'gg-rug', elementIndex)
+        }
+
+        elementIndex++
+      }
+    }
+
+    // Collect y values for left/right rugs
+    if ((sides.contains('l') || sides.contains('r')) && yCol != null && yScale != null) {
+      data.each { row ->
+        def yVal = row[yCol]
+        if (yVal == null) {
+          elementIndex++
+          return
+        }
+
+        BigDecimal yPx = yScale.transform(yVal) as BigDecimal
+        if (yPx == null) {
+          elementIndex++
+          return
+        }
+
+        // Determine color
+        String rugColor = getRugColor(row, colorCol, colorScale)
+
+        // Left rug
+        if (sides.contains('l')) {
+          BigDecimal x1 = 0
+          BigDecimal x2 = rugLength
+          def line = drawRugMarkWithContext(group, x1, yPx, x2, yPx, rugColor)
+          GeomUtils.applyAttributes(line, ctx, 'rug', 'gg-rug', elementIndex)
+        }
+
+        // Right rug
+        if (sides.contains('r')) {
+          BigDecimal x1 = plotWidth - rugLength
+          BigDecimal x2 = plotWidth
+          def line = drawRugMarkWithContext(group, x1, yPx, x2, yPx, rugColor)
+          GeomUtils.applyAttributes(line, ctx, 'rug', 'gg-rug', elementIndex)
+        }
+
+        elementIndex++
+      }
+    }
+  }
+
   private String getRugColor(def row, String colorCol, Scale colorScale) {
     if (colorCol && row[colorCol] != null) {
       if (colorScale) {
@@ -157,5 +255,23 @@ class GeomRug extends Geom {
     if (alpha < 1.0) {
       line.addAttribute('stroke-opacity', alpha)
     }
+  }
+
+  private se.alipsa.groovy.svg.SvgElement drawRugMarkWithContext(G group, Number x1, Number y1, Number x2, Number y2, String rugColor) {
+    String strokeColor = ColorUtil.normalizeColor(rugColor) ?: rugColor
+    def line = group.addLine()
+        .x1(x1)
+        .y1(y1)
+        .x2(x2)
+        .y2(y2)
+        .stroke(strokeColor)
+
+    line.addAttribute('stroke-width', linewidth)
+
+    if (alpha < 1.0) {
+      line.addAttribute('stroke-opacity', alpha)
+    }
+
+    return line
   }
 }

@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -58,7 +59,7 @@ class GeomQq extends Geom {
   }
 
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xCol = data.columnNames().contains('x') ? 'x' : aes.xColName
@@ -79,15 +80,22 @@ class GeomQq extends Geom {
     Scale shapeScale = scales['shape']
     Scale alphaScale = scales['alpha']
 
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
 
-      if (xVal == null || yVal == null) return
+      if (xVal == null || yVal == null) {
+        elementIndex++
+        return
+      }
 
       def xTransformed = xScale?.transform(xVal)
       def yTransformed = yScale?.transform(yVal)
-      if (xTransformed == null || yTransformed == null) return
+      if (xTransformed == null || yTransformed == null) {
+        elementIndex++
+        return
+      }
 
       BigDecimal xPx = xTransformed as BigDecimal
       BigDecimal yPx = yTransformed as BigDecimal
@@ -115,8 +123,11 @@ class GeomQq extends Geom {
 
       Number pointAlpha = GeomUtils.extractPointAlpha(this.alpha, aes, alphaCol, row.toMap(), alphaScale)
 
+      // Note: GeomUtils.drawPoint returns void, so CSS attributes cannot be applied to Q-Q points
+      // until GeomUtils.drawPoint is refactored to return the created element(s)
       GeomUtils.drawPoint(group, xPx, yPx, (pointSize as BigDecimal), pointColor, pointShape,
           (pointAlpha as BigDecimal))
+      elementIndex++
     }
   }
 }

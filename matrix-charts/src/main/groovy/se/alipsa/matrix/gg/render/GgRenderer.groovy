@@ -85,6 +85,14 @@ class GgRenderer {
    * @return The rendered SVG
    */
   Svg render(GgChart chart) {
+    // Initialize CSS attribute configuration in context
+    context.cssConfig = chart.cssAttributes
+
+    // Reset panel and layer state to avoid stale context
+    context.panelRow = null
+    context.panelCol = null
+    context.layerIndex = 0
+
     // Check if faceting is enabled
     if (chart.facet != null) {
       return renderFaceted(chart)
@@ -192,7 +200,8 @@ class GgRenderer {
     }
 
     // 8. Render each layer
-    chart.layers.each { layer ->
+    chart.layers.eachWithIndex { layer, layerIdx ->
+      context.layerIndex = layerIdx
       renderLayer(dataLayer, layer, chart, computedScales, coord)
     }
 
@@ -286,6 +295,10 @@ class GgRenderer {
         col = panelIdx % ncol
       }
 
+      // Set panel coordinates in render context
+      context.panelRow = row
+      context.panelCol = col
+
       // Calculate panel position in pixels
       // For FacetGrid: panels start below column strips
       int panelX = MARGIN_LEFT + col * (panelWidth + panelSpacing)
@@ -350,7 +363,8 @@ class GgRenderer {
       }
 
       // Render each layer with filtered data
-      chart.layers.each { layer ->
+      chart.layers.eachWithIndex { layer, layerIdx ->
+        context.layerIndex = layerIdx
         renderLayerWithData(dataLayer, layer, panelData, chart.globalAes, panelScales, coord)
       }
 
@@ -496,9 +510,9 @@ class GgRenderer {
     G layerGroup = dataLayer.addG()
     layerGroup.styleClass(layer.geom?.class?.simpleName?.toLowerCase() ?: 'layer')
 
-    // Render the geom
+    // Render the geom with context
     if (layer.geom) {
-      layer.geom.render(layerGroup, posData, resolvedAes, scales, coord)
+      layer.geom.render(layerGroup, posData, resolvedAes, scales, coord, context)
     }
   }
 
@@ -1014,7 +1028,7 @@ class GgRenderer {
     boolean hasBarGeom = false
 
     // Collect from each layer (including stat-transformed data)
-    chart.layers.each { layer ->
+    chart.layers.eachWithIndex { layer, layerIdx ->
       Matrix layerData = layer.data ?: chart.data
       // Merge layer aes with global aes when inheritAes is true (the default)
       Aes layerAes
@@ -1267,9 +1281,9 @@ class GgRenderer {
     G layerGroup = dataLayer.addG()
     layerGroup.styleClass(layer.geom?.class?.simpleName?.toLowerCase() ?: 'layer')
 
-    // Render the geom
+    // Render the geom with context
     if (layer.geom) {
-      layer.geom.render(layerGroup, posData, resolvedAes, scales, coord)
+      layer.geom.render(layerGroup, posData, resolvedAes, scales, coord, context)
     }
   }
 

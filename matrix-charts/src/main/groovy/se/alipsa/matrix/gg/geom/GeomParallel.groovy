@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
 
@@ -79,7 +80,7 @@ class GeomParallel extends Geom {
   }
 
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     // Determine which columns to use
@@ -120,6 +121,7 @@ class GeomParallel extends Geom {
     renderAxes(group, columns, axisPositions, yScale, stats)
 
     // Render polylines for each observation
+    int elementIndex = 0
     data.eachWithIndex { row, int idx ->
       List<BigDecimal> values = []
       for (String col : columns) {
@@ -175,6 +177,9 @@ class GeomParallel extends Geom {
       if (alpha < 1.0) {
         path.addAttribute('stroke-opacity', alpha)
       }
+
+      GeomUtils.applyAttributes(path, ctx, 'parallel', 'gg-parallel', elementIndex)
+      elementIndex++
     }
   }
 

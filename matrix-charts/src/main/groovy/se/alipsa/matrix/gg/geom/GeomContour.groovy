@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * Contour geometry for drawing contour lines from 2D density/height data.
@@ -65,6 +66,11 @@ class GeomContour extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 4) return
 
     String xCol = aes.xColName
@@ -92,6 +98,7 @@ class GeomContour extends Geom {
     // Determine contour levels
     List<BigDecimal> levels = computeLevels(grid.zMin, grid.zMax)
 
+    int elementIndex = 0
     // Generate and render contours for each level
     levels.eachWithIndex { BigDecimal level, int idx ->
       List<List<BigDecimal[]>> contours = marchingSquares(grid, level)
@@ -136,6 +143,10 @@ class GeomContour extends Geom {
           if (alpha < 1.0) {
             line.addAttribute('stroke-opacity', alpha)
           }
+
+          // Apply CSS attributes
+          GeomUtils.applyAttributes(line, ctx, 'contour', 'gg-contour', elementIndex)
+          elementIndex++
         }
       }
     }

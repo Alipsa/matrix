@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * Filled 2D density contours geometry.
@@ -71,6 +72,11 @@ class GeomDensity2dFilled extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 3) return
 
     String xCol = aes.xColName
@@ -143,6 +149,7 @@ class GeomDensity2dFilled extends Geom {
 
     if (maxDensity == 0) return
 
+    int elementIndex = 0
     // Render filled contours as tiles
     for (int i = 0; i < n - 1; i++) {
       for (int j = 0; j < n - 1; j++) {
@@ -198,6 +205,10 @@ class GeomDensity2dFilled extends Geom {
         } else {
           rect.stroke('none')
         }
+
+        // Apply CSS attributes
+        GeomUtils.applyAttributes(rect, ctx, 'density2d-filled', 'gg-density2d-filled', elementIndex)
+        elementIndex++
       }
     }
   }

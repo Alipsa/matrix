@@ -148,6 +148,7 @@ class LegendRenderer {
     if (legendTitle) {
       int titleFontSize = (theme.legendTitle?.size ?: 11) as int
       def titleText = legendGroup.addText(legendTitle)
+          .styleClass('gg-legend-title')
           .x(0)
           .y(titleFontSize)  // Position baseline at font size so text is visible
           .addAttribute('font-weight', 'bold')
@@ -235,6 +236,7 @@ class LegendRenderer {
     if (params.title) {
       int titleFontSize = (theme.legendTitle?.size ?: 11) as int
       def titleText = parentGroup.addText(params.title as String)
+          .styleClass('gg-legend-title')
           .x(startX)
           .y(currentY + titleFontSize)
           .addAttribute('font-weight', 'bold')
@@ -274,12 +276,14 @@ class LegendRenderer {
 
       // Render error placeholder
       customGroup.addRect(width, 20)
+                 .styleClass('gg-legend-background')
                  .x(startX)
                  .y(currentY)
                  .fill('#ffcccc')
                  .stroke('#cc0000')
 
       customGroup.addText("Error rendering custom guide")
+                 .styleClass('gg-legend-label')
                  .x(startX + 5)
                  .y(currentY + 14)
                  .fontSize(9)
@@ -330,6 +334,7 @@ class LegendRenderer {
             // Draw circle for point geoms
             BigDecimal radius = (keyWidth.min(keyHeight) / 2).round()
             def circle = group.addCircle()
+                .styleClass('gg-legend-key')
                 .cx((x + keyWidth / 2).round())
                 .cy((y + keyHeight / 2).round())
                 .r(radius - 1)  // Slightly smaller to fit in key area
@@ -341,6 +346,7 @@ class LegendRenderer {
         } else {
           // Draw rectangle for bar/area geoms
           def rect = group.addRect(keyWidth, keyHeight)
+              .styleClass('gg-legend-key')
               .x(x)
               .y(y)
               .fill(color)
@@ -359,6 +365,7 @@ class LegendRenderer {
 
       // Draw label
       group.addText(label)
+          .styleClass('gg-legend-label')
           .x(x + textOffset)
           .y(y + keyHeight - 3)
           .fontSize(theme.legendText?.size ?: 10)
@@ -410,6 +417,7 @@ class LegendRenderer {
         int stepHeight = (int) (barHeight / numSteps)
         int stepY = y + barHeight - (i + 1) * stepHeight
         group.addRect(barWidth, stepHeight + 1)
+            .styleClass('gg-legend-colorbar')
             .x(x)
             .y(stepY)
             .fill(color)
@@ -418,6 +426,7 @@ class LegendRenderer {
         int stepWidth = (int) (barWidth / numSteps)
         int stepX = x + i * stepWidth
         group.addRect(stepWidth + 1, barHeight)
+            .styleClass('gg-legend-colorbar')
             .x(stepX)
             .y(y)
             .fill(color)
@@ -427,6 +436,7 @@ class LegendRenderer {
 
     // Draw border around the bar
     group.addRect(barWidth, barHeight)
+        .styleClass('gg-legend-background')
         .x(x)
         .y(y)
         .fill('none')
@@ -439,6 +449,7 @@ class LegendRenderer {
     if (vertical) {
       // Min at bottom
       group.addText(labels.first() ?: context.formatNumber(minVal))
+          .styleClass('gg-legend-colorbar-label')
           .x(x + barWidth + 5)
           .y(y + barHeight)
           .fontSize(theme.legendText?.size ?: 9)
@@ -446,6 +457,7 @@ class LegendRenderer {
 
       // Max at top
       group.addText(labels.last() ?: context.formatNumber(maxVal))
+          .styleClass('gg-legend-colorbar-label')
           .x(x + barWidth + 5)
           .y(y + 10)
           .fontSize(theme.legendText?.size ?: 9)
@@ -455,6 +467,7 @@ class LegendRenderer {
     } else {
       // Min at left
       group.addText(labels.first() ?: context.formatNumber(minVal))
+          .styleClass('gg-legend-colorbar-label')
           .x(x)
           .y(y + barHeight + 12)
           .fontSize(theme.legendText?.size ?: 9)
@@ -462,6 +475,7 @@ class LegendRenderer {
 
       // Max at right
       group.addText(labels.last() ?: context.formatNumber(maxVal))
+          .styleClass('gg-legend-colorbar-label')
           .x(x + barWidth - 20)
           .y(y + barHeight + 12)
           .fontSize(theme.legendText?.size ?: 9)
@@ -491,6 +505,7 @@ class LegendRenderer {
         int stepY = reverse ? (y + i * stepHeight) : (y + barHeight - (i + 1) * stepHeight)
 
         group.addRect(barWidth, stepHeight + 1)
+            .styleClass('gg-legend-colorbar')
             .x(x)
             .y(stepY)
             .fill(color)
@@ -501,6 +516,7 @@ class LegendRenderer {
         int stepX = x + i * stepWidth
 
         group.addRect(stepWidth + 1, barHeight)
+            .styleClass('gg-legend-colorbar')
             .x(stepX)
             .y(y)
             .fill(color)
@@ -581,6 +597,7 @@ class LegendRenderer {
             int stepY = reverse ? (y + accumulatedHeight) : (y + barHeight - accumulatedHeight - stepHeight)
 
             group.addRect(barWidth, stepHeight + 1)
+                .styleClass('gg-legend-colorbar')
                 .x(x)
                 .y(stepY)
                 .fill(color)
@@ -593,6 +610,7 @@ class LegendRenderer {
             int stepX = x + accumulatedWidth
 
             group.addRect(stepWidth + 1, barHeight)
+                .styleClass('gg-legend-colorbar')
                 .x(stepX)
                 .y(y)
                 .fill(color)
@@ -606,6 +624,7 @@ class LegendRenderer {
 
     // Draw border around the bar
     group.addRect(barWidth, barHeight)
+        .styleClass('gg-legend-background')
         .x(x)
         .y(y)
         .fill('none')
@@ -617,6 +636,7 @@ class LegendRenderer {
       if (vertical) {
         // Min at bottom
         group.addText(!displayLabels.isEmpty() ? displayLabels.first() : context.formatNumber(displayBreaks.first()))
+            .styleClass('gg-legend-colorbar-label')
             .x(x + barWidth + 5)
             .y(y + barHeight)
             .fontSize(theme.legendText?.size ?: 9)
@@ -624,6 +644,7 @@ class LegendRenderer {
 
         // Max at top
         group.addText(!displayLabels.isEmpty() ? displayLabels.last() : context.formatNumber(displayBreaks.last()))
+            .styleClass('gg-legend-colorbar-label')
             .x(x + barWidth + 5)
             .y(y + 10)
             .fontSize(theme.legendText?.size ?: 9)
@@ -633,6 +654,7 @@ class LegendRenderer {
       } else {
         // Min at left
         group.addText(!displayLabels.isEmpty() ? displayLabels.first() : context.formatNumber(displayBreaks.first()))
+            .styleClass('gg-legend-colorbar-label')
             .x(x)
             .y(y + barHeight + 12)
             .fontSize(theme.legendText?.size ?: 9)
@@ -640,6 +662,7 @@ class LegendRenderer {
 
         // Max at right
         group.addText(!displayLabels.isEmpty() ? displayLabels.last() : context.formatNumber(displayBreaks.last()))
+            .styleClass('gg-legend-colorbar-label')
             .x(x + barWidth - 20)
             .y(y + barHeight + 12)
             .fontSize(theme.legendText?.size ?: 9)
@@ -676,6 +699,7 @@ class LegendRenderer {
       String label = idx < labels.size() ? labels[idx] : context.formatNumber(breakVal)
 
       def rect = group.addRect(keyWidth, keyHeight)
+          .styleClass('gg-legend-key')
           .x(x)
           .y(y)
           .fill(color)
@@ -684,6 +708,7 @@ class LegendRenderer {
       }
 
       group.addText(label ?: '')
+          .styleClass('gg-legend-label')
           .x(x + textOffset)
           .y(y + keyHeight - 3)
           .fontSize(theme.legendText?.size ?: 10)
@@ -741,6 +766,7 @@ class LegendRenderer {
       BigDecimal centerX = x + keyWidth / 2.0
       BigDecimal centerY = y + keyHeight / 2.0
       def circle = group.addCircle()
+          .styleClass('gg-legend-key')
           .cx(centerX)
           .cy(centerY)
           .r(radius.max(1.0))
@@ -751,6 +777,7 @@ class LegendRenderer {
 
       String label = idx < labels.size() ? labels[idx] : value?.toString() ?: ''
       group.addText(label)
+          .styleClass('gg-legend-label')
           .x(x + textOffset)
           .y(y + keyHeight - 3)
           .fontSize(theme.legendText?.size ?: 10)
@@ -798,6 +825,7 @@ class LegendRenderer {
       }
       BigDecimal alphaVal = scaled.min(1).max(0)
       def rect = group.addRect(keyWidth, keyHeight)
+          .styleClass('gg-legend-key')
           .x(x)
           .y(y)
           .fill(theme.legendKey?.color ?: '#999999')
@@ -808,6 +836,7 @@ class LegendRenderer {
 
       String label = idx < labels.size() ? labels[idx] : value?.toString() ?: ''
       group.addText(label)
+          .styleClass('gg-legend-label')
           .x(x + textOffset)
           .y(y + keyHeight - 3)
           .fontSize(theme.legendText?.size ?: 10)
@@ -836,6 +865,7 @@ class LegendRenderer {
     switch (shape?.toLowerCase()) {
       case 'square' -> {
         group.addRect((halfSize * 2).round(), (halfSize * 2).round())
+            .styleClass('gg-legend-key')
             .x((cx - halfSize).round())
             .y((cy - halfSize).round())
             .fill(fillColor)
@@ -843,14 +873,18 @@ class LegendRenderer {
       }
       case 'plus', 'cross' -> {
         group.addLine((cx - halfSize).round(), cy.round(), (cx + halfSize).round(), cy.round())
+            .styleClass('gg-legend-key')
             .stroke(stroke)
         group.addLine(cx.round(), (cy - halfSize).round(), cx.round(), (cy + halfSize).round())
+            .styleClass('gg-legend-key')
             .stroke(stroke)
       }
       case 'x' -> {
         group.addLine((cx - halfSize).round(), (cy - halfSize).round(), (cx + halfSize).round(), (cy + halfSize).round())
+            .styleClass('gg-legend-key')
             .stroke(stroke)
         group.addLine((cx - halfSize).round(), (cy + halfSize).round(), (cx + halfSize).round(), (cy - halfSize).round())
+            .styleClass('gg-legend-key')
             .stroke(stroke)
       }
       case 'triangle' -> {
@@ -861,6 +895,7 @@ class LegendRenderer {
         BigDecimal rightX = cx + halfSize
         String pathD = "M ${cx.round()} ${topY.round()} L ${leftX.round()} ${bottomY.round()} L ${rightX.round()} ${bottomY.round()} Z"
         group.addPath().d(pathD)
+            .styleClass('gg-legend-key')
             .fill(fillColor)
             .stroke(stroke)
       }
@@ -870,11 +905,13 @@ class LegendRenderer {
             "L ${cx.round()} ${(cy + halfSize).round()} " +
             "L ${(cx - halfSize).round()} ${cy.round()} Z"
         group.addPath().d(diamond)
+            .styleClass('gg-legend-key')
             .fill(fillColor)
             .stroke(stroke)
       }
       default -> {
         group.addCircle()
+            .styleClass('gg-legend-key')
             .cx(centerX)
             .cy(centerY)
             .r(halfSize.round())

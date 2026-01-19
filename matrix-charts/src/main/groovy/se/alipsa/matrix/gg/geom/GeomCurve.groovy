@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -63,7 +64,7 @@ class GeomCurve extends Geom {
   }
 
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     Scale xScale = scales['x']
@@ -79,6 +80,7 @@ class GeomCurve extends Geom {
     boolean hasAllCols = [xCol, yCol, xendCol, yendCol].every { colNames.contains(it) }
     if (!hasAllCols) return
 
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
@@ -133,6 +135,9 @@ class GeomCurve extends Geom {
       if (alpha < 1.0) {
         path.addAttribute('stroke-opacity', alpha)
       }
+
+      GeomUtils.applyAttributes(path, ctx, 'curve', 'gg-curve', elementIndex)
+      elementIndex++
     }
   }
 

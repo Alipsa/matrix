@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * 2D density contour lines geometry.
@@ -66,6 +67,11 @@ class GeomDensity2d extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 3) return
 
     String xCol = aes.xColName
@@ -144,6 +150,7 @@ class GeomDensity2d extends Geom {
       levels << (maxDensity * i / bins)
     }
 
+    int elementIndex = 0
     // Draw contours using marching squares
     levels.eachWithIndex { BigDecimal level, int idx ->
       // Determine color for this level
@@ -199,6 +206,10 @@ class GeomDensity2d extends Geom {
             path.addAttribute('stroke-dasharray', dashArray)
           }
         }
+
+        // Apply CSS attributes
+        GeomUtils.applyAttributes(path, ctx, 'density2d', 'gg-density2d', elementIndex)
+        elementIndex++
       }
     }
   }

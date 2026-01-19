@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -59,6 +60,11 @@ class GeomAbline extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     Scale xScale = scales['x']
     Scale yScale = scales['y']
     if (xScale == null || yScale == null) return
@@ -99,6 +105,7 @@ class GeomAbline extends Geom {
     BigDecimal xMax = xDomain[1] as BigDecimal
 
     // Draw lines
+    int elementIndex = 0
     lines.unique().each { Map<String, Number> lineParams ->
       BigDecimal s = lineParams.slope as BigDecimal
       BigDecimal ic = lineParams.intercept as BigDecimal
@@ -113,7 +120,10 @@ class GeomAbline extends Geom {
       Number y1Px = yScale.transform(y1) as Number
       Number y2Px = yScale.transform(y2) as Number
 
-      if (x1Px == null || x2Px == null || y1Px == null || y2Px == null) return
+      if (x1Px == null || x2Px == null || y1Px == null || y2Px == null) {
+        elementIndex++
+        return
+      }
 
       String lineColor = ColorUtil.normalizeColor(color) ?: color
       def line = group.addLine()
@@ -135,6 +145,10 @@ class GeomAbline extends Geom {
       if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(line, ctx, 'abline', 'gg-abline', elementIndex)
+      elementIndex++
     }
   }
 

@@ -64,6 +64,9 @@ class GgChart {
   /** Chart height in pixels */
   int height = 600
 
+  /** CSS attribute configuration */
+  CssAttributeConfig cssAttributes = new CssAttributeConfig()
+
   private static final Set<String> STAT_PARAM_KEYS = [
       'method', 'n', 'se', 'level', 'formula', 'degree',
       'bins', 'binwidth', 'fun', 'fun.y', 'fun.data', 'fun.args', 'width', 'coef',
@@ -422,6 +425,17 @@ class GgChart {
     } else {
       this.guides = this.guides + guides
     }
+    return this
+  }
+
+  /**
+   * Set CSS attribute configuration.
+   */
+  GgChart plus(CssAttributeConfig cssConfig) {
+    if (cssConfig == null) {
+      return this
+    }
+    this.cssAttributes = cssConfig
     return this
   }
 

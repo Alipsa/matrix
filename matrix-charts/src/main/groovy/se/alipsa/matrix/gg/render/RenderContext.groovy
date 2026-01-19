@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.render
 
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
+import se.alipsa.matrix.gg.CssAttributeConfig
 import se.alipsa.matrix.gg.Guide
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleColorGradient
@@ -14,11 +15,26 @@ import java.text.DecimalFormat
 /**
  * Context class providing shared utility methods for rendering components.
  * This allows renderers to access common functionality without coupling.
+ * <p>
+ * The RenderContext also carries CSS attribute configuration and panel/layer
+ * information through the rendering pipeline to support CSS class and ID generation.
  */
 @CompileStatic
 class RenderContext {
 
   private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat('#.##########')
+
+  /** CSS attribute configuration (may be null) */
+  CssAttributeConfig cssConfig
+
+  /** Panel row for faceted charts (null for single-panel charts) */
+  Integer panelRow
+
+  /** Panel column for faceted charts (null for single-panel charts) */
+  Integer panelCol
+
+  /** Current layer index (0-based) */
+  int layerIndex = 0
 
   /**
    * Parse guide type from various guide specifications.

@@ -7,6 +7,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -45,5 +46,28 @@ class Geom {
               Map<String, Scale> scales, Coord coord) {
     throw new UnsupportedOperationException(
         "render() not yet implemented for ${this.class.simpleName}")
+  }
+
+  /**
+   * Render this geom to an SVG group with rendering context.
+   * <p>
+   * This overloaded version includes a {@link RenderContext} parameter that carries
+   * CSS attribute configuration, panel information (for faceted charts), and layer
+   * index. Subclasses can override this method to support CSS class and ID generation.
+   * <p>
+   * The default implementation delegates to the existing {@link #render} method
+   * for backward compatibility with custom geoms.
+   *
+   * @param group The SVG group to render into
+   * @param data The transformed data (after stat and position adjustments)
+   * @param aes The aesthetic mappings
+   * @param scales Map of aesthetic name to Scale
+   * @param coord The coordinate system
+   * @param ctx The render context with CSS config and panel/layer info
+   */
+  void render(G group, Matrix data, Aes aes,
+              Map<String, Scale> scales, Coord coord, RenderContext ctx) {
+    // Default implementation: delegate to existing method for backward compatibility
+    render(group, data, aes, scales, coord)
   }
 }

@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleXLog10
 import se.alipsa.matrix.gg.scale.ScaleYLog10
@@ -91,7 +92,7 @@ class GeomLogticks extends Geom {
   }
 
   @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     Scale xScale = scales['x']
     Scale yScale = scales['y']
 
@@ -105,16 +106,18 @@ class GeomLogticks extends Geom {
 
     String sidesLower = sides.toLowerCase()
 
+    int elementIndex = 0
+
     // Draw x-axis ticks (bottom and/or top)
     if (isXLog && (sidesLower.contains('b') || sidesLower.contains('t'))) {
       List<BigDecimal> domain = (xScale as se.alipsa.matrix.gg.scale.ScaleContinuous).getComputedDomain()
       List<Map> tickData = generateLogTickPositions(domain[0], domain[1], base)
 
       if (sidesLower.contains('b')) {
-        drawXTicks(group, tickData, 'bottom', xScale, yScale)
+        elementIndex = drawXTicks(group, tickData, 'bottom', xScale, yScale, ctx, elementIndex)
       }
       if (sidesLower.contains('t')) {
-        drawXTicks(group, tickData, 'top', xScale, yScale)
+        elementIndex = drawXTicks(group, tickData, 'top', xScale, yScale, ctx, elementIndex)
       }
     }
 
@@ -124,10 +127,10 @@ class GeomLogticks extends Geom {
       List<Map> tickData = generateLogTickPositions(domain[0], domain[1], base)
 
       if (sidesLower.contains('l')) {
-        drawYTicks(group, tickData, 'left', xScale, yScale)
+        elementIndex = drawYTicks(group, tickData, 'left', xScale, yScale, ctx, elementIndex)
       }
       if (sidesLower.contains('r')) {
-        drawYTicks(group, tickData, 'right', xScale, yScale)
+        elementIndex = drawYTicks(group, tickData, 'right', xScale, yScale, ctx, elementIndex)
       }
     }
   }
@@ -181,7 +184,8 @@ class GeomLogticks extends Geom {
   /**
    * Draw tick marks for x-axis (bottom or top).
    */
-  private void drawXTicks(G group, List<Map> tickData, String side, Scale xScale, Scale yScale) {
+  private int drawXTicks(G group, List<Map> tickData, String side, Scale xScale, Scale yScale,
+                         RenderContext ctx, int elementIndex) {
     List<BigDecimal> yRange = (yScale as se.alipsa.matrix.gg.scale.ScaleContinuous).getRange()
     BigDecimal yPos = (side == 'bottom') ? yRange[1] : yRange[0]
 
@@ -206,14 +210,17 @@ class GeomLogticks extends Geom {
         y2 = (side == 'bottom') ? (yPos - tickLen) : (yPos + tickLen)
       }
 
-      drawTickLine(group, xPx, y1, xPx, y2)
+      elementIndex = drawTickLine(group, xPx, y1, xPx, y2, ctx, elementIndex)
     }
+
+    return elementIndex
   }
 
   /**
    * Draw tick marks for y-axis (left or right).
    */
-  private void drawYTicks(G group, List<Map> tickData, String side, Scale xScale, Scale yScale) {
+  private int drawYTicks(G group, List<Map> tickData, String side, Scale xScale, Scale yScale,
+                         RenderContext ctx, int elementIndex) {
     List<BigDecimal> xRange = (xScale as se.alipsa.matrix.gg.scale.ScaleContinuous).getRange()
     BigDecimal xPos = (side == 'left') ? xRange[0] : xRange[1]
 
@@ -238,8 +245,10 @@ class GeomLogticks extends Geom {
         x2 = (side == 'left') ? (xPos + tickLen) : (xPos - tickLen)
       }
 
-      drawTickLine(group, x1, yPx, x2, yPx)
+      elementIndex = drawTickLine(group, x1, yPx, x2, yPx, ctx, elementIndex)
     }
+
+    return elementIndex
   }
 
   /**
@@ -261,7 +270,8 @@ class GeomLogticks extends Geom {
   /**
    * Draw a single tick line.
    */
-  private void drawTickLine(G group, BigDecimal x1, BigDecimal y1, BigDecimal x2, BigDecimal y2) {
+  private int drawTickLine(G group, BigDecimal x1, BigDecimal y1, BigDecimal x2, BigDecimal y2,
+                           RenderContext ctx, int elementIndex) {
     String lineColor = ColorUtil.normalizeColor(colour) ?: colour
     def line = group.addLine()
         .x1(x1 as int)
@@ -282,6 +292,10 @@ class GeomLogticks extends Geom {
     if (alpha < 1.0) {
       line.addAttribute('stroke-opacity', alpha)
     }
+
+    GeomUtils.applyAttributes(line, ctx, 'logticks', 'gg-logticks', elementIndex)
+
+    return elementIndex + 1
   }
 
   /**

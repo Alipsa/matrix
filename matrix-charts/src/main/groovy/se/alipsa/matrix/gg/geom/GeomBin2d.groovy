@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.gg.render.RenderContext
 
 /**
  * 2D binning geometry for creating heatmaps from point data.
@@ -74,6 +75,11 @@ class GeomBin2d extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() < 1) return
 
     String xCol = aes.xColName
@@ -151,6 +157,7 @@ class GeomBin2d extends Geom {
 
     if (maxCount == 0) return
 
+    int elementIndex = 0
     // Render bins as rectangles
     for (int j = 0; j < nBinsY; j++) {
       for (int i = 0; i < nBinsX; i++) {
@@ -205,6 +212,10 @@ class GeomBin2d extends Geom {
         if (alpha < 1.0) {
           rect.addAttribute('fill-opacity', alpha)
         }
+
+        // Apply CSS attributes
+        GeomUtils.applyAttributes(rect, ctx, 'bin2d', 'gg-bin2d', elementIndex)
+        elementIndex++
       }
     }
   }

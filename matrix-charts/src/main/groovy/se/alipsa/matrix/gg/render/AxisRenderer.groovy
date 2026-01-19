@@ -149,6 +149,7 @@ class AxisRenderer {
       BigDecimal y2 = cy - tickOuter * theta.cos()
 
       axisGroup.addLine(x1, y1, x2, y2)
+               .styleClass('gg-axis-tick')
                .stroke(theme.axisLineX?.color ?: 'black')
                .strokeWidth(theme.axisLineX?.size ?: 0.5)
 
@@ -159,6 +160,7 @@ class AxisRenderer {
         String textAnchor = calculatePolarTextAnchor(theta)
 
         def textElement = axisGroup.addText(labels[i])
+            .styleClass('gg-axis-label')
             .x(labelX)
             .y(labelY)
             .fontSize(theme.axisTextX?.size ?: 10)
@@ -193,6 +195,7 @@ class AxisRenderer {
           BigDecimal my2 = cy - minorTickOuter * minorTheta.cos()
 
           axisGroup.addLine(mx1, my1, mx2, my2)
+              .styleClass('gg-axis-tick')
               .stroke(theme.axisLineX?.color ?: 'black')
               .strokeWidth((theme.axisLineX?.size ?: 0.5) * 0.75)
         }
@@ -233,6 +236,7 @@ class AxisRenderer {
     BigDecimal ay2 = cy - axisEnd * axisAngle.cos()
 
     axisGroup.addLine(ax1, ay1, ax2, ay2)
+        .styleClass('gg-axis-line')
         .stroke(theme.axisLineY?.color ?: 'black')
         .strokeWidth(theme.axisLineY?.size ?: 0.5)
 
@@ -254,6 +258,7 @@ class AxisRenderer {
       BigDecimal ty2 = cy - tickOuter * axisAngle.cos()
 
       axisGroup.addLine(tx1, ty1, tx2, ty2)
+          .styleClass('gg-axis-tick')
           .stroke(theme.axisLineY?.color ?: 'black')
           .strokeWidth(theme.axisLineY?.size ?: 0.5)
 
@@ -267,6 +272,7 @@ class AxisRenderer {
         String textAnchor = calculatePolarTextAnchor(axisAngle)
 
         axisGroup.addText(labels[i])
+            .styleClass('gg-axis-label')
             .x(labelX)
             .y(labelY)
             .fontSize(theme.axisTextY?.size ?: 10)
@@ -347,6 +353,7 @@ class AxisRenderer {
       BigDecimal y2 = cy - tickOuter * theta.cos()
 
       axisGroup.addLine(x1, y1, x2, y2)
+               .styleClass('gg-axis-tick')
                .stroke(theme.axisLineX?.color ?: 'black')
                .strokeWidth(theme.axisLineX?.size ?: 0.5)
 
@@ -359,6 +366,7 @@ class AxisRenderer {
         String textAnchor = calculatePolarTextAnchor(theta)
 
         def textElement = axisGroup.addText(labels[i])
+                 .styleClass('gg-axis-label')
                  .x(labelX)
                  .y(labelY)
                  .fontSize(theme.axisTextX?.size ?: 10)
@@ -404,6 +412,7 @@ class AxisRenderer {
           BigDecimal my2 = cy - minorTickOuter * minorTheta.cos()
 
           axisGroup.addLine(mx1, my1, mx2, my2)
+                   .styleClass('gg-axis-tick')
                    .stroke(theme.axisLineX?.color ?: 'black')
                    .strokeWidth((theme.axisLineX?.size ?: 0.5) * 0.75)
         }
@@ -560,6 +569,7 @@ class AxisRenderer {
 
     // Axis line
     xAxisGroup.addLine(0, 0, width, 0)
+              .styleClass('gg-axis-line')
               .stroke(theme.axisLineX?.color ?: 'black')
               .strokeWidth(theme.axisLineX?.size ?: 1)
 
@@ -590,12 +600,14 @@ class AxisRenderer {
       // Tick mark (direction depends on position)
       int tickDir = isTop ? -1 : 1
       xAxisGroup.addLine(xPos, 0, xPos, tickDir * (theme.axisTickLength ?: 5))
+                .styleClass('gg-axis-tick')
                 .stroke('black')
 
       // Label (position depends on axis position)
       String label = i < labels.size() ? labels[i] : breakVal.toString()
       int labelY = isTop ? (-1 * (theme.axisTickLength ?: 5) - 3) : ((theme.axisTickLength ?: 5) + 15)
       def text = xAxisGroup.addText(label)
+                .styleClass('gg-axis-label')
                 .x(xPos)
                 .y(labelY)
                 .fontSize(theme.axisTextX?.size ?: 10)
@@ -651,6 +663,7 @@ class AxisRenderer {
 
     // Axis line
     yAxisGroup.addLine(0, 0, 0, height)
+              .styleClass('gg-axis-line')
               .stroke(theme.axisLineY?.color ?: 'black')
               .strokeWidth(theme.axisLineY?.size ?: 1)
 
@@ -681,12 +694,14 @@ class AxisRenderer {
       // Tick mark (direction depends on position)
       int tickDir = isRight ? 1 : -1
       yAxisGroup.addLine(0, yPos, tickDir * (theme.axisTickLength ?: 5), yPos)
+                .styleClass('gg-axis-tick')
                 .stroke('black')
 
       // Label (position depends on axis position)
       String label = i < labels.size() ? labels[i] : breakVal.toString()
       if (isRight) {
         def text = yAxisGroup.addText(label)
+                  .styleClass('gg-axis-label')
                   .x((theme.axisTickLength ?: 5) + 5)
                   .y(yPos + 4)
                   .fontSize(theme.axisTextY?.size ?: 10)
@@ -701,6 +716,7 @@ class AxisRenderer {
         }
       } else {
         def text = yAxisGroup.addText(label)
+                  .styleClass('gg-axis-label')
                   .x(-1 * (theme.axisTickLength ?: 5) - 5)
                   .y(yPos + 4)
                   .fontSize(theme.axisTextY?.size ?: 10)
@@ -822,6 +838,7 @@ class AxisRenderer {
 
     // Axis line
     xAxisGroup.addLine(0, 0, width, 0)
+              .styleClass('gg-axis-line')
               .stroke(theme.axisLineX?.color ?: 'black')
               .strokeWidth(theme.axisLineX?.size ?: 1)
 
@@ -841,6 +858,7 @@ class AxisRenderer {
 
       BigDecimal tickLength = (theme.axisTickLength ?: 5) * tick.tickMultiplier
       xAxisGroup.addLine(xPos, 0, xPos, tickDir * tickLength)
+                .styleClass('gg-axis-tick')
                 .stroke('black')
     }
 
@@ -866,6 +884,7 @@ class AxisRenderer {
                         : (tickDir * (theme.axisTickLength ?: 5) * longMult + 15) as int
 
       xAxisGroup.addText(label)
+                .styleClass('gg-axis-label')
                 .x(xPos)
                 .y(labelY)
                 .fontSize(theme.axisTextX?.size ?: 10)
@@ -897,6 +916,7 @@ class AxisRenderer {
 
     // Axis line
     yAxisGroup.addLine(0, 0, 0, height)
+              .styleClass('gg-axis-line')
               .stroke(theme.axisLineY?.color ?: 'black')
               .strokeWidth(theme.axisLineY?.size ?: 1)
 
@@ -916,6 +936,7 @@ class AxisRenderer {
 
       BigDecimal tickLength = (theme.axisTickLength ?: 5) * tick.tickMultiplier
       yAxisGroup.addLine(0, yPos, tickDir * tickLength, yPos)
+                .styleClass('gg-axis-tick')
                 .stroke('black')
     }
 
@@ -940,6 +961,7 @@ class AxisRenderer {
       if (isRight) {
         int labelX = ((theme.axisTickLength ?: 5) * longMult + 5) as int
         yAxisGroup.addText(label)
+                  .styleClass('gg-axis-label')
                   .x(labelX)
                   .y(yPos + 4)
                   .fontSize(theme.axisTextY?.size ?: 10)
@@ -947,6 +969,7 @@ class AxisRenderer {
       } else {
         int labelX = (-1 * (theme.axisTickLength ?: 5) * longMult - 5) as int
         yAxisGroup.addText(label)
+                  .styleClass('gg-axis-label')
                   .x(labelX)
                   .y(yPos + 4)
                   .fontSize(theme.axisTextY?.size ?: 10)

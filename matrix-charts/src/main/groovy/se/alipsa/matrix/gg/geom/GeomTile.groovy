@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -63,6 +64,11 @@ class GeomTile extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xCol = aes.xColName
@@ -81,18 +87,25 @@ class GeomTile extends Geom {
     BigDecimal tileWidth = this.width ?: calculateResolution(data, xCol)
     BigDecimal tileHeight = this.height ?: calculateResolution(data, yCol)
 
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yVal = row[yCol]
       def fillVal = fillCol ? row[fillCol] : null
 
-      if (xVal == null || yVal == null) return
+      if (xVal == null || yVal == null) {
+        elementIndex++
+        return
+      }
 
       // Get center position
       BigDecimal xCenterPx = xScale?.transform(xVal) as BigDecimal
       BigDecimal yCenterPx = yScale?.transform(yVal) as BigDecimal
 
-      if (xCenterPx == null || yCenterPx == null) return
+      if (xCenterPx == null || yCenterPx == null) {
+        elementIndex++
+        return
+      }
 
       // Calculate half-widths in data space, then transform to get pixel dimensions
       BigDecimal halfW, halfH
@@ -154,6 +167,10 @@ class GeomTile extends Geom {
       } else {
         rect.stroke('none')
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(rect, ctx, 'tile', 'gg-tile', elementIndex)
+      elementIndex++
     }
   }
 

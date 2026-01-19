@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -55,6 +56,11 @@ class GeomLinerange extends Geom {
 
   @Override
   void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
+    render(group, data, aes, scales, coord, null)
+  }
+
+  @Override
+  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
     if (data == null || data.rowCount() == 0) return
 
     String xCol = aes?.xColName ?: 'x'
@@ -66,19 +72,26 @@ class GeomLinerange extends Geom {
     Scale yScale = scales['y']
     Scale colorScale = scales['color']
 
+    int elementIndex = 0
     data.each { row ->
       def xVal = row[xCol]
       def yminVal = row[yminCol]
       def ymaxVal = row[ymaxCol]
       def colorVal = colorCol ? row[colorCol] : null
 
-      if (xVal == null || yminVal == null || ymaxVal == null) return
+      if (xVal == null || yminVal == null || ymaxVal == null) {
+        elementIndex++
+        return
+      }
 
       BigDecimal xCenter = xScale?.transform(xVal) as BigDecimal
       BigDecimal yMin = yScale?.transform(yminVal) as BigDecimal
       BigDecimal yMax = yScale?.transform(ymaxVal) as BigDecimal
 
-      if (xCenter == null || yMin == null || yMax == null) return
+      if (xCenter == null || yMin == null || yMax == null) {
+        elementIndex++
+        return
+      }
 
       // Determine color
       String lineColor = this.color
@@ -112,6 +125,11 @@ class GeomLinerange extends Geom {
       if (alpha < 1.0) {
         line.addAttribute('stroke-opacity', alpha)
       }
+
+      // Apply CSS attributes
+      GeomUtils.applyAttributes(line, ctx, 'linerange', 'gg-linerange', elementIndex)
+
+      elementIndex++
     }
   }
 
