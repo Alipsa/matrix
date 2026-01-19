@@ -55,15 +55,6 @@ class GsUtilTest {
         .types([Integer, String, BigDecimal, LocalDate])
         .build()
 
-    def salesData = Matrix.builder()
-        .matrixName('Sales Q1')
-        .data(
-            month: ["Jan", "Feb", "Mar"],
-            revenue: [10000, 12000, 15000]
-        )
-        .types([String, BigDecimal])
-        .build()
-
     // Export creates spreadsheet with sheet named after matrix
     String spreadsheetId = GsExporter.exportSheet(empData)
 
