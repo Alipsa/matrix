@@ -137,8 +137,9 @@ class GsImporter {
 
   private static List<String> buildHeader(int ncol, List<Object> firstRow) {
     List<String> headers  = []
+    int rowSize = firstRow.size()
     for (int i = 0; i < ncol; i++) {
-      def val = firstRow.get(i)
+      def val = i < rowSize ? firstRow.get(i) : null
       def colName
       if (val == null || val.toString().trim().isEmpty()) {
         colName = 'c' + (i + 1)
