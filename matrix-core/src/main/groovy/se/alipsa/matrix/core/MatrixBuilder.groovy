@@ -118,6 +118,9 @@ class MatrixBuilder {
    * @return this builder
    */
   MatrixBuilder rows(List<List> rows) {
+    if (rows == null || rows.isEmpty()) {
+      return this
+    }
     this.columns = rows.transpose()
     this
   }

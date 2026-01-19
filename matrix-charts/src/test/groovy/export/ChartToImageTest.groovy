@@ -37,6 +37,6 @@ class ChartToImageTest {
     Exception exception = assertThrows(IllegalArgumentException.class, {
       ChartToImage.export(null)
     })
-    assertEquals("svgChart must not be null", exception.getMessage())
+    assertEquals("chart must not be null", exception.getMessage())
   }
 }

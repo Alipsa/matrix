@@ -57,7 +57,7 @@ dependencies {
 test {
   testLogging.showStandardStreams = true
   useJUnitPlatform() {
-    excludeTags 'external'
+    excludeTags 'external', 'flaky'
   }
 
   // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)

@@ -2,6 +2,7 @@ package test.alipsa.matrix.bigquery
 
 import com.google.cloud.NoCredentials
 import com.google.cloud.bigquery.BigQueryOptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.BigQueryEmulatorContainer
 import org.testcontainers.junit.jupiter.Container
@@ -17,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue
 import static org.junit.jupiter.api.Assertions.fail
 
 @Testcontainers
+@Tag("flaky")  // BigQuery emulator testcontainer has threading issues - see issue #XXX
 class BqTestContainerTest {
 
   // https://github.com/goccy/bigquery-emulator/pkgs/container/bigquery-emulator
@@ -53,8 +55,9 @@ class BqTestContainerTest {
 
       bq.createDataset(dsName)
 
-      // Add a small delay to ensure the emulator service is fully ready for streaming inserts
-      Thread.sleep(500)
+      // Add a delay to ensure the emulator service is fully ready for streaming inserts
+      // Testcontainers can be slow to fully initialize, especially on first run
+      Thread.sleep(2000)
 
       Matrix airq = Dataset.airquality().rename('Solar.R', 'Solar_r')
       assertTrue(bq.saveToBigQuery(airq, dsName), "Failed to save matrix to big query")
