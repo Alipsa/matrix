@@ -48,19 +48,10 @@ class GsImporter {
     List<List<Object>> values = response.getValues()
     int ncol = GsUtil.columnCountForRange(range)
 
-    List<String> headers = []
+    List<String> headers
     if (firstRowAsColumnNames) {
       List<Object> firstRow = values.remove(0)
-      for (int i = 0; i < ncol; i++) {
-        def val = firstRow.get(i)
-        def colName
-        if (val == null || val.toString().trim().isEmpty()) {
-          colName = 'c' + i + 1
-        } else {
-          colName = String.valueOf(val)
-        }
-        headers << colName
-      }
+      headers = buildHeader(ncol, firstRow)
     } else {
       headers = Matrix.anonymousHeader(ncol)
     }
@@ -110,19 +101,10 @@ class GsImporter {
     List<List<Object>> values = response.getValues()
     int ncol = GsUtil.columnCountForRange(range)
 
-    List<String> headers = []
+    List<String> headers
     if (firstRowAsColumnNames) {
       List<Object> firstRow = values.remove(0)
-      for (int i = 0; i < ncol; i++) {
-        def val = firstRow.get(i)
-        def colName
-        if (val == null || val.toString().trim().isEmpty()) {
-          colName = 'c' + i
-        } else {
-          colName = String.valueOf(val)
-        }
-        headers << colName
-      }
+      headers = buildHeader(ncol, firstRow)
     } else {
       headers = Matrix.anonymousHeader(ncol)
     }
@@ -151,6 +133,21 @@ class GsImporter {
         .columnNames(headers)
         .types([String] * ncol)
         .build()
+  }
+
+  private static List<String> buildHeader(int ncol, List<Object> firstRow) {
+    List<String> headers  = []
+    for (int i = 0; i < ncol; i++) {
+      def val = firstRow.get(i)
+      def colName
+      if (val == null || val.toString().trim().isEmpty()) {
+        colName = 'c' + (i + 1)
+      } else {
+        colName = String.valueOf(val)
+      }
+      headers << colName
+    }
+    headers
   }
 
   static List<Object> fillListToSize(List<Object> list, int desiredSize) {
