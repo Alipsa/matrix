@@ -163,7 +163,6 @@ class GsUtil {
 
       return names
     } catch (Exception e) {
-      def log = LogManager.getLogger(GsUtil)
       log.error("Failed to retrieve sheet names for spreadsheetId '{}'", spreadsheetId, e)
       throw e
     }
