@@ -111,7 +111,6 @@ class GsImporter {
     List<String> headers = []
     if (firstRowAsColumnNames) {
       List<Object> firstRow = values.remove(0)
-      //headers = firstRow.collect { String.valueOf(it) }
       for (int i = 0; i < ncol; i++) {
         def val = firstRow.get(i)
         def colName
