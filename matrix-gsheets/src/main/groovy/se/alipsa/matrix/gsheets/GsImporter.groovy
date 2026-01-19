@@ -47,6 +47,24 @@ class GsImporter {
         .execute()
     List<List<Object>> values = response.getValues()
     int ncol = GsUtil.columnCountForRange(range)
+
+    List<String> headers = []
+    if (firstRowAsColumnNames) {
+      List<Object> firstRow = values.remove(0)
+      for (int i = 0; i < ncol; i++) {
+        def val = firstRow.get(i)
+        def colName
+        if (val == null || val.toString().trim().isEmpty()) {
+          colName = 'c' + i + 1
+        } else {
+          colName = String.valueOf(val)
+        }
+        headers << colName
+      }
+    } else {
+      headers = Matrix.anonymousHeader(ncol)
+    }
+
     // if values are missing, fill with nulls
     for (int r = 0; r < values.size(); r++) {
       List<Object> row = values.get(r)
@@ -60,27 +78,11 @@ class GsImporter {
       }
       fillListToSize(row, ncol)
     }
-    List<String> headers = []
-    if (firstRowAsColumnNames) {
-      List<Object> firstRow = values.remove(0)
-      for (int i = 0; i < ncol; i++) {
-        def val = firstRow.get(i)
-        def colName
-        if (val == null || val.toString().trim().isEmpty()) {
-          colName = 'c' + i
-        } else {
-          colName = String.valueOf(val)
-        }
-        headers << colName
-      }
-    } else {
-      headers = Matrix.anonymousHeader(ncol)
-    }
 
     def sheetName = range.split('!')[0]
     Matrix.builder(sheetName)
         .rows(values)
-        .columnNames(fillHeaderToSize(headers, ncol))
+        .columnNames(headers)
         .build()
   }
 
@@ -149,19 +151,6 @@ class GsImporter {
         .columnNames(headers)
         .types([String] * ncol)
         .build()
-  }
-
-  static List<String> fillHeaderToSize(List<String> list, int desiredSize) {
-    if (list.size() >= desiredSize) {
-      return list
-    }
-
-    int currentSize = list.size()
-    for (int i = currentSize; i < desiredSize; i++) {
-      def index = i + 1
-      list.add("c" + index)
-    }
-    list
   }
 
   static List<Object> fillListToSize(List<Object> list, int desiredSize) {
