@@ -98,6 +98,18 @@ class GsUtil {
         .setApplicationName("Groovy Sheets Reader")
         .build()
 
+    return getSheetNames(spreadsheetId, sheetsService)
+  }
+
+  /**
+   * Get sheet names from a spreadsheet using a provided Sheets service.
+   * This overload is useful for testing with mocked services.
+   *
+   * @param spreadsheetId The ID of the spreadsheet
+   * @param sheetsService The Sheets service to use
+   * @return List of sheet names
+   */
+  static List<String> getSheetNames(String spreadsheetId, Sheets sheetsService) {
     // Fetch the spreadsheet metadata (this includes the list of sheets)
     def spreadsheet = sheetsService.spreadsheets().get(spreadsheetId).execute()
 
