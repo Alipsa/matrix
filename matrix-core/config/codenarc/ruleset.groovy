@@ -20,10 +20,10 @@ ruleset {
     // DRY rules
     ruleset('rulesets/dry.xml') {
         'DuplicateNumberLiteral' {
-            doNotApplyToFilesMatching = '.*Test\\.groovy'
+            doNotApplyToFilesMatching = /.*Test\.groovy/
         }
         'DuplicateStringLiteral' {
-            doNotApplyToFilesMatching = '.*Test\\.groovy'
+            doNotApplyToFilesMatching = /.*Test\.groovy/
         }
     }
 
