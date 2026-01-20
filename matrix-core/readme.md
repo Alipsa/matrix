@@ -664,4 +664,4 @@ The `check` task runs all quality gates:
 4. Verifies coverage thresholds
 5. Runs static analysis
 
-Set `codenarc { ignoreFailures = false }` in `build.gradle` to fail the build on code quality violations.
+By default, CodeNarc is configured with `ignoreFailures = true` in `build.gradle` so that violations do not fail the build. Change this setting to `ignoreFailures = false` if you want the build to fail on code quality violations.
