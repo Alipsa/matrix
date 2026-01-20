@@ -162,6 +162,7 @@ class Grid<T> implements Iterable<List<T>> {
     StringBuilder sb = new StringBuilder('[\n')
     data.each { sb.append('  ').append(String.valueOf(it)).append('\n') }
     sb.append(']\n')
+    return sb.toString()
   }
 
   /**

@@ -27,7 +27,7 @@ class ListConverter {
       try {
         if (it == null) {
           c.add(valueIfNull)
-        } else if (it.class.isAssignableFrom(type)) {
+        } else if (type.isAssignableFrom(it.class)) {
           c.add(type.cast(it))
         } else {
           c.add(ValueConverter.convert(it, type, dateTimeFormat, numberFormat))

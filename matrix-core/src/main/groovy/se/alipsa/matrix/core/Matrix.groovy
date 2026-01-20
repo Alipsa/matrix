@@ -2,7 +2,6 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
-import org.opentest4j.AssertionFailedError
 import se.alipsa.matrix.core.util.MatrixPrinter
 import se.alipsa.matrix.core.util.RowComparator
 
@@ -1100,7 +1099,7 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   static void handleError(String msg, boolean throwException) {
     if (throwException) {
-      throw new AssertionFailedError(msg)
+      throw new IllegalArgumentException(msg)
     } else {
       println(msg)
     }

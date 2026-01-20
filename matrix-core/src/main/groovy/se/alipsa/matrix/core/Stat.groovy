@@ -49,7 +49,10 @@ class Stat {
             def column = table.column(colName)
             def type = table.type(colName)
             if (Number.isAssignableFrom(type) || primitives.contains(type.getTypeName())) {
-                map[colName] = addNumericSummary(column, type)
+                def summary = addNumericSummary(column, type)
+                if (summary != null) {
+                    map[colName] = summary
+                }
             } else {
                 map[colName] = addCategorySummary(column, type)
             }
@@ -62,7 +65,10 @@ class Stat {
         def colName = column.name
         def type = column.type
         if (Number.isAssignableFrom(type) || primitives.contains(type.getTypeName())) {
-            sum[colName] = addNumericSummary(column, type)
+            def summary = addNumericSummary(column, type)
+            if (summary != null) {
+                sum[colName] = summary
+            }
         } else {
             sum[colName] = addCategorySummary(column, type)
         }
