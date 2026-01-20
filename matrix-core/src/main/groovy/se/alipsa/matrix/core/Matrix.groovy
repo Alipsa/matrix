@@ -2237,26 +2237,40 @@ class Matrix implements Iterable<Row>, Cloneable {
    * Splits this matrix into a specified number of chunks.
    * Rows will be distributed as evenly as possible among the chunks.
    *
-   * @param numChunks the number of chunks to split the matrix into (must be > 0)
-   * @return a list of Matrix chunks
+   * @param numChunks the number of chunks to split the matrix into (must be > 0 and <= rowCount())
+   * @return a list of exactly numChunks Matrix objects
    * @throws IllegalArgumentException if numChunks is less than 1 or greater than rowCount()
    * @example if there are 30 rows and numChunks=4, you get 4 matrices:
-   *          the first 2 have 8 rows each, the last 2 have 7 rows each
+   *          the first 2 have 8 rows each, the last 2 have 7 rows each (8+8+7+7=30)
    */
   List<Matrix> split(int numChunks) {
     if (numChunks < 1) {
       throw new IllegalArgumentException("numChunks must be at least 1, got: $numChunks")
     }
-    if (numChunks > rowCount()) {
-      throw new IllegalArgumentException("numChunks ($numChunks) cannot be greater than rowCount() (${rowCount()})")
+    int totalRows = rowCount()
+    if (numChunks > totalRows) {
+      throw new IllegalArgumentException("numChunks ($numChunks) cannot be greater than rowCount() ($totalRows)")
     }
-    int rowsPerChunk = rowCount().intdiv(numChunks)
-    def rowChunks = this.collate(rowsPerChunk)
+
+    // Calculate base size and remainder to distribute rows evenly
+    int baseSize = totalRows.intdiv(numChunks)
+    int remainder = totalRows % numChunks
+
     List<Matrix> chunks = []
-    rowChunks.eachWithIndex { it, idx ->
-      chunks << builder(matrixName + "_" + idx).rowList(it).build()
+    int startRow = 0
+
+    for (int i = 0; i < numChunks; i++) {
+      // First 'remainder' chunks get an extra row
+      int chunkSize = (i < remainder) ? baseSize + 1 : baseSize
+      int endRow = startRow + chunkSize
+
+      def rowsForChunk = rows().subList(startRow, endRow)
+      chunks << builder(matrixName + "_" + i).rowList(rowsForChunk).build()
+
+      startRow = endRow
     }
-    chunks
+
+    return chunks
   }
   /**
    * split is used t create a map of matrices for each unique value in the column.

@@ -1370,13 +1370,14 @@ class MatrixTest {
   @Test
   void testChunkSplit() {
     Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
+    // PlantGrowth.csv has 30 rows, split into 4 chunks
+    // 30/4 = 7 remainder 2, so first 2 chunks get 8 rows, last 2 get 7 rows
     List<Matrix> chunks = m.split(4)
-    assertEquals(5, chunks.size())
-    assertEquals(m.subset(0..6).withMatrixName("${m.matrixName}_0"), chunks[0])
-    assertEquals(m.subset(7..13).withMatrixName("${m.matrixName}_1"), chunks[1])
-    assertEquals(m.subset(14..20).withMatrixName("${m.matrixName}_2"), chunks[2])
-    assertEquals(m.subset(21..27).withMatrixName("${m.matrixName}_3"), chunks[3])
-    assertEquals(m.subset(28..29).withMatrixName("${m.matrixName}_4"), chunks[4])
+    assertEquals(4, chunks.size())
+    assertEquals(m.subset(0..7).withMatrixName("${m.matrixName}_0"), chunks[0])
+    assertEquals(m.subset(8..15).withMatrixName("${m.matrixName}_1"), chunks[1])
+    assertEquals(m.subset(16..22).withMatrixName("${m.matrixName}_2"), chunks[2])
+    assertEquals(m.subset(23..29).withMatrixName("${m.matrixName}_3"), chunks[3])
   }
 
   @Test
