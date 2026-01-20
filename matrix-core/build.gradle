@@ -128,7 +128,7 @@ jacocoTestCoverageVerification {
       element = 'CLASS'
       // Exclude closure classes, exception classes, and assertion utilities from per-class coverage
       excludes = [
-        '**.*_closure*',
+        '**/*$_*closure*',
         '**/*Exception',
         '**.MatrixAssertions' // Low coverage - needs dedicated assertion tests
       ]
