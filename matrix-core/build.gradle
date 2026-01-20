@@ -130,7 +130,7 @@ jacocoTestCoverageVerification {
       excludes = [
         '**/*$_*closure*',
         '**/*Exception',
-        '**.MatrixAssertions' // Low coverage - needs dedicated assertion tests
+        '**/MatrixAssertions.class' // Low coverage - needs dedicated assertion tests
       ]
       limit {
         minimum = 0.30 // 30% per class minimum (excluding closures)
