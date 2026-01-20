@@ -424,4 +424,59 @@ class StatTest {
     assertEquals(2, grouped2['2_A'].size())
     assertEquals(3, grouped2['2_B'].size())
   }
+
+  @Test
+  void testStrWithEmptyMatrix() {
+    // Test str() with completely empty matrix (no rows, no columns)
+    Matrix emptyMatrix = Matrix.builder().matrixName('Empty').build()
+    def structure = str(emptyMatrix)
+    assertNotNull(structure)
+    assertTrue(structure.toString().contains('Empty'))
+
+    // Test str() with columns but no rows
+    Matrix noRowsMatrix = Matrix.builder()
+        .matrixName('NoRows')
+        .columnNames(['col1', 'col2'])
+        .types([String, Integer])
+        .build()
+    structure = str(noRowsMatrix)
+    assertNotNull(structure)
+    assertTrue(structure.toString().contains('NoRows'))
+  }
+
+  @Test
+  void testStatMethodsWithNullInput() {
+    // Test mean with null/empty list
+    assertNull(mean(null as List))
+    assertNull(mean([]))
+
+    // Test median with null/empty list
+    assertNull(median(null as List))
+    assertNull(median([]))
+
+    // Test sd with null/empty list
+    assertNull(sd(null as List))
+    assertNull(sd([]))
+
+    // Test variance with null/empty list
+    assertNull(variance(null as List))
+    assertNull(variance([]))
+  }
+
+  @Test
+  void testStatMethodsWithSingleElement() {
+    // Test median with single element
+    def medianResult = median([5])
+    assertNotNull(medianResult)
+    assertEquals(new BigDecimal(5), medianResult)
+
+    // Test sd with single element and bias correction (should return null for n-1=0 case)
+    def result = sd([5.0], true)
+    assertNull(result, "SD with single element and bias correction should return null")
+
+    // Test sd with single element without bias correction (should work)
+    def resultNoBias = sd([5.0], false)
+    assertNotNull(resultNoBias)
+    assertEquals(0.0, resultNoBias, 0.0001)
+  }
 }

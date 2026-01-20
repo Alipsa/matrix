@@ -692,6 +692,26 @@ class MatrixTest {
   }
 
   @Test
+  void testDropColumnsExceptWithEmptyMatrix() {
+    // Test dropExcept on empty matrix
+    Matrix emptyMatrix = Matrix.builder().matrixName('Empty').build()
+    Matrix result = emptyMatrix.dropColumnsExcept()
+    assertNotNull(result)
+    assertEquals(0, result.columnCount())
+    assertEquals(0, result.rowCount())
+
+    // Test dropExcept on matrix with columns but no rows
+    Matrix noRowsMatrix = Matrix.builder()
+        .columnNames(['col1', 'col2', 'col3'])
+        .types([String, Integer, Double])
+        .build()
+    result = noRowsMatrix.dropColumnsExcept('col1', 'col3')
+    assertEquals(2, result.columnCount())
+    assertEquals(0, result.rowCount())
+    assertIterableEquals(['col1', 'col3'], result.columnNames())
+  }
+
+  @Test
   void testIteration() {
     def empData = Matrix.builder()
         .columns(
