@@ -1005,6 +1005,23 @@ class MatrixTest {
     assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
   }
 
+  @Test
+  void testRemoveEmptyColumnsWithBlankStrings() {
+    def empData = Matrix.builder()
+        .columns(
+            emp_id: [1, 2],
+            emp_name: ['', ''],
+            salary: [623.3, 515.2],
+            start_date: ['  ', '  '],
+            other: [null, ''])
+        .types(int, String, Number, String, String)
+        .build()
+    assertIterableEquals(['emp_id', 'emp_name', 'salary', 'start_date', 'other'], empData.columnNames())
+    empData.removeEmptyColumns()
+    assertEquals(2, empData.columnCount())
+    assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
+  }
+
   boolean deleteDirectory(File directoryToBeDeleted) {
     File[] allContents = directoryToBeDeleted.listFiles()
     if (allContents != null) {
@@ -1378,6 +1395,34 @@ class MatrixTest {
     assertEquals(m.subset(8..15).withMatrixName("${m.matrixName}_1"), chunks[1])
     assertEquals(m.subset(16..22).withMatrixName("${m.matrixName}_2"), chunks[2])
     assertEquals(m.subset(23..29).withMatrixName("${m.matrixName}_3"), chunks[3])
+  }
+
+  @Test
+  void testChunkSplitEdgeCases() {
+    Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
+    // PlantGrowth.csv has 30 rows
+
+    // Test numChunks < 1 (should throw IllegalArgumentException)
+    assertThrows(IllegalArgumentException.class, { m.split(0) })
+    assertThrows(IllegalArgumentException.class, { m.split(-1) })
+
+    // Test numChunks > rowCount() (should throw IllegalArgumentException)
+    assertThrows(IllegalArgumentException.class, { m.split(31) })
+    assertThrows(IllegalArgumentException.class, { m.split(100) })
+
+    // Test numChunks == rowCount() (each chunk gets 1 row)
+    List<Matrix> oneRowChunks = m.split(30)
+    assertEquals(30, oneRowChunks.size())
+    for (int i = 0; i < 30; i++) {
+      assertEquals(1, oneRowChunks[i].rowCount())
+      assertEquals(m.subset(i..i).withMatrixName("${m.matrixName}_${i}"), oneRowChunks[i])
+    }
+
+    // Test numChunks == 1 (single chunk with all rows)
+    List<Matrix> singleChunk = m.split(1)
+    assertEquals(1, singleChunk.size())
+    assertEquals(30, singleChunk[0].rowCount())
+    assertEquals(m.withMatrixName("${m.matrixName}_0"), singleChunk[0])
   }
 
   @Test
