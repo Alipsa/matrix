@@ -357,7 +357,7 @@ class MatrixBuilder {
     if (noName()) {
       String fileName = file.getFileName().toString()
       int endIdx = fileName.length()
-      if (file.contains('.')) {
+      if (fileName.contains('.')) {
         endIdx = fileName.lastIndexOf('.')
       }
       matrixName(fileName.substring(0, endIdx))

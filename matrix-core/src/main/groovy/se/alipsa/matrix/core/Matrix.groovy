@@ -894,7 +894,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         boolean valueDiff = false
         thisRow.eachWithIndex { Object entry, int c ->
           if (entry instanceof Number) {
-            def thatVal = (thatRow[c] ?: Double.NaN) as double
+            def thatVal = (thatRow[c] != null ? thatRow[c] : Double.NaN) as double
             double thisVal = entry as double
             if (Math.abs(thisVal - thatVal as double) > allowedDiff) {
               valueDiff = true
@@ -951,13 +951,19 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   Matrix dropExcept(int ... columnIndices) {
-    def retainColIndices = columnIndices.length > 0 ? columnIndices as List : []
+    if (columnIndices.length == 0) {
+      mColumns.clear()
+      return this
+    }
+    def retainColIndices = columnIndices as Set
+    List<Column> columnsToKeep = []
     for (int i = 0; i < columnCount(); i++) {
       if (retainColIndices.contains(i)) {
-        continue
+        columnsToKeep.add(mColumns[i])
       }
-      mColumns.remove(i)
     }
+    mColumns.clear()
+    mColumns.addAll(columnsToKeep)
     return this
   }
 
@@ -1109,7 +1115,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       for (entry in column) {
         def thatVal = thatCol[r]
         if (entry instanceof Number) {
-          def diff = Math.abs((entry as double) - ((thatVal ?: Double.NaN) as double))
+          def diff = Math.abs((entry as double) - ((thatVal != null ? thatVal : Double.NaN) as double))
           if (diff > allowedDiff) {
             return [r, i, entry, thatVal]
           }
@@ -1947,7 +1953,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow for method chaining
    */
   Matrix removeRows(List<Integer> indexes) {
-    Arrays.sort(indexes)
+    indexes.sort()
     mColumns.each { col ->
       indexes.eachWithIndex { Number idx, int count ->
         col.remove((int) idx - count)
@@ -2139,10 +2145,8 @@ class Matrix implements Iterable<Row>, Cloneable {
   List<Integer> rowIndices(Closure criteria) {
     def r = [] as List<Integer>
     rows().eachWithIndex { row, idx ->
-      {
-        if (criteria(row)) {
-          r.add(idx)
-        }
+      if (criteria(row)) {
+        r.add(idx)
       }
     }
     return r

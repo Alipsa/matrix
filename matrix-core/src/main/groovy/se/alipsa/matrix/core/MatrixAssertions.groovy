@@ -17,14 +17,14 @@ class MatrixAssertions {
   static void assertNotEquals(Matrix expected, Matrix actual, String message = '') {
     boolean eq = expected.equals(actual, true, true, false, 0.0001d, false, message)
     if (eq) {
-      new IllegalArgumentException(message)
+      throw new IllegalArgumentException(message)
     }
   }
 
   static void assertContentNotEquals(Matrix expected, Matrix actual, String message = '') {
     boolean eq = expected.equals(actual, true, true, true, 0.0001d, false, message)
     if (eq) {
-      new IllegalArgumentException(message)
+      throw new IllegalArgumentException(message)
     }
   }
 
