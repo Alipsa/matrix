@@ -176,6 +176,7 @@ class MatrixResultSet implements ResultSet{
   @Override
   boolean getBoolean(int columnIndex) throws SQLException {
     lastReadValue = matrix[rowIdx, columnIndex-1, Boolean]
+    lastReadValue == null ? false : (boolean) lastReadValue
   }
 
   /**
@@ -193,6 +194,7 @@ class MatrixResultSet implements ResultSet{
   @Override
   byte getByte(int columnIndex) throws SQLException {
     lastReadValue = matrix[rowIdx, columnIndex-1, Byte]
+    lastReadValue == null ? (byte) 0 : (byte) lastReadValue
   }
 
   /**
@@ -210,6 +212,7 @@ class MatrixResultSet implements ResultSet{
   @Override
   short getShort(int columnIndex) throws SQLException {
     lastReadValue = matrix[rowIdx, columnIndex-1, Short]
+    lastReadValue == null ? (short) 0 : (short) lastReadValue
   }
 
   /**
@@ -388,17 +391,21 @@ class MatrixResultSet implements ResultSet{
   @Override
   InputStream getAsciiStream(int columnIndex) throws SQLException {
     String val = matrix[rowIdx, columnIndex-1, String]
-    lastReadValue = ReaderInputStream.builder()
-        .setCharset(StandardCharsets.UTF_8)
-        .setReader(new CharArrayReader(val.toCharArray()))
-        .get()
+    if (val == null) {
+      lastReadValue = null
+    } else {
+      lastReadValue = ReaderInputStream.builder()
+          .setCharset(StandardCharsets.UTF_8)
+          .setReader(new CharArrayReader(val.toCharArray()))
+          .get()
+    }
   }
 
   /** @deprecated */
   @Override
   InputStream getUnicodeStream(int columnIndex) throws SQLException {
     String val = matrix[rowIdx, columnIndex-1, String]
-    lastReadValue = new ByteArrayInputStream(val.getBytes(StandardCharsets.UTF_8))
+    lastReadValue = val == null ? null : new ByteArrayInputStream(val.getBytes(StandardCharsets.UTF_8))
   }
 
   /**
@@ -2361,17 +2368,18 @@ class MatrixResultSet implements ResultSet{
    * current row of this {@code ResultSet} object.
    * This method cannot be called when the cursor is on the insert row.
    *
+   * This is a no-op for a detached in-memory result set since updates are applied
+   * immediately by the update methods.
+   *
    * @throws SQLException if a database access error occurs;
    * the result set concurrency is {@code CONCUR_READ_ONLY};
-   *  this method is called on a closed result set or
+   * this method is called on a closed result set or
    * if this method is called when the cursor is on the insert row
-   * @throws SQLFeatureNotSupportedException if the JDBC driver does not support
-   * this method
    * @since 1.2
    */
   @Override
   void updateRow() throws SQLException {
-    throw new SQLFeatureNotSupportedException("This result set is detached")
+    // no-op for detached result set
   }
 
   /**
@@ -4458,7 +4466,7 @@ class MatrixResultSet implements ResultSet{
     if (iface == List) {
       return matrix.rows() as T
     }
-    return null
+    throw new SQLException("No wrapper for ${iface?.name}")
   }
 
   /**

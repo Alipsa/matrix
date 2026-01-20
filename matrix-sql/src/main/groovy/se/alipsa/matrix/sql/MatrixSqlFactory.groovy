@@ -105,6 +105,12 @@ class MatrixSqlFactory {
    * @return a MatrixSql instance
    */
   static MatrixSql create(ConnectionInfo ci, String version = null) {
+    if (ci.driver == null || ci.driver.isBlank()) {
+      String driverClassName = SqlUtil.getDriverClassName(ci.url)
+      if (driverClassName != null && !driverClassName.isBlank()) {
+        ci.setDriver(driverClassName)
+      }
+    }
     Map<String, String> dependency = getDependencyName(ci.url)
     if (dependency == null) {
       throw new RuntimeException("Failed to find a suitable dependency for $ci.url")

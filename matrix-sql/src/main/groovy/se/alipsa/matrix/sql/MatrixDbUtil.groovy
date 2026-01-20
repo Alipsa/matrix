@@ -157,6 +157,8 @@ class MatrixDbUtil {
   Map<String,Map<String, Integer>> createMappings(Matrix table, int scanNumRows) {
     List<Class<?>> types = table.types()
     Map<String, Map<String, Integer>> mappings = [:]
+    int rowCount = table.rowCount()
+    int rowsToScan = Math.min(Math.max(scanNumRows, 0), rowCount)
     int i = 0
     for (String name : table.columnNames()) {
       Map<String, Integer> props = [:]
@@ -164,7 +166,7 @@ class MatrixDbUtil {
       if (BigDecimal == type) {
         Integer left = 0
         Integer right = 0
-        for (int r = 0; r < scanNumRows; r++) {
+        for (int r = 0; r < rowsToScan; r++) {
           BigDecimal val = table[r, name]
           if (val == null) {
             continue
@@ -180,7 +182,7 @@ class MatrixDbUtil {
         props.put(DECIMAL_SCALE, right)
       } else if (type == String) {
         Integer maxLength = 0
-        for (int r = 0; r < scanNumRows; r++) {
+        for (int r = 0; r < rowsToScan; r++) {
           String val = table[r, name]
           if (val == null) {
             continue
@@ -266,14 +268,15 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   boolean tableExists(Connection con, String tableName) throws SQLException {
-    var rs = con.getMetaData().getTables(null, null, null, null)
-    while (rs.next()) {
-      String name = rs.getString('TABLE_NAME')
-      if (name.toUpperCase() == tableName.toUpperCase()) {
-        return true
+    try (ResultSet rs = con.getMetaData().getTables(null, null, null, null)) {
+      while (rs.next()) {
+        String name = rs.getString('TABLE_NAME')
+        if (name.toUpperCase() == tableName.toUpperCase()) {
+          return true
+        }
       }
+      return false
     }
-    return false
   }
 
   /**
@@ -284,10 +287,11 @@ class MatrixDbUtil {
    * @throws SQLException if any sql error occurs
    */
   Set<String> getTableNames(Connection con) throws SQLException {
-    var rs = con.getMetaData().getTables(null, null, null, null)
     Set<String> names = new HashSet<>()
-    while (rs.next()) {
-      names << rs.getString('TABLE_NAME')
+    try (ResultSet rs = con.getMetaData().getTables(null, null, null, null)) {
+      while (rs.next()) {
+        names << rs.getString('TABLE_NAME')
+      }
     }
     names
   }

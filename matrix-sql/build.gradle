@@ -34,13 +34,14 @@ compileGroovy {
 
 dependencies {
     compileOnly libs.groovy
+    compileOnly libs.groovySql
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
-    implementation 'se.alipsa.groovy:data-utils:2.0.3'
+    implementation 'se.alipsa.groovy:data-utils:2.0.4'
     implementation 'commons-io:commons-io:2.21.0'
     implementation 'se.alipsa.groovy:dependency-resolver:1.0.1'
-    implementation 'se.alipsa:maven-3.9.11-utils:1.0.0'
+    implementation 'se.alipsa:maven-3.9.11-utils:1.1.0'
     //implementation 'org.apache.logging.log4j:log4j-api:2.24.1'
 
     testImplementation libs.groovy

@@ -315,7 +315,7 @@ class MatrixResultSetMetaData implements ResultSetMetaData {
     if (iface == List) {
       return matrix.rows() as T
     }
-    return null
+    throw new SQLException("No wrapper for ${iface?.name}")
   }
 
   /**

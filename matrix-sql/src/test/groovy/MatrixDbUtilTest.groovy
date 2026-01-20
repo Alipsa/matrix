@@ -1,6 +1,7 @@
 import it.AbstractDbTest
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
+import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.sql.MatrixDbUtil
@@ -24,5 +25,21 @@ class MatrixDbUtilTest {
     String ddl = util.createTableDdl(MatrixDbUtil.tableName(m), m, mappings, true)
     // check that LocalDateTime becomes a datetime2 and not a TIMESTAMP
     assertTrue(ddl.contains('"local date time" datetime2'))
+  }
+
+  @Test
+  void testCreateMappingsClampsScanRows() {
+    Matrix m = Matrix.builder('small').data([
+        name: ['abc'],
+        amount: [12.34]
+    ])
+    .types(String, BigDecimal)
+    .build()
+
+    def util = new MatrixDbUtil(SqlTypeMapper.create(DataBaseProvider.UNKNOWN))
+    Map mappings = util.createMappings(m, 10)
+    assertEquals(2, mappings.size())
+    assertEquals(1, mappings['name'].size())
+    assertEquals(2, mappings['amount'].size())
   }
 }

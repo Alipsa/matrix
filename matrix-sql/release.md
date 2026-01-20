@@ -4,7 +4,15 @@ Date format used below is yyyy-MM-dd
 ## v2.3.0, in progress
 - add option to control whether column names are quoted when creating a table
 - add an execute method to MatrixSql to run arbitrary sql (update, delete, insert etc.)
-- commons-io:commons-io [2.20.0 -> 2.21.0]
+- MatrixSqlFactory.create attempts to infer and set the JDBC driver when missing
+- MatrixSql connection lifecycle fixes (reconnect after close)
+- safer, prepared-statement updates with match-column validation
+- ResultSet improvements: updateRow is a no-op for detached sets, null-safe primitive/stream getters, strict unwrap contract
+- close metadata ResultSets for table discovery utilities
+- Dependency upgrades:
+  - commons-io:commons-io [2.20.0 -> 2.21.0]
+  - se.alipsa.groovy:data-utils [2.0.3 -> 2.0.4]
+  - se.alipsa:maven-3.9.11-utils [1.0.0 -> 1.1.0]
 
 ## v2.2.0, 2025-10-25
 - upgrade dependencies

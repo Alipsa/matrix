@@ -50,7 +50,7 @@ class MatrixSql implements Closeable {
     if (con != null) {
       con.close()
     }
-    con == null
+    con = null
   }
 
   Matrix select(String sqlQuery, String matrixName = 'myMatrix') throws SQLException {
@@ -68,8 +68,14 @@ class MatrixSql implements Closeable {
   }
 
   int update(String tableName, Row row, String... matchColumnName) throws SQLException {
-    String sql = SqlGenerator.createUpdateSql(tableName, row, matchColumnName)
-    dbUpdate(sql)
+    SqlGenerator.PreparedUpdate prepared = SqlGenerator.createPreparedUpdate(tableName, row, matchColumnName)
+    try(PreparedStatement stm = connect().prepareStatement(prepared.sql)) {
+      int i = 1
+      prepared.values.each {
+        stm.setObject(i++, it)
+      }
+      return stm.executeUpdate()
+    }
   }
 
   int update(Matrix table, String... matchColumnName) throws SQLException {
@@ -278,9 +284,26 @@ class MatrixSql implements Closeable {
   }
 
   private int dbExecuteBatchUpdate(Matrix table, String[] matchColumnName) throws SQLException {
-    try(Statement stm = connect().createStatement()) {
+    if (matchColumnName == null || matchColumnName.length == 0) {
+      throw new IllegalArgumentException("matchColumnName is required")
+    }
+    if (table.rowCount() == 0) {
+      return 0
+    }
+    List<String> matchColumns = matchColumnName.toList()
+    List<String> updateColumns = SqlGenerator.updateColumnNames(table.columnNames(), matchColumns)
+    if (updateColumns.isEmpty()) {
+      throw new IllegalArgumentException("No columns left to update after excluding match columns")
+    }
+    String sql = SqlGenerator.createPreparedUpdateSql(table.getMatrixName(), updateColumns, matchColumns)
+    try(PreparedStatement stm = connect().prepareStatement(sql)) {
       for (Row row : table) {
-        stm.addBatch(SqlGenerator.createUpdateSql(table.getMatrixName(), row, matchColumnName))
+        List<Object> values = SqlGenerator.updateValues(row, updateColumns, matchColumns)
+        int i = 1
+        values.each {
+          stm.setObject(i++, it)
+        }
+        stm.addBatch()
       }
       int[] results = stm.executeBatch()
       return IntStream.of(results).sum()
@@ -292,7 +315,7 @@ class MatrixSql implements Closeable {
   }
 
   synchronized Connection connect() throws SQLException {
-    if (con == null) {
+    if (con == null || con.isClosed()) {
       String url = ci.getUrl().toLowerCase()
       if (!url.contains(':h2:') && !url.contains(':derby:')
           && isBlank(ci.getPassword()) && !url.contains("passw")

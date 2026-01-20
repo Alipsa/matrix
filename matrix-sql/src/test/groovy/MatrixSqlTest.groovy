@@ -2,6 +2,7 @@ import groovy.sql.Sql
 import it.AbstractDbTest
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.datautil.ConnectionInfo
+import se.alipsa.groovy.datautil.SqlUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.sql.MatrixSql
@@ -97,6 +98,84 @@ class MatrixSqlTest {
       stored = stored.convert('start', LocalDate)
       assertEquals(LocalDate, stored.type('start'))
       assertEquals(ListConverter.toLocalDates('2021-12-01', '2022-07-10', '2023-05-27'), stored.column('start'))
+    }
+  }
+
+  @Test
+  void testFactorySetsDriverWhenMissing() {
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'driver_testdb')
+    String url = "jdbc:h2:file:${tmpDb}"
+    String expectedDriver = SqlUtil.getDriverClassName(url)
+    assertNotNull(expectedDriver, "Expected SqlUtil to resolve a driver for $url")
+    try (MatrixSql matrixSql = MatrixSqlFactory.create(url, 'sa', '123', '2.4.240')) {
+      assertEquals(expectedDriver, matrixSql.connectionInfo.driver)
+    }
+  }
+
+  @Test
+  void testReconnectAfterClose() {
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'reconnect_testdb')
+    MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')
+    try {
+      Connection first = matrixSql.connect()
+      assertFalse(first.isClosed(), 'Expected initial connection to be open')
+      matrixSql.close()
+      assertTrue(first.isClosed(), 'Expected initial connection to be closed after MatrixSql.close()')
+      Connection second = matrixSql.connect()
+      assertFalse(second.isClosed(), 'Expected new connection after close')
+      assertNotSame(first, second, 'Expected a new connection instance after close')
+    } finally {
+      matrixSql.close()
+    }
+  }
+
+  @Test
+  void testUpdateUsesPreparedStatement() {
+    Matrix data = Matrix.builder('people').data([
+        id: [1],
+        name: ["O'Neil"]
+    ])
+    .types(int, String)
+    .build()
+
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'update_testdb')
+    String props = "DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123', props)) {
+      String tableName = matrixSql.tableName(data)
+      if (matrixSql.tableExists(tableName)) {
+        matrixSql.dropTable(tableName)
+      }
+      matrixSql.create(data)
+
+      Row row = data.row(0)
+      row['name'] = "D'Arcy"
+      assertEquals(1, matrixSql.update(tableName, row, 'id'))
+
+      Matrix stored = matrixSql.select("select * from $tableName")
+      assertEquals("D'Arcy", stored[0, 'name'])
+    }
+  }
+
+  @Test
+  void testUpdateRequiresMatchColumn() {
+    Matrix data = Matrix.builder('people2').data([
+        id: [1],
+        name: ['Alice']
+    ])
+    .types(int, String)
+    .build()
+
+    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'update_match_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')) {
+      String tableName = matrixSql.tableName(data)
+      if (matrixSql.tableExists(tableName)) {
+        matrixSql.dropTable(tableName)
+      }
+      matrixSql.create(data)
+
+      Row row = data.row(0)
+      row['name'] = 'Bob'
+      assertThrows(IllegalArgumentException) { matrixSql.update(tableName, row) }
     }
   }
 
