@@ -77,7 +77,7 @@ class ClassUtils {
 
   /**
    * Since all primitive wrappers extends Number, the simple solution would be to just
-   * return Number but actually there is a kind of hiearchy e.g. a Flloat fits in a Double etc.
+   * return Number but actually there is a kind of hierarchy e.g. a Float fits in a Double etc.
    * so this returns the nearest common Number instance that can contain both.
    * Handles Byte, Short, Integer, Long, BigInteger, Float, Double, and BigDecimal
    * @param updated the "new" class to try to fit into the existing one

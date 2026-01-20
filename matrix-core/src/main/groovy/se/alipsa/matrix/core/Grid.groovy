@@ -72,7 +72,7 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   /**
-   * Insert a row i the specified position.
+   * Insert a row at the specified position.
    *
    * @param position the row index to insert the row at
    * @param row the row data
@@ -280,10 +280,25 @@ class Grid<T> implements Iterable<List<T>> {
     return rowList.transpose()
   }
 
+  /**
+   * Validates that a Grid has a valid structure.
+   *
+   * @param grid the Grid to validate
+   * @return true if the grid is valid, false otherwise
+   */
   static boolean isValid(Grid grid) {
     return isValid(grid.data)
   }
 
+  /**
+   * Validates that a row list has a valid Grid structure.
+   * A valid Grid must be:
+   * - A non-null List of Lists
+   * - All rows must have the same number of columns
+   *
+   * @param rowList the row list to validate
+   * @return true if the row list forms a valid grid structure, false otherwise
+   */
   static boolean isValid(Object rowList) {
     if (rowList == null) {
       return false
