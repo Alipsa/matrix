@@ -98,6 +98,17 @@ jacoco {
   toolVersion = "0.8.12"
 }
 
+def jacocoCoverageExclusions = [
+  '**/*_closure*.class',
+  '**/*Exception.class',
+  '**/MatrixAssertions.class'
+]
+
+def jacocoTestExclusions = [
+  '**/*Test.class',
+  '**/*Test$*.class'
+]
+
 jacocoTestReport {
   dependsOn test
   reports {
@@ -107,17 +118,18 @@ jacocoTestReport {
   }
   afterEvaluate {
     classDirectories.setFrom(files(classDirectories.files.collect {
-      fileTree(dir: it, exclude: [
-        // Exclude test classes themselves from coverage metrics (only production code is measured)
-        '**/*Test.class',
-        '**/*Test$*.class'
-      ])
+      fileTree(dir: it, exclude: jacocoTestExclusions + jacocoCoverageExclusions)
     }))
   }
 }
 
 jacocoTestCoverageVerification {
   dependsOn jacocoTestReport
+  afterEvaluate {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+      fileTree(dir: it, exclude: jacocoTestExclusions + jacocoCoverageExclusions)
+    }))
+  }
   violationRules {
     rule {
       limit {
@@ -128,9 +140,9 @@ jacocoTestCoverageVerification {
       element = 'CLASS'
       // Exclude closure classes, exception classes, and assertion utilities from per-class coverage
       excludes = [
-        '**/*$_*closure*',
-        '**/*Exception',
-        '**/MatrixAssertions.class' // Low coverage - needs dedicated assertion tests
+        '*_closure*',
+        '*Exception',
+        '*MatrixAssertions' // Low coverage - needs dedicated assertion tests
       ]
       limit {
         minimum = 0.30 // 30% per class minimum (excluding closures)
