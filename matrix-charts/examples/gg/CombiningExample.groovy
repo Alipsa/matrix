@@ -13,7 +13,7 @@ p <- ggplot(mpg, aes(cty, hwy)) +
 
 ggsave("themes.svg", plot = p)
  */
-@Grab('se.alipsa.matrix:matrix-core:3.5.1-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-core:3.6.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-groovy-ext:0.1.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-charts:0.4.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2-SNAPSHOT')

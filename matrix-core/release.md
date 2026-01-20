@@ -1,6 +1,6 @@
 # Matrix Core Release History
 
-### 3.5.1, in progress
+### 3.6.0, in progress
 - deprecate renameColumn and dropColumns in favor of rename and drop
 - regard an empty string as null in ValueConverter (except for asString)
 - add fallback for creating a matrix from a ResultSet that does not have classTypeName set.
