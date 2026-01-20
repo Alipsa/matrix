@@ -403,7 +403,22 @@ class Stat {
     }
 
     static List<BigDecimal> means(Matrix table, List<String> colNames) {
-        return means(table.rows() as List<List<?>>, table.columnIndices(colNames))
+        // Optimized: use columnar access instead of row iteration
+        List<BigDecimal> results = []
+        colNames.each { colName ->
+            List<?> columnData = table.column(colName)
+            def sum = 0.0g
+            def count = 0.0g
+            columnData.each { value ->
+                if (value != null && value instanceof Number) {
+                    sum += value
+                    count += 1
+                }
+            }
+            // Handle division by zero for empty columns or columns with no numeric values
+            results << (count == 0 ? null : sum / count)
+        }
+        return results
     }
 
     /**
@@ -504,7 +519,15 @@ class Stat {
     }
 
     static List<BigDecimal> medians(Matrix table, List<String> colNames) {
-        return medians(table.rows() as List<List<?>>, table.columnIndices(colNames))
+        // Optimized: use columnar access instead of row iteration
+        List<BigDecimal> results = []
+        colNames.each { colName ->
+            List<?> columnData = table.column(colName)
+            List<Number> numericValues = columnData.findAll { it != null && it instanceof Number } as List<Number>
+            // median() handles sorting internally, no need to pre-sort
+            results << median(numericValues)
+        }
+        return results
     }
 
     /**
@@ -748,7 +771,19 @@ class Stat {
     }
 
     static <T extends Number> List<T> sd(Matrix table, List<String> columnNames, boolean isBiasCorrected = true) {
-        return sd(table.rows() as List<List<T>>, isBiasCorrected, table.columnIndices(columnNames))
+        // Optimized: use columnar access instead of row iteration
+        List<T> results = []
+        columnNames.each { colName ->
+            List<?> columnData = table.column(colName)
+            List<Double> numericValues = []
+            columnData.each { value ->
+                if (value instanceof Number) {
+                    numericValues.add(value.doubleValue())
+                }
+            }
+            results << (T)sd(numericValues, isBiasCorrected)
+        }
+        return results
     }
 
     @CompileDynamic
@@ -781,6 +816,9 @@ class Stat {
             return null
         }
         def variance = variance(values, isBiasCorrected)
+        if (variance == null) {
+            return null
+        }
         return Math.sqrt(variance as double) as T
     }
 

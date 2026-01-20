@@ -424,4 +424,88 @@ class StatTest {
     assertEquals(2, grouped2['2_A'].size())
     assertEquals(3, grouped2['2_B'].size())
   }
+
+  @Test
+  void testStrWithEmptyMatrix() {
+    // Test str() with completely empty matrix (no rows, no columns)
+    Matrix emptyMatrix = Matrix.builder().matrixName('Empty').build()
+    def structure = str(emptyMatrix)
+    assertNotNull(structure)
+    assertTrue(structure.toString().contains('Empty'))
+
+    // Test str() with columns but no rows
+    Matrix noRowsMatrix = Matrix.builder()
+        .matrixName('NoRows')
+        .columnNames(['col1', 'col2'])
+        .types([String, Integer])
+        .build()
+    structure = str(noRowsMatrix)
+    assertNotNull(structure)
+    assertTrue(structure.toString().contains('NoRows'))
+  }
+
+  @Test
+  void testStatMethodsWithNullInput() {
+    // Test mean with null/empty list
+    assertNull(mean(null as List))
+    assertNull(mean([]))
+
+    // Test median with null/empty list
+    assertNull(median(null as List))
+    assertNull(median([]))
+
+    // Test sd with null/empty list
+    assertNull(sd(null as List))
+    assertNull(sd([]))
+
+    // Test variance with null/empty list
+    assertNull(variance(null as List))
+    assertNull(variance([]))
+  }
+
+  @Test
+  void testStatMethodsWithSingleElement() {
+    // Test median with single element
+    def medianResult = median([5])
+    assertNotNull(medianResult)
+    assertEquals(new BigDecimal(5), medianResult)
+
+    // Test sd with single element and bias correction (should return null for n-1=0 case)
+    def result = sd([5.0], true)
+    assertNull(result, "SD with single element and bias correction should return null")
+
+    // Test sd with single element without bias correction (should work)
+    def resultNoBias = sd([5.0], false)
+    assertNotNull(resultNoBias)
+    assertEquals(0.0, resultNoBias, 0.0001)
+  }
+
+  @Test
+  void testStatMethodsWithNoNumericValues() {
+    // Test means with columns containing no numeric values (all nulls or non-numeric)
+    def matrix = Matrix.builder()
+        .columns(
+            allNulls: [null, null, null],
+            allStrings: ['a', 'b', 'c'],
+            mixed: [null, 'x', null],
+            hasNumbers: [1, 2, 3]
+        )
+        .types([String, String, String, Integer])
+        .build()
+
+    def meanResults = means(matrix, ['allNulls', 'allStrings', 'mixed', 'hasNumbers'])
+    assertNull(meanResults[0], "Mean of all-null column should be null")
+    assertNull(meanResults[1], "Mean of all-string column should be null")
+    assertNull(meanResults[2], "Mean of mixed null/string column should be null")
+    assertNotNull(meanResults[3], "Mean of numeric column should not be null")
+    assertEquals(new BigDecimal(2), meanResults[3])
+
+    // Test medians with same columns
+    def medianResults = medians(matrix, ['allNulls', 'allStrings', 'mixed', 'hasNumbers'])
+    assertNull(medianResults[0], "Median of all-null column should be null")
+    assertNull(medianResults[1], "Median of all-string column should be null")
+    assertNull(medianResults[2], "Median of mixed null/string column should be null")
+    assertNotNull(medianResults[3], "Median of numeric column should not be null")
+    assertEquals(new BigDecimal(2), medianResults[3])
+  }
 }

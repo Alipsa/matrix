@@ -159,6 +159,29 @@ class GridTest {
     }
 
     @Test
+    void testTransposeWithEmptyGrid() {
+        // Test transpose with empty grid
+        Grid<Object> emptyGrid = [] as Grid
+        def result = transpose(emptyGrid)
+        assertNotNull(result)
+        assertEquals(0, result.size())
+
+        // Test transpose with single row
+        Grid<Object> singleRow = [[1, 2, 3]] as Grid
+        result = transpose(singleRow)
+        assertEquals(3, result.size())
+        assertEquals(1, result.data[0].size())
+        assertEquals([[1], [2], [3]], result.data)
+
+        // Test transpose with single column
+        Grid<Object> singleCol = [[1], [2], [3]] as Grid
+        result = transpose(singleCol)
+        assertEquals(1, result.size())
+        assertEquals(3, result.data[0].size())
+        assertEquals([[1, 2, 3]], result.data)
+    }
+
+    @Test
     void testValidate() {
         Grid singleRow = [[1,2,3]] as Grid
         assertTrue(isValid(singleRow), "Single row, " + singleRow.getClass())
