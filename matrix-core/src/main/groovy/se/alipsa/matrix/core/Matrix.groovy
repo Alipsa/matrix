@@ -2273,7 +2273,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     return chunks
   }
   /**
-   * split is used t create a map of matrices for each unique value in the column.
+   * split is used to create a map of matrices for each unique value in the column.
    * This is useful for e.g. countBy or sumBy (see Stat.countBy() and Stat.countBy())
    *
    * @param columnName
