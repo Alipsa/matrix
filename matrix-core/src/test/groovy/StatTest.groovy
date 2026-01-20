@@ -479,4 +479,33 @@ class StatTest {
     assertNotNull(resultNoBias)
     assertEquals(0.0, resultNoBias, 0.0001)
   }
+
+  @Test
+  void testStatMethodsWithNoNumericValues() {
+    // Test means with columns containing no numeric values (all nulls or non-numeric)
+    def matrix = Matrix.builder()
+        .columns(
+            allNulls: [null, null, null],
+            allStrings: ['a', 'b', 'c'],
+            mixed: [null, 'x', null],
+            hasNumbers: [1, 2, 3]
+        )
+        .types([String, String, String, Integer])
+        .build()
+
+    def meanResults = means(matrix, ['allNulls', 'allStrings', 'mixed', 'hasNumbers'])
+    assertNull(meanResults[0], "Mean of all-null column should be null")
+    assertNull(meanResults[1], "Mean of all-string column should be null")
+    assertNull(meanResults[2], "Mean of mixed null/string column should be null")
+    assertNotNull(meanResults[3], "Mean of numeric column should not be null")
+    assertEquals(new BigDecimal(2), meanResults[3])
+
+    // Test medians with same columns
+    def medianResults = medians(matrix, ['allNulls', 'allStrings', 'mixed', 'hasNumbers'])
+    assertNull(medianResults[0], "Median of all-null column should be null")
+    assertNull(medianResults[1], "Median of all-string column should be null")
+    assertNull(medianResults[2], "Median of mixed null/string column should be null")
+    assertNotNull(medianResults[3], "Median of numeric column should not be null")
+    assertEquals(new BigDecimal(2), medianResults[3])
+  }
 }

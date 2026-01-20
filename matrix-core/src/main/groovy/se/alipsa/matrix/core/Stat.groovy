@@ -415,7 +415,8 @@ class Stat {
                     count += 1
                 }
             }
-            results << (sum / count)
+            // Handle division by zero for empty columns or columns with no numeric values
+            results << (count == 0 ? null : sum / count)
         }
         return results
     }
@@ -523,7 +524,8 @@ class Stat {
         colNames.each { colName ->
             List<?> columnData = table.column(colName)
             List<Number> numericValues = columnData.findAll { it != null && it instanceof Number } as List<Number>
-            results << median(numericValues.sort())
+            // median() handles sorting internally, no need to pre-sort
+            results << median(numericValues)
         }
         return results
     }
