@@ -57,6 +57,9 @@ allprojects {
     }
   }
   tasks.matching { it.name == "dependencyUpdates" }.configureEach {
+    // Disable configuration cache for this task - plugin not fully compatible with Gradle 9.2+
+    notCompatibleWithConfigurationCache("dependencyUpdates plugin uses Task.project at execution time")
+
     gradleReleaseChannel = "current"
     checkForGradleUpdate = false // optional: silence Gradle RC noise
 
