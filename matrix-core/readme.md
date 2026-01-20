@@ -612,3 +612,56 @@ assert 3.23 == foo[0,1]
 Stat contains basic statistical operations such as sum, mean, median, frequency, sd (standard deviation), variance, 
 quartiles. See [StatTest](https://github.com/Alipsa/matrix/blob/main/src/test/groovy/StatTest.groovy)
 for some examples.
+
+## Building and Quality Tools
+
+Matrix uses Gradle for building and includes integrated quality tools:
+
+### Build Commands
+
+```bash
+# Run tests
+./gradlew test
+
+# Run tests with coverage report
+./gradlew jacocoTestReport
+
+# Run static analysis
+./gradlew codenarcMain
+
+# Run all quality checks (tests + coverage + static analysis)
+./gradlew check
+```
+
+### Code Coverage (JaCoCo)
+
+Code coverage is measured using JaCoCo. After running `./gradlew jacocoTestReport`, reports are available at:
+- HTML: `build/reports/jacoco/test/html/index.html`
+- XML: `build/reports/jacoco/test/jacocoTestReport.xml`
+
+**Coverage Thresholds:**
+- Overall coverage: 70% minimum
+- Per-class coverage: 30% minimum (excluding closures and exceptions)
+
+Note: Some utility classes (MatrixAssertions, ColumnExtension) currently have lower coverage and need additional tests.
+
+### Static Analysis (CodeNarc)
+
+CodeNarc analyzes Groovy code for potential issues and style violations. Reports are generated at:
+- Main code: `build/reports/codenarc/main.html`
+- Test code: `build/reports/codenarc/test.html`
+
+The ruleset configuration is located at `config/codenarc/ruleset.groovy`.
+
+**Note:** Files using Groovy 5 switch expressions (ValueConverter, MatrixBuilder) are temporarily excluded from CodeNarc analysis pending tooling updates.
+
+### Quality Gates
+
+The `check` task runs all quality gates:
+1. Compiles source code
+2. Runs all tests
+3. Generates code coverage reports  
+4. Verifies coverage thresholds
+5. Runs static analysis
+
+By default, CodeNarc is configured with `ignoreFailures = true` in `build.gradle` so that violations do not fail the build. Change this setting to `ignoreFailures = false` if you want the build to fail on code quality violations.

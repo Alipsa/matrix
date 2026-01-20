@@ -6,6 +6,8 @@ plugins {
   id('java-library')
   id('signing')
   id('maven-publish')
+  id('jacoco')
+  id('codenarc')
   id("se.alipsa.nexus-release-plugin") version '2.0.0'
   //id("se.alipsa.nexus-release-plugin") version "1.0.1"
 }
@@ -91,6 +93,75 @@ test {
   }
 }
 
+// JaCoCo configuration for code coverage
+jacoco {
+  toolVersion = "0.8.12"
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+    html.required = true
+    csv.required = false
+  }
+  afterEvaluate {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+      fileTree(dir: it, exclude: [
+        // Exclude test classes themselves from coverage metrics (only production code is measured)
+        '**/*Test.class',
+        '**/*Test$*.class'
+      ])
+    }))
+  }
+}
+
+jacocoTestCoverageVerification {
+  dependsOn jacocoTestReport
+  violationRules {
+    rule {
+      limit {
+        minimum = 0.70 // 70% overall coverage minimum
+      }
+    }
+    rule {
+      element = 'CLASS'
+      // Exclude closure classes, exception classes, and assertion utilities from per-class coverage
+      excludes = [
+        '**/*$_*closure*',
+        '**/*Exception',
+        '**/MatrixAssertions.class' // Low coverage - needs dedicated assertion tests
+      ]
+      limit {
+        minimum = 0.30 // 30% per class minimum (excluding closures)
+      }
+    }
+  }
+}
+
+// CodeNarc configuration for static analysis
+codenarc {
+  toolVersion = '3.5.0'
+  configFile = file('config/codenarc/ruleset.groovy')
+  reportFormat = 'html'
+  ignoreFailures = true // Set to false to fail build on violations; currently informational only
+}
+
+codenarcMain {
+  source = 'src/main/groovy'
+  // Exclude files with Groovy 5 switch expressions until CodeNarc fully supports them.
+  // TODO: When upgrading CodeNarc to a version that supports Groovy 5 switch expressions,
+  //       remove these exclusions so ValueConverter.groovy and MatrixBuilder.groovy are analyzed.
+  exclude '**/ValueConverter.groovy'
+  exclude '**/MatrixBuilder.groovy'
+}
+
+codenarcTest {
+  source = 'src/test/groovy'
+}
+
+// Make check depend on quality checks
+check.dependsOn jacocoTestCoverageVerification, codenarcMain
 
 tasks.register('javadocJar', Jar) {
   dependsOn groovydoc
