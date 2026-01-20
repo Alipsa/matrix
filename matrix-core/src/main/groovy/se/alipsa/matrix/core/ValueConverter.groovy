@@ -512,11 +512,12 @@ class ValueConverter {
 
   static DateTimeFormatter dateTimeFormatter(String pattern, Locale locale = Locale.default) {
     if (pattern == null) return null
-    if (!dateTimeFormatterCache.containsKey(pattern)) {
-      dateTimeFormatterCache.put(pattern, DateTimeFormatter.ofPattern(pattern))
+    String localeString = locale.toString()
+    String key = pattern + localeString
+    if (!dateTimeFormatterCache.containsKey(key)) {
+      dateTimeFormatterCache.put(key, DateTimeFormatter.ofPattern(pattern).withLocale(locale))
     }
-    if (locale == null) return dateTimeFormatterCache.get(pattern)
-    dateTimeFormatterCache.get(pattern).withLocale(locale)
+    return dateTimeFormatterCache.get(key)
   }
 
   static Time asSqlTIme(Object o, Time valueIfNull = null) {

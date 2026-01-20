@@ -1,7 +1,6 @@
 package se.alipsa.matrix.core.util
 
 import groovy.transform.CompileStatic
-import jdk.internal.reflect.Reflection
 
 @CompileStatic
 class ClassUtils {
@@ -93,98 +92,40 @@ class ClassUtils {
     return aToB
   }
 
+  private static final Map<String, Class<? extends Number>> NEAREST_TYPE_MAP = [
+      'Byte_Short': Short,
+      'Byte_Integer': Integer,
+      'Byte_Long': Long,
+      'Byte_BigInteger': BigInteger,
+      'Byte_Float': Float,
+      'Byte_Double': Double,
+      'Byte_BigDecimal': BigDecimal,
+      'Short_Integer': Integer,
+      'Short_Long': Long,
+      'Short_BigInteger': BigInteger,
+      'Short_Float': Float,
+      'Short_Double': Double,
+      'Short_BigDecimal': BigDecimal,
+      'Integer_Long': Long,
+      'Integer_BigInteger': BigInteger,
+      'Integer_Float': Float,
+      'Integer_Double': Double,
+      'Integer_BigDecimal': BigDecimal,
+      'Long_Float': Double,
+      'Long_BigInteger': BigInteger,
+      'Long_Double': Double,
+      'Long_BigDecimal': BigDecimal,
+      'BigInteger_BigDecimal': BigDecimal,
+      'Float_Double': Double,
+      'Float_BigInteger': BigDecimal,
+      'Float_BigDecimal': BigDecimal,
+      'Double_BigInteger': BigDecimal,
+      'Double_BigDecimal': BigDecimal
+  ]
+
   private static nearest(Class<? extends Number> updated, Class<? extends Number> columnClass) {
-    if (updated == Byte && columnClass == Short) {
-      return Short
-    }
-    if (updated == Byte && columnClass == Integer) {
-      return Integer
-    }
-    if (updated == Byte && columnClass == Long) {
-      return Long
-    }
-    if (updated == Byte && columnClass == BigInteger) {
-      return BigInteger
-    }
-    if (updated == Byte && columnClass == Float) {
-      return Float
-    }
-    if (updated == Byte && columnClass == Double) {
-      return Double
-    }
-    if (updated == Byte && columnClass == BigDecimal) {
-      return BigDecimal
-    }
-
-    if (updated == Short && columnClass == Integer) {
-      return Integer
-    }
-    if (updated == Short && columnClass == Long) {
-      return Long
-    }
-    if (updated == Short && columnClass == BigInteger) {
-      return BigInteger
-    }
-    if (updated == Short && columnClass == Float) {
-      return Float
-    }
-    if (updated == Short && columnClass == Double) {
-      return Double
-    }
-    if (updated == Short && columnClass == BigDecimal) {
-      return BigDecimal
-    }
-
-    if (updated == Integer && columnClass == Long) {
-      return Long
-    }
-    if (updated == Integer && columnClass == BigInteger) {
-      return BigInteger
-    }
-    if (updated == Integer && columnClass == Float) {
-      return Float
-    }
-    if (updated == Integer && columnClass == Double) {
-      return Double
-    }
-    if (updated == Integer && columnClass == BigDecimal) {
-      return BigDecimal
-    }
-
-    if (updated == Long && columnClass == Float) {
-      return Double
-    }
-    if (updated == Long && columnClass == BigInteger) {
-      return BigInteger
-    }
-    if (updated == Long && columnClass == Double) {
-      return Double
-    }
-    if (updated == Long && columnClass == BigDecimal) {
-      return BigDecimal
-    }
-    if (updated == BigInteger && columnClass == BigDecimal) {
-      return BigDecimal
-    }
-
-    if (updated == Float && columnClass == Double) {
-      return Double
-    }
-    if (updated == Float && columnClass == BigInteger) {
-      return BigDecimal
-    }
-    if (updated == Float && columnClass == BigDecimal) {
-      return BigDecimal
-    }
-
-    if (updated == Double && columnClass == BigInteger) {
-      return BigDecimal
-    }
-    if (updated == Double && columnClass == BigDecimal) {
-      return BigDecimal
-    }
-
-    return Number
+    String key = "${updated.simpleName}_${columnClass.simpleName}"
+    return NEAREST_TYPE_MAP.get(key, Number)
   }
 
   static GroovyClassLoader findGroovyClassLoader(Object obj) {

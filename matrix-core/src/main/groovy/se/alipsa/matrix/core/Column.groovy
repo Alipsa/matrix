@@ -61,16 +61,21 @@ class Column extends ArrayList {
   }
 
   @CompileDynamic
-  List plus(Object val) {
+  private List applyOperation(Object val, Closure operation) {
     List result = new Column()
     this.each {
       if (val == null || it == null) {
         result.add(null)
       } else {
-        result.add(it + val)
+        result.add(operation(it, val))
       }
     }
     result
+  }
+
+  @CompileDynamic
+  List plus(Object val) {
+    applyOperation(val, { a, b -> a + b })
   }
 
   @CompileDynamic
@@ -97,15 +102,7 @@ class Column extends ArrayList {
 
   @CompileDynamic
   List minus(Object val) {
-    List result = new Column()
-    this.each {
-      if (val == null || it == null) {
-        result.add(null)
-      } else {
-        result.add(it - val)
-      }
-    }
-    result
+    applyOperation(val, { a, b -> a - b })
   }
 
   List removeNulls() {
@@ -135,15 +132,7 @@ class Column extends ArrayList {
 
   @CompileDynamic
   List multiply(Number val) {
-    List result = new Column()
-    this.each {
-      if (val == null || it == null) {
-        result.add(null)
-      } else {
-        result.add(it * val)
-      }
-    }
-    result
+    applyOperation(val, { a, b -> a * b })
   }
 
   @CompileDynamic
@@ -165,15 +154,7 @@ class Column extends ArrayList {
 
   @CompileDynamic
   List div(Number val) {
-    List result = new Column()
-    this.each {
-      if (val == null || it == null) {
-        result.add(null)
-      } else {
-        result.add(it / val)
-      }
-    }
-    result
+    applyOperation(val, { a, b -> a / b })
   }
 
   @CompileDynamic
@@ -195,15 +176,7 @@ class Column extends ArrayList {
 
   @CompileDynamic
   List power(Number val) {
-    List result = new Column()
-    this.each {
-      if (val == null || it == null) {
-        result.add(null)
-      } else {
-        result.add(it ** val)
-      }
-    }
-    result
+    applyOperation(val, { a, b -> a ** b })
   }
 
   @CompileDynamic
