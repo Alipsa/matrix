@@ -153,7 +153,9 @@ codenarc {
 
 codenarcMain {
   source = 'src/main/groovy'
-  // Exclude files with Groovy 5 switch expressions until CodeNarc fully supports them
+  // Exclude files with Groovy 5 switch expressions until CodeNarc fully supports them.
+  // TODO: When upgrading CodeNarc to a version that supports Groovy 5 switch expressions,
+  //       remove these exclusions so ValueConverter.groovy and MatrixBuilder.groovy are analyzed.
   exclude '**/ValueConverter.groovy'
   exclude '**/MatrixBuilder.groovy'
 }
