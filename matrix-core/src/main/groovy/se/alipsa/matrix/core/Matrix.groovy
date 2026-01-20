@@ -2234,6 +2234,22 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Splits this matrix into chunks of approximately chunkSize rows.
+   * The last chunk may contain fewer rows.
+   *
+   * @param chunkSize the approximate number of rows per chunk
+   * @return a list of Matrix objects
+   */
+  List<Matrix> split(int chunkSize) {
+    def rowChunks = this.collate( rowCount().intdiv( chunkSize ) )
+    List<Matrix> chunks = []
+    rowChunks.eachWithIndex { it, idx ->
+      chunks << builder(matrixName + "_" + idx).rowList(it).build()
+    }
+    chunks
+  }
+
+  /**
    * Splits this matrix into a specified number of chunks.
    * Rows will be distributed as evenly as possible among the chunks.
    *
@@ -2243,7 +2259,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @example if there are 30 rows and numChunks=4, you get 4 matrices:
    *          the first 2 have 8 rows each, the last 2 have 7 rows each (8+8+7+7=30)
    */
-  List<Matrix> split(int numChunks) {
+  List<Matrix> splitInto(int numChunks) {
     if (numChunks < 1) {
       throw new IllegalArgumentException("numChunks must be at least 1, got: $numChunks")
     }
@@ -2272,6 +2288,7 @@ class Matrix implements Iterable<Row>, Cloneable {
 
     return chunks
   }
+
   /**
    * split is used to create a map of matrices for each unique value in the column.
    * This is useful for e.g. countBy or sumBy (see Stat.countBy() and Stat.countBy())

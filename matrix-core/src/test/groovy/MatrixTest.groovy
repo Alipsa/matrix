@@ -1387,9 +1387,23 @@ class MatrixTest {
   @Test
   void testChunkSplit() {
     Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
-    // PlantGrowth.csv has 30 rows, split into 4 chunks
-    // 30/4 = 7 remainder 2, so first 2 chunks get 8 rows, last 2 get 7 rows
+    // PlantGrowth.csv has 30 rows, split(4) uses collate(30/4) = collate(7)
+    // This creates chunks of 7 rows: 5 chunks total [7, 7, 7, 7, 2]
     List<Matrix> chunks = m.split(4)
+    assertEquals(5, chunks.size())
+    assertEquals(m.subset(0..6).withMatrixName("${m.matrixName}_0"), chunks[0])
+    assertEquals(m.subset(7..13).withMatrixName("${m.matrixName}_1"), chunks[1])
+    assertEquals(m.subset(14..20).withMatrixName("${m.matrixName}_2"), chunks[2])
+    assertEquals(m.subset(21..27).withMatrixName("${m.matrixName}_3"), chunks[3])
+    assertEquals(m.subset(28..29).withMatrixName("${m.matrixName}_4"), chunks[4])
+  }
+
+  @Test
+  void testSplitInto() {
+    Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
+    // PlantGrowth.csv has 30 rows, splitInto(4) creates exactly 4 chunks
+    // 30/4 = 7 remainder 2, so first 2 chunks get 8 rows, last 2 get 7 rows
+    List<Matrix> chunks = m.splitInto(4)
     assertEquals(4, chunks.size())
     assertEquals(m.subset(0..7).withMatrixName("${m.matrixName}_0"), chunks[0])
     assertEquals(m.subset(8..15).withMatrixName("${m.matrixName}_1"), chunks[1])
@@ -1398,20 +1412,20 @@ class MatrixTest {
   }
 
   @Test
-  void testChunkSplitEdgeCases() {
+  void testSplitIntoEdgeCases() {
     Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
     // PlantGrowth.csv has 30 rows
 
     // Test numChunks < 1 (should throw IllegalArgumentException)
-    assertThrows(IllegalArgumentException.class, { m.split(0) })
-    assertThrows(IllegalArgumentException.class, { m.split(-1) })
+    assertThrows(IllegalArgumentException.class, { m.splitInto(0) })
+    assertThrows(IllegalArgumentException.class, { m.splitInto(-1) })
 
     // Test numChunks > rowCount() (should throw IllegalArgumentException)
-    assertThrows(IllegalArgumentException.class, { m.split(31) })
-    assertThrows(IllegalArgumentException.class, { m.split(100) })
+    assertThrows(IllegalArgumentException.class, { m.splitInto(31) })
+    assertThrows(IllegalArgumentException.class, { m.splitInto(100) })
 
     // Test numChunks == rowCount() (each chunk gets 1 row)
-    List<Matrix> oneRowChunks = m.split(30)
+    List<Matrix> oneRowChunks = m.splitInto(30)
     assertEquals(30, oneRowChunks.size())
     for (int i = 0; i < 30; i++) {
       assertEquals(1, oneRowChunks[i].rowCount())
@@ -1419,7 +1433,7 @@ class MatrixTest {
     }
 
     // Test numChunks == 1 (single chunk with all rows)
-    List<Matrix> singleChunk = m.split(1)
+    List<Matrix> singleChunk = m.splitInto(1)
     assertEquals(1, singleChunk.size())
     assertEquals(30, singleChunk[0].rowCount())
     assertEquals(m.withMatrixName("${m.matrixName}_0"), singleChunk[0])
