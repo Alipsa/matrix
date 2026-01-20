@@ -145,10 +145,7 @@ codenarc {
   toolVersion = '3.5.0'
   configFile = file('config/codenarc/ruleset.groovy')
   reportFormat = 'html'
-  ignoreFailures = true // Set to false to fail build on violations
-  maxPriority1Violations = 0
-  maxPriority2Violations = 10
-  maxPriority3Violations = 20
+  ignoreFailures = true // Set to false to fail build on violations; currently informational only
 }
 
 codenarcMain {
