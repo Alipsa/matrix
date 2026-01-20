@@ -91,7 +91,7 @@ ggsave("my_plot.svg", plot = chart)
 The above R code can be translated to Groovy as:
 
 ```groovy
-@Grab('se.alipsa.matrix:matrix-core:3.5.1')
+@Grab('se.alipsa.matrix:matrix-core:3.6.0')
 @Grab('se.alipsa.matrix:matrix-charts:0.4.0')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2')
 @Grab('se.alipsa.matrix:matrix-stats:2.2.1')

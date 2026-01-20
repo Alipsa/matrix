@@ -759,6 +759,9 @@ class Stat {
         }
         def sumOfSquares = sum(squaredDeviations)
         def size = isBiasCorrected ? nullFreeNumbers.size() - 1 : nullFreeNumbers.size()
+        if (size <= 0) {
+            return null
+        }
         return (sumOfSquares / size) as T
     }
 

@@ -29,7 +29,7 @@ colorbar_plot <- ggplot(df, aes(x, y, colour = value)) +
   guides(colour = guide_colourbar()) +
   labs(title = "Guide colorbar")
 */
-@Grab('se.alipsa.matrix:matrix-core:3.5.1-SNAPSHOT')
+@Grab('se.alipsa.matrix:matrix-core:3.6.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-groovy-ext:0.1.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-charts:0.4.0-SNAPSHOT')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2-SNAPSHOT')
