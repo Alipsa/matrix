@@ -1979,14 +1979,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     int i = 0
     List<Integer> columnsToRemove = []
     for (List col in mColumns) {
-      boolean hasVal = false
-      for (def v in col) {
-        if (v != null) {
-          hasVal = true
-          break
-        }
-      }
-      if (!hasVal) {
+      if (!containsValues(col)) {
         columnsToRemove.add(i as Integer)
       }
       i++
@@ -2241,10 +2234,11 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Splits this matrix into chunks of the size given.
-   * Remaining rows will go into an additional tail chunk e.g.
-   * if there are 30 rows and i split by 4 i will get 5 Matrices back
-   * the first 4 have 7 rows each and the final chunk will have 2 rows.
+   * Splits this matrix into chunks of approximately chunkSize rows.
+   * The last chunk may contain fewer rows.
+   *
+   * @param chunkSize the approximate number of rows per chunk
+   * @return a list of Matrix objects
    */
   List<Matrix> split(int chunkSize) {
     def rowChunks = this.collate( rowCount().intdiv( chunkSize ) )
@@ -2254,8 +2248,49 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     chunks
   }
+
   /**
-   * split is used t create a map of matrices for each unique value in the column.
+   * Splits this matrix into a specified number of chunks.
+   * Rows will be distributed as evenly as possible among the chunks.
+   *
+   * @param numChunks the number of chunks to split the matrix into (must be > 0 and <= rowCount())
+   * @return a list of exactly numChunks Matrix objects
+   * @throws IllegalArgumentException if numChunks is less than 1 or greater than rowCount()
+   * @example if there are 30 rows and numChunks=4, you get 4 matrices:
+   *          the first 2 have 8 rows each, the last 2 have 7 rows each (8+8+7+7=30)
+   */
+  List<Matrix> splitInto(int numChunks) {
+    if (numChunks < 1) {
+      throw new IllegalArgumentException("numChunks must be at least 1, got: $numChunks")
+    }
+    int totalRows = rowCount()
+    if (numChunks > totalRows) {
+      throw new IllegalArgumentException("numChunks ($numChunks) cannot be greater than rowCount() ($totalRows)")
+    }
+
+    // Calculate base size and remainder to distribute rows evenly
+    int baseSize = totalRows.intdiv(numChunks)
+    int remainder = totalRows % numChunks
+
+    List<Matrix> chunks = []
+    int startRow = 0
+
+    for (int i = 0; i < numChunks; i++) {
+      // First 'remainder' chunks get an extra row
+      int chunkSize = (i < remainder) ? baseSize + 1 : baseSize
+      int endRow = startRow + chunkSize
+
+      def rowsForChunk = rows().subList(startRow, endRow)
+      chunks << builder(matrixName + "_" + i).rowList(rowsForChunk).build()
+
+      startRow = endRow
+    }
+
+    return chunks
+  }
+
+  /**
+   * split is used to create a map of matrices for each unique value in the column.
    * This is useful for e.g. countBy or sumBy (see Stat.countBy() and Stat.countBy())
    *
    * @param columnName

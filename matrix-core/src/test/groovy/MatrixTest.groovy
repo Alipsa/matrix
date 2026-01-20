@@ -1005,6 +1005,23 @@ class MatrixTest {
     assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
   }
 
+  @Test
+  void testRemoveEmptyColumnsWithBlankStrings() {
+    def empData = Matrix.builder()
+        .columns(
+            emp_id: [1, 2],
+            emp_name: ['', ''],
+            salary: [623.3, 515.2],
+            start_date: ['  ', '  '],
+            other: [null, ''])
+        .types(int, String, Number, String, String)
+        .build()
+    assertIterableEquals(['emp_id', 'emp_name', 'salary', 'start_date', 'other'], empData.columnNames())
+    empData.removeEmptyColumns()
+    assertEquals(2, empData.columnCount())
+    assertIterableEquals(['emp_id', 'salary'], empData.columnNames())
+  }
+
   boolean deleteDirectory(File directoryToBeDeleted) {
     File[] allContents = directoryToBeDeleted.listFiles()
     if (allContents != null) {
@@ -1370,6 +1387,8 @@ class MatrixTest {
   @Test
   void testChunkSplit() {
     Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
+    // PlantGrowth.csv has 30 rows, split(4) uses collate(30/4) = collate(7)
+    // This creates chunks of 7 rows: 5 chunks total [7, 7, 7, 7, 2]
     List<Matrix> chunks = m.split(4)
     assertEquals(5, chunks.size())
     assertEquals(m.subset(0..6).withMatrixName("${m.matrixName}_0"), chunks[0])
@@ -1377,6 +1396,47 @@ class MatrixTest {
     assertEquals(m.subset(14..20).withMatrixName("${m.matrixName}_2"), chunks[2])
     assertEquals(m.subset(21..27).withMatrixName("${m.matrixName}_3"), chunks[3])
     assertEquals(m.subset(28..29).withMatrixName("${m.matrixName}_4"), chunks[4])
+  }
+
+  @Test
+  void testSplitInto() {
+    Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
+    // PlantGrowth.csv has 30 rows, splitInto(4) creates exactly 4 chunks
+    // 30/4 = 7 remainder 2, so first 2 chunks get 8 rows, last 2 get 7 rows
+    List<Matrix> chunks = m.splitInto(4)
+    assertEquals(4, chunks.size())
+    assertEquals(m.subset(0..7).withMatrixName("${m.matrixName}_0"), chunks[0])
+    assertEquals(m.subset(8..15).withMatrixName("${m.matrixName}_1"), chunks[1])
+    assertEquals(m.subset(16..22).withMatrixName("${m.matrixName}_2"), chunks[2])
+    assertEquals(m.subset(23..29).withMatrixName("${m.matrixName}_3"), chunks[3])
+  }
+
+  @Test
+  void testSplitIntoEdgeCases() {
+    Matrix m = Matrix.builder().data(this.class.getResource("PlantGrowth.csv"), ',', '"', true).build()
+    // PlantGrowth.csv has 30 rows
+
+    // Test numChunks < 1 (should throw IllegalArgumentException)
+    assertThrows(IllegalArgumentException.class, { m.splitInto(0) })
+    assertThrows(IllegalArgumentException.class, { m.splitInto(-1) })
+
+    // Test numChunks > rowCount() (should throw IllegalArgumentException)
+    assertThrows(IllegalArgumentException.class, { m.splitInto(31) })
+    assertThrows(IllegalArgumentException.class, { m.splitInto(100) })
+
+    // Test numChunks == rowCount() (each chunk gets 1 row)
+    List<Matrix> oneRowChunks = m.splitInto(30)
+    assertEquals(30, oneRowChunks.size())
+    for (int i = 0; i < 30; i++) {
+      assertEquals(1, oneRowChunks[i].rowCount())
+      assertEquals(m.subset(i..i).withMatrixName("${m.matrixName}_${i}"), oneRowChunks[i])
+    }
+
+    // Test numChunks == 1 (single chunk with all rows)
+    List<Matrix> singleChunk = m.splitInto(1)
+    assertEquals(1, singleChunk.size())
+    assertEquals(30, singleChunk[0].rowCount())
+    assertEquals(m.withMatrixName("${m.matrixName}_0"), singleChunk[0])
   }
 
   @Test
