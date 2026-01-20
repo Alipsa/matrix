@@ -108,7 +108,7 @@ jacocoTestReport {
   afterEvaluate {
     classDirectories.setFrom(files(classDirectories.files.collect {
       fileTree(dir: it, exclude: [
-        // Exclude test classes from coverage
+        // Exclude test classes themselves from coverage metrics (only production code is measured)
         '**/*Test.class',
         '**/*Test$*.class'
       ])
