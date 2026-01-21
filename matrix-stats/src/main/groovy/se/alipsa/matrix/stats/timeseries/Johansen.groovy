@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.timeseries
 
+
 /**
  * the Johansen test, named after Søren Johansen, is a procedure for testing cointegration of several,
  * say k, I(1) time series.
@@ -10,5 +11,6 @@ package se.alipsa.matrix.stats.timeseries
  * There are two types of Johansen test, either with trace or with eigenvalue,
  * and the inferences might be a little bit different.
  */
+
 class Johansen {
 }

@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.stats.distribution.TDistribution
@@ -28,9 +29,10 @@ import java.math.RoundingMode
  * </ul>
  * @return
  */
+@CompileStatic
 class Student {
 
-  private static final SCALE = 15
+  private static final int SCALE = 15
 
   /**
    * The paired samples t-test is used to compare the means between two related groups of samples.
@@ -50,18 +52,18 @@ class Student {
     BigDecimal mean2 = Stat.mean(second, SCALE)
     BigDecimal var1 = Stat.variance(first, true)
     BigDecimal var2 = Stat.variance(second, true)
-    BigDecimal sd1 = Math.sqrt(var1 as double)
-    BigDecimal sd2 = Math.sqrt(var2 as double)
+    BigDecimal sd1 = var1.sqrt()
+    BigDecimal sd2 = var2.sqrt()
     def df = n1 - 1
 
-    double cov = 0.0
+    BigDecimal cov = 0
     for (int j = 0; j < n1; j++) {
-      cov += (first[j] - mean1) * (second[j] - mean2)
+      cov += (first[j] as BigDecimal - mean1) * (second[j] as BigDecimal - mean2)
     }
     cov /= df
     // sample standard deviation of the differences
-    double sd = Math.sqrt((var1 + var2 - 2.0 * cov) / n1)
-    def t = (mean1 - mean2) / sd
+    BigDecimal sd = ((var1 + var2 - 2 * cov) / n1).sqrt()
+    BigDecimal t = (mean1 - mean2) / sd
 
     // Use native TDistribution for p-value calculation
     def p = TDistribution.pValue(t as double, df as double)
@@ -94,12 +96,12 @@ class Student {
     BigDecimal mean2 = Stat.mean(second, SCALE)
     BigDecimal var1 = Stat.variance(first, true)
     BigDecimal var2 = Stat.variance(second, true)
-    BigDecimal sd1 = Math.sqrt(var1 as double)
-    BigDecimal sd2 = Math.sqrt(var2 as double)
-    BigDecimal n1 = first.size()
-    BigDecimal n2 = second.size()
+    BigDecimal sd1 = var1.sqrt()
+    BigDecimal sd2 = var2.sqrt()
+    int n1 = first.size()
+    int n2 = second.size()
     Result result = new Result()
-    def t = (mean1 - mean2) / Math.sqrt((sd1 ** 2) / n1 + (sd2 ** 2) / n2)
+    BigDecimal t = (mean1 - mean2) / ((var1 / n1) + (var2 / n2)).sqrt()
     result.tVal = t
     // To be sure, perform an F test test to check, 4 is general rule of thumb, https://www.statology.org/equal-variance-assumption/
     boolean isEqualVariance
@@ -112,9 +114,11 @@ class Student {
       result.df = n1 + n2 - 2
       result.description = "Welch two sample t-test with equal variance"
     } else {
-      BigDecimal dividend = (var1/n1 + var2/n2) ** 2
-      BigDecimal divisor1 = (var1 ** 2).divide((n1 ** 2) * (n1-1), SCALE, RoundingMode.HALF_UP)
-      BigDecimal divisor2 = (var2 ** 2).divide((n2 ** 2) * (n2 -1), SCALE, RoundingMode.HALF_UP)
+      BigDecimal dividend = ((var1/n1) + (var2/n2)) ** 2
+      BigDecimal n1Sq = (n1 as BigDecimal) ** 2
+      BigDecimal n2Sq = (n2 as BigDecimal) ** 2
+      BigDecimal divisor1 = ((var1 ** 2) as BigDecimal).divide(n1Sq * (n1-1), SCALE, RoundingMode.HALF_UP)
+      BigDecimal divisor2 = ((var2 ** 2) as BigDecimal).divide(n2Sq * (n2 -1), SCALE, RoundingMode.HALF_UP)
       result.df =  dividend.divide(divisor1 + divisor2, SCALE, RoundingMode.HALF_UP)
       result.description = "Welch two sample t-test with unequal variance"
     }
@@ -143,12 +147,12 @@ class Student {
    * </ul>
    */
   static SingleResult tTest(List<? extends Number> values, Number comparison) {
-    def mean = Stat.mean(values, SCALE)
-    def variance = Stat.variance(values)
-    def sd = Math.sqrt(variance as double)
-    def n = values.size()
-    def dividend = mean - comparison
-    def divisor = sd / Math.sqrt(n)
+    int n = values.size()
+    BigDecimal mean = Stat.mean(values, SCALE)
+    BigDecimal variance = Stat.variance(values)
+    BigDecimal sd = variance.sqrt()
+    BigDecimal dividend = mean - (comparison as BigDecimal)
+    BigDecimal divisor = sd / (n as BigDecimal).sqrt()
     SingleResult result = new SingleResult("One Sample t-test")
     result.tVal = dividend / divisor
     result.mean = mean

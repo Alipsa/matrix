@@ -1,6 +1,5 @@
 package se.alipsa.matrix.stats.kde
 
-import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
@@ -41,7 +40,6 @@ import java.math.RoundingMode
  * Matrix result = kde.toMatrix()
  * </pre>
  */
-@CompileStatic
 class KernelDensity {
 
   /** The kernel function used for density estimation */

@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.cluster
 
+
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 
@@ -33,6 +34,7 @@ import se.alipsa.matrix.core.Matrix
  * @param columnName name of the added cluster column (default "Group")
  * @param mutate whether to mutate the original Matrix (true) or return a copy (false), default is true
  */
+
 class KMeans {
 
   private Matrix matrix

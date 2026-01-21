@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.timeseries
 
+
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -11,6 +12,7 @@ import se.alipsa.matrix.core.Matrix
  * are many different ways in which the model may depart from the underlying data generating process.
  * Use of such tests avoids having to be very specific about the particular type of departure being tested.
  */
+
 class Portmanteau {
 
   /**

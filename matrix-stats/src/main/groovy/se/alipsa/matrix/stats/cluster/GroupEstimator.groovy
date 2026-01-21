@@ -1,5 +1,7 @@
 package se.alipsa.matrix.stats.cluster
 
+
+
 class GroupEstimator {
 
   private final CalculationMethod method

@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.solver
 
+
 import org.apache.commons.math3.analysis.UnivariateFunction
 import org.apache.commons.math3.analysis.solvers.AllowedSolution
 import org.apache.commons.math3.analysis.solvers.BracketingNthOrderBrentSolver
@@ -9,6 +10,7 @@ import org.apache.commons.math3.analysis.solvers.UnivariateSolver
 /**
 Similar to the excel goal seek function.
  */
+
 class GoalSeek {
 
   /**

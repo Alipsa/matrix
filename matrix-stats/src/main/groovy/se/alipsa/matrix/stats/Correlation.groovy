@@ -1,5 +1,8 @@
 package se.alipsa.matrix.stats
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class Correlation {
 
   static final String PEARSON = "pearson"
@@ -22,18 +25,18 @@ class Correlation {
    * and +1 represents X and Y are positively correlated
    */
   static BigDecimal corPearson(List<? extends Number> numbersX, List<? extends Number> numbersY) {
-    def sumX = 0.0
-    def sumY = 0.0
-    def sumXY = 0.0
-    def sumX2 = 0.0
-    def sumY2 = 0.0
-    def size = numbersX.size()
+    BigDecimal sumX = 0
+    BigDecimal sumY = 0
+    BigDecimal sumXY = 0
+    BigDecimal sumX2 = 0
+    BigDecimal sumY2 = 0
+    int size = numbersX.size()
 
     def final itX = numbersX.iterator()
     def final itY = numbersY.iterator()
     for (int i = 0; i < size; i++) {
-      def x = itX.next()
-      def y = itY.next()
+      BigDecimal x = itX.next() as BigDecimal
+      BigDecimal y = itY.next() as BigDecimal
 
       sumX += x
       sumY += y
@@ -42,32 +45,25 @@ class Correlation {
       sumY2 += y * y
     }
 
-    def final bottom = Math.sqrt((size * sumX2 - sumX * sumX) * (size * sumY2 - sumY * sumY))
-    if (bottom == 0) return 0
-    def final top = size * sumXY - sumX * sumY
+    BigDecimal bottomSquared = (size * sumX2 - sumX * sumX) * (size * sumY2 - sumY * sumY)
+    if (bottomSquared == 0) return 0
+    BigDecimal bottom = bottomSquared.sqrt()
+    BigDecimal top = size * sumXY - sumX * sumY
     return top / bottom
   }
 
+  /**
+   * Spearman's rank correlation coefficient measures the monotonic relationship between two variables.
+   * It is the Pearson correlation coefficient applied to the ranks of the data.
+   * @param numbersX the first list of Numbers
+   * @param numbersY the second list of Numbers
+   * @return a value between -1 to +1 where -1 represents X and Y are negatively correlated
+   * and +1 represents X and Y are positively correlated
+   */
   static BigDecimal corSpearman(List<? extends Number> numbersX, List<? extends Number> numbersY) {
-    int n = numbersX.size()
-    def sum_X = 0.0, sum_Y = 0.0, sum_XY = 0.0, squareSum_X = 0.0, squareSum_Y = 0.0
-    Number x, y
-    for (int i = 0; i < n; i++) {
-      x = numbersX.get(i)
-      y = numbersY.get(i)
-
-      sum_X = sum_X + x
-      sum_Y = sum_Y + y
-      sum_XY = sum_XY + x * y
-
-      // sum of square of elements.
-      squareSum_X = squareSum_X + x**2
-      squareSum_Y = squareSum_Y + y**2
-    }
-
-    return (n * sum_XY - sum_X * sum_Y) / Math.sqrt(
-        (n * squareSum_X - sum_X * sum_X)
-            * (n * squareSum_Y - sum_Y * sum_Y))
+    List<BigDecimal> ranksX = rank(numbersX)
+    List<BigDecimal> ranksY = rank(numbersY)
+    return corPearson(ranksX, ranksY)
   }
 
   /**
@@ -83,7 +79,7 @@ class Correlation {
 
     BigDecimalPair[] pairs = new BigDecimalPair[n]
     for (int i = 0; i < n; i++) {
-      pairs[i] = new BigDecimalPair(numbersX[i], numbersY[i])
+      pairs[i] = new BigDecimalPair(numbersX[i] as BigDecimal, numbersY[i] as BigDecimal)
     }
 
     Arrays.sort(pairs, (p1, p2) -> {
@@ -170,8 +166,48 @@ class Correlation {
     tiedYPairs += sumN(consecutiveYTies - 1)
 
     final long concordantMinusDiscordant = numPairs - tiedXPairs - tiedYPairs + tiedXYPairs - 2 * swaps
-    final double nonTiedPairsMultiplied = (numPairs - tiedXPairs) * (double) (numPairs - tiedYPairs)
-    return concordantMinusDiscordant / Math.sqrt(nonTiedPairsMultiplied)
+    final BigDecimal nonTiedPairsMultiplied = (numPairs - tiedXPairs) * (numPairs - tiedYPairs)
+    return concordantMinusDiscordant / nonTiedPairsMultiplied.sqrt()
+  }
+
+  /**
+   * Ranks the values in the list using average rank for ties.
+   * @param values the list of values to rank
+   * @return a list of ranks (1-based)
+   */
+  private static List<BigDecimal> rank(List<? extends Number> values) {
+    int n = values.size()
+
+    // Create indexed pairs (value, original index)
+    def indexed = values.withIndex().collect { val, idx ->
+      [value: val as BigDecimal, index: idx]
+    }
+
+    // Sort by value
+    indexed.sort { a, b -> a.value <=> b.value }
+
+    // Assign ranks, handling ties with average rank
+    BigDecimal[] ranks = new BigDecimal[n]
+    int i = 0
+    while (i < n) {
+      int j = i
+      // Find all tied values
+      while (j < n - 1 && indexed[j].value == indexed[j + 1].value) {
+        j++
+      }
+
+      // Average rank for tied values (1-based ranking)
+      BigDecimal avgRank = (i + 1 + j + 1) / 2
+
+      // Assign average rank to all tied positions
+      for (int k = i; k <= j; k++) {
+        ranks[indexed[k].index as int] = avgRank
+      }
+
+      i = j + 1
+    }
+
+    return ranks.toList()
   }
 
   private static int compare(Number x, Number y) {
@@ -192,7 +228,7 @@ class Correlation {
    * @return the sum of the number from 1 to n
    */
   private static long sumN(long n) {
-    return n * (n + 1) / 2l
+    return (long)(n * (n + 1) / 2)
   }
 
   /**

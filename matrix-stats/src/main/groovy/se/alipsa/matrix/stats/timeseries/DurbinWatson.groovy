@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.timeseries
 
+
 /**
  * the Durbin–Watson statistic is a test statistic used to detect the presence of autocorrelation at lag 1 in
  * the residuals (prediction errors) from a regression analysis. It is named after James Durbin and Geoffrey Watson.
@@ -8,5 +9,6 @@ package se.alipsa.matrix.stats.timeseries
  * and developed bounds tests for the null hypothesis that the errors are serially uncorrelated against the
  * alternative that they follow a first order autoregressive process.
  */
+
 class DurbinWatson {
 }

@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.regression
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 
@@ -24,6 +25,7 @@ import java.math.RoundingMode
  *   <li>X is the independent variable.</li>
  * </ul>
  */
+@CompileStatic
 class LinearRegression {
 
   BigDecimal slope
@@ -50,7 +52,7 @@ class LinearRegression {
     List<? extends Number> xSquared = x.collect {it * it }
 
     List<BigDecimal> xMultipliedByY = (0 ..< numberOfDataValues).collect {
-      i -> x.get(i) * y.get(i)
+      i -> (x.get(i) * y.get(i)) as BigDecimal
     }
 
     BigDecimal xSummed = Stat.sum(x)

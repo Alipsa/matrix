@@ -1,6 +1,5 @@
 package se.alipsa.matrix.stats.kde
 
-import groovy.transform.CompileStatic
 
 /**
  * Kernel functions for kernel density estimation.
@@ -11,7 +10,6 @@ import groovy.transform.CompileStatic
  *
  * Equivalent to R's density() kernel parameter.
  */
-@CompileStatic
 enum Kernel {
 
   /**
