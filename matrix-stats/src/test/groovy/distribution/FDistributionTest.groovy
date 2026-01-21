@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for FDistribution class.
- * Reference values computed using R's pf() and aov() functions.
+ * Reference values from Apache Commons Math 3.6.1 FDistribution implementation.
  */
 class FDistributionTest {
 
-  private static final double TOLERANCE = 1e-3
+  private static final double TOLERANCE = 1e-10
 
   @Test
   void testConstructorValidation() {

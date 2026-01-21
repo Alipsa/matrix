@@ -5,12 +5,15 @@ import groovy.transform.CompileStatic
 /**
  * F-distribution (Fisher-Snedecor distribution) implementation.
  * Provides CDF and p-value calculations for ANOVA and variance ratio tests.
+ *
+ * <p>Uses Apache Commons Math's implementation for high numerical accuracy.</p>
  */
 @CompileStatic
 class FDistribution {
 
   private final double dfNumerator
   private final double dfDenominator
+  private final org.apache.commons.math3.distribution.FDistribution apacheDist
 
   /**
    * Creates an F-distribution with the specified degrees of freedom.
@@ -26,6 +29,7 @@ class FDistribution {
     }
     this.dfNumerator = dfNumerator
     this.dfDenominator = dfDenominator
+    this.apacheDist = new org.apache.commons.math3.distribution.FDistribution(dfNumerator, dfDenominator)
   }
 
   /**
@@ -41,13 +45,7 @@ class FDistribution {
     }
     if (f == 0) return 0.0
 
-    // F-distribution CDF is related to the regularized incomplete beta function
-    double x = dfNumerator * f / (dfNumerator * f + dfDenominator)
-    return SpecialFunctions.regularizedIncompleteBeta(
-        x,
-        dfNumerator / 2.0d,
-        dfDenominator / 2.0d
-    )
+    return apacheDist.cumulativeProbability(f)
   }
 
   /**

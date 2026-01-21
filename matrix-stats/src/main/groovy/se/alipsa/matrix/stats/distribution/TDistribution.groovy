@@ -5,17 +5,21 @@ import groovy.transform.CompileStatic
 /**
  * Student's t-distribution implementation.
  * Provides CDF and p-value calculations for t-tests.
+ *
+ * <p>Uses Apache Commons Math's implementation for high numerical accuracy.</p>
  */
 @CompileStatic
 class TDistribution {
 
   private final double degreesOfFreedom
+  private final org.apache.commons.math3.distribution.TDistribution apacheDist
 
   TDistribution(double degreesOfFreedom) {
     if (degreesOfFreedom <= 0) {
       throw new IllegalArgumentException("Degrees of freedom must be positive, got: $degreesOfFreedom")
     }
     this.degreesOfFreedom = degreesOfFreedom
+    this.apacheDist = new org.apache.commons.math3.distribution.TDistribution(degreesOfFreedom)
   }
 
   /**
@@ -26,17 +30,7 @@ class TDistribution {
    * @return probability P(T <= t)
    */
   double cdf(double t) {
-    double x = degreesOfFreedom / (degreesOfFreedom + t * t)
-    double beta = SpecialFunctions.regularizedIncompleteBeta(
-        x,
-        degreesOfFreedom / 2.0d,
-        0.5d)
-
-    if (t >= 0) {
-      return 1.0 - 0.5 * beta
-    } else {
-      return 0.5 * beta
-    }
+    return apacheDist.cumulativeProbability(t)
   }
 
   /**
