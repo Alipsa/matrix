@@ -41,6 +41,7 @@ dependencies {
     compileOnly libs.groovy
     compileOnly project(':matrix-core')
     compileOnly project(':matrix-stats')
+    implementation project(":matrix-groovy-ext")
 
     api 'org.knowm.xchart:xchart:3.8.8'
 

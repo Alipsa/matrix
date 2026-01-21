@@ -59,13 +59,17 @@ class RadarChartTest {
     Matrix matrix = Matrix.builder()
         .columnNames("Player", "Speed", "Power", "Agility", "Endurance", "Accuracy")
         .rows([
-            ['Player1', 8, 7, 9, 6, 8],
-            ['Player2', 6, 9, 7, 8, 7]
-        ]).types([String] + [Number]*5)
+            ['Player1', 8.0, 2.0, 9.0, 6.0, 8.0],
+            ['Player2', 6.0, 9.0, 7.0, 3.0, 7.0],
+            ['Player3', 3.0, 3.5, 5.2, 9.1, 5.9],
+            ['Player4', 6.2, 4.5, 4.2, 7.1, 4.3],
+            ['Player5', 5.1, 6.7, 5.7, 3.6, 2.9]
+        ]).types([String] + [BigDecimal]*5)
         .matrixName("Radar")
         .build()
 
-    def normalizedMatrix = Normalize.stdScaleNorm(matrix, 3)
+    def normalizedMatrix = Normalize.minMaxNorm(matrix, 3)
+    println normalizedMatrix.content()
     // Create a radar chart
     def rc = se.alipsa.matrix.xchart.RadarChart.create(normalizedMatrix)
     // Add series using variable and value columns

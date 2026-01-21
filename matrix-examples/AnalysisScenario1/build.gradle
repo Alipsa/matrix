@@ -16,6 +16,7 @@ dependencies {
     implementation project(":matrix-csv")
     implementation project(":matrix-stats")
     implementation project(":matrix-xchart")
+    implementation project(":matrix-groovy-ext")
     testImplementation testLibs.junitJupiter
     testImplementation testLibs.junitPlatformLauncher
 }
