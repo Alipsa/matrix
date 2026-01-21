@@ -102,10 +102,10 @@ class TDistributionTest {
     // R> t.test(x, mu=10)
     //    One Sample t-test
     // data:  x
-    // t = 2.7386, df = 9, p-value = 0.02301
+    // t = 3, df = 9, p-value = 0.01496
     double[] sample = [10, 12, 11, 13, 9, 14, 10, 11, 12, 13] as double[]
     double pValue = TDistribution.oneSampleTTest(10, sample)
-    assertEquals(0.02301, pValue, 1e-4, 'one-sample t-test against mu=10')
+    assertEquals(0.01496, pValue, 1e-4, 'one-sample t-test against mu=10')
 
     // R> t.test(x, mu=11.5)
     //    One Sample t-test
@@ -122,11 +122,11 @@ class TDistributionTest {
     // R> t.test(x, y)
     //    Welch Two Sample t-test
     // data:  x and y
-    // t = -4.2426, df = 7.9815, p-value = 0.00289
+    // t = -3.9001, df = 7.2746, p-value = 0.00547
     double[] sample1 = [10, 12, 11, 13, 9] as double[]
     double[] sample2 = [14, 15, 13, 16, 14] as double[]
     double pValue = TDistribution.twoSampleTTest(sample1, sample2)
-    assertEquals(0.00289, pValue, 1e-4, 'two-sample t-test (Welch)')
+    assertEquals(0.00547, pValue, 1e-4, 'two-sample t-test (Welch)')
   }
 
   @Test

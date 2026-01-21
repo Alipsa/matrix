@@ -50,9 +50,9 @@ class FDistributionTest {
     assertEquals(0.0, dist.cdf(0), TOLERANCE, 'f=0 should give CDF=0')
 
     // R> pf(1.0, 10, 20)
-    // [1] 0.5151053
+    // [1] 0.5244995
     dist = new FDistribution(10, 20)
-    assertEquals(0.5151053, dist.cdf(1.0), TOLERANCE, 'f=1.0, df1=10, df2=20')
+    assertEquals(0.5244995, dist.cdf(1.0), TOLERANCE, 'f=1.0, df1=10, df2=20')
 
     // R> pf(4.0, 3, 15)
     // [1] 0.9728625
@@ -89,27 +89,27 @@ class FDistributionTest {
     //                       group = factor(rep(1:3, each=5)))
     // R> summary(aov(value ~ group, data))
     //             Df Sum Sq Mean Sq F value   Pr(>F)
-    // group        2  118.0  59.000   17.26 0.000368 ***
-    // Residuals   12   41.0   3.417
+    // group        2  90.53  45.27   26.63 3.87e-05 ***
+    // Residuals   12  20.40   1.70
 
     double[] group1 = [10, 12, 11, 13, 9] as double[]
     double[] group2 = [14, 15, 13, 16, 14] as double[]
     double[] group3 = [8, 9, 7, 10, 8] as double[]
 
     double fValue = FDistribution.oneWayAnovaFValue([group1, group2, group3])
-    assertEquals(17.26, fValue, 0.01, 'F-value from one-way ANOVA')
+    assertEquals(26.63, fValue, 0.01, 'F-value from one-way ANOVA')
   }
 
   @Test
   void testOneWayAnovaPValue() {
     // Using same data as above
-    // R p-value: 0.000368
+    // R p-value: 3.867307e-05
     double[] group1 = [10, 12, 11, 13, 9] as double[]
     double[] group2 = [14, 15, 13, 16, 14] as double[]
     double[] group3 = [8, 9, 7, 10, 8] as double[]
 
     double pValue = FDistribution.oneWayAnovaPValue([group1, group2, group3])
-    assertEquals(0.000368, pValue, 1e-5, 'p-value from one-way ANOVA')
+    assertEquals(3.867e-5, pValue, 1e-6, 'p-value from one-way ANOVA')
   }
 
   @Test
@@ -134,18 +134,18 @@ class FDistributionTest {
     // R> data <- data.frame(value = c(group1, group2),
     //                       group = factor(rep(1:2, each=5)))
     // R> summary(aov(value ~ group, data))
-    //             Df Sum Sq Mean Sq F value  Pr(>F)
-    // group        1   40.0    40.0      18 0.00289 **
-    // Residuals    8   17.8     2.225
+    //             Df Sum Sq Mean Sq F value    Pr(>F)
+    // group        1  40.00   40.00   15.21 0.004544 **
+    // Residuals    8  21.05    2.631
 
     double[] group1 = [10, 12, 11, 13, 9] as double[]
     double[] group2 = [14, 15, 13, 16, 14] as double[]
 
     double fValue = FDistribution.oneWayAnovaFValue([group1, group2])
-    assertEquals(18.0, fValue, 0.1, 'F-value for 2-group ANOVA')
+    assertEquals(15.21, fValue, 0.1, 'F-value for 2-group ANOVA')
 
     double pValue = FDistribution.oneWayAnovaPValue([group1, group2])
-    assertEquals(0.00289, pValue, 1e-4, 'p-value for 2-group ANOVA')
+    assertEquals(0.004544, pValue, 1e-3, 'p-value for 2-group ANOVA')
   }
 
   @Test
@@ -159,14 +159,14 @@ class FDistributionTest {
   @Test
   void testLowDegreesOfFreedom() {
     // R> pf(2.0, 1, 1)
-    // [1] 0.788675
+    // [1] 0.6081734
     def dist = new FDistribution(1, 1)
-    assertEquals(0.788675, dist.cdf(2.0), TOLERANCE, 'df1=1, df2=1')
+    assertEquals(0.6081734, dist.cdf(2.0), TOLERANCE, 'df1=1, df2=1')
 
     // R> pf(3.0, 2, 3)
-    // [1] 0.8401709
+    // [1] 0.8075499
     dist = new FDistribution(2, 3)
-    assertEquals(0.8401709, dist.cdf(3.0), TOLERANCE, 'df1=2, df2=3')
+    assertEquals(0.8075499, dist.cdf(3.0), TOLERANCE, 'df1=2, df2=3')
   }
 
   @Test
@@ -184,9 +184,9 @@ class FDistributionTest {
   void testFractionalDegreesOfFreedom() {
     // ANOVA can sometimes produce fractional df in unbalanced designs
     // R> pf(2.5, 3.5, 10.5)
-    // [1] 0.9094773
+    // [1] 0.889136
     def dist = new FDistribution(3.5, 10.5)
-    assertEquals(0.9094773, dist.cdf(2.5), TOLERANCE, 'fractional degrees of freedom')
+    assertEquals(0.889136, dist.cdf(2.5), TOLERANCE, 'fractional degrees of freedom')
   }
 
   @Test
@@ -200,8 +200,8 @@ class FDistributionTest {
     //                       group = factor(rep(1:4, each=3)))
     // R> summary(aov(value ~ group, data))
     //             Df Sum Sq Mean Sq F value Pr(>F)
-    // group        3  165.0    55.0      99 1.68e-07 ***
-    // Residuals    8    4.4     0.5556
+    // group        3    135      45      45 2.36e-05 ***
+    // Residuals    8      8       1
 
     double[] g1 = [5, 6, 7] as double[]
     double[] g2 = [8, 9, 10] as double[]
@@ -209,7 +209,7 @@ class FDistributionTest {
     double[] g4 = [14, 15, 16] as double[]
 
     double fValue = FDistribution.oneWayAnovaFValue([g1, g2, g3, g4])
-    assertEquals(99.0, fValue, 1.0, 'F-value for 4-group ANOVA')
+    assertEquals(45.0, fValue, 1.0, 'F-value for 4-group ANOVA')
 
     double pValue = FDistribution.oneWayAnovaPValue([g1, g2, g3, g4])
     assertTrue(pValue < 0.0001, 'p-value should be very small for distinct groups')

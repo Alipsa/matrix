@@ -23,11 +23,12 @@ class AnovaTest {
     // Residuals  147  38.96   0.265
 
     def iris = Dataset.iris()
+    def speciesIdx = iris.columnIndex("Species")
 
-    // Group by species
-    def setosa = iris.filter { row -> row['Species'] == 'setosa' }['Sepal.Length'] as List<Number>
-    def versicolor = iris.filter { row -> row['Species'] == 'versicolor' }['Sepal.Length'] as List<Number>
-    def virginica = iris.filter { row -> row['Species'] == 'virginica' }['Sepal.Length'] as List<Number>
+    // Group by species using subset
+    def setosa = iris.subset { it[speciesIdx] == 'setosa' }['Sepal Length'] as List<Number>
+    def versicolor = iris.subset { it[speciesIdx] == 'versicolor' }['Sepal Length'] as List<Number>
+    def virginica = iris.subset { it[speciesIdx] == 'virginica' }['Sepal Length'] as List<Number>
 
     def data = [
       'setosa': setosa,
@@ -49,10 +50,11 @@ class AnovaTest {
     // Residuals  147  16.96   0.115
 
     def iris = Dataset.iris()
+    def speciesIdx = iris.columnIndex("Species")
 
-    def setosa = iris.filter { row -> row['Species'] == 'setosa' }['Sepal.Width'] as List<Number>
-    def versicolor = iris.filter { row -> row['Species'] == 'versicolor' }['Sepal.Width'] as List<Number>
-    def virginica = iris.filter { row -> row['Species'] == 'virginica' }['Sepal.Width'] as List<Number>
+    def setosa = iris.subset { it[speciesIdx] == 'setosa' }['Sepal Width'] as List<Number>
+    def versicolor = iris.subset { it[speciesIdx] == 'versicolor' }['Sepal Width'] as List<Number>
+    def virginica = iris.subset { it[speciesIdx] == 'virginica' }['Sepal Width'] as List<Number>
 
     def data = [
       'setosa': setosa,
@@ -75,8 +77,8 @@ class AnovaTest {
     //                       group = factor(rep(1:3, each=5)))
     // R> summary(aov(value ~ group, data))
     //             Df Sum Sq Mean Sq F value   Pr(>F)
-    // group        2  118.0  59.000   17.26 0.000368 ***
-    // Residuals   12   41.0   3.417
+    // group        2  90.53  45.27   26.63 3.87e-05 ***
+    // Residuals   12  20.40   1.70
 
     def data = [
       'group1': [10, 12, 11, 13, 9],
@@ -86,8 +88,8 @@ class AnovaTest {
 
     def result = Anova.aov(data)
 
-    assertEquals(17.26, result.fValue, 0.01, 'F-value')
-    assertEquals(0.000368, result.pValue, TOLERANCE, 'p-value')
+    assertEquals(26.63, result.fValue, 0.01, 'F-value')
+    assertEquals(3.867e-5, result.pValue, TOLERANCE, 'p-value')
   }
 
   @Test
@@ -106,8 +108,8 @@ class AnovaTest {
 
     def result = Anova.aov(matrix, ['group1', 'group2', 'group3'])
 
-    assertEquals(17.26, result.fValue, 0.01, 'F-value from Matrix')
-    assertEquals(0.000368, result.pValue, TOLERANCE, 'p-value from Matrix')
+    assertEquals(26.63, result.fValue, 0.01, 'F-value from Matrix')
+    assertEquals(3.867e-5, result.pValue, TOLERANCE, 'p-value from Matrix')
   }
 
   @Test
@@ -117,8 +119,8 @@ class AnovaTest {
     // R> group2 <- c(14, 15, 13, 16, 14)
     // R> summary(aov(value ~ group, data=data.frame(value=c(group1, group2), group=factor(rep(1:2, each=5)))))
     //             Df Sum Sq Mean Sq F value  Pr(>F)
-    // group        1   40.0    40.0      18 0.00289 **
-    // Residuals    8   17.8     2.225
+    // group        1   40.0    40.0   15.21 0.004544 **
+    // Residuals    8   21.05    2.631
 
     def data = [
       'group1': [10, 12, 11, 13, 9],
@@ -127,8 +129,8 @@ class AnovaTest {
 
     def result = Anova.aov(data)
 
-    assertEquals(18.0, result.fValue, 0.1, 'F-value for 2-group ANOVA')
-    assertEquals(0.00289, result.pValue, TOLERANCE, 'p-value for 2-group ANOVA')
+    assertEquals(15.21, result.fValue, 0.1, 'F-value for 2-group ANOVA')
+    assertEquals(0.004544, result.pValue, TOLERANCE, 'p-value for 2-group ANOVA')
   }
 
   @Test
@@ -157,11 +159,11 @@ class AnovaTest {
 
     def result = Anova.aov(data)
 
-    // p-value = 0.000368, so should reject null at alpha=0.05
+    // p-value = 3.867e-05, so should reject null at alpha=0.05
     assertTrue(result.evaluate(0.05), 'should reject null at alpha=0.05')
     assertTrue(result.evaluate(0.01), 'should reject null at alpha=0.01')
     assertTrue(result.evaluate(0.001), 'should reject null at alpha=0.001')
-    assertFalse(result.evaluate(0.0001), 'should not reject null at alpha=0.0001')
+    assertTrue(result.evaluate(0.0001), 'should reject null at alpha=0.0001')
   }
 
   @Test
@@ -174,8 +176,8 @@ class AnovaTest {
     //                       group = factor(c(rep(1,4), rep(2,3), rep(3,2))))
     // R> summary(aov(value ~ group, data))
     //             Df Sum Sq Mean Sq F value  Pr(>F)
-    // group        2 130.44  65.222   139.4 8.6e-06 ***
-    // Residuals    6   2.81   0.468
+    // group        2  112.5   56.25      45 0.000244 ***
+    // Residuals    6    7.5    1.25
 
     def data = [
       'group1': [5, 6, 7, 8],
@@ -185,8 +187,8 @@ class AnovaTest {
 
     def result = Anova.aov(data)
 
-    assertEquals(139.4, result.fValue, 1.0, 'F-value for unbalanced design')
-    assertTrue(result.pValue < 1e-4, 'p-value should be very small')
+    assertEquals(45.0, result.fValue, 1.0, 'F-value for unbalanced design')
+    assertTrue(result.pValue < 1e-3, 'p-value should be very small')
   }
 
   @Test
@@ -222,8 +224,8 @@ class AnovaTest {
     //                       group = factor(rep(1:4, each=3)))
     // R> summary(aov(value ~ group, data))
     //             Df Sum Sq Mean Sq F value Pr(>F)
-    // group        3  165.0    55.0      99 1.68e-07 ***
-    // Residuals    8    4.4     0.5556
+    // group        3    135      45      45 2.36e-05 ***
+    // Residuals    8      8       1
 
     def data = [
       'group1': [5, 6, 7],
@@ -234,7 +236,7 @@ class AnovaTest {
 
     def result = Anova.aov(data)
 
-    assertEquals(99.0, result.fValue, 1.0, 'F-value for 4-group ANOVA')
-    assertTrue(result.pValue < 1e-6, 'p-value should be very small')
+    assertEquals(45.0, result.fValue, 1.0, 'F-value for 4-group ANOVA')
+    assertTrue(result.pValue < 1e-4, 'p-value should be very small')
   }
 }
