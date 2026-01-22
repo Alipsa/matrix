@@ -6,20 +6,18 @@ import groovy.transform.CompileStatic
  * Student's t-distribution implementation.
  * Provides CDF and p-value calculations for t-tests.
  *
- * <p>Uses Apache Commons Math's implementation for high numerical accuracy.</p>
+ * <p>Uses custom high-precision implementation with no external dependencies.</p>
  */
 @CompileStatic
 class TDistribution {
 
   private final double degreesOfFreedom
-  private final org.apache.commons.math3.distribution.TDistribution apacheDist
 
   TDistribution(double degreesOfFreedom) {
     if (degreesOfFreedom <= 0) {
       throw new IllegalArgumentException("Degrees of freedom must be positive, got: $degreesOfFreedom")
     }
     this.degreesOfFreedom = degreesOfFreedom
-    this.apacheDist = new org.apache.commons.math3.distribution.TDistribution(degreesOfFreedom)
   }
 
   /**
@@ -30,7 +28,14 @@ class TDistribution {
    * @return probability P(T <= t)
    */
   double cdf(double t) {
-    return apacheDist.cumulativeProbability(t)
+    double x = degreesOfFreedom / (degreesOfFreedom + t * t)
+    double beta = SpecialFunctions.regularizedIncompleteBeta(x, degreesOfFreedom / 2.0d, 0.5d)
+
+    if (t >= 0) {
+      return 1.0d - 0.5d * beta
+    } else {
+      return 0.5d * beta
+    }
   }
 
   /**
@@ -42,7 +47,7 @@ class TDistribution {
    */
   double twoTailedPValue(double t) {
     double absT = Math.abs(t)
-    return 2.0 * (1.0 - cdf(absT))
+    return 2.0d * (1.0d - cdf(absT))
   }
 
   /**
@@ -53,7 +58,7 @@ class TDistribution {
    * @return one-tailed p-value (upper)
    */
   double oneTailedPValueUpper(double t) {
-    return 1.0 - cdf(t)
+    return 1.0d - cdf(t)
   }
 
   /**
@@ -123,7 +128,7 @@ class TDistribution {
   }
 
   private static double mean(double[] values) {
-    double sum = 0.0
+    double sum = 0.0d
     for (double v : values) {
       sum += v
     }
@@ -131,7 +136,7 @@ class TDistribution {
   }
 
   private static double variance(double[] values, double mean) {
-    double sum = 0.0
+    double sum = 0.0d
     for (double v : values) {
       double diff = v - mean
       sum += diff * diff

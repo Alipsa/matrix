@@ -7,10 +7,11 @@ import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for TDistribution class.
- * Reference values from Apache Commons Math 3.6.1 TDistribution implementation.
+ * Reference values from Apache Commons Math 3.6.1 (used only for test comparisons).
  *
- * Note: Values may differ slightly from R's pt() due to different numerical methods,
- * but both are within acceptable statistical accuracy (typically within 1e-4).
+ * Note: The production implementation uses a custom self-contained implementation
+ * with no external dependencies, achieving 1e-10 precision or better.
+ * Apache Commons Math is used only in tests for reference value comparisons.
  */
 class TDistributionTest {
 

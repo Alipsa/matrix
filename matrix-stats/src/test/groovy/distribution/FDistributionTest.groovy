@@ -7,7 +7,11 @@ import static org.junit.jupiter.api.Assertions.*
 
 /**
  * Tests for FDistribution class.
- * Reference values from Apache Commons Math 3.6.1 FDistribution implementation.
+ * Reference values from Apache Commons Math 3.6.1 (used only for test comparisons).
+ *
+ * Note: The production implementation uses a custom self-contained implementation
+ * with no external dependencies, achieving 1e-10 precision or better.
+ * Apache Commons Math is used only in tests for reference value comparisons.
  */
 class FDistributionTest {
 
@@ -38,46 +42,34 @@ class FDistributionTest {
   }
 
   @Test
-  void testCdfAgainstRReference() {
-    // Test against R: pf(f, df1, df2)
-    // R> pf(2.5, 5, 10)
-    // [1] 0.897046
+  void testCdfAgainstApacheCommonsMath() {
+    // Values verified against Apache Commons Math 3.6.1
     def dist = new FDistribution(5, 10)
-    assertEquals(0.897046, dist.cdf(2.5), TOLERANCE, 'f=2.5, df1=5, df2=10')
+    assertEquals(0.8979977233557302, dist.cdf(2.5), TOLERANCE, 'f=2.5, df1=5, df2=10')
 
-    // R> pf(0, 5, 10)
-    // [1] 0
     assertEquals(0.0, dist.cdf(0), TOLERANCE, 'f=0 should give CDF=0')
 
-    // R> pf(1.0, 10, 20)
-    // [1] 0.5244995
     dist = new FDistribution(10, 20)
-    assertEquals(0.5244995, dist.cdf(1.0), TOLERANCE, 'f=1.0, df1=10, df2=20')
+    assertEquals(0.5244995315671094, dist.cdf(1.0), TOLERANCE, 'f=1.0, df1=10, df2=20')
 
-    // R> pf(4.0, 3, 15)
-    // [1] 0.9728625
     dist = new FDistribution(3, 15)
-    assertEquals(0.9728625, dist.cdf(4.0), TOLERANCE, 'f=4.0, df1=3, df2=15')
+    assertEquals(0.9718629601291221, dist.cdf(4.0), TOLERANCE, 'f=4.0, df1=3, df2=15')
   }
 
   @Test
   void testPValue() {
-    // R> 1 - pf(3.0, 2, 10)
-    // [1] 0.09539903
+    // Values from Apache Commons Math 3.6.1
     def dist = new FDistribution(2, 10)
-    assertEquals(0.09539903, dist.pValue(3.0), TOLERANCE, 'p-value for f=3.0, df1=2, df2=10')
+    assertEquals(0.095367431640625, dist.pValue(3.0), TOLERANCE, 'p-value for f=3.0, df1=2, df2=10')
 
-    // R> 1 - pf(5.14, 2, 27)
-    // [1] 0.01269826
     dist = new FDistribution(2, 27)
-    assertEquals(0.01269826, dist.pValue(5.14), TOLERANCE, 'p-value for f=5.14, df1=2, df2=27')
+    assertEquals(0.012837667302614042, dist.pValue(5.14), TOLERANCE, 'p-value for f=5.14, df1=2, df2=27')
   }
 
   @Test
   void testStaticPValueMethod() {
-    // R> 1 - pf(4.26, 3, 16)
-    // [1] 0.02194892
-    assertEquals(0.02194892, FDistribution.pValue(4.26, 3, 16), TOLERANCE, 'static pValue method')
+    // Values from Apache Commons Math 3.6.1
+    assertEquals(0.021635907788579045, FDistribution.pValue(4.26, 3, 16), TOLERANCE, 'static pValue method')
   }
 
   @Test
@@ -150,23 +142,19 @@ class FDistributionTest {
 
   @Test
   void testHighDegreesOfFreedom() {
-    // R> pf(2.0, 100, 100)
-    // [1] 0.9999899
+    // Values from Apache Commons Math 3.6.1
     def dist = new FDistribution(100, 100)
-    assertEquals(0.9999899, dist.cdf(2.0), TOLERANCE, 'high degrees of freedom')
+    assertEquals(0.999690863137393, dist.cdf(2.0), TOLERANCE, 'high degrees of freedom')
   }
 
   @Test
   void testLowDegreesOfFreedom() {
-    // R> pf(2.0, 1, 1)
-    // [1] 0.6081734
+    // Values from Apache Commons Math 3.6.1
     def dist = new FDistribution(1, 1)
-    assertEquals(0.6081734, dist.cdf(2.0), TOLERANCE, 'df1=1, df2=1')
+    assertEquals(0.6081734479693928, dist.cdf(2.0), TOLERANCE, 'df1=1, df2=1')
 
-    // R> pf(3.0, 2, 3)
-    // [1] 0.8075499
     dist = new FDistribution(2, 3)
-    assertEquals(0.8075499, dist.cdf(3.0), TOLERANCE, 'df1=2, df2=3')
+    assertEquals(0.8075499102701247, dist.cdf(3.0), TOLERANCE, 'df1=2, df2=3')
   }
 
   @Test
@@ -183,10 +171,9 @@ class FDistributionTest {
   @Test
   void testFractionalDegreesOfFreedom() {
     // ANOVA can sometimes produce fractional df in unbalanced designs
-    // R> pf(2.5, 3.5, 10.5)
-    // [1] 0.889136
+    // Values from Apache Commons Math 3.6.1
     def dist = new FDistribution(3.5, 10.5)
-    assertEquals(0.889136, dist.cdf(2.5), TOLERANCE, 'fractional degrees of freedom')
+    assertEquals(0.8891360408579752, dist.cdf(2.5), TOLERANCE, 'fractional degrees of freedom')
   }
 
   @Test
