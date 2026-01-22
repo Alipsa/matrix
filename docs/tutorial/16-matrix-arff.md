@@ -86,7 +86,7 @@ import java.nio.file.Paths
 Matrix data1 = MatrixArffReader.read(Paths.get("data/dataset.arff"))
 
 // Read from a file path string
-Matrix data1b = MatrixArffReader.read("data/dataset.arff")
+Matrix data1b = MatrixArffReader.readFile("data/dataset.arff")
 
 // Read from a URL
 Matrix data2 = MatrixArffReader.read(new URL("https://example.com/dataset.arff"))
