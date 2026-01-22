@@ -1,14 +1,16 @@
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.datasets.*
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.stats.Student
+import se.alipsa.matrix.stats.ttest.Student
+import se.alipsa.matrix.stats.ttest.Welch
+import se.alipsa.matrix.stats.ttest.TtestResult
 
 import static org.junit.jupiter.api.Assertions.*
 
 class StudentTest {
 
   /**
-   * Equivalent code in R
+   * Equivalent code in R (note: R's t.test defaults to Welch's t-test)
    * <code><pre>
    * flowers <- iris[iris$Species == 'setosa' | iris$Species == 'virginica',]
    * print(t.test(Petal.Length ~ Species, data = flowers))
@@ -30,7 +32,8 @@ class StudentTest {
     def virginica = iris.subset {
       it[speciesIdx] == 'virginica'
     }
-    Student.Result result = Student.tTest(setosa['Petal Length'], virginica['Petal Length'], false)
+    // R's t.test defaults to Welch's t-test, so we use Welch class
+    TtestResult result = Welch.tTest(setosa['Petal Length'], virginica['Petal Length'])
     //println(result)
     assertEquals(-49.98618626, result.getT(8), "t value")
     //println("var1 = ${result.var1}, var2 = ${result.var2}")

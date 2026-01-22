@@ -109,11 +109,16 @@ assert 30.34082454 == model.predict(13, 8)
 
 ### T-test
 
-#### Two sample t-test
+The t-test functionality is available in the `se.alipsa.matrix.stats.ttest` package with two implementations:
+
+- **Welch** - Always uses Welch's t-test (recommended for general use, does not assume equal variances)
+- **Student** - Orthodox Student's t-test using pooled variance (requires equal variance assumption)
+
+#### Two sample t-test using Welch (recommended)
 
 ```groovy
 import se.alipsa.matrix.datasets.*
-import se.alipsa.matrix.stats.Student
+import se.alipsa.matrix.stats.ttest.Welch
 
 def iris = Dataset.iris()
 def speciesIdx = iris.columnIndex("Species")
@@ -123,23 +128,38 @@ def setosa = iris.subset {
 def virginica = iris.subset {
   it[speciesIdx] == 'virginica'
 }
-Student.Result result = Student.tTest(setosa['Petal Length'], virginica['Petal Length'], false)
+def result = Welch.tTest(setosa['Petal Length'], virginica['Petal Length'])
 println(result)
 ```
 
 which will result in
 
 ```
-Welch two sample t-test with unequal variance
+Welch's two sample t-test
 t = -49.986, df = 58.609, p = 0.000
 x: mean = 1.462, size = 50, sd = 0.174
-y: mean = 5.552, size = 50, sd = 0.552 
+y: mean = 5.552, size = 50, sd = 0.552
+```
+
+#### Two sample t-test using Student class
+
+```groovy
+import se.alipsa.matrix.stats.ttest.Student
+
+// Student's t-test requires equal variance assumption
+// equalVariance parameter:
+// - true: Perform Student's t-test with pooled variance
+// - null: Auto-detect using rule of thumb |var1-var2| < 4 (default)
+// - false: Throws exception directing user to Welch.tTest()
+Student.Result result = Student.tTest(sample1, sample2, true)
+
+// If variances are unequal or unknown, use Welch.tTest() instead
 ```
 
 #### One sample t-test
 
 ```groovy
-import se.alipsa.matrix.stats.Student
+import se.alipsa.matrix.stats.ttest.Student
 
 def plantHeights = [14, 14, 16, 13, 12, 17, 15, 14, 15, 13, 15, 14]
 def t = Student.tTest(plantHeights, 15)
@@ -158,7 +178,7 @@ mean = 14.333, size = 12, sd = 1.371
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.stats.Student
+import se.alipsa.matrix.stats.ttest.Student
 
 def data = Matrix.builder().data(
 score: [85 ,85, 78, 78, 92, 94, 91, 85, 72, 97,
@@ -179,8 +199,54 @@ which will result in
 Paired t-test
 t = 1.588, df = 19, p = 0.1288, sd diff = 1.354
 x: mean = 90.300, size = 20, sd = 4.879
-y: mean = 88.150, size = 20, sd = 7.242 
+y: mean = 88.150, size = 20, sd = 7.242
 ```
+
+## Result Object Patterns
+
+Statistical tests in matrix-stats return result objects that follow consistent patterns:
+
+### T-Test Results
+
+The `ttest` package provides several result types:
+
+**TtestResult** (base class for two-sample t-tests):
+- Used by `Welch.tTest()` for Welch's t-test
+- Properties: `tVal`, `pVal`, `df`, `mean1`, `mean2`, `var1`, `var2`, `sd1`, `sd2`, `n1`, `n2`, `description`
+- Includes `toString()` for formatted output
+- Supports `getX(int decimals)` methods for formatted precision
+
+**Student.Result** (extends TtestResult for backwards compatibility):
+- Used by `Student.tTest()` for Student's t-test
+- Inherits all properties and methods from TtestResult
+
+**Student.SingleResult** (for one-sample t-tests):
+- Properties: `tVal`, `pVal`, `df`, `mean`, `var`, `sd`, `n`, `description`
+
+**Student.PairedResult** (for paired t-tests):
+- Extends `Student.Result`
+- Properties: `tVal`, `pVal`, `df`, `mean1`, `mean2`, `var1`, `var2`, `sd1`, `sd2`, `sd`, `n1`, `n2`, `description`
+- Additional `sd` property for standard deviation of differences
+
+### ANOVA Results
+
+**Anova.AnovaResult** (for ANOVA tests):
+- Properties: `fValue`, `pValue`, `description`
+- Simple structure with core statistics
+
+### Regression Results
+
+Regression classes (`LinearRegression`, `PolynomialRegression`, `QuantileRegression`) return `this` and expose properties directly:
+- Methods like `getSlope()`, `getIntercept()`, `getRSquared()`, `predict()`
+- Immutable after construction
+
+### Pattern Guidelines
+
+1. **Immutability**: Result objects are immutable after creation
+2. **toString()**: All result objects provide formatted string output
+3. **Precision Control**: Methods with `(int decimals)` parameter for rounding
+4. **Descriptive Names**: Properties use full names (`mean`, not `m`; `pValue`, not `p`)
+5. **BigDecimal**: Most values are BigDecimal for precision (except p-values which are double)
 
 # Release version compatibility matrix
 The following table illustrates the version compatibility of
@@ -207,6 +273,9 @@ License: Apache 2.0
 You need to include a dependency to matrix-core >= 2.0.0
 License: MIT
 
-### Apache Commons Math
-Used in the solver package and in some other places where we dont have a native implementation yet.
+### Apache Commons Math (test scope only)
+Apache Commons Math 3.6.1 is used **only in test code** for reference value comparisons.
+The production code uses custom self-contained implementations with no external dependencies
+beyond Groovy and matrix-core. This ensures the library remains lightweight and not affected
+by Apache Commons Math deprecation.
 License: Apache 2.0

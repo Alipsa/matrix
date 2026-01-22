@@ -10,28 +10,153 @@ import se.alipsa.matrix.core.Matrix
 import java.math.RoundingMode
 
 /**
- * Quantile Regression implements linear regression that estimates conditional quantiles
- * rather than the conditional mean (as in OLS regression).
+ * Quantile Regression extends linear regression by modeling conditional quantiles rather than
+ * the conditional mean. While ordinary least squares (OLS) regression finds the line through
+ * the average of Y given X, quantile regression finds the line through any specified quantile
+ * (e.g., median, 25th percentile, 90th percentile), providing a more complete picture of the
+ * relationship between variables.
  *
- * For a given quantile tau (denoted mathematically as τ), the regression line minimizes
- * the asymmetric loss function:
- * ρ_τ(u) = u * (τ - I(u < 0))
- * where I(u < 0) is an indicator function that is 1 when u < 0, and 0 otherwise.
+ * <p><b>What is Quantile Regression?</b></p>
+ * Quantile regression estimates the relationship between a predictor and a specific quantile of
+ * the response distribution. For example, median regression (τ=0.5) finds the line that splits
+ * the data so that 50% of observations fall below and 50% above. Unlike OLS which minimizes
+ * squared errors symmetrically, quantile regression minimizes an asymmetric loss function that
+ * gives different weights to positive and negative residuals based on the target quantile.
  *
- * This implementation solves the linear programming formulation of quantile regression
- * using a simplex-based method (via Apache Commons Math's SimplexSolver).
+ * <p><b>When to use Quantile Regression:</b></p>
+ * <ul>
+ *   <li>When the response distribution is skewed or has heavy tails (non-normal errors)</li>
+ *   <li>When you want robust regression that is less sensitive to outliers (use median regression τ=0.5)</li>
+ *   <li>When the relationship varies across the distribution (e.g., effect differs for low vs. high values)</li>
+ *   <li>For modeling extreme values (use τ=0.10 or τ=0.90 for tails)</li>
+ *   <li>When heteroscedasticity is present (variance changes with X)</li>
+ *   <li>For growth charts and reference curves (pediatric height/weight percentiles)</li>
+ *   <li>In economics to study income inequality across distribution quantiles</li>
+ *   <li>In environmental science to model extreme events (floods, temperatures)</li>
+ *   <li>When conditional mean is not the quantity of interest</li>
+ * </ul>
  *
- * Example:
+ * <p><b>Advantages:</b></p>
+ * <ul>
+ *   <li>Robust to outliers in Y (especially median regression τ=0.5)</li>
+ *   <li>No assumptions about error distribution (non-parametric regarding errors)</li>
+ *   <li>Provides complete picture of relationship across entire distribution</li>
+ *   <li>Naturally handles heteroscedasticity without transformations</li>
+ *   <li>Can model asymmetric relationships (upper vs. lower tail behavior)</li>
+ *   <li>Coefficients have direct interpretation at specific quantiles</li>
+ *   <li>More informative than mean regression when distribution is skewed</li>
+ *   <li>Enables modeling of conditional variability and dispersion</li>
+ * </ul>
+ *
+ * <p><b>Disadvantages:</b></p>
+ * <ul>
+ *   <li>Computationally more intensive than OLS (requires linear programming solver)</li>
+ *   <li>Less efficient than OLS when errors are actually normal</li>
+ *   <li>Standard errors and confidence intervals require special methods (bootstrap recommended)</li>
+ *   <li>Not unique solution when data points lie exactly on quantile line</li>
+ *   <li>May produce crossing quantile lines when multiple quantiles are fitted separately</li>
+ *   <li>Interpretation is more nuanced than mean regression</li>
+ *   <li>Single predictor limitation (this implementation)</li>
+ *   <li>Requires more data to estimate extreme quantiles reliably</li>
+ * </ul>
+ *
+ * <p><b>Example usage:</b></p>
  * <pre>
- * // Median regression (tau = 0.5)
- * def x = [1, 2, 3, 4, 5]
- * def y = [2.1, 3.9, 6.2, 7.8, 10.1]
- * def qr = new QuantileRegression(x, y, 0.5)
- * println qr  // Y = 2.02X + 0.04 (τ=0.5)
+ * // Median regression (robust to outliers)
+ * def x = [1, 2, 3, 4, 5, 6, 7, 8]
+ * def y = [2.1, 3.9, 6.2, 7.8, 10.1, 11.9, 14.2, 50.0]  // Last value is outlier
+ * def medianReg = new QuantileRegression(x, y, 0.5)  // τ=0.5 for median
+ * println medianReg  // Y = 2.0X + 0.1 (τ=0.5)
  *
- * // Predict at x=3
- * def yPred = qr.predict(3)  // ≈ 6.1
+ * // Compare with different quantiles
+ * def q10 = new QuantileRegression(x, y, 0.10)  // 10th percentile (lower tail)
+ * def q90 = new QuantileRegression(x, y, 0.90)  // 90th percentile (upper tail)
+ *
+ * // Predict median value at x=5
+ * println medianReg.predict(5)  // Predicted median
+ *
+ * // Model growth chart percentiles
+ * def ages = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+ * def heights = [75, 85, 95, 100, 108, 115, 120, 128, 132, 138]
+ *
+ * // Fit 5th, 50th, and 95th percentile curves
+ * def p5 = new QuantileRegression(ages, heights, 0.05)
+ * def p50 = new QuantileRegression(ages, heights, 0.50)
+ * def p95 = new QuantileRegression(ages, heights, 0.95)
+ *
+ * println "At age 6:"
+ * println "  5th percentile: ${p5.predict(6, 1)} cm"
+ * println "  Median: ${p50.predict(6, 1)} cm"
+ * println "  95th percentile: ${p95.predict(6, 1)} cm"
+ *
+ * // Use with Matrix
+ * def data = Matrix.builder()
+ *   .data(experience: [1, 2, 3, 4, 5], salary: [35, 42, 48, 55, 70])
+ *   .build()
+ * def qr = new QuantileRegression(data, 'experience', 'salary', 0.75)
+ * println "75th percentile salary prediction: ${qr.predict(3)}"
  * </pre>
+ *
+ * <p><b>Mathematical formulation:</b></p>
+ * Quantile regression finds coefficients β0 and β1 that minimize the asymmetric loss function:
+ * <pre>
+ * minimize: Σ ρτ(yi - β0 - β1*xi)
+ *
+ * where ρτ(u) = u * (τ - I(u < 0))
+ *             = {  τ * u      if u ≥ 0  (positive residuals)
+ *               { (τ-1) * u   if u < 0  (negative residuals)
+ * </pre>
+ * where:
+ * <ul>
+ *   <li>τ (tau) is the target quantile, τ ∈ (0, 1)</li>
+ *   <li>I(u < 0) is an indicator function: 1 if u < 0, otherwise 0</li>
+ *   <li>For median regression (τ=0.5), this reduces to minimizing absolute deviations (LAD)</li>
+ *   <li>For τ > 0.5, over-predictions are penalized more (pushes line upward)</li>
+ *   <li>For τ < 0.5, under-predictions are penalized more (pushes line downward)</li>
+ * </ul>
+ *
+ * <p>The optimization problem is reformulated as a linear program and solved using the simplex method:</p>
+ * <pre>
+ * minimize: τ * Σ(ui+) + (1-τ) * Σ(ui-)
+ * subject to: yi = β0 + β1*xi + ui+ - ui-
+ *             ui+, ui- ≥ 0
+ * </pre>
+ * where ui+ and ui- represent positive and negative residuals respectively.
+ *
+ * <p><b>Interpreting coefficients:</b></p>
+ * <ul>
+ *   <li><b>β1</b>: Change in the τ-th quantile of Y per unit increase in X</li>
+ *   <li><b>β0</b>: The τ-th quantile of Y when X=0 (if X=0 is in range)</li>
+ *   <li>Example: If β1=2.0 at τ=0.75, then a 1-unit increase in X raises the 75th percentile of Y by 2.0</li>
+ * </ul>
+ *
+ * <p><b>Common quantile values:</b></p>
+ * <ul>
+ *   <li><b>τ = 0.10, 0.25</b>: Lower tail, useful for modeling worst-case or low-end scenarios</li>
+ *   <li><b>τ = 0.50</b>: Median regression, robust alternative to OLS mean regression</li>
+ *   <li><b>τ = 0.75, 0.90</b>: Upper tail, useful for modeling best-case or high-end scenarios</li>
+ *   <li><b>Multiple quantiles</b>: Fit several to understand how the relationship varies across distribution</li>
+ * </ul>
+ *
+ * <p><b>Comparing OLS vs. Quantile Regression:</b></p>
+ * <ul>
+ *   <li><b>OLS</b>: E[Y|X] - estimates conditional mean, optimal when errors are normal</li>
+ *   <li><b>Quantile (τ)</b>: Qτ[Y|X] - estimates conditional quantile, robust to outliers and skewness</li>
+ *   <li><b>When equal</b>: If Y|X is symmetric and errors are normal, median regression ≈ OLS</li>
+ *   <li><b>When different</b>: Skewed distributions show different slopes across quantiles</li>
+ * </ul>
+ *
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li>Koenker, R., & Bassett Jr, G. (1978). "Regression Quantiles". Econometrica, 46(1), 33-50.</li>
+ *   <li>Koenker, R. (2005). "Quantile Regression". Cambridge University Press.</li>
+ *   <li>Hao, L., & Naiman, D. Q. (2007). "Quantile Regression". SAGE Publications.</li>
+ *   <li>Cade, B. S., & Noon, B. R. (2003). "A gentle introduction to quantile regression for ecologists". Frontiers in Ecology and the Environment, 1(8), 412-420.</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> This implementation supports single-predictor (univariate) quantile regression only.
+ * For multivariate quantile regression, consider using R's quantreg package or Python's statsmodels.
+ * The quantile parameter τ must be in the open interval (0, 1).</p>
  */
 @CompileStatic
 class QuantileRegression {

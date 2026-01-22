@@ -67,8 +67,6 @@ test {
     info.exceptionFormat = debug.exceptionFormat
 
     afterSuite { desc, result ->
-      def duration = result.endTime - result.startTime
-      println "Duration of $desc: $duration ms"
       if (!desc.parent) { // will match the outermost suite
         def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
         def startItem = '|  ', endItem = '  |'

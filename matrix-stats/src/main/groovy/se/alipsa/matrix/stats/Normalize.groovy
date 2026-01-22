@@ -22,751 +22,413 @@ import static se.alipsa.matrix.core.ValueConverter.convert
  */
 class Normalize {
 
+  // ===== LOG NORMALIZATION =====
 
   /**
    * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
    * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
    * will thus generate a more normal distribution.
    *
-   * @param x
-   * @return the natural logarithm (base e) of the x value
-   */
-  static BigDecimal logNorm(BigDecimal x, int... decimals) {
-    if (x == null) return null
-    if (x == 0) return null
-    def result = Math.log(x.doubleValue()) as BigDecimal
-    if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN)
-    }
-    return result
-  }
-
-  /**
-   * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
-   * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
-   * will thus generate a more normal distribution.
-   *
-   * @param x
-   * @return the natural logarithm (base e) of the x value
+   * @param x the value to normalize
+   * @param decimals optional number of decimal places to round to
+   * @return the natural logarithm (base e) of the x value, or null/NaN for invalid input
    */
   static <T extends Number> T logNorm(T x, int... decimals) {
-    if (x == null) return null
-    if (x == 0) return null
-    T result = Math.log(x.doubleValue()) as T
-    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
-      return (result as BigDecimal).setScale(decimals[0], RoundingMode.HALF_EVEN) as T
+    if (x == null || x == 0) {
+      return null  // logNorm always returns null for zero/invalid
+    }
+
+    double logResult = Math.log(x.doubleValue())
+
+    if (decimals.length > 0 && !Double.isInfinite(logResult)) {
+      BigDecimal bd = new BigDecimal(logResult).setScale(decimals[0], RoundingMode.HALF_EVEN)
+      return convertToType(bd, x)
+    }
+
+    return convertToType(logResult, x)
+  }
+
+  /**
+   * Apply logarithmic normalization to an array of values.
+   */
+  static <T extends Number> List<T> logNorm(T[] values, int... decimals) {
+    return values.collect { logNorm(it, decimals) }
+  }
+
+  /**
+   * Apply logarithmic normalization to a list of values.
+   */
+  static List logNorm(List values, int... decimals) {
+    List result = values.collect { val ->
+      if (val instanceof String) {
+        return val
+      }
+      return logNorm(val as Number, decimals)
+    }
+    // Force BigDecimal preservation - if any input was BigDecimal, ensure outputs stay BigDecimal
+    if (values.any { it instanceof BigDecimal }) {
+      result = result.collect { val ->
+        if (val == null) return null
+        if (val instanceof String) return val
+        if (val instanceof BigInteger) {
+          // Convert BigInteger back to BigDecimal (Groovy may have auto-converted)
+          return new BigDecimal(val).setScale(decimals.length > 0 ? decimals[0] : 6, RoundingMode.HALF_EVEN)
+        }
+        if (val instanceof Number && !(val instanceof BigDecimal)) {
+          // Safety: convert any other numeric type to BigDecimal
+          return new BigDecimal(val.toString()).setScale(decimals.length > 0 ? decimals[0] : 6, RoundingMode.HALF_EVEN)
+        }
+        return val
+      }
     }
     return result
   }
 
   /**
-   * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
-   * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
-   * will thus generate a more normal distribution.
-   *
-   * @param x
-   * @return the natural logarithm (base e) of the x value
+   * Apply logarithmic normalization to a specific column in a Matrix.
    */
-  static Double logNorm(Double x, int... decimals) {
-    if (x == null) return Double.NaN
-    def result = Math.log(x) as BigDecimal
-    if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN).doubleValue()
-    }
-    return result.doubleValue()
-  }
-
-  /**
-   * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
-   * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
-   * will thus generate a more normal distribution.
-   *
-   * @param x
-   * @return the natural logarithm (base e) of the x value
-   */
-  static Float logNorm(Float x, int... decimals) {
-    if (x == null) return Float.NaN
-    Double result = Math.log(x)
-    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
-      result = result.round(decimals[0])
-      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
-    }
-    return result.floatValue()
-  }
-
-  /**
-   * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
-   * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
-   * will thus generate a more normal distribution.
-   *
-   * @param column the double column to normalize
-   * @return a double column where all values are transformed with the natural logarithm (base e) of the observations
-   */
-  static List<Double> logNorm(Double[] column, int... decimals) {
-    def vals = []
-    for (Double x : column) {
-      vals.add(logNorm(x, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
-   * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
-   * will thus generate a more normal distribution.
-   *
-   * @param column the Float column to normalize
-   * @return a Float column where all values are transformed with the natural logarithm (base e) of the observations
-   */
-  static List<Float> logNorm(Float[] column, int... decimals) {
-    def vals = []
-    for (Float x : column) {
-      vals.add(logNorm(x, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
-   * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
-   * will thus generate a more normal distribution.
-   *
-   * @param column the BigDecimal column to normalize
-   * @return a BigDecimal column where all values are transformed with the natural logarithm (base e) of the observations
-   */
-  static List<BigDecimal> logNorm(BigDecimal[] column, int... decimals) {
-    def vals = []
-    for (BigDecimal x : column) {
-      vals.add(logNorm(x, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * Logarithmic transformations are used to normalize skewed distributions of continuous variables.
-   * Taking the natural log of each observation in the distribution, forces the observations closer to the mean and
-   * will thus generate a more normal distribution.
-   * If the values are zero, the results will be null
-   *
-   * @param column the BigDecimal column to normalize
-   * @return a BigDecimal column where all values are transformed with the natural logarithm (base e) of the observations
-   */
-  static List<? extends Number> logNorm(List<? extends Number> column, int... decimals) {
-    def vals = []
-    for (def x : column) {
-      if (x == null || x == 0) {
-        vals.add(null)
-      } else {
-        vals.add(logNorm(x, decimals))
-      }
-    }
-    return vals
-  }
-
   static List<? extends Number> logNorm(Matrix table, String columnName, int... decimals) {
-    if (Number.isAssignableFrom(table.type(columnName))) {
-      return logNorm(table[columnName] as List<? extends Number>, decimals)
-    } else {
-      throw new IllegalArgumentException("$columnName is not a numeric column")
-    }
+    return logNorm(table.column(columnName).data as List, decimals)
   }
 
+  /**
+   * Apply logarithmic normalization to all numeric columns in a Matrix.
+   */
   static Matrix logNorm(Matrix table, int... decimals) {
     List<List> columns = []
     for (Column col in table.columns()) {
-      columns << logNorm(col, decimals)
+      columns << logNorm(col as List, decimals)
     }
-    Matrix.builder(table.matrixName)
+    return Matrix.builder(table.matrixName)
+        .columnNames(table.columnNames())
         .columns(columns)
         .types(table.types())
         .build()
   }
 
+  // ===== MIN-MAX NORMALIZATION =====
+
   /**
-   * Ranges the data values to be between 0 and 1, the formula is:
-   * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
+   * Min-Max scaling normalizes values to a [0, 1] range.
+   * Formula: Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
    *
-   * @param x the observed value
-   * @param minX the lowest value in the distribution
-   * @param maxX the highest value in the distribution
-   * @return a scaled value between 0 and 1 or null if the input is null or maxX - minX == 0
+   * @param x the value to normalize
+   * @param min the minimum value in the dataset
+   * @param max the maximum value in the dataset
+   * @param decimals optional number of decimal places to round to
+   * @return the normalized value in [0, 1] range, or null/NaN for invalid input
    */
-  static BigDecimal minMaxNorm(BigDecimal x, BigDecimal minX, BigDecimal maxX, int... decimals) {
-    if (x == null || minX == null || maxX == null || (maxX - minX) == 0) {
-      System.err.println("Invalid input for minMaxNorm: x=$x, minX=$minX, maxX=$maxX, returning null")
-      return null
+  static <T extends Number> T minMaxNorm(T x, Number min, Number max, int... decimals) {
+    if (x == null) {
+      return minMaxNormNullValue(x)
     }
 
-    def result = (x - minX) / (maxX - minX) as BigDecimal
+    double xVal = x.doubleValue()
+    double minVal = min.doubleValue()
+    double maxVal = max.doubleValue()
+    double range = maxVal - minVal
+
+    if (range == 0) {
+      return minMaxNormNullValue(x)
+    }
+
+    double result = (xVal - minVal) / range
+
     if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN)
+      BigDecimal bd = new BigDecimal(result).setScale(decimals[0], RoundingMode.HALF_EVEN)
+      return convertToType(bd, x)
     }
-    return result
+
+    return convertToType(result, x)
   }
 
   /**
-   * Ranges the data values to be between 0 and 1, the formula is:
-   * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
-   *
-   * @param x the observed value
-   * @param minX the lowest value in the distribution
-   * @param maxX the highest value in the distribution
-   * @return a scaled value between 0 and 1
+   * Apply min-max normalization to an array of values.
    */
-  static <T extends Number> T minMaxNorm(T x, T minX, T maxX, int... decimals) {
-    if (x == null || minX == null || maxX == null) {
-      return null
-    }
-    if (minX == 0 && maxX == 0) {
-      return null
-    }
+  static <T extends Number> List<T> minMaxNorm(T[] values, int... decimals) {
+    if (values.length == 0) return []
 
-    Double result = ((x - minX) / (maxX - minX))
-    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
-      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN) as T
-      result = result.round(decimals[0])
-    }
-    return result as T
+    T min = values.min()
+    T max = values.max()
+
+    return values.collect { minMaxNorm(it, min, max, decimals) }
   }
 
   /**
-   * Ranges the data values to be between 0 and 1, the formula is:
-   * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
-   *
-   * @param x the observed value
-   * @param minX the lowest value in the distribution
-   * @param maxX the highest value in the distribution
-   * @return a scaled value between 0 and 1
+   * Apply min-max normalization to a list of values.
    */
-  static Double minMaxNorm(Double x, Double minX, Double maxX, int... decimals) {
-    if (x == null || Double.isNaN(x) || minX == null || Double.isNaN(minX) || maxX == null || Double.isNaN(maxX)) {
-      return Double.NaN
-    }
-    Double result = (x - minX) / (maxX - minX)
-    // divide by zero -> NaN
-    if (decimals.length > 0 && result != Double.NaN) {
-      return result.round(decimals[0])
-      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).doubleValue()
-    }
-    return result.doubleValue()
+  static List minMaxNorm(List values, int... decimals) {
+    if (values.isEmpty()) return []
+    if (values[0] instanceof String) return values  // Return strings as-is
+
+    def min = values.min()
+    def max = values.max()
+
+    return values.collect { minMaxNorm(it as Number, min, max, decimals) }
   }
 
   /**
-   * Ranges the data values to be between 0 and 1, the formula is:
-   * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
-   *
-   * @param x the observed value
-   * @param minX the lowest value in the distribution
-   * @param maxX the highest value in the distribution
-   * @return a scaled value between 0 and 1
+   * Apply min-max normalization to a specific column in a Matrix.
    */
-  static Float minMaxNorm(Float x, Float minX, Float maxX, int... decimals) {
-    if (x == null || Float.isNaN(x) || minX == null || Float.isNaN(minX) || maxX == null || Float.isNaN(maxX)) {
-      return Float.NaN
-    }
-    Double result = (x - minX) / (maxX - minX)
-    if (decimals.length > 0) {
-      return result.round(decimals[0])
-      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
-    }
-    return result.floatValue()
-  }
-
-  /**
-   * Ranges the data values to be between 0 and 1, the formula is:
-   * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
-   *
-   * @param column the double column to scale
-   * @return a new double column of scaled values between 0 and 1
-   */
-  static List<Double> minMaxNorm(Double[] column, int... decimals) {
-    def min = column.min()
-    def max = column.max()
-
-    List<Double> vals = []
-    for (def x : column) {
-      vals.add(minMaxNorm(x, min, max, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * Ranges the data values to be between 0 and 1, the formula is:
-   * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
-   *
-   * @param column the float column to scale
-   * @return a new float column of scaled values between 0 and 1
-   */
-  static List<Float> minMaxNorm(Float[] column, int... decimals) {
-    List<Float> col = column as List<Float>
-    def min = col.min() as float
-    def max = col.max() as float
-
-    List<Float> vals = []
-    for (def x : col) {
-      vals.add(minMaxNorm(x, min, max, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * Ranges the data values to be between 0 and 1, the formula is:
-   * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
-   *
-   * @param column the float column to scale
-   * @return a new float column of scaled values between 0 and 1
-   */
-  static List<BigDecimal> minMaxNorm(BigDecimal[] column, int... decimals) {
-    List<BigDecimal> col = column as List<BigDecimal>
-    def min = col.min() as BigDecimal
-    def max = col.max() as BigDecimal
-
-    List<BigDecimal> vals = []
-    for (def x : col) {
-      vals.add(minMaxNorm(x, min, max, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * Ranges the data values to be between 0 and 1, the formula is:
-   * Z<sub>i</sub> = ( X<sub>i</sub> - min(X) ) / ( max(X) - min(X) )
-   * If the values are all zero, the results will all be as follows:
-   * Double.NaN if all the values as doubles, long, int
-   * Float.Nan if all the values as floats, short, byte
-   * null for other numeric types (e.g. BigDecimal, BigInteger)
-   *
-   * @param column the float column to scale
-   * @return a new float column of scaled values between 0 and 1
-   */
-  static List<? extends Number> minMaxNorm(List<? extends Number> column, int... decimals) {
-    def min = column.min()
-    def max = column.max()
-
-    List<? extends Number> vals = []
-    for (def x : column) {
-      def type = x.getClass()
-      def val = minMaxNorm(x, convert(min, type), convert(max, type), decimals)
-      vals.add(val)
-    }
-    return vals
-  }
-
   static List<? extends Number> minMaxNorm(Matrix table, String columnName, int... decimals) {
-    if (Number.isAssignableFrom(table.type(columnName))) {
-      return minMaxNorm(table[columnName] as List<? extends Number>, decimals)
-    } else {
-      throw new IllegalArgumentException("$columnName is not a numeric column")
-    }
+    return minMaxNorm(table.column(columnName).data as List, decimals)
   }
 
+  /**
+   * Apply min-max normalization to all numeric columns in a Matrix.
+   */
   static Matrix minMaxNorm(Matrix table, int... decimals) {
     List<List> columns = []
     for (Column col in table.columns()) {
-      if (! Number.isAssignableFrom(col.type)) {
-        columns << col
-      } else {
-        columns << minMaxNorm(col, decimals)
-      }
+      columns << minMaxNorm(col as List, decimals)
     }
-    Matrix.builder(table.matrixName)
-        .columns(columns)
+    return Matrix.builder(table.matrixName)
         .columnNames(table.columnNames())
+        .columns(columns)
         .types(table.types())
         .build()
   }
 
+  // ===== MEAN NORMALIZATION =====
+
   /**
-   * Scales the data values to be between (–1, 1), the formula is
-   * X´ = ( X - μ ) / ( max(X) - min(X) )
+   * Mean normalization scales values relative to the mean and range.
+   * Formula: X´ = ( X - μ ) / ( max(X) - min(X) )
    *
-   * @param x the observed value
-   * @param sampleMean the sample mean (μ)
-   * @param minX the lowest value in the distribution
-   * @param maxX the highest value in the distribution
-   * @return a scaled value between -1 and 1
+   * @param x the value to normalize
+   * @param mean the mean of the dataset
+   * @param min the minimum value in the dataset
+   * @param max the maximum value in the dataset
+   * @param decimals optional number of decimal places to round to
+   * @return the normalized value, or null/NaN for invalid input
    */
-  static BigDecimal meanNorm(BigDecimal x, BigDecimal sampleMean, BigDecimal minX, BigDecimal maxX, int... decimals) {
-    if (x == null || sampleMean == null || minX == null || maxX == null || (maxX - minX) == 0) {
-      return null
+  static <T extends Number> T meanNorm(T x, Number mean, Number min, Number max, int... decimals) {
+    if (x == null) {
+      return meanNormNullValue(x)
     }
-    def result = (x - sampleMean) / (maxX - minX) as BigDecimal
+
+    double xVal = x.doubleValue()
+    double meanVal = mean.doubleValue()
+    double minVal = min.doubleValue()
+    double maxVal = max.doubleValue()
+    double range = maxVal - minVal
+
+    if (range == 0) {
+      return meanNormNullValue(x)
+    }
+
+    double result = (xVal - meanVal) / range
+
     if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN)
+      BigDecimal bd = new BigDecimal(result).setScale(decimals[0], RoundingMode.HALF_EVEN)
+      return convertToType(bd, x)
     }
-    return result
+
+    return convertToType(result, x)
   }
 
   /**
-   * Scales the data values to be between (–1, 1), the formula is
-   * X´ = ( X - μ ) / ( max(X) - min(X) )
-   *
-   * @param x the observed value
-   * @param sampleMean the sample mean (μ)
-   * @param minX the lowest value in the distribution
-   * @param maxX the highest value in the distribution
-   * @return a scaled value between -1 and 1
+   * Apply mean normalization to an array of values.
    */
-  static <T extends Number> T meanNorm(T x, T sampleMean, T minX, T maxX, int... decimals) {
-    if (x == null || sampleMean == null || minX == null || maxX == null) {
-      return null
-    }
-    if (minX == 0 && maxX == 0) {
-      return null
-    }
-    def result = ((x - sampleMean) / (maxX - minX)) as T
-    if (decimals.length > 0) {
-      return (result as BigDecimal).setScale(decimals[0], RoundingMode.HALF_EVEN) as T
-    }
-    return result
+  static <T extends Number> List<T> meanNorm(T[] values, int... decimals) {
+    if (values.length == 0) return []
+
+    List<T> list = Arrays.asList(values)
+    BigDecimal mean = Stat.mean(list)
+    T min = list.min()
+    T max = list.max()
+
+    return values.collect { meanNorm(it, mean, min, max, decimals) }
   }
 
   /**
-   * Scales the data values to be between (–1, 1), the formula is
-   * X´ = ( X - μ ) / ( max(X) - min(X) )
-   *
-   * @param x the observed value
-   * @param sampleMean the sample mean (μ)
-   * @param minX the lowest value in the distribution
-   * @param maxX the highest value in the distribution
-   * @return a scaled value between -1 and 1
+   * Apply mean normalization to a list of values.
    */
-  static Double meanNorm(Double x, Double sampleMean, Double minX, Double maxX, int... decimals) {
-    if (x == null || Double.isNaN(x) || sampleMean == null || Double.isNaN(sampleMean) || minX == null || Double.isNaN(minX) || maxX == null || Double.isNaN(maxX)) {
-      return Double.NaN
-    }
-    def result = (x - sampleMean) / (maxX - minX)
-    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
-      return result.round(decimals[0])
-      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).doubleValue()
-    }
-    return result.doubleValue()
+  static List meanNorm(List values, int... decimals) {
+    if (values.isEmpty()) return []
+    if (values[0] instanceof String) return values  // Return strings as-is
+
+    BigDecimal mean = Stat.mean(values)
+    def min = values.min()
+    def max = values.max()
+
+    return values.collect { meanNorm(it as Number, mean, min, max, decimals) }
   }
 
   /**
-   * Scales the data values to be between (–1, 1), the formula is
-   * X´ = ( X - μ ) / ( max(X) - min(X) )
-   *
-   * @param x the observed value
-   * @param sampleMean the sample mean (μ)
-   * @param minX the lowest value in the distribution
-   * @param maxX the highest value in the distribution
-   * @return a scaled value between -1 and 1
+   * Apply mean normalization to a specific column in a Matrix.
    */
-  static Float meanNorm(Float x, Float sampleMean, Float minX, Float maxX, int... decimals) {
-    if (x == null || Float.isNaN(x) || sampleMean == null || Float.isNaN(sampleMean) || minX == null || Float.isNaN(minX) || maxX == null || Float.isNaN(maxX)) {
-      return Float.NaN
-    }
-    def result = (x - sampleMean) / (maxX - minX)
-    if (decimals.length > 0 && result != Double.NEGATIVE_INFINITY && result != Double.POSITIVE_INFINITY) {
-      result = result.round(decimals[0])
-      //return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
-    }
-    return result.floatValue()
-  }
-
- /**
-  * Scales the data values to be between (–1, 1), the formula is
-  * X´ = ( X - μ ) / ( max(X) - min(X) )
-  *
-  * @param column the double column to scale
-  * @return a new, normalized double column
-  */
-  static List<Double> meanNorm(Double[] column, int... decimals) {
-    List<Double> col = column as List<Double>
-    def min = col.min()
-    def max = col.max()
-    def mean = Stat.mean(col).doubleValue()
-
-    List<Double> vals = []
-    for (def x : col) {
-      vals.add(meanNorm(x, mean, min, max, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * Scales the data values to be between (–1, 1), the formula is
-   * X´ = ( X - μ ) / ( max(X) - min(X) )
-   *
-   * @param column the float column to scale
-   * @return a new, normalized float column
-   */
-  static List<Float> meanNorm(Float[] column, int... decimals) {
-    List<Float> col = column as List<Float>
-    def min = col.min() as float
-    def max = col.max() as float
-    def mean = Stat.mean(col) as float
-
-    List<Float> vals = []
-    for (def x : col) {
-      vals.add(meanNorm(x, mean, min, max, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * Scales the data values to be between (–1, 1), the formula is
-   * X´ = ( X - μ ) / ( max(X) - min(X) )
-   *
-   * @param column the float column to scale
-   * @return a new, normalized float column
-   */
-  static List<BigDecimal> meanNorm(BigDecimal[] column, int... decimals) {
-    List<BigDecimal> col = column as List<BigDecimal>
-    def min = col.min() as BigDecimal
-    def max = col.max() as BigDecimal
-    def mean = Stat.mean(col) as BigDecimal
-
-    List<BigDecimal> vals = []
-    for (def x : col) {
-      vals.add(meanNorm(x, mean, min, max, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * Scales the data values to be between (–1, 1), the formula is
-   * X´ = ( X - μ ) / ( max(X) - min(X) )
-   * <p>
-   * If the values are all zero, the results will all be as follows:
-   * Float.NaN if the values are all byte, short, integer, float, long
-   * Double.NaN if the values are all double
-   * null for other numeric types (BigDecimal, BigInteger)
-   * </p>
-   * @param column the float column to scale
-   * @return a new, normalized float column
-   */
-  static List<Number> meanNorm(List<? extends Number> column, int... decimals) {
-    def min = column.min()
-    def max = column.max()
-    def mean = Stat.mean(column)
-
-    List<? extends Number> vals = []
-    for (def x : column) {
-      def type = x.getClass()
-      vals.add(meanNorm(x, convert(mean, type), convert(min, type), convert(max, type), decimals))
-    }
-    return vals
-  }
-
   static List<? extends Number> meanNorm(Matrix table, String columnName, int... decimals) {
-    if (Number.isAssignableFrom(table.type(columnName))) {
-      return meanNorm(table[columnName] as List<? extends Number>, decimals)
-    } else {
-      throw new IllegalArgumentException("$columnName is not a numeric column")
-    }
+    return meanNorm(table.column(columnName).data as List, decimals)
   }
 
+  /**
+   * Apply mean normalization to all numeric columns in a Matrix.
+   */
   static Matrix meanNorm(Matrix table, int... decimals) {
     List<List> columns = []
     for (Column col in table.columns()) {
-      if (! Number.isAssignableFrom(col.type)) {
-        columns << col
-      } else {
-        columns << meanNorm(col, decimals)
-      }
+      columns << meanNorm(col as List, decimals)
     }
-    Matrix.builder(table.matrixName)
-        .columns(columns)
+    return Matrix.builder(table.matrixName)
         .columnNames(table.columnNames())
+        .columns(columns)
         .types(table.types())
         .build()
   }
 
+  // ===== STANDARD DEVIATION NORMALIZATION (Z-SCORE) =====
+
   /**
-   * scales the distribution of data values so that the mean of the observed values
-   * will be 0 and standard deviation will be 1 (a.k.a Z-score).
-   * Z = ( X<sub>i</sub> - μ ) / σ
+   * Standard deviation normalization (Z-score) scales values by standard deviations from the mean.
+   * Formula: Z = ( X<sub>i</sub> - μ ) / σ
    *
-   * @param x the observed value
-   * @param sampleMean the sample mean (μ)
-   * @param stdDeviation the standard deviation (σ)
-   * @return a scaled value so that the mean of the observed values will be 0 and standard deviation will be 1
+   * @param x the value to normalize
+   * @param mean the mean of the dataset
+   * @param stdDev the standard deviation of the dataset
+   * @param decimals optional number of decimal places to round to
+   * @return the z-score, or null/NaN for invalid input
    */
-  static BigDecimal stdScaleNorm(BigDecimal x, BigDecimal sampleMean, BigDecimal stdDeviation, int... decimals) {
-    if (x == null || sampleMean == null || stdDeviation == null) {
-      return null
+  static <T extends Number> T stdScaleNorm(T x, Number mean, Number stdDev, int... decimals) {
+    if (x == null) {
+      return null  // stdScaleNorm always returns null for invalid
     }
-    def result = (x - sampleMean) / stdDeviation as BigDecimal
+
+    double xVal = x.doubleValue()
+    double meanVal = mean.doubleValue()
+    double stdDevVal = stdDev.doubleValue()
+
+    if (stdDevVal == 0) {
+      return null  // stdScaleNorm always returns null for zero stddev
+    }
+
+    double result = (xVal - meanVal) / stdDevVal
+
     if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN)
+      BigDecimal bd = new BigDecimal(result).setScale(decimals[0], RoundingMode.HALF_EVEN)
+      return convertToType(bd, x)
     }
-    return result
+
+    return convertToType(result, x)
   }
 
   /**
-   * scales the distribution of data values so that the mean of the observed values
-   * will be 0 and standard deviation will be 1 (a.k.a Z-score).
-   * Z = ( X<sub>i</sub> - μ ) / σ
-   *
-   * @param x the observed value
-   * @param sampleMean the sample mean (μ)
-   * @param stdDeviation the standard deviation (σ)
-   * @return a scaled value so that the mean of the observed values will be 0 and standard deviation will be 1
+   * Apply standard deviation normalization to an array of values.
    */
-  static <T extends Number> T stdScaleNorm(T x, T sampleMean, T stdDeviation, int... decimals) {
-    if (x == null || sampleMean == null || stdDeviation == null || stdDeviation == 0) {
-      return null
-    }
-    def result = ((x - sampleMean) / stdDeviation) as T
-    if (decimals.length > 0) {
-      return (result as BigDecimal).setScale(decimals[0], RoundingMode.HALF_EVEN) as T
-    }
-    return result
+  static <T extends Number> List<T> stdScaleNorm(T[] values, int... decimals) {
+    if (values.length == 0) return []
+
+    List<T> list = Arrays.asList(values)
+    BigDecimal mean = Stat.mean(list)
+    BigDecimal stdDev = Stat.sd(list)
+
+    return values.collect { stdScaleNorm(it, mean, stdDev, decimals) }
   }
 
   /**
-   * scales the distribution of data values so that the mean of the observed values
-   * will be 0 and standard deviation will be 1 (a.k.a Z-score).
-   * Z = ( X<sub>i</sub> - μ ) / σ
-   *
-   * @param x the observed value
-   * @param sampleMean the sample mean (μ)
-   * @param stdDeviation the standard deviation (σ)
-   * @return a scaled value so that the mean of the observed values will be 0 and standard deviation will be 1
+   * Apply standard deviation normalization to a list of values.
    */
-  static Double stdScaleNorm(Double x, Double sampleMean, Double stdDeviation, int... decimals) {
-    if (x == null || Double.isNaN(x) || sampleMean == null || Double.isNaN(sampleMean) || stdDeviation == null || Double.isNaN(stdDeviation)) {
-      return Double.NaN
-    }
-    def result = (x - sampleMean) / stdDeviation as BigDecimal
-    if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN)
-    }
-    return result.doubleValue()
+  static List stdScaleNorm(List values, int... decimals) {
+    if (values.isEmpty()) return []
+    if (values[0] instanceof String) return values  // Return strings as-is
+
+    BigDecimal mean = Stat.mean(values)
+    BigDecimal stdDev = Stat.sd(values)
+
+    return values.collect { stdScaleNorm(it as Number, mean, stdDev, decimals) }
   }
 
   /**
-   * scales the distribution of data values so that the mean of the observed values
-   * will be 0 and standard deviation will be 1 (a.k.a Z-score).
-   * Z = ( X<sub>i</sub> - μ ) / σ
-   *
-   * @param x the observed value
-   * @param sampleMean the sample mean (μ)
-   * @param stdDeviation the standard deviation (σ)
-   * @return a scaled value so that the mean of the observed values will be 0 and standard deviation will be 1
+   * Apply standard deviation normalization to a specific column in a Matrix.
    */
-  static Float stdScaleNorm(Float x, Float sampleMean, Float stdDeviation, int... decimals) {
-    if (x == null || Float.isNaN(x) || sampleMean == null || Float.isNaN(sampleMean) || stdDeviation == null || Float.isNaN(stdDeviation)) {
-      return Float.NaN
-    }
-    //println ("(x - sampleMean) / stdDeviation = ${(x - sampleMean) / stdDeviation}")
-    def result = (x - sampleMean) / stdDeviation as BigDecimal
-    if (decimals.length > 0) {
-      return result.setScale(decimals[0], RoundingMode.HALF_EVEN).floatValue()
-    }
-    return result.floatValue()
-  }
-
-  /**
-   * scales the distribution of data values so that the mean of the observed values
-   * will be 0 and standard deviation will be 1 (a.k.a Z-score).
-   * Z = ( X<sub>i</sub> - μ ) / σ
-   *
-   * @param column the double column to scale
-   * @return a scaled double column where the values are scaled so that the mean of the observed values
-   * will be 0 and standard deviation will be 1
-   */
-  static List<Double> stdScaleNorm(Double[] column, int... decimals) {
-    List<Double> col = column as List<Double>
-    def mean = Stat.mean(col) as Double
-    def stdDev = Stat.sd(col) as Double
-
-    List<Double> vals = []
-    for (def x : column) {
-      vals.add(stdScaleNorm(x, mean, stdDev, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * scales the distribution of data values so that the mean of the observed values
-   * will be 0 and standard deviation will be 1 (a.k.a Z-score).
-   * Z = ( X<sub>i</sub> - μ ) / σ
-   *
-   * @param column the float column to scale
-   * @return a scaled float column where the values are scaled so that the mean of the observed values
-   * will be 0 and standard deviation will be 1
-   */
-  static List<Float> stdScaleNorm(Float[] column, int... decimals) {
-    List<Float> col = column as List<Float>
-    def stdDev = Stat.sd(col) as Float
-    def mean = Stat.mean(col) as Float
-
-    List<Float> vals = []
-    for (Float x : col) {
-      vals.add(stdScaleNorm(x, mean, stdDev, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * scales the distribution of data values so that the mean of the observed values
-   * will be 0 and standard deviation will be 1 (a.k.a Z-score).
-   * Z = ( X<sub>i</sub> - μ ) / σ
-   *
-   * @param column the float column to scale
-   * @return a scaled float column where the values are scaled so that the mean of the observed values
-   * will be 0 and standard deviation will be 1
-   */
-  static List<BigDecimal> stdScaleNorm(BigDecimal[] column, int... decimals) {
-    List<BigDecimal> col = column as List<BigDecimal>
-    def stdDev = Stat.sd(col) as BigDecimal
-    def mean = Stat.mean(col) as BigDecimal
-
-    List<BigDecimal> vals = []
-    for (def x : col) {
-      vals.add(stdScaleNorm(x, mean, stdDev, decimals))
-    }
-    return vals
-  }
-
-  /**
-   * scales the distribution of data values so that the mean of the observed values
-   * will be 0 and standard deviation will be 1 (a.k.a Z-score).
-   * Z = ( X<sub>i</sub> - μ ) / σ
-   * <p>
-   *   If the values are all zero, the results will be all null.
-   * </p>
-   * @param column the float column to scale
-   * @return a scaled float column where the values are scaled so that the mean of the observed values
-   * will be 0 and standard deviation will be 1
-  */
-  static List<? extends Number> stdScaleNorm(List<? extends Number> column, int... decimals) {
-    def stdDev = Stat.sd(column)
-    def mean = Stat.mean(column)
-
-    List<? extends Number> vals = []
-    for (def x : column) {
-      Class<? extends Number> cls = x.getClass()
-      vals.add(stdScaleNorm(x as Number, mean, stdDev, decimals).asType(cls))
-    }
-    return vals
-  }
-
   static List<? extends Number> stdScaleNorm(Matrix table, String columnName, int... decimals) {
-    if (Number.isAssignableFrom(table.type(columnName))) {
-      return stdScaleNorm(table[columnName] as List<? extends Number>, decimals)
-    } else {
-      throw new IllegalArgumentException("$columnName is not a numeric column")
-    }
+    return stdScaleNorm(table.column(columnName).data as List, decimals)
   }
 
+  /**
+   * Apply standard deviation normalization to all numeric columns in a Matrix.
+   */
   static Matrix stdScaleNorm(Matrix table, int... decimals) {
     List<List> columns = []
     for (Column col in table.columns()) {
-      if (! Number.isAssignableFrom(col.type)) {
-        columns << col
-      } else {
-        columns << stdScaleNorm(col, decimals)
-      }
+      columns << stdScaleNorm(col as List, decimals)
     }
-    Matrix.builder(table.matrixName)
-        .columns(columns)
+    return Matrix.builder(table.matrixName)
         .columnNames(table.columnNames())
+        .columns(columns)
         .types(table.types())
         .build()
   }
 
+  // ===== HELPER METHODS =====
+
+  /**
+   * Returns null/NaN for minMaxNorm: Float.NaN for Byte/Short/Float, Double.NaN for Integer/Long/Double, null for BigInteger/BigDecimal
+   */
+  private static <T extends Number> T minMaxNormNullValue(T sample) {
+    if (sample instanceof BigDecimal || sample instanceof BigInteger) {
+      return null
+    }
+    if (sample instanceof Double || sample instanceof Integer || sample instanceof Long) {
+      return Double.NaN as T
+    }
+    // Byte, Short, Float
+    return Float.NaN as T
+  }
+
+  /**
+   * Returns null/NaN for meanNorm: Float.NaN for Byte/Short/Integer/Long/Float, Double.NaN for Double, null for BigInteger/BigDecimal
+   */
+  private static <T extends Number> T meanNormNullValue(T sample) {
+    if (sample instanceof BigDecimal || sample instanceof BigInteger) {
+      return null
+    }
+    if (sample instanceof Double) {
+      return Double.NaN as T
+    }
+    // Byte, Short, Integer, Long, Float
+    return Float.NaN as T
+  }
+
+  /**
+   * Converts a numeric value to the same type as the sample.
+   * For normalization operations, integer types are upgraded to Float since
+   * operations like log, normalization produce non-integer results.
+   */
+  private static <T extends Number> T convertToType(Number value, T sample) {
+    if (sample instanceof BigDecimal) {
+      // Always ensure we return BigDecimal, not BigInteger
+      BigDecimal result
+      if (value instanceof BigDecimal) {
+        result = (BigDecimal) value
+      } else {
+        result = new BigDecimal(value.toString())
+      }
+      // CRITICAL: Ensure scale > 0 to prevent Groovy from converting to BigInteger
+      // Groovy may auto-convert BigDecimal to BigInteger for whole numbers with scale 0
+      // We ensure minimum scale of 1 for all BigDecimal results
+      int targetScale = Math.max(result.scale(), 1)
+      if (result.scale() < targetScale) {
+        result = result.setScale(targetScale, RoundingMode.HALF_EVEN)
+      }
+      return result as T
+    }
+    if (sample instanceof BigInteger) {
+      return (value instanceof BigInteger ? value : BigInteger.valueOf(value.longValue())) as T
+    }
+    if (sample instanceof Double) {
+      return value.doubleValue() as T
+    }
+    if (sample instanceof Float) {
+      return value.floatValue() as T
+    }
+    // Integer types (Long, Integer, Short, Byte) are upgraded to Float
+    // because normalization operations produce non-integer results
+    if (sample instanceof Long || sample instanceof Integer ||
+        sample instanceof Short || sample instanceof Byte) {
+      return value.floatValue() as T
+    }
+    // Default to the value's natural type
+    return value as T
+  }
 }

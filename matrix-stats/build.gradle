@@ -40,10 +40,13 @@ dependencies {
   compileOnly libs.groovy
 
   compileOnly project(':matrix-core')
-  testImplementation project(':matrix-core')
-  testImplementation project(':matrix-datasets')
+  compileOnly project(':matrix-groovy-ext')
 
   implementation 'org.apache.commons:commons-math3:3.6.1'
+
+  testImplementation project(':matrix-core')
+  testImplementation project(':matrix-datasets')
+  testImplementation project(':matrix-groovy-ext')
   testImplementation libs.groovy
   testImplementation 'com.github.haifengl:smile-core:4.4.2'
   testImplementation("se.alipsa:jfinancials:1.0.0")
@@ -59,7 +62,7 @@ test {
   testLogging {
     // set options for log level LIFECYCLE
     events TestLogEvent.FAILED,
-        TestLogEvent.PASSED,
+        //TestLogEvent.PASSED,
         TestLogEvent.SKIPPED,
         TestLogEvent.STANDARD_OUT
     exceptionFormat = TestExceptionFormat.FULL

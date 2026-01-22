@@ -44,12 +44,12 @@ dependencies {
 
 
   def fastExcelVersion = '0.19.0'
-  def poiVersion = '5.5.0'
+  def poiVersion = '5.5.1'
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
   implementation libs.log4jApi
 
-  implementation("org.apache.poi:poi:${poiVersion}")
+  api("org.apache.poi:poi:${poiVersion}")
   implementation("org.apache.poi:poi-ooxml:${poiVersion}")
   // https://github.com/dhatim/fastexcel
   implementation("org.dhatim:fastexcel:$fastExcelVersion")
@@ -80,9 +80,10 @@ test {
   testLogging {
     // set options for log level LIFECYCLE
     events TestLogEvent.FAILED,
-        TestLogEvent.PASSED,
+        //TestLogEvent.PASSED,
         TestLogEvent.SKIPPED,
-        TestLogEvent.STANDARD_OUT
+        TestLogEvent.STANDARD_OUT,
+        TestLogEvent.STANDARD_ERROR
     exceptionFormat = TestExceptionFormat.FULL
     showExceptions = true
     showCauses = true
@@ -103,8 +104,6 @@ test {
     info.exceptionFormat = debug.exceptionFormat
 
     afterSuite { desc, result ->
-      def duration = result.endTime - result.startTime
-      println "Duration of $desc: $duration ms"
       if (!desc.parent) { // will match the outermost suite
         def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
         def startItem = '|  ', endItem = '  |'

@@ -1,5 +1,65 @@
 package se.alipsa.matrix.stats
 
+import groovy.transform.CompileStatic
+
+/**
+ * Statistical correlation measures that quantify the relationship between two variables.
+ *
+ * <p>This class provides three types of correlation coefficients:</p>
+ * <ul>
+ *   <li><b>Pearson correlation</b> - Measures linear relationship (parametric)</li>
+ *   <li><b>Spearman correlation</b> - Measures monotonic relationship based on ranks (non-parametric)</li>
+ *   <li><b>Kendall tau correlation</b> - Measures ordinal association based on concordance (non-parametric)</li>
+ * </ul>
+ *
+ * <h3>Pearson Correlation</h3>
+ * <p>The Pearson product-moment correlation coefficient measures the strength and direction of the
+ * linear relationship between two continuous variables. It assumes:</p>
+ * <ul>
+ *   <li>Both variables are normally distributed</li>
+ *   <li>The relationship is linear</li>
+ *   <li>No significant outliers</li>
+ * </ul>
+ * <p>Formula: r = Σ[(x - x̄)(y - ȳ)] / √[Σ(x - x̄)² × Σ(y - ȳ)²]</p>
+ *
+ * <h3>Spearman Correlation</h3>
+ * <p>Spearman's rank correlation coefficient is the non-parametric version of Pearson correlation.
+ * It assesses monotonic relationships (whether linear or not) by first converting the data to ranks,
+ * then computing the Pearson correlation on the ranks. It is robust to outliers and does not assume
+ * normality.</p>
+ *
+ * <h3>Kendall Tau Correlation</h3>
+ * <p>Kendall's tau measures the ordinal association between two variables based on the number of
+ * concordant and discordant pairs. It is particularly useful for small sample sizes and tied ranks.</p>
+ * <p>Formula: τ = (concordant pairs - discordant pairs) / (n × (n-1) / 2)</p>
+ *
+ * <h3>Usage Examples</h3>
+ * <pre>
+ * import static se.alipsa.matrix.stats.Correlation.*
+ *
+ * // Pearson correlation (default)
+ * def r = cor([1, 2, 3, 4, 5], [2, 4, 6, 8, 10])  // returns 1.0 (perfect positive)
+ *
+ * // Spearman correlation (for non-linear monotonic relationships)
+ * def rho = cor([1, 2, 3, 4, 5], [1, 4, 9, 16, 25], SPEARMAN)
+ *
+ * // Kendall tau (for ordinal data)
+ * def tau = cor([1, 2, 3, 4], [2, 1, 4, 3], KENDALL)
+ * </pre>
+ *
+ * <h3>Return Values</h3>
+ * <p>All correlation coefficients return values between -1 and +1:</p>
+ * <ul>
+ *   <li><b>+1</b>: Perfect positive correlation</li>
+ *   <li><b>0</b>: No correlation</li>
+ *   <li><b>-1</b>: Perfect negative correlation</li>
+ * </ul>
+ *
+ * @see <a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson Correlation</a>
+ * @see <a href="https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient">Spearman's Rank Correlation</a>
+ * @see <a href="https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient">Kendall Tau Correlation</a>
+ */
+@CompileStatic
 class Correlation {
 
   static final String PEARSON = "pearson"
@@ -16,24 +76,27 @@ class Correlation {
   /**
    * measures a linear dependence between two variables (x and y) i.e. a parametric correlation test
    * as it depends on the distribution of the data.
-   * @param numbers1 the first list of Numbers
-   * @param numbers2 the second list of Numbers
+   * @param numbersX the first list of Numbers
+   * @param numbersY the second list of Numbers
    * @return a value between -1 to +1 where -1 represents X and Y are negatively correlated
    * and +1 represents X and Y are positively correlated
+   * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corPearson(List<? extends Number> numbersX, List<? extends Number> numbersY) {
-    def sumX = 0.0
-    def sumY = 0.0
-    def sumXY = 0.0
-    def sumX2 = 0.0
-    def sumY2 = 0.0
-    def size = numbersX.size()
+    validateCorrelationInputs(numbersX, numbersY, "Pearson correlation")
+
+    BigDecimal sumX = 0
+    BigDecimal sumY = 0
+    BigDecimal sumXY = 0
+    BigDecimal sumX2 = 0
+    BigDecimal sumY2 = 0
+    int size = numbersX.size()
 
     def final itX = numbersX.iterator()
     def final itY = numbersY.iterator()
     for (int i = 0; i < size; i++) {
-      def x = itX.next()
-      def y = itY.next()
+      BigDecimal x = itX.next() as BigDecimal
+      BigDecimal y = itY.next() as BigDecimal
 
       sumX += x
       sumY += y
@@ -42,48 +105,46 @@ class Correlation {
       sumY2 += y * y
     }
 
-    def final bottom = Math.sqrt((size * sumX2 - sumX * sumX) * (size * sumY2 - sumY * sumY))
-    if (bottom == 0) return 0
-    def final top = size * sumXY - sumX * sumY
+    BigDecimal bottomSquared = (size * sumX2 - sumX * sumX) * (size * sumY2 - sumY * sumY)
+    if (bottomSquared == 0) return 0
+    BigDecimal bottom = bottomSquared.sqrt()
+    BigDecimal top = size * sumXY - sumX * sumY
     return top / bottom
   }
 
+  /**
+   * Spearman's rank correlation coefficient measures the monotonic relationship between two variables.
+   * It is the Pearson correlation coefficient applied to the ranks of the data.
+   * @param numbersX the first list of Numbers
+   * @param numbersY the second list of Numbers
+   * @return a value between -1 to +1 where -1 represents X and Y are negatively correlated
+   * and +1 represents X and Y are positively correlated
+   * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
+   */
   static BigDecimal corSpearman(List<? extends Number> numbersX, List<? extends Number> numbersY) {
-    int n = numbersX.size()
-    def sum_X = 0.0, sum_Y = 0.0, sum_XY = 0.0, squareSum_X = 0.0, squareSum_Y = 0.0
-    Number x, y
-    for (int i = 0; i < n; i++) {
-      x = numbersX.get(i)
-      y = numbersY.get(i)
+    validateCorrelationInputs(numbersX, numbersY, "Spearman correlation")
 
-      sum_X = sum_X + x
-      sum_Y = sum_Y + y
-      sum_XY = sum_XY + x * y
-
-      // sum of square of elements.
-      squareSum_X = squareSum_X + x**2
-      squareSum_Y = squareSum_Y + y**2
-    }
-
-    return (n * sum_XY - sum_X * sum_Y) / Math.sqrt(
-        (n * squareSum_X - sum_X * sum_X)
-            * (n * squareSum_Y - sum_Y * sum_Y))
+    List<BigDecimal> ranksX = rank(numbersX)
+    List<BigDecimal> ranksY = rank(numbersY)
+    return corPearson(ranksX, ranksY)
   }
 
   /**
    * Kendall Tau can be used as a metric to compare similarities between search results.
+   * @param numbersX the first list of Numbers
+   * @param numbersY the second list of Numbers
+   * @return a value between -1 to +1 representing the correlation
+   * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corKendall(List<? extends Number> numbersX, List<? extends Number> numbersY) {
-    if (numbersX.size() != numbersY.size()) {
-      throw new IllegalArgumentException("Lists must be of equal size!")
-    }
+    validateCorrelationInputs(numbersX, numbersY, "Kendall correlation")
 
     final int n = numbersX.size()
     final long numPairs = sumN(n - 1)
 
     BigDecimalPair[] pairs = new BigDecimalPair[n]
     for (int i = 0; i < n; i++) {
-      pairs[i] = new BigDecimalPair(numbersX[i], numbersY[i])
+      pairs[i] = new BigDecimalPair(numbersX[i] as BigDecimal, numbersY[i] as BigDecimal)
     }
 
     Arrays.sort(pairs, (p1, p2) -> {
@@ -170,8 +231,48 @@ class Correlation {
     tiedYPairs += sumN(consecutiveYTies - 1)
 
     final long concordantMinusDiscordant = numPairs - tiedXPairs - tiedYPairs + tiedXYPairs - 2 * swaps
-    final double nonTiedPairsMultiplied = (numPairs - tiedXPairs) * (double) (numPairs - tiedYPairs)
-    return concordantMinusDiscordant / Math.sqrt(nonTiedPairsMultiplied)
+    final BigDecimal nonTiedPairsMultiplied = (numPairs - tiedXPairs) * (numPairs - tiedYPairs)
+    return concordantMinusDiscordant / nonTiedPairsMultiplied.sqrt()
+  }
+
+  /**
+   * Ranks the values in the list using average rank for ties.
+   * @param values the list of values to rank
+   * @return a list of ranks (1-based)
+   */
+  private static List<BigDecimal> rank(List<? extends Number> values) {
+    int n = values.size()
+
+    // Create indexed pairs (value, original index)
+    def indexed = values.withIndex().collect { val, idx ->
+      [value: val as BigDecimal, index: idx]
+    }
+
+    // Sort by value
+    indexed.sort { a, b -> a.value <=> b.value }
+
+    // Assign ranks, handling ties with average rank
+    BigDecimal[] ranks = new BigDecimal[n]
+    int i = 0
+    while (i < n) {
+      int j = i
+      // Find all tied values
+      while (j < n - 1 && indexed[j].value == indexed[j + 1].value) {
+        j++
+      }
+
+      // Average rank for tied values (1-based ranking)
+      BigDecimal avgRank = (i + 1 + j + 1) / 2
+
+      // Assign average rank to all tied positions
+      for (int k = i; k <= j; k++) {
+        ranks[indexed[k].index as int] = avgRank
+      }
+
+      i = j + 1
+    }
+
+    return ranks.toList()
   }
 
   private static int compare(Number x, Number y) {
@@ -192,7 +293,29 @@ class Correlation {
    * @return the sum of the number from 1 to n
    */
   private static long sumN(long n) {
-    return n * (n + 1) / 2l
+    return (long)(n * (n + 1) / 2)
+  }
+
+  /**
+   * Validates correlation inputs for null, empty, size mismatch, and insufficient observations.
+   * @param x the first list
+   * @param y the second list
+   * @param testName the name of the test for error messages
+   * @throws IllegalArgumentException if validation fails
+   */
+  private static void validateCorrelationInputs(List<? extends Number> x, List<? extends Number> y, String testName) {
+    if (x == null || y == null) {
+      throw new IllegalArgumentException("${testName} requires non-null input lists")
+    }
+    if (x.isEmpty() || y.isEmpty()) {
+      throw new IllegalArgumentException("${testName} requires non-empty input lists")
+    }
+    if (x.size() != y.size()) {
+      throw new IllegalArgumentException("${testName} requires lists of equal size, got: x=${x.size()}, y=${y.size()}")
+    }
+    if (x.size() < 2) {
+      throw new IllegalArgumentException("${testName} requires at least 2 paired observations, got: ${x.size()}")
+    }
   }
 
   /**

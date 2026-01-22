@@ -1,101 +1,197 @@
 package se.alipsa.matrix.stats.cluster
 
-import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
 /**
- * KMeans clustering algorithm. Based on <a href='https://github.com/JasonAltschuler/KMeansPlusPlus'>Jason Altschuler's implementation</a>
- * (with explicit permission).
- * <p>
- * The K-Means algorithm is a method of vector quantization, originally from signal processing,
- * that is popular for cluster analysis in data mining.
- * </p>
- * <p>
- * The algorithm partitions <code>n</code> observations into <code>k</code> clusters,
- * such that each observation belongs to the cluster with the nearest mean (centroid),
- * which serves as a prototype of the cluster.
- * </p>
+ * KMeans++ is an enhanced K-Means clustering algorithm that uses an improved initialization
+ * strategy to produce better clustering results. It partitions n observations into k clusters
+ * by iteratively minimizing the Within-Cluster Sum of Squares (WCSS).
  *
- * <h3>Example usage:</h3>
- * <pre><code>
- *   import se.alipsa.matrix.stats.cluster.KMeans
- *   import se.alipsa.matrix.core.Matrix
+ * <p>This implementation is based on <a href='https://github.com/JasonAltschuler/KMeansPlusPlus'>Jason Altschuler's
+ * implementation</a> (used with explicit permission). It provides a low-level API for clustering
+ * double[][] arrays, with optional parameters for fine-tuning convergence and distance metrics.</p>
  *
- *   Matrix m = Matrix.builder("Whiskey data")
- *                   .data("https://www.niss.org/sites/default/files/ScotchWhisky01.txt")
- *                   .build()
- *   KMeans kmeans = new KMeans(m)
- *   Matrix clustered = kmeans.fit(features, 3, 20)
- * </code></pre>
- *
- * <h3>Purpose</h3>
+ * <h3>What is KMeans++?</h3>
+ * <p>KMeans++ improves upon standard K-Means by using a smarter initialization strategy:</p>
  * <ul>
- *   <li><strong>Clustering:</strong> Groups n-dimensional points.</li>
- *   <li><strong>Algorithm:</strong> KMeans++, an enhanced version of classic K-Means.</li>
- *   <li><strong>Objective:</strong> Minimize Within-Cluster Sum of Squares (WCSS).</li>
+ *   <li><strong>Standard K-Means:</strong> Randomly selects k initial centroids, often leading to poor local optima</li>
+ *   <li><strong>KMeans++:</strong> Selects initial centroids probabilistically, favoring points far from existing centroids</li>
+ *   <li><strong>Result:</strong> Faster convergence and better clustering quality (proven O(log k) competitive ratio)</li>
  * </ul>
+ *
+ * <h3>When to Use KMeansPlusPlus</h3>
+ * <ul>
+ *   <li><strong>Low-Level Control:</strong> When you need direct access to centroids, WCSS, or distance metrics</li>
+ *   <li><strong>Performance Tuning:</strong> When you want to customize epsilon, iterations, or distance norms</li>
+ *   <li><strong>Non-Matrix Data:</strong> When working with double[][] arrays instead of Matrix objects</li>
+ *   <li><strong>Algorithmic Research:</strong> When studying clustering behavior or implementing variants</li>
+ * </ul>
+ *
+ * <p><strong>Note:</strong> For most use cases, prefer the higher-level {@link KMeans} class which provides
+ * a simpler API and integrates directly with Matrix objects.</p>
+ *
+ * <h3>KMeans++ Initialization Strategy</h3>
+ * <p>The initialization algorithm works as follows:</p>
+ * <ol>
+ *   <li>Choose the first centroid uniformly at random from the data points</li>
+ *   <li>For each subsequent centroid:
+ *     <ul>
+ *       <li>Compute D(x)² for each point x, where D(x) = distance to nearest existing centroid</li>
+ *       <li>Select the next centroid with probability proportional to D(x)²</li>
+ *       <li>This favors points far from existing centroids, spreading them out</li>
+ *     </ul>
+ *   </li>
+ *   <li>Repeat until k centroids are selected</li>
+ * </ol>
+ *
+ * <p><strong>Why it works:</strong> This strategy ensures initial centroids are well-distributed across
+ * the data space, avoiding poor initializations that trap the algorithm in bad local optima.</p>
+ *
+ * <h3>Key Concepts</h3>
+ * <dl>
+ *   <dt><strong>Centroids</strong></dt>
+ *   <dd>The k cluster centers, each represented as an n-dimensional point. Updated iteratively
+ *   as the mean of all points assigned to the cluster. Access via getCentroids().</dd>
+ *
+ *   <dt><strong>WCSS (Within-Cluster Sum of Squares)</strong></dt>
+ *   <dd>The objective function being minimized: WCSS = Σᵢ Σⱼ ||Cᵢ - Xⱼ||², where Cᵢ is the
+ *   i-th centroid and Xⱼ is a point assigned to cluster i. Lower WCSS = better clustering.</dd>
+ *
+ *   <dt><strong>Convergence</strong></dt>
+ *   <dd>The algorithm stops when WCSS improvement falls below epsilon (default: 0.001) or when
+ *   no improvement occurs. Runs multiple iterations (default: 50) and keeps the best result.</dd>
+ *
+ *   <dt><strong>Distance Metrics</strong></dt>
+ *   <dd>Supports L1 (Manhattan) and L2 (Euclidean squared) distance. KMeans++ initialization
+ *   always uses L2 for theoretical guarantees, but the main algorithm can use either.</dd>
+ * </dl>
+ *
+ * <h3>Basic Usage</h3>
+ * <pre>
+ * import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
+ * import se.alipsa.matrix.stats.cluster.ClusteredPoint
+ *
+ * // Prepare data as double[][]
+ * double[][] points = [
+ *     [1.0, 2.0],
+ *     [1.5, 1.8],
+ *     [5.0, 8.0],
+ *     [8.0, 8.0],
+ *     [1.0, 0.6],
+ *     [9.0, 11.0]
+ * ]
+ *
+ * // Method 1: Fixed k with custom parameters
+ * KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(2, points)
+ *     .iterations(50)           // Run 50 times, keep best result
+ *     .pp(true)                 // Use KMeans++ initialization (recommended)
+ *     .epsilon(0.001)           // Stop when WCSS improvement &lt; 0.001
+ *     .useEpsilon(true)         // Enable epsilon-based stopping
+ *     .useL1norm(false)         // Use L2 (Euclidean) distance
+ *     .build()
+ *
+ * // Method 2: Auto-estimate k using GroupEstimator
+ * clustering = new KMeansPlusPlus.Builder(points, GroupEstimator.CalculationMethod.ELBOW)
+ *     .iterations(30)
+ *     .build()
+ *
+ * // Access results
+ * double[][] centroids = clustering.getCentroids()
+ * ClusteredPoint[] assignments = clustering.getAssignment()
+ * double wcss = clustering.getWCSS()
+ *
+ * println "WCSS: $wcss"
+ * println "Execution time: ${clustering.getTiming()}"
+ *
+ * // Examine cluster assignments
+ * assignments.each { cp ->
+ *     println "Point ${Arrays.toString(cp.point)} → Cluster ${cp.clusterId}"
+ * }
+ *
+ * // Get clusters as Matrix objects
+ * Map&lt;Integer, Matrix&gt; clusterMatrices = clustering.getClustersById()
+ * clusterMatrices.each { clusterId, matrix ->
+ *     println "Cluster $clusterId: ${matrix.rowCount()} points"
+ * }
+ * </pre>
+ *
+ * <h3>Advanced Configuration</h3>
+ * <pre>
+ * // Fine-tune for large datasets (prioritize speed)
+ * clustering = new KMeansPlusPlus.Builder(10, points)
+ *     .iterations(20)           // Fewer iterations
+ *     .epsilon(0.01)            // Looser convergence threshold
+ *     .useL1norm(true)          // Faster distance calculation
+ *     .build()
+ *
+ * // Fine-tune for precision (prioritize accuracy)
+ * clustering = new KMeansPlusPlus.Builder(5, points)
+ *     .iterations(100)          // More iterations
+ *     .epsilon(0.0001)          // Tighter convergence threshold
+ *     .useL1norm(false)         // More accurate L2 distance
+ *     .build()
+ * </pre>
  *
  * <h3>Algorithm Steps</h3>
  * <ol>
- *   <li>Select <code>k</code> initial centroids (either randomly or via KMeans++).</li>
- *   <li>Iteratively perform:
- *     <ul>
- *       <li><strong>Assignment step:</strong> assign each point to the nearest centroid.</li>
- *       <li><strong>Update step:</strong> recompute centroids as the mean of assigned points.</li>
- *     </ul>
- *   </li>
- *   <li>Stop when improvement in WCSS is smaller than <code>epsilon</code> (or zero if not using epsilon).</li>
- *   <li>Return the best clustering out of multiple runs (lowest WCSS).</li>
+ *   <li><strong>Initialization:</strong> Select k initial centroids using KMeans++ or random sampling</li>
+ *   <li><strong>Assignment Step:</strong> Assign each point to its nearest centroid (using L1 or L2 distance)</li>
+ *   <li><strong>Update Step:</strong> Recalculate each centroid as the mean of its assigned points</li>
+ *   <li><strong>Convergence Check:</strong> If WCSS improvement &lt; epsilon (or 0), stop; otherwise repeat from step 2</li>
+ *   <li><strong>Multi-Run:</strong> Repeat the entire process 'iterations' times and keep the best result (lowest WCSS)</li>
  * </ol>
  *
- * <h3>WCSS (Within-Cluster Sum of Squares)</h3>
- * WCSS = Σᵢ Σⱼ ||Cᵢ - Xⱼ||², where:
- * <ul>
- *   <li>Cᵢ = the i-th centroid</li>
- *   <li>Xⱼ = data point assigned to centroid Cᵢ</li>
- * </ul>
- *
- * <h3>KMeans++ Initialization</h3>
- * Selects the next centroid using weighted probabilities proportional to the squared distance from the nearest existing centroid.
- *
  * <h3>Parameters</h3>
- * <strong>Required:</strong>
+ * <table border="1">
+ *   <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
+ *   <tr><td>k</td><td>int</td><td>required</td><td>Number of clusters (must be ≤ number of distinct points)</td></tr>
+ *   <tr><td>points</td><td>double[][]</td><td>required</td><td>Input data (m × n array: m points, n dimensions)</td></tr>
+ *   <tr><td>iterations</td><td>int</td><td>50</td><td>Number of independent runs (keeps best WCSS)</td></tr>
+ *   <tr><td>pp</td><td>boolean</td><td>true</td><td>Use KMeans++ initialization (vs. random)</td></tr>
+ *   <tr><td>epsilon</td><td>double</td><td>0.001</td><td>Convergence threshold for WCSS improvement</td></tr>
+ *   <tr><td>useEpsilon</td><td>boolean</td><td>true</td><td>Enable epsilon-based stopping (vs. exact convergence)</td></tr>
+ *   <tr><td>L1norm</td><td>boolean</td><td>true</td><td>Use L1 (Manhattan) vs. L2 (Euclidean) distance</td></tr>
+ * </table>
+ *
+ * <h3>Output Methods</h3>
  * <ul>
- *   <li><code>int k</code>: number of clusters</li>
- *   <li><code>double[][] points</code>: input data</li>
- * </ul>
- * <strong>Optional:</strong>
- * <ul>
- *   <li><code>int iterations</code> (default 50): number of runs to find best clustering</li>
- *   <li><code>boolean pp</code> (default true): use KMeans++ initialization</li>
- *   <li><code>double epsilon</code> (default .001): WCSS improvement threshold</li>
- *   <li><code>boolean useEpsilon</code> (default true)</li>
+ *   <li><strong>getCentroids():</strong> Returns double[][] of final cluster centers (k × n)</li>
+ *   <li><strong>getAssignment():</strong> Returns ClusteredPoint[] array with cluster IDs for each point</li>
+ *   <li><strong>getWCSS():</strong> Returns final Within-Cluster Sum of Squares (double)</li>
+ *   <li><strong>getClustersById():</strong> Returns Map&lt;Integer, Matrix&gt; of points grouped by cluster</li>
+ *   <li><strong>getTiming():</strong> Returns execution time as formatted string</li>
+ *   <li><strong>getExecutionTimeMillis():</strong> Returns execution time in milliseconds</li>
  * </ul>
  *
- * <h3>Output</h3>
+ * <h3>Best Practices</h3>
  * <ul>
- *   <li><code>double[][]</code> centroids</li>
- *   <li><code>ClusteredPoint[]</code> assignment</li>
- *   <li><code>double</code> WCSS</li>
+ *   <li><strong>Always use pp(true):</strong> KMeans++ initialization consistently outperforms random initialization</li>
+ *   <li><strong>Normalize data:</strong> Use Normalize.minMaxNorm() before clustering for better results</li>
+ *   <li><strong>Check for empty clusters:</strong> The algorithm automatically reinitializes empty clusters to random points</li>
+ *   <li><strong>Validate k:</strong> Ensure k ≤ number of distinct points, or construction will fail</li>
+ *   <li><strong>Monitor WCSS:</strong> Compare WCSS values to assess clustering quality</li>
  * </ul>
  *
- * <h3>Matrix integration</h3>
- * The getClustersById() gives you a Matrix for each group, where the group id is the key.
- * Example:
- * <pre><code>
- * KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(k, points)
- *   .iterations(20)
- *   .pp(true)
- *   .epsilon(.003)
- *   .useEpsilon(true)
- *   .build()
- * Map<Integer, Matrix> clusters = clustering.getClustersById()
- * </code></pre>
+ * <h3>References</h3>
+ * <ul>
+ *   <li>Arthur, D. and Vassilvitskii, S. (2007). "k-means++: the advantages of careful seeding."
+ *   SODA '07: Proceedings of the eighteenth annual ACM-SIAM symposium on Discrete algorithms, 1027–1035.
+ *   (Proves O(log k) competitive ratio for KMeans++ initialization)</li>
+ *   <li>MacQueen, J. (1967). "Some methods for classification and analysis of multivariate observations."
+ *   Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability, 1:281–297.
+ *   (Original K-Means algorithm description)</li>
+ *   <li>Hartigan, J.A. and Wong, M.A. (1979). "Algorithm AS 136: A K-Means Clustering Algorithm."
+ *   Journal of the Royal Statistical Society, Series C, 28(1): 100–108.</li>
+ *   <li>Altschuler, J. (2016). KMeansPlusPlus GitHub Repository.
+ *   <a href="https://github.com/JasonAltschuler/KMeansPlusPlus">https://github.com/JasonAltschuler/KMeansPlusPlus</a></li>
+ * </ul>
  *
  * @author Jason Altschuler
  * @author Per Nyfelt
+ * @see KMeans
+ * @see GroupEstimator
+ * @see ClusteredPoint
  */
-@CompileStatic
 class KMeansPlusPlus {
 /***********************************************************************
  * Data structures
