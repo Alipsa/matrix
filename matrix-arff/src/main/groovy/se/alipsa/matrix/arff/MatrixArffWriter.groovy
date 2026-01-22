@@ -178,7 +178,7 @@ class MatrixArffWriter {
   private static ArffAttributeInfo determineAttributeInfo(Matrix matrix, String colName, Class colType) {
     // Check for numeric types
     if (isNumericType(colType)) {
-      return new ArffAttributeInfo(ArffTypeDecl.REAL, "REAL")
+      return new ArffAttributeInfo(ArffTypeDecl.NUMERIC, "NUMERIC")
     }
 
     // Check for integer types
@@ -248,6 +248,7 @@ class MatrixArffWriter {
     }
 
     switch (info.type) {
+      case ArffTypeDecl.NUMERIC:
       case ArffTypeDecl.REAL:
       case ArffTypeDecl.INTEGER:
         return value.toString()
@@ -357,6 +358,7 @@ class MatrixArffWriter {
 
 /** Enum representing ARFF type declarations */
 enum ArffTypeDecl {
+  NUMERIC,
   REAL,
   INTEGER,
   STRING,

@@ -214,6 +214,7 @@ class MatrixArffReader {
       char quoteChar = first
       StringBuilder sb = new StringBuilder()
       boolean escape = false
+      boolean closed = false
       int i = 1
       for (; i < spec.length(); i++) {
         char c = spec.charAt(i)
@@ -228,12 +229,19 @@ class MatrixArffReader {
         }
         if (c == quoteChar) {
           i++
+          closed = true
           break
         }
         sb.append(c)
       }
+      if (!closed) {
+        throw new IllegalArgumentException("Invalid @ATTRIBUTE line (missing closing quote): $line")
+      }
       name = sb.toString()
       typeSpec = i < spec.length() ? spec.substring(i).trim() : ''
+      if (typeSpec.isEmpty()) {
+        throw new IllegalArgumentException("Invalid @ATTRIBUTE line (missing type): $line")
+      }
     } else {
       int splitIndex = -1
       for (int i = 0; i < spec.length(); i++) {
@@ -345,6 +353,12 @@ class MatrixArffReader {
       }
 
       if (c == '\'' || c == '"') {
+        if (current.toString().trim().isEmpty()) {
+          current.setLength(0)
+        } else {
+          current.append(c)
+          continue
+        }
         inQuote = true
         quoteChar = c
         tokenQuoted = true

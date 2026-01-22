@@ -417,4 +417,20 @@ plain
     assertEquals("{leading brace}", m[1, "label"])
     assertEquals("plain", m[2, "label"])
   }
+
+  @Test @Order(21)
+  void testWhitespaceBeforeQuotedValue() {
+    String arffContent = """
+@RELATION whitespace_test
+
+@ATTRIBUTE id INTEGER
+@ATTRIBUTE note STRING
+
+@DATA
+1,  'text'
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+    assertEquals("text", m[0, "note"])
+  }
 }

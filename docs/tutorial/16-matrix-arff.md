@@ -223,7 +223,7 @@ The generated ARFF file will look like:
 
 @ATTRIBUTE name STRING
 @ATTRIBUTE age INTEGER
-@ATTRIBUTE salary REAL
+@ATTRIBUTE salary NUMERIC
 @ATTRIBUTE department {Engineering,Sales}
 
 @DATA
