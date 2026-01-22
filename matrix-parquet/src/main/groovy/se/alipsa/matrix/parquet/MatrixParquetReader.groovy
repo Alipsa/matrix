@@ -22,6 +22,45 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 
+/**
+ * Reads Apache Parquet files into {@link Matrix} objects.
+ *
+ * <p>This class provides static methods for deserializing Parquet files back into Matrix data,
+ * reconstructing column types, nested structures (Lists, Maps), and preserving BigDecimal precision.</p>
+ *
+ * <h3>Basic Usage</h3>
+ * <pre>{@code
+ * // Read a Parquet file (matrix name derived from filename)
+ * Matrix data = MatrixParquetReader.read(new File("sales.parquet"))
+ *
+ * // Read with a custom matrix name
+ * Matrix data = MatrixParquetReader.read(new File("sales.parquet"), "quarterly_sales")
+ * }</pre>
+ *
+ * <h3>Type Preservation</h3>
+ * <p>When reading files written by {@link MatrixParquetWriter}, column types are automatically
+ * restored from the {@link #METADATA_COLUMN_TYPES} metadata. This includes:</p>
+ * <ul>
+ *   <li>Primitives: Integer, Long, Float, Double, Boolean</li>
+ *   <li>Numeric: BigDecimal (with original precision), BigInteger</li>
+ *   <li>Temporal: LocalDate, LocalDateTime, java.sql.Date, java.sql.Time, java.sql.Timestamp</li>
+ *   <li>Text: String</li>
+ *   <li>Nested: List, Map (reconstructed from Parquet LIST/MAP/STRUCT types)</li>
+ * </ul>
+ *
+ * <h3>Reading External Parquet Files</h3>
+ * <p>Files not created by MatrixParquetWriter can still be read. Column types will be
+ * inferred from the Parquet schema's logical type annotations.</p>
+ *
+ * <h3>Limitations</h3>
+ * <ul>
+ *   <li>The entire file is loaded into memory (no streaming support)</li>
+ *   <li>Timestamps use the system default timezone for conversion</li>
+ * </ul>
+ *
+ * @see MatrixParquetWriter
+ * @see Matrix
+ */
 @CompileStatic
 class MatrixParquetReader {
 

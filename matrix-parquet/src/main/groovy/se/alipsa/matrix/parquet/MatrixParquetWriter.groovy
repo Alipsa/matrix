@@ -26,6 +26,53 @@ import java.time.ZoneId
 import java.beans.Introspector
 import java.beans.PropertyDescriptor
 
+/**
+ * Writes {@link Matrix} data to Apache Parquet files.
+ *
+ * <p>This class provides static methods for serializing Matrix data to the Parquet columnar format,
+ * preserving column types, nested structures (Lists, Maps), and BigDecimal precision.</p>
+ *
+ * <h3>Basic Usage</h3>
+ * <pre>{@code
+ * Matrix data = Matrix.builder('sales')
+ *     .columns(id: [1, 2, 3], amount: [100.50, 200.75, 300.25])
+ *     .types([Integer, BigDecimal])
+ *     .build()
+ *
+ * // Write with automatic precision inference for BigDecimal columns
+ * File file = MatrixParquetWriter.write(data, new File("sales.parquet"))
+ *
+ * // Write to a directory (filename derived from matrix name)
+ * File file = MatrixParquetWriter.write(data, new File("output/"))
+ * }</pre>
+ *
+ * <h3>BigDecimal Precision Control</h3>
+ * <p>BigDecimal columns can be written with explicit precision and scale to avoid precision loss:</p>
+ * <pre>{@code
+ * // Uniform precision for all BigDecimal columns
+ * MatrixParquetWriter.write(data, file, 38, 18)
+ *
+ * // Per-column precision specification
+ * MatrixParquetWriter.write(data, file, [amount: [10, 2], price: [12, 4]])
+ * }</pre>
+ *
+ * <h3>Supported Data Types</h3>
+ * <ul>
+ *   <li>Primitives: Integer, Long, Float, Double, Boolean</li>
+ *   <li>Numeric: BigDecimal (with configurable precision), BigInteger</li>
+ *   <li>Temporal: LocalDate, LocalDateTime, java.sql.Date, java.sql.Time, java.sql.Timestamp</li>
+ *   <li>Text: String</li>
+ *   <li>Nested: List, Map (preserved as Parquet LIST/MAP/STRUCT types)</li>
+ * </ul>
+ *
+ * <h3>Metadata</h3>
+ * <p>Column type information is stored in Parquet file metadata under the key
+ * {@link #METADATA_COLUMN_TYPES}, enabling {@link MatrixParquetReader} to reconstruct
+ * the original Matrix types when reading.</p>
+ *
+ * @see MatrixParquetReader
+ * @see Matrix
+ */
 @CompileStatic
 class MatrixParquetWriter {
 
