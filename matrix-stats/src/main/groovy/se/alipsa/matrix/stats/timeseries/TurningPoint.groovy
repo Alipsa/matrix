@@ -4,34 +4,72 @@ import groovy.transform.CompileStatic
 import org.apache.commons.math3.distribution.NormalDistribution
 
 /**
- * The Turning Point test is a statistical test of the independence of a series of random variables.
- * Maurice Kendall and Alan Stuart describe the test as "reasonable for a test against cyclicity but
- * poor as a test against trend."
+ * The Turning Point test is a non-parametric statistical test for randomness (independence) in a time series
+ * based on counting local maxima and minima. It is particularly useful for detecting cyclicity and
+ * non-random patterns in sequential data.
  *
- * A turning point occurs at position i if either:
- * - x[i-1] < x[i] > x[i+1] (local maximum/peak)
- * - x[i-1] > x[i] < x[i+1] (local minimum/trough)
+ * <p>A turning point occurs at position i when the value differs from both neighbors in the same direction:
+ * either a local maximum (peak) where x[i-1] < x[i] > x[i+1], or a local minimum (trough) where
+ * x[i-1] > x[i] < x[i+1]. Random sequences produce a predictable number of turning points on average.</p>
  *
- * The test is based on counting the number of turning points in a sequence.
- * Under the null hypothesis of randomness (independence), the expected number of turning points
- * and its variance follow known distributions.
+ * <h3>When to Use</h3>
+ * <ul>
+ * <li>To test if a sequence is randomly ordered versus exhibiting systematic patterns</li>
+ * <li>For detecting cyclical behavior in time series (business cycles, seasonal patterns)</li>
+ * <li>As a simple preliminary randomness test before more complex analysis</li>
+ * <li>When you want a distribution-free test (no normality assumption)</li>
+ * <li>To identify over-smoothing (too few turning points) or excessive volatility (too many)</li>
+ * </ul>
  *
- * For a sequence of n observations:
- * - E[T] = 2(n - 2) / 3
- * - Var[T] = (16n - 29) / 90
+ * <h3>Hypotheses</h3>
+ * <ul>
+ * <li><strong>H0 (null):</strong> The series is random (independent observations)</li>
+ * <li><strong>H1 (alternative):</strong> The series is not random (exhibits trend or cyclicity)</li>
+ * </ul>
  *
- * For large n, the test statistic (T - E[T]) / sqrt(Var[T]) is approximately N(0,1) distributed.
+ * <h3>Test Interpretation</h3>
+ * <ul>
+ * <li><strong>Too few turning points:</strong> Suggests a trend or autocorrelation (smooth series)</li>
+ * <li><strong>Too many turning points:</strong> Suggests excessive cyclicity or mean reversion</li>
+ * <li><strong>Expected number:</strong> Random series have approximately 2(n-2)/3 turning points</li>
+ * </ul>
  *
- * Example:
+ * <h3>Test Statistics</h3>
+ * <p>For a sequence of n observations:</p>
+ * <ul>
+ * <li>E[T] = 2(n - 2) / 3 (expected turning points under randomness)</li>
+ * <li>Var[T] = (16n - 29) / 90 (variance under randomness)</li>
+ * <li>Z = (T - E[T]) / √Var[T] ~ N(0,1) for large n</li>
+ * </ul>
+ *
+ * <p>Example usage:</p>
  * <pre>
- * def data = [1, 3, 2, 4, 3, 5, 4, 6, 5, 7] as double[]
+ * // Test a series for randomness
+ * def data = [1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8] as double[]
  * def result = TurningPoint.test(data)
- * println result.toString()
+ * println result.interpret()
+ *
+ * // Access detailed results
+ * println "Peaks: ${result.peaks}, Troughs: ${result.troughs}"
+ * println "Total turning points: ${result.turningPoints}"
+ * println "Expected: ${result.expectedTurningPoints}"
  * </pre>
  *
- * Reference:
- * - Kendall, M. G., & Stuart, A. (1976). The Advanced Theory of Statistics, Vol. 3
- * - Brockwell, P. J., & Davis, R. A. (2016). Introduction to Time Series and Forecasting
+ * <h3>Limitations</h3>
+ * <ul>
+ * <li>As noted by Kendall & Stuart: "reasonable for cyclicity but poor as a test against trend"</li>
+ * <li>Less powerful than runs tests for detecting trends</li>
+ * <li>Sensitive to tied values (equal consecutive observations)</li>
+ * </ul>
+ *
+ * <h3>References</h3>
+ * <ul>
+ * <li>Kendall, M. G., & Stuart, A. (1976). The Advanced Theory of Statistics, Vol. 3:
+ * Design and Analysis, and Time-Series, 4th Edition, Chapter 45.</li>
+ * <li>Brockwell, P. J., & Davis, R. A. (2016). Introduction to Time Series and Forecasting,
+ * 3rd Edition, Springer.</li>
+ * <li>Mood, A. M. (1940). "The Distribution Theory of Runs", Annals of Mathematical Statistics, 11(4), 367-392.</li>
+ * </ul>
  */
 @CompileStatic
 class TurningPoint {

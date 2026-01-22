@@ -2,6 +2,63 @@ package se.alipsa.matrix.stats
 
 import groovy.transform.CompileStatic
 
+/**
+ * Statistical correlation measures that quantify the relationship between two variables.
+ *
+ * <p>This class provides three types of correlation coefficients:</p>
+ * <ul>
+ *   <li><b>Pearson correlation</b> - Measures linear relationship (parametric)</li>
+ *   <li><b>Spearman correlation</b> - Measures monotonic relationship based on ranks (non-parametric)</li>
+ *   <li><b>Kendall tau correlation</b> - Measures ordinal association based on concordance (non-parametric)</li>
+ * </ul>
+ *
+ * <h3>Pearson Correlation</h3>
+ * <p>The Pearson product-moment correlation coefficient measures the strength and direction of the
+ * linear relationship between two continuous variables. It assumes:</p>
+ * <ul>
+ *   <li>Both variables are normally distributed</li>
+ *   <li>The relationship is linear</li>
+ *   <li>No significant outliers</li>
+ * </ul>
+ * <p>Formula: r = Σ[(x - x̄)(y - ȳ)] / √[Σ(x - x̄)² × Σ(y - ȳ)²]</p>
+ *
+ * <h3>Spearman Correlation</h3>
+ * <p>Spearman's rank correlation coefficient is the non-parametric version of Pearson correlation.
+ * It assesses monotonic relationships (whether linear or not) by first converting the data to ranks,
+ * then computing the Pearson correlation on the ranks. It is robust to outliers and does not assume
+ * normality.</p>
+ *
+ * <h3>Kendall Tau Correlation</h3>
+ * <p>Kendall's tau measures the ordinal association between two variables based on the number of
+ * concordant and discordant pairs. It is particularly useful for small sample sizes and tied ranks.</p>
+ * <p>Formula: τ = (concordant pairs - discordant pairs) / (n × (n-1) / 2)</p>
+ *
+ * <h3>Usage Examples</h3>
+ * <pre>
+ * import static se.alipsa.matrix.stats.Correlation.*
+ *
+ * // Pearson correlation (default)
+ * def r = cor([1, 2, 3, 4, 5], [2, 4, 6, 8, 10])  // returns 1.0 (perfect positive)
+ *
+ * // Spearman correlation (for non-linear monotonic relationships)
+ * def rho = cor([1, 2, 3, 4, 5], [1, 4, 9, 16, 25], SPEARMAN)
+ *
+ * // Kendall tau (for ordinal data)
+ * def tau = cor([1, 2, 3, 4], [2, 1, 4, 3], KENDALL)
+ * </pre>
+ *
+ * <h3>Return Values</h3>
+ * <p>All correlation coefficients return values between -1 and +1:</p>
+ * <ul>
+ *   <li><b>+1</b>: Perfect positive correlation</li>
+ *   <li><b>0</b>: No correlation</li>
+ *   <li><b>-1</b>: Perfect negative correlation</li>
+ * </ul>
+ *
+ * @see <a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson Correlation</a>
+ * @see <a href="https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient">Spearman's Rank Correlation</a>
+ * @see <a href="https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient">Kendall Tau Correlation</a>
+ */
 @CompileStatic
 class Correlation {
 

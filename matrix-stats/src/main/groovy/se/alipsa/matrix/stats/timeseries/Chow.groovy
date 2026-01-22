@@ -4,32 +4,57 @@ import groovy.transform.CompileStatic
 import org.apache.commons.math3.distribution.FDistribution
 
 /**
- * The Chow test proposed by econometrician Gregory Chow in 1960, is a test of whether the true coefficients
- * in two linear regressions on different data sets are equal.
+ * The Chow test, proposed by econometrician Gregory Chow in 1960, tests whether the coefficients
+ * in two linear regressions on different subsets of data are equal. It is the standard test for
+ * detecting structural breaks in time series when the break point is known a priori.
  *
- * In econometrics, it is most commonly used in time series analysis to test for the presence of a structural
- * break at a period which can be assumed to be known a priori (for instance, a major historical event such as a war).
+ * <p>In econometrics and time series analysis, structural breaks represent fundamental changes in the
+ * data-generating process, such as policy changes, regime shifts, economic crises, or technological innovations.
+ * The Chow test determines whether such events significantly altered the relationship between variables.</p>
  *
- * The test compares:
- * - H0: No structural break (coefficients are equal in both periods)
- * - H1: Structural break exists (coefficients differ)
+ * <h3>When to Use</h3>
+ * <ul>
+ * <li>When testing for structural change at a known point in time (policy change, crisis event)</li>
+ * <li>To validate whether a regression model is stable across different time periods</li>
+ * <li>Before pooling data from different periods in econometric analysis</li>
+ * <li>When you suspect regime changes in economic or financial relationships</li>
+ * <li>To test stability of estimated relationships across subsamples</li>
+ * </ul>
  *
- * The F-statistic is:
- * F = [(RSS_full - (RSS_1 + RSS_2)) / k] / [(RSS_1 + RSS_2) / (n - 2k)]
+ * <h3>Hypotheses</h3>
+ * <ul>
+ * <li><strong>H0 (null):</strong> No structural break; coefficients are equal in both periods (β₁ = β₂)</li>
+ * <li><strong>H1 (alternative):</strong> Structural break exists; coefficients differ across periods (β₁ ≠ β₂)</li>
+ * </ul>
  *
- * where RSS = residual sum of squares, k = number of parameters, n = total observations
+ * <h3>Test Statistic</h3>
+ * <p>F = [(RSS_full - (RSS_1 + RSS_2)) / k] / [(RSS_1 + RSS_2) / (n - 2k)]</p>
+ * <p>where RSS = residual sum of squares, k = number of parameters, n = total observations</p>
+ * <p>Under H0, the F-statistic follows an F(k, n-2k) distribution.</p>
  *
- * Example:
+ * <p>Example usage:</p>
  * <pre>
+ * // Test for structural break at a known point (e.g., policy change)
  * def y = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as double[]
- * def X = [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 7], [1, 8], [1, 9], [1, 10]] as double[][]
- * def result = Chow.test(y, X, 5)  // Test for break at observation 5
- * println result.toString()
+ * def X = [[1, 1], [1, 2], [1, 3], [1, 4], [1, 5],
+ *          [1, 6], [1, 7], [1, 8], [1, 9], [1, 10]] as double[][]
+ *
+ * // Test for break at observation 5 (after index 4)
+ * def result = Chow.test(y, X, 5)
+ * println result.interpret()
+ *
+ * // Detailed evaluation
+ * println result.evaluate(0.05)
  * </pre>
  *
- * Reference:
- * - Chow, G. C. (1960). "Tests of Equality Between Sets of Coefficients in Two Linear Regressions"
- * - R's strucchange package
+ * <h3>References</h3>
+ * <ul>
+ * <li>Chow, G. C. (1960). "Tests of Equality Between Sets of Coefficients in Two Linear Regressions",
+ * Econometrica, 28(3), 591-605.</li>
+ * <li>Greene, W. H. (2018). Econometric Analysis, 8th Edition, Chapter 6.</li>
+ * <li>R's strucchange package: sctest() function</li>
+ * <li>Stata's chow command</li>
+ * </ul>
  */
 @CompileStatic
 class Chow {

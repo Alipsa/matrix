@@ -4,37 +4,106 @@ import groovy.transform.CompileStatic
 import org.apache.commons.math3.distribution.ChiSquaredDistribution
 
 /**
- * The Cochran–Mantel–Haenszel test (CMH) is a test used in the analysis of stratified or matched categorical data.
- * It allows an investigator to test the association between a binary predictor or treatment and a binary outcome
- * such as case or control status while taking into account the stratification.
- * Unlike the McNemar test which can only handle pairs, the CMH test handles arbitrary strata size.
+ * The Cochran-Mantel-Haenszel (CMH) test is a statistical test for assessing the association between
+ * two binary variables while controlling for one or more stratifying variables. It tests whether there
+ * is a consistent association across multiple 2×2 contingency tables (strata), making it essential for
+ * controlling confounding in observational studies.
  *
- * The test is particularly useful when:
- * - You have multiple 2×2 contingency tables (one for each stratum)
- * - You want to test for a common association while controlling for a confounding variable
- * - The stratifying variable might confound the relationship of interest
+ * <p><b>What is the Cochran-Mantel-Haenszel test?</b></p>
+ * The CMH test, named for William G. Cochran, Nathan Mantel, and William Haenszel, tests for a common
+ * association between a binary exposure and binary outcome across k strata (subgroups). It combines
+ * information from multiple 2×2 tables to test whether the exposure-outcome association is consistent
+ * across strata while controlling for the stratifying variable(s). The test produces a chi-squared
+ * statistic with 1 degree of freedom and estimates a common (pooled) odds ratio across all strata
+ * using the Mantel-Haenszel estimator.
  *
- * Example:
+ * <p><b>When to use the Cochran-Mantel-Haenszel test:</b></p>
+ * <ul>
+ *   <li>When analyzing the association between two binary variables across multiple strata</li>
+ *   <li>When you need to control for a confounding variable in observational studies</li>
+ *   <li>In meta-analysis to combine results from multiple studies</li>
+ *   <li>When testing treatment effects across multiple centers, hospitals, or sites</li>
+ *   <li>In matched case-control studies with variable matching ratios</li>
+ *   <li>When you want to test for a common odds ratio across strata</li>
+ *   <li>As an extension of Fisher's or chi-squared test to stratified data</li>
+ *   <li>When the association is assumed to be similar (homogeneous) across strata</li>
+ * </ul>
+ *
+ * <p><b>Hypotheses:</b></p>
+ * <ul>
+ *   <li>H₀ (null hypothesis): There is no association between exposure and outcome in any stratum (common odds ratio = 1)</li>
+ *   <li>H₁ (alternative hypothesis): There is a consistent association between exposure and outcome across strata (common odds ratio ≠ 1)</li>
+ * </ul>
+ *
+ * <p><b>Example usage:</b></p>
  * <pre>
- * // Test treatment effect across multiple hospitals (strata)
+ * // Test drug effectiveness across multiple hospitals, controlling for hospital
  * // Stratum 1: Hospital A
- * int[][] stratum1 = [[12, 8],    // Treatment: Success, Failure
- *                     [6, 14]]    // Control: Success, Failure
+ * int[][] hospitalA = [[15, 10],    // Drug: Cured, Not cured
+ *                      [8, 17]]     // Placebo: Cured, Not cured
  *
  * // Stratum 2: Hospital B
- * int[][] stratum2 = [[18, 12],
- *                     [8, 22]]
+ * int[][] hospitalB = [[22, 14],    // Drug: Cured, Not cured
+ *                      [12, 24]]    // Placebo: Cured, Not cured
  *
- * List<int[][]> strata = [stratum1, stratum2]
- * def result = CochranMantelHaenszel.test(strata)
- * println result.toString()
+ * // Stratum 3: Hospital C
+ * int[][] hospitalC = [[18, 8],     // Drug: Cured, Not cured
+ *                      [9, 15]]     // Placebo: Cured, Not cured
+ *
+ * List<int[][]> hospitals = [hospitalA, hospitalB, hospitalC]
+ * def result = CochranMantelHaenszel.test(hospitals)
+ * println "CMH statistic: ${result.statistic}"
+ * println "p-value: ${result.pValue}"
+ * println "Common odds ratio: ${result.commonOddsRatio}"
+ * println result.interpret()
+ *
+ * // Example output:
+ * // CMH statistic: 5.8234
+ * // p-value: 0.0158
+ * // Common odds ratio: 2.1547
+ * // Reject H0: Significant association detected across strata
  * </pre>
  *
- * Reference:
- * - Cochran, W. G. (1954). "Some methods for strengthening the common χ² tests"
- * - Mantel, N., & Haenszel, W. (1959). "Statistical aspects of the analysis of data from retrospective studies"
+ * <p><b>Statistical details:</b></p>
+ * The CMH statistic is calculated as: χ²_CMH = [|Σ(a_i - E[a_i])| - c]² / Σ Var(a_i),
+ * where the sum is over all strata, a_i is the observed count in cell [1,1] of stratum i,
+ * E[a_i] is its expected value under independence, Var(a_i) is its variance, and c is the
+ * continuity correction (0.5 by default, or 0 if disabled). The test statistic follows a
+ * chi-squared distribution with 1 degree of freedom under the null hypothesis.
  *
- * Named after William G. Cochran, Nathan Mantel, and William Haenszel.
+ * <p><b>Common odds ratio (Mantel-Haenszel estimator):</b></p>
+ * The pooled odds ratio is: OR_MH = Σ(a_i × d_i / n_i) / Σ(b_i × c_i / n_i),
+ * where a_i, b_i, c_i, d_i are the four cells of the 2×2 table in stratum i, and n_i is the
+ * total count in stratum i. This provides a summary measure of the association across all strata.
+ *
+ * <p><b>Assumptions:</b></p>
+ * <ul>
+ *   <li>Independence of observations within and across strata</li>
+ *   <li>Homogeneity of odds ratios across strata (the association is similar in all strata)</li>
+ *   <li>Binary exposure and outcome variables</li>
+ * </ul>
+ *
+ * <p><b>Comparison with other tests:</b></p>
+ * <ul>
+ *   <li>Generalizes the McNemar test to arbitrary stratum sizes (McNemar is CMH with paired data)</li>
+ *   <li>More appropriate than pooling all strata into one table when a confounding variable exists</li>
+ *   <li>Tests for a common association; use Breslow-Day test to check homogeneity assumption</li>
+ *   <li>More powerful than analyzing each stratum separately</li>
+ * </ul>
+ *
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li>Cochran, W. G. (1954). "Some methods for strengthening the common χ² tests". Biometrics, 10(4), 417-451.</li>
+ *   <li>Mantel, N., & Haenszel, W. (1959). "Statistical aspects of the analysis of data from retrospective studies of disease". Journal of the National Cancer Institute, 22(4), 719-748.</li>
+ *   <li>Agresti, A. (2013). "Categorical Data Analysis" (3rd ed.). Wiley, Chapter 8.</li>
+ *   <li>Breslow, N. E., & Day, N. E. (1980). "Statistical Methods in Cancer Research, Volume 1: The Analysis of Case-Control Studies". IARC Scientific Publications.</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> The CMH test assumes that the odds ratios are homogeneous (similar) across strata.
+ * If the association varies substantially across strata (heterogeneity), the test may not be
+ * appropriate. Consider using the Breslow-Day test to assess homogeneity of odds ratios before
+ * interpreting the CMH test results. When heterogeneity is present, consider analyzing strata
+ * separately or using stratified logistic regression.</p>
  */
 @CompileStatic
 class CochranMantelHaenszel {

@@ -54,9 +54,10 @@ test {
     testLogging {
         // set options for log level LIFECYCLE
         events TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
+                //TestLogEvent.PASSED,
                 TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_OUT
+                TestLogEvent.STANDARD_OUT,
+                TestLogEvent.STANDARD_ERROR
         exceptionFormat = TestExceptionFormat.FULL
         showExceptions = true
         showCauses = true

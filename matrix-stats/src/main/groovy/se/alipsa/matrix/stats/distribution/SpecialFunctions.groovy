@@ -1,7 +1,8 @@
 package se.alipsa.matrix.stats.distribution
 
 import groovy.transform.CompileStatic
-
+import static se.alipsa.matrix.ext.NumberExtension.*
+import static java.math.BigDecimal.*
 /**
  * Special mathematical functions used in statistical distributions.
  * Implementation based on algorithms from Numerical Recipes and NIST.

@@ -3,30 +3,63 @@ package se.alipsa.matrix.stats.timeseries
 import groovy.transform.CompileStatic
 
 /**
- * Convergent cross mapping (CCM) is a statistical test for a cause-and-effect relationship between two
- * variables that, like the Granger causality test, seeks to resolve the problem that correlation does not
- * imply causation. While Granger causality is best suited for purely stochastic systems where the influences
+ * Convergent Cross Mapping (CCM) is a statistical test for detecting causal relationships between variables
+ * in dynamical systems. Unlike Granger causality which assumes separable influences, CCM is designed for
+ * systems with synergistic, nonlinear interactions where traditional correlation-based methods fail.
+ *
+ * <p>While Granger causality is best suited for purely stochastic systems where the influences
  * of the causal variables are separable (independent of each other), CCM is based on the theory of dynamical
- * systems and can be applied to systems where causal variables have synergistic effects.
+ * systems and can be applied to systems where causal variables have synergistic effects, such as
+ * ecological systems, climate dynamics, and physiological networks.</p>
  *
- * As such, CCM is specifically aimed to identify linkage between variables that can appear uncorrelated with
- * each other.
+ * <h3>When to Use</h3>
+ * <ul>
+ * <li>When analyzing nonlinear dynamical systems (ecosystems, climate, physiology)</li>
+ * <li>When variables appear uncorrelated but may have causal relationships</li>
+ * <li>When causality is mediated through state space rather than direct linear effects</li>
+ * <li>When Granger causality gives inconclusive results due to nonlinearity</li>
+ * <li>For detecting weak coupling or indirect causal influences</li>
+ * </ul>
  *
- * The method is based on Takens' theorem, which states that the dynamics of a system can be reconstructed
- * from time-delay embeddings of a single observed variable. If variable X causally drives Y, then the
- * reconstructed attractor of Y should contain information about X, allowing cross-mapping from Y to X.
+ * <h3>Hypotheses</h3>
+ * <ul>
+ * <li><strong>H0 (null):</strong> Variable X does not causally influence variable Y</li>
+ * <li><strong>H1 (alternative):</strong> Variable X causally influences Y (evidenced by convergent cross-map skill)</li>
+ * </ul>
  *
- * Example:
+ * <h3>Theory</h3>
+ * <p>Based on Takens' embedding theorem, if X causally drives Y, then the reconstructed state space (shadow manifold)
+ * of Y contains information about X. CCM tests this by attempting to predict X from Y's manifold.
+ * Convergence (improving prediction with more data) indicates causality.</p>
+ *
+ * <p>Example usage:</p>
  * <pre>
- * def x = [1.0, 1.2, 1.5, 1.3, ...] as double[]
- * def y = [2.0, 2.3, 2.8, 2.5, ...] as double[]
+ * // Test for causality between two nonlinear time series
+ * def x = [1.0, 1.2, 1.5, 1.3, 1.6, 1.4, 1.8, ...] as double[]
+ * def y = [2.0, 2.3, 2.8, 2.5, 3.0, 2.7, 3.2, ...] as double[]
+ *
+ * // E = embedding dimension, tau = time delay, librarySizes = library sizes to test
  * def result = Ccm.test(x, y, 3, 1, [10, 20, 30, 50])
- * println result.toString()
+ * println result.interpret()
+ *
+ * // Check specific directional causality
+ * if (result.xCausesY()) {
+ *   println "X causally drives Y"
+ * }
+ * if (result.yCausesX()) {
+ *   println "Y causally drives X"
+ * }
  * </pre>
  *
- * Reference:
- * - Sugihara, G., et al. (2012). "Detecting Causality in Complex Ecosystems", Science
- * - Takens, F. (1981). "Detecting strange attractors in turbulence"
+ * <h3>References</h3>
+ * <ul>
+ * <li>Sugihara, G., May, R., Ye, H., et al. (2012). "Detecting Causality in Complex Ecosystems",
+ * Science, 338(6106), 496-500.</li>
+ * <li>Takens, F. (1981). "Detecting strange attractors in turbulence", in Dynamical Systems and Turbulence,
+ * Lecture Notes in Mathematics, 898, 366-381.</li>
+ * <li>Ye, H., et al. (2015). "Distinguishing time-delayed causal interactions using convergent cross mapping",
+ * Scientific Reports, 5, 14750.</li>
+ * </ul>
  */
 @CompileStatic
 class Ccm {

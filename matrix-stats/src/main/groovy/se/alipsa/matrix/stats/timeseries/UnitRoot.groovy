@@ -3,27 +3,90 @@ package se.alipsa.matrix.stats.timeseries
 import groovy.transform.CompileStatic
 
 /**
- * A unit root test tests whether a time series variable is non-stationary and possesses a unit root.
- * The null hypothesis is generally defined as the presence of a unit root and the alternative hypothesis
- * is either stationarity, trend stationarity or explosive root depending on the test used.
+ * Comprehensive unit root testing framework that runs multiple complementary tests and synthesizes
+ * their results into a unified assessment. Unit roots indicate non-stationarity where shocks have
+ * permanent effects, a critical property for proper time series modeling.
  *
- * This class provides a convenient interface to run multiple unit root tests and compare results:
- * - Dickey-Fuller (DF): Basic test for unit root
- * - Augmented Dickey-Fuller (ADF): Extension with lagged differences
- * - ADF-GLS: More powerful variant using GLS detrending
- * - KPSS: Tests stationarity (reversed null hypothesis)
+ * <p>This class provides a convenient interface to run multiple unit root tests simultaneously and
+ * compare their conclusions. Different tests have different strengths, and examining multiple tests
+ * together provides more robust inference about stationarity than any single test.</p>
  *
- * Example:
+ * <h3>When to Use</h3>
+ * <ul>
+ * <li>Before any time series modeling (ARIMA, VAR, VECM) to check stationarity assumptions</li>
+ * <li>When you want a comprehensive assessment rather than a single test result</li>
+ * <li>To resolve conflicting results from individual unit root tests</li>
+ * <li>When the stationarity property is crucial for your analysis</li>
+ * <li>As a best practice for econometric time series analysis</li>
+ * </ul>
+ *
+ * <h3>Tests Included</h3>
+ * <ul>
+ * <li><strong>Dickey-Fuller (DF):</strong> Basic test for unit root without augmentation</li>
+ * <li><strong>Augmented Dickey-Fuller (ADF):</strong> Extension with lagged differences for autocorrelated errors</li>
+ * <li><strong>ADF-GLS:</strong> More powerful variant using GLS detrending (Elliott-Rothenberg-Stock)</li>
+ * <li><strong>KPSS:</strong> Tests stationarity (reversed null hypothesis for complementary perspective)</li>
+ * </ul>
+ *
+ * <h3>Interpretation Strategy</h3>
+ * <p>The class synthesizes results using the following logic:</p>
+ * <ul>
+ * <li><strong>Strong stationarity:</strong> Majority of DF/ADF/ADF-GLS reject unit root AND KPSS doesn't reject stationarity</li>
+ * <li><strong>Strong unit root:</strong> All DF/ADF/ADF-GLS fail to reject AND KPSS rejects stationarity</li>
+ * <li><strong>Mixed evidence:</strong> Conflicting signals suggest caution and possibly differencing</li>
+ * </ul>
+ *
+ * <h3>Hypotheses</h3>
+ * <p>For DF, ADF, and ADF-GLS:</p>
+ * <ul>
+ * <li><strong>H0:</strong> Series has a unit root (non-stationary)</li>
+ * <li><strong>H1:</strong> Series is stationary</li>
+ * </ul>
+ * <p>For KPSS (complementary):</p>
+ * <ul>
+ * <li><strong>H0:</strong> Series is stationary</li>
+ * <li><strong>H1:</strong> Series has a unit root (non-stationary)</li>
+ * </ul>
+ *
+ * <p>Example usage:</p>
  * <pre>
- * def data = [1.2, 1.5, 1.3, 1.6, 1.4, 1.7, ...] as double[]
+ * // Comprehensive unit root analysis
+ * def data = [1.2, 1.5, 1.3, 1.6, 1.4, 1.7, 1.5, 1.8, ...] as double[]
  * def result = UnitRoot.test(data)
  * println result.summary()
+ *
+ * // Check consensus conclusion
+ * if (result.isStationary()) {
+ *   println "Series is stationary - proceed with modeling"
+ * } else if (result.hasUnitRoot()) {
+ *   println "Series has unit root - consider differencing"
+ * } else {
+ *   println "Mixed evidence - examine individual tests"
+ * }
+ *
+ * // Test with specific options
+ * def result2 = UnitRoot.test(data, 'trend', 3)  // trend component, 3 lags
  * </pre>
  *
- * Reference:
- * - Dickey, D. A., & Fuller, W. A. (1979). "Distribution of the Estimators for Autoregressive Time Series"
- * - Elliott, G., Rothenberg, T. J., & Stock, J. H. (1996). "Efficient Tests for an Autoregressive Unit Root"
- * - Kwiatkowski, D., et al. (1992). "Testing the Null Hypothesis of Stationarity"
+ * <h3>Best Practices</h3>
+ * <ul>
+ * <li>Always check for unit roots before time series modeling</li>
+ * <li>Plot the series first to visually assess stationarity</li>
+ * <li>Consider the economic/theoretical context when interpreting results</li>
+ * <li>If results are mixed, err on the side of caution (assume non-stationarity)</li>
+ * <li>Remember that differencing a stationary series introduces autocorrelation</li>
+ * </ul>
+ *
+ * <h3>References</h3>
+ * <ul>
+ * <li>Dickey, D. A., & Fuller, W. A. (1979). "Distribution of the Estimators for Autoregressive
+ * Time Series with a Unit Root", Journal of the American Statistical Association, 74(366), 427-431.</li>
+ * <li>Elliott, G., Rothenberg, T. J., & Stock, J. H. (1996). "Efficient Tests for an Autoregressive Unit Root",
+ * Econometrica, 64(4), 813-836.</li>
+ * <li>Kwiatkowski, D., Phillips, P. C. B., Schmidt, P., & Shin, Y. (1992). "Testing the Null Hypothesis
+ * of Stationarity against the Alternative of a Unit Root", Journal of Econometrics, 54(1-3), 159-178.</li>
+ * <li>Enders, W. (2014). Applied Econometric Time Series, 4th Edition, Chapter 4.</li>
+ * </ul>
  */
 @CompileStatic
 class UnitRoot {

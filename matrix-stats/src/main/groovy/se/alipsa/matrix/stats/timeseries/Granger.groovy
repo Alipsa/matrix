@@ -4,30 +4,69 @@ import groovy.transform.CompileStatic
 import org.apache.commons.math3.distribution.FDistribution
 
 /**
- * The Granger causality test is a statistical hypothesis test for determining whether one time series is
- * useful in forecasting another, first proposed by Clive Granger in 1969.
+ * The Granger causality test determines whether one time series is useful in forecasting another.
+ * First proposed by Clive Granger in 1969, it operationalizes the concept of causality in economics
+ * through predictive ability rather than mere correlation.
  *
- * Ordinarily, regressions reflect "mere" correlations, but Granger argued that causality in economics
- * could be tested for by measuring the ability to predict the future values of a time series using
- * prior values of another time series.
+ * <p>Granger causality does not imply true causation but rather precedence and information content.
+ * If X "Granger-causes" Y, it means that past values of X provide statistically significant information
+ * about future values of Y beyond what is contained in past values of Y alone.</p>
  *
- * The test compares:
- * - Restricted model: Y_t = α + β₁Y_{t-1} + ... + βₚY_{t-p} + ε_t
- * - Unrestricted model: Y_t = α + β₁Y_{t-1} + ... + βₚY_{t-p} + γ₁X_{t-1} + ... + γₚX_{t-p} + ε_t
+ * <h3>When to Use</h3>
+ * <ul>
+ * <li>To test whether one economic variable helps predict another (e.g., money supply → inflation)</li>
+ * <li>When analyzing lead-lag relationships in financial markets</li>
+ * <li>To establish temporal precedence in causal inference</li>
+ * <li>For identifying information flow between time series</li>
+ * <li>As a preliminary test before building vector autoregression (VAR) models</li>
+ * </ul>
  *
- * If adding lags of X significantly reduces RSS, then X Granger-causes Y.
+ * <h3>Hypotheses</h3>
+ * <ul>
+ * <li><strong>H0 (null):</strong> X does not Granger-cause Y (γ₁ = γ₂ = ... = γₚ = 0)</li>
+ * <li><strong>H1 (alternative):</strong> X Granger-causes Y (at least one γᵢ ≠ 0)</li>
+ * </ul>
  *
- * Example:
+ * <h3>Test Procedure</h3>
+ * <p>The test compares two models:</p>
+ * <ul>
+ * <li><strong>Restricted:</strong> Y_t = α + β₁Y_{t-1} + ... + βₚY_{t-p} + ε_t</li>
+ * <li><strong>Unrestricted:</strong> Y_t = α + β₁Y_{t-1} + ... + βₚY_{t-p} + γ₁X_{t-1} + ... + γₚX_{t-p} + ε_t</li>
+ * </ul>
+ * <p>An F-test determines if adding lagged X values significantly improves the model.</p>
+ *
+ * <p>Example usage:</p>
  * <pre>
+ * // Test if X Granger-causes Y
  * def x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as double[]
  * def y = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as double[]
- * def result = Granger.test(x, y, 2)  // Test with 2 lags
- * println result.toString()
+ *
+ * // Test with 2 lags
+ * def result = Granger.test(x, y, 2)
+ * println result.interpret()
+ *
+ * // Auto-select optimal lag using AIC
+ * def result2 = Granger.test(x, y)
+ * println "Using ${result2.lags} lags (AIC-selected)"
  * </pre>
  *
- * Reference:
- * - Granger, C. W. J. (1969). "Investigating Causal Relations by Econometric Models and Cross-spectral Methods"
- * - R's lmtest package (grangertest)
+ * <h3>Important Notes</h3>
+ * <ul>
+ * <li>Both series should be stationary; test for unit roots first (ADF, KPSS)</li>
+ * <li>Granger causality is symmetric; test both directions (X→Y and Y→X)</li>
+ * <li>Results are sensitive to lag length selection</li>
+ * <li>Does not detect instantaneous causality (use VAR for contemporaneous effects)</li>
+ * </ul>
+ *
+ * <h3>References</h3>
+ * <ul>
+ * <li>Granger, C. W. J. (1969). "Investigating Causal Relations by Econometric Models and Cross-spectral Methods",
+ * Econometrica, 37(3), 424-438.</li>
+ * <li>Granger, C. W. J. (1980). "Testing for Causality: A Personal Viewpoint",
+ * Journal of Economic Dynamics and Control, 2, 329-352.</li>
+ * <li>R's lmtest package: grangertest() function</li>
+ * <li>Stata's vargranger command</li>
+ * </ul>
  */
 @CompileStatic
 class Granger {

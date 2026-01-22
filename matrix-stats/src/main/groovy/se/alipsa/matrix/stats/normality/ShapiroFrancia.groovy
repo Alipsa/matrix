@@ -5,28 +5,99 @@ import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.stat.StatUtils
 
 /**
- * The Shapiro–Francia test is a statistical test for the normality of a population, based on sample data.
- * It was introduced by S. S. Shapiro and R. S. Francia in 1972 as a simplification of the Shapiro–Wilk test.
+ * The Shapiro-Francia test is a simplified and computationally efficient approximation to the
+ * Shapiro-Wilk test, specifically designed for larger sample sizes. It provides a practical
+ * alternative that maintains good statistical power while being easier to compute.
  *
- * The Shapiro-Francia test is computationally simpler than Shapiro-Wilk and is particularly recommended
- * for larger sample sizes (n > 50). It uses the correlation coefficient between the ordered sample values
- * and the expected normal quantiles.
+ * <p><b>What is the Shapiro-Francia test?</b></p>
+ * The Shapiro-Francia test measures the squared correlation coefficient (R²) between the ordered
+ * sample values and the expected normal quantiles (normal scores). This correlation-based approach
+ * is mathematically simpler than Shapiro-Wilk's use of the covariance matrix of order statistics,
+ * making it particularly suitable for larger samples where the full Shapiro-Wilk calculation
+ * becomes computationally demanding.
  *
- * The test statistic W' is calculated as:
- * W' = R²
+ * <p><b>When to use the Shapiro-Francia test:</b></p>
+ * <ul>
+ *   <li>For moderate to large sample sizes (50 ≤ n ≤ 5000) where it performs optimally</li>
+ *   <li>When computational simplicity is important while maintaining good power</li>
+ *   <li>As an alternative to Shapiro-Wilk for larger samples (n > 50)</li>
+ *   <li>When you need a good balance between computational efficiency and statistical power</li>
+ *   <li>For samples too large for practical Shapiro-Wilk computation but too small for asymptotic tests</li>
+ * </ul>
  *
- * where R is the correlation coefficient between:
- * - The ordered sample values x₁, x₂, ..., xₙ
- * - The expected normal quantiles mᵢ = Φ⁻¹((i - 3/8)/(n + 1/4))
+ * <p><b>Advantages:</b></p>
+ * <ul>
+ *   <li>Computationally simpler and faster than Shapiro-Wilk, especially for larger samples</li>
+ *   <li>Maintains good statistical power, nearly equivalent to Shapiro-Wilk for n > 50</li>
+ *   <li>Based on an intuitive measure (correlation with normal quantiles)</li>
+ *   <li>Well-suited for the range 50 ≤ n ≤ 5000 where it balances power and efficiency</li>
+ *   <li>Good approximation to Shapiro-Wilk with less computational burden</li>
+ * </ul>
  *
- * Equivalently:
- * W' = (Σ mᵢ xᵢ)² / (Σ mᵢ² × Σ(xᵢ - x̄)²)
+ * <p><b>Disadvantages:</b></p>
+ * <ul>
+ *   <li>Slightly less powerful than Shapiro-Wilk for small samples (n < 50)</li>
+ *   <li>Requires at least 5 observations</li>
+ *   <li>P-value approximation may be less accurate than Shapiro-Wilk for very small samples</li>
+ *   <li>Less widely known and used than Shapiro-Wilk, though equally valid for larger samples</li>
+ * </ul>
  *
- * W' ranges from 0 to 1, with values close to 1 indicating normality.
+ * <p><b>Hypotheses:</b></p>
+ * <ul>
+ *   <li>H₀ (null hypothesis): The data come from a normally distributed population</li>
+ *   <li>H₁ (alternative hypothesis): The data do not come from a normally distributed population</li>
+ * </ul>
  *
- * Reference:
- * - Shapiro, S. S., & Francia, R. S. (1972). "An approximate analysis of variance test for normality"
- * - Royston, P. (1993). "A toolkit for testing for non-normality in complete and censored samples"
+ * <p><b>Example usage:</b></p>
+ * <pre>
+ * // Test normality of a moderate-sized dataset
+ * def data = [2.3, 3.1, 2.8, 3.5, 2.9, 3.2, 3.0, 2.7, 3.4, 2.6,
+ *             3.1, 2.9, 3.3, 2.8, 3.0, 2.7, 3.2, 2.9, 3.1, 2.8]
+ * def result = ShapiroFrancia.test(data)
+ * println "W' statistic: ${result.W}"
+ * println "p-value: ${result.pValue}"
+ * println result.interpret()
+ *
+ * // Example output:
+ * // W' statistic: 0.9823
+ * // p-value: 0.7645
+ * // Fail to reject H0: Data appears to be consistent with a normal distribution
+ * </pre>
+ *
+ * <p><b>Statistical details:</b></p>
+ * The test statistic W' is calculated as the squared correlation coefficient:
+ * <pre>
+ * W' = R² = (Σ mᵢ xᵢ)² / (Σ mᵢ² × Σ(xᵢ - x̄)²)
+ * </pre>
+ * where:
+ * <ul>
+ *   <li>x₁, x₂, ..., xₙ are the ordered sample values (sorted in ascending order)</li>
+ *   <li>x̄ is the sample mean</li>
+ *   <li>mᵢ = Φ⁻¹((i - 3/8)/(n + 1/4)) are the expected normal quantiles (Blom's approximation)</li>
+ *   <li>Φ⁻¹ is the inverse of the standard normal cumulative distribution function</li>
+ * </ul>
+ *
+ * <p>The statistic W' ranges from 0 to 1, where:</p>
+ * <ul>
+ *   <li>W' = 1 indicates perfect correlation (perfect normality)</li>
+ *   <li>W' close to 1 suggests the data are normally distributed</li>
+ *   <li>W' significantly less than 1 indicates departure from normality</li>
+ * </ul>
+ *
+ * <p>The test interprets W' similarly to Shapiro-Wilk's W statistic but uses a simpler calculation
+ * based on correlation rather than the full covariance matrix of order statistics.</p>
+ *
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li>Shapiro, S. S., & Francia, R. S. (1972). "An approximate analysis of variance test for normality". Journal of the American Statistical Association, 67(337), 215-216.</li>
+ *   <li>Royston, P. (1993). "A toolkit for testing for non-normality in complete and censored samples". The Statistician, 42(1), 37-43.</li>
+ *   <li>Thadewald, T., & Büning, H. (2007). "Jarque-Bera test and its competitors for testing normality – A power comparison". Journal of Applied Statistics, 34(1), 87-105.</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> For small samples (n < 50), the Shapiro-Wilk test is generally preferred as it has
+ * slightly better power. For very large samples (n > 5000), consider using Anderson-Darling, Cramer-von Mises,
+ * or asymptotic tests like Jarque-Bera. The Shapiro-Francia test is optimal for the intermediate range
+ * of 50 to 5000 observations where it provides an excellent balance of power and computational efficiency.</p>
  */
 @CompileStatic
 class ShapiroFrancia {

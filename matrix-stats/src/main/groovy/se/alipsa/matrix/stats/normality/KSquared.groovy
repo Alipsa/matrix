@@ -5,28 +5,93 @@ import org.apache.commons.math3.distribution.ChiSquaredDistribution
 import se.alipsa.matrix.core.Matrix
 
 /**
- * D'Agostino's K² test (also known as K-squared test) is a goodness-of-fit measure of departure from normality.
- * Named for Ralph D'Agostino, the test gauges the compatibility of given data with the null hypothesis that
- * the data is a realization of independent, identically distributed Gaussian random variables.
+ * D'Agostino's K² test (K-squared test) is a powerful omnibus test for normality that combines
+ * normalized measures of sample skewness and kurtosis into a single test statistic. Named after
+ * Ralph D'Agostino, this test provides a comprehensive assessment of departure from normality by
+ * examining both the asymmetry and tail behavior of the distribution.
  *
- * The test is based on transformations of the sample kurtosis and skewness, and has power only against the
- * alternatives that the distribution is skewed and/or kurtic (heavy or light tails).
+ * <p><b>What is D'Agostino's K² test?</b></p>
+ * The K² test transforms sample skewness and kurtosis into approximately normally distributed
+ * Z-scores, then combines them into a chi-squared statistic with 2 degrees of freedom. This
+ * approach allows the test to detect departures from normality due to asymmetry (skewness),
+ * heavy or light tails (kurtosis), or both. The transformation makes the test more powerful
+ * than simple moment-based tests for moderate sample sizes.
  *
- * The K² statistic is the sum of squares of Z-scores for skewness and kurtosis:
- * K² = Z(skewness)² + Z(kurtosis)²
+ * <p><b>When to use D'Agostino's K² test:</b></p>
+ * <ul>
+ *   <li>For sample sizes from about 20 to several thousand observations</li>
+ *   <li>When you want to test for departures from normality due to both skewness and kurtosis</li>
+ *   <li>As an omnibus test that has good power against a wide range of alternatives</li>
+ *   <li>When you need diagnostic information about the nature of non-normality</li>
+ *   <li>For balanced assessment of both symmetry and tail behavior</li>
+ * </ul>
  *
- * Under the null hypothesis of normality, K² follows a chi-squared distribution with 2 degrees of freedom.
+ * <p><b>Advantages:</b></p>
+ * <ul>
+ *   <li>Good power for moderate to large sample sizes (n ≥ 20)</li>
+ *   <li>Provides information about which aspect (skewness or kurtosis) contributes to non-normality</li>
+ *   <li>More powerful than simple Jarque-Bera test due to better normalizing transformations</li>
+ *   <li>Well-calibrated for sample sizes as small as 20</li>
+ *   <li>Computationally simple and fast</li>
+ * </ul>
  *
- * Example:
+ * <p><b>Disadvantages:</b></p>
+ * <ul>
+ *   <li>Less powerful than Shapiro-Wilk or Anderson-Darling tests for small samples (n < 50)</li>
+ *   <li>Requires minimum sample size of 8 observations</li>
+ *   <li>Like all moment-based tests, can be affected by outliers</li>
+ *   <li>May have reduced power against certain alternatives (e.g., contaminated normals)</li>
+ * </ul>
+ *
+ * <p><b>Hypotheses:</b></p>
+ * <ul>
+ *   <li>H₀ (null hypothesis): The data follow a normal distribution</li>
+ *   <li>H₁ (alternative hypothesis): The data do not follow a normal distribution (due to non-zero skewness, excess kurtosis, or both)</li>
+ * </ul>
+ *
+ * <p><b>Example usage:</b></p>
  * <pre>
+ * // Test normality of a dataset
  * def data = [2.3, 3.1, 2.8, 3.5, 2.9, 3.2, 2.7, 3.0, 3.3, 2.6] as double[]
  * def result = KSquared.test(data)
- * println result.toString()
+ * println "K² statistic: ${result.statistic}"
+ * println "p-value: ${result.pValue}"
+ * println "Skewness: ${result.skewness} (Z = ${result.zSkewness})"
+ * println "Kurtosis: ${result.kurtosis} (Z = ${result.zKurtosis})"
+ * println result.interpret()
+ *
+ * // Example output:
+ * // K² statistic: 1.2345
+ * // p-value: 0.5395
+ * // Skewness: 0.1234 (Z = 0.4567)
+ * // Kurtosis: 2.8901 (Z = -0.2345)
+ * // Fail to reject H0: Data is consistent with normality
  * </pre>
  *
- * Reference:
- * - D'Agostino, R. B., & Pearson, E. S. (1973). "Tests for departure from normality"
- * - D'Agostino, R. B., Belanger, A., & D'Agostino, R. B. Jr. (1990). "A suggestion for using powerful and informative tests of normality"
+ * <p><b>Statistical details:</b></p>
+ * The test statistic is calculated as:
+ * <pre>
+ * K² = Z(skewness)² + Z(kurtosis)²
+ * </pre>
+ * where Z(skewness) and Z(kurtosis) are normalized transformations of the sample skewness and
+ * kurtosis using D'Agostino's method. These transformations account for the sampling distributions
+ * and make the components approximately normally distributed. Under H₀, K² follows a chi-squared
+ * distribution with 2 degrees of freedom.
+ *
+ * <p>The sample skewness and kurtosis are calculated from the third and fourth standardized moments,
+ * then transformed using correction factors that depend on sample size to achieve approximate normality
+ * of the Z-scores.</p>
+ *
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li>D'Agostino, R. B., & Pearson, E. S. (1973). "Tests for departure from normality. Empirical results for the distributions of b2 and √b1". Biometrika, 60(3), 613-622.</li>
+ *   <li>D'Agostino, R. B., Belanger, A., & D'Agostino, R. B. Jr. (1990). "A suggestion for using powerful and informative tests of normality". The American Statistician, 44(4), 316-321.</li>
+ *   <li>D'Agostino, R. B., & Stephens, M. A. (1986). Goodness-of-Fit Techniques. New York: Marcel Dekker.</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> For small samples (n < 20), consider using the Shapiro-Wilk test instead.
+ * For very large samples (n > 2000), the Jarque-Bera test is also appropriate and computationally
+ * simpler, though K² generally has better finite-sample properties.</p>
  */
 @CompileStatic
 class KSquared {

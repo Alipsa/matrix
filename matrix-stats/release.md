@@ -1,8 +1,16 @@
 # Matrix stats release history
 
 ## v2.3.0, In progress
--  added kernel density for Gaussian, Epanechnikov, uniform, and triangular kernels
+- Added kernel density for Gaussian, Epanechnikov, uniform, and triangular kernels
 - Add RegressionUtils for easy regression diagnostics and standard error calculations
+- Implement all stubbed tests
+- Compile statically for increased type safety and performance
+- Consolidated duplicates to make the code more DRY
+- Enhance documentation
+- Increased test coverage
+- Bugfixes:
+  - Fix Incorrect corSpearman Implementation
+  - Increase accuracy of tests results depending on t or f distributions.
 
 ## v2.2.0, 2025-06-02
 - Ensure that all methods in Normalize can handle all zeroes as input

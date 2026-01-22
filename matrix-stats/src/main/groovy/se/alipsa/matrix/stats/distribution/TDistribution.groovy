@@ -13,6 +13,10 @@ class TDistribution {
 
   private final double degreesOfFreedom
 
+  TDistribution(BigDecimal degreesOfFreedom) {
+    this(degreesOfFreedom.doubleValue())
+  }
+
   TDistribution(double degreesOfFreedom) {
     if (degreesOfFreedom <= 0) {
       throw new IllegalArgumentException("Degrees of freedom must be positive, got: $degreesOfFreedom")

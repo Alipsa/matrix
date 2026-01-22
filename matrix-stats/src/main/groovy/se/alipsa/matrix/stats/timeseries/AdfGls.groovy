@@ -7,24 +7,50 @@ import groovy.transform.CompileStatic
  * It was developed by Elliott, Rothenberg and Stock (ERS) in 1996 as a modification of the
  * augmented Dickey-Fuller test (ADF).
  *
- * The ADF-GLS test uses generalized least squares (GLS) detrending prior to running the ADF test.
- * This modification provides improved power when there is an uncertain trend under the alternative hypothesis.
+ * <p>The ADF-GLS test uses generalized least squares (GLS) detrending prior to running the ADF test.
+ * This modification provides improved power when there is an uncertain trend under the alternative hypothesis,
+ * making it more powerful than the standard ADF test, especially in small samples.</p>
  *
- * The procedure:
- * 1. GLS-detrend the data with parameter α (α = -7 for drift, α = -13.5 for trend)
- * 2. Run ADF regression on the detrended data
- * 3. Use ADF-GLS specific critical values
+ * <h3>When to Use</h3>
+ * <ul>
+ * <li>When testing for unit roots in economic or financial time series</li>
+ * <li>When you need more statistical power than the standard ADF test</li>
+ * <li>When the series may contain a deterministic trend or drift</li>
+ * <li>Particularly useful for small to moderate sample sizes (n < 200)</li>
+ * </ul>
  *
- * Example:
+ * <h3>Hypotheses</h3>
+ * <ul>
+ * <li><strong>H0 (null):</strong> The series has a unit root (non-stationary, γ = 0)</li>
+ * <li><strong>H1 (alternative):</strong> The series is stationary (γ < 0)</li>
+ * </ul>
+ *
+ * <h3>Test Procedure</h3>
+ * <ol>
+ * <li>GLS-detrend the data with parameter α (α = 1 - 7/T for drift, α = 1 - 13.5/T for trend)</li>
+ * <li>Run ADF regression on the detrended data: Δỹ_t = γỹ_{t-1} + δ₁Δỹ_{t-1} + ... + δₚΔỹ_{t-p} + ε_t</li>
+ * <li>Compare t-statistic against ADF-GLS specific critical values</li>
+ * </ol>
+ *
+ * <p>Example usage:</p>
  * <pre>
+ * // Test for unit root with drift (default)
  * def timeSeries = [100, 102, 101, 105, 107, 106, 110, 112] as double[]
  * def result = AdfGls.test(timeSeries)
- * println result.toString()
+ * println result.interpret()
+ *
+ * // Test with trend and specified lags
+ * def result2 = AdfGls.test(timeSeries, 2, "trend")
+ * println result2.evaluate()
  * </pre>
  *
- * Reference:
- * - Elliott, G., Rothenberg, T.J., & Stock, J.H. (1996). "Efficient tests for an autoregressive unit root"
- * - R's urca package (ur.ers)
+ * <h3>References</h3>
+ * <ul>
+ * <li>Elliott, G., Rothenberg, T.J., & Stock, J.H. (1996). "Efficient Tests for an Autoregressive Unit Root",
+ * Econometrica, 64(4), 813-836.</li>
+ * <li>R's urca package: ur.ers() function</li>
+ * <li>Stata's dfuller command with -gls option</li>
+ * </ul>
  */
 @CompileStatic
 class AdfGls {

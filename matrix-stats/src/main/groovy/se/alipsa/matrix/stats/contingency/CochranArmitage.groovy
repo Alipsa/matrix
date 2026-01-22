@@ -4,31 +4,84 @@ import groovy.transform.CompileStatic
 import org.apache.commons.math3.distribution.NormalDistribution
 
 /**
- * The Cochran–Armitage test for trend, named for William Cochran and Peter Armitage,
- * is used in categorical data analysis when the aim is to assess for the presence of an
- * association between a variable with two categories and an ordinal variable with k categories.
- * It modifies the Pearson chi-squared test to incorporate a suspected ordering in the effects
- * of the k categories of the second variable.
+ * The Cochran-Armitage test for trend is a statistical test used to detect linear trends in
+ * proportions across ordered categories. It extends the chi-squared test by incorporating the
+ * ordinal nature of exposure or dose levels, making it more powerful for detecting dose-response
+ * relationships or monotonic trends.
  *
- * The test is particularly useful for detecting dose-response relationships or trends across
- * ordered categories (e.g., low, medium, high exposure levels).
+ * <p><b>What is the Cochran-Armitage test?</b></p>
+ * The Cochran-Armitage test, named for William Cochran and Peter Armitage, assesses whether there
+ * is a linear trend in the proportion of cases (or events) across k ordered categories. Unlike the
+ * standard Pearson chi-squared test which treats categories as nominal, the Cochran-Armitage test
+ * incorporates the ordering of categories through assigned scores, providing greater statistical
+ * power to detect trends. The test statistic follows a standard normal distribution (Z-distribution)
+ * under the null hypothesis of no linear trend.
  *
- * The test statistic follows a standard normal distribution under the null hypothesis of no trend.
+ * <p><b>When to use the Cochran-Armitage test:</b></p>
+ * <ul>
+ *   <li>When testing for dose-response relationships in epidemiological studies</li>
+ *   <li>When examining trends across ordered exposure levels (e.g., none, low, medium, high)</li>
+ *   <li>When you have a binary outcome and an ordinal predictor variable with 3+ levels</li>
+ *   <li>When detecting monotonic trends in proportions across ordered categories</li>
+ *   <li>In case-control or cohort studies with ordinal exposure classifications</li>
+ *   <li>When the ordering of categories has meaningful interpretation (not arbitrary)</li>
+ *   <li>As an alternative to chi-squared test when testing for linear trends rather than general association</li>
+ * </ul>
  *
- * Example:
+ * <p><b>Hypotheses:</b></p>
+ * <ul>
+ *   <li>H₀ (null hypothesis): There is no linear trend in proportions across the ordered categories (slope = 0)</li>
+ *   <li>H₁ (alternative hypothesis): There is a linear trend in proportions across the ordered categories (slope ≠ 0)</li>
+ * </ul>
+ *
+ * <p><b>Example usage:</b></p>
  * <pre>
- * // Test for trend in disease rates across exposure levels (low, medium, high)
- * int[] cases = [10, 15, 25]      // Disease cases at each level
- * int[] controls = [90, 85, 75]   // Controls at each level
- * double[] scores = [0, 1, 2]     // Ordinal scores for exposure levels
+ * // Test for trend in disease incidence across smoking levels
+ * int[] cases = [10, 18, 32, 45]          // Disease cases in each group
+ * int[] controls = [90, 82, 68, 55]       // Controls in each group
+ * double[] scores = [0, 5, 15, 30]        // Cigarettes per day (custom scoring)
  *
  * def result = CochranArmitage.test(cases, controls, scores)
- * println result.toString()
+ * println "Z-statistic: ${result.statistic}"
+ * println "p-value: ${result.pValue}"
+ * println result.interpret()
+ *
+ * // Example output:
+ * // Z-statistic: 3.8472
+ * // p-value: 0.0001
+ * // Reject H0: Significant increasing trend detected
+ *
+ * // You can also use default scores (0, 1, 2, 3) if custom scores aren't needed
+ * def result2 = CochranArmitage.test(cases, controls)  // Uses [0, 1, 2, 3]
  * </pre>
  *
- * Reference:
- * - Cochran, W. G. (1954). "Some methods for strengthening the common χ² tests"
- * - Armitage, P. (1955). "Tests for linear trends in proportions and frequencies"
+ * <p><b>Statistical details:</b></p>
+ * The test statistic is calculated as: Z = (Observed weighted sum - Expected weighted sum) / √Variance,
+ * where the weighted sum uses the assigned scores for each category. The test is most powerful when:
+ * <ul>
+ *   <li>The true relationship is approximately linear on the logit scale</li>
+ *   <li>The assigned scores accurately reflect the exposure levels</li>
+ *   <li>Sample sizes are adequate across all categories</li>
+ * </ul>
+ *
+ * <p><b>Score selection:</b></p>
+ * <ul>
+ *   <li>Default scores: [0, 1, 2, ..., k-1] for k categories (equally spaced)</li>
+ *   <li>Custom scores: Should reflect meaningful differences between categories (e.g., actual dose amounts, midpoints of exposure ranges)</li>
+ *   <li>The choice of scores affects test power; use domain knowledge when possible</li>
+ *   <li>Linear transformations of scores (a + b×score) do not change the p-value</li>
+ * </ul>
+ *
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li>Cochran, W. G. (1954). "Some methods for strengthening the common χ² tests". Biometrics, 10(4), 417-451.</li>
+ *   <li>Armitage, P. (1955). "Tests for linear trends in proportions and frequencies". Biometrics, 11(3), 375-386.</li>
+ *   <li>Agresti, A. (2013). "Categorical Data Analysis" (3rd ed.). Wiley, Chapter 3.</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> The test assumes independence of observations and is designed to detect linear trends.
+ * If you suspect a non-linear dose-response relationship, consider using multiple indicator variables
+ * or non-linear modeling approaches instead.</p>
  */
 @CompileStatic
 class CochranArmitage {

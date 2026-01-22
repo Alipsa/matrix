@@ -7,28 +7,133 @@ import se.alipsa.matrix.core.Stat
 import java.math.RoundingMode
 
 /**
- * CART (Classification and Regression Trees) algorithm for single-feature regression.
+ * Decision Tree Regression (CART algorithm) models non-linear relationships by recursively partitioning
+ * the feature space into regions and predicting the mean value within each region. It creates a tree-like
+ * structure where each internal node represents a decision rule (threshold split) and each leaf node
+ * represents a predicted value.
  *
- * This implementation builds a binary decision tree for regression using variance reduction
- * (minimizing MSE in child nodes) as the splitting criterion. At each leaf node, the prediction
- * is the mean of the training samples that fall into that node.
+ * <p><b>What is Decision Tree Regression?</b></p>
+ * Decision tree regression is a non-parametric supervised learning algorithm that approximates a function
+ * by recursively splitting the input space based on feature values. Unlike linear regression, which assumes
+ * a linear relationship, decision trees can model complex, non-linear patterns including step functions,
+ * piecewise constant functions, and interactions. This implementation uses the CART (Classification and
+ * Regression Trees) algorithm with variance reduction as the splitting criterion.
  *
- * Example:
+ * <p><b>When to use Decision Tree Regression:</b></p>
+ * <ul>
+ *   <li>When the relationship between predictor and response is non-linear or piecewise constant</li>
+ *   <li>When you need an interpretable model that can be visualized as decision rules</li>
+ *   <li>When the data contains natural thresholds or breakpoints (e.g., pricing tiers, age groups)</li>
+ *   <li>When you want automatic feature interaction detection without manual engineering</li>
+ *   <li>For exploratory analysis to identify important split points in the data</li>
+ *   <li>When robustness to outliers is desired (predictions are based on local means)</li>
+ *   <li>As a component in ensemble methods (Random Forests, Gradient Boosting)</li>
+ * </ul>
+ *
+ * <p><b>Advantages:</b></p>
+ * <ul>
+ *   <li>Highly interpretable - can be visualized and explained as simple if-then rules</li>
+ *   <li>Handles non-linear relationships without requiring feature transformations</li>
+ *   <li>No assumptions about data distribution (non-parametric)</li>
+ *   <li>Robust to outliers in X (splits based on ranks/ordering)</li>
+ *   <li>Can capture interactions and thresholds automatically</li>
+ *   <li>Fast prediction time - O(log n) for balanced trees</li>
+ *   <li>No feature scaling required</li>
+ *   <li>Can handle missing values with surrogate splits (advanced implementations)</li>
+ * </ul>
+ *
+ * <p><b>Disadvantages:</b></p>
+ * <ul>
+ *   <li>Prone to overfitting, especially with deep trees (high variance)</li>
+ *   <li>Unstable - small changes in data can lead to completely different trees</li>
+ *   <li>Biased towards features with more unique values</li>
+ *   <li>Cannot extrapolate beyond the range of training data</li>
+ *   <li>Predictions are piecewise constant (cannot model smooth functions well)</li>
+ *   <li>Single feature implementation (this class) - limited to univariate regression</li>
+ *   <li>May create overly complex trees with noisy data</li>
+ *   <li>Requires tuning of hyperparameters (maxDepth, minSamplesLeaf) to prevent overfitting</li>
+ * </ul>
+ *
+ * <p><b>Example usage:</b></p>
  * <pre>
- * // Create a decision tree from x and y data
+ * // Model a step function relationship
  * def x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
- * def y = [1.0, 1.0, 1.0, 1.0, 5.0, 5.0, 5.0, 5.0]  // Step function
- * def tree = new DecisionTree(x, y)
+ * def y = [1.0, 1.0, 1.0, 1.0, 5.0, 5.0, 5.0, 5.0]
+ * def tree = new DecisionTree(x, y, 3, 2)  // maxDepth=3, minSamplesLeaf=2
  *
- * // Predict values
- * def prediction = tree.predict(2.5)  // ≈ 1.0
- * def prediction2 = tree.predict(6.5)  // ≈ 5.0
+ * // Make predictions
+ * println tree.predict(2.5)  // ≈ 1.0 (in first region)
+ * println tree.predict(6.5)  // ≈ 5.0 (in second region)
  *
- * // Get model quality metrics
- * println "R² = ${tree.getRSquared()}"
- * println "MSE = ${tree.getMse()}"
+ * // Evaluate model quality
+ * println "R² = ${tree.getRSquared(3)}"    // Coefficient of determination
+ * println "MSE = ${tree.getMse(3)}"        // Mean squared error
+ * println "Depth = ${tree.getDepth()}"     // Actual tree depth
+ * println "Leaves = ${tree.getLeafCount()}" // Number of leaf nodes
+ *
+ * // View decision rules
  * println tree.summary()
+ * // Output shows tree structure:
+ * //   root:
+ * //     X <= 4.5: predict 1.0
+ * //     X > 4.5: predict 5.0
+ *
+ * // Use with Matrix
+ * def data = Matrix.builder()
+ *   .data(x: [1, 2, 3, 4, 5, 6, 7, 8], y: [1, 1, 1, 1, 5, 5, 5, 5])
+ *   .build()
+ * def tree2 = new DecisionTree(data, 'x', 'y', 3, 2)
+ * println tree2
  * </pre>
+ *
+ * <p><b>Mathematical formulation:</b></p>
+ * At each node, the algorithm selects the split threshold that maximizes variance reduction:
+ * <pre>
+ * Split criterion: maximize Gain = Var(parent) - (n_left/n)*Var(left) - (n_right/n)*Var(right)
+ * Variance: Var(S) = (1/|S|) Σ(y - ȳ)² for samples S
+ * Prediction: ŷ = mean(y) for samples reaching the leaf node
+ * </pre>
+ * where:
+ * <ul>
+ *   <li>Var(parent) is the variance of y values in the parent node</li>
+ *   <li>Var(left), Var(right) are variances in left and right child nodes</li>
+ *   <li>n_left, n_right are the number of samples in each child</li>
+ *   <li>The split threshold is chosen from midpoints between consecutive unique X values</li>
+ * </ul>
+ *
+ * <p>The tree-building process recursively partitions until:</p>
+ * <ul>
+ *   <li>Maximum depth (maxDepth) is reached</li>
+ *   <li>Node has fewer than minSamplesLeaf samples</li>
+ *   <li>All Y values in the node are identical (variance = 0)</li>
+ *   <li>No valid split can be found that satisfies minSamplesLeaf constraint</li>
+ * </ul>
+ *
+ * <p><b>Tuning parameters:</b></p>
+ * <ul>
+ *   <li><b>maxDepth</b> (default: 5): Maximum tree depth. Smaller values prevent overfitting but may underfit.
+ *       Typical range: 2-10 for interpretability, 10-20 for complex patterns.</li>
+ *   <li><b>minSamplesLeaf</b> (default: 2): Minimum samples required in a leaf. Larger values create
+ *       smoother, more robust models. Typical range: 1-10 for small datasets, 5-50 for larger datasets.</li>
+ * </ul>
+ *
+ * <p><b>Model evaluation metrics:</b></p>
+ * <ul>
+ *   <li><b>R² (coefficient of determination)</b>: Proportion of variance explained, ranges 0-1 (higher is better)</li>
+ *   <li><b>MSE (mean squared error)</b>: Average squared prediction error (lower is better)</li>
+ *   <li><b>RMSE (root mean squared error)</b>: Square root of MSE, in same units as Y (lower is better)</li>
+ *   <li><b>MAE (mean absolute error)</b>: Average absolute prediction error (lower is better, more robust to outliers)</li>
+ * </ul>
+ *
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li>Breiman, L., Friedman, J., Stone, C. J., & Olshen, R. A. (1984). "Classification and Regression Trees". Wadsworth International Group.</li>
+ *   <li>James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). "An Introduction to Statistical Learning". Springer, Chapter 8.</li>
+ *   <li>Hastie, T., Tibshirani, R., & Friedman, J. (2009). "The Elements of Statistical Learning" (2nd ed.). Springer, Chapter 9.</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> This implementation supports single-feature (univariate) regression only. For multivariate
+ * regression trees, consider using ensemble methods or dedicated machine learning libraries.</p>
  */
 @CompileStatic
 class DecisionTree {

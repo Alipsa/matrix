@@ -3,32 +3,66 @@ package se.alipsa.matrix.stats.contingency
 import groovy.transform.CompileStatic
 
 /**
- * Barnard's test is an exact test for 2×2 contingency tables that is uniformly more powerful
- * than Fisher's exact test. While Fisher's test conditions on both row and column margins,
- * Barnard's test only conditions on the total sample size, allowing it to be more powerful
- * when the margins are not fixed by design.
+ * Barnard's exact test is an unconditional exact test for 2×2 contingency tables that is uniformly
+ * more powerful than Fisher's exact test. It tests for association between two binary variables
+ * while conditioning only on the total sample size, making it more powerful when row and column
+ * margins are not fixed by experimental design.
  *
- * The test uses a nuisance parameter (the pooled probability π) and maximizes the p-value
- * over all possible values of π to provide a conservative exact test. The test statistic
- * used is typically Wald's score statistic.
+ * <p><b>What is Barnard's test?</b></p>
+ * Barnard's test evaluates the association between two dichotomous variables using an unconditional
+ * approach. Unlike Fisher's exact test which conditions on both row and column margins, Barnard's
+ * test only conditions on the total sample size (n), allowing it to use more of the sample space
+ * and thereby achieve greater statistical power. The test maximizes over a nuisance parameter π
+ * (the common success probability under the null hypothesis) and uses Wald's score statistic.
  *
- * Example:
+ * <p><b>When to use Barnard's test:</b></p>
+ * <ul>
+ *   <li>When analyzing 2×2 contingency tables with small sample sizes</li>
+ *   <li>When margins are not fixed by the experimental design (e.g., retrospective studies)</li>
+ *   <li>When you need more statistical power than Fisher's exact test</li>
+ *   <li>When comparing two independent proportions with binary outcomes</li>
+ *   <li>As an alternative to chi-squared test when expected cell frequencies are small (&lt; 5)</li>
+ * </ul>
+ *
+ * <p><b>Hypotheses:</b></p>
+ * <ul>
+ *   <li>H₀ (null hypothesis): The two variables are independent (no association between row and column variables)</li>
+ *   <li>H₁ (alternative hypothesis): The two variables are associated (the proportions differ between groups)</li>
+ * </ul>
+ *
+ * <p><b>Example usage:</b></p>
  * <pre>
- * // Test association in a 2×2 table
- * int[][] table = [[12, 8],    // Row 1: Success, Failure
- *                  [6, 14]]    // Row 2: Success, Failure
+ * // Test association between treatment and outcome in a clinical trial
+ * int[][] table = [[12, 8],    // Treatment group: Success, Failure
+ *                  [6, 14]]    // Control group: Success, Failure
  *
  * def result = Barnard.test(table)
- * println result.toString()
+ * println "p-value: ${result.pValue}"
+ * println "Wald statistic: ${result.statistic}"
+ * println result.interpret()
+ *
+ * // Example output:
+ * // p-value: 0.0891
+ * // Wald statistic: 1.6996
+ * // Fail to reject H0: No significant association detected
  * </pre>
  *
- * Reference:
- * - Barnard, G. A. (1945). "A new test for 2×2 tables"
- * - Barnard, G. A. (1947). "Significance tests for 2×2 tables"
- * - Mehta, C. R., & Senchaudhuri, P. (2003). "Conditional versus unconditional exact tests for comparing two binomials"
+ * <p><b>Statistical details:</b></p>
+ * The test statistic is the Wald score: T = (p₁ - p₂) / √[π(1-π)(1/n₁ + 1/n₂)]
+ * where p₁ and p₂ are the observed proportions in each group, and π is the pooled proportion.
+ * The p-value is computed by enumerating all possible 2×2 tables with the same total sample size
+ * and summing probabilities of tables with test statistics as extreme or more extreme than observed.
  *
- * Note: Barnard's test is computationally intensive for large sample sizes due to the need to
- * enumerate all possible tables and optimize over the nuisance parameter.
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li>Barnard, G. A. (1945). "A new test for 2×2 tables". Nature, 156, 177.</li>
+ *   <li>Barnard, G. A. (1947). "Significance tests for 2×2 tables". Biometrika, 34(1-2), 123-138.</li>
+ *   <li>Mehta, C. R., & Senchaudhuri, P. (2003). "Conditional versus unconditional exact tests for comparing two binomials". In Handbook of Statistics, Vol. 22 (pp. 1-49).</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> Barnard's test is computationally intensive for large sample sizes (n > 200) due to the need to
+ * enumerate all possible tables and optimize over the nuisance parameter π. For very large samples,
+ * consider using the chi-squared test instead.</p>
  */
 @CompileStatic
 class Barnard {

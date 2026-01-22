@@ -3,29 +3,58 @@ package se.alipsa.matrix.stats.timeseries
 import groovy.transform.CompileStatic
 
 /**
- * The Dickey-Fuller test tests the null hypothesis that a unit root is present in an autoregressive (AR)
- * time series model. The alternative hypothesis is different depending on which version of the test is used,
- * but is usually stationarity or trend-stationarity.
+ * The Dickey-Fuller (DF) test is the foundational statistical test for detecting unit roots in time series.
+ * A unit root indicates non-stationarity, meaning the series has no tendency to return to a long-run mean
+ * and shocks have permanent effects. This is the basic version without augmentation terms.
  *
- * The DF test fits the simple regression:
- * Δy_t = α + βt + γy_{t-1} + ε_t
+ * <p>The presence of a unit root has critical implications for econometric modeling and forecasting.
+ * Non-stationary series can lead to spurious regressions, and many time series models require
+ * stationary input data. The DF test provides a formal statistical framework for testing this property.</p>
  *
- * The null hypothesis is H0: γ = 0 (unit root present, series is non-stationary)
- * The alternative is H1: γ < 0 (series is stationary)
+ * <h3>When to Use</h3>
+ * <ul>
+ * <li>As a preliminary check before time series modeling (ARIMA, VAR)</li>
+ * <li>When testing if a series is integrated of order one, I(1)</li>
+ * <li>To determine if differencing is needed to achieve stationarity</li>
+ * <li>For simple AR(1) processes without complex lag structures</li>
+ * <li>When you need a baseline unit root test (use ADF for more complex cases)</li>
+ * </ul>
  *
- * This is the basic version without augmentation terms. For the augmented version that includes
- * lagged differences, use the ADF test.
+ * <h3>Hypotheses</h3>
+ * <ul>
+ * <li><strong>H0 (null):</strong> The series has a unit root; it is non-stationary (γ = 0)</li>
+ * <li><strong>H1 (alternative):</strong> The series is stationary or trend-stationary (γ < 0)</li>
+ * </ul>
  *
- * Example:
+ * <h3>Test Regression</h3>
+ * <p>Δy_t = α + βt + γy_{t-1} + ε_t</p>
+ * <p>where the null hypothesis H0: γ = 0 is tested against H1: γ < 0</p>
+ *
+ * <p><strong>Note:</strong> For series with autocorrelated errors, use the Augmented Dickey-Fuller (ADF) test
+ * which includes lagged differences to account for serial correlation.</p>
+ *
+ * <p>Example usage:</p>
  * <pre>
+ * // Basic test with drift (default)
  * def timeSeries = [100, 102, 101, 105, 107, 106, 110, 112] as double[]
  * def result = Df.test(timeSeries)
- * println result.toString()
+ * println result.interpret()
+ *
+ * // Test with trend component
+ * def result2 = Df.test(timeSeries, "trend")
+ * println result2.evaluate()
+ *
+ * // Test without intercept or trend
+ * def result3 = Df.test(timeSeries, "none")
  * </pre>
  *
- * Reference:
- * - Dickey, D. A., & Fuller, W. A. (1979). "Distribution of the estimators for autoregressive time series with a unit root"
- * - R's tseries package
+ * <h3>References</h3>
+ * <ul>
+ * <li>Dickey, D. A., & Fuller, W. A. (1979). "Distribution of the Estimators for Autoregressive Time Series
+ * with a Unit Root", Journal of the American Statistical Association, 74(366), 427-431.</li>
+ * <li>Hamilton, J. D. (1994). Time Series Analysis, Chapter 17.</li>
+ * <li>R's tseries package: adf.test() and urca package: ur.df()</li>
+ * </ul>
  */
 @CompileStatic
 class Df {

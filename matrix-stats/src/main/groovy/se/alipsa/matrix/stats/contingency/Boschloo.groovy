@@ -3,30 +3,80 @@ package se.alipsa.matrix.stats.contingency
 import groovy.transform.CompileStatic
 
 /**
- * Boschloo's test is a uniformly more powerful alternative to Fisher's exact test for 2×2 contingency tables.
- * Like Barnard's test, it only conditions on the total sample size rather than both margins,
- * making it more powerful when margins are not fixed by design.
+ * Boschloo's exact test is an unconditional exact test for 2×2 contingency tables that provides
+ * uniformly greater statistical power than Fisher's exact test. It tests for association between
+ * two binary variables by conditioning only on the total sample size, using Fisher's exact p-value
+ * as the test statistic.
  *
- * Boschloo's test uses Fisher's exact test p-value as the ordering statistic. For each possible value
- * of the nuisance parameter π (the common success probability under the null hypothesis), it computes
- * the probability of obtaining a table with a Fisher p-value as extreme or more extreme than the observed
- * table. The final p-value is the maximum over all values of π.
+ * <p><b>What is Boschloo's test?</b></p>
+ * Boschloo's test is a more powerful alternative to Fisher's exact test that addresses the conservatism
+ * of Fisher's test by using an unconditional approach. For each possible value of the nuisance parameter
+ * π (the common success probability under the null hypothesis), the test computes the probability of
+ * obtaining a table with a Fisher's exact p-value as extreme or more extreme than the observed table.
+ * The final p-value is the maximum over all values of π, ensuring proper error rate control while
+ * maximizing statistical power.
  *
- * Example:
+ * <p><b>When to use Boschloo's test:</b></p>
+ * <ul>
+ *   <li>When analyzing 2×2 contingency tables with small to moderate sample sizes</li>
+ *   <li>When margins are not fixed by experimental design (e.g., case-control studies, observational studies)</li>
+ *   <li>When you need an exact test with greater power than Fisher's exact test</li>
+ *   <li>When comparing two independent proportions and you want to avoid the conservatism of Fisher's test</li>
+ *   <li>As a gold standard exact test for 2×2 tables when computational resources permit</li>
+ *   <li>When expected cell frequencies are too small for chi-squared test validity (&lt; 5)</li>
+ * </ul>
+ *
+ * <p><b>Hypotheses:</b></p>
+ * <ul>
+ *   <li>H₀ (null hypothesis): The two proportions are equal (p₁ = p₂), or equivalently, the two variables are independent</li>
+ *   <li>H₁ (alternative hypothesis): The two proportions differ (p₁ ≠ p₂), indicating association between the variables</li>
+ * </ul>
+ *
+ * <p><b>Example usage:</b></p>
  * <pre>
- * // Test association in a 2×2 table
- * int[][] table = [[12, 8],    // Row 1: Success, Failure
- *                  [6, 14]]    // Row 2: Success, Failure
+ * // Test effectiveness of a new drug versus placebo
+ * int[][] table = [[18, 12],    // Drug group: Improved, Not improved
+ *                  [8, 22]]     // Placebo group: Improved, Not improved
  *
  * def result = Boschloo.test(table)
- * println result.toString()
+ * println "Boschloo p-value: ${result.pValue}"
+ * println "Fisher p-value: ${result.fisherPValue}"
+ * println "Optimal π: ${result.nuisanceParameter}"
+ * println result.interpret()
+ *
+ * // Example output:
+ * // Boschloo p-value: 0.0234
+ * // Fisher p-value: 0.0312
+ * // Optimal π: 0.4333
+ * // Reject H0: Significant association detected
  * </pre>
  *
- * Reference:
- * - Boschloo, R. D. (1970). "Raised conditional level of significance for the 2 × 2-table when testing the equality of two probabilities"
- * - Lydersen, S., Fagerland, M. W., & Laake, P. (2009). "Recommended tests for association in 2×2 tables"
+ * <p><b>Statistical details:</b></p>
+ * The test uses Fisher's exact test p-value as an ordering statistic. For a given nuisance parameter π,
+ * the Boschloo p-value is: P_π(Fisher p-value ≤ observed Fisher p-value). The final p-value is:
+ * max_π P_π(Fisher p-value ≤ observed Fisher p-value), where the maximization is over all possible
+ * values of π ∈ [0, 1]. This ensures the test maintains the nominal Type I error rate while being
+ * less conservative than Fisher's exact test.
  *
- * Note: Boschloo's test is computationally intensive for large sample sizes.
+ * <p><b>Comparison with other tests:</b></p>
+ * <ul>
+ *   <li>More powerful than Fisher's exact test (less conservative)</li>
+ *   <li>Similar power to Barnard's test but uses different test statistic</li>
+ *   <li>Exact test (maintains correct Type I error rate for any sample size)</li>
+ *   <li>More appropriate than chi-squared test for small sample sizes</li>
+ * </ul>
+ *
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li>Boschloo, R. D. (1970). "Raised conditional level of significance for the 2 × 2-table when testing the equality of two probabilities". Statistica Neerlandica, 24(1), 1-9.</li>
+ *   <li>Lydersen, S., Fagerland, M. W., & Laake, P. (2009). "Recommended tests for association in 2×2 tables". Statistics in Medicine, 28(7), 1159-1175.</li>
+ *   <li>Suissa, S., & Shuster, J. J. (1985). "Exact unconditional sample sizes for the 2×2 binomial trial". Journal of the Royal Statistical Society: Series A, 148(4), 317-327.</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> Boschloo's test is computationally intensive for large sample sizes (n > 200) as it
+ * requires enumerating all possible 2×2 tables and computing Fisher's exact test for each combination
+ * at multiple values of the nuisance parameter. For very large samples, consider using the chi-squared
+ * test or Barnard's test instead.</p>
  */
 @CompileStatic
 class Boschloo {

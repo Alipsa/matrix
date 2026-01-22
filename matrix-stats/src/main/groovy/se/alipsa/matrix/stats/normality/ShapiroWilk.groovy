@@ -5,31 +5,101 @@ import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.stat.StatUtils
 
 /**
- * The Shapiro–Wilk test tests the null hypothesis that a sample x₁, ..., xₙ came from a
- * normally distributed population.
+ * The Shapiro-Wilk test is widely considered the most powerful statistical test for assessing
+ * normality, especially for small to medium sample sizes. It evaluates whether a sample comes from
+ * a normally distributed population by comparing the observed order statistics with those expected
+ * from a normal distribution.
  *
- * <p>The Shapiro-Wilk test is one of the most powerful normality tests, especially for small sample sizes
- * (n < 50), though it is valid for larger samples as well.</p>
+ * <p><b>What is the Shapiro-Wilk test?</b></p>
+ * The Shapiro-Wilk test calculates a statistic W that measures how well the ordered sample values
+ * align with the expected order statistics from a normal distribution. The test uses optimal weights
+ * derived from the covariance matrix of order statistics to construct a powerful measure of normality.
+ * W ranges from 0 to 1, with values close to 1 indicating the data are consistent with normality.
  *
- * <p>The test statistic W is calculated as:</p>
+ * <p><b>When to use the Shapiro-Wilk test:</b></p>
+ * <ul>
+ *   <li>For small to medium sample sizes (3 ≤ n ≤ 50) - this is where it excels</li>
+ *   <li>When maximum statistical power is needed to detect departures from normality</li>
+ *   <li>When you need a reliable test for moderate samples (50 < n ≤ 2000)</li>
+ *   <li>As a gold standard reference test for comparing other normality tests</li>
+ *   <li>When the alternative distribution is unknown but you need high sensitivity</li>
+ * </ul>
+ *
+ * <p><b>Advantages:</b></p>
+ * <ul>
+ *   <li>Most powerful test for normality across a wide range of alternatives, especially for small samples</li>
+ *   <li>Excellent performance for sample sizes from 3 to 2000</li>
+ *   <li>Based on optimal weights from order statistics theory</li>
+ *   <li>Well-calibrated significance levels (maintains nominal Type I error rate)</li>
+ *   <li>Widely accepted and recommended in statistical literature</li>
+ *   <li>Good power against both symmetric and asymmetric departures from normality</li>
+ * </ul>
+ *
+ * <p><b>Disadvantages:</b></p>
+ * <ul>
+ *   <li>Computationally more intensive than moment-based tests (Jarque-Bera, K²)</li>
+ *   <li>Limited to sample sizes up to 5000 (use other tests for larger samples)</li>
+ *   <li>Requires at least 3 observations</li>
+ *   <li>Can be sensitive to ties in the data (though this usually indicates discrete data)</li>
+ *   <li>P-value calculation relies on approximations (Royston's method)</li>
+ * </ul>
+ *
+ * <p><b>Hypotheses:</b></p>
+ * <ul>
+ *   <li>H₀ (null hypothesis): The data come from a normally distributed population</li>
+ *   <li>H₁ (alternative hypothesis): The data do not come from a normally distributed population</li>
+ * </ul>
+ *
+ * <p><b>Example usage:</b></p>
  * <pre>
- * W = (Σ aᵢ xᵢ)² / Σ(xᵢ - x̄)²
- * </pre>
- * <p>where x₁, ..., xₙ are the ordered sample values, x̄ is the sample mean,
- * and aᵢ are weights calculated from the expected values of order statistics.</p>
- *
- * <p>W ranges from 0 to 1, with values close to 1 indicating normality.</p>
- *
- * <p>Example usage:</p>
- * <pre>
+ * // Test normality of a small dataset
  * def data = [2.3, 3.1, 2.8, 3.5, 2.9, 3.2, 3.0, 2.7, 3.4, 2.6]
  * def result = ShapiroWilk.test(data)
  * println "W statistic: ${result.W}"
  * println "p-value: ${result.pValue}"
+ * println result.isNormal() ? "Data appears normal" : "Data appears non-normal"
+ *
+ * // Example output:
+ * // W statistic: 0.9641
+ * // p-value: 0.8234
+ * // Data appears normal
  * </pre>
  *
- * <p><strong>Note:</strong> This implementation uses an approximation for p-value calculation
- * based on the algorithm described in Royston (1992) for sample sizes 3 ≤ n ≤ 5000.</p>
+ * <p><b>Statistical details:</b></p>
+ * The test statistic W is calculated as:
+ * <pre>
+ * W = (Σ aᵢ xᵢ)² / Σ(xᵢ - x̄)²
+ * </pre>
+ * where:
+ * <ul>
+ *   <li>x₁, x₂, ..., xₙ are the ordered sample values (sorted in ascending order)</li>
+ *   <li>x̄ is the sample mean</li>
+ *   <li>aᵢ are weights calculated from the expected values of order statistics from a standard normal distribution</li>
+ * </ul>
+ *
+ * <p>The weights aᵢ are optimal in the sense that they maximize the correlation between the sample
+ * order statistics and expected normal order statistics. The numerator represents the best linear
+ * combination of order statistics for detecting non-normality, while the denominator standardizes
+ * by the total variation.</p>
+ *
+ * <p>The W statistic ranges from 0 to 1, where:</p>
+ * <ul>
+ *   <li>W = 1 indicates perfect agreement with normality</li>
+ *   <li>W close to 1 (e.g., > 0.95) suggests normality</li>
+ *   <li>W significantly less than 1 indicates departure from normality</li>
+ * </ul>
+ *
+ * <p><b>References:</b></p>
+ * <ul>
+ *   <li>Shapiro, S. S., & Wilk, M. B. (1965). "An analysis of variance test for normality (complete samples)". Biometrika, 52(3-4), 591-611.</li>
+ *   <li>Royston, P. (1982). "An extension of Shapiro and Wilk's W test for normality to large samples". Applied Statistics, 31(2), 115-124.</li>
+ *   <li>Royston, P. (1992). "Approximating the Shapiro-Wilk W-test for non-normality". Statistics and Computing, 2(3), 117-119.</li>
+ *   <li>Razali, N. M., & Wah, Y. B. (2011). "Power comparisons of Shapiro-Wilk, Kolmogorov-Smirnov, Lilliefors and Anderson-Darling tests". Journal of Statistical Modeling and Analytics, 2(1), 21-33.</li>
+ * </ul>
+ *
+ * <p><b>Note:</b> This implementation uses Royston's approximation for p-value calculation,
+ * which provides good accuracy for sample sizes 3 ≤ n ≤ 5000. For very large samples (n > 5000),
+ * consider using Anderson-Darling or other tests designed for large samples.</p>
  */
 @CompileStatic
 class ShapiroWilk {

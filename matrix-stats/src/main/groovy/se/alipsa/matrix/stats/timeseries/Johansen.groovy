@@ -4,36 +4,73 @@ import groovy.transform.CompileStatic
 import org.apache.commons.math3.linear.*
 
 /**
- * The Johansen test, named after Søren Johansen, is a procedure for testing cointegration of several,
- * say k, I(1) time series.
+ * The Johansen cointegration test, named after Søren Johansen, is a procedure for testing cointegration
+ * among multiple I(1) time series. Cointegration implies that multiple non-stationary series share a
+ * common stochastic trend and move together in the long run, even though they may diverge in the short run.
  *
- * This test permits more than one cointegrating relationship so is more generally applicable than the
- * Engle–Granger test which is based on the Dickey–Fuller (or the augmented) test for unit roots in the
- * residuals from a single (estimated) cointegrating relationship.
+ * <p>This test permits detection of multiple cointegrating relationships, making it more generally applicable
+ * than the Engle-Granger test which is limited to a single cointegrating vector. The Johansen test is
+ * based on maximum likelihood estimation within a vector autoregression (VAR) framework.</p>
  *
- * There are two types of Johansen test, either with trace or with eigenvalue,
- * and the inferences might be a little bit different.
+ * <h3>When to Use</h3>
+ * <ul>
+ * <li>When testing for long-run equilibrium relationships among multiple variables</li>
+ * <li>Before estimating vector error correction models (VECM)</li>
+ * <li>In macroeconomic analysis (e.g., purchasing power parity, money demand)</li>
+ * <li>For financial applications (pairs trading, portfolio cointegration)</li>
+ * <li>When you have more than two potentially cointegrated series</li>
+ * <li>After confirming all series are I(1) using unit root tests</li>
+ * </ul>
  *
- * This implementation provides the trace test statistic:
- * Trace(r) = -T * Σ(i=r+1 to k) ln(1 - λ_i)
+ * <h3>Hypotheses</h3>
+ * <p>The Johansen test performs a sequential test of the cointegration rank:</p>
+ * <ul>
+ * <li><strong>H0:</strong> There are at most r cointegrating relationships</li>
+ * <li><strong>H1:</strong> There are more than r cointegrating relationships</li>
+ * </ul>
+ * <p>Tests are performed sequentially for r = 0, 1, 2, ..., k-1 until we fail to reject H0.</p>
  *
- * where T is sample size, k is number of variables, r is the number of cointegrating relations under H0,
- * and λ_i are the eigenvalues.
+ * <h3>Test Statistic</h3>
+ * <p>This implementation uses the trace test statistic:</p>
+ * <p>Trace(r) = -T × Σ(i=r+1 to k) ln(1 - λ_i)</p>
+ * <p>where T is sample size, k is number of variables, r is the hypothesized number of cointegrating relations,
+ * and λ_i are the eigenvalues from the canonical correlation analysis.</p>
  *
- * Example:
+ * <p>Example usage:</p>
  * <pre>
- * // Test for cointegration between two series
- * def y1 = [1.0, 1.2, 1.5, 1.3, 1.6, ...] as double[]
- * def y2 = [2.0, 2.3, 2.8, 2.5, 3.0, ...] as double[]
- * def data = [y1, y2]
- * def result = Johansen.test(data, 1)  // Test with 1 lag
- * println result.toString()
+ * // Test for cointegration between multiple series
+ * def y1 = [1.0, 1.2, 1.5, 1.3, 1.6, 1.8, 2.0, ...] as double[]
+ * def y2 = [2.0, 2.3, 2.8, 2.5, 3.0, 3.3, 3.8, ...] as double[]
+ * def y3 = [0.5, 0.6, 0.7, 0.65, 0.8, 0.85, 0.95, ...] as double[]
+ * def data = [y1, y2, y3]
+ *
+ * // Test with 1 lag and constant term (most common)
+ * def result = Johansen.test(data, 1, 'const')
+ * println result.interpret()
+ *
+ * // Test with trend
+ * def result2 = Johansen.test(data, 2, 'trend')
  * </pre>
  *
- * Reference:
- * - Johansen, S. (1991). "Estimation and Hypothesis Testing of Cointegration Vectors"
- * - Johansen, S. (1995). "Likelihood-Based Inference in Cointegrated Vector Autoregressive Models"
- * - R's urca package (ca.jo function)
+ * <h3>Important Assumptions</h3>
+ * <ul>
+ * <li>All series must be integrated of order one, I(1)</li>
+ * <li>The VAR lag order should be correctly specified</li>
+ * <li>Residuals should be approximately white noise</li>
+ * <li>No structural breaks in the cointegrating relationship</li>
+ * </ul>
+ *
+ * <h3>References</h3>
+ * <ul>
+ * <li>Johansen, S. (1991). "Estimation and Hypothesis Testing of Cointegration Vectors in Gaussian
+ * Vector Autoregressive Models", Econometrica, 59(6), 1551-1580.</li>
+ * <li>Johansen, S. (1995). "Likelihood-Based Inference in Cointegrated Vector Autoregressive Models",
+ * Oxford University Press.</li>
+ * <li>Osterwald-Lenum, M. (1992). "A Note with Quantiles of the Asymptotic Distribution of the ML
+ * Cointegration Rank Test Statistics", Oxford Bulletin of Economics and Statistics, 54(3), 461-472.</li>
+ * <li>R's urca package: ca.jo() function</li>
+ * <li>Stata's vecrank command</li>
+ * </ul>
  */
 @CompileStatic
 class Johansen {
