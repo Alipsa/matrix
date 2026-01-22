@@ -329,7 +329,7 @@ class MatrixArffWriter {
       throw new IllegalArgumentException("File or directory cannot be null")
     }
     if (output.isDirectory()) {
-      String fileName = (matrix.matrixName ?: 'matrix') + '.arff'
+      String fileName = safeFileName(matrix.matrixName) + '.arff'
       output = new File(output, fileName)
     }
     if (output.parentFile != null && !output.parentFile.exists()) {
@@ -338,6 +338,20 @@ class MatrixArffWriter {
       }
     }
     return output
+  }
+
+  private static String safeFileName(String name) {
+    String baseName = name?.trim()
+    if (baseName == null || baseName.isEmpty()) {
+      return 'matrix'
+    }
+    baseName = baseName.replace('\\', '_').replace('/', '_')
+    baseName = baseName.replace('..', '_')
+    baseName = baseName.replaceAll(/[^A-Za-z0-9._-]/, '_')
+    if (baseName.isEmpty() || baseName == '.' || baseName == '..') {
+      return 'matrix'
+    }
+    return baseName
   }
 }
 
