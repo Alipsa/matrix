@@ -14,12 +14,18 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName
 import org.apache.parquet.schema.Type
 import se.alipsa.matrix.core.Matrix
 
+import java.io.InputStream
+import java.io.IOException
+import java.net.URI
+import java.net.URL
 import java.sql.Time
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -35,6 +41,12 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * // Read with a custom matrix name
  * Matrix data = MatrixParquetReader.read(new File("sales.parquet"), "quarterly_sales")
+ *
+ * // Read from an InputStream
+ * Matrix data = MatrixParquetReader.read(inputStream)
+ *
+ * // Read from a URL
+ * Matrix data = MatrixParquetReader.read(new URL("https://example.com/sales.parquet"))
  * }</pre>
  *
  * <h3>Type Preservation</h3>
@@ -140,6 +152,121 @@ class MatrixParquetReader {
   }
 
   /**
+   * Read the Parquet file from a Path into a {@link Matrix}.
+   *
+   * @param path the Path to read
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if path is null, does not exist, or is a directory
+   */
+  static Matrix read(java.nio.file.Path path) {
+    if (path == null) {
+      throw new IllegalArgumentException("Path cannot be null")
+    }
+    read(path.toFile())
+  }
+
+  /**
+   * Read the Parquet file from a Path into a {@link Matrix} using the supplied name.
+   *
+   * @param path the Path to read
+   * @param matrixName the name to apply to the resulting matrix
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if path is null, does not exist, or is a directory
+   */
+  static Matrix read(java.nio.file.Path path, String matrixName) {
+    if (path == null) {
+      throw new IllegalArgumentException("Path cannot be null")
+    }
+    read(path.toFile(), matrixName)
+  }
+
+  /**
+   * Read the Parquet file from a file path string into a {@link Matrix}.
+   *
+   * @param filePath the file path to read
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if filePath is null, does not exist, or is a directory
+   */
+  static Matrix readFromFile(String filePath) {
+    if (filePath == null) {
+      throw new IllegalArgumentException("File path cannot be null")
+    }
+    read(new File(filePath))
+  }
+
+  /**
+   * Read the Parquet file from a file path string into a {@link Matrix} using the supplied name.
+   *
+   * @param filePath the file path to read
+   * @param matrixName the name to apply to the resulting matrix
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if filePath is null, does not exist, or is a directory
+   */
+  static Matrix readFromFile(String filePath, String matrixName) {
+    if (filePath == null) {
+      throw new IllegalArgumentException("File path cannot be null")
+    }
+    read(new File(filePath), matrixName)
+  }
+
+  /**
+   * Read Parquet content from an InputStream into a {@link Matrix}.
+   *
+   * <p>Parquet requires a seekable input, so the stream is copied to a temporary file.</p>
+   *
+   * @param is input stream containing Parquet data
+   * @return a matrix populated with the stream contents
+   * @throws IllegalArgumentException if input stream is null
+   */
+  static Matrix read(InputStream is) {
+    readFromInputStream(is, null, null)
+  }
+
+  /**
+   * Read Parquet content from an InputStream into a {@link Matrix} using the supplied name.
+   *
+   * <p>Parquet requires a seekable input, so the stream is copied to a temporary file.</p>
+   *
+   * @param is input stream containing Parquet data
+   * @param matrixName the name to apply to the resulting matrix
+   * @return a matrix populated with the stream contents
+   * @throws IllegalArgumentException if input stream is null
+   */
+  static Matrix read(InputStream is, String matrixName) {
+    readFromInputStream(is, matrixName, null)
+  }
+
+  /**
+   * Read Parquet content from a URL into a {@link Matrix}.
+   *
+   * @param url URL pointing to Parquet content
+   * @return a matrix populated with the URL contents
+   * @throws IllegalArgumentException if url is null
+   */
+  static Matrix read(URL url) {
+    if (url == null) {
+      throw new IllegalArgumentException("URL cannot be null")
+    }
+    url.openStream().withCloseable { InputStream is ->
+      readFromInputStream(is, null, null)
+    }
+  }
+
+  /**
+   * Read Parquet content from a URL string into a {@link Matrix}.
+   *
+   * @param urlString String URL pointing to Parquet content
+   * @return a matrix populated with the URL contents
+   * @throws IllegalArgumentException if urlString is null
+   */
+  static Matrix readFromUrl(String urlString) {
+    if (urlString == null) {
+      throw new IllegalArgumentException("URL string cannot be null")
+    }
+    read(new URI(urlString).toURL())
+  }
+
+  /**
    * Read the Parquet file into a {@link Matrix} with a specific timezone for timestamp conversion.
    *
    * <p>By default, UTC timestamps are converted to {@link LocalDateTime} using the system
@@ -163,6 +290,88 @@ class MatrixParquetReader {
   }
 
   /**
+   * Read the Parquet file from a Path into a {@link Matrix} with a specific timezone.
+   *
+   * @param path the Path to read
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if path is null, does not exist, or is a directory, or zoneId is null
+   */
+  static Matrix read(java.nio.file.Path path, ZoneId zoneId) {
+    if (path == null) {
+      throw new IllegalArgumentException("Path cannot be null")
+    }
+    read(path.toFile(), zoneId)
+  }
+
+  /**
+   * Read the Parquet file from a file path string into a {@link Matrix} with a specific timezone.
+   *
+   * @param filePath the file path to read
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if filePath is null or zoneId is null
+   */
+  static Matrix readFromFile(String filePath, ZoneId zoneId) {
+    if (filePath == null) {
+      throw new IllegalArgumentException("File path cannot be null")
+    }
+    read(new File(filePath), zoneId)
+  }
+
+  /**
+   * Read Parquet content from an InputStream into a {@link Matrix} with a specific timezone.
+   *
+   * <p>Parquet requires a seekable input, so the stream is copied to a temporary file.</p>
+   *
+   * @param is input stream containing Parquet data
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the stream contents
+   * @throws IllegalArgumentException if input stream is null or zoneId is null
+   */
+  static Matrix read(InputStream is, ZoneId zoneId) {
+    if (zoneId == null) {
+      throw new IllegalArgumentException("ZoneId cannot be null")
+    }
+    readFromInputStream(is, null, zoneId)
+  }
+
+  /**
+   * Read Parquet content from a URL into a {@link Matrix} with a specific timezone.
+   *
+   * @param url URL pointing to Parquet content
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the URL contents
+   * @throws IllegalArgumentException if url is null or zoneId is null
+   */
+  static Matrix read(URL url, ZoneId zoneId) {
+    if (url == null) {
+      throw new IllegalArgumentException("URL cannot be null")
+    }
+    if (zoneId == null) {
+      throw new IllegalArgumentException("ZoneId cannot be null")
+    }
+    url.openStream().withCloseable { InputStream is ->
+      readFromInputStream(is, null, zoneId)
+    }
+  }
+
+  /**
+   * Read Parquet content from a URL string into a {@link Matrix} with a specific timezone.
+   *
+   * @param urlString String URL pointing to Parquet content
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the URL contents
+   * @throws IllegalArgumentException if urlString is null or zoneId is null
+   */
+  static Matrix readFromUrl(String urlString, ZoneId zoneId) {
+    if (urlString == null) {
+      throw new IllegalArgumentException("URL string cannot be null")
+    }
+    read(new URI(urlString).toURL(), zoneId)
+  }
+
+  /**
    * Read the Parquet file into a {@link Matrix} with a specific timezone and matrix name.
    *
    * @param file the Parquet file to read
@@ -181,6 +390,93 @@ class MatrixParquetReader {
     } finally {
       ZONE_ID_HOLDER.remove()
     }
+  }
+
+  /**
+   * Read the Parquet file from a Path into a {@link Matrix} with a specific timezone and name.
+   *
+   * @param path the Path to read
+   * @param matrixName the name to apply to the resulting matrix
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if path is null or zoneId is null
+   */
+  static Matrix read(java.nio.file.Path path, String matrixName, ZoneId zoneId) {
+    if (path == null) {
+      throw new IllegalArgumentException("Path cannot be null")
+    }
+    read(path.toFile(), matrixName, zoneId)
+  }
+
+  /**
+   * Read the Parquet file from a file path string into a {@link Matrix} with a specific timezone and name.
+   *
+   * @param filePath the file path to read
+   * @param matrixName the name to apply to the resulting matrix
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if filePath is null or zoneId is null
+   */
+  static Matrix readFromFile(String filePath, String matrixName, ZoneId zoneId) {
+    if (filePath == null) {
+      throw new IllegalArgumentException("File path cannot be null")
+    }
+    read(new File(filePath), matrixName, zoneId)
+  }
+
+  /**
+   * Read Parquet content from an InputStream into a {@link Matrix} with a specific timezone and name.
+   *
+   * <p>Parquet requires a seekable input, so the stream is copied to a temporary file.</p>
+   *
+   * @param is input stream containing Parquet data
+   * @param matrixName the name to apply to the resulting matrix
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the stream contents
+   * @throws IllegalArgumentException if input stream is null or zoneId is null
+   */
+  static Matrix read(InputStream is, String matrixName, ZoneId zoneId) {
+    if (zoneId == null) {
+      throw new IllegalArgumentException("ZoneId cannot be null")
+    }
+    readFromInputStream(is, matrixName, zoneId)
+  }
+
+  /**
+   * Read Parquet content from a URL into a {@link Matrix} with a specific timezone and name.
+   *
+   * @param url URL pointing to Parquet content
+   * @param matrixName the name to apply to the resulting matrix
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the URL contents
+   * @throws IllegalArgumentException if url is null or zoneId is null
+   */
+  static Matrix read(URL url, String matrixName, ZoneId zoneId) {
+    if (url == null) {
+      throw new IllegalArgumentException("URL cannot be null")
+    }
+    if (zoneId == null) {
+      throw new IllegalArgumentException("ZoneId cannot be null")
+    }
+    url.openStream().withCloseable { InputStream is ->
+      readFromInputStream(is, matrixName, zoneId)
+    }
+  }
+
+  /**
+   * Read Parquet content from a URL string into a {@link Matrix} with a specific timezone and name.
+   *
+   * @param urlString String URL pointing to Parquet content
+   * @param matrixName the name to apply to the resulting matrix
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the URL contents
+   * @throws IllegalArgumentException if urlString is null or zoneId is null
+   */
+  static Matrix readFromUrl(String urlString, String matrixName, ZoneId zoneId) {
+    if (urlString == null) {
+      throw new IllegalArgumentException("URL string cannot be null")
+    }
+    read(new URI(urlString).toURL(), matrixName, zoneId)
   }
 
   /**
@@ -243,6 +539,35 @@ class MatrixParquetReader {
       row = reader.read()
     }
     return builder.build()
+  }
+
+  private static Matrix readFromInputStream(InputStream is, String matrixName, ZoneId zoneId) {
+    if (is == null) {
+      throw new IllegalArgumentException("InputStream cannot be null")
+    }
+    boolean hasMatrixName = matrixName != null && !matrixName.trim().isEmpty()
+    String normalizedMatrixName = hasMatrixName ? matrixName : 'matrix'
+    java.nio.file.Path tempFile = Files.createTempFile("matrix-parquet-", ".parquet")
+    try {
+      Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING)
+      Matrix result
+      if (zoneId != null) {
+        result = hasMatrixName
+            ? read(tempFile.toFile(), normalizedMatrixName, zoneId)
+            : read(tempFile.toFile(), zoneId)
+      } else {
+        result = hasMatrixName
+            ? read(tempFile.toFile(), normalizedMatrixName)
+            : read(tempFile.toFile())
+      }
+      return hasMatrixName ? result : result.withMatrixName(normalizedMatrixName)
+    } finally {
+      try {
+        Files.deleteIfExists(tempFile)
+      } catch (IOException ignored) {
+        // Best-effort cleanup for temp file.
+      }
+    }
   }
 
   static List<Class> parseTypeString(String typeString) {

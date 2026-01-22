@@ -23,6 +23,21 @@ Matrix matrix = MatrixParquetReader.read(file)
 
 // Or with a custom matrix name
 Matrix matrix = MatrixParquetReader.read(file, "myData")
+
+// Read from a Path
+Matrix matrix = MatrixParquetReader.read(file.toPath())
+
+// Read from an InputStream
+new FileInputStream(file).withCloseable { is ->
+  Matrix matrix = MatrixParquetReader.read(is)
+}
+
+// Read from a URL (e.g. file:// or https://)
+URL url = file.toURI().toURL()
+Matrix matrix = MatrixParquetReader.read(url)
+
+// Read from a file path string
+Matrix matrix = MatrixParquetReader.readFromFile("/path/to/data.parquet")
 ```
 
 ### Writing a Matrix to a Parquet file

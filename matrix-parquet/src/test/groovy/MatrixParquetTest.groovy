@@ -302,7 +302,7 @@ class MatrixParquetTest {
   void testReaderValidation() {
     // Test null file
     def nullFileEx = assertThrows(IllegalArgumentException, {
-      MatrixParquetReader.read(null)
+      MatrixParquetReader.read((File) null)
     })
     assertTrue(nullFileEx.message.contains("File cannot be null"))
 
@@ -319,6 +319,57 @@ class MatrixParquetTest {
       MatrixParquetReader.read(dir)
     })
     assertTrue(dirEx.message.contains("directory"))
+  }
+
+  @Test
+  void testReadFromInputStream() {
+    def data = Matrix.builder('streamData').columns(
+        id: [1, 2],
+        name: ['A', 'B']
+    ).types([Integer, String]).build()
+
+    File file = new File("build/streamData.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.write(data, file)
+    assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
+
+    def matrix
+    new FileInputStream(file).withCloseable { input ->
+      matrix = MatrixParquetReader.read(input)
+    }
+
+    assertEquals(data, matrix, "Data read from InputStream does not match original data")
+    assertIterableEquals(data.types(), matrix.types(),
+        "Types read from InputStream do not match expected types")
+  }
+
+  @Test
+  void testReadFromUrlAndPath() {
+    def data = Matrix.builder('urlPathData').columns(
+        id: [1, 2],
+        amount: toBigDecimals([10.5, 20.75])
+    ).types([Integer, BigDecimal]).build()
+
+    File file = new File("build/urlPathData.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.write(data, file)
+    assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
+
+    def fromPath = MatrixParquetReader.read(file.toPath())
+    assertEquals(data, fromPath, "Data read from Path does not match original data")
+
+    def fromFilePath = MatrixParquetReader.readFromFile(file.absolutePath)
+    assertEquals(data, fromFilePath, "Data read from file path does not match original data")
+
+    def url = file.toURI().toURL()
+    def fromUrl = MatrixParquetReader.read(url)
+    assertEquals(data, fromUrl, "Data read from URL does not match original data")
   }
 
   @Test
