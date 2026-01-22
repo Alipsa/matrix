@@ -9,7 +9,6 @@ import org.apache.parquet.hadoop.ParquetReader
 import org.apache.parquet.hadoop.example.GroupReadSupport
 import org.apache.parquet.schema.GroupType
 import org.apache.parquet.schema.LogicalTypeAnnotation
-import org.apache.parquet.schema.MessageType
 import org.apache.parquet.schema.PrimitiveType
 import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName
 import org.apache.parquet.schema.Type
@@ -216,14 +215,16 @@ class MatrixParquetReader {
     }
 
     Group row = reader.read()
-    if (row == null) {
-      return Matrix.builder(matrixName).build()
-    }
-
-    def schema = row.getType()
+    GroupType schema = row != null ? row.getType() : footer.getFileMetaData().getSchema()
     List<String> fieldNames = schema.fields.collect { it.name }
     if (fieldTypes == null) {
       fieldTypes = extractFieldTypes(schema)
+    }
+    if (row == null) {
+      return Matrix.builder(matrixName)
+          .columnNames(fieldNames)
+          .types(fieldTypes)
+          .build()
     }
 
     def builder = Matrix.builder(matrixName)

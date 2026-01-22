@@ -371,4 +371,107 @@ class MatrixParquetTest {
     })
     assertTrue(readerNullEx.message.contains("ZoneId cannot be null"))
   }
+
+  @Test
+  void testEmptyMatrixRoundTrip() {
+    def emptyRows = Matrix.builder('empty_rows').columns(
+        id: [],
+        name: [],
+        amount: []
+    ).types([Integer, String, BigDecimal]).build()
+
+    File file = new File("build/empty_rows.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.write(emptyRows, file)
+    assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
+
+    def matrix = MatrixParquetReader.read(file)
+
+    assertIterableEquals(emptyRows.columnNames(), matrix.columnNames(),
+        "Column names should round-trip for an empty matrix")
+    assertIterableEquals(emptyRows.types(), matrix.types(),
+        "Column types should round-trip for an empty matrix")
+    assertEquals(0, matrix.rowCount(), "Empty matrix should have zero rows")
+  }
+
+  @Test
+  void testNullOnlyColumnRoundTrip() {
+    def data = Matrix.builder('null_only').columns(
+        id: [1, 2, 3],
+        notes: [null, null, null]
+    ).types([Integer, String]).build()
+
+    File file = new File("build/null_only.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.write(data, file)
+    assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
+
+    def matrix = MatrixParquetReader.read(file)
+
+    assertIterableEquals(data.types(), matrix.types(),
+        "Column types should be preserved when a column contains only nulls")
+    assertEquals([null, null, null], matrix['notes'], "Null-only column should round-trip")
+  }
+
+  @Test
+  void testSpecialCharacterColumnNames() {
+    def data = Matrix.builder('special_columns').columns(
+        'col with space': [1, 2],
+        'col-name': ['a', 'b'],
+        'col.name': [true, false],
+        'col(name)': toBigDecimals([1.1, 2.2])
+    ).types([Integer, String, Boolean, BigDecimal]).build()
+
+    File file = new File("build/special_columns.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.write(data, file)
+    assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
+
+    def matrix = MatrixParquetReader.read(file)
+
+    assertIterableEquals(data.columnNames(), matrix.columnNames(),
+        "Special character column names should be preserved")
+    assertIterableEquals(data.types(), matrix.types(),
+        "Column types should be preserved for special character columns")
+    assertEquals([1, 2], matrix['col with space'])
+    assertEquals(['a', 'b'], matrix['col-name'])
+    assertEquals([true, false], matrix['col.name'])
+    assertEquals(toBigDecimals([1.1, 2.2]), matrix['col(name)'])
+  }
+
+  @Test
+  void testLargeBigDecimalValues() {
+    def largeValues = toBigDecimals([
+        "12345678901234567890.123456789012345678",
+        "99999999999999999999.999999999999999999"
+    ])
+
+    def data = Matrix.builder('large_decimals').columns(
+        id: [1, 2],
+        amount: largeValues
+    ).types([Integer, BigDecimal]).build()
+
+    File file = new File("build/large_decimals.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.write(data, file, true)
+    assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
+
+    def matrix = MatrixParquetReader.read(file)
+
+    assertIterableEquals(data.types(), matrix.types(),
+        "BigDecimal column types should be preserved for large values")
+    assertEquals(largeValues, matrix.amount, "Large BigDecimal values should round-trip")
+  }
 }
