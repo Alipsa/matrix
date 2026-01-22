@@ -399,4 +399,24 @@ class MatrixArffTest {
     assertEquals(new BigDecimal("1"), roundTripped[0, "longs"])
     assertEquals(new BigDecimal("456"), roundTripped[1, "bigints"])
   }
+
+  @Test @Order(20)
+  void testNominalValuesWithBraces() {
+    String arffContent = """
+@RELATION brace_nominal
+
+@ATTRIBUTE label {'value with }','{leading brace}','plain'}
+
+@DATA
+'value with }'
+'{leading brace}'
+plain
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+    assertEquals(3, m.rowCount())
+    assertEquals("value with }", m[0, "label"])
+    assertEquals("{leading brace}", m[1, "label"])
+    assertEquals("plain", m[2, "label"])
+  }
 }

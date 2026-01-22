@@ -30,7 +30,6 @@ import java.util.regex.Pattern
 @CompileStatic
 class MatrixArffReader {
 
-  private static final Pattern NOMINAL_PATTERN = Pattern.compile(/\{([^}]*)\}/)
   private static final Pattern DATE_FORMAT_PATTERN = Pattern.compile(/(?i)date\s*(?:'([^']*)'|"([^"]*)")?/)
 
   /** Read from an Arff file */
@@ -275,10 +274,9 @@ class MatrixArffReader {
     String upperType = typeSpec.toUpperCase()
 
     // Check for nominal (categorical) type
-    Matcher nominalMatcher = NOMINAL_PATTERN.matcher(typeSpec)
-    if (nominalMatcher.find()) {
-      String valuesStr = nominalMatcher.group(1)
-      List<String> nominalValues = parseNominalValues(valuesStr)
+    String nominalValuesStr = extractNominalValues(typeSpec)
+    if (nominalValuesStr != null) {
+      List<String> nominalValues = parseNominalValues(nominalValuesStr)
       return new ArffAttribute(name, ArffType.NOMINAL, String.class, nominalValues)
     }
 
@@ -446,6 +444,42 @@ class MatrixArffReader {
       result.append('\\')
     }
     return result.toString()
+  }
+
+  private static String extractNominalValues(String typeSpec) {
+    int openIndex = typeSpec.indexOf('{')
+    if (openIndex < 0) {
+      return null
+    }
+    boolean inQuote = false
+    boolean escape = false
+    char quoteChar = 0
+    for (int i = openIndex + 1; i < typeSpec.length(); i++) {
+      char c = typeSpec.charAt(i)
+      if (inQuote) {
+        if (escape) {
+          escape = false
+          continue
+        }
+        if (c == '\\') {
+          escape = true
+          continue
+        }
+        if (c == quoteChar) {
+          inQuote = false
+        }
+        continue
+      }
+      if (c == '\'' || c == '"') {
+        inQuote = true
+        quoteChar = c
+        continue
+      }
+      if (c == '}') {
+        return typeSpec.substring(openIndex + 1, i)
+      }
+    }
+    return null
   }
 
   private static void validateFile(File file) {

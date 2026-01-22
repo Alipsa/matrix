@@ -289,7 +289,7 @@ class MatrixArffWriter {
         name.contains('}') || name.contains('%') || name.contains("'") ||
         name.contains('"')) {
       // Use single quotes and escape any internal single quotes
-      return "'" + name.replace("'", "\\'") + "'"
+      return "'" + name.replace("\\", "\\\\").replace("'", "\\'") + "'"
     }
     return name
   }
