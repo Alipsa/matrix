@@ -91,6 +91,36 @@ class CsvExporter {
   }
 
   /**
+   * Export a Matrix to an Excel-compatible CSV file.
+   *
+   * <p>Uses the Excel CSV format which is compatible with Microsoft Excel.</p>
+   *
+   * @param table the matrix to export
+   * @param out the file to write to or a directory to write to
+   * @param withHeader whether to include the columns names in the first row, default is true
+   */
+  static void exportToExcelCsv(Matrix table, File out, boolean withHeader = true) {
+    validateMatrix(table)
+    out = ensureFileOutput(table, out)
+    exportToCsv(table, CSVFormat.EXCEL, new PrintWriter(out), withHeader)
+  }
+
+  /**
+   * Export a Matrix to a Tab-Separated Values (TSV) file.
+   *
+   * <p>Uses tab characters as delimiters instead of commas.</p>
+   *
+   * @param table the matrix to export
+   * @param out the file to write to or a directory to write to
+   * @param withHeader whether to include the columns names in the first row, default is true
+   */
+  static void exportToTsv(Matrix table, File out, boolean withHeader = true) {
+    validateMatrix(table)
+    out = ensureFileOutput(table, out)
+    exportToCsv(table, CSVFormat.TDF, new PrintWriter(out), withHeader)
+  }
+
+  /**
    * Validate that the Matrix is not null and has columns.
    */
   private static void validateMatrix(Matrix table) {

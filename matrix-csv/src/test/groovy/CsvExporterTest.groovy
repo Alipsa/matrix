@@ -174,4 +174,51 @@ class CsvExporterTest {
       tempDir.deleteDir()
     }
   }
+
+  // Phase 4: API Enhancements
+
+  @Test
+  void testExportToExcelCsv() {
+    File file = File.createTempFile('excel', '.csv')
+    try {
+      CsvExporter.exportToExcelCsv(Dataset.mtcars(), file)
+      def content = file.text.split("\r\n")
+      // Excel format uses comma delimiter and CRLF line endings
+      assertTrue(content[0].contains(','), "Should use comma delimiter")
+      assertEquals('model,mpg,cyl,disp,hp,drat,wt,qsec,vs,am,gear,carb', content[0])
+      assertTrue(content[content.length - 1].startsWith('Volvo 142E'), "Last row should be Volvo")
+    } finally {
+      file.delete()
+    }
+  }
+
+  @Test
+  void testExportToTsv() {
+    File file = File.createTempFile('data', '.tsv')
+    try {
+      CsvExporter.exportToTsv(Dataset.mtcars(), file)
+      def content = file.text
+      // TDF format uses tab delimiter
+      assertTrue(content.contains('\t'), "Should use tab delimiter")
+      assertTrue(content.startsWith('model\tmpg\tcyl\tdisp\thp\tdrat\twt\tqsec\tvs\tam\tgear\tcarb'),
+          "Should start with header row")
+      assertTrue(content.contains('Volvo 142E'), "Should contain Volvo data")
+    } finally {
+      file.delete()
+    }
+  }
+
+  @Test
+  void testExportToExcelCsvWithoutHeader() {
+    File file = File.createTempFile('excel-noheader', '.csv')
+    try {
+      CsvExporter.exportToExcelCsv(Dataset.mtcars(), file, false)
+      def content = file.text.split("\r\n")
+      // First line should be data, not headers
+      assertTrue(content[0].startsWith('Mazda'), "First line should be data when withHeader=false")
+      assertFalse(content[0].contains('model'), "Should not contain header row")
+    } finally {
+      file.delete()
+    }
+  }
 }

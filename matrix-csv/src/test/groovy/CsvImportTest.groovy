@@ -217,4 +217,21 @@ id,name,amount
     assertEquals(['1', 'John', '100.50'], matrix.row(0))
     assertEquals(['2', 'Jane', '200.75'], matrix.row(1))
   }
+
+  // Phase 4: API Enhancements
+
+  @Test
+  void testImportCsvFromStringPath() {
+    // Test the convenience method that takes a String file path
+    URL url = getClass().getResource("/basic.csv")
+    File file = new File(url.toURI())
+
+    Matrix matrix = CsvImporter.importCsvFromFile(file.absolutePath)
+    assertNotNull(matrix, "Matrix should not be null")
+    assertEquals(4, matrix.rowCount(), "Should have 4 data rows")
+    assertEquals(4, matrix.columnCount(), "Should have 4 columns")
+    // Note: basic.csv has spaces after commas, default CSVFormat doesn't trim
+    assertEquals(['id', ' name', ' date', ' amount'], matrix.columnNames(), "Column names with spaces")
+    assertEquals(['1', ' Per', ' 2023-04-30', ' 234.12'], matrix.row(0), "First row")
+  }
 }
