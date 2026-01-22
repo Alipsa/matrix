@@ -249,4 +249,70 @@ class JsonImporterTest {
       tempFile.delete()
     }
   }
+
+  // Phase 2: Edge Case Tests
+
+  @Test
+  void testEmptyJsonArray() {
+    Matrix m = JsonImporter.parse('[]')
+    assertNotNull(m, "Matrix should not be null")
+    assertEquals(0, m.rowCount(), "Empty JSON should have 0 rows")
+    assertEquals(0, m.columnCount(), "Empty JSON should have 0 columns")
+  }
+
+  @Test
+  void testSingleRow() {
+    Matrix m = JsonImporter.parse('[{"id": 1, "name": "Alice"}]')
+    assertEquals(1, m.rowCount(), "Should have 1 row")
+    assertEquals(2, m.columnCount(), "Should have 2 columns")
+    assertEquals(['id', 'name'], m.columnNames())
+    assertEquals(1, m.row(0)[0])
+    assertEquals('Alice', m.row(0)[1])
+  }
+
+  @Test
+  void testSparseData() {
+    Matrix m = JsonImporter.parse('''[
+      {"a": 1, "b": 2},
+      {"a": 3},
+      {"b": 4, "c": 5}
+    ]''')
+    assertEquals(3, m.rowCount(), "Should have 3 rows")
+    assertEquals(3, m.columnCount(), "Should have 3 columns")
+    assertEquals(['a', 'b', 'c'], m.columnNames())
+    // Row 0: [1, 2, null]
+    // Row 1: [3, null, null]
+    // Row 2: [null, 4, 5]
+    assertEquals(1, m[0, 'a'])
+    assertEquals(2, m[0, 'b'])
+    assertNull(m[0, 'c'], "Row 0 column c should be null")
+    assertEquals(3, m[1, 'a'])
+    assertNull(m[1, 'b'], "Row 1 column b should be null")
+    assertNull(m[1, 'c'], "Row 1 column c should be null")
+    assertNull(m[2, 'a'], "Row 2 column a should be null")
+    assertEquals(4, m[2, 'b'])
+    assertEquals(5, m[2, 'c'])
+  }
+
+  @Test
+  void testInvalidJsonNotArray() {
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      JsonImporter.parse('{"not": "an array"}')
+    }
+    assertTrue(ex.message.contains("Expected JSON array"), "Error should mention array expectation")
+  }
+
+  @Test
+  void testMalformedJson() {
+    assertThrows(Exception) {
+      JsonImporter.parse('[{"a": 1,}]')  // Trailing comma
+    }
+  }
+
+  @Test
+  void testFileNotFound() {
+    assertThrows(FileNotFoundException) {
+      JsonImporter.parse(new File("/nonexistent/path/file.json"))
+    }
+  }
 }

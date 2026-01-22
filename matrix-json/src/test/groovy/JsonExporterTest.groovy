@@ -96,4 +96,41 @@ class JsonExporterTest {
 
 
     }
+
+    // Phase 2: Edge Case Tests
+
+    @Test
+    void testEmptyMatrixExport() {
+        Matrix empty = Matrix.builder().build()
+        JsonExporter exporter = new JsonExporter(empty)
+        String json = exporter.toJson()
+        assertEquals('[]', json, "Empty matrix should export as empty JSON array")
+    }
+
+    @Test
+    void testEmptyMatrixWithColumns() {
+        Matrix m = Matrix.builder()
+            .matrixName('empty')
+            .data(id: [], name: [])
+            .build()
+
+        JsonExporter exporter = new JsonExporter(m)
+        String json = exporter.toJson()
+        assertEquals('[]', json, "Matrix with 0 rows should export as empty array")
+    }
+
+    @Test
+    void testPrettyPrint() {
+        Matrix m = Matrix.builder()
+            .data(id: [1, 2], name: ['Alice', 'Bob'])
+            .build()
+
+        JsonExporter exporter = new JsonExporter(m)
+        String json = exporter.toJson(true)
+
+        assertTrue(json.contains('\n'), "Pretty printed JSON should contain newlines")
+        assertTrue(json.contains('  '), "Pretty printed JSON should contain indentation")
+        assertTrue(json.contains('"id"'), "Should contain id field")
+        assertTrue(json.contains('"name"'), "Should contain name field")
+    }
 }
