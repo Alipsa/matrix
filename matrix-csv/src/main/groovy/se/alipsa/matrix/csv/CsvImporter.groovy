@@ -208,6 +208,35 @@ class CsvImporter {
   }
 
   /**
+   * Import CSV content from a String (convenience method).
+   *
+   * <p>This method provides a convenient way to parse CSV data directly from a String,
+   * useful for testing and processing CSV data from non-file sources.</p>
+   *
+   * @param csvContent String containing CSV data
+   * @return Matrix containing the imported data with default settings (comma delimiter, first row as header)
+   * @throws IOException if parsing fails
+   * @throws IllegalArgumentException if columns are mismatched between rows
+   */
+  static Matrix importCsvString(String csvContent) throws IOException {
+    return importCsv(new StringReader(csvContent), CSVFormat.DEFAULT, true, StandardCharsets.UTF_8, '')
+  }
+
+  /**
+   * Import CSV content from a String with custom format.
+   *
+   * @param csvContent String containing CSV data
+   * @param format CSVFormat configuration
+   * @param firstRowAsHeader whether the first row contains column names (default: true)
+   * @return Matrix containing the imported data
+   * @throws IOException if parsing fails
+   * @throws IllegalArgumentException if columns are mismatched between rows
+   */
+  static Matrix importCsvString(String csvContent, CSVFormat format, boolean firstRowAsHeader = true) throws IOException {
+    return importCsv(new StringReader(csvContent), format, firstRowAsHeader, StandardCharsets.UTF_8, '')
+  }
+
+  /**
    * Import a CSV file from a URL using Apache Commons CSV format.
    *
    * @param url URL pointing to the CSV file to import

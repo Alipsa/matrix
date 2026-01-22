@@ -153,4 +153,166 @@ class JsonImporterTest {
       }
     }
   }
+
+  // Phase 1: API Consistency Tests
+
+  @Test
+  void testParseFromFile() {
+    // Create a temp file with JSON content
+    File tempFile = File.createTempFile('test-json', '.json')
+    try {
+      tempFile.text = '''[
+        {"emp_id": 1, "emp_name": "Rick", "salary": 623.3},
+        {"emp_id": 2, "emp_name": "Dan", "salary": 515.2}
+      ]'''
+
+      Matrix table = JsonImporter.parseFromFile(tempFile.absolutePath)
+
+      assertEquals(2, table.rowCount(), "Should have 2 rows")
+      assertEquals(3, table.columnCount(), "Should have 3 columns")
+      assertEquals(['emp_id', 'emp_name', 'salary'], table.columnNames())
+      // Check individual values rather than comparing lists directly
+      assertEquals(1, table.row(0)[0])
+      assertEquals('Rick', table.row(0)[1])
+      assertEquals(623.3, table.row(0)[2])
+    } finally {
+      tempFile.delete()
+    }
+  }
+
+  @Test
+  void testParseFromPath() {
+    // Create a temp file with JSON content
+    File tempFile = File.createTempFile('test-json', '.json')
+    try {
+      tempFile.text = '''[
+        {"id": 1, "name": "Alice"},
+        {"id": 2, "name": "Bob"},
+        {"id": 3, "name": "Charlie"}
+      ]'''
+
+      Matrix table = JsonImporter.parse(tempFile.toPath())
+
+      assertEquals(3, table.rowCount(), "Should have 3 rows")
+      assertEquals(2, table.columnCount(), "Should have 2 columns")
+      assertEquals(['id', 'name'], table.columnNames())
+      assertEquals(3, table.row(2)[0])
+      assertEquals('Charlie', table.row(2)[1])
+    } finally {
+      tempFile.delete()
+    }
+  }
+
+  @Test
+  void testParseFromUrl() {
+    // Create a temp file and use it as a file URL
+    File tempFile = File.createTempFile('test-json', '.json')
+    try {
+      tempFile.text = '''[
+        {"x": 10, "y": 20},
+        {"x": 30, "y": 40}
+      ]'''
+
+      URL url = tempFile.toURI().toURL()
+      Matrix table = JsonImporter.parse(url)
+
+      assertEquals(2, table.rowCount(), "Should have 2 rows")
+      assertEquals(2, table.columnCount(), "Should have 2 columns")
+      assertEquals(['x', 'y'], table.columnNames())
+      assertEquals(10, table.row(0)[0])
+      assertEquals(20, table.row(0)[1])
+      assertEquals(30, table.row(1)[0])
+      assertEquals(40, table.row(1)[1])
+    } finally {
+      tempFile.delete()
+    }
+  }
+
+  @Test
+  void testParseFromUrlString() {
+    // Create a temp file and use it as a file URL string
+    File tempFile = File.createTempFile('test-json', '.json')
+    try {
+      tempFile.text = '''[
+        {"a": 1, "b": 2}
+      ]'''
+
+      String urlString = tempFile.toURI().toURL().toString()
+      Matrix table = JsonImporter.parseFromUrl(urlString)
+
+      assertEquals(1, table.rowCount(), "Should have 1 row")
+      assertEquals(2, table.columnCount(), "Should have 2 columns")
+      assertEquals(['a', 'b'], table.columnNames())
+      assertEquals(1, table.row(0)[0])
+      assertEquals(2, table.row(0)[1])
+    } finally {
+      tempFile.delete()
+    }
+  }
+
+  // Phase 2: Edge Case Tests
+
+  @Test
+  void testEmptyJsonArray() {
+    Matrix m = JsonImporter.parse('[]')
+    assertNotNull(m, "Matrix should not be null")
+    assertEquals(0, m.rowCount(), "Empty JSON should have 0 rows")
+    assertEquals(0, m.columnCount(), "Empty JSON should have 0 columns")
+  }
+
+  @Test
+  void testSingleRow() {
+    Matrix m = JsonImporter.parse('[{"id": 1, "name": "Alice"}]')
+    assertEquals(1, m.rowCount(), "Should have 1 row")
+    assertEquals(2, m.columnCount(), "Should have 2 columns")
+    assertEquals(['id', 'name'], m.columnNames())
+    assertEquals(1, m.row(0)[0])
+    assertEquals('Alice', m.row(0)[1])
+  }
+
+  @Test
+  void testSparseData() {
+    Matrix m = JsonImporter.parse('''[
+      {"a": 1, "b": 2},
+      {"a": 3},
+      {"b": 4, "c": 5}
+    ]''')
+    assertEquals(3, m.rowCount(), "Should have 3 rows")
+    assertEquals(3, m.columnCount(), "Should have 3 columns")
+    assertEquals(['a', 'b', 'c'], m.columnNames())
+    // Row 0: [1, 2, null]
+    // Row 1: [3, null, null]
+    // Row 2: [null, 4, 5]
+    assertEquals(1, m[0, 'a'])
+    assertEquals(2, m[0, 'b'])
+    assertNull(m[0, 'c'], "Row 0 column c should be null")
+    assertEquals(3, m[1, 'a'])
+    assertNull(m[1, 'b'], "Row 1 column b should be null")
+    assertNull(m[1, 'c'], "Row 1 column c should be null")
+    assertNull(m[2, 'a'], "Row 2 column a should be null")
+    assertEquals(4, m[2, 'b'])
+    assertEquals(5, m[2, 'c'])
+  }
+
+  @Test
+  void testInvalidJsonNotArray() {
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      JsonImporter.parse('{"not": "an array"}')
+    }
+    assertTrue(ex.message.contains("Expected JSON array"), "Error should mention array expectation")
+  }
+
+  @Test
+  void testMalformedJson() {
+    assertThrows(Exception) {
+      JsonImporter.parse('[{"a": 1,}]')  // Trailing comma
+    }
+  }
+
+  @Test
+  void testFileNotFound() {
+    assertThrows(FileNotFoundException) {
+      JsonImporter.parse(new File("/nonexistent/path/file.json"))
+    }
+  }
 }

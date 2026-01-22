@@ -234,4 +234,60 @@ id,name,amount
     assertEquals(['id', ' name', ' date', ' amount'], matrix.columnNames(), "Column names with spaces")
     assertEquals(['1', ' Per', ' 2023-04-30', ' 234.12'], matrix.row(0), "First row")
   }
+
+  // String Content Support Tests
+
+  @Test
+  void testImportCsvString() {
+    String csvContent = """id,name,amount
+1,Alice,100.50
+2,Bob,200.75
+3,Charlie,300.00"""
+
+    Matrix matrix = CsvImporter.importCsvString(csvContent)
+
+    assertNotNull(matrix, "Matrix should not be null")
+    assertEquals(3, matrix.rowCount(), "Should have 3 data rows")
+    assertEquals(3, matrix.columnCount(), "Should have 3 columns")
+    assertEquals(['id', 'name', 'amount'], matrix.columnNames())
+    assertEquals(['1', 'Alice', '100.50'], matrix.row(0))
+    assertEquals(['2', 'Bob', '200.75'], matrix.row(1))
+    assertEquals(['3', 'Charlie', '300.00'], matrix.row(2))
+  }
+
+  @Test
+  void testImportCsvStringWithCustomFormat() {
+    String csvContent = """id;name;amount
+1;Alice;100.50
+2;Bob;200.75"""
+
+    CSVFormat format = CSVFormat.Builder.create()
+        .setDelimiter(';')
+        .setTrim(true)
+        .build()
+
+    Matrix matrix = CsvImporter.importCsvString(csvContent, format)
+
+    assertEquals(2, matrix.rowCount(), "Should have 2 data rows")
+    assertEquals(3, matrix.columnCount(), "Should have 3 columns")
+    assertEquals(['id', 'name', 'amount'], matrix.columnNames())
+    assertEquals(['1', 'Alice', '100.50'], matrix.row(0))
+  }
+
+  @Test
+  void testImportCsvStringWithoutHeader() {
+    String csvContent = """1,Alice,100.50
+2,Bob,200.75"""
+
+    CSVFormat format = CSVFormat.Builder.create()
+        .setTrim(true)
+        .build()
+
+    Matrix matrix = CsvImporter.importCsvString(csvContent, format, false)
+
+    assertEquals(2, matrix.rowCount(), "Should have 2 data rows")
+    assertEquals(3, matrix.columnCount(), "Should have 3 columns")
+    assertEquals(['c0', 'c1', 'c2'], matrix.columnNames(), "Auto-generated column names")
+    assertEquals(['1', 'Alice', '100.50'], matrix.row(0))
+  }
 }
