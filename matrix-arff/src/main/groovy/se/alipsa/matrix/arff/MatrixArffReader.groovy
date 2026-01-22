@@ -252,7 +252,7 @@ class MatrixArffReader {
         sb.append(c)
       }
       name = sb.toString()
-      typeSpec = i <= spec.length() ? spec.substring(i).trim() : ''
+      typeSpec = i < spec.length() ? spec.substring(i).trim() : ''
     } else {
       int splitIndex = -1
       for (int i = 0; i < spec.length(); i++) {
@@ -423,6 +423,9 @@ class MatrixArffReader {
     if (!quoted) {
       return value
     }
+    if (value.length() == 2) {
+      return ""
+    }
     value = value.substring(1, value.length() - 1)
     StringBuilder result = new StringBuilder()
     boolean escape = false
@@ -466,7 +469,13 @@ class MatrixArffReader {
   }
 
   private static String defaultName(URL url) {
-    String name = url.getFile() == null ? url.getPath() : url.getFile()
+    String name = url.getPath()
+    if (name == null || name.isEmpty()) {
+      name = url.getFile()
+    }
+    if (name == null || name.isEmpty()) {
+      return "ArffMatrix"
+    }
     if (name.contains('/')) {
       name = name.substring(name.lastIndexOf('/') + 1)
     }

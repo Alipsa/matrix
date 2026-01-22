@@ -31,12 +31,17 @@ class MatrixArffWriter {
     validateMatrix(matrix)
     File output = ensureFileOutput(matrix, file)
     OutputStream outputStream = new FileOutputStream(output)
+    OutputStreamWriter writer = null
     try {
-      OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
+      writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
       write(matrix, writer)
       writer.flush()
     } finally {
-      outputStream.close()
+      if (writer != null) {
+        writer.close()
+      } else {
+        outputStream.close()
+      }
     }
   }
 
@@ -105,12 +110,17 @@ class MatrixArffWriter {
     validateMatrix(matrix)
     File output = ensureFileOutput(matrix, file)
     OutputStream outputStream = new FileOutputStream(output)
+    OutputStreamWriter writer = null
     try {
-      OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
+      writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
       write(matrix, writer, nominalMappings)
       writer.flush()
     } finally {
-      outputStream.close()
+      if (writer != null) {
+        writer.close()
+      } else {
+        outputStream.close()
+      }
     }
   }
 
@@ -323,7 +333,9 @@ class MatrixArffWriter {
       output = new File(output, fileName)
     }
     if (output.parentFile != null && !output.parentFile.exists()) {
-      output.parentFile.mkdirs()
+      if (!output.parentFile.mkdirs() && !output.parentFile.exists()) {
+        throw new IllegalArgumentException("Failed to create directory: ${output.parentFile.absolutePath}")
+      }
     }
     return output
   }
