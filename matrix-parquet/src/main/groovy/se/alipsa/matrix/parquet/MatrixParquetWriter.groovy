@@ -29,6 +29,43 @@ import java.beans.PropertyDescriptor
 @CompileStatic
 class MatrixParquetWriter {
 
+  /** Metadata key for storing Matrix column types in Parquet file */
+  static final String METADATA_COLUMN_TYPES = "matrix.columnTypes"
+
+  /** Parquet schema field name for list elements */
+  private static final String FIELD_ELEMENT = 'element'
+
+  /** Parquet schema field name for map keys */
+  private static final String FIELD_KEY = 'key'
+
+  /** Parquet schema field name for map values */
+  private static final String FIELD_VALUE = 'value'
+
+  /** Parquet schema field name for repeated list entries */
+  private static final String FIELD_LIST = 'list'
+
+  /** Parquet schema field name for map key-value pairs */
+  private static final String FIELD_KEY_VALUE = 'key_value'
+
+  /**
+   * Validates the matrix and file parameters before writing.
+   *
+   * @param matrix the matrix to validate
+   * @param fileOrDir the file or directory to validate
+   * @throws IllegalArgumentException if matrix is null, has no columns, or fileOrDir is null
+   */
+  private static void validateInput(Matrix matrix, File fileOrDir) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
+    }
+    if (fileOrDir == null) {
+      throw new IllegalArgumentException("File or directory cannot be null")
+    }
+  }
+
   /**
    * Writes a Matrix to a Parquet file, optionally inferring precision and scale for BigDecimal columns.
    *
@@ -38,8 +75,10 @@ class MatrixParquetWriter {
    * BigDecimal columns default to double storage (which leads to some loss of precision).
    * Nested Groovy {@link List} and {@link Map} structures are preserved as Parquet LIST/MAP/STRUCT types.
    * @return the target file
+   * @throws IllegalArgumentException if matrix is null, has no columns, or fileOrDir is null
    */
   static File write(Matrix matrix, File fileOrDir, boolean inferPrecisionAndScale = true) {
+    validateInput(matrix, fileOrDir)
     MessageType schema
     if (inferPrecisionAndScale) {
       schema = buildSchema(matrix,true)
@@ -59,13 +98,15 @@ class MatrixParquetWriter {
    * so you can set the precision and scale to a sufficiently large value (e.g., [38, 18] for typical financial calculations)
    * so there will be no loss of precision.
    *
-   * @param matrix
-   * @param fileOrDir
-   * @param precision
-   * @param scale
-   * @return
+   * @param matrix the matrix to write
+   * @param fileOrDir the target file or directory
+   * @param precision the decimal precision to use for all BigDecimal columns
+   * @param scale the decimal scale to use for all BigDecimal columns
+   * @return the target file
+   * @throws IllegalArgumentException if matrix is null, has no columns, or fileOrDir is null
    */
   static File write(Matrix matrix, File fileOrDir, int precision, int scale) {
+    validateInput(matrix, fileOrDir)
     Map<String, int[]> decimalMeta = [:]
     matrix.columnNames().each { col ->
       if (matrix.type(col) == BigDecimal) {
@@ -93,8 +134,10 @@ class MatrixParquetWriter {
    * @param decimalMeta a Map where keys are column names (String) and values are int arrays [precision, scale].
    * if set to null or there is no matching entry for a BigDecimal column, that column will default to double storage
    * @return the target file
+   * @throws IllegalArgumentException if matrix is null, has no columns, or fileOrDir is null
    */
   static File write(Matrix matrix, File fileOrDir, Map<String, int[]> decimalMeta) {
+    validateInput(matrix, fileOrDir)
     File file = determineTargetFile(matrix, fileOrDir)
 
     def schema = buildSchema(matrix, decimalMeta)
@@ -106,7 +149,7 @@ class MatrixParquetWriter {
     File file
     if (fileOrDir.isDirectory()) {
       file = new File(fileOrDir, "${name}.parquet")
-      println "Writing to ${file.absolutePath}"
+      // println "Writing to ${file.absolutePath}"
     } else {
       file = fileOrDir
     }
@@ -124,7 +167,7 @@ class MatrixParquetWriter {
   private static File writeInternal(Matrix matrix, File file, MessageType schema) {
     def conf = new Configuration()
     def extraMeta = new HashMap<String, String>()
-    extraMeta.put("matrix.columnTypes", matrix.types().collect { it.name }.join(','))
+    extraMeta.put(METADATA_COLUMN_TYPES, matrix.types().collect { it.name }.join(','))
 
     def writer = ExampleParquetWriter.builder(new Path(file.toURI()))
         .withConf(conf)
@@ -200,9 +243,9 @@ class MatrixParquetWriter {
   static Type buildParquetType(String name, List<?> values, Class clazz, int[] decimalMeta = null, boolean preferStructForMaps = false) {
     if (isListType(clazz, values)) {
       List<?> nestedValues = extractListElements(values)
-      Type elementType = buildParquetType('element', nestedValues, inferClass(nestedValues, Object), null, true)
+      Type elementType = buildParquetType(FIELD_ELEMENT, nestedValues, inferClass(nestedValues, Object), null, true)
       if (elementType == null) {
-        elementType = buildPrimitiveType('element', String, null, false)
+        elementType = buildPrimitiveType(FIELD_ELEMENT, String, null, false)
       }
       return Types.optionalList().element(elementType).named(name)
     }
@@ -273,13 +316,10 @@ class MatrixParquetWriter {
       }
       case LocalDateTime, Timestamp -> {
         primitive = PrimitiveTypeName.INT64
-        // Use LogicalTypeAnnotation.TimeUnit.MICROS for better precision, but current code used MILLIS
-        // Sticking to MILLIS to avoid breaking existing behavior, but writing microseconds in _writeInternal
-        logical = LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MILLIS)
+        logical = LogicalTypeAnnotation.timestampType(true, LogicalTypeAnnotation.TimeUnit.MICROS)
       }
       case Time -> {
         primitive = PrimitiveTypeName.INT32
-        // Time in milliseconds, but writing seconds in _writeInternal
         logical = LogicalTypeAnnotation.timeType(true, LogicalTypeAnnotation.TimeUnit.MILLIS)
       }
       default -> primitive = PrimitiveTypeName.BINARY
@@ -298,7 +338,7 @@ class MatrixParquetWriter {
 
     Object keySample = findFirstNonNull(maps.collectMany { it?.keySet() ?: [] } as List)
     Class<?> keyClass = inferClass([keySample], keySample?.class ?: String)
-    PrimitiveType keyType = buildPrimitiveType('key', keyClass ?: String, null, true)
+    PrimitiveType keyType = buildPrimitiveType(FIELD_KEY, keyClass ?: String, null, true)
     mapBuilder.key(keyType)
 
     List<Object> valueSamples = maps.collectMany { it?.values() ?: [] } as List<Object>
@@ -308,9 +348,9 @@ class MatrixParquetWriter {
     }
     Type valueType
     if (valueSamples.isEmpty()) {
-      valueType = buildPrimitiveType('value', String, null, false)
+      valueType = buildPrimitiveType(FIELD_VALUE, String, null, false)
     } else {
-      valueType = buildParquetType('value', valueSamples, inferClass(valueSamples, Object), null)
+      valueType = buildParquetType(FIELD_VALUE, valueSamples, inferClass(valueSamples, Object), null)
     }
     mapBuilder.value(valueType)
     return mapBuilder.named(name)
@@ -511,7 +551,11 @@ class MatrixParquetWriter {
       case Boolean, boolean -> group.append(fieldName, (boolean) value)
       case LocalDate -> group.append(fieldName, ((LocalDate) value).toEpochDay().intValue())
       case java.sql.Date -> group.append(fieldName, ((java.sql.Date) value).toLocalDate().toEpochDay().intValue())
-      case Time -> group.append(fieldName, ((Time) value).toLocalTime().toSecondOfDay())
+      case Time -> {
+        def localTime = ((Time) value).toLocalTime()
+        int millis = (int) (localTime.toNanoOfDay() / 1_000_000L)
+        group.append(fieldName, millis)
+      }
       case LocalDateTime -> {
         def micros = ((LocalDateTime) value).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() * 1000
         group.append(fieldName, (long) micros)
@@ -538,7 +582,7 @@ class MatrixParquetWriter {
     GroupType repeatedType = groupType.getType(0).asGroupType()
     Type elementType = repeatedType.getType(0)
     collection.each { Object element ->
-      Group entry = listGroup.addGroup('list')
+      Group entry = listGroup.addGroup(FIELD_LIST)
       writeValue(entry, elementType.name, elementType, element)
     }
   }
@@ -553,7 +597,7 @@ class MatrixParquetWriter {
     PrimitiveType keyPrimitive = keyValueType.getType(0).asPrimitiveType()
     Type valueType = keyValueType.getFieldCount() > 1 ? keyValueType.getType(1) : null
     mapValue.each { Object k, Object v ->
-      Group kvGroup = mapGroup.addGroup('key_value')
+      Group kvGroup = mapGroup.addGroup(FIELD_KEY_VALUE)
       writePrimitiveValue(kvGroup, keyPrimitive.name, keyPrimitive, k)
       if (valueType != null && v != null) {
         writeValue(kvGroup, valueType.name, valueType, v)

@@ -4,7 +4,11 @@ import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.parquet.MatrixParquetWriter
 
+import java.sql.Time
+import java.sql.Timestamp
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
@@ -205,5 +209,114 @@ class MatrixParquetTest {
     assertEquals(['Electronics', 'High-End'], matrix.tags[0])
     assertEquals([manufacturer: 'Alpha', warranty_years: 3], matrix.details[0])
     assertEquals([rating: 5, user: 'A'], matrix.reviews[0][0])
+  }
+
+  @Test
+  void testTimePrecisionRoundTrip() {
+    // Test LocalDateTime with microsecond precision (schema uses MICROS)
+    def dateTime1 = LocalDateTime.of(2024, 6, 15, 10, 30, 45, 123_456_000) // 123.456 ms
+    def dateTime2 = LocalDateTime.of(2024, 12, 31, 23, 59, 59, 999_000_000) // 999 ms
+    def dateTime3 = LocalDateTime.of(2024, 1, 1, 0, 0, 0, 0) // midnight
+
+    // Test java.sql.Time with millisecond precision (schema uses MILLIS)
+    def time1 = Time.valueOf(LocalTime.of(10, 30, 45)) // 10:30:45.000
+    def time2 = Time.valueOf(LocalTime.of(23, 59, 59)) // 23:59:59.000
+    def time3 = Time.valueOf(LocalTime.of(0, 0, 0)) // 00:00:00.000
+
+    // Test java.sql.Timestamp with microsecond precision
+    def timestamp1 = Timestamp.valueOf(LocalDateTime.of(2024, 6, 15, 10, 30, 45, 123_000_000))
+    def timestamp2 = Timestamp.valueOf(LocalDateTime.of(2024, 12, 31, 23, 59, 59, 999_000_000))
+    def timestamp3 = Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 0, 0, 0, 0))
+
+    def timeData = Matrix.builder('timeData').columns(
+        id: [1, 2, 3],
+        local_datetime: [dateTime1, dateTime2, dateTime3],
+        sql_time: [time1, time2, time3],
+        sql_timestamp: [timestamp1, timestamp2, timestamp3]
+    ).types([Integer, LocalDateTime, Time, Timestamp]).build()
+
+    File file = new File("build/timeData.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.write(timeData, file)
+    assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
+
+    def matrix = MatrixParquetReader.read(file)
+
+    // Verify types are preserved
+    assertEquals([Integer, LocalDateTime, Time, Timestamp], matrix.types(),
+        "Time types should be preserved")
+
+    // Verify LocalDateTime values (note: precision may be reduced to milliseconds due to storage)
+    // The reader reconstructs LocalDateTime from milliseconds, so nanosecond precision is lost
+    assertEquals(dateTime1.withNano((dateTime1.nano / 1_000_000 as int) * 1_000_000),
+        matrix.local_datetime[0], "LocalDateTime should round-trip with millisecond precision")
+    assertEquals(dateTime2.withNano((dateTime2.nano / 1_000_000 as int) * 1_000_000),
+        matrix.local_datetime[1], "LocalDateTime should round-trip with millisecond precision")
+    assertEquals(dateTime3, matrix.local_datetime[2], "LocalDateTime midnight should round-trip exactly")
+
+    // Verify Time values (millisecond precision)
+    assertEquals(time1.toString(), matrix.sql_time[0].toString(), "Time 10:30:45 should round-trip")
+    assertEquals(time2.toString(), matrix.sql_time[1].toString(), "Time 23:59:59 should round-trip")
+    assertEquals(time3.toString(), matrix.sql_time[2].toString(), "Time 00:00:00 should round-trip")
+
+    // Verify Timestamp values are preserved (type is stored in metadata)
+    assertEquals(Timestamp, matrix.types()[3], "Timestamp type should be preserved")
+
+    // Verify the actual timestamp values round-trip correctly
+    // Timestamps are stored with microsecond precision in Parquet (MICROS)
+    assertEquals(timestamp1.time, matrix.sql_timestamp[0].time, "Timestamp1 should round-trip")
+    assertEquals(timestamp2.time, matrix.sql_timestamp[1].time, "Timestamp2 should round-trip")
+    assertEquals(timestamp3.time, matrix.sql_timestamp[2].time, "Timestamp3 should round-trip")
+  }
+
+  @Test
+  void testWriterValidation() {
+    File file = new File("build/validation_test.parquet")
+
+    // Test null matrix
+    def nullMatrixEx = assertThrows(IllegalArgumentException, {
+      MatrixParquetWriter.write(null, file)
+    })
+    assertTrue(nullMatrixEx.message.contains("Matrix cannot be null"))
+
+    // Test empty matrix (no columns)
+    def emptyMatrix = Matrix.builder('empty').build()
+    def emptyMatrixEx = assertThrows(IllegalArgumentException, {
+      MatrixParquetWriter.write(emptyMatrix, file)
+    })
+    assertTrue(emptyMatrixEx.message.contains("at least one column"))
+
+    // Test null file
+    def validMatrix = Matrix.builder('test').columns(id: [1, 2, 3]).types([Integer]).build()
+    def nullFileEx = assertThrows(IllegalArgumentException, {
+      MatrixParquetWriter.write(validMatrix, null)
+    })
+    assertTrue(nullFileEx.message.contains("File or directory cannot be null"))
+  }
+
+  @Test
+  void testReaderValidation() {
+    // Test null file
+    def nullFileEx = assertThrows(IllegalArgumentException, {
+      MatrixParquetReader.read(null)
+    })
+    assertTrue(nullFileEx.message.contains("File cannot be null"))
+
+    // Test non-existent file
+    def nonExistentFile = new File("build/does_not_exist.parquet")
+    def noFileEx = assertThrows(IllegalArgumentException, {
+      MatrixParquetReader.read(nonExistentFile)
+    })
+    assertTrue(noFileEx.message.contains("does not exist"))
+
+    // Test directory instead of file
+    def dir = new File("build")
+    def dirEx = assertThrows(IllegalArgumentException, {
+      MatrixParquetReader.read(dir)
+    })
+    assertTrue(dirEx.message.contains("directory"))
   }
 }

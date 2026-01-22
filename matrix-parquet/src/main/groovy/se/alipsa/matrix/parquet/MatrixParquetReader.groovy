@@ -1,5 +1,6 @@
 package se.alipsa.matrix.parquet
 
+import groovy.transform.CompileStatic
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.parquet.example.data.Group
@@ -21,7 +22,35 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 
+@CompileStatic
 class MatrixParquetReader {
+
+  /** Metadata key for storing Matrix column types in Parquet file */
+  static final String METADATA_COLUMN_TYPES = "matrix.columnTypes"
+
+  /** Parquet schema field name for repeated list entries */
+  private static final String FIELD_LIST = 'list'
+
+  /** Parquet schema field name for map key-value pairs */
+  private static final String FIELD_KEY_VALUE = 'key_value'
+
+  /**
+   * Validates the file parameter before reading.
+   *
+   * @param file the file to validate
+   * @throws IllegalArgumentException if file is null, does not exist, or is a directory
+   */
+  private static void validateFile(File file) {
+    if (file == null) {
+      throw new IllegalArgumentException("File cannot be null")
+    }
+    if (!file.exists()) {
+      throw new IllegalArgumentException("File does not exist: ${file.absolutePath}")
+    }
+    if (file.isDirectory()) {
+      throw new IllegalArgumentException("Expected a file but got a directory: ${file.absolutePath}")
+    }
+  }
 
   /**
    * Read the Parquet file into a {@link Matrix} using the supplied name.
@@ -29,8 +58,10 @@ class MatrixParquetReader {
    * @param file the Parquet file to read
    * @param matrixName the name to apply to the resulting matrix
    * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if file is null, does not exist, or is a directory
    */
   static Matrix read(File file, String matrixName) {
+    validateFile(file)
     read(file).withMatrixName(matrixName)
   }
 
@@ -39,14 +70,16 @@ class MatrixParquetReader {
    *
    * @param file the Parquet file to read
    * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if file is null, does not exist, or is a directory
    */
   static Matrix read(File file) {
+    validateFile(file)
     def path = new Path(file.toURI())
     def conf = new Configuration()
     // Open Parquet file metadata
     def footer = ParquetFileReader.readFooter(conf, path)
     def keyValueMetaData = footer.getFileMetaData().getKeyValueMetaData()
-    def typeString = keyValueMetaData.get("matrix.columnTypes")
+    def typeString = keyValueMetaData.get(METADATA_COLUMN_TYPES)
 
     //println("typeString: $typeString")
     List<Class> fieldTypes
@@ -163,7 +196,8 @@ class MatrixParquetReader {
           return LocalDate.ofEpochDay(group.getInteger(fieldName, 0))
         }
         if (logical instanceof LogicalTypeAnnotation.TimeLogicalTypeAnnotation) {
-          return Time.valueOf(LocalTime.ofSecondOfDay(group.getInteger(fieldName, 0)))
+          int millis = group.getInteger(fieldName, 0)
+          return Time.valueOf(LocalTime.ofNanoOfDay(millis * 1_000_000L))
         }
         if (expectedType == java.sql.Date) {
           return java.sql.Date.valueOf(LocalDate.ofEpochDay(group.getInteger(fieldName, 0)))
@@ -173,6 +207,9 @@ class MatrixParquetReader {
         if (logical instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
           def micros = group.getLong(fieldName, 0)
           def millis = (long) (micros / 1000)
+          if (expectedType == java.sql.Timestamp) {
+            return new java.sql.Timestamp(millis)
+          }
           return LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
         }
         def longValue = group.getLong(fieldName, 0)
@@ -208,9 +245,9 @@ class MatrixParquetReader {
     Group listGroup = group.getGroup(fieldName, 0)
     GroupType repeatedType = groupType.getType(0).asGroupType()
     Type elementType = repeatedType.getType(0)
-    int elementCount = listGroup.getFieldRepetitionCount('list')
+    int elementCount = listGroup.getFieldRepetitionCount(FIELD_LIST)
     for (int j = 0; j < elementCount; j++) {
-      Group elementGroup = listGroup.getGroup('list', j)
+      Group elementGroup = listGroup.getGroup(FIELD_LIST, j)
       def element = readValue(elementGroup, elementType.name, elementType, null)
       result << element
     }
@@ -223,9 +260,9 @@ class MatrixParquetReader {
     GroupType keyValueType = groupType.getType(0).asGroupType()
     Type keyType = keyValueType.getType(0)
     Type valueType = keyValueType.getFieldCount() > 1 ? keyValueType.getType(1) : null
-    int keyValueCount = mapGroup.getFieldRepetitionCount('key_value')
+    int keyValueCount = mapGroup.getFieldRepetitionCount(FIELD_KEY_VALUE)
     for (int j = 0; j < keyValueCount; j++) {
-      Group kvGroup = mapGroup.getGroup('key_value', j)
+      Group kvGroup = mapGroup.getGroup(FIELD_KEY_VALUE, j)
       def key = readValue(kvGroup, keyType.name, keyType, null)
       def value = valueType == null ? null : readValue(kvGroup, valueType.name, valueType, null)
       result[key] = value
