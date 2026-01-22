@@ -123,7 +123,11 @@ class MatrixArffReader {
     if (urlString == null) {
       throw new IllegalArgumentException("URL string cannot be null")
     }
-    read(new URI(urlString).toURL())
+    try {
+      return read(new URI(urlString).toURL())
+    } catch (URISyntaxException | MalformedURLException e) {
+      throw new IllegalArgumentException("Invalid URL string: " + urlString, e)
+    }
   }
 
   private static Matrix parseArff(BufferedReader reader, String defaultName) {
