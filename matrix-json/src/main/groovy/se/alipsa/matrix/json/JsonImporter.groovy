@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
+import java.nio.file.Path
 
 /**
  * Imports JSON arrays into Matrix format using Jackson streaming API.
@@ -74,6 +75,59 @@ class JsonImporter {
     FACTORY.createParser(reader).withCloseable { JsonParser parser ->
       return parseStream(parser)
     }
+  }
+
+  /**
+   * Parse JSON from a URL into a Matrix.
+   *
+   * @param url URL pointing to JSON content
+   * @param charset character encoding (default UTF-8)
+   * @return a Matrix with columns derived from JSON keys
+   * @throws IOException if reading the URL fails
+   */
+  static Matrix parse(URL url, Charset charset = StandardCharsets.UTF_8) {
+    url.openStream().withCloseable { InputStream is ->
+      return parse(is, charset)
+    }
+  }
+
+  /**
+   * Parse JSON from a URL string into a Matrix.
+   *
+   * @param urlString String URL pointing to JSON content
+   * @param charset character encoding (default UTF-8)
+   * @return a Matrix with columns derived from JSON keys
+   * @throws IOException if reading the URL fails or URL is invalid
+   */
+  static Matrix parseFromUrl(String urlString, Charset charset = StandardCharsets.UTF_8) {
+    return parse(new URI(urlString).toURL(), charset)
+  }
+
+  /**
+   * Parse JSON from a Path into a Matrix.
+   *
+   * @param path Path to the file containing JSON array
+   * @param charset character encoding (default UTF-8)
+   * @return a Matrix with columns derived from JSON keys
+   * @throws IOException if reading the file fails
+   */
+  static Matrix parse(Path path, Charset charset = StandardCharsets.UTF_8) {
+    return parse(path.toFile(), charset)
+  }
+
+  /**
+   * Parse JSON from a file path string (convenience method).
+   *
+   * <p>This method provides a convenient way to import JSON using a String file path
+   * instead of creating a File object. It uses default UTF-8 encoding.</p>
+   *
+   * @param filePath path to the JSON file as a String
+   * @param charset character encoding (default UTF-8)
+   * @return Matrix containing the parsed data
+   * @throws IOException if reading the file fails or file not found
+   */
+  static Matrix parseFromFile(String filePath, Charset charset = StandardCharsets.UTF_8) {
+    return parse(new File(filePath), charset)
   }
 
   /**

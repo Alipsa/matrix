@@ -3,7 +3,6 @@ plugins {
     id 'java-library'
     id 'signing'
     id 'maven-publish'
-    //id("se.alipsa.nexus-release-plugin") version "1.0.1"
     id("se.alipsa.nexus-release-plugin") version '2.0.0'
 }
 
@@ -35,15 +34,9 @@ repositories {
 
 dependencies {
     compileOnly libs.groovy
-    //if (version.endsWith('SNAPSHOT')) {
-        compileOnly project(':matrix-core')
-        testImplementation project(':matrix-core')
-        testImplementation project(':matrix-datasets')
-    /*} else {
-        compileOnly('se.alipsa.matrix:matrix-core:2.2.0')
-        testImplementation('se.alipsa.matrix:matrix-core:2.2.0')
-        testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
-    }*/
+    compileOnly project(':matrix-core')
+    testImplementation project(':matrix-core')
+    testImplementation project(':matrix-datasets')
     implementation 'org.apache.ivy:ivy:2.5.3'
     implementation 'org.apache.parquet:parquet-column:1.16.0'
     implementation 'org.apache.parquet:parquet-hadoop:1.16.0'

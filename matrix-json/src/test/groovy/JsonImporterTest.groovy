@@ -153,4 +153,100 @@ class JsonImporterTest {
       }
     }
   }
+
+  // Phase 1: API Consistency Tests
+
+  @Test
+  void testParseFromFile() {
+    // Create a temp file with JSON content
+    File tempFile = File.createTempFile('test-json', '.json')
+    try {
+      tempFile.text = '''[
+        {"emp_id": 1, "emp_name": "Rick", "salary": 623.3},
+        {"emp_id": 2, "emp_name": "Dan", "salary": 515.2}
+      ]'''
+
+      Matrix table = JsonImporter.parseFromFile(tempFile.absolutePath)
+
+      assertEquals(2, table.rowCount(), "Should have 2 rows")
+      assertEquals(3, table.columnCount(), "Should have 3 columns")
+      assertEquals(['emp_id', 'emp_name', 'salary'], table.columnNames())
+      // Check individual values rather than comparing lists directly
+      assertEquals(1, table.row(0)[0])
+      assertEquals('Rick', table.row(0)[1])
+      assertEquals(623.3, table.row(0)[2])
+    } finally {
+      tempFile.delete()
+    }
+  }
+
+  @Test
+  void testParseFromPath() {
+    // Create a temp file with JSON content
+    File tempFile = File.createTempFile('test-json', '.json')
+    try {
+      tempFile.text = '''[
+        {"id": 1, "name": "Alice"},
+        {"id": 2, "name": "Bob"},
+        {"id": 3, "name": "Charlie"}
+      ]'''
+
+      Matrix table = JsonImporter.parse(tempFile.toPath())
+
+      assertEquals(3, table.rowCount(), "Should have 3 rows")
+      assertEquals(2, table.columnCount(), "Should have 2 columns")
+      assertEquals(['id', 'name'], table.columnNames())
+      assertEquals(3, table.row(2)[0])
+      assertEquals('Charlie', table.row(2)[1])
+    } finally {
+      tempFile.delete()
+    }
+  }
+
+  @Test
+  void testParseFromUrl() {
+    // Create a temp file and use it as a file URL
+    File tempFile = File.createTempFile('test-json', '.json')
+    try {
+      tempFile.text = '''[
+        {"x": 10, "y": 20},
+        {"x": 30, "y": 40}
+      ]'''
+
+      URL url = tempFile.toURI().toURL()
+      Matrix table = JsonImporter.parse(url)
+
+      assertEquals(2, table.rowCount(), "Should have 2 rows")
+      assertEquals(2, table.columnCount(), "Should have 2 columns")
+      assertEquals(['x', 'y'], table.columnNames())
+      assertEquals(10, table.row(0)[0])
+      assertEquals(20, table.row(0)[1])
+      assertEquals(30, table.row(1)[0])
+      assertEquals(40, table.row(1)[1])
+    } finally {
+      tempFile.delete()
+    }
+  }
+
+  @Test
+  void testParseFromUrlString() {
+    // Create a temp file and use it as a file URL string
+    File tempFile = File.createTempFile('test-json', '.json')
+    try {
+      tempFile.text = '''[
+        {"a": 1, "b": 2}
+      ]'''
+
+      String urlString = tempFile.toURI().toURL().toString()
+      Matrix table = JsonImporter.parseFromUrl(urlString)
+
+      assertEquals(1, table.rowCount(), "Should have 1 row")
+      assertEquals(2, table.columnCount(), "Should have 2 columns")
+      assertEquals(['a', 'b'], table.columnNames())
+      assertEquals(1, table.row(0)[0])
+      assertEquals(2, table.row(0)[1])
+    } finally {
+      tempFile.delete()
+    }
+  }
 }
