@@ -112,7 +112,8 @@ class CsvExporter {
       out.parentFile.mkdirs()
     }
     if (out.isDirectory()) {
-      return new File(out, table.matrixName ?: 'matrix.csv')
+      String fileName = (table.matrixName ?: 'matrix') + '.csv'
+      return new File(out, fileName)
     }
     return out
   }

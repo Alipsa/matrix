@@ -112,11 +112,19 @@ class CsvImporter {
 
   private static Matrix parse(String tableName, CSVParser parser, boolean firstRowAsHeader) {
     List<List<String>> rows = parser.records*.toList()
+
+    // Handle empty CSV file
+    if (rows.isEmpty()) {
+      return Matrix.builder()
+          .matrixName(tableName ?: 'matrix')
+          .build()
+    }
+
     int rowCount = 0
     int ncols = rows[0].size()
     for (List<String> row in rows) {
       if (row.size() != ncols) {
-        throw new IllegalArgumentException("This csv file does not have an equal number of columns on each row, error on row $rowCount: extected $ncols but was ${row.size()}")
+        throw new IllegalArgumentException("This csv file does not have an equal number of columns on each row, error on row $rowCount: expected $ncols but was ${row.size()}")
       }
       rowCount++
     }
