@@ -20,13 +20,8 @@ class CsvExporter {
    * @param withHeader whether to include the columns names in the first row, default is true
    */
   static void exportToCsv(Matrix table, File out, boolean withHeader = true) {
-    if (!out.parentFile.exists()) {
-      out.mkdirs()
-    }
-    if (out.isDirectory()) {
-      out.mkdirs()
-      out = new File(out, table.matrixName ?: 'matrix' + '.csv')
-    }
+    validateMatrix(table)
+    out = ensureFileOutput(table, out)
     exportToCsv(table, CSVFormat.DEFAULT, new PrintWriter(out), withHeader)
   }
 
@@ -40,13 +35,8 @@ class CsvExporter {
    * @param withHeader whether to include the columns names in the first row, default is true
    */
   static void exportToCsv(Matrix table, CSVFormat format, File out, boolean withHeader = true) {
-    if (!out.parentFile.exists()) {
-      out.mkdirs()
-    }
-    if (out.isDirectory()) {
-      out.mkdirs()
-      out = new File(out, table.matrixName ?: 'matrix' + '.csv')
-    }
+    validateMatrix(table)
+    out = ensureFileOutput(table, out)
     exportToCsv(table, format, new PrintWriter(out), withHeader)
   }
 
@@ -93,9 +83,68 @@ class CsvExporter {
    * @param withHeader whether to include the columns names in the first row, default is true
    */
   static void exportToCsv(Matrix table, CSVPrinter printer, boolean withHeader = true) {
+    validateMatrix(table)
     if(withHeader) {
       printer.printRecord(table.columnNames())
     }
     printer.printRecords(table.rows())
+  }
+
+  /**
+   * Export a Matrix to an Excel-compatible CSV file.
+   *
+   * <p>Uses the Excel CSV format which is compatible with Microsoft Excel.</p>
+   *
+   * @param table the matrix to export
+   * @param out the file to write to or a directory to write to
+   * @param withHeader whether to include the columns names in the first row, default is true
+   */
+  static void exportToExcelCsv(Matrix table, File out, boolean withHeader = true) {
+    validateMatrix(table)
+    out = ensureFileOutput(table, out)
+    exportToCsv(table, CSVFormat.EXCEL, new PrintWriter(out), withHeader)
+  }
+
+  /**
+   * Export a Matrix to a Tab-Separated Values (TSV) file.
+   *
+   * <p>Uses tab characters as delimiters instead of commas.</p>
+   *
+   * @param table the matrix to export
+   * @param out the file to write to or a directory to write to
+   * @param withHeader whether to include the columns names in the first row, default is true
+   */
+  static void exportToTsv(Matrix table, File out, boolean withHeader = true) {
+    validateMatrix(table)
+    out = ensureFileOutput(table, out)
+    exportToCsv(table, CSVFormat.TDF, new PrintWriter(out), withHeader)
+  }
+
+  /**
+   * Validate that the Matrix is not null and has columns.
+   */
+  private static void validateMatrix(Matrix table) {
+    if (table == null) {
+      throw new IllegalArgumentException("Matrix table cannot be null")
+    }
+    if (table.columnCount() == 0) {
+      throw new IllegalArgumentException("Cannot export matrix with no columns")
+    }
+  }
+
+  /**
+   * Ensure the output File exists and is a regular file (not a directory).
+   * If out is a directory, creates a file within it using the Matrix name.
+   * Creates parent directories if they don't exist.
+   */
+  private static File ensureFileOutput(Matrix table, File out) {
+    if (out.parentFile != null && !out.parentFile.exists()) {
+      out.parentFile.mkdirs()
+    }
+    if (out.isDirectory()) {
+      String fileName = (table.matrixName ?: 'matrix') + '.csv'
+      return new File(out, fileName)
+    }
+    return out
   }
 }
