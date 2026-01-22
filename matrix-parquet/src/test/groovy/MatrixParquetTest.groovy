@@ -9,6 +9,8 @@ import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
@@ -318,5 +320,56 @@ class MatrixParquetTest {
       MatrixParquetReader.read(dir)
     })
     assertTrue(dirEx.message.contains("directory"))
+  }
+
+  @Test
+  void testTimezoneHandling() {
+    // Create test data with LocalDateTime
+    def dateTime = LocalDateTime.of(2024, 6, 15, 12, 0, 0) // Noon on June 15, 2024
+
+    def data = Matrix.builder('tzTest').columns(
+        id: [1],
+        event_time: [dateTime]
+    ).types([Integer, LocalDateTime]).build()
+
+    File file = new File("build/tzTest.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    // Write with UTC timezone
+    ZoneId utcZone = ZoneId.of("UTC")
+    MatrixParquetWriter.write(data, file, utcZone)
+    assertTrue(file.exists(), "Parquet file was not created")
+
+    // Read back with the same timezone
+    Matrix readUtc = MatrixParquetReader.read(file, utcZone)
+    assertEquals(dateTime, readUtc.event_time[0], "LocalDateTime should round-trip with same timezone")
+
+    // Read with a different timezone (e.g., 5 hours behind UTC)
+    ZoneId nyZone = ZoneId.of("America/New_York")
+
+    // Write with NY timezone
+    File fileNy = new File("build/tzTestNy.parquet")
+    if (fileNy.exists()) {
+      fileNy.delete()
+    }
+    MatrixParquetWriter.write(data, fileNy, nyZone)
+
+    // Read back with same NY timezone
+    Matrix readNy = MatrixParquetReader.read(fileNy, nyZone)
+    assertEquals(dateTime, readNy.event_time[0], "LocalDateTime should round-trip with NY timezone")
+
+    // Test null ZoneId validation in writer
+    def writerNullEx = assertThrows(IllegalArgumentException, {
+      MatrixParquetWriter.write(data, file, (ZoneId) null)
+    })
+    assertTrue(writerNullEx.message.contains("ZoneId cannot be null"))
+
+    // Test null ZoneId validation in reader
+    def readerNullEx = assertThrows(IllegalArgumentException, {
+      MatrixParquetReader.read(file, (ZoneId) null)
+    })
+    assertTrue(readerNullEx.message.contains("ZoneId cannot be null"))
   }
 }

@@ -65,6 +65,14 @@ import java.beans.PropertyDescriptor
  *   <li>Nested: List, Map (preserved as Parquet LIST/MAP/STRUCT types)</li>
  * </ul>
  *
+ * <h3>Timezone Handling</h3>
+ * <p>{@link LocalDateTime} values are converted to UTC timestamps using the system default
+ * timezone. To use a different timezone, use the {@link #write(Matrix, File, ZoneId)} method:</p>
+ * <pre>{@code
+ * // Write using a specific timezone
+ * MatrixParquetWriter.write(data, file, ZoneId.of("America/New_York"))
+ * }</pre>
+ *
  * <h3>Metadata</h3>
  * <p>Column type information is stored in Parquet file metadata under the key
  * {@link #METADATA_COLUMN_TYPES}, enabling {@link MatrixParquetReader} to reconstruct
@@ -93,6 +101,18 @@ class MatrixParquetWriter {
 
   /** Parquet schema field name for map key-value pairs */
   private static final String FIELD_KEY_VALUE = 'key_value'
+
+  /** Thread-local storage for timezone used during write operations */
+  private static final ThreadLocal<ZoneId> ZONE_ID_HOLDER = new ThreadLocal<>()
+
+  /**
+   * Gets the current timezone for timestamp conversion.
+   * Returns the thread-local value if set, otherwise the system default.
+   */
+  private static ZoneId getZoneId() {
+    ZoneId zoneId = ZONE_ID_HOLDER.get()
+    return zoneId != null ? zoneId : ZoneId.systemDefault()
+  }
 
   /**
    * Validates the matrix and file parameters before writing.
@@ -136,6 +156,30 @@ class MatrixParquetWriter {
     File file = determineTargetFile(matrix, fileOrDir)
 
     return writeInternal(matrix, file, schema)
+  }
+
+  /**
+   * Writes a Matrix to a Parquet file with a specific timezone for timestamp conversion.
+   *
+   * <p>By default, {@link LocalDateTime} values are converted to UTC timestamps using the system
+   * default timezone. Use this method to specify a different timezone for the conversion.</p>
+   *
+   * @param matrix the matrix to write
+   * @param fileOrDir the target file or directory. If directory the file name will be based on the matrix name.
+   * @param zoneId the timezone to use for converting LocalDateTime values to UTC timestamps
+   * @return the target file
+   * @throws IllegalArgumentException if matrix is null, has no columns, fileOrDir is null, or zoneId is null
+   */
+  static File write(Matrix matrix, File fileOrDir, ZoneId zoneId) {
+    if (zoneId == null) {
+      throw new IllegalArgumentException("ZoneId cannot be null")
+    }
+    try {
+      ZONE_ID_HOLDER.set(zoneId)
+      return write(matrix, fileOrDir, true)
+    } finally {
+      ZONE_ID_HOLDER.remove()
+    }
   }
 
   /**
@@ -604,7 +648,7 @@ class MatrixParquetWriter {
         group.append(fieldName, millis)
       }
       case LocalDateTime -> {
-        def micros = ((LocalDateTime) value).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() * 1000
+        def micros = ((LocalDateTime) value).atZone(getZoneId()).toInstant().toEpochMilli() * 1000
         group.append(fieldName, (long) micros)
       }
       case Timestamp -> {

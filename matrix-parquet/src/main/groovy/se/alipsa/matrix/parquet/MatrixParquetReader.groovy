@@ -52,10 +52,20 @@ import java.time.ZoneId
  * <p>Files not created by MatrixParquetWriter can still be read. Column types will be
  * inferred from the Parquet schema's logical type annotations.</p>
  *
+ * <h3>Timezone Handling</h3>
+ * <p>UTC timestamps are converted to {@link LocalDateTime} using the system default
+ * timezone. To use a different timezone, use the {@link #read(File, ZoneId)} method:</p>
+ * <pre>{@code
+ * // Read using a specific timezone
+ * Matrix data = MatrixParquetReader.read(file, ZoneId.of("America/New_York"))
+ *
+ * // Read with custom name and timezone
+ * Matrix data = MatrixParquetReader.read(file, "myData", ZoneId.of("Europe/London"))
+ * }</pre>
+ *
  * <h3>Limitations</h3>
  * <ul>
  *   <li>The entire file is loaded into memory (no streaming support)</li>
- *   <li>Timestamps use the system default timezone for conversion</li>
  * </ul>
  *
  * @see MatrixParquetWriter
@@ -72,6 +82,18 @@ class MatrixParquetReader {
 
   /** Parquet schema field name for map key-value pairs */
   private static final String FIELD_KEY_VALUE = 'key_value'
+
+  /** Thread-local storage for timezone used during read operations */
+  private static final ThreadLocal<ZoneId> ZONE_ID_HOLDER = new ThreadLocal<>()
+
+  /**
+   * Gets the current timezone for timestamp conversion.
+   * Returns the thread-local value if set, otherwise the system default.
+   */
+  private static ZoneId getZoneId() {
+    ZoneId zoneId = ZONE_ID_HOLDER.get()
+    return zoneId != null ? zoneId : ZoneId.systemDefault()
+  }
 
   /**
    * Validates the file parameter before reading.
@@ -102,6 +124,50 @@ class MatrixParquetReader {
   static Matrix read(File file, String matrixName) {
     validateFile(file)
     read(file).withMatrixName(matrixName)
+  }
+
+  /**
+   * Read the Parquet file into a {@link Matrix} with a specific timezone for timestamp conversion.
+   *
+   * <p>By default, UTC timestamps are converted to {@link LocalDateTime} using the system
+   * default timezone. Use this method to specify a different timezone for the conversion.</p>
+   *
+   * @param file the Parquet file to read
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if file is null, does not exist, is a directory, or zoneId is null
+   */
+  static Matrix read(File file, ZoneId zoneId) {
+    if (zoneId == null) {
+      throw new IllegalArgumentException("ZoneId cannot be null")
+    }
+    try {
+      ZONE_ID_HOLDER.set(zoneId)
+      return read(file)
+    } finally {
+      ZONE_ID_HOLDER.remove()
+    }
+  }
+
+  /**
+   * Read the Parquet file into a {@link Matrix} with a specific timezone and matrix name.
+   *
+   * @param file the Parquet file to read
+   * @param matrixName the name to apply to the resulting matrix
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the file contents
+   * @throws IllegalArgumentException if file is null, does not exist, is a directory, or zoneId is null
+   */
+  static Matrix read(File file, String matrixName, ZoneId zoneId) {
+    if (zoneId == null) {
+      throw new IllegalArgumentException("ZoneId cannot be null")
+    }
+    try {
+      ZONE_ID_HOLDER.set(zoneId)
+      return read(file, matrixName)
+    } finally {
+      ZONE_ID_HOLDER.remove()
+    }
   }
 
   /**
@@ -249,7 +315,7 @@ class MatrixParquetReader {
           if (expectedType == java.sql.Timestamp) {
             return new java.sql.Timestamp(millis)
           }
-          return LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault())
+          return LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), getZoneId())
         }
         def longValue = group.getLong(fieldName, 0)
         if (expectedType == BigInteger) {
