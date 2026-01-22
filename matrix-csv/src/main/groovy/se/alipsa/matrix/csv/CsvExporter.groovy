@@ -127,8 +127,8 @@ class CsvExporter {
     if (table == null) {
       throw new IllegalArgumentException("Matrix table cannot be null")
     }
-    if (table.rowCount() == 0 && table.columnCount() == 0) {
-      throw new IllegalArgumentException("Cannot export empty matrix with no columns")
+    if (table.columnCount() == 0) {
+      throw new IllegalArgumentException("Cannot export matrix with no columns")
     }
   }
 
