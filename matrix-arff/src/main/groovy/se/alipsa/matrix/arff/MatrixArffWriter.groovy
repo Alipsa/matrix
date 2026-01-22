@@ -3,6 +3,8 @@ package se.alipsa.matrix.arff
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
+import java.io.FileOutputStream
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
@@ -26,8 +28,15 @@ class MatrixArffWriter {
 
   /** Write to a File */
   static void write(Matrix matrix, File file) {
-    file.withWriter("UTF-8") { Writer writer ->
+    validateMatrix(matrix)
+    File output = ensureFileOutput(matrix, file)
+    OutputStream outputStream = new FileOutputStream(output)
+    try {
+      OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
       write(matrix, writer)
+      writer.flush()
+    } finally {
+      outputStream.close()
     }
   }
 
@@ -38,13 +47,15 @@ class MatrixArffWriter {
 
   /** Write to an OutputStream */
   static void write(Matrix matrix, OutputStream output) {
-    OutputStreamWriter writer = new OutputStreamWriter(output, "UTF-8")
+    validateMatrix(matrix)
+    OutputStreamWriter writer = new OutputStreamWriter(output, StandardCharsets.UTF_8)
     write(matrix, writer)
     writer.flush()
   }
 
   /** Write to a Writer */
   static void write(Matrix matrix, Writer writer) {
+    validateMatrix(matrix)
     PrintWriter pw = writer instanceof PrintWriter ? (PrintWriter) writer : new PrintWriter(writer)
 
     // Write relation name
@@ -91,13 +102,21 @@ class MatrixArffWriter {
    * and what their allowed values are.
    */
   static void write(Matrix matrix, File file, Map<String, List<String>> nominalMappings) {
-    file.withWriter("UTF-8") { Writer writer ->
+    validateMatrix(matrix)
+    File output = ensureFileOutput(matrix, file)
+    OutputStream outputStream = new FileOutputStream(output)
+    try {
+      OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
       write(matrix, writer, nominalMappings)
+      writer.flush()
+    } finally {
+      outputStream.close()
     }
   }
 
   /** Write with custom nominal value mappings */
   static void write(Matrix matrix, Writer writer, Map<String, List<String>> nominalMappings) {
+    validateMatrix(matrix)
     PrintWriter pw = writer instanceof PrintWriter ? (PrintWriter) writer : new PrintWriter(writer)
 
     // Write relation name
@@ -178,11 +197,11 @@ class MatrixArffWriter {
   }
 
   private static boolean isNumericType(Class type) {
-    return type in [BigDecimal, Double, Float, double.class, float.class, Number]
+    return type in [BigDecimal, Double, Float, Long, BigInteger, double.class, float.class, long.class, Number]
   }
 
   private static boolean isIntegerType(Class type) {
-    return type in [Integer, Long, Short, Byte, BigInteger, int.class, long.class, short.class, byte.class]
+    return type in [Integer, Short, Byte, int.class, short.class, byte.class]
   }
 
   private static boolean isDateType(Class type) {
@@ -277,6 +296,36 @@ class MatrixArffWriter {
   private static String escapeStringValue(String value) {
     // String values should be quoted
     return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
+  }
+
+  /**
+   * Validate that the Matrix is not null and has columns.
+   */
+  private static void validateMatrix(Matrix matrix) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
+    }
+  }
+
+  /**
+   * Ensure the output File exists and is a regular file (not a directory).
+   * If output is a directory, creates a file within it using the Matrix name.
+   */
+  private static File ensureFileOutput(Matrix matrix, File output) {
+    if (output == null) {
+      throw new IllegalArgumentException("File or directory cannot be null")
+    }
+    if (output.isDirectory()) {
+      String fileName = (matrix.matrixName ?: 'matrix') + '.arff'
+      output = new File(output, fileName)
+    }
+    if (output.parentFile != null && !output.parentFile.exists()) {
+      output.parentFile.mkdirs()
+    }
+    return output
   }
 }
 

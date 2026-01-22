@@ -5,6 +5,8 @@ import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.core.Matrix
 
+import java.io.StringReader
+import java.math.BigInteger
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -319,5 +321,82 @@ class MatrixArffTest {
     assertEquals(new BigDecimal("1.0"), m[0, "value"])
     assertEquals(new BigDecimal("2.0"), m[1, "value"])
     assertEquals(new BigDecimal("3.0"), m[2, "value"])
+  }
+
+  @Test @Order(15)
+  void testReadFromFilePathString() {
+    Matrix m = MatrixArffReader.read(irisFile.absolutePath)
+    assertEquals("iris", m.matrixName)
+    assertEquals(150, m.rowCount())
+  }
+
+  @Test @Order(16)
+  void testReadFromUrlString() {
+    Matrix m = MatrixArffReader.readFromUrl(irisFile.toURI().toString())
+    assertEquals("iris", m.matrixName)
+    assertEquals(150, m.rowCount())
+  }
+
+  @Test @Order(17)
+  void testReadFromStringAndReader() {
+    String arffContent = """
+@RELATION string_test
+
+@ATTRIBUTE name STRING
+@ATTRIBUTE value NUMERIC
+
+@DATA
+'Alice',10.5
+""".trim()
+
+    Matrix fromString = MatrixArffReader.readString(arffContent)
+    assertEquals("string_test", fromString.matrixName)
+    assertEquals(new BigDecimal("10.5"), fromString[0, "value"])
+
+    Matrix fromReader = MatrixArffReader.read(new StringReader(arffContent))
+    assertEquals("string_test", fromReader.matrixName)
+    assertEquals("Alice", fromReader[0, "name"])
+  }
+
+  @Test @Order(18)
+  void testEscapedQuotesAndWhitespace() {
+    String arffContent = """
+@RELATION 'quote test'
+
+@ATTRIBUTE 'col with \\'quote' STRING
+@ATTRIBUTE value STRING
+
+@DATA
+'  spaced value  ','O\\'Reilly'
+'back\\\\slash','?'
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+    assertEquals("col with 'quote", m.columnNames()[0])
+    assertEquals("  spaced value  ", m[0, "col with 'quote"])
+    assertEquals("O'Reilly", m[0, "value"])
+    assertEquals("back\\slash", m[1, "col with 'quote"])
+    assertEquals("?", m[1, "value"])
+  }
+
+  @Test @Order(19)
+  void testLongAndBigIntegerWrittenAsNumeric() {
+    Matrix m = Matrix.builder("long_test")
+        .columnNames("longs", "bigints")
+        .columns(
+            [1L, 2L] as List,
+            [new BigInteger("123"), new BigInteger("456")] as List
+        )
+        .types([Long, BigInteger])
+        .build()
+
+    File outputFile = new File(tempDir, "long_test.arff")
+    MatrixArffWriter.write(m, outputFile)
+
+    Matrix roundTripped = MatrixArffReader.read(outputFile)
+    assertEquals(BigDecimal, roundTripped.type("longs"))
+    assertEquals(BigDecimal, roundTripped.type("bigints"))
+    assertEquals(new BigDecimal("1"), roundTripped[0, "longs"])
+    assertEquals(new BigDecimal("456"), roundTripped[1, "bigints"])
   }
 }

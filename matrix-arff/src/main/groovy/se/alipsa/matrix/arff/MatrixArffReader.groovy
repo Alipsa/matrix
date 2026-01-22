@@ -3,6 +3,15 @@ package se.alipsa.matrix.arff
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
+import java.io.BufferedReader
+import java.io.FileInputStream
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.Reader
+import java.io.StringReader
+import java.net.URI
+import java.net.URL
+import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.regex.Matcher
@@ -21,16 +30,15 @@ import java.util.regex.Pattern
 @CompileStatic
 class MatrixArffReader {
 
-  private static final Pattern ATTRIBUTE_PATTERN = Pattern.compile(
-      /(?i)@attribute\s+('[^']*'|"[^"]*"|\S+)\s+(.+)/)
   private static final Pattern NOMINAL_PATTERN = Pattern.compile(/\{([^}]*)\}/)
   private static final Pattern DATE_FORMAT_PATTERN = Pattern.compile(/(?i)date\s*(?:'([^']*)'|"([^"]*)")?/)
 
   /** Read from an Arff file */
   static Matrix read(File file) {
+    validateFile(file)
     InputStream is = new FileInputStream(file)
     try {
-      return read(is, file.name)
+      return read(is, defaultName(file))
     } finally {
       is.close()
     }
@@ -38,23 +46,103 @@ class MatrixArffReader {
 
   /** Read from an Arff file */
   static Matrix read(Path path) {
+    if (path == null) {
+      throw new IllegalArgumentException("Path cannot be null")
+    }
     read(path.toFile())
   }
 
-  /** Read arff from an InputStream. Stream will be closed by caller if needed. */
+  /**
+   * Read arff from an InputStream. Stream will be closed by caller if needed.
+   *
+   * @param input the input stream containing ARFF content
+   * @param defaultName fallback name if no @RELATION is present
+   * @return a Matrix containing the parsed data
+   */
   static Matrix read(InputStream input, String defaultName = "ArffMatrix") {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(input, "UTF-8"))
+    if (input == null) {
+      throw new IllegalArgumentException("InputStream cannot be null")
+    }
+    BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))
     parseArff(reader, defaultName)
+  }
+
+  /**
+   * Read arff from a Reader. Reader will be closed by caller if needed.
+   *
+   * @param reader the reader containing ARFF content
+   * @param defaultName fallback name if no @RELATION is present
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix read(Reader reader, String defaultName = "ArffMatrix") {
+    if (reader == null) {
+      throw new IllegalArgumentException("Reader cannot be null")
+    }
+    BufferedReader buffered = reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader)
+    parseArff(buffered, defaultName)
+  }
+
+  /**
+   * Read arff from a file path string.
+   *
+   * @param filePath path to the ARFF file
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix read(String filePath) {
+    if (filePath == null) {
+      throw new IllegalArgumentException("File path cannot be null")
+    }
+    read(new File(filePath))
+  }
+
+  /**
+   * Read arff content from a String.
+   *
+   * @param arffContent ARFF content as a string
+   * @param defaultName fallback name if no @RELATION is present
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix readString(String arffContent, String defaultName = "ArffMatrix") {
+    if (arffContent == null) {
+      throw new IllegalArgumentException("ARFF content cannot be null")
+    }
+    read(new StringReader(arffContent), defaultName)
+  }
+
+  /**
+   * Read arff from a file path string (explicit convenience method).
+   *
+   * @param filePath path to the ARFF file
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix readFromFile(String filePath) {
+    read(filePath)
   }
 
   /** Read from a URL */
   static Matrix read(URL url) {
+    if (url == null) {
+      throw new IllegalArgumentException("URL cannot be null")
+    }
     InputStream is = url.openStream()
     try {
-      return read(is, url.getFile() ?: "ArffMatrix")
+      return read(is, defaultName(url))
     } finally {
       is.close()
     }
+  }
+
+  /**
+   * Read arff from a URL string.
+   *
+   * @param urlString URL string pointing to ARFF content
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix readFromUrl(String urlString) {
+    if (urlString == null) {
+      throw new IllegalArgumentException("URL string cannot be null")
+    }
+    read(new URI(urlString).toURL())
   }
 
   private static Matrix parseArff(BufferedReader reader, String defaultName) {
@@ -124,28 +212,62 @@ class MatrixArffReader {
 
   private static String parseRelationName(String line) {
     String name = line.substring(9).trim() // Remove @RELATION
-    // Handle quoted names
-    if ((name.startsWith("'") && name.endsWith("'")) ||
-        (name.startsWith('"') && name.endsWith('"'))) {
-      name = name.substring(1, name.length() - 1)
-    }
-    return name
+    return unescapeQuoted(name)
   }
 
   private static ArffAttribute parseAttribute(String line) {
-    Matcher matcher = ATTRIBUTE_PATTERN.matcher(line)
-    if (!matcher.find()) {
+    String trimmed = line.trim()
+    int attrIndex = trimmed.toUpperCase().indexOf('@ATTRIBUTE')
+    if (attrIndex < 0) {
+      throw new IllegalArgumentException("Invalid @ATTRIBUTE line: $line")
+    }
+    String spec = trimmed.substring(attrIndex + 10).trim()
+    if (spec.isEmpty()) {
       throw new IllegalArgumentException("Invalid @ATTRIBUTE line: $line")
     }
 
-    String name = matcher.group(1).trim()
-    // Remove quotes from attribute name if present
-    if ((name.startsWith("'") && name.endsWith("'")) ||
-        (name.startsWith('"') && name.endsWith('"'))) {
-      name = name.substring(1, name.length() - 1)
+    String name
+    String typeSpec
+    char first = spec.charAt(0)
+    if (first == '\'' || first == '"') {
+      char quoteChar = first
+      StringBuilder sb = new StringBuilder()
+      boolean escape = false
+      int i = 1
+      for (; i < spec.length(); i++) {
+        char c = spec.charAt(i)
+        if (escape) {
+          sb.append(c)
+          escape = false
+          continue
+        }
+        if (c == '\\') {
+          escape = true
+          continue
+        }
+        if (c == quoteChar) {
+          i++
+          break
+        }
+        sb.append(c)
+      }
+      name = sb.toString()
+      typeSpec = i <= spec.length() ? spec.substring(i).trim() : ''
+    } else {
+      int splitIndex = -1
+      for (int i = 0; i < spec.length(); i++) {
+        if (Character.isWhitespace(spec.charAt(i))) {
+          splitIndex = i
+          break
+        }
+      }
+      if (splitIndex < 0) {
+        throw new IllegalArgumentException("Invalid @ATTRIBUTE line: $line")
+      }
+      name = spec.substring(0, splitIndex)
+      typeSpec = spec.substring(splitIndex).trim()
     }
 
-    String typeSpec = matcher.group(2).trim()
     return parseAttributeType(name, typeSpec)
   }
 
@@ -187,81 +309,89 @@ class MatrixArffReader {
 
   private static List<String> parseNominalValues(String valuesStr) {
     List<String> values = []
-    StringBuilder current = new StringBuilder()
-    boolean inQuote = false
-    char quoteChar = 0
-
-    for (int i = 0; i < valuesStr.length(); i++) {
-      char c = valuesStr.charAt(i)
-
-      if (!inQuote && (c == '\'' || c == '"')) {
-        inQuote = true
-        quoteChar = c
-      } else if (inQuote && c == quoteChar) {
-        inQuote = false
-      } else if (!inQuote && c == ',') {
-        values.add(current.toString().trim())
-        current = new StringBuilder()
-      } else {
-        current.append(c)
-      }
+    parseDelimitedLine(valuesStr, ',' as char).each { ParsedToken token ->
+      String value = token.quoted ? token.value : token.value.trim()
+      values.add(value)
     }
-
-    if (current.length() > 0) {
-      values.add(current.toString().trim())
-    }
-
     return values
   }
 
   private static List<Object> parseDataRow(String line, List<ArffAttribute> attributes) {
-    List<String> values = parseCSVLine(line)
+    List<ParsedToken> values = parseDelimitedLine(line, ',' as char)
     List<Object> row = []
 
     for (int i = 0; i < attributes.size(); i++) {
-      String value = i < values.size() ? values[i].trim() : null
-      Object converted = convertValue(value, attributes[i])
+      ParsedToken token = i < values.size() ? values[i] : new ParsedToken(null, false)
+      String value = token.value
+      boolean quoted = token.quoted
+      if (value != null && !quoted) {
+        value = value.trim()
+      }
+      Object converted = convertValue(value, attributes[i], quoted)
       row.add(converted)
     }
 
     return row
   }
 
-  private static List<String> parseCSVLine(String line) {
-    List<String> values = []
+  private static List<ParsedToken> parseDelimitedLine(String line, char delimiter) {
+    List<ParsedToken> values = []
     StringBuilder current = new StringBuilder()
     boolean inQuote = false
     char quoteChar = 0
+    boolean tokenQuoted = false
+    boolean escape = false
 
     for (int i = 0; i < line.length(); i++) {
       char c = line.charAt(i)
 
-      if (!inQuote && (c == '\'' || c == '"')) {
+      if (inQuote) {
+        if (escape) {
+          current.append(c)
+          escape = false
+          continue
+        }
+        if (c == '\\') {
+          escape = true
+          continue
+        }
+        if (c == quoteChar) {
+          inQuote = false
+          tokenQuoted = true
+          continue
+        }
+        current.append(c)
+        continue
+      }
+
+      if (c == '\'' || c == '"') {
         inQuote = true
         quoteChar = c
-      } else if (inQuote && c == quoteChar) {
-        inQuote = false
-      } else if (!inQuote && c == ',') {
-        values.add(current.toString())
-        current = new StringBuilder()
-      } else {
-        current.append(c)
+        tokenQuoted = true
+        continue
       }
+      if (c == delimiter) {
+        values.add(new ParsedToken(current.toString(), tokenQuoted))
+        current = new StringBuilder()
+        tokenQuoted = false
+        continue
+      }
+      current.append(c)
     }
 
-    values.add(current.toString())
+    if (escape) {
+      current.append('\\')
+    }
+    values.add(new ParsedToken(current.toString(), tokenQuoted))
     return values
   }
 
-  private static Object convertValue(String value, ArffAttribute attr) {
-    if (value == null || value.isEmpty() || value == '?' || value == '?') {
+  private static Object convertValue(String value, ArffAttribute attr, boolean quoted) {
+    if (value == null) {
       return null
     }
-
-    // Remove quotes if present
-    if ((value.startsWith("'") && value.endsWith("'")) ||
-        (value.startsWith('"') && value.endsWith('"'))) {
-      value = value.substring(1, value.length() - 1)
+    if (!quoted && (value.isEmpty() || value == '?')) {
+      return null
     }
 
     switch (attr.type) {
@@ -285,6 +415,76 @@ class MatrixArffReader {
     }
     SimpleDateFormat sdf = new SimpleDateFormat(format)
     return sdf.parse(value)
+  }
+
+  private static String unescapeQuoted(String value) {
+    boolean quoted = (value.startsWith("'") && value.endsWith("'")) ||
+        (value.startsWith('"') && value.endsWith('"'))
+    if (!quoted) {
+      return value
+    }
+    value = value.substring(1, value.length() - 1)
+    StringBuilder result = new StringBuilder()
+    boolean escape = false
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i)
+      if (escape) {
+        result.append(c)
+        escape = false
+        continue
+      }
+      if (c == '\\') {
+        escape = true
+        continue
+      }
+      result.append(c)
+    }
+    if (escape) {
+      result.append('\\')
+    }
+    return result.toString()
+  }
+
+  private static void validateFile(File file) {
+    if (file == null) {
+      throw new IllegalArgumentException("File cannot be null")
+    }
+    if (!file.exists()) {
+      throw new IllegalArgumentException("File does not exist: ${file.absolutePath}")
+    }
+    if (file.isDirectory()) {
+      throw new IllegalArgumentException("Expected a file but got a directory: ${file.absolutePath}")
+    }
+  }
+
+  private static String defaultName(File file) {
+    String name = file.name
+    if (name.contains('.')) {
+      name = name.substring(0, name.lastIndexOf('.'))
+    }
+    return name
+  }
+
+  private static String defaultName(URL url) {
+    String name = url.getFile() == null ? url.getPath() : url.getFile()
+    if (name.contains('/')) {
+      name = name.substring(name.lastIndexOf('/') + 1)
+    }
+    if (name.contains('.')) {
+      name = name.substring(0, name.lastIndexOf('.'))
+    }
+    return name ?: "ArffMatrix"
+  }
+
+  @CompileStatic
+  private static final class ParsedToken {
+    final String value
+    final boolean quoted
+
+    ParsedToken(String value, boolean quoted) {
+      this.value = value
+      this.quoted = quoted
+    }
   }
 }
 
