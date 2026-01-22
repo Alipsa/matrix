@@ -19,12 +19,15 @@ class Correlation {
   /**
    * measures a linear dependence between two variables (x and y) i.e. a parametric correlation test
    * as it depends on the distribution of the data.
-   * @param numbers1 the first list of Numbers
-   * @param numbers2 the second list of Numbers
+   * @param numbersX the first list of Numbers
+   * @param numbersY the second list of Numbers
    * @return a value between -1 to +1 where -1 represents X and Y are negatively correlated
    * and +1 represents X and Y are positively correlated
+   * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corPearson(List<? extends Number> numbersX, List<? extends Number> numbersY) {
+    validateCorrelationInputs(numbersX, numbersY, "Pearson correlation")
+
     BigDecimal sumX = 0
     BigDecimal sumY = 0
     BigDecimal sumXY = 0
@@ -59,8 +62,11 @@ class Correlation {
    * @param numbersY the second list of Numbers
    * @return a value between -1 to +1 where -1 represents X and Y are negatively correlated
    * and +1 represents X and Y are positively correlated
+   * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corSpearman(List<? extends Number> numbersX, List<? extends Number> numbersY) {
+    validateCorrelationInputs(numbersX, numbersY, "Spearman correlation")
+
     List<BigDecimal> ranksX = rank(numbersX)
     List<BigDecimal> ranksY = rank(numbersY)
     return corPearson(ranksX, ranksY)
@@ -68,11 +74,13 @@ class Correlation {
 
   /**
    * Kendall Tau can be used as a metric to compare similarities between search results.
+   * @param numbersX the first list of Numbers
+   * @param numbersY the second list of Numbers
+   * @return a value between -1 to +1 representing the correlation
+   * @throws IllegalArgumentException if inputs are null, empty, of different sizes, or have insufficient observations
    */
   static BigDecimal corKendall(List<? extends Number> numbersX, List<? extends Number> numbersY) {
-    if (numbersX.size() != numbersY.size()) {
-      throw new IllegalArgumentException("Lists must be of equal size!")
-    }
+    validateCorrelationInputs(numbersX, numbersY, "Kendall correlation")
 
     final int n = numbersX.size()
     final long numPairs = sumN(n - 1)
@@ -229,6 +237,28 @@ class Correlation {
    */
   private static long sumN(long n) {
     return (long)(n * (n + 1) / 2)
+  }
+
+  /**
+   * Validates correlation inputs for null, empty, size mismatch, and insufficient observations.
+   * @param x the first list
+   * @param y the second list
+   * @param testName the name of the test for error messages
+   * @throws IllegalArgumentException if validation fails
+   */
+  private static void validateCorrelationInputs(List<? extends Number> x, List<? extends Number> y, String testName) {
+    if (x == null || y == null) {
+      throw new IllegalArgumentException("${testName} requires non-null input lists")
+    }
+    if (x.isEmpty() || y.isEmpty()) {
+      throw new IllegalArgumentException("${testName} requires non-empty input lists")
+    }
+    if (x.size() != y.size()) {
+      throw new IllegalArgumentException("${testName} requires lists of equal size, got: x=${x.size()}, y=${y.size()}")
+    }
+    if (x.size() < 2) {
+      throw new IllegalArgumentException("${testName} requires at least 2 paired observations, got: ${x.size()}")
+    }
   }
 
   /**
