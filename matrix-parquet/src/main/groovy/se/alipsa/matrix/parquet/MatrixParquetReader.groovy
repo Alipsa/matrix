@@ -21,6 +21,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Reads Apache Parquet files into {@link Matrix} objects.
@@ -86,6 +87,9 @@ class MatrixParquetReader {
   /** Thread-local storage for timezone used during read operations */
   private static final ThreadLocal<ZoneId> ZONE_ID_HOLDER = new ThreadLocal<>()
 
+  /** Cache for Class.forName() results to avoid repeated reflection calls */
+  private static final Map<String, Class<?>> CLASS_CACHE = new ConcurrentHashMap<>()
+
   /**
    * Gets the current timezone for timestamp conversion.
    * Returns the thread-local value if set, otherwise the system default.
@@ -93,6 +97,16 @@ class MatrixParquetReader {
   private static ZoneId getZoneId() {
     ZoneId zoneId = ZONE_ID_HOLDER.get()
     return zoneId != null ? zoneId : ZoneId.systemDefault()
+  }
+
+  /**
+   * Gets a cached Class object for the given class name.
+   * Uses Class.forName() and caches the result for subsequent calls.
+   */
+  private static Class<?> getCachedClass(String className) {
+    return CLASS_CACHE.computeIfAbsent(className) { name ->
+      Class.forName(name)
+    }
   }
 
   /**
@@ -232,7 +246,7 @@ class MatrixParquetReader {
 
   static List<Class> parseTypeString(String typeString) {
     return typeString.split(',').collect { className ->
-      return Class.forName(className.trim())
+      return getCachedClass(className.trim())
     }
   }
 

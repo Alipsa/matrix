@@ -163,10 +163,9 @@ class MatrixParquetTest {
       MatrixParquetWriter.write(empData, file, [salary: [4, 2]])
     })
 
-    // Assert that the exception message indicates a size/precision error.
-    // We now include "arraycopy" to catch the specific low-level error seen in the test environment.
+    // Assert that the exception message indicates a precision overflow error
     String message = exception.getMessage() ?: ""
-    assertTrue(message.contains("arraycopy") || message.contains("byte array size") || message.contains("exceeds the max precision") || message.contains("overflow"),
+    assertTrue(message.contains("exceeds the configured precision"),
         "Expected an exception indicating a precision overflow, but got: ${message}")
   }
 

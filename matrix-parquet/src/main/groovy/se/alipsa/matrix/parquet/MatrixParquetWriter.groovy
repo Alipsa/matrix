@@ -25,6 +25,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.beans.Introspector
 import java.beans.PropertyDescriptor
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Writes {@link Matrix} data to Apache Parquet files.
@@ -105,6 +106,10 @@ class MatrixParquetWriter {
   /** Thread-local storage for timezone used during write operations */
   private static final ThreadLocal<ZoneId> ZONE_ID_HOLDER = new ThreadLocal<>()
 
+  /** Cache for PropertyDescriptor lists by class to avoid repeated reflection calls */
+  private static final Map<Class<?>, List<PropertyDescriptor>> PROPERTY_DESCRIPTOR_CACHE =
+      new ConcurrentHashMap<>()
+
   /**
    * Gets the current timezone for timestamp conversion.
    * Returns the thread-local value if set, otherwise the system default.
@@ -112,6 +117,17 @@ class MatrixParquetWriter {
   private static ZoneId getZoneId() {
     ZoneId zoneId = ZONE_ID_HOLDER.get()
     return zoneId != null ? zoneId : ZoneId.systemDefault()
+  }
+
+  /**
+   * Gets cached PropertyDescriptors for the given class.
+   * Uses Introspector to get bean info and caches the result for subsequent calls.
+   */
+  private static List<PropertyDescriptor> getPropertyDescriptors(Class<?> clazz) {
+    return PROPERTY_DESCRIPTOR_CACHE.computeIfAbsent(clazz) { c ->
+      def beanInfo = Introspector.getBeanInfo(c, Object)
+      return beanInfo.propertyDescriptors.findAll { it.readMethod != null }
+    }
   }
 
   /**
@@ -477,8 +493,7 @@ class MatrixParquetWriter {
         fieldTypes[key] = inferClass(collected, Object)
       }
     } else {
-      def beanInfo = Introspector.getBeanInfo(sample.class, Object)
-      List<PropertyDescriptor> descriptors = beanInfo.propertyDescriptors.findAll { it.readMethod != null }
+      List<PropertyDescriptor> descriptors = getPropertyDescriptors(sample.class)
       descriptors.each { PropertyDescriptor pd ->
         List<Object> collected = []
         values.each { val ->
@@ -629,9 +644,17 @@ class MatrixParquetWriter {
             logical instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
           def bd = (BigDecimal) value
           def scale = logical.scale
+          def precision = logical.precision
           def unscaled = bd.setScale(scale, BigDecimal.ROUND_HALF_UP).unscaledValue()
           def bytes = unscaled.toByteArray()
           def size = field.typeLength
+          if (bytes.length > size) {
+            throw new IllegalArgumentException(
+                "BigDecimal value '$bd' for field '$fieldName' exceeds the configured precision. " +
+                "The value requires ${bytes.length} bytes but schema allows only $size bytes " +
+                "(precision=$precision, scale=$scale). " +
+                "Either increase the precision or use inferPrecisionAndScale=true.")
+          }
           def padded = new byte[size]
           System.arraycopy(bytes, 0, padded, size - bytes.length, bytes.length)
           group.add(fieldName, Binary.fromConstantByteArray(padded))
@@ -662,7 +685,9 @@ class MatrixParquetWriter {
 
   private static void writeList(Group group, String fieldName, GroupType groupType, Object value) {
     if (!(value instanceof Collection)) {
-      throw new IllegalArgumentException("Expected a Collection for list field '$fieldName' but got ${value.class}")
+      throw new IllegalArgumentException(
+          "Cannot write field '$fieldName' as Parquet LIST: expected a Collection (List, Set, etc.) " +
+          "but got ${value.class.simpleName}. Value: ${truncateForError(value)}")
     }
     Collection<?> collection = (Collection<?>) value
     if (collection.isEmpty()) {
@@ -680,7 +705,9 @@ class MatrixParquetWriter {
 
   private static void writeMap(Group group, String fieldName, GroupType groupType, Object value) {
     if (!(value instanceof Map)) {
-      throw new IllegalArgumentException("Expected a Map for field '$fieldName' but got ${value.class}")
+      throw new IllegalArgumentException(
+          "Cannot write field '$fieldName' as Parquet MAP: expected a Map " +
+          "but got ${value.class.simpleName}. Value: ${truncateForError(value)}")
     }
     Map<?, ?> mapValue = (Map<?, ?>) value
     Group mapGroup = group.addGroup(fieldName)
@@ -714,8 +741,7 @@ class MatrixParquetWriter {
       return result
     }
     LinkedHashMap<String, Object> map = new LinkedHashMap<>()
-    def beanInfo = Introspector.getBeanInfo(value.class, Object)
-    beanInfo.propertyDescriptors.findAll { it.readMethod != null }.each { PropertyDescriptor pd ->
+    getPropertyDescriptors(value.class).each { PropertyDescriptor pd ->
       def method = pd.readMethod
       if (!method.accessible) {
         method.accessible = true
@@ -723,6 +749,21 @@ class MatrixParquetWriter {
       map[pd.name] = method.invoke(value)
     }
     return map
+  }
+
+  /**
+   * Truncates a value's string representation for inclusion in error messages.
+   * Prevents excessively long error messages from large objects.
+   */
+  private static String truncateForError(Object value) {
+    if (value == null) {
+      return "null"
+    }
+    String str = value.toString()
+    if (str.length() > 100) {
+      return str.substring(0, 100) + "..."
+    }
+    return str
   }
 
   /**
