@@ -43,7 +43,7 @@ class MatrixAvroReaderTest {
   }
 
   @Test @Order(1)
-  void readFromFile() {
+  void readFile() {
     Matrix m = MatrixAvroReader.read(avroFile)
     assertBasicShapeAndValues(m)
   }
@@ -56,7 +56,7 @@ class MatrixAvroReaderTest {
   }
 
   @Test @Order(3)
-  void readFromUrl() {
+  void readUrl() {
     URL url = avroFile.toURI().toURL()
     Matrix m = MatrixAvroReader.read(url)
     assertBasicShapeAndValues(m)

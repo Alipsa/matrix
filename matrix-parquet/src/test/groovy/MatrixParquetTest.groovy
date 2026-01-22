@@ -10,7 +10,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
@@ -364,7 +363,7 @@ class MatrixParquetTest {
     def fromPath = MatrixParquetReader.read(file.toPath())
     assertEquals(data, fromPath, "Data read from Path does not match original data")
 
-    def fromFilePath = MatrixParquetReader.readFromFile(file.absolutePath)
+    def fromFilePath = MatrixParquetReader.readFile(file.absolutePath)
     assertEquals(data, fromFilePath, "Data read from file path does not match original data")
 
     def url = file.toURI().toURL()

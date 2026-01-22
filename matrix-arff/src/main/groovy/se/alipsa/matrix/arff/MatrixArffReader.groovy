@@ -79,7 +79,7 @@ class MatrixArffReader {
    * @param filePath path to the ARFF file
    * @return a Matrix containing the parsed data
    */
-  static Matrix read(String filePath) {
+  static Matrix readFile(String filePath) {
     if (filePath == null) {
       throw new IllegalArgumentException("File path cannot be null")
     }

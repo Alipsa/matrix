@@ -14,10 +14,6 @@ import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName
 import org.apache.parquet.schema.Type
 import se.alipsa.matrix.core.Matrix
 
-import java.io.InputStream
-import java.io.IOException
-import java.net.URI
-import java.net.URL
 import java.sql.Time
 import java.time.Instant
 import java.time.LocalDate
@@ -187,7 +183,7 @@ class MatrixParquetReader {
    * @return a matrix populated with the file contents
    * @throws IllegalArgumentException if filePath is null, does not exist, or is a directory
    */
-  static Matrix readFromFile(String filePath) {
+  static Matrix readFile(String filePath) {
     if (filePath == null) {
       throw new IllegalArgumentException("File path cannot be null")
     }
@@ -202,7 +198,7 @@ class MatrixParquetReader {
    * @return a matrix populated with the file contents
    * @throws IllegalArgumentException if filePath is null, does not exist, or is a directory
    */
-  static Matrix readFromFile(String filePath, String matrixName) {
+  static Matrix readFile(String filePath, String matrixName) {
     if (filePath == null) {
       throw new IllegalArgumentException("File path cannot be null")
     }
@@ -259,7 +255,7 @@ class MatrixParquetReader {
    * @return a matrix populated with the URL contents
    * @throws IllegalArgumentException if urlString is null
    */
-  static Matrix readFromUrl(String urlString) {
+  static Matrix readUrl(String urlString) {
     if (urlString == null) {
       throw new IllegalArgumentException("URL string cannot be null")
     }
@@ -312,7 +308,7 @@ class MatrixParquetReader {
    * @return a matrix populated with the file contents
    * @throws IllegalArgumentException if filePath is null or zoneId is null
    */
-  static Matrix readFromFile(String filePath, ZoneId zoneId) {
+  static Matrix readFile(String filePath, ZoneId zoneId) {
     if (filePath == null) {
       throw new IllegalArgumentException("File path cannot be null")
     }
@@ -364,7 +360,7 @@ class MatrixParquetReader {
    * @return a matrix populated with the URL contents
    * @throws IllegalArgumentException if urlString is null or zoneId is null
    */
-  static Matrix readFromUrl(String urlString, ZoneId zoneId) {
+  static Matrix readUrl(String urlString, ZoneId zoneId) {
     if (urlString == null) {
       throw new IllegalArgumentException("URL string cannot be null")
     }
@@ -417,7 +413,7 @@ class MatrixParquetReader {
    * @return a matrix populated with the file contents
    * @throws IllegalArgumentException if filePath is null or zoneId is null
    */
-  static Matrix readFromFile(String filePath, String matrixName, ZoneId zoneId) {
+  static Matrix readFile(String filePath, String matrixName, ZoneId zoneId) {
     if (filePath == null) {
       throw new IllegalArgumentException("File path cannot be null")
     }
@@ -472,7 +468,7 @@ class MatrixParquetReader {
    * @return a matrix populated with the URL contents
    * @throws IllegalArgumentException if urlString is null or zoneId is null
    */
-  static Matrix readFromUrl(String urlString, String matrixName, ZoneId zoneId) {
+  static Matrix readUrl(String urlString, String matrixName, ZoneId zoneId) {
     if (urlString == null) {
       throw new IllegalArgumentException("URL string cannot be null")
     }

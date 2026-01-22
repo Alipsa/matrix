@@ -323,7 +323,7 @@ class MatrixArffTest {
 
   @Test @Order(15)
   void testReadFromFilePathString() {
-    Matrix m = MatrixArffReader.read(irisFile.absolutePath)
+    Matrix m = MatrixArffReader.readFile(irisFile.absolutePath)
     assertEquals("iris", m.matrixName)
     assertEquals(150, m.rowCount())
   }

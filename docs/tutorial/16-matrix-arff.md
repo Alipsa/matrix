@@ -92,7 +92,7 @@ Matrix data1b = MatrixArffReader.read("data/dataset.arff")
 Matrix data2 = MatrixArffReader.read(new URL("https://example.com/dataset.arff"))
 
 // Read from a URL string
-Matrix data2b = MatrixArffReader.readFromUrl("https://example.com/dataset.arff")
+Matrix data2b = MatrixArffReader.readUrl("https://example.com/dataset.arff")
 
 // Read from an InputStream (useful for classpath resources)
 InputStream stream = getClass().getResourceAsStream("/data/iris.arff")
