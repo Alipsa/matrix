@@ -37,7 +37,7 @@ URL url = file.toURI().toURL()
 Matrix matrix = MatrixParquetReader.read(url)
 
 // Read from a file path string
-Matrix matrix = MatrixParquetReader.readFromFile("/path/to/data.parquet")
+Matrix matrix = MatrixParquetReader.readFile("/path/to/data.parquet")
 ```
 
 ### Writing a Matrix to a Parquet file

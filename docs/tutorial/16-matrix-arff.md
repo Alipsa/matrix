@@ -85,12 +85,22 @@ import java.nio.file.Paths
 // Read from a Path
 Matrix data1 = MatrixArffReader.read(Paths.get("data/dataset.arff"))
 
+// Read from a file path string
+Matrix data1b = MatrixArffReader.readFile("data/dataset.arff")
+
 // Read from a URL
 Matrix data2 = MatrixArffReader.read(new URL("https://example.com/dataset.arff"))
+
+// Read from a URL string
+Matrix data2b = MatrixArffReader.readUrl("https://example.com/dataset.arff")
 
 // Read from an InputStream (useful for classpath resources)
 InputStream stream = getClass().getResourceAsStream("/data/iris.arff")
 Matrix data3 = MatrixArffReader.read(stream, "iris")
+
+// Read from a String containing ARFF content
+String arffContent = "... ARFF ..."
+Matrix data4 = MatrixArffReader.readString(arffContent)
 ```
 
 ### Exploring the Loaded Data
@@ -138,6 +148,8 @@ The ARFF format supports several attribute types, which are automatically conver
 | `STRING` | Text strings | `String` |
 | `DATE` | Date/time values | `Date` |
 | `{val1,val2,...}` | Nominal (categorical) | `String` |
+
+**Note:** When writing a Matrix, `Long` and `BigInteger` columns are stored as `NUMERIC` and are read back as `BigDecimal`.
 
 ### Example ARFF with Various Types
 
@@ -211,7 +223,7 @@ The generated ARFF file will look like:
 
 @ATTRIBUTE name STRING
 @ATTRIBUTE age INTEGER
-@ATTRIBUTE salary REAL
+@ATTRIBUTE salary NUMERIC
 @ATTRIBUTE department {Engineering,Sales}
 
 @DATA

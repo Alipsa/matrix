@@ -320,4 +320,117 @@ class MatrixArffTest {
     assertEquals(new BigDecimal("2.0"), m[1, "value"])
     assertEquals(new BigDecimal("3.0"), m[2, "value"])
   }
+
+  @Test @Order(15)
+  void testReadFromFilePathString() {
+    Matrix m = MatrixArffReader.readFile(irisFile.absolutePath)
+    assertEquals("iris", m.matrixName)
+    assertEquals(150, m.rowCount())
+  }
+
+  @Test @Order(16)
+  void testReadFromUrlString() {
+    Matrix m = MatrixArffReader.readUrl(irisFile.toURI().toString())
+    assertEquals("iris", m.matrixName)
+    assertEquals(150, m.rowCount())
+  }
+
+  @Test @Order(17)
+  void testReadFromStringAndReader() {
+    String arffContent = """
+@RELATION string_test
+
+@ATTRIBUTE name STRING
+@ATTRIBUTE value NUMERIC
+
+@DATA
+'Alice',10.5
+""".trim()
+
+    Matrix fromString = MatrixArffReader.readString(arffContent)
+    assertEquals("string_test", fromString.matrixName)
+    assertEquals(new BigDecimal("10.5"), fromString[0, "value"])
+
+    Matrix fromReader = MatrixArffReader.read(new StringReader(arffContent))
+    assertEquals("string_test", fromReader.matrixName)
+    assertEquals("Alice", fromReader[0, "name"])
+  }
+
+  @Test @Order(18)
+  void testEscapedQuotesAndWhitespace() {
+    String arffContent = """
+@RELATION 'quote test'
+
+@ATTRIBUTE 'col with \\'quote' STRING
+@ATTRIBUTE value STRING
+
+@DATA
+'  spaced value  ','O\\'Reilly'
+'back\\\\slash','?'
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+    assertEquals("col with 'quote", m.columnNames()[0])
+    assertEquals("  spaced value  ", m[0, "col with 'quote"])
+    assertEquals("O'Reilly", m[0, "value"])
+    assertEquals("back\\slash", m[1, "col with 'quote"])
+    assertEquals("?", m[1, "value"])
+  }
+
+  @Test @Order(19)
+  void testLongAndBigIntegerWrittenAsNumeric() {
+    Matrix m = Matrix.builder("long_test")
+        .columnNames("longs", "bigints")
+        .columns(
+            [1L, 2L] as List,
+            [new BigInteger("123"), new BigInteger("456")] as List
+        )
+        .types([Long, BigInteger])
+        .build()
+
+    File outputFile = new File(tempDir, "long_test.arff")
+    MatrixArffWriter.write(m, outputFile)
+
+    Matrix roundTripped = MatrixArffReader.read(outputFile)
+    assertEquals(BigDecimal, roundTripped.type("longs"))
+    assertEquals(BigDecimal, roundTripped.type("bigints"))
+    assertEquals(new BigDecimal("1"), roundTripped[0, "longs"])
+    assertEquals(new BigDecimal("456"), roundTripped[1, "bigints"])
+  }
+
+  @Test @Order(20)
+  void testNominalValuesWithBraces() {
+    String arffContent = """
+@RELATION brace_nominal
+
+@ATTRIBUTE label {'value with }','{leading brace}','plain'}
+
+@DATA
+'value with }'
+'{leading brace}'
+plain
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+    assertEquals(3, m.rowCount())
+    assertEquals("value with }", m[0, "label"])
+    assertEquals("{leading brace}", m[1, "label"])
+    assertEquals("plain", m[2, "label"])
+  }
+
+  @Test @Order(21)
+  void testWhitespaceBeforeQuotedValue() {
+    String arffContent = """
+@RELATION whitespace_test
+
+@ATTRIBUTE id INTEGER
+@ATTRIBUTE note STRING
+
+@DATA
+1,  'text'
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+    assertEquals("text", m[0, "note"])
+  }
 }
