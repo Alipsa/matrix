@@ -299,7 +299,7 @@ class MatrixArffWriter {
     // For nominal values, escape if they contain special characters
     if (value.contains(',') || value.contains(' ') || value.contains("'") ||
         value.contains('"') || value.contains('{') || value.contains('}')) {
-      return "'" + value.replace("'", "\\'") + "'"
+      return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
     }
     return value
   }
