@@ -20,13 +20,8 @@ class CsvExporter {
    * @param withHeader whether to include the columns names in the first row, default is true
    */
   static void exportToCsv(Matrix table, File out, boolean withHeader = true) {
-    if (!out.parentFile.exists()) {
-      out.mkdirs()
-    }
-    if (out.isDirectory()) {
-      out.mkdirs()
-      out = new File(out, table.matrixName ?: 'matrix' + '.csv')
-    }
+    validateMatrix(table)
+    out = ensureFileOutput(table, out)
     exportToCsv(table, CSVFormat.DEFAULT, new PrintWriter(out), withHeader)
   }
 
@@ -40,13 +35,8 @@ class CsvExporter {
    * @param withHeader whether to include the columns names in the first row, default is true
    */
   static void exportToCsv(Matrix table, CSVFormat format, File out, boolean withHeader = true) {
-    if (!out.parentFile.exists()) {
-      out.mkdirs()
-    }
-    if (out.isDirectory()) {
-      out.mkdirs()
-      out = new File(out, table.matrixName ?: 'matrix' + '.csv')
-    }
+    validateMatrix(table)
+    out = ensureFileOutput(table, out)
     exportToCsv(table, format, new PrintWriter(out), withHeader)
   }
 
@@ -93,9 +83,37 @@ class CsvExporter {
    * @param withHeader whether to include the columns names in the first row, default is true
    */
   static void exportToCsv(Matrix table, CSVPrinter printer, boolean withHeader = true) {
+    validateMatrix(table)
     if(withHeader) {
       printer.printRecord(table.columnNames())
     }
     printer.printRecords(table.rows())
+  }
+
+  /**
+   * Validate that the Matrix is not null and has columns.
+   */
+  private static void validateMatrix(Matrix table) {
+    if (table == null) {
+      throw new IllegalArgumentException("Matrix table cannot be null")
+    }
+    if (table.rowCount() == 0 && table.columnCount() == 0) {
+      throw new IllegalArgumentException("Cannot export empty matrix with no columns")
+    }
+  }
+
+  /**
+   * Ensure the output File exists and is a regular file (not a directory).
+   * If out is a directory, creates a file within it using the Matrix name.
+   * Creates parent directories if they don't exist.
+   */
+  private static File ensureFileOutput(Matrix table, File out) {
+    if (out.parentFile != null && !out.parentFile.exists()) {
+      out.parentFile.mkdirs()
+    }
+    if (out.isDirectory()) {
+      return new File(out, table.matrixName ?: 'matrix.csv')
+    }
+    return out
   }
 }

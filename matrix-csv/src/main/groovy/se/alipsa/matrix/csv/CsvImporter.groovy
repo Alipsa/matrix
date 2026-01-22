@@ -162,78 +162,22 @@ class CsvImporter {
     format = convertKeysToEnums(format)
     CSVFormat.Builder f = CSVFormat.Builder.create()
 
-    if (format.containsKey(Format.Trim)) {
-      def val = format.get(Format.Trim)
-      if (val instanceof Boolean) {
-        f.setTrim(val as Boolean)
-      } else {
-        throw new IllegalArgumentException("The value for Trim must be a Boolean but was $val")
-      }
-    } else {
-      f.setTrim(true)
-    }
+    // Boolean format options
+    setTrim(f, format)
+    setIgnoreEmptyLines(f, format)
+    setIgnoreSurroundingSpaces(f, format)
 
-    if (format.containsKey(Format.Delimiter)) {
-      def val = format.get(Format.Delimiter)
-      if (val instanceof String || val instanceof Character) {
-        f.setDelimiter(String.valueOf(val))
-      } else {
-        throw new IllegalArgumentException("The value for Delimeter must be a String or Character but was $val")
-      }
-    } else {
-      f.setDelimiter(',')
-    }
+    // Character format options
+    setDelimiter(f, format)
+    setQuote(f, format)
+    setCommentMarker(f, format)
+    setEscape(f, format)
 
-    if (format.containsKey(Format.IgnoreEmptyLines)) {
-      def val = format.get(Format.IgnoreEmptyLines)
-      if (val instanceof Boolean) {
-        f.setIgnoreEmptyLines(val as Boolean)
-      } else {
-        throw new IllegalArgumentException("The value for IgnoreEmptyLines must be a Boolean but was $val")
-      }
-    } else {
-      f.setIgnoreEmptyLines(true)
-    }
+    // String format options
+    setNullString(f, format)
+    setRecordSeparator(f, format)
 
-    if (format.containsKey(Format.Quote)) {
-      def val = format.get(Format.Quote)
-      if (val instanceof String) {
-        f.setQuote(String.valueOf(val).substring(0, 1) as Character)
-      } else if (val instanceof Character) {
-        f.setQuote(val as Character)
-      } else {
-        throw new IllegalArgumentException("The value for Quote must be a String or Character but was $val")
-      }
-    } else {
-      f.setQuote('"' as Character)
-    }
-
-    if (format.containsKey(Format.CommentMarker)) {
-      def val = format.get(Format.CommentMarker)
-      if (val instanceof String) {
-        f.setCommentMarker(String.valueOf(val).substring(0, 1) as Character)
-      } else if (val instanceof Character) {
-        f.setCommentMarker(val as Character)
-      } else {
-        throw new IllegalArgumentException("The value for CommentMarker must be a String or Character but was $val")
-      }
-    } else {
-      f.setCommentMarker(null)
-    }
-
-    if (format.containsKey(Format.Escape)) {
-      def val = format.get(Format.Escape)
-      if (val instanceof String) {
-        f.setEscape(String.valueOf(val).substring(0, 1) as Character)
-      } else if (val instanceof Character) {
-        f.setEscape(val as Character)
-      } else {
-        throw new IllegalArgumentException("The value for Escape must be a String or Character but was $val")
-      }
-    } else {
-      f.setEscape(null)
-    }
-
+    // Header format option (special handling)
     if (format.containsKey(Format.Header)) {
       def val = format.get(Format.Header)
       if (val instanceof String[]) {
@@ -256,6 +200,7 @@ class CsvImporter {
       f.setSkipHeaderRecord(true)
     }
 
+    // DuplicateHeaderMode (enum/string handling)
     if (format.containsKey(Format.DuplicateHeaderMode)) {
       def val = format.get(Format.DuplicateHeaderMode)
       if (val instanceof DuplicateHeaderMode) {
@@ -269,39 +214,7 @@ class CsvImporter {
       f.setDuplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY)
     }
 
-    if (format.containsKey(Format.IgnoreSurroundingSpaces)) {
-      def val = format.get(Format.IgnoreSurroundingSpaces)
-      if (val instanceof Boolean) {
-        f.setIgnoreSurroundingSpaces(val as Boolean)
-      } else {
-        throw new IllegalArgumentException("The value for IgnoreSurroundingSpaces must be a Boolean but was $val")
-      }
-    } else {
-      f.setIgnoreSurroundingSpaces(true)
-    }
-
-    if (format.containsKey(Format.NullString)) {
-      def val = format.get(Format.NullString)
-      if (val instanceof String) {
-        f.setNullString(val)
-      } else {
-        throw new IllegalArgumentException("The value for NullString must be a String but was $val")
-      }
-    } else {
-      f.setNullString(null)
-    }
-
-    if (format.containsKey(Format.RecordSeparator)) {
-      def val = format.get(Format.RecordSeparator)
-      if (val instanceof String) {
-        f.setRecordSeparator(val)
-      } else {
-        throw new IllegalArgumentException("The value for RecordSeparator must be a String but was $val")
-      }
-    } else {
-      f.setRecordSeparator('\n')
-    }
-
+    // FirstRowAsHeader (special boolean with header interaction)
     if (format.containsKey(Format.FirstRowAsHeader)) {
       def val = format.get(Format.FirstRowAsHeader)
       if (val instanceof Boolean) {
@@ -317,7 +230,7 @@ class CsvImporter {
           // will be set in the Header section
         }
       } else {
-        throw new IllegalArgumentException("The value for IgnoreEmptyLines must be a Boolean but was ${val.class} = $val")
+        throw new IllegalArgumentException("The value for FirstRowAsHeader must be a Boolean but was ${val.class} = $val")
       }
     } else {
       f.setHeader()
@@ -325,6 +238,127 @@ class CsvImporter {
     }
 
     return f
+  }
+
+  // Boolean format options
+  private static void setTrim(CSVFormat.Builder builder, Map format) {
+    if (format.containsKey(Format.Trim)) {
+      def val = format.get(Format.Trim)
+      if (!(val instanceof Boolean)) {
+        throw new IllegalArgumentException("The value for Trim must be a Boolean but was $val")
+      }
+      builder.setTrim(val as Boolean)
+    } else {
+      builder.setTrim(true)
+    }
+  }
+
+  private static void setIgnoreEmptyLines(CSVFormat.Builder builder, Map format) {
+    if (format.containsKey(Format.IgnoreEmptyLines)) {
+      def val = format.get(Format.IgnoreEmptyLines)
+      if (!(val instanceof Boolean)) {
+        throw new IllegalArgumentException("The value for IgnoreEmptyLines must be a Boolean but was $val")
+      }
+      builder.setIgnoreEmptyLines(val as Boolean)
+    } else {
+      builder.setIgnoreEmptyLines(true)
+    }
+  }
+
+  private static void setIgnoreSurroundingSpaces(CSVFormat.Builder builder, Map format) {
+    if (format.containsKey(Format.IgnoreSurroundingSpaces)) {
+      def val = format.get(Format.IgnoreSurroundingSpaces)
+      if (!(val instanceof Boolean)) {
+        throw new IllegalArgumentException("The value for IgnoreSurroundingSpaces must be a Boolean but was $val")
+      }
+      builder.setIgnoreSurroundingSpaces(val as Boolean)
+    } else {
+      builder.setIgnoreSurroundingSpaces(true)
+    }
+  }
+
+  // Character format options
+  private static void setDelimiter(CSVFormat.Builder builder, Map format) {
+    if (format.containsKey(Format.Delimiter)) {
+      def val = format.get(Format.Delimiter)
+      if (val instanceof String || val instanceof Character) {
+        builder.setDelimiter(String.valueOf(val))
+      } else {
+        throw new IllegalArgumentException("The value for Delimiter must be a String or Character but was $val")
+      }
+    } else {
+      builder.setDelimiter(',')
+    }
+  }
+
+  private static void setQuote(CSVFormat.Builder builder, Map format) {
+    if (format.containsKey(Format.Quote)) {
+      def val = format.get(Format.Quote)
+      if (val instanceof String) {
+        builder.setQuote(String.valueOf(val).substring(0, 1) as Character)
+      } else if (val instanceof Character) {
+        builder.setQuote(val as Character)
+      } else {
+        throw new IllegalArgumentException("The value for Quote must be a String or Character but was $val")
+      }
+    } else {
+      builder.setQuote('"' as Character)
+    }
+  }
+
+  private static void setCommentMarker(CSVFormat.Builder builder, Map format) {
+    if (format.containsKey(Format.CommentMarker)) {
+      def val = format.get(Format.CommentMarker)
+      if (val instanceof String) {
+        builder.setCommentMarker(String.valueOf(val).substring(0, 1) as Character)
+      } else if (val instanceof Character) {
+        builder.setCommentMarker(val as Character)
+      } else {
+        throw new IllegalArgumentException("The value for CommentMarker must be a String or Character but was $val")
+      }
+    } else {
+      builder.setCommentMarker(null)
+    }
+  }
+
+  private static void setEscape(CSVFormat.Builder builder, Map format) {
+    if (format.containsKey(Format.Escape)) {
+      def val = format.get(Format.Escape)
+      if (val instanceof String) {
+        builder.setEscape(String.valueOf(val).substring(0, 1) as Character)
+      } else if (val instanceof Character) {
+        builder.setEscape(val as Character)
+      } else {
+        throw new IllegalArgumentException("The value for Escape must be a String or Character but was $val")
+      }
+    } else {
+      builder.setEscape(null)
+    }
+  }
+
+  // String format options
+  private static void setNullString(CSVFormat.Builder builder, Map format) {
+    if (format.containsKey(Format.NullString)) {
+      def val = format.get(Format.NullString)
+      if (!(val instanceof String)) {
+        throw new IllegalArgumentException("The value for NullString must be a String but was $val")
+      }
+      builder.setNullString(val as String)
+    } else {
+      builder.setNullString(null)
+    }
+  }
+
+  private static void setRecordSeparator(CSVFormat.Builder builder, Map format) {
+    if (format.containsKey(Format.RecordSeparator)) {
+      def val = format.get(Format.RecordSeparator)
+      if (!(val instanceof String)) {
+        throw new IllegalArgumentException("The value for RecordSeparator must be a String but was $val")
+      }
+      builder.setRecordSeparator(val as String)
+    } else {
+      builder.setRecordSeparator('\n')
+    }
   }
 
   private static Map convertKeysToEnums(Map map) {
