@@ -7,6 +7,51 @@ import groovy.json.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
 
+/**
+ * Exports Matrix data to JSON format with optional column formatters.
+ *
+ * <p>Supports custom formatting for individual columns via closures and
+ * automatic temporal data formatting with configurable date patterns.</p>
+ *
+ * <h3>Basic Usage</h3>
+ * <pre>
+ * Matrix m = Matrix.builder()
+ *   .data(id: [1, 2], name: ['Alice', 'Bob'])
+ *   .build()
+ *
+ * JsonExporter exporter = new JsonExporter(m)
+ * String json = exporter.toJson()
+ * // Output: [{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]
+ *
+ * String pretty = exporter.toJson(true)
+ * // Output: Pretty-printed with indentation
+ * </pre>
+ *
+ * <h3>Static Convenience Methods</h3>
+ * <pre>
+ * // One-liner export
+ * String json = JsonExporter.toJson(m)
+ *
+ * // Export to file
+ * JsonExporter.toJsonFile(m, new File("output.json"))
+ * </pre>
+ *
+ * <h3>Custom Column Formatting</h3>
+ * <pre>
+ * String json = exporter.toJson([
+ *   'salary': {it * 10 + ' kr'},
+ *   'date': {DateTimeFormatter.ofPattern('MM/dd/yy').format(it)}
+ * ])
+ * </pre>
+ *
+ * <h3>Date Formatting</h3>
+ * <pre>
+ * // All temporal columns formatted with custom pattern
+ * String json = exporter.toJson('MM/dd/yyyy')
+ * </pre>
+ *
+ * @see JsonImporter
+ */
 class JsonExporter {
 
     Matrix table

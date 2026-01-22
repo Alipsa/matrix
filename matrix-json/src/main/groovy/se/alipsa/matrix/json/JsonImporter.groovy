@@ -14,8 +14,40 @@ import java.nio.file.Path
 
 /**
  * Imports JSON arrays into Matrix format using Jackson streaming API.
- * This approach uses constant memory regardless of JSON size by processing
- * one row at a time instead of loading the entire document into memory.
+ *
+ * <p>This class uses constant memory regardless of JSON size by processing
+ * one row at a time instead of loading the entire document into memory.</p>
+ *
+ * <h3>Basic Usage</h3>
+ * <pre>
+ * // Parse JSON string
+ * Matrix m = JsonImporter.parse('[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]')
+ *
+ * // Parse from file
+ * Matrix m = JsonImporter.parse(new File("data.json"))
+ *
+ * // Parse from file path
+ * Matrix m = JsonImporter.parseFromFile("/path/to/data.json")
+ *
+ * // Parse from URL
+ * Matrix m = JsonImporter.parseFromUrl("https://example.com/data.json")
+ * </pre>
+ *
+ * <h3>Nested Structure Handling</h3>
+ * <p>Nested objects are automatically flattened to dot-notation keys:</p>
+ * <ul>
+ *   <li><code>{"a": {"b": 1}}</code> becomes <code>{"a.b": 1}</code></li>
+ *   <li><code>{"arr": [1, 2]}</code> becomes <code>{"arr[0]": 1, "arr[1]": 2}</code></li>
+ * </ul>
+ *
+ * <h3>Duplicate Key Detection</h3>
+ * <p>Throws {@link IllegalArgumentException} if keys collide after flattening:</p>
+ * <pre>
+ * // This will throw: "a.b" literal vs "a": {"b": ...} flattened
+ * {"a.b": 1, "a": {"b": 2}}
+ * </pre>
+ *
+ * @see JsonExporter
  */
 @CompileStatic
 class JsonImporter {
@@ -206,9 +238,25 @@ class JsonImporter {
 
   /**
    * Flatten a nested structure into dot-notation keys.
-   * Example: {"a": {"b": 1}} becomes {"a.b": 1}
-   * Arrays are indexed: {"arr": [1,2]} becomes {"arr[0]": 1, "arr[1]": 2}
-   * 
+   *
+   * <p><b>Examples:</b></p>
+   * <ul>
+   *   <li>Objects: <code>{"a": {"b": 1}}</code> → <code>{"a.b": 1}</code></li>
+   *   <li>Arrays: <code>{"arr": [1, 2]}</code> → <code>{"arr[0]": 1, "arr[1]": 2}</code></li>
+   *   <li>Deep nesting: <code>{"x": {"y": {"z": 3}}}</code> → <code>{"x.y.z": 3}</code></li>
+   *   <li>Mixed: <code>{"a": [{"b": 1}, {"b": 2}]}</code> → <code>{"a[0].b": 1, "a[1].b": 2}</code></li>
+   * </ul>
+   *
+   * <p><b>Collision Detection:</b></p>
+   * <p>Throws {@link IllegalArgumentException} if a literal key collides with a flattened path:</p>
+   * <pre>
+   * // Error: Both flatten to "a.b"
+   * {"a.b": 1, "a": {"b": 2}}
+   * </pre>
+   *
+   * @param prefix the current path prefix (empty string at root level)
+   * @param node the current node to flatten (Map, List, or leaf value)
+   * @param result output map collecting flattened key-value pairs
    * @throws IllegalArgumentException if duplicate keys are detected after flattening
    */
   private static void flatten(String prefix, Object node, Map<String, Object> result) {
