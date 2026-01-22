@@ -12,6 +12,9 @@ class JsonExporter {
     Matrix table
 
     JsonExporter(Grid grid, List<String> columnNames) {
+        if (grid == null || columnNames == null) {
+            throw new IllegalArgumentException("Grid and columnNames cannot be null")
+        }
         this.table = Matrix.builder()
         .columnNames(columnNames)
         .data(grid)
@@ -19,19 +22,22 @@ class JsonExporter {
     }
 
     JsonExporter(Matrix table) {
+        if (table == null) {
+            throw new IllegalArgumentException("Matrix table cannot be null")
+        }
         this.table = table
     }
 
     String toJson(boolean indent = false) {
-        toJson([:], indent)
+        this.toJson([:], indent)
     }
 
     String toJson(Map<String, Closure> columnFormatters) {
-        toJson(columnFormatters, false)
+        this.toJson(columnFormatters, false)
     }
 
     String toJson(String dateFormat) {
-        toJson([:], false, dateFormat)
+        this.toJson([:], false, dateFormat)
     }
 
     /**
@@ -76,5 +82,30 @@ class JsonExporter {
         }
         String json = jsonGenerator.toJson(rowMaps)
         return indent ? JsonOutput.prettyPrint(json) : json
+    }
+
+    /**
+     * Export a Matrix to JSON string (static convenience method).
+     *
+     * <p>This provides a one-liner way to export a Matrix without creating an instance.</p>
+     *
+     * @param table the Matrix to export
+     * @param indent whether to pretty print the JSON
+     * @return JSON string representation
+     */
+    static String toJson(Matrix table, boolean indent = false) {
+        new JsonExporter(table).toJson(indent)
+    }
+
+    /**
+     * Export a Matrix to a JSON file.
+     *
+     * @param table the Matrix to export
+     * @param outputFile file to write JSON to
+     * @param indent whether to pretty print the JSON
+     * @throws IOException if writing fails
+     */
+    static void toJsonFile(Matrix table, File outputFile, boolean indent = false) throws IOException {
+        outputFile.text = new JsonExporter(table).toJson(indent)
     }
 }
