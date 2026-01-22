@@ -5,8 +5,6 @@ import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.core.Matrix
 
-import java.io.StringReader
-import java.math.BigInteger
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -332,7 +330,7 @@ class MatrixArffTest {
 
   @Test @Order(16)
   void testReadFromUrlString() {
-    Matrix m = MatrixArffReader.readFromUrl(irisFile.toURI().toString())
+    Matrix m = MatrixArffReader.readUrl(irisFile.toURI().toString())
     assertEquals("iris", m.matrixName)
     assertEquals(150, m.rowCount())
   }

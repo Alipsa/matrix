@@ -3,14 +3,6 @@ package se.alipsa.matrix.arff
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
-import java.io.BufferedReader
-import java.io.FileInputStream
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.Reader
-import java.io.StringReader
-import java.net.URI
-import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.text.SimpleDateFormat
@@ -108,16 +100,6 @@ class MatrixArffReader {
     read(new StringReader(arffContent), defaultName)
   }
 
-  /**
-   * Read arff from a file path string (explicit convenience method).
-   *
-   * @param filePath path to the ARFF file
-   * @return a Matrix containing the parsed data
-   */
-  static Matrix readFromFile(String filePath) {
-    read(filePath)
-  }
-
   /** Read from a URL */
   static Matrix read(URL url) {
     if (url == null) {
@@ -137,7 +119,7 @@ class MatrixArffReader {
    * @param urlString URL string pointing to ARFF content
    * @return a Matrix containing the parsed data
    */
-  static Matrix readFromUrl(String urlString) {
+  static Matrix readUrl(String urlString) {
     if (urlString == null) {
       throw new IllegalArgumentException("URL string cannot be null")
     }
