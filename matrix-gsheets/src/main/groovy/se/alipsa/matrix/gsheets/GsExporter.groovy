@@ -25,6 +25,13 @@ import java.time.LocalDateTime
 /**
  * Exports Matrix data to Google Sheets spreadsheets.
  *
+ * @deprecated Use {@link GsheetsWriter} instead. This class will be removed in v2.0.
+ * <p>Migration guide:</p>
+ * <ul>
+ *   <li>{@code GsExporter.exportSheet(matrix)} → {@code GsheetsWriter.write(matrix)}</li>
+ *   <li>{@code GsExporter.exportSheet(matrix, creds, convertNulls, convertDates)} → {@code GsheetsWriter.write(matrix, creds, convertNulls, convertDates)}</li>
+ * </ul>
+ *
  * <p>This class creates new Google Spreadsheets from Matrix objects. The exported spreadsheet
  * will have a single sheet containing the matrix data with column names as the first row.
  *
@@ -86,10 +93,12 @@ import java.time.LocalDateTime
  * <li><strong>Other types:</strong> Converted to strings via String.valueOf()</li>
  * </ul>
  *
+ * @see GsheetsWriter
  * @see GsImporter
  * @see GsConverter
  * @since 0.1.0
  */
+@Deprecated
 @CompileStatic
 class GsExporter {
 
@@ -124,8 +133,10 @@ class GsExporter {
    * @throws SheetOperationException if spreadsheet creation or data writing fails
    * @see GsConverter#asSerial(LocalDate)
    * @see GsConverter#asSerial(LocalDateTime)
+   * @deprecated Use {@link GsheetsWriter#write(Matrix, GoogleCredentials, boolean, boolean)} instead
    * @since 0.1.0
    */
+  @Deprecated
   static String exportSheet(Matrix matrix, GoogleCredentials credentials = null, boolean convertNullsToEmptyString = true, boolean convertDatesToSerial = false) {
     if (matrix == null) {
       throw new IllegalArgumentException("matrix must not be null")
