@@ -433,4 +433,100 @@ plain
     Matrix m = MatrixArffReader.readString(arffContent)
     assertEquals("text", m[0, "note"])
   }
+
+  @Test @Order(22)
+  void testWriteString() {
+    Matrix m = Matrix.builder("string_test")
+        .columnNames("id", "name", "value")
+        .columns(
+            [1, 2, 3] as List,
+            ["Alice", "Bob", "Charlie"] as List,
+            [10.5, 20.5, 30.5] as List
+        )
+        .types([Integer, String, BigDecimal])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(m)
+
+    assertNotNull(arffContent)
+    assertTrue(arffContent.contains("@RELATION string_test"))
+    assertTrue(arffContent.contains("@ATTRIBUTE id INTEGER"))
+    assertTrue(arffContent.contains("@ATTRIBUTE name"))
+    assertTrue(arffContent.contains("@ATTRIBUTE value NUMERIC"))
+    assertTrue(arffContent.contains("@DATA"))
+    assertTrue(arffContent.contains("Alice"))
+    assertTrue(arffContent.contains("10.5"))
+  }
+
+  @Test @Order(23)
+  void testWriteStringWithNominalMappings() {
+    Matrix m = Matrix.builder("nominal_string_test")
+        .columnNames("category", "value")
+        .columns(
+            ["A", "B", "A", "C"] as List,
+            [1, 2, 3, 4] as List
+        )
+        .types([String, Integer])
+        .build()
+
+    Map<String, List<String>> nominalMappings = ["category": ["A", "B", "C", "D"]]
+    String arffContent = MatrixArffWriter.writeString(m, nominalMappings)
+
+    assertNotNull(arffContent)
+    assertTrue(arffContent.contains("@RELATION nominal_string_test"))
+    assertTrue(arffContent.contains("{A,B,C,D}"))
+    assertTrue(arffContent.contains("@DATA"))
+    assertTrue(arffContent.contains("A,1"))
+    assertTrue(arffContent.contains("C,4"))
+  }
+
+  @Test @Order(24)
+  void testWriteStringRoundTrip() {
+    Matrix original = Matrix.builder("roundtrip_test")
+        .columnNames("id", "name", "score")
+        .columns(
+            [1, 2, 3] as List,
+            ["Alice", "Bob", "Charlie"] as List,
+            [95.5, 87.3, 92.1] as List
+        )
+        .types([Integer, String, BigDecimal])
+        .build()
+
+    String arffString = MatrixArffWriter.writeString(original)
+    Matrix roundTripped = MatrixArffReader.readString(arffString)
+
+    assertEquals(original.rowCount(), roundTripped.rowCount())
+    assertEquals(original.columnCount(), roundTripped.columnCount())
+    assertEquals(original.columnNames(), roundTripped.columnNames())
+
+    // Check values
+    assertEquals(1, roundTripped[0, "id"])
+    assertEquals("Alice", roundTripped[0, "name"])
+    assertEquals(new BigDecimal("95.5"), roundTripped[0, "score"])
+    assertEquals(3, roundTripped[2, "id"])
+    assertEquals("Charlie", roundTripped[2, "name"])
+  }
+
+  @Test @Order(25)
+  void testWriteStringProducesSameOutputAsWriter() {
+    Matrix m = Matrix.builder("compare_test")
+        .columnNames("x", "y")
+        .columns(
+            [1, 2, 3] as List,
+            [10, 20, 30] as List
+        )
+        .types([Integer, Integer])
+        .build()
+
+    // Get output from writeString()
+    String fromWriteString = MatrixArffWriter.writeString(m)
+
+    // Get output from write(Writer)
+    StringWriter sw = new StringWriter()
+    MatrixArffWriter.write(m, sw)
+    String fromWriter = sw.toString()
+
+    // They should be identical
+    assertEquals(fromWriter, fromWriteString)
+  }
 }

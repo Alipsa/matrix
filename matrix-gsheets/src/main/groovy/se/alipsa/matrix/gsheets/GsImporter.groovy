@@ -12,6 +12,14 @@ import groovy.transform.CompileStatic
 /**
  * Imports data from Google Sheets into Matrix objects.
  *
+ * @deprecated Use {@link GsheetsReader} instead. This class will be removed in v2.0.
+ * <p>Migration guide:</p>
+ * <ul>
+ *   <li>{@code GsImporter.importSheet(sheetId, range, firstRow)} → {@code GsheetsReader.read(sheetId, range, firstRow)}</li>
+ *   <li>{@code GsImporter.importSheetAsObject(sheetId, range, firstRow, creds, convertEmpty)} → {@code GsheetsReader.readAsObject(sheetId, range, firstRow, creds, convertEmpty)}</li>
+ *   <li>{@code GsImporter.importSheetAsStrings(sheetId, range, firstRow)} → {@code GsheetsReader.readAsStrings(sheetId, range, firstRow)}</li>
+ * </ul>
+ *
  * <p>This class provides methods to import data from Google Spreadsheets into Matrix format.
  * It supports both formatted values (as displayed in Google Sheets) and raw unformatted values.
  *
@@ -44,10 +52,12 @@ import groovy.transform.CompileStatic
  * <li>Trailing empty columns/rows may be omitted from the API response</li>
  * </ul>
  *
+ * @see GsheetsReader
  * @see GsExporter
  * @see GsConverter
  * @since 0.1.0
  */
+@Deprecated
 @CompileStatic
 class GsImporter {
 
@@ -75,8 +85,10 @@ class GsImporter {
    * @throws IllegalArgumentException if sheetId or range is null/empty or malformed
    * @throws IOException if the Google Sheets API call fails
    * @see #importSheetAsObject(String, String, boolean, GoogleCredentials, boolean)
+   * @deprecated Use {@link GsheetsReader#read(String, String, boolean, GoogleCredentials)} instead
    * @since 0.1.0
    */
+  @Deprecated
   static Matrix importSheet(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
     validateSheetId(sheetId)
     validateRange(range)
@@ -123,8 +135,10 @@ class GsImporter {
    * @throws IllegalArgumentException if sheetId or range is null/empty or malformed
    * @throws IOException if the Google Sheets API call fails
    * @see GsConverter
+   * @deprecated Use {@link GsheetsReader#readAsObject(String, String, boolean, GoogleCredentials, boolean)} instead
    * @since 0.1.0
    */
+  @Deprecated
   static Matrix importSheetAsObject(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null, boolean convertEmptyToNull = false) {
     validateSheetId(sheetId)
     validateRange(range)
@@ -180,6 +194,10 @@ class GsImporter {
         .build()
   }
 
+  /**
+   * @deprecated Use {@link GsheetsReader#readAsStrings(String, String, boolean, GoogleCredentials)} instead
+   */
+  @Deprecated
   static Matrix importSheetAsStrings(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
     validateSheetId(sheetId)
     validateRange(range)

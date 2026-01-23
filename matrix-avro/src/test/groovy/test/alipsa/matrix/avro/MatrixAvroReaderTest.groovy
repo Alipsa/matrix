@@ -75,6 +75,21 @@ class MatrixAvroReaderTest {
     }
   }
 
+  @Test @Order(5)
+  void readFromByteArray() {
+    byte[] content = Files.readAllBytes(avroFile.toPath())
+    Matrix m = MatrixAvroReader.read(content, "FromBytes")
+    assertBasicShapeAndValues(m)
+  }
+
+  @Test @Order(6)
+  void readFromByteArrayWithDefaultName() {
+    byte[] content = Files.readAllBytes(avroFile.toPath())
+    Matrix m = MatrixAvroReader.read(content)
+    assertBasicShapeAndValues(m)
+    assertEquals("AvroMatrix", m.matrixName)
+  }
+
   // ---------- helpers ----------
 
   private static Schema buildSchema() {

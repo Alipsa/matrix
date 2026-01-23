@@ -7,7 +7,18 @@ import se.alipsa.matrix.core.Matrix
 
 /**
  * Exports a Matrix to a CSV using apache commons csv.
+ *
+ * @deprecated Use {@link CsvWriter} instead. This class will be removed in v2.0.
+ * <p>Migration guide:</p>
+ * <ul>
+ *   <li>{@code CsvExporter.exportToCsv(matrix, file)} → {@code CsvWriter.write(matrix, file)}</li>
+ *   <li>{@code CsvExporter.exportToExcelCsv(matrix, file)} → {@code CsvWriter.writeExcelCsv(matrix, file)}</li>
+ *   <li>{@code CsvExporter.exportToTsv(matrix, file)} → {@code CsvWriter.writeTsv(matrix, file)}</li>
+ * </ul>
+ *
+ * @see CsvWriter
  */
+@Deprecated
 @CompileStatic
 class CsvExporter {
 
@@ -18,11 +29,11 @@ class CsvExporter {
    * @param table the matrix to export
    * @param out the file to write to or a directory to write to
    * @param withHeader whether to include the columns names in the first row, default is true
+   * @deprecated Use {@link CsvWriter#write(Matrix, File, CSVFormat, boolean)} instead
    */
+  @Deprecated
   static void exportToCsv(Matrix table, File out, boolean withHeader = true) {
-    validateMatrix(table)
-    out = ensureFileOutput(table, out)
-    exportToCsv(table, CSVFormat.DEFAULT, new PrintWriter(out), withHeader)
+    CsvWriter.write(table, out, CSVFormat.DEFAULT, withHeader)
   }
 
   /**
@@ -33,11 +44,11 @@ class CsvExporter {
    * @param format the CSVFormat to use
    * @param out the file to write to or a directory to write to
    * @param withHeader whether to include the columns names in the first row, default is true
+   * @deprecated Use {@link CsvWriter#write(Matrix, File, CSVFormat, boolean)} instead
    */
+  @Deprecated
   static void exportToCsv(Matrix table, CSVFormat format, File out, boolean withHeader = true) {
-    validateMatrix(table)
-    out = ensureFileOutput(table, out)
-    exportToCsv(table, format, new PrintWriter(out), withHeader)
+    CsvWriter.write(table, out, format, withHeader)
   }
 
   /**
@@ -47,9 +58,11 @@ class CsvExporter {
    * @param format the CSVFormat to use
    * @param out the writer to write to
    * @param withHeader whether to include the columns names in the first row, default is true
+   * @deprecated Use {@link CsvWriter#write(Matrix, Writer, CSVFormat, boolean)} instead
    */
+  @Deprecated
   static void exportToCsv(Matrix table, CSVFormat format = CSVFormat.DEFAULT, Writer out, boolean withHeader = true) {
-    exportToCsv(table, format, new PrintWriter(out), withHeader)
+    CsvWriter.write(table, out, format, withHeader)
   }
 
   /**
@@ -59,20 +72,11 @@ class CsvExporter {
    * @param format the CSVFormat to use
    * @param out the print writer to write to
    * @param withHeader whether to include the columns names in the first row, default is true
+   * @deprecated Use {@link CsvWriter#write(Matrix, CSVFormat, PrintWriter, boolean)} instead
    */
+  @Deprecated
   static void exportToCsv(Matrix table, CSVFormat format = CSVFormat.DEFAULT, PrintWriter out, boolean withHeader = true) {
-    try(CSVPrinter printer = new CSVPrinter(out, format)) {
-      if (format.header != null && format.header.length == table.columnCount()) {
-        printer.printRecord(format.header)
-      } else if (withHeader) {
-        if (table.columnNames() != null) {
-          printer.printRecord(table.columnNames())
-        } else {
-          printer.printRecord((1..table.columnCount()).collect{ 'c' + it})
-        }
-      }
-      printer.printRecords(table.rows())
-    }
+    CsvWriter.write(table, format, out, withHeader)
   }
 
   /**
@@ -81,13 +85,11 @@ class CsvExporter {
    * @param table the matrix to export
    * @param printer the CSVPrinter to use
    * @param withHeader whether to include the columns names in the first row, default is true
+   * @deprecated Use {@link CsvWriter#write(Matrix, CSVPrinter, boolean)} instead
    */
+  @Deprecated
   static void exportToCsv(Matrix table, CSVPrinter printer, boolean withHeader = true) {
-    validateMatrix(table)
-    if(withHeader) {
-      printer.printRecord(table.columnNames())
-    }
-    printer.printRecords(table.rows())
+    CsvWriter.write(table, printer, withHeader)
   }
 
   /**
@@ -98,11 +100,11 @@ class CsvExporter {
    * @param table the matrix to export
    * @param out the file to write to or a directory to write to
    * @param withHeader whether to include the columns names in the first row, default is true
+   * @deprecated Use {@link CsvWriter#writeExcelCsv(Matrix, File, boolean)} instead
    */
+  @Deprecated
   static void exportToExcelCsv(Matrix table, File out, boolean withHeader = true) {
-    validateMatrix(table)
-    out = ensureFileOutput(table, out)
-    exportToCsv(table, CSVFormat.EXCEL, new PrintWriter(out), withHeader)
+    CsvWriter.writeExcelCsv(table, out, withHeader)
   }
 
   /**
@@ -113,38 +115,10 @@ class CsvExporter {
    * @param table the matrix to export
    * @param out the file to write to or a directory to write to
    * @param withHeader whether to include the columns names in the first row, default is true
+   * @deprecated Use {@link CsvWriter#writeTsv(Matrix, File, boolean)} instead
    */
+  @Deprecated
   static void exportToTsv(Matrix table, File out, boolean withHeader = true) {
-    validateMatrix(table)
-    out = ensureFileOutput(table, out)
-    exportToCsv(table, CSVFormat.TDF, new PrintWriter(out), withHeader)
-  }
-
-  /**
-   * Validate that the Matrix is not null and has columns.
-   */
-  private static void validateMatrix(Matrix table) {
-    if (table == null) {
-      throw new IllegalArgumentException("Matrix table cannot be null")
-    }
-    if (table.columnCount() == 0) {
-      throw new IllegalArgumentException("Cannot export matrix with no columns")
-    }
-  }
-
-  /**
-   * Ensure the output File exists and is a regular file (not a directory).
-   * If out is a directory, creates a file within it using the Matrix name.
-   * Creates parent directories if they don't exist.
-   */
-  private static File ensureFileOutput(Matrix table, File out) {
-    if (out.parentFile != null && !out.parentFile.exists()) {
-      out.parentFile.mkdirs()
-    }
-    if (out.isDirectory()) {
-      String fileName = (table.matrixName ?: 'matrix') + '.csv'
-      return new File(out, fileName)
-    }
-    return out
+    CsvWriter.writeTsv(table, out, withHeader)
   }
 }

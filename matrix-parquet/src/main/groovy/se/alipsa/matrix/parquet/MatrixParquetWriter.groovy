@@ -251,6 +251,65 @@ class MatrixParquetWriter {
     return writeInternal(matrix, file, schema)
   }
 
+  /**
+   * Writes a Matrix to a byte array in Parquet format, optionally inferring precision and scale for BigDecimal columns.
+   *
+   * @param matrix the matrix to write
+   * @param inferPrecisionAndScale whether to infer precision and scale for BigDecimal columns. If false,
+   * BigDecimal columns default to double storage (which leads to some loss of precision).
+   * @return byte array containing Parquet data
+   * @throws IllegalArgumentException if matrix is null or has no columns
+   */
+  static byte[] writeBytes(Matrix matrix, boolean inferPrecisionAndScale = true) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
+    }
+    MessageType schema = buildSchema(matrix, inferPrecisionAndScale)
+    return writeBytesInternal(matrix, schema)
+  }
+
+  /**
+   * Writes a Matrix to a byte array in Parquet format with a specific timezone for timestamp conversion.
+   *
+   * @param matrix the matrix to write
+   * @param zoneId the timezone to use for converting LocalDateTime values to UTC timestamps
+   * @return byte array containing Parquet data
+   * @throws IllegalArgumentException if matrix is null, has no columns, or zoneId is null
+   */
+  static byte[] writeBytes(Matrix matrix, ZoneId zoneId) {
+    if (zoneId == null) {
+      throw new IllegalArgumentException("ZoneId cannot be null")
+    }
+    try {
+      ZONE_ID_HOLDER.set(zoneId)
+      return writeBytes(matrix, true)
+    } finally {
+      ZONE_ID_HOLDER.remove()
+    }
+  }
+
+  /**
+   * Writes a Matrix to a byte array in Parquet format using explicitly provided decimal precision and scale metadata.
+   *
+   * @param matrix the matrix to write
+   * @param decimalMeta a Map where keys are column names (String) and values are int arrays [precision, scale]
+   * @return byte array containing Parquet data
+   * @throws IllegalArgumentException if matrix is null or has no columns
+   */
+  static byte[] writeBytes(Matrix matrix, Map<String, int[]> decimalMeta) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
+    }
+    MessageType schema = buildSchema(matrix, decimalMeta)
+    return writeBytesInternal(matrix, schema)
+  }
+
   private static File determineTargetFile(Matrix matrix, File fileOrDir) {
     String name = matrix.matrixName ?: 'matrix'
     File file
@@ -301,6 +360,57 @@ class MatrixParquetWriter {
 
     writer.close()
     return file
+  }
+
+  /**
+   * Internal helper method that handles the core logic of writing matrix rows
+   * to a byte array, given an already constructed schema.
+   *
+   * <p>This method writes directly to memory using {@link InMemoryOutputFile} without creating
+   * temporary files. This is more efficient than the previous temp file approach.</p>
+   *
+   * <p><strong>Performance Note:</strong> For very large matrices (&gt;100MB), consider using
+   * {@link #write(Matrix, File)} directly to avoid memory pressure. The in-memory approach
+   * requires approximately 2-3x the final file size in heap memory.</p>
+   *
+   * <p><strong>Size Limitation:</strong> Maximum file size is ~2GB due to ByteArrayOutputStream
+   * constraints (Integer.MAX_VALUE).</p>
+   *
+   * @param matrix the matrix to write
+   * @param schema the Parquet MessageType schema
+   * @return byte array containing Parquet data
+   */
+  private static byte[] writeBytesInternal(Matrix matrix, MessageType schema) {
+    def conf = new Configuration()
+    def extraMeta = new HashMap<String, String>()
+    extraMeta.put(METADATA_COLUMN_TYPES, matrix.types().collect { it.name }.join(','))
+
+    InMemoryOutputFile outputFile = new InMemoryOutputFile()
+
+    def writer = ExampleParquetWriter.builder(outputFile)
+        .withConf(conf)
+        .withType(schema)
+        .withExtraMetaData(extraMeta)
+        .build()
+
+    def factory = new SimpleGroupFactory(schema)
+    def rowCount = matrix.rowCount()
+    def colNames = matrix.columnNames()
+
+    (0..<rowCount).each { i ->
+      def group = factory.newGroup()
+      colNames.each { col ->
+        def value = matrix[i, col]
+        if (value != null) {
+          def fieldType = schema.getType(col)
+          writeValue(group, col, fieldType, value)
+        }
+      }
+      writer.write(group)
+    }
+
+    writer.close()
+    return outputFile.getBytes()
   }
 
   /**

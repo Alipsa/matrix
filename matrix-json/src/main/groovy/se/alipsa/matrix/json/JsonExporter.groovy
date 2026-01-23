@@ -2,155 +2,107 @@ package se.alipsa.matrix.json
 
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
-import groovy.json.*
-
-import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalAccessor
 
 /**
  * Exports Matrix data to JSON format with optional column formatters.
  *
- * <p>Supports custom formatting for individual columns via closures and
- * automatic temporal data formatting with configurable date patterns.</p>
+ * @deprecated Use {@link JsonWriter} instead. This class will be removed in v2.0.
+ * <p>Migration guide:</p>
+ * <ul>
+ *   <li>Instance API: {@code new JsonExporter(matrix).toJson()} → {@code JsonWriter.writeString(matrix)}</li>
+ *   <li>Static API: {@code JsonExporter.toJson(matrix)} → {@code JsonWriter.writeString(matrix)}</li>
+ *   <li>File export: {@code JsonExporter.toJsonFile(matrix, file)} → {@code JsonWriter.write(matrix, file)}</li>
+ * </ul>
  *
- * <h3>Basic Usage</h3>
- * <pre>
- * Matrix m = Matrix.builder()
- *   .data(id: [1, 2], name: ['Alice', 'Bob'])
- *   .build()
- *
- * JsonExporter exporter = new JsonExporter(m)
- * String json = exporter.toJson()
- * // Output: [{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]
- *
- * String pretty = exporter.toJson(true)
- * // Output: Pretty-printed with indentation
- * </pre>
- *
- * <h3>Static Convenience Methods</h3>
- * <pre>
- * // One-liner export
- * String json = JsonExporter.toJson(m)
- *
- * // Export to file
- * JsonExporter.toJsonFile(m, new File("output.json"))
- * </pre>
- *
- * <h3>Custom Column Formatting</h3>
- * <pre>
- * String json = exporter.toJson([
- *   'salary': {it * 10 + ' kr'},
- *   'date': {DateTimeFormatter.ofPattern('MM/dd/yy').format(it)}
- * ])
- * </pre>
- *
- * <h3>Date Formatting</h3>
- * <pre>
- * // All temporal columns formatted with custom pattern
- * String json = exporter.toJson('MM/dd/yyyy')
- * </pre>
- *
+ * @see JsonWriter
  * @see JsonImporter
  */
+@Deprecated
 class JsonExporter {
 
-    Matrix table
+  Matrix table
 
-    JsonExporter(Grid grid, List<String> columnNames) {
-        if (grid == null || columnNames == null) {
-            throw new IllegalArgumentException("Grid and columnNames cannot be null")
-        }
-        this.table = Matrix.builder()
+  /**
+   * @deprecated Use {@link JsonWriter#writeString(Matrix)} static methods instead
+   */
+  @Deprecated
+  JsonExporter(Grid grid, List<String> columnNames) {
+    if (grid == null || columnNames == null) {
+      throw new IllegalArgumentException("Grid and columnNames cannot be null")
+    }
+    this.table = Matrix.builder()
         .columnNames(columnNames)
         .data(grid)
         .build()
+  }
+
+  /**
+   * @deprecated Use {@link JsonWriter#writeString(Matrix)} static methods instead
+   */
+  @Deprecated
+  JsonExporter(Matrix table) {
+    if (table == null) {
+      throw new IllegalArgumentException("Matrix table cannot be null")
     }
+    this.table = table
+  }
 
-    JsonExporter(Matrix table) {
-        if (table == null) {
-            throw new IllegalArgumentException("Matrix table cannot be null")
-        }
-        this.table = table
-    }
+  /**
+   * @deprecated Use {@link JsonWriter#writeString(Matrix, boolean)} instead
+   */
+  @Deprecated
+  String toJson(boolean indent = false) {
+    JsonWriter.writeString(table, indent)
+  }
 
-    String toJson(boolean indent = false) {
-        this.toJson([:], indent)
-    }
+  /**
+   * @deprecated Use {@link JsonWriter#writeString(Matrix, Map, boolean, String)} instead
+   */
+  @Deprecated
+  String toJson(Map<String, Closure> columnFormatters) {
+    JsonWriter.writeString(table, columnFormatters, false)
+  }
 
-    String toJson(Map<String, Closure> columnFormatters) {
-        this.toJson(columnFormatters, false)
-    }
+  /**
+   * @deprecated Use {@link JsonWriter#writeString(Matrix, String, boolean)} instead
+   */
+  @Deprecated
+  String toJson(String dateFormat) {
+    JsonWriter.writeString(table, dateFormat, false)
+  }
 
-    String toJson(String dateFormat) {
-        this.toJson([:], false, dateFormat)
-    }
+  /**
+   * @deprecated Use {@link JsonWriter#writeString(Matrix, Map, boolean, String)} instead
+   */
+  @Deprecated
+  String toJson(Map<String, Closure> columnFormatters, boolean indent, String dateFormat = 'yyyy-MM-dd') {
+    JsonWriter.writeString(table, columnFormatters, indent, dateFormat)
+  }
 
-    /**
-     * If your data contains temporal data, you should add a converter for each such column
-     * that converts the data into strings. If you are satisfied with converting all temporal data
-     * to the format yyyy-MM-dd then you can skip that, or alternatively supply a dateFormat pattern which
-     * applies to all Date and TemporalAccessor columns
-     *
-     * @param columnFormatters
-     * @param indent whether to pretty print the json string or not
-     * @param dateFormat optional date format pattern, default is yyyy-MM-dd
-     * @return a json string
-     */
-    String toJson(Map<String, Closure> columnFormatters, boolean indent, String dateFormat='yyyy-MM-dd') {
-        // Only clone if we need to apply formatters (avoids unnecessary memory allocation)
-        def t = columnFormatters.isEmpty() ? table : table.clone()
-        if (!columnFormatters.isEmpty()) {
-            columnFormatters.each { k,v ->
-                t.apply(k, v)
-            }
-        }
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dateFormat)
+  /**
+   * Export a Matrix to JSON string (static convenience method).
+   *
+   * @param table the Matrix to export
+   * @param indent whether to pretty print the JSON
+   * @return JSON string representation
+   * @deprecated Use {@link JsonWriter#writeString(Matrix, boolean)} instead
+   */
+  @Deprecated
+  static String toJson(Matrix table, boolean indent = false) {
+    JsonWriter.writeString(table, indent)
+  }
 
-        def jsonGenerator = new JsonGenerator.Options()
-            .dateFormat(dateFormat)
-            .addConverter(new JsonGenerator.Converter() {
-                @Override
-                boolean handles(Class<?> type) {
-                    return TemporalAccessor.isAssignableFrom(type)
-                }
-                @Override
-                Object convert(Object date, String key) {
-                    dtf.format(date as TemporalAccessor)
-                }
-            })
-            .build()
-
-        // Build JSON by collecting row maps and letting the generator handle serialization
-        def rowMaps = []
-        for (def row : t) {
-            rowMaps.add(row.toMap())
-        }
-        String json = jsonGenerator.toJson(rowMaps)
-        return indent ? JsonOutput.prettyPrint(json) : json
-    }
-
-    /**
-     * Export a Matrix to JSON string (static convenience method).
-     *
-     * <p>This provides a one-liner way to export a Matrix without creating an instance.</p>
-     *
-     * @param table the Matrix to export
-     * @param indent whether to pretty print the JSON
-     * @return JSON string representation
-     */
-    static String toJson(Matrix table, boolean indent = false) {
-        new JsonExporter(table).toJson(indent)
-    }
-
-    /**
-     * Export a Matrix to a JSON file.
-     *
-     * @param table the Matrix to export
-     * @param outputFile file to write JSON to
-     * @param indent whether to pretty print the JSON
-     * @throws IOException if writing fails
-     */
-    static void toJsonFile(Matrix table, File outputFile, boolean indent = false) throws IOException {
-        outputFile.text = new JsonExporter(table).toJson(indent)
-    }
+  /**
+   * Export a Matrix to a JSON file.
+   *
+   * @param table the Matrix to export
+   * @param outputFile file to write JSON to
+   * @param indent whether to pretty print the JSON
+   * @throws IOException if writing fails
+   * @deprecated Use {@link JsonWriter#write(Matrix, File, boolean)} instead
+   */
+  @Deprecated
+  static void toJsonFile(Matrix table, File outputFile, boolean indent = false) throws IOException {
+    JsonWriter.write(table, outputFile, indent)
+  }
 }
