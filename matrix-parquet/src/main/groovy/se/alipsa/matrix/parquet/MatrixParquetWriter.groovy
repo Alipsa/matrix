@@ -366,29 +366,51 @@ class MatrixParquetWriter {
    * Internal helper method that handles the core logic of writing matrix rows
    * to a byte array, given an already constructed schema.
    *
-   * <p><strong>Performance Note:</strong> This method creates a temporary file which is then read
-   * back into memory and deleted. This is necessary because Parquet requires seekable output.
-   * For large matrices, consider using {@link #write(Matrix, File)} directly to avoid the
-   * memory overhead of loading the entire file into a byte array.</p>
+   * <p>This method writes directly to memory using {@link InMemoryOutputFile} without creating
+   * temporary files. This is more efficient than the previous temp file approach.</p>
+   *
+   * <p><strong>Performance Note:</strong> For very large matrices (&gt;100MB), consider using
+   * {@link #write(Matrix, File)} directly to avoid memory pressure. The in-memory approach
+   * requires approximately 2-3x the final file size in heap memory.</p>
+   *
+   * <p><strong>Size Limitation:</strong> Maximum file size is ~2GB due to ByteArrayOutputStream
+   * constraints (Integer.MAX_VALUE).</p>
    *
    * @param matrix the matrix to write
    * @param schema the Parquet MessageType schema
    * @return byte array containing Parquet data
    */
   private static byte[] writeBytesInternal(Matrix matrix, MessageType schema) {
-    // Write to a temporary file (Parquet requires seekable output)
-    java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("matrix-parquet-", ".parquet")
-    try {
-      File file = tempFile.toFile()
-      writeInternal(matrix, file, schema)
-      return java.nio.file.Files.readAllBytes(tempFile)
-    } finally {
-      try {
-        java.nio.file.Files.deleteIfExists(tempFile)
-      } catch (IOException ignored) {
-        // Best-effort cleanup for temp file.
+    def conf = new Configuration()
+    def extraMeta = new HashMap<String, String>()
+    extraMeta.put(METADATA_COLUMN_TYPES, matrix.types().collect { it.name }.join(','))
+
+    InMemoryOutputFile outputFile = new InMemoryOutputFile()
+
+    def writer = ExampleParquetWriter.builder(outputFile)
+        .withConf(conf)
+        .withType(schema)
+        .withExtraMetaData(extraMeta)
+        .build()
+
+    def factory = new SimpleGroupFactory(schema)
+    def rowCount = matrix.rowCount()
+    def colNames = matrix.columnNames()
+
+    (0..<rowCount).each { i ->
+      def group = factory.newGroup()
+      colNames.each { col ->
+        def value = matrix[i, col]
+        if (value != null) {
+          def fieldType = schema.getType(col)
+          writeValue(group, col, fieldType, value)
+        }
       }
+      writer.write(group)
     }
+
+    writer.close()
+    return outputFile.getBytes()
   }
 
   /**
