@@ -214,7 +214,9 @@ class CsvWriter {
    */
   private static File ensureFileOutput(Matrix matrix, File out) {
     if (out.parentFile != null && !out.parentFile.exists()) {
-      out.parentFile.mkdirs()
+      if (!out.parentFile.mkdirs()) {
+        throw new IOException("Failed to create parent directory: ${out.parentFile.absolutePath}")
+      }
     }
     if (out.isDirectory()) {
       String fileName = (matrix.matrixName ?: 'matrix') + '.csv'

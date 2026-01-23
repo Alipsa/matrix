@@ -68,6 +68,9 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
+    }
     if (file.getName().toLowerCase().endsWith(".ods")) {
       return SOdsExporter.exportOds(file, matrix)
     }
@@ -91,6 +94,9 @@ class SpreadsheetWriter {
     }
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
+    }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
     }
     if (sheetName == null) {
       throw new IllegalArgumentException("Sheet name cannot be null")
@@ -124,6 +130,15 @@ class SpreadsheetWriter {
     }
     if (matrices.size() != sheetNames.size()) {
       throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
+    }
+    // Validate each matrix has columns
+    matrices.eachWithIndex { matrix, idx ->
+      if (matrix == null) {
+        throw new IllegalArgumentException("Matrix at index ${idx} is null")
+      }
+      if (matrix.columnCount() == 0) {
+        throw new IllegalArgumentException("Matrix at index ${idx} must have at least one column")
+      }
     }
     if (file.getName().toLowerCase().endsWith(".ods")) {
       return SOdsExporter.exportOdsSheets(file, matrices, sheetNames)

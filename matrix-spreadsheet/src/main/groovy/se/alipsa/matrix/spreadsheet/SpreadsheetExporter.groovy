@@ -2,6 +2,9 @@ package se.alipsa.matrix.spreadsheet
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
+import se.alipsa.matrix.spreadsheet.poi.ExcelExporter
+import se.alipsa.matrix.spreadsheet.sods.SOdsExporter
 
 /**
  * Exports Matrix data to spreadsheet files (Excel, ODS).
@@ -14,9 +17,10 @@ import se.alipsa.matrix.core.Matrix
  *   <li>{@code SpreadsheetExporter.exportSpreadsheets(file, data, sheetNames)} → {@code SpreadsheetWriter.writeSheets(data, file, sheetNames)}</li>
  * </ul>
  *
- * <p><strong>Thread-safety limitation:</strong> This class uses a static {@code excelImplementation} field
- * that is not thread-safe. Concurrent calls with different implementation settings may cause race conditions.
- * Use {@link SpreadsheetWriter} which provides thread-safe alternatives.</p>
+ * <p><strong>Thread-safety limitation:</strong> This deprecated class maintains its own static
+ * {@code excelImplementation} field to avoid race conditions with {@link SpreadsheetWriter}.
+ * However, concurrent calls to this deprecated class itself are still not thread-safe.
+ * For thread-safe spreadsheet writing, migrate to {@link SpreadsheetWriter}.</p>
  *
  * @see SpreadsheetWriter
  */
@@ -25,6 +29,9 @@ import se.alipsa.matrix.core.Matrix
 class SpreadsheetExporter {
 
   /**
+   * Excel implementation to use for this deprecated class.
+   * Maintained separately from SpreadsheetWriter to avoid race conditions.
+   *
    * @deprecated Use {@link SpreadsheetWriter#excelImplementation} instead
    */
   @Deprecated
@@ -40,8 +47,14 @@ class SpreadsheetExporter {
    */
   @Deprecated
   static String exportSpreadsheet(File file, Matrix data) {
-    SpreadsheetWriter.excelImplementation = excelImplementation
-    return SpreadsheetWriter.write(data, file)
+    // Use local implementation field to avoid race conditions with SpreadsheetWriter
+    if (file.getName().toLowerCase().endsWith(".ods")) {
+      return SOdsExporter.exportOds(file, data)
+    }
+    return switch (excelImplementation) {
+      case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, data)
+      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcel(file, data)
+    }
   }
 
   /**
@@ -55,8 +68,14 @@ class SpreadsheetExporter {
    */
   @Deprecated
   static String exportSpreadsheet(File file, Matrix data, String sheetName) {
-    SpreadsheetWriter.excelImplementation = excelImplementation
-    return SpreadsheetWriter.write(data, file, sheetName)
+    // Use local implementation field to avoid race conditions with SpreadsheetWriter
+    if (file.getName().toLowerCase().endsWith(".ods")) {
+      return SOdsExporter.exportOds(file, data, sheetName)
+    }
+    return switch (excelImplementation) {
+      case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, data, sheetName)
+      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcel(file, data, sheetName)
+    }
   }
 
   /**
@@ -70,8 +89,14 @@ class SpreadsheetExporter {
    */
   @Deprecated
   static List<String> exportSpreadsheets(File file, List<Matrix> data, List<String> sheetNames) {
-    SpreadsheetWriter.excelImplementation = excelImplementation
-    return SpreadsheetWriter.writeSheets(data, file, sheetNames)
+    // Use local implementation field to avoid race conditions with SpreadsheetWriter
+    if (file.getName().toLowerCase().endsWith(".ods")) {
+      return SOdsExporter.exportOdsSheets(file, data, sheetNames)
+    }
+    return switch (excelImplementation) {
+      case ExcelImplementation.POI -> ExcelExporter.exportExcelSheets(file, data, sheetNames)
+      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcelSheets(file, data, sheetNames)
+    }
   }
 
   /**

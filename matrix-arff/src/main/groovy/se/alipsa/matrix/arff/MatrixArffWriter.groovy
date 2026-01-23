@@ -200,8 +200,12 @@ class MatrixArffWriter {
    *
    * @param matrix the Matrix to write
    * @return ARFF formatted string
+   * @throws IllegalArgumentException if matrix is null
    */
   static String writeString(Matrix matrix) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
     StringWriter stringWriter = new StringWriter()
     write(matrix, stringWriter)
     return stringWriter.toString()
@@ -213,8 +217,12 @@ class MatrixArffWriter {
    * @param matrix the Matrix to write
    * @param nominalMappings map of column names to lists of nominal values
    * @return ARFF formatted string
+   * @throws IllegalArgumentException if matrix is null
    */
   static String writeString(Matrix matrix, Map<String, List<String>> nominalMappings) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
     StringWriter stringWriter = new StringWriter()
     write(matrix, stringWriter, nominalMappings)
     return stringWriter.toString()
