@@ -190,7 +190,22 @@ class MatrixAvroReader {
     }
   }
 
-  /** Convert an Avro-typed value to a suitable Java value for Matrix. */
+  /**
+   * Converts an Avro-typed value to a suitable Java value for Matrix storage.
+   *
+   * <p>This method handles the conversion of Avro's type system to Java types:
+   * <ul>
+   *   <li>UNION types are unwrapped to their non-null component</li>
+   *   <li>Logical types (date, time, timestamp, decimal, uuid) are converted to appropriate Java types</li>
+   *   <li>Primitive types are converted directly (INT→Integer, LONG→Long, etc.)</li>
+   *   <li>Complex types (ARRAY, MAP, RECORD) are recursively converted</li>
+   *   <li>Avro's Utf8 strings are converted to Java Strings</li>
+   * </ul>
+   *
+   * @param schema the Avro schema describing the value's type
+   * @param v the raw Avro value to convert (may be null)
+   * @return the converted Java value suitable for Matrix storage, or null if input is null
+   */
   private static Object convertValue(Schema schema, Object v) {
     if (v == null) return null
 
@@ -283,6 +298,12 @@ class MatrixAvroReader {
     }
   }
 
+  /**
+   * Converts a ByteBuffer to a byte array, extracting only the remaining bytes.
+   *
+   * @param buf the ByteBuffer to convert
+   * @return a new byte array containing the buffer's remaining bytes
+   */
   private static byte[] byteBufferToArray(ByteBuffer buf) {
     ByteBuffer slice = buf.slice()
     byte[] exact = new byte[slice.remaining()]
@@ -290,26 +311,56 @@ class MatrixAvroReader {
     return exact
   }
 
+  /**
+   * Converts an Avro date value (days since epoch) to a LocalDate.
+   *
+   * @param v the Avro value representing days since Unix epoch (1970-01-01)
+   * @return the corresponding LocalDate
+   */
   private static LocalDate toLocalDate(Object v) {
     int days = (v instanceof Integer) ? (Integer) v : ((Number) v).intValue()
     return LocalDate.ofEpochDay(days)
   }
 
+  /**
+   * Converts an Avro time-millis value to a LocalTime.
+   *
+   * @param v the Avro value representing milliseconds since midnight
+   * @return the corresponding LocalTime
+   */
   private static LocalTime toLocalTimeMillis(Object v) {
     long ms = (v instanceof Integer) ? ((Integer) v).longValue() : ((Number) v).longValue()
     return LocalTime.ofNanoOfDay(ms * 1_000_000L)
   }
 
+  /**
+   * Converts an Avro time-micros value to a LocalTime.
+   *
+   * @param v the Avro value representing microseconds since midnight
+   * @return the corresponding LocalTime
+   */
   private static LocalTime toLocalTimeMicros(Object v) {
     long micros = ((Number) v).longValue()
     return LocalTime.ofNanoOfDay(micros * 1_000L)
   }
 
+  /**
+   * Converts an Avro timestamp-millis value to an Instant.
+   *
+   * @param v the Avro value representing milliseconds since Unix epoch (UTC)
+   * @return the corresponding Instant
+   */
   private static Instant toInstantMillis(Object v) {
     long ms = ((Number) v).longValue()
     return Instant.ofEpochMilli(ms)
   }
 
+  /**
+   * Converts an Avro timestamp-micros value to an Instant.
+   *
+   * @param v the Avro value representing microseconds since Unix epoch (UTC)
+   * @return the corresponding Instant
+   */
   private static Instant toInstantMicros(Object v) {
     long micros = ((Number) v).longValue()
     long seconds = Math.floorDiv(micros, 1_000_000L)
@@ -317,6 +368,14 @@ class MatrixAvroReader {
     return Instant.ofEpochSecond(seconds, nanos)
   }
 
+  /**
+   * Converts an Avro local-timestamp-millis value to a LocalDateTime.
+   *
+   * <p>Note: local-timestamp has no timezone; UTC offset is used for conversion.
+   *
+   * @param v the Avro value representing milliseconds since epoch (no timezone)
+   * @return the corresponding LocalDateTime
+   */
   private static LocalDateTime toLocalDateTimeMillis(Object v) {
     long ms = ((Number) v).longValue()
     return LocalDateTime.ofEpochSecond(
@@ -326,6 +385,14 @@ class MatrixAvroReader {
     )
   }
 
+  /**
+   * Converts an Avro local-timestamp-micros value to a LocalDateTime.
+   *
+   * <p>Note: local-timestamp has no timezone; UTC offset is used for conversion.
+   *
+   * @param v the Avro value representing microseconds since epoch (no timezone)
+   * @return the corresponding LocalDateTime
+   */
   private static LocalDateTime toLocalDateTimeMicros(Object v) {
     long micros = ((Number) v).longValue()
     long seconds = Math.floorDiv(micros, 1_000_000L)
@@ -333,6 +400,18 @@ class MatrixAvroReader {
     return LocalDateTime.ofEpochSecond(seconds, nanos, ZoneOffset.UTC)
   }
 
+  /**
+   * Converts an Avro decimal logical type value to a BigDecimal.
+   *
+   * <p>Avro decimals are stored as unscaled byte arrays (big-endian two's complement).
+   * The scale is obtained from the logical type metadata.
+   *
+   * @param dec the Avro Decimal logical type containing precision and scale
+   * @param schema the Avro schema (must be BYTES or FIXED)
+   * @param v the raw Avro value (ByteBuffer for BYTES, GenericFixed for FIXED)
+   * @return the corresponding BigDecimal
+   * @throws IllegalArgumentException if schema type is not BYTES or FIXED
+   */
   private static BigDecimal toBigDecimal(LogicalTypes.Decimal dec, Schema schema, Object v) {
     int scale = dec.getScale()
     byte[] bytes
