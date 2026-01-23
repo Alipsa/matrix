@@ -11,15 +11,46 @@ import org.apache.avro.util.Utf8
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.ByteBuffer
+import java.net.MalformedURLException
+import java.net.URI
+import java.net.URISyntaxException
 import java.nio.file.Path
 import java.time.*
 
+/**
+ * Reads Avro Object Container Files (OCF) into Matrix objects.
+ *
+ * <p>Supports reading from File, Path, URL, InputStream, and byte arrays.
+ * Handles Avro logical types including date, time, timestamp, decimal, and UUID.
+ *
+ * <p>Example usage:
+ * <pre>{@code
+ * // Read from file
+ * Matrix m = MatrixAvroReader.read(new File("data.avro"))
+ *
+ * // Read from file path string
+ * Matrix m = MatrixAvroReader.readFile("/path/to/data.avro")
+ *
+ * // Read from URL
+ * Matrix m = MatrixAvroReader.readUrl("https://example.com/data.avro")
+ * }</pre>
+ */
 @CompileStatic
 class MatrixAvroReader {
 
-  /** Read from a File */
+  /**
+   * Read an Avro file from a File object.
+   *
+   * @param file the Avro file to read (must exist and be a file, not a directory)
+   * @param name optional name for the resulting Matrix; defaults to the file name
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if file is null or is a directory
+   * @throws FileNotFoundException if the file does not exist
+   * @throws IOException if an I/O error occurs
+   */
   static Matrix read(File file, String name = null) {
-    name = name ?: (file.name ?: "AvroMatrix")
+    validateFile(file)
+    name = name ?: defaultName(file)
     InputStream is = new FileInputStream(file)
     try {
       return read(is, name)
@@ -28,13 +59,36 @@ class MatrixAvroReader {
     }
   }
 
-  /** Read from a Path */
+  /**
+   * Read an Avro file from a Path.
+   *
+   * @param path the path to the Avro file (must not be null)
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if path is null or points to a directory
+   * @throws FileNotFoundException if the file does not exist
+   * @throws IOException if an I/O error occurs
+   */
   static Matrix read(Path path) {
+    if (path == null) {
+      throw new IllegalArgumentException("Path cannot be null")
+    }
     return read(path.toFile())
   }
 
-  /** Read from a URL */
-  static Matrix read(URL url, String name = url.getFile() ?: "AvroMatrix") {
+  /**
+   * Read Avro data from a URL.
+   *
+   * @param url the URL to read from (must not be null)
+   * @param name optional name for the resulting Matrix; defaults to the URL file name
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if url is null
+   * @throws IOException if an I/O error occurs
+   */
+  static Matrix read(URL url, String name = null) {
+    if (url == null) {
+      throw new IllegalArgumentException("URL cannot be null")
+    }
+    name = name ?: defaultName(url)
     InputStream is = url.openStream()
     try {
       return read(is, name)
@@ -43,7 +97,15 @@ class MatrixAvroReader {
     }
   }
 
-  /** Read from a byte array */
+  /**
+   * Read Avro data from a byte array.
+   *
+   * @param content the Avro content as a byte array (must not be null)
+   * @param name optional name for the resulting Matrix; defaults to "AvroMatrix"
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if content is null
+   * @throws IOException if an I/O error occurs
+   */
   static Matrix read(byte[] content, String name = "AvroMatrix") {
     if (content == null) {
       throw new IllegalArgumentException("Content cannot be null")
@@ -51,8 +113,58 @@ class MatrixAvroReader {
     return read(new ByteArrayInputStream(content), name)
   }
 
-  /** Read from an InputStream (Avro OCF). Stream will be closed by caller if needed. */
+  /**
+   * Read an Avro file from a file path string.
+   *
+   * @param filePath the path to the Avro file (must not be null)
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if filePath is null or points to a directory
+   * @throws FileNotFoundException if the file does not exist
+   * @throws IOException if an I/O error occurs
+   * @see #read(File, String)
+   */
+  static Matrix readFile(String filePath) {
+    if (filePath == null) {
+      throw new IllegalArgumentException("File path cannot be null")
+    }
+    return read(new File(filePath))
+  }
+
+  /**
+   * Read Avro data from a URL string.
+   *
+   * @param urlString the URL string to read from (must not be null and must be a valid URL)
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if urlString is null or invalid
+   * @throws IOException if an I/O error occurs
+   * @see #read(URL, String)
+   */
+  static Matrix readUrl(String urlString) {
+    if (urlString == null) {
+      throw new IllegalArgumentException("URL string cannot be null")
+    }
+    try {
+      return read(new URI(urlString).toURL())
+    } catch (URISyntaxException | MalformedURLException e) {
+      throw new IllegalArgumentException("Invalid URL string: " + urlString, e)
+    }
+  }
+
+  /**
+   * Read Avro data from an InputStream.
+   *
+   * <p>The stream will NOT be closed by this method; the caller is responsible for closing it.
+   *
+   * @param input the InputStream to read from (must not be null)
+   * @param name optional name for the resulting Matrix; defaults to "AvroMatrix"
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if input is null
+   * @throws IOException if an I/O error occurs
+   */
   static Matrix read(InputStream input, String name = "AvroMatrix") {
+    if (input == null) {
+      throw new IllegalArgumentException("InputStream cannot be null")
+    }
     GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>()
     DataFileStream<GenericRecord> dfs = new DataFileStream<>(input, datumReader)
     try {
@@ -232,5 +344,51 @@ class MatrixAvroReader {
       throw new IllegalArgumentException("Decimal logical type on non-bytes/fixed field")
     }
     return new BigDecimal(new BigInteger(bytes), scale)
+  }
+
+  /**
+   * Validates that the file exists and is not a directory.
+   */
+  private static void validateFile(File file) {
+    if (file == null) {
+      throw new IllegalArgumentException("File cannot be null")
+    }
+    if (!file.exists()) {
+      throw new FileNotFoundException("File does not exist: ${file.absolutePath}")
+    }
+    if (file.isDirectory()) {
+      throw new IllegalArgumentException("Expected a file but got a directory: ${file.absolutePath}")
+    }
+  }
+
+  /**
+   * Extracts a default name from a file (file name without extension).
+   */
+  private static String defaultName(File file) {
+    String name = file.name
+    if (name != null && name.contains('.')) {
+      name = name.substring(0, name.lastIndexOf('.'))
+    }
+    return name ?: "AvroMatrix"
+  }
+
+  /**
+   * Extracts a default name from a URL (file name without extension).
+   */
+  private static String defaultName(URL url) {
+    String name = url.getPath()
+    if (name == null || name.isEmpty()) {
+      name = url.getFile()
+    }
+    if (name == null || name.isEmpty()) {
+      return "AvroMatrix"
+    }
+    if (name.contains('/')) {
+      name = name.substring(name.lastIndexOf('/') + 1)
+    }
+    if (name.contains('.')) {
+      name = name.substring(0, name.lastIndexOf('.'))
+    }
+    return name ?: "AvroMatrix"
   }
 }

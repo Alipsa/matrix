@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.avro.MatrixAvroWriter
 
 import java.nio.file.Files
+import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -123,6 +124,138 @@ class MatrixAvroWriterTest {
     byte[] avroBytes = MatrixAvroWriter.writeBytes(m, false)
     assertNotNull(avroBytes)
     assertTrue(avroBytes.length > 0)
+  }
+
+  // ---------- validation tests ----------
+
+  @Test
+  void testValidationNullMatrix() {
+    File tmp = Files.createTempFile("avro-test-", ".avro").toFile()
+    try {
+      def ex = assertThrows(IllegalArgumentException) {
+        MatrixAvroWriter.write(null, tmp)
+      }
+      assertEquals("Matrix cannot be null", ex.message)
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
+  void testValidationEmptyMatrix() {
+    Matrix m = Matrix.builder("Empty").build()
+    File tmp = Files.createTempFile("avro-test-", ".avro").toFile()
+    try {
+      def ex = assertThrows(IllegalArgumentException) {
+        MatrixAvroWriter.write(m, tmp)
+      }
+      assertEquals("Matrix must have at least one column", ex.message)
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
+  void testValidationNullFile() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["id"] = [1, 2]
+    Matrix m = Matrix.builder("Test").columns(cols).types(Integer).build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroWriter.write(m, (File) null)
+    }
+    assertEquals("File cannot be null", ex.message)
+  }
+
+  @Test
+  void testValidationNullPath() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["id"] = [1, 2]
+    Matrix m = Matrix.builder("Test").columns(cols).types(Integer).build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroWriter.write(m, (Path) null)
+    }
+    assertEquals("Path cannot be null", ex.message)
+  }
+
+  @Test
+  void testValidationNullOutputStream() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["id"] = [1, 2]
+    Matrix m = Matrix.builder("Test").columns(cols).types(Integer).build()
+
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroWriter.write(m, (OutputStream) null)
+    }
+    assertEquals("OutputStream cannot be null", ex.message)
+  }
+
+  @Test
+  void testValidationWriteBytesNullMatrix() {
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroWriter.writeBytes(null)
+    }
+    assertEquals("Matrix cannot be null", ex.message)
+  }
+
+  @Test
+  void testValidationWriteBytesEmptyMatrix() {
+    Matrix m = Matrix.builder("Empty").build()
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroWriter.writeBytes(m)
+    }
+    assertEquals("Matrix must have at least one column", ex.message)
+  }
+
+  @Test
+  void testWriteToOutputStream() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["id"] = [1, 2, 3]
+    cols["name"] = ["Alice", "Bob", "Charlie"]
+
+    Matrix m = Matrix.builder("StreamTest")
+        .columns(cols)
+        .types(Integer, String)
+        .build()
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    MatrixAvroWriter.write(m, baos, false)
+
+    byte[] bytes = baos.toByteArray()
+    assertNotNull(bytes)
+    assertTrue(bytes.length > 0, "Output stream should contain data")
+
+    // Verify it can be read back
+    Matrix result = se.alipsa.matrix.avro.MatrixAvroReader.read(bytes, "StreamTest")
+    assertEquals(3, result.rowCount())
+    assertEquals(2, result.columnCount())
+  }
+
+  @Test
+  void testWriteCreatesParentDirectory() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["id"] = [1]
+    Matrix m = Matrix.builder("Test").columns(cols).types(Integer).build()
+
+    // Create a temp directory and then a nested path that doesn't exist yet
+    File tempDir = Files.createTempDirectory("avro-parent-test").toFile()
+    File nestedFile = new File(tempDir, "nested/subdir/test.avro")
+
+    try {
+      assertFalse(nestedFile.parentFile.exists(), "Parent directory should not exist yet")
+
+      MatrixAvroWriter.write(m, nestedFile)
+
+      assertTrue(nestedFile.exists(), "File should be created")
+      assertTrue(nestedFile.parentFile.exists(), "Parent directory should be created")
+    } finally {
+      // Clean up
+      if (nestedFile.exists()) nestedFile.delete()
+      new File(tempDir, "nested/subdir").delete()
+      new File(tempDir, "nested").delete()
+      tempDir.delete()
+    }
   }
 
   // Helper: unwrap ["null", T] to T

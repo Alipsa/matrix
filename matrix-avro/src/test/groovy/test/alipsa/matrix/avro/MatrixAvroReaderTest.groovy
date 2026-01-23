@@ -90,6 +90,107 @@ class MatrixAvroReaderTest {
     assertEquals("AvroMatrix", m.matrixName)
   }
 
+  // ---------- convenience method tests ----------
+
+  @Test @Order(7)
+  void testReadFile() {
+    Matrix m = MatrixAvroReader.readFile(avroFile.absolutePath)
+    assertBasicShapeAndValues(m)
+  }
+
+  @Test @Order(8)
+  void testReadUrl() {
+    Matrix m = MatrixAvroReader.readUrl(avroFile.toURI().toString())
+    assertBasicShapeAndValues(m)
+  }
+
+  // ---------- validation tests ----------
+
+  @Test @Order(10)
+  void testValidationNullFile() {
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroReader.read((File) null)
+    }
+    assertEquals("File cannot be null", ex.message)
+  }
+
+  @Test @Order(11)
+  void testValidationNullPath() {
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroReader.read((Path) null)
+    }
+    assertEquals("Path cannot be null", ex.message)
+  }
+
+  @Test @Order(12)
+  void testValidationNullUrl() {
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroReader.read((URL) null)
+    }
+    assertEquals("URL cannot be null", ex.message)
+  }
+
+  @Test @Order(13)
+  void testValidationNullInputStream() {
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroReader.read((InputStream) null)
+    }
+    assertEquals("InputStream cannot be null", ex.message)
+  }
+
+  @Test @Order(14)
+  void testValidationNullByteArray() {
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroReader.read((byte[]) null)
+    }
+    assertEquals("Content cannot be null", ex.message)
+  }
+
+  @Test @Order(15)
+  void testValidationNullFilePath() {
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroReader.readFile(null)
+    }
+    assertEquals("File path cannot be null", ex.message)
+  }
+
+  @Test @Order(16)
+  void testValidationNullUrlString() {
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroReader.readUrl(null)
+    }
+    assertEquals("URL string cannot be null", ex.message)
+  }
+
+  @Test @Order(17)
+  void testValidationFileDoesNotExist() {
+    def ex = assertThrows(FileNotFoundException) {
+      MatrixAvroReader.read(new File("/non/existent/path/to/file.avro"))
+    }
+    assertTrue(ex.message.contains("does not exist"))
+  }
+
+  @Test @Order(18)
+  void testValidationFileIsDirectory() {
+    File tempDir = Files.createTempDirectory("avro-test").toFile()
+    try {
+      def ex = assertThrows(IllegalArgumentException) {
+        MatrixAvroReader.read(tempDir)
+      }
+      assertTrue(ex.message.contains("directory"))
+    } finally {
+      tempDir.delete()
+    }
+  }
+
+  @Test @Order(19)
+  void testValidationInvalidUrlString() {
+    def ex = assertThrows(IllegalArgumentException) {
+      MatrixAvroReader.readUrl("not a valid url")
+    }
+    assertTrue(ex.message.contains("Invalid URL string"))
+  }
+
   // ---------- helpers ----------
 
   private static Schema buildSchema() {

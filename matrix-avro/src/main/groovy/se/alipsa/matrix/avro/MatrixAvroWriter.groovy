@@ -18,49 +18,114 @@ import java.nio.file.Path
 import java.sql.Time
 import java.time.*
 
+/**
+ * Writes Matrix objects to Avro Object Container Files (OCF).
+ *
+ * <p>Supports writing to File, Path, OutputStream, and byte arrays.
+ * Handles conversion of Java types to appropriate Avro types, including
+ * support for logical types (date, time, timestamp, decimal, UUID).
+ *
+ * <p>Example usage:
+ * <pre>{@code
+ * Matrix m = Matrix.builder("data")
+ *     .columnNames(["id", "name", "price"])
+ *     .rows([[1, "Alice", 10.50], [2, "Bob", 20.75]])
+ *     .types(Integer, String, BigDecimal)
+ *     .build()
+ *
+ * // Write to file
+ * MatrixAvroWriter.write(m, new File("data.avro"))
+ *
+ * // Write with decimal precision inference
+ * MatrixAvroWriter.write(m, new File("data.avro"), true)
+ *
+ * // Write to byte array
+ * byte[] bytes = MatrixAvroWriter.writeBytes(m)
+ * }</pre>
+ */
 @CompileStatic
 class MatrixAvroWriter {
 
-  /** Write to a File */
+  /**
+   * Write a Matrix to an Avro file.
+   *
+   * @param matrix the Matrix to write (must not be null, must have at least one column)
+   * @param file the target file to write to (must not be null)
+   * @param inferPrecisionAndScale if true, infer precision and scale for BigDecimal columns
+   *        from the actual data; if false, BigDecimal columns are stored as doubles
+   * @throws IllegalArgumentException if matrix is null, has no columns, or file is null
+   * @throws IOException if an I/O error occurs or parent directory creation fails
+   */
   static void write(Matrix matrix, File file, boolean inferPrecisionAndScale = false) {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
-    }
-    if (matrix.columnCount() == 0) {
-      throw new IllegalArgumentException("Matrix must have at least one column")
-    }
+    validateMatrix(matrix)
+    validateFile(file)
     Schema schema = buildSchema(matrix, inferPrecisionAndScale)
     DataFileWriter<GenericRecord> dfw = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(schema))
     dfw.create(schema, file)
     try {
-      writeRows(matrix, dfw, schema) // removed unused inferPrecisionAndScale
+      writeRows(matrix, dfw, schema)
     } finally {
       dfw.close()
     }
   }
 
-  /** Write to a Path */
+  /**
+   * Write a Matrix to an Avro file at the specified Path.
+   *
+   * @param matrix the Matrix to write (must not be null, must have at least one column)
+   * @param path the target path to write to (must not be null)
+   * @param inferPrecisionAndScale if true, infer precision and scale for BigDecimal columns
+   *        from the actual data; if false, BigDecimal columns are stored as doubles
+   * @throws IllegalArgumentException if matrix is null, has no columns, or path is null
+   * @throws IOException if an I/O error occurs or parent directory creation fails
+   * @see #write(Matrix, File, boolean)
+   */
   static void write(Matrix matrix, Path path, boolean inferPrecisionAndScale = false) {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
+    if (path == null) {
+      throw new IllegalArgumentException("Path cannot be null")
     }
+    validateMatrix(matrix)
     write(matrix, path.toFile(), inferPrecisionAndScale)
   }
 
   /**
-   * Write to a byte array in Avro format.
+   * Write a Matrix to an OutputStream in Avro format.
    *
-   * @param matrix the Matrix to write
-   * @param inferPrecisionAndScale whether to infer precision and scale for BigDecimal columns
-   * @return byte array containing Avro data
+   * <p>The stream will NOT be closed by this method; the caller is responsible for closing it.
+   *
+   * @param matrix the Matrix to write (must not be null, must have at least one column)
+   * @param out the OutputStream to write to (must not be null)
+   * @param inferPrecisionAndScale if true, infer precision and scale for BigDecimal columns
+   *        from the actual data; if false, BigDecimal columns are stored as doubles
+   * @throws IllegalArgumentException if matrix is null, has no columns, or out is null
+   * @throws IOException if an I/O error occurs
+   */
+  static void write(Matrix matrix, OutputStream out, boolean inferPrecisionAndScale = false) {
+    validateMatrix(matrix)
+    if (out == null) {
+      throw new IllegalArgumentException("OutputStream cannot be null")
+    }
+    Schema schema = buildSchema(matrix, inferPrecisionAndScale)
+    DataFileWriter<GenericRecord> dfw = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(schema))
+    dfw.create(schema, out)
+    try {
+      writeRows(matrix, dfw, schema)
+    } finally {
+      dfw.close()
+    }
+  }
+
+  /**
+   * Write a Matrix to a byte array in Avro format.
+   *
+   * @param matrix the Matrix to write (must not be null, must have at least one column)
+   * @param inferPrecisionAndScale if true, infer precision and scale for BigDecimal columns
+   *        from the actual data; if false, BigDecimal columns are stored as doubles
+   * @return byte array containing the Avro data
+   * @throws IllegalArgumentException if matrix is null or has no columns
    */
   static byte[] writeBytes(Matrix matrix, boolean inferPrecisionAndScale = false) {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
-    }
-    if (matrix.columnCount() == 0) {
-      throw new IllegalArgumentException("Matrix must have at least one column")
-    }
+    validateMatrix(matrix)
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     Schema schema = buildSchema(matrix, inferPrecisionAndScale)
     DataFileWriter<GenericRecord> dfw = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(schema))
@@ -71,6 +136,33 @@ class MatrixAvroWriter {
       dfw.close()
     }
     return baos.toByteArray()
+  }
+
+  /**
+   * Validates that the matrix is not null and has at least one column.
+   */
+  private static void validateMatrix(Matrix matrix) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
+    }
+  }
+
+  /**
+   * Validates the file parameter and ensures parent directory exists.
+   */
+  private static void validateFile(File file) {
+    if (file == null) {
+      throw new IllegalArgumentException("File cannot be null")
+    }
+    File parentDir = file.parentFile
+    if (parentDir != null && !parentDir.exists()) {
+      if (!parentDir.mkdirs()) {
+        throw new IOException("Failed to create parent directory: ${parentDir.absolutePath}")
+      }
+    }
   }
 
   // ----------------------------------------------------------------------
