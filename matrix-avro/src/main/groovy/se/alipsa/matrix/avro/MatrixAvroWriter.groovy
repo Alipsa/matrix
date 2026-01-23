@@ -10,6 +10,8 @@ import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
+import se.alipsa.matrix.avro.exceptions.AvroConversionException
+import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
 
 import java.math.RoundingMode
@@ -138,29 +140,150 @@ class MatrixAvroWriter {
     return baos.toByteArray()
   }
 
+  // ----------------------------------------------------------------------
+  // Methods accepting AvroWriteOptions
+  // ----------------------------------------------------------------------
+
+  /**
+   * Write a Matrix to an Avro file with configurable options.
+   *
+   * @param matrix the Matrix to write (must not be null, must have at least one column)
+   * @param file the target file to write to (must not be null)
+   * @param options the write configuration options
+   * @throws IllegalArgumentException if matrix is null, has no columns, file is null, or options is null
+   * @throws IOException if an I/O error occurs or parent directory creation fails
+   * @see AvroWriteOptions
+   */
+  static void write(Matrix matrix, File file, AvroWriteOptions options) {
+    validateMatrix(matrix)
+    validateFile(file)
+    if (options == null) {
+      throw new IllegalArgumentException("Options cannot be null")
+    }
+    Schema schema = buildSchema(matrix, options)
+    DataFileWriter<GenericRecord> dfw = createDataFileWriter(schema, options)
+    dfw.create(schema, file)
+    try {
+      writeRows(matrix, dfw, schema)
+    } finally {
+      dfw.close()
+    }
+  }
+
+  /**
+   * Write a Matrix to an Avro file at the specified Path with configurable options.
+   *
+   * @param matrix the Matrix to write (must not be null, must have at least one column)
+   * @param path the target path to write to (must not be null)
+   * @param options the write configuration options
+   * @throws IllegalArgumentException if matrix is null, has no columns, path is null, or options is null
+   * @throws IOException if an I/O error occurs or parent directory creation fails
+   * @see AvroWriteOptions
+   */
+  static void write(Matrix matrix, Path path, AvroWriteOptions options) {
+    if (path == null) {
+      throw new IllegalArgumentException("Path cannot be null")
+    }
+    write(matrix, path.toFile(), options)
+  }
+
+  /**
+   * Write a Matrix to an OutputStream in Avro format with configurable options.
+   *
+   * <p>The stream will NOT be closed by this method; the caller is responsible for closing it.
+   *
+   * @param matrix the Matrix to write (must not be null, must have at least one column)
+   * @param out the OutputStream to write to (must not be null)
+   * @param options the write configuration options
+   * @throws IllegalArgumentException if matrix is null, has no columns, out is null, or options is null
+   * @throws IOException if an I/O error occurs
+   * @see AvroWriteOptions
+   */
+  static void write(Matrix matrix, OutputStream out, AvroWriteOptions options) {
+    validateMatrix(matrix)
+    if (out == null) {
+      throw new IllegalArgumentException("OutputStream cannot be null")
+    }
+    if (options == null) {
+      throw new IllegalArgumentException("Options cannot be null")
+    }
+    Schema schema = buildSchema(matrix, options)
+    DataFileWriter<GenericRecord> dfw = createDataFileWriter(schema, options)
+    dfw.create(schema, out)
+    try {
+      writeRows(matrix, dfw, schema)
+    } finally {
+      dfw.close()
+    }
+  }
+
+  /**
+   * Write a Matrix to a byte array in Avro format with configurable options.
+   *
+   * @param matrix the Matrix to write (must not be null, must have at least one column)
+   * @param options the write configuration options
+   * @return byte array containing the Avro data
+   * @throws IllegalArgumentException if matrix is null, has no columns, or options is null
+   * @see AvroWriteOptions
+   */
+  static byte[] writeBytes(Matrix matrix, AvroWriteOptions options) {
+    validateMatrix(matrix)
+    if (options == null) {
+      throw new IllegalArgumentException("Options cannot be null")
+    }
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    Schema schema = buildSchema(matrix, options)
+    DataFileWriter<GenericRecord> dfw = createDataFileWriter(schema, options)
+    dfw.create(schema, baos)
+    try {
+      writeRows(matrix, dfw, schema)
+    } finally {
+      dfw.close()
+    }
+    return baos.toByteArray()
+  }
+
+  /**
+   * Creates a DataFileWriter configured with the specified options.
+   */
+  private static DataFileWriter<GenericRecord> createDataFileWriter(Schema schema, AvroWriteOptions options) {
+    DataFileWriter<GenericRecord> dfw = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(schema))
+    dfw.setCodec(options.createCodecFactory())
+    if (options.syncInterval > 0) {
+      dfw.setSyncInterval(options.syncInterval)
+    }
+    return dfw
+  }
+
   /**
    * Validates that the matrix is not null and has at least one column.
+   *
+   * @throws AvroValidationException if matrix is null or has no columns
    */
   private static void validateMatrix(Matrix matrix) {
     if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
+      throw AvroValidationException.nullParameter("matrix")
     }
     if (matrix.columnCount() == 0) {
-      throw new IllegalArgumentException("Matrix must have at least one column")
+      throw AvroValidationException.emptyMatrix()
     }
   }
 
   /**
    * Validates the file parameter and ensures parent directory exists.
+   *
+   * @throws AvroValidationException if file is null
+   * @throws IOException if parent directory creation fails
    */
   private static void validateFile(File file) {
     if (file == null) {
-      throw new IllegalArgumentException("File cannot be null")
+      throw AvroValidationException.nullParameter("file")
     }
     File parentDir = file.parentFile
     if (parentDir != null && !parentDir.exists()) {
       if (!parentDir.mkdirs()) {
-        throw new IOException("Failed to create parent directory: ${parentDir.absolutePath}")
+        throw new IOException("Failed to create parent directory: ${parentDir.absolutePath}. " +
+            "Check that you have write permissions and the path is valid.")
       }
     }
   }
@@ -188,7 +311,26 @@ class MatrixAvroWriter {
    * @return an Avro record schema suitable for writing the Matrix
    */
   static Schema buildSchema(Matrix matrix, boolean inferPrecisionAndScale) {
-    Schema record = Schema.createRecord("MatrixSchema", "Generated by MatrixAvroWriter", "se.alipsa.matrix.avro", false)
+    return buildSchemaInternal(matrix, inferPrecisionAndScale, "MatrixSchema", "se.alipsa.matrix.avro")
+  }
+
+  /**
+   * Builds an Avro schema for the given Matrix using options.
+   *
+   * @param matrix the Matrix to build a schema for
+   * @param options the write options containing schema configuration
+   * @return an Avro record schema suitable for writing the Matrix
+   */
+  static Schema buildSchema(Matrix matrix, AvroWriteOptions options) {
+    return buildSchemaInternal(matrix, options.inferPrecisionAndScale, options.schemaName, options.namespace)
+  }
+
+  /**
+   * Internal schema building with configurable name and namespace.
+   */
+  private static Schema buildSchemaInternal(Matrix matrix, boolean inferPrecisionAndScale,
+                                            String schemaName, String namespace) {
+    Schema record = Schema.createRecord(schemaName, "Generated by MatrixAvroWriter", namespace, false)
     List<Schema.Field> fields = new ArrayList<>(matrix.columnCount())
 
     Map<String, int[]> decimalMeta = inferPrecisionAndScale ? inferDecimalPrecisionAndScale(matrix) : null
@@ -364,6 +506,7 @@ class MatrixAvroWriter {
    * @param matrix the Matrix containing the data to write
    * @param dfw the Avro DataFileWriter to append records to
    * @param schema the Avro schema describing the record structure
+   * @throws AvroConversionException if a value cannot be converted to its Avro type
    */
   private static void writeRows(Matrix matrix, DataFileWriter<GenericRecord> dfw, Schema schema) {
     GenericData.Record rec = new GenericData.Record(schema)
@@ -390,7 +533,19 @@ class MatrixAvroWriter {
       for (String col : cols) {
         Object v = matrix[r, col]
         Schema fs = fieldSchemas.get(col)
-        rec.put(col, toAvroValue(fs, v, decConv))
+        try {
+          rec.put(col, toAvroValue(fs, v, decConv))
+        } catch (Exception e) {
+          throw new AvroConversionException(
+              "Failed to convert value to Avro format",
+              col,
+              r,
+              v?.getClass()?.simpleName ?: "null",
+              fs.getType().name(),
+              v,
+              e
+          )
+        }
       }
       dfw.append(rec)
       rec = new GenericData.Record(schema) // fresh record per row

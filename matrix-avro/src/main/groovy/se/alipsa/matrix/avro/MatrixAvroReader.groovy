@@ -8,6 +8,8 @@ import org.apache.avro.generic.GenericDatumReader
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.util.Utf8
+import se.alipsa.matrix.avro.exceptions.AvroConversionException
+import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.ByteBuffer
@@ -165,7 +167,133 @@ class MatrixAvroReader {
     if (input == null) {
       throw new IllegalArgumentException("InputStream cannot be null")
     }
-    GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>()
+    return readInternal(input, name, null)
+  }
+
+  // ----------------------------------------------------------------------
+  // Methods accepting AvroReadOptions
+  // ----------------------------------------------------------------------
+
+  /**
+   * Read an Avro file from a File object with configurable options.
+   *
+   * @param file the Avro file to read (must exist and be a file, not a directory)
+   * @param options the read configuration options
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if file is null, is a directory, or options is null
+   * @throws FileNotFoundException if the file does not exist
+   * @throws IOException if an I/O error occurs
+   * @see AvroReadOptions
+   */
+  static Matrix read(File file, AvroReadOptions options) {
+    validateFile(file)
+    if (options == null) {
+      throw new IllegalArgumentException("Options cannot be null")
+    }
+    String name = options.matrixName ?: defaultName(file)
+    InputStream is = new FileInputStream(file)
+    try {
+      return readInternal(is, name, options.readerSchema)
+    } finally {
+      is.close()
+    }
+  }
+
+  /**
+   * Read an Avro file from a Path with configurable options.
+   *
+   * @param path the path to the Avro file (must not be null)
+   * @param options the read configuration options
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if path is null, points to a directory, or options is null
+   * @throws FileNotFoundException if the file does not exist
+   * @throws IOException if an I/O error occurs
+   * @see AvroReadOptions
+   */
+  static Matrix read(Path path, AvroReadOptions options) {
+    if (path == null) {
+      throw new IllegalArgumentException("Path cannot be null")
+    }
+    return read(path.toFile(), options)
+  }
+
+  /**
+   * Read Avro data from a URL with configurable options.
+   *
+   * @param url the URL to read from (must not be null)
+   * @param options the read configuration options
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if url is null or options is null
+   * @throws IOException if an I/O error occurs
+   * @see AvroReadOptions
+   */
+  static Matrix read(URL url, AvroReadOptions options) {
+    if (url == null) {
+      throw new IllegalArgumentException("URL cannot be null")
+    }
+    if (options == null) {
+      throw new IllegalArgumentException("Options cannot be null")
+    }
+    String name = options.matrixName ?: defaultName(url)
+    InputStream is = url.openStream()
+    try {
+      return readInternal(is, name, options.readerSchema)
+    } finally {
+      is.close()
+    }
+  }
+
+  /**
+   * Read Avro data from a byte array with configurable options.
+   *
+   * @param content the Avro content as a byte array (must not be null)
+   * @param options the read configuration options
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if content is null or options is null
+   * @throws IOException if an I/O error occurs
+   * @see AvroReadOptions
+   */
+  static Matrix read(byte[] content, AvroReadOptions options) {
+    if (content == null) {
+      throw new IllegalArgumentException("Content cannot be null")
+    }
+    if (options == null) {
+      throw new IllegalArgumentException("Options cannot be null")
+    }
+    String name = options.matrixName ?: "AvroMatrix"
+    return readInternal(new ByteArrayInputStream(content), name, options.readerSchema)
+  }
+
+  /**
+   * Read Avro data from an InputStream with configurable options.
+   *
+   * <p>The stream will NOT be closed by this method; the caller is responsible for closing it.
+   *
+   * @param input the InputStream to read from (must not be null)
+   * @param options the read configuration options
+   * @return a Matrix containing the Avro data
+   * @throws IllegalArgumentException if input is null or options is null
+   * @throws IOException if an I/O error occurs
+   * @see AvroReadOptions
+   */
+  static Matrix read(InputStream input, AvroReadOptions options) {
+    if (input == null) {
+      throw new IllegalArgumentException("InputStream cannot be null")
+    }
+    if (options == null) {
+      throw new IllegalArgumentException("Options cannot be null")
+    }
+    String name = options.matrixName ?: "AvroMatrix"
+    return readInternal(input, name, options.readerSchema)
+  }
+
+  /**
+   * Internal read implementation supporting optional reader schema.
+   */
+  private static Matrix readInternal(InputStream input, String name, Schema readerSchema) {
+    GenericDatumReader<GenericRecord> datumReader = readerSchema != null
+        ? new GenericDatumReader<>(readerSchema)
+        : new GenericDatumReader<>()
     DataFileStream<GenericRecord> dfs = new DataFileStream<>(input, datumReader)
     try {
       Schema schema = dfs.schema
@@ -176,18 +304,49 @@ class MatrixAvroReader {
         columns.put(f.name(), new ArrayList<>())
       }
 
+      int rowNumber = 0
       for (GenericRecord rec : dfs) {
         for (Schema.Field f : fields) {
           Object raw = rec.get(f.name())
-          Object val = convertValue(f.schema(), raw)
-          columns.get(f.name()).add(val)
+          try {
+            Object val = convertValue(f.schema(), raw)
+            columns.get(f.name()).add(val)
+          } catch (Exception e) {
+            throw new AvroConversionException(
+                "Failed to convert value",
+                f.name(),
+                rowNumber,
+                raw?.getClass()?.simpleName ?: "null",
+                getTargetType(f.schema()),
+                raw,
+                e
+            )
+          }
         }
+        rowNumber++
       }
 
       return Matrix.builder(name).columns(columns).build()
     } finally {
       dfs.close()
     }
+  }
+
+  /**
+   * Gets a human-readable target type name from an Avro schema.
+   */
+  private static String getTargetType(Schema schema) {
+    if (schema.getType() == Schema.Type.UNION) {
+      Schema nonNull = schema.getTypes().stream()
+          .filter(s -> s.getType() != Schema.Type.NULL)
+          .findFirst().orElse(schema)
+      return getTargetType(nonNull)
+    }
+    def lt = schema.getLogicalType()
+    if (lt != null) {
+      return lt.getName()
+    }
+    return schema.getType().name()
   }
 
   /**
@@ -427,16 +586,18 @@ class MatrixAvroReader {
 
   /**
    * Validates that the file exists and is not a directory.
+   *
+   * @throws AvroValidationException if file is null, doesn't exist, or is a directory
    */
   private static void validateFile(File file) {
     if (file == null) {
-      throw new IllegalArgumentException("File cannot be null")
+      throw AvroValidationException.nullParameter("file")
     }
     if (!file.exists()) {
-      throw new FileNotFoundException("File does not exist: ${file.absolutePath}")
+      throw AvroValidationException.fileNotFound(file.absolutePath)
     }
     if (file.isDirectory()) {
-      throw new IllegalArgumentException("Expected a file but got a directory: ${file.absolutePath}")
+      throw AvroValidationException.isDirectory(file.absolutePath)
     }
   }
 
