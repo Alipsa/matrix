@@ -79,10 +79,22 @@ class JsonWriter {
       throw new IllegalArgumentException("Matrix cannot be null")
     }
 
+    // Validate that all formatter keys refer to existing columns before cloning/applying
+    if (columnFormatters != null && !columnFormatters.isEmpty()) {
+      def columnNames = matrix.columnNames()
+      def invalidFormatters = columnFormatters.keySet().findAll { !columnNames.contains(it) }
+      if (!invalidFormatters.isEmpty()) {
+        throw new IllegalArgumentException(
+            "Column formatter(s) defined for non-existent column(s): ${invalidFormatters}. " +
+            "Available columns: ${columnNames}"
+        )
+      }
+    }
+
     // Only clone if we need to apply formatters (avoids unnecessary memory allocation)
     def t = columnFormatters.isEmpty() ? matrix : matrix.clone()
     if (!columnFormatters.isEmpty()) {
-      columnFormatters.each { k,v ->
+      columnFormatters.each { k, v ->
         t.apply(k, v)
       }
     }
