@@ -348,7 +348,8 @@ class CsvReader {
    * @param url URL to extract the name from
    * @return file name without extension, or the path if no file name is present
    */
-  private static String tableName(URL url) {
+  @groovy.transform.PackageScope
+  static String tableName(URL url) {
     def name = url.getFile() == null ? url.getPath() : url.getFile()
     if (name.contains('/')) {
       name = name.substring(name.lastIndexOf('/') + 1, name.length())
@@ -367,7 +368,8 @@ class CsvReader {
    * @param file File to extract the name from
    * @return file name without extension
    */
-  private static String tableName(File file) {
+  @groovy.transform.PackageScope
+  static String tableName(File file) {
     def name = file.getName()
     if (name.contains('.')) {
       name = name.substring(0, name.lastIndexOf('.'))

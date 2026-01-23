@@ -1,6 +1,5 @@
 package se.alipsa.matrix.json
 
-import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Matrix
 import groovy.json.*
 
@@ -60,6 +59,9 @@ class JsonWriter {
    * @return JSON string representation
    */
   static String writeString(Matrix matrix, boolean indent = false) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
     writeString(matrix, [:], indent)
   }
 
@@ -118,6 +120,9 @@ class JsonWriter {
    * @return JSON string representation
    */
   static String writeString(Matrix matrix, String dateFormat, boolean indent = false) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
     writeString(matrix, [:], indent, dateFormat)
   }
 

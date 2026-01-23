@@ -118,6 +118,8 @@ class MatrixAvroWriterTest {
         .types(BigDecimal)
         .build()
 
+    // Note: When inferPrecisionAndScale=false, BigDecimal columns are stored as Avro doubles.
+    // This may lose precision for values that exceed double's precision limits.
     byte[] avroBytes = MatrixAvroWriter.writeBytes(m, false)
     assertNotNull(avroBytes)
     assertTrue(avroBytes.length > 0)

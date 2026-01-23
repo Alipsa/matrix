@@ -14,6 +14,10 @@ import se.alipsa.matrix.core.Matrix
  *   <li>{@code SpreadsheetExporter.exportSpreadsheets(file, data, sheetNames)} → {@code SpreadsheetWriter.writeSheets(data, file, sheetNames)}</li>
  * </ul>
  *
+ * <p><strong>Thread-safety limitation:</strong> This class uses a static {@code excelImplementation} field
+ * that is not thread-safe. Concurrent calls with different implementation settings may cause race conditions.
+ * Use {@link SpreadsheetWriter} which provides thread-safe alternatives.</p>
+ *
  * @see SpreadsheetWriter
  */
 @Deprecated

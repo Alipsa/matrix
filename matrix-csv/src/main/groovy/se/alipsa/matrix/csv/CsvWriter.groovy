@@ -194,6 +194,9 @@ class CsvWriter {
 
   /**
    * Validate that the Matrix is not null and has columns.
+   *
+   * Note: This only checks for columns, not rows. Writing a matrix with columns but zero rows
+   * is a valid use case (e.g., writing just headers).
    */
   private static void validateMatrix(Matrix matrix) {
     if (matrix == null) {

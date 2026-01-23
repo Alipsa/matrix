@@ -365,6 +365,12 @@ class MatrixParquetWriter {
   /**
    * Internal helper method that handles the core logic of writing matrix rows
    * to a byte array, given an already constructed schema.
+   *
+   * <p><strong>Performance Note:</strong> This method creates a temporary file which is then read
+   * back into memory and deleted. This is necessary because Parquet requires seekable output.
+   * For large matrices, consider using {@link #write(Matrix, File)} directly to avoid the
+   * memory overhead of loading the entire file into a byte array.</p>
+   *
    * @param matrix the matrix to write
    * @param schema the Parquet MessageType schema
    * @return byte array containing Parquet data
