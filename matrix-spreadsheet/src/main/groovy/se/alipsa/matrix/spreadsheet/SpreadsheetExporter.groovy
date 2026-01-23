@@ -108,7 +108,10 @@ class SpreadsheetExporter {
    */
   @Deprecated
   static List<String> exportSpreadsheets(Map params) {
-    SpreadsheetWriter.excelImplementation = excelImplementation
-    return SpreadsheetWriter.writeSheets(params)
+    // Use local implementation field to avoid race conditions with SpreadsheetWriter
+    File file = params.file as File
+    List<Matrix> data = params.data as List<Matrix>
+    List<String> sheetNames = params.sheetNames as List<String>
+    return exportSpreadsheets(file, data, sheetNames)
   }
 }

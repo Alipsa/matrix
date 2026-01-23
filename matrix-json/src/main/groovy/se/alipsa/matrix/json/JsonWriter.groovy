@@ -165,19 +165,12 @@ class JsonWriter {
       }
     }
 
-    if (outputFile.exists()) {
-      if (!outputFile.canWrite()) {
-        throw new IOException("Output file '${outputFile.absolutePath}' is not writable")
-      }
-    } else {
-      try {
-        if (!outputFile.createNewFile()) {
-          throw new IOException("Failed to create output file '${outputFile.absolutePath}'")
-        }
-      } catch (IOException e) {
-        throw new IOException("Failed to create output file '${outputFile.absolutePath}'", e)
-      }
+    if (outputFile.exists() && !outputFile.canWrite()) {
+      throw new IOException("Output file '${outputFile.absolutePath}' is not writable")
     }
+
+    // Let Groovy's file.text setter handle file creation - it will create the file if needed
+    // and overwrite if it exists, avoiding TOCTOU race conditions
     outputFile.text = writeString(matrix, indent)
   }
 
