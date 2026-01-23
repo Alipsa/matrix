@@ -69,6 +69,60 @@ class MatrixAvroWriterTest {
     }
   }
 
+  @Test
+  void writeBytesBasic() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["id"] = [1, 2, 3]
+    cols["name"] = ["Alice", "Bob", "Charlie"]
+    cols["value"] = [10.5, 20.5, 30.5]
+
+    Matrix m = Matrix.builder("ByteTest")
+        .columns(cols)
+        .types(Integer, String, BigDecimal)
+        .build()
+
+    byte[] avroBytes = MatrixAvroWriter.writeBytes(m, true)
+    assertNotNull(avroBytes)
+    assertTrue(avroBytes.length > 0, "Byte array should not be empty")
+  }
+
+  @Test
+  void writeBytesRoundTrip() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["id"] = [1, 2, 3]
+    cols["score"] = [95.5, 87.3, 92.1]
+
+    Matrix original = Matrix.builder("RoundTrip")
+        .columns(cols)
+        .types(Integer, BigDecimal)
+        .build()
+
+    // Write to byte array
+    byte[] avroBytes = MatrixAvroWriter.writeBytes(original, true)
+
+    // Read it back
+    Matrix result = se.alipsa.matrix.avro.MatrixAvroReader.read(avroBytes, "RoundTrip")
+
+    assertEquals(original.rowCount(), result.rowCount())
+    assertEquals(original.columnCount(), result.columnCount())
+    assertEquals(original.columnNames(), result.columnNames())
+  }
+
+  @Test
+  void writeBytesWithoutInference() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["price"] = [new BigDecimal("123.45"), new BigDecimal("678.90")]
+
+    Matrix m = Matrix.builder("NoInference")
+        .columns(cols)
+        .types(BigDecimal)
+        .build()
+
+    byte[] avroBytes = MatrixAvroWriter.writeBytes(m, false)
+    assertNotNull(avroBytes)
+    assertTrue(avroBytes.length > 0)
+  }
+
   // Helper: unwrap ["null", T] to T
   private static Schema nonNullFieldSchema(Schema record, String fieldName) {
     Schema s = record.getField(fieldName).schema()

@@ -38,6 +38,29 @@ class MatrixAvroWriter {
     write(matrix, path.toFile(), inferPrecisionAndScale)
   }
 
+  /**
+   * Write to a byte array in Avro format.
+   *
+   * @param matrix the Matrix to write
+   * @param inferPrecisionAndScale whether to infer precision and scale for BigDecimal columns
+   * @return byte array containing Avro data
+   */
+  static byte[] writeBytes(Matrix matrix, boolean inferPrecisionAndScale = false) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    Schema schema = buildSchema(matrix, inferPrecisionAndScale)
+    DataFileWriter<GenericRecord> dfw = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(schema))
+    dfw.create(schema, baos)
+    try {
+      writeRows(matrix, dfw, schema)
+    } finally {
+      dfw.close()
+    }
+    return baos.toByteArray()
+  }
+
   // ----------------------------------------------------------------------
   // Schema building
   // ----------------------------------------------------------------------

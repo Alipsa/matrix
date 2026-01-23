@@ -43,6 +43,14 @@ class MatrixAvroReader {
     }
   }
 
+  /** Read from a byte array */
+  static Matrix read(byte[] content, String name = "AvroMatrix") {
+    if (content == null) {
+      throw new IllegalArgumentException("Content cannot be null")
+    }
+    return read(new ByteArrayInputStream(content), name)
+  }
+
   /** Read from an InputStream (Avro OCF). Stream will be closed by caller if needed. */
   static Matrix read(InputStream input, String name = "AvroMatrix") {
     GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>()

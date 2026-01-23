@@ -574,4 +574,73 @@ class MatrixParquetTest {
         "BigDecimal column types should be preserved for large values")
     assertEquals(largeValues, matrix.amount, "Large BigDecimal values should round-trip")
   }
+
+  @Test
+  void testWriteBytesBasic() {
+    def data = Matrix.builder('ByteTest').columns(
+        id: [1, 2, 3],
+        name: ["Alice", "Bob", "Charlie"],
+        value: toBigDecimals([10.5, 20.5, 30.5])
+    ).types([Integer, String, BigDecimal]).build()
+
+    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, true)
+    assert parquetBytes != null
+    assert parquetBytes.length > 0 : "Byte array should not be empty"
+  }
+
+  @Test
+  void testWriteBytesRoundTrip() {
+    def original = Matrix.builder('RoundTrip').columns(
+        id: [1, 2, 3],
+        score: toBigDecimals([95.5, 87.3, 92.1])
+    ).types([Integer, BigDecimal]).build()
+
+    // Write to byte array
+    byte[] parquetBytes = MatrixParquetWriter.writeBytes(original, true)
+
+    // Read it back
+    Matrix result = MatrixParquetReader.read(parquetBytes)
+
+    assertEquals(original.rowCount(), result.rowCount())
+    assertEquals(original.columnCount(), result.columnCount())
+    assertEquals(original.columnNames(), result.columnNames())
+    assertEquals(original.types(), result.types())
+  }
+
+  @Test
+  void testWriteBytesWithZoneId() {
+    def data = Matrix.builder('ZoneTest').columns(
+        timestamp: [LocalDateTime.of(2024, 1, 1, 12, 0, 0)]
+    ).types([LocalDateTime]).build()
+
+    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, ZoneId.of("America/New_York"))
+    assert parquetBytes != null
+    assert parquetBytes.length > 0
+  }
+
+  @Test
+  void testWriteBytesWithDecimalMeta() {
+    def data = Matrix.builder('DecimalMeta').columns(
+        price: toBigDecimals([123.45, 678.90])
+    ).types([BigDecimal]).build()
+
+    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, [price: [10, 2]])
+    assert parquetBytes != null
+    assert parquetBytes.length > 0
+
+    // Read it back and verify precision/scale
+    Matrix result = MatrixParquetReader.read(parquetBytes)
+    assertEquals(2, result.price[0].scale())
+  }
+
+  @Test
+  void testWriteBytesWithoutInference() {
+    def data = Matrix.builder('NoInference').columns(
+        value: toBigDecimals([12.34, 56.78])
+    ).types([BigDecimal]).build()
+
+    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, false)
+    assert parquetBytes != null
+    assert parquetBytes.length > 0
+  }
 }
