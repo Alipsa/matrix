@@ -346,6 +346,56 @@ class MatrixParquetTest {
   }
 
   @Test
+  void testReadFromByteArray() {
+    def data = Matrix.builder('byteArrayData').columns(
+        id: [1, 2, 3],
+        name: ['Alpha', 'Beta', 'Gamma'],
+        value: toBigDecimals([10.5, 20.75, 30.25])
+    ).types([Integer, String, BigDecimal]).build()
+
+    File file = new File("build/byteArrayData.parquet")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    MatrixParquetWriter.write(data, file)
+    assertTrue(file.exists(), "Parquet file was not created: ${file.absolutePath}")
+
+    // Read file into byte array
+    byte[] content = file.bytes
+
+    // Test read(byte[] content)
+    def matrix1 = MatrixParquetReader.read(content)
+    assertEquals(data, matrix1, "Data read from byte array does not match original data")
+    assertIterableEquals(data.types(), matrix1.types(),
+        "Types read from byte array do not match expected types")
+
+    // Test read(byte[] content, String matrixName)
+    def matrix2 = MatrixParquetReader.read(content, 'customName')
+    assertEquals('customName', matrix2.matrixName, "Custom matrix name should be applied")
+    assertIterableEquals(data.columnNames(), matrix2.columnNames(), "Column names should match")
+    assertEquals(data.rowCount(), matrix2.rowCount(), "Row count should match")
+    assertIterableEquals(data.types(), matrix2.types(), "Types should match")
+
+    // Test read(byte[] content, ZoneId zoneId)
+    def matrix3 = MatrixParquetReader.read(content, ZoneId.of("UTC"))
+    assertEquals(data, matrix3, "Data should match when using timezone")
+
+    // Test read(byte[] content, String matrixName, ZoneId zoneId)
+    def matrix4 = MatrixParquetReader.read(content, 'customName2', ZoneId.of("America/New_York"))
+    assertEquals('customName2', matrix4.matrixName, "Custom matrix name should be applied with timezone")
+    assertIterableEquals(data.columnNames(), matrix4.columnNames(), "Column names should match")
+    assertEquals(data.rowCount(), matrix4.rowCount(), "Row count should match")
+    assertIterableEquals(data.types(), matrix4.types(), "Types should match")
+
+    // Test null content validation
+    def nullContentEx = assertThrows(IllegalArgumentException, {
+      MatrixParquetReader.read((byte[]) null)
+    })
+    assertTrue(nullContentEx.message.contains("Content cannot be null"))
+  }
+
+  @Test
   void testReadFromUrlAndPath() {
     def data = Matrix.builder('urlPathData').columns(
         id: [1, 2],

@@ -38,6 +38,10 @@ import java.util.concurrent.ConcurrentHashMap
  * // Read with a custom matrix name
  * Matrix data = MatrixParquetReader.read(new File("sales.parquet"), "quarterly_sales")
  *
+ * // Read from a byte array
+ * byte[] parquetContent = ...
+ * Matrix data = MatrixParquetReader.read(parquetContent)
+ *
  * // Read from an InputStream
  * Matrix data = MatrixParquetReader.read(inputStream)
  *
@@ -203,6 +207,74 @@ class MatrixParquetReader {
       throw new IllegalArgumentException("File path cannot be null")
     }
     read(new File(filePath), matrixName)
+  }
+
+  /**
+   * Read Parquet content from a byte array into a {@link Matrix}.
+   *
+   * <p>Parquet requires a seekable input, so the content is copied to a temporary file.</p>
+   *
+   * @param content byte array containing Parquet data
+   * @return a matrix populated with the byte array contents
+   * @throws IllegalArgumentException if content is null
+   */
+  static Matrix read(byte[] content) {
+    if (content == null) {
+      throw new IllegalArgumentException("Content cannot be null")
+    }
+    read(new ByteArrayInputStream(content))
+  }
+
+  /**
+   * Read Parquet content from a byte array into a {@link Matrix} using the supplied name.
+   *
+   * <p>Parquet requires a seekable input, so the content is copied to a temporary file.</p>
+   *
+   * @param content byte array containing Parquet data
+   * @param matrixName the name to apply to the resulting matrix
+   * @return a matrix populated with the byte array contents
+   * @throws IllegalArgumentException if content is null
+   */
+  static Matrix read(byte[] content, String matrixName) {
+    if (content == null) {
+      throw new IllegalArgumentException("Content cannot be null")
+    }
+    read(new ByteArrayInputStream(content), matrixName)
+  }
+
+  /**
+   * Read Parquet content from a byte array into a {@link Matrix} with a specific timezone.
+   *
+   * <p>Parquet requires a seekable input, so the content is copied to a temporary file.</p>
+   *
+   * @param content byte array containing Parquet data
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the byte array contents
+   * @throws IllegalArgumentException if content is null or zoneId is null
+   */
+  static Matrix read(byte[] content, ZoneId zoneId) {
+    if (content == null) {
+      throw new IllegalArgumentException("Content cannot be null")
+    }
+    read(new ByteArrayInputStream(content), zoneId)
+  }
+
+  /**
+   * Read Parquet content from a byte array into a {@link Matrix} with a specific timezone and name.
+   *
+   * <p>Parquet requires a seekable input, so the content is copied to a temporary file.</p>
+   *
+   * @param content byte array containing Parquet data
+   * @param matrixName the name to apply to the resulting matrix
+   * @param zoneId the timezone to use for converting UTC timestamps to LocalDateTime values
+   * @return a matrix populated with the byte array contents
+   * @throws IllegalArgumentException if content is null or zoneId is null
+   */
+  static Matrix read(byte[] content, String matrixName, ZoneId zoneId) {
+    if (content == null) {
+      throw new IllegalArgumentException("Content cannot be null")
+    }
+    read(new ByteArrayInputStream(content), matrixName, zoneId)
   }
 
   /**
