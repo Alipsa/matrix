@@ -11,6 +11,7 @@ import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
 import se.alipsa.matrix.avro.exceptions.AvroConversionException
+import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 import se.alipsa.matrix.core.Matrix
 
@@ -266,6 +267,14 @@ class MatrixAvroWriter {
     }
     if (matrix.columnCount() == 0) {
       throw AvroValidationException.emptyMatrix()
+    }
+    int expectedRows = matrix.rowCount()
+    for (String col : matrix.columnNames()) {
+      List values = matrix.column(col)
+      if (values.size() != expectedRows) {
+        int rowNumber = Math.min(values.size(), expectedRows)
+        throw AvroValidationException.columnSizeMismatch(col, rowNumber, values.size(), expectedRows)
+      }
     }
   }
 
@@ -534,7 +543,17 @@ class MatrixAvroWriter {
         Object v = matrix[r, col]
         Schema fs = fieldSchemas.get(col)
         try {
+          if (!isCompatible(fs, v)) {
+            throw new AvroSchemaException(
+                "Value does not match schema type",
+                col,
+                schemaTypeLabel(fs),
+                v?.getClass()?.simpleName ?: "null"
+            )
+          }
           rec.put(col, toAvroValue(fs, v, decConv))
+        } catch (AvroSchemaException e) {
+          throw e
         } catch (Exception e) {
           throw new AvroConversionException(
               "Failed to convert value to Avro format",
@@ -888,20 +907,85 @@ class MatrixAvroWriter {
    * @return true if the value can be serialized under this schema
    */
   private static boolean isCompatible(Schema s, Object v) {
-    if (v == null) return s.getType() == Schema.Type.NULL
+    if (v == null) return true
+    if (s.getType() == Schema.Type.UNION) {
+      for (Schema branch : s.getTypes()) {
+        if (isCompatible(branch, v)) return true
+      }
+      return false
+    }
+    def logical = s.getLogicalType()
+    if (logical != null) {
+      String name = logical.getName()
+      switch (name) {
+        case "date":
+          return v instanceof LocalDate || v instanceof java.sql.Date || v instanceof Number
+        case "time-millis":
+        case "time-micros":
+          return v instanceof LocalTime || v instanceof Time || v instanceof Number
+        case "timestamp-millis":
+        case "timestamp-micros":
+          return v instanceof Instant || v instanceof Date || v instanceof Number
+        case "local-timestamp-millis":
+        case "local-timestamp-micros":
+          return v instanceof LocalDateTime || v instanceof Number
+        case "uuid":
+          return v instanceof UUID || v instanceof String
+        case "decimal":
+          return v instanceof BigDecimal || v instanceof Double || v instanceof Float ||
+              v instanceof byte[] || v instanceof ByteBuffer
+      }
+    }
     switch (s.getType()) {
       case Schema.Type.STRING: return true // we'll toString() later
       case Schema.Type.BOOLEAN: return v instanceof Boolean
       case Schema.Type.INT: return v instanceof Byte || v instanceof Short || v instanceof Integer
-      case Schema.Type.LONG: return v instanceof Number // includes Integer/Long/BigInteger
+      case Schema.Type.LONG: return v instanceof Number || v instanceof Date || v instanceof Instant
       case Schema.Type.FLOAT: return v instanceof Number
       case Schema.Type.DOUBLE: return v instanceof Number || v instanceof BigDecimal
       case Schema.Type.BYTES: return (v instanceof byte[]) || (v instanceof ByteBuffer) || (v instanceof BigDecimal)
-      case Schema.Type.ARRAY: return v instanceof List
-      case Schema.Type.MAP: return v instanceof Map
-      case Schema.Type.RECORD: return (v instanceof Map) || (v instanceof GenericRecord)
+      case Schema.Type.ARRAY:
+        if (!(v instanceof List)) return false
+        Schema elem = s.getElementType()
+        for (def e : (List) v) {
+          if (!isCompatible(elem, e)) return false
+        }
+        return true
+      case Schema.Type.MAP:
+        if (!(v instanceof Map)) return false
+        Schema vs = s.getValueType()
+        for (def e : ((Map) v).entrySet()) {
+          if (!isCompatible(vs, e.value)) return false
+        }
+        return true
+      case Schema.Type.RECORD:
+        if (v instanceof GenericRecord) return true
+        if (!(v instanceof Map)) return false
+        Map inRec = (Map) v
+        for (Schema.Field f : s.getFields()) {
+          if (!isCompatible(f.schema(), inRec.get(f.name()))) return false
+        }
+        return true
       case Schema.Type.FIXED: return v instanceof GenericFixed
       default: return false
     }
+  }
+
+  /**
+   * Produces a human-readable label for a schema type, preferring logical types.
+   */
+  private static String schemaTypeLabel(Schema schema) {
+    if (schema.getType() == Schema.Type.UNION) {
+      List<String> parts = new ArrayList<>()
+      for (Schema branch : schema.getTypes()) {
+        parts.add(schemaTypeLabel(branch))
+      }
+      return "UNION[" + String.join(", ", parts) + "]"
+    }
+    def logical = schema.getLogicalType()
+    if (logical != null) {
+      return logical.getName()
+    }
+    return schema.getType().name()
   }
 }

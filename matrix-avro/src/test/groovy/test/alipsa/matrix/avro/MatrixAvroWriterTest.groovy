@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.avro.exceptions.AvroSchemaException
 import se.alipsa.matrix.avro.exceptions.AvroValidationException
 
 import java.nio.file.Files
@@ -444,6 +445,55 @@ class MatrixAvroWriterTest {
     assertEquals("file", ex.parameterName)
     assertNotNull(ex.suggestion)
     assertTrue(ex.message.contains("cannot be null"))
+  }
+
+  @Test
+  void testValidationExceptionForColumnSizeMismatch() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["id"] = [1, 2, 3]
+    cols["name"] = ["Alice", "Bob"]
+
+    Matrix m = Matrix.builder("Mismatch")
+        .columns(cols)
+        .types(Integer, String)
+        .build()
+
+    File tmp = Files.createTempFile("avro-test-", ".avro").toFile()
+    try {
+      def ex = assertThrows(AvroValidationException) {
+        MatrixAvroWriter.write(m, tmp)
+      }
+      assertEquals("matrix", ex.parameterName)
+      assertEquals(2, ex.rowNumber)
+      assertNotNull(ex.suggestion)
+      assertTrue(ex.message.contains("row: 2"))
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
+  void testSchemaExceptionForTypeMismatch() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["props"] = [[a: 1], [1, 2]]
+
+    Matrix m = Matrix.builder("TypeMismatch")
+        .columns(cols)
+        .types(Object)
+        .build()
+
+    File tmp = Files.createTempFile("avro-test-", ".avro").toFile()
+    try {
+      def ex = assertThrows(AvroSchemaException) {
+        MatrixAvroWriter.write(m, tmp)
+      }
+      assertEquals("props", ex.columnName)
+      assertEquals("RECORD", ex.expectedType)
+      assertEquals("ArrayList", ex.actualType)
+      assertTrue(ex.message.contains("expected"))
+    } finally {
+      tmp.delete()
+    }
   }
 
   // Helper: unwrap ["null", T] to T

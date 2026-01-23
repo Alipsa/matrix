@@ -34,6 +34,9 @@ class AvroValidationException extends IllegalArgumentException {
   /** A helpful suggestion for fixing the error */
   private final String suggestion
 
+  /** The row number associated with this error, or -1 if not applicable */
+  private final int rowNumber
+
   /**
    * Creates a new AvroValidationException with a message.
    *
@@ -43,6 +46,7 @@ class AvroValidationException extends IllegalArgumentException {
     super(message)
     this.parameterName = null
     this.suggestion = null
+    this.rowNumber = -1
   }
 
   /**
@@ -55,6 +59,7 @@ class AvroValidationException extends IllegalArgumentException {
     super(message, cause)
     this.parameterName = null
     this.suggestion = null
+    this.rowNumber = -1
   }
 
   /**
@@ -65,9 +70,10 @@ class AvroValidationException extends IllegalArgumentException {
    * @param suggestion a helpful suggestion for fixing the error
    */
   AvroValidationException(String message, String parameterName, String suggestion) {
-    super(buildMessage(message, parameterName, suggestion))
+    super(buildMessage(message, parameterName, -1, suggestion))
     this.parameterName = parameterName
     this.suggestion = suggestion
+    this.rowNumber = -1
   }
 
   /**
@@ -79,9 +85,25 @@ class AvroValidationException extends IllegalArgumentException {
    * @param cause the underlying cause
    */
   AvroValidationException(String message, String parameterName, String suggestion, Throwable cause) {
-    super(buildMessage(message, parameterName, suggestion), cause)
+    super(buildMessage(message, parameterName, -1, suggestion), cause)
     this.parameterName = parameterName
     this.suggestion = suggestion
+    this.rowNumber = -1
+  }
+
+  /**
+   * Creates a new AvroValidationException with contextual information and row number.
+   *
+   * @param message the error message
+   * @param parameterName the parameter name that failed validation
+   * @param rowNumber the row number where validation failed (0-based)
+   * @param suggestion a helpful suggestion for fixing the error
+   */
+  AvroValidationException(String message, String parameterName, int rowNumber, String suggestion) {
+    super(buildMessage(message, parameterName, rowNumber, suggestion))
+    this.parameterName = parameterName
+    this.suggestion = suggestion
+    this.rowNumber = rowNumber
   }
 
   /**
@@ -98,10 +120,24 @@ class AvroValidationException extends IllegalArgumentException {
     return suggestion
   }
 
-  private static String buildMessage(String message, String parameterName, String suggestion) {
+  /**
+   * @return the row number where validation failed, or -1 if not applicable
+   */
+  int getRowNumber() {
+    return rowNumber
+  }
+
+  private static String buildMessage(String message, String parameterName, int rowNumber, String suggestion) {
     StringBuilder sb = new StringBuilder(message)
+    List<String> context = new ArrayList<>()
     if (parameterName != null) {
-      sb.append(" [parameter: ").append(parameterName).append("]")
+      context.add("parameter: " + parameterName)
+    }
+    if (rowNumber >= 0) {
+      context.add("row: " + rowNumber)
+    }
+    if (!context.isEmpty()) {
+      sb.append(" [").append(String.join(", ", context)).append("]")
     }
     if (suggestion != null) {
       sb.append(". Suggestion: ").append(suggestion)
@@ -133,6 +169,24 @@ class AvroValidationException extends IllegalArgumentException {
         "Matrix must have at least one column",
         "matrix",
         "Add at least one column to the Matrix before writing"
+    )
+  }
+
+  /**
+   * Creates an exception for uneven column lengths.
+   *
+   * @param columnName the column with mismatched length
+   * @param rowNumber the row index where mismatch begins (0-based)
+   * @param columnSize the size of the offending column
+   * @param rowCount the expected row count
+   * @return a new AvroValidationException
+   */
+  static AvroValidationException columnSizeMismatch(String columnName, int rowNumber, int columnSize, int rowCount) {
+    return new AvroValidationException(
+        "Column '${columnName}' size (${columnSize}) does not match matrix row count (${rowCount})",
+        "matrix",
+        rowNumber,
+        "Ensure all columns have the same number of rows before writing"
     )
   }
 
