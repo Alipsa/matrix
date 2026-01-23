@@ -153,6 +153,31 @@ class JsonWriter {
     if (outputFile == null) {
       throw new IllegalArgumentException("Output file cannot be null")
     }
+
+    if (outputFile.isDirectory()) {
+      throw new IOException("Output file '${outputFile.absolutePath}' is a directory, cannot write JSON data")
+    }
+
+    File parent = outputFile.getParentFile()
+    if (parent != null && !parent.exists()) {
+      if (!parent.mkdirs()) {
+        throw new IOException("Failed to create parent directory '${parent.absolutePath}' for output file '${outputFile.absolutePath}'")
+      }
+    }
+
+    if (outputFile.exists()) {
+      if (!outputFile.canWrite()) {
+        throw new IOException("Output file '${outputFile.absolutePath}' is not writable")
+      }
+    } else {
+      try {
+        if (!outputFile.createNewFile()) {
+          throw new IOException("Failed to create output file '${outputFile.absolutePath}'")
+        }
+      } catch (IOException e) {
+        throw new IOException("Failed to create output file '${outputFile.absolutePath}'", e)
+      }
+    }
     outputFile.text = writeString(matrix, indent)
   }
 
