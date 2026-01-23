@@ -345,6 +345,7 @@ class MatrixAvroWriter {
     Map<String, int[]> decimalMeta = inferPrecisionAndScale ? inferDecimalPrecisionAndScale(matrix) : null
 
     for (String col : matrix.columnNames()) {
+      validateAvroFieldName(col, col)
       Class<?> clazz = effectiveTypeForColumn(matrix, col)
       Schema fieldSchema
 
@@ -366,12 +367,14 @@ class MatrixAvroWriter {
           def rec = Schema.createRecord(col + "_record", null, "se.alipsa.matrix.avro", false)
           List<Schema.Field> flds = new ArrayList<>()
           for (def k : first.keySet()) {
+            String fieldName = k.toString()
+            validateAvroFieldName(fieldName, "${col}.${fieldName}")
             def v = first.get(k)
             Class<?> vClazz = (v == null) ? String : v.getClass()
             Schema valueSchema = toFieldSchema(vClazz, null)
             // nullable union for each field
             Schema nullable = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), valueSchema))
-            flds.add(new Schema.Field(k.toString(), nullable, null as String, (Object) null))
+            flds.add(new Schema.Field(fieldName, nullable, null as String, (Object) null))
           }
           rec.setFields(flds)
           fieldSchema = rec
@@ -969,6 +972,28 @@ class MatrixAvroWriter {
       case Schema.Type.FIXED: return v instanceof GenericFixed
       default: return false
     }
+  }
+
+  /**
+   * Validates that a field name conforms to Avro's naming rules.
+   */
+  private static void validateAvroFieldName(String fieldName, String columnName) {
+    if (!isValidAvroName(fieldName)) {
+      throw new AvroSchemaException(
+          "Invalid Avro field name",
+          columnName,
+          "Avro field name (A-Za-z_ followed by A-Za-z0-9_)",
+          fieldName
+      )
+    }
+  }
+
+  /**
+   * Avro names must start with [A-Za-z_] and subsequently contain [A-Za-z0-9_].
+   */
+  private static boolean isValidAvroName(String name) {
+    if (name == null || name.isEmpty()) return false
+    return name ==~ /[A-Za-z_][A-Za-z0-9_]*/
   }
 
   /**

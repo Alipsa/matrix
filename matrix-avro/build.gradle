@@ -81,6 +81,17 @@ test {
   }
 }
 
+tasks.register('avroBenchmark', JavaExec) {
+  group = 'benchmark'
+  description = 'Run MatrixAvro read/write benchmark'
+  classpath = sourceSets.test.runtimeClasspath
+  mainClass = 'se.alipsa.matrix.avro.benchmarks.MatrixAvroBenchmark'
+  def rows = project.findProperty('rows') ?: '100000'
+  def warmups = project.findProperty('warmups') ?: '2'
+  def runs = project.findProperty('runs') ?: '5'
+  args rows, warmups, runs
+}
+
 //Maven Central uploads
 task javadocJar(type: Jar, dependsOn: groovydoc) {
   archiveClassifier.set('javadoc')
