@@ -15,11 +15,31 @@ import java.time.LocalDateTime
 /**
  * Writes Matrix objects to ARFF (Attribute-Relation File Format) files.
  *
- * ARFF format specification:
- * - @RELATION defines the dataset name
- * - @ATTRIBUTE name type defines columns (NUMERIC, REAL, INTEGER, STRING, DATE, or {nominal values})
- * - @DATA marks the start of data rows
- * - Data rows are comma-separated values
+ * <p>ARFF format specification:</p>
+ * <ul>
+ *   <li>@RELATION defines the dataset name</li>
+ *   <li>@ATTRIBUTE name type defines columns (NUMERIC, REAL, INTEGER, STRING, DATE, or {nominal values})</li>
+ *   <li>@DATA marks the start of data rows</li>
+ *   <li>Data rows are comma-separated values</li>
+ * </ul>
+ *
+ * <h3>Basic Usage</h3>
+ * <pre>
+ * Matrix m = Matrix.builder("iris")
+ *   .data(sepalLength: [5.1, 4.9], sepalWidth: [3.5, 3.0])
+ *   .build()
+ *
+ * // Write to file
+ * MatrixArffWriter.write(m, new File("iris.arff"))
+ *
+ * // Write to String
+ * String arff = MatrixArffWriter.writeString(m)
+ *
+ * // Write with custom nominal values
+ * Map&lt;String, List&lt;String&gt;&gt; nominals = [species: ["setosa", "versicolor", "virginica"]]
+ * MatrixArffWriter.write(m, file, nominals)
+ * String arffStr = MatrixArffWriter.writeString(m, nominals)
+ * </pre>
  */
 @CompileStatic
 class MatrixArffWriter {
@@ -173,6 +193,31 @@ class MatrixArffWriter {
     }
 
     pw.flush()
+  }
+
+  /**
+   * Write Matrix to a String in ARFF format.
+   *
+   * @param matrix the Matrix to write
+   * @return ARFF formatted string
+   */
+  static String writeString(Matrix matrix) {
+    StringWriter stringWriter = new StringWriter()
+    write(matrix, stringWriter)
+    return stringWriter.toString()
+  }
+
+  /**
+   * Write Matrix to a String in ARFF format with custom nominal value mappings.
+   *
+   * @param matrix the Matrix to write
+   * @param nominalMappings map of column names to lists of nominal values
+   * @return ARFF formatted string
+   */
+  static String writeString(Matrix matrix, Map<String, List<String>> nominalMappings) {
+    StringWriter stringWriter = new StringWriter()
+    write(matrix, stringWriter, nominalMappings)
+    return stringWriter.toString()
   }
 
   private static ArffAttributeInfo determineAttributeInfo(Matrix matrix, String colName, Class colType) {
