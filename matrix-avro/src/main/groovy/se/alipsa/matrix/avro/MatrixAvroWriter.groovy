@@ -26,6 +26,9 @@ class MatrixAvroWriter {
     if (matrix == null) {
       throw new IllegalArgumentException("Matrix cannot be null")
     }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
+    }
     Schema schema = buildSchema(matrix, inferPrecisionAndScale)
     DataFileWriter<GenericRecord> dfw = new DataFileWriter<>(new GenericDatumWriter<GenericRecord>(schema))
     dfw.create(schema, file)
