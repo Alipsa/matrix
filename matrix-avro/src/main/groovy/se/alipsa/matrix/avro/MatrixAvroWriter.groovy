@@ -733,22 +733,11 @@ class MatrixAvroWriter {
   }
 
   /**
-   * Determines the effective Java type for a Matrix column.
+   * Returns a cached schema for the given matrix and cache key, if available.
    *
-   * <p>If the column has a declared type (other than Object or Number), that type
-   * is used. Otherwise, the actual values are scanned to infer the most appropriate
-   * type. Type inference follows these precedence rules:
-   * <ul>
-   *   <li>BigDecimal if any BigDecimal values present</li>
-   *   <li>Double if any Float/Double values present</li>
-   *   <li>Long if integral values exceed Integer range</li>
-   *   <li>Integer for small integral values</li>
-   *   <li>String as the fallback</li>
-   * </ul>
-   *
-   * @param matrix the Matrix containing the column
-   * @param col the column name
-   * @return the effective Java class to use for Avro schema mapping
+   * @param matrix the matrix used as a cache namespace
+   * @param key the cache key describing schema inputs
+   * @return a cached schema instance, or null if none exists
    */
   private static Schema getCachedSchema(Matrix matrix, SchemaCacheKey key) {
     synchronized (SCHEMA_CACHE) {

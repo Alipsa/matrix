@@ -204,15 +204,15 @@ class AvroWriteOptions {
   CodecFactory createCodecFactory() {
     switch (compression) {
       case Compression.DEFLATE ->
-        compressionLevel > 0 ? CodecFactory.deflateCodec(compressionLevel) : CodecFactory.deflateCodec(6)
+        compressionLevel >= 0 ? CodecFactory.deflateCodec(compressionLevel) : CodecFactory.deflateCodec(6)
       case Compression.SNAPPY ->
         CodecFactory.snappyCodec()
       case Compression.BZIP2 ->
         CodecFactory.bzip2Codec()
       case Compression.XZ ->
-        compressionLevel > 0 ? CodecFactory.xzCodec(compressionLevel) : CodecFactory.xzCodec(6)
+        compressionLevel >= 0 ? CodecFactory.xzCodec(compressionLevel) : CodecFactory.xzCodec(6)
       case Compression.ZSTANDARD ->
-        compressionLevel > 0 ? CodecFactory.zstandardCodec(compressionLevel) : CodecFactory.zstandardCodec(3)
+        compressionLevel >= 0 ? CodecFactory.zstandardCodec(compressionLevel) : CodecFactory.zstandardCodec(3)
       default ->
         CodecFactory.nullCodec()
     }

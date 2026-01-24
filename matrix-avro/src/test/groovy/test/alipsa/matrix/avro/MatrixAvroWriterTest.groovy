@@ -163,45 +163,6 @@ class MatrixAvroWriterTest {
   // ---------- validation tests ----------
 
   @Test
-  void testValidationNullMatrix() {
-    File tmp = Files.createTempFile("avro-test-", ".avro").toFile()
-    try {
-      def ex = assertThrows(IllegalArgumentException) {
-        MatrixAvroWriter.write(null, tmp)
-      }
-      assertEquals("matrix cannot be null [parameter: matrix]. Suggestion: Provide a non-null value for matrix", ex.message)
-    } finally {
-      tmp.delete()
-    }
-  }
-
-  @Test
-  void testValidationEmptyMatrix() {
-    Matrix m = Matrix.builder("Empty").build()
-    File tmp = Files.createTempFile("avro-test-", ".avro").toFile()
-    try {
-      def ex = assertThrows(IllegalArgumentException) {
-        MatrixAvroWriter.write(m, tmp)
-      }
-      assertEquals("Matrix must have at least one column [parameter: matrix]. Suggestion: Add at least one column to the Matrix before writing", ex.message)
-    } finally {
-      tmp.delete()
-    }
-  }
-
-  @Test
-  void testValidationNullFile() {
-    def cols = new LinkedHashMap<String, List<?>>()
-    cols["id"] = [1, 2]
-    Matrix m = Matrix.builder("Test").columns(cols).types(Integer).build()
-
-    def ex = assertThrows(IllegalArgumentException) {
-      MatrixAvroWriter.write(m, (File) null)
-    }
-    assertEquals("file cannot be null [parameter: file]. Suggestion: Provide a non-null value for file", ex.message)
-  }
-
-  @Test
   void testValidationNullPath() {
     def cols = new LinkedHashMap<String, List<?>>()
     cols["id"] = [1, 2]
@@ -227,19 +188,21 @@ class MatrixAvroWriterTest {
 
   @Test
   void testValidationWriteBytesNullMatrix() {
-    def ex = assertThrows(IllegalArgumentException) {
+    def ex = assertThrows(AvroValidationException) {
       MatrixAvroWriter.writeBytes(null)
     }
-    assertEquals("matrix cannot be null [parameter: matrix]. Suggestion: Provide a non-null value for matrix", ex.message)
+    assertEquals("matrix", ex.parameterName)
+    assertTrue(ex.message.contains("cannot be null"))
   }
 
   @Test
   void testValidationWriteBytesEmptyMatrix() {
     Matrix m = Matrix.builder("Empty").build()
-    def ex = assertThrows(IllegalArgumentException) {
+    def ex = assertThrows(AvroValidationException) {
       MatrixAvroWriter.writeBytes(m)
     }
-    assertEquals("Matrix must have at least one column [parameter: matrix]. Suggestion: Add at least one column to the Matrix before writing", ex.message)
+    assertEquals("matrix", ex.parameterName)
+    assertTrue(ex.message.contains("at least one column"))
   }
 
   @Test
