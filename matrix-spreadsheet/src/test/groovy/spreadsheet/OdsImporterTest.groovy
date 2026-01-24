@@ -5,7 +5,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
-import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
 
 import java.time.LocalDate
 
@@ -44,10 +43,10 @@ class OdsImporterTest {
   @Test
   void testImportFromStream() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
-      Matrix table = SOdsImporter.create().importSpreadsheet(
+      Matrix table = FOdsImporter.create().importSpreadsheet(
           is, 'Sheet1', 1, 12, 'A', 'D', true
       )
-      assertEquals(3.0, table[2, 0])
+      assertEquals(3.0, ValueConverter.asDouble(table[2, 0]), 0.000001)
       def date = table[6, 2]
       assertEquals(LocalDate.parse("2023-05-06"), date)
       assertEquals(17.4, table['baz'][table.rowCount()-1])
@@ -56,20 +55,7 @@ class OdsImporterTest {
   }
 
   @Test
-  void testImportMultipleSheetsSods() {
-    try(InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
-      Map<String, Matrix> sheets = SOdsImporter.create().importSpreadsheets(is,
-          [
-              [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 6, firstRowAsColNames: true],
-              [sheetName: 'Sheet2', startRow: 2, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: false],
-              ['key': 'comp', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: false],
-              ['key': 'comp2', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: true]
-          ])
-      testImportMultipleSheets(sheets)
-    }
-  }
-  @Test
-  void testImportMultipleSheetsFastOds() {
+  void testImportMultipleSheets() {
     try(InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
       Map<Object, Matrix> sheets = FOdsImporter.create().importSpreadsheets(is,
           [
@@ -142,7 +128,7 @@ class OdsImporterTest {
   @Test
   void testFormulas() {
     URL file = this.getClass().getResource("/Book3.ods")
-    Matrix m = SOdsImporter.create().importSpreadsheet(file, 1, 2, 8, 'A', 'G', false)
+    Matrix m = FOdsImporter.create().importSpreadsheet(file, 1, 2, 8, 'A', 'G', false)
         .convert('c3': LocalDate)
     //println m.content()
     assertEquals(21, m[6, 0, Integer])

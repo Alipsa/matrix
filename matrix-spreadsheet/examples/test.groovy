@@ -16,7 +16,7 @@ Matrix salesDetails = Matrix.builder().data(
 ).build()
 
 // Export both matrices to a single spreadsheet with multiple sheets
-SpreadsheetExporter.exportSpreadsheets(
+SpreadsheetWriter.writeSheets(
     file: new File(System.getProperty("user.dir"), "sales_report.xlsx"),
     data: [salesByMonth, salesDetails],
     sheetNames: ['Monthly Summary', 'Sales Details']

@@ -9,15 +9,13 @@ import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.OPENDOCUMENT_MIMET
 @CompileStatic
 abstract class OdsDataReader {
 
-  enum ReaderImpl {
-    EVENT, STREAM
-  }
-  static OdsDataReader create(ReaderImpl impl = ReaderImpl.STREAM) {
-    switch (impl) {
-      case ReaderImpl.EVENT -> new OdsEventDataReader()
-      case ReaderImpl.STREAM -> new OdsStreamDataReader()
-      default -> throw new IllegalArgumentException("Unknown reader implementation")
-    }
+  /**
+   * Create the default ODS data reader implementation.
+   *
+   * @return a stream-based ODS data reader
+   */
+  static OdsDataReader create() {
+    new OdsStreamDataReader()
   }
 
   Sheet readOds(InputStream is, Object sheet, Integer startRow, Integer endRow, Integer startCol, Integer endCol) {

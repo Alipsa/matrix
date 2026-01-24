@@ -5,11 +5,15 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
-import se.alipsa.matrix.spreadsheet.ExcelImplementation
+import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.regex.Pattern
+import java.util.zip.ZipFile
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.*
@@ -147,23 +151,6 @@ class SpreadsheetWriterTest {
   }
 
   @Test
-  void testWriteWithDifferentImplementation() {
-    // Test with POI
-    SpreadsheetWriter.excelImplementation = ExcelImplementation.POI
-    def poiFile = File.createTempFile("matrix-writer-poi", ".xlsx")
-    String sheetName1 = SpreadsheetWriter.write(table3, poiFile)
-    assertNotNull(sheetName1)
-    assertTrue(poiFile.exists())
-
-    // Test with FastExcel
-    SpreadsheetWriter.excelImplementation = ExcelImplementation.FastExcel
-    def fastFile = File.createTempFile("matrix-writer-fast", ".xlsx")
-    String sheetName2 = SpreadsheetWriter.write(table3, fastFile)
-    assertNotNull(sheetName2)
-    assertTrue(fastFile.exists())
-  }
-
-  @Test
   void testWriteNullMatrixThrows() {
     def file = File.createTempFile("matrix-writer-null", ".xlsx")
     assertThrows(IllegalArgumentException.class, () -> {
@@ -198,10 +185,219 @@ class SpreadsheetWriterTest {
   void testDeprecatedExporterStillWorks() {
     // Verify deprecated class still delegates correctly
     def file = File.createTempFile("matrix-deprecated", ".xlsx")
-    se.alipsa.matrix.spreadsheet.SpreadsheetExporter.excelImplementation = ExcelImplementation.POI
     String sheetName = se.alipsa.matrix.spreadsheet.SpreadsheetExporter.exportSpreadsheet(file, table)
 
     assertNotNull(sheetName)
     assertTrue(file.exists())
+  }
+
+  @Test
+  void testWriteXlsThrows() {
+    def file = File.createTempFile("matrix-writer-xls", ".xls")
+    assertThrows(IllegalArgumentException.class, () -> {
+      SpreadsheetWriter.write(table, file)
+    }, "Should throw on unsupported .xls format")
+  }
+
+  @Test
+  void testAppendXlsxPreservesExistingSheet() {
+    File file = copyResourceToTempFile("Book3.xlsx", ".xlsx")
+    Matrix before = SpreadsheetImporter.importSpreadsheet(file.absolutePath, "Sheet1", 1, 3, 1, 3, true)
+    Matrix newSheet = Matrix.builder().data(id: [1, 2], name: ["a", "b"]).build()
+    SpreadsheetWriter.write(newSheet, file, "Appended")
+    Matrix after = SpreadsheetImporter.importSpreadsheet(file.absolutePath, "Sheet1", 1, 3, 1, 3, true)
+    assertEquals(before, after)
+    try (def reader = SpreadsheetReader.Factory.create(file)) {
+      assertTrue(reader.sheetNames.contains("Appended"))
+    }
+  }
+
+  @Test
+  void testAppendXlsxInheritsBaseFormatting() {
+    File file = copyResourceToTempFile("Book3.xlsx", ".xlsx")
+    SpreadsheetWriter.write(table3, file, "Appended")
+
+    String baseXml = readXlsxSheetXml(file, "Sheet1")
+    String appendedXml = readXlsxSheetXml(file, "Appended")
+
+    String baseRowHeight = extractSheetFormatAttribute(baseXml, "defaultRowHeight")
+    String appendedRowHeight = extractSheetFormatAttribute(appendedXml, "defaultRowHeight")
+    assertNotNull(baseRowHeight)
+    assertEquals(baseRowHeight, appendedRowHeight)
+
+    String baseColWidth = extractFirstColumnWidth(baseXml)
+    String appendedColWidth = extractFirstColumnWidth(appendedXml)
+    assertNotNull(baseColWidth)
+    assertEquals(baseColWidth, appendedColWidth)
+
+    String baseLeftMargin = extractPageMargin(baseXml, "left")
+    String appendedLeftMargin = extractPageMargin(appendedXml, "left")
+    assertNotNull(baseLeftMargin)
+    assertEquals(baseLeftMargin, appendedLeftMargin)
+  }
+
+  @Test
+  void testReplaceXlsxSheet() {
+    File file = File.createTempFile("matrix-replace", ".xlsx")
+    file.delete()
+    Matrix original = Matrix.builder().data(id: [1], name: ["a"]).build()
+    SpreadsheetWriter.write(original, file, "Data")
+    Matrix replacement = Matrix.builder().data(id: [2], name: ["b"]).build()
+    SpreadsheetWriter.write(replacement, file, "Data")
+    Matrix imported = SpreadsheetImporter.importSpreadsheet(file.absolutePath, "Data", 1, 2, 1, 2, true)
+    assertEquals(replacement, imported)
+  }
+
+  @Test
+  void testAppendOdsPreservesExistingSheet() {
+    File file = copyResourceToTempFile("Book3.ods", ".ods")
+    Matrix before = SpreadsheetImporter.importSpreadsheet(file.absolutePath, "Sheet1", 1, 3, 1, 3, true)
+    Matrix newSheet = Matrix.builder().data(id: [1, 2], name: ["a", "b"]).build()
+    SpreadsheetWriter.write(newSheet, file, "Appended")
+    Matrix after = SpreadsheetImporter.importSpreadsheet(file.absolutePath, "Sheet1", 1, 3, 1, 3, true)
+    assertEquals(before, after)
+    try (def reader = SpreadsheetReader.Factory.create(file)) {
+      assertTrue(reader.sheetNames.contains("Appended"))
+    }
+  }
+
+  @Test
+  void testAppendOdsInheritsTableStyle() {
+    File file = copyResourceToTempFile("Book3.ods", ".ods")
+    SpreadsheetWriter.write(table3, file, "Appended")
+
+    String contentXml = readZipEntry(file, "content.xml")
+    String baseStyle = extractOdsTableStyle(contentXml, "Sheet1")
+    String appendedStyle = extractOdsTableStyle(contentXml, "Appended")
+    assertNotNull(baseStyle)
+    assertEquals(baseStyle, appendedStyle)
+
+    String baseColumnStyle = extractOdsFirstColumnStyle(contentXml, "Sheet1")
+    String appendedColumnStyle = extractOdsFirstColumnStyle(contentXml, "Appended")
+    assertNotNull(baseColumnStyle)
+    assertEquals(baseColumnStyle, appendedColumnStyle)
+  }
+
+  @Test
+  void testReplaceOdsSheet() {
+    File file = File.createTempFile("matrix-replace", ".ods")
+    file.delete()
+    Matrix original = Matrix.builder().data(id: [1], name: ["a"]).build()
+    SpreadsheetWriter.write(original, file, "Data")
+    Matrix replacement = Matrix.builder().data(id: [2], name: ["b"]).build()
+    SpreadsheetWriter.write(replacement, file, "Data")
+    Matrix imported = SpreadsheetImporter.importSpreadsheet(file.absolutePath, "Data", 1, 2, 1, 2, true)
+    assertEquals(replacement, imported)
+  }
+
+  private static File copyResourceToTempFile(String resourceName, String suffix) {
+    File file = File.createTempFile("matrix-resource", suffix)
+    file.delete()
+    InputStream is = SpreadsheetWriterTest.class.getResourceAsStream("/${resourceName}")
+    assertNotNull(is, "Missing test resource ${resourceName}")
+    Files.copy(is, file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    is.close()
+    file
+  }
+
+  private static String readXlsxSheetXml(File file, String sheetName) {
+    try (ZipFile zip = new ZipFile(file)) {
+      String workbookXml = readZipEntry(zip, "xl/workbook.xml")
+      String relsXml = readZipEntry(zip, "xl/_rels/workbook.xml.rels")
+      String relId = extractSheetRelId(workbookXml, sheetName)
+      assertNotNull(relId, "Missing sheet ${sheetName}")
+      String target = extractRelationshipTarget(relsXml, relId)
+      assertNotNull(target, "Missing relationship ${relId}")
+      String path = target.startsWith("xl/") ? target : "xl/${target}"
+      return readZipEntry(zip, path)
+    }
+  }
+
+  private static String readZipEntry(File file, String path) {
+    try (ZipFile zip = new ZipFile(file)) {
+      return readZipEntry(zip, path)
+    }
+  }
+
+  private static String readZipEntry(ZipFile zip, String path) {
+    def entry = zip.getEntry(path)
+    assertNotNull(entry, "Missing zip entry ${path}")
+    return new String(zip.getInputStream(entry).bytes, "UTF-8")
+  }
+
+  private static String extractSheetFormatAttribute(String xml, String attribute) {
+    Pattern pattern = Pattern.compile("<sheetFormatPr[^>]*\\b${attribute}=\"([^\"]+)\"")
+    def matcher = pattern.matcher(xml)
+    return matcher.find() ? matcher.group(1) : null
+  }
+
+  private static String extractFirstColumnWidth(String xml) {
+    Pattern pattern = Pattern.compile("<col[^>]*\\bwidth=\"([^\"]+)\"")
+    def matcher = pattern.matcher(xml)
+    return matcher.find() ? matcher.group(1) : null
+  }
+
+  private static String extractPageMargin(String xml, String attribute) {
+    Pattern pattern = Pattern.compile("<pageMargins[^>]*\\b${attribute}=\"([^\"]+)\"")
+    def matcher = pattern.matcher(xml)
+    return matcher.find() ? matcher.group(1) : null
+  }
+
+  private static String extractOdsTableStyle(String contentXml, String sheetName) {
+    String escapedName = Pattern.quote(sheetName)
+    Pattern tablePattern = Pattern.compile("<table:table\\b[^>]*table:name=\"${escapedName}\"[^>]*>")
+    def tableMatcher = tablePattern.matcher(contentXml)
+    if (!tableMatcher.find()) {
+      return null
+    }
+    String tableTag = tableMatcher.group()
+    Pattern stylePattern = Pattern.compile("table:style-name=\"([^\"]+)\"")
+    def styleMatcher = stylePattern.matcher(tableTag)
+    return styleMatcher.find() ? styleMatcher.group(1) : null
+  }
+
+  private static String extractSheetRelId(String workbookXml, String sheetName) {
+    String escapedName = Pattern.quote(sheetName)
+    Pattern sheetPattern = Pattern.compile("<sheet\\b[^>]*\\bname=\"${escapedName}\"[^>]*>")
+    def sheetMatcher = sheetPattern.matcher(workbookXml)
+    if (!sheetMatcher.find()) {
+      return null
+    }
+    String sheetTag = sheetMatcher.group()
+    Pattern relPattern = Pattern.compile("\\br:id=\"([^\"]+)\"")
+    def relMatcher = relPattern.matcher(sheetTag)
+    return relMatcher.find() ? relMatcher.group(1) : null
+  }
+
+  private static String extractRelationshipTarget(String relsXml, String relId) {
+    String escapedId = Pattern.quote(relId)
+    Pattern relPattern = Pattern.compile("<Relationship\\b[^>]*\\bId=\"${escapedId}\"[^>]*>")
+    def relMatcher = relPattern.matcher(relsXml)
+    if (!relMatcher.find()) {
+      return null
+    }
+    String relTag = relMatcher.group()
+    Pattern targetPattern = Pattern.compile("\\bTarget=\"([^\"]+)\"")
+    def targetMatcher = targetPattern.matcher(relTag)
+    return targetMatcher.find() ? targetMatcher.group(1) : null
+  }
+
+  private static String extractOdsFirstColumnStyle(String contentXml, String sheetName) {
+    String escapedName = Pattern.quote(sheetName)
+    Pattern tablePattern = Pattern.compile("(?s)<table:table\\b[^>]*table:name=\"${escapedName}\"[^>]*>(.*?)</table:table>")
+    def tableMatcher = tablePattern.matcher(contentXml)
+    if (!tableMatcher.find()) {
+      return null
+    }
+    String tableBody = tableMatcher.group(1)
+    Pattern columnPattern = Pattern.compile("<table:table-column\\b[^>]*>")
+    def columnMatcher = columnPattern.matcher(tableBody)
+    if (!columnMatcher.find()) {
+      return null
+    }
+    String columnTag = columnMatcher.group()
+    Pattern stylePattern = Pattern.compile("table:style-name=\"([^\"]+)\"")
+    def styleMatcher = stylePattern.matcher(columnTag)
+    return styleMatcher.find() ? styleMatcher.group(1) : null
   }
 }

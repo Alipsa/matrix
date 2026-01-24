@@ -16,8 +16,7 @@ import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
 
 /**
  * Minimal stream reader that discards styles and only reads the content
- * into a list of rows. It is faster than the event reader so we use it as
- * the default one.
+ * into a list of rows. It is the default reader for fastods.
  */
 @CompileStatic
 final class OdsStreamDataReader extends OdsDataReader {
@@ -30,6 +29,8 @@ final class OdsStreamDataReader extends OdsDataReader {
 
   Sheet processContent(final InputStream is, Object sheet, Integer startRow, Integer endRow, Integer startCol, Integer endCol) {
     final XMLInputFactory factory = XMLInputFactory.newInstance()
+    factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false)
+    factory.setProperty(XMLInputFactory.SUPPORT_DTD, false)
     Integer sheetCount = 1
     final XMLStreamReader reader = factory.createXMLStreamReader(is)
     if (sheet == null) {
@@ -66,6 +67,13 @@ final class OdsStreamDataReader extends OdsDataReader {
 
         // Parse this physical row ONCE (consumes until </table-row>)
         List<Object> rowValues = processRow(reader, startColumn, endColumn)
+        boolean isEmptyRow = rowValues == null || rowValues.isEmpty() || rowValues.every { it == null }
+
+        if (isEmptyRow && repeatRows > 1000 && endRow == Integer.MAX_VALUE) {
+          // ODS files often encode trailing empty rows with a huge repeat count.
+          // Stop here to avoid inflating row counts and memory usage.
+          break
+        }
 
         // Replicate logically according to repeatRows
         for (int i = 0; i < repeatRows; i++) {

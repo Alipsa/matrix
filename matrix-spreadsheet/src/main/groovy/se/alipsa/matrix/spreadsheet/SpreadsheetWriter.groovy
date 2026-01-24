@@ -1,18 +1,19 @@
 package se.alipsa.matrix.spreadsheet
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
-import se.alipsa.matrix.spreadsheet.sods.SOdsExporter
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.poi.ExcelExporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelAppender
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
+import se.alipsa.matrix.spreadsheet.fastods.FOdsAppender
+import se.alipsa.matrix.spreadsheet.fastods.FOdsExporter
 
 /**
  * Writes Matrix data to spreadsheet files (Excel, ODS).
  *
- * <p>Supports multiple spreadsheet formats:</p>
+ * <p>Supports spreadsheet formats:</p>
  * <ul>
- *   <li>Excel (.xlsx, .xls) - via Apache POI or FastExcel</li>
- *   <li>OpenDocument Spreadsheet (.ods) - via SODS</li>
+ *   <li>Excel (.xlsx) - via FastExcel</li>
+ *   <li>OpenDocument Spreadsheet (.ods) - via FastOds</li>
  * </ul>
  *
  * <h3>Basic Usage</h3>
@@ -33,29 +34,18 @@ import se.alipsa.matrix.spreadsheet.poi.ExcelExporter
  * List&lt;String&gt; paths = SpreadsheetWriter.writeSheets(sheets, new File("multi.xlsx"), names)
  * </pre>
  *
- * <h3>Format Selection</h3>
- * <pre>
- * // Excel with specific implementation
- * SpreadsheetWriter.excelImplementation = ExcelImplementation.POI  // or FastExcel
- * String path = SpreadsheetWriter.write(data, new File("output.xlsx"))
- * </pre>
- *
  * @see SpreadsheetExporter (deprecated)
- * @see ExcelExporter
  * @see FExcelExporter
- * @see SOdsExporter
+ * @see FOdsExporter
  */
 @CompileStatic
 class SpreadsheetWriter {
-
-  /** Default Excel implementation to use (POI or FastExcel) */
-  public static ExcelImplementation excelImplementation = ExcelImplementation.POI
 
   /**
    * Write a Matrix to a spreadsheet file.
    *
    * <p>The format is auto-detected based on file extension (.ods for OpenDocument,
-   * .xlsx/.xls for Excel).</p>
+   * .xlsx for Excel).</p>
    *
    * @param matrix the Matrix to write
    * @param file the target file
@@ -68,16 +58,20 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
+    ensureSupportedExcelFormat(file)
     if (matrix.columnCount() == 0) {
       throw new IllegalArgumentException("Matrix must have at least one column")
     }
     if (file.getName().toLowerCase().endsWith(".ods")) {
-      return SOdsExporter.exportOds(file, matrix)
+      if (file.exists() && file.length() > 0) {
+        return FOdsAppender.appendOrReplaceSheets(file, [matrix], [matrix.matrixName])[0]
+      }
+      return FOdsExporter.exportOds(file, matrix)
     }
-    return switch (excelImplementation) {
-      case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, matrix)
-      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcel(file, matrix)
+    if (file.exists() && file.length() > 0) {
+      return FExcelAppender.appendOrReplaceSheets(file, [matrix], [matrix.matrixName])[0]
     }
+    return FExcelExporter.exportExcel(file, matrix)
   }
 
   /**
@@ -95,6 +89,7 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
+    ensureSupportedExcelFormat(file)
     if (matrix.columnCount() == 0) {
       throw new IllegalArgumentException("Matrix must have at least one column")
     }
@@ -102,12 +97,15 @@ class SpreadsheetWriter {
       throw new IllegalArgumentException("Sheet name cannot be null")
     }
     if (file.getName().toLowerCase().endsWith(".ods")) {
-      return SOdsExporter.exportOds(file, matrix, sheetName)
+      if (file.exists() && file.length() > 0) {
+        return FOdsAppender.appendOrReplaceSheets(file, [matrix], [sheetName])[0]
+      }
+      return FOdsExporter.exportOds(file, matrix, sheetName)
     }
-    return switch (excelImplementation) {
-      case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, matrix, sheetName)
-      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcel(file, matrix, sheetName)
+    if (file.exists() && file.length() > 0) {
+      return FExcelAppender.appendOrReplaceSheets(file, [matrix], [sheetName])[0]
     }
+    return FExcelExporter.exportExcel(file, matrix, sheetName)
   }
 
   /**
@@ -125,6 +123,7 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
+    ensureSupportedExcelFormat(file)
     if (sheetNames == null) {
       throw new IllegalArgumentException("Sheet names list cannot be null")
     }
@@ -141,12 +140,15 @@ class SpreadsheetWriter {
       }
     }
     if (file.getName().toLowerCase().endsWith(".ods")) {
-      return SOdsExporter.exportOdsSheets(file, matrices, sheetNames)
+      if (file.exists() && file.length() > 0) {
+        return FOdsAppender.appendOrReplaceSheets(file, matrices, sheetNames)
+      }
+      return FOdsExporter.exportOdsSheets(file, matrices, sheetNames)
     }
-    return switch (excelImplementation) {
-      case ExcelImplementation.POI -> ExcelExporter.exportExcelSheets(file, matrices, sheetNames)
-      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcelSheets(file, matrices, sheetNames)
+    if (file.exists() && file.length() > 0) {
+      return FExcelAppender.appendOrReplaceSheets(file, matrices, sheetNames)
     }
+    return FExcelExporter.exportExcelSheets(file, matrices, sheetNames)
   }
 
   /**
@@ -160,5 +162,11 @@ class SpreadsheetWriter {
     def data = (List<Matrix>) params.get("data")
     def sheetNames = params.get("sheetNames") as List<String>
     return writeSheets(data, file, sheetNames)
+  }
+
+  private static void ensureSupportedExcelFormat(File file) {
+    if (file.getName().toLowerCase().endsWith(".xls")) {
+      throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
+    }
   }
 }

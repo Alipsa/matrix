@@ -3,7 +3,7 @@ package spreadsheet
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
-import se.alipsa.matrix.spreadsheet.fastods.reader.OdsEventDataReader
+import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
 import static se.alipsa.matrix.core.ValueConverter.*
 
 class FastOdsTest {
@@ -13,7 +13,7 @@ class FastOdsTest {
     Sheet spreadsheet
     URL url = this.getClass().getResource("/positions.ods")
     try (InputStream is = url.openStream()) {
-      spreadsheet = OdsEventDataReader.create().readOds(is,
+      spreadsheet = OdsDataReader.create().readOds(is,
           'Sheet1', 1, 11, 4, 7)
     }
     assert spreadsheet.get(0) == ['d1',	'e1',	'f1', null]
@@ -27,7 +27,7 @@ class FastOdsTest {
     Sheet spreadsheet
     URL url = this.getClass().getResource("/simple.ods")
     try (InputStream is = url.openStream()) {
-      spreadsheet = OdsEventDataReader.create().readOds(is,
+      spreadsheet = OdsDataReader.create().readOds(is,
           'Sheet1', 4, 5, 2, 3)
     }
     assert spreadsheet.get(0) == ['hej hopp', null]
@@ -40,7 +40,7 @@ class FastOdsTest {
     Sheet spreadsheet
     URL url = this.getClass().getResource("/simple.ods")
     try (InputStream is = url.openStream()) {
-      spreadsheet = OdsEventDataReader.create().readOds(is, 'Sheet2', 4, 7, 2, 8)
+      spreadsheet = OdsDataReader.create().readOds(is, 'Sheet2', 4, 7, 2, 8)
     }
     assert spreadsheet.get(2) == [3, asLocalDate('2025-03-21'), 'doo', 12.7, 0.1245, 'baz', false]
     assert spreadsheet.get(3) == [2, null, null, 38, 15.2, null, null]

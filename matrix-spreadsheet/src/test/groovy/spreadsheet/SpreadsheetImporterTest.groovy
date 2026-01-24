@@ -5,12 +5,9 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.core.ValueConverter
 import java.io.InputStream
-import se.alipsa.matrix.spreadsheet.ExcelImplementation
 import se.alipsa.matrix.spreadsheet.Importer
-import se.alipsa.matrix.spreadsheet.OdsImplementation
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
-import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
 
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -19,6 +16,7 @@ import java.time.format.DateTimeFormatter
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertIterableEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importExcel
 import static se.alipsa.matrix.spreadsheet.SpreadsheetImporter.importSpreadsheet
 
@@ -27,10 +25,7 @@ class SpreadsheetImporterTest {
   @Test
   void testExcelImport() {
     book1ImportAssertions(
-      importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true, excelImplementation: ExcelImplementation.POI)
-    )
-    book1ImportAssertions(
-        importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true, excelImplementation: ExcelImplementation.FastExcel)
+      importSpreadsheet(file: "Book1.xlsx", endRow: 12, endCol: 4, firstRowAsColNames: true)
     )
     URL url = getClass().getResource("/Book1.xlsx")
     book1ImportAssertions(
@@ -44,17 +39,10 @@ class SpreadsheetImporterTest {
     book1ImportAssertions(m)
     Matrix m2 = importSpreadsheet("Book1.ods", 1, 1, 12, 'A', 'D', true)
     book1ImportAssertions(m2)
-    Matrix m3 = importSpreadsheet("transactions.ods", 1, 1, 100, 'A', 'D', true,
-        ExcelImplementation.FastExcel, OdsImplementation.FastOdsStream)
+    Matrix m3 = importSpreadsheet("transactions.ods", 1, 1, 100, 'A', 'D', true)
       .withMatrixName('transactions')
-    Matrix m4 = importSpreadsheet("transactions.ods", 1, 1, 100, 'A', 'D', true,
-        ExcelImplementation.FastExcel, OdsImplementation.FastOdsEvent)
-        .withMatrixName('transactions')
-    Matrix m5 = importSpreadsheet("transactions.ods", 1, 1, 100, 'A', 'D', true,
-        ExcelImplementation.FastExcel, OdsImplementation.SODS)
-        .withMatrixName('transactions')
-    MatrixAssertions.assertEquals(m3, m4)
-    MatrixAssertions.assertEquals(m3, m5)
+    assertEquals('transactions', m3.matrixName)
+    assertEquals(4, m3.columnCount())
   }
 
   static void book1ImportAssertions(Matrix table) {
@@ -69,17 +57,15 @@ class SpreadsheetImporterTest {
 
   @Test
   void TestImportWithColnames() {
-    importWithColnamesAssertions(ExcelImplementation.POI)
-    importWithColnamesAssertions(ExcelImplementation.FastExcel)
+    importWithColnamesAssertions()
   }
 
-  static void importWithColnamesAssertions(ExcelImplementation excelImplementation) {
+  static void importWithColnamesAssertions() {
     def table = importSpreadsheet(
         "file": "Book1.xlsx",
         "endRow": 12,
         "startCol": 'A',
-        "endCol": 'D',
-        'excelImplementation': excelImplementation
+        "endCol": 'D'
     )
     //println(table.content())
     assertEquals(3.0d, table[2, 0])
@@ -90,11 +76,10 @@ class SpreadsheetImporterTest {
 
   @Test
   void testImportMultipleSheets() {
-    importMultipleSheetsAssertions(ExcelImplementation.POI)
-    importMultipleSheetsAssertions(ExcelImplementation.FastExcel)
+    importMultipleSheetsAssertions()
   }
 
-  void importMultipleSheetsAssertions(ExcelImplementation excelImplementation) {
+  void importMultipleSheetsAssertions() {
 
       Map<String, Matrix> sheets = SpreadsheetImporter.importSpreadsheets("Book2.xlsx",
           [
@@ -102,7 +87,7 @@ class SpreadsheetImporterTest {
               [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true],
               ['key': 'comp', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: false],
               ['key': 'comp2', sheetName: 'Sheet2', startRow: 6, endRow: 10, startCol: 'AC', endCol: 'BH', firstRowAsColNames: true]
-          ], excelImplementation)
+          ])
       assertEquals(4, sheets.size())
       Matrix table2 = sheets.Sheet2
       assertEquals(3i, table2[2, 0, Integer])
@@ -161,18 +146,15 @@ class SpreadsheetImporterTest {
   }
 
   @Test
-  void testPoiSheetNumberIsOneIndexedForFileImport() {
-    assertSheetNumberIsOneIndexedForFile(ExcelImporter.create())
-  }
-
-  @Test
   void testFastExcelSheetNumberIsOneIndexedForStreamImport() {
     assertSheetNumberIsOneIndexedForStream(FExcelImporter.create())
   }
 
   @Test
-  void testPoiSheetNumberIsOneIndexedForStreamImport() {
-    assertSheetNumberIsOneIndexedForStream(ExcelImporter.create())
+  void testImportXlsThrows() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      SpreadsheetImporter.importSpreadsheet("Book1.xls", 1, 1, 2, 1, 2, true)
+    })
   }
 
   private static void assertSheetNumberIsOneIndexedForFile(Importer importer) {

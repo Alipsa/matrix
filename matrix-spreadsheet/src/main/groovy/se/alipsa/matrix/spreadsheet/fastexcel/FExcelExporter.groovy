@@ -46,6 +46,7 @@ class FExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data) {
+    ensureXlsx(file)
     String sheetName = SpreadsheetUtil.createValidSheetName(data.matrixName)
     exportExcel(file, data, sheetName)
     return sheetName
@@ -61,6 +62,7 @@ class FExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data, String sheetName) {
+    ensureXlsx(file)
     String validSheetName = SpreadsheetUtil.createValidSheetName(sheetName)
     if (file.exists() && file.length() > 0) {
       try (FileInputStream fis = new FileInputStream(file)
@@ -106,6 +108,7 @@ class FExcelExporter {
 
   static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames, boolean overwrite = false) throws IOException {
 
+    ensureXlsx(file)
     if (file.exists() && !overwrite && file.length() > 0) {
       throw new IllegalArgumentException("Appending to an external file is not supported, remove it first")
     }
@@ -133,6 +136,12 @@ class FExcelExporter {
   private static boolean isXssf(String filePath) {
     return !filePath.toLowerCase().endsWith(".xls")
 
+  }
+
+  private static void ensureXlsx(File file) {
+    if (!isXssf(file)) {
+      throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
+    }
   }
 
   private static void buildSheet(Matrix data, Worksheet sheet) {

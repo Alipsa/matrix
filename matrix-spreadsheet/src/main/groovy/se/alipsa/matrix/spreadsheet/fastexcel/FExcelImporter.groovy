@@ -43,6 +43,7 @@ class FExcelImporter implements Importer {
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
     if (url == null) throw new IllegalArgumentException("url cannot be null")
+    ensureXlsx(url.path)
     try(InputStream is = url.openStream(); ReadableWorkbook workbook = new ReadableWorkbook(is, OPTIONS)) {
       Sheet sheet = workbook.getSheet(sheetNumber - 1).orElse(null)
       int startColNum = SpreadsheetUtil.asColumnNumber(startCol)
@@ -57,6 +58,7 @@ class FExcelImporter implements Importer {
                             int startRow, int endRow,
                             int startCol, int endCol,
                             boolean firstRowAsColNames = true) {
+    ensureXlsx(url?.path)
     try(InputStream is = url.openStream()) {
       importSpreadsheet(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
@@ -67,6 +69,7 @@ class FExcelImporter implements Importer {
                             int startRow = 1, int endRow,
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
+    ensureXlsx(url?.path)
     try(InputStream is = url.openStream()) {
       importSpreadsheet(is, sheetName, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
@@ -78,6 +81,7 @@ class FExcelImporter implements Importer {
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
 
+    ensureXlsx(file)
     return importSpreadsheet(
         file,
         sheetName,
@@ -107,6 +111,7 @@ class FExcelImporter implements Importer {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
+    ensureXlsx(file)
     File excelFile = FileUtil.checkFilePath(file)
     try (ReadableWorkbook workbook = new ReadableWorkbook(excelFile, OPTIONS)) {
       if (sheetNumber < 1) {
@@ -125,6 +130,7 @@ class FExcelImporter implements Importer {
                             int startRow = 1, int endRow,
                             String startColumn = 'A', String endColumn,
                             boolean firstRowAsColNames = true) {
+    ensureXlsx(file)
     return importSpreadsheet(
         file,
         sheet,
@@ -141,6 +147,7 @@ class FExcelImporter implements Importer {
                             int startRow = 1, int endRow,
                             int startCol = 1, int endCol,
                             boolean firstRowAsColNames = true) {
+    ensureXlsx(file)
     File excelFile = FileUtil.checkFilePath(file)
     try (ReadableWorkbook workbook = new ReadableWorkbook(excelFile, OPTIONS)) {
       Sheet sheet = workbook.findSheet(sheetName).orElseThrow()
@@ -191,8 +198,15 @@ class FExcelImporter implements Importer {
 
   @Override
   Matrix importSpreadsheet(URL url, int sheetNumber, int startRow, int endRow, int startCol, int endCol, boolean firstRowAsColNames) {
+    ensureXlsx(url?.path)
     try (InputStream is = url.openStream()) {
       importSpreadsheet(is, sheetNumber, startRow, endRow, startCol, endCol, firstRowAsColNames)
+    }
+  }
+
+  private static void ensureXlsx(String fileName) {
+    if (fileName?.toLowerCase()?.endsWith(".xls")) {
+      throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
     }
   }
 
@@ -229,6 +243,7 @@ class FExcelImporter implements Importer {
 
   @Override
   Map<Object, Matrix> importSpreadsheets(URL url, List<Map> sheetParams, NumberFormat... formatOpt) {
+    ensureXlsx(url?.path)
     try(InputStream is = url.openStream()) {
       importSpreadsheets(is, sheetParams, formatOpt)
     }
@@ -236,6 +251,7 @@ class FExcelImporter implements Importer {
 
   @Override
   Map<Object, Matrix> importSpreadsheets(String fileName, List<Map> sheetParams, NumberFormat... formatOpt) {
+    ensureXlsx(fileName)
     File file = FileUtil.checkFilePath(fileName)
     try (FileInputStream fis = new FileInputStream(file)) {
       importSpreadsheets(fis, sheetParams, formatOpt)

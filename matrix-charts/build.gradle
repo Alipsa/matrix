@@ -62,7 +62,7 @@ dependencies {
   compileOnly libs.groovy
   compileOnly project(':matrix-core')
   compileOnly project(':matrix-stats')
-  compileOnly project(':matrix-groovy-ext')
+  //compileOnly project(':matrix-groovy-ext')
   api("se.alipsa.groovy:gsvg:1.0.0")
   api("se.alipsa.groovy:gsvg-export:1.0.0")
 
@@ -85,7 +85,7 @@ dependencies {
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-stats')
   testImplementation project(':matrix-datasets')
-  testImplementation project(':matrix-groovy-ext')
+  //testImplementation project(':matrix-groovy-ext')
   testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"

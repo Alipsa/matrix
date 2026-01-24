@@ -2,7 +2,7 @@ package spreadsheet
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
+import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 
 import static org.junit.jupiter.api.Assertions.assertEquals
@@ -32,7 +32,7 @@ class SpreadsheetTest {
         .build()
     def file = new File("build/table.xlsx")
     if (file.exists()) file.delete()
-    SpreadsheetExporter.exportSpreadsheet(file, table)
+    SpreadsheetWriter.write(table, file)
 
     Matrix m2 = SpreadsheetImporter.importSpreadsheet([
         file: file,

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader;
-import se.alipsa.matrix.spreadsheet.fastods.reader.OdsEventDataReader
 
 import java.time.Duration;
 import java.time.Instant
@@ -15,7 +14,7 @@ class OdsDataReaderTest {
   @Test
   void testDataReader() throws IOException {
     try (InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
-      List<List<?>> rows = OdsEventDataReader.create().readOds(is, 'Sheet1', 3, 11, 2, 6)
+      List<List<?>> rows = OdsDataReader.create().readOds(is, 'Sheet1', 3, 11, 2, 6)
       /*
       if (rows != null) {
         for (List<?> row : rows) {
@@ -36,7 +35,7 @@ class OdsDataReaderTest {
   @Test
   void testPreserveSpace() throws IOException {
     try (InputStream is = this.getClass().getResourceAsStream("/Book2.ods")) {
-      Sheet rows = OdsEventDataReader.create().readOds(is, 'Sheet3', 1, 1, 1, 1)
+      Sheet rows = OdsDataReader.create().readOds(is, 'Sheet3', 1, 1, 1, 1)
       Assertions.assertEquals('24300    WESTERN                      AV', rows [ 0][ 0])
     }
   }

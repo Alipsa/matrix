@@ -7,13 +7,10 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.Importer
-import se.alipsa.matrix.spreadsheet.OdsImplementation
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
 
 import java.text.NumberFormat
-
-import static se.alipsa.matrix.spreadsheet.OdsImplementation.*
 
 /**
  * Import Calc (ods file)
@@ -22,14 +19,6 @@ import static se.alipsa.matrix.spreadsheet.OdsImplementation.*
 class FOdsImporter implements Importer {
 
   OdsDataReader odsDataReader
-
-  static FOdsImporter create(OdsImplementation odsImplementation) {
-    switch (odsImplementation) {
-      case FastOdsStream -> create(OdsDataReader.create(OdsDataReader.ReaderImpl.STREAM))
-      case FastOdsEvent -> create(OdsDataReader.create(OdsDataReader.ReaderImpl.EVENT))
-      default -> throw new IllegalArgumentException("Unknown ODS reader implementation")
-    }
-  }
 
   static FOdsImporter create(OdsDataReader odsDataReader = OdsDataReader.create()) {
     new FOdsImporter(odsDataReader)

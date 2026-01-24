@@ -3,7 +3,7 @@ package spreadsheet
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
-import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
+import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 
@@ -161,8 +161,7 @@ class SpreadSheetIndexTest {
 
     File tempFile = File.createTempFile("spreadsheet-index", ".xlsx")
     tempFile.deleteOnExit()
-    SpreadsheetExporter.exportSpreadsheet(tempFile, sheet1, "First")
-    SpreadsheetExporter.exportSpreadsheet(tempFile, sheet2, "Second")
+    SpreadsheetWriter.writeSheets([sheet1, sheet2], tempFile, ["First", "Second"])
 
     try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(tempFile)) {
       assertEquals(2, reader.sheetNames.size())
