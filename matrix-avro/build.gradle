@@ -37,10 +37,6 @@ dependencies {
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
   testImplementation project(':matrix-parquet')
-  testImplementation 'org.apache.parquet:parquet-column:1.16.0'
-  testImplementation 'org.apache.parquet:parquet-hadoop:1.16.0'
-  testImplementation 'org.apache.hadoop:hadoop-common:3.4.2'
-  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.4.2'
   testImplementation testLibs.slf4jSimple
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
