@@ -129,6 +129,37 @@ class MatrixAvroWriterTest {
     assertTrue(avroBytes.length > 0)
   }
 
+  @Test
+  void schema_infers_decimal_for_object_column() {
+    def cols = new LinkedHashMap<String, List<?>>()
+    cols["price"] = [new BigDecimal("12.30"), new BigDecimal("456.789")]
+
+    Matrix m = Matrix.builder("ObjectDecimal")
+        .columns(cols)
+        .types(Object)
+        .build()
+
+    File tmp = Files.createTempFile("matrix-avro-writer-object-decimal-", ".avro").toFile()
+    try {
+      MatrixAvroWriter.write(m, tmp, true)
+      def reader = new DataFileReader<GenericRecord>(tmp, new GenericDatumReader<>())
+      try {
+        Schema schema = reader.schema
+        Schema priceSchema = nonNullFieldSchema(schema, "price")
+        assertEquals(Schema.Type.BYTES, priceSchema.getType())
+        assertNotNull(priceSchema.getLogicalType())
+        assertEquals("decimal", priceSchema.getLogicalType().name)
+        def dec = (LogicalTypes.Decimal) priceSchema.getLogicalType()
+        assertEquals(6, dec.getPrecision())
+        assertEquals(3, dec.getScale())
+      } finally {
+        reader.close()
+      }
+    } finally {
+      tmp.delete()
+    }
+  }
+
   // ---------- validation tests ----------
 
   @Test

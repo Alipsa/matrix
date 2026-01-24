@@ -36,6 +36,11 @@ dependencies {
   testImplementation libs.groovy
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
+  testImplementation project(':matrix-parquet')
+  testImplementation 'org.apache.parquet:parquet-column:1.16.0'
+  testImplementation 'org.apache.parquet:parquet-hadoop:1.16.0'
+  testImplementation 'org.apache.hadoop:hadoop-common:3.4.2'
+  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.4.2'
   testImplementation testLibs.slf4jSimple
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
@@ -86,6 +91,39 @@ tasks.register('avroBenchmark', JavaExec) {
   description = 'Run MatrixAvro read/write benchmark'
   classpath = sourceSets.test.runtimeClasspath
   mainClass = 'se.alipsa.matrix.avro.benchmarks.MatrixAvroBenchmark'
+  def rows = project.findProperty('rows') ?: '100000'
+  def warmups = project.findProperty('warmups') ?: '2'
+  def runs = project.findProperty('runs') ?: '5'
+  args rows, warmups, runs
+}
+
+tasks.register('avroSchemaBenchmark', JavaExec) {
+  group = 'benchmark'
+  description = 'Run MatrixAvro schema inference benchmark'
+  classpath = sourceSets.test.runtimeClasspath
+  mainClass = 'se.alipsa.matrix.avro.benchmarks.MatrixAvroSchemaBenchmark'
+  def rows = project.findProperty('rows') ?: '100000'
+  def warmups = project.findProperty('warmups') ?: '2'
+  def runs = project.findProperty('runs') ?: '5'
+  args rows, warmups, runs
+}
+
+tasks.register('avroConversionBenchmark', JavaExec) {
+  group = 'benchmark'
+  description = 'Run MatrixAvro type conversion benchmark (in-memory)'
+  classpath = sourceSets.test.runtimeClasspath
+  mainClass = 'se.alipsa.matrix.avro.benchmarks.MatrixAvroConversionBenchmark'
+  def rows = project.findProperty('rows') ?: '50000'
+  def warmups = project.findProperty('warmups') ?: '2'
+  def runs = project.findProperty('runs') ?: '5'
+  args rows, warmups, runs
+}
+
+tasks.register('avroParquetBenchmark', JavaExec) {
+  group = 'benchmark'
+  description = 'Run Avro vs Parquet performance comparison benchmark'
+  classpath = sourceSets.test.runtimeClasspath
+  mainClass = 'se.alipsa.matrix.avro.benchmarks.MatrixAvroParquetBenchmark'
   def rows = project.findProperty('rows') ?: '100000'
   def warmups = project.findProperty('warmups') ?: '2'
   def runs = project.findProperty('runs') ?: '5'
