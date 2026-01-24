@@ -24,9 +24,11 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.stats.Sampler
 import se.alipsa.matrix.stats.regression.LinearRegression
+import se.alipsa.matrix.gsheets.GsUtil
 import se.alipsa.matrix.xchart.PieChart
 import se.alipsa.matrix.smile.SmileUtil
 import se.alipsa.matrix.smile.stats.SmileStats
+import se.alipsa.matrix.tablesaw.TableUtil
 import smile.data.DataFrame
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
@@ -153,6 +155,12 @@ class MatrixModulesTest {
   }
 
   @Test
+  void testGsheets() {
+    assertEquals(3, GsUtil.columnCountForRange("Sheet1!B2:D10"))
+    assertEquals(27, GsUtil.asColumnNumber("AA"))
+  }
+
+  @Test
   void testXChart() {
     Matrix matrix = Matrix.builder(
         metal: ['Gold', 'Silver', 'Platinum', 'Copper', 'Zinc'],
@@ -188,6 +196,16 @@ class MatrixModulesTest {
     MatrixArffWriter.write(mtcars, file)
     Matrix m2 = MatrixArffReader.read(file)
     MatrixAssertions.assertContentMatches(mtcars, m2, mtcars.diff(m2))
+  }
+
+  @Test
+  void testTablesaw() {
+    Matrix data = Dataset.mtcars()
+    def table = TableUtil.toTablesaw(data)
+    Matrix restored = TableUtil.fromTablesaw(table)
+    assertEquals(data.rowCount(), restored.rowCount(), "Row count should match after tablesaw round trip")
+    assertEquals(data.columnCount(), restored.columnCount(), "Column count should match after tablesaw round trip")
+    assertEquals(data.columnNames(), restored.columnNames(), "Column names should match after tablesaw round trip")
   }
 
   @Test

@@ -56,6 +56,15 @@ class MatrixAvroReader {
     InputStream is = new FileInputStream(file)
     try {
       return read(is, name)
+    } catch (AvroConversionException | AvroValidationException e) {
+      throw e
+    } catch (Exception e) {
+      throw new AvroValidationException(
+          "Invalid or corrupt Avro file: ${file.absolutePath}",
+          "file",
+          "Ensure the file contains valid Avro OCF data",
+          e
+      )
     } finally {
       is.close()
     }
@@ -194,6 +203,15 @@ class MatrixAvroReader {
     InputStream is = new FileInputStream(file)
     try {
       return readInternal(is, name, options.readerSchema)
+    } catch (AvroConversionException | AvroValidationException e) {
+      throw e
+    } catch (Exception e) {
+      throw new AvroValidationException(
+          "Invalid or corrupt Avro file: ${file.absolutePath}",
+          "file",
+          "Ensure the file contains valid Avro OCF data",
+          e
+      )
     } finally {
       is.close()
     }
@@ -598,6 +616,13 @@ class MatrixAvroReader {
     }
     if (file.isDirectory()) {
       throw AvroValidationException.isDirectory(file.absolutePath)
+    }
+    if (file.length() == 0) {
+      throw new AvroValidationException(
+          "Avro file is empty: ${file.absolutePath}",
+          "file",
+          "Ensure the file contains Avro OCF data"
+      )
     }
   }
 

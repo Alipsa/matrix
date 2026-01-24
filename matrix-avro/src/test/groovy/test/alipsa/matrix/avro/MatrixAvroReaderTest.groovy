@@ -308,6 +308,36 @@ class MatrixAvroReaderTest {
     }
   }
 
+  @Test @Order(33)
+  void testValidationEmptyFileHandling() {
+    File emptyFile = Files.createTempFile("avro-empty-", ".avro").toFile()
+    try {
+      def ex = assertThrows(AvroValidationException) {
+        MatrixAvroReader.read(emptyFile)
+      }
+      assertEquals("file", ex.parameterName)
+      assertTrue(ex.message.contains("empty"))
+    } finally {
+      emptyFile.delete()
+    }
+  }
+
+  @Test @Order(34)
+  void testValidationCorruptFileHandling() {
+    File corruptFile = Files.createTempFile("avro-corrupt-", ".avro").toFile()
+    Files.write(corruptFile.toPath(), "not avro data".bytes)
+    try {
+      def ex = assertThrows(AvroValidationException) {
+        MatrixAvroReader.read(corruptFile)
+      }
+      assertEquals("file", ex.parameterName)
+      assertNotNull(ex.cause)
+      assertTrue(ex.message.toLowerCase().contains("corrupt") || ex.message.toLowerCase().contains("invalid"))
+    } finally {
+      corruptFile.delete()
+    }
+  }
+
   // ---------- helpers ----------
 
   private static Schema buildSchema() {
