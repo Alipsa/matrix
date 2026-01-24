@@ -42,3 +42,31 @@ implementation('se.alipsa.matrix:matrix-spreadsheet')
    ...
 </project>
 ```
+
+## Matrix-all (convenience jar)
+
+If you want a single dependency that pulls in all Matrix modules with their transitive dependencies, use
+the `matrix-all` convenience jar. This is simpler than a BOM import, but less flexible.
+
+Note: `matrix-all` does not include a Groovy runtime on purpose, so you can choose your Groovy
+version (4.x or 5.x). Add the Groovy dependency explicitly in your build.
+
+Gradle:
+```groovy
+implementation('org.apache.groovy:groovy-all:4.0.23') // or 5.x if you prefer
+implementation('se.alipsa.matrix:matrix-all:2.2.3')
+```
+
+Maven:
+```xml
+<dependency>
+  <groupId>org.apache.groovy</groupId>
+  <artifactId>groovy-all</artifactId>
+  <version>4.0.23</version>
+</dependency>
+<dependency>
+  <groupId>se.alipsa.matrix</groupId>
+  <artifactId>matrix-all</artifactId>
+  <version>2.2.3</version>
+</dependency>
+```

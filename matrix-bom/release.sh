@@ -9,3 +9,4 @@ fi
 mvn -f bom.xml install
 mvn clean verify
 mvn -DstagingProcessTimeoutMinutes=10 -Prelease -f bom.xml clean deploy
+mvn -DstagingProcessTimeoutMinutes=10 -Prelease clean deploy
