@@ -43,9 +43,14 @@ class FExcelImporter implements Importer {
                             String startCol = 'A', String endCol,
                             boolean firstRowAsColNames = true) {
     if (url == null) throw new IllegalArgumentException("url cannot be null")
+    if (sheetNumber < 1) {
+      throw new IllegalArgumentException("Sheet number must be 1 or greater")
+    }
     SpreadsheetUtil.ensureXlsx(url.path)
     try(InputStream is = url.openStream(); ReadableWorkbook workbook = new ReadableWorkbook(is, OPTIONS)) {
-      Sheet sheet = workbook.getSheet(sheetNumber - 1).orElse(null)
+      int sheetIndex = sheetNumber - 1
+      Sheet sheet = workbook.getSheet(sheetIndex)
+          .orElseThrow(() -> new IllegalArgumentException("Sheet number $sheetNumber does not exist"))
       int startColNum = SpreadsheetUtil.asColumnNumber(startCol)
       int endColNum = SpreadsheetUtil.asColumnNumber(endCol)
       boolean isDate1904 = workbook.isDate1904()
@@ -253,9 +258,6 @@ class FExcelImporter implements Importer {
   }
 
   private static Matrix importExcelSheet(Sheet sheet, int startRowNum, int endRowNum, int startColNum, int endColNum, boolean firstRowAsColNames, boolean isDate1904) {
-    //println "Importing sheet ${sheet.name}, startRowNum = $startRowNum, endRowNum = $endRowNum"
-    //int startRowNumZI = startRowNum - 1
-    //int endRowNumZI = endRowNum - 1
     FExcelValueExtractor ext = new FExcelValueExtractor(sheet, isDate1904)
     int startColNumZI = startColNum - 1
     int endColNumZI = endColNum - 1
@@ -265,7 +267,6 @@ class FExcelImporter implements Importer {
     int ncol = endColNum - startColNum + 1 // both start and end are included
     try (Stream<Row> rows = sheet.openStream()) {
       rows.each { Row row ->
-        //println "on row $row.rowNum, row.rowNum >= startRowNum = ${row.rowNum >= startRowNum} row.rowNum <= endRowNum = ${row.rowNum <= endRowNum}"
         if (row.rowNum >= startRowNum && row.rowNum <= endRowNum) {
           rowList = []
           List list = row.asList()
@@ -282,7 +283,6 @@ class FExcelImporter implements Importer {
             }
           }
           list.eachWithIndex { cell, cIdx ->
-            //println "row $cIdx adding " + cell?.rawValue
             if (cIdx >= startColNumZI && cIdx <= endColNumZI) {
               if (cell == null) {
                 rowList.add(null)
@@ -292,15 +292,11 @@ class FExcelImporter implements Importer {
             }
           }
           if (rowList.size() < ncol) {
-            //println("padding null to rowList rowList.size() = ${rowList.size()}, ncol=$ncol")
             def padSize = ncol - rowList.size()
             (1..padSize).each {
-              //print "."
               rowList << null
             }
-            //println()
           }
-          //println row.rowNum + ": " + rowList
           matrix.add(rowList)
         }
       }

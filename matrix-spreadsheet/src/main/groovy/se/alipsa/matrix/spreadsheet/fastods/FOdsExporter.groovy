@@ -54,7 +54,7 @@ class FOdsExporter {
     if (positions.size() != sheetNames.size()) {
       throw new IllegalArgumentException("Sheet names and start positions lists must have the same size")
     }
-    List<String> actualSheetNames = sheetNames.collect { SpreadsheetUtil.createValidSheetName(it) }
+    List<String> actualSheetNames = SpreadsheetUtil.createUniqueSheetNames(sheetNames)
     String contentXml = buildContentXml(data, actualSheetNames, positions)
     String stylesXml = buildStylesXml()
     String metaXml = buildMetaXml()

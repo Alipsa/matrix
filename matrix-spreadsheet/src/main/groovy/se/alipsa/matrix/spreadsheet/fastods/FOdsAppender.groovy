@@ -84,10 +84,10 @@ class FOdsAppender {
     if (sheetNames.size() != positions.size()) {
       throw new IllegalArgumentException("Sheet names and start positions lists must have the same size")
     }
+    List<String> uniqueNames = SpreadsheetUtil.createUniqueSheetNames(sheetNames)
     Map<String, String> result = new LinkedHashMap<>()
-    for (int i = 0; i < sheetNames.size(); i++) {
-      String name = SpreadsheetUtil.createValidSheetName(sheetNames.get(i))
-      result.put(name, positions.get(i) ?: "A1")
+    for (int i = 0; i < uniqueNames.size(); i++) {
+      result.put(uniqueNames.get(i), positions.get(i) ?: "A1")
     }
     result
   }

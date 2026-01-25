@@ -8,8 +8,7 @@ import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
 import java.math.RoundingMode
 import java.time.LocalDate
 
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.*
 
 class FOdsImporterTest {
 
@@ -170,5 +169,30 @@ class FOdsImporterTest {
     assertEquals(LocalDate.parse('2025-03-20'), m[5, 2])
     assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001d)
     assertEquals('foobar1', m[0, 'c7'])
+  }
+
+  @Test
+  void testInvalidSheetNumberThrows() {
+    URL url = this.getClass().getResource("/Book1.ods")
+
+    // Sheet number 0 should throw (via FastOdsException)
+    assertThrows(Exception.class, () -> {
+      FOdsImporter.create().importSpreadsheet(url, 0, 1, 12, 'A', 'D', true)
+    }, "Sheet number 0 should throw")
+
+    // Non-existent sheet number should throw
+    assertThrows(Exception.class, () -> {
+      FOdsImporter.create().importSpreadsheet(url, 999, 1, 12, 'A', 'D', true)
+    }, "Non-existent sheet number should throw")
+  }
+
+  @Test
+  void testInvalidSheetNameThrows() {
+    URL url = this.getClass().getResource("/Book1.ods")
+
+    // Non-existent sheet name should throw
+    assertThrows(Exception.class, () -> {
+      FOdsImporter.create().importSpreadsheet(url, 'NonExistentSheet', 1, 12, 'A', 'D', true)
+    }, "Non-existent sheet name should throw")
   }
 }

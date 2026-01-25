@@ -92,22 +92,13 @@ class FExcelExporter {
             }
           }
         }
-        throw new Exception("append to existing excel is not yet supported")
-
-        /*
-        todo: 1. import each sheet into a map<sheetName, matrix>
-          2. for each in map:  buildSheet(value, wb.newWorksheet(key))
-          3. append the new sheet: buildSheet(data, wb.newWorksheet(validSheetName))
-        Sheet sheet = workbook.(validSheetName)
-        buildSheet(data, sheet, position)
-        writeFile(file, workbook)*/
+        throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
       }
     } else {
       try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {
         Worksheet sheet = workbook.newWorksheet(validSheetName)
         buildSheet(data, sheet, position)
         workbook.finish()
-        //writeFile(file, workbook)
       }
     }
     return validSheetName
@@ -126,29 +117,29 @@ class FExcelExporter {
   }
 
   static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions, boolean overwrite = false) throws IOException {
-
     SpreadsheetUtil.ensureXlsx(file)
     if (file.exists() && !overwrite && file.length() > 0) {
       throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
+    }
+    if (data.size() != sheetNames.size()) {
+      throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
     }
     List<String> positions = startPositions ?: Collections.nCopies(data.size(), "A1")
     if (data.size() != positions.size()) {
       throw new IllegalArgumentException("Matrices and start positions lists must have the same size")
     }
+    List<String> uniqueSheetNames = SpreadsheetUtil.createUniqueSheetNames(sheetNames)
 
     try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {
-
-      List<String> actualSheetNames = []
       for (int i = 0; i < data.size(); i++) {
         Matrix dataFrame = data.get(i)
-        String sheetName = sheetNames.toArray()[i]
+        String sheetName = uniqueSheetNames.get(i)
         SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(positions.get(i))
         buildSheet(dataFrame, workbook.newWorksheet(sheetName), position)
-        actualSheetNames.add(sheetName)
       }
-      return actualSheetNames
+      return uniqueSheetNames
     } catch (IOException e) {
-      logger.error("Failed to create excel file {}" + file.getAbsolutePath(), e)
+      logger.error("Failed to create excel file {}", file.getAbsolutePath(), e)
       throw new IOException("Failed to create excel file ${file}", e)
     }
   }
@@ -193,28 +184,4 @@ class FExcelExporter {
     }
   }
 
-  private static String upsertSheet(Matrix dataFrame, String sheetName, Workbook workbook) {
-    /*Worksheet sheet = workbook.getSheet(sheetName)
-    if (sheet == null) {
-      sheet = workbook.createSheet(SpreadsheetUtil.createValidSheetName(sheetName))
-    }
-    buildSheet(dataFrame, sheet)
-    return sheet.getSheetName()*/
-    System.err.println("Not yet implemented")
-    return null
-  }
-
-  /*
-  private static void writeFile(File file, Workbook workbook) throws IOException {
-    if (workbook == null) {
-      logger.warn("Workbook is null, cannot write to file")
-      return
-    }
-    logger.info("Writing spreadsheet to {}", file.getAbsolutePath())
-    // default is 100 000 000, 600M takes up about 1 GB of memory
-    //IOUtils.setByteArrayMaxOverride(600_000_000)
-    try (FileOutputStream fos = new FileOutputStream(file)) {
-      workbook.write(fos)
-    }
-  }*/
 }

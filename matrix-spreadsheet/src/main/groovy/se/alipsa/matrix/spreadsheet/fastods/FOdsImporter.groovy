@@ -2,6 +2,8 @@ package se.alipsa.matrix.spreadsheet.fastods
 
 import groovy.transform.CompileStatic
 import org.apache.commons.io.IOUtils
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
@@ -18,6 +20,7 @@ import java.text.NumberFormat
 @CompileStatic
 class FOdsImporter implements Importer {
 
+  private static final Logger logger = LogManager.getLogger()
   OdsDataReader odsDataReader
 
   static FOdsImporter create(OdsDataReader odsDataReader = OdsDataReader.create()) {
@@ -49,7 +52,6 @@ class FOdsImporter implements Importer {
                            int startRow = 1, int endRow,
                            int startCol = 1, int endCol,
                           boolean firstRowAsColNames = true) {
-    //println("FOdsImporter.importOds: file=$file, sheetNumber=$sheetNumber, startRow=$startRow, endRow=$endRow, startCol=$startCol, endCol=$endCol, firstRowAsColNames=$firstRowAsColNames")
     File odsFile = FileUtil.checkFilePath(file)
     Sheet sheet
     try (FileInputStream fis = new FileInputStream(odsFile)) {
@@ -222,8 +224,12 @@ class FOdsImporter implements Importer {
       throw new IllegalArgumentException("sheet is null, impossible to build a Matrix from that")
     }
     if (sheet.size() == 0) {
-      println("sheet ${sheet?.sheetName} is empty, nothing to do, return Matrix as null")
-      return null
+      logger.debug("Sheet '{}' is empty, returning empty Matrix", sheet?.sheetName)
+      return Matrix.builder()
+          .matrixName(sheet.sheetName)
+          .columnNames([])
+          .rows([])
+          .build()
     }
     def header = buildHeaderRow(sheet, firstRowAsColNames)
     Matrix.builder()

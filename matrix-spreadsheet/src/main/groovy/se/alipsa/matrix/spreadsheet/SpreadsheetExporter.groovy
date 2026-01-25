@@ -6,7 +6,7 @@ import se.alipsa.matrix.core.Matrix
 /**
  * Exports Matrix data to spreadsheet files (Excel, ODS).
  *
- * @deprecated Use {@link SpreadsheetWriter} instead. This class will be removed in v2.0.
+ * @deprecated Use {@link SpreadsheetWriter} instead. This class will be removed in v3.0.
  * <p>Migration guide:</p>
  * <ul>
  *   <li>{@code SpreadsheetExporter.exportSpreadsheet(file, data)} → {@code SpreadsheetWriter.write(data, file)}</li>

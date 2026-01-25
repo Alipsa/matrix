@@ -4,6 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 plugins {
   id('groovy')
   id('java-library')
+  id('jacoco')
   id('signing')
   id('maven-publish')
   //id("se.alipsa.nexus-release-plugin") version "1.0.1"
@@ -63,15 +64,17 @@ dependencies {
 
 test {
   jvmArgs '-Xmx2g'
-  useJUnitPlatform() {
-    excludeTags 'slow'
-  }
   // Allow enabling from CLI:  -PrunSlowTests=true  (or env RUN_SLOW_TESTS=true)
   def runSlow = (project.findProperty('runSlowTests') ?: System.getenv('RUN_SLOW_TESTS'))?.toString()?.toBoolean() ?: false
-  if (runSlow) {
-    useJUnitPlatform {
-      excludeTags()  // clear the default exclusion
+  def odsProfile = (project.findProperty('odsProfile') ?: System.getenv('ODS_PROFILE'))?.toString()?.toBoolean() ?: false
+  useJUnitPlatform {
+    if (!runSlow) {
+      excludeTags 'slow'
     }
+  }
+  systemProperty 'matrix.spreadsheet.ods.profile', odsProfile.toString()
+  if (odsProfile) {
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', 'info'
   }
   testLogging {
     // set options for log level LIFECYCLE
@@ -107,6 +110,72 @@ test {
         println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
       }
     }
+  }
+}
+
+// JaCoCo configuration for code coverage
+jacoco {
+  toolVersion = "0.8.12"
+}
+
+def jacocoCoverageExclusions = [
+  '**/*_closure*.class',
+  '**/*Exception.class'
+]
+
+def jacocoTestExclusions = [
+  '**/*Test.class',
+  '**/*Test$*.class'
+]
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+    html.required = true
+    csv.required = false
+  }
+  afterEvaluate {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+      fileTree(dir: it, exclude: jacocoTestExclusions + jacocoCoverageExclusions)
+    }))
+  }
+}
+
+jacocoTestCoverageVerification {
+  dependsOn jacocoTestReport
+  afterEvaluate {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+      fileTree(dir: it, exclude: jacocoTestExclusions + jacocoCoverageExclusions)
+    }))
+  }
+  violationRules {
+    rule {
+      limit {
+        counter = 'LINE'
+        minimum = 0.70 // 70% overall coverage minimum
+      }
+    }
+  }
+}
+
+check.dependsOn jacocoTestCoverageVerification
+
+tasks.register('spreadsheetBenchmark', JavaExec) {
+  group = 'benchmark'
+  description = 'Run matrix-spreadsheet read/write benchmark'
+  classpath = sourceSets.test.runtimeClasspath
+  mainClass = 'spreadsheet.SpreadsheetBenchmark'
+  def format = project.findProperty('format') ?: 'all'
+  def rows = project.findProperty('rows') ?: '50000'
+  def cols = project.findProperty('cols') ?: '12'
+  def warmups = project.findProperty('warmups') ?: '1'
+  def runs = project.findProperty('runs') ?: '3'
+  def mode = project.findProperty('mode') ?: 'readwrite'
+  args format, rows, cols, warmups, runs, mode
+  if (project.hasProperty('odsProfile')) {
+    systemProperty 'matrix.spreadsheet.ods.profile', project.findProperty('odsProfile')
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', 'info'
   }
 }
 

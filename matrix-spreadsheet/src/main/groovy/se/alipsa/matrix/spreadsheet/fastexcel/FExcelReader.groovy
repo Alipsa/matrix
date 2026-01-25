@@ -82,7 +82,6 @@ class FExcelReader implements SpreadsheetReader {
   int findRowNum(String sheetName, String colName, String content) {
     Sheet sheet = workbook.findSheet(sheetName)
         .orElseThrow(() -> new IllegalArgumentException("Failed to find sheet $sheetName"))
-    if (sheet == null) return -1
     return findRowNum(sheet, SpreadsheetUtil.asColumnNumber(colName), content)
   }
 
@@ -145,10 +144,10 @@ class FExcelReader implements SpreadsheetReader {
   int findColNum(Sheet sheet, int rowNumber, String content) {
     if (content == null) return -1
     FExcelValueExtractor ext = new FExcelValueExtractor(sheet, workbook.isDate1904())
-    Row row = FExcelUtil.getRow(sheet, rowNumber -1)
+    Row row = FExcelUtil.getRow(sheet, rowNumber - 1)
+    if (row == null) return -1
     for (int colNum = 0; colNum < row.cellCount; colNum++) {
       Cell cell = row.getCell(colNum)
-      //println "FExcelReader.findColNum: row $rowNumber, col $colNum, cell: ${ext.getString(cell)}"
       if (content == ext.getString(cell)) {
         return colNum + 1
       }
@@ -184,14 +183,15 @@ class FExcelReader implements SpreadsheetReader {
   }
 
   static int findLastCol(Sheet sheet, int numRowsToScan = 10) {
-    Stream<Row> it = sheet.openStream()
     int maxColumn = -1
-    it.eachWithIndex { Row row, int i ->
-      def nCol = row.size()
-      if (nCol > maxColumn) {
-        maxColumn = nCol
+    try (Stream<Row> rows = sheet.openStream()) {
+      rows.eachWithIndex { Row row, int i ->
+        def nCol = row.size()
+        if (nCol > maxColumn) {
+          maxColumn = nCol
+        }
+        if (i > numRowsToScan) return
       }
-      if (i > numRowsToScan) return
     }
     return maxColumn
   }

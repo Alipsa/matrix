@@ -76,6 +76,36 @@ class SpreadsheetReaderTest {
     }
   }
 
+  @Test
+  void testFindColNumInNonExistentRow() {
+    // Test that searching in a row beyond the data returns -1 (not NPE)
+    withBook1Reader { SpreadsheetReader reader, String spreadsheetName ->
+      int result = reader.findColNum(1, 9999, 'anything')
+      assertEquals(-1, result,
+          "$spreadsheetName: findColNum on non-existent row should return -1")
+    }
+  }
+
+  @Test
+  void testFindRowNumContentNotFound() {
+    // Test that searching for non-existent content returns -1
+    withBook1Reader { SpreadsheetReader reader, String spreadsheetName ->
+      int result = reader.findRowNum(1, 'A', 'this-content-does-not-exist')
+      assertEquals(-1, result,
+          "$spreadsheetName: findRowNum for non-existent content should return -1")
+    }
+  }
+
+  @Test
+  void testFindColNumContentNotFound() {
+    // Test that searching for non-existent content in a valid row returns -1
+    withBook1Reader { SpreadsheetReader reader, String spreadsheetName ->
+      int result = reader.findColNum(1, 1, 'this-content-does-not-exist')
+      assertEquals(-1, result,
+          "$spreadsheetName: findColNum for non-existent content should return -1")
+    }
+  }
+
   private static void withBook1Reader(Closure action) {
     BOOK1_FILES.each { String spreadsheetName ->
       try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheetName)) {

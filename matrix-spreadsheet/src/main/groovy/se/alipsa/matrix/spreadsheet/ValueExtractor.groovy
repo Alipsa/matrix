@@ -22,7 +22,7 @@ abstract class ValueExtractor {
          return Double.parseDouble(strVal)
       } catch (NumberFormatException e) {
          try {
-            percentFormat.parse(strVal).doubleValue()
+            return percentFormat.parse(strVal).doubleValue()
          } catch (ParseException ignored) {
             // do nothing
          }

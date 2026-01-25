@@ -371,6 +371,84 @@ class SpreadsheetWriterTest {
     assertEquals(replacement, imported)
   }
 
+  @Test
+  void testSheetNameCollisionHandlingXlsx() {
+    // Test that duplicate sheet names after sanitization are handled
+    def file = File.createTempFile("matrix-collision", ".xlsx")
+    if (file.exists()) file.delete()
+
+    Matrix m1 = Matrix.builder().data(id: [1]).build()
+    Matrix m2 = Matrix.builder().data(id: [2]).build()
+    Matrix m3 = Matrix.builder().data(id: [3]).build()
+
+    // Names that become identical after sanitization (A/B, A?B, A*B all become "A B")
+    List<String> sheetNames = SpreadsheetWriter.writeSheets([m1, m2, m3], file, ["A/B", "A?B", "A*B"])
+
+    assertNotNull(sheetNames)
+    assertEquals(3, sheetNames.size())
+    // Should be de-duplicated with numeric suffixes
+    assertEquals("A B", sheetNames[0])
+    assertEquals("A B1", sheetNames[1])
+    assertEquals("A B2", sheetNames[2])
+
+    try (def reader = SpreadsheetReader.Factory.create(file)) {
+      assertEquals(3, reader.sheetNames.size(), "Should have three unique sheets")
+    }
+  }
+
+  @Test
+  void testSheetNameCollisionHandlingOds() {
+    // Test that duplicate sheet names after sanitization are handled for ODS
+    def file = File.createTempFile("matrix-collision", ".ods")
+    if (file.exists()) file.delete()
+
+    Matrix m1 = Matrix.builder().data(id: [1]).build()
+    Matrix m2 = Matrix.builder().data(id: [2]).build()
+
+    // Duplicate names
+    List<String> sheetNames = SpreadsheetWriter.writeSheets([m1, m2], file, ["Data", "Data"])
+
+    assertNotNull(sheetNames)
+    assertEquals(2, sheetNames.size())
+    assertEquals("Data", sheetNames[0])
+    assertEquals("Data1", sheetNames[1])
+
+    try (def reader = SpreadsheetReader.Factory.create(file)) {
+      assertEquals(2, reader.sheetNames.size(), "Should have two unique sheets")
+    }
+  }
+
+  @Test
+  void testMaxSheetNameLength() {
+    // Test that long sheet names are truncated to 31 characters
+    def file = File.createTempFile("matrix-longname", ".xlsx")
+    if (file.exists()) file.delete()
+
+    String longName = "A" * 50  // 50 characters
+    String sheetName = SpreadsheetWriter.write(table3, file, longName)
+
+    assertEquals(31, sheetName.length(), "Sheet name should be truncated to 31 chars")
+
+    try (def reader = SpreadsheetReader.Factory.create(file)) {
+      assertEquals(31, reader.sheetNames[0].length())
+    }
+  }
+
+  @Test
+  void testSingleCellMatrix() {
+    // Test writing and reading a single-cell matrix
+    def file = File.createTempFile("matrix-singlecell", ".xlsx")
+    if (file.exists()) file.delete()
+
+    Matrix singleCell = Matrix.builder().data(value: [42]).build()
+    SpreadsheetWriter.write(singleCell, file, "Single")
+
+    Matrix imported = SpreadsheetImporter.importSpreadsheet(file.absolutePath, "Single", 1, 2, 1, 1, true)
+    assertEquals(1, imported.rowCount())
+    assertEquals(1, imported.columnCount())
+    assertEquals(42, imported[0, 0, Integer])
+  }
+
   private static File copyResourceToTempFile(String resourceName, String suffix) {
     File file = File.createTempFile("matrix-resource", suffix)
     InputStream is = SpreadsheetWriterTest.class.getResourceAsStream("/${resourceName}")

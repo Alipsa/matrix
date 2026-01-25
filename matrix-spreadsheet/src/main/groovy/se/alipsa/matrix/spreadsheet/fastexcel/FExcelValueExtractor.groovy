@@ -96,11 +96,13 @@ class FExcelValueExtractor extends ValueExtractor {
    }
 
    LocalDateTime getLocalDateTime(Row row, int column) {
-      return getLocalDateTime(row.getCell(column))
+      return row == null ? null : getLocalDateTime(row.getCell(column))
    }
 
    LocalDateTime getLocalDateTime(Cell cell) {
-      return LocalDateTime.parse(String.valueOf(getObject(cell)), SpreadsheetUtil.dateTimeFormatter)
+      Object value = getObject(cell)
+      if (value == null) return null
+      return LocalDateTime.parse(String.valueOf(value), SpreadsheetUtil.dateTimeFormatter)
    }
 
    /**
@@ -126,7 +128,6 @@ class FExcelValueExtractor extends ValueExtractor {
                   return date
                }
             } else {
-               //println ("adding number " + cell.asNumber())
                return cell.asNumber()
             }
          case CellType.BOOLEAN:
@@ -145,7 +146,6 @@ class FExcelValueExtractor extends ValueExtractor {
       Integer dataFormatId = cell.dataFormatId
       String dateFormatString = cell.dataFormatString
       if (FDateUtil.isADateFormat(dataFormatId, dateFormatString)) {
-         //println "adding FORMULA date $rawValue"
          def date = FDateUtil.convertToDate(ValueConverter.asDouble(rawValue), isDate1904)
          if (!dateFormatString.toLowerCase().contains('hh') && date.hour == 0 && date.minute == 0) {
             return date.toLocalDate()
@@ -153,10 +153,8 @@ class FExcelValueExtractor extends ValueExtractor {
             return date
          }
       } else if (ValueConverter.isNumeric(rawValue)){
-         //println "adding FORMULA number $rawValue"
          return ValueConverter.asNumber(rawValue)
       } else {
-         //println "adding FORMULA string $rawValue"
          return rawValue
       }
    }
