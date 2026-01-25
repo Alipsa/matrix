@@ -68,8 +68,9 @@ final class OdsStreamDataReader extends OdsDataReader {
         List<Object> rowValues = processRow(reader, startColumn, endColumn)
         boolean isEmptyRow = rowValues == null || rowValues.isEmpty() || rowValues.every { it == null }
 
-        boolean exceedsRequested = endRow == Integer.MAX_VALUE && endRow > rowCount + repeatRows
-        if (isEmptyRow && repeatRows > TRAILING_EMPTY_ROW_THRESHOLD && exceedsRequested) {
+        boolean isUnbounded = endRow == Integer.MAX_VALUE
+        boolean exceedsRequested = !isUnbounded && endRow > rowCount + repeatRows
+        if (isEmptyRow && repeatRows > TRAILING_EMPTY_ROW_THRESHOLD && (isUnbounded || exceedsRequested)) {
           // ODS files often encode trailing empty rows with a huge repeat count.
           // Stop here to avoid inflating row counts and memory usage.
           break
