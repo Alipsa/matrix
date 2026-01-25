@@ -15,6 +15,7 @@ import javax.xml.stream.XMLStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.util.Collections
 import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -30,13 +31,18 @@ class FOdsAppender {
   private static final String MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet"
 
   static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames) {
+    return appendOrReplaceSheets(file, data, sheetNames, null)
+  }
+
+  static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions) {
     if (!file.exists() || file.length() == 0) {
-      return FOdsExporter.exportOdsSheets(file, data, sheetNames)
+      return FOdsExporter.exportOdsSheets(file, data, sheetNames, startPositions)
     }
     if (data.size() != sheetNames.size()) {
       throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
     }
     Map<String, Matrix> requested = buildRequestedMap(data, sheetNames)
+    Map<String, String> positions = buildPositionMap(sheetNames, startPositions)
     File tmp = File.createTempFile("matrix-ods", ".ods", file.parentFile)
     boolean moved = false
     try {
@@ -51,14 +57,14 @@ class FOdsAppender {
             continue
           }
           if (name == "content.xml") {
-            writeContentXml(zip.getInputStream(entry), zos, requested)
+            writeContentXml(zip.getInputStream(entry), zos, requested, positions)
             contentWritten = true
             continue
           }
           copyEntry(zip, entry, zos)
         }
         if (!contentWritten) {
-          writeContentXml(null, zos, requested)
+          writeContentXml(null, zos, requested, positions)
         }
       }
       Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
@@ -78,6 +84,19 @@ class FOdsAppender {
       requested.put(name, data.get(i))
     }
     requested
+  }
+
+  private static Map<String, String> buildPositionMap(List<String> sheetNames, List<String> startPositions) {
+    List<String> positions = startPositions ?: Collections.nCopies(sheetNames.size(), "A1")
+    if (sheetNames.size() != positions.size()) {
+      throw new IllegalArgumentException("Sheet names and start positions lists must have the same size")
+    }
+    Map<String, String> result = new LinkedHashMap<>()
+    for (int i = 0; i < sheetNames.size(); i++) {
+      String name = SpreadsheetUtil.createValidSheetName(sheetNames.get(i))
+      result.put(name, positions.get(i) ?: "A1")
+    }
+    result
   }
 
   private static void writeMimetype(ZipFile zip, ZipOutputStream zos) {
@@ -109,7 +128,7 @@ class FOdsAppender {
     zos.closeEntry()
   }
 
-  private static void writeContentXml(InputStream input, ZipOutputStream zos, Map<String, Matrix> requested) {
+  private static void writeContentXml(InputStream input, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
     ZipEntry out = new ZipEntry("content.xml")
     zos.putNextEntry(out)
     if (input == null) {
@@ -154,10 +173,11 @@ class FOdsAppender {
             capturingBase = false
             capturingColumns = false
             baseDepth = 0
-            OdsXmlWriter.writeTable(writer, requested.get(name), name, template)
-            replaced.add(name)
-            continue
-          }
+          String startPosition = positions.get(name) ?: "A1"
+          OdsXmlWriter.writeTable(writer, requested.get(name), name, template, startPosition)
+          replaced.add(name)
+          continue
+        }
         }
         if (capturingBase) {
           if (event == XMLStreamConstants.START_ELEMENT && reader.localName == "table") {
@@ -178,7 +198,8 @@ class FOdsAppender {
         if (event == XMLStreamConstants.END_ELEMENT && reader.localName == "spreadsheet" && officeUrn == reader.namespaceURI) {
           requested.each { String name, Matrix matrix ->
             if (!replaced.contains(name)) {
-              OdsXmlWriter.writeTable(writer, matrix, name, baseTemplate)
+              String startPosition = positions.get(name) ?: "A1"
+              OdsXmlWriter.writeTable(writer, matrix, name, baseTemplate, startPosition)
             }
           }
           writer.writeEndElement()

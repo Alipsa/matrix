@@ -7,6 +7,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.nio.charset.StandardCharsets
+import java.util.Collections
 import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -23,15 +24,15 @@ class FOdsExporter {
 
   static String exportOds(File file, Matrix dataFrame) {
     String sheetName = SpreadsheetUtil.createValidSheetName(dataFrame.matrixName)
-    return exportOdsSheets(file, [dataFrame], [sheetName])[0]
+    return exportOdsSheets(file, [dataFrame], [sheetName], ["A1"])[0]
   }
 
   static String exportOds(File file, Matrix dataFrame, String sheetName) {
-    return exportOdsSheets(file, [dataFrame], [sheetName])[0]
+    return exportOdsSheets(file, [dataFrame], [sheetName], ["A1"])[0]
   }
 
   static String exportOds(String filePath, Matrix dataFrame, String sheetName) {
-    return exportOdsSheets(new File(filePath), [dataFrame], [sheetName])[0]
+    return exportOdsSheets(new File(filePath), [dataFrame], [sheetName], ["A1"])[0]
   }
 
   static List<String> exportOdsSheets(String filePath, List<Matrix> data, List<String> sheetNames) {
@@ -39,14 +40,22 @@ class FOdsExporter {
   }
 
   static List<String> exportOdsSheets(File file, List<Matrix> data, List<String> sheetNames) {
+    return exportOdsSheets(file, data, sheetNames, null)
+  }
+
+  static List<String> exportOdsSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions) {
     if (file.exists() && file.length() > 0) {
       throw new IllegalArgumentException("Appending to an existing ODS file is not supported by FOdsExporter. Use FOdsAppender or SpreadsheetWriter for append/replace operations.")
     }
     if (data.size() != sheetNames.size()) {
       throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
     }
+    List<String> positions = startPositions ?: Collections.nCopies(sheetNames.size(), "A1")
+    if (positions.size() != sheetNames.size()) {
+      throw new IllegalArgumentException("Sheet names and start positions lists must have the same size")
+    }
     List<String> actualSheetNames = sheetNames.collect { SpreadsheetUtil.createValidSheetName(it) }
-    String contentXml = buildContentXml(data, actualSheetNames)
+    String contentXml = buildContentXml(data, actualSheetNames, positions)
     String stylesXml = buildStylesXml()
     String metaXml = buildMetaXml()
     String manifestXml = buildManifestXml()
@@ -86,8 +95,8 @@ class FOdsExporter {
     zos.closeEntry()
   }
 
-  private static String buildContentXml(List<Matrix> data, List<String> sheetNames) {
-    OdsXmlWriter.buildContentXml(data, sheetNames)
+  private static String buildContentXml(List<Matrix> data, List<String> sheetNames, List<String> startPositions) {
+    OdsXmlWriter.buildContentXml(data, sheetNames, startPositions)
   }
 
   private static String buildStylesXml() {

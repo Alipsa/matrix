@@ -32,6 +32,7 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import java.io.StringReader
 import java.util.regex.Pattern
+import java.util.Collections
 
 @CompileStatic
 class FExcelAppender {
@@ -44,19 +45,24 @@ class FExcelAppender {
   private static final String WORKSHEET_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
 
   static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames) {
+    return appendOrReplaceSheets(file, data, sheetNames, null)
+  }
+
+  static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions) {
     if (!file.exists() || file.length() == 0) {
-      return FExcelExporter.exportExcelSheets(file, data, sheetNames)
+      return FExcelExporter.exportExcelSheets(file, data, sheetNames, startPositions)
     }
     if (data.size() != sheetNames.size()) {
       throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
     }
     Map<String, Matrix> requested = buildRequestedMap(data, sheetNames)
+    Map<String, String> positions = buildPositionMap(sheetNames, startPositions)
     File tmp = File.createTempFile("matrix-xlsx", ".xlsx", file.parentFile)
     boolean moved = false
     try {
       try (ZipFile zip = new ZipFile(file); FileOutputStream fos = new FileOutputStream(tmp); ZipOutputStream zos = new ZipOutputStream(fos)) {
         WorkbookState state = readWorkbookState(zip)
-        WorkbookPlan plan = buildPlan(state, requested)
+        WorkbookPlan plan = buildPlan(state, requested, positions)
 
         Enumeration<? extends ZipEntry> entries = zip.entries()
         Set<String> written = new HashSet<>()
@@ -116,6 +122,19 @@ class FExcelAppender {
     requested
   }
 
+  private static Map<String, String> buildPositionMap(List<String> sheetNames, List<String> startPositions) {
+    List<String> positions = startPositions ?: Collections.nCopies(sheetNames.size(), "A1")
+    if (sheetNames.size() != positions.size()) {
+      throw new IllegalArgumentException("Sheet names and start positions lists must have the same size")
+    }
+    Map<String, String> result = new LinkedHashMap<>()
+    for (int i = 0; i < sheetNames.size(); i++) {
+      String name = SpreadsheetUtil.createValidSheetName(sheetNames.get(i))
+      result.put(name, positions.get(i) ?: "A1")
+    }
+    result
+  }
+
   private static WorkbookState readWorkbookState(ZipFile zip) {
     String workbookXml = readEntry(zip, WORKBOOK_PATH)
     String relsXml = readEntry(zip, RELS_PATH)
@@ -124,7 +143,7 @@ class FExcelAppender {
     return new WorkbookState(workbookXml, relsXml, contentXml, appXml, zip)
   }
 
-  private static WorkbookPlan buildPlan(WorkbookState state, Map<String, Matrix> requested) {
+  private static WorkbookPlan buildPlan(WorkbookState state, Map<String, Matrix> requested, Map<String, String> positions) {
     Document workbook = parseXml(state.workbookXml)
     Document rels = parseXml(state.relsXml)
     Document types = parseXml(state.contentTypesXml)
@@ -144,10 +163,11 @@ class FExcelAppender {
     baseTemplate = ensureTemplate(state.zip, existing, baseTemplate)
 
     requested.each { String name, Matrix matrix ->
+      String startPosition = positions.get(name) ?: "A1"
       SheetInfo info = existing.get(name)
       if (info != null) {
         SheetTemplate template = templateForPath(state.zip, templateCache, info.path) ?: baseTemplate
-        replacements.put(info.path, buildSheetXml(matrix, template))
+        replacements.put(info.path, buildSheetXml(matrix, template, startPosition))
       } else {
         String sheetPath = "xl/worksheets/sheet${nextSheetIndex++}.xml"
         String relId = "rId${nextRelId++}"
@@ -155,7 +175,7 @@ class FExcelAppender {
         addSheet(workbook, name, sheetId, relId)
         addRelationship(rels, relId, sheetPath)
         addContentType(types, sheetPath)
-        additions.put(sheetPath, buildSheetXml(matrix, baseTemplate))
+        additions.put(sheetPath, buildSheetXml(matrix, baseTemplate, startPosition))
         existing.put(name, new SheetInfo(name, sheetId, relId, sheetPath, sheetId, relIdNumber(relId), sheetNumberFromPath(sheetPath)))
       }
     }
@@ -348,12 +368,13 @@ class FExcelAppender {
     out.toString()
   }
 
-  private static String buildSheetXml(Matrix matrix, SheetTemplate template) {
+  private static String buildSheetXml(Matrix matrix, SheetTemplate template, String startPosition) {
+    SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(startPosition)
     StringBuilder sb = new StringBuilder()
     sb.append('<?xml version="1.0" encoding="UTF-8"?>')
     sb.append('<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ')
       .append('xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">')
-    sb.append('<dimension ref="').append(sheetDimension(matrix)).append('"/>')
+    sb.append('<dimension ref="').append(sheetDimension(matrix, position)).append('"/>')
     if (template?.sheetFormatXml) {
       sb.append(template.sheetFormatXml)
     } else if (template?.sheetFormatAttributes && !template.sheetFormatAttributes.isEmpty()) {
@@ -367,7 +388,8 @@ class FExcelAppender {
       sb.append(template.colsXml)
     }
     sb.append('<sheetData>')
-    writeRow(sb, 1, matrix.columnNames())
+    writeEmptyRows(sb, position.row - 1)
+    writeRow(sb, position.row, matrix.columnNames(), position.column)
     List<Column> columns = matrix.columns()
     int rowCount = matrix.rowCount()
     int colCount = columns.size()
@@ -376,7 +398,7 @@ class FExcelAppender {
       for (int c = 0; c < colCount; c++) {
         row.add(columns.get(c).get(r))
       }
-      writeRow(sb, r + 2, row)
+      writeRow(sb, position.row + r + 1, row, position.column)
     }
     sb.append('</sheetData>')
     if (template?.pageMarginsXml) {
@@ -386,19 +408,37 @@ class FExcelAppender {
     sb.toString()
   }
 
-  private static String sheetDimension(Matrix matrix) {
+  private static String sheetDimension(Matrix matrix, SpreadsheetUtil.CellPosition position) {
     int rowCount = Math.max(1, matrix.rowCount() + 1)
     int colCount = Math.max(1, matrix.columnCount())
-    String lastCol = SpreadsheetUtil.asColumnName(colCount)
-    return "A1:${lastCol}${rowCount}"
+    int startRow = position.row
+    int startCol = position.column
+    int lastRow = startRow + rowCount - 1
+    int lastColNum = startCol + colCount - 1
+    String startColName = SpreadsheetUtil.asColumnName(startCol)
+    String lastColName = SpreadsheetUtil.asColumnName(lastColNum)
+    return "${startColName}${startRow}:${lastColName}${lastRow}"
   }
 
-  private static void writeRow(StringBuilder sb, int rowNum, List<?> values) {
+  private static void writeRow(StringBuilder sb, int rowNum, List<?> values, int startCol) {
     sb.append('<row r="').append(rowNum).append('">')
+    appendEmptyCells(sb, startCol - 1)
     values.each { Object value ->
       appendCell(sb, value)
     }
     sb.append('</row>')
+  }
+
+  private static void writeEmptyRows(StringBuilder sb, int count) {
+    for (int i = 1; i <= count; i++) {
+      sb.append('<row r="').append(i).append('"/>')
+    }
+  }
+
+  private static void appendEmptyCells(StringBuilder sb, int count) {
+    for (int i = 0; i < count; i++) {
+      sb.append('<c/>')
+    }
   }
 
   private static void appendCell(StringBuilder sb, Object value) {

@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
+import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -77,6 +78,22 @@ class SpreadsheetWriterTest {
   }
 
   @Test
+  void testWriteExcelWithStartPosition() {
+    def file = File.createTempFile("matrix-writer-offset", ".xlsx")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    String sheetName = SpreadsheetWriter.write(table, file, "Offset", "B3")
+    SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition("B3")
+    int endRow = position.row + table.rowCount()
+    int endCol = position.column + table.columnCount() - 1
+    Matrix imported = SpreadsheetImporter.importSpreadsheet(file.absolutePath, sheetName, position.row, endRow, position.column, endCol, true)
+
+    assertTrue(table.equals(imported, false, true, true), "Imported matrix should match written data")
+  }
+
+  @Test
   void testWriteMultipleSheets() {
     def file = File.createTempFile("matrix-writer-multi", ".xlsx")
     if (file.exists()) {
@@ -93,6 +110,44 @@ class SpreadsheetWriterTest {
       assertEquals(3, reader.sheetNames.size(), "Should have three sheets")
       assertEquals(["Sheet1", "Sheet2", "Sheet3"], reader.sheetNames)
     }
+  }
+
+  @Test
+  void testWriteMultipleSheetsWithPositionsMap() {
+    def file = File.createTempFile("matrix-writer-map-pos", ".xlsx")
+    if (file.exists()) {
+      file.delete()
+    }
+
+    LinkedHashMap<String, String> positions = ["First": "B2", "Second": "D4"]
+    List<String> sheetNames = SpreadsheetWriter.writeSheets([table2, table3], file, positions)
+
+    assertNotNull(sheetNames)
+    assertEquals(["First", "Second"], sheetNames)
+
+    SpreadsheetUtil.CellPosition pos1 = SpreadsheetUtil.parseCellPosition("B2")
+    SpreadsheetUtil.CellPosition pos2 = SpreadsheetUtil.parseCellPosition("D4")
+    Matrix imported1 = SpreadsheetImporter.importSpreadsheet(
+        file.absolutePath,
+        "First",
+        pos1.row,
+        pos1.row + table2.rowCount(),
+        pos1.column,
+        pos1.column + table2.columnCount() - 1,
+        true
+    )
+    Matrix imported2 = SpreadsheetImporter.importSpreadsheet(
+        file.absolutePath,
+        "Second",
+        pos2.row,
+        pos2.row + table3.rowCount(),
+        pos2.column,
+        pos2.column + table3.columnCount() - 1,
+        true
+    )
+
+    assertTrue(table2.equals(imported1, false, true, true), "First sheet should match written data")
+    assertTrue(table3.equals(imported2, false, true, true), "Second sheet should match written data")
   }
 
   @Test
@@ -131,6 +186,22 @@ class SpreadsheetWriterTest {
     try (def reader = SpreadsheetReader.Factory.create(odsFile)) {
       assertEquals(1, reader.sheetNames.size())
     }
+  }
+
+  @Test
+  void testWriteOdsWithStartPosition() {
+    File odsFile = File.createTempFile("matrix-writer-ods-offset", ".ods")
+    if (odsFile.exists()) {
+      odsFile.delete()
+    }
+
+    String sheetName = SpreadsheetWriter.write(table, odsFile, "Sheet 1", "C2")
+    SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition("C2")
+    int endRow = position.row + table.rowCount()
+    int endCol = position.column + table.columnCount() - 1
+    Matrix imported = SpreadsheetImporter.importSpreadsheet(odsFile.absolutePath, sheetName, position.row, endRow, position.column, endCol, true)
+
+    assertTrue(table.equals(imported, false, true, true), "Imported ODS data should match written data")
   }
 
   @Test
