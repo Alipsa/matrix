@@ -52,51 +52,59 @@ class FExcelAppender {
     }
     Map<String, Matrix> requested = buildRequestedMap(data, sheetNames)
     File tmp = File.createTempFile("matrix-xlsx", ".xlsx", file.parentFile)
-    try (ZipFile zip = new ZipFile(file); FileOutputStream fos = new FileOutputStream(tmp); ZipOutputStream zos = new ZipOutputStream(fos)) {
-      WorkbookState state = readWorkbookState(zip)
-      WorkbookPlan plan = buildPlan(state, requested)
+    boolean moved = false
+    try {
+      try (ZipFile zip = new ZipFile(file); FileOutputStream fos = new FileOutputStream(tmp); ZipOutputStream zos = new ZipOutputStream(fos)) {
+        WorkbookState state = readWorkbookState(zip)
+        WorkbookPlan plan = buildPlan(state, requested)
 
-      Enumeration<? extends ZipEntry> entries = zip.entries()
-      Set<String> written = new HashSet<>()
-      while (entries.hasMoreElements()) {
-        ZipEntry entry = entries.nextElement()
-        String name = entry.name
-        if (name == WORKBOOK_PATH) {
-          writeEntry(zos, WORKBOOK_PATH, plan.workbookXml)
-          written.add(WORKBOOK_PATH)
-          continue
-        }
-        if (name == RELS_PATH) {
-          writeEntry(zos, RELS_PATH, plan.relsXml)
-          written.add(RELS_PATH)
-          continue
-        }
-        if (name == CONTENT_TYPES) {
-          writeEntry(zos, CONTENT_TYPES, plan.contentTypesXml)
-          written.add(CONTENT_TYPES)
-          continue
-        }
-        if (name == APP_PATH) {
-          writeEntry(zos, APP_PATH, plan.appXml)
-          written.add(APP_PATH)
-          continue
-        }
-        if (plan.replacements.containsKey(name)) {
-          writeEntry(zos, name, plan.replacements.get(name))
+        Enumeration<? extends ZipEntry> entries = zip.entries()
+        Set<String> written = new HashSet<>()
+        while (entries.hasMoreElements()) {
+          ZipEntry entry = entries.nextElement()
+          String name = entry.name
+          if (name == WORKBOOK_PATH) {
+            writeEntry(zos, WORKBOOK_PATH, plan.workbookXml)
+            written.add(WORKBOOK_PATH)
+            continue
+          }
+          if (name == RELS_PATH) {
+            writeEntry(zos, RELS_PATH, plan.relsXml)
+            written.add(RELS_PATH)
+            continue
+          }
+          if (name == CONTENT_TYPES) {
+            writeEntry(zos, CONTENT_TYPES, plan.contentTypesXml)
+            written.add(CONTENT_TYPES)
+            continue
+          }
+          if (name == APP_PATH) {
+            writeEntry(zos, APP_PATH, plan.appXml)
+            written.add(APP_PATH)
+            continue
+          }
+          if (plan.replacements.containsKey(name)) {
+            writeEntry(zos, name, plan.replacements.get(name))
+            written.add(name)
+            continue
+          }
+          copyEntry(zip, entry, zos)
           written.add(name)
-          continue
         }
-        copyEntry(zip, entry, zos)
-        written.add(name)
+        plan.additions.each { String path, String xml ->
+          if (!written.contains(path)) {
+            writeEntry(zos, path, xml)
+          }
+        }
       }
-      plan.additions.each { String path, String xml ->
-        if (!written.contains(path)) {
-          writeEntry(zos, path, xml)
-        }
+      Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
+      moved = true
+      return requested.keySet().toList()
+    } finally {
+      if (!moved && tmp.exists()) {
+        tmp.delete()
       }
     }
-    Files.move(tmp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
-    return requested.keySet().toList()
   }
 
   private static Map<String, Matrix> buildRequestedMap(List<Matrix> data, List<String> sheetNames) {
