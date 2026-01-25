@@ -145,6 +145,7 @@ class SpreadsheetWriter {
     if (matrices == null) {
       throw new IllegalArgumentException("Matrices list cannot be null")
     }
+    // LinkedHashMap preserves insertion order and cannot contain duplicate keys.
     if (sheetNamesAndPositions.size() != matrices.size()) {
       throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
     }

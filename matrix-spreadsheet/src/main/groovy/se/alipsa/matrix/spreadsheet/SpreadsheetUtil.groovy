@@ -76,7 +76,7 @@ class SpreadsheetUtil {
          throw new IllegalArgumentException("Start position cannot be null")
       }
       String trimmed = position.trim()
-      Pattern pattern = Pattern.compile("^([A-Z]+)(\\d+)\$")
+      Pattern pattern = ~/^([A-Z]+)(\d+)$/
       def matcher = pattern.matcher(trimmed.toUpperCase())
       if (!matcher.matches()) {
          throw new IllegalArgumentException("Invalid start position '${position}', expected format like 'A1' or 'B3'")

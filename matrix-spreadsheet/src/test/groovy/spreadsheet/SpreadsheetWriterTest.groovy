@@ -11,10 +11,14 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.io.FileOutputStream
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.util.regex.Pattern
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.*
@@ -310,7 +314,6 @@ class SpreadsheetWriterTest {
   @Test
   void testReplaceXlsxSheet() {
     File file = File.createTempFile("matrix-replace", ".xlsx")
-    file.delete()
     Matrix original = Matrix.builder().data(id: [1], name: ["a"]).build()
     SpreadsheetWriter.write(original, file, "Data")
     Matrix replacement = Matrix.builder().data(id: [2], name: ["b"]).build()
@@ -350,9 +353,16 @@ class SpreadsheetWriterTest {
   }
 
   @Test
+  void testOdsStopsAtTrailingEmptyRows() {
+    File odsFile = createOdsWithTrailingEmptyRows()
+    try (def reader = SpreadsheetReader.Factory.create(odsFile)) {
+      assertEquals(2, reader.findLastRow("Sheet1"))
+    }
+  }
+
+  @Test
   void testReplaceOdsSheet() {
     File file = File.createTempFile("matrix-replace", ".ods")
-    file.delete()
     Matrix original = Matrix.builder().data(id: [1], name: ["a"]).build()
     SpreadsheetWriter.write(original, file, "Data")
     Matrix replacement = Matrix.builder().data(id: [2], name: ["b"]).build()
@@ -363,11 +373,45 @@ class SpreadsheetWriterTest {
 
   private static File copyResourceToTempFile(String resourceName, String suffix) {
     File file = File.createTempFile("matrix-resource", suffix)
-    file.delete()
     InputStream is = SpreadsheetWriterTest.class.getResourceAsStream("/${resourceName}")
     assertNotNull(is, "Missing test resource ${resourceName}")
     Files.copy(is, file.toPath(), StandardCopyOption.REPLACE_EXISTING)
     is.close()
+    file
+  }
+
+  private static File createOdsWithTrailingEmptyRows() {
+    File file = File.createTempFile("matrix-trailing-empty", ".ods")
+    String contentXml = '''<?xml version="1.0" encoding="UTF-8"?>
+<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+  xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
+  xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" office:version="1.2">
+  <office:body>
+    <office:spreadsheet>
+      <table:table table:name="Sheet1">
+        <table:table-row>
+          <table:table-cell office:value-type="string"><text:p>col1</text:p></table:table-cell>
+        </table:table-row>
+        <table:table-row>
+          <table:table-cell office:value-type="string"><text:p>val1</text:p></table:table-cell>
+        </table:table-row>
+        <table:table-row table:number-rows-repeated="2000"/>
+      </table:table>
+    </office:spreadsheet>
+  </office:body>
+</office:document-content>
+'''
+    try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(file))) {
+      ZipEntry mimetype = new ZipEntry("mimetype")
+      zos.putNextEntry(mimetype)
+      zos.write("application/vnd.oasis.opendocument.spreadsheet".getBytes(StandardCharsets.UTF_8))
+      zos.closeEntry()
+
+      ZipEntry content = new ZipEntry("content.xml")
+      zos.putNextEntry(content)
+      zos.write(contentXml.getBytes(StandardCharsets.UTF_8))
+      zos.closeEntry()
+    }
     file
   }
 

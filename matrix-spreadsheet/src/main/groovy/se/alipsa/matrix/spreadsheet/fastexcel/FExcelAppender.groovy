@@ -153,7 +153,7 @@ class FExcelAppender {
     Map<String, String> additions = new LinkedHashMap<>()
     Map<String, SheetTemplate> templateCache = [:]
     SheetTemplate baseTemplate = readBaseTemplate(state.zip, existing)
-    baseTemplate = ensureTemplate(state.zip, existing, baseTemplate)
+    baseTemplate = mergeTemplate(state.zip, existing, baseTemplate)
 
     requested.each { String name, Matrix matrix ->
       String startPosition = positions.get(name) ?: "A1"
@@ -337,7 +337,7 @@ class FExcelAppender {
 
   private static Document parseXml(String xml) {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance()
-    factory.setNamespaceAware(false)
+    factory.setNamespaceAware(true)
     XmlSecurityUtil.configureDocumentBuilderFactory(factory)
     def builder = factory.newDocumentBuilder()
     return builder.parse(new InputSource(new StringReader(xml)))
@@ -395,6 +395,7 @@ class FExcelAppender {
   }
 
   private static String sheetDimension(Matrix matrix, SpreadsheetUtil.CellPosition position) {
+    // Always include the header row, even if the matrix has no data rows.
     int rowCount = Math.max(1, matrix.rowCount() + 1)
     int colCount = Math.max(1, matrix.columnCount())
     int startRow = position.row
@@ -494,7 +495,7 @@ class FExcelAppender {
     if (values == null || values.isEmpty()) {
       return defaultValue
     }
-    Integer maxValue = values.max()
+    Integer maxValue = values.findAll { it != null }?.max()
     return (maxValue == null ? defaultValue : maxValue + 1)
   }
 
@@ -508,7 +509,7 @@ class FExcelAppender {
     return fallback ? readSheetTemplate(zip, fallback) : null
   }
 
-  private static SheetTemplate ensureTemplate(ZipFile zip, Map<String, SheetInfo> existing, SheetTemplate template) {
+  private static SheetTemplate mergeTemplate(ZipFile zip, Map<String, SheetInfo> existing, SheetTemplate template) {
     if (template != null && template.sheetFormatXml && template.colsXml && template.pageMarginsXml) {
       return template
     }
@@ -639,7 +640,8 @@ class FExcelAppender {
     }
     String attrs = matcher.group(1)
     Map<String, String> result = new LinkedHashMap<>()
-    Pattern attrPattern = Pattern.compile("\\b([A-Za-z0-9_-]+)=\"([^\"]*)\"")
+    // Allow namespace prefixes and standard XML name characters.
+    Pattern attrPattern = Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_.:-]*)=\"([^\"]*)\"")
     def attrMatcher = attrPattern.matcher(attrs)
     while (attrMatcher.find()) {
       String name = attrMatcher.group(1)
@@ -651,6 +653,7 @@ class FExcelAppender {
   }
 
   private static String extractElementXml(String xml, String tagName) {
+    // Regex fallback: assumes no nested elements of the same tag name.
     Pattern fullPattern = Pattern.compile("(?s)<${tagName}\\b[^>]*>.*?</${tagName}>")
     def fullMatcher = fullPattern.matcher(xml)
     if (fullMatcher.find()) {

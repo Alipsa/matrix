@@ -21,6 +21,9 @@ final class SpreadsheetWriteUtil {
    * @return a linked map of safe sheet names to matrices
    */
   static Map<String, Matrix> buildRequestedMap(List<Matrix> data, List<String> sheetNames) {
+    if (data.size() != sheetNames.size()) {
+      throw new IllegalArgumentException("Data and sheetNames lists must have the same size")
+    }
     Map<String, Matrix> requested = new LinkedHashMap<>()
     for (int i = 0; i < data.size(); i++) {
       String name = SpreadsheetUtil.createValidSheetName(sheetNames.get(i))

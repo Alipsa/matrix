@@ -111,14 +111,22 @@ class FOdsAppender {
     if (entry == null) {
       return MIMETYPE.getBytes(StandardCharsets.UTF_8)
     }
-    return zip.getInputStream(entry).bytes
+    byte[] bytes = zip.getInputStream(entry).bytes
+    String mime = new String(bytes, StandardCharsets.UTF_8).trim()
+    if (mime != MIMETYPE) {
+      logger.warn("Unexpected ODS mimetype '{}', rewriting as '{}'.", mime, MIMETYPE)
+      return MIMETYPE.getBytes(StandardCharsets.UTF_8)
+    }
+    return bytes
   }
 
   private static void writeContentXml(InputStream input, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
     ZipEntry out = new ZipEntry("content.xml")
     zos.putNextEntry(out)
     if (input == null) {
-      String content = OdsXmlWriter.buildContentXml(requested.values().toList(), requested.keySet().toList())
+      List<String> names = requested.keySet().toList()
+      List<String> startPositions = names.collect { positions.get(it) ?: "A1" }
+      String content = OdsXmlWriter.buildContentXml(requested.values().toList(), names, startPositions)
       zos.write(content.getBytes(StandardCharsets.UTF_8))
       zos.closeEntry()
       return
@@ -159,19 +167,21 @@ class FOdsAppender {
             capturingBase = false
             capturingColumns = false
             baseDepth = 0
-          String startPosition = positions.get(name) ?: "A1"
-          OdsXmlWriter.writeTable(writer, requested.get(name), name, template, startPosition)
-          replaced.add(name)
-          continue
-        }
+            String startPosition = positions.get(name) ?: "A1"
+            OdsXmlWriter.writeTable(writer, requested.get(name), name, template, startPosition)
+            replaced.add(name)
+            continue
+          }
         }
         if (capturingBase) {
-          if (event == XMLStreamConstants.START_ELEMENT && reader.localName == "table") {
-            baseDepth++
-          } else if (event == XMLStreamConstants.START_ELEMENT && reader.localName == "table-column" && capturingColumns && baseDepth == 1) {
-            baseColumns.add(new OdsXmlWriter.TableColumn(readAttributes(reader)))
-          } else if (event == XMLStreamConstants.START_ELEMENT && reader.localName == "table-row" && baseDepth == 1) {
-            capturingColumns = false
+          if (event == XMLStreamConstants.START_ELEMENT) {
+            if (reader.localName == "table") {
+              baseDepth++
+            } else if (reader.localName == "table-column" && capturingColumns && baseDepth == 1) {
+              baseColumns.add(new OdsXmlWriter.TableColumn(readAttributes(reader)))
+            } else if (reader.localName == "table-row" && baseDepth == 1) {
+              capturingColumns = false
+            }
           } else if (event == XMLStreamConstants.END_ELEMENT && reader.localName == "table") {
             baseDepth--
             if (baseDepth == 0) {

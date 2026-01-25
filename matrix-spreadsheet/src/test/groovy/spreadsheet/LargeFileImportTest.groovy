@@ -65,7 +65,7 @@ class LargeFileImportTest {
     checkAssertions(matrix)
   }
 
-  // Legacy implementations removed; fastods/fastExcel are the supported large-file paths.
+  // Legacy implementations removed; FastOds/FastExcel are the supported large-file paths.
 
   private static String formatDuration(Duration duration) {
     List<String> parts = new ArrayList<>()

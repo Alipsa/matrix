@@ -101,6 +101,7 @@ class OdsXmlWriter {
     writer.writeStartElement("table", "table", tableUrn)
     writer.writeAttribute("table", tableUrn, "name", safeName)
     if (template?.tableAttributes != null) {
+      // Avoid duplicating table:name; the explicit sheet name is written above.
       template.tableAttributes.findAll { !it.isTableNameAttribute() }.each { TableAttribute attr ->
         writer.writeAttribute(attr.prefix ?: "", attr.namespace ?: "", attr.localName, attr.value)
       }
