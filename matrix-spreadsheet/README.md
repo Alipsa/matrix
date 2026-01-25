@@ -56,17 +56,17 @@ using column index instead of column name etc.
 
 See [the Matrix package](https://github.com/Alipsa/matrix) for more information on what you can do with a Matrix.
 
-If you need to import from a stream you must use the importer specific to the type of spreadsheet you are reading 
-(ExcelImporter or OdsImporter respectively) e.g.
+If you need to import from a stream you must use the importer specific to the type of spreadsheet you are reading
+(FExcelImporter or FOdsImporter respectively) e.g.
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
-import se.alipsa.matrix.spreadsheet.sods.OdsImporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
+import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
 
 // Importing an excel spreadsheet
 try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
-  Matrix table = ExcelImporter.create().importExcel(
+  Matrix table = FExcelImporter.create().importSpreadsheet(
       is, 'Sheet1', 1, 12, 'A', 'D', true
   )
   assert 3.0d == table[2, 0]
@@ -74,7 +74,7 @@ try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
 
 // importing an open document spreadsheet
 try (InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
-  Matrix table = OdsImporter.importOds(
+  Matrix table = FOdsImporter.create().importSpreadsheet(
       is, 'Sheet1', 1, 12, 'A', 'D', true
   )
   assert "3.0" == table[2, 0]
@@ -86,7 +86,7 @@ try (InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
 ```groovy
 import static se.alipsa.matrix.core.ListConverter.*
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
+import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import java.time.format.DateTimeFormatter
 
 def dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -103,7 +103,10 @@ def table = Matrix.builder().data(
 def file = File.createTempFile("matrix", ".xlsx")
 
 // Export the Matrix to an excel file
-SpreadsheetExporter.exportSpreadsheet(file, table)
+SpreadsheetWriter.write(table, file)
+
+// Export the Matrix starting at a specific cell
+SpreadsheetWriter.write(table, file, "Metrics", "B3")
 ```
 
 ## Export to multiple sheets
@@ -115,11 +118,18 @@ import se.alipsa.matrix.spreadsheet.*
 Matrix revenuePerYearMonth = getRevenue() 
 Matrix details = getSalesDetails()
 
-SpreadsheetExporter.exportSpreadsheets(
-    // The file extension (.xls, .xlsx, .ods) determines the type (Excel or Calc)
+SpreadsheetWriter.writeSheets(
+    // The file extension (.xlsx or .ods) determines the type (Excel or Calc)
   file: new File("/some/path/sales.ods"),
   data: [revenuePerYearMonth, details],
   sheetNames: ['monthly', 'details']
+)
+
+// Export with per-sheet start positions (LinkedHashMap preserves order)
+SpreadsheetWriter.writeSheets(
+  data: [revenuePerYearMonth, details],
+  file: new File("/some/path/sales.xlsx"),
+  sheetNamesAndPositions: ['monthly': 'B2', 'details': 'D4']
 )
 ```
 
@@ -141,7 +151,7 @@ try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheet)) {
 See [the tests](https://github.com/Alipsa/spreadsheet/tree/main/src/test/groovy/spreadsheet) for more usage examples!
 
 # Handling large files
-Apache POI which is used to handle Excel sheets requires quite a lot of memory. If you have Excel sheets with more than 150,000 rows you might encounter out of memory errors. If increasing RAM is not an option, consider exporting the content to a csv and use matrix-csv to import the data instead. There is also an early alternative implementation based on fastexcel which uses streaming and MUCH less memory. It has a very similar API as the poi one except for one difference: it is unable to append sheets to an existing Excel document. See [FExcelImporterTest](https://github.com/Alipsa/matrix/blob/main/matrix-spreadsheet/src/test/groovy/spreadsheet/FExcelImporterTest.groovy) and [FExporterTest](https://github.com/Alipsa/matrix/blob/main/matrix-spreadsheet/src/test/groovy/spreadsheet/FExporterTest.groovy) for example usage. You can also switch between implementations when using the Spreadsheet API (e.g. SpreadsheetImporter) by setting the static enum variable `excelImplementation` e.g. `SpreadsheetImporter.excelImplementation = ExcelImplementation.FastExcel`. See [SpreadsheetImporterTest](https://github.com/Alipsa/matrix/blob/main/matrix-spreadsheet/src/test/groovy/spreadsheet/SpreadsheetImporterTest.groovy) for examples.
+Matrix-spreadsheet uses FastExcel for .xlsx import/export and FastOds (streaming) for .ods import/reading/export by default to keep memory usage low. If you have Excel sheets with more than 150,000 rows you might still encounter out of memory errors; if increasing RAM is not an option, consider exporting the content to CSV and use matrix-csv to import the data instead. Note that the FastExcel backend only supports .xlsx (not legacy .xls). Appending/replacing sheets in existing .xlsx files is supported via SpreadsheetWriter/FExcelAppender, and appending/replacing sheets in existing .ods files is supported via SpreadsheetWriter/FOdsAppender.
 
 # Release version compatibility matrix
 The following table illustrates the version compatibility of the matrix-csv and matrix core
@@ -169,15 +179,15 @@ any (modern) version of Groovy you prefer.
 - URL: https://groovy-lang.org/
 - License: Apache 2.0
 
-### SODS 
-Used to handle ODS file import and export
-- URL: https://github.com/miachm/SODS
-- License: Unlicense
-
-### POI
-Used to handle Excel import and export
-- URL: https://poi.apache.org/
+### FastExcel
+Used to handle Excel (.xlsx) import and export
+- URL: https://github.com/dhatim/fastexcel
 - License: Apache 2.0
+
+### FastOds
+Internal streaming ODS implementation bundled with matrix-spreadsheet (not an external dependency).
+- URL: https://github.com/Alipsa/matrix (matrix-spreadsheet fastods package)
+- License: MIT
 
 ### Matrix-core
 Used to define the data format i.e. the result from an import or the data to export

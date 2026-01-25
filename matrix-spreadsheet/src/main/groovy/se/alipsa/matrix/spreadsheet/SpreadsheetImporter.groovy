@@ -3,14 +3,9 @@ package se.alipsa.matrix.spreadsheet
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
-import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
-import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
 
 import java.text.NumberFormat
-
-import static se.alipsa.matrix.spreadsheet.ExcelImplementation.*
-import static se.alipsa.matrix.spreadsheet.OdsImplementation.*
 
 @CompileStatic
 class SpreadsheetImporter {
@@ -30,13 +25,12 @@ class SpreadsheetImporter {
   static Matrix importSpreadsheet(String file, int sheet,
                                   int startRow = 1, int endRow,
                                   int startColumn = 1, int endColumn,
-                                  boolean firstRowAsColNames = true,
-                                  ExcelImplementation excelImplementation = FastExcel,
-                                  OdsImplementation odsImplementation = FastOdsStream) {
-    if (file.toLowerCase().endsWith(".ods")) {
-      return getImporter(odsImplementation).importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+                                  boolean firstRowAsColNames = true) {
+    if (isOdsFile(file)) {
+      return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    return getImporter(excelImplementation)
+    SpreadsheetUtil.ensureXlsx(file)
+    return excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
@@ -55,19 +49,17 @@ class SpreadsheetImporter {
   static Matrix importOds(URL url, int sheet,
                           int startRow = 1, int endRow,
                           int startColumn = 1, int endColumn,
-                          boolean firstRowAsColNames = true,
-                          OdsImplementation odsImplementation = FastOdsStream) {
+                          boolean firstRowAsColNames = true) {
 
-    getImporter(odsImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
   static Matrix importOds(URL url, int sheet,
                           int startRow = 1, int endRow,
                           String startColumn = 'A', String endColumn,
-                          boolean firstRowAsColNames = true,
-                          OdsImplementation odsImplementation = FastOdsStream) {
+                          boolean firstRowAsColNames = true) {
 
-    getImporter(odsImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
   /**
@@ -85,52 +77,48 @@ class SpreadsheetImporter {
   static Matrix importOds(URL url, String sheet,
                           int startRow = 1, int endRow,
                           int startColumn = 1, int endColumn,
-                          boolean firstRowAsColNames = true,
-                          OdsImplementation odsImplementation = FastOdsStream) {
-    getImporter(odsImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+                          boolean firstRowAsColNames = true) {
+    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
   static Matrix importOds(URL url, String sheet,
                           int startRow = 1, int endRow,
                           String startColumn = 'A', String endColumn,
-                          boolean firstRowAsColNames = true,
-                          OdsImplementation odsImplementation = FastOdsStream) {
-    getImporter(odsImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+                          boolean firstRowAsColNames = true) {
+    odsImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
   static Matrix importExcel(URL url, int sheet,
                             int startRow = 1, int endRow,
                             int startColumn = 1, int endColumn,
-                            boolean firstRowAsColNames = true,
-                            ExcelImplementation excelImplementation = FastExcel) {
-
-    getImporter(excelImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+                            boolean firstRowAsColNames = true) {
+    SpreadsheetUtil.ensureXlsx(url?.path)
+    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
   static Matrix importExcel(URL url, String sheet,
                             int startRow = 1, int endRow,
                             int startColumn = 1, int endColumn,
-                            boolean firstRowAsColNames = true,
-                            ExcelImplementation excelImplementation = FastExcel) {
-
-    getImporter(excelImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+                            boolean firstRowAsColNames = true) {
+    SpreadsheetUtil.ensureXlsx(url?.path)
+    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
   static Matrix importExcel(URL url, int sheet,
                             int startRow = 1, int endRow,
                             String startColumn = 'A', String endColumn,
-                            boolean firstRowAsColNames = true,
-                            ExcelImplementation excelImplementation = FastExcel) {
-    getImporter(excelImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+                            boolean firstRowAsColNames = true) {
+    SpreadsheetUtil.ensureXlsx(url?.path)
+    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
   static Matrix importExcel(URL url, String sheet,
                             int startRow = 1, int endRow,
                             String startColumn = 'A', String endColumn,
-                            boolean firstRowAsColNames = true,
-                            ExcelImplementation excelImplementation = FastExcel) {
+                            boolean firstRowAsColNames = true) {
 
-    getImporter(excelImplementation).importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+    SpreadsheetUtil.ensureXlsx(url?.path)
+    excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
   /**
@@ -148,13 +136,12 @@ class SpreadsheetImporter {
   static Matrix importSpreadsheet(String file, int sheet,
                                   int startRow = 1, int endRow,
                                   String startColumn = 'A', String endColumn,
-                                  boolean firstRowAsColNames = true,
-                                  ExcelImplementation excelImplementation = FastExcel,
-                                  OdsImplementation odsImplementation = FastOdsStream) {
-    if (file.toLowerCase().endsWith(".ods")) {
-      return getImporter(odsImplementation).importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
+                                  boolean firstRowAsColNames = true) {
+    if (isOdsFile(file)) {
+      return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    return getImporter(excelImplementation)
+    SpreadsheetUtil.ensureXlsx(file)
+    return excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
@@ -173,13 +160,12 @@ class SpreadsheetImporter {
   static Matrix importSpreadsheet(String file, String sheet = 'Sheet1',
                                   int startRow = 1, int endRow,
                                   int startCol = 1, int endCol,
-                                  boolean firstRowAsColNames = true,
-                                  ExcelImplementation excelImplementation = ExcelImplementation.FastExcel,
-                                  OdsImplementation odsImplementation = FastOdsStream) {
-    if (file.toLowerCase().endsWith(".ods")) {
-      return getImporter(odsImplementation).importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
+                                  boolean firstRowAsColNames = true) {
+    if (isOdsFile(file)) {
+      return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
-    getImporter(excelImplementation)
+    SpreadsheetUtil.ensureXlsx(file)
+    excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
@@ -198,16 +184,15 @@ class SpreadsheetImporter {
   static Matrix importSpreadsheet(String file, String sheet = 'Sheet1',
                                   int startRow = 1, int endRow,
                                   String startCol = 'A', String endCol,
-                                  boolean firstRowAsColNames = true,
-                                  ExcelImplementation excelImplementation = ExcelImplementation.FastExcel,
-                                  OdsImplementation odsImplementation = FastOdsStream) {
-    if (file.toLowerCase().endsWith(".ods")) {
+                                  boolean firstRowAsColNames = true) {
+    if (isOdsFile(file)) {
       int startColumn = SpreadsheetUtil.asColumnNumber(startCol)
       int endColumn = SpreadsheetUtil.asColumnNumber(endCol)
-      return getImporter(odsImplementation)
+      return odsImporter()
           .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    getImporter(excelImplementation)
+    SpreadsheetUtil.ensureXlsx(file)
+    excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
 
@@ -258,8 +243,6 @@ class SpreadsheetImporter {
     Boolean firstRowAsColNames = params.getOrDefault('firstRowAsColNames', true) as Boolean
     validateNotNull(firstRowAsColNames, 'firstRowAsColNames')
 
-    ExcelImplementation excelImplementation = params['excelImplementation'] as ExcelImplementation ?: FastExcel
-    OdsImplementation odsImplementation = params['odsImplementation']as OdsImplementation ?: FastOdsStream
     //println "SpreadsheetImporter.importSpreadsheet: file=$file, sheet=$sheet, startRow= $startRow, endRow= $endRow, startCol= $startCol, endCol= $endCol, firstRowAsColNames= $firstRowAsColNames"
     if (sheet instanceof Number) {
       //println "importing sheet number $sheet"
@@ -269,9 +252,7 @@ class SpreadsheetImporter {
           endRow as int,
           startCol as int,
           endCol as int,
-          firstRowAsColNames as boolean,
-          excelImplementation,
-          odsImplementation)
+          firstRowAsColNames as boolean)
     }
     //println "importing sheet name $sheet"
     return importSpreadsheet(
@@ -281,37 +262,32 @@ class SpreadsheetImporter {
         endRow as int,
         startCol as int,
         endCol as int,
-        firstRowAsColNames as boolean,
-        excelImplementation,
-        odsImplementation
+        firstRowAsColNames as boolean
     )
   }
 
   static Map<Object, Matrix> importSpreadsheets(String fileName,
                                                 List<Map> sheetParams,
-                                                ExcelImplementation excelImplementation = FastExcel,
-                                                OdsImplementation odsImplementation = FastOdsStream,
                                                 NumberFormat... formatOpt) {
-    if (fileName.toLowerCase().endsWith(".ods")) {
+    if (isOdsFile(fileName)) {
       NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
-      return getImporter(odsImplementation).importSpreadsheets(fileName, sheetParams, format)
+      return odsImporter().importSpreadsheets(fileName, sheetParams, format)
     }
-    return getImporter(excelImplementation).importSpreadsheets(fileName, sheetParams, formatOpt)
+    SpreadsheetUtil.ensureXlsx(fileName)
+    return excelImporter().importSpreadsheets(fileName, sheetParams, formatOpt)
   }
 
   static Map<Object, Matrix> importOdsSheets(URL url,
                                                 List<Map> sheetParams,
-                                                OdsImplementation odsImplementation = FastOdsStream,
                                                 NumberFormat... formatOpt) {
       NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
-      return getImporter(odsImplementation).importSpreadsheets(url, sheetParams, format)
+      return odsImporter().importSpreadsheets(url, sheetParams, format)
   }
 
   static Map<Object, Matrix> importExcelSheets(URL url,
                                                 List<Map> sheetParams,
-                                                ExcelImplementation excelImplementation = FastExcel,
                                                 NumberFormat... formatOpt) {
-    getImporter(excelImplementation)
+    excelImporter()
         .importSpreadsheets(url, sheetParams, formatOpt)
   }
 
@@ -321,18 +297,16 @@ class SpreadsheetImporter {
     }
   }
 
-  static Importer getImporter(OdsImplementation odsImplementation) {
-    return switch(odsImplementation) {
-      case SODS -> SOdsImporter.create()
-      case FastOdsStream -> FOdsImporter.create(FastOdsStream)
-      case FastOdsEvent -> FOdsImporter.create(FastOdsEvent)
-    }
+  private static Importer odsImporter() {
+    return FOdsImporter.create()
   }
 
-  static Importer getImporter(ExcelImplementation implementation) {
-    return switch(implementation) {
-      case FastExcel -> FExcelImporter.create()
-      case POI -> ExcelImporter.create()
-    }
+  private static Importer excelImporter() {
+    return FExcelImporter.create()
   }
+
+  private static boolean isOdsFile(String fileName) {
+    return fileName?.toLowerCase()?.endsWith(".ods") ?: false
+  }
+
 }

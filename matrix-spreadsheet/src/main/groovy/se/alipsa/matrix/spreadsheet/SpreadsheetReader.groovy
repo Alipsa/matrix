@@ -2,40 +2,35 @@ package se.alipsa.matrix.spreadsheet
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelReader
-import se.alipsa.matrix.spreadsheet.sods.SOdsReader
-import se.alipsa.matrix.spreadsheet.poi.ExcelReader
+import se.alipsa.matrix.spreadsheet.fastods.FOdsReader
 
 @CompileStatic
 interface SpreadsheetReader extends Closeable {
 
   // Groovy does not support static methods in interfaces so we create an inner class for those
   class Factory {
-    static SpreadsheetReader create(File file, excelImplementation = ExcelImplementation.FastExcel) {
+    static SpreadsheetReader create(File file) {
       if (file == null) {
         throw new IllegalArgumentException("File is null, cannot create SpreadsheetReader")
       }
+      SpreadsheetUtil.ensureXlsx(file.getName())
       if (file.getName().toLowerCase().endsWith(".ods")) {
-        return new SOdsReader(file)
+        return new FOdsReader(file)
       }
-      return switch (excelImplementation) {
-        case ExcelImplementation.POI -> new ExcelReader(file)
-        case ExcelImplementation.FastExcel -> new FExcelReader(file)
-        default -> throw new IllegalArgumentException("Unknown excelImplementation: $excelImplementation")
-      }
+      return new FExcelReader(file)
     }
 
-    static SpreadsheetReader create(String filePath, excelImplementation = ExcelImplementation.FastExcel) throws Exception {
+    static SpreadsheetReader create(String filePath) throws Exception {
       if (filePath == null) {
         throw new IllegalArgumentException("filePath is null, cannot create SpreadsheetReader")
       }
+      SpreadsheetUtil.ensureXlsx(filePath)
       if (filePath.toLowerCase().endsWith(".ods")) {
-        return new SOdsReader(filePath)
+        return new FOdsReader(filePath)
       }
-      return switch (excelImplementation) {
-        case ExcelImplementation.POI -> new ExcelReader(filePath)
-        case ExcelImplementation.FastExcel -> new FExcelReader(filePath)
-      }
+      return new FExcelReader(filePath)
     }
+
   }
 
   int findRowNum(int sheetNumber, int colNumber, String content) throws Exception

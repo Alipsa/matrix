@@ -16,6 +16,7 @@ class FExcelReader implements SpreadsheetReader {
   private ReadableWorkbook workbook
 
   FExcelReader(File excelFile) {
+    SpreadsheetUtil.ensureXlsx(excelFile.name)
     workbook = new ReadableWorkbook(excelFile, FExcelImporter.OPTIONS)
   }
 

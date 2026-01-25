@@ -3,6 +3,7 @@ package se.alipsa.matrix.spreadsheet.fastods.reader
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
+import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamReader
@@ -16,20 +17,19 @@ import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
 
 /**
  * Minimal stream reader that discards styles and only reads the content
- * into a list of rows. It is faster than the event reader so we use it as
- * the default one.
+ * into a list of rows. It is the default reader for fastods.
  */
 @CompileStatic
 final class OdsStreamDataReader extends OdsDataReader {
-
-  static StringBuilder text = new StringBuilder()
+  // Chosen to tolerate large, intentional padding while preventing runaway expansion of trailing empty rows.
+  private static final int TRAILING_EMPTY_ROW_THRESHOLD = 1000
 
   static OdsStreamDataReader create() {
     new OdsStreamDataReader()
   }
 
   Sheet processContent(final InputStream is, Object sheet, Integer startRow, Integer endRow, Integer startCol, Integer endCol) {
-    final XMLInputFactory factory = XMLInputFactory.newInstance()
+    final XMLInputFactory factory = XmlSecurityUtil.newSecureInputFactory()
     Integer sheetCount = 1
     final XMLStreamReader reader = factory.createXMLStreamReader(is)
     if (sheet == null) {
@@ -66,6 +66,15 @@ final class OdsStreamDataReader extends OdsDataReader {
 
         // Parse this physical row ONCE (consumes until </table-row>)
         List<Object> rowValues = processRow(reader, startColumn, endColumn)
+        boolean isEmptyRow = rowValues == null || rowValues.isEmpty() || rowValues.every { it == null }
+
+        boolean isUnbounded = endRow == Integer.MAX_VALUE
+        boolean exceedsRequested = !isUnbounded && endRow > rowCount + repeatRows
+        if (isEmptyRow && repeatRows > TRAILING_EMPTY_ROW_THRESHOLD && (isUnbounded || exceedsRequested)) {
+          // ODS files often encode trailing empty rows with a huge repeat count.
+          // Stop here to avoid inflating row counts and memory usage.
+          break
+        }
 
         // Replicate logically according to repeatRows
         for (int i = 0; i < repeatRows; i++) {
@@ -134,7 +143,7 @@ final class OdsStreamDataReader extends OdsDataReader {
 
     // Fallback for strings/unknown types: collect <text:p> content until </table-cell>
     // Also handles empty/self-closing <table-cell/> → returns null
-    text.setLength(0)
+    StringBuilder text = new StringBuilder()
     while (reader.hasNext()) {
       reader.next()
 

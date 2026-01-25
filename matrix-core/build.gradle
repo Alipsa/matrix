@@ -41,6 +41,7 @@ sourceSets {
 }
 
 dependencies {
+  api project(':matrix-groovy-ext')
   compileOnly libs.groovy
   testImplementation 'org.opentest4j:opentest4j:1.3.0'
   testImplementation libs.groovy

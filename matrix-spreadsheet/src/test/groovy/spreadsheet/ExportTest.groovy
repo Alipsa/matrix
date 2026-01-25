@@ -3,7 +3,7 @@ package spreadsheet
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
+import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
@@ -45,11 +45,8 @@ class ExportTest {
 
     //println(table.content())
     def file = File.createTempFile("matrix", ".xlsx")
-    SpreadsheetExporter.exportSpreadsheet(file, table)
+    SpreadsheetWriter.writeSheets([table, table2], file, ["Sheet1", "Sheet2"])
     println("ExportTest.exportExcelTest: Wrote to $file")
-
-    SpreadsheetExporter.exportSpreadsheet(file, table2)
-    println("ExportTest.exportExcelTest: Wrote another sheet to $file")
     try (def reader = SpreadsheetReader.Factory.create(file)) {
       assertEquals(2, reader.sheetNames.size(), "number of sheets")
     }
@@ -61,13 +58,8 @@ class ExportTest {
     if (odsFile.exists()) {
       odsFile.delete()
     }
-    SpreadsheetExporter.exportSpreadsheet(odsFile, table, "Sheet 1")
+    SpreadsheetWriter.writeSheets([table, table2], odsFile, ["Sheet 1", "Sheet 2"])
     println("ExportTest.testOdsExport: Wrote to $odsFile")
-    try (def reader = SpreadsheetReader.Factory.create(odsFile)) {
-      assertEquals(1, reader.sheetNames.size(), "number of sheets")
-    }
-    SpreadsheetExporter.exportSpreadsheet(odsFile, table2, "Sheet 2")
-    println("ExportTest.testOdsExport: Wrote another sheet to $odsFile")
     try (def reader = SpreadsheetReader.Factory.create(odsFile)) {
       assertEquals(2, reader.sheetNames.size(), "number of sheets")
     }

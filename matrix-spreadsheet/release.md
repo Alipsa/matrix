@@ -1,23 +1,12 @@
 # Release history
 
-## v2.2.2. In progress
-- com.github.miachm.sods:SODS [1.6.8 -> 1.7.0]
-- org.apache.poi:poi [5.4.1 -> 5.5.0]
-- ODS Streaming reader 
-  - Row repeats: Parse one physical `<table-row>` once, then replicate the parsed values number-rows-repeated times. 
-  - Column repeats: Parse one physical `<table-cell>` once, then replicate its value number-columns-repeated times. 
-  - Cursor alignment: After reading a cell’s value, drain to `</table-cell>`; similarly, drain covered cells to `</covered-table-cell>`. 
-  - Covered cells: Handle table:covered-table-cell consistently (according to your chosen policy) rather than implicitly skipping.
-- ODS Event reader 
-  - Row & column repeats: Same “parse once, then replicate” fix as the stream reader. 
-  - String cells: Fixed the big bug where office:value-type="string" returned null. We now collect `<text:p>` content (and `<text:s/>` spaces, optional `<text:line-break/>`, `<text:tab/>`) until </table-cell>. 
-  - Cursor alignment: Introduced a drainUntilEnd(reader, "table-cell") helper and used it in all typed branches to keep the event cursor in sync.
-- Multiple paragraphs: Join multiple `<text:p>` with \n. 
-- Defensive attrs: If a typed value’s attribute is missing, return null instead of exploding.
-- Fix sheet numbering (was off by one) for SODSImporter.importSpreadsheet(InputStream is, int sheetNum,
-  int startRow = 1, int endRow,
-  int startCol = 1, int endCol,
-  boolean firstRowAsColNames = true)
+## v2.3.0, 2026-01-24
+- Simplified spreadsheet backends: removed POI and SODS implementations; FastExcel is now the single XLSX path and FastOds is the single ODS path (import/export/read).
+- Added append/replace support for existing XLSX and ODS files; preserves existing sheets and metadata.
+- New ODS streaming writer/appender that reuses table attributes/columns for base styling.
+- XLSX append now inherits sheetFormatPr, column widths, and page margins, and fixes relId collisions in workbook relationships.
+- Updated tests to cover append/replace and style inheritance. API simplified with no implementation selection needed.
+- Explicitly reject legacy .xls files (xlsx only)
 
 ## v2.2.1, 2025-07-19
 - Upgrade dependencies

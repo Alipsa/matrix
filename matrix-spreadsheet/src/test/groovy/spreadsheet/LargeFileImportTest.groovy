@@ -1,14 +1,11 @@
 package spreadsheet
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
-import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
 import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
 import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
-import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
 
 import java.math.RoundingMode
@@ -40,48 +37,14 @@ class LargeFileImportTest {
                   'STRONG-ARM (HANDS, FIST, FEET OR BODILY FORCE)',	'IC',	'Invest Cont', 210,
                   null, null, null, '24300    WESTERN                      AV', null,	33.8046, -118.3074]
 
-  /**
-   * This test takes VERY long time at best or causes OutOfMemoryError at worst which is
-   * precisely why the fastods implementation was created
-   */
-  @Disabled
-  @Test
-  void testImportWithODSImporter() {
-    assert colNames.size() == lastRow.size()
-    URL url = this.getClass().getResource('/Crime_Data_from_2023.ods')
-    println "LargeFileImportTest.testImportWithODSImporter: importing $url"
-    Instant start = Instant.now()
-    def matrix = SOdsImporter.create().importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
-    Instant finish = Instant.now()
-    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
-    println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
-    checkAssertions(matrix)
-  }
-
-
-  // this is about 2-7 seconds faster then the event reader
-  // memory consumption is the same, at least after completion
+  // streaming reader is the default and fastest option for large files
   @Test
   void testImportWithFastOdsStreamImporter() {
     assert colNames.size() == lastRow.size()
     URL url = this.getClass().getResource('/Crime_Data_from_2023.ods')
     println "LargeFileImportTest.testImportWithFastOdsStreamImporter importing $url"
     Instant start = Instant.now()
-    def matrix = FOdsImporter.create(OdsDataReader.create(OdsDataReader.ReaderImpl.STREAM))
-        .importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
-    Instant finish = Instant.now()
-    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
-    println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
-    checkAssertions(matrix, "yyyy-MM-dd'T'HH:mm")
-  }
-
-  @Test
-  void testImportWithFastOdsEventImporter() {
-    assert colNames.size() == lastRow.size()
-    URL url = this.getClass().getResource('/Crime_Data_from_2023.ods')
-    println "LargeFileImportTest.testImportWithFastOdsEventImporter: importing $url"
-    Instant start = Instant.now()
-    def matrix = FOdsImporter.create(OdsDataReader.create(OdsDataReader.ReaderImpl.EVENT))
+    def matrix = FOdsImporter.create(OdsDataReader.create())
         .importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
     Instant finish = Instant.now()
     println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
@@ -102,24 +65,7 @@ class LargeFileImportTest {
     checkAssertions(matrix)
   }
 
-  /**
-   * This test causes OutOfMemoryError which is
-   * precisely why the fastexcel implementation was created
-   */
-  @Disabled
-  @Test
-  void testImportFromPoi() {
-    System.gc()
-    assert colNames.size() == lastRow.size()
-    URL url = this.getClass().getResource('/Crime_Data_from_2023.xlsx')
-    println "LargeFileImportTest.testImportFromPoi importing $url"
-    Instant start = Instant.now()
-    def matrix = ExcelImporter.create().importSpreadsheet(url, 1, 1, nrows, 'A', 'AB', true)
-    Instant finish = Instant.now()
-    println "total memory: ${(Runtime.getRuntime().totalMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB, free: ${(Runtime.getRuntime().freeMemory()/1024/1024).setScale(2, RoundingMode.HALF_UP)} MB"
-    println "Parsing time: ${formatDuration(Duration.between(start, finish))}"
-    checkAssertions(matrix)
-  }
+  // Legacy implementations removed; FastOds/FastExcel are the supported large-file paths.
 
   private static String formatDuration(Duration duration) {
     List<String> parts = new ArrayList<>()

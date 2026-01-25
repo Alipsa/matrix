@@ -14,6 +14,7 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
+import java.util.Collections
 
 // Causes module access error (failed to access class org.dhatim.fastexcel.GenericStyleSetter)
 // so go with dynamic for now
@@ -46,8 +47,9 @@ class FExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data) {
+    SpreadsheetUtil.ensureXlsx(file)
     String sheetName = SpreadsheetUtil.createValidSheetName(data.matrixName)
-    exportExcel(file, data, sheetName)
+    exportExcel(file, data, sheetName, "A1")
     return sheetName
   }
 
@@ -61,7 +63,22 @@ class FExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data, String sheetName) {
+    exportExcel(file, data, sheetName, "A1")
+  }
+
+  /**
+   * Export to an Excel file with a specific start position.
+   *
+   * @param file the file to export
+   * @param data the Matrix data to export
+   * @param sheetName the name of the sheet to export to
+   * @param startPosition the top-left cell for the header row (e.g. "B3")
+   * @return the actual name of the sheet created (illegal characters replaced by space)
+   */
+  static String exportExcel(File file, Matrix data, String sheetName, String startPosition) {
+    SpreadsheetUtil.ensureXlsx(file)
     String validSheetName = SpreadsheetUtil.createValidSheetName(sheetName)
+    SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(startPosition)
     if (file.exists() && file.length() > 0) {
       try (FileInputStream fis = new FileInputStream(file)
            ReadableWorkbook workbook = new ReadableWorkbook(fis, FExcelImporter.OPTIONS)) {
@@ -82,13 +99,13 @@ class FExcelExporter {
           2. for each in map:  buildSheet(value, wb.newWorksheet(key))
           3. append the new sheet: buildSheet(data, wb.newWorksheet(validSheetName))
         Sheet sheet = workbook.(validSheetName)
-        buildSheet(data, sheet)
+        buildSheet(data, sheet, position)
         writeFile(file, workbook)*/
       }
     } else {
       try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {
         Worksheet sheet = workbook.newWorksheet(validSheetName)
-        buildSheet(data, sheet)
+        buildSheet(data, sheet, position)
         workbook.finish()
         //writeFile(file, workbook)
       }
@@ -105,9 +122,18 @@ class FExcelExporter {
   }
 
   static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames, boolean overwrite = false) throws IOException {
+    return exportExcelSheets(file, data, sheetNames, null, overwrite)
+  }
 
+  static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions, boolean overwrite = false) throws IOException {
+
+    SpreadsheetUtil.ensureXlsx(file)
     if (file.exists() && !overwrite && file.length() > 0) {
-      throw new IllegalArgumentException("Appending to an external file is not supported, remove it first")
+      throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
+    }
+    List<String> positions = startPositions ?: Collections.nCopies(data.size(), "A1")
+    if (data.size() != positions.size()) {
+      throw new IllegalArgumentException("Matrices and start positions lists must have the same size")
     }
 
     try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {
@@ -116,7 +142,8 @@ class FExcelExporter {
       for (int i = 0; i < data.size(); i++) {
         Matrix dataFrame = data.get(i)
         String sheetName = sheetNames.toArray()[i]
-        buildSheet(dataFrame, workbook.newWorksheet(sheetName))
+        SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(positions.get(i))
+        buildSheet(dataFrame, workbook.newWorksheet(sheetName), position)
         actualSheetNames.add(sheetName)
       }
       return actualSheetNames
@@ -126,26 +153,19 @@ class FExcelExporter {
     }
   }
 
-  private static boolean isXssf(File file) {
-    return isXssf(file.getName())
-  }
-
-  private static boolean isXssf(String filePath) {
-    return !filePath.toLowerCase().endsWith(".xls")
-
-  }
-
-  private static void buildSheet(Matrix data, Worksheet sheet) {
+  private static void buildSheet(Matrix data, Worksheet sheet, SpreadsheetUtil.CellPosition startPosition) {
+    int rowOffset = startPosition.row - 1
+    int colOffset = startPosition.column - 1
     def names = data.columnNames()
     for (int i = 0; i < names.size(); i++) {
-      sheet.value(0, i, names[i])
+      sheet.value(rowOffset, colOffset + i, names[i])
     }
 
     data.columns().eachWithIndex { Column column, int c ->
       Class type = column.type
-      int col = c
+      int col = colOffset + c
       column.eachWithIndex { Object entry, int r ->
-        int row = r + 1
+        int row = rowOffset + r + 1
         if (entry == null) {
           // do nothing
         } else if (Number.isAssignableFrom(type)) {

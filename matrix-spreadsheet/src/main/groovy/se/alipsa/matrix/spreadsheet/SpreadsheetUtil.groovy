@@ -3,6 +3,7 @@ package se.alipsa.matrix.spreadsheet
 import groovy.transform.CompileStatic
 
 import java.time.format.DateTimeFormatter
+import java.util.regex.Pattern
 
 /**
  * Common spreadsheet utilities
@@ -62,6 +63,66 @@ class SpreadsheetUtil {
          header.add("c$i".toString())
       }
       header
+   }
+
+   /**
+    * Ensure only .xlsx is used for Excel files.
+    *
+    * @param file the file to validate
+    */
+   static void ensureXlsx(File file) {
+      if (file == null) {
+         return
+      }
+      ensureXlsx(file.getName())
+   }
+
+   /**
+    * Ensure only .xlsx is used for Excel files.
+    *
+    * @param fileName the file name or path to validate
+    */
+   static void ensureXlsx(String fileName) {
+      if (fileName != null && fileName.toLowerCase().endsWith(".xls")) {
+         throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
+      }
+   }
+
+   /**
+    * Parse a cell reference like "B3" into row and column numbers (1-indexed).
+    *
+    * @param position the cell reference to parse
+    * @return the parsed cell position
+    */
+   static CellPosition parseCellPosition(String position) {
+      if (position == null) {
+         throw new IllegalArgumentException("Start position cannot be null")
+      }
+      String trimmed = position.trim()
+      Pattern pattern = ~/^([A-Z]+)(\d+)$/
+      def matcher = pattern.matcher(trimmed.toUpperCase())
+      if (!matcher.matches()) {
+         throw new IllegalArgumentException("Invalid start position '${position}', expected format like 'A1' or 'B3'")
+      }
+      int column = asColumnNumber(matcher.group(1))
+      int row = Integer.parseInt(matcher.group(2))
+      if (row < 1 || column < 1) {
+         throw new IllegalArgumentException("Invalid start position '${position}', row and column must be >= 1")
+      }
+      return new CellPosition(row, column)
+   }
+
+   /**
+    * Represents a parsed cell position (1-indexed).
+    */
+   static class CellPosition {
+      final int row
+      final int column
+
+      CellPosition(int row, int column) {
+         this.row = row
+         this.column = column
+      }
    }
 
    private final static String createSafeSheetName(final String nameProposal, char replaceChar = ' ' as char) {

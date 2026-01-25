@@ -1,18 +1,21 @@
 package se.alipsa.matrix.spreadsheet
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
-import se.alipsa.matrix.spreadsheet.sods.SOdsExporter
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.poi.ExcelExporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelAppender
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
+import se.alipsa.matrix.spreadsheet.fastods.FOdsAppender
+import se.alipsa.matrix.spreadsheet.fastods.FOdsExporter
+
+import java.util.Collections
 
 /**
  * Writes Matrix data to spreadsheet files (Excel, ODS).
  *
- * <p>Supports multiple spreadsheet formats:</p>
+ * <p>Supports spreadsheet formats:</p>
  * <ul>
- *   <li>Excel (.xlsx, .xls) - via Apache POI or FastExcel</li>
- *   <li>OpenDocument Spreadsheet (.ods) - via SODS</li>
+ *   <li>Excel (.xlsx) - via FastExcel</li>
+ *   <li>OpenDocument Spreadsheet (.ods) - via FastOds</li>
  * </ul>
  *
  * <h3>Basic Usage</h3>
@@ -33,29 +36,20 @@ import se.alipsa.matrix.spreadsheet.poi.ExcelExporter
  * List&lt;String&gt; paths = SpreadsheetWriter.writeSheets(sheets, new File("multi.xlsx"), names)
  * </pre>
  *
- * <h3>Format Selection</h3>
- * <pre>
- * // Excel with specific implementation
- * SpreadsheetWriter.excelImplementation = ExcelImplementation.POI  // or FastExcel
- * String path = SpreadsheetWriter.write(data, new File("output.xlsx"))
- * </pre>
- *
  * @see SpreadsheetExporter (deprecated)
- * @see ExcelExporter
  * @see FExcelExporter
- * @see SOdsExporter
+ * @see FOdsExporter
  */
 @CompileStatic
 class SpreadsheetWriter {
 
-  /** Default Excel implementation to use (POI or FastExcel) */
-  public static ExcelImplementation excelImplementation = ExcelImplementation.POI
+  private static final String DEFAULT_START_POSITION = "A1"
 
   /**
    * Write a Matrix to a spreadsheet file.
    *
    * <p>The format is auto-detected based on file extension (.ods for OpenDocument,
-   * .xlsx/.xls for Excel).</p>
+   * .xlsx for Excel).</p>
    *
    * @param matrix the Matrix to write
    * @param file the target file
@@ -72,23 +66,28 @@ class SpreadsheetWriter {
       throw new IllegalArgumentException("Matrix must have at least one column")
     }
     if (file.getName().toLowerCase().endsWith(".ods")) {
-      return SOdsExporter.exportOds(file, matrix)
+      if (file.exists() && file.length() > 0) {
+        return FOdsAppender.appendOrReplaceSheets(file, [matrix], [matrix.matrixName], [DEFAULT_START_POSITION])[0]
+      }
+      return FOdsExporter.exportOds(file, matrix)
     }
-    return switch (excelImplementation) {
-      case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, matrix)
-      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcel(file, matrix)
+    SpreadsheetUtil.ensureXlsx(file)
+    if (file.exists() && file.length() > 0) {
+      return FExcelAppender.appendOrReplaceSheets(file, [matrix], [matrix.matrixName], [DEFAULT_START_POSITION])[0]
     }
+    return FExcelExporter.exportExcel(file, matrix)
   }
 
   /**
-   * Write a Matrix to a spreadsheet file with a specific sheet name.
+   * Write a Matrix to a spreadsheet file with a specific sheet name and start position.
    *
    * @param matrix the Matrix to write
    * @param file the target file
    * @param sheetName the name for the sheet
+   * @param startPosition the top-left cell for the header row (e.g. "B3")
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
-  static String write(Matrix matrix, File file, String sheetName) {
+  static String write(Matrix matrix, File file, String sheetName, String startPosition = DEFAULT_START_POSITION) {
     if (matrix == null) {
       throw new IllegalArgumentException("Matrix cannot be null")
     }
@@ -101,13 +100,18 @@ class SpreadsheetWriter {
     if (sheetName == null) {
       throw new IllegalArgumentException("Sheet name cannot be null")
     }
+    SpreadsheetUtil.parseCellPosition(startPosition)
     if (file.getName().toLowerCase().endsWith(".ods")) {
-      return SOdsExporter.exportOds(file, matrix, sheetName)
+      if (file.exists() && file.length() > 0) {
+        return FOdsAppender.appendOrReplaceSheets(file, [matrix], [sheetName], [startPosition])[0]
+      }
+      return FOdsExporter.exportOdsSheets(file, [matrix], [sheetName], [startPosition])[0]
     }
-    return switch (excelImplementation) {
-      case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, matrix, sheetName)
-      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcel(file, matrix, sheetName)
+    SpreadsheetUtil.ensureXlsx(file)
+    if (file.exists() && file.length() > 0) {
+      return FExcelAppender.appendOrReplaceSheets(file, [matrix], [sheetName], [startPosition])[0]
     }
+    return FExcelExporter.exportExcel(file, matrix, sheetName, startPosition)
   }
 
   /**
@@ -119,6 +123,42 @@ class SpreadsheetWriter {
    * @return list of actual sheet names created (illegal characters replaced by space)
    */
   static List<String> writeSheets(List<Matrix> matrices, File file, List<String> sheetNames) {
+    return writeSheetsInternal(matrices, file, sheetNames, null)
+  }
+
+  /**
+   * Write multiple Matrix objects to a single spreadsheet file with per-sheet start positions.
+   *
+   * @param matrices list of Matrix objects to write
+   * @param file the target file
+   * @param sheetNamesAndPositions map of sheet name -> start position (LinkedHashMap order is preserved)
+   * @return list of actual sheet names created (illegal characters replaced by space)
+   */
+  static List<String> writeSheets(List<Matrix> matrices, File file, LinkedHashMap<String, String> sheetNamesAndPositions = null) {
+    if (sheetNamesAndPositions == null) {
+      if (matrices == null) {
+        throw new IllegalArgumentException("Matrices list cannot be null")
+      }
+      List<String> sheetNames = matrices.collect { it.matrixName }
+      return writeSheetsInternal(matrices, file, sheetNames, null)
+    }
+    if (matrices == null) {
+      throw new IllegalArgumentException("Matrices list cannot be null")
+    }
+    // LinkedHashMap preserves insertion order and cannot contain duplicate keys.
+    if (sheetNamesAndPositions.size() != matrices.size()) {
+      throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
+    }
+    List<String> sheetNames = []
+    List<String> startPositions = []
+    sheetNamesAndPositions.each { String name, String position ->
+      sheetNames.add(name)
+      startPositions.add(position ?: DEFAULT_START_POSITION)
+    }
+    return writeSheetsInternal(matrices, file, sheetNames, startPositions)
+  }
+
+  private static List<String> writeSheetsInternal(List<Matrix> matrices, File file, List<String> sheetNames, List<String> startPositions) {
     if (matrices == null) {
       throw new IllegalArgumentException("Matrices list cannot be null")
     }
@@ -131,6 +171,13 @@ class SpreadsheetWriter {
     if (matrices.size() != sheetNames.size()) {
       throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
     }
+    List<String> positions = startPositions ?: Collections.nCopies(matrices.size(), DEFAULT_START_POSITION)
+    if (positions.size() != matrices.size()) {
+      throw new IllegalArgumentException("Matrices and start positions lists must have the same size")
+    }
+    positions.each { String position ->
+      SpreadsheetUtil.parseCellPosition(position)
+    }
     // Validate each matrix has columns
     matrices.eachWithIndex { matrix, idx ->
       if (matrix == null) {
@@ -141,12 +188,16 @@ class SpreadsheetWriter {
       }
     }
     if (file.getName().toLowerCase().endsWith(".ods")) {
-      return SOdsExporter.exportOdsSheets(file, matrices, sheetNames)
+      if (file.exists() && file.length() > 0) {
+        return FOdsAppender.appendOrReplaceSheets(file, matrices, sheetNames, positions)
+      }
+      return FOdsExporter.exportOdsSheets(file, matrices, sheetNames, positions)
     }
-    return switch (excelImplementation) {
-      case ExcelImplementation.POI -> ExcelExporter.exportExcelSheets(file, matrices, sheetNames)
-      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcelSheets(file, matrices, sheetNames)
+    SpreadsheetUtil.ensureXlsx(file)
+    if (file.exists() && file.length() > 0) {
+      return FExcelAppender.appendOrReplaceSheets(file, matrices, sheetNames, positions)
     }
+    return FExcelExporter.exportExcelSheets(file, matrices, sheetNames, positions)
   }
 
   /**
@@ -161,4 +212,5 @@ class SpreadsheetWriter {
     def sheetNames = params.get("sheetNames") as List<String>
     return writeSheets(data, file, sheetNames)
   }
+
 }

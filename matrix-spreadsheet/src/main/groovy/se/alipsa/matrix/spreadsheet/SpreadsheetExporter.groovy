@@ -2,9 +2,6 @@ package se.alipsa.matrix.spreadsheet
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.fastexcel.FExcelExporter
-import se.alipsa.matrix.spreadsheet.poi.ExcelExporter
-import se.alipsa.matrix.spreadsheet.sods.SOdsExporter
 
 /**
  * Exports Matrix data to spreadsheet files (Excel, ODS).
@@ -17,25 +14,11 @@ import se.alipsa.matrix.spreadsheet.sods.SOdsExporter
  *   <li>{@code SpreadsheetExporter.exportSpreadsheets(file, data, sheetNames)} → {@code SpreadsheetWriter.writeSheets(data, file, sheetNames)}</li>
  * </ul>
  *
- * <p><strong>Thread-safety limitation:</strong> This deprecated class maintains its own static
- * {@code excelImplementation} field to avoid race conditions with {@link SpreadsheetWriter}.
- * However, concurrent calls to this deprecated class itself are still not thread-safe.
- * For thread-safe spreadsheet writing, migrate to {@link SpreadsheetWriter}.</p>
- *
  * @see SpreadsheetWriter
  */
 @Deprecated
 @CompileStatic
 class SpreadsheetExporter {
-
-  /**
-   * Excel implementation to use for this deprecated class.
-   * Maintained separately from SpreadsheetWriter to avoid race conditions.
-   *
-   * @deprecated Use {@link SpreadsheetWriter#excelImplementation} instead
-   */
-  @Deprecated
-  public static ExcelImplementation excelImplementation = ExcelImplementation.POI
 
   /**
    * Export a Matrix to a spreadsheet file.
@@ -47,14 +30,7 @@ class SpreadsheetExporter {
    */
   @Deprecated
   static String exportSpreadsheet(File file, Matrix data) {
-    // Use local implementation field to avoid race conditions with SpreadsheetWriter
-    if (file.getName().toLowerCase().endsWith(".ods")) {
-      return SOdsExporter.exportOds(file, data)
-    }
-    return switch (excelImplementation) {
-      case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, data)
-      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcel(file, data)
-    }
+    SpreadsheetWriter.write(data, file)
   }
 
   /**
@@ -68,14 +44,7 @@ class SpreadsheetExporter {
    */
   @Deprecated
   static String exportSpreadsheet(File file, Matrix data, String sheetName) {
-    // Use local implementation field to avoid race conditions with SpreadsheetWriter
-    if (file.getName().toLowerCase().endsWith(".ods")) {
-      return SOdsExporter.exportOds(file, data, sheetName)
-    }
-    return switch (excelImplementation) {
-      case ExcelImplementation.POI -> ExcelExporter.exportExcel(file, data, sheetName)
-      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcel(file, data, sheetName)
-    }
+    SpreadsheetWriter.write(data, file, sheetName)
   }
 
   /**
@@ -89,14 +58,7 @@ class SpreadsheetExporter {
    */
   @Deprecated
   static List<String> exportSpreadsheets(File file, List<Matrix> data, List<String> sheetNames) {
-    // Use local implementation field to avoid race conditions with SpreadsheetWriter
-    if (file.getName().toLowerCase().endsWith(".ods")) {
-      return SOdsExporter.exportOdsSheets(file, data, sheetNames)
-    }
-    return switch (excelImplementation) {
-      case ExcelImplementation.POI -> ExcelExporter.exportExcelSheets(file, data, sheetNames)
-      case ExcelImplementation.FastExcel -> FExcelExporter.exportExcelSheets(file, data, sheetNames)
-    }
+    SpreadsheetWriter.writeSheets(data, file, sheetNames)
   }
 
   /**
@@ -108,7 +70,6 @@ class SpreadsheetExporter {
    */
   @Deprecated
   static List<String> exportSpreadsheets(Map params) {
-    // Use local implementation field to avoid race conditions with SpreadsheetWriter
     File file = params.file as File
     List<Matrix> data = params.data as List<Matrix>
     List<String> sheetNames = params.sheetNames as List<String>

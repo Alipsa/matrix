@@ -15,10 +15,16 @@ This is a Gradle multi-module Groovy/Java project. Each module lives in a `matri
 
 ## Coding Style & Naming Conventions
 Use Groovy 5.0.3 and target Java 21. Follow the existing 2-space indentation and import style in each file. Prefer `@CompileStatic` and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted. Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories. Always add GroovyDoc for public classes and public methods. There is no enforced formatter, so match the surrounding file conventions.
-Prefer idiomatic groovy constructs such as closures, `each`, `collect`, and `findAll` for collections. Use string interpolation (`"${var}"`) instead of concatenation when building strings. Default numeric type in groovy is BigDecimal, try to take advantage of that rather than converting to double/float.
+Prefer idiomatic groovy constructs.
+Bear in min that Groovy is not Java, and while they interoperate seamlessly, Groovy has its own idioms and best practices that differ from Java. Write code that is idiomatic Groovy rather than Java code written in Groovy syntax. Some examples:
+ - Use Groovy's native collection literals and methods e.g. closures, `each`, `collect`, and `findAll` instead of Java-style loops and streams.
+ - Prefer closures and higher-order functions over verbose anonymous classes.
+ - == vs .equals(): Use `==` for value equality in Groovy, which handles nulls gracefully. == does NOT mean reference equality like in Java.
+ - String interpolation: Use `"${var}"` for building strings instead of concatenation.
+ - Default numeric type: Groovy uses BigDecimal as the default for decimal literals. Prefer BigDecimal over double/float unless performance is critical.
 
 ## DRY Principle (Don't Repeat Yourself)
-**CRITICAL:** Avoid code duplication at all costs. Before implementing functionality, check if similar code already exists in the codebase. If you find duplicated code (identical or near-identical methods, constants, or logic in multiple files):
+**CRITICAL:** Avoid code duplication! Before implementing functionality, check if similar code already exists in the codebase. If you find duplicated code (identical or near-identical methods, constants, or logic in multiple files):
 
 1. **Extract to Utility Class**: Create a shared utility class in an appropriate package to hold the common functionality. For example:
    - Color conversion logic → `ColorSpaceUtil` in the same package

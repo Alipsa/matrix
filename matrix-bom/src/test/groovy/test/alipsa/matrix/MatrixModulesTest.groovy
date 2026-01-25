@@ -19,7 +19,7 @@ import se.alipsa.matrix.json.JsonExporter
 import se.alipsa.matrix.json.JsonImporter
 import se.alipsa.matrix.parquet.MatrixParquetReader
 import se.alipsa.matrix.parquet.MatrixParquetWriter
-import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
+import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import se.alipsa.matrix.spreadsheet.SpreadsheetImporter
 import se.alipsa.matrix.sql.MatrixSql
 import se.alipsa.matrix.stats.Sampler
@@ -92,7 +92,7 @@ class MatrixModulesTest {
     Matrix mtcars = Dataset.mtcars()
     def file = new File("target/mtcars.xlsx")
     if (file.exists()) file.delete()
-    SpreadsheetExporter.exportSpreadsheet(file, mtcars)
+    SpreadsheetWriter.write(mtcars, file)
     println "wrote $file"
 
     Matrix m2 = SpreadsheetImporter.importSpreadsheet([

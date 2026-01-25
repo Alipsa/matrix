@@ -1,6 +1,6 @@
 # Matrix Spreadsheet Module
 
-The matrix-spreadsheet module provides functionality for importing data from spreadsheets into Matrix objects and exporting Matrix objects to spreadsheets. It supports both Excel (.xls, .xlsx) and LibreOffice/OpenOffice Calc (.ods) formats.
+The matrix-spreadsheet module provides functionality for importing data from spreadsheets into Matrix objects and exporting Matrix objects to spreadsheets. It supports Excel (.xlsx) and LibreOffice/OpenOffice Calc (.ods) formats.
 
 Note that indexing in this module follows the Excel convention of starting with 1 instead of the usual 0 in Groovy.
 This means that the first row and the first column are both referenced as 1.
@@ -109,12 +109,12 @@ If you need to import from a stream (e.g., from a resource or network), you must
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.poi.ExcelImporter
-import se.alipsa.matrix.spreadsheet.sods.SOdsImporter
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
+import se.alipsa.matrix.spreadsheet.fastods.FOdsImporter
 
 // Importing an Excel spreadsheet
 try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
-    Matrix table = ExcelImporter.create().importSpreadsheet(
+    Matrix table = FExcelImporter.create().importSpreadsheet(
         is, 'Sheet1', 1, 12, 'A', 'D', true
     )
     assert 3.0d == table[2, 0]
@@ -122,7 +122,7 @@ try (InputStream is = this.getClass().getResourceAsStream("/Book1.xlsx")) {
 
 // Importing an OpenOffice spreadsheet
 try (InputStream is = this.getClass().getResourceAsStream("/Book1.ods")) {
-    Matrix table = SOdsImporter.importSpreadsheet(
+    Matrix table = FOdsImporter.create().importSpreadsheet(
         is, 'Sheet1', 1, 12, 'A', 'D', true
     )
     assert "3.0" == table[2, 0]
@@ -139,7 +139,7 @@ import se.alipsa.matrix.spreadsheet.fastods.*
 
 // Importing an Excel spreadsheet
 URL url = this.getClass().getResource("/Book1.xlsx")
-Matrix table = ExcelImporter.create().importSpreadsheet(
+Matrix table = FExcelImporter.create().importSpreadsheet(
     url, 'Sheet1', 1, 12, 'A', 'D', true
 )
 assert 3.0d == table[2, 0]
@@ -154,13 +154,13 @@ assert 3.0 == book1[2, 0]
 
 ```
 
-### Different spreadsheet import and export implementations
-Since both POI and SODS as require quite a lot of memory for large spreadsheets, work is underway to implement faster and less memory hungry implementations. The SpreadsheetImporter and SpreadsheetExporter classes shields you from a lot of that complexity. For reading Excel files, the current default implementation is based on fastexcel, while the export defaults are based on POI. Similarly, the default implementation for reading ODS files is based on a "native" matrix-spreadsheet implementation (see the se.alipsa.matrix.spreadsheet.fastods package) while the default for writing is based on SODS. It is possible to override the default and specify which implementation to use in the importSpreadsheet and exportSpreadsheet methods respectively. The API will stay the same but the underlying default implementation may change in the future.
+### Spreadsheet implementations
+Matrix-spreadsheet uses FastExcel for .xlsx import/export and FastOds (streaming) for .ods import/reading/export to reduce memory usage. The SpreadsheetImporter and SpreadsheetWriter classes hide the underlying implementation details.
 
 
 ## Exporting to Spreadsheets
 
-The matrix-spreadsheet module also provides functionality to export Matrix objects to spreadsheets using the `SpreadsheetExporter` class.
+The matrix-spreadsheet module also provides functionality to export Matrix objects to spreadsheets using the `SpreadsheetWriter` class.
 
 ### Basic Export
 
@@ -169,7 +169,7 @@ Here's a simple example of exporting a Matrix to a spreadsheet:
 ```groovy
 import static se.alipsa.matrix.core.ListConverter.*
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.spreadsheet.SpreadsheetExporter
+import se.alipsa.matrix.spreadsheet.SpreadsheetWriter
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -193,7 +193,10 @@ def table = Matrix.builder().data(
 def file = File.createTempFile("matrix", ".xlsx")
 
 // Export the Matrix to an Excel file
-SpreadsheetExporter.exportSpreadsheet(file, table)
+SpreadsheetWriter.write(table, file)
+
+// Export the Matrix starting at a specific cell
+SpreadsheetWriter.write(table, file, "Metrics", "B3")
 
 println("Spreadsheet exported to: ${file.absolutePath}")
 ```
@@ -221,14 +224,21 @@ Matrix salesDetails = Matrix.builder().data(
 ).build()
 
 // Export both matrices to a single spreadsheet with multiple sheets
-SpreadsheetExporter.exportSpreadsheets(
+SpreadsheetWriter.writeSheets(
     file: new File("/path/to/sales_report.xlsx"),
     data: [salesByMonth, salesDetails],
     sheetNames: ['Monthly Summary', 'Sales Details']
 )
+
+// Export with per-sheet start positions (LinkedHashMap preserves order)
+SpreadsheetWriter.writeSheets(
+    file: new File("/path/to/sales_report.xlsx"),
+    data: [salesByMonth, salesDetails],
+    sheetNamesAndPositions: ['Monthly Summary': 'B2', 'Sales Details': 'D4']
+)
 ```
 
-The file extension (.xls, .xlsx, .ods) determines the type of spreadsheet that will be created (Excel or Calc).
+The file extension (.xlsx or .ods) determines the type of spreadsheet that will be created (Excel or Calc).
 
 ## Reading Spreadsheet Information
 
@@ -262,29 +272,29 @@ try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheet)) {
 
 ## Handling Large Files
 
-Apache POI, which is used to handle Excel sheets, requires a significant amount of memory. If you're working with spreadsheets containing more than 150,000 rows, you might encounter out-of-memory errors. Here are some strategies for dealing with large files:
+FastExcel is the default Excel backend and uses streaming to keep memory usage down. If you're working with spreadsheets containing more than 150,000 rows, you might still encounter out-of-memory errors. Here are some strategies for dealing with large files:
 
 1. **Export to CSV first**: If increasing RAM is not an option, consider exporting the content to a CSV file and use the matrix-csv module to import the data instead.
 
-2. **Use streaming implementation**: The library includes an alternative implementation based on fastexcel which uses streaming and requires much less memory:
+2. **Stream a single sheet**: Reading a single sheet at a time minimizes memory use:
 
 ```groovy
-import se.alipsa.matrix.spreadsheet.fastexcel.*
+import se.alipsa.matrix.spreadsheet.fastexcel.FExcelImporter
 import se.alipsa.matrix.core.Matrix
 
-// Import a large Excel file using the streaming implementation
-Matrix data = FExcelImporter.importExcel(
-    file: "/path/to/large_file.xlsx",
-    sheetName: "Data",
-    startRow: 1,
-    endRow: 200000,  // Can handle many more rows than POI
-    startCol: "A",
-    endCol: "Z"
+// Import a large Excel file (streaming)
+Matrix data = FExcelImporter.create().importSpreadsheet(
+    "/path/to/large_file.xlsx",
+    "Data",
+    1,
+    200000,
+    "A",
+    "Z",
+    true
 )
 ```
 
-Note that the streaming implementation has some limitations compared to the POI implementation, such as being unable to append sheets to an existing Excel document.
-Also, reading multiple sheets at once requires the streaming implementation to change the content of the spreadsheet so it can be re streamed for each sheet which might take up a lot of memory. The streaming readers shines when reading a single sheet of a large spreadsheets. 
+FastExcel now supports appending new sheets (or replacing sheets with the same name) in existing Excel workbooks. The writer preserves existing sheets and metadata; new sheets inherit base column widths/default row heights from the first sheet when available. FastOds likewise supports appending/replacing sheets in existing .ods files via SpreadsheetWriter/FOdsAppender. Reading multiple sheets at once can still require re-streaming the workbook and may increase memory use; the streaming reader shines when reading a single sheet from a large spreadsheet.
 
 ## Best Practices
 

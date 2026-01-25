@@ -77,7 +77,7 @@ interface Importer {
    * Imports multiple sheets in one go.
    * Example:
    * <code><pre>
-   * Map<String, Matrix> sheets = ExcelImporter.create().importSpreadsheets(is, [
+   * Map<String, Matrix> sheets = FExcelImporter.create().importSpreadsheets(is, [
    *   [sheetName: 'Sheet1', startRow: 3, endRow: 11, startCol: 2, endCol: 5, firstRowAsColNames: true],
    *   [sheetName: 'Sheet2', startRow: 1, endRow: 12, startCol: 'A', endCol: 'D', firstRowAsColNames: true]
    * ])
