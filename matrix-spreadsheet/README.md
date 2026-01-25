@@ -104,6 +104,9 @@ def file = File.createTempFile("matrix", ".xlsx")
 
 // Export the Matrix to an excel file
 SpreadsheetWriter.write(table, file)
+
+// Export the Matrix starting at a specific cell
+SpreadsheetWriter.write(table, file, "Metrics", "B3")
 ```
 
 ## Export to multiple sheets
@@ -120,6 +123,13 @@ SpreadsheetWriter.writeSheets(
   file: new File("/some/path/sales.ods"),
   data: [revenuePerYearMonth, details],
   sheetNames: ['monthly', 'details']
+)
+
+// Export with per-sheet start positions (LinkedHashMap preserves order)
+SpreadsheetWriter.writeSheets(
+  data: [revenuePerYearMonth, details],
+  file: new File("/some/path/sales.xlsx"),
+  sheetNamesAndPositions: ['monthly': 'B2', 'details': 'D4']
 )
 ```
 

@@ -195,6 +195,9 @@ def file = File.createTempFile("matrix", ".xlsx")
 // Export the Matrix to an Excel file
 SpreadsheetWriter.write(table, file)
 
+// Export the Matrix starting at a specific cell
+SpreadsheetWriter.write(table, file, "Metrics", "B3")
+
 println("Spreadsheet exported to: ${file.absolutePath}")
 ```
 
@@ -225,6 +228,13 @@ SpreadsheetWriter.writeSheets(
     file: new File("/path/to/sales_report.xlsx"),
     data: [salesByMonth, salesDetails],
     sheetNames: ['Monthly Summary', 'Sales Details']
+)
+
+// Export with per-sheet start positions (LinkedHashMap preserves order)
+SpreadsheetWriter.writeSheets(
+    file: new File("/path/to/sales_report.xlsx"),
+    data: [salesByMonth, salesDetails],
+    sheetNamesAndPositions: ['Monthly Summary': 'B2', 'Sales Details': 'D4']
 )
 ```
 
