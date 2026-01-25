@@ -5,6 +5,7 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
+import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
@@ -323,10 +324,7 @@ class FExcelAppender {
   private static Document parseXml(String xml) {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance()
     factory.setNamespaceAware(false)
-    setFeatureSafe(factory, "http://apache.org/xml/features/disallow-doctype-decl", true)
-    setFeatureSafe(factory, "http://xml.org/sax/features/external-general-entities", false)
-    setFeatureSafe(factory, "http://xml.org/sax/features/external-parameter-entities", false)
-    setFeatureSafe(factory, "http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+    XmlSecurityUtil.configureDocumentBuilderFactory(factory)
     def builder = factory.newDocumentBuilder()
     return builder.parse(new InputSource(new StringReader(xml)))
   }
@@ -340,14 +338,6 @@ class FExcelAppender {
     StringWriter out = new StringWriter()
     transformer.transform(new DOMSource(doc), new StreamResult(out))
     out.toString()
-  }
-
-  private static void setFeatureSafe(DocumentBuilderFactory factory, String feature, boolean value) {
-    try {
-      factory.setFeature(feature, value)
-    } catch (Exception ignored) {
-      // best-effort hardening
-    }
   }
 
   private static String buildSheetXml(Matrix matrix, SheetTemplate template) {

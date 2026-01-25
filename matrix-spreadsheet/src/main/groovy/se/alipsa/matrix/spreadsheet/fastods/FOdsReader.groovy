@@ -4,10 +4,10 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.FileUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetReader
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
+import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.fastods.reader.OdsDataReader
 import se.alipsa.matrix.spreadsheet.fastods.reader.Uncompressor
 
-import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamReader
 
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
@@ -164,7 +164,7 @@ class FOdsReader implements SpreadsheetReader {
       String entry = unc.nextFile()
       while (entry != null) {
         if (entry == 'content.xml') {
-          xmlReader = XMLInputFactory.newInstance().createXMLStreamReader(unc.getInputStream())
+          xmlReader = XmlSecurityUtil.newSecureInputFactory().createXMLStreamReader(unc.getInputStream())
           while (xmlReader.hasNext()) {
             xmlReader.next()
             if (xmlReader.isStartElement() && xmlReader.localName == 'table') {

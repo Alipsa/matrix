@@ -284,7 +284,7 @@ Matrix data = FExcelImporter.create().importSpreadsheet(
 )
 ```
 
-FastExcel now supports appending new sheets (or replacing sheets with the same name) in existing Excel workbooks. The writer preserves existing sheets and metadata; new sheets inherit base column widths/default row heights from the first sheet when available. Reading multiple sheets at once can still require re-streaming the workbook and may increase memory use; the streaming reader shines when reading a single sheet from a large spreadsheet.
+FastExcel now supports appending new sheets (or replacing sheets with the same name) in existing Excel workbooks. The writer preserves existing sheets and metadata; new sheets inherit base column widths/default row heights from the first sheet when available. FastOds likewise supports appending/replacing sheets in existing .ods files via SpreadsheetWriter/FOdsAppender. Reading multiple sheets at once can still require re-streaming the workbook and may increase memory use; the streaming reader shines when reading a single sheet from a large spreadsheet.
 
 ## Best Practices
 

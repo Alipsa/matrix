@@ -205,7 +205,7 @@ class FExcelImporter implements Importer {
   }
 
   private static void ensureXlsx(String fileName) {
-    if (fileName?.toLowerCase()?.endsWith(".xls")) {
+    if (fileName != null && fileName.toLowerCase().endsWith(".xls")) {
       throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
     }
   }

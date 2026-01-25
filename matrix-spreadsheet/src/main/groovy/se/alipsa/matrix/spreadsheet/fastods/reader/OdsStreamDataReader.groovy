@@ -3,6 +3,7 @@ package se.alipsa.matrix.spreadsheet.fastods.reader
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
+import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamReader
@@ -22,15 +23,15 @@ import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
 final class OdsStreamDataReader extends OdsDataReader {
 
   static StringBuilder text = new StringBuilder()
+  // Chosen to tolerate large, intentional padding while preventing runaway expansion of trailing empty rows.
+  private static final int TRAILING_EMPTY_ROW_THRESHOLD = 1000
 
   static OdsStreamDataReader create() {
     new OdsStreamDataReader()
   }
 
   Sheet processContent(final InputStream is, Object sheet, Integer startRow, Integer endRow, Integer startCol, Integer endCol) {
-    final XMLInputFactory factory = XMLInputFactory.newInstance()
-    factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false)
-    factory.setProperty(XMLInputFactory.SUPPORT_DTD, false)
+    final XMLInputFactory factory = XmlSecurityUtil.newSecureInputFactory()
     Integer sheetCount = 1
     final XMLStreamReader reader = factory.createXMLStreamReader(is)
     if (sheet == null) {
@@ -69,7 +70,7 @@ final class OdsStreamDataReader extends OdsDataReader {
         List<Object> rowValues = processRow(reader, startColumn, endColumn)
         boolean isEmptyRow = rowValues == null || rowValues.isEmpty() || rowValues.every { it == null }
 
-        if (isEmptyRow && repeatRows > 1000 && endRow == Integer.MAX_VALUE) {
+        if (isEmptyRow && repeatRows > TRAILING_EMPTY_ROW_THRESHOLD && endRow == Integer.MAX_VALUE) {
           // ODS files often encode trailing empty rows with a huge repeat count.
           // Stop here to avoid inflating row counts and memory usage.
           break

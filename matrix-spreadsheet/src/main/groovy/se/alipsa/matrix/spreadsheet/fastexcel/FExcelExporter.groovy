@@ -110,7 +110,7 @@ class FExcelExporter {
 
     ensureXlsx(file)
     if (file.exists() && !overwrite && file.length() > 0) {
-      throw new IllegalArgumentException("Appending to an external file is not supported, remove it first")
+      throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
     }
 
     try (FileOutputStream fos = new FileOutputStream(file); Workbook workbook = new Workbook(fos, APP_NAME, VERSION)) {

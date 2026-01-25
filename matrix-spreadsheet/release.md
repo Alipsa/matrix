@@ -5,7 +5,7 @@
 - Added append/replace support for existing XLSX and ODS files; preserves existing sheets and metadata.
 - New ODS streaming writer/appender that reuses table attributes/columns for base styling.
 - XLSX append now inherits sheetFormatPr, column widths, and page margins, and fixes relId collisions in workbook relationships.
-- Updated tests to cover append/replace and style inheritance. API (no implementation selection)
+- Updated tests to cover append/replace and style inheritance. API simplified with no implementation selection needed.
 - Explicitly reject legacy .xls files (xlsx only)
 
 ## v2.2.1, 2025-07-19

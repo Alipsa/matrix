@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import javax.xml.stream.XMLInputFactory
@@ -109,7 +110,7 @@ class FOdsAppender {
       zos.closeEntry()
       return
     }
-    XMLInputFactory inFactory = XMLInputFactory.newInstance()
+    XMLInputFactory inFactory = XmlSecurityUtil.newSecureInputFactory()
     XMLOutputFactory outFactory = XMLOutputFactory.newInstance()
     XMLStreamReader reader = inFactory.createXMLStreamReader(input)
     XMLStreamWriter writer = outFactory.createXMLStreamWriter(zos, "UTF-8")
@@ -231,9 +232,11 @@ class FOdsAppender {
       case XMLStreamConstants.START_ELEMENT -> {
         String prefix = reader.prefix ?: ""
         String namespace = reader.namespaceURI ?: ""
-        writer.writeStartElement(prefix, reader.localName, namespace)
+        writer.writeStartElement(prefix ?: "", reader.localName, namespace ?: "")
         for (int i = 0; i < reader.namespaceCount; i++) {
-          writer.writeNamespace(reader.getNamespacePrefix(i), reader.getNamespaceURI(i))
+          String nsPrefix = reader.getNamespacePrefix(i) ?: ""
+          String nsUri = reader.getNamespaceURI(i) ?: ""
+          writer.writeNamespace(nsPrefix, nsUri)
         }
         for (int i = 0; i < reader.attributeCount; i++) {
           String attrPrefix = reader.getAttributePrefix(i)

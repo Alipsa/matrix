@@ -40,7 +40,7 @@ class FOdsExporter {
 
   static List<String> exportOdsSheets(File file, List<Matrix> data, List<String> sheetNames) {
     if (file.exists() && file.length() > 0) {
-      throw new IllegalArgumentException("Appending to an external file is not supported, remove it first")
+      throw new IllegalArgumentException("Appending to an existing ODS file is not supported by FOdsExporter. Use FOdsAppender or SpreadsheetWriter for append/replace operations.")
     }
     if (data.size() != sheetNames.size()) {
       throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")

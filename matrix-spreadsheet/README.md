@@ -141,7 +141,7 @@ try (SpreadsheetReader reader = SpreadsheetReader.Factory.create(spreadsheet)) {
 See [the tests](https://github.com/Alipsa/spreadsheet/tree/main/src/test/groovy/spreadsheet) for more usage examples!
 
 # Handling large files
-Matrix-spreadsheet uses FastExcel for .xlsx import/export and FastOds (streaming) for .ods import/reading/export by default to keep memory usage low. If you have Excel sheets with more than 150,000 rows you might still encounter out of memory errors; if increasing RAM is not an option, consider exporting the content to CSV and use matrix-csv to import the data instead. Note that the FastExcel backend only supports .xlsx (not legacy .xls) and it cannot append sheets to an existing Excel document. The FastOds exporter also does not support appending to existing files.
+Matrix-spreadsheet uses FastExcel for .xlsx import/export and FastOds (streaming) for .ods import/reading/export by default to keep memory usage low. If you have Excel sheets with more than 150,000 rows you might still encounter out of memory errors; if increasing RAM is not an option, consider exporting the content to CSV and use matrix-csv to import the data instead. Note that the FastExcel backend only supports .xlsx (not legacy .xls). Appending/replacing sheets in existing .xlsx files is supported via SpreadsheetWriter/FExcelAppender, and appending/replacing sheets in existing .ods files is supported via SpreadsheetWriter/FOdsAppender.
 
 # Release version compatibility matrix
 The following table illustrates the version compatibility of the matrix-csv and matrix core
@@ -175,8 +175,8 @@ Used to handle Excel (.xlsx) import and export
 - License: Apache 2.0
 
 ### FastOds
-Used to handle ODS import/export
-- URL: https://github.com/Alipsa/matrix
+Internal streaming ODS implementation bundled with matrix-spreadsheet (not an external dependency).
+- URL: https://github.com/Alipsa/matrix (matrix-spreadsheet fastods package)
 - License: MIT
 
 ### Matrix-core
