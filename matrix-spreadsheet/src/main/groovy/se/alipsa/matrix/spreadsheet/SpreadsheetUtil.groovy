@@ -57,12 +57,35 @@ class SpreadsheetUtil {
       createColumnNames(endCol - startCol + 1)
    }
 
-  static List<String> createColumnNames(int nCols) {
+   static List<String> createColumnNames(int nCols) {
       List<String> header = []
       for (int i = 1; i <= nCols; i++) {
          header.add("c$i".toString())
       }
       header
+   }
+
+   /**
+    * Ensure only .xlsx is used for Excel files.
+    *
+    * @param file the file to validate
+    */
+   static void ensureXlsx(File file) {
+      if (file == null) {
+         return
+      }
+      ensureXlsx(file.getName())
+   }
+
+   /**
+    * Ensure only .xlsx is used for Excel files.
+    *
+    * @param fileName the file name or path to validate
+    */
+   static void ensureXlsx(String fileName) {
+      if (fileName != null && fileName.toLowerCase().endsWith(".xls")) {
+         throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
+      }
    }
 
    /**

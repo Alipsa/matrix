@@ -13,7 +13,7 @@ interface SpreadsheetReader extends Closeable {
       if (file == null) {
         throw new IllegalArgumentException("File is null, cannot create SpreadsheetReader")
       }
-      ensureSupportedExcelFormat(file.getName())
+      SpreadsheetUtil.ensureXlsx(file.getName())
       if (file.getName().toLowerCase().endsWith(".ods")) {
         return new FOdsReader(file)
       }
@@ -24,18 +24,13 @@ interface SpreadsheetReader extends Closeable {
       if (filePath == null) {
         throw new IllegalArgumentException("filePath is null, cannot create SpreadsheetReader")
       }
-      ensureSupportedExcelFormat(filePath)
+      SpreadsheetUtil.ensureXlsx(filePath)
       if (filePath.toLowerCase().endsWith(".ods")) {
         return new FOdsReader(filePath)
       }
       return new FExcelReader(filePath)
     }
 
-    private static void ensureSupportedExcelFormat(String fileName) {
-      if (fileName.toLowerCase().endsWith(".xls")) {
-        throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
-      }
-    }
   }
 
   int findRowNum(int sheetNumber, int colNumber, String content) throws Exception

@@ -62,7 +62,7 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
-    ensureSupportedExcelFormat(file)
+    SpreadsheetUtil.ensureXlsx(file)
     if (matrix.columnCount() == 0) {
       throw new IllegalArgumentException("Matrix must have at least one column")
     }
@@ -94,7 +94,7 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
-    ensureSupportedExcelFormat(file)
+    SpreadsheetUtil.ensureXlsx(file)
     if (matrix.columnCount() == 0) {
       throw new IllegalArgumentException("Matrix must have at least one column")
     }
@@ -165,7 +165,7 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
-    ensureSupportedExcelFormat(file)
+    SpreadsheetUtil.ensureXlsx(file)
     if (sheetNames == null) {
       throw new IllegalArgumentException("Sheet names list cannot be null")
     }
@@ -213,9 +213,4 @@ class SpreadsheetWriter {
     return writeSheets(data, file, sheetNames)
   }
 
-  private static void ensureSupportedExcelFormat(File file) {
-    if (file.getName().toLowerCase().endsWith(".xls")) {
-      throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
-    }
-  }
 }

@@ -29,7 +29,7 @@ class SpreadsheetImporter {
     if (isOdsFile(file)) {
       return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    ensureSupportedExcelFormat(file)
+    SpreadsheetUtil.ensureXlsx(file)
     return excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
@@ -92,7 +92,7 @@ class SpreadsheetImporter {
                             int startRow = 1, int endRow,
                             int startColumn = 1, int endColumn,
                             boolean firstRowAsColNames = true) {
-    ensureSupportedExcelFormat(url?.path)
+    SpreadsheetUtil.ensureXlsx(url?.path)
     excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
@@ -100,7 +100,7 @@ class SpreadsheetImporter {
                             int startRow = 1, int endRow,
                             int startColumn = 1, int endColumn,
                             boolean firstRowAsColNames = true) {
-    ensureSupportedExcelFormat(url?.path)
+    SpreadsheetUtil.ensureXlsx(url?.path)
     excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
@@ -108,7 +108,7 @@ class SpreadsheetImporter {
                             int startRow = 1, int endRow,
                             String startColumn = 'A', String endColumn,
                             boolean firstRowAsColNames = true) {
-    ensureSupportedExcelFormat(url?.path)
+    SpreadsheetUtil.ensureXlsx(url?.path)
     excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
@@ -117,7 +117,7 @@ class SpreadsheetImporter {
                             String startColumn = 'A', String endColumn,
                             boolean firstRowAsColNames = true) {
 
-    ensureSupportedExcelFormat(url?.path)
+    SpreadsheetUtil.ensureXlsx(url?.path)
     excelImporter().importSpreadsheet(url, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
 
@@ -140,7 +140,7 @@ class SpreadsheetImporter {
     if (isOdsFile(file)) {
       return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    ensureSupportedExcelFormat(file)
+    SpreadsheetUtil.ensureXlsx(file)
     return excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
   }
@@ -164,7 +164,7 @@ class SpreadsheetImporter {
     if (isOdsFile(file)) {
       return odsImporter().importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
     }
-    ensureSupportedExcelFormat(file)
+    SpreadsheetUtil.ensureXlsx(file)
     excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
@@ -191,7 +191,7 @@ class SpreadsheetImporter {
       return odsImporter()
           .importSpreadsheet(file, sheet, startRow, endRow, startColumn, endColumn, firstRowAsColNames)
     }
-    ensureSupportedExcelFormat(file)
+    SpreadsheetUtil.ensureXlsx(file)
     excelImporter()
         .importSpreadsheet(file, sheet, startRow, endRow, startCol, endCol, firstRowAsColNames)
   }
@@ -273,7 +273,7 @@ class SpreadsheetImporter {
       NumberFormat format = formatOpt.length > 0 ? formatOpt[0] : NumberFormat.getInstance()
       return odsImporter().importSpreadsheets(fileName, sheetParams, format)
     }
-    ensureSupportedExcelFormat(fileName)
+    SpreadsheetUtil.ensureXlsx(fileName)
     return excelImporter().importSpreadsheets(fileName, sheetParams, formatOpt)
   }
 
@@ -309,9 +309,4 @@ class SpreadsheetImporter {
     return fileName?.toLowerCase()?.endsWith(".ods") ?: false
   }
 
-  private static void ensureSupportedExcelFormat(String fileName) {
-    if (fileName?.toLowerCase()?.endsWith(".xls")) {
-      throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
-    }
-  }
 }

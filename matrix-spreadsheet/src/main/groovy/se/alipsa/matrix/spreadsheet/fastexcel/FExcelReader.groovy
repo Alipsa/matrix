@@ -16,7 +16,7 @@ class FExcelReader implements SpreadsheetReader {
   private ReadableWorkbook workbook
 
   FExcelReader(File excelFile) {
-    ensureXlsx(excelFile.name)
+    SpreadsheetUtil.ensureXlsx(excelFile.name)
     workbook = new ReadableWorkbook(excelFile, FExcelImporter.OPTIONS)
   }
 
@@ -30,12 +30,6 @@ class FExcelReader implements SpreadsheetReader {
   @Override
   List<String> getSheetNames() throws Exception {
     return getSheetNames(workbook)
-  }
-
-  private static void ensureXlsx(String fileName) {
-    if (fileName?.toLowerCase()?.endsWith(".xls")) {
-      throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
-    }
   }
 
   static List<String> getSheetNames(ReadableWorkbook workbook) throws Exception {

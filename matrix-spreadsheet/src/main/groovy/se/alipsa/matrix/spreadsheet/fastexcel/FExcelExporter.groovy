@@ -47,7 +47,7 @@ class FExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data) {
-    ensureXlsx(file)
+    SpreadsheetUtil.ensureXlsx(file)
     String sheetName = SpreadsheetUtil.createValidSheetName(data.matrixName)
     exportExcel(file, data, sheetName, "A1")
     return sheetName
@@ -76,7 +76,7 @@ class FExcelExporter {
    * @return the actual name of the sheet created (illegal characters replaced by space)
    */
   static String exportExcel(File file, Matrix data, String sheetName, String startPosition) {
-    ensureXlsx(file)
+    SpreadsheetUtil.ensureXlsx(file)
     String validSheetName = SpreadsheetUtil.createValidSheetName(sheetName)
     SpreadsheetUtil.CellPosition position = SpreadsheetUtil.parseCellPosition(startPosition)
     if (file.exists() && file.length() > 0) {
@@ -127,7 +127,7 @@ class FExcelExporter {
 
   static List<String> exportExcelSheets(File file, List<Matrix> data, List<String> sheetNames, List<String> startPositions, boolean overwrite = false) throws IOException {
 
-    ensureXlsx(file)
+    SpreadsheetUtil.ensureXlsx(file)
     if (file.exists() && !overwrite && file.length() > 0) {
       throw new IllegalArgumentException("Appending to an existing Excel file is not supported by FExcelExporter. Use FExcelAppender or SpreadsheetWriter for append/replace operations.")
     }
@@ -150,21 +150,6 @@ class FExcelExporter {
     } catch (IOException e) {
       logger.error("Failed to create excel file {}" + file.getAbsolutePath(), e)
       throw new IOException("Failed to create excel file ${file}", e)
-    }
-  }
-
-  private static boolean isXssf(File file) {
-    return isXssf(file.getName())
-  }
-
-  private static boolean isXssf(String filePath) {
-    return !filePath.toLowerCase().endsWith(".xls")
-
-  }
-
-  private static void ensureXlsx(File file) {
-    if (!isXssf(file)) {
-      throw new IllegalArgumentException("Unsupported Excel format .xls. Only .xlsx is supported.")
     }
   }
 
