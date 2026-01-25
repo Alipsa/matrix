@@ -62,7 +62,6 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
-    SpreadsheetUtil.ensureXlsx(file)
     if (matrix.columnCount() == 0) {
       throw new IllegalArgumentException("Matrix must have at least one column")
     }
@@ -72,6 +71,7 @@ class SpreadsheetWriter {
       }
       return FOdsExporter.exportOds(file, matrix)
     }
+    SpreadsheetUtil.ensureXlsx(file)
     if (file.exists() && file.length() > 0) {
       return FExcelAppender.appendOrReplaceSheets(file, [matrix], [matrix.matrixName], [DEFAULT_START_POSITION])[0]
     }
@@ -94,7 +94,6 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
-    SpreadsheetUtil.ensureXlsx(file)
     if (matrix.columnCount() == 0) {
       throw new IllegalArgumentException("Matrix must have at least one column")
     }
@@ -108,6 +107,7 @@ class SpreadsheetWriter {
       }
       return FOdsExporter.exportOdsSheets(file, [matrix], [sheetName], [startPosition])[0]
     }
+    SpreadsheetUtil.ensureXlsx(file)
     if (file.exists() && file.length() > 0) {
       return FExcelAppender.appendOrReplaceSheets(file, [matrix], [sheetName], [startPosition])[0]
     }
@@ -165,7 +165,6 @@ class SpreadsheetWriter {
     if (file == null) {
       throw new IllegalArgumentException("File cannot be null")
     }
-    SpreadsheetUtil.ensureXlsx(file)
     if (sheetNames == null) {
       throw new IllegalArgumentException("Sheet names list cannot be null")
     }
@@ -194,6 +193,7 @@ class SpreadsheetWriter {
       }
       return FOdsExporter.exportOdsSheets(file, matrices, sheetNames, positions)
     }
+    SpreadsheetUtil.ensureXlsx(file)
     if (file.exists() && file.length() > 0) {
       return FExcelAppender.appendOrReplaceSheets(file, matrices, sheetNames, positions)
     }
