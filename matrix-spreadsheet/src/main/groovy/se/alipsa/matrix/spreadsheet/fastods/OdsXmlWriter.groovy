@@ -101,10 +101,8 @@ class OdsXmlWriter {
     writer.writeStartElement("table", "table", tableUrn)
     writer.writeAttribute("table", tableUrn, "name", safeName)
     if (template?.tableAttributes != null) {
-      template.tableAttributes.each { TableAttribute attr ->
-        if (!attr.isTableNameAttribute()) {
-          writer.writeAttribute(attr.prefix ?: "", attr.namespace ?: "", attr.localName, attr.value)
-        }
+      template.tableAttributes.findAll { !it.isTableNameAttribute() }.each { TableAttribute attr ->
+        writer.writeAttribute(attr.prefix ?: "", attr.namespace ?: "", attr.localName, attr.value)
       }
     }
     if (template?.columns != null) {

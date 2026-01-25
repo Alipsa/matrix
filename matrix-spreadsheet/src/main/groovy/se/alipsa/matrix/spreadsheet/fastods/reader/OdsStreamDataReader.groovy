@@ -21,8 +21,6 @@ import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
  */
 @CompileStatic
 final class OdsStreamDataReader extends OdsDataReader {
-
-  static StringBuilder text = new StringBuilder()
   // Chosen to tolerate large, intentional padding while preventing runaway expansion of trailing empty rows.
   private static final int TRAILING_EMPTY_ROW_THRESHOLD = 1000
 
@@ -144,7 +142,7 @@ final class OdsStreamDataReader extends OdsDataReader {
 
     // Fallback for strings/unknown types: collect <text:p> content until </table-cell>
     // Also handles empty/self-closing <table-cell/> → returns null
-    text.setLength(0)
+    StringBuilder text = new StringBuilder()
     while (reader.hasNext()) {
       reader.next()
 

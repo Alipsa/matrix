@@ -5,7 +5,9 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
+import se.alipsa.matrix.spreadsheet.SpreadsheetWriteUtil
 import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
+import se.alipsa.matrix.spreadsheet.ZipUtil
 
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
@@ -55,7 +57,7 @@ class FExcelAppender {
     if (data.size() != sheetNames.size()) {
       throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
     }
-    Map<String, Matrix> requested = buildRequestedMap(data, sheetNames)
+    Map<String, Matrix> requested = SpreadsheetWriteUtil.buildRequestedMap(data, sheetNames)
     Map<String, String> positions = buildPositionMap(sheetNames, startPositions)
     File tmp = File.createTempFile("matrix-xlsx", ".xlsx", file.parentFile)
     boolean moved = false
@@ -94,7 +96,7 @@ class FExcelAppender {
             written.add(name)
             continue
           }
-          copyEntry(zip, entry, zos)
+        ZipUtil.copyEntry(zip, entry, zos)
           written.add(name)
         }
         plan.additions.each { String path, String xml ->
@@ -111,15 +113,6 @@ class FExcelAppender {
         tmp.delete()
       }
     }
-  }
-
-  private static Map<String, Matrix> buildRequestedMap(List<Matrix> data, List<String> sheetNames) {
-    Map<String, Matrix> requested = new LinkedHashMap<>()
-    for (int i = 0; i < data.size(); i++) {
-      String name = SpreadsheetUtil.createValidSheetName(sheetNames.get(i))
-      requested.put(name, data.get(i))
-    }
-    requested
   }
 
   private static Map<String, String> buildPositionMap(List<String> sheetNames, List<String> startPositions) {
@@ -333,13 +326,6 @@ class FExcelAppender {
       throw new IllegalArgumentException("Missing entry $name in xlsx file")
     }
     new String(zip.getInputStream(entry).bytes, StandardCharsets.UTF_8)
-  }
-
-  private static void copyEntry(ZipFile zip, ZipEntry entry, ZipOutputStream zos) {
-    ZipEntry out = new ZipEntry(entry.name)
-    zos.putNextEntry(out)
-    zos.write(zip.getInputStream(entry).bytes)
-    zos.closeEntry()
   }
 
   private static void writeEntry(ZipOutputStream zos, String name, String content) {

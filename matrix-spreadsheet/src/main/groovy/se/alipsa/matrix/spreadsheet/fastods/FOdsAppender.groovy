@@ -6,6 +6,8 @@ import org.apache.logging.log4j.Logger
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
+import se.alipsa.matrix.spreadsheet.SpreadsheetWriteUtil
+import se.alipsa.matrix.spreadsheet.ZipUtil
 
 import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLOutputFactory
@@ -41,7 +43,7 @@ class FOdsAppender {
     if (data.size() != sheetNames.size()) {
       throw new IllegalArgumentException("Matrices and sheet names lists must have the same size")
     }
-    Map<String, Matrix> requested = buildRequestedMap(data, sheetNames)
+    Map<String, Matrix> requested = SpreadsheetWriteUtil.buildRequestedMap(data, sheetNames)
     Map<String, String> positions = buildPositionMap(sheetNames, startPositions)
     File tmp = File.createTempFile("matrix-ods", ".ods", file.parentFile)
     boolean moved = false
@@ -61,7 +63,7 @@ class FOdsAppender {
             contentWritten = true
             continue
           }
-          copyEntry(zip, entry, zos)
+          ZipUtil.copyEntry(zip, entry, zos)
         }
         if (!contentWritten) {
           writeContentXml(null, zos, requested, positions)
@@ -75,15 +77,6 @@ class FOdsAppender {
         tmp.delete()
       }
     }
-  }
-
-  private static Map<String, Matrix> buildRequestedMap(List<Matrix> data, List<String> sheetNames) {
-    Map<String, Matrix> requested = new LinkedHashMap<>()
-    for (int i = 0; i < data.size(); i++) {
-      String name = SpreadsheetUtil.createValidSheetName(sheetNames.get(i))
-      requested.put(name, data.get(i))
-    }
-    requested
   }
 
   private static Map<String, String> buildPositionMap(List<String> sheetNames, List<String> startPositions) {
@@ -119,13 +112,6 @@ class FOdsAppender {
       return MIMETYPE.getBytes(StandardCharsets.UTF_8)
     }
     return zip.getInputStream(entry).bytes
-  }
-
-  private static void copyEntry(ZipFile zip, ZipEntry entry, ZipOutputStream zos) {
-    ZipEntry out = new ZipEntry(entry.name)
-    zos.putNextEntry(out)
-    zos.write(zip.getInputStream(entry).bytes)
-    zos.closeEntry()
   }
 
   private static void writeContentXml(InputStream input, ZipOutputStream zos, Map<String, Matrix> requested, Map<String, String> positions) {
