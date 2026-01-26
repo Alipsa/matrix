@@ -60,6 +60,13 @@ class TypeMapper {
     }
   }
 
+  /**
+   * Converts a BigQuery FieldValue to a Java object based on the column type.
+   *
+   * @param fv the FieldValue from BigQuery
+   * @param colType the LegacySQLTypeName indicating the column's data type
+   * @return the converted Java object, or null if the field value is null
+   */
   static Object convertFieldValue(FieldValue fv, LegacySQLTypeName colType) {
     if (fv.isNull()) return null
 
@@ -67,9 +74,12 @@ class TypeMapper {
       try {
         // Preferred: typed accessor
         return fv.getBytesValue()
-      } catch (Throwable ignore) {
-        // Fallbacks depending on client version/driver
-        def v = fv.getValue()
+      } catch (IllegalStateException | UnsupportedOperationException | ClassCastException ignored) {
+        // Fallbacks depending on client version/driver:
+        // - IllegalStateException: when FieldValue state doesn't allow getBytesValue()
+        // - UnsupportedOperationException: when the method isn't supported by driver version
+        // - ClassCastException: when internal type doesn't match expected byte array
+        Object v = fv.getValue()
         if (v instanceof byte[]) return (byte[]) v
         if (v instanceof CharSequence) return Base64.decoder.decode(v.toString())
         if (v instanceof ByteBuffer) {
