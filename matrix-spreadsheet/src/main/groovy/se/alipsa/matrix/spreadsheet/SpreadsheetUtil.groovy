@@ -72,7 +72,7 @@ class SpreadsheetUtil {
             String candidate = "${safeName}${suffix}"
             // Ensure the suffixed name also respects the 31-char limit
             if (candidate.length() > 31) {
-               int cutoff = 31 - String.valueOf(suffix).length()
+               int cutoff = Math.max(0, 31 - String.valueOf(suffix).length())
                candidate = safeName.substring(0, Math.min(cutoff, safeName.length())) + suffix
             }
             uniqueName = candidate

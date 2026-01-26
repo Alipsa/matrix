@@ -42,8 +42,14 @@ import static se.alipsa.matrix.spreadsheet.fastods.reader.OptimizedXMLInputFacto
 @CompileStatic
 final class OdsStreamDataReader extends OdsDataReader {
   private static final Logger logger = LogManager.getLogger(OdsStreamDataReader)
-  private static final boolean PROFILE = Boolean.getBoolean('matrix.spreadsheet.ods.profile')
-  private static final ProfileStats PROFILE_STATS = PROFILE ? new ProfileStats() : null
+
+  /**
+   * Profiling statistics collector. Uses Null Object pattern to avoid branch overhead.
+   * Set JVM system property -Dmatrix.spreadsheet.ods.profile=true to enable profiling.
+   */
+  private static final ProfileStats PROFILE_STATS = Boolean.getBoolean('matrix.spreadsheet.ods.profile')
+      ? new RealProfileStats()
+      : new NoOpProfileStats()
 
   /**
    * Maximum number of consecutive empty rows to expand before stopping.
@@ -69,9 +75,7 @@ final class OdsStreamDataReader extends OdsDataReader {
     if (sheet == null) {
       throw new FastOdsException("Sheet name or number must be provided but was null")
     }
-    if (PROFILE) {
-      PROFILE_STATS.reset()
-    }
+    PROFILE_STATS.reset()
     try {
       while (reader.hasNext()) {
         reader.next()
@@ -85,9 +89,7 @@ final class OdsStreamDataReader extends OdsDataReader {
               throw new FastOdsException("Failed to process '$sheet' in the ODS file")
             }
             s.name = String.valueOf(sheet)
-            if (PROFILE) {
-              PROFILE_STATS.log(String.valueOf(sheet))
-            }
+            PROFILE_STATS.log(String.valueOf(sheet))
             return s
           }
           sheetCount++
@@ -104,13 +106,11 @@ final class OdsStreamDataReader extends OdsDataReader {
     final String TABLE_URN = tableUrn
 
     Sheet sheet = new Sheet()
-    long sheetStart = PROFILE ? System.nanoTime() : 0L
+    long sheetStart = System.nanoTime()
     int rowCount = 1
     while (reader.hasNext() && !(reader.isEndElement() && reader.localName == 'table')) {
       if (reader.isStartElement() && reader.localName == 'table-row') {
-        if (PROFILE) {
-          PROFILE_STATS.physicalRows++
-        }
+        PROFILE_STATS.incrementPhysicalRows()
         int repeatRows = asInteger(reader.getAttributeValue(TABLE_URN, 'number-rows-repeated') ?: 1)
 
         // Parse this physical row ONCE (consumes until </table-row>), using learned capacity
@@ -134,18 +134,14 @@ final class OdsStreamDataReader extends OdsDataReader {
         if (repeatRows == 1) {
           if (rowCount >= startRow && rowCount <= endRow) {
             sheet.add(rowValues)
-            if (PROFILE) {
-              PROFILE_STATS.logicalRows++
-            }
+            PROFILE_STATS.incrementLogicalRows()
           }
           rowCount++
         } else {
           for (int i = 0; i < repeatRows; i++) {
             if (rowCount >= startRow && rowCount <= endRow) {
               sheet.add(new ArrayList<>(rowValues))
-              if (PROFILE) {
-                PROFILE_STATS.logicalRows++
-              }
+              PROFILE_STATS.incrementLogicalRows()
             }
             rowCount++
           }
@@ -158,21 +154,16 @@ final class OdsStreamDataReader extends OdsDataReader {
         break
       }
     }
-    if (PROFILE) {
-      PROFILE_STATS.processSheetNanos += System.nanoTime() - sheetStart
-    }
+    PROFILE_STATS.addProcessSheetTime(System.nanoTime() - sheetStart)
     return sheet
   }
 
   final static List<Object> processRow(final XMLStreamReader reader, final int startColumn, final int endColumn, final int initialCapacity) {
-    if (!PROFILE) {
-      return processRowInternal(reader, startColumn, endColumn, initialCapacity)
-    }
     long start = System.nanoTime()
     try {
       return processRowInternal(reader, startColumn, endColumn, initialCapacity)
     } finally {
-      PROFILE_STATS.processRowNanos += System.nanoTime() - start
+      PROFILE_STATS.addProcessRowTime(System.nanoTime() - start)
     }
   }
 
@@ -220,20 +211,16 @@ final class OdsStreamDataReader extends OdsDataReader {
     if (repeatColumns == 1) {
       if (columnCount >= startColumn && columnCount <= endColumn) {
         row.add(value)
-        if (PROFILE) {
-          PROFILE_STATS.cellsAdded++
-        }
-      } else if (PROFILE) {
-        PROFILE_STATS.cellsSkipped++
+        PROFILE_STATS.incrementCellsAdded()
+      } else {
+        PROFILE_STATS.incrementCellsSkipped()
       }
       return columnCount + 1
     }
     int rangeStart = columnCount
     int rangeEnd = columnCount + repeatColumns - 1
     if (rangeEnd < startColumn || rangeStart > endColumn) {
-      if (PROFILE) {
-        PROFILE_STATS.cellsSkipped += repeatColumns
-      }
+      PROFILE_STATS.incrementCellsSkipped(repeatColumns)
       return columnCount + repeatColumns
     }
     int addFrom = Math.max(rangeStart, startColumn)
@@ -242,23 +229,17 @@ final class OdsStreamDataReader extends OdsDataReader {
     for (int i = 0; i < addCount; i++) {
       row.add(value)
     }
-    if (PROFILE) {
-      PROFILE_STATS.cellsAdded += addCount
-      PROFILE_STATS.cellsSkipped += (repeatColumns - addCount)
-    }
+    PROFILE_STATS.incrementCellsAdded(addCount)
+    PROFILE_STATS.incrementCellsSkipped(repeatColumns - addCount)
     return columnCount + repeatColumns
   }
 
   final static Object extractValue(final XMLStreamReader reader) {
-    if (!PROFILE) {
-      return extractValueInternal(reader)
-    }
     long start = System.nanoTime()
     try {
       return extractValueInternal(reader)
     } finally {
-      PROFILE_STATS.extractValueCalls++
-      PROFILE_STATS.extractValueNanos += System.nanoTime() - start
+      PROFILE_STATS.addExtractValueTime(System.nanoTime() - start)
     }
   }
 
@@ -381,8 +362,63 @@ final class OdsStreamDataReader extends OdsDataReader {
     return s.isEmpty() ? null : s
   }
 
+  /**
+   * Abstract base class for profiling statistics.
+   * Uses Null Object pattern to avoid branching overhead in hot paths.
+   */
   @CompileStatic
-  private static final class ProfileStats {
+  private static abstract class ProfileStats {
+    abstract void reset()
+    abstract void log(String sheetName)
+    abstract void incrementPhysicalRows()
+    abstract void incrementLogicalRows()
+    abstract void incrementCellsAdded()
+    abstract void incrementCellsSkipped()
+    abstract void incrementCellsSkipped(int count)
+    abstract void incrementCellsAdded(int count)
+    abstract void addExtractValueTime(long nanos)
+    abstract void addProcessRowTime(long nanos)
+    abstract void addProcessSheetTime(long nanos)
+
+    // Provide property-like access for compatibility
+    void setPhysicalRows(long value) { /* no-op by default */ }
+    void setLogicalRows(long value) { /* no-op by default */ }
+    void setCellsAdded(long value) { /* no-op by default */ }
+    void setCellsSkipped(long value) { /* no-op by default */ }
+    void setExtractValueCalls(long value) { /* no-op by default */ }
+    void setExtractValueNanos(long value) { /* no-op by default */ }
+    void setProcessRowNanos(long value) { /* no-op by default */ }
+    void setProcessSheetNanos(long value) { /* no-op by default */ }
+
+    // Support ++ operator
+    ProfileStats next() { return this }
+  }
+
+  /**
+   * No-op implementation for production use (profiling disabled).
+   * All methods are empty to eliminate overhead.
+   */
+  @CompileStatic
+  private static final class NoOpProfileStats extends ProfileStats {
+    @Override void reset() {}
+    @Override void log(String sheetName) {}
+    @Override void incrementPhysicalRows() {}
+    @Override void incrementLogicalRows() {}
+    @Override void incrementCellsAdded() {}
+    @Override void incrementCellsSkipped() {}
+    @Override void incrementCellsSkipped(int count) {}
+    @Override void incrementCellsAdded(int count) {}
+    @Override void addExtractValueTime(long nanos) {}
+    @Override void addProcessRowTime(long nanos) {}
+    @Override void addProcessSheetTime(long nanos) {}
+  }
+
+  /**
+   * Real implementation for profiling use.
+   * Collects and logs detailed performance statistics.
+   */
+  @CompileStatic
+  private static final class RealProfileStats extends ProfileStats {
     long physicalRows = 0
     long logicalRows = 0
     long cellsAdded = 0
@@ -392,6 +428,7 @@ final class OdsStreamDataReader extends OdsDataReader {
     long processRowNanos = 0
     long processSheetNanos = 0
 
+    @Override
     void reset() {
       physicalRows = 0
       logicalRows = 0
@@ -403,6 +440,7 @@ final class OdsStreamDataReader extends OdsDataReader {
       processSheetNanos = 0
     }
 
+    @Override
     void log(String sheetName) {
       long sheetMs = nanosToMillis(processSheetNanos)
       long rowMs = nanosToMillis(processRowNanos)
@@ -412,6 +450,29 @@ final class OdsStreamDataReader extends OdsDataReader {
           "cells(added/skipped)=${cellsAdded}/${cellsSkipped}, extractValue=${extractMs} ms (calls=${extractValueCalls}, avg=${avgExtract} ms), " +
           "processRow=${rowMs} ms"
       logger.info(message)
+    }
+
+    @Override void incrementPhysicalRows() { physicalRows++ }
+    @Override void incrementLogicalRows() { logicalRows++ }
+    @Override void incrementCellsAdded() { cellsAdded++ }
+    @Override void incrementCellsSkipped() { cellsSkipped++ }
+    @Override void incrementCellsSkipped(int count) { cellsSkipped += count }
+    @Override void incrementCellsAdded(int count) { cellsAdded += count }
+
+    @Override
+    void addExtractValueTime(long nanos) {
+      extractValueCalls++
+      extractValueNanos += nanos
+    }
+
+    @Override
+    void addProcessRowTime(long nanos) {
+      processRowNanos += nanos
+    }
+
+    @Override
+    void addProcessSheetTime(long nanos) {
+      processSheetNanos += nanos
     }
 
     private static long nanosToMillis(long nanos) {
