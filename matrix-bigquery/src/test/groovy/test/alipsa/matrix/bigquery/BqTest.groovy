@@ -5,6 +5,7 @@ import org.junit.jupiter.api.*
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.datasets.Dataset
 
 import java.sql.Time
@@ -85,7 +86,8 @@ class BqTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    println "Projects are ${bq.getProjects().collect{it.displayName + ' (' + it.projectId + ')'}}"
+    List projects = bq.getProjects().collect{it.displayName + ' (' + it.projectId + ')'}
+    assertTrue(projects.size() > 0, "Projects are ${String.join('\n',projects)}")
   }
 
   @Test
@@ -99,7 +101,7 @@ class BqTest {
     bq.saveToBigQuery(mtcars, DATASET_NAME)
     String qry = "select * from `${projectId}.${DATASET_NAME}.mtcars`"
     Matrix mtcars2 = bq.query(qry).withMatrixName(mtcars.matrixName)
-    assertEquals(mtcars.orderBy("model"), mtcars2.orderBy("model"))
+    MatrixAssertions.assertContentMatches(mtcars.orderBy("model"), mtcars2.orderBy("model"))
   }
 
   @Test
@@ -109,12 +111,12 @@ class BqTest {
       return
     }
     Matrix airq = Dataset.airquality()
-    airq.renameColumn('Solar.R', 'solar_r')
+    airq.rename('Solar.R', 'solar_r')
     bq.dropTable(DATASET_NAME, airq)
     assertTrue(bq.saveToBigQuery(airq, DATASET_NAME))
     String qry = "select * from `${DATASET_NAME}.${airq.matrixName}`"
     Matrix airq2 = bq.query(qry).withMatrixName(airq.matrixName)
-    assertEquals(airq, airq2)
+    MatrixAssertions.assertContentMatches(airq, airq2)
   }
 
   @Test

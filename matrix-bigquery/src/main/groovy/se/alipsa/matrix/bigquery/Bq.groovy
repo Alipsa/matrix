@@ -15,6 +15,7 @@ import com.google.cloud.resourcemanager.v3.ProjectsSettings
 import groovy.transform.CompileStatic
 import me.tongfei.progressbar.ProgressBar
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 
 import java.nio.channels.Channels
 import java.sql.Time
@@ -29,6 +30,8 @@ import com.google.cloud.bigquery.InsertAllRequest.RowToInsert
 
 @CompileStatic
 class Bq {
+
+  private static final Logger log = Logger.getLogger(Bq)
 
   // BigQuery serializes complex datatypes into structs so we must convert things like BigDecimal, Date, LocalDate etc
   // into plain text strings that BigQuery will understand when inserting data
@@ -240,7 +243,7 @@ class Bq {
       TableDefinition tableDefinition = StandardTableDefinition.of(schema)
       TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build()
       Table table = bigQuery.create(tableInfo)
-      println("Table ${datasetName}.$tableName created successfully")
+      log.info("Table $datasetName.$tableName created successfully")
       return new TableSchema(table, schema)
     } catch (BigQueryException e) {
       throw new BqException(e)
@@ -328,14 +331,14 @@ class Bq {
       JobStatistics.LoadStatistics stats = loadJob.getStatistics()
       long rowsInserted = stats.getOutputRows()
 
-      println "Load job completed successfully. Inserted ${rowsInserted} rows."
+      log.info("Load job completed successfully. Inserted $rowsInserted rows")
       return stats
 
     } catch (Exception e) {
       // Check if the failure is a known connection error that necessitates the fallback
       if (e.cause instanceof ConnectException || e.message?.contains("Connection refused")) {
 
-        println "Streaming insert failed with connection error. Falling back to InsertAll..."
+        log.warn("Streaming insert failed with connection error. Falling back to InsertAll...")
         try {
 
           List<RowToInsert> rows = matrix.rows().collect { row ->
@@ -373,7 +376,7 @@ class Bq {
           }
 
           // Success: Return a placeholder LoadStatistics object
-          println "InsertAll fallback successful. Inserted ${matrix.rowCount()} rows."
+          log.info("InsertAll fallback successful. Inserted ${matrix.rowCount()} rows")
 
           List<String> emptySourceUris = Collections.emptyList()
 
@@ -390,7 +393,7 @@ class Bq {
 
         } catch (Exception fallbackException) {
           // If fallback fails, log and throw a detailed exception
-          println "InsertAll fallback also failed: ${fallbackException.message}"
+          log.error("InsertAll fallback also failed: ${fallbackException.message}")
           throw new BqException("Streaming insert failed: ${e.message}. Fallback also failed: ${fallbackException.message}", e)
         }
       }
@@ -491,7 +494,7 @@ class Bq {
     try {
       Page<Dataset> datasets = bigQuery.listDatasets(projectId, DatasetListOption.pageSize(100))
       if (datasets == null) {
-        println("Dataset does not contain any models")
+        log.debug("Dataset does not contain any models")
         return []
       }
       return datasets
@@ -547,7 +550,7 @@ class Bq {
     try {
       Dataset dataset = bigQuery.getDataset(DatasetId.of(datasetName))
       if (dataset != null) {
-        println("Dataset $datasetName already exists.")
+        log.debug("Dataset $datasetName already exists")
         return dataset
       }
       def builder = DatasetInfo.newBuilder(datasetName)
@@ -557,7 +560,7 @@ class Bq {
       DatasetInfo datasetInfo = builder.build()
       Dataset ds = bigQuery.create(datasetInfo)
       String newDatasetName = ds.getDatasetId().getDataset()
-      System.out.println(newDatasetName + " created successfully")
+      log.info("$newDatasetName created successfully")
       ds
     } catch (BigQueryException e) {
       throw new BqException("Dataset was not created: " + e.toString(), e)
@@ -585,9 +588,9 @@ class Bq {
       DatasetId datasetId = DatasetId.of(projectId, datasetName)
       boolean success = bigQuery.delete(datasetId, DatasetDeleteOption.deleteContents())
       if (success) {
-        println("Dataset $datasetName deleted successfully");
+        log.info("Dataset $datasetName deleted successfully")
       } else {
-        println("Dataset $datasetName was not found");
+        log.warn("Dataset $datasetName was not found")
       }
       return success
     } catch (BigQueryException e) {
@@ -603,9 +606,9 @@ class Bq {
     try {
       boolean success = bigQuery.delete(TableId.of(datasetName, tableName))
       if (success) {
-        System.out.println("Table ${datasetName}.${tableName} deleted successfully")
+        log.info("Table $datasetName.$tableName deleted successfully")
       } else {
-        System.out.println("Table ${datasetName}.${tableName} was not found")
+        log.warn("Table $datasetName.$tableName was not found")
       }
       return success
     } catch (BigQueryException e) {
