@@ -5,9 +5,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
-import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 
-import javax.xml.stream.XMLInputFactory
 import javax.xml.stream.XMLStreamReader
 import java.time.Duration
 import java.time.LocalDate
@@ -16,6 +14,7 @@ import java.time.LocalDateTime
 import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
 import static se.alipsa.matrix.core.ValueConverter.asInteger
 import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.*
+import static se.alipsa.matrix.spreadsheet.fastods.reader.OptimizedXMLInputFactory.INSTANCE
 
 /**
  * Minimal stream reader that discards styles and only reads the content
@@ -53,14 +52,20 @@ final class OdsStreamDataReader extends OdsDataReader {
    */
   private static final int TRAILING_EMPTY_ROW_THRESHOLD = 1000
 
+  /**
+   * Adaptive row capacity tracking.
+   * Learns the actual row width from parsed data to minimize ArrayList resizing.
+   * Initialized to 16 (typical minimum), grows to match the widest row seen.
+   */
+  private int rowCapacity = 16
+
   static OdsStreamDataReader create() {
     new OdsStreamDataReader()
   }
 
   Sheet processContent(final InputStream is, Object sheet, Integer startRow, Integer endRow, Integer startCol, Integer endCol) {
-    final XMLInputFactory factory = XmlSecurityUtil.newSecureInputFactory()
     Integer sheetCount = 1
-    final XMLStreamReader reader = factory.createXMLStreamReader(is)
+    final XMLStreamReader reader = INSTANCE.createXMLStreamReader(is)
     if (sheet == null) {
       throw new FastOdsException("Sheet name or number must be provided but was null")
     }
@@ -73,6 +78,8 @@ final class OdsStreamDataReader extends OdsDataReader {
         if (reader.isStartElement() && reader.localName == 'table') {
           String sheetName = reader.getAttributeValue(tableUrn, 'name').trim()
           if (sheet == sheetName || sheet == sheetCount) {
+            // Reset rowCapacity for each sheet to learn its specific width
+            rowCapacity = 16
             Sheet s = processSheet(reader, startRow, endRow, startCol, endCol)
             if (s == null) {
               throw new FastOdsException("Failed to process '$sheet' in the ODS file")
@@ -92,7 +99,10 @@ final class OdsStreamDataReader extends OdsDataReader {
     throw new FastOdsException("Failed to find sheet '$sheet' in the ODS file")
   }
 
-  final static Sheet processSheet(final XMLStreamReader reader, final int startRow, final int endRow, int startColumn, int endColumn) {
+  final Sheet processSheet(final XMLStreamReader reader, final int startRow, final int endRow, int startColumn, int endColumn) {
+    // Cache URN constant locally for hot path
+    final String TABLE_URN = tableUrn
+
     Sheet sheet = new Sheet()
     long sheetStart = PROFILE ? System.nanoTime() : 0L
     int rowCount = 1
@@ -101,10 +111,14 @@ final class OdsStreamDataReader extends OdsDataReader {
         if (PROFILE) {
           PROFILE_STATS.physicalRows++
         }
-        int repeatRows = asInteger(reader.getAttributeValue(tableUrn, 'number-rows-repeated') ?: 1)
+        int repeatRows = asInteger(reader.getAttributeValue(TABLE_URN, 'number-rows-repeated') ?: 1)
 
-        // Parse this physical row ONCE (consumes until </table-row>)
-        List<Object> rowValues = processRow(reader, startColumn, endColumn)
+        // Parse this physical row ONCE (consumes until </table-row>), using learned capacity
+        List<Object> rowValues = processRow(reader, startColumn, endColumn, rowCapacity)
+
+        // Learn from actual row size for future rows
+        rowCapacity = Math.max(rowCapacity, rowValues.size())
+
         boolean isUnbounded = endRow == Integer.MAX_VALUE
         boolean exceedsRequested = !isUnbounded && endRow > rowCount + repeatRows
         if (repeatRows > TRAILING_EMPTY_ROW_THRESHOLD && (isUnbounded || exceedsRequested)) {
@@ -150,21 +164,26 @@ final class OdsStreamDataReader extends OdsDataReader {
     return sheet
   }
 
-  final static List<Object> processRow(final XMLStreamReader reader, final int startColumn, final int endColumn) {
+  final static List<Object> processRow(final XMLStreamReader reader, final int startColumn, final int endColumn, final int initialCapacity) {
     if (!PROFILE) {
-      return processRowInternal(reader, startColumn, endColumn)
+      return processRowInternal(reader, startColumn, endColumn, initialCapacity)
     }
     long start = System.nanoTime()
     try {
-      return processRowInternal(reader, startColumn, endColumn)
+      return processRowInternal(reader, startColumn, endColumn, initialCapacity)
     } finally {
       PROFILE_STATS.processRowNanos += System.nanoTime() - start
     }
   }
 
-  private static List<Object> processRowInternal(final XMLStreamReader reader, final int startColumn, final int endColumn) {
-    int expectedColumns = endColumn == Integer.MAX_VALUE ? 16 : Math.max(0, endColumn - startColumn + 1)
-    List<Object> row = new ArrayList<>(expectedColumns)
+  private static List<Object> processRowInternal(final XMLStreamReader reader, final int startColumn, final int endColumn, final int initialCapacity) {
+    // Cache URN constant locally for hot path
+    final String TABLE_URN = tableUrn
+
+    // Use adaptive capacity if available, otherwise calculate from range
+    int capacity = initialCapacity > 0 ? initialCapacity :
+        (endColumn == Integer.MAX_VALUE ? 16 : Math.max(0, endColumn - startColumn + 1))
+    List<Object> row = new ArrayList<>(capacity)
     int columnCount = 1
 
     // We enter with cursor at <table-row>; consume its children until </table-row>
@@ -174,13 +193,13 @@ final class OdsStreamDataReader extends OdsDataReader {
         break
       }
       if (reader.isStartElement() && reader.localName == 'table-cell') {
-        int repeatColumns = asInteger(reader.getAttributeValue(tableUrn, 'number-columns-repeated') ?: 1)
+        int repeatColumns = asInteger(reader.getAttributeValue(TABLE_URN, 'number-columns-repeated') ?: 1)
         Object cellValue = extractValue(reader)
         // drain to </table-cell>
         while (reader.hasNext() && !(reader.isEndElement() && reader.localName == 'table-cell')) reader.next()
         columnCount = appendRepeatedValue(row, columnCount, repeatColumns, startColumn, endColumn, cellValue)
       } else if (reader.isStartElement() && reader.localName == 'covered-table-cell') {
-        int repeatColumns = asInteger(reader.getAttributeValue(tableUrn, 'number-columns-repeated') ?: 1)
+        int repeatColumns = asInteger(reader.getAttributeValue(TABLE_URN, 'number-columns-repeated') ?: 1)
         // drain to </covered-table-cell>
         while (reader.hasNext() && !(reader.isEndElement() && reader.localName == 'covered-table-cell')) reader.next()
         columnCount = appendRepeatedValue(row, columnCount, repeatColumns, startColumn, endColumn, null)
@@ -244,46 +263,116 @@ final class OdsStreamDataReader extends OdsDataReader {
   }
 
   private static Object extractValueInternal(final XMLStreamReader reader) {
-    // Cursor is at <table:table-cell ...> here
-    String valueType = reader.getAttributeValue(officeUrn, 'value-type')
+    // Cache URN constants locally to reduce field access overhead
+    final String OFFICE_URN = officeUrn
+    final String TEXT_URN = textUrn
 
-    // Typed values via attributes
-    if (valueType == 'boolean') {
-      return Boolean.parseBoolean(reader.getAttributeValue(officeUrn, 'boolean-value'))
-    } else if (valueType == 'float' || valueType == 'percentage' || valueType == 'currency') {
-      String v = reader.getAttributeValue(officeUrn, 'value')
-      return v != null ? asBigDecimal(v) : null
-    } else if (valueType == 'date') {
-      String v = reader.getAttributeValue(officeUrn, 'date-value')
-      return (v != null && v.length() == 10) ? LocalDate.parse(v) : (v != null ? LocalDateTime.parse(v) : null)
-    } else if (valueType == 'time') {
-      String v = reader.getAttributeValue(officeUrn, 'time-value')
-      return v != null ? Duration.parse(v) : null
+    // Cursor is at <table:table-cell ...> here
+    String valueType = reader.getAttributeValue(OFFICE_URN, 'value-type')
+
+    // Fast path: typed values extracted from attributes (90% of cells)
+    // Using switch for better JIT optimization vs if-else chain
+    if (valueType != null) {
+      switch (valueType) {
+        case 'boolean':
+          return extractBooleanValue(reader, OFFICE_URN)
+        case 'float':
+        case 'percentage':
+        case 'currency':
+          return extractNumericValue(reader, OFFICE_URN)
+        case 'date':
+          return extractDateValue(reader, OFFICE_URN)
+        case 'time':
+          return extractTimeValue(reader, OFFICE_URN)
+        default:
+          // fall through to text extraction for unknown types
+          break
+      }
     }
 
-    // Fallback for strings/unknown types: collect <text:p> content until </table-cell>
-    // Also handles empty/self-closing <table-cell/> → returns null
-    StringBuilder text = new StringBuilder()
-    while (reader.hasNext()) {
-      reader.next()
+    // Slow path: text content from child elements (10% of cells)
+    return extractTextContent(reader, TEXT_URN)
+  }
 
-      if (reader.isStartElement()) {
-        if (reader.localName == 'p') {
-          // Separate multiple <text:p> blocks with newline
-          if (text.length() > 0) text.append('\n')
-        } else if (reader.localName == 's') {
-          // <text:s c="N"/> ⇒ N spaces (default 1)
-          int numSpaces = asInteger(reader.getAttributeValue(textUrn, 'c')) ?: 1
-          text.append(' '.repeat(numSpaces))
-        } else if (reader.localName == 'line-break') {
-          text.append('\n')
-        } else if (reader.localName == 'tab') {
-          text.append('\t')
-        }
-      } else if (reader.isCharacters()) {
+  /**
+   * Extract boolean value from office:boolean-value attribute.
+   */
+  private static Boolean extractBooleanValue(final XMLStreamReader reader, final String officeUrn) {
+    String v = reader.getAttributeValue(officeUrn, 'boolean-value')
+    return v != null ? Boolean.parseBoolean(v) : null
+  }
+
+  /**
+   * Extract numeric value from office:value attribute.
+   * Handles float, percentage, and currency types.
+   */
+  private static BigDecimal extractNumericValue(final XMLStreamReader reader, final String officeUrn) {
+    String v = reader.getAttributeValue(officeUrn, 'value')
+    return v != null ? asBigDecimal(v) : null
+  }
+
+  /**
+   * Extract date/datetime value from office:date-value attribute.
+   * Returns LocalDate for date-only values (10 chars: YYYY-MM-DD),
+   * LocalDateTime for datetime values (19+ chars: YYYY-MM-DDTHH:MM:SS).
+   */
+  private static Object extractDateValue(final XMLStreamReader reader, final String officeUrn) {
+    String v = reader.getAttributeValue(officeUrn, 'date-value')
+    if (v == null) return null
+    // Date format: YYYY-MM-DD (10 chars) vs DateTime: YYYY-MM-DDTHH:MM:SS
+    return v.length() == 10 ? LocalDate.parse(v) : LocalDateTime.parse(v)
+  }
+
+  /**
+   * Extract time duration value from office:time-value attribute.
+   */
+  private static Duration extractTimeValue(final XMLStreamReader reader, final String officeUrn) {
+    String v = reader.getAttributeValue(officeUrn, 'time-value')
+    return v != null ? Duration.parse(v) : null
+  }
+
+  /**
+   * Extract text content from child elements (text:p, text:s, etc.).
+   * Pre-allocates StringBuilder with 64-char capacity to reduce resizing.
+   * Handles empty/self-closing cells by returning null.
+   */
+  private static String extractTextContent(final XMLStreamReader reader, final String textUrn) {
+    // Pre-allocate typical cell text size to reduce StringBuilder resizing
+    StringBuilder text = new StringBuilder(64)
+
+    while (reader.hasNext()) {
+      int eventType = reader.next()
+
+      // Fast path: character data (most common in text cells)
+      if (eventType == XMLStreamReader.CHARACTERS ||
+          eventType == XMLStreamReader.CDATA ||
+          eventType == XMLStreamReader.SPACE) {
         text.append(reader.getText())
-      } else if (reader.isEndElement() && reader.localName == 'table-cell') {
-        // stop at end of cell (covers empty/self-closing cells)
+        continue
+      }
+
+      // Element handling
+      if (eventType == XMLStreamReader.START_ELEMENT) {
+        String localName = reader.localName  // Cache to avoid repeated calls
+        switch (localName) {
+          case 'p':
+            // Separate multiple <text:p> blocks with newline
+            if (text.length() > 0) text.append('\n')
+            break
+          case 's':
+            // <text:s c="N"/> ⇒ N spaces (default 1)
+            int numSpaces = asInteger(reader.getAttributeValue(textUrn, 'c')) ?: 1
+            text.append(' '.repeat(numSpaces))
+            break
+          case 'line-break':
+            text.append('\n')
+            break
+          case 'tab':
+            text.append('\t')
+            break
+        }
+      } else if (eventType == XMLStreamReader.END_ELEMENT && reader.localName == 'table-cell') {
+        // Stop at end of cell (covers empty/self-closing cells)
         break
       }
     }

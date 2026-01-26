@@ -53,6 +53,9 @@ dependencies {
   implementation("org.dhatim:fastexcel:$fastExcelVersion")
   implementation("org.dhatim:fastexcel-reader:$fastExcelVersion")
 
+  // Aalto StAX parser for high-performance XML parsing (10-30% faster than JDK default)
+  implementation 'com.fasterxml:aalto-xml:1.3.4'
+
 
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
