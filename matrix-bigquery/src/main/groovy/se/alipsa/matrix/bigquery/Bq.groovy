@@ -31,7 +31,7 @@ import com.google.cloud.bigquery.InsertAllRequest.RowToInsert
 class Bq {
 
   // BigQuery serializes complex datatypes into structs so we must convert things like BigDecimal, Date, LocalDate etc
-  // into plain text strings that BigQuery will understand hen inserting data
+  // into plain text strings that BigQuery will understand when inserting data
   static final SimpleDateFormat bqSimpledateFormat = new SimpleDateFormat("yyyy-MM-dd")
   static final DateTimeFormatter bqDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
   static final DateTimeFormatter bqDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
@@ -39,14 +39,17 @@ class Bq {
 
   private BigQuery bigQuery
   private String projectId
+  private boolean useAsyncQueries = false
 
-  Bq(BigQueryOptions options) {
+  Bq(BigQueryOptions options, boolean useAsyncQueries = false) {
     bigQuery = options.getService()
     projectId = options.getProjectId()
+    this.useAsyncQueries = useAsyncQueries
   }
 
-  Bq(GoogleCredentials credentials, String projectId) {
+  Bq(GoogleCredentials credentials, String projectId, boolean useAsyncQueries = false) {
     this.projectId = projectId
+    this.useAsyncQueries = useAsyncQueries
     bigQuery = BigQueryOptions.newBuilder()
         .setCredentials(credentials)
         .setProjectId(projectId)
@@ -54,23 +57,25 @@ class Bq {
         .getService()
   }
 
-  Bq(String projectId) {
+  Bq(String projectId, boolean useAsyncQueries = false) {
     if (projectId == null) {
       throw new IllegalArgumentException("ProjectId cannot be null")
     }
     this.projectId = projectId
+    this.useAsyncQueries = useAsyncQueries
     bigQuery = BigQueryOptions.newBuilder()
         .setProjectId(projectId)
         .build()
         .getService()
   }
 
-  Bq() {
+  Bq(boolean useAsyncQueries = false) {
     String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
       throw new RuntimeException("Please set the environment variable GOOGLE_CLOUD_PROJECT prior to creating this class (or pass it as a parameter)")
     }
     this.projectId = projectId
+    this.useAsyncQueries = useAsyncQueries
     bigQuery = BigQueryOptions.newBuilder()
         .setProjectId(projectId)
         .build()
@@ -86,6 +91,12 @@ class Bq {
    * across all statements. There is no built-in mechanism in the BigQuery client library to get
    * a row count for each individual statement within a single job.
    *
+   * <p>Query execution mode is controlled by the useAsyncQueries flag:</p>
+   * <ul>
+   * <li>Synchronous (default, useAsyncQueries=false): 10 GB response size limit, compatible with BigQuery emulators</li>
+   * <li>Asynchronous (useAsyncQueries=true): No size limit, recommended for production use with large datasets</li>
+   * </ul>
+   *
    * @param qry the query to execute
    * @param useLegacySql Sets whether to use BigQuery's legacy SQL dialect for this query.
    * @return the number of rows affected by the query
@@ -93,41 +104,40 @@ class Bq {
    */
   int execute(String qry, boolean useLegacySql = false) throws BqException {
     try {
-      // Note: Synchronous query execution has a 10 GB response size limit.
-      // For larger results, consider using the async job-based approach.
-      // Currently using sync for compatibility with BigQuery emulators in tests.
-      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
-          .setUseLegacySql(useLegacySql)
-          .build()
+      if (useAsyncQueries) {
+        // Async job-based approach: no size limit, recommended for production
+        Job queryJob = runQuery(qry, useLegacySql)
 
-      TableResult result = bigQuery.query(queryConfig)
+        // Retrieve the job statistics to check for DML operations.
+        JobStatistics.QueryStatistics stats = queryJob.getStatistics()
+        DmlStats dmlStats = stats.getDmlStats()
 
-      // When running a query synchronously, TableResult.getTotalRows() returns
-      // either the number of rows returned (SELECT) or the number of rows affected (DML/DDL).
-      return result.getTotalRows().intValue()
+        if (dmlStats != null) {
+          // This is a DML query (INSERT, UPDATE, or DELETE).
+          // We get the affected row count from the DML stats.
+          long insertedRows = dmlStats.getInsertedRowCount() != null ? dmlStats.getInsertedRowCount() : 0
+          long updatedRows = dmlStats.getUpdatedRowCount() != null ? dmlStats.getUpdatedRowCount() : 0
+          long deletedRows = dmlStats.getDeletedRowCount() != null ? dmlStats.getDeletedRowCount() : 0
 
-      /* Async job-based approach (no size limit, but not compatible with emulators):
-      Job queryJob = runQuery(qry, useLegacySql)
-
-      // Retrieve the job statistics to check for DML operations.
-      JobStatistics.QueryStatistics stats = queryJob.getStatistics()
-      DmlStats dmlStats = stats.getDmlStats()
-
-      if (dmlStats != null) {
-        // This is a DML query (INSERT, UPDATE, or DELETE).
-        // We get the affected row count from the DML stats.
-        long insertedRows = dmlStats.getInsertedRowCount() != null ? dmlStats.getInsertedRowCount() : 0
-        long updatedRows = dmlStats.getUpdatedRowCount() != null ? dmlStats.getUpdatedRowCount() : 0
-        long deletedRows = dmlStats.getDeletedRowCount() != null ? dmlStats.getDeletedRowCount() : 0
-
-        return (int) (insertedRows + updatedRows + deletedRows)
+          return (int) (insertedRows + updatedRows + deletedRows)
+        } else {
+          // This is likely a SELECT query.
+          // We get the result set and return the total number of rows.
+          TableResult result = queryJob.getQueryResults()
+          return result.getTotalRows().intValue()
+        }
       } else {
-        // This is likely a SELECT query.
-        // We get the result set and return the total number of rows.
-        TableResult result = queryJob.getQueryResults()
+        // Synchronous approach: 10 GB response size limit, emulator compatible
+        QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
+            .setUseLegacySql(useLegacySql)
+            .build()
+
+        TableResult result = bigQuery.query(queryConfig)
+
+        // When running a query synchronously, TableResult.getTotalRows() returns
+        // either the number of rows returned (SELECT) or the number of rows affected (DML/DDL).
         return result.getTotalRows().intValue()
       }
-       */
 
     } catch (BigQueryException | InterruptedException e) {
       throw new BqException("Query execution failed due to error: " + e.toString(), e)
@@ -152,27 +162,39 @@ class Bq {
     queryJob
   }
 
+  /**
+   * Execute a query and return the results as a Matrix.
+   *
+   * <p>Query execution mode is controlled by the useAsyncQueries flag:</p>
+   * <ul>
+   * <li>Synchronous (default, useAsyncQueries=false): 10 GB response size limit, compatible with BigQuery emulators</li>
+   * <li>Asynchronous (useAsyncQueries=true): No size limit, recommended for production use with large datasets</li>
+   * </ul>
+   *
+   * @param qry the query to execute
+   * @param useLegacySql Sets whether to use BigQuery's legacy SQL dialect for this query.
+   * @return Matrix containing the query results
+   * @throws BqException if the query fails
+   */
   Matrix query(String qry, boolean useLegacySql = false) throws BqException {
     try {
-      // Note: Synchronous query execution has a 10 GB response size limit.
-      // For larger results, consider using the async job-based approach.
-      // Currently using sync for compatibility with BigQuery emulators in tests.
-      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
-          .setUseLegacySql(useLegacySql)
-          .build()
+      TableResult result
 
-      TableResult result = bigQuery.query(queryConfig)
+      if (useAsyncQueries) {
+        // Async job-based approach: no size limit, recommended for production
+        Job queryJob = runQuery(qry, useLegacySql)
+        result = queryJob.getQueryResults()
+      } else {
+        // Synchronous approach: 10 GB response size limit, emulator compatible
+        QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
+            .setUseLegacySql(useLegacySql)
+            .build()
+
+        result = bigQuery.query(queryConfig)
+      }
 
       // Convert to a Matrix and return the results.
       return convertToMatrix(result)
-
-      /* Async job-based approach (no size limit, but not compatible with emulators):
-      Job queryJob = runQuery(qry, useLegacySql)
-
-      // Convert to a Matrix and return the results.
-      TableResult result = queryJob.getQueryResults()
-      return convertToMatrix(result)
-       */
 
     } catch (BigQueryException | InterruptedException e) {
       throw new BqException("Query failed due to error: " + e.toString(), e)
