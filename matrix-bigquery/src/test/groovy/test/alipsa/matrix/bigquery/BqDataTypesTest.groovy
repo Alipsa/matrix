@@ -38,7 +38,7 @@ class BqDataTypesTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
 
     if (!bq.datasetExist(datasetName)) {
       bq.createDataset(datasetName)
@@ -53,7 +53,7 @@ class BqDataTypesTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     if (bq.datasetExist(datasetName)) {
       bq.dropDataset(datasetName)
     }
@@ -108,7 +108,7 @@ class BqDataTypesTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     Matrix m = Matrix.builder(columnName+type.simpleName.replace('[]', 's')).data(
         (columnName): list
     ).types(type).build()
@@ -233,7 +233,7 @@ class BqDataTypesTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     String datasetName = 'BqTestComplexData'
     bq.createDataset(datasetName)
     assertTrue(bq.datasetExist(datasetName))

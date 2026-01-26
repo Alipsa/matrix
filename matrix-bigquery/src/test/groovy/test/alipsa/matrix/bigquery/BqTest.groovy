@@ -24,6 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull
  * set. Since billing is connected to a project it cannot be hard coded here. Each user that
  * wants to run it must set the environment variable GOOGLE_CLOUD_PROJECT prior to running the
  * tests.
+ *
+ * Note: These tests use async query execution (useAsyncQueries=true) since they run against
+ * real BigQuery in production. Async mode has no response size limits and is optimal for
+ * production workloads.
  */
 @Tag("external")
 @CompileStatic
@@ -36,7 +40,7 @@ class BqTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     Matrix m = bq.query("""SELECT CONCAT('https://stackoverflow.com/questions/', 
         CAST(id as STRING)) as url, view_count 
         FROM `bigquery-public-data.stackoverflow.posts_questions` 
@@ -55,7 +59,7 @@ class BqTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     println "Projects are ${bq.getProjects().collect{it.displayName + ' (' + it.projectId + ')'}}"
 
   }
@@ -67,7 +71,7 @@ class BqTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     String datasetName = 'BqTestCars'
     bq.createDataset(datasetName)
     Assertions.assertTrue(bq.datasetExist(datasetName))
@@ -89,7 +93,7 @@ class BqTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     String datasetName = 'BqTestAirQuality'
     bq.createDataset(datasetName)
     Assertions.assertTrue(bq.datasetExist(datasetName))
@@ -111,7 +115,7 @@ class BqTest {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     List<String> ds = bq.datasets
     if (ds.size() ==  0) {
       println "No datasets found"
