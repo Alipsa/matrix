@@ -67,7 +67,7 @@ private static XMLInputFactory defaultXmlInputFactory() {
 **File**: `matrix-spreadsheet/build.gradle`
 ```gradle
 dependencies {
-    implementation 'com.fasterxml.aalto:aalto-xml:1.3.2'
+    implementation 'com.fasterxml.aalto:aalto-xml:1.3.4'
     // ... existing dependencies
 }
 ```
