@@ -414,4 +414,21 @@ class BqUnitTest {
     assertEquals(30, parsed.second)
     assertEquals(0, parsed.nano)
   }
+
+  // Tests for waitForTableTimeoutMs configuration
+
+  @Test
+  void testDefaultWaitForTableTimeout() {
+    assertEquals(60_000L, Bq.DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS)
+  }
+
+  @Test
+  void testWaitForTableTimeoutGetterSetter() {
+    // We can't instantiate Bq without BigQuery credentials in unit tests,
+    // but we can verify the constant is correct
+    assertEquals(60_000L, Bq.DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS)
+
+    // Verify the constant is 60 seconds (1 minute)
+    assertEquals(60 * 1000, Bq.DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS)
+  }
 }

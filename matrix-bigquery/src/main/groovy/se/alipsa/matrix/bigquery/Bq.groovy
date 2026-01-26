@@ -57,6 +57,12 @@ import com.google.cloud.bigquery.InsertAllRequest.RowToInsert
  *       common with BigQuery emulators.</li>
  * </ol>
  *
+ * <h2>Configurable Options</h2>
+ * <ul>
+ *   <li><b>waitForTableTimeoutMs</b>: Timeout for waiting for table availability after creation.
+ *       Default: 60 seconds. Configure via {@link #setWaitForTableTimeoutMs}.</li>
+ * </ul>
+ *
  * <h2>Thread Safety</h2>
  * <p><b>This class is NOT thread-safe.</b> Each thread should use its own Bq instance.
  * The underlying BigQuery client is thread-safe, but this wrapper maintains state
@@ -69,6 +75,9 @@ import com.google.cloud.bigquery.InsertAllRequest.RowToInsert
  *
  * // Or with explicit project ID and async mode for production
  * Bq bq = new Bq("my-project-id", true)
+ *
+ * // Configure timeout for slow table propagation
+ * bq.setWaitForTableTimeoutMs(120_000L)  // 2 minutes
  *
  * // Query data
  * Matrix result = bq.query("SELECT * FROM dataset.table LIMIT 100")
@@ -97,9 +106,13 @@ class Bq {
   /** Time formatter for BigQuery TIME type with optional microsecond precision. Thread-safe. */
   static final DateTimeFormatter bqTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss[.SSSSSS]")
 
+  /** Default timeout for waiting for table availability (60 seconds). */
+  static final long DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS = 60_000L
+
   private BigQuery bigQuery
   private String projectId
   private boolean useAsyncQueries = false
+  private long waitForTableTimeoutMs = DEFAULT_WAIT_FOR_TABLE_TIMEOUT_MS
 
   /**
    * Creates a Bq instance from pre-configured BigQueryOptions.
@@ -184,6 +197,41 @@ class Bq {
         .setProjectId(projectId)
         .build()
         .getService()
+  }
+
+  /**
+   * Gets the timeout for waiting for table availability after creation.
+   *
+   * @return the timeout in milliseconds
+   * @see #setWaitForTableTimeoutMs
+   */
+  long getWaitForTableTimeoutMs() {
+    return waitForTableTimeoutMs
+  }
+
+  /**
+   * Sets the timeout for waiting for table availability after creation.
+   *
+   * <p>When creating a new table via {@link #saveToBigQuery}, BigQuery may have a brief delay
+   * before the table is available for inserts. This timeout controls how long to wait.</p>
+   *
+   * <p>Example usage:</p>
+   * <pre>{@code
+   * Bq bq = new Bq("my-project")
+   * bq.setWaitForTableTimeoutMs(120_000L)  // Wait up to 2 minutes
+   * bq.saveToBigQuery(matrix, "my_dataset")
+   * }</pre>
+   *
+   * @param timeoutMs the timeout in milliseconds (must be positive)
+   * @throws IllegalArgumentException if timeoutMs is not positive
+   * @see #getWaitForTableTimeoutMs
+   * @see #saveToBigQuery
+   */
+  void setWaitForTableTimeoutMs(long timeoutMs) {
+    if (timeoutMs <= 0) {
+      throw new IllegalArgumentException("Timeout must be positive, got: $timeoutMs")
+    }
+    this.waitForTableTimeoutMs = timeoutMs
   }
 
   /**
@@ -325,12 +373,13 @@ class Bq {
    * @throws BqException if any step fails
    * @see #createTable
    * @see #insert
+   * @see #setWaitForTableTimeoutMs
    */
   boolean saveToBigQuery(Matrix matrix, String datasetName) throws BqException {
     String tableName = matrix.matrixName
     if (!tableExist(datasetName, tableName)) {
       TableSchema defs = createTable(matrix, datasetName)
-      waitForTable(defs.table.tableId)
+      waitForTable(defs.table.tableId, waitForTableTimeoutMs)
     }
     TableId tableId = TableId.of(projectId, datasetName, tableName)
     insert(matrix, tableId)
@@ -351,10 +400,11 @@ class Bq {
    * <p>Example backoff sequence: 300ms → 510ms → 867ms → 1.5s → 2.5s → 4.2s → 5s → 5s...</p>
    *
    * @param tableId the table identifier to wait for
-   * @param timeoutMs maximum time to wait in milliseconds (default: 60 seconds)
+   * @param timeoutMs maximum time to wait in milliseconds
    * @throws BqException if the table is not ready within the timeout period
+   * @see #setWaitForTableTimeoutMs
    */
-  private void waitForTable(TableId tableId, long timeoutMs = 60_000L) {
+  private void waitForTable(TableId tableId, long timeoutMs) {
     long start = System.currentTimeMillis()
     long backoff = 300L
     while (System.currentTimeMillis() - start < timeoutMs) {
