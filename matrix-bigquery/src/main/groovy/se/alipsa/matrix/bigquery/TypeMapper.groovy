@@ -27,11 +27,12 @@ class TypeMapper {
       case Byte -> StandardSQLTypeName.INT64
       case Byte[], byte[] -> StandardSQLTypeName.BYTES
       case Double, Float -> StandardSQLTypeName.FLOAT64
+      // Check more specific types before general types (Timestamp extends Date, Time extends Date)
       case LocalTime, Time -> StandardSQLTypeName.TIME
+      case Timestamp, Instant -> StandardSQLTypeName.TIMESTAMP
       case LocalDate, Date -> StandardSQLTypeName.DATE
       case LocalDateTime -> StandardSQLTypeName.DATETIME
       case String -> StandardSQLTypeName.STRING
-      case Timestamp, Instant -> StandardSQLTypeName.TIMESTAMP
       case ZonedDateTime -> StandardSQLTypeName.STRING // There is no timezone aware type in BQ so we store it as a string
       default -> StandardSQLTypeName.STRING
     }
