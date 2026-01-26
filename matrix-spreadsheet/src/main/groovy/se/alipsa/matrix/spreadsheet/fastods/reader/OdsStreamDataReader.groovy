@@ -412,7 +412,6 @@ final class OdsStreamDataReader extends OdsDataReader {
           "cells(added/skipped)=${cellsAdded}/${cellsSkipped}, extractValue=${extractMs} ms (calls=${extractValueCalls}, avg=${avgExtract} ms), " +
           "processRow=${rowMs} ms"
       logger.info(message)
-      println message
     }
 
     private static long nanosToMillis(long nanos) {
