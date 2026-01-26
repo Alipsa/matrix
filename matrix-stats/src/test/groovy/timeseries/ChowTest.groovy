@@ -109,13 +109,15 @@ class ChowTest {
 
   @Test
   void testDifferentBreakPoints() {
+    // Use seeded random for deterministic test
+    Random random = new Random(42)
     double[] y = new double[30]
     double[][] X = new double[30][2]
 
     for (int i = 0; i < 30; i++) {
       X[i][0] = 1.0
       X[i][1] = i + 1.0
-      y[i] = 2.0 + 3.0 * (i + 1.0) + (Math.random() - 0.5) * 0.5
+      y[i] = 2.0 + 3.0 * (i + 1.0) + (random.nextDouble() - 0.5) * 0.5
     }
 
     // Test at different break points
