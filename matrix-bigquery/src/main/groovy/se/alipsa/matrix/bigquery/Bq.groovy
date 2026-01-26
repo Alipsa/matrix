@@ -93,7 +93,20 @@ class Bq {
    */
   int execute(String qry, boolean useLegacySql = false) throws BqException {
     try {
-      /*
+      // Note: Synchronous query execution has a 10 GB response size limit.
+      // For larger results, consider using the async job-based approach.
+      // Currently using sync for compatibility with BigQuery emulators in tests.
+      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
+          .setUseLegacySql(useLegacySql)
+          .build()
+
+      TableResult result = bigQuery.query(queryConfig)
+
+      // When running a query synchronously, TableResult.getTotalRows() returns
+      // either the number of rows returned (SELECT) or the number of rows affected (DML/DDL).
+      return result.getTotalRows().intValue()
+
+      /* Async job-based approach (no size limit, but not compatible with emulators):
       Job queryJob = runQuery(qry, useLegacySql)
 
       // Retrieve the job statistics to check for DML operations.
@@ -115,16 +128,6 @@ class Bq {
         return result.getTotalRows().intValue()
       }
        */
-      // FIX: Use synchronous query execution to bypass the unstable job polling API in the emulator
-      QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
-          .setUseLegacySql(useLegacySql)
-          .build()
-
-      TableResult result = bigQuery.query(queryConfig)
-
-      // When running a query synchronously, TableResult.getTotalRows() returns
-      // either the number of rows returned (SELECT) or the number of rows affected (DML/DDL).
-      return result.getTotalRows().intValue()
 
     } catch (BigQueryException | InterruptedException e) {
       throw new BqException("Query execution failed due to error: " + e.toString(), e)
@@ -151,13 +154,9 @@ class Bq {
 
   Matrix query(String qry, boolean useLegacySql = false) throws BqException {
     try {
-      /*
-            Job queryJob = runQuery(qry, useLegacySql)
-
-      // Convert to a Matrix and return the results.
-      TableResult result = queryJob.getQueryResults()
-       */
-      // FIX: Use synchronous query execution to bypass the unstable job polling API in the emulator
+      // Note: Synchronous query execution has a 10 GB response size limit.
+      // For larger results, consider using the async job-based approach.
+      // Currently using sync for compatibility with BigQuery emulators in tests.
       QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(qry)
           .setUseLegacySql(useLegacySql)
           .build()
@@ -166,6 +165,15 @@ class Bq {
 
       // Convert to a Matrix and return the results.
       return convertToMatrix(result)
+
+      /* Async job-based approach (no size limit, but not compatible with emulators):
+      Job queryJob = runQuery(qry, useLegacySql)
+
+      // Convert to a Matrix and return the results.
+      TableResult result = queryJob.getQueryResults()
+      return convertToMatrix(result)
+       */
+
     } catch (BigQueryException | InterruptedException e) {
       throw new BqException("Query failed due to error: " + e.toString(), e)
     }
@@ -440,9 +448,6 @@ class Bq {
       colTypes << it.type
     }
 
-    //println "Bq.convertToMatrix: result contains $result.totalRows rows"
-    //println "Bq.convertToMatrix: Column names in bq result are ${colNames}"
-    //println "Bq.convertToMatrix: Column types in bq result are ${colTypes}"
     List<List> rows = []
     def row
     for (FieldValueList fvl : result.iterateAll()) {
@@ -451,7 +456,6 @@ class Bq {
       for (FieldValue fv : fvl.iterator()) {
         row << convertFieldValue(fv, colTypes[i++])
       }
-      //println "Bq.convertToMatrix: adding $row"
       rows << row
     }
     Matrix.builder()
