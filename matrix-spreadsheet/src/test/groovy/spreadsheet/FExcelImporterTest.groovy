@@ -7,8 +7,7 @@ import se.alipsa.matrix.spreadsheet.fastexcel.FExcelUtil
 
 import java.time.LocalDate
 
-import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertIterableEquals
+import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ValueConverter.asBigDecimal
 import static se.alipsa.matrix.core.ValueConverter.asDouble
 
@@ -147,5 +146,42 @@ class FExcelImporterTest {
     assertEquals(LocalDate.parse('2025-03-20'), m[5, 2])
     assertEquals(m['c4'].subList(0..5).average() as double, m[6,'c4'] as double, 0.000001)
     assertEquals('foobar1', m[0, 'c7'])
+  }
+
+  @Test
+  void testInvalidSheetNumberThrows() {
+    URL url = this.getClass().getResource("/Book1.xlsx")
+
+    // Sheet number 0 should throw
+    assertThrows(IllegalArgumentException.class, () -> {
+      FExcelImporter.create().importSpreadsheet(url, 0, 1, 12, 'A', 'D', true)
+    }, "Sheet number 0 should throw IllegalArgumentException")
+
+    // Negative sheet number should throw
+    assertThrows(IllegalArgumentException.class, () -> {
+      FExcelImporter.create().importSpreadsheet(url, -1, 1, 12, 'A', 'D', true)
+    }, "Negative sheet number should throw IllegalArgumentException")
+
+    // Non-existent sheet number should throw
+    assertThrows(IllegalArgumentException.class, () -> {
+      FExcelImporter.create().importSpreadsheet(url, 999, 1, 12, 'A', 'D', true)
+    }, "Non-existent sheet number should throw IllegalArgumentException")
+  }
+
+  @Test
+  void testInvalidSheetNameThrows() {
+    URL url = this.getClass().getResource("/Book1.xlsx")
+
+    // Non-existent sheet name should throw (NoSuchElementException from orElseThrow)
+    assertThrows(NoSuchElementException.class, () -> {
+      FExcelImporter.create().importSpreadsheet(url, 'NonExistentSheet', 1, 12, 'A', 'D', true)
+    }, "Non-existent sheet name should throw NoSuchElementException")
+  }
+
+  @Test
+  void testNullUrlThrows() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      FExcelImporter.create().importSpreadsheet((URL) null, 1, 1, 12, 'A', 'D', true)
+    }, "Null URL should throw IllegalArgumentException")
   }
 }

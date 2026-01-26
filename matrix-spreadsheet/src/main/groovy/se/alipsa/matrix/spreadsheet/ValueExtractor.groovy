@@ -1,14 +1,9 @@
 package se.alipsa.matrix.spreadsheet
 
-import java.text.NumberFormat
-import java.text.ParseException
-
 /**
  * A ValueExtractor is a helper class that makes it easier to get values from a spreadsheet.
  */
 abstract class ValueExtractor {
-
-   protected NumberFormat percentFormat = NumberFormat.getPercentInstance()
 
    Double getDouble(Object val) {
       if (val == null) {
@@ -17,14 +12,18 @@ abstract class ValueExtractor {
       if (val instanceof Double) {
          return (Double) val
       }
-      String strVal = val.toString()
+      String strVal = val.toString().trim()
       try {
          return Double.parseDouble(strVal)
       } catch (NumberFormatException e) {
-         try {
-            percentFormat.parse(strVal).doubleValue()
-         } catch (ParseException ignored) {
-            // do nothing
+         // Try parsing as percentage (e.g., "50%" -> 0.5)
+         if (strVal.endsWith("%")) {
+            try {
+               String numPart = strVal.substring(0, strVal.length() - 1).trim()
+               return Double.parseDouble(numPart) / 100.0
+            } catch (NumberFormatException ignored) {
+               // do nothing
+            }
          }
          return null
       }
@@ -37,15 +36,20 @@ abstract class ValueExtractor {
       if (val instanceof Double) {
          return (Double) val
       }
-      String strVal = val.toString()
-      if (strVal.contains("%")) {
+      String strVal = val.toString().trim()
+      if (strVal.endsWith("%")) {
          try {
-            return percentFormat.parse(strVal).doubleValue()
-         } catch (ParseException e) {
+            String numPart = strVal.substring(0, strVal.length() - 1).trim()
+            return Double.parseDouble(numPart) / 100.0
+         } catch (NumberFormatException e) {
             return null
          }
       } else {
-         return Double.parseDouble(strVal)
+         try {
+            return Double.parseDouble(strVal)
+         } catch (NumberFormatException e) {
+            return null
+         }
       }
    }
 

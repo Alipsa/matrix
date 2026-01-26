@@ -217,7 +217,6 @@ class SpreadsheetImporter {
     } else {
       file = String.valueOf(fp)
     }
-    //println "SpreadsheetImporter.importSpreadsheet: parse = $params"
     Object sheet = params.get("sheet")
     if (sheet == null) {
       sheet = params.get("sheetNumber")
@@ -243,9 +242,7 @@ class SpreadsheetImporter {
     Boolean firstRowAsColNames = params.getOrDefault('firstRowAsColNames', true) as Boolean
     validateNotNull(firstRowAsColNames, 'firstRowAsColNames')
 
-    //println "SpreadsheetImporter.importSpreadsheet: file=$file, sheet=$sheet, startRow= $startRow, endRow= $endRow, startCol= $startCol, endCol= $endCol, firstRowAsColNames= $firstRowAsColNames"
     if (sheet instanceof Number) {
-      //println "importing sheet number $sheet"
       return importSpreadsheet(file,
           sheet as int,
           startRow as int,
@@ -254,7 +251,6 @@ class SpreadsheetImporter {
           endCol as int,
           firstRowAsColNames as boolean)
     }
-    //println "importing sheet name $sheet"
     return importSpreadsheet(
         file,
         sheet as String,

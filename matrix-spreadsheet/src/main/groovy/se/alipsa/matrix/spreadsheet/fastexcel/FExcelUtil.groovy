@@ -30,18 +30,17 @@ class FExcelUtil {
   }
 
   static Map<String, ?> getFormat(InputStream is, String sheetName, String columnName, int rowNumber) {
-    ReadableWorkbook wb = new ReadableWorkbook(is, FExcelImporter.OPTIONS)
-    Sheet sheet = wb.findSheet(sheetName).orElseThrow()
-    //List<Row> rowList = sheet.read()
-    Row row = sheet.openStream().find { Row row ->
-      if (row.rowNum == rowNumber) {
-        return true
+    try (ReadableWorkbook wb = new ReadableWorkbook(is, FExcelImporter.OPTIONS)) {
+      Sheet sheet = wb.findSheet(sheetName).orElseThrow()
+      Row row
+      try (def rows = sheet.openStream()) {
+        row = rows.find { Row r -> r.rowNum == rowNumber } as Row
       }
-      return false
-    } as Row
-    Cell cell = row.getCell(new CellAddress("$columnName$rowNumber"))
-    if (cell == null) return null
-    [cellAddress: cell.address, formatId: cell.dataFormatId, formatString: cell.dataFormatString, rawValue: cell.rawValue]
+      if (row == null) return null
+      Cell cell = row.getCell(new CellAddress("$columnName$rowNumber"))
+      if (cell == null) return null
+      [cellAddress: cell.address, formatId: cell.dataFormatId, formatString: cell.dataFormatString, rawValue: cell.rawValue]
+    }
   }
 
   static Row getRow(Sheet sheet, int rowIdx) {

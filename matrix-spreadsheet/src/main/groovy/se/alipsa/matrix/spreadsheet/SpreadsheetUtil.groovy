@@ -53,6 +53,37 @@ class SpreadsheetUtil {
       return createSafeSheetName(suggestion)
    }
 
+   /**
+    * Create unique sheet names from a list, handling collision after sanitization.
+    * If two names become identical after sanitization (e.g., "A/B" and "A?B" both become "A B"),
+    * numeric suffixes are appended to ensure uniqueness.
+    *
+    * @param names the proposed sheet names
+    * @return list of unique sanitized sheet names in the same order
+    */
+   static List<String> createUniqueSheetNames(List<String> names) {
+      List<String> result = []
+      Set<String> usedNames = new HashSet<>()
+      for (String name : names) {
+         String safeName = createValidSheetName(name)
+         String uniqueName = safeName
+         int suffix = 1
+         while (usedNames.contains(uniqueName)) {
+            String candidate = "${safeName}${suffix}"
+            // Ensure the suffixed name also respects the 31-char limit
+            if (candidate.length() > 31) {
+               int cutoff = Math.max(0, 31 - String.valueOf(suffix).length())
+               candidate = safeName.substring(0, Math.min(cutoff, safeName.length())) + suffix
+            }
+            uniqueName = candidate
+            suffix++
+         }
+         usedNames.add(uniqueName)
+         result.add(uniqueName)
+      }
+      result
+   }
+
    static List<String> createColumnNames(int startCol, int endCol) {
       createColumnNames(endCol - startCol + 1)
    }

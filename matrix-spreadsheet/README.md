@@ -7,11 +7,11 @@ This Groovy library enables you to import and export Excel and Libre/Open Office
 It is heavily inspired by the [Spreadsheets](https://github.com/Alipsa/spreadsheets) library 
 for [Renjin R](https://github.com/bedatadriven/renjin).
 
-To use it, add the following to your gradle build script: 
+To use it, add the following to your gradle build script:
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.5'
+implementation 'org.apache.groovy:groovy:5.0.3'
 implementation 'se.alipsa.matrix:matrix-core:3.4.1'
-implementation 'se.alipsa.matrix:matrix-spreadsheet:2.2.1'
+implementation 'se.alipsa.matrix:matrix-spreadsheet:2.3.0'
 ```
 or if you use maven:
 ```xml
@@ -19,7 +19,7 @@ or if you use maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>5.0.2</version>
+      <version>5.0.3</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
@@ -29,7 +29,7 @@ or if you use maven:
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-spreadsheet</artifactId>
-    <version>2.2.1</version>
+    <version>2.3.0</version>
   </dependency>
 </dependencies>
 ```
@@ -153,11 +153,41 @@ See [the tests](https://github.com/Alipsa/spreadsheet/tree/main/src/test/groovy/
 # Handling large files
 Matrix-spreadsheet uses FastExcel for .xlsx import/export and FastOds (streaming) for .ods import/reading/export by default to keep memory usage low. If you have Excel sheets with more than 150,000 rows you might still encounter out of memory errors; if increasing RAM is not an option, consider exporting the content to CSV and use matrix-csv to import the data instead. Note that the FastExcel backend only supports .xlsx (not legacy .xls). Appending/replacing sheets in existing .xlsx files is supported via SpreadsheetWriter/FExcelAppender, and appending/replacing sheets in existing .ods files is supported via SpreadsheetWriter/FOdsAppender.
 
+# Performance
+
+Version 2.3.0 introduced significant ODS performance optimizations:
+
+**ODS Read Performance (v2.3.0)**
+- Medium files (50k rows × 12 columns): **1.43s** (70% faster than v2.2.0)
+- Large files (900k+ rows Crime_Data): **53s** (80% faster than v2.2.0)
+
+**Key Optimizations**
+1. **Aalto StAX Parser**: Switched from JDK default to high-performance Aalto XML parser (10-30% faster)
+2. **Type-aware Cell Parsing**: Optimized extractValue with switch dispatch and separate methods per type
+3. **Adaptive Capacity**: Dynamic ArrayList sizing based on learned row width
+4. **Null Object Pattern**: Eliminated profiling branch overhead for production use
+
+**Benchmarking**
+
+Run performance benchmarks:
+```bash
+./gradlew :matrix-spreadsheet:spreadsheetBenchmark --rerun-tasks
+```
+
+Enable ODS profiling (detailed timing breakdown):
+```bash
+./gradlew :matrix-spreadsheet:spreadsheetBenchmark -Dmatrix.spreadsheet.ods.profile=true
+```
+
+For more details on the optimizations, see `docs/fastexcel-analysis.md` and `docs/ods-optimization-opportunities.md`.
+
 # Release version compatibility matrix
-The following table illustrates the version compatibility of the matrix-csv and matrix core
+The following table illustrates the version compatibility of the matrix-spreadsheet and matrix-core
 
 | Matrix spreadsheet |    Matrix core |
 |-------------------:|---------------:|
+|              2.3.0 |          3.4.1 |
+|              2.2.0 | 3.2.0 -> 3.3.0 |
 |              2.1.0 |          3.1.0 |
 |              2.0.0 |          3.0.0 |
 |     1.2.0 -> 1.2.1 |          2.3.0 |
@@ -165,9 +195,6 @@ The following table illustrates the version compatibility of the matrix-csv and 
 |              1.0.3 | 2.0.0 -> 2.1.1 |
 |              1.0.2 |          1.2.4 |
 |              1.0.1 | 1.2.1 -> 1.2.3 |
-|              2.0.0 |          3.0.0 |
-|              2.1.0 |          3.1.0 |
-|              2.2.0 | 3.2.0 -> 3.3.0 |
 
 
 # Third party libraries used
