@@ -67,6 +67,9 @@ test {
     logger.lifecycle("Excluding external and flaky tests (set -PrunExternalTests=true or RUN_EXTERNAL_TESTS=true to include them)")
   }
 
+  // Enable parallel test execution for faster external test runs
+  maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
   useJUnitPlatform() {
     if (!runExternal) {
       excludeTags 'external', 'flaky'

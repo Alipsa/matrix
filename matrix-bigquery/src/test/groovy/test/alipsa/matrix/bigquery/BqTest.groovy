@@ -1,9 +1,7 @@
 package test.alipsa.matrix.bigquery
 
 import groovy.transform.CompileStatic
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
 import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
@@ -16,7 +14,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZonedDateTime
 
-import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.*
 
 /**
  * The GCloud testcontainer project is not yet mature enough to rely on so
@@ -28,19 +26,48 @@ import static org.junit.jupiter.api.Assertions.assertNotNull
  * Note: These tests use async query execution (useAsyncQueries=true) since they run against
  * real BigQuery in production. Async mode has no response size limits and is optimal for
  * production workloads.
+ *
+ * Performance optimization: Uses shared dataset and Bq instance to minimize network round-trips.
  */
 @Tag("external")
 @CompileStatic
 class BqTest {
 
+  private static Bq bq
+  private static String projectId
+  private static final String DATASET_NAME = 'BqTestShared'
+
+  @BeforeAll
+  static void setupClass() {
+    projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
+    if (projectId == null) {
+      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run tests!")
+      return
+    }
+    bq = new Bq(true)  // Use async queries for production BigQuery
+
+    // Create shared dataset once for all tests
+    if (!bq.datasetExist(DATASET_NAME)) {
+      bq.createDataset(DATASET_NAME, "Shared test dataset for BqTest suite")
+    }
+  }
+
+  @AfterAll
+  static void teardownClass() {
+    if (bq != null && DATASET_NAME != null) {
+      // Clean up shared dataset after all tests
+      if (bq.datasetExist(DATASET_NAME)) {
+        bq.dropDataset(DATASET_NAME)
+      }
+    }
+  }
+
   @Test
   void testExample() {
-    String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     Matrix m = bq.query("""SELECT CONCAT('https://stackoverflow.com/questions/', 
         CAST(id as STRING)) as url, view_count 
         FROM `bigquery-public-data.stackoverflow.posts_questions` 
@@ -48,74 +75,54 @@ class BqTest {
         ORDER BY view_count DESC
         LIMIT 10
         """.stripIndent())
-    Assertions.assertEquals(10, m.rowCount(), "Unexpected row count")
-    Assertions.assertEquals(2, m.columnCount(), "Unexpected column count")
+    assertEquals(10, m.rowCount(), "Unexpected row count")
+    assertEquals(2, m.columnCount(), "Unexpected column count")
   }
 
   @Test
   void testListProjects() {
-    String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     println "Projects are ${bq.getProjects().collect{it.displayName + ' (' + it.projectId + ')'}}"
-
   }
 
   @Test
   void testCreateAndRetrieve() {
-    String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq(true)  // Use async queries for production BigQuery
-    String datasetName = 'BqTestCars'
-    bq.createDataset(datasetName)
-    Assertions.assertTrue(bq.datasetExist(datasetName))
-    def mtcars = Dataset.mtcars()
-    bq.dropTable(datasetName, mtcars)
-    bq.saveToBigQuery(mtcars, datasetName)
-    String qry = "select * from `${projectId}.${datasetName}.mtcars`"
-    println qry
+    Matrix mtcars = Dataset.mtcars()
+    bq.dropTable(DATASET_NAME, mtcars)
+    bq.saveToBigQuery(mtcars, DATASET_NAME)
+    String qry = "select * from `${projectId}.${DATASET_NAME}.mtcars`"
     Matrix mtcars2 = bq.query(qry).withMatrixName(mtcars.matrixName)
-    assert mtcars.orderBy("model") == mtcars2.orderBy("model")
-    bq.dropDataset(datasetName)
-    Assertions.assertFalse(bq.datasetExist(datasetName))
+    assertEquals(mtcars.orderBy("model"), mtcars2.orderBy("model"))
   }
 
   @Test
   void testCreateAndRetrieveAirquality() {
-    String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq(true)  // Use async queries for production BigQuery
-    String datasetName = 'BqTestAirQuality'
-    bq.createDataset(datasetName)
-    Assertions.assertTrue(bq.datasetExist(datasetName))
-    def airq = Dataset.airquality()
+    Matrix airq = Dataset.airquality()
     airq.renameColumn('Solar.R', 'solar_r')
-    bq.dropTable(datasetName, airq)
-    Assertions.assertTrue(bq.saveToBigQuery(airq, datasetName))
-    String qry = "select * from `${datasetName}.${airq.matrixName}`"
+    bq.dropTable(DATASET_NAME, airq)
+    assertTrue(bq.saveToBigQuery(airq, DATASET_NAME))
+    String qry = "select * from `${DATASET_NAME}.${airq.matrixName}`"
     Matrix airq2 = bq.query(qry).withMatrixName(airq.matrixName)
-    assert airq == airq2
-    bq.dropDataset(datasetName)
-    Assertions.assertFalse(bq.datasetExist(datasetName))
+    assertEquals(airq, airq2)
   }
 
   @Test
   void testListTableInfo() {
-    String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
       println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     List<String> ds = bq.datasets
     if (ds.size() ==  0) {
       println "No datasets found"
