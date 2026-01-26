@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
   id 'groovy'
   id 'java-library'
@@ -55,16 +58,57 @@ dependencies {
 }
 
 test {
-  testLogging.showStandardStreams = true
-  useJUnitPlatform() {
-    excludeTags 'external', 'flaky'
-  }
-
   // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)
   def runExternal = (project.findProperty('runExternalTests') ?: System.getenv('RUN_EXTERNAL_TESTS'))?.toString()?.toBoolean() ?: false
+
   if (runExternal) {
-    useJUnitPlatform {
-      excludeTags()          // clear the default exclusion
+    logger.lifecycle("Running external tests (including @Tag('external') tests)")
+  } else {
+    logger.lifecycle("Excluding external and flaky tests (set -PrunExternalTests=true or RUN_EXTERNAL_TESTS=true to include them)")
+  }
+
+  useJUnitPlatform() {
+    if (!runExternal) {
+      excludeTags 'external', 'flaky'
+    }
+  }
+
+  testLogging {
+    // set options for log level LIFECYCLE
+    events TestLogEvent.FAILED,
+        TestLogEvent.SKIPPED,
+        TestLogEvent.STANDARD_OUT
+    exceptionFormat = TestExceptionFormat.FULL
+    showExceptions = true
+    showCauses = true
+    showStackTraces = true
+    showStandardStreams = true
+
+    // set options for log level DEBUG and INFO
+    debug {
+      events TestLogEvent.STARTED,
+          TestLogEvent.FAILED,
+          TestLogEvent.PASSED,
+          TestLogEvent.SKIPPED,
+          TestLogEvent.STANDARD_ERROR,
+          TestLogEvent.STANDARD_OUT
+      exceptionFormat = TestExceptionFormat.FULL
+    }
+    info.events = debug.events
+    info.exceptionFormat = debug.exceptionFormat
+
+    def totalDuration = 0
+    afterSuite { desc, result ->
+      def duration = result.endTime - result.startTime
+      //println "Duration of $desc: $duration ms"
+      totalDuration += duration
+      if (!desc.parent) { // will match the outermost suite
+        println "\nTotal test duration: ${totalDuration/1000} s"
+        def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+        def startItem = '|  ', endItem = '  |'
+        def repeatLength = startItem.length() + output.length() + endItem.length()
+        println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+      }
     }
   }
 }
