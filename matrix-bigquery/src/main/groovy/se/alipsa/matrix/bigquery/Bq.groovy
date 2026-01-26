@@ -15,6 +15,7 @@ import com.google.cloud.resourcemanager.v3.ProjectsSettings
 import groovy.transform.CompileStatic
 import me.tongfei.progressbar.ProgressBar
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.util.Logger
 
 import java.nio.channels.Channels
@@ -254,59 +255,82 @@ class Bq {
     insert(matrix, dataSet, projectId)
   }
 
+  /**
+   * Inserts data from a Matrix into a BigQuery table.
+   *
+   * <p>This method first attempts to use the write channel API for streaming JSON data.
+   * If a connection error occurs (common with emulators), it automatically falls back
+   * to the InsertAll API.</p>
+   *
+   * @param matrix the Matrix containing data to insert
+   * @param tableId the BigQuery table identifier
+   * @return load statistics from the insert operation
+   * @throws BqException if both insert methods fail
+   */
   JobStatistics.LoadStatistics insert(Matrix matrix, TableId tableId) throws BqException {
-    int rowIdx = 0
-    Object value = null
-    final BigDecimal tickPercent = 0.05
     try {
-      def wcfg = WriteChannelConfiguration.newBuilder(tableId)
-          .setFormatOptions(FormatOptions.json())
-          .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE) // or WRITE_APPEND
-          .build()
+      return insertViaWriteChannel(matrix, tableId)
+    } catch (Exception e) {
+      if (isConnectionError(e)) {
+        log.warn("Streaming insert failed with connection error. Falling back to InsertAll...")
+        return insertViaInsertAll(matrix, tableId, e)
+      }
+      throw e
+    }
+  }
 
-      JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
-      TableDataWriteChannel writer = bigQuery.writer(jobId, wcfg)
+  /**
+   * Checks if an exception represents a connection error that warrants fallback.
+   *
+   * @param e the exception to check
+   * @return true if this is a connection-related error
+   */
+  private static boolean isConnectionError(Exception e) {
+    return e.cause instanceof ConnectException || e.message?.contains("Connection refused")
+  }
+
+  /**
+   * Inserts data using BigQuery's write channel API with NDJSON format.
+   *
+   * <p>This is the preferred method for large datasets as it supports streaming
+   * and has better performance characteristics.</p>
+   *
+   * @param matrix the Matrix containing data to insert
+   * @param tableId the BigQuery table identifier
+   * @return load statistics from the insert operation
+   * @throws BqException if the insert fails
+   */
+  private JobStatistics.LoadStatistics insertViaWriteChannel(Matrix matrix, TableId tableId) throws BqException {
+    int rowIdx = 0
+    Object lastValue = null
+    final BigDecimal tickPercent = 0.05
+
+    WriteChannelConfiguration wcfg = WriteChannelConfiguration.newBuilder(tableId)
+        .setFormatOptions(FormatOptions.json())
+        .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE)
+        .build()
+
+    JobId jobId = JobId.newBuilder().setProject(projectId).setRandomJob().build()
+    TableDataWriteChannel writer = bigQuery.writer(jobId, wcfg)
+
+    try {
       OutputStream out = Channels.newOutputStream(writer)
       JsonGenerator json = new JsonFactory().createGenerator(out, JsonEncoding.UTF8)
 
-      def names = matrix.columnNames()
+      List<String> columnNames = matrix.columnNames()
       int rowCount = matrix.rowCount()
-      int stepSize = Math.max(1, (int) (rowCount * tickPercent)) // every 5% of total
+      int stepSize = Math.max(1, (int) (rowCount * tickPercent))
       ProgressBar pb = new ProgressBar("Inserting into ${tableId.dataset}.${tableId.table}", rowCount)
 
       try {
-        for (def row : matrix.rows()) {
+        for (Row row : matrix.rows()) {
           rowIdx++
-          json.writeStartObject()
-          for (String name : names) {
-            value = row[name]
-            json.writeFieldName(name)
-            if (needsConversion(value)) {
-              json.writeString(sanitizeString(convertObjectValue(value))) // dates/decimals as strings
-            } else if (value instanceof Number) {
-              json.writeNumber(value.toString())  // keep numbers as numbers
-            } else if (value instanceof Boolean) {
-              json.writeBoolean((Boolean) value)
-            } else if (value == null) {
-              json.writeNull()
-            } else if (value instanceof byte[]) {
-              json.writeBinary(value as byte[])
-            } else if (value instanceof CharSequence) {
-              json.writeString(sanitizeString(value.toString()))
-            } else {
-              json.writeObject(value)
-            }
-          }
-          json.writeEndObject()
-          json.writeRaw('\n') // NDJSON newline
+          lastValue = writeRowAsJson(json, row, columnNames)
 
-          // update progress bar every tickPercent of total rows
           if (rowIdx % stepSize == 0) {
             pb.stepBy(stepSize)
           }
         }
-
-        // make sure we reach 100% even if total not multiple of stepSize
         pb.stepTo(rowIdx)
       } finally {
         pb.close()
@@ -314,92 +338,200 @@ class Bq {
         json.close()
       }
 
-      Job loadJob = writer.getJob().waitFor()
-
-      def status = loadJob.getStatus()
-      def primary = status?.getError()
-      def execErrs = status?.getExecutionErrors()
-
-      if (primary != null || (execErrs != null && !execErrs.isEmpty())) {
-        String details = ([primary] + (execErrs ?: []))
-            .findAll { it != null }
-            .collect { e -> "${e.message} (reason=${e.reason}, location=${e.location})" }
-            .join("; ")
-        throw new BqException("Write-channel load (JSON) failed: ${details}")
-      }
-
-      JobStatistics.LoadStatistics stats = loadJob.getStatistics()
-      long rowsInserted = stats.getOutputRows()
-
-      log.info("Load job completed successfully. Inserted $rowsInserted rows")
-      return stats
+      return waitForLoadJobAndGetStats(writer, tableId)
 
     } catch (Exception e) {
-      // Check if the failure is a known connection error that necessitates the fallback
-      if (e.cause instanceof ConnectException || e.message?.contains("Connection refused")) {
-
-        log.warn("Streaming insert failed with connection error. Falling back to InsertAll...")
-        try {
-
-          List<RowToInsert> rows = matrix.rows().collect { row ->
-            Map<String, Object> content = new LinkedHashMap<>()
-
-            matrix.columnNames().each { name ->
-              Object val = row[name]
-              if (needsConversion(val)) {
-                // Apply conversion for complex types (Dates, BigDecimal, etc.)
-                content.put(name, sanitizeString(convertObjectValue(val)))
-              } else if (val instanceof CharSequence) {
-                // Sanitize regular strings
-                content.put(name, sanitizeString(val.toString()))
-              } else {
-                // Pass simple types (Number, Boolean, byte[], null) directly
-                content.put(name, val)
-              }
-            }
-
-            return RowToInsert.of(content)
-          }
-
-          InsertAllRequest request = InsertAllRequest.newBuilder(tableId)
-              .setRows(rows)
-              .build()
-
-          InsertAllResponse response = bigQuery.insertAll(request)
-
-          if (response.hasErrors()) {
-            def errorDetails = response.getInsertErrors().collect { entry ->
-              def rowErrors = entry.getValue().collect { it.getMessage() }.join(", ")
-              return "Row ${entry.getKey()}: ${rowErrors}"
-            }.join("\n")
-            throw new BqException("InsertAll fallback failed with errors:\n${errorDetails}")
-          }
-
-          // Success: Return a placeholder LoadStatistics object
-          log.info("InsertAll fallback successful. Inserted ${matrix.rowCount()} rows")
-
-          List<String> emptySourceUris = Collections.emptyList()
-
-          LoadJobConfiguration.Builder loadConfigBuilder = (LoadJobConfiguration.Builder) LoadJobConfiguration
-              .newBuilder(tableId, emptySourceUris)
-              .setFormatOptions(FormatOptions.json())
-
-          LoadJobConfiguration placeholderLoadConfig = loadConfigBuilder.build()
-
-          JobInfo.Builder jobInfoBuilder = JobInfo.newBuilder(placeholderLoadConfig)
-          JobInfo placeholderJobInfo = jobInfoBuilder.build()
-
-          return (JobStatistics.LoadStatistics) placeholderJobInfo.getStatistics()
-
-        } catch (Exception fallbackException) {
-          // If fallback fails, log and throw a detailed exception
-          log.error("InsertAll fallback also failed: ${fallbackException.message}")
-          throw new BqException("Streaming insert failed: ${e.message}. Fallback also failed: ${fallbackException.message}", e)
-        }
-      }
-      // for non-connection errors or if fallback not used:
-      throw new BqException("Error writing value '${value}' (type=${value?.class?.name}) on row ${rowIdx}", e)
+      throw new BqException("Error writing value '${lastValue}' (type=${lastValue?.class?.name}) on row ${rowIdx}", e)
     }
+  }
+
+  /**
+   * Writes a single row to the JSON generator in NDJSON format.
+   *
+   * @param json the JSON generator
+   * @param row the row data
+   * @param columnNames the column names to write
+   * @return the last value written (for error reporting)
+   */
+  private static Object writeRowAsJson(JsonGenerator json, Row row, List<String> columnNames) {
+    Object lastValue = null
+    json.writeStartObject()
+
+    for (String name : columnNames) {
+      Object value = row[name]
+      lastValue = value
+      json.writeFieldName(name)
+      writeJsonValue(json, value)
+    }
+
+    json.writeEndObject()
+    json.writeRaw('\n')
+    return lastValue
+  }
+
+  /**
+   * Writes a single value to the JSON generator with appropriate type handling.
+   *
+   * @param json the JSON generator
+   * @param value the value to write
+   */
+  private static void writeJsonValue(JsonGenerator json, Object value) {
+    if (needsConversion(value)) {
+      json.writeString(sanitizeString(convertObjectValue(value)))
+    } else if (value instanceof Number) {
+      json.writeNumber(value.toString())
+    } else if (value instanceof Boolean) {
+      json.writeBoolean((Boolean) value)
+    } else if (value == null) {
+      json.writeNull()
+    } else if (value instanceof byte[]) {
+      json.writeBinary(value as byte[])
+    } else if (value instanceof CharSequence) {
+      json.writeString(sanitizeString(value.toString()))
+    } else {
+      json.writeObject(value)
+    }
+  }
+
+  /**
+   * Waits for a load job to complete and returns the statistics.
+   *
+   * @param writer the table data write channel
+   * @param tableId the table identifier (for error messages)
+   * @return load statistics from the completed job
+   * @throws BqException if the job fails
+   */
+  private JobStatistics.LoadStatistics waitForLoadJobAndGetStats(TableDataWriteChannel writer, TableId tableId) throws BqException {
+    Job loadJob = writer.getJob().waitFor()
+
+    JobStatus status = loadJob.getStatus()
+    BigQueryError primary = status?.getError()
+    List<BigQueryError> execErrs = status?.getExecutionErrors()
+
+    if (primary != null || (execErrs != null && !execErrs.isEmpty())) {
+      String details = buildErrorDetails(primary, execErrs)
+      throw new BqException("Write-channel load (JSON) failed: ${details}")
+    }
+
+    JobStatistics.LoadStatistics stats = loadJob.getStatistics()
+    long rowsInserted = stats.getOutputRows()
+    log.info("Load job completed successfully. Inserted $rowsInserted rows")
+    return stats
+  }
+
+  /**
+   * Builds a detailed error message from BigQuery errors.
+   *
+   * @param primary the primary error (may be null)
+   * @param execErrs execution errors (may be null or empty)
+   * @return formatted error details string
+   */
+  private static String buildErrorDetails(BigQueryError primary, List<BigQueryError> execErrs) {
+    List<BigQueryError> allErrors = []
+    if (primary != null) {
+      allErrors << primary
+    }
+    if (execErrs != null) {
+      allErrors.addAll(execErrs)
+    }
+    return allErrors
+        .collect { e -> "${e.message} (reason=${e.reason}, location=${e.location})" }
+        .join("; ")
+  }
+
+  /**
+   * Inserts data using BigQuery's InsertAll API.
+   *
+   * <p>This is the fallback method used when write channel fails (e.g., with emulators).
+   * It's less efficient for large datasets but more compatible.</p>
+   *
+   * @param matrix the Matrix containing data to insert
+   * @param tableId the BigQuery table identifier
+   * @param originalException the original exception that triggered the fallback
+   * @return load statistics (placeholder, as InsertAll doesn't provide detailed stats)
+   * @throws BqException if the insert fails
+   */
+  private JobStatistics.LoadStatistics insertViaInsertAll(Matrix matrix, TableId tableId, Exception originalException) throws BqException {
+    try {
+      List<String> columnNames = matrix.columnNames()
+      List<RowToInsert> rows = matrix.rows().collect { Row row ->
+        RowToInsert.of(convertRowForInsertAll(row, columnNames))
+      }
+
+      InsertAllRequest request = InsertAllRequest.newBuilder(tableId)
+          .setRows(rows)
+          .build()
+
+      InsertAllResponse response = bigQuery.insertAll(request)
+
+      if (response.hasErrors()) {
+        String errorDetails = buildInsertAllErrorDetails(response)
+        throw new BqException("InsertAll fallback failed with errors:\n${errorDetails}")
+      }
+
+      log.info("InsertAll fallback successful. Inserted ${matrix.rowCount()} rows")
+      return createPlaceholderLoadStatistics(tableId)
+
+    } catch (Exception fallbackException) {
+      log.error("InsertAll fallback also failed: ${fallbackException.message}")
+      throw new BqException("Streaming insert failed: ${originalException.message}. Fallback also failed: ${fallbackException.message}", originalException)
+    }
+  }
+
+  /**
+   * Converts a matrix row to a map suitable for InsertAll API.
+   *
+   * @param row the row data
+   * @param columnNames the column names
+   * @return a map with converted values
+   */
+  private static Map<String, Object> convertRowForInsertAll(Row row, List<String> columnNames) {
+    Map<String, Object> content = new LinkedHashMap<>()
+
+    for (String name : columnNames) {
+      Object val = row[name]
+      if (needsConversion(val)) {
+        content.put(name, sanitizeString(convertObjectValue(val)))
+      } else if (val instanceof CharSequence) {
+        content.put(name, sanitizeString(val.toString()))
+      } else {
+        content.put(name, val)
+      }
+    }
+
+    return content
+  }
+
+  /**
+   * Builds error details from an InsertAllResponse.
+   *
+   * @param response the response containing errors
+   * @return formatted error details string
+   */
+  private static String buildInsertAllErrorDetails(InsertAllResponse response) {
+    return response.getInsertErrors().collect { Map.Entry<Long, List<BigQueryError>> entry ->
+      String rowErrors = entry.getValue().collect { it.getMessage() }.join(", ")
+      "Row ${entry.getKey()}: ${rowErrors}"
+    }.join("\n")
+  }
+
+  /**
+   * Creates a placeholder LoadStatistics for InsertAll operations.
+   *
+   * <p>InsertAll doesn't provide detailed statistics like write channel does,
+   * so we create a minimal placeholder to maintain API compatibility.</p>
+   *
+   * @param tableId the table identifier
+   * @return placeholder load statistics (with null values)
+   */
+  private static JobStatistics.LoadStatistics createPlaceholderLoadStatistics(TableId tableId) {
+    List<String> emptySourceUris = Collections.emptyList()
+    LoadJobConfiguration placeholderConfig = LoadJobConfiguration
+        .newBuilder(tableId, emptySourceUris)
+        .setFormatOptions(FormatOptions.json())
+        .build()
+    JobInfo placeholderJobInfo = JobInfo.newBuilder(placeholderConfig).build()
+    return (JobStatistics.LoadStatistics) placeholderJobInfo.getStatistics()
   }
 
   static boolean needsConversion(Object orgVal) {
