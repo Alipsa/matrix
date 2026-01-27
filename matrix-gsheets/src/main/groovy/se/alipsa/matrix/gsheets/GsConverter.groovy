@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gsheets
 
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -13,7 +12,7 @@ import java.time.temporal.ChronoUnit
 
 class GsConverter {
 
-  private static Logger log = LogManager.getLogger(GsConverter)
+  private static final Logger log = Logger.getLogger(GsConverter)
 
   private static long secondsInDay = 24 * 60 * 60
   private static LocalDateTime epochDateTime = LocalDateTime.of(1899, 12, 30, 0, 0, 0)
@@ -34,8 +33,7 @@ class GsConverter {
         return LocalDate.parse(o.toString(), formatter)
       } catch (DateTimeParseException e) {
         // Try parsing as a numeric serial value
-        log.warn("Failed to parse '{}' as date with formatter {}, attempting numeric conversion: {}",
-                 o, formatter, e.getMessage())
+        log.warn("Failed to parse '$o' as date with formatter $formatter, attempting numeric conversion: ${e.message}")
         try {
           return asLocalDate(new BigDecimal(o.toString().replace(' ', '')))
         } catch (NumberFormatException nfe) {
@@ -74,8 +72,7 @@ class GsConverter {
         return LocalDateTime.parse(o.toString(), formatter)
       } catch (DateTimeParseException e) {
         // Try parsing as a numeric serial value
-        log.warn("Failed to parse '{}' as datetime with formatter {}, attempting numeric conversion: {}",
-                 o, formatter, e.getMessage())
+        log.warn("Failed to parse '$o' as datetime with formatter $formatter, attempting numeric conversion: ${e.message}")
         try {
           return asLocalDateTime(new BigDecimal(o.toString().replace(' ', '')))
         } catch (NumberFormatException nfe) {
@@ -126,7 +123,7 @@ class GsConverter {
         return LocalTime.parse(o.toString())
       } catch (DateTimeParseException e) {
         // Try parsing as a numeric serial value
-        log.warn("Failed to parse '{}' as time, attempting numeric conversion: {}", o, e.getMessage())
+        log.warn("Failed to parse '$o' as time, attempting numeric conversion: ${e.message}")
         try {
           return asLocalTime(new BigDecimal(o.toString()))
         } catch (NumberFormatException nfe) {

@@ -5,10 +5,12 @@ import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.SqlUtil
 import se.alipsa.groovy.resolver.MavenRepoLookup
+import se.alipsa.matrix.core.util.Logger
 
 @CompileStatic
 class MatrixSqlFactory {
 
+  private static final Logger log = Logger.getLogger(MatrixSqlFactory)
   static String REPO_URL = "https://repo1.maven.org/maven2/"
   static MatrixSql createH2(String url, String user, String password, String additionalUrlProperties = null, String version = null) {
     ConnectionInfo ci = new ConnectionInfo()
@@ -28,7 +30,7 @@ class MatrixSqlFactory {
             .getVersion()
       } catch (Exception e) {
         dependencyVersion = '2.4.240'
-        System.err.println("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion, " + e)
+        log.warn("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion: ${e.message}", e)
       }
     } else {
       dependencyVersion = version
@@ -56,7 +58,7 @@ class MatrixSqlFactory {
             .getVersion()
       } catch (Exception e) {
         dependencyVersion = '10.17.1.0'
-        System.err.println("Failed to fetch latest Derby artifact, falling back to version $dependencyVersion, " + e)
+        log.warn("Failed to fetch latest Derby artifact, falling back to version $dependencyVersion: ${e.message}", e)
       }
     } else {
       dependencyVersion = version

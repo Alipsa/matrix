@@ -2,6 +2,7 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.Logger
 import java.math.RoundingMode
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -17,6 +18,7 @@ import static ValueConverter.asBigDecimal
 @CompileStatic
 class Stat {
 
+    private static final Logger log = Logger.getLogger(Stat)
     private static final List<String> primitives = ['double', 'float', 'int', 'long', 'short', 'byte']
     static final String FREQUENCY_VALUE = "Value"
     static final String FREQUENCY_FREQUENCY = "Frequency"
@@ -77,7 +79,7 @@ class Stat {
 
     static Map<String, Object> addNumericSummary(List<Object> objects, Class<?> type) {
         if (objects == null) {
-            System.err.println("The list of objects for addNumericSummary is null")
+            log.error("The list of objects for addNumericSummary is null")
             return null
         }
         List<Number> numbers = objects as List<Number>

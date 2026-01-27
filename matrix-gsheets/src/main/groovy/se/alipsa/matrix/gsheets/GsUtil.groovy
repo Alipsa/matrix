@@ -7,12 +7,11 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.sheets.v4.Sheets
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import se.alipsa.matrix.core.util.Logger
 
 class GsUtil {
 
-  private static Logger log = LogManager.getLogger(GsUtil)
+  private static final Logger log = Logger.getLogger(GsUtil)
 
   static void deleteSheet(String spreadsheetId) {
     if (spreadsheetId == null || spreadsheetId.trim().isEmpty()) {
@@ -163,7 +162,7 @@ class GsUtil {
 
       return names
     } catch (Exception e) {
-      log.error("Failed to retrieve sheet names for spreadsheetId '{}'", spreadsheetId, e)
+      log.error("Failed to retrieve sheet names for spreadsheetId '$spreadsheetId': ${e.message}", e)
       throw e
     }
   }

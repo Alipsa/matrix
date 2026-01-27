@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
@@ -45,6 +46,8 @@ import se.alipsa.matrix.gg.scale.Scale
  */
 @CompileStatic
 class GeomFunction extends Geom {
+
+  private static final Logger log = Logger.getLogger(GeomFunction)
 
   /** Line color */
   String color = 'black'
@@ -117,8 +120,7 @@ class GeomFunction extends Geom {
 
     // Warn if multiple groups detected (like R's implementation)
     if (groups.size() > 1) {
-      System.err.println("Warning: Multiple drawing groups in geom_function. " +
-                        "Did you use the correct group, colour, or fill aesthetics?")
+      log.warn("Warning: Multiple drawing groups in geom_function. Did you use the correct group, colour, or fill aesthetics?")
     }
 
     // Render each group as a separate path

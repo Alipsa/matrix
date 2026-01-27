@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
@@ -15,6 +16,8 @@ import se.alipsa.matrix.gg.scale.Scale
  */
 @CompileStatic
 class GeomMap extends Geom {
+
+  private static final Logger log = Logger.getLogger(GeomMap)
 
   /** Map polygon data */
   Matrix map
@@ -159,7 +162,7 @@ class GeomMap extends Geom {
     if (unmatchedDataIds) {
       String preview = unmatchedDataIds.take(5).collect { it.toString() }.join(', ')
       String suffix = unmatchedDataIds.size() > 5 ? '...' : ''
-      System.err.println("geom_map warning: ${unmatchedDataIds.size()} data ID(s) not found in map: ${preview}${suffix}")
+      log.warn("geom_map warning: ${unmatchedDataIds.size()} data ID(s) not found in map: $preview$suffix")
     }
 
     List<Map<String, Object>> rows = []

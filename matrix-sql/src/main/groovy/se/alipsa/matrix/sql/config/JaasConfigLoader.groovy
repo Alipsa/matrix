@@ -1,9 +1,12 @@
 package se.alipsa.matrix.sql.config
 
+import se.alipsa.matrix.core.util.Logger
+
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.AppConfigurationEntry;
 class JaasConfigLoader {
 
+  private static final Logger log = Logger.getLogger(JaasConfigLoader)
   private static final String JAAS_CONFIG_NAME = "SQLJDBCDriver";
 
   static void loadDefaultKerberosConfigIfNeeded() {
@@ -18,24 +21,24 @@ class JaasConfigLoader {
       if (entries == null || entries.length == 0) {
         // If entries are null or empty, it means the named configuration is missing
         // *or* no configuration is loaded. Set our default.
-        System.out.println("No JAAS configuration found for " + JAAS_CONFIG_NAME + ". Setting default Kerberos config.")
+        log.info("No JAAS configuration found for $JAAS_CONFIG_NAME. Setting default Kerberos config.")
 
         // 2. Create and set the custom Configuration
         Configuration.setConfiguration(new KerberosJaasConfiguration(currentConfig))
       } else {
-        System.out.println("Existing JAAS configuration for " + JAAS_CONFIG_NAME + " found. Skipping default load.")
+        log.info("Existing JAAS configuration for $JAAS_CONFIG_NAME found. Skipping default load.")
       }
 
     } catch (SecurityException e) {
       // This is the typical exception thrown when a security policy prevents reading the default config,
       // or when no configuration has been loaded at all. Treat this as "not configured" and set our default.
-      System.err.println("Security exception retrieving JAAS config. Assuming none set and registering default.")
+      log.error("Security exception retrieving JAAS config. Assuming none set and registering default.", e)
       Configuration.setConfiguration(new KerberosJaasConfiguration(null))
     } catch (RuntimeException e) {
       // Intentional fail-fast: for any other unexpected runtime exceptions we log and rethrow
       // to avoid continuing application startup with a potentially broken JAAS/Kerberos configuration.
       // This may prevent the application from starting if JAAS initialization fails.
-      System.err.println("Unexpected runtime error during JAAS check: " + e.getMessage())
+      log.error("Unexpected runtime error during JAAS check: ${e.message}", e)
       throw e
     }
   }
