@@ -191,7 +191,9 @@ class TableUtil {
   /**
    * Convert a Tablesaw table to a Matrix.
    *
-   * <p>Preserves the table name, column names, column types, and all data.
+   * <p>Preserves the table name, column names, and all data. Column types are mapped
+   * to their corresponding Java classes where supported; unknown or custom Tablesaw
+   * column types are represented as {@code Object.class} in the resulting Matrix.
    *
    * @param table the Tablesaw table to convert
    * @return a Matrix with the same data and structure
