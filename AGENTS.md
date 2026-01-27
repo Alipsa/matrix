@@ -23,6 +23,104 @@ Bear in min that Groovy is not Java, and while they interoperate seamlessly, Gro
  - String interpolation: Use `"${var}"` for building strings instead of concatenation.
  - Default numeric type: Groovy uses BigDecimal as the default for decimal literals. Prefer BigDecimal over double/float unless performance is critical.
 
+## Logging Guidelines
+
+**CRITICAL:** Always use the matrix-core Logger utility instead of System.out, System.err, println, log4j, or SLF4J direct usage.
+
+### Use the Logger Class
+
+The project provides a lightweight logging utility in `se.alipsa.matrix.core.util.Logger` that automatically detects and uses SLF4J if available, otherwise falls back to System.out/err. This supports both project dependency usage (with SLF4J) and Groovy scripting usage (without SLF4J setup).
+
+**Pattern:**
+```groovy
+import se.alipsa.matrix.core.util.Logger
+
+@CompileStatic
+class MyClass {
+  private static final Logger log = Logger.getLogger(MyClass)
+
+  void myMethod() {
+    log.info("Starting process")
+    log.debug("Dataset $name already exists")
+    log.warn("Falling back to alternative approach")
+    log.error("Operation failed: ${exception.message}", exception)
+  }
+}
+```
+
+**Available log levels:** DEBUG, INFO, WARN, ERROR
+
+**String interpolation:** Use Groovy string interpolation in log messages:
+```groovy
+// Good - Idiomatic Groovy
+log.info("Table $datasetName.$tableName created successfully")
+log.debug("Processing ${count} items")
+
+// Avoid - Java/SLF4J style (not necessary in Groovy)
+log.info("Table %s.%s created successfully", datasetName, tableName)
+```
+
+### Replace Existing Logging
+
+When implementing features or modifying code, **always replace** any of the following with Logger:
+
+**Replace System.out/System.err:**
+```groovy
+// Before
+System.out.println("Processing started")
+println("Dataset created")
+
+// After
+log.info("Processing started")
+log.info("Dataset created")
+```
+
+**Replace direct SLF4J usage:**
+```groovy
+// Before
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+private static final Logger logger = LoggerFactory.getLogger(MyClass)
+
+// After
+import se.alipsa.matrix.core.util.Logger
+
+private static final Logger log = Logger.getLogger(MyClass)
+```
+
+**Replace log4j:**
+```groovy
+// Before
+import org.apache.log4j.Logger
+
+private static final Logger logger = Logger.getLogger(MyClass)
+
+// After
+import se.alipsa.matrix.core.util.Logger
+
+private static final Logger log = Logger.getLogger(MyClass)
+```
+
+### When to Log
+
+- **INFO**: Important operations, dataset creation, successful completions, user-facing events
+- **DEBUG**: Detailed diagnostic information, data that exists checks, intermediate results
+- **WARN**: Recoverable errors, fallback mechanisms activated, deprecation warnings
+- **ERROR**: Exceptions, failures, unrecoverable errors
+
+### Exceptions
+
+When logging exceptions, use the overload that accepts a Throwable:
+```groovy
+try {
+  // operation
+} catch (Exception e) {
+  log.error("Operation failed: ${e.message}", e)
+  throw new CustomException("...", e)
+}
+```
+
 ## DRY Principle (Don't Repeat Yourself)
 **CRITICAL:** Avoid code duplication! Before implementing functionality, check if similar code already exists in the codebase. If you find duplicated code (identical or near-identical methods, constants, or logic in multiple files):
 

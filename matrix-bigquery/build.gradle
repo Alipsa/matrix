@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
   id 'groovy'
   id 'java-library'
@@ -37,16 +40,16 @@ dependencies {
   testImplementation project(':matrix-datasets')
   compileOnly libs.groovy
 
-  api('com.google.cloud:google-cloud-bigquery:2.56.0')
-  api 'com.google.cloud:google-cloud-resourcemanager:1.82.0'
-  implementation platform('com.google.auth:google-auth-library-bom:1.41.0')
+  api('com.google.cloud:google-cloud-bigquery:2.58.0')
+  api 'com.google.cloud:google-cloud-resourcemanager:1.84.0'
+  implementation platform('com.google.auth:google-auth-library-bom:1.42.1')
   implementation 'com.google.auth:google-auth-library-oauth2-http'
-  implementation('com.google.cloud:google-cloud-bigquerystorage:3.18.0')
-  implementation 'me.tongfei:progressbar:0.10.1'
+  implementation('com.google.cloud:google-cloud-bigquerystorage:3.20.0')
+  implementation 'me.tongfei:progressbar:0.10.2'
 
   // https://mvnrepository.com/artifact/org.testcontainers/gcloud
-  testImplementation 'org.testcontainers:gcloud:1.21.3'
-  testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
+  testImplementation 'org.testcontainers:gcloud:1.21.4'
+  testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
   testImplementation libs.groovy
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
@@ -55,16 +58,63 @@ dependencies {
 }
 
 test {
-  testLogging.showStandardStreams = true
-  useJUnitPlatform() {
-    excludeTags 'external', 'flaky'
-  }
-
   // Allow enabling from CLI:  -PrunExternalTests=true  (or env RUN_EXTERNAL_TESTS=true)
   def runExternal = (project.findProperty('runExternalTests') ?: System.getenv('RUN_EXTERNAL_TESTS'))?.toString()?.toBoolean() ?: false
+
   if (runExternal) {
-    useJUnitPlatform {
-      excludeTags()          // clear the default exclusion
+    logger.lifecycle("Running external tests (including @Tag('external') tests)")
+  } else {
+    logger.lifecycle("Excluding external and flaky tests (set -PrunExternalTests=true or RUN_EXTERNAL_TESTS=true to include them)")
+  }
+
+  // Enable parallel test execution for faster external test runs
+  maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
+  useJUnitPlatform() {
+    if (!runExternal) {
+      excludeTags 'external', 'flaky'
+    }
+  }
+
+  testLogging {
+    // set options for log level LIFECYCLE
+    events TestLogEvent.FAILED,
+        TestLogEvent.SKIPPED,
+        TestLogEvent.STANDARD_OUT
+    exceptionFormat = TestExceptionFormat.FULL
+    showExceptions = true
+    showCauses = true
+    showStackTraces = true
+    showStandardStreams = true
+
+    // set options for log level DEBUG and INFO
+    debug {
+      events TestLogEvent.STARTED,
+          TestLogEvent.FAILED,
+          TestLogEvent.PASSED,
+          TestLogEvent.SKIPPED,
+          TestLogEvent.STANDARD_ERROR,
+          TestLogEvent.STANDARD_OUT
+      exceptionFormat = TestExceptionFormat.FULL
+    }
+    info.events = debug.events
+    info.exceptionFormat = debug.exceptionFormat
+
+    def totalDuration = 0
+    afterSuite { desc, result ->
+      def duration = result.endTime - result.startTime
+      //println "Duration of $desc: $duration ms"
+      totalDuration += duration
+      if (!desc.parent) { // will match the outermost suite
+        // Note: Using println here is the standard Gradle pattern for test listeners.
+        // Using logger.lifecycle causes configuration cache issues as it references
+        // a Gradle script object from a closure at execution time.
+        println "\nTotal test duration: ${totalDuration/1000} s"
+        def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+        def startItem = '|  ', endItem = '  |'
+        def repeatLength = startItem.length() + output.length() + endItem.length()
+        println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+      }
     }
   }
 }
@@ -88,7 +138,7 @@ publishing {
       artifact(javadocJar)
       artifact(sourcesJar)
       pom {
-        name = 'Matrix Json'
+        name = 'Matrix BigQuery'
         description = "${project.description}"
         url = "https://github.com/Alipsa/matrix/matrix-bigquery"
         properties = [

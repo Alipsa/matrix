@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Tag
 import se.alipsa.matrix.bigquery.TypeMapper
 import se.alipsa.matrix.core.Column
+import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
 
@@ -30,15 +31,16 @@ import java.time.ZonedDateTime
 @CompileStatic
 class BqDataTypesTest {
 
+  private static final Logger log = Logger.getLogger(BqDataTypesTest)
   static String datasetName = 'BqDataTypesTest'
   @BeforeAll
   static void setup() {
     String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
 
     if (!bq.datasetExist(datasetName)) {
       bq.createDataset(datasetName)
@@ -50,10 +52,10 @@ class BqDataTypesTest {
   static void tearDown() {
     String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     if (bq.datasetExist(datasetName)) {
       bq.dropDataset(datasetName)
     }
@@ -105,10 +107,10 @@ class BqDataTypesTest {
   void testSingleDataType(List list, Class type, String columnName) {
     String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     Matrix m = Matrix.builder(columnName+type.simpleName.replace('[]', 's')).data(
         (columnName): list
     ).types(type).build()
@@ -230,10 +232,10 @@ class BqDataTypesTest {
   void testComplexData() {
     String projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
-    Bq bq = new Bq()
+    Bq bq = new Bq(true)  // Use async queries for production BigQuery
     String datasetName = 'BqTestComplexData'
     bq.createDataset(datasetName)
     assertTrue(bq.datasetExist(datasetName))

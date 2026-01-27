@@ -4,9 +4,9 @@ This module makes it simple to query data from Google Big Query and get the resu
 
 To use it, add the following to your gradle build script
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.2'
+implementation 'org.apache.groovy:groovy:5.0.3'
 implementation 'se.alipsa.matrix:matrix-core:3.5.0'
-implementation 'se.alipsa.matrix:matrix-bigquery:0.3.2'
+implementation 'se.alipsa.matrix:matrix-bigquery:0.5.0'
 ```
 To export and import data:
 ```groovy
@@ -19,12 +19,32 @@ Matrix data = Dataset.cars()
 // GOOGLE_CLOUD_PROJECT. An alternative would be to pass
 // the Big Query projectId to the constructor
 Bq bq = new Bq()
-// Export 
+// Export
 bq.saveToBigQuery(data, 'mydataset.cars')
 // Import
 Matrix d2 = bq.query("select * from 'mydataset.cars'")
 assert data == d2
 ```
+
+## Query Execution Modes
+
+Matrix BigQuery supports two query execution modes:
+
+**Synchronous (default):**
+```groovy
+Bq bq = new Bq()  // or new Bq(false)
+// 10 GB response size limit
+// Compatible with BigQuery emulators for testing
+```
+
+**Asynchronous (recommended for production):**
+```groovy
+Bq bq = new Bq(true)  // Enable async queries
+// No size limit
+// Optimal for large datasets in production
+```
+
+The async mode is superior for production use as it has no response size limitations. The sync mode (default) is maintained for compatibility with BigQuery emulators used in testing.
 See the [BqTest](src/test/groovy/se/alipsa/matrix/bigquery/BqTest.groovy) for more usage examples.
 
 # 3:rd party libraries used
