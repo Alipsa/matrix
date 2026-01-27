@@ -14,8 +14,8 @@ import java.math.BigDecimal;
  * {@link BigDecimal#BigDecimal(String)} constructor for parsing, which supports standard
  * decimal number formats including scientific notation.
  *
- * <p>The parser handles missing values according to the configured missing value indicators
- * from the read options.
+ * <p>The parser treats configured missing value indicators as missing and returns the
+ * column's missing value indicator for those inputs.
  *
  * @see BigDecimalColumnType
  * @see AbstractColumnParser
@@ -49,11 +49,11 @@ public class BigDecimalParser extends AbstractColumnParser<BigDecimal> {
    * Checks if the given string can be parsed as a BigDecimal.
    *
    * @param s the string to check
-   * @return true if the string can be parsed as a BigDecimal or is null, false otherwise
+   * @return true if the string can be parsed as a BigDecimal or is a configured missing value, false otherwise
    */
   @Override
   public boolean canParse(String s) {
-    if (s == null) return true;
+    if (isMissing(s)) return true;
     try {
       new BigDecimal(s);
       return true;
@@ -66,11 +66,14 @@ public class BigDecimalParser extends AbstractColumnParser<BigDecimal> {
    * Parses the given string as a BigDecimal.
    *
    * @param s the string to parse
-   * @return the parsed BigDecimal value
+   * @return the parsed BigDecimal value, or the missing value indicator if the input is missing
    * @throws NumberFormatException if the string cannot be parsed as a valid BigDecimal
    */
   @Override
   public BigDecimal parse(String s) {
+    if (isMissing(s)) {
+      return BigDecimalColumnType.missingValueIndicator();
+    }
     return new BigDecimal(s);
   }
 }

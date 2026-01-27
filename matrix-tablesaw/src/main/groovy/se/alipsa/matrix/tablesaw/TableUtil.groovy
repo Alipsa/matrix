@@ -234,7 +234,9 @@ class TableUtil {
   /**
    * Convert a Matrix to a Tablesaw table.
    *
-   * <p>Preserves the matrix name, column names, column types, and all data.
+   * <p>Preserves the matrix name, column names, column types, and all data for supported
+   * column types. Columns whose Java types map to {@link ColumnType#SKIP} (or that cannot
+   * be created by {@link #createColumn(Object, String, List)}) are omitted from the result.
    *
    * @param matrix the Matrix to convert
    * @return a Tablesaw Table with the same data and structure
@@ -243,8 +245,13 @@ class TableUtil {
     List<Column<?>> columns = new ArrayList<>()
     for (int i = 0; i < matrix.columnCount(); i++) {
       ColumnType type = columnTypeForClass(matrix.type(i))
+      if (type == ColumnType.SKIP) {
+        continue
+      }
       Column<?> col = createColumn(type, matrix.columnNames().get(i), matrix.column(i))
-      columns.add(col)
+      if (col != null) {
+        columns.add(col)
+      }
     }
     return Table.create(matrix.getMatrixName(), columns)
   }

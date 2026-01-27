@@ -437,6 +437,9 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   public BigDecimalColumn appendCell(final String value, AbstractColumnParser<?> parser) {
     try {
       Object val = parser.parse(value);
+      if (val == null) {
+        return appendMissing();
+      }
       if (val instanceof BigDecimal) {
         return append((BigDecimal) val);
       } else if (val instanceof Number) {
