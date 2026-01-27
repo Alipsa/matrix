@@ -40,16 +40,16 @@ dependencies {
   testImplementation project(':matrix-datasets')
   compileOnly libs.groovy
 
-  api('com.google.cloud:google-cloud-bigquery:2.56.0')
-  api 'com.google.cloud:google-cloud-resourcemanager:1.82.0'
-  implementation platform('com.google.auth:google-auth-library-bom:1.41.0')
+  api('com.google.cloud:google-cloud-bigquery:2.58.0')
+  api 'com.google.cloud:google-cloud-resourcemanager:1.84.0'
+  implementation platform('com.google.auth:google-auth-library-bom:1.42.1')
   implementation 'com.google.auth:google-auth-library-oauth2-http'
-  implementation('com.google.cloud:google-cloud-bigquerystorage:3.18.0')
-  implementation 'me.tongfei:progressbar:0.10.1'
+  implementation('com.google.cloud:google-cloud-bigquerystorage:3.20.0')
+  implementation 'me.tongfei:progressbar:0.10.2'
 
   // https://mvnrepository.com/artifact/org.testcontainers/gcloud
-  testImplementation 'org.testcontainers:gcloud:1.21.3'
-  testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
+  testImplementation 'org.testcontainers:gcloud:1.21.4'
+  testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
   testImplementation libs.groovy
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
