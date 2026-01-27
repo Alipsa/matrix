@@ -1,4 +1,3 @@
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.util.LogLevel
@@ -8,30 +7,10 @@ import static org.junit.jupiter.api.Assertions.*
 
 class LoggerTest {
 
-  private PrintStream originalOut
-  private PrintStream originalErr
-  private ByteArrayOutputStream capturedOut
-  private ByteArrayOutputStream capturedErr
-
   @BeforeEach
   void setUp() {
-    // Capture System.out and System.err for verification
-    originalOut = System.out
-    originalErr = System.err
-    capturedOut = new ByteArrayOutputStream()
-    capturedErr = new ByteArrayOutputStream()
-    System.setOut(new PrintStream(capturedOut))
-    System.setErr(new PrintStream(capturedErr))
-
     // Reset log level to default
     Logger.setLevel(LogLevel.INFO)
-  }
-
-  @AfterEach
-  void tearDown() {
-    // Restore original streams
-    System.setOut(originalOut)
-    System.setErr(originalErr)
   }
 
   @Test
