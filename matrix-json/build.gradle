@@ -33,7 +33,7 @@ repositories {
 }
 
 dependencies {
-  def jacksonVersion = '2.20.1'
+  def jacksonVersion = '2.21.0'
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')

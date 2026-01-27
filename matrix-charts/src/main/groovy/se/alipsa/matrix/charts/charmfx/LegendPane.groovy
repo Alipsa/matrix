@@ -15,7 +15,7 @@ import static se.alipsa.matrix.charts.util.StyleUtil.addStyle
 
 trait LegendPane {
 
-  abstract ObservableList<Node> getChildren()
+  abstract ObservableList<Node> getLegendChildren()
 
   abstract void setBorder(Border border)
 
@@ -25,7 +25,7 @@ trait LegendPane {
     HBox itemBox = new HBox()
     itemBox.setAlignment(Pos.CENTER_LEFT)
     itemBox.getChildren().addAll(shape, label)
-    getChildren().add(itemBox)
+    getLegendChildren().add(itemBox)
   }
 
   void addItems(Map<String, Color> items) {

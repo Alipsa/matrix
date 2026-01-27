@@ -5,7 +5,7 @@ plugins {
 group = 'se.alipsa.matrix.examples'
 version = '1.0.0-SNAPSHOT'
 
-def groovyVersion = '5.0.2'
+def groovyVersion = '5.0.4'
 repositories {
   mavenCentral()
   mavenLocal()
@@ -32,7 +32,7 @@ dependencies {
   }
   implementation 'com.github.haifengl:smile-core:4.4.2'
   implementation 'com.github.haifengl:smile-plot:4.4.2'
-  testImplementation platform('org.junit:junit-bom:6.0.1')
+  testImplementation platform('org.junit:junit-bom:6.0.2')
   testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 

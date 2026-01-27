@@ -38,8 +38,8 @@ dependencies {
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
     implementation 'org.apache.ivy:ivy:2.5.3'
-    api 'org.apache.parquet:parquet-column:1.16.0'
-    api 'org.apache.parquet:parquet-hadoop:1.16.0'
+    api 'org.apache.parquet:parquet-column:1.17.0'
+    api 'org.apache.parquet:parquet-hadoop:1.17.0'
     implementation('org.apache.hadoop:hadoop-common:3.4.2') {
         //exclude group: 'org.slf4j'         // optional: avoid conflicts
         //exclude group: 'com.google.guava'  // optional: prevent old guava

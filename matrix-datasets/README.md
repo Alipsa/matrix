@@ -8,8 +8,8 @@ Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and m
 ## Setup
 Gradle:
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.2'
-implementation 'org.apache.groovy:groovy-ginq:5.0.2'
+implementation 'org.apache.groovy:groovy:5.0.4'
+implementation 'org.apache.groovy:groovy-ginq:5.0.4'
 implementation 'se.alipsa.matrix:matrix-core:3.5.0'
 implementation 'se.alipsa.matrix:matrix-datasets:2.1.1'
 ```

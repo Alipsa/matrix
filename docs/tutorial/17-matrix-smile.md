@@ -21,7 +21,7 @@ The matrix-smile module complements matrix-stats with ML-focused functionality:
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.3'
+implementation 'org.apache.groovy:groovy:5.0.4'
 implementation "se.alipsa.matrix:matrix-core:3.5.0"
 implementation "se.alipsa.matrix:matrix-smile:0.1.0"
 ```

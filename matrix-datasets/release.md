@@ -1,5 +1,9 @@
 # Release history
 
+## v2.1.2, in progress
+- Upgrade dependencies
+  - org.jsoup:jsoup [1.21.1 -> 1.22.1]
+  
 ## v2.1.1, 2025-07-19
 - Upgrade dependencies
   - org.jsoup:jsoup [1.20.1 -> 1.21.1]

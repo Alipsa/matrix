@@ -9,7 +9,7 @@ To use the matrix-stats module, you need to add it as a dependency to your proje
 ### Gradle Configuration
 
 ```groovy
-implementation 'org.apache.groovy:groovy:5.0.3'
+implementation 'org.apache.groovy:groovy:5.0.4'
 implementation "se.alipsa.matrix:matrix-core:3.5.0"
 implementation "se.alipsa.matrix:matrix-stats:2.2.0"
 ```

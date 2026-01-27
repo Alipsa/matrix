@@ -44,7 +44,7 @@ dependencies {
     compileOnly project(':matrix-core')
     compileOnly project(':matrix-stats')
     // for XlsxWriter, TODO: remove once contributed to tablesaw
-    implementation 'org.apache.poi:poi-ooxml:5.5.0'
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
     // for OdsReader and Writer, TODO: remove once contributed to tablesaw
     implementation 'com.github.miachm.sods:SODS:1.7.0'
     // for XmlReader and writer, TODO: remove once contributed to tablesaw

@@ -87,7 +87,7 @@ If you're using the Matrix library from Java, you'll need to add the Groovy core
 
 ```groovy
 // For Gradle
-implementation('org.apache.groovy:groovy:5.0.3')
+implementation('org.apache.groovy:groovy:5.0.4')
 ```
 
 ```xml
