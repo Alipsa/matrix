@@ -1,10 +1,9 @@
 package se.alipsa.matrix.smile
 
 import groovy.transform.CompileStatic
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 import smile.data.DataFrame
 import smile.data.type.BooleanType
 import smile.data.type.ByteType
@@ -33,7 +32,7 @@ import java.time.ZonedDateTime
 @CompileStatic
 class DataframeConverter {
 
-  private static Logger log = LoggerFactory.getLogger(DataframeConverter.class)
+  private static final Logger log = Logger.getLogger(DataframeConverter)
 
   static Matrix convert(DataFrame dataFrame) {
     def columnNames = dataFrame.schema().fields().collect { it.name() }
