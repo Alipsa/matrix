@@ -1,8 +1,7 @@
 package se.alipsa.matrix.spreadsheet
 
 import groovy.transform.CompileStatic
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import se.alipsa.matrix.core.util.Logger
 
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.stream.XMLInputFactory
@@ -13,7 +12,7 @@ import javax.xml.stream.XMLInputFactory
 @CompileStatic
 final class XmlSecurityUtil {
 
-  private static final Logger logger = LogManager.getLogger()
+  private static final Logger logger = Logger.getLogger(XmlSecurityUtil)
 
   private XmlSecurityUtil() {
     // utility class
@@ -51,7 +50,7 @@ final class XmlSecurityUtil {
     try {
       factory.setFeature(feature, value)
     } catch (Exception ex) {
-      logger.warn("Failed to set XML parser feature {} to {}. Continuing without it.", feature, value, ex)
+      logger.warn("Failed to set XML parser feature $feature to $value. Continuing without it.", ex)
     }
   }
 }

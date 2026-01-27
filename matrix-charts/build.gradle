@@ -93,6 +93,7 @@ dependencies {
   testImplementation testLibs.junitJupiter
   testRuntimeOnly testLibs.junitJupiterEngine
   testRuntimeOnly testLibs.junitPlatformLauncher
+  testImplementation testLibs.slf4jSimple
   testImplementation libs.groovySql
   //testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
 }

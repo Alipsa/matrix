@@ -2,9 +2,8 @@ package se.alipsa.matrix.spreadsheet.fastods
 
 import groovy.transform.CompileStatic
 import org.apache.commons.io.IOUtils
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import se.alipsa.matrix.core.ListConverter
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.spreadsheet.FileUtil
@@ -20,7 +19,7 @@ import java.text.NumberFormat
 @CompileStatic
 class FOdsImporter implements Importer {
 
-  private static final Logger logger = LogManager.getLogger()
+  private static final Logger logger = Logger.getLogger(FOdsImporter)
   OdsDataReader odsDataReader
 
   static FOdsImporter create(OdsDataReader odsDataReader = OdsDataReader.create()) {
@@ -224,7 +223,7 @@ class FOdsImporter implements Importer {
       throw new IllegalArgumentException("sheet is null, impossible to build a Matrix from that")
     }
     if (sheet.size() == 0) {
-      logger.debug("Sheet '{}' is empty, returning empty Matrix", sheet?.sheetName)
+      logger.debug("Sheet '${sheet?.sheetName}' is empty, returning empty Matrix")
       return Matrix.builder()
           .matrixName(sheet.sheetName)
           .columnNames([])

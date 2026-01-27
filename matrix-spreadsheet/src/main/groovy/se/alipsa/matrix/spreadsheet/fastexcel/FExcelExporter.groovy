@@ -1,9 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastexcel
 
 import groovy.transform.CompileStatic
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import org.dhatim.fastexcel.Workbook
+import se.alipsa.matrix.core.util.Logger
 import org.dhatim.fastexcel.Worksheet
 import org.dhatim.fastexcel.reader.ReadableWorkbook
 import se.alipsa.matrix.core.Column
@@ -21,7 +20,7 @@ import java.util.Collections
 //@CompileStatic
 class FExcelExporter {
 
-  static final Logger logger = LogManager.getLogger()
+  static final Logger logger = Logger.getLogger(FExcelExporter)
   static final String APP_NAME = 'matrix-spreadsheet'
   static final String VERSION = '02.1000' // must be in the format XX.YYYY
 
@@ -139,7 +138,7 @@ class FExcelExporter {
       }
       return uniqueSheetNames
     } catch (IOException e) {
-      logger.error("Failed to create excel file {}", file.getAbsolutePath(), e)
+      logger.error("Failed to create excel file ${file.absolutePath}", e)
       throw new IOException("Failed to create excel file ${file}", e)
     }
   }

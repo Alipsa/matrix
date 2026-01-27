@@ -1,8 +1,7 @@
 package se.alipsa.matrix.spreadsheet.fastods.reader
 
 import groovy.transform.CompileStatic
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.spreadsheet.fastods.FastOdsException
 import se.alipsa.matrix.spreadsheet.fastods.Sheet
 
@@ -41,7 +40,7 @@ import static se.alipsa.matrix.spreadsheet.fastods.reader.OptimizedXMLInputFacto
  */
 @CompileStatic
 final class OdsStreamDataReader extends OdsDataReader {
-  private static final Logger logger = LogManager.getLogger(OdsStreamDataReader)
+  private static final Logger logger = Logger.getLogger(OdsStreamDataReader)
 
   /**
    * Profiling statistics collector. Uses Null Object pattern to avoid branch overhead.

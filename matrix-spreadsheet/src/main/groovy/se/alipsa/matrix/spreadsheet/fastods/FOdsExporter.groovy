@@ -1,9 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
 import groovy.transform.CompileStatic
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 
 import java.nio.charset.StandardCharsets
@@ -15,7 +14,7 @@ import java.util.zip.ZipOutputStream
 @CompileStatic
 class FOdsExporter {
 
-  private static final Logger logger = LogManager.getLogger()
+  private static final Logger logger = Logger.getLogger(FOdsExporter)
   private static final String MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet"
 
   static String exportOds(String filePath, Matrix dataFrame) {
@@ -64,7 +63,7 @@ class FOdsExporter {
   }
 
   private static void writeOds(File file, String contentXml, String stylesXml, String metaXml, String manifestXml) {
-    logger.info("Writing spreadsheet to {}", file.getAbsolutePath())
+    logger.info("Writing spreadsheet to ${file.absolutePath}")
     try (FileOutputStream fos = new FileOutputStream(file); ZipOutputStream zos = new ZipOutputStream(fos)) {
       writeMimetype(zos)
       writeEntry(zos, "content.xml", contentXml)

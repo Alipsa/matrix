@@ -47,7 +47,7 @@ dependencies {
   def fastExcelVersion = '0.19.0'
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
-  implementation libs.log4jApi
+  // Removed libs.log4jApi - migrated to matrix-core Logger
 
   // https://github.com/dhatim/fastexcel
   implementation("org.dhatim:fastexcel:$fastExcelVersion")
@@ -62,7 +62,7 @@ dependencies {
   testRuntimeOnly testLibs.junitPlatformLauncher
   testImplementation libs.groovy
   testImplementation testLibs.log4jToSlf4j
-  testImplementation testLibs.slf4jSimple
+  // Removed slf4jSimple - conflicts with log4jToSlf4j (both are SLF4J providers)
 }
 
 test {

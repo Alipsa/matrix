@@ -1,9 +1,8 @@
 package se.alipsa.matrix.spreadsheet.fastods
 
 import groovy.transform.CompileStatic
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.spreadsheet.XmlSecurityUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetUtil
 import se.alipsa.matrix.spreadsheet.SpreadsheetWriteUtil
@@ -29,7 +28,7 @@ import static se.alipsa.matrix.spreadsheet.fastods.OdsXmlUtil.tableUrn
 @CompileStatic
 class FOdsAppender {
 
-  private static final Logger logger = LogManager.getLogger()
+  private static final Logger logger = Logger.getLogger(FOdsAppender)
   private static final String MIMETYPE = "application/vnd.oasis.opendocument.spreadsheet"
 
   static List<String> appendOrReplaceSheets(File file, List<Matrix> data, List<String> sheetNames) {
@@ -114,7 +113,7 @@ class FOdsAppender {
     byte[] bytes = zip.getInputStream(entry).bytes
     String mime = new String(bytes, StandardCharsets.UTF_8).trim()
     if (mime != MIMETYPE) {
-      logger.warn("Unexpected ODS mimetype '{}', rewriting as '{}'.", mime, MIMETYPE)
+      logger.warn("Unexpected ODS mimetype '$mime', rewriting as '$MIMETYPE'.")
       return MIMETYPE.getBytes(StandardCharsets.UTF_8)
     }
     return bytes
