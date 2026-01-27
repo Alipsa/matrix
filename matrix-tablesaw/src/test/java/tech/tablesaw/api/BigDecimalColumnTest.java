@@ -254,6 +254,24 @@ public class BigDecimalColumnTest {
   }
 
   @Test
+  public void testAppendCellWithParserMissingValue() {
+    var parser = new AbstractColumnParser<BigDecimal>(BigDecimalColumnType.instance()) {
+      @Override
+      public boolean canParse(String s) {
+        return true;
+      }
+      @Override
+      public BigDecimal parse(String s) {
+        return "NA".equals(s) ? null : new BigDecimal(s);
+      }
+    };
+
+    var col = obs.copy().appendCell("NA", parser);
+    assertEquals(10, col.size(), "appended column size");
+    assertNull(col.getBigDecimal(9), "value of appended missing");
+  }
+
+  @Test
   public void testGetUnformattedString() {
     assertEquals("", obs.getUnformattedString(1), "unformatted string for null");
     assertEquals("1200.000000000", obs.getUnformattedString(0));

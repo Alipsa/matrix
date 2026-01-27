@@ -18,6 +18,22 @@ import java.time.ZonedDateTime;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+/**
+ * Writer for Excel (.xlsx) format using Apache POI.
+ *
+ * <p>This writer exports Tablesaw tables to Excel XLSX format files. Each table is written as a single sheet
+ * with column names as the first row followed by the data. Date/time columns are formatted appropriately
+ * in Excel:
+ * <ul>
+ *   <li>LOCAL_DATE: yyyy-MM-dd</li>
+ *   <li>LOCAL_DATE_TIME and INSTANT: yyyy-MM-dd hh:mm:ss</li>
+ *   <li>LOCAL_TIME: [h]:mm:ss</li>
+ * </ul>
+ *
+ * <p>The writer is automatically registered for the ".xlsx" extension in the default writer registry.
+ *
+ * @see XlsxWriteOptions
+ */
 public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
 
   private static final XlsxWriter INSTANCE = new XlsxWriter();
@@ -26,16 +42,38 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
     register(Table.defaultWriterRegistry);
   }
 
+  /**
+   * Register this writer with the given registry.
+   *
+   * @param registry the writer registry to register with
+   */
   public static void register(WriterRegistry registry) {
     registry.registerExtension("xlsx", INSTANCE);
     registry.registerOptions(XlsxWriteOptions.class, INSTANCE);
   }
 
+  /**
+   * Write the table to the destination using default options.
+   *
+   * @param table the table to write
+   * @param dest the destination to write to
+   */
   @Override
   public void write(Table table, Destination dest) {
     write(table, XlsxWriteOptions.builder(dest).build());
   }
 
+  /**
+   * Write the table to an Excel (.xlsx) file using the specified options.
+   *
+   * <p>Creates an Excel workbook with a single sheet named after the table.
+   * The first row contains column headers, followed by the data rows.
+   * Date and time columns are formatted with appropriate Excel formats.
+   *
+   * @param table the table to write
+   * @param options the write options specifying the destination
+   * @throws RuntimeIOException if an I/O error occurs during writing
+   */
   @Override
   public void write(Table table, XlsxWriteOptions options) {
     try(XSSFWorkbook workbook = new XSSFWorkbook()) {

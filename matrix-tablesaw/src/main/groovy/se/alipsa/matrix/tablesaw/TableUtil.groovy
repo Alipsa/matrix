@@ -14,8 +14,34 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * Utility methods for working with Tablesaw tables and converting between Matrix and Tablesaw formats.
+ *
+ * <p>This class provides various utility functions including:
+ * <ul>
+ *   <li>Frequency analysis for columns and tables</li>
+ *   <li>Rounding operations for numeric values and columns</li>
+ *   <li>Conversion between Matrix and Tablesaw Table formats</li>
+ *   <li>Column creation and type mapping</li>
+ * </ul>
+ */
 class TableUtil {
 
+  /**
+   * Generate a frequency table for the given column.
+   *
+   * <p>Creates a table with three columns:
+   * <ul>
+   *   <li>Value: distinct values from the column</li>
+   *   <li>Frequency: count of occurrences for each value</li>
+   *   <li>Percent: percentage of total (rounded to 2 decimals)</li>
+   * </ul>
+   *
+   * <p>The resulting table is sorted by frequency in descending order.
+   *
+   * @param column the column to analyze
+   * @return a frequency table sorted by descending frequency
+   */
   static Table frequency(Column<?> column) {
     Map<Object, AtomicInteger> freq = new HashMap<>()
     column.forEach(v -> {
@@ -37,10 +63,28 @@ class TableUtil {
     return table.sortDescendingOn("Frequency")
   }
 
+  /**
+   * Generate a frequency table for the specified column in a table.
+   *
+   * @param table the table containing the column
+   * @param columnName the name of the column to analyze
+   * @return a frequency table for the specified column
+   * @see #frequency(Column)
+   */
   static Table frequency(Table table, String columnName) {
     return frequency(table.column(columnName))
   }
 
+  /**
+   * Round a double value to the specified number of decimal places.
+   *
+   * <p>Uses {@link RoundingMode#HALF_UP} for rounding.
+   *
+   * @param value the value to round
+   * @param numDecimals the number of decimal places (must be non-negative)
+   * @return the rounded value
+   * @throws IllegalArgumentException if numDecimals is negative
+   */
   static double round(double value, int numDecimals) {
     if (numDecimals < 0) throw new IllegalArgumentException("numDecimals cannot be a negative number: was " + numDecimals)
 
@@ -49,6 +93,16 @@ class TableUtil {
     return bd.doubleValue()
   }
 
+  /**
+   * Round a float value to the specified number of decimal places.
+   *
+   * <p>Uses {@link RoundingMode#HALF_UP} for rounding.
+   *
+   * @param value the value to round
+   * @param numDecimals the number of decimal places (must be non-negative)
+   * @return the rounded value
+   * @throws IllegalArgumentException if numDecimals is negative
+   */
   static float round(float value, int numDecimals) {
     if (numDecimals < 0) throw new IllegalArgumentException("numDecimals cannot be a negative number: was " + numDecimals)
 
@@ -57,6 +111,15 @@ class TableUtil {
     return bd.floatValue()
   }
 
+  /**
+   * Round all values in a column to the specified number of decimal places.
+   *
+   * <p>If the column is not a {@link NumberColumn}, it is returned unchanged.
+   *
+   * @param column the column to round
+   * @param numDecimals the number of decimal places
+   * @return the rounded column (or original column if not numeric)
+   */
   static Column<?> round(Column<?> column, int numDecimals) {
     if (column instanceof NumberColumn) {
       return round(column as NumberColumn, numDecimals)
@@ -64,6 +127,22 @@ class TableUtil {
     return column
   }
 
+  /**
+   * Round all values in a numeric column to the specified number of decimal places.
+   *
+   * <p>Supported column types:
+   * <ul>
+   *   <li>{@link BigDecimalColumn} - uses setScale</li>
+   *   <li>{@link DoubleColumn} - rounds each value</li>
+   *   <li>{@link FloatColumn} - rounds each value</li>
+   *   <li>Integer types (IntColumn, ShortColumn, LongColumn) - returned unchanged</li>
+   * </ul>
+   *
+   * @param column the numeric column to round
+   * @param numDecimals the number of decimal places (must be non-negative)
+   * @return the column with rounded values
+   * @throws IllegalArgumentException if numDecimals is negative
+   */
   static NumberColumn round(NumberColumn column, int numDecimals) {
     if (numDecimals < 0) throw new IllegalArgumentException("numDecimals cannot be a negative number: was " + numDecimals)
 
@@ -88,6 +167,14 @@ class TableUtil {
     return column
   }
 
+  /**
+   * Convert a Tablesaw table to a list of rows.
+   *
+   * <p>Each row is represented as a list of objects corresponding to the column values.
+   *
+   * @param table the table to convert
+   * @return a list of rows, where each row is a list of column values
+   */
   static List<List<Object>> toRowList(Table table) {
     List<List<Object>> rowList = new ArrayList<>(table.rowCount())
     int ncol = table.columnCount()
@@ -101,6 +188,16 @@ class TableUtil {
     return rowList
   }
 
+  /**
+   * Convert a Tablesaw table to a Matrix.
+   *
+   * <p>Preserves the table name, column names, and all data. Column types are mapped
+   * to their corresponding Java classes where supported; unknown or custom Tablesaw
+   * column types are represented as {@code Object.class} in the resulting Matrix.
+   *
+   * @param table the Tablesaw table to convert
+   * @return a Matrix with the same data and structure
+   */
   static Matrix fromTablesaw(Table table) {
     List<List<?>> rows = toRowList(table)
     List<Class<?>> columnTypes = new ArrayList<>()
@@ -114,24 +211,78 @@ class TableUtil {
         .build()
   }
 
+  /**
+   * Convert a Matrix to a Gtable.
+   *
+   * @param matrix the Matrix to convert
+   * @return a Gtable with the same data and structure
+   * @see #toTablesaw(Matrix)
+   */
   static Gtable fromMatrix(Matrix matrix) {
     Gtable.create(toTablesaw(matrix))
   }
 
+  /**
+   * Convert a Gtable to a Matrix.
+   *
+   * @param gtable the Gtable to convert
+   * @return a Matrix with the same data and structure
+   * @see #fromTablesaw(Table)
+   */
   static Matrix toMatrix(Gtable gtable) {
     return fromTablesaw(gtable)
   }
 
+  /**
+   * Convert a Matrix to a Tablesaw table.
+   *
+   * <p>Preserves the matrix name, column names, column types, and all data for supported
+   * column types. Columns whose Java types map to {@link ColumnType#SKIP} (or that cannot
+   * be created by {@link #createColumn(Object, String, List)}) are omitted from the result.
+   *
+   * @param matrix the Matrix to convert
+   * @return a Tablesaw Table with the same data and structure
+   */
   static Table toTablesaw(Matrix matrix) {
     List<Column<?>> columns = new ArrayList<>()
     for (int i = 0; i < matrix.columnCount(); i++) {
       ColumnType type = columnTypeForClass(matrix.type(i))
+      if (type == ColumnType.SKIP) {
+        continue
+      }
       Column<?> col = createColumn(type, matrix.columnNames().get(i), matrix.column(i))
-      columns.add(col)
+      if (col != null) {
+        columns.add(col)
+      }
     }
     return Table.create(matrix.getMatrixName(), columns)
   }
 
+  /**
+   * Create a Tablesaw column of the specified type with the given name and values.
+   *
+   * <p>Supported types include:
+   * <ul>
+   *   <li>STRING - {@link StringColumn}</li>
+   *   <li>BOOLEAN - {@link BooleanColumn}</li>
+   *   <li>LOCAL_DATE - {@link DateColumn}</li>
+   *   <li>LOCAL_DATE_TIME - {@link DateTimeColumn}</li>
+   *   <li>INSTANT - {@link InstantColumn}</li>
+   *   <li>LOCAL_TIME - {@link TimeColumn}</li>
+   *   <li>BigDecimalColumnType - {@link BigDecimalColumn}</li>
+   *   <li>DOUBLE - {@link DoubleColumn}</li>
+   *   <li>FLOAT - {@link FloatColumn}</li>
+   *   <li>INTEGER - {@link IntColumn}</li>
+   *   <li>LONG - {@link LongColumn}</li>
+   *   <li>SHORT - {@link ShortColumn}</li>
+   * </ul>
+   *
+   * @param type the column type
+   * @param name the column name
+   * @param values the values to populate the column
+   * @param <T> the type parameter
+   * @return a column of the specified type, or null if type is not supported
+   */
   static <T> Column<T> createColumn(T type, String name, List<?> values) {
     if (type == ColumnType.STRING) {
       var col = StringColumn.create(name)
@@ -222,6 +373,14 @@ class TableUtil {
 
   }
 
+  /**
+   * Get the Tablesaw {@link ColumnType} for a given Java class.
+   *
+   * <p>Maps common Java types to their corresponding Tablesaw column types.
+   *
+   * @param columnType the Java class
+   * @return the corresponding ColumnType, or {@link ColumnType#SKIP} if not recognized
+   */
   static ColumnType columnTypeForClass(Class<?> columnType) {
     if (columnType == String.class) {
       return ColumnType.STRING
@@ -252,6 +411,14 @@ class TableUtil {
     }
   }
 
+  /**
+   * Get the Java class for a given Tablesaw {@link ColumnType}.
+   *
+   * <p>Maps Tablesaw column types to their corresponding Java classes.
+   *
+   * @param type the Tablesaw ColumnType
+   * @return the corresponding Java class, or {@link Object} for custom/unknown types
+   */
   static Class<?> classForColumnType(ColumnType type) {
     Class<?> typeClass = type.getClass()
     if (StringColumn.class.isAssignableFrom(typeClass)) {
