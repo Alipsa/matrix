@@ -35,11 +35,11 @@ public class BigDecimalParser extends AbstractColumnParser<BigDecimal> {
    * Constructs a parser with the specified column type and read options.
    * Missing value indicators from the read options are used to identify missing values.
    *
-   * @param doubleColumnType the BigDecimal column type
+   * @param bigDecimalColumnType the BigDecimal column type
    * @param readOptions the read options containing missing value indicators
    */
-  public BigDecimalParser(BigDecimalColumnType doubleColumnType, ReadOptions readOptions) {
-    super(doubleColumnType);
+  public BigDecimalParser(BigDecimalColumnType bigDecimalColumnType, ReadOptions readOptions) {
+    super(bigDecimalColumnType);
     if (readOptions.missingValueIndicators().length > 0) {
       missingValueStrings = Lists.newArrayList(readOptions.missingValueIndicators());
     }

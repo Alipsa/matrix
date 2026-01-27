@@ -31,7 +31,8 @@ public class BigDecimalComparator implements Comparator<BigDecimal> {
    *
    * @param o1 the first BigDecimal to compare (may be null)
    * @param o2 the second BigDecimal to compare (may be null)
-   * @return 0 if both are null or equal, -1 if o1 is null or less than o2, 1 if o2 is null or o1 is greater than o2
+   * @return a negative integer if o1 is null or less than o2, zero if both are null or equal, or a positive integer
+   *         if o2 is null or o1 is greater than o2
    */
   public static int compareBigDecimals(BigDecimal o1, BigDecimal o2) {
     if ((o1 == null) && (o2 == null)) return 0;

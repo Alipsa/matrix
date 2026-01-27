@@ -65,7 +65,9 @@ public class OdsReadOptions extends ReadOptions {
    *
    * @param reader the reader to read from
    * @return a new builder
+   * @deprecated Using a Reader for binary content does not make sense.
    */
+  @Deprecated
   public static Builder	builder(Reader reader) {
     return new Builder(reader);
   }
@@ -106,7 +108,9 @@ public class OdsReadOptions extends ReadOptions {
    *
    * @param contents the ODS content as a string
    * @return a new builder
+   * @deprecated Using a String for binary content does not make sense.
    */
+  @Deprecated
   public static Builder	builderFromString(String contents) {
     return new Builder(new StringReader(contents));
   }
@@ -118,7 +122,9 @@ public class OdsReadOptions extends ReadOptions {
    * @return a new builder
    * @throws IOException if the URL cannot be accessed
    * @throws URISyntaxException if the URL string is not a valid URI
+   * @deprecated Use {@link #builder(URL)} instead.
    */
+  @Deprecated
   public static Builder builderFromUrl(String url) throws IOException, URISyntaxException {
     return new Builder(new URI(url).toURL());
   }

@@ -4,7 +4,6 @@ import tech.tablesaw.io.Destination;
 import tech.tablesaw.io.WriteOptions;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 
@@ -62,9 +61,9 @@ public class XmlWriteOptions extends WriteOptions {
    *
    * @param dest the file to write to
    * @return a new builder
-   * @throws IOException if the file cannot be accessed
+   * <p>Note: this method does not access the filesystem; any I/O errors occur when writing.
    */
-  public static Builder builder(File dest) throws IOException {
+  public static Builder builder(File dest) {
     return new Builder(dest);
   }
 
@@ -73,9 +72,9 @@ public class XmlWriteOptions extends WriteOptions {
    *
    * @param fileName the name of the file to write to
    * @return a new builder
-   * @throws IOException if the file cannot be accessed
+   * <p>Note: this method does not access the filesystem; any I/O errors occur when writing.
    */
-  public static Builder builder(String fileName) throws IOException {
+  public static Builder builder(String fileName) {
     return builder(new File(fileName));
   }
 
