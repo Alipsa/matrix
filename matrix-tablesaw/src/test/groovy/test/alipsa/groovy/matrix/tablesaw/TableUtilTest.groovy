@@ -10,6 +10,8 @@ import tech.tablesaw.api.Table
 import tech.tablesaw.column.numbers.BigDecimalColumnType
 import tech.tablesaw.io.csv.CsvReadOptions
 
+import java.util.UUID
+
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static tech.tablesaw.api.ColumnType.*
 
@@ -58,6 +60,24 @@ class TableUtilTest {
     assertEquals(glaciers.get(1,0), table.get(1, 0))
     assertEquals(glaciers.get(2,1), table.get(2, 1))
     assertEquals(glaciers.get(3,2), table.get(3, 2))
+  }
+
+  @Test
+  void testConvertMatrixToTablesawSkipsUnsupportedTypes() {
+    Matrix matrix = Matrix.builder("mixed")
+        .columnNames(["id", "value"])
+        .rows([
+            [UUID.randomUUID(), 10],
+            [UUID.randomUUID(), 20]
+        ])
+        .types([UUID, Integer])
+        .build()
+
+    Table table = TableUtil.toTablesaw(matrix)
+    assertEquals(1, table.columnCount())
+    assertEquals(["value"], table.columnNames())
+    assertEquals(2, table.rowCount())
+    assertEquals(10, table.get(0, 0))
   }
 
   @Test
