@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * Binned ColorBrewer scale for continuous data.
@@ -42,6 +43,8 @@ import groovy.transform.CompileStatic
  */
 @CompileStatic
 class ScaleColorFermenter extends ScaleContinuous {
+
+  private static final Logger log = Logger.getLogger(ScaleColorFermenter)
 
   /** Which aesthetic this scale applies to ('color' or 'fill') */
   String aesthetic = 'color'
@@ -107,7 +110,7 @@ class ScaleColorFermenter extends ScaleContinuous {
         if (resolvedName != null) {
           this.palette = resolvedName
         } else {
-          System.err.println "Warning: Palette index ${index} is out of range for type '${this.type ?: 'seq'}'. Using default palette."
+          log.warn("Warning: Palette index $index is out of range for type '${this.type ?: 'seq'}'. Using default palette.")
           this.palette = null  // Will use type-based default
         }
       } else {
@@ -162,7 +165,7 @@ class ScaleColorFermenter extends ScaleContinuous {
 
     // Check if requested breaks exceeds palette size
     if (nBreaksExplicitlySet && nBreaks > paletteColors.size()) {
-      System.err.println "Warning: Number of breaks (${nBreaks}) exceeds palette size (${paletteColors.size()}). Using maximum of ${paletteColors.size()} colors from palette."
+      log.warn("Warning: Number of breaks ($nBreaks) exceeds palette size (${paletteColors.size()}). Using maximum of ${paletteColors.size()} colors from palette.")
     }
   }
 
