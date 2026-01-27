@@ -156,13 +156,13 @@ log.info("No JAAS configuration found for $JAAS_CONFIG_NAME...")
 - **Priority**: P2 (Medium) - Google Sheets integration
 - **Risk**: Medium
 - **Files**:
-  1. `matrix-gsheets/src/main/groovy/se/alipsa/matrix/gsheets/GsUtil.groovy` (2 instances)
-  2. `matrix-gsheets/src/main/groovy/se/alipsa/matrix/gsheets/GsConverter.groovy` (4 instances)
-  3. `matrix-gsheets/src/main/groovy/se/alipsa/matrix/gsheets/BqAuthenticator.groovy` (9 instances)
-  4. `matrix-gsheets/src/main/groovy/se/alipsa/matrix/gsheets/BqAuthUtils.groovy` (2 instances)
-- **Dependency Changes**: Remove `implementation libs.log4jApi` from build.gradle
-- **Testing**: `RUN_EXTERNAL_TESTS=true ./gradlew :matrix-gsheets:test`
-- **Status**: ⬜ Not started
+  1. `matrix-gsheets/src/main/groovy/se/alipsa/matrix/gsheets/GsUtil.groovy` (2 instances) ✅
+  2. `matrix-gsheets/src/main/groovy/se/alipsa/matrix/gsheets/GsConverter.groovy` (4 instances) ✅
+  3. `matrix-gsheets/src/main/groovy/se/alipsa/matrix/gsheets/BqAuthenticator.groovy` (10 instances) ✅
+  4. `matrix-gsheets/src/main/groovy/se/alipsa/matrix/gsheets/BqAuthUtils.groovy` (2 instances) ✅
+- **Dependency Changes**: ✅ Removed `implementation libs.log4jApi` from build.gradle
+- **Testing**: `./gradlew :matrix-gsheets:test`
+- **Status**: ✅ **COMPLETED** - All 112 tests passing, Log4j dependency removed, no System.out/err remaining
 
 #### Task 2.2: matrix-smile
 - **Effort**: 20 minutes
@@ -305,13 +305,13 @@ After each module migration:
 
 ### Overall Status
 - **Total Tasks**: 5
-- **Completed**: 2 (40%)
+- **Completed**: 3 (60%)
 - **In Progress**: 0
-- **Not Started**: 3 (60%)
+- **Not Started**: 2 (40%)
 
 ### By Phase
 - **Phase 1 (Foundation)**: 2/2 tasks (100%) ✅ **COMPLETE**
-- **Phase 2 (Integration)**: 0/2 tasks (0%)
+- **Phase 2 (Integration)**: 1/2 tasks (50%)
 - **Phase 3 (Visualization)**: 0/1 task (0%)
 
 ---

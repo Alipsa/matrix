@@ -11,8 +11,7 @@ import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.auth.oauth2.GoogleCredentials
 import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import se.alipsa.matrix.core.util.Logger
 
 import java.security.GeneralSecurityException
 import java.util.concurrent.atomic.AtomicBoolean
@@ -20,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @CompileStatic
 class BqAuthenticator {
 
-  private static final Logger log = LogManager.getLogger(BqAuthenticator)
+  private static final Logger log = Logger.getLogger(BqAuthenticator)
 
   static final String SCOPE_CLOUD_PLATFORM = "https://www.googleapis.com/auth/cloud-platform"
   static final String SCOPE_SHEETS = SheetsScopes.SPREADSHEETS
@@ -77,7 +76,7 @@ class BqAuthenticator {
       }
       if (qp) {
         credentials = credentials.createWithQuotaProject(qp)
-        if (verbose) println "Using quota project: ${qp}"
+        if (verbose) log.info("Using quota project: $qp")
       }
 
       // The refreshIfExpired() method will handle checking if a refresh is needed.
@@ -171,7 +170,7 @@ class BqAuthenticator {
           .build()
       return oauth2.userinfo().get().execute().getEmail()
     } catch (Exception e) {
-      System.err.println "Could not fetch user email: ${e.message}"
+      log.warn("Could not fetch user email: ${e.message}")
       return null
     }
   }

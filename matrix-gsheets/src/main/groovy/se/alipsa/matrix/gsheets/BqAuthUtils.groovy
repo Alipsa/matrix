@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gsheets
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.Logger
 
 import static se.alipsa.matrix.gsheets.BqAuthenticator.*
 import com.google.api.client.auth.oauth2.Credential
@@ -20,6 +21,9 @@ import groovy.transform.CompileDynamic
 
 @CompileStatic
 class BqAuthUtils {
+
+  private static final Logger log = Logger.getLogger(BqAuthUtils)
+
   /* drop-in replacement for gcloud auth application-default login
   // Writes ~/.config/gcloud/application_default_credentials.json
   // Usage:
@@ -34,14 +38,14 @@ class BqAuthUtils {
     def http = GoogleNetHttpTransport.newTrustedTransport()
     def json = GsonFactory.getDefaultInstance()
     if (!clientSecretJson.exists()) {
-      println "Please create OAuth 2.0 credentials for a 'Desktop app' in the Google Cloud Console and save the downloaded JSON file to this location."
-      println """
+      log.info("Please create OAuth 2.0 credentials for a 'Desktop app' in the Google Cloud Console and save the downloaded JSON file to this location.")
+      log.info("""
           1. Go to the Google Cloud Console (https://console.cloud.google.com/).
-          2. Navigate to APIs & Services > Credentials.         
+          2. Navigate to APIs & Services > Credentials.
           3. Click "Create Credentials" and choose "OAuth 2.0 Client ID".
           4. Select "Desktop App" as the application type.
           5. After creation, click the download icon to save the JSON file to $clientSecretJson.absolutePath.
-        """
+        """)
       throw new IllegalStateException("Error: The 'client_secret_desktop.json' file was not found at $clientSecretJson.absolutePath")
     }
     GoogleClientSecrets secrets = GoogleClientSecrets.load(json, new FileReader(clientSecretJson))
@@ -72,7 +76,7 @@ class BqAuthUtils {
     File adcFile = BqAuthenticator.ADC_FILE_PATH
     adcFile.parentFile.mkdirs()
     adcFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(adc))
-    println "Wrote ADC to ${adcFile.absolutePath}"
+    log.info("Wrote ADC to ${adcFile.absolutePath}")
 
     // Return a ready-to-use GoogleCredentials as well
     GoogleCredentials gc = GoogleCredentials.fromStream(new ByteArrayInputStream(adcFile.bytes))

@@ -1,7 +1,6 @@
 package se.alipsa.matrix.gsheets
 
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -13,7 +12,7 @@ import java.time.temporal.ChronoUnit
 
 class GsConverter {
 
-  private static Logger log = LogManager.getLogger(GsConverter)
+  private static final Logger log = Logger.getLogger(GsConverter)
 
   private static long secondsInDay = 24 * 60 * 60
   private static LocalDateTime epochDateTime = LocalDateTime.of(1899, 12, 30, 0, 0, 0)
