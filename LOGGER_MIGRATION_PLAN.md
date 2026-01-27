@@ -285,12 +285,14 @@ After each module migration:
 ## Success Criteria
 
 ### Completion
-1. ✅ All production code (src/main) uses `se.alipsa.matrix.core.util.Logger`
-2. ✅ No direct SLF4J or Log4j imports in production code
-3. ✅ No System.out/System.err/println in production code
-4. ✅ All module tests pass
-5. ✅ Full regression test suite passes
-6. ✅ Dependencies cleaned up (log4j-api removed)
+1. ✅ All **migrated modules** (matrix-core, matrix-sql, matrix-gsheets, matrix-smile, matrix-charts, matrix-bigquery) use `se.alipsa.matrix.core.util.Logger` in production code
+2. ✅ No direct SLF4J or Log4j imports in migrated module production code
+3. ✅ No System.out/System.err logging in migrated module production code (println allowed in Matrix.groovy for debug/user-facing output)
+4. ✅ All migrated module tests pass
+5. ✅ Full regression test suite passes for migrated modules
+6. ✅ Dependencies cleaned up (log4j-api removed from matrix-gsheets)
+
+**Scope Note**: This migration covered 6 modules. Other modules (matrix-spreadsheet, etc.) were not included in this phase and may still use their existing logging frameworks.
 
 ### Quality
 1. ✅ Consistent Logger field naming

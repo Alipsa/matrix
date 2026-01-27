@@ -30,7 +30,7 @@ class MatrixSqlFactory {
             .getVersion()
       } catch (Exception e) {
         dependencyVersion = '2.4.240'
-        log.warn("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion: ${e.message}")
+        log.warn("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion: ${e.message}", e)
       }
     } else {
       dependencyVersion = version
@@ -58,7 +58,7 @@ class MatrixSqlFactory {
             .getVersion()
       } catch (Exception e) {
         dependencyVersion = '10.17.1.0'
-        log.warn("Failed to fetch latest Derby artifact, falling back to version $dependencyVersion: ${e.message}")
+        log.warn("Failed to fetch latest Derby artifact, falling back to version $dependencyVersion: ${e.message}", e)
       }
     } else {
       dependencyVersion = version

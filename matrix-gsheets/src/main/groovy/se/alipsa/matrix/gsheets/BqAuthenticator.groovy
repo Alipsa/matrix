@@ -170,7 +170,7 @@ class BqAuthenticator {
           .build()
       return oauth2.userinfo().get().execute().getEmail()
     } catch (Exception e) {
-      log.warn("Could not fetch user email: ${e.message}")
+      log.warn("Could not fetch user email: ${e.message}", e)
       return null
     }
   }

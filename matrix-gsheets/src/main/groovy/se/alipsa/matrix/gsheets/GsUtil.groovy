@@ -162,7 +162,7 @@ class GsUtil {
 
       return names
     } catch (Exception e) {
-      log.error("Failed to retrieve sheet names for spreadsheetId '{}'", spreadsheetId, e)
+      log.error("Failed to retrieve sheet names for spreadsheetId '$spreadsheetId': ${e.message}", e)
       throw e
     }
   }
