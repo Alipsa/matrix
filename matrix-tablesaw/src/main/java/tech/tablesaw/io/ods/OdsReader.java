@@ -41,17 +41,41 @@ public class OdsReader implements DataReader<OdsReadOptions> {
     register(Table.defaultReaderRegistry);
   }
 
+  /**
+   * Register this reader with the given registry.
+   *
+   * @param registry the reader registry to register with
+   */
   public static void register(ReaderRegistry registry) {
     registry.registerExtension("ods", INSTANCE);
     registry.registerMimeType("application/vnd.oasis.opendocument.spreadsheet", INSTANCE);
     registry.registerOptions(OdsReadOptions.class, INSTANCE);
   }
 
+  /**
+   * Read a table from the source using default options.
+   * Reads the first sheet (index 0) by default.
+   *
+   * @param source the source to read from
+   * @return the table read from the source
+   */
   @Override
   public Table read(Source source) {
     return read(OdsReadOptions.builder(source).build());
   }
 
+  /**
+   * Read a table from an ODS file using the specified options.
+   *
+   * <p>Reads data from the specified sheet index (default is 0, the first sheet).
+   * The first row is treated as column headers. Rows where all values are null are skipped.
+   * All cell values are read as strings and then converted to appropriate types based on
+   * the read options.
+   *
+   * @param options the read options specifying the source, sheet index, and parsing configuration
+   * @return the table read from the ODS file
+   * @throws RuntimeIOException if an I/O error occurs during reading
+   */
   @Override
   public Table read(OdsReadOptions options) {
 
@@ -91,6 +115,15 @@ public class OdsReader implements DataReader<OdsReadOptions> {
     }
   }
 
+  /**
+   * Get an InputStream from the source specified in the read options.
+   * Handles different source types: file, reader, or input stream.
+   *
+   * @param options the read options containing the source
+   * @return an InputStream for reading the ODS data
+   * @throws IOException if the source cannot be accessed
+   * @throws FileNotFoundException if the source file does not exist
+   */
   private InputStream getInputStream(ReadOptions options) throws IOException {
     if (options.source().file() != null) {
       return new FileInputStream(options.source().file());
