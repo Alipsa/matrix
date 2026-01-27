@@ -1,4 +1,4 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-spreadsheet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-spreadsheet)
+[![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-spreadsheet/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-spreadsheet)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-spreadsheet/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-spreadsheet)
 # Matrix Spreadsheet
 Spreadsheet import to a Matrix and Matrix export to a spreadsheet. 

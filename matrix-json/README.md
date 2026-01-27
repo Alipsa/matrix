@@ -1,4 +1,4 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-json/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-json)
+[![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-json/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-json)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-json/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-json)
 # matrix-json
 Json import and export functionality to and from a Matrix or Grid

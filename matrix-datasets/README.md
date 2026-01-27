@@ -1,4 +1,4 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-datasets/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-datasets)
+[![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-datasets/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-datasets)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-datasets/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-datasets)
 # Matrix Datasets
 Common, public domain and oss datasets in Matrix format for Groovy applications running on JDK 17 or later.

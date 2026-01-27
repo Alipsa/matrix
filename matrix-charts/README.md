@@ -1,3 +1,5 @@
+[![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-charts/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-charts)
+[![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-charts/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-charts)
 # Charts
 Groovy library for creating graphs based on Matrix or [][] data
 

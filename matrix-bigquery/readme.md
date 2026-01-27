@@ -1,3 +1,5 @@
+[![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-bigquery/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-bigquery)
+[![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-bigquery/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-bigquery)
 # Matrix Big Query
 
 This module makes it simple to query data from Google Big Query and get the result back as a Matrix and also to export a Matrix to Big Query.

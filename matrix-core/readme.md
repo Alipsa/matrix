@@ -1,4 +1,4 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-core)
+[![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-core/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-core)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-core/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-core)
 # Matrix
 This is a Groovy library to make it easy to work with

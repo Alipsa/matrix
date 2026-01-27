@@ -1,4 +1,4 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-bom/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-bom)
+[![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-bom/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-bom)
 # Matrix-bom (Bill of Materials)
 Since matrix modules are release separately, the version numbers of the matrix modules does not align with each other.
 This requires som research (reading of readme.md files) to figure out which versions works well with each other.

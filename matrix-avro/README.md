@@ -1,3 +1,5 @@
+[![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-avro/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-avro)
+[![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-avro/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-avro)
 # matrix-avro
 
 [Avro](https://avro.apache.org/) read/write support for [Matrix](https://github.com/Alipsa/matrix).  

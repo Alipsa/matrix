@@ -1,4 +1,4 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix-stats/badge.svg)](https://maven-badges.herokuapp.com/maven-central/se.alipsa.matrix/matrix)
+[![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-stats/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-stats)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-stats/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-stats)
 # matrix-stats
 Statistical functions for Matrix data. E.g. correlations, normalizations, regressions, and hypothesis tests.
