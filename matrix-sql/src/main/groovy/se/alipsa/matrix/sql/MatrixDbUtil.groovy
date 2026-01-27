@@ -5,6 +5,7 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.core.util.Logger
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -23,6 +24,8 @@ import static se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper.getVARCHAR_SIZE
 // dynamic use of getAt extensions prevents this from being compiled statically
 // @CompileStatic
 class MatrixDbUtil {
+
+  private static final Logger log = Logger.getLogger(MatrixDbUtil)
 
   SqlTypeMapper mapper
 
@@ -69,13 +72,13 @@ class MatrixDbUtil {
       result.ddlResult = stm.execute(sql)
 
     } catch (SQLException e) {
-      System.err.println("Failed to create table $tableName using ddl: " + sql)
+      log.error("Failed to create table $tableName using ddl: $sql", e)
       throw e
     }
     try {
       result.inserted = insert(con, tableName, table)
     } catch (SQLException e) {
-      System.err.println("Failed to insert data to table $tableName" + e)
+      log.error("Failed to insert data to table $tableName: ${e.message}", e)
       throw e
     }
     result

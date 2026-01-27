@@ -6,6 +6,7 @@ import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.sqltypes.SqlTypeMapper
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.sql.config.JaasConfigLoader
 import se.alipsa.mavenutils.MavenUtils
 
@@ -25,6 +26,8 @@ import java.util.stream.IntStream
  */
 @CompileStatic
 class MatrixSql implements Closeable {
+
+  private static final Logger log = Logger.getLogger(MatrixSql)
 
   private ConnectionInfo ci
   private SqlTypeMapper mapper
@@ -320,7 +323,7 @@ class MatrixSql implements Closeable {
       if (!url.contains(':h2:') && !url.contains(':derby:')
           && isBlank(ci.getPassword()) && !url.contains("passw")
           && !url.contains("integratedsecurity=true")) {
-        System.err.println("Password probably required to " + ci.getName() + " for " + ci.getUser())
+        log.warn("Password probably required to ${ci.getName()} for ${ci.getUser()}")
       }
       con = dbConnect(ci)
     }
@@ -364,11 +367,11 @@ class MatrixSql implements Closeable {
       try {
         driver = clazz.getDeclaredConstructor().newInstance()
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | NullPointerException e) {
-        System.err.println("Failed to instantiate the driver: ${ci.getDriver()}, clazz is ${clazz}: " + e)
+        log.error("Failed to instantiate the driver: ${ci.getDriver()}, clazz is $clazz: ${e.message}", e)
         throw e
       }
     } catch (ClassCastException | ClassNotFoundException e) {
-      System.err.println("Failed to load driver; ${ci.getDriver()} could not be loaded from dependency ${ci.getDependency()}")
+      log.error("Failed to load driver: ${ci.getDriver()} could not be loaded from dependency ${ci.getDependency()}", e)
       throw e
     }
     Properties props = new Properties()

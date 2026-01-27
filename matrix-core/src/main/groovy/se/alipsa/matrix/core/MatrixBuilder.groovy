@@ -4,6 +4,7 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import se.alipsa.matrix.core.util.ClassUtils
+import se.alipsa.matrix.core.util.Logger
 
 import java.lang.reflect.Modifier
 import java.nio.file.Files
@@ -19,6 +20,8 @@ import java.sql.Types
 
 @CompileStatic
 class MatrixBuilder {
+
+  private static final Logger log = Logger.getLogger(MatrixBuilder)
 
   String matrixName
   List<String> headerList
@@ -478,7 +481,7 @@ class MatrixBuilder {
           try {
             columnTypes.add(Class.forName(columnClassName))
           } catch (ClassNotFoundException e) {
-            System.err.println "Failed to load class $columnClassName, setting type to Object; ${e.toString()}"
+            log.error("Failed to load class $columnClassName, setting type to Object: ${e.message}", e)
             columnTypes.add(Object.class)
           }
         }
