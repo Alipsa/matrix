@@ -6,6 +6,7 @@ import se.alipsa.matrix.bigquery.Bq
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.datasets.Dataset
 
 import java.sql.Time
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.*
 @CompileStatic
 class BqTest {
 
+  private static final Logger log = Logger.getLogger(BqTest)
   private static Bq bq
   private static String projectId
   private static final String DATASET_NAME = 'BqTestShared'
@@ -42,7 +44,7 @@ class BqTest {
   static void setupClass() {
     projectId = System.getenv('GOOGLE_CLOUD_PROJECT')
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run tests!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run tests!")
       return
     }
     bq = new Bq(true)  // Use async queries for production BigQuery
@@ -66,7 +68,7 @@ class BqTest {
   @Test
   void testExample() {
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
     Matrix m = bq.query("""SELECT CONCAT('https://stackoverflow.com/questions/', 
@@ -83,7 +85,7 @@ class BqTest {
   @Test
   void testListProjects() {
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
     List projects = bq.getProjects().collect{it.displayName + ' (' + it.projectId + ')'}
@@ -93,7 +95,7 @@ class BqTest {
   @Test
   void testCreateAndRetrieve() {
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
     Matrix mtcars = Dataset.mtcars()
@@ -107,7 +109,7 @@ class BqTest {
   @Test
   void testCreateAndRetrieveAirquality() {
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
     Matrix airq = Dataset.airquality()
@@ -122,12 +124,12 @@ class BqTest {
   @Test
   void testListTableInfo() {
     if (projectId == null) {
-      println("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
+      log.warn("GOOGLE_CLOUD_PROJECT env variable not set, cannot run test!")
       return
     }
     List<String> ds = bq.datasets
     if (ds.size() ==  0) {
-      println "No datasets found"
+      log.info("No datasets found")
       return
     }
     //println "datasets are"
@@ -135,7 +137,7 @@ class BqTest {
     List<String> tableNames = bq.getTableNames(ds[0])
 
     if (tableNames.size() == 0) {
-      println "no tables found in ${ds[0]}"
+      log.info("No tables found in ${ds[0]}")
       return
     }
     //println "Listing tables in ${ds[0]}"

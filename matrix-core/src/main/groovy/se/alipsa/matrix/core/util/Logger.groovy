@@ -3,7 +3,8 @@ package se.alipsa.matrix.core.util
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
 
-import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -30,7 +31,7 @@ class Logger {
   private static final boolean SLF4J_AVAILABLE
   private static final ConcurrentHashMap<String, Logger> LOGGER_CACHE = new ConcurrentHashMap<>()
   private static volatile LogLevel CURRENT_LEVEL = LogLevel.INFO
-  private static final SimpleDateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
+  private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
   // Instance fields
   private final String className
@@ -257,7 +258,7 @@ class Logger {
     String message = (args != null && args.length > 0) ? String.format(format, args) : format
 
     // Build the log line
-    String timestamp = TIMESTAMP_FORMAT.format(new Date())
+    String timestamp = LocalDateTime.now().format(TIMESTAMP_FORMAT)
     String levelStr = String.format("%-5s", level.name())
     String logLine = "${timestamp} [${levelStr}] ${className} - ${message}"
 
