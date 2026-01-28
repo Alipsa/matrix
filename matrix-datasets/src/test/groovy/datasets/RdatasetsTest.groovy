@@ -31,7 +31,87 @@ class RdatasetsTest {
     //println "mtcars content: ${mtcars.content()}"
     //println Dataset.mtcars().content()
     assertEquals(32, mtcars.rowCount(), 'Mtcars dataset should have 32 rows')
-    assertEquals(12, mtcars.columnCount(), 'Mtcars dataset should have 11 columns')
+    assertEquals(12, mtcars.columnCount(), 'Mtcars dataset should have 12 columns')
     MatrixAssertions.assertContentMatches(Dataset.mtcars(), mtcars, Dataset.mtcars().diff(mtcars))
+  }
+
+  @Test
+  void testFetchDataWithNullPackage() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchData(null, 'mtcars')
+    }
+    assertEquals('Package name and item name cannot be null or empty', exception.message)
+  }
+
+  @Test
+  void testFetchDataWithNullItem() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchData('datasets', null)
+    }
+    assertEquals('Package name and item name cannot be null or empty', exception.message)
+  }
+
+  @Test
+  void testFetchDataWithEmptyItem() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchData('datasets', '')
+    }
+    assertEquals('Package name and item name cannot be null or empty', exception.message)
+  }
+
+  @Test
+  void testFetchDataWithEmptyPackage() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchData('', 'mtcars')
+    }
+    assertEquals('Package name and item name cannot be null or empty', exception.message)
+  }
+
+  @Test
+  void testFetchDataWithNonExistentDataset() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchData('datasets', 'nonexistent_dataset_xyz_123')
+    }
+    assertEquals('Dataset not found: datasets/nonexistent_dataset_xyz_123', exception.message)
+  }
+
+  @Test
+  void testFetchInfoWithNullPackage() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchInfo(null, 'mtcars')
+    }
+    assertEquals('Package name and item name cannot be null or empty', exception.message)
+  }
+
+  @Test
+  void testFetchInfoWithNullItem() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchInfo('datasets', null)
+    }
+    assertEquals('Package name and item name cannot be null or empty', exception.message)
+  }
+
+  @Test
+  void testFetchInfoWithEmptyPackage() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchInfo('', 'mtcars')
+    }
+    assertEquals('Package name and item name cannot be null or empty', exception.message)
+  }
+
+  @Test
+  void testFetchInfoWithEmptyItem() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchInfo('datasets', '')
+    }
+    assertEquals('Package name and item name cannot be null or empty', exception.message)
+  }
+
+  @Test
+  void testFetchInfoWithNonExistentDataset() {
+    def exception = assertThrows(IllegalArgumentException) {
+      Rdatasets.fetchInfo('datasets', 'nonexistent_dataset_xyz_123')
+    }
+    assertEquals('Dataset not found: datasets/nonexistent_dataset_xyz_123', exception.message)
   }
 }

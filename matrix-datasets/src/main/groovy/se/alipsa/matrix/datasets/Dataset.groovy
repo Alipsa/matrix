@@ -3,32 +3,65 @@ package se.alipsa.matrix.datasets
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.datasets.util.FileUtil
 import se.alipsa.matrix.core.Stat
+import se.alipsa.matrix.core.util.Logger
+import se.alipsa.matrix.datasets.util.FileUtil
 
-// Cannot find matching method java.lang.Object#minus(java.lang.Comparable)
-// Need to add more type info for CompileStatic to work
+/**
+ * Provides access to common datasets in Matrix format.
+ * Includes statistical datasets (mtcars, iris, diamonds, etc.) and geographical map data.
+ */
 @CompileStatic
 class Dataset {
 
+  private static final Logger log = Logger.getLogger(Dataset)
+
+  /** Map dataset file paths indexed by exact name */
+  private static final Map<String, String> MAP_DATA_FILES = [
+      county: '/data/maps/map_county.csv',
+      france: '/data/maps/map_france.csv',
+      italy : '/data/maps/map_italy.csv',
+      nz    : '/data/maps/map_nz.csv',
+      state : '/data/maps/map_state.csv',
+      usa   : '/data/maps/map_usa.csv',
+      world : '/data/maps/map_world.csv',
+      world2: '/data/maps/map_world2.csv'
+  ]
+
+  /** Prefix mappings for non-exact matching (prefix -> exact name) */
+  private static final Map<String, String> MAP_DATA_PREFIXES = [
+      co: 'county',
+      fr: 'france',
+      it: 'italy',
+      nz: 'nz',
+      st: 'state',
+      us: 'usa'
+  ]
+
   static Matrix airquality() {
-    Matrix.builder().data(url('/data/airquality.csv'), ',', '', true)
-        .build().convert(
-        'Ozone': BigDecimal,
-        'Solar.R': BigDecimal,
-        'Wind': BigDecimal,
-        'Temp': BigDecimal,
-        'Month': Short,
-        'Day': Short
-    ).withMatrixName('airquality')
+    Matrix.builder()
+        .matrixName('airquality')
+        .data(url('/data/airquality.csv'), ',', '', true)
+        .build()
+        .convert(
+            'Ozone': BigDecimal,
+            'Solar.R': BigDecimal,
+            'Wind': BigDecimal,
+            'Temp': BigDecimal,
+            'Month': Short,
+            'Day': Short
+        )
   }
 
   static Matrix cars() {
-    Matrix.builder().data(url('/data/cars.csv'), ',', '"')
-        .build().convert(
-        speed: BigDecimal,
-        dist: BigDecimal
-    ).withMatrixName('cars')
+    Matrix.builder()
+        .matrixName('cars')
+        .data(url('/data/cars.csv'), ',', '"')
+        .build()
+        .convert(
+            speed: BigDecimal,
+            dist: BigDecimal
+        )
   }
 
   /**
@@ -36,7 +69,9 @@ class Dataset {
    * petal length and petal width, respectively, for 50 flowers from each of 3 species of iris.
    */
   static Matrix iris() {
-    Matrix table = Matrix.builder().data(url('/data/iris.csv'))
+    Matrix.builder()
+        .matrixName('Iris')
+        .data(url('/data/iris.csv'))
         .build()
         .convert(
             Id: Integer,
@@ -46,8 +81,6 @@ class Dataset {
             'Petal Width': BigDecimal,
             Species: String
         )
-    table.setMatrixName('Iris')
-    return table
   }
 
   /**
@@ -172,28 +205,55 @@ class Dataset {
         .build()
   }
 
+  /**
+   * Loads geographical map data for the specified dataset.
+   *
+   * @param datasetName the name of the map dataset (county, france, italy, nz, state, usa, world, world2)
+   * @param region optional region name to filter the data
+   * @param exact if true, requires exact name match; if false, allows prefix matching
+   * @return a Matrix containing the map data
+   * @throws IllegalArgumentException if the dataset name is null or not found
+   */
   static Matrix mapData(String datasetName, String region = null, boolean exact = false) {
     if (datasetName == null) {
       throw new IllegalArgumentException("dataset name cannot be null")
     }
-    datasetName = datasetName.toLowerCase()
-    if (exact && datasetName == 'county' || !exact && datasetName.startsWith('co'))
-      return mapDataSet('/data/maps/map_county.csv', region)
-    if (exact && datasetName == 'france' || !exact && datasetName.startsWith('fr'))
-      return mapDataSet('/data/maps/map_france.csv', region)
-    if (exact && datasetName == 'italy' || !exact && datasetName.startsWith('it'))
-      return mapDataSet('/data/maps/map_italy.csv', region)
-    if (exact && datasetName == 'nz' || !exact && datasetName.startsWith('nz'))
-      return mapDataSet('/data/maps/map_nz.csv', region)
-    if (exact && datasetName == 'state' || !exact && datasetName.startsWith('st'))
-      return mapDataSet('/data/maps/map_state.csv', region)
-    if (exact && datasetName == 'usa' || !exact && datasetName.startsWith('us'))
-      return mapDataSet('/data/maps/map_usa.csv', region)
-    if (datasetName == 'world')
-      return mapDataSet('/data/maps/map_world.csv', region)
-    if (datasetName == 'world2')
-      return mapDataSet('/data/maps/map_world2.csv', region)
-    throw new IllegalArgumentException("no map data exists for $datasetName")
+    String name = datasetName.toLowerCase()
+    String filePath = resolveMapDataFile(name, exact)
+
+    if (filePath == null) {
+      log.debug("Map dataset not found: $datasetName (exact=$exact)")
+      throw new IllegalArgumentException("no map data exists for $datasetName")
+    }
+
+    log.debug("Loading map data from $filePath" + (region ? " for region: $region" : ""))
+    return mapDataSet(filePath, region)
+  }
+
+  /**
+   * Resolves the file path for a map dataset name.
+   *
+   * @param name the lowercase dataset name
+   * @param exact if true, requires exact name match; if false, allows prefix matching
+   * @return the file path or null if not found
+   */
+  private static String resolveMapDataFile(String name, boolean exact) {
+    // Try exact match first
+    if (MAP_DATA_FILES.containsKey(name)) {
+      return MAP_DATA_FILES[name]
+    }
+
+    // If exact matching is required, no match found
+    if (exact) {
+      return null
+    }
+
+    // Try prefix matching
+    String matchedName = MAP_DATA_PREFIXES.find { prefix, exactName ->
+      name.startsWith(prefix)
+    }?.value
+
+    return matchedName ? MAP_DATA_FILES[matchedName] : null
   }
 
   @CompileDynamic
@@ -210,9 +270,15 @@ class Dataset {
             "subregion": String
         )
     if (region == null) {
+      log.debug("Loaded ${ds.rowCount()} rows from $filePath")
       return ds
     }
     Matrix sub = ds.subset("region", { it == region })
+    if (sub.rowCount() == 0) {
+      log.warn("Region not found in dataset: $region")
+      throw new IllegalArgumentException("Region not found: $region")
+    }
+    log.debug("Filtered to ${sub.rowCount()} rows for region: $region")
     def minOrder = Stat.min(sub['order']) - 1
     def minGroup = Stat.min(sub['group']) - 1
     return sub.apply(

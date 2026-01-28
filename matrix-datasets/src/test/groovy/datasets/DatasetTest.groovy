@@ -202,4 +202,47 @@ class DatasetTest {
             Stat.sum(sweden["lat"]).setScale(10, RoundingMode.HALF_EVEN),
             "Sweden, sum of lat")
     }
+
+    @Test
+    void testMapDataWithNonExistentRegion() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.mapData('world', 'NonExistentRegion123')
+        }
+        assertEquals('Region not found: NonExistentRegion123', exception.message)
+    }
+
+    @Test
+    void testMapDataWithNullDatasetName() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.mapData(null)
+        }
+        assertEquals('dataset name cannot be null', exception.message)
+    }
+
+    @Test
+    void testMapDataWithInvalidDatasetName() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.mapData('invalid_map_xyz')
+        }
+        assertEquals('no map data exists for invalid_map_xyz', exception.message)
+    }
+
+    @Test
+    void testDescribeUnknownDataset() {
+        def description = Dataset.describe('unknown_dataset')
+        assertEquals('Unknown table: unknown_dataset', description)
+    }
+
+    @Test
+    void testFromUrl() {
+        // Use the same mtcars URL that Rdatasets uses
+        def mtcars = Dataset.fromUrl(
+            'https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/datasets/mtcars.csv',
+            ',',
+            '"'
+        )
+        assertNotNull(mtcars, 'fromUrl should return a Matrix')
+        assertEquals(32, mtcars.rowCount(), 'mtcars should have 32 rows')
+        assertTrue(mtcars.columnCount() >= 11, 'mtcars should have at least 11 columns')
+    }
 }

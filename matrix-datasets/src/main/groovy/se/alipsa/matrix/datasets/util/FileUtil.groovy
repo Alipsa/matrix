@@ -18,21 +18,21 @@ class FileUtil {
    * Verify that the filePath exists and is reachable
    * @param filePath the path + file name of the resource to find
    * @return a File of found
-   * @throws Exception if the filePath cannot be found
+   * @throws FileNotFoundException if the filePath cannot be found
    */
-  static File checkFilePath(String filePath) throws Exception {
+  static File checkFilePath(String filePath) throws FileNotFoundException {
     File excelFile
     URL url = getResourceUrl(filePath)
     if (url == null) {
-      throw new Exception(filePath + " does not exist")
+      throw new FileNotFoundException("$filePath does not exist")
     }
     try {
       excelFile = Paths.get(url.toURI()).toFile()
     } catch (URISyntaxException | RuntimeException e) {
-      throw new Exception(filePath + " does not exist", e)
+      throw new FileNotFoundException("$filePath does not exist").initCause(e)
     }
     if (!excelFile.exists()) {
-      throw new Exception(filePath + " does not exist")
+      throw new FileNotFoundException("$filePath does not exist")
     }
     return excelFile
   }
@@ -95,7 +95,7 @@ class FileUtil {
       String path = getResourcePath(name, encodingOpt)
       file = new File(path)
     } catch (UnsupportedEncodingException e) {
-      throw new FileNotFoundException("Failed to find resource " + name)
+      throw new FileNotFoundException("Failed to find resource $name")
     }
     return file
   }

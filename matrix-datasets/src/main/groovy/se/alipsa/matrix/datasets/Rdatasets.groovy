@@ -4,6 +4,7 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import org.jsoup.Jsoup
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * Convenience wrapper for accessing datasets from the [R datasets repository](https://vincentarelbundock.github.io/Rdatasets/).
@@ -12,6 +13,8 @@ import se.alipsa.matrix.core.Matrix
  */
 @CompileStatic
 class Rdatasets {
+
+  private static final Logger log = Logger.getLogger(Rdatasets)
 
   static Matrix overView
 
@@ -42,18 +45,25 @@ class Rdatasets {
    */
   @CompileDynamic
   static String fetchInfo(String packageName, String itemName, boolean toPlainText = false) {
-    if (packageName == null || itemName.isEmpty()) {
-      throw new IllegalArgumentException("Dataset name cannot be null or empty")
+    if (packageName == null || packageName.isEmpty() || itemName == null || itemName.isEmpty()) {
+      throw new IllegalArgumentException("Package name and item name cannot be null or empty")
     }
+    log.debug("Fetching info for $packageName/$itemName (plainText=$toPlainText)")
     def urlResult = GQ {
       from d in overView
       where d.Package == "$packageName" && d.Item == "$itemName"
       select d.Doc
     }
-    String content = urlResult.toList()[0].toURL().text
+    def resultList = urlResult.toList()
+    if (resultList.isEmpty()) {
+      log.warn("Dataset not found: $packageName/$itemName")
+      throw new IllegalArgumentException("Dataset not found: $packageName/$itemName")
+    }
+    String content = resultList[0].toURL().text
     if (toPlainText) {
       content = Jsoup.parse(content).wholeText()
     }
+    log.debug("Successfully fetched info for $packageName/$itemName")
     content
   }
 
@@ -67,16 +77,24 @@ class Rdatasets {
    */
   @CompileDynamic
   static Matrix fetchData(String packageName, String itemName) {
-    if (packageName == null || itemName.isEmpty()) {
-      throw new IllegalArgumentException("Dataset name cannot be null or empty")
+    if (packageName == null || packageName.isEmpty() || itemName == null || itemName.isEmpty()) {
+      throw new IllegalArgumentException("Package name and item name cannot be null or empty")
     }
+    log.debug("Fetching data for $packageName/$itemName")
     def urlResult = GQ {
       from d in overView
       where d.Package == "$packageName" && d.Item == "$itemName"
       select d.CSV
     }
-    Matrix.builder()
-        .data(urlResult.toList()[0], ',', '"', true)
+    def resultList = urlResult.toList()
+    if (resultList.isEmpty()) {
+      log.warn("Dataset not found: $packageName/$itemName")
+      throw new IllegalArgumentException("Dataset not found: $packageName/$itemName")
+    }
+    Matrix result = Matrix.builder()
+        .data(resultList[0], ',', '"', true)
         .build()
+    log.debug("Successfully fetched $packageName/$itemName: ${result.rowCount()} rows, ${result.columnCount()} columns")
+    result
   }
 }
