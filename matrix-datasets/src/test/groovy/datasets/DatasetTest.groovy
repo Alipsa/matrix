@@ -233,4 +233,17 @@ class DatasetTest {
         def description = Dataset.describe('unknown_dataset')
         assertEquals('Unknown table: unknown_dataset', description)
     }
+
+    @Test
+    void testFromUrl() {
+        // Use the same mtcars URL that Rdatasets uses
+        def mtcars = Dataset.fromUrl(
+            'https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/datasets/mtcars.csv',
+            ',',
+            '"'
+        )
+        assertNotNull(mtcars, 'fromUrl should return a Matrix')
+        assertEquals(32, mtcars.rowCount(), 'mtcars should have 32 rows')
+        assertTrue(mtcars.columnCount() >= 11, 'mtcars should have at least 11 columns')
+    }
 }
