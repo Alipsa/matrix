@@ -597,19 +597,42 @@ class SmileFeatures {
 
     /**
      * Transform data using the fitted parameters.
+     * The scaler must be fitted (using fit()) before calling this method.
      *
      * @param matrix the data to transform
      * @return a new Matrix with standardized columns
+     * @throws IllegalStateException if the scaler has not been fitted
      */
     Matrix transform(Matrix matrix) {
       if (!fitted) {
         throw new IllegalStateException("Scaler must be fitted before transforming")
       }
 
-      return SmileFeatures.transformColumns(matrix, means.keySet().toList()) { List<Double> values ->
-        // This closure receives values for each column in turn, but we need column context
-        values // Will be handled column by column below
+      Map<String, List<?>> newData = new LinkedHashMap<>()
+      List<Class<?>> newTypes = []
+
+      for (int i = 0; i < matrix.columnCount(); i++) {
+        String colName = matrix.columnName(i)
+        if (means.containsKey(colName)) {
+          List<?> col = matrix.column(i)
+          double mean = means[colName]
+          double std = stds[colName]
+          List<Double> transformed = col.collect { v ->
+            v != null ? (((Number) v).doubleValue() - mean) / std : null
+          }
+          newData.put(colName, transformed)
+          newTypes.add(Double)
+        } else {
+          newData.put(colName, matrix.column(i))
+          newTypes.add(matrix.type(i))
+        }
       }
+
+      return Matrix.builder()
+          .data(newData)
+          .types(newTypes)
+          .matrixName(matrix.matrixName)
+          .build()
     }
 
     /**
