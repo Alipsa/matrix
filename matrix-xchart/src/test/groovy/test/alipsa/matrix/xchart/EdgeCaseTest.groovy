@@ -137,7 +137,7 @@ class EdgeCaseTest {
     assertTrue(file.exists())
     assertTrue(exportTime < 5000, "Chart export took ${exportTime}ms (expected < 5000ms)")
 
-    println "Large dataset (${numPoints} points): Creation=${chartCreationTime}ms, Export=${exportTime}ms"
+    //println "Large dataset (${numPoints} points): Creation=${chartCreationTime}ms, Export=${exportTime}ms"
   }
 
   @Test
@@ -167,7 +167,7 @@ class EdgeCaseTest {
     chart.exportPng(file)
     assertTrue(file.exists())
 
-    println "Large scatter dataset (${numPoints} points): ${totalTime}ms"
+    // println "Large scatter dataset (${numPoints} points): ${totalTime}ms"
   }
 
   // ========== Theme Variation Tests ==========
