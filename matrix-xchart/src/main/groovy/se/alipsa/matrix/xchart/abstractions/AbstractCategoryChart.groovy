@@ -12,6 +12,21 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.MatrixTheme
 
+/**
+ * Base class for category chart types (Bar, Stick, Histogram).
+ * Provides common functionality for charts with categorical X-axis and numeric Y-axis.
+ * <p>
+ * Category charts display data organized by categories or discrete groups.
+ * This abstract class handles chart initialization, series management,
+ * and provides methods for adding categorical data series to the chart.
+ * </p>
+ * <p>
+ * Subclasses specify the render style (Bar, Stick, etc.) and
+ * can add additional customization for their specific chart type.
+ * </p>
+ *
+ * @param <T> the concrete category chart type for fluent API chaining
+ */
 @CompileStatic
 class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractChart<T, CategoryChart, CategoryStyler, CategorySeries> {
 

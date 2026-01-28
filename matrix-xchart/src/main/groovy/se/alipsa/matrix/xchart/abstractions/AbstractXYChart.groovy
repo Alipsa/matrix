@@ -9,6 +9,21 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.MatrixTheme
 
+/**
+ * Base class for XY chart types (Line, Area, Scatter).
+ * Provides common functionality for charts with X and Y numeric axes.
+ * <p>
+ * XY charts display data as a series of points with X and Y coordinates.
+ * This abstract class handles chart initialization, series management,
+ * and provides methods for adding data series to the chart.
+ * </p>
+ * <p>
+ * Subclasses specify the render style (Line, Area, or Scatter) and
+ * can add additional customization for their specific chart type.
+ * </p>
+ *
+ * @param <T> the concrete XY chart type for fluent API chaining
+ */
 @CompileStatic
 abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<T, XYChart, XYStyler, XYSeries> {
 
