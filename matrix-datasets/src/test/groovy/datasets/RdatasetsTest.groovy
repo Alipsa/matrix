@@ -6,7 +6,6 @@ import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.datasets.Rdatasets
 
 import static org.junit.jupiter.api.Assertions.*
-import static org.junit.jupiter.api.Assertions.assertThrows
 
 class RdatasetsTest {
 
