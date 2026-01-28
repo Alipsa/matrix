@@ -193,7 +193,7 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
     // Make the fill transparent so that overlaps are visible
     Color[] colors = style.theme.seriesColors
     if (numSeries > colors.size() - 1) {
-      def multiple = (((numSeries + 1) as double) / style.theme.seriesColors.size()).ceil() as int
+      def multiple = (((numSeries + 1.0)) / style.theme.seriesColors.size()).ceil() as int
       List<Color> colorList = []
       for (int i = 0; i < multiple; i++) {
         colorList.addAll(colors as List<Color>)
