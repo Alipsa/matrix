@@ -56,7 +56,6 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
 
   RadarChart addSeries(String seriesNameColumn, Integer transparency = 150) {
     def labels = matrix.columnNames() - seriesNameColumn
-    //println "labels are $labels"
     xchart.radiiLabels = labels as String[]
     matrix.rows().each { Row row ->
       def label = row[seriesNameColumn].toString()

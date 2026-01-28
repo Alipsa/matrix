@@ -69,7 +69,6 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
         .types([Number] * 2)
         .matrixName('Heatmap')
         .build()
-    //println "Correlation matrix: ${corrMatrix.content()}"
     addSeries(
         title,
         columnNames.reverse(),
