@@ -24,7 +24,7 @@ class HistogramChartTest {
    * </pre></code>
    */
   @Test
-  void testDesityHistogram() {
+  void testDensityHistogram() {
     def airquality = Dataset.airquality()
     def hc = HistogramChart.create(airquality, 800, 600)
     hc.setTitle("Maximum daily temperature at La Guardia Airport")
