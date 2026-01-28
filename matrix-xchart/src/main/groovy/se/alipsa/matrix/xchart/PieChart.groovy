@@ -1,7 +1,6 @@
 package se.alipsa.matrix.xchart
 
 import groovy.transform.CompileStatic
-import groovy.transform.CompileDynamic
 
 import org.knowm.xchart.PieChartBuilder
 import org.knowm.xchart.PieSeries
