@@ -128,10 +128,23 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
     return this.xchart
   }
 
+  /**
+   * Get a specific series by name from this chart.
+   * Each series represents a set of data points displayed on the chart.
+   *
+   * @param name the name of the series to retrieve
+   * @return the series with the given name, or null if no such series exists
+   */
   S getSeries(String name) {
     xchart.getSeriesMap().get(name)
   }
 
+  /**
+   * Get all series in this chart as a map.
+   * The map keys are series names, and values are the series objects.
+   *
+   * @return a map of all series in this chart (series name to series object)
+   */
   Map<String, S> getSeries() {
     xchart.getSeriesMap()
   }

@@ -46,26 +46,84 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
     style.defaultSeriesRenderStyle = chartType
   }
 
+  /**
+   * Add a data series to the chart using column names from the source Matrix.
+   * The series will be named using the Y column name.
+   *
+   * @param xValueCol the name of the column containing X values
+   * @param yValueCol the name of the column containing Y values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(String xValueCol, String yValueCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
     addSeries(matrix.column(xValueCol), matrix.column(yValueCol), renderStyle)
   }
 
+  /**
+   * Add a named data series to the chart using column names from the source Matrix.
+   *
+   * @param seriesName the name for this series (displayed in legend)
+   * @param xValueCol the name of the column containing X values
+   * @param yValueCol the name of the column containing Y values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(String seriesName, String xValueCol, String yValueCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
     addSeries(seriesName, matrix.column(xValueCol), matrix.column(yValueCol), renderStyle)
   }
 
+  /**
+   * Add a named data series with error bars to the chart using column names from the source Matrix.
+   *
+   * @param seriesName the name for this series (displayed in legend)
+   * @param xValueCol the name of the column containing X values
+   * @param yValueCol the name of the column containing Y values
+   * @param errorCol the name of the column containing error bar values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(String seriesName, String xValueCol, String yValueCol, String errorCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
     addSeries(seriesName, matrix.column(xValueCol), matrix.column(yValueCol), matrix.column(errorCol), renderStyle)
   }
 
+  /**
+   * Add a data series to the chart using Column objects.
+   * The series will be named using the X column name.
+   *
+   * @param xCol the column containing X values
+   * @param yCol the column containing Y values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(Column xCol, Column yCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
     addSeries(xCol.name, xCol, yCol, renderStyle)
   }
 
+  /**
+   * Add a data series with error bars to the chart using Column objects.
+   * The series will be named using the X column name.
+   *
+   * @param xCol the column containing X values
+   * @param yCol the column containing Y values
+   * @param errorCol the column containing error bar values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(Column xCol, Column yCol, Column errorCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
     addSeries(xCol.name, xCol, yCol, errorCol, renderStyle)
   }
 
+  /**
+   * Add a named data series with error bars to the chart using Column objects.
+   * This is the core implementation method that all other addSeries methods delegate to.
+   *
+   * @param name the name for this series (displayed in legend)
+   * @param xCol the column containing X values
+   * @param yCol the column containing Y values
+   * @param errorCol the column containing error bar values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(String name, Column xCol, Column yCol, Column errorCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
     XYSeries xySeries = xchart.addSeries(name, xCol, yCol, errorCol)
     if (renderStyle != null) {
@@ -74,6 +132,16 @@ abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<
     this as T
   }
 
+  /**
+   * Add a named data series to the chart using Column objects.
+   * This is the core implementation method for series without error bars.
+   *
+   * @param name the name for this series (displayed in legend)
+   * @param xCol the column containing X values
+   * @param yCol the column containing Y values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(String name, Column xCol, Column yCol, XYSeries.XYSeriesRenderStyle renderStyle = null) {
     XYSeries xySeries = xchart.addSeries(name, xCol, yCol)
     if (renderStyle != null) {

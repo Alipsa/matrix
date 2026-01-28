@@ -48,19 +48,55 @@ class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractCha
     style.defaultSeriesRenderStyle = chartType
   }
 
-
+  /**
+   * Add a data series to the chart using column names from the source Matrix.
+   * The series will be named using the Y column name.
+   *
+   * @param xValueCol the name of the column containing category (X-axis) values
+   * @param yValueCol the name of the column containing numeric (Y-axis) values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(String xValueCol, String yValueCol, CategorySeries.CategorySeriesRenderStyle renderStyle = null) {
     addSeries(matrix.column(xValueCol), matrix.column(yValueCol), renderStyle)
   }
 
+  /**
+   * Add a named data series to the chart using column names from the source Matrix.
+   *
+   * @param seriesName the name for this series (displayed in legend)
+   * @param xValueCol the name of the column containing category (X-axis) values
+   * @param yValueCol the name of the column containing numeric (Y-axis) values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(String seriesName, String xValueCol, String yValueCol, CategorySeries.CategorySeriesRenderStyle renderStyle = null) {
     addSeries(seriesName, matrix.column(xValueCol), matrix.column(yValueCol), renderStyle)
   }
 
+  /**
+   * Add a data series to the chart using Column objects.
+   * The series will be named using the Y column name.
+   *
+   * @param xCol the column containing category (X-axis) values
+   * @param yCol the column containing numeric (Y-axis) values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(Column xCol, Column yCol, CategorySeries.CategorySeriesRenderStyle renderStyle = null) {
     addSeries(yCol.name, xCol, yCol, renderStyle)
   }
 
+  /**
+   * Add a named data series to the chart using Column objects.
+   * This is the core implementation method that all other addSeries methods delegate to.
+   *
+   * @param name the name for this series (displayed in legend)
+   * @param xCol the column containing category (X-axis) values
+   * @param yCol the column containing numeric (Y-axis) values
+   * @param renderStyle optional render style override for this series (null to use chart default)
+   * @return this chart for method chaining
+   */
   T addSeries(String name, Column xCol, Column yCol, CategorySeries.CategorySeriesRenderStyle renderStyle = null) {
     CategorySeries series = xchart.addSeries(name, xCol, yCol)
     if (renderStyle != null) {
