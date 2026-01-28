@@ -1,7 +1,7 @@
 [![Maven Central](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-datasets/badge.svg)](https://maven-badges.sml.io/maven-central/se.alipsa.matrix/matrix-datasets)
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-datasets/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-datasets)
 # Matrix Datasets
-Common, public domain and oss datasets in Matrix format for Groovy applications running on JDK 17 or later.
+Common, public domain and oss datasets in Matrix format for Groovy applications running on JDK 21 or later.
 
 Includes mtcars, iris, PlantGrowth, ToothGrowth, USArrests, diamonds, mpg, and map data
 
@@ -19,12 +19,12 @@ Maven:
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy</artifactId>
-      <version>5.0.2</version>
+      <version>5.0.4</version>
   </dependency>
   <dependency>
       <groupId>org.apache.groovy</groupId>
       <artifactId>groovy-ginq</artifactId>
-      <version>5.0.2</version>
+      <version>5.0.4</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
@@ -80,11 +80,13 @@ To get a specific dataset as a Matrix, use `Rdatasets.fetchData(packageName, ite
 # Release version compatibility matrix
 The following table illustrates the version compatibility of the matrix datasets and matrix core
 
-| Matrix datasets |    Matrix core | 
+| Matrix datasets |    Matrix core |
 |----------------:|---------------:|
 |           1.0.3 | 1.2.3 -> 1.2.4 |
 |           1.0.4 | 2.0.0 -> 2.1.1 |
 |           1.1.0 | 2.2.0 -> 2.2.1 |
-|  2.0.0 -> 2.1.0 | 3.0.0 -> 3.0.0 |
+|  2.0.0 -> 2.1.0 |          3.0.0 |
+|           2.1.1 | 3.1.0 -> 3.5.0 |
+|           2.1.2 | 3.5.0 -> 3.6.0 |
 
 
