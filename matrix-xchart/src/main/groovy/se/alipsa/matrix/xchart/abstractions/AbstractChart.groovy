@@ -180,7 +180,7 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
     // Make the fill transparent so that overlaps are visible
     Color[] colors = style.theme.seriesColors
     if (numSeries > colors.size() - 1) {
-      def multiple = Math.ceil(style.theme.seriesColors.size() / numSeries).intValue()
+      def multiple = (style.theme.seriesColors.size() / numSeries).ceil() as int
       List<Color> colorList = []
       for (int i = 0; i < multiple; i++) {
         colorList.addAll(colors as List<Color>)
