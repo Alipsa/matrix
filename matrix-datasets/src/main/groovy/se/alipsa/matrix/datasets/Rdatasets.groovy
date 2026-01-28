@@ -42,7 +42,7 @@ class Rdatasets {
    */
   @CompileDynamic
   static String fetchInfo(String packageName, String itemName, boolean toPlainText = false) {
-    if (packageName == null || itemName.isEmpty()) {
+    if (packageName == null || itemName == null || itemName.isEmpty()) {
       throw new IllegalArgumentException("Dataset name cannot be null or empty")
     }
     def urlResult = GQ {
@@ -50,7 +50,11 @@ class Rdatasets {
       where d.Package == "$packageName" && d.Item == "$itemName"
       select d.Doc
     }
-    String content = urlResult.toList()[0].toURL().text
+    def resultList = urlResult.toList()
+    if (resultList.isEmpty()) {
+      throw new IllegalArgumentException("Dataset not found: $packageName/$itemName")
+    }
+    String content = resultList[0].toURL().text
     if (toPlainText) {
       content = Jsoup.parse(content).wholeText()
     }
@@ -67,7 +71,7 @@ class Rdatasets {
    */
   @CompileDynamic
   static Matrix fetchData(String packageName, String itemName) {
-    if (packageName == null || itemName.isEmpty()) {
+    if (packageName == null || itemName == null || itemName.isEmpty()) {
       throw new IllegalArgumentException("Dataset name cannot be null or empty")
     }
     def urlResult = GQ {
@@ -75,8 +79,12 @@ class Rdatasets {
       where d.Package == "$packageName" && d.Item == "$itemName"
       select d.CSV
     }
+    def resultList = urlResult.toList()
+    if (resultList.isEmpty()) {
+      throw new IllegalArgumentException("Dataset not found: $packageName/$itemName")
+    }
     Matrix.builder()
-        .data(urlResult.toList()[0], ',', '"', true)
+        .data(resultList[0], ',', '"', true)
         .build()
   }
 }
