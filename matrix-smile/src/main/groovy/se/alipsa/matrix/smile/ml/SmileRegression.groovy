@@ -262,7 +262,7 @@ class SmileRegression {
 
     for (int i = 0; i < values.size(); i++) {
       Object val = values.get(i)
-      result[i] = val != null ? ((Number) val).doubleValue() : 0.0d
+      result[i] = val != null ? val as double : 0.0d
     }
 
     return result

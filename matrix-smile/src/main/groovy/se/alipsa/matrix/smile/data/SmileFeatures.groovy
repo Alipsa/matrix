@@ -247,7 +247,7 @@ class SmileFeatures {
    */
   static Matrix binning(Matrix matrix, String column, int bins) {
     List<?> col = matrix.column(column)
-    List<Double> numericCol = col.collect { it != null ? ((Number) it).doubleValue() : null }
+    List<Double> numericCol = col.collect { it != null ? it as double : null }
 
     double min = numericCol.findAll { it != null }.min() as double
     double max = numericCol.findAll { it != null }.max() as double
@@ -277,7 +277,7 @@ class SmileFeatures {
     }
 
     List<?> col = matrix.column(column)
-    List<Double> numericCol = col.collect { it != null ? ((Number) it).doubleValue() : null }
+    List<Double> numericCol = col.collect { it != null ? it as double : null }
 
     List<?> binLabels = numericCol.collect { v ->
       if (v == null) return null
@@ -320,7 +320,7 @@ class SmileFeatures {
    */
   static Matrix fillnaMean(Matrix matrix, String column) {
     List<?> col = matrix.column(column)
-    List<Double> numericCol = col.findAll { it != null }.collect { ((Number) it).doubleValue() }
+    List<Double> numericCol = col.findAll { it != null }.collect { it as double }
     double mean = sumDoubles(numericCol) / numericCol.size()
     return fillna(matrix, column, mean)
   }
@@ -334,7 +334,7 @@ class SmileFeatures {
    */
   static Matrix fillnaMedian(Matrix matrix, String column) {
     List<?> col = matrix.column(column)
-    List<Double> sortedCol = col.findAll { it != null }.collect { ((Number) it).doubleValue() }.sort() as List<Double>
+    List<Double> sortedCol = col.findAll { it != null }.collect { it as double }.sort() as List<Double>
     double median
     int size = sortedCol.size()
     if (size % 2 == 0) {
@@ -457,7 +457,7 @@ class SmileFeatures {
       String colName = matrix.columnName(i)
       if (columns.contains(colName)) {
         List<?> col = matrix.column(i)
-        List<Double> numericCol = col.collect { it != null ? ((Number) it).doubleValue() : null }
+        List<Double> numericCol = col.collect { it != null ? it as double : null }
         List<?> transformed = transformer.call(numericCol)
         newData.put(colName, transformed)
         newTypes.add(Double)
@@ -575,7 +575,7 @@ class SmileFeatures {
 
       for (String col : targetColumns) {
         List<?> colData = matrix.column(col)
-        List<Double> numericCol = colData.findAll { it != null }.collect { ((Number) it).doubleValue() } as List<Double>
+        List<Double> numericCol = colData.findAll { it != null }.collect { it as double } as List<Double>
 
         if (numericCol.isEmpty()) {
           means[col] = 0.0d
@@ -618,7 +618,7 @@ class SmileFeatures {
           double mean = means[colName]
           double std = stds[colName]
           List<Double> transformed = col.collect { v ->
-            v != null ? (((Number) v).doubleValue() - mean) / std : null
+            v != null ? ((v as double) - mean) / std : null
           }
           newData.put(colName, transformed)
           newTypes.add(Double)
@@ -655,7 +655,7 @@ class SmileFeatures {
           double mean = means[colName]
           double std = stds[colName]
           List<Double> transformed = col.collect { v ->
-            v != null ? (((Number) v).doubleValue() - mean) / std : null
+            v != null ? ((v as double) - mean) / std : null
           }
           newData.put(colName, transformed)
           newTypes.add(Double)
@@ -708,7 +708,7 @@ class SmileFeatures {
 
       for (String col : targetColumns) {
         List<?> colData = matrix.column(col)
-        List<Double> numericCol = colData.findAll { it != null }.collect { ((Number) it).doubleValue() }
+        List<Double> numericCol = colData.findAll { it != null }.collect { it as double }
 
         if (numericCol.isEmpty()) {
           mins[col] = 0.0d
@@ -748,7 +748,7 @@ class SmileFeatures {
           List<Double> transformed = col.collect { v ->
             if (v == null) return null
             if (range == 0.0d) return 0.0d
-            (((Number) v).doubleValue() - min) / range
+            ((v as double) - min) / range
           }
           newData.put(colName, transformed)
           newTypes.add(Double)

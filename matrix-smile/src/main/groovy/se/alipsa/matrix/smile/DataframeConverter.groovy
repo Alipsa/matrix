@@ -191,7 +191,7 @@ class DataframeConverter {
   private static double[] toPrimitiveDoubleArray(List<?> list) {
     double[] result = new double[list.size()]
     for (int i = 0; i < list.size(); i++) {
-      result[i] = ((Number) list.get(i)).doubleValue()
+      result[i] = list.get(i) as double
     }
     return result
   }

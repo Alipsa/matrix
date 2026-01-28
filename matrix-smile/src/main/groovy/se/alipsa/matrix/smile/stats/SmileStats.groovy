@@ -724,7 +724,7 @@ class SmileStats {
     int idx = 0
     for (Object val : col) {
       if (val != null) {
-        result[idx++] = ((Number) val).doubleValue()
+        result[idx++] = val as double
       }
     }
     // Trim to actual size if there were nulls
