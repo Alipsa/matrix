@@ -45,8 +45,8 @@ class Rdatasets {
    */
   @CompileDynamic
   static String fetchInfo(String packageName, String itemName, boolean toPlainText = false) {
-    if (packageName == null || itemName == null || itemName.isEmpty()) {
-      throw new IllegalArgumentException("Dataset name cannot be null or empty")
+    if (packageName == null || packageName.isEmpty() || itemName == null || itemName.isEmpty()) {
+      throw new IllegalArgumentException("Package name and item name cannot be null or empty")
     }
     log.debug("Fetching info for $packageName/$itemName (plainText=$toPlainText)")
     def urlResult = GQ {
@@ -77,8 +77,8 @@ class Rdatasets {
    */
   @CompileDynamic
   static Matrix fetchData(String packageName, String itemName) {
-    if (packageName == null || itemName == null || itemName.isEmpty()) {
-      throw new IllegalArgumentException("Dataset name cannot be null or empty")
+    if (packageName == null || packageName.isEmpty() || itemName == null || itemName.isEmpty()) {
+      throw new IllegalArgumentException("Package name and item name cannot be null or empty")
     }
     log.debug("Fetching data for $packageName/$itemName")
     def urlResult = GQ {
