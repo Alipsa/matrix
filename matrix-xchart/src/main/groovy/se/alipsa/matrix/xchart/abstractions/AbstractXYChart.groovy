@@ -1,5 +1,6 @@
 package se.alipsa.matrix.xchart.abstractions
 
+import groovy.transform.CompileStatic
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.XYSeries
@@ -8,6 +9,7 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.MatrixTheme
 
+@CompileStatic
 abstract class AbstractXYChart<T extends AbstractXYChart> extends AbstractChart<T, XYChart, XYStyler, XYSeries> {
 
   AbstractXYChart(Matrix matrix, Integer width = null, Integer height = null,

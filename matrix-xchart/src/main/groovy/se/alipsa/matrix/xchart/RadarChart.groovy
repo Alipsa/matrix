@@ -1,5 +1,7 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
+
 import org.knowm.xchart.RadarChartBuilder
 import org.knowm.xchart.RadarSeries
 import org.knowm.xchart.style.RadarStyler
@@ -26,6 +28,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * radarChart.exportPng(file)
  * </code></pre>
  */
+@CompileStatic
 class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, RadarStyler, RadarSeries> {
 
   int numSeries = 0

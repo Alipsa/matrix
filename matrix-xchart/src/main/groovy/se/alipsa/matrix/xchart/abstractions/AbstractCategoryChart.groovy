@@ -1,5 +1,6 @@
 package se.alipsa.matrix.xchart.abstractions
 
+import groovy.transform.CompileStatic
 import org.knowm.xchart.CategoryChart
 import org.knowm.xchart.CategoryChartBuilder
 import org.knowm.xchart.CategorySeries
@@ -11,6 +12,7 @@ import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.MatrixTheme
 
+@CompileStatic
 class AbstractCategoryChart<T extends AbstractCategoryChart> extends AbstractChart<T, CategoryChart, CategoryStyler, CategorySeries> {
 
   AbstractCategoryChart(Matrix matrix, Integer width = null, Integer height = null, CategorySeries.CategorySeriesRenderStyle chartType) {

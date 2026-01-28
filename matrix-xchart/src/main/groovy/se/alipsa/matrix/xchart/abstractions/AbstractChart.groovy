@@ -1,5 +1,6 @@
 package se.alipsa.matrix.xchart.abstractions
 
+import groovy.transform.CompileStatic
 import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.VectorGraphicsEncoder
@@ -15,6 +16,7 @@ import javax.swing.WindowConstants
 import java.awt.Color
 import java.lang.reflect.InvocationTargetException
 
+@CompileStatic
 abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> implements MatrixXChart {
 
   protected C xchart
@@ -85,12 +87,16 @@ abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extend
 
   void makeFillTransparent(Series s, int numSeries, Integer transparency = 185) {
     // Make the fill transparent so that overlaps are visible
-    def colors = style.theme.seriesColors
+    Color[] colors = style.theme.seriesColors
     if (numSeries > colors.size() - 1) {
       def multiple = Math.ceil(style.theme.seriesColors.size() / numSeries).intValue()
-      colors = style.theme.seriesColors*multiple
+      List<Color> colorList = []
+      for (int i = 0; i < multiple; i++) {
+        colorList.addAll(colors as List<Color>)
+      }
+      colors = colorList as Color[]
     }
-    def color = colors[numSeries]
+    Color color = colors[numSeries]
     //s.lineColor = color.darker()
     s.fillColor = new Color(color.red, color.green, color.blue, transparency)
   }

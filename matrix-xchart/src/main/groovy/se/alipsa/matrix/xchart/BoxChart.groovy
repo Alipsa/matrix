@@ -1,5 +1,7 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
+
 import org.knowm.xchart.BoxChartBuilder
 import org.knowm.xchart.BoxSeries
 import org.knowm.xchart.style.BoxStyler
@@ -30,6 +32,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * bc.exportPng(file)
  * </code></pre>
  */
+@CompileStatic
 class BoxChart extends AbstractChart<BoxChart, org.knowm.xchart.BoxChart, BoxStyler, BoxSeries> {
 
   private BoxChart(Matrix matrix, Integer width = null, Integer height = null) {

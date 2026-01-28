@@ -1,5 +1,8 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
+import groovy.transform.CompileDynamic
+
 import org.knowm.xchart.CategoryChart
 import org.knowm.xchart.CategoryChartBuilder
 import org.knowm.xchart.CategorySeries
@@ -21,6 +24,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * hc.exportPng(file)
  * </code></pre>
  */
+@CompileStatic
 class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, CategoryStyler, CategorySeries> {
 
   private HistogramChart(Matrix matrix, Integer width = null, Integer height = null, CategorySeries.CategorySeriesRenderStyle type) {
@@ -51,7 +55,7 @@ class HistogramChart extends AbstractChart<HistogramChart, CategoryChart, Catego
   }
 
   HistogramChart addSeries(String columnName, int numBuckets) {
-    addSeries(matrix[columnName], numBuckets)
+    addSeries(matrix.column(columnName), numBuckets)
   }
 
   HistogramChart addSeries(Column column, int numBuckets) {

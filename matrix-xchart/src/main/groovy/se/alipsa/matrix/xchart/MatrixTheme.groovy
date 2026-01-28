@@ -1,5 +1,7 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
+
 import org.knowm.xchart.style.PieStyler
 import org.knowm.xchart.style.colors.ChartColor
 import org.knowm.xchart.style.colors.MatlabSeriesColors
@@ -15,6 +17,7 @@ import java.awt.Font
 /**
  * A chart Theme based on the MathLab theme
  */
+@CompileStatic
 class MatrixTheme extends AbstractBaseTheme {
 
   static final Color TEXT_COLOR = ChartColor.DARK_GREY.getColor().darker().darker()
