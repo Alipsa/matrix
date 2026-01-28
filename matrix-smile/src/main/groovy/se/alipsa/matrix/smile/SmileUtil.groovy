@@ -80,8 +80,8 @@ class SmileUtil {
       int count = numericValues.size()
       BigDecimal meanVal = Stat.mean(numericValues as List<BigDecimal>)
       BigDecimal stdVal = Stat.sd(numericValues as List<Number>) as BigDecimal
-      double mean = meanVal as double ?: 0.0d
-      double std = stdVal as double ?: 0.0d
+      double mean = meanVal != null ? meanVal as double : 0.0d
+      double std = stdVal != null ? stdVal as double : 0.0d
       double min = numericValues.first()
       double max = numericValues.last()
       double q25 = percentile(numericValues, 25)
