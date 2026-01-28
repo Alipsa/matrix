@@ -219,7 +219,7 @@ class SmileFeatures {
    */
   static Matrix sqrtTransform(Matrix matrix, List<String> columns) {
     return transformColumns(matrix, columns) { List<Double> values ->
-      values.collect { v -> v != null ? Math.sqrt(v) : null }
+      values.collect { v -> v != null ? v.sqrt() : null }
     }
   }
 
@@ -233,7 +233,7 @@ class SmileFeatures {
    */
   static Matrix powerTransform(Matrix matrix, List<String> columns, double power) {
     return transformColumns(matrix, columns) { List<Double> values ->
-      values.collect { v -> v != null ? Math.pow(v, power) : null }
+      values.collect { v -> v != null ? v ** power : null }
     }
   }
 
