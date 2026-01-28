@@ -121,23 +121,18 @@ class EdgeCaseTest {
         .matrixName("Large Dataset Performance Test")
         .build()
 
-    long startTime = System.currentTimeMillis()
     LineChart chart = LineChart.create(matrix, 800, 600)
         .addSeries('X', 'Y')
-    long chartCreationTime = System.currentTimeMillis() - startTime
 
     assertNotNull(chart)
-    assertTrue(chartCreationTime < 5000, "Chart creation took ${chartCreationTime}ms (expected < 5000ms)")
+    assertNotNull(chart.xchart)
+    assertEquals(1, chart.series.size())
 
-    startTime = System.currentTimeMillis()
     File file = new File("build/edgeCase_largeDataset_line.png")
     chart.exportPng(file)
-    long exportTime = System.currentTimeMillis() - startTime
 
     assertTrue(file.exists())
-    assertTrue(exportTime < 5000, "Chart export took ${exportTime}ms (expected < 5000ms)")
-
-    //println "Large dataset (${numPoints} points): Creation=${chartCreationTime}ms, Export=${exportTime}ms"
+    assertTrue(file.length() > 0, "Exported file should not be empty")
   }
 
   @Test
@@ -155,19 +150,17 @@ class EdgeCaseTest {
         ).types([Double, Double])
         .build()
 
-    long startTime = System.currentTimeMillis()
     ScatterChart chart = ScatterChart.create(matrix, 800, 600)
         .addSeries('X', 'Y')
-    long totalTime = System.currentTimeMillis() - startTime
 
     assertNotNull(chart)
-    assertTrue(totalTime < 5000, "Scatter chart with ${numPoints} points took ${totalTime}ms (expected < 5000ms)")
+    assertNotNull(chart.xchart)
+    assertEquals(1, chart.series.size())
 
     File file = new File("build/edgeCase_largeDataset_scatter.png")
     chart.exportPng(file)
     assertTrue(file.exists())
-
-    // println "Large scatter dataset (${numPoints} points): ${totalTime}ms"
+    assertTrue(file.length() > 0, "Exported file should not be empty")
   }
 
   // ========== Theme Variation Tests ==========

@@ -1,7 +1,6 @@
 package se.alipsa.matrix.xchart
 
 import groovy.transform.CompileStatic
-import groovy.transform.CompileDynamic
 
 import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder

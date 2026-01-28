@@ -1,7 +1,6 @@
 package se.alipsa.matrix.xchart
 
 import groovy.transform.CompileStatic
-import groovy.transform.CompileDynamic
 
 import org.knowm.xchart.PieChartBuilder
 import org.knowm.xchart.PieSeries
@@ -79,7 +78,7 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
       throw new IllegalArgumentException("The yCol is null, cannot add series")
     }
     if (xCol.size() != yCol.size()) {
-      throw new IllegalArgumentException("xCol and yCol must be of equal length but xCol has ${xCol.size()} elements wheras yCol has ${yCol.size()} elements.")
+      throw new IllegalArgumentException("xCol and yCol must be of equal length but xCol has ${xCol.size()} elements whereas yCol has ${yCol.size()} elements.")
     }
     xCol.eachWithIndex { Object name, int i ->
       xchart.addSeries(ValueConverter.asString(name), yCol[i] as Number)
