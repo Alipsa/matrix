@@ -15,7 +15,7 @@ import java.awt.Color
 import java.awt.Font
 
 /**
- * A chart Theme based on the MathLab theme
+ * A chart Theme based on the Matlab theme
  */
 @CompileStatic
 class MatrixTheme extends AbstractBaseTheme {
