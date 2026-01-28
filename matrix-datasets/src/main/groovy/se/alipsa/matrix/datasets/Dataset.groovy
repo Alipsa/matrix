@@ -12,23 +12,29 @@ import se.alipsa.matrix.core.Stat
 class Dataset {
 
   static Matrix airquality() {
-    Matrix.builder().data(url('/data/airquality.csv'), ',', '', true)
-        .build().convert(
-        'Ozone': BigDecimal,
-        'Solar.R': BigDecimal,
-        'Wind': BigDecimal,
-        'Temp': BigDecimal,
-        'Month': Short,
-        'Day': Short
-    ).withMatrixName('airquality')
+    Matrix.builder()
+        .matrixName('airquality')
+        .data(url('/data/airquality.csv'), ',', '', true)
+        .build()
+        .convert(
+            'Ozone': BigDecimal,
+            'Solar.R': BigDecimal,
+            'Wind': BigDecimal,
+            'Temp': BigDecimal,
+            'Month': Short,
+            'Day': Short
+        )
   }
 
   static Matrix cars() {
-    Matrix.builder().data(url('/data/cars.csv'), ',', '"')
-        .build().convert(
-        speed: BigDecimal,
-        dist: BigDecimal
-    ).withMatrixName('cars')
+    Matrix.builder()
+        .matrixName('cars')
+        .data(url('/data/cars.csv'), ',', '"')
+        .build()
+        .convert(
+            speed: BigDecimal,
+            dist: BigDecimal
+        )
   }
 
   /**
@@ -36,7 +42,9 @@ class Dataset {
    * petal length and petal width, respectively, for 50 flowers from each of 3 species of iris.
    */
   static Matrix iris() {
-    Matrix table = Matrix.builder().data(url('/data/iris.csv'))
+    Matrix.builder()
+        .matrixName('Iris')
+        .data(url('/data/iris.csv'))
         .build()
         .convert(
             Id: Integer,
@@ -46,8 +54,6 @@ class Dataset {
             'Petal Width': BigDecimal,
             Species: String
         )
-    table.setMatrixName('Iris')
-    return table
   }
 
   /**
@@ -213,6 +219,9 @@ class Dataset {
       return ds
     }
     Matrix sub = ds.subset("region", { it == region })
+    if (sub.rowCount() == 0) {
+      throw new IllegalArgumentException("Region not found: $region")
+    }
     def minOrder = Stat.min(sub['order']) - 1
     def minGroup = Stat.min(sub['group']) - 1
     return sub.apply(

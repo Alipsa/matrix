@@ -5,6 +5,7 @@ import se.alipsa.matrix.datasets.Dataset
 import java.math.RoundingMode
 
 import static org.junit.jupiter.api.Assertions.*
+import static org.junit.jupiter.api.Assertions.assertThrows
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.*
@@ -201,5 +202,35 @@ class DatasetTest {
         assertEquals(36704.2741737366,
             Stat.sum(sweden["lat"]).setScale(10, RoundingMode.HALF_EVEN),
             "Sweden, sum of lat")
+    }
+
+    @Test
+    void testMapDataWithNonExistentRegion() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.mapData('world', 'NonExistentRegion123')
+        }
+        assertEquals('Region not found: NonExistentRegion123', exception.message)
+    }
+
+    @Test
+    void testMapDataWithNullDatasetName() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.mapData(null)
+        }
+        assertEquals('dataset name cannot be null', exception.message)
+    }
+
+    @Test
+    void testMapDataWithInvalidDatasetName() {
+        def exception = assertThrows(IllegalArgumentException) {
+            Dataset.mapData('invalid_map_xyz')
+        }
+        assertEquals('no map data exists for invalid_map_xyz', exception.message)
+    }
+
+    @Test
+    void testDescribeUnknownDataset() {
+        def description = Dataset.describe('unknown_dataset')
+        assertEquals('Unknown table: unknown_dataset', description)
     }
 }
