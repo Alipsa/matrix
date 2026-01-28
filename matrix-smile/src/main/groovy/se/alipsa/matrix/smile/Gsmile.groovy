@@ -302,7 +302,7 @@ class Gsmile {
    * Iterate over each row of the DataFrame.
    * The closure receives a Map representing each row.
    *
-   * Usage: df.eachRow { row -> log.info("Processing: ${row['name']}") }
+   * Usage: df.eachRow { row -> println("Processing: ${row['name']}") }
    *
    * @param self the DataFrame
    * @param action a closure to execute for each row
