@@ -1166,7 +1166,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @return the column corresponding to the column name supplied
    */
-  List getAt(String columnName) {
+  Column getAt(String columnName) {
     return column(columnName)
   }
 
@@ -1184,7 +1184,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @return the column corresponding to the column index supplied
    */
-  List getAt(int columnIndex) {
+  Column getAt(int columnIndex) {
     return column(columnIndex)
   }
 
