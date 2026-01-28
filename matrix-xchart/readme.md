@@ -10,7 +10,7 @@ To use it add the following to your gradle build script (or equivalent for maven
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
 implementation 'se.alipsa.matrix:matrix-core:3.3.0'
-implementation 'se.alipsa.matrix:matrix-xchart:0.2.1'
+implementation 'se.alipsa.matrix:matrix-xchart:0.2.3'
 ```
 Here is an example usage for a Line Chart:
 

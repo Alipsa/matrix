@@ -57,9 +57,9 @@ class PieChart extends AbstractChart<PieChart, org.knowm.xchart.PieChart, PieSty
     def chart = new PieChart(matrix, width, height)
     chart.style.setDefaultSeriesRenderStyle(PieSeries.PieSeriesRenderStyle.Donut)
     chart.style.setLabelType(PieStyler.LabelType.NameAndValue)
-    chart.style.setLabelsDistance(.82);
-    chart.style.setPlotContentSize(.9);
-    chart.style.setSumVisible(true);
+    chart.style.setLabelsDistance(.82d)
+    chart.style.setPlotContentSize(.9d)
+    chart.style.setSumVisible(true)
     chart
   }
 
