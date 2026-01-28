@@ -10,7 +10,7 @@ To use it add the following to your gradle build script (or equivalent for maven
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
 implementation 'se.alipsa.matrix:matrix-core:3.3.0'
-implementation 'se.alipsa.matrix:matrix-xchart:0.2.1'
+implementation 'se.alipsa.matrix:matrix-xchart:0.2.3'
 ```
 Here is an example usage for a Line Chart:
 
@@ -76,4 +76,4 @@ The Chart types supported are:
 - [ScatterChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/ScatterChart.groovy)
   - a type of plot or mathematical diagram using Cartesian coordinates to display values for typically two variables for a set of data. If the points are coded (color/shape/size), additional variables can be displayed.
 - [StickChart](https://github.com/Alipsa/matrix/blob/main/matrix-xchart/src/main/groovy/se/alipsa/matrix/xchart/StickChart.groovy)
-  -
+  - A stick chart displays data points as vertical lines (sticks) extending from a baseline. It is useful for visualizing the distribution of data points along a category axis, similar to a bar chart but using lines instead of bars.

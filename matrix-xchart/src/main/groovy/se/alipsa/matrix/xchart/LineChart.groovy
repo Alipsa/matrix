@@ -1,5 +1,6 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
 import org.knowm.xchart.XYSeries
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
@@ -21,6 +22,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
  * lineChart.exportPng(file)
  * </code></pre>
  */
+@CompileStatic
 class LineChart extends AbstractXYChart<LineChart> {
 
   private LineChart(Matrix matrix, int width, int height) {

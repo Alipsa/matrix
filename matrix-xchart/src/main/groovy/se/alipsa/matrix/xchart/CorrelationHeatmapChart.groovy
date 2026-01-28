@@ -1,5 +1,7 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
+
 import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder
 import org.knowm.xchart.HeatMapSeries
@@ -21,6 +23,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * chart.exportSvg(new File("build/correlationHeatmap.svg")
  * </code></pre>
  */
+@CompileStatic
 class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   final Number[] numberArray = new Number[]{}
@@ -53,17 +56,18 @@ class CorrelationHeatmapChart extends AbstractChart<CorrelationHeatmapChart, Hea
       throw new IllegalArgumentException("At least one column name must be provided for the correlation heatmap series.")
     }
     Matrix data = matrix.selectColumns(columnNames)
-    def size = columnNames.size()
-    def corr = [size<..0, 0..<size].combinations().collect { int i, int j ->
-      def xValues = ListConverter.toBigDecimals(data[j])
-      def yValues = ListConverter.toBigDecimals(data[i])
+    int size = columnNames.size()
+    List<BigDecimal> corr = [size<..0, 0..<size].combinations().collect { a, b ->
+      int i = a as int
+      int j = b as int
+      List<BigDecimal> xValues = ListConverter.toBigDecimals(data[j])
+      List<BigDecimal> yValues = ListConverter.toBigDecimals(data[i])
       Correlation.cor(xValues, yValues).round(2)
     }
     def corrMatrix = Matrix.builder().data(X: 0..<corr.size(), Heat: corr)
         .types([Number] * 2)
         .matrixName('Heatmap')
         .build()
-    //println "Correlation matrix: ${corrMatrix.content()}"
     addSeries(
         title,
         columnNames.reverse(),

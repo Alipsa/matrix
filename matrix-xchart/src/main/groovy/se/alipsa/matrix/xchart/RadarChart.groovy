@@ -1,5 +1,7 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
+
 import org.knowm.xchart.RadarChartBuilder
 import org.knowm.xchart.RadarSeries
 import org.knowm.xchart.style.RadarStyler
@@ -26,6 +28,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * radarChart.exportPng(file)
  * </code></pre>
  */
+@CompileStatic
 class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, RadarStyler, RadarSeries> {
 
   int numSeries = 0
@@ -53,7 +56,6 @@ class RadarChart extends AbstractChart<RadarChart, org.knowm.xchart.RadarChart, 
 
   RadarChart addSeries(String seriesNameColumn, Integer transparency = 150) {
     def labels = matrix.columnNames() - seriesNameColumn
-    //println "labels are $labels"
     xchart.radiiLabels = labels as String[]
     matrix.rows().each { Row row ->
       def label = row[seriesNameColumn].toString()

@@ -24,8 +24,19 @@ class HistogramChartTest {
    * </pre></code>
    */
   @Test
-  void testDesityHistogram() {
+  void testDensityHistogram() {
+    def airquality = Dataset.airquality()
+    def hc = HistogramChart.create(airquality, 800, 600)
+    hc.setTitle("Maximum daily temperature at La Guardia Airport")
+    hc.setXLabel("Temperature in degrees Fahrenheit")
 
+    // Use Scott's rule for optimal bin width
+    def bins = HistogramChart.scottsRule(airquality['Temp']).round() as int
+    hc.addSeries('Temp', bins)
+
+    File file = new File("build/testDensityHistogram.png")
+    hc.exportPng(file)
+    assertTrue(file.exists())
   }
 
   /**
@@ -52,7 +63,21 @@ class HistogramChartTest {
    */
   @Test
   void testFrequencyHistogramCustom() {
+    def airquality = Dataset.airquality()
+    def hc = HistogramChart.create(airquality, 800, 600)
 
+    // Use Freedman-Diaconis rule for bin width
+    def bins = (airquality['Temp'].max() as double - airquality['Temp'].min() as double) /
+               HistogramChart.freedmanDiaconisRule(airquality['Temp'])
+    hc.addSeries('Temp', bins.round() as int)
+
+    // Note: Y-axis range setting would require access to XChart's CategoryStyler
+    // which doesn't expose yAxisMin/yAxisMax for category charts
+    // The histogram is created with automatic scaling
+
+    File file = new File("build/testFrequencyHistogramCustom.png")
+    hc.exportPng(file)
+    assertTrue(file.exists())
   }
 
 

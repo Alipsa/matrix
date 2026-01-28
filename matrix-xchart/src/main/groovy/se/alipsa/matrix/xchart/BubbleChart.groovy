@@ -1,5 +1,6 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
 import org.knowm.xchart.BubbleChartBuilder
 import org.knowm.xchart.BubbleSeries
 import org.knowm.xchart.style.BubbleStyler
@@ -30,6 +31,7 @@ import java.awt.Color
  * File file = new File('build/testBubbleChart.png')
  * bc.exportPng(file)
  */
+@CompileStatic
 class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChart, BubbleStyler, BubbleSeries> {
 
   int numSeries = 0
@@ -56,11 +58,11 @@ class BubbleChart extends AbstractChart<BubbleChart, org.knowm.xchart.BubbleChar
   }
 
   BubbleChart addSeries(String xCol, String yCol,String valueCol, Integer transparency = 185) {
-    addSeries(matrix[xCol], matrix[yCol],matrix[valueCol], transparency)
+    addSeries(matrix.column(xCol), matrix.column(yCol),matrix.column(valueCol), transparency)
   }
 
   BubbleChart addSeries(String seriesName, String xCol, String yCol,String valueCol, Integer transparency = 185) {
-    addSeries(seriesName, matrix[xCol], matrix[yCol],matrix[valueCol], transparency)
+    addSeries(seriesName, matrix.column(xCol), matrix.column(yCol),matrix.column(valueCol), transparency)
   }
 
   BubbleChart addSeries(Column xCol, Column yCol,Column valueCol, Integer transparency = 185) {

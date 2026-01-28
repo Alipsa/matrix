@@ -1,5 +1,6 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
 import org.knowm.xchart.XYSeries
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
@@ -17,11 +18,12 @@ import se.alipsa.matrix.xchart.abstractions.AbstractXYChart
  * scatterPlot.exportPng(file)
  * </code></pre>
  */
+@CompileStatic
 class ScatterChart extends AbstractXYChart<ScatterChart> {
 
   private ScatterChart(Matrix matrix, Integer width = null, Integer height = null) {
     super(matrix, width, height, XYSeries.XYSeriesRenderStyle.Scatter)
-    style.seriesMarkers = MatrixTheme.MARKERS
+    style.seriesMarkers = MatrixTheme.MARKERS as org.knowm.xchart.style.markers.Marker[]
   }
 
   static ScatterChart create(String title, Matrix matrix, Integer width = null, Integer height = null) {

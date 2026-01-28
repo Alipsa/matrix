@@ -1,11 +1,14 @@
 package se.alipsa.matrix.xchart
 
+import groovy.transform.CompileStatic
+
 import org.knowm.xchart.HeatMapChart
 import org.knowm.xchart.HeatMapChartBuilder
 import org.knowm.xchart.HeatMapSeries
 import org.knowm.xchart.style.HeatMapStyler
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.xchart.abstractions.AbstractChart
 
 /**
@@ -23,6 +26,7 @@ import se.alipsa.matrix.xchart.abstractions.AbstractChart
  * hc.exportPng(file)
  * </code></pre>
  */
+@CompileStatic
 class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyler, HeatMapSeries> {
 
   final Number[] numberArray = new Number[]{}
@@ -52,15 +56,15 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
   }
 
   HeatmapChart addSeries(String seriesName, String colName, Integer columns = null) {
-    addSeries(seriesName, matrix[colName], columns)
+    addSeries(seriesName, matrix.column(colName), columns)
   }
 
   HeatmapChart addSeries(String seriesName, Column col, Integer columns = null) {
-    int nCols = columns ?: (Math.sqrt(col.size() as int))
+    int nCols = columns ?: col.size().sqrt() as int
     int nRows = (int) (col.size() / nCols)
     List<Number[]> heatData = []
     Number[] numberArray = new Number[]{}
-    def tmpRows = []
+    List<List> tmpRows = []
     int idx = 0
     for (int r = 0; r < nRows; r++) {
       def tmpRow = []
@@ -87,9 +91,9 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
     int nRows = columns[0].size()
     List<Number[]> heatData = []
 
-    def tmpRows = []
+    List<List> tmpRows = []
     for (int r = 0; r < nRows; r++) {
-      def tmpRow = []
+      List tmpRow = []
       for (int c = 0; c < nCols; c++) {
         heatData << [c, r, columns[c][r]].toArray(numberArray)
         tmpRow << columns[c][r]
@@ -104,10 +108,10 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
   HeatmapChart addAllToSeriesBy(String columnName) {
     int byIdx = matrix.columnIndex(columnName)
     List<Number[]> heatData = []
-    def tmpRows = []
+    List<List> tmpRows = []
     matrix.rows().eachWithIndex { row, r ->
-      def tmpRow = []
-      def valueRow = row - byIdx
+      List tmpRow = []
+      List valueRow = (row as Row).minusColumn(byIdx)
       valueRow.eachWithIndex { Object entry, int c ->
         heatData << [c, r, entry as Number].toArray(numberArray)
         tmpRow << entry
@@ -118,7 +122,7 @@ class HeatmapChart extends AbstractChart<HeatmapChart, HeatMapChart, HeatMapStyl
         .rows(tmpRows)
         .columnNames(matrix.columnNames() - columnName)
         .build()
-    def colNames = matrix.columnNames() - columnName
+    List<String> colNames = matrix.columnNames() - columnName
     xchart.addSeries(matrix.matrixName, colNames, matrix[columnName], heatData)
     this
   }

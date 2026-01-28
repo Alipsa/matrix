@@ -8,6 +8,7 @@ import org.knowm.xchart.style.Styler
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.Normalize
 
+import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class RadarChartTest {
@@ -69,10 +70,30 @@ class RadarChartTest {
         .build()
 
     def normalizedMatrix = Normalize.minMaxNorm(matrix, 3)
-    println normalizedMatrix.content()
+    //println normalizedMatrix.content()
     // Create a radar chart
     def rc = se.alipsa.matrix.xchart.RadarChart.create(normalizedMatrix)
-    // Add series using variable and value columns
+        // Add series using the "Player" column as seriesNameColumn
+        // This creates one series per row, using the value from "Player" column as the series name
         .addSeries("Player")
+
+    assertNotNull(rc)
+
+    // Verify that series were created with names from the "Player" column values
+    def allSeries = rc.getSeries()
+    assertNotNull(allSeries, "Series map should not be null")
+    assertTrue(allSeries.size() == 5, "Should have 5 series (one per row), but got ${allSeries.size()}")
+
+    // Verify each expected series exists (named by values in "Player" column)
+    assertNotNull(rc.getSeries("Player1"), "RadarChart Series 'Player1' is null")
+    assertNotNull(rc.getSeries("Player2"), "RadarChart Series 'Player2' is null")
+    assertNotNull(rc.getSeries("Player3"), "RadarChart Series 'Player3' is null")
+    assertNotNull(rc.getSeries("Player4"), "RadarChart Series 'Player4' is null")
+    assertNotNull(rc.getSeries("Player5"), "RadarChart Series 'Player5' is null")
+
+    // Verify the radii labels are set to the other columns (excluding "Player")
+    def expectedLabels = ["Speed", "Power", "Agility", "Endurance", "Accuracy"] as String[]
+    assertTrue(rc.getXChart().radiiLabels == expectedLabels,
+        "Radii labels should be all columns except 'Player', got: ${rc.getXChart().radiiLabels}")
   }
 }
