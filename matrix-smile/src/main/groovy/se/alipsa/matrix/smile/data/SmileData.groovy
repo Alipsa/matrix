@@ -79,7 +79,7 @@ class SmileData {
    * @return a list containing [trainMatrix, testMatrix]
    */
   static List<Matrix> trainTestSplit(Map<String, Object> params, Matrix matrix) {
-    double testRatio = params.containsKey('testRatio') ? ((Number) params.testRatio).doubleValue() : 0.2d
+    double testRatio = params.containsKey('testRatio') ? params.testRatio as double : 0.2d
     boolean shuffle = params.containsKey('shuffle') ? (params.shuffle as boolean) : true
 
     if (params.containsKey('seed')) {

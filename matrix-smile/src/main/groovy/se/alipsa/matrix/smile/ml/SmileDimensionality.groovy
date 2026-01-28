@@ -241,7 +241,7 @@ class SmileDimensionality {
       List<?> column = matrix.column(j)
       for (int i = 0; i < rows; i++) {
         Object val = column.get(i)
-        result[i][j] = val != null ? ((Number) val).doubleValue() : 0.0d
+        result[i][j] = val != null ? val as double : 0.0d
       }
     }
 

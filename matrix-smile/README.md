@@ -5,7 +5,7 @@ Integration between [Matrix](https://github.com/Alipsa/matrix) and [Smile](https
 ## Requirements
 
 - Java 21 or earlier (Smile 4.x is not compatible with Java 22+)
-- Groovy 4.x
+- Groovy 5.0+ (required for modern switch expression syntax)
 
 ## Installation
 

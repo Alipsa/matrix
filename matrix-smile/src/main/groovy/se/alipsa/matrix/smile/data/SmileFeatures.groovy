@@ -219,7 +219,7 @@ class SmileFeatures {
    */
   static Matrix sqrtTransform(Matrix matrix, List<String> columns) {
     return transformColumns(matrix, columns) { List<Double> values ->
-      values.collect { v -> v != null ? Math.sqrt(v) : null }
+      values.collect { v -> v != null ? v.sqrt() : null }
     }
   }
 
@@ -233,7 +233,7 @@ class SmileFeatures {
    */
   static Matrix powerTransform(Matrix matrix, List<String> columns, double power) {
     return transformColumns(matrix, columns) { List<Double> values ->
-      values.collect { v -> v != null ? Math.pow(v, power) : null }
+      values.collect { v -> v != null ? v ** power : null }
     }
   }
 
@@ -247,7 +247,7 @@ class SmileFeatures {
    */
   static Matrix binning(Matrix matrix, String column, int bins) {
     List<?> col = matrix.column(column)
-    List<Double> numericCol = col.collect { it != null ? ((Number) it).doubleValue() : null }
+    List<Double> numericCol = col.collect { it != null ? it as double : null }
 
     double min = numericCol.findAll { it != null }.min() as double
     double max = numericCol.findAll { it != null }.max() as double
@@ -277,7 +277,7 @@ class SmileFeatures {
     }
 
     List<?> col = matrix.column(column)
-    List<Double> numericCol = col.collect { it != null ? ((Number) it).doubleValue() : null }
+    List<Double> numericCol = col.collect { it != null ? it as double : null }
 
     List<?> binLabels = numericCol.collect { v ->
       if (v == null) return null
@@ -320,7 +320,7 @@ class SmileFeatures {
    */
   static Matrix fillnaMean(Matrix matrix, String column) {
     List<?> col = matrix.column(column)
-    List<Double> numericCol = col.findAll { it != null }.collect { ((Number) it).doubleValue() }
+    List<Double> numericCol = col.findAll { it != null }.collect { it as double }
     double mean = sumDoubles(numericCol) / numericCol.size()
     return fillna(matrix, column, mean)
   }
@@ -334,7 +334,7 @@ class SmileFeatures {
    */
   static Matrix fillnaMedian(Matrix matrix, String column) {
     List<?> col = matrix.column(column)
-    List<Double> sortedCol = col.findAll { it != null }.collect { ((Number) it).doubleValue() }.sort() as List<Double>
+    List<Double> sortedCol = col.findAll { it != null }.collect { it as double }.sort() as List<Double>
     double median
     int size = sortedCol.size()
     if (size % 2 == 0) {
@@ -457,7 +457,7 @@ class SmileFeatures {
       String colName = matrix.columnName(i)
       if (columns.contains(colName)) {
         List<?> col = matrix.column(i)
-        List<Double> numericCol = col.collect { it != null ? ((Number) it).doubleValue() : null }
+        List<Double> numericCol = col.collect { it != null ? it as double : null }
         List<?> transformed = transformer.call(numericCol)
         newData.put(colName, transformed)
         newTypes.add(Double)
@@ -575,7 +575,7 @@ class SmileFeatures {
 
       for (String col : targetColumns) {
         List<?> colData = matrix.column(col)
-        List<Double> numericCol = colData.findAll { it != null }.collect { ((Number) it).doubleValue() } as List<Double>
+        List<Double> numericCol = colData.findAll { it != null }.collect { it as double } as List<Double>
 
         if (numericCol.isEmpty()) {
           means[col] = 0.0d
@@ -597,19 +597,42 @@ class SmileFeatures {
 
     /**
      * Transform data using the fitted parameters.
+     * The scaler must be fitted (using fit()) before calling this method.
      *
      * @param matrix the data to transform
      * @return a new Matrix with standardized columns
+     * @throws IllegalStateException if the scaler has not been fitted
      */
     Matrix transform(Matrix matrix) {
       if (!fitted) {
         throw new IllegalStateException("Scaler must be fitted before transforming")
       }
 
-      return SmileFeatures.transformColumns(matrix, means.keySet().toList()) { List<Double> values ->
-        // This closure receives values for each column in turn, but we need column context
-        values // Will be handled column by column below
+      Map<String, List<?>> newData = new LinkedHashMap<>()
+      List<Class<?>> newTypes = []
+
+      for (int i = 0; i < matrix.columnCount(); i++) {
+        String colName = matrix.columnName(i)
+        if (means.containsKey(colName)) {
+          List<?> col = matrix.column(i)
+          double mean = means[colName]
+          double std = stds[colName]
+          List<Double> transformed = col.collect { v ->
+            v != null ? ((v as double) - mean) / std : null
+          }
+          newData.put(colName, transformed)
+          newTypes.add(Double)
+        } else {
+          newData.put(colName, matrix.column(i))
+          newTypes.add(matrix.type(i))
+        }
       }
+
+      return Matrix.builder()
+          .data(newData)
+          .types(newTypes)
+          .matrixName(matrix.matrixName)
+          .build()
     }
 
     /**
@@ -632,7 +655,7 @@ class SmileFeatures {
           double mean = means[colName]
           double std = stds[colName]
           List<Double> transformed = col.collect { v ->
-            v != null ? (((Number) v).doubleValue() - mean) / std : null
+            v != null ? ((v as double) - mean) / std : null
           }
           newData.put(colName, transformed)
           newTypes.add(Double)
@@ -685,7 +708,7 @@ class SmileFeatures {
 
       for (String col : targetColumns) {
         List<?> colData = matrix.column(col)
-        List<Double> numericCol = colData.findAll { it != null }.collect { ((Number) it).doubleValue() }
+        List<Double> numericCol = colData.findAll { it != null }.collect { it as double }
 
         if (numericCol.isEmpty()) {
           mins[col] = 0.0d
@@ -725,7 +748,7 @@ class SmileFeatures {
           List<Double> transformed = col.collect { v ->
             if (v == null) return null
             if (range == 0.0d) return 0.0d
-            (((Number) v).doubleValue() - min) / range
+            ((v as double) - min) / range
           }
           newData.put(colName, transformed)
           newTypes.add(Double)

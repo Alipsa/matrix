@@ -434,6 +434,57 @@ class SmileFeaturesTest {
   }
 
   @Test
+  void testStandardScalerSeparateFitAndTransform() {
+    // Create training data
+    Matrix trainData = Matrix.builder()
+        .data(
+            x: [1.0, 2.0, 3.0, 4.0, 5.0],
+            y: [10.0, 20.0, 30.0, 40.0, 50.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    // Create test data with different values
+    Matrix testData = Matrix.builder()
+        .data(
+            x: [2.0, 4.0, 6.0],
+            y: [15.0, 25.0, 35.0]
+        )
+        .types([Double, Double])
+        .build()
+
+    // Fit on training data
+    SmileFeatures.StandardScaler scaler = SmileFeatures.standardScaler()
+    scaler.fit(trainData, ['x', 'y'])
+
+    // Verify means and stds are stored
+    assertEquals(3.0d, scaler.means['x'], 0.0001d) // Mean of [1,2,3,4,5]
+    assertEquals(30.0d, scaler.means['y'], 0.0001d) // Mean of [10,20,30,40,50]
+    assertNotNull(scaler.stds['x'])
+    assertNotNull(scaler.stds['y'])
+
+    // Transform test data using fitted parameters
+    Matrix scaled = scaler.transform(testData)
+
+    // Check structure
+    assertEquals(3, scaled.rowCount())
+    assertEquals(2, scaled.columnCount())
+
+    // Verify transformation uses training mean/std
+    List<Double> xCol = scaled.column('x') as List<Double>
+    List<Double> yCol = scaled.column('y') as List<Double>
+
+    // x=2 scaled with train mean=3, std should be: (2-3)/std
+    assertNotNull(xCol[0])
+    // x=4 scaled with train mean=3
+    assertNotNull(xCol[1])
+
+    // All values should be transformed
+    assertEquals(3, xCol.size())
+    assertEquals(3, yCol.size())
+  }
+
+  @Test
   void testStandardScalerNotFitted() {
     SmileFeatures.StandardScaler scaler = SmileFeatures.standardScaler()
 

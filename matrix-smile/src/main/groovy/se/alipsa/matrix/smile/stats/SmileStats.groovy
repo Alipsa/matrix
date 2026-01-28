@@ -533,14 +533,9 @@ class SmileStats {
       for (int j = i + 1; j < n; j++) {
         CorTest result
         switch (method.toLowerCase()) {
-          case "spearman":
-            result = CorTest.spearman(data[i], data[j])
-            break
-          case "kendall":
-            result = CorTest.kendall(data[i], data[j])
-            break
-          default:
-            result = CorTest.pearson(data[i], data[j])
+          case "spearman" -> result = CorTest.spearman(data[i], data[j])
+          case "kendall" -> result = CorTest.kendall(data[i], data[j])
+          default -> result = CorTest.pearson(data[i], data[j])
         }
         corMatrix[i][j] = result.cor()
         corMatrix[j][i] = result.cor()
@@ -577,14 +572,9 @@ class SmileStats {
       for (int j = i + 1; j < n; j++) {
         CorTest result
         switch (method.toLowerCase()) {
-          case "spearman":
-            result = CorTest.spearman(data[i], data[j])
-            break
-          case "kendall":
-            result = CorTest.kendall(data[i], data[j])
-            break
-          default:
-            result = CorTest.pearson(data[i], data[j])
+          case "spearman" -> result = CorTest.spearman(data[i], data[j])
+          case "kendall" -> result = CorTest.kendall(data[i], data[j])
+          default -> result = CorTest.pearson(data[i], data[j])
         }
         pMatrix[i][j] = result.pvalue()
         pMatrix[j][i] = result.pvalue()
@@ -623,14 +613,9 @@ class SmileStats {
       for (int j = i + 1; j < n; j++) {
         CorTest result
         switch (method.toLowerCase()) {
-          case "spearman":
-            result = CorTest.spearman(data[i], data[j])
-            break
-          case "kendall":
-            result = CorTest.kendall(data[i], data[j])
-            break
-          default:
-            result = CorTest.pearson(data[i], data[j])
+          case "spearman" -> result = CorTest.spearman(data[i], data[j])
+          case "kendall" -> result = CorTest.kendall(data[i], data[j])
+          default -> result = CorTest.pearson(data[i], data[j])
         }
         corMatrix[i][j] = result.cor()
         corMatrix[j][i] = result.cor()
@@ -739,7 +724,7 @@ class SmileStats {
     int idx = 0
     for (Object val : col) {
       if (val != null) {
-        result[idx++] = ((Number) val).doubleValue()
+        result[idx++] = val as double
       }
     }
     // Trim to actual size if there were nulls
