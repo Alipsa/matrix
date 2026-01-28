@@ -111,7 +111,7 @@ class EdgeCaseTest {
     // Generate 10,000 data points
     int numPoints = 10000
     List<Double> xValues = (0..<numPoints).collect { it as Double }
-    List<Double> yValues = (0..<numPoints).collect { Math.sin(it * 0.01) }
+    List<Double> yValues = (0..<numPoints).collect { (it * 0.01).sin() as Double }
 
     Matrix matrix = Matrix.builder()
         .data(

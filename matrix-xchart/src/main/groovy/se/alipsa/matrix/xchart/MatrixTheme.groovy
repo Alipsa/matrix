@@ -33,7 +33,7 @@ class MatrixTheme extends AbstractBaseTheme {
 
   @Override
   Marker[] getSeriesMarkers() {
-    return [SeriesMarkers.NONE]
+    return [SeriesMarkers.NONE] as Marker[]
   }
 
   @Override
