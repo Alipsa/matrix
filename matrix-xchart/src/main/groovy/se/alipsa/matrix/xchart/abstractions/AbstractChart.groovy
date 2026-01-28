@@ -36,7 +36,7 @@ import java.lang.reflect.InvocationTargetException
  * @param <S> the XChart series type for this chart
  */
 @CompileStatic
-abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> implements MatrixXChart {
+abstract class AbstractChart<T extends AbstractChart, C extends Chart, ST extends Styler, S extends Series> implements MatrixXChart<C> {
 
   protected C xchart
   protected Matrix matrix
