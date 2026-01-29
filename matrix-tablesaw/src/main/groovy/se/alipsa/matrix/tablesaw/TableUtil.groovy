@@ -283,6 +283,7 @@ class TableUtil {
    * @param <T> the type parameter
    * @return a column of the specified type, or null if type is not supported
    */
+  @SuppressWarnings("unchecked")
   static <T> Column<T> createColumn(T type, String name, List<?> values) {
     if (type == ColumnType.STRING) {
       var col = StringColumn.create(name)
