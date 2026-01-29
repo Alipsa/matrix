@@ -524,11 +524,13 @@ class MatrixBuilder {
     this
   }
 
-  MatrixBuilder types(Class... dataTypes) {
+  @SafeVarargs
+  final MatrixBuilder types(Class... dataTypes) {
     types(dataTypes as List<Class>)
   }
 
-  MatrixBuilder types(List<Class>... types) {
+  @SafeVarargs
+  final MatrixBuilder types(List<Class>... types) {
     if (types.length > 0) {
       this.dataTypes = types[0]
     }

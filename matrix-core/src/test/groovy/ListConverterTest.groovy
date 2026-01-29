@@ -62,7 +62,13 @@ class ListConverterTest {
         YearMonth.of(2023, 4),
         YearMonth.of(2023, 5)
     ]
-    println ListConverter.toDates(yearMonths)
+    List<Date> dt = ListConverter.toDates(yearMonths)
+    assertEquals(yearMonths.size(), dt.size())
+    Calendar calendar = Calendar.getInstance()
+    for (int i = 0; i < yearMonths.size(); i++) {
+      calendar.setTime(dt[i])
+      assertEquals(yearMonths[i], YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1))
+    }
   }
 
   @Test

@@ -300,7 +300,7 @@ class MatrixBuilderTest {
   }
 
   @Test
-  void testGreationFromGinq() {
+  void testGreateFromGinq() {
     Matrix matrix = Matrix.builder()
         .data([
             id: [1,2,3],
@@ -447,8 +447,8 @@ class MatrixBuilderTest {
             startDate: ["2012-01-01", "2013-09-23", "2014-11-15"]
         ])
         .build()
-    println "table content:"
-    println table.content()
+    //println "table content:"
+    //println table.content()
     def ssnCustomerId = Matrix.builder()
         .matrixName('eln')
         .data([
@@ -456,20 +456,20 @@ class MatrixBuilderTest {
             lei  : ["111", "222", "333", '444', '555']
         ])
         .build()
-    println "ssnCustomerId content:"
-    println ssnCustomerId.content()
+    //println "ssnCustomerId content:"
+    //println ssnCustomerId.content()
     def result = GQ {
       from t in table
       leftjoin mcid in ssnCustomerId on t.mainSsn == mcid.lei
       leftjoin cocid in ssnCustomerId on t.coSsn == cocid.lei
       select t as Map + [mainCustomerId: mcid.customerId, coCustomerId: cocid?.customerId]
     }
-    println "ginq result content:"
-    println result
+    //println "ginq result content:"
+    //println result
     def resultList = result.toList()
     Matrix m = Matrix.builder().mapList(resultList).build()
-    println "result matrix content:"
-    println m.content()
+    //println "result matrix content:"
+    //println m.content()
     assertTrue(m.columnNames().contains('mainCustomerId'))
     assertTrue(m.columnNames().contains('coCustomerId'))
     assertEquals(3, m.rowCount())

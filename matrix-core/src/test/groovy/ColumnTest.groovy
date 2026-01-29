@@ -94,7 +94,6 @@ class ColumnTest {
   @Test
   void testMultiplyNumber() {
     Column c1 = new Column([1, 2, 3, 4])
-    assert c1.multiply(2) == [2, 4, 6, 8]
     assert c1 * 2 == [2, 4, 6, 8]
 
     Column c2 = new Column([1, null, 3, 4])
@@ -123,7 +122,6 @@ class ColumnTest {
   @Test
   void testDivNumber() {
     Column c1 = new Column([1, 2, 3, 4])
-    assert c1.div(2) == [0.5, 1, 1.5, 2]
     assert c1 / 2 ==  [0.5, 1, 1.5, 2]
 
     Column c2 = new Column([1, null, 3, 4])
@@ -152,7 +150,6 @@ class ColumnTest {
   @Test
   void testPowerNumber() {
     Column c1 = new Column([1, 2, 3, 4])
-    assert c1.power(2) == [1, 4, 9, 16]
     assert c1 ** 2 == [1, 4, 9, 16]
 
     Column c2 = new Column([1, null, 3, 4])
@@ -173,7 +170,7 @@ class ColumnTest {
     Column c = [1,2,3] as Column
     assert [1,2,3] == c
 
-    LinkedList<Number> l = new LinkedList<>()
+    List<Number> l = []
     l.add(1)
     l.add(2)
     l.add(1)

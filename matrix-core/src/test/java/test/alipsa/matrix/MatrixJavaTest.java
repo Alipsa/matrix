@@ -170,7 +170,7 @@ class MatrixJavaTest {
     Matrix table3 = empData.clone();
     table3.putAt("yearMonth", YearMonth.class, 0, toYearMonths(table3.column("start_date")));
     assertEquals(empData.columnCount() + 1, table3.columnCount());
-    assertEquals("yearMonth", table3.columnNames().get(0));
+    assertEquals("yearMonth", table3.columnNames().getFirst());
     assertEquals(YearMonth.class, table3.type("yearMonth"));
     assertEquals(YearMonth.of(2012, 1), table3.getAt(0, 0));
     assertEquals(YearMonth.of(2015, 3), table3.getAt(4, 0));
@@ -179,7 +179,7 @@ class MatrixJavaTest {
     Matrix table4 = empData.clone();
     table4.setProperty("yearMonth", toYearMonths(table4.column("start_date")));
     assertEquals(empData.columnCount() + 1, table3.columnCount());
-    assertEquals("yearMonth", table3.columnNames().get(0));
+    assertEquals("yearMonth", table3.columnNames().getFirst());
     assertEquals(YearMonth.class, table3.type("yearMonth"));
     assertEquals(YearMonth.of(2012, 1), table3.getAt(0, 0));
     assertEquals(YearMonth.of(2015, 3), table3.getAt(4, 0));
@@ -378,7 +378,12 @@ class MatrixJavaTest {
         .data(data)
         .types(c(int.class, String.class, String.class))
         .build();
-    List<Integer> idx = (List<Integer>) table.getAt("place").stream().filter(it -> (Integer) it > 1).collect(Collectors.toList());
+    @SuppressWarnings("unchecked")
+    List<Object> placeColumn = (List<Object>) table.getAt("place");
+    List<Integer> idx = placeColumn.stream()
+        .filter(it -> (Integer) it > 1)
+        .map(it -> (Integer) it)
+        .collect(Collectors.toList());
     var rows = table.rows(idx);
     assertEquals(2, rows.size());
 
@@ -581,7 +586,7 @@ class MatrixJavaTest {
       var date = it.getAt(2, LocalDate.class);
       return date.isAfter(LocalDate.of(2022, 1, 1));
     }), new ValueClosure<Integer, Integer>(it -> it * 2));
-    System.out.println(bar.content());
+    //System.out.println(bar.content());
     assertEquals(4, bar.getAt(1, 0, Integer.class));
     assertEquals(6, bar.getAt(2, 0, Integer.class));
     assertEquals(LocalDate.class, bar.type(2), "start column type");
@@ -778,8 +783,8 @@ class MatrixJavaTest {
         .types(Integer.class, String.class, Number.class, LocalDate.class)
         .build();
 
-    empData.renameColumn("emp_id", "id");
-    empData.renameColumn(1, "name");
+    empData.rename("emp_id", "id");
+    empData.rename(1, "name");
 
     assertEquals("id", empData.columnNames().get(0));
     assertEquals("name", empData.columnNames().get(1));

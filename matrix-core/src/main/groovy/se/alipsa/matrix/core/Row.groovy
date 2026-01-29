@@ -77,7 +77,7 @@ class Row implements GroovyObject, List<Object> {
     }
 
     @Override
-    Iterator iterator() {
+    Iterator<Object> iterator() {
         return Collections.unmodifiableList(content).iterator()
     }
 
@@ -87,7 +87,8 @@ class Row implements GroovyObject, List<Object> {
     }
 
     @Override
-    Object[] toArray(Object[] a) {
+    @SuppressWarnings("unchecked")
+    <T> T[] toArray(T[] a) {
         return content.toArray(a)
     }
 
@@ -249,12 +250,12 @@ class Row implements GroovyObject, List<Object> {
     }
 
     @Override
-    ListIterator listIterator() {
+    ListIterator<Object> listIterator() {
         return content.listIterator()
     }
 
     @Override
-    ListIterator listIterator(int index) {
+    ListIterator<Object> listIterator(int index) {
         return content.listIterator(index)
     }
 
@@ -268,7 +269,7 @@ class Row implements GroovyObject, List<Object> {
      * @return a list with the columns values specified in the range
      */
     @Override
-    List subList(int fromIndex, int toIndex) {
+    List<Object> subList(int fromIndex, int toIndex) {
         content.subList(fromIndex, toIndex)
     }
 
@@ -280,7 +281,7 @@ class Row implements GroovyObject, List<Object> {
      * @param range (inclusive) of all the indexes to include
      * @return a new list with the values for the indices
      */
-    List subList(IntRange range) {
+    List<Object> subList(IntRange range) {
         content[range]
     }
 
@@ -292,7 +293,7 @@ class Row implements GroovyObject, List<Object> {
      * @param indices a collection (inclusive) of all the indexes to include
      * @return a new list with the values for the indices
      */
-    List subList(Collection indices) {
+    List<Object> subList(Collection indices) {
         def vals = []
         indices.each {
             vals << get(it as int)
@@ -308,7 +309,7 @@ class Row implements GroovyObject, List<Object> {
      * @param colNames an array of column names to include
      * @return a new list with the values for the colNames
      */
-    List subList(String... colNames) {
+    List<Object> subList(String... colNames) {
         def vals = []
         colNames.each {
             vals << getAt(it)
@@ -441,11 +442,11 @@ class Row implements GroovyObject, List<Object> {
         return String.valueOf(content)
     }
 
-    List minusColumn(String columnName) {
+    List<Object> minusColumn(String columnName) {
         minusColumn(columnNames.indexOf(columnName))
     }
 
-    List minusColumn(int index) {
+    List<Object> minusColumn(int index) {
         def result = new ArrayList(this)
         result.remove(index)
         result
