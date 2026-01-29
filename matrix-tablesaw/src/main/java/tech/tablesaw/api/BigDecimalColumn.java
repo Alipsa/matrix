@@ -23,6 +23,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.DoubleAccumulator;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -575,25 +578,21 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return result;
   }
 
-  /** {@inheritDoc}
-   * TODO: uses double which is imprecise
-   *   Something like this should be more accurate but size will vary
-   *   BigDecimal value = get(rowNumber);
-   *   return value == null ? null : value.unscaledValue().toByteArray();
-   *   or, alternatively
-   *   BigDecimal value = get(rowNumber);
-   *   return value == null ? null : value.toString().getBytes();
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Returns a byte array representation of the BigDecimal value at the specified row.
+   * The byte array is generated from the string representation of the BigDecimal,
+   * allowing for variable-length encoding that preserves precision.
+   * </p>
+   *
+   * @param rowNumber the row number
+   * @return byte array representation of the value, or null if the value is null
    */
   @Override
   public byte[] asBytes(int rowNumber) {
     BigDecimal val = getBigDecimal(rowNumber);
     return val == null ? null : val.toString().getBytes();
-    /* TODO: not sure how this is supposed to work. A fixed sice byte array will either need to be huge or values will be lost
-    return val == null ? null : ByteBuffer.allocate(BigDecimalColumnType.instance().byteSize())
-        .put(val.toString().getBytes())
-        .array();
-
-     */
   }
 
   /** {@inheritDoc} */
@@ -824,22 +823,53 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   }
 
   /**
-   * TODO: maybe handle AtomicLong, AtomicInteger, DoubleAccumulator etc. since they are also subclasses of Number
+   * Converts a Number to BigDecimal with appropriate precision handling.
+   * <p>
+   * Handles various Number subtypes including:
+   * </p>
+   * <ul>
+   *   <li>BigDecimal - returned as-is (no conversion needed)</li>
+   *   <li>Integer, Long, Short, Byte - converted via longValue() for precision</li>
+   *   <li>AtomicInteger, AtomicLong - converted via their int/long values</li>
+   *   <li>BigInteger - converted directly to BigDecimal</li>
+   *   <li>Float, Double, DoubleAccumulator - converted via doubleValue()</li>
+   *   <li>Other Number types - converted via doubleValue()</li>
+   * </ul>
    *
    * @param number the number to convert
-   * @return as BigDecimal corresponding to the number
+   * @return a BigDecimal corresponding to the number, or null if the input is null
    */
   protected static BigDecimal toBigDecimal(Number number) {
     if (number == null) return null;
+
+    // If already a BigDecimal, return it directly without conversion
+    if (number instanceof BigDecimal) {
+      return (BigDecimal) number;
+    }
+
+    // Handle integer types using longValue() for precision
     if (number instanceof Integer
         || number instanceof Long
         || number instanceof Short
         || number instanceof Byte) {
       return BigDecimal.valueOf(number.longValue());
     }
+
+    // Handle atomic integer types
+    if (number instanceof AtomicInteger) {
+      return BigDecimal.valueOf(((AtomicInteger) number).get());
+    }
+    if (number instanceof AtomicLong) {
+      return BigDecimal.valueOf(((AtomicLong) number).get());
+    }
+
+    // Handle BigInteger directly
     if (number instanceof BigInteger) {
       return new BigDecimal((BigInteger) number);
     }
+
+    // Handle Float, Double, DoubleAccumulator and other Number types via doubleValue()
+    // Note: This includes DoubleAdder and custom Number implementations
     return BigDecimal.valueOf(number.doubleValue());
   }
 

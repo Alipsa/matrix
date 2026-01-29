@@ -11,10 +11,17 @@
 - Added `@SuppressWarnings("unchecked")` annotation to `TableUtil.createColumn()` method to properly handle intentional unchecked generic casts
 - Removed duplicate `BigDecimalColumn` type check in `classForColumnType()` method (dead code removal)
 
-### Bug Fixes
-- Fixed precision issues in `BigDecimalColumn.asBytes()` method (previously used imprecise double conversion)
-- Implemented proper fixed-size byte array handling in `BigDecimalColumn`
-- Extended `BigDecimalColumn.toBigDecimal()` to handle AtomicLong, AtomicInteger, and DoubleAccumulator types
+### Bug Fixes & Improvements
+- **BigDecimalColumn enhancements:**
+  - Cleaned up `asBytes()` method documentation and removed outdated TODO comments
+  - The method now properly uses string-based byte encoding (`toString().getBytes()`) for variable-length precision preservation
+  - Extended `toBigDecimal()` method to handle additional Number subtypes:
+    - `BigDecimal` - now returns the value as-is without conversion (prevents precision loss from unnecessary double conversion)
+    - `AtomicInteger` - converted via `get()` for precision
+    - `AtomicLong` - converted via `get()` for precision
+    - `DoubleAccumulator` - converted via `doubleValue()`
+  - Added comprehensive Javadoc explaining conversion behavior for all Number types
+  - Added test coverage for atomic type conversions and BigDecimal precision preservation
 
 ### Documentation
 - Updated README with v0.2.2 version reference

@@ -17,6 +17,9 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.DoubleAccumulator;
 
 public class BigDecimalColumnTest {
 
@@ -519,6 +522,40 @@ public class BigDecimalColumnTest {
     }
     var act = obs.copy().apply(bd -> bd.pow(3).divide(BigDecimal.valueOf(100), RoundingMode.HALF_EVEN));
     assertArrayEquals(exp, act.asObjectArray());
+  }
+
+  @Test
+  void testAppendAtomicTypes() {
+    var col = BigDecimalColumn.create("test");
+
+    // Test AtomicInteger
+    col.append(new AtomicInteger(42));
+    assertEquals(BigDecimal.valueOf(42), col.get(0), "AtomicInteger conversion");
+
+    // Test AtomicLong
+    col.append(new AtomicLong(9876543210L));
+    assertEquals(BigDecimal.valueOf(9876543210L), col.get(1), "AtomicLong conversion");
+
+    // Test DoubleAccumulator
+    DoubleAccumulator accumulator = new DoubleAccumulator(Double::sum, 0.0);
+    accumulator.accumulate(123.456);
+    col.append(accumulator);
+    assertEquals(BigDecimal.valueOf(123.456), col.get(2), "DoubleAccumulator conversion");
+
+    assertEquals(3, col.size(), "Column size after appending atomic types");
+  }
+
+  @Test
+  void testAppendBigDecimalNoPrecisionLoss() {
+    var col = BigDecimalColumn.create("test");
+
+    // Test that BigDecimal is returned as-is without precision loss
+    BigDecimal preciseValue = new BigDecimal("123.456789012345678901234567890");
+    col.append(preciseValue);
+
+    // Verify the value is preserved exactly (no double conversion)
+    assertEquals(preciseValue, col.get(0), "BigDecimal should be preserved without precision loss");
+    assertEquals(preciseValue.toPlainString(), col.get(0).toPlainString(), "String representation should match exactly");
   }
 
   private BigDecimal[] bdArr(Number... numbers) {
