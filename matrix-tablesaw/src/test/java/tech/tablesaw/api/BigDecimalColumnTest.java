@@ -15,6 +15,7 @@ import tech.tablesaw.columns.AbstractColumnParser;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -319,9 +320,9 @@ public class BigDecimalColumnTest {
   public void testAsBytes() {
     var exp = values[4].toString();
     assertArrayEquals(
-        exp.getBytes(),
+        exp.getBytes(StandardCharsets.UTF_8),
         obs.asBytes(4),
-        "as bytes: " + exp + " vs " + new String(obs.asBytes(4))
+        "as bytes: " + exp + " vs " + new String(obs.asBytes(4), StandardCharsets.UTF_8)
     );
   }
 
@@ -549,9 +550,12 @@ public class BigDecimalColumnTest {
   void testAppendBigDecimalNoPrecisionLoss() {
     var col = BigDecimalColumn.create("test");
 
-    // Test that BigDecimal is returned as-is without precision loss
+    // Test that BigDecimal is returned as-is without precision loss via toBigDecimal(Number)
     BigDecimal preciseValue = new BigDecimal("123.456789012345678901234567890");
-    col.append(preciseValue);
+
+    // Cast to Number to force toBigDecimal(Number) path instead of direct append(BigDecimal)
+    Number numberValue = preciseValue;
+    col.append(numberValue);
 
     // Verify the value is preserved exactly (no double conversion)
     assertEquals(preciseValue, col.get(0), "BigDecimal should be preserved without precision loss");

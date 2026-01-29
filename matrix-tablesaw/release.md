@@ -13,15 +13,16 @@
 
 ### Bug Fixes & Improvements
 - **BigDecimalColumn enhancements:**
+  - Fixed `asBytes()` method to use UTF-8 encoding explicitly instead of platform default charset, ensuring consistent byte representation across all platforms
   - Cleaned up `asBytes()` method documentation and removed outdated TODO comments
-  - The method now properly uses string-based byte encoding (`toString().getBytes()`) for variable-length precision preservation
   - Extended `toBigDecimal()` method to handle additional Number subtypes:
     - `BigDecimal` - now returns the value as-is without conversion (prevents precision loss from unnecessary double conversion)
     - `AtomicInteger` - converted via `get()` for precision
     - `AtomicLong` - converted via `get()` for precision
     - `DoubleAccumulator` - converted via `doubleValue()`
   - Added comprehensive Javadoc explaining conversion behavior for all Number types
-  - Added test coverage for atomic type conversions and BigDecimal precision preservation
+  - Improved test coverage to properly exercise toBigDecimal(Number) conversion path for BigDecimal inputs
+  - Updated test assertions to use UTF-8 encoding for deterministic byte array comparisons
 
 ### Documentation
 - Updated README with v0.2.2 version reference

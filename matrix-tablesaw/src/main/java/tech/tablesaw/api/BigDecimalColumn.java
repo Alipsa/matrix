@@ -22,6 +22,7 @@ import tech.tablesaw.selection.Selection;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -582,17 +583,18 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * {@inheritDoc}
    * <p>
    * Returns a byte array representation of the BigDecimal value at the specified row.
-   * The byte array is generated from the string representation of the BigDecimal,
-   * allowing for variable-length encoding that preserves precision.
+   * The byte array is generated from the UTF-8 encoded string representation of the BigDecimal,
+   * allowing for variable-length encoding that preserves precision. UTF-8 encoding ensures
+   * consistent byte representation across different platforms.
    * </p>
    *
    * @param rowNumber the row number
-   * @return byte array representation of the value, or null if the value is null
+   * @return UTF-8 encoded byte array representation of the value, or null if the value is null
    */
   @Override
   public byte[] asBytes(int rowNumber) {
     BigDecimal val = getBigDecimal(rowNumber);
-    return val == null ? null : val.toString().getBytes();
+    return val == null ? null : val.toString().getBytes(StandardCharsets.UTF_8);
   }
 
   /** {@inheritDoc} */
