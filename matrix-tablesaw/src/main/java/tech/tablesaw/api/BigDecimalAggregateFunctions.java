@@ -4,6 +4,7 @@ import static se.alipsa.matrix.core.ValueConverter.asBigDecimal;
 import static se.alipsa.matrix.core.ValueConverter.asDouble;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.List;
 import se.alipsa.matrix.core.Stat;
@@ -50,7 +51,7 @@ public class BigDecimalAggregateFunctions {
         @Override
         public BigDecimal summarize(BigDecimalColumn column) {
           List<Double> nums = toDoubleList(column);
-          return asBigDecimal(Math.sqrt(Stat.variance(nums)) / Stat.mean(nums).doubleValue());
+          return Stat.variance(nums).sqrt(MathContext.DECIMAL64).divide(Stat.mean(nums), MathContext.DECIMAL64);
         }
       };
 

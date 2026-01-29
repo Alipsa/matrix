@@ -197,8 +197,8 @@ class ColumnTest {
     assert 4 == c.max()
     assert 1 == c.min()
     assert 2 == c.median()
-    assert 2.285714286 == c.mean()
-    assert 1.1126972805283737 == c.sd()
+    assert 2.2857142857142857 == c.mean()
+    assert 1.112697280528374 == c.sd()
     assert Stat.variance(c) == c.variance()
   }
 

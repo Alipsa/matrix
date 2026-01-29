@@ -3,6 +3,8 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.util.Logger
+
+import java.math.MathContext
 import java.math.RoundingMode
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -84,7 +86,7 @@ class Stat {
         }
         List<Number> numbers = objects as List<Number>
         def quarts = quartiles(numbers)
-        [
+        Map<String, Object> result = [
             'Type': type.getSimpleName(),
             'Min': min(numbers),
             '1st Q': quarts[0],
@@ -92,7 +94,8 @@ class Stat {
             'Mean': mean(numbers),
             '3rd Q': quarts[1],
             'Max': max(numbers)
-        ]
+        ] as Map<String, Object>
+        result
     }
 
     static Map<String, Object> addCategorySummary(List<Object> objects, Class<?> type) {
@@ -304,29 +307,35 @@ class Stat {
      * @param columnName the name(s) of the column(s) containing the values
      * @return a Map<String, Matrix> where the key is a compound of the grouped values separated by underscore.
      */
-    @CompileDynamic
     static Map<String, Matrix> groupBy(Matrix table, String... columnNames) {
         if (columnNames.length == 0) {
             throw new IllegalArgumentException("At least one column name must be specified to groupBy")
         }
 
-        Map<String, Matrix> result = [:]
+        Map<String, Matrix> result = new LinkedHashMap<>()
+        groupByRecursive(table, columnNames, 0, "", result)
+        return result
+    }
 
-        def recursiveGroup
-        recursiveGroup = { Matrix currentTable, int index, String prefix ->
-            Map<?, Matrix> splitMap = currentTable.split(columnNames[index])
-            splitMap.each { entry ->
-                String key = prefix ? "${prefix}_${entry.key}" : "${entry.key}"
-                if (index == columnNames.length - 1) {
-                    result[key] = entry.value
-                } else {
-                    recursiveGroup(entry.value, index + 1, key)
-                }
+    /**
+     * Recursive helper for groupBy that processes one column level at a time.
+     */
+    private static void groupByRecursive(
+        Matrix currentTable,
+        String[] columnNames,
+        int index,
+        String prefix,
+        Map<String, Matrix> result
+    ) {
+        Map<?, Matrix> splitMap = currentTable.split(columnNames[index])
+        for (Map.Entry<?, Matrix> entry : splitMap.entrySet()) {
+            String key = prefix ? "${prefix}_${entry.key}" : "${entry.key}"
+            if (index == columnNames.length - 1) {
+                result.put(key, entry.value)
+            } else {
+                groupByRecursive(entry.value, columnNames, index + 1, key, result)
             }
         }
-
-        recursiveGroup(table, 0, "")
-        return result
     }
 
     static Map<String, Matrix> groupBy(Matrix table, List<String> columnNames) {
@@ -430,23 +439,26 @@ class Stat {
      * @param colNums either a List of numbers or an IntRange to include
      * @return a list (a column) with the mean of the rows for the columns specified
      */
-    @CompileDynamic
     static List<BigDecimal> meanRows(Matrix table, List<Integer> columns) {
         List<BigDecimal> means = []
         table.each { row ->
-            means << mean(row[columns])
+            means << mean(row[columns] as List<?>)
         }
         means
     }
-
-    @CompileDynamic
+    /**
+     *
+     * @param m the matrix containing the data
+     * @param colNames the names of the columns to include, if omitted, all columns will be included
+     * @return a list of the row sums
+     */
     static List<BigDecimal> meanRows(Matrix m, String... colNames) {
         List<BigDecimal> means = []
         if (colNames.length == 0) {
             colNames = m.columnNames()
         }
         m.each { row ->
-            means << mean(row[colNames])
+            means << mean(row.subList(colNames))
         }
         means
     }
@@ -464,15 +476,15 @@ class Stat {
         means
     }
 
-    static BigDecimal mean(List<?> list, int scale = 9) {
+    static BigDecimal mean(List<?> list, int scale = 16) {
         if (list == null || list.isEmpty()) {
             return null
         }
-        BigDecimal sum = BigDecimal.ZERO //.setScale(scale, RoundingMode.HALF_UP)
+        BigDecimal sum = BigDecimal.ZERO.setScale(scale, RoundingMode.HALF_UP)
         int nVals = 0
         for (value in list) {
             if (value != null && value instanceof Number) {
-                sum += (value as BigDecimal) //.setScale(scale, RoundingMode.HALF_UP)
+                sum += (value as BigDecimal).setScale(scale, RoundingMode.HALF_UP)
                 nVals++
             }
         }
@@ -486,34 +498,28 @@ class Stat {
         return mean(table.column(colName))
     }
 
-    @CompileDynamic
-    static List<BigDecimal> medians(List<List<?>> matrix, Integer colNum) {
-        return medians(matrix, [colNum])
+    static List<BigDecimal> medians(List<List<?>> matrix, Integer... colNum) {
+        return medians(matrix, colNum as List<Integer>)
     }
 
-    @CompileDynamic
-    static List<BigDecimal> medians(Matrix table, String colName) {
-        return medians(table.column(colName) as List<List<?>>, [table.columnNames().indexOf(colName)])
+    static List<BigDecimal> medians(Matrix table, String... colName) {
+        return medians(table, colName as List<String>)
     }
 
-    @CompileDynamic
     static List<BigDecimal> medians(List<List<?>> matrix, List<Integer> colNums) {
-        Map<String, List<? extends Number>> valueList = [:].withDefault{key -> return []}
-        def value
-        for (row in matrix) {
-            for (colNum in colNums) {
-                value = row[colNum]
+        Map<String, List<Number>> valueList = new LinkedHashMap<String, List<Number>>().withDefault { key -> new ArrayList<Number>() }
+        for (List<?> row in matrix) {
+            for (Integer colNum in colNums) {
+                Object value = row[colNum]
                 if (value != null && value instanceof Number) {
-                    valueList[String.valueOf(colNum)].add(value)
+                    valueList[String.valueOf(colNum)].add((Number) value)
                 }
             }
         }
-        def medians = new ArrayList<BigDecimal>(colNums.size())
-        def m
-        def list
-        for (colNum in colNums) {
-            list = valueList[String.valueOf(colNum)].sort()
-            m = median(list as List<? extends Number>)
+        List<BigDecimal> medians = new ArrayList<BigDecimal>(colNums.size())
+        for (Integer colNum in colNums) {
+            List<Number> list = (List<Number>) valueList[String.valueOf(colNum)].sort()
+            BigDecimal m = median(list)
             medians.add(m)
         }
 
@@ -539,11 +545,10 @@ class Stat {
      * @param colNums either a List of numbers or an IntRange to include
      * @return a list (a column) with the mean of the rows for the columns specified
      */
-    @CompileDynamic
     static List<BigDecimal> medianRows(Matrix table, List<Integer> columns) {
         List<BigDecimal> means = []
         table.each { row ->
-            means << median(row[columns])
+            means << median(row.subList(columns) as List<? extends Number>)
         }
         means
     }
@@ -554,14 +559,13 @@ class Stat {
      * @param colNames the names of the columns to include, if omitted, all columns will be included
      * @return a list of the row sums
      */
-    @CompileDynamic
     static List<BigDecimal> medianRows(Matrix m, String... colNames) {
         List<BigDecimal> means = []
         if (colNames.length == 0) {
             colNames = m.columnNames()
         }
         m.each { row ->
-            means << median(row[colNames])
+            means << median(row.subList(colNames) as List<? extends Number>)
         }
         means
     }
@@ -571,21 +575,20 @@ class Stat {
      * @param columns a list of columns to summarize by row
      * @return a list of numbers with sums for each row
      */
-    @CompileDynamic
-    static <T extends Number> List<T> medianRows(List<List<?>> columns) {
-        def medians = []
+    static List<BigDecimal> medianRows(List<List<?>> columns) {
+        List<BigDecimal> medians = []
         columns.transpose().each {
             medians << median(it as List<?>)
         }
         medians
     }
 
-    static BigDecimal median(List<? extends Number> valueList) {
+    static BigDecimal median(List<?> valueList) {
         if (valueList == null || valueList.size() == 0) {
             return null
         }
         if (valueList.size() == 1) {
-            return valueList[0]
+            return valueList[0] as BigDecimal
         }
         List<? extends Number> vals = new ArrayList(valueList)
         vals.sort()
@@ -606,20 +609,19 @@ class Stat {
      * @param values a list of numbers to use
      * @return a list of the 1:st and 3:rd quartile
      */
-    @CompileDynamic
-    static <T extends Number> List<T> quartiles(List<T> values) {
+    static  List<Number> quartiles(List<?> values) {
         if (values == null || values.size() == 0) {
             throw new IllegalArgumentException("The list of values are either null or does not contain any data.")
         }
 
         // Rank order the values
-        def v = values.collect() as Number[]
+        List<Number> v = values.collect() as List<Number>
         v.sort()
 
         int q1 = ((v.size() -1) * 25 / 100).round(0).intValue()
         int q3 = ((v.size() -1) * 75 / 100).round(0).intValue()
 
-        return [v[q1], v[q3]] as List<T>
+        return [v[q1], v[q3]]
     }
 
     /**
@@ -629,9 +631,9 @@ class Stat {
      * @param values a list of numbers to use
      * @return the difference between the 3rd and 1st quartile (always positive)
      */
-    static <T extends Number> T iqr(List<T> values) {
+    static Number iqr(List<?> values) {
         def q = quartiles(values)
-        (q[1] - q[0]) as T
+        q[1] - q[0]
     }
 
     static <T> T min(List<T> list, boolean ignoreNonNumerics = false) {
@@ -737,8 +739,8 @@ class Stat {
     }
 
 
-    @CompileDynamic
-    static <T extends Number> List<T> sd(List<List<T>> matrix, boolean isBiasCorrected = true, Integer colNum) {
+    //@CompileDynamic
+    static List<BigDecimal> sd(List<List<?>> matrix, boolean isBiasCorrected = true, Integer colNum) {
         return sd(matrix, isBiasCorrected, [colNum])
     }
 
@@ -749,32 +751,32 @@ class Stat {
      * @param isBiasCorrected - whether or not the variance computation will use the bias-corrected formula
      * @return the standard deviation
      */
-    @CompileDynamic
-    static <T extends Number> List<T> sd(List<List<T>> matrix, boolean isBiasCorrected = true, List<Integer> colNums) {
+    static List<BigDecimal> sd(List<List<?>> matrix, boolean isBiasCorrected = true, List<Integer> colNums) {
         def value
-        def numberMap = [:].withDefault{key -> return []}
+        Map<String, List> numberMap = [:].withDefault{key -> return []}
         for (row in matrix) {
             for (colNum in colNums) {
                 value = row[colNum]
                 if (value instanceof Number) {
-                    numberMap[String.valueOf(colNum)].add(value.doubleValue())
+                    //numberMap[String.valueOf(colNum)].add(value.doubleValue())
+                    numberMap[String.valueOf(colNum)].add(value)
                 }
             }
         }
         def list
         def std
-        List<T> stds = []
+        List<BigDecimal> stds = []
         for (colNum in colNums) {
             list = numberMap[String.valueOf(colNum)]
-            std = (T)sd(list, isBiasCorrected)
+            std = sd(list, isBiasCorrected)
             stds.add(std)
         }
         return stds
     }
 
-    static <T extends Number> List<T> sd(Matrix table, List<String> columnNames, boolean isBiasCorrected = true) {
+    static List<BigDecimal> sd(Matrix table, List<String> columnNames, boolean isBiasCorrected = true) {
         // Optimized: use columnar access instead of row iteration
-        List<T> results = []
+        List<BigDecimal> results = []
         columnNames.each { colName ->
             List<?> columnData = table.column(colName)
             List<Double> numericValues = []
@@ -783,52 +785,51 @@ class Stat {
                     numericValues.add(value.doubleValue())
                 }
             }
-            results << (T)sd(numericValues, isBiasCorrected)
+            results << sd(numericValues, isBiasCorrected)
         }
         return results
     }
 
-    @CompileDynamic
-    static <T extends Number> T variance(List<T> values, boolean isBiasCorrected = true) {
+    static BigDecimal variance(List<?> values, boolean isBiasCorrected = true) {
         if (values == null || values.isEmpty()) {
             return null
         }
-        def nullFreeNumbers = new ArrayList<T>()
+        List<Number> nullFreeNumbers = new ArrayList<>()
         values.each { if (it != null && it instanceof Number) nullFreeNumbers.add(it) }
-        def m = mean(nullFreeNumbers)
-        def squaredDeviations = []
+        BigDecimal m = mean(nullFreeNumbers, 16)
+        List<BigDecimal> squaredDeviations = []
         nullFreeNumbers.each {
-            squaredDeviations.add((it - m) ** 2)
+            BigDecimal deviation = it - m
+            squaredDeviations.add(deviation * deviation)
         }
-        def sumOfSquares = sum(squaredDeviations)
-        def size = isBiasCorrected ? nullFreeNumbers.size() - 1 : nullFreeNumbers.size()
+        Number sumOfSquares = sum(squaredDeviations)
+        Integer size = isBiasCorrected ? nullFreeNumbers.size() - 1 : nullFreeNumbers.size()
         if (size <= 0) {
             return null
         }
-        return (sumOfSquares / size) as T
+        return sumOfSquares / size
     }
 
-    static <T extends Number> T sd(Matrix table, String columnName, boolean isBiasCorrected = true) {
-        return sd(table.column(columnName) as List<T>, isBiasCorrected)
+    static BigDecimal sd(Matrix table, String columnName, boolean isBiasCorrected = true) {
+        return sd(table.column(columnName), isBiasCorrected)
     }
 
-    @CompileDynamic
-    static <T extends Number> T sd(List<T> values, boolean isBiasCorrected = true) {
+    static BigDecimal sd(List<?> values, boolean isBiasCorrected = true) {
         if (values == null || values.isEmpty()) {
             return null
         }
-        def variance = variance(values, isBiasCorrected)
+        BigDecimal variance = variance(values, isBiasCorrected)
         if (variance == null) {
             return null
         }
-        return Math.sqrt(variance as double) as T
+        return variance.sqrt()
     }
 
-    static <T extends Number> T sdSample(List<T> population) {
+    static BigDecimal sdSample(List<?> population) {
         return sd(population, true)
     }
 
-    static <T extends Number> T sdPopulation(List<T> population) {
+    static BigDecimal sdPopulation(List<?> population) {
         return sd(population, false)
     }
 
@@ -840,7 +841,7 @@ class Stat {
         int size = column.size()
         List<List<?>> matrix = []
         def percent
-        for (Map.Entry<Object, AtomicInteger> entry : freq.entrySet()) {
+        for (Map.Entry<String, AtomicInteger> entry : freq.entrySet()) {
             int numOccurrence = entry.getValue().intValue()
             percent = (numOccurrence * 100.0 / size).setScale(2, RoundingMode.HALF_EVEN)
             matrix.add([String.valueOf(entry.getKey()), numOccurrence, percent])

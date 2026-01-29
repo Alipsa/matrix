@@ -33,6 +33,7 @@ dependencies {
   compileOnly libs.groovy
   compileOnly libs.groovyAnt
   compileOnly libs.groovyDoc
+  compileOnly libs.groovyTemplates
   testImplementation testLibs.junitJupiterApi
   testRuntimeOnly testLibs.junitJupiterEngine
   testRuntimeOnly testLibs.junitPlatformLauncher
