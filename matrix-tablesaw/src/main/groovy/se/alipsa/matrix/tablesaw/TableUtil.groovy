@@ -446,8 +446,6 @@ class TableUtil {
       return Long
     } else if (ShortColumn.isAssignableFrom(typeClass)) {
       return Short
-    } else if (BigDecimalColumn.isAssignableFrom(typeClass)) {
-      return BigDecimal
     } else {
       // it is some custom column type made outside the "official" tablesaw api
       return Object.class
