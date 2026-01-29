@@ -2,7 +2,7 @@
 
 ## v0.2.2, In progress
 - com.github.miachm.sods:SODS [1.6.8 -> 1.7.0]
-- org.apache.poi:poi [5.4.1 -> 5.5.0]
+- org.apache.poi:poi-ooxml [5.4.1 -> 5.5.1]
 
 ## v0.2.1, 2025-07-19
 - Upgrade dependencies
