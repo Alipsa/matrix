@@ -283,6 +283,7 @@ class TableUtil {
    * @param <T> the type parameter
    * @return a column of the specified type, or null if type is not supported
    */
+  @SuppressWarnings("unchecked")
   static <T> Column<T> createColumn(T type, String name, List<?> values) {
     if (type == ColumnType.STRING) {
       var col = StringColumn.create(name)
@@ -445,8 +446,6 @@ class TableUtil {
       return Long
     } else if (ShortColumn.isAssignableFrom(typeClass)) {
       return Short
-    } else if (BigDecimalColumn.isAssignableFrom(typeClass)) {
-      return BigDecimal
     } else {
       // it is some custom column type made outside the "official" tablesaw api
       return Object.class

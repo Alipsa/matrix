@@ -10,7 +10,7 @@ To use it add the following to your gradle build script (or equivalent for maven
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
 implementation 'se.alipsa.matrix:matrix-core:3.5.0'
-implementation 'se.alipsa.matrix:matrix-tablesaw:0.2.1'
+implementation 'se.alipsa.matrix:matrix-tablesaw:0.2.2'
 ```
 
 See The [tutorial section on Tablesaw](../docs/tutorial/14-matrix-tablesaw.md) and [test.alipsa.groovy.datautil.TableUtilTest](https://github.com/perNyfelt/data-utils/blob/master/src/test/groovy/test/alipsa/groovy/datautil/TableUtilTest.groovy)

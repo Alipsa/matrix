@@ -116,15 +116,14 @@ public class OdsReadOptions extends ReadOptions {
   }
 
   /**
-   * Creates a builder with a URL string source.
+   * Creates a builder with a URL string source. This is a convenience method for
+   * <code>builder(new URI(url).toURL())</code>
    *
    * @param url the URL string to read from
    * @return a new builder
    * @throws IOException if the URL cannot be accessed
    * @throws URISyntaxException if the URL string is not a valid URI
-   * @deprecated Use {@link #builder(URL)} instead.
    */
-  @Deprecated
   public static Builder builderFromUrl(String url) throws IOException, URISyntaxException {
     return new Builder(new URI(url).toURL());
   }
