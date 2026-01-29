@@ -28,8 +28,14 @@ JavaCompile javaCompile = compileJava {
     options.compilerArgs << "-Xlint:unchecked"
 }
 
+compileTestJava {
+    options.deprecation = true
+    options.compilerArgs << "-Xlint:unchecked"
+}
+
 compileGroovy {
     options.deprecation = true
+    options.compilerArgs << "-Xlint:unchecked"
 }
 
 java {
