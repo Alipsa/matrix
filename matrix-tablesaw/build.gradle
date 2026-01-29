@@ -6,6 +6,7 @@ plugins {
     id('java-library')
     id('signing')
     id('maven-publish')
+    id('jacoco')
     //id("se.alipsa.nexus-release-plugin") version "1.0.1"
     id("se.alipsa.nexus-release-plugin") version '2.0.0'
     //id("com.github.ben-manes.versions").version("0.53.0")
@@ -107,6 +108,78 @@ test {
         }
     }
 }
+
+// JaCoCo configuration for code coverage
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+def jacocoCoverageExclusions = [
+    '**/*_closure*.class',
+    '**/*Exception.class'
+]
+
+def jacocoTestExclusions = [
+    '**/*Test.class',
+    '**/*Test$*.class'
+]
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoTestExclusions + jacocoCoverageExclusions)
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoTestExclusions + jacocoCoverageExclusions)
+        }))
+    }
+    violationRules {
+        rule {
+            limit {
+                // Current coverage: 54%
+                // Target: 70% (aspirational goal for future releases)
+                // Set to 50% to prevent regression while allowing incremental improvement
+                minimum = 0.50
+            }
+        }
+        rule {
+            element = 'CLASS'
+            // Exclude closure classes, exception classes, and low-coverage infrastructure classes
+            excludes = [
+                '*_closure*',
+                '*Exception',
+                // Builder classes have low coverage due to many untested builder combinations
+                '*.Builder',
+                // Aggregate function closures
+                'tech.tablesaw.api.BigDecimalAggregateFunctions$*',
+                // Infrastructure classes with low coverage (aspirational: add tests in future releases)
+                'se.alipsa.matrix.tablesaw.gtable.GdataFrameJoiner',
+                'tech.tablesaw.io.xlsx.XlsxWriter',
+                'tech.tablesaw.io.xlsx.XlsxWriteOptions'
+            ]
+            limit {
+                // Current: many classes below 30%
+                // Set to 15% to establish baseline and prevent regression
+                minimum = 0.15
+            }
+        }
+    }
+}
+
+// Make check depend on coverage verification
+check.dependsOn jacocoTestCoverageVerification
 
 publishing {
     publications {
