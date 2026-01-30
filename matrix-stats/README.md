@@ -9,7 +9,7 @@ matrix-stats is available from maven central
 Groovy:
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
-implementation "se.alipsa.matrix:matrix-core:3.3.0"
+implementation "se.alipsa.matrix:matrix-core:3.6.0"
 implementation "se.alipsa.matrix:matrix-stats:2.3.0"
 ```
 
@@ -19,17 +19,17 @@ Maven:
     <dependency>
         <groupId>org.apache.groovy</groupId>
         <artifactId>groovy</artifactId>
-        <version>5.0.2</version>
+        <version>5.0.4</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.3.0</version>
+        <version>3.6.0</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-stats</artifactId>
-        <version>2.2.0</version>
+        <version>2.3.0</version>
     </dependency>
 </dependencies>
 ```
