@@ -498,12 +498,23 @@ class Bq {
    * If a connection error occurs (common with emulators), it automatically falls back
    * to the InsertAll API.</p>
    *
+   * <p>The write channel API can be disabled by setting the system property
+   * {@code bigquery.enable_write_api=false}, which forces use of the InsertAll API.
+   * This is useful for BigQuery emulators that don't support the write channel.</p>
+   *
    * @param matrix the Matrix containing data to insert
    * @param tableId the BigQuery table identifier
    * @return load statistics from the insert operation
    * @throws BqException if both insert methods fail
    */
   JobStatistics.LoadStatistics insert(Matrix matrix, TableId tableId) throws BqException {
+    // Check if write API is disabled (e.g., for emulator compatibility)
+    String enableWriteApi = System.getProperty("bigquery.enable_write_api", "true")
+    if ("false".equalsIgnoreCase(enableWriteApi)) {
+      log.debug("Write channel API disabled via system property, using InsertAll")
+      return insertViaInsertAll(matrix, tableId, null)
+    }
+
     try {
       return insertViaWriteChannel(matrix, tableId)
     } catch (Exception e) {
@@ -518,11 +529,25 @@ class Bq {
   /**
    * Checks if an exception represents a connection error that warrants fallback.
    *
+   * <p>This method traverses the entire cause chain to detect connection errors,
+   * which may be wrapped in multiple layers of exceptions (e.g., BqException wrapping
+   * BigQueryException wrapping ConnectException).</p>
+   *
    * @param e the exception to check
-   * @return true if this is a connection-related error
+   * @return true if this is a connection-related error anywhere in the cause chain
    */
   private static boolean isConnectionError(Exception e) {
-    return e.cause instanceof ConnectException || e.message?.contains("Connection refused")
+    Throwable current = e
+    while (current != null) {
+      if (current instanceof ConnectException) {
+        return true
+      }
+      if (current.message?.contains("Connection refused")) {
+        return true
+      }
+      current = current.cause
+    }
+    return false
   }
 
   /**
@@ -678,12 +703,12 @@ class Bq {
   /**
    * Inserts data using BigQuery's InsertAll API.
    *
-   * <p>This is the fallback method used when write channel fails (e.g., with emulators).
-   * It's less efficient for large datasets but more compatible.</p>
+   * <p>This method is used either as a fallback when write channel fails (e.g., with emulators),
+   * or as the primary insert method when write channel is disabled via system property.</p>
    *
    * @param matrix the Matrix containing data to insert
    * @param tableId the BigQuery table identifier
-   * @param originalException the original exception that triggered the fallback
+   * @param originalException the original exception that triggered the fallback (null if called directly)
    * @return load statistics (placeholder, as InsertAll doesn't provide detailed stats)
    * @throws BqException if the insert fails
    */
@@ -702,15 +727,18 @@ class Bq {
 
       if (response.hasErrors()) {
         String errorDetails = buildInsertAllErrorDetails(response)
-        throw new BqException("InsertAll fallback failed with errors:\n${errorDetails}")
+        throw new BqException("InsertAll failed with errors:\n${errorDetails}")
       }
 
-      log.info("InsertAll fallback successful. Inserted ${matrix.rowCount()} rows")
+      log.info("InsertAll successful. Inserted ${matrix.rowCount()} rows")
       return createPlaceholderLoadStatistics(tableId)
 
     } catch (Exception fallbackException) {
-      log.error("InsertAll fallback also failed: ${fallbackException.message}")
-      throw new BqException("Streaming insert failed: ${originalException.message}. Fallback also failed: ${fallbackException.message}", originalException)
+      log.error("InsertAll failed: ${fallbackException.message}")
+      if (originalException != null) {
+        throw new BqException("Streaming insert failed: ${originalException.message}. Fallback also failed: ${fallbackException.message}", originalException)
+      }
+      throw new BqException("InsertAll failed: ${fallbackException.message}", fallbackException)
     }
   }
 

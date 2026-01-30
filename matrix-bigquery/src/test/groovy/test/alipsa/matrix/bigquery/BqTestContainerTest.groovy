@@ -92,4 +92,82 @@ class BqTestContainerTest {
       System.clearProperty("google.cloud.project.id") // Cleanup new property
     }
   }
+
+  /**
+   * Tests that when the write channel API fails (not supported by emulator),
+   * the fallback to InsertAll API is triggered and succeeds.
+   *
+   * <p>This test deliberately does NOT set bigquery.enable_write_api=false,
+   * so the write channel is attempted first, fails with a connection error,
+   * and then falls back to InsertAll.</p>
+   */
+  @Test
+  void testWriteChannelFallbackToInsertAll() {
+    String fullUrl = container.getEmulatorHttpEndpoint()
+    assertNotNull(fullUrl)
+
+    URI emulatorUri = new URI(fullUrl)
+    String hostAndPort = emulatorUri.getAuthority()
+
+    String projectId = container.getProjectId()
+
+    // Set host but deliberately do NOT set bigquery.enable_write_api=false
+    // This forces the code to try write channel first, fail, and fall back to InsertAll
+    System.setProperty("bigquery.host", hostAndPort)
+    System.setProperty("google.cloud.project.id", projectId)
+
+    try {
+      BigQueryOptions options = BigQueryOptions
+          .newBuilder()
+          .setProjectId(projectId)
+          .setHost(fullUrl)
+          .setLocation(fullUrl)
+          .setCredentials(NoCredentials.getInstance())
+          .build()
+
+      Bq bq = new Bq(options)
+      String dsName = "FallbackTest"
+
+      bq.createDataset(dsName)
+
+      // Add a delay to ensure the emulator service is fully ready
+      Thread.sleep(2000)
+
+      // Use a smaller dataset for this test
+      Matrix testData = Matrix.builder()
+          .columnNames(['id', 'name', 'value'])
+          .rows([
+              [1, 'Alice', 100.5],
+              [2, 'Bob', 200.75],
+              [3, 'Charlie', 300.25]
+          ])
+          .types([Integer, String, BigDecimal])
+          .matrixName('fallback_test')
+          .build()
+
+      // This should:
+      // 1. Try write channel API (will fail with connection error on emulator)
+      // 2. Detect connection error and fall back to InsertAll
+      // 3. Succeed with InsertAll
+      assertTrue(bq.saveToBigQuery(testData, dsName), "Failed to save matrix - fallback should have worked")
+
+      // Verify the data was actually inserted
+      Matrix retrieved = bq.query("select * from `${projectId}.${dsName}.${testData.matrixName}` order by id")
+          .withMatrixName(testData.matrixName)
+
+      assertEquals(3, retrieved.rowCount(), "Should have inserted 3 rows")
+      assertEquals('Alice', retrieved[0, 'name'], "First row name should be Alice")
+      assertEquals('Bob', retrieved[1, 'name'], "Second row name should be Bob")
+      assertEquals('Charlie', retrieved[2, 'name'], "Third row name should be Charlie")
+
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt()
+      throw new RuntimeException("Test interrupted during sleep", e)
+    } finally {
+      // Always clean up the system properties after the test
+      System.clearProperty("bigquery.host")
+      System.clearProperty("bigquery.enable_write_api")
+      System.clearProperty("google.cloud.project.id")
+    }
+  }
 }

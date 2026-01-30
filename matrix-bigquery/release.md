@@ -1,6 +1,11 @@
 # Matrix-bigquery Release History
 
-## v0.5.0, In progress
+## v0.5.1, 2026-01-30
+- Honour bigquery.enable_write_api system property - When set to "false", skips write channel and uses InsertAll directly
+- Fixed isConnectionError - Now traverses the full cause chain to detect connection errors wrapped in multiple exception layers
+- Updated insertViaInsertAll - Properly handles null originalException when called directly
+
+## v0.5.0, 2026-01-30
 - com.google.auth:google-auth-library-bom [1.38.0 -> 1.41.0]
 - com.google.auth:google-auth-library-oauth2-http [1.39.0 -> 1.41.0]
 - com.google.cloud:google-cloud-bigquery [2.54.2 -> 2.56.0]
