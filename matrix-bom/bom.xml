@@ -46,8 +46,8 @@
     <matrixSmileVersion>0.1.0</matrixSmileVersion>
     <matrixSpreadsheetVersion>2.3.0</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.3.0</matrixSqlVersion>
-    <matrixStatsVersion>2.3.0-SNAPSHOT</matrixStatsVersion>
-    <matrixTablesawVersion>0.2.2-SNAPSHOT</matrixTablesawVersion>
+    <matrixStatsVersion>2.3.0</matrixStatsVersion>
+    <matrixTablesawVersion>0.2.2</matrixTablesawVersion>
     <matrixXChartVersion>0.2.3-SNAPSHOT</matrixXChartVersion>
   </properties>
   <repositories>

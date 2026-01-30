@@ -9,7 +9,7 @@ Normalize tablesaw columns etc.
 To use it add the following to your gradle build script (or equivalent for maven etc)
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
-implementation 'se.alipsa.matrix:matrix-core:3.5.0'
+implementation 'se.alipsa.matrix:matrix-core:3.6.0'
 implementation 'se.alipsa.matrix:matrix-tablesaw:0.2.2'
 ```
 
