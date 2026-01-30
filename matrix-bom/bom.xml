@@ -44,7 +44,7 @@
     <matrixJsonVersion>2.1.2</matrixJsonVersion>
     <matrixParquetVersion>0.4.0</matrixParquetVersion>
     <matrixSmileVersion>0.1.0</matrixSmileVersion>
-    <matrixSpreadsheetVersion>2.3.0-SNAPSHOT</matrixSpreadsheetVersion>
+    <matrixSpreadsheetVersion>2.3.0</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.3.0-SNAPSHOT</matrixSqlVersion>
     <matrixStatsVersion>2.3.0-SNAPSHOT</matrixStatsVersion>
     <matrixTablesawVersion>0.2.2-SNAPSHOT</matrixTablesawVersion>

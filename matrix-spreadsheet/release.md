@@ -1,12 +1,57 @@
 # Release history
 
-## v2.3.0, 2026-01-24
-- Simplified spreadsheet backends: removed POI and SODS implementations; FastExcel is now the single XLSX path and FastOds is the single ODS path (import/export/read).
-- Added append/replace support for existing XLSX and ODS files; preserves existing sheets and metadata.
-- New ODS streaming writer/appender that reuses table attributes/columns for base styling.
-- XLSX append now inherits sheetFormatPr, column widths, and page margins, and fixes relId collisions in workbook relationships.
-- Updated tests to cover append/replace and style inheritance. API simplified with no implementation selection needed.
-- Explicitly reject legacy .xls files (xlsx only)
+## v2.3.0, In progress
+**Major architectural refactoring with significant performance improvements**
+
+### Breaking Changes
+- removed POI and SODS implementations - FastExcel is now the single XLSX backend, FastOds is the single ODS backend
+- removed ExcelImplementation and OdsImplementation enums - no implementation selection needed
+- explicitly reject legacy .xls files (XLSX only)
+- deprecated SpreadsheetExporter in favor of SpreadsheetWriter
+
+### New Features
+- add append/replace support for existing XLSX and ODS files (preserves sheets and metadata)
+- add flexible start position support when writing data (e.g., write to cell B5)
+- add map-based multi-sheet API: `writeSheets(Map<String, Position>)`
+- add new ODS streaming writer/appender with table attributes/column reuse for styling
+- add profiling support for ODS operations via `-Dmatrix.spreadsheet.ods.profile=true`
+- XLSX append now inherits sheetFormatPr, column widths, page margins, and fixes relId collisions
+- add comprehensive sheet name sanitization with automatic de-duplication
+
+### Performance Improvements
+- ODS read performance: 65-80% faster (medium files: 4.86s → 1.43s, large files: 262s → 53s)
+- switched to Aalto StAX parser for 64% speedup
+- adaptive row capacity sizing to minimize ArrayList resizing
+- type-aware value extraction with switch dispatch
+- optimized trailing empty row detection
+- Null Object pattern for profiling eliminates branching overhead (~14% improvement)
+
+### Bug Fixes
+- fix missing return statement in ValueExtractor.getDouble() (percentage parsing)
+- fix 1-based sheet indexing consistency across all importers
+- fix sheet name collision prevention (sanitization could cause silent data loss)
+- fix invalid sheet number handling in URL imports
+- fix null row guards in FExcelReader
+- fix percentage parsing to be locale-independent
+- fix race condition in SpreadsheetExporter static field sharing
+
+### Code Quality
+- add column count validation to all write methods
+- add robust cleanup for temp files and XML stream resources
+- add XXE protection with hardened XML parsing
+- replace 15+ println statements with proper logging
+- remove ~500 lines of dead code (POI, SODS implementations)
+- extract duplicate header building logic (DRY improvements)
+- comprehensive test coverage: 79.74% (105 tests passing)
+- add benchmarking suite for performance validation
+
+### Dependencies
+- remove org.apache.poi:poi and org.apache.poi:poi-ooxml
+- remove com.github.miachm.sods:SODS
+- remove org.apache.logging.log4j:log4j-api (migrated to matrix-core Logger)
+- add com.fasterxml:aalto-xml 1.3.4 (high-performance StAX parser)
+- upgrade com.github.javaparser:javaparser-core [3.26.4 -> 3.27.0]
+- migrate from log4j to matrix-core Logger (supports slf4j if present, otherwise System.out/err)
 
 ## v2.2.1, 2025-07-19
 - Upgrade dependencies
