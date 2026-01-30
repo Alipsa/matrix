@@ -6,7 +6,7 @@ import se.alipsa.matrix.gg.GgChart
 
 class ChartToJpeg {
 
-  static void export(Svg svgChart, File targetFile, BigDecimal quality) {
+  static void export(Svg svgChart, File targetFile, BigDecimal quality = 1.0) {
     if (svgChart == null) {
       throw new IllegalArgumentException("svgChart must not be null")
     }
@@ -22,4 +22,5 @@ class ChartToJpeg {
     }
     export(chart.render(), targetFile, quality)
   }
+
 }

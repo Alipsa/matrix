@@ -39,7 +39,7 @@ import se.alipsa.matrix.avro.MatrixAvroReader
 import java.nio.file.Paths
 
 def m1 = MatrixAvroReader.read(new File("data/users.avro"))
-def m2 = MatrixAvroReader.read(new URL("file:data/users.avro"))
+def m2 = MatrixAvroReader.read(new URI("file:data/users.avro").toURL())
 def m3 = MatrixAvroReader.read(Paths.get("data/users.avro"))
 println m1.dim()           // [rows, cols]
 println m1.columnNames()

@@ -191,7 +191,7 @@ class GgSaveTest {
       ggsave(invalidFile.absolutePath, svg)
     }
 
-    assertTrue(exception.message.contains("File extension must be .svg or .png"),
+    assertTrue(exception.message.contains("File extension must be .svg"),
         "Should throw error for invalid extension")
   }
 

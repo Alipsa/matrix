@@ -10,6 +10,7 @@ import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Factor
+import se.alipsa.matrix.gg.coord.CoordPolar
 
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -138,7 +139,7 @@ class GgPlotTest {
         def chart = ggplot(mtcars, aes(factor(1), fill: 'cyl')) \
             + geom_bar(width:1) \
             + coord_polar(theta: "y", start:0)
-        assertTrue(chart.coord instanceof se.alipsa.matrix.gg.coord.CoordPolar)
+        assertTrue(chart.coord instanceof CoordPolar)
         Svg svg = chart.render()
         assertNotNull(svg)
 
@@ -990,6 +991,218 @@ class GgPlotTest {
         // Both should be StatsBin2D instances
         assertTrue(statAlias.class.name.contains('StatsBin2D'))
         assertTrue(statOriginal.class.name.contains('StatsBin2D'))
+    }
+
+    // ========== ggsave File Type Detection Tests ==========
+
+    @Test
+    void testGgsaveSvgExtension() {
+        // Test that ggsave correctly saves SVG files based on .svg extension
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point() +
+            labs(title: 'SVG Export Test')
+
+        File outputFile = new File('build/test_ggsave.svg')
+        ggsave(chart, outputFile.path)
+
+        assertTrue(outputFile.exists(), "SVG file should be created")
+        assertTrue(outputFile.length() > 0, "SVG file should not be empty")
+
+        // Verify it's actually an SVG file
+        String content = outputFile.text
+        assertTrue(content.contains('<svg'), "File should contain SVG content")
+        assertTrue(content.contains('</svg>'), "File should have closing SVG tag")
+
+        outputFile.delete()
+    }
+
+    @Test
+    void testGgsavePngExtension() {
+        // Test that ggsave correctly saves PNG files based on .png extension
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point() +
+            labs(title: 'PNG Export Test')
+
+        File outputFile = new File('build/test_ggsave.png')
+        ggsave(chart, outputFile.path)
+
+        assertTrue(outputFile.exists(), "PNG file should be created")
+        assertTrue(outputFile.length() > 0, "PNG file should not be empty")
+
+        // Verify it's a PNG file by checking the magic number (first 8 bytes)
+        byte[] header = new byte[8]
+        new FileInputStream(outputFile).withCloseable { fis ->
+            fis.read(header)
+        }
+        // PNG magic number: 89 50 4E 47 0D 0A 1A 0A
+        assertEquals((byte) 0x89, header[0], "PNG file should have correct magic number")
+        assertEquals((byte) 0x50, header[1], "PNG file should have correct magic number")
+        assertEquals((byte) 0x4E, header[2], "PNG file should have correct magic number")
+        assertEquals((byte) 0x47, header[3], "PNG file should have correct magic number")
+
+        outputFile.delete()
+    }
+
+    @Test
+    void testGgsaveJpgExtension() {
+        // Test that ggsave correctly saves JPEG files based on .jpg extension
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point() +
+            labs(title: 'JPG Export Test')
+
+        File outputFile = new File('build/test_ggsave.jpg')
+        ggsave(chart, outputFile.path)
+
+        assertTrue(outputFile.exists(), "JPG file should be created")
+        assertTrue(outputFile.length() > 0, "JPG file should not be empty")
+
+        // Verify it's a JPEG file by checking the magic number (first 3 bytes)
+        byte[] header = new byte[3]
+        new FileInputStream(outputFile).withCloseable { fis ->
+            fis.read(header)
+        }
+        // JPEG magic number: FF D8 FF
+        assertEquals((byte) 0xFF, header[0], "JPEG file should have correct magic number")
+        assertEquals((byte) 0xD8, header[1], "JPEG file should have correct magic number")
+        assertEquals((byte) 0xFF, header[2], "JPEG file should have correct magic number")
+
+        outputFile.delete()
+    }
+
+    @Test
+    void testGgsaveJpegExtension() {
+        // Test that ggsave correctly saves JPEG files based on .jpeg extension
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point() +
+            labs(title: 'JPEG Export Test')
+
+        File outputFile = new File('build/test_ggsave.jpeg')
+        ggsave(chart, outputFile.path)
+
+        assertTrue(outputFile.exists(), "JPEG file should be created")
+        assertTrue(outputFile.length() > 0, "JPEG file should not be empty")
+
+        // Verify it's a JPEG file by checking the magic number
+        byte[] header = new byte[3]
+        new FileInputStream(outputFile).withCloseable { fis ->
+            fis.read(header)
+        }
+        // JPEG magic number: FF D8 FF
+        assertEquals((byte) 0xFF, header[0], "JPEG file should have correct magic number")
+        assertEquals((byte) 0xD8, header[1], "JPEG file should have correct magic number")
+        assertEquals((byte) 0xFF, header[2], "JPEG file should have correct magic number")
+
+        outputFile.delete()
+    }
+
+    @Test
+    void testGgsaveJpegWithQuality() {
+        // Test that ggsave correctly handles quality parameter for JPEG files
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point() +
+            labs(title: 'JPEG Quality Test')
+
+        File outputFile = new File('build/test_ggsave_quality.jpeg')
+        ggsave(chart, outputFile.path, quality: 0.5)
+
+        assertTrue(outputFile.exists(), "JPEG file with quality parameter should be created")
+        assertTrue(outputFile.length() > 0, "JPEG file should not be empty")
+
+        outputFile.delete()
+    }
+
+    @Test
+    void testGgsaveInvalidExtension() {
+        // Test that ggsave throws exception for invalid file extension
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point()
+
+        def exception = assertThrows(IllegalArgumentException.class, {
+            ggsave(chart, 'build/test_ggsave.txt')
+        })
+
+        assertTrue(exception.message.contains('extension'), "Exception message should mention extension")
+    }
+
+    @Test
+    void testGgsaveNoExtension() {
+        // Test that ggsave throws exception when no file extension is provided
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point()
+
+        def exception = assertThrows(IllegalArgumentException.class, {
+            ggsave(chart, 'build/test_ggsave')
+        })
+
+        assertTrue(exception.message.contains('extension'), "Exception message should mention extension")
+    }
+
+    @Test
+    void testGgsaveCaseInsensitiveExtension() {
+        // Test that ggsave handles case-insensitive extensions (e.g., .PNG, .Svg)
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point()
+
+        // Test uppercase PNG
+        File pngFile = new File('build/test_ggsave.PNG')
+        ggsave(chart, pngFile.path)
+        assertTrue(pngFile.exists(), "PNG file with uppercase extension should be created")
+        pngFile.delete()
+
+        // Test mixed case SVG
+        File svgFile = new File('build/test_ggsave.SvG')
+        ggsave(chart, svgFile.path)
+        assertTrue(svgFile.exists(), "SVG file with mixed case extension should be created")
+        svgFile.delete()
+
+        // Test uppercase JPEG
+        File jpegFile = new File('build/test_ggsave.JPEG')
+        ggsave(chart, jpegFile.path)
+        assertTrue(jpegFile.exists(), "JPEG file with uppercase extension should be created")
+        jpegFile.delete()
+    }
+
+    @Test
+    void testGgsaveWithWidthAndHeight() {
+        // Test that ggsave correctly applies width and height parameters
+        def chart = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point() +
+            labs(title: 'Size Parameter Test')
+
+        File outputFile = new File('build/test_ggsave_size.svg')
+        ggsave(chart, outputFile.path, width: 1200, height: 800, quality: 0.95)
+
+        assertTrue(outputFile.exists(), "SVG file with custom size should be created")
+
+        String content = outputFile.text
+        assertTrue(content.contains('width'), "SVG should contain width attribute")
+        assertTrue(content.contains('height'), "SVG should contain height attribute")
+
+        outputFile.delete()
+    }
+
+    @Test
+    void testGgsaveMultipleChartsSvg() {
+        // Test that ggsave correctly saves multiple charts to a single SVG file
+        def chart1 = ggplot(iris, aes(x: 'Sepal Length', y: 'Petal Length')) +
+            geom_point() +
+            labs(title: 'Chart 1')
+
+        def chart2 = ggplot(mtcars, aes(x: 'hp', y: 'mpg')) +
+            geom_point() +
+            labs(title: 'Chart 2')
+
+        File outputFile = new File('build/test_ggsave_multiple.svg')
+        ggsave(outputFile.path, chart1, chart2)
+
+        assertTrue(outputFile.exists(), "Combined SVG file should be created")
+        assertTrue(outputFile.length() > 0, "Combined SVG file should not be empty")
+
+        String content = outputFile.text
+        assertTrue(content.contains('Chart 1'), "Should contain first chart title")
+        assertTrue(content.contains('Chart 2'), "Should contain second chart title")
+
+        outputFile.delete()
     }
 
 }

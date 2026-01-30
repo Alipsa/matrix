@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.groovy.svg.utils.SvgMerger
+import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.gg.geom.GeomBin2d
 import se.alipsa.matrix.gg.geom.GeomHex
 import se.alipsa.matrix.gg.geom.GeomBlank
@@ -562,11 +563,14 @@ class GgPlot {
 
   /**
    * Convenience alias for write().
+   *
+   * @param params values for width, height, and quality (for jpg) are supported
    */
-  static void ggsave(GgChart chart, String filename, Map params = [:]) {
+  static void ggsave(Map params = [:], GgChart chart, String filePath) {
     if (params.width) chart.width = params.width as int
     if (params.height) chart.height = params.height as int
-    write(chart, new File(filename))
+    BigDecimal quality = (params.quality ?: 1.0) as BigDecimal
+    saveBasedOnExtension(chart.render(), filePath, quality)
   }
 
   /**
@@ -583,15 +587,6 @@ class GgPlot {
       throw new IllegalArgumentException("At least one SVG object must be provided")
     }
 
-    File file = new File(filePath)
-
-    // Extract and validate file extension
-    int dotIndex = filePath.lastIndexOf('.')
-    if (dotIndex == -1 || dotIndex == filePath.length() - 1) {
-      throw new IllegalArgumentException("File path must have a valid extension (.svg or .png)")
-    }
-    String extension = filePath.substring(dotIndex + 1).toLowerCase()
-
     Svg finalSvg
     if (svgs.length == 1) {
       // Single SVG - use as-is
@@ -601,14 +596,38 @@ class GgPlot {
       finalSvg = SvgMerger.mergeVertically(svgs)
     }
 
-    // Save based on file extension
+    saveBasedOnExtension(finalSvg, filePath, 1.0)
+  }
+
+  /**
+   * Save based on file extension.
+   *
+   * @param filePath Path to save the file (must end with .svg, .png or .jpg)
+   * @param finalSvg Svg object to save
+   */
+  private static void saveBasedOnExtension(Svg finalSvg, String filePath, BigDecimal quality) {
+
+    String extension = getExtension(filePath)
+    File file = new File(filePath)
     if (extension == 'svg') {
       write(finalSvg, file)
     } else if (extension == 'png') {
       ChartToPng.export(finalSvg, file)
+    } else if (extension == 'jpg' || extension == 'jpeg') {
+      ChartToJpeg.export(finalSvg, file, quality)
     } else {
-      throw new IllegalArgumentException("File extension must be .svg or .png, got: .${extension}")
+      throw new IllegalArgumentException("File extension must be .svg, .png or .jpg, got: .${extension}")
     }
+  }
+
+  private static String getExtension(String filePath) {
+// Extract and validate file extension
+    int dotIndex = filePath.lastIndexOf('.')
+    if (dotIndex == -1 || dotIndex == filePath.length() - 1) {
+      throw new IllegalArgumentException("File path must have a valid extension (.svg, .png or .jpg)")
+    }
+    String extension = filePath.substring(dotIndex + 1).toLowerCase()
+    extension
   }
 
   /**
