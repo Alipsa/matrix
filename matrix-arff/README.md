@@ -37,12 +37,12 @@ implementation "se.alipsa.matrix:matrix-arff"
     <dependency>
         <groupId>org.apache.groovy</groupId>
         <artifactId>groovy</artifactId>
-        <version>5.0.3</version>
+        <version>5.0.4</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.5.0</version>
+        <version>3.6.0</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
