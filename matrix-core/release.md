@@ -1,13 +1,19 @@
 # Matrix Core Release History
 
 ### 3.6.0, in progress
+- Matrix.getAt() now returns Column instead of List (Column extends ArrayList)
 - deprecate renameColumn and dropColumns in favor of rename and drop
+- add Matrix.drop(), dropExcept(), rename(), replaceAll(), splitInto(), and subset() methods for improved API consistency
 - regard an empty string as null in ValueConverter (except for asString)
-- add fallback for creating a matrix from a ResultSet that does not have classTypeName set.
+- add fallback for creating a matrix from a ResultSet that does not have classTypeName set
 - add size check when adding columns
 - Row iterator is now based on an unmodifiable list
-- Add Column.removeNulls() since minus preserves the column length and Column - null does not do anything.
-- add a subset method to Matrix taking a list of row indices and another subset taking a vararg of row indices
+- add Column.removeNulls() and Column.plus() methods
+- add lightweight Logger utility class
+- add @CompileStatic to Stat class for performance improvements and type safety
+- optimize Stat.means(), medians(), and sd() to use columnar access instead of row iteration
+- critical bug fixes: row indices criteria evaluation, assertion throwing, variance division by zero, dropEmptyColumns blank string handling
+- add JaCoCo code coverage and CodeNarc static analysis to build infrastructure
 
 ### 3.5.0, 2025-09-06
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.5.0/matrix-core-3.5.0.jar)

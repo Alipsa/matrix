@@ -1,10 +1,8 @@
 package se.alipsa.matrix.core
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.util.Logger
 
-import java.math.MathContext
 import java.math.RoundingMode
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -26,7 +24,6 @@ class Stat {
     static final String FREQUENCY_FREQUENCY = "Frequency"
     static final String FREQUENCY_PERCENT = "Percent"
 
-    @CompileDynamic
     static Structure str(Matrix table) {
         Structure map = new Structure()
         def name = table.matrixName == null ? '' : table.matrixName + ', '
@@ -129,7 +126,6 @@ class Stat {
         return s.asType(type)
     }
 
-    @CompileDynamic
     static List<Number> sum(Matrix matrix, String... columnNames) {
         List<Number> sums = []
         List<String> columns
@@ -151,14 +147,12 @@ class Stat {
         return sums
     }
 
-    @CompileDynamic
     static List<Number> sum(Matrix matrix, IntRange columnIndices) {
         return sum(matrix, columnIndices as List)
     }
 
-    @CompileDynamic
     static List<Number> sum(Matrix matrix, List<Integer> columnIndices) {
-        List<? extends Number> sums = []
+        List<Number> sums = []
         columnIndices.each { colIdx ->
             def column = matrix.column(colIdx)
             def type = matrix.type(colIdx)
@@ -172,25 +166,20 @@ class Stat {
         return sums
     }
 
-
-    @CompileDynamic
     static <T extends Number> T sum(List<List<T>> grid, Integer colNum) {
         return sum(grid, [colNum])[0]
     }
 
-    @CompileDynamic
-    static <T extends Number> T sum(Grid grid, Integer colNum) {
+    static <T extends Number> T sum(Grid<T> grid, Integer colNum) {
         return sum(grid.data, colNum)
     }
 
-    @CompileDynamic
-    static <T extends Number> List<T> sum(Grid grid, List<Integer> colNums) {
+    static <T extends Number> List<T> sum(Grid<T> grid, List<Integer> colNums) {
         return sum(grid.data, colNums)
     }
 
-    @CompileDynamic
-    static <T extends Number> List<T> sum(List<List<T>> grid, List<Integer> colNums) {
-        def s = [0 as T] * colNums.size()
+    static <T extends Number> List<T> sum(List<List<?>> grid, List<Integer> colNums) {
+        List<T> s = [0 as T] * colNums.size()
         def value
         int idx
         for (row in grid) {
@@ -222,14 +211,13 @@ class Stat {
         means
     }
 
-    @CompileDynamic
     static <T extends Number> List<T> sumRows(Matrix m, String... colNames) {
         List<T> means = []
         if (colNames.length == 0) {
             colNames = m.columnNames()
         }
         m.each { row ->
-            means << (sum(row[colNames]) as T)
+            means << (sum(row.subList(colNames)) as T)
         }
         means
     }
@@ -267,10 +255,9 @@ class Stat {
         return sums
     }
 
-    @CompileDynamic
     static Matrix meanBy(Matrix table, String meanColumn, String groupBy, int scale = 9) {
         Matrix means = funBy(table, meanColumn, groupBy, Stat.&mean, BigDecimal)
-        means = means.apply(meanColumn) {
+        means = means.apply(meanColumn) { BigDecimal it ->
             it.setScale(scale, RoundingMode.HALF_UP)
         }
         means.setMatrixName("${table.matrixName}-means by $groupBy".toString())
@@ -739,7 +726,6 @@ class Stat {
     }
 
 
-    //@CompileDynamic
     static List<BigDecimal> sd(List<List<?>> matrix, boolean isBiasCorrected = true, Integer colNum) {
         return sd(matrix, isBiasCorrected, [colNum])
     }
