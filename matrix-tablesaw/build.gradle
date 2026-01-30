@@ -7,9 +7,7 @@ plugins {
     id('signing')
     id('maven-publish')
     id('jacoco')
-    //id("se.alipsa.nexus-release-plugin") version "1.0.1"
-    id("se.alipsa.nexus-release-plugin") version '2.0.0'
-    //id("com.github.ben-manes.versions").version("0.53.0")
+    id("se.alipsa.nexus-release-plugin") version '2.0.1'
 }
 
 group = 'se.alipsa.matrix'
