@@ -7,11 +7,16 @@
 - com.google.cloud:google-cloud-bigquerystorage [3.16.3 -> 3.18.0]
 - com.google.cloud:google-cloud-resourcemanager [1.75.0 -> 1.82.0]
 - add execute method to Bq to allow for execution of update, delete or insert queries
+- add configurable sync/async query execution mode (defaults to sync for emulator compatibility, opt-in async for production)
+- add configurable waitForTable timeout
 - add progress bar when inserting data
-- Added a fallback to InsertAll for BigQuery data insertion in Bq.groovy when streaming inserts fail due to connection errors, ensuring more robust handling with the emulator and production environments. 
-- Changed query execution in Bq.groovy to use synchronous queries instead of job polling, improving reliability with the BigQuery emulator. 
-- Added new test coverage using Testcontainers and the BigQuery emulator, including detailed configuration for reliable integration testing in BqTestContainerTest.groovy. 
-- Map Short type to INT64 in the SQL type mapper for better type compatibility with BigQuery.
+- add 60 comprehensive unit tests that run in CI without external dependencies (TypeMapper and Bq utilities)
+- fallback to InsertAll for BigQuery data insertion when streaming inserts fail due to connection errors
+- refactored insert method into smaller, maintainable methods with single responsibilities
+- fixed Timestamp type mapping bug (was incorrectly mapped to DATE instead of TIMESTAMP)
+- map Short type to INT64 for better type compatibility
+- test coverage using Testcontainers and BigQuery emulator (BqTestContainerTest.groovy)
+- comprehensive JavaDoc documentation and code quality improvements
 
 ## v0.4.0, 2025-09-06
 - Change saveToBigQuery to use the BigQuery Write API instead of the older

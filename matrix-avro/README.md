@@ -23,8 +23,7 @@ Add the module to your build (versions are examples; prefer the Matrix BOM if yo
 dependencies {
   api "se.alipsa.matrix:matrix-core:<version>"
   implementation "se.alipsa.matrix:matrix-avro:<version>"
-  // Avro runtime is brought in transitively; if you need to pin:
-  implementation "org.apache.avro:avro:1.11.4"
+  // Avro runtime is brought in transitively by matrix-avro
 }
 ```
 
