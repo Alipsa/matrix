@@ -10,8 +10,8 @@ Gradle:
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
 implementation 'org.apache.groovy:groovy-ginq:5.0.4'
-implementation 'se.alipsa.matrix:matrix-core:3.5.0'
-implementation 'se.alipsa.matrix:matrix-datasets:2.1.1'
+implementation 'se.alipsa.matrix:matrix-core:3.6.0'
+implementation 'se.alipsa.matrix:matrix-datasets:2.1.2'
 ```
 Maven:
 ```xml
@@ -29,12 +29,12 @@ Maven:
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-core</artifactId>
-      <version>3.5.0</version>
+      <version>3.6.0</version>
   </dependency>
   <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-datasets</artifactId>
-      <version>2.1.1</version>
+      <version>2.1.2</version>
   </dependency>
 </dependencies>
 ```
