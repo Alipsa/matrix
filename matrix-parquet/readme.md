@@ -57,24 +57,24 @@ MatrixParquetWriter.write(data, dir)  // Creates output/cars.parquet
 
 ## Supported Data Types
 
-| Java/Groovy Type | Parquet Type | Notes |
-|------------------|--------------|-------|
-| Integer | INT32 | |
-| Long | INT64 | |
-| BigInteger | INT64 | |
-| Float | FLOAT | |
-| Double | DOUBLE | |
-| BigDecimal | FIXED_LEN_BYTE_ARRAY (DECIMAL) | See [BigDecimal Precision](#bigdecimal-precision) |
-| Boolean | BOOLEAN | |
-| LocalDate | INT32 (DATE) | |
-| java.sql.Date | INT32 (DATE) | |
-| java.sql.Time | INT32 (TIME_MILLIS) | Millisecond precision |
-| LocalDateTime | INT64 (TIMESTAMP_MICROS) | Microsecond precision |
-| java.sql.Timestamp | INT64 (TIMESTAMP_MICROS) | Microsecond precision |
-| java.util.Date | INT64 | Epoch milliseconds |
-| List | LIST | See [Nested Structures](#nested-structures) |
-| Map | MAP or STRUCT | See [Nested Structures](#nested-structures) |
-| Other | BINARY (STRING) | Stored as toString() |
+| Java/Groovy Type   | Parquet Type                   | Notes                                             |
+|--------------------|--------------------------------|---------------------------------------------------|
+| Integer            | INT32                          |                                                   |
+| Long               | INT64                          |                                                   |
+| BigInteger         | INT64                          |                                                   |
+| Float              | FLOAT                          |                                                   |
+| Double             | DOUBLE                         |                                                   |
+| BigDecimal         | FIXED_LEN_BYTE_ARRAY (DECIMAL) | See [BigDecimal Precision](#bigdecimal-precision) |
+| Boolean            | BOOLEAN                        |                                                   |
+| LocalDate          | INT32 (DATE)                   |                                                   |
+| java.sql.Date      | INT32 (DATE)                   |                                                   |
+| java.sql.Time      | INT32 (TIME_MILLIS)            | Millisecond precision                             |
+| LocalDateTime      | INT64 (TIMESTAMP_MICROS)       | Microsecond precision                             |
+| java.sql.Timestamp | INT64 (TIMESTAMP_MICROS)       | Microsecond precision                             |
+| java.util.Date     | INT64                          | Epoch milliseconds                                |
+| List               | LIST                           | See [Nested Structures](#nested-structures)       |
+| Map                | MAP or STRUCT                  | See [Nested Structures](#nested-structures)       |
+| Other              | BINARY (STRING)                | Stored as toString()                              |
 
 ## BigDecimal Precision
 

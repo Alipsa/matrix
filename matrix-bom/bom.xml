@@ -42,7 +42,7 @@
     <matrixGroovyExtVersion>0.1.0</matrixGroovyExtVersion>
     <matrixGsheetsVersion>0.1.0</matrixGsheetsVersion>
     <matrixJsonVersion>2.1.2</matrixJsonVersion>
-    <matrixParquetVersion>0.4.0-SNAPSHOT</matrixParquetVersion>
+    <matrixParquetVersion>0.4.0</matrixParquetVersion>
     <matrixSmileVersion>0.1.0-SNAPSHOT</matrixSmileVersion>
     <matrixSpreadsheetVersion>2.3.0-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.3.0-SNAPSHOT</matrixSqlVersion>
