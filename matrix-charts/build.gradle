@@ -68,10 +68,10 @@ dependencies {
 
   // One of these is enough
   //implementation "org.jfree:jfreechart:1.5.6"
-  implementation 'org.knowm.xchart:xchart:3.8.8'
+  api 'org.knowm.xchart:xchart:3.8.8'
   api 'se.alipsa:fxsvgimage:1.4.2'
   //api 'org.girod:fxsvgimage:1.4'
-  implementation 'com.github.weisj:jsvg:2.0.0'
+  api 'com.github.weisj:jsvg:2.0.0'
 
   compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
