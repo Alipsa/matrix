@@ -11,7 +11,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1.0-SNAPSHOT'
+version = '0.1.0'
 description = 'Google Sheets import/export'
 
 repositories {

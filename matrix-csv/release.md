@@ -1,7 +1,13 @@
 # Release history
 
 ## v2.2.2, In progress
-- Upgrade commons-csv from 1.14.0 to 1.14.1
+- deprecate CsvImporter and CsvExporter in favor of CsvReader and CsvWriter
+- upgrade commons-csv from 1.14.0 to 1.14.1
+- fix bug: empty CSV files now handled correctly (no more IndexOutOfBoundsException)
+- fix typos in error messages ("extected" → "expected")
+- add comprehensive test coverage for edge cases (empty CSV, header-only, single row/column, mismatched columns)
+- add null validation to CsvExporter methods
+- add GroovyDoc documentation to CsvImporter and CsvExporter classes and methods
 
 ## v2.2.1, 2025-07-10
 - Add default value for CSV importer when importing from a file to make the api mirror the exporter.

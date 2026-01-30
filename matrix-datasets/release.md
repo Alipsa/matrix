@@ -1,7 +1,16 @@
 # Release history
 
 ## v2.1.2, in progress
-- Upgrade dependencies
+- fix critical bug: Rdatasets methods now handle missing datasets correctly (no more IndexOutOfBoundsException)
+- fix null parameter validation in Rdatasets (now checks both packageName and itemName for null)
+- add null safety to mapDataSet() method
+- use consistent Matrix naming approach (standardized on matrixName() builder method)
+- replace generic Exception with FileNotFoundException in FileUtil
+- use string interpolation instead of concatenation for error messages
+- add comprehensive test coverage for error cases and edge cases
+- add Logger implementation for better diagnostics
+- refactor mapData() to use Map lookup for improved performance
+- upgrade dependencies
   - org.jsoup:jsoup [1.21.1 -> 1.22.1]
   
 ## v2.1.1, 2025-07-19

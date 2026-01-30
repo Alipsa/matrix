@@ -37,11 +37,11 @@
     <matrixBigQueryVersion>0.5.0</matrixBigQueryVersion>
     <matrixChartsVersion>0.4.0</matrixChartsVersion>
     <matrixCoreVersion>3.6.0</matrixCoreVersion>
-    <matrixCsvVersion>2.2.2-SNAPSHOT</matrixCsvVersion>
-    <matrixDatasetsVersion>2.1.2-SNAPSHOT</matrixDatasetsVersion>
+    <matrixCsvVersion>2.2.2</matrixCsvVersion>
+    <matrixDatasetsVersion>2.1.2</matrixDatasetsVersion>
     <matrixGroovyExtVersion>0.1.0</matrixGroovyExtVersion>
-    <matrixGsheetsVersion>0.1.0-SNAPSHOT</matrixGsheetsVersion>
-    <matrixJsonVersion>2.1.2-SNAPSHOT</matrixJsonVersion>
+    <matrixGsheetsVersion>0.1.0</matrixGsheetsVersion>
+    <matrixJsonVersion>2.1.2</matrixJsonVersion>
     <matrixParquetVersion>0.4.0-SNAPSHOT</matrixParquetVersion>
     <matrixSmileVersion>0.1.0-SNAPSHOT</matrixSmileVersion>
     <matrixSpreadsheetVersion>2.3.0-SNAPSHOT</matrixSpreadsheetVersion>
