@@ -1,5 +1,8 @@
 # Maven-BOM release history
 
+## v2.4.0, 2026-01-31
+Pom file available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.4.0/matrix-bom-2.4.0.pom)
+
 ## v2.3.0, 2025-09-06
 Pom file available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.3.0/matrix-bom-2.3.0.pom)
 
