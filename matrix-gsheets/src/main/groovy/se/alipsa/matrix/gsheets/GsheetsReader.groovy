@@ -1,5 +1,9 @@
 package se.alipsa.matrix.gsheets
 
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.sheets.v4.Sheets
+import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 import se.alipsa.matrix.core.Matrix
 import groovy.transform.CompileStatic
@@ -116,7 +120,58 @@ class GsheetsReader {
    * @see GsConverter
    */
   static Matrix readAsObject(String spreadsheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null, boolean convertEmptyToNull = false) {
-    return GsImporter.importSheetAsObject(spreadsheetId, range, firstRowAsColumnNames, credentials, convertEmptyToNull)
+    GsUtil.validateSheetId(spreadsheetId)
+    GsUtil.validateRange(range)
+
+    def transport = GoogleNetHttpTransport.newTrustedTransport()
+    def gsonFactory = GsonFactory.getDefaultInstance()
+
+    if (credentials == null) {
+      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
+    }
+    def sheetsService = new Sheets.Builder(
+        transport,
+        gsonFactory,
+        new HttpCredentialsAdapter(credentials))
+        .setApplicationName("Groovy Sheets Reader")
+        .build()
+
+    def response = sheetsService
+        .spreadsheets()
+        .values()
+        .get(spreadsheetId, range)
+        .setValueRenderOption('UNFORMATTED_VALUE')
+        .execute()
+    List<List<Object>> values = response.getValues()
+    int ncol = GsUtil.columnCountForRange(range)
+
+    List<String> headers
+    if (firstRowAsColumnNames) {
+      List<Object> firstRow = values.remove(0)
+      headers = GsUtil.buildHeader(ncol, firstRow)
+    } else {
+      headers = Matrix.anonymousHeader(ncol)
+    }
+
+    // if values are missing, fill with nulls
+    for (int r = 0; r < values.size(); r++) {
+      List<Object> row = values.get(r)
+      if (convertEmptyToNull) {
+        for (int c = 0; c < row.size(); c++) {
+          Object v = row.get(c)
+          if (v instanceof CharSequence && ((CharSequence) v).length() == 0) {
+            row.set(c, null)
+          }
+        }
+      }
+      GsUtil.fillListToSize(row, ncol)
+    }
+
+    def sheetName = range.split('!')[0]
+    Matrix.builder(sheetName)
+        .rows(values)
+        .columnNames(headers)
+        .build()
   }
 
   /**
@@ -133,6 +188,63 @@ class GsheetsReader {
    * @throws IOException if the Google Sheets API call fails
    */
   static Matrix readAsStrings(String spreadsheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
-    return GsImporter.importSheetAsStrings(spreadsheetId, range, firstRowAsColumnNames, credentials)
+    GsUtil.validateSheetId(spreadsheetId)
+    GsUtil.validateRange(range)
+
+    def transport = GoogleNetHttpTransport.newTrustedTransport()
+    def gsonFactory = GsonFactory.getDefaultInstance()
+
+    if (credentials == null) {
+      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
+    }
+    def sheetsService = new Sheets.Builder(
+        transport,
+        gsonFactory,
+        new HttpCredentialsAdapter(credentials))
+        .setApplicationName("Groovy Sheets Reader")
+        .build()
+
+    def request = sheetsService
+        .spreadsheets()
+        .values()
+        .get(spreadsheetId, range)
+        .setValueRenderOption('FORMATTED_VALUE')
+
+    def response = request.execute()
+    List<List<Object>> values = response.getValues()
+    int ncol = GsUtil.columnCountForRange(range)
+
+    List<String> headers
+    if (firstRowAsColumnNames) {
+      List<Object> firstRow = values.remove(0)
+      headers = GsUtil.buildHeader(ncol, firstRow)
+    } else {
+      headers = Matrix.anonymousHeader(ncol)
+    }
+
+    def sheetName = range.split('!')[0]
+    List<List<String>> rows = []
+    values.each {valueRow ->
+      List<String> row = []
+      for (int i = 0; i < ncol; i++) {
+        if (i < valueRow.size()) {
+          def cell = valueRow.get(i)
+          if (cell == '' || cell == null) {
+            row << null
+          } else {
+            row << String.valueOf(cell)
+          }
+        } else {
+          // Pad missing trailing columns with null
+          row << null
+        }
+      }
+      rows << row
+    }
+    Matrix.builder(sheetName)
+        .rows(rows)
+        .columnNames(headers)
+        .types([String] * ncol)
+        .build()
   }
 }

@@ -33,7 +33,7 @@ class GsConverter {
         return LocalDate.parse(o.toString(), formatter)
       } catch (DateTimeParseException e) {
         // Try parsing as a numeric serial value
-        log.warn("Failed to parse '$o' as date with formatter $formatter, attempting numeric conversion: ${e.message}")
+        log.debug("Failed to parse '$o' as date with formatter $formatter, attempting numeric conversion: ${e.message}")
         try {
           return asLocalDate(new BigDecimal(o.toString().replace(' ', '')))
         } catch (NumberFormatException nfe) {
@@ -72,7 +72,7 @@ class GsConverter {
         return LocalDateTime.parse(o.toString(), formatter)
       } catch (DateTimeParseException e) {
         // Try parsing as a numeric serial value
-        log.warn("Failed to parse '$o' as datetime with formatter $formatter, attempting numeric conversion: ${e.message}")
+        log.debug("Failed to parse '$o' as datetime with formatter $formatter, attempting numeric conversion: ${e.message}")
         try {
           return asLocalDateTime(new BigDecimal(o.toString().replace(' ', '')))
         } catch (NumberFormatException nfe) {
@@ -123,7 +123,7 @@ class GsConverter {
         return LocalTime.parse(o.toString())
       } catch (DateTimeParseException e) {
         // Try parsing as a numeric serial value
-        log.warn("Failed to parse '$o' as time, attempting numeric conversion: ${e.message}")
+        log.debug("Failed to parse '$o' as time, attempting numeric conversion: ${e.message}")
         try {
           return asLocalTime(new BigDecimal(o.toString()))
         } catch (NumberFormatException nfe) {

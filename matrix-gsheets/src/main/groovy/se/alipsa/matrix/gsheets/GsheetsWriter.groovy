@@ -1,8 +1,27 @@
 package se.alipsa.matrix.gsheets
 
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.http.HttpRequestInitializer
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.sheets.v4.Sheets
+import com.google.api.services.sheets.v4.model.Sheet
+import com.google.api.services.sheets.v4.model.SheetProperties
+import com.google.api.services.sheets.v4.model.Spreadsheet
+import com.google.api.services.sheets.v4.model.SpreadsheetProperties
+import com.google.api.services.sheets.v4.model.ValueRange
+import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
+import groovy.transform.PackageScope
 import se.alipsa.matrix.core.Matrix
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.Row
+
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+
+import static se.alipsa.matrix.gsheets.BqAuthenticator.authenticate
+import static se.alipsa.matrix.gsheets.BqAuthenticator.getSCOPES
 
 /**
  * Writes Matrix data to Google Sheets spreadsheets.
@@ -106,7 +125,110 @@ class GsheetsWriter {
    * @see GsConverter#asSerial(java.time.LocalDate)
    * @see GsConverter#asSerial(java.time.LocalDateTime)
    */
-  static String write(Matrix matrix, GoogleCredentials credentials = null, boolean convertNullsToEmptyString = true, boolean convertDatesToSerial = false) {
-    return GsExporter.exportSheet(matrix, credentials, convertNullsToEmptyString, convertDatesToSerial)
+  static String write(Matrix matrix, boolean convertNullsToEmptyString = true, boolean convertDatesToSerial = false) {
+    return write(matrix, null, convertNullsToEmptyString, convertDatesToSerial)
+  }
+
+  static String write(Matrix matrix, GoogleCredentials credentials, boolean convertNullsToEmptyString = true, boolean convertDatesToSerial = false) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("matrix must not be null")
+    }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("matrix must have at least one column")
+    }
+    if (matrix.rowCount() == 0) {
+      throw new IllegalArgumentException("matrix must have at least one row")
+    }
+
+    def transport = GoogleNetHttpTransport.newTrustedTransport()
+    def gsonFactory = GsonFactory.getDefaultInstance()
+
+    // Need write scope for creating/updating spreadsheets
+    if (credentials == null) {
+      credentials = authenticate(SCOPES)
+    }
+    HttpRequestInitializer cred = new HttpCredentialsAdapter(credentials)
+
+    Sheets sheets = new Sheets.Builder(transport, gsonFactory, cred)
+        .setApplicationName("Matrix GSheets")
+        .build()
+
+    String titleBase = matrix.matrixName ?: "Matrix ${LocalDateTime.now().toString().replace('T', '_')}"
+    String sheetName = sanitizeSheetName(titleBase)
+    String spreadsheetTitle = titleBase
+
+    // 1) Create an empty spreadsheet with one sheet named after the matrix
+    Spreadsheet requestBody = new Spreadsheet()
+        .setProperties(new SpreadsheetProperties().setTitle(spreadsheetTitle))
+        .setSheets([
+            new Sheet().setProperties(new SheetProperties().setTitle(sheetName))
+        ])
+
+    Spreadsheet created
+    try {
+      created = sheets.spreadsheets()
+          .create(requestBody)
+          .setFields("spreadsheetId") // we only need the id here
+          .execute()
+    } catch (IOException e) {
+      throw new SheetOperationException("create spreadsheet", "Failed to create spreadsheet '${spreadsheetTitle}': ${e.message}")
+    }
+
+    String spreadsheetId = created.getSpreadsheetId()
+
+    // 2) Build the data: header row + data rows
+    List<String> headers = (List<String>) matrix.columnNames()
+    List<List<Object>> values = new ArrayList<>()
+
+    // header row
+    values.add(new ArrayList<Object>(headers))
+
+    // data rows
+    matrix.each { Row it ->
+      List<Object> row = new ArrayList<>(headers.size())
+      it.each { v ->
+        row.add(toCell(v, convertNullsToEmptyString, convertDatesToSerial))
+      }
+      values.add(row)
+    }
+
+    // 3) Write all values starting at A1
+    ValueRange vr = new ValueRange()
+        .setRange("${sheetName}!A1")
+        .setMajorDimension("ROWS")
+        .setValues(values)
+
+    try {
+      sheets.spreadsheets().values()
+          .update(spreadsheetId, "${sheetName}!A1", vr)
+          .setValueInputOption("RAW") // don't coerce; write exact values/strings
+          .execute()
+    } catch (IOException e) {
+      throw new SheetOperationException("write data", spreadsheetId, e)
+    }
+
+    return spreadsheetId
+  }
+
+  @PackageScope
+  static String sanitizeSheetName(String name) {
+    // Google Sheets sheet names cannot contain: : \ / ? * [ ]
+    String s = name.replaceAll('[:\\\\/?*\\[\\]]', ' ')
+    if (s.length() > 100) s = s.substring(0, 100)
+    return s.trim().isEmpty() ? "Sheet1" : s
+  }
+
+  @PackageScope
+  static Object toCell(Object v, boolean convertNullsToEmptyString, boolean convertDatesToSerial) {
+    if (v == null) return convertNullsToEmptyString ? '' : null
+    if (v instanceof Number || v instanceof Boolean) return v
+    // Dates/LocalDates/etc. are written as ISO strings unless you convert them to serial numbers yourself.
+    if (convertDatesToSerial) {
+      if (v instanceof LocalDate) return GsConverter.asSerial(v as LocalDate)
+      if (v instanceof LocalDateTime) return GsConverter.asSerial(v as LocalDateTime)
+      if (v instanceof Date) return GsConverter.asSerial(v as Date)
+      if (v instanceof LocalTime) return GsConverter.asSerial(v as LocalTime)
+    }
+    return String.valueOf(v)
   }
 }

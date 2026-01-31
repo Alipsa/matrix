@@ -7,7 +7,12 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.sheets.v4.Sheets
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
+import groovy.transform.PackageScope
 import se.alipsa.matrix.core.util.Logger
+
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 class GsUtil {
 
@@ -165,5 +170,71 @@ class GsUtil {
       log.error("Failed to retrieve sheet names for spreadsheetId '$spreadsheetId': ${e.message}", e)
       throw e
     }
+  }
+
+  static String sanitizeSheetName(String name) {
+    // Google Sheets sheet names cannot contain: : \ / ? * [ ]
+    String s = name.replaceAll('[:\\\\/?*\\[\\]]', ' ')
+    if (s.length() > 100) s = s.substring(0, 100)
+    return s.trim().isEmpty() ? "Sheet1" : s
+  }
+
+  static Object toCell(Object v, boolean convertNullsToEmptyString, boolean convertDatesToSerial) {
+    if (v == null) return convertNullsToEmptyString ? '' : null
+    if (v instanceof Number || v instanceof Boolean) return v
+    // Dates/LocalDates/etc. are written as ISO strings unless you convert them to serial numbers yourself.
+    if (convertDatesToSerial) {
+      if (v instanceof LocalDate) return GsConverter.asSerial(v as LocalDate)
+      if (v instanceof LocalDateTime) return GsConverter.asSerial(v as LocalDateTime)
+      if (v instanceof Date) return GsConverter.asSerial(v as Date)
+      if (v instanceof LocalTime) return GsConverter.asSerial(v as LocalTime)
+    }
+    return String.valueOf(v)
+  }
+
+  static void validateRange(String range) {
+    if (range == null || range.trim().isEmpty()) {
+      throw new IllegalArgumentException("range must not be null or empty")
+    }
+    // Basic A1 notation validation - should contain a colon for ranges or be a single cell
+    if (!range.contains(':') && !range.matches('.*!?[A-Z]+\\d+.*')) {
+      throw new IllegalArgumentException(
+          "Invalid range format: '${range}'. Expected A1 notation like 'Sheet1!A1:D10', 'A1:D10', or 'Sheet1!A1'"
+      )
+    }
+  }
+
+  static void validateSheetId(String sheetId) {
+    if (sheetId == null || sheetId.trim().isEmpty()) {
+      throw new IllegalArgumentException("sheetId must not be null or empty")
+    }
+  }
+
+  static List<Object> fillListToSize(List<Object> list, int desiredSize) {
+    if (list.size() >= desiredSize) {
+      return list
+    }
+
+    int currentSize = list.size()
+    for (int i = currentSize; i < desiredSize; i++) {
+      list.add(null)
+    }
+    list
+  }
+
+  static List<String> buildHeader(int ncol, List<Object> firstRow) {
+    List<String> headers  = []
+    int rowSize = firstRow.size()
+    for (int i = 0; i < ncol; i++) {
+      def val = i < rowSize ? firstRow.get(i) : null
+      def colName
+      if (val == null || val.toString().trim().isEmpty()) {
+        colName = 'c' + (i + 1)
+      } else {
+        colName = String.valueOf(val)
+      }
+      headers << colName
+    }
+    headers
   }
 }

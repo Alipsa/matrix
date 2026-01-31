@@ -1,10 +1,11 @@
 package test.alipsa.matrix.gsheets
 
+import se.alipsa.matrix.gsheets.GsheetsReader
+import se.alipsa.matrix.gsheets.GsheetsWriter
+
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gsheets.GsExporter
-import se.alipsa.matrix.gsheets.GsImporter
 import se.alipsa.matrix.gsheets.GsUtil
 import org.junit.jupiter.api.Tag
 
@@ -28,7 +29,8 @@ class GsTest {
 
   @Test
   void testExport() {
-    String spreadsheetId = GsExporter.exportSheet(empData)
+
+    String spreadsheetId = GsheetsWriter.write(empData)
 
     //println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
     GsUtil.deleteSheet(spreadsheetId)
@@ -36,10 +38,10 @@ class GsTest {
 
   @Test
   void testExportImport() {
-    String spreadsheetId = GsExporter.exportSheet(empData)
+    String spreadsheetId = GsheetsWriter.write(empData)
 
     //println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
-    Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+    Matrix m = GsheetsReader.readAsStrings(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
     assertTrue(empData.equals(m, true, true, true))
     //println "Data is basically correct"
     m.convert('emp_id': Integer,
@@ -59,10 +61,10 @@ class GsTest {
     ed[4,'emp_id'] = null
 
     //println ed.withMatrixName('original').content()
-    String spreadsheetId = GsExporter.exportSheet(ed.withMatrixName('empData'))
+    String spreadsheetId = GsheetsWriter.write(ed.withMatrixName('empData'))
 
     println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
-    Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+    Matrix m = GsheetsReader.readAsStrings(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
     //println m.withMatrixName('imported').content()
     assertTrue(ed.equals(m, true, true, true))
     //println "Data is basically correct"
@@ -78,15 +80,16 @@ class GsTest {
 
   @Test
   void testImportAsObjectWithNull() {
-    Matrix ed = empData.clone()
+    Matrix ed = empData.clone().withMatrixName('empData')
     ed[2,'salary'] = null
     ed[4,'emp_id'] = null
 
     //println ed.withMatrixName('original').content()
-    String spreadsheetId = GsExporter.exportSheet(ed.withMatrixName('empData'), false)
-
+    String spreadsheetId = GsheetsWriter.write(ed, false)
     //println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
-    Matrix m = GsImporter.importSheetAsObject(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+    Matrix m = GsheetsReader
+        .readAsObject(spreadsheetId, "empData!A1:D6", true)
+        .withMatrixName(empData.matrixName)
     //println m.withMatrixName('imported').content()
     m.moveValue(2, 'start_date', 'salary')
     m.moveValue(4, 'start_date', 'emp_id')

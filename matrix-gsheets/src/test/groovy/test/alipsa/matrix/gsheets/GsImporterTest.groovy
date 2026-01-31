@@ -2,6 +2,7 @@ package test.alipsa.matrix.gsheets
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.gsheets.GsImporter
+import se.alipsa.matrix.gsheets.GsUtil
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -13,7 +14,7 @@ class GsImporterTest {
   @Test
   void testBuildHeaderWithAllValues() {
     def firstRow = ["Name", "Age", "City"]
-    def headers = GsImporter.buildHeader(3, firstRow)
+    def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
     assertEquals("Name", headers[0])
@@ -24,7 +25,7 @@ class GsImporterTest {
   @Test
   void testBuildHeaderWithNullValues() {
     def firstRow = ["Name", null, "City"]
-    def headers = GsImporter.buildHeader(3, firstRow)
+    def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
     assertEquals("Name", headers[0])
@@ -35,7 +36,7 @@ class GsImporterTest {
   @Test
   void testBuildHeaderWithEmptyStrings() {
     def firstRow = ["Name", "", "City"]
-    def headers = GsImporter.buildHeader(3, firstRow)
+    def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
     assertEquals("Name", headers[0])
@@ -46,7 +47,7 @@ class GsImporterTest {
   @Test
   void testBuildHeaderWithWhitespaceOnly() {
     def firstRow = ["Name", "   ", "City"]
-    def headers = GsImporter.buildHeader(3, firstRow)
+    def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
     assertEquals("Name", headers[0])
@@ -58,7 +59,7 @@ class GsImporterTest {
   void testBuildHeaderWithMoreColumnsThanValues() {
     // When ncol > firstRow.size(), should generate column names
     def firstRow = ["Name", "Age"]
-    def headers = GsImporter.buildHeader(5, firstRow)
+    def headers = GsUtil.buildHeader(5, firstRow)
 
     assertEquals(5, headers.size())
     assertEquals("Name", headers[0])
@@ -71,7 +72,7 @@ class GsImporterTest {
   @Test
   void testBuildHeaderWithEmptyFirstRow() {
     def firstRow = []
-    def headers = GsImporter.buildHeader(3, firstRow)
+    def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
     assertEquals("c1", headers[0])
@@ -83,7 +84,7 @@ class GsImporterTest {
   void testBuildHeaderWithFewerColumnsThanValues() {
     // When ncol < firstRow.size(), should only use ncol headers
     def firstRow = ["Name", "Age", "City", "Country", "Zip"]
-    def headers = GsImporter.buildHeader(3, firstRow)
+    def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
     assertEquals("Name", headers[0])
@@ -94,7 +95,7 @@ class GsImporterTest {
   @Test
   void testBuildHeaderWithNumericValues() {
     def firstRow = [100, 200, 300]
-    def headers = GsImporter.buildHeader(3, firstRow)
+    def headers = GsUtil.buildHeader(3, firstRow)
 
     assertEquals(3, headers.size())
     assertEquals("100", headers[0])
@@ -105,7 +106,7 @@ class GsImporterTest {
   @Test
   void testFillListToSizeAlreadyCorrectSize() {
     def list = ["A", "B", "C"]
-    def result = GsImporter.fillListToSize(list, 3)
+    def result = GsUtil.fillListToSize(list, 3)
 
     assertEquals(3, result.size())
     assertEquals("A", result[0])
@@ -117,7 +118,7 @@ class GsImporterTest {
   void testFillListToSizeLargerThanDesired() {
     // If list is already larger than desired size, should return unchanged
     def list = ["A", "B", "C", "D", "E"]
-    def result = GsImporter.fillListToSize(list, 3)
+    def result = GsUtil.fillListToSize(list, 3)
 
     assertEquals(5, result.size())  // Should not truncate
     assertEquals("A", result[0])
@@ -128,7 +129,7 @@ class GsImporterTest {
   void testFillListToSizeSmallerThanDesired() {
     // Should pad with nulls
     def list = ["A", "B"]
-    def result = GsImporter.fillListToSize(list, 5)
+    def result = GsUtil.fillListToSize(list, 5)
 
     assertEquals(5, result.size())
     assertEquals("A", result[0])
@@ -141,7 +142,7 @@ class GsImporterTest {
   @Test
   void testFillListToSizeEmptyList() {
     def list = []
-    def result = GsImporter.fillListToSize(list, 3)
+    def result = GsUtil.fillListToSize(list, 3)
 
     assertEquals(3, result.size())
     assertNull(result[0])
@@ -152,7 +153,7 @@ class GsImporterTest {
   @Test
   void testFillListToSizeWithZeroDesiredSize() {
     def list = ["A", "B", "C"]
-    def result = GsImporter.fillListToSize(list, 0)
+    def result = GsUtil.fillListToSize(list, 0)
 
     // Should return the list unchanged since it's already >= desired size
     assertEquals(3, result.size())

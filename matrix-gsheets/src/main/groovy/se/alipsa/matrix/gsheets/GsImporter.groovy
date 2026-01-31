@@ -90,9 +90,7 @@ class GsImporter {
    */
   @Deprecated
   static Matrix importSheet(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
-    validateSheetId(sheetId)
-    validateRange(range)
-    return importSheetAsStrings(sheetId, range, firstRowAsColumnNames, credentials)
+    GsheetsReader.readAsStrings(sheetId, range, firstRowAsColumnNames, credentials)
   }
 
   /**
@@ -140,58 +138,7 @@ class GsImporter {
    */
   @Deprecated
   static Matrix importSheetAsObject(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null, boolean convertEmptyToNull = false) {
-    validateSheetId(sheetId)
-    validateRange(range)
-
-    def transport = GoogleNetHttpTransport.newTrustedTransport()
-    def gsonFactory = GsonFactory.getDefaultInstance()
-
-    if (credentials == null) {
-      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
-    }
-    def sheetsService = new Sheets.Builder(
-        transport,
-        gsonFactory,
-        new HttpCredentialsAdapter(credentials))
-        .setApplicationName("Groovy Sheets Reader")
-        .build()
-
-    def response = sheetsService
-        .spreadsheets()
-        .values()
-        .get(sheetId, range)
-        .setValueRenderOption('UNFORMATTED_VALUE')
-        .execute()
-    List<List<Object>> values = response.getValues()
-    int ncol = GsUtil.columnCountForRange(range)
-
-    List<String> headers
-    if (firstRowAsColumnNames) {
-      List<Object> firstRow = values.remove(0)
-      headers = buildHeader(ncol, firstRow)
-    } else {
-      headers = Matrix.anonymousHeader(ncol)
-    }
-
-    // if values are missing, fill with nulls
-    for (int r = 0; r < values.size(); r++) {
-      List<Object> row = values.get(r)
-      if (convertEmptyToNull) {
-        for (int c = 0; c < row.size(); c++) {
-          Object v = row.get(c)
-          if (v instanceof CharSequence && ((CharSequence) v).length() == 0) {
-            row.set(c, null)
-          }
-        }
-      }
-      fillListToSize(row, ncol)
-    }
-
-    def sheetName = range.split('!')[0]
-    Matrix.builder(sheetName)
-        .rows(values)
-        .columnNames(headers)
-        .build()
+    GsheetsReader.readAsObject(sheetId, range, firstRowAsColumnNames, credentials, convertEmptyToNull)
   }
 
   /**
@@ -199,111 +146,6 @@ class GsImporter {
    */
   @Deprecated
   static Matrix importSheetAsStrings(String sheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
-    validateSheetId(sheetId)
-    validateRange(range)
-
-    def transport = GoogleNetHttpTransport.newTrustedTransport()
-    def gsonFactory = GsonFactory.getDefaultInstance()
-
-    if (credentials == null) {
-      credentials = BqAuthenticator.authenticate(BqAuthenticator.SCOPE_SHEETS_READONLY)
-    }
-    def sheetsService = new Sheets.Builder(
-        transport,
-        gsonFactory,
-        new HttpCredentialsAdapter(credentials))
-        .setApplicationName("Groovy Sheets Reader")
-        .build()
-
-    def request = sheetsService
-        .spreadsheets()
-        .values()
-        .get(sheetId, range)
-        .setValueRenderOption('FORMATTED_VALUE')
-
-    def response = request.execute()
-    List<List<Object>> values = response.getValues()
-    int ncol = GsUtil.columnCountForRange(range)
-
-    List<String> headers
-    if (firstRowAsColumnNames) {
-      List<Object> firstRow = values.remove(0)
-      headers = buildHeader(ncol, firstRow)
-    } else {
-      headers = Matrix.anonymousHeader(ncol)
-    }
-
-    def sheetName = range.split('!')[0]
-    List<List<String>> rows = []
-    values.each {valueRow ->
-      List<String> row = []
-      for (int i = 0; i < ncol; i++) {
-        if (i < valueRow.size()) {
-          def cell = valueRow.get(i)
-          if (cell == '' || cell == null) {
-            row << null
-          } else {
-            row << String.valueOf(cell)
-          }
-        } else {
-          // Pad missing trailing columns with null
-          row << null
-        }
-      }
-      rows << row
-    }
-    Matrix.builder(sheetName)
-        .rows(rows)
-        .columnNames(headers)
-        .types([String] * ncol)
-        .build()
-  }
-
-  @groovy.transform.PackageScope
-  static List<String> buildHeader(int ncol, List<Object> firstRow) {
-    List<String> headers  = []
-    int rowSize = firstRow.size()
-    for (int i = 0; i < ncol; i++) {
-      def val = i < rowSize ? firstRow.get(i) : null
-      def colName
-      if (val == null || val.toString().trim().isEmpty()) {
-        colName = 'c' + (i + 1)
-      } else {
-        colName = String.valueOf(val)
-      }
-      headers << colName
-    }
-    headers
-  }
-
-  @groovy.transform.PackageScope
-  static List<Object> fillListToSize(List<Object> list, int desiredSize) {
-    if (list.size() >= desiredSize) {
-      return list
-    }
-
-    int currentSize = list.size()
-    for (int i = currentSize; i < desiredSize; i++) {
-      list.add(null)
-    }
-    list
-  }
-
-  private static void validateSheetId(String sheetId) {
-    if (sheetId == null || sheetId.trim().isEmpty()) {
-      throw new IllegalArgumentException("sheetId must not be null or empty")
-    }
-  }
-
-  private static void validateRange(String range) {
-    if (range == null || range.trim().isEmpty()) {
-      throw new IllegalArgumentException("range must not be null or empty")
-    }
-    // Basic A1 notation validation - should contain a colon for ranges or be a single cell
-    if (!range.contains(':') && !range.matches('.*!?[A-Z]+\\d+.*')) {
-      throw new IllegalArgumentException(
-        "Invalid range format: '${range}'. Expected A1 notation like 'Sheet1!A1:D10', 'A1:D10', or 'Sheet1!A1'"
-      )
-    }
+    GsheetsReader.readAsStrings(sheetId, range, firstRowAsColumnNames, credentials)
   }
 }
