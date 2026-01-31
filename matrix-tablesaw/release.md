@@ -1,6 +1,6 @@
 # Matrix-Tablesaw Version history
 
-## v0.2.2, In progress
+## v0.2.2, 2026-01-31
 
 ### Build Configuration Improvements
 - Added `compileTestJava` configuration with deprecation and unchecked warnings enabled
