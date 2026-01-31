@@ -31,7 +31,7 @@ or if you use maven:
 </dependencies>
 ```
 
-The core class is MatrixSql. It is created using a ConnectionInfo from the data-utils library.
+The core class is MatrixSql. It is created using a ConnectionInfo from the [data-utils library](https://github.com/Alipsa/data-utils).
 A connection info contains the jdbc url, credentials and info of the jdbc driver to use.
 The driver will be downloaded, if needed, and added to the classpath enabling dynamic 
 instantiation of the driver when connecting to the db.
@@ -42,6 +42,9 @@ requires a java.sql.Connection. You instantiate a MatrixDbUtil with a SqlTypeMap
 
 Creating a MatrixSql can be done as follows:
 ```groovy 
+import se.alipsa.groovy.datautil.ConnectionInfo
+import se.alipsa.matrix.sql.MatrixSql
+
 ConnectionInfo ci = new ConnectionInfo()
 ci.setDependency('org.postgresql:postgresql:42.7.3')
 ci.setUrl("jdbc:postgresql://somedb.somedomain.com/mydatabase")

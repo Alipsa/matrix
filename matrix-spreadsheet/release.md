@@ -1,6 +1,6 @@
 # Release history
 
-## v2.3.0, In progress
+## v2.3.0, 2026-01-31
 **Major architectural refactoring with significant performance improvements**
 
 ### Breaking Changes
