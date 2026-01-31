@@ -2,8 +2,8 @@
 set -e
 source ~/.sdkman/bin/sdkman-init.sh
 source jdk21
-#./gradlew clean publishToSonatype closeAndReleaseSonatypeStagingRepository
-./gradlew -PrunExternalTests=true :matrix-gsheets:clean :matrix-gsheets:build :matrix-gsheets:release || exit 1
+./gradlew -PrunExternalTests=true :matrix-gsheets:clean :matrix-gsheets:build
+./gradlew :matrix-gsheets:release
 PROJECT=$(basename "$PWD")
 if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"
