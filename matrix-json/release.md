@@ -1,6 +1,6 @@
 # Release history
 
-## v2.1.2, in progress
+## v2.1.2, 2026-01-31
 - deprecate JsonImporter and JsonExporter in favor of JsonReader and JsonWriter
 - change implementation to use Jackson streaming API instead of JsonSlurper for improved memory efficiency (O(1) memory regardless of JSON size)
 - add duplicate key detection in flatten() to prevent silent data loss

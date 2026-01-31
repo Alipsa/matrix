@@ -2,7 +2,9 @@
 source ~/.sdkman/bin/sdkman-init.sh
 source jdk21
 #./gradlew clean publishToSonatype closeAndReleaseSonatypeStagingRepository
-../gradlew :matrix-parquet:clean :matrix-parquet:build :matrix-parquet:release || exit 1
+../gradlew :matrix-parquet:clean :matrix-parquet:build || exit 1
+echo "Build was successful, publishing to maven central..."
+../gradlew :matrix-parquet:release || exit 1
 PROJECT=$(basename "$PWD")
 if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
   echo "$PROJECT snapshot published"

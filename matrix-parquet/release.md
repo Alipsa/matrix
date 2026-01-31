@@ -1,6 +1,6 @@
 # Matrix-parquet Release History
 
-## v0.4.0, In progress
+## v0.4.0, 2026-01-31
 - remove parquet-carpet dependency (MatrixCarpetIO) - now using native Parquet implementation
 - add support for nested structures: structs (POJOs, maps) and repeated fields (arrays)
 - add URL, Path, InputStream, and byte[] input support to MatrixParquetReader (API consistency with matrix-csv and matrix-json)
