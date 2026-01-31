@@ -1,6 +1,6 @@
 # Matrix stats release history
 
-## v2.3.0, In progress
+## v2.3.0, 2026-01-30
 **Major expansion with 26+ new statistical tests and comprehensive refactoring**
 
 ### New Statistical Tests

@@ -1,6 +1,6 @@
 # Matrix XChart release history
 
-## v0.2.3, In progress
+## v0.2.3, 2026-01-31
 - add @CompileStatic to all 17 classes for performance and type safety (100% static compilation, no @CompileDynamic needed)
 - complete empty test methods in HistogramChartTest (testDensityHistogram, testFrequencyHistogramCustom)
 - add comprehensive GroovyDoc to all abstract classes (AbstractChart, AbstractXYChart, AbstractCategoryChart)

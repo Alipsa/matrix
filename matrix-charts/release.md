@@ -1,6 +1,6 @@
 # Matrix-charts Release History
 
-## v0.4.0, in progress
+## v0.4.0, 2026-01-31
 
 This release introduces a ggplot2-style charting module. See [ggPlot.md](ggPlot.md) for more details.
 

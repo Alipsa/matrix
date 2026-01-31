@@ -1,6 +1,6 @@
 # Release history
 
-## v2.1.2, in progress
+## v2.1.2, 2026-01-31
 - fix critical bug: Rdatasets methods now handle missing datasets correctly (no more IndexOutOfBoundsException)
 - fix null parameter validation in Rdatasets (now checks both packageName and itemName for null)
 - add null safety to mapDataSet() method

@@ -1,6 +1,6 @@
 # Matrix Core Release History
 
-### 3.6.0, in progress
+### 3.6.0, 2026-01-30
 - Matrix.getAt() now returns Column instead of List (Column extends ArrayList)
 - deprecate renameColumn and dropColumns in favor of rename and drop
 - add Matrix.drop(), dropExcept(), rename(), replaceAll(), splitInto(), and subset() methods for improved API consistency
