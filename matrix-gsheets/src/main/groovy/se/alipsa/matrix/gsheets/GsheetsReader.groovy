@@ -75,7 +75,7 @@ class GsheetsReader {
    * @see #readAsObject(String, String, boolean, GoogleCredentials, boolean)
    */
   static Matrix read(String spreadsheetId, String range, boolean firstRowAsColumnNames, GoogleCredentials credentials = null) {
-    return GsImporter.importSheet(spreadsheetId, range, firstRowAsColumnNames, credentials)
+    return readAsStrings(spreadsheetId, range, firstRowAsColumnNames, credentials)
   }
 
   /**

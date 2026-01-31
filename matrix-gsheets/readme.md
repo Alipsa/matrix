@@ -19,15 +19,15 @@ def empData = Matrix.builder()
 ```
 You can export it to a google sheet like this:
 ```groovy
-import se.alipsa.matrix.gsheets.GsExporter
-String spreadsheetId = GsExporter.exportSheet(empData)
+import se.alipsa.matrix.gsheets.GsheetsWriter
+String spreadsheetId = GsheetsWriter.write(empData)
 println "Export completed: https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit"
 ```
 and import it like this:
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gsheets.GsImporter
-Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+import se.alipsa.matrix.gsheets.GsheetsReader
+Matrix m = GsheetsReader.read(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
 // all column types will be Object so we need to convert them back to their original types
 m.convert('emp_id': Integer,
         'emp_name': String,
@@ -52,17 +52,18 @@ Here is an example:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gsheets.GsImporter
+import se.alipsa.matrix.gsheets.GsheetsReader
+import se.alipsa.matrix.gsheets.GsheetsWriter
 import se.alipsa.matrix.gsheets.GsUtil
 
 // Upload it where the local dates are converted to serials
 Matrix ed = empData.clone().convert('start_date', BigDecimal) {
   GsUtil.asSerial(it)
 }
-def spreadsheetId = GsExporter.exportSheet(ed)
+def spreadsheetId = GsheetsWriter.write(ed)
 
 // Download it and covert the serials back to LocalDates 
-Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+Matrix m = GsheetsReader.read(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
 m.convert('start_date', LocalDate) {
   GsUtil.asLocalDate(it)
 }
@@ -106,9 +107,10 @@ emp_id	emp_name	salary	start_date
 ```
 
 ```groovy
-String spreadsheetId = GsExporter.exportSheet(ed.withMatrixName('empData'))
-Matrix m = GsImporter.importSheet(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+String spreadsheetId = GsheetsWriter.write(ed.withMatrixName('empData'))
+Matrix m = GsheetsReader.read(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
 println m.withMatrixName('imported').content()
+
 ```
 The imported matrix will now look like this:
 ```
@@ -124,7 +126,7 @@ If this side effect is not desired, you can use the GsImporter.importSheetAsObje
 move method to correct the misaligned rows values. Here is an example:
 
 ```groovy
-Matrix m = GsImporter.importSheetAsObject(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
+Matrix m = GsheetsReader.readAsObject(spreadsheetId, "empData!A1:D6", true).withMatrixName(empData.matrixName)
 println m.withMatrixName('imported').content()
 ```
 This will look like this:

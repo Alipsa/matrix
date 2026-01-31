@@ -40,7 +40,7 @@
     <matrixCsvVersion>2.2.2</matrixCsvVersion>
     <matrixDatasetsVersion>2.1.2</matrixDatasetsVersion>
     <matrixGroovyExtVersion>0.1.0</matrixGroovyExtVersion>
-    <matrixGsheetsVersion>0.1.0</matrixGsheetsVersion>
+    <matrixGsheetsVersion>0.1.1</matrixGsheetsVersion>
     <matrixJsonVersion>2.1.2</matrixJsonVersion>
     <matrixParquetVersion>0.4.0</matrixParquetVersion>
     <matrixSmileVersion>0.1.0</matrixSmileVersion>

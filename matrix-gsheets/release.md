@@ -1,6 +1,9 @@
 # Release history
 
-## 0.1.0, In progress
+## 0.1.1, 2026-01-31
+Move actual implementation for GsheetsReader and GsheetsWriter and utility methods to GsUtil so that GsImporter and GsExporter are just empty wrappers.
+
+## 0.1.0, 2026-01-31
 
 ### Major Improvements
 - **Production Readiness**: Comprehensive error handling, input validation, and 101 passing tests (up from 23)
