@@ -1,6 +1,6 @@
 # Release history
 
-## v2.2.2, In progress
+## v2.2.2, 2026-01-31
 - deprecate CsvImporter and CsvExporter in favor of CsvReader and CsvWriter
 - upgrade commons-csv from 1.14.0 to 1.14.1
 - fix bug: empty CSV files now handled correctly (no more IndexOutOfBoundsException)
