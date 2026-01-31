@@ -1,7 +1,28 @@
 # Maven-BOM release history
 
 ## v2.4.0, 2026-01-31
-Pom file available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.4.0/matrix-bom-2.4.0.pom)
+Pom files available at maven central
+- [matrix-bom](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.4.0/matrix-bom-2.4.0.pom)
+- [matrix-all](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-all/2.4.0/matrix-all-2.4.0.pom)
+
+Dependency changes:
+- Add matrix-arff 0.1.0 (new)
+- Add matrix-avro 0.1.0 (new)
+- Add matrix-groovy-ext 0.1.0 (new)
+- Add matrix-smile 0.1.0 (new)
+- Upgrade matrix-core 3.5.0 -> 3.6.0
+- Upgrade matrix-stats 2.2.0 -> 2.3.0
+- Upgrade matrix-sql 2.1.1 -> 2.3.0
+- Upgrade matrix-spreadsheet 2.2.1 -> 2.3.0
+- Upgrade matrix-datasets 2.1.1 -> 2.1.2
+- Upgrade matrix-json 2.1.1 -> 2.1.2
+- Upgrade matrix-csv 2.2.1 -> 2.2.2
+- Upgrade matrix-parquet 0.3.0 -> 0.4.0
+- Upgrade matrix-bigquery 0.4.0 -> 0.5.1
+- Upgrade matrix-charts 0.3.1 -> 0.4.0
+- Upgrade matrix-xchart 0.2.2 -> 0.2.3
+- Upgrade matrix-tablesaw 0.2.1 -> 0.2.2
+- Upgrade matrix-gsheets 0.0.1 -> 0.1.1
 
 ## v2.3.0, 2025-09-06
 Pom file available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-bom/2.3.0/matrix-bom-2.3.0.pom)

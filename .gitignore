@@ -15,3 +15,4 @@ build/
 /.gradle-user/
 
 /agent-api.log
+/matrix-bom/.flattened-pom.xml
