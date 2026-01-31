@@ -1,6 +1,6 @@
 # Matrix-smile release history
 
-## v0.1.0, In progress
+## v0.1.0, 2026-01-31
 Initial release providing comprehensive integration between Matrix and Smile (Statistical Machine Intelligence and Learning Engine).
 
 ### Core Features
