@@ -1,7 +1,7 @@
 # Release history
 Date format used below is yyyy-MM-dd
 
-## v2.3.0, in progress
+## v2.3.0, 2026-01-31
 - add option to control whether column names are quoted when creating a table
 - add an execute method to MatrixSql to run arbitrary sql (update, delete, insert etc.)
 - MatrixSqlFactory.create attempts to infer and set the JDBC driver when missing
