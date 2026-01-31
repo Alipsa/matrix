@@ -9,7 +9,6 @@ implementation(platform( 'se.alipsa.matrix:matrix-bom:2.4.0'))
 implementation 'se.alipsa.matrix-core'
 implementation 'se.alipsa.matrix:matrix-charts'
 implementation 'se.alipsa.matrix:matrix-stats'
-implementation 'se.alipsa.matrix:matrix-groovy-ext'
 ```
 
 ... or maven pom.xml
@@ -39,10 +38,6 @@ implementation 'se.alipsa.matrix:matrix-groovy-ext'
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
     <artifactId>matrix-stats</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-groovy-ext</artifactId>
   </dependency>
 </dependencies>
 ```
