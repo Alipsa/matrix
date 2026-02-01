@@ -36,7 +36,7 @@
     <matrixAvroVersion>0.1.0</matrixAvroVersion>
     <matrixBigQueryVersion>0.5.1</matrixBigQueryVersion>
     <matrixChartsVersion>0.4.0</matrixChartsVersion>
-    <matrixCoreVersion>3.6.0</matrixCoreVersion>
+    <matrixCoreVersion>3.7.0-SNAPSHOT</matrixCoreVersion>
     <matrixCsvVersion>2.2.2</matrixCsvVersion>
     <matrixDatasetsVersion>2.1.2</matrixDatasetsVersion>
     <matrixGroovyExtVersion>0.1.1-SNAPSHOT</matrixGroovyExtVersion>
@@ -45,7 +45,7 @@
     <matrixParquetVersion>0.4.0</matrixParquetVersion>
     <matrixSmileVersion>0.1.0</matrixSmileVersion>
     <matrixSpreadsheetVersion>2.3.0</matrixSpreadsheetVersion>
-    <matrixSqlVersion>2.3.0</matrixSqlVersion>
+    <matrixSqlVersion>2.3.1-SNAPSHOT</matrixSqlVersion>
     <matrixStatsVersion>2.3.0</matrixStatsVersion>
     <matrixTablesawVersion>0.2.2</matrixTablesawVersion>
     <matrixXChartVersion>0.2.3</matrixXChartVersion>

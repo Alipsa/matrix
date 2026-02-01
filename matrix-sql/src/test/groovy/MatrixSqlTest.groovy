@@ -18,12 +18,21 @@ import static org.junit.jupiter.api.Assertions.*
 
 class MatrixSqlTest {
 
+  private static String h2MemUrl(String name, String additionalProperties = null) {
+    String uniqueName = "${name}_${System.nanoTime()}"
+    String url = "jdbc:h2:mem:${uniqueName};DB_CLOSE_DELAY=-1"
+    if (additionalProperties != null && !additionalProperties.isBlank()) {
+      url += ";${additionalProperties}"
+    }
+    return url
+  }
+
 
   @Test
   void testH2TableCreation() {
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'h2testdb')
+    String url = h2MemUrl('h2testdb')
     Matrix airq = Dataset.airquality()
-    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')) {
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
 
       String tableName = matrixSql.tableName(airq)
       if (matrixSql.tableExists(tableName)) {
@@ -77,8 +86,7 @@ class MatrixSqlTest {
     .types(int, String, LocalDate)
     .build()
 
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'testdb')
-    String url = "jdbc:h2:file:${tmpDb};MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
+    String url = h2MemUrl('testdb', 'MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE')
     // Test that deriving the dependency and driver from the url works
     try(MatrixSql matrixSql = MatrixSqlFactory.create(url, 'sa', '123')) {
 
@@ -103,8 +111,7 @@ class MatrixSqlTest {
 
   @Test
   void testFactorySetsDriverWhenMissing() {
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'driver_testdb')
-    String url = "jdbc:h2:file:${tmpDb}"
+    String url = h2MemUrl('driver_testdb')
     String expectedDriver = SqlUtil.getDriverClassName(url)
     assertNotNull(expectedDriver, "Expected SqlUtil to resolve a driver for $url")
     try (MatrixSql matrixSql = MatrixSqlFactory.create(url, 'sa', '123', '2.4.240')) {
@@ -114,8 +121,8 @@ class MatrixSqlTest {
 
   @Test
   void testReconnectAfterClose() {
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'reconnect_testdb')
-    MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')
+    String url = h2MemUrl('reconnect_testdb')
+    MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')
     try {
       Connection first = matrixSql.connect()
       assertFalse(first.isClosed(), 'Expected initial connection to be open')
@@ -138,9 +145,9 @@ class MatrixSqlTest {
     .types(int, String)
     .build()
 
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'update_testdb')
     String props = "DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
-    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123', props)) {
+    String url = h2MemUrl('update_testdb', props)
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
       String tableName = matrixSql.tableName(data)
       if (matrixSql.tableExists(tableName)) {
         matrixSql.dropTable(tableName)
@@ -165,8 +172,8 @@ class MatrixSqlTest {
     .types(int, String)
     .build()
 
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'update_match_testdb')
-    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')) {
+    String url = h2MemUrl('update_match_testdb')
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
       String tableName = matrixSql.tableName(data)
       if (matrixSql.tableExists(tableName)) {
         matrixSql.dropTable(tableName)
@@ -190,9 +197,9 @@ class MatrixSqlTest {
     .types(int, int, String, LocalDate)
     .build()
 
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'pktestdb')
+    String url = h2MemUrl('pktestdb')
 
-    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(tmpDb, 'sa', '123')) {
+    try (MatrixSql matrixSql = MatrixSqlFactory.createH2(url, 'sa', '123')) {
       String tableName = matrixSql.tableName(pkdata)
       if (matrixSql.tableExists(tableName)) {
         matrixSql.dropTable(tableName)
@@ -213,14 +220,14 @@ class MatrixSqlTest {
 
   @Test
   void testDdl() {
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'ddltestdb')
     String h2version = "2.4.240"
     Matrix m = AbstractDbTest.getComplexData()
     String props = "MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
+    String url = h2MemUrl('ddltestdb', props)
 
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDependency("com.h2database:h2:$h2version")
-    ci.setUrl("jdbc:h2:file:${tmpDb};$props")
+    ci.setUrl(url)
     ci.setUser('sa')
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")
@@ -233,7 +240,7 @@ class MatrixSqlTest {
     }
 
     // Check that the factory creates the same MatrixSql as the explicit creation does
-    try (MatrixSql h2 = MatrixSqlFactory.createH2(tmpDb, 'sa', '123', props)) {
+    try (MatrixSql h2 = MatrixSqlFactory.createH2(url, 'sa', '123', null, h2version)) {
       //println "using $h2.connectionInfo.dependency with url ${h2.connectionInfo.url}"
       ddl2 = h2.createDdl(m)
       String latestVersion = h2.connectionInfo.dependencyVersion

@@ -199,23 +199,29 @@ class MatrixBuilderTest {
     assertIterableEquals([3, 'Lotte', '2023-05-27'], m.row(2))
   }
 
+  @Test
+  void testClipboardParsing() {
+    String content = "#types: String, int\r\nname\tvalue\r\n\"A\"\t\"1\"\r\nB\t2\r\n"
+    Matrix m = Matrix.builder()
+        .clipboard(content, [delimiter: "\t", rowDelimiter: "\r\n", quoteString: '"'])
+        .build()
+
+    assertIterableEquals(['name', 'value'], m.columnNames())
+    assertIterableEquals([String, Integer], m.types())
+    assertEquals('A', m[0, 0])
+    assertEquals(1, m[0, 1])
+    assertEquals('B', m[1, 0])
+    assertEquals(2, m[1, 1])
+  }
+
   @SuppressWarnings('SqlNoDataSourceInspection')
   @Test
   void testCreateFromDb() {
     def dbDriver = "org.h2.Driver"
-    def dbFileName = System.getProperty("java.io.tmpdir") + "/testdb"
-    def dbUrl = "jdbc:h2:file:" + dbFileName
+    def dbName = "testdb_${System.nanoTime()}"
+    def dbUrl = "jdbc:h2:mem:${dbName};DB_CLOSE_DELAY=-1"
     def dbUser = "sa"
     def dbPasswd = "123"
-
-    File dbFile = new File(dbFileName + ".mv.db")
-    if (dbFile.exists()) {
-      dbFile.delete()
-    }
-    File dbTraceFile = new File(dbFileName + "trace.db")
-    if (dbTraceFile.exists()) {
-      dbTraceFile.delete()
-    }
 
     Sql.withInstance(dbUrl, dbUser, dbPasswd, dbDriver) { sql ->
       sql.execute '''

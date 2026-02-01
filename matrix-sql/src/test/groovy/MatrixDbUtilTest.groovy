@@ -13,8 +13,8 @@ class MatrixDbUtilTest {
   void testDdl() {
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDependency('com.h2database:h2:2.4.240')
-    def tmpDb = new File(System.getProperty('java.io.tmpdir'), 'ddltestdb').getAbsolutePath()
-    ci.setUrl("jdbc:h2:file:${tmpDb};MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE")
+    String dbName = "ddltestdb_${System.nanoTime()}"
+    ci.setUrl("jdbc:h2:mem:${dbName};DB_CLOSE_DELAY=-1;MODE=MSSQLServer;DATABASE_TO_UPPER=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE")
     ci.setUser('sa')
     ci.setPassword('123')
     ci.setDriver("org.h2.Driver")

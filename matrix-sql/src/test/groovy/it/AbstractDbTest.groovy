@@ -40,7 +40,7 @@ abstract class AbstractDbTest {
       //Grape.grab(ci.dependency) // does not work since junit is not running in a groovy class loader
     } else {
       ci.setDependency('com.h2database:h2:2.4.240')
-      def tmpDb = new File(System.getProperty('java.io.tmpdir'), "$dbName").getAbsolutePath()
+      String uniqueName = "${dbName}_${System.nanoTime()}"
       String settings = ''
       if (mode != null && db != DataBaseProvider.H2) {
         settings += "MODE=$mode"
@@ -48,7 +48,11 @@ abstract class AbstractDbTest {
       additionalSettings.each {
         settings += ";$it"
       }
-      ci.setUrl("jdbc:h2:file:${tmpDb};$settings")
+      String url = "jdbc:h2:mem:${uniqueName};DB_CLOSE_DELAY=-1"
+      if (settings != null && !settings.isBlank()) {
+        url += ";$settings"
+      }
+      ci.setUrl(url)
       ci.setUser('sa')
       ci.setPassword('123')
       ci.setDriver("org.h2.Driver")

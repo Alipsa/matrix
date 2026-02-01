@@ -430,19 +430,10 @@ class MatrixJavaTest {
   @Test
   void testCreateFromDb() throws SQLException, ClassNotFoundException {
     var dbDriver = "org.h2.Driver";
-    var dbFileName = System.getProperty("java.io.tmpdir") + "/testdb";
-    var dbUrl = "jdbc:h2:file:" + dbFileName;
+    var dbName = "testdb_" + System.nanoTime();
+    var dbUrl = "jdbc:h2:mem:" + dbName + ";DB_CLOSE_DELAY=-1";
     var dbUser = "sa";
     var dbPasswd = "123";
-
-    File dbFile = new File(dbFileName + ".mv.db");
-    if (dbFile.exists()) {
-      dbFile.delete();
-    }
-    File dbTraceFile = new File(dbFileName + "trace.db");
-    if (dbTraceFile.exists()) {
-      dbTraceFile.delete();
-    }
     Properties props = new Properties();
     props.setProperty("user", dbUser);
     props.setProperty("password", dbPasswd);

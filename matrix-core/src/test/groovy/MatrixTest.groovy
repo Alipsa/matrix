@@ -856,6 +856,39 @@ class MatrixTest {
   }
 
   @Test
+  void testToCsvString() {
+    def table = Matrix.builder()
+        .data(
+            name: ['A, B', 'C'],
+            value: [1, null]
+        )
+        .types(String, Number)
+        .build()
+
+    String csv = table.toCsvString()
+    def rows = csv.split('\n')
+    assertEquals(3, rows.length)
+    assertEquals('name, value', rows[0])
+    assertEquals('"A, B", 1', rows[1])
+    assertEquals('C, ', rows[2])
+
+    String noHeader = table.toCsvString(false)
+    assertEquals('"A, B", 1\nC, ', noHeader)
+
+    String withTypes = table.toCsvString(includeTypes: true)
+    def typedRows = withTypes.split('\n')
+    assertEquals('#types: String, Number', typedRows[0])
+    assertEquals('name, value', typedRows[1])
+    assertEquals(withTypes, table.toCsvString(true, true))
+
+    String withCustomComment = table.toCsvString(includeTypes: true, lineComment: '--')
+    assertTrue(withCustomComment.startsWith('--types: String, Number\n'))
+
+    String custom = table.toCsvString(quoteString: "'", delimiter: '\t', rowDelimiter: '\r\n')
+    assertEquals("name\tvalue\r\nA, B\t1\r\nC\t", custom)
+  }
+
+  @Test
   void testToHtml() {
     def empData = Matrix.builder()
         .columns(
@@ -876,6 +909,50 @@ class MatrixTest {
     assertTrue(html.contains("<th class='salary Number' style='text-align: right'>salary</th>"), 'table header for salary should be right aligned but was ' + html)
     assertTrue(html.contains("<td class='salary Number' style='text-align: right'>623.3</td>"), 'table row for salary should be right aligned but was ' + html)
 
+  }
+
+  @Test
+  void testReplaceAllWithNullAndEmpty() {
+    Matrix table = Matrix.builder()
+        .rows([
+            [null, '', 'x'],
+            ['', null, 'y']
+        ])
+        .types(String, String, String)
+        .build()
+
+    table.replaceAll(null, '')
+    assertEquals('', table[0, 0])
+    assertEquals('', table[1, 1])
+
+    table.replaceAll('', null)
+    assertEquals(null, table[0, 0])
+    assertEquals(null, table[0, 1])
+    assertEquals(null, table[1, 0])
+    assertEquals(null, table[1, 1])
+    assertEquals('x', table[0, 2])
+    assertEquals('y', table[1, 2])
+  }
+
+  @Test
+  void testReplaceColumnWithNullAndEmpty() {
+    Matrix table = Matrix.builder()
+        .rows([
+            [null, '', 'x'],
+            ['', null, 'y']
+        ])
+        .types(String, String, String)
+        .build()
+
+    table.replace(0, null, '')
+    table.replace(1, '', null)
+
+    assertEquals('', table[0, 0])
+    assertEquals(null, table[0, 1])
+    assertEquals('', table[1, 0])
+    assertEquals(null, table[1, 1])
+    assertEquals('x', table[0, 2])
+    assertEquals('y', table[1, 2])
   }
 
   @Test

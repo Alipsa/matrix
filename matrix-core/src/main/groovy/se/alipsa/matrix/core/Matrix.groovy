@@ -2,6 +2,7 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
+import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.MatrixPrinter
 import se.alipsa.matrix.core.util.RowComparator
 
@@ -106,10 +107,25 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
+  /**
+   * Add a column of the specified type, initialized with null values.
+   *
+   * @param name the name of the column
+   * @param type the type (class) of the data
+   * @return this matrix (mutated) to allow method chaining
+   */
   Matrix addColumn(String name, Class type) {
     addColumn(name, type, [null]*rowCount())
   }
 
+  /**
+   * Add a column to the end of the matrix.
+   *
+   * @param name the name of the column
+   * @param type the type (class) of the data
+   * @param column the list of column values
+   * @return this matrix (mutated) to allow method chaining
+   */
   Matrix addColumn(String name, Class type = Object, List column) {
     if (columnNames().contains(name)) {
       throw new IllegalArgumentException("Column names must be unique, $name already exists at index ${columnIndex(name)}")
@@ -182,6 +198,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     return this
   }
 
+  /**
+   * Add the specified columns from another matrix by index.
+   *
+   * @param table the matrix to add columns from
+   * @param columns the column indices to add
+   * @return this matrix (mutated) to allow method chaining
+   */
   Matrix addColumns(Matrix table, List<Integer> columns) {
     List<String> names
     columns.each {
@@ -250,20 +273,30 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Mutable operation to add a row
+   * Mutable operation to add a row.
+   *
+   * This differs from {@code plus(List)} which returns a new matrix without mutating this instance.
    *
    * @param row the row list to add
    * @return this matrix (altered)
+   *
+   * Note: In v3.7.0, the `&` operator is planned to append columns instead of rows.
+   * Use addRow/addRows for forward-compatible code.
    */
   Matrix and(List row) {
     addRow(row)
   }
 
   /**
-   * Mutable operation to add a row
+   * Mutable operation to add all rows from another matrix.
+   *
+   * This differs from {@code plus(Matrix)} which returns a new matrix without mutating this instance.
    *
    * @param row the row list to add
    * @return this matrix (altered)
+   *
+   * Note: In v3.7.0, the `&` operator is planned to append columns instead of rows.
+   * Use addRow/addRows for forward-compatible code.
    */
   Matrix and(Matrix matrix) {
     addRows(matrix.rowList())
@@ -427,14 +460,37 @@ class Matrix implements Iterable<Row>, Cloneable {
     this
   }
 
+  /**
+   * Return the name of the column at the specified index.
+   *
+   * @param index the column index
+   * @return the column name
+   */
   String columnName(int index) {
     return columnNames()[index]
   }
 
+  /**
+   * Return all column names in order.
+   *
+   * @return the list of column names
+   */
   List<String> columnNames() {
     return mColumns.collect{it.name}
   }
 
+  /**
+   * Cast this matrix to other common types.
+   *
+   * Supported targets:
+   * - Matrix (returns this)
+   * - List/ArrayList (rows as List<List>)
+   * - Map/LinkedHashMap (column name -> column values)
+   * - Grid (matrix values only)
+   *
+   * @param type the target class
+   * @return the matrix converted to the requested type
+   */
   def asType(Class type) {
     if (type == null) {
       throw new IllegalArgumentException("Type cannot be null")
@@ -527,12 +583,29 @@ class Matrix implements Iterable<Row>, Cloneable {
     convert(types, null, dateTimeFormat, numberFormat)
   }
 
+  /**
+   * Convert all columns to the type specified, substituting a value for nulls.
+   *
+   * @param type the class to convert all values to
+   * @param valueIfNull the value to use when an element is null
+   * @param dateTimeFormat an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return this Matrix converted as specified
+   */
   <T> Matrix convert(Class<T> type, T valueIfNull, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     List<Class<T>> types = [type] * columnCount()
     convert(types, valueIfNull, dateTimeFormat, numberFormat)
   }
 
 
+  /**
+   * Convert columns in order to the classes specified.
+   *
+   * @param types a list of column types (classes) in column order
+   * @param dateTimeFormat an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return this Matrix converted as specified
+   */
   Matrix convert(List<Class> types, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     convert(types, null, dateTimeFormat, numberFormat)
   }
@@ -555,10 +628,27 @@ class Matrix implements Iterable<Row>, Cloneable {
     return convert(columnTypeMap, valueIfNull, dateTimeFormat, numberFormat)
   }
 
+  /**
+   * Convert named columns to the classes specified in the map.
+   *
+   * @param types a map of column name to target class
+   * @param dateTimeFormat an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return this Matrix converted as specified
+   */
   Matrix convert(Map<String, Class> types, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     convert(types, null, dateTimeFormat, numberFormat)
   }
 
+  /**
+   * Convert named columns to the classes specified in the map, substituting a value for nulls.
+   *
+   * @param types a map of column name to target class
+   * @param valueIfNull the value to use when an element is null
+   * @param dateTimeFormat an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return this Matrix converted as specified
+   */
   Matrix convert(Map<String, Class> types, Object valueIfNull, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     List<Column> convertedColumns = []
     for (int i = 0; i < columnCount(); i++) {
@@ -580,22 +670,68 @@ class Matrix implements Iterable<Row>, Cloneable {
     this
   }
 
+  /**
+   * Convert a single column to the specified type.
+   *
+   * @param columnName the column name to convert
+   * @param type the target class
+   * @param dateTimeFormat an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return this Matrix converted as specified
+   */
   <T> Matrix convert(String columnName, Class<T> type, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     return convert([(columnName): type], null, dateTimeFormat, numberFormat)
   }
 
+  /**
+   * Convert a single column to the specified type, substituting a value for nulls.
+   *
+   * @param columnName the column name to convert
+   * @param type the target class
+   * @param valueIfNull the value to use when an element is null
+   * @param dateTimeFormat an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return this Matrix converted as specified
+   */
   <T> Matrix convert(String columnName, Class<T> type, T valueIfNull, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     return convert([(columnName): type], valueIfNull, dateTimeFormat, numberFormat)
   }
 
+  /**
+   * Convert a single column by index to the specified type.
+   *
+   * @param columnIndex the column index to convert
+   * @param type the target class
+   * @param dateTimeFormat an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return this Matrix converted as specified
+   */
   <T> Matrix convert(int columnIndex, Class<T> type, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     convert(columnIndex, type, null, dateTimeFormat, numberFormat)
   }
 
+  /**
+   * Convert a single column by index to the specified type, substituting a value for nulls.
+   *
+   * @param columnIndex the column index to convert
+   * @param type the target class
+   * @param valueIfNull the value to use when an element is null
+   * @param dateTimeFormat an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return this Matrix converted as specified
+   */
   <T> Matrix convert(int columnIndex, Class<T> type, T valueIfNull, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     convert(columnName(columnIndex), type, valueIfNull, dateTimeFormat, numberFormat)
   }
 
+  /**
+   * Convert a column using a custom converter closure.
+   *
+   * @param columnName the column name to convert
+   * @param type the target class
+   * @param converter a closure that converts each value
+   * @return this Matrix converted as specified
+   */
   Matrix convert(String columnName, Class type, Closure converter) {
     return convert(columnNames().indexOf(columnName), type, converter)
   }
@@ -666,6 +802,16 @@ class Matrix implements Iterable<Row>, Cloneable {
     this
   }
 
+  /**
+   * Convert a range of columns to the specified type.
+   *
+   * @param columns the column index range to convert
+   * @param type the target class
+   * @param valueIfNull the value to use when an element is null
+   * @param dateTimeFormat an optional formatter if you are converting to a date object (LocalDate, LocalDateTime etc)
+   * @param numberFormat an optional number format if you are converting Strings to numbers
+   * @return this Matrix converted as specified
+   */
   <T> Matrix convert(IntRange columns, Class<T> type, T valueIfNull = null, String dateTimeFormat = null, NumberFormat numberFormat = null) {
     Map<String, Class> map = [:]
     columns.each {
@@ -678,6 +824,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     return mColumns.size()
   }
 
+  /**
+   * @return the index of the last column (columnCount - 1)
+   */
   int lastColumnIndex() {
     columnCount() - 1
   }
@@ -725,6 +874,12 @@ class Matrix implements Iterable<Row>, Cloneable {
     return colNums
   }
 
+  /**
+   * Return the column with the specified name.
+   *
+   * @param columnName the column name to retrieve
+   * @return the matching Column
+   */
   Column column(String columnName) {
     try {
       return mColumns.get(columnIndex(columnName))
@@ -734,18 +889,41 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
+  /**
+   * Return the column at the specified index.
+   *
+   * @param index the column index
+   * @return the column at that index
+   */
   Column column(int index) {
     return mColumns.get(index)
   }
 
+  /**
+   * Return all columns in order.
+   *
+   * @return the list of columns
+   */
   List<Column> columns() {
     return mColumns
   }
 
+  /**
+   * Return the columns matching the supplied names.
+   *
+   * @param columnNames the column names to retrieve
+   * @return the matching columns in the order supplied
+   */
   List<Column> columns(String[] columnNames) {
     return columns(columnNames as List<String>)
   }
 
+  /**
+   * Return the columns matching the supplied names.
+   *
+   * @param columnNames the column names to retrieve
+   * @return the matching columns in the order supplied
+   */
   List<Column> columns(List<String> columnNames) {
     def cols = new ArrayList<Column>()
     for (String colName in columnNames) {
@@ -754,6 +932,12 @@ class Matrix implements Iterable<Row>, Cloneable {
     return cols
   }
 
+  /**
+   * Return the columns matching the supplied indices.
+   *
+   * @param indices the column indices to retrieve
+   * @return the matching columns in the order supplied
+   */
   List<Column> columns(Integer[] indices) {
     List<Column> cols = new ArrayList<>()
     for (int index in indices) {
@@ -762,24 +946,57 @@ class Matrix implements Iterable<Row>, Cloneable {
     return cols
   }
 
+  /**
+   * Return the columns within the specified index range.
+   *
+   * @param range the column index range to retrieve
+   * @return the matching columns in range order
+   */
   List<Column> columns(IntRange range) {
     Integer[] arr = new Integer[range.size()]
     range.eachWithIndex { int entry, int i -> arr[i] = entry }
     columns(arr)
   }
 
+
+  /**
+   * Return the type for the column at the specified index.
+   *
+   * @param i the column index
+   * @return the column type
+   */
   Class type(int i) {
     return mColumns[i].type
   }
 
+
+  /**
+   * Return the type for the column with the specified name.
+   *
+   * @param columnName the column name
+   * @return the column type
+   */
   Class type(String columnName) {
     return mColumns[columnIndex(columnName)].type
   }
 
+
+  /**
+   * Return the types for all columns in order.
+   *
+   * @return the list of column types
+   */
   List<Class> types() {
     return mColumns.collect{it.type}
   }
 
+
+  /**
+   * Return the types for the specified column names.
+   *
+   * @param columnNames the column names
+   * @return the matching column types in the order supplied
+   */
   List<Class> types(List<String> columnNames) {
     List<Class> types = []
     for (name in columnNames) {
@@ -788,17 +1005,51 @@ class Matrix implements Iterable<Row>, Cloneable {
     return types
   }
 
+
+  /**
+   * Return the types for columns in the specified index range.
+   *
+   * @param range the column index range
+   * @return the matching column types in range order
+   */
   List<Class> types(IntRange range) {
     return mColumns[range].collect {it.type}
   }
+
+
+  /**
+   * Return the type names for all columns in order.
+   *
+   * @return the list of column type names
+   */
 
   List<String> typeNames() {
     return mColumns.collect {it.type.simpleName}
   }
 
+
+  /**
+   * Return the type name for the column at the specified index.
+   *
+   * @param idx the column index
+   * @return the column type name
+   */
+
   String typeName(Integer idx) {
     type(idx).simpleName
   }
+
+
+  /**
+   * Render the matrix as a delimited text table.
+   *
+   * @param includeHeader whether to include a header row with column names
+   * @param includeTitle whether to include the matrix name as a title line
+   * @param delimiter the column delimiter
+   * @param lineEnding the line ending to use between rows
+   * @param maxColumnLength the maximum width for each column in the output
+   * @return the formatted text table
+   */
 
   String content(boolean includeHeader = true, boolean includeTitle = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     String title = ''
@@ -807,6 +1058,16 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     return title + head(rowCount(), includeHeader, delimiter, lineEnding, maxColumnLength)
   }
+
+
+  /**
+   * Render the matrix as a delimited text table using the supplied parameters.
+   *
+   * Supported params: includeHeader, includeTitle, delimiter, lineEnding, maxColumnLength.
+   *
+   * @param params the rendering parameters
+   * @return the formatted text table
+   */
 
   String content(Map params) {
     boolean includeTitle = params.getOrDefault('includeTitle', true)
@@ -817,6 +1078,15 @@ class Matrix implements Iterable<Row>, Cloneable {
     return content(includeHeader, includeTitle, delimiter, lineEnding, maxColumnLength)
   }
 
+
+  /**
+   * Determine whether the supplied row contains any non-null values.
+   *
+   * Note: this helper is internal-only and will become private in v3.7.0.
+   *
+   * @param row the row values to inspect
+   * @return true if at least one value is non-null, otherwise false
+   */
   static boolean containsValues(Iterable row) {
     def strVal
     for (def element in row) {
@@ -826,6 +1096,14 @@ class Matrix implements Iterable<Row>, Cloneable {
     return false
   }
 
+  /**
+   * Return a copy of this matrix.
+   *
+   * The clone contains copies of the columns and rows so changes to the clone
+   * do not affect the original matrix.
+   *
+   * @return a deep copy of this matrix
+   */
   @Override
   Matrix clone() {
     List<String> headers = []
@@ -868,6 +1146,15 @@ class Matrix implements Iterable<Row>, Cloneable {
     return types
   }
 
+
+  /**
+   * Compare this matrix with another and return a human-readable diff.
+   *
+   * @param other the matrix to compare with
+   * @param forceRowComparing whether to compare row-by-row even if column names differ
+   * @param allowedDiff the numeric tolerance when comparing numeric values
+   * @return a diff string describing any differences, or an empty string if equal
+   */
   String diff(Matrix other, boolean forceRowComparing = false, double allowedDiff = 0.0001) {
     StringBuilder sb = new StringBuilder()
     if (this.matrixName != other.matrixName) {
@@ -920,12 +1207,19 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this modified matrix
    * @deprecated use dropColumns(String...) instead. Will be removed in 3.6.0
    */
-  @Deprecated
+  @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumnsExcept(String... columnNames) {
     dropExcept(columnNames)
   }
 
 
+
+  /**
+   * Drop all columns except the specified ones.
+   *
+   * @param columnNames the column names to keep
+   * @return a matrix with only the specified columns
+   */
   Matrix dropExcept(String... columnNames) {
     def retainColNames = columnNames.length > 0 ? columnNames as List : []
     for (String columnName : this.columnNames()) {
@@ -944,11 +1238,18 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return
    * @deprecated use dropColumns(int...) instead. Will be removed in 3.6.0
    */
-  @Deprecated
+  @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumnsExcept(int ... columnIndices) {
     dropExcept(columnIndices)
   }
 
+
+  /**
+   * Drop all columns except the specified indices.
+   *
+   * @param columnIndices the column indices to keep
+   * @return a matrix with only the specified columns
+   */
   Matrix dropExcept(int ... columnIndices) {
     if (columnIndices.length == 0) {
       mColumns.clear()
@@ -972,11 +1273,18 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return
    * @deprecated use drop(String...) instead. Will be removed in 3.6.0
    */
-  @Deprecated
+  @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumns(String... columnNames) {
     drop(columnNames)
   }
 
+
+  /**
+   * Drop the specified columns by name.
+   *
+   * @param columnNames the column names to remove
+   * @return a matrix without the specified columns
+   */
   Matrix drop(String... columnNames) {
     if (columnNames.length == 0) {
       println "no variables to drop specified, nothing to do"
@@ -996,7 +1304,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return
    * @deprecated use drop(int...) instead. Will be removed in 3.6.0
    */
-  @Deprecated
+  @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumns(IntRange columnIndices) {
     drop(columnIndices)
   }
@@ -1044,7 +1352,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return
    * @deprecated use drop(int...) instead. Will be removed in 3.6.0
    */
-  @Deprecated
+  @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix dropColumns(int ... columnIndices) {
     drop(columnIndices)
   }
@@ -1065,6 +1373,19 @@ class Matrix implements Iterable<Row>, Cloneable {
     equals(o, true, true, false, 0.0001d, false)
   }
 
+
+  /**
+   * Compare this matrix to another with configurable comparison rules.
+   *
+   * @param o the matrix to compare against
+   * @param ignoreColumnNames whether to ignore column names when comparing
+   * @param ignoreMatrixName whether to ignore the matrix name when comparing
+   * @param ignoreTypes whether to ignore column types when comparing
+   * @param allowedDiff numeric tolerance for numeric values
+   * @param throwException whether to throw on mismatch instead of returning false
+   * @param message message prefix used when throwException is true
+   * @return true if the matrices are considered equal, otherwise false
+   */
   boolean equals(Object o, boolean ignoreColumnNames, boolean ignoreMatrixName, boolean ignoreTypes = true,
                  Double allowedDiff = 0.0001, boolean throwException = false, String message = '') {
     if (this.is(o)) return true
@@ -1097,6 +1418,15 @@ class Matrix implements Iterable<Row>, Cloneable {
     return true
   }
 
+
+  /**
+   * Handle comparison errors for matrix equality checks.
+   *
+   * Note: this helper is internal-only and will become private in v3.7.0.
+   *
+   * @param msg the error message
+   * @param throwException whether to throw an IllegalArgumentException instead of logging
+   */
   static void handleError(String msg, boolean throwException) {
     if (throwException) {
       throw new IllegalArgumentException(msg)
@@ -1148,15 +1478,32 @@ class Matrix implements Iterable<Row>, Cloneable {
     return rowIndex >= 0 ? row(rowIndex) : null
   }
 
+  /**
+   * Searches for the first occurrence of the value in the column specified
+   *
+   * @param columnIndex the index of the column to search
+   * @param value the value to search for
+   * @return the first row where the column matches the value or null of no match found
+   */
   Row findFirstRow(Integer columnIndex, Object value) {
     int rowIndex = column(columnIndex).findIndexOf { it == value }
     return rowIndex >= 0 ? row(rowIndex) : null
   }
 
+  /**
+   * Get a raw value from the matrix at the specified row/column.
+   *
+   * @param row the row index
+   * @param column the column index
+   * @return the value at the specified coordinates
+   */
   Object get(int row, int column) {
     return mColumns[column][row]
   }
 
+  /**
+   * @return the name of the matrix, or null if unnamed
+   */
   String getMatrixName() {
     return mName
   }
@@ -1202,14 +1549,9 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**
    * Enable the use of square bracket to reference a column, e.g. table[0, "salary"] for the salary for the first observation
+   *
    * @return the value corresponding to the row and column name supplied
    */
-  /* should be the same as below
-  <T> T getAt(int row, String columnName) {
-    Class<T> type = type(columnName) as Class<T>
-    return get(row, columnIndex(columnName)).asType(type)
-  }*/
-
   <T> T getAt(Integer row, String columnName) {
     Class<T> type = type(columnName) as Class<T>
     Integer columnIdx = columnIndex(columnName)
@@ -1380,6 +1722,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     throw new IllegalArgumentException("Unable to understand arguments supplied: $args")
   }
 
+
+  /**
+   * Intercept property access to return a column when the name matches.
+   *
+   * @param name the property name
+   * @return the matching Column, or the default property value if not a column name
+   */
   Object getProperty(String name) {
     if (columnNames().contains(name)) {
       return column(name)
@@ -1539,6 +1888,16 @@ class Matrix implements Iterable<Row>, Cloneable {
     //return create(mName, mHeaders, rows as List<List>, mTypes)
   }
 
+
+  /**
+   * Sort rows using the supplied column ordering.
+   *
+   * The map key is the column name and the value indicates ascending (true)
+   * or descending (false) order. The map iteration order is respected.
+   *
+   * @param columnsAndDirection ordered map of column name to ascending flag
+   * @return a matrix sorted according to the supplied columns
+   */
   Matrix orderBy(LinkedHashMap<String, Boolean> columnsAndDirection) {
     def colNames = columnsAndDirection.keySet() as List<String>
     def headers = columnNames()
@@ -1555,6 +1914,15 @@ class Matrix implements Iterable<Row>, Cloneable {
     return orderBy(comparator)
   }
 
+
+  /**
+   * Sort rows using the supplied comparator.
+   *
+   * The comparator receives row lists for comparison.
+   *
+   * @param comparator the comparator used to order rows
+   * @return a matrix sorted according to the comparator
+   */
   Matrix orderBy(Comparator comparator) {
     // copy all the rows
     List<Row> rows = this.rows()
@@ -1564,9 +1932,11 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Append a row to this matrix
+   * Append a row to a clone of this matrix.
    *
-   * @param row
+   * This differs from {@code and(List)} which mutates this instance.
+   *
+   * @param row the row to append
    * @return a new matrix with the row appended to the end
    */
   Matrix plus(List row) {
@@ -1577,7 +1947,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Append all rows from the matrix to a clone of this one.
+   * Append all rows from another matrix to a clone of this one.
+   *
+   * This differs from {@code and(Matrix)} which mutates this instance.
    *
    * @param table the matrix to append from
    * @return a new matrix containing the rows of the former and the new rows added
@@ -1609,6 +1981,22 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
+
+  /**
+   * Set a value by row and column indices.
+   *
+   * This is the backing method for the square-bracket assignment syntax.
+   *
+   * Example:
+   * <pre>
+   * matrix.putAt(0, 1, 42)
+   * matrix[0, 1] = 42
+   * </pre>
+   *
+   * @param rowIndex the row index
+   * @param colIndex the column index
+   * @param value the value to set
+   */
   void putAt(Number rowIndex, Number colIndex, Object value) {
     def column = mColumns[colIndex.intValue()]
     if (rowIndex < column.size()) {
@@ -1620,6 +2008,22 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
+
+  /**
+   * Set a value by row index and column name.
+   *
+   * This is the backing method for the square-bracket assignment syntax.
+   *
+   * Example:
+   * <pre>
+   * matrix.putAt(0, 'age', 42)
+   * matrix[0, 'age'] = 42
+   * </pre>
+   *
+   * @param rowIndex the row index
+   * @param columnName the column name
+   * @param value the value to set
+   */
   void putAt(Number rowIndex, String columnName, Object value) {
     putAt(rowIndex, columnIndex(columnName), value)
   }
@@ -1656,14 +2060,18 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
 
-  // Groovy semantics requires this to mutate, i.e. this does not work
-  // Matrix t2 = (table["yearMonth", YearMonth, 0] = toYearMonth(table["start_date"]))
-  // thus, we return void to make that fact obvious
+
   /**
-   * add the column to the end or at the index if specified
+   * Add the column to the end or at the index if specified
    * <code><pre>
    *   tbl["yearMonth", YearMonth] = toYearMonths(tbl.start_date)
    * </code>
+   * Groovy semantics requires this to mutate, i.e. this does not work
+   * <code>
+   *   Matrix t2 = (table["yearMonth", YearMonth, 0] = toYearMonth(table["start_date"]))
+   * </code>
+   * thus, we return void to make that fact obvious.
+   *
    * @param columnName the column name to add
    * @param type the class of the contents in the column list
    * @param index the position to insert it or null if append to the end
@@ -1684,10 +2092,22 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
+  /**
+   * Assign or replace a column by name using the provided values.
+   *
+   * @param columnName the column name to add or replace
+   * @param values the column values
+   */
   void putAt(String columnName, List values) {
     upsertColumn(columnName, values)
   }
 
+  /**
+   * Assign or replace a column by index using the provided values.
+   *
+   * @param column the column index to add or replace
+   * @param values the column values
+   */
   void putAt(Integer column, List values) {
     upsertColumn(columnName(column), values)
   }
@@ -1715,10 +2135,22 @@ class Matrix implements Iterable<Row>, Cloneable {
     rowCount() - 1
   }
 
+  /**
+   * Append a column to this matrix.
+   *
+   * Note: In v3.7.0, the `<<` operator is planned to append rows instead of columns.
+   * Use addColumn for forward-compatible code.
+   */
   def leftShift(Column column) {
     addColumn(column.name, column.type, column)
   }
 
+  /**
+   * Append multiple columns to this matrix.
+   *
+   * Note: In v3.7.0, the `<<` operator is planned to append rows instead of columns.
+   * Use addColumn for forward-compatible code.
+   */
   def leftShift(Collection<Column> columns) {
     columns.each { column ->
       if (!column instanceof Column) {
@@ -1735,6 +2167,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @param m the matrix containing the columns to add
    * @return this Matrix (mutated)
+   *
+   * Note: In v3.7.0, the `<<` operator is planned to append rows instead of columns.
+   * Use addColumn for forward-compatible code.
    */
   def leftShift(Matrix m) {
     int nrow = rowCount()
@@ -1751,6 +2186,12 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
+  /**
+   * Append columns to this matrix from a map of column name to values.
+   *
+   * Note: In v3.7.0, the `<<` operator is planned to append rows instead of columns.
+   * Use addColumn for forward-compatible code.
+   */
   def leftShift(Map<String, List> columns) {
     columns.each { name, list ->
       def type = list.isEmpty() ? Object : list[0].class
@@ -1831,10 +2272,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the (mutated) table to allow for chaining
    * @deprecated Use rename(before, after) instead
    */
-  @Deprecated
+  @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix renameColumn(String before, String after) {
     rename(before, after)
   }
+
   /**
    * renames the column and returns the table to allow for chaining
    *
@@ -1843,7 +2285,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the (mutated) table to allow for chaining
    */
   Matrix rename(String before, String after) {
-    renameColumn(columnIndex(before), after)
+    rename(columnIndex(before), after)
     this
   }
 
@@ -1852,7 +2294,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    *
    * @deprecated use rename(int, String) instead
    */
-  @Deprecated
+  @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix renameColumn(int columnIndex, String after) {
     rename(columnIndex, after)
   }
@@ -1992,7 +2434,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix without the empty columns
    * @deprecated Use dropEmptyColumns() instead
    */
-  @Deprecated
+  @Deprecated(forRemoval = true, since = "3.7.0")
   Matrix removeEmptyColumns() {
     dropEmptyColumns()
   }
@@ -2034,6 +2476,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     return mColumns.transpose()
   }
 
+
+  /**
+   * Return the rows for the specified indices.
+   *
+   * @param index the row indices
+   * @return the matching rows in the order supplied
+   */
   List<Row> rows(List<Integer> index) {
     List<Row> rows = []
     index.each {
@@ -2043,7 +2492,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Finding rows based on some criterie e.g:
+   * Finding rows based on some criteria e.g:
    * <code>
    * def r = table.rows { row ->
    *   row['place'] == 2
@@ -2104,10 +2553,23 @@ class Matrix implements Iterable<Row>, Cloneable {
     return types
   }
 
+  /**
+   * Select columns by name and return a new Matrix containing only those columns.
+   *
+   * @param columnNames the column names to include
+   * @return a new Matrix with the selected columns
+   */
   Matrix selectColumns(List<String> columnNames) {
     selectColumns(columnNames as String[])
   }
 
+
+  /**
+   * Return a new matrix containing only the specified columns.
+   *
+   * @param columnNames the column names to include
+   * @return a matrix with the selected columns
+   */
   Matrix selectColumns(String... columnNames) {
     List<List> cols = []
     List<String> colNames = []
@@ -2125,6 +2587,13 @@ class Matrix implements Iterable<Row>, Cloneable {
         .build()
   }
 
+
+  /**
+   * Return a new matrix containing the columns in the specified index range.
+   *
+   * @param range the column index range to include
+   * @return a matrix with the selected columns
+   */
   Matrix selectColumns(IntRange range) {
     selectColumns(columnNames(range) as String[])
   }
@@ -2144,10 +2613,23 @@ class Matrix implements Iterable<Row>, Cloneable {
     return r
   }
 
+
+  /**
+   * Set the matrix name.
+   *
+   * @param name the new matrix name
+   */
   void setMatrixName(String name) {
     mName = name
   }
 
+  /**
+   * Allow property-style assignment to add or replace a column when the value is a List.
+   * For non-list values, this delegates to normal property assignment (e.g. matrixName).
+   *
+   * @param propertyName the column name to add or replace when the value is a List
+   * @param newValue the column values (List) or a regular property value
+   */
   @Override
   void setProperty(String propertyName, Object newValue) {
     if (newValue instanceof List) {
@@ -2211,7 +2693,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         }
       }
     }
-    m.dropColumns(columnNames as String[])
+    m.drop(columnNames as String[])
     m
   }
 
@@ -2345,9 +2827,18 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Return a new Matrix containing only rows that match the supplied criteria.
+   *
+   * The criteria receives each row as a List-like Row and should return true to keep the row.
+   * Example:
+   * <code><pre>
+   * def subset = table.subset { it[0] > 10 && it['status'] == 'ACTIVE' }
+   * </pre></code>
+   *
+   * The mutable counterpart is {@code removeRows} or {@code dropRows}.
    *
    * @param criteria takes a row (List) as parameter and returns true if the row should be included
-   * @return this Matrix with the rows matching the criteria supplied retained
+   * @return a new Matrix with the rows matching the criteria supplied retained
    */
   Matrix subset(Closure<Boolean> criteria) {
     builder()
@@ -2358,6 +2849,12 @@ class Matrix implements Iterable<Row>, Cloneable {
         .build()
   }
 
+  /**
+   * Return a new Matrix containing only rows within the specified index range.
+   *
+   * @param rows the row index range to include
+   * @return a new Matrix with the selected rows
+   */
   Matrix subset(IntRange rows) {
     builder()
         .rows(this.rows(rows) as List<List>)
@@ -2367,6 +2864,12 @@ class Matrix implements Iterable<Row>, Cloneable {
         .build()
   }
 
+  /**
+   * Return a new Matrix containing only the rows with the specified indices.
+   *
+   * @param rows the row indices to include
+   * @return a new Matrix with the selected rows
+   */
   Matrix subset(List<Integer> rows) {
     builder()
         .rows(this.rows(rows) as List<List>)
@@ -2376,6 +2879,12 @@ class Matrix implements Iterable<Row>, Cloneable {
         .build()
   }
 
+  /**
+   * Return a new Matrix containing only the rows with the specified indices.
+   *
+   * @param rows the row indices to include
+   * @return a new Matrix with the selected rows (or a clone if none supplied)
+   */
   Matrix subset(Integer... rows) {
     if (rows == null || rows.length == 0) {
       return this.clone()
@@ -2389,10 +2898,10 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Filters the matrix to only include rows where the columnName has the value specified
+   * Filters the matrix to only include rows where the column has the specified value.
    *
-   * @param columnName
-   * @param value
+   * @param columnName the column to match against
+   * @param value the value to keep
    * @return a new matrix with the rows matching the value
    */
   Matrix subset(String columnName, Object value) {
@@ -2401,8 +2910,125 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
+  /**
+   * Return a textual representation of the last N rows in the matrix.
+   *
+   * @param rows number of rows to include from the end
+   * @param includeHeader if true, include the header row
+   * @param delimiter column delimiter
+   * @param lineEnding line ending to use
+   * @param maxColumnLength maximum column width for formatting
+   * @return a formatted string containing the tail of the matrix
+   */
   String tail(int rows, boolean includeHeader = true, String delimiter = '\t', String lineEnding = '\n', int maxColumnLength = 50) {
     MatrixPrinter.tail(this, rows, includeHeader, delimiter, lineEnding, maxColumnLength)
+  }
+
+  /**
+   * Convert this matrix to a CSV formatted string.
+   *
+   * Defaults: quoteString = '\"', delimiter = ', ', rowDelimiter = '\\n', includeHeader = true
+   *
+   * @return the matrix as a CSV string
+   */
+  String toCsvString() {
+    toCsvString([:])
+  }
+
+  /**
+   * Convert this matrix to a CSV formatted string.
+   *
+   * @param includeHeader if true, include the header row
+   * @return the matrix as a CSV string
+   */
+  String toCsvString(boolean includeHeader) {
+    toCsvString([includeHeader: includeHeader])
+  }
+
+  /**
+   * Convert this matrix to a CSV formatted string.
+   *
+   * @param includeHeader if true, include the header row
+   * @param includeTypes if true, include a types comment header
+   * @return the matrix as a CSV string
+   */
+  String toCsvString(boolean includeHeader, boolean includeTypes) {
+    toCsvString([includeHeader: includeHeader, includeTypes: includeTypes])
+  }
+
+  /**
+   * Convert this matrix to a CSV formatted string.
+   *
+   * @param options optional parameters:
+   *   - quoteString (String) string quote, default '\"'
+   *   - delimiter (String) column delimiter, default ', '
+   *   - rowDelimiter (String) row delimiter, default '\\n'
+   *   - lineComment (String) comment prefix, default '#'
+   *   - includeHeader (boolean) include header row, default true
+   *   - includeTypes (boolean) include a types comment header, default false
+   * @return the matrix as a CSV string
+   */
+  String toCsvString(Map options) {
+    String quoteString = options.containsKey('quoteString') ? options.quoteString as String : '"'
+    String delimiter = options.containsKey('delimiter') ? options.delimiter as String : ', '
+    String rowDelimiter = options.containsKey('rowDelimiter')
+      ? options.rowDelimiter as String
+      : (options.rowdelimiter as String ?: '\n')
+    String lineComment = options.containsKey('lineComment')
+      ? options.lineComment as String
+      : (options.linecomment as String ?: '#')
+    boolean includeHeader = options.containsKey('includeHeader') ? options.includeHeader as boolean : true
+    boolean includeTypes = options.containsKey('includeTypes') ? options.includeTypes as boolean : false
+
+    StringBuilder sb = new StringBuilder()
+    if (includeTypes) {
+      if (lineComment == null || lineComment.isEmpty()) {
+        lineComment = '#'
+      }
+      sb.append(lineComment)
+        .append('types: ')
+        .append(types().collect { typeLabel(it) }.join(', '))
+        .append(rowDelimiter)
+    }
+
+    boolean wroteHeader = false
+    if (includeHeader) {
+      sb.append(buildCsvRow(columnNames(), quoteString, delimiter, rowDelimiter))
+      wroteHeader = true
+    }
+
+    int rowCount = rowCount()
+    for (int i = 0; i < rowCount; i++) {
+      if (wroteHeader || i > 0 || includeHeader) {
+        sb.append(rowDelimiter)
+      }
+      sb.append(buildCsvRow(row(i), quoteString, delimiter, rowDelimiter))
+      wroteHeader = true
+    }
+    sb.toString()
+  }
+
+  /**
+   * Copy this matrix to the system clipboard in CSV format.
+   *
+   * Defaults: quoteString = '\"', delimiter = ', ', rowDelimiter = '\\n', includeHeader = true, includeTypes = true
+   *
+   * @param options optional parameters:
+   *   - quoteString (String) string quote, default '\"'
+   *   - delimiter (String) column delimiter, default ', '
+   *   - rowDelimiter (String) row delimiter, default '\\n'
+   *   - lineComment (String) comment prefix, default '#'
+   *   - includeHeader (boolean) include header row, default true
+   *   - includeTypes (boolean) include a types comment header, default true
+   */
+  void toClipboard(Map options = [:]) {
+    if (!options.containsKey('includeTypes')) {
+      options.includeTypes = true
+    }
+    if (!options.containsKey('includeHeader')) {
+      options.includeHeader = true
+    }
+    ClipboardUtil.writeText(toCsvString(options))
   }
 
 
@@ -2411,11 +3037,25 @@ class Matrix implements Iterable<Row>, Cloneable {
     return "${matrixName ?: 'a matrix with '}: ${rowCount()} obs * ${columnCount()} variables "
   }
 
+  /**
+   * Return the dimensions of the matrix as a map.
+   *
+   * @return a map with keys 'observations' (row count) and 'variables' (column count)
+   */
   Map<String, Integer> dimensions() {
     ['observations': rowCount(), 'variables': columnCount()]
   }
 
 
+  /**
+   * Render a subset of rows as an HTML table.
+   *
+   * @param attr table attributes (e.g. id, class, align)
+   * @param numRows number of rows to render
+   * @param fromHead if true, render from the start; otherwise from the end
+   * @param autoAlign if true, right-align numeric columns unless overridden by align attribute
+   * @return HTML table string
+   */
   String toHtml(Map<String, String> attr = [:], Integer numRows, boolean fromHead = true, boolean autoAlign = true) {
     List<?> r
     if (fromHead) {
@@ -2426,6 +3066,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     toHtml(attr, r, autoAlign)
   }
 
+  /**
+   * Render all rows as an HTML table.
+   *
+   * @param attr table attributes (e.g. id, class, align)
+   * @param autoAlign if true, right-align numeric columns unless overridden by align attribute
+   * @return HTML table string
+   */
   String toHtml(Map<String, String> attr = [:], boolean autoAlign=true) {
     toHtml(attr, rows(), autoAlign)
   }
@@ -2545,19 +3192,38 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * @param attr table attributes e.g. id, class etc. that is added immediately after the table and become table
-   *  attributes when rendered as html
-   * @return a markdown formatted table where all the values have been converted to strings, numbers are right aligned
-   * and everything else default (left) aligned
+   * Render the matrix as a Markdown table.
+   *
+   * Column alignment is derived from column types (numbers right-aligned, others left).
+   *
+   * @param attr table attributes (e.g. id, class) appended for Markdown/HTML renderers
+   * @return the markdown formatted table
    */
   String toMarkdown(Map<String, String> attr = [:]) {
     return toMarkdown(attr, calculateAlignment())
   }
 
+
+  /**
+   * Render a subset of rows as a Markdown table.
+   *
+   * @param numRows the number of rows to include
+   * @param fromHead true to include rows from the start, false to include from the end
+   * @return the markdown formatted table
+   */
   String toMarkdown(int numRows, boolean fromHead = true) {
     toMarkdown([:], numRows, fromHead)
   }
 
+
+  /**
+   * Render a subset of rows as a Markdown table with attributes.
+   *
+   * @param attr table attributes (e.g. id, class) appended for Markdown/HTML renderers
+   * @param numRows the number of rows to include
+   * @param fromHead true to include rows from the start, false to include from the end
+   * @return the markdown formatted table
+   */
   String toMarkdown(Map<String, String> attr, int numRows, boolean fromHead = true) {
     List<?> r
     if (fromHead) {
@@ -2568,15 +3234,25 @@ class Matrix implements Iterable<Row>, Cloneable {
     return toMarkdown(attr, calculateAlignment(), r)
   }
 
+
+  /**
+   * Render the matrix as a Markdown table using explicit alignment markers.
+   *
+   * @param attr table attributes (e.g. id, class) appended for Markdown/HTML renderers
+   * @param alignment alignment markers per column (e.g. :---, :---:, ---:)
+   * @return the markdown formatted table
+   */
   String toMarkdown(Map<String, String> attr = [:], List<String> alignment) {
     toMarkdown(attr, alignment, rows())
   }
 
   /**
-   * @param attr table attributes e.g. id, class etc. that is added immediately after the table and become table
-   *  attributes when rendered as html
-   * @param alignment use :--- for left align, :----: for centered, and ---: for right alignment
-   * @return a markdown formatted table where all the values have been converted to strings
+   * Render the provided rows as a Markdown table with explicit alignment.
+   *
+   * @param attr table attributes (e.g. id, class) appended for Markdown/HTML renderers
+   * @param alignment alignment markers per column (e.g. :---, :---:, ---:)
+   * @param rows the rows to render (Row or List instances)
+   * @return the markdown formatted table
    */
   String toMarkdown(Map<String, String> attr = [:], List<String> alignment, List<?> rows) {
     if (alignment.size() != columnCount()) {
@@ -2618,10 +3294,62 @@ class Matrix implements Iterable<Row>, Cloneable {
     alignment
   }
 
+  private static String buildCsvRow(List<?> values, String quoteString, String delimiter, String rowDelimiter) {
+    StringBuilder rowBuilder = new StringBuilder()
+    int max = values.size()
+    for (int i = 0; i < max; i++) {
+      rowBuilder.append(escapeCsvValue(values[i], quoteString, delimiter, rowDelimiter))
+      if (i < max - 1) {
+        rowBuilder.append(delimiter)
+      }
+    }
+    rowBuilder.toString()
+  }
+
+  private static String escapeCsvValue(Object value, String quoteString, String delimiter, String rowDelimiter) {
+    String stringValue = ValueConverter.asString(value) ?: ''
+    if (quoteString == null || quoteString.isEmpty()) {
+      return stringValue
+    }
+    boolean shouldQuote = stringValue.contains(quoteString) ||
+      stringValue.contains(delimiter) ||
+      stringValue.contains(rowDelimiter) ||
+      stringValue.contains('\n') ||
+      stringValue.contains('\r')
+    if (!shouldQuote) {
+      return stringValue
+    }
+    String escaped = stringValue.replace(quoteString, quoteString + quoteString)
+    "${quoteString}${escaped}${quoteString}"
+  }
+
+  private static String typeLabel(Class type) {
+    if (type == Integer) return 'int'
+    if (type == Long) return 'long'
+    if (type == Short) return 'short'
+    if (type == Byte) return 'byte'
+    if (type == Float) return 'float'
+    if (type == Double) return 'double'
+    if (type == Character) return 'char'
+    if (type == Boolean) return 'Boolean'
+    if (type == String || type == BigDecimal || type == BigInteger || type == Number || type == Object) {
+      return type.simpleName
+    }
+    String pkg = type.package?.name ?: ''
+    if (pkg.startsWith('java.lang') || pkg.startsWith('java.math') || pkg.startsWith('java.time') || pkg.startsWith('java.util') || pkg.startsWith('java.io') || pkg.startsWith('java.net')) {
+      return type.simpleName
+    }
+    type.name
+  }
+
   /**
+   * Transpose the matrix using a column as the new header row.
    *
-   * @param columnNameAsHeader
-   * @param includeHeaderAsRow
+   * The values in {@code columnNameAsHeader} become the column names of the transposed matrix.
+   * If {@code includeHeaderAsRow} is true, the original column names are inserted as the first data row.
+   *
+   * @param columnNameAsHeader the column whose values should become the new column names
+   * @param includeHeaderAsRow if true, include the original header as the first row
    * @return a new Matrix turned 90 degrees
    */
   Matrix transpose(String columnNameAsHeader, boolean includeHeaderAsRow = false) {
@@ -2636,10 +3364,11 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Transpose the matrix using a column as the new header row with explicit data types.
    *
-   * @param columnNameAsHeader
-   * @param dataTypes
-   * @param includeHeaderAsRow
+   * @param columnNameAsHeader the column whose values should become the new column names
+   * @param dataTypes the data types for the transposed columns
+   * @param includeHeaderAsRow if true, include the original header as the first row
    * @return a new Matrix turned 90 degrees
    */
   Matrix transpose(String columnNameAsHeader, List<Class> dataTypes, boolean includeHeaderAsRow = false) {
@@ -2711,6 +3440,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
   }
 
+  /**
+   * Apply a closure to each value in the specified column and return the resulting list.
+   *
+   * @param columnName the column to apply the operation to
+   * @param operation the closure to apply to each value
+   * @return a list containing the transformed values
+   */
   List withColumn(String columnName, Closure operation) {
     def result = []
     column(columnName).each {
@@ -2719,6 +3455,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     result
   }
 
+  /**
+   * Apply a closure to each value in the specified column and return the resulting list.
+   *
+   * @param columnIndex the column to apply the operation to
+   * @param operation the closure to apply to each value
+   * @return a list containing the transformed values
+   */
   List withColumn(int columnIndex, Closure operation) {
     withColumn(columnName(columnIndex), operation)
   }
@@ -2781,6 +3524,12 @@ class Matrix implements Iterable<Row>, Cloneable {
     return result
   }
 
+  /**
+   * @see #withColumns(List < String >, Closure)
+   * @param colIndices the column index range to include
+   * @param operation the closure operation doing the calculation
+   * @return a list (a new column) with the result of the operations
+   */
   List withColumns(IntRange colIndices, Closure operation) {
     withColumns(colIndices as int[], operation)
   }
@@ -2805,24 +3554,64 @@ class Matrix implements Iterable<Row>, Cloneable {
     return metaData
   }
 
+  /**
+   * Create a list of Object types sized to the supplied template.
+   *
+   * Note: This method is internal and will be made private in v3.7.0.
+   *
+   * @param template a collection used only for sizing
+   * @return a list of Object classes matching the template size
+   */
   static List<Class> createObjectTypes(Collection template) {
     [Object] * template.size() as List<Class>
   }
 
+  /**
+   * Move a value within a row from one column to another.
+   *
+   * @param rowIndex the row index to update
+   * @param fromColumn the source column index
+   * @param toColumn the destination column index
+   * @return this matrix (mutated) to allow method chaining
+   */
   Matrix moveValue(int rowIndex, int fromColumn, int toColumn) {
     Row row = row(rowIndex)
     row.move(fromColumn, toColumn)
     this
   }
 
+  /**
+   * Move a value within a row from one column to another using column names.
+   *
+   * @param rowIndex the row index to update
+   * @param fromColumn the source column name
+   * @param toColumn the destination column name
+   * @return this matrix (mutated) to allow method chaining
+   */
   Matrix moveValue(int rowIndex, String fromColumn, String toColumn) {
     moveValue(rowIndex, columnIndex(fromColumn), columnIndex(toColumn))
   }
 
+  /**
+   * Move a value within a row from one column to another using a name/index mix.
+   *
+   * @param rowIndex the row index to update
+   * @param fromColumn the source column index
+   * @param toColumn the destination column name
+   * @return this matrix (mutated) to allow method chaining
+   */
   Matrix moveValue(int rowIndex, int fromColumn, String toColumn) {
     moveValue(rowIndex, fromColumn, columnIndex(toColumn))
   }
 
+  /**
+   * Move a value within a row from one column to another using a name/index mix.
+   *
+   * @param rowIndex the row index to update
+   * @param fromColumn the source column name
+   * @param toColumn the destination column index
+   * @return this matrix (mutated) to allow method chaining
+   */
   Matrix moveValue(int rowIndex, String fromColumn, int toColumn) {
     moveValue(rowIndex, columnIndex(fromColumn), toColumn)
   }

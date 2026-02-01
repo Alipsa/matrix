@@ -4,6 +4,7 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import se.alipsa.matrix.core.util.ClassUtils
+import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.Logger
 
 import java.lang.reflect.Modifier
@@ -424,44 +425,189 @@ class MatrixBuilder {
    */
   MatrixBuilder data(InputStream inputStream, String delimiter = ',', String stringQuote = '', boolean firstRowAsHeader = true, List<String> nullStrings=['NULL', 'null', 'NA']) {
     try (InputStreamReader reader = new InputStreamReader(inputStream)) {
-      List<List<String>> data = []
-      final boolean stripQuotes = stringQuote != ''
-      int maxCols = 0
-      for (line in reader.readLines()) {
-        List<String> row = []
-        // if there are empty columns in the end, split does not take those into account unless we set the limit to -1
-        def values = line.split(delimiter, -1)
-        maxCols = Math.max(maxCols, values.length)
-        for (val in values) {
-          String value
-          if (stripQuotes) {
-            value = (val.replaceAll(~/^$stringQuote|$stringQuote$/, '').trim())
-          } else {
-            value = val.trim()
-          }
-          if (nullStrings.contains(value)) {
-            value = null
-          }
-          row.add(value)
-        }
-        data.add(row)
-      }
-      List<String> headerNames
-
-      if (firstRowAsHeader) {
-        headerNames = data.remove(0)
-      } else {
-        headerNames = (1..maxCols).collect { 'c' + it }
-      }
-      if (noColumnNames()) {
-        columnNames(headerNames)
-      }
-      rows(data)
-      if (noDataTypes()) {
-        types([String] * headerNames.size())
-      }
+      parseDelimitedRows(reader.readLines(), delimiter, stringQuote, firstRowAsHeader, nullStrings)
     }
     this
+  }
+
+  /**
+   * Populate the data of the Matrix from the system clipboard.
+   *
+   * @param options optional parameters:
+   *   - quoteString (String) string quote, default '"'
+   *   - delimiter (String) column delimiter, default ', '
+   *   - rowDelimiter (String) row delimiter, default '\\n'
+   *   - lineComment (String) comment prefix, default '#'
+   *   - firstRowAsHeader (boolean) default true
+   *   - nullStrings (List<String>) list of strings to treat as null
+   * @return this builder
+   */
+  MatrixBuilder clipboard(Map options = [:]) {
+    String content = ClipboardUtil.readText()
+    return clipboard(content, options)
+  }
+
+  /**
+   * Populate the data of the Matrix from the provided clipboard content.
+   *
+   * @param content the clipboard text
+   * @param options optional parameters:
+   *   - quoteString (String) string quote, default '"'
+   *   - delimiter (String) column delimiter, default ', '
+   *   - rowDelimiter (String) row delimiter, default '\\n'
+   *   - lineComment (String) comment prefix, default '#'
+   *   - firstRowAsHeader (boolean) default true
+   *   - nullStrings (List<String>) list of strings to treat as null
+   * @return this builder
+   */
+  MatrixBuilder clipboard(String content, Map options = [:]) {
+    if (content == null || content.isEmpty()) {
+      throw new IllegalArgumentException('Clipboard content is empty')
+    }
+    String quoteString = options.containsKey('quoteString') ? options.quoteString as String : '"'
+    String delimiter = options.containsKey('delimiter') ? options.delimiter as String : ', '
+    String rowDelimiter = options.containsKey('rowDelimiter')
+      ? options.rowDelimiter as String
+      : (options.rowdelimiter as String ?: '\n')
+    String lineComment = options.containsKey('lineComment')
+      ? options.lineComment as String
+      : (options.linecomment as String ?: '#')
+    boolean firstRowAsHeader = options.containsKey('firstRowAsHeader')
+      ? options.firstRowAsHeader as boolean
+      : true
+    List<String> nullStrings = options.containsKey('nullStrings')
+      ? options.nullStrings as List<String>
+      : ['NULL', 'null', 'NA']
+
+    List<String> lines = content.split(rowDelimiter, -1) as List<String>
+    while (!lines.isEmpty() && lines.last().isEmpty()) {
+      lines.remove(lines.size() - 1)
+    }
+    parseDelimitedRows(lines, delimiter, quoteString, firstRowAsHeader, nullStrings, lineComment)
+  }
+
+  private MatrixBuilder parseDelimitedRows(List<String> lines, String delimiter, String stringQuote, boolean firstRowAsHeader, List<String> nullStrings) {
+    parseDelimitedRows(lines, delimiter, stringQuote, firstRowAsHeader, nullStrings, null)
+  }
+
+  private MatrixBuilder parseDelimitedRows(List<String> lines, String delimiter, String stringQuote, boolean firstRowAsHeader, List<String> nullStrings, String lineComment) {
+    List<List> data = []
+    final boolean stripQuotes = stringQuote != ''
+    int maxCols = 0
+    List<Class> parsedTypes = null
+    for (String line in lines) {
+      if (lineComment != null && !lineComment.isEmpty()) {
+        String trimmed = line.trim()
+        if (trimmed.startsWith(lineComment)) {
+          String after = trimmed.substring(lineComment.length()).trim()
+          if (after.toLowerCase().startsWith('types:')) {
+            String typeSpec = after.substring('types:'.length()).trim()
+            if (!typeSpec.isEmpty()) {
+              parsedTypes = typeSpec.split(',').collect { resolveTypeName(it) }
+            }
+          }
+          continue
+        }
+      }
+      List row = []
+      // if there are empty columns in the end, split does not take those into account unless we set the limit to -1
+      def values = line.split(delimiter, -1)
+      maxCols = Math.max(maxCols, values.length)
+      for (String val in values) {
+        String value
+        if (stripQuotes) {
+          value = (val.replaceAll(~/^$stringQuote|$stringQuote$/, '').trim())
+        } else {
+          value = val.trim()
+        }
+        if (nullStrings.contains(value)) {
+          value = null
+        }
+        row.add(value)
+      }
+      data.add(row)
+    }
+    List<String> headerNames
+
+    if (firstRowAsHeader) {
+      headerNames = data.remove(0)
+    } else {
+      headerNames = (1..maxCols).collect { 'c' + it }
+    }
+    if (parsedTypes != null) {
+      data.each { List row ->
+        int limit = Math.min(row.size(), parsedTypes.size())
+        for (int i = 0; i < limit; i++) {
+          row[i] = ValueConverter.convert(row[i], parsedTypes[i])
+        }
+      }
+    }
+    if (noColumnNames()) {
+      columnNames(headerNames)
+    }
+    rows(data)
+    if (parsedTypes != null) {
+      if (parsedTypes.size() != headerNames.size()) {
+        throw new IllegalArgumentException("number of types (${parsedTypes.size()}) differs from number of columns (${headerNames.size()})")
+      }
+      if (noDataTypes()) {
+        types(parsedTypes)
+      }
+    } else if (noDataTypes()) {
+      types([String] * headerNames.size())
+    }
+    this
+  }
+
+  private static Class resolveTypeName(String rawName) {
+    String name = rawName == null ? '' : rawName.trim()
+    if (name.isEmpty()) {
+      return String
+    }
+    return switch (name) {
+      case 'int', 'Integer' -> Integer
+      case 'long', 'Long' -> Long
+      case 'short', 'Short' -> Short
+      case 'byte', 'Byte' -> Byte
+      case 'float', 'Float' -> Float
+      case 'double', 'Double' -> Double
+      case 'char', 'Character' -> Character
+      case 'boolean', 'Boolean' -> Boolean
+      case 'String' -> String
+      case 'BigDecimal' -> BigDecimal
+      case 'BigInteger' -> BigInteger
+      case 'Number' -> Number
+      case 'Object' -> Object
+      case 'LocalDate' -> java.time.LocalDate
+      case 'LocalDateTime' -> java.time.LocalDateTime
+      case 'LocalTime' -> java.time.LocalTime
+      case 'YearMonth' -> java.time.YearMonth
+      case 'Year' -> java.time.Year
+      case 'MonthDay' -> java.time.MonthDay
+      case 'DayOfWeek' -> java.time.DayOfWeek
+      case 'OffsetDateTime' -> java.time.OffsetDateTime
+      case 'OffsetTime' -> java.time.OffsetTime
+      case 'ZonedDateTime' -> java.time.ZonedDateTime
+      case 'Instant' -> java.time.Instant
+      case 'Duration' -> java.time.Duration
+      case 'Period' -> java.time.Period
+      case 'ZoneId' -> java.time.ZoneId
+      case 'ZoneOffset' -> java.time.ZoneOffset
+      case 'Date' -> java.util.Date
+      case 'Time' -> java.sql.Time
+      case 'Timestamp' -> java.sql.Timestamp
+      default -> {
+        if (name.contains('.')) {
+          Class.forName(name)
+        } else {
+          try {
+            Class.forName("java.time.${name}")
+          } catch (ClassNotFoundException ignored) {
+            throw new IllegalArgumentException("Unknown type '$name'. Use a fully qualified class name for non standard types.")
+          }
+        }
+      }
+    }
   }
 
   MatrixBuilder data(ResultSet rs) {
