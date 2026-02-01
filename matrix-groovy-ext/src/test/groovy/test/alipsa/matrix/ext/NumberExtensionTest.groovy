@@ -367,7 +367,7 @@ class NumberExtensionTest {
     BigDecimal sqrt128 = val128.sqrt(MathContext.DECIMAL128)
     assert sqrt128 != null
     // DECIMAL128 has more precision than DECIMAL64
-    assert sqrt128.precision() <= MathContext.DECIMAL128.precision
+    assert sqrt128.precision() >= val128.sqrt().precision()
   }
 
   @Test

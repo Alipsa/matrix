@@ -5,7 +5,7 @@
   <!-- deploy with mvn -Prelease -f bom.xml deploy -->
   <groupId>se.alipsa.matrix</groupId>
   <artifactId>matrix-bom</artifactId>
-  <version>2.4.0</version>
+  <version>2.4.1-SNAPSHOT</version>
   <name>Matrix Bill of Materials</name>
   <description>bom file for simpler dependency management of Matrix libraries</description>
   <packaging>pom</packaging>
@@ -39,7 +39,7 @@
     <matrixCoreVersion>3.6.0</matrixCoreVersion>
     <matrixCsvVersion>2.2.2</matrixCsvVersion>
     <matrixDatasetsVersion>2.1.2</matrixDatasetsVersion>
-    <matrixGroovyExtVersion>0.1.0</matrixGroovyExtVersion>
+    <matrixGroovyExtVersion>0.1.1-SNAPSHOT</matrixGroovyExtVersion>
     <matrixGsheetsVersion>0.1.1</matrixGsheetsVersion>
     <matrixJsonVersion>2.1.2</matrixJsonVersion>
     <matrixParquetVersion>0.4.0</matrixParquetVersion>
@@ -50,18 +50,6 @@
     <matrixTablesawVersion>0.2.2</matrixTablesawVersion>
     <matrixXChartVersion>0.2.3</matrixXChartVersion>
   </properties>
-  <repositories>
-    <repository>
-      <id>oss.sonatype.org-snapshot</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
   <dependencyManagement>
     <dependencies>
       <dependency>

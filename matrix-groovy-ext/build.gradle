@@ -9,7 +9,7 @@ plugins {
   id("se.alipsa.nexus-release-plugin") version '2.0.1'
 }
 group = 'se.alipsa.matrix'
-version = '0.1.0' // remember to change Extension module info if changing version
+version = '0.1.1-SNAPSHOT' // remember to change Extension module info if changing version
 description = "Groovy extensions for the matrix library"
 
 repositories {

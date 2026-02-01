@@ -65,7 +65,7 @@ import java.math.RoundingMode
 @CompileStatic
 class NumberExtension {
 
-  /** π to 16 digits is 3.1415926535897932, is precise enough for most scientific calculations */
+  /** π to 30 digits is 3.141592653589793238462643383279, 16 is precise enough for most scientific calculations */
   static final BigDecimal PI = 3.1415926535897932
   /** e (eulers number) to 30 digits is 2.718281828459045235360287471352, 16 is enough for practical use */
   static final BigDecimal E = 2.7182818284590452
