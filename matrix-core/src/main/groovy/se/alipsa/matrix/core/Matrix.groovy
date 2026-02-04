@@ -2947,6 +2947,7 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**
    * Convert this matrix to a CSV formatted string.
+   * If the matrix has a name, it will be included as a comment header.
    *
    * @param includeHeader if true, include the header row
    * @param includeTypes if true, include a types comment header
@@ -2958,6 +2959,9 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**
    * Convert this matrix to a CSV formatted string.
+   * If the matrix has a name, it will be included as a comment header (#name: matrixName).
+   * If includeTypes is true, type information will be included as a comment header (#types: Integer, String, ...).
+   * These comment headers can be read back using Matrix.builder().csvString() to fully restore the matrix.
    *
    * @param options optional parameters:
    *   - quoteString (String) string quote, default '\"'
@@ -2981,14 +2985,22 @@ class Matrix implements Iterable<Row>, Cloneable {
     boolean includeTypes = options.containsKey('includeTypes') ? options.includeTypes as boolean : false
 
     StringBuilder sb = new StringBuilder()
-    if (includeTypes) {
+    if (includeTypes || matrixName) {
       if (lineComment == null || lineComment.isEmpty()) {
         lineComment = '#'
       }
-      sb.append(lineComment)
-        .append('types: ')
-        .append(types().collect { typeLabel(it) }.join(', '))
-        .append(rowDelimiter)
+      if (matrixName) {
+        sb.append(lineComment)
+          .append('name: ')
+          .append(matrixName)
+          .append(rowDelimiter)
+      }
+      if (includeTypes) {
+        sb.append(lineComment)
+          .append('types: ')
+          .append(types().collect { typeLabel(it) }.join(', '))
+          .append(rowDelimiter)
+      }
     }
 
     boolean wroteHeader = false

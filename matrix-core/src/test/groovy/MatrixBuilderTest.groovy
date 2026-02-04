@@ -481,4 +481,35 @@ class MatrixBuilderTest {
     assertEquals(3, m.rowCount())
     assertEquals(7, m.columnCount())
   }
+
+  @Test
+  void testCsvStringRoundTrip() {
+    Matrix original = Matrix.builder()
+        .matrixName('testMatrix')
+        .columnNames(['id', 'name', 'score', 'date'])
+        .types([Integer, String, BigDecimal, LocalDate])
+        .rows([
+            [1, 'Alice', 95.5, asLocalDate('2023-01-15')],
+            [2, 'Bob', 87.3, asLocalDate('2023-02-20')],
+            [3, 'Charlie', 92.1, asLocalDate('2023-03-10')]
+        ])
+        .build()
+
+    String csvString = original.toCsvString(true, true)
+
+    Matrix deserialized = Matrix.builder()
+        .csvString(csvString)
+        .build()
+
+    assertEquals(original.matrixName, deserialized.matrixName)
+    assertIterableEquals(original.columnNames(), deserialized.columnNames())
+    assertIterableEquals(original.types(), deserialized.types())
+    assertEquals(original.rowCount(), deserialized.rowCount())
+    assertEquals(original.columnCount(), deserialized.columnCount())
+
+    assertEquals(1, deserialized[0, 'id'])
+    assertEquals('Bob', deserialized[1, 'name'])
+    assertEquals(92.1, deserialized[2, 'score'] as BigDecimal)
+    assertEquals(asLocalDate('2023-03-10'), deserialized[2, 'date'])
+  }
 }

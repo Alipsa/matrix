@@ -431,6 +431,26 @@ class MatrixBuilder {
   }
 
   /**
+   * Populate the data of the Matrix from a CSV string. This method is useful for reading
+   * CSV strings that were created using Matrix.toCsvString(), especially when includeTypes is true.
+   * The CSV string can include a types comment header (e.g., "#types: String, int, BigDecimal")
+   * which will be used to properly type the columns.
+   *
+   * @param csvContent the CSV string to parse
+   * @param options optional parameters:
+   *   - quoteString (String) string quote, default '"'
+   *   - delimiter (String) column delimiter, default ', '
+   *   - rowDelimiter (String) row delimiter, default '\\n'
+   *   - lineComment (String) comment prefix, default '#'
+   *   - firstRowAsHeader (boolean) default true
+   *   - nullStrings (List<String>) list of strings to treat as null
+   * @return this builder
+   */
+  MatrixBuilder csvString(String csvContent, Map options = [:]) {
+    clipboard(csvContent, options)
+  }
+
+  /**
    * Populate the data of the Matrix from the system clipboard.
    *
    * @param options optional parameters:
@@ -495,12 +515,18 @@ class MatrixBuilder {
     final boolean stripQuotes = stringQuote != ''
     int maxCols = 0
     List<Class> parsedTypes = null
+    String parsedName = null
     for (String line in lines) {
       if (lineComment != null && !lineComment.isEmpty()) {
         String trimmed = line.trim()
         if (trimmed.startsWith(lineComment)) {
           String after = trimmed.substring(lineComment.length()).trim()
-          if (after.toLowerCase().startsWith('types:')) {
+          if (after.toLowerCase().startsWith('name:')) {
+            String nameSpec = after.substring('name:'.length()).trim()
+            if (!nameSpec.isEmpty()) {
+              parsedName = nameSpec
+            }
+          } else if (after.toLowerCase().startsWith('types:')) {
             String typeSpec = after.substring('types:'.length()).trim()
             if (!typeSpec.isEmpty()) {
               parsedTypes = typeSpec.split(',').collect { resolveTypeName(it) }
@@ -555,6 +581,9 @@ class MatrixBuilder {
       }
     } else if (noDataTypes()) {
       types([String] * headerNames.size())
+    }
+    if (parsedName != null && noName()) {
+      matrixName(parsedName)
     }
     this
   }

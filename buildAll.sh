@@ -57,9 +57,9 @@ popd
 echo "Building and locally publishing matrix"
 ./gradlew build publishToMavenLocal
 
-echo "Verify bom"
+echo "Verify bom and install matrix-all"
 pushd matrix-bom
-  mvn verify
+  mvn install
 popd
 
 # Clean up
