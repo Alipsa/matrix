@@ -888,6 +888,13 @@ class MatrixTest {
 
     String custom = table.toCsvString(quoteString: "'", delimiter: '\t', rowDelimiter: '\r\n')
     assertEquals("name\tvalue\r\n'A'\t1\r\n'B'\t\r\n'C,k'\t1.1", custom)
+
+    // Test that matrix name is preserved through serialization round-trip
+    String csvWithName = table.withMatrixName('toCsvTest').toCsvString()
+    Matrix restored = Matrix.builder().csvString(csvWithName).build()
+    assertEquals('toCsvTest', restored.matrixName)
+    assertIterableEquals(['name', 'value'], restored.columnNames())
+    assertIterableEquals([String, Number], restored.types())
   }
 
   @Test
