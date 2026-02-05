@@ -18,6 +18,21 @@ import java.sql.ResultSetMetaData
 import java.sql.Time
 import java.sql.Timestamp
 import java.sql.Types
+import java.time.DayOfWeek
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.MonthDay
+import java.time.OffsetDateTime
+import java.time.OffsetTime
+import java.time.Period
+import java.time.Year
+import java.time.YearMonth
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 @CompileStatic
 class MatrixBuilder {
@@ -433,7 +448,7 @@ class MatrixBuilder {
   /**
    * Populate the data of the Matrix from a CSV string. This method is useful for reading
    * CSV strings that were created using Matrix.toCsvString(), especially when includeTypes is true.
-   * The CSV string can include a types comment header (e.g., "#types: String, int, BigDecimal")
+   * The CSV string can include a types comment header (e.g., "#types: String,Integer,BigDecimal")
    * which will be used to properly type the columns.
    *
    * @param csvContent the CSV string to parse
@@ -446,8 +461,30 @@ class MatrixBuilder {
    *   - nullStrings (List<String>) list of strings to treat as null
    * @return this builder
    */
-  MatrixBuilder csvString(String csvContent, Map options = [:]) {
-    clipboard(csvContent, options)
+  MatrixBuilder csvString(String content, Map options = [:]) {
+    if (content == null || content.isEmpty()) {
+      throw new IllegalArgumentException('Clipboard content is empty')
+    }
+    String quoteString = options.containsKey('quoteString') ? options.quoteString as String : '"'
+    String delimiter = options.containsKey('delimiter') ? options.delimiter as String : ','
+    String rowDelimiter = options.containsKey('rowDelimiter')
+        ? options.rowDelimiter as String
+        : (options.rowdelimiter as String ?: '\n')
+    String lineComment = options.containsKey('lineComment')
+        ? options.lineComment as String
+        : (options.linecomment as String ?: '#')
+    boolean firstRowAsHeader = options.containsKey('firstRowAsHeader')
+        ? options.firstRowAsHeader as boolean
+        : true
+    List<String> nullStrings = options.containsKey('nullStrings')
+        ? options.nullStrings as List<String>
+        : ['NULL', 'null', 'NA']
+
+    List<String> lines = content.split(rowDelimiter, -1) as List<String>
+    while (!lines.isEmpty() && lines.last().isEmpty()) {
+      lines.remove(lines.size() - 1)
+    }
+    parseDelimitedRows(lines, delimiter, quoteString, firstRowAsHeader, nullStrings, lineComment)
   }
 
   /**
@@ -464,46 +501,7 @@ class MatrixBuilder {
    */
   MatrixBuilder clipboard(Map options = [:]) {
     String content = ClipboardUtil.readText()
-    return clipboard(content, options)
-  }
-
-  /**
-   * Populate the data of the Matrix from the provided clipboard content.
-   *
-   * @param content the clipboard text
-   * @param options optional parameters:
-   *   - quoteString (String) string quote, default '"'
-   *   - delimiter (String) column delimiter, default ', '
-   *   - rowDelimiter (String) row delimiter, default '\\n'
-   *   - lineComment (String) comment prefix, default '#'
-   *   - firstRowAsHeader (boolean) default true
-   *   - nullStrings (List<String>) list of strings to treat as null
-   * @return this builder
-   */
-  MatrixBuilder clipboard(String content, Map options = [:]) {
-    if (content == null || content.isEmpty()) {
-      throw new IllegalArgumentException('Clipboard content is empty')
-    }
-    String quoteString = options.containsKey('quoteString') ? options.quoteString as String : '"'
-    String delimiter = options.containsKey('delimiter') ? options.delimiter as String : ', '
-    String rowDelimiter = options.containsKey('rowDelimiter')
-      ? options.rowDelimiter as String
-      : (options.rowdelimiter as String ?: '\n')
-    String lineComment = options.containsKey('lineComment')
-      ? options.lineComment as String
-      : (options.linecomment as String ?: '#')
-    boolean firstRowAsHeader = options.containsKey('firstRowAsHeader')
-      ? options.firstRowAsHeader as boolean
-      : true
-    List<String> nullStrings = options.containsKey('nullStrings')
-      ? options.nullStrings as List<String>
-      : ['NULL', 'null', 'NA']
-
-    List<String> lines = content.split(rowDelimiter, -1) as List<String>
-    while (!lines.isEmpty() && lines.last().isEmpty()) {
-      lines.remove(lines.size() - 1)
-    }
-    parseDelimitedRows(lines, delimiter, quoteString, firstRowAsHeader, nullStrings, lineComment)
+    return csvString(content, options)
   }
 
   private MatrixBuilder parseDelimitedRows(List<String> lines, String delimiter, String stringQuote, boolean firstRowAsHeader, List<String> nullStrings) {
@@ -607,24 +605,24 @@ class MatrixBuilder {
       case 'BigInteger' -> BigInteger
       case 'Number' -> Number
       case 'Object' -> Object
-      case 'LocalDate' -> java.time.LocalDate
-      case 'LocalDateTime' -> java.time.LocalDateTime
-      case 'LocalTime' -> java.time.LocalTime
-      case 'YearMonth' -> java.time.YearMonth
-      case 'Year' -> java.time.Year
-      case 'MonthDay' -> java.time.MonthDay
-      case 'DayOfWeek' -> java.time.DayOfWeek
-      case 'OffsetDateTime' -> java.time.OffsetDateTime
-      case 'OffsetTime' -> java.time.OffsetTime
-      case 'ZonedDateTime' -> java.time.ZonedDateTime
-      case 'Instant' -> java.time.Instant
-      case 'Duration' -> java.time.Duration
-      case 'Period' -> java.time.Period
-      case 'ZoneId' -> java.time.ZoneId
-      case 'ZoneOffset' -> java.time.ZoneOffset
-      case 'Date' -> java.util.Date
-      case 'Time' -> java.sql.Time
-      case 'Timestamp' -> java.sql.Timestamp
+      case 'LocalDate' -> LocalDate
+      case 'LocalDateTime' -> LocalDateTime
+      case 'LocalTime' -> LocalTime
+      case 'YearMonth' -> YearMonth
+      case 'Year' -> Year
+      case 'MonthDay' -> MonthDay
+      case 'DayOfWeek' -> DayOfWeek
+      case 'OffsetDateTime' -> OffsetDateTime
+      case 'OffsetTime' -> OffsetTime
+      case 'ZonedDateTime' -> ZonedDateTime
+      case 'Instant' -> Instant
+      case 'Duration' -> Duration
+      case 'Period' -> Period
+      case 'ZoneId' -> ZoneId
+      case 'ZoneOffset' -> ZoneOffset
+      case 'Date' -> Date
+      case 'Time' -> Time
+      case 'Timestamp' -> Timestamp
       default -> {
         if (name.contains('.')) {
           Class.forName(name)

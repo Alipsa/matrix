@@ -203,7 +203,7 @@ class MatrixBuilderTest {
   void testClipboardParsing() {
     String content = "#types: String, int\r\nname\tvalue\r\n\"A\"\t\"1\"\r\nB\t2\r\n"
     Matrix m = Matrix.builder()
-        .clipboard(content, [delimiter: "\t", rowDelimiter: "\r\n", quoteString: '"'])
+        .csvString(content, [delimiter: "\t", rowDelimiter: "\r\n", quoteString: '"'])
         .build()
 
     assertIterableEquals(['name', 'value'], m.columnNames())

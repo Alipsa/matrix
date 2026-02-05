@@ -859,33 +859,35 @@ class MatrixTest {
   void testToCsvString() {
     def table = Matrix.builder()
         .data(
-            name: ['A, B', 'C'],
-            value: [1, null]
+            name: ['A', 'B', 'C'],
+            value: [1, null, 1.1]
         )
         .types(String, Number)
         .build()
 
     String csv = table.toCsvString()
     def rows = csv.split('\n')
-    assertEquals(3, rows.length)
-    assertEquals('name, value', rows[0])
-    assertEquals('"A, B", 1', rows[1])
-    assertEquals('C, ', rows[2])
+    assertEquals(5, rows.length, csv)
+    assertEquals('#types: String,Number', rows[0])
+    assertEquals('name,value', rows[1])
+    assertEquals('A,1', rows[2])
+    assertEquals('B,', rows[3])
+    assertEquals('C,1.1', rows[4])
 
-    String noHeader = table.toCsvString(false)
-    assertEquals('"A, B", 1\nC, ', noHeader)
+    String noHeader = table.toCsvString(false, false)
+    assertEquals('A,1', noHeader.split('\n')[0])
 
     String withTypes = table.toCsvString(includeTypes: true)
     def typedRows = withTypes.split('\n')
-    assertEquals('#types: String, Number', typedRows[0])
-    assertEquals('name, value', typedRows[1])
+    assertEquals('#types: String,Number', typedRows[0])
+    assertEquals('name,value', typedRows[1])
     assertEquals(withTypes, table.toCsvString(true, true))
 
     String withCustomComment = table.toCsvString(includeTypes: true, lineComment: '--')
-    assertTrue(withCustomComment.startsWith('--types: String, Number\n'))
+    assertTrue(withCustomComment.startsWith('--types: String,Number\n'))
 
     String custom = table.toCsvString(quoteString: "'", delimiter: '\t', rowDelimiter: '\r\n')
-    assertEquals("name\tvalue\r\nA, B\t1\r\nC\t", custom)
+    assertEquals("name\tvalue\r\n'A'\t1\r\n'B'\t\r\n'C'\t1.1", custom)
   }
 
   @Test

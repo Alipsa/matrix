@@ -2932,7 +2932,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return the matrix as a CSV string
    */
   String toCsvString() {
-    toCsvString([:])
+    toCsvString(includeHeader: true, includeTypes: true)
   }
 
   /**
@@ -2974,7 +2974,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   String toCsvString(Map options) {
     String quoteString = options.containsKey('quoteString') ? options.quoteString as String : '"'
-    String delimiter = options.containsKey('delimiter') ? options.delimiter as String : ', '
+    String delimiter = options.containsKey('delimiter') ? options.delimiter as String : ','
     String rowDelimiter = options.containsKey('rowDelimiter')
       ? options.rowDelimiter as String
       : (options.rowdelimiter as String ?: '\n')
@@ -2983,6 +2983,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       : (options.linecomment as String ?: '#')
     boolean includeHeader = options.containsKey('includeHeader') ? options.includeHeader as boolean : true
     boolean includeTypes = options.containsKey('includeTypes') ? options.includeTypes as boolean : false
+    boolean customQuoteString = options.containsKey('quoteString')
 
     StringBuilder sb = new StringBuilder()
     if (includeTypes || matrixName) {
@@ -2998,23 +2999,24 @@ class Matrix implements Iterable<Row>, Cloneable {
       if (includeTypes) {
         sb.append(lineComment)
           .append('types: ')
-          .append(types().collect { typeLabel(it) }.join(', '))
+          .append(types().collect { typeLabel(it) }.join(','))
           .append(rowDelimiter)
       }
     }
 
     boolean wroteHeader = false
     if (includeHeader) {
-      sb.append(buildCsvRow(columnNames(), quoteString, delimiter, rowDelimiter))
+      sb.append(buildCsvRow(columnNames(), quoteString, delimiter, rowDelimiter, null, customQuoteString))
       wroteHeader = true
     }
 
     int rowCount = rowCount()
+    List<Class> columnTypes = types()
     for (int i = 0; i < rowCount; i++) {
       if (wroteHeader || i > 0 || includeHeader) {
         sb.append(rowDelimiter)
       }
-      sb.append(buildCsvRow(row(i), quoteString, delimiter, rowDelimiter))
+      sb.append(buildCsvRow(row(i), quoteString, delimiter, rowDelimiter, columnTypes, customQuoteString))
       wroteHeader = true
     }
     sb.toString()
@@ -3306,11 +3308,12 @@ class Matrix implements Iterable<Row>, Cloneable {
     alignment
   }
 
-  private static String buildCsvRow(List<?> values, String quoteString, String delimiter, String rowDelimiter) {
+  private static String buildCsvRow(List<?> values, String quoteString, String delimiter, String rowDelimiter, List<Class> types, boolean customQuoteString) {
     StringBuilder rowBuilder = new StringBuilder()
     int max = values.size()
     for (int i = 0; i < max; i++) {
-      rowBuilder.append(escapeCsvValue(values[i], quoteString, delimiter, rowDelimiter))
+      Class type = (types != null && i < types.size()) ? types[i] : null
+      rowBuilder.append(escapeCsvValue(values[i], quoteString, delimiter, rowDelimiter, type, customQuoteString))
       if (i < max - 1) {
         rowBuilder.append(delimiter)
       }
@@ -3318,16 +3321,29 @@ class Matrix implements Iterable<Row>, Cloneable {
     rowBuilder.toString()
   }
 
-  private static String escapeCsvValue(Object value, String quoteString, String delimiter, String rowDelimiter) {
+  private static String escapeCsvValue(Object value, String quoteString, String delimiter, String rowDelimiter, Class type, boolean customQuoteString) {
     String stringValue = ValueConverter.asString(value) ?: ''
     if (quoteString == null || quoteString.isEmpty()) {
       return stringValue
     }
-    boolean shouldQuote = stringValue.contains(quoteString) ||
-      stringValue.contains(delimiter) ||
-      stringValue.contains(rowDelimiter) ||
-      stringValue.contains('\n') ||
-      stringValue.contains('\r')
+
+    // Determine if we should quote based on type or special characters
+    boolean shouldQuote = false
+
+    // Quote string-typed values only when a custom quote string was specified
+    if (customQuoteString && type == String && stringValue && !stringValue.isBlank()) {
+      shouldQuote = true
+    }
+
+    // Always quote if the value contains special characters
+    if (stringValue.contains(quoteString) ||
+        stringValue.contains(delimiter) ||
+        stringValue.contains(rowDelimiter) ||
+        stringValue.contains('\n') ||
+        stringValue.contains('\r')) {
+      shouldQuote = true
+    }
+
     if (!shouldQuote) {
       return stringValue
     }
@@ -3336,14 +3352,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   private static String typeLabel(Class type) {
-    if (type == Integer) return 'int'
-    if (type == Long) return 'long'
-    if (type == Short) return 'short'
-    if (type == Byte) return 'byte'
-    if (type == Float) return 'float'
-    if (type == Double) return 'double'
-    if (type == Character) return 'char'
-    if (type == Boolean) return 'Boolean'
+    if (type != null && type.isPrimitive()) {
+      return primitiveWrapper(type)
+    }
     if (type == String || type == BigDecimal || type == BigInteger || type == Number || type == Object) {
       return type.simpleName
     }
