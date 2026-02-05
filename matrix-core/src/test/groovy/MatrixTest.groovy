@@ -859,7 +859,7 @@ class MatrixTest {
   void testToCsvString() {
     def table = Matrix.builder()
         .data(
-            name: ['A', 'B', 'C'],
+            name: ['A', 'B', 'C,k'],
             value: [1, null, 1.1]
         )
         .types(String, Number)
@@ -872,7 +872,7 @@ class MatrixTest {
     assertEquals('name,value', rows[1])
     assertEquals('A,1', rows[2])
     assertEquals('B,', rows[3])
-    assertEquals('C,1.1', rows[4])
+    assertEquals('"C,k",1.1', rows[4])
 
     String noHeader = table.toCsvString(false, false)
     assertEquals('A,1', noHeader.split('\n')[0])
@@ -887,7 +887,7 @@ class MatrixTest {
     assertTrue(withCustomComment.startsWith('--types: String,Number\n'))
 
     String custom = table.toCsvString(quoteString: "'", delimiter: '\t', rowDelimiter: '\r\n')
-    assertEquals("name\tvalue\r\n'A'\t1\r\n'B'\t\r\n'C'\t1.1", custom)
+    assertEquals("name\tvalue\r\n'A'\t1\r\n'B'\t\r\n'C,k'\t1.1", custom)
   }
 
   @Test
