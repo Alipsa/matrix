@@ -7,6 +7,8 @@ import se.alipsa.matrix.core.util.MatrixPrinter
 import se.alipsa.matrix.core.util.RowComparator
 
 import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 import static se.alipsa.matrix.core.util.ClassUtils.*
 
@@ -2961,7 +2963,18 @@ class Matrix implements Iterable<Row>, Cloneable {
    * Convert this matrix to a CSV formatted string.
    * If the matrix has a name, it will be included as a comment header (#name: matrixName).
    * If includeTypes is true, type information will be included as a comment header (#types: Integer, String, ...).
+   * Metadata will be included as comment headers (#metadata.key: value).
    * These comment headers can be read back using Matrix.builder().csvString() to fully restore the matrix.
+   *
+   * <p><b>Metadata Constraints:</b> Only metadata values of the following types can be serialized and round-tripped:
+   * <ul>
+   *   <li>String</li>
+   *   <li>Number (Integer, Long, BigDecimal, etc.)</li>
+   *   <li>Boolean</li>
+   *   <li>LocalDate</li>
+   *   <li>LocalDateTime</li>
+   * </ul>
+   * Other types will be converted to String via toString() and will be read back as String values.
    *
    * @param options optional parameters:
    *   - quoteString (String) string quote, default '\"'
@@ -2986,7 +2999,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     boolean customQuoteString = options.containsKey('quoteString')
 
     StringBuilder sb = new StringBuilder()
-    if (includeTypes || matrixName) {
+    if (includeTypes || matrixName || !metaData.isEmpty()) {
       if (lineComment == null || lineComment.isEmpty()) {
         lineComment = '#'
       }
@@ -2995,6 +3008,16 @@ class Matrix implements Iterable<Row>, Cloneable {
           .append('name: ')
           .append(matrixName)
           .append(rowDelimiter)
+      }
+      if (!metaData.isEmpty()) {
+        metaData.each { key, value ->
+          sb.append(lineComment)
+            .append('metadata.')
+            .append(key)
+            .append(': ')
+            .append(serializeMetadataValue(value))
+            .append(rowDelimiter)
+        }
       }
       if (includeTypes) {
         sb.append(lineComment)
@@ -3363,6 +3386,19 @@ class Matrix implements Iterable<Row>, Cloneable {
       return type.simpleName
     }
     type.name
+  }
+
+  private static String serializeMetadataValue(Object value) {
+    if (value == null) {
+      return ''
+    }
+    if (value instanceof LocalDate) {
+      return value.toString()
+    }
+    if (value instanceof LocalDateTime) {
+      return value.toString()
+    }
+    return value.toString()
   }
 
   /**

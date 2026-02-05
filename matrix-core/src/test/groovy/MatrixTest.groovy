@@ -895,6 +895,20 @@ class MatrixTest {
     assertEquals('toCsvTest', restored.matrixName)
     assertIterableEquals(['name', 'value'], restored.columnNames())
     assertIterableEquals([String, Number], restored.types())
+
+    // Test that metadata is preserved through serialization round-trip
+    table.metaData.put('author', 'Per')
+    table.metaData.put('version', 1)
+    table.metaData.put('active', true)
+    table.metaData.put('created', LocalDate.of(2024, 1, 15))
+    table.metaData.put('modified', LocalDateTime.of(2024, 1, 15, 10, 30, 0))
+    String csvWithMetadata = table.toCsvString()
+    Matrix restoredWithMetadata = Matrix.builder().csvString(csvWithMetadata).build()
+    assertEquals('Per', restoredWithMetadata.metaData.author)
+    assertEquals(1, restoredWithMetadata.metaData.version)
+    assertEquals(true, restoredWithMetadata.metaData.active)
+    assertEquals(LocalDate.of(2024, 1, 15), restoredWithMetadata.metaData.created)
+    assertEquals(LocalDateTime.of(2024, 1, 15, 10, 30, 0), restoredWithMetadata.metaData.modified)
   }
 
   @Test

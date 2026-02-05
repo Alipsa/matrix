@@ -43,6 +43,7 @@ class MatrixBuilder {
   List<String> headerList
   List<List> columns
   List<Class> dataTypes
+  Map<String, Object> metadata = [:]
 
   /**
    * Create a MatrixBuilder with no name. This is package scoped as the way to create a MatrixBuilder
@@ -65,7 +66,11 @@ class MatrixBuilder {
   }
 
   Matrix build() {
-    new Matrix(matrixName, headerList, columns, dataTypes)
+    Matrix m = new Matrix(matrixName, headerList, columns, dataTypes)
+    if (!metadata.isEmpty()) {
+      (m.metaData as Map<String, Object>).putAll(metadata)
+    }
+    m
   }
 
   MatrixBuilder matrixName(String name) {
@@ -448,8 +453,21 @@ class MatrixBuilder {
   /**
    * Populate the data of the Matrix from a CSV string. This method is useful for reading
    * CSV strings that were created using Matrix.toCsvString(), especially when includeTypes is true.
-   * The CSV string can include a types comment header (e.g., "#types: String,Integer,BigDecimal")
-   * which will be used to properly type the columns.
+   * The CSV string can include comment headers:
+   * <ul>
+   *   <li>#name: matrixName</li>
+   *   <li>#types: String,Integer,BigDecimal</li>
+   *   <li>#metadata.key: value</li>
+   * </ul>
+   *
+   * <p><b>Metadata Parsing:</b> Metadata values are parsed and converted to the appropriate type:
+   * <ul>
+   *   <li>Boolean: true/false (case insensitive)</li>
+   *   <li>Number: numeric strings are converted to Integer, Long, or BigDecimal</li>
+   *   <li>LocalDate: ISO date format (yyyy-MM-dd)</li>
+   *   <li>LocalDateTime: ISO datetime format (yyyy-MM-ddTHH:mm:ss)</li>
+   *   <li>String: all other values</li>
+   * </ul>
    *
    * @param csvContent the CSV string to parse
    * @param options optional parameters:
@@ -514,6 +532,7 @@ class MatrixBuilder {
     int maxCols = 0
     List<Class> parsedTypes = null
     String parsedName = null
+    Map<String, Object> parsedMetadata = [:]
     for (String line in lines) {
       if (lineComment != null && !lineComment.isEmpty()) {
         String trimmed = line.trim()
@@ -523,6 +542,14 @@ class MatrixBuilder {
             String nameSpec = after.substring('name:'.length()).trim()
             if (!nameSpec.isEmpty()) {
               parsedName = nameSpec
+            }
+          } else if (after.toLowerCase().startsWith('metadata.')) {
+            String metaSpec = after.substring('metadata.'.length())
+            int colonPos = metaSpec.indexOf(':')
+            if (colonPos > 0) {
+              String key = metaSpec.substring(0, colonPos).trim()
+              String value = metaSpec.substring(colonPos + 1).trim()
+              parsedMetadata[key] = parseMetadataValue(value)
             }
           } else if (after.toLowerCase().startsWith('types:')) {
             String typeSpec = after.substring('types:'.length()).trim()
@@ -583,6 +610,11 @@ class MatrixBuilder {
     if (parsedName != null && noName()) {
       matrixName(parsedName)
     }
+    if (!parsedMetadata.isEmpty()) {
+      parsedMetadata.each { key, value ->
+        metadata.put(key, value)
+      }
+    }
     this
   }
 
@@ -635,6 +667,57 @@ class MatrixBuilder {
         }
       }
     }
+  }
+
+  private static Object parseMetadataValue(String value) {
+    if (value == null || value.isEmpty()) {
+      return null
+    }
+
+    // Try boolean
+    if (value.equalsIgnoreCase('true')) {
+      return true
+    }
+    if (value.equalsIgnoreCase('false')) {
+      return false
+    }
+
+    // Try LocalDateTime (has 'T' in it)
+    if (value.contains('T')) {
+      try {
+        return LocalDateTime.parse(value)
+      } catch (Exception ignored) {
+        // Not a datetime, continue
+      }
+    }
+
+    // Try LocalDate (yyyy-MM-dd format)
+    if (value.matches(/^\d{4}-\d{2}-\d{2}$/)) {
+      try {
+        return LocalDate.parse(value)
+      } catch (Exception ignored) {
+        // Not a date, continue
+      }
+    }
+
+    // Try number
+    try {
+      // Check if it's an integer
+      if (!value.contains('.')) {
+        long longValue = Long.parseLong(value)
+        if (longValue >= Integer.MIN_VALUE && longValue <= Integer.MAX_VALUE) {
+          return (int) longValue
+        }
+        return longValue
+      } else {
+        return new BigDecimal(value)
+      }
+    } catch (NumberFormatException ignored) {
+      // Not a number, treat as string
+    }
+
+    // Default to string
+    return value
   }
 
   MatrixBuilder data(ResultSet rs) {
