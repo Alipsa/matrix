@@ -1,5 +1,8 @@
 # Matrix-bigquery Release History
 
+## v0.5.1, In progress
+- com.google.cloud:google-cloud-resourcemanager [1.84.0 -> 1.85.0]
+- 
 ## v0.5.1, 2026-01-30
 - Honour bigquery.enable_write_api system property - When set to "false", skips write channel and uses InsertAll directly
 - Fixed isConnectionError - Now traverses the full cause chain to detect connection errors wrapped in multiple exception layers
