@@ -4,7 +4,7 @@
 Json import and export functionality to and from a Matrix or Grid
 
 ## Setup
-Matrix-json should work with any 4.x version of groovy, and probably older versions as well. 
+Matrix-json should work with any 5.x version of groovy. 
 It requires version 2.0.0 or later of the Matrix-core package (recommend se.alipsa.groovy:matrix-core:3.6.0)
 Binary builds can be downloaded
 from the [Matrix-json project release page](https://github.com/Alipsa/matrix-json/releases) but if you use a build system that

@@ -9,7 +9,7 @@ The matrix core is focused on providing the data structure and data manipulation
 Grid classes) that all the other matrix libraries use.
 
 ## Setup
-Matrix should work with any 4.x version of groovy, and probably older versions as well. Binary builds can be downloaded 
+Matrix should work with any 5.x version of groovy. Binary builds can be downloaded 
 from the [Matrix project release page](https://github.com/Alipsa/matrix/releases) but if you use a build system that 
 handles dependencies via maven central (gradle, maven ivy etc.) you can do the following for Gradle
 ```groovy

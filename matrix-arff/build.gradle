@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1.0'
+version = '0.1.1-SNAPSHOT'
 description = 'Matrix ARFF import/export'
 
 JavaCompile javaCompile = compileJava {

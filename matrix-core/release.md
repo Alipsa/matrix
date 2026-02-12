@@ -1,5 +1,25 @@
 # Matrix Core Release History
 
+### 3.7.0, in progress
+- enforcing Groovy 5 or greater. Groovy 5 has been used for quite some time to build the matrix library. While Groovy 4 works most of the time, there are several cases where it does not. Since groovy 6 is on the way and groovy 5 is already stable, it makes sense to enforce Groovy 5 as the minimum version for matrix-core.
+- New native CSV serialization format in Matrix
+  - Added toCsvString() overloads with options 
+  - Supports comment headers for:
+    - matrix name (#name:),
+    - types (#types:),
+    - metadata (#metadata.<key>:)
+  - Added CSV escaping/typing helpers.
+
+- New CSV deserialization API in MatrixBuilder (round-trip capable)
+ - Added csvString(...)
+ - Parses #name, #types, #metadata.* and restores typed values 
+ - Added type-name resolution and metadata type parsing 
+ - Builder now carries metadata into built Matrix
+
+- Clipboard convenience support
+  - Added Matrix.toClipboard(...)
+  - Added MatrixBuilder.clipboard(...)
+
 ### 3.6.0, 2026-01-30
 - Matrix.getAt() now returns Column instead of List (Column extends ArrayList)
 - deprecate renameColumn and dropColumns in favor of rename and drop

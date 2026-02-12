@@ -40,6 +40,19 @@ class Matrix implements Iterable<Row>, Cloneable {
   public static final Boolean DESC = Boolean.TRUE
   private Map<String, ?> metaData = [:]
 
+  static {
+    // Splits "5.0.1" into [5, 0, 1]
+    def versionParts = GroovySystem.version.tokenize('.')*.toInteger()
+    def majorVersion = versionParts[0]
+
+    if (majorVersion < 5) {
+      throw new IllegalStateException(
+          "Unsupported Groovy version! This library requires Groovy 5.0.0 or higher. " +
+              "Current version: ${GroovySystem.version}"
+      )
+    }
+  }
+
   static MatrixBuilder builder() {
     new MatrixBuilder()
   }

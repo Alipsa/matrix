@@ -32,23 +32,23 @@
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
 
-    <matrixArffVersion>0.1.0</matrixArffVersion>
-    <matrixAvroVersion>0.1.0</matrixAvroVersion>
-    <matrixBigQueryVersion>0.5.1</matrixBigQueryVersion>
-    <matrixChartsVersion>0.4.0</matrixChartsVersion>
+    <matrixArffVersion>0.1.1-SNAPSHOT</matrixArffVersion>
+    <matrixAvroVersion>0.1.1-SNAPSHOT</matrixAvroVersion>
+    <matrixBigQueryVersion>0.5.2-SNAPSHOT</matrixBigQueryVersion>
+    <matrixChartsVersion>0.4.1-SNAPSHOT</matrixChartsVersion>
     <matrixCoreVersion>3.7.0-SNAPSHOT</matrixCoreVersion>
-    <matrixCsvVersion>2.2.2</matrixCsvVersion>
-    <matrixDatasetsVersion>2.1.2</matrixDatasetsVersion>
+    <matrixCsvVersion>2.2.3-SNAPSHOT</matrixCsvVersion>
+    <matrixDatasetsVersion>2.1.3-SNAPSHOT</matrixDatasetsVersion>
     <matrixGroovyExtVersion>0.1.1-SNAPSHOT</matrixGroovyExtVersion>
-    <matrixGsheetsVersion>0.1.1</matrixGsheetsVersion>
-    <matrixJsonVersion>2.1.2</matrixJsonVersion>
-    <matrixParquetVersion>0.4.0</matrixParquetVersion>
-    <matrixSmileVersion>0.1.0</matrixSmileVersion>
-    <matrixSpreadsheetVersion>2.3.0</matrixSpreadsheetVersion>
+    <matrixGsheetsVersion>0.1.2-SNAPSHOT</matrixGsheetsVersion>
+    <matrixJsonVersion>2.1.3-SNAPSHOT</matrixJsonVersion>
+    <matrixParquetVersion>0.4.1-SNAPSHOT</matrixParquetVersion>
+    <matrixSmileVersion>0.1.1-SNAPSHOT</matrixSmileVersion>
+    <matrixSpreadsheetVersion>2.3.1-SNAPSHOT</matrixSpreadsheetVersion>
     <matrixSqlVersion>2.3.1-SNAPSHOT</matrixSqlVersion>
-    <matrixStatsVersion>2.3.0</matrixStatsVersion>
-    <matrixTablesawVersion>0.2.2</matrixTablesawVersion>
-    <matrixXChartVersion>0.2.3</matrixXChartVersion>
+    <matrixStatsVersion>2.3.1-SNAPSHOT</matrixStatsVersion>
+    <matrixTablesawVersion>0.2.3-SNAPSHOT</matrixTablesawVersion>
+    <matrixXChartVersion>0.2.4-SNAPSHOT</matrixXChartVersion>
   </properties>
   <dependencyManagement>
     <dependencies>
