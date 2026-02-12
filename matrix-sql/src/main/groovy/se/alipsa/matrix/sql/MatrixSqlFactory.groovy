@@ -4,14 +4,16 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.groovy.datautil.DataBaseProvider
 import se.alipsa.groovy.datautil.SqlUtil
-import se.alipsa.groovy.resolver.MavenRepoLookup
 import se.alipsa.matrix.core.util.Logger
+import se.alipsa.mavenutils.ArtifactLookup
 
 @CompileStatic
 class MatrixSqlFactory {
 
   private static final Logger log = Logger.getLogger(MatrixSqlFactory)
   static String REPO_URL = "https://repo1.maven.org/maven2/"
+  static ArtifactLookup artifactLookup = new ArtifactLookup(REPO_URL)
+
   static MatrixSql createH2(String url, String user, String password, String additionalUrlProperties = null, String version = null) {
     ConnectionInfo ci = new ConnectionInfo()
     ci.setDriver("org.h2.Driver")
@@ -25,9 +27,8 @@ class MatrixSqlFactory {
     String dependencyVersion
     if (version == null) {
       try {
-        dependencyVersion = MavenRepoLookup
-            .fetchLatestArtifact('com.h2database', 'h2', REPO_URL)
-            .getVersion()
+        dependencyVersion = artifactLookup
+            .fetchLatestVersion('com.h2database', 'h2')
       } catch (Exception e) {
         dependencyVersion = '2.4.240'
         log.warn("Failed to fetch latest H2 artifact, falling back to version $dependencyVersion: ${e.message}", e)
@@ -53,9 +54,8 @@ class MatrixSqlFactory {
     String dependencyVersion
     if (version == null) {
       try {
-        dependencyVersion = MavenRepoLookup
-            .fetchLatestArtifact('org.apache.derby', 'derby', REPO_URL)
-            .getVersion()
+        dependencyVersion = artifactLookup
+            .fetchLatestVersion('org.apache.derby', 'derby')
       } catch (Exception e) {
         dependencyVersion = '10.17.1.0'
         log.warn("Failed to fetch latest Derby artifact, falling back to version $dependencyVersion: ${e.message}", e)
@@ -120,9 +120,8 @@ class MatrixSqlFactory {
     String dependencyVersion = version
     if (dependencyVersion == null) {
       try {
-        dependencyVersion = MavenRepoLookup
-            .fetchLatestArtifact(dependency.groupId, dependency.artifactId, REPO_URL)
-            .getVersion()
+        dependencyVersion = artifactLookup
+            .fetchLatestVersion(dependency.groupId, dependency.artifactId)
       } catch (Exception e) {
         throw new RuntimeException ("Failed to fetch latest artifact for $dependency.groupId:$dependency.artifactId", e)
       }
