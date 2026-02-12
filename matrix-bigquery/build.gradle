@@ -40,11 +40,11 @@ dependencies {
   testImplementation project(':matrix-datasets')
   compileOnly libs.groovy
 
-  api('com.google.cloud:google-cloud-bigquery:2.58.0')
-  api 'com.google.cloud:google-cloud-resourcemanager:1.85.0'
+  api('com.google.cloud:google-cloud-bigquery:2.59.0')
+  api 'com.google.cloud:google-cloud-resourcemanager:1.86.0'
   implementation platform('com.google.auth:google-auth-library-bom:1.42.1')
   implementation 'com.google.auth:google-auth-library-oauth2-http'
-  implementation('com.google.cloud:google-cloud-bigquerystorage:3.20.0')
+  implementation('com.google.cloud:google-cloud-bigquerystorage:3.21.0')
   implementation 'me.tongfei:progressbar:0.10.2'
 
   // https://mvnrepository.com/artifact/org.testcontainers/gcloud

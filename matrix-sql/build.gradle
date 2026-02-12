@@ -38,7 +38,7 @@ dependencies {
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
-    implementation 'se.alipsa.groovy:data-utils:2.0.4'
+    implementation 'se.alipsa.groovy:data-utils:2.0.6'
     implementation 'commons-io:commons-io:2.21.0'
     implementation 'se.alipsa:maven-utils:1.4.0'
 

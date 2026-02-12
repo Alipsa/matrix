@@ -24,7 +24,7 @@ dependencies {
     implementation project(':matrix-xchart')
   } else {
     // This is what you would if the project was standalone:
-    implementation platform('se.alipsa.matrix:matrix-bom:2.3.0')
+    implementation platform('se.alipsa.matrix:matrix-bom:2.4.0')
     implementation 'se.alipsa.matrix:matrix-core'
     implementation 'se.alipsa.matrix:matrix-csv'
     implementation 'se.alipsa.matrix:matrix-stats'

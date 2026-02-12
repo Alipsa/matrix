@@ -51,7 +51,7 @@ dependencies {
     // for XlsxWriter, TODO: remove once contributed to tablesaw
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
     // for OdsReader and Writer, TODO: remove once contributed to tablesaw
-    implementation 'com.github.miachm.sods:SODS:1.7.0'
+    implementation 'com.github.miachm.sods:SODS:1.8.0'
     // for XmlReader and writer, TODO: remove once contributed to tablesaw
     implementation 'org.dom4j:dom4j:2.2.0'
 

@@ -1,7 +1,9 @@
 # Matrix-bigquery Release History
 
-## v0.5.1, In progress
-- com.google.cloud:google-cloud-resourcemanager [1.84.0 -> 1.85.0]
+## v0.5.2, In progress
+- com.google.cloud:google-cloud-resourcemanager [1.84.0 -> 1.86.0]
+- com.google.cloud:google-cloud-bigquery [2.58.0 -> 2.59.0]
+- com.google.cloud:google-cloud-bigquerystorage [3.20.0 -> 3.21.0]
 - 
 ## v0.5.1, 2026-01-30
 - Honour bigquery.enable_write_api system property - When set to "false", skips write channel and uses InsertAll directly
