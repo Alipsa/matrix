@@ -109,10 +109,6 @@ class Column extends ArrayList {
     }
   }
 
-  List removeNulls() {
-    this.findAll { it != null } as Column
-  }
-
   @CompileDynamic
   List minus(List list) {
     List result = new Column()
@@ -198,6 +194,20 @@ class Column extends ArrayList {
       }
     }
     result
+  }
+
+  List removeNulls() {
+    this.findAll { it != null } as Column
+  }
+
+  List replaceNulls(Object val) {
+    replace(null, val)
+  }
+
+  List replace(Object oldVal, Object val) {
+    this.collect {
+      it == oldVal ? val : it
+    }
   }
 
   private Column fill(List list) {
