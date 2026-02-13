@@ -34,6 +34,7 @@
 - optimize Stat.means(), medians(), and sd() to use columnar access instead of row iteration
 - critical bug fixes: row indices criteria evaluation, assertion throwing, variance division by zero, dropEmptyColumns blank string handling
 - add JaCoCo code coverage and CodeNarc static analysis to build infrastructure
+  Column.minus can now handle nulls so matrix['columnA'] - null now works the same as if one did matrix['columnA'].removeNulls()
 
 ### 3.5.0, 2025-09-06
 Jar available at [maven central](https://repo1.maven.org/maven2/se/alipsa/matrix/matrix-core/3.5.0/matrix-core-3.5.0.jar)

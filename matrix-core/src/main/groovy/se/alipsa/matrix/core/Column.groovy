@@ -102,7 +102,11 @@ class Column extends ArrayList {
 
   @CompileDynamic
   List minus(Object val) {
-    applyOperation(val, { a, b -> a - b })
+    if (val == null) {
+      removeNulls()
+    } else {
+      applyOperation(val, { a, b -> a - b })
+    }
   }
 
   List removeNulls() {

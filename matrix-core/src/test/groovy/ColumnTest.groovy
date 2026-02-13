@@ -209,4 +209,28 @@ class ColumnTest {
     assert [1,3,5] == noNulls
     assert [1, null, 3, null, 5] == c // original should be unchanged
   }
+
+  @Test
+  void testMinusNull() {
+    // Mimic standard Groovy list behavior: ['a', null, 'c', null] - null == ['a', 'c']
+    Column c1 = new Column(['a', null, 'c', null])
+    assert ['a', 'c'] == c1 - null
+
+    // Numeric column with nulls
+    Column c2 = new Column([1, null, 3, null, 5])
+    assert [1, 3, 5] == c2 - null
+
+    // Column with no nulls should be unchanged
+    Column c3 = new Column([1, 2, 3])
+    assert [1, 2, 3] == c3 - null
+
+    // All nulls should return empty
+    Column c4 = new Column([null, null, null])
+    assert [] == c4 - null
+
+    // Original column should not be mutated
+    Column c5 = new Column([1, null, 2])
+    c5 - null
+    assert [1, null, 2] == c5
+  }
 }
