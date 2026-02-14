@@ -34,28 +34,39 @@ Svg ----exports-----> chartexport -------> PNG/JPEG/JFX/Swing
 ```
 
 ## 2. Baseline and Inventory
-2.1 [ ] Create an API inventory for all public classes/methods in:
+2.1 [x] Create an API inventory for all public classes/methods in:
   `matrix-charts/src/main/groovy/se/alipsa/matrix/gg`,
   `matrix-charts/src/main/groovy/se/alipsa/matrix/charts`,
   `matrix-charts/src/main/groovy/se/alipsa/matrix/chartexport`.
-2.2 [ ] Inventory current export pipeline duality and call graph explicitly:
+  Inventory artifacts:
+  `matrix-charts/section2-inventory/gg-public-api.txt`,
+  `matrix-charts/section2-inventory/charts-public-api.txt`,
+  `matrix-charts/section2-inventory/chartexport-public-api.txt`.
+2.2 [x] Inventory current export pipeline duality and call graph explicitly:
   `charts` path: `Plot.jfx/png/base64` -> `JfxConverter`/`PngConverter` (JavaFX toolkit/snapshot dependent),
   `gg` path: `GgChart.render()` -> `se.alipsa.groovy.svg.Svg` -> `ChartToPng/Jfx/Jpeg/Swing/Image`.
-2.3 [ ] Document JavaFX PNG constraint as baseline risk:
+2.3 [x] Document JavaFX PNG constraint as baseline risk:
   `charts.png.PngConverter` depends on `Platform.runLater` + `Scene.snapshot`, requiring JavaFX toolkit initialization and UI-thread orchestration.
-2.4 [ ] Document current test-coverage asymmetry as a migration risk:
-  `gg` has 65+ test files (scales, geoms, themes, coords, stats, facets), while `charts` currently has only a small set of direct tests (notably `BoxChartTest`, `HistogramTest`, `LineChartTest`).
-2.5 [ ] Create missing baseline tests for `se.alipsa.matrix.charts` before fixture capture:
+2.4 [x] Document current test-coverage asymmetry as a migration risk:
+  Baseline counts recorded in `matrix-charts/section2-baseline.md`:
+  `gg`: 100 test files, `charts`: 5 test files, `export`: 5 test files.
+2.5 [x] Create missing baseline tests for `se.alipsa.matrix.charts` before fixture capture:
   add coverage for chart families and behavior currently untested (Area, Bar, Bubble, Pie, Scatter, styling/defaults, legend/title behavior, invalid input handling).
-2.6 [ ] Capture current behavior with baseline fixtures for representative chart types (point, line, bar, histogram, boxplot, facets, transforms, themes, guides), using both existing `gg` tests and the newly-added `charts` baselines.
-2.7 [ ] Define explicit compatibility tiers:
+  Added:
+  `matrix-charts/src/test/groovy/chart/ChartFactoryBaselineTest.groovy`.
+2.6 [x] Capture current behavior with baseline fixtures for representative chart types (point, line, bar, histogram, boxplot, facets, transforms, themes, guides), using both existing `gg` tests and the newly-added `charts` baselines.
+  Fixture mapping and baseline notes recorded in:
+  `matrix-charts/section2-baseline.md`.
+2.7 [x] Define explicit compatibility tiers:
   Tier A: no observable behavior change (`gg` public API),
   Tier B: safe output differences (layout/style refinement),
   Tier C: documented breaking changes (only in `charts` internals or deprecated backends).
-2.8 [ ] Add this section’s command log once executed:
+2.8 [x] Add this section’s command log once executed:
   `./gradlew :matrix-charts:test --tests "chart.*" -Pheadless=true`
   `./gradlew :matrix-charts:test --tests "gg.*" -Pheadless=true`
   `./gradlew :matrix-charts:test -Pheadless=true`
+  Outcomes recorded in:
+  `matrix-charts/section2-baseline.md`.
 
 ## 3. Charm API Specification (Design First)
 3.1 [ ] Finalize Charm naming strategy and import-conflict policy:

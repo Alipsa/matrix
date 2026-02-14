@@ -1,0 +1,266 @@
+# Package: se.alipsa.matrix.charts
+# Source root: matrix-charts/src/main/groovy/se/alipsa/matrix/charts
+
+## Top-level types
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:8:class Histogram extends Chart<Histogram> {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:86:class MinMax {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/DataType.groovy:14:class DataType {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/ChartType.groovy:3:enum ChartType {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:13:abstract class Chart<T extends Chart> {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/LineChart.groovy:6:class LineChart extends Chart<LineChart> {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BoxChart.groovy:7:class BoxChart extends Chart<BoxChart> {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgChart.groovy:8:class SvgChart {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:12:class SvgBarChart extends SvgChart {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Plot.groovy:8:class Plot {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Legend.groovy:3:class Legend {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Style.groovy:54:class Style {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxHistogramConverter.groovy:9:class JfxHistogramConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/PieChart.groovy:6:class PieChart extends Chart<PieChart> {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxAreaChartConverter.groovy:5:class JfxAreaChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BubbleChart.groovy:5:class BubbleChart {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/ConverterUtil.groovy:5:class ConverterUtil {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/ChartDirection.groovy:3:enum ChartDirection {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxLineChartConverter.groovy:9:class JfxLineChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/InitializationException.groovy:3:class InitializationException extends RuntimeException {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfXScatterChartConverter.groovy:11:class JfXScatterChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/ScatterChart.groovy:5:class ScatterChart extends Chart<ScatterChart> {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxConverter.groovy:13:class JfxConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxPieChartConverter.groovy:6:class JfxPieChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:31:class JfxStyler {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingBarChartConverter.groovy:7:class SwingBarChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChartConverter.groovy:9:class JfxBoxChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingAreaChartConverter.groovy:7:class SwingAreaChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:21:class JfxBoxChart extends Chart {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingBoxChartConverter.groovy:6:class SwingBoxChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBarChartConverter.groovy:7:class JfxBarChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingConverter.groovy:17:class SwingConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:7:class SwingStyler {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPlot.groovy:11:class SwingPlot {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AreaChart.groovy:6:class AreaChart extends Chart<AreaChart> {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BarChart.groovy:5:class BarChart extends Chart<BarChart> {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPieChartConverter.groovy:7:class SwingPieChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingScatterChartConverter.groovy:8:class SwingScatterChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingHistogramConverter.groovy:11:class SwingHistogramConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/StyleUtil.groovy:5:class StyleUtil {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/png/PngConverter.groovy:14:class PngConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AxisScale.groovy:3:class AxisScale {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/DateUtil.groovy:10:class DateUtil {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingLineChartConverter.groovy:7:class SwingLineChartConverter {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/ColorUtil.groovy:5:class ColorUtil {
+
+## Candidate public/static method signatures
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:14:  static Histogram create(Map params) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:23:  static Histogram create(String title, Matrix data, String columnName, Integer bins = 9, int binDecimals = 1) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:36:  static Histogram create(List<? extends Number> column, Integer bins = 9) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:73:  Map<MinMax, Integer> getRanges() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:77:  List<? extends Number> getOriginalData() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:81:  Integer getNumberOfBins() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:90:  MinMax(BigDecimal minValue, BigDecimal maxValue, int binDecimals = 1) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Histogram.groovy:96:  String toString() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/LineChart.groovy:8:  static LineChart create(LinearRegression model) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/LineChart.groovy:12:  static LineChart create(Matrix data, String xAxis, String... valueColumns) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/LineChart.groovy:13:    create(data.matrixName, data, xAxis, valueColumns)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/LineChart.groovy:16:  static LineChart create(String title, Matrix data, String xAxis, String... valueColumns) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/DataType.groovy:19:  static boolean equals(Class one, Class two) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/DataType.groovy:25:  static boolean differs(Class one, Class two) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/DataType.groovy:29:  static String dataType(Class columnType) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/DataType.groovy:36:  static boolean isCharacter(Class columnType) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/DataType.groovy:40:  static String sqlType(Class columnType, int... varcharSize) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:30:  String getTitle() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:34:  List getCategorySeries() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:38:  List<List> getValueSeries() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:42:  static void validateSeries(Matrix[] series) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:77:  String getxAxisTitle() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:81:  String getyAxisTitle() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:85:  AxisScale getxAxisScale() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:89:  T setXAxisScale(AxisScale xAxisScale) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:94:  T setXAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:99:  AxisScale getyAxisScale() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:103:  T setYAxisScale(AxisScale yAxisScale) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:108:  T setYAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:113:  T setTitle(String title) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:118:  T setXAxisTitle(String xAxisTitle) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:123:  T setYAxisTitle(String yAxisTitle) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:128:  T setCategorySeries(List<?> categorySeries) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:133:  T setValueSeries(List<List> valueSeries) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:138:  List<?> getValueSerie(int index) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:142:  List<String> getValueSeriesNames() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:146:  T setValueSeriesNames(List<String> valueSeriesNames) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:151:  Style getStyle() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:155:  Legend getLegend() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:159:  T setLegend(Legend legend) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Chart.groovy:165:  String toString() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgChart.groovy:11:  String asString(boolean prettyPrint = false) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgChart.groovy:21:  Svg getSvg() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BoxChart.groovy:9:  static BoxChart create(String title, Matrix data, String categoryColumnName, String valueColumn) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BoxChart.groovy:22:  static BoxChart create(title, Matrix data, List<String> columnNames) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:15:  SvgBarChart(BarChart barChart, int width, int height) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:37:    addCanvas(width, height)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:38:    addTitle(barChart.title, barChart.style, titleXOffset, titleYOffset)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:39:    addGraph(graphWidth, graphHeight, plotXOffset, plotYOffset)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:40:    addLegend(barChart.legend, barChart.style)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:43:  void addCanvas(int width, int height) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:49:  void addTitle(String title, Style style, int xOffset, int yOffset) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:54:  void addLegend(Legend legend, Style style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:62:  void addGraph(double graphWidth, double graphHeight, double xOffset, double yOffset) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:70:    println("proportion = graphHeight / orgMaxHeight = $proportion = $graphHeight / $orgMaxHeight")
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:86:    plotXAxis(graph, maxHeight, width, xOffset, 'black')
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:87:    plotYAxis(graph, maxHeight, xOffset, yOffset, 'black')
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:92:    plotXLabels(graph, xTicks, maxHeight, 20,'black')
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:93:    plotYLabels(graph, yTicks, xOffset, orgMaxHeight, 10, 'black', barChart.style.yLabels.format as DecimalFormat)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:95:    plotData(graph, valueSeries, barWidth, barSpace, maxHeight, xOffset, yOffset)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:98:  void plotYAxis(G graph, double maxHeight, double xOffset, double yOffset, String color) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:105:  List<Double> plotYTicks(G graph, double maxHeight, double xOffset, double yOffset, int nofTicks, String color) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:122:  void plotXAxis(G graph, double maxHeight, double width, double xOffset, String color) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:130:  List<Double> plotXTicks(G graph, double maxHeight, List valueSeries , double xOffset, double barWidth, double barSpace, String color) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:149:  static Map<String, Number> calculateValues(List<List> values) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:162:  static double calculateWidth(List<List> values, double barWidth, double barSpace) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:172:  void plotData(G graph, List valueSeries, double barWidth, double barSpace, double maxHeight, double xOffset, double yOffset) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:191:  void plotXLabels(G graph, List<Double> xTicks, double maxHeight, double margin, String color) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:202:  static void plotYLabels(G graph, List<Double> yTicks, double xOffset, double maxValue, double margin, String color, DecimalFormat format = null) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:216:  static DecimalFormat getDecimalFormat(double maxValue, int defaultNumberOfDecimals) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy:237:  Map<String, Double> calculatePosition(Style.Position position) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Plot.groovy:10:  static void png(Chart chart, File file, double width = 800, double height = 600) throws IOException {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Plot.groovy:11:    try(OutputStream os = Files.newOutputStream(file.toPath())) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Plot.groovy:12:      png(chart, os, width, height)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Plot.groovy:16:  static void png(Chart chart, OutputStream os, double width = 800, double height = 600) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Plot.groovy:20:  static javafx.scene.chart.Chart jfx(Chart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Plot.groovy:24:  static String base64(Chart chart, double width = 800, double height = 600) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Plot.groovy:26:    png(chart, baos, width, height)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Style.groovy:82:  boolean isLegendVisible() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Style.groovy:86:  void setCss(String css) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Style.groovy:90:  String getCss() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/Style.groovy:98:  void setLegendPosition(String pos) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/PieChart.groovy:8:  static PieChart create(String title, List<?> groupCol, List<?> numberCol){
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/PieChart.groovy:16:  static PieChart create(Matrix table, String groupColName, String numberColName){
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/PieChart.groovy:20:  static PieChart create(String title, Matrix table, String groupColName, String numberColName){
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/InitializationException.groovy:5:  InitializationException() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/InitializationException.groovy:6:    super()
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/InitializationException.groovy:9:  InitializationException(String message) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/InitializationException.groovy:10:    super(message)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/InitializationException.groovy:13:  InitializationException(String message, Throwable cause) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/InitializationException.groovy:14:    super(message, cause)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BubbleChart.groovy:7:  static BubbleChart create(String title, Matrix table, String xCol, String yCol, String sizeColumn, String groupCol) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxHistogramConverter.groovy:11:  static BarChart<String,Number> convert(Histogram histogram) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxConverter.groovy:15:    static javafx.scene.chart.Chart convert(Chart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxConverter.groovy:34:    static javafx.scene.chart.LineChart<?,?> convert(LineChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxConverter.groovy:38:    static javafx.scene.chart.AreaChart<?,?> convert(AreaChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxConverter.groovy:42:    static XYChart<?,?> convert(BarChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxConverter.groovy:46:    static javafx.scene.chart.PieChart convert(PieChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxConverter.groovy:50:    static javafx.scene.chart.BarChart convert(Histogram chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxConverter.groovy:54:    static javafx.scene.chart.Chart convert(BoxChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxConverter.groovy:58:    static javafx.scene.chart.ScatterChart convert(ScatterChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxAreaChartConverter.groovy:8:  static AreaChart<?,?> convert(se.alipsa.matrix.charts.AreaChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AreaChart.groovy:8:  static AreaChart create(Matrix data) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AreaChart.groovy:20:  static AreaChart create(String title, List<?> groupColumn, List<?>... valueColumn) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AreaChart.groovy:32:  static AreaChart create(String title, Matrix data, String xCol, String yCol) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AreaChart.groovy:43:  static AreaChart create(String title, Matrix data, String xCol, String yCol, String groupCol) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxPieChartConverter.groovy:8:  static PieChart convert(se.alipsa.matrix.charts.PieChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BarChart.groovy:10:  ChartType getChartType() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BarChart.groovy:14:  ChartDirection getDirection() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BarChart.groovy:18:  static BarChart create(String title, ChartType chartType, ChartDirection direction, List<?> groupColumn, List<?>... valueColumn) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BarChart.groovy:29:  static BarChart create(String title, ChartType chartType, Matrix data, String categoryColumnName, ChartDirection direction, String... valueColumn) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BarChart.groovy:53:  static BarChart createHorizontal(String title, Matrix data, String categoryColumnName, ChartType chartType, String... valueColumn) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BarChart.groovy:68:  static BarChart createVertical(String title, Matrix data, String categoryColumnName, ChartType chartType = ChartType.BASIC, String... valueColumn) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/BarChart.groovy:72:  boolean isStacked() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/ConverterUtil.groovy:7:  static void populateVerticalSeries(XYChart<?,?> fxChart, se.alipsa.matrix.charts.Chart data) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/ConverterUtil.groovy:8:    populateSeries(fxChart, data, ConverterUtil.&verticalData)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/ConverterUtil.groovy:11:  static void populateHorizontalSeries(XYChart<?,?> fxChart, se.alipsa.matrix.charts.Chart data) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/ConverterUtil.groovy:12:    populateSeries(fxChart, data, ConverterUtil.&horizontalData)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/ConverterUtil.groovy:23:  static void populateSeries(XYChart<?,?> fxChart, se.alipsa.matrix.charts.Chart data, Closure<XYChart.Data> dataCreator) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/ConverterUtil.groovy:37:  static void maybeHideLegend(se.alipsa.matrix.charts.Chart chart, Chart fxChart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:48:  JfxBoxChart(List<String> categories, List<List> valueSeries, String title, String xLabel, String yLabel) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:49:    setTitle(title ?: '')
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:56:        stats << computeStats(category, values)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:80:    new BoxStats(
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:94:    getChartChildren().clear()
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:125:    drawAxes(plotLeft, plotTop, plotRight, plotBottom, yMin, yMax)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:134:      drawBox(bs, cx, boxWidth, plotTop, plotBottom, yMin, yMax)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:146:    getChartChildren().add(yAxis)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:151:    getChartChildren().add(xAxis)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:161:      getChartChildren().add(tick)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:169:      getChartChildren().add(label)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:180:    getChartChildren().add(yLabel)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:191:      getChartChildren().add(label)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:200:    getChartChildren().add(xLabel)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:224:    getChartChildren().add(box)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:230:    getChartChildren().add(medianLine)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:235:    getChartChildren().add(lowerWhisker)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:240:    getChartChildren().add(upperWhisker)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:246:    getChartChildren().add(lowerCap)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:251:    getChartChildren().add(upperCap)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChart.groovy:260:      getChartChildren().add(circle)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxLineChartConverter.groovy:13:    String toString(Number number) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxLineChartConverter.groovy:18:    Number fromString(String s) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxLineChartConverter.groovy:23:  static LineChart<?,?> convert(se.alipsa.matrix.charts.LineChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:33:    static void style(Chart jfxChart, se.alipsa.matrix.charts.Chart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:35:        setChartStyles(jfxChart, style)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:36:        setTitleStyles(jfxChart, style)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:37:        setPlotStyles(jfxChart, style)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:38:        setLegendStyles(jfxChart, style)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:41:    static void setChartStyles(Chart jfxChart, Style style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:44:            addStyle(chartNode,"-fx-background-color: ${asHexString(style.chartBackgroundColor)};")
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:48:    static void setTitleStyles(Chart jfxChart, Style style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:56:    static void setPlotStyles(Chart jfxChart, Style style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:59:            addStyle(plotNode, "-fx-background-color: ${asHexString(style.plotBackgroundColor)};")
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:74:    static void setLegendStyles(Chart jfxChart, Style style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:92:            addStyle(legendNode, "-fx-background-color: ${asHexString(style.legendBackgroundColor)};")
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxStyler.groovy:96:            addStyle(legendNode, "-fx-font-family:: ${style.legendFont.getFamily()};")
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBarChartConverter.groovy:9:  static XYChart<?,?> convert(se.alipsa.matrix.charts.BarChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfXScatterChartConverter.groovy:13:  static javafx.scene.chart.ScatterChart convert(ScatterChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfXScatterChartConverter.groovy:37:  static Axis<Number> createAxis(AxisScale scale, List<? extends Number> series) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AxisScale.groovy:8:  AxisScale() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AxisScale.groovy:12:  AxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AxisScale.groovy:18:  BigDecimal getStart() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AxisScale.groovy:22:  void setStart(BigDecimal start) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AxisScale.groovy:26:  BigDecimal getEnd() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AxisScale.groovy:30:  void setEnd(BigDecimal end) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AxisScale.groovy:34:  BigDecimal getStep() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/AxisScale.groovy:38:  void setStep(BigDecimal step) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/ScatterChart.groovy:7:  static ScatterChart create(String title, Matrix data, String xAxis, String yAxis) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/jfx/JfxBoxChartConverter.groovy:11:  static Chart convert(BoxChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/png/PngConverter.groovy:25:    static void convert(Chart chart, OutputStream out, double width, double height) throws IOException {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/png/PngConverter.groovy:26:        new JFXPanel()
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/DateUtil.groovy:12:  static List<String> getMonthNames() {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/DateUtil.groovy:13:    getMonthNames(TextStyle.SHORT, Locale.default, 1, 12)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/DateUtil.groovy:16:  static List<String> getMonthNames(TextStyle style, Locale locale, int startMonth, int endMonth) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingBarChartConverter.groovy:9:  static CategoryChart convert(BarChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingBarChartConverter.groovy:11:        new CategoryChartBuilder()
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingLineChartConverter.groovy:9:  static XYChart convert(LineChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingLineChartConverter.groovy:11:        new XYChartBuilder()
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/ColorUtil.groovy:7:    static String asHexString(Color color, String defaultIfNull='none') {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/ColorUtil.groovy:18:    static String asHexString(Object color) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/ColorUtil.groovy:22:    static String asHexString(Object color, String defaultIfNull) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/ColorUtil.groovy:47:    static String normalizeColor(String color) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:9:    static void style(Chart swingChart, se.alipsa.matrix.charts.Chart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:11:        setChartStyles(swingChart, style)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:12:        setTitleStyles(swingChart, style)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:13:        setPlotStyles(swingChart, style)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:14:        setLegendStyles(swingChart, style)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:17:    static void setChartStyles(Chart swingChart, Style style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:25:    static void setTitleStyles(Chart swingChart, Style style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:33:    static void setPlotStyles(Chart swingChart, Style style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingStyler.groovy:41:    static void setLegendStyles(Chart swingChart, Style style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingAreaChartConverter.groovy:9:  static XYChart convert(AreaChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingAreaChartConverter.groovy:12:        new XYChartBuilder()
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingScatterChartConverter.groovy:10:  static XYChart convert(ScatterChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/util/StyleUtil.groovy:7:    static void addStyle(Node node, String style) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingBoxChartConverter.groovy:8:  static org.knowm.xchart.BoxChart convert(BoxChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingHistogramConverter.groovy:13:  static CategoryChart convert(Histogram chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingHistogramConverter.groovy:15:        new CategoryChartBuilder()
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPlot.groovy:13:  static XChartPanel<? extends org.knowm.xchart.internal.chartpart.Chart<? extends Styler,? extends Series>> swing(Chart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPlot.groovy:17:  static void png(Chart chart, File file, double width = 800, double height = 600) throws IOException {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPlot.groovy:18:    try(OutputStream os = Files.newOutputStream(file.toPath())) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPlot.groovy:19:      png(chart, os, width, height)
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPlot.groovy:23:  static void png(Chart chart, OutputStream os, double width = 800, double height = 600) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPlot.groovy:31:  static String base64(Chart chart, double width = 800, double height = 600) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPieChartConverter.groovy:9:  static org.knowm.xchart.PieChart convert(PieChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingPieChartConverter.groovy:11:        new PieChartBuilder()
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingConverter.groovy:19:  static XChartPanel<? extends org.knowm.xchart.internal.chartpart.Chart<? extends Styler,? extends Series>> convert(Chart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingConverter.groovy:38:  static XChartPanel<XYChart> convert(AreaChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingConverter.groovy:42:  static XChartPanel<CategoryChart> convert(BarChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingConverter.groovy:46:  static XChartPanel<org.knowm.xchart.PieChart> convert(PieChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingConverter.groovy:50:  static XChartPanel<CategoryChart> convert(Histogram chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingConverter.groovy:54:  static XChartPanel<org.knowm.xchart.BoxChart> convert(BoxChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingConverter.groovy:58:  static XChartPanel<XYChart> convert(ScatterChart chart) {
+matrix-charts/src/main/groovy/se/alipsa/matrix/charts/swing/SwingConverter.groovy:62:  static XChartPanel<XYChart> convert(LineChart chart) {
