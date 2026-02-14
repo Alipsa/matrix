@@ -1,0 +1,61 @@
+package se.alipsa.matrix.charm
+
+import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
+
+/**
+ * Closure delegate for `aes {}` configuration blocks.
+ */
+@CompileStatic
+class AesDsl {
+
+  private final Cols col = new Cols()
+  Object x
+  Object y
+  Object color
+  Object fill
+  Object size
+  Object shape
+  Object group
+
+  /**
+   * Returns the column namespace proxy.
+   *
+   * @return `col` proxy
+   */
+  Cols getCol() {
+    col
+  }
+
+  /**
+   * Collects non-null aesthetic values as mapping input.
+   *
+   * @return mapping map
+   */
+  Map<String, Object> toMapping() {
+    Map<String, Object> mapping = [:]
+    if (x != null) mapping.x = x
+    if (y != null) mapping.y = y
+    if (color != null) mapping.color = color
+    if (fill != null) mapping.fill = fill
+    if (size != null) mapping.size = size
+    if (shape != null) mapping.shape = shape
+    if (group != null) mapping.group = group
+    mapping
+  }
+
+  /**
+   * Supports `colour` alias.
+   *
+   * @param name property name
+   * @param value property value
+   */
+  @CompileDynamic
+  void propertyMissing(String name, Object value) {
+    if (name == 'colour') {
+      color = value
+      return
+    }
+    throw new CharmMappingException("Unsupported aesthetic '${name}'")
+  }
+}

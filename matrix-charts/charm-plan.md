@@ -69,20 +69,24 @@ Svg ----exports-----> chartexport -------> PNG/JPEG/JFX/Swing
   `matrix-charts/section2-baseline.md`.
 
 ## 3. Charm API Specification (Design First)
-3.1 [ ] Finalize Charm naming strategy and import-conflict policy:
+3.1 [x] Finalize Charm naming strategy and import-conflict policy:
   prefer concise names in `se.alipsa.matrix.charm` (`Chart`, `Layer`, `Geom`, `Scale`, `Coord`, `Facet`, `Theme`, `Guide`, `Aes`, `Stat`, `Position`) and reserve suffixed names (`*Spec`, `*Model`) for internal types where needed.
-3.2 [ ] Document import ambiguity handling for coexistence with `se.alipsa.matrix.charts.Chart` and other common type names:
+  Implemented in:
+  `matrix-charts/section3-api-design.md`.
+3.2 [x] Document import ambiguity handling for coexistence with `se.alipsa.matrix.charts.Chart` and other common type names:
   use import aliasing (`import se.alipsa.matrix.charm.Chart as CharmChart`), static DSL entrypoints (`import static se.alipsa.matrix.charm.Charts.chart`), and fully-qualified names as fallback.
-3.3 [ ] Define explicit render/output contract:
-  Charm renders to `se.alipsa.groovy.svg.Svg` objects (gsvg), not SVG strings; string conversion (if needed) happens via `SvgWriter`/`chartexport`.
-3.4 [ ] Define idiomatic Groovy API conventions:
+  Validated by:
+  `matrix-charts/src/test/groovy/charm/api/CharmApiDesignTest.groovy`.
+3.3 [x] Define explicit render/output contract:
+  Charm renders to `se.alipsa.groovy.svg.Svg` objects (gsvg), not SVG strings; string conversion (if needed) happens via `svg.toXml()`/`SvgWriter`/`chartexport`.
+3.4 [x] Define idiomatic Groovy API conventions:
   camelCase names, map/closure configuration, typed builders, inheritance/composition-friendly design, no R-style underscore factory naming in Charm.
-3.5 [ ] Compare and map Charm package layout to existing `gg` structure; ensure GoG concept parity:
+3.5 [x] Compare and map Charm package layout to existing `gg` structure; ensure GoG concept parity:
   include equivalents for `aes`, `stat`, `position`, and `sf` in addition to `coord`, `facet`, `geom`, `layer`, `render`, `scale`, `theme`, `util`.
-3.6 [ ] Specify a stable public package layout under `se.alipsa.matrix.charm` (for example: `aes`, `coord`, `facet`, `geom`, `layer`, `position`, `render`, `scale`, `sf`, `stat`, `theme`, `dsl`, `util`).
-3.7 [ ] Define conversion contract from gg specs to charm specs (`gg` adapter layer), including aes/stat/position/scale/theme mapping.
-3.8 [ ] Define a minimal Charm MVP scope (must-have for first cutover): point, line, bar/col, histogram, boxplot, smooth, facets, major scales, theme basics, legend.
-3.9 [ ] Add explicit Charm API usage examples for design review using the closure DSL as primary syntax, plus gg-style façade examples as secondary syntax.
+3.6 [x] Specify a stable public package layout under `se.alipsa.matrix.charm` (for example: `aes`, `coord`, `facet`, `geom`, `layer`, `position`, `render`, `scale`, `sf`, `stat`, `theme`, `dsl`, `util`).
+3.7 [x] Define conversion contract from gg specs to charm specs (`gg` adapter layer), including aes/stat/position/scale/theme mapping.
+3.8 [x] Define a minimal Charm MVP scope (must-have for first cutover): point, line, bar/col, histogram, boxplot, smooth, facets, major scales, theme basics, legend.
+3.9 [x] Add explicit Charm API usage examples for design review using the closure DSL as primary syntax, plus gg-style façade examples as secondary syntax.
 
 Draft API sketches to validate ergonomics:
 ```groovy
@@ -123,16 +127,20 @@ GgChart gg = ggplot(mpg, aes(x: 'cty', y: 'hwy', colour: 'class')) +
 Svg svg = gg.render()  // same underlying PlotSpec/engine
 ```
 
-3.10 [ ] Add API design tests in `matrix-charts/src/test/groovy/charm/api` that compile and execute the example snippets.
-3.11 [ ] Adopt the spec decision that Charm core uses its own typed `AesSpec`/`ColumnExpr` model; `gg.aes.Aes` is adapted via the gg façade/adapter layer (not reused as Charm core type).
-3.12 [ ] Adopt thread-safety default for v1: per-chart explicit state and immutable compiled charts, with no global mutable theme in Charm core.
+3.10 [x] Add API design tests in `matrix-charts/src/test/groovy/charm/api` that compile and execute the example snippets.
+  Added:
+  `matrix-charts/src/test/groovy/charm/api/CharmApiDesignTest.groovy`.
+3.11 [x] Adopt the spec decision that Charm core uses its own typed `AesSpec`/`ColumnExpr` model; `gg.aes.Aes` is adapted via the gg façade/adapter layer (not reused as Charm core type).
+3.12 [x] Adopt thread-safety default for v1: per-chart explicit state and immutable compiled charts, with no global mutable theme in Charm core.
   Optional thread-local convenience layer may be added later if needed, without changing core semantics.
-3.13 [ ] Define Charm error-handling strategy:
+3.13 [x] Define Charm error-handling strategy:
   use domain-specific exceptions (e.g. `CharmException` hierarchy) and consistent diagnostic messages for mapping/render/validation failures.
-3.14 [ ] Review and formally approve `charm-specification.md` sections 4-10 as locked v1 decisions (grammar, `col` semantics, object model, lifecycle, static requirements, non-goals).
+3.14 [x] Review and formally approve `charm-specification.md` sections 4-10 as locked v1 decisions (grammar, `col` semantics, object model, lifecycle, static requirements, non-goals).
   Any planned deviation must be documented explicitly in this plan before implementation.
-3.15 [ ] Define ggplot2-style façade requirement from spec section 10:
+3.15 [x] Define ggplot2-style façade requirement from spec section 10:
   it must build the same underlying `PlotSpec`, support `+` composition for familiarity, and must not alter Charm DSL grammar rules.
+  Outcomes and references for 3.1-3.15:
+  `matrix-charts/section3-api-design.md`.
 
 ## 4. Implement Charm Core Domain Model
 4.1 [ ] Create `matrix-charts/src/main/groovy/se/alipsa/matrix/charm` source files for immutable/mostly-immutable core model objects.
@@ -146,7 +154,7 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   First step: run `git show --name-only --oneline 115bd930` and confirm the file list before assessment.
   Files to assess:
   `ChartBuilder.groovy`, `CoordinateSystem.groovy`, `Graph.groovy`, `GridLines.groovy`, `Legend.groovy`, `Style.groovy`, `SubTitle.groovy`, `Text.groovy`, `Title.groovy`, `ChartBuilderTest.groovy`.
-4.6 [ ] Separately review recently removed `se.alipsa.matrix.charts.charmfx` files (`CharmChartFx`, `ChartPane`, `LegendPane`, `PlotPane`, `TitlePane`, `Position`, horizontal/vertical legend panes`) as a distinct prototype iteration and classify reuse/discard rationale.
+4.6 [ ] Separately review recently removed `se.alipsa.matrix.charts.charmfx` files (`CharmChartFx`, `ChartPane`, `LegendPane`, `PlotPane`, `TitlePane`, `Position`, horizontal/vertical legend panes) as a distinct prototype iteration and classify reuse/discard rationale.
 4.7 [ ] Document prototype assessment outcomes in this plan (or companion design doc), including rationale for what is intentionally not carried forward.
 4.8 [ ] Move reusable utility logic from `gg` and `charts` into shared Charm utilities where appropriate.
 4.9 [ ] Introduce strict validation and error messages for invalid mappings, missing required aesthetics, and unsupported combos.
