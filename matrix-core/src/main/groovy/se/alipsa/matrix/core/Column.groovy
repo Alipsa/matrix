@@ -64,7 +64,7 @@ class Column extends ArrayList {
   private List applyOperation(Object val, Closure operation) {
     List result = new Column()
     this.each {
-      if (val == null || it == null) {
+      if (it == null) {
         result.add(null)
       } else {
         result.add(operation(it, val))
@@ -75,11 +75,17 @@ class Column extends ArrayList {
 
   @CompileDynamic
   List plus(Object val) {
+    if (val == null) {
+      throw new IllegalArgumentException("Cannot add null to a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before adding")
+    }
     applyOperation(val, { a, b -> a + b })
   }
 
   @CompileDynamic
   List plus(List list) {
+    if (list == null) {
+      throw new IllegalArgumentException("Cannot add a null list to a column")
+    }
     List result = new Column()
     def that = fill(list)
     this.eachWithIndex {it, idx ->
@@ -103,14 +109,16 @@ class Column extends ArrayList {
   @CompileDynamic
   List minus(Object val) {
     if (val == null) {
-      removeNulls()
-    } else {
-      applyOperation(val, { a, b -> a - b })
+      throw new IllegalArgumentException("Cannot subtract null from a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before subtracting")
     }
+    applyOperation(val, { a, b -> a - b })
   }
 
   @CompileDynamic
   List minus(List list) {
+    if (list == null) {
+      throw new IllegalArgumentException("Cannot subtract a null list from a column")
+    }
     List result = new Column()
     def that = fill(list)
     this.eachWithIndex {it, idx ->
@@ -132,11 +140,17 @@ class Column extends ArrayList {
 
   @CompileDynamic
   List multiply(Number val) {
+    if (val == null) {
+      throw new IllegalArgumentException("Cannot multiply null with a column, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before multiplying")
+    }
     applyOperation(val, { a, b -> a * b })
   }
 
   @CompileDynamic
   List multiply(List list) {
+    if (list == null) {
+      throw new IllegalArgumentException("Cannot multiply a column by a null list")
+    }
     List result = new Column()
     def that = fill(list)
     this.eachWithIndex {it, idx ->
@@ -154,11 +168,17 @@ class Column extends ArrayList {
 
   @CompileDynamic
   List div(Number val) {
+    if (val == null) {
+      throw new IllegalArgumentException("Cannot divide a column by null, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before dividing")
+    }
     applyOperation(val, { a, b -> a / b })
   }
 
   @CompileDynamic
   List div(List list) {
+    if (list == null) {
+      throw new IllegalArgumentException("Cannot divide a column by a null list")
+    }
     List result = new Column()
     def that = fill(list)
     this.eachWithIndex {it, idx ->
@@ -176,11 +196,17 @@ class Column extends ArrayList {
 
   @CompileDynamic
   List power(Number val) {
+    if (val == null) {
+      throw new IllegalArgumentException("Cannot raise a column to the power of null, use removeNulls() to remove nulls from the column or replaceNulls() to replace nulls with a value before exponentiating")
+    }
     applyOperation(val, { a, b -> a ** b })
   }
 
   @CompileDynamic
   List power(List list) {
+    if (list == null) {
+      throw new IllegalArgumentException("Cannot raise a column to the power of a null list")
+    }
     List result = new Column()
     def that = fill(list)
     this.eachWithIndex {it, idx ->
@@ -200,14 +226,32 @@ class Column extends ArrayList {
     this.findAll { it != null } as Column
   }
 
-  List replaceNulls(Object val) {
+  /**
+   * Replaces all null values in this column with the specified value.
+   * Mutates this column in place.
+   *
+   * @param val the value to replace nulls with
+   * @return this column
+   */
+  Column replaceNulls(Object val) {
     replace(null, val)
   }
 
-  List replace(Object oldVal, Object val) {
-    this.collect {
-      it == oldVal ? val : it
+  /**
+   * Replaces all occurrences of oldVal with val in this column.
+   * Mutates this column in place.
+   *
+   * @param oldVal the value to find and replace
+   * @param val the replacement value
+   * @return this column
+   */
+  Column replace(Object oldVal, Object val) {
+    for (int i = 0; i < size(); i++) {
+      if (get(i) == oldVal) {
+        set(i, val)
+      }
     }
+    this
   }
 
   private Column fill(List list) {

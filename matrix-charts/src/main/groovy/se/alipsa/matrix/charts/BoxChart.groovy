@@ -12,7 +12,7 @@ class BoxChart extends Chart<BoxChart> {
     BoxChart chart = new BoxChart()
     chart.title = title
     chart.categorySeries = ListConverter.toStrings(groups.keySet())
-    chart.valueSeries = groups.values().collect {it[valueColumn] - null}
+    chart.valueSeries = groups.values().collect {it[valueColumn].removeNulls()}
     chart.valueSeriesNames = chart.categorySeries as List<String>
     chart.xAxisTitle = categoryColumnName
     chart.yAxisTitle = valueColumn

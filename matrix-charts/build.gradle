@@ -101,7 +101,8 @@ dependencies {
 test {
   testLogging.showStandardStreams = true
   // run using gradle -Pheadless=true test
-  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}",
+      "--add-opens", "javafx.controls/javafx.scene.chart=ALL-UNNAMED"
   useJUnitPlatform()
   testLogging {
     // set options for log level LIFECYCLE

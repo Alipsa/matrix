@@ -2,6 +2,8 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Stat
 
+import static org.junit.jupiter.api.Assertions.assertThrows
+
 class ColumnTest {
 
   @Test
@@ -211,26 +213,29 @@ class ColumnTest {
   }
 
   @Test
-  void testMinusNull() {
-    // Mimic standard Groovy list behavior: ['a', null, 'c', null] - null == ['a', 'c']
-    Column c1 = new Column(['a', null, 'c', null])
-    assert ['a', 'c'] == c1 - null
+  void testReplaceNulls() {
+    Column c = new Column([1, null, 3, null, 5])
+    Column result = c.replaceNulls(0)
+    assert [1, 0, 3, 0, 5] == c : "replaceNulls() should mutate in place"
+    assert result.is(c) : "replaceNulls() should return the same column instance"
+  }
 
-    // Numeric column with nulls
-    Column c2 = new Column([1, null, 3, null, 5])
-    assert [1, 3, 5] == c2 - null
+  @Test
+  void testReplace() {
+    Column c = new Column([1, 2, 3, 2, 5])
+    Column result = c.replace(2, 99)
+    assert [1, 99, 3, 99, 5] == c : "replace() should mutate in place"
+    assert result.is(c) : "replace() should return the same column instance"
+  }
 
-    // Column with no nulls should be unchanged
-    Column c3 = new Column([1, 2, 3])
-    assert [1, 2, 3] == c3 - null
+  @Test
+  void testNullScalarOperations() {
+    Column c = new Column([1, 2, 3])
 
-    // All nulls should return empty
-    Column c4 = new Column([null, null, null])
-    assert [] == c4 - null
-
-    // Original column should not be mutated
-    Column c5 = new Column([1, null, 2])
-    c5 - null
-    assert [1, null, 2] == c5
+    assertThrows(IllegalArgumentException) { c + null }
+    assertThrows(IllegalArgumentException) { c - null }
+    assertThrows(IllegalArgumentException) { c * null }
+    assertThrows(IllegalArgumentException) { c / null }
+    assertThrows(IllegalArgumentException) { c ** null }
   }
 }
