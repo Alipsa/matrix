@@ -149,7 +149,7 @@ Represents aesthetic mappings.
 Accepted inputs:
 
 * `ColumnExpr`
-* `CharSequence` → coerced to `ColumnName`
+* `CharSequence` → coerced to a named-column `ColumnExpr`
 
 Coercion occurs at specification time (via setters).
 
@@ -159,7 +159,7 @@ Examples:
 
 ```groovy
 aes { x = col.cty }     // ColumnExpr
-aes { x = 'cty' }       // CharSequence → ColumnName('cty')
+aes { x = 'cty' }       // CharSequence → named-column ColumnExpr('cty')
 aes(x: 'cty', y: 'hwy') // map form uses identical coercion logic
 ```
 
@@ -308,7 +308,7 @@ facet {
   }
 }
 ```
-This is equivalent to “facet_grid” in the gg ggplot2 style API.
+This is equivalent to “facet_grid” in the gg (ggplot2 style) API.
 
 #### Explicit WRAP faceting
 
