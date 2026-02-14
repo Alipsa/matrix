@@ -1,0 +1,146 @@
+package charm.api
+
+import groovy.lang.GroovyShell
+import groovy.transform.CompileStatic
+import org.junit.jupiter.api.Test
+import se.alipsa.groovy.svg.Svg
+import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.Cols
+import se.alipsa.matrix.charm.Geom
+import se.alipsa.matrix.charm.PlotSpec
+import se.alipsa.matrix.datasets.Dataset
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.GgChart
+
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertTrue
+import static se.alipsa.matrix.charm.Charts.chart
+import static se.alipsa.matrix.charm.Charts.plot
+
+class CharmApiDesignTest {
+
+  @Test
+  void testClosureDslPrimarySyntaxBuildAndRender() {
+    Matrix mpg = Dataset.mpg()
+    PlotSpec spec = plot(mpg) {
+      aes {
+        x = col['cty']
+        y = col['hwy']
+        color = col['class']
+      }
+      points {
+        size = 2
+        alpha = 0.7
+      }
+      smooth {
+        method = 'lm'
+      }
+      labels {
+        title = 'City vs Highway MPG'
+      }
+    }
+
+    Chart compiled = spec.build()
+    Svg svg = compiled.render()
+    assertNotNull(svg)
+    assertEquals(2, compiled.layers.size())
+    assertEquals('City vs Highway MPG', compiled.labels.title)
+    assertEquals('cty', compiled.aes.x.columnName())
+  }
+
+  @Test
+  void testDynamicColDotSyntaxResolvesColumnExpr() {
+    Cols col = new Cols()
+    assertEquals('cty', col.cty.columnName())
+    assertEquals('hwy', col.hwy.columnName())
+  }
+
+  @Test
+  void testScaleThemeAndCoordDslExamples() {
+    PlotSpec spec = plot(Dataset.mpg()) {
+      aes {
+        x = col.cty
+        y = col.hwy
+      }
+      points {}
+      scale {
+        x = log10()
+        y = sqrt()
+      }
+      theme {
+        legend { position = 'top' }
+        axis { lineWidth = 0.75 }
+      }
+      coord {
+        type = 'polar'
+        theta = 'y'
+        start = 0
+      }
+    }
+
+    assertEquals('log10', spec.scale.x.transform)
+    assertEquals('sqrt', spec.scale.y.transform)
+    assertEquals('top', spec.theme.legend.position)
+    assertEquals(0.75, spec.theme.axis.lineWidth)
+    assertEquals('y', spec.coord.params.theta)
+  }
+
+  @Test
+  void testCompileStaticColumnBracketSyntax() {
+    Chart chart = StaticApiSample.build(Dataset.mpg())
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    assertEquals('class', chart.aes.color.columnName())
+  }
+
+  @Test
+  void testImportAliasStrategyCompilesAndRuns() {
+    Matrix mpg = Dataset.mpg()
+    GroovyShell shell = new GroovyShell(new Binding([mpg: mpg]))
+    Object result = shell.evaluate('''
+      import se.alipsa.matrix.charm.Chart as CharmChart
+      import se.alipsa.matrix.charts.Chart as LegacyChart
+      import static se.alipsa.matrix.charm.Charts.chart
+
+      CharmChart c = chart(mpg) {
+        aes {
+          x = col.cty
+          y = col.hwy
+        }
+        points {}
+      }.build()
+
+      assert LegacyChart != null
+      c.render()
+    ''')
+    assertTrue(result instanceof Svg)
+  }
+
+  @Test
+  void testGgFacadeSecondarySyntaxStillRenders() {
+    Matrix mpg = Dataset.mpg()
+    GgChart gg = se.alipsa.matrix.gg.GgPlot.ggplot(
+        mpg,
+        se.alipsa.matrix.gg.GgPlot.aes(x: 'cty', y: 'hwy', colour: 'class')
+    ) +
+        se.alipsa.matrix.gg.GgPlot.geom_point(size: 2, alpha: 0.7) +
+        se.alipsa.matrix.gg.GgPlot.geom_smooth(method: 'lm') +
+        se.alipsa.matrix.gg.GgPlot.labs(title: 'City vs Highway MPG')
+    Svg svg = gg.render()
+    assertNotNull(svg)
+  }
+
+  @CompileStatic
+  private static class StaticApiSample {
+
+    static Chart build(Matrix data) {
+      Cols col = new Cols()
+      PlotSpec spec = chart(data)
+      spec.aes(x: col['cty'], y: col['hwy'], color: col['class'])
+      spec.layer(Geom.POINT, [size: 2, alpha: 0.7])
+      spec.layer(Geom.SMOOTH, [method: 'lm'])
+      spec.build()
+    }
+  }
+}
