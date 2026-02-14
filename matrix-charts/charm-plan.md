@@ -256,7 +256,11 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   `se.alipsa.matrix.charts.jfx`,
   `se.alipsa.matrix.charts.swing`,
   `se.alipsa.matrix.charts.png`,
-  `se.alipsa.matrix.charts.svg` (legacy wrappers only).
+  `se.alipsa.matrix.charts.svg` (legacy wrappers only),
+  `se.alipsa.matrix.charts.charmfx` (prototype UI classes).
+9.1.1 [ ] Document `se.alipsa.matrix.charts.charmfx` removal as an intentional breaking change for the next release,
+  including impacted classes (`CharmChartFx`, `ChartPane`, `LegendPane`, `PlotPane`, `TitlePane`, `Position`, `HorizontalLegendPane`, `VerticalLegendPane`)
+  and recommended migration path (Charm core + `chartexport`).
 9.2 [ ] Deprecate (do not abruptly remove) `se.alipsa.matrix.charts.Plot` as a compatibility facade:
   keep behavior routed to Charm/SVG + `chartexport` per Section 7, document replacement APIs, and define removal timeline.
 9.3 [ ] Remove dead code and duplicated conversion utilities after parity is confirmed.
@@ -285,7 +289,8 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
 10.5 [ ] Add migration notes for:
   old `charts` backend behavior,
   direct converter usage,
-  recommended future usage patterns.
+  recommended future usage patterns,
+  explicit note that `se.alipsa.matrix.charts.charmfx` was removed as a breaking change in this release line.
 10.6 [ ] Add Charm DSL documentation extracted from `charm-specification.md`:
   closure assignment rule (`=`), named-argument rule (`:`), `col.*` canonical mappings, and lifecycle (`spec -> build -> render`).
 
@@ -296,6 +301,7 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   `./gradlew :matrix-charts:test -Pheadless=true`
   `./gradlew test`
 11.4 [ ] Prepare release notes summarizing architecture shift and migration guidance.
+11.4.1 [ ] Ensure release notes contain a dedicated "Breaking Changes" section that explicitly lists removal of `se.alipsa.matrix.charts.charmfx`.
 11.5 [ ] Only mark tasks complete (`[x]`) when corresponding tests have passed and commands are recorded in this file or PR description.
 
 ## 12. Suggested Delivery Milestones
