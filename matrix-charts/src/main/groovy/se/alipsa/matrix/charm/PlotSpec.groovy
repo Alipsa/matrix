@@ -347,10 +347,11 @@ class PlotSpec {
     validateAes('plot aes', aes)
     layers.eachWithIndex { LayerSpec layer, int idx ->
       validateLayerSemantics(layer, idx)
-      if (layer.aes != null) {
-        validateAes("layer ${idx} aes", layer.aes)
+      Aes layerAes = layer.aes
+      if (layerAes != null) {
+        validateAes("layer ${idx} aes", layerAes)
       }
-      validateRequiredAesthetics(layer, idx)
+      validateRequiredAesthetics(layer, layerAes, idx)
     }
     facet.rows.each { ColumnExpr expr -> validateColumn(expr, 'facet.rows') }
     facet.cols.each { ColumnExpr expr -> validateColumn(expr, 'facet.cols') }
@@ -365,12 +366,12 @@ class PlotSpec {
     }
   }
 
-  private void validateRequiredAesthetics(LayerSpec layer, int idx) {
+  private void validateRequiredAesthetics(LayerSpec layer, Aes layerAes, int idx) {
     List<String> required = REQUIRED_AESTHETICS[layer.geom] ?: []
     if (required.isEmpty()) {
       return
     }
-    Aes effective = effectiveAes(layer)
+    Aes effective = effectiveAes(layer, layerAes)
     List<String> missing = required.findAll { String key -> !effective.mappings().containsKey(key) }
     if (!missing.isEmpty()) {
       String inheritText = layer.inheritAes ? 'with inherited plot mappings' : 'without inherited plot mappings'
@@ -380,10 +381,10 @@ class PlotSpec {
     }
   }
 
-  private Aes effectiveAes(LayerSpec layer) {
+  private Aes effectiveAes(LayerSpec layer, Aes layerAes) {
     Aes effective = layer.inheritAes ? aes.copy() : new Aes()
-    if (layer.aes != null) {
-      effective.apply(layer.aes.mappings())
+    if (layerAes != null) {
+      effective.apply(layerAes.mappings())
     }
     effective
   }
