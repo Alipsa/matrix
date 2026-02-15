@@ -84,7 +84,7 @@ class Chart {
    * @return layer list
    */
   List<LayerSpec> getLayers() {
-    Collections.unmodifiableList(layers.collect { LayerSpec layer -> layer.copy() })
+    layers
   }
 
   /**
@@ -133,7 +133,10 @@ class Chart {
   }
 
   /**
-   * Returns immutable annotations.
+   * Returns immutable annotations snapshot.
+   *
+   * Annotation specs are still mutable DSL/value objects in v1 for compatibility.
+   * This getter therefore returns defensive copies to preserve `Chart` immutability.
    *
    * @return annotations list
    */

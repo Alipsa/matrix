@@ -65,7 +65,7 @@ class Layer {
    * @return layer aes or null
    */
   Aes getAes() {
-    aes
+    aes?.copy()
   }
 
   /**

@@ -288,4 +288,22 @@ class CharmCoreModelTest {
       chart.layers << chart.layers.first()
     }
   }
+
+  @Test
+  void testLayerAesGetterReturnsDefensiveCopy() {
+    Chart chart = plot(Dataset.mpg()) {
+      points {
+        aes {
+          x = col.cty
+          y = col.hwy
+        }
+      }
+    }.build()
+
+    def firstRead = chart.layers.first().aes
+    firstRead.x = 'displ'
+
+    def secondRead = chart.layers.first().aes
+    assertEquals('cty', secondRead.x.columnName())
+  }
 }
