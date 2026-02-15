@@ -12,6 +12,8 @@ import javafx.scene.text.Text
 import javafx.scene.text.TextAlignment
 import se.alipsa.matrix.core.Stat
 
+import java.math.RoundingMode
+
 /**
  * A custom JavaFX Chart that renders box-and-whisker plots.
  *
@@ -274,10 +276,10 @@ class JfxBoxChart extends Chart {
    * Formats a number for axis tick labels.
    */
   private static String formatNumber(BigDecimal value) {
-    if (value == value.setScale(0, BigDecimal.ROUND_HALF_UP)) {
+    if (value == value.setScale(0, RoundingMode.HALF_UP)) {
       return value.toBigInteger().toString()
     }
-    value.setScale(1, BigDecimal.ROUND_HALF_UP).stripTrailingZeros().toPlainString()
+    value.setScale(1, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
   }
 
   /**

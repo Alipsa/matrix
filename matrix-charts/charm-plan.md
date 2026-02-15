@@ -186,29 +186,33 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   `matrix-charts/section4-core-model.md`.
 
 ## 5. Implement Charm Rendering Pipeline (SVG First)
-5.1 [ ] Build `charm` renderer pipeline to output `se.alipsa.groovy.svg.Svg`.
-5.2 [ ] Perform a class-by-class migration assessment of `se.alipsa.matrix.gg.render`:
+5.1 [x] Build `charm` renderer pipeline to output `se.alipsa.groovy.svg.Svg`.
+5.2 [x] Perform a class-by-class migration assessment of `se.alipsa.matrix.gg.render`:
   `GgRenderer`, `AxisRenderer`, `GridRenderer`, `FacetRenderer`, `LegendRenderer`, `RenderContext`.
   For each class, label logic as:
   portable as-is, portable with refactor, or redesign required.
-5.3 [ ] Extract and port portable rendering primitives first:
+5.3 [x] Extract and port portable rendering primitives first:
   axis tick/label generation, grid line generation, legend item rendering, facet panel layout, clip-path setup, and theme style application.
-5.4 [ ] Redesign non-portable renderer concerns currently coupled to `gg` internals:
+5.4 [x] Redesign non-portable renderer concerns currently coupled to `gg` internals:
   hardcoded margin constants in `GgRenderer`,
   tight dependence on `GgChart`/`Layer` types in renderer signatures,
   mutable global-style rendering state in `RenderContext`.
-5.5 [ ] Introduce Charm render configuration objects (margins, panel spacing, legend placement, label paddings) to replace hardcoded constants.
-5.6 [ ] Introduce Charm-native render context abstractions independent of `gg` domain types; keep `gg` coupling only in adapter layer.
-5.7 [ ] Evaluate historical `charts.svg.SvgBarChart` (`matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy`) as reference and cautionary example:
+5.5 [x] Introduce Charm render configuration objects (margins, panel spacing, legend placement, label paddings) to replace hardcoded constants.
+5.6 [x] Introduce Charm-native render context abstractions independent of `gg` domain types; keep `gg` coupling only in adapter layer.
+5.7 [x] Evaluate historical `charts.svg.SvgBarChart` (`matrix-charts/src/main/groovy/se/alipsa/matrix/charts/svg/SvgBarChart.groovy`) as reference and cautionary example:
   useful ideas: explicit axis/tick/label/bar drawing flow.
   anti-patterns to avoid in Charm: hardcoded colors/styles, `println` debugging, incomplete legend positioning, chart-type-specific rendering logic without shared GoG abstractions.
-5.8 [ ] Ensure data flow is explicit and testable:
+5.8 [x] Ensure data flow is explicit and testable:
   data + mappings -> stat -> position -> scale -> coord -> geom -> theme -> svg.
-5.9 [ ] Add deterministic rendering tests with direct SVG object assertions for core chart types.
-5.10 [ ] Add fixture comparison tests against selected existing gg outputs (structure/element counts/critical attributes, not fragile full-string equality).
-5.11 [ ] Ensure renderer consumes immutable compiled chart model (not mutable `PlotSpec`) and keeps rendering side-effect free.
-5.12 [ ] Add this section’s command log once executed:
+5.9 [x] Add deterministic rendering tests with direct SVG object assertions for core chart types.
+5.10 [x] Add fixture comparison tests against selected existing gg outputs (structure/element counts/critical attributes, not fragile full-string equality).
+5.11 [x] Ensure renderer consumes immutable compiled chart model (not mutable `PlotSpec`) and keeps rendering side-effect free.
+5.12 [x] Add this section’s command log once executed:
+  `./gradlew :matrix-charts:compileGroovy`
   `./gradlew :matrix-charts:test --tests "charm.render.*" -Pheadless=true`
+  `./gradlew :matrix-charts:test -Pheadless=true`
+  Outcomes and rationale for 5.1-5.12:
+  `matrix-charts/section5-rendering.md`.
 
 ## 6. Add GG -> Charm Adapter Layer (Keep GG API Stable)
 6.1 [ ] Place adapter implementation in `se.alipsa.matrix.gg.adapter` (or internal `gg` package scope), not in `charm`, to preserve dependency direction:

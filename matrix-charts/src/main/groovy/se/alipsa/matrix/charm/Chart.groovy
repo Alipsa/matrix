@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.charm.render.CharmRenderer
 
 /**
  * Immutable compiled Charm chart.
@@ -262,11 +263,7 @@ class Chart {
    */
   Svg render() {
     try {
-      Svg svg = new Svg()
-      svg.width(800)
-      svg.height(600)
-      svg.viewBox('0 0 800 600')
-      return svg
+      new CharmRenderer().render(this)
     } catch (Exception e) {
       throw new CharmRenderException("Failed to render Charm chart: ${e.message}", e)
     }
