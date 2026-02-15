@@ -215,27 +215,29 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   `matrix-charts/section5-rendering.md`.
 
 ## 6. Add GG -> Charm Adapter Layer (Keep GG API Stable)
-6.1 [ ] Place adapter implementation in `se.alipsa.matrix.gg.adapter` (or internal `gg` package scope), not in `charm`, to preserve dependency direction:
+6.1 [x] Place adapter implementation in `se.alipsa.matrix.gg.adapter` (or internal `gg` package scope), not in `charm`, to preserve dependency direction:
   `gg` depends on `charm`; `charm` has zero knowledge of `gg`.
-6.2 [ ] Define adapter architecture for `gg` scale/surface size (currently 200 source files under `se/alipsa/matrix/gg`, many geom/scale/stat/coord variants):
+6.2 [x] Define adapter architecture for `gg` scale/surface size (currently 200 source files under `se/alipsa/matrix/gg`, many geom/scale/stat/coord variants):
   use registry/strategy mapping plus parameterized Charm model types instead of one adapter class per gg type.
-6.3 [ ] Define canonical parameterized Charm targets for mapping:
+6.3 [x] Define canonical parameterized Charm targets for mapping:
   geoms -> small core set + options,
   scales -> axis + transform/palette strategy,
   stats -> stat type + parameter map,
   coords -> coord type + parameters.
-6.4 [ ] Build and maintain a gg-to-charm mapping matrix covering geoms/scales/stats/coords/positions/themes:
+6.4 [x] Build and maintain a gg-to-charm mapping matrix covering geoms/scales/stats/coords/positions/themes:
   each gg type must map to either a supported Charm representation or a documented compatibility fallback/error.
-6.5 [ ] Change `GgChart.render()` and related render entrypoints to delegate to Charm renderer while preserving method signatures.
-6.6 [ ] Keep existing static factories in `GgPlot.groovy` unchanged for users; route implementation through adapter.
-6.7 [ ] Modernize touched `gg` switch statements to Groovy 5 arrow syntax during adapter refactoring, including:
+6.5 [x] Change `GgChart.render()` and related render entrypoints to delegate to Charm renderer while preserving method signatures.
+6.6 [x] Keep existing static factories in `GgPlot.groovy` unchanged for users; route implementation through adapter.
+6.7 [x] Modernize touched `gg` switch statements to Groovy 5 arrow syntax during adapter refactoring, including:
   `parseStatType()` and `parsePositionType()` in `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/GgChart.groovy`.
-6.8 [ ] Remove/merge duplicated rendering and transformation logic from `gg` once delegated (DRY cleanup).
-6.9 [ ] Validate parity with existing `gg` test suite and targeted regression fixtures.
-6.10 [ ] Ensure gg adapter/façade generates the same underlying Charm `PlotSpec`/compiled model as native Charm API for equivalent semantics.
-6.11 [ ] Add this section’s command log once executed:
+6.8 [x] Remove/merge duplicated rendering and transformation logic from `gg` once delegated (DRY cleanup).
+6.9 [x] Validate parity with existing `gg` test suite and targeted regression fixtures.
+6.10 [x] Ensure gg adapter/façade generates the same underlying Charm `PlotSpec`/compiled model as native Charm API for equivalent semantics.
+6.11 [x] Add this section’s command log once executed:
   `./gradlew :matrix-charts:test --tests "gg.GgPlotTest" -Pheadless=true`
   `./gradlew :matrix-charts:test --tests "gg.*" -Pheadless=true`
+  Outcomes and rationale for 6.1-6.11:
+  `matrix-charts/section6-adapter.md`.
 
 ## 7. Rebuild Charts API on Top of Charm
 7.1 [ ] Audit `se.alipsa.matrix.charts` types for implementation status and usage before refactor:
