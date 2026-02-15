@@ -11,7 +11,7 @@ class LayerDsl extends LayerParams {
 
   private Aes layerAes
   boolean inheritAes = true
-  Position position = Position.IDENTITY
+  private Position position = Position.IDENTITY
 
   /**
    * Configures layer-level aesthetics.
@@ -46,6 +46,58 @@ class LayerDsl extends LayerParams {
    */
   Aes layerAes() {
     layerAes?.copy()
+  }
+
+  /**
+   * Returns normalized layer position.
+   *
+   * @return layer position
+   */
+  Position getPosition() {
+    position
+  }
+
+  /**
+   * Sets layer position from Position or string value.
+   *
+   * @param value position value
+   */
+  void setPosition(Object value) {
+    this.position = parsePosition(value)
+  }
+
+  /**
+   * Builder-style position setter.
+   *
+   * @param value position value
+   * @return this layer dsl
+   */
+  LayerDsl position(Object value) {
+    setPosition(value)
+    this
+  }
+
+  /**
+   * Parses layer position values.
+   *
+   * @param value position value
+   * @return normalized position enum
+   */
+  static Position parsePosition(Object value) {
+    if (value == null) {
+      return Position.IDENTITY
+    }
+    if (value instanceof Position) {
+      return value as Position
+    }
+    if (value instanceof CharSequence) {
+      try {
+        return Position.valueOf(value.toString().trim().toUpperCase(Locale.ROOT))
+      } catch (IllegalArgumentException e) {
+        throw new CharmValidationException("Unsupported layer position '${value}'")
+      }
+    }
+    throw new CharmValidationException("Unsupported layer position type '${value.getClass().name}'")
   }
 
   /**

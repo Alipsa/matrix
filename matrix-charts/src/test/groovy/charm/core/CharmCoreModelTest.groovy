@@ -9,6 +9,7 @@ import se.alipsa.matrix.charm.CustomScaleTransform
 import se.alipsa.matrix.charm.Geom
 import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.PlotSpec
+import se.alipsa.matrix.charm.Position
 import se.alipsa.matrix.charm.ReverseScaleTransform
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
@@ -198,6 +199,37 @@ class CharmCoreModelTest {
     }
     assertTrue(e.message.contains("Unsupported boolean value 'not-a-bool'"))
     assertTrue(e.message.contains("layer option 'inheritAes'"))
+  }
+
+  @Test
+  void testLayerDslPositionParsesStringValue() {
+    Chart chart = plot(Dataset.mpg()) {
+      aes {
+        x = col.cty
+        y = col.hwy
+      }
+      points {
+        position = 'stack'
+      }
+    }.build()
+
+    assertEquals(Position.STACK, chart.layers.first().position)
+  }
+
+  @Test
+  void testLayerDslPositionRejectsInvalidStringValue() {
+    CharmValidationException e = assertThrows(CharmValidationException.class) {
+      plot(Dataset.mpg()) {
+        aes {
+          x = col.cty
+          y = col.hwy
+        }
+        points {
+          position = 'bogus-position'
+        }
+      }
+    }
+    assertTrue(e.message.contains("Unsupported layer position 'bogus-position'"))
   }
 
   @Test

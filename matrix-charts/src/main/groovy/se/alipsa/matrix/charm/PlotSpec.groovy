@@ -424,20 +424,7 @@ class PlotSpec {
   }
 
   private static Position coercePosition(Object value) {
-    if (value == null) {
-      return Position.IDENTITY
-    }
-    if (value instanceof Position) {
-      return value as Position
-    }
-    if (value instanceof CharSequence) {
-      try {
-        return Position.valueOf(value.toString().trim().toUpperCase(Locale.ROOT))
-      } catch (IllegalArgumentException e) {
-        throw new CharmValidationException("Unsupported layer position '${value}'")
-      }
-    }
-    throw new CharmValidationException("Unsupported layer position type '${value.getClass().name}'")
+    LayerDsl.parsePosition(value)
   }
 
   private static Stat coerceStat(Object value, Geom geom) {
