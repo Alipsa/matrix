@@ -10,6 +10,8 @@ import se.alipsa.matrix.charm.Geom
 import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.ReverseScaleTransform
+import se.alipsa.matrix.charm.Scale
+import se.alipsa.matrix.charm.ScaleType
 import se.alipsa.matrix.charm.Stat
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.core.Matrix
@@ -196,6 +198,25 @@ class CharmCoreModelTest {
     assertTrue(spec.scale.x.transformStrategy instanceof Log10ScaleTransform)
     assertTrue(spec.scale.y.transformStrategy instanceof ReverseScaleTransform)
     assertTrue(spec.scale.fill.transformStrategy instanceof CustomScaleTransform)
+  }
+
+  @Test
+  void testClearingTransformResetsScaleTypeConsistency() {
+    Scale scale = Scale.transform('log10')
+    assertEquals(ScaleType.TRANSFORM, scale.type)
+    assertNotNull(scale.transformStrategy)
+
+    scale.transform = null
+    assertEquals(ScaleType.CONTINUOUS, scale.type)
+    assertEquals(null, scale.transformStrategy)
+
+    scale.transformStrategy = new ReverseScaleTransform()
+    assertEquals(ScaleType.TRANSFORM, scale.type)
+    assertNotNull(scale.transformStrategy)
+
+    scale.transformStrategy = null
+    assertEquals(ScaleType.CONTINUOUS, scale.type)
+    assertEquals(null, scale.transformStrategy)
   }
 
   @Test

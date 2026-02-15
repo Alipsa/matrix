@@ -106,7 +106,11 @@ class Scale {
    * @param type scale type
    */
   void setType(ScaleType type) {
-    this.type = type ?: ScaleType.CONTINUOUS
+    ScaleType resolved = type ?: ScaleType.CONTINUOUS
+    this.type = resolved
+    if (resolved != ScaleType.TRANSFORM) {
+      this.transformStrategy = null
+    }
   }
 
   /**
@@ -125,9 +129,13 @@ class Scale {
    */
   void setTransform(Object transform) {
     this.transformStrategy = ScaleTransforms.resolve(transform)
-    if (this.transformStrategy != null) {
-      type = ScaleType.TRANSFORM
+    if (this.transformStrategy == null) {
+      if (type == ScaleType.TRANSFORM) {
+        type = ScaleType.CONTINUOUS
+      }
+      return
     }
+    type = ScaleType.TRANSFORM
   }
 
   /**
@@ -146,9 +154,13 @@ class Scale {
    */
   void setTransformStrategy(ScaleTransform transformStrategy) {
     this.transformStrategy = transformStrategy
-    if (transformStrategy != null) {
-      type = ScaleType.TRANSFORM
+    if (transformStrategy == null) {
+      if (type == ScaleType.TRANSFORM) {
+        type = ScaleType.CONTINUOUS
+      }
+      return
     }
+    type = ScaleType.TRANSFORM
   }
 
   /**
