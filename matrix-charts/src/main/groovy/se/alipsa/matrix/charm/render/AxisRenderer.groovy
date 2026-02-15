@@ -3,6 +3,8 @@ package se.alipsa.matrix.charm.render
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 
+import java.math.RoundingMode
+
 /**
  * Renders cartesian axes and labels.
  */
@@ -63,7 +65,7 @@ class AxisRenderer {
 
   private static String formatTick(Object tick) {
     if (tick instanceof BigDecimal) {
-      BigDecimal rounded = (tick as BigDecimal).setScale(2, BigDecimal.ROUND_HALF_UP).stripTrailingZeros()
+      BigDecimal rounded = (tick as BigDecimal).setScale(2, RoundingMode.HALF_UP).stripTrailingZeros()
       return rounded.toPlainString()
     }
     tick?.toString() ?: ''
