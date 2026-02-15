@@ -372,7 +372,8 @@ class PlotSpec {
       return
     }
     Aes effective = effectiveAes(layer, layerAes)
-    List<String> missing = required.findAll { String key -> !effective.mappings().containsKey(key) }
+    Map<String, ColumnExpr> mappings = effective.mappings()
+    List<String> missing = required.findAll { String key -> !mappings.containsKey(key) }
     if (!missing.isEmpty()) {
       String inheritText = layer.inheritAes ? 'with inherited plot mappings' : 'without inherited plot mappings'
       throw new CharmValidationException(

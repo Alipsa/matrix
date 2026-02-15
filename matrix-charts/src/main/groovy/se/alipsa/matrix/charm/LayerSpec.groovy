@@ -36,6 +36,7 @@ class LayerSpec extends Layer {
    */
   @Override
   LayerSpec copy() {
-    new LayerSpec(geom, stat, aes?.copy(), inheritAes, position, params)
+    Aes layerAes = super.getAes()
+    new LayerSpec(geom, stat, layerAes, inheritAes, position, params)
   }
 }

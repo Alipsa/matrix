@@ -157,10 +157,41 @@ class Chart {
   }
 
   private static LayerSpec toLayerSpec(Layer value) {
-    if (value instanceof LayerSpec) {
-      return (value as LayerSpec).copy()
+    Map<String, Object> frozenParams = deepFreezeParams(value.params)
+    new LayerSpec(value.geom, value.stat, value.aes, value.inheritAes, value.position, frozenParams)
+  }
+
+  private static Map<String, Object> deepFreezeParams(Map<String, Object> params) {
+    if (params == null || params.isEmpty()) {
+      return [:]
     }
-    new LayerSpec(value.geom, value.stat, value.aes, value.inheritAes, value.position, value.params)
+    Map<String, Object> frozen = new LinkedHashMap<>()
+    params.each { String key, Object value ->
+      frozen[key] = deepFreezeValue(value)
+    }
+    frozen
+  }
+
+  private static Object deepFreezeValue(Object value) {
+    if (value instanceof Map) {
+      Map<Object, Object> frozen = new LinkedHashMap<>()
+      (value as Map).each { Object k, Object v ->
+        frozen[k] = deepFreezeValue(v)
+      }
+      return Collections.unmodifiableMap(frozen)
+    }
+    if (value instanceof List) {
+      List<Object> frozen = (value as List).collect { Object v -> deepFreezeValue(v) } as List<Object>
+      return Collections.unmodifiableList(frozen)
+    }
+    if (value instanceof Set) {
+      Set<Object> frozen = new LinkedHashSet<>()
+      (value as Set).each { Object v ->
+        frozen << deepFreezeValue(v)
+      }
+      return Collections.unmodifiableSet(frozen)
+    }
+    value
   }
 
   private static ThemeSpec toThemeSpec(Theme value) {

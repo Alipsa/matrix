@@ -338,4 +338,40 @@ class CharmCoreModelTest {
     def secondRead = chart.layers.first().aes
     assertEquals('cty', secondRead.x.columnName())
   }
+
+  @Test
+  void testCompiledChartDeepFreezesNestedLayerParams() {
+    Map<String, Object> externalPayload = [
+        nested: [kind: 'point'],
+        values: [1, 2]
+    ]
+    Set<String> tags = ['a', 'b'] as Set<String>
+
+    Chart chart = plot(Dataset.mpg()) {
+      layer(Geom.POINT, [
+          aes    : [x: 'cty', y: 'hwy'],
+          payload: externalPayload,
+          tags   : tags
+      ])
+    }.build()
+
+    externalPayload.nested.kind = 'changed'
+    (externalPayload.values as List) << 3
+    tags << 'c'
+
+    Map<String, Object> payload = chart.layers.first().params.payload as Map<String, Object>
+    assertEquals('point', (payload.nested as Map).kind)
+    assertEquals(2, (payload.values as List).size())
+    assertEquals(2, (chart.layers.first().params.tags as Set).size())
+
+    assertThrows(UnsupportedOperationException.class) {
+      (payload.nested as Map).put('x', 1)
+    }
+    assertThrows(UnsupportedOperationException.class) {
+      (payload.values as List) << 99
+    }
+    assertThrows(UnsupportedOperationException.class) {
+      (chart.layers.first().params.tags as Set) << 'z'
+    }
+  }
 }
