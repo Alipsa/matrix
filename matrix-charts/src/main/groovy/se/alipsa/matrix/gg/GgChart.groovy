@@ -17,9 +17,9 @@ import se.alipsa.matrix.gg.geom.GeomSmooth
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
+import se.alipsa.matrix.gg.adapter.GgCharmAdapter
 import se.alipsa.matrix.gg.position.Position
 import se.alipsa.matrix.gg.scale.Scale
-import se.alipsa.matrix.gg.render.GgRenderer
 import se.alipsa.matrix.gg.stat.Stats
 import se.alipsa.matrix.gg.theme.Theme
 
@@ -175,45 +175,25 @@ class GgChart {
       return (stat as Stats).statType
     }
     if (stat instanceof CharSequence) {
-      switch (stat.toString().trim().toLowerCase(Locale.ROOT)) {
-        case 'identity':
-          return StatType.IDENTITY
-        case 'count':
-          return StatType.COUNT
-        case 'bin':
-          return StatType.BIN
-        case 'boxplot':
-          return StatType.BOXPLOT
-        case 'smooth':
-          return StatType.SMOOTH
-        case 'summary':
-          return StatType.SUMMARY
-        case 'density':
-          return StatType.DENSITY
-        case 'ydensity':
-          return StatType.YDENSITY
-        case 'bin2d':
-          return StatType.BIN2D
-        case 'contour':
-          return StatType.CONTOUR
-        case 'ecdf':
-          return StatType.ECDF
-        case 'qq':
-          return StatType.QQ
-        case 'qq_line':
-        case 'qqline':
-          return StatType.QQ_LINE
-        case 'unique':
-          return StatType.UNIQUE
-        case 'function':
-          return StatType.FUNCTION
-        case 'sf':
-          return StatType.SF
-        case 'sf_coordinates':
-        case 'sf_coords':
-          return StatType.SF_COORDINATES
-        default:
-          throw new IllegalArgumentException("Unsupported stat: ${stat}")
+      return switch (stat.toString().trim().toLowerCase(Locale.ROOT)) {
+        case 'identity' -> StatType.IDENTITY
+        case 'count' -> StatType.COUNT
+        case 'bin' -> StatType.BIN
+        case 'boxplot' -> StatType.BOXPLOT
+        case 'smooth' -> StatType.SMOOTH
+        case 'summary' -> StatType.SUMMARY
+        case 'density' -> StatType.DENSITY
+        case 'ydensity' -> StatType.YDENSITY
+        case 'bin2d' -> StatType.BIN2D
+        case 'contour' -> StatType.CONTOUR
+        case 'ecdf' -> StatType.ECDF
+        case 'qq' -> StatType.QQ
+        case 'qq_line', 'qqline' -> StatType.QQ_LINE
+        case 'unique' -> StatType.UNIQUE
+        case 'function' -> StatType.FUNCTION
+        case 'sf' -> StatType.SF
+        case 'sf_coordinates', 'sf_coords' -> StatType.SF_COORDINATES
+        default -> throw new IllegalArgumentException("Unsupported stat: ${stat}")
       }
     }
     throw new IllegalArgumentException("Unsupported stat type: ${stat.getClass().name}")
@@ -242,24 +222,16 @@ class GgChart {
     if (position == null) {
       return null
     }
-    switch (position.toLowerCase(Locale.ROOT)) {
-      case 'identity':
-        return PositionType.IDENTITY
-      case 'dodge':
-        return PositionType.DODGE
-      case 'dodge2':
-        return PositionType.DODGE2
-      case 'stack':
-        return PositionType.STACK
-      case 'fill':
-        return PositionType.FILL
-      case 'jitter':
-        return PositionType.JITTER
-      case 'nudge':
-        return PositionType.NUDGE
-      default:
-        throw new IllegalArgumentException(
-            "Unknown position type: '${position}'. Supported types: identity, dodge, dodge2, stack, fill, jitter, nudge")
+    return switch (position.toLowerCase(Locale.ROOT)) {
+      case 'identity' -> PositionType.IDENTITY
+      case 'dodge' -> PositionType.DODGE
+      case 'dodge2' -> PositionType.DODGE2
+      case 'stack' -> PositionType.STACK
+      case 'fill' -> PositionType.FILL
+      case 'jitter' -> PositionType.JITTER
+      case 'nudge' -> PositionType.NUDGE
+      default -> throw new IllegalArgumentException(
+          "Unknown position type: '${position}'. Supported types: identity, dodge, dodge2, stack, fill, jitter, nudge")
     }
   }
 
@@ -512,9 +484,6 @@ class GgChart {
     if (coord == null) {
       coord = new CoordCartesian()
     }
-
-    // Use GgRenderer to render the chart
-    GgRenderer renderer = new GgRenderer()
-    return renderer.render(this)
+    new GgCharmAdapter().render(this)
   }
 }
