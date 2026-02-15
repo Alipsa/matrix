@@ -189,11 +189,21 @@ class GgCharmAdapter {
    */
   Svg render(GgChart ggChart) {
     GgCharmAdaptation adaptation = adapt(ggChart)
-    if (!adaptation.delegated || adaptation.charmChart == null) {
+    if (!adaptation.delegated || adaptation.charmChart == null || !isCharmRenderDelegationEnabled()) {
       return ggRenderer.render(ggChart)
     }
     RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
     charmRenderer.render(adaptation.charmChart, config)
+  }
+
+  private static boolean isCharmRenderDelegationEnabled() {
+    // Keep adapter delegation opt-in until gg/charm render parity is complete.
+    String propertyValue = System.getProperty('matrix.charts.gg.delegateToCharm')
+    if (propertyValue != null) {
+      return propertyValue.toBoolean()
+    }
+    String envValue = System.getenv('MATRIX_GG_DELEGATE_TO_CHARM')
+    envValue != null && envValue.toBoolean()
   }
 
   private static Aes mergeAes(Aes plotAes, Aes layerAes, boolean inheritAes) {

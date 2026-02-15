@@ -5,7 +5,7 @@ This document records implementation outcomes for Section 6 in `matrix-charts/ch
 ## Section 1 Constraint Alignment
 
 - `1.1` API stability: `se.alipsa.matrix.gg` signatures remain unchanged; delegation is internal and fallback-safe.
-- `1.4` SVG-first rendering: delegated gg charts now render through Charm SVG renderer.
+- `1.4` SVG-first rendering: adapter can render delegated gg charts through Charm SVG renderer; runtime delegation is currently opt-in to preserve parity safety.
 - `1.5` DRY: `GgChart.render()` now routes through one adapter bridge instead of directly instantiating gg renderer.
 - `1.9` spec conformance: adapter target is Charm compiled `Chart` model, with explicit fallback when semantics are not yet parity-safe.
 
@@ -58,6 +58,13 @@ Updated:
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/gg/GgChart.groovy`
 
 `GgChart.render()` now delegates through `GgCharmAdapter.render(this)` while preserving existing method signature and default coord initialization behavior.
+
+Runtime policy:
+
+- Default behavior uses legacy gg rendering unless delegation is explicitly enabled.
+- Enable delegated rendering with either:
+  - JVM property: `-Dmatrix.charts.gg.delegateToCharm=true`
+  - Env var: `MATRIX_GG_DELEGATE_TO_CHARM=true`
 
 `GgPlot` static factories were left unchanged.
 
