@@ -160,7 +160,7 @@ class Chart {
     if (value instanceof LayerSpec) {
       return (value as LayerSpec).copy()
     }
-    new LayerSpec(value.geom, value.stat, value.aes?.copy(), value.inheritAes, value.position, value.params)
+    new LayerSpec(value.geom, value.stat, value.aes, value.inheritAes, value.position, value.params)
   }
 
   private static ThemeSpec toThemeSpec(Theme value) {
