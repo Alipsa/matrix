@@ -6,7 +6,10 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
 
 /**
- * Per-render immutable context.
+ * Per-render write-once context.
+ *
+ * The chart/config/svg references are immutable, while trained scales/panels/defs
+ * are initialized once during renderer setup and then treated as read-only.
  */
 @CompileStatic
 class RenderContext {
@@ -21,6 +24,7 @@ class RenderContext {
   ScaleModel colorScale
   ScaleModel fillScale
   List<PanelSpec> panels = []
+  final Map<se.alipsa.matrix.charm.LayerSpec, Map<List<Integer>, List<LayerData>>> pipelineCache = [:]
 
   /**
    * Creates render context.

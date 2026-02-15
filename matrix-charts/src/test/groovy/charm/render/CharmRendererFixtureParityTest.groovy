@@ -125,7 +125,9 @@ class CharmRendererFixtureParityTest {
     assertEquals(0, ggCounts.circle)
     assertTrue(charmCounts.rect >= 8)
     assertTrue(ggCounts.rect >= 5)
-    assertTrue(Math.abs(charmCounts.rect - ggCounts.rect) <= 25)
+    // Charm and gg include different non-data scaffolding rects (panel/canvas/background),
+    // but histogram structure should still stay in the same order of magnitude.
+    assertTrue(Math.abs(charmCounts.rect - ggCounts.rect) <= 10)
   }
 
   private static Map<String, Integer> primitiveCounts(Svg svg) {

@@ -105,6 +105,9 @@ class CharmRenderer {
   }
 
   private void renderPanels(RenderContext context) {
+    if (context.panels == null || context.panels.isEmpty()) {
+      context.panels = [defaultPanel(context.chart.data.rowCount())]
+    }
     int panelRows = context.panels.collect { PanelSpec p -> p.row }.max() + 1
     int panelCols = context.panels.collect { PanelSpec p -> p.col }.max() + 1
     boolean faceted = context.chart.facet.type != FacetType.NONE
@@ -296,9 +299,22 @@ class CharmRenderer {
   }
 
   private List<LayerData> runPipeline(RenderContext context, LayerSpec layer, Aes aes, List<Integer> rowIndexes) {
+    Map<List<Integer>, List<LayerData>> layerCache = context.pipelineCache[layer]
+    if (layerCache == null) {
+      layerCache = [:]
+      context.pipelineCache[layer] = layerCache
+    }
+    List<Integer> rowKey = Collections.unmodifiableList(new ArrayList<>(rowIndexes))
+    List<LayerData> cached = layerCache[rowKey]
+    if (cached != null) {
+      return cached
+    }
+
     List<LayerData> mapped = mapData(context.chart.data, aes, rowIndexes)
     List<LayerData> statData = applyStat(layer, mapped)
-    applyPosition(layer, statData)
+    List<LayerData> result = applyPosition(layer, statData)
+    layerCache[rowKey] = result
+    result
   }
 
   private List<LayerData> mapData(se.alipsa.matrix.core.Matrix data, Aes aes, List<Integer> rowIndexes) {
@@ -488,5 +504,11 @@ class CharmRenderer {
           .fill(textColor)
           .styleClass('charm-y-label')
     }
+  }
+
+  private static PanelSpec defaultPanel(int rowCount) {
+    PanelSpec panel = new PanelSpec(row: 0, col: 0, label: null)
+    panel.rowIndexes = (0..<rowCount).collect { int idx -> idx }
+    panel
   }
 }

@@ -33,22 +33,21 @@ class FacetRenderer {
       Integer nrow
   ) {
     if (facetType == FacetType.NONE) {
-      PanelSpec panel = new PanelSpec(row: 0, col: 0, label: null)
-      panel.rowIndexes = (0..<chartData.rowCount()).collect { int idx -> idx }
-      return [panel]
+      return [defaultPanel(chartData)]
     }
 
     if (facetType == FacetType.WRAP) {
       ColumnExpr expr = vars.isEmpty() ? null : vars.first()
       if (expr == null) {
-        PanelSpec panel = new PanelSpec(row: 0, col: 0, label: null)
-        panel.rowIndexes = (0..<chartData.rowCount()).collect { int idx -> idx }
-        return [panel]
+        return [defaultPanel(chartData)]
       }
       LinkedHashMap<String, List<Integer>> grouped = new LinkedHashMap<>()
       for (int i = 0; i < chartData.rowCount(); i++) {
         String key = String.valueOf(chartData[i, expr.columnName()])
         grouped.computeIfAbsent(key) { [] as List<Integer> }.add(i)
+      }
+      if (grouped.isEmpty()) {
+        return [defaultPanel(chartData)]
       }
       int columns = ncol ?: (int) Math.ceil(Math.sqrt(grouped.size() as double))
       List<PanelSpec> panels = []
@@ -70,6 +69,12 @@ class FacetRenderer {
     String colColumn = cols.isEmpty() ? null : cols.first().columnName()
     List<String> rowLevels = rowColumn == null ? [''] : uniqueValues(chartData, rowColumn)
     List<String> colLevels = colColumn == null ? [''] : uniqueValues(chartData, colColumn)
+    if (rowLevels.isEmpty()) {
+      rowLevels = ['']
+    }
+    if (colLevels.isEmpty()) {
+      colLevels = ['']
+    }
 
     List<PanelSpec> panels = []
     rowLevels.eachWithIndex { String rowLevel, int r ->
@@ -91,7 +96,7 @@ class FacetRenderer {
         panels << panel
       }
     }
-    panels
+    panels.isEmpty() ? [defaultPanel(chartData)] : panels
   }
 
   private static List<String> uniqueValues(Matrix matrix, String columnName) {
@@ -100,5 +105,11 @@ class FacetRenderer {
       values << String.valueOf(matrix[i, columnName])
     }
     new ArrayList<>(values)
+  }
+
+  private static PanelSpec defaultPanel(Matrix data) {
+    PanelSpec panel = new PanelSpec(row: 0, col: 0, label: null)
+    panel.rowIndexes = (0..<data.rowCount()).collect { int idx -> idx }
+    panel
   }
 }

@@ -158,6 +158,65 @@ class CharmRendererTest {
   }
 
   @Test
+  void testFacetWrapWithEmptyDataStillRendersSinglePanel() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'grp')
+        .rows([])
+        .build()
+
+    Chart chart = plot(data) {
+      aes {
+        x = col.x
+        y = col.y
+      }
+      points {}
+      facet {
+        wrap {
+          vars = ['grp']
+          ncol = 2
+        }
+      }
+      theme {
+        legend { position = 'none' }
+      }
+    }.build()
+
+    Svg svg = chart.render()
+    Map<String, Integer> counts = primitiveCounts(svg)
+
+    assertEquals(0, counts.circle)
+    assertEquals(1, counts.clipPath)
+  }
+
+  @Test
+  void testFacetGridWithEmptyDataStillRendersSinglePanel() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'grp')
+        .rows([])
+        .build()
+
+    Chart chart = plot(data) {
+      aes {
+        x = col.x
+        y = col.y
+      }
+      points {}
+      facet {
+        rows = [col.grp]
+      }
+      theme {
+        legend { position = 'none' }
+      }
+    }.build()
+
+    Svg svg = chart.render()
+    Map<String, Integer> counts = primitiveCounts(svg)
+
+    assertEquals(0, counts.circle)
+    assertEquals(1, counts.clipPath)
+  }
+
+  @Test
   void testRenderConfigControlsCanvasSizeAndRenderIsDeterministic() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
