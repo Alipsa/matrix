@@ -9,7 +9,7 @@ import groovy.transform.CompileStatic
 class Scale {
 
   private ScaleType type = ScaleType.CONTINUOUS
-  private String transform
+  private ScaleTransform transformStrategy
   private List breaks = []
   private List<String> labels = []
   private Map<String, Object> params = [:]
@@ -39,7 +39,56 @@ class Scale {
    * @return scale instance
    */
   static Scale transform(String transformName) {
-    new Scale(type: ScaleType.TRANSFORM, transform: transformName)
+    new Scale(type: ScaleType.TRANSFORM, transformStrategy: ScaleTransforms.named(transformName))
+  }
+
+  /**
+   * Creates a transformed scale from a strategy object.
+   *
+   * @param transform strategy object
+   * @return scale instance
+   */
+  static Scale transform(ScaleTransform transform) {
+    new Scale(type: ScaleType.TRANSFORM, transformStrategy: transform)
+  }
+
+  /**
+   * Creates a date transform scale.
+   *
+   * @return scale instance
+   */
+  static Scale date() {
+    transform('date')
+  }
+
+  /**
+   * Creates a time transform scale.
+   *
+   * @return scale instance
+   */
+  static Scale time() {
+    transform('time')
+  }
+
+  /**
+   * Creates a reverse transform scale.
+   *
+   * @return scale instance
+   */
+  static Scale reverse() {
+    transform('reverse')
+  }
+
+  /**
+   * Creates a custom transformed scale.
+   *
+   * @param id transform id
+   * @param forward forward transform
+   * @param inverse inverse transform
+   * @return scale instance
+   */
+  static Scale custom(String id, Closure<BigDecimal> forward, Closure<BigDecimal> inverse = null) {
+    transform(ScaleTransforms.custom(id, forward, inverse))
   }
 
   /**
@@ -66,7 +115,7 @@ class Scale {
    * @return transform name
    */
   String getTransform() {
-    transform
+    transformStrategy?.id()
   }
 
   /**
@@ -74,8 +123,32 @@ class Scale {
    *
    * @param transform transform name
    */
-  void setTransform(String transform) {
-    this.transform = transform
+  void setTransform(Object transform) {
+    this.transformStrategy = ScaleTransforms.resolve(transform)
+    if (this.transformStrategy != null) {
+      type = ScaleType.TRANSFORM
+    }
+  }
+
+  /**
+   * Returns transform strategy object.
+   *
+   * @return strategy object
+   */
+  ScaleTransform getTransformStrategy() {
+    transformStrategy
+  }
+
+  /**
+   * Sets transform strategy object.
+   *
+   * @param transformStrategy strategy object
+   */
+  void setTransformStrategy(ScaleTransform transformStrategy) {
+    this.transformStrategy = transformStrategy
+    if (transformStrategy != null) {
+      type = ScaleType.TRANSFORM
+    }
   }
 
   /**
@@ -140,7 +213,7 @@ class Scale {
   Scale copy() {
     new Scale(
         type: type,
-        transform: transform,
+        transformStrategy: transformStrategy,
         breaks: new ArrayList(breaks),
         labels: new ArrayList<>(labels),
         params: new LinkedHashMap<>(params)
