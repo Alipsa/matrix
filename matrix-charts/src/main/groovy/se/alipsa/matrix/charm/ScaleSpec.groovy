@@ -32,6 +32,17 @@ class ScaleSpec {
   }
 
   /**
+   * Builder-style x scale assignment.
+   *
+   * @param value x scale
+   * @return this spec
+   */
+  ScaleSpec x(Scale value) {
+    setX(value)
+    this
+  }
+
+  /**
    * Returns y scale.
    *
    * @return y scale
@@ -47,6 +58,17 @@ class ScaleSpec {
    */
   void setY(Scale y) {
     this.y = y
+  }
+
+  /**
+   * Builder-style y scale assignment.
+   *
+   * @param value y scale
+   * @return this spec
+   */
+  ScaleSpec y(Scale value) {
+    setY(value)
+    this
   }
 
   /**
@@ -68,6 +90,17 @@ class ScaleSpec {
   }
 
   /**
+   * Builder-style color scale assignment.
+   *
+   * @param value color scale
+   * @return this spec
+   */
+  ScaleSpec color(Scale value) {
+    setColor(value)
+    this
+  }
+
+  /**
    * Returns fill scale.
    *
    * @return fill scale
@@ -83,6 +116,17 @@ class ScaleSpec {
    */
   void setFill(Scale fill) {
     this.fill = fill
+  }
+
+  /**
+   * Builder-style fill scale assignment.
+   *
+   * @param value fill scale
+   * @return this spec
+   */
+  ScaleSpec fill(Scale value) {
+    setFill(value)
+    this
   }
 
   /**

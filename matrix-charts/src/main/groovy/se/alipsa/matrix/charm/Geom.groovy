@@ -11,6 +11,7 @@ enum Geom {
   LINE,
   BAR,
   COL,
+  TILE,
   HISTOGRAM,
   BOXPLOT,
   SMOOTH

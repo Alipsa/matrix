@@ -143,45 +143,47 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   `matrix-charts/section3-api-design.md`.
 
 ## 4. Implement Charm Core Domain Model
-4.1 [ ] Create `matrix-charts/src/main/groovy/se/alipsa/matrix/charm` source files for immutable/mostly-immutable core model objects.
-4.2 [ ] Implement inheritance/composition hierarchy to reduce duplication:
+4.1 [x] Create `matrix-charts/src/main/groovy/se/alipsa/matrix/charm` source files for immutable/mostly-immutable core model objects.
+4.2 [x] Implement inheritance/composition hierarchy to reduce duplication:
   shared base types for geoms/scales/coords/themes instead of repeated ad-hoc logic.
-4.3 [ ] Explicitly address `gg` scale hierarchy debt while designing Charm:
+4.3 [x] Explicitly address `gg` scale hierarchy debt while designing Charm:
   avoid one-class-per-variation duplication and replace patterns like `ScaleXLog10`, `ScaleXSqrt`, `ScaleXReverse` with parameterized transform-based scale types where feasible (e.g., axis + transform strategy).
-4.4 [ ] Define reusable transformation strategy interfaces/classes (log10/sqrt/reverse/time/date/custom) to keep scale logic DRY across x/y variants.
-4.5 [ ] Verify and review deleted Charm prototype from commit `115bd930` and classify each removed type as:
+4.4 [x] Define reusable transformation strategy interfaces/classes (log10/sqrt/reverse/time/date/custom) to keep scale logic DRY across x/y variants.
+4.5 [x] Verify and review deleted Charm prototype from commit `115bd930` and classify each removed type as:
   reuse with refactor, partial reuse, or discard.
   First step: run `git show --name-only --oneline 115bd930` and confirm the file list before assessment.
   Files to assess:
   `ChartBuilder.groovy`, `CoordinateSystem.groovy`, `Graph.groovy`, `GridLines.groovy`, `Legend.groovy`, `Style.groovy`, `SubTitle.groovy`, `Text.groovy`, `Title.groovy`, `ChartBuilderTest.groovy`.
-4.6 [ ] Separately review recently removed `se.alipsa.matrix.charts.charmfx` files (`CharmChartFx`, `ChartPane`, `LegendPane`, `PlotPane`, `TitlePane`, `Position`, horizontal/vertical legend panes) as a distinct prototype iteration and classify reuse/discard rationale.
-4.7 [ ] Document prototype assessment outcomes in this plan (or companion design doc), including rationale for what is intentionally not carried forward.
-4.8 [ ] Move reusable utility logic from `gg` and `charts` into shared Charm utilities where appropriate.
-4.9 [ ] Introduce strict validation and error messages for invalid mappings, missing required aesthetics, and unsupported combos.
-4.10 [ ] Add unit tests for model and validation behavior in `matrix-charts/src/test/groovy/charm/core`.
-4.11 [ ] Implement thread-safety model from Section 3:
+4.6 [x] Separately review recently removed `se.alipsa.matrix.charts.charmfx` files (`CharmChartFx`, `ChartPane`, `LegendPane`, `PlotPane`, `TitlePane`, `Position`, horizontal/vertical legend panes) as a distinct prototype iteration and classify reuse/discard rationale.
+4.7 [x] Document prototype assessment outcomes in this plan (or companion design doc), including rationale for what is intentionally not carried forward.
+4.8 [x] Move reusable utility logic from `gg` and `charts` into shared Charm utilities where appropriate.
+4.9 [x] Introduce strict validation and error messages for invalid mappings, missing required aesthetics, and unsupported combos.
+4.10 [x] Add unit tests for model and validation behavior in `matrix-charts/src/test/groovy/charm/core`.
+4.11 [x] Implement thread-safety model from Section 3:
   enforce per-chart explicit state and immutable compiled charts in core; do not introduce global mutable theme state.
-4.12 [ ] Implement Charm exception hierarchy and wire through validation/renderer/adapter boundaries with actionable error context.
-4.13 [ ] Implement typed spec model classes from Section 3 (`PlotSpec`, `AesSpec`, `LayerSpec`, `ScaleSpec`, `ThemeSpec`, `FacetSpec`, `LabelsSpec`, `AnnotationSpec`, `ColumnRef`/`ColumnExpr`) with builder-friendly APIs.
-4.14 [ ] Implement `col` namespace mechanism for static compilation:
+4.12 [x] Implement Charm exception hierarchy and wire through validation/renderer/adapter boundaries with actionable error context.
+4.13 [x] Implement typed spec model classes from Section 3 (`PlotSpec`, `AesSpec`, `LayerSpec`, `ScaleSpec`, `ThemeSpec`, `FacetSpec`, `LabelsSpec`, `AnnotationSpec`, `ColumnRef`/`ColumnExpr`) with builder-friendly APIs.
+4.14 [x] Implement `col` namespace mechanism for static compilation:
   add typed `Cols` proxy with `getAt(String)` for static-safe `col['name']` and `getProperty(String)` for `col.name` in dynamic DSL closures.
-4.15 [ ] Implement `ColumnExpr` resolution/coercion rules from spec:
+4.15 [x] Implement `ColumnExpr` resolution/coercion rules from spec:
   accept `ColumnExpr` and `CharSequence` in aes setters/maps, coerce deterministically at specification time, and reject unsupported types with clear errors.
-4.16 [ ] Define and implement DSL-to-model mapping rules:
+4.16 [x] Define and implement DSL-to-model mapping rules:
   `points {}` / `line {}` / `tile {}` / `smooth {}` -> `LayerSpec`,
   `labels {}` -> `LabelsSpec`,
   `annotate { text/rect/segment }` -> `AnnotationSpec` hierarchy.
   Include explicit `smooth {}` mapping semantics (geom/stat/params).
-4.17 [ ] Implement compile/build boundary:
+4.17 [x] Implement compile/build boundary:
   `PlotSpec.build()` returns immutable compiled chart model and freezes defaults/mappings deterministically.
-4.18 [ ] Implement schema-aware data contract validation where metadata exists:
+4.18 [x] Implement schema-aware data contract validation where metadata exists:
   validate unknown columns and invalid mappings with deterministic, user-friendly diagnostics during build (or documented render-time fallback).
-4.19 [ ] Add conformance tests for spec semantics:
+4.19 [x] Add conformance tests for spec semantics:
   closure `=` rule, named-arg `:` rule, `col.*` behavior, aes inheritance (`inheritAes`), mutable->immutable lifecycle guarantees.
-4.20 [ ] Add this section’s command log once executed:
+4.20 [x] Add this section’s command log once executed:
   `git show --name-only --oneline 115bd930`
   `git status --short`
   `./gradlew :matrix-charts:test --tests "charm.core.*" -Pheadless=true`
+  Outcomes and rationale for 4.1-4.20:
+  `matrix-charts/section4-core-model.md`.
 
 ## 5. Implement Charm Rendering Pipeline (SVG First)
 5.1 [ ] Build `charm` renderer pipeline to output `se.alipsa.groovy.svg.Svg`.

@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
 /**
  * Utility methods for scale operations.
@@ -20,31 +21,7 @@ class ScaleUtils {
    * - Otherwise attempts BigDecimal parsing; failures return null
    */
   static BigDecimal coerceToNumber(Object value) {
-    if (value == null) return null
-    if (value instanceof BigDecimal) return value as BigDecimal
-    if (value instanceof Number) {
-      if (value instanceof Double || value instanceof Float) {
-        double v = value as double
-        if (Double.isNaN(v) || Double.isInfinite(v)) return null
-      }
-      try {
-        return new BigDecimal(value.toString())
-      } catch (NumberFormatException ignored) {
-        return null
-      }
-    }
-    if (value instanceof CharSequence) {
-      String s = value.toString().trim()
-      if (s.isEmpty() || s.equalsIgnoreCase('NA') || s.equalsIgnoreCase('NaN') || s.equalsIgnoreCase('null')) {
-        return null
-      }
-      try {
-        return new BigDecimal(s)
-      } catch (NumberFormatException ignored) {
-        return null
-      }
-    }
-    return null
+    NumberCoercionUtil.coerceToBigDecimal(value)
   }
 
   /**
