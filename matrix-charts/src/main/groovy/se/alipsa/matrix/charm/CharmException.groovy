@@ -42,6 +42,16 @@ class CharmValidationException extends CharmException {
   CharmValidationException(String message) {
     super(message)
   }
+
+  /**
+   * Creates a new CharmValidationException with a message and cause.
+   *
+   * @param message the detail message
+   * @param cause the originating cause
+   */
+  CharmValidationException(String message, Throwable cause) {
+    super(message, cause)
+  }
 }
 
 /**
@@ -57,6 +67,42 @@ class CharmMappingException extends CharmException {
    */
   CharmMappingException(String message) {
     super(message)
+  }
+
+  /**
+   * Creates a new CharmMappingException with a message and cause.
+   *
+   * @param message the detail message
+   * @param cause the originating cause
+   */
+  CharmMappingException(String message, Throwable cause) {
+    super(message, cause)
+  }
+}
+
+/**
+ * Indicates failures during mutable-spec to immutable-chart compilation.
+ */
+@CompileStatic
+class CharmCompilationException extends CharmException {
+
+  /**
+   * Creates a new CharmCompilationException with a message.
+   *
+   * @param message the detail message
+   */
+  CharmCompilationException(String message) {
+    super(message)
+  }
+
+  /**
+   * Creates a new CharmCompilationException with a message and cause.
+   *
+   * @param message the detail message
+   * @param cause the originating cause
+   */
+  CharmCompilationException(String message, Throwable cause) {
+    super(message, cause)
   }
 }
 

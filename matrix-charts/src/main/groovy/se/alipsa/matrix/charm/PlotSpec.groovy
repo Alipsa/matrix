@@ -1,6 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
@@ -10,14 +9,24 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class PlotSpec {
 
+  private static final Map<Geom, List<String>> REQUIRED_AESTHETICS = [
+      (Geom.POINT)    : ['x', 'y'],
+      (Geom.LINE)     : ['x', 'y'],
+      (Geom.SMOOTH)   : ['x', 'y'],
+      (Geom.TILE)     : ['x', 'y'],
+      (Geom.BAR)      : ['x'],
+      (Geom.HISTOGRAM): ['x'],
+      (Geom.BOXPLOT)  : ['y']
+  ]
+
   private final Matrix data
-  private Aes aes = new Aes()
-  private final List<Layer> layers = []
+  private AesSpec aes = new AesSpec()
+  private final List<LayerSpec> layers = []
   private ScaleSpec scale = new ScaleSpec()
-  private Theme theme = new Theme()
-  private Facet facet = new Facet()
-  private Coord coord = new Coord()
-  private Labels labels = new Labels()
+  private ThemeSpec theme = new ThemeSpec()
+  private FacetSpec facet = new FacetSpec()
+  private CoordSpec coord = new CoordSpec()
+  private LabelsSpec labels = new LabelsSpec()
   private final List<AnnotationSpec> annotations = []
 
   /**
@@ -46,7 +55,7 @@ class PlotSpec {
    *
    * @return plot-level aesthetics
    */
-  Aes getAes() {
+  AesSpec getAes() {
     aes
   }
 
@@ -55,7 +64,7 @@ class PlotSpec {
    *
    * @return layer list
    */
-  List<Layer> getLayers() {
+  List<LayerSpec> getLayers() {
     layers
   }
 
@@ -73,7 +82,7 @@ class PlotSpec {
    *
    * @return theme specification
    */
-  Theme getTheme() {
+  ThemeSpec getTheme() {
     theme
   }
 
@@ -82,7 +91,7 @@ class PlotSpec {
    *
    * @return facet specification
    */
-  Facet getFacet() {
+  FacetSpec getFacet() {
     facet
   }
 
@@ -91,7 +100,7 @@ class PlotSpec {
    *
    * @return coord specification
    */
-  Coord getCoord() {
+  CoordSpec getCoord() {
     coord
   }
 
@@ -100,7 +109,7 @@ class PlotSpec {
    *
    * @return labels specification
    */
-  Labels getLabels() {
+  LabelsSpec getLabels() {
     labels
   }
 
@@ -145,7 +154,7 @@ class PlotSpec {
    * @param configure optional layer parameter closure
    * @return this plot spec
    */
-  PlotSpec points(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerParams) Closure<?> configure = null) {
+  PlotSpec points(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
     addLayer(Geom.POINT, Stat.IDENTITY, configure)
   }
 
@@ -155,8 +164,18 @@ class PlotSpec {
    * @param configure optional layer parameter closure
    * @return this plot spec
    */
-  PlotSpec line(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerParams) Closure<?> configure = null) {
+  PlotSpec line(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
     addLayer(Geom.LINE, Stat.IDENTITY, configure)
+  }
+
+  /**
+   * Adds a tile layer.
+   *
+   * @param configure optional layer parameter closure
+   * @return this plot spec
+   */
+  PlotSpec tile(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
+    addLayer(Geom.TILE, Stat.IDENTITY, configure)
   }
 
   /**
@@ -165,7 +184,7 @@ class PlotSpec {
    * @param configure optional layer parameter closure
    * @return this plot spec
    */
-  PlotSpec smooth(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerParams) Closure<?> configure = null) {
+  PlotSpec smooth(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
     addLayer(Geom.SMOOTH, Stat.SMOOTH, configure)
   }
 
@@ -177,7 +196,17 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec layer(Geom geom, Map<String, Object> options = [:]) {
-    Layer layer = new Layer(geom, Stat.IDENTITY, null, true, Position.IDENTITY, options)
+    if (geom == null) {
+      throw new CharmValidationException('layer geom cannot be null')
+    }
+    Map<String, Object> params = new LinkedHashMap<>(options ?: [:])
+    Aes layerAes = coerceLayerAes(params.remove('aes'))
+    boolean inheritAes = params.containsKey('inheritAes')
+        ? parseBooleanOption(params.remove('inheritAes'), 'inheritAes')
+        : true
+    Position position = coercePosition(params.remove('position'))
+    Stat stat = coerceStat(params.remove('stat'), geom)
+    LayerSpec layer = new LayerSpec(geom, stat, layerAes, inheritAes, position, params)
     layers << layer
     this
   }
@@ -230,7 +259,7 @@ class PlotSpec {
    * @param configure closure for coord options
    * @return this plot spec
    */
-  PlotSpec coord(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = Coord) Closure<?> configure) {
+  PlotSpec coord(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = CoordSpec) Closure<?> configure) {
     Closure<?> body = configure.rehydrate(coord, this, this)
     body.resolveStrategy = Closure.DELEGATE_ONLY
     body.call()
@@ -243,7 +272,7 @@ class PlotSpec {
    * @param configure closure for labels options
    * @return this plot spec
    */
-  PlotSpec labels(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = Labels) Closure<?> configure) {
+  PlotSpec labels(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LabelsSpec) Closure<?> configure) {
     Closure<?> body = configure.rehydrate(labels, this, this)
     body.resolveStrategy = Closure.DELEGATE_ONLY
     body.call()
@@ -270,47 +299,95 @@ class PlotSpec {
    * @return immutable chart
    */
   Chart build() {
-    validate()
-    List<Layer> compiledLayers = layers.collect { Layer layer -> layer.copy() }
-    List<AnnotationSpec> compiledAnnotations = annotations.collect { AnnotationSpec a -> a.copy() }
-    new Chart(
-        data,
-        aes.copy(),
-        compiledLayers,
-        scale.copy(),
-        theme.copy(),
-        facet.copy(),
-        coord.copy(),
-        labels.copy(),
-        compiledAnnotations
-    )
+    try {
+      validate()
+      List<LayerSpec> compiledLayers = layers.collect { LayerSpec layer -> layer.copy() }
+      List<AnnotationSpec> compiledAnnotations = annotations.collect { AnnotationSpec a -> a.copy() }
+      new Chart(
+          data,
+          aes.copy(),
+          compiledLayers,
+          scale.copy(),
+          theme.copy(),
+          facet.copy(),
+          coord.copy(),
+          labels.copy(),
+          compiledAnnotations
+      )
+    } catch (CharmException e) {
+      throw e
+    } catch (Exception e) {
+      throw new CharmCompilationException("Failed to compile plot specification: ${e.message}", e)
+    }
   }
 
   private PlotSpec addLayer(
       Geom geom,
       Stat stat,
-      @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerParams) Closure<?> configure
+      @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure
   ) {
-    LayerParams options = new LayerParams()
+    LayerDsl options = new LayerDsl()
     if (configure != null) {
       Closure<?> body = configure.rehydrate(options, this, this)
       body.resolveStrategy = Closure.DELEGATE_ONLY
       body.call()
     }
-    layers << new Layer(geom, stat, null, true, Position.IDENTITY, options.values())
+    layers << new LayerSpec(
+        geom,
+        stat,
+        options.layerAes(),
+        options.inheritAes,
+        options.position,
+        options.values()
+    )
     this
   }
 
   private void validate() {
     validateAes('plot aes', aes)
-    layers.eachWithIndex { Layer layer, int idx ->
-      if (layer.aes != null) {
-        validateAes("layer ${idx} aes", layer.aes)
+    layers.eachWithIndex { LayerSpec layer, int idx ->
+      validateLayerSemantics(layer, idx)
+      Aes layerAes = layer.aes
+      if (layerAes != null) {
+        validateAes("layer ${idx} aes", layerAes)
       }
+      validateRequiredAesthetics(layer, layerAes, idx)
     }
     facet.rows.each { ColumnExpr expr -> validateColumn(expr, 'facet.rows') }
     facet.cols.each { ColumnExpr expr -> validateColumn(expr, 'facet.cols') }
     facet.vars.each { ColumnExpr expr -> validateColumn(expr, 'facet.vars') }
+  }
+
+  private void validateLayerSemantics(LayerSpec layer, int idx) {
+    if (layer.geom == Geom.SMOOTH && layer.stat != Stat.SMOOTH) {
+      throw new CharmValidationException(
+          "Invalid layer ${idx}: geom SMOOTH requires stat SMOOTH, but was ${layer.stat}"
+      )
+    }
+  }
+
+  private void validateRequiredAesthetics(LayerSpec layer, Aes layerAes, int idx) {
+    List<String> required = REQUIRED_AESTHETICS[layer.geom] ?: []
+    if (required.isEmpty()) {
+      return
+    }
+    Aes effective = effectiveAes(layer, layerAes)
+    Map<String, ColumnExpr> mappings = effective.mappings()
+    List<String> missing = required.findAll { String key -> !mappings.containsKey(key) }
+    if (!missing.isEmpty()) {
+      String inheritText = layer.inheritAes ? 'with inherited plot mappings' : 'without inherited plot mappings'
+      throw new CharmValidationException(
+          "Layer ${idx} (${layer.geom}) is missing required aesthetics [${missing.join(', ')}] ${inheritText}"
+      )
+    }
+  }
+
+  private Aes effectiveAes(LayerSpec layer, Aes layerAes) {
+    Aes effective = layer.inheritAes ? aes.copy() : new Aes()
+    if (layerAes != null) {
+      effective.apply(layerAes.mappings())
+    }
+    effective
   }
 
   private void validateAes(String context, Aes aesValue) {
@@ -329,6 +406,68 @@ class PlotSpec {
           "Unknown column '${expr.columnName()}' for ${context}. Available columns: ${names.join(', ')}"
       )
     }
+  }
+
+  private static Aes coerceLayerAes(Object value) {
+    if (value == null) {
+      return null
+    }
+    if (value instanceof Aes) {
+      return (value as Aes).copy()
+    }
+    if (value instanceof Map) {
+      Aes mapped = new Aes()
+      mapped.apply(value as Map<String, ?>)
+      return mapped
+    }
+    throw new CharmValidationException(
+        "Unsupported layer aes value type '${value.getClass().name}'. Expected Aes or Map."
+    )
+  }
+
+  private static Position coercePosition(Object value) {
+    LayerDsl.parsePosition(value)
+  }
+
+  private static Stat coerceStat(Object value, Geom geom) {
+    if (value == null) {
+      return geom == Geom.SMOOTH ? Stat.SMOOTH : Stat.IDENTITY
+    }
+    if (value instanceof Stat) {
+      return value as Stat
+    }
+    if (value instanceof CharSequence) {
+      try {
+        return Stat.valueOf(value.toString().trim().toUpperCase(Locale.ROOT))
+      } catch (IllegalArgumentException e) {
+        throw new CharmValidationException("Unsupported layer stat '${value}'")
+      }
+    }
+    throw new CharmValidationException("Unsupported layer stat type '${value.getClass().name}'")
+  }
+
+  private static boolean parseBooleanOption(Object value, String optionName) {
+    if (value == null) {
+      throw new CharmValidationException("Layer option '${optionName}' cannot be null")
+    }
+    if (value instanceof Boolean) {
+      return value as boolean
+    }
+    if (value instanceof CharSequence) {
+      String normalized = value.toString().trim().toLowerCase(Locale.ROOT)
+      if (normalized == 'true') {
+        return true
+      }
+      if (normalized == 'false') {
+        return false
+      }
+      throw new CharmValidationException(
+          "Unsupported boolean value '${value}' for layer option '${optionName}'. Use true or false."
+      )
+    }
+    throw new CharmValidationException(
+        "Unsupported type '${value.getClass().name}' for layer option '${optionName}'. Use Boolean or true/false string."
+    )
   }
 
   /**
@@ -403,6 +542,45 @@ class PlotSpec {
     }
 
     /**
+     * Creates a reverse transform scale.
+     *
+     * @return scale object
+     */
+    Scale reverse() {
+      Scale.transform('reverse')
+    }
+
+    /**
+     * Creates a date transform scale.
+     *
+     * @return scale object
+     */
+    Scale date() {
+      Scale.date()
+    }
+
+    /**
+     * Creates a time transform scale.
+     *
+     * @return scale object
+     */
+    Scale time() {
+      Scale.time()
+    }
+
+    /**
+     * Creates a custom transform scale.
+     *
+     * @param id transform id
+     * @param forward forward transform
+     * @param inverse inverse transform
+     * @return scale object
+     */
+    Scale custom(String id, Closure<BigDecimal> forward, Closure<BigDecimal> inverse = null) {
+      Scale.custom(id, forward, inverse)
+    }
+
+    /**
      * Creates a continuous scale.
      *
      * @return scale object
@@ -426,6 +604,9 @@ class PlotSpec {
       }
       if (value instanceof Scale) {
         return value as Scale
+      }
+      if (value instanceof ScaleTransform) {
+        return Scale.transform(value as ScaleTransform)
       }
       if (value instanceof CharSequence) {
         return Scale.transform(value.toString())

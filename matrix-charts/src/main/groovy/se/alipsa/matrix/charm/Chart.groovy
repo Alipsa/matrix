@@ -12,13 +12,13 @@ import se.alipsa.matrix.core.Matrix
 class Chart {
 
   private final Matrix data
-  private final Aes aes
-  private final List<Layer> layers
+  private final AesSpec aes
+  private final List<LayerSpec> layers
   private final ScaleSpec scale
-  private final Theme theme
-  private final Facet facet
-  private final Coord coord
-  private final Labels labels
+  private final ThemeSpec theme
+  private final FacetSpec facet
+  private final CoordSpec coord
+  private final LabelsSpec labels
   private final List<AnnotationSpec> annotations
 
   /**
@@ -37,7 +37,7 @@ class Chart {
   Chart(
       Matrix data,
       Aes aes,
-      List<Layer> layers,
+      List<LayerSpec> layers,
       ScaleSpec scale,
       Theme theme,
       Facet facet,
@@ -46,14 +46,18 @@ class Chart {
       List<AnnotationSpec> annotations
   ) {
     this.data = data
-    this.aes = aes
-    this.layers = Collections.unmodifiableList(new ArrayList<>(layers))
-    this.scale = scale
-    this.theme = theme
-    this.facet = facet
-    this.coord = coord
-    this.labels = labels
-    this.annotations = Collections.unmodifiableList(new ArrayList<>(annotations))
+    this.aes = toAesSpec(aes)
+    this.layers = Collections.unmodifiableList(
+        layers.collect { Layer layer -> toLayerSpec(layer) }
+    )
+    this.scale = scale?.copy()
+    this.theme = toThemeSpec(theme)
+    this.facet = toFacetSpec(facet)
+    this.coord = toCoordSpec(coord)
+    this.labels = toLabelsSpec(labels)
+    this.annotations = Collections.unmodifiableList(
+        annotations.collect { AnnotationSpec a -> a.copy() }
+    )
   }
 
   /**
@@ -70,8 +74,8 @@ class Chart {
    *
    * @return aesthetics
    */
-  Aes getAes() {
-    aes
+  AesSpec getAes() {
+    aes?.copy()
   }
 
   /**
@@ -79,7 +83,7 @@ class Chart {
    *
    * @return layer list
    */
-  List<Layer> getLayers() {
+  List<LayerSpec> getLayers() {
     layers
   }
 
@@ -89,7 +93,7 @@ class Chart {
    * @return scale spec
    */
   ScaleSpec getScale() {
-    scale
+    scale?.copy()
   }
 
   /**
@@ -97,8 +101,8 @@ class Chart {
    *
    * @return theme spec
    */
-  Theme getTheme() {
-    theme
+  ThemeSpec getTheme() {
+    theme?.copy()
   }
 
   /**
@@ -106,8 +110,8 @@ class Chart {
    *
    * @return facet spec
    */
-  Facet getFacet() {
-    facet
+  FacetSpec getFacet() {
+    facet?.copy()
   }
 
   /**
@@ -115,8 +119,8 @@ class Chart {
    *
    * @return coord spec
    */
-  Coord getCoord() {
-    coord
+  CoordSpec getCoord() {
+    coord?.copy()
   }
 
   /**
@@ -124,17 +128,131 @@ class Chart {
    *
    * @return labels spec
    */
-  Labels getLabels() {
-    labels
+  LabelsSpec getLabels() {
+    labels?.copy()
   }
 
   /**
-   * Returns immutable annotations.
+   * Returns immutable annotations snapshot.
+   *
+   * Annotation specs are still mutable DSL/value objects in v1 for compatibility.
+   * This getter therefore returns defensive copies to preserve `Chart` immutability.
    *
    * @return annotations list
    */
   List<AnnotationSpec> getAnnotations() {
-    annotations
+    Collections.unmodifiableList(annotations.collect { AnnotationSpec a -> a.copy() })
+  }
+
+  private static AesSpec toAesSpec(Aes value) {
+    if (value == null) {
+      return new AesSpec()
+    }
+    if (value instanceof AesSpec) {
+      return (value as AesSpec).copy()
+    }
+    AesSpec converted = new AesSpec()
+    converted.apply(value.mappings())
+    converted
+  }
+
+  private static LayerSpec toLayerSpec(Layer value) {
+    Map<String, Object> frozenParams = deepFreezeParams(value.params)
+    new LayerSpec(value.geom, value.stat, value.aes, value.inheritAes, value.position, frozenParams)
+  }
+
+  private static Map<String, Object> deepFreezeParams(Map<String, Object> params) {
+    if (params == null || params.isEmpty()) {
+      return [:]
+    }
+    Map<String, Object> frozen = new LinkedHashMap<>()
+    params.each { String key, Object value ->
+      frozen[key] = deepFreezeValue(value)
+    }
+    frozen
+  }
+
+  private static Object deepFreezeValue(Object value) {
+    if (value instanceof Map) {
+      Map<Object, Object> frozen = new LinkedHashMap<>()
+      (value as Map).each { Object k, Object v ->
+        frozen[k] = deepFreezeValue(v)
+      }
+      return Collections.unmodifiableMap(frozen)
+    }
+    if (value instanceof List) {
+      List<Object> frozen = (value as List).collect { Object v -> deepFreezeValue(v) } as List<Object>
+      return Collections.unmodifiableList(frozen)
+    }
+    if (value instanceof Set) {
+      Set<Object> frozen = new LinkedHashSet<>()
+      (value as Set).each { Object v ->
+        frozen << deepFreezeValue(v)
+      }
+      return Collections.unmodifiableSet(frozen)
+    }
+    value
+  }
+
+  private static ThemeSpec toThemeSpec(Theme value) {
+    if (value == null) {
+      return new ThemeSpec()
+    }
+    if (value instanceof ThemeSpec) {
+      return (value as ThemeSpec).copy()
+    }
+    new ThemeSpec(
+        legend: new LinkedHashMap<>(value.legend),
+        axis: new LinkedHashMap<>(value.axis),
+        text: new LinkedHashMap<>(value.text),
+        grid: new LinkedHashMap<>(value.grid),
+        raw: new LinkedHashMap<>(value.raw)
+    )
+  }
+
+  private static FacetSpec toFacetSpec(Facet value) {
+    if (value == null) {
+      return new FacetSpec()
+    }
+    if (value instanceof FacetSpec) {
+      return (value as FacetSpec).copy()
+    }
+    new FacetSpec(
+        type: value.type,
+        rows: new ArrayList<>(value.rows),
+        cols: new ArrayList<>(value.cols),
+        vars: new ArrayList<>(value.vars),
+        ncol: value.ncol,
+        nrow: value.nrow,
+        params: new LinkedHashMap<>(value.params)
+    )
+  }
+
+  private static CoordSpec toCoordSpec(Coord value) {
+    if (value == null) {
+      return new CoordSpec()
+    }
+    if (value instanceof CoordSpec) {
+      return (value as CoordSpec).copy()
+    }
+    new CoordSpec(type: value.type, params: new LinkedHashMap<>(value.params))
+  }
+
+  private static LabelsSpec toLabelsSpec(Labels value) {
+    if (value == null) {
+      return new LabelsSpec()
+    }
+    if (value instanceof LabelsSpec) {
+      return (value as LabelsSpec).copy()
+    }
+    new LabelsSpec(
+        title: value.title,
+        subtitle: value.subtitle,
+        caption: value.caption,
+        x: value.x,
+        y: value.y,
+        guides: new LinkedHashMap<>(value.guides)
+    )
   }
 
   /**
