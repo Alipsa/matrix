@@ -176,6 +176,31 @@ class CharmCoreModelTest {
   }
 
   @Test
+  void testLayerMapInheritAesParsesFalseString() {
+    Chart chart = plot(Dataset.mpg()) {
+      layer(Geom.POINT, [
+          inheritAes: 'false',
+          aes       : [x: 'cty', y: 'hwy'],
+          size      : 2
+      ])
+    }.build()
+
+    assertEquals(1, chart.layers.size())
+    assertEquals(false, chart.layers.first().inheritAes)
+  }
+
+  @Test
+  void testLayerMapInheritAesRejectsInvalidString() {
+    CharmValidationException e = assertThrows(CharmValidationException.class) {
+      plot(Dataset.mpg()) {
+        layer(Geom.POINT, [inheritAes: 'not-a-bool', aes: [x: 'cty', y: 'hwy']])
+      }.build()
+    }
+    assertTrue(e.message.contains("Unsupported boolean value 'not-a-bool'"))
+    assertTrue(e.message.contains("layer option 'inheritAes'"))
+  }
+
+  @Test
   void testScaleTransformsUseStrategyObjects() {
     PlotSpec spec = plot(Dataset.mpg()) {
       aes {

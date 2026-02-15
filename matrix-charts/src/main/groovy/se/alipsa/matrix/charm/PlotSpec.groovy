@@ -201,7 +201,9 @@ class PlotSpec {
     }
     Map<String, Object> params = new LinkedHashMap<>(options ?: [:])
     Aes layerAes = coerceLayerAes(params.remove('aes'))
-    boolean inheritAes = params.containsKey('inheritAes') ? (params.remove('inheritAes') as boolean) : true
+    boolean inheritAes = params.containsKey('inheritAes')
+        ? parseBooleanOption(params.remove('inheritAes'), 'inheritAes')
+        : true
     Position position = coercePosition(params.remove('position'))
     Stat stat = coerceStat(params.remove('stat'), geom)
     LayerSpec layer = new LayerSpec(geom, stat, layerAes, inheritAes, position, params)
@@ -453,6 +455,30 @@ class PlotSpec {
       }
     }
     throw new CharmValidationException("Unsupported layer stat type '${value.getClass().name}'")
+  }
+
+  private static boolean parseBooleanOption(Object value, String optionName) {
+    if (value == null) {
+      throw new CharmValidationException("Layer option '${optionName}' cannot be null")
+    }
+    if (value instanceof Boolean) {
+      return value as boolean
+    }
+    if (value instanceof CharSequence) {
+      String normalized = value.toString().trim().toLowerCase(Locale.ROOT)
+      if (normalized == 'true') {
+        return true
+      }
+      if (normalized == 'false') {
+        return false
+      }
+      throw new CharmValidationException(
+          "Unsupported boolean value '${value}' for layer option '${optionName}'. Use true or false."
+      )
+    }
+    throw new CharmValidationException(
+        "Unsupported type '${value.getClass().name}' for layer option '${optionName}'. Use Boolean or true/false string."
+    )
   }
 
   /**
