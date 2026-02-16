@@ -172,6 +172,9 @@ class CharmRenderer {
       case Geom.LINE, Geom.SMOOTH -> renderLines(dataLayer, context, layer, layerData)
       case Geom.TILE -> renderTiles(dataLayer, context, layer, layerData)
       case Geom.BAR, Geom.COL, Geom.HISTOGRAM -> renderBars(dataLayer, context, layer, layerData, panelHeight)
+      case Geom.AREA -> renderArea(dataLayer, context, layer, layerData, panelHeight)
+      case Geom.PIE -> renderPie(dataLayer, context, layer, layerData, panelWidth, panelHeight)
+      case Geom.BOXPLOT -> renderBoxplot(dataLayer, context, layer, layerData, panelHeight)
       default -> renderPoints(dataLayer, context, layer, layerData)
     }
   }
@@ -338,6 +341,9 @@ class CharmRenderer {
     if (layer.geom == Geom.HISTOGRAM) {
       return histogramStat(layer, mapped)
     }
+    if (layer.geom == Geom.BOXPLOT) {
+      return boxplotStat(mapped)
+    }
     if (layer.stat == Stat.SMOOTH) {
       return smoothStat(mapped)
     }
@@ -437,6 +443,229 @@ class CharmRenderer {
       histogram << datum
     }
     histogram
+  }
+
+  private void renderArea(
+      G dataLayer,
+      RenderContext context,
+      LayerSpec layer,
+      List<LayerData> layerData,
+      int panelHeight
+  ) {
+    if (layerData.size() < 2) {
+      return
+    }
+    List<LayerData> sorted = new ArrayList<>(layerData)
+    sorted.sort { LayerData a, LayerData b ->
+      BigDecimal x1 = NumberCoercionUtil.coerceToBigDecimal(a.x) ?: 0
+      BigDecimal x2 = NumberCoercionUtil.coerceToBigDecimal(b.x) ?: 0
+      x1 <=> x2
+    }
+    BigDecimal baseline = context.yScale.transform(0)
+    if (baseline == null) {
+      baseline = panelHeight
+    }
+    List<BigDecimal[]> transformedPoints = []
+    sorted.each { LayerData d ->
+      BigDecimal px = context.xScale.transform(d.x)
+      BigDecimal py = context.yScale.transform(d.y)
+      if (px != null && py != null) {
+        transformedPoints << ([px, py] as BigDecimal[])
+      }
+    }
+    if (transformedPoints.size() < 2) {
+      return
+    }
+    StringBuilder pathD = new StringBuilder()
+    BigDecimal firstX = transformedPoints.first()[0]
+    BigDecimal lastX = transformedPoints.last()[0]
+    pathD.append("M ${firstX} ${baseline}")
+    transformedPoints.each { BigDecimal[] pt ->
+      pathD.append(" L ${pt[0]} ${pt[1]}")
+    }
+    pathD.append(" L ${lastX} ${baseline} Z")
+    String fill = resolveFill(context, layer, sorted.first())
+    String stroke = resolveStroke(context, layer, sorted.first())
+    dataLayer.addPath().d(pathD.toString())
+        .fill(fill)
+        .stroke(stroke)
+        .addAttribute('opacity', '0.7')
+        .styleClass('charm-area')
+  }
+
+  private void renderPie(
+      G dataLayer,
+      RenderContext context,
+      LayerSpec layer,
+      List<LayerData> layerData,
+      int panelWidth,
+      int panelHeight
+  ) {
+    if (layerData.isEmpty()) {
+      return
+    }
+    double cx = panelWidth / 2.0d
+    double cy = panelHeight / 2.0d
+    double radius = Math.min(panelWidth, panelHeight) * 0.4d
+    List<BigDecimal> values = layerData.collect { LayerData d ->
+      BigDecimal v = NumberCoercionUtil.coerceToBigDecimal(d.y)
+      v != null && v > 0 ? v : 0.0
+    }
+    BigDecimal total = values.sum() as BigDecimal
+    if (total == 0) {
+      return
+    }
+    double startAngle = -Math.PI / 2.0d
+    layerData.eachWithIndex { LayerData d, int idx ->
+      BigDecimal sliceValue = values[idx]
+      if (sliceValue == 0) {
+        return
+      }
+      double sweepAngle = (sliceValue / total) as double * 2.0d * Math.PI
+      double endAngle = startAngle + sweepAngle
+      double x1 = cx + radius * Math.cos(startAngle)
+      double y1 = cy + radius * Math.sin(startAngle)
+      double x2 = cx + radius * Math.cos(endAngle)
+      double y2 = cy + radius * Math.sin(endAngle)
+      int largeArc = sweepAngle > Math.PI ? 1 : 0
+      String pathD = "M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z"
+      String fill = resolveFill(context, layer, d)
+      dataLayer.addPath().d(pathD)
+          .fill(fill)
+          .stroke('#ffffff')
+          .addAttribute('stroke-width', '1')
+          .styleClass('charm-pie')
+      startAngle = endAngle
+    }
+  }
+
+  private void renderBoxplot(
+      G dataLayer,
+      RenderContext context,
+      LayerSpec layer,
+      List<LayerData> layerData,
+      int panelHeight
+  ) {
+    if (layerData.isEmpty()) {
+      return
+    }
+    boolean discreteX = context.xScale.discrete
+    BigDecimal boxWidth
+    if (discreteX) {
+      BigDecimal step = context.xScale.levels.isEmpty() ? 20
+          : (context.xScale.rangeEnd - context.xScale.rangeStart) / context.xScale.levels.size()
+      boxWidth = step * 0.5
+    } else {
+      boxWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.boxWidth) ?: 20
+    }
+    String fill = layer.params.fill?.toString() ?: '#1f77b4'
+    String stroke = layer.params.color?.toString() ?: '#333333'
+
+    layerData.each { LayerData d ->
+      BigDecimal xCenter = context.xScale.transform(d.x)
+      if (xCenter == null) {
+        return
+      }
+      BigDecimal q1 = context.yScale.transform(d.meta.q1)
+      BigDecimal median = context.yScale.transform(d.meta.median)
+      BigDecimal q3 = context.yScale.transform(d.meta.q3)
+      BigDecimal whiskerLow = context.yScale.transform(d.meta.whiskerLow)
+      BigDecimal whiskerHigh = context.yScale.transform(d.meta.whiskerHigh)
+      if ([q1, median, q3, whiskerLow, whiskerHigh].any { it == null }) {
+        return
+      }
+      BigDecimal xLeft = xCenter - boxWidth / 2
+      BigDecimal boxTop = [q1, q3].min()
+      BigDecimal boxHeight = (q3 - q1).abs()
+      dataLayer.addRect(boxWidth, boxHeight)
+          .x(xLeft).y(boxTop)
+          .fill(fill).stroke(stroke)
+          .styleClass('charm-boxplot-box')
+      dataLayer.addLine(xLeft, median, xLeft + boxWidth, median)
+          .stroke(stroke).strokeWidth(2)
+          .styleClass('charm-boxplot-median')
+      dataLayer.addLine(xCenter, boxTop, xCenter, whiskerHigh)
+          .stroke(stroke).styleClass('charm-boxplot-whisker')
+      BigDecimal boxBottom = [q1, q3].max()
+      dataLayer.addLine(xCenter, boxBottom, xCenter, whiskerLow)
+          .stroke(stroke).styleClass('charm-boxplot-whisker')
+      BigDecimal capHalf = boxWidth / 4
+      dataLayer.addLine(xCenter - capHalf, whiskerHigh, xCenter + capHalf, whiskerHigh)
+          .stroke(stroke).styleClass('charm-boxplot-cap')
+      dataLayer.addLine(xCenter - capHalf, whiskerLow, xCenter + capHalf, whiskerLow)
+          .stroke(stroke).styleClass('charm-boxplot-cap')
+      List outliers = d.meta.outliers as List ?: []
+      outliers.each { Object outlierVal ->
+        BigDecimal oy = context.yScale.transform(outlierVal)
+        if (oy != null) {
+          dataLayer.addCircle().cx(xCenter).cy(oy).r(3)
+              .fill('none').stroke(stroke)
+              .styleClass('charm-boxplot-outlier')
+        }
+      }
+    }
+  }
+
+  private static List<LayerData> boxplotStat(List<LayerData> mapped) {
+    Map<String, List<BigDecimal>> groups = [:]
+    Map<String, LayerData> templates = [:]
+    mapped.each { LayerData d ->
+      String key = d.x?.toString() ?: ''
+      BigDecimal yVal = NumberCoercionUtil.coerceToBigDecimal(d.y)
+      if (yVal != null) {
+        groups.computeIfAbsent(key) { [] } << yVal
+        if (!templates.containsKey(key)) {
+          templates[key] = d
+        }
+      }
+    }
+    List<LayerData> result = []
+    groups.each { String key, List<BigDecimal> values ->
+      values.sort()
+      int n = values.size()
+      BigDecimal q1 = percentile(values, 0.25)
+      BigDecimal median = percentile(values, 0.5)
+      BigDecimal q3 = percentile(values, 0.75)
+      BigDecimal iqr = q3 - q1
+      BigDecimal lowerFence = q1 - 1.5 * iqr
+      BigDecimal upperFence = q3 + 1.5 * iqr
+      BigDecimal whiskerLow = values.find { it >= lowerFence } ?: values.first()
+      BigDecimal whiskerHigh = values.reverse().find { it <= upperFence } ?: values.last()
+      List<BigDecimal> outliers = values.findAll { it < lowerFence || it > upperFence }
+      LayerData template = templates[key]
+      LayerData datum = new LayerData(
+          x: template.x,
+          y: median,
+          color: template.color,
+          fill: template.fill,
+          rowIndex: -1
+      )
+      datum.meta.q1 = q1
+      datum.meta.median = median
+      datum.meta.q3 = q3
+      datum.meta.whiskerLow = whiskerLow
+      datum.meta.whiskerHigh = whiskerHigh
+      datum.meta.outliers = outliers
+      result << datum
+    }
+    result
+  }
+
+  private static BigDecimal percentile(List<BigDecimal> sorted, BigDecimal p) {
+    if (sorted.isEmpty()) {
+      return 0
+    }
+    if (sorted.size() == 1) {
+      return sorted.first()
+    }
+    BigDecimal index = p * (sorted.size() - 1)
+    int lower = index.intValue()
+    int upper = lower + 1
+    if (upper >= sorted.size()) {
+      return sorted.last()
+    }
+    BigDecimal fraction = index - lower
+    sorted[lower] + fraction * (sorted[upper] - sorted[lower])
   }
 
   private static Aes effectiveAes(Aes plotAes, LayerSpec layer) {

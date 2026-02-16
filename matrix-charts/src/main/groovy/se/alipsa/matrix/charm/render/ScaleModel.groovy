@@ -75,7 +75,7 @@ class ScaleModel {
       boolean forceDiscrete = false
   ) {
     Scale scaleSpec = spec ?: Scale.continuous()
-    boolean discrete = resolveDiscrete(values, scaleSpec, forceDiscrete)
+    boolean discrete = resolveDiscrete(values, spec, forceDiscrete)
     BigDecimal rangeStartValue = toBigDecimal(rangeStart)
     BigDecimal rangeEndValue = toBigDecimal(rangeEnd)
     if (discrete) {

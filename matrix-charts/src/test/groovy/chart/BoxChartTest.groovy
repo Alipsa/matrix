@@ -52,9 +52,9 @@ class BoxChartTest {
     ]).types([String, int]).build()
 
     def chart = BoxChart.create('JFX Box Chart', data, 'group', 'value')
-    def jfxChart = Plot.jfx(chart)
-    assertNotNull(jfxChart)
-    assertTrue(jfxChart instanceof JfxBoxChart, "Expected JfxBoxChart but got ${jfxChart.getClass().name}")
+    def jfxNode = Plot.jfx(chart)
+    assertNotNull(jfxNode)
+    assertTrue(jfxNode instanceof javafx.scene.Node, "Expected javafx.scene.Node but got ${jfxNode.getClass().name}")
   }
 
   @Test

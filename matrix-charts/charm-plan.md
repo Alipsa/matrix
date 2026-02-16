@@ -240,29 +240,47 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   `matrix-charts/section6-adapter.md`.
 
 ## 7. Rebuild Charts API on Top of Charm
-7.1 [ ] Audit `se.alipsa.matrix.charts` types for implementation status and usage before refactor:
+7.1 [x] Audit `se.alipsa.matrix.charts` types for implementation status and usage before refactor:
   note that `BubbleChart` is currently a stub (`create(...)` throws `Not yet implemented`, ~271 bytes).
-7.2 [ ] Decide Bubble chart strategy explicitly:
-  implement as Charm-backed chart now, or deprecate/drop until fully supported.
-  Record decision and migration impact in this plan.
-7.3 [ ] Refactor implemented `charts` chart types (`AreaChart`, `BarChart`, `BoxChart`, `Histogram`, `LineChart`, `PieChart`, `ScatterChart`) to produce Charm specs.
-7.4 [ ] Preserve the “chart type first” user flow in `charts` API:
+  Status: AreaChart (3 factories, 1 stub), BarChart (4 factories), BoxChart (2 factories),
+  Histogram (3 factories), LineChart (3 factories, 1 stub), PieChart (3 factories),
+  ScatterChart (1 factory), BubbleChart (stub).
+7.2 [x] Decide Bubble chart strategy explicitly:
+  Decision: Deprecate with `@Deprecated` annotation and doc comment. No known users, no tests.
+  Future Charm-backed implementation when POINT geom supports size aesthetic mapping.
+7.3 [x] Refactor implemented `charts` chart types (`AreaChart`, `BarChart`, `BoxChart`, `Histogram`, `LineChart`, `PieChart`, `ScatterChart`) to produce Charm specs.
+  Implemented via `CharmBridge.groovy` — package-private converter utility.
+  Added prerequisite geom types to Charm renderer: AREA, PIE, BOXPLOT rendering.
+7.4 [x] Preserve the "chart type first" user flow in `charts` API:
   choose chart type -> add data -> labels/legend -> style/customization.
-7.5 [ ] Keep `Plot` as a deprecated compatibility shim (documented), preserving method signatures where feasible:
+  All existing factory methods unchanged. CharmBridge converts at render time.
+7.5 [x] Keep `Plot` as a deprecated compatibility shim (documented), preserving method signatures where feasible:
   `Plot.jfx(chart)`, `Plot.png(chart, file, ...)`, `Plot.base64(chart, ...)`.
-7.6 [ ] Rewire `Plot` implementation to Charm/SVG-first export path:
-  `Plot.png(...)` -> chart renders to `Svg` -> `ChartToPng`,
-  `Plot.jfx(...)` -> chart renders to `Svg` -> `ChartToJfx`,
-  `Plot.base64(...)` -> `Svg` -> image bytes/base64 via shared chartexport path.
+  Breaking change: `Plot.jfx()` return type changed from `javafx.scene.chart.Chart` to `javafx.scene.Node` (Tier C).
+7.6 [x] Rewire `Plot` implementation to Charm/SVG-first export path:
+  `Plot.png(...)` -> `CharmBridge.renderSvg()` -> `ChartToPng.export(Svg, OutputStream)`,
+  `Plot.jfx(...)` -> `CharmBridge.convert()` -> `render()` -> `ChartToJfx.export(Svg)`,
+  `Plot.base64(...)` -> `Plot.png()` -> base64 encode.
   No JavaFX snapshot dependency in the new `Plot.png(...)` flow.
-7.7 [ ] Keep convenient defaults and expose explicit customization points that map cleanly to charm theme/scale/guide options.
-7.8 [ ] Evaluate `se.alipsa.matrix.charts.util` (`ColorUtil`, `DateUtil`, `StyleUtil`) for extraction/migration:
-  move shared utilities to `charm.util` (or a shared neutral package) and update both `gg` and `charts` call sites to avoid duplication.
-7.9 [ ] Update or replace tests under `matrix-charts/src/test/groovy/chart` to validate charm-backed outputs and compatibility shim behavior.
-7.10 [ ] Add/adjust focused compatibility tests for `Plot` methods (png/jfx/base64) to confirm preserved behavior with new implementation path.
-7.11 [ ] Add this section’s command log once executed:
-  `./gradlew :matrix-charts:test --tests "chart.*" -Pheadless=true`
-  `./gradlew :matrix-charts:test --tests "PngTest" -Pheadless=true`
+  Added `ChartToPng.export(String, OutputStream)` and `ChartToPng.export(Svg, OutputStream)` overloads.
+7.7 [x] Keep convenient defaults and expose explicit customization points that map cleanly to charm theme/scale/guide options.
+  Style → Theme mapping implemented in CharmBridge: plotBackgroundColor → panelBackground,
+  chartBackgroundColor → background, legendVisible → legend position, title/axis labels → labels.
+7.8 [x] Evaluate `se.alipsa.matrix.charts.util` (`ColorUtil`, `DateUtil`, `StyleUtil`) for extraction/migration:
+  Decision: Keep all in `charts.util`. ColorUtil used by 54 gg files (moving would touch too many files).
+  DateUtil is chart-domain utility. StyleUtil is JavaFX-specific, will be removed with JFX converters in section 9.
+7.9 [x] Update or replace tests under `matrix-charts/src/test/groovy/chart` to validate charm-backed outputs and compatibility shim behavior.
+  Added: `matrix-charts/src/test/groovy/chart/ChartsCharmIntegrationTest.groovy` (14 tests).
+  Updated: `BoxChartTest.testJfxBoxChartRendering` for new return type.
+  Updated: `export/ChartToPngTest` null-overload disambiguation.
+7.10 [x] Add/adjust focused compatibility tests for `Plot` methods (png/jfx/base64) to confirm preserved behavior with new implementation path.
+  Added: `matrix-charts/src/test/groovy/chart/PlotCompatibilityTest.groovy` (9 tests).
+  Tests: PNG to File (6 chart types), PNG to OutputStream, base64 data URI, JFX Node.
+7.11 [x] Add this section's command log once executed:
+  `./gradlew :matrix-charts:test --tests "chart.*" -Pheadless=true` — 39 tests, 39 passed
+  `./gradlew :matrix-charts:test --tests "charm.*" -Pheadless=true` — 36 tests, 36 passed
+  `./gradlew :matrix-charts:test --tests "gg.*" -Pheadless=true` — 1659 tests, 1659 passed
+  `./gradlew :matrix-charts:test -Pheadless=true` — 1760 tests, 1760 passed
 
 ## 8. Consolidate Export Path Through chartexport
 8.1 [ ] Standardize export inputs in `se.alipsa.matrix.chartexport` to accept `Svg` and Charm chart types directly.

@@ -51,6 +51,40 @@ class ChartToPng {
   }
 
   /**
+   * Export an SVG chart as PNG to an {@link OutputStream}.
+   *
+   * @param svgChart the SVG content as a {@link String}
+   * @param os the output stream to write the PNG to
+   * @throws IOException if an error occurs during writing
+   * @throws IllegalArgumentException if svgChart is null or empty, or os is null
+   */
+  static void export(String svgChart, OutputStream os) throws IOException {
+    if (svgChart == null || svgChart.isEmpty()) {
+      throw new IllegalArgumentException("svgChart cannot be null or empty")
+    }
+    if (os == null) {
+      throw new IllegalArgumentException("outputStream cannot be null")
+    }
+    SVGLoader loader = new SVGLoader()
+    ByteArrayInputStream svgStream = new ByteArrayInputStream(svgChart.getBytes(StandardCharsets.UTF_8))
+    SVGDocument svgDocument = loader.load(svgStream, null, LoaderContext.createDefault())
+
+    if (svgDocument == null) {
+      throw new IllegalArgumentException("Invalid SVG document")
+    }
+    int width = (int) svgDocument.size().width
+    int height = (int) svgDocument.size().height
+
+    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+    Graphics2D g = image.createGraphics()
+    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+    svgDocument.render(null, g)
+    g.dispose()
+
+    ImageIO.write(image, "png", os)
+  }
+
+  /**
    * Export an {@link Svg} chart as a PNG image file.
    *
    * @param svgChart the {@link Svg} object containing the chart
@@ -66,6 +100,24 @@ class ChartToPng {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
     export(svgChart.toXml(), targetFile)
+  }
+
+  /**
+   * Export an {@link Svg} chart as PNG to an {@link OutputStream}.
+   *
+   * @param svgChart the {@link Svg} object containing the chart
+   * @param os the output stream to write the PNG to
+   * @throws IOException if an error occurs during writing
+   * @throws IllegalArgumentException if svgChart or os is null
+   */
+  static void export(Svg svgChart, OutputStream os) throws IOException {
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart cannot be null")
+    }
+    if (os == null) {
+      throw new IllegalArgumentException("outputStream cannot be null")
+    }
+    export(svgChart.toXml(), os)
   }
 
   /**
