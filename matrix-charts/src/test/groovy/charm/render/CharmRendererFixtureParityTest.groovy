@@ -150,7 +150,7 @@ class CharmRendererFixtureParityTest {
         x = col.category
         y = col.value
       }
-      layer(Geom.BAR, [:])
+      layer(Geom.COL, [:])
       theme {
         legend { position = 'none' }
       }
@@ -162,9 +162,11 @@ class CharmRendererFixtureParityTest {
     Map<String, Integer> charmCounts = primitiveCounts(charmChart.render())
     Map<String, Integer> ggCounts = primitiveCounts(ggChart.render())
 
-    // Both should produce rectangles for bars
+    // Both should produce rectangles for bars; counts should match within scaffolding tolerance
     assertTrue(charmCounts.rect >= data.rowCount(), "Charm should render at least ${data.rowCount()} rects")
     assertTrue(ggCounts.rect >= data.rowCount(), "Gg should render at least ${data.rowCount()} rects")
+    assertTrue(Math.abs(charmCounts.rect - ggCounts.rect) <= 10,
+        "Charm rect count (${charmCounts.rect}) and gg rect count (${ggCounts.rect}) should be within tolerance")
   }
 
   @Test
@@ -200,6 +202,13 @@ class CharmRendererFixtureParityTest {
     assertTrue(ggCounts.rect > 0, "Gg should render rects for box bodies")
     assertTrue(charmCounts.line > 0, "Charm should render lines for whiskers/medians")
     assertTrue(ggCounts.line > 0, "Gg should render lines for whiskers/medians")
+    // Rect counts should be comparable between renderers
+    assertTrue(Math.abs(charmCounts.rect - ggCounts.rect) <= 10,
+        "Charm rect count (${charmCounts.rect}) and gg rect count (${ggCounts.rect}) should be within tolerance")
+    // Line counts differ more due to axis ticks, grid lines, and whisker rendering differences,
+    // so we use a wider tolerance but still verify they are in the same order of magnitude
+    assertTrue(Math.abs(charmCounts.line - ggCounts.line) <= 40,
+        "Charm line count (${charmCounts.line}) and gg line count (${ggCounts.line}) should be within tolerance")
   }
 
   private static Map<String, Integer> primitiveCounts(Svg svg) {
