@@ -66,9 +66,6 @@ dependencies {
   api("se.alipsa.groovy:gsvg:1.0.0")
   api("se.alipsa.groovy:gsvg-export:1.0.0")
 
-  // One of these is enough
-  //implementation "org.jfree:jfreechart:1.5.6"
-  api 'org.knowm.xchart:xchart:3.8.8'
   api 'se.alipsa:fxsvgimage:1.4.2'
   //api 'org.girod:fxsvgimage:1.4'
   api 'com.github.weisj:jsvg:2.0.0'
@@ -101,8 +98,7 @@ dependencies {
 test {
   testLogging.showStandardStreams = true
   // run using gradle -Pheadless=true test
-  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}",
-      "--add-opens", "javafx.controls/javafx.scene.chart=ALL-UNNAMED"
+  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
   useJUnitPlatform()
   testLogging {
     // set options for log level LIFECYCLE

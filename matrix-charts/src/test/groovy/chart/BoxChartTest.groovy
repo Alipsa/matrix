@@ -3,8 +3,6 @@ package chart
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.charts.BoxChart
 import se.alipsa.matrix.charts.Plot
-import se.alipsa.matrix.charts.jfx.JfxBoxChart
-import se.alipsa.matrix.charts.swing.SwingPlot
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*
@@ -76,20 +74,4 @@ class BoxChartTest {
     file.delete()
   }
 
-  @Test
-  void testBoxChartToSwingPng() {
-    def data = Matrix.builder().matrixName('BoxData').columns([
-        group: ['A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
-                'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B'],
-        value: [10, 12, 14, 15, 13, 11, 16, 18, 12, 14,
-                20, 22, 25, 28, 23, 21, 26, 30, 24, 22]
-    ]).types([String, int]).build()
-
-    def chart = BoxChart.create('Swing Box Chart', data, 'group', 'value')
-    File file = File.createTempFile("SwingBoxChart", ".png")
-    SwingPlot.png(chart, file)
-    assertTrue(file.exists(), "Swing PNG file should exist")
-    assertTrue(file.length() > 0, "Swing PNG file should not be empty")
-    file.delete()
-  }
 }

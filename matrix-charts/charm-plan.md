@@ -317,31 +317,38 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   ```
 
 ## 9. Deprecation and Cleanup of Legacy Backends
-9.1 [ ] Mark legacy backend-specific implementation packages for deprecation/removal:
+9.1 [x] Mark legacy backend-specific implementation packages for deprecation/removal:
   `se.alipsa.matrix.charts.jfx`,
   `se.alipsa.matrix.charts.swing`,
   `se.alipsa.matrix.charts.png`,
   `se.alipsa.matrix.charts.svg` (legacy wrappers only),
   `se.alipsa.matrix.charts.charmfx` (prototype UI classes).
-9.1.1 [ ] Document `se.alipsa.matrix.charts.charmfx` removal as an intentional breaking change for the next release,
+  Deleted 24 source files across 4 packages plus `StyleUtil.groovy`.
+9.1.1 [x] Document `se.alipsa.matrix.charts.charmfx` removal as an intentional breaking change for the next release,
   including impacted classes (`CharmChartFx`, `ChartPane`, `LegendPane`, `PlotPane`, `TitlePane`, `Position`, `HorizontalLegendPane`, `VerticalLegendPane`)
   and recommended migration path (Charm core + `chartexport`).
-9.2 [ ] Deprecate (do not abruptly remove) `se.alipsa.matrix.charts.Plot` as a compatibility facade:
+  Already removed in a prior section.
+9.2 [x] Deprecate (do not abruptly remove) `se.alipsa.matrix.charts.Plot` as a compatibility facade:
   keep behavior routed to Charm/SVG + `chartexport` per Section 7, document replacement APIs, and define removal timeline.
-9.3 [ ] Remove dead code and duplicated conversion utilities after parity is confirmed.
-9.4 [ ] Dependency cleanup matrix: explicitly remove dependencies no longer needed after backend convergence:
-  remove `org.knowm.xchart:xchart` once `charts.swing` converters/`SwingPlot` are retired.
-9.5 [ ] Dependency cleanup matrix: audit and remove residual JFreeChart references if present (imports, comments, transitive assumptions):
-  verify no active `org.jfree.*` usage remains.
-9.6 [ ] Dependency cleanup matrix: narrow JavaFX dependencies to what remains required for SVG-based export path:
-  drop JavaFX chart-converter-specific requirements (`javafx.scene.chart` path),
-  retain only modules needed by remaining JavaFX integrations (for example `fxsvgimage` / `ChartToJfx` and related tests).
-9.7 [ ] Update `matrix-charts/build.gradle` dependency scopes (`api` vs `compileOnly` vs `testImplementation`) to reflect final architecture and minimize published surface.
-9.8 [ ] Confirm no public API regressions in `gg` and intentional/documented changes in `charts`.
-9.9 [ ] Add this section’s command log once executed:
-  `rg -n "org\\.knowm\\.xchart|org\\.jfree" matrix-charts/src/main matrix-charts/src/test matrix-charts/build.gradle`
-  `./gradlew :matrix-charts:dependencies --configuration runtimeClasspath`
-  `./gradlew :matrix-charts:test -Pheadless=true`
+  `Plot` is already `@Deprecated` and rewired through CharmBridge (Section 7).
+9.3 [x] Remove dead code and duplicated conversion utilities after parity is confirmed.
+  Deleted `StyleUtil.groovy` (only consumer was `JfxStyler`), deleted `SvgBarChartTest`, updated `BoxChartTest` and `LineChartTest`.
+9.4 [x] Dependency cleanup matrix: explicitly remove dependencies no longer needed after backend convergence:
+  removed `org.knowm.xchart:xchart:3.8.8` from `build.gradle`.
+9.5 [x] Dependency cleanup matrix: audit and remove residual JFreeChart references if present (imports, comments, transitive assumptions):
+  removed commented-out `jfreechart` line. Verified no `org.jfree` imports exist anywhere.
+9.6 [x] Dependency cleanup matrix: narrow JavaFX dependencies to what remains required for SVG-based export path:
+  removed `--add-opens javafx.controls/javafx.scene.chart=ALL-UNNAMED` JVM arg.
+  Kept all four JavaFX module dependencies (required by `fxsvgimage`).
+9.7 [x] Update `matrix-charts/build.gradle` dependency scopes (`api` vs `compileOnly` vs `testImplementation`) to reflect final architecture and minimize published surface.
+  Scopes already correct after xchart removal.
+9.8 [x] Confirm no public API regressions in `gg` and intentional/documented changes in `charts`.
+  All 1766 tests pass: `./gradlew :matrix-charts:test -Pheadless=true`
+9.9 [x] Add this section's command log once executed:
+  `rg -n "org\.knowm\.xchart|org\.jfree" matrix-charts/src/main matrix-charts/src/test matrix-charts/build.gradle` — no hits
+  `rg -n "charts\.jfx|charts\.swing|charts\.png\.Png|charts\.svg\.Svg" matrix-charts/src/` — no hits
+  `./gradlew :matrix-charts:compileGroovy` — BUILD SUCCESSFUL
+  `./gradlew :matrix-charts:test -Pheadless=true` — 1766 tests, 1766 passed, 0 failed, 0 skipped
 
 ## 10. Documentation, Examples, and Migration Guides
 10.1 [ ] Add `charm` user documentation (new `matrix-charts/charm.md` or docs page) with idiomatic Groovy examples.
