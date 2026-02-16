@@ -5,7 +5,6 @@ import se.alipsa.matrix.core.Matrix
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.charts.LineChart
-import se.alipsa.matrix.charts.swing.SwingPlot
 import se.alipsa.matrix.charts.Plot
 import java.time.YearMonth
 
@@ -41,11 +40,6 @@ class LineChartTest {
     assertEquals(12, chart.valueSeries[0].size(), "Number of elements in y")
     File file = File.createTempFile("JfxLineChart", ".png")
     Plot.png(chart, file)
-    //println("Wrote ${file.getAbsolutePath()}")
-    assertTrue(file.exists())
-    file.delete()
-    file = File.createTempFile("SwingLineChart", ".png")
-    SwingPlot.png(chart, file)
     //println("Wrote ${file.getAbsolutePath()}")
     assertTrue(file.exists())
     file.delete()
