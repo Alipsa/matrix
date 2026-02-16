@@ -153,7 +153,7 @@ class ChartToPng {
    *
    * @param svgContent the SVG XML string
    * @return rendered image with transparency support
-   * @throws IllegalArgumentException if the SVG document is invalid
+   * @throws IllegalArgumentException if the SVG document is invalid or has non-positive dimensions
    */
   private static BufferedImage renderToImage(String svgContent) {
     SVGLoader loader = new SVGLoader()
@@ -162,8 +162,14 @@ class ChartToPng {
     if (svgDocument == null) {
       throw new IllegalArgumentException("Invalid SVG document")
     }
-    int width = (int) svgDocument.size().width
-    int height = (int) svgDocument.size().height
+    int width = (svgDocument.size().width as BigDecimal).ceil() as int
+    int height = (svgDocument.size().height as BigDecimal).ceil() as int
+    if (width <= 0 || height <= 0) {
+      throw new IllegalArgumentException(
+          "SVG document has non-positive dimensions (${width}x${height}); " +
+          "ensure the SVG specifies width/height attributes or a valid viewBox"
+      )
+    }
     BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
     Graphics2D g = image.createGraphics()
     g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
