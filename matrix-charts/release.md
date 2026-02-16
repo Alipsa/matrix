@@ -1,12 +1,44 @@
 # Matrix-charts Release History
 
+## v0.4.1 (unreleased)
+
+This release unifies all charting APIs under the Charm rendering engine and removes legacy backends.
+See [charm.md](charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md) for the gg API guide.
+
+**Architecture**
+  - Introduced `se.alipsa.matrix.charm` as the single rendering engine for all three charting APIs (Charm, gg, charts).
+  - All chart rendering now produces SVG via gsvg. Export to PNG/JPEG/JavaFX/Swing goes through `se.alipsa.matrix.chartexport`.
+  - The gg API (`se.alipsa.matrix.gg`) is preserved as a thin compatibility wrapper delegating to Charm.
+  - The charts API (`se.alipsa.matrix.charts`) is backed by Charm via `CharmBridge`. `Plot` is `@Deprecated` but functional.
+  - `Plot.png()` no longer requires JavaFX toolkit initialization.
+
+**Breaking Changes**
+  - **`se.alipsa.matrix.charts.charmfx` removed.** Deleted classes: `CharmChartFx`, `ChartPane`, `LegendPane`, `PlotPane`, `TitlePane`, `Position`, `HorizontalLegendPane`, `VerticalLegendPane`. Use Charm core + `chartexport` instead.
+  - **`Plot.jfx()` return type changed** from `javafx.scene.chart.Chart` to `javafx.scene.Node`. Code using `view()` or similar methods that accept `Node` is unaffected.
+  - **Legacy backend packages removed:** `se.alipsa.matrix.charts.jfx`, `se.alipsa.matrix.charts.swing`, `se.alipsa.matrix.charts.png`, `se.alipsa.matrix.charts.svg`, and `se.alipsa.matrix.charts.util.StyleUtil`. Use `chartexport` classes (`ChartToPng`, `ChartToJfx`, `ChartToSwing`, `ChartToJpeg`, `ChartToImage`) instead.
+  - **`org.knowm.xchart:xchart` dependency removed.** If you depended on xchart transitively, add it directly.
+
+**New Features**
+  - Charm closure DSL for idiomatic Groovy chart specifications (`Charts.plot(data) { ... }`).
+  - Immutable compiled chart models (`Chart`) with deterministic lifecycle (spec -> build -> render).
+  - Typed column references via `col` proxy (`col.name`, `col['name']`).
+  - `@CompileStatic` support throughout Charm core.
+  - Charm export overloads added to all five chartexport classes.
+  - `verifyGgRegression` Gradle task for pre-merge gg test regression gating.
+
+**Documentation**
+  - Added [charm.md](charm.md) with comprehensive Charm DSL guide and migration notes.
+  - Updated [README.md](README.md) to position Charm as the core API.
+  - Updated [ggPlot.md](ggPlot.md) with charm-backed implementation note.
+  - Refreshed `examples/charm/SimpleCharmChart.groovy` to use the new Charm DSL.
+
 ## v0.4.0, 2026-01-31
 
 This release introduces a ggplot2-style charting module. See [ggPlot.md](ggPlot.md) for more details.
 
 **API and Architecture Improvements**
   - Refactored the ChartBuilder API to use setLegend, setGridLines, setTitle, setSubTitle, setCoordinateSystem, and a new setStyle method instead of multiple add* methods, making the API more consistent and extensible (ChartBuilder.groovy).
-  - Introduced a new Style class and made Title and SubTitle extend a new abstract Text class, improving the internal structure and potential for future styling features (Style.groovy, Title.groovy, SubTitle.groovy, Text.groovy). 
+  - Introduced a new Style class and made Title and SubTitle extend a new abstract Text class, improving the internal structure and potential for future styling features (Style.groovy, Title.groovy, SubTitle.groovy, Text.groovy).
   - GGplot class is the entrace point for the ggplot2 inspired chart api.
   - Annotated the classes with @CompileStatic for performance and type safety.
 

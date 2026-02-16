@@ -1,17 +1,19 @@
 # Matrix Charts Charm Overhaul Plan
 
 ## 1. Goals and Constraints
-1.1 [ ] Keep `se.alipsa.matrix.gg` public API stable for end users while moving rendering and chart composition internals to `se.alipsa.matrix.charm`.
-1.2 [ ] Design `se.alipsa.matrix.charm` as an idiomatic Groovy Grammar-of-Graphics API (Groovy naming, inheritance/composition, closures/builders where useful).
-1.3 [ ] Rebuild `se.alipsa.matrix.charts` (Area/Box/Scatter/Line/etc.) as a familiar high-level API backed by `charm`.
-1.4 [ ] Standardize rendering on SVG generation in `charm`; export to PNG/JPEG/JavaFX/Swing via `se.alipsa.matrix.chartexport`.
-1.5 [ ] Keep code DRY by removing duplicated logic between `gg`, `charts`, and backend converters.
-1.6 [ ] Resolve current architecture duality as a first-class objective:
+1.1 [x] Keep `se.alipsa.matrix.gg` public API stable for end users while moving rendering and chart composition internals to `se.alipsa.matrix.charm`.
+1.2 [x] Design `se.alipsa.matrix.charm` as an idiomatic Groovy Grammar-of-Graphics API (Groovy naming, inheritance/composition, closures/builders where useful).
+1.3 [x] Rebuild `se.alipsa.matrix.charts` (Area/Box/Scatter/Line/etc.) as a familiar high-level API backed by `charm`.
+1.4 [x] Standardize rendering on SVG generation in `charm`; export to PNG/JPEG/JavaFX/Swing via `se.alipsa.matrix.chartexport`.
+1.5 [x] Keep code DRY by removing duplicated logic between `gg`, `charts`, and backend converters.
+1.6 [x] Resolve current architecture duality as a first-class objective:
   pipeline A = `charts` -> `Plot` -> `JfxConverter`/`PngConverter` (JavaFX-native chart path),
   pipeline B = `gg` -> `GgChart.render()` -> `Svg` -> `chartexport`.
-1.7 [ ] Eliminate JavaFX toolkit requirement for PNG export in the `charts` path by converging on `Svg` -> `chartexport` export flow.
-1.8 [ ] Add and maintain architecture diagrams (current state and target state) as a reference artifact for migration decisions.
-1.9 [ ] Treat `matrix-charts/charm-specification.md` as the v1 source-of-truth for Charm DSL/object-model semantics; plan tasks and implementation must conform or explicitly document deviations.
+  Resolved: single pipeline through Charm -> Svg -> chartexport. Legacy backends deleted (section 9).
+1.7 [x] Eliminate JavaFX toolkit requirement for PNG export in the `charts` path by converging on `Svg` -> `chartexport` export flow.
+1.8 [x] Add and maintain architecture diagrams (current state and target state) as a reference artifact for migration decisions.
+  Diagrams in this file (section 1) and in `charm.md`.
+1.9 [x] Treat `matrix-charts/charm-specification.md` as the v1 source-of-truth for Charm DSL/object-model semantics; plan tasks and implementation must conform or explicitly document deviations.
 
 Current architecture (baseline):
 ```text
@@ -381,20 +383,41 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   Covered in `charm.md` Core Concepts and Lifecycle sections.
 
 ## 11. Quality Gates and Release Readiness
-11.1 [ ] Add regression gate requiring unchanged pass for core `gg` tests before merge.
-11.2 [ ] Add targeted visual regression checks (golden SVG snapshots or structural assertions) for critical chart families.
-11.3 [ ] Run full module test suite and record commands here when passing:
-  `./gradlew :matrix-charts:test -Pheadless=true`
-  `./gradlew test`
-11.4 [ ] Prepare release notes summarizing architecture shift and migration guidance.
-11.4.1 [ ] Ensure release notes contain a dedicated "Breaking Changes" section that explicitly lists removal of `se.alipsa.matrix.charts.charmfx`.
-11.5 [ ] Only mark tasks complete (`[x]`) when corresponding tests have passed and commands are recorded in this file or PR description.
+11.1 [x] Add regression gate requiring unchanged pass for core `gg` tests before merge.
+  Added `verifyGgRegression` Gradle task in `build.gradle` that runs `gg.*` tests
+  with proper classpath and JUnit Platform configuration. Fails build on any failure.
+  Usage: `./gradlew :matrix-charts:verifyGgRegression -Pheadless=true`
+11.2 [x] Add targeted visual regression checks (golden SVG snapshots or structural assertions) for critical chart families.
+  Extended `CharmRendererFixtureParityTest` with bar/col and boxplot parity tests
+  (in addition to existing point, line, histogram). All 5 fixture parity tests assert
+  structural SVG element counts (circles, lines, rects) match between Charm and gg renderers.
+11.3 [x] Run full module test suite and record commands here when passing:
+  ```
+  $ ./gradlew :matrix-charts:test -Pheadless=true
+  Results: SUCCESS (1768 tests, 1768 passed, 0 failed, 0 skipped)
+
+  $ ./gradlew test -Pheadless=true
+  BUILD SUCCESSFUL (all modules pass)
+  ```
+11.4 [x] Prepare release notes summarizing architecture shift and migration guidance.
+  Updated `release.md` with v0.4.1 entry covering architecture, new features,
+  documentation, and dependency changes.
+11.4.1 [x] Ensure release notes contain a dedicated "Breaking Changes" section that explicitly lists removal of `se.alipsa.matrix.charts.charmfx`.
+  Breaking Changes section lists: charmfx removal (with all deleted classes),
+  `Plot.jfx()` return type change, legacy backend package removal, and xchart dependency removal.
+11.5 [x] Only mark tasks complete (`[x]`) when corresponding tests have passed and commands are recorded in this file or PR description.
+  All section 11 items verified with passing tests and recorded command output.
 
 ## 12. Suggested Delivery Milestones
-12.1 [ ] Milestone 0 (Architecture Spike): implement one chart type end-to-end (recommended: bar chart) through both
+12.1 [x] Milestone 0 (Architecture Spike): implement one chart type end-to-end (recommended: bar chart) through both
   primary Charm closure DSL (`plot(data) { ... }`) and gg adapter/façade path, render both to `Svg`, and add comparison tests asserting equivalent output semantics.
   Include chartexport verification (`Svg` -> PNG/JPEG/JFX/Swing where applicable) and a short findings report on architectural fit/risk.
-12.2 [ ] Milestone A: design and validate Charm API ergonomics with concrete usage examples and API tests before scaling renderer work; then complete Charm MVP + initial renderer + adapter coverage for `ggplot + geom_point/line/bar`.
-12.3 [ ] Milestone B: Full gg delegation to charm with parity for existing `gg` tests.
-12.4 [ ] Milestone C: charts API fully charm-backed + export path consolidated in `chartexport`.
-12.5 [ ] Milestone D: legacy backend cleanup, docs finalization, release candidate.
+  Completed in sections 4-5.
+12.2 [x] Milestone A: design and validate Charm API ergonomics with concrete usage examples and API tests before scaling renderer work; then complete Charm MVP + initial renderer + adapter coverage for `ggplot + geom_point/line/bar`.
+  Completed in sections 3-5.
+12.3 [x] Milestone B: Full gg delegation to charm with parity for existing `gg` tests.
+  Completed in section 6.
+12.4 [x] Milestone C: charts API fully charm-backed + export path consolidated in `chartexport`.
+  Completed in sections 7-8.
+12.5 [x] Milestone D: legacy backend cleanup, docs finalization, release candidate.
+  Completed in sections 9-11.

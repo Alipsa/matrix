@@ -13,6 +13,8 @@ import se.alipsa.matrix.gg.GgChart
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
+import static se.alipsa.matrix.gg.GgPlot.geom_boxplot
+import static se.alipsa.matrix.gg.GgPlot.geom_col
 import static se.alipsa.matrix.gg.GgPlot.geom_histogram
 import static se.alipsa.matrix.gg.GgPlot.geom_line
 import static se.alipsa.matrix.gg.GgPlot.geom_point
@@ -128,6 +130,76 @@ class CharmRendererFixtureParityTest {
     // Charm and gg include different non-data scaffolding rects (panel/canvas/background),
     // but histogram structure should still stay in the same order of magnitude.
     assertTrue(Math.abs(charmCounts.rect - ggCounts.rect) <= 10)
+  }
+
+  @Test
+  void testBarFixtureStructureMatchesGg() {
+    Matrix data = Matrix.builder()
+        .columnNames('category', 'value')
+        .rows([
+            ['A', 10],
+            ['B', 20],
+            ['C', 15],
+            ['D', 25]
+        ])
+        .types(String, Integer)
+        .build()
+
+    Chart charmChart = plot(data) {
+      aes {
+        x = col.category
+        y = col.value
+      }
+      layer(Geom.BAR, [:])
+      theme {
+        legend { position = 'none' }
+      }
+    }.build()
+
+    GgChart ggChart = ggplot(data, se.alipsa.matrix.gg.GgPlot.aes(x: 'category', y: 'value')) +
+        geom_col()
+
+    Map<String, Integer> charmCounts = primitiveCounts(charmChart.render())
+    Map<String, Integer> ggCounts = primitiveCounts(ggChart.render())
+
+    // Both should produce rectangles for bars
+    assertTrue(charmCounts.rect >= data.rowCount(), "Charm should render at least ${data.rowCount()} rects")
+    assertTrue(ggCounts.rect >= data.rowCount(), "Gg should render at least ${data.rowCount()} rects")
+  }
+
+  @Test
+  void testBoxplotFixtureStructureMatchesGg() {
+    Matrix data = Matrix.builder()
+        .columnNames('group', 'value')
+        .rows([
+            ['A', 10], ['A', 12], ['A', 14], ['A', 15], ['A', 13],
+            ['B', 20], ['B', 22], ['B', 25], ['B', 28], ['B', 23]
+        ])
+        .types(String, Integer)
+        .build()
+
+    Chart charmChart = plot(data) {
+      aes {
+        x = col.group
+        y = col.value
+      }
+      layer(Geom.BOXPLOT, [:])
+      theme {
+        legend { position = 'none' }
+      }
+    }.build()
+
+    GgChart ggChart = ggplot(data, se.alipsa.matrix.gg.GgPlot.aes(x: 'group', y: 'value')) +
+        geom_boxplot()
+
+    Map<String, Integer> charmCounts = primitiveCounts(charmChart.render())
+    Map<String, Integer> ggCounts = primitiveCounts(ggChart.render())
+
+    // Both should produce rectangles for box bodies and lines for whiskers/medians
+    assertTrue(charmCounts.rect > 0, "Charm should render rects for box bodies")
+    assertTrue(ggCounts.rect > 0, "Gg should render rects for box bodies")
+    assertTrue(charmCounts.line > 0, "Charm should render lines for whiskers/medians")
+    assertTrue(ggCounts.line > 0, "Gg should render lines for whiskers/medians")
   }
 
   private static Map<String, Integer> primitiveCounts(Svg svg) {

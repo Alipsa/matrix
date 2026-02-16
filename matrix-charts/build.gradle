@@ -140,6 +140,19 @@ test {
   }
 }
 
+// Regression gate: run gg tests as a pre-merge quality check
+tasks.register('verifyGgRegression', Test) {
+  description = 'Runs gg test suite as a regression gate before merge'
+  group = 'verification'
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+  useJUnitPlatform()
+  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  filter {
+    includeTestsMatching 'gg.*'
+  }
+}
+
 //Maven Central uploads
 task javadocJar(type: Jar, dependsOn: groovydoc) {
   archiveClassifier.set 'javadoc'
