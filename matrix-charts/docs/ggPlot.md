@@ -36,8 +36,8 @@ The API is designed to be nearly identical to R's ggplot2 library, making it eas
 ### Basic Setup
 
 ```groovy
-@Grab('se.alipsa.matrix:matrix-core:3.6.0')
-@Grab('se.alipsa.matrix:matrix-charts:0.4.0')
+@Grab('se.alipsa.matrix:matrix-core:3.7.0')
+@Grab('se.alipsa.matrix:matrix-charts:0.5.0')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2')
 @Grab('se.alipsa.matrix:matrix-stats:2.2.1')
 

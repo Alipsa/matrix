@@ -1,9 +1,9 @@
 # Matrix-charts Release History
 
-## v0.4.1 (unreleased)
+## v0.5.0 (unreleased)
 
 This release unifies all charting APIs under the Charm rendering engine and removes legacy backends.
-See [charm.md](charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md) for the gg API guide.
+See [charm.md](docs/charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md) for the gg API guide.
 
 **Architecture**
   - Introduced `se.alipsa.matrix.charm` as the single rendering engine for all three charting APIs (Charm, gg, charts).
@@ -27,9 +27,9 @@ See [charm.md](charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md) for
   - `verifyGgRegression` Gradle task for pre-merge gg test regression gating.
 
 **Documentation**
-  - Added [charm.md](charm.md) with comprehensive Charm DSL guide and migration notes.
+  - Added [charm.md](docs/charm.md) with comprehensive Charm DSL guide and migration notes.
   - Updated [README.md](README.md) to position Charm as the core API.
-  - Updated [ggPlot.md](ggPlot.md) with charm-backed implementation note.
+  - Updated [ggPlot.md](docs/ggPlot.md) with charm-backed implementation note.
   - Refreshed `examples/charm/SimpleCharmChart.groovy` to use the new Charm DSL.
 
 ## v0.4.0, 2026-01-31

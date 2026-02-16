@@ -8,12 +8,12 @@ An SVG chart can be exported to Swing, JavaFX, Image, PNG, or JPG using
 the exporters in the se.alipsa.matrix.chartexport package. 
 
 There are 3 APIs in matrix-charts, all sharing the same Charm rendering engine:
-1. **[Charm](charm.md)** The core chart library based on the principles of Grammar of Graphics.
+1. **[Charm](docs/charm.md)** The core chart library based on the principles of Grammar of Graphics.
    Idiomatic Groovy closure DSL with typed specifications and immutable compiled charts.
 2. **Charts** The `se.alipsa.matrix.charts` package contains charts in a "familiar style"
     (begin with the chart type, e.g. `AreaChart`, then add data and styling).
     Backed by Charm internally.
-3. **[gg](ggPlot.md)** A compatibility layer mimicking the ggplot2 API in R, making migrations
+3. **[gg](docs/ggPlot.md)** A compatibility layer mimicking the ggplot2 API in R, making migrations
     from R applications easy. Delegates to Charm under the hood.
 
 > Note: the [matrix-xchart](../matrix-xchart/readme.md) module exists as an alternative charting module
@@ -21,7 +21,7 @@ There are 3 APIs in matrix-charts, all sharing the same Charm rendering engine:
 
 To use matrix-charts, add the following dependencies to your gradle build script
 ```groovy
-implementation(platform( 'se.alipsa.matrix:matrix-bom:2.4.0'))
+implementation(platform( 'se.alipsa.matrix:matrix-bom:2.4.1'))
 implementation 'se.alipsa.matrix-core'
 implementation 'se.alipsa.matrix:matrix-charts'
 implementation 'se.alipsa.matrix:matrix-stats'
@@ -34,7 +34,7 @@ implementation 'se.alipsa.matrix:matrix-stats'
     <dependency>
       <groupId>se.alipsa.matrix</groupId>
       <artifactId>matrix-bom</artifactId>
-      <version>2.4.0</version>
+      <version>2.4.1</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -79,7 +79,7 @@ def chart = plot(Dataset.mpg()) {
 chart.writeTo('mpg_chart.svg')
 ```
 
-See **[charm.md](charm.md)** for comprehensive documentation.
+See **[charm.md](docs/charm.md)** for comprehensive documentation.
 
 ## Charts Example
 
@@ -115,8 +115,8 @@ The library also supports ggplot2-style charting via the GgPlot class. The API c
 
 **Quick Example:**
 ```groovy
-@Grab('se.alipsa.matrix:matrix-core:3.6.0')
-@Grab('se.alipsa.matrix:matrix-charts:0.4.0')
+@Grab('se.alipsa.matrix:matrix-core:3.7.0')
+@Grab('se.alipsa.matrix:matrix-charts:0.5.0')
 @Grab('se.alipsa.matrix:matrix-datasets:2.1.2')
 @Grab('se.alipsa.matrix:matrix-stats:2.2.1')
 
@@ -142,7 +142,7 @@ write(chart.render(), new File('my_plot.svg'))
 
 **Getting Started:**
 
-See **[ggPlot.md](ggPlot.md)** for comprehensive documentation including:
+See **[ggPlot.md](docs/ggPlot.md)** for comprehensive documentation including:
 - Complete API reference
 - Core concepts (aesthetics, geoms, scales, coordinates, facets, themes)
 - Detailed examples
