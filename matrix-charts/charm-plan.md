@@ -343,7 +343,8 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
 9.7 [x] Update `matrix-charts/build.gradle` dependency scopes (`api` vs `compileOnly` vs `testImplementation`) to reflect final architecture and minimize published surface.
   Scopes already correct after xchart removal.
 9.8 [x] Confirm no public API regressions in `gg` and intentional/documented changes in `charts`.
-  All 1766 tests pass: `./gradlew :matrix-charts:test -Pheadless=true`
+  Full test suite passes (see 9.9 command log). Test count dropped from 1768 (section 8) to 1766
+  after removing `SvgBarChartTest` and `testBoxChartToSwingPng`.
 9.9 [x] Add this section's command log once executed:
   `rg -n "org\.knowm\.xchart|org\.jfree" matrix-charts/src/main matrix-charts/src/test matrix-charts/build.gradle` — no hits
   `rg -n "charts\.jfx|charts\.swing|charts\.png\.Png|charts\.svg\.Svg" matrix-charts/src/` — no hits
