@@ -7,15 +7,16 @@ Matrix-charts is a "native" chart library that creates charts as SVGs.
 An SVG chart can be exported to Swing, JavaFX, Image, PNG, or JPG using 
 the exporters in the se.alipsa.matrix.chartexport package. 
 
-There are 3 APIs in matrix-charts:
-1. **Charm** This is the core chart library based on the principles of Grammar Of Graphics.
-2. **Charts** The se.alipsa.matrix.chart package contains charts in a "familiar style" for those used to
-    chart libraries such as xcharts and JavaFX charts (i.e. you begin with the chart type (e.g. AreaChart), 
-    then add data and styling).
-3. **[gg](ggPlot.md)** This is a compatibility layer mimicking the ggplot2 API in R making migrations from
-    R applications easy.
+There are 3 APIs in matrix-charts, all sharing the same Charm rendering engine:
+1. **[Charm](charm.md)** The core chart library based on the principles of Grammar of Graphics.
+   Idiomatic Groovy closure DSL with typed specifications and immutable compiled charts.
+2. **Charts** The `se.alipsa.matrix.charts` package contains charts in a "familiar style"
+    (begin with the chart type, e.g. `AreaChart`, then add data and styling).
+    Backed by Charm internally.
+3. **[gg](ggPlot.md)** A compatibility layer mimicking the ggplot2 API in R, making migrations
+    from R applications easy. Delegates to Charm under the hood.
 
-> Note: the [matrix-xchart](../matrix-xchart/readme.md) module exists as an alternative charting module 
+> Note: the [matrix-xchart](../matrix-xchart/readme.md) module exists as an alternative charting module
 > making it easy to use the xcharts library with the rest of the matrix ecosystem.
 
 To use matrix-charts, add the following dependencies to your gradle build script
@@ -58,12 +59,35 @@ implementation 'se.alipsa.matrix:matrix-stats'
 ```
 
 
-## Example usage
+## Charm Example (Recommended)
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plot
+import se.alipsa.matrix.datasets.Dataset
+
+def chart = plot(Dataset.mpg()) {
+  aes {
+    x = col.cty
+    y = col.hwy
+    color = col['class']
+  }
+  points { size = 2 }
+  smooth { method = 'lm' }
+  labels { title = 'City vs Highway MPG' }
+}.build()
+
+chart.writeTo('mpg_chart.svg')
+```
+
+See **[charm.md](charm.md)** for comprehensive documentation.
+
+## Charts Example
 
 ```groovy
 import java.time.LocalDate
 import se.alipsa.matrix.core.*
 import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.chartexport.ChartToPng
 
 def empData = Matrix.builder().data(
     emp_id: 1..5,
@@ -77,12 +101,12 @@ def areaChart = AreaChart.create("Salaries", empData, "emp_name", "salary")
 def barChart = BarChart.createVertical("Salaries", empData, "emp_name", ChartType.NONE, "salary")
 def pieChart = PieChart.create("Salaries", empData, "emp_name", "salary")
 
-// Use the Plot class to output the chart, e.g:
-Plot.png(areaChart, new File("areaChart.png"))
+// Export to PNG via chartexport
+ChartToPng.export(areaChart, new File("areaChart.png"))
 
+// Or via the deprecated Plot class
+Plot.png(barChart, new File("barChart.png"))
 Plot.svg(barChart, new File("barChart.svg"))
-
-javafx.scene.chart.Chart jfxPieChart = Plot.jfx(pieChart)
 ```
 
 # GGPlotting
