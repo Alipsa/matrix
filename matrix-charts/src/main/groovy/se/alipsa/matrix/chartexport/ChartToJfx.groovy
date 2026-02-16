@@ -25,7 +25,7 @@ class ChartToJfx {
     if (svgChart == null) {
       throw new IllegalArgumentException("svgChart must not be null")
     }
-    return SVGLoader.load(svgChart)
+    SVGLoader.load(svgChart)
   }
 
   /**
@@ -39,7 +39,7 @@ class ChartToJfx {
     if (chart == null) {
       throw new IllegalArgumentException("chart must not be null")
     }
-    return SVGLoader.load(chart.toXml())
+    SVGLoader.load(chart.toXml())
   }
 
   /**
