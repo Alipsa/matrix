@@ -323,7 +323,7 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   `se.alipsa.matrix.charts.png`,
   `se.alipsa.matrix.charts.svg` (legacy wrappers only),
   `se.alipsa.matrix.charts.charmfx` (prototype UI classes).
-  Deleted 24 source files across 4 packages plus `StyleUtil.groovy`.
+  Deleted 25 source files (11 jfx + 10 swing + 1 png + 2 svg + `StyleUtil.groovy`).
 9.1.1 [x] Document `se.alipsa.matrix.charts.charmfx` removal as an intentional breaking change for the next release,
   including impacted classes (`CharmChartFx`, `ChartPane`, `LegendPane`, `PlotPane`, `TitlePane`, `Position`, `HorizontalLegendPane`, `VerticalLegendPane`)
   and recommended migration path (Charm core + `chartexport`).
