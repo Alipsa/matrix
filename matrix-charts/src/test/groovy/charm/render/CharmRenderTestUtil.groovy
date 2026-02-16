@@ -72,9 +72,16 @@ class CharmRenderTestUtil {
     if (chart == null) {
       throw new IllegalArgumentException('chart cannot be null')
     }
-    chart.width = width
-    chart.height = height
-    chart.render()
+    int originalWidth = chart.width
+    int originalHeight = chart.height
+    try {
+      chart.width = width
+      chart.height = height
+      chart.render()
+    } finally {
+      chart.width = originalWidth
+      chart.height = originalHeight
+    }
   }
 
   /**
@@ -186,7 +193,11 @@ class CharmRenderTestUtil {
     if (in == null) {
       throw new IllegalArgumentException("Resource not found: ${resourcePath}")
     }
-    String text = in.getText('UTF-8').trim()
+    String text = ''
+    in.withCloseable { InputStream stream ->
+      text = stream.getText('UTF-8')
+    }
+    text = text.trim()
     if (text.isEmpty()) {
       return []
     }
