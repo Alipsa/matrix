@@ -36,21 +36,6 @@ class CharmBridge {
   }
 
   /**
-   * Converts a legacy charts {@link Chart} to a Charm {@link se.alipsa.matrix.charm.Chart}
-   * with explicit dimensions.
-   *
-   * @param chart the legacy chart
-   * @param width target width in pixels
-   * @param height target height in pixels
-   * @return an immutable Charm chart
-   */
-  static se.alipsa.matrix.charm.Chart convert(Chart chart, int width, int height) {
-    PlotSpec spec = buildSpec(chart)
-    se.alipsa.matrix.charm.Chart charmChart = spec.build()
-    charmChart
-  }
-
-  /**
    * Renders a legacy chart directly to SVG with explicit dimensions.
    *
    * @param chart the legacy chart
