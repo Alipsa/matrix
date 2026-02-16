@@ -354,7 +354,7 @@ Modules like matrix-smile use Groovy extension methods registered via `META-INF/
 private List<BigDecimal> calculateValues(BigDecimal x1, BigDecimal x2) {
   BigDecimal midpoint = (x1 + x2) / 2
   BigDecimal distance = (x2 - x1).abs()
-  return [midpoint, distance]
+  [midpoint, distance]
 }
 
 // Avoid - Using double when BigDecimal would be natural
@@ -369,7 +369,7 @@ private List<Double> calculateValues(double x1, double x2) {
 ```groovy
 // Good
 private BigDecimal computeOffset(BigDecimal value, BigDecimal curvature) {
-  return value * curvature * 0.5
+  value * curvature * 0.5
 }
 
 // Avoid
@@ -756,6 +756,15 @@ for (int i = minExp; i <= maxExp; i++) {
   result << value
 }
 ```
+### Use of the return statement
+Use the `return` keyword only when we need to return early, otherwise use implicit return.
+
+| Feature    | Idiomatic Groovy (good)   | Java-Style Groovy (bad) |
+|------------|---------------------------|-------------------------|
+| Last Line  | Implicit (No return)      | Explicit return         |
+| Early Exit | Explicit return           | Explicit return         |
+| Closures   | Implicit                  | Implicit                |
+| Vibe       | Clean, functional, modern | Verbose, traditional    |
 
 ### Modern Switch Expressions (JDK 14+ / Groovy 5+)
 

@@ -3,7 +3,22 @@
 # Charts
 Groovy library for creating graphs based on Matrix or [][] data
 
-add the following dependencies to your gradle build script
+Matrix-charts is a "native" chart library that creates charts as SVGs. 
+An SVG chart can be exported to Swing, JavaFX, Image, PNG, or JPG using 
+the exporters in the se.alipsa.matrix.chartexport package. 
+
+There are 3 APIs in matrix-charts:
+1. **Charm** This is the core chart library based on the principles of Grammar Of Graphics.
+2. **Charts** The se.alipsa.matrix.chart package contains charts in a "familiar style" for those used to
+    chart libraries such as xcharts and JavaFX charts (i.e. you begin with the chart type (e.g. AreaChart), 
+    then add data and styling).
+3. **[gg](ggPlot.md)** This is a compatibility layer mimicking the ggplot2 API in R making migrations from
+    R applications easy.
+
+> Note: the [matrix-xchart](../matrix-xchart/readme.md) module exists as an alternative charting module 
+> making it easy to use the xcharts library with the rest of the matrix ecosystem.
+
+To use matrix-charts, add the following dependencies to your gradle build script
 ```groovy
 implementation(platform( 'se.alipsa.matrix:matrix-bom:2.4.0'))
 implementation 'se.alipsa.matrix-core'

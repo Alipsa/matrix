@@ -283,18 +283,38 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   `./gradlew :matrix-charts:test -Pheadless=true` — 1760 tests, 1760 passed
 
 ## 8. Consolidate Export Path Through chartexport
-8.1 [ ] Standardize export inputs in `se.alipsa.matrix.chartexport` to accept `Svg` and Charm chart types directly.
-8.2 [ ] Add Charm overloads to export entrypoints (`ChartToPng`, `ChartToJpeg`, `ChartToJfx`, `ChartToSwing`, `ChartToImage`) that delegate through Charm render -> `Svg`.
-8.3 [ ] Keep `GgChart` overloads as compatibility shims initially, internally delegating to shared SVG export path.
-8.4 [ ] Remove backend-specific chart generation dependencies from `charts` (direct jfx/swing/png converters) where replaced by chartexport.
-8.5 [ ] Explicitly retire JavaFX snapshot dependency for `charts` PNG output:
-  converged path should be `chart` -> Charm render (`Svg`) -> `ChartToPng`, without JavaFX toolkit initialization.
-8.6 [ ] Refactor/update:
-  `ChartToPng.groovy`, `ChartToJpeg.groovy`, `ChartToJfx.groovy`, `ChartToSwing.groovy`, `ChartToImage.groovy`.
-8.7 [ ] Add/refresh tests in `matrix-charts/src/test/groovy/export` for all supported export targets via SVG path.
-8.8 [ ] Add this section’s command log once executed:
-  `./gradlew :matrix-charts:test --tests "PngTest" -Pheadless=true`
-  `./gradlew :matrix-charts:test --tests "export.*" -Pheadless=true`
+8.1 [x] Standardize export inputs in `se.alipsa.matrix.chartexport` to accept `Svg` and Charm chart types directly.
+  All five export classes now accept `Svg`, `GgChart`, and Charm `Chart` inputs uniformly.
+8.2 [x] Add Charm overloads to export entrypoints (`ChartToPng`, `ChartToJpeg`, `ChartToJfx`, `ChartToSwing`, `ChartToImage`) that delegate through Charm render -> `Svg`.
+  Each class received `export(CharmChart)` overloads that call `chart.render()` then delegate to the `Svg` path.
+  `ChartToPng` also has `export(CharmChart, OutputStream)`.
+  `ChartToSwing.export(Object)` dispatch updated to handle `CharmChart` instances.
+8.3 [x] Keep `GgChart` overloads as compatibility shims initially, internally delegating to shared SVG export path.
+  Existing `GgChart` overloads remain unchanged; they already delegate through `chart.render()` → `Svg` path.
+8.4 [x] Remove backend-specific chart generation dependencies from `charts` (direct jfx/swing/png converters) where replaced by chartexport.
+  `Plot.groovy` was rewired in Section 7 to use `CharmBridge.renderSvg()` → `ChartToPng.export(Svg)`.
+  `Plot` no longer imports or calls `JfxConverter` or `PngConverter`.
+8.5 [x] Explicitly retire JavaFX snapshot dependency for `charts` PNG output:
+  `Plot.png()` now follows: `Chart` → `CharmBridge.renderSvg()` → `Svg` → `ChartToPng.export(Svg, OutputStream)` using jsvg (no JavaFX toolkit).
+  `PngConverter` (JavaFX snapshot-based) is dead code with zero callers from `charts` path.
+8.6 [x] Refactor/update:
+  `ChartToPng.groovy`: DRY-extracted shared jsvg logic into `renderToImage(String)`, added Charm `Chart` overloads (File + OutputStream).
+  `ChartToJpeg.groovy`: Added `export(CharmChart, File, BigDecimal)` with default quality.
+  `ChartToJfx.groovy`: Added `export(CharmChart)`.
+  `ChartToSwing.groovy`: Added `export(CharmChart)`, updated `export(Object)` dispatch.
+  `ChartToImage.groovy`: Added `export(CharmChart)`.
+  All five classes received updated class-level Javadoc.
+8.7 [x] Add/refresh tests in `matrix-charts/src/test/groovy/export` for all supported export targets via SVG path.
+  Added Charm `Chart` export tests to all five test files: functional rendering tests (PNG/JPEG file output, OutputStream, SVGImage, SvgPanel, BufferedImage) and Object dispatch verification.
+  31 export tests pass (was 22 before Section 8).
+8.8 [x] Command log:
+  ```
+  $ ./gradlew :matrix-charts:test --tests "export.*" -Pheadless=true
+  Results: SUCCESS (31 tests, 31 passed, 0 failed, 0 skipped)
+
+  $ ./gradlew :matrix-charts:test -Pheadless=true
+  Results: SUCCESS (1768 tests, 1768 passed, 0 failed, 0 skipped)
+  ```
 
 ## 9. Deprecation and Cleanup of Legacy Backends
 9.1 [ ] Mark legacy backend-specific implementation packages for deprecation/removal:

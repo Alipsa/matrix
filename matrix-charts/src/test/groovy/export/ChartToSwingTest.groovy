@@ -3,11 +3,14 @@ package export
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgReader
+import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.matrix.chartexport.SvgPanel
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
 
+import se.alipsa.matrix.charm.Charts
 import static se.alipsa.matrix.gg.GgPlot.*
 import static org.junit.jupiter.api.Assertions.*
 
@@ -122,5 +125,32 @@ class ChartToSwingTest {
     } finally {
       System.setErr(originalErr)
     }
+  }
+
+  @Test
+  void testExportFromCharmChart() {
+    CharmChart chart = buildCharmChart()
+
+    SvgPanel panel = ChartToSwing.export(chart)
+    assertNotNull(panel, "SvgPanel should not be null")
+    assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
+    assertTrue(panel.getPreferredSize().width > 0)
+    assertTrue(panel.getPreferredSize().height > 0)
+  }
+
+  @Test
+  void testExportObjectDispatchCharmChart() {
+    CharmChart chart = buildCharmChart()
+
+    SvgPanel panel = ChartToSwing.export((Object) chart)
+    assertNotNull(panel, "SvgPanel should not be null via Object dispatch")
+  }
+
+  private static CharmChart buildCharmChart() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 3], [2, 5], [3, 4]])
+        .build()
+    Charts.plot(data).aes(x: 'x', y: 'y').points().build()
   }
 }
