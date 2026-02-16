@@ -81,6 +81,61 @@ class Histogram extends Chart<Histogram> {
   Integer getNumberOfBins() {
     return numberOfBins
   }
+
+  /**
+   * Creates a new fluent builder for constructing a {@link Histogram}.
+   *
+   * <p>Example:
+   * <pre>
+   * Histogram chart = Histogram.builder(data)
+   *     .title('MPG Distribution')
+   *     .x('mpg')
+   *     .bins(5)
+   *     .build()
+   * </pre>
+   *
+   * @param data the Matrix containing chart data
+   * @return a new Builder instance
+   */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  /**
+   * Fluent builder for {@link Histogram}.
+   */
+  static class Builder extends Chart.ChartBuilder<Builder, Histogram> {
+
+    private Integer bins = 9
+    private int binDecimals = 1
+
+    Builder(Matrix data) { super(data) }
+
+    /**
+     * Sets the number of bins for the histogram.
+     *
+     * @param n the number of bins (default 9)
+     * @return this builder
+     */
+    Builder bins(Integer n) { this.bins = n; this }
+
+    /**
+     * Sets the number of decimal places for bin boundaries.
+     *
+     * @param n the number of decimals (default 1)
+     * @return this builder
+     */
+    Builder binDecimals(int n) { this.binDecimals = n; this }
+
+    /**
+     * Builds the configured {@link Histogram}.
+     *
+     * @return the histogram
+     */
+    Histogram build() {
+      def chart = Histogram.create(title, data, xCol, bins, binDecimals)
+      applyTo(chart)
+      chart
+    }
+  }
 }
 
 class MinMax {

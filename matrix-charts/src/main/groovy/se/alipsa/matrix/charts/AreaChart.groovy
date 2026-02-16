@@ -43,4 +43,43 @@ class AreaChart extends Chart<AreaChart> {
   static AreaChart create(String title, Matrix data, String xCol, String yCol, String groupCol) {
     throw new RuntimeException("Not yet implemented")
   }
+
+  /**
+   * Creates a new fluent builder for constructing an {@link AreaChart}.
+   *
+   * <p>Example:
+   * <pre>
+   * AreaChart chart = AreaChart.builder(data)
+   *     .title('Robberies')
+   *     .x('Record')
+   *     .y('Robberies')
+   *     .build()
+   * </pre>
+   *
+   * @param data the Matrix containing chart data
+   * @return a new Builder instance
+   */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  /**
+   * Fluent builder for {@link AreaChart}.
+   */
+  static class Builder extends Chart.ChartBuilder<Builder, AreaChart> {
+
+    Builder(Matrix data) { super(data) }
+
+    /**
+     * Builds the configured {@link AreaChart}.
+     *
+     * @return the area chart
+     */
+    AreaChart build() {
+      def chart = new AreaChart()
+      applyTo(chart)
+      chart.categorySeries = data.column(xCol)
+      chart.valueSeries = yCols.collect { data.column(it) }
+      chart.valueSeriesNames = yCols
+      chart
+    }
+  }
 }

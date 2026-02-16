@@ -24,4 +24,42 @@ class LineChart extends Chart<LineChart> {
     return chart
   }
 
+  /**
+   * Creates a new fluent builder for constructing a {@link LineChart}.
+   *
+   * <p>Example:
+   * <pre>
+   * LineChart chart = LineChart.builder(data)
+   *     .title('Trends')
+   *     .x('year')
+   *     .y('sales', 'profit')
+   *     .build()
+   * </pre>
+   *
+   * @param data the Matrix containing chart data
+   * @return a new Builder instance
+   */
+  static Builder builder(Matrix data) { new Builder(data) }
+
+  /**
+   * Fluent builder for {@link LineChart}.
+   */
+  static class Builder extends Chart.ChartBuilder<Builder, LineChart> {
+
+    Builder(Matrix data) { super(data) }
+
+    /**
+     * Builds the configured {@link LineChart}.
+     *
+     * @return the line chart
+     */
+    LineChart build() {
+      def chart = new LineChart()
+      applyTo(chart)
+      chart.categorySeries = data.column(xCol)
+      chart.valueSeries = yCols.collect { data.column(it) }
+      chart.valueSeriesNames = yCols
+      chart
+    }
+  }
 }

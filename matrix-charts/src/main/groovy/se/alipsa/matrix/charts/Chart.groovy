@@ -165,4 +165,101 @@ abstract class Chart<T extends Chart> {
   String toString() {
     return title + ", " + categorySeries.size() + " categories, " + valueSeries.size() + " value series"
   }
+
+  /**
+   * Abstract base builder for fluent chart construction.
+   * Subclasses add chart-specific configuration methods and implement {@link #build()}.
+   *
+   * <p>Usage example:
+   * <pre>
+   * AreaChart chart = AreaChart.builder(data)
+   *     .title('Salaries')
+   *     .x('emp_name')
+   *     .y('salary')
+   *     .build()
+   * </pre>
+   *
+   * @param <B> the concrete builder type (for fluent method chaining)
+   * @param <C> the concrete chart type produced by this builder
+   */
+  abstract static class ChartBuilder<B extends ChartBuilder, C extends Chart> {
+
+    protected Matrix data
+    protected String title
+    protected String xCol
+    protected List<String> yCols = []
+    protected String xAxisTitle
+    protected String yAxisTitle
+    protected AxisScale xAxisScale
+    protected AxisScale yAxisScale
+    protected Legend legend
+    protected Style style
+
+    ChartBuilder(Matrix data) {
+      this.data = data
+    }
+
+    /** Sets the chart title. */
+    B title(String title) { this.title = title; this as B }
+
+    /** Sets the x-axis (category) column name. */
+    B x(String columnName) { this.xCol = columnName; this as B }
+
+    /** Sets a single y-axis (value) column name. */
+    B y(String columnName) { this.yCols = [columnName]; this as B }
+
+    /** Sets multiple y-axis (value) column names. */
+    B y(String... columnNames) { this.yCols = columnNames.toList(); this as B }
+
+    /** Sets the x-axis title label. */
+    B xAxisTitle(String title) { this.xAxisTitle = title; this as B }
+
+    /** Sets the y-axis title label. */
+    B yAxisTitle(String title) { this.yAxisTitle = title; this as B }
+
+    /** Sets the x-axis scale. */
+    B xAxisScale(AxisScale scale) { this.xAxisScale = scale; this as B }
+
+    /** Sets the y-axis scale. */
+    B yAxisScale(AxisScale scale) { this.yAxisScale = scale; this as B }
+
+    /** Sets the x-axis scale with start, end, and step values. */
+    B xAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
+      this.xAxisScale = new AxisScale(start, end, step)
+      this as B
+    }
+
+    /** Sets the y-axis scale with start, end, and step values. */
+    B yAxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
+      this.yAxisScale = new AxisScale(start, end, step)
+      this as B
+    }
+
+    /** Sets the legend configuration. */
+    B legend(Legend legend) { this.legend = legend; this as B }
+
+    /** Sets the style configuration. */
+    B style(Style style) { this.style = style; this as B }
+
+    /**
+     * Applies shared builder fields to the chart instance.
+     * Called by subclass {@link #build()} implementations.
+     */
+    protected void applyTo(C chart) {
+      if (title) chart.title = title
+      if (xAxisTitle) chart.xAxisTitle = xAxisTitle
+      if (yAxisTitle) chart.yAxisTitle = yAxisTitle
+      if (xAxisScale) chart.xAxisScale = xAxisScale
+      if (yAxisScale) chart.yAxisScale = yAxisScale
+      if (legend) chart.legend = legend
+      if (style) chart.style = style
+    }
+
+    /**
+     * Builds and returns the configured chart instance.
+     *
+     * @return the fully configured chart
+     */
+    abstract C build()
+  }
 }
