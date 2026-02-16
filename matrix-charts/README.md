@@ -3,7 +3,7 @@
 # Charts
 Groovy library for creating graphs based on Matrix or [][] data
 
-Matrix-charts is a "native" chart library that creates charts as SVG's. 
+Matrix-charts is a "native" chart library that creates charts as SVGs. 
 An SVG chart can be exported to Swing, JavaFx, Image, PNG, or JPG using 
 the exporters in the se.alipsa.matrix.chartexport package. 
 
