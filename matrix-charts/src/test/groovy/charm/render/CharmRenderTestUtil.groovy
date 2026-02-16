@@ -207,6 +207,12 @@ class CharmRenderTestUtil {
   }
 
   private static int elementCount(Svg svg, Class<?> elementType) {
+    if (svg == null) {
+      throw new IllegalArgumentException('svg cannot be null')
+    }
+    if (elementType == null) {
+      throw new IllegalArgumentException('elementType cannot be null')
+    }
     List elements = svg.descendants()
     elements.count { Object e -> elementType.isInstance(e) } as int
   }
