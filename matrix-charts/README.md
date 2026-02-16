@@ -7,7 +7,7 @@ Matrix-charts is a "native" chart library that creates charts as SVGs.
 An SVG chart can be exported to Swing, JavaFX, Image, PNG, or JPG using 
 the exporters in the se.alipsa.matrix.chartexport package. 
 
-There are 3 API's in matrix-charts:
+There are 3 APIs in matrix-charts:
 1. **Charm** This is the core chart library based on the principles of Grammar Of Graphics.
 2. **Charts** The se.alipsa.matrix.chart package contains charts in a "familiar style" for those used to
     chart libraries such as xcharts and JavaFX charts (i.e. you begin with the chart type (e.g. AreaChart), 

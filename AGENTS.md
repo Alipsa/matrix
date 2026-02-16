@@ -368,7 +368,7 @@ private List<Double> calculateValues(double x1, double x2) {
 **When methods accept or return numeric types, prefer BigDecimal:**
 ```groovy
 // Good
-private BigDecimal computeOffset(BigDecimal value, BigDecimal curvature) { 
+private BigDecimal computeOffset(BigDecimal value, BigDecimal curvature) {
   value * curvature * 0.5
 }
 
