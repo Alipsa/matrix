@@ -14,5 +14,7 @@ enum Geom {
   TILE,
   HISTOGRAM,
   BOXPLOT,
-  SMOOTH
+  SMOOTH,
+  AREA,
+  PIE
 }

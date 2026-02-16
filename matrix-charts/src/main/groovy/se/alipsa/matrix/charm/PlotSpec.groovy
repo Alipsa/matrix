@@ -16,7 +16,9 @@ class PlotSpec {
       (Geom.TILE)     : ['x', 'y'],
       (Geom.BAR)      : ['x'],
       (Geom.HISTOGRAM): ['x'],
-      (Geom.BOXPLOT)  : ['y']
+      (Geom.BOXPLOT)  : ['y'],
+      (Geom.AREA)     : ['x', 'y'],
+      (Geom.PIE)      : ['x', 'y']
   ]
 
   private final Matrix data
@@ -186,6 +188,26 @@ class PlotSpec {
    */
   PlotSpec smooth(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
     addLayer(Geom.SMOOTH, Stat.SMOOTH, configure)
+  }
+
+  /**
+   * Adds an area layer.
+   *
+   * @param configure optional layer parameter closure
+   * @return this plot spec
+   */
+  PlotSpec area(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
+    addLayer(Geom.AREA, Stat.IDENTITY, configure)
+  }
+
+  /**
+   * Adds a pie layer.
+   *
+   * @param configure optional layer parameter closure
+   * @return this plot spec
+   */
+  PlotSpec pie(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
+    addLayer(Geom.PIE, Stat.IDENTITY, configure)
   }
 
   /**

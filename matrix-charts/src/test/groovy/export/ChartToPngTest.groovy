@@ -56,7 +56,7 @@ class ChartToPngTest {
   void testExportWithNullTargetFile_String() {
     String svgContent = "<svg></svg>"
     Exception exception = assertThrows(IllegalArgumentException.class, {
-      ChartToPng.export(svgContent, null)
+      ChartToPng.export(svgContent, (File) null)
     })
     assertEquals("targetFile cannot be null", exception.getMessage())
   }
@@ -65,7 +65,7 @@ class ChartToPngTest {
   void testExportWithNullTargetFile_Svg() {
     Svg svg = new Svg()
     Exception exception = assertThrows(IllegalArgumentException.class, {
-      ChartToPng.export(svg, null)
+      ChartToPng.export(svg, (File) null)
     })
     assertEquals("targetFile cannot be null", exception.getMessage())
   }
