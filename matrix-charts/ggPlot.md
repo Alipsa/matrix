@@ -13,8 +13,14 @@ A comprehensive guide to using the `se.alipsa.matrix.gg` package for creating gg
 
 ## Introduction
 
-The `se.alipsa.matrix.gg` package provides a ggplot2-style API for creating data visualizations in Groovy. 
+The `se.alipsa.matrix.gg` package provides a ggplot2-style API for creating data visualizations in Groovy.
 The API is designed to be nearly identical to R's ggplot2 library, making it easy to port R plotting code to Groovy with minimal modifications.
+
+> **Implementation note:** The gg API is a thin compatibility wrapper over the
+> [Charm](charm.md) engine. All gg functions delegate to Charm, producing the same
+> `PlotSpec` model and rendering through the same SVG pipeline. The full gg public API
+> is preserved and will continue to work. For new code that does not need ggplot2
+> compatibility, consider using the [Charm DSL](charm.md) directly.
 
 ### Key Features
 - Familiar ggplot2 syntax and semantics

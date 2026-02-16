@@ -352,20 +352,33 @@ Svg svg = gg.render()  // same underlying PlotSpec/engine
   `./gradlew :matrix-charts:test -Pheadless=true` — 1766 tests, 1766 passed, 0 failed, 0 skipped
 
 ## 10. Documentation, Examples, and Migration Guides
-10.1 [ ] Add `charm` user documentation (new `matrix-charts/charm.md` or docs page) with idiomatic Groovy examples.
-10.2 [ ] Update `matrix-charts/README.md` positioning:
+10.1 [x] Add `charm` user documentation (new `matrix-charts/charm.md` or docs page) with idiomatic Groovy examples.
+  Created `matrix-charts/charm.md` with sections: Quick Start, Core Concepts, DSL Reference,
+  Layers/Geoms, Scales, Themes, Faceting, Coordinates, Labels/Annotations, Lifecycle,
+  Output Formats, Static Compilation, API relationship, Migration Guide, and Examples.
+10.2 [x] Update `matrix-charts/README.md` positioning:
   `charm` = core grammar API,
   `charts` = quick familiar chart API,
   `gg` = ggplot2-compatible migration API.
-10.3 [ ] Update `matrix-charts/ggPlot.md` to clarify compatibility promise and charm-backed implementation.
-10.4 [ ] Add/refresh examples in `matrix-charts/examples/charm`, `matrix-charts/examples/gg`, and `matrix-charts/examples/charts` (if added).
-10.5 [ ] Add migration notes for:
+  Updated API descriptions to reflect Charm as core engine, added Charm quick example,
+  fixed outdated `Plot.jfx()` return type in example code, added chartexport usage.
+10.3 [x] Update `matrix-charts/ggPlot.md` to clarify compatibility promise and charm-backed implementation.
+  Added implementation note in Introduction section explaining gg delegates to Charm
+  and linking to `charm.md` for new code.
+10.4 [x] Add/refresh examples in `matrix-charts/examples/charm`, `matrix-charts/examples/gg`, and `matrix-charts/examples/charts` (if added).
+  Replaced `examples/charm/SimpleCharmChart.groovy` (was using deleted `charmfx` API)
+  with a working Charm DSL example using `Charts.plot()`, line/point layers, and ChartToPng export.
+  Existing gg examples are unaffected (no references to deleted packages).
+10.5 [x] Add migration notes for:
   old `charts` backend behavior,
   direct converter usage,
   recommended future usage patterns,
   explicit note that `se.alipsa.matrix.charts.charmfx` was removed as a breaking change in this release line.
-10.6 [ ] Add Charm DSL documentation extracted from `charm-specification.md`:
+  All covered in `charm.md` Migration Guide section with table of old/new paths
+  and code examples for each migration scenario.
+10.6 [x] Add Charm DSL documentation extracted from `charm-specification.md`:
   closure assignment rule (`=`), named-argument rule (`:`), `col.*` canonical mappings, and lifecycle (`spec -> build -> render`).
+  Covered in `charm.md` Core Concepts and Lifecycle sections.
 
 ## 11. Quality Gates and Release Readiness
 11.1 [ ] Add regression gate requiring unchanged pass for core `gg` tests before merge.
