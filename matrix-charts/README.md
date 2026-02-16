@@ -16,7 +16,7 @@ There are 3 APIs in matrix-charts:
     R applications easy.
 
 > Note: the [matrix-xchart](../matrix-xchart/readme.md) module exists as an alternative charting module 
-> making it easy to use the xcharts library with the rest of the matrix eco system.
+> making it easy to use the xcharts library with the rest of the matrix ecosystem.
 
 To use matrix-charts, add the following dependencies to your gradle build script
 ```groovy
