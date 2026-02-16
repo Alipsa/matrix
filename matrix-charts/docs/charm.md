@@ -432,6 +432,16 @@ chart.writeTo('plot.svg')
 
 `writeTo()` internally calls `render()` and writes the SVG to disk.
 
+### How this differs from gg and charts
+
+The explicit `build()` + `render()` lifecycle is specific to the Charm API. The other
+APIs handle these steps internally:
+
+- **gg:** `GgChart.render()` compiles and renders in a single call -- there is no separate `build()` step.
+- **charts:** Neither `build()` nor `render()` is called by user code. Export methods like
+  `Plot.png(chart, file)` and `ChartToPng.export(chart, file)` handle everything through
+  an internal bridge.
+
 ### Custom Render Configuration
 
 ```groovy

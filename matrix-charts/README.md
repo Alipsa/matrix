@@ -10,7 +10,7 @@ the exporters in the se.alipsa.matrix.chartexport package.
 There are 3 APIs in matrix-charts, all sharing the same Charm rendering engine:
 1. **[Charm](docs/charm.md)** The core chart library based on the principles of Grammar of Graphics.
    Idiomatic Groovy closure DSL with typed specifications and immutable compiled charts.
-2. **Charts** The `se.alipsa.matrix.charts` package contains charts in a "familiar style"
+2. **[Charts](docs/charts.md)** The `se.alipsa.matrix.charts` package contains charts in a "familiar style"
     (begin with the chart type, e.g. `AreaChart`, then add data and styling).
     Backed by Charm internally.
 3. **[gg](docs/ggPlot.md)** A compatibility layer mimicking the ggplot2 API in R, making migrations
@@ -108,6 +108,8 @@ ChartToPng.export(areaChart, new File("areaChart.png"))
 Plot.png(barChart, new File("barChart.png"))
 Plot.svg(barChart, new File("barChart.svg"))
 ```
+
+See **[charts.md](docs/charts.md)** for comprehensive documentation.
 
 # GGPlotting
 
