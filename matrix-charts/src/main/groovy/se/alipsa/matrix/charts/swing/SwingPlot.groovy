@@ -31,6 +31,6 @@ class SwingPlot {
   static String base64(Chart chart, double width = 800, double height = 600) {
     def xchart = SwingConverter.convert(chart).getChart()
     byte[] bytes = BitmapEncoder.getBitmapBytes(xchart, BitmapEncoder.BitmapFormat.PNG)
-    return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes)
+    return "data:image/png;base64," + Base64.encoder.encodeToString(bytes)
   }
 }
