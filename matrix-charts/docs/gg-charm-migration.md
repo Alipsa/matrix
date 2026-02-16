@@ -491,20 +491,20 @@ Phase 15 (final cutover, cleanup, and verification)
 
 ### 5.1 Phase 1 -- Test Infrastructure
 
-5.1.1 [ ] Create `matrix-charts/docs/gg-charm-parity-matrix.md` with one row per feature in Sections 3, 5.9, 5.10, 5.11, and 5.12, and columns: `Feature`, `Priority`, `Charm Implementation`, `Tests`, `Status`.
+5.1.1 [x] Create `matrix-charts/docs/gg-charm-parity-matrix.md` with one row per feature in Sections 3, 5.9, 5.10, 5.11, and 5.12, and columns: `Feature`, `Priority`, `Charm Implementation`, `Tests`, `Status`.
 
-5.1.2 [ ] Add test utility class `CharmRenderTestUtil` that:
+5.1.2 [x] Add test utility class `CharmRenderTestUtil` that:
 - Builds a charm `Chart` from a given spec and renders to SVG
 - Provides assertion helpers for SVG structure (element counts by type, text content, attribute values)
 - Provides helpers to compare old gg rendering vs new charm rendering for the same input
 
-5.1.3 [ ] Add parity chart corpus under `src/test/resources/charm-parity/` with representative data fixtures for each P0 geom/stat/coord combination.
+5.1.3 [x] Add parity chart corpus under `src/test/resources/charm-parity/` with representative data fixtures for each P0 geom/stat/coord combination.
 
-5.1.4 [ ] Add per-feature completion rule in tests: a feature checkbox in this plan can only be marked `[x]` when a dedicated test exists and the test commands have been recorded.
+5.1.4 [x] Add per-feature completion rule in tests: a feature checkbox in this plan can only be marked `[x]` when a dedicated test exists and the test commands have been recorded.
 
-5.1.5 [ ] Keep existing gg tests as integration tests for the thin delegation layer; do not replace them with charm-only tests.
+5.1.5 [x] Keep existing gg tests as integration tests for the thin delegation layer; do not replace them with charm-only tests.
 
-5.1.6 [ ] Add test taxonomy doc section: `gg integration tests` vs `charm direct rendering tests` vs `charts facade tests`.
+5.1.6 [x] Add test taxonomy doc section: `gg integration tests` vs `charm direct rendering tests` vs `charts facade tests`.
 
 ### 5.1A Phase Merge Gates (applies to every phase branch)
 

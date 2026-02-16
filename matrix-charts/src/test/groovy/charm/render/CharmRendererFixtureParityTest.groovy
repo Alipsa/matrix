@@ -1,10 +1,6 @@
 package charm.render
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.svg.Circle
-import se.alipsa.groovy.svg.Line
-import se.alipsa.groovy.svg.Rect
-import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Geom
 import se.alipsa.matrix.core.Matrix
@@ -53,8 +49,8 @@ class CharmRendererFixtureParityTest {
         geom_point() +
         labs(title: 'Point Fixture')
 
-    Map<String, Integer> charmCounts = primitiveCounts(charmChart.render())
-    Map<String, Integer> ggCounts = primitiveCounts(ggChart.render())
+    Map<String, Integer> charmCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderCharm(charmChart))
+    Map<String, Integer> ggCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderGg(ggChart))
 
     assertEquals(data.rowCount(), charmCounts.circle)
     assertEquals(data.rowCount(), ggCounts.circle)
@@ -89,8 +85,8 @@ class CharmRendererFixtureParityTest {
     GgChart ggChart = ggplot(data, se.alipsa.matrix.gg.GgPlot.aes(x: 'x', y: 'y')) +
         geom_line()
 
-    Map<String, Integer> charmCounts = primitiveCounts(charmChart.render())
-    Map<String, Integer> ggCounts = primitiveCounts(ggChart.render())
+    Map<String, Integer> charmCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderCharm(charmChart))
+    Map<String, Integer> ggCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderGg(ggChart))
 
     assertEquals(0, charmCounts.circle)
     assertEquals(0, ggCounts.circle)
@@ -120,8 +116,8 @@ class CharmRendererFixtureParityTest {
     GgChart ggChart = ggplot(data, se.alipsa.matrix.gg.GgPlot.aes(x: 'x')) +
         geom_histogram(bins: 5)
 
-    Map<String, Integer> charmCounts = primitiveCounts(charmChart.render())
-    Map<String, Integer> ggCounts = primitiveCounts(ggChart.render())
+    Map<String, Integer> charmCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderCharm(charmChart))
+    Map<String, Integer> ggCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderGg(ggChart))
 
     assertEquals(0, charmCounts.circle)
     assertEquals(0, ggCounts.circle)
@@ -159,8 +155,8 @@ class CharmRendererFixtureParityTest {
     GgChart ggChart = ggplot(data, se.alipsa.matrix.gg.GgPlot.aes(x: 'category', y: 'value')) +
         geom_col()
 
-    Map<String, Integer> charmCounts = primitiveCounts(charmChart.render())
-    Map<String, Integer> ggCounts = primitiveCounts(ggChart.render())
+    Map<String, Integer> charmCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderCharm(charmChart))
+    Map<String, Integer> ggCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderGg(ggChart))
 
     // Both should produce rectangles for bars; counts should match within scaffolding tolerance
     assertTrue(charmCounts.rect >= data.rowCount(), "Charm should render at least ${data.rowCount()} rects")
@@ -194,8 +190,8 @@ class CharmRendererFixtureParityTest {
     GgChart ggChart = ggplot(data, se.alipsa.matrix.gg.GgPlot.aes(x: 'group', y: 'value')) +
         geom_boxplot()
 
-    Map<String, Integer> charmCounts = primitiveCounts(charmChart.render())
-    Map<String, Integer> ggCounts = primitiveCounts(ggChart.render())
+    Map<String, Integer> charmCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderCharm(charmChart))
+    Map<String, Integer> ggCounts = CharmRenderTestUtil.primitiveCounts(CharmRenderTestUtil.renderGg(ggChart))
 
     // Both should produce rectangles for box bodies and lines for whiskers/medians
     assertTrue(charmCounts.rect > 0, "Charm should render rects for box bodies")
@@ -211,12 +207,4 @@ class CharmRendererFixtureParityTest {
         "Charm line count (${charmCounts.line}) and gg line count (${ggCounts.line}) should be within tolerance")
   }
 
-  private static Map<String, Integer> primitiveCounts(Svg svg) {
-    List elements = svg.descendants()
-    [
-        circle: elements.count { it instanceof Circle } as int,
-        line  : elements.count { it instanceof Line } as int,
-        rect  : elements.count { it instanceof Rect } as int
-    ]
-  }
 }
