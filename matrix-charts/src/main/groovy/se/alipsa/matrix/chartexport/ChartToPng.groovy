@@ -4,6 +4,7 @@ import com.github.weisj.jsvg.SVGDocument
 import com.github.weisj.jsvg.parser.LoaderContext
 import com.github.weisj.jsvg.parser.SVGLoader
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.gg.GgChart
 
 import javax.imageio.ImageIO
@@ -12,6 +13,13 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.nio.charset.StandardCharsets
 
+/**
+ * Exports charts as PNG images.
+ *
+ * <p>Accepts SVG strings, {@link Svg} objects, {@link GgChart} instances,
+ * and {@link CharmChart} instances. All paths converge through SVG rendering
+ * via jsvg, with no JavaFX toolkit dependency.</p>
+ */
 class ChartToPng {
 
   /**
@@ -29,25 +37,7 @@ class ChartToPng {
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
-    SVGLoader loader = new SVGLoader()
-    ByteArrayInputStream svgStream = new ByteArrayInputStream(svgChart.getBytes(StandardCharsets.UTF_8))
-    SVGDocument svgDocument = loader.load(svgStream, null, LoaderContext.createDefault())
-
-    if (svgDocument == null) {
-      throw new IllegalArgumentException("Invalid SVG document")
-    }
-    int width = (int) svgDocument.size().width
-    int height = (int) svgDocument.size().height
-
-    // TYPE_INT_ARGB is crucial for transparency support
-    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-
-    Graphics2D g = image.createGraphics()
-    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    svgDocument.render(null, g)
-    g.dispose()
-
-    ImageIO.write(image, "png", targetFile)
+    ImageIO.write(renderToImage(svgChart), "png", targetFile)
   }
 
   /**
@@ -65,23 +55,7 @@ class ChartToPng {
     if (os == null) {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
-    SVGLoader loader = new SVGLoader()
-    ByteArrayInputStream svgStream = new ByteArrayInputStream(svgChart.getBytes(StandardCharsets.UTF_8))
-    SVGDocument svgDocument = loader.load(svgStream, null, LoaderContext.createDefault())
-
-    if (svgDocument == null) {
-      throw new IllegalArgumentException("Invalid SVG document")
-    }
-    int width = (int) svgDocument.size().width
-    int height = (int) svgDocument.size().height
-
-    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-    Graphics2D g = image.createGraphics()
-    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    svgDocument.render(null, g)
-    g.dispose()
-
-    ImageIO.write(image, "png", os)
+    ImageIO.write(renderToImage(svgChart), "png", os)
   }
 
   /**
@@ -92,7 +66,7 @@ class ChartToPng {
    * @throws IOException if an error occurs during file writing
    * @throws IllegalArgumentException if svgChart or targetFile is null
    */
-  static void export(Svg svgChart, File targetFile) throws IOException  {
+  static void export(Svg svgChart, File targetFile) throws IOException {
     if (svgChart == null) {
       throw new IllegalArgumentException("svgChart cannot be null")
     }
@@ -128,13 +102,73 @@ class ChartToPng {
    * @throws IOException if an error occurs during file writing
    * @throws IllegalArgumentException if chart or targetFile is null
    */
-  static void export(GgChart chart, File targetFile) throws IOException  {
+  static void export(GgChart chart, File targetFile) throws IOException {
     if (chart == null) {
       throw new IllegalArgumentException("chart cannot be null")
     }
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
-    export(chart.render().toXml(), targetFile)
+    export(chart.render(), targetFile)
+  }
+
+  /**
+   * Export a Charm {@link CharmChart} as a PNG image file.
+   *
+   * @param chart the Charm chart to export
+   * @param targetFile the {@link File} where the PNG image will be written
+   * @throws IOException if an error occurs during file writing
+   * @throws IllegalArgumentException if chart or targetFile is null
+   */
+  static void export(CharmChart chart, File targetFile) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException("chart cannot be null")
+    }
+    if (targetFile == null) {
+      throw new IllegalArgumentException("targetFile cannot be null")
+    }
+    export(chart.render(), targetFile)
+  }
+
+  /**
+   * Export a Charm {@link CharmChart} as PNG to an {@link OutputStream}.
+   *
+   * @param chart the Charm chart to export
+   * @param os the output stream to write the PNG to
+   * @throws IOException if an error occurs during writing
+   * @throws IllegalArgumentException if chart or os is null
+   */
+  static void export(CharmChart chart, OutputStream os) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException("chart cannot be null")
+    }
+    if (os == null) {
+      throw new IllegalArgumentException("outputStream cannot be null")
+    }
+    export(chart.render(), os)
+  }
+
+  /**
+   * Renders SVG content to a {@link BufferedImage} using jsvg.
+   *
+   * @param svgContent the SVG XML string
+   * @return rendered image with transparency support
+   * @throws IllegalArgumentException if the SVG document is invalid
+   */
+  private static BufferedImage renderToImage(String svgContent) {
+    SVGLoader loader = new SVGLoader()
+    ByteArrayInputStream svgStream = new ByteArrayInputStream(svgContent.getBytes(StandardCharsets.UTF_8))
+    SVGDocument svgDocument = loader.load(svgStream, null, LoaderContext.createDefault())
+    if (svgDocument == null) {
+      throw new IllegalArgumentException("Invalid SVG document")
+    }
+    int width = (int) svgDocument.size().width
+    int height = (int) svgDocument.size().height
+    BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+    Graphics2D g = image.createGraphics()
+    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+    svgDocument.render(null, g)
+    g.dispose()
+    image
   }
 }

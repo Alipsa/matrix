@@ -2,12 +2,15 @@ package export
 
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.chartexport.ChartToImage
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
 
 import java.awt.image.BufferedImage
 
+import se.alipsa.matrix.charm.Charts
 import static se.alipsa.matrix.gg.GgPlot.*
 import static org.junit.jupiter.api.Assertions.*
 
@@ -35,8 +38,26 @@ class ChartToImageTest {
   @Test
   void testExportWithNullSvgChart() {
     Exception exception = assertThrows(IllegalArgumentException.class, {
-      ChartToImage.export(null)
+      ChartToImage.export((Svg) null)
     })
-    assertEquals("chart must not be null", exception.getMessage())
+    assertEquals("svgChart must not be null", exception.getMessage())
+  }
+
+  @Test
+  void testExportCharmChartToBufferedImage() {
+    CharmChart chart = buildCharmChart()
+
+    BufferedImage image = ChartToImage.export(chart)
+    assertNotNull(image, "BufferedImage should not be null")
+    assertTrue(image.getWidth() > 0, "Image width should be greater than 0")
+    assertTrue(image.getHeight() > 0, "Image height should be greater than 0")
+  }
+
+  private static CharmChart buildCharmChart() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 3], [2, 5], [3, 4]])
+        .build()
+    Charts.plot(data).aes(x: 'x', y: 'y').points().build()
   }
 }

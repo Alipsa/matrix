@@ -3,10 +3,13 @@ package export
 import org.girod.javafx.svgimage.SVGImage
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.chartexport.ChartToJfx
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
 
+import se.alipsa.matrix.charm.Charts
 import static se.alipsa.matrix.gg.GgPlot.*
 import static org.junit.jupiter.api.Assertions.*
 
@@ -74,5 +77,22 @@ class ChartToJfxTest {
       ChartToJfx.export((GgChart) null)
     })
     assertEquals("chart must not be null", exception.getMessage())
+  }
+
+  @Test
+  void testExportFromCharmChart() {
+    CharmChart chart = buildCharmChart()
+
+    SVGImage svgImage = ChartToJfx.export(chart)
+    assertNotNull(svgImage, "SVGImage should not be null")
+    assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
+  }
+
+  private static CharmChart buildCharmChart() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 3], [2, 5], [3, 4]])
+        .build()
+    Charts.plot(data).aes(x: 'x', y: 'y').points().build()
   }
 }
