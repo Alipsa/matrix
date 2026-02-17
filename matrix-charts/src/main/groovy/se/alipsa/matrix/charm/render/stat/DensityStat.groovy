@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm.render.stat
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.render.geom.GeomUtils
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 import se.alipsa.matrix.stats.kde.KernelDensity
@@ -33,7 +34,7 @@ class DensityStat {
    */
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     Map<String, Object> kdeParams = buildKdeParams(StatEngine.effectiveParams(layer))
-    Map<Object, List<LayerData>> groups = groupData(data)
+    Map<Object, List<LayerData>> groups = GeomUtils.groupSeries(data)
     List<LayerData> result = []
     groups.each { Object _, List<LayerData> bucket ->
       List<Number> values = extractNumericX(bucket)
@@ -93,19 +94,5 @@ class DensityStat {
     if (params.from != null) kdeParams.from = params.from
     if (params.to != null) kdeParams.to = params.to
     kdeParams
-  }
-
-  private static Map<Object, List<LayerData>> groupData(List<LayerData> data) {
-    Map<Object, List<LayerData>> groups = new LinkedHashMap<>()
-    data.each { LayerData datum ->
-      Object key = datum.group ?: datum.color ?: datum.fill ?: '__all__'
-      List<LayerData> bucket = groups[key]
-      if (bucket == null) {
-        bucket = []
-        groups[key] = bucket
-      }
-      bucket << datum
-    }
-    groups
   }
 }

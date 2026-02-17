@@ -16,7 +16,7 @@ class SmoothRenderer {
   /**
    * Render smooth layer.
    */
-  static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData, int panelHeight) {
+  static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
     if (layerData.size() < 2) {
       return
     }

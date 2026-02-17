@@ -31,7 +31,7 @@ class GeomEngine {
       case CharmGeomType.HISTOGRAM -> HistogramRenderer.render(dataLayer, context, layer, layerData, panelHeight)
       case CharmGeomType.BOXPLOT -> BoxplotRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.AREA -> AreaRenderer.render(dataLayer, context, layer, layerData, panelHeight)
-      case CharmGeomType.SMOOTH -> SmoothRenderer.render(dataLayer, context, layer, layerData, panelHeight)
+      case CharmGeomType.SMOOTH -> SmoothRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.DENSITY -> DensityRenderer.render(dataLayer, context, layer, layerData, panelHeight)
       case CharmGeomType.VIOLIN -> ViolinRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.TILE -> TileRenderer.render(dataLayer, context, layer, layerData)
