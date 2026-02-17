@@ -602,6 +602,10 @@ _Build charm's coordinate transformation pipeline._
 
 _Migrate rendering code for the 12 core geoms from gg to charm by extending existing charm renderer infrastructure (not rewriting from zero)._
 
+Note: Charm also supports `PIE` as a charm-native geom extension. It is intentionally
+outside the gg P0 parity list in Section 3.1 and therefore not counted as one of the
+12 Phase 7 core geoms.
+
 5.7.1 [x] Create `charm/render/geom/` package with one renderer class per geom family.
 
 5.7.2 [x] Implement `PointRenderer` -- port rendering from `gg/geom/GeomPoint.render()`.

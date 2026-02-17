@@ -3,10 +3,10 @@ package se.alipsa.matrix.charm
 import groovy.transform.CompileStatic
 
 /**
- * Expanded geometry types covering the full gg surface.
+ * Expanded geometry types covering the gg surface plus charm-native extensions.
  *
- * Each value corresponds to a ggplot2 geom family. The Charm renderer
- * dispatches to rendering logic based on this type.
+ * Most values correspond to ggplot2 geom families. Charm can also expose
+ * additional geoms not in gg, such as {@code PIE}.
  */
 @CompileStatic
 enum CharmGeomType {
