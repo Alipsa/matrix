@@ -21,18 +21,37 @@ class YDensityStatTest {
   }
 
   @Test
-  void testDensityInXField() {
+  void testDensityStoredInMetaAndXPreservedAsGroupCenter() {
     LayerSpec layer = makeLayer([:])
     Random rng = new Random(42)
     List<LayerData> data = (1..50).collect {
       new LayerData(x: 'G', y: rng.nextGaussian() * 5 + 25, rowIndex: it - 1)
     }
     List<LayerData> result = YDensityStat.compute(layer, data)
-    // For y-density, density goes in x field
+    // For y-density used by violin, x remains group center and density is stored in meta.
     result.each { LayerData d ->
-      BigDecimal density = d.x as BigDecimal
-      assertTrue(density >= 0, "Density values in x should be non-negative")
+      BigDecimal density = d.meta.density as BigDecimal
+      assertTrue(density >= 0, "Density values in meta should be non-negative")
+      assertEquals('G', d.x)
     }
+  }
+
+  @Test
+  void testComputesSeparateDensityPerGroup() {
+    LayerSpec layer = makeLayer([:])
+    Random rng = new Random(42)
+    List<LayerData> data = []
+    (1..30).each { int i ->
+      data << new LayerData(x: 'A', y: rng.nextGaussian() * 5 + 25, rowIndex: i - 1)
+    }
+    (31..60).each { int i ->
+      data << new LayerData(x: 'B', y: rng.nextGaussian() * 5 + 45, rowIndex: i - 1)
+    }
+    List<LayerData> result = YDensityStat.compute(layer, data)
+
+    assertFalse(result.isEmpty())
+    assertTrue(result.any { LayerData d -> d.x == 'A' })
+    assertTrue(result.any { LayerData d -> d.x == 'B' })
   }
 
   @Test

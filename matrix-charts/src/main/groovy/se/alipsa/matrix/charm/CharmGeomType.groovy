@@ -71,6 +71,6 @@ enum CharmGeomType {
    * Geometry types currently supported by the Charm renderer.
    */
   static final Set<CharmGeomType> SUPPORTED = EnumSet.of(
-      POINT, LINE, BAR, COL, TILE, HISTOGRAM, BOXPLOT, SMOOTH, AREA, PIE
+      POINT, LINE, BAR, COL, HISTOGRAM, BOXPLOT, AREA, SMOOTH, DENSITY, VIOLIN, TILE, TEXT, PIE
   )
 }

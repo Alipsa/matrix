@@ -13,7 +13,10 @@ class PlotSpec {
       (CharmGeomType.POINT)    : ['x', 'y'],
       (CharmGeomType.LINE)     : ['x', 'y'],
       (CharmGeomType.SMOOTH)   : ['x', 'y'],
+      (CharmGeomType.DENSITY)  : ['x'],
+      (CharmGeomType.VIOLIN)   : ['x', 'y'],
       (CharmGeomType.TILE)     : ['x', 'y'],
+      (CharmGeomType.TEXT)     : ['x', 'y'],
       (CharmGeomType.BAR)      : ['x'],
       (CharmGeomType.HISTOGRAM): ['x'],
       (CharmGeomType.BOXPLOT)  : ['y'],
@@ -484,6 +487,8 @@ class PlotSpec {
       (CharmGeomType.HISTOGRAM): CharmStatType.BIN,
       (CharmGeomType.BOXPLOT)  : CharmStatType.BOXPLOT,
       (CharmGeomType.SMOOTH)   : CharmStatType.SMOOTH,
+      (CharmGeomType.DENSITY)  : CharmStatType.DENSITY,
+      (CharmGeomType.VIOLIN)   : CharmStatType.YDENSITY,
       (CharmGeomType.BAR)      : CharmStatType.COUNT
   ]
 
