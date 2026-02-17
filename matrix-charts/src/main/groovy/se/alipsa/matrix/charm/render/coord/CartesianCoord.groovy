@@ -9,10 +9,11 @@ import se.alipsa.matrix.charm.util.NumberCoercionUtil
 /**
  * Cartesian coordinate transformation - the default coordinate system.
  *
- * Applies optional xlim/ylim clipping to constrain the data view.
- * Unlike scale limits which remove data before stat computation,
- * coord limits act as a zoom (data outside limits is clipped but
- * stats are computed on the full dataset).
+ * Applies optional xlim/ylim clamping to numeric x/y values.
+ * Values outside the configured limits are squished to the nearest bound.
+ *
+ * This coordinate step runs after stats/positions but before scale training,
+ * so clamped values can influence trained scale domains.
  */
 @CompileStatic
 class CartesianCoord {

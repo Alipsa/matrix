@@ -27,8 +27,8 @@ class FixedCoordTest {
 
   @Test
   void testRatioIsMetadata() {
-    // Fixed coord at data level behaves like Cartesian
-    // The ratio is metadata consumed by the renderer
+    // Fixed coord at data level behaves like Cartesian.
+    // In Charm renderer, ratio is currently informational only.
     CoordSpec coord = new CoordSpec(type: CharmCoordType.FIXED, params: [ratio: 2.0])
     List<LayerData> data = [
         new LayerData(x: 5, y: 10, rowIndex: 0)
