@@ -11,7 +11,7 @@ class LayerDsl extends LayerParams {
 
   private Aes layerAes
   boolean inheritAes = true
-  private Position position = Position.IDENTITY
+  private PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY)
 
   /**
    * Configures layer-level aesthetics.
@@ -49,21 +49,21 @@ class LayerDsl extends LayerParams {
   }
 
   /**
-   * Returns normalized layer position.
+   * Returns normalized layer position spec.
    *
-   * @return layer position
+   * @return layer position spec
    */
-  Position getPosition() {
-    position
+  PositionSpec getPositionSpec() {
+    positionSpec
   }
 
   /**
-   * Sets layer position from Position or string value.
+   * Sets layer position from CharmPositionType, PositionSpec, or string value.
    *
    * @param value position value
    */
   void setPosition(Object value) {
-    this.position = parsePosition(value)
+    this.positionSpec = parsePosition(value)
   }
 
   /**
@@ -81,18 +81,21 @@ class LayerDsl extends LayerParams {
    * Parses layer position values.
    *
    * @param value position value
-   * @return normalized position enum
+   * @return normalized PositionSpec
    */
-  static Position parsePosition(Object value) {
+  static PositionSpec parsePosition(Object value) {
     if (value == null) {
-      return Position.IDENTITY
+      return PositionSpec.of(CharmPositionType.IDENTITY)
     }
-    if (value instanceof Position) {
-      return value as Position
+    if (value instanceof PositionSpec) {
+      return (value as PositionSpec).copy()
+    }
+    if (value instanceof CharmPositionType) {
+      return PositionSpec.of(value as CharmPositionType)
     }
     if (value instanceof CharSequence) {
       try {
-        return Position.valueOf(value.toString().trim().toUpperCase(Locale.ROOT))
+        return PositionSpec.of(CharmPositionType.valueOf(value.toString().trim().toUpperCase(Locale.ROOT)))
       } catch (IllegalArgumentException e) {
         throw new CharmValidationException("Unsupported layer position '${value}'")
       }

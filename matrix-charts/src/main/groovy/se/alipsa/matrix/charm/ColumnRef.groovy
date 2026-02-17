@@ -33,6 +33,11 @@ class ColumnRef implements ColumnExpr {
     name
   }
 
+  @Override
+  String describe() {
+    "column(${name})"
+  }
+
   /**
    * Returns the column reference as string.
    *

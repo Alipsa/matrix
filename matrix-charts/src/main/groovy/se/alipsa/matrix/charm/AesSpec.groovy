@@ -86,6 +86,116 @@ class AesSpec extends Aes {
   }
 
   /**
+   * Builder-style xend mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec xend(Object value) {
+    setXend(value)
+    this
+  }
+
+  /**
+   * Builder-style yend mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec yend(Object value) {
+    setYend(value)
+    this
+  }
+
+  /**
+   * Builder-style xmin mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec xmin(Object value) {
+    setXmin(value)
+    this
+  }
+
+  /**
+   * Builder-style xmax mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec xmax(Object value) {
+    setXmax(value)
+    this
+  }
+
+  /**
+   * Builder-style ymin mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec ymin(Object value) {
+    setYmin(value)
+    this
+  }
+
+  /**
+   * Builder-style ymax mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec ymax(Object value) {
+    setYmax(value)
+    this
+  }
+
+  /**
+   * Builder-style alpha mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec alpha(Object value) {
+    setAlpha(value)
+    this
+  }
+
+  /**
+   * Builder-style linetype mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec linetype(Object value) {
+    setLinetype(value)
+    this
+  }
+
+  /**
+   * Builder-style label mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec label(Object value) {
+    setLabel(value)
+    this
+  }
+
+  /**
+   * Builder-style weight mapping assignment.
+   *
+   * @param value mapping value
+   * @return this spec
+   */
+  AesSpec weight(Object value) {
+    setWeight(value)
+    this
+  }
+
+  /**
    * Builder-style named mapping apply.
    *
    * @param mapping mapping map

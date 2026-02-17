@@ -11,22 +11,22 @@ class LayerSpec extends Layer {
   /**
    * Creates a new layer spec.
    *
-   * @param geom geometry type
-   * @param stat stat type
+   * @param geomSpec geometry specification
+   * @param statSpec stat specification
    * @param aes layer aes
    * @param inheritAes inherit flag
-   * @param position position mode
+   * @param positionSpec position specification
    * @param params layer params
    */
   LayerSpec(
-      Geom geom,
-      Stat stat = Stat.IDENTITY,
+      GeomSpec geomSpec,
+      StatSpec statSpec = StatSpec.of(CharmStatType.IDENTITY),
       Aes aes = null,
       boolean inheritAes = true,
-      Position position = Position.IDENTITY,
+      PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY),
       Map<String, Object> params = [:]
   ) {
-    super(geom, stat, aes, inheritAes, position, params)
+    super(geomSpec, statSpec, aes, inheritAes, positionSpec, params)
   }
 
   /**
@@ -37,6 +37,6 @@ class LayerSpec extends Layer {
   @Override
   LayerSpec copy() {
     Aes layerAes = super.getAes()
-    new LayerSpec(geom, stat, layerAes, inheritAes, position, params)
+    new LayerSpec(geomSpec.copy(), statSpec.copy(), layerAes, inheritAes, positionSpec.copy(), params)
   }
 }

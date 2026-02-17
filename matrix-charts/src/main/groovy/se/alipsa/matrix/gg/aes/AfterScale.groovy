@@ -1,12 +1,13 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmExpression
 
 /**
  * Wrapper for referencing scaled aesthetics in mappings.
  */
 @CompileStatic
-class AfterScale {
+class AfterScale implements CharmExpression {
 
   /** The name of the scaled aesthetic to reference. */
   final String aesthetic
@@ -48,5 +49,10 @@ class AfterScale {
   @Override
   int hashCode() {
     return aesthetic.hashCode()
+  }
+
+  @Override
+  String describe() {
+    "after_scale(${aesthetic})"
   }
 }

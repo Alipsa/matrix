@@ -2,7 +2,7 @@ package charm.render
 
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.charm.Geom
+import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 
@@ -107,7 +107,7 @@ class CharmRendererFixtureParityTest {
       aes {
         x = col.x
       }
-      layer(Geom.HISTOGRAM, [bins: 5])
+      layer(CharmGeomType.HISTOGRAM, [bins: 5])
       theme {
         legend { position = 'none' }
       }
@@ -146,7 +146,7 @@ class CharmRendererFixtureParityTest {
         x = col.category
         y = col.value
       }
-      layer(Geom.COL, [:])
+      layer(CharmGeomType.COL, [:])
       theme {
         legend { position = 'none' }
       }
@@ -181,7 +181,7 @@ class CharmRendererFixtureParityTest {
         x = col.group
         y = col.value
       }
-      layer(Geom.BOXPLOT, [:])
+      layer(CharmGeomType.BOXPLOT, [:])
       theme {
         legend { position = 'none' }
       }

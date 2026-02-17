@@ -2,8 +2,9 @@ package se.alipsa.matrix.charts
 
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
-import se.alipsa.matrix.charm.Geom
-import se.alipsa.matrix.charm.Position as CharmPosition
+import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.render.CharmRenderer
@@ -76,8 +77,8 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     boolean multiSeries = chart.valueSeries.size() > 1
     boolean horizontal = chart.direction == ChartDirection.HORIZONTAL
-    Geom geom = horizontal ? Geom.BAR : Geom.COL
-    CharmPosition position = chart.stacked ? CharmPosition.STACK : CharmPosition.IDENTITY
+    CharmGeomType geom = horizontal ? CharmGeomType.BAR : CharmGeomType.COL
+    PositionSpec position = chart.stacked ? PositionSpec.of(CharmPositionType.STACK) : PositionSpec.of(CharmPositionType.IDENTITY)
 
     PlotSpec spec = Charts.plot(data)
     if (horizontal) {
@@ -106,7 +107,7 @@ class CharmBridge {
 
     PlotSpec spec = Charts.plot(data)
     spec.aes([x: 'x', y: 'y'])
-    spec.layer(Geom.BOXPLOT)
+    spec.layer(CharmGeomType.BOXPLOT)
     applyLabelsAndTheme(spec, chart)
     spec
   }
@@ -124,7 +125,7 @@ class CharmBridge {
 
     PlotSpec spec = Charts.plot(data)
     spec.aes([x: 'x'])
-    spec.layer(Geom.HISTOGRAM, [bins: chart.numberOfBins])
+    spec.layer(CharmGeomType.HISTOGRAM, [bins: chart.numberOfBins])
     applyLabelsAndTheme(spec, chart as Chart)
     spec
   }

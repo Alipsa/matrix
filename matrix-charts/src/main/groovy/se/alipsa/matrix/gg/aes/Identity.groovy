@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmExpression
 
 /**
  * Identity wrapper for constant values in aesthetic mappings.
@@ -9,7 +10,7 @@ import groovy.transform.CompileStatic
  * Example: aes(x: 'col1', color: I('red'))
  */
 @CompileStatic
-class Identity {
+class Identity implements CharmExpression {
   final Object value
 
   Identity(Object value) {
@@ -26,5 +27,10 @@ class Identity {
    */
   static Identity of(Object value) {
     return new Identity(value)
+  }
+
+  @Override
+  String describe() {
+    "I(${value})"
   }
 }

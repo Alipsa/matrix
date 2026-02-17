@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -8,7 +9,7 @@ import se.alipsa.matrix.core.Matrix
  * Converts values to Strings and adds a discrete column to the data.
  */
 @CompileStatic
-class Factor {
+class Factor implements CharmExpression {
   private static final String DEFAULT_NAME = 'factor'
 
   final Object value
@@ -115,5 +116,10 @@ class Factor {
 
   private static String sanitizeName(String candidate) {
     return candidate.replaceAll(/[^A-Za-z0-9_]+/, '_')
+  }
+
+  @Override
+  String describe() {
+    "factor(${value})"
   }
 }
