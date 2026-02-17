@@ -136,4 +136,24 @@ class FlipCoordTest {
     assertEquals(5, twice[0].ymin)
     assertEquals(15, twice[0].ymax)
   }
+
+  @Test
+  void testFlipAppliesLimitsInFlippedSpace() {
+    CoordSpec coord = new CoordSpec(type: CharmCoordType.FLIP, params: [xlim: [0, 20], ylim: [0, 5]])
+    List<LayerData> data = [
+        new LayerData(x: -10, y: 30, rowIndex: 0),
+        new LayerData(x: 3, y: 4, rowIndex: 1)
+    ]
+    List<LayerData> result = FlipCoord.compute(coord, data)
+
+    assertEquals(2, result.size())
+    assertBigDecimalEquals(20, result[0].x)
+    assertBigDecimalEquals(0, result[0].y)
+    assertBigDecimalEquals(4, result[1].x)
+    assertBigDecimalEquals(3, result[1].y)
+  }
+
+  private static void assertBigDecimalEquals(Number expected, Object actual) {
+    assertEquals(0, (expected as BigDecimal).compareTo(actual as BigDecimal))
+  }
 }

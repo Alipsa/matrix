@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.render.coord
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.render.LayerDataUtil
 
 /**
  * Flipped coordinate transformation - swaps x and y axes.
@@ -34,30 +35,19 @@ class FlipCoord {
 
     List<LayerData> result = []
     data.each { LayerData datum ->
-      LayerData flipped = new LayerData(
-          x: datum.y,
-          y: datum.x,
-          color: datum.color,
-          fill: datum.fill,
-          xend: datum.yend,
-          yend: datum.xend,
-          xmin: datum.ymin,
-          xmax: datum.ymax,
-          ymin: datum.xmin,
-          ymax: datum.xmax,
-          size: datum.size,
-          shape: datum.shape,
-          alpha: datum.alpha,
-          linetype: datum.linetype,
-          group: datum.group,
-          label: datum.label,
-          weight: datum.weight,
-          rowIndex: datum.rowIndex,
-          meta: new LinkedHashMap<>(datum.meta)
-      )
+      LayerData flipped = LayerDataUtil.copyDatum(datum)
+      flipped.x = datum.y
+      flipped.y = datum.x
+      flipped.xend = datum.yend
+      flipped.yend = datum.xend
+      flipped.xmin = datum.ymin
+      flipped.xmax = datum.ymax
+      flipped.ymin = datum.xmin
+      flipped.ymax = datum.xmax
       result.add(flipped)
     }
 
-    result
+    // Apply optional limits after flip so xlim/ylim operate in flipped space.
+    CartesianCoord.compute(coordSpec, result)
   }
 }

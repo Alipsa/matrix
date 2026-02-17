@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.render.position
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.render.LayerDataUtil
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
 /**
@@ -49,7 +50,7 @@ class StackPosition {
       BigDecimal cumSum = BigDecimal.ZERO
 
       ordered.each { LayerData datum ->
-        LayerData updated = copyDatum(datum)
+        LayerData updated = LayerDataUtil.copyDatum(datum)
         BigDecimal yVal = NumberCoercionUtil.coerceToBigDecimal(datum.y) ?: BigDecimal.ZERO
         updated.ymin = cumSum
         cumSum = cumSum + yVal
@@ -62,32 +63,5 @@ class StackPosition {
     }
 
     result
-  }
-
-  /**
-   * Creates a shallow copy of a LayerData.
-   */
-  static LayerData copyDatum(LayerData datum) {
-    new LayerData(
-        x: datum.x,
-        y: datum.y,
-        color: datum.color,
-        fill: datum.fill,
-        xend: datum.xend,
-        yend: datum.yend,
-        xmin: datum.xmin,
-        xmax: datum.xmax,
-        ymin: datum.ymin,
-        ymax: datum.ymax,
-        size: datum.size,
-        shape: datum.shape,
-        alpha: datum.alpha,
-        linetype: datum.linetype,
-        group: datum.group,
-        label: datum.label,
-        weight: datum.weight,
-        rowIndex: datum.rowIndex,
-        meta: new LinkedHashMap<>(datum.meta)
-    )
   }
 }

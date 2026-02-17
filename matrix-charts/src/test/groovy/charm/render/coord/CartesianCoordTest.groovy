@@ -51,11 +51,11 @@ class CartesianCoordTest {
     List<LayerData> result = CartesianCoord.compute(coord, data)
     assertEquals(3, result.size())
     // x=1 clamped to 2
-    assertEquals(0, new BigDecimal('2').compareTo(result[0].x as BigDecimal))
+    assertBigDecimalEquals(2, result[0].x)
     // x=5 within range, unchanged
-    assertEquals(5, result[1].x)
+    assertBigDecimalEquals(5, result[1].x)
     // x=10 clamped to 8
-    assertEquals(0, new BigDecimal('8').compareTo(result[2].x as BigDecimal))
+    assertBigDecimalEquals(8, result[2].x)
   }
 
   @Test
@@ -69,11 +69,11 @@ class CartesianCoordTest {
     List<LayerData> result = CartesianCoord.compute(coord, data)
     assertEquals(3, result.size())
     // y=3 clamped to 5
-    assertEquals(0, new BigDecimal('5').compareTo(result[0].y as BigDecimal))
+    assertBigDecimalEquals(5, result[0].y)
     // y=15 within range, unchanged
-    assertEquals(15, result[1].y)
+    assertBigDecimalEquals(15, result[1].y)
     // y=30 clamped to 25
-    assertEquals(0, new BigDecimal('25').compareTo(result[2].y as BigDecimal))
+    assertBigDecimalEquals(25, result[2].y)
   }
 
   @Test
@@ -87,14 +87,14 @@ class CartesianCoordTest {
     List<LayerData> result = CartesianCoord.compute(coord, data)
     assertEquals(3, result.size())
 
-    assertEquals(0, new BigDecimal('0').compareTo(result[0].x as BigDecimal))
-    assertEquals(0, new BigDecimal('0').compareTo(result[0].y as BigDecimal))
+    assertBigDecimalEquals(0, result[0].x)
+    assertBigDecimalEquals(0, result[0].y)
 
-    assertEquals(5, result[1].x)
-    assertEquals(50, result[1].y)
+    assertBigDecimalEquals(5, result[1].x)
+    assertBigDecimalEquals(50, result[1].y)
 
-    assertEquals(0, new BigDecimal('10').compareTo(result[2].x as BigDecimal))
-    assertEquals(0, new BigDecimal('100').compareTo(result[2].y as BigDecimal))
+    assertBigDecimalEquals(10, result[2].x)
+    assertBigDecimalEquals(100, result[2].y)
   }
 
   @Test
@@ -122,15 +122,37 @@ class CartesianCoordTest {
 
   @Test
   void testPreservesAllFields() {
-    CoordSpec coord = new CoordSpec(type: CharmCoordType.CARTESIAN)
+    CoordSpec coord = new CoordSpec(type: CharmCoordType.CARTESIAN, params: [xlim: [0, 10], ylim: [0, 20]])
     LayerData datum = new LayerData(
         x: 5, y: 10, color: 'red', fill: 'blue',
+        xend: 15, yend: 25,
         xmin: 3, xmax: 7, ymin: 8, ymax: 12,
-        group: 'G1', label: 'lbl', rowIndex: 3
+        size: 4, shape: 'circle', alpha: 0.5, linetype: 'dashed',
+        group: 'G1', label: 'lbl', weight: 1.5, rowIndex: 3
     )
     datum.meta.custom = 'val'
     List<LayerData> result = CartesianCoord.compute(coord, [datum])
-    // No limits: same reference
-    assertSame(datum, result[0])
+    LayerData updated = result[0]
+
+    assertNotSame(datum, updated)
+    assertBigDecimalEquals(5, updated.x)
+    assertBigDecimalEquals(10, updated.y)
+
+    assertEquals('red', updated.color)
+    assertEquals('blue', updated.fill)
+    assertEquals(4, updated.size)
+    assertEquals('circle', updated.shape)
+    assertBigDecimalEquals(0.5, updated.alpha)
+    assertEquals('dashed', updated.linetype)
+    assertEquals('G1', updated.group)
+    assertEquals('lbl', updated.label)
+    assertBigDecimalEquals(1.5, updated.weight)
+    assertEquals(3, updated.rowIndex)
+    assertEquals([custom: 'val'], updated.meta)
+    assertNotSame(datum.meta, updated.meta)
+  }
+
+  private static void assertBigDecimalEquals(Number expected, Object actual) {
+    assertEquals(0, (expected as BigDecimal).compareTo(actual as BigDecimal))
   }
 }
