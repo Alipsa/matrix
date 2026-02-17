@@ -221,6 +221,9 @@ class PlotSpec {
     if (geomType == null) {
       throw new CharmValidationException('layer geom cannot be null')
     }
+    if (!(geomType in CharmGeomType.SUPPORTED)) {
+      throw new CharmValidationException("Unsupported geom type '${geomType}'. Supported types: ${CharmGeomType.SUPPORTED}")
+    }
     Map<String, Object> params = new LinkedHashMap<>(options ?: [:])
     Aes layerAes = coerceLayerAes(params.remove('aes'))
     boolean inheritAes = params.containsKey('inheritAes')
@@ -382,6 +385,11 @@ class PlotSpec {
   }
 
   private void validateLayerSemantics(LayerSpec layer, int idx) {
+    if (!(layer.geomType in CharmGeomType.SUPPORTED)) {
+      throw new CharmValidationException(
+          "Layer ${idx}: unsupported geom type '${layer.geomType}'. Supported types: ${CharmGeomType.SUPPORTED}"
+      )
+    }
     if (layer.geomType == CharmGeomType.SMOOTH && layer.statType != CharmStatType.SMOOTH) {
       throw new CharmValidationException(
           "Invalid layer ${idx}: geom SMOOTH requires stat SMOOTH, but was ${layer.statType}"

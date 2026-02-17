@@ -7,6 +7,7 @@ import se.alipsa.matrix.charm.Aes
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
@@ -175,7 +176,7 @@ class CharmRenderer {
       case CharmGeomType.AREA -> renderArea(dataLayer, context, layer, layerData, panelHeight)
       case CharmGeomType.PIE -> renderPie(dataLayer, context, layer, layerData, panelWidth, panelHeight)
       case CharmGeomType.BOXPLOT -> renderBoxplot(dataLayer, context, layer, layerData, panelHeight)
-      default -> renderPoints(dataLayer, context, layer, layerData)
+      default -> throw new CharmRenderException("Unsupported geom type: ${layer.geomType}")
     }
   }
 

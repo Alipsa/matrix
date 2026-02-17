@@ -30,10 +30,13 @@ import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
 
+import se.alipsa.matrix.charm.CharmValidationException
+
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertNotSame
 import static org.junit.jupiter.api.Assertions.assertNull
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
 
@@ -309,7 +312,7 @@ class CharmModelExpansionTest {
   }
 
   @Test
-  void testPlotSpecLayerWithCharmGeomTypeValues() {
+  void testPlotSpecLayerRejectsUnsupportedGeomTypes() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
         .rows([[1, 2], [3, 4]])
@@ -317,12 +320,33 @@ class CharmModelExpansionTest {
 
     PlotSpec spec = plot(data)
     spec.aes(x: 'x', y: 'y')
-    spec.layer(CharmGeomType.CONTOUR, [:])
-    spec.layer(CharmGeomType.VIOLIN, [:])
+
+    CharmValidationException ex = assertThrows(CharmValidationException) {
+      spec.layer(CharmGeomType.CONTOUR, [:])
+    }
+    assertTrue(ex.message.contains('CONTOUR'))
+
+    ex = assertThrows(CharmValidationException) {
+      spec.layer(CharmGeomType.VIOLIN, [:])
+    }
+    assertTrue(ex.message.contains('VIOLIN'))
+  }
+
+  @Test
+  void testPlotSpecLayerAcceptsSupportedGeomTypes() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [3, 4]])
+        .build()
+
+    PlotSpec spec = plot(data)
+    spec.aes(x: 'x', y: 'y')
+    spec.layer(CharmGeomType.POINT, [:])
+    spec.layer(CharmGeomType.LINE, [:])
 
     assertEquals(2, spec.layers.size())
-    assertEquals(CharmGeomType.CONTOUR, spec.layers[0].geomType)
-    assertEquals(CharmGeomType.VIOLIN, spec.layers[1].geomType)
+    assertEquals(CharmGeomType.POINT, spec.layers[0].geomType)
+    assertEquals(CharmGeomType.LINE, spec.layers[1].geomType)
   }
 
   @Test
