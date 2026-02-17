@@ -44,7 +44,7 @@ use the bom file.
 
 An example for matrix-core is as follows for Gradle
 ```groovy
-implementation(platform( 'se.alipsa.matrix:matrix-bom:2.3.0'))
+implementation(platform( 'se.alipsa.matrix:matrix-bom:2.4.0'))
 implementation('se.alipsa.matrix:matrix-core')
 ```
 ...or the following for maven
@@ -56,7 +56,7 @@ implementation('se.alipsa.matrix:matrix-core')
          <dependency>
             <groupId>se.alipsa.matrix</groupId>
             <artifactId>matrix-bom</artifactId>
-            <version>2.3.0</version>
+            <version>2.4.0</version>
             <type>pom</type>
             <scope>import</scope>
          </dependency>
