@@ -42,7 +42,7 @@ import static se.alipsa.matrix.charm.Charts.plot
 class CharmModelExpansionTest {
 
   @Test
-  void testCharmGeomTypeHas55Values() {
+  void testCharmGeomTypeValues() {
     CharmGeomType[] values = CharmGeomType.values()
     assertEquals(56, values.length)
     assertNotNull(CharmGeomType.POINT)
