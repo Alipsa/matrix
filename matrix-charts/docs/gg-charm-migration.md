@@ -520,7 +520,7 @@ Phase 15 (final cutover, cleanup, and verification)
 
 _Restructure charm's core model types from thin enums to parameterized specs._
 
-5.2.1 [x] Replace `charm/Geom.groovy` enum with `CharmGeomType` enum (all 55 geom types) and a `GeomSpec` class carrying `type`, `params`, `requiredAes`, `defaultAes`, `defaultStat`, `defaultPosition`.
+5.2.1 [x] Replace `charm/Geom.groovy` enum with `CharmGeomType` enum (all 56 geom types) and a `GeomSpec` class carrying `type`, `params`, `requiredAes`, `defaultAes`, `defaultStat`, `defaultPosition`.
 
 5.2.2 [x] Replace `charm/Stat.groovy` enum with `CharmStatType` enum (all 26 stat types) and a `StatSpec` class carrying `type` and `params`.
 
