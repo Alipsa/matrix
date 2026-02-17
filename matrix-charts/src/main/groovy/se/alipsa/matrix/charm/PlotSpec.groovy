@@ -9,16 +9,16 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class PlotSpec {
 
-  private static final Map<Geom, List<String>> REQUIRED_AESTHETICS = [
-      (Geom.POINT)    : ['x', 'y'],
-      (Geom.LINE)     : ['x', 'y'],
-      (Geom.SMOOTH)   : ['x', 'y'],
-      (Geom.TILE)     : ['x', 'y'],
-      (Geom.BAR)      : ['x'],
-      (Geom.HISTOGRAM): ['x'],
-      (Geom.BOXPLOT)  : ['y'],
-      (Geom.AREA)     : ['x', 'y'],
-      (Geom.PIE)      : ['x', 'y']
+  private static final Map<CharmGeomType, List<String>> REQUIRED_AESTHETICS = [
+      (CharmGeomType.POINT)    : ['x', 'y'],
+      (CharmGeomType.LINE)     : ['x', 'y'],
+      (CharmGeomType.SMOOTH)   : ['x', 'y'],
+      (CharmGeomType.TILE)     : ['x', 'y'],
+      (CharmGeomType.BAR)      : ['x'],
+      (CharmGeomType.HISTOGRAM): ['x'],
+      (CharmGeomType.BOXPLOT)  : ['y'],
+      (CharmGeomType.AREA)     : ['x', 'y'],
+      (CharmGeomType.PIE)      : ['x', 'y']
   ]
 
   private final Matrix data
@@ -157,7 +157,7 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec points(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
-    addLayer(Geom.POINT, Stat.IDENTITY, configure)
+    addLayer(CharmGeomType.POINT, CharmStatType.IDENTITY, configure)
   }
 
   /**
@@ -167,7 +167,7 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec line(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
-    addLayer(Geom.LINE, Stat.IDENTITY, configure)
+    addLayer(CharmGeomType.LINE, CharmStatType.IDENTITY, configure)
   }
 
   /**
@@ -177,7 +177,7 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec tile(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
-    addLayer(Geom.TILE, Stat.IDENTITY, configure)
+    addLayer(CharmGeomType.TILE, CharmStatType.IDENTITY, configure)
   }
 
   /**
@@ -187,7 +187,7 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec smooth(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
-    addLayer(Geom.SMOOTH, Stat.SMOOTH, configure)
+    addLayer(CharmGeomType.SMOOTH, CharmStatType.SMOOTH, configure)
   }
 
   /**
@@ -197,7 +197,7 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec area(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
-    addLayer(Geom.AREA, Stat.IDENTITY, configure)
+    addLayer(CharmGeomType.AREA, CharmStatType.IDENTITY, configure)
   }
 
   /**
@@ -207,7 +207,7 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec pie(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
-    addLayer(Geom.PIE, Stat.IDENTITY, configure)
+    addLayer(CharmGeomType.PIE, CharmStatType.IDENTITY, configure)
   }
 
   /**
@@ -217,18 +217,22 @@ class PlotSpec {
    * @param options free-form layer options
    * @return this plot spec
    */
-  PlotSpec layer(Geom geom, Map<String, Object> options = [:]) {
-    if (geom == null) {
+  PlotSpec layer(CharmGeomType geomType, Map<String, Object> options = [:]) {
+    if (geomType == null) {
       throw new CharmValidationException('layer geom cannot be null')
+    }
+    if (!(geomType in CharmGeomType.SUPPORTED)) {
+      throw new CharmValidationException("Unsupported geom type '${geomType}'. Supported types: ${CharmGeomType.SUPPORTED}")
     }
     Map<String, Object> params = new LinkedHashMap<>(options ?: [:])
     Aes layerAes = coerceLayerAes(params.remove('aes'))
     boolean inheritAes = params.containsKey('inheritAes')
         ? parseBooleanOption(params.remove('inheritAes'), 'inheritAes')
         : true
-    Position position = coercePosition(params.remove('position'))
-    Stat stat = coerceStat(params.remove('stat'), geom)
-    LayerSpec layer = new LayerSpec(geom, stat, layerAes, inheritAes, position, params)
+    PositionSpec positionSpec = coercePosition(params.remove('position'))
+    StatSpec statSpec = coerceStat(params.remove('stat'), geomType)
+    GeomSpec geomSpec = GeomSpec.of(geomType)
+    LayerSpec layer = new LayerSpec(geomSpec, statSpec, layerAes, inheritAes, positionSpec, params)
     layers << layer
     this
   }
@@ -344,8 +348,8 @@ class PlotSpec {
   }
 
   private PlotSpec addLayer(
-      Geom geom,
-      Stat stat,
+      CharmGeomType geomType,
+      CharmStatType statType,
       @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure
   ) {
     LayerDsl options = new LayerDsl()
@@ -355,11 +359,11 @@ class PlotSpec {
       body.call()
     }
     layers << new LayerSpec(
-        geom,
-        stat,
+        GeomSpec.of(geomType),
+        StatSpec.of(statType),
         options.layerAes(),
         options.inheritAes,
-        options.position,
+        options.positionSpec,
         options.values()
     )
     this
@@ -381,15 +385,20 @@ class PlotSpec {
   }
 
   private void validateLayerSemantics(LayerSpec layer, int idx) {
-    if (layer.geom == Geom.SMOOTH && layer.stat != Stat.SMOOTH) {
+    if (!(layer.geomType in CharmGeomType.SUPPORTED)) {
       throw new CharmValidationException(
-          "Invalid layer ${idx}: geom SMOOTH requires stat SMOOTH, but was ${layer.stat}"
+          "Layer ${idx}: unsupported geom type '${layer.geomType}'. Supported types: ${CharmGeomType.SUPPORTED}"
+      )
+    }
+    if (layer.geomType == CharmGeomType.SMOOTH && layer.statType != CharmStatType.SMOOTH) {
+      throw new CharmValidationException(
+          "Invalid layer ${idx}: geom SMOOTH requires stat SMOOTH, but was ${layer.statType}"
       )
     }
   }
 
   private void validateRequiredAesthetics(LayerSpec layer, Aes layerAes, int idx) {
-    List<String> required = REQUIRED_AESTHETICS[layer.geom] ?: []
+    List<String> required = REQUIRED_AESTHETICS[layer.geomType] ?: []
     if (required.isEmpty()) {
       return
     }
@@ -399,7 +408,7 @@ class PlotSpec {
     if (!missing.isEmpty()) {
       String inheritText = layer.inheritAes ? 'with inherited plot mappings' : 'without inherited plot mappings'
       throw new CharmValidationException(
-          "Layer ${idx} (${layer.geom}) is missing required aesthetics [${missing.join(', ')}] ${inheritText}"
+          "Layer ${idx} (${layer.geomType}) is missing required aesthetics [${missing.join(', ')}] ${inheritText}"
       )
     }
   }
@@ -447,20 +456,25 @@ class PlotSpec {
     )
   }
 
-  private static Position coercePosition(Object value) {
+  private static PositionSpec coercePosition(Object value) {
     LayerDsl.parsePosition(value)
   }
 
-  private static Stat coerceStat(Object value, Geom geom) {
+  private static StatSpec coerceStat(Object value, CharmGeomType geomType) {
     if (value == null) {
-      return geom == Geom.SMOOTH ? Stat.SMOOTH : Stat.IDENTITY
+      return geomType == CharmGeomType.SMOOTH
+          ? StatSpec.of(CharmStatType.SMOOTH)
+          : StatSpec.of(CharmStatType.IDENTITY)
     }
-    if (value instanceof Stat) {
-      return value as Stat
+    if (value instanceof CharmStatType) {
+      return StatSpec.of(value as CharmStatType)
+    }
+    if (value instanceof StatSpec) {
+      return (value as StatSpec).copy()
     }
     if (value instanceof CharSequence) {
       try {
-        return Stat.valueOf(value.toString().trim().toUpperCase(Locale.ROOT))
+        return StatSpec.of(CharmStatType.valueOf(value.toString().trim().toUpperCase(Locale.ROOT)))
       } catch (IllegalArgumentException e) {
         throw new CharmValidationException("Unsupported layer stat '${value}'")
       }

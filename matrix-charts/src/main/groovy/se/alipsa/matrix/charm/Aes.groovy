@@ -18,6 +18,16 @@ class Aes {
   private ColumnExpr size
   private ColumnExpr shape
   private ColumnExpr group
+  private ColumnExpr xend
+  private ColumnExpr yend
+  private ColumnExpr xmin
+  private ColumnExpr xmax
+  private ColumnExpr ymin
+  private ColumnExpr ymax
+  private ColumnExpr alpha
+  private ColumnExpr linetype
+  private ColumnExpr label
+  private ColumnExpr weight
 
   /**
    * Returns the column namespace proxy for DSL usage.
@@ -155,6 +165,146 @@ class Aes {
   }
 
   /**
+   * Returns xend mapping.
+   *
+   * @return xend mapping
+   */
+  ColumnExpr getXend() { xend }
+
+  /**
+   * Sets xend mapping.
+   *
+   * @param value mapping input
+   */
+  void setXend(Object value) { xend = coerceToColumnExpr(value, 'xend') }
+
+  /**
+   * Returns yend mapping.
+   *
+   * @return yend mapping
+   */
+  ColumnExpr getYend() { yend }
+
+  /**
+   * Sets yend mapping.
+   *
+   * @param value mapping input
+   */
+  void setYend(Object value) { yend = coerceToColumnExpr(value, 'yend') }
+
+  /**
+   * Returns xmin mapping.
+   *
+   * @return xmin mapping
+   */
+  ColumnExpr getXmin() { xmin }
+
+  /**
+   * Sets xmin mapping.
+   *
+   * @param value mapping input
+   */
+  void setXmin(Object value) { xmin = coerceToColumnExpr(value, 'xmin') }
+
+  /**
+   * Returns xmax mapping.
+   *
+   * @return xmax mapping
+   */
+  ColumnExpr getXmax() { xmax }
+
+  /**
+   * Sets xmax mapping.
+   *
+   * @param value mapping input
+   */
+  void setXmax(Object value) { xmax = coerceToColumnExpr(value, 'xmax') }
+
+  /**
+   * Returns ymin mapping.
+   *
+   * @return ymin mapping
+   */
+  ColumnExpr getYmin() { ymin }
+
+  /**
+   * Sets ymin mapping.
+   *
+   * @param value mapping input
+   */
+  void setYmin(Object value) { ymin = coerceToColumnExpr(value, 'ymin') }
+
+  /**
+   * Returns ymax mapping.
+   *
+   * @return ymax mapping
+   */
+  ColumnExpr getYmax() { ymax }
+
+  /**
+   * Sets ymax mapping.
+   *
+   * @param value mapping input
+   */
+  void setYmax(Object value) { ymax = coerceToColumnExpr(value, 'ymax') }
+
+  /**
+   * Returns alpha mapping.
+   *
+   * @return alpha mapping
+   */
+  ColumnExpr getAlpha() { alpha }
+
+  /**
+   * Sets alpha mapping.
+   *
+   * @param value mapping input
+   */
+  void setAlpha(Object value) { alpha = coerceToColumnExpr(value, 'alpha') }
+
+  /**
+   * Returns linetype mapping.
+   *
+   * @return linetype mapping
+   */
+  ColumnExpr getLinetype() { linetype }
+
+  /**
+   * Sets linetype mapping.
+   *
+   * @param value mapping input
+   */
+  void setLinetype(Object value) { linetype = coerceToColumnExpr(value, 'linetype') }
+
+  /**
+   * Returns label mapping.
+   *
+   * @return label mapping
+   */
+  ColumnExpr getLabel() { label }
+
+  /**
+   * Sets label mapping.
+   *
+   * @param value mapping input
+   */
+  void setLabel(Object value) { label = coerceToColumnExpr(value, 'label') }
+
+  /**
+   * Returns weight mapping.
+   *
+   * @return weight mapping
+   */
+  ColumnExpr getWeight() { weight }
+
+  /**
+   * Sets weight mapping.
+   *
+   * @param value mapping input
+   */
+  void setWeight(Object value) { weight = coerceToColumnExpr(value, 'weight') }
+
+  /**
    * Applies a named mapping map (`aes(x: 'cty', y: 'hwy')`).
    *
    * @param mapping the mapping map
@@ -172,6 +322,16 @@ class Aes {
         case 'size' -> setSize(value)
         case 'shape' -> setShape(value)
         case 'group' -> setGroup(value)
+        case 'xend' -> setXend(value)
+        case 'yend' -> setYend(value)
+        case 'xmin' -> setXmin(value)
+        case 'xmax' -> setXmax(value)
+        case 'ymin' -> setYmin(value)
+        case 'ymax' -> setYmax(value)
+        case 'alpha' -> setAlpha(value)
+        case 'linetype' -> setLinetype(value)
+        case 'label' -> setLabel(value)
+        case 'weight' -> setWeight(value)
         default -> throw new CharmMappingException("Unsupported aesthetic '${key}'")
       }
     }
@@ -191,6 +351,16 @@ class Aes {
     cloned.size = size
     cloned.shape = shape
     cloned.group = group
+    cloned.xend = xend
+    cloned.yend = yend
+    cloned.xmin = xmin
+    cloned.xmax = xmax
+    cloned.ymin = ymin
+    cloned.ymax = ymax
+    cloned.alpha = alpha
+    cloned.linetype = linetype
+    cloned.label = label
+    cloned.weight = weight
     cloned
   }
 
@@ -208,6 +378,16 @@ class Aes {
     if (size != null) values.size = size
     if (shape != null) values.shape = shape
     if (group != null) values.group = group
+    if (xend != null) values.xend = xend
+    if (yend != null) values.yend = yend
+    if (xmin != null) values.xmin = xmin
+    if (xmax != null) values.xmax = xmax
+    if (ymin != null) values.ymin = ymin
+    if (ymax != null) values.ymax = ymax
+    if (alpha != null) values.alpha = alpha
+    if (linetype != null) values.linetype = linetype
+    if (label != null) values.label = label
+    if (weight != null) values.weight = weight
     values
   }
 
@@ -261,6 +441,16 @@ class Aes {
       case 'size' -> size
       case 'shape' -> shape
       case 'group' -> group
+      case 'xend' -> xend
+      case 'yend' -> yend
+      case 'xmin' -> xmin
+      case 'xmax' -> xmax
+      case 'ymin' -> ymin
+      case 'ymax' -> ymax
+      case 'alpha' -> alpha
+      case 'linetype' -> linetype
+      case 'label' -> label
+      case 'weight' -> weight
       case 'col' -> col
       default -> null
     }

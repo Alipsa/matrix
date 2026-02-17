@@ -520,25 +520,25 @@ Phase 15 (final cutover, cleanup, and verification)
 
 _Restructure charm's core model types from thin enums to parameterized specs._
 
-5.2.1 [ ] Replace `charm/Geom.groovy` enum with `CharmGeomType` enum (all 55 geom types) and a `GeomSpec` class carrying `type`, `params`, `requiredAes`, `defaultAes`, `defaultStat`, `defaultPosition`.
+5.2.1 [x] Replace `charm/Geom.groovy` enum with `CharmGeomType` enum (all 56 geom types) and a `GeomSpec` class carrying `type`, `params`, `requiredAes`, `defaultAes`, `defaultStat`, `defaultPosition`.
 
-5.2.2 [ ] Replace `charm/Stat.groovy` enum with `CharmStatType` enum (all 26 stat types) and a `StatSpec` class carrying `type` and `params`.
+5.2.2 [x] Replace `charm/Stat.groovy` enum with `CharmStatType` enum (all 26 stat types) and a `StatSpec` class carrying `type` and `params`.
 
-5.2.3 [ ] Replace `charm/Position.groovy` enum with `CharmPositionType` enum (all 7 position types) and a `PositionSpec` class carrying `type` and `params` (`width`, `padding`, `reverse`, `seed`, `x`, `y`).
+5.2.3 [x] Replace `charm/Position.groovy` enum with `CharmPositionType` enum (all 7 position types) and a `PositionSpec` class carrying `type` and `params` (`width`, `padding`, `reverse`, `seed`, `x`, `y`).
 
-5.2.4 [ ] Replace `charm/CoordType.groovy` enum with `CharmCoordType` enum (all 9 coord types). Update `CoordSpec` to carry per-coord parameters (`xlim`, `ylim`, `ratio`, `theta`, `start`, `direction`, `clip`).
+5.2.4 [x] Replace `charm/CoordType.groovy` enum with `CharmCoordType` enum (all 9 coord types). Update `CoordSpec` to carry per-coord parameters (`xlim`, `ylim`, `ratio`, `theta`, `start`, `direction`, `clip`).
 
-5.2.5 [ ] Expand existing top-level `LayerData` (currently defined in `charm/render/RenderContext.groovy`) to carry all aesthetic channels: `x`, `y`, `xend`, `yend`, `xmin`, `xmax`, `ymin`, `ymax`, `size`, `shape`, `alpha`, `linetype`, `group`, `label`, `weight`, and a `meta` map for stat-computed fields.
+5.2.5 [x] Expand existing top-level `LayerData` (currently defined in `charm/render/RenderContext.groovy`) to carry all aesthetic channels: `x`, `y`, `xend`, `yend`, `xmin`, `xmax`, `ymin`, `ymax`, `size`, `shape`, `alpha`, `linetype`, `group`, `label`, `weight`, and a `meta` map for stat-computed fields.
 
-5.2.6 [ ] Update `LayerSpec` to use the new `GeomSpec`, `StatSpec`, `PositionSpec` types instead of the old enums.
+5.2.6 [x] Update `LayerSpec` to use the new `GeomSpec`, `StatSpec`, `PositionSpec` types instead of the old enums.
 
-5.2.7 [ ] Update `Chart.groovy` constructor and accessors for the new types.
+5.2.7 [x] Update `Chart.groovy` constructor and accessors for the new types.
 
-5.2.8 [ ] Implement the expression decision from 0.12: introduce/use shared `CharmExpression` interface and update gg expression types (`Factor`, `CutWidth`, `Expression`, `AfterStat`, `AfterScale`, `Identity`) to implement/adapt to it.
+5.2.8 [x] Implement the expression decision from 0.12: introduce/use shared `CharmExpression` interface and update gg expression types (`Factor`, `CutWidth`, `Expression`, `AfterStat`, `AfterScale`, `Identity`) to implement/adapt to it.
 
-5.2.9 [ ] Refactor `PlotSpec.groovy` and companion charm DSL classes (`Charts`, `AesDsl`, `LayerDsl`, `MapDsl`, `Cols`, `ColumnRef`, `ColumnExpr`, `Facet`, `Coord`, `Theme`) to the new core model.
+5.2.9 [x] Refactor `PlotSpec.groovy` and companion charm DSL classes (`Charts`, `AesDsl`, `LayerDsl`, `MapDsl`, `Cols`, `ColumnRef`, `ColumnExpr`, `Facet`, `Coord`, `Theme`) to the new core model.
 
-5.2.10 [ ] Update `se.alipsa.matrix.charts.CharmBridge` to use the new charm model types/specs and run `./gradlew :matrix-charts:test` to validate charts API compatibility.
+5.2.10 [x] Update `se.alipsa.matrix.charts.CharmBridge` to use the new charm model types/specs and run `./gradlew :matrix-charts:test` to validate charts API compatibility.
 
 ### 5.3 Phase 3 -- Scale System
 

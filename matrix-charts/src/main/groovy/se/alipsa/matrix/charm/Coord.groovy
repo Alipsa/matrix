@@ -9,7 +9,7 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class Coord {
 
-  private CoordType type = CoordType.CARTESIAN
+  private CharmCoordType type = CharmCoordType.CARTESIAN
   private Map<String, Object> params = [:]
 
   /**
@@ -17,28 +17,35 @@ class Coord {
    *
    * @return coordinate system type
    */
-  CoordType getType() {
+  CharmCoordType getType() {
     type
   }
 
   /**
    * Sets coordinate system type.
    *
-   * @param value CoordType or string value
+   * @param value CharmCoordType or string value
    */
   void setType(Object value) {
     if (value == null) {
-      type = CoordType.CARTESIAN
+      type = CharmCoordType.CARTESIAN
       return
     }
-    if (value instanceof CoordType) {
-      type = value as CoordType
+    if (value instanceof CharmCoordType) {
+      type = value as CharmCoordType
       return
     }
     if (value instanceof CharSequence) {
       switch (value.toString().trim().toLowerCase(Locale.ROOT)) {
-        case 'cartesian' -> type = CoordType.CARTESIAN
-        case 'polar' -> type = CoordType.POLAR
+        case 'cartesian' -> type = CharmCoordType.CARTESIAN
+        case 'polar' -> type = CharmCoordType.POLAR
+        case 'flip' -> type = CharmCoordType.FLIP
+        case 'fixed' -> type = CharmCoordType.FIXED
+        case 'trans' -> type = CharmCoordType.TRANS
+        case 'radial' -> type = CharmCoordType.RADIAL
+        case 'map' -> type = CharmCoordType.MAP
+        case 'quickmap' -> type = CharmCoordType.QUICKMAP
+        case 'sf' -> type = CharmCoordType.SF
         default -> throw new CharmValidationException("Unsupported coord type '${value}'")
       }
       return

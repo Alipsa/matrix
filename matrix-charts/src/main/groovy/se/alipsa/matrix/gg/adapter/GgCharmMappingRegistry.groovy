@@ -1,11 +1,11 @@
 package se.alipsa.matrix.gg.adapter
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.charm.CoordType
-import se.alipsa.matrix.charm.Geom as CharmGeom
-import se.alipsa.matrix.charm.Position as CharmPosition
+import se.alipsa.matrix.charm.CharmCoordType
+import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.Scale as CharmScale
-import se.alipsa.matrix.charm.Stat as CharmStat
 import se.alipsa.matrix.gg.coord.Coord as GgCoord
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordPolar
@@ -45,44 +45,72 @@ import se.alipsa.matrix.gg.scale.ScaleYTime
 @CompileStatic
 class GgCharmMappingRegistry {
 
-  private final Map<Class<? extends GgGeom>, CharmGeom> geomMappings = [
-      (GeomPoint)    : CharmGeom.POINT,
-      (GeomLine)     : CharmGeom.LINE,
-      (GeomSmooth)   : CharmGeom.SMOOTH,
-      (GeomTile)     : CharmGeom.TILE,
-      (GeomCol)      : CharmGeom.COL,
-      (GeomBar)      : CharmGeom.BAR,
-      (GeomHistogram): CharmGeom.HISTOGRAM,
-      (GeomBoxplot)  : CharmGeom.BOXPLOT
-  ] as Map<Class<? extends GgGeom>, CharmGeom>
+  private final Map<Class<? extends GgGeom>, CharmGeomType> geomMappings = [
+      (GeomPoint)    : CharmGeomType.POINT,
+      (GeomLine)     : CharmGeomType.LINE,
+      (GeomSmooth)   : CharmGeomType.SMOOTH,
+      (GeomTile)     : CharmGeomType.TILE,
+      (GeomCol)      : CharmGeomType.COL,
+      (GeomBar)      : CharmGeomType.BAR,
+      (GeomHistogram): CharmGeomType.HISTOGRAM,
+      (GeomBoxplot)  : CharmGeomType.BOXPLOT
+  ] as Map<Class<? extends GgGeom>, CharmGeomType>
 
-  private final Map<StatType, CharmStat> statMappings = [
-      (StatType.IDENTITY): CharmStat.IDENTITY,
-      (StatType.SMOOTH)  : CharmStat.SMOOTH
-  ] as Map<StatType, CharmStat>
+  private final Map<StatType, CharmStatType> statMappings = [
+      (StatType.IDENTITY)  : CharmStatType.IDENTITY,
+      (StatType.COUNT)     : CharmStatType.COUNT,
+      (StatType.BIN)       : CharmStatType.BIN,
+      (StatType.BOXPLOT)   : CharmStatType.BOXPLOT,
+      (StatType.SMOOTH)    : CharmStatType.SMOOTH,
+      (StatType.QUANTILE)  : CharmStatType.QUANTILE,
+      (StatType.SUMMARY)   : CharmStatType.SUMMARY,
+      (StatType.DENSITY)   : CharmStatType.DENSITY,
+      (StatType.YDENSITY)  : CharmStatType.YDENSITY,
+      (StatType.DENSITY_2D): CharmStatType.DENSITY_2D,
+      (StatType.BIN2D)     : CharmStatType.BIN2D,
+      (StatType.BIN_HEX)   : CharmStatType.BIN_HEX,
+      (StatType.SUMMARY_HEX): CharmStatType.SUMMARY_HEX,
+      (StatType.SUMMARY_2D): CharmStatType.SUMMARY_2D,
+      (StatType.CONTOUR)   : CharmStatType.CONTOUR,
+      (StatType.ECDF)      : CharmStatType.ECDF,
+      (StatType.QQ)        : CharmStatType.QQ,
+      (StatType.QQ_LINE)   : CharmStatType.QQ_LINE,
+      (StatType.ELLIPSE)   : CharmStatType.ELLIPSE,
+      (StatType.SUMMARY_BIN): CharmStatType.SUMMARY_BIN,
+      (StatType.UNIQUE)    : CharmStatType.UNIQUE,
+      (StatType.FUNCTION)  : CharmStatType.FUNCTION,
+      (StatType.SF)        : CharmStatType.SF,
+      (StatType.SF_COORDINATES): CharmStatType.SF_COORDINATES,
+      (StatType.SPOKE)     : CharmStatType.SPOKE,
+      (StatType.ALIGN)     : CharmStatType.ALIGN
+  ] as Map<StatType, CharmStatType>
 
-  private final Map<PositionType, CharmPosition> positionMappings = [
-      (PositionType.IDENTITY): CharmPosition.IDENTITY,
-      (PositionType.STACK)   : CharmPosition.STACK,
-      (PositionType.DODGE)   : CharmPosition.DODGE
-  ] as Map<PositionType, CharmPosition>
+  private final Map<PositionType, CharmPositionType> positionMappings = [
+      (PositionType.IDENTITY): CharmPositionType.IDENTITY,
+      (PositionType.STACK)   : CharmPositionType.STACK,
+      (PositionType.DODGE)   : CharmPositionType.DODGE,
+      (PositionType.DODGE2)  : CharmPositionType.DODGE2,
+      (PositionType.FILL)    : CharmPositionType.FILL,
+      (PositionType.JITTER)  : CharmPositionType.JITTER,
+      (PositionType.NUDGE)   : CharmPositionType.NUDGE
+  ] as Map<PositionType, CharmPositionType>
 
-  private final Map<Class<? extends GgCoord>, CoordType> coordMappings = [
-      (CoordCartesian): CoordType.CARTESIAN,
-      (CoordPolar)    : CoordType.POLAR
-  ] as Map<Class<? extends GgCoord>, CoordType>
+  private final Map<Class<? extends GgCoord>, CharmCoordType> coordMappings = [
+      (CoordCartesian): CharmCoordType.CARTESIAN,
+      (CoordPolar)    : CharmCoordType.POLAR
+  ] as Map<Class<? extends GgCoord>, CharmCoordType>
 
   /**
-   * Maps a gg geom instance to a canonical Charm geom.
+   * Maps a gg geom instance to a canonical Charm geom type.
    *
    * @param geom gg geom
-   * @return mapped Charm geom, or null when unsupported
+   * @return mapped CharmGeomType, or null when unsupported
    */
-  CharmGeom mapGeom(GgGeom geom) {
+  CharmGeomType mapGeom(GgGeom geom) {
     if (geom == null) {
       return null
     }
-    for (Map.Entry<Class<? extends GgGeom>, CharmGeom> entry : geomMappings.entrySet()) {
+    for (Map.Entry<Class<? extends GgGeom>, CharmGeomType> entry : geomMappings.entrySet()) {
       if (entry.key.isInstance(geom)) {
         return entry.value
       }
@@ -91,42 +119,42 @@ class GgCharmMappingRegistry {
   }
 
   /**
-   * Maps a gg stat enum to a Charm stat enum.
+   * Maps a gg stat enum to a CharmStatType.
    *
    * @param statType gg stat
-   * @return mapped stat, or null when unsupported
+   * @return mapped CharmStatType, or null when unsupported
    */
-  CharmStat mapStat(StatType statType) {
+  CharmStatType mapStat(StatType statType) {
     if (statType == null) {
-      return CharmStat.IDENTITY
+      return CharmStatType.IDENTITY
     }
     statMappings[statType]
   }
 
   /**
-   * Maps a gg position enum to a Charm position enum.
+   * Maps a gg position enum to a CharmPositionType.
    *
    * @param positionType gg position
-   * @return mapped position, or null when unsupported
+   * @return mapped CharmPositionType, or null when unsupported
    */
-  CharmPosition mapPosition(PositionType positionType) {
+  CharmPositionType mapPosition(PositionType positionType) {
     if (positionType == null) {
-      return CharmPosition.IDENTITY
+      return CharmPositionType.IDENTITY
     }
     positionMappings[positionType]
   }
 
   /**
-   * Maps a gg coord instance to a Charm coord type.
+   * Maps a gg coord instance to a CharmCoordType.
    *
    * @param coord gg coord
-   * @return mapped coord type, or null when unsupported
+   * @return mapped CharmCoordType, or null when unsupported
    */
-  CoordType mapCoordType(GgCoord coord) {
+  CharmCoordType mapCoordType(GgCoord coord) {
     if (coord == null) {
-      return CoordType.CARTESIAN
+      return CharmCoordType.CARTESIAN
     }
-    for (Map.Entry<Class<? extends GgCoord>, CoordType> entry : coordMappings.entrySet()) {
+    for (Map.Entry<Class<? extends GgCoord>, CharmCoordType> entry : coordMappings.entrySet()) {
       if (entry.key.isInstance(coord)) {
         return entry.value
       }

@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmExpression
 
 /**
  * Wrapper for referencing computed statistics in aesthetic mappings.
@@ -19,7 +20,7 @@ import groovy.transform.CompileStatic
  * aes(x: 'displ', y: after_stat('count'))
  */
 @CompileStatic
-class AfterStat {
+class AfterStat implements CharmExpression {
 
   /** The name of the computed statistic to reference */
   final String stat
@@ -54,5 +55,10 @@ class AfterStat {
   @Override
   int hashCode() {
     return stat.hashCode()
+  }
+
+  @Override
+  String describe() {
+    "after_stat(${stat})"
   }
 }

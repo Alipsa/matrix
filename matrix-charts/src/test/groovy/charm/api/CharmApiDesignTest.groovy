@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Cols
-import se.alipsa.matrix.charm.Geom
+import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.core.Matrix
@@ -138,8 +138,8 @@ class CharmApiDesignTest {
       Cols col = new Cols()
       PlotSpec spec = chart(data)
       spec.aes(x: col['cty'], y: col['hwy'], color: col['class'])
-      spec.layer(Geom.POINT, [size: 2, alpha: 0.7])
-      spec.layer(Geom.SMOOTH, [method: 'lm'])
+      spec.layer(CharmGeomType.POINT, [size: 2, alpha: 0.7])
+      spec.layer(CharmGeomType.SMOOTH, [method: 'lm'])
       spec.build()
     }
   }

@@ -5,11 +5,12 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Aes
 import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.CharmRenderException
+import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.FacetType
-import se.alipsa.matrix.charm.Geom
 import se.alipsa.matrix.charm.LayerSpec
-import se.alipsa.matrix.charm.Position
-import se.alipsa.matrix.charm.Stat
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
 /**
@@ -167,15 +168,15 @@ class CharmRenderer {
       int panelWidth,
       int panelHeight
   ) {
-    switch (layer.geom) {
-      case Geom.POINT -> renderPoints(dataLayer, context, layer, layerData)
-      case Geom.LINE, Geom.SMOOTH -> renderLines(dataLayer, context, layer, layerData)
-      case Geom.TILE -> renderTiles(dataLayer, context, layer, layerData)
-      case Geom.BAR, Geom.COL, Geom.HISTOGRAM -> renderBars(dataLayer, context, layer, layerData, panelHeight)
-      case Geom.AREA -> renderArea(dataLayer, context, layer, layerData, panelHeight)
-      case Geom.PIE -> renderPie(dataLayer, context, layer, layerData, panelWidth, panelHeight)
-      case Geom.BOXPLOT -> renderBoxplot(dataLayer, context, layer, layerData, panelHeight)
-      default -> renderPoints(dataLayer, context, layer, layerData)
+    switch (layer.geomType) {
+      case CharmGeomType.POINT -> renderPoints(dataLayer, context, layer, layerData)
+      case CharmGeomType.LINE, CharmGeomType.SMOOTH -> renderLines(dataLayer, context, layer, layerData)
+      case CharmGeomType.TILE -> renderTiles(dataLayer, context, layer, layerData)
+      case CharmGeomType.BAR, CharmGeomType.COL, CharmGeomType.HISTOGRAM -> renderBars(dataLayer, context, layer, layerData, panelHeight)
+      case CharmGeomType.AREA -> renderArea(dataLayer, context, layer, layerData, panelHeight)
+      case CharmGeomType.PIE -> renderPie(dataLayer, context, layer, layerData, panelWidth, panelHeight)
+      case CharmGeomType.BOXPLOT -> renderBoxplot(dataLayer, context, layer, layerData, panelHeight)
+      default -> throw new CharmRenderException("Unsupported geom type: ${layer.geomType}")
     }
   }
 
@@ -222,7 +223,7 @@ class CharmRenderer {
       dataLayer.addLine(x1, y1, x2, y2)
           .stroke(stroke)
           .strokeWidth(width)
-          .styleClass(layer.geom == Geom.SMOOTH ? 'charm-smooth' : 'charm-line')
+          .styleClass(layer.geomType == CharmGeomType.SMOOTH ? 'charm-smooth' : 'charm-line')
     }
   }
 
@@ -338,20 +339,20 @@ class CharmRenderer {
   }
 
   private List<LayerData> applyStat(LayerSpec layer, List<LayerData> mapped) {
-    if (layer.geom == Geom.HISTOGRAM) {
+    if (layer.geomType == CharmGeomType.HISTOGRAM) {
       return histogramStat(layer, mapped)
     }
-    if (layer.geom == Geom.BOXPLOT) {
+    if (layer.geomType == CharmGeomType.BOXPLOT) {
       return boxplotStat(mapped)
     }
-    if (layer.stat == Stat.SMOOTH) {
+    if (layer.statType == CharmStatType.SMOOTH) {
       return smoothStat(mapped)
     }
     mapped
   }
 
   private static List<LayerData> applyPosition(LayerSpec layer, List<LayerData> data) {
-    if (layer.position != Position.STACK || !(layer.geom in [Geom.BAR, Geom.COL, Geom.HISTOGRAM])) {
+    if (layer.positionType != CharmPositionType.STACK || !(layer.geomType in [CharmGeomType.BAR, CharmGeomType.COL, CharmGeomType.HISTOGRAM])) {
       return data
     }
     Map<String, BigDecimal> cumulative = [:]
@@ -366,6 +367,19 @@ class CharmRenderer {
           y: next,
           color: datum.color,
           fill: datum.fill,
+          xend: datum.xend,
+          yend: datum.yend,
+          xmin: datum.xmin,
+          xmax: datum.xmax,
+          ymin: datum.ymin,
+          ymax: datum.ymax,
+          size: datum.size,
+          shape: datum.shape,
+          alpha: datum.alpha,
+          linetype: datum.linetype,
+          group: datum.group,
+          label: datum.label,
+          weight: datum.weight,
           rowIndex: datum.rowIndex,
           meta: new LinkedHashMap<>(datum.meta)
       )
