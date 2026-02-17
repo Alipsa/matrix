@@ -31,7 +31,6 @@ A feature row may be marked `[x]` only when:
 | Geom: GeomViolin | P0 | `charm/render/geom/ViolinRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testViolinRepresentativeAndEmptyEdge` | [x] |
 | Geom: GeomTile | P0 | `charm/render/geom/TileRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testTileRepresentativeAndEmptyEdge` | [x] |
 | Geom: GeomText | P0 | `charm/render/geom/TextRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testTextRepresentativeAndEmptyEdge` | [x] |
-| Geom: PIE (charm-only extension) | Charm extension | `charm/render/geom/PieRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `PieRendererTest.testPieRendersOneSlicePerPositiveDatum`, `PieRendererTest.testPieReturnsNoSlicesForEmptyOrNonPositiveInput` | [x] |
 | Geom: GeomJitter | P1 | - | - | [ ] |
 | Geom: GeomStep | P1 | - | - | [ ] |
 | Geom: GeomErrorbar | P1 | - | - | [ ] |
