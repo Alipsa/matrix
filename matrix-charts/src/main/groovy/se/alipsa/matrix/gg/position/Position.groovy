@@ -1,6 +1,8 @@
 package se.alipsa.matrix.gg.position
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.gg.layer.PositionType
 
 /**
@@ -24,5 +26,15 @@ class Position {
   Position(PositionType positionType, Map params = [:]) {
     this.positionType = positionType
     this.params = params ?: [:]
+  }
+
+  /**
+   * Converts this gg position wrapper to a charm PositionSpec.
+   *
+   * @return equivalent charm PositionSpec with type and params
+   */
+  PositionSpec toCharmPositionSpec() {
+    CharmPositionType charmType = CharmPositionType.valueOf(positionType.name())
+    PositionSpec.of(charmType, params as Map<String, Object>)
   }
 }

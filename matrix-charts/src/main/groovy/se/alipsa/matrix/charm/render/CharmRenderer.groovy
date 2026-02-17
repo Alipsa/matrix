@@ -346,40 +346,7 @@ class CharmRenderer {
   }
 
   private static List<LayerData> applyPosition(LayerSpec layer, List<LayerData> data) {
-    if (layer.positionType != CharmPositionType.STACK || !(layer.geomType in [CharmGeomType.BAR, CharmGeomType.COL, CharmGeomType.HISTOGRAM])) {
-      return data
-    }
-    Map<String, BigDecimal> cumulative = [:]
-    List<LayerData> stacked = []
-    data.each { LayerData datum ->
-      String key = datum.x?.toString() ?: ''
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(datum.y) ?: 0
-      BigDecimal next = (cumulative[key] ?: 0) + y
-      cumulative[key] = next
-      LayerData updated = new LayerData(
-          x: datum.x,
-          y: next,
-          color: datum.color,
-          fill: datum.fill,
-          xend: datum.xend,
-          yend: datum.yend,
-          xmin: datum.xmin,
-          xmax: datum.xmax,
-          ymin: datum.ymin,
-          ymax: datum.ymax,
-          size: datum.size,
-          shape: datum.shape,
-          alpha: datum.alpha,
-          linetype: datum.linetype,
-          group: datum.group,
-          label: datum.label,
-          weight: datum.weight,
-          rowIndex: datum.rowIndex,
-          meta: new LinkedHashMap<>(datum.meta)
-      )
-      stacked << updated
-    }
-    stacked
+    se.alipsa.matrix.charm.render.position.PositionEngine.apply(layer, data)
   }
 
 
