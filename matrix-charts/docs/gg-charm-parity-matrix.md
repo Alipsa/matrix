@@ -74,13 +74,13 @@ A feature row may be marked `[x]` only when:
 | Geom: GeomSf | P2 | - | - | [ ] |
 | Geom: GeomSfLabel | P2 | - | - | [ ] |
 | Geom: GeomSfText | P2 | - | - | [ ] |
-| Stat: IDENTITY | P0 | - | - | [ ] |
-| Stat: COUNT | P0 | - | - | [ ] |
-| Stat: BIN | P0 | - | - | [ ] |
-| Stat: BOXPLOT | P0 | - | - | [ ] |
-| Stat: SMOOTH | P0 | - | - | [ ] |
-| Stat: DENSITY | P0 | - | - | [ ] |
-| Stat: YDENSITY | P0 | - | - | [ ] |
+| Stat: IDENTITY | P0 | `charm/render/stat/IdentityStat`, `StatEngine` dispatch | `IdentityStatTest`, `StatEngineTest` | [x] |
+| Stat: COUNT | P0 | `charm/render/stat/CountStat`, `StatEngine` dispatch | `CountStatTest`, `StatEngineTest` | [x] |
+| Stat: BIN | P0 | `charm/render/stat/BinStat`, `StatEngine` dispatch | `BinStatTest`, `StatEngineTest` | [x] |
+| Stat: BOXPLOT | P0 | `charm/render/stat/BoxplotStat`, `StatEngine` dispatch | `BoxplotStatTest`, `StatEngineTest` | [x] |
+| Stat: SMOOTH | P0 | `charm/render/stat/SmoothStat`, `StatEngine` dispatch | `SmoothStatTest`, `StatEngineTest` | [x] |
+| Stat: DENSITY | P0 | `charm/render/stat/DensityStat`, `StatEngine` dispatch | `DensityStatTest`, `StatEngineTest` | [x] |
+| Stat: YDENSITY | P0 | `charm/render/stat/YDensityStat`, `StatEngine` dispatch | `YDensityStatTest`, `StatEngineTest` | [x] |
 | Stat: SUMMARY | P1 | - | - | [ ] |
 | Stat: BIN2D | P1 | - | - | [ ] |
 | Stat: CONTOUR | P1 | - | - | [ ] |
