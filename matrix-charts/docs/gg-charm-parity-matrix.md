@@ -100,10 +100,10 @@ A feature row may be marked `[x]` only when:
 | Stat: SF_COORDINATES | P2 | - | - | [ ] |
 | Stat: SPOKE | P2 | - | - | [ ] |
 | Stat: ALIGN | P2 | - | - | [ ] |
-| Position: IDENTITY | P0 | - | - | [ ] |
-| Position: DODGE | P0 | - | - | [ ] |
-| Position: STACK | P0 | - | - | [ ] |
-| Position: FILL | P0 | - | - | [ ] |
+| Position: IDENTITY | P0 | `charm/render/position/IdentityPosition`, `PositionEngine` dispatch | `IdentityPositionTest`, `PositionEngineTest` | [x] |
+| Position: DODGE | P0 | `charm/render/position/DodgePosition`, `PositionEngine` dispatch | `DodgePositionTest`, `PositionEngineTest` | [x] |
+| Position: STACK | P0 | `charm/render/position/StackPosition`, `PositionEngine` dispatch | `StackPositionTest`, `PositionEngineTest` | [x] |
+| Position: FILL | P0 | `charm/render/position/FillPosition`, `PositionEngine` dispatch | `FillPositionTest`, `PositionEngineTest` | [x] |
 | Position: JITTER | P1 | - | - | [ ] |
 | Position: DODGE2 | P1 | - | - | [ ] |
 | Position: NUDGE | P1 | - | - | [ ] |

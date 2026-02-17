@@ -319,10 +319,10 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P0:**
 
-3.3.1 [ ] IDENTITY
-3.3.2 [ ] DODGE
-3.3.3 [ ] STACK
-3.3.4 [ ] FILL
+3.3.1 [x] IDENTITY
+3.3.2 [x] DODGE
+3.3.3 [x] STACK
+3.3.4 [x] FILL
 
 **P1:**
 
@@ -578,13 +578,13 @@ _Build charm's statistical transformation pipeline._
 
 _Build charm's position adjustment pipeline._
 
-5.5.1 [ ] Create `charm/render/position/PositionEngine.groovy` as dispatch hub.
+5.5.1 [x] Create `charm/render/position/PositionEngine.groovy` as dispatch hub.
 
-5.5.2 [ ] Implement P0 positions: IDENTITY, DODGE, STACK, FILL (3.3.1-3.3.4). Port logic from `gg/position/GgPosition.groovy`.
+5.5.2 [x] Implement P0 positions: IDENTITY, DODGE, STACK, FILL (3.3.1-3.3.4). Port logic from `gg/position/GgPosition.groovy`.
 
-5.5.3 [ ] Port parameter semantics: `width` (dodge), `reverse` (stack/fill).
+5.5.3 [x] Port parameter semantics: `width` (dodge), `reverse` (stack/fill).
 
-5.5.4 [ ] Add tests for each P0 position, including interaction with grouping and scale transforms.
+5.5.4 [x] Add tests for each P0 position, including interaction with grouping and scale transforms.
 
 ### 5.6 Phase 6 -- Coordinate Engine
 
