@@ -2,6 +2,8 @@ package se.alipsa.matrix.gg.coord
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmCoordType
+import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -10,6 +12,16 @@ import se.alipsa.matrix.core.Matrix
  */
 @CompileStatic
 abstract class Coord {
+
+  /**
+   * Converts this gg coord to a charm CoordSpec.
+   * Subclasses should override to include their specific params.
+   *
+   * @return equivalent charm CoordSpec with type and params
+   */
+  CoordSpec toCharmCoordSpec() {
+    new CoordSpec(type: CharmCoordType.CARTESIAN, params: [:])
+  }
 
   /**
    * Transform data coordinates to pixel coordinates.

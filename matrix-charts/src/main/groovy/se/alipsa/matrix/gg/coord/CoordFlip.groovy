@@ -2,6 +2,8 @@ package se.alipsa.matrix.gg.coord
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmCoordType
+import se.alipsa.matrix.charm.CoordSpec
 
 /**
  * Flipped Cartesian coordinate system - swaps x and y axes.
@@ -38,6 +40,14 @@ class CoordFlip extends Coord {
   CoordFlip(Map params) {
     if (params.xlim) this.xlim = params.xlim as List<Number>
     if (params.ylim) this.ylim = params.ylim as List<Number>
+  }
+
+  @Override
+  CoordSpec toCharmCoordSpec() {
+    Map<String, Object> p = [:]
+    if (xlim) p.xlim = xlim
+    if (ylim) p.ylim = ylim
+    new CoordSpec(type: CharmCoordType.FLIP, params: p)
   }
 
   /**

@@ -107,9 +107,9 @@ A feature row may be marked `[x]` only when:
 | Position: JITTER | P1 | - | - | [ ] |
 | Position: DODGE2 | P1 | - | - | [ ] |
 | Position: NUDGE | P1 | - | - | [ ] |
-| Coord: CoordCartesian | P0 | - | - | [ ] |
-| Coord: CoordFlip | P0 | - | - | [ ] |
-| Coord: CoordFixed | P0 | - | - | [ ] |
+| Coord: CoordCartesian | P0 | `charm/render/coord/CartesianCoord`, `CoordEngine` dispatch | `CartesianCoordTest`, `CoordEngineTest` | [x] |
+| Coord: CoordFlip | P0 | `charm/render/coord/FlipCoord`, `CoordEngine` dispatch | `FlipCoordTest`, `CoordEngineTest` | [x] |
+| Coord: CoordFixed | P0 | `charm/render/coord/FixedCoord`, `CoordEngine` dispatch | `FixedCoordTest`, `CoordEngineTest` | [x] |
 | Coord: CoordPolar | P1 | - | - | [ ] |
 | Coord: CoordRadial | P1 | - | - | [ ] |
 | Coord: CoordTrans | P1 | - | - | [ ] |

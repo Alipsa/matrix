@@ -8,6 +8,8 @@ import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.Scale as CharmScale
 import se.alipsa.matrix.gg.coord.Coord as GgCoord
 import se.alipsa.matrix.gg.coord.CoordCartesian
+import se.alipsa.matrix.gg.coord.CoordFixed
+import se.alipsa.matrix.gg.coord.CoordFlip
 import se.alipsa.matrix.gg.coord.CoordPolar
 import se.alipsa.matrix.gg.geom.Geom as GgGeom
 import se.alipsa.matrix.gg.geom.GeomBar
@@ -97,6 +99,8 @@ class GgCharmMappingRegistry {
 
   private final Map<Class<? extends GgCoord>, CharmCoordType> coordMappings = [
       (CoordCartesian): CharmCoordType.CARTESIAN,
+      (CoordFixed)    : CharmCoordType.FIXED,
+      (CoordFlip)     : CharmCoordType.FLIP,
       (CoordPolar)    : CharmCoordType.POLAR
   ] as Map<Class<? extends GgCoord>, CharmCoordType>
 

@@ -319,7 +319,8 @@ class CharmRenderer {
 
     List<LayerData> mapped = mapData(context.chart.data, aes, rowIndexes)
     List<LayerData> statData = applyStat(layer, mapped)
-    List<LayerData> result = applyPosition(layer, statData)
+    List<LayerData> posData = applyPosition(layer, statData)
+    List<LayerData> result = applyCoord(context.chart.coord, posData)
     layerCache[rowKey] = result
     result
   }
@@ -347,6 +348,10 @@ class CharmRenderer {
 
   private static List<LayerData> applyPosition(LayerSpec layer, List<LayerData> data) {
     se.alipsa.matrix.charm.render.position.PositionEngine.apply(layer, data)
+  }
+
+  private static List<LayerData> applyCoord(se.alipsa.matrix.charm.CoordSpec coord, List<LayerData> data) {
+    se.alipsa.matrix.charm.render.coord.CoordEngine.apply(coord, data)
   }
 
 
@@ -548,6 +553,11 @@ class CharmRenderer {
     BigDecimal titleSize = (context.chart.theme.text?.titleSize ?: 16) as BigDecimal
     BigDecimal labelSize = (context.chart.theme.text?.size ?: 12) as BigDecimal
 
+    // When coord is FLIP, swap x/y axis labels since data axes are swapped
+    boolean flipped = context.chart.coord?.type == se.alipsa.matrix.charm.CharmCoordType.FLIP
+    String xLabelText = flipped ? context.chart.labels?.y : context.chart.labels?.x
+    String yLabelText = flipped ? context.chart.labels?.x : context.chart.labels?.y
+
     if (context.chart.labels?.title) {
       context.svg.addText(context.chart.labels.title)
           .x(context.config.width / 2)
@@ -557,8 +567,8 @@ class CharmRenderer {
           .fill(textColor)
           .styleClass('charm-title')
     }
-    if (context.chart.labels?.x) {
-      context.svg.addText(context.chart.labels.x)
+    if (xLabelText) {
+      context.svg.addText(xLabelText)
           .x(context.config.marginLeft + context.config.plotWidth() / 2)
           .y(context.config.height - 10)
           .textAnchor('middle')
@@ -566,9 +576,9 @@ class CharmRenderer {
           .fill(textColor)
           .styleClass('charm-x-label')
     }
-    if (context.chart.labels?.y) {
+    if (yLabelText) {
       int yMid = context.config.marginTop + context.config.plotHeight().intdiv(2)
-      context.svg.addText(context.chart.labels.y)
+      context.svg.addText(yLabelText)
           .x(18)
           .y(yMid)
           .transform("rotate(-90, 18, $yMid)")

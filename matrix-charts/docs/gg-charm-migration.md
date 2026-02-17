@@ -334,9 +334,9 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P0:**
 
-3.4.1 [ ] CoordCartesian
-3.4.2 [ ] CoordFlip
-3.4.3 [ ] CoordFixed
+3.4.1 [x] CoordCartesian
+3.4.2 [x] CoordFlip
+3.4.3 [x] CoordFixed
 
 **P1:**
 
@@ -590,13 +590,13 @@ _Build charm's position adjustment pipeline._
 
 _Build charm's coordinate transformation pipeline._
 
-5.6.1 [ ] Create `charm/render/coord/CoordEngine.groovy` as dispatch hub.
+5.6.1 [x] Create `charm/render/coord/CoordEngine.groovy` as dispatch hub.
 
-5.6.2 [ ] Implement P0 coords: Cartesian, Flip, Fixed (3.4.1-3.4.3). Port logic from `gg/coord/` classes.
+5.6.2 [x] Implement P0 coords: Cartesian, Flip, Fixed (3.4.1-3.4.3). Port logic from `gg/coord/` classes.
 
-5.6.3 [ ] Implement axis/grid behavior differences per coordinate system.
+5.6.3 [x] Implement axis/grid behavior differences per coordinate system.
 
-5.6.4 [ ] Add tests for each P0 coord type.
+5.6.4 [x] Add tests for each P0 coord type.
 
 ### 5.7 Phase 7 -- P0 Geom Rendering
 

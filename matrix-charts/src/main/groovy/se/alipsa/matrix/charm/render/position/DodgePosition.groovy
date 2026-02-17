@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.render.position
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.render.LayerDataUtil
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
 /**
@@ -54,7 +55,7 @@ class DodgePosition {
       if (nGroups <= 1) {
         // Single group: copy data unchanged
         bucket.each { LayerData datum ->
-          result.add(copyDatum(datum))
+          result.add(LayerDataUtil.copyDatum(datum))
         }
         return
       }
@@ -67,7 +68,7 @@ class DodgePosition {
       }
 
       bucket.each { LayerData datum ->
-        LayerData updated = copyDatum(datum)
+        LayerData updated = LayerDataUtil.copyDatum(datum)
         Object group = resolveGroup(datum)
         BigDecimal xNum = NumberCoercionUtil.coerceToBigDecimal(datum.x)
         if (xNum != null && groupOffsets.containsKey(group)) {
@@ -85,32 +86,5 @@ class DodgePosition {
    */
   private static Object resolveGroup(LayerData datum) {
     datum.group ?: datum.fill ?: datum.color
-  }
-
-  /**
-   * Creates a shallow copy of a LayerData.
-   */
-  private static LayerData copyDatum(LayerData datum) {
-    new LayerData(
-        x: datum.x,
-        y: datum.y,
-        color: datum.color,
-        fill: datum.fill,
-        xend: datum.xend,
-        yend: datum.yend,
-        xmin: datum.xmin,
-        xmax: datum.xmax,
-        ymin: datum.ymin,
-        ymax: datum.ymax,
-        size: datum.size,
-        shape: datum.shape,
-        alpha: datum.alpha,
-        linetype: datum.linetype,
-        group: datum.group,
-        label: datum.label,
-        weight: datum.weight,
-        rowIndex: datum.rowIndex,
-        meta: new LinkedHashMap<>(datum.meta)
-    )
   }
 }
