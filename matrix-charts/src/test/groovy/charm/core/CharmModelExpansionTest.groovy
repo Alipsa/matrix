@@ -3,6 +3,7 @@ package charm.core
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Aes
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmExpression
@@ -90,7 +91,7 @@ class CharmModelExpansionTest {
         CharmPositionType.IDENTITY
     )
     assertEquals(CharmGeomType.POINT, spec.type)
-    assertEquals(3, spec.params.size)
+    assertEquals(3, spec.params['size'])
     assertEquals(['x', 'y'], spec.requiredAes)
     assertEquals('black', spec.defaultAes.color)
     assertEquals(CharmStatType.IDENTITY, spec.defaultStat)
@@ -365,8 +366,8 @@ class CharmModelExpansionTest {
 
     Svg svg = chart.render()
     assertNotNull(svg)
-    String svgStr = svg.toString()
-    assertTrue(svgStr.length() > 0)
+    String svgXml = SvgWriter.toXml(svg)
+    assertTrue(svgXml.contains('<svg'), 'Expected valid SVG XML output')
   }
 
   @Test
