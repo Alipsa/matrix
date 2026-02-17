@@ -8,7 +8,6 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmRenderException
-import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
@@ -16,6 +15,7 @@ import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
 import se.alipsa.matrix.charm.render.scale.TrainedScales
+import se.alipsa.matrix.charm.render.stat.StatEngine
 
 /**
  * Charm SVG renderer.
@@ -341,17 +341,8 @@ class CharmRenderer {
     columnName == null ? null : data[rowIndex, columnName]
   }
 
-  private List<LayerData> applyStat(LayerSpec layer, List<LayerData> mapped) {
-    if (layer.geomType == CharmGeomType.HISTOGRAM) {
-      return histogramStat(layer, mapped)
-    }
-    if (layer.geomType == CharmGeomType.BOXPLOT) {
-      return boxplotStat(mapped)
-    }
-    if (layer.statType == CharmStatType.SMOOTH) {
-      return smoothStat(mapped)
-    }
-    mapped
+  private static List<LayerData> applyStat(LayerSpec layer, List<LayerData> mapped) {
+    StatEngine.apply(layer, mapped)
   }
 
   private static List<LayerData> applyPosition(LayerSpec layer, List<LayerData> data) {
@@ -391,76 +382,6 @@ class CharmRenderer {
     stacked
   }
 
-  private static List<LayerData> smoothStat(List<LayerData> mapped) {
-    List<LayerData> numeric = mapped.findAll { LayerData d ->
-      NumberCoercionUtil.coerceToBigDecimal(d.x) != null && NumberCoercionUtil.coerceToBigDecimal(d.y) != null
-    }
-    if (numeric.size() < 2) {
-      return mapped
-    }
-    BigDecimal n = numeric.size()
-    BigDecimal sumX = numeric.sum { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.x) } as BigDecimal
-    BigDecimal sumY = numeric.sum { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.y) } as BigDecimal
-    BigDecimal sumXY = numeric.sum { LayerData d ->
-      NumberCoercionUtil.coerceToBigDecimal(d.x) * NumberCoercionUtil.coerceToBigDecimal(d.y)
-    } as BigDecimal
-    BigDecimal sumX2 = numeric.sum { LayerData d ->
-      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(d.x)
-      x * x
-    } as BigDecimal
-    BigDecimal denominator = n * sumX2 - sumX * sumX
-    if (denominator == 0) {
-      return mapped
-    }
-    BigDecimal slope = (n * sumXY - sumX * sumY) / denominator
-    BigDecimal intercept = (sumY - slope * sumX) / n
-
-    BigDecimal minX = numeric.collect { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.x) }.min()
-    BigDecimal maxX = numeric.collect { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.x) }.max()
-    LayerData p1 = new LayerData(x: minX, y: intercept + slope * minX, color: numeric.first().color, fill: numeric.first().fill, rowIndex: -1)
-    LayerData p2 = new LayerData(x: maxX, y: intercept + slope * maxX, color: numeric.first().color, fill: numeric.first().fill, rowIndex: -1)
-    [p1, p2]
-  }
-
-  private static List<LayerData> histogramStat(LayerSpec layer, List<LayerData> mapped) {
-    List<BigDecimal> values = mapped.collect { LayerData d ->
-      NumberCoercionUtil.coerceToBigDecimal(d.x)
-    }.findAll { BigDecimal v -> v != null } as List<BigDecimal>
-    if (values.isEmpty()) {
-      return []
-    }
-    int bins = (layer.params.bins instanceof Number) ? (layer.params.bins as Number).intValue() : 10
-    bins = bins < 1 ? 10 : bins
-    BigDecimal min = values.min()
-    BigDecimal max = values.max()
-    if (min == max) {
-      max = max + 1
-    }
-    BigDecimal width = (max - min) / bins
-    List<Integer> counts = new ArrayList<>(Collections.nCopies(bins, 0))
-    values.each { BigDecimal value ->
-      int idx = ((value - min) / width) as int
-      idx = Math.min(Math.max(idx, 0), bins - 1)
-      counts[idx] = counts[idx] + 1
-    }
-    List<LayerData> histogram = []
-    for (int i = 0; i < bins; i++) {
-      BigDecimal start = min + width * i
-      BigDecimal end = start + width
-      BigDecimal center = start + width / 2
-      LayerData datum = new LayerData(
-          x: center,
-          y: counts[i],
-          color: mapped.first()?.color,
-          fill: mapped.first()?.fill,
-          rowIndex: -1
-      )
-      datum.meta.binStart = start
-      datum.meta.binEnd = end
-      histogram << datum
-    }
-    histogram
-  }
 
   private void renderArea(
       G dataLayer,
@@ -622,68 +543,6 @@ class CharmRenderer {
         }
       }
     }
-  }
-
-  private static List<LayerData> boxplotStat(List<LayerData> mapped) {
-    Map<String, List<BigDecimal>> groups = [:]
-    Map<String, LayerData> templates = [:]
-    mapped.each { LayerData d ->
-      String key = d.x?.toString() ?: ''
-      BigDecimal yVal = NumberCoercionUtil.coerceToBigDecimal(d.y)
-      if (yVal != null) {
-        groups.computeIfAbsent(key) { [] } << yVal
-        if (!templates.containsKey(key)) {
-          templates[key] = d
-        }
-      }
-    }
-    List<LayerData> result = []
-    groups.each { String key, List<BigDecimal> values ->
-      values.sort()
-      int n = values.size()
-      BigDecimal q1 = percentile(values, 0.25)
-      BigDecimal median = percentile(values, 0.5)
-      BigDecimal q3 = percentile(values, 0.75)
-      BigDecimal iqr = q3 - q1
-      BigDecimal lowerFence = q1 - 1.5 * iqr
-      BigDecimal upperFence = q3 + 1.5 * iqr
-      BigDecimal whiskerLow = values.find { it >= lowerFence } ?: values.first()
-      BigDecimal whiskerHigh = values.reverse().find { it <= upperFence } ?: values.last()
-      List<BigDecimal> outliers = values.findAll { it < lowerFence || it > upperFence }
-      LayerData template = templates[key]
-      LayerData datum = new LayerData(
-          x: template.x,
-          y: median,
-          color: template.color,
-          fill: template.fill,
-          rowIndex: -1
-      )
-      datum.meta.q1 = q1
-      datum.meta.median = median
-      datum.meta.q3 = q3
-      datum.meta.whiskerLow = whiskerLow
-      datum.meta.whiskerHigh = whiskerHigh
-      datum.meta.outliers = outliers
-      result << datum
-    }
-    result
-  }
-
-  private static BigDecimal percentile(List<BigDecimal> sorted, BigDecimal p) {
-    if (sorted.isEmpty()) {
-      return 0
-    }
-    if (sorted.size() == 1) {
-      return sorted.first()
-    }
-    BigDecimal index = p * (sorted.size() - 1)
-    int lower = index.intValue()
-    int upper = lower + 1
-    if (upper >= sorted.size()) {
-      return sorted.last()
-    }
-    BigDecimal fraction = index - lower
-    sorted[lower] + fraction * (sorted[upper] - sorted[lower])
   }
 
   private static Aes effectiveAes(Aes plotAes, LayerSpec layer) {

@@ -462,9 +462,7 @@ class PlotSpec {
 
   private static StatSpec coerceStat(Object value, CharmGeomType geomType) {
     if (value == null) {
-      return geomType == CharmGeomType.SMOOTH
-          ? StatSpec.of(CharmStatType.SMOOTH)
-          : StatSpec.of(CharmStatType.IDENTITY)
+      return StatSpec.of(defaultStatForGeom(geomType))
     }
     if (value instanceof CharmStatType) {
       return StatSpec.of(value as CharmStatType)
@@ -480,6 +478,17 @@ class PlotSpec {
       }
     }
     throw new CharmValidationException("Unsupported layer stat type '${value.getClass().name}'")
+  }
+
+  private static final Map<CharmGeomType, CharmStatType> GEOM_DEFAULT_STATS = [
+      (CharmGeomType.HISTOGRAM): CharmStatType.BIN,
+      (CharmGeomType.BOXPLOT)  : CharmStatType.BOXPLOT,
+      (CharmGeomType.SMOOTH)   : CharmStatType.SMOOTH,
+      (CharmGeomType.BAR)      : CharmStatType.COUNT
+  ]
+
+  private static CharmStatType defaultStatForGeom(CharmGeomType geomType) {
+    GEOM_DEFAULT_STATS[geomType] ?: CharmStatType.IDENTITY
   }
 
   private static boolean parseBooleanOption(Object value, String optionName) {

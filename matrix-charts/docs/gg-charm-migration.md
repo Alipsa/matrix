@@ -282,13 +282,13 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P0:**
 
-3.2.1 [ ] IDENTITY
-3.2.2 [ ] COUNT
-3.2.3 [ ] BIN
-3.2.4 [ ] BOXPLOT
-3.2.5 [ ] SMOOTH
-3.2.6 [ ] DENSITY
-3.2.7 [ ] YDENSITY
+3.2.1 [x] IDENTITY
+3.2.2 [x] COUNT
+3.2.3 [x] BIN
+3.2.4 [x] BOXPLOT
+3.2.5 [x] SMOOTH
+3.2.6 [x] DENSITY
+3.2.7 [x] YDENSITY
 
 **P1:**
 
@@ -544,35 +544,35 @@ _Restructure charm's core model types from thin enums to parameterized specs._
 
 _Build charm's scale infrastructure. Geom rendering depends on trained scales._
 
-5.3.1 [ ] Design charm scale architecture: `CharmScale` base with `ContinuousScale`, `DiscreteScale`, `BinnedScale` subclasses in `charm/render/scale/`.
+5.3.1 [x] Design charm scale architecture: `CharmScale` base with `ContinuousScale`, `DiscreteScale`, `BinnedScale` subclasses in `charm/render/scale/`.
 
-5.3.2 [ ] Implement P0 positional scales: continuous, discrete, log10, reverse for x and y (3.5.1-3.5.4).
+5.3.2 [x] Implement P0 positional scales: continuous, discrete, log10, reverse for x and y (3.5.1-3.5.4).
 
-5.3.3 [ ] Implement P0 color/fill scales: manual, brewer, gradient, viridis, fill identity (3.5.5-3.5.9).
+5.3.3 [x] Implement P0 color/fill scales: manual, brewer, gradient, viridis, fill identity (3.5.5-3.5.9).
 
-5.3.4 [ ] Move `BrewerPalettes`, `ColorScaleUtil`, `ColorSpaceUtil`, `ScaleUtils` from `gg/scale/` to `charm/render/scale/`.
+5.3.4 [x] Move `BrewerPalettes`, `ColorScaleUtil`, `ColorSpaceUtil`, `ScaleUtils` from `gg/scale/` to `charm/render/scale/`.
 
-5.3.5 [ ] Implement scale training pipeline in `ScaleEngine`: train from data + explicit scale specs, produce domain/range/breaks/labels/transform.
+5.3.5 [x] Implement scale training pipeline in `ScaleEngine`: train from data + explicit scale specs, produce domain/range/breaks/labels/transform.
 
-5.3.6 [ ] Implement full aesthetic channel training for: `x`, `y`, `color`, `fill`, `size`, `shape`, `alpha`, `linetype`, `group`.
+5.3.6 [x] Implement full aesthetic channel training for: `x`, `y`, `color`, `fill`, `size`, `shape`, `alpha`, `linetype`, `group`.
 
-5.3.7 [ ] Add tests for each P0 scale type.
+5.3.7 [x] Add tests for each P0 scale type.
 
-5.3.8 [ ] Convert gg scale classes to thin wrappers/factories over charm scale specs. Keep gg API signatures stable while moving scale training logic entirely into charm scale engines.
+5.3.8 [x] Convert gg scale classes to thin wrappers/factories over charm scale specs. Keep gg API signatures stable while moving scale training logic entirely into charm scale engines.
 
 ### 5.4 Phase 4 -- Stat Engine
 
 _Build charm's statistical transformation pipeline._
 
-5.4.1 [ ] Create/expand `charm/render/stat/StatEngine.groovy` as the single stat dispatch hub.
+5.4.1 [x] Create/expand `charm/render/stat/StatEngine.groovy` as the single stat dispatch hub.
 
-5.4.2 [ ] Implement P0 stats: IDENTITY, COUNT, BIN, BOXPLOT, SMOOTH, DENSITY, YDENSITY (3.2.1-3.2.7). Port computation logic from `gg/stat/` classes (`StatsBin`, `StatsBoxplot`, `StatsSmooth`, `StatsDensity`, `StatsCount`, `StatsYDensity`).
+5.4.2 [x] Implement P0 stats: IDENTITY, COUNT, BIN, BOXPLOT, SMOOTH, DENSITY, YDENSITY (3.2.1-3.2.7). Port computation logic from `gg/stat/` classes (`StatsBin`, `StatsBoxplot`, `StatsSmooth`, `StatsDensity`, `StatsCount`, `StatsYDensity`).
 
-5.4.3 [ ] Preserve computed variable names and semantics used by downstream geoms and `after_stat` expressions.
+5.4.3 [x] Preserve computed variable names and semantics used by downstream geoms and `after_stat` expressions.
 
-5.4.4 [ ] Add one test per P0 stat for output schema and numeric behavior.
+5.4.4 [x] Add one test per P0 stat for output schema and numeric behavior.
 
-5.4.5 [ ] Migrate dispatch/computation orchestration from `gg/stat/GgStat.groovy` into charm stat engine classes. Keep any remaining gg stat entry points as thin adapters only.
+5.4.5 [x] Migrate dispatch/computation orchestration from `gg/stat/GgStat.groovy` into charm stat engine classes. Keep any remaining gg stat entry points as thin adapters only.
 
 ### 5.5 Phase 5 -- Position Engine
 
