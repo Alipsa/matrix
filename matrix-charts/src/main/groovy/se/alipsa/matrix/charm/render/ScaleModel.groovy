@@ -7,7 +7,10 @@ import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
 /**
  * Trained axis scale model used by Charm renderer.
+ *
+ * @deprecated Use {@link se.alipsa.matrix.charm.render.scale.CharmScale} hierarchy instead.
  */
+@Deprecated
 @CompileStatic
 class ScaleModel {
 

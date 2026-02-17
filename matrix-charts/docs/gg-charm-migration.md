@@ -354,18 +354,18 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P0 -- Positional scales:**
 
-3.5.1 [ ] ScaleXContinuous / ScaleYContinuous
-3.5.2 [ ] ScaleXDiscrete / ScaleYDiscrete
-3.5.3 [ ] ScaleXLog10 / ScaleYLog10
-3.5.4 [ ] ScaleXReverse / ScaleYReverse
+3.5.1 [x] ScaleXContinuous / ScaleYContinuous
+3.5.2 [x] ScaleXDiscrete / ScaleYDiscrete
+3.5.3 [x] ScaleXLog10 / ScaleYLog10
+3.5.4 [x] ScaleXReverse / ScaleYReverse
 
 **P0 -- Color/fill scales:**
 
-3.5.5 [ ] ScaleColorManual
-3.5.6 [ ] ScaleColorBrewer
-3.5.7 [ ] ScaleColorGradient / ScaleColorGradientN
-3.5.8 [ ] ScaleColorViridis / ScaleColorViridisC
-3.5.9 [ ] ScaleFillIdentity
+3.5.5 [x] ScaleColorManual
+3.5.6 [x] ScaleColorBrewer
+3.5.7 [x] ScaleColorGradient / ScaleColorGradientN
+3.5.8 [x] ScaleColorViridis / ScaleColorViridisC
+3.5.9 [x] ScaleFillIdentity
 
 **P1 -- Positional scales:**
 

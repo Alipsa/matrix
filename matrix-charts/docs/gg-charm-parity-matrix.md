@@ -116,15 +116,15 @@ A feature row may be marked `[x]` only when:
 | Coord: CoordMap | P2 | - | - | [ ] |
 | Coord: CoordQuickmap | P2 | - | - | [ ] |
 | Coord: CoordSf | P2 | - | - | [ ] |
-| Scale: ScaleXContinuous / ScaleYContinuous | P0 | - | - | [ ] |
-| Scale: ScaleXDiscrete / ScaleYDiscrete | P0 | - | - | [ ] |
-| Scale: ScaleXLog10 / ScaleYLog10 | P0 | - | - | [ ] |
-| Scale: ScaleXReverse / ScaleYReverse | P0 | - | - | [ ] |
-| Scale: ScaleColorManual | P0 | - | - | [ ] |
-| Scale: ScaleColorBrewer | P0 | - | - | [ ] |
-| Scale: ScaleColorGradient / ScaleColorGradientN | P0 | - | - | [ ] |
-| Scale: ScaleColorViridis / ScaleColorViridisC | P0 | - | - | [ ] |
-| Scale: ScaleFillIdentity | P0 | - | - | [ ] |
+| Scale: ScaleXContinuous / ScaleYContinuous | P0 | `charm/render/scale/ContinuousCharmScale`, `charm/Scale.continuous()`, `gg/scale/ScaleX/YContinuous.toCharmScale()` | `ContinuousCharmScaleTest`, `ScaleEngineTest` | [x] |
+| Scale: ScaleXDiscrete / ScaleYDiscrete | P0 | `charm/render/scale/DiscreteCharmScale`, `charm/Scale.discrete()`, `gg/scale/ScaleX/YDiscrete.toCharmScale()` | `DiscreteCharmScaleTest`, `ScaleEngineTest` | [x] |
+| Scale: ScaleXLog10 / ScaleYLog10 | P0 | `charm/render/scale/ContinuousCharmScale` + `Log10ScaleTransform`, `charm/Scale.transform('log10')`, `gg/scale/ScaleXLog10.toCharmScale()` | `ContinuousCharmScaleTest.testLog10*`, `ScaleEngineTest.testLog10ScaleTraining` | [x] |
+| Scale: ScaleXReverse / ScaleYReverse | P0 | `charm/render/scale/ContinuousCharmScale` + `ReverseScaleTransform`, `charm/Scale.transform('reverse')`, `gg/scale/ScaleXReverse.toCharmScale()` | `ContinuousCharmScaleTest.testReverse*`, `ScaleEngineTest.testReverseScaleTraining` | [x] |
+| Scale: ScaleColorManual | P0 | `charm/render/scale/ColorCharmScale` (manual strategy), `charm/Scale.manual()`, `gg/scale/ScaleColorManual.toCharmScale()` | `ColorCharmScaleTest.testManual*` | [x] |
+| Scale: ScaleColorBrewer | P0 | `charm/render/scale/ColorCharmScale` (brewer strategy), `charm/Scale.brewer()`, `gg/scale/ScaleColorBrewer.toCharmScale()` | `ColorCharmScaleTest.testBrewer*` | [x] |
+| Scale: ScaleColorGradient / ScaleColorGradientN | P0 | `charm/render/scale/ColorCharmScale` (gradient/gradientN strategies), `charm/Scale.gradient()/gradientN()`, `gg/scale/ScaleColorGradient/N.toCharmScale()` | `ColorCharmScaleTest.testGradient*` | [x] |
+| Scale: ScaleColorViridis / ScaleColorViridisC | P0 | `charm/render/scale/ColorCharmScale` (viridis_d strategy) + `ViridisProvider`, `charm/Scale.viridis()`, `gg/scale/ScaleColorViridis.toCharmScale()` | `ColorCharmScaleTest.testViridis*` | [x] |
+| Scale: ScaleFillIdentity | P0 | `charm/render/scale/ColorCharmScale` (identity strategy), `charm/Scale.identity()`, `gg/scale/ScaleFillIdentity.toCharmScale()` | `ColorCharmScaleTest.testIdentity*` | [x] |
 | Scale: ScaleXSqrt / ScaleYSqrt | P1 | - | - | [ ] |
 | Scale: ScaleXDate / ScaleYDate | P1 | - | - | [ ] |
 | Scale: ScaleXDatetime / ScaleYDatetime | P1 | - | - | [ ] |

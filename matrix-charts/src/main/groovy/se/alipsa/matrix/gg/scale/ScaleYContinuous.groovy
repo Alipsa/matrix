@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Continuous scale for the y-axis position aesthetic.
@@ -132,5 +133,20 @@ class ScaleYContinuous extends ScaleContinuous {
   ScaleYContinuous expand(BigDecimal mult, BigDecimal add = 0) {
     this.expand = [mult, add]
     return this
+  }
+
+  /**
+   * Converts this gg scale to a charm Scale spec.
+   *
+   * @return charm Scale configured with this scale's parameters
+   */
+  CharmScale toCharmScale() {
+    CharmScale s = CharmScale.continuous()
+    if (limits) s.params['limits'] = limits
+    if (expand) s.params['expand'] = expand
+    if (breaks) s.params['breaks'] = breaks
+    if (labels) s.params['labels'] = labels
+    if (nBreaks != 7) s.params['nBreaks'] = nBreaks
+    s
   }
 }

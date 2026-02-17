@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Manual discrete color scale.
@@ -164,6 +165,20 @@ class ScaleColorManual extends ScaleDiscrete {
     this.namedValues = mapping
     this.computedPalette = []
     return this
+  }
+
+  /**
+   * Converts this gg scale to a charm Scale spec.
+   *
+   * @return charm Scale with manual color configuration
+   */
+  CharmScale toCharmScale() {
+    CharmScale s = CharmScale.discrete()
+    s.params['colorType'] = 'manual'
+    if (!values.isEmpty()) s.params['values'] = values
+    if (!namedValues.isEmpty()) s.params['namedValues'] = namedValues
+    s.params['naValue'] = naValue
+    s
   }
 
   /**

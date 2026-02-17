@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Continuous color scale using multiple colors.
@@ -85,6 +86,15 @@ class ScaleColorGradientN extends ScaleContinuous {
     BigDecimal end = stops[idx + 1]
     BigDecimal localT = end > start ? (normalized - start) / (end - start) : 0.0G
     return ColorScaleUtil.interpolateColor(colors[idx], colors[idx + 1], localT)
+  }
+
+  /**
+   * Converts this gg scale to a charm Scale spec.
+   *
+   * @return charm Scale with multi-stop gradient color configuration
+   */
+  CharmScale toCharmScale() {
+    CharmScale.gradientN(colors, values)
   }
 
   private List<BigDecimal> resolveStops() {

@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
 enum ScaleType {
   CONTINUOUS,
   DISCRETE,
+  BINNED,
   DATE,
   TRANSFORM
 }

@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Continuous color scale for numeric data.
@@ -139,5 +140,14 @@ class ScaleColorGradient extends ScaleContinuous {
   ScaleColorGradient limits(Number min, Number max) {
     this.limits = [min as BigDecimal, max as BigDecimal]
     return this
+  }
+
+  /**
+   * Converts this gg scale to a charm Scale spec.
+   *
+   * @return charm Scale with gradient color configuration
+   */
+  CharmScale toCharmScale() {
+    CharmScale.gradient(low, high, mid, midpoint)
   }
 }
