@@ -1,6 +1,8 @@
 package se.alipsa.matrix.gg.coord
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmCoordType
+import se.alipsa.matrix.charm.CoordSpec
 
 /**
  * Fixed aspect ratio coordinate system.
@@ -47,5 +49,14 @@ class CoordFixed extends CoordCartesian {
   CoordFixed(Map params) {
     super(params)
     if (params.ratio != null) this.ratio = params.ratio as BigDecimal
+  }
+
+  @Override
+  CoordSpec toCharmCoordSpec() {
+    Map<String, Object> p = [:]
+    if (xlim) p.xlim = xlim
+    if (ylim) p.ylim = ylim
+    if (ratio != null) p.ratio = ratio
+    new CoordSpec(type: CharmCoordType.FIXED, params: p)
   }
 }

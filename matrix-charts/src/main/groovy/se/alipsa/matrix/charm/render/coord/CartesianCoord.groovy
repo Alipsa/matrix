@@ -1,0 +1,100 @@
+package se.alipsa.matrix.charm.render.coord
+
+import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CoordSpec
+import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.util.NumberCoercionUtil
+
+/**
+ * Cartesian coordinate transformation - the default coordinate system.
+ *
+ * Applies optional xlim/ylim clipping to constrain the data view.
+ * Unlike scale limits which remove data before stat computation,
+ * coord limits act as a zoom (data outside limits is clipped but
+ * stats are computed on the full dataset).
+ */
+@CompileStatic
+class CartesianCoord {
+
+  /**
+   * Applies cartesian coordinate transformation.
+   * If xlim/ylim are specified, clamps numeric x/y values to those limits.
+   * Otherwise, returns data unchanged.
+   *
+   * @param coordSpec coordinate specification with optional xlim/ylim params
+   * @param data layer data to transform
+   * @return transformed layer data
+   */
+  static List<LayerData> compute(CoordSpec coordSpec, List<LayerData> data) {
+    if (data == null || data.isEmpty()) {
+      return data
+    }
+
+    List<Number> xlim = coordSpec?.xlim
+    List<Number> ylim = coordSpec?.ylim
+
+    // No limits: pass through
+    if (xlim == null && ylim == null) {
+      return data
+    }
+
+    BigDecimal xMin = xlim != null && xlim.size() >= 2 && xlim[0] != null ? xlim[0] as BigDecimal : null
+    BigDecimal xMax = xlim != null && xlim.size() >= 2 && xlim[1] != null ? xlim[1] as BigDecimal : null
+    BigDecimal yMin = ylim != null && ylim.size() >= 2 && ylim[0] != null ? ylim[0] as BigDecimal : null
+    BigDecimal yMax = ylim != null && ylim.size() >= 2 && ylim[1] != null ? ylim[1] as BigDecimal : null
+
+    List<LayerData> result = []
+    data.each { LayerData datum ->
+      LayerData updated = copyDatum(datum)
+
+      // Clamp x
+      if (xMin != null || xMax != null) {
+        BigDecimal xVal = NumberCoercionUtil.coerceToBigDecimal(datum.x)
+        if (xVal != null) {
+          if (xMin != null && xVal < xMin) updated.x = xMin
+          if (xMax != null && xVal > xMax) updated.x = xMax
+        }
+      }
+
+      // Clamp y
+      if (yMin != null || yMax != null) {
+        BigDecimal yVal = NumberCoercionUtil.coerceToBigDecimal(datum.y)
+        if (yVal != null) {
+          if (yMin != null && yVal < yMin) updated.y = yMin
+          if (yMax != null && yVal > yMax) updated.y = yMax
+        }
+      }
+
+      result.add(updated)
+    }
+
+    result
+  }
+
+  /**
+   * Creates a shallow copy of a LayerData.
+   */
+  static LayerData copyDatum(LayerData datum) {
+    new LayerData(
+        x: datum.x,
+        y: datum.y,
+        color: datum.color,
+        fill: datum.fill,
+        xend: datum.xend,
+        yend: datum.yend,
+        xmin: datum.xmin,
+        xmax: datum.xmax,
+        ymin: datum.ymin,
+        ymax: datum.ymax,
+        size: datum.size,
+        shape: datum.shape,
+        alpha: datum.alpha,
+        linetype: datum.linetype,
+        group: datum.group,
+        label: datum.label,
+        weight: datum.weight,
+        rowIndex: datum.rowIndex,
+        meta: new LinkedHashMap<>(datum.meta)
+    )
+  }
+}
