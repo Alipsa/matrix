@@ -37,6 +37,46 @@ class DensityStatTest {
   }
 
   @Test
+  void testComputesSeparateDensityPerGroupAndPreservesTemplateAesthetics() {
+    LayerSpec layer = makeLayer([:])
+    Random rng = new Random(42)
+    List<LayerData> data = []
+    (1..30).each { int i ->
+      data << new LayerData(
+          x: rng.nextGaussian() * 5 + 25,
+          y: 0,
+          color: 'red',
+          fill: 'pink',
+          group: 'A',
+          rowIndex: i - 1
+      )
+    }
+    (31..60).each { int i ->
+      data << new LayerData(
+          x: rng.nextGaussian() * 5 + 45,
+          y: 0,
+          color: 'blue',
+          fill: 'cyan',
+          group: 'B',
+          rowIndex: i - 1
+      )
+    }
+
+    List<LayerData> result = DensityStat.compute(layer, data)
+
+    assertFalse(result.isEmpty())
+    Set<Object> groups = result.collect { LayerData d -> d.group }.toSet()
+    assertEquals(['A', 'B'] as Set, groups)
+
+    List<LayerData> groupA = result.findAll { LayerData d -> d.group == 'A' }
+    List<LayerData> groupB = result.findAll { LayerData d -> d.group == 'B' }
+    assertEquals(512, groupA.size())
+    assertEquals(512, groupB.size())
+    assertTrue(groupA.every { LayerData d -> d.color == 'red' && d.fill == 'pink' })
+    assertTrue(groupB.every { LayerData d -> d.color == 'blue' && d.fill == 'cyan' })
+  }
+
+  @Test
   void testDensityIntegratesToApproximatelyOne() {
     LayerSpec layer = makeLayer([:])
     Random rng = new Random(42)

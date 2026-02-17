@@ -19,18 +19,19 @@ A feature row may be marked `[x]` only when:
 
 | Feature | Priority | Charm Implementation | Tests | Status |
 |---|---|---|---|---|
-| Geom: GeomPoint | P0 | - | - | [ ] |
-| Geom: GeomLine | P0 | - | - | [ ] |
-| Geom: GeomBar | P0 | - | - | [ ] |
-| Geom: GeomCol | P0 | - | - | [ ] |
-| Geom: GeomHistogram | P0 | - | - | [ ] |
-| Geom: GeomBoxplot | P0 | - | - | [ ] |
-| Geom: GeomArea | P0 | - | - | [ ] |
-| Geom: GeomSmooth | P0 | - | - | [ ] |
-| Geom: GeomDensity | P0 | - | - | [ ] |
-| Geom: GeomViolin | P0 | - | - | [ ] |
-| Geom: GeomTile | P0 | - | - | [ ] |
-| Geom: GeomText | P0 | - | - | [ ] |
+| Geom: GeomPoint | P0 | `charm/render/geom/PointRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testPointRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomLine | P0 | `charm/render/geom/LineRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testLineRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomBar | P0 | `charm/render/geom/BarRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testBarRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomCol | P0 | `charm/render/geom/BarRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testColRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomHistogram | P0 | `charm/render/geom/HistogramRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testHistogramRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomBoxplot | P0 | `charm/render/geom/BoxplotRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testBoxplotRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomArea | P0 | `charm/render/geom/AreaRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testAreaRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomSmooth | P0 | `charm/render/geom/SmoothRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testSmoothRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomDensity | P0 | `charm/render/geom/DensityRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testDensityRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomViolin | P0 | `charm/render/geom/ViolinRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testViolinRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomTile | P0 | `charm/render/geom/TileRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testTileRepresentativeAndEmptyEdge` | [x] |
+| Geom: GeomText | P0 | `charm/render/geom/TextRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testTextRepresentativeAndEmptyEdge` | [x] |
+| Geom: PIE (charm-only extension) | Charm extension | `charm/render/geom/PieRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `PieRendererTest.testPieRendersOneSlicePerPositiveDatum`, `PieRendererTest.testPieReturnsNoSlicesForEmptyOrNonPositiveInput` | [x] |
 | Geom: GeomJitter | P1 | - | - | [ ] |
 | Geom: GeomStep | P1 | - | - | [ ] |
 | Geom: GeomErrorbar | P1 | - | - | [ ] |

@@ -87,7 +87,6 @@ ggsave("my_plot.svg", plot: chart)
 **Key differences:**
 1. Use a Matrix instead of a data.frame
 2. Quote column names and constants
-3. Use `write()` or `ggsave()` instead of R's `ggsave()`
 
 ## Core Concepts
 

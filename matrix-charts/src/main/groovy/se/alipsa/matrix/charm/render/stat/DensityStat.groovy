@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm.render.stat
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.render.geom.GeomUtils
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 import se.alipsa.matrix.stats.kde.KernelDensity
@@ -29,31 +30,33 @@ class DensityStat {
    *
    * @param layer layer specification
    * @param data layer data
-   * @return density curve as LayerData with x and y=density
+   * @return density curves as LayerData with x and y=density
    */
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
-    List<Number> values = extractNumericX(data)
-
-    if (values.size() < 2) {
-      return []
-    }
-
     Map<String, Object> kdeParams = buildKdeParams(StatEngine.effectiveParams(layer))
-    KernelDensity kde = new KernelDensity(values, kdeParams)
-    double[] xVals = kde.getX()
-    double[] densityVals = kde.getDensity()
-
-    LayerData template = data.first()
+    Map<Object, List<LayerData>> groups = GeomUtils.groupSeries(data)
     List<LayerData> result = []
-    for (int i = 0; i < xVals.length; i++) {
-      LayerData datum = new LayerData(
-          x: xVals[i] as BigDecimal,
-          y: densityVals[i] as BigDecimal,
-          color: template?.color,
-          fill: template?.fill,
-          rowIndex: -1
-      )
-      result << datum
+    groups.each { Object _, List<LayerData> bucket ->
+      List<Number> values = extractNumericX(bucket)
+      if (values.size() < 2) {
+        return
+      }
+
+      KernelDensity kde = new KernelDensity(values, kdeParams)
+      double[] xVals = kde.getX()
+      double[] densityVals = kde.getDensity()
+      LayerData template = bucket.first()
+      for (int i = 0; i < xVals.length; i++) {
+        LayerData datum = new LayerData(
+            x: xVals[i] as BigDecimal,
+            y: densityVals[i] as BigDecimal,
+            color: template?.color,
+            fill: template?.fill,
+            group: template?.group,
+            rowIndex: -1
+        )
+        result << datum
+      }
     }
     result
   }

@@ -325,11 +325,6 @@ class CharmModelExpansionTest {
       spec.layer(CharmGeomType.CONTOUR, [:])
     }
     assertTrue(ex.message.contains('CONTOUR'))
-
-    ex = assertThrows(CharmValidationException) {
-      spec.layer(CharmGeomType.VIOLIN, [:])
-    }
-    assertTrue(ex.message.contains('VIOLIN'))
   }
 
   @Test
@@ -343,10 +338,16 @@ class CharmModelExpansionTest {
     spec.aes(x: 'x', y: 'y')
     spec.layer(CharmGeomType.POINT, [:])
     spec.layer(CharmGeomType.LINE, [:])
+    spec.layer(CharmGeomType.DENSITY, [stat: CharmStatType.DENSITY])
+    spec.layer(CharmGeomType.VIOLIN, [stat: CharmStatType.YDENSITY])
+    spec.layer(CharmGeomType.TEXT, [label: 'ok'])
 
-    assertEquals(2, spec.layers.size())
+    assertEquals(5, spec.layers.size())
     assertEquals(CharmGeomType.POINT, spec.layers[0].geomType)
     assertEquals(CharmGeomType.LINE, spec.layers[1].geomType)
+    assertEquals(CharmGeomType.DENSITY, spec.layers[2].geomType)
+    assertEquals(CharmGeomType.VIOLIN, spec.layers[3].geomType)
+    assertEquals(CharmGeomType.TEXT, spec.layers[4].geomType)
   }
 
   @Test

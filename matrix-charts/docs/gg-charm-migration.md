@@ -216,18 +216,18 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P0 -- Core geoms:**
 
-3.1.1 [ ] GeomPoint
-3.1.2 [ ] GeomLine
-3.1.3 [ ] GeomBar
-3.1.4 [ ] GeomCol
-3.1.5 [ ] GeomHistogram
-3.1.6 [ ] GeomBoxplot
-3.1.7 [ ] GeomArea
-3.1.8 [ ] GeomSmooth
-3.1.9 [ ] GeomDensity
-3.1.10 [ ] GeomViolin
-3.1.11 [ ] GeomTile
-3.1.12 [ ] GeomText
+3.1.1 [x] GeomPoint
+3.1.2 [x] GeomLine
+3.1.3 [x] GeomBar
+3.1.4 [x] GeomCol
+3.1.5 [x] GeomHistogram
+3.1.6 [x] GeomBoxplot
+3.1.7 [x] GeomArea
+3.1.8 [x] GeomSmooth
+3.1.9 [x] GeomDensity
+3.1.10 [x] GeomViolin
+3.1.11 [x] GeomTile
+3.1.12 [x] GeomText
 
 **P1 -- Common geoms:**
 
@@ -602,35 +602,39 @@ _Build charm's coordinate transformation pipeline._
 
 _Migrate rendering code for the 12 core geoms from gg to charm by extending existing charm renderer infrastructure (not rewriting from zero)._
 
-5.7.1 [ ] Create `charm/render/geom/` package with one renderer class per geom family.
+Note: Charm also supports `PIE` as a charm-native geom extension. It is intentionally
+outside the gg P0 parity list in Section 3.1 and therefore not counted as one of the
+12 Phase 7 core geoms.
 
-5.7.2 [ ] Implement `PointRenderer` -- port rendering from `gg/geom/GeomPoint.render()`.
+5.7.1 [x] Create `charm/render/geom/` package with one renderer class per geom family.
 
-5.7.3 [ ] Implement `LineRenderer` -- port from `GeomLine.render()`, including grouping/ordering.
+5.7.2 [x] Implement `PointRenderer` -- port rendering from `gg/geom/GeomPoint.render()`.
 
-5.7.4 [ ] Implement `BarRenderer` -- port from `GeomBar.render()` and `GeomCol.render()`.
+5.7.3 [x] Implement `LineRenderer` -- port from `GeomLine.render()`, including grouping/ordering.
 
-5.7.5 [ ] Implement `HistogramRenderer` -- port from `GeomHistogram.render()`.
+5.7.4 [x] Implement `BarRenderer` -- port from `GeomBar.render()` and `GeomCol.render()`.
 
-5.7.6 [ ] Implement `BoxplotRenderer` -- port from `GeomBoxplot.render()`.
+5.7.5 [x] Implement `HistogramRenderer` -- port from `GeomHistogram.render()`.
 
-5.7.7 [ ] Implement `AreaRenderer` -- port from `GeomArea.render()`.
+5.7.6 [x] Implement `BoxplotRenderer` -- port from `GeomBoxplot.render()`.
 
-5.7.8 [ ] Implement `SmoothRenderer` -- port from `GeomSmooth.render()`.
+5.7.7 [x] Implement `AreaRenderer` -- port from `GeomArea.render()`.
 
-5.7.9 [ ] Implement `DensityRenderer` -- port from `GeomDensity.render()`.
+5.7.8 [x] Implement `SmoothRenderer` -- port from `GeomSmooth.render()`.
 
-5.7.10 [ ] Implement `ViolinRenderer` -- port from `GeomViolin.render()`.
+5.7.9 [x] Implement `DensityRenderer` -- port from `GeomDensity.render()`.
 
-5.7.11 [ ] Implement `TileRenderer` -- port from `GeomTile.render()`.
+5.7.10 [x] Implement `ViolinRenderer` -- port from `GeomViolin.render()`.
 
-5.7.12 [ ] Implement `TextRenderer` -- port from `GeomText.render()`.
+5.7.11 [x] Implement `TileRenderer` -- port from `GeomTile.render()`.
 
-5.7.13 [ ] Update `CharmRenderer.renderLayer()` to dispatch to the new geom renderers by `CharmGeomType`.
+5.7.12 [x] Implement `TextRenderer` -- port from `GeomText.render()`.
 
-5.7.14 [ ] Move `GeomUtils` shared rendering helpers to `charm/render/geom/`.
+5.7.13 [x] Update `CharmRenderer.renderLayer()` to dispatch to the new geom renderers by `CharmGeomType`.
 
-5.7.15 [ ] Add rendering tests for each P0 geom in at least one representative configuration and one edge case.
+5.7.14 [x] Move `GeomUtils` shared rendering helpers to `charm/render/geom/`.
+
+5.7.15 [x] Add rendering tests for each P0 geom in at least one representative configuration and one edge case.
 
 ### 5.8 Phase 8 -- GG Delegation Wiring (Pre-Cutover)
 
