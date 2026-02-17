@@ -4,16 +4,19 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Aes
 import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.CharmCoordType
+import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.Coord
-import se.alipsa.matrix.charm.CoordType
 import se.alipsa.matrix.charm.Facet
 import se.alipsa.matrix.charm.FacetType
-import se.alipsa.matrix.charm.Geom as CharmGeom
+import se.alipsa.matrix.charm.GeomSpec
 import se.alipsa.matrix.charm.Labels
 import se.alipsa.matrix.charm.LayerSpec
-import se.alipsa.matrix.charm.Position as CharmPosition
+import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.ScaleSpec
-import se.alipsa.matrix.charm.Stat as CharmStat
+import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.Theme
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
@@ -57,14 +60,14 @@ class GgCharmAdapter {
   private static final Set<String> SUPPORTED_COL_PARAM_KEYS = [
       'color', 'colour', 'fill', 'alpha', 'width'
   ] as Set<String>
-  private static final Set<CharmGeom> DELEGATED_GEOMS = [
-      CharmGeom.POINT,
-      CharmGeom.LINE,
-      CharmGeom.SMOOTH,
-      CharmGeom.HISTOGRAM,
-      CharmGeom.COL,
-      CharmGeom.BAR
-  ] as Set<CharmGeom>
+  private static final Set<CharmGeomType> DELEGATED_GEOMS = [
+      CharmGeomType.POINT,
+      CharmGeomType.LINE,
+      CharmGeomType.SMOOTH,
+      CharmGeomType.HISTOGRAM,
+      CharmGeomType.COL,
+      CharmGeomType.BAR
+  ] as Set<CharmGeomType>
 
   private final GgCharmMappingRegistry mappingRegistry = new GgCharmMappingRegistry()
   private final CharmRenderer charmRenderer = new CharmRenderer()
@@ -107,7 +110,7 @@ class GgCharmAdapter {
       return GgCharmAdaptation.fallback(reasons)
     }
     if (ggChart.coord != null && !(ggChart.coord instanceof CoordCartesian)) {
-      CoordType coordType = mappingRegistry.mapCoordType(ggChart.coord)
+      CharmCoordType coordType = mappingRegistry.mapCoordType(ggChart.coord)
       reasons.add("Coord '${ggChart.coord.class.simpleName}' mapped as ${coordType ?: 'unsupported'} but renderer parity is pending".toString())
       return GgCharmAdaptation.fallback(reasons)
     }
@@ -135,33 +138,33 @@ class GgCharmAdapter {
         reasons.add("Layer ${idx} uses layer-specific data".toString())
         return
       }
-      CharmGeom geom = mappingRegistry.mapGeom(layer.geom)
-      if (geom == null) {
+      CharmGeomType geomType = mappingRegistry.mapGeom(layer.geom)
+      if (geomType == null) {
         reasons.add("Layer ${idx} geom '${layer.geom?.class?.simpleName}' is unsupported".toString())
         return
       }
-      if (!DELEGATED_GEOMS.contains(geom)) {
-        reasons.add("Layer ${idx} geom '${geom}' is mapped but not delegated yet".toString())
+      if (!DELEGATED_GEOMS.contains(geomType)) {
+        reasons.add("Layer ${idx} geom '${geomType}' is mapped but not delegated yet".toString())
         return
       }
 
-      CharmStat stat = mapLayerStat(geom, layer.stat, idx, reasons)
-      if (stat == null) {
+      CharmStatType statType = mapLayerStat(geomType, layer.stat, idx, reasons)
+      if (statType == null) {
         return
       }
-      CharmPosition position = mapLayerPosition(geom, layer.position, idx, reasons)
-      if (position == null) {
+      CharmPositionType positionType = mapLayerPosition(geomType, layer.position, idx, reasons)
+      if (positionType == null) {
         return
       }
 
       Aes layerAes = mapAes(layer.aes, "layer ${idx}", reasons)
       Aes effectiveAes = mergeAes(plotAes, layerAes, layer.inheritAes)
-      validateDelegatedAes(geom, effectiveAes, idx, reasons)
-      Map<String, Object> params = normalizeLayerParams(geom, layer.params, idx, reasons)
+      validateDelegatedAes(geomType, effectiveAes, idx, reasons)
+      Map<String, Object> params = normalizeLayerParams(geomType, layer.params, idx, reasons)
       if (!reasons.isEmpty()) {
         return
       }
-      mappedLayers << new LayerSpec(geom, stat, layerAes, layer.inheritAes, position, params)
+      mappedLayers << new LayerSpec(GeomSpec.of(geomType), StatSpec.of(statType), layerAes, layer.inheritAes, PositionSpec.of(positionType), params)
     }
     if (!reasons.isEmpty()) {
       return GgCharmAdaptation.fallback(reasons)
@@ -174,7 +177,7 @@ class GgCharmAdapter {
         new ScaleSpec(),
         mapTheme(ggChart.theme),
         new Facet(type: FacetType.NONE),
-        new Coord(type: CoordType.CARTESIAN),
+        new Coord(type: CharmCoordType.CARTESIAN),
         mapLabels(ggChart.labels),
         []
     )
@@ -214,17 +217,17 @@ class GgCharmAdapter {
     merged
   }
 
-  private static Map<String, Object> normalizeLayerParams(CharmGeom geom, Map params, int idx, List<String> reasons) {
-    Set<String> allowed = switch (geom) {
-      case CharmGeom.POINT -> SUPPORTED_POINT_PARAM_KEYS
-      case CharmGeom.LINE -> SUPPORTED_LINE_PARAM_KEYS
-      case CharmGeom.SMOOTH -> SUPPORTED_SMOOTH_PARAM_KEYS
-      case CharmGeom.HISTOGRAM -> SUPPORTED_HISTOGRAM_PARAM_KEYS
-      case CharmGeom.COL, CharmGeom.BAR -> SUPPORTED_COL_PARAM_KEYS
+  private static Map<String, Object> normalizeLayerParams(CharmGeomType geomType, Map params, int idx, List<String> reasons) {
+    Set<String> allowed = switch (geomType) {
+      case CharmGeomType.POINT -> SUPPORTED_POINT_PARAM_KEYS
+      case CharmGeomType.LINE -> SUPPORTED_LINE_PARAM_KEYS
+      case CharmGeomType.SMOOTH -> SUPPORTED_SMOOTH_PARAM_KEYS
+      case CharmGeomType.HISTOGRAM -> SUPPORTED_HISTOGRAM_PARAM_KEYS
+      case CharmGeomType.COL, CharmGeomType.BAR -> SUPPORTED_COL_PARAM_KEYS
       default -> null
     }
     if (allowed == null) {
-      reasons.add("Layer ${idx} geom '${geom}' has no delegated param mapping".toString())
+      reasons.add("Layer ${idx} geom '${geomType}' has no delegated param mapping".toString())
       return [:]
     }
 
@@ -235,20 +238,20 @@ class GgCharmAdapter {
         return
       }
       if (!allowed.contains(name)) {
-        reasons.add("Layer ${idx} ${geom} param '${name}' is not delegated yet".toString())
+        reasons.add("Layer ${idx} ${geomType} param '${name}' is not delegated yet".toString())
         return
       }
-      String targetKey = normalizeParamKey(geom, name)
+      String targetKey = normalizeParamKey(geomType, name)
       normalized[targetKey] = deepCopyValue(value)
     }
 
-    if (geom == CharmGeom.SMOOTH && normalized.containsKey('method')) {
+    if (geomType == CharmGeomType.SMOOTH && normalized.containsKey('method')) {
       String method = normalized['method']?.toString()?.trim()?.toLowerCase(Locale.ROOT)
       if (method != null && !method.isEmpty() && method != 'lm') {
         reasons.add("Layer ${idx} smooth method '${normalized['method']}' is not delegated yet".toString())
       }
     }
-    if (geom == CharmGeom.HISTOGRAM) {
+    if (geomType == CharmGeomType.HISTOGRAM) {
       Object binsValue = normalized['bins']
       if (binsValue != null && (!(binsValue instanceof Number) || (binsValue as Number).intValue() <= 0)) {
         reasons.add("Layer ${idx} histogram bins must be a positive number".toString())
@@ -257,80 +260,80 @@ class GgCharmAdapter {
     normalized
   }
 
-  private static String normalizeParamKey(CharmGeom geom, String key) {
+  private static String normalizeParamKey(CharmGeomType geomType, String key) {
     String normalized = key == 'colour' ? 'color' : key
-    if ((geom == CharmGeom.LINE || geom == CharmGeom.SMOOTH) && (normalized == 'size' || normalized == 'linewidth')) {
+    if ((geomType == CharmGeomType.LINE || geomType == CharmGeomType.SMOOTH) && (normalized == 'size' || normalized == 'linewidth')) {
       return 'lineWidth'
     }
-    if ((geom == CharmGeom.COL || geom == CharmGeom.BAR) && normalized == 'width') {
+    if ((geomType == CharmGeomType.COL || geomType == CharmGeomType.BAR) && normalized == 'width') {
       return 'barWidth'
     }
     normalized
   }
 
-  private CharmStat mapLayerStat(CharmGeom geom, StatType ggStat, int idx, List<String> reasons) {
+  private CharmStatType mapLayerStat(CharmGeomType geomType, StatType ggStat, int idx, List<String> reasons) {
     StatType resolved = ggStat ?: StatType.IDENTITY
-    if (geom == CharmGeom.SMOOTH) {
+    if (geomType == CharmGeomType.SMOOTH) {
       if (resolved != StatType.SMOOTH) {
         reasons.add("Layer ${idx} smooth requires stat SMOOTH".toString())
         return null
       }
-      return CharmStat.SMOOTH
+      return CharmStatType.SMOOTH
     }
-    if (geom == CharmGeom.HISTOGRAM) {
+    if (geomType == CharmGeomType.HISTOGRAM) {
       if (!(resolved in [StatType.BIN, StatType.IDENTITY])) {
         reasons.add("Layer ${idx} histogram stat '${resolved}' is not delegated".toString())
         return null
       }
-      return CharmStat.IDENTITY
+      return CharmStatType.IDENTITY
     }
-    if (geom in [CharmGeom.POINT, CharmGeom.LINE, CharmGeom.COL, CharmGeom.BAR]) {
+    if (geomType in [CharmGeomType.POINT, CharmGeomType.LINE, CharmGeomType.COL, CharmGeomType.BAR]) {
       if (resolved != StatType.IDENTITY) {
-        reasons.add("Layer ${idx} geom '${geom}' with stat '${resolved}' is not delegated".toString())
+        reasons.add("Layer ${idx} geom '${geomType}' with stat '${resolved}' is not delegated".toString())
         return null
       }
-      return CharmStat.IDENTITY
+      return CharmStatType.IDENTITY
     }
-    CharmStat mapped = mappingRegistry.mapStat(resolved)
+    CharmStatType mapped = mappingRegistry.mapStat(resolved)
     if (mapped == null) {
       reasons.add("Layer ${idx} stat '${resolved}' is not delegated".toString())
     }
     mapped
   }
 
-  private CharmPosition mapLayerPosition(CharmGeom geom, PositionType ggPosition, int idx, List<String> reasons) {
+  private CharmPositionType mapLayerPosition(CharmGeomType geomType, PositionType ggPosition, int idx, List<String> reasons) {
     PositionType resolved = ggPosition ?: PositionType.IDENTITY
-    CharmPosition mapped = mappingRegistry.mapPosition(resolved)
+    CharmPositionType mapped = mappingRegistry.mapPosition(resolved)
     if (mapped == null) {
       reasons.add("Layer ${idx} position '${resolved}' is not delegated".toString())
       return null
     }
-    if (geom in [CharmGeom.POINT, CharmGeom.LINE, CharmGeom.SMOOTH, CharmGeom.HISTOGRAM] && mapped != CharmPosition.IDENTITY) {
-      reasons.add("Layer ${idx} geom '${geom}' does not delegate position '${resolved}'".toString())
+    if (geomType in [CharmGeomType.POINT, CharmGeomType.LINE, CharmGeomType.SMOOTH, CharmGeomType.HISTOGRAM] && mapped != CharmPositionType.IDENTITY) {
+      reasons.add("Layer ${idx} geom '${geomType}' does not delegate position '${resolved}'".toString())
       return null
     }
-    if (geom in [CharmGeom.COL, CharmGeom.BAR] && !(mapped in [CharmPosition.IDENTITY, CharmPosition.STACK])) {
-      reasons.add("Layer ${idx} geom '${geom}' does not delegate position '${resolved}'".toString())
+    if (geomType in [CharmGeomType.COL, CharmGeomType.BAR] && !(mapped in [CharmPositionType.IDENTITY, CharmPositionType.STACK])) {
+      reasons.add("Layer ${idx} geom '${geomType}' does not delegate position '${resolved}'".toString())
       return null
     }
     mapped
   }
 
-  private static void validateDelegatedAes(CharmGeom geom, Aes effectiveAes, int idx, List<String> reasons) {
-    boolean needsX = geom in [CharmGeom.POINT, CharmGeom.LINE, CharmGeom.SMOOTH, CharmGeom.HISTOGRAM, CharmGeom.COL, CharmGeom.BAR]
-    boolean needsY = geom in [CharmGeom.POINT, CharmGeom.LINE, CharmGeom.SMOOTH, CharmGeom.COL, CharmGeom.BAR]
+  private static void validateDelegatedAes(CharmGeomType geomType, Aes effectiveAes, int idx, List<String> reasons) {
+    boolean needsX = geomType in [CharmGeomType.POINT, CharmGeomType.LINE, CharmGeomType.SMOOTH, CharmGeomType.HISTOGRAM, CharmGeomType.COL, CharmGeomType.BAR]
+    boolean needsY = geomType in [CharmGeomType.POINT, CharmGeomType.LINE, CharmGeomType.SMOOTH, CharmGeomType.COL, CharmGeomType.BAR]
     if (needsX && effectiveAes?.x == null) {
-      reasons.add("Layer ${idx} (${geom}) requires x mapping for delegation".toString())
+      reasons.add("Layer ${idx} (${geomType}) requires x mapping for delegation".toString())
     }
     if (needsY && effectiveAes?.y == null) {
-      reasons.add("Layer ${idx} (${geom}) requires y mapping for delegation".toString())
+      reasons.add("Layer ${idx} (${geomType}) requires y mapping for delegation".toString())
     }
-    if (geom == CharmGeom.HISTOGRAM && effectiveAes?.y != null) {
+    if (geomType == CharmGeomType.HISTOGRAM && effectiveAes?.y != null) {
       reasons.add("Layer ${idx} histogram with mapped y is not delegated yet".toString())
     }
     if (effectiveAes?.group != null || effectiveAes?.shape != null ||
         effectiveAes?.size != null || effectiveAes?.color != null || effectiveAes?.fill != null) {
-      reasons.add("Layer ${idx} (${geom}) uses mapped non-positional aesthetics not delegated yet".toString())
+      reasons.add("Layer ${idx} (${geomType}) uses mapped non-positional aesthetics not delegated yet".toString())
     }
   }
 

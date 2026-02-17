@@ -8,36 +8,36 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class Layer {
 
-  private final Geom geom
-  private final Stat stat
+  private final GeomSpec geomSpec
+  private final StatSpec statSpec
   private final Aes aes
   private final boolean inheritAes
-  private final Position position
+  private final PositionSpec positionSpec
   private final Map<String, Object> params
 
   /**
    * Creates a new layer.
    *
-   * @param geom geometry type
-   * @param stat statistical transformation
+   * @param geomSpec geometry specification
+   * @param statSpec statistical transformation specification
    * @param aes layer-specific mappings
    * @param inheritAes true when plot-level mappings are inherited
-   * @param position position adjustment
+   * @param positionSpec position adjustment specification
    * @param params free-form layer parameters
    */
   Layer(
-      Geom geom,
-      Stat stat = Stat.IDENTITY,
+      GeomSpec geomSpec,
+      StatSpec statSpec = StatSpec.of(CharmStatType.IDENTITY),
       Aes aes = null,
       boolean inheritAes = true,
-      Position position = Position.IDENTITY,
+      PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY),
       Map<String, Object> params = [:]
   ) {
-    this.geom = geom ?: Geom.POINT
-    this.stat = stat ?: Stat.IDENTITY
+    this.geomSpec = geomSpec ?: GeomSpec.of(CharmGeomType.POINT)
+    this.statSpec = statSpec ?: StatSpec.of(CharmStatType.IDENTITY)
     this.aes = aes
     this.inheritAes = inheritAes
-    this.position = position ?: Position.IDENTITY
+    this.positionSpec = positionSpec ?: PositionSpec.of(CharmPositionType.IDENTITY)
     this.params = params == null ? [:] : new LinkedHashMap<>(params)
   }
 
@@ -46,8 +46,17 @@ class Layer {
    *
    * @return geometry type
    */
-  Geom getGeom() {
-    geom
+  CharmGeomType getGeomType() {
+    geomSpec.type
+  }
+
+  /**
+   * Returns the geometry specification.
+   *
+   * @return geometry spec
+   */
+  GeomSpec getGeomSpec() {
+    geomSpec
   }
 
   /**
@@ -55,8 +64,17 @@ class Layer {
    *
    * @return stat type
    */
-  Stat getStat() {
-    stat
+  CharmStatType getStatType() {
+    statSpec.type
+  }
+
+  /**
+   * Returns the stat specification.
+   *
+   * @return stat spec
+   */
+  StatSpec getStatSpec() {
+    statSpec
   }
 
   /**
@@ -78,12 +96,21 @@ class Layer {
   }
 
   /**
-   * Returns position-adjustment mode.
+   * Returns position-adjustment type.
    *
-   * @return position mode
+   * @return position type
    */
-  Position getPosition() {
-    position
+  CharmPositionType getPositionType() {
+    positionSpec.type
+  }
+
+  /**
+   * Returns the position specification.
+   *
+   * @return position spec
+   */
+  PositionSpec getPositionSpec() {
+    positionSpec
   }
 
   /**
@@ -101,6 +128,6 @@ class Layer {
    * @return copied layer
    */
   Layer copy() {
-    new Layer(geom, stat, aes?.copy(), inheritAes, position, params)
+    new Layer(geomSpec.copy(), statSpec.copy(), aes?.copy(), inheritAes, positionSpec.copy(), params)
   }
 }

@@ -2,6 +2,7 @@ package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 
@@ -23,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * The closure receives a Row object and should return a numeric value.
  */
 @CompileStatic
-class Expression {
+class Expression implements CharmExpression {
 
   private static final AtomicInteger NAME_COUNTER = new AtomicInteger(0)
 
@@ -128,5 +129,10 @@ class Expression {
 
   static Expression of(Closure<Number> closure, String name) {
     return new Expression(closure, name)
+  }
+
+  @Override
+  String describe() {
+    "expr(${name})"
   }
 }

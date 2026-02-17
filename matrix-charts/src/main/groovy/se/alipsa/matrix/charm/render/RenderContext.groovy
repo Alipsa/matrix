@@ -60,6 +60,19 @@ class LayerData {
   Object y
   Object color
   Object fill
+  Object xend
+  Object yend
+  Object xmin
+  Object xmax
+  Object ymin
+  Object ymax
+  Object size
+  Object shape
+  Object alpha
+  Object linetype
+  Object group
+  Object label
+  Object weight
   int rowIndex
   Map<String, Object> meta = [:]
 }

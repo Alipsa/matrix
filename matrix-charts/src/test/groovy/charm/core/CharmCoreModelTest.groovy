@@ -1,19 +1,19 @@
 package charm.core
 
 import org.junit.jupiter.api.Test
+import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmMappingException
+import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.CharmValidationException
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Cols
 import se.alipsa.matrix.charm.CustomScaleTransform
-import se.alipsa.matrix.charm.Geom
 import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.PlotSpec
-import se.alipsa.matrix.charm.Position
 import se.alipsa.matrix.charm.ReverseScaleTransform
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
-import se.alipsa.matrix.charm.Stat
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.core.Matrix
 
@@ -153,10 +153,10 @@ class CharmCoreModelTest {
     }
 
     assertEquals(2, spec.layers.size())
-    assertEquals(Geom.SMOOTH, spec.layers[0].geom)
-    assertEquals(Stat.SMOOTH, spec.layers[0].stat)
+    assertEquals(CharmGeomType.SMOOTH, spec.layers[0].geomType)
+    assertEquals(CharmStatType.SMOOTH, spec.layers[0].statType)
     assertEquals('lm', spec.layers[0].params.method)
-    assertEquals(Geom.TILE, spec.layers[1].geom)
+    assertEquals(CharmGeomType.TILE, spec.layers[1].geomType)
     assertEquals(0.3, spec.layers[1].params.alpha)
   }
 
@@ -167,7 +167,7 @@ class CharmCoreModelTest {
         x = col.cty
         y = col.hwy
       }
-      layer(Geom.SMOOTH, [stat: Stat.IDENTITY, method: 'lm'])
+      layer(CharmGeomType.SMOOTH, [stat: CharmStatType.IDENTITY, method: 'lm'])
     }
 
     CharmValidationException e = assertThrows(CharmValidationException.class) {
@@ -179,7 +179,7 @@ class CharmCoreModelTest {
   @Test
   void testLayerMapInheritAesParsesFalseString() {
     Chart chart = plot(Dataset.mpg()) {
-      layer(Geom.POINT, [
+      layer(CharmGeomType.POINT, [
           inheritAes: 'false',
           aes       : [x: 'cty', y: 'hwy'],
           size      : 2
@@ -194,7 +194,7 @@ class CharmCoreModelTest {
   void testLayerMapInheritAesRejectsInvalidString() {
     CharmValidationException e = assertThrows(CharmValidationException.class) {
       plot(Dataset.mpg()) {
-        layer(Geom.POINT, [inheritAes: 'not-a-bool', aes: [x: 'cty', y: 'hwy']])
+        layer(CharmGeomType.POINT, [inheritAes: 'not-a-bool', aes: [x: 'cty', y: 'hwy']])
       }.build()
     }
     assertTrue(e.message.contains("Unsupported boolean value 'not-a-bool'"))
@@ -213,7 +213,7 @@ class CharmCoreModelTest {
       }
     }.build()
 
-    assertEquals(Position.STACK, chart.layers.first().position)
+    assertEquals(CharmPositionType.STACK, chart.layers.first().positionType)
   }
 
   @Test
@@ -348,7 +348,7 @@ class CharmCoreModelTest {
     Set<String> tags = ['a', 'b'] as Set<String>
 
     Chart chart = plot(Dataset.mpg()) {
-      layer(Geom.POINT, [
+      layer(CharmGeomType.POINT, [
           aes    : [x: 'cty', y: 'hwy'],
           payload: externalPayload,
           tags   : tags

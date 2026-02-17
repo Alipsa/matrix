@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.core.Matrix
 import java.util.Locale
 
@@ -19,7 +20,7 @@ import java.util.Locale
  * </pre>
  */
 @CompileStatic
-class CutWidth {
+class CutWidth implements CharmExpression {
   private static final String DEFAULT_PREFIX = 'cut_width'
 
   /** Column name containing the values to bin */
@@ -236,5 +237,10 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
   @Override
   String toString() {
     return "cut_width('${column}', ${width})"
+  }
+
+  @Override
+  String describe() {
+    "cut_width(${column}, ${width})"
   }
 }

@@ -6,8 +6,8 @@ import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.Charts
-import se.alipsa.matrix.charm.Geom
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
@@ -96,7 +96,7 @@ class CharmRendererTest {
         x = col.cat
         y = col.value
       }
-      layer(Geom.COL, [fill: '#336699'])
+      layer(CharmGeomType.COL, [fill: '#336699'])
       theme {
         legend { position = 'none' }
       }
@@ -110,7 +110,7 @@ class CharmRendererTest {
       aes {
         x = col.value
       }
-      layer(Geom.HISTOGRAM, [bins: 4, fill: '#cc6677'])
+      layer(CharmGeomType.HISTOGRAM, [bins: 4, fill: '#cc6677'])
       theme {
         legend { position = 'none' }
       }

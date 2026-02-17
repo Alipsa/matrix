@@ -17,6 +17,16 @@ class AesDsl {
   Object size
   Object shape
   Object group
+  Object xend
+  Object yend
+  Object xmin
+  Object xmax
+  Object ymin
+  Object ymax
+  Object alpha
+  Object linetype
+  Object label
+  Object weight
 
   /**
    * Returns the column namespace proxy.
@@ -41,6 +51,16 @@ class AesDsl {
     if (size != null) mapping.size = size
     if (shape != null) mapping.shape = shape
     if (group != null) mapping.group = group
+    if (xend != null) mapping.xend = xend
+    if (yend != null) mapping.yend = yend
+    if (xmin != null) mapping.xmin = xmin
+    if (xmax != null) mapping.xmax = xmax
+    if (ymin != null) mapping.ymin = ymin
+    if (ymax != null) mapping.ymax = ymax
+    if (alpha != null) mapping.alpha = alpha
+    if (linetype != null) mapping.linetype = linetype
+    if (label != null) mapping.label = label
+    if (weight != null) mapping.weight = weight
     mapping
   }
 
