@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Discrete ColorBrewer scale for categorical data.
@@ -88,6 +89,16 @@ class ScaleColorBrewer extends ScaleDiscrete {
       generatePalette()
     }
     return getColorsFromPalette(paletteMap, naValue)
+  }
+
+  /**
+   * Converts this gg scale to a charm Scale spec.
+   *
+   * @return charm Scale with brewer color configuration
+   */
+  CharmScale toCharmScale() {
+    CharmScale s = CharmScale.brewer(palette, direction)
+    s
   }
 
   private String resolvePaletteName() {

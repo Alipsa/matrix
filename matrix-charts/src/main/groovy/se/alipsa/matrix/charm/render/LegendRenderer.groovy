@@ -18,6 +18,7 @@ class LegendRenderer {
     if (context.colorScale == null || context.colorScale.levels.isEmpty()) {
       return
     }
+
     if ((context.chart.theme.legend?.position ?: context.config.legendPosition) == 'none') {
       return
     }

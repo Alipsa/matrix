@@ -218,6 +218,121 @@ class Scale {
   }
 
   /**
+   * Creates a manual color scale.
+   *
+   * @param values color list or named map
+   * @return scale instance
+   */
+  static Scale manual(Object values) {
+    Scale s = new Scale(type: ScaleType.DISCRETE)
+    s.params['colorType'] = 'manual'
+    if (values instanceof Map) {
+      s.params['namedValues'] = values
+    } else if (values instanceof List) {
+      s.params['values'] = values
+    }
+    s
+  }
+
+  /**
+   * Creates a ColorBrewer color scale.
+   *
+   * @param palette palette name
+   * @param direction 1 for normal, -1 for reversed
+   * @return scale instance
+   */
+  static Scale brewer(String palette = 'Set1', int direction = 1) {
+    Scale s = new Scale(type: ScaleType.DISCRETE)
+    s.params['colorType'] = 'brewer'
+    s.params['palette'] = palette
+    s.params['direction'] = direction
+    s
+  }
+
+  /**
+   * Creates a two-color gradient color scale.
+   *
+   * @param low low-end color
+   * @param high high-end color
+   * @param mid optional midpoint color
+   * @param midpoint optional midpoint value
+   * @return scale instance
+   */
+  static Scale gradient(String low = '#132B43', String high = '#56B1F7',
+                         String mid = null, Number midpoint = null) {
+    Scale s = new Scale(type: ScaleType.CONTINUOUS)
+    s.params['colorType'] = 'gradient'
+    s.params['low'] = low
+    s.params['high'] = high
+    if (mid != null) {
+      s.params['mid'] = mid
+      s.params['midpoint'] = midpoint
+    }
+    s
+  }
+
+  /**
+   * Creates a multi-stop gradient color scale.
+   *
+   * @param colors list of colors
+   * @param values optional stop positions (0-1)
+   * @return scale instance
+   */
+  static Scale gradientN(List<String> colors, List<BigDecimal> values = null) {
+    Scale s = new Scale(type: ScaleType.CONTINUOUS)
+    s.params['colorType'] = 'gradientN'
+    s.params['colors'] = colors
+    if (values != null) {
+      s.params['gradientValues'] = values
+    }
+    s
+  }
+
+  /**
+   * Creates a viridis discrete color scale.
+   *
+   * @param option palette option (viridis, magma, inferno, plasma, etc.)
+   * @param begin start of range (0-1)
+   * @param end end of range (0-1)
+   * @param direction 1 for normal, -1 for reversed
+   * @param alpha transparency (0-1)
+   * @return scale instance
+   */
+  static Scale viridis(String option = 'viridis', BigDecimal begin = 0.0,
+                        BigDecimal end = 1.0, int direction = 1, BigDecimal alpha = 1.0) {
+    Scale s = new Scale(type: ScaleType.DISCRETE)
+    s.params['colorType'] = 'viridis_d'
+    s.params['option'] = option
+    s.params['begin'] = begin
+    s.params['end'] = end
+    s.params['direction'] = direction
+    s.params['alpha'] = alpha
+    s
+  }
+
+  /**
+   * Creates an identity pass-through color scale.
+   *
+   * @param naValue color for missing values
+   * @return scale instance
+   */
+  static Scale identity(String naValue = '#999999') {
+    Scale s = new Scale(type: ScaleType.DISCRETE)
+    s.params['colorType'] = 'identity'
+    s.params['naValue'] = naValue
+    s
+  }
+
+  /**
+   * Creates a binned scale.
+   *
+   * @return scale instance
+   */
+  static Scale binned() {
+    new Scale(type: ScaleType.BINNED)
+  }
+
+  /**
    * Copies this scale.
    *
    * @return copied scale

@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.Scale as CharmScale
 import se.alipsa.matrix.charts.util.ColorUtil
 
 /**
@@ -33,5 +34,14 @@ class ScaleFillIdentity extends Scale {
     if (value == null) return naValue
     String colorValue = value.toString()
     return ColorUtil.normalizeColor(colorValue) ?: colorValue
+  }
+
+  /**
+   * Converts this gg scale to a charm Scale spec.
+   *
+   * @return charm Scale with identity color configuration
+   */
+  CharmScale toCharmScale() {
+    CharmScale.identity(naValue)
   }
 }

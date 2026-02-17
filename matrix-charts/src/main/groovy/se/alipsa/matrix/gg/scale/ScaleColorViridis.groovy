@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Viridis color scale for categorical/discrete data.
@@ -304,5 +305,14 @@ class ScaleColorViridis extends ScaleDiscrete {
   void reset() {
     super.reset()
     paletteMap = [:]
+  }
+
+  /**
+   * Converts this gg scale to a charm Scale spec.
+   *
+   * @return charm Scale with viridis color configuration
+   */
+  CharmScale toCharmScale() {
+    CharmScale.viridis(option, begin, end, direction, alpha)
   }
 }

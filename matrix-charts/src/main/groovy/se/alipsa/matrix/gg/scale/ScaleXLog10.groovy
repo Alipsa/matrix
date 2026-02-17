@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Log10-transformed continuous scale for the x-axis.
@@ -198,5 +199,17 @@ class ScaleXLog10 extends ScaleContinuous {
     if (num == null) return null
     if (num <= 0) return null
     return num
+  }
+
+  /**
+   * Converts this gg scale to a charm Scale spec.
+   *
+   * @return charm Scale with log10 transform and this scale's parameters
+   */
+  CharmScale toCharmScale() {
+    CharmScale s = CharmScale.transform('log10')
+    if (limits) s.params['limits'] = limits
+    if (expand) s.params['expand'] = expand
+    s
   }
 }

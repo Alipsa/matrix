@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.Scale as CharmScale
 
 /**
  * Discrete scale for the y-axis position aesthetic.
@@ -122,5 +123,17 @@ class ScaleYDiscrete extends ScaleDiscrete {
   ScaleYDiscrete expand(Number mult, Number add = 0.6) {
     this.discreteExpand = [mult, add]
     return this
+  }
+
+  /**
+   * Converts this gg scale to a charm Scale spec.
+   *
+   * @return charm Scale configured with this scale's parameters
+   */
+  CharmScale toCharmScale() {
+    CharmScale s = CharmScale.discrete()
+    if (limits) s.params['limits'] = limits
+    if (discreteExpand) s.params['expand'] = discreteExpand
+    s
   }
 }

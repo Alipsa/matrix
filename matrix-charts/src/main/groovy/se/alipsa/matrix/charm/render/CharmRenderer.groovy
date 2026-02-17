@@ -12,6 +12,10 @@ import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.charm.render.scale.CharmScale
+import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
+import se.alipsa.matrix.charm.render.scale.ScaleEngine
+import se.alipsa.matrix.charm.render.scale.TrainedScales
 
 /**
  * Charm SVG renderer.
@@ -86,14 +90,12 @@ class CharmRenderer {
       fillValues.addAll(pipelineData.collect { LayerData d -> d.fill })
     }
 
-    context.xScale = ScaleModel.train(xValues, context.chart.scale.x, 0, context.config.plotWidth())
-    context.yScale = ScaleModel.train(yValues, context.chart.scale.y, context.config.plotHeight(), 0)
-    context.colorScale = colorValues.find { Object v -> v != null } == null
-        ? null
-        : ScaleModel.trainColor(colorValues, context.chart.scale.color)
-    context.fillScale = fillValues.find { Object v -> v != null } == null
-        ? null
-        : ScaleModel.trainColor(fillValues, context.chart.scale.fill)
+    TrainedScales trained = ScaleEngine.train(
+        context.chart, context.config, xValues, yValues, colorValues, fillValues)
+    context.xScale = trained.x
+    context.yScale = trained.y
+    context.colorScale = trained.color
+    context.fillScale = trained.fill
   }
 
   private void renderCanvas(RenderContext context) {
@@ -259,10 +261,11 @@ class CharmRenderer {
     if (baseline == null) {
       baseline = panelHeight
     }
-    boolean discreteX = context.xScale.discrete
+    boolean discreteX = context.xScale.isDiscrete()
     BigDecimal barWidth
-    if (discreteX) {
-      BigDecimal step = context.xScale.levels.isEmpty() ? 20 : (context.xScale.rangeEnd - context.xScale.rangeStart) / context.xScale.levels.size()
+    if (discreteX && context.xScale instanceof DiscreteCharmScale) {
+      DiscreteCharmScale dScale = context.xScale as DiscreteCharmScale
+      BigDecimal step = dScale.levels.isEmpty() ? 20 : (dScale.rangeEnd - dScale.rangeStart) / dScale.levels.size()
       barWidth = step * 0.75
     } else {
       barWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.barWidth) ?: 12
@@ -563,11 +566,12 @@ class CharmRenderer {
     if (layerData.isEmpty()) {
       return
     }
-    boolean discreteX = context.xScale.discrete
+    boolean discreteX = context.xScale.isDiscrete()
     BigDecimal boxWidth
-    if (discreteX) {
-      BigDecimal step = context.xScale.levels.isEmpty() ? 20
-          : (context.xScale.rangeEnd - context.xScale.rangeStart) / context.xScale.levels.size()
+    if (discreteX && context.xScale instanceof DiscreteCharmScale) {
+      DiscreteCharmScale dScale = context.xScale as DiscreteCharmScale
+      BigDecimal step = dScale.levels.isEmpty() ? 20
+          : (dScale.rangeEnd - dScale.rangeStart) / dScale.levels.size()
       boxWidth = step * 0.5
     } else {
       boxWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.boxWidth) ?: 20
