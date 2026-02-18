@@ -79,7 +79,7 @@ class CharmRenderer {
 
     context.chart.layers.each { LayerSpec layer ->
       Matrix sourceData = resolveLayerData(context.chart.data, layer)
-      List<Integer> rowIndexes = defaultRowIndexes(sourceData.rowCount())
+      List<Integer> rowIndexes = defaultRowIndexes(sourceData?.rowCount() ?: 0)
       Aes aes = effectiveAes(context.chart.aes, layer)
       List<LayerData> pipelineData = runPipeline(context, layer, sourceData, aes, rowIndexes)
       xValues.addAll(pipelineData.collect { LayerData d -> d.x })

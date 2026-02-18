@@ -90,11 +90,14 @@ class Geom {
       return geomSpec.copy()
     }
     CharmGeomType geomType = resolveGeomType()
+    Map<String, Object> geomParams = params == null ? [:] : new LinkedHashMap<>(params as Map<String, Object>)
+    List<String> geomRequiredAes = requiredAes == null ? [] : new ArrayList<>(requiredAes)
+    Map<String, Object> geomDefaultAes = defaultAes == null ? [:] : new LinkedHashMap<>(defaultAes)
     geomSpec = new GeomSpec(
         geomType,
-        params as Map<String, Object>,
-        requiredAes ?: [],
-        defaultAes ?: [:],
+        geomParams,
+        geomRequiredAes,
+        geomDefaultAes,
         STAT_TYPE_MAP[defaultStat] ?: CharmStatType.IDENTITY,
         POSITION_TYPE_MAP[defaultPosition] ?: CharmPositionType.IDENTITY
     )
