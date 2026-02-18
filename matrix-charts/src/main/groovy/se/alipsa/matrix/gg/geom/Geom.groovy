@@ -2,6 +2,10 @@ package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.GeomSpec
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
@@ -9,6 +13,7 @@ import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
+import java.util.Locale
 
 /**
  * Base class for geometric objects (geoms).
@@ -31,6 +36,85 @@ class Geom {
 
   /** Optional aesthetic mappings with defaults */
   Map<String, Object> defaultAes = [:]
+
+  /** Canonical Charm geom spec used by the direct delegation path. */
+  GeomSpec geomSpec
+
+  private static final Map<StatType, CharmStatType> STAT_TYPE_MAP = [
+      (StatType.IDENTITY)  : CharmStatType.IDENTITY,
+      (StatType.COUNT)     : CharmStatType.COUNT,
+      (StatType.BIN)       : CharmStatType.BIN,
+      (StatType.BOXPLOT)   : CharmStatType.BOXPLOT,
+      (StatType.SMOOTH)    : CharmStatType.SMOOTH,
+      (StatType.QUANTILE)  : CharmStatType.QUANTILE,
+      (StatType.SUMMARY)   : CharmStatType.SUMMARY,
+      (StatType.DENSITY)   : CharmStatType.DENSITY,
+      (StatType.YDENSITY)  : CharmStatType.YDENSITY,
+      (StatType.DENSITY_2D): CharmStatType.DENSITY_2D,
+      (StatType.BIN2D)     : CharmStatType.BIN2D,
+      (StatType.BIN_HEX)   : CharmStatType.BIN_HEX,
+      (StatType.SUMMARY_HEX): CharmStatType.SUMMARY_HEX,
+      (StatType.SUMMARY_2D): CharmStatType.SUMMARY_2D,
+      (StatType.CONTOUR)   : CharmStatType.CONTOUR,
+      (StatType.ECDF)      : CharmStatType.ECDF,
+      (StatType.QQ)        : CharmStatType.QQ,
+      (StatType.QQ_LINE)   : CharmStatType.QQ_LINE,
+      (StatType.ELLIPSE)   : CharmStatType.ELLIPSE,
+      (StatType.SUMMARY_BIN): CharmStatType.SUMMARY_BIN,
+      (StatType.UNIQUE)    : CharmStatType.UNIQUE,
+      (StatType.FUNCTION)  : CharmStatType.FUNCTION,
+      (StatType.SF)        : CharmStatType.SF,
+      (StatType.SF_COORDINATES): CharmStatType.SF_COORDINATES,
+      (StatType.SPOKE)     : CharmStatType.SPOKE,
+      (StatType.ALIGN)     : CharmStatType.ALIGN
+  ] as Map<StatType, CharmStatType>
+
+  private static final Map<PositionType, CharmPositionType> POSITION_TYPE_MAP = [
+      (PositionType.IDENTITY): CharmPositionType.IDENTITY,
+      (PositionType.DODGE)   : CharmPositionType.DODGE,
+      (PositionType.DODGE2)  : CharmPositionType.DODGE2,
+      (PositionType.STACK)   : CharmPositionType.STACK,
+      (PositionType.FILL)    : CharmPositionType.FILL,
+      (PositionType.JITTER)  : CharmPositionType.JITTER,
+      (PositionType.NUDGE)   : CharmPositionType.NUDGE
+  ] as Map<PositionType, CharmPositionType>
+
+  /**
+   * Returns this geom represented as a Charm {@link GeomSpec}.
+   * The spec is lazily created and then cached.
+   *
+   * @return charm geom spec
+   */
+  GeomSpec toCharmGeomSpec() {
+    if (geomSpec != null) {
+      return geomSpec.copy()
+    }
+    CharmGeomType geomType = resolveGeomType()
+    geomSpec = new GeomSpec(
+        geomType,
+        params as Map<String, Object>,
+        requiredAes ?: [],
+        defaultAes ?: [:],
+        STAT_TYPE_MAP[defaultStat] ?: CharmStatType.IDENTITY,
+        POSITION_TYPE_MAP[defaultPosition] ?: CharmPositionType.IDENTITY
+    )
+    geomSpec.copy()
+  }
+
+  private CharmGeomType resolveGeomType() {
+    String simpleName = this.class.simpleName
+    String withoutPrefix = simpleName.startsWith('Geom') ? simpleName.substring(4) : simpleName
+    String enumName = withoutPrefix
+        .replaceAll(/([a-z])([A-Z])/, '$1_$2')
+        .replaceAll(/([A-Za-z])([0-9])/, '$1_$2')
+        .replaceAll(/([0-9])([A-Za-z])/, '$1_$2')
+        .toUpperCase(Locale.ROOT)
+    try {
+      return CharmGeomType.valueOf(enumName)
+    } catch (IllegalArgumentException ignored) {
+      throw new IllegalArgumentException("Unable to map gg geom '${simpleName}' to CharmGeomType '${enumName}'")
+    }
+  }
 
   /**
    * Render this geom to an SVG group.

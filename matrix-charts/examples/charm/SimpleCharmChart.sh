@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
+set -e
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-cd "$SCRIPT_DIR/../.." || exit
-. ./gradlew build
-cd "$SCRIPT_DIR" || exit
-
-groovy -cp "$SCRIPT_DIR/../../build/libs/matrix-charts-1.0.0-SNAPSHOT.jar" SimpleCharmChart.groovy
+cd "$SCRIPT_DIR/../.."
+./gradlew build -x test
+CLASSPATH=$(./gradlew -q printCp)
+cd "$SCRIPT_DIR"
+echo "Using CLASSPATH: $CLASSPATH"
+groovy -cp "$CLASSPATH" SimpleCharmChart.groovy
 

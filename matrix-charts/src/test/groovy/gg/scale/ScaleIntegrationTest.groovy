@@ -571,9 +571,11 @@ class ScaleIntegrationTest {
     assertEquals(histogramContent1, histogramContent2,
         "Both charts should produce identical histogram content")
 
-    // Verify both have histogram class
-    assertTrue(content1.contains('class="geomhistogram"'), "Chart 1 should have histogram class")
-    assertTrue(content2.contains('class="geomhistogram"'), "Chart 2 should have histogram class")
+    // Verify both have histogram class (legacy gg or delegated charm)
+    assertTrue(content1.contains('class="geomhistogram"') || content1.contains('charm-histogram'),
+        "Chart 1 should have histogram class")
+    assertTrue(content2.contains('class="geomhistogram"') || content2.contains('charm-histogram'),
+        "Chart 2 should have histogram class")
   }
 
   /**
@@ -584,13 +586,17 @@ class ScaleIntegrationTest {
   private String extractHistogramGroupContent(String svgContent) {
     def svg = new XmlSlurper().parseText(svgContent)
     def histogramGroup = svg.depthFirst().find { node ->
-      node.name() == 'g' && node.@class?.toString()?.contains('geomhistogram')
+      String classAttr = node.@class?.toString()
+      classAttr?.contains('geomhistogram') || classAttr?.contains('charm-histogram')
     }
     if (histogramGroup) {
-      // Convert children to a normalized string for comparison
-      return histogramGroup.children().collect { child ->
-        groovy.xml.XmlUtil.serialize(child)
-      }.join('\n')
+      if (histogramGroup.name() == 'g') {
+        // Convert children to a normalized string for comparison
+        return histogramGroup.children().collect { child ->
+          groovy.xml.XmlUtil.serialize(child)
+        }.join('\n')
+      }
+      return groovy.xml.XmlUtil.serialize(histogramGroup)
     }
     return ""
   }

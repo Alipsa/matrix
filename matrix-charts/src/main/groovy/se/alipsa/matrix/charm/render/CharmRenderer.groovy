@@ -7,6 +7,7 @@ import se.alipsa.matrix.charm.Aes
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.charm.render.geom.GeomEngine
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
@@ -71,15 +72,16 @@ class CharmRenderer {
   }
 
   private void trainScales(RenderContext context) {
-    List<Integer> rowIndexes = (0..<context.chart.data.rowCount()).collect { int idx -> idx }
     List<Object> xValues = []
     List<Object> yValues = []
     List<Object> colorValues = []
     List<Object> fillValues = []
 
     context.chart.layers.each { LayerSpec layer ->
+      Matrix sourceData = resolveLayerData(context.chart.data, layer)
+      List<Integer> rowIndexes = defaultRowIndexes(sourceData.rowCount())
       Aes aes = effectiveAes(context.chart.aes, layer)
-      List<LayerData> pipelineData = runPipeline(context, layer, aes, rowIndexes)
+      List<LayerData> pipelineData = runPipeline(context, layer, sourceData, aes, rowIndexes)
       xValues.addAll(pipelineData.collect { LayerData d -> d.x })
       yValues.addAll(pipelineData.collect { LayerData d -> d.y })
       colorValues.addAll(pipelineData.collect { LayerData d -> d.color })
@@ -150,8 +152,12 @@ class CharmRenderer {
       dataLayer.addAttribute('clip-path', "url(#${clipId})")
 
       context.chart.layers.each { LayerSpec layer ->
+        Matrix sourceData = resolveLayerData(context.chart.data, layer)
+        List<Integer> rowIndexes = sourceData.is(context.chart.data)
+            ? panel.rowIndexes
+            : defaultRowIndexes(sourceData.rowCount())
         Aes aes = effectiveAes(context.chart.aes, layer)
-        List<LayerData> layerData = runPipeline(context, layer, aes, panel.rowIndexes)
+        List<LayerData> layerData = runPipeline(context, layer, sourceData, aes, rowIndexes)
         renderLayer(dataLayer, context, layer, layerData, panelWidth, panelHeight)
       }
       axisRenderer.render(plotArea, context, panelWidth, panelHeight)
@@ -169,7 +175,13 @@ class CharmRenderer {
     GeomEngine.render(dataLayer, context, layer, layerData, panelWidth, panelHeight)
   }
 
-  private List<LayerData> runPipeline(RenderContext context, LayerSpec layer, Aes aes, List<Integer> rowIndexes) {
+  private List<LayerData> runPipeline(
+      RenderContext context,
+      LayerSpec layer,
+      Matrix dataMatrix,
+      Aes aes,
+      List<Integer> rowIndexes
+  ) {
     Map<List<Integer>, List<LayerData>> layerCache = context.pipelineCache[layer]
     if (layerCache == null) {
       layerCache = [:]
@@ -181,7 +193,7 @@ class CharmRenderer {
       return cached
     }
 
-    List<LayerData> mapped = mapData(context.chart.data, aes, rowIndexes)
+    List<LayerData> mapped = mapData(dataMatrix, aes, rowIndexes)
     List<LayerData> statData = applyStat(layer, mapped)
     List<LayerData> posData = applyPosition(layer, statData)
     List<LayerData> result = applyCoord(context.chart.coord, posData)
@@ -216,6 +228,9 @@ class CharmRenderer {
   }
 
   private static Object readValue(se.alipsa.matrix.core.Matrix data, int rowIndex, String columnName) {
+    if (data == null || rowIndex < 0 || rowIndex >= data.rowCount()) {
+      return null
+    }
     columnName == null ? null : data[rowIndex, columnName]
   }
 
@@ -285,5 +300,14 @@ class CharmRenderer {
     PanelSpec panel = new PanelSpec(row: 0, col: 0, label: null)
     panel.rowIndexes = (0..<rowCount).collect { int idx -> idx }
     panel
+  }
+
+  private static Matrix resolveLayerData(Matrix chartData, LayerSpec layer) {
+    Object layerData = layer.params['__layer_data']
+    layerData instanceof Matrix ? layerData as Matrix : chartData
+  }
+
+  private static List<Integer> defaultRowIndexes(int rowCount) {
+    (0..<rowCount).collect { int idx -> idx }
   }
 }
