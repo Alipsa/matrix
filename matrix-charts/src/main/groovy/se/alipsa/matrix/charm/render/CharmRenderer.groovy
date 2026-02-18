@@ -153,7 +153,7 @@ class CharmRenderer {
 
       context.chart.layers.each { LayerSpec layer ->
         Matrix sourceData = resolveLayerData(context.chart.data, layer)
-        List<Integer> rowIndexes = sourceData.is(context.chart.data)
+        List<Integer> rowIndexes = (sourceData == null || sourceData.is(context.chart.data))
             ? panel.rowIndexes
             : defaultRowIndexes(sourceData.rowCount())
         Aes aes = effectiveAes(context.chart.aes, layer)

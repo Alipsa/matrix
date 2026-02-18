@@ -24,6 +24,7 @@ import se.alipsa.matrix.charm.Theme
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.Guide
 import se.alipsa.matrix.gg.Guides
@@ -52,6 +53,8 @@ import java.util.Locale
 @CompileStatic
 class GgCharmAdapter {
 
+  private static final Logger log = Logger.getLogger(GgCharmAdapter)
+
   private static final Set<CharmStatType> SUPPORTED_STATS = [
       CharmStatType.IDENTITY,
       CharmStatType.COUNT,
@@ -75,6 +78,7 @@ class GgCharmAdapter {
       CharmCoordType.FIXED
   ] as Set<CharmCoordType>
 
+  // Intentionally narrower than CharmGeomType.SUPPORTED during phased migration.
   private static final Set<CharmGeomType> DELEGATED_GEOMS = [
       CharmGeomType.POINT,
       CharmGeomType.LINE,
@@ -218,6 +222,7 @@ class GgCharmAdapter {
       RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
       return charmRenderer.render(adaptation.charmChart, config)
     } catch (Exception ignored) {
+      log.debug("Charm delegation render failed, falling back to legacy gg renderer: ${ignored.message}")
       return ggRenderer.render(ggChart)
     }
   }
@@ -240,10 +245,6 @@ class GgCharmAdapter {
       return null
     }
 
-    if (!(geomSpec.type in CharmGeomType.SUPPORTED)) {
-      reasons.add("Layer ${idx} geom '${geomSpec.type}' is not delegated yet".toString())
-      return null
-    }
     if (!(geomSpec.type in DELEGATED_GEOMS)) {
       reasons.add("Layer ${idx} geom '${geomSpec.type}' is mapped but not delegated yet".toString())
       return null

@@ -2,14 +2,10 @@ package se.alipsa.matrix.gg
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.charm.render.CharmRenderer
-import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.coord.CoordCartesian
-import se.alipsa.matrix.gg.adapter.GgCharmAdaptation
 import se.alipsa.matrix.gg.facet.Facet
 import se.alipsa.matrix.gg.geom.Geom
 import se.alipsa.matrix.gg.geom.GeomBar
@@ -23,7 +19,6 @@ import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.adapter.GgCharmAdapter
 import se.alipsa.matrix.gg.position.Position
-import se.alipsa.matrix.gg.render.GgRenderer
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.stat.Stats
 import se.alipsa.matrix.gg.theme.Theme
@@ -489,22 +484,6 @@ class GgChart {
     if (coord == null) {
       coord = new CoordCartesian()
     }
-    renderWithCharmDelegationFallback()
-  }
-
-  private Svg renderWithCharmDelegationFallback() {
-    GgCharmAdapter adapter = new GgCharmAdapter()
-    GgCharmAdaptation adaptation = adapter.adapt(this)
-    if (adaptation.delegated && adaptation.charmChart != null) {
-      try {
-        RenderConfig config = new RenderConfig(width: width, height: height)
-        return new CharmRenderer().render(adaptation.charmChart as Chart, config)
-      } catch (Exception ignored) {
-        // Fall through to legacy path.
-      }
-    }
-
-    // TODO(phase15): Remove legacy fallback path once direct delegation fully covers gg surface.
-    new GgRenderer().render(this)
+    new GgCharmAdapter().render(this)
   }
 }
