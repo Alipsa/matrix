@@ -267,10 +267,6 @@ class GgCharmAdapter {
 
     Aes effectiveAes = mergeAes(plotAes, layerAes, layer.inheritAes)
     validateRequiredAes(geomSpec, effectiveAes, idx, reasons)
-    if (geomSpec.type == CharmGeomType.HISTOGRAM && statType == CharmStatType.IDENTITY &&
-        !((effectiveAes?.mappings() ?: [:]).containsKey('y'))) {
-      reasons.add("Layer ${idx} histogram with stat identity requires y mapping for delegation".toString())
-    }
     if (!reasons.isEmpty()) {
       return null
     }
