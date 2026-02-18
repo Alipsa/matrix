@@ -140,8 +140,8 @@ test {
   }
 }
 
-// Utility task to print the classpath, excluding Groovy dependencies, to easily run examples
 tasks.register('printCp') {
+  description = "Utility task to print the classpath, excluding Groovy dependencies, to easily run examples"
   // Combine configurations into a single FileCollection
   def fullClasspath = configurations.testRuntimeClasspath +
       configurations.compileClasspath +
