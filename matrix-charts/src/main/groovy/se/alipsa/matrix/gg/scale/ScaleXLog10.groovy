@@ -42,6 +42,7 @@ class ScaleXLog10 extends ScaleContinuous {
     if (params.labels) this.labels = params.labels as List<String>
     if (params.position) this.position = params.position as String
     if (params.nBreaks) this.nBreaks = params.nBreaks as int
+    if (params.guide) this.guide = params.guide
   }
 
   @Override

@@ -33,15 +33,17 @@ class AxisRenderer {
 
     int tickLen = context.config.axisTickLength
     int tickCount = context.config.axisTickCount
+
+    G xAxisGroup = axes.addG().id('x-axis')
     List<Object> xTicks = context.xScale.ticks(tickCount)
     List<String> xLabels = context.xScale.tickLabels(tickCount)
     xTicks.eachWithIndex { Object tick, int idx ->
       BigDecimal x = context.xScale.transform(tick)
       if (x != null) {
-        axes.addLine(x, panelHeight, x, panelHeight + tickLen)
+        xAxisGroup.addLine(x, panelHeight, x, panelHeight + tickLen)
             .stroke(lineColor).strokeWidth(lineWidth).styleClass('charm-axis-tick')
         String label = idx < xLabels.size() ? xLabels[idx] : formatTick(tick)
-        axes.addText(label)
+        xAxisGroup.addText(label)
             .x(x)
             .y(panelHeight + tickLen + 14)
             .textAnchor('middle')
@@ -51,15 +53,16 @@ class AxisRenderer {
       }
     }
 
+    G yAxisGroup = axes.addG().id('y-axis')
     List<Object> yTicks = context.yScale.ticks(tickCount)
     List<String> yLabels = context.yScale.tickLabels(tickCount)
     yTicks.eachWithIndex { Object tick, int idx ->
       BigDecimal y = context.yScale.transform(tick)
       if (y != null) {
-        axes.addLine(0, y, -tickLen, y)
+        yAxisGroup.addLine(0, y, -tickLen, y)
             .stroke(lineColor).strokeWidth(lineWidth).styleClass('charm-axis-tick')
         String label = idx < yLabels.size() ? yLabels[idx] : formatTick(tick)
-        axes.addText(label)
+        yAxisGroup.addText(label)
             .x(-tickLen - 4)
             .y(y + 4)
             .textAnchor('end')

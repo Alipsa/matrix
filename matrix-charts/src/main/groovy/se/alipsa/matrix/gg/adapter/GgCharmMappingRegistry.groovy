@@ -97,9 +97,10 @@ class GgCharmMappingRegistry {
       (PositionType.NUDGE)   : CharmPositionType.NUDGE
   ] as Map<PositionType, CharmPositionType>
 
+  // Subclasses must appear before parent classes so isInstance checks match the most specific type first.
   private final Map<Class<? extends GgCoord>, CharmCoordType> coordMappings = [
-      (CoordCartesian): CharmCoordType.CARTESIAN,
       (CoordFixed)    : CharmCoordType.FIXED,
+      (CoordCartesian): CharmCoordType.CARTESIAN,
       (CoordFlip)     : CharmCoordType.FLIP,
       (CoordPolar)    : CharmCoordType.POLAR
   ] as Map<Class<? extends GgCoord>, CharmCoordType>
@@ -213,7 +214,7 @@ class GgCharmMappingRegistry {
     }
     if (scale instanceof ScaleXTime || scale instanceof ScaleYTime ||
         scale instanceof ScaleXDatetime || scale instanceof ScaleYDatetime) {
-      return CharmScale.time()
+      return null
     }
     if (scale instanceof ScaleDiscrete) {
       return CharmScale.discrete()

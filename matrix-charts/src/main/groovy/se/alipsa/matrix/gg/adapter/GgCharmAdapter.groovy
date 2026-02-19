@@ -39,6 +39,7 @@ import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.render.GgRenderer
 import se.alipsa.matrix.gg.scale.Scale as GgScale
+import se.alipsa.matrix.gg.scale.ScaleDiscrete
 import se.alipsa.matrix.gg.theme.ElementLine
 import se.alipsa.matrix.gg.theme.ElementRect
 import se.alipsa.matrix.gg.theme.Theme as GgTheme
@@ -73,8 +74,7 @@ class GgCharmAdapter {
 
   private static final Set<CharmCoordType> SUPPORTED_COORDS = [
       CharmCoordType.CARTESIAN,
-      CharmCoordType.FLIP,
-      CharmCoordType.FIXED
+      CharmCoordType.FLIP
   ] as Set<CharmCoordType>
 
   // Intentionally narrower than CharmGeomType.SUPPORTED during phased migration.
@@ -369,6 +369,13 @@ class GgCharmAdapter {
       }
 
       enrichScale(charmScale, scale)
+
+      if (scale instanceof ScaleDiscrete && scale.labels != null && !scale.labels.isEmpty()
+          && aesthetic in ['x', 'y']) {
+        reasons.add("Scale ${idx} (${scale.class.simpleName}) discrete scale with custom labels for '${aesthetic}' is not delegated yet".toString())
+        return
+      }
+
       assignScale(mapped, aesthetic, charmScale, idx, reasons)
     }
     mapped
