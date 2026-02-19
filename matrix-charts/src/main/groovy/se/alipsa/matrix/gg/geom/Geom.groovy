@@ -104,9 +104,19 @@ class Geom {
     geomSpec.copy()
   }
 
+  private static final Map<String, CharmGeomType> GEOM_NAME_OVERRIDES = [
+      'Bin2d'          : CharmGeomType.BIN2D,
+      'Density2d'      : CharmGeomType.DENSITY_2D,
+      'Density2dFilled': CharmGeomType.DENSITY_2D_FILLED
+  ]
+
   private CharmGeomType resolveGeomType() {
     String simpleName = this.class.simpleName
     String withoutPrefix = simpleName.startsWith('Geom') ? simpleName.substring(4) : simpleName
+    CharmGeomType override = GEOM_NAME_OVERRIDES[withoutPrefix]
+    if (override != null) {
+      return override
+    }
     String enumName = withoutPrefix
         .replaceAll(/([a-z])([A-Z])/, '$1_$2')
         .replaceAll(/([A-Za-z])([0-9])/, '$1_$2')

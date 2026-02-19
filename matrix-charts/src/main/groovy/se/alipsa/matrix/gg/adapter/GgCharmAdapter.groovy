@@ -32,7 +32,6 @@ import se.alipsa.matrix.gg.Label
 import se.alipsa.matrix.gg.aes.Aes as GgAes
 import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.Factor
-import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
 import se.alipsa.matrix.gg.layer.Layer
@@ -133,14 +132,6 @@ class GgCharmAdapter {
       reasons << 'Facet delegation is not enabled yet for gg adapter'
       return GgCharmAdaptation.fallback(reasons)
     }
-    if (ggChart.scales != null && !ggChart.scales.isEmpty()) {
-      reasons << 'Explicit gg scales currently use legacy gg renderer'
-      return GgCharmAdaptation.fallback(reasons)
-    }
-    if (ggChart.coord != null && ggChart.coord.class != CoordCartesian) {
-      reasons << "Coord '${ggChart.coord.class.simpleName}' is delegated via legacy gg renderer for parity".toString()
-      return GgCharmAdaptation.fallback(reasons)
-    }
     if (!isDefaultGrayTheme(ggChart.theme)) {
       reasons << 'Non-default gg themes currently use legacy gg renderer for visual parity'
       return GgCharmAdaptation.fallback(reasons)
@@ -221,8 +212,8 @@ class GgCharmAdapter {
     try {
       RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
       return charmRenderer.render(adaptation.charmChart, config)
-    } catch (Exception ignored) {
-      log.debug("Charm delegation render failed, falling back to legacy gg renderer: ${ignored.message}")
+    } catch (Exception e) {
+      log.warn("Charm delegation render failed, falling back to legacy gg renderer: ${e.message}")
       return ggRenderer.render(ggChart)
     }
   }
@@ -396,6 +387,11 @@ class GgCharmAdapter {
       CharmScale charmScale = mapScale(scale, aesthetic)
       if (charmScale == null) {
         reasons.add("Scale ${idx} (${scale.class.simpleName}) for aesthetic '${aesthetic}' is not delegated yet".toString())
+        return
+      }
+
+      if (hasUnsupportedGuide(scale.guide)) {
+        reasons.add("Scale ${idx} guide '${extractGuideType(scale.guide)}' for aesthetic '${aesthetic}' is not delegated yet".toString())
         return
       }
 
@@ -624,8 +620,8 @@ class GgCharmAdapter {
         mapped[key] = (value as Factor).value.toString()
         continue
       }
-      if (value instanceof AfterStat && (value as AfterStat).stat) {
-        mapped[key] = (value as AfterStat).stat
+      if (value instanceof AfterStat) {
+        reasons.add("AfterStat mapping '${key}' = after_stat('${(value as AfterStat).stat}') is not delegated yet".toString())
         continue
       }
       reasons.add("Unsupported ${context} aes '${key}' mapping type '${value.getClass().simpleName}'".toString())
@@ -769,6 +765,31 @@ class GgCharmAdapter {
       return guideSpec.toString()
     }
     guideSpec
+  }
+
+  private static final Set<String> SUPPORTED_GUIDE_TYPES = [
+      'legend', 'colorbar', 'none'
+  ] as Set<String>
+
+  private static boolean hasUnsupportedGuide(Object guideSpec) {
+    if (guideSpec == null) {
+      return false
+    }
+    String type = extractGuideType(guideSpec)
+    type != null && !(type in SUPPORTED_GUIDE_TYPES)
+  }
+
+  private static String extractGuideType(Object guideSpec) {
+    if (guideSpec instanceof Guide) {
+      return (guideSpec as Guide).type
+    }
+    if (guideSpec instanceof Map) {
+      return (guideSpec as Map).get('type')?.toString()
+    }
+    if (guideSpec instanceof CharSequence) {
+      return guideSpec.toString()
+    }
+    null
   }
 
   private static boolean hasUnsupportedLabels(Label labels) {
