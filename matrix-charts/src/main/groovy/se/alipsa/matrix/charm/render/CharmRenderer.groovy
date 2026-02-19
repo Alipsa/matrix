@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.charm.render.geom.GeomEngine
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
@@ -22,6 +23,8 @@ import se.alipsa.matrix.charm.render.stat.StatEngine
  */
 @CompileStatic
 class CharmRenderer {
+
+  private static final Logger log = Logger.getLogger(CharmRenderer)
 
   private final AxisRenderer axisRenderer = new AxisRenderer()
   private final GridRenderer gridRenderer = new GridRenderer()
@@ -153,9 +156,17 @@ class CharmRenderer {
 
       context.chart.layers.each { LayerSpec layer ->
         Matrix sourceData = resolveLayerData(context.chart.data, layer)
-        List<Integer> rowIndexes = (sourceData == null || sourceData.is(context.chart.data))
-            ? panel.rowIndexes
-            : defaultRowIndexes(sourceData.rowCount())
+        boolean layerHasOwnData = sourceData != null && !sourceData.is(context.chart.data)
+        List<Integer> rowIndexes
+        if (layerHasOwnData) {
+          if (faceted) {
+            log.warn("Layer-specific data with facets is not fully supported yet; " +
+                "the full layer dataset will be rendered in every panel")
+          }
+          rowIndexes = defaultRowIndexes(sourceData.rowCount())
+        } else {
+          rowIndexes = panel.rowIndexes
+        }
         Aes aes = effectiveAes(context.chart.aes, layer)
         List<LayerData> layerData = runPipeline(context, layer, sourceData, aes, rowIndexes)
         renderLayer(dataLayer, context, layer, layerData, panelWidth, panelHeight)

@@ -204,7 +204,7 @@ class GgCharmAdapter {
       RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
       return charmRenderer.render(adaptation.charmChart, config)
     } catch (Exception e) {
-      log.warn("Charm delegation render failed, falling back to legacy gg renderer: ${e.message}")
+      log.warn("Charm delegation render failed, falling back to legacy gg renderer: ${e.message}", e)
       return ggRenderer.render(ggChart)
     }
   }

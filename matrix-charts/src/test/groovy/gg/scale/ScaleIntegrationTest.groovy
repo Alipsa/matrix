@@ -585,20 +585,23 @@ class ScaleIntegrationTest {
    */
   private String extractHistogramGroupContent(String svgContent) {
     def svg = new XmlSlurper().parseText(svgContent)
-    def histogramGroup = svg.depthFirst().find { node ->
+    def matches = svg.depthFirst().findAll { node ->
       String classAttr = node.@class?.toString()
       classAttr?.contains('geomhistogram') || classAttr?.contains('charm-histogram')
     }
-    if (histogramGroup) {
-      if (histogramGroup.name() == 'g') {
-        // Convert children to a normalized string for comparison
-        return histogramGroup.children().collect { child ->
-          groovy.xml.XmlUtil.serialize(child)
-        }.join('\n')
-      }
-      return groovy.xml.XmlUtil.serialize(histogramGroup)
+    if (matches.isEmpty()) {
+      return ""
     }
-    return ""
+    // Prefer a wrapping <g> if present; otherwise collect all matching elements
+    def wrapper = matches.find { it.name() == 'g' }
+    if (wrapper) {
+      return wrapper.children().collect { child ->
+        groovy.xml.XmlUtil.serialize(child)
+      }.sort().join('\n')
+    }
+    matches.collect { node ->
+      groovy.xml.XmlUtil.serialize(node)
+    }.sort().join('\n')
   }
 
   @Test
