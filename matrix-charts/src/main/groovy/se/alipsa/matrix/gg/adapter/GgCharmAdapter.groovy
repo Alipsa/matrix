@@ -128,10 +128,6 @@ class GgCharmAdapter {
       reasons << 'Custom guides are currently handled by legacy gg renderer'
       return GgCharmAdaptation.fallback(reasons)
     }
-    if (ggChart.facet != null) {
-      reasons << 'Facet delegation is not enabled yet for gg adapter'
-      return GgCharmAdaptation.fallback(reasons)
-    }
     if (!isDefaultGrayTheme(ggChart.theme)) {
       reasons << 'Non-default gg themes currently use legacy gg renderer for visual parity'
       return GgCharmAdaptation.fallback(reasons)
@@ -276,14 +272,6 @@ class GgCharmAdapter {
       }
     }
 
-    if (geomSpec.type == CharmGeomType.HISTOGRAM) {
-      Object bins = layerParams['bins']
-      if (bins != null && (!(bins instanceof Number) || (bins as Number).intValue() <= 0)) {
-        reasons.add("Layer ${idx} histogram bins must be a positive number".toString())
-        return null
-      }
-    }
-
     Map<String, Object> statParams = deepCopyMap(layer.statParams)
     Map<String, Object> positionParams = deepCopyMap(layer.positionParams)
 
@@ -315,13 +303,6 @@ class GgCharmAdapter {
       }
       return CharmStatType.SMOOTH
     }
-    if (geomType == CharmGeomType.HISTOGRAM) {
-      if (!(resolved in [StatType.BIN, StatType.IDENTITY])) {
-        reasons.add("Layer ${idx} histogram stat '${resolved}' is not delegated".toString())
-        return null
-      }
-      return resolved == StatType.BIN ? CharmStatType.BIN : CharmStatType.IDENTITY
-    }
     if (geomType in [CharmGeomType.POINT, CharmGeomType.LINE, CharmGeomType.COL, CharmGeomType.BAR]) {
       if (resolved != StatType.IDENTITY) {
         reasons.add("Layer ${idx} geom '${geomType}' with stat '${resolved}' is not delegated".toString())
@@ -344,7 +325,7 @@ class GgCharmAdapter {
       reasons.add("Layer ${idx} position '${resolved}' is not delegated".toString())
       return null
     }
-    if (geomType in [CharmGeomType.POINT, CharmGeomType.LINE, CharmGeomType.SMOOTH, CharmGeomType.HISTOGRAM] && mapped != CharmPositionType.IDENTITY) {
+    if (geomType in [CharmGeomType.POINT, CharmGeomType.LINE, CharmGeomType.SMOOTH] && mapped != CharmPositionType.IDENTITY) {
       reasons.add("Layer ${idx} geom '${geomType}' does not delegate position '${resolved}'".toString())
       return null
     }
@@ -361,9 +342,6 @@ class GgCharmAdapter {
       if (!mappedAes.containsKey(aesName)) {
         reasons.add("Layer ${idx} (${geomSpec.type}) requires '${aesName}' mapping for delegation".toString())
       }
-    }
-    if (geomSpec.type == CharmGeomType.HISTOGRAM && mappedAes.containsKey('y')) {
-      reasons.add("Layer ${idx} histogram with mapped y is not delegated yet".toString())
     }
     if (mappedAes.containsKey('group') || mappedAes.containsKey('shape') ||
         mappedAes.containsKey('size') || mappedAes.containsKey('color') ||
