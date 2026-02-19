@@ -37,10 +37,10 @@ dependencies {
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-datasets')
   testImplementation project(':matrix-parquet')
-  testImplementation testLibs.slf4jSimple
-  testImplementation testLibs.junitJupiterApi
-  testRuntimeOnly testLibs.junitJupiterEngine
-  testRuntimeOnly testLibs.junitPlatformLauncher
+  testImplementation libs.slf4j.simple
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.platform.launcher
 }
 
 test {

@@ -34,7 +34,7 @@ compileGroovy {
 
 dependencies {
     compileOnly libs.groovy
-    compileOnly libs.groovySql
+    compileOnly libs.groovy.sql
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
     testImplementation project(':matrix-datasets')
@@ -43,12 +43,12 @@ dependencies {
     implementation 'se.alipsa:maven-utils:1.4.0'
 
     testImplementation libs.groovy
-    testImplementation libs.groovySql
+    testImplementation libs.groovy.sql
 
-    testImplementation testLibs.junitJupiterApi
-    testRuntimeOnly testLibs.junitJupiterEngine
-    testRuntimeOnly testLibs.junitPlatformLauncher
-    testRuntimeOnly testLibs.log4jToSlf4j
+    testImplementation libs.junit.jupiter.api
+    testRuntimeOnly libs.junit.jupiter.engine
+    testRuntimeOnly libs.junit.platform.launcher
+    testRuntimeOnly libs.log4j.slf4j
 }
 
 test {

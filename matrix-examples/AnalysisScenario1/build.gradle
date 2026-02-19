@@ -17,8 +17,8 @@ dependencies {
     implementation project(":matrix-stats")
     implementation project(":matrix-xchart")
     implementation project(":matrix-groovy-ext")
-    testImplementation testLibs.junitJupiter
-    testImplementation testLibs.junitPlatformLauncher
+    testImplementation libs.junit.jupiter
+    testImplementation libs.junit.platform.launcher
 }
 
 test {

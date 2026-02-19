@@ -32,7 +32,7 @@ dependencies {
   }
   implementation 'com.github.haifengl:smile-core:4.4.2'
   implementation 'com.github.haifengl:smile-plot:4.4.2'
-  testImplementation platform('org.junit:junit-bom:6.0.2')
+  testImplementation platform('org.junit:junit-bom:6.0.3')
   testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 

@@ -41,8 +41,8 @@ dependencies {
   compileOnly libs.groovy
 
   api('com.google.cloud:google-cloud-bigquery:2.59.0')
-  api 'com.google.cloud:google-cloud-resourcemanager:1.86.0'
-  implementation platform('com.google.auth:google-auth-library-bom:1.42.1')
+  api 'com.google.cloud:google-cloud-resourcemanager:1.87.0'
+  implementation platform('com.google.auth:google-auth-library-bom:1.43.0')
   implementation 'com.google.auth:google-auth-library-oauth2-http'
   implementation('com.google.cloud:google-cloud-bigquerystorage:3.21.0')
   implementation 'me.tongfei:progressbar:0.10.2'
@@ -51,10 +51,10 @@ dependencies {
   testImplementation 'org.testcontainers:gcloud:1.21.4'
   testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
   testImplementation libs.groovy
-  testImplementation testLibs.junitJupiterApi
-  testRuntimeOnly testLibs.junitJupiterEngine
-  testRuntimeOnly testLibs.junitPlatformLauncher
-  testRuntimeOnly testLibs.log4jToSlf4j
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.platform.launcher
+  testRuntimeOnly libs.log4j.slf4j
 }
 
 test {

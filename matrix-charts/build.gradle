@@ -66,7 +66,7 @@ dependencies {
   api("se.alipsa.groovy:gsvg:1.0.0")
   api("se.alipsa.groovy:gsvg-export:1.0.0")
 
-  api 'se.alipsa:fxsvgimage:1.4.2'
+  api 'se.alipsa:fxsvgimage:1.5.1'
   //api 'org.girod:fxsvgimage:1.4'
   api 'com.github.weisj:jsvg:2.0.0'
 
@@ -76,7 +76,7 @@ dependencies {
   compileOnly "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
 
   testImplementation libs.groovy
-  testImplementation libs.groovyXml
+  testImplementation libs.groovy.xml
   //testImplementation "org.testfx:openjfx-monocle:jdk-11+26"
 
   testImplementation project(':matrix-core')
@@ -87,11 +87,11 @@ dependencies {
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
-  testImplementation testLibs.junitJupiter
-  testRuntimeOnly testLibs.junitJupiterEngine
-  testRuntimeOnly testLibs.junitPlatformLauncher
-  testImplementation testLibs.slf4jSimple
-  testImplementation libs.groovySql
+  testImplementation libs.junit.jupiter
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.platform.launcher
+  testImplementation libs.slf4j.simple
+  testImplementation libs.groovy.sql
   //testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
 }
 

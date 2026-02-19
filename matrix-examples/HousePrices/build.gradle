@@ -16,10 +16,10 @@ tasks.withType(GroovyCompile) { task ->
 
 dependencies {
     implementation libs.groovy
-    implementation libs.groovyGinq
+    implementation libs.groovy.ginq
     implementation project(':matrix-core')
-    testImplementation testLibs.junitJupiter
-    testImplementation testLibs.junitPlatformLauncher
+    testImplementation libs.junit.jupiter
+    testImplementation libs.junit.platform.launcher
 }
 
 test {

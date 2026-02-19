@@ -38,17 +38,17 @@ dependencies {
   testImplementation project(':matrix-datasets')
 
   compileOnly libs.groovy
-  compileOnly libs.groovyJson
+  compileOnly libs.groovy.json
 
   // Jackson for streaming JSON parsing (low memory footprint)
   api("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
   api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 
   testImplementation libs.groovy
-  testImplementation libs.groovyJson
-  testImplementation testLibs.junitJupiterApi
-  testRuntimeOnly testLibs.junitJupiterEngine
-  testRuntimeOnly testLibs.junitPlatformLauncher
+  testImplementation libs.groovy.json
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.platform.launcher
 }
 
 test {

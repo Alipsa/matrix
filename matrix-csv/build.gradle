@@ -49,9 +49,9 @@ dependencies {
   compileOnly libs.groovy
   testImplementation libs.groovy
 
-  testImplementation testLibs.junitJupiterApi
-  testRuntimeOnly testLibs.junitJupiterEngine
-  testRuntimeOnly testLibs.junitPlatformLauncher
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.platform.launcher
 
 }
 

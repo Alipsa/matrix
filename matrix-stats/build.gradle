@@ -48,10 +48,10 @@ dependencies {
   testImplementation libs.groovy
   testImplementation 'com.github.haifengl:smile-core:4.4.2'
   testImplementation("se.alipsa:jfinancials:1.0.0")
-  testImplementation testLibs.junitJupiterApi
-  testRuntimeOnly testLibs.junitPlatformLauncher
-  testRuntimeOnly testLibs.junitJupiterEngine
-  testRuntimeOnly testLibs.slf4jSimple
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.platform.launcher
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.slf4j.simple
 
 }
 

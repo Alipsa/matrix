@@ -37,9 +37,9 @@ compileGroovy {
 
 dependencies {
   compileOnly libs.groovy
-  compileOnly libs.groovyAnt
-  compileOnly libs.groovyTemplates
-  compileOnly libs.groovyDoc
+  compileOnly libs.groovy.ant
+  compileOnly libs.groovy.templates
+  compileOnly libs.groovy.doc
   compileOnly 'com.github.javaparser:javaparser-core:3.28.0'
 
 
@@ -56,11 +56,11 @@ dependencies {
   implementation 'com.fasterxml:aalto-xml:1.3.4'
 
 
-  testImplementation testLibs.junitJupiterApi
-  testRuntimeOnly testLibs.junitJupiterEngine
-  testRuntimeOnly testLibs.junitPlatformLauncher
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.jupiter.engine
+  testRuntimeOnly libs.junit.platform.launcher
   testImplementation libs.groovy
-  testImplementation testLibs.log4jToSlf4j
+  testImplementation libs.log4j.slf4j
   // Removed slf4jSimple - conflicts with log4jToSlf4j (both are SLF4J providers)
 }
 

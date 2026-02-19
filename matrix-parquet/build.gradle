@@ -50,11 +50,11 @@ dependencies {
         exclude group: 'com.squareup.okhttp3'       // optional, sometimes pulled transitively
     }
   implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.4.2'
-    testImplementation testLibs.junitJupiterApi
-    testRuntimeOnly testLibs.junitJupiterEngine
-    testRuntimeOnly testLibs.junitPlatformLauncher
+    testImplementation libs.junit.jupiter.api
+    testRuntimeOnly libs.junit.jupiter.engine
+    testRuntimeOnly libs.junit.platform.launcher
     testImplementation libs.groovy
-    testImplementation testLibs.log4jToSlf4j
+    testImplementation libs.log4j.slf4j
 }
 
 test {

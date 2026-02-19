@@ -27,7 +27,7 @@ dependencies {
     implementation('se.alipsa.matrix:matrix-datasets')
     implementation('se.alipsa.matrix:matrix-stats')
     implementation('se.alipsa.matrix:matrix-charts')
-    testImplementation testLibs.junitJupiter
+    testImplementation libs.junit.jupiter
 }
 
 test {

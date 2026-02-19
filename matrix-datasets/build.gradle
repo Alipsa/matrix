@@ -36,16 +36,16 @@ compileGroovy {
 
 dependencies {
     compileOnly libs.groovy
-    compileOnly libs.groovyGinq
+    compileOnly libs.groovy.ginq
     implementation 'org.jsoup:jsoup:1.22.1'
     compileOnly project(':matrix-core')
     testImplementation project(':matrix-core')
 
     testImplementation libs.groovy
-    testImplementation libs.groovyGinq
-    testImplementation testLibs.junitJupiterApi
-    testRuntimeOnly testLibs.junitJupiterEngine
-    testRuntimeOnly testLibs.junitPlatformLauncher
+    testImplementation libs.groovy.ginq
+    testImplementation libs.junit.jupiter.api
+    testRuntimeOnly libs.junit.jupiter.engine
+    testRuntimeOnly libs.junit.platform.launcher
 }
 
 test {

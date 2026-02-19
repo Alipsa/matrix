@@ -65,6 +65,18 @@ allprojects {
     gradleReleaseChannel = "current"
     checkForGradleUpdate = false // optional: silence Gradle RC noise
 
+    outputFormatter = { result ->
+      def outdated = result.outdated.dependencies
+      if (outdated) {
+        rootProject.ext.set('_hasOutdatedDeps', true)
+        println "${project.name}:"
+        outdated.each { dep ->
+          def latest = dep.available.release ?: dep.available.milestone ?: dep.available.integration
+          println "  ${dep.group}:${dep.name} ${dep.version} -> ${latest}"
+        }
+      }
+    }
+
     resolutionStrategy {
       componentSelection {
         all { s ->
@@ -81,4 +93,22 @@ allprojects {
       }
     }
   }
+}
+
+// Summary task that runs after all dependencyUpdates tasks complete
+tasks.register('dependencyUpdatesSummary') {
+  description = 'Prints a summary after all dependency update checks'
+  dependsOn allprojects.collect { p ->
+    p.tasks.matching { it.name == 'dependencyUpdates' }
+  }
+  doLast {
+    if (!rootProject.ext.has('_hasOutdatedDeps')) {
+      println 'All dependencies are up-to-date.'
+    }
+  }
+}
+
+// Wire: running dependencyUpdates on root also triggers the summary
+tasks.matching { it.name == 'dependencyUpdates' }.configureEach {
+  finalizedBy tasks.named('dependencyUpdatesSummary')
 }
