@@ -55,6 +55,12 @@ class PanelSpec {
   int row
   int col
   String label
+  /** Row strip label (used by FacetGrid for right-side row strips) */
+  String rowLabel
+  /** Column strip label (used by FacetGrid for top column strips) */
+  String colLabel
+  /** Facet variable values for this panel */
+  Map<String, Object> facetValues = [:]
   List<Integer> rowIndexes = []
 }
 

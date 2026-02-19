@@ -135,6 +135,7 @@ class Geom {
   /**
    * Render this geom to an SVG group.
    * Subclasses should override this method to provide actual rendering.
+   * TODO Phase 15: Remove legacy render() methods once all rendering goes through CharmRenderer.
    *
    * @param group The SVG group to render into
    * @param data The transformed data (after stat and position adjustments)
@@ -157,6 +158,7 @@ class Geom {
    * <p>
    * The default implementation delegates to the existing {@link #render} method
    * for backward compatibility with custom geoms.
+   * TODO Phase 15: Remove legacy render() methods once all rendering goes through CharmRenderer.
    *
    * @param group The SVG group to render into
    * @param data The transformed data (after stat and position adjustments)

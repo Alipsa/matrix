@@ -81,8 +81,8 @@ class CharmApiDesignTest {
 
     assertEquals('log10', spec.scale.x.transform)
     assertEquals('sqrt', spec.scale.y.transform)
-    assertEquals('top', spec.theme.legend.position)
-    assertEquals(0.75, spec.theme.axis.lineWidth)
+    assertEquals('top', spec.theme.legendPosition)
+    assertEquals(0.75, spec.theme.axisLineX.size)
     assertEquals('y', spec.coord.params.theta)
   }
 

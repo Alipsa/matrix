@@ -40,10 +40,7 @@ import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.render.GgRenderer
 import se.alipsa.matrix.gg.scale.Scale as GgScale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
-import se.alipsa.matrix.gg.theme.ElementLine
-import se.alipsa.matrix.gg.theme.ElementRect
 import se.alipsa.matrix.gg.theme.Theme as GgTheme
-import se.alipsa.matrix.gg.theme.Themes
 import java.util.Locale
 
 /**
@@ -98,7 +95,7 @@ class GgCharmAdapter {
 
   private final GgCharmMappingRegistry mappingRegistry = new GgCharmMappingRegistry()
   private final CharmRenderer charmRenderer = new CharmRenderer()
-  private final GgRenderer ggRenderer = new GgRenderer()
+  private final GgRenderer ggRenderer = new GgRenderer() // TODO Phase 15: Remove legacy fallback renderer
 
   /**
    * Attempts to adapt a gg chart to a Charm chart model.
@@ -128,14 +125,7 @@ class GgCharmAdapter {
       reasons << 'Custom guides are currently handled by legacy gg renderer'
       return GgCharmAdaptation.fallback(reasons)
     }
-    if (!isDefaultGrayTheme(ggChart.theme)) {
-      reasons << 'Non-default gg themes currently use legacy gg renderer for visual parity'
-      return GgCharmAdaptation.fallback(reasons)
-    }
-    if (hasUnsupportedLabels(ggChart.labels)) {
-      reasons << 'Subtitle/caption labels are currently handled by legacy gg renderer'
-      return GgCharmAdaptation.fallback(reasons)
-    }
+    // Theme gate and label gate removed in Phase 9 — all themes and labels now delegated.
 
     Aes plotAes = mapAes(ggChart.globalAes, 'plot', reasons)
     if (!reasons.isEmpty() || plotAes == null) {
@@ -144,10 +134,6 @@ class GgCharmAdapter {
 
     Facet mappedFacet = mapFacet(ggChart.facet, reasons)
     if (!reasons.isEmpty() || mappedFacet == null) {
-      return GgCharmAdaptation.fallback(reasons)
-    }
-    if (mappedFacet.type != FacetType.NONE) {
-      reasons << 'Facet delegation is scheduled for phase 9'
       return GgCharmAdaptation.fallback(reasons)
     }
 
@@ -190,22 +176,23 @@ class GgCharmAdapter {
 
   /**
    * Renders a gg chart through Charm when supported, otherwise via legacy gg renderer.
+   * TODO Phase 15: Remove fallback path entirely; all rendering should go through CharmRenderer.
    */
   Svg render(GgChart ggChart) {
     if (isLegacyRendererForced()) {
-      return ggRenderer.render(ggChart)
+      return ggRenderer.render(ggChart) // TODO Phase 15: Remove legacy fallback
     }
 
     GgCharmAdaptation adaptation = adapt(ggChart)
     if (!adaptation.delegated || adaptation.charmChart == null) {
-      return ggRenderer.render(ggChart)
+      return ggRenderer.render(ggChart) // TODO Phase 15: Remove legacy fallback
     }
     try {
       RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
       return charmRenderer.render(adaptation.charmChart, config)
     } catch (Exception e) {
       log.warn("Charm delegation render failed, falling back to legacy gg renderer: ${e.message}", e)
-      return ggRenderer.render(ggChart)
+      return ggRenderer.render(ggChart) // TODO Phase 15: Remove legacy fallback
     }
   }
 
@@ -619,43 +606,90 @@ class GgCharmAdapter {
     if (source == null) {
       return theme
     }
-    theme.legend = ([
-        position : source.legendPosition ?: 'right',
-        direction: source.legendDirection ?: 'vertical'
-    ] as Map<String, Object>)
-    theme.axis = ([
-        color     : source.axisLineX?.color ?: source.axisLineY?.color ?: '#333333',
-        lineWidth : source.axisLineX?.size ?: source.axisLineY?.size ?: 1,
-        tickLength: source.axisTickLength ?: 5
-    ] as Map<String, Object>)
-    theme.text = ([
-        color      : source.axisTextX?.color ?: source.axisTextY?.color ?: source.plotTitle?.color ?: '#333333',
-        size       : source.axisTextX?.size ?: source.axisTextY?.size ?: source.baseSize ?: 10,
-        titleSize  : source.plotTitle?.size ?: ((source.baseSize ?: 11) + 4),
-        family     : source.baseFamily,
-        lineHeight : source.baseLineHeight,
-        subtitleSize: source.plotSubtitle?.size,
-        captionSize: source.plotCaption?.size
-    ] as Map<String, Object>)
-    theme.grid = ([
-        color    : source.panelGridMajor?.color ?: '#eeeeee',
-        lineWidth: source.panelGridMajor?.size ?: 1,
-        minor    : source.panelGridMinor?.color
-    ] as Map<String, Object>)
-    theme.raw = ([
-        background      : source.plotBackground?.fill ?: '#ffffff',
-        panelBackground : source.panelBackground?.fill ?: '#ffffff',
-        panelBorder     : source.panelBorder?.color,
-        themeName       : source.themeName,
-        plotMargin      : source.plotMargin,
-        panelSpacing    : source.panelSpacing,
-        legendKeySize   : source.legendKeySize,
-        legendMargin    : source.legendMargin,
-        discreteColors  : source.discreteColors,
-        gradientColors  : source.gradientColors,
-        explicitNulls   : source.explicitNulls
-    ] as Map<String, Object>)
+    // Map typed elements field-by-field from gg theme to charm theme
+    theme.plotBackground = mapRect(source.plotBackground)
+    theme.plotTitle = mapText(source.plotTitle)
+    theme.plotSubtitle = mapText(source.plotSubtitle)
+    theme.plotCaption = mapText(source.plotCaption)
+    theme.plotMargin = source.plotMargin != null ? new ArrayList<>(source.plotMargin) : null
+
+    theme.panelBackground = mapRect(source.panelBackground)
+    theme.panelBorder = mapRect(source.panelBorder)
+    theme.panelGridMajor = mapLine(source.panelGridMajor)
+    theme.panelGridMinor = mapLine(source.panelGridMinor)
+    theme.panelSpacing = source.panelSpacing != null ? new ArrayList<>(source.panelSpacing) : null
+
+    theme.axisLineX = mapLine(source.axisLineX)
+    theme.axisLineY = mapLine(source.axisLineY)
+    theme.axisTicksX = mapLine(source.axisTicksX)
+    theme.axisTicksY = mapLine(source.axisTicksY)
+    theme.axisTextX = mapText(source.axisTextX)
+    theme.axisTextY = mapText(source.axisTextY)
+    theme.axisTitleX = mapText(source.axisTitleX)
+    theme.axisTitleY = mapText(source.axisTitleY)
+    theme.axisTickLength = source.axisTickLength
+
+    theme.legendPosition = source.legendPosition ?: 'right'
+    theme.legendDirection = source.legendDirection ?: 'vertical'
+    theme.legendBackground = mapRect(source.legendBackground)
+    theme.legendKey = mapRect(source.legendKey)
+    theme.legendKeySize = source.legendKeySize != null ? new ArrayList<>(source.legendKeySize) : null
+    theme.legendTitle = mapText(source.legendTitle)
+    theme.legendText = mapText(source.legendText)
+    theme.legendMargin = source.legendMargin != null ? new ArrayList<>(source.legendMargin) : null
+
+    theme.stripBackground = mapRect(source.stripBackground)
+    theme.stripText = mapText(source.stripText)
+
+    theme.discreteColors = source.discreteColors != null ? new ArrayList<>(source.discreteColors) : null
+    theme.gradientColors = source.gradientColors != null ? new ArrayList<>(source.gradientColors) : null
+    theme.baseFamily = source.baseFamily
+    theme.baseSize = source.baseSize
+    theme.baseLineHeight = source.baseLineHeight
+    theme.themeName = source.themeName
+    theme.explicitNulls = source.explicitNulls != null ? new HashSet<>(source.explicitNulls) : new HashSet<>()
     theme
+  }
+
+  private static se.alipsa.matrix.charm.theme.ElementText mapText(se.alipsa.matrix.gg.theme.ElementText source) {
+    if (source == null) {
+      return null
+    }
+    new se.alipsa.matrix.charm.theme.ElementText(
+        family: source.family,
+        face: source.face,
+        size: source.size,
+        color: source.color,
+        hjust: source.hjust,
+        vjust: source.vjust,
+        angle: source.angle,
+        lineheight: source.lineheight,
+        margin: source.margin != null ? new ArrayList<>(source.margin) : null
+    )
+  }
+
+  private static se.alipsa.matrix.charm.theme.ElementLine mapLine(se.alipsa.matrix.gg.theme.ElementLine source) {
+    if (source == null) {
+      return null
+    }
+    new se.alipsa.matrix.charm.theme.ElementLine(
+        color: source.color,
+        size: source.size,
+        linetype: source.linetype,
+        lineend: source.lineend
+    )
+  }
+
+  private static se.alipsa.matrix.charm.theme.ElementRect mapRect(se.alipsa.matrix.gg.theme.ElementRect source) {
+    if (source == null) {
+      return null
+    }
+    new se.alipsa.matrix.charm.theme.ElementRect(
+        fill: source.fill,
+        color: source.color,
+        size: source.size,
+        linetype: source.linetype
+    )
   }
 
   private static Labels mapLabels(Label source, Guides guides, List<GgScale> scales) {
@@ -772,70 +806,10 @@ class GgCharmAdapter {
     null
   }
 
-  private static boolean hasUnsupportedLabels(Label labels) {
-    if (labels == null) {
-      return false
-    }
-    labels.subTitle != null || labels.caption != null
-  }
+  // Theme gate methods (isDefaultGrayTheme, sameRect, sameLine) and
+  // hasUnsupportedLabels removed in Phase 9 — all themes and labels now delegated.
 
-  private static boolean isDefaultGrayTheme(GgTheme theme) {
-    if (theme == null) {
-      return true
-    }
-    GgTheme baseline = Themes.gray()
-    if (!(theme.themeName == null || theme.themeName == baseline.themeName)) {
-      return false
-    }
-    if (theme.explicitNulls != null && !theme.explicitNulls.isEmpty()) {
-      return false
-    }
-    if (!sameRect(theme.plotBackground, baseline.plotBackground)) {
-      return false
-    }
-    if (!sameRect(theme.panelBackground, baseline.panelBackground)) {
-      return false
-    }
-    if (!sameLine(theme.panelGridMajor, baseline.panelGridMajor)) {
-      return false
-    }
-    if (!sameLine(theme.panelGridMinor, baseline.panelGridMinor)) {
-      return false
-    }
-    if (theme.axisLineX != null || theme.axisLineY != null ||
-        theme.axisTicksX != null || theme.axisTicksY != null ||
-        theme.axisTextX != null || theme.axisTextY != null ||
-        theme.axisTitleX != null || theme.axisTitleY != null ||
-        theme.plotSubtitle != null || theme.plotCaption != null ||
-        theme.legendTitle != null || theme.legendText != null ||
-        theme.legendBackground != null || theme.legendKey != null ||
-        theme.stripBackground != null || theme.stripText != null ||
-        theme.panelBorder != null) {
-      return false
-    }
-    if (theme.legendPosition != null && theme.legendPosition != 'right') {
-      return false
-    }
-    if (theme.legendDirection != null && theme.legendDirection != 'vertical') {
-      return false
-    }
-    true
-  }
-
-  private static boolean sameRect(ElementRect left, ElementRect right) {
-    if (left == null || right == null) {
-      return left == right
-    }
-    left.fill == right.fill && left.color == right.color && left.size == right.size && left.linetype == right.linetype
-  }
-
-  private static boolean sameLine(ElementLine left, ElementLine right) {
-    if (left == null || right == null) {
-      return left == right
-    }
-    left.color == right.color && left.size == right.size && left.linetype == right.linetype && left.lineend == right.lineend
-  }
-
+  // TODO Phase 15: Remove isLegacyRendererForced() and associated system/env property support
   private static boolean isLegacyRendererForced() {
     String propertyValue = System.getProperty('matrix.charts.gg.delegateToCharm')
     if (propertyValue != null) {

@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charm.theme.ElementLine
 
 /**
  * Renders major grid lines.
@@ -18,8 +19,16 @@ class GridRenderer {
    * @param panelHeight panel height
    */
   void render(G group, RenderContext context, int panelWidth, int panelHeight) {
-    String color = (context.chart.theme.grid?.color ?: '#eeeeee') as String
-    BigDecimal width = (context.chart.theme.grid?.lineWidth ?: 1) as BigDecimal
+    Set<String> nulls = context.chart.theme.explicitNulls
+
+    // Skip grid entirely if major grid is explicitly blanked
+    if (nulls.contains('panelGridMajor')) {
+      return
+    }
+
+    ElementLine gridMajor = context.chart.theme.panelGridMajor
+    String color = gridMajor?.color ?: '#eeeeee'
+    BigDecimal width = (gridMajor?.size ?: 1) as BigDecimal
 
     G grid = group.addG().id('grid')
     context.xScale.ticks(context.config.axisTickCount).each { Object tick ->

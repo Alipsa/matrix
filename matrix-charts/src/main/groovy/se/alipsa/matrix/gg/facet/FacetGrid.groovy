@@ -59,8 +59,8 @@ class FacetGrid extends Facet {
     if (params.scales) this.scales = params.scales as String
     if (params.space) this.space = params.space as String
     if (params.labeller) {
-      // Accept both String and Labeller objects
-      if (params.labeller instanceof Labeller || params.labeller instanceof String) {
+      // Accept String, gg Labeller, and charm Labeller objects
+      if (params.labeller instanceof se.alipsa.matrix.charm.facet.Labeller || params.labeller instanceof String) {
         this.labeller = params.labeller
       } else {
         this.labeller = params.labeller as String
@@ -249,9 +249,10 @@ class FacetGrid extends Facet {
     Object val = rowVals[rowIndex]
 
     // If labeller is a Labeller object, use it
-    if (labeller instanceof Labeller) {
+    if (labeller instanceof se.alipsa.matrix.charm.facet.Labeller) {
+      se.alipsa.matrix.charm.facet.Labeller lab = labeller as se.alipsa.matrix.charm.facet.Labeller
       if (rows.size() == 1) {
-        return (labeller as Labeller).label(rows[0], val)
+        return lab.label(rows[0], val)
       } else {
         // Multiple row variables - create map
         Map<String, Object> valMap = [:]
@@ -264,7 +265,7 @@ class FacetGrid extends Facet {
           // Fallback: associate the first row with the string representation of the value
           valMap[rows[0]] = val?.toString()
         }
-        return (labeller as Labeller).label(valMap)
+        return lab.label(valMap)
       }
     }
 
@@ -286,9 +287,10 @@ class FacetGrid extends Facet {
     Object val = colVals[colIndex]
 
     // If labeller is a Labeller object, use it
-    if (labeller instanceof Labeller) {
+    if (labeller instanceof se.alipsa.matrix.charm.facet.Labeller) {
+      se.alipsa.matrix.charm.facet.Labeller lab = labeller as se.alipsa.matrix.charm.facet.Labeller
       if (cols.size() == 1) {
-        return (labeller as Labeller).label(cols[0], val)
+        return lab.label(cols[0], val)
       } else {
         // Multiple column variables - create map
         Map<String, Object> valMap = [:]
@@ -301,7 +303,7 @@ class FacetGrid extends Facet {
           // Fallback: associate the first column with the string representation of the value
           valMap[cols[0]] = val?.toString()
         }
-        return (labeller as Labeller).label(valMap)
+        return lab.label(valMap)
       }
     }
 

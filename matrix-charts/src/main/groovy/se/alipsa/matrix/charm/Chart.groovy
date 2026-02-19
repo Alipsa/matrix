@@ -202,13 +202,15 @@ class Chart {
     if (value instanceof ThemeSpec) {
       return (value as ThemeSpec).copy()
     }
-    new ThemeSpec(
-        legend: new LinkedHashMap<>(value.legend),
-        axis: new LinkedHashMap<>(value.axis),
-        text: new LinkedHashMap<>(value.text),
-        grid: new LinkedHashMap<>(value.grid),
-        raw: new LinkedHashMap<>(value.raw)
-    )
+    ThemeSpec spec = new ThemeSpec()
+    Theme copy = value.copy()
+    copy.properties.each { key, val ->
+      String k = key as String
+      if (k != 'class' && spec.hasProperty(k)) {
+        spec.setProperty(k, val)
+      }
+    }
+    spec
   }
 
   private static FacetSpec toFacetSpec(Facet value) {

@@ -683,39 +683,96 @@ class PlotSpec {
     }
 
     /**
-     * Configures legend theme options.
+     * Configures legend theme options via map DSL.
+     * Maps 'position' and 'direction' to typed theme fields.
      *
      * @param configure legend closure
      */
     void legend(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = MapDsl) Closure<?> configure) {
-      theme.legend = configureMap(configure)
+      Map<String, Object> values = configureMap(configure)
+      if (values.containsKey('position')) {
+        theme.legendPosition = values['position']
+      }
+      if (values.containsKey('direction')) {
+        theme.legendDirection = values['direction'] as String
+      }
     }
 
     /**
-     * Configures axis theme options.
+     * Configures axis theme options via map DSL.
+     * Maps 'color', 'lineWidth', 'tickLength' to typed theme fields.
      *
      * @param configure axis closure
      */
     void axis(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = MapDsl) Closure<?> configure) {
-      theme.axis = configureMap(configure)
+      Map<String, Object> values = configureMap(configure)
+      if (values.containsKey('color') || values.containsKey('lineWidth')) {
+        se.alipsa.matrix.charm.theme.ElementLine line = new se.alipsa.matrix.charm.theme.ElementLine(
+            color: (values['color'] ?: '#333333') as String,
+            size: values['lineWidth'] ?: 1
+        )
+        theme.axisLineX = line.copy()
+        theme.axisLineY = line.copy()
+      }
+      if (values.containsKey('tickLength')) {
+        theme.axisTickLength = values['tickLength'] as Number
+      }
     }
 
     /**
-     * Configures text theme options.
+     * Configures text theme options via map DSL.
+     * Maps 'color', 'size', 'titleSize', 'family' to typed theme fields.
      *
      * @param configure text closure
      */
     void text(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = MapDsl) Closure<?> configure) {
-      theme.text = configureMap(configure)
+      Map<String, Object> values = configureMap(configure)
+      if (values.containsKey('color') || values.containsKey('size')) {
+        se.alipsa.matrix.charm.theme.ElementText textEl = new se.alipsa.matrix.charm.theme.ElementText(
+            color: (values['color'] ?: '#333333') as String,
+            size: values['size'] ?: theme.baseSize
+        )
+        theme.axisTextX = textEl.copy()
+        theme.axisTextY = textEl.copy()
+      }
+      if (values.containsKey('titleSize')) {
+        Number titleSize = values['titleSize'] as Number
+        theme.plotTitle = new se.alipsa.matrix.charm.theme.ElementText(
+            size: titleSize,
+            color: (values['color'] ?: '#333333') as String
+        )
+      }
+      if (values.containsKey('family')) {
+        theme.baseFamily = values['family'] as String
+      }
+      if (values.containsKey('lineHeight')) {
+        theme.baseLineHeight = values['lineHeight'] as Number
+      }
     }
 
     /**
-     * Configures grid theme options.
+     * Configures grid theme options via map DSL.
+     * Maps 'color', 'lineWidth' to typed theme fields.
      *
      * @param configure grid closure
      */
     void grid(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = MapDsl) Closure<?> configure) {
-      theme.grid = configureMap(configure)
+      Map<String, Object> values = configureMap(configure)
+      if (values.containsKey('color') || values.containsKey('lineWidth')) {
+        theme.panelGridMajor = new se.alipsa.matrix.charm.theme.ElementLine(
+            color: (values['color'] ?: '#eeeeee') as String,
+            size: values['lineWidth'] ?: 1
+        )
+      }
+      if (values.containsKey('minor')) {
+        Object minor = values['minor']
+        if (minor != null) {
+          theme.panelGridMinor = new se.alipsa.matrix.charm.theme.ElementLine(
+              color: minor as String,
+              size: (values['lineWidth'] ?: 1) as Number
+          )
+        }
+      }
     }
 
     private static Map<String, Object> configureMap(

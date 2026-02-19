@@ -69,9 +69,9 @@ abstract class Facet {
    * Get the panel title/label for display.
    */
   String getPanelLabel(Map<String, Object> panelValues) {
-    // If labeller is a Labeller object, use it
-    if (labeller instanceof Labeller) {
-      return (labeller as Labeller).label(panelValues)
+    // If labeller is a Labeller object (either gg or charm), use it
+    if (labeller instanceof se.alipsa.matrix.charm.facet.Labeller) {
+      return (labeller as se.alipsa.matrix.charm.facet.Labeller).label(panelValues)
     }
 
     // Otherwise, use string-based labelling (backward compatibility)

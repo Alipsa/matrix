@@ -110,12 +110,12 @@ class GgCharmAdapterTest {
 
     GgCharmAdapter adapter = new GgCharmAdapter()
 
+    // Phase 9: non-default themes are now delegated to Charm
     GgChart themed = ggplot(data, aes(x: 'x', y: 'y')) +
         geom_point() +
         theme_minimal()
     GgCharmAdaptation themedAdaptation = adapter.adapt(themed)
-    assertFalse(themedAdaptation.delegated)
-    assertTrue(themedAdaptation.reasons.any { it.contains('theme') })
+    assertTrue(themedAdaptation.delegated, 'Non-default themes should now delegate to Charm')
 
     GgChart barChart = ggplot(data, aes(x: 'x')) + geom_bar()
     GgCharmAdaptation barAdaptation = adapter.adapt(barChart)

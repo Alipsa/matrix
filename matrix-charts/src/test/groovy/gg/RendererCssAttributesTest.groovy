@@ -50,9 +50,10 @@ class RendererCssAttributesTest {
     Svg svg = chart.render()
     String svgString = svg.toXml()
 
-    // Grid lines should have CSS classes
+    // Grid lines should have CSS classes (charm-grid for delegated charts, gg-grid-major for legacy)
     assertTrue(svgString.contains('gg-grid-major') ||
-               svgString.contains('gg-grid-minor'),
+               svgString.contains('gg-grid-minor') ||
+               svgString.contains('charm-grid'),
         "SVG should contain grid CSS classes")
   }
 
