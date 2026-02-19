@@ -87,7 +87,7 @@ class GgCharmAdapter {
   ] as Set<CharmGeomType>
 
   private static final Set<String> LAYER_PARAM_SKIP_KEYS = [
-      'stat', 'position', 'mapping'
+      'stat', 'position', 'mapping', '__layer_data'
   ] as Set<String>
 
   private static final List<String> AESTHETIC_KEYS = [
@@ -153,11 +153,6 @@ class GgCharmAdapter {
 
     Coord mappedCoord = mapCoord(ggChart.coord, reasons)
     if (!reasons.isEmpty() || mappedCoord == null) {
-      return GgCharmAdaptation.fallback(reasons)
-    }
-
-    if (ggChart.layers.any { Layer layer -> layer?.data != null } && mappedFacet.type != FacetType.NONE) {
-      reasons << 'Layer-specific data with facets is not delegated yet'
       return GgCharmAdaptation.fallback(reasons)
     }
 
@@ -329,7 +324,7 @@ class GgCharmAdapter {
       reasons.add("Layer ${idx} geom '${geomType}' does not delegate position '${resolved}'".toString())
       return null
     }
-    if (geomType in [CharmGeomType.COL, CharmGeomType.BAR] && !(mapped in [CharmPositionType.IDENTITY, CharmPositionType.STACK])) {
+    if (geomType in [CharmGeomType.COL, CharmGeomType.BAR] && !(mapped in [CharmPositionType.IDENTITY, CharmPositionType.STACK, CharmPositionType.DODGE, CharmPositionType.FILL])) {
       reasons.add("Layer ${idx} geom '${geomType}' does not delegate position '${resolved}'".toString())
       return null
     }

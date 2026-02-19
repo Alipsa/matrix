@@ -86,14 +86,18 @@ class Geom {
    * @return charm geom spec
    */
   GeomSpec toCharmGeomSpec() {
-    if (geomSpec != null) {
-      return geomSpec.copy()
+    if (geomSpec == null) {
+      geomSpec = buildGeomSpec()
     }
+    geomSpec.copy()
+  }
+
+  private GeomSpec buildGeomSpec() {
     CharmGeomType geomType = resolveGeomType()
     Map<String, Object> geomParams = params == null ? [:] : new LinkedHashMap<>(params as Map<String, Object>)
     List<String> geomRequiredAes = requiredAes == null ? [] : new ArrayList<>(requiredAes)
     Map<String, Object> geomDefaultAes = defaultAes == null ? [:] : new LinkedHashMap<>(defaultAes)
-    geomSpec = new GeomSpec(
+    new GeomSpec(
         geomType,
         geomParams,
         geomRequiredAes,
@@ -101,7 +105,6 @@ class Geom {
         STAT_TYPE_MAP[defaultStat] ?: CharmStatType.IDENTITY,
         POSITION_TYPE_MAP[defaultPosition] ?: CharmPositionType.IDENTITY
     )
-    geomSpec.copy()
   }
 
   private static final Map<String, CharmGeomType> GEOM_NAME_OVERRIDES = [
