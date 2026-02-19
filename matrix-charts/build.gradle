@@ -140,6 +140,23 @@ test {
   }
 }
 
+tasks.register('printCp') {
+  description = "Utility task to print the classpath, excluding Groovy dependencies, to easily run examples"
+  // Combine configurations into a single FileCollection
+  def fullClasspath = configurations.testRuntimeClasspath +
+      configurations.compileClasspath +
+      tasks.jar.outputs.files
+
+  inputs.files(fullClasspath)
+
+  doLast {
+    def filteredPath = fullClasspath.filter { file ->
+      !file.path.contains("org/apache/groovy")
+    }.asPath // .asPath handles the OS-specific separator ( : or ; )
+    println filteredPath
+  }
+}
+
 // Regression gate: run gg tests as a pre-merge quality check
 tasks.register('verifyGgRegression', Test) {
   description = 'Runs gg test suite as a regression gate before merge'

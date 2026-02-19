@@ -13,6 +13,7 @@ import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
 
@@ -251,6 +252,118 @@ class CharmRendererTest {
     assertEquals(primitiveCounts(first), primitiveCounts(second))
     assertEquals('x', chart.aes.x.columnName())
     assertEquals(1, chart.layers.size())
+  }
+
+  @Test
+  void testLayerSpecificDataProducesDifferentOutput() {
+    Matrix chartData = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [1, 10],
+            [2, 20],
+            [3, 30]
+        ])
+        .build()
+
+    Matrix layerData = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [4, 40],
+            [5, 50],
+            [6, 60]
+        ])
+        .build()
+
+    Chart chart = plot(chartData) {
+      aes {
+        x = col.x
+        y = col.y
+      }
+      points {}
+      layer(CharmGeomType.POINT, [__layer_data: layerData])
+      theme {
+        legend { position = 'none' }
+      }
+    }.build()
+
+    Svg svg = chart.render()
+    Map<String, Integer> counts = primitiveCounts(svg)
+
+    assertEquals(chartData.rowCount() + layerData.rowCount(), counts.circle,
+        'Expected circles from both chart-level and layer-specific datasets')
+
+    // Verify that circles span distinct x positions from both datasets.
+    // chartData x: [1,2,3] and layerData x: [4,5,6] should produce 6 distinct
+    // cx values after scaling. If layer data were ignored, only 3 would appear.
+    List<Circle> circles = svg.descendants().findAll { it instanceof Circle } as List<Circle>
+    Set<String> distinctCx = circles.collect { it.cx } as Set
+    assertTrue(distinctCx.size() > 3,
+        "Expected more than 3 distinct cx positions when using layer-specific data, got ${distinctCx.size()}")
+
+    Set<String> distinctCy = circles.collect { it.cy } as Set
+    assertTrue(distinctCy.size() > 3,
+        "Expected more than 3 distinct cy positions when using layer-specific data, got ${distinctCy.size()}")
+  }
+
+  @Test
+  void testLayerSpecificDataAffectsScaleRange() {
+    Matrix narrowData = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [1, 10],
+            [2, 20]
+        ])
+        .build()
+
+    Matrix wideData = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [100, 1000],
+            [200, 2000]
+        ])
+        .build()
+
+    // Baseline: two point layers both using the narrow chart data
+    Chart baseline = plot(narrowData) {
+      aes {
+        x = col.x
+        y = col.y
+      }
+      points {}
+      points {}
+      theme {
+        legend { position = 'none' }
+      }
+    }.build()
+
+    // Test chart: second layer uses wide data, which should shift scale domain
+    Chart withLayerData = plot(narrowData) {
+      aes {
+        x = col.x
+        y = col.y
+      }
+      points {}
+      layer(CharmGeomType.POINT, [__layer_data: wideData])
+      theme {
+        legend { position = 'none' }
+      }
+    }.build()
+
+    Svg baselineSvg = baseline.render()
+    Svg layerSvg = withLayerData.render()
+
+    List<Circle> baselineCircles = baselineSvg.descendants().findAll { it instanceof Circle } as List<Circle>
+    List<Circle> layerCircles = layerSvg.descendants().findAll { it instanceof Circle } as List<Circle>
+
+    assertEquals(4, baselineCircles.size())
+    assertEquals(4, layerCircles.size())
+
+    // With layer-specific data (x up to 200), the baseline circles from narrowData (x 1-2)
+    // should be compressed to the left of the panel compared to the baseline-only chart.
+    Set<String> baselineCxSet = baselineCircles.collect { it.cx } as Set
+    Set<String> layerCxSet = layerCircles.collect { it.cx } as Set
+    assertNotEquals(baselineCxSet, layerCxSet,
+        'Layer-specific data should change scale range, producing different circle positions')
   }
 
   private static Map<String, Integer> primitiveCounts(Svg svg) {

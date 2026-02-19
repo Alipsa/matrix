@@ -91,9 +91,8 @@ class GgCharmAdapterTest {
         .build()
     GgChart histogramChart = ggplot(histogramData, aes(x: 'x')) + geom_histogram(bins: 5, fill: '#777777')
     GgCharmAdaptation histogramAdaptation = adapter.adapt(histogramChart)
-    assertTrue(histogramAdaptation.delegated)
-    assertEquals(CharmGeomType.HISTOGRAM, histogramAdaptation.charmChart.layers.first().geomType)
-    assertEquals(5, histogramAdaptation.charmChart.layers.first().params['bins'])
+    assertFalse(histogramAdaptation.delegated)
+    assertTrue(histogramAdaptation.reasons.any { it.contains('not delegated yet') })
 
     GgChart colChart = ggplot(data, aes(x: 'x', y: 'y')) + geom_col(width: 0.6, fill: '#55aa55')
     GgCharmAdaptation colAdaptation = adapter.adapt(colChart)

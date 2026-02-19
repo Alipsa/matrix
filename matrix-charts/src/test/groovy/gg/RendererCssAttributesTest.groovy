@@ -27,12 +27,12 @@ class RendererCssAttributesTest {
     String svgString = svg.toXml()
 
     // Axis components should have CSS classes (independent of css_attributes config)
-    assertTrue(svgString.contains('gg-axis-line'),
-        "SVG should contain gg-axis-line CSS class")
-    assertTrue(svgString.contains('gg-axis-tick'),
-        "SVG should contain gg-axis-tick CSS class")
-    assertTrue(svgString.contains('gg-axis-label'),
-        "SVG should contain gg-axis-label CSS class")
+    assertTrue(svgString.contains('gg-axis-line') || svgString.contains('charm-axis-line'),
+        "SVG should contain axis line CSS class")
+    assertTrue(svgString.contains('gg-axis-tick') || svgString.contains('charm-axis-tick'),
+        "SVG should contain axis tick CSS class")
+    assertTrue(svgString.contains('gg-axis-label') || svgString.contains('charm-axis-label'),
+        "SVG should contain axis label CSS class")
   }
 
   @Test
@@ -159,9 +159,9 @@ class RendererCssAttributesTest {
     String svgString = svg.toXml()
 
     // Even with flipped coordinates, axis CSS classes should be present
-    assertTrue(svgString.contains('gg-axis-line'),
+    assertTrue(svgString.contains('gg-axis-line') || svgString.contains('charm-axis-line'),
         "Flipped chart should contain axis line CSS class")
-    assertTrue(svgString.contains('gg-axis-tick'),
+    assertTrue(svgString.contains('gg-axis-tick') || svgString.contains('charm-axis-tick'),
         "Flipped chart should contain axis tick CSS class")
   }
 }
