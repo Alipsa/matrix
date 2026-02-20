@@ -20,6 +20,7 @@ class DensityRenderer {
       return
     }
 
+    int elementIndex = 0
     BigDecimal baseline = context.yScale.transform(0)
     if (baseline == null) {
       baseline = panelHeight
@@ -62,6 +63,8 @@ class DensityRenderer {
         if (alpha < 1.0) {
           area.addAttribute('fill-opacity', alpha)
         }
+        GeomUtils.applyCssAttributes(area, context, layer.geomType.name(), elementIndex, first)
+        elementIndex++
       }
 
       for (int i = 0; i < points.size() - 1; i++) {
@@ -75,6 +78,8 @@ class DensityRenderer {
         if (alpha < 1.0 && !drawFill) {
           line.addAttribute('stroke-opacity', alpha)
         }
+        GeomUtils.applyCssAttributes(line, context, layer.geomType.name(), elementIndex, sorted[i])
+        elementIndex++
       }
     }
   }

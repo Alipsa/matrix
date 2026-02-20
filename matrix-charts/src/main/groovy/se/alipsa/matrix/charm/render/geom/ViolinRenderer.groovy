@@ -22,6 +22,7 @@ class ViolinRenderer {
       return
     }
 
+    int elementIndex = 0
     BigDecimal maxDensity = layerData.collect { LayerData d ->
       NumberCoercionUtil.coerceToBigDecimal(d.meta.density)
     }.findAll { it != null }.max() ?: 0
@@ -104,6 +105,8 @@ class ViolinRenderer {
       if (alpha < 1.0) {
         path.addAttribute('fill-opacity', alpha)
       }
+      GeomUtils.applyCssAttributes(path, context, layer.geomType.name(), elementIndex, first)
+      elementIndex++
     }
   }
 }

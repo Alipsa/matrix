@@ -129,4 +129,31 @@ class FacetedCssAttributesTest {
     assertTrue(pointIds.any { it.contains('panel-0-1-') } || pointIds.any { it.contains('panel-1-0-') },
         "Should have IDs from second panel")
   }
+
+  @Test
+  void testFacetedChartAddsDataPanelAttributes() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y', 'group')
+        .rows([
+          [1, 2, 'A'],
+          [2, 3, 'A'],
+          [1, 4, 'B'],
+          [2, 5, 'B']
+        ])
+        .types(Integer, Integer, String)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        css_attributes(enabled: true, includeDataAttributes: true) +
+        geom_point() +
+        facet_wrap('group')
+
+    Svg svg = chart.render()
+    String svgString = svg.toXml()
+
+    assertTrue(svgString.contains('data-panel="0-0"'),
+        "Faceted charts should include data-panel for first panel")
+    assertTrue(svgString.contains('data-panel="0-1"') || svgString.contains('data-panel="1-0"'),
+        "Faceted charts should include data-panel for additional panels")
+  }
 }

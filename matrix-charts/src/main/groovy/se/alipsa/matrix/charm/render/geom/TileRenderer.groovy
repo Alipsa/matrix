@@ -19,6 +19,7 @@ class TileRenderer {
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
     BigDecimal defaultWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.width) ?: 10
     BigDecimal defaultHeight = NumberCoercionUtil.coerceToBigDecimal(layer.params.height) ?: 10
+    int elementIndex = 0
 
     layerData.each { LayerData datum ->
       BigDecimal xCenter = context.xScale.transform(datum.x)
@@ -62,6 +63,8 @@ class TileRenderer {
       if (alpha < 1.0) {
         rect.addAttribute('fill-opacity', alpha)
       }
+      GeomUtils.applyCssAttributes(rect, context, layer.geomType.name(), elementIndex, datum)
+      elementIndex++
     }
   }
 }

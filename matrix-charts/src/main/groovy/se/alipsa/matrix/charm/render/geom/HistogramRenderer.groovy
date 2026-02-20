@@ -21,6 +21,7 @@ class HistogramRenderer {
       return
     }
 
+    int elementIndex = 0
     BigDecimal baseline = context.yScale.transform(0)
     if (baseline == null) {
       baseline = panelHeight
@@ -76,6 +77,8 @@ class HistogramRenderer {
       if (alpha < 1.0) {
         rect.addAttribute('fill-opacity', alpha)
       }
+      GeomUtils.applyCssAttributes(rect, context, layer.geomType.name(), elementIndex, datum)
+      elementIndex++
     }
   }
 }

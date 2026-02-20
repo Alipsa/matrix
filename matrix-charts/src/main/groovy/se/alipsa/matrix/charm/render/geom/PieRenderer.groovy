@@ -53,11 +53,12 @@ class PieRenderer {
 
       String pathD = "M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z"
       String fill = GeomUtils.resolveFill(context, layer, datum)
-      dataLayer.addPath().d(pathD)
+      def slicePath = dataLayer.addPath().d(pathD)
           .fill(fill)
           .stroke('#ffffff')
           .addAttribute('stroke-width', '1')
           .styleClass('charm-pie')
+      GeomUtils.applyCssAttributes(slicePath, context, layer.geomType.name(), idx, datum)
       startAngle = endAngle
     }
   }

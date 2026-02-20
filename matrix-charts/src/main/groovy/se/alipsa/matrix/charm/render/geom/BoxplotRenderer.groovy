@@ -22,6 +22,7 @@ class BoxplotRenderer {
       return
     }
 
+    int elementIndex = 0
     boolean discreteX = context.xScale.isDiscrete()
     BigDecimal boxWidth
     if (discreteX && context.xScale instanceof DiscreteCharmScale) {
@@ -61,29 +62,43 @@ class BoxplotRenderer {
       if (alpha < 1.0) {
         box.addAttribute('fill-opacity', alpha)
       }
+      GeomUtils.applyCssAttributes(box, context, layer.geomType.name(), elementIndex, datum)
+      elementIndex++
 
-      dataLayer.addLine(xLeft, median, xLeft + boxWidth, median)
+      def medianLine = dataLayer.addLine(xLeft, median, xLeft + boxWidth, median)
           .stroke(stroke).strokeWidth(2)
           .styleClass('charm-boxplot-median')
-      dataLayer.addLine(xCenter, boxTop, xCenter, whiskerHigh)
+      GeomUtils.applyCssAttributes(medianLine, context, layer.geomType.name(), elementIndex, datum)
+      elementIndex++
+      def highWhisker = dataLayer.addLine(xCenter, boxTop, xCenter, whiskerHigh)
           .stroke(stroke).styleClass('charm-boxplot-whisker')
+      GeomUtils.applyCssAttributes(highWhisker, context, layer.geomType.name(), elementIndex, datum)
+      elementIndex++
       BigDecimal boxBottom = [q1, q3].max()
-      dataLayer.addLine(xCenter, boxBottom, xCenter, whiskerLow)
+      def lowWhisker = dataLayer.addLine(xCenter, boxBottom, xCenter, whiskerLow)
           .stroke(stroke).styleClass('charm-boxplot-whisker')
+      GeomUtils.applyCssAttributes(lowWhisker, context, layer.geomType.name(), elementIndex, datum)
+      elementIndex++
 
       BigDecimal capHalf = boxWidth / 4
-      dataLayer.addLine(xCenter - capHalf, whiskerHigh, xCenter + capHalf, whiskerHigh)
+      def highCap = dataLayer.addLine(xCenter - capHalf, whiskerHigh, xCenter + capHalf, whiskerHigh)
           .stroke(stroke).styleClass('charm-boxplot-cap')
-      dataLayer.addLine(xCenter - capHalf, whiskerLow, xCenter + capHalf, whiskerLow)
+      GeomUtils.applyCssAttributes(highCap, context, layer.geomType.name(), elementIndex, datum)
+      elementIndex++
+      def lowCap = dataLayer.addLine(xCenter - capHalf, whiskerLow, xCenter + capHalf, whiskerLow)
           .stroke(stroke).styleClass('charm-boxplot-cap')
+      GeomUtils.applyCssAttributes(lowCap, context, layer.geomType.name(), elementIndex, datum)
+      elementIndex++
 
       List outliers = datum.meta.outliers as List ?: []
       outliers.each { Object outlierVal ->
         BigDecimal oy = context.yScale.transform(outlierVal)
         if (oy != null) {
-          dataLayer.addCircle().cx(xCenter).cy(oy).r(3)
+          def outlier = dataLayer.addCircle().cx(xCenter).cy(oy).r(3)
               .fill('none').stroke(stroke)
               .styleClass('charm-boxplot-outlier')
+          GeomUtils.applyCssAttributes(outlier, context, layer.geomType.name(), elementIndex, datum)
+          elementIndex++
         }
       }
     }

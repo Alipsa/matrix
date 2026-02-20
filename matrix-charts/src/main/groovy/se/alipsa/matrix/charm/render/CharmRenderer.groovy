@@ -147,6 +147,8 @@ class CharmRenderer {
     int panelHeight = ((context.config.plotHeight() - totalSpacingY - panelRows * stripHeight) / panelRows) as int
 
     context.panels.each { PanelSpec panel ->
+      context.panelRow = panel.row
+      context.panelCol = panel.col
       int panelX = context.config.marginLeft + panel.col * (panelWidth + context.config.panelSpacing)
       int panelY = context.config.marginTop + panel.row * (panelHeight + stripHeight + context.config.panelSpacing)
       G panelGroup = context.svg.addG().id("panel-${panel.row}-${panel.col}").transform("translate($panelX, $panelY)")
@@ -220,7 +222,8 @@ class CharmRenderer {
       context.defs.addClipPath().id(clipId).addRect(panelWidth, panelHeight).x(0).y(0)
       dataLayer.addAttribute('clip-path', "url(#${clipId})")
 
-      context.chart.layers.each { LayerSpec layer ->
+      context.chart.layers.eachWithIndex { LayerSpec layer, int layerIndex ->
+        context.layerIndex = layerIndex
         Matrix sourceData = resolveLayerData(context.chart.data, layer)
         boolean layerHasOwnData = sourceData != null && !sourceData.is(context.chart.data)
         List<Integer> rowIndexes
@@ -237,8 +240,11 @@ class CharmRenderer {
         List<LayerData> layerData = runPipeline(context, layer, sourceData, aes, rowIndexes)
         renderLayer(dataLayer, context, layer, layerData, panelWidth, panelHeight)
       }
+      context.layerIndex = -1
       axisRenderer.render(plotArea, context, panelWidth, panelHeight)
     }
+    context.panelRow = null
+    context.panelCol = null
   }
 
   private void renderLayer(

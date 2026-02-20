@@ -30,6 +30,9 @@ class RenderContext {
   CharmScale alphaScale
   CharmScale linetypeScale
   CharmScale groupScale
+  int layerIndex = -1
+  Integer panelRow
+  Integer panelCol
   List<PanelSpec> panels = []
   final Map<se.alipsa.matrix.charm.LayerSpec, Map<List<Integer>, List<LayerData>>> pipelineCache = [:]
 

@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.ColumnRef
 import se.alipsa.matrix.charm.Coord
+import se.alipsa.matrix.charm.CssAttributesSpec
 import se.alipsa.matrix.charm.Facet
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.GeomSpec
@@ -120,10 +121,6 @@ class GgCharmAdapter {
       reasons << 'Missing global aes mapping'
       return GgCharmAdaptation.fallback(reasons)
     }
-    if (ggChart.cssAttributes?.enabled) {
-      reasons << 'CSS attribute mode is gg-specific and currently uses legacy renderer'
-      return GgCharmAdaptation.fallback(reasons)
-    }
     // Guide gate removed in Phase 10 — all guides now delegated to Charm.
     // Theme gate and label gate removed in Phase 9 — all themes and labels now delegated.
 
@@ -172,7 +169,8 @@ class GgCharmAdapter {
         mappedCoord,
         mappedLabels,
         mappedGuides,
-        []
+        [],
+        mapCssAttributes(ggChart)
     )
     GgCharmAdaptation.delegated(mappedChart)
   }
@@ -885,6 +883,20 @@ class GgCharmAdapter {
       return guideSpec.toString()
     }
     guideSpec
+  }
+
+  private static CssAttributesSpec mapCssAttributes(GgChart ggChart) {
+    if (ggChart?.cssAttributes == null) {
+      return new CssAttributesSpec()
+    }
+    new CssAttributesSpec(
+        enabled: ggChart.cssAttributes.enabled,
+        includeClasses: ggChart.cssAttributes.includeClasses,
+        includeIds: ggChart.cssAttributes.includeIds,
+        includeDataAttributes: ggChart.cssAttributes.includeDataAttributes,
+        chartIdPrefix: ggChart.cssAttributes.chartIdPrefix,
+        idPrefix: ggChart.cssAttributes.idPrefix
+    )
   }
 
   // Guide gate methods (SUPPORTED_GUIDE_TYPES, hasUnsupportedGuide, extractGuideType)

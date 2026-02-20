@@ -20,6 +20,7 @@ class AreaRenderer {
       return
     }
 
+    int elementIndex = 0
     BigDecimal baseline = context.yScale.transform(0)
     if (baseline == null) {
       baseline = panelHeight
@@ -63,6 +64,8 @@ class AreaRenderer {
       if (alpha < 1.0) {
         path.addAttribute('fill-opacity', alpha)
       }
+      GeomUtils.applyCssAttributes(path, context, layer.geomType.name(), elementIndex, firstDatum)
+      elementIndex++
     }
   }
 }

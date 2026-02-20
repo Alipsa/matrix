@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.render.geom
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.SvgElement
+import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
@@ -119,27 +120,33 @@ class GeomUtils {
   /**
    * Draws a point shape.
    */
-  static void drawPoint(G group, BigDecimal cx, BigDecimal cy, BigDecimal radius,
-                        String fill, String stroke, String shape, BigDecimal alpha) {
+  static List<SvgElement> drawPoint(G group, BigDecimal cx, BigDecimal cy, BigDecimal radius,
+                                    String fill, String stroke, String shape, BigDecimal alpha) {
     BigDecimal size = radius * 2
     BigDecimal half = size / 2
+    List<SvgElement> elements = []
 
     switch (shape?.toLowerCase()) {
       case 'square' -> {
         def rect = group.addRect(size, size).x(cx - half).y(cy - half).fill(fill).stroke(stroke).styleClass('charm-point')
         applyAlpha(rect, alpha)
+        elements << rect
       }
       case 'plus', 'cross' -> {
         def h = group.addLine(cx - half, cy, cx + half, cy).stroke(stroke).styleClass('charm-point')
         def v = group.addLine(cx, cy - half, cx, cy + half).stroke(stroke).styleClass('charm-point')
         applyStrokeAlpha(h, alpha)
         applyStrokeAlpha(v, alpha)
+        elements << h
+        elements << v
       }
       case 'x' -> {
         def d1 = group.addLine(cx - half, cy - half, cx + half, cy + half).stroke(stroke).styleClass('charm-point')
         def d2 = group.addLine(cx - half, cy + half, cx + half, cy - half).stroke(stroke).styleClass('charm-point')
         applyStrokeAlpha(d1, alpha)
         applyStrokeAlpha(d2, alpha)
+        elements << d1
+        elements << d2
       }
       case 'triangle' -> {
         BigDecimal h = size * (3.0 as BigDecimal).sqrt() / 2
@@ -150,17 +157,125 @@ class GeomUtils {
         String d = "M ${cx} ${topY} L ${leftX} ${bottomY} L ${rightX} ${bottomY} Z"
         def path = group.addPath().d(d).fill(fill).stroke(stroke).styleClass('charm-point')
         applyAlpha(path, alpha)
+        elements << path
       }
       case 'diamond' -> {
         String d = "M ${cx} ${cy - half} L ${cx + half} ${cy} L ${cx} ${cy + half} L ${cx - half} ${cy} Z"
         def path = group.addPath().d(d).fill(fill).stroke(stroke).styleClass('charm-point')
         applyAlpha(path, alpha)
+        elements << path
       }
       default -> {
         def circle = group.addCircle().cx(cx).cy(cy).r(radius).fill(fill).stroke(stroke).styleClass('charm-point')
         applyAlpha(circle, alpha)
+        elements << circle
       }
     }
+    elements
+  }
+
+  /**
+   * Applies gg-compatible CSS class/id/data-* attributes to an element when enabled.
+   */
+  static void applyCssAttributes(SvgElement element,
+                                 RenderContext context,
+                                 String geomType,
+                                 int elementIndex,
+                                 LayerData datum = null) {
+    if (element == null || context == null || !isCssEnabled(context)) {
+      return
+    }
+    def cssConfig = context.chart.cssAttributes
+    if (cssConfig.includeClasses) {
+      String geomToken = normalizeIdToken(geomType)
+      if (!geomToken.isEmpty()) {
+        element.addAttribute('class', "gg-${geomToken}")
+      }
+    }
+    if (cssConfig.includeIds) {
+      String elementId = generateElementId(context, geomType, elementIndex)
+      if (elementId != null) {
+        element.id(elementId)
+      }
+    }
+    if (cssConfig.includeDataAttributes) {
+      applyDataAttributes(element, context, datum, elementIndex)
+    }
+  }
+
+  /**
+   * Generates a gg-compatible element id.
+   */
+  static String generateElementId(RenderContext context, String geomType, int elementIndex) {
+    if (context == null || !isCssEnabled(context) || !context.chart.cssAttributes.includeIds) {
+      return null
+    }
+
+    String prefix = resolveIdPrefix(context)
+    String normalizedGeom = normalizeIdToken(geomType)
+    boolean faceted = context.chart?.facet?.type != FacetType.NONE
+    if (faceted && context.panelRow != null && context.panelCol != null) {
+      return "${prefix}-panel-${context.panelRow}-${context.panelCol}-layer-${context.layerIndex}-${normalizedGeom}-${elementIndex}"
+    }
+    "${prefix}-layer-${context.layerIndex}-${normalizedGeom}-${elementIndex}"
+  }
+
+  /**
+   * Normalizes a token for id use.
+   */
+  static String normalizeIdToken(String token) {
+    if (token == null) {
+      return ''
+    }
+    token.toLowerCase().replace('_', '-')
+  }
+
+  private static boolean isCssEnabled(RenderContext context) {
+    context?.chart?.cssAttributes?.enabled ?: false
+  }
+
+  private static void applyDataAttributes(SvgElement element, RenderContext context, LayerData datum, int elementIndex) {
+    if (datum?.x != null) {
+      element.addAttribute('data-x', datum.x.toString())
+    }
+    if (datum?.y != null) {
+      element.addAttribute('data-y', datum.y.toString())
+    }
+    if (datum?.group != null) {
+      element.addAttribute('data-group', datum.group.toString())
+    }
+    int dataRow = datum?.rowIndex ?: elementIndex
+    element.addAttribute('data-row', Integer.toString(dataRow))
+    element.addAttribute('data-layer', Integer.toString(context.layerIndex))
+    boolean faceted = context.chart?.facet?.type != FacetType.NONE
+    if (faceted && context.panelRow != null && context.panelCol != null) {
+      element.addAttribute('data-panel', "${context.panelRow}-${context.panelCol}")
+    }
+  }
+
+  private static String resolveIdPrefix(RenderContext context) {
+    def cssConfig = context.chart.cssAttributes
+    String chartPrefix = normalizeIdPrefixOrNull(cssConfig.chartIdPrefix)
+    if (chartPrefix != null) {
+      return chartPrefix
+    }
+    String fallback = normalizeIdPrefixOrNull(cssConfig.idPrefix)
+    fallback ?: 'gg'
+  }
+
+  private static String normalizeIdPrefixOrNull(String prefix) {
+    if (prefix == null || prefix.trim().isEmpty()) {
+      return null
+    }
+    String normalized = prefix.toLowerCase()
+        .replaceAll(/[\s_]+/, '-')
+        .replaceAll(/[^a-z0-9-]/, '')
+        .replaceAll(/-+/, '-')
+        .replaceAll(/^-|-$/, '')
+    if (normalized.isEmpty() || Character.isDigit(normalized.charAt(0))) {
+      return null
+    }
+    normalized
   }
 
   private static void applyAlpha(SvgElement element, BigDecimal alpha) {

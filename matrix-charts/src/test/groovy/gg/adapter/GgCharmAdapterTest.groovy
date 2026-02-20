@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
 import static se.alipsa.matrix.gg.GgPlot.aes
+import static se.alipsa.matrix.gg.GgPlot.css_attributes
 import static se.alipsa.matrix.gg.GgPlot.geom_bar
 import static se.alipsa.matrix.gg.GgPlot.geom_col
 import static se.alipsa.matrix.gg.GgPlot.geom_histogram
@@ -152,5 +153,22 @@ class GgCharmAdapterTest {
     assertEquals(nativeChart.layers.first().statType, adaptation.charmChart.layers.first().statType)
     assertEquals(nativeChart.layers.first().params['size'], adaptation.charmChart.layers.first().params['size'])
     assertEquals(nativeChart.layers.first().params['fill'], adaptation.charmChart.layers.first().params['fill'])
+  }
+
+  @Test
+  void testAdapterDelegatesPointChartWhenCssAttributesEnabled() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4]])
+        .build()
+
+    GgChart ggChart = ggplot(data, aes(x: 'x', y: 'y')) +
+        css_attributes(enabled: true, includeDataAttributes: true) +
+        geom_point()
+
+    GgCharmAdaptation adaptation = new GgCharmAdapter().adapt(ggChart)
+    assertTrue(adaptation.delegated, "CSS attributes should render through charm delegation in Phase 11")
+    assertTrue(adaptation.charmChart.cssAttributes.enabled)
+    assertTrue(adaptation.charmChart.cssAttributes.includeDataAttributes)
   }
 }
