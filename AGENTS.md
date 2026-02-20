@@ -16,8 +16,8 @@ This is a Gradle multi-module Groovy/Java project. Each module lives in a `matri
 ## Coding Style & Naming Conventions
 Use Groovy 5.0.3 and target Java 21. Follow the existing 2-space indentation and import style in each file. Prefer `@CompileStatic` and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted. Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories. Always add GroovyDoc for public classes and public methods. There is no enforced formatter, so match the surrounding file conventions.
 Prefer idiomatic groovy constructs.
-Bear in min that Groovy is not Java, and while they interoperate seamlessly, Groovy has its own idioms and best practices that differ from Java. Write code that is idiomatic Groovy rather than Java code written in Groovy syntax. Some examples:
- - Use Groovy's native collection literals and methods e.g. closures, `each`, `collect`, and `findAll` instead of Java-style loops and streams.
+Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Groovy has its own idioms and best practices that differ from Java. Write code that is idiomatic Groovy rather than Java code written in Groovy syntax. Some examples:
+ - Use Groovy's native collection literals and methods e.g. closures, `each`, `collect`, and `findAll` instead of Java-style loops and streams. Use `[]` instead of `new ArrayList<>()` and `[:]` instead of `new LinkedHashMap<>()`/`new HashMap<>()`.
  - Prefer closures and higher-order functions over verbose anonymous classes.
  - == vs .equals(): Use `==` for value equality in Groovy, which handles nulls gracefully. == does NOT mean reference equality like in Java.
  - String interpolation: Use `"${var}"` for building strings instead of concatenation.

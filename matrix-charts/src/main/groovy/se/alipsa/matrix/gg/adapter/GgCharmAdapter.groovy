@@ -14,6 +14,9 @@ import se.alipsa.matrix.charm.Coord
 import se.alipsa.matrix.charm.Facet
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.GeomSpec
+import se.alipsa.matrix.charm.GuideSpec
+import se.alipsa.matrix.charm.GuideType
+import se.alipsa.matrix.charm.GuidesSpec
 import se.alipsa.matrix.charm.Labels
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.PositionSpec
@@ -121,10 +124,7 @@ class GgCharmAdapter {
       reasons << 'CSS attribute mode is gg-specific and currently uses legacy renderer'
       return GgCharmAdaptation.fallback(reasons)
     }
-    if (ggChart.guides?.specs && !ggChart.guides.specs.isEmpty()) {
-      reasons << 'Custom guides are currently handled by legacy gg renderer'
-      return GgCharmAdaptation.fallback(reasons)
-    }
+    // Guide gate removed in Phase 10 — all guides now delegated to Charm.
     // Theme gate and label gate removed in Phase 9 — all themes and labels now delegated.
 
     Aes plotAes = mapAes(ggChart.globalAes, 'plot', reasons)
@@ -160,6 +160,8 @@ class GgCharmAdapter {
 
     Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, ggChart.scales)
 
+    GuidesSpec mappedGuides = mapGuides(ggChart.guides, ggChart.scales)
+
     Chart mappedChart = new Chart(
         ggChart.data,
         plotAes,
@@ -169,6 +171,7 @@ class GgCharmAdapter {
         mappedFacet,
         mappedCoord,
         mappedLabels,
+        mappedGuides,
         []
     )
     GgCharmAdaptation.delegated(mappedChart)
@@ -350,10 +353,7 @@ class GgCharmAdapter {
         return
       }
 
-      if (hasUnsupportedGuide(scale.guide)) {
-        reasons.add("Scale ${idx} guide '${extractGuideType(scale.guide)}' for aesthetic '${aesthetic}' is not delegated yet".toString())
-        return
-      }
+      // Guide type check removed in Phase 10 — all guide types now supported.
 
       enrichScale(charmScale, scale)
 
@@ -764,6 +764,112 @@ class GgCharmAdapter {
     null
   }
 
+  /**
+   * Converts gg Guides to charm GuidesSpec.
+   *
+   * @param guides gg guides collection
+   * @param scales gg scales (for per-scale guide params)
+   * @return charm guides spec
+   */
+  private static GuidesSpec mapGuides(Guides guides, List<GgScale> scales) {
+    GuidesSpec result = new GuidesSpec()
+
+    // Map guide specs from Guides collection
+    if (guides?.specs) {
+      guides.specs.each { String key, Object spec ->
+        String normalized = GgCharmMappingRegistry.normalizeAesthetic(key)
+        GuideSpec mapped = mapSingleGuide(spec)
+        if (mapped != null) {
+          result.setSpec(normalized, mapped)
+        }
+      }
+    }
+
+    // Extract per-scale guide params
+    (scales ?: []).each { GgScale scale ->
+      if (scale?.guide == null) return
+      String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(scale.aesthetic)
+      if (aesthetic == null || aesthetic.isBlank()) return
+      // Don't override if already set from explicit guides
+      if (result.getSpec(aesthetic) != null) return
+
+      GuideSpec mapped = mapSingleGuide(scale.guide)
+      if (mapped != null) {
+        result.setSpec(aesthetic, mapped)
+      }
+    }
+
+    result
+  }
+
+  private static GuideSpec mapSingleGuide(Object spec) {
+    if (spec == null) return null
+
+    if (spec instanceof Guide) {
+      Guide guide = spec as Guide
+      GuideType type = GuideType.fromString(guide.type)
+      if (type == null) return null
+      Map<String, Object> params = guide.params ? convertGuideParams(guide.params) : [:]
+      return new GuideSpec(type, params)
+    }
+
+    if (spec instanceof CharSequence) {
+      GuideType type = GuideType.fromString(spec.toString())
+      if (type != null) {
+        return new GuideSpec(type)
+      }
+      return null
+    }
+
+    if (spec == false || spec == Boolean.FALSE) {
+      return GuideSpec.none()
+    }
+
+    if (spec instanceof Map) {
+      Map map = spec as Map
+      String typeStr = map['type']?.toString()
+      GuideType type = GuideType.fromString(typeStr)
+      if (type == null) return null
+      Map<String, Object> params = convertGuideParams(map.findAll { k, v -> k != 'type' })
+      return new GuideSpec(type, params)
+    }
+
+    null
+  }
+
+  /**
+   * Recursively converts Guide objects in params to GuideSpec objects
+   * and deep-copies other values.
+   */
+  private static Map<String, Object> convertGuideParams(Map params) {
+    Map<String, Object> result = [:]
+    (params ?: [:]).each { Object key, Object value ->
+      if (key != null) {
+        result[key.toString()] = convertGuideParamValue(value)
+      }
+    }
+    result
+  }
+
+  private static Object convertGuideParamValue(Object value) {
+    if (value instanceof Guide) {
+      GuideSpec mapped = mapSingleGuide(value)
+      if (mapped != null) return mapped
+      // Fallback: convert to map when guide type is unrecognized
+      Guide guideValue = value as Guide
+      log.warn("convertGuideParamValue: falling back to map conversion for unmapped Guide " +
+          "with type='${guideValue.type}'")
+      return [type: guideValue.type, params: deepCopyMap(guideValue.params)]
+    }
+    if (value instanceof List) {
+      return (value as List).collect { convertGuideParamValue(it) }
+    }
+    if (value instanceof Map) {
+      return convertGuideParams(value as Map)
+    }
+    value
+  }
+
   private static Object normalizeGuide(Object guideSpec) {
     if (guideSpec instanceof Guide) {
       Guide guide = guideSpec as Guide
@@ -781,31 +887,8 @@ class GgCharmAdapter {
     guideSpec
   }
 
-  private static final Set<String> SUPPORTED_GUIDE_TYPES = [
-      'legend', 'colorbar', 'none'
-  ] as Set<String>
-
-  private static boolean hasUnsupportedGuide(Object guideSpec) {
-    if (guideSpec == null) {
-      return false
-    }
-    String type = extractGuideType(guideSpec)
-    type != null && !(type in SUPPORTED_GUIDE_TYPES)
-  }
-
-  private static String extractGuideType(Object guideSpec) {
-    if (guideSpec instanceof Guide) {
-      return (guideSpec as Guide).type
-    }
-    if (guideSpec instanceof Map) {
-      return (guideSpec as Map).get('type')?.toString()
-    }
-    if (guideSpec instanceof CharSequence) {
-      return guideSpec.toString()
-    }
-    null
-  }
-
+  // Guide gate methods (SUPPORTED_GUIDE_TYPES, hasUnsupportedGuide, extractGuideType)
+  // removed in Phase 10 — all guides now delegated via mapGuides().
   // Theme gate methods (isDefaultGrayTheme, sameRect, sameLine) and
   // hasUnsupportedLabels removed in Phase 9 — all themes and labels now delegated.
 

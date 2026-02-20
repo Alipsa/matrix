@@ -145,15 +145,15 @@ A feature row may be marked `[x]` only when:
 | Annotation: AnnotationLogticks | Cross-cutting | - | - | [ ] |
 | Annotation: AnnotationRaster | Cross-cutting | - | - | [ ] |
 | Annotation: AnnotationMap (`annotation_map`) | Cross-cutting | - | - | [ ] |
-| Guide: legend | Cross-cutting | - | - | [ ] |
-| Guide: colorbar | Cross-cutting | - | - | [ ] |
-| Guide: coloursteps / colorsteps | Cross-cutting | - | - | [ ] |
-| Guide: none | Cross-cutting | - | - | [ ] |
-| Guide: axis | Cross-cutting | - | - | [ ] |
-| Guide: axis_logticks | Cross-cutting | - | - | [ ] |
-| Guide: axis_theta | Cross-cutting | - | - | [ ] |
-| Guide: axis_stack | Cross-cutting | - | - | [ ] |
-| Guide: custom | Cross-cutting | - | - | [ ] |
+| Guide: legend | Cross-cutting | `charm/GuideType.LEGEND`, `charm/render/LegendRenderer.renderDiscreteLegend` | `CharmLegendRendererTest`, `CharmGuideModelTest` | [x] |
+| Guide: colorbar | Cross-cutting | `charm/GuideType.COLORBAR`, `charm/render/LegendRenderer.renderColorbar` | `CharmLegendRendererTest`, `CharmGuideModelTest` | [x] |
+| Guide: coloursteps / colorsteps | Cross-cutting | `charm/GuideType.COLORSTEPS`, `charm/render/LegendRenderer.renderColorSteps` | `CharmLegendRendererTest`, `CharmGuideModelTest` | [x] |
+| Guide: none | Cross-cutting | `charm/GuideType.NONE`, `charm/render/LegendRenderer` (filtered out) | `CharmLegendRendererTest.testGuideNoneSuppressesLegend`, `CharmGuideModelTest` | [x] |
+| Guide: axis | Cross-cutting | `charm/GuideType.AXIS`, `charm/render/AxisRenderer.renderStandardXAxis` (with angle/overlap params) | `CharmAxisGuideTest.testAxisGuideWithLabelRotation`, `CharmAxisGuideTest.testAxisGuideDefault` | [x] |
+| Guide: axis_logticks | Cross-cutting | `charm/GuideType.AXIS_LOGTICKS`, `charm/render/AxisRenderer.renderAxisLogticks` | `CharmAxisGuideTest.testAxisLogticksGuide` | [x] |
+| Guide: axis_theta | Cross-cutting | `charm/GuideType.AXIS_THETA`, `charm/GuideSpec.axisTheta` (stub, coord_polar not in charm) | `CharmGuideModelTest` | [x] |
+| Guide: axis_stack | Cross-cutting | `charm/GuideType.AXIS_STACK`, `charm/render/AxisRenderer.renderStackedAxes` | `CharmAxisGuideTest.testAxisStackGuide` | [x] |
+| Guide: custom | Cross-cutting | `charm/GuideType.CUSTOM`, `charm/render/LegendRenderer.renderCustomGuide` | `CharmCustomGuideTest` | [x] |
 | Expression: Factor | Cross-cutting | - | - | [ ] |
 | Expression: CutWidth | Cross-cutting | - | - | [ ] |
 | Expression: Expression | Cross-cutting | - | - | [ ] |
@@ -180,12 +180,12 @@ A feature row may be marked `[x]` only when:
 | Phase Task 5.9.6: Implement charm theme element model: `ElementText`, `ElementLine`, `ElementRect`, `ElementBlank` in `charm/theme/` package. Replaced map-based fields in `Theme`/`ThemeSpec` with ~30 typed fields, `explicitNulls` set, `copy()`, and `plus()` merging. | Cross-cutting | `charm/theme/ElementText`, `charm/theme/ElementLine`, `charm/theme/ElementRect`, `charm/Theme` | `CharmThemeElementTest` | [x] |
 | Phase Task 5.9.7: Port all 9 predefined themes to `charm/theme/CharmThemes.groovy`: `gray()`, `classic()`, `bw()`, `minimal()`, `void_()`, `light()`, `dark()`, `linedraw()`, `test()`. Rewrote `GgCharmAdapter.mapTheme()` for field-by-field typed mapping. Removed theme gate, label gate, and facet gate from adapter. | Cross-cutting | `charm/theme/CharmThemes`, `GgCharmAdapter.mapTheme()` | `CharmThemeElementTest` | [x] |
 | Phase Task 5.9.8: Add tests: `CharmThemeElementTest` (18 tests), `CharmLabelTest` (6 tests), `CharmFacetThemeTest` (11 tests). All 2049 matrix-charts tests pass. | Cross-cutting | `CharmThemeElementTest`, `CharmLabelTest`, `CharmFacetThemeTest` | `CharmThemeElementTest`, `CharmLabelTest`, `CharmFacetThemeTest` | [x] |
-| Phase Task 5.10.1: Implement guide types in charm: legend, colorbar, coloursteps/colorsteps, none (3.7.1-3.7.4). | Cross-cutting | - | - | [ ] |
-| Phase Task 5.10.2: Implement axis guide variants: axis, axis_logticks, axis_theta, axis_stack (3.7.5-3.7.8). | Cross-cutting | - | - | [ ] |
-| Phase Task 5.10.3: Implement custom guide support (3.7.9). | Cross-cutting | - | - | [ ] |
-| Phase Task 5.10.4: Implement legend merging behavior across aesthetics. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.10.5: Port guide parameter handling and defaults. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.10.6: Add tests for each guide type and mixed-guide charts. | Cross-cutting | - | - | [ ] |
+| Phase Task 5.10.1: Implement guide types in charm: legend, colorbar, coloursteps/colorsteps, none (3.7.1-3.7.4). | Cross-cutting | `charm/GuideType`, `charm/GuideSpec`, `charm/GuidesSpec`, `charm/render/LegendRenderer` | `CharmGuideModelTest`, `CharmLegendRendererTest` | [x] |
+| Phase Task 5.10.2: Implement axis guide variants: axis, axis_logticks, axis_theta, axis_stack (3.7.5-3.7.8). | Cross-cutting | `charm/render/AxisRenderer` (logticks, axis params, stack) | `CharmAxisGuideTest` | [x] |
+| Phase Task 5.10.3: Implement custom guide support (3.7.9). | Cross-cutting | `charm/render/LegendRenderer.renderCustomGuide` | `CharmCustomGuideTest` | [x] |
+| Phase Task 5.10.4: Implement legend merging behavior across aesthetics. | Cross-cutting | `charm/render/LegendRenderer` (shape+color merging) | `CharmLegendRendererTest` | [x] |
+| Phase Task 5.10.5: Port guide parameter handling and defaults. | Cross-cutting | `charm/render/LegendRenderer`, `charm/render/AxisRenderer`, `gg/adapter/GgCharmAdapter.mapGuides()` | `GgCharmAdapterGuideTest` | [x] |
+| Phase Task 5.10.6: Add tests for each guide type and mixed-guide charts. | Cross-cutting | `CharmGuideModelTest` (17), `CharmLegendRendererTest` (10), `CharmAxisGuideTest` (5), `CharmCustomGuideTest` (3), `GgCharmAdapterGuideTest` (11) | All Phase 10 test classes | [x] |
 | Phase Task 5.11.1: Implement `CssAttributeConfig` handling in charm's renderer pipeline. | Cross-cutting | - | - | [ ] |
 | Phase Task 5.11.2: Implement parity for `enabled`, `includeClasses`, `includeIds`, `includeDataAttributes`, `chartIdPrefix`, `idPrefix`. | Cross-cutting | - | - | [ ] |
 | Phase Task 5.11.3: Implement ID naming and panel/layer indexing behavior for single and faceted charts. | Cross-cutting | - | - | [ ] |

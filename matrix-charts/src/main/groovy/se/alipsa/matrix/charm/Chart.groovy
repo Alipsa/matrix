@@ -20,6 +20,7 @@ class Chart {
   private final FacetSpec facet
   private final CoordSpec coord
   private final LabelsSpec labels
+  private final GuidesSpec guides
   private final List<AnnotationSpec> annotations
 
   /**
@@ -33,6 +34,7 @@ class Chart {
    * @param facet facet spec
    * @param coord coord spec
    * @param labels labels spec
+   * @param guides guides spec
    * @param annotations annotation list
    */
   Chart(
@@ -44,6 +46,7 @@ class Chart {
       Facet facet,
       Coord coord,
       Labels labels,
+      GuidesSpec guides,
       List<AnnotationSpec> annotations
   ) {
     this.data = data
@@ -56,6 +59,7 @@ class Chart {
     this.facet = toFacetSpec(facet)
     this.coord = toCoordSpec(coord)
     this.labels = toLabelsSpec(labels)
+    this.guides = guides?.copy()
     this.annotations = Collections.unmodifiableList(
         annotations.collect { AnnotationSpec a -> a.copy() }
     )
@@ -131,6 +135,15 @@ class Chart {
    */
   LabelsSpec getLabels() {
     labels?.copy()
+  }
+
+  /**
+   * Returns guides specification.
+   *
+   * @return guides spec
+   */
+  GuidesSpec getGuides() {
+    guides?.copy()
   }
 
   /**

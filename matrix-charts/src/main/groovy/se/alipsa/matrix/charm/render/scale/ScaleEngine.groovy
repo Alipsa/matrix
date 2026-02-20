@@ -29,11 +29,17 @@ class ScaleEngine {
    * @param yValues collected y values from all layers
    * @param colorValues collected color values from all layers
    * @param fillValues collected fill values from all layers
+   * @param sizeValues collected size values from all layers
+   * @param shapeValues collected shape values from all layers
+   * @param alphaValues collected alpha values from all layers
    * @return trained scales container
    */
   static TrainedScales train(Chart chart, RenderConfig config,
                               List<Object> xValues, List<Object> yValues,
-                              List<Object> colorValues, List<Object> fillValues) {
+                              List<Object> colorValues, List<Object> fillValues,
+                              List<Object> sizeValues = [],
+                              List<Object> shapeValues = [],
+                              List<Object> alphaValues = []) {
     TrainedScales trained = new TrainedScales()
 
     trained.x = trainPositionalScale(xValues, chart.scale.x, 0, config.plotWidth())
@@ -47,6 +53,21 @@ class ScaleEngine {
     boolean hasFill = fillValues.any { it != null }
     if (hasFill) {
       trained.fill = trainColorScale(fillValues, chart.scale.fill)
+    }
+
+    boolean hasSize = sizeValues.any { it != null }
+    if (hasSize) {
+      trained.size = trainSizeScale(sizeValues)
+    }
+
+    boolean hasShape = shapeValues.any { it != null }
+    if (hasShape) {
+      trained.shape = trainShapeScale(shapeValues)
+    }
+
+    boolean hasAlpha = alphaValues.any { it != null }
+    if (hasAlpha) {
+      trained.alpha = trainAlphaScale(alphaValues)
     }
 
     trained
@@ -161,6 +182,85 @@ class ScaleEngine {
         rangeEnd: rangeEnd,
         levels: new ArrayList<>(unique)
     )
+  }
+
+  /**
+   * Trains a size scale mapping data values to pixel sizes (range 2-10).
+   *
+   * @param values data values for size aesthetic
+   * @return trained continuous scale for size, or null if no numeric values
+   */
+  private static CharmScale trainSizeScale(List<Object> values) {
+    List<BigDecimal> numeric = coerceToNumeric(values)
+    if (numeric.isEmpty()) {
+      return null
+    }
+
+    BigDecimal min = numeric.min()
+    BigDecimal max = ensureDomainRange(numeric.max(), min)
+
+    new ContinuousCharmScale(
+        rangeStart: 2.0,
+        rangeEnd: 10.0,
+        domainMin: min,
+        domainMax: max
+    )
+  }
+
+  /**
+   * Trains a shape scale mapping data values to shape names.
+   *
+   * @param values data values for shape aesthetic
+   * @return trained discrete scale for shape
+   */
+  private static CharmScale trainShapeScale(List<Object> values) {
+    LinkedHashSet<String> unique = new LinkedHashSet<>()
+    values.each { Object value ->
+      if (value != null) {
+        unique << value.toString()
+      }
+    }
+
+    new DiscreteCharmScale(
+        rangeStart: 0.0,
+        rangeEnd: 1.0,
+        levels: new ArrayList<>(unique)
+    )
+  }
+
+  /**
+   * Trains an alpha scale mapping data values to opacity (range 0-1).
+   *
+   * @param values data values for alpha aesthetic
+   * @return trained continuous scale for alpha, or null if no numeric values
+   */
+  private static CharmScale trainAlphaScale(List<Object> values) {
+    List<BigDecimal> numeric = coerceToNumeric(values)
+    if (numeric.isEmpty()) {
+      return null
+    }
+
+    BigDecimal min = numeric.min()
+    BigDecimal max = ensureDomainRange(numeric.max(), min)
+
+    new ContinuousCharmScale(
+        rangeStart: 0.1,
+        rangeEnd: 1.0,
+        domainMin: min,
+        domainMax: max
+    )
+  }
+
+  /** Coerces a list of values to BigDecimal, filtering out nulls and non-numeric values. */
+  private static List<BigDecimal> coerceToNumeric(List<Object> values) {
+    values
+        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
+        .findAll { it != null } as List<BigDecimal>
+  }
+
+  /** Returns max adjusted to avoid zero-width domain (which would cause division by zero). */
+  private static BigDecimal ensureDomainRange(BigDecimal max, BigDecimal min) {
+    max == min ? max + 1 : max
   }
 
   /**
