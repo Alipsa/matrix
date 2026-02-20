@@ -33,11 +33,25 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A numeric column implementation backed by {@link BigDecimal} values.
+ *
+ * <p>Missing values are represented by the {@link BigDecimalColumnType#missingValueIndicator()},
+ * which is {@code null}.
+ */
 public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     implements NumberFillers<BigDecimalColumn> {
 
+  /** Backing storage for the column values. */
   protected final ObjectArrayList<BigDecimal> data;
 
+  /**
+   * Creates a column from {@code double} values.
+   *
+   * @param name the column name
+   * @param arr the values to populate the column with
+   * @return a new {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name, double... arr) {
     final BigDecimal[] values = new BigDecimal[arr.length];
     for (int i = 0; i < arr.length; i++) {
@@ -46,6 +60,13 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return new BigDecimalColumn(name, new ObjectArrayList<>(values));
   }
 
+  /**
+   * Creates a column from {@code float} values.
+   *
+   * @param name the column name
+   * @param arr the values to populate the column with
+   * @return a new {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name, float... arr) {
     final BigDecimal[] values = new BigDecimal[arr.length];
     for (int i = 0; i < arr.length; i++) {
@@ -54,6 +75,13 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return new BigDecimalColumn(name, new ObjectArrayList<>(values));
   }
 
+  /**
+   * Creates a column from {@code int} values.
+   *
+   * @param name the column name
+   * @param arr the values to populate the column with
+   * @return a new {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name, int... arr) {
     final BigDecimal[] values = new BigDecimal[arr.length];
     for (int i = 0; i < arr.length; i++) {
@@ -62,6 +90,13 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return new BigDecimalColumn(name, new ObjectArrayList<>(values));
   }
 
+  /**
+   * Creates a column from {@code long} values.
+   *
+   * @param name the column name
+   * @param arr the values to populate the column with
+   * @return a new {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name, long... arr) {
     final BigDecimal[] values = new BigDecimal[arr.length];
     for (int i = 0; i < arr.length; i++) {
@@ -70,6 +105,13 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return new BigDecimalColumn(name, new ObjectArrayList<>(values));
   }
 
+  /**
+   * Creates a column from a collection of numbers.
+   *
+   * @param name the column name
+   * @param numberList the values to populate the column with
+   * @return a new {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name, Collection<? extends Number> numberList) {
     BigDecimalColumn newColumn = new BigDecimalColumn(name, new ObjectArrayList<>(0));
     for (Number number : numberList) {
@@ -78,6 +120,13 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return newColumn;
   }
 
+  /**
+   * Creates a column from an array of numbers.
+   *
+   * @param name the column name
+   * @param numbers the values to populate the column with
+   * @return a new {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name, Number[] numbers) {
     BigDecimalColumn newColumn = new BigDecimalColumn(name, new ObjectArrayList<>(0));
     for (Number number : numbers) {
@@ -86,6 +135,13 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return newColumn;
   }
 
+  /**
+   * Creates a column with the given initial size filled with missing values.
+   *
+   * @param name the column name
+   * @param initialSize the initial number of rows
+   * @return a new {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name, int initialSize) {
     BigDecimalColumn column = new BigDecimalColumn(name);
     for (int i = 0; i < initialSize; i++) {
@@ -94,28 +150,59 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return column;
   }
 
+  /**
+   * Creates a column from a stream of {@link BigDecimal} values.
+   *
+   * @param name the column name
+   * @param stream the values to populate the column with
+   * @return a new {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name, Stream<BigDecimal>stream) {
     ObjectArrayList<BigDecimal> list = new ObjectArrayList<>();
     stream.forEach(list::add);
     return new BigDecimalColumn(name, list);
   }
 
+  /**
+   * Creates a new column backed by the provided data.
+   *
+   * @param name the column name
+   * @param data the backing values
+   */
   protected BigDecimalColumn(String name, ObjectArrayList<BigDecimal> data) {
     super(BigDecimalColumnType.instance(), name, BigDecimalColumnType.DEFAULT_PARSER);
     setPrintFormatter(BigDecimalColumnFormatter.floatingPointDefault());
     this.data = data;
   }
 
+  /**
+   * Creates an empty column with default capacity.
+   *
+   * @param name the column name
+   */
   protected BigDecimalColumn(String name) {
     super(BigDecimalColumnType.instance(), name, BigDecimalColumnType.DEFAULT_PARSER);
     setPrintFormatter(BigDecimalColumnFormatter.floatingPointDefault());
     this.data = new ObjectArrayList<>(DEFAULT_ARRAY_SIZE);
   }
 
+  /**
+   * Creates a column from {@link BigDecimal} values.
+   *
+   * @param name the column name
+   * @param arr the values to populate the column with
+   * @return a new {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name, BigDecimal... arr) {
     return new BigDecimalColumn(name, new ObjectArrayList<>(arr));
   }
 
+  /**
+   * Creates an empty column.
+   *
+   * @param name the column name
+   * @return a new empty {@code BigDecimalColumn}
+   */
   public static BigDecimalColumn create(String name) {
     return new BigDecimalColumn(name);
   }
@@ -165,6 +252,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return isMissingValue(result) ? null : result;
   }
 
+  /**
+   * Returns the raw value at the given index, including missing value markers.
+   *
+   * @param index the row index
+   * @return the stored value at {@code index}
+   */
   protected BigDecimal getBigDecimal(int index) {
     return data.get(index);
   }
@@ -175,6 +268,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return (BigDecimalColumn) super.where(selection);
   }
 
+  /**
+   * Returns row indices whose values are not contained in {@code values}.
+   *
+   * @param values values to exclude
+   * @return a selection with all rows not in {@code values}
+   */
   public Selection isNotIn(final BigDecimal... values) {
     final Selection results = new BitmapBackedSelection();
     results.addRange(0, size());
@@ -182,6 +281,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return results;
   }
 
+  /**
+   * Returns row indices whose values are contained in {@code values}.
+   *
+   * @param values values to include
+   * @return a selection with all rows in {@code values}
+   */
   public Selection isIn(final BigDecimal... values) {
     final Selection results = new BitmapBackedSelection();
     final List<BigDecimal> valueList = Arrays.asList(values);
@@ -501,6 +606,11 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return data.iterator();
   }
 
+  /**
+   * Returns the values in this column as an array.
+   *
+   * @return an array containing all values in this column
+   */
   public BigDecimal[] asBigDecimalArray() {
     return data.toArray(new BigDecimal[]{});
   }
@@ -534,7 +644,11 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
 
   /**
    * Updates this column where values matching the selection are replaced with the corresponding
-   * value from the given column
+   * value from the given column.
+   *
+   * @param condition predicate to decide which rows to update
+   * @param other source column for replacement values
+   * @return this column
    */
   public BigDecimalColumn set(Predicate<BigDecimal> condition, NumericColumn<?> other) {
     for (int row = 0; row < size(); row++) {
@@ -613,6 +727,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return uniqueElements.size();
   }
 
+  /**
+   * Returns whether the supplied value is considered missing.
+   *
+   * @param value the value to check
+   * @return {@code true} if the value is missing, otherwise {@code false}
+   */
   public boolean isMissingValue(BigDecimal value) {
     return BigDecimalColumnType.valueIsMissing(value);
   }
@@ -635,7 +755,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     data.sort(new BigDecimalComparator().reversed());
   }
 
-
+  /**
+   * Fills this column from an iterator until the iterator is exhausted or the column is full.
+   *
+   * @param iterator source of values
+   * @return this column
+   */
   public BigDecimalColumn fillWith(final Iterator<BigDecimal> iterator) {
     for (int r = 0; r < size(); r++) {
       if (!iterator.hasNext()) {
@@ -696,7 +821,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * Fills all rows in this column with the same value.
+   *
+   * @param d value to write to every row
+   * @return this column
+   */
   public BigDecimalColumn fillWith(BigDecimal d) {
     for (int r = 0; r < size(); r++) {
       set(r, d);
@@ -879,6 +1009,7 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
    * Add all the big decimals in the list to this column
    *
    * @param values a list of values
+   * @return this column
    */
   public BigDecimalColumn addAll(List<BigDecimal> values) {
     for (BigDecimal value : values) {
@@ -887,6 +1018,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
+  /**
+   * Parses a string value into a {@link BigDecimal}.
+   *
+   * @param val string value to parse
+   * @return parsed value
+   */
   protected BigDecimal parse(String val) {
     return parser().parse(val);
   }
@@ -903,11 +1040,22 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     }
   }
 
+  /**
+   * Sets a formatter specialized for BigDecimal values.
+   *
+   * @param formatter formatter to use when printing values
+   */
   protected void setPrintFormatter(BigDecimalColumnFormatter formatter) {
     super.setPrintFormatter(formatter);
   }
 
-  // BigDecimalColumn Specific methods
+  /**
+   * Sets the scale for all non-missing values in this column.
+   *
+   * @param numDecimals number of decimal places
+   * @param roundingMode optional rounding mode; defaults to {@link RoundingMode#HALF_EVEN}
+   * @return this column
+   */
   public BigDecimalColumn setScale(int numDecimals, RoundingMode... roundingMode) {
     RoundingMode mode = roundingMode.length > 0 ? roundingMode[0] : RoundingMode.HALF_EVEN;
     for (int i = 0; i < size(); i++) {
@@ -919,6 +1067,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
+  /**
+   * Alias for {@link #plus(BigDecimalColumn)}.
+   *
+   * @param column the column to add
+   * @return this column
+   */
   public BigDecimalColumn add(BigDecimalColumn column) {
     return plus(column);
   }
@@ -926,6 +1080,9 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
   /**
    * naming it plus() has the nice benefit of overloading the + operator in groovy
    * so you can do column1 + column2
+   *
+   * @param column the column to add
+   * @return this column
    */
   public BigDecimalColumn plus(BigDecimalColumn column) {
     if (size() > column.size()) {
@@ -952,6 +1109,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
+  /**
+   * Subtracts values from the provided column row-by-row.
+   *
+   * @param column the column to subtract
+   * @return this column
+   */
   public BigDecimalColumn subtract(BigDecimalColumn column) {
     if (size() > column.size()) {
       for (int i = 0; i < column.size(); i++) {
@@ -977,6 +1140,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
+  /**
+   * Multiplies values by the provided column row-by-row.
+   *
+   * @param column the column to multiply by
+   * @return this column
+   */
   public BigDecimalColumn multiply(BigDecimalColumn column) {
     if (size() > column.size()) {
       for (int i = 0; i < column.size(); i++) {
@@ -1002,6 +1171,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
+  /**
+   * Divides values by the provided column row-by-row using {@link RoundingMode#HALF_EVEN}.
+   *
+   * @param column the column to divide by
+   * @return this column
+   */
   public BigDecimalColumn divide(BigDecimalColumn column) {
     if (size() > column.size()) {
       for (int i = 0; i < column.size(); i++) {
@@ -1027,6 +1202,12 @@ public class BigDecimalColumn extends NumberColumn<BigDecimalColumn, BigDecimal>
     return this;
   }
 
+  /**
+   * Applies a transformation function to each non-missing value.
+   *
+   * @param function the transformation function
+   * @return this column
+   */
   public BigDecimalColumn apply(Function<BigDecimal, BigDecimal> function) {
     for (int i = 0; i < size(); i++) {
       var val = getBigDecimal(i);

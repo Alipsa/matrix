@@ -36,6 +36,12 @@ public class OdsWriter implements DataWriter<OdsWriteOptions> {
   }
 
   /**
+   * Creates an ODS writer.
+   */
+  public OdsWriter() {
+  }
+
+  /**
    * Register this writer with the given registry.
    *
    * @param registry the writer registry to register with

@@ -43,6 +43,12 @@ public class XlsxWriter implements DataWriter<XlsxWriteOptions> {
   }
 
   /**
+   * Creates an XLSX writer.
+   */
+  public XlsxWriter() {
+  }
+
+  /**
    * Register this writer with the given registry.
    *
    * @param registry the writer registry to register with

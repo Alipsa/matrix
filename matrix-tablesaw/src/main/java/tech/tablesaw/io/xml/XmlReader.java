@@ -45,6 +45,12 @@ public class XmlReader implements DataReader<XmlReadOptions> {
   }
 
   /**
+   * Creates an XML reader.
+   */
+  public XmlReader() {
+  }
+
+  /**
    * Register this reader with the given registry.
    *
    * @param registry the reader registry to register with

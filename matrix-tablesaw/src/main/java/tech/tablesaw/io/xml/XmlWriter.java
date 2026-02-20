@@ -45,6 +45,12 @@ public class XmlWriter implements DataWriter<XmlWriteOptions> {
   }
 
   /**
+   * Creates an XML writer.
+   */
+  public XmlWriter() {
+  }
+
+  /**
    * Register this writer with the given registry.
    *
    * @param registry the writer registry to register with

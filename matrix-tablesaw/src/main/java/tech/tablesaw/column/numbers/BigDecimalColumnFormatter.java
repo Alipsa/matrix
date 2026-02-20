@@ -36,6 +36,7 @@ import java.util.Locale;
  */
 public class BigDecimalColumnFormatter extends NumberColumnFormatter {
 
+  /** The NumberFormat used to render non-missing values, or {@code null} for default formatting. */
   protected NumberFormat format;
 
   /**
@@ -129,6 +130,7 @@ public class BigDecimalColumnFormatter extends NumberColumnFormatter {
    *
    * @param language the ISO 639 alpha-2 or alpha-3 language code
    * @param country the ISO 3166 alpha-2 country code
+   * @return a BigDecimalColumnFormatter configured for locale currency formatting
    */
   public static BigDecimalColumnFormatter currency(String language, String country) {
     NumberFormat format = NumberFormat.getCurrencyInstance(Locale.of(language, country));

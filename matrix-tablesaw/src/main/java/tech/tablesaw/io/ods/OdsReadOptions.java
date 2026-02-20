@@ -146,6 +146,7 @@ public class OdsReadOptions extends ReadOptions {
    */
   public static class Builder extends ReadOptions.Builder {
 
+    /** The zero-based sheet index to read, or null to use default sheet resolution. */
     protected Integer sheetIndex;
 
     /**

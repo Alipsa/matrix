@@ -11,9 +11,15 @@ import se.alipsa.matrix.core.Stat;
 import tech.tablesaw.columns.Column;
 
 /**
- * A collection of aggregate functions that can be applied to BigDecimalColumns
+ * A collection of aggregate functions that can be applied to {@link BigDecimalColumn} instances.
  */
 public class BigDecimalAggregateFunctions {
+
+  /**
+   * Utility class.
+   */
+  private BigDecimalAggregateFunctions() {
+  }
 
   /**
    * A function that takes a {@link NumericColumn} argument and returns the mean of the values in
@@ -69,7 +75,8 @@ public class BigDecimalAggregateFunctions {
       };
 
   /**
-   * A function that takes a {@link NumericColumn} argument and returns the range (max - min) of the
+   * A function that takes a {@link NumericColumn} argument and returns the range ({@code max - min})
+   * of the values in the column.
    */
   public static final NumberAggregateFunction range =
       new NumberAggregateFunction("Range") {

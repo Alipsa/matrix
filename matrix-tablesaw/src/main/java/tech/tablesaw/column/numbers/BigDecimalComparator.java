@@ -27,6 +27,12 @@ import java.util.function.ToLongFunction;
 public class BigDecimalComparator implements Comparator<BigDecimal> {
 
   /**
+   * Creates a comparator for BigDecimal values.
+   */
+  public BigDecimalComparator() {
+  }
+
+  /**
    * Compares two BigDecimal values with null-safe logic.
    *
    * @param o1 the first BigDecimal to compare (may be null)
