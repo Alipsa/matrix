@@ -89,14 +89,30 @@ class GuideSpec {
   GuideSpec copy() {
     Map<String, Object> copiedParams = new LinkedHashMap<>()
     params.each { String key, Object value ->
-      if (value instanceof Map) {
-        copiedParams[key] = new LinkedHashMap<>(value as Map)
-      } else if (value instanceof List) {
-        copiedParams[key] = new ArrayList<>(value as List)
-      } else {
-        copiedParams[key] = value
-      }
+      copiedParams.put(key, deepCopy(value))
     }
     new GuideSpec(type, copiedParams)
+  }
+
+  /**
+   * Recursively deep-copies Map and List values.
+   * Non-collection values (including closures) are returned as-is.
+   */
+  private static Object deepCopy(Object value) {
+    if (value instanceof Map) {
+      Map<Object, Object> result = [:]
+      (value as Map).each { Object k, Object v ->
+        result[k] = deepCopy(v)
+      }
+      return result
+    }
+    if (value instanceof List) {
+      List<Object> result = []
+      (value as List).each { Object element ->
+        result << deepCopy(element)
+      }
+      return result
+    }
+    return value
   }
 }

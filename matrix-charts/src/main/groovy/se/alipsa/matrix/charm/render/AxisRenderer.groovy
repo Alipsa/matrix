@@ -144,10 +144,12 @@ class AxisRenderer {
         }
         String label = idx < xLabels.size() ? xLabels[idx] : formatTick(tick)
 
-        // Check overlap (heuristic: assumes ~0.6em average character width; may need
+        // Estimate label width (heuristic: assumes ~0.6em average character width; may need
         // tuning for non-monospace fonts since SVG lacks text measurement without rendering)
+        BigDecimal estimatedWidth = label.length() * xTextSize * 0.6
+
+        // Check overlap
         if (checkOverlap && lastLabelEnd != null) {
-          BigDecimal estimatedWidth = label.length() * xTextSize * 0.6
           if (x - estimatedWidth / 2 < lastLabelEnd) {
             return // skip this label
           }
@@ -172,7 +174,6 @@ class AxisRenderer {
               .styleClass('charm-axis-label')
         }
 
-        BigDecimal estimatedWidth = label.length() * xTextSize * 0.6
         lastLabelEnd = x + estimatedWidth / 2
       }
     }
@@ -249,6 +250,13 @@ class AxisRenderer {
     }
     int minExp = Math.floor(Math.log10(dMin as double)) as int
     int maxExp = Math.ceil(Math.log10(dMax as double)) as int
+
+    // Cap exponent range to avoid excessive tick generation on very wide domains
+    int maxIterations = 20
+    if (maxExp - minExp > maxIterations) {
+      log.warn("renderAxisLogticks: exponent range ${minExp}..${maxExp} exceeds limit of ${maxIterations}, clamping")
+      maxExp = minExp + maxIterations
+    }
 
     for (int exp = minExp; exp <= maxExp; exp++) {
       BigDecimal powerOf10 = (10 ** exp) as BigDecimal

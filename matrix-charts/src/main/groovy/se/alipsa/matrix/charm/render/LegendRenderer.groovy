@@ -323,8 +323,9 @@ class LegendRenderer {
     int y = startY
 
     // Draw gradient as small rects, using rounding to tile without gaps or overlaps
+    int tDenominator = Math.max(COLORBAR_STEPS - 1, 1)
     for (int i = 0; i < COLORBAR_STEPS; i++) {
-      BigDecimal t = i / (COLORBAR_STEPS - 1)
+      BigDecimal t = (BigDecimal) i / (BigDecimal) tDenominator
       BigDecimal value = cs.domainMin + t * (cs.domainMax - cs.domainMin)
       String color = cs.colorFor(value) ?: '#999999'
 
