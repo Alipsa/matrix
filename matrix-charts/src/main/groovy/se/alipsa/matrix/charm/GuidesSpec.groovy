@@ -49,7 +49,12 @@ class GuidesSpec {
     if (aesthetic == null) {
       return
     }
-    specs[normalizeKey(aesthetic)] = spec
+    String key = normalizeKey(aesthetic)
+    if (spec == null) {
+      specs.remove(key)
+    } else {
+      specs[key] = spec
+    }
   }
 
   /**

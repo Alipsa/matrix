@@ -106,7 +106,8 @@ class AxisRenderer {
                                     ElementLine xLine, ElementText xText, GuideSpec xGuide,
                                     Set<String> nulls,
                                     String defaultLineColor, BigDecimal defaultLineWidth,
-                                    String defaultTextColor, BigDecimal defaultTextSize) {
+                                    String defaultTextColor, BigDecimal defaultTextSize,
+                                    String axisGroupId = 'x-axis') {
     ElementLine xTicks = context.chart.theme.axisTicksX
     String xTickColor = xTicks?.color ?: xLine?.color ?: defaultLineColor
     BigDecimal xTickWidth = (xTicks?.size ?: xLine?.size ?: defaultLineWidth) as BigDecimal
@@ -115,9 +116,17 @@ class AxisRenderer {
 
     // Label rotation angle from guide params
     Number labelAngle = xGuide?.params?.get('angle') as Number
-    boolean checkOverlap = (xGuide?.params?.get('check.overlap') ?: xGuide?.params?.get('checkOverlap')) as boolean
+    Map<?, ?> xParams = xGuide?.params as Map<?, ?>
+    boolean checkOverlap = false
+    if (xParams != null) {
+      if (xParams.containsKey('check.overlap')) {
+        checkOverlap = xParams.get('check.overlap') as boolean
+      } else if (xParams.containsKey('checkOverlap')) {
+        checkOverlap = xParams.get('checkOverlap') as boolean
+      }
+    }
 
-    G xAxisGroup = axes.addG().id('x-axis')
+    G xAxisGroup = axes.addG().id(axisGroupId)
     List<Object> xTickValues = context.xScale.ticks(tickCount)
     List<String> xLabels = context.xScale.tickLabels(tickCount)
 
@@ -170,14 +179,15 @@ class AxisRenderer {
                                     ElementLine yLine, ElementText yText, GuideSpec yGuide,
                                     Set<String> nulls,
                                     String defaultLineColor, BigDecimal defaultLineWidth,
-                                    String defaultTextColor, BigDecimal defaultTextSize) {
+                                    String defaultTextColor, BigDecimal defaultTextSize,
+                                    String axisGroupId = 'y-axis') {
     ElementLine yTicks = context.chart.theme.axisTicksY
     String yTickColor = yTicks?.color ?: yLine?.color ?: defaultLineColor
     BigDecimal yTickWidth = (yTicks?.size ?: yLine?.size ?: defaultLineWidth) as BigDecimal
     String yTextColor = yText?.color ?: defaultTextColor
     BigDecimal yTextSize = (yText?.size ?: defaultTextSize) as BigDecimal
 
-    G yAxisGroup = axes.addG().id('y-axis')
+    G yAxisGroup = axes.addG().id(axisGroupId)
     List<Object> yTickValues = context.yScale.ticks(tickCount)
     List<String> yLabels = context.yScale.tickLabels(tickCount)
     yTickValues.eachWithIndex { Object tick, int idx ->
@@ -314,7 +324,8 @@ class AxisRenderer {
     if (!(additional instanceof List)) return
 
     List additionalGuides = additional as List
-    additionalGuides.each { Object additionalEntry ->
+    String axisPrefix = isXAxis ? 'x-axis' : 'y-axis'
+    additionalGuides.eachWithIndex { Object additionalEntry, int idx ->
       GuideSpec additionalGuide
       if (additionalEntry instanceof GuideSpec) {
         additionalGuide = additionalEntry as GuideSpec
@@ -328,14 +339,15 @@ class AxisRenderer {
         return
       }
 
+      String stackedId = "${axisPrefix}-stack-${idx}"
       if (isXAxis) {
         renderStandardXAxis(axes, context, panelWidth, panelHeight, tickLen, tickCount,
             axisLine, axisText, additionalGuide, nulls, defaultLineColor, defaultLineWidth,
-            defaultTextColor, defaultTextSize)
+            defaultTextColor, defaultTextSize, stackedId)
       } else {
         renderStandardYAxis(axes, context, panelHeight, tickLen, tickCount,
             axisLine, axisText, additionalGuide, nulls, defaultLineColor, defaultLineWidth,
-            defaultTextColor, defaultTextSize)
+            defaultTextColor, defaultTextSize, stackedId)
       }
     }
   }

@@ -884,34 +884,8 @@ class GgCharmAdapter {
     guideSpec
   }
 
-  private static final Set<String> SUPPORTED_GUIDE_TYPES = [
-      'legend', 'colorbar', 'none',
-      'coloursteps', 'colorsteps',
-      'axis', 'axis_logticks', 'axis_theta', 'axis_stack',
-      'bins', 'custom'
-  ] as Set<String>
-
-  private static boolean hasUnsupportedGuide(Object guideSpec) {
-    if (guideSpec == null) {
-      return false
-    }
-    String type = extractGuideType(guideSpec)
-    type != null && !(type in SUPPORTED_GUIDE_TYPES)
-  }
-
-  private static String extractGuideType(Object guideSpec) {
-    if (guideSpec instanceof Guide) {
-      return (guideSpec as Guide).type
-    }
-    if (guideSpec instanceof Map) {
-      return (guideSpec as Map).get('type')?.toString()
-    }
-    if (guideSpec instanceof CharSequence) {
-      return guideSpec.toString()
-    }
-    null
-  }
-
+  // Guide gate methods (SUPPORTED_GUIDE_TYPES, hasUnsupportedGuide, extractGuideType)
+  // removed in Phase 10 — all guides now delegated via mapGuides().
   // Theme gate methods (isDefaultGrayTheme, sameRect, sameLine) and
   // hasUnsupportedLabels removed in Phase 9 — all themes and labels now delegated.
 

@@ -384,9 +384,30 @@ class LegendRenderer {
       return startY
     }
 
-    boolean evenSteps = (guideParams['even.steps'] ?: guideParams['evenSteps'] ?: true) as boolean
-    boolean reverse = (guideParams['reverse'] ?: false) as boolean
-    Boolean showLimits = (guideParams['show.limits'] ?: guideParams['showLimits']) as Boolean
+    boolean evenSteps
+    if (guideParams.containsKey('even.steps')) {
+      evenSteps = guideParams['even.steps'] as boolean
+    } else if (guideParams.containsKey('evenSteps')) {
+      evenSteps = guideParams['evenSteps'] as boolean
+    } else {
+      evenSteps = true
+    }
+
+    boolean reverse
+    if (guideParams.containsKey('reverse')) {
+      reverse = guideParams['reverse'] as boolean
+    } else {
+      reverse = false
+    }
+
+    Boolean showLimits
+    if (guideParams.containsKey('show.limits')) {
+      showLimits = guideParams['show.limits'] as Boolean
+    } else if (guideParams.containsKey('showLimits')) {
+      showLimits = guideParams['showLimits'] as Boolean
+    } else {
+      showLimits = null
+    }
 
     int barWidth = vertical ? COLORBAR_WIDTH_VERTICAL : COLORBAR_WIDTH_HORIZONTAL
     int barHeight = vertical ? COLORBAR_HEIGHT_VERTICAL : COLORBAR_HEIGHT_HORIZONTAL
