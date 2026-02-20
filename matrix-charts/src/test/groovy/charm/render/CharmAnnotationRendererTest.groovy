@@ -152,4 +152,62 @@ class CharmAnnotationRendererTest {
     assertTrue(xml.contains('charm-annotation-map'))
     assertTrue(xml.contains('<path'))
   }
+
+  @Test
+  void testTextAnnotationParsesTextGeomStyleParams() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 1], [2, 2], [3, 3]])
+        .build()
+
+    Chart chart = plot(data) {
+      aes {
+        x = col.x
+        y = col.y
+      }
+      points {}
+      annotate {
+        text {
+          x = 2
+          y = 2
+          label = 'styled'
+          params = [hjust: 0.0, vjust: 0.0, nudge_x: 1, nudge_y: 1, alpha: 0.5, angle: 45]
+        }
+      }
+    }.build()
+
+    String xml = SvgWriter.toXml(chart.render())
+    assertTrue(xml.contains('text-anchor="start"') || xml.contains("text-anchor='start'"))
+    assertTrue(xml.contains('dominant-baseline') || xml.contains('alignment-baseline'))
+    assertTrue(xml.contains('fill-opacity="0.5"') || xml.contains("fill-opacity='0.5'"))
+    assertTrue(xml.contains('rotate(-45'))
+  }
+
+  @Test
+  void testRectAnnotationSupportsLinetypeDashArray() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 1], [2, 2], [3, 3]])
+        .build()
+
+    Chart chart = plot(data) {
+      aes {
+        x = col.x
+        y = col.y
+      }
+      points {}
+      annotate {
+        rect {
+          xmin = 1
+          xmax = 2
+          ymin = 1
+          ymax = 2
+          params = [fill: '#cccccc', color: '#333333', linetype: 'dashed']
+        }
+      }
+    }.build()
+
+    String xml = SvgWriter.toXml(chart.render())
+    assertTrue(xml.contains('stroke-dasharray'))
+  }
 }

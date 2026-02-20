@@ -152,6 +152,7 @@ class CharmRenderer {
     int totalSpacingY = (panelRows - 1) * context.config.panelSpacing
     int panelWidth = ((context.config.plotWidth() - totalSpacingX - stripWidth) / panelCols) as int
     int panelHeight = ((context.config.plotHeight() - totalSpacingY - panelRows * stripHeight) / panelRows) as int
+    Map<Integer, List<AnnotationRenderEntry>> annotationsByOrder = annotationOrderMap(context.chart.annotations)
 
     context.panels.each { PanelSpec panel ->
       context.panelRow = panel.row
@@ -230,6 +231,7 @@ class CharmRenderer {
       dataLayer.addAttribute('clip-path', "url(#${clipId})")
 
       context.chart.layers.eachWithIndex { LayerSpec layer, int layerIndex ->
+        renderAnnotationsAtOrder(dataLayer, context, annotationsByOrder, layerIndex)
         context.layerIndex = layerIndex
         Matrix sourceData = resolveLayerData(context.chart.data, layer)
         boolean layerHasOwnData = sourceData != null && !sourceData.is(context.chart.data)
@@ -247,7 +249,7 @@ class CharmRenderer {
         List<LayerData> layerData = runPipeline(context, layer, sourceData, aes, rowIndexes)
         renderLayer(dataLayer, context, layer, layerData, panelWidth, panelHeight)
       }
-      renderAnnotations(dataLayer, context)
+      renderAnnotationsFromOrder(dataLayer, context, annotationsByOrder, context.chart.layers.size())
       context.layerIndex = -1
       axisRenderer.render(plotArea, context, panelWidth, panelHeight)
     }
@@ -266,15 +268,54 @@ class CharmRenderer {
     GeomEngine.render(dataLayer, context, layer, layerData, panelWidth, panelHeight)
   }
 
-  private static void renderAnnotations(G dataLayer, RenderContext context) {
-    if (context.chart.annotations == null || context.chart.annotations.isEmpty()) {
+  private static void renderAnnotationsAtOrder(
+      G dataLayer,
+      RenderContext context,
+      Map<Integer, List<AnnotationRenderEntry>> annotationsByOrder,
+      int drawOrder
+  ) {
+    if (annotationsByOrder == null || annotationsByOrder.isEmpty()) {
       return
     }
-    int layerOffset = context.chart.layers.size()
-    context.chart.annotations.eachWithIndex { AnnotationSpec annotation, int annotationIndex ->
-      context.layerIndex = layerOffset + annotationIndex
-      AnnotationEngine.render(dataLayer, context, annotation, annotationIndex)
+    List<AnnotationRenderEntry> entries = annotationsByOrder[drawOrder]
+    if (entries == null || entries.isEmpty()) {
+      return
     }
+    entries.each { AnnotationRenderEntry entry ->
+      context.layerIndex = entry.drawOrder
+      AnnotationEngine.render(dataLayer, context, entry.annotation, entry.annotationIndex)
+    }
+  }
+
+  private static void renderAnnotationsFromOrder(
+      G dataLayer,
+      RenderContext context,
+      Map<Integer, List<AnnotationRenderEntry>> annotationsByOrder,
+      int startOrder
+  ) {
+    if (annotationsByOrder == null || annotationsByOrder.isEmpty()) {
+      return
+    }
+    List<Integer> orders = annotationsByOrder.keySet()
+        .findAll { Integer order -> order >= startOrder }
+        .sort()
+    orders.each { Integer order ->
+      renderAnnotationsAtOrder(dataLayer, context, annotationsByOrder, order)
+    }
+  }
+
+  private static Map<Integer, List<AnnotationRenderEntry>> annotationOrderMap(List<AnnotationSpec> annotations) {
+    Map<Integer, List<AnnotationRenderEntry>> byOrder = [:]
+    (annotations ?: []).eachWithIndex { AnnotationSpec annotation, int idx ->
+      int order = annotation?.drawOrder ?: 0
+      List<AnnotationRenderEntry> entries = byOrder[order]
+      if (entries == null) {
+        entries = []
+        byOrder[order] = entries
+      }
+      entries << new AnnotationRenderEntry(annotation: annotation, annotationIndex: idx, drawOrder: order)
+    }
+    byOrder
   }
 
   private List<LayerData> runPipeline(
@@ -502,5 +543,11 @@ class CharmRenderer {
 
   private static List<Integer> defaultRowIndexes(int rowCount) {
     (0..<rowCount).collect { int idx -> idx }
+  }
+
+  private static class AnnotationRenderEntry {
+    AnnotationSpec annotation
+    int annotationIndex
+    int drawOrder
   }
 }

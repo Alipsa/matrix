@@ -339,7 +339,7 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec annotate(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AnnotationDsl) Closure<?> configure) {
-    AnnotationDsl dsl = new AnnotationDsl(annotations)
+    AnnotationDsl dsl = new AnnotationDsl(annotations, layers.size())
     Closure<?> body = configure.rehydrate(dsl, this, this)
     body.resolveStrategy = Closure.DELEGATE_ONLY
     body.call()
@@ -1012,14 +1012,16 @@ class PlotSpec {
   static class AnnotationDsl {
 
     private final List<AnnotationSpec> target
+    private final int drawOrder
 
     /**
      * Creates annotation DSL bound to an annotation list.
      *
      * @param target annotation target list
      */
-    AnnotationDsl(List<AnnotationSpec> target) {
+    AnnotationDsl(List<AnnotationSpec> target, int drawOrder = 0) {
       this.target = target
+      this.drawOrder = drawOrder
     }
 
     /**
@@ -1032,6 +1034,7 @@ class PlotSpec {
       Closure<?> body = configure.rehydrate(spec, this, this)
       body.resolveStrategy = Closure.DELEGATE_ONLY
       body.call()
+      spec.drawOrder = drawOrder
       target << spec
     }
 
@@ -1045,6 +1048,7 @@ class PlotSpec {
       Closure<?> body = configure.rehydrate(spec, this, this)
       body.resolveStrategy = Closure.DELEGATE_ONLY
       body.call()
+      spec.drawOrder = drawOrder
       target << spec
     }
 
@@ -1058,6 +1062,7 @@ class PlotSpec {
       Closure<?> body = configure.rehydrate(spec, this, this)
       body.resolveStrategy = Closure.DELEGATE_ONLY
       body.call()
+      spec.drawOrder = drawOrder
       target << spec
     }
 
@@ -1071,6 +1076,7 @@ class PlotSpec {
       Closure<?> body = configure.rehydrate(spec, this, this)
       body.resolveStrategy = Closure.DELEGATE_ONLY
       body.call()
+      spec.drawOrder = drawOrder
       target << spec
     }
 
@@ -1084,6 +1090,7 @@ class PlotSpec {
       Closure<?> body = configure.rehydrate(spec, this, this)
       body.resolveStrategy = Closure.DELEGATE_ONLY
       body.call()
+      spec.drawOrder = drawOrder
       target << spec
     }
 
@@ -1097,6 +1104,7 @@ class PlotSpec {
       Closure<?> body = configure.rehydrate(spec, this, this)
       body.resolveStrategy = Closure.DELEGATE_ONLY
       body.call()
+      spec.drawOrder = drawOrder
       target << spec
     }
 
@@ -1110,6 +1118,7 @@ class PlotSpec {
       Closure<?> body = configure.rehydrate(spec, this, this)
       body.resolveStrategy = Closure.DELEGATE_ONLY
       body.call()
+      spec.drawOrder = drawOrder
       target << spec
     }
   }

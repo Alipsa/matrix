@@ -10,6 +10,12 @@ import se.alipsa.matrix.core.Matrix
 abstract class AnnotationSpec {
 
   /**
+   * Draw order relative to layers within a panel.
+   * Lower values render earlier (behind higher-order elements).
+   */
+  int drawOrder = 0
+
+  /**
    * Creates a deep copy of this annotation.
    *
    * @return copied annotation
@@ -35,7 +41,13 @@ class TextAnnotationSpec extends AnnotationSpec {
    */
   @Override
   AnnotationSpec copy() {
-    new TextAnnotationSpec(x: x, y: y, label: label, params: new LinkedHashMap<>(params))
+    new TextAnnotationSpec(
+        x: x,
+        y: y,
+        label: label,
+        drawOrder: drawOrder,
+        params: new LinkedHashMap<>(params)
+    )
   }
 }
 
@@ -63,6 +75,7 @@ class RectAnnotationSpec extends AnnotationSpec {
         xmax: xmax,
         ymin: ymin,
         ymax: ymax,
+        drawOrder: drawOrder,
         params: new LinkedHashMap<>(params)
     )
   }
@@ -92,6 +105,7 @@ class SegmentAnnotationSpec extends AnnotationSpec {
         xend: xend,
         y: y,
         yend: yend,
+        drawOrder: drawOrder,
         params: new LinkedHashMap<>(params)
     )
   }
@@ -123,6 +137,7 @@ class CustomAnnotationSpec extends AnnotationSpec {
         xmax: xmax,
         ymin: ymin,
         ymax: ymax,
+        drawOrder: drawOrder,
         params: new LinkedHashMap<>(params)
     )
   }
@@ -143,7 +158,7 @@ class LogticksAnnotationSpec extends AnnotationSpec {
    */
   @Override
   AnnotationSpec copy() {
-    new LogticksAnnotationSpec(params: new LinkedHashMap<>(params))
+    new LogticksAnnotationSpec(drawOrder: drawOrder, params: new LinkedHashMap<>(params))
   }
 }
 
@@ -175,6 +190,7 @@ class RasterAnnotationSpec extends AnnotationSpec {
         ymin: ymin,
         ymax: ymax,
         interpolate: interpolate,
+        drawOrder: drawOrder,
         params: new LinkedHashMap<>(params)
     )
   }
@@ -201,6 +217,7 @@ class MapAnnotationSpec extends AnnotationSpec {
     new MapAnnotationSpec(
         map: map,
         data: data,
+        drawOrder: drawOrder,
         mapping: new LinkedHashMap<>(mapping),
         params: new LinkedHashMap<>(params)
     )

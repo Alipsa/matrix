@@ -67,27 +67,44 @@ class AnnotationEngine {
       return
     }
 
+    BigDecimal sizeValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.size)
+    BigDecimal size = sizeValue == null ? 11 : sizeValue
+    String family = spec.params?.family?.toString() ?: 'sans-serif'
+    String fontface = spec.params?.fontface?.toString() ?: 'normal'
+    BigDecimal hjustValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.hjust)
+    BigDecimal hjust = hjustValue == null ? 0.5 : hjustValue
+    BigDecimal vjustValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.vjust)
+    BigDecimal vjust = vjustValue == null ? 0.5 : vjustValue
+    BigDecimal nudgeXValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.nudge_x)
+    BigDecimal nudgeX = nudgeXValue == null ? 0 : nudgeXValue
+    BigDecimal nudgeYValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.nudge_y)
+    BigDecimal nudgeY = nudgeYValue == null ? 0 : nudgeYValue
+    BigDecimal angleValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.angle)
+    BigDecimal angle = angleValue == null ? 0 : angleValue
+    BigDecimal alphaValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.alpha)
+    BigDecimal alpha = alphaValue == null ? 1.0 : alphaValue
     String color = normalizeColor(spec.params?.color ?: spec.params?.colour ?: '#000000')
-    BigDecimal size = NumberCoercionUtil.coerceToBigDecimal(spec.params?.size) ?: 11
-    String anchor = resolveTextAnchor(spec.params?.hjust)
+    BigDecimal drawX = x + nudgeX * 10
+    BigDecimal drawY = y - nudgeY * 10
 
     def text = dataLayer.addText(spec.label)
-        .x(x)
-        .y(y)
+        .x(drawX)
+        .y(drawY)
         .fill(color)
         .fontSize(size)
-        .textAnchor(anchor)
         .styleClass('charm-annotation-text')
 
-    if (spec.params?.angle != null) {
-      BigDecimal angle = NumberCoercionUtil.coerceToBigDecimal(spec.params?.angle) ?: 0
-      text.transform("rotate(${angle}, ${x}, ${y})")
+    String baseline = dominantBaseline(vjust)
+    text.addAttribute('font-family', family)
+    text.addAttribute('text-anchor', textAnchor(hjust))
+    text.addAttribute('dominant-baseline', baseline)
+    text.addAttribute('alignment-baseline', baseline)
+    applyFontFace(text as SvgElement, fontface)
+    if (angle != 0) {
+      text.addAttribute('transform', "rotate(${-angle}, ${drawX}, ${drawY})")
     }
-    if (spec.params?.family != null) {
-      text.addAttribute('font-family', spec.params.family.toString())
-    }
-    if (spec.params?.fontface != null) {
-      applyFontFace(text as SvgElement, spec.params.fontface.toString())
+    if (alpha < 1.0) {
+      text.addAttribute('fill-opacity', alpha)
     }
 
     LayerData datum = new LayerData(x: spec.x, y: spec.y, rowIndex: annotationIndex)
@@ -115,6 +132,10 @@ class AnnotationEngine {
         .stroke(stroke)
         .addAttribute('stroke-width', strokeWidth)
         .styleClass('charm-annotation-rect')
+    String dashArray = GeomUtils.dashArray(spec.params?.linetype ?: spec.params?.lty)
+    if (dashArray != null) {
+      rect.addAttribute('stroke-dasharray', dashArray)
+    }
     if (alpha < 1.0) {
       rect.addAttribute('fill-opacity', alpha)
       if (stroke != 'none') {
@@ -176,7 +197,8 @@ class AnnotationEngine {
     GeomUtils.applyCssAttributes(customGroup, context, CharmGeomType.CUSTOM.name(), 0, null)
 
     if (spec.grob instanceof Closure) {
-      renderClosure(customGroup, spec.grob as Closure, pixelBounds, context)
+      boolean allowExtendedArgs = spec.params?.get('__source')?.toString() != 'gg'
+      renderClosure(customGroup, spec.grob as Closure, pixelBounds, context, allowExtendedArgs)
       return
     }
     if (spec.grob instanceof SvgElement) {
@@ -701,16 +723,22 @@ class AnnotationEngine {
     ColorUtil.normalizeColor(raw) ?: raw
   }
 
-  private static String resolveTextAnchor(Object hjust) {
-    BigDecimal value = NumberCoercionUtil.coerceToBigDecimal(hjust)
-    if (value == null) {
-      return 'middle'
-    }
-    if (value < 0.25) {
+  private static String textAnchor(BigDecimal hjust) {
+    if (hjust <= 0.25) {
       return 'start'
     }
-    if (value > 0.75) {
+    if (hjust >= 0.75) {
       return 'end'
+    }
+    'middle'
+  }
+
+  private static String dominantBaseline(BigDecimal vjust) {
+    if (vjust <= 0.25) {
+      return 'text-after-edge'
+    }
+    if (vjust >= 0.75) {
+      return 'text-before-edge'
     }
     'middle'
   }
@@ -727,12 +755,22 @@ class AnnotationEngine {
   }
 
   @CompileDynamic
-  private static void renderClosure(G customGroup, Closure<?> grob, Map<String, BigDecimal> bounds, RenderContext context) {
+  private static void renderClosure(
+      G customGroup,
+      Closure<?> grob,
+      Map<String, BigDecimal> bounds,
+      RenderContext context,
+      boolean allowExtendedArgs
+  ) {
     int arity = grob.maximumNumberOfParameters
-    if (arity >= 4) {
+    if (allowExtendedArgs && arity >= 4) {
       grob.call(customGroup, bounds, [x: context.xScale, y: context.yScale], context.chart.coord)
-    } else if (arity == 3) {
+    } else if (allowExtendedArgs && arity == 3) {
       grob.call(customGroup, bounds, [x: context.xScale, y: context.yScale])
+    } else if (!allowExtendedArgs && arity >= 4) {
+      grob.call(customGroup, bounds, null, null)
+    } else if (!allowExtendedArgs && arity == 3) {
+      grob.call(customGroup, bounds, null)
     } else {
       grob.call(customGroup, bounds)
     }

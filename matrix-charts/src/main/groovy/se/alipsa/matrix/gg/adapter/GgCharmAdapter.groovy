@@ -311,7 +311,7 @@ class GgCharmAdapter {
       case CharmGeomType.CUSTOM:
         return mapCustomAnnotationLayer(layer, idx, reasons)
       case CharmGeomType.LOGTICKS:
-        return mapLogticksAnnotationLayer(layer)
+        return mapLogticksAnnotationLayer(layer, idx)
       case CharmGeomType.RASTER_ANN:
         return mapRasterAnnotationLayer(layer, idx, reasons)
       case CharmGeomType.MAP:
@@ -342,18 +342,21 @@ class GgCharmAdapter {
       return []
     }
     Matrix bounds = layer.data
+    Map<String, Object> annotationParams = filterParams(layer.params, ['grob', 'xmin', 'xmax', 'ymin', 'ymax'] as Set<String>)
+    annotationParams['__source'] = 'gg'
     CustomAnnotationSpec spec = new CustomAnnotationSpec(
         grob: geom.grob,
         xmin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmin', 0),
         xmax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmax', 0),
         ymin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymin', 0),
         ymax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymax', 0),
-        params: filterParams(layer.params, ['grob', 'xmin', 'xmax', 'ymin', 'ymax'] as Set<String>)
+        drawOrder: idx,
+        params: annotationParams
     )
     [spec]
   }
 
-  private List<AnnotationSpec> mapLogticksAnnotationLayer(Layer layer) {
+  private List<AnnotationSpec> mapLogticksAnnotationLayer(Layer layer, int idx) {
     if (!(layer.geom instanceof GeomLogticks)) {
       return []
     }
@@ -372,7 +375,8 @@ class GgCharmAdapter {
         alpha    : geom.alpha
     ]
     params.putAll(filterParams(layer.params, [] as Set<String>))
-    [new LogticksAnnotationSpec(params: params)]
+    params['__source'] = 'gg'
+    [new LogticksAnnotationSpec(drawOrder: idx, params: params)]
   }
 
   private List<AnnotationSpec> mapRasterAnnotationLayer(Layer layer, int idx, List<String> reasons) {
@@ -393,8 +397,10 @@ class GgCharmAdapter {
         ymin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymin', 0),
         ymax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymax', 0),
         interpolate: geom.interpolate,
+        drawOrder: idx,
         params: filterParams(layer.params, ['raster', 'xmin', 'xmax', 'ymin', 'ymax', 'interpolate'] as Set<String>)
     )
+    spec.params['__source'] = 'gg'
     [spec]
   }
 
@@ -412,9 +418,11 @@ class GgCharmAdapter {
     MapAnnotationSpec spec = new MapAnnotationSpec(
         map: mapData,
         data: layer.data,
+        drawOrder: idx,
         mapping: extractMapMapping(layer.aes),
         params: filterParams(layer.params, ['map', 'data', 'mapping'] as Set<String>)
     )
+    spec.params['__source'] = 'gg'
     [spec]
   }
 
@@ -467,7 +475,7 @@ class GgCharmAdapter {
       if (x == null || y == null || label == null) {
         continue
       }
-      specs << new TextAnnotationSpec(x: x, y: y, label: label, params: new LinkedHashMap<>(style))
+      specs << new TextAnnotationSpec(x: x, y: y, label: label, drawOrder: idx, params: new LinkedHashMap<>(style))
     }
     specs
   }
@@ -503,6 +511,7 @@ class GgCharmAdapter {
           xmax: xmax,
           ymin: ymin,
           ymax: ymax,
+          drawOrder: idx,
           params: new LinkedHashMap<>(style)
       )
     }
@@ -540,6 +549,7 @@ class GgCharmAdapter {
           y: y,
           xend: xend,
           yend: yend,
+          drawOrder: idx,
           params: new LinkedHashMap<>(style)
       )
     }

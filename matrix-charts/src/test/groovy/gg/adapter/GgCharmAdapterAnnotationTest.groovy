@@ -145,4 +145,48 @@ class GgCharmAdapterAnnotationTest {
     String svg = SvgWriter.toXml(chart.render())
     assertTrue(svg.contains('center'))
   }
+
+  @Test
+  void testAnnotationOrderPreservedWhenRasterBeforePoints() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 1], [2, 2], [3, 3]])
+        .build()
+
+    GgChart chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        annotation_raster(
+            raster: [['#eeeeee', '#dddddd'], ['#cccccc', '#bbbbbb']],
+            xmin: 1, xmax: 3, ymin: 1, ymax: 3
+        ) +
+        geom_point()
+
+    String svg = SvgWriter.toXml(chart.render())
+    int rasterPos = svg.indexOf('charm-annotation-raster')
+    int pointPos = svg.indexOf('<circle')
+    assertTrue(rasterPos >= 0)
+    assertTrue(pointPos >= 0)
+    assertTrue(rasterPos < pointPos, 'Raster annotation should render behind points when added first')
+  }
+
+  @Test
+  void testAnnotationOrderPreservedWhenRasterAfterPoints() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 1], [2, 2], [3, 3]])
+        .build()
+
+    GgChart chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point() +
+        annotation_raster(
+            raster: [['#eeeeee', '#dddddd'], ['#cccccc', '#bbbbbb']],
+            xmin: 1, xmax: 3, ymin: 1, ymax: 3
+        )
+
+    String svg = SvgWriter.toXml(chart.render())
+    int rasterPos = svg.indexOf('charm-annotation-raster')
+    int pointPos = svg.indexOf('<circle')
+    assertTrue(rasterPos >= 0)
+    assertTrue(pointPos >= 0)
+    assertTrue(rasterPos > pointPos, 'Raster annotation should render above points when added last')
+  }
 }
