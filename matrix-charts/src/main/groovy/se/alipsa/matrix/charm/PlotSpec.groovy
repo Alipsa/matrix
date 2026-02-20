@@ -1060,5 +1060,57 @@ class PlotSpec {
       body.call()
       target << spec
     }
+
+    /**
+     * Adds custom-grob annotation.
+     *
+     * @param configure custom closure
+     */
+    void custom(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = CustomAnnotationSpec) Closure<?> configure) {
+      CustomAnnotationSpec spec = new CustomAnnotationSpec()
+      Closure<?> body = configure.rehydrate(spec, this, this)
+      body.resolveStrategy = Closure.DELEGATE_ONLY
+      body.call()
+      target << spec
+    }
+
+    /**
+     * Adds logticks annotation.
+     *
+     * @param configure logticks closure
+     */
+    void logticks(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LogticksAnnotationSpec) Closure<?> configure) {
+      LogticksAnnotationSpec spec = new LogticksAnnotationSpec()
+      Closure<?> body = configure.rehydrate(spec, this, this)
+      body.resolveStrategy = Closure.DELEGATE_ONLY
+      body.call()
+      target << spec
+    }
+
+    /**
+     * Adds raster annotation.
+     *
+     * @param configure raster closure
+     */
+    void raster(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = RasterAnnotationSpec) Closure<?> configure) {
+      RasterAnnotationSpec spec = new RasterAnnotationSpec()
+      Closure<?> body = configure.rehydrate(spec, this, this)
+      body.resolveStrategy = Closure.DELEGATE_ONLY
+      body.call()
+      target << spec
+    }
+
+    /**
+     * Adds map annotation.
+     *
+     * @param configure map closure
+     */
+    void map(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = MapAnnotationSpec) Closure<?> configure) {
+      MapAnnotationSpec spec = new MapAnnotationSpec()
+      Closure<?> body = configure.rehydrate(spec, this, this)
+      body.resolveStrategy = Closure.DELEGATE_ONLY
+      body.call()
+      target << spec
+    }
   }
 }

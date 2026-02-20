@@ -4,6 +4,7 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Aes
+import se.alipsa.matrix.charm.AnnotationSpec
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmGeomType
@@ -20,13 +21,21 @@ import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.GuidesSpec
 import se.alipsa.matrix.charm.Labels
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.LogticksAnnotationSpec
+import se.alipsa.matrix.charm.MapAnnotationSpec
 import se.alipsa.matrix.charm.PositionSpec
+import se.alipsa.matrix.charm.RasterAnnotationSpec
+import se.alipsa.matrix.charm.RectAnnotationSpec
 import se.alipsa.matrix.charm.Scale as CharmScale
 import se.alipsa.matrix.charm.ScaleSpec
+import se.alipsa.matrix.charm.SegmentAnnotationSpec
 import se.alipsa.matrix.charm.StatSpec
+import se.alipsa.matrix.charm.TextAnnotationSpec
 import se.alipsa.matrix.charm.Theme
+import se.alipsa.matrix.charm.CustomAnnotationSpec
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
+import se.alipsa.matrix.charm.util.NumberCoercionUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.GgChart
@@ -38,6 +47,10 @@ import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
+import se.alipsa.matrix.gg.geom.GeomCustom
+import se.alipsa.matrix.gg.geom.GeomLogticks
+import se.alipsa.matrix.gg.geom.GeomMap
+import se.alipsa.matrix.gg.geom.GeomRasterAnn
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
@@ -140,10 +153,16 @@ class GgCharmAdapter {
     }
 
     List<LayerSpec> mappedLayers = []
+    List<AnnotationSpec> mappedAnnotations = []
     ggChart.layers.eachWithIndex { Layer layer, int idx ->
-      LayerSpec mapped = mapLayer(layer, idx, plotAes, reasons)
-      if (mapped != null) {
-        mappedLayers << mapped
+      List<AnnotationSpec> annotationSpecs = mapAnnotationLayer(layer, idx, reasons)
+      if (!annotationSpecs.isEmpty()) {
+        mappedAnnotations.addAll(annotationSpecs)
+      } else {
+        LayerSpec mapped = mapLayer(layer, idx, plotAes, reasons)
+        if (mapped != null) {
+          mappedLayers << mapped
+        }
       }
     }
     if (!reasons.isEmpty()) {
@@ -169,7 +188,7 @@ class GgCharmAdapter {
         mappedCoord,
         mappedLabels,
         mappedGuides,
-        [],
+        mappedAnnotations,
         mapCssAttributes(ggChart)
     )
     GgCharmAdaptation.delegated(mappedChart)
@@ -275,6 +294,317 @@ class GgCharmAdapter {
         PositionSpec.of(positionType, positionParams),
         layerParams
     )
+  }
+
+  private List<AnnotationSpec> mapAnnotationLayer(Layer layer, int idx, List<String> reasons) {
+    if (layer == null || layer.geom == null) {
+      return []
+    }
+    GeomSpec geomSpec
+    try {
+      geomSpec = layer.geom.toCharmGeomSpec()
+    } catch (Exception ignored) {
+      return []
+    }
+
+    switch (geomSpec.type) {
+      case CharmGeomType.CUSTOM:
+        return mapCustomAnnotationLayer(layer, idx, reasons)
+      case CharmGeomType.LOGTICKS:
+        return mapLogticksAnnotationLayer(layer)
+      case CharmGeomType.RASTER_ANN:
+        return mapRasterAnnotationLayer(layer, idx, reasons)
+      case CharmGeomType.MAP:
+        if (!layer.inheritAes) {
+          return mapMapAnnotationLayer(layer, idx, reasons)
+        }
+        return []
+      case CharmGeomType.TEXT:
+      case CharmGeomType.RECT:
+      case CharmGeomType.SEGMENT:
+        if (!layer.inheritAes) {
+          return mapInlineAnnotationLayer(layer, geomSpec.type, idx, reasons)
+        }
+        return []
+      default:
+        return []
+    }
+  }
+
+  private List<AnnotationSpec> mapCustomAnnotationLayer(Layer layer, int idx, List<String> reasons) {
+    if (!(layer.geom instanceof GeomCustom)) {
+      reasons.add("Layer ${idx} custom annotation has incompatible geom '${layer.geom.class.simpleName}'".toString())
+      return []
+    }
+    GeomCustom geom = layer.geom as GeomCustom
+    if (geom.grob == null) {
+      reasons.add("Layer ${idx} custom annotation requires a grob".toString())
+      return []
+    }
+    Matrix bounds = layer.data
+    CustomAnnotationSpec spec = new CustomAnnotationSpec(
+        grob: geom.grob,
+        xmin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmin', 0),
+        xmax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmax', 0),
+        ymin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymin', 0),
+        ymax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymax', 0),
+        params: filterParams(layer.params, ['grob', 'xmin', 'xmax', 'ymin', 'ymax'] as Set<String>)
+    )
+    [spec]
+  }
+
+  private List<AnnotationSpec> mapLogticksAnnotationLayer(Layer layer) {
+    if (!(layer.geom instanceof GeomLogticks)) {
+      return []
+    }
+    GeomLogticks geom = layer.geom as GeomLogticks
+    Map<String, Object> params = [
+        base     : geom.base,
+        sides    : geom.sides,
+        outside  : geom.outside,
+        scaled   : geom.scaled,
+        short    : geom.shortLength,
+        mid      : geom.midLength,
+        long     : geom.longLength,
+        colour   : geom.colour,
+        linewidth: geom.linewidth,
+        linetype : geom.linetype,
+        alpha    : geom.alpha
+    ]
+    params.putAll(filterParams(layer.params, [] as Set<String>))
+    [new LogticksAnnotationSpec(params: params)]
+  }
+
+  private List<AnnotationSpec> mapRasterAnnotationLayer(Layer layer, int idx, List<String> reasons) {
+    if (!(layer.geom instanceof GeomRasterAnn)) {
+      reasons.add("Layer ${idx} raster annotation has incompatible geom '${layer.geom.class.simpleName}'".toString())
+      return []
+    }
+    GeomRasterAnn geom = layer.geom as GeomRasterAnn
+    if (geom.raster == null) {
+      reasons.add("Layer ${idx} raster annotation requires raster data".toString())
+      return []
+    }
+    Matrix bounds = layer.data
+    RasterAnnotationSpec spec = new RasterAnnotationSpec(
+        raster: geom.raster.collect { List<String> row -> row == null ? [] : new ArrayList<>(row) },
+        xmin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmin', 0),
+        xmax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'xmax', 0),
+        ymin: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymin', 0),
+        ymax: se.alipsa.matrix.charm.AnnotationConstants.getPositionValue(bounds, 'ymax', 0),
+        interpolate: geom.interpolate,
+        params: filterParams(layer.params, ['raster', 'xmin', 'xmax', 'ymin', 'ymax', 'interpolate'] as Set<String>)
+    )
+    [spec]
+  }
+
+  private List<AnnotationSpec> mapMapAnnotationLayer(Layer layer, int idx, List<String> reasons) {
+    if (!(layer.geom instanceof GeomMap)) {
+      reasons.add("Layer ${idx} map annotation has incompatible geom '${layer.geom.class.simpleName}'".toString())
+      return []
+    }
+    GeomMap geom = layer.geom as GeomMap
+    Matrix mapData = geom.map ?: (layer.params?.get('map') instanceof Matrix ? layer.params.get('map') as Matrix : null)
+    if (mapData == null) {
+      reasons.add("Layer ${idx} annotation_map requires a map Matrix".toString())
+      return []
+    }
+    MapAnnotationSpec spec = new MapAnnotationSpec(
+        map: mapData,
+        data: layer.data,
+        mapping: extractMapMapping(layer.aes),
+        params: filterParams(layer.params, ['map', 'data', 'mapping'] as Set<String>)
+    )
+    [spec]
+  }
+
+  private List<AnnotationSpec> mapInlineAnnotationLayer(
+      Layer layer,
+      CharmGeomType type,
+      int idx,
+      List<String> reasons
+  ) {
+    Matrix data = layer.data
+    GgAes aes = layer.aes
+    if (data == null || aes == null || data.rowCount() == 0) {
+      reasons.add("Layer ${idx} annotation ${type} is missing data/aes bindings".toString())
+      return []
+    }
+
+    switch (type) {
+      case CharmGeomType.TEXT:
+        return mapTextAnnotations(data, aes, layer.params, idx, reasons)
+      case CharmGeomType.RECT:
+        return mapRectAnnotations(data, aes, layer.params, idx, reasons)
+      case CharmGeomType.SEGMENT:
+        return mapSegmentAnnotations(data, aes, layer.params, idx, reasons)
+      default:
+        return []
+    }
+  }
+
+  private List<AnnotationSpec> mapTextAnnotations(
+      Matrix data,
+      GgAes aes,
+      Map params,
+      int idx,
+      List<String> reasons
+  ) {
+    String xCol = resolveColumnRef(aes, 'x')
+    String yCol = resolveColumnRef(aes, 'y')
+    String labelCol = resolveColumnRef(aes, 'label')
+    if (xCol == null || yCol == null || labelCol == null) {
+      reasons.add("Layer ${idx} text annotation requires x, y, and label columns".toString())
+      return []
+    }
+
+    Map<String, Object> style = filterParams(params, ['x', 'y', 'label'] as Set<String>)
+    List<AnnotationSpec> specs = []
+    for (int row = 0; row < data.rowCount(); row++) {
+      Number x = coerceNumber(data[row, xCol])
+      Number y = coerceNumber(data[row, yCol])
+      String label = data[row, labelCol]?.toString()
+      if (x == null || y == null || label == null) {
+        continue
+      }
+      specs << new TextAnnotationSpec(x: x, y: y, label: label, params: new LinkedHashMap<>(style))
+    }
+    specs
+  }
+
+  private List<AnnotationSpec> mapRectAnnotations(
+      Matrix data,
+      GgAes aes,
+      Map params,
+      int idx,
+      List<String> reasons
+  ) {
+    String xminCol = resolveColumnRef(aes, 'xmin')
+    String xmaxCol = resolveColumnRef(aes, 'xmax')
+    String yminCol = resolveColumnRef(aes, 'ymin')
+    String ymaxCol = resolveColumnRef(aes, 'ymax')
+    if (xminCol == null || xmaxCol == null || yminCol == null || ymaxCol == null) {
+      reasons.add("Layer ${idx} rect annotation requires xmin, xmax, ymin, and ymax columns".toString())
+      return []
+    }
+
+    Map<String, Object> style = filterParams(params, ['xmin', 'xmax', 'ymin', 'ymax'] as Set<String>)
+    List<AnnotationSpec> specs = []
+    for (int row = 0; row < data.rowCount(); row++) {
+      Number xmin = coerceNumber(data[row, xminCol])
+      Number xmax = coerceNumber(data[row, xmaxCol])
+      Number ymin = coerceNumber(data[row, yminCol])
+      Number ymax = coerceNumber(data[row, ymaxCol])
+      if (xmin == null || xmax == null || ymin == null || ymax == null) {
+        continue
+      }
+      specs << new RectAnnotationSpec(
+          xmin: xmin,
+          xmax: xmax,
+          ymin: ymin,
+          ymax: ymax,
+          params: new LinkedHashMap<>(style)
+      )
+    }
+    specs
+  }
+
+  private List<AnnotationSpec> mapSegmentAnnotations(
+      Matrix data,
+      GgAes aes,
+      Map params,
+      int idx,
+      List<String> reasons
+  ) {
+    String xCol = resolveColumnRef(aes, 'x')
+    String yCol = resolveColumnRef(aes, 'y')
+    String xendCol = resolveColumnRef(aes, 'xend')
+    String yendCol = resolveColumnRef(aes, 'yend')
+    if (xCol == null || yCol == null || xendCol == null || yendCol == null) {
+      reasons.add("Layer ${idx} segment annotation requires x, y, xend, and yend columns".toString())
+      return []
+    }
+
+    Map<String, Object> style = filterParams(params, ['x', 'y', 'xend', 'yend'] as Set<String>)
+    List<AnnotationSpec> specs = []
+    for (int row = 0; row < data.rowCount(); row++) {
+      Number x = coerceNumber(data[row, xCol])
+      Number y = coerceNumber(data[row, yCol])
+      Number xend = coerceNumber(data[row, xendCol])
+      Number yend = coerceNumber(data[row, yendCol])
+      if (x == null || y == null || xend == null || yend == null) {
+        continue
+      }
+      specs << new SegmentAnnotationSpec(
+          x: x,
+          y: y,
+          xend: xend,
+          yend: yend,
+          params: new LinkedHashMap<>(style)
+      )
+    }
+    specs
+  }
+
+  private static Map<String, String> extractMapMapping(GgAes aes) {
+    Map<String, String> mapping = [:]
+    if (aes == null) {
+      return mapping
+    }
+    String mapId = resolveColumnRef(aes, 'map_id')
+    if (mapId != null) {
+      mapping['map_id'] = mapId
+    }
+    String x = resolveColumnRef(aes, 'x')
+    if (x != null) {
+      mapping['x'] = x
+    }
+    String y = resolveColumnRef(aes, 'y')
+    if (y != null) {
+      mapping['y'] = y
+    }
+    String group = resolveColumnRef(aes, 'group')
+    if (group != null) {
+      mapping['group'] = group
+    }
+    String fill = resolveColumnRef(aes, 'fill')
+    if (fill != null) {
+      mapping['fill'] = fill
+    }
+    String color = resolveColumnRef(aes, 'color')
+    if (color != null) {
+      mapping['color'] = color
+    }
+    mapping
+  }
+
+  private static String resolveColumnRef(GgAes aes, String aesthetic) {
+    if (aes == null) {
+      return null
+    }
+    Object value = aes.getAestheticValue(aesthetic)
+    if (value instanceof CharSequence) {
+      return value.toString()
+    }
+    if (value instanceof Factor && (value as Factor).value instanceof CharSequence) {
+      return (value as Factor).value.toString()
+    }
+    null
+  }
+
+  private static Number coerceNumber(Object value) {
+    if (value instanceof Number) {
+      return value as Number
+    }
+    NumberCoercionUtil.coerceToBigDecimal(value)
+  }
+
+  private static Map<String, Object> filterParams(Map source, Set<String> excluded) {
+    Map<String, Object> params = deepCopyMap(source)
+    excluded.each { String key ->
+      params.remove(key)
+    }
+    params
   }
 
   private CharmStatType mapLayerStat(CharmGeomType geomType, StatType ggStat, int idx, List<String> reasons) {
