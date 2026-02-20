@@ -65,11 +65,12 @@ allprojects {
     gradleReleaseChannel = "current"
     checkForGradleUpdate = false // optional: silence Gradle RC noise
     def projectName = project.name
+    def rootExt = rootProject.ext
 
     outputFormatter = { result ->
       def outdated = result.outdated.dependencies
       if (outdated) {
-        rootProject.ext.set('_hasOutdatedDeps', true)
+        rootExt.set('_hasOutdatedDeps', true)
         println "${projectName}:"
         outdated.each { dep ->
           def latest = dep.available.release ?: dep.available.milestone ?: dep.available.integration
