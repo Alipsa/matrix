@@ -1,5 +1,6 @@
 plugins {
-  id "com.github.ben-manes.versions" version "0.54.0-SNAPSHOT" apply false
+  //id "com.github.ben-manes.versions" version "0.54.0-SNAPSHOT" apply false
+  id "com.github.ben-manes.versions" version "0.53.0" apply false
 }
 
 description = "Groovy libraries for working with matrix ([][] data)"
@@ -60,7 +61,7 @@ allprojects {
     // Plugin is not compatible with configuration cache (uses Task.project at execution time).
     // This invalidates the cache entry when dependencyUpdates is in the task graph.
     // Also run with --no-parallel on Gradle 9.x: ./gradlew dependencyUpdates --no-parallel
-    //notCompatibleWithConfigurationCache("dependencyUpdates plugin uses Task.project at execution time")
+    notCompatibleWithConfigurationCache("dependencyUpdates plugin uses Task.project at execution time")
 
     gradleReleaseChannel = "current"
     checkForGradleUpdate = false // optional: silence Gradle RC noise
