@@ -20,9 +20,9 @@ class ColorScaleUtil {
     int[] rgb1 = parseColor(color1)
     int[] rgb2 = parseColor(color2)
 
-    int r = (int) (rgb1[0] + t * (rgb2[0] - rgb1[0])).round()
-    int g = (int) (rgb1[1] + t * (rgb2[1] - rgb1[1])).round()
-    int b = (int) (rgb1[2] + t * (rgb2[2] - rgb1[2])).round()
+    int r = (rgb1[0] + t * (rgb2[0] - rgb1[0])).round() as int
+    int g = (rgb1[1] + t * (rgb2[1] - rgb1[1])).round() as int
+    int b = (rgb1[2] + t * (rgb2[2] - rgb1[2])).round() as int
 
     r = 0.max(r.min(255)).intValue()
     g = 0.max(g.min(255)).intValue()

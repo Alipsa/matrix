@@ -125,7 +125,7 @@ class BrewerPalettes {
     if (n <= 0) return []
     if (colors.size() == n) return new ArrayList<>(colors)
     if (n == 1) {
-      return [colors[(int) Math.floor(colors.size() / 2.0d)]] as List<String>
+      return [colors[(colors.size() / 2.0).floor() as int]] as List<String>
     }
     if (n >= colors.size()) {
       List<String> expanded = []
@@ -136,8 +136,8 @@ class BrewerPalettes {
     }
     List<String> selected = []
     for (int i = 0; i < n; i++) {
-      double idx = i * (colors.size() - 1) / (double) (n - 1)
-      int rounded = Math.round(idx) as int
+      BigDecimal idx = i * (colors.size() - 1) / (n - 1 as BigDecimal)
+      int rounded = idx.round() as int
       selected << colors[rounded]
     }
     selected

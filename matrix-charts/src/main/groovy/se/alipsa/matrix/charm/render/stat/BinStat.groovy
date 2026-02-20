@@ -51,7 +51,7 @@ class BinStat {
     if (paramBinwidth != null && paramBinwidth > 0) {
       binwidth = paramBinwidth
       int rawBins = (range / binwidth).toBigInteger().intValue()
-      bins = Math.max(rawBins, 1)
+      bins = 1.max(rawBins) as int
       // Extend max to cover full bins
       max = min + binwidth * bins
     } else {
@@ -73,7 +73,7 @@ class BinStat {
     List<Integer> counts = new ArrayList<>(Collections.nCopies(bins, 0))
     values.each { BigDecimal value ->
       int idx = binwidth > 0 ? ((value - min) / binwidth).intValue() : 0
-      idx = Math.max(0, Math.min(idx, bins - 1))
+      idx = 0.max(idx.min(bins - 1)) as int
       counts[idx] = counts[idx] + 1
     }
 

@@ -98,7 +98,7 @@ class BoxplotStat {
     }
     int n = sorted.size()
     double h = (n - 1) * (p as double) + 1
-    int j = (int) Math.floor(h)
+    int j = (h as BigDecimal).floor() as int
     double g = h - j
 
     if (j <= 1) {
