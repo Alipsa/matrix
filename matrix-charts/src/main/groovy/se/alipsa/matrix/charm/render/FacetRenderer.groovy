@@ -291,7 +291,7 @@ class FacetRenderer {
       }
       return (count / nrow).ceil() as int
     }
-    (int) Math.ceil(Math.sqrt(count as double))
+    (count as BigDecimal).sqrt().ceil() as int
   }
 
   /**
@@ -322,7 +322,7 @@ class FacetRenderer {
     String[] parts = compositeKey.split(KEY_SEP)
     for (int v = 0; v < varNames.size(); v++) {
       String actual = String.valueOf(data[rowIndex, varNames[v]])
-      if (v >= parts.size() || actual != parts[v]) {
+      if (v >= parts.length || actual != parts[v]) {
         return false
       }
     }
