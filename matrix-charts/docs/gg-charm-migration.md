@@ -28,6 +28,8 @@
 
 0.13 Charm keeps its idiomatic Groovy DSL (`Charts`, `PlotSpec`, `LayerDsl`, `AesDsl`, etc.). Migration updates these APIs for the new core model; it does not remove charm's native DSL.
 
+0.14 Adhere to the context, coding standards and rules described in AGENTS.md
+
 ## 1. Target Architecture
 
 ### 1.1 Data Flow (After Migration)
@@ -839,3 +841,5 @@ _Implement the P2 tier and geospatial support._
 7.9 `PlotSpec.groovy` is a first-class migration target despite file size; refactoring it is explicit Phase 2 scope, not incidental cleanup.
 
 7.10 `gg/util/Rconverter.groovy` stays in gg unless explicitly marked unused during final cleanup.
+
+7.11 Adhere to the coding and architectural standards described in AGENTS.md
