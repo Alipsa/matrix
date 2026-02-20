@@ -21,7 +21,7 @@ class GuidesSpec {
   GuidesSpec(Map<String, GuideSpec> entries) {
     if (entries) {
       entries.each { String key, GuideSpec value ->
-        specs[normalizeKey(key)] = value
+        setSpec(key, value)
       }
     }
   }

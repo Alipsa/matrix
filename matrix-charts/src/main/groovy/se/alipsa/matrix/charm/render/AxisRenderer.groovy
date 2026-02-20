@@ -344,6 +344,11 @@ class AxisRenderer {
 
     List additionalGuides = additional as List
     String axisPrefix = isXAxis ? 'x-axis' : 'y-axis'
+    BigDecimal spacingParam = (stackGuide.params['spacing'] ?: 0) as BigDecimal
+    // Each stacked axis is offset by tick length + estimated label height/width + spacing
+    BigDecimal axisTextSize = (axisText?.size ?: defaultTextSize) as BigDecimal
+    BigDecimal baseOffset = tickLen + axisTextSize + 14 + spacingParam
+
     additionalGuides.eachWithIndex { Object additionalEntry, int idx ->
       GuideSpec additionalGuide
       if (additionalEntry instanceof GuideSpec) {
@@ -359,14 +364,18 @@ class AxisRenderer {
       }
 
       String stackedId = "${axisPrefix}-stack-${idx}"
+      BigDecimal offset = baseOffset * (idx + 1)
+      G stackGroup = axes.addG().id(stackedId)
       if (isXAxis) {
-        renderStandardXAxis(axes, context, panelWidth, panelHeight, tickLen, tickCount,
+        stackGroup.addAttribute('transform', "translate(0, ${offset})")
+        renderStandardXAxis(stackGroup, context, panelWidth, panelHeight, tickLen, tickCount,
             axisLine, axisText, additionalGuide, nulls, defaultLineColor, defaultLineWidth,
-            defaultTextColor, defaultTextSize, stackedId)
+            defaultTextColor, defaultTextSize, "${stackedId}-inner")
       } else {
-        renderStandardYAxis(axes, context, panelHeight, tickLen, tickCount,
+        stackGroup.addAttribute('transform', "translate(${-offset}, 0)")
+        renderStandardYAxis(stackGroup, context, panelHeight, tickLen, tickCount,
             axisLine, axisText, additionalGuide, nulls, defaultLineColor, defaultLineWidth,
-            defaultTextColor, defaultTextSize, stackedId)
+            defaultTextColor, defaultTextSize, "${stackedId}-inner")
       }
     }
   }

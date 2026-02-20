@@ -138,7 +138,8 @@ class CharmAxisGuideTest {
     Svg svg = chart.render()
     String content = SvgWriter.toXml(svg)
     assertTrue(content.contains('id="x-axis"'), 'Primary X-axis group should be present')
-    assertTrue(content.contains('id="x-axis-stack-0"'), 'Stacked axis group should have unique id')
+    assertTrue(content.contains('id="x-axis-stack-0"'), 'Stacked axis wrapper group should have unique id')
+    assertTrue(content.contains('translate(0,'), 'Stacked axis should be offset from primary axis')
     assertTrue(content.contains('rotate(45'), 'Stacked axis should include rotated labels')
   }
 }

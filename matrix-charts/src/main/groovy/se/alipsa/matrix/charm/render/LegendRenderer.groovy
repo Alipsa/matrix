@@ -586,12 +586,13 @@ class LegendRenderer {
       ContinuousCharmScale cont = sizeScale as ContinuousCharmScale
       List<Object> ticks = cont.ticks(5)
       List<String> labels = cont.tickLabels(5)
-      BigDecimal maxVal = cont.domainMax ?: 1.0
+      BigDecimal transformedMax = cont.rangeEnd ?: 10.0
 
       ticks.eachWithIndex { Object tickVal, int idx ->
         BigDecimal scaled = cont.transform(tickVal)
         if (scaled == null) return
-        BigDecimal radius = maxVal > 0 ? (scaled / maxVal * maxRadius).max(1.0) : maxRadius / 2.0
+        // transform() returns values in the scale range (e.g. 2..10); normalize using range max
+        BigDecimal radius = transformedMax > 0 ? (scaled / transformedMax * maxRadius).max(1.0) : maxRadius / 2.0
         BigDecimal centerX = x + keySize / 2.0
         BigDecimal centerY = y + keySize / 2.0
         group.addCircle()
@@ -656,9 +657,8 @@ class LegendRenderer {
       ticks.eachWithIndex { Object tickVal, int idx ->
         BigDecimal scaled = cont.transform(tickVal)
         if (scaled == null) return
-        // Normalize to 0-1 range
-        BigDecimal alphaVal = ((scaled - cont.rangeStart) / (cont.rangeEnd - cont.rangeStart))
-            .min(1).max(0)
+        // transform() already returns values in the alpha range (0.1..1.0); use directly
+        BigDecimal alphaVal = scaled.min(1).max(0)
         def rect = group.addRect(keySize, keySize)
             .x(x).y(y).fill(keyColor)
             .styleClass('charm-legend-key')
