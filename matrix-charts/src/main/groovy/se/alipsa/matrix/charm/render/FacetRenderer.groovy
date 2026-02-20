@@ -286,6 +286,9 @@ class FacetRenderer {
       return ncol
     }
     if (nrow != null) {
+      if (nrow <= 0) {
+        throw new IllegalArgumentException("nrow must be a positive integer, but was ${nrow}")
+      }
       return (count / nrow).ceil() as int
     }
     (int) Math.ceil(Math.sqrt(count as double))
