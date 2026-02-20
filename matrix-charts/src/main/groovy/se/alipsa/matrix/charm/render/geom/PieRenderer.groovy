@@ -7,6 +7,8 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
 /**
  * Renders pie geometry.
  */
@@ -22,9 +24,9 @@ class PieRenderer {
       return
     }
 
-    double cx = panelWidth / 2.0d
-    double cy = panelHeight / 2.0d
-    double radius = Math.min(panelWidth, panelHeight) * 0.4d
+    BigDecimal cx = panelWidth / 2.0
+    BigDecimal cy = panelHeight / 2.0
+    BigDecimal radius = panelWidth.min(panelHeight) * 0.4
 
     List<BigDecimal> values = layerData.collect { LayerData datum ->
       BigDecimal v = NumberCoercionUtil.coerceToBigDecimal(datum.y)
@@ -35,19 +37,19 @@ class PieRenderer {
       return
     }
 
-    double startAngle = -Math.PI / 2.0d
+    BigDecimal startAngle = -PI / 2
     layerData.eachWithIndex { LayerData datum, int idx ->
       BigDecimal slice = values[idx]
       if (slice == 0) {
         return
       }
-      double sweep = (slice / total) as double * 2.0d * Math.PI
-      double endAngle = startAngle + sweep
-      double x1 = cx + radius * Math.cos(startAngle)
-      double y1 = cy + radius * Math.sin(startAngle)
-      double x2 = cx + radius * Math.cos(endAngle)
-      double y2 = cy + radius * Math.sin(endAngle)
-      int largeArc = sweep > Math.PI ? 1 : 0
+      BigDecimal sweep = (slice / total) * 2 * PI
+      BigDecimal endAngle = startAngle + sweep
+      BigDecimal x1 = cx + radius * startAngle.cos()
+      BigDecimal y1 = cy + radius * startAngle.sin()
+      BigDecimal x2 = cx + radius * endAngle.cos()
+      BigDecimal y2 = cy + radius * endAngle.sin()
+      int largeArc = sweep > PI ? 1 : 0
 
       String pathD = "M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z"
       String fill = GeomUtils.resolveFill(context, layer, datum)

@@ -1,54 +1,81 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.theme.ElementLine
+import se.alipsa.matrix.charm.theme.ElementRect
+import se.alipsa.matrix.charm.theme.ElementText
 
 /**
  * Typed theme specification for Charm core.
+ *
+ * Extends {@link Theme} with builder-style methods for fluent configuration.
  */
 @CompileStatic
 class ThemeSpec extends Theme {
 
   /**
-   * Builder-style legend section setter.
+   * Builder-style plot background setter.
    *
-   * @param values legend values
+   * @param value plot background element
    * @return this spec
    */
-  ThemeSpec legend(Map<String, Object> values) {
-    setLegend(values)
+  ThemeSpec plotBackground(ElementRect value) {
+    setPlotBackground(value)
     this
   }
 
   /**
-   * Builder-style axis section setter.
+   * Builder-style panel background setter.
    *
-   * @param values axis values
+   * @param value panel background element
    * @return this spec
    */
-  ThemeSpec axis(Map<String, Object> values) {
-    setAxis(values)
+  ThemeSpec panelBackground(ElementRect value) {
+    setPanelBackground(value)
     this
   }
 
   /**
-   * Builder-style text section setter.
+   * Builder-style panel grid major setter.
    *
-   * @param values text values
+   * @param value grid major element
    * @return this spec
    */
-  ThemeSpec text(Map<String, Object> values) {
-    setText(values)
+  ThemeSpec panelGridMajor(ElementLine value) {
+    setPanelGridMajor(value)
     this
   }
 
   /**
-   * Builder-style grid section setter.
+   * Builder-style panel grid minor setter.
    *
-   * @param values grid values
+   * @param value grid minor element
    * @return this spec
    */
-  ThemeSpec grid(Map<String, Object> values) {
-    setGrid(values)
+  ThemeSpec panelGridMinor(ElementLine value) {
+    setPanelGridMinor(value)
+    this
+  }
+
+  /**
+   * Builder-style legend position setter.
+   *
+   * @param value legend position
+   * @return this spec
+   */
+  ThemeSpec legendPosition(Object value) {
+    setLegendPosition(value)
+    this
+  }
+
+  /**
+   * Builder-style theme name setter.
+   *
+   * @param value theme name
+   * @return this spec
+   */
+  ThemeSpec themeName(String value) {
+    setThemeName(value)
     this
   }
 
@@ -59,12 +86,15 @@ class ThemeSpec extends Theme {
    */
   @Override
   ThemeSpec copy() {
-    new ThemeSpec(
-        legend: new LinkedHashMap<>(legend),
-        axis: new LinkedHashMap<>(axis),
-        text: new LinkedHashMap<>(text),
-        grid: new LinkedHashMap<>(grid),
-        raw: new LinkedHashMap<>(raw)
-    )
+    Theme baseCopy = super.copy()
+    ThemeSpec spec = new ThemeSpec()
+    // Copy all fields from the base copy
+    baseCopy.properties.each { key, value ->
+      String k = key as String
+      if (k != 'class' && spec.hasProperty(k)) {
+        spec.setProperty(k, value)
+      }
+    }
+    spec
   }
 }

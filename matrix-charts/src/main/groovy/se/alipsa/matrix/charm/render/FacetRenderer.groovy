@@ -3,13 +3,20 @@ package se.alipsa.matrix.charm.render
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.ColumnExpr
 import se.alipsa.matrix.charm.FacetType
+import se.alipsa.matrix.charm.facet.Labeller
 import se.alipsa.matrix.core.Matrix
 
 /**
  * Computes facet panels from chart facet spec.
+ *
+ * Supports NONE, WRAP (multi-variable, ncol/nrow, dir, labeller),
+ * and GRID (multi-variable rows/cols, margins, labeller).
  */
 @CompileStatic
 class FacetRenderer {
+
+  /** Unit separator character used as composite key delimiter to avoid ambiguity with data values. */
+  private static final String KEY_SEP = '\u001F'
 
   /**
    * Computes facet panels for a chart.
@@ -21,6 +28,7 @@ class FacetRenderer {
    * @param vars wrap facet columns
    * @param ncol wrap ncol
    * @param nrow wrap nrow
+   * @param params extra facet parameters (labeller, scales, dir, drop, margins)
    * @return ordered panel specs
    */
   List<PanelSpec> computePanels(
@@ -30,81 +38,295 @@ class FacetRenderer {
       List<ColumnExpr> cols,
       List<ColumnExpr> vars,
       Integer ncol,
-      Integer nrow
+      Integer nrow,
+      Map<String, Object> params = [:]
   ) {
     if (facetType == FacetType.NONE) {
       return [defaultPanel(chartData)]
     }
 
     if (facetType == FacetType.WRAP) {
-      ColumnExpr expr = vars.isEmpty() ? null : vars.first()
-      if (expr == null) {
-        return [defaultPanel(chartData)]
-      }
-      LinkedHashMap<String, List<Integer>> grouped = new LinkedHashMap<>()
-      for (int i = 0; i < chartData.rowCount(); i++) {
-        String key = String.valueOf(chartData[i, expr.columnName()])
-        grouped.computeIfAbsent(key) { [] as List<Integer> }.add(i)
-      }
-      if (grouped.isEmpty()) {
-        return [defaultPanel(chartData)]
-      }
-      int columns = ncol ?: (int) Math.ceil(Math.sqrt(grouped.size() as double))
-      List<PanelSpec> panels = []
-      int idx = 0
-      grouped.each { String key, List<Integer> rowIndexes ->
-        PanelSpec panel = new PanelSpec(
-            row: idx.intdiv(columns),
-            col: idx % columns,
-            label: key,
-            rowIndexes: new ArrayList<>(rowIndexes)
-        )
-        panels << panel
-        idx++
-      }
-      return panels
+      return computeWrapPanels(chartData, vars, ncol, nrow, params)
     }
 
-    String rowColumn = rows.isEmpty() ? null : rows.first().columnName()
-    String colColumn = cols.isEmpty() ? null : cols.first().columnName()
-    List<String> rowLevels = rowColumn == null ? [''] : uniqueValues(chartData, rowColumn)
-    List<String> colLevels = colColumn == null ? [''] : uniqueValues(chartData, colColumn)
-    if (rowLevels.isEmpty()) {
-      rowLevels = ['']
+    computeGridPanels(chartData, rows, cols, params)
+  }
+
+  /**
+   * Computes WRAP facet panels with multi-variable composite keys,
+   * ncol/nrow, dir (horizontal/vertical fill), and labeller support.
+   */
+  private List<PanelSpec> computeWrapPanels(
+      Matrix chartData,
+      List<ColumnExpr> vars,
+      Integer ncol,
+      Integer nrow,
+      Map<String, Object> params
+  ) {
+    if (vars == null || vars.isEmpty()) {
+      return [defaultPanel(chartData)]
     }
-    if (colLevels.isEmpty()) {
-      colLevels = ['']
+
+    List<String> varNames = vars.collect { ColumnExpr expr -> expr.columnName() }
+    Object labellerObj = params?.get('labeller')
+    String dir = (params?.get('dir') ?: 'h') as String
+
+    // Group by composite key from all vars
+    LinkedHashMap<String, List<Integer>> grouped = new LinkedHashMap<>()
+    LinkedHashMap<String, Map<String, Object>> facetValuesByKey = new LinkedHashMap<>()
+    for (int i = 0; i < chartData.rowCount(); i++) {
+      List<String> keyParts = []
+      Map<String, Object> fv = [:]
+      for (String varName : varNames) {
+        Object val = chartData[i, varName]
+        keyParts << String.valueOf(val)
+        fv[varName] = val
+      }
+      String key = keyParts.join(KEY_SEP)
+      grouped.computeIfAbsent(key) { [] as List<Integer> }.add(i)
+      facetValuesByKey.putIfAbsent(key, fv)
     }
+    if (grouped.isEmpty()) {
+      return [defaultPanel(chartData)]
+    }
+
+    int count = grouped.size()
+    int columns = resolveWrapColumns(count, ncol, nrow)
+    int computedRows = (count / columns).ceil() as int
+
+    List<PanelSpec> panels = []
+    int idx = 0
+    grouped.each { String key, List<Integer> rowIndexes ->
+      Map<String, Object> fv = facetValuesByKey[key]
+      String label = applyLabeller(labellerObj, fv, varNames)
+
+      int panelRow, panelCol
+      if (dir == 'v') {
+        panelCol = idx.intdiv(computedRows)
+        panelRow = idx % computedRows
+      } else {
+        panelRow = idx.intdiv(columns)
+        panelCol = idx % columns
+      }
+
+      PanelSpec panel = new PanelSpec(
+          row: panelRow,
+          col: panelCol,
+          label: label,
+          colLabel: label,
+          facetValues: fv,
+          rowIndexes: new ArrayList<>(rowIndexes)
+      )
+      panels << panel
+      idx++
+    }
+    panels
+  }
+
+  /**
+   * Computes GRID facet panels with multi-variable rows/cols,
+   * margins, and labeller support.
+   */
+  private List<PanelSpec> computeGridPanels(
+      Matrix chartData,
+      List<ColumnExpr> rows,
+      List<ColumnExpr> cols,
+      Map<String, Object> params
+  ) {
+    List<String> rowVarNames = (rows ?: []).collect { ColumnExpr expr -> expr.columnName() }
+    List<String> colVarNames = (cols ?: []).collect { ColumnExpr expr -> expr.columnName() }
+    Object labellerObj = params?.get('labeller')
+    boolean margins = params?.get('margins') == true
+
+    List<String> rowLevels = rowVarNames.isEmpty() ? [''] : uniqueCompositeValues(chartData, rowVarNames)
+    List<String> colLevels = colVarNames.isEmpty() ? [''] : uniqueCompositeValues(chartData, colVarNames)
+    if (rowLevels.isEmpty()) rowLevels = ['']
+    if (colLevels.isEmpty()) colLevels = ['']
 
     List<PanelSpec> panels = []
     rowLevels.eachWithIndex { String rowLevel, int r ->
       colLevels.eachWithIndex { String colLevel, int c ->
         List<Integer> indexes = []
+        Map<String, Object> facetValues = [:]
+
         for (int i = 0; i < chartData.rowCount(); i++) {
-          boolean rowMatch = rowColumn == null || String.valueOf(chartData[i, rowColumn]) == rowLevel
-          boolean colMatch = colColumn == null || String.valueOf(chartData[i, colColumn]) == colLevel
+          boolean rowMatch = rowVarNames.isEmpty() || compositeMatch(chartData, i, rowVarNames, rowLevel)
+          boolean colMatch = colVarNames.isEmpty() || compositeMatch(chartData, i, colVarNames, colLevel)
           if (rowMatch && colMatch) {
             indexes << i
           }
         }
+
+        // Build facet values map for labeller
+        if (!rowVarNames.isEmpty()) {
+          List<String> parts = rowLevel.split(KEY_SEP).toList()
+          rowVarNames.eachWithIndex { String varName, int vi ->
+            if (vi < parts.size()) facetValues[varName] = parts[vi]
+          }
+        }
+        if (!colVarNames.isEmpty()) {
+          List<String> parts = colLevel.split(KEY_SEP).toList()
+          colVarNames.eachWithIndex { String varName, int vi ->
+            if (vi < parts.size()) facetValues[varName] = parts[vi]
+          }
+        }
+
+        String rowLabel = ''
+        if (!rowVarNames.isEmpty()) {
+          Map<String, Object> rowFv = [:]
+          List<String> parts = rowLevel.split(KEY_SEP).toList()
+          rowVarNames.eachWithIndex { String varName, int vi ->
+            if (vi < parts.size()) rowFv[varName] = parts[vi]
+          }
+          rowLabel = applyLabeller(labellerObj, rowFv, rowVarNames)
+        }
+
+        String colLabel = ''
+        if (!colVarNames.isEmpty()) {
+          Map<String, Object> colFv = [:]
+          List<String> parts = colLevel.split(KEY_SEP).toList()
+          colVarNames.eachWithIndex { String varName, int vi ->
+            if (vi < parts.size()) colFv[varName] = parts[vi]
+          }
+          colLabel = applyLabeller(labellerObj, colFv, colVarNames)
+        }
+
+        String combinedLabel = [rowLabel, colLabel].findAll { String v -> v != null && !v.isEmpty() }.join(' | ')
+
         PanelSpec panel = new PanelSpec(
             row: r,
             col: c,
-            label: [rowLevel, colLevel].findAll { String v -> v != null && !v.isEmpty() }.join(' | '),
+            label: combinedLabel,
+            rowLabel: rowLabel,
+            colLabel: colLabel,
+            facetValues: facetValues,
             rowIndexes: indexes
         )
         panels << panel
       }
     }
+
+    // Add margin panels if requested
+    if (margins && (!rowVarNames.isEmpty() || !colVarNames.isEmpty())) {
+      panels.addAll(computeMarginPanels(chartData, rowLevels, colLevels, rowVarNames, colVarNames, labellerObj))
+    }
+
     panels.isEmpty() ? [defaultPanel(chartData)] : panels
   }
 
-  private static List<String> uniqueValues(Matrix matrix, String columnName) {
+  /**
+   * Computes margin panels for FacetGrid with margins=true.
+   */
+  private List<PanelSpec> computeMarginPanels(
+      Matrix chartData,
+      List<String> rowLevels,
+      List<String> colLevels,
+      List<String> rowVarNames,
+      List<String> colVarNames,
+      Object labellerObj
+  ) {
+    List<PanelSpec> marginPanels = []
+    int nextRow = rowLevels.isEmpty() ? 1 : rowLevels.size()
+    int nextCol = colLevels.isEmpty() ? 1 : colLevels.size()
+
+    // Row margins (aggregate across all columns for each row level)
+    if (!rowVarNames.isEmpty() && !colVarNames.isEmpty()) {
+      rowLevels.eachWithIndex { String rowLevel, int r ->
+        List<Integer> indexes = []
+        for (int i = 0; i < chartData.rowCount(); i++) {
+          if (compositeMatch(chartData, i, rowVarNames, rowLevel)) {
+            indexes << i
+          }
+        }
+        marginPanels << new PanelSpec(
+            row: r, col: nextCol,
+            label: '(all)',
+            rowLabel: rowLevel, colLabel: '(all)',
+            rowIndexes: indexes
+        )
+      }
+    }
+
+    // Column margins (aggregate across all rows for each column level)
+    if (!rowVarNames.isEmpty() && !colVarNames.isEmpty()) {
+      colLevels.eachWithIndex { String colLevel, int c ->
+        List<Integer> indexes = []
+        for (int i = 0; i < chartData.rowCount(); i++) {
+          if (compositeMatch(chartData, i, colVarNames, colLevel)) {
+            indexes << i
+          }
+        }
+        marginPanels << new PanelSpec(
+            row: nextRow, col: c,
+            label: '(all)',
+            rowLabel: '(all)', colLabel: colLevel,
+            rowIndexes: indexes
+        )
+      }
+    }
+
+    // Global margin (all data)
+    if (!rowVarNames.isEmpty() && !colVarNames.isEmpty()) {
+      marginPanels << new PanelSpec(
+          row: nextRow, col: nextCol,
+          label: '(all)',
+          rowLabel: '(all)', colLabel: '(all)',
+          rowIndexes: (0..<chartData.rowCount()).collect { int idx -> idx }
+      )
+    }
+
+    marginPanels
+  }
+
+  private static int resolveWrapColumns(int count, Integer ncol, Integer nrow) {
+    if (ncol != null && nrow != null) {
+      return ncol
+    }
+    if (ncol != null) {
+      return ncol
+    }
+    if (nrow != null) {
+      if (nrow <= 0) {
+        throw new IllegalArgumentException("nrow must be a positive integer, but was ${nrow}")
+      }
+      return (count / nrow).ceil() as int
+    }
+    (count as BigDecimal).sqrt().ceil() as int
+  }
+
+  /**
+   * Applies a labeller to facet values. Supports charm Labeller objects,
+   * string-based labeller names ('value', 'both'), and null (defaults to 'value').
+   */
+  private static String applyLabeller(Object labeller, Map<String, Object> facetValues, List<String> varNames) {
+    if (labeller instanceof Labeller) {
+      return (labeller as Labeller).label(facetValues)
+    }
+    if (labeller == 'both') {
+      return facetValues.collect { String k, Object v -> "${k}: ${v}" }.join(', ')
+    }
+    // Default: 'value' labelling
+    facetValues.values().collect { it?.toString() ?: '' }.join(', ')
+  }
+
+  private static List<String> uniqueCompositeValues(Matrix matrix, List<String> varNames) {
     LinkedHashSet<String> values = new LinkedHashSet<>()
     for (int i = 0; i < matrix.rowCount(); i++) {
-      values << String.valueOf(matrix[i, columnName])
+      List<String> parts = varNames.collect { String varName -> String.valueOf(matrix[i, varName]) }
+      values << parts.join(KEY_SEP)
     }
     new ArrayList<>(values)
+  }
+
+  private static boolean compositeMatch(Matrix data, int rowIndex, List<String> varNames, String compositeKey) {
+    String[] parts = compositeKey.split(KEY_SEP)
+    for (int v = 0; v < varNames.size(); v++) {
+      String actual = String.valueOf(data[rowIndex, varNames[v]])
+      if (v >= parts.length || actual != parts[v]) {
+        return false
+      }
+    }
+    true
   }
 
   private static PanelSpec defaultPanel(Matrix data) {

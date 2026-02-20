@@ -58,8 +58,8 @@ class FacetWrap extends Facet {
     this.dir = params.dir as String ?: this.dir
     if (params.containsKey('drop')) this.drop = params.drop as boolean
     if (params.labeller) {
-      // Accept both String and Labeller objects
-      if (params.labeller instanceof Labeller || params.labeller instanceof String) {
+      // Accept String, gg Labeller, and charm Labeller objects
+      if (params.labeller instanceof se.alipsa.matrix.charm.facet.Labeller || params.labeller instanceof String) {
         this.labeller = params.labeller
       }
     }

@@ -59,8 +59,8 @@ class SmoothStat {
       return data
     }
 
-    List<Number> xValues = numeric.collect { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.x) as Number }
-    List<Number> yValues = numeric.collect { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.y) as Number }
+    List<BigDecimal> xValues = numeric.collect { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.x) }
+    List<BigDecimal> yValues = numeric.collect { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.y) }
 
     def regression
     if (polyDegree > 1) {
@@ -69,8 +69,8 @@ class SmoothStat {
       regression = new LinearRegression(xValues, yValues)
     }
 
-    BigDecimal xMin = xValues.collect { it as BigDecimal }.min()
-    BigDecimal xMax = xValues.collect { it as BigDecimal }.max()
+    BigDecimal xMin = xValues.min()
+    BigDecimal xMax = xValues.max()
 
     // Compute SE components if needed
     double sigma2 = 0.0d

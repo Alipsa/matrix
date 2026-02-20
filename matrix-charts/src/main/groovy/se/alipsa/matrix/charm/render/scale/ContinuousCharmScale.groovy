@@ -163,7 +163,7 @@ class ContinuousCharmScale extends CharmScale {
    */
   private static String formatNumber(Number n) {
     if (n == null) return ''
-    BigDecimal bd = n instanceof BigDecimal ? n as BigDecimal : new BigDecimal(n.toString())
+    BigDecimal bd = n as BigDecimal
     if (bd.stripTrailingZeros().scale() <= 0) {
       return bd.toBigInteger().toString()
     }
@@ -179,7 +179,7 @@ class ContinuousCharmScale extends CharmScale {
    */
   private static String formatLogNumber(Number n) {
     if (n == null) return ''
-    BigDecimal bd = n instanceof BigDecimal ? n as BigDecimal : new BigDecimal(n.toString())
+    BigDecimal bd = n as BigDecimal
     if (bd.stripTrailingZeros().scale() <= 0) {
       return bd.toBigInteger().toString()
     }

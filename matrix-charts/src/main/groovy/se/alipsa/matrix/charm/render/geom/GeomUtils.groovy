@@ -142,7 +142,7 @@ class GeomUtils {
         applyStrokeAlpha(d2, alpha)
       }
       case 'triangle' -> {
-        BigDecimal h = size * Math.sqrt(3.0d) / 2
+        BigDecimal h = size * (3.0 as BigDecimal).sqrt() / 2
         BigDecimal topY = cy - h * 2 / 3
         BigDecimal bottomY = cy + h / 3
         BigDecimal leftX = cx - half

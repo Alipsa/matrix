@@ -221,13 +221,17 @@ class CharmBridge {
 
     se.alipsa.matrix.charm.ThemeSpec theme = spec.theme as se.alipsa.matrix.charm.ThemeSpec
     if (chart.style?.plotBackgroundColor) {
-      theme.raw.panelBackground = colorToHex(chart.style.plotBackgroundColor)
+      theme.panelBackground = new se.alipsa.matrix.charm.theme.ElementRect(
+          fill: colorToHex(chart.style.plotBackgroundColor)
+      )
     }
     if (chart.style?.chartBackgroundColor) {
-      theme.raw.background = colorToHex(chart.style.chartBackgroundColor)
+      theme.plotBackground = new se.alipsa.matrix.charm.theme.ElementRect(
+          fill: colorToHex(chart.style.chartBackgroundColor)
+      )
     }
     if (chart.style?.legendVisible == false) {
-      theme.legend = [position: 'none'] as Map<String, Object>
+      theme.legendPosition = 'none'
     }
   }
 

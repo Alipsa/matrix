@@ -312,7 +312,7 @@ class ColorCharmScale extends CharmScale {
     if (!(value instanceof Number) || gradientColors == null || gradientColors.isEmpty()) return naValue
     BigDecimal v = value as BigDecimal
     if (domainMax == domainMin) {
-      return gradientColors.size() == 1 ? gradientColors[0] : gradientColors[(int) (gradientColors.size() / 2.0).floor()]
+      return gradientColors.size() == 1 ? gradientColors[0] : gradientColors[(gradientColors.size() / 2.0).floor() as int]
     }
 
     BigDecimal normalized = ((v - domainMin) / (domainMax - domainMin)).min(1.0).max(0.0)

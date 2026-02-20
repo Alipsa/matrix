@@ -63,7 +63,8 @@ class CharmRenderer {
         chart.facet.cols,
         chart.facet.vars,
         chart.facet.ncol,
-        chart.facet.nrow
+        chart.facet.nrow,
+        chart.facet.params
     )
 
     trainScales(context)
@@ -100,7 +101,7 @@ class CharmRenderer {
   }
 
   private void renderCanvas(RenderContext context) {
-    String background = (context.chart.theme.raw?.background ?: '#ffffff') as String
+    String background = context.chart.theme.plotBackground?.fill ?: '#ffffff'
     context.svg.addRect(context.config.width, context.config.height)
         .x(0)
         .y(0)
@@ -115,11 +116,24 @@ class CharmRenderer {
     int panelRows = context.panels.collect { PanelSpec p -> p.row }.max() + 1
     int panelCols = context.panels.collect { PanelSpec p -> p.col }.max() + 1
     boolean faceted = context.chart.facet.type != FacetType.NONE
+    boolean isGrid = context.chart.facet.type == FacetType.GRID
+    boolean hasRowStrips = isGrid && context.panels.any { PanelSpec p -> p.rowLabel != null && !p.rowLabel.isEmpty() }
     int stripHeight = faceted ? context.config.stripHeight : 0
+    int stripWidth = hasRowStrips ? context.config.stripWidth : 0
+
+    // Theme-driven strip styling
+    Set<String> nulls = context.chart.theme.explicitNulls
+    boolean drawStripBackground = !nulls.contains('stripBackground')
+    boolean drawStripText = !nulls.contains('stripText')
+    String stripBgFill = context.chart.theme.stripBackground?.fill ?: '#D9D9D9'
+    String stripBgStroke = context.chart.theme.stripBackground?.color ?: null
+    String stripTextColor = context.chart.theme.stripText?.color ?: '#333333'
+    BigDecimal stripTextSize = (context.chart.theme.stripText?.size ?: 10) as BigDecimal
+    String stripTextFamily = context.chart.theme.stripText?.family
 
     int totalSpacingX = (panelCols - 1) * context.config.panelSpacing
     int totalSpacingY = (panelRows - 1) * context.config.panelSpacing
-    int panelWidth = ((context.config.plotWidth() - totalSpacingX) / panelCols) as int
+    int panelWidth = ((context.config.plotWidth() - totalSpacingX - stripWidth) / panelCols) as int
     int panelHeight = ((context.config.plotHeight() - totalSpacingY - panelRows * stripHeight) / panelRows) as int
 
     context.panels.each { PanelSpec panel ->
@@ -129,23 +143,65 @@ class CharmRenderer {
 
       G plotArea = panelGroup
       if (faceted) {
-        panelGroup.addRect(panelWidth, stripHeight)
-            .x(0).y(0).fill('#e9e9e9').stroke('#cccccc').styleClass('charm-strip')
-        panelGroup.addText(panel.label ?: '')
-            .x(panelWidth / 2)
-            .y(stripHeight - 7)
-            .textAnchor('middle')
-            .fontSize(10)
-            .fill('#333333')
-            .styleClass('charm-strip-label')
+        // Column strip (top of each panel)
+        String colStripLabel = panel.colLabel ?: panel.label ?: ''
+        if (drawStripBackground) {
+          def stripRect = panelGroup.addRect(panelWidth, stripHeight)
+              .x(0).y(0).fill(stripBgFill).styleClass('charm-strip')
+          if (stripBgStroke) {
+            stripRect.stroke(stripBgStroke)
+          }
+        }
+        if (drawStripText && colStripLabel) {
+          def stripTextEl = panelGroup.addText(colStripLabel)
+              .x(panelWidth / 2)
+              .y(stripHeight - 7)
+              .textAnchor('middle')
+              .fontSize(stripTextSize)
+              .fill(stripTextColor)
+              .styleClass('charm-strip-label')
+          if (stripTextFamily) {
+            stripTextEl.addAttribute('font-family', stripTextFamily)
+          }
+        }
         plotArea = panelGroup.addG().id("panel-plot-${panel.row}-${panel.col}").transform("translate(0, $stripHeight)")
+
+        // Row strip (right side, GRID only)
+        if (hasRowStrips && panel.col == panelCols - 1 && panel.rowLabel) {
+          int rowStripX = panelWidth
+          if (drawStripBackground) {
+            def rowRect = panelGroup.addRect(stripWidth, panelHeight + stripHeight)
+                .x(rowStripX).y(0).fill(stripBgFill).styleClass('charm-strip-row')
+            if (stripBgStroke) {
+              rowRect.stroke(stripBgStroke)
+            }
+          }
+          if (drawStripText) {
+            int textX = rowStripX + stripWidth / 2 as int
+            int textY = (panelHeight + stripHeight) / 2 as int
+            def rowTextEl = panelGroup.addText(panel.rowLabel)
+                .x(textX)
+                .y(textY)
+                .textAnchor('middle')
+                .fontSize(stripTextSize)
+                .fill(stripTextColor)
+                .transform("rotate(90, $textX, $textY)")
+                .styleClass('charm-strip-label-row')
+            if (stripTextFamily) {
+              rowTextEl.addAttribute('font-family', stripTextFamily)
+            }
+          }
+        }
       }
 
+      String panelFill = context.chart.theme.panelBackground?.fill ?: '#ffffff'
+      String panelStroke = context.chart.theme.panelBorder?.color
+          ?: context.chart.theme.panelBackground?.color ?: '#dddddd'
       plotArea.addRect(panelWidth, panelHeight)
           .x(0)
           .y(0)
-          .fill((context.chart.theme.raw?.panelBackground ?: '#ffffff') as String)
-          .stroke('#dddddd')
+          .fill(panelFill)
+          .stroke(panelStroke)
           .styleClass('charm-panel')
 
       gridRenderer.render(plotArea, context, panelWidth, panelHeight)
@@ -267,44 +323,135 @@ class CharmRenderer {
   }
 
   private void renderLabels(RenderContext context) {
-    String textColor = (context.chart.theme.text?.color ?: '#222222') as String
-    BigDecimal titleSize = (context.chart.theme.text?.titleSize ?: 16) as BigDecimal
-    BigDecimal labelSize = (context.chart.theme.text?.size ?: 12) as BigDecimal
+    se.alipsa.matrix.charm.theme.ElementText titleStyle = context.chart.theme.plotTitle
+    se.alipsa.matrix.charm.theme.ElementText subtitleStyle = context.chart.theme.plotSubtitle
+    se.alipsa.matrix.charm.theme.ElementText captionStyle = context.chart.theme.plotCaption
+    se.alipsa.matrix.charm.theme.ElementText xTitleStyle = context.chart.theme.axisTitleX
+    se.alipsa.matrix.charm.theme.ElementText yTitleStyle = context.chart.theme.axisTitleY
+    String defaultColor = '#222222'
+    BigDecimal defaultTitleSize = (context.chart.theme.baseSize ?: 11) + 4 as BigDecimal
+    BigDecimal defaultLabelSize = (context.chart.theme.baseSize ?: 11) as BigDecimal
 
     // When coord is FLIP, swap x/y axis labels since data axes are swapped
     boolean flipped = context.chart.coord?.type == se.alipsa.matrix.charm.CharmCoordType.FLIP
     String xLabelText = flipped ? context.chart.labels?.y : context.chart.labels?.x
     String yLabelText = flipped ? context.chart.labels?.x : context.chart.labels?.y
 
-    if (context.chart.labels?.title) {
-      context.svg.addText(context.chart.labels.title)
-          .x(context.config.width / 2)
-          .y(30)
-          .textAnchor('middle')
-          .fontSize(titleSize)
-          .fill(textColor)
+    int titleY = 30
+    boolean titleRendered = false
+    BigDecimal renderedTitleSize = defaultTitleSize
+    if (context.chart.labels?.title && !context.chart.theme.explicitNulls.contains('plotTitle')) {
+      titleRendered = true
+      String titleColor = titleStyle?.color ?: defaultColor
+      renderedTitleSize = (titleStyle?.size ?: defaultTitleSize) as BigDecimal
+      String titleAnchor = resolveTextAnchor(titleStyle?.hjust)
+      BigDecimal titleX = resolveHjustX(titleStyle?.hjust, context.config.width)
+      def text = context.svg.addText(context.chart.labels.title)
+          .x(titleX)
+          .y(titleY)
+          .textAnchor(titleAnchor)
+          .fontSize(renderedTitleSize)
+          .fill(titleColor)
           .styleClass('charm-title')
+      if (titleStyle?.face == 'bold' || titleStyle?.face == 'bold.italic') {
+        text.addAttribute('font-weight', 'bold')
+      }
+      if (titleStyle?.face == 'italic' || titleStyle?.face == 'bold.italic') {
+        text.addAttribute('font-style', 'italic')
+      }
+      if (titleStyle?.family) {
+        text.addAttribute('font-family', titleStyle.family)
+      }
     }
-    if (xLabelText) {
+
+    if (context.chart.labels?.subtitle && !context.chart.theme.explicitNulls.contains('plotSubtitle')) {
+      String stColor = subtitleStyle?.color ?: defaultColor
+      BigDecimal stSize = (subtitleStyle?.size ?: defaultLabelSize) as BigDecimal
+      String stAnchor = resolveTextAnchor(subtitleStyle?.hjust)
+      BigDecimal stX = resolveHjustX(subtitleStyle?.hjust, context.config.width)
+      int stY = titleRendered ? (titleY + renderedTitleSize as int + 4) : titleY
+      def text = context.svg.addText(context.chart.labels.subtitle)
+          .x(stX)
+          .y(stY)
+          .textAnchor(stAnchor)
+          .fontSize(stSize)
+          .fill(stColor)
+          .styleClass('charm-subtitle')
+      if (subtitleStyle?.family) {
+        text.addAttribute('font-family', subtitleStyle.family)
+      }
+      if (subtitleStyle?.face == 'italic' || subtitleStyle?.face == 'bold.italic') {
+        text.addAttribute('font-style', 'italic')
+      }
+    }
+
+    if (xLabelText && !context.chart.theme.explicitNulls.contains('axisTitleX')) {
+      String xColor = xTitleStyle?.color ?: defaultColor
+      BigDecimal xSize = (xTitleStyle?.size ?: defaultLabelSize) as BigDecimal
       context.svg.addText(xLabelText)
           .x(context.config.marginLeft + context.config.plotWidth() / 2)
           .y(context.config.height - 10)
           .textAnchor('middle')
-          .fontSize(labelSize)
-          .fill(textColor)
+          .fontSize(xSize)
+          .fill(xColor)
           .styleClass('charm-x-label')
     }
-    if (yLabelText) {
+    if (yLabelText && !context.chart.theme.explicitNulls.contains('axisTitleY')) {
+      String yColor = yTitleStyle?.color ?: defaultColor
+      BigDecimal ySize = (yTitleStyle?.size ?: defaultLabelSize) as BigDecimal
       int yMid = context.config.marginTop + context.config.plotHeight().intdiv(2)
       context.svg.addText(yLabelText)
           .x(18)
           .y(yMid)
           .transform("rotate(-90, 18, $yMid)")
           .textAnchor('middle')
-          .fontSize(labelSize)
-          .fill(textColor)
+          .fontSize(ySize)
+          .fill(yColor)
           .styleClass('charm-y-label')
     }
+
+    if (context.chart.labels?.caption && !context.chart.theme.explicitNulls.contains('plotCaption')) {
+      String capColor = captionStyle?.color ?: '#666666'
+      BigDecimal capSize = (captionStyle?.size ?: (defaultLabelSize * 0.8)) as BigDecimal
+      int capY = context.config.height - 5
+      int capX = context.config.width - context.config.marginRight
+      def text = context.svg.addText(context.chart.labels.caption)
+          .x(capX)
+          .y(capY)
+          .textAnchor('end')
+          .fontSize(capSize)
+          .fill(capColor)
+          .styleClass('charm-caption')
+      if (captionStyle?.family) {
+        text.addAttribute('font-family', captionStyle.family)
+      }
+      if (captionStyle?.face == 'italic' || captionStyle?.face == 'bold.italic') {
+        text.addAttribute('font-style', 'italic')
+      }
+    }
+  }
+
+  private static String resolveTextAnchor(Number hjust) {
+    if (hjust == null) {
+      return 'middle'
+    }
+    BigDecimal h = hjust as BigDecimal
+    if (h < 0.25) {
+      return 'start'
+    }
+    if (h > 0.75) {
+      return 'end'
+    }
+    'middle'
+  }
+
+  private static BigDecimal resolveHjustX(Number hjust, int width) {
+    if (hjust == null) {
+      return width / 2 as BigDecimal
+    }
+    // Interpolate: hjust 0 -> left margin (10px), hjust 1 -> right margin (width - 10)
+    BigDecimal h = hjust as BigDecimal
+    10 + h * (width - 20) as BigDecimal
   }
 
   private static PanelSpec defaultPanel(int rowCount) {

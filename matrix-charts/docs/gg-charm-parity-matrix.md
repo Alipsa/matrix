@@ -165,21 +165,21 @@ A feature row may be marked `[x]` only when:
 | Helper: `xlim` / `ylim` wrappers | Cross-cutting | - | - | [ ] |
 | Helper: Global theme functions (`theme_get`, `theme_set`, `theme_update`, `theme_replace`) | Cross-cutting | - | - | [ ] |
 | Helper: Utility wrappers (`position_nudge`, `expansion`, `vars`) | Cross-cutting | - | - | [ ] |
-| Theme: Theme presets: `theme_gray`/`theme_grey`, `theme_bw`, `theme_minimal`, `theme_classic`, `theme_dark`, `theme_light`, `theme_linedraw`, `theme_void`, `theme_test` | Cross-cutting | - | - | [ ] |
+| Theme: Theme presets: `theme_gray`/`theme_grey`, `theme_bw`, `theme_minimal`, `theme_classic`, `theme_dark`, `theme_light`, `theme_linedraw`, `theme_void`, `theme_test` | Cross-cutting | `charm/theme/CharmThemes` | `CharmThemeElementTest` | [x] |
 | Theme: Theme state helpers: `theme_get`, `theme_set`, `theme_update`, `theme_replace` | Cross-cutting | - | - | [ ] |
-| Theme: Theme element parity: `ElementLine`, `ElementRect`, `ElementText`, `ElementBlank` | Cross-cutting | - | - | [ ] |
+| Theme: Theme element parity: `ElementLine`, `ElementRect`, `ElementText`, `ElementBlank` | Cross-cutting | `charm/theme/ElementLine`, `charm/theme/ElementRect`, `charm/theme/ElementText`, `charm/Theme` | `CharmThemeElementTest` | [x] |
 | Charm DSL: `Charts.plot(...)` and `PlotSpec` fluent API | Cross-cutting | - | - | [ ] |
 | Charm DSL: Layer/aesthetic DSLs: `Aes`, `AesDsl`, `Layer`, `LayerDsl` | Cross-cutting | - | - | [ ] |
 | Charm DSL: Structural DSLs: `Facet`, `Coord`, `Theme`, `Labels` | Cross-cutting | - | - | [ ] |
 | Charm DSL: Column/mapping DSLs: `Cols`, `ColumnRef`, `ColumnExpr`, `MapDsl` | Cross-cutting | - | - | [ ] |
-| Phase Task 5.9.1: Implement FacetWrap parity in charm, including free scales (`fixed`, `free`, `free_x`, `free_y`), `ncol`, `nrow`. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.9.2: Implement FacetGrid parity in charm, including `rows`, `cols`, margin panels. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.9.3: Move `FormulaParser` and `Labeller` from `gg/facet/` to charm's facet rendering. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.9.4: Implement strip rendering parity (column strips, row strips, rotation, theme-driven styling). | Cross-cutting | - | - | [ ] |
-| Phase Task 5.9.5: Implement full label parity: `title`, `subtitle`, `caption`, axis labels, guide titles. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.9.6: Implement charm theme element model: `ElementLine`, `ElementRect`, `ElementText` equivalents that replace the current `Map<String, Object>` bags in charm's `ThemeSpec`. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.9.7: Port all predefined themes from `gg/theme/Themes.groovy` (gray, bw, minimal, classic, dark, light, linedraw, etc.) to charm theme presets. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.9.8: Add tests for facet + theme + label combinations. | Cross-cutting | - | - | [ ] |
+| Phase Task 5.9.1: Implement FacetWrap parity in charm, including free scales (`fixed`, `free`, `free_x`, `free_y`), `ncol`, `nrow`, `dir`, multi-variable composite keys, labeller support. | Cross-cutting | `charm/render/FacetRenderer`, `charm/render/CharmRenderer` | `CharmFacetThemeTest` | [x] |
+| Phase Task 5.9.2: Implement FacetGrid parity in charm, including `rows`, `cols`, margin panels, multi-variable composite keys, labeller support. | Cross-cutting | `charm/render/FacetRenderer` | `CharmFacetThemeTest` | [x] |
+| Phase Task 5.9.3: Move `FormulaParser` and `Labeller` from `gg/facet/` to `charm/facet/`. Original gg classes delegate/extend charm implementations for backward compatibility. | Cross-cutting | `charm/facet/FormulaParser`, `charm/facet/Labeller` | `CharmFacetThemeTest` | [x] |
+| Phase Task 5.9.4: Implement strip rendering parity (column strips top, row strips right-side with 90-degree rotation, theme-driven styling via `stripBackground`/`stripText`). | Cross-cutting | `charm/render/CharmRenderer` | `CharmFacetThemeTest` | [x] |
+| Phase Task 5.9.5: Implement full label parity: `title`, `subtitle`, `caption`, axis labels with theme-driven styling (`plotTitle`, `plotSubtitle`, `plotCaption`, `axisTitleX`, `axisTitleY`), explicit null suppression, and hjust-based alignment. | Cross-cutting | `charm/render/CharmRenderer` | `CharmLabelTest` | [x] |
+| Phase Task 5.9.6: Implement charm theme element model: `ElementText`, `ElementLine`, `ElementRect`, `ElementBlank` in `charm/theme/` package. Replaced map-based fields in `Theme`/`ThemeSpec` with ~30 typed fields, `explicitNulls` set, `copy()`, and `plus()` merging. | Cross-cutting | `charm/theme/ElementText`, `charm/theme/ElementLine`, `charm/theme/ElementRect`, `charm/Theme` | `CharmThemeElementTest` | [x] |
+| Phase Task 5.9.7: Port all 9 predefined themes to `charm/theme/CharmThemes.groovy`: `gray()`, `classic()`, `bw()`, `minimal()`, `void_()`, `light()`, `dark()`, `linedraw()`, `test()`. Rewrote `GgCharmAdapter.mapTheme()` for field-by-field typed mapping. Removed theme gate, label gate, and facet gate from adapter. | Cross-cutting | `charm/theme/CharmThemes`, `GgCharmAdapter.mapTheme()` | `CharmThemeElementTest` | [x] |
+| Phase Task 5.9.8: Add tests: `CharmThemeElementTest` (18 tests), `CharmLabelTest` (6 tests), `CharmFacetThemeTest` (11 tests). All 2049 matrix-charts tests pass. | Cross-cutting | `CharmThemeElementTest`, `CharmLabelTest`, `CharmFacetThemeTest` | `CharmThemeElementTest`, `CharmLabelTest`, `CharmFacetThemeTest` | [x] |
 | Phase Task 5.10.1: Implement guide types in charm: legend, colorbar, coloursteps/colorsteps, none (3.7.1-3.7.4). | Cross-cutting | - | - | [ ] |
 | Phase Task 5.10.2: Implement axis guide variants: axis, axis_logticks, axis_theta, axis_stack (3.7.5-3.7.8). | Cross-cutting | - | - | [ ] |
 | Phase Task 5.10.3: Implement custom guide support (3.7.9). | Cross-cutting | - | - | [ ] |
