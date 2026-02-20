@@ -140,11 +140,11 @@ A feature row may be marked `[x]` only when:
 | Scale: ScaleLinetype / ScaleLinetypeIdentity / ScaleLinetypeManual | P1 | - | - | [ ] |
 | Scale: ScaleRadius | P1 | - | - | [ ] |
 | Scale: SecondaryAxis | P1 | - | - | [ ] |
-| Annotation: Annotate (annotate() factory) | Cross-cutting | - | - | [ ] |
-| Annotation: AnnotationCustom | Cross-cutting | - | - | [ ] |
-| Annotation: AnnotationLogticks | Cross-cutting | - | - | [ ] |
-| Annotation: AnnotationRaster | Cross-cutting | - | - | [ ] |
-| Annotation: AnnotationMap (`annotation_map`) | Cross-cutting | - | - | [ ] |
+| Annotation: Annotate (annotate() factory) | Cross-cutting | `gg/GgChart.plus(Annotate)`, `gg/adapter/GgCharmAdapter.mapInlineAnnotationLayer()`, `charm/AnnotationSpec` | `GgCharmAdapterAnnotationTest.testGgChartPlusAnnotateMapsToCharmAnnotationSpec` | [x] |
+| Annotation: AnnotationCustom | Cross-cutting | `charm/render/annotation/AnnotationEngine.renderCustom`, `gg/adapter/GgCharmAdapter.mapCustomAnnotationLayer()`, `charm/CustomAnnotationSpec` | `CharmAnnotationRendererTest.testCustomAnnotationDslRendersCustomElements`, `GgCharmAdapterAnnotationTest.testAdapterDelegatesAnnotationCustom` | [x] |
+| Annotation: AnnotationLogticks | Cross-cutting | `charm/render/annotation/AnnotationEngine.renderLogticks`, `gg/adapter/GgCharmAdapter.mapLogticksAnnotationLayer()`, `charm/LogticksAnnotationSpec` | `CharmAnnotationRendererTest.testLogticksAnnotationDslRendersLines`, `GgCharmAdapterAnnotationTest.testAdapterDelegatesAnnotationLogticks` | [x] |
+| Annotation: AnnotationRaster | Cross-cutting | `charm/render/annotation/AnnotationEngine.renderRaster`, `gg/adapter/GgCharmAdapter.mapRasterAnnotationLayer()`, `charm/RasterAnnotationSpec` | `CharmAnnotationRendererTest.testRasterAnnotationDslRendersRasterCells`, `GgCharmAdapterAnnotationTest.testAdapterDelegatesAnnotationRaster` | [x] |
+| Annotation: AnnotationMap (`annotation_map`) | Cross-cutting | `charm/render/annotation/AnnotationEngine.renderMap`, `gg/adapter/GgCharmAdapter.mapMapAnnotationLayer()`, `charm/MapAnnotationSpec` | `CharmAnnotationRendererTest.testMapAnnotationDslRendersPaths`, `GgCharmAdapterAnnotationTest.testAdapterDelegatesAnnotationMapParity` | [x] |
 | Guide: legend | Cross-cutting | `charm/GuideType.LEGEND`, `charm/render/LegendRenderer.renderDiscreteLegend` | `CharmLegendRendererTest`, `CharmGuideModelTest` | [x] |
 | Guide: colorbar | Cross-cutting | `charm/GuideType.COLORBAR`, `charm/render/LegendRenderer.renderColorbar` | `CharmLegendRendererTest`, `CharmGuideModelTest` | [x] |
 | Guide: coloursteps / colorsteps | Cross-cutting | `charm/GuideType.COLORSTEPS`, `charm/render/LegendRenderer.renderColorSteps` | `CharmLegendRendererTest`, `CharmGuideModelTest` | [x] |
@@ -191,14 +191,15 @@ A feature row may be marked `[x]` only when:
 | Phase Task 5.11.3: Implement ID naming and panel/layer indexing behavior for single and faceted charts. | Cross-cutting | `charm/render/RenderContext` (layer/panel indexes), `charm/render/CharmRenderer` (panel/layer assignment), `charm/render/geom/GeomUtils.generateElementId()` | `GeomCssAttributesTest.testMultipleLayersIncrementLayerIndex`, `FacetedCssAttributesTest.testFacetWrapWithCssAttributes` | [x] |
 | Phase Task 5.11.4: Implement data attribute emission behavior and defaults. | Cross-cutting | `charm/render/geom/GeomUtils.applyDataAttributes()` | `GeomCssAttributesTest.testGeomPointWithDataAttributesEnabled`, `FacetedCssAttributesTest.testFacetedChartAddsDataPanelAttributes` | [x] |
 | Phase Task 5.11.5: Add structural SVG tests that assert CSS class/id/data-* behavior. | Cross-cutting | `gg` integration coverage for CSS output via delegated charm render path | `GeomCssAttributesTest`, `FacetedCssAttributesTest`, `GeomUtilsCssTest`, `GgCharmAdapterTest` | [x] |
-| Phase Task 5.12.1: Implement annotation rendering in charm: custom, logticks, raster. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.12.2: Wire `GgChart.plus(Annotate)` to produce charm `AnnotationSpec` objects. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.12.3: Move `AnnotationConstants` to charm or make shared. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.12.4: Add tests for each annotation type. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.12.5: Add tests for `annotation_map` parity. | Cross-cutting | - | - | [ ] |
+| Phase Task 5.12.1: Implement annotation rendering in charm: custom, logticks, raster. | Cross-cutting | `charm/render/annotation/AnnotationEngine`, `charm/render/CharmRenderer.renderAnnotations()` | `CharmAnnotationRendererTest` | [x] |
+| Phase Task 5.12.2: Wire `GgChart.plus(Annotate)` to produce charm `AnnotationSpec` objects. | Cross-cutting | `gg/GgChart.plus(Annotate)`, `gg/adapter/GgCharmAdapter.mapAnnotationLayer()` | `GgCharmAdapterAnnotationTest.testGgChartPlusAnnotateMapsToCharmAnnotationSpec` | [x] |
+| Phase Task 5.12.3: Move `AnnotationConstants` to charm or make shared. | Cross-cutting | `charm/AnnotationConstants`, `gg/AnnotationConstants` (compat facade) | `AnnotationRasterTest.testStringInfinityBounds`, `GgCharmAdapterAnnotationTest.testAdapterDelegatesAnnotationRaster` | [x] |
+| Phase Task 5.12.4: Add tests for each annotation type. | Cross-cutting | `CharmAnnotationRendererTest`, `GgCharmAdapterAnnotationTest` | `CharmAnnotationRendererTest` (4), `GgCharmAdapterAnnotationTest` (5) | [x] |
+| Phase Task 5.12.5: Add tests for `annotation_map` parity. | Cross-cutting | `AnnotationEngine.renderMap`, `GgCharmAdapter.mapMapAnnotationLayer` | `CharmAnnotationRendererTest.testMapAnnotationDslRendersPaths`, `GgCharmAdapterAnnotationTest.testAdapterDelegatesAnnotationMapParity` | [x] |
 
 ## Recorded Test Commands
 
 - [x] `./gradlew :matrix-charts:compileGroovy`
 - [x] `./gradlew :matrix-charts:test -Pheadless=true`
 - [x] `./gradlew test -Pheadless=true`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true --tests "gg.adapter.GgCharmAdapterAnnotationTest" --tests "charm.render.CharmAnnotationRendererTest" --tests "gg.AnnotationCustomTest" --tests "gg.AnnotationLogticksTest" --tests "gg.AnnotationRasterTest" --tests "charm.render.CharmParityGovernanceTest"`

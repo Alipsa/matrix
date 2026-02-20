@@ -272,6 +272,10 @@ class GgChart {
         plus(part as Geom)
         continue
       }
+      if (part instanceof Annotate) {
+        plus(part as Annotate)
+        continue
+      }
       if (part instanceof Theme) {
         plus(part as Theme)
         continue
@@ -332,6 +336,17 @@ class GgChart {
       return this
     }
     layers << layer
+    return this
+  }
+
+  /**
+   * Add an annotation object.
+   */
+  GgChart plus(Annotate annotate) {
+    if (annotate == null) {
+      return this
+    }
+    layers << annotate.toLayer()
     return this
   }
 

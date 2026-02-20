@@ -392,11 +392,11 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 ### 3.6 Annotation Surface (from `gg/`)
 
-3.6.1 [ ] Annotate (annotate() factory)
-3.6.2 [ ] AnnotationCustom
-3.6.3 [ ] AnnotationLogticks
-3.6.4 [ ] AnnotationRaster
-3.6.5 [ ] AnnotationMap (`annotation_map`)
+3.6.1 [x] Annotate (annotate() factory)
+3.6.2 [x] AnnotationCustom
+3.6.3 [x] AnnotationLogticks
+3.6.4 [x] AnnotationRaster
+3.6.5 [x] AnnotationMap (`annotation_map`)
 
 ### 3.7 Guide Surface (from `gg/`)
 
@@ -732,15 +732,19 @@ Executed commands:
 
 ### 5.12 Phase 12 -- Annotations
 
-5.12.1 [ ] Implement annotation rendering in charm: custom, logticks, raster.
+5.12.1 [x] Implement annotation rendering in charm: custom, logticks, raster.
 
-5.12.2 [ ] Wire `GgChart.plus(Annotate)` to produce charm `AnnotationSpec` objects.
+5.12.2 [x] Wire `GgChart.plus(Annotate)` to produce charm `AnnotationSpec` objects.
 
-5.12.3 [ ] Move `AnnotationConstants` to charm or make shared.
+5.12.3 [x] Move `AnnotationConstants` to charm or make shared.
 
-5.12.4 [ ] Add tests for each annotation type.
+5.12.4 [x] Add tests for each annotation type.
 
-5.12.5 [ ] Add tests for `annotation_map` parity.
+5.12.5 [x] Add tests for `annotation_map` parity.
+
+Executed commands:
+- [x] `./gradlew :matrix-charts:compileGroovy`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true --tests "gg.adapter.GgCharmAdapterAnnotationTest" --tests "charm.render.CharmAnnotationRendererTest" --tests "gg.AnnotationCustomTest" --tests "gg.AnnotationLogticksTest" --tests "gg.AnnotationRasterTest" --tests "charm.render.CharmParityGovernanceTest"`
 
 ### 5.13 Phase 13 -- P1 Geoms, Stats, Positions, Coords, and Scales
 

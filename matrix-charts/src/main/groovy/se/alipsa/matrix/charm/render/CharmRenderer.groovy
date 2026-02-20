@@ -4,12 +4,19 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Aes
+import se.alipsa.matrix.charm.AnnotationSpec
+import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.render.coord.CoordEngine
+import se.alipsa.matrix.charm.render.position.PositionEngine
+import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.charm.render.geom.GeomEngine
+import se.alipsa.matrix.charm.render.annotation.AnnotationEngine
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
 import se.alipsa.matrix.charm.render.scale.TrainedScales
@@ -145,6 +152,7 @@ class CharmRenderer {
     int totalSpacingY = (panelRows - 1) * context.config.panelSpacing
     int panelWidth = ((context.config.plotWidth() - totalSpacingX - stripWidth) / panelCols) as int
     int panelHeight = ((context.config.plotHeight() - totalSpacingY - panelRows * stripHeight) / panelRows) as int
+    Map<Integer, List<AnnotationRenderEntry>> annotationsByOrder = annotationOrderMap(context.chart.annotations)
 
     context.panels.each { PanelSpec panel ->
       context.panelRow = panel.row
@@ -221,8 +229,10 @@ class CharmRenderer {
       String clipId = "panel-clip-${panel.row}-${panel.col}"
       context.defs.addClipPath().id(clipId).addRect(panelWidth, panelHeight).x(0).y(0)
       dataLayer.addAttribute('clip-path', "url(#${clipId})")
+      renderAnnotationsBeforeOrder(dataLayer, context, annotationsByOrder, 0)
 
       context.chart.layers.eachWithIndex { LayerSpec layer, int layerIndex ->
+        renderAnnotationsAtOrder(dataLayer, context, annotationsByOrder, layerIndex)
         context.layerIndex = layerIndex
         Matrix sourceData = resolveLayerData(context.chart.data, layer)
         boolean layerHasOwnData = sourceData != null && !sourceData.is(context.chart.data)
@@ -240,6 +250,7 @@ class CharmRenderer {
         List<LayerData> layerData = runPipeline(context, layer, sourceData, aes, rowIndexes)
         renderLayer(dataLayer, context, layer, layerData, panelWidth, panelHeight)
       }
+      renderAnnotationsFromOrder(dataLayer, context, annotationsByOrder, context.chart.layers.size())
       context.layerIndex = -1
       axisRenderer.render(plotArea, context, panelWidth, panelHeight)
     }
@@ -256,6 +267,73 @@ class CharmRenderer {
       int panelHeight
   ) {
     GeomEngine.render(dataLayer, context, layer, layerData, panelWidth, panelHeight)
+  }
+
+  private static void renderAnnotationsAtOrder(
+      G dataLayer,
+      RenderContext context,
+      Map<Integer, List<AnnotationRenderEntry>> annotationsByOrder,
+      int drawOrder
+  ) {
+    if (annotationsByOrder == null || annotationsByOrder.isEmpty()) {
+      return
+    }
+    List<AnnotationRenderEntry> entries = annotationsByOrder[drawOrder]
+    if (entries == null || entries.isEmpty()) {
+      return
+    }
+    entries.each { AnnotationRenderEntry entry ->
+      context.layerIndex = entry.drawOrder
+      AnnotationEngine.render(dataLayer, context, entry.annotation, entry.annotationIndex)
+    }
+  }
+
+  private static void renderAnnotationsBeforeOrder(
+      G dataLayer,
+      RenderContext context,
+      Map<Integer, List<AnnotationRenderEntry>> annotationsByOrder,
+      int startOrder
+  ) {
+    if (annotationsByOrder == null || annotationsByOrder.isEmpty()) {
+      return
+    }
+    List<Integer> orders = annotationsByOrder.keySet()
+        .findAll { Integer order -> order < startOrder }
+        .sort()
+    orders.each { Integer order ->
+      renderAnnotationsAtOrder(dataLayer, context, annotationsByOrder, order)
+    }
+  }
+
+  private static void renderAnnotationsFromOrder(
+      G dataLayer,
+      RenderContext context,
+      Map<Integer, List<AnnotationRenderEntry>> annotationsByOrder,
+      int startOrder
+  ) {
+    if (annotationsByOrder == null || annotationsByOrder.isEmpty()) {
+      return
+    }
+    List<Integer> orders = annotationsByOrder.keySet()
+        .findAll { Integer order -> order >= startOrder }
+        .sort()
+    orders.each { Integer order ->
+      renderAnnotationsAtOrder(dataLayer, context, annotationsByOrder, order)
+    }
+  }
+
+  private static Map<Integer, List<AnnotationRenderEntry>> annotationOrderMap(List<AnnotationSpec> annotations) {
+    Map<Integer, List<AnnotationRenderEntry>> byOrder = [:]
+    (annotations ?: []).eachWithIndex { AnnotationSpec annotation, int idx ->
+      int order = annotation?.drawOrder ?: 0
+      List<AnnotationRenderEntry> entries = byOrder[order]
+      if (entries == null) {
+        entries = []
+        byOrder[order] = entries
+      }
+      entries << new AnnotationRenderEntry(annotation: annotation, annotationIndex: idx, drawOrder: order)
+    }
+    byOrder
   }
 
   private List<LayerData> runPipeline(
@@ -284,7 +362,7 @@ class CharmRenderer {
     result
   }
 
-  private List<LayerData> mapData(se.alipsa.matrix.core.Matrix data, Aes aes, List<Integer> rowIndexes) {
+  private List<LayerData> mapData(Matrix data, Aes aes, List<Integer> rowIndexes) {
     List<LayerData> values = []
     rowIndexes.each { int rowIndex ->
       LayerData datum = new LayerData(rowIndex: rowIndex)
@@ -310,7 +388,7 @@ class CharmRenderer {
     values
   }
 
-  private static Object readValue(se.alipsa.matrix.core.Matrix data, int rowIndex, String columnName) {
+  private static Object readValue(Matrix data, int rowIndex, String columnName) {
     if (data == null || rowIndex < 0 || rowIndex >= data.rowCount()) {
       return null
     }
@@ -322,11 +400,11 @@ class CharmRenderer {
   }
 
   private static List<LayerData> applyPosition(LayerSpec layer, List<LayerData> data) {
-    se.alipsa.matrix.charm.render.position.PositionEngine.apply(layer, data)
+    PositionEngine.apply(layer, data)
   }
 
-  private static List<LayerData> applyCoord(se.alipsa.matrix.charm.CoordSpec coord, List<LayerData> data) {
-    se.alipsa.matrix.charm.render.coord.CoordEngine.apply(coord, data)
+  private static List<LayerData> applyCoord(CoordSpec coord, List<LayerData> data) {
+    CoordEngine.apply(coord, data)
   }
 
 
@@ -339,17 +417,17 @@ class CharmRenderer {
   }
 
   private void renderLabels(RenderContext context) {
-    se.alipsa.matrix.charm.theme.ElementText titleStyle = context.chart.theme.plotTitle
-    se.alipsa.matrix.charm.theme.ElementText subtitleStyle = context.chart.theme.plotSubtitle
-    se.alipsa.matrix.charm.theme.ElementText captionStyle = context.chart.theme.plotCaption
-    se.alipsa.matrix.charm.theme.ElementText xTitleStyle = context.chart.theme.axisTitleX
-    se.alipsa.matrix.charm.theme.ElementText yTitleStyle = context.chart.theme.axisTitleY
+    ElementText titleStyle = context.chart.theme.plotTitle
+    ElementText subtitleStyle = context.chart.theme.plotSubtitle
+    ElementText captionStyle = context.chart.theme.plotCaption
+    ElementText xTitleStyle = context.chart.theme.axisTitleX
+    ElementText yTitleStyle = context.chart.theme.axisTitleY
     String defaultColor = '#222222'
     BigDecimal defaultTitleSize = (context.chart.theme.baseSize ?: 11) + 4 as BigDecimal
     BigDecimal defaultLabelSize = (context.chart.theme.baseSize ?: 11) as BigDecimal
 
     // When coord is FLIP, swap x/y axis labels since data axes are swapped
-    boolean flipped = context.chart.coord?.type == se.alipsa.matrix.charm.CharmCoordType.FLIP
+    boolean flipped = context.chart.coord?.type == CharmCoordType.FLIP
     String xLabelText = flipped ? context.chart.labels?.y : context.chart.labels?.x
     String yLabelText = flipped ? context.chart.labels?.x : context.chart.labels?.y
 
@@ -483,5 +561,11 @@ class CharmRenderer {
 
   private static List<Integer> defaultRowIndexes(int rowCount) {
     (0..<rowCount).collect { int idx -> idx }
+  }
+
+  private static class AnnotationRenderEntry {
+    AnnotationSpec annotation
+    int annotationIndex
+    int drawOrder
   }
 }
