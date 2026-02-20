@@ -185,7 +185,7 @@ class GeomUtils {
     if (element == null || context == null || !isCssEnabled(context)) {
       return
     }
-    def cssConfig = context.chart.cssAttributes
+    def cssConfig = context.cssAttributes
     if (cssConfig.includeClasses) {
       String geomToken = normalizeIdToken(geomType)
       if (!geomToken.isEmpty()) {
@@ -207,7 +207,7 @@ class GeomUtils {
    * Generates a gg-compatible element id.
    */
   static String generateElementId(RenderContext context, String geomType, int elementIndex) {
-    if (context == null || !isCssEnabled(context) || !context.chart.cssAttributes.includeIds) {
+    if (context == null || !isCssEnabled(context) || !context.cssAttributes.includeIds) {
       return null
     }
 
@@ -231,7 +231,7 @@ class GeomUtils {
   }
 
   private static boolean isCssEnabled(RenderContext context) {
-    context?.chart?.cssAttributes?.enabled ?: false
+    context?.cssAttributes?.enabled ?: false
   }
 
   private static void applyDataAttributes(SvgElement element, RenderContext context, LayerData datum, int elementIndex) {
@@ -254,7 +254,7 @@ class GeomUtils {
   }
 
   private static String resolveIdPrefix(RenderContext context) {
-    def cssConfig = context.chart.cssAttributes
+    def cssConfig = context.cssAttributes
     String chartPrefix = normalizeIdPrefixOrNull(cssConfig.chartIdPrefix)
     if (chartPrefix != null) {
       return chartPrefix
