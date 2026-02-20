@@ -400,15 +400,15 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 ### 3.7 Guide Surface (from `gg/`)
 
-3.7.1 [ ] Guide: legend
-3.7.2 [ ] Guide: colorbar
-3.7.3 [ ] Guide: coloursteps / colorsteps
-3.7.4 [ ] Guide: none
-3.7.5 [ ] Guide: axis
-3.7.6 [ ] Guide: axis_logticks
-3.7.7 [ ] Guide: axis_theta
-3.7.8 [ ] Guide: axis_stack
-3.7.9 [ ] Guide: custom
+3.7.1 [x] Guide: legend
+3.7.2 [x] Guide: colorbar
+3.7.3 [x] Guide: coloursteps / colorsteps
+3.7.4 [x] Guide: none
+3.7.5 [x] Guide: axis
+3.7.6 [x] Guide: axis_logticks
+3.7.7 [x] Guide: axis_theta
+3.7.8 [x] Guide: axis_stack
+3.7.9 [x] Guide: custom
 
 ### 3.8 Aesthetic Expression Surface (from `gg/aes`)
 
@@ -702,17 +702,17 @@ _Rewire gg to delegate directly to charm while preserving branch-safe fallback u
 
 ### 5.10 Phase 10 -- Guides and Legends
 
-5.10.1 [ ] Implement guide types in charm: legend, colorbar, coloursteps/colorsteps, none (3.7.1-3.7.4).
+5.10.1 [x] Implement guide types in charm: legend, colorbar, coloursteps/colorsteps, none (3.7.1-3.7.4).
 
-5.10.2 [ ] Implement axis guide variants: axis, axis_logticks, axis_theta, axis_stack (3.7.5-3.7.8).
+5.10.2 [x] Implement axis guide variants: axis, axis_logticks, axis_theta, axis_stack (3.7.5-3.7.8).
 
-5.10.3 [ ] Implement custom guide support (3.7.9).
+5.10.3 [x] Implement custom guide support (3.7.9).
 
-5.10.4 [ ] Implement legend merging behavior across aesthetics.
+5.10.4 [x] Implement legend merging behavior across aesthetics.
 
-5.10.5 [ ] Port guide parameter handling and defaults.
+5.10.5 [x] Port guide parameter handling and defaults.
 
-5.10.6 [ ] Add tests for each guide type and mixed-guide charts.
+5.10.6 [x] Add tests for each guide type and mixed-guide charts.
 
 ### 5.11 Phase 11 -- CssAttributeConfig
 

@@ -32,6 +32,7 @@ class PlotSpec {
   private FacetSpec facet = new FacetSpec()
   private CoordSpec coord = new CoordSpec()
   private LabelsSpec labels = new LabelsSpec()
+  private GuidesSpec guides = new GuidesSpec()
   private final List<AnnotationSpec> annotations = []
 
   /**
@@ -116,6 +117,15 @@ class PlotSpec {
    */
   LabelsSpec getLabels() {
     labels
+  }
+
+  /**
+   * Returns guides specification.
+   *
+   * @return guides specification
+   */
+  GuidesSpec getGuides() {
+    guides
   }
 
   /**
@@ -309,6 +319,20 @@ class PlotSpec {
   }
 
   /**
+   * Configures guides using closure syntax.
+   *
+   * @param configure closure for guide options
+   * @return this plot spec
+   */
+  PlotSpec guides(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = GuidesDsl) Closure<?> configure) {
+    GuidesDsl dsl = new GuidesDsl(guides)
+    Closure<?> body = configure.rehydrate(dsl, this, this)
+    body.resolveStrategy = Closure.DELEGATE_ONLY
+    body.call()
+    this
+  }
+
+  /**
    * Adds annotations via closure DSL.
    *
    * @param configure closure for annotation declarations
@@ -341,6 +365,7 @@ class PlotSpec {
           facet.copy(),
           coord.copy(),
           labels.copy(),
+          guides.copy(),
           compiledAnnotations
       )
     } catch (CharmException e) {
@@ -894,6 +919,89 @@ class PlotSpec {
       List vars = []
       Integer ncol
       Integer nrow
+    }
+  }
+
+  /**
+   * Guides DSL delegate for configuring guide types per aesthetic.
+   */
+  @CompileStatic
+  static class GuidesDsl {
+
+    private final GuidesSpec guides
+
+    /**
+     * Creates guides DSL bound to a target guides spec.
+     *
+     * @param guides target guides spec
+     */
+    GuidesDsl(GuidesSpec guides) {
+      this.guides = guides
+    }
+
+    /** Sets the color guide. */
+    void setColor(Object value) { guides.setSpec('color', coerceGuide(value, 'color')) }
+
+    /** Sets the fill guide. */
+    void setFill(Object value) { guides.setSpec('fill', coerceGuide(value, 'fill')) }
+
+    /** Sets the size guide. */
+    void setSize(Object value) { guides.setSpec('size', coerceGuide(value, 'size')) }
+
+    /** Sets the shape guide. */
+    void setShape(Object value) { guides.setSpec('shape', coerceGuide(value, 'shape')) }
+
+    /** Sets the alpha guide. */
+    void setAlpha(Object value) { guides.setSpec('alpha', coerceGuide(value, 'alpha')) }
+
+    /** Sets the x guide. */
+    void setX(Object value) { guides.setSpec('x', coerceGuide(value, 'x')) }
+
+    /** Sets the y guide. */
+    void setY(Object value) { guides.setSpec('y', coerceGuide(value, 'y')) }
+
+    /** Creates a legend guide spec. */
+    GuideSpec legend(Map<String, Object> params = [:]) { GuideSpec.legend(params) }
+
+    /** Creates a colorbar guide spec. */
+    GuideSpec colorbar(Map<String, Object> params = [:]) { GuideSpec.colorbar(params) }
+
+    /** Creates a colorsteps guide spec. */
+    GuideSpec colorsteps(Map<String, Object> params = [:]) { GuideSpec.colorsteps(params) }
+
+    /** Creates a none guide spec. */
+    GuideSpec none() { GuideSpec.none() }
+
+    /** Creates an axis guide spec. */
+    GuideSpec axis(Map<String, Object> params = [:]) { GuideSpec.axis(params) }
+
+    /** Creates an axis_logticks guide spec. */
+    GuideSpec axisLogticks(Map<String, Object> params = [:]) { GuideSpec.axisLogticks(params) }
+
+    private static GuideSpec coerceGuide(Object value, String aesthetic) {
+      if (value == null) {
+        return null
+      }
+      if (value instanceof GuideSpec) {
+        return value as GuideSpec
+      }
+      if (value instanceof GuideType) {
+        return new GuideSpec(value as GuideType)
+      }
+      if (value instanceof CharSequence) {
+        GuideType type = GuideType.fromString(value.toString())
+        if (type == null) {
+          throw new CharmValidationException("Unknown guide type '${value}' for '${aesthetic}'")
+        }
+        return new GuideSpec(type)
+      }
+      if (value == false || value == Boolean.FALSE) {
+        return GuideSpec.none()
+      }
+      throw new CharmValidationException(
+          "Unsupported guide value type '${value.getClass().name}' for '${aesthetic}'. " +
+          "Use GuideSpec, GuideType, String, or false."
+      )
     }
   }
 

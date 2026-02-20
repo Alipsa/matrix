@@ -221,6 +221,7 @@ class CharmFacetThemeTest {
         chart.facet,
         chart.coord,
         chart.labels,
+        null,
         chart.annotations
     )
 
@@ -254,6 +255,7 @@ class CharmFacetThemeTest {
         ),
         new se.alipsa.matrix.charm.CoordSpec(),
         new se.alipsa.matrix.charm.LabelsSpec(),
+        null,
         []
     )
 

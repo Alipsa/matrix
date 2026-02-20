@@ -136,6 +136,7 @@ class CharmLabelTest {
         new se.alipsa.matrix.charm.Facet(),
         new se.alipsa.matrix.charm.Coord(),
         new se.alipsa.matrix.charm.Labels(title: 'Should be hidden'),
+        null,
         []
     )
 
