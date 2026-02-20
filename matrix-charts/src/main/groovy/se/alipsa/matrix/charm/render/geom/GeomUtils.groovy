@@ -189,7 +189,7 @@ class GeomUtils {
     if (cssConfig.includeClasses) {
       String geomToken = normalizeIdToken(geomType)
       if (!geomToken.isEmpty()) {
-        element.addAttribute('class', "gg-${geomToken}")
+        element.styleClass("gg-${geomToken}")
       }
     }
     if (cssConfig.includeIds) {
@@ -244,7 +244,7 @@ class GeomUtils {
     if (datum?.group != null) {
       element.addAttribute('data-group', datum.group.toString())
     }
-    int dataRow = datum?.rowIndex ?: elementIndex
+    int dataRow = datum != null ? datum.rowIndex : elementIndex
     element.addAttribute('data-row', Integer.toString(dataRow))
     element.addAttribute('data-layer', Integer.toString(context.layerIndex))
     boolean faceted = context.chart?.facet?.type != FacetType.NONE
