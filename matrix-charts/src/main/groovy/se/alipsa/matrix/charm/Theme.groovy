@@ -251,9 +251,25 @@ class Theme {
     } else {
       Object value = other.getProperty(fieldName)
       if (value != null) {
-        merged.setProperty(fieldName, value)
+        merged.setProperty(fieldName, deepCopy(value))
         merged.explicitNulls.remove(fieldName)
       }
     }
+  }
+
+  private static Object deepCopy(Object value) {
+    if (value instanceof ElementText) {
+      return (value as ElementText).copy()
+    }
+    if (value instanceof ElementLine) {
+      return (value as ElementLine).copy()
+    }
+    if (value instanceof ElementRect) {
+      return (value as ElementRect).copy()
+    }
+    if (value instanceof List) {
+      return new ArrayList<>(value as List)
+    }
+    value
   }
 }

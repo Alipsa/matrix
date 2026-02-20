@@ -133,7 +133,7 @@ class CharmRenderer {
 
     int totalSpacingX = (panelCols - 1) * context.config.panelSpacing
     int totalSpacingY = (panelRows - 1) * context.config.panelSpacing
-    int panelWidth = ((context.config.plotWidth() - totalSpacingX - stripWidth) / panelCols) as int
+    int panelWidth = ((context.config.plotWidth() - totalSpacingX) / panelCols) as int
     int panelHeight = ((context.config.plotHeight() - totalSpacingY - panelRows * stripHeight) / panelRows) as int
 
     context.panels.each { PanelSpec panel ->
@@ -338,16 +338,19 @@ class CharmRenderer {
     String yLabelText = flipped ? context.chart.labels?.x : context.chart.labels?.y
 
     int titleY = 30
+    boolean titleRendered = false
+    BigDecimal renderedTitleSize = defaultTitleSize
     if (context.chart.labels?.title && !context.chart.theme.explicitNulls.contains('plotTitle')) {
+      titleRendered = true
       String titleColor = titleStyle?.color ?: defaultColor
-      BigDecimal titleSize = (titleStyle?.size ?: defaultTitleSize) as BigDecimal
+      renderedTitleSize = (titleStyle?.size ?: defaultTitleSize) as BigDecimal
       String titleAnchor = resolveTextAnchor(titleStyle?.hjust)
       BigDecimal titleX = resolveHjustX(titleStyle?.hjust, context.config.width)
       def text = context.svg.addText(context.chart.labels.title)
           .x(titleX)
           .y(titleY)
           .textAnchor(titleAnchor)
-          .fontSize(titleSize)
+          .fontSize(renderedTitleSize)
           .fill(titleColor)
           .styleClass('charm-title')
       if (titleStyle?.face == 'bold' || titleStyle?.face == 'bold.italic') {
@@ -366,7 +369,7 @@ class CharmRenderer {
       BigDecimal stSize = (subtitleStyle?.size ?: defaultLabelSize) as BigDecimal
       String stAnchor = resolveTextAnchor(subtitleStyle?.hjust)
       BigDecimal stX = resolveHjustX(subtitleStyle?.hjust, context.config.width)
-      int stY = titleY + (titleStyle?.size ?: defaultTitleSize) as int + 4
+      int stY = titleRendered ? (titleY + renderedTitleSize as int + 4) : titleY
       def text = context.svg.addText(context.chart.labels.subtitle)
           .x(stX)
           .y(stY)
@@ -432,10 +435,11 @@ class CharmRenderer {
     if (hjust == null) {
       return 'middle'
     }
-    if (hjust == 0) {
+    BigDecimal h = hjust as BigDecimal
+    if (h < 0.25) {
       return 'start'
     }
-    if (hjust == 1) {
+    if (h > 0.75) {
       return 'end'
     }
     'middle'
@@ -445,13 +449,9 @@ class CharmRenderer {
     if (hjust == null) {
       return width / 2 as BigDecimal
     }
-    if (hjust == 0) {
-      return 10 as BigDecimal
-    }
-    if (hjust == 1) {
-      return (width - 10) as BigDecimal
-    }
-    width / 2 as BigDecimal
+    // Interpolate: hjust 0 -> left margin (10px), hjust 1 -> right margin (width - 10)
+    BigDecimal h = hjust as BigDecimal
+    10 + h * (width - 20) as BigDecimal
   }
 
   private static PanelSpec defaultPanel(int rowCount) {

@@ -15,6 +15,9 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class FacetRenderer {
 
+  /** Unit separator character used as composite key delimiter to avoid ambiguity with data values. */
+  private static final String KEY_SEP = '\u001F'
+
   /**
    * Computes facet panels for a chart.
    *
@@ -79,7 +82,7 @@ class FacetRenderer {
         keyParts << String.valueOf(val)
         fv[varName] = val
       }
-      String key = keyParts.join('|')
+      String key = keyParts.join(KEY_SEP)
       grouped.computeIfAbsent(key) { [] as List<Integer> }.add(i)
       facetValuesByKey.putIfAbsent(key, fv)
     }
@@ -156,13 +159,13 @@ class FacetRenderer {
 
         // Build facet values map for labeller
         if (!rowVarNames.isEmpty()) {
-          List<String> parts = rowLevel.split('\\|').toList()
+          List<String> parts = rowLevel.split(KEY_SEP).toList()
           rowVarNames.eachWithIndex { String varName, int vi ->
             if (vi < parts.size()) facetValues[varName] = parts[vi]
           }
         }
         if (!colVarNames.isEmpty()) {
-          List<String> parts = colLevel.split('\\|').toList()
+          List<String> parts = colLevel.split(KEY_SEP).toList()
           colVarNames.eachWithIndex { String varName, int vi ->
             if (vi < parts.size()) facetValues[varName] = parts[vi]
           }
@@ -171,7 +174,7 @@ class FacetRenderer {
         String rowLabel = ''
         if (!rowVarNames.isEmpty()) {
           Map<String, Object> rowFv = [:]
-          List<String> parts = rowLevel.split('\\|').toList()
+          List<String> parts = rowLevel.split(KEY_SEP).toList()
           rowVarNames.eachWithIndex { String varName, int vi ->
             if (vi < parts.size()) rowFv[varName] = parts[vi]
           }
@@ -181,7 +184,7 @@ class FacetRenderer {
         String colLabel = ''
         if (!colVarNames.isEmpty()) {
           Map<String, Object> colFv = [:]
-          List<String> parts = colLevel.split('\\|').toList()
+          List<String> parts = colLevel.split(KEY_SEP).toList()
           colVarNames.eachWithIndex { String varName, int vi ->
             if (vi < parts.size()) colFv[varName] = parts[vi]
           }
@@ -307,16 +310,16 @@ class FacetRenderer {
     LinkedHashSet<String> values = new LinkedHashSet<>()
     for (int i = 0; i < matrix.rowCount(); i++) {
       List<String> parts = varNames.collect { String varName -> String.valueOf(matrix[i, varName]) }
-      values << parts.join('|')
+      values << parts.join(KEY_SEP)
     }
     new ArrayList<>(values)
   }
 
   private static boolean compositeMatch(Matrix data, int rowIndex, List<String> varNames, String compositeKey) {
-    List<String> parts = compositeKey.split('\\|').toList()
+    String[] parts = compositeKey.split(KEY_SEP)
     for (int v = 0; v < varNames.size(); v++) {
       String actual = String.valueOf(data[rowIndex, varNames[v]])
-      if (v < parts.size() && actual != parts[v]) {
+      if (v >= parts.size() || actual != parts[v]) {
         return false
       }
     }
