@@ -221,8 +221,8 @@ class AnnotationEngine {
     )
 
     if (spec.grob instanceof Closure) {
-      boolean allowExtendedArgs = spec.params?.get('__source')?.toString() != 'gg'
-      renderClosure(customGroup, spec.grob as Closure, pixelBounds, context, allowExtendedArgs)
+      boolean ggSource = spec.params?.get('__source')?.toString() == 'gg'
+      renderClosure(customGroup, spec.grob as Closure, pixelBounds, context, ggSource)
       return
     }
     if (spec.grob instanceof SvgElement) {
@@ -789,19 +789,79 @@ class AnnotationEngine {
       Closure<?> grob,
       Map<String, BigDecimal> bounds,
       RenderContext context,
-      boolean allowExtendedArgs
+      boolean ggSource
   ) {
     int arity = grob.maximumNumberOfParameters
-    if (allowExtendedArgs && arity >= 4) {
-      grob.call(customGroup, bounds, [x: context.xScale, y: context.yScale], context.chart.coord)
-    } else if (allowExtendedArgs && arity == 3) {
-      grob.call(customGroup, bounds, [x: context.xScale, y: context.yScale])
-    } else if (!allowExtendedArgs && arity >= 4) {
-      grob.call(customGroup, bounds, null, null)
-    } else if (!allowExtendedArgs && arity == 3) {
-      grob.call(customGroup, bounds, null)
+    Map<String, Object> scalesArg = ggSource
+        ? ggCompatibilityScales(context)
+        : [x: context.xScale, y: context.yScale]
+    Object coordArg = ggSource ? new GgCoordCompat() : context.chart.coord
+    if (arity >= 4) {
+      grob.call(customGroup, bounds, scalesArg, coordArg)
+    } else if (arity == 3) {
+      grob.call(customGroup, bounds, scalesArg)
     } else {
       grob.call(customGroup, bounds)
+    }
+  }
+
+  @CompileDynamic
+  private static Map<String, Object> ggCompatibilityScales(RenderContext context) {
+    [
+        x: new GgScaleCompat(scale: context.xScale),
+        y: new GgScaleCompat(scale: context.yScale)
+    ]
+  }
+
+  @CompileStatic
+  private static class GgScaleCompat {
+    CharmScale scale
+
+    BigDecimal transform(Object value) {
+      scale?.transform(value)
+    }
+
+    Object inverse(Object value) {
+      value
+    }
+
+    List<Object> getComputedDomain() {
+      if (scale instanceof ContinuousCharmScale) {
+        ContinuousCharmScale continuous = scale as ContinuousCharmScale
+        return [continuous.domainMin, continuous.domainMax]
+      }
+      []
+    }
+
+    List<Object> getDomain() {
+      getComputedDomain()
+    }
+
+    BigDecimal getRangeStart() {
+      scale?.rangeStart
+    }
+
+    BigDecimal getRangeEnd() {
+      scale?.rangeEnd
+    }
+  }
+
+  @CompileStatic
+  private static class GgCoordCompat {
+    List<Number> transform(Number x, Number y, Map<String, ?> scales) {
+      GgScaleCompat xScale = scales?.get('x') as GgScaleCompat
+      GgScaleCompat yScale = scales?.get('y') as GgScaleCompat
+      Number xPx = xScale ? xScale.transform(x) : x
+      Number yPx = yScale ? yScale.transform(y) : y
+      [xPx, yPx]
+    }
+
+    List<Number> inverse(Number xPx, Number yPx, Map<String, ?> scales) {
+      GgScaleCompat xScale = scales?.get('x') as GgScaleCompat
+      GgScaleCompat yScale = scales?.get('y') as GgScaleCompat
+      Number x = xScale ? xScale.inverse(xPx) as Number : xPx
+      Number y = yScale ? yScale.inverse(yPx) as Number : yPx
+      [x, y]
     }
   }
 

@@ -15,6 +15,7 @@ import se.alipsa.matrix.gg.adapter.GgCharmAdaptation
 import se.alipsa.matrix.gg.adapter.GgCharmAdapter
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.*
 
@@ -188,5 +189,68 @@ class GgCharmAdapterAnnotationTest {
     assertTrue(rasterPos >= 0)
     assertTrue(pointPos >= 0)
     assertTrue(rasterPos > pointPos, 'Raster annotation should render above points when added last')
+  }
+
+  @Test
+  void testAnnotationCustomClosureArityThreeReceivesScalesInCharmDelegation() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 1], [2, 2], [3, 3]])
+        .build()
+    Map<String, Object> captured = [:]
+
+    GgChart chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point() +
+        annotation_custom(
+            grob: { G g, Map b, Map scales ->
+              captured.scales = scales
+              captured.xTransform = scales?.x?.transform(2)
+              g.addRect()
+                  .x([b.xmin, b.xmax].min() as int)
+                  .y([b.ymin, b.ymax].min() as int)
+                  .width((b.xmax - b.xmin).abs() as int)
+                  .height((b.ymax - b.ymin).abs() as int)
+                  .fill('red')
+            },
+            xmin: 1, xmax: 3, ymin: 1, ymax: 3
+        )
+
+    String svg = SvgWriter.toXml(chart.render())
+    assertTrue(svg.contains('charm-annotation-custom'))
+    assertNotNull(captured.scales)
+    assertNotNull(captured.xTransform)
+  }
+
+  @Test
+  void testAnnotationCustomClosureArityFourReceivesCoordInCharmDelegation() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 1], [2, 2], [3, 3]])
+        .build()
+    Map<String, Object> captured = [:]
+
+    GgChart chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point() +
+        annotation_custom(
+            grob: { G g, Map b, Map scales, Object coord ->
+              captured.scales = scales
+              captured.coord = coord
+              captured.point = coord?.transform(2, 2, scales)
+              g.addRect()
+                  .x([b.xmin, b.xmax].min() as int)
+                  .y([b.ymin, b.ymax].min() as int)
+                  .width((b.xmax - b.xmin).abs() as int)
+                  .height((b.ymax - b.ymin).abs() as int)
+                  .fill('blue')
+            },
+            xmin: 1, xmax: 3, ymin: 1, ymax: 3
+        )
+
+    String svg = SvgWriter.toXml(chart.render())
+    assertTrue(svg.contains('charm-annotation-custom'))
+    assertNotNull(captured.scales)
+    assertNotNull(captured.coord)
+    assertTrue(captured.point instanceof List)
+    assertEquals(2, (captured.point as List).size())
   }
 }
