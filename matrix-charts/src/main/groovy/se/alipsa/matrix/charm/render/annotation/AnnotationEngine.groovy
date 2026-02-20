@@ -108,7 +108,13 @@ class AnnotationEngine {
     }
 
     LayerData datum = new LayerData(x: spec.x, y: spec.y, rowIndex: annotationIndex)
-    GeomUtils.applyCssAttributes(text, context, CharmGeomType.TEXT.name(), 0, datum)
+    GeomUtils.applyCssAttributes(
+        text,
+        context,
+        CharmGeomType.TEXT.name(),
+        annotationElementIndexBase(annotationIndex),
+        datum
+    )
   }
 
   private static void renderRect(G dataLayer, RenderContext context, RectAnnotationSpec spec, int annotationIndex) {
@@ -144,7 +150,13 @@ class AnnotationEngine {
     }
 
     LayerData datum = new LayerData(x: spec.xmin, y: spec.ymin, rowIndex: annotationIndex)
-    GeomUtils.applyCssAttributes(rect, context, CharmGeomType.RECT.name(), 0, datum)
+    GeomUtils.applyCssAttributes(
+        rect,
+        context,
+        CharmGeomType.RECT.name(),
+        annotationElementIndexBase(annotationIndex),
+        datum
+    )
   }
 
   private static void renderSegment(G dataLayer, RenderContext context, SegmentAnnotationSpec spec, int annotationIndex) {
@@ -178,7 +190,13 @@ class AnnotationEngine {
     }
 
     LayerData datum = new LayerData(x: spec.x, y: spec.y, rowIndex: annotationIndex)
-    GeomUtils.applyCssAttributes(line, context, CharmGeomType.SEGMENT.name(), 0, datum)
+    GeomUtils.applyCssAttributes(
+        line,
+        context,
+        CharmGeomType.SEGMENT.name(),
+        annotationElementIndexBase(annotationIndex),
+        datum
+    )
   }
 
   private static void renderCustom(G dataLayer, RenderContext context, CustomAnnotationSpec spec, int annotationIndex) {
@@ -194,7 +212,13 @@ class AnnotationEngine {
     ]
 
     G customGroup = dataLayer.addG().styleClass('charm-annotation-custom')
-    GeomUtils.applyCssAttributes(customGroup, context, CharmGeomType.CUSTOM.name(), 0, null)
+    GeomUtils.applyCssAttributes(
+        customGroup,
+        context,
+        CharmGeomType.CUSTOM.name(),
+        annotationElementIndexBase(annotationIndex),
+        null
+    )
 
     if (spec.grob instanceof Closure) {
       boolean allowExtendedArgs = spec.params?.get('__source')?.toString() != 'gg'
@@ -234,7 +258,7 @@ class AnnotationEngine {
     BigDecimal alpha = NumberCoercionUtil.coerceToBigDecimal(params.alpha) ?: 1.0
     String dashArray = GeomUtils.dashArray(linetype)
 
-    int elementIndex = 0
+    int elementIndex = annotationElementIndexBase(annotationIndex)
     if (xLog && context.xScale instanceof ContinuousCharmScale) {
       ContinuousCharmScale xScale = context.xScale as ContinuousCharmScale
       List<Map<String, Object>> ticks = generateLogTickPositions(xScale.domainMin, xScale.domainMax, base)
@@ -290,7 +314,7 @@ class AnnotationEngine {
       rasterGroup.addAttribute('style', 'image-rendering: smooth;')
     }
 
-    int elementIndex = 0
+    int elementIndex = annotationElementIndexBase(annotationIndex)
     for (int row = 0; row < rows; row++) {
       List<String> rowData = raster[row]
       if (rowData == null || rowData.isEmpty()) {
@@ -357,7 +381,7 @@ class AnnotationEngine {
       indexes << row
     }
 
-    int elementIndex = 0
+    int elementIndex = annotationElementIndexBase(annotationIndex)
     groups.each { Object _, List<Integer> rowIndexes ->
       if (rowIndexes.size() < 3) {
         return
@@ -455,7 +479,12 @@ class AnnotationEngine {
 
   private static boolean isLogScale(CharmScale scale) {
     scale instanceof ContinuousCharmScale &&
-        (scale as ContinuousCharmScale).transformStrategy?.class?.simpleName == 'Log10ScaleTransform'
+        (scale as ContinuousCharmScale).transformStrategy?.id() == 'log10'
+  }
+
+  private static int annotationElementIndexBase(int annotationIndex) {
+    int normalized = annotationIndex < 0 ? 0 : annotationIndex
+    normalized * 1_000_000
   }
 
   private static List<Map<String, Object>> generateLogTickPositions(BigDecimal logMin, BigDecimal logMax, int base) {

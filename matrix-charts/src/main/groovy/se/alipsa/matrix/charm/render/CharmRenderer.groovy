@@ -229,6 +229,7 @@ class CharmRenderer {
       String clipId = "panel-clip-${panel.row}-${panel.col}"
       context.defs.addClipPath().id(clipId).addRect(panelWidth, panelHeight).x(0).y(0)
       dataLayer.addAttribute('clip-path', "url(#${clipId})")
+      renderAnnotationsBeforeOrder(dataLayer, context, annotationsByOrder, 0)
 
       context.chart.layers.eachWithIndex { LayerSpec layer, int layerIndex ->
         renderAnnotationsAtOrder(dataLayer, context, annotationsByOrder, layerIndex)
@@ -284,6 +285,23 @@ class CharmRenderer {
     entries.each { AnnotationRenderEntry entry ->
       context.layerIndex = entry.drawOrder
       AnnotationEngine.render(dataLayer, context, entry.annotation, entry.annotationIndex)
+    }
+  }
+
+  private static void renderAnnotationsBeforeOrder(
+      G dataLayer,
+      RenderContext context,
+      Map<Integer, List<AnnotationRenderEntry>> annotationsByOrder,
+      int startOrder
+  ) {
+    if (annotationsByOrder == null || annotationsByOrder.isEmpty()) {
+      return
+    }
+    List<Integer> orders = annotationsByOrder.keySet()
+        .findAll { Integer order -> order < startOrder }
+        .sort()
+    orders.each { Integer order ->
+      renderAnnotationsAtOrder(dataLayer, context, annotationsByOrder, order)
     }
   }
 
