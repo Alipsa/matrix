@@ -511,6 +511,11 @@ class LegendRenderer {
                                              int numBins, int x, int y, int barWidth, int barHeight,
                                              boolean vertical, boolean reverse) {
     BigDecimal totalRange = (breaks.last() - breaks.first()).abs()
+    if (totalRange == 0) {
+      // All breaks collapsed to the same value; fall back to even rendering
+      renderEvenColorSteps(group, cs, breaks, numBins, x, y, barWidth, barHeight, vertical, reverse)
+      return
+    }
     int accumulated = 0
 
     for (int i = 0; i < numBins; i++) {
