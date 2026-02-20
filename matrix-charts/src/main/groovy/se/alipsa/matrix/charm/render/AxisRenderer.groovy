@@ -8,6 +8,7 @@ import se.alipsa.matrix.charm.GuidesSpec
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
 import se.alipsa.matrix.charm.theme.ElementLine
 import se.alipsa.matrix.charm.theme.ElementText
+import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
 
@@ -16,6 +17,8 @@ import java.math.RoundingMode
  */
 @CompileStatic
 class AxisRenderer {
+
+  private static final Logger log = Logger.getLogger(AxisRenderer)
 
   /**
    * Renders x and y axes with guide-type dispatching.
@@ -141,7 +144,8 @@ class AxisRenderer {
         }
         String label = idx < xLabels.size() ? xLabels[idx] : formatTick(tick)
 
-        // Check overlap
+        // Check overlap (heuristic: assumes ~0.6em average character width; may need
+        // tuning for non-monospace fonts since SVG lacks text measurement without rendering)
         if (checkOverlap && lastLabelEnd != null) {
           BigDecimal estimatedWidth = label.length() * xTextSize * 0.6
           if (x - estimatedWidth / 2 < lastLabelEnd) {
@@ -235,11 +239,16 @@ class AxisRenderer {
     int baseTickLen = context.config.axisTickLength
     G tickGroup = axes.addG().id(isXAxis ? 'x-axis' : 'y-axis')
 
-    // Determine range of powers of 10
-    BigDecimal dMin = scale.domainMin ?: 0.0
-    BigDecimal dMax = scale.domainMax ?: 1.0
-    int minExp = dMin <= 0 ? 0 : Math.floor(Math.log10(dMin as double)) as int
-    int maxExp = dMax <= 0 ? 1 : Math.ceil(Math.log10(dMax as double)) as int
+    // Determine range of powers of 10; log scale requires positive domain
+    BigDecimal dMin = scale.domainMin
+    BigDecimal dMax = scale.domainMax
+    if (dMin == null || dMax == null || dMin <= 0 || dMax <= 0) {
+      log.warn("renderAxisLogticks: log scale requires positive domain bounds, " +
+          "but got domainMin=${dMin}, domainMax=${dMax}. Skipping log tick rendering.")
+      return
+    }
+    int minExp = Math.floor(Math.log10(dMin as double)) as int
+    int maxExp = Math.ceil(Math.log10(dMax as double)) as int
 
     for (int exp = minExp; exp <= maxExp; exp++) {
       BigDecimal powerOf10 = (10 ** exp) as BigDecimal

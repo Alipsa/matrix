@@ -81,6 +81,8 @@ class GuideSpec {
 
   /**
    * Returns a deep copy of this guide spec.
+   * Note: closures (e.g. renderClosure for custom guides) are shared by reference
+   * since they are effectively immutable in their captured state.
    *
    * @return copy
    */

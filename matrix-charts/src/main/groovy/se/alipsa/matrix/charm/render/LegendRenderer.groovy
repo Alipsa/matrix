@@ -322,22 +322,32 @@ class LegendRenderer {
     int x = 0
     int y = startY
 
-    // Draw gradient as small rects
+    // Draw gradient as small rects, using rounding to tile without gaps or overlaps
     for (int i = 0; i < COLORBAR_STEPS; i++) {
       BigDecimal t = i / (COLORBAR_STEPS - 1)
       BigDecimal value = cs.domainMin + t * (cs.domainMax - cs.domainMin)
       String color = cs.colorFor(value) ?: '#999999'
 
       if (vertical) {
-        int stepHeight = (barHeight / COLORBAR_STEPS) as int
-        int stepY = y + barHeight - (i + 1) * stepHeight
-        group.addRect(barWidth, stepHeight + 1)
+        double fromRel = (double) i / (double) COLORBAR_STEPS
+        double toRel = (double) (i + 1) / (double) COLORBAR_STEPS
+        int fromBottom = (int) Math.round(fromRel * barHeight)
+        int toBottom = (int) Math.round(toRel * barHeight)
+        int stepHeight = toBottom - fromBottom
+        if (stepHeight <= 0) continue
+        int stepY = y + barHeight - toBottom
+        group.addRect(barWidth, stepHeight)
             .x(x).y(stepY).fill(color).stroke('none')
             .styleClass('charm-legend-colorbar')
       } else {
-        int stepWidth = (barWidth / COLORBAR_STEPS) as int
-        int stepX = x + i * stepWidth
-        group.addRect(stepWidth + 1, barHeight)
+        double fromRel = (double) i / (double) COLORBAR_STEPS
+        double toRel = (double) (i + 1) / (double) COLORBAR_STEPS
+        int from = (int) Math.round(fromRel * barWidth)
+        int to = (int) Math.round(toRel * barWidth)
+        int stepWidth = to - from
+        if (stepWidth <= 0) continue
+        int stepX = x + from
+        group.addRect(stepWidth, barHeight)
             .x(stepX).y(y).fill(color).stroke('none')
             .styleClass('charm-legend-colorbar')
       }
@@ -943,12 +953,17 @@ class LegendRenderer {
     aesthetic == 'color' || aesthetic == 'colour' || aesthetic == 'fill'
   }
 
+  /**
+   * Formats a number for display in legends.
+   * Whole numbers display without decimals; fractional values display with up to 2 decimal places
+   * (trailing zeros stripped for consistency, e.g. 1.50 becomes "1.5").
+   */
   private static String formatNumber(BigDecimal value) {
     if (value == null) return ''
     if (value == value.setScale(0, java.math.RoundingMode.HALF_UP)) {
       value.setScale(0, java.math.RoundingMode.HALF_UP).toPlainString()
     } else {
-      value.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString()
+      value.setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
     }
   }
 }

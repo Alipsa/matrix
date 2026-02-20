@@ -188,20 +188,16 @@ class ScaleEngine {
    * Trains a size scale mapping data values to pixel sizes (range 2-10).
    *
    * @param values data values for size aesthetic
-   * @return trained continuous scale for size
+   * @return trained continuous scale for size, or null if no numeric values
    */
   private static CharmScale trainSizeScale(List<Object> values) {
-    List<BigDecimal> numeric = values
-        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
-        .findAll { it != null } as List<BigDecimal>
-
+    List<BigDecimal> numeric = coerceToNumeric(values)
     if (numeric.isEmpty()) {
       return null
     }
 
     BigDecimal min = numeric.min()
-    BigDecimal max = numeric.max()
-    if (min == max) max = max + 1
+    BigDecimal max = ensureDomainRange(numeric.max(), min)
 
     new ContinuousCharmScale(
         rangeStart: 2.0,
@@ -236,20 +232,16 @@ class ScaleEngine {
    * Trains an alpha scale mapping data values to opacity (range 0-1).
    *
    * @param values data values for alpha aesthetic
-   * @return trained continuous scale for alpha
+   * @return trained continuous scale for alpha, or null if no numeric values
    */
   private static CharmScale trainAlphaScale(List<Object> values) {
-    List<BigDecimal> numeric = values
-        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
-        .findAll { it != null } as List<BigDecimal>
-
+    List<BigDecimal> numeric = coerceToNumeric(values)
     if (numeric.isEmpty()) {
       return null
     }
 
     BigDecimal min = numeric.min()
-    BigDecimal max = numeric.max()
-    if (min == max) max = max + 1
+    BigDecimal max = ensureDomainRange(numeric.max(), min)
 
     new ContinuousCharmScale(
         rangeStart: 0.1,
@@ -257,6 +249,18 @@ class ScaleEngine {
         domainMin: min,
         domainMax: max
     )
+  }
+
+  /** Coerces a list of values to BigDecimal, filtering out nulls and non-numeric values. */
+  private static List<BigDecimal> coerceToNumeric(List<Object> values) {
+    values
+        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
+        .findAll { it != null } as List<BigDecimal>
+  }
+
+  /** Returns max adjusted to avoid zero-width domain (which would cause division by zero). */
+  private static BigDecimal ensureDomainRange(BigDecimal max, BigDecimal min) {
+    max == min ? max + 1 : max
   }
 
   /**

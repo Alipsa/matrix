@@ -855,8 +855,11 @@ class GgCharmAdapter {
     if (value instanceof Guide) {
       GuideSpec mapped = mapSingleGuide(value)
       if (mapped != null) return mapped
-      // Fallback: convert to map
-      return [type: (value as Guide).type, params: deepCopyMap((value as Guide).params)]
+      // Fallback: convert to map when guide type is unrecognized
+      Guide guideValue = value as Guide
+      log.warn("convertGuideParamValue: falling back to map conversion for unmapped Guide " +
+          "with type='${guideValue.type}'")
+      return [type: guideValue.type, params: deepCopyMap(guideValue.params)]
     }
     if (value instanceof List) {
       return (value as List).collect { convertGuideParamValue(it) }

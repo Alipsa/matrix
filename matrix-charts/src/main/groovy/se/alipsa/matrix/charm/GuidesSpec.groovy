@@ -65,7 +65,9 @@ class GuidesSpec {
   GuidesSpec copy() {
     GuidesSpec result = new GuidesSpec()
     specs.each { String key, GuideSpec value ->
-      result.specs[key] = value?.copy()
+      if (value != null) {
+        result.specs[key] = value.copy()
+      }
     }
     result
   }
