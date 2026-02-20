@@ -270,6 +270,9 @@ class Theme {
     if (value instanceof List) {
       return new ArrayList<>(value as List)
     }
+    if (value instanceof Set) {
+      return new LinkedHashSet<>(value as Set)
+    }
     value
   }
 }

@@ -728,19 +728,31 @@ class PlotSpec {
     void text(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = MapDsl) Closure<?> configure) {
       Map<String, Object> values = configureMap(configure)
       if (values.containsKey('color') || values.containsKey('size')) {
-        se.alipsa.matrix.charm.theme.ElementText textEl = new se.alipsa.matrix.charm.theme.ElementText(
-            color: (values['color'] ?: '#333333') as String,
-            size: values['size'] ?: theme.baseSize
-        )
-        theme.axisTextX = textEl.copy()
-        theme.axisTextY = textEl.copy()
+        se.alipsa.matrix.charm.theme.ElementText xText = theme.axisTextX?.copy()
+            ?: new se.alipsa.matrix.charm.theme.ElementText()
+        se.alipsa.matrix.charm.theme.ElementText yText = theme.axisTextY?.copy()
+            ?: new se.alipsa.matrix.charm.theme.ElementText()
+        if (values.containsKey('color')) {
+          String color = values['color'] as String
+          xText.color = color
+          yText.color = color
+        }
+        if (values.containsKey('size')) {
+          Number size = values['size'] as Number
+          xText.size = size
+          yText.size = size
+        }
+        theme.axisTextX = xText
+        theme.axisTextY = yText
       }
       if (values.containsKey('titleSize')) {
-        Number titleSize = values['titleSize'] as Number
-        theme.plotTitle = new se.alipsa.matrix.charm.theme.ElementText(
-            size: titleSize,
-            color: (values['color'] ?: '#333333') as String
-        )
+        se.alipsa.matrix.charm.theme.ElementText title = theme.plotTitle?.copy()
+            ?: new se.alipsa.matrix.charm.theme.ElementText()
+        title.size = values['titleSize'] as Number
+        if (values.containsKey('color')) {
+          title.color = values['color'] as String
+        }
+        theme.plotTitle = title
       }
       if (values.containsKey('family')) {
         theme.baseFamily = values['family'] as String

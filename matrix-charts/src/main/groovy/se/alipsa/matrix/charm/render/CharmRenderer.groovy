@@ -133,7 +133,7 @@ class CharmRenderer {
 
     int totalSpacingX = (panelCols - 1) * context.config.panelSpacing
     int totalSpacingY = (panelRows - 1) * context.config.panelSpacing
-    int panelWidth = ((context.config.plotWidth() - totalSpacingX) / panelCols) as int
+    int panelWidth = ((context.config.plotWidth() - totalSpacingX - stripWidth) / panelCols) as int
     int panelHeight = ((context.config.plotHeight() - totalSpacingY - panelRows * stripHeight) / panelRows) as int
 
     context.panels.each { PanelSpec panel ->
