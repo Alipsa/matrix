@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Defs
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.CssAttributesSpec
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ColorCharmScale
 
@@ -17,6 +18,7 @@ import se.alipsa.matrix.charm.render.scale.ColorCharmScale
 class RenderContext {
 
   final Chart chart
+  final CssAttributesSpec cssAttributes
   final RenderConfig config
   final Svg svg
   Defs defs
@@ -30,6 +32,9 @@ class RenderContext {
   CharmScale alphaScale
   CharmScale linetypeScale
   CharmScale groupScale
+  int layerIndex = -1
+  Integer panelRow
+  Integer panelCol
   List<PanelSpec> panels = []
   final Map<se.alipsa.matrix.charm.LayerSpec, Map<List<Integer>, List<LayerData>>> pipelineCache = [:]
 
@@ -42,6 +47,7 @@ class RenderContext {
    */
   RenderContext(Chart chart, RenderConfig config, Svg svg) {
     this.chart = chart
+    this.cssAttributes = chart.cssAttributes
     this.config = config
     this.svg = svg
   }

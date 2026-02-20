@@ -21,6 +21,7 @@ class LineRenderer {
       return
     }
 
+    int elementIndex = 0
     Map<Object, List<LayerData>> groups = GeomUtils.groupSeries(layerData)
     groups.each { Object _, List<LayerData> groupData ->
       List<LayerData> sorted = GeomUtils.sortByX(groupData)
@@ -54,6 +55,8 @@ class LineRenderer {
         if (alpha < 1.0) {
           line.addAttribute('stroke-opacity', alpha)
         }
+        GeomUtils.applyCssAttributes(line, context, layer.geomType.name(), elementIndex, sorted[i])
+        elementIndex++
       }
     }
   }

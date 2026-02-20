@@ -227,4 +227,73 @@ class GeomCssAttributesTest {
     assertTrue(svgString.contains('class="gg-area"'),
         "SVG should contain gg-area CSS class")
   }
+
+  @Test
+  void testGeomPointWithDataAttributesEnabled() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 3]])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        css_attributes(enabled: true, includeDataAttributes: true) +
+        geom_point()
+
+    Svg svg = chart.render()
+    String svgString = svg.toXml()
+
+    assertTrue(svgString.contains('data-x="1"') || svgString.contains('data-x="2"'),
+        "SVG should include data-x attributes")
+    assertTrue(svgString.contains('data-y="2"') || svgString.contains('data-y="3"'),
+        "SVG should include data-y attributes")
+    assertTrue(svgString.contains('data-row="0"'),
+        "SVG should include data-row attributes")
+    assertTrue(svgString.contains('data-layer="0"'),
+        "SVG should include data-layer attributes")
+    assertFalse(svgString.contains('data-panel='),
+        "Non-faceted charts should not include data-panel")
+  }
+
+  @Test
+  void testInvalidChartPrefixFallsBackToIdPrefix() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2]])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        css_attributes(enabled: true, chartIdPrefix: '123invalid', idPrefix: 'custom') +
+        geom_point()
+
+    Svg svg = chart.render()
+    String svgString = svg.toXml()
+
+    assertTrue(svgString.contains('id="custom-layer-0-point-0"'),
+        "Invalid chartIdPrefix should fall back to idPrefix")
+  }
+
+  @Test
+  void testDataRowUsesSourceRowIndexForMultiElementShapes() {
+    def data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 3]])
+        .types(Integer, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        css_attributes(enabled: true, includeDataAttributes: true) +
+        geom_point(shape: 'plus')
+
+    Svg svg = chart.render()
+    String svgString = svg.toXml()
+
+    assertTrue(svgString.contains('data-row="0"'),
+        "First source row should emit data-row=0")
+    assertTrue(svgString.contains('data-row="1"'),
+        "Second source row should emit data-row=1")
+    assertFalse(svgString.contains('data-row="2"') || svgString.contains('data-row="3"'),
+        "Multi-element point shapes should not use element index as data-row")
+  }
 }

@@ -716,15 +716,19 @@ _Rewire gg to delegate directly to charm while preserving branch-safe fallback u
 
 ### 5.11 Phase 11 -- CssAttributeConfig
 
-5.11.1 [ ] Implement `CssAttributeConfig` handling in charm's renderer pipeline.
+5.11.1 [x] Implement `CssAttributeConfig` handling in charm's renderer pipeline.
 
-5.11.2 [ ] Implement parity for `enabled`, `includeClasses`, `includeIds`, `includeDataAttributes`, `chartIdPrefix`, `idPrefix`.
+5.11.2 [x] Implement parity for `enabled`, `includeClasses`, `includeIds`, `includeDataAttributes`, `chartIdPrefix`, `idPrefix`.
 
-5.11.3 [ ] Implement ID naming and panel/layer indexing behavior for single and faceted charts.
+5.11.3 [x] Implement ID naming and panel/layer indexing behavior for single and faceted charts.
 
-5.11.4 [ ] Implement data attribute emission behavior and defaults.
+5.11.4 [x] Implement data attribute emission behavior and defaults.
 
-5.11.5 [ ] Add structural SVG tests that assert CSS class/id/data-* behavior.
+5.11.5 [x] Add structural SVG tests that assert CSS class/id/data-* behavior.
+
+Executed commands:
+- [x] `./gradlew :matrix-charts:compileGroovy`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true --tests "gg.adapter.GgCharmAdapterTest" --tests "gg.GeomCssAttributesTest" --tests "gg.FacetedCssAttributesTest" --tests "gg.GeomUtilsCssTest" --tests "charm.render.geom.P0GeomRendererTest"`
 
 ### 5.12 Phase 12 -- Annotations
 

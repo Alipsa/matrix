@@ -21,6 +21,7 @@ class SmoothRenderer {
       return
     }
 
+    int elementIndex = 0
     Map<Object, List<LayerData>> groups = GeomUtils.groupSeries(layerData)
     groups.each { Object _, List<LayerData> groupData ->
       List<LayerData> sorted = GeomUtils.sortByX(groupData)
@@ -70,11 +71,13 @@ class SmoothRenderer {
           bandPath.append(" L ${lower[i][0]} ${lower[i][1]}")
         }
         bandPath.append(' Z')
-        dataLayer.addPath().d(bandPath.toString())
+        def band = dataLayer.addPath().d(bandPath.toString())
             .fill(fill)
             .stroke('none')
             .addAttribute('fill-opacity', bandAlpha)
             .styleClass('charm-smooth-band')
+        GeomUtils.applyCssAttributes(band, context, layer.geomType.name(), elementIndex, first)
+        elementIndex++
       }
 
       for (int i = 0; i < linePoints.size() - 1; i++) {
@@ -88,6 +91,8 @@ class SmoothRenderer {
         if (alpha < 1.0) {
           line.addAttribute('stroke-opacity', alpha)
         }
+        GeomUtils.applyCssAttributes(line, context, layer.geomType.name(), elementIndex, sorted[i])
+        elementIndex++
       }
     }
   }

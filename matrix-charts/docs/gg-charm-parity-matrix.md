@@ -186,11 +186,11 @@ A feature row may be marked `[x]` only when:
 | Phase Task 5.10.4: Implement legend merging behavior across aesthetics. | Cross-cutting | `charm/render/LegendRenderer` (shape+color merging) | `CharmLegendRendererTest` | [x] |
 | Phase Task 5.10.5: Port guide parameter handling and defaults. | Cross-cutting | `charm/render/LegendRenderer`, `charm/render/AxisRenderer`, `gg/adapter/GgCharmAdapter.mapGuides()` | `GgCharmAdapterGuideTest` | [x] |
 | Phase Task 5.10.6: Add tests for each guide type and mixed-guide charts. | Cross-cutting | `CharmGuideModelTest` (17), `CharmLegendRendererTest` (10), `CharmAxisGuideTest` (5), `CharmCustomGuideTest` (3), `GgCharmAdapterGuideTest` (11) | All Phase 10 test classes | [x] |
-| Phase Task 5.11.1: Implement `CssAttributeConfig` handling in charm's renderer pipeline. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.11.2: Implement parity for `enabled`, `includeClasses`, `includeIds`, `includeDataAttributes`, `chartIdPrefix`, `idPrefix`. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.11.3: Implement ID naming and panel/layer indexing behavior for single and faceted charts. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.11.4: Implement data attribute emission behavior and defaults. | Cross-cutting | - | - | [ ] |
-| Phase Task 5.11.5: Add structural SVG tests that assert CSS class/id/data-* behavior. | Cross-cutting | - | - | [ ] |
+| Phase Task 5.11.1: Implement `CssAttributeConfig` handling in charm's renderer pipeline. | Cross-cutting | `charm/CssAttributesSpec`, `charm/Chart`, `gg/adapter/GgCharmAdapter.mapCssAttributes()`, `charm/render/geom/GeomUtils.applyCssAttributes()` | `GgCharmAdapterTest.testAdapterDelegatesPointChartWhenCssAttributesEnabled` | [x] |
+| Phase Task 5.11.2: Implement parity for `enabled`, `includeClasses`, `includeIds`, `includeDataAttributes`, `chartIdPrefix`, `idPrefix`. | Cross-cutting | `charm/render/geom/GeomUtils` (class/id/data-* toggles and prefix resolution) | `GeomCssAttributesTest`, `FacetedCssAttributesTest` | [x] |
+| Phase Task 5.11.3: Implement ID naming and panel/layer indexing behavior for single and faceted charts. | Cross-cutting | `charm/render/RenderContext` (layer/panel indexes), `charm/render/CharmRenderer` (panel/layer assignment), `charm/render/geom/GeomUtils.generateElementId()` | `GeomCssAttributesTest.testMultipleLayersIncrementLayerIndex`, `FacetedCssAttributesTest.testFacetWrapWithCssAttributes` | [x] |
+| Phase Task 5.11.4: Implement data attribute emission behavior and defaults. | Cross-cutting | `charm/render/geom/GeomUtils.applyDataAttributes()` | `GeomCssAttributesTest.testGeomPointWithDataAttributesEnabled`, `FacetedCssAttributesTest.testFacetedChartAddsDataPanelAttributes` | [x] |
+| Phase Task 5.11.5: Add structural SVG tests that assert CSS class/id/data-* behavior. | Cross-cutting | `gg` integration coverage for CSS output via delegated charm render path | `GeomCssAttributesTest`, `FacetedCssAttributesTest`, `GeomUtilsCssTest`, `GgCharmAdapterTest` | [x] |
 | Phase Task 5.12.1: Implement annotation rendering in charm: custom, logticks, raster. | Cross-cutting | - | - | [ ] |
 | Phase Task 5.12.2: Wire `GgChart.plus(Annotate)` to produce charm `AnnotationSpec` objects. | Cross-cutting | - | - | [ ] |
 | Phase Task 5.12.3: Move `AnnotationConstants` to charm or make shared. | Cross-cutting | - | - | [ ] |

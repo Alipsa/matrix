@@ -25,6 +25,7 @@ class TextRenderer {
     BigDecimal vjust = NumberCoercionUtil.coerceToBigDecimal(layer.params.vjust) ?: 0.5
     BigDecimal nudgeX = NumberCoercionUtil.coerceToBigDecimal(layer.params.nudge_x) ?: 0
     BigDecimal nudgeY = NumberCoercionUtil.coerceToBigDecimal(layer.params.nudge_y) ?: 0
+    int elementIndex = 0
 
     layerData.each { LayerData datum ->
       String label = datum.label?.toString() ?: layer.params.label?.toString()
@@ -65,6 +66,8 @@ class TextRenderer {
       if (alpha < 1.0) {
         text.addAttribute('fill-opacity', alpha)
       }
+      GeomUtils.applyCssAttributes(text, context, layer.geomType.name(), elementIndex, datum)
+      elementIndex++
     }
   }
 

@@ -22,6 +22,7 @@ class Chart {
   private final LabelsSpec labels
   private final GuidesSpec guides
   private final List<AnnotationSpec> annotations
+  private final CssAttributesSpec cssAttributes
 
   /**
    * Creates a new compiled chart model.
@@ -36,6 +37,7 @@ class Chart {
    * @param labels labels spec
    * @param guides guides spec
    * @param annotations annotation list
+   * @param cssAttributes css attribute configuration
    */
   Chart(
       Matrix data,
@@ -47,7 +49,8 @@ class Chart {
       Coord coord,
       Labels labels,
       GuidesSpec guides,
-      List<AnnotationSpec> annotations
+      List<AnnotationSpec> annotations,
+      CssAttributesSpec cssAttributes = null
   ) {
     this.data = data
     this.aes = toAesSpec(aes)
@@ -63,6 +66,7 @@ class Chart {
     this.annotations = Collections.unmodifiableList(
         annotations.collect { AnnotationSpec a -> a.copy() }
     )
+    this.cssAttributes = cssAttributes?.copy() ?: new CssAttributesSpec()
   }
 
   /**
@@ -156,6 +160,15 @@ class Chart {
    */
   List<AnnotationSpec> getAnnotations() {
     Collections.unmodifiableList(annotations.collect { AnnotationSpec a -> a.copy() })
+  }
+
+  /**
+   * Returns CSS attribute configuration.
+   *
+   * @return css attributes spec
+   */
+  CssAttributesSpec getCssAttributes() {
+    cssAttributes?.copy()
   }
 
   private static AesSpec toAesSpec(Aes value) {
