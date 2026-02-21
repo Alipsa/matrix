@@ -6,10 +6,10 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
 /**
- * Two-dimensional rectangular binning stat.
+ * Approximate 2D density stat by binning points and assigning level groups.
  */
 @CompileStatic
-class Bin2DStat {
+class Density2DStat {
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data == null || data.isEmpty()) {
@@ -17,9 +17,9 @@ class Bin2DStat {
     }
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
-    int bins = NumberCoercionUtil.coerceToBigDecimal(params.bins)?.intValue() ?: 30
-    if (bins < 1) {
-      bins = 30
+    int bins = NumberCoercionUtil.coerceToBigDecimal(params.bins)?.intValue() ?: 10
+    if (bins < 2) {
+      bins = 10
     }
 
     List<LayerData> numeric = data.findAll { LayerData datum ->
@@ -45,8 +45,8 @@ class Bin2DStat {
 
     BigDecimal xStep = (xMax - xMin) / bins
     BigDecimal yStep = (yMax - yMin) / bins
-    Map<String, Integer> counts = [:]
 
+    Map<String, Integer> counts = [:]
     numeric.each { LayerData datum ->
       BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(datum.x)
       BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(datum.y)
@@ -60,15 +60,27 @@ class Bin2DStat {
       counts[key] = (counts[key] ?: 0) + 1
     }
 
+    if (counts.isEmpty()) {
+      return []
+    }
+
+    int maxCount = counts.values().max() ?: 1
     List<LayerData> result = []
     counts.each { String key, Integer count ->
       String[] parts = key.split(':')
       int xBin = parts[0] as int
       int yBin = parts[1] as int
+
       BigDecimal xmin = xMin + xStep * xBin
       BigDecimal xmax = xmin + xStep
       BigDecimal ymin = yMin + yStep * yBin
       BigDecimal ymax = ymin + yStep
+
+      BigDecimal normalized = maxCount == 0 ? 0 : (count as BigDecimal) / maxCount
+      int levelIdx = (normalized * (bins - 1)).intValue()
+      if (levelIdx < 0) levelIdx = 0
+      if (levelIdx > bins - 1) levelIdx = bins - 1
+
       LayerData datum = new LayerData(
           x: xmin + xStep / 2,
           y: ymin + yStep / 2,
@@ -76,17 +88,26 @@ class Bin2DStat {
           xmax: xmax,
           ymin: ymin,
           ymax: ymax,
-          fill: count,
+          fill: normalized,
+          group: "level-${levelIdx}",
           rowIndex: -1
       )
+      datum.meta.level = levelIdx
+      datum.meta.density = normalized
       datum.meta.count = count
-      datum.meta.xmin = xmin
-      datum.meta.xmax = xmax
-      datum.meta.ymin = ymin
-      datum.meta.ymax = ymax
       result << datum
     }
 
-    result
+    result.sort { LayerData a, LayerData b ->
+      String g1 = a.group?.toString() ?: ''
+      String g2 = b.group?.toString() ?: ''
+      int g = g1 <=> g2
+      if (g != 0) {
+        return g
+      }
+      BigDecimal x1 = NumberCoercionUtil.coerceToBigDecimal(a.x) ?: 0
+      BigDecimal x2 = NumberCoercionUtil.coerceToBigDecimal(b.x) ?: 0
+      x1 <=> x2
+    }
   }
 }

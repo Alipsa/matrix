@@ -34,6 +34,9 @@ class CoordEngine {
       case CharmCoordType.POLAR -> PolarCoord.compute(coordSpec, data)
       case CharmCoordType.RADIAL -> RadialCoord.compute(coordSpec, data)
       case CharmCoordType.TRANS -> TransCoord.compute(coordSpec, data)
+      case CharmCoordType.MAP -> MapCoord.compute(coordSpec, data)
+      case CharmCoordType.QUICKMAP -> QuickmapCoord.compute(coordSpec, data)
+      case CharmCoordType.SF -> SfCoord.compute(coordSpec, data)
       default -> {
         log.debug("Unimplemented coord type ${coordType}, falling back to cartesian")
         CartesianCoord.compute(coordSpec, data)

@@ -1,0 +1,58 @@
+package se.alipsa.matrix.charm.render.coord
+
+import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CoordSpec
+import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.render.LayerDataUtil
+import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.util.Logger
+import java.util.Locale
+import static se.alipsa.matrix.ext.NumberExtension.PI
+
+/**
+ * Map projection coordinate transform for lon/lat data.
+ */
+@CompileStatic
+class MapCoord {
+
+  private static final Logger log = Logger.getLogger(MapCoord)
+
+  static List<LayerData> compute(CoordSpec coordSpec, List<LayerData> data) {
+    if (data == null || data.isEmpty()) {
+      return data
+    }
+
+    String projection = coordSpec?.params?.projection?.toString()?.toLowerCase(Locale.ROOT) ?: 'mercator'
+    List<LayerData> transformed = []
+    data.each { LayerData datum ->
+      LayerData updated = LayerDataUtil.copyDatum(datum)
+      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(updated.x)
+      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(updated.y)
+      if (x != null && y != null) {
+        switch (projection) {
+          case 'mercator' -> {
+            BigDecimal clamped = y
+            if (clamped.abs() > 85.05) {
+              clamped = clamped.signum() * 85.05
+            }
+            BigDecimal rad = clamped.toRadians()
+            updated.x = x.toRadians()
+            updated.y = (PI / 4 + rad / 2).tan().log()
+          }
+          case 'equirectangular', 'identity' -> {
+            updated.x = x
+            updated.y = y
+          }
+          default -> {
+            log.warn("Unsupported map projection '${projection}', using identity")
+            updated.x = x
+            updated.y = y
+          }
+        }
+      }
+      transformed << updated
+    }
+
+    CartesianCoord.compute(coordSpec, transformed)
+  }
+}

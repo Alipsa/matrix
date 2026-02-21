@@ -3,8 +3,8 @@ package gg.geom
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.gg.sf.SfType
-import se.alipsa.matrix.gg.sf.WktReader
+import se.alipsa.matrix.charm.sf.SfType
+import se.alipsa.matrix.charm.sf.WktReader
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull

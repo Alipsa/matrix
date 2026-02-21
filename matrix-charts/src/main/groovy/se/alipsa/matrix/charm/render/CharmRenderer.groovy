@@ -369,6 +369,11 @@ class CharmRenderer {
     List<LayerData> values = []
     rowIndexes.each { int rowIndex ->
       LayerData datum = new LayerData(rowIndex: rowIndex)
+      Map<String, Object> rowMap = [:]
+      data?.columnNames()?.each { String columnName ->
+        rowMap[columnName] = readValue(data, rowIndex, columnName)
+      }
+      datum.meta.__row = rowMap
       datum.x = readValue(data, rowIndex, aes.x?.columnName())
       datum.y = readValue(data, rowIndex, aes.y?.columnName())
       datum.color = readValue(data, rowIndex, aes.color?.columnName())

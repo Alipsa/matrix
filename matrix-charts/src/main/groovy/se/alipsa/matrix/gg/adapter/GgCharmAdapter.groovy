@@ -91,7 +91,6 @@ class GgCharmAdapter {
       CharmCoordType.FLIP
   ] as Set<CharmCoordType>
 
-  // Intentionally narrower than CharmGeomType.SUPPORTED during phased migration.
   private static final Set<CharmGeomType> DELEGATED_GEOMS = [
       CharmGeomType.POINT,
       CharmGeomType.LINE,

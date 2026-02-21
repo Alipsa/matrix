@@ -57,6 +57,15 @@ class StatEngine {
       case CharmStatType.SUMMARY_BIN -> SummaryBinStat.compute(layer, data)
       case CharmStatType.UNIQUE -> UniqueStat.compute(layer, data)
       case CharmStatType.QUANTILE -> QuantileStat.compute(layer, data)
+      case CharmStatType.DENSITY_2D -> Density2DStat.compute(layer, data)
+      case CharmStatType.BIN_HEX -> BinHexStat.compute(layer, data)
+      case CharmStatType.SUMMARY_HEX -> SummaryHexStat.compute(layer, data)
+      case CharmStatType.SUMMARY_2D -> Summary2DStat.compute(layer, data)
+      case CharmStatType.ELLIPSE -> EllipseStat.compute(layer, data)
+      case CharmStatType.SF -> SfStat.compute(layer, data)
+      case CharmStatType.SF_COORDINATES -> SfCoordinatesStat.compute(layer, data)
+      case CharmStatType.SPOKE -> SpokeStat.compute(layer, data)
+      case CharmStatType.ALIGN -> AlignStat.compute(layer, data)
       default -> {
         log.debug("Unimplemented stat type ${statType}, falling back to identity")
         data

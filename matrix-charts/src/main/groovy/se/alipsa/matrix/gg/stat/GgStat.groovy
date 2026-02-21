@@ -13,10 +13,10 @@ import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression
 import se.alipsa.matrix.stats.regression.QuantileRegression
 import se.alipsa.matrix.stats.regression.RegressionUtils
-import se.alipsa.matrix.gg.sf.SfGeometry
-import se.alipsa.matrix.gg.sf.SfGeometryUtils
-import se.alipsa.matrix.gg.sf.SfPoint
-import se.alipsa.matrix.gg.sf.WktReader
+import se.alipsa.matrix.charm.sf.SfGeometry
+import se.alipsa.matrix.charm.sf.SfGeometryUtils
+import se.alipsa.matrix.charm.sf.SfPoint
+import se.alipsa.matrix.charm.sf.WktReader
 
 import java.math.RoundingMode
 import java.util.regex.Matcher

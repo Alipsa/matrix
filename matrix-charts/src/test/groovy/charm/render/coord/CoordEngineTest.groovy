@@ -87,4 +87,36 @@ class CoordEngineTest {
     assertEquals(1, result[0].x)
     assertEquals(2, result[0].y)
   }
+
+  @Test
+  void testDispatchMap() {
+    CoordSpec coord = new CoordSpec(type: CharmCoordType.MAP, params: [projection: 'mercator'])
+    List<LayerData> data = [new LayerData(x: 10, y: 45, rowIndex: 0)]
+    List<LayerData> result = CoordEngine.apply(coord, data)
+    assertNotNull(result)
+    assertEquals(1, result.size())
+    assertNotEquals(10, result[0].x)
+    assertNotEquals(45, result[0].y)
+  }
+
+  @Test
+  void testDispatchQuickmap() {
+    CoordSpec coord = new CoordSpec(type: CharmCoordType.QUICKMAP)
+    List<LayerData> data = [new LayerData(x: 10, y: 45, rowIndex: 0)]
+    List<LayerData> result = CoordEngine.apply(coord, data)
+    assertNotNull(result)
+    assertEquals(1, result.size())
+    assertNotEquals(45, result[0].y)
+  }
+
+  @Test
+  void testDispatchSf() {
+    CoordSpec coord = new CoordSpec(type: CharmCoordType.SF)
+    List<LayerData> data = [new LayerData(x: 1, y: 2, rowIndex: 0)]
+    List<LayerData> result = CoordEngine.apply(coord, data)
+    assertNotNull(result)
+    assertEquals(1, result.size())
+    assertEquals(1, result[0].x)
+    assertEquals(2, result[0].y)
+  }
 }

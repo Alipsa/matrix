@@ -256,29 +256,29 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P2 -- Specialized geoms:**
 
-3.1.33 [ ] GeomBin2d
-3.1.34 [ ] GeomBlank
-3.1.35 [ ] GeomContourFilled
-3.1.36 [ ] GeomCount
-3.1.37 [ ] GeomCurve
-3.1.38 [ ] GeomCustom
-3.1.39 [ ] GeomDensity2d
-3.1.40 [ ] GeomDensity2dFilled
-3.1.41 [ ] GeomDotplot
-3.1.42 [ ] GeomFunction
-3.1.43 [ ] GeomLogticks
-3.1.44 [ ] GeomMag
-3.1.45 [ ] GeomMap
-3.1.46 [ ] GeomParallel
-3.1.47 [ ] GeomQq
-3.1.48 [ ] GeomQqLine
-3.1.49 [ ] GeomQuantile
-3.1.50 [ ] GeomRaster
-3.1.51 [ ] GeomRasterAnn
-3.1.52 [ ] GeomSpoke
-3.1.53 [ ] GeomSf
-3.1.54 [ ] GeomSfLabel
-3.1.55 [ ] GeomSfText
+3.1.33 [x] GeomBin2d
+3.1.34 [x] GeomBlank
+3.1.35 [x] GeomContourFilled
+3.1.36 [x] GeomCount
+3.1.37 [x] GeomCurve
+3.1.38 [x] GeomCustom
+3.1.39 [x] GeomDensity2d
+3.1.40 [x] GeomDensity2dFilled
+3.1.41 [x] GeomDotplot
+3.1.42 [x] GeomFunction
+3.1.43 [x] GeomLogticks
+3.1.44 [x] GeomMag
+3.1.45 [x] GeomMap
+3.1.46 [x] GeomParallel
+3.1.47 [x] GeomQq
+3.1.48 [x] GeomQqLine
+3.1.49 [x] GeomQuantile
+3.1.50 [x] GeomRaster
+3.1.51 [x] GeomRasterAnn
+3.1.52 [x] GeomSpoke
+3.1.53 [x] GeomSf
+3.1.54 [x] GeomSfLabel
+3.1.55 [x] GeomSfText
 
 ### 3.2 Stat Surface (from `gg/layer/StatType`)
 
@@ -307,15 +307,15 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P2:**
 
-3.2.18 [ ] DENSITY_2D
-3.2.19 [ ] BIN_HEX
-3.2.20 [ ] SUMMARY_HEX
-3.2.21 [ ] SUMMARY_2D
-3.2.22 [ ] ELLIPSE
-3.2.23 [ ] SF
-3.2.24 [ ] SF_COORDINATES
-3.2.25 [ ] SPOKE
-3.2.26 [ ] ALIGN
+3.2.18 [x] DENSITY_2D
+3.2.19 [x] BIN_HEX
+3.2.20 [x] SUMMARY_HEX
+3.2.21 [x] SUMMARY_2D
+3.2.22 [x] ELLIPSE
+3.2.23 [x] SF
+3.2.24 [x] SF_COORDINATES
+3.2.25 [x] SPOKE
+3.2.26 [x] ALIGN
 
 ### 3.3 Position Surface (from `gg/layer/PositionType`)
 
@@ -348,9 +348,9 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P2:**
 
-3.4.7 [ ] CoordMap
-3.4.8 [ ] CoordQuickmap
-3.4.9 [ ] CoordSf
+3.4.7 [x] CoordMap
+3.4.8 [x] CoordQuickmap
+3.4.9 [x] CoordSf
 
 ### 3.5 Scale Surface (from `gg/scale`)
 
@@ -773,15 +773,20 @@ Executed commands:
 
 _Implement the P2 tier and geospatial support._
 
-5.14.1 [ ] Implement P2 geom renderers (3.1.33-3.1.55): bin2d, blank, contour_filled, count, curve, custom, density_2d, density_2d_filled, dotplot, function, logticks, mag, parallel, qq, qq_line, quantile, raster, raster_ann, spoke, sf, sf_label, sf_text.
+5.14.1 [x] Implement P2 geom renderers (3.1.33-3.1.55): bin2d, blank, contour_filled, count, curve, custom, density_2d, density_2d_filled, dotplot, function, logticks, mag, parallel, qq, qq_line, quantile, raster, raster_ann, spoke, sf, sf_label, sf_text.
 
-5.14.2 [ ] Implement P2 stats (3.2.18-3.2.26): DENSITY_2D, BIN_HEX, SUMMARY_HEX, SUMMARY_2D, ELLIPSE, SF, SF_COORDINATES, SPOKE, ALIGN.
+5.14.2 [x] Implement P2 stats (3.2.18-3.2.26): DENSITY_2D, BIN_HEX, SUMMARY_HEX, SUMMARY_2D, ELLIPSE, SF, SF_COORDINATES, SPOKE, ALIGN.
 
-5.14.3 [ ] Implement P2 coords (3.4.7-3.4.9): Map, Quickmap, Sf.
+5.14.3 [x] Implement P2 coords (3.4.7-3.4.9): Map, Quickmap, Sf.
 
-5.14.4 [ ] Move SF infrastructure (`SfGeometry`, `SfGeometryUtils`, `SfPoint`, `SfRing`, `SfShape`, `SfType`, `WktReader`) from `gg/sf/` to `charm/sf/` or `charm/render/geom/sf/`.
+5.14.4 [x] Move SF infrastructure (`SfGeometry`, `SfGeometryUtils`, `SfPoint`, `SfRing`, `SfShape`, `SfType`, `WktReader`) from `gg/sf/` to `charm/sf/` or `charm/render/geom/sf/`.
 
-5.14.5 [ ] Add tests for each P2 feature.
+5.14.5 [x] Add tests for each P2 feature.
+
+Executed commands:
+- [x] `./gradlew :matrix-charts:compileGroovy :matrix-charts:compileTestGroovy`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true --tests "charm.render.geom.P2GeomRendererTest" --tests "charm.render.stat.StatEngineTest" --tests "charm.render.coord.CoordEngineTest" --tests "gg.geom.GeomSfTest"`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true --tests "charm.core.CharmModelExpansionTest" --tests "gg.GgPlotTest.testGeomDensity2d" --tests "gg.GgPlotTest.testGeomDotplot" --tests "gg.GgRendererPolarGridLinesTest" --tests "gg.RendererCssAttributesTest" --tests "gg.adapter.GgCharmAdapterTest" --tests "gg.coord.CoordRadialTest" --tests "gg.coord.CoordSystemTest.testCoordFixedRatioAffectsScaling" --tests "gg.coord.CoordSystemTest.testCoordFixedLimitsAffectScaling" --tests "gg.geom.GeomBarColorTest" --tests "gg.geom.GeomBarPolarTest" --tests "gg.geom.GeomBoxplotTest.testBoxplotVariableWidth"`
 
 ### 5.15 Phase 15 -- Cleanup and Final Verification
 

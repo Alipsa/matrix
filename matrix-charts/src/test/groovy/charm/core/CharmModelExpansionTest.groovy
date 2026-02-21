@@ -312,7 +312,7 @@ class CharmModelExpansionTest {
   }
 
   @Test
-  void testPlotSpecLayerRejectsUnsupportedGeomTypes() {
+  void testPlotSpecLayerAcceptsExpandedGeomTypes() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
         .rows([[1, 2], [3, 4]])
@@ -320,11 +320,10 @@ class CharmModelExpansionTest {
 
     PlotSpec spec = plot(data)
     spec.aes(x: 'x', y: 'y')
-
-    CharmValidationException ex = assertThrows(CharmValidationException) {
-      spec.layer(CharmGeomType.BIN2D, [:])
-    }
-    assertTrue(ex.message.contains('BIN2D'))
+    spec.layer(CharmGeomType.BIN2D, [:])
+    spec.layer(CharmGeomType.COUNT, [:])
+    spec.layer(CharmGeomType.RASTER, [:])
+    assertEquals(3, spec.layers.size())
   }
 
   @Test

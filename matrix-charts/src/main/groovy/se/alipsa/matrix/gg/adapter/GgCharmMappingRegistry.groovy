@@ -10,7 +10,12 @@ import se.alipsa.matrix.gg.coord.Coord as GgCoord
 import se.alipsa.matrix.gg.coord.CoordCartesian
 import se.alipsa.matrix.gg.coord.CoordFixed
 import se.alipsa.matrix.gg.coord.CoordFlip
+import se.alipsa.matrix.gg.coord.CoordMap
 import se.alipsa.matrix.gg.coord.CoordPolar
+import se.alipsa.matrix.gg.coord.CoordQuickmap
+import se.alipsa.matrix.gg.coord.CoordRadial
+import se.alipsa.matrix.gg.coord.CoordSf
+import se.alipsa.matrix.gg.coord.CoordTrans
 import se.alipsa.matrix.gg.geom.Geom as GgGeom
 import se.alipsa.matrix.gg.geom.GeomBar
 import se.alipsa.matrix.gg.geom.GeomBoxplot
@@ -99,6 +104,11 @@ class GgCharmMappingRegistry {
 
   // Subclasses must appear before parent classes so isInstance checks match the most specific type first.
   private final Map<Class<? extends GgCoord>, CharmCoordType> coordMappings = [
+      (CoordQuickmap) : CharmCoordType.QUICKMAP,
+      (CoordSf)       : CharmCoordType.SF,
+      (CoordMap)      : CharmCoordType.MAP,
+      (CoordRadial)   : CharmCoordType.RADIAL,
+      (CoordTrans)    : CharmCoordType.TRANS,
       (CoordFixed)    : CharmCoordType.FIXED,
       (CoordCartesian): CharmCoordType.CARTESIAN,
       (CoordFlip)     : CharmCoordType.FLIP,
