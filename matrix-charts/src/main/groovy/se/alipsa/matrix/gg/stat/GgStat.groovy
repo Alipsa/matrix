@@ -954,7 +954,7 @@ class GgStat {
     //BigDecimal lowerProb = Math.max(0.0d, Math.min(1.0d, alpha.doubleValue()))
     BigDecimal lowerProb = 0.0.max(1.0.min(alpha))
     //BigDecimal upperProb = Math.max(0.0d, Math.min(1.0d, 1.0d - alpha))
-    BigDecimal upperProb = 0.0.max(1.0d.min(1.0 - alpha))
+    BigDecimal upperProb = 0.0.max(1.0.min(1.0 - alpha))
 
     Number median = quantileType7(numeric, 0.5)
     Number lower = quantileType7(numeric, lowerProb)

@@ -75,7 +75,7 @@ class SpecialFunctions {
     // Compute using continued fraction
     BigDecimal bt = (
         logGamma(a + b) - logGamma(a) - logGamma(b) +
-            a * x.log() + b * (1.0d - x).log()
+            a * x.log() + b * (1.0 - x).log()
     ).exp()
 
     return bt * betaContinuedFraction(x, a, b) / a
