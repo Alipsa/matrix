@@ -5,6 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
+import se.alipsa.matrix.charm.render.SpokeSupport
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
 /**
@@ -14,9 +15,10 @@ import se.alipsa.matrix.charm.util.NumberCoercionUtil
 class SpokeRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
-    String angleCol = layer.params.angle?.toString() ?: 'angle'
-    String radiusCol = layer.params.radius?.toString() ?: 'radius'
-    BigDecimal defaultRadius = NumberCoercionUtil.coerceToBigDecimal(layer.params.radiusDefault ?: layer.params.radius) ?: 1
+    String angleCol = SpokeSupport.resolveAngleColumn(layer.params)
+    BigDecimal angleDefault = SpokeSupport.resolveAngleDefault(layer.params)
+    String radiusCol = SpokeSupport.resolveRadiusColumn(layer.params)
+    BigDecimal defaultRadius = SpokeSupport.resolveRadiusDefault(layer.params)
     int elementIndex = 0
 
     layerData.each { LayerData datum ->
@@ -27,8 +29,14 @@ class SpokeRenderer {
       }
 
       Map<String, Object> row = datum.meta?.__row instanceof Map ? (datum.meta.__row as Map<String, Object>) : [:]
-      BigDecimal angle = NumberCoercionUtil.coerceToBigDecimal(row[angleCol]) ?: 0
-      BigDecimal radius = NumberCoercionUtil.coerceToBigDecimal(row[radiusCol]) ?: defaultRadius
+      BigDecimal angle = angleCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(row[angleCol])
+      if (angle == null) {
+        angle = angleDefault
+      }
+      BigDecimal radius = radiusCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(row[radiusCol])
+      if (radius == null) {
+        radius = defaultRadius
+      }
 
       BigDecimal xend = x + radius * angle.cos()
       BigDecimal yend = y + radius * angle.sin()

@@ -156,6 +156,20 @@ class StatEngineTest {
   }
 
   @Test
+  void testDispatchEllipseUsesBiasCorrectedSpread() {
+    LayerSpec layer = makeLayer(CharmStatType.ELLIPSE, [segments: 8, level: 0.95])
+    List<LayerData> data = [
+        new LayerData(x: 0, y: 0, group: 'g1', rowIndex: 0),
+        new LayerData(x: 2, y: 0, group: 'g1', rowIndex: 1)
+    ]
+    List<LayerData> result = StatEngine.apply(layer, data)
+
+    assertEquals(9, result.size())
+    BigDecimal maxX = result.collect { it.x as BigDecimal }.max()
+    assertTrue(maxX > 3.5, 'Expected sample sd based ellipse extent')
+  }
+
+  @Test
   void testDispatchSfAndSfCoordinates() {
     String polygon = 'POLYGON((0 0, 1 0, 1 1, 0 0))'
     List<LayerData> sfInput = [
@@ -181,6 +195,32 @@ class StatEngineTest {
     assertEquals(1, result.size())
     assertNotNull(result[0].xend)
     assertNotNull(result[0].yend)
+  }
+
+  @Test
+  void testDispatchSpokeUsesNumericRadiusParamAsDefault() {
+    LayerSpec layer = makeLayer(CharmStatType.SPOKE, [angle: 'angle', radius: 2.5])
+    List<LayerData> data = [
+        new LayerData(x: 1, y: 1, rowIndex: 0, meta: [__row: [angle: 0.0, radius: 99.0]])
+    ]
+    List<LayerData> result = StatEngine.apply(layer, data)
+
+    assertEquals(1, result.size())
+    assertEquals(3.5, result[0].xend)
+    assertEquals(1.0, result[0].yend)
+  }
+
+  @Test
+  void testDispatchSpokeFallsBackToDefaultWhenRadiusParamIsColumnName() {
+    LayerSpec layer = makeLayer(CharmStatType.SPOKE, [angle: 'angle', radius: 'missing_radius'])
+    List<LayerData> data = [
+        new LayerData(x: 1, y: 1, rowIndex: 0, meta: [__row: [angle: 0.0, radius: 7.0]])
+    ]
+    List<LayerData> result = StatEngine.apply(layer, data)
+
+    assertEquals(1, result.size())
+    assertEquals(2.0, result[0].xend)
+    assertEquals(1.0, result[0].yend)
   }
 
   @Test

@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.Stat
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
@@ -42,14 +43,14 @@ class EllipseStat {
       List<BigDecimal> xs = groupData.collect { NumberCoercionUtil.coerceToBigDecimal(it.x) }
       List<BigDecimal> ys = groupData.collect { NumberCoercionUtil.coerceToBigDecimal(it.y) }
 
-      BigDecimal meanX = (xs.sum() as BigDecimal) / xs.size()
-      BigDecimal meanY = (ys.sum() as BigDecimal) / ys.size()
-      BigDecimal stdX = stdDev(xs)
-      BigDecimal stdY = stdDev(ys)
-      if (stdX <= 0) {
+      BigDecimal meanX = Stat.mean(xs)
+      BigDecimal meanY = Stat.mean(ys)
+      BigDecimal stdX = Stat.sd(xs, true)
+      BigDecimal stdY = Stat.sd(ys, true)
+      if (stdX == null || stdX <= 0) {
         stdX = 1
       }
-      if (stdY <= 0) {
+      if (stdY == null || stdY <= 0) {
         stdY = 1
       }
 
@@ -74,15 +75,5 @@ class EllipseStat {
     }
 
     result
-  }
-
-  private static BigDecimal stdDev(List<BigDecimal> values) {
-    if (values == null || values.size() < 2) {
-      return 0
-    }
-    BigDecimal mean = (values.sum() as BigDecimal) / values.size()
-    BigDecimal variance = values.collect { BigDecimal v -> (v - mean) ** 2 }.sum() as BigDecimal
-    variance = variance / values.size()
-    variance.sqrt()
   }
 }

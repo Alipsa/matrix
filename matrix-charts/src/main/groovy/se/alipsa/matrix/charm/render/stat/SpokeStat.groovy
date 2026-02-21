@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
+import se.alipsa.matrix.charm.render.SpokeSupport
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
 /**
@@ -18,9 +19,10 @@ class SpokeStat {
     }
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
-    String angleCol = params.angle?.toString() ?: 'angle'
-    String radiusCol = params.radius?.toString() ?: 'radius'
-    BigDecimal radiusDefault = NumberCoercionUtil.coerceToBigDecimal(params.radiusDefault ?: params.radius) ?: 1
+    String angleCol = SpokeSupport.resolveAngleColumn(params)
+    BigDecimal angleDefault = SpokeSupport.resolveAngleDefault(params)
+    String radiusCol = SpokeSupport.resolveRadiusColumn(params)
+    BigDecimal radiusDefault = SpokeSupport.resolveRadiusDefault(params)
 
     List<LayerData> result = []
     data.each { LayerData datum ->
@@ -31,8 +33,14 @@ class SpokeStat {
       }
 
       Map<String, Object> row = SfStatSupport.rowMap(datum)
-      BigDecimal angle = NumberCoercionUtil.coerceToBigDecimal(row[angleCol]) ?: 0
-      BigDecimal radius = NumberCoercionUtil.coerceToBigDecimal(row[radiusCol]) ?: radiusDefault
+      BigDecimal angle = angleCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(row[angleCol])
+      if (angle == null) {
+        angle = angleDefault
+      }
+      BigDecimal radius = radiusCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(row[radiusCol])
+      if (radius == null) {
+        radius = radiusDefault
+      }
 
       LayerData updated = LayerDataUtil.copyDatum(datum)
       updated.xend = x + radius * angle.cos()
