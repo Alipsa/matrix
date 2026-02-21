@@ -42,8 +42,11 @@ class PositionEngine {
     switch (positionType) {
       case CharmPositionType.IDENTITY -> IdentityPosition.compute(layer, data)
       case CharmPositionType.DODGE -> DodgePosition.compute(layer, data)
+      case CharmPositionType.DODGE2 -> Dodge2Position.compute(layer, data)
       case CharmPositionType.STACK -> StackPosition.compute(layer, data)
       case CharmPositionType.FILL -> FillPosition.compute(layer, data)
+      case CharmPositionType.JITTER -> JitterPosition.compute(layer, data)
+      case CharmPositionType.NUDGE -> NudgePosition.compute(layer, data)
       default -> {
         log.debug("Unimplemented position type ${positionType}, falling back to identity")
         data

@@ -1,6 +1,13 @@
 package se.alipsa.matrix.charm.util
 
 import groovy.transform.CompileStatic
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 /**
  * Shared numeric coercion helpers used by Charm and gg scale paths.
@@ -38,6 +45,24 @@ class NumberCoercionUtil {
       } catch (NumberFormatException ignored) {
         return null
       }
+    }
+    if (value instanceof LocalDate) {
+      return (value as LocalDate).toEpochDay() as BigDecimal
+    }
+    if (value instanceof LocalDateTime) {
+      return (value as LocalDateTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() as BigDecimal
+    }
+    if (value instanceof ZonedDateTime) {
+      return (value as ZonedDateTime).toInstant().toEpochMilli() as BigDecimal
+    }
+    if (value instanceof OffsetDateTime) {
+      return (value as OffsetDateTime).toInstant().toEpochMilli() as BigDecimal
+    }
+    if (value instanceof Instant) {
+      return (value as Instant).toEpochMilli() as BigDecimal
+    }
+    if (value instanceof LocalTime) {
+      return (value as LocalTime).toSecondOfDay() as BigDecimal
     }
     return null
   }

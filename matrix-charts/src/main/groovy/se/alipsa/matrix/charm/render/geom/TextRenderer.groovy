@@ -42,7 +42,7 @@ class TextRenderer {
       BigDecimal drawX = x + nudgeX * 10
       BigDecimal drawY = y - nudgeY * 10
       String color = GeomUtils.resolveStroke(context, layer, datum)
-      BigDecimal alpha = GeomUtils.resolveAlpha(layer, datum)
+      BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
 
       def text = dataLayer.addText(label)
           .x(drawX)

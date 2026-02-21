@@ -60,11 +60,17 @@ class StatEngineTest {
   }
 
   @Test
-  void testUnimplementedStatFallsBackToIdentity() {
+  void testDispatchEcdf() {
     LayerSpec layer = makeLayer(CharmStatType.ECDF)
-    List<LayerData> data = [new LayerData(x: 1, y: 2, rowIndex: 0)]
+    List<LayerData> data = [
+        new LayerData(x: 1, y: 2, rowIndex: 0),
+        new LayerData(x: 3, y: 5, rowIndex: 1),
+        new LayerData(x: 2, y: 4, rowIndex: 2)
+    ]
     List<LayerData> result = StatEngine.apply(layer, data)
-    assertSame(data, result)
+    assertEquals(3, result.size())
+    assertEquals(1.0, result[0].x)
+    assertEquals(1.0 / 3.0, result[0].y)
   }
 
   @Test

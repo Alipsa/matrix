@@ -322,9 +322,9 @@ class CharmModelExpansionTest {
     spec.aes(x: 'x', y: 'y')
 
     CharmValidationException ex = assertThrows(CharmValidationException) {
-      spec.layer(CharmGeomType.CONTOUR, [:])
+      spec.layer(CharmGeomType.BIN2D, [:])
     }
-    assertTrue(ex.message.contains('CONTOUR'))
+    assertTrue(ex.message.contains('BIN2D'))
   }
 
   @Test

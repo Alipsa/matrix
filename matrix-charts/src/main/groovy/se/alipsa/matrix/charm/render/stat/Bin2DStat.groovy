@@ -1,0 +1,88 @@
+package se.alipsa.matrix.charm.render.stat
+
+import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.util.NumberCoercionUtil
+
+/**
+ * Two-dimensional rectangular binning stat.
+ */
+@CompileStatic
+class Bin2DStat {
+
+  static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
+    if (data == null || data.isEmpty()) {
+      return []
+    }
+
+    Map<String, Object> params = StatEngine.effectiveParams(layer)
+    int bins = NumberCoercionUtil.coerceToBigDecimal(params.bins)?.intValue() ?: 30
+    if (bins < 1) {
+      bins = 30
+    }
+
+    List<LayerData> numeric = data.findAll { LayerData datum ->
+      NumberCoercionUtil.coerceToBigDecimal(datum.x) != null &&
+          NumberCoercionUtil.coerceToBigDecimal(datum.y) != null
+    }
+    if (numeric.isEmpty()) {
+      return []
+    }
+
+    List<BigDecimal> xs = numeric.collect { NumberCoercionUtil.coerceToBigDecimal(it.x) }
+    List<BigDecimal> ys = numeric.collect { NumberCoercionUtil.coerceToBigDecimal(it.y) }
+    BigDecimal xMin = xs.min()
+    BigDecimal xMax = xs.max()
+    BigDecimal yMin = ys.min()
+    BigDecimal yMax = ys.max()
+    if (xMin == xMax) {
+      xMax = xMax + 1
+    }
+    if (yMin == yMax) {
+      yMax = yMax + 1
+    }
+
+    BigDecimal xStep = (xMax - xMin) / bins
+    BigDecimal yStep = (yMax - yMin) / bins
+    Map<String, Integer> counts = [:]
+
+    numeric.each { LayerData datum ->
+      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(datum.x)
+      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(datum.y)
+      int xBin = ((x - xMin) / xStep).intValue()
+      int yBin = ((y - yMin) / yStep).intValue()
+      if (xBin < 0) xBin = 0
+      if (yBin < 0) yBin = 0
+      if (xBin > bins - 1) xBin = bins - 1
+      if (yBin > bins - 1) yBin = bins - 1
+      String key = "${xBin}:${yBin}"
+      counts[key] = (counts[key] ?: 0) + 1
+    }
+
+    List<LayerData> result = []
+    counts.each { String key, Integer count ->
+      String[] parts = key.split(':')
+      int xBin = parts[0] as int
+      int yBin = parts[1] as int
+      BigDecimal xmin = xMin + xStep * xBin
+      BigDecimal xmax = xmin + xStep
+      BigDecimal ymin = yMin + yStep * yBin
+      BigDecimal ymax = ymin + yStep
+      LayerData datum = new LayerData(
+          x: xmin + xStep / 2,
+          y: ymin + yStep / 2,
+          fill: count,
+          rowIndex: -1
+      )
+      datum.meta.count = count
+      datum.meta.xmin = xmin
+      datum.meta.xmax = xmax
+      datum.meta.ymin = ymin
+      datum.meta.ymax = ymax
+      result << datum
+    }
+
+    result
+  }
+}

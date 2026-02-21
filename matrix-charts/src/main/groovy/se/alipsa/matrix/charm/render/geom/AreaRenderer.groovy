@@ -44,7 +44,7 @@ class AreaRenderer {
       LayerData firstDatum = sorted.first()
       String fill = GeomUtils.resolveFill(context, layer, firstDatum)
       String stroke = GeomUtils.resolveStroke(context, layer, firstDatum)
-      BigDecimal alpha = GeomUtils.resolveAlpha(layer, firstDatum, 0.7)
+      BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, firstDatum, 0.7)
       String dashArray = GeomUtils.dashArray(firstDatum.linetype ?: layer.params.linetype)
 
       StringBuilder pathD = new StringBuilder()

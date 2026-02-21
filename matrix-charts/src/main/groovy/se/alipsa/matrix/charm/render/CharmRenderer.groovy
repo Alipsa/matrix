@@ -90,6 +90,7 @@ class CharmRenderer {
     List<Object> sizeValues = []
     List<Object> shapeValues = []
     List<Object> alphaValues = []
+    List<Object> linetypeValues = []
 
     context.chart.layers.each { LayerSpec layer ->
       Matrix sourceData = resolveLayerData(context.chart.data, layer)
@@ -103,11 +104,12 @@ class CharmRenderer {
       sizeValues.addAll(pipelineData.collect { LayerData d -> d.size })
       shapeValues.addAll(pipelineData.collect { LayerData d -> d.shape })
       alphaValues.addAll(pipelineData.collect { LayerData d -> d.alpha })
+      linetypeValues.addAll(pipelineData.collect { LayerData d -> d.linetype })
     }
 
     TrainedScales trained = ScaleEngine.train(
         context.chart, context.config, xValues, yValues, colorValues, fillValues,
-        sizeValues, shapeValues, alphaValues)
+        sizeValues, shapeValues, alphaValues, linetypeValues)
     context.xScale = trained.x
     context.yScale = trained.y
     context.colorScale = trained.color
@@ -115,6 +117,7 @@ class CharmRenderer {
     context.sizeScale = trained.size
     context.shapeScale = trained.shape
     context.alphaScale = trained.alpha
+    context.linetypeScale = trained.linetype
   }
 
   private void renderCanvas(RenderContext context) {

@@ -44,7 +44,7 @@ class DensityRenderer {
       LayerData first = sorted.first()
       String stroke = GeomUtils.resolveStroke(context, layer, first)
       String fill = GeomUtils.resolveFill(context, layer, first)
-      BigDecimal alpha = GeomUtils.resolveAlpha(layer, first)
+      BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, first)
       String dashArray = GeomUtils.dashArray(first.linetype ?: layer.params.linetype)
       boolean drawFill = layer.params.fill != null || first.fill != null
 

@@ -47,6 +47,16 @@ class StatEngine {
       case CharmStatType.SMOOTH -> SmoothStat.compute(layer, data)
       case CharmStatType.DENSITY -> DensityStat.compute(layer, data)
       case CharmStatType.YDENSITY -> YDensityStat.compute(layer, data)
+      case CharmStatType.SUMMARY -> SummaryStat.compute(layer, data)
+      case CharmStatType.BIN2D -> Bin2DStat.compute(layer, data)
+      case CharmStatType.CONTOUR -> ContourStat.compute(layer, data)
+      case CharmStatType.ECDF -> EcdfStat.compute(layer, data)
+      case CharmStatType.QQ -> QqStat.compute(layer, data)
+      case CharmStatType.QQ_LINE -> QqLineStat.compute(layer, data)
+      case CharmStatType.FUNCTION -> FunctionStat.compute(layer, data)
+      case CharmStatType.SUMMARY_BIN -> SummaryBinStat.compute(layer, data)
+      case CharmStatType.UNIQUE -> UniqueStat.compute(layer, data)
+      case CharmStatType.QUANTILE -> QuantileStat.compute(layer, data)
       default -> {
         log.debug("Unimplemented stat type ${statType}, falling back to identity")
         data

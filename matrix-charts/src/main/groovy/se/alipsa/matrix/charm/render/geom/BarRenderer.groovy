@@ -80,7 +80,7 @@ class BarRenderer {
 
       String fill = GeomUtils.resolveFill(context, layer, datum)
       String stroke = layer.params.color != null ? layer.params.color.toString() : GeomUtils.resolveStroke(context, layer, datum)
-      BigDecimal alpha = GeomUtils.resolveAlpha(layer, datum)
+      BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
       BigDecimal strokeWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.lineWidth) ?:
           NumberCoercionUtil.coerceToBigDecimal(layer.params.linewidth) ?: 0.5
 

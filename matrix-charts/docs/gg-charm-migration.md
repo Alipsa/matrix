@@ -233,26 +233,26 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P1 -- Common geoms:**
 
-3.1.13 [ ] GeomJitter
-3.1.14 [ ] GeomStep
-3.1.15 [ ] GeomErrorbar
-3.1.16 [ ] GeomErrorbarh
-3.1.17 [ ] GeomRibbon
-3.1.18 [ ] GeomSegment
-3.1.19 [ ] GeomHline
-3.1.20 [ ] GeomVline
-3.1.21 [ ] GeomAbline
-3.1.22 [ ] GeomLabel
-3.1.23 [ ] GeomRug
-3.1.24 [ ] GeomFreqpoly
-3.1.25 [ ] GeomPath
-3.1.26 [ ] GeomRect
-3.1.27 [ ] GeomPolygon
-3.1.28 [ ] GeomCrossbar
-3.1.29 [ ] GeomLinerange
-3.1.30 [ ] GeomPointrange
-3.1.31 [ ] GeomHex
-3.1.32 [ ] GeomContour
+3.1.13 [x] GeomJitter
+3.1.14 [x] GeomStep
+3.1.15 [x] GeomErrorbar
+3.1.16 [x] GeomErrorbarh
+3.1.17 [x] GeomRibbon
+3.1.18 [x] GeomSegment
+3.1.19 [x] GeomHline
+3.1.20 [x] GeomVline
+3.1.21 [x] GeomAbline
+3.1.22 [x] GeomLabel
+3.1.23 [x] GeomRug
+3.1.24 [x] GeomFreqpoly
+3.1.25 [x] GeomPath
+3.1.26 [x] GeomRect
+3.1.27 [x] GeomPolygon
+3.1.28 [x] GeomCrossbar
+3.1.29 [x] GeomLinerange
+3.1.30 [x] GeomPointrange
+3.1.31 [x] GeomHex
+3.1.32 [x] GeomContour
 
 **P2 -- Specialized geoms:**
 
@@ -294,16 +294,16 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P1:**
 
-3.2.8 [ ] SUMMARY
-3.2.9 [ ] BIN2D
-3.2.10 [ ] CONTOUR
-3.2.11 [ ] ECDF
-3.2.12 [ ] QQ
-3.2.13 [ ] QQ_LINE
-3.2.14 [ ] FUNCTION
-3.2.15 [ ] SUMMARY_BIN
-3.2.16 [ ] UNIQUE
-3.2.17 [ ] QUANTILE
+3.2.8 [x] SUMMARY
+3.2.9 [x] BIN2D
+3.2.10 [x] CONTOUR
+3.2.11 [x] ECDF
+3.2.12 [x] QQ
+3.2.13 [x] QQ_LINE
+3.2.14 [x] FUNCTION
+3.2.15 [x] SUMMARY_BIN
+3.2.16 [x] UNIQUE
+3.2.17 [x] QUANTILE
 
 **P2:**
 
@@ -328,9 +328,9 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P1:**
 
-3.3.5 [ ] JITTER
-3.3.6 [ ] DODGE2
-3.3.7 [ ] NUDGE
+3.3.5 [x] JITTER
+3.3.6 [x] DODGE2
+3.3.7 [x] NUDGE
 
 ### 3.4 Coordinate Surface (from `gg/coord`)
 
@@ -342,9 +342,9 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P1:**
 
-3.4.4 [ ] CoordPolar
-3.4.5 [ ] CoordRadial
-3.4.6 [ ] CoordTrans
+3.4.4 [x] CoordPolar
+3.4.5 [x] CoordRadial
+3.4.6 [x] CoordTrans
 
 **P2:**
 
@@ -371,24 +371,24 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 **P1 -- Positional scales:**
 
-3.5.10 [ ] ScaleXSqrt / ScaleYSqrt
-3.5.11 [ ] ScaleXDate / ScaleYDate
-3.5.12 [ ] ScaleXDatetime / ScaleYDatetime
-3.5.13 [ ] ScaleXTime / ScaleYTime
-3.5.14 [ ] ScaleXBinned / ScaleYBinned
+3.5.10 [x] ScaleXSqrt / ScaleYSqrt
+3.5.11 [x] ScaleXDate / ScaleYDate
+3.5.12 [x] ScaleXDatetime / ScaleYDatetime
+3.5.13 [x] ScaleXTime / ScaleYTime
+3.5.14 [x] ScaleXBinned / ScaleYBinned
 
 **P1 -- Non-positional scales:**
 
-3.5.15 [ ] ScaleColorDistiller / ScaleColorFermenter
-3.5.16 [ ] ScaleColorGrey / ScaleColorHue
-3.5.17 [ ] ScaleColorIdentity
-3.5.18 [ ] ScaleColorSteps / ScaleColorSteps2 / ScaleColorStepsN
-3.5.19 [ ] ScaleSizeContinuous / ScaleSizeDiscrete / ScaleSizeBinned / ScaleSizeArea / ScaleSizeIdentity
-3.5.20 [ ] ScaleAlphaContinuous / ScaleAlphaDiscrete / ScaleAlphaBinned / ScaleAlphaIdentity
-3.5.21 [ ] ScaleShape / ScaleShapeIdentity / ScaleShapeManual / ScaleShapeBinned
-3.5.22 [ ] ScaleLinetype / ScaleLinetypeIdentity / ScaleLinetypeManual
-3.5.23 [ ] ScaleRadius
-3.5.24 [ ] SecondaryAxis
+3.5.15 [x] ScaleColorDistiller / ScaleColorFermenter
+3.5.16 [x] ScaleColorGrey / ScaleColorHue
+3.5.17 [x] ScaleColorIdentity
+3.5.18 [x] ScaleColorSteps / ScaleColorSteps2 / ScaleColorStepsN
+3.5.19 [x] ScaleSizeContinuous / ScaleSizeDiscrete / ScaleSizeBinned / ScaleSizeArea / ScaleSizeIdentity
+3.5.20 [x] ScaleAlphaContinuous / ScaleAlphaDiscrete / ScaleAlphaBinned / ScaleAlphaIdentity
+3.5.21 [x] ScaleShape / ScaleShapeIdentity / ScaleShapeManual / ScaleShapeBinned
+3.5.22 [x] ScaleLinetype / ScaleLinetypeIdentity / ScaleLinetypeManual
+3.5.23 [x] ScaleRadius
+3.5.24 [x] SecondaryAxis
 
 ### 3.6 Annotation Surface (from `gg/`)
 
@@ -750,17 +750,24 @@ Executed commands:
 
 _Implement the P1 tier from the feature inventory._
 
-5.13.1 [ ] Implement P1 geom renderers (3.1.13-3.1.32): jitter, step, errorbar, errorbarh, ribbon, segment, hline, vline, abline, label, rug, freqpoly, path, rect, polygon, crossbar, linerange, pointrange, hex, contour.
+5.13.1 [x] Implement P1 geom renderers (3.1.13-3.1.32): jitter, step, errorbar, errorbarh, ribbon, segment, hline, vline, abline, label, rug, freqpoly, path, rect, polygon, crossbar, linerange, pointrange, hex, contour.
 
-5.13.2 [ ] Implement P1 stats (3.2.8-3.2.17): SUMMARY, BIN2D, CONTOUR, ECDF, QQ, QQ_LINE, FUNCTION, SUMMARY_BIN, UNIQUE, QUANTILE.
+5.13.2 [x] Implement P1 stats (3.2.8-3.2.17): SUMMARY, BIN2D, CONTOUR, ECDF, QQ, QQ_LINE, FUNCTION, SUMMARY_BIN, UNIQUE, QUANTILE.
 
-5.13.3 [ ] Implement P1 positions (3.3.5-3.3.7): JITTER, DODGE2, NUDGE.
+5.13.3 [x] Implement P1 positions (3.3.5-3.3.7): JITTER, DODGE2, NUDGE.
 
-5.13.4 [ ] Implement P1 coords (3.4.4-3.4.6): Polar, Radial, Trans. Ensure geom renderers emit coord-specific geometry (e.g., polar arcs).
+5.13.4 [x] Implement P1 coords (3.4.4-3.4.6): Polar, Radial, Trans. Ensure geom renderers emit coord-specific geometry (e.g., polar arcs).
 
-5.13.5 [ ] Implement P1 scales (3.5.10-3.5.24): sqrt, date, datetime, time, binned positional; distiller, fermenter, grey, hue, identity, steps color; size, alpha, shape, linetype, radius; secondary axis.
+5.13.5 [x] Implement P1 scales (3.5.10-3.5.24): sqrt, date, datetime, time, binned positional; distiller, fermenter, grey, hue, identity, steps color; size, alpha, shape, linetype, radius; secondary axis.
 
-5.13.6 [ ] Add tests for each P1 feature.
+5.13.6 [x] Add tests for each P1 feature.
+
+Executed commands:
+- [x] `./gradlew :matrix-charts:compileGroovy`
+- [x] `./gradlew :matrix-charts:compileGroovy :matrix-charts:compileTestGroovy`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true --tests "charm.core.CharmModelExpansionTest" --tests "charm.render.geom.P1GeomRendererTest" --tests "charm.render.stat.P1StatTest" --tests "charm.render.position.PositionEngineTest" --tests "charm.render.coord.CoordEngineTest" --tests "charm.render.scale.ScaleEngineTest"`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true`
+- [x] `./gradlew test -Pheadless=true`
 
 ### 5.14 Phase 14 -- P2 Geoms, Stats, Coords, and SF Infrastructure
 

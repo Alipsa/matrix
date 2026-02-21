@@ -1,0 +1,42 @@
+package se.alipsa.matrix.charm.render.position
+
+import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.render.LayerDataUtil
+import se.alipsa.matrix.charm.util.NumberCoercionUtil
+
+/**
+ * Nudge position shifts points by fixed x/y offsets.
+ */
+@CompileStatic
+class NudgePosition {
+
+  static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
+    if (data == null || data.isEmpty()) {
+      return data
+    }
+
+    Map<String, Object> params = PositionEngine.effectiveParams(layer)
+    BigDecimal nudgeX = NumberCoercionUtil.coerceToBigDecimal(params.x) ?: 0
+    BigDecimal nudgeY = NumberCoercionUtil.coerceToBigDecimal(params.y) ?: 0
+    if (nudgeX == 0 && nudgeY == 0) {
+      return data
+    }
+
+    List<LayerData> result = []
+    data.each { LayerData datum ->
+      LayerData updated = LayerDataUtil.copyDatum(datum)
+      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(updated.x)
+      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(updated.y)
+      if (x != null) {
+        updated.x = x + nudgeX
+      }
+      if (y != null) {
+        updated.y = y + nudgeY
+      }
+      result << updated
+    }
+    result
+  }
+}
