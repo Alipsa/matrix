@@ -115,6 +115,28 @@ class StatEngineTest {
   }
 
   @Test
+  void testDispatchDensity2DSortsByNumericLevel() {
+    LayerSpec layer = makeLayer(CharmStatType.DENSITY_2D, [bins: 12])
+    List<LayerData> data = []
+    int rowIndex = 0
+    12.times {
+      data << new LayerData(x: 0.1, y: 0.1, rowIndex: rowIndex++)
+    }
+    11.times {
+      data << new LayerData(x: 1.1, y: 0.1, rowIndex: rowIndex++)
+    }
+    3.times {
+      data << new LayerData(x: 2.1, y: 0.1, rowIndex: rowIndex++)
+    }
+
+    List<LayerData> result = StatEngine.apply(layer, data)
+
+    assertEquals(3, result.size())
+    List<Integer> levels = result.collect { (it.meta.level as Number).intValue() }
+    assertEquals([2, 10, 11], levels)
+  }
+
+  @Test
   void testDispatchBinHex() {
     LayerSpec layer = makeLayer(CharmStatType.BIN_HEX, [bins: 5])
     List<LayerData> data = (1..30).collect {

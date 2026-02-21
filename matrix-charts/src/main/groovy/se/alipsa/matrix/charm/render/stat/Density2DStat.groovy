@@ -99,11 +99,11 @@ class Density2DStat {
     }
 
     result.sort { LayerData a, LayerData b ->
-      String g1 = a.group?.toString() ?: ''
-      String g2 = b.group?.toString() ?: ''
-      int g = g1 <=> g2
-      if (g != 0) {
-        return g
+      BigDecimal level1 = NumberCoercionUtil.coerceToBigDecimal(a.meta?.level) ?: 0
+      BigDecimal level2 = NumberCoercionUtil.coerceToBigDecimal(b.meta?.level) ?: 0
+      int levelCompare = level1 <=> level2
+      if (levelCompare != 0) {
+        return levelCompare
       }
       BigDecimal x1 = NumberCoercionUtil.coerceToBigDecimal(a.x) ?: 0
       BigDecimal x2 = NumberCoercionUtil.coerceToBigDecimal(b.x) ?: 0

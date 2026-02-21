@@ -23,7 +23,14 @@ class MapCoord {
     }
 
     List<LayerData> clampedInput = CartesianCoord.compute(coordSpec, data)
-    String projection = coordSpec?.params?.projection?.toString()?.toLowerCase(Locale.ROOT) ?: 'mercator'
+    String requestedProjection = coordSpec?.params?.projection?.toString()?.toLowerCase(Locale.ROOT) ?: 'mercator'
+    String projection = switch (requestedProjection) {
+      case 'mercator', 'equirectangular', 'identity' -> requestedProjection
+      default -> {
+        log.warn("Unsupported map projection '${requestedProjection}', using identity")
+        'identity'
+      }
+    }
     List<LayerData> transformed = []
     clampedInput.each { LayerData datum ->
       LayerData updated = LayerDataUtil.copyDatum(datum)
@@ -45,7 +52,6 @@ class MapCoord {
             updated.y = y
           }
           default -> {
-            log.warn("Unsupported map projection '${projection}', using identity")
             updated.x = x
             updated.y = y
           }

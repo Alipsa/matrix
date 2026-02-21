@@ -133,7 +133,7 @@ class CoordEngineTest {
     List<LayerData> result = CoordEngine.apply(coord, data)
 
     assertEquals(1, result.size())
-    double expectedY = 30 * Math.cos(Math.toRadians(30))
+    double expectedY = 30 / Math.cos(Math.toRadians(30))
     assertEquals(expectedY, result[0].y as double, 1.0e-9d)
   }
 
