@@ -1477,16 +1477,16 @@ class GgStat {
     BigDecimal g = h - j
 
     if (j <= 1) {
-      BigDecimal x1 = sortedValues[0]
-      BigDecimal x2 = sortedValues[1]
+      BigDecimal x1 = sortedValues[0] as BigDecimal
+      BigDecimal x2 = sortedValues[1] as BigDecimal
       return x1 + g * (x2 - x1)
     }
     if (j >= n) {
       return sortedValues[n - 1]
     }
 
-    BigDecimal xj = sortedValues[j - 1]
-    BigDecimal xj1 = sortedValues[j]
+    BigDecimal xj = sortedValues[j - 1] as BigDecimal
+    BigDecimal xj1 = sortedValues[j] as BigDecimal
     return xj + g * (xj1 - xj)
   }
 
