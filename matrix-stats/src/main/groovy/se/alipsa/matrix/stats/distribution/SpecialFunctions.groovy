@@ -1,6 +1,8 @@
 package se.alipsa.matrix.stats.distribution
 
 import groovy.transform.CompileStatic
+import java.math.MathContext
+import java.math.RoundingMode
 import static se.alipsa.matrix.ext.NumberExtension.*
 import static java.math.BigDecimal.*
 /**
@@ -15,6 +17,9 @@ class SpecialFunctions {
 
   private static final double EPSILON = 1e-14
   private static final int MAX_ITERATIONS = 200
+  private static final MathContext BETA_MC = new MathContext(50, RoundingMode.HALF_EVEN)
+  private static final BigDecimal BETA_EPSILON = new BigDecimal('1e-30')
+  private static final BigDecimal BETA_TINY = new BigDecimal('1e-40')
 
   /**
    * Computes the regularized incomplete beta function I_x(a, b).
@@ -57,28 +62,31 @@ class SpecialFunctions {
   }
 
   static BigDecimal regularizedIncompleteBeta(BigDecimal x, BigDecimal a, BigDecimal b) {
-    if (x < 0.0 || x > 1.0) {
+    if (x < ZERO || x > ONE) {
       throw new IllegalArgumentException("x must be between 0 and 1, got: $x")
     }
-    if (a <= 0.0 || b <= 0.0) {
+    if (a <= ZERO || b <= ZERO) {
       throw new IllegalArgumentException("a and b must be positive, got a=$a, b=$b")
     }
 
-    if (x == 0.0) return 0.0
-    if (x == 1.0) return 1.0
+    if (x == ZERO) return ZERO
+    if (x == ONE) return ONE
 
     // Use symmetry relation for faster convergence when x > (a+1)/(a+b+2)
-    if (x > (a + 1.0) / (a + b + 2.0)) {
-      return 1.0 - regularizedIncompleteBeta(1.0 - x, b, a)
+    BigDecimal threshold = a.add(ONE, BETA_MC).divide(a.add(b, BETA_MC).add(TWO, BETA_MC), BETA_MC)
+    if (x > threshold) {
+      return ONE.subtract(regularizedIncompleteBeta(ONE.subtract(x, BETA_MC), b, a), BETA_MC)
     }
 
     // Compute using continued fraction
-    BigDecimal bt = (
-        logGamma(a + b) - logGamma(a) - logGamma(b) +
-            a * x.log() + b * (1.0 - x).log()
-    ).exp()
+    BigDecimal btExponent = logGamma(a.add(b, BETA_MC))
+        .subtract(logGamma(a), BETA_MC)
+        .subtract(logGamma(b), BETA_MC)
+        .add(a.multiply(x.log(), BETA_MC), BETA_MC)
+        .add(b.multiply(ONE.subtract(x, BETA_MC).log(), BETA_MC), BETA_MC)
+    BigDecimal bt = btExponent.exp()
 
-    return bt * betaContinuedFraction(x, a, b) / a
+    bt.multiply(betaContinuedFraction(x, a, b), BETA_MC).divide(a, BETA_MC)
   }
 
   /**
@@ -124,35 +132,41 @@ class SpecialFunctions {
   }
 
   private static BigDecimal betaContinuedFraction(BigDecimal x, BigDecimal a, BigDecimal b) {
-    BigDecimal qab = a + b
-    BigDecimal qap = a + 1.0
-    BigDecimal qam = a - 1.0
-    BigDecimal c = 1.0
-    BigDecimal d = 1.0 - qab * x / qap
-    if (d.abs() < 1e-30) d = 1e-30
-    d = 1.0 / d
+    BigDecimal qab = a.add(b, BETA_MC)
+    BigDecimal qap = a.add(ONE, BETA_MC)
+    BigDecimal qam = a.subtract(ONE, BETA_MC)
+    BigDecimal c = ONE
+    BigDecimal d = ONE.subtract(qab.multiply(x, BETA_MC).divide(qap, BETA_MC), BETA_MC)
+    if (d.abs().compareTo(BETA_TINY) < 0) d = BETA_TINY
+    d = ONE.divide(d, BETA_MC)
     BigDecimal h = d
 
     for (int m = 1; m <= MAX_ITERATIONS; m++) {
-      int m2 = 2 * m
-      BigDecimal aa = m * (b - m) * x / ((qam + m2) * (a + m2))
-      d = 1.0 + aa * d
-      if (d.abs() < 1e-30) d = 1e-30
-      c = 1.0 + aa / c
-      if (c.abs() < 1e-30) c = 1e-30
-      d = 1.0 / d
-      h *= d * c
+      BigDecimal mValue = BigDecimal.valueOf(m)
+      BigDecimal m2Value = BigDecimal.valueOf(2L * m)
+      BigDecimal aa = mValue.multiply(b.subtract(mValue, BETA_MC), BETA_MC)
+          .multiply(x, BETA_MC)
+          .divide(qam.add(m2Value, BETA_MC).multiply(a.add(m2Value, BETA_MC), BETA_MC), BETA_MC)
+      d = ONE.add(aa.multiply(d, BETA_MC), BETA_MC)
+      if (d.abs().compareTo(BETA_TINY) < 0) d = BETA_TINY
+      c = ONE.add(aa.divide(c, BETA_MC), BETA_MC)
+      if (c.abs().compareTo(BETA_TINY) < 0) c = BETA_TINY
+      d = ONE.divide(d, BETA_MC)
+      h = h.multiply(d.multiply(c, BETA_MC), BETA_MC)
 
-      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
-      d = 1.0 + aa * d
-      if (d.abs() < 1e-30) d = 1e-30
-      c = 1.0 + aa / c
-      if (c.abs() < 1e-30) c = 1e-30
-      d = 1.0 / d
-      BigDecimal delta = d * c
-      h *= delta
+      aa = a.add(mValue, BETA_MC).negate()
+          .multiply(qab.add(mValue, BETA_MC), BETA_MC)
+          .multiply(x, BETA_MC)
+          .divide(a.add(m2Value, BETA_MC).multiply(qap.add(m2Value, BETA_MC), BETA_MC), BETA_MC)
+      d = ONE.add(aa.multiply(d, BETA_MC), BETA_MC)
+      if (d.abs().compareTo(BETA_TINY) < 0) d = BETA_TINY
+      c = ONE.add(aa.divide(c, BETA_MC), BETA_MC)
+      if (c.abs().compareTo(BETA_TINY) < 0) c = BETA_TINY
+      d = ONE.divide(d, BETA_MC)
+      BigDecimal delta = d.multiply(c, BETA_MC)
+      h = h.multiply(delta, BETA_MC)
 
-      if ((delta - 1.0).abs() < EPSILON) {
+      if (delta.subtract(ONE, BETA_MC).abs().compareTo(BETA_EPSILON) < 0) {
         return h
       }
     }
