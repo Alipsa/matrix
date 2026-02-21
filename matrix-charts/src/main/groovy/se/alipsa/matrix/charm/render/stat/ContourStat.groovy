@@ -17,9 +17,10 @@ class ContourStat {
     }
 
     List<LayerData> withZ = data.findAll { LayerData datum ->
+      Object zCandidate = datum.label != null ? datum.label : datum.meta?.z
       NumberCoercionUtil.coerceToBigDecimal(datum.x) != null &&
           NumberCoercionUtil.coerceToBigDecimal(datum.y) != null &&
-          NumberCoercionUtil.coerceToBigDecimal(datum.label ?: datum.meta?.z) != null
+          NumberCoercionUtil.coerceToBigDecimal(zCandidate) != null
     }
     if (withZ.isEmpty()) {
       return data
@@ -31,7 +32,8 @@ class ContourStat {
     }
 
     List<BigDecimal> zValues = withZ.collect { LayerData datum ->
-      NumberCoercionUtil.coerceToBigDecimal(datum.label ?: datum.meta?.z)
+      Object zCandidate = datum.label != null ? datum.label : datum.meta?.z
+      NumberCoercionUtil.coerceToBigDecimal(zCandidate)
     }
     BigDecimal zMin = zValues.min()
     BigDecimal zMax = zValues.max()
@@ -45,7 +47,8 @@ class ContourStat {
 
     List<LayerData> result = []
     withZ.each { LayerData datum ->
-      BigDecimal z = NumberCoercionUtil.coerceToBigDecimal(datum.label ?: datum.meta?.z)
+      Object zCandidate = datum.label != null ? datum.label : datum.meta?.z
+      BigDecimal z = NumberCoercionUtil.coerceToBigDecimal(zCandidate)
       int levelIdx = ((z - zMin) / step).intValue()
       if (levelIdx < 0) levelIdx = 0
       if (levelIdx > bins - 1) levelIdx = bins - 1

@@ -17,6 +17,9 @@ class SegmentRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
     int elementIndex = 0
+    LayerData styleDatum = layerData.isEmpty()
+        ? new LayerData(rowIndex: -1, meta: [:])
+        : layerData.first()
     switch (layer.geomType) {
       case CharmGeomType.HLINE -> {
         List<BigDecimal> yValues = collectReferenceValues(layerData, layer.params.yintercept, true)
@@ -25,7 +28,7 @@ class SegmentRenderer {
           if (yPx == null) {
             return
           }
-          drawLine(dataLayer, context, layer, layerData.first(), context.xScale.rangeStart, yPx, context.xScale.rangeEnd, yPx, elementIndex)
+          drawLine(dataLayer, context, layer, styleDatum, context.xScale.rangeStart, yPx, context.xScale.rangeEnd, yPx, elementIndex)
           elementIndex++
         }
       }
@@ -36,7 +39,7 @@ class SegmentRenderer {
           if (xPx == null) {
             return
           }
-          drawLine(dataLayer, context, layer, layerData.first(), xPx, context.yScale.rangeStart, xPx, context.yScale.rangeEnd, elementIndex)
+          drawLine(dataLayer, context, layer, styleDatum, xPx, context.yScale.rangeStart, xPx, context.yScale.rangeEnd, elementIndex)
           elementIndex++
         }
       }
@@ -54,7 +57,7 @@ class SegmentRenderer {
           BigDecimal px2 = context.xScale.transform(x2)
           BigDecimal py2 = context.yScale.transform(y2)
           if (px1 != null && py1 != null && px2 != null && py2 != null) {
-            drawLine(dataLayer, context, layer, layerData.first(), px1, py1, px2, py2, elementIndex)
+            drawLine(dataLayer, context, layer, styleDatum, px1, py1, px2, py2, elementIndex)
           }
         }
       }
@@ -76,9 +79,10 @@ class SegmentRenderer {
 
   private static List<BigDecimal> collectReferenceValues(List<LayerData> layerData, Object layerParam, boolean horizontal) {
     List<BigDecimal> values = layerData.collect { LayerData datum ->
-      horizontal
-          ? NumberCoercionUtil.coerceToBigDecimal(datum.y ?: datum.meta?.yintercept)
-          : NumberCoercionUtil.coerceToBigDecimal(datum.x ?: datum.meta?.xintercept)
+      Object value = horizontal
+          ? (datum.y != null ? datum.y : datum.meta?.yintercept)
+          : (datum.x != null ? datum.x : datum.meta?.xintercept)
+      NumberCoercionUtil.coerceToBigDecimal(value)
     }.findAll { it != null } as List<BigDecimal>
     BigDecimal paramValue = NumberCoercionUtil.coerceToBigDecimal(layerParam)
     if (paramValue != null) {

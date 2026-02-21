@@ -17,7 +17,7 @@ class StatUtils {
   static Map<Object, List<LayerData>> groupBySeries(List<LayerData> data) {
     Map<Object, List<LayerData>> groups = new LinkedHashMap<>()
     data.each { LayerData datum ->
-      Object key = datum.group ?: datum.color ?: datum.fill ?: '__all__'
+      Object key = seriesKey(datum)
       List<LayerData> bucket = groups[key]
       if (bucket == null) {
         bucket = []
@@ -26,6 +26,19 @@ class StatUtils {
       bucket << datum
     }
     groups
+  }
+
+  static Object seriesKey(LayerData datum) {
+    if (datum.group != null) {
+      return datum.group
+    }
+    if (datum.color != null) {
+      return datum.color
+    }
+    if (datum.fill != null) {
+      return datum.fill
+    }
+    '__all__'
   }
 
   static List<BigDecimal> sortedNumericValues(List<LayerData> data, Closure<Object> selector) {

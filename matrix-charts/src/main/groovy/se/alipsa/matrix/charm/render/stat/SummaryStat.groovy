@@ -19,10 +19,19 @@ class SummaryStat {
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
     String fun = (params.fun ?: params['fun.y'] ?: 'mean').toString().toLowerCase(Locale.ROOT)
-    Map<Object, List<LayerData>> groups = StatUtils.groupBySeries(data)
+    Map<List<Object>, List<LayerData>> groups = new LinkedHashMap<>()
+    data.each { LayerData datum ->
+      List<Object> key = [StatUtils.seriesKey(datum), datum.x]
+      List<LayerData> bucket = groups[key]
+      if (bucket == null) {
+        bucket = []
+        groups[key] = bucket
+      }
+      bucket << datum
+    }
     List<LayerData> result = []
 
-    groups.each { Object key, List<LayerData> bucket ->
+    groups.each { List<Object> key, List<LayerData> bucket ->
       List<BigDecimal> values = StatUtils.sortedNumericValues(bucket) { LayerData d -> d.y }
       if (values.isEmpty()) {
         return

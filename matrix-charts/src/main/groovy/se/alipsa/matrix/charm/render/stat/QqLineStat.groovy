@@ -17,7 +17,7 @@ class QqLineStat {
 
     List<LayerData> result = []
     StatUtils.groupBySeries(data).each { Object key, List<LayerData> bucket ->
-      List<BigDecimal> values = StatUtils.sortedNumericValues(bucket) { LayerData d -> d.x ?: d.y }
+      List<BigDecimal> values = StatUtils.sortedNumericValues(bucket) { LayerData d -> d.x != null ? d.x : d.y }
       if (values.size() < 2) {
         return
       }

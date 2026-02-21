@@ -21,13 +21,24 @@ class P1StatTest {
     LayerSpec layer = makeLayer(CharmStatType.SUMMARY, [fun: 'mean'])
     List<LayerData> data = [
         new LayerData(x: 1, y: 2, group: 'g1', rowIndex: 0),
-        new LayerData(x: 2, y: 4, group: 'g1', rowIndex: 1),
-        new LayerData(x: 1, y: 3, group: 'g2', rowIndex: 2),
-        new LayerData(x: 2, y: 5, group: 'g2', rowIndex: 3)
+        new LayerData(x: 1, y: 4, group: 'g1', rowIndex: 1),
+        new LayerData(x: 2, y: 6, group: 'g1', rowIndex: 2),
+        new LayerData(x: 2, y: 8, group: 'g1', rowIndex: 3),
+        new LayerData(x: 1, y: 1, group: 'g2', rowIndex: 4),
+        new LayerData(x: 1, y: 3, group: 'g2', rowIndex: 5),
+        new LayerData(x: 2, y: 5, group: 'g2', rowIndex: 6),
+        new LayerData(x: 2, y: 7, group: 'g2', rowIndex: 7)
     ]
     List<LayerData> result = StatEngine.apply(layer, data)
-    assertEquals(2, result.size())
-    assertNotNull(result[0].meta.n)
+    assertEquals(4, result.size())
+    BigDecimal g1x1 = result.find { it.group == 'g1' && (it.x as BigDecimal).compareTo(1.0) == 0 }?.y as BigDecimal
+    BigDecimal g1x2 = result.find { it.group == 'g1' && (it.x as BigDecimal).compareTo(2.0) == 0 }?.y as BigDecimal
+    BigDecimal g2x1 = result.find { it.group == 'g2' && (it.x as BigDecimal).compareTo(1.0) == 0 }?.y as BigDecimal
+    BigDecimal g2x2 = result.find { it.group == 'g2' && (it.x as BigDecimal).compareTo(2.0) == 0 }?.y as BigDecimal
+    assertEquals(0, g1x1.compareTo(3.0))
+    assertEquals(0, g1x2.compareTo(7.0))
+    assertEquals(0, g2x1.compareTo(2.0))
+    assertEquals(0, g2x2.compareTo(6.0))
   }
 
   @Test
@@ -56,6 +67,18 @@ class P1StatTest {
   }
 
   @Test
+  void testContourStatKeepsZeroZValues() {
+    LayerSpec layer = makeLayer(CharmStatType.CONTOUR, [bins: 2])
+    List<LayerData> data = [
+        new LayerData(x: 1, y: 1, label: 0, rowIndex: 0),
+        new LayerData(x: 2, y: 2, label: 1, rowIndex: 1)
+    ]
+    List<LayerData> result = StatEngine.apply(layer, data)
+    assertEquals(2, result.size())
+    assertTrue(result.any { (it.meta.z as BigDecimal).compareTo(0.0) == 0 })
+  }
+
+  @Test
   void testQqStat() {
     LayerSpec layer = makeLayer(CharmStatType.QQ)
     List<LayerData> data = (1..8).collect { int i ->
@@ -68,6 +91,20 @@ class P1StatTest {
   }
 
   @Test
+  void testQqStatUsesZeroXValues() {
+    LayerSpec layer = makeLayer(CharmStatType.QQ)
+    List<LayerData> data = [
+        new LayerData(x: 0, y: 100, rowIndex: 0),
+        new LayerData(x: 1, y: 101, rowIndex: 1),
+        new LayerData(x: 2, y: 102, rowIndex: 2)
+    ]
+    List<LayerData> result = StatEngine.apply(layer, data)
+    List<BigDecimal> observed = result.collect { it.y as BigDecimal }
+    assertTrue(observed.any { it.compareTo(0.0) == 0 })
+    assertFalse(observed.any { it.compareTo(100.0) == 0 })
+  }
+
+  @Test
   void testQqLineStat() {
     LayerSpec layer = makeLayer(CharmStatType.QQ_LINE)
     List<LayerData> data = (1..8).collect { int i ->
@@ -77,6 +114,21 @@ class P1StatTest {
     assertEquals(2, result.size())
     assertNotNull(result[0].meta.slope)
     assertNotNull(result[0].meta.intercept)
+  }
+
+  @Test
+  void testQqLineStatUsesZeroXValues() {
+    LayerSpec layer = makeLayer(CharmStatType.QQ_LINE)
+    List<LayerData> data = [
+        new LayerData(x: 0, y: 100, rowIndex: 0),
+        new LayerData(x: 1, y: 101, rowIndex: 1),
+        new LayerData(x: 2, y: 102, rowIndex: 2),
+        new LayerData(x: 3, y: 103, rowIndex: 3)
+    ]
+    List<LayerData> result = StatEngine.apply(layer, data)
+    BigDecimal slope = result[0].meta.slope as BigDecimal
+    assertTrue(slope > 0)
+    assertTrue(slope < 5)
   }
 
   @Test
@@ -133,6 +185,22 @@ class P1StatTest {
     assertTrue(Double.isFinite(upper as double))
     assertTrue(lower < 0)
     assertTrue(upper > 0)
+  }
+
+  @Test
+  void testGroupBySeriesKeepsFalsyKeys() {
+    List<LayerData> data = [
+        new LayerData(x: 1, y: 1, group: 0, rowIndex: 0),
+        new LayerData(x: 2, y: 2, group: false, rowIndex: 1),
+        new LayerData(x: 3, y: 3, group: '', rowIndex: 2),
+        new LayerData(x: 4, y: 4, rowIndex: 3)
+    ]
+    Map<Object, List<LayerData>> grouped = StatUtils.groupBySeries(data)
+    assertEquals(4, grouped.size())
+    assertTrue(grouped.containsKey(0))
+    assertTrue(grouped.containsKey(false))
+    assertTrue(grouped.containsKey(''))
+    assertTrue(grouped.containsKey('__all__'))
   }
 
   @Test

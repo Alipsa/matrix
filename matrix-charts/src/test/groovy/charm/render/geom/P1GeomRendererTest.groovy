@@ -83,6 +83,42 @@ class P1GeomRendererTest {
     }
   }
 
+  @Test
+  void testReferenceLinesPreserveZeroInterceptsFromData() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[0.0, 0.0]])
+        .build()
+
+    Chart chart = plot(data) {
+      aes([x: 'x', y: 'y'])
+      layer(CharmGeomType.HLINE, [:])
+      layer(CharmGeomType.VLINE, [:])
+    }.build()
+
+    String svg = SvgWriter.toXml(chart.render())
+    int segmentCount = (svg =~ /class=['"]charm-segment['"]/).count
+    assertEquals(2, segmentCount)
+  }
+
+  @Test
+  void testReferenceLinesRenderWithEmptyDataAndParamIntercepts() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([])
+        .build()
+
+    Chart chart = plot(data) {
+      aes([x: 'x', y: 'y'])
+      layer(CharmGeomType.HLINE, [yintercept: 0.0])
+      layer(CharmGeomType.VLINE, [xintercept: 0.0])
+    }.build()
+
+    String svg = SvgWriter.toXml(chart.render())
+    int segmentCount = (svg =~ /class=['"]charm-segment['"]/).count
+    assertEquals(2, segmentCount)
+  }
+
   private static Chart withCssIdsEnabled(Chart chart) {
     new Chart(
         chart.data,
