@@ -167,6 +167,20 @@ class StatEngineTest {
   }
 
   @Test
+  void testDispatchSummary2DPreservesZeroFillValues() {
+    LayerSpec layer = makeLayer(CharmStatType.SUMMARY_2D, [bins: 2, fun: 'mean'])
+    List<LayerData> data = [
+        new LayerData(x: 0, y: 0, fill: 0, label: 9, rowIndex: 0),
+        new LayerData(x: 0, y: 0, fill: 0, label: 8, rowIndex: 1)
+    ]
+
+    List<LayerData> result = StatEngine.apply(layer, data)
+
+    assertEquals(1, result.size())
+    assertEquals(0, result[0].fill)
+  }
+
+  @Test
   void testDispatchEllipse() {
     LayerSpec layer = makeLayer(CharmStatType.ELLIPSE, [segments: 20, level: 0.95])
     List<LayerData> data = (1..20).collect {

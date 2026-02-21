@@ -626,19 +626,19 @@ class GgStat {
       Number x = xMin + (xMax - xMin) * i / (nPoints - 1)
       BigDecimal yFit = regression.predict(x)
       if (se) {
-        double seFit
+        BigDecimal seFit
         if (polyDegree == 1) {
-          double dx = (x as double) - xBar
-          seFit = Math.sqrt(sigma2 * (1.0d / xValues.size() + (dx * dx) / sxx))
+          BigDecimal dx = (x as BigDecimal) - xBar
+          seFit = (sigma2 * (1.0 / xValues.size() + (dx * dx) / sxx)).sqrt()
         } else {
-          double leverage = RegressionUtils.polynomialLeverage(
+          BigDecimal leverage = RegressionUtils.polynomialLeverage(
             xtxInv,
-            (x as double),
+            x as BigDecimal,
             polyDegree
           )
-          seFit = Math.sqrt(sigma2 * Math.max(0.0d, leverage))
+          seFit = (sigma2 * 0.0.max(leverage)).sqrt()
         }
-        BigDecimal margin = (tCrit * seFit) as BigDecimal
+        BigDecimal margin = tCrit * seFit
         BigDecimal yMin = yFit - margin
         BigDecimal yMax = yFit + margin
         results << [x as BigDecimal, yFit, yMin, yMax]
@@ -821,7 +821,7 @@ class GgStat {
           BigDecimal level = params.level != null ? (params.level as BigDecimal) : 0.95
           return meanClNormal(data, xCol, yCol, level)
         case 'median_hilow':
-          BigDecimal confInt = 0.95d
+          BigDecimal confInt = 0.95
           if (funArgs != null) {
             if (funArgs.containsKey('conf.int')) {
               confInt = funArgs.'conf.int' as BigDecimal
@@ -829,7 +829,7 @@ class GgStat {
               confInt = funArgs.confInt as BigDecimal
             }
           }
-          if (confInt <= 0.0d || confInt > 1.0d || confInt == null) {
+          if (confInt == null || confInt <= 0.0 || confInt > 1.0) {
             throw new IllegalArgumentException("median_hilow requires conf.int in (0, 1]")
           }
           return medianHiLow(data, xCol, yCol, confInt)
@@ -910,7 +910,7 @@ class GgStat {
     if (n > 1) {
       BigDecimal sd = Stat.sd(numeric, true)
       BigDecimal se = sd / n.sqrt()
-      double tCrit = tCritical(n - 1, level)
+      BigDecimal tCrit = tCritical(n - 1, level)
       ymin = mean - tCrit * se
       ymax = mean + tCrit * se
     }
@@ -1261,25 +1261,12 @@ class GgStat {
    * Approximate inverse CDF for the standard normal distribution.
    * Uses the Acklam rational approximation for good accuracy in the tails.
    * <p>
-   * <b>Edge cases:</b>
-   * <ul>
-   *   <li>p &lt;= 0.0: Returns {@link Double#NEGATIVE_INFINITY}</li>
-   *   <li>p &gt;= 1.0: Returns {@link Double#POSITIVE_INFINITY}</li>
-   * </ul>
-   * <p>
-   * <b>Note:</b> Calling code should handle infinite return values appropriately,
-   * as they may propagate through calculations and cause issues in downstream
-   * processing (e.g., coordinate transformations, plotting bounds).
-   *
    * @param p probability value, should be in range (0, 1) for finite results
-   * @return the quantile value, or +/-Infinity for edge cases
+   * @return the quantile value
    */
   private static BigDecimal normalQuantile(BigDecimal p) {
-    if (p <= 0.0) {
-      return Double.NEGATIVE_INFINITY as BigDecimal
-    }
-    if (p >= 1.0d) {
-      return Double.POSITIVE_INFINITY as BigDecimal
+    if (p == null || p <= 0.0 || p >= 1.0) {
+      throw new IllegalArgumentException("normalQuantile requires p in (0, 1), got: $p")
     }
 
     // Coefficients in rational approximations

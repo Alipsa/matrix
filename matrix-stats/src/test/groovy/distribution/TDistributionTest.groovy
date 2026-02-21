@@ -42,6 +42,15 @@ class TDistributionTest {
   }
 
   @Test
+  void testBigDecimalCdfMatchesDoubleCdf() {
+    def dist = new TDistribution(10)
+    BigDecimal bigResult = dist.cdf(1.5 as BigDecimal)
+    double doubleResult = dist.cdf(1.5d)
+
+    assertEquals(doubleResult, bigResult as double, TOLERANCE)
+  }
+
+  @Test
   void testCdfSymmetry() {
     // For symmetric distribution: CDF(t) + CDF(-t) = 1
     def dist = new TDistribution(10)

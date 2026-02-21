@@ -37,7 +37,14 @@ class RegressionUtils {
     if (!solver.isNonSingular()) {
       return null
     }
-    return solver.inverse.data as BigDecimal[][]
+    double[][] inverse = solver.inverse.data
+    BigDecimal[][] result = new BigDecimal[inverse.length][inverse[0].length]
+    for (int i = 0; i < inverse.length; i++) {
+      for (int j = 0; j < inverse[i].length; j++) {
+        result[i][j] = inverse[i][j] as BigDecimal
+      }
+    }
+    result
   }
 
   /**

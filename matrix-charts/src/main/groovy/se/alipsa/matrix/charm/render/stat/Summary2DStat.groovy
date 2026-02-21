@@ -108,9 +108,15 @@ class Summary2DStat {
   }
 
   private static BigDecimal resolveSummaryValue(LayerData datum) {
-    NumberCoercionUtil.coerceToBigDecimal(datum.fill) ?:
-        NumberCoercionUtil.coerceToBigDecimal(datum.label) ?:
-        NumberCoercionUtil.coerceToBigDecimal(datum.weight)
+    BigDecimal value = NumberCoercionUtil.coerceToBigDecimal(datum.fill)
+    if (value != null) {
+      return value
+    }
+    value = NumberCoercionUtil.coerceToBigDecimal(datum.label)
+    if (value != null) {
+      return value
+    }
+    NumberCoercionUtil.coerceToBigDecimal(datum.weight)
   }
 
   private static BigDecimal summarize(List<BigDecimal> values, String fun) {

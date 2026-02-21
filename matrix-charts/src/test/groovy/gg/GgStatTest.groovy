@@ -198,6 +198,28 @@ class GgStatTest {
   }
 
   @Test
+  void testSummaryMedianHiLowRejectsNullConfInt() {
+    def data = Matrix.builder()
+        .columnNames(['group', 'value'])
+        .rows([
+            ['A', 1],
+            ['A', 2],
+            ['B', 10],
+            ['B', 20]
+        ])
+        .build()
+    def aes = new Aes(x: 'group', y: 'value')
+
+    def ex = assertThrows(IllegalArgumentException) {
+      GgStat.summary(data, aes, [
+          'fun.data': 'median_hilow',
+          'fun.args': ['conf.int': null]
+      ])
+    }
+    assertTrue(ex.message.contains('conf.int'))
+  }
+
+  @Test
   void testSmoothDegreeWithFormulaNoPoly() {
     def data = Matrix.builder()
         .columnNames(['x', 'y'])
