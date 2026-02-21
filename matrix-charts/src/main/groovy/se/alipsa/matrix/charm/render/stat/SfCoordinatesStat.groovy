@@ -22,8 +22,7 @@ class SfCoordinatesStat {
 
     List<LayerData> result = []
     data.eachWithIndex { LayerData source, int idx ->
-      Map<String, Object> row = SfStatSupport.rowMap(source)
-      Object geometryValue = row[geometryCol]
+      Object geometryValue = SfStatSupport.rowValue(source, geometryCol)
       if (geometryValue == null) {
         geometryValue = source.label
       }
@@ -51,7 +50,7 @@ class SfCoordinatesStat {
           alpha: source.alpha,
           linetype: source.linetype,
           shape: source.shape,
-          label: source.label ?: row['label'],
+          label: source.label ?: SfStatSupport.rowValue(source, 'label'),
           rowIndex: source.rowIndex
       )
       datum.meta = source.meta != null ? new LinkedHashMap<>(source.meta) : [:]

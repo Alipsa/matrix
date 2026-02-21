@@ -32,12 +32,11 @@ class SpokeStat {
         return
       }
 
-      Map<String, Object> row = SfStatSupport.rowMap(datum)
-      BigDecimal angle = angleCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(row[angleCol])
+      BigDecimal angle = angleCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(SfStatSupport.rowValue(datum, angleCol))
       if (angle == null) {
         angle = angleDefault
       }
-      BigDecimal radius = radiusCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(row[radiusCol])
+      BigDecimal radius = radiusCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(SfStatSupport.rowValue(datum, radiusCol))
       if (radius == null) {
         radius = radiusDefault
       }

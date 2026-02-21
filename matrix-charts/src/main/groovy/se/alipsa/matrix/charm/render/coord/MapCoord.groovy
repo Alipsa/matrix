@@ -22,9 +22,10 @@ class MapCoord {
       return data
     }
 
+    List<LayerData> clampedInput = CartesianCoord.compute(coordSpec, data)
     String projection = coordSpec?.params?.projection?.toString()?.toLowerCase(Locale.ROOT) ?: 'mercator'
     List<LayerData> transformed = []
-    data.each { LayerData datum ->
+    clampedInput.each { LayerData datum ->
       LayerData updated = LayerDataUtil.copyDatum(datum)
       BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(updated.x)
       BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(updated.y)
@@ -53,6 +54,13 @@ class MapCoord {
       transformed << updated
     }
 
-    CartesianCoord.compute(coordSpec, transformed)
+    CartesianCoord.compute(withoutLimits(coordSpec), transformed)
+  }
+
+  private static CoordSpec withoutLimits(CoordSpec coordSpec) {
+    CoordSpec copy = coordSpec?.copy() ?: new CoordSpec()
+    copy.xlim = null
+    copy.ylim = null
+    copy
   }
 }

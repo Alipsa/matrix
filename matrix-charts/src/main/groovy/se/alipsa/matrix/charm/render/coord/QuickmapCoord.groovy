@@ -17,11 +17,12 @@ class QuickmapCoord {
       return data
     }
 
-    List<BigDecimal> latitudes = data.collect { LayerData datum ->
+    List<LayerData> clampedInput = CartesianCoord.compute(coordSpec, data)
+    List<BigDecimal> latitudes = clampedInput.collect { LayerData datum ->
       NumberCoercionUtil.coerceToBigDecimal(datum.y)
     }.findAll { it != null } as List<BigDecimal>
     if (latitudes.isEmpty()) {
-      return FixedCoord.compute(coordSpec, data)
+      return FixedCoord.compute(withoutLimits(coordSpec), clampedInput)
     }
 
     BigDecimal meanLat = (latitudes.sum() as BigDecimal) / latitudes.size()
@@ -31,7 +32,7 @@ class QuickmapCoord {
     }
 
     List<LayerData> adjusted = []
-    data.each { LayerData datum ->
+    clampedInput.each { LayerData datum ->
       LayerData updated = LayerDataUtil.copyDatum(datum)
       BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(updated.y)
       if (y != null) {
@@ -40,6 +41,13 @@ class QuickmapCoord {
       adjusted << updated
     }
 
-    FixedCoord.compute(coordSpec, adjusted)
+    FixedCoord.compute(withoutLimits(coordSpec), adjusted)
+  }
+
+  private static CoordSpec withoutLimits(CoordSpec coordSpec) {
+    CoordSpec copy = coordSpec?.copy() ?: new CoordSpec()
+    copy.xlim = null
+    copy.ylim = null
+    copy
   }
 }

@@ -21,8 +21,7 @@ class SfStat {
 
     List<LayerData> result = []
     data.eachWithIndex { LayerData source, int idx ->
-      Map<String, Object> row = SfStatSupport.rowMap(source)
-      Object geometryValue = row[geometryCol]
+      Object geometryValue = SfStatSupport.rowValue(source, geometryCol)
       if (geometryValue == null) {
         geometryValue = source.label
       }

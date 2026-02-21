@@ -100,6 +100,22 @@ class CoordEngineTest {
   }
 
   @Test
+  void testMapAppliesLimitsBeforeProjection() {
+    CoordSpec coord = new CoordSpec(
+        type: CharmCoordType.MAP,
+        params: [projection: 'mercator', xlim: [0, 5], ylim: [0, 30]]
+    )
+    List<LayerData> data = [new LayerData(x: 10, y: 45, rowIndex: 0)]
+
+    List<LayerData> result = CoordEngine.apply(coord, data)
+
+    assertEquals(1, result.size())
+    assertEquals(Math.toRadians(5), result[0].x as double, 1.0e-9d)
+    double expectedY = Math.log(Math.tan(Math.PI / 4 + Math.toRadians(30) / 2))
+    assertEquals(expectedY, result[0].y as double, 1.0e-9d)
+  }
+
+  @Test
   void testDispatchQuickmap() {
     CoordSpec coord = new CoordSpec(type: CharmCoordType.QUICKMAP)
     List<LayerData> data = [new LayerData(x: 10, y: 45, rowIndex: 0)]
@@ -107,6 +123,18 @@ class CoordEngineTest {
     assertNotNull(result)
     assertEquals(1, result.size())
     assertNotEquals(45, result[0].y)
+  }
+
+  @Test
+  void testQuickmapAppliesYLimitsBeforeScaling() {
+    CoordSpec coord = new CoordSpec(type: CharmCoordType.QUICKMAP, params: [ylim: [0, 30]])
+    List<LayerData> data = [new LayerData(x: 10, y: 45, rowIndex: 0)]
+
+    List<LayerData> result = CoordEngine.apply(coord, data)
+
+    assertEquals(1, result.size())
+    double expectedY = 30 * Math.cos(Math.toRadians(30))
+    assertEquals(expectedY, result[0].y as double, 1.0e-9d)
   }
 
   @Test

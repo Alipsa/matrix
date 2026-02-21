@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.render.stat
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.render.LayerDataRowAccess
 import se.alipsa.matrix.charm.sf.SfGeometry
 import se.alipsa.matrix.charm.sf.WktReader
 import se.alipsa.matrix.charm.render.LayerData
@@ -21,27 +22,28 @@ class SfStatSupport {
       return explicit
     }
 
-    Map<String, Object> row = firstRowMap(data)
-    if (row == null) {
+    List<String> columns = firstRowColumns(data)
+    if (columns == null || columns.isEmpty()) {
       return 'geometry'
     }
-    if (row.containsKey('geometry')) {
+    if (columns.contains('geometry')) {
       return 'geometry'
     }
-    if (row.containsKey('geom')) {
+    if (columns.contains('geom')) {
       return 'geom'
     }
-    if (row.containsKey('wkt')) {
+    if (columns.contains('wkt')) {
       return 'wkt'
     }
-    row.keySet().find { String key -> key?.toLowerCase()?.contains('geometry') } ?: 'geometry'
+    columns.find { String key -> key?.toLowerCase()?.contains('geometry') } ?: 'geometry'
   }
 
   static Map<String, Object> rowMap(LayerData datum) {
-    if (datum?.meta?.__row instanceof Map) {
-      return datum.meta.__row as Map<String, Object>
-    }
-    [:]
+    LayerDataRowAccess.rowMap(datum)
+  }
+
+  static Object rowValue(LayerData datum, String columnName) {
+    LayerDataRowAccess.value(datum, columnName)
   }
 
   static SfGeometry toGeometry(Object value) {
@@ -54,10 +56,10 @@ class SfStatSupport {
     WktReader.parse(value.toString())
   }
 
-  private static Map<String, Object> firstRowMap(List<LayerData> data) {
+  private static List<String> firstRowColumns(List<LayerData> data) {
     data?.findResult { LayerData datum ->
-      Map<String, Object> row = rowMap(datum)
-      row.isEmpty() ? null : row
+      List<String> cols = LayerDataRowAccess.columns(datum)
+      cols.isEmpty() ? null : cols
     }
   }
 }
