@@ -3,11 +3,12 @@ package se.alipsa.matrix.gg.stat
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Aes
-import se.alipsa.matrix.gg.scale.ScaleUtils
+import se.alipsa.matrix.gg.geom.Point
+import se.alipsa.matrix.charm.render.scale.ScaleUtils
 import se.alipsa.matrix.stats.distribution.TDistribution
-import se.alipsa.matrix.stats.kde.Kernel
 import se.alipsa.matrix.stats.kde.KernelDensity
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression
@@ -56,7 +57,7 @@ class GgStat {
     String geometryCol = resolveGeometryColumn(data, aes, params)
     List<Map<String, Object>> rows = []
 
-    data.eachWithIndex { row, int idx ->
+    data.eachWithIndex { Row row, int idx ->
       Object geomVal = row[geometryCol]
       if (geomVal == null) return
 
@@ -105,7 +106,7 @@ class GgStat {
     String geometryCol = resolveGeometryColumn(data, aes, params)
     List<Map<String, Object>> rows = []
 
-    data.eachWithIndex { row, int idx ->
+    data.eachWithIndex { Row row, int idx ->
       Object geomVal = row[geometryCol]
       if (geomVal == null) return
 
@@ -183,7 +184,7 @@ class GgStat {
     if (fillCol != null && data.columnNames().contains(fillCol)) {
       // Group by [xVal, fillVal] and count
       Map<List<Object>, List> groups = data.rows()
-          .groupBy { row -> [row[xCol], row[fillCol]] }
+          .groupBy { Row row -> [row[xCol], row[fillCol]] } as Map<List<Object>, List>
 
       // Calculate totals by x for percentage calculation
       Map<Object, Integer> totalsByX = data.rows()
@@ -487,11 +488,11 @@ class GgStat {
           "Polynomial degree must be at least 1, got: $degree in formula '$formula'"
         )
       }
-      return [polyDegree: degree, response: response, predictor: predictor, polyExplicit: true]
+      return [polyDegree: degree, response: response, predictor: predictor, polyExplicit: true] as Map<String, Object>
     }
 
     // Simple linear: y ~ x
-    return [polyDegree: 1, response: response, predictor: rhs, polyExplicit: false]
+    return [polyDegree: 1, response: response, predictor: rhs, polyExplicit: false] as Map<String, Object>
   }
 
   /**
@@ -520,7 +521,7 @@ class GgStat {
 
     String method = params.method ?: 'lm'
     boolean se = params.se != false
-    double level = params.level != null ? (params.level as double) : 0.95d
+    BigDecimal level = params.level != null ? (params.level as BigDecimal) : 0.95
 
     // Determine polynomial degree: check for conflicting 'degree' and 'formula' specifications
     int polyDegree
@@ -579,33 +580,33 @@ class GgStat {
     Number xMax = Stat.max(xValues)
     int nPoints = (params.n ?: 80) as int
 
-    double sigma2 = 0.0d
+    BigDecimal sigma2 = 0.0
     int dfResid = xValues.size() - (polyDegree + 1)
-    double sxx = 0.0d
-    double xBar = 0.0d
-    double[][] xtxInv = null
+    BigDecimal sxx = 0.0
+    BigDecimal xBar = 0.0
+    BigDecimal[][] xtxInv = null
     if (se && dfResid > 0) {
       if (polyDegree == 1) {
-        xBar = (xValues.sum() as double) / xValues.size()
+        xBar = (xValues.sum() as BigDecimal) / xValues.size()
         xValues.each { Number val ->
-          double diff = (val as double) - xBar
+          BigDecimal diff = val - xBar
           sxx += diff * diff
         }
       }
 
-      double sse = 0.0d
+      BigDecimal sse = 0.0
       for (int i = 0; i < xValues.size(); i++) {
-        double xi = xValues[i] as double
-        double yi = yValues[i] as double
-        double yFit = regression.predict(xi) as double
-        double resid = yi - yFit
+        BigDecimal xi = xValues[i] as BigDecimal
+        BigDecimal yi = yValues[i] as BigDecimal
+        BigDecimal yFit = regression.predict(xi) as BigDecimal
+        BigDecimal resid = yi - yFit
         sse += resid * resid
       }
       sigma2 = sse / dfResid
-      if (sigma2 <= 0.0d) {
+      if (sigma2 <= 0.0) {
         se = false
       } else if (polyDegree == 1) {
-        if (sxx <= 0.0d) {
+        if (sxx <= 0.0) {
           se = false
         }
       } else {
@@ -618,7 +619,7 @@ class GgStat {
       se = false
     }
 
-    double tCrit = se ? tCritical(dfResid, level) : 0.0d
+    BigDecimal tCrit = se ? tCritical(dfResid, level) : 0.0
 
     List<List<?>> results = []
     for (int i = 0; i < nPoints; i++) {
@@ -765,24 +766,24 @@ class GgStat {
         .build()
   }
 
-  private static double tCritical(int df, double level) {
-    if (df <= 0) return 0.0d
-    double target = 0.5d + level / 2.0d
+  private static BigDecimal tCritical(int df, BigDecimal level) {
+    if (df <= 0) return 0.0
+    BigDecimal target = 0.5 + level / 2.0
     TDistribution dist = new TDistribution(df as double)
-    double low = 0.0d
-    double high = 1.0d
+    BigDecimal low = 0.0
+    BigDecimal high = 1.0
     while (dist.cdf(high) < target && high < 1.0e6) {
-      high *= 2.0d
+      high *= 2.0
     }
     for (int i = 0; i < 80; i++) {
-      double mid = (low + high) / 2.0d
+      BigDecimal mid = (low + high) / 2.0
       if (dist.cdf(mid) < target) {
         low = mid
       } else {
         high = mid
       }
     }
-    return (low + high) / 2.0d
+    return (low + high) / 2.0
   }
 
   /**
@@ -817,18 +818,18 @@ class GgStat {
     if (funData) {
       switch (funData) {
         case 'mean_cl_normal':
-          double level = params.level != null ? (params.level as double) : 0.95d
+          BigDecimal level = params.level != null ? (params.level as BigDecimal) : 0.95
           return meanClNormal(data, xCol, yCol, level)
         case 'median_hilow':
-          double confInt = 0.95d
+          BigDecimal confInt = 0.95d
           if (funArgs != null) {
             if (funArgs.containsKey('conf.int')) {
-              confInt = funArgs.'conf.int' as double
+              confInt = funArgs.'conf.int' as BigDecimal
             } else if (funArgs.containsKey('confInt')) {
-              confInt = funArgs.confInt as double
+              confInt = funArgs.confInt as BigDecimal
             }
           }
-          if (confInt <= 0.0d || confInt > 1.0d || Double.isNaN(confInt)) {
+          if (confInt <= 0.0d || confInt > 1.0d || confInt == null) {
             throw new IllegalArgumentException("median_hilow requires conf.int in (0, 1]")
           }
           return medianHiLow(data, xCol, yCol, confInt)
@@ -876,7 +877,7 @@ class GgStat {
     }
   }
 
-  private static Matrix meanClNormal(Matrix data, String xCol, String yCol, double level) {
+  private static Matrix meanClNormal(Matrix data, String xCol, String yCol, BigDecimal level) {
     if (xCol == null) {
       return meanClNormalUngrouped(data, yCol, level)
     }
@@ -890,28 +891,28 @@ class GgStat {
     return Matrix.builder().mapList(rows).build()
   }
 
-  private static Matrix meanClNormalUngrouped(Matrix data, String yCol, double level) {
+  private static Matrix meanClNormalUngrouped(Matrix data, String yCol, BigDecimal level) {
     List<Number> values = data[yCol] as List<Number>
     Map<String, Object> row = meanClNormalRow('all', values, 'x', yCol, level)
     return Matrix.builder().mapList([row]).build()
   }
 
   private static Map<String, Object> meanClNormalRow(Object groupKey, List<Number> values,
-                                                     String xCol, String yCol, double level) {
+                                                     String xCol, String yCol, BigDecimal level) {
     List<Number> numeric = values.findAll { it instanceof Number } as List<Number>
     int n = numeric.size()
     if (n == 0) {
       return [(xCol): groupKey, (yCol): null, ymin: null, ymax: null]
     }
     BigDecimal mean = Stat.mean(numeric)
-    double ymin = mean as double
-    double ymax = mean as double
+    BigDecimal ymin = mean
+    BigDecimal ymax = mean
     if (n > 1) {
-      double sd = Stat.sd(numeric, true) as double
-      double se = sd / Math.sqrt(n as double)
+      BigDecimal sd = Stat.sd(numeric, true)
+      BigDecimal se = sd / n.sqrt()
       double tCrit = tCritical(n - 1, level)
-      ymin = (mean as double) - tCrit * se
-      ymax = (mean as double) + tCrit * se
+      ymin = mean - tCrit * se
+      ymax = mean + tCrit * se
     }
     return [
         (xCol): groupKey,
@@ -921,7 +922,7 @@ class GgStat {
     ]
   }
 
-  private static Matrix medianHiLow(Matrix data, String xCol, String yCol, double confInt) {
+  private static Matrix medianHiLow(Matrix data, String xCol, String yCol, BigDecimal confInt) {
     if (xCol == null) {
       return medianHiLowUngrouped(data, yCol, confInt)
     }
@@ -935,25 +936,27 @@ class GgStat {
     return Matrix.builder().mapList(rows).build()
   }
 
-  private static Matrix medianHiLowUngrouped(Matrix data, String yCol, double confInt) {
+  private static Matrix medianHiLowUngrouped(Matrix data, String yCol, BigDecimal confInt) {
     List<Number> values = data[yCol] as List<Number>
     Map<String, Object> row = medianHiLowRow('all', values, 'x', yCol, confInt)
     return Matrix.builder().mapList([row]).build()
   }
 
   private static Map<String, Object> medianHiLowRow(Object groupKey, List<Number> values,
-                                                    String xCol, String yCol, double confInt) {
+                                                    String xCol, String yCol, BigDecimal confInt) {
     List<Number> numeric = values.findAll { it instanceof Number } as List<Number>
     if (numeric.isEmpty()) {
       return [(xCol): groupKey, (yCol): null, ymin: null, ymax: null]
     }
     numeric.sort()
 
-    double alpha = (1.0d - confInt) / 2.0d
-    double lowerProb = Math.max(0.0d, Math.min(1.0d, alpha))
-    double upperProb = Math.max(0.0d, Math.min(1.0d, 1.0d - alpha))
+    BigDecimal alpha = (1.0 - confInt) / 2.0
+    //BigDecimal lowerProb = Math.max(0.0d, Math.min(1.0d, alpha.doubleValue()))
+    BigDecimal lowerProb = 0.0.max(1.0.min(alpha))
+    //BigDecimal upperProb = Math.max(0.0d, Math.min(1.0d, 1.0d - alpha))
+    BigDecimal upperProb = 0.0.max(1.0d.min(1.0 - alpha))
 
-    Number median = quantileType7(numeric, 0.5d)
+    Number median = quantileType7(numeric, 0.5)
     Number lower = quantileType7(numeric, lowerProb)
     Number upper = quantileType7(numeric, upperProb)
     return [
@@ -1046,7 +1049,7 @@ class GgStat {
     Aes yAes = new Aes([x: yCol, group: groupCol])
     Matrix result = density(data, yAes, params)
     if (result.columnNames().contains('x')) {
-      return result.renameColumn('x', 'y')
+      return result.rename('x', 'y')
     }
     return result
   }
@@ -1089,25 +1092,29 @@ class GgStat {
 
   private static List<Map<String, Object>> ecdfRows(List<Number> values, String xName,
                                                     String groupCol, Object groupKey, boolean pad) {
-    if (values == null || values.isEmpty()) {
+    List<Number> sorted = (values ?: []).findAll { it instanceof Number }.sort(false) as List<Number>
+    if (sorted.isEmpty()) {
       return []
     }
-    List<Number> sorted = values.findAll { it instanceof Number } as List<Number>
-    sorted.sort()
-    int n = sorted.size()
+
+    BigDecimal n = sorted.size()
     List<Map<String, Object>> rows = []
     if (pad) {
-      Map<String, Object> row = [(xName): sorted.first(), y: 0.0d]
-      if (groupCol) row[groupCol] = groupKey
-      rows << row
+      rows << ecdfRow(xName, sorted.first(), 0.0, groupCol, groupKey)
     }
-    for (int i = 0; i < n; i++) {
-      double yVal = (i + 1) / (double) n
-      Map<String, Object> row = [(xName): sorted[i], y: yVal]
-      if (groupCol) row[groupCol] = groupKey
-      rows << row
+    rows.addAll(sorted.withIndex(1).collect { Number value, int idx ->
+      ecdfRow(xName, value, (idx as BigDecimal) / n, groupCol, groupKey)
+    })
+    rows
+  }
+
+  private static Map<String, Object> ecdfRow(String xName, Number xValue, BigDecimal yValue,
+                                              String groupCol, Object groupKey) {
+    Map<String, Object> row = [(xName): xValue, y: yValue] as Map<String, Object>
+    if (groupCol) {
+      row[groupCol] = groupKey
     }
-    return rows
+    row
   }
 
   /**
@@ -1147,15 +1154,15 @@ class GgStat {
     if (values == null || values.isEmpty()) {
       return []
     }
-    List<Double> sorted = values.findAll { it instanceof Number }
-        .collect { it as double }
+    List<BigDecimal> sorted = values.findAll { it instanceof Number }
+        .collect { it as BigDecimal }
         .sort()
     int n = sorted.size()
     List<Map<String, Object>> rows = []
     for (int i = 0; i < n; i++) {
-      double p = (i + 0.5d) / n
-      double theoretical = normalQuantile(p)
-      Map<String, Object> row = [x: theoretical, y: sorted[i]]
+      BigDecimal p = (i + 0.5) / n
+      BigDecimal theoretical = normalQuantile(p)
+      Map<String, Object> row = [x: theoretical, y: sorted[i]] as Map<String, Object>
       if (groupCol) {
         row[groupCol] = groupKey
       }
@@ -1212,19 +1219,19 @@ class GgStat {
     }
     numeric.sort()
     int n = numeric.size()
-    double q1 = quantileType7(numeric, 0.25d) as double
-    double q3 = quantileType7(numeric, 0.75d) as double
-    double theoQ1 = normalQuantile(0.25d)
-    double theoQ3 = normalQuantile(0.75d)
-    double slope = (q3 - q1) / (theoQ3 - theoQ1)
-    double intercept = q1 - slope * theoQ1
+    BigDecimal q1 = quantileType7(numeric, 0.25)
+    BigDecimal q3 = quantileType7(numeric, 0.75)
+    BigDecimal theoQ1 = normalQuantile(0.25)
+    BigDecimal theoQ3 = normalQuantile(0.75)
+    BigDecimal slope = (q3 - q1) / (theoQ3 - theoQ1)
+    BigDecimal intercept = q1 - slope * theoQ1
 
     // Clamp probabilities to prevent infinite values from normalQuantile
-    double minTheo = safeNormalQuantile(0.5d / n)
-    double maxTheo = safeNormalQuantile((n - 0.5d) / n)
+    BigDecimal minTheo = safeNormalQuantile(0.5 / n)
+    BigDecimal maxTheo = safeNormalQuantile((n - 0.5) / n)
 
-    Map<String, Object> start = [x: minTheo, y: slope * minTheo + intercept]
-    Map<String, Object> end = [x: maxTheo, y: slope * maxTheo + intercept]
+    Map<String, Object> start = [x: minTheo, y: slope * minTheo + intercept] as Map<String, Object>
+    Map<String, Object> end = [x: maxTheo, y: slope * maxTheo + intercept] as Map<String, Object>
     if (groupCol) {
       start[groupCol] = groupKey
       end[groupCol] = groupKey
@@ -1242,11 +1249,11 @@ class GgStat {
    * @param p probability value
    * @return finite quantile value
    */
-  private static double safeNormalQuantile(double p) {
+  private static BigDecimal safeNormalQuantile(BigDecimal p) {
     // Minimum probability to avoid extreme quantile values
     // 1e-10 corresponds to approximately -6.4 standard deviations
-    final double QUANTILE_EPSILON = 1.0e-10d
-    double clampedP = Math.max(QUANTILE_EPSILON, Math.min(1.0d - QUANTILE_EPSILON, p))
+    final BigDecimal QUANTILE_EPSILON = 1.0e-10
+    BigDecimal clampedP = QUANTILE_EPSILON.max((1.0 - QUANTILE_EPSILON).min(p))
     return normalQuantile(clampedP)
   }
 
@@ -1267,65 +1274,65 @@ class GgStat {
    * @param p probability value, should be in range (0, 1) for finite results
    * @return the quantile value, or +/-Infinity for edge cases
    */
-  private static double normalQuantile(double p) {
-    if (p <= 0.0d) {
-      return Double.NEGATIVE_INFINITY
+  private static BigDecimal normalQuantile(BigDecimal p) {
+    if (p <= 0.0) {
+      return Double.NEGATIVE_INFINITY as BigDecimal
     }
     if (p >= 1.0d) {
-      return Double.POSITIVE_INFINITY
+      return Double.POSITIVE_INFINITY as BigDecimal
     }
 
     // Coefficients in rational approximations
-    double[] a = [
+    BigDecimal[] a = [
         -3.969683028665376e+01,
         2.209460984245205e+02,
         -2.759285104469687e+02,
         1.383577518672690e+02,
         -3.066479806614716e+01,
         2.506628277459239e+00
-    ] as double[]
-    double[] b = [
+    ] as BigDecimal[]
+    BigDecimal[] b = [
         -5.447609879822406e+01,
         1.615858368580409e+02,
         -1.556989798598866e+02,
         6.680131188771972e+01,
         -1.328068155288572e+01
-    ] as double[]
-    double[] c = [
+    ] as BigDecimal[]
+    BigDecimal[] c = [
         -7.784894002430293e-03,
         -3.223964580411365e-01,
         -2.400758277161838e+00,
         -2.549732539343734e+00,
         4.374664141464968e+00,
         2.938163982698783e+00
-    ] as double[]
-    double[] d = [
+    ] as BigDecimal[]
+    BigDecimal[] d = [
         7.784695709041462e-03,
         3.224671290700398e-01,
         2.445134137142996e+00,
         3.754408661907416e+00
-    ] as double[]
+    ] as BigDecimal[]
 
-    double pLow = 0.02425d
-    double pHigh = 1.0d - pLow
-    double q
-    double r
+    BigDecimal pLow = 0.02425
+    BigDecimal pHigh = 1.0 - pLow
+    BigDecimal q
+    BigDecimal r
 
     if (p < pLow) {
-      q = Math.sqrt(-2.0d * Math.log(p))
+      q =(-2.0 * p.log()).sqrt()
       return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
           ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1.0d)
     }
     if (p > pHigh) {
-      q = Math.sqrt(-2.0d * Math.log(1.0d - p))
+      q = (-2.0 * (1.0d - p).log()).sqrt()
       return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
           ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1.0d)
     }
 
-    q = p - 0.5d
+    q = p - 0.5
     r = q * q
     return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q /
-        (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1.0d)
+        (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1.0)
   }
 
   /**
@@ -1467,7 +1474,7 @@ class GgStat {
    * @param prob the probability for the quantile, between 0 and 1 (e.g., 0.25 for Q1, 0.5 for median)
    * @return the computed quantile value, or null if the input list is null or empty
    */
-  private static Number quantileType7(List<Number> sortedValues, double prob) {
+  private static Number quantileType7(List<Number> sortedValues, BigDecimal prob) {
     if (sortedValues == null || sortedValues.isEmpty()) {
       return null
     }
@@ -1478,21 +1485,21 @@ class GgStat {
       throw new IllegalArgumentException('quantileType7 requires sortedValues in ascending order')
     }
     int n = sortedValues.size()
-    double h = (n - 1) * prob + 1
-    int j = (int) Math.floor(h)
-    double g = h - j
+    BigDecimal h = (n - 1) * prob + 1
+    int j = (int) h.floor()
+    BigDecimal g = h - j
 
     if (j <= 1) {
-      double x1 = sortedValues[0] as double
-      double x2 = sortedValues[1] as double
+      BigDecimal x1 = sortedValues[0]
+      BigDecimal x2 = sortedValues[1]
       return x1 + g * (x2 - x1)
     }
     if (j >= n) {
       return sortedValues[n - 1]
     }
 
-    double xj = sortedValues[j - 1] as double
-    double xj1 = sortedValues[j] as double
+    BigDecimal xj = sortedValues[j - 1]
+    BigDecimal xj1 = sortedValues[j]
     return xj + g * (xj1 - xj)
   }
 
@@ -1855,7 +1862,7 @@ class GgStat {
 
     // Collect numeric x,y values and compute bounds
     def result = collectXYPointsAndBounds(data, xCol, yCol)
-    List<se.alipsa.matrix.gg.geom.Point> points = result.points as List<se.alipsa.matrix.gg.geom.Point>
+    List<Point> points = result.points as List<Point>
     BigDecimal xMin = result.xMin as BigDecimal
     BigDecimal yMin = result.yMin as BigDecimal
     BigDecimal xMax = result.xMax as BigDecimal
@@ -2101,7 +2108,7 @@ class GgStat {
       if (xVal instanceof Number && yVal instanceof Number) {
         BigDecimal x = xVal as BigDecimal
         BigDecimal y = yVal as BigDecimal
-        points << new se.alipsa.matrix.gg.geom.Point(x, y)
+        points << new Point(x, y)
 
         xMin = xMin == null ? x : xMin.min(x)
         xMax = xMax == null ? x : xMax.max(x)
@@ -2180,7 +2187,7 @@ class GgStat {
     }
 
     // For regular hexagons (flat-top), height = width * sqrt(3) / 2
-    BigDecimal hexHeight = hexWidth * (Math.sqrt(3) / 2)
+    BigDecimal hexHeight = hexWidth * (3.sqrt() / 2)
 
     // Hexagon spacing
     BigDecimal dx = hexWidth * 0.75  // horizontal spacing between hex centers

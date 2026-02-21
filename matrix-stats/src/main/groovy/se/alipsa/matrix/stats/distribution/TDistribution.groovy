@@ -42,6 +42,17 @@ class TDistribution {
     }
   }
 
+  BigDecimal cdf(BigDecimal t) {
+    BigDecimal x = degreesOfFreedom / (degreesOfFreedom + t * t)
+    BigDecimal beta = SpecialFunctions.regularizedIncompleteBeta(x, degreesOfFreedom / 2.0, 0.5)
+
+    if (t >= 0) {
+      return 1.0 - 0.5 * beta
+    } else {
+      return 0.5 * beta
+    }
+  }
+
   /**
    * Computes the two-tailed p-value for a t-statistic.
    * This is 2 * P(T > |t|) = 2 * (1 - CDF(|t|))

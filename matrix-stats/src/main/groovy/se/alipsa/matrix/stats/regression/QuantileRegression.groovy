@@ -278,8 +278,9 @@ class QuantileRegression {
 
       constraintsReformulated << new LinearConstraint(coeffs, Relationship.EQ, y[i])
     }
-
-    LinearObjectiveFunction objFuncReformulated = new LinearObjectiveFunction(objectiveReformulated, 0.0)
+    // TODO implement our own LinearObjectiveFunction and LinearConstraintSet that works with BigDecimal for
+    //  cleaner groovy code, better precision and to avoid dependency on commons-math3
+    LinearObjectiveFunction objFuncReformulated = new LinearObjectiveFunction(objectiveReformulated, 0.0d)
 
     try {
       SimplexSolver solver = new SimplexSolver()

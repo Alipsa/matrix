@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.Stat
 
 /**
  * 2D binned summary stat for z-like values.
@@ -114,24 +115,12 @@ class Summary2DStat {
 
   private static BigDecimal summarize(List<BigDecimal> values, String fun) {
     switch (fun) {
-      case 'sum' -> values.sum() as BigDecimal
-      case 'min' -> values.min()
-      case 'max' -> values.max()
-      case 'median' -> {
-        List<BigDecimal> sorted = new ArrayList<>(values)
-        sorted.sort()
-        int n = sorted.size()
-        if (n % 2 == 1) {
-          sorted[n.intdiv(2)]
-        } else {
-          (sorted[n.intdiv(2) - 1] + sorted[n.intdiv(2)]) / 2
-        }
-      }
+      case 'sum' -> Stat.sum(values) as BigDecimal
+      case 'min' -> Stat.min(values) as BigDecimal
+      case 'max' -> Stat.max(values) as BigDecimal
+      case 'median' -> Stat.median(values) as BigDecimal
       case 'count' -> values.size() as BigDecimal
-      default -> {
-        BigDecimal sum = values.sum() as BigDecimal
-        sum / values.size()
-      }
+      default -> Stat.mean(values) as BigDecimal
     }
   }
 }

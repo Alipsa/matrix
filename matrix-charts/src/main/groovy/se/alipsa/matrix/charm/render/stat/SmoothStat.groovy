@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.stats.distribution.TDistribution
 import se.alipsa.matrix.stats.regression.LinearRegression
 import se.alipsa.matrix.stats.regression.PolynomialRegression
@@ -50,7 +51,7 @@ class SmoothStat {
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
     boolean se = params.se != false
-    double level = params.level != null ? (params.level as double) : 0.95d
+    BigDecimal level = params.level != null ? (params.level as BigDecimal) : 0.95
     int nPoints = params.n != null ? (params.n as int) : 80
     int polyDegree = resolvePolyDegree(params)
 
@@ -73,32 +74,32 @@ class SmoothStat {
     BigDecimal xMax = xValues.max()
 
     // Compute SE components if needed
-    double sigma2 = 0.0d
+    BigDecimal sigma2 = 0.0
     int dfResid = xValues.size() - (polyDegree + 1)
-    double sxx = 0.0d
-    double xBar = 0.0d
-    double[][] xtxInv = null
+    BigDecimal sxx = 0.0
+    BigDecimal xBar = 0.0
+    BigDecimal[][] xtxInv = null
     if (se && dfResid > 0) {
       if (polyDegree == 1) {
-        xBar = (xValues.sum() as double) / xValues.size()
+        xBar = Stat.mean(xValues)
         xValues.each { Number val ->
-          double diff = (val as double) - xBar
+          BigDecimal diff = val - xBar
           sxx += diff * diff
         }
       }
-      double sse = 0.0d
+      BigDecimal sse = 0.0
       for (int i = 0; i < xValues.size(); i++) {
-        double xi = xValues[i] as double
-        double yi = yValues[i] as double
-        double yFit = regression.predict(xi) as double
-        double resid = yi - yFit
+        BigDecimal xi = xValues[i]
+        BigDecimal yi = yValues[i]
+        BigDecimal yFit = regression.predict(xi)
+        BigDecimal resid = yi - yFit
         sse += resid * resid
       }
       sigma2 = sse / dfResid
-      if (sigma2 <= 0.0d) {
+      if (sigma2 <= 0.0) {
         se = false
       } else if (polyDegree == 1) {
-        if (sxx <= 0.0d) {
+        if (sxx <= 0.0) {
           se = false
         }
       } else {
@@ -111,7 +112,7 @@ class SmoothStat {
       se = false
     }
 
-    double tCrit = se ? tCritical(dfResid, level) : 0.0d
+    BigDecimal tCrit = se ? tCritical(dfResid, level) : 0.0
 
     List<LayerData> result = []
     for (int i = 0; i < nPoints; i++) {
@@ -125,13 +126,13 @@ class SmoothStat {
           rowIndex: -1
       )
       if (se) {
-        double seFit
+        BigDecimal seFit
         if (polyDegree == 1) {
-          double dx = (x as double) - xBar
-          seFit = Math.sqrt(sigma2 * (1.0d / xValues.size() + (dx * dx) / sxx))
+          BigDecimal dx = x - xBar
+          seFit = (sigma2 * (1.0 / xValues.size() + (dx * dx) / sxx)).sqrt()
         } else {
-          double leverage = RegressionUtils.polynomialLeverage(xtxInv, x as double, polyDegree)
-          seFit = Math.sqrt(sigma2 * Math.max(0.0d, leverage))
+          BigDecimal leverage = RegressionUtils.polynomialLeverage(xtxInv, x, polyDegree)
+          seFit = (sigma2 * 0.0.max(leverage)).sqrt()
         }
         BigDecimal margin = (tCrit * seFit) as BigDecimal
         datum.meta.ymin = yFit - margin
@@ -172,12 +173,12 @@ class SmoothStat {
     1
   }
 
-  private static double tCritical(int df, double level) {
-    if (df <= 0) return 0.0d
-    double target = 0.5d + level / 2.0d
-    TDistribution dist = new TDistribution(df as double)
-    double low = 0.0d
-    double high = 1.0d
+  private static BigDecimal tCritical(int df, double level) {
+    if (df <= 0) return 0.0
+    BigDecimal target = 0.5 + level / 2.0
+    TDistribution dist = new TDistribution(df as BigDecimal)
+    BigDecimal low = 0.0
+    BigDecimal high = 1.0
     while (dist.cdf(high) < target && high < 1.0e6) {
       high *= 2.0d
     }
