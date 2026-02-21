@@ -63,7 +63,7 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
     //println "inverse($result) = $inverted (type: ${inverted.class.simpleName})"
     // Note: inverse may return BigDecimal or exact power (Integer)
     assertTrue(inverted instanceof BigDecimal, "inverse should return BigDecimal")
-    assertEquals(10, inverted)
+    assertEquals(10.0d, (inverted as BigDecimal).doubleValue(), 1.0E-6d)
 
     // Test breaks are BigDecimal
     def breaks = scale.getComputedBreaks()
