@@ -61,11 +61,35 @@ class PositionEngineTest {
   }
 
   @Test
-  void testUnimplementedPositionFallsBackToIdentity() {
-    LayerSpec layer = makeLayer(CharmPositionType.JITTER)
+  void testDispatchJitter() {
+    LayerSpec layer = makeLayer(CharmPositionType.JITTER, [width: 1, height: 1, seed: 42])
     List<LayerData> data = [new LayerData(x: 1, y: 2, rowIndex: 0)]
     List<LayerData> result = PositionEngine.apply(layer, data)
-    assertSame(data, result)
+    assertEquals(1, result.size())
+    assertNotEquals(data[0].x, result[0].x)
+    assertNotEquals(data[0].y, result[0].y)
+  }
+
+  @Test
+  void testDispatchDodge2() {
+    LayerSpec layer = makeLayer(CharmPositionType.DODGE2, [padding: 0.2, width: 0.8])
+    List<LayerData> data = [
+        new LayerData(x: 1, y: 10, fill: 'A', rowIndex: 0),
+        new LayerData(x: 1, y: 20, fill: 'B', rowIndex: 1)
+    ]
+    List<LayerData> result = PositionEngine.apply(layer, data)
+    assertEquals(2, result.size())
+    assertNotEquals(result[0].x, result[1].x)
+  }
+
+  @Test
+  void testDispatchNudge() {
+    LayerSpec layer = makeLayer(CharmPositionType.NUDGE, [x: 0.5, y: -1])
+    List<LayerData> data = [new LayerData(x: 2, y: 3, rowIndex: 0)]
+    List<LayerData> result = PositionEngine.apply(layer, data)
+    assertEquals(1, result.size())
+    assertEquals(0, (result[0].x as BigDecimal).compareTo(2.5))
+    assertEquals(0, (result[0].y as BigDecimal).compareTo(2.0))
   }
 
   @Test

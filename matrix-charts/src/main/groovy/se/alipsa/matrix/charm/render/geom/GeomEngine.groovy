@@ -36,6 +36,26 @@ class GeomEngine {
       case CharmGeomType.VIOLIN -> ViolinRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.TILE -> TileRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.TEXT -> TextRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.LABEL -> LabelRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.JITTER -> PointRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.PATH -> PathRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.STEP -> StepRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.FREQPOLY -> LineRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.SEGMENT,
+           CharmGeomType.HLINE,
+           CharmGeomType.VLINE,
+           CharmGeomType.ABLINE -> SegmentRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.ERRORBAR,
+           CharmGeomType.ERRORBARH,
+           CharmGeomType.CROSSBAR,
+           CharmGeomType.LINERANGE,
+           CharmGeomType.POINTRANGE -> IntervalRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.RIBBON -> RibbonRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.RECT -> RectRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.POLYGON -> PolygonRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.RUG -> RugRenderer.render(dataLayer, context, layer, layerData, panelWidth, panelHeight)
+      case CharmGeomType.HEX -> HexRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.CONTOUR -> ContourRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.PIE -> PieRenderer.render(dataLayer, context, layer, layerData, panelWidth, panelHeight)
       default -> throw new CharmRenderException("Unsupported geom type: ${geomType}")
     }

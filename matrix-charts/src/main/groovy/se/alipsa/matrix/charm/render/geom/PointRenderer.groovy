@@ -28,9 +28,14 @@ class PointRenderer {
       if (x == null || y == null) {
         return
       }
-      BigDecimal radius = NumberCoercionUtil.coerceToBigDecimal(datum.size) ?: defaultRadius
-      BigDecimal alpha = GeomUtils.resolveAlpha(layer, datum)
-      String shape = datum.shape?.toString() ?: defaultShape
+      BigDecimal radius = context.sizeScale != null && datum.size != null
+          ? context.sizeScale.transform(datum.size)
+          : NumberCoercionUtil.coerceToBigDecimal(datum.size)
+      if (radius == null) {
+        radius = defaultRadius
+      }
+      BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
+      String shape = GeomUtils.resolveShape(context, layer, datum, defaultShape)
       String fill = GeomUtils.resolveFill(context, layer, datum)
       String stroke = GeomUtils.resolveStroke(context, layer, datum)
 

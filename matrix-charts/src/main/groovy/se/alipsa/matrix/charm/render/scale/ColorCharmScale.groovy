@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 import se.alipsa.matrix.charts.util.ColorUtil
+import java.util.Locale
 
 /**
  * Trained color scale for mapping data values to colors.
@@ -91,8 +92,11 @@ class ColorCharmScale extends CharmScale {
     if (colorType == 'gradient') {
       return gradientColor(value)
     }
-    if (colorType == 'gradientN') {
+    if (colorType == 'gradientN' || colorType == 'distiller') {
       return gradientNColor(value)
+    }
+    if (colorType == 'fermenter' || colorType == 'steps' || colorType == 'steps2' || colorType == 'stepsN') {
+      return binnedGradientColor(value)
     }
 
     if (colorMap.isEmpty()) return naValue
@@ -117,7 +121,7 @@ class ColorCharmScale extends CharmScale {
 
   @Override
   boolean isDiscrete() {
-    colorType != 'gradient' && colorType != 'gradientN'
+    !(colorType in ['gradient', 'gradientN', 'distiller', 'fermenter', 'steps', 'steps2', 'stepsN'])
   }
 
   /**
@@ -130,17 +134,66 @@ class ColorCharmScale extends CharmScale {
   ColorCharmScale trainFromValues(List<Object> dataValues, Scale spec) {
     this.scaleSpec = spec
 
-    String type = spec?.params?.get('colorType') as String ?: 'default'
-    this.colorType = type
+    String configuredType = spec?.params?.get('colorType') as String ?: 'default'
+    String type = configuredType.toLowerCase(Locale.ROOT)
 
     switch (type) {
-      case 'manual' -> trainManual(dataValues, spec)
-      case 'brewer' -> trainBrewer(dataValues, spec)
-      case 'gradient' -> trainGradient(dataValues, spec)
-      case 'gradientN' -> trainGradientN(dataValues, spec)
-      case 'viridis_d' -> trainViridis(dataValues, spec)
-      case 'identity' -> trainIdentity(dataValues, spec)
-      default -> trainDefault(dataValues)
+      case 'manual' -> {
+        this.colorType = 'manual'
+        trainManual(dataValues, spec)
+      }
+      case 'brewer' -> {
+        this.colorType = 'brewer'
+        trainBrewer(dataValues, spec)
+      }
+      case 'gradient' -> {
+        this.colorType = 'gradient'
+        trainGradient(dataValues, spec)
+      }
+      case 'gradientn' -> {
+        this.colorType = 'gradientN'
+        trainGradientN(dataValues, spec)
+      }
+      case 'viridis_d' -> {
+        this.colorType = 'viridis_d'
+        trainViridis(dataValues, spec)
+      }
+      case 'identity' -> {
+        this.colorType = 'identity'
+        trainIdentity(dataValues, spec)
+      }
+      case 'distiller' -> {
+        this.colorType = 'distiller'
+        trainDistiller(dataValues, spec)
+      }
+      case 'fermenter' -> {
+        this.colorType = 'fermenter'
+        trainFermenter(dataValues, spec)
+      }
+      case 'grey' -> {
+        this.colorType = 'grey'
+        trainGrey(dataValues, spec)
+      }
+      case 'hue' -> {
+        this.colorType = 'hue'
+        trainHue(dataValues, spec)
+      }
+      case 'steps' -> {
+        this.colorType = 'steps'
+        trainSteps(dataValues, spec)
+      }
+      case 'steps2' -> {
+        this.colorType = 'steps2'
+        trainSteps2(dataValues, spec)
+      }
+      case 'stepsn' -> {
+        this.colorType = 'stepsN'
+        trainStepsN(dataValues, spec)
+      }
+      default -> {
+        this.colorType = 'default'
+        trainDefault(dataValues)
+      }
     }
     this
   }
@@ -215,18 +268,7 @@ class ColorCharmScale extends CharmScale {
     this.midpoint = spec.params['midpoint'] as Number
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
 
-    List<BigDecimal> numeric = dataValues
-        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
-        .findAll { it != null } as List<BigDecimal>
-
-    if (numeric.isEmpty()) {
-      domainMin = 0.0
-      domainMax = 1.0
-    } else {
-      domainMin = numeric.min()
-      domainMax = numeric.max()
-      if (domainMin == domainMax) domainMax = domainMin + 1
-    }
+    trainContinuousDomain(dataValues)
   }
 
   private void trainGradientN(List<Object> dataValues, Scale spec) {
@@ -234,18 +276,7 @@ class ColorCharmScale extends CharmScale {
     this.gradientValues = spec.params['gradientValues'] as List<BigDecimal>
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
 
-    List<BigDecimal> numeric = dataValues
-        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
-        .findAll { it != null } as List<BigDecimal>
-
-    if (numeric.isEmpty()) {
-      domainMin = 0.0
-      domainMax = 1.0
-    } else {
-      domainMin = numeric.min()
-      domainMax = numeric.max()
-      if (domainMin == domainMax) domainMax = domainMin + 1
-    }
+    trainContinuousDomain(dataValues)
   }
 
   private void trainViridis(List<Object> dataValues, Scale spec) {
@@ -273,6 +304,134 @@ class ColorCharmScale extends CharmScale {
     levels.each { String level ->
       String normalized = ColorUtil.normalizeColor(level)
       colorMap[level] = normalized ?: level
+    }
+  }
+
+  private void trainDistiller(List<Object> dataValues, Scale spec) {
+    this.palette = (spec.params['palette'] as String) ?: 'RdYlBu'
+    this.direction = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : -1
+    this.naValue = (spec.params['naValue'] as String) ?: '#999999'
+    List<String> colors = BrewerPalettes.selectPalette(palette, 9, direction)
+    this.gradientColors = colors.isEmpty() ? new ArrayList<>(DEFAULT_COLORS) : colors
+    this.gradientValues = null
+    trainContinuousDomain(dataValues)
+  }
+
+  private void trainFermenter(List<Object> dataValues, Scale spec) {
+    this.palette = (spec.params['palette'] as String) ?: 'YlOrRd'
+    this.direction = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : 1
+    this.naValue = (spec.params['naValue'] as String) ?: '#999999'
+    int breaks = NumberCoercionUtil.coerceToBigDecimal(spec.params['nBreaks'])?.intValue() ?:
+        NumberCoercionUtil.coerceToBigDecimal(spec.params['n.breaks'])?.intValue() ?: 6
+    if (breaks < 2) {
+      breaks = 6
+    }
+    List<String> colors = BrewerPalettes.selectPalette(palette, breaks, direction)
+    this.gradientColors = colors.isEmpty() ? (0..<breaks).collect { int i ->
+      DEFAULT_COLORS[i % DEFAULT_COLORS.size()]
+    } as List<String> : colors
+    this.gradientValues = null
+    trainContinuousDomain(dataValues)
+  }
+
+  private void trainGrey(List<Object> dataValues, Scale spec) {
+    collectLevels(dataValues)
+    this.naValue = (spec.params['naValue'] as String) ?: '#999999'
+    String start = (spec.params['start'] as String) ?: '#EBEBEB'
+    String end = (spec.params['end'] as String) ?: '#4D4D4D'
+    colorMap = [:]
+    if (levels.isEmpty()) {
+      return
+    }
+    if (levels.size() == 1) {
+      colorMap[levels[0]] = start
+      return
+    }
+    levels.eachWithIndex { String level, int idx ->
+      BigDecimal t = idx / (levels.size() - 1)
+      colorMap[level] = ColorScaleUtil.interpolateColor(start, end, t)
+    }
+  }
+
+  private void trainHue(List<Object> dataValues, Scale spec) {
+    collectLevels(dataValues)
+    this.naValue = (spec.params['naValue'] as String) ?: '#999999'
+    BigDecimal start = NumberCoercionUtil.coerceToBigDecimal(spec.params['hStart'] ?: spec.params['h.start']) ?: 15.0
+    BigDecimal end = NumberCoercionUtil.coerceToBigDecimal(spec.params['hEnd'] ?: spec.params['h.end']) ?: 375.0
+    int dir = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : 1
+    List<String> colors = generateHuePalette(levels.size(), start, end)
+    if (dir < 0) {
+      colors = colors.reverse()
+    }
+    colorMap = [:]
+    levels.eachWithIndex { String level, int idx ->
+      colorMap[level] = colors[idx % colors.size()]
+    }
+  }
+
+  private void trainSteps(List<Object> dataValues, Scale spec) {
+    String stepLow = (spec.params['low'] as String) ?: '#132B43'
+    String stepHigh = (spec.params['high'] as String) ?: '#56B1F7'
+    int breaks = NumberCoercionUtil.coerceToBigDecimal(spec.params['nBreaks'])?.intValue() ?:
+        NumberCoercionUtil.coerceToBigDecimal(spec.params['n.breaks'])?.intValue() ?: 6
+    if (breaks < 2) {
+      breaks = 6
+    }
+    gradientColors = []
+    for (int i = 0; i < breaks; i++) {
+      BigDecimal t = i / (breaks - 1)
+      gradientColors << ColorScaleUtil.interpolateColor(stepLow, stepHigh, t)
+    }
+    gradientValues = null
+    this.naValue = (spec.params['naValue'] as String) ?: '#999999'
+    trainContinuousDomain(dataValues)
+  }
+
+  private void trainSteps2(List<Object> dataValues, Scale spec) {
+    String stepLow = (spec.params['low'] as String) ?: '#832424'
+    String stepMid = (spec.params['mid'] as String) ?: '#FFFFFF'
+    String stepHigh = (spec.params['high'] as String) ?: '#3B4CC0'
+    int breaks = NumberCoercionUtil.coerceToBigDecimal(spec.params['nBreaks'])?.intValue() ?:
+        NumberCoercionUtil.coerceToBigDecimal(spec.params['n.breaks'])?.intValue() ?: 7
+    if (breaks < 3) {
+      breaks = 7
+    }
+    gradientColors = []
+    for (int i = 0; i < breaks; i++) {
+      BigDecimal t = i / (breaks - 1)
+      String color = t <= 0.5
+          ? ColorScaleUtil.interpolateColor(stepLow, stepMid, t * 2)
+          : ColorScaleUtil.interpolateColor(stepMid, stepHigh, (t - 0.5) * 2)
+      gradientColors << color
+    }
+    gradientValues = null
+    this.naValue = (spec.params['naValue'] as String) ?: '#999999'
+    trainContinuousDomain(dataValues)
+  }
+
+  private void trainStepsN(List<Object> dataValues, Scale spec) {
+    this.gradientColors = (spec.params['colors'] as List)?.collect { it?.toString() } ?: ['#132B43', '#56B1F7']
+    if (gradientColors.size() < 2) {
+      gradientColors = ['#132B43', '#56B1F7']
+    }
+    this.gradientValues = null
+    this.naValue = (spec.params['naValue'] as String) ?: '#999999'
+    trainContinuousDomain(dataValues)
+  }
+
+  private void trainContinuousDomain(List<Object> dataValues) {
+    List<BigDecimal> numeric = dataValues
+        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
+        .findAll { it != null } as List<BigDecimal>
+    if (numeric.isEmpty()) {
+      domainMin = 0.0
+      domainMax = 1.0
+      return
+    }
+    domainMin = numeric.min()
+    domainMax = numeric.max()
+    if (domainMin == domainMax) {
+      domainMax = domainMin + 1
     }
   }
 
@@ -332,6 +491,22 @@ class ColorCharmScale extends CharmScale {
     ColorScaleUtil.interpolateColor(gradientColors[idx], gradientColors[idx + 1], localT)
   }
 
+  private String binnedGradientColor(Object value) {
+    if (!(value instanceof Number) || gradientColors == null || gradientColors.isEmpty()) return naValue
+    BigDecimal v = value as BigDecimal
+    if (domainMax == domainMin) {
+      return gradientColors[gradientColors.size() - 1]
+    }
+    BigDecimal normalized = ((v - domainMin) / (domainMax - domainMin)).min(1.0).max(0.0)
+    int idx = (normalized * (gradientColors.size() - 1)).intValue()
+    if (idx < 0) {
+      idx = 0
+    } else if (idx > gradientColors.size() - 1) {
+      idx = gradientColors.size() - 1
+    }
+    gradientColors[idx]
+  }
+
   private List<BigDecimal> resolveGradientStops() {
     if (gradientValues != null && gradientValues.size() == gradientColors.size()) {
       return gradientValues.collect { Number n ->
@@ -359,9 +534,11 @@ class ColorCharmScale extends CharmScale {
    * @return list of hex RGB colors
    */
   private static List<String> generateHuePalette(int n) {
+    generateHuePalette(n, 15.0, 375.0)
+  }
+
+  private static List<String> generateHuePalette(int n, BigDecimal start, BigDecimal end) {
     if (n <= 0) return []
-    BigDecimal start = 15.0
-    BigDecimal end = 375.0
     BigDecimal step = (end - start) / n
     List<String> colors = new ArrayList<>(n)
     for (int i = 0; i < n; i++) {

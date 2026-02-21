@@ -86,7 +86,7 @@ class ViolinRenderer {
       LayerData first = sorted.first()
       String fill = GeomUtils.resolveFill(context, layer, first)
       String stroke = GeomUtils.resolveStroke(context, layer, first)
-      BigDecimal alpha = GeomUtils.resolveAlpha(layer, first, 0.7)
+      BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, first, 0.7)
 
       StringBuilder d = new StringBuilder()
       d.append("M ${right[0][0]} ${right[0][1]}")

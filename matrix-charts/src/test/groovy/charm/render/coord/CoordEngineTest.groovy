@@ -45,14 +45,37 @@ class CoordEngineTest {
   }
 
   @Test
-  void testUnimplementedCoordFallsBackToCartesian() {
+  void testDispatchPolar() {
     CoordSpec coord = new CoordSpec(type: CharmCoordType.POLAR)
     List<LayerData> data = [new LayerData(x: 1, y: 2, rowIndex: 0)]
     List<LayerData> result = CoordEngine.apply(coord, data)
     assertNotNull(result)
     assertEquals(1, result.size())
-    assertEquals(1, result[0].x)
-    assertEquals(2, result[0].y)
+    assertNotEquals(1, result[0].x)
+    assertNotEquals(2, result[0].y)
+  }
+
+  @Test
+  void testDispatchRadial() {
+    CoordSpec coord = new CoordSpec(type: CharmCoordType.RADIAL)
+    List<LayerData> data = [new LayerData(x: 0.25, y: -2, rowIndex: 0)]
+    List<LayerData> result = CoordEngine.apply(coord, data)
+    assertNotNull(result)
+    assertEquals(1, result.size())
+    // Radial clamps radius to non-negative before polar transform.
+    assertEquals(0, (result[0].x as BigDecimal).compareTo(0.0))
+    assertEquals(0, (result[0].y as BigDecimal).compareTo(0.0))
+  }
+
+  @Test
+  void testDispatchTrans() {
+    CoordSpec coord = new CoordSpec(type: CharmCoordType.TRANS, params: [x: 'log10', y: 'sqrt'])
+    List<LayerData> data = [new LayerData(x: 100, y: 9, rowIndex: 0)]
+    List<LayerData> result = CoordEngine.apply(coord, data)
+    assertNotNull(result)
+    assertEquals(1, result.size())
+    assertEquals(0, (result[0].x as BigDecimal).compareTo(2.0))
+    assertEquals(0, (result[0].y as BigDecimal).compareTo(3.0))
   }
 
   @Test

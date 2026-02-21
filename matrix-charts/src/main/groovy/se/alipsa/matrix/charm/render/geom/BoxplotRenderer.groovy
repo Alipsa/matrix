@@ -49,7 +49,7 @@ class BoxplotRenderer {
 
       String fill = GeomUtils.resolveFill(context, layer, datum)
       String stroke = GeomUtils.resolveStroke(context, layer, datum)
-      BigDecimal alpha = GeomUtils.resolveAlpha(layer, datum)
+      BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
 
       BigDecimal xLeft = xCenter - boxWidth / 2
       BigDecimal boxTop = [q1, q3].min()

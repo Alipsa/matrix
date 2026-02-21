@@ -7,6 +7,7 @@ import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
+import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
 
 /**
@@ -18,6 +19,12 @@ class GeomUtils {
   private static final List<String> DEFAULT_PALETTE = [
       '#F8766D', '#C49A00', '#53B400',
       '#00C094', '#00B6EB', '#A58AFF', '#FB61D7'
+  ].asImmutable()
+  private static final List<String> DEFAULT_SHAPES = [
+      'circle', 'square', 'triangle', 'diamond', 'plus', 'x', 'cross'
+  ].asImmutable()
+  private static final List<String> DEFAULT_LINETYPES = [
+      'solid', 'dashed', 'dotted', 'dotdash', 'longdash', 'twodash'
   ].asImmutable()
 
   private GeomUtils() {
@@ -59,6 +66,109 @@ class GeomUtils {
   static BigDecimal resolveAlpha(LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
     NumberCoercionUtil.coerceToBigDecimal(datum.alpha) ?:
         NumberCoercionUtil.coerceToBigDecimal(layer.params.alpha) ?: defaultValue
+  }
+
+  /**
+   * Resolve alpha from mapped alpha scale, then datum/layer/default.
+   */
+  static BigDecimal resolveAlpha(RenderContext context, LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
+    if (datum.alpha != null && context?.alphaScale != null) {
+      BigDecimal scaled = context.alphaScale.transform(datum.alpha)
+      if (scaled != null) {
+        return scaled.min(1.0).max(0.0)
+      }
+    }
+    resolveAlpha(layer, datum, defaultValue)
+  }
+
+  /**
+   * Resolve line width from datum/layer/default.
+   */
+  static BigDecimal resolveLineWidth(LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
+    NumberCoercionUtil.coerceToBigDecimal(datum.size) ?:
+        NumberCoercionUtil.coerceToBigDecimal(layer.params.lineWidth) ?:
+        NumberCoercionUtil.coerceToBigDecimal(layer.params.linewidth) ?:
+        NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: defaultValue
+  }
+
+  /**
+   * Resolve line width from mapped size scale, then datum/layer/default.
+   */
+  static BigDecimal resolveLineWidth(RenderContext context, LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
+    if (datum.size != null && context?.sizeScale != null) {
+      BigDecimal scaled = context.sizeScale.transform(datum.size)
+      if (scaled != null) {
+        return scaled.max(0.0)
+      }
+    }
+    resolveLineWidth(layer, datum, defaultValue)
+  }
+
+  /**
+   * Resolves linetype, optionally through a trained linetype scale.
+   */
+  static Object resolveLinetype(RenderContext context, LayerSpec layer, LayerData datum) {
+    if (datum.linetype != null && context?.linetypeScale instanceof DiscreteCharmScale) {
+      DiscreteCharmScale linetypeScale = context.linetypeScale as DiscreteCharmScale
+      String mapped = mappedValue(linetypeScale, datum.linetype)
+      if (mapped != null) {
+        return mapped
+      }
+      int idx = linetypeScale.levels.indexOf(datum.linetype.toString())
+      if (idx >= 0) {
+        return DEFAULT_LINETYPES[idx % DEFAULT_LINETYPES.size()]
+      }
+    }
+    if (datum.linetype != null) {
+      return datum.linetype
+    }
+    layer.params.linetype
+  }
+
+  /**
+   * Resolve point shape from mapped shape scale, then datum/layer/default.
+   */
+  static String resolveShape(RenderContext context, LayerSpec layer, LayerData datum, String defaultValue = 'circle') {
+    if (datum.shape != null && context?.shapeScale instanceof DiscreteCharmScale) {
+      DiscreteCharmScale shapeScale = context.shapeScale as DiscreteCharmScale
+      String mapped = mappedValue(shapeScale, datum.shape)
+      if (mapped != null) {
+        return mapped
+      }
+      int idx = shapeScale.levels.indexOf(datum.shape.toString())
+      if (idx >= 0) {
+        return DEFAULT_SHAPES[idx % DEFAULT_SHAPES.size()]
+      }
+    }
+    if (datum.shape != null) {
+      return datum.shape.toString()
+    }
+    layer.params.shape?.toString() ?: defaultValue
+  }
+
+  private static String mappedValue(DiscreteCharmScale scale, Object value) {
+    if (scale == null || value == null) {
+      return null
+    }
+    Object values = scale.scaleSpec?.params?.values
+    if (values instanceof Map) {
+      Object direct = (values as Map)[value]
+      if (direct == null) {
+        direct = (values as Map)[value.toString()]
+      }
+      return direct?.toString()
+    }
+    if (values instanceof List) {
+      int idx = scale.levels.indexOf(value.toString())
+      if (idx >= 0) {
+        List listValues = values as List
+        if (listValues.isEmpty()) {
+          return null
+        }
+        return listValues[idx % listValues.size()]?.toString()
+      }
+    }
+    null
   }
 
   /**

@@ -250,6 +250,70 @@ class Scale {
   }
 
   /**
+   * Creates a ColorBrewer-based continuous interpolation scale.
+   *
+   * @param palette brewer palette name
+   * @param direction 1 for normal, -1 for reversed
+   * @return scale instance
+   */
+  static Scale distiller(String palette = 'RdYlBu', int direction = -1) {
+    Scale s = new Scale(type: ScaleType.CONTINUOUS)
+    s.params['colorType'] = 'distiller'
+    s.params['palette'] = palette
+    s.params['direction'] = direction
+    s
+  }
+
+  /**
+   * Creates a ColorBrewer-based binned continuous scale.
+   *
+   * @param palette brewer palette name
+   * @param direction 1 for normal, -1 for reversed
+   * @param nBreaks number of bins
+   * @return scale instance
+   */
+  static Scale fermenter(String palette = 'YlOrRd', int direction = 1, int nBreaks = 6) {
+    Scale s = new Scale(type: ScaleType.CONTINUOUS)
+    s.params['colorType'] = 'fermenter'
+    s.params['palette'] = palette
+    s.params['direction'] = direction
+    s.params['nBreaks'] = nBreaks
+    s
+  }
+
+  /**
+   * Creates a discrete grey scale.
+   *
+   * @param start start grey color
+   * @param end end grey color
+   * @return scale instance
+   */
+  static Scale grey(String start = '#EBEBEB', String end = '#4D4D4D') {
+    Scale s = new Scale(type: ScaleType.DISCRETE)
+    s.params['colorType'] = 'grey'
+    s.params['start'] = start
+    s.params['end'] = end
+    s
+  }
+
+  /**
+   * Creates a discrete hue scale.
+   *
+   * @param hStart start hue in degrees
+   * @param hEnd end hue in degrees
+   * @param direction 1 for normal, -1 for reversed
+   * @return scale instance
+   */
+  static Scale hue(BigDecimal hStart = 15.0, BigDecimal hEnd = 375.0, int direction = 1) {
+    Scale s = new Scale(type: ScaleType.DISCRETE)
+    s.params['colorType'] = 'hue'
+    s.params['hStart'] = hStart
+    s.params['hEnd'] = hEnd
+    s.params['direction'] = direction
+    s
+  }
+
+  /**
    * Creates a two-color gradient color scale.
    *
    * @param low low-end color
@@ -285,6 +349,55 @@ class Scale {
     if (values != null) {
       s.params['gradientValues'] = values
     }
+    s
+  }
+
+  /**
+   * Creates a stepped two-color continuous scale.
+   *
+   * @param low low-end color
+   * @param high high-end color
+   * @param nBreaks number of bins
+   * @return scale instance
+   */
+  static Scale steps(String low = '#132B43', String high = '#56B1F7', int nBreaks = 6) {
+    Scale s = new Scale(type: ScaleType.CONTINUOUS)
+    s.params['colorType'] = 'steps'
+    s.params['low'] = low
+    s.params['high'] = high
+    s.params['nBreaks'] = nBreaks
+    s
+  }
+
+  /**
+   * Creates a stepped diverging continuous scale.
+   *
+   * @param low low-end color
+   * @param mid middle color
+   * @param high high-end color
+   * @param nBreaks number of bins
+   * @return scale instance
+   */
+  static Scale steps2(String low = '#832424', String mid = '#FFFFFF', String high = '#3B4CC0', int nBreaks = 7) {
+    Scale s = new Scale(type: ScaleType.CONTINUOUS)
+    s.params['colorType'] = 'steps2'
+    s.params['low'] = low
+    s.params['mid'] = mid
+    s.params['high'] = high
+    s.params['nBreaks'] = nBreaks
+    s
+  }
+
+  /**
+   * Creates a stepped multi-color continuous scale.
+   *
+   * @param colors ordered colors
+   * @return scale instance
+   */
+  static Scale stepsN(List<String> colors) {
+    Scale s = new Scale(type: ScaleType.CONTINUOUS)
+    s.params['colorType'] = 'stepsN'
+    s.params['colors'] = colors
     s
   }
 
@@ -330,6 +443,31 @@ class Scale {
    */
   static Scale binned() {
     new Scale(type: ScaleType.BINNED)
+  }
+
+  /**
+   * Creates a continuous radius scale.
+   *
+   * @param min minimum radius
+   * @param max maximum radius
+   * @return scale instance
+   */
+  static Scale radius(Number min = 1.0, Number max = 6.0) {
+    Scale s = new Scale(type: ScaleType.CONTINUOUS)
+    s.params['range'] = [min, max]
+    s.params['aesthetic'] = 'radius'
+    s
+  }
+
+  /**
+   * Attaches secondary-axis metadata to this scale.
+   *
+   * @param secondaryAxis free-form secondary-axis parameters
+   * @return this scale
+   */
+  Scale secondaryAxis(Map<String, Object> secondaryAxis) {
+    params['secondaryAxis'] = secondaryAxis == null ? [:] : new LinkedHashMap<>(secondaryAxis)
+    this
   }
 
   /**

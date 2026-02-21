@@ -31,26 +31,26 @@ A feature row may be marked `[x]` only when:
 | Geom: GeomViolin | P0 | `charm/render/geom/ViolinRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testViolinRepresentativeAndEmptyEdge` | [x] |
 | Geom: GeomTile | P0 | `charm/render/geom/TileRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testTileRepresentativeAndEmptyEdge` | [x] |
 | Geom: GeomText | P0 | `charm/render/geom/TextRenderer`, `charm/render/geom/GeomEngine`, `CharmRenderer` dispatch | `P0GeomRendererTest.testTextRepresentativeAndEmptyEdge` | [x] |
-| Geom: GeomJitter | P1 | - | - | [ ] |
-| Geom: GeomStep | P1 | - | - | [ ] |
-| Geom: GeomErrorbar | P1 | - | - | [ ] |
-| Geom: GeomErrorbarh | P1 | - | - | [ ] |
-| Geom: GeomRibbon | P1 | - | - | [ ] |
-| Geom: GeomSegment | P1 | - | - | [ ] |
-| Geom: GeomHline | P1 | - | - | [ ] |
-| Geom: GeomVline | P1 | - | - | [ ] |
-| Geom: GeomAbline | P1 | - | - | [ ] |
-| Geom: GeomLabel | P1 | - | - | [ ] |
-| Geom: GeomRug | P1 | - | - | [ ] |
-| Geom: GeomFreqpoly | P1 | - | - | [ ] |
-| Geom: GeomPath | P1 | - | - | [ ] |
-| Geom: GeomRect | P1 | - | - | [ ] |
-| Geom: GeomPolygon | P1 | - | - | [ ] |
-| Geom: GeomCrossbar | P1 | - | - | [ ] |
-| Geom: GeomLinerange | P1 | - | - | [ ] |
-| Geom: GeomPointrange | P1 | - | - | [ ] |
-| Geom: GeomHex | P1 | - | - | [ ] |
-| Geom: GeomContour | P1 | - | - | [ ] |
+| Geom: GeomJitter | P1 | `charm/render/geom/GeomEngine` (JITTER dispatch via `PointRenderer`) | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomStep | P1 | `charm/render/geom/StepRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomErrorbar | P1 | `charm/render/geom/IntervalRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomErrorbarh | P1 | `charm/render/geom/IntervalRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomRibbon | P1 | `charm/render/geom/RibbonRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomSegment | P1 | `charm/render/geom/SegmentRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomHline | P1 | `charm/render/geom/SegmentRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomVline | P1 | `charm/render/geom/SegmentRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomAbline | P1 | `charm/render/geom/SegmentRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomLabel | P1 | `charm/render/geom/LabelRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomRug | P1 | `charm/render/geom/RugRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomFreqpoly | P1 | `charm/render/geom/GeomEngine` (FREQPOLY dispatch via `LineRenderer`) | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomPath | P1 | `charm/render/geom/PathRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomRect | P1 | `charm/render/geom/RectRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomPolygon | P1 | `charm/render/geom/PolygonRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomCrossbar | P1 | `charm/render/geom/IntervalRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomLinerange | P1 | `charm/render/geom/IntervalRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomPointrange | P1 | `charm/render/geom/IntervalRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomHex | P1 | `charm/render/geom/HexRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
+| Geom: GeomContour | P1 | `charm/render/geom/ContourRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
 | Geom: GeomBin2d | P2 | - | - | [ ] |
 | Geom: GeomBlank | P2 | - | - | [ ] |
 | Geom: GeomContourFilled | P2 | - | - | [ ] |
@@ -81,16 +81,16 @@ A feature row may be marked `[x]` only when:
 | Stat: SMOOTH | P0 | `charm/render/stat/SmoothStat`, `StatEngine` dispatch | `SmoothStatTest`, `StatEngineTest` | [x] |
 | Stat: DENSITY | P0 | `charm/render/stat/DensityStat`, `StatEngine` dispatch | `DensityStatTest`, `StatEngineTest` | [x] |
 | Stat: YDENSITY | P0 | `charm/render/stat/YDensityStat`, `StatEngine` dispatch | `YDensityStatTest`, `StatEngineTest` | [x] |
-| Stat: SUMMARY | P1 | - | - | [ ] |
-| Stat: BIN2D | P1 | - | - | [ ] |
-| Stat: CONTOUR | P1 | - | - | [ ] |
-| Stat: ECDF | P1 | - | - | [ ] |
-| Stat: QQ | P1 | - | - | [ ] |
-| Stat: QQ_LINE | P1 | - | - | [ ] |
-| Stat: FUNCTION | P1 | - | - | [ ] |
-| Stat: SUMMARY_BIN | P1 | - | - | [ ] |
-| Stat: UNIQUE | P1 | - | - | [ ] |
-| Stat: QUANTILE | P1 | - | - | [ ] |
+| Stat: SUMMARY | P1 | `charm/render/stat/SummaryStat`, `StatEngine` dispatch | `P1StatTest.testSummaryStat` | [x] |
+| Stat: BIN2D | P1 | `charm/render/stat/Bin2DStat`, `StatEngine` dispatch | `P1StatTest.testBin2DStat` | [x] |
+| Stat: CONTOUR | P1 | `charm/render/stat/ContourStat`, `StatEngine` dispatch | `P1StatTest.testContourStat` | [x] |
+| Stat: ECDF | P1 | `charm/render/stat/EcdfStat`, `StatEngine` dispatch | `StatEngineTest.testDispatchEcdf` | [x] |
+| Stat: QQ | P1 | `charm/render/stat/QqStat`, `StatEngine` dispatch | `P1StatTest.testQqStat` | [x] |
+| Stat: QQ_LINE | P1 | `charm/render/stat/QqLineStat`, `StatEngine` dispatch | `P1StatTest.testQqLineStat` | [x] |
+| Stat: FUNCTION | P1 | `charm/render/stat/FunctionStat`, `StatEngine` dispatch | `P1StatTest.testFunctionStat` | [x] |
+| Stat: SUMMARY_BIN | P1 | `charm/render/stat/SummaryBinStat`, `StatEngine` dispatch | `P1StatTest.testSummaryBinStat` | [x] |
+| Stat: UNIQUE | P1 | `charm/render/stat/UniqueStat`, `StatEngine` dispatch | `P1StatTest.testUniqueStat` | [x] |
+| Stat: QUANTILE | P1 | `charm/render/stat/QuantileStat`, `StatEngine` dispatch | `P1StatTest.testQuantileStat` | [x] |
 | Stat: DENSITY_2D | P2 | - | - | [ ] |
 | Stat: BIN_HEX | P2 | - | - | [ ] |
 | Stat: SUMMARY_HEX | P2 | - | - | [ ] |
@@ -104,15 +104,15 @@ A feature row may be marked `[x]` only when:
 | Position: DODGE | P0 | `charm/render/position/DodgePosition`, `PositionEngine` dispatch | `DodgePositionTest`, `PositionEngineTest` | [x] |
 | Position: STACK | P0 | `charm/render/position/StackPosition`, `PositionEngine` dispatch | `StackPositionTest`, `PositionEngineTest` | [x] |
 | Position: FILL | P0 | `charm/render/position/FillPosition`, `PositionEngine` dispatch | `FillPositionTest`, `PositionEngineTest` | [x] |
-| Position: JITTER | P1 | - | - | [ ] |
-| Position: DODGE2 | P1 | - | - | [ ] |
-| Position: NUDGE | P1 | - | - | [ ] |
+| Position: JITTER | P1 | `charm/render/position/JitterPosition`, `PositionEngine` dispatch | `PositionEngineTest.testDispatchJitter` | [x] |
+| Position: DODGE2 | P1 | `charm/render/position/Dodge2Position`, `PositionEngine` dispatch | `PositionEngineTest.testDispatchDodge2` | [x] |
+| Position: NUDGE | P1 | `charm/render/position/NudgePosition`, `PositionEngine` dispatch | `PositionEngineTest.testDispatchNudge` | [x] |
 | Coord: CoordCartesian | P0 | `charm/render/coord/CartesianCoord`, `CoordEngine` dispatch | `CartesianCoordTest`, `CoordEngineTest` | [x] |
 | Coord: CoordFlip | P0 | `charm/render/coord/FlipCoord`, `CoordEngine` dispatch | `FlipCoordTest`, `CoordEngineTest` | [x] |
 | Coord: CoordFixed | P0 | `charm/render/coord/FixedCoord`, `CoordEngine` dispatch | `FixedCoordTest`, `CoordEngineTest` | [x] |
-| Coord: CoordPolar | P1 | - | - | [ ] |
-| Coord: CoordRadial | P1 | - | - | [ ] |
-| Coord: CoordTrans | P1 | - | - | [ ] |
+| Coord: CoordPolar | P1 | `charm/render/coord/PolarCoord`, `CoordEngine` dispatch | `CoordEngineTest.testDispatchPolar` | [x] |
+| Coord: CoordRadial | P1 | `charm/render/coord/RadialCoord`, `CoordEngine` dispatch | `CoordEngineTest.testDispatchRadial` | [x] |
+| Coord: CoordTrans | P1 | `charm/render/coord/TransCoord`, `CoordEngine` dispatch | `CoordEngineTest.testDispatchTrans` | [x] |
 | Coord: CoordMap | P2 | - | - | [ ] |
 | Coord: CoordQuickmap | P2 | - | - | [ ] |
 | Coord: CoordSf | P2 | - | - | [ ] |
@@ -125,21 +125,21 @@ A feature row may be marked `[x]` only when:
 | Scale: ScaleColorGradient / ScaleColorGradientN | P0 | `charm/render/scale/ColorCharmScale` (gradient/gradientN strategies), `charm/Scale.gradient()/gradientN()`, `gg/scale/ScaleColorGradient/N.toCharmScale()` | `ColorCharmScaleTest.testGradient*` | [x] |
 | Scale: ScaleColorViridis / ScaleColorViridisC | P0 | `charm/render/scale/ColorCharmScale` (viridis_d strategy) + `ViridisProvider`, `charm/Scale.viridis()`, `gg/scale/ScaleColorViridis.toCharmScale()` | `ColorCharmScaleTest.testViridis*` | [x] |
 | Scale: ScaleFillIdentity | P0 | `charm/render/scale/ColorCharmScale` (identity strategy), `charm/Scale.identity()`, `gg/scale/ScaleFillIdentity.toCharmScale()` | `ColorCharmScaleTest.testIdentity*` | [x] |
-| Scale: ScaleXSqrt / ScaleYSqrt | P1 | - | - | [ ] |
-| Scale: ScaleXDate / ScaleYDate | P1 | - | - | [ ] |
-| Scale: ScaleXDatetime / ScaleYDatetime | P1 | - | - | [ ] |
-| Scale: ScaleXTime / ScaleYTime | P1 | - | - | [ ] |
-| Scale: ScaleXBinned / ScaleYBinned | P1 | - | - | [ ] |
-| Scale: ScaleColorDistiller / ScaleColorFermenter | P1 | - | - | [ ] |
-| Scale: ScaleColorGrey / ScaleColorHue | P1 | - | - | [ ] |
-| Scale: ScaleColorIdentity | P1 | - | - | [ ] |
-| Scale: ScaleColorSteps / ScaleColorSteps2 / ScaleColorStepsN | P1 | - | - | [ ] |
-| Scale: ScaleSizeContinuous / ScaleSizeDiscrete / ScaleSizeBinned / ScaleSizeArea / ScaleSizeIdentity | P1 | - | - | [ ] |
-| Scale: ScaleAlphaContinuous / ScaleAlphaDiscrete / ScaleAlphaBinned / ScaleAlphaIdentity | P1 | - | - | [ ] |
-| Scale: ScaleShape / ScaleShapeIdentity / ScaleShapeManual / ScaleShapeBinned | P1 | - | - | [ ] |
-| Scale: ScaleLinetype / ScaleLinetypeIdentity / ScaleLinetypeManual | P1 | - | - | [ ] |
-| Scale: ScaleRadius | P1 | - | - | [ ] |
-| Scale: SecondaryAxis | P1 | - | - | [ ] |
+| Scale: ScaleXSqrt / ScaleYSqrt | P1 | `charm/ScaleTransform` (`SqrtScaleTransform`), `ScaleEngine.trainPositionalScale` | `ScaleEngineTest.testSqrtScaleTraining` | [x] |
+| Scale: ScaleXDate / ScaleYDate | P1 | `charm/ScaleTransform` (`DateScaleTransform`), `NumberCoercionUtil` temporal coercion, `ScaleEngine` | `ScaleEngineTest.testDateScaleTrainingWithTemporalValues` | [x] |
+| Scale: ScaleXDatetime / ScaleYDatetime | P1 | `DateScaleTransform` + temporal coercion for `LocalDateTime`/`Instant` types, `ScaleEngine` | `ScaleEngineTest.testDatetimeScaleTrainingWithTemporalValues` | [x] |
+| Scale: ScaleXTime / ScaleYTime | P1 | `charm/ScaleTransform` (`TimeScaleTransform`), temporal coercion for `LocalTime`, `ScaleEngine` | `ScaleEngineTest.testTimeScaleTrainingWithTemporalValues` | [x] |
+| Scale: ScaleXBinned / ScaleYBinned | P1 | `charm/render/scale/BinnedCharmScale`, `ScaleEngine.trainBinnedScale` | `ScaleEngineTest.testBinnedPositionalScaleTraining` | [x] |
+| Scale: ScaleColorDistiller / ScaleColorFermenter | P1 | `charm/Scale.distiller()/fermenter()`, `ColorCharmScale` distiller/fermenter strategies | `ScaleEngineTest.testP1ColorScaleVariants` | [x] |
+| Scale: ScaleColorGrey / ScaleColorHue | P1 | `charm/Scale.grey()/hue()`, `ColorCharmScale` grey/hue strategies | `ScaleEngineTest.testP1ColorScaleVariants` | [x] |
+| Scale: ScaleColorIdentity | P1 | `charm/Scale.identity()`, `ColorCharmScale` identity strategy | `ColorCharmScaleTest.testIdentity*` | [x] |
+| Scale: ScaleColorSteps / ScaleColorSteps2 / ScaleColorStepsN | P1 | `charm/Scale.steps()/steps2()/stepsN()`, `ColorCharmScale` stepped strategies | `ScaleEngineTest.testP1ColorScaleVariants` | [x] |
+| Scale: ScaleSizeContinuous / ScaleSizeDiscrete / ScaleSizeBinned / ScaleSizeArea / ScaleSizeIdentity | P1 | `ScaleEngine.trainSizeScale` + `GeomUtils.resolveLineWidth` / `PointRenderer` mapped size application | `ScaleEngineTest.testTrainNonPositionalScalesRespectSpecTypes` | [x] |
+| Scale: ScaleAlphaContinuous / ScaleAlphaDiscrete / ScaleAlphaBinned / ScaleAlphaIdentity | P1 | `ScaleEngine.trainAlphaScale`, `GeomUtils.resolveAlpha` mapped alpha application | `ScaleEngineTest.testTrainNonPositionalScalesRespectSpecTypes` | [x] |
+| Scale: ScaleShape / ScaleShapeIdentity / ScaleShapeManual / ScaleShapeBinned | P1 | `ScaleEngine.trainShapeScale`, `GeomUtils.resolveShape` mapped/manual shape resolution | `ScaleEngineTest.testTrainNonPositionalScalesRespectSpecTypes` | [x] |
+| Scale: ScaleLinetype / ScaleLinetypeIdentity / ScaleLinetypeManual | P1 | `ScaleEngine.trainLinetypeScale`, `GeomUtils.resolveLinetype` mapped/manual linetype resolution | `ScaleEngineTest.testTrainLinetypeChannel` | [x] |
+| Scale: ScaleRadius | P1 | `charm/Scale.radius()`, `ScaleEngine.trainSizeScale` range-driven radius mapping | `ScaleEngineTest.testTrainNonPositionalScalesRespectSpecTypes` | [x] |
+| Scale: SecondaryAxis | P1 | `charm/Scale.secondaryAxis(...)` metadata support preserved through trained scales | `ScaleEngineTest.testSecondaryAxisMetadataPreserved` | [x] |
 | Annotation: Annotate (annotate() factory) | Cross-cutting | `gg/GgChart.plus(Annotate)`, `gg/adapter/GgCharmAdapter.mapInlineAnnotationLayer()`, `charm/AnnotationSpec` | `GgCharmAdapterAnnotationTest.testGgChartPlusAnnotateMapsToCharmAnnotationSpec` | [x] |
 | Annotation: AnnotationCustom | Cross-cutting | `charm/render/annotation/AnnotationEngine.renderCustom`, `gg/adapter/GgCharmAdapter.mapCustomAnnotationLayer()`, `charm/CustomAnnotationSpec` | `CharmAnnotationRendererTest.testCustomAnnotationDslRendersCustomElements`, `GgCharmAdapterAnnotationTest.testAdapterDelegatesAnnotationCustom` | [x] |
 | Annotation: AnnotationLogticks | Cross-cutting | `charm/render/annotation/AnnotationEngine.renderLogticks`, `gg/adapter/GgCharmAdapter.mapLogticksAnnotationLayer()`, `charm/LogticksAnnotationSpec` | `CharmAnnotationRendererTest.testLogticksAnnotationDslRendersLines`, `GgCharmAdapterAnnotationTest.testAdapterDelegatesAnnotationLogticks` | [x] |
@@ -200,6 +200,8 @@ A feature row may be marked `[x]` only when:
 ## Recorded Test Commands
 
 - [x] `./gradlew :matrix-charts:compileGroovy`
+- [x] `./gradlew :matrix-charts:compileGroovy :matrix-charts:compileTestGroovy`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true --tests "charm.core.CharmModelExpansionTest" --tests "charm.render.geom.P1GeomRendererTest" --tests "charm.render.stat.P1StatTest" --tests "charm.render.position.PositionEngineTest" --tests "charm.render.coord.CoordEngineTest" --tests "charm.render.scale.ScaleEngineTest"`
 - [x] `./gradlew :matrix-charts:test -Pheadless=true`
 - [x] `./gradlew test -Pheadless=true`
 - [x] `./gradlew :matrix-charts:test -Pheadless=true --tests "gg.adapter.GgCharmAdapterAnnotationTest" --tests "charm.render.CharmAnnotationRendererTest" --tests "gg.AnnotationCustomTest" --tests "gg.AnnotationLogticksTest" --tests "gg.AnnotationRasterTest" --tests "charm.render.CharmParityGovernanceTest"`

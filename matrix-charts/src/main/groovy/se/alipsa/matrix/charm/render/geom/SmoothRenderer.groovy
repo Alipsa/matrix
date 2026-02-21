@@ -35,7 +35,7 @@ class SmoothRenderer {
       BigDecimal lineWidth = NumberCoercionUtil.coerceToBigDecimal(first.size) ?:
           NumberCoercionUtil.coerceToBigDecimal(layer.params.lineWidth) ?:
           NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: 1.5
-      BigDecimal alpha = GeomUtils.resolveAlpha(layer, first)
+      BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, first)
       BigDecimal bandAlpha = NumberCoercionUtil.coerceToBigDecimal(layer.params.fillAlpha) ?: 0.2
       String dashArray = GeomUtils.dashArray(first.linetype ?: layer.params.linetype)
 
