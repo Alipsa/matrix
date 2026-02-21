@@ -131,34 +131,34 @@ class SpecialFunctions {
 
   private static BigDecimal betaContinuedFraction(BigDecimal x, BigDecimal a, BigDecimal b) {
     BigDecimal qab = a + b
-    BigDecimal qap = a + 1.0
-    BigDecimal qam = a - 1.0
-    BigDecimal c = 1.0
-    BigDecimal d = 1.0 - div(qab * x, qap)
-    if (d.abs().compareTo(BETA_TINY) < 0) d = BETA_TINY
-    d = div(1.0, d)
+    BigDecimal qap = a + ONE
+    BigDecimal qam = a - ONE
+    BigDecimal c = ONE
+    BigDecimal d = ONE - div(qab * x, qap)
+    if (d.abs() < BETA_TINY) d = BETA_TINY
+    d = div(ONE, d)
     BigDecimal h = d
 
     for (int m = 1; m <= MAX_ITERATIONS; m++) {
       int m2 = 2 * m
       BigDecimal aa = div(m * (b - m) * x, (qam + m2) * (a + m2))
-      d = 1.0 + aa * d
-      if (d.abs().compareTo(BETA_TINY) < 0) d = BETA_TINY
-      c = 1.0 + div(aa, c)
-      if (c.abs().compareTo(BETA_TINY) < 0) c = BETA_TINY
-      d = div(1.0, d)
+      d = ONE + aa * d
+      if (d.abs() < BETA_TINY) d = BETA_TINY
+      c = ONE + div(aa, c)
+      if (c.abs() < BETA_TINY) c = BETA_TINY
+      d = div(ONE, d)
       h *= d * c
 
       aa = div(-(a + m) * (qab + m) * x, (a + m2) * (qap + m2))
-      d = 1.0 + aa * d
-      if (d.abs().compareTo(BETA_TINY) < 0) d = BETA_TINY
-      c = 1.0 + div(aa, c)
-      if (c.abs().compareTo(BETA_TINY) < 0) c = BETA_TINY
-      d = div(1.0, d)
+      d = ONE + aa * d
+      if (d.abs() < BETA_TINY) d = BETA_TINY
+      c = ONE + div(aa, c)
+      if (c.abs() < BETA_TINY) c = BETA_TINY
+      d = div(ONE, d)
       BigDecimal delta = d * c
       h *= delta
 
-      if ((delta - 1.0).abs().compareTo(BETA_EPSILON) < 0) {
+      if ((delta - ONE).abs() < BETA_EPSILON) {
         return h
       }
     }

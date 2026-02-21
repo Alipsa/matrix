@@ -31,10 +31,16 @@ class TDistribution {
    *
    * @param t the t-value
    * @return probability P(T <= t)
-   * @deprecated Use {@link #cdf(BigDecimal)} for idiomatic groovy
    */
   double cdf(double t) {
-    cdf(t as BigDecimal) as double
+    double x = degreesOfFreedom / (degreesOfFreedom + t * t)
+    double beta = SpecialFunctions.regularizedIncompleteBeta(x, degreesOfFreedom / 2.0d, 0.5d)
+
+    if (t >= 0) {
+      return 1.0d - 0.5d * beta
+    } else {
+      return 0.5d * beta
+    }
   }
 
   BigDecimal cdf(BigDecimal t) {
@@ -43,7 +49,7 @@ class TDistribution {
     BigDecimal beta = SpecialFunctions.regularizedIncompleteBeta(x, degreesOfFreedom / 2.0, 0.5)
 
     if (t >= 0) {
-      return 1.0d - 0.5 * beta
+      return BigDecimal.ONE - 0.5 * beta
     } else {
       return 0.5 * beta
     }
@@ -98,7 +104,6 @@ class TDistribution {
    * @param t the t-statistic
    * @param df degrees of freedom
    * @return two-tailed p-value
-   * @deprecated Use {@link #pValue(BigDecimal, BigDecimal)} for idiomatic groovy
    */
   static double pValue(double t, double df) {
     return new TDistribution(df).twoTailedPValue(t)
