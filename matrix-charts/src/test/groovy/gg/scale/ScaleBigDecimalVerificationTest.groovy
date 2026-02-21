@@ -76,7 +76,7 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
     // Verify round trip
     def inverted = scale.inverse(result)
     assertTrue(inverted instanceof BigDecimal, "inverse should return BigDecimal but was ${inverted?.class?.simpleName}")
-    assertEquals(16G, inverted as BigDecimal, 0.01G)
+    assertEquals(16, inverted as BigDecimal, 0.01)
 
     // Test breaks are BigDecimal
     def breaks = scale.getComputedBreaks()
@@ -100,8 +100,8 @@ class ScaleBigDecimalVerificationTest extends BaseTest {
     def min = scale.transform(0)
     def max = scale.transform(100)
     //println "transform(0) = $min, transform(100) = $max"
-    assertEquals(1G, min as BigDecimal, 0.01G)
-    assertEquals(10G, max as BigDecimal, 0.01G)
+    assertEquals(1G, min as BigDecimal, 0.01)
+    assertEquals(10G, max as BigDecimal, 0.01)
   }
 
   @Test
