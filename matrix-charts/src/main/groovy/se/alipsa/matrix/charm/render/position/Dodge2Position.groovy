@@ -24,16 +24,42 @@ class Dodge2Position {
       return dodged
     }
 
+    Map<Integer, List<BigDecimal>> sourceXByRowIndex = [:].withDefault { [] }
+    data.each { LayerData datum ->
+      BigDecimal sourceX = NumberCoercionUtil.coerceToBigDecimal(datum.x)
+      if (sourceX != null) {
+        sourceXByRowIndex[datum.rowIndex] << sourceX
+      }
+    }
+
     List<LayerData> adjusted = []
     dodged.each { LayerData datum ->
       LayerData updated = LayerDataUtil.copyDatum(datum)
-      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(updated.x)
-      if (x != null) {
-        BigDecimal sign = x < 0 ? -1 : 1
-        updated.x = x + sign * padding / 2
+      BigDecimal dodgedX = NumberCoercionUtil.coerceToBigDecimal(updated.x)
+      BigDecimal sourceX = nearestSourceX(dodgedX, sourceXByRowIndex[datum.rowIndex])
+      if (dodgedX != null && sourceX != null) {
+        BigDecimal offsetFromCenter = dodgedX - sourceX
+        updated.x = sourceX + (offsetFromCenter * (1 + padding))
       }
       adjusted << updated
     }
     adjusted
+  }
+
+  private static BigDecimal nearestSourceX(BigDecimal target, List<BigDecimal> candidates) {
+    if (target == null || candidates == null || candidates.isEmpty()) {
+      return null
+    }
+    BigDecimal best = candidates[0]
+    BigDecimal bestDistance = (target - best).abs()
+    for (int i = 1; i < candidates.size(); i++) {
+      BigDecimal candidate = candidates[i]
+      BigDecimal candidateDistance = (target - candidate).abs()
+      if (candidateDistance < bestDistance) {
+        best = candidate
+        bestDistance = candidateDistance
+      }
+    }
+    best
   }
 }

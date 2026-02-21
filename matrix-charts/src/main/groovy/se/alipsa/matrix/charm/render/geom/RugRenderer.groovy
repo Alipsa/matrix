@@ -29,19 +29,18 @@ class RugRenderer {
 
       if (sides.contains('b')) {
         BigDecimal panelBottom = panelHeight as BigDecimal
-        drawTick(dataLayer, context, layer, datum, x, panelBottom, x, panelBottom - tickY, elementIndex)
+        drawTick(dataLayer, context, layer, datum, x, panelBottom, x, panelBottom - tickY, elementIndex++)
       }
       if (sides.contains('t')) {
-        drawTick(dataLayer, context, layer, datum, x, 0.0, x, tickY, elementIndex)
+        drawTick(dataLayer, context, layer, datum, x, 0.0, x, tickY, elementIndex++)
       }
       if (sides.contains('l')) {
-        drawTick(dataLayer, context, layer, datum, 0.0, y, tickX, y, elementIndex)
+        drawTick(dataLayer, context, layer, datum, 0.0, y, tickX, y, elementIndex++)
       }
       if (sides.contains('r')) {
         BigDecimal panelRight = panelWidth as BigDecimal
-        drawTick(dataLayer, context, layer, datum, panelRight, y, panelRight - tickX, y, elementIndex)
+        drawTick(dataLayer, context, layer, datum, panelRight, y, panelRight - tickX, y, elementIndex++)
       }
-      elementIndex++
     }
   }
 

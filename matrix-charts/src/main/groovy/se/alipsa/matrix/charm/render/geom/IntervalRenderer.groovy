@@ -25,6 +25,7 @@ class IntervalRenderer {
     int elementIndex = 0
 
     layerData.each { LayerData datum ->
+      int nextElementIndex = elementIndex
       BigDecimal x = context.xScale.transform(datum.x)
       BigDecimal y = context.yScale.transform(datum.y)
       BigDecimal xmin = context.xScale.transform(datum.xmin)
@@ -36,41 +37,41 @@ class IntervalRenderer {
         case CharmGeomType.ERRORBAR -> {
           if (x != null && ymin != null && ymax != null) {
             BigDecimal halfWidth = capHalfWidth(context.xScale, x, widthRatio)
-            drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-errorbar', elementIndex)
-            drawSegment(dataLayer, context, layer, datum, x - halfWidth, ymin, x + halfWidth, ymin, 'charm-errorbar', elementIndex)
-            drawSegment(dataLayer, context, layer, datum, x - halfWidth, ymax, x + halfWidth, ymax, 'charm-errorbar', elementIndex)
+            drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-errorbar', nextElementIndex++)
+            drawSegment(dataLayer, context, layer, datum, x - halfWidth, ymin, x + halfWidth, ymin, 'charm-errorbar', nextElementIndex++)
+            drawSegment(dataLayer, context, layer, datum, x - halfWidth, ymax, x + halfWidth, ymax, 'charm-errorbar', nextElementIndex++)
           }
         }
         case CharmGeomType.ERRORBARH -> {
           if (y != null && xmin != null && xmax != null) {
             BigDecimal halfHeight = capHalfWidth(context.yScale, y, widthRatio)
-            drawSegment(dataLayer, context, layer, datum, xmin, y, xmax, y, 'charm-errorbarh', elementIndex)
-            drawSegment(dataLayer, context, layer, datum, xmin, y - halfHeight, xmin, y + halfHeight, 'charm-errorbarh', elementIndex)
-            drawSegment(dataLayer, context, layer, datum, xmax, y - halfHeight, xmax, y + halfHeight, 'charm-errorbarh', elementIndex)
+            drawSegment(dataLayer, context, layer, datum, xmin, y, xmax, y, 'charm-errorbarh', nextElementIndex++)
+            drawSegment(dataLayer, context, layer, datum, xmin, y - halfHeight, xmin, y + halfHeight, 'charm-errorbarh', nextElementIndex++)
+            drawSegment(dataLayer, context, layer, datum, xmax, y - halfHeight, xmax, y + halfHeight, 'charm-errorbarh', nextElementIndex++)
           }
         }
         case CharmGeomType.LINERANGE -> {
           if (x != null && ymin != null && ymax != null) {
-            drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-linerange', elementIndex)
+            drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-linerange', nextElementIndex++)
           }
         }
         case CharmGeomType.CROSSBAR -> {
           if (x != null && y != null && ymin != null && ymax != null) {
             BigDecimal halfWidth = capHalfWidth(context.xScale, x, widthRatio)
-            drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-crossbar', elementIndex)
-            drawSegment(dataLayer, context, layer, datum, x - halfWidth, y, x + halfWidth, y, 'charm-crossbar', elementIndex)
+            drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-crossbar', nextElementIndex++)
+            drawSegment(dataLayer, context, layer, datum, x - halfWidth, y, x + halfWidth, y, 'charm-crossbar', nextElementIndex++)
           }
         }
         case CharmGeomType.POINTRANGE -> {
           if (x != null && y != null && ymin != null && ymax != null) {
-            drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-pointrange', elementIndex)
+            drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-pointrange', nextElementIndex++)
             BigDecimal pointRadius = NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: 3
             String fill = GeomUtils.resolveFill(context, layer, datum)
             String stroke = GeomUtils.resolveStroke(context, layer, datum)
             BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
             GeomUtils.drawPoint(dataLayer, x, y, pointRadius, fill, stroke, 'circle', alpha).each { point ->
               point.styleClass('charm-pointrange-point')
-              GeomUtils.applyCssAttributes(point, context, layer.geomType.name(), elementIndex, datum)
+              GeomUtils.applyCssAttributes(point, context, layer.geomType.name(), nextElementIndex++, datum)
             }
           }
         }
@@ -78,7 +79,7 @@ class IntervalRenderer {
           // no-op
         }
       }
-      elementIndex++
+      elementIndex = nextElementIndex
     }
   }
 

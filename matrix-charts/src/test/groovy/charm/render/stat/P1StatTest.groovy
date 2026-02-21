@@ -10,6 +10,7 @@ import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.stat.StatEngine
+import se.alipsa.matrix.charm.render.stat.StatUtils
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -108,6 +109,30 @@ class P1StatTest {
     ]
     List<LayerData> result = StatEngine.apply(layer, data)
     assertEquals(2, result.size())
+  }
+
+  @Test
+  void testUniqueStatRetainsDistinctColorAndFill() {
+    LayerSpec layer = makeLayer(CharmStatType.UNIQUE)
+    List<LayerData> data = [
+        new LayerData(x: 1, y: 2, group: 'g1', color: 'red', fill: 'pink', rowIndex: 0),
+        new LayerData(x: 1, y: 2, group: 'g1', color: 'blue', fill: 'pink', rowIndex: 1),
+        new LayerData(x: 1, y: 2, group: 'g1', color: 'red', fill: 'pink', rowIndex: 2)
+    ]
+    List<LayerData> result = StatEngine.apply(layer, data)
+    assertEquals(2, result.size())
+  }
+
+  @Test
+  void testNormalQuantileClampsOutOfRangeProbabilities() {
+    BigDecimal lower = StatUtils.normalQuantile(0.0)
+    BigDecimal upper = StatUtils.normalQuantile(1.0)
+    assertNotNull(lower)
+    assertNotNull(upper)
+    assertTrue(Double.isFinite(lower as double))
+    assertTrue(Double.isFinite(upper as double))
+    assertTrue(lower < 0)
+    assertTrue(upper > 0)
   }
 
   @Test

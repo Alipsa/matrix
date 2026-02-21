@@ -69,8 +69,8 @@ class StatEngineTest {
     ]
     List<LayerData> result = StatEngine.apply(layer, data)
     assertEquals(3, result.size())
-    assertEquals(1, result[0].x)
-    assertEquals(1.0 / 3.0, result[0].y)
+    assertEquals(0, (result[0].x as BigDecimal).compareTo(1.0))
+    assertEquals(0, (result[0].y as BigDecimal).compareTo(1.0 / 3.0))
   }
 
   @Test

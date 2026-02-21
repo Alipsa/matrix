@@ -44,11 +44,14 @@ class StatUtils {
    * Approximate inverse CDF of standard normal distribution.
    */
   static BigDecimal normalQuantile(BigDecimal p) {
-    if (p <= 0) {
-      return Double.NEGATIVE_INFINITY as BigDecimal
+    if (p == null) {
+      return null
     }
-    if (p >= 1) {
-      return Double.POSITIVE_INFINITY as BigDecimal
+    BigDecimal probValue = p
+    if (probValue <= 0) {
+      probValue = 1.0E-16
+    } else if (probValue >= 1) {
+      probValue = 1 - 1.0E-16
     }
 
     // Coefficients from Peter J. Acklam's inverse normal approximation.
@@ -64,7 +67,7 @@ class StatUtils {
     double[] d = [7.784695709041462e-03, 3.224671290700398e-01,
                   2.445134137142996e+00, 3.754408661907416e+00] as double[]
 
-    double prob = p as double
+    double prob = probValue as double
     double plow = 0.02425d
     double phigh = 1 - plow
     double q

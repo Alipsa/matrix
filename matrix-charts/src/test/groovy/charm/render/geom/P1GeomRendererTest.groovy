@@ -3,10 +3,12 @@ package charm.render.geom
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charm.CssAttributesSpec
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.core.Matrix
 
+import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
 
@@ -51,6 +53,56 @@ class P1GeomRendererTest {
       String token = "class=\"${tc.css}\""
       assertTrue(svg.contains(token), "Expected ${tc.geom} to render ${token}")
     }
+  }
+
+  @Test
+  void testCssIdsRemainUniqueForMultiPrimitiveGeoms() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'xmin', 'xmax', 'ymin', 'ymax', 'label')
+        .rows([[1.0, 2.0, 0.7, 1.3, 1.5, 2.5, 'p1']])
+        .build()
+    List<Map<String, Object>> cases = [
+        [geom: CharmGeomType.ERRORBAR, aes: [x: 'x', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-errorbar-', expected: 3],
+        [geom: CharmGeomType.ERRORBARH, aes: [y: 'y', xmin: 'xmin', xmax: 'xmax'], options: [:], idToken: '-errorbarh-', expected: 3],
+        [geom: CharmGeomType.CROSSBAR, aes: [x: 'x', y: 'y', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-crossbar-', expected: 2],
+        [geom: CharmGeomType.POINTRANGE, aes: [x: 'x', y: 'y', ymin: 'ymin', ymax: 'ymax'], options: [:], idToken: '-pointrange-', expected: 2],
+        [geom: CharmGeomType.LABEL, aes: [x: 'x', y: 'y', label: 'label'], options: [:], idToken: '-label-', expected: 2],
+        [geom: CharmGeomType.RUG, aes: [x: 'x', y: 'y'], options: [sides: 'bltr'], idToken: '-rug-', expected: 4]
+    ]
+
+    cases.each { Map<String, Object> tc ->
+      Chart chart = plot(data) {
+        aes(tc.aes as Map<String, String>)
+        layer(tc.geom as CharmGeomType, tc.options as Map<String, Object>)
+      }.build()
+
+      String svg = SvgWriter.toXml(withCssIdsEnabled(chart).render())
+      List<String> ids = idsForToken(svg, tc.idToken as String)
+      assertEquals(tc.expected as int, ids.size(), "Unexpected element count for ${tc.geom}")
+      assertEquals(ids.size(), ids.toSet().size(), "Expected unique IDs for ${tc.geom}")
+    }
+  }
+
+  private static Chart withCssIdsEnabled(Chart chart) {
+    new Chart(
+        chart.data,
+        chart.aes,
+        chart.layers,
+        chart.scale,
+        chart.theme,
+        chart.facet,
+        chart.coord,
+        chart.labels,
+        chart.guides,
+        chart.annotations,
+        new CssAttributesSpec(enabled: true, includeIds: true, includeClasses: true, includeDataAttributes: false)
+    )
+  }
+
+  private static List<String> idsForToken(String xml, String token) {
+    (xml =~ /id=['"]([^'"]+)['"]/)
+        .collect { it[1] as String }
+        .findAll { String id -> id.contains(token) }
   }
 
   private static Matrix p1Data() {

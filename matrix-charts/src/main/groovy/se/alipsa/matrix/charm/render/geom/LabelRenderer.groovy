@@ -23,6 +23,7 @@ class LabelRenderer {
 
     int elementIndex = 0
     layerData.each { LayerData datum ->
+      int nextElementIndex = elementIndex
       String label = datum.label?.toString() ?: layer.params.label?.toString()
       if (label == null || label.isBlank()) {
         return
@@ -58,7 +59,7 @@ class LabelRenderer {
       if (alpha < 1.0) {
         rect.addAttribute('fill-opacity', alpha)
       }
-      GeomUtils.applyCssAttributes(rect, context, layer.geomType.name(), elementIndex, datum)
+      GeomUtils.applyCssAttributes(rect, context, layer.geomType.name(), nextElementIndex++, datum)
 
       def text = dataLayer.addText(label)
           .x(x)
@@ -77,8 +78,8 @@ class LabelRenderer {
       if (alpha < 1.0) {
         text.addAttribute('fill-opacity', alpha)
       }
-      GeomUtils.applyCssAttributes(text, context, layer.geomType.name(), elementIndex, datum)
-      elementIndex++
+      GeomUtils.applyCssAttributes(text, context, layer.geomType.name(), nextElementIndex++, datum)
+      elementIndex = nextElementIndex
     }
   }
 }

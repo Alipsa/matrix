@@ -6,7 +6,7 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
 
 /**
- * Unique stat drops duplicate observations by x/y/group.
+ * Unique stat drops duplicate observations by x/y/group/color/fill.
  */
 @CompileStatic
 class UniqueStat {
