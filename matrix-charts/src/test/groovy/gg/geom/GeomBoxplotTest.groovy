@@ -14,6 +14,7 @@ import se.alipsa.matrix.gg.stat.GgStat
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomBoxplotTest {
 
@@ -82,6 +83,9 @@ class GeomBoxplotTest {
     assertEquals('green', geom.outlierColor)
     assertEquals(0.3, geom.stapleWidth)
   }
+
+  @Slow
+
 
   @Test
   void testGeomBoxplotUsesBoundsForWidth() {
@@ -264,6 +268,9 @@ class GeomBoxplotTest {
 
   // ============== Full Chart Tests ==============
 
+  @Slow
+
+
   @Test
   void testSimpleBoxplot() {
     def random = new Random(42)
@@ -294,6 +301,9 @@ class GeomBoxplotTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testBoxplotWithColors() {
     def random = new Random(123)
@@ -323,6 +333,9 @@ class GeomBoxplotTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testBoxplotVariableWidth() {
     def data = Matrix.builder()
@@ -351,6 +364,9 @@ class GeomBoxplotTest {
     assertTrue(widths.max() > widths.min(), "Box widths should vary with x range")
   }
 
+  @Slow
+
+
   @Test
   void testBoxplotWithAlpha() {
     def random = new Random(456)
@@ -376,6 +392,9 @@ class GeomBoxplotTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testBoxplotWithTheme() {
@@ -403,6 +422,9 @@ class GeomBoxplotTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testBoxplotClassicTheme() {
@@ -445,6 +467,9 @@ class GeomBoxplotTest {
 
   // ============== Edge Cases ==============
 
+  @Slow
+
+
   @Test
   void testBoxplotSingleGroup() {
     def data = Matrix.builder()
@@ -466,6 +491,9 @@ class GeomBoxplotTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testBoxplotManyGroups() {
@@ -493,6 +521,9 @@ class GeomBoxplotTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testBoxplotNegativeValues() {
     def data = Matrix.builder()
@@ -516,6 +547,9 @@ class GeomBoxplotTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testBoxplotWithOutliersDisabled() {
@@ -543,6 +577,9 @@ class GeomBoxplotTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testBoxplotDecimalValues() {

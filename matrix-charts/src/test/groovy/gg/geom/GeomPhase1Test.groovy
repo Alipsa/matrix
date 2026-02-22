@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.geom.*
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 /**
  * Tests for Phase 1.1 geoms: ribbon, tile, rect, path, step, pointrange, linerange, crossbar
@@ -41,6 +42,9 @@ class GeomPhase1Test {
     assertEquals(2, geom.linewidth)
     assertEquals(0.3, geom.alpha)
   }
+
+  @Slow
+
 
   @Test
   void testRibbonChartRender() {
@@ -99,6 +103,9 @@ class GeomPhase1Test {
     assertEquals(1, geom.linewidth)
     assertEquals(0.8, geom.alpha)
   }
+
+  @Slow
+
 
   @Test
   void testTileHeatmapRender() {
@@ -161,6 +168,9 @@ class GeomPhase1Test {
     assertEquals(0.6, geom.alpha)
   }
 
+  @Slow
+
+
   @Test
   void testRectChartRender() {
     def data = Matrix.builder()
@@ -216,6 +226,9 @@ class GeomPhase1Test {
     assertEquals(0.7, geom.alpha)
   }
 
+  @Slow
+
+
   @Test
   void testPathChartPreservesDataOrder() {
     // Data NOT sorted by x - path should connect in data order
@@ -245,6 +258,9 @@ class GeomPhase1Test {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testPathVsLineDifference() {
@@ -306,6 +322,9 @@ class GeomPhase1Test {
     assertEquals('vh', geom.direction)
   }
 
+  @Slow
+
+
   @Test
   void testStepChartHV() {
     def data = Matrix.builder()
@@ -336,6 +355,9 @@ class GeomPhase1Test {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testStepChartVH() {
     def data = Matrix.builder()
@@ -362,6 +384,9 @@ class GeomPhase1Test {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testStepChartMid() {
@@ -415,6 +440,9 @@ class GeomPhase1Test {
     assertEquals(6, geom.size)
     assertEquals(2, geom.linewidth)
   }
+
+  @Slow
+
 
   @Test
   void testPointrangeChartRender() {
@@ -471,6 +499,9 @@ class GeomPhase1Test {
     assertEquals('dashed', geom.linetype)
   }
 
+  @Slow
+
+
   @Test
   void testLinerangeChartRender() {
     def data = Matrix.builder()
@@ -526,6 +557,9 @@ class GeomPhase1Test {
     assertEquals(2, geom.linewidth)
     assertEquals(3, geom.fatten)
   }
+
+  @Slow
+
 
   @Test
   void testCrossbarChartRender() {
@@ -616,6 +650,9 @@ class GeomPhase1Test {
   }
 
   // ============ Combined Chart Tests ============
+
+  @Slow
+
 
   @Test
   void testCombinedErrorVisualization() {

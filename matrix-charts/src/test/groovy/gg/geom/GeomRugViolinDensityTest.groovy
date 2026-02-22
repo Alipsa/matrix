@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.geom.GeomDensity
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomRugViolinDensityTest {
 
@@ -42,6 +43,9 @@ class GeomRugViolinDensityTest {
     assertEquals(0.3, geom.alpha)
   }
 
+  @Slow
+
+
   @Test
   void testRugPlotWithScatter() {
     def data = Matrix.builder()
@@ -73,6 +77,9 @@ class GeomRugViolinDensityTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testRugPlotSidesSelection() {
@@ -138,6 +145,9 @@ class GeomRugViolinDensityTest {
     assertEquals([0.25, 0.5, 0.75], geom.draw_quantiles)
   }
 
+  @Slow
+
+
   @Test
   void testSimpleViolinPlot() {
     // Create grouped data
@@ -170,6 +180,9 @@ class GeomRugViolinDensityTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testViolinWithQuantiles() {
@@ -232,6 +245,9 @@ class GeomRugViolinDensityTest {
     assertEquals(0.5, geom.adjust)
   }
 
+  @Slow
+
+
   @Test
   void testSimpleDensityPlot() {
     // Generate some random data
@@ -261,6 +277,9 @@ class GeomRugViolinDensityTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testDensityWithHistogram() {
     def random = new Random(123)
@@ -286,6 +305,9 @@ class GeomRugViolinDensityTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testDensityBandwidthAdjustment() {

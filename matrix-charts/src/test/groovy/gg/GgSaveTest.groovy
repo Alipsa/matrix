@@ -12,9 +12,12 @@ import java.nio.file.Path
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
 
+import testutil.Slow
+
 /**
  * Tests for ggsave methods.
  */
+@Slow
 class GgSaveTest {
 
   @TempDir

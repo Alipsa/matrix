@@ -212,6 +212,12 @@ RUN_EXTERNAL_TESTS=true ./gradlew test
 
 # Run GUI tests in headless mode (for CI)
 ./gradlew :matrix-charts:test -Pheadless=true
+
+# Fast unit tests only (no chart rendering) — use for quick dev-cycle feedback
+./gradlew :matrix-charts:testFast
+
+# Full test suite (always run before merge)
+./gradlew :matrix-charts:test -Pheadless=true
 ```
 
 ## Testing Patterns

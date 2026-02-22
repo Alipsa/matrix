@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.layer.StatType
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomBarColTest {
 
@@ -49,6 +50,9 @@ class GeomBarColTest {
     assertEquals('red', geom.color)
   }
 
+  @Slow
+
+
   @Test
   void testSimpleBarChart() {
     // Data with categories to count
@@ -82,6 +86,9 @@ class GeomBarColTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testBarChartWithFill() {
     def data = Matrix.builder()
@@ -103,6 +110,9 @@ class GeomBarColTest {
     assertTrue(content.contains('fill=\"steelblue\"'), "Should have steelblue fill")
     assertTrue(content.contains('stroke=\"black\"'), "Should have black stroke")
   }
+
+  @Slow
+
 
   @Test
   void testBarChartWithAlpha() {
@@ -150,6 +160,9 @@ class GeomBarColTest {
     assertEquals(StatType.IDENTITY, geom.defaultStat)
   }
 
+  @Slow
+
+
   @Test
   void testSimpleColumnChart() {
     def data = Matrix.builder()
@@ -180,6 +193,9 @@ class GeomBarColTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testColumnChartWithColors() {
     def data = Matrix.builder()
@@ -206,6 +222,9 @@ class GeomBarColTest {
     File outputFile = new File('build/colored_column_chart.svg')
     write(svg, outputFile)
   }
+
+  @Slow
+
 
   @Test
   void testColumnChartWithNegativeValues() {
@@ -256,6 +275,9 @@ class GeomBarColTest {
 
   // ============== Combined Chart Tests ==============
 
+  @Slow
+
+
   @Test
   void testBarChartWithTheme() {
     def data = Matrix.builder()
@@ -280,6 +302,9 @@ class GeomBarColTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testColChartWithTheme() {
@@ -307,6 +332,9 @@ class GeomBarColTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testBarChartNumericCategories() {
     // Test with numeric categories (should still work with discrete scale)
@@ -330,6 +358,9 @@ class GeomBarColTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testColChartWithDecimalValues() {
@@ -356,6 +387,9 @@ class GeomBarColTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testEmptyData() {
     def data = Matrix.builder()
@@ -371,6 +405,9 @@ class GeomBarColTest {
     Svg svg = chart.render()
     assertNotNull(svg)
   }
+
+  @Slow
+
 
   @Test
   void testSingleCategory() {

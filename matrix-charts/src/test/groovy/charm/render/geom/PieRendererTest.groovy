@@ -10,6 +10,9 @@ import se.alipsa.matrix.core.Matrix
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static se.alipsa.matrix.charm.Charts.plot
 
+import testutil.Slow
+
+@Slow
 class PieRendererTest {
 
   @Test

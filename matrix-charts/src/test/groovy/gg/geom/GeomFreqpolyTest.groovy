@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.layer.StatType
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomFreqpolyTest {
 
@@ -21,6 +22,9 @@ class GeomFreqpolyTest {
     assertEquals('black', geom.color)
     assertEquals(1, geom.size)
   }
+
+  @Slow
+
 
   @Test
   void testRenderProducesSvg() {

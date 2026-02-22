@@ -11,9 +11,12 @@ import se.alipsa.matrix.datasets.Dataset
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
 
+import testutil.Slow
+
 /**
  * Integration tests for scale system with GgPlot rendering.
  */
+@Slow
 class ScaleIntegrationTest {
 
   def mtcars = Dataset.mtcars()

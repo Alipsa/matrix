@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.datasets.Dataset
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GgPlotTest {
 
@@ -115,6 +116,9 @@ class GgPlotTest {
             geom_violin(aes(fill: 'cyl'))
     }
 
+    @Slow
+
+
     @Test
     void testFactorConstant() {
         def data = Matrix.builder()
@@ -133,6 +137,9 @@ class GgPlotTest {
         def rects = svg.descendants().findAll { it instanceof Rect }
         assertTrue(rects.size() > 0, "Should render bars for factor(1)")
     }
+
+    @Slow
+
 
     @Test
     void testPieChart() {
@@ -157,6 +164,9 @@ class GgPlotTest {
         //ggplot(aes(x = cyl, y = mpg)) + geom_col(aes(fill =cyl), color = NA) + labs(x = "", y = "Median mpg")  + coord_polar()
         Stat.medianBy(mtcars, 'cyl', 'mpg')
     }
+
+    @Slow
+
 
     @Test
     void testPointChartRender() {
@@ -193,6 +203,9 @@ class GgPlotTest {
         //println("Wrote scatter plot to ${outputFile.absolutePath}")
     }
 
+    @Slow
+
+
     @Test
     void testScatterWithSmooth() {
         // Equivalent to R:
@@ -219,6 +232,9 @@ class GgPlotTest {
         // Note: Stroke color verification would require accessing element attributes
     }
 
+    @Slow
+
+
     @Test
     void testPointChartWithLabels() {
         // Test with explicit labels
@@ -244,6 +260,9 @@ class GgPlotTest {
         assertTrue(allText.contains('Miles per Gallon'))
     }
 
+    @Slow
+
+
     @Test
     void testGeomLm() {
         // Test the geom_lm convenience wrapper
@@ -268,6 +287,9 @@ class GgPlotTest {
         assertTrue(lines.size() > 0, "Should contain line elements for geom_lm")
     }
 
+    @Slow
+
+
     @Test
     void testGeomLmWithPolynomial() {
         // Test geom_lm with polynomial formula
@@ -290,6 +312,9 @@ class GgPlotTest {
         assertTrue(lines.size() > 0, "Should contain line elements for polynomial fit")
     }
 
+    @Slow
+
+
     @Test
     void testExpressionInAes() {
         // Test closure expression in aesthetics
@@ -309,6 +334,9 @@ class GgPlotTest {
         // Verify points are rendered
         assertTrue(circles.size() > 0, "Should contain circle elements for points")
     }
+
+    @Slow
+
 
     @Test
     void testExpressionWithGeomLm() {
@@ -332,6 +360,9 @@ class GgPlotTest {
         assertTrue(lines.size() > 0, "Should contain line elements for regression")
     }
 
+    @Slow
+
+
     @Test
     void testExpressionWithPolynomial() {
         // Full example: expression in aes with polynomial geom_lm
@@ -354,6 +385,9 @@ class GgPlotTest {
         assertTrue(lines.size() > 0, "Should contain line elements for polynomial")
     }
 
+    @Slow
+
+
     @Test
     void testGeomFunction() {
         // Test geom_function for drawing mathematical functions
@@ -373,6 +407,9 @@ class GgPlotTest {
         write(svg, outputFile)
         //println("Wrote sine function plot to ${outputFile.absolutePath}")
     }
+
+    @Slow
+
 
     @Test
     void testDegreeParameter() {
@@ -398,6 +435,9 @@ class GgPlotTest {
 
     }
 
+    @Slow
+
+
     @Test
     void testDegreeWithExpression() {
         // Combine degree parameter with expression in aes
@@ -418,6 +458,9 @@ class GgPlotTest {
         assertTrue(circles.size() > 0, "Should contain circle elements for points")
         assertTrue(lines.size() > 0, "Should contain line elements for polynomial")
     }
+
+    @Slow
+
 
     @Test
     void testGeomHex() {
@@ -442,6 +485,9 @@ class GgPlotTest {
         //println("Wrote hexagonal binning plot to ${outputFile.absolutePath}")
     }
 
+    @Slow
+
+
     @Test
     void testGeomDotplot() {
         // Test with mtcars data
@@ -455,6 +501,9 @@ class GgPlotTest {
         def circles = svg.descendants().findAll { it instanceof Circle }
         assertTrue(circles.size() > 0, "Should contain circle elements for dots")
     }
+
+    @Slow
+
 
     @Test
     void testGeomDensity2d() {
@@ -470,6 +519,9 @@ class GgPlotTest {
         assertTrue(paths.size() > 0, "Should contain path elements for contours")
     }
 
+    @Slow
+
+
     @Test
     void testGeomDensity2dFilled() {
         // Test with mtcars data
@@ -483,6 +535,9 @@ class GgPlotTest {
         def rects = svg.descendants().findAll { it instanceof Rect }
         assertTrue(rects.size() > 0, "Should contain rect elements for filled regions")
     }
+
+    @Slow
+
 
     @Test
     void testStatEllipse() {
@@ -501,6 +556,9 @@ class GgPlotTest {
         assertTrue(circles.size() > 0 || paths.size() > 0,
                    "Should contain points or path elements")
     }
+
+    @Slow
+
 
     @Test
     void testStatEllipseLevels() {
@@ -527,6 +585,9 @@ class GgPlotTest {
         //println("Wrote multi-level ellipse plot to ${outputFile.absolutePath}")
     }
 
+    @Slow
+
+
     @Test
     void testStatSummaryBin() {
         // Test binned summary
@@ -537,6 +598,9 @@ class GgPlotTest {
         Svg svg = chart.render()
         assertNotNull(svg)
     }
+
+    @Slow
+
 
     @Test
     void testStatUnique() {
@@ -565,6 +629,9 @@ class GgPlotTest {
         assertTrue(circles.size() > 0, "Should contain circle elements")
     }
 
+    @Slow
+
+
     @Test
     void testStatFunction() {
         // Test function stat
@@ -582,6 +649,9 @@ class GgPlotTest {
         assertTrue(lines.size() > 0 || paths.size() > 0,
                    "Should contain line or path elements")
     }
+
+    @Slow
+
 
     @Test
     void testCoordTransLog10() {
@@ -613,6 +683,9 @@ class GgPlotTest {
                    "Should contain points or lines")
     }
 
+    @Slow
+
+
     @Test
     void testCoordTransSqrt() {
         // Test sqrt transformation on y-axis
@@ -641,6 +714,9 @@ class GgPlotTest {
                    "Should contain points")
     }
 
+    @Slow
+
+
     @Test
     void testCoordTransBothAxes() {
         // Test transformation on both axes
@@ -667,6 +743,9 @@ class GgPlotTest {
                    "Should contain points")
     }
 
+    @Slow
+
+
     @Test
     void testCoordTransCustom() {
         // Test custom transformation using closures
@@ -691,6 +770,9 @@ class GgPlotTest {
         assertNotNull(svg)
     }
 
+    @Slow
+
+
     @Test
     void testCoordTransReverse() {
         // Test reverse transformation
@@ -706,6 +788,9 @@ class GgPlotTest {
         write(svg, outputFile)
         //println("Wrote coord_trans reverse plot to ${outputFile.absolutePath}")
     }
+
+    @Slow
+
 
     @Test
     void testCoordTransLog() {
@@ -736,6 +821,9 @@ class GgPlotTest {
                    "Should contain points or lines")
     }
 
+    @Slow
+
+
     @Test
     void testCoordTransPower() {
         // Test power transformation with explicit exponent
@@ -763,6 +851,9 @@ class GgPlotTest {
         assertTrue(circles.size() > 0,
                    "Should contain points")
     }
+
+    @Slow
+
 
     @Test
     void testCoordTransReciprocal() {
@@ -792,6 +883,9 @@ class GgPlotTest {
                    "Should contain points")
     }
 
+    @Slow
+
+
     @Test
     void testCoordTransAsn() {
         // Test arcsine square root transformation (for proportions)
@@ -820,6 +914,9 @@ class GgPlotTest {
                    "Should contain points")
     }
 
+    @Slow
+
+
     @Test
     void testStatBinHex() {
         // Test hexagonal binning stat with random data
@@ -843,6 +940,9 @@ class GgPlotTest {
                    "Should contain path elements for hexagons or circle elements for points")
     }
 
+    @Slow
+
+
     @Test
     void testStatBinHexWithMtcars() {
         // Test hexagonal binning with mtcars dataset
@@ -853,6 +953,9 @@ class GgPlotTest {
         Svg svg = chart.render()
         assertNotNull(svg)
     }
+
+    @Slow
+
 
     @Test
     void testStatSummaryHex() {
@@ -875,6 +978,9 @@ class GgPlotTest {
         assertNotNull(svg)
     }
 
+    @Slow
+
+
     @Test
     void testStatSummaryHexWithMtcars() {
         // Test hexagonal summary with mtcars - mean weight in hp/mpg bins
@@ -885,6 +991,9 @@ class GgPlotTest {
         Svg svg = chart.render()
         assertNotNull(svg)
     }
+
+    @Slow
+
 
     @Test
     void testStatSummaryHexMedian() {
@@ -905,6 +1014,9 @@ class GgPlotTest {
     }
 
     // ========== Phase 1: ggplot2 API Compatibility Alias Tests ==========
+
+    @Slow
+
 
     @Test
     void testGeomBin2dAlias() {
@@ -931,6 +1043,9 @@ class GgPlotTest {
         assertTrue(svgContent2.contains('<svg'))
     }
 
+    @Slow
+
+
     @Test
     void testGeomDensity2dAlias() {
         // Test that geom_density2d() (no underscore between 'density' and '2d') works as alias for geom_density_2d()
@@ -954,6 +1069,9 @@ class GgPlotTest {
         assertTrue(svgContent1.contains('<svg'))
         assertTrue(svgContent2.contains('<svg'))
     }
+
+    @Slow
+
 
     @Test
     void testGeomDensity2dFilledAlias() {
@@ -995,6 +1113,9 @@ class GgPlotTest {
 
     // ========== ggsave File Type Detection Tests ==========
 
+    @Slow
+
+
     @Test
     void testGgsaveSvgExtension() {
         // Test that ggsave correctly saves SVG files based on .svg extension
@@ -1015,6 +1136,9 @@ class GgPlotTest {
 
         outputFile.delete()
     }
+
+    @Slow
+
 
     @Test
     void testGgsavePngExtension() {
@@ -1043,6 +1167,9 @@ class GgPlotTest {
         outputFile.delete()
     }
 
+    @Slow
+
+
     @Test
     void testGgsaveJpgExtension() {
         // Test that ggsave correctly saves JPEG files based on .jpg extension
@@ -1068,6 +1195,9 @@ class GgPlotTest {
 
         outputFile.delete()
     }
+
+    @Slow
+
 
     @Test
     void testGgsaveJpegExtension() {
@@ -1095,6 +1225,9 @@ class GgPlotTest {
         outputFile.delete()
     }
 
+    @Slow
+
+
     @Test
     void testGgsaveJpegWithQuality() {
         // Test that ggsave correctly handles quality parameter for JPEG files
@@ -1111,6 +1244,9 @@ class GgPlotTest {
         outputFile.delete()
     }
 
+    @Slow
+
+
     @Test
     void testGgsaveInvalidExtension() {
         // Test that ggsave throws exception for invalid file extension
@@ -1124,6 +1260,9 @@ class GgPlotTest {
         assertTrue(exception.message.contains('extension'), "Exception message should mention extension")
     }
 
+    @Slow
+
+
     @Test
     void testGgsaveNoExtension() {
         // Test that ggsave throws exception when no file extension is provided
@@ -1136,6 +1275,9 @@ class GgPlotTest {
 
         assertTrue(exception.message.contains('extension'), "Exception message should mention extension")
     }
+
+    @Slow
+
 
     @Test
     void testGgsaveCaseInsensitiveExtension() {
@@ -1162,6 +1304,9 @@ class GgPlotTest {
         jpegFile.delete()
     }
 
+    @Slow
+
+
     @Test
     void testGgsaveWithWidthAndHeight() {
         // Test that ggsave correctly applies width and height parameters
@@ -1180,6 +1325,9 @@ class GgPlotTest {
 
         outputFile.delete()
     }
+
+    @Slow
+
 
     @Test
     void testGgsaveMultipleChartsSvg() {
