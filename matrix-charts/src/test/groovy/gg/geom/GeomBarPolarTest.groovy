@@ -8,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
 import static se.alipsa.groovy.svg.io.SvgWriter.toXml
 
+import testutil.Slow
+
+@Slow
 class GeomBarPolarTest {
 
   @Test

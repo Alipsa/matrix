@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.layer.StatType
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomQqTest {
 
@@ -28,6 +29,9 @@ class GeomQqTest {
     assertEquals(StatType.QQ_LINE, geom.defaultStat)
     assertEquals(['x'], geom.requiredAes)
   }
+
+  @Slow
+
 
   @Test
   void testQqRender() {

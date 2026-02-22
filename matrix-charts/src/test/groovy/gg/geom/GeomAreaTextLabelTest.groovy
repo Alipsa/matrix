@@ -10,6 +10,7 @@ import se.alipsa.matrix.gg.geom.GeomLabel
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomAreaTextLabelTest {
 
@@ -42,6 +43,9 @@ class GeomAreaTextLabelTest {
     assertEquals(0.5, geom.alpha)
   }
 
+  @Slow
+
+
   @Test
   void testSimpleAreaChart() {
     def data = Matrix.builder()
@@ -72,6 +76,9 @@ class GeomAreaTextLabelTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testAreaChartWithLine() {
     def data = Matrix.builder()
@@ -98,6 +105,9 @@ class GeomAreaTextLabelTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testGroupedAreaChart() {
@@ -161,6 +171,9 @@ class GeomAreaTextLabelTest {
     assertEquals(1, geom.vjust)
   }
 
+  @Slow
+
+
   @Test
   void testTextLabelsOnScatter() {
     def data = Matrix.builder()
@@ -191,6 +204,9 @@ class GeomAreaTextLabelTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testRotatedText() {
     def data = Matrix.builder()
@@ -218,6 +234,9 @@ class GeomAreaTextLabelTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testTextWithDifferentAlignments() {
@@ -271,6 +290,9 @@ class GeomAreaTextLabelTest {
     assertEquals(4, geom.label_r)
   }
 
+  @Slow
+
+
   @Test
   void testLabelsOnScatter() {
     def data = Matrix.builder()
@@ -300,6 +322,9 @@ class GeomAreaTextLabelTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testLabelWithCustomStyling() {
@@ -334,6 +359,9 @@ class GeomAreaTextLabelTest {
   }
 
   // ==================== Combined Tests ====================
+
+  @Slow
+
 
   @Test
   void testAreaWithLabels() {

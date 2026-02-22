@@ -100,6 +100,7 @@ test {
   testLogging.showStandardStreams = true
   // run using gradle -Pheadless=true test
   jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
   useJUnitPlatform()
   testLogging {
     // set options for log level LIFECYCLE
@@ -158,6 +159,18 @@ tasks.register('printCp') {
   }
 }
 
+tasks.register('testFast', Test) {
+  description = 'Runs only fast (non-render) tests. Use for quick dev-cycle feedback.'
+  group = 'verification'
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+  useJUnitPlatform {
+    excludeTags 'slow'
+  }
+  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
+}
+
 // Regression gate: run gg tests as a pre-merge quality check
 tasks.register('verifyGgRegression', Test) {
   description = 'Runs gg test suite as a regression gate before merge'
@@ -166,6 +179,7 @@ tasks.register('verifyGgRegression', Test) {
   classpath = sourceSets.test.runtimeClasspath
   useJUnitPlatform()
   jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
   filter {
     includeTestsMatching 'gg.*'
   }

@@ -8,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.*
 
+import testutil.Slow
+
+@Slow
 class GeomBarColorTest {
 
   @Test

@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.geom.GeomCount
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomBin2dCountTest {
 
@@ -55,6 +56,9 @@ class GeomBin2dCountTest {
     assertEquals(0.5, geom.binwidth[1])
   }
 
+  @Slow
+
+
   @Test
   void testSimpleBin2dPlot() {
     // Generate some random 2D data
@@ -83,6 +87,9 @@ class GeomBin2dCountTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testBin2dWithCustomColors() {
@@ -115,6 +122,9 @@ class GeomBin2dCountTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testBin2dWithBinwidth() {
     def random = new Random(456)
@@ -139,6 +149,9 @@ class GeomBin2dCountTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testBin2dNoBorders() {
@@ -197,6 +210,9 @@ class GeomBin2dCountTest {
     assertEquals('square', geom.shape)
   }
 
+  @Slow
+
+
   @Test
   void testSimpleCountPlot() {
     // Create data with overlapping points
@@ -229,6 +245,9 @@ class GeomBin2dCountTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testCountPlotWithSquares() {
     def rows = [
@@ -259,6 +278,9 @@ class GeomBin2dCountTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testCountPlotWithTriangles() {
     def rows = [
@@ -287,6 +309,9 @@ class GeomBin2dCountTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testCountPlotWithRandomData() {
@@ -339,6 +364,9 @@ class GeomBin2dCountTest {
 
   // ==================== Combination Tests ====================
 
+  @Slow
+
+
   @Test
   void testBin2dWithPointsOverlay() {
     def random = new Random(999)
@@ -371,6 +399,9 @@ class GeomBin2dCountTest {
 
   // ==================== Edge Cases ====================
 
+  @Slow
+
+
   @Test
   void testBin2dWithSinglePoint() {
     def data = Matrix.builder()
@@ -387,6 +418,9 @@ class GeomBin2dCountTest {
     assertNotNull(svg)
   }
 
+  @Slow
+
+
   @Test
   void testCountWithSingleLocation() {
     def data = Matrix.builder()
@@ -401,6 +435,9 @@ class GeomBin2dCountTest {
     Svg svg = chart.render()
     assertNotNull(svg)
   }
+
+  @Slow
+
 
   @Test
   void testBin2dKeepEmptyBins() {

@@ -8,9 +8,12 @@ import se.alipsa.matrix.core.Matrix
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
 
+import testutil.Slow
+
 /**
  * Tests for GeomMag - magnitude visualization for vector fields.
  */
+@Slow
 class GeomMagTest {
 
   @Test

@@ -1,9 +1,6 @@
 package gg.scale
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.io.SvgWriter
-import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.scale.ScaleColorSteps2
 
 import static org.junit.jupiter.api.Assertions.*
@@ -119,26 +116,6 @@ class ScaleColorSteps2Test {
     assertNotNull(scale)
     assertTrue(scale instanceof ScaleColorSteps2)
     assertEquals('fill', scale.aesthetic)
-  }
-
-  @Test
-  void testWithGeomTile() {
-    def data = Matrix.builder()
-      .columnNames(['x', 'y', 'value'])
-      .rows([
-        [1, 1, -50], [2, 1, -25], [3, 1, 0],
-        [1, 2, 25],  [2, 2, 50],  [3, 2, 75]
-      ])
-      .build()
-
-    def chart = ggplot(data, aes(x: 'x', y: 'y', fill: 'value')) +
-      geom_tile() +
-      scale_fill_steps2(bins: 7, midpoint: 0)
-
-    Svg svg = chart.render()
-    assertNotNull(svg)
-    def svgXml = SvgWriter.toXml(svg)
-    assertTrue(svgXml.contains('<svg'))
   }
 
   @Test

@@ -9,6 +9,7 @@ import se.alipsa.matrix.gg.geom.GeomContourFilled
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomContourTest {
 
@@ -50,6 +51,9 @@ class GeomContourTest {
     assertEquals(0.25, geom.binwidth)
   }
 
+  @Slow
+
+
   @Test
   void testSimpleContourPlot() {
     // Create grid data for a simple hill (z = -(x^2 + y^2))
@@ -82,6 +86,9 @@ class GeomContourTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testContourPlotWithPeaks() {
     // Create grid data with two peaks
@@ -112,6 +119,9 @@ class GeomContourTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testContourWithDashedLines() {
@@ -171,6 +181,9 @@ class GeomContourTest {
     assertEquals(0, geom.linewidth)
   }
 
+  @Slow
+
+
   @Test
   void testSimpleFilledContourPlot() {
     // Create grid data for a simple hill
@@ -204,6 +217,9 @@ class GeomContourTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testFilledContourWithCustomColors() {
     def rows = []
@@ -235,6 +251,9 @@ class GeomContourTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testFilledContourNoOutlines() {
     def rows = []
@@ -262,6 +281,9 @@ class GeomContourTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testFilledContourWithGaussianPeak() {
@@ -331,6 +353,9 @@ class GeomContourTest {
 
   // ==================== Edge Cases ====================
 
+  @Slow
+
+
   @Test
   void testContourWithSparseData() {
     // Very sparse grid
@@ -357,6 +382,9 @@ class GeomContourTest {
     assertNotNull(svg)
   }
 
+  @Slow
+
+
   @Test
   void testContourWithDifferentColumnNames() {
     def rows = []
@@ -381,6 +409,9 @@ class GeomContourTest {
     Svg svg = chart.render()
     assertNotNull(svg)
   }
+
+  @Slow
+
 
   @Test
   void testContourWithValue() {

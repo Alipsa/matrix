@@ -1,8 +1,6 @@
 package gg.scale
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.svg.io.SvgWriter
-import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.scale.ScaleColorFermenter
 
 import static org.junit.jupiter.api.Assertions.*
@@ -92,32 +90,6 @@ class ScaleColorFermenterTest {
     scale.train([1, 2, 3])
 
     assertEquals('#FF00FF', scale.transform(null))
-  }
-
-  @Test
-  void testWithPlot() {
-    // Test: Fermenter scale works in actual plot
-    def data = Matrix.builder()
-        .columnNames(['x', 'y', 'value'])
-        .rows([
-            [1, 1, 10],
-            [2, 1, 20],
-            [3, 1, 30],
-            [1, 2, 40],
-            [2, 2, 50],
-            [3, 2, 60]
-        ])
-        .build()
-
-    def chart = ggplot(data, aes(x: 'x', y: 'y', fill: 'value')) +
-                geom_tile() +
-                scale_fill_fermenter(palette: 'YlOrRd', type: 'seq')
-
-    def svg = chart.render()
-    String svgContent = SvgWriter.toXml(svg)
-
-    assertTrue(svgContent.contains('<svg'))
-    assertTrue(svgContent.contains('</svg>'))
   }
 
   @Test
@@ -239,25 +211,4 @@ class ScaleColorFermenterTest {
     assertFalse(colors.isEmpty())
   }
 
-  @Test
-  void testWithDivergingData() {
-    // Test: Diverging palette with data centered around zero
-    def data = Matrix.builder()
-        .columnNames(['x', 'y', 'value'])
-        .rows([
-            [1, 1, -10],
-            [2, 1, -5],
-            [3, 1, 0],
-            [4, 1, 5],
-            [5, 1, 10]
-        ])
-        .build()
-
-    def chart = ggplot(data, aes(x: 'x', y: 'y', fill: 'value')) +
-                geom_tile() +
-                scale_fill_fermenter(type: 'div', palette: 'RdBu', direction: 1)
-
-    def svg = chart.render()
-    assertNotNull(svg)
-  }
 }

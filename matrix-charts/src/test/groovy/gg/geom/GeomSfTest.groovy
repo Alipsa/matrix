@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 /**
  * Tests for simple feature (sf) rendering and WKT parsing.
@@ -45,6 +46,9 @@ class GeomSfTest {
     assertEquals(SfType.LINESTRING, geom.shapes[1].type)
   }
 
+  @Slow
+
+
   @Test
   void testGeomSfRendersMixedTypes() {
     def data = Matrix.builder()
@@ -64,6 +68,9 @@ class GeomSfTest {
     assertNotNull(svg, 'geom_sf should render mixed geometry types')
   }
 
+  @Slow
+
+
   @Test
   void testGeomSfTextRendersLabels() {
     def data = Matrix.builder()
@@ -79,6 +86,9 @@ class GeomSfTest {
     Svg svg = chart.render()
     assertNotNull(svg, 'geom_sf_text should render labels')
   }
+
+  @Slow
+
 
   @Test
   void testGeomMapRendersPolygons() {
@@ -105,6 +115,9 @@ class GeomSfTest {
     assertNotNull(svg, 'geom_map should render polygon data')
   }
 
+  @Slow
+
+
   @Test
   void testGeomSfMultiPolygon() {
     def data = Matrix.builder()
@@ -114,6 +127,9 @@ class GeomSfTest {
     Svg svg = chart.render()
     assertNotNull(svg, 'geom_sf should render MULTIPOLYGON')
   }
+
+  @Slow
+
 
   @Test
   void testGeomSfMultiPoint() {
@@ -125,6 +141,9 @@ class GeomSfTest {
     assertNotNull(svg, 'geom_sf should render MULTIPOINT')
   }
 
+  @Slow
+
+
   @Test
   void testGeomSfMultiLinestring() {
     def data = Matrix.builder()
@@ -135,6 +154,9 @@ class GeomSfTest {
     assertNotNull(svg, 'geom_sf should render MULTILINESTRING')
   }
 
+  @Slow
+
+
   @Test
   void testGeomSfEmptyGeometry() {
     def data = Matrix.builder()
@@ -144,6 +166,9 @@ class GeomSfTest {
     Svg svg = chart.render()
     assertNotNull(svg, 'geom_sf should handle EMPTY geometries')
   }
+
+  @Slow
+
 
   @Test
   void testGeomMapUnmatchedIds() {

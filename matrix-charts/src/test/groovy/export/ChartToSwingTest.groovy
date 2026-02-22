@@ -14,6 +14,9 @@ import se.alipsa.matrix.charm.Charts
 import static se.alipsa.matrix.gg.GgPlot.*
 import static org.junit.jupiter.api.Assertions.*
 
+import testutil.Slow
+
+@Slow
 class ChartToSwingTest {
 
   @Test

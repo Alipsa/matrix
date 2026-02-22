@@ -8,6 +8,7 @@ import se.alipsa.matrix.gg.geom.GeomLine
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomLineTest {
 
@@ -49,6 +50,9 @@ class GeomLineTest {
     assertEquals(3, geom.size)
   }
 
+  @Slow
+
+
   @Test
   void testSimpleLineChart() {
     def data = Matrix.builder()
@@ -80,6 +84,9 @@ class GeomLineTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testLineChartWithColor() {
     def data = Matrix.builder()
@@ -102,6 +109,9 @@ class GeomLineTest {
     assertTrue(content.contains('stroke-width="2"'), "Should have stroke-width 2")
   }
 
+  @Slow
+
+
   @Test
   void testLineChartWithDashedLine() {
     def data = Matrix.builder()
@@ -122,6 +132,9 @@ class GeomLineTest {
 
     assertTrue(content.contains('stroke-dasharray="8,4"'), "Should have dashed line pattern")
   }
+
+  @Slow
+
 
   @Test
   void testLineChartWithGroups() {
@@ -155,6 +168,9 @@ class GeomLineTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testLineChartWithColorScale() {
     def data = Matrix.builder()
@@ -180,6 +196,9 @@ class GeomLineTest {
     assertTrue(content.contains('<line'), "Should contain line elements")
   }
 
+  @Slow
+
+
   @Test
   void testLineChartWithAlpha() {
     def data = Matrix.builder()
@@ -200,6 +219,9 @@ class GeomLineTest {
 
     assertTrue(content.contains('stroke-opacity'), "Should have stroke-opacity attribute")
   }
+
+  @Slow
+
 
   @Test
   void testLineChartWithPointsAndLine() {
@@ -231,6 +253,9 @@ class GeomLineTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testLineChartWithRealDataset() {
@@ -267,6 +292,9 @@ class GeomLineTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testLineChartSortsPointsByX() {
     // Data intentionally not sorted by x
@@ -291,6 +319,9 @@ class GeomLineTest {
     // Should render successfully even with unsorted data
     assertTrue(content.contains('<line'), "Should contain line elements")
   }
+
+  @Slow
+
 
   @Test
   void testLineChartWithDiscreteX() {
@@ -321,6 +352,9 @@ class GeomLineTest {
     File outputFile = new File('build/discrete_x_line.svg')
     write(svg, outputFile)
   }
+
+  @Slow
+
 
   @Test
   void testMultipleLineTypes() {

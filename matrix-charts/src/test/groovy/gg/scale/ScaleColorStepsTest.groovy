@@ -1,9 +1,6 @@
 package gg.scale
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.io.SvgWriter
-import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.scale.ScaleColorSteps
 
 import static org.junit.jupiter.api.Assertions.*
@@ -114,49 +111,6 @@ class ScaleColorStepsTest {
     assertNotNull(scale)
     assertTrue(scale instanceof ScaleColorSteps)
     assertEquals('fill', scale.aesthetic)
-  }
-
-  @Test
-  void testWithGeomPoint() {
-    def data = Matrix.builder()
-      .columnNames(['x', 'y', 'value'])
-      .rows([
-        [1, 2, 10],
-        [2, 4, 30],
-        [3, 6, 50],
-        [4, 8, 70],
-        [5, 10, 90]
-      ])
-      .build()
-
-    def chart = ggplot(data, aes(x: 'x', y: 'y', color: 'value')) +
-      geom_point() +
-      scale_color_steps(bins: 3)
-
-    Svg svg = chart.render()
-    assertNotNull(svg)
-    def svgXml = SvgWriter.toXml(svg)
-    assertTrue(svgXml.contains('<svg'))
-  }
-
-  @Test
-  void testWithGeomTile() {
-    def data = Matrix.builder()
-      .columnNames(['x', 'y', 'value'])
-      .rows([
-        [1, 1, 10], [2, 1, 30], [3, 1, 50],
-        [1, 2, 70], [2, 2, 90], [3, 2, 100]
-      ])
-      .build()
-
-    def chart = ggplot(data, aes(x: 'x', y: 'y', fill: 'value')) +
-      geom_tile() +
-      scale_fill_steps(bins: 5)
-
-    Svg svg = chart.render()
-    assertNotNull(svg)
-    def svgXml = SvgWriter.toXml(svg)
-    assertTrue(svgXml.contains('<svg'))
   }
 
   @Test

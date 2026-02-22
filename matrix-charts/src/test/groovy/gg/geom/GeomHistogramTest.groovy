@@ -11,6 +11,7 @@ import se.alipsa.matrix.gg.stat.GgStat
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
+import testutil.Slow
 
 class GeomHistogramTest {
 
@@ -106,6 +107,9 @@ class GeomHistogramTest {
 
   // ============== Full Chart Tests ==============
 
+  @Slow
+
+
   @Test
   void testSimpleHistogram() {
     // Generate some normally-distributed-like data
@@ -139,6 +143,9 @@ class GeomHistogramTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testHistogramWithBins() {
     def rows = (1..100).collect { [it] }
@@ -162,6 +169,9 @@ class GeomHistogramTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testHistogramWithBinwidth() {
     def rows = (0..99).collect { [it] }
@@ -183,6 +193,9 @@ class GeomHistogramTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testHistogramWithAlpha() {
     def rows = (1..50).collect { [it] }
@@ -200,6 +213,9 @@ class GeomHistogramTest {
 
     assertTrue(content.contains('fill-opacity'), "Should have fill-opacity attribute")
   }
+
+  @Slow
+
 
   @Test
   void testHistogramWithTheme() {
@@ -224,6 +240,9 @@ class GeomHistogramTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testHistogramClassicTheme() {
@@ -264,6 +283,9 @@ class GeomHistogramTest {
 
   // ============== Edge Cases ==============
 
+  @Slow
+
+
   @Test
   void testHistogramSmallDataset() {
     def data = Matrix.builder()
@@ -285,6 +307,9 @@ class GeomHistogramTest {
     assertTrue(outputFile.exists())
   }
 
+  @Slow
+
+
   @Test
   void testHistogramSingleValue() {
     def data = Matrix.builder()
@@ -302,6 +327,9 @@ class GeomHistogramTest {
     Svg svg = chart.render()
     assertNotNull(svg)
   }
+
+  @Slow
+
 
   @Test
   void testHistogramDecimalValues() {
@@ -325,6 +353,9 @@ class GeomHistogramTest {
     write(svg, outputFile)
     assertTrue(outputFile.exists())
   }
+
+  @Slow
+
 
   @Test
   void testHistogramNegativeValues() {
