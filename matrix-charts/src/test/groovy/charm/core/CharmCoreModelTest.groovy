@@ -292,6 +292,21 @@ class CharmCoreModelTest {
   }
 
   @Test
+  void testFacetGridAfterWrapConflictThrowsValidationError() {
+    CharmValidationException e = assertThrows(CharmValidationException.class) {
+      plot(Dataset.mpg()) {
+        facet {
+          wrap {
+            vars = ['drv']
+          }
+          rows = [col.year]
+        }
+      }
+    }
+    assertTrue(e.message.contains('Cannot set rows/cols after wrap{}'))
+  }
+
+  @Test
   void testBuildReturnsImmutableChartState() {
     Matrix data = Dataset.mpg()
     PlotSpec spec = plot(data) {

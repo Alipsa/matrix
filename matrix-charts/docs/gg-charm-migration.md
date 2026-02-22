@@ -484,10 +484,10 @@ Phase 15 (final cutover, cleanup, and verification)
 
 ### 4.1 Phase Execution Policy
 
-4.1.1 [ ] Create exactly one branch per phase (`phase-1-*`, `phase-2-*`, etc.).
-4.1.2 [ ] Open a PR for that phase branch and complete code review before merge.
-4.1.3 [ ] Merge that phase branch to `main` before starting the next phase branch.
-4.1.4 [ ] If review uncovers blockers, fix within the same phase branch instead of starting the next phase.
+4.1.1 [x] Create exactly one branch per phase (`phase-1-*`, `phase-2-*`, etc.). _(Historical process gate; tracked in GitHub branch/PR history.)_
+4.1.2 [x] Open a PR for that phase branch and complete code review before merge. _(Historical process gate; tracked in GitHub PR history.)_
+4.1.3 [x] Merge that phase branch to `main` before starting the next phase branch. _(Historical process gate; tracked in merge timeline.)_
+4.1.4 [x] If review uncovers blockers, fix within the same phase branch instead of starting the next phase. _(Historical process gate applied during migration reviews.)_
 
 ## 5. Migration Phases
 
@@ -819,6 +819,30 @@ Executed commands:
 - [x] `./gradlew :matrix-charts:test -Pheadless=true -g ./.gradle-user`
 - [x] `./gradlew test -Pheadless=true -g ./.gradle-user`
 - [x] `./gradlew :matrix-charts:test -Pheadless=true -g ./.gradle-user --tests "gg.SvgObjectAccessReference.testPerformanceBenefit"`
+
+### 5.16 Post-Phase-15 Spec and Governance Alignment
+
+5.16.1 [x] Update `docs/charm-specification.md` §5.1 to include `GuidesSpec guides` in `PlotSpec`.
+
+5.16.2 [x] Update `docs/charm-specification.md` §5.6 to describe the implemented typed `Theme`/`ThemeSpec` model (`ElementText`, `ElementLine`, `ElementRect`, typed theme fields) instead of legacy `LegendTheme/AxisTheme/TextTheme/GridTheme/raw`.
+
+5.16.3 [x] Clarify lifecycle coverage in `docs/charm-specification.md` §7.2 and §10.1: charm-native flow uses explicit `PlotSpec.build()`, while gg compatibility flow compiles to immutable charm `Chart` inside `GgCharmCompiler.adapt()/render()` before delegating to `CharmRenderer`.
+
+5.16.4 [x] Verify facet conflict policy from spec §5.7 is enforced for both directions (`rows/cols -> wrap`, `wrap -> rows/cols`) and covered by tests.
+
+5.16.5 [x] Implement data convenience input conversion support in charm entry points (`Charts.plot(...)` / `Charts.chart(...)`) for:
+- [x] `List<Map<String, ?>>`
+- [x] `Map<String, List<?>>`
+- [x] `Iterable<POJO>`
+
+5.16.6 [x] Record explicit grammar-rule enforcement coverage from spec §4:
+- [x] Rule 1 (closure assignment): `CharmCoreModelTest.testClosureAssignmentRuleRequiresEqualsToApplyMappings`
+- [x] Rule 2 (named arguments outside closures): `CharmCoreModelTest.testNamedArgMappingCoercionAcceptsStringAndColumnExpr`
+- [x] Rule 3 (`col` column references): `CharmCoreModelTest.testColBracketAndDotAccessAreSupported`, `CharmApiDesignTest.testCompileStaticColumnBracketSyntax`
+
+Executed commands:
+- [x] `./gradlew :matrix-charts:test -Pheadless=true -g ./.gradle-user --tests "charm.core.ChartsDataConversionTest" --tests "charm.core.CharmCoreModelTest"`
+- [x] `./gradlew test -Pheadless=true -g ./.gradle-user`
 
 ## 6. Files Expected to Change
 

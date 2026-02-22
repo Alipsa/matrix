@@ -119,6 +119,7 @@ Represents the full plot specification.
 * `FacetSpec facet`
 * `CoordSpec coord`
 * `LabelsSpec labels`
+* `GuidesSpec guides`
 * `List<AnnotationSpec> annotations`
 
 **Responsibilities:**
@@ -252,17 +253,20 @@ Implementation details may vary, but the semantic model is fixed.
 
 ---
 
-### 5.6 ThemeSpec (Minimal v1)
+### 5.6 ThemeSpec (Typed v1)
 
 Represents styling configuration.
 
-**Fields:**
+**Fields (typed theme model):**
 
-* `LegendTheme legend`
-* `AxisTheme axis`
-* `TextTheme text`
-* `GridTheme grid`
-* `Map<String,Object> raw` (compatibility fallback)
+* Plot: `plotBackground` (`ElementRect`), `plotTitle`/`plotSubtitle`/`plotCaption` (`ElementText`), `plotMargin`
+* Panel: `panelBackground`/`panelBorder` (`ElementRect`), `panelGridMajor`/`panelGridMinor` (`ElementLine`), `panelSpacing`
+* Axis: `axisLineX`/`axisLineY`, `axisTicksX`/`axisTicksY` (`ElementLine`), `axisTextX`/`axisTextY`, `axisTitleX`/`axisTitleY` (`ElementText`), `axisTickLength`
+* Legend: `legendPosition`, `legendDirection`, `legendBackground`, `legendKey` (`ElementRect`), `legendKeySize`, `legendTitle`, `legendText`, `legendMargin`
+* Facet strips: `stripBackground` (`ElementRect`), `stripText` (`ElementText`)
+* Defaults/meta: `discreteColors`, `gradientColors`, `baseFamily`, `baseSize`, `baseLineHeight`, `themeName`, `explicitNulls`
+
+`ThemeSpec` extends `Theme` and keeps builder-style DSL setters over this typed model.
 
 **DSL example:**
 
@@ -329,6 +333,8 @@ Combining wrap configuration with grid settings in the same `facet {}` block is 
 
 * If `wrap { ... }` is used after `rows/cols` were set → error
 * If `rows/cols` are set after `wrap { ... }` was used → error
+
+This is enforced in `PlotSpec.FacetDsl` and throws `CharmValidationException`.
 
 #### Formula support (gg wrapper parity)
 
@@ -411,13 +417,15 @@ Primary input:
 
 * `se.alipsa.matrix.core.Matrix`
 
-Convenience inputs MAY include:
+Convenience inputs supported by Charm entry points (`Charts.plot(...)`, `Charts.chart(...)`):
 
 * `List<Map<String, ?>>`
 * `Map<String, List<?>>`
 * `Iterable<POJO>`
 
-All convenience inputs MUST be converted internally to `Matrix` before compilation.
+All convenience inputs are converted to `Matrix` before `PlotSpec` compilation.
+
+The gg wrapper entry point `ggplot(...)` remains matrix-first (`Matrix` + `Aes`) for compatibility.
 
 Column validation SHOULD occur during `build()` and MUST produce actionable errors.
 
@@ -445,6 +453,9 @@ Build MUST:
 * apply defaults
 * resolve inheritance
 * freeze an immutable chart model
+
+For the gg compatibility path, equivalent compilation semantics are executed in
+`GgCharmCompiler.adapt()`/`render()` before handing the immutable `Chart` to `CharmRenderer`.
 
 ### 7.3 Rendering (Primary API)
 
@@ -526,7 +537,8 @@ The `se.alipsa.matrix.gg` module remains and preserves the existing public API s
 ### 10.1 Architecture
 
 * `se.alipsa.matrix.gg.GgPlot` acts as the entry point for `import static ...GgPlot.*`
-* gg functions delegate to Charm, producing and modifying `PlotSpec`
+* gg functions build/modify `GgChart` compatibility state
+* `GgCharmCompiler` compiles `GgChart` into immutable Charm `Chart` and delegates rendering to `CharmRenderer`
 * no engine logic (geoms/stats/scales/rendering) remains in gg
 
 ### 10.2 Entry point preservation example
@@ -546,9 +558,10 @@ ggsave(chart, "barchart.svg")
 
 Mapping:
 
-* `ggplot(...)` creates a `PlotSpec`
-* `geom_bar(...)` creates a `LayerSpec`
-* `coord_polar(...)` modifies `CoordSpec`
+* `ggplot(...)` creates a `GgChart`
+* `geom_bar(...)` adds gg layer specs that are compiled into charm layer specs at render time
+* `coord_polar(...)` updates gg coord state that is compiled into charm `CoordSpec`
+* `chart.render()` compiles gg state into immutable Charm `Chart` and renders via `CharmRenderer`
 * `ggsave(...)` calls `chart.render()` + writer
 
 ### 10.3 Scope
