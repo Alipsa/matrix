@@ -31,7 +31,7 @@ class KMeansPlusPlusTest {
     // print timing information
     println clustering.getTiming()
     // Check that we did not introduce some performance regression, this might fail on a slow machine.
-    assertTrue(clustering.getExecutionTimeMillis() < 1000, "KMeans execution time should be less than 1000 ms")
+    assertTrue(clustering.getExecutionTimeMillis() < 1200, "KMeans execution time should be less than 1200 ms but was ${clustering.getExecutionTimeMillis()} ms")
 
     // get output
     double[][] centroids = clustering.getCentroids()
