@@ -119,7 +119,7 @@ class LegendRenderer {
           .fontSize(titleSize)
           .fill(titleColor)
           .addAttribute('font-weight', 'bold')
-          .styleClass('charm-legend-title')
+          .styleClass('charm-legend-title gg-legend-title')
       if (titleText?.family) {
         titleEl.addAttribute('font-family', titleText.family)
       }
@@ -260,7 +260,7 @@ class LegendRenderer {
         } else if (usesPoints) {
           BigDecimal radius = ((keySize - 2) / 2).round()
           group.addCircle()
-              .styleClass('charm-legend-key')
+              .styleClass('charm-legend-key gg-legend-key')
               .cx((x + keySize / 2).round())
               .cy((y + keySize / 2).round())
               .r(radius)
@@ -271,7 +271,7 @@ class LegendRenderer {
               .x(x).y(y)
               .fill(color)
               .stroke('#666666')
-              .styleClass('charm-legend-key')
+              .styleClass('charm-legend-key gg-legend-key')
         }
       } else if (isShapeKey) {
         DiscreteCharmScale colorDisc = resolveColorDiscrete(context)
@@ -288,7 +288,7 @@ class LegendRenderer {
           .y(y + keySize - 2)
           .fontSize(labelSize)
           .fill(labelColor)
-          .styleClass('charm-legend-label')
+          .styleClass('charm-legend-label gg-legend-label')
       if (labelText?.family) {
         labelEl.addAttribute('font-family', labelText.family)
       }
@@ -339,7 +339,7 @@ class LegendRenderer {
         int stepY = y + barHeight - toBottom
         group.addRect(barWidth, stepHeight)
             .x(x).y(stepY).fill(color).stroke('none')
-            .styleClass('charm-legend-colorbar')
+            .styleClass('charm-legend-colorbar gg-legend-colorbar')
       } else {
         double fromRel = (double) i / (double) COLORBAR_STEPS
         double toRel = (double) (i + 1) / (double) COLORBAR_STEPS
@@ -350,14 +350,14 @@ class LegendRenderer {
         int stepX = x + from
         group.addRect(stepWidth, barHeight)
             .x(stepX).y(y).fill(color).stroke('none')
-            .styleClass('charm-legend-colorbar')
+            .styleClass('charm-legend-colorbar gg-legend-colorbar')
       }
     }
 
     // Border
     group.addRect(barWidth, barHeight)
         .x(x).y(y).fill('none').stroke(borderColor)
-        .styleClass('charm-legend-colorbar-border')
+        .styleClass('charm-legend-colorbar-border gg-legend-colorbar')
 
     // Min/max labels
     String minLabel = formatNumber(cs.domainMin)
@@ -367,21 +367,21 @@ class LegendRenderer {
       group.addText(minLabel)
           .x(x + barWidth + 5).y(y + barHeight)
           .fontSize(labelSize).fill(labelColor)
-          .styleClass('charm-legend-colorbar-label')
+          .styleClass('charm-legend-colorbar-label gg-legend-label')
       group.addText(maxLabel)
           .x(x + barWidth + 5).y(y + 10)
           .fontSize(labelSize).fill(labelColor)
-          .styleClass('charm-legend-colorbar-label')
+          .styleClass('charm-legend-colorbar-label gg-legend-label')
       y + barHeight + 5
     } else {
       group.addText(minLabel)
           .x(x).y(y + barHeight + 12)
           .fontSize(labelSize).fill(labelColor)
-          .styleClass('charm-legend-colorbar-label')
+          .styleClass('charm-legend-colorbar-label gg-legend-label')
       group.addText(maxLabel)
           .x(x + barWidth - 20).y(y + barHeight + 12)
           .fontSize(labelSize).fill(labelColor)
-          .styleClass('charm-legend-colorbar-label')
+          .styleClass('charm-legend-colorbar-label gg-legend-label')
       y + barHeight + 20
     }
   }
@@ -452,7 +452,7 @@ class LegendRenderer {
     // Border
     group.addRect(barWidth, barHeight)
         .x(x).y(y).fill('none').stroke(borderColor)
-        .styleClass('charm-legend-colorbar-border')
+        .styleClass('charm-legend-colorbar-border gg-legend-colorbar')
 
     // Labels
     if (showLimits || showLimits == null) {
@@ -462,20 +462,20 @@ class LegendRenderer {
         group.addText(minLabel)
             .x(x + barWidth + 5).y(y + barHeight)
             .fontSize(labelSize).fill(labelColor)
-            .styleClass('charm-legend-colorbar-label')
+            .styleClass('charm-legend-colorbar-label gg-legend-label')
         group.addText(maxLabel)
             .x(x + barWidth + 5).y(y + 10)
             .fontSize(labelSize).fill(labelColor)
-            .styleClass('charm-legend-colorbar-label')
+            .styleClass('charm-legend-colorbar-label gg-legend-label')
       } else {
         group.addText(minLabel)
             .x(x).y(y + barHeight + 12)
             .fontSize(labelSize).fill(labelColor)
-            .styleClass('charm-legend-colorbar-label')
+            .styleClass('charm-legend-colorbar-label gg-legend-label')
         group.addText(maxLabel)
             .x(x + barWidth - 20).y(y + barHeight + 12)
             .fontSize(labelSize).fill(labelColor)
-            .styleClass('charm-legend-colorbar-label')
+            .styleClass('charm-legend-colorbar-label gg-legend-label')
       }
     }
 
@@ -496,13 +496,13 @@ class LegendRenderer {
         int stepY = reverse ? (y + i * stepHeight) : (y + barHeight - (i + 1) * stepHeight)
         group.addRect(barWidth, stepHeight + 1)
             .x(x).y(stepY).fill(color).stroke('none')
-            .styleClass('charm-legend-colorbar')
+            .styleClass('charm-legend-colorbar gg-legend-colorbar')
       } else {
         int stepWidth = (barWidth / numBins) as int
         int stepX = x + i * stepWidth
         group.addRect(stepWidth + 1, barHeight)
             .x(stepX).y(y).fill(color).stroke('none')
-            .styleClass('charm-legend-colorbar')
+            .styleClass('charm-legend-colorbar gg-legend-colorbar')
       }
     }
   }
@@ -530,14 +530,14 @@ class LegendRenderer {
         int stepY = reverse ? (y + accumulated) : (y + barHeight - accumulated - stepHeight)
         group.addRect(barWidth, stepHeight + 1)
             .x(x).y(stepY).fill(color).stroke('none')
-            .styleClass('charm-legend-colorbar')
+            .styleClass('charm-legend-colorbar gg-legend-colorbar')
         accumulated += stepHeight
       } else {
         int stepWidth = (barWidth * (binRange / totalRange)) as int
         int stepX = x + accumulated
         group.addRect(stepWidth + 1, barHeight)
             .x(stepX).y(y).fill(color).stroke('none')
-            .styleClass('charm-legend-colorbar')
+            .styleClass('charm-legend-colorbar gg-legend-colorbar')
         accumulated += stepWidth
       }
     }
@@ -571,14 +571,14 @@ class LegendRenderer {
         BigDecimal centerY = y + keySize / 2.0
         BigDecimal radius = maxRadius / 2.0  // Default radius for discrete
         group.addCircle()
-            .styleClass('charm-legend-key')
+            .styleClass('charm-legend-key gg-legend-key')
             .cx(centerX).cy(centerY).r(radius.max(1.0))
             .fill(keyColor).stroke(keyColor)
 
         def labelEl = group.addText(level)
             .x(x + textOffset).y(y + keySize - 2)
             .fontSize(labelSize).fill(labelColor)
-            .styleClass('charm-legend-label')
+            .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
         y += keySize + spacing
       }
@@ -596,7 +596,7 @@ class LegendRenderer {
         BigDecimal centerX = x + keySize / 2.0
         BigDecimal centerY = y + keySize / 2.0
         group.addCircle()
-            .styleClass('charm-legend-key')
+            .styleClass('charm-legend-key gg-legend-key')
             .cx(centerX).cy(centerY).r(radius)
             .fill(keyColor).stroke(keyColor)
 
@@ -604,7 +604,7 @@ class LegendRenderer {
         def labelEl = group.addText(label)
             .x(x + textOffset).y(y + keySize - 2)
             .fontSize(labelSize).fill(labelColor)
-            .styleClass('charm-legend-label')
+            .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
         y += keySize + spacing
       }
@@ -639,13 +639,13 @@ class LegendRenderer {
         BigDecimal alphaVal = 0.5  // Default alpha for discrete levels
         def rect = group.addRect(keySize, keySize)
             .x(x).y(y).fill(keyColor)
-            .styleClass('charm-legend-key')
+            .styleClass('charm-legend-key gg-legend-key')
         rect.addAttribute('fill-opacity', alphaVal)
 
         def labelEl = group.addText(level)
             .x(x + textOffset).y(y + keySize - 2)
             .fontSize(labelSize).fill(labelColor)
-            .styleClass('charm-legend-label')
+            .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
         y += keySize + spacing
       }
@@ -661,14 +661,14 @@ class LegendRenderer {
         BigDecimal alphaVal = scaled.min(1).max(0)
         def rect = group.addRect(keySize, keySize)
             .x(x).y(y).fill(keyColor)
-            .styleClass('charm-legend-key')
+            .styleClass('charm-legend-key gg-legend-key')
         rect.addAttribute('fill-opacity', alphaVal)
 
         String label = idx < labels.size() ? labels[idx] : tickVal?.toString() ?: ''
         def labelEl = group.addText(label)
             .x(x + textOffset).y(y + keySize - 2)
             .fontSize(labelSize).fill(labelColor)
-            .styleClass('charm-legend-label')
+            .styleClass('charm-legend-label gg-legend-label')
         if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
         y += keySize + spacing
       }
@@ -694,26 +694,49 @@ class LegendRenderer {
     int spacing = context.config.legendSpacing
     int textOffset = keySize + 8
 
-    // Generate break values
-    int numBreaks = 5
-    BigDecimal range = cs.domainMax - cs.domainMin
+    List<Object> breakValues = []
+    List<String> breakLabels = []
+    List configuredBreaks = cs.scaleSpec?.breaks as List
+    List configuredLabels = cs.scaleSpec?.labels as List
+
+    if (configuredBreaks != null && !configuredBreaks.isEmpty()) {
+      breakValues.addAll(configuredBreaks)
+      if (configuredLabels != null && configuredLabels.size() == configuredBreaks.size()) {
+        breakLabels.addAll(configuredLabels.collect { Object it -> it?.toString() ?: '' })
+      }
+    } else {
+      int numBreaks = 5
+      BigDecimal range = cs.domainMax - cs.domainMin
+      for (int i = 0; i < numBreaks; i++) {
+        breakValues << (cs.domainMin + range * i / (numBreaks - 1))
+      }
+    }
+    if (breakLabels.isEmpty()) {
+      breakLabels = (breakValues.collect { Object value ->
+        if (value instanceof Number) {
+          return formatNumber(value as BigDecimal)
+        }
+        value?.toString() ?: ''
+      } as List<String>)
+    }
+
     int x = 0
     int y = startY
 
-    for (int i = 0; i < numBreaks; i++) {
-      BigDecimal value = cs.domainMin + range * i / (numBreaks - 1)
+    for (int i = 0; i < breakValues.size(); i++) {
+      Object value = breakValues[i]
       String color = cs.colorFor(value) ?: '#999999'
-      String label = formatNumber(value)
+      String label = i < breakLabels.size() ? breakLabels[i] : (value?.toString() ?: '')
 
       group.addRect(keySize, keySize)
           .x(x).y(y).fill(color)
           .stroke(context.chart.theme.legendKey?.color ?: '#666666')
-          .styleClass('charm-legend-key')
+          .styleClass('charm-legend-key gg-legend-key')
 
       def labelEl = group.addText(label)
           .x(x + textOffset).y(y + keySize - 2)
           .fontSize(labelSize).fill(labelColor)
-          .styleClass('charm-legend-label')
+          .styleClass('charm-legend-label gg-legend-label')
       if (labelText?.family) labelEl.addAttribute('font-family', labelText.family)
 
       if (vertical) {
@@ -745,7 +768,7 @@ class LegendRenderer {
           .x(0).y(currentY + titleSize)
           .addAttribute('font-weight', 'bold')
           .fontSize(titleSize)
-          .styleClass('charm-legend-title')
+          .styleClass('charm-legend-title gg-legend-title')
       if (titleStyle?.color) titleText.fill(titleStyle.color)
       currentY += (titleSize as int) + 5
     }
@@ -764,6 +787,7 @@ class LegendRenderer {
         if (context.sizeScale) scalesMap['size'] = context.sizeScale
         if (context.shapeScale) scalesMap['shape'] = context.shapeScale
         if (context.alphaScale) scalesMap['alpha'] = context.alphaScale
+        if (context.linetypeScale) scalesMap['linetype'] = context.linetypeScale
 
         Map closureContext = [
             svg   : customGroup,
@@ -804,24 +828,24 @@ class LegendRenderer {
     switch (shape?.toLowerCase()) {
       case 'square' -> {
         group.addRect((halfSize * 2).round(), (halfSize * 2).round())
-            .styleClass('charm-legend-key')
+            .styleClass('charm-legend-key gg-legend-key')
             .x((cx - halfSize).round())
             .y((cy - halfSize).round())
             .fill(fillColor).stroke(stroke)
       }
       case 'plus', 'cross' -> {
         group.addLine((cx - halfSize).round(), cy.round(), (cx + halfSize).round(), cy.round())
-            .styleClass('charm-legend-key').stroke(stroke)
+            .styleClass('charm-legend-key gg-legend-key').stroke(stroke)
         group.addLine(cx.round(), (cy - halfSize).round(), cx.round(), (cy + halfSize).round())
-            .styleClass('charm-legend-key').stroke(stroke)
+            .styleClass('charm-legend-key gg-legend-key').stroke(stroke)
       }
       case 'x' -> {
         group.addLine((cx - halfSize).round(), (cy - halfSize).round(),
             (cx + halfSize).round(), (cy + halfSize).round())
-            .styleClass('charm-legend-key').stroke(stroke)
+            .styleClass('charm-legend-key gg-legend-key').stroke(stroke)
         group.addLine((cx - halfSize).round(), (cy + halfSize).round(),
             (cx + halfSize).round(), (cy - halfSize).round())
-            .styleClass('charm-legend-key').stroke(stroke)
+            .styleClass('charm-legend-key gg-legend-key').stroke(stroke)
       }
       case 'triangle' -> {
         BigDecimal h = (halfSize * 2) * 3.sqrt() / 2
@@ -831,7 +855,7 @@ class LegendRenderer {
         BigDecimal rightX = cx + halfSize
         String pathD = "M ${cx.round()} ${topY.round()} L ${leftX.round()} ${bottomY.round()} L ${rightX.round()} ${bottomY.round()} Z"
         group.addPath().d(pathD)
-            .styleClass('charm-legend-key')
+            .styleClass('charm-legend-key gg-legend-key')
             .fill(fillColor).stroke(stroke)
       }
       case 'diamond' -> {
@@ -840,12 +864,12 @@ class LegendRenderer {
             "L ${cx.round()} ${(cy + halfSize).round()} " +
             "L ${(cx - halfSize).round()} ${cy.round()} Z"
         group.addPath().d(diamond)
-            .styleClass('charm-legend-key')
+            .styleClass('charm-legend-key gg-legend-key')
             .fill(fillColor).stroke(stroke)
       }
       default -> {
         group.addCircle()
-            .styleClass('charm-legend-key')
+            .styleClass('charm-legend-key gg-legend-key')
             .cx(centerX).cy(centerY)
             .r(halfSize.round())
             .fill(fillColor).stroke(stroke)
@@ -896,6 +920,12 @@ class LegendRenderer {
       }
     }
 
+    if (context.linetypeScale != null) {
+      if (resolveGuideType('linetype', context, guides) != GuideType.NONE) {
+        result['linetype'] = context.linetypeScale
+      }
+    }
+
     result
   }
 
@@ -928,6 +958,18 @@ class LegendRenderer {
         if (title) {
           return title
         }
+      }
+    }
+
+    // Next priority: explicit scale name from scale params.
+    for (Object scaleObj : legendScales.values()) {
+      if (!(scaleObj instanceof se.alipsa.matrix.charm.render.scale.CharmScale)) {
+        continue
+      }
+      def scale = scaleObj as se.alipsa.matrix.charm.render.scale.CharmScale
+      Object name = scale.scaleSpec?.params?.get('name')
+      if (name instanceof CharSequence && !name.toString().isBlank()) {
+        return name.toString()
       }
     }
 

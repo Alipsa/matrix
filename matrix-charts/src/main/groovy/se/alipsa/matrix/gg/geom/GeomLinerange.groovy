@@ -8,7 +8,6 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -54,111 +53,4 @@ class GeomLinerange extends Geom {
     this.params = params
   }
 
-  @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord) {
-    render(group, data, aes, scales, coord, null)
-  }
-
-  @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
-    if (data == null || data.rowCount() == 0) return
-
-    String xCol = aes?.xColName ?: 'x'
-    String yminCol = params?.get('ymin')?.toString() ?: 'ymin'
-    String ymaxCol = params?.get('ymax')?.toString() ?: 'ymax'
-    String colorCol = aes.colorColName
-
-    Scale xScale = scales['x']
-    Scale yScale = scales['y']
-    Scale colorScale = scales['color']
-
-    int elementIndex = 0
-    data.each { row ->
-      def xVal = row[xCol]
-      def yminVal = row[yminCol]
-      def ymaxVal = row[ymaxCol]
-      def colorVal = colorCol ? row[colorCol] : null
-
-      if (xVal == null || yminVal == null || ymaxVal == null) {
-        elementIndex++
-        return
-      }
-
-      BigDecimal xCenter = xScale?.transform(xVal) as BigDecimal
-      BigDecimal yMin = yScale?.transform(yminVal) as BigDecimal
-      BigDecimal yMax = yScale?.transform(ymaxVal) as BigDecimal
-
-      if (xCenter == null || yMin == null || yMax == null) {
-        elementIndex++
-        return
-      }
-
-      // Determine color
-      String lineColor = this.color
-      if (colorCol && colorVal != null) {
-        if (colorScale) {
-          lineColor = colorScale.transform(colorVal)?.toString() ?: this.color
-        } else {
-          lineColor = getDefaultColor(colorVal)
-        }
-      } else if (aes.color instanceof Identity) {
-        lineColor = (aes.color as Identity).value.toString()
-      }
-      lineColor = ColorUtil.normalizeColor(lineColor) ?: lineColor
-
-      // Draw the vertical line
-      def line = group.addLine()
-          .x1(xCenter)
-          .y1(yMin)
-          .x2(xCenter)
-          .y2(yMax)
-          .stroke(lineColor)
-
-      line.addAttribute('stroke-width', linewidth)
-
-      // Apply line type
-      String dashArray = getDashArray(linetype)
-      if (dashArray) {
-        line.addAttribute('stroke-dasharray', dashArray)
-      }
-
-      if (alpha < 1.0) {
-        line.addAttribute('stroke-opacity', alpha)
-      }
-
-      // Apply CSS attributes
-      GeomUtils.applyAttributes(line, ctx, 'linerange', 'gg-linerange', elementIndex)
-
-      elementIndex++
-    }
-  }
-
-  /**
-   * Convert line type to SVG stroke-dasharray.
-   */
-  private String getDashArray(String type) {
-    switch (type?.toLowerCase()) {
-      case 'dashed': return '8,4'
-      case 'dotted': return '2,2'
-      case 'dotdash': return '2,2,8,2'
-      case 'longdash': return '12,4'
-      case 'twodash': return '4,2,8,2'
-      case 'solid':
-      default: return null
-    }
-  }
-
-  /**
-   * Get a default color from a discrete palette.
-   */
-  private String getDefaultColor(Object value) {
-    List<String> palette = [
-      '#F8766D', '#C49A00', '#53B400',
-      '#00C094', '#00B6EB', '#A58AFF',
-      '#FB61D7'
-    ]
-
-    int index = value.hashCode().abs() % palette.size()
-    return palette[index]
-  }
 }

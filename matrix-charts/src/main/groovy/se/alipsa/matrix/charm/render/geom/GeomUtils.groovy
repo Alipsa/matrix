@@ -9,6 +9,7 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
 import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.charts.util.ColorUtil
 
 /**
  * Shared helpers for Charm geom renderers.
@@ -39,7 +40,8 @@ class GeomUtils {
       return context.colorScale.colorFor(datum.color)
     }
     if (layer.params.color != null) {
-      return layer.params.color.toString()
+      String raw = layer.params.color.toString()
+      return ColorUtil.normalizeColor(raw) ?: raw
     }
     '#1f77b4'
   }
@@ -55,7 +57,8 @@ class GeomUtils {
       return context.colorScale.colorFor(datum.color)
     }
     if (layer.params.fill != null) {
-      return layer.params.fill.toString()
+      String raw = layer.params.fill.toString()
+      return ColorUtil.normalizeColor(raw) ?: raw
     }
     '#1f77b4'
   }

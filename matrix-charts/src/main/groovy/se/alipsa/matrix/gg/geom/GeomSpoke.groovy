@@ -7,7 +7,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -60,111 +59,4 @@ class GeomSpoke extends Geom {
     this.params = params
   }
 
-  @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
-    if (data == null || data.rowCount() == 0) return
-
-    Scale xScale = scales['x']
-    Scale yScale = scales['y']
-    if (xScale == null || yScale == null) return
-
-    String xCol = aes?.xColName ?: 'x'
-    String yCol = aes?.yColName ?: 'y'
-    String angleCol = params?.get('angle')?.toString() ?: 'angle'
-    String radiusCol = params?.get('radius')?.toString() ?: 'radius'
-
-    List<String> colNames = data.columnNames()
-    if (!colNames.contains(xCol) || !colNames.contains(yCol)) return
-
-    boolean hasAngle = colNames.contains(angleCol)
-    boolean hasRadius = colNames.contains(radiusCol)
-
-    int elementIndex = 0
-    data.each { row ->
-      def xVal = row[xCol]
-      def yVal = row[yCol]
-
-      if (!(xVal instanceof Number) || !(yVal instanceof Number)) return
-
-      // Get angle (in radians)
-      double angle = 0
-      if (hasAngle) {
-        def angleVal = row[angleCol]
-        if (angleVal instanceof Number) {
-          angle = angleVal as double
-        } else {
-          return
-        }
-      }
-
-      // Get radius
-      double rad = this.radius as double
-      if (hasRadius) {
-        def radiusVal = row[radiusCol]
-        if (radiusVal instanceof Number) {
-          rad = radiusVal as double
-        }
-      }
-
-      // Transform center point
-      def x0Px = xScale.transform(xVal)
-      def y0Px = yScale.transform(yVal)
-
-      if (x0Px == null || y0Px == null) return
-
-      double x0 = x0Px as double
-      double y0 = y0Px as double
-
-      // Calculate end point in data space
-      double xEnd = (xVal as double) + rad * (angle as BigDecimal).cos()
-      double yEnd = (yVal as double) + rad * (angle as BigDecimal).sin()
-
-      // Transform end point
-      def x1Px = xScale.transform(xEnd)
-      def y1Px = yScale.transform(yEnd)
-
-      if (x1Px == null || y1Px == null) return
-
-      double x1 = x1Px as double
-      double y1 = y1Px as double
-
-      // Draw spoke
-      String lineColor = ColorUtil.normalizeColor(color) ?: color
-      def line = group.addLine()
-          .x1(x0 as int)
-          .y1(y0 as int)
-          .x2(x1 as int)
-          .y2(y1 as int)
-          .stroke(lineColor)
-
-      line.addAttribute('stroke-width', linewidth)
-
-      // Apply line type
-      String dashArray = getLineDashArray(linetype)
-      if (dashArray) {
-        line.addAttribute('stroke-dasharray', dashArray)
-      }
-
-      // Apply alpha
-      if (alpha < 1.0) {
-        line.addAttribute('stroke-opacity', alpha)
-      }
-
-      GeomUtils.applyAttributes(line, ctx, 'spoke', 'gg-spoke', elementIndex)
-      elementIndex++
-    }
-  }
-
-  /**
-   * Convert line type name to SVG stroke-dasharray value.
-   */
-  private String getLineDashArray(String type) {
-    final Map<String, String> dashArray = [
-        dashed: '5,5',
-        dotted: '2,2',
-        longdash: '10,5',
-        twodash: '10,5,2,5'
-    ]
-    dashArray[type?.toLowerCase()]
-  }
 }

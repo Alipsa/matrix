@@ -30,13 +30,17 @@ class GeomFunctionTest {
         String pathData = dMatch[0][1]
         List<double[]> coords = []
 
-        // Parse M and L commands (M x y or L x y)
-        // Handle both space and comma separators
-        def coordPattern = ~/([ML])\s*([-+]?[\d.]+)[,\s]+([-+]?[\d.]+)/
-        pathData.findAll(coordPattern).each { match ->
-          double x = Double.parseDouble(match[2])
-          double y = Double.parseDouble(match[3])
-          coords << ([x, y] as double[])
+        // Parse M and L commands (M x y or L x y), including scientific notation.
+        def numberPattern = /[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/
+        def coordPattern = ~/([ML])\s*(${numberPattern})[,\s]+(${numberPattern})/
+        def matcher = (pathData =~ coordPattern)
+        while (matcher.find()) {
+          String xToken = matcher.group(2)
+          String yToken = matcher.group(3)
+          if (xToken == null || yToken == null || xToken.isBlank() || yToken.isBlank()) {
+            continue
+          }
+          coords << ([Double.parseDouble(xToken), Double.parseDouble(yToken)] as double[])
         }
 
         if (!coords.isEmpty()) {

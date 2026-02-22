@@ -182,30 +182,30 @@ These gg utility classes serve both packages and move to a shared location or st
 
 ## 2. Definition of Done
 
-2.1 [ ] `GgChart.render()` delegates directly to `CharmRenderer` with no adapter or fallback path.
+2.1 [x] `GgChart.render()` delegates directly to `CharmRenderer` with no adapter or fallback path.
 
-2.2 [ ] `GgCharmAdapter`, `GgCharmAdaptation`, `GgCharmMappingRegistry` are deleted.
+2.2 [x] `GgCharmAdapter`, `GgCharmAdaptation`, `GgCharmMappingRegistry` are deleted.
 
-2.3 [ ] `GgRenderer` and its helper renderers (`AxisRenderer`, `GridRenderer`, etc.) are deleted.
+2.3 [x] `GgRenderer` and its helper renderers (`AxisRenderer`, `GridRenderer`, etc.) are deleted.
 
-2.4 [ ] All gg geom classes are reduced to thin factories (no `render()` methods).
+2.4 [x] All gg geom classes are reduced to thin factories (no `render()` methods).
 
-2.5 [ ] All gg geoms, stats, positions, coords, scales, guides, themes, facets, labels, annotations, and CSS attributes have tests via charm rendering.
+2.5 [x] All gg geoms, stats, positions, coords, scales, guides, themes, facets, labels, annotations, and CSS attributes have tests via charm rendering.
 
-2.6 [ ] Visual, structural, and semantic test suites pass in CI.
+2.6 [x] Visual, structural, and semantic test suites pass in CI.
 
-2.7 [ ] Required test commands have been executed and recorded:
-- [ ] `./gradlew :matrix-charts:compileGroovy`
-- [ ] `./gradlew :matrix-charts:test -Pheadless=true`
-- [ ] `./gradlew test -Pheadless=true`
+2.7 [x] Required test commands have been executed and recorded:
+- [x] `./gradlew :matrix-charts:compileGroovy`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true`
+- [x] `./gradlew test -Pheadless=true`
 
-2.8 [ ] `se.alipsa.matrix.charts` compatibility is preserved: `CharmBridge` and `charts` API tests pass against the evolved charm model.
+2.8 [x] `se.alipsa.matrix.charts` compatibility is preserved: `CharmBridge` and `charts` API tests pass against the evolved charm model.
 
-2.9 [ ] `GgPlot` helper API parity is verified (wrappers/utilities such as `ggsave`, `borders`, `xlim`/`ylim`, theme global setters/getters, and annotation helpers).
+2.9 [x] `GgPlot` helper API parity is verified (wrappers/utilities such as `ggsave`, `borders`, `xlim`/`ylim`, theme global setters/getters, and annotation helpers).
 
-2.10 [ ] Existing gg test suite remains active and passes as integration coverage of the `gg -> charm` delegation path.
+2.10 [x] Existing gg test suite remains active and passes as integration coverage of the `gg -> charm` delegation path.
 
-2.11 [ ] `PlotSpec` and charm DSL APIs (`Charts`, `AesDsl`, `LayerDsl`, facet/coord/theme DSLs) compile and pass dedicated tests after model migration.
+2.11 [x] `PlotSpec` and charm DSL APIs (`Charts`, `AesDsl`, `LayerDsl`, facet/coord/theme DSLs) compile and pass dedicated tests after model migration.
 
 ## 3. Feature Inventory (Prioritized)
 
@@ -412,33 +412,33 @@ Features are tiered by usage frequency to enable incremental value delivery:
 
 ### 3.8 Aesthetic Expression Surface (from `gg/aes`)
 
-3.8.1 [ ] Factor
-3.8.2 [ ] CutWidth
-3.8.3 [ ] Expression
-3.8.4 [ ] AfterStat
-3.8.5 [ ] AfterScale
-3.8.6 [ ] Identity
+3.8.1 [x] Factor
+3.8.2 [x] CutWidth
+3.8.3 [x] Expression
+3.8.4 [x] AfterStat
+3.8.5 [x] AfterScale
+3.8.6 [x] Identity
 
 ### 3.9 GG Helper and Interop Surface (from `GgPlot`)
 
-3.9.1 [ ] `ggsave` overloads (single chart, multiple charts, svg inputs)
-3.9.2 [ ] `borders` helpers (`borders(String, ...)`, `borders(Matrix, ...)`)
-3.9.3 [ ] `xlim` / `ylim` wrappers
-3.9.4 [ ] Global theme functions (`theme_get`, `theme_set`, `theme_update`, `theme_replace`)
-3.9.5 [ ] Utility wrappers (`position_nudge`, `expansion`, `vars`)
+3.9.1 [x] `ggsave` overloads (single chart, multiple charts, svg inputs)
+3.9.2 [x] `borders` helpers (`borders(String, ...)`, `borders(Matrix, ...)`)
+3.9.3 [x] `xlim` / `ylim` wrappers
+3.9.4 [x] Global theme functions (`theme_get`, `theme_set`, `theme_update`, `theme_replace`)
+3.9.5 [x] Utility wrappers (`position_nudge`, `expansion`, `vars`)
 
 ### 3.10 Theme Surface (from `gg/theme` and `GgPlot theme_*`)
 
 3.10.1 [x] Theme presets: `theme_gray`/`theme_grey`, `theme_bw`, `theme_minimal`, `theme_classic`, `theme_dark`, `theme_light`, `theme_linedraw`, `theme_void`, `theme_test`
-3.10.2 [ ] Theme state helpers: `theme_get`, `theme_set`, `theme_update`, `theme_replace`
+3.10.2 [x] Theme state helpers: `theme_get`, `theme_set`, `theme_update`, `theme_replace`
 3.10.3 [x] Theme element parity: `ElementLine`, `ElementRect`, `ElementText`, `ElementBlank`
 
 ### 3.11 Charm DSL Surface (from `charm/`)
 
-3.11.1 [ ] `Charts.plot(...)` and `PlotSpec` fluent API
-3.11.2 [ ] Layer/aesthetic DSLs: `Aes`, `AesDsl`, `Layer`, `LayerDsl`
-3.11.3 [ ] Structural DSLs: `Facet`, `Coord`, `Theme`, `Labels`
-3.11.4 [ ] Column/mapping DSLs: `Cols`, `ColumnRef`, `ColumnExpr`, `MapDsl`
+3.11.1 [x] `Charts.plot(...)` and `PlotSpec` fluent API
+3.11.2 [x] Layer/aesthetic DSLs: `Aes`, `AesDsl`, `Layer`, `LayerDsl`
+3.11.3 [x] Structural DSLs: `Facet`, `Coord`, `Theme`, `Labels`
+3.11.4 [x] Column/mapping DSLs: `Cols`, `ColumnRef`, `ColumnExpr`, `MapDsl`
 
 ## 4. Phase Dependencies
 
@@ -790,29 +790,35 @@ Executed commands:
 
 ### 5.15 Phase 15 -- Cleanup and Final Verification
 
-5.15.1 [ ] Verify all checkboxes in Section 3 are marked `[x]`.
+5.15.1 [x] Verify all checkboxes in Section 3 are marked `[x]`.
 
-5.15.2 [ ] Delete adapter/fallback path and legacy gg renderers:
-- [ ] `gg/adapter/GgCharmAdapter.groovy`
-- [ ] `gg/adapter/GgCharmAdaptation.groovy`
-- [ ] `gg/adapter/GgCharmMappingRegistry.groovy`
-- [ ] `gg/render/GgRenderer.groovy`
-- [ ] `gg/render/AxisRenderer.groovy`, `GridRenderer.groovy`, `FacetRenderer.groovy`, `LegendRenderer.groovy`, `RenderContext.groovy`
+5.15.2 [x] Delete adapter/fallback path and legacy gg renderers:
+- [x] `gg/adapter/GgCharmAdapter.groovy`
+- [x] `gg/adapter/GgCharmAdaptation.groovy`
+- [x] `gg/adapter/GgCharmMappingRegistry.groovy`
+- [x] `gg/render/GgRenderer.groovy`
+- [x] `gg/render/AxisRenderer.groovy`, `GridRenderer.groovy`, `FacetRenderer.groovy`, `LegendRenderer.groovy`, `RenderContext.groovy`
 
-5.15.3 [ ] Delete any remaining dead code in `gg/` (rendering helpers, unused imports, orphan classes).
+5.15.3 [x] Delete any remaining dead code in `gg/` (rendering helpers, unused imports, orphan classes).
 
-5.15.4 [ ] Verify the `gg/` package contains only: thin factory classes, `GgChart` (delegation shell), `GgPlot` (static API), type definitions (`Aes`, `Label`, `CssAttributeConfig`, `Guides`, `Guide`), and ggplot2-compatibility sugar.
+5.15.4 [x] Verify the `gg/` package contains only: thin factory classes, `GgChart` (delegation shell), `GgPlot` (static API), type definitions (`Aes`, `Label`, `CssAttributeConfig`, `Guides`, `Guide`), and ggplot2-compatibility sugar.
 
-5.15.5 [ ] Run performance sanity benchmarks against baseline charts.
+5.15.5 [x] Run performance sanity benchmarks against baseline charts.
 
-5.15.6 [ ] Update this migration plan to mark all tasks `[x]`.
+5.15.6 [x] Update this migration plan to mark all tasks `[x]`.
 
-5.15.7 [ ] Record final passing commands:
-- [ ] `./gradlew :matrix-charts:compileGroovy`
-- [ ] `./gradlew :matrix-charts:test -Pheadless=true`
-- [ ] `./gradlew test -Pheadless=true`
+5.15.7 [x] Record final passing commands:
+- [x] `./gradlew :matrix-charts:compileGroovy`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true`
+- [x] `./gradlew test -Pheadless=true`
 
-5.15.8 [ ] Verify build/dependency configuration after package/class moves (update `matrix-charts/build.gradle`, root `build.gradle`, `dependencies.gradle` only if required).
+5.15.8 [x] Verify build/dependency configuration after package/class moves (update `matrix-charts/build.gradle`, root `build.gradle`, `dependencies.gradle` only if required).
+
+Executed commands:
+- [x] `./gradlew :matrix-charts:compileGroovy :matrix-charts:compileTestGroovy -g ./.gradle-user`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true -g ./.gradle-user`
+- [x] `./gradlew test -Pheadless=true -g ./.gradle-user`
+- [x] `./gradlew :matrix-charts:test -Pheadless=true -g ./.gradle-user --tests "gg.SvgObjectAccessReference.testPerformanceBenefit"`
 
 ## 6. Files Expected to Change
 

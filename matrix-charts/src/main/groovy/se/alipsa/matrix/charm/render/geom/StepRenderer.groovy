@@ -33,6 +33,7 @@ class StepRenderer {
       BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, first)
       String dashArray = GeomUtils.dashArray(GeomUtils.resolveLinetype(context, layer, first))
 
+      List<BigDecimal[]> points = []
       for (int i = 1; i < sorted.size(); i++) {
         BigDecimal xPrev = context.xScale.transform(sorted[i - 1].x)
         BigDecimal yPrev = context.yScale.transform(sorted[i - 1].y)
@@ -42,39 +43,54 @@ class StepRenderer {
           continue
         }
 
-        List<BigDecimal[]> segments = []
+        if (points.isEmpty()) {
+          points << ([xPrev, yPrev] as BigDecimal[])
+        }
+
         switch (direction) {
           case 'vh' -> {
-            segments << ([xPrev, yPrev, xPrev, yCurr] as BigDecimal[])
-            segments << ([xPrev, yCurr, xCurr, yCurr] as BigDecimal[])
+            points << ([xPrev, yCurr] as BigDecimal[])
+            points << ([xCurr, yCurr] as BigDecimal[])
           }
           case 'mid' -> {
             BigDecimal midX = (xPrev + xCurr) / 2
-            segments << ([xPrev, yPrev, midX, yPrev] as BigDecimal[])
-            segments << ([midX, yPrev, midX, yCurr] as BigDecimal[])
-            segments << ([midX, yCurr, xCurr, yCurr] as BigDecimal[])
+            points << ([midX, yPrev] as BigDecimal[])
+            points << ([midX, yCurr] as BigDecimal[])
+            points << ([xCurr, yCurr] as BigDecimal[])
           }
           default -> {
-            segments << ([xPrev, yPrev, xCurr, yPrev] as BigDecimal[])
-            segments << ([xCurr, yPrev, xCurr, yCurr] as BigDecimal[])
+            points << ([xCurr, yPrev] as BigDecimal[])
+            points << ([xCurr, yCurr] as BigDecimal[])
           }
-        }
-
-        segments.each { BigDecimal[] segment ->
-          def line = dataLayer.addLine(segment[0], segment[1], segment[2], segment[3])
-              .stroke(stroke)
-              .strokeWidth(lineWidth)
-              .styleClass('charm-step')
-          if (dashArray != null) {
-            line.addAttribute('stroke-dasharray', dashArray)
-          }
-          if (alpha < 1.0) {
-            line.addAttribute('stroke-opacity', alpha)
-          }
-          GeomUtils.applyCssAttributes(line, context, layer.geomType.name(), elementIndex, sorted[i])
-          elementIndex++
         }
       }
+      if (points.size() < 2) {
+        return
+      }
+
+      StringBuilder pathD = new StringBuilder()
+      pathD << "M ${fmt(points[0][0])} ${fmt(points[0][1])}"
+      for (int i = 1; i < points.size(); i++) {
+        pathD << " L ${fmt(points[i][0])} ${fmt(points[i][1])}"
+      }
+
+      def path = dataLayer.addPath().d(pathD.toString())
+          .fill('none')
+          .stroke(stroke)
+          .strokeWidth(lineWidth)
+          .styleClass('charm-step')
+      if (dashArray != null) {
+        path.addAttribute('stroke-dasharray', dashArray)
+      }
+      if (alpha < 1.0) {
+        path.addAttribute('stroke-opacity', alpha)
+      }
+      GeomUtils.applyCssAttributes(path, context, layer.geomType.name(), elementIndex, first)
+      elementIndex++
     }
+  }
+
+  private static String fmt(BigDecimal value) {
+    value?.stripTrailingZeros()?.toPlainString() ?: '0'
   }
 }

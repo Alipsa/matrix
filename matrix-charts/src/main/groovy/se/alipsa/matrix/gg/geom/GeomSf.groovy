@@ -7,7 +7,6 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 
 /**
@@ -63,82 +62,5 @@ class GeomSf extends Geom {
    * @param scales scale map for rendering
    * @param coord coordinate system
    */
-  @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
-    if (data == null || data.rowCount() == 0) return
 
-    // Check for stat_sf preprocessing
-    if (!data.columnNames().contains('__sf_type')) {
-      throw new IllegalStateException(
-          "geom_sf requires geometry data processed by stat_sf. " +
-          "The data is missing the '__sf_type' column. " +
-          "If using stat='identity', change to stat='sf' or remove the stat parameter.")
-    }
-
-    Aes resolvedAes = resolveAes(aes)
-    Map<String, List<Map<String, Object>>> buckets = [
-        'point': [],
-        'line': [],
-        'polygon': []
-    ] as Map<String, List<Map<String, Object>>>
-
-    data.each { row ->
-      String type = row['__sf_type']?.toString()?.toUpperCase()
-      if (type == null) return
-      Map<String, Object> rowMap = new LinkedHashMap<>(row.toMap())
-      switch (type) {
-        case 'POINT':
-        case 'MULTIPOINT':
-          buckets['point'] << rowMap
-          break
-        case 'LINESTRING':
-        case 'MULTILINESTRING':
-          buckets['line'] << rowMap
-          break
-        case 'POLYGON':
-        case 'MULTIPOLYGON':
-          buckets['polygon'] << rowMap
-          break
-        default:
-          buckets['line'] << rowMap
-      }
-    }
-
-    if (!buckets['polygon'].isEmpty()) {
-      GeomPolygon polygon = new GeomPolygon([
-          fill: fill,
-          color: color,
-          size: size,
-          linetype: linetype,
-          alpha: alpha
-      ])
-      polygon.render(group, Matrix.builder().mapList(buckets['polygon']).build(), resolvedAes, scales, coord, ctx)
-    }
-
-    if (!buckets['line'].isEmpty()) {
-      GeomPath path = new GeomPath([
-          color: color,
-          size: size,
-          linetype: linetype,
-          alpha: alpha
-      ])
-      path.render(group, Matrix.builder().mapList(buckets['line']).build(), resolvedAes, scales, coord, ctx)
-    }
-
-    if (!buckets['point'].isEmpty()) {
-      GeomPoint point = new GeomPoint([
-          color: color,
-          fill: fill,
-          size: size,
-          alpha: alpha,
-          shape: shape
-      ])
-      point.render(group, Matrix.builder().mapList(buckets['point']).build(), resolvedAes, scales, coord, ctx)
-    }
-  }
-
-  private static Aes resolveAes(Aes aes) {
-    Aes base = new Aes([x: 'x', y: 'y', group: '__sf_group'])
-    return aes != null ? aes.merge(base) : base
-  }
 }

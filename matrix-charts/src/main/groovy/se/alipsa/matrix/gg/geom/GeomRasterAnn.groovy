@@ -8,7 +8,6 @@ import se.alipsa.matrix.gg.AnnotationConstants
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.render.RenderContext
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleContinuous
 
@@ -61,151 +60,19 @@ class GeomRasterAnn extends Geom {
     this.params = params
   }
 
-  @Override
-  void render(G group, Matrix data, Aes aes, Map<String, Scale> scales, Coord coord, RenderContext ctx) {
-    if (raster == null || raster.isEmpty()) return
-
-    Scale xScale = scales['x']
-    Scale yScale = scales['y']
-    if (xScale == null || yScale == null) return
-
-    // Get position bounds from data (in data-space coordinates)
-    BigDecimal xmin = AnnotationConstants.getPositionValue(data, 'xmin', 0)
-    BigDecimal xmax = AnnotationConstants.getPositionValue(data, 'xmax', 0)
-    BigDecimal ymin = AnnotationConstants.getPositionValue(data, 'ymin', 0)
-    BigDecimal ymax = AnnotationConstants.getPositionValue(data, 'ymax', 0)
-
-    // Handle infinite values - use full panel extent in DATA-SPACE
-    // Requires continuous scales for domain access
-    if (!(xScale instanceof ScaleContinuous) || !(yScale instanceof ScaleContinuous)) {
-      // Cannot render raster annotation with non-continuous scales
-      return
+  private static List<List<String>> normalizeRaster(Object source) {
+    if (!(source instanceof List)) {
+      return []
     }
-    List<BigDecimal> xDomain = (xScale as ScaleContinuous).computedDomain
-    List<BigDecimal> yDomain = (yScale as ScaleContinuous).computedDomain
-
-    if (AnnotationConstants.isInfinite(xmin)) xmin = xDomain[0]
-    if (AnnotationConstants.isInfinite(xmax)) xmax = xDomain[1]
-    if (AnnotationConstants.isInfinite(ymin)) ymin = yDomain[0]
-    if (AnnotationConstants.isInfinite(ymax)) ymax = yDomain[1]
-
-    // Transform bounds from data-space to pixel-space
-    BigDecimal xminPx = xScale.transform(xmin) as BigDecimal
-    BigDecimal xmaxPx = xScale.transform(xmax) as BigDecimal
-    BigDecimal yminPx = yScale.transform(ymin) as BigDecimal
-    BigDecimal ymaxPx = yScale.transform(ymax) as BigDecimal
-
-    // Calculate raster dimensions
-    int numRows = raster.size()
-    if (numRows == 0) return
-
-    // Find the first non-empty row to determine column count
-    int numCols = 0
-    for (List<String> row : raster) {
-      if (row != null && !row.isEmpty()) {
-        numCols = row.size()
-        break
+    List<List<String>> normalized = []
+    (source as List).each { Object row ->
+      if (row instanceof List) {
+        normalized << (row as List).collect { Object cell ->
+          cell == null ? null : ColorUtil.normalizeColor(cell.toString()) ?: cell.toString()
+        }
       }
     }
-    if (numCols == 0) return
-
-    // Calculate cell dimensions in pixels
-    BigDecimal totalWidth = (xmaxPx - xminPx).abs()
-    BigDecimal totalHeight = (ymaxPx - yminPx).abs()
-    BigDecimal cellWidth = totalWidth / numCols
-    BigDecimal cellHeight = totalHeight / numRows
-
-    // Determine top-left corner (SVG Y increases downward)
-    BigDecimal startX = [xminPx, xmaxPx].min()
-    BigDecimal startY = [yminPx, ymaxPx].min()
-
-    // Create group for raster with optional interpolation hint
-    G rasterGroup = group.addG()
-    if (interpolate) {
-      // Add CSS hint for smooth rendering (browser support varies)
-      rasterGroup.addAttribute('style', 'image-rendering: smooth;')
-    }
-
-    // Render each cell
-    // Row 0 is rendered at the top (minimum Y pixel position in SVG coordinates)
-    int elementIndex = 0
-    for (int row = 0; row < numRows; row++) {
-      List<String> rowData = raster[row]
-      if (rowData == null || rowData.isEmpty()) continue
-      for (int col = 0; col < numCols; col++) {
-        if (col >= rowData.size()) continue
-
-        String color = rowData[col]
-        if (color == null || color.isEmpty()) continue
-
-        // Normalize color
-        String normalizedColor = ColorUtil.normalizeColor(color) ?: color
-
-        BigDecimal x = startX + col * cellWidth
-        BigDecimal y = startY + row * cellHeight
-
-        // Render cell as rectangle (no stroke for performance)
-        def rect = rasterGroup.addRect()
-            .x(x as int)
-            .y(y as int)
-            .width((cellWidth as int).max(1))
-            .height((cellHeight as int).max(1))
-            .fill(normalizedColor)
-            .addAttribute('stroke', 'none')
-
-        GeomUtils.applyAttributes(rect, ctx, 'raster-ann', 'gg-raster-ann', elementIndex)
-        elementIndex++
-      }
-    }
+    normalized
   }
 
-  /**
-   * Normalize raster input to List<List<String>>.
-   * Accepts 2D arrays, lists, or other iterable structures.
-   */
-  @SuppressWarnings('Instanceof')
-  private static List<List<String>> normalizeRaster(Object input) {
-    if (input == null) return []
-
-    List<List<String>> result = []
-
-    if (input instanceof List) {
-      for (Object row : input as List) {
-        result.add(normalizeRow(row))
-      }
-    } else if (input.class.isArray()) {
-      // Handle 2D arrays
-      for (int i = 0; i < java.lang.reflect.Array.getLength(input); i++) {
-        Object row = java.lang.reflect.Array.get(input, i)
-        result.add(normalizeRow(row))
-      }
-    } else {
-      throw new IllegalArgumentException(
-          "Raster must be a 2D list or array of colors, got: ${input.class.name}")
-    }
-
-    return result
-  }
-
-  /**
-   * Normalize a single row to List<String>.
-   */
-  @SuppressWarnings('Instanceof')
-  private static List<String> normalizeRow(Object row) {
-    if (row == null) return []
-
-    if (row instanceof List) {
-      return (row as List).collect { it?.toString() ?: '' }
-    } else if (row.class.isArray()) {
-      List<String> result = []
-      for (int i = 0; i < java.lang.reflect.Array.getLength(row); i++) {
-        Object cell = java.lang.reflect.Array.get(row, i)
-        result.add(cell?.toString() ?: '')
-      }
-      return result
-    } else {
-      throw new IllegalArgumentException(
-          "Raster row must be a list or array of colors, got: ${row.class.name}")
-    }
-  }
 }

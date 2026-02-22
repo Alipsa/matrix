@@ -6,6 +6,7 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Aes
 import se.alipsa.matrix.charm.AnnotationSpec
 import se.alipsa.matrix.charm.CharmCoordType
+import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.FacetType
@@ -360,7 +361,9 @@ class CharmRenderer {
     List<LayerData> mapped = mapData(dataMatrix, aes, rowIndexes)
     List<LayerData> statData = applyStat(layer, mapped)
     List<LayerData> posData = applyPosition(layer, statData)
-    List<LayerData> result = applyCoord(context.chart.coord, posData)
+    List<LayerData> result = layer.geomType == CharmGeomType.PIE
+        ? posData
+        : applyCoord(context.chart.coord, posData)
     layerCache[rowKey] = result
     result
   }

@@ -2,15 +2,18 @@ package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
+import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.GuidesSpec
+import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
 import se.alipsa.matrix.charm.theme.ElementLine
 import se.alipsa.matrix.charm.theme.ElementText
 import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
+import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Renders cartesian axes, tick labels, and axis guide variants.
@@ -47,6 +50,11 @@ class AxisRenderer {
     GuidesSpec guides = context.chart.guides
     GuideSpec xGuide = guides?.getSpec('x')
     GuideSpec yGuide = guides?.getSpec('y')
+    CharmCoordType coordType = context.chart.coord?.type ?: CharmCoordType.CARTESIAN
+    if (coordType == CharmCoordType.POLAR || coordType == CharmCoordType.RADIAL) {
+      renderPolarAxes(group, context, panelWidth, panelHeight, coordType, guides)
+      return
+    }
 
     // X-axis line
     if (!nulls.contains('axisLineX')) {
@@ -398,5 +406,160 @@ class AxisRenderer {
       return rounded.toPlainString()
     }
     tick?.toString() ?: ''
+  }
+
+  private void renderPolarAxes(
+      G plotArea,
+      RenderContext context,
+      int panelWidth,
+      int panelHeight,
+      CharmCoordType coordType,
+      GuidesSpec guides
+  ) {
+    String thetaAes = resolveThetaAesthetic(context.chart.coord?.params)
+    GuideSpec thetaGuide = guides?.getSpec(thetaAes)
+    if (thetaGuide?.type != GuideType.AXIS_THETA) {
+      return
+    }
+    CharmScale thetaScale = thetaAes == 'y' ? context.yScale : context.xScale
+    if (thetaScale == null) {
+      return
+    }
+
+    renderThetaAxis(plotArea, context, thetaScale, thetaGuide, panelWidth, panelHeight, coordType)
+  }
+
+  private static void renderThetaAxis(
+      G plotArea,
+      RenderContext context,
+      CharmScale thetaScale,
+      GuideSpec guide,
+      int panelWidth,
+      int panelHeight,
+      CharmCoordType coordType
+  ) {
+    Map<String, Object> params = guide?.params ?: [:]
+    BigDecimal labelAngle = (params.angle as BigDecimal) ?: 0
+    boolean showMinorTicks = (params['minor.ticks'] ?: params.minorTicks ?: false) as boolean
+    String cap = (params.cap ?: 'none').toString()
+    BigDecimal start = (context.chart.coord?.params?.start as BigDecimal) ?: 0
+    Integer direction = context.chart.coord?.params?.direction as Integer
+    boolean clockwise = context.chart.coord?.params?.containsKey('clockwise')
+        ? context.chart.coord?.params?.clockwise as boolean
+        : (direction == null || direction >= 0)
+
+    BigDecimal cx = panelWidth / 2 as BigDecimal
+    BigDecimal cy = panelHeight / 2 as BigDecimal
+    BigDecimal outerRadius = panelWidth.min(panelHeight) / 2 * 0.9
+    BigDecimal tickLength = (context.chart.theme.axisTickLength ?: 5) as BigDecimal
+    BigDecimal labelRadius = outerRadius + tickLength + 5
+    String axisColor = context.chart.theme.axisLineX?.color ?: '#333333'
+    BigDecimal axisWidth = (context.chart.theme.axisLineX?.size ?: 1) as BigDecimal
+    String textColor = context.chart.theme.axisTextX?.color ?: '#333333'
+    BigDecimal textSize = (context.chart.theme.axisTextX?.size ?: (context.chart.theme.baseSize ?: 10)) as BigDecimal
+
+    List<Object> breaks = thetaScale.ticks(context.config.axisTickCount)
+    List<String> labels = thetaScale.tickLabels(context.config.axisTickCount)
+    G axisGroup = plotArea.addG().id('theta-axis')
+
+    breaks.eachWithIndex { Object breakVal, int i ->
+      BigDecimal norm = normalizeFromScale(thetaScale, breakVal)
+      if (norm == null) {
+        return
+      }
+      BigDecimal theta = clockwise ? (start + norm * 2 * PI) : (start - norm * 2 * PI)
+      BigDecimal x1 = cx + outerRadius * theta.sin()
+      BigDecimal y1 = cy - outerRadius * theta.cos()
+      BigDecimal tickOuter = outerRadius + tickLength
+      BigDecimal x2 = cx + tickOuter * theta.sin()
+      BigDecimal y2 = cy - tickOuter * theta.cos()
+
+      axisGroup.addLine(x1, y1, x2, y2)
+          .stroke(axisColor)
+          .strokeWidth(axisWidth)
+          .styleClass('charm-axis-tick')
+
+      String label = i < labels.size() ? labels[i] : breakVal?.toString()
+      if (label != null && !label.isEmpty()) {
+        BigDecimal labelX = cx + labelRadius * theta.sin()
+        BigDecimal labelY = cy - labelRadius * theta.cos()
+        def text = axisGroup.addText(label)
+            .x(labelX)
+            .y(labelY)
+            .textAnchor('middle')
+            .dominantBaseline('middle')
+            .fill(textColor)
+            .fontSize(textSize)
+            .styleClass('charm-axis-label')
+        if (labelAngle != 0) {
+          text.transform("rotate(${labelAngle}, ${labelX}, ${labelY})")
+        }
+      }
+    }
+
+    if (showMinorTicks && breaks.size() >= 2) {
+      for (int i = 0; i < breaks.size() - 1; i++) {
+        BigDecimal startNorm = normalizeFromScale(thetaScale, breaks[i])
+        BigDecimal endNorm = normalizeFromScale(thetaScale, breaks[i + 1])
+        if (startNorm == null || endNorm == null) {
+          continue
+        }
+        for (int j = 1; j <= 4; j++) {
+          BigDecimal minorNorm = startNorm + (endNorm - startNorm) * j / 5
+          BigDecimal minorTheta = clockwise ? (start + minorNorm * 2 * PI) : (start - minorNorm * 2 * PI)
+          BigDecimal minorOuter = outerRadius + tickLength * 0.5
+          axisGroup.addLine(
+              cx + outerRadius * minorTheta.sin(),
+              cy - outerRadius * minorTheta.cos(),
+              cx + minorOuter * minorTheta.sin(),
+              cy - minorOuter * minorTheta.cos()
+          )
+              .stroke(axisColor)
+              .strokeWidth(axisWidth * 0.75)
+              .styleClass('charm-axis-tick')
+        }
+      }
+    }
+
+    if (cap != 'none' || coordType == CharmCoordType.RADIAL) {
+      axisGroup.addCircle()
+          .cx(cx)
+          .cy(cy)
+          .r(outerRadius)
+          .fill('none')
+          .stroke(axisColor)
+          .strokeWidth(axisWidth)
+          .styleClass('charm-axis-line')
+    }
+  }
+
+  private static String resolveThetaAesthetic(Map<String, Object> coordParams) {
+    String theta = coordParams?.theta?.toString()?.toLowerCase()
+    theta == 'y' ? 'y' : 'x'
+  }
+
+  private static BigDecimal normalizeFromScale(CharmScale scale, Object value) {
+    if (scale == null) {
+      return null
+    }
+    BigDecimal transformed = scale.transform(value)
+    if (transformed == null) {
+      return null
+    }
+    BigDecimal rangeStart = scale.rangeStart
+    BigDecimal rangeEnd = scale.rangeEnd
+    if (rangeStart == null || rangeEnd == null) {
+      return null
+    }
+    BigDecimal span = (rangeEnd - rangeStart).abs()
+    if (span == 0) {
+      return 0
+    }
+    BigDecimal low = [rangeStart, rangeEnd].min()
+    BigDecimal norm = ((transformed - low) / span).min(1).max(0)
+    if (rangeEnd < rangeStart) {
+      norm = 1 - norm
+    }
+    norm
   }
 }
