@@ -48,7 +48,7 @@ class LayerDataRowAccess {
       return data.columnNames()
     }
     if (datum?.meta?.__row instanceof Map) {
-      return new ArrayList<>((datum.meta.__row as Map<String, Object>).keySet())
+      return (datum.meta.__row as Map<String, Object>).keySet().toList()
     }
     []
   }
