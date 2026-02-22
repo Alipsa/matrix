@@ -214,13 +214,15 @@ The `testWithChart()` tests in each file should be merged into a single `ScaleId
 
 ---
 
-### Task 5 — Restructure GgPlotTest
+### Task 5 — Restructure GgPlotTest ✓
 
 `GgPlotTest` is the single largest contributor to test duration (60 tests, 36 render calls, reported as "several minutes").
 
 **5.1 Extract ggsave tests**
 
 Move all `testGgsave*` methods (10 tests) to `GgSaveTest.groovy` (a file that already exists). Tag the file `@Slow` at the class level. This removes the file I/O tests from the main test class entirely.
+
+**Implementation:** `GgPlotTest` no longer contains any `ggsave`/file-type-detection tests. `GgSaveTest` remains the dedicated `ggsave` test class and is tagged `@Slow` at class level.
 
 **5.2 Split into smoke layer and full layer**
 
@@ -243,9 +245,15 @@ The ~15 tests kept in `GgPlotTest` cover the full API surface for smoke purposes
 
 **Net change:** `GgPlotTest` drops from 60 tests to ~15 tests. Full coverage is preserved in the slow group.
 
+**Implementation:** Created `GgPlotFullTest.groovy` by splitting out the non-smoke and render-heavy tests from `GgPlotTest`. `GgPlotFullTest` is `@Slow` at class level. Smoke-overlap tests are retained only in `GgPlotTest` and explicitly `@Disabled('Covered by GgPlotTest smoke layer')` in `GgPlotFullTest` to avoid duplicate execution while preserving test intent.
+
+**Result:**
+- `./gradlew :matrix-charts:test -Pheadless=true --tests "gg.GgPlotTest" --tests "gg.GgPlotFullTest" --tests "gg.GgSaveTest"` — SUCCESS (77 tests, 65 passed, 0 failed, 12 skipped).
+- `./gradlew test -Pheadless=true` — SUCCESS (full repository suite). `:matrix-charts:test` summary in this run: 2139 tests, 2127 passed, 0 failed, 12 skipped.
+
 ---
 
-### Task 6 — Remove per-scale `testWithChart()` redundancy
+### Task 6 — Remove per-scale `testWithChart()` redundancy ✓
 
 Every scale unit-test file includes 1–3 tests that render a chart and verify only `assertNotNull(svg)` or `svgXml.contains('<svg')`. `GgPlotTest` (smoke layer after Task 5) and `ScaleIntegrationTest` already cover this integration verification for each aesthetic.
 
@@ -261,6 +269,19 @@ Priority candidates for deletion (confirmed redundant by audit):
 - `ScaleLinetypeIdentityTest.testWithChart` — same
 
 These five together account for 5 render calls; after Task 4 they will be consolidated anyway.
+
+**Implementation:** Consolidated specialized per-scale render smoke tests into a single slow integration class: `ScaleSpecializedIntegrationTest` (`@Slow` at class level). Removed redundant per-file render-only tests from:
+- `ScaleColorStepsTest` (`testWithGeomPoint`, `testWithGeomTile`)
+- `ScaleColorStepsNTest` (`testWithGeomPoint`, `testWithGeomTile`)
+- `ScaleColorSteps2Test` (`testWithGeomTile`)
+- `ScaleColorFermenterTest` (`testWithPlot`, `testWithDivergingData`)
+
+This preserves one representative render per specialized scale family while eliminating duplicated "renders without crashing" checks from unit-focused files.
+
+**Result:**
+- `./gradlew :matrix-charts:test -Pheadless=true --tests "gg.scale.ScaleColorStepsTest" --tests "gg.scale.ScaleColorStepsNTest" --tests "gg.scale.ScaleColorSteps2Test" --tests "gg.scale.ScaleColorFermenterTest" --tests "gg.scale.ScaleSpecializedIntegrationTest"` — SUCCESS (64 tests, 64 passed, 0 failed, 0 skipped).
+- `./gradlew :matrix-charts:testFast -Pheadless=true` — SUCCESS (slow specialized integration tests excluded by tag).
+- `./gradlew test -Pheadless=true` — SUCCESS (full repository suite). `:matrix-charts:test` summary in this run: 2137 tests, 2125 passed, 0 failed, 12 skipped.
 
 ---
 
