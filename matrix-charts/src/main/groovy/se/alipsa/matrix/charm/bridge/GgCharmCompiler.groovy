@@ -1,4 +1,4 @@
-package se.alipsa.matrix.gg.adapter
+package se.alipsa.matrix.charm.bridge
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
@@ -43,8 +43,12 @@ import se.alipsa.matrix.gg.Guide
 import se.alipsa.matrix.gg.Guides
 import se.alipsa.matrix.gg.Label
 import se.alipsa.matrix.gg.aes.Aes as GgAes
+import se.alipsa.matrix.gg.aes.AfterScale
 import se.alipsa.matrix.gg.aes.AfterStat
+import se.alipsa.matrix.gg.aes.CutWidth
+import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
+import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
 import se.alipsa.matrix.gg.geom.GeomCustom
@@ -54,7 +58,6 @@ import se.alipsa.matrix.gg.geom.GeomRasterAnn
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.render.GgRenderer
 import se.alipsa.matrix.gg.scale.Scale as GgScale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 import se.alipsa.matrix.gg.theme.Theme as GgTheme
@@ -65,39 +68,9 @@ import java.util.Locale
  * them through the Charm renderer pipeline when the mapped surface is supported.
  */
 @CompileStatic
-class GgCharmAdapter {
+class GgCharmCompiler {
 
-  private static final Logger log = Logger.getLogger(GgCharmAdapter)
-
-  private static final Set<CharmStatType> SUPPORTED_STATS = [
-      CharmStatType.IDENTITY,
-      CharmStatType.COUNT,
-      CharmStatType.BIN,
-      CharmStatType.BOXPLOT,
-      CharmStatType.SMOOTH,
-      CharmStatType.DENSITY,
-      CharmStatType.YDENSITY
-  ] as Set<CharmStatType>
-
-  private static final Set<CharmPositionType> SUPPORTED_POSITIONS = [
-      CharmPositionType.IDENTITY,
-      CharmPositionType.DODGE,
-      CharmPositionType.STACK,
-      CharmPositionType.FILL
-  ] as Set<CharmPositionType>
-
-  private static final Set<CharmCoordType> SUPPORTED_COORDS = [
-      CharmCoordType.CARTESIAN,
-      CharmCoordType.FLIP
-  ] as Set<CharmCoordType>
-
-  private static final Set<CharmGeomType> DELEGATED_GEOMS = [
-      CharmGeomType.POINT,
-      CharmGeomType.LINE,
-      CharmGeomType.SMOOTH,
-      CharmGeomType.COL,
-      CharmGeomType.BAR
-  ] as Set<CharmGeomType>
+  private static final Logger log = Logger.getLogger(GgCharmCompiler)
 
   private static final Set<String> LAYER_PARAM_SKIP_KEYS = [
       'stat', 'position', 'mapping', '__layer_data'
@@ -108,10 +81,12 @@ class GgCharmAdapter {
       'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax',
       'alpha', 'linetype', 'label', 'weight'
   ] as List<String>
+  private static final Set<String> PARAM_COLUMN_AESTHETICS = [
+      'x', 'y', 'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax', 'label', 'weight'
+  ] as Set<String>
 
   private final GgCharmMappingRegistry mappingRegistry = new GgCharmMappingRegistry()
   private final CharmRenderer charmRenderer = new CharmRenderer()
-  private final GgRenderer ggRenderer = new GgRenderer() // TODO Phase 15: Remove legacy fallback renderer
 
   /**
    * Attempts to adapt a gg chart to a Charm chart model.
@@ -119,36 +94,30 @@ class GgCharmAdapter {
    * @param ggChart source gg chart
    * @return adaptation result with delegated chart or fallback reasons
    */
-  GgCharmAdaptation adapt(GgChart ggChart) {
+  GgCharmCompilation adapt(GgChart ggChart) {
     List<String> reasons = []
     if (ggChart == null) {
       reasons << 'Chart is null'
-      return GgCharmAdaptation.fallback(reasons)
+      return GgCharmCompilation.fallback(reasons)
     }
-    if (ggChart.data == null) {
-      reasons << 'ggplot(data: null, ...) is not delegated to Charm'
-      return GgCharmAdaptation.fallback(reasons)
-    }
-    if (ggChart.globalAes == null) {
-      reasons << 'Missing global aes mapping'
-      return GgCharmAdaptation.fallback(reasons)
-    }
+    Matrix plotData = resolvePlotData(ggChart)
+    GgAes plotSourceAes = ggChart.globalAes ?: new GgAes()
     // Guide gate removed in Phase 10 — all guides now delegated to Charm.
     // Theme gate and label gate removed in Phase 9 — all themes and labels now delegated.
 
-    Aes plotAes = mapAes(ggChart.globalAes, 'plot', reasons)
+    Aes plotAes = mapAes(plotSourceAes, plotData, 'plot', reasons)
     if (!reasons.isEmpty() || plotAes == null) {
-      return GgCharmAdaptation.fallback(reasons)
+      return GgCharmCompilation.fallback(reasons)
     }
 
     Facet mappedFacet = mapFacet(ggChart.facet, reasons)
     if (!reasons.isEmpty() || mappedFacet == null) {
-      return GgCharmAdaptation.fallback(reasons)
+      return GgCharmCompilation.fallback(reasons)
     }
 
     Coord mappedCoord = mapCoord(ggChart.coord, reasons)
     if (!reasons.isEmpty() || mappedCoord == null) {
-      return GgCharmAdaptation.fallback(reasons)
+      return GgCharmCompilation.fallback(reasons)
     }
 
     List<LayerSpec> mappedLayers = []
@@ -158,19 +127,19 @@ class GgCharmAdapter {
       if (!annotationSpecs.isEmpty()) {
         mappedAnnotations.addAll(annotationSpecs)
       } else {
-        LayerSpec mapped = mapLayer(layer, idx, plotAes, reasons)
+        LayerSpec mapped = mapLayer(layer, idx, plotAes, plotData, mappedCoord, reasons)
         if (mapped != null) {
           mappedLayers << mapped
         }
       }
     }
     if (!reasons.isEmpty()) {
-      return GgCharmAdaptation.fallback(reasons)
+      return GgCharmCompilation.fallback(reasons)
     }
 
     ScaleSpec mappedScales = mapScales(ggChart.scales, reasons)
     if (!reasons.isEmpty()) {
-      return GgCharmAdaptation.fallback(reasons)
+      return GgCharmCompilation.fallback(reasons)
     }
 
     Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, ggChart.scales)
@@ -178,7 +147,7 @@ class GgCharmAdapter {
     GuidesSpec mappedGuides = mapGuides(ggChart.guides, ggChart.scales)
 
     Chart mappedChart = new Chart(
-        ggChart.data,
+        plotData,
         plotAes,
         mappedLayers,
         mappedScales,
@@ -190,94 +159,70 @@ class GgCharmAdapter {
         mappedAnnotations,
         mapCssAttributes(ggChart)
     )
-    GgCharmAdaptation.delegated(mappedChart)
+    GgCharmCompilation.delegated(mappedChart)
   }
 
   /**
-   * Renders a gg chart through Charm when supported, otherwise via legacy gg renderer.
-   * TODO Phase 15: Remove fallback path entirely; all rendering should go through CharmRenderer.
+   * Renders a gg chart through Charm.
    */
   Svg render(GgChart ggChart) {
-    if (isLegacyRendererForced()) {
-      return ggRenderer.render(ggChart) // TODO Phase 15: Remove legacy fallback
-    }
-
-    GgCharmAdaptation adaptation = adapt(ggChart)
+    GgCharmCompilation adaptation = adapt(ggChart)
     if (!adaptation.delegated || adaptation.charmChart == null) {
-      return ggRenderer.render(ggChart) // TODO Phase 15: Remove legacy fallback
+      String reasons = adaptation?.reasons?.join('; ') ?: 'Unknown adaptation failure'
+      throw new IllegalStateException("GG to Charm adaptation failed: ${reasons}")
     }
-    try {
-      RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
-      return charmRenderer.render(adaptation.charmChart, config)
-    } catch (Exception e) {
-      log.warn("Charm delegation render failed, falling back to legacy gg renderer: ${e.message}", e)
-      return ggRenderer.render(ggChart) // TODO Phase 15: Remove legacy fallback
-    }
+    RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
+    charmRenderer.render(adaptation.charmChart, config)
   }
 
-  private LayerSpec mapLayer(Layer layer, int idx, Aes plotAes, List<String> reasons) {
+  private LayerSpec mapLayer(
+      Layer layer,
+      int idx,
+      Aes plotAes,
+      Matrix plotData,
+      Coord mappedCoord,
+      List<String> reasons
+  ) {
     if (layer == null) {
       reasons.add("Layer ${idx} is null".toString())
       return null
     }
-    if (layer.geom == null) {
-      reasons.add("Layer ${idx} is missing a geom".toString())
+    GeomSpec geomSpec = resolveLayerGeomSpec(layer, idx, reasons)
+    if (geomSpec == null) {
       return null
     }
 
-    GeomSpec geomSpec
-    try {
-      geomSpec = layer.geom.toCharmGeomSpec()
-    } catch (Exception e) {
-      reasons.add("Layer ${idx} geom '${layer.geom.class.simpleName}' could not be mapped: ${e.message}".toString())
-      return null
-    }
-
-    if (!(geomSpec.type in DELEGATED_GEOMS)) {
-      reasons.add("Layer ${idx} geom '${geomSpec.type}' is mapped but not delegated yet".toString())
-      return null
-    }
-
-    CharmStatType statType = mapLayerStat(geomSpec.type, layer.stat, idx, reasons)
+    CharmStatType statType = mapLayerStat(geomSpec, layer.stat, idx, reasons)
     if (statType == null) {
       return null
     }
 
-    CharmPositionType positionType = mapLayerPosition(geomSpec.type, layer.position, idx, reasons)
+    CharmPositionType positionType = mapLayerPosition(geomSpec, layer.position, idx, reasons)
     if (positionType == null) {
       return null
     }
 
-    Aes layerAes = mapAes(layer.aes, "layer ${idx}", reasons)
+    Matrix aesData = layer.data ?: plotData
+    Aes layerAes = mapAes(layer.aes, aesData, "layer ${idx}", reasons)
     if (!reasons.isEmpty()) {
       return null
     }
 
     Aes effectiveAes = mergeAes(plotAes, layerAes, layer.inheritAes)
-    validateRequiredAes(geomSpec, effectiveAes, idx, reasons)
-    if (!reasons.isEmpty()) {
-      return null
-    }
+    applyParamColumnAesthetics(effectiveAes, layer.params)
 
     Map<String, Object> layerParams = normalizeLayerParams(geomSpec.type, layer.params)
     if (layer.data != null) {
       layerParams['__layer_data'] = layer.data
     }
 
-    // Charm smooth stat currently models lm-style regression only.
-    if (geomSpec.type == CharmGeomType.SMOOTH && layerParams.containsKey('method')) {
-      String method = layerParams['method']?.toString()?.trim()?.toLowerCase(Locale.ROOT)
-      if (method != null && !method.isEmpty() && method != 'lm') {
-        reasons.add("Layer ${idx} smooth method '${layerParams['method']}' is not delegated yet".toString())
-        return null
-      }
-    }
-
     Map<String, Object> statParams = deepCopyMap(layer.statParams)
     Map<String, Object> positionParams = deepCopyMap(layer.positionParams)
 
+    CharmGeomType delegatedGeomType = resolveGeomTypeForCoord(geomSpec.type, mappedCoord)
+
     GeomSpec delegatedGeom = new GeomSpec(
-        geomSpec.type,
+        delegatedGeomType,
         normalizeLayerParams(geomSpec.type, geomSpec.params),
         geomSpec.requiredAes,
         geomSpec.defaultAes,
@@ -288,11 +233,74 @@ class GgCharmAdapter {
     new LayerSpec(
         delegatedGeom,
         StatSpec.of(statType, statParams),
-        layerAes,
+        effectiveAes,
         layer.inheritAes,
         PositionSpec.of(positionType, positionParams),
         layerParams
     )
+  }
+
+  private static CharmGeomType resolveGeomTypeForCoord(CharmGeomType source, Coord coord) {
+    if ((coord?.type == CharmCoordType.POLAR || coord?.type == CharmCoordType.RADIAL)
+        && (source == CharmGeomType.BAR || source == CharmGeomType.COL)) {
+      return CharmGeomType.PIE
+    }
+    source
+  }
+
+  private GeomSpec resolveLayerGeomSpec(Layer layer, int idx, List<String> reasons) {
+    if (layer?.geom != null) {
+      try {
+        return layer.geom.toCharmGeomSpec()
+      } catch (Exception e) {
+        reasons.add("Layer ${idx} geom '${layer.geom.class.simpleName}' could not be mapped: ${e.message}".toString())
+        return null
+      }
+    }
+
+    CharmGeomType inferred = inferGeomType(layer?.stat)
+    if (inferred == null) {
+      return null
+    }
+    new GeomSpec(
+        inferred,
+        [:],
+        [],
+        [:],
+        mappingRegistry.mapStat(layer?.stat ?: StatType.IDENTITY) ?: CharmStatType.IDENTITY,
+        mappingRegistry.mapPosition(layer?.position ?: PositionType.IDENTITY) ?: CharmPositionType.IDENTITY
+    )
+  }
+
+  private static CharmGeomType inferGeomType(StatType statType) {
+    switch (statType ?: StatType.IDENTITY) {
+      case StatType.COUNT -> CharmGeomType.BAR
+      case StatType.BIN -> CharmGeomType.HISTOGRAM
+      case StatType.BOXPLOT -> CharmGeomType.BOXPLOT
+      case StatType.SMOOTH -> CharmGeomType.SMOOTH
+      case StatType.QUANTILE -> CharmGeomType.QUANTILE
+      case StatType.SUMMARY -> CharmGeomType.POINT
+      case StatType.DENSITY -> CharmGeomType.DENSITY
+      case StatType.YDENSITY -> CharmGeomType.VIOLIN
+      case StatType.DENSITY_2D -> CharmGeomType.DENSITY_2D
+      case StatType.BIN2D -> CharmGeomType.BIN2D
+      case StatType.BIN_HEX -> CharmGeomType.HEX
+      case StatType.SUMMARY_HEX -> CharmGeomType.HEX
+      case StatType.SUMMARY_2D -> CharmGeomType.BIN2D
+      case StatType.CONTOUR -> CharmGeomType.CONTOUR
+      case StatType.ECDF -> CharmGeomType.STEP
+      case StatType.QQ -> CharmGeomType.QQ
+      case StatType.QQ_LINE -> CharmGeomType.QQ_LINE
+      case StatType.ELLIPSE -> CharmGeomType.PATH
+      case StatType.SUMMARY_BIN -> CharmGeomType.BAR
+      case StatType.UNIQUE -> CharmGeomType.POINT
+      case StatType.FUNCTION -> CharmGeomType.FUNCTION
+      case StatType.SF -> CharmGeomType.SF
+      case StatType.SF_COORDINATES -> CharmGeomType.POINT
+      case StatType.SPOKE -> CharmGeomType.SPOKE
+      case StatType.ALIGN -> CharmGeomType.AREA
+      default -> null
+    }
   }
 
   private List<AnnotationSpec> mapAnnotationLayer(Layer layer, int idx, List<String> reasons) {
@@ -616,60 +624,28 @@ class GgCharmAdapter {
     params
   }
 
-  private CharmStatType mapLayerStat(CharmGeomType geomType, StatType ggStat, int idx, List<String> reasons) {
-    StatType resolved = ggStat ?: StatType.IDENTITY
-    if (geomType == CharmGeomType.SMOOTH) {
-      if (resolved != StatType.SMOOTH) {
-        reasons.add("Layer ${idx} smooth requires stat SMOOTH".toString())
-        return null
-      }
-      return CharmStatType.SMOOTH
+  private CharmStatType mapLayerStat(GeomSpec geomSpec, StatType ggStat, int idx, List<String> reasons) {
+    if (ggStat == null) {
+      return geomSpec?.defaultStat ?: CharmStatType.IDENTITY
     }
-    if (geomType in [CharmGeomType.POINT, CharmGeomType.LINE, CharmGeomType.COL, CharmGeomType.BAR]) {
-      if (resolved != StatType.IDENTITY) {
-        reasons.add("Layer ${idx} geom '${geomType}' with stat '${resolved}' is not delegated".toString())
-        return null
-      }
-      return CharmStatType.IDENTITY
-    }
-    CharmStatType mapped = mappingRegistry.mapStat(resolved)
-    if (mapped == null || !(mapped in SUPPORTED_STATS)) {
-      reasons.add("Layer ${idx} stat '${resolved}' is not delegated".toString())
+    CharmStatType mapped = mappingRegistry.mapStat(ggStat)
+    if (mapped == null) {
+      reasons.add("Layer ${idx} stat '${ggStat}' is not delegated".toString())
       return null
     }
     mapped
   }
 
-  private CharmPositionType mapLayerPosition(CharmGeomType geomType, PositionType ggPosition, int idx, List<String> reasons) {
-    PositionType resolved = ggPosition ?: PositionType.IDENTITY
-    CharmPositionType mapped = mappingRegistry.mapPosition(resolved)
-    if (mapped == null || !(mapped in SUPPORTED_POSITIONS)) {
-      reasons.add("Layer ${idx} position '${resolved}' is not delegated".toString())
-      return null
+  private CharmPositionType mapLayerPosition(GeomSpec geomSpec, PositionType ggPosition, int idx, List<String> reasons) {
+    if (ggPosition == null) {
+      return geomSpec?.defaultPosition ?: CharmPositionType.IDENTITY
     }
-    if (geomType in [CharmGeomType.POINT, CharmGeomType.LINE, CharmGeomType.SMOOTH] && mapped != CharmPositionType.IDENTITY) {
-      reasons.add("Layer ${idx} geom '${geomType}' does not delegate position '${resolved}'".toString())
-      return null
-    }
-    if (geomType in [CharmGeomType.COL, CharmGeomType.BAR] && !(mapped in [CharmPositionType.IDENTITY, CharmPositionType.STACK, CharmPositionType.DODGE, CharmPositionType.FILL])) {
-      reasons.add("Layer ${idx} geom '${geomType}' does not delegate position '${resolved}'".toString())
+    CharmPositionType mapped = mappingRegistry.mapPosition(ggPosition)
+    if (mapped == null) {
+      reasons.add("Layer ${idx} position '${ggPosition}' is not delegated".toString())
       return null
     }
     mapped
-  }
-
-  private static void validateRequiredAes(GeomSpec geomSpec, Aes effectiveAes, int idx, List<String> reasons) {
-    Map<String, ?> mappedAes = effectiveAes?.mappings() ?: [:]
-    geomSpec.requiredAes.each { String aesName ->
-      if (!mappedAes.containsKey(aesName)) {
-        reasons.add("Layer ${idx} (${geomSpec.type}) requires '${aesName}' mapping for delegation".toString())
-      }
-    }
-    if (mappedAes.containsKey('group') || mappedAes.containsKey('shape') ||
-        mappedAes.containsKey('size') || mappedAes.containsKey('color') ||
-        mappedAes.containsKey('fill')) {
-      reasons.add("Layer ${idx} (${geomSpec.type}) uses mapped non-positional aesthetics not delegated yet".toString())
-    }
   }
 
   private ScaleSpec mapScales(List<GgScale> ggScales, List<String> reasons) {
@@ -694,12 +670,6 @@ class GgCharmAdapter {
 
       enrichScale(charmScale, scale)
 
-      if (scale instanceof ScaleDiscrete && scale.labels != null && !scale.labels.isEmpty()
-          && aesthetic in ['x', 'y']) {
-        reasons.add("Scale ${idx} (${scale.class.simpleName}) discrete scale with custom labels for '${aesthetic}' is not delegated yet".toString())
-        return
-      }
-
       assignScale(mapped, aesthetic, charmScale, idx, reasons)
     }
     mapped
@@ -710,7 +680,11 @@ class GgCharmAdapter {
     if (fromMethod != null) {
       return fromMethod
     }
-    mappingRegistry.mapScale(scale, aesthetic)
+    CharmScale mapped = mappingRegistry.mapScale(scale, aesthetic)
+    if (mapped != null) {
+      return mapped
+    }
+    fallbackScale(scale, aesthetic)
   }
 
   @CompileDynamic
@@ -745,6 +719,29 @@ class GgCharmAdapter {
     }
   }
 
+  private static CharmScale fallbackScale(GgScale scale, String aesthetic) {
+    if (aesthetic == 'x' || aesthetic == 'y') {
+      String simple = scale?.class?.simpleName?.toLowerCase(Locale.ROOT) ?: ''
+      if (simple.contains('date')) {
+        return CharmScale.date()
+      }
+      if (simple.contains('time') || simple.contains('datetime')) {
+        return CharmScale.time()
+      }
+      return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.continuous()
+    }
+    if (aesthetic == 'color' || aesthetic == 'fill') {
+      return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.continuous()
+    }
+    if (aesthetic == 'size' || aesthetic == 'alpha') {
+      return CharmScale.continuous()
+    }
+    if (aesthetic == 'shape' || aesthetic == 'linetype' || aesthetic == 'group') {
+      return CharmScale.discrete()
+    }
+    null
+  }
+
   private static void assignScale(ScaleSpec spec, String aesthetic, CharmScale charmScale, int idx, List<String> reasons) {
     switch (aesthetic) {
       case 'x' -> spec.x = charmScale
@@ -764,10 +761,6 @@ class GgCharmAdapter {
     CharmCoordType type = mappingRegistry.mapCoordType(source)
     if (type == null) {
       reasons << "Coord '${source?.class?.simpleName}' is not delegated".toString()
-      return null
-    }
-    if (!(type in SUPPORTED_COORDS)) {
-      reasons << "Coord '${type}' is not delegated yet".toString()
       return null
     }
 
@@ -851,6 +844,22 @@ class GgCharmAdapter {
     merged
   }
 
+  private static void applyParamColumnAesthetics(Aes aes, Map params) {
+    if (aes == null || params == null) {
+      return
+    }
+    Map<String, Object> mapped = [:]
+    PARAM_COLUMN_AESTHETICS.each { String key ->
+      Object value = params[key]
+      if (value instanceof CharSequence) {
+        mapped[key] = value.toString()
+      }
+    }
+    if (!mapped.isEmpty()) {
+      aes.apply(mapped)
+    }
+  }
+
   private static Map<String, Object> normalizeLayerParams(CharmGeomType geomType, Map params) {
     Map<String, Object> normalized = [:]
     (params ?: [:]).each { Object key, Object value ->
@@ -906,7 +915,7 @@ class GgCharmAdapter {
     value
   }
 
-  private static Aes mapAes(GgAes source, String context, List<String> reasons) {
+  private static Aes mapAes(GgAes source, Matrix data, String context, List<String> reasons) {
     if (source == null) {
       return null
     }
@@ -920,12 +929,32 @@ class GgCharmAdapter {
         mapped[key] = value.toString()
         continue
       }
-      if (value instanceof Factor && (value as Factor).value instanceof CharSequence) {
-        mapped[key] = (value as Factor).value.toString()
+      if (value instanceof Factor) {
+        mapped[key] = data == null ? null : (value as Factor).addToMatrix(data)
         continue
       }
       if (value instanceof AfterStat) {
-        reasons.add("AfterStat mapping '${key}' = after_stat('${(value as AfterStat).stat}') is not delegated yet".toString())
+        mapped[key] = (value as AfterStat).stat
+        continue
+      }
+      if (value instanceof AfterScale) {
+        mapped[key] = (value as AfterScale).aesthetic
+        continue
+      }
+      if (value instanceof CutWidth) {
+        mapped[key] = data == null ? null : (value as CutWidth).addToMatrix(data)
+        continue
+      }
+      if (value instanceof Expression) {
+        mapped[key] = data == null ? null : (value as Expression).addToMatrix(data)
+        continue
+      }
+      if (value instanceof Closure) {
+        mapped[key] = data == null ? null : new Expression(value as Closure<Number>).addToMatrix(data)
+        continue
+      }
+      if (value instanceof Identity) {
+        mapped[key] = (value as Identity).value
         continue
       }
       reasons.add("Unsupported ${context} aes '${key}' mapping type '${value.getClass().simpleName}'".toString())
@@ -986,6 +1015,17 @@ class GgCharmAdapter {
     theme.themeName = source.themeName
     theme.explicitNulls = source.explicitNulls != null ? new HashSet<>(source.explicitNulls) : new HashSet<>()
     theme
+  }
+
+  private static Matrix resolvePlotData(GgChart chart) {
+    if (chart?.data != null) {
+      return chart.data
+    }
+    Matrix layerData = chart?.layers?.findResult { Layer layer -> layer?.data }
+    if (layerData != null) {
+      return layerData
+    }
+    new Matrix('gg-plot', [], [], [])
   }
 
   private static se.alipsa.matrix.charm.theme.ElementText mapText(se.alipsa.matrix.gg.theme.ElementText source) {
@@ -1242,17 +1282,4 @@ class GgCharmAdapter {
   // removed in Phase 10 — all guides now delegated via mapGuides().
   // Theme gate methods (isDefaultGrayTheme, sameRect, sameLine) and
   // hasUnsupportedLabels removed in Phase 9 — all themes and labels now delegated.
-
-  // TODO Phase 15: Remove isLegacyRendererForced() and associated system/env property support
-  private static boolean isLegacyRendererForced() {
-    String propertyValue = System.getProperty('matrix.charts.gg.delegateToCharm')
-    if (propertyValue != null) {
-      return !propertyValue.toBoolean()
-    }
-    String envValue = System.getenv('MATRIX_GG_DELEGATE_TO_CHARM')
-    if (envValue != null) {
-      return !envValue.toBoolean()
-    }
-    false
-  }
 }

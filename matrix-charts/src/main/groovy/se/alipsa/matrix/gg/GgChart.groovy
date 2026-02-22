@@ -17,7 +17,7 @@ import se.alipsa.matrix.gg.geom.GeomSmooth
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
-import se.alipsa.matrix.gg.adapter.GgCharmAdapter
+import se.alipsa.matrix.charm.bridge.GgCharmCompiler
 import se.alipsa.matrix.gg.position.Position
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.stat.Stats
@@ -499,6 +499,6 @@ class GgChart {
     if (coord == null) {
       coord = new CoordCartesian()
     }
-    new GgCharmAdapter().render(this)
+    new GgCharmCompiler().render(this)
   }
 }

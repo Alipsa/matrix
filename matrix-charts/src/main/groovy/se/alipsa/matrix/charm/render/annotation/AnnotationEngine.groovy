@@ -871,7 +871,14 @@ class AnnotationEngine {
     if (!wrapped.startsWith('<svg')) {
       wrapped = "<svg xmlns=\"http://www.w3.org/2000/svg\">${wrapped}</svg>"
     }
-    Svg parsed = SvgReader.parse(wrapped)
-    parsed.clone(customGroup)
+    try {
+      Svg parsed = SvgReader.parse(wrapped)
+      parsed.clone(customGroup)
+    } catch (Exception e) {
+      throw new IllegalArgumentException(
+          "Failed to parse SVG string for annotation_custom; please provide valid SVG markup: ${e.message}",
+          e
+      )
+    }
   }
 }

@@ -32,6 +32,10 @@ class DiscreteCharmScale extends CharmScale {
 
   @Override
   List<String> tickLabels(int count) {
+    List<String> configured = scaleSpec?.labels
+    if (configured != null && configured.size() == levels.size()) {
+      return new ArrayList<>(configured)
+    }
     new ArrayList<>(levels)
   }
 

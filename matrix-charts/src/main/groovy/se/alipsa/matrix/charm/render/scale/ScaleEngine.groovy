@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.render.scale
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
@@ -41,6 +42,7 @@ class ScaleEngine {
 
     trained.x = trainPositionalScale(xValues, chart.scale.x, 0, config.plotWidth())
     trained.y = trainPositionalScale(yValues, chart.scale.y, config.plotHeight(), 0)
+    applyFixedCoordScaling(chart, config, trained)
 
     boolean hasColor = colorValues.any { it != null }
     if (hasColor) {
@@ -73,6 +75,60 @@ class ScaleEngine {
     }
 
     trained
+  }
+
+  private static void applyFixedCoordScaling(Chart chart, RenderConfig config, TrainedScales trained) {
+    if (chart?.coord?.type != CharmCoordType.FIXED) {
+      return
+    }
+    if (!(trained.x instanceof ContinuousCharmScale) || !(trained.y instanceof ContinuousCharmScale)) {
+      return
+    }
+
+    ContinuousCharmScale xScale = trained.x as ContinuousCharmScale
+    ContinuousCharmScale yScale = trained.y as ContinuousCharmScale
+
+    List<Number> xlim = chart.coord?.xlim
+    if (xlim != null && xlim.size() >= 2) {
+      BigDecimal xMin = NumberCoercionUtil.coerceToBigDecimal(xlim[0])
+      BigDecimal xMax = NumberCoercionUtil.coerceToBigDecimal(xlim[1])
+      if (xMin != null && xMax != null && xMax > xMin) {
+        xScale.domainMin = xMin
+        xScale.domainMax = xMax
+      }
+    }
+    List<Number> ylim = chart.coord?.ylim
+    if (ylim != null && ylim.size() >= 2) {
+      BigDecimal yMin = NumberCoercionUtil.coerceToBigDecimal(ylim[0])
+      BigDecimal yMax = NumberCoercionUtil.coerceToBigDecimal(ylim[1])
+      if (yMin != null && yMax != null && yMax > yMin) {
+        yScale.domainMin = yMin
+        yScale.domainMax = yMax
+      }
+    }
+
+    BigDecimal xDomain = (xScale.domainMax - xScale.domainMin).abs()
+    BigDecimal yDomain = (yScale.domainMax - yScale.domainMin).abs()
+    if (xDomain <= 0 || yDomain <= 0) {
+      return
+    }
+
+    BigDecimal ratio = NumberCoercionUtil.coerceToBigDecimal(chart.coord?.ratio) ?: 1.0
+    if (ratio <= 0) {
+      ratio = 1.0
+    }
+    BigDecimal plotWidth = config.plotWidth()
+    BigDecimal plotHeight = config.plotHeight()
+    BigDecimal targetWidth = (plotHeight * xDomain) / (ratio * yDomain)
+
+    if (targetWidth < plotWidth) {
+      BigDecimal offset = (plotWidth - targetWidth) / 2
+      xScale.rangeStart = offset
+      xScale.rangeEnd = offset + targetWidth
+    } else {
+      xScale.rangeStart = 0
+      xScale.rangeEnd = plotWidth
+    }
   }
 
   /**
@@ -108,11 +164,17 @@ class ScaleEngine {
    * @return trained ColorCharmScale
    */
   static ColorCharmScale trainColorScale(List<Object> values, Scale spec) {
+    Scale effectiveSpec = spec
+    if (effectiveSpec == null) {
+      boolean numericValues = values.findAll { it != null }
+          .every { NumberCoercionUtil.coerceToBigDecimal(it) != null }
+      effectiveSpec = numericValues ? Scale.gradient() : Scale.discrete()
+    }
     ColorCharmScale colorScale = new ColorCharmScale(
         rangeStart: 0.0,
         rangeEnd: 1.0
     )
-    colorScale.trainFromValues(values, spec ?: Scale.discrete())
+    colorScale.trainFromValues(values, effectiveSpec)
     colorScale
   }
 

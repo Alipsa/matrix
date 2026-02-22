@@ -30,7 +30,7 @@ class ContourRenderer {
     }
 
     groups.each { Object _, List<LayerData> groupData ->
-      if (groupData.size() < 2) {
+      if (groupData.isEmpty()) {
         return
       }
       LayerData first = groupData.first()
@@ -39,28 +39,44 @@ class ContourRenderer {
       BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, first)
       String dashArray = GeomUtils.dashArray(GeomUtils.resolveLinetype(context, layer, first))
 
-      for (int i = 0; i < groupData.size() - 1; i++) {
-        BigDecimal x1 = context.xScale.transform(groupData[i].x)
-        BigDecimal y1 = context.yScale.transform(groupData[i].y)
-        BigDecimal x2 = context.xScale.transform(groupData[i + 1].x)
-        BigDecimal y2 = context.yScale.transform(groupData[i + 1].y)
-        if (x1 == null || y1 == null || x2 == null || y2 == null) {
-          continue
+      List<BigDecimal[]> points = []
+      groupData.each { LayerData datum ->
+        BigDecimal x = context.xScale.transform(datum.x)
+        BigDecimal y = context.yScale.transform(datum.y)
+        if (x != null && y != null) {
+          points << ([x, y] as BigDecimal[])
         }
-
-        def line = dataLayer.addLine(x1, y1, x2, y2)
-            .stroke(stroke)
-            .strokeWidth(lineWidth)
-            .styleClass('charm-contour')
-        if (dashArray != null) {
-          line.addAttribute('stroke-dasharray', dashArray)
-        }
-        if (alpha < 1.0) {
-          line.addAttribute('stroke-opacity', alpha)
-        }
-        GeomUtils.applyCssAttributes(line, context, layer.geomType.name(), elementIndex, groupData[i])
-        elementIndex++
       }
+      if (points.isEmpty()) {
+        return
+      }
+
+      StringBuilder pathD = new StringBuilder()
+      pathD << "M ${fmt(points[0][0])} ${fmt(points[0][1])}"
+      for (int i = 1; i < points.size(); i++) {
+        pathD << " L ${fmt(points[i][0])} ${fmt(points[i][1])}"
+      }
+      if (points.size() == 1) {
+        pathD << " L ${fmt(points[0][0])} ${fmt(points[0][1])}"
+      }
+
+      def path = dataLayer.addPath().d(pathD.toString())
+          .fill('none')
+          .stroke(stroke)
+          .strokeWidth(lineWidth)
+          .styleClass('charm-contour')
+      if (dashArray != null) {
+        path.addAttribute('stroke-dasharray', dashArray)
+      }
+      if (alpha < 1.0) {
+        path.addAttribute('stroke-opacity', alpha)
+      }
+      GeomUtils.applyCssAttributes(path, context, layer.geomType.name(), elementIndex, first)
+      elementIndex++
     }
+  }
+
+  private static String fmt(BigDecimal value) {
+    value?.stripTrailingZeros()?.toPlainString() ?: '0'
   }
 }

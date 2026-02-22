@@ -23,6 +23,14 @@ abstract class CharmScale {
   BigDecimal rangeEnd
 
   /**
+   * Optional display name for legend/guide compatibility.
+   */
+  String getName() {
+    Object value = scaleSpec?.params?.get('name')
+    value == null ? null : value.toString()
+  }
+
+  /**
    * Maps a data value to a rendered coordinate.
    *
    * @param value data value

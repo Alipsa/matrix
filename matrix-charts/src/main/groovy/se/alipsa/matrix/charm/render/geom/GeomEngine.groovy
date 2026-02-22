@@ -65,7 +65,7 @@ class GeomEngine {
       case CharmGeomType.DENSITY_2D -> ContourRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.DENSITY_2D_FILLED -> ContourRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.DOTPLOT -> PointRenderer.render(dataLayer, context, layer, layerData)
-      case CharmGeomType.FUNCTION -> LineRenderer.render(dataLayer, context, layer, layerData)
+      case CharmGeomType.FUNCTION -> PathRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.LOGTICKS -> RugRenderer.render(dataLayer, context, layer, layerData, panelWidth, panelHeight)
       case CharmGeomType.MAG -> PointRenderer.render(dataLayer, context, layer, layerData)
       case CharmGeomType.MAP -> PolygonRenderer.render(dataLayer, context, layer, layerData)

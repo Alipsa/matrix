@@ -154,24 +154,24 @@ A feature row may be marked `[x]` only when:
 | Guide: axis_theta | Cross-cutting | `charm/GuideType.AXIS_THETA`, `charm/GuideSpec.axisTheta` (stub, coord_polar not in charm) | `CharmGuideModelTest` | [x] |
 | Guide: axis_stack | Cross-cutting | `charm/GuideType.AXIS_STACK`, `charm/render/AxisRenderer.renderStackedAxes` | `CharmAxisGuideTest.testAxisStackGuide` | [x] |
 | Guide: custom | Cross-cutting | `charm/GuideType.CUSTOM`, `charm/render/LegendRenderer.renderCustomGuide` | `CharmCustomGuideTest` | [x] |
-| Expression: Factor | Cross-cutting | - | - | [ ] |
-| Expression: CutWidth | Cross-cutting | - | - | [ ] |
-| Expression: Expression | Cross-cutting | - | - | [ ] |
-| Expression: AfterStat | Cross-cutting | - | - | [ ] |
-| Expression: AfterScale | Cross-cutting | - | - | [ ] |
-| Expression: Identity | Cross-cutting | - | - | [ ] |
-| Helper: `ggsave` overloads (single chart, multiple charts, svg inputs) | Cross-cutting | - | - | [ ] |
-| Helper: `borders` helpers (`borders(String, ...)`, `borders(Matrix, ...)`) | Cross-cutting | - | - | [ ] |
-| Helper: `xlim` / `ylim` wrappers | Cross-cutting | - | - | [ ] |
-| Helper: Global theme functions (`theme_get`, `theme_set`, `theme_update`, `theme_replace`) | Cross-cutting | - | - | [ ] |
-| Helper: Utility wrappers (`position_nudge`, `expansion`, `vars`) | Cross-cutting | - | - | [ ] |
+| Expression: Factor | Cross-cutting | `gg/aes/Factor`, `charm/bridge/GgCharmCompiler.mapAes(...)` | `FactorTest`, `CharmModelExpansionTest.testCharmExpressionImplementedByGgExpressionTypes` | [x] |
+| Expression: CutWidth | Cross-cutting | `gg/aes/CutWidth`, `charm/bridge/GgCharmCompiler.mapAes(...)` | `CutWidthTest`, `CharmModelExpansionTest.testCharmExpressionImplementedByGgExpressionTypes` | [x] |
+| Expression: Expression | Cross-cutting | `gg/aes/Expression`, `charm/bridge/GgCharmCompiler.mapAes(...)` | `ExpressionTest`, `CharmModelExpansionTest.testCharmExpressionImplementedByGgExpressionTypes` | [x] |
+| Expression: AfterStat | Cross-cutting | `gg/aes/AfterStat`, `charm/bridge/GgCharmCompiler.mapAes(...)` | `ScaleIntegrationTest.testAfterStatFactoryMethod`, `CharmModelExpansionTest.testCharmExpressionImplementedByGgExpressionTypes` | [x] |
+| Expression: AfterScale | Cross-cutting | `gg/aes/AfterScale`, `charm/bridge/GgCharmCompiler.mapAes(...)` | `GgPlotHelpersTest.testAfterScaleHelper`, `CharmModelExpansionTest.testCharmExpressionImplementedByGgExpressionTypes` | [x] |
+| Expression: Identity | Cross-cutting | `gg/aes/Identity`, `charm/bridge/GgCharmCompiler.mapAes(...)` | `CharmModelExpansionTest.testCharmExpressionImplementedByGgExpressionTypes` | [x] |
+| Helper: `ggsave` overloads (single chart, multiple charts, svg inputs) | Cross-cutting | `gg/GgPlot.groovy` (`ggsave(...)` overloads) | `GgSaveTest`, `GgPlotTest` (ggsave integration section) | [x] |
+| Helper: `borders` helpers (`borders(String, ...)`, `borders(Matrix, ...)`) | Cross-cutting | `gg/GgPlot.groovy` (`borders(...)` overloads) | `GgPlotTest` | [x] |
+| Helper: `xlim` / `ylim` wrappers | Cross-cutting | `gg/GgPlot.groovy` (`xlim(...)`, `ylim(...)`) | `GeomFunctionTest`, `ThemeTestTest`, `GgPlotTest` | [x] |
+| Helper: Global theme functions (`theme_get`, `theme_set`, `theme_update`, `theme_replace`) | Cross-cutting | `gg/GgPlot.groovy` global theme API + thread-local storage | `gg/theme/GlobalThemeTest` | [x] |
+| Helper: Utility wrappers (`position_nudge`, `expansion`, `vars`) | Cross-cutting | `gg/GgPlot.groovy` (`position_nudge(...)`, `expansion(...)`, `vars(...)`) | `GgPlotHelpersTest` | [x] |
 | Theme: Theme presets: `theme_gray`/`theme_grey`, `theme_bw`, `theme_minimal`, `theme_classic`, `theme_dark`, `theme_light`, `theme_linedraw`, `theme_void`, `theme_test` | Cross-cutting | `charm/theme/CharmThemes` | `CharmThemeElementTest` | [x] |
-| Theme: Theme state helpers: `theme_get`, `theme_set`, `theme_update`, `theme_replace` | Cross-cutting | - | - | [ ] |
+| Theme: Theme state helpers: `theme_get`, `theme_set`, `theme_update`, `theme_replace` | Cross-cutting | `gg/GgPlot.groovy` global theme helpers | `gg/theme/GlobalThemeTest` | [x] |
 | Theme: Theme element parity: `ElementLine`, `ElementRect`, `ElementText`, `ElementBlank` | Cross-cutting | `charm/theme/ElementLine`, `charm/theme/ElementRect`, `charm/theme/ElementText`, `charm/Theme` | `CharmThemeElementTest` | [x] |
-| Charm DSL: `Charts.plot(...)` and `PlotSpec` fluent API | Cross-cutting | - | - | [ ] |
-| Charm DSL: Layer/aesthetic DSLs: `Aes`, `AesDsl`, `Layer`, `LayerDsl` | Cross-cutting | - | - | [ ] |
-| Charm DSL: Structural DSLs: `Facet`, `Coord`, `Theme`, `Labels` | Cross-cutting | - | - | [ ] |
-| Charm DSL: Column/mapping DSLs: `Cols`, `ColumnRef`, `ColumnExpr`, `MapDsl` | Cross-cutting | - | - | [ ] |
+| Charm DSL: `Charts.plot(...)` and `PlotSpec` fluent API | Cross-cutting | `charm/Charts`, `charm/PlotSpec` | `charm/api/CharmApiDesignTest`, `charm/core/CharmCoreModelTest` | [x] |
+| Charm DSL: Layer/aesthetic DSLs: `Aes`, `AesDsl`, `Layer`, `LayerDsl` | Cross-cutting | `charm/Aes`, `charm/AesDsl`, `charm/Layer`, `charm/LayerDsl` | `charm/core/CharmCoreModelTest`, `charm/core/CharmModelExpansionTest` | [x] |
+| Charm DSL: Structural DSLs: `Facet`, `Coord`, `Theme`, `Labels` | Cross-cutting | `charm/Facet`, `charm/Coord`, `charm/Theme`, `charm/Labels` | `charm/api/CharmApiDesignTest`, `charm/render/CharmFacetThemeTest`, `charm/render/CharmLabelTest` | [x] |
+| Charm DSL: Column/mapping DSLs: `Cols`, `ColumnRef`, `ColumnExpr`, `MapDsl` | Cross-cutting | `charm/Cols`, `charm/ColumnRef`, `charm/ColumnExpr`, `charm/MapDsl` | `charm/api/CharmApiDesignTest`, `charm/core/CharmCoreModelTest`, `charm/core/CharmModelExpansionTest` | [x] |
 | Phase Task 5.9.1: Implement FacetWrap parity in charm, including free scales (`fixed`, `free`, `free_x`, `free_y`), `ncol`, `nrow`, `dir`, multi-variable composite keys, labeller support. | Cross-cutting | `charm/render/FacetRenderer`, `charm/render/CharmRenderer` | `CharmFacetThemeTest` | [x] |
 | Phase Task 5.9.2: Implement FacetGrid parity in charm, including `rows`, `cols`, margin panels, multi-variable composite keys, labeller support. | Cross-cutting | `charm/render/FacetRenderer` | `CharmFacetThemeTest` | [x] |
 | Phase Task 5.9.3: Move `FormulaParser` and `Labeller` from `gg/facet/` to `charm/facet/`. Original gg classes delegate/extend charm implementations for backward compatibility. | Cross-cutting | `charm/facet/FormulaParser`, `charm/facet/Labeller` | `CharmFacetThemeTest` | [x] |

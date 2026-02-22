@@ -22,6 +22,7 @@ class BarRenderer {
       return
     }
 
+    G barGroup = dataLayer.addG().styleClass('geombar')
     int elementIndex = 0
     BigDecimal baseline = context.yScale.transform(0)
     if (baseline == null) {
@@ -84,7 +85,7 @@ class BarRenderer {
       BigDecimal strokeWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.lineWidth) ?:
           NumberCoercionUtil.coerceToBigDecimal(layer.params.linewidth) ?: 0.5
 
-      def rect = dataLayer.addRect(width, rectHeight)
+      def rect = barGroup.addRect(width, rectHeight)
           .x(xLeft)
           .y(rectY)
           .fill(fill)

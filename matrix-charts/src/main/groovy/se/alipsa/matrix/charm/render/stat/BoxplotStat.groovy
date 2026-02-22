@@ -35,17 +35,26 @@ class BoxplotStat {
     BigDecimal coef = NumberCoercionUtil.coerceToBigDecimal(params.coef) ?: 1.5
 
     Map<String, List<BigDecimal>> groups = [:]
+    Map<String, List<BigDecimal>> xGroups = [:]
     Map<String, LayerData> templates = [:]
     data.each { LayerData d ->
-      String key = d.x?.toString() ?: ''
+      String key = d.group?.toString() ?: d.x?.toString() ?: ''
       BigDecimal yVal = NumberCoercionUtil.coerceToBigDecimal(d.y)
       if (yVal != null) {
         groups.computeIfAbsent(key) { [] } << yVal
+        BigDecimal xVal = NumberCoercionUtil.coerceToBigDecimal(d.x)
+        if (xVal != null) {
+          xGroups.computeIfAbsent(key) { [] } << xVal
+        }
         if (!templates.containsKey(key)) {
           templates[key] = d
         }
       }
     }
+
+    BigDecimal maxSqrtN = groups.values().collect { List<BigDecimal> values ->
+      Math.sqrt(values.size() as double) as BigDecimal
+    }.max() ?: 1.0
 
     List<LayerData> result = []
     groups.each { String key, List<BigDecimal> values ->
@@ -61,13 +70,20 @@ class BoxplotStat {
       BigDecimal whiskerLow = values.find { it >= lowerFence } ?: values.first()
       BigDecimal whiskerHigh = values.reverse().find { it <= upperFence } ?: values.last()
       List<BigDecimal> outliers = values.findAll { it < lowerFence || it > upperFence }
+      List<BigDecimal> xValues = xGroups[key] ?: []
+      BigDecimal xmin = xValues.isEmpty() ? null : xValues.min()
+      BigDecimal xmax = xValues.isEmpty() ? null : xValues.max()
+      BigDecimal centerX = (xmin != null && xmax != null) ? (xmin + xmax) / 2 : null
 
       LayerData template = templates[key]
       LayerData datum = new LayerData(
-          x: template.x,
+          x: centerX ?: template.x,
           y: median,
+          xmin: xmin,
+          xmax: xmax,
           color: template.color,
           fill: template.fill,
+          group: template.group,
           rowIndex: -1
       )
       datum.meta.q1 = q1
@@ -77,6 +93,7 @@ class BoxplotStat {
       datum.meta.whiskerHigh = whiskerHigh
       datum.meta.outliers = outliers
       datum.meta.n = n
+      datum.meta.relvarwidth = maxSqrtN > 0 ? (Math.sqrt(n as double) as BigDecimal) / maxSqrtN : 1.0
       result << datum
     }
     result

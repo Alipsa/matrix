@@ -85,9 +85,10 @@ class GeomBoxplotTest {
 
   @Test
   void testGeomBoxplotUsesBoundsForWidth() {
-    def data = Matrix.builder().mapList([
+    def dataWithBounds = Matrix.builder().mapList([
         [
             x: 3,
+            y: 3,
             xmin: 2,
             xmax: 4,
             ymin: 0,
@@ -99,23 +100,36 @@ class GeomBoxplotTest {
             width: 8
         ]
     ]).build()
+    def dataWithoutBounds = Matrix.builder().mapList([
+        [
+            x: 3,
+            y: 3,
+            ymin: 0,
+            lower: 2,
+            middle: 3,
+            upper: 5,
+            ymax: 6,
+            outliers: [],
+            width: 8
+        ]
+    ]).build()
 
-    def aes = new Aes(x: 'x', y: 'y')
-    def xScale = new ScaleXContinuous(expand: [0, 0])
-    xScale.train([0, 10])
-    xScale.range = [0, 100]
-    def yScale = new ScaleYContinuous(expand: [0, 0])
-    yScale.train([0, 10])
-    yScale.range = [100, 0]
+    def chartWithBounds = ggplot(dataWithBounds, aes(x: 'x', y: 'y')) +
+        geom_boxplot(stat: 'identity')
+    def chartWithoutBounds = ggplot(dataWithoutBounds, aes(x: 'x', y: 'y')) +
+        geom_boxplot(stat: 'identity')
 
-    def svg = new Svg()
-    def group = svg.addG()
-    new GeomBoxplot().render(group, data, aes, [x: xScale, y: yScale], new CoordCartesian())
+    String xmlWithBounds = SvgWriter.toXmlPretty(chartWithBounds.render())
+    String xmlWithoutBounds = SvgWriter.toXmlPretty(chartWithoutBounds.render())
 
-    def xml = SvgWriter.toXmlPretty(svg)
-    def matcher = (xml =~ /<rect[^>]*?\swidth=\"([0-9.]+)\"/)
-    assertTrue(matcher.find())
-    assertEquals(20.0d, matcher.group(1).toDouble(), 0.0001d)
+    def matcherWithBounds = (xmlWithBounds =~ /<rect(?=[^>]*class=['"][^'"]*charm-boxplot-box[^'"]*['"])(?=[^>]*width=['"]([^'"]+)['"])[^>]*>/)
+    def matcherWithoutBounds = (xmlWithoutBounds =~ /<rect(?=[^>]*class=['"][^'"]*charm-boxplot-box[^'"]*['"])(?=[^>]*width=['"]([^'"]+)['"])[^>]*>/)
+    assertTrue(matcherWithBounds.find())
+    assertTrue(matcherWithoutBounds.find())
+
+    double widthWithBounds = matcherWithBounds.group(1).toDouble()
+    double widthWithoutBounds = matcherWithoutBounds.group(1).toDouble()
+    assertTrue(widthWithBounds > widthWithoutBounds, "widthWithBounds=${widthWithBounds}, widthWithoutBounds=${widthWithoutBounds}")
   }
 
   // ============== GgStat.boxplot() Tests ==============
@@ -327,7 +341,7 @@ class GeomBoxplotTest {
     String content = SvgWriter.toXml(svg)
 
     // Match <rect width="..." - the width attribute comes first in our SVG output
-    def matcher = content =~ /(?s)<g class="geom-boxplot">.*?<rect width="([^"]+)"/
+    def matcher = content =~ /<rect(?=[^>]*class=['"][^'"]*charm-boxplot-box[^'"]*['"])(?=[^>]*width=['"]([^'"]+)['"])[^>]*>/
     List<Double> widths = []
     matcher.each { match ->
       widths << (match[1] as String).toDouble()

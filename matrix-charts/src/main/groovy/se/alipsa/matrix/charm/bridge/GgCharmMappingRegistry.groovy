@@ -1,4 +1,4 @@
-package se.alipsa.matrix.gg.adapter
+package se.alipsa.matrix.charm.bridge
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmCoordType
