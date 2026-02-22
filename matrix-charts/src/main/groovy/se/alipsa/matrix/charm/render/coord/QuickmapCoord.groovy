@@ -27,7 +27,8 @@ class QuickmapCoord {
 
     BigDecimal meanLat = (latitudes.sum() as BigDecimal) / latitudes.size()
     BigDecimal cosLat = meanLat.toRadians().cos().abs()
-    BigDecimal ratio = cosLat <= 0 ? 1 : 1 / cosLat
+    BigDecimal minCos = 1.0e-12
+    BigDecimal ratio = 1 / minCos.max(cosLat)
 
     List<LayerData> adjusted = []
     clampedInput.each { LayerData datum ->
