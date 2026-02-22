@@ -38,7 +38,17 @@ class TDistributionTest {
     assertEquals(0.9735654327994362, dist.cdf(2.228), TOLERANCE, 't=2.228, df=9')
 
     dist = new TDistribution(5)
-    assertEquals(0.5, dist.cdf(0), TOLERANCE, 't=0, df=5 should be 0.5')
+    assertEquals(0.5d, dist.cdf(0d), TOLERANCE, 't=0, df=5 should be 0.5')
+    assertEquals(0.5, dist.cdf(0.0), TOLERANCE, 't=0, df=5 should be 0.5')
+  }
+
+  @Test
+  void testBigDecimalCdfMatchesDoubleCdf() {
+    def dist = new TDistribution(10)
+    BigDecimal bigResult = dist.cdf(1.5 as BigDecimal)
+    double doubleResult = dist.cdf(1.5d)
+
+    assertEquals(doubleResult, bigResult as double, TOLERANCE)
   }
 
   @Test
@@ -56,7 +66,7 @@ class TDistributionTest {
     // Values from Apache Commons Math 3.6.1
     def dist = new TDistribution(9)
     assertEquals(0.05001284550245466, dist.twoTailedPValue(2.262), TOLERANCE, 't=2.262, df=9')
-    assertEquals(0.05001284550245466, dist.twoTailedPValue(-2.262), TOLERANCE, 't=-2.262, df=9')
+    assertEquals(0.05001284550245466, dist.twoTailedPValue(-2.262), TOLERANCE as BigDecimal, 't=-2.262, df=9')
 
     dist = new TDistribution(4)
     assertEquals(0.03347112132993746, dist.twoTailedPValue(3.182), TOLERANCE, 't=3.182, df=4')
@@ -80,6 +90,7 @@ class TDistributionTest {
   void testStaticPValueMethod() {
     // Values from Apache Commons Math 3.6.1
     assertEquals(0.024505803246513747, TDistribution.pValue(2.5, 15), TOLERANCE, 't=2.5, df=15')
+    assertEquals(0.024505803246513747G, TDistribution.pValue(2.5G, 15G), TOLERANCE, 't=2.5, df=15')
   }
 
   @Test
@@ -88,7 +99,9 @@ class TDistributionTest {
     // p-value from Apache Commons Math for t=3, df=9
     double[] sample = [10, 12, 11, 13, 9, 14, 10, 11, 12, 13] as double[]
     double pValue = TDistribution.oneSampleTTest(10, sample)
-    assertEquals(0.014956363910414217, pValue, TOLERANCE, 'one-sample t-test against mu=10')
+    assertEquals(0.014956363910414217, pValue, TOLERANCE, 'one-sample t-test against mu=10 (double)')
+    BigDecimal pValue2 = TDistribution.oneSampleTTest(10.0, sample as BigDecimal[])
+    assertEquals(0.014956363910414217g, pValue2, TOLERANCE as BigDecimal, 'one-sample t-test against mu=10 (BigDecimal')
 
     // t.test(x, mu=11.5) - testing against sample mean should give p≈1
     pValue = TDistribution.oneSampleTTest(11.5, sample)
@@ -102,7 +115,9 @@ class TDistributionTest {
     double[] sample1 = [10, 12, 11, 13, 9] as double[]
     double[] sample2 = [14, 15, 13, 16, 14] as double[]
     double pValue = TDistribution.twoSampleTTest(sample1, sample2)
-    assertEquals(0.005470215157182601, pValue, TOLERANCE, 'two-sample t-test (Welch)')
+    assertEquals(0.005470215157182601, pValue, TOLERANCE, 'two-sample t-test (Welch) - double')
+    BigDecimal pValue2 = TDistribution.twoSampleTTest(sample1 as BigDecimal[], sample2 as BigDecimal[])
+    assertEquals(0.005470215157182601G, pValue2, TOLERANCE as BigDecimal, 'two-sample t-test (Welch) - BigDecimal')
   }
 
   @Test
@@ -119,7 +134,7 @@ class TDistributionTest {
     // With high df, t-distribution approaches normal distribution
     // Values from Apache Commons Math 3.6.1
     def dist = new TDistribution(1000)
-    assertEquals(0.9748634075221323, dist.cdf(1.96), TOLERANCE, 'high df approaches normal')
+    assertEquals(0.9748634075221323d, dist.cdf(1.96d), TOLERANCE, 'high df approaches normal')
   }
 
   @Test

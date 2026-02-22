@@ -21,7 +21,29 @@ class PlotSpec {
       (CharmGeomType.HISTOGRAM): ['x'],
       (CharmGeomType.BOXPLOT)  : ['y'],
       (CharmGeomType.AREA)     : ['x', 'y'],
-      (CharmGeomType.PIE)      : ['x', 'y']
+      (CharmGeomType.PIE)      : ['x', 'y'],
+      (CharmGeomType.BIN2D)    : ['x', 'y'],
+      (CharmGeomType.CONTOUR)  : ['x', 'y'],
+      (CharmGeomType.CONTOUR_FILLED): ['x', 'y'],
+      (CharmGeomType.COUNT)    : ['x', 'y'],
+      (CharmGeomType.CURVE)    : ['x', 'y', 'xend', 'yend'],
+      (CharmGeomType.DENSITY_2D): ['x', 'y'],
+      (CharmGeomType.DENSITY_2D_FILLED): ['x', 'y'],
+      (CharmGeomType.DOTPLOT)  : ['x'],
+      (CharmGeomType.FUNCTION) : ['x'],
+      (CharmGeomType.LOGTICKS) : [] as List<String>,
+      (CharmGeomType.MAG)      : ['x', 'y'],
+      (CharmGeomType.MAP)      : ['x', 'y'],
+      (CharmGeomType.PARALLEL) : ['x', 'y'],
+      (CharmGeomType.QQ)       : ['x'],
+      (CharmGeomType.QQ_LINE)  : ['x'],
+      (CharmGeomType.QUANTILE) : ['x', 'y'],
+      (CharmGeomType.RASTER)   : ['x', 'y'],
+      (CharmGeomType.RASTER_ANN): ['x', 'y'],
+      (CharmGeomType.SPOKE)    : ['x', 'y'],
+      (CharmGeomType.SF)       : [] as List<String>,
+      (CharmGeomType.SF_LABEL) : [] as List<String>,
+      (CharmGeomType.SF_TEXT)  : [] as List<String>
   ]
 
   private final Matrix data
@@ -514,7 +536,21 @@ class PlotSpec {
       (CharmGeomType.SMOOTH)   : CharmStatType.SMOOTH,
       (CharmGeomType.DENSITY)  : CharmStatType.DENSITY,
       (CharmGeomType.VIOLIN)   : CharmStatType.YDENSITY,
-      (CharmGeomType.BAR)      : CharmStatType.COUNT
+      (CharmGeomType.BAR)      : CharmStatType.COUNT,
+      (CharmGeomType.COUNT)    : CharmStatType.COUNT,
+      (CharmGeomType.BIN2D)    : CharmStatType.BIN2D,
+      (CharmGeomType.AREA)     : CharmStatType.ALIGN,
+      (CharmGeomType.DENSITY_2D): CharmStatType.DENSITY_2D,
+      (CharmGeomType.DENSITY_2D_FILLED): CharmStatType.DENSITY_2D,
+      (CharmGeomType.CONTOUR_FILLED): CharmStatType.CONTOUR,
+      (CharmGeomType.QQ)       : CharmStatType.QQ,
+      (CharmGeomType.QQ_LINE)  : CharmStatType.QQ_LINE,
+      (CharmGeomType.QUANTILE) : CharmStatType.QUANTILE,
+      (CharmGeomType.FUNCTION) : CharmStatType.FUNCTION,
+      (CharmGeomType.SPOKE)    : CharmStatType.SPOKE,
+      (CharmGeomType.SF)       : CharmStatType.SF,
+      (CharmGeomType.SF_LABEL) : CharmStatType.SF_COORDINATES,
+      (CharmGeomType.SF_TEXT)  : CharmStatType.SF_COORDINATES
   ]
 
   private static CharmStatType defaultStatForGeom(CharmGeomType geomType) {

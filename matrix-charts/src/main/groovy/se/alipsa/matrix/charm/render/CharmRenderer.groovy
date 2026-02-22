@@ -369,6 +369,7 @@ class CharmRenderer {
     List<LayerData> values = []
     rowIndexes.each { int rowIndex ->
       LayerData datum = new LayerData(rowIndex: rowIndex)
+      LayerDataRowAccess.attach(datum, data, rowIndex)
       datum.x = readValue(data, rowIndex, aes.x?.columnName())
       datum.y = readValue(data, rowIndex, aes.y?.columnName())
       datum.color = readValue(data, rowIndex, aes.color?.columnName())

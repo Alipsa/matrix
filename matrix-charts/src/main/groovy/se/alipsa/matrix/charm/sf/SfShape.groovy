@@ -1,4 +1,4 @@
-package se.alipsa.matrix.gg.sf
+package se.alipsa.matrix.charm.sf
 
 import groovy.transform.CompileStatic
 

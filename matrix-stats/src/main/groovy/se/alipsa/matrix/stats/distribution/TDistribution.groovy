@@ -1,6 +1,7 @@
 package se.alipsa.matrix.stats.distribution
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.Stat
 
 /**
  * Student's t-distribution implementation.
@@ -11,17 +12,17 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class TDistribution {
 
-  private final double degreesOfFreedom
+  private final BigDecimal degreesOfFreedom
 
   TDistribution(BigDecimal degreesOfFreedom) {
-    this(degreesOfFreedom.doubleValue())
-  }
-
-  TDistribution(double degreesOfFreedom) {
     if (degreesOfFreedom <= 0) {
       throw new IllegalArgumentException("Degrees of freedom must be positive, got: $degreesOfFreedom")
     }
     this.degreesOfFreedom = degreesOfFreedom
+  }
+
+  TDistribution(double degreesOfFreedom) {
+    this(degreesOfFreedom as BigDecimal)
   }
 
   /**
@@ -42,6 +43,18 @@ class TDistribution {
     }
   }
 
+  BigDecimal cdf(BigDecimal t) {
+
+    BigDecimal x = degreesOfFreedom / (degreesOfFreedom + t * t)
+    BigDecimal beta = SpecialFunctions.regularizedIncompleteBeta(x, degreesOfFreedom / 2.0, 0.5)
+
+    if (t >= 0) {
+      return BigDecimal.ONE - 0.5 * beta
+    } else {
+      return 0.5 * beta
+    }
+  }
+
   /**
    * Computes the two-tailed p-value for a t-statistic.
    * This is 2 * P(T > |t|) = 2 * (1 - CDF(|t|))
@@ -54,6 +67,11 @@ class TDistribution {
     return 2.0d * (1.0d - cdf(absT))
   }
 
+  BigDecimal twoTailedPValue(BigDecimal t) {
+    BigDecimal absT = t.abs()
+    return BigDecimal.TWO * (BigDecimal.ONE - cdf(absT))
+  }
+
   /**
    * Computes the one-tailed p-value for a t-statistic (upper tail).
    * This is P(T > t) = 1 - CDF(t)
@@ -61,6 +79,10 @@ class TDistribution {
    * @param t the t-statistic
    * @return one-tailed p-value (upper)
    */
+  BigDecimal oneTailedPValueUpper(BigDecimal t) {
+    return BigDecimal.ONE - cdf(t)
+  }
+
   double oneTailedPValueUpper(double t) {
     return 1.0d - cdf(t)
   }
@@ -84,6 +106,10 @@ class TDistribution {
    * @return two-tailed p-value
    */
   static double pValue(double t, double df) {
+    return new TDistribution(df).twoTailedPValue(t)
+  }
+
+  static BigDecimal pValue(BigDecimal t, BigDecimal df) {
     return new TDistribution(df).twoTailedPValue(t)
   }
 
@@ -115,6 +141,27 @@ class TDistribution {
     return pValue(t, df)
   }
 
+  static BigDecimal twoSampleTTest(BigDecimal[] sample1, BigDecimal[] sample2) {
+    int n1 = sample1.length
+    int n2 = sample2.length
+
+    BigDecimal mean1 = Stat.mean(sample1)
+    BigDecimal mean2 = Stat.mean(sample2)
+    BigDecimal var1 = Stat.variance(sample1, mean1)
+    BigDecimal var2 = Stat.variance(sample2, mean2)
+
+    // Welch's t-test (unequal variances)
+    BigDecimal se = (var1 / n1 + var2 / n2).sqrt()
+    BigDecimal t = (mean1 - mean2) / se
+
+    // Welch-Satterthwaite degrees of freedom
+    BigDecimal num = (var1 / n1 + var2 / n2) ** 2
+    BigDecimal denom = ((var1 / n1) ** 2) / (n1 - 1) + ((var2 / n2) ** 2) / (n2 - 1)
+    BigDecimal df = num / denom
+
+    return pValue(t, df)
+  }
+
   /**
    * Computes the one-sample t-test p-value (two-tailed).
    *
@@ -128,6 +175,15 @@ class TDistribution {
     double sd = Math.sqrt(variance(sample, mean))
     double t = (mean - mu) / (sd / Math.sqrt(n))
     double df = n - 1
+    return pValue(t, df)
+  }
+
+  static BigDecimal oneSampleTTest(BigDecimal mu, BigDecimal[] sample) {
+    int n = sample.length
+    BigDecimal mean = Stat.mean(sample)
+    BigDecimal sd = Stat.variance(sample, mean).sqrt()
+    BigDecimal t = (mean - mu) / (sd / n.sqrt())
+    BigDecimal df = n - 1
     return pValue(t, df)
   }
 

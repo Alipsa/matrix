@@ -1,6 +1,8 @@
 package se.alipsa.matrix.stats.distribution
 
 import groovy.transform.CompileStatic
+import java.math.MathContext
+import java.math.RoundingMode
 import static se.alipsa.matrix.ext.NumberExtension.*
 import static java.math.BigDecimal.*
 /**
@@ -15,6 +17,9 @@ class SpecialFunctions {
 
   private static final double EPSILON = 1e-14
   private static final int MAX_ITERATIONS = 200
+  private static final MathContext BETA_MC = new MathContext(50, RoundingMode.HALF_EVEN)
+  private static final BigDecimal BETA_EPSILON = new BigDecimal('1e-30')
+  private static final BigDecimal BETA_TINY = new BigDecimal('1e-40')
 
   /**
    * Computes the regularized incomplete beta function I_x(a, b).
@@ -28,7 +33,9 @@ class SpecialFunctions {
    * @param b second shape parameter (b > 0)
    * @return the regularized incomplete beta function value
    * @throws IllegalArgumentException if x is not in [0,1] or a,b are not positive
+   * @deprecated Use {@link #regularizedIncompleteBeta(BigDecimal, BigDecimal, BigDecimal)} for idiomatic groovy
    */
+  @Deprecated
   static double regularizedIncompleteBeta(double x, double a, double b) {
     if (x < 0.0d || x > 1.0d) {
       throw new IllegalArgumentException("x must be between 0 and 1, got: $x")
@@ -54,10 +61,38 @@ class SpecialFunctions {
     return bt * betaContinuedFraction(x, a, b) / a
   }
 
+  static BigDecimal regularizedIncompleteBeta(BigDecimal x, BigDecimal a, BigDecimal b) {
+    if (x < ZERO || x > ONE) {
+      throw new IllegalArgumentException("x must be between 0 and 1, got: $x")
+    }
+    if (a <= ZERO || b <= ZERO) {
+      throw new IllegalArgumentException("a and b must be positive, got a=$a, b=$b")
+    }
+
+    if (x == ZERO) return ZERO
+    if (x == ONE) return ONE
+
+    // Use symmetry relation for faster convergence when x > (a+1)/(a+b+2)
+    BigDecimal threshold = div(a + 1.0, a + b + 2.0)
+    if (x > threshold) {
+      return 1.0 - regularizedIncompleteBeta(1.0 - x, b, a)
+    }
+
+    // Compute using continued fraction
+    BigDecimal bt = (
+        logGamma(a + b) - logGamma(a) - logGamma(b) +
+            a * x.log() + b * (1.0 - x).log()
+    ).exp()
+
+    div(bt * betaContinuedFraction(x, a, b), a)
+  }
+
   /**
    * Continued fraction representation of the incomplete beta function.
    * Uses the modified Lentz's algorithm for numerical stability.
+   * @deprecated Use {@link #betaContinuedFraction(BigDecimal, BigDecimal, BigDecimal)} for idiomatic groovy
    */
+  @Deprecated
   private static double betaContinuedFraction(double x, double a, double b) {
     double qab = a + b
     double qap = a + 1.0d
@@ -94,6 +129,46 @@ class SpecialFunctions {
     throw new RuntimeException("Beta continued fraction failed to converge after $MAX_ITERATIONS iterations")
   }
 
+  private static BigDecimal betaContinuedFraction(BigDecimal x, BigDecimal a, BigDecimal b) {
+    BigDecimal qab = a + b
+    BigDecimal qap = a + ONE
+    BigDecimal qam = a - ONE
+    BigDecimal c = ONE
+    BigDecimal d = ONE - div(qab * x, qap)
+    if (d.abs() < BETA_TINY) d = BETA_TINY
+    d = div(ONE, d)
+    BigDecimal h = d
+
+    for (int m = 1; m <= MAX_ITERATIONS; m++) {
+      int m2 = 2 * m
+      BigDecimal aa = div(m * (b - m) * x, (qam + m2) * (a + m2))
+      d = ONE + aa * d
+      if (d.abs() < BETA_TINY) d = BETA_TINY
+      c = ONE + div(aa, c)
+      if (c.abs() < BETA_TINY) c = BETA_TINY
+      d = div(ONE, d)
+      h *= d * c
+
+      aa = div(-(a + m) * (qab + m) * x, (a + m2) * (qap + m2))
+      d = ONE + aa * d
+      if (d.abs() < BETA_TINY) d = BETA_TINY
+      c = ONE + div(aa, c)
+      if (c.abs() < BETA_TINY) c = BETA_TINY
+      d = div(ONE, d)
+      BigDecimal delta = d * c
+      h *= delta
+
+      if ((delta - ONE).abs() < BETA_EPSILON) {
+        return h
+      }
+    }
+    throw new RuntimeException("Beta continued fraction failed to converge after $MAX_ITERATIONS iterations")
+  }
+
+  private static BigDecimal div(BigDecimal numerator, BigDecimal denominator) {
+    numerator.divide(denominator, BETA_MC)
+  }
+
   /**
    * Computes the log of the gamma function using Lanczos approximation.
    * More accurate than direct computation for large values.
@@ -104,7 +179,9 @@ class SpecialFunctions {
    * @param x input value (x > 0)
    * @return log(Gamma(x))
    * @throws IllegalArgumentException if x <= 0
+   * @deprecated Use {@link #logGamma(BigDecimal)} for idiomatic groovy
    */
+  @Deprecated
   static double logGamma(double x) {
     if (x <= 0.0) {
       throw new IllegalArgumentException("x must be positive, got: $x")
@@ -138,18 +215,60 @@ class SpecialFunctions {
     return 0.5 * Math.log(2.0 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a)
   }
 
+  static BigDecimal logGamma(BigDecimal x) {
+    if (x <= 0.0) {
+      throw new IllegalArgumentException("x must be positive, got: $x")
+    }
+
+    // Lanczos coefficients for g=7, n=9
+    BigDecimal[] coef = [
+        0.99999999999980993,
+        676.5203681218851,
+        -1259.1392167224028,
+        771.32342877765313,
+        -176.61502916214059,
+        12.507343278686905,
+        -0.13857109526572012,
+        9.9843695780195716e-6,
+        1.5056327351493116e-7
+    ] as BigDecimal[]
+
+    if (x < 0.5) {
+      // Use reflection formula
+      return (PI / (PI * x).sin()).log() - logGamma(1.0 - x)
+    }
+
+    x -= 1.0
+    BigDecimal a = coef[0]
+    BigDecimal t = x + 7.5
+    for (int i = 1; i < coef.length; i++) {
+      a += coef[i] / (x + i)
+    }
+
+    return 0.5 * (2.0 * PI).log() + (x + 0.5) * t.log() - t + a.log()
+  }
+
   /**
    * Computes the gamma function.
    *
    * @param x input value (x > 0)
    * @return Gamma(x)
    * @throws IllegalArgumentException if x <= 0
+   * @deprecated Use {@link #gamma(BigDecimal)} for idiomatic groovy
    */
+  @Deprecated
   static double gamma(double x) {
     if (x <= 0.0d) {
       throw new IllegalArgumentException("x must be positive, got: $x")
     }
 
     return Math.exp(logGamma(x))
+  }
+
+  static BigDecimal gamma(BigDecimal x) {
+    if (x <= 0.0) {
+      throw new IllegalArgumentException("x must be positive, got: $x")
+    }
+    return logGamma(x).exp()
   }
 }

@@ -463,6 +463,10 @@ class Stat {
         means
     }
 
+    static BigDecimal mean(BigDecimal[] values, int scale = 16) {
+        return mean(values as List<BigDecimal>, scale)
+    }
+
     static BigDecimal mean(List<?> list, int scale = 16) {
         if (list == null || list.isEmpty()) {
             return null
@@ -774,6 +778,19 @@ class Stat {
             results << sd(numericValues, isBiasCorrected)
         }
         return results
+    }
+
+    static BigDecimal variance(BigDecimal[] values, BigDecimal mean) {
+        BigDecimal sum = 0.0
+        for (BigDecimal v : values) {
+            BigDecimal diff = v - mean
+            sum += diff * diff
+        }
+        return sum / (values.length - 1)
+    }
+
+    static BigDecimal variance(BigDecimal[] values, boolean isBiasCorrected = true) {
+        return variance(values as List<BigDecimal>, isBiasCorrected)
     }
 
     static BigDecimal variance(List<?> values, boolean isBiasCorrected = true) {

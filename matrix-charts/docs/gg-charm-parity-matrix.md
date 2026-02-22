@@ -51,29 +51,29 @@ A feature row may be marked `[x]` only when:
 | Geom: GeomPointrange | P1 | `charm/render/geom/IntervalRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
 | Geom: GeomHex | P1 | `charm/render/geom/HexRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
 | Geom: GeomContour | P1 | `charm/render/geom/ContourRenderer`, `GeomEngine` dispatch | `P1GeomRendererTest.testP1GeomRendering` | [x] |
-| Geom: GeomBin2d | P2 | - | - | [ ] |
-| Geom: GeomBlank | P2 | - | - | [ ] |
-| Geom: GeomContourFilled | P2 | - | - | [ ] |
-| Geom: GeomCount | P2 | - | - | [ ] |
-| Geom: GeomCurve | P2 | - | - | [ ] |
-| Geom: GeomCustom | P2 | - | - | [ ] |
-| Geom: GeomDensity2d | P2 | - | - | [ ] |
-| Geom: GeomDensity2dFilled | P2 | - | - | [ ] |
-| Geom: GeomDotplot | P2 | - | - | [ ] |
-| Geom: GeomFunction | P2 | - | - | [ ] |
-| Geom: GeomLogticks | P2 | - | - | [ ] |
-| Geom: GeomMag | P2 | - | - | [ ] |
-| Geom: GeomMap | P2 | - | - | [ ] |
-| Geom: GeomParallel | P2 | - | - | [ ] |
-| Geom: GeomQq | P2 | - | - | [ ] |
-| Geom: GeomQqLine | P2 | - | - | [ ] |
-| Geom: GeomQuantile | P2 | - | - | [ ] |
-| Geom: GeomRaster | P2 | - | - | [ ] |
-| Geom: GeomRasterAnn | P2 | - | - | [ ] |
-| Geom: GeomSpoke | P2 | - | - | [ ] |
-| Geom: GeomSf | P2 | - | - | [ ] |
-| Geom: GeomSfLabel | P2 | - | - | [ ] |
-| Geom: GeomSfText | P2 | - | - | [ ] |
+| Geom: GeomBin2d | P2 | `charm/render/geom/GeomEngine` (BIN2D dispatch via `TileRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomBlank | P2 | `charm/render/geom/BlankRenderer`, `GeomEngine` dispatch | `P2GeomRendererTest.testBlankAndCustomGeomDoNotRenderElements` | [x] |
+| Geom: GeomContourFilled | P2 | `charm/render/geom/GeomEngine` (CONTOUR_FILLED dispatch via `ContourRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomCount | P2 | `charm/render/geom/GeomEngine` (COUNT dispatch via `PointRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomCurve | P2 | `charm/render/geom/CurveRenderer`, `GeomEngine` dispatch | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomCustom | P2 | `charm/render/geom/GeomEngine` (CUSTOM dispatch via `BlankRenderer`) | `P2GeomRendererTest.testBlankAndCustomGeomDoNotRenderElements` | [x] |
+| Geom: GeomDensity2d | P2 | `charm/render/geom/GeomEngine` (DENSITY_2D dispatch via `ContourRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomDensity2dFilled | P2 | `charm/render/geom/GeomEngine` (DENSITY_2D_FILLED dispatch via `ContourRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomDotplot | P2 | `charm/render/geom/GeomEngine` (DOTPLOT dispatch via `PointRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomFunction | P2 | `charm/render/geom/GeomEngine` (FUNCTION dispatch via `LineRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomLogticks | P2 | `charm/render/geom/GeomEngine` (LOGTICKS dispatch via `RugRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomMag | P2 | `charm/render/geom/GeomEngine` (MAG dispatch via `PointRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomMap | P2 | `charm/render/geom/GeomEngine` (MAP dispatch via `PolygonRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomParallel | P2 | `charm/render/geom/GeomEngine` (PARALLEL dispatch via `PathRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomQq | P2 | `charm/render/geom/GeomEngine` (QQ dispatch via `PointRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomQqLine | P2 | `charm/render/geom/GeomEngine` (QQ_LINE dispatch via `LineRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomQuantile | P2 | `charm/render/geom/GeomEngine` (QUANTILE dispatch via `LineRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomRaster | P2 | `charm/render/geom/GeomEngine` (RASTER dispatch via `TileRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomRasterAnn | P2 | `charm/render/geom/GeomEngine` (RASTER_ANN dispatch via `TileRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomSpoke | P2 | `charm/render/geom/SpokeRenderer`, `GeomEngine` dispatch | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomSf | P2 | `charm/render/geom/SfRenderer`, `GeomEngine` dispatch | `P2GeomRendererTest.testP2GeomRendering`, `gg.geom.GeomSfTest` | [x] |
+| Geom: GeomSfLabel | P2 | `charm/render/geom/GeomEngine` (SF_LABEL dispatch via `LabelRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
+| Geom: GeomSfText | P2 | `charm/render/geom/GeomEngine` (SF_TEXT dispatch via `TextRenderer`) | `P2GeomRendererTest.testP2GeomRendering` | [x] |
 | Stat: IDENTITY | P0 | `charm/render/stat/IdentityStat`, `StatEngine` dispatch | `IdentityStatTest`, `StatEngineTest` | [x] |
 | Stat: COUNT | P0 | `charm/render/stat/CountStat`, `StatEngine` dispatch | `CountStatTest`, `StatEngineTest` | [x] |
 | Stat: BIN | P0 | `charm/render/stat/BinStat`, `StatEngine` dispatch | `BinStatTest`, `StatEngineTest` | [x] |
@@ -91,15 +91,15 @@ A feature row may be marked `[x]` only when:
 | Stat: SUMMARY_BIN | P1 | `charm/render/stat/SummaryBinStat`, `StatEngine` dispatch | `P1StatTest.testSummaryBinStat` | [x] |
 | Stat: UNIQUE | P1 | `charm/render/stat/UniqueStat`, `StatEngine` dispatch | `P1StatTest.testUniqueStat` | [x] |
 | Stat: QUANTILE | P1 | `charm/render/stat/QuantileStat`, `StatEngine` dispatch | `P1StatTest.testQuantileStat` | [x] |
-| Stat: DENSITY_2D | P2 | - | - | [ ] |
-| Stat: BIN_HEX | P2 | - | - | [ ] |
-| Stat: SUMMARY_HEX | P2 | - | - | [ ] |
-| Stat: SUMMARY_2D | P2 | - | - | [ ] |
-| Stat: ELLIPSE | P2 | - | - | [ ] |
-| Stat: SF | P2 | - | - | [ ] |
-| Stat: SF_COORDINATES | P2 | - | - | [ ] |
-| Stat: SPOKE | P2 | - | - | [ ] |
-| Stat: ALIGN | P2 | - | - | [ ] |
+| Stat: DENSITY_2D | P2 | `charm/render/stat/Density2DStat`, `StatEngine` dispatch | `StatEngineTest.testDispatchDensity2D` | [x] |
+| Stat: BIN_HEX | P2 | `charm/render/stat/BinHexStat`, `StatEngine` dispatch | `StatEngineTest.testDispatchBinHex` | [x] |
+| Stat: SUMMARY_HEX | P2 | `charm/render/stat/SummaryHexStat`, `StatEngine` dispatch | `StatEngineTest.testDispatchSummaryHexAndSummary2D` | [x] |
+| Stat: SUMMARY_2D | P2 | `charm/render/stat/Summary2DStat`, `StatEngine` dispatch | `StatEngineTest.testDispatchSummaryHexAndSummary2D` | [x] |
+| Stat: ELLIPSE | P2 | `charm/render/stat/EllipseStat`, `StatEngine` dispatch | `StatEngineTest.testDispatchEllipse` | [x] |
+| Stat: SF | P2 | `charm/render/stat/SfStat`, `charm/sf/*`, `StatEngine` dispatch | `StatEngineTest.testDispatchSfAndSfCoordinates`, `gg.geom.GeomSfTest` | [x] |
+| Stat: SF_COORDINATES | P2 | `charm/render/stat/SfCoordinatesStat`, `StatEngine` dispatch | `StatEngineTest.testDispatchSfAndSfCoordinates` | [x] |
+| Stat: SPOKE | P2 | `charm/render/stat/SpokeStat`, `StatEngine` dispatch | `StatEngineTest.testDispatchSpoke` | [x] |
+| Stat: ALIGN | P2 | `charm/render/stat/AlignStat`, `StatEngine` dispatch | `StatEngineTest.testDispatchAlign` | [x] |
 | Position: IDENTITY | P0 | `charm/render/position/IdentityPosition`, `PositionEngine` dispatch | `IdentityPositionTest`, `PositionEngineTest` | [x] |
 | Position: DODGE | P0 | `charm/render/position/DodgePosition`, `PositionEngine` dispatch | `DodgePositionTest`, `PositionEngineTest` | [x] |
 | Position: STACK | P0 | `charm/render/position/StackPosition`, `PositionEngine` dispatch | `StackPositionTest`, `PositionEngineTest` | [x] |
@@ -113,9 +113,9 @@ A feature row may be marked `[x]` only when:
 | Coord: CoordPolar | P1 | `charm/render/coord/PolarCoord`, `CoordEngine` dispatch | `CoordEngineTest.testDispatchPolar` | [x] |
 | Coord: CoordRadial | P1 | `charm/render/coord/RadialCoord`, `CoordEngine` dispatch | `CoordEngineTest.testDispatchRadial` | [x] |
 | Coord: CoordTrans | P1 | `charm/render/coord/TransCoord`, `CoordEngine` dispatch | `CoordEngineTest.testDispatchTrans` | [x] |
-| Coord: CoordMap | P2 | - | - | [ ] |
-| Coord: CoordQuickmap | P2 | - | - | [ ] |
-| Coord: CoordSf | P2 | - | - | [ ] |
+| Coord: CoordMap | P2 | `charm/render/coord/MapCoord`, `CoordEngine` dispatch | `CoordEngineTest.testDispatchMap` | [x] |
+| Coord: CoordQuickmap | P2 | `charm/render/coord/QuickmapCoord`, `CoordEngine` dispatch | `CoordEngineTest.testDispatchQuickmap` | [x] |
+| Coord: CoordSf | P2 | `charm/render/coord/SfCoord`, `CoordEngine` dispatch | `CoordEngineTest.testDispatchSf` | [x] |
 | Scale: ScaleXContinuous / ScaleYContinuous | P0 | `charm/render/scale/ContinuousCharmScale`, `charm/Scale.continuous()`, `gg/scale/ScaleX/YContinuous.toCharmScale()` | `ContinuousCharmScaleTest`, `ScaleEngineTest` | [x] |
 | Scale: ScaleXDiscrete / ScaleYDiscrete | P0 | `charm/render/scale/DiscreteCharmScale`, `charm/Scale.discrete()`, `gg/scale/ScaleX/YDiscrete.toCharmScale()` | `DiscreteCharmScaleTest`, `ScaleEngineTest` | [x] |
 | Scale: ScaleXLog10 / ScaleYLog10 | P0 | `charm/render/scale/ContinuousCharmScale` + `Log10ScaleTransform`, `charm/Scale.transform('log10')`, `gg/scale/ScaleXLog10.toCharmScale()` | `ContinuousCharmScaleTest.testLog10*`, `ScaleEngineTest.testLog10ScaleTraining` | [x] |
