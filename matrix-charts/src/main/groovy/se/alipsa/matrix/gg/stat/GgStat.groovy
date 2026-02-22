@@ -951,9 +951,7 @@ class GgStat {
     numeric.sort()
 
     BigDecimal alpha = (1.0 - confInt) / 2.0
-    //BigDecimal lowerProb = Math.max(0.0d, Math.min(1.0d, alpha.doubleValue()))
     BigDecimal lowerProb = 0.0.max(1.0.min(alpha))
-    //BigDecimal upperProb = Math.max(0.0d, Math.min(1.0d, 1.0d - alpha))
     BigDecimal upperProb = 0.0.max(1.0.min(1.0 - alpha))
 
     Number median = quantileType7(numeric, 0.5)
@@ -1306,14 +1304,14 @@ class GgStat {
     BigDecimal r
 
     if (p < pLow) {
-      q =(-2.0 * p.log()).sqrt()
+      q = (-2.0 * p.log()).sqrt()
       return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
-          ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1.0d)
+          ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1.0)
     }
     if (p > pHigh) {
-      q = (-2.0 * (1.0d - p).log()).sqrt()
+      q = (-2.0 * (1.0 - p).log()).sqrt()
       return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) /
-          ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1.0d)
+          ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1.0)
     }
 
     q = p - 0.5
