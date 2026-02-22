@@ -115,7 +115,7 @@ class TDistributionTest {
     double[] sample1 = [10, 12, 11, 13, 9] as double[]
     double[] sample2 = [14, 15, 13, 16, 14] as double[]
     double pValue = TDistribution.twoSampleTTest(sample1, sample2)
-    assertEquals(0.005470215157182601, pValue, TOLERANCE, 'two-sample t-test (Welch) - dounle')
+    assertEquals(0.005470215157182601, pValue, TOLERANCE, 'two-sample t-test (Welch) - double')
     BigDecimal pValue2 = TDistribution.twoSampleTTest(sample1 as BigDecimal[], sample2 as BigDecimal[])
     assertEquals(0.005470215157182601G, pValue2, TOLERANCE as BigDecimal, 'two-sample t-test (Welch) - BigDecimal')
   }

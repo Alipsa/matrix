@@ -132,7 +132,7 @@ class SmoothStat {
           seFit = (sigma2 * (1.0 / xValues.size() + (dx * dx) / sxx)).sqrt()
         } else {
           BigDecimal leverage = RegressionUtils.polynomialLeverage(xtxInv, x, polyDegree)
-          seFit = (sigma2 * 0.0.max(leverage)).sqrt()
+          seFit = (sigma2 * leverage.max(0.0)).sqrt()
         }
         BigDecimal margin = (tCrit * seFit) as BigDecimal
         datum.meta.ymin = yFit - margin
@@ -173,23 +173,23 @@ class SmoothStat {
     1
   }
 
-  private static BigDecimal tCritical(int df, double level) {
+  private static BigDecimal tCritical(int df, BigDecimal level) {
     if (df <= 0) return 0.0
     BigDecimal target = 0.5 + level / 2.0
     TDistribution dist = new TDistribution(df as BigDecimal)
     BigDecimal low = 0.0
     BigDecimal high = 1.0
     while (dist.cdf(high) < target && high < 1.0e6) {
-      high *= 2.0d
+      high *= 2.0
     }
     for (int i = 0; i < 80; i++) {
-      double mid = (low + high) / 2.0d
+      BigDecimal mid = (low + high) / 2.0
       if (dist.cdf(mid) < target) {
         low = mid
       } else {
         high = mid
       }
     }
-    (low + high) / 2.0d
+    (low + high) / 2.0
   }
 }

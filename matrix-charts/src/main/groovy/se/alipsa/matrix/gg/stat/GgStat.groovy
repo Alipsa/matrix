@@ -636,7 +636,7 @@ class GgStat {
             x as BigDecimal,
             polyDegree
           )
-          seFit = (sigma2 * 0.0.max(leverage)).sqrt()
+          seFit = (sigma2 * leverage.max(0.0)).sqrt()
         }
         BigDecimal margin = tCrit * seFit
         BigDecimal yMin = yFit - margin
