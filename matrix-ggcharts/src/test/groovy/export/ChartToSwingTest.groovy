@@ -9,6 +9,7 @@ import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
+import se.alipsa.matrix.gg.export.GgExport
 
 import se.alipsa.matrix.charm.Charts
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -64,13 +65,13 @@ class ChartToSwingTest {
     GgChart chart = ggplot(mpg, aes(x: 'cty', y: 'hwy')) +
         geom_point() +
         labs(title: 'City vs Highway MPG', x: 'City MPG', y: 'Highway MPG')
-    
-    // Export to SvgPanel
-    SvgPanel panel = ChartToSwing.export(chart)
-    
+
+    // Export to SvgPanel via GgExport
+    SvgPanel panel = GgExport.toSwing(chart)
+
     // Verify panel is not null
     assertNotNull(panel, "SvgPanel should not be null")
-    
+
     // Verify panel has preferred size set
     assertNotNull(panel.getPreferredSize(), "Panel should have preferred size")
     assertTrue(panel.getPreferredSize().width > 0, "Panel width should be greater than 0")
@@ -97,11 +98,10 @@ class ChartToSwingTest {
 
   @Test
   void testExportWithNullGgChart() {
-    GgChart chart = null
     Exception exception = assertThrows(IllegalArgumentException.class, {
-      ChartToSwing.export(chart)
+      GgExport.toSwing(null)
     })
-    assertEquals("svgChart must not be null", exception.getMessage())
+    assertEquals("chart must not be null", exception.getMessage())
   }
 
   @Test

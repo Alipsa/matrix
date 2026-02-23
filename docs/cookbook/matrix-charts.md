@@ -110,5 +110,11 @@ All builders share these methods inherited from `Chart.ChartBuilder`:
 - `legend(Legend)` — legend configuration
 - `style(Style)` — style configuration
 
+## GGPlot-style Charting
+
+For ggplot2-style charting (e.g. `ggplot()`, `geom_point()`, `geom_smooth()`, etc.),
+see the separate [matrix-ggcharts](../../matrix-ggcharts/README.md) module and its
+[ggPlot documentation](../../matrix-ggcharts/docs/ggPlot.md).
+
 ---
 [Back to index](cookbook.md)

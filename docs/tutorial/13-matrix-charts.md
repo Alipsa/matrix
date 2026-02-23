@@ -414,6 +414,16 @@ println "Charts have been exported successfully."
 
 5. **Size Appropriately**: Export charts at appropriate dimensions for their intended use.
 
+## GGPlot-style Charting (matrix-ggcharts)
+
+For ggplot2-style charting, see the separate [matrix-ggcharts](../../matrix-ggcharts/README.md) module.
+It provides a compatibility layer mimicking R's ggplot2 API and delegates to the Charm rendering
+engine in matrix-charts. Add it as a dependency:
+
+```groovy
+implementation 'se.alipsa.matrix:matrix-ggcharts'
+```
+
 ## Conclusion
 
 The matrix-charts module provides a powerful and flexible way to create various types of charts from Matrix data. It offers a simple API for generating visualizations that can be exported to different formats, making it easy to include data visualizations in your Groovy applications.

@@ -8,6 +8,7 @@ import se.alipsa.matrix.chartexport.ChartToJfx
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
+import se.alipsa.matrix.gg.export.GgExport
 
 import se.alipsa.matrix.charm.Charts
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -23,7 +24,7 @@ class ChartToJfxTest {
     String svgContent = """<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
       <rect width="200" height="100" style="fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,0)" />
     </svg>"""
-    
+
     SVGImage svgImage = ChartToJfx.export(svgContent)
     assertNotNull(svgImage, "SVGImage should not be null")
     assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
@@ -36,9 +37,9 @@ class ChartToJfxTest {
     .width(200)
     .height(100)
     .style( 'fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,0)')
-    
+
     SVGImage svgImage = ChartToJfx.export(svg)
-    
+
     assertNotNull(svgImage, "SVGImage should not be null")
     assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
   }
@@ -50,9 +51,9 @@ class ChartToJfxTest {
         geom_point() +
         geom_smooth(method: 'lm') +
         labs(title: 'City vs Highway MPG', x: 'City MPG', y: 'Highway MPG')
-    
-    SVGImage svgImage = ChartToJfx.export(chart)
-    
+
+    SVGImage svgImage = GgExport.toJfx(chart)
+
     assertNotNull(svgImage, "SVGImage should not be null")
     assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
   }
@@ -77,7 +78,7 @@ class ChartToJfxTest {
   @Test
   void testExportWithNullGgChart() {
     Exception exception = assertThrows(IllegalArgumentException.class, {
-      ChartToJfx.export((GgChart) null)
+      GgExport.toJfx(null)
     })
     assertEquals("chart must not be null", exception.getMessage())
   }

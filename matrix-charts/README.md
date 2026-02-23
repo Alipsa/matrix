@@ -3,18 +3,19 @@
 # Charts
 Groovy library for creating graphs based on Matrix or [][] data
 
-Matrix-charts is a "native" chart library that creates charts as SVGs. 
-An SVG chart can be exported to Swing, JavaFX, Image, PNG, or JPG using 
-the exporters in the se.alipsa.matrix.chartexport package. 
+Matrix-charts is a "native" chart library that creates charts as SVGs.
+An SVG chart can be exported to Swing, JavaFX, Image, PNG, or JPG using
+the exporters in the se.alipsa.matrix.chartexport package.
 
-There are 3 APIs in matrix-charts, all sharing the same Charm rendering engine:
+There are 2 APIs in matrix-charts, sharing the same Charm rendering engine:
 1. **[Charm](docs/charm.md)** The core chart library based on the principles of Grammar of Graphics.
    Idiomatic Groovy closure DSL with typed specifications and immutable compiled charts.
 2. **[Charts](docs/charts.md)** The `se.alipsa.matrix.charts` package contains charts in a "familiar style"
     (begin with the chart type, e.g. `AreaChart`, then add data and styling).
     Backed by Charm internally.
-3. **[gg](docs/ggPlot.md)** A compatibility layer mimicking the ggplot2 API in R, making migrations
-    from R applications easy. Delegates to Charm under the hood.
+
+> For ggplot2-style API, see **[matrix-ggcharts](../matrix-ggcharts/README.md)** — a compatibility
+> layer mimicking the ggplot2 API in R. It depends on matrix-charts and delegates to Charm under the hood.
 
 > Note: the [matrix-xchart](../matrix-xchart/readme.md) module exists as an alternative charting module
 > making it easy to use the xcharts library with the rest of the matrix ecosystem.
@@ -111,49 +112,5 @@ Plot.svg(barChart, new File("barChart.svg"))
 
 See **[charts.md](docs/charts.md)** for comprehensive documentation.
 
-# GGPlotting
-
-The library also supports ggplot2-style charting via the GgPlot class. The API closely follows R's ggplot2 library, making it easy to port R code to Groovy with minimal changes.
-
-**Quick Example:**
-```groovy
-@Grab('se.alipsa.matrix:matrix-core:3.7.0')
-@Grab('se.alipsa.matrix:matrix-charts:0.5.0')
-@Grab('se.alipsa.matrix:matrix-datasets:2.1.2')
-@Grab('se.alipsa.matrix:matrix-stats:2.2.1')
-
-import static se.alipsa.matrix.gg.GgPlot.*
-import se.alipsa.matrix.datasets.Dataset
-
-def chart = ggplot(Dataset.mpg(), aes('cty', 'hwy')) +
-    geom_point() +
-    geom_smooth(method: 'lm') +
-    labs(title: 'City vs Highway MPG')
-
-write(chart.render(), new File('my_plot.svg'))
-```
-
-**Key Features:**
-- 54+ geoms (geometric objects) including point, line, bar, histogram, boxplot, heatmap, and more
-- Complete scale system (color, size, shape, transformations)
-- Faceting for multi-panel plots
-- Full theming support
-- Statistical transformations
-- Annotations and labels
-- Multiple output formats (SVG, PNG, JavaFX)
-
-**Getting Started:**
-
-See **[ggPlot.md](docs/ggPlot.md)** for comprehensive documentation including:
-- Complete API reference
-- Core concepts (aesthetics, geoms, scales, coordinates, facets, themes)
-- Detailed examples
-- Differences from R's ggplot2
-- Tips and best practices
-
-**Examples:**
-
-Additional examples can be found in `matrix-charts/examples/gg/`
-
 # Release version compatibility matrix
-See the [Matrix BOM](https://mvnrepository.com/artifact/se.alipsa.matrix/matrix-bom) for the recommended matrix library versions. 
+See the [Matrix BOM](https://mvnrepository.com/artifact/se.alipsa.matrix/matrix-bom) for the recommended matrix library versions.
