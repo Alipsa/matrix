@@ -204,19 +204,19 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
    * Format a number, removing unnecessary decimal places.
    */
   private static String formatNumber(Number n) {
-    double d = n as double
-    if (d >= Long.MIN_VALUE && d <= Long.MAX_VALUE && d == (d as BigDecimal).floor()) {
-      return String.valueOf((long) d)
+    BigDecimal bd = n as BigDecimal
+    if (bd == bd.floor() && bd >= Long.MIN_VALUE && bd <= Long.MAX_VALUE) {
+      return String.valueOf(bd as long)
     }
     // Round to avoid floating point artifacts
-    String s = String.format(Locale.US, "%.2f", d)
+    String s = String.format(Locale.US, "%.2f", bd)
     if (s.contains('.')) {
       // Remove trailing zeros after the decimal point
       s = s.replaceAll(/0+$/, '')
       // If all decimals were zeros, remove the trailing decimal point
       s = s.replaceAll(/\.$/, '')
     }
-    return s
+    s
   }
 
   /**
