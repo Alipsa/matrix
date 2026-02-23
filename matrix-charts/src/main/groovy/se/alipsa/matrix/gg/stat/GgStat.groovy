@@ -714,7 +714,7 @@ class GgStat {
     List<Number> yValues = []
     List<?> rawX = data[xCol] as List<?>
     List<?> rawY = data[yCol] as List<?>
-    int maxIdx = (rawX?.size() ?: 0).min(rawY?.size() ?: 0)
+    int maxIdx = ((rawX?.size() ?: 0).min(rawY?.size() ?: 0)) as int
     for (int i = 0; i < maxIdx; i++) {
       def xVal = rawX[i]
       def yVal = rawY[i]
