@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Function stat evaluates y = f(x) over a range.
@@ -18,7 +18,7 @@ class FunctionStat {
       return []
     }
 
-    int n = NumberCoercionUtil.coerceToBigDecimal(params.n)?.intValue() ?: 101
+    int n = ValueConverter.asBigDecimal(params.n)?.intValue() ?: 101
     if (n < 1) {
       n = 101
     }
@@ -27,8 +27,8 @@ class FunctionStat {
     BigDecimal xmax
     List xlim = params.xlim instanceof List ? params.xlim as List : null
     if (xlim != null && xlim.size() >= 2) {
-      xmin = NumberCoercionUtil.coerceToBigDecimal(xlim[0]) ?: 0
-      xmax = NumberCoercionUtil.coerceToBigDecimal(xlim[1]) ?: 1
+      xmin = ValueConverter.asBigDecimal(xlim[0]) ?: 0
+      xmax = ValueConverter.asBigDecimal(xlim[1]) ?: 1
     } else {
       List<BigDecimal> xs = StatUtils.sortedNumericValues(data ?: []) { LayerData d -> d.x }
       xmin = xs.isEmpty() ? 0 : xs.min()
@@ -39,7 +39,7 @@ class FunctionStat {
     }
 
     if (n == 1) {
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(fun.call(xmin))
+      BigDecimal y = ValueConverter.asBigDecimal(fun.call(xmin))
       return y == null ? [] : [new LayerData(x: xmin, y: y, rowIndex: -1)]
     }
 
@@ -47,7 +47,7 @@ class FunctionStat {
     List<LayerData> result = []
     for (int i = 0; i < n; i++) {
       BigDecimal x = xmin + i * step
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(fun.call(x))
+      BigDecimal y = ValueConverter.asBigDecimal(fun.call(x))
       if (y != null) {
         result << new LayerData(x: x, y: y, rowIndex: -1)
       }

@@ -35,7 +35,7 @@ import se.alipsa.matrix.charm.Theme
 import se.alipsa.matrix.charm.CustomAnnotationSpec
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.gg.GgChart
@@ -613,7 +613,7 @@ class GgCharmCompiler {
     if (value instanceof Number) {
       return value as Number
     }
-    NumberCoercionUtil.coerceToBigDecimal(value)
+    ValueConverter.asBigDecimal(value)
   }
 
   private static Map<String, Object> filterParams(Map source, Set<String> excluded) {

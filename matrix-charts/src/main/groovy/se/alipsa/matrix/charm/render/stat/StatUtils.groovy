@@ -2,7 +2,7 @@ package se.alipsa.matrix.charm.render.stat
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Shared helpers for Charm stat computations.
@@ -43,7 +43,7 @@ class StatUtils {
 
   static List<BigDecimal> sortedNumericValues(List<LayerData> data, Closure<Object> selector) {
     List<BigDecimal> values = data.collect { LayerData datum ->
-      NumberCoercionUtil.coerceToBigDecimal(selector.call(datum))
+      ValueConverter.asBigDecimal(selector.call(datum))
     }.findAll { it != null } as List<BigDecimal>
     values.sort()
     values

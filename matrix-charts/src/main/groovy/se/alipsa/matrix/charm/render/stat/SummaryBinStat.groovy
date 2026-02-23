@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.Stat
 import java.util.Locale
 
@@ -20,21 +20,21 @@ class SummaryBinStat {
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
     String fun = (params.fun ?: 'mean').toString().toLowerCase(Locale.ROOT)
-    int bins = NumberCoercionUtil.coerceToBigDecimal(params.bins)?.intValue() ?: 30
+    int bins = ValueConverter.asBigDecimal(params.bins)?.intValue() ?: 30
     if (bins < 1) {
       bins = 30
     }
-    BigDecimal binWidth = NumberCoercionUtil.coerceToBigDecimal(params.binwidth)
+    BigDecimal binWidth = ValueConverter.asBigDecimal(params.binwidth)
 
     List<LayerData> points = data.findAll { LayerData datum ->
-      NumberCoercionUtil.coerceToBigDecimal(datum.x) != null &&
-          NumberCoercionUtil.coerceToBigDecimal(datum.y) != null
+      ValueConverter.asBigDecimal(datum.x) != null &&
+          ValueConverter.asBigDecimal(datum.y) != null
     }
     if (points.isEmpty()) {
       return []
     }
 
-    List<BigDecimal> xs = points.collect { NumberCoercionUtil.coerceToBigDecimal(it.x) }
+    List<BigDecimal> xs = points.collect { ValueConverter.asBigDecimal(it.x) }
     BigDecimal xMin = xs.min()
     BigDecimal xMax = xs.max()
     BigDecimal range = xMax - xMin
@@ -50,8 +50,8 @@ class SummaryBinStat {
 
     Map<Integer, List<BigDecimal>> yByBin = [:]
     points.each { LayerData datum ->
-      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(datum.x)
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(datum.y)
+      BigDecimal x = ValueConverter.asBigDecimal(datum.x)
+      BigDecimal y = ValueConverter.asBigDecimal(datum.y)
       int idx = ((x - xMin) / binWidth).intValue()
       if (idx < 0) {
         idx = 0

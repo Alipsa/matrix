@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.ReverseScaleTransform
 import se.alipsa.matrix.charm.ScaleTransform
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 import java.math.RoundingMode
 
@@ -40,7 +40,7 @@ class ContinuousCharmScale extends CharmScale {
   BigDecimal transform(Object value) {
     if (value == null) return null
 
-    BigDecimal numeric = NumberCoercionUtil.coerceToBigDecimal(value)
+    BigDecimal numeric = ValueConverter.asBigDecimal(value)
     if (numeric == null) return null
 
     if (transformStrategy != null) {

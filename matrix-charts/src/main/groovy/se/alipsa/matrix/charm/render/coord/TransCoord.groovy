@@ -6,7 +6,7 @@ import se.alipsa.matrix.charm.ScaleTransform
 import se.alipsa.matrix.charm.ScaleTransforms
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Coordinate transform applying named transforms to x/y.
@@ -29,13 +29,13 @@ class TransCoord {
     data.each { LayerData datum ->
       LayerData updated = LayerDataUtil.copyDatum(datum)
       if (xTrans != null) {
-        BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(updated.x)
+        BigDecimal x = ValueConverter.asBigDecimal(updated.x)
         if (x != null) {
           updated.x = xTrans.apply(x)
         }
       }
       if (yTrans != null) {
-        BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(updated.y)
+        BigDecimal y = ValueConverter.asBigDecimal(updated.y)
         if (y != null) {
           updated.y = yTrans.apply(y)
         }

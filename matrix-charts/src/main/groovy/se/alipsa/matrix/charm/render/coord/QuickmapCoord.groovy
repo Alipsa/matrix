@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Quickmap coord with approximate latitude-based aspect correction.
@@ -19,7 +19,7 @@ class QuickmapCoord {
 
     List<LayerData> clampedInput = CartesianCoord.compute(coordSpec, data)
     List<BigDecimal> latitudes = clampedInput.collect { LayerData datum ->
-      NumberCoercionUtil.coerceToBigDecimal(datum.y)
+      ValueConverter.asBigDecimal(datum.y)
     }.findAll { it != null } as List<BigDecimal>
     if (latitudes.isEmpty()) {
       return FixedCoord.compute(withoutLimits(coordSpec), clampedInput)
@@ -33,7 +33,7 @@ class QuickmapCoord {
     List<LayerData> adjusted = []
     clampedInput.each { LayerData datum ->
       LayerData updated = LayerDataUtil.copyDatum(datum)
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(updated.y)
+      BigDecimal y = ValueConverter.asBigDecimal(updated.y)
       if (y != null) {
         updated.y = y * ratio
       }

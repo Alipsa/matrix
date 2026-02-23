@@ -2,7 +2,7 @@ package se.alipsa.matrix.charm.render.scale
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.Scale
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.charts.util.ColorUtil
 import java.util.Locale
 
@@ -321,8 +321,8 @@ class ColorCharmScale extends CharmScale {
     this.palette = (spec.params['palette'] as String) ?: 'YlOrRd'
     this.direction = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : 1
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
-    int breaks = NumberCoercionUtil.coerceToBigDecimal(spec.params['nBreaks'])?.intValue() ?:
-        NumberCoercionUtil.coerceToBigDecimal(spec.params['n.breaks'])?.intValue() ?: 6
+    int breaks = ValueConverter.asBigDecimal(spec.params['nBreaks'])?.intValue() ?:
+        ValueConverter.asBigDecimal(spec.params['n.breaks'])?.intValue() ?: 6
     if (breaks < 2) {
       breaks = 6
     }
@@ -356,8 +356,8 @@ class ColorCharmScale extends CharmScale {
   private void trainHue(List<Object> dataValues, Scale spec) {
     collectLevels(dataValues)
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
-    BigDecimal start = NumberCoercionUtil.coerceToBigDecimal(spec.params['hStart'] ?: spec.params['h.start']) ?: 15.0
-    BigDecimal end = NumberCoercionUtil.coerceToBigDecimal(spec.params['hEnd'] ?: spec.params['h.end']) ?: 375.0
+    BigDecimal start = ValueConverter.asBigDecimal(spec.params['hStart'] ?: spec.params['h.start']) ?: 15.0
+    BigDecimal end = ValueConverter.asBigDecimal(spec.params['hEnd'] ?: spec.params['h.end']) ?: 375.0
     int dir = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : 1
     List<String> colors = generateHuePalette(levels.size(), start, end)
     if (dir < 0) {
@@ -372,8 +372,8 @@ class ColorCharmScale extends CharmScale {
   private void trainSteps(List<Object> dataValues, Scale spec) {
     String stepLow = (spec.params['low'] as String) ?: '#132B43'
     String stepHigh = (spec.params['high'] as String) ?: '#56B1F7'
-    int breaks = NumberCoercionUtil.coerceToBigDecimal(spec.params['nBreaks'])?.intValue() ?:
-        NumberCoercionUtil.coerceToBigDecimal(spec.params['n.breaks'])?.intValue() ?: 6
+    int breaks = ValueConverter.asBigDecimal(spec.params['nBreaks'])?.intValue() ?:
+        ValueConverter.asBigDecimal(spec.params['n.breaks'])?.intValue() ?: 6
     if (breaks < 2) {
       breaks = 6
     }
@@ -391,8 +391,8 @@ class ColorCharmScale extends CharmScale {
     String stepLow = (spec.params['low'] as String) ?: '#832424'
     String stepMid = (spec.params['mid'] as String) ?: '#FFFFFF'
     String stepHigh = (spec.params['high'] as String) ?: '#3B4CC0'
-    int breaks = NumberCoercionUtil.coerceToBigDecimal(spec.params['nBreaks'])?.intValue() ?:
-        NumberCoercionUtil.coerceToBigDecimal(spec.params['n.breaks'])?.intValue() ?: 7
+    int breaks = ValueConverter.asBigDecimal(spec.params['nBreaks'])?.intValue() ?:
+        ValueConverter.asBigDecimal(spec.params['n.breaks'])?.intValue() ?: 7
     if (breaks < 3) {
       breaks = 7
     }
@@ -421,7 +421,7 @@ class ColorCharmScale extends CharmScale {
 
   private void trainContinuousDomain(List<Object> dataValues) {
     List<BigDecimal> numeric = dataValues
-        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
+        .collect { ValueConverter.asBigDecimal(it) }
         .findAll { it != null } as List<BigDecimal>
     if (numeric.isEmpty()) {
       domainMin = 0.0

@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Trained axis scale model used by Charm renderer.
@@ -93,7 +93,7 @@ class ScaleModel {
     }
 
     List<BigDecimal> numeric = values.collect { Object value ->
-      NumberCoercionUtil.coerceToBigDecimal(value)
+      ValueConverter.asBigDecimal(value)
     }.findAll { BigDecimal value -> value != null } as List<BigDecimal>
     if (scaleSpec.transformStrategy != null) {
       numeric = numeric.collect { BigDecimal value ->
@@ -148,7 +148,7 @@ class ScaleModel {
       BigDecimal step = (rangeEnd - rangeStart) / levels.size()
       return rangeStart + step * idx + step / 2
     }
-    BigDecimal numeric = NumberCoercionUtil.coerceToBigDecimal(value)
+    BigDecimal numeric = ValueConverter.asBigDecimal(value)
     if (numeric == null) {
       return null
     }
@@ -214,7 +214,7 @@ class ScaleModel {
       return false
     }
     return !values.every { Object value ->
-      value == null || NumberCoercionUtil.coerceToBigDecimal(value) != null
+      value == null || ValueConverter.asBigDecimal(value) != null
     }
   }
 

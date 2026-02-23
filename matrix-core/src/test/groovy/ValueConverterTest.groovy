@@ -183,4 +183,54 @@ class ValueConverterTest {
     assertNull(ValueConverter.asNumber(null))
   }
 
+  @Test
+  void testAsBigDecimalNaNAndInfinity() {
+    // Cast to Object to ensure dispatch through asBigDecimal(Object) which handles NaN/Infinity
+    assertNull(ValueConverter.asBigDecimal((Object) Double.NaN))
+    assertNull(ValueConverter.asBigDecimal((Object) Double.POSITIVE_INFINITY))
+    assertNull(ValueConverter.asBigDecimal((Object) Double.NEGATIVE_INFINITY))
+    assertNull(ValueConverter.asBigDecimal((Object) Float.NaN))
+    assertNull(ValueConverter.asBigDecimal((Object) Float.POSITIVE_INFINITY))
+    assertNull(ValueConverter.asBigDecimal((Object) Float.NEGATIVE_INFINITY))
+  }
+
+  @Test
+  void testAsBigDecimalSpecialStrings() {
+    assertNull(ValueConverter.asBigDecimal('NA'))
+    assertNull(ValueConverter.asBigDecimal('NaN'))
+    assertNull(ValueConverter.asBigDecimal('null'))
+    assertNull(ValueConverter.asBigDecimal(''))
+    assertNull(ValueConverter.asBigDecimal('   '))
+    assertNull(ValueConverter.asBigDecimal((String) null))
+  }
+
+  @Test
+  void testAsBigDecimalUnparseableStrings() {
+    assertNull(ValueConverter.asBigDecimal('abc'))
+    assertNull(ValueConverter.asBigDecimal('hello world'))
+    assertNull(ValueConverter.asBigDecimal('not-a-number'))
+  }
+
+  @Test
+  void testAsBigDecimalTemporalTypes() {
+    def date = LocalDate.of(2024, 1, 15)
+    assertEquals(date.toEpochDay() as BigDecimal, ValueConverter.asBigDecimal((Object) date))
+
+    def dateTime = LocalDateTime.of(2024, 1, 15, 10, 30, 0)
+    def expectedMillis = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() as BigDecimal
+    assertEquals(expectedMillis, ValueConverter.asBigDecimal((Object) dateTime))
+
+    def zonedDt = ZonedDateTime.of(2024, 1, 15, 10, 30, 0, 0, ZoneId.of('UTC'))
+    assertEquals(zonedDt.toInstant().toEpochMilli() as BigDecimal, ValueConverter.asBigDecimal((Object) zonedDt))
+
+    def offsetDt = OffsetDateTime.of(2024, 1, 15, 10, 30, 0, 0, ZoneOffset.UTC)
+    assertEquals(offsetDt.toInstant().toEpochMilli() as BigDecimal, ValueConverter.asBigDecimal((Object) offsetDt))
+
+    def instant = Instant.ofEpochMilli(1705312200000L)
+    assertEquals(1705312200000 as BigDecimal, ValueConverter.asBigDecimal((Object) instant))
+
+    def time = LocalTime.of(10, 30, 45)
+    assertEquals(time.toSecondOfDay() as BigDecimal, ValueConverter.asBigDecimal((Object) time))
+  }
+
 }

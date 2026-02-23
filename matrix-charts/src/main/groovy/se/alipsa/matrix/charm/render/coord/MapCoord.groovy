@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.util.Logger
 import java.util.Locale
 import static se.alipsa.matrix.ext.NumberExtension.PI
@@ -34,8 +34,8 @@ class MapCoord {
     List<LayerData> transformed = []
     clampedInput.each { LayerData datum ->
       LayerData updated = LayerDataUtil.copyDatum(datum)
-      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(updated.x)
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(updated.y)
+      BigDecimal x = ValueConverter.asBigDecimal(updated.x)
+      BigDecimal y = ValueConverter.asBigDecimal(updated.y)
       if (x != null && y != null) {
         switch (projection) {
           case 'mercator' -> {

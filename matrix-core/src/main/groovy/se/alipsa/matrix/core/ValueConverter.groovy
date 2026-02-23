@@ -90,13 +90,27 @@ class ValueConverter {
     if (format == null) {
       def n = asDecimalNumber(num)
       if (n.isBlank()) return null
-      return new BigDecimal(num)
+      try {
+        new BigDecimal(n)
+      } catch (NumberFormatException ignored) {
+        null
+      }
+    } else {
+      format.parse(fixNegationFormat(format, num)) as BigDecimal
     }
-    return format.parse(fixNegationFormat(format, num)) as BigDecimal
   }
 
   static BigDecimal asBigDecimal(Number num) {
-    return num as BigDecimal
+    if (num == null) return null
+    if (num instanceof Double || num instanceof Float) {
+      double v = num as double
+      if (Double.isNaN(v) || Double.isInfinite(v)) return null
+    }
+    try {
+      num as BigDecimal
+    } catch (NumberFormatException ignored) {
+      null
+    }
   }
 
   static BigDecimal asBigDecimal(Object num, NumberFormat format = null) {
@@ -119,7 +133,27 @@ class ValueConverter {
         return asBigDecimal(num as String, format)
       }
     }
-    return asBigDecimal(String.valueOf(num), format)
+    if (num instanceof LocalDate) {
+      (num as LocalDate).toEpochDay() as BigDecimal
+    } else if (num instanceof LocalDateTime) {
+      (num as LocalDateTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() as BigDecimal
+    } else if (num instanceof ZonedDateTime) {
+      (num as ZonedDateTime).toInstant().toEpochMilli() as BigDecimal
+    } else if (num instanceof OffsetDateTime) {
+      (num as OffsetDateTime).toInstant().toEpochMilli() as BigDecimal
+    } else if (num instanceof Instant) {
+      (num as Instant).toEpochMilli() as BigDecimal
+    } else if (num instanceof LocalTime) {
+      (num as LocalTime).toSecondOfDay() as BigDecimal
+    } else if (num instanceof java.util.Date) {
+      (num as java.util.Date).getTime() as BigDecimal
+    } else {
+      try {
+        asBigDecimal(String.valueOf(num), format)
+      } catch (Exception ignored) {
+        null
+      }
+    }
   }
 
   static Boolean asBoolean(Object obj) {

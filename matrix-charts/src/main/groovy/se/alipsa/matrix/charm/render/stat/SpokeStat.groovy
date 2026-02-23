@@ -5,7 +5,7 @@ import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
 import se.alipsa.matrix.charm.render.SpokeSupport
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Computes xend/yend from x/y plus angle/radius for spoke geoms.
@@ -26,17 +26,17 @@ class SpokeStat {
 
     List<LayerData> result = []
     data.each { LayerData datum ->
-      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(datum.x)
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(datum.y)
+      BigDecimal x = ValueConverter.asBigDecimal(datum.x)
+      BigDecimal y = ValueConverter.asBigDecimal(datum.y)
       if (x == null || y == null) {
         return
       }
 
-      BigDecimal angle = angleCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(SfStatSupport.rowValue(datum, angleCol))
+      BigDecimal angle = angleCol == null ? null : ValueConverter.asBigDecimal(SfStatSupport.rowValue(datum, angleCol))
       if (angle == null) {
         angle = angleDefault
       }
-      BigDecimal radius = radiusCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(SfStatSupport.rowValue(datum, radiusCol))
+      BigDecimal radius = radiusCol == null ? null : ValueConverter.asBigDecimal(SfStatSupport.rowValue(datum, radiusCol))
       if (radius == null) {
         radius = radiusDefault
       }

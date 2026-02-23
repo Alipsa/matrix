@@ -6,7 +6,7 @@ import se.alipsa.groovy.svg.SvgElement
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders point geometry.
@@ -18,7 +18,7 @@ class PointRenderer {
    * Render points for one layer.
    */
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
-    BigDecimal defaultRadius = NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: context.config.pointRadius
+    BigDecimal defaultRadius = ValueConverter.asBigDecimal(layer.params.size) ?: context.config.pointRadius
     String defaultShape = layer.params.shape?.toString() ?: 'circle'
     int elementIndex = 0
 
@@ -30,7 +30,7 @@ class PointRenderer {
       }
       BigDecimal radius = context.sizeScale != null && datum.size != null
           ? context.sizeScale.transform(datum.size)
-          : NumberCoercionUtil.coerceToBigDecimal(datum.size)
+          : ValueConverter.asBigDecimal(datum.size)
       if (radius == null) {
         radius = defaultRadius
       }

@@ -6,7 +6,7 @@ import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders violin geometry from y-density stat output.
@@ -24,7 +24,7 @@ class ViolinRenderer {
 
     int elementIndex = 0
     BigDecimal maxDensity = layerData.collect { LayerData d ->
-      NumberCoercionUtil.coerceToBigDecimal(d.meta.density)
+      ValueConverter.asBigDecimal(d.meta.density)
     }.findAll { it != null }.max() ?: 0
     if (maxDensity <= 0) {
       return
@@ -36,7 +36,7 @@ class ViolinRenderer {
       BigDecimal step = scale.levels.isEmpty() ? 20 : (scale.rangeEnd - scale.rangeStart) / scale.levels.size()
       baseHalfWidth = step * 0.45
     } else {
-      baseHalfWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.width) ?: 20
+      baseHalfWidth = ValueConverter.asBigDecimal(layer.params.width) ?: 20
     }
 
     Map<Object, List<LayerData>> groups = new LinkedHashMap<>()
@@ -53,8 +53,8 @@ class ViolinRenderer {
     groups.each { Object centerKey, List<LayerData> groupData ->
       List<LayerData> sorted = new ArrayList<>(groupData)
       sorted.sort { LayerData a, LayerData b ->
-        BigDecimal y1 = NumberCoercionUtil.coerceToBigDecimal(a.y)
-        BigDecimal y2 = NumberCoercionUtil.coerceToBigDecimal(b.y)
+        BigDecimal y1 = ValueConverter.asBigDecimal(a.y)
+        BigDecimal y2 = ValueConverter.asBigDecimal(b.y)
         if (y1 != null && y2 != null) {
           return y1 <=> y2
         }
@@ -70,7 +70,7 @@ class ViolinRenderer {
       List<BigDecimal[]> left = []
       sorted.each { LayerData datum ->
         BigDecimal yPx = context.yScale.transform(datum.y)
-        BigDecimal density = NumberCoercionUtil.coerceToBigDecimal(datum.meta.density)
+        BigDecimal density = ValueConverter.asBigDecimal(datum.meta.density)
         if (yPx == null || density == null) {
           return
         }

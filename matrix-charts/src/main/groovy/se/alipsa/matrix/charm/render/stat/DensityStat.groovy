@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.geom.GeomUtils
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.stats.kde.KernelDensity
 
 /**
@@ -70,7 +70,7 @@ class DensityStat {
   static List<Number> extractNumericX(List<LayerData> data) {
     List<Number> values = []
     data.each { LayerData d ->
-      BigDecimal v = NumberCoercionUtil.coerceToBigDecimal(d.x)
+      BigDecimal v = ValueConverter.asBigDecimal(d.x)
       if (v != null) {
         values << v
       }

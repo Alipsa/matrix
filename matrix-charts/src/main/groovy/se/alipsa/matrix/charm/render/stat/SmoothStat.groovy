@@ -4,7 +4,7 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.stats.distribution.TDistribution
 import se.alipsa.matrix.stats.regression.LinearRegression
@@ -42,8 +42,8 @@ class SmoothStat {
   @CompileDynamic
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     List<LayerData> numeric = data.findAll { LayerData d ->
-      NumberCoercionUtil.coerceToBigDecimal(d.x) != null &&
-          NumberCoercionUtil.coerceToBigDecimal(d.y) != null
+      ValueConverter.asBigDecimal(d.x) != null &&
+          ValueConverter.asBigDecimal(d.y) != null
     }
     if (numeric.size() < 2) {
       return data
@@ -60,8 +60,8 @@ class SmoothStat {
       return data
     }
 
-    List<BigDecimal> xValues = numeric.collect { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.x) }
-    List<BigDecimal> yValues = numeric.collect { LayerData d -> NumberCoercionUtil.coerceToBigDecimal(d.y) }
+    List<BigDecimal> xValues = numeric.collect { LayerData d -> ValueConverter.asBigDecimal(d.x) }
+    List<BigDecimal> yValues = numeric.collect { LayerData d -> ValueConverter.asBigDecimal(d.y) }
 
     def regression
     if (polyDegree > 1) {

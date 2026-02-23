@@ -8,7 +8,7 @@ import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.charts.util.ColorUtil
 
 /**
@@ -67,8 +67,8 @@ class GeomUtils {
    * Resolve alpha from datum/layer/default.
    */
   static BigDecimal resolveAlpha(LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
-    NumberCoercionUtil.coerceToBigDecimal(datum.alpha) ?:
-        NumberCoercionUtil.coerceToBigDecimal(layer.params.alpha) ?: defaultValue
+    ValueConverter.asBigDecimal(datum.alpha) ?:
+        ValueConverter.asBigDecimal(layer.params.alpha) ?: defaultValue
   }
 
   /**
@@ -88,10 +88,10 @@ class GeomUtils {
    * Resolve line width from datum/layer/default.
    */
   static BigDecimal resolveLineWidth(LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
-    NumberCoercionUtil.coerceToBigDecimal(datum.size) ?:
-        NumberCoercionUtil.coerceToBigDecimal(layer.params.lineWidth) ?:
-        NumberCoercionUtil.coerceToBigDecimal(layer.params.linewidth) ?:
-        NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: defaultValue
+    ValueConverter.asBigDecimal(datum.size) ?:
+        ValueConverter.asBigDecimal(layer.params.lineWidth) ?:
+        ValueConverter.asBigDecimal(layer.params.linewidth) ?:
+        ValueConverter.asBigDecimal(layer.params.size) ?: defaultValue
   }
 
   /**
@@ -212,8 +212,8 @@ class GeomUtils {
   static List<LayerData> sortByX(List<LayerData> data) {
     List<LayerData> sorted = new ArrayList<>(data)
     sorted.sort { LayerData a, LayerData b ->
-      BigDecimal x1 = NumberCoercionUtil.coerceToBigDecimal(a.x)
-      BigDecimal x2 = NumberCoercionUtil.coerceToBigDecimal(b.x)
+      BigDecimal x1 = ValueConverter.asBigDecimal(a.x)
+      BigDecimal x2 = ValueConverter.asBigDecimal(b.x)
       if (x1 != null && x2 != null) {
         return x1 <=> x2
       }

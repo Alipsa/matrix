@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Stack position adjustment - stacks overlapping objects on top of each other.
@@ -51,7 +51,7 @@ class StackPosition {
 
       ordered.each { LayerData datum ->
         LayerData updated = LayerDataUtil.copyDatum(datum)
-        BigDecimal yVal = NumberCoercionUtil.coerceToBigDecimal(datum.y) ?: BigDecimal.ZERO
+        BigDecimal yVal = ValueConverter.asBigDecimal(datum.y) ?: BigDecimal.ZERO
         updated.ymin = cumSum
         cumSum = cumSum + yVal
         updated.ymax = cumSum

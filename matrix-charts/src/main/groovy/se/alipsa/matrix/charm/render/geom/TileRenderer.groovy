@@ -5,7 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders tile geometry.
@@ -17,8 +17,8 @@ class TileRenderer {
    * Render tiles centered at x/y positions.
    */
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
-    BigDecimal defaultWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.width) ?: 10
-    BigDecimal defaultHeight = NumberCoercionUtil.coerceToBigDecimal(layer.params.height) ?: 10
+    BigDecimal defaultWidth = ValueConverter.asBigDecimal(layer.params.width) ?: 10
+    BigDecimal defaultHeight = ValueConverter.asBigDecimal(layer.params.height) ?: 10
     int elementIndex = 0
 
     layerData.each { LayerData datum ->
@@ -50,8 +50,8 @@ class TileRenderer {
       String fill = GeomUtils.resolveFill(context, layer, datum)
       String stroke = layer.params.color?.toString() ?: 'white'
       BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
-      BigDecimal strokeWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.lineWidth) ?:
-          NumberCoercionUtil.coerceToBigDecimal(layer.params.linewidth) ?: 0.5
+      BigDecimal strokeWidth = ValueConverter.asBigDecimal(layer.params.lineWidth) ?:
+          ValueConverter.asBigDecimal(layer.params.linewidth) ?: 0.5
 
       def rect = dataLayer.addRect(halfW * 2, halfH * 2)
           .x(xCenter - halfW)

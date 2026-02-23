@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Two-dimensional rectangular binning stat.
@@ -17,21 +17,21 @@ class Bin2DStat {
     }
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
-    int bins = NumberCoercionUtil.coerceToBigDecimal(params.bins)?.intValue() ?: 30
+    int bins = ValueConverter.asBigDecimal(params.bins)?.intValue() ?: 30
     if (bins < 1) {
       bins = 30
     }
 
     List<LayerData> numeric = data.findAll { LayerData datum ->
-      NumberCoercionUtil.coerceToBigDecimal(datum.x) != null &&
-          NumberCoercionUtil.coerceToBigDecimal(datum.y) != null
+      ValueConverter.asBigDecimal(datum.x) != null &&
+          ValueConverter.asBigDecimal(datum.y) != null
     }
     if (numeric.isEmpty()) {
       return []
     }
 
-    List<BigDecimal> xs = numeric.collect { NumberCoercionUtil.coerceToBigDecimal(it.x) }
-    List<BigDecimal> ys = numeric.collect { NumberCoercionUtil.coerceToBigDecimal(it.y) }
+    List<BigDecimal> xs = numeric.collect { ValueConverter.asBigDecimal(it.x) }
+    List<BigDecimal> ys = numeric.collect { ValueConverter.asBigDecimal(it.y) }
     BigDecimal xMin = xs.min()
     BigDecimal xMax = xs.max()
     BigDecimal yMin = ys.min()
@@ -48,8 +48,8 @@ class Bin2DStat {
     Map<String, Integer> counts = [:]
 
     numeric.each { LayerData datum ->
-      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(datum.x)
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(datum.y)
+      BigDecimal x = ValueConverter.asBigDecimal(datum.x)
+      BigDecimal y = ValueConverter.asBigDecimal(datum.y)
       int xBin = ((x - xMin) / xStep).intValue()
       int yBin = ((y - yMin) / yStep).intValue()
       if (xBin < 0) xBin = 0

@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Radial coordinate transform (polar with non-negative radius).
@@ -20,7 +20,7 @@ class RadialCoord {
     List<LayerData> clamped = []
     data.each { LayerData datum ->
       LayerData updated = LayerDataUtil.copyDatum(datum)
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(updated.y)
+      BigDecimal y = ValueConverter.asBigDecimal(updated.y)
       if (y != null && y < 0) {
         updated.y = 0
       }

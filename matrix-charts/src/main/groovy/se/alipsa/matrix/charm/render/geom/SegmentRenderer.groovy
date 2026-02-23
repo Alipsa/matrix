@@ -7,7 +7,7 @@ import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders segment-like geometries: segment, hline, vline, and abline.
@@ -44,8 +44,8 @@ class SegmentRenderer {
         }
       }
       case CharmGeomType.ABLINE -> {
-        BigDecimal intercept = NumberCoercionUtil.coerceToBigDecimal(layer.params.intercept) ?: 0
-        BigDecimal slope = NumberCoercionUtil.coerceToBigDecimal(layer.params.slope) ?: 1
+        BigDecimal intercept = ValueConverter.asBigDecimal(layer.params.intercept) ?: 0
+        BigDecimal slope = ValueConverter.asBigDecimal(layer.params.slope) ?: 1
         if (context.xScale instanceof ContinuousCharmScale) {
           ContinuousCharmScale xScale = context.xScale as ContinuousCharmScale
           BigDecimal x1 = xScale.domainMin
@@ -82,9 +82,9 @@ class SegmentRenderer {
       Object value = horizontal
           ? (datum.y != null ? datum.y : datum.meta?.yintercept)
           : (datum.x != null ? datum.x : datum.meta?.xintercept)
-      NumberCoercionUtil.coerceToBigDecimal(value)
+      ValueConverter.asBigDecimal(value)
     }.findAll { it != null } as List<BigDecimal>
-    BigDecimal paramValue = NumberCoercionUtil.coerceToBigDecimal(layerParam)
+    BigDecimal paramValue = ValueConverter.asBigDecimal(layerParam)
     if (paramValue != null) {
       values << paramValue
     }
