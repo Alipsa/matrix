@@ -20,7 +20,7 @@ class StatSpec {
    */
   StatSpec(CharmStatType type, Map<String, Object> params = [:]) {
     this.type = type ?: CharmStatType.IDENTITY
-    this.params = params == null ? [:] : new LinkedHashMap<>(params)
+    this.params = params == null ? [:] : [*:params]
   }
 
   /**
@@ -50,7 +50,7 @@ class StatSpec {
    * @return copied StatSpec
    */
   StatSpec copy() {
-    new StatSpec(type, new LinkedHashMap<>(params))
+    new StatSpec(type, [*:params])
   }
 
   @Override

@@ -215,7 +215,7 @@ class ScaleColorFermenter extends ScaleContinuous {
 
     // Determine number of bins (use palette size if nBreaks not explicitly set)
     int numBins = nBreaksExplicitlySet ? nBreaks : paletteColors.size()
-    numBins = Math.max(1, Math.min(numBins, paletteColors.size()))
+    numBins = 1.max(numBins.min(paletteColors.size())) as int
 
     // Create bin boundaries (numBins + 1 boundaries)
     binBoundaries = []
@@ -245,7 +245,7 @@ class ScaleColorFermenter extends ScaleContinuous {
     int binIndex = findBinIndex(v)
 
     // Map bin to color (use palette colors without interpolation)
-    int colorIndex = Math.min(binIndex, paletteColors.size() - 1)
+    int colorIndex = binIndex.min(paletteColors.size() - 1) as int
     return paletteColors[colorIndex]
   }
 
@@ -281,9 +281,9 @@ class ScaleColorFermenter extends ScaleContinuous {
       loadPalette()
     }
     // Return only the colors actually used for bins
-    int numBins = nBreaksExplicitlySet ?
-                  Math.min(nBreaks, paletteColors.size()) :
-                  paletteColors.size()
+    int numBins = (nBreaksExplicitlySet ?
+                  nBreaks.min(paletteColors.size()) :
+                  paletteColors.size()) as int
     return paletteColors.take(numBins)
   }
 }

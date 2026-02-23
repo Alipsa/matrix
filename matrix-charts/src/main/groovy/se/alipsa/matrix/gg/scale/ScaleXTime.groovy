@@ -120,8 +120,8 @@ class ScaleXTime extends ScaleContinuous {
       min = (long)(min - delta * mult - add)  // add is in seconds
       max = (long)(max + delta * mult + add)
       // Clamp to valid time range [0, 86399]
-      min = Math.max(0, min)
-      max = Math.min(86399, max)
+      min = 0.max(min) as long
+      max = 86399.min(max) as long
     }
 
     minSecondsSinceMidnight = min
@@ -165,7 +165,7 @@ class ScaleXTime extends ScaleContinuous {
     double normalized = (v - rMin) / (rMax - rMin)
     double seconds = dMin + normalized * (dMax - dMin)
 
-    long clampedSeconds = Math.max(0, Math.min(86399, seconds as long))
+    long clampedSeconds = 0.max((seconds as long).min(86399)) as long
     return LocalTime.ofSecondOfDay(clampedSeconds)
   }
 
@@ -364,14 +364,14 @@ class ScaleXTime extends ScaleContinuous {
     if (value instanceof Duration) {
       long seconds = (value as Duration).getSeconds()
       // Clamp to valid 24-hour range
-      return Math.max(0, Math.min(86399, seconds))
+      return 0.max(seconds.min(86399)) as long
     }
 
     if (value instanceof Number) {
       // Assume it's already seconds since midnight
       long seconds = (value as Number).longValue()
       // Clamp to valid 24-hour range [0, 86399]
-      return Math.max(0, Math.min(86399, seconds))
+      return 0.max(seconds.min(86399)) as long
     }
 
     if (value instanceof CharSequence) {

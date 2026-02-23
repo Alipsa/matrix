@@ -68,7 +68,7 @@ class SvgPanel extends JPanel {
     double panelHeight = getHeight()
 
     // Calculate aspect-preserving scale
-    double scale = Math.min(panelWidth / svgWidth, panelHeight / svgHeight)
+    double scale = (panelWidth / svgWidth).min(panelHeight / svgHeight)
 
     // Center the SVG
     double xOffset = (panelWidth - (svgWidth * scale)) / 2

@@ -93,8 +93,8 @@ class LegendRenderer {
       default -> {
         if (legendPos instanceof List && (legendPos as List).size() >= 2) {
           List pos = legendPos as List
-          legendX = (pos[0] as Number).intValue()
-          legendY = (pos[1] as Number).intValue()
+          legendX = pos[0] as int
+          legendY = pos[1] as int
         } else {
           legendX = context.config.width - context.config.marginRight + LEGEND_PLOT_GAP
           legendY = context.config.marginTop + 20
@@ -323,17 +323,17 @@ class LegendRenderer {
     int y = startY
 
     // Draw gradient as small rects, using rounding to tile without gaps or overlaps
-    int tDenominator = Math.max(COLORBAR_STEPS - 1, 1)
+    int tDenominator = (COLORBAR_STEPS - 1).max(1) as int
     for (int i = 0; i < COLORBAR_STEPS; i++) {
-      BigDecimal t = (BigDecimal) i / (BigDecimal) tDenominator
+      BigDecimal t = (i as BigDecimal) / tDenominator
       BigDecimal value = cs.domainMin + t * (cs.domainMax - cs.domainMin)
       String color = cs.colorFor(value) ?: '#999999'
 
       if (vertical) {
-        double fromRel = (double) i / (double) COLORBAR_STEPS
-        double toRel = (double) (i + 1) / (double) COLORBAR_STEPS
-        int fromBottom = (int) Math.round(fromRel * barHeight)
-        int toBottom = (int) Math.round(toRel * barHeight)
+        BigDecimal fromRel = (i as BigDecimal) / COLORBAR_STEPS
+        BigDecimal toRel = ((i + 1) as BigDecimal) / COLORBAR_STEPS
+        int fromBottom = (fromRel * barHeight).round() as int
+        int toBottom = (toRel * barHeight).round() as int
         int stepHeight = toBottom - fromBottom
         if (stepHeight <= 0) continue
         int stepY = y + barHeight - toBottom
@@ -341,10 +341,10 @@ class LegendRenderer {
             .x(x).y(stepY).fill(color).stroke('none')
             .styleClass('charm-legend-colorbar gg-legend-colorbar')
       } else {
-        double fromRel = (double) i / (double) COLORBAR_STEPS
-        double toRel = (double) (i + 1) / (double) COLORBAR_STEPS
-        int from = (int) Math.round(fromRel * barWidth)
-        int to = (int) Math.round(toRel * barWidth)
+        BigDecimal fromRel = (i as BigDecimal) / COLORBAR_STEPS
+        BigDecimal toRel = ((i + 1) as BigDecimal) / COLORBAR_STEPS
+        int from = (fromRel * barWidth).round() as int
+        int to = (toRel * barWidth).round() as int
         int stepWidth = to - from
         if (stepWidth <= 0) continue
         int stepX = x + from

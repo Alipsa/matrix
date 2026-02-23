@@ -151,13 +151,13 @@ class Theme {
     copy.plotTitle = plotTitle?.copy()
     copy.plotSubtitle = plotSubtitle?.copy()
     copy.plotCaption = plotCaption?.copy()
-    copy.plotMargin = plotMargin != null ? new ArrayList<>(plotMargin) : null
+    copy.plotMargin = plotMargin != null ? [*plotMargin] : null
 
     copy.panelBackground = panelBackground?.copy()
     copy.panelBorder = panelBorder?.copy()
     copy.panelGridMajor = panelGridMajor?.copy()
     copy.panelGridMinor = panelGridMinor?.copy()
-    copy.panelSpacing = panelSpacing != null ? new ArrayList<>(panelSpacing) : null
+    copy.panelSpacing = panelSpacing != null ? [*panelSpacing] : null
 
     copy.axisLineX = axisLineX?.copy()
     copy.axisLineY = axisLineY?.copy()
@@ -170,20 +170,20 @@ class Theme {
     copy.axisTickLength = axisTickLength
 
     copy.legendPosition = legendPosition instanceof List
-        ? new ArrayList<>(legendPosition as List) : legendPosition
+        ? [*(legendPosition as List)] : legendPosition
     copy.legendDirection = legendDirection
     copy.legendBackground = legendBackground?.copy()
     copy.legendKey = legendKey?.copy()
-    copy.legendKeySize = legendKeySize != null ? new ArrayList<>(legendKeySize) : null
+    copy.legendKeySize = legendKeySize != null ? [*legendKeySize] : null
     copy.legendTitle = legendTitle?.copy()
     copy.legendText = legendText?.copy()
-    copy.legendMargin = legendMargin != null ? new ArrayList<>(legendMargin) : null
+    copy.legendMargin = legendMargin != null ? [*legendMargin] : null
 
     copy.stripBackground = stripBackground?.copy()
     copy.stripText = stripText?.copy()
 
-    copy.discreteColors = discreteColors != null ? new ArrayList<>(discreteColors) : null
-    copy.gradientColors = gradientColors != null ? new ArrayList<>(gradientColors) : null
+    copy.discreteColors = discreteColors != null ? [*discreteColors] : null
+    copy.gradientColors = gradientColors != null ? [*gradientColors] : null
 
     copy.baseFamily = baseFamily
     copy.baseSize = baseSize
@@ -268,7 +268,7 @@ class Theme {
       return (value as ElementRect).copy()
     }
     if (value instanceof List) {
-      return new ArrayList<>(value as List)
+      return [*(value as List)]
     }
     if (value instanceof Set) {
       return new LinkedHashSet<>(value as Set)

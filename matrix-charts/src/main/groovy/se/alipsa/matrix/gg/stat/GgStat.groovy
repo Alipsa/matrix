@@ -413,7 +413,7 @@ class GgStat {
           ymax: whiskerHigh,
           outliers: outliers,
           n: values.size(),  // sample size for potential width scaling
-          relvarwidth: Math.sqrt(values.size()),
+          relvarwidth: (values.size() as BigDecimal).sqrt(),
           width: widthValue,
           xresolution: xResolution
       ]
@@ -714,7 +714,7 @@ class GgStat {
     List<Number> yValues = []
     List<?> rawX = data[xCol] as List<?>
     List<?> rawY = data[yCol] as List<?>
-    int maxIdx = Math.min(rawX?.size() ?: 0, rawY?.size() ?: 0)
+    int maxIdx = (rawX?.size() ?: 0).min(rawY?.size() ?: 0)
     for (int i = 0; i < maxIdx; i++) {
       def xVal = rawX[i]
       def yVal = rawY[i]
@@ -1706,7 +1706,7 @@ class GgStat {
     points.each { point ->
       BigDecimal x = point.x as BigDecimal
       int binIdx = ((x - xMin) / binWidth) as int
-      binIdx = Math.min(binIdx, nBins - 1)  // Handle edge case
+      binIdx = binIdx.min(nBins - 1) as int  // Handle edge case
       binned[binIdx] << (point.y as Number)
     }
 
@@ -2033,8 +2033,8 @@ class GgStat {
       int yBinIdx = ((point.y - yMin) / yBinWidth) as int
 
       // Clamp to valid range
-      xBinIdx = Math.max(0, Math.min(xBinIdx, xNBins - 1))
-      yBinIdx = Math.max(0, Math.min(yBinIdx, yNBins - 1))
+      xBinIdx = 0.max(xBinIdx.min(xNBins - 1)) as int
+      yBinIdx = 0.max(yBinIdx.min(yNBins - 1)) as int
 
       String gridKey = "${xBinIdx},${yBinIdx}"
       gridValues[gridKey] << point.z

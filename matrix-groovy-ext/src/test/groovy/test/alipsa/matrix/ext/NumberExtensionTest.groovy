@@ -675,4 +675,36 @@ class NumberExtensionTest {
     radians = degrees.toRadians()
     assertEquals(Math.PI / 4, radians.doubleValue(), 1e-10)
   }
+
+  @Test
+  void testAsin() {
+    // Test asin(0) = 0
+    assertEquals(0.0, (0.0).asin().doubleValue(), 1e-10)
+
+    // Test asin(1) = π/2
+    assertEquals(Math.PI / 2, (1.0).asin().doubleValue(), 1e-10)
+
+    // Test asin(-1) = -π/2
+    assertEquals(-Math.PI / 2, (-1.0).asin().doubleValue(), 1e-10)
+
+    // Test asin(0.5) = π/6
+    assertEquals(Math.PI / 6, (0.5).asin().doubleValue(), 1e-10)
+
+    // Test asin is inverse of sin
+    BigDecimal angle = Math.PI / 4 as BigDecimal
+    BigDecimal sinVal = angle.sin()
+    BigDecimal recovered = sinVal.asin()
+    assertEquals(angle.doubleValue(), recovered.doubleValue(), 1e-10)
+
+    // Test with Number type
+    assertEquals(Math.asin(0.5), NumberExtension.asin(0.5).doubleValue(), 1e-10)
+
+    // Test out of range throws
+    assertThrows(ArithmeticException) {
+      (1.5).asin()
+    }
+    assertThrows(ArithmeticException) {
+      (-1.5).asin()
+    }
+  }
 }

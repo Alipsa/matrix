@@ -205,7 +205,7 @@ width=${w}, minVal=${minVal}, maxVal=${maxVal}, boundary=${boundary}, center=${c
    */
   private static String formatNumber(Number n) {
     double d = n as double
-    if (d >= Long.MIN_VALUE && d <= Long.MAX_VALUE && d == Math.floor(d)) {
+    if (d >= Long.MIN_VALUE && d <= Long.MAX_VALUE && d == (d as BigDecimal).floor()) {
       return String.valueOf((long) d)
     }
     // Round to avoid floating point artifacts

@@ -245,7 +245,7 @@ class ColorCharmScale extends CharmScale {
   private void trainBrewer(List<Object> dataValues, Scale spec) {
     collectLevels(dataValues)
     this.palette = (spec.params['palette'] as String) ?: 'Set1'
-    this.direction = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : 1
+    this.direction = spec.params['direction'] != null ? spec.params['direction'] as int : 1
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
 
     List<String> colors = BrewerPalettes.selectPalette(palette, levels.size(), direction)
@@ -284,7 +284,7 @@ class ColorCharmScale extends CharmScale {
     this.viridisOption = (spec.params['option'] as String) ?: 'viridis'
     this.viridisBegin = spec.params['begin'] != null ? (spec.params['begin'] as BigDecimal) : 0.0
     this.viridisEnd = spec.params['end'] != null ? (spec.params['end'] as BigDecimal) : 1.0
-    this.direction = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : 1
+    this.direction = spec.params['direction'] != null ? spec.params['direction'] as int : 1
     this.viridisAlpha = spec.params['alpha'] != null ? (spec.params['alpha'] as BigDecimal) : 1.0
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
 
@@ -309,7 +309,7 @@ class ColorCharmScale extends CharmScale {
 
   private void trainDistiller(List<Object> dataValues, Scale spec) {
     this.palette = (spec.params['palette'] as String) ?: 'RdYlBu'
-    this.direction = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : -1
+    this.direction = spec.params['direction'] != null ? spec.params['direction'] as int : -1
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
     List<String> colors = BrewerPalettes.selectPalette(palette, 9, direction)
     this.gradientColors = colors.isEmpty() ? new ArrayList<>(DEFAULT_COLORS) : colors
@@ -319,7 +319,7 @@ class ColorCharmScale extends CharmScale {
 
   private void trainFermenter(List<Object> dataValues, Scale spec) {
     this.palette = (spec.params['palette'] as String) ?: 'YlOrRd'
-    this.direction = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : 1
+    this.direction = spec.params['direction'] != null ? spec.params['direction'] as int : 1
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
     int breaks = ValueConverter.asBigDecimal(spec.params['nBreaks'])?.intValue() ?:
         ValueConverter.asBigDecimal(spec.params['n.breaks'])?.intValue() ?: 6
@@ -358,7 +358,7 @@ class ColorCharmScale extends CharmScale {
     this.naValue = (spec.params['naValue'] as String) ?: '#999999'
     BigDecimal start = ValueConverter.asBigDecimal(spec.params['hStart'] ?: spec.params['h.start']) ?: 15.0
     BigDecimal end = ValueConverter.asBigDecimal(spec.params['hEnd'] ?: spec.params['h.end']) ?: 375.0
-    int dir = spec.params['direction'] != null ? (spec.params['direction'] as Number).intValue() : 1
+    int dir = spec.params['direction'] != null ? spec.params['direction'] as int : 1
     List<String> colors = generateHuePalette(levels.size(), start, end)
     if (dir < 0) {
       colors = colors.reverse()
@@ -498,7 +498,7 @@ class ColorCharmScale extends CharmScale {
       return gradientColors[gradientColors.size() - 1]
     }
     BigDecimal normalized = ((v - domainMin) / (domainMax - domainMin)).min(1.0).max(0.0)
-    int idx = (normalized * (gradientColors.size() - 1)).intValue()
+    int idx = normalized * (gradientColors.size() - 1) as int
     if (idx < 0) {
       idx = 0
     } else if (idx > gradientColors.size() - 1) {

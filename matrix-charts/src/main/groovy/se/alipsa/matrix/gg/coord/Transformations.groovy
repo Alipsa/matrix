@@ -249,7 +249,7 @@ class Transformations {
       if (x == null) return null
       BigDecimal val = x as BigDecimal
       if (val < 0 || val > 1) return null
-      return Math.asin(val.sqrt() as double) as BigDecimal
+      return val.sqrt().asin()
     }
 
     @Override

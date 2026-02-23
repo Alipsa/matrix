@@ -346,7 +346,7 @@ class Rconverter {
         continue
       }
       if (ch == ')') {
-        depth = Math.max(0, depth - 1)
+        depth = 0.max(depth - 1) as int
         out.append(ch)
         i++
         continue
@@ -571,7 +571,7 @@ class Rconverter {
         continue
       }
       if (ch == ')' || ch == ']' || ch == '}') {
-        depth = Math.max(0, depth - 1)
+        depth = 0.max(depth - 1) as int
         current.append(ch)
         continue
       }
@@ -631,7 +631,7 @@ class Rconverter {
         continue
       }
       if (ch == ')' || ch == ']' || ch == '}') {
-        depth = Math.max(0, depth - 1)
+        depth = 0.max(depth - 1) as int
         current.append(ch)
         continue
       }
@@ -682,7 +682,7 @@ class Rconverter {
         continue
       }
       if (ch == ')' || ch == ']' || ch == '}') {
-        depth = Math.max(0, depth - 1)
+        depth = 0.max(depth - 1) as int
         continue
       }
       if (depth == 0 && input.startsWith(token, i)) {
@@ -933,7 +933,7 @@ class Rconverter {
         continue
       }
       if (ch == ')' || ch == ']' || ch == '}') {
-        depth = Math.max(0, depth - 1)
+        depth = 0.max(depth - 1) as int
         continue
       }
       if (depth == 0 && ch == '=') {
