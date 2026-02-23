@@ -5,7 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders curved segments using cubic Bezier paths.
@@ -14,7 +14,7 @@ import se.alipsa.matrix.charm.util.NumberCoercionUtil
 class CurveRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
-    BigDecimal curvature = NumberCoercionUtil.coerceToBigDecimal(layer.params.curvature) ?: 0.5
+    BigDecimal curvature = ValueConverter.asBigDecimal(layer.params.curvature) ?: 0.5
     int elementIndex = 0
 
     layerData.each { LayerData datum ->

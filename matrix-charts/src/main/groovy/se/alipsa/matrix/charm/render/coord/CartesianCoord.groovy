@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CoordSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Cartesian coordinate transformation - the default coordinate system.
@@ -51,7 +51,7 @@ class CartesianCoord {
 
       // Clamp x
       if (xMin != null || xMax != null) {
-        BigDecimal xVal = NumberCoercionUtil.coerceToBigDecimal(datum.x)
+        BigDecimal xVal = ValueConverter.asBigDecimal(datum.x)
         if (xVal != null) {
           if (xMin != null && xVal < xMin) updated.x = xMin
           if (xMax != null && xVal > xMax) updated.x = xMax
@@ -60,7 +60,7 @@ class CartesianCoord {
 
       // Clamp y
       if (yMin != null || yMax != null) {
-        BigDecimal yVal = NumberCoercionUtil.coerceToBigDecimal(datum.y)
+        BigDecimal yVal = ValueConverter.asBigDecimal(datum.y)
         if (yVal != null) {
           if (yMin != null && yVal < yMin) updated.y = yMin
           if (yMax != null && yVal > yMax) updated.y = yMax

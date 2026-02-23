@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Dodge2 position with optional padding.
@@ -18,7 +18,7 @@ class Dodge2Position {
     }
 
     Map<String, Object> params = PositionEngine.effectiveParams(layer)
-    BigDecimal padding = NumberCoercionUtil.coerceToBigDecimal(params.padding) ?: 0.1
+    BigDecimal padding = ValueConverter.asBigDecimal(params.padding) ?: 0.1
     List<LayerData> dodged = DodgePosition.compute(layer, data)
     if (padding <= 0) {
       return dodged
@@ -26,7 +26,7 @@ class Dodge2Position {
 
     Map<Integer, List<BigDecimal>> sourceXByRowIndex = [:].withDefault { [] }
     data.each { LayerData datum ->
-      BigDecimal sourceX = NumberCoercionUtil.coerceToBigDecimal(datum.x)
+      BigDecimal sourceX = ValueConverter.asBigDecimal(datum.x)
       if (sourceX != null) {
         sourceXByRowIndex[datum.rowIndex] << sourceX
       }
@@ -35,7 +35,7 @@ class Dodge2Position {
     List<LayerData> adjusted = []
     dodged.each { LayerData datum ->
       LayerData updated = LayerDataUtil.copyDatum(datum)
-      BigDecimal dodgedX = NumberCoercionUtil.coerceToBigDecimal(updated.x)
+      BigDecimal dodgedX = ValueConverter.asBigDecimal(updated.x)
       BigDecimal sourceX = nearestSourceX(dodgedX, sourceXByRowIndex[datum.rowIndex])
       if (dodgedX != null && sourceX != null) {
         BigDecimal offsetFromCenter = dodgedX - sourceX

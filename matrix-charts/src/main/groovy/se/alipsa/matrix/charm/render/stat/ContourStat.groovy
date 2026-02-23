@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Lightweight contour stat that groups x/y samples by z-level slices.
@@ -18,22 +18,22 @@ class ContourStat {
 
     List<LayerData> withZ = data.findAll { LayerData datum ->
       Object zCandidate = datum.label != null ? datum.label : datum.meta?.z
-      NumberCoercionUtil.coerceToBigDecimal(datum.x) != null &&
-          NumberCoercionUtil.coerceToBigDecimal(datum.y) != null &&
-          NumberCoercionUtil.coerceToBigDecimal(zCandidate) != null
+      ValueConverter.asBigDecimal(datum.x) != null &&
+          ValueConverter.asBigDecimal(datum.y) != null &&
+          ValueConverter.asBigDecimal(zCandidate) != null
     }
     if (withZ.isEmpty()) {
       return data
     }
 
-    int bins = NumberCoercionUtil.coerceToBigDecimal(StatEngine.effectiveParams(layer).bins)?.intValue() ?: 10
+    int bins = ValueConverter.asBigDecimal(StatEngine.effectiveParams(layer).bins)?.intValue() ?: 10
     if (bins < 1) {
       bins = 10
     }
 
     List<BigDecimal> zValues = withZ.collect { LayerData datum ->
       Object zCandidate = datum.label != null ? datum.label : datum.meta?.z
-      NumberCoercionUtil.coerceToBigDecimal(zCandidate)
+      ValueConverter.asBigDecimal(zCandidate)
     }
     BigDecimal zMin = zValues.min()
     BigDecimal zMax = zValues.max()
@@ -48,7 +48,7 @@ class ContourStat {
     List<LayerData> result = []
     withZ.each { LayerData datum ->
       Object zCandidate = datum.label != null ? datum.label : datum.meta?.z
-      BigDecimal z = NumberCoercionUtil.coerceToBigDecimal(zCandidate)
+      BigDecimal z = ValueConverter.asBigDecimal(zCandidate)
       int levelIdx = ((z - zMin) / step).intValue()
       if (levelIdx < 0) levelIdx = 0
       if (levelIdx > bins - 1) levelIdx = bins - 1
@@ -71,8 +71,8 @@ class ContourStat {
       if (g != 0) {
         return g
       }
-      BigDecimal x1 = NumberCoercionUtil.coerceToBigDecimal(a.x) ?: 0
-      BigDecimal x2 = NumberCoercionUtil.coerceToBigDecimal(b.x) ?: 0
+      BigDecimal x1 = ValueConverter.asBigDecimal(a.x) ?: 0
+      BigDecimal x2 = ValueConverter.asBigDecimal(b.x) ?: 0
       x1 <=> x2
     }
   }

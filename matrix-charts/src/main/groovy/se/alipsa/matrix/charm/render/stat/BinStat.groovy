@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Bin stat transformation - bins continuous data into intervals.
@@ -29,7 +29,7 @@ class BinStat {
    */
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     List<BigDecimal> values = data.collect { LayerData d ->
-      NumberCoercionUtil.coerceToBigDecimal(d.x)
+      ValueConverter.asBigDecimal(d.x)
     }.findAll { BigDecimal v -> v != null } as List<BigDecimal>
 
     if (values.isEmpty()) {
@@ -47,7 +47,7 @@ class BinStat {
     int bins
     BigDecimal binwidth
 
-    BigDecimal paramBinwidth = NumberCoercionUtil.coerceToBigDecimal(params.binwidth)
+    BigDecimal paramBinwidth = ValueConverter.asBigDecimal(params.binwidth)
     if (paramBinwidth != null && paramBinwidth > 0) {
       binwidth = paramBinwidth
       int rawBins = (range / binwidth).toBigInteger().intValue()
@@ -55,14 +55,14 @@ class BinStat {
       // Extend max to cover full bins
       max = min + binwidth * bins
     } else {
-      BigDecimal paramBins = NumberCoercionUtil.coerceToBigDecimal(params.bins)
+      BigDecimal paramBins = ValueConverter.asBigDecimal(params.bins)
       bins = paramBins != null ? paramBins.intValue() : 30
       if (bins < 1) bins = 30
       binwidth = range / bins
     }
 
     // Boundary alignment
-    BigDecimal boundary = NumberCoercionUtil.coerceToBigDecimal(params.boundary)
+    BigDecimal boundary = ValueConverter.asBigDecimal(params.boundary)
     if (boundary != null) {
       BigDecimal shift = ((min - boundary) / binwidth).toBigInteger() as BigDecimal
       min = boundary + shift * binwidth

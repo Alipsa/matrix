@@ -8,12 +8,9 @@ import se.alipsa.groovy.svg.Path
 import se.alipsa.groovy.svg.Text
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Factor
-import se.alipsa.matrix.gg.coord.CoordPolar
 
 import static org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.datasets.Dataset
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -24,62 +21,6 @@ class GgPlotFullTest {
 
     def iris = Dataset.iris()
     def mtcars = Dataset.mtcars()
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testAes() {
-        def a = aes(x:"Sepal Length", y:"Petal Length", col:"Species")
-        assertEquals('Aes(xCol=Sepal Length, yCol=Petal Length, colorCol=Species)', a.toString())
-    }
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testAesPositionalWithNamedParams() {
-        // Test the new constructor: aes('x', 'y', colour: 'z')
-        def a = aes('cty', 'hwy', colour: 'class')
-        assertEquals('cty', a.x)
-        assertEquals('hwy', a.y)
-        assertEquals('class', a.color)
-
-        // Test that positional params override map params
-        def b = aes('hp', 'mpg', x: 'ignored', y: 'also_ignored', color: 'cyl')
-        assertEquals('hp', b.x)
-        assertEquals('mpg', b.y)
-        assertEquals('cyl', b.color)
-
-        // Test with multiple named parameters
-        def c = aes('Sepal Length', 'Petal Length', col: 'Species', size: 'Petal Width', alpha: 0.8)
-        assertEquals('Sepal Length', c.x)
-        assertEquals('Petal Length', c.y)
-        assertEquals('Species', c.color)
-        assertEquals('Petal Width', c.size)
-        assertEquals(0.8, c.alpha)
-
-        // Test integration with ggplot
-        def chart = ggplot(Dataset.mpg(), aes('cty', 'hwy', colour: 'class')) + geom_point()
-        assertNotNull(chart)
-    }
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testPoint(){
-        ggplot(iris,
-                aes(x:"Sepal Length", y:"Petal Length", col:"Species")
-        ) + geom_point()
-
-        ggplot(iris, aes(x:'Sepal Length', y:'Petal Length', col:'Species')) \
-            + geom_point() + geom_smooth()
-
-        // same thing with colors
-        ggplot(iris, aes(x:'Sepal Length', y:'Petal Length', col:'Species')) \
-            + geom_point(color:"blue") + geom_smooth(color:"red")
-    }
-
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testVerticalBarPlot() {
-        ggplot(mtcars, aes(x: 'gear')) + geom_bar()
-    }
 
     @Test
     void testHorizontalBarPlot() {
@@ -100,32 +41,10 @@ class GgPlotFullTest {
     }
 
     @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testHistogram() {
-        ggplot(mtcars,aes(x:'mpg')) + geom_histogram()
-    }
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testBoxPlot() {
-        //ggplot(mtcars, aes(x=as.factor(cyl), y=mpg)) + geom_boxplot()
-        ggplot(mtcars, aes(x:As.factor(mtcars['cyl']), y:'mpg')) + geom_boxplot()
-
-        // Colored boxplot
-        def cyl = As.factor(mtcars['cyl'])
-        ggplot(mtcars, aes(x:(cyl), y:'mpg',color: 'cyl')) \
-        + geom_boxplot() \
-        + scale_color_manual(values: ["#3a0ca3", "#c9184a", "#3a5a40"])
-    }
-
-    @Test
     void testViolinPlot() {
         ggplot(mtcars, aes(As.factor(mtcars['cyl']), 'mpg')) + \
             geom_violin(aes(fill: 'cyl'))
     }
-
-    @Slow
-
 
     @Test
     void testFactorConstant() {
@@ -145,34 +64,6 @@ class GgPlotFullTest {
         def rects = svg.descendants().findAll { it instanceof Rect }
         assertTrue(rects.size() > 0, "Should render bars for factor(1)")
     }
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testPieChart() {
-        def chart = ggplot(mtcars, aes(factor(1), fill: 'cyl')) \
-            + geom_bar(width:1) \
-            + coord_polar(theta: "y", start:0)
-        assertTrue(chart.coord instanceof CoordPolar)
-        Svg svg = chart.render()
-        assertNotNull(svg)
-
-        // Use direct object access for assertions
-        def paths = svg.descendants().findAll { it instanceof Path }
-        assertTrue(paths.size() > 0, "Pie chart should render arc paths")
-
-        // Keep file write for visual inspection
-        File outputFile = new File('build/pie_chart_test.svg')
-        write(svg, outputFile)
-
-        //mtcars %>%
-        //dplyr::group_by(cyl) %>%
-        //dplyr::summarize(mpg = median(mpg)) %>%
-        //ggplot(aes(x = cyl, y = mpg)) + geom_col(aes(fill =cyl), color = NA) + labs(x = "", y = "Median mpg")  + coord_polar()
-        Stat.medianBy(mtcars, 'cyl', 'mpg')
-    }
-
-    @Slow
-
 
     @Test
     void testPointChartRender() {
@@ -206,38 +97,7 @@ class GgPlotFullTest {
         File outputFile = new File('build/iris_scatter.svg')
         write(svg, outputFile)
         assertTrue(outputFile.exists(), "Output file should exist")
-        //println("Wrote scatter plot to ${outputFile.absolutePath}")
     }
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testScatterWithSmooth() {
-        // Equivalent to R:
-        // ggplot(mpg, aes(cty, hwy)) + geom_point() + geom_smooth(method = "lm")
-        def mpg = Dataset.mpg()
-
-        def chart = ggplot(mpg, aes(x: 'cty', y: 'hwy')) +
-            geom_point() +
-            geom_smooth(method: 'lm') +
-            labs(title: 'City vs Highway MPG', x: 'City MPG', y: 'Highway MPG')
-
-        Svg svg = chart.render()
-        assertNotNull(svg)
-
-        // Use direct object access - no serialization needed
-        def circles = svg.descendants().findAll { it instanceof Circle }
-        def lines = svg.descendants().findAll { it instanceof Line }
-
-        // Verify points are rendered
-        assertTrue(circles.size() > 0, "Should contain circle elements for points")
-
-        // Verify smooth line is rendered (multiple connected line segments)
-        assertTrue(lines.size() > 0, "Should contain line elements for smooth")
-        // Note: Stroke color verification would require accessing element attributes
-    }
-
-    @Slow
-
 
     @Test
     void testPointChartWithLabels() {
@@ -264,9 +124,6 @@ class GgPlotFullTest {
         assertTrue(allText.contains('Miles per Gallon'))
     }
 
-    @Slow
-
-
     @Test
     void testGeomLm() {
         // Test the geom_lm convenience wrapper
@@ -291,9 +148,6 @@ class GgPlotFullTest {
         assertTrue(lines.size() > 0, "Should contain line elements for geom_lm")
     }
 
-    @Slow
-
-
     @Test
     void testGeomLmWithPolynomial() {
         // Test geom_lm with polynomial formula
@@ -316,9 +170,6 @@ class GgPlotFullTest {
         assertTrue(lines.size() > 0, "Should contain line elements for polynomial fit")
     }
 
-    @Slow
-
-
     @Test
     void testExpressionInAes() {
         // Test closure expression in aesthetics
@@ -338,9 +189,6 @@ class GgPlotFullTest {
         // Verify points are rendered
         assertTrue(circles.size() > 0, "Should contain circle elements for points")
     }
-
-    @Slow
-
 
     @Test
     void testExpressionWithGeomLm() {
@@ -364,9 +212,6 @@ class GgPlotFullTest {
         assertTrue(lines.size() > 0, "Should contain line elements for regression")
     }
 
-    @Slow
-
-
     @Test
     void testExpressionWithPolynomial() {
         // Full example: expression in aes with polynomial geom_lm
@@ -388,30 +233,6 @@ class GgPlotFullTest {
         assertTrue(circles.size() > 0, "Should contain circle elements for points")
         assertTrue(lines.size() > 0, "Should contain line elements for polynomial")
     }
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testGeomFunction() {
-        // Test geom_function for drawing mathematical functions
-        def chart = ggplot(null, null) +
-            xlim(0, 2*Math.PI) +
-            geom_function(fun: { x -> Math.sin(x) }, color: 'steelblue')
-
-        Svg svg = chart.render()
-        assertNotNull(svg)
-
-        // Use direct object access
-        def paths = svg.descendants().findAll { it instanceof Path }
-        assertTrue(paths.size() > 0, "Should contain path element for function")
-
-        // Write for inspection
-        File outputFile = new File('build/function_sine.svg')
-        write(svg, outputFile)
-        //println("Wrote sine function plot to ${outputFile.absolutePath}")
-    }
-
-    @Slow
-
 
     @Test
     void testDegreeParameter() {
@@ -437,9 +258,6 @@ class GgPlotFullTest {
 
     }
 
-    @Slow
-
-
     @Test
     void testDegreeWithExpression() {
         // Combine degree parameter with expression in aes
@@ -461,9 +279,6 @@ class GgPlotFullTest {
         assertTrue(lines.size() > 0, "Should contain line elements for polynomial")
     }
 
-    @Slow
-
-
     @Test
     void testGeomHex() {
         // Create sample data with x,y coordinates
@@ -484,11 +299,7 @@ class GgPlotFullTest {
 
         File outputFile = new File('build/test_geom_hex.svg')
         write(svg, outputFile)
-        //println("Wrote hexagonal binning plot to ${outputFile.absolutePath}")
     }
-
-    @Slow
-
 
     @Test
     void testGeomDotplot() {
@@ -504,9 +315,6 @@ class GgPlotFullTest {
         assertTrue(circles.size() > 0, "Should contain circle elements for dots")
     }
 
-    @Slow
-
-
     @Test
     void testGeomDensity2d() {
         // Test with faithful dataset or mtcars
@@ -521,9 +329,6 @@ class GgPlotFullTest {
         assertTrue(paths.size() > 0, "Should contain path elements for contours")
     }
 
-    @Slow
-
-
     @Test
     void testGeomDensity2dFilled() {
         // Test with mtcars data
@@ -537,9 +342,6 @@ class GgPlotFullTest {
         def rects = svg.descendants().findAll { it instanceof Rect }
         assertTrue(rects.size() > 0, "Should contain rect elements for filled regions")
     }
-
-    @Slow
-
 
     @Test
     void testStatEllipse() {
@@ -558,9 +360,6 @@ class GgPlotFullTest {
         assertTrue(circles.size() > 0 || paths.size() > 0,
                    "Should contain points or path elements")
     }
-
-    @Slow
-
 
     @Test
     void testStatEllipseLevels() {
@@ -584,11 +383,7 @@ class GgPlotFullTest {
 
         File outputFile = new File('build/test_stat_ellipse_levels.svg')
         write(svg, outputFile)
-        //println("Wrote multi-level ellipse plot to ${outputFile.absolutePath}")
     }
-
-    @Slow
-
 
     @Test
     void testStatSummaryBin() {
@@ -600,9 +395,6 @@ class GgPlotFullTest {
         Svg svg = chart.render()
         assertNotNull(svg)
     }
-
-    @Slow
-
 
     @Test
     void testStatUnique() {
@@ -631,9 +423,6 @@ class GgPlotFullTest {
         assertTrue(circles.size() > 0, "Should contain circle elements")
     }
 
-    @Slow
-
-
     @Test
     void testStatFunction() {
         // Test function stat
@@ -651,40 +440,6 @@ class GgPlotFullTest {
         assertTrue(lines.size() > 0 || paths.size() > 0,
                    "Should contain line or path elements")
     }
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testCoordTransLog10() {
-        // Test log10 transformation on x-axis
-        def data = Matrix.builder()
-            .columnNames(['x', 'y'])
-            .rows([
-                [1, 1],
-                [10, 2],
-                [100, 3],
-                [1000, 4],
-                [10000, 5]
-            ])
-            .build()
-
-        def chart = ggplot(data, aes(x: 'x', y: 'y')) +
-            geom_point(size: 3) +
-            geom_line() +
-            coord_trans(x: 'log10') +
-            labs(title: 'Log10 Transformation on X-axis')
-
-        Svg svg = chart.render()
-        assertNotNull(svg)
-
-        def descendants = svg.descendants()
-        def circles = descendants.findAll { it instanceof Circle }
-        def lines = descendants.findAll { it instanceof Line }
-        assertTrue(circles.size() > 0 || lines.size() > 0,
-                   "Should contain points or lines")
-    }
-
-    @Slow
-
 
     @Test
     void testCoordTransSqrt() {
@@ -714,9 +469,6 @@ class GgPlotFullTest {
                    "Should contain points")
     }
 
-    @Slow
-
-
     @Test
     void testCoordTransBothAxes() {
         // Test transformation on both axes
@@ -743,9 +495,6 @@ class GgPlotFullTest {
                    "Should contain points")
     }
 
-    @Slow
-
-
     @Test
     void testCoordTransCustom() {
         // Test custom transformation using closures
@@ -770,9 +519,6 @@ class GgPlotFullTest {
         assertNotNull(svg)
     }
 
-    @Slow
-
-
     @Test
     void testCoordTransReverse() {
         // Test reverse transformation
@@ -786,11 +532,7 @@ class GgPlotFullTest {
 
         File outputFile = new File('build/test_coord_trans_reverse.svg')
         write(svg, outputFile)
-        //println("Wrote coord_trans reverse plot to ${outputFile.absolutePath}")
     }
-
-    @Slow
-
 
     @Test
     void testCoordTransLog() {
@@ -821,9 +563,6 @@ class GgPlotFullTest {
                    "Should contain points or lines")
     }
 
-    @Slow
-
-
     @Test
     void testCoordTransPower() {
         // Test power transformation with explicit exponent
@@ -851,9 +590,6 @@ class GgPlotFullTest {
         assertTrue(circles.size() > 0,
                    "Should contain points")
     }
-
-    @Slow
-
 
     @Test
     void testCoordTransReciprocal() {
@@ -883,9 +619,6 @@ class GgPlotFullTest {
                    "Should contain points")
     }
 
-    @Slow
-
-
     @Test
     void testCoordTransAsn() {
         // Test arcsine square root transformation (for proportions)
@@ -914,9 +647,6 @@ class GgPlotFullTest {
                    "Should contain points")
     }
 
-    @Slow
-
-
     @Test
     void testStatBinHex() {
         // Test hexagonal binning stat with random data
@@ -940,9 +670,6 @@ class GgPlotFullTest {
                    "Should contain path elements for hexagons or circle elements for points")
     }
 
-    @Slow
-
-
     @Test
     void testStatBinHexWithMtcars() {
         // Test hexagonal binning with mtcars dataset
@@ -953,9 +680,6 @@ class GgPlotFullTest {
         Svg svg = chart.render()
         assertNotNull(svg)
     }
-
-    @Slow
-
 
     @Test
     void testStatSummaryHex() {
@@ -978,9 +702,6 @@ class GgPlotFullTest {
         assertNotNull(svg)
     }
 
-    @Slow
-
-
     @Test
     void testStatSummaryHexWithMtcars() {
         // Test hexagonal summary with mtcars - mean weight in hp/mpg bins
@@ -991,9 +712,6 @@ class GgPlotFullTest {
         Svg svg = chart.render()
         assertNotNull(svg)
     }
-
-    @Slow
-
 
     @Test
     void testStatSummaryHexMedian() {
@@ -1013,36 +731,7 @@ class GgPlotFullTest {
         assertNotNull(svg)
     }
 
-    // ========== Phase 1: ggplot2 API Compatibility Alias Tests ==========
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testGeomBin2dAlias() {
-        // Test that geom_bin2d() (ggplot2-style name with no underscore between 'bin' and '2d') works as alias for geom_bin_2d()
-        def data = Matrix.builder()
-            .columnNames(['x', 'y'])
-            .rows((1..100).collect { [Math.random() * 5, Math.random() * 5] })
-            .build()
-
-        def chart1 = ggplot(data, aes(x: 'x', y: 'y')) + geom_bin2d()
-        def chart2 = ggplot(data, aes(x: 'x', y: 'y')) + geom_bin_2d()
-
-        Svg svg1 = chart1.render()
-        Svg svg2 = chart2.render()
-
-        assertNotNull(svg1)
-        assertNotNull(svg2)
-
-        // Both should produce similar output (just check they render without error)
-        String svgContent1 = SvgWriter.toXml(svg1)
-        String svgContent2 = SvgWriter.toXml(svg2)
-
-        assertTrue(svgContent1.contains('<svg'))
-        assertTrue(svgContent2.contains('<svg'))
-    }
-
-    @Slow
-
+    // ========== ggplot2 API Compatibility Alias Tests ==========
 
     @Test
     void testGeomDensity2dAlias() {
@@ -1068,9 +757,6 @@ class GgPlotFullTest {
         assertTrue(svgContent2.contains('<svg'))
     }
 
-    @Slow
-
-
     @Test
     void testGeomDensity2dFilledAlias() {
         // Test that geom_density2d_filled() (no underscore between 'density' and '2d') works as alias for geom_density_2d_filled()
@@ -1093,21 +779,6 @@ class GgPlotFullTest {
 
         assertTrue(svgContent1.contains('<svg'))
         assertTrue(svgContent2.contains('<svg'))
-    }
-
-    @Test
-    @Disabled('Covered by GgPlotTest smoke layer')
-    void testStatBin2dAlias() {
-        // Test that stat_bin2d() (no underscore) works as alias for stat_bin_2d()
-        def statAlias = stat_bin2d()
-        def statOriginal = stat_bin_2d()
-
-        assertNotNull(statAlias)
-        assertNotNull(statOriginal)
-
-        // Both should be StatsBin2D instances
-        assertTrue(statAlias.class.name.contains('StatsBin2D'))
-        assertTrue(statOriginal.class.name.contains('StatsBin2D'))
     }
 
 }

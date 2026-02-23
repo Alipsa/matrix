@@ -7,7 +7,7 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataRowAccess
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.SpokeSupport
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders spokes from x/y using angle and radius columns or params.
@@ -23,20 +23,20 @@ class SpokeRenderer {
     int elementIndex = 0
 
     layerData.each { LayerData datum ->
-      BigDecimal x = NumberCoercionUtil.coerceToBigDecimal(datum.x)
-      BigDecimal y = NumberCoercionUtil.coerceToBigDecimal(datum.y)
+      BigDecimal x = ValueConverter.asBigDecimal(datum.x)
+      BigDecimal y = ValueConverter.asBigDecimal(datum.y)
       if (x == null || y == null) {
         return
       }
 
-      BigDecimal xend = NumberCoercionUtil.coerceToBigDecimal(datum.xend)
-      BigDecimal yend = NumberCoercionUtil.coerceToBigDecimal(datum.yend)
+      BigDecimal xend = ValueConverter.asBigDecimal(datum.xend)
+      BigDecimal yend = ValueConverter.asBigDecimal(datum.yend)
       if (xend == null || yend == null) {
-        BigDecimal angle = angleCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(LayerDataRowAccess.value(datum, angleCol))
+        BigDecimal angle = angleCol == null ? null : ValueConverter.asBigDecimal(LayerDataRowAccess.value(datum, angleCol))
         if (angle == null) {
           angle = angleDefault
         }
-        BigDecimal radius = radiusCol == null ? null : NumberCoercionUtil.coerceToBigDecimal(LayerDataRowAccess.value(datum, radiusCol))
+        BigDecimal radius = radiusCol == null ? null : ValueConverter.asBigDecimal(LayerDataRowAccess.value(datum, radiusCol))
         if (radius == null) {
           radius = defaultRadius
         }

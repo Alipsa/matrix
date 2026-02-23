@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.Stat
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
@@ -19,16 +19,16 @@ class EllipseStat {
     }
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
-    int segments = NumberCoercionUtil.coerceToBigDecimal(params.segments)?.intValue() ?: 51
+    int segments = ValueConverter.asBigDecimal(params.segments)?.intValue() ?: 51
     if (segments < 8) {
       segments = 51
     }
-    BigDecimal level = NumberCoercionUtil.coerceToBigDecimal(params.level) ?: 0.95
+    BigDecimal level = ValueConverter.asBigDecimal(params.level) ?: 0.95
     BigDecimal radiusScale = level >= 0.99 ? 2.58 : (level >= 0.95 ? 2.0 : 1.64)
 
     Map<Object, List<LayerData>> groups = StatUtils.groupBySeries(data.findAll { LayerData datum ->
-      NumberCoercionUtil.coerceToBigDecimal(datum.x) != null &&
-          NumberCoercionUtil.coerceToBigDecimal(datum.y) != null
+      ValueConverter.asBigDecimal(datum.x) != null &&
+          ValueConverter.asBigDecimal(datum.y) != null
     })
     if (groups.isEmpty()) {
       return []
@@ -40,8 +40,8 @@ class EllipseStat {
         return
       }
 
-      List<BigDecimal> xs = groupData.collect { NumberCoercionUtil.coerceToBigDecimal(it.x) }
-      List<BigDecimal> ys = groupData.collect { NumberCoercionUtil.coerceToBigDecimal(it.y) }
+      List<BigDecimal> xs = groupData.collect { ValueConverter.asBigDecimal(it.x) }
+      List<BigDecimal> ys = groupData.collect { ValueConverter.asBigDecimal(it.y) }
 
       BigDecimal meanX = Stat.mean(xs)
       BigDecimal meanY = Stat.mean(ys)

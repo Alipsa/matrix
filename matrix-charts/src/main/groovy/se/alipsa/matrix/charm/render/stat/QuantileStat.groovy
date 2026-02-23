@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.stats.regression.QuantileRegression
 
 /**
@@ -18,8 +18,8 @@ class QuantileStat {
     }
 
     List<LayerData> numeric = data.findAll { LayerData datum ->
-      NumberCoercionUtil.coerceToBigDecimal(datum.x) != null &&
-          NumberCoercionUtil.coerceToBigDecimal(datum.y) != null
+      ValueConverter.asBigDecimal(datum.x) != null &&
+          ValueConverter.asBigDecimal(datum.y) != null
     }
     if (numeric.size() < 2) {
       return []
@@ -29,7 +29,7 @@ class QuantileStat {
     List<Number> quantiles = []
     if (params.quantiles instanceof List) {
       (params.quantiles as List).each { Object value ->
-        BigDecimal quantile = NumberCoercionUtil.coerceToBigDecimal(value)
+        BigDecimal quantile = ValueConverter.asBigDecimal(value)
         if (quantile != null) {
           quantiles << quantile
         }
@@ -38,13 +38,13 @@ class QuantileStat {
     if (quantiles.isEmpty()) {
       quantiles = [0.25, 0.5, 0.75] as List<Number>
     }
-    int n = NumberCoercionUtil.coerceToBigDecimal(params.n)?.intValue() ?: 80
+    int n = ValueConverter.asBigDecimal(params.n)?.intValue() ?: 80
     if (n < 2) {
       n = 80
     }
 
-    List<BigDecimal> x = numeric.collect { NumberCoercionUtil.coerceToBigDecimal(it.x) }
-    List<BigDecimal> y = numeric.collect { NumberCoercionUtil.coerceToBigDecimal(it.y) }
+    List<BigDecimal> x = numeric.collect { ValueConverter.asBigDecimal(it.x) }
+    List<BigDecimal> y = numeric.collect { ValueConverter.asBigDecimal(it.y) }
     BigDecimal xMin = x.min()
     BigDecimal xMax = x.max()
     if (xMin == xMax) {
@@ -53,7 +53,7 @@ class QuantileStat {
 
     List<LayerData> result = []
     quantiles.eachWithIndex { Number tauValue, int groupIndex ->
-      BigDecimal tau = NumberCoercionUtil.coerceToBigDecimal(tauValue)
+      BigDecimal tau = ValueConverter.asBigDecimal(tauValue)
       if (tau == null || tau <= 0 || tau >= 1) {
         return
       }

@@ -1,7 +1,7 @@
 package se.alipsa.matrix.charm.render.scale
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Trained binned scale.
@@ -28,7 +28,7 @@ class BinnedCharmScale extends CharmScale {
   BigDecimal transform(Object value) {
     if (value == null || binBoundaries.isEmpty()) return null
 
-    BigDecimal numeric = NumberCoercionUtil.coerceToBigDecimal(value)
+    BigDecimal numeric = ValueConverter.asBigDecimal(value)
     if (numeric == null) return null
 
     BigDecimal center = findBinCenter(numeric)

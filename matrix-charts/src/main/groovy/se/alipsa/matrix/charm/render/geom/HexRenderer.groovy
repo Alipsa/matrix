@@ -5,7 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders hexagon glyphs centered at x/y coordinates.
@@ -14,8 +14,8 @@ import se.alipsa.matrix.charm.util.NumberCoercionUtil
 class HexRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
-    BigDecimal width = NumberCoercionUtil.coerceToBigDecimal(layer.params.binwidth) ?:
-        NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: 8
+    BigDecimal width = ValueConverter.asBigDecimal(layer.params.binwidth) ?:
+        ValueConverter.asBigDecimal(layer.params.size) ?: 8
     BigDecimal height = width * ((3.0 as BigDecimal).sqrt() / 2)
 
     int elementIndex = 0

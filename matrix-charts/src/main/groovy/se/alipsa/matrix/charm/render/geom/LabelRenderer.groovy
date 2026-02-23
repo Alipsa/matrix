@@ -5,7 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders text labels with background rectangles.
@@ -14,12 +14,12 @@ import se.alipsa.matrix.charm.util.NumberCoercionUtil
 class LabelRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
-    BigDecimal fontSize = NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: 10
+    BigDecimal fontSize = ValueConverter.asBigDecimal(layer.params.size) ?: 10
     String textFamily = layer.params.family?.toString() ?: 'sans-serif'
     String textFace = layer.params.fontface?.toString() ?: 'normal'
     String textColor = layer.params.textColor?.toString() ?: '#111111'
-    BigDecimal labelPadding = NumberCoercionUtil.coerceToBigDecimal(layer.params.labelPadding) ?: 2
-    BigDecimal radius = NumberCoercionUtil.coerceToBigDecimal(layer.params.labelR) ?: 2
+    BigDecimal labelPadding = ValueConverter.asBigDecimal(layer.params.labelPadding) ?: 2
+    BigDecimal radius = ValueConverter.asBigDecimal(layer.params.labelR) ?: 2
 
     int elementIndex = 0
     layerData.each { LayerData datum ->

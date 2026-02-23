@@ -1,7 +1,7 @@
 package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Shared parameter resolution for spoke stat/geom behavior.
@@ -27,7 +27,7 @@ class SpokeSupport {
    * Resolve fallback angle when row data has no angle value.
    */
   static BigDecimal resolveAngleDefault(Map<String, Object> params) {
-    NumberCoercionUtil.coerceToBigDecimal(params?.angle) ?: 0
+    ValueConverter.asBigDecimal(params?.angle) ?: 0
   }
 
   /**
@@ -48,11 +48,11 @@ class SpokeSupport {
    * Resolve fallback radius while avoiding coercion of column-name strings.
    */
   static BigDecimal resolveRadiusDefault(Map<String, Object> params) {
-    BigDecimal radiusDefault = NumberCoercionUtil.coerceToBigDecimal(params?.radiusDefault)
+    BigDecimal radiusDefault = ValueConverter.asBigDecimal(params?.radiusDefault)
     if (radiusDefault != null) {
       return radiusDefault
     }
-    BigDecimal radiusParam = NumberCoercionUtil.coerceToBigDecimal(params?.radius)
+    BigDecimal radiusParam = ValueConverter.asBigDecimal(params?.radius)
     radiusParam ?: 1
   }
 }

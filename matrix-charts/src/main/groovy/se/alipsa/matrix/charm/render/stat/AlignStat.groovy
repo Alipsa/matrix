@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Aligns grouped series to a shared x-grid using linear interpolation.
@@ -17,8 +17,8 @@ class AlignStat {
     }
 
     Map<Object, List<LayerData>> groups = StatUtils.groupBySeries(data.findAll { LayerData datum ->
-      NumberCoercionUtil.coerceToBigDecimal(datum.x) != null &&
-          NumberCoercionUtil.coerceToBigDecimal(datum.y) != null
+      ValueConverter.asBigDecimal(datum.x) != null &&
+          ValueConverter.asBigDecimal(datum.y) != null
     })
     if (groups.isEmpty()) {
       return []
@@ -26,7 +26,7 @@ class AlignStat {
 
     List<BigDecimal> xGrid = groups.values()
         .collectMany { List<LayerData> series ->
-          series.collect { LayerData datum -> NumberCoercionUtil.coerceToBigDecimal(datum.x) }
+          series.collect { LayerData datum -> ValueConverter.asBigDecimal(datum.x) }
         }
         .findAll { it != null } as List<BigDecimal>
     xGrid = xGrid.unique().sort()
@@ -37,8 +37,8 @@ class AlignStat {
     List<LayerData> result = []
     groups.each { Object key, List<LayerData> series ->
       List<LayerData> sorted = series.sort { LayerData a, LayerData b ->
-        BigDecimal x1 = NumberCoercionUtil.coerceToBigDecimal(a.x) ?: 0
-        BigDecimal x2 = NumberCoercionUtil.coerceToBigDecimal(b.x) ?: 0
+        BigDecimal x1 = ValueConverter.asBigDecimal(a.x) ?: 0
+        BigDecimal x2 = ValueConverter.asBigDecimal(b.x) ?: 0
         x1 <=> x2
       }
       LayerData template = sorted.first()
@@ -74,10 +74,10 @@ class AlignStat {
 
     LayerData first = sorted.first()
     LayerData last = sorted.last()
-    BigDecimal firstX = NumberCoercionUtil.coerceToBigDecimal(first.x)
-    BigDecimal firstY = NumberCoercionUtil.coerceToBigDecimal(first.y)
-    BigDecimal lastX = NumberCoercionUtil.coerceToBigDecimal(last.x)
-    BigDecimal lastY = NumberCoercionUtil.coerceToBigDecimal(last.y)
+    BigDecimal firstX = ValueConverter.asBigDecimal(first.x)
+    BigDecimal firstY = ValueConverter.asBigDecimal(first.y)
+    BigDecimal lastX = ValueConverter.asBigDecimal(last.x)
+    BigDecimal lastY = ValueConverter.asBigDecimal(last.y)
 
     if (targetX <= firstX) {
       return firstY
@@ -89,10 +89,10 @@ class AlignStat {
     for (int i = 0; i < sorted.size() - 1; i++) {
       LayerData left = sorted[i]
       LayerData right = sorted[i + 1]
-      BigDecimal x1 = NumberCoercionUtil.coerceToBigDecimal(left.x)
-      BigDecimal y1 = NumberCoercionUtil.coerceToBigDecimal(left.y)
-      BigDecimal x2 = NumberCoercionUtil.coerceToBigDecimal(right.x)
-      BigDecimal y2 = NumberCoercionUtil.coerceToBigDecimal(right.y)
+      BigDecimal x1 = ValueConverter.asBigDecimal(left.x)
+      BigDecimal y1 = ValueConverter.asBigDecimal(left.y)
+      BigDecimal x2 = ValueConverter.asBigDecimal(right.x)
+      BigDecimal y2 = ValueConverter.asBigDecimal(right.y)
       if (x1 == null || x2 == null || y1 == null || y2 == null) {
         continue
       }

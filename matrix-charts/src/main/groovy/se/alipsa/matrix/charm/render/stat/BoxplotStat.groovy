@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Boxplot stat transformation - computes quartiles, whiskers, and outliers.
@@ -32,17 +32,17 @@ class BoxplotStat {
     }
 
     Map<String, Object> params = StatEngine.effectiveParams(layer)
-    BigDecimal coef = NumberCoercionUtil.coerceToBigDecimal(params.coef) ?: 1.5
+    BigDecimal coef = ValueConverter.asBigDecimal(params.coef) ?: 1.5
 
     Map<String, List<BigDecimal>> groups = [:]
     Map<String, List<BigDecimal>> xGroups = [:]
     Map<String, LayerData> templates = [:]
     data.each { LayerData d ->
       String key = d.group?.toString() ?: d.x?.toString() ?: ''
-      BigDecimal yVal = NumberCoercionUtil.coerceToBigDecimal(d.y)
+      BigDecimal yVal = ValueConverter.asBigDecimal(d.y)
       if (yVal != null) {
         groups.computeIfAbsent(key) { [] } << yVal
-        BigDecimal xVal = NumberCoercionUtil.coerceToBigDecimal(d.x)
+        BigDecimal xVal = ValueConverter.asBigDecimal(d.x)
         if (xVal != null) {
           xGroups.computeIfAbsent(key) { [] } << xVal
         }

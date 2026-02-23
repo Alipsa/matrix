@@ -5,7 +5,7 @@ import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.charm.render.RenderConfig
 
 /**
@@ -90,8 +90,8 @@ class ScaleEngine {
 
     List<Number> xlim = chart.coord?.xlim
     if (xlim != null && xlim.size() >= 2) {
-      BigDecimal xMin = NumberCoercionUtil.coerceToBigDecimal(xlim[0])
-      BigDecimal xMax = NumberCoercionUtil.coerceToBigDecimal(xlim[1])
+      BigDecimal xMin = ValueConverter.asBigDecimal(xlim[0])
+      BigDecimal xMax = ValueConverter.asBigDecimal(xlim[1])
       if (xMin != null && xMax != null && xMax > xMin) {
         xScale.domainMin = xMin
         xScale.domainMax = xMax
@@ -99,8 +99,8 @@ class ScaleEngine {
     }
     List<Number> ylim = chart.coord?.ylim
     if (ylim != null && ylim.size() >= 2) {
-      BigDecimal yMin = NumberCoercionUtil.coerceToBigDecimal(ylim[0])
-      BigDecimal yMax = NumberCoercionUtil.coerceToBigDecimal(ylim[1])
+      BigDecimal yMin = ValueConverter.asBigDecimal(ylim[0])
+      BigDecimal yMax = ValueConverter.asBigDecimal(ylim[1])
       if (yMin != null && yMax != null && yMax > yMin) {
         yScale.domainMin = yMin
         yScale.domainMax = yMax
@@ -113,7 +113,7 @@ class ScaleEngine {
       return
     }
 
-    BigDecimal ratio = NumberCoercionUtil.coerceToBigDecimal(chart.coord?.ratio) ?: 1.0
+    BigDecimal ratio = ValueConverter.asBigDecimal(chart.coord?.ratio) ?: 1.0
     if (ratio <= 0) {
       ratio = 1.0
     }
@@ -167,7 +167,7 @@ class ScaleEngine {
     Scale effectiveSpec = spec
     if (effectiveSpec == null) {
       boolean numericValues = values.findAll { it != null }
-          .every { NumberCoercionUtil.coerceToBigDecimal(it) != null }
+          .every { ValueConverter.asBigDecimal(it) != null }
       effectiveSpec = numericValues ? Scale.gradient() : Scale.discrete()
     }
     ColorCharmScale colorScale = new ColorCharmScale(
@@ -183,7 +183,7 @@ class ScaleEngine {
       BigDecimal rangeStart, BigDecimal rangeEnd) {
 
     List<BigDecimal> numeric = values
-        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
+        .collect { ValueConverter.asBigDecimal(it) }
         .findAll { it != null } as List<BigDecimal>
 
     // Apply transform to find domain in transformed space
@@ -274,11 +274,11 @@ class ScaleEngine {
       max = max + 1
     }
 
-    int bins = NumberCoercionUtil.coerceToBigDecimal(scaleSpec.params?.bins)?.intValue() ?: 30
+    int bins = ValueConverter.asBigDecimal(scaleSpec.params?.bins)?.intValue() ?: 30
     if (bins < 1) {
       bins = 30
     }
-    BigDecimal binwidth = NumberCoercionUtil.coerceToBigDecimal(scaleSpec.params?.binwidth)
+    BigDecimal binwidth = ValueConverter.asBigDecimal(scaleSpec.params?.binwidth)
     if (binwidth == null || binwidth <= 0) {
       binwidth = (max - min) / bins
     } else {
@@ -316,8 +316,8 @@ class ScaleEngine {
   private static CharmScale trainSizeScale(List<Object> values, Scale spec) {
     Scale scaleSpec = spec ?: Scale.continuous()
     List<Number> range = scaleSpec.params?.range as List<Number>
-    BigDecimal rangeStart = NumberCoercionUtil.coerceToBigDecimal(range != null && range.size() > 0 ? range[0] : null) ?: 2.0
-    BigDecimal rangeEnd = NumberCoercionUtil.coerceToBigDecimal(range != null && range.size() > 1 ? range[1] : null) ?: 10.0
+    BigDecimal rangeStart = ValueConverter.asBigDecimal(range != null && range.size() > 0 ? range[0] : null) ?: 2.0
+    BigDecimal rangeEnd = ValueConverter.asBigDecimal(range != null && range.size() > 1 ? range[1] : null) ?: 10.0
     if (scaleSpec.type == ScaleType.DISCRETE) {
       return trainDiscreteScale(values, scaleSpec, rangeStart, rangeEnd)
     }
@@ -355,8 +355,8 @@ class ScaleEngine {
   private static CharmScale trainShapeScale(List<Object> values, Scale spec) {
     Scale scaleSpec = spec ?: Scale.discrete()
     List<Number> range = scaleSpec.params?.range as List<Number>
-    BigDecimal rangeStart = NumberCoercionUtil.coerceToBigDecimal(range != null && range.size() > 0 ? range[0] : null) ?: 0.0
-    BigDecimal rangeEnd = NumberCoercionUtil.coerceToBigDecimal(range != null && range.size() > 1 ? range[1] : null) ?: 1.0
+    BigDecimal rangeStart = ValueConverter.asBigDecimal(range != null && range.size() > 0 ? range[0] : null) ?: 0.0
+    BigDecimal rangeEnd = ValueConverter.asBigDecimal(range != null && range.size() > 1 ? range[1] : null) ?: 1.0
     LinkedHashSet<String> unique = new LinkedHashSet<>()
     values.each { Object value ->
       if (value != null) {
@@ -381,8 +381,8 @@ class ScaleEngine {
   private static CharmScale trainAlphaScale(List<Object> values, Scale spec) {
     Scale scaleSpec = spec ?: Scale.continuous()
     List<Number> range = scaleSpec.params?.range as List<Number>
-    BigDecimal rangeStart = NumberCoercionUtil.coerceToBigDecimal(range != null && range.size() > 0 ? range[0] : null) ?: 0.1
-    BigDecimal rangeEnd = NumberCoercionUtil.coerceToBigDecimal(range != null && range.size() > 1 ? range[1] : null) ?: 1.0
+    BigDecimal rangeStart = ValueConverter.asBigDecimal(range != null && range.size() > 0 ? range[0] : null) ?: 0.1
+    BigDecimal rangeEnd = ValueConverter.asBigDecimal(range != null && range.size() > 1 ? range[1] : null) ?: 1.0
     if (scaleSpec.type == ScaleType.DISCRETE) {
       return trainDiscreteScale(values, scaleSpec, rangeStart, rangeEnd)
     }
@@ -419,7 +419,7 @@ class ScaleEngine {
   /** Coerces a list of values to BigDecimal, filtering out nulls and non-numeric values. */
   private static List<BigDecimal> coerceToNumeric(List<Object> values) {
     values
-        .collect { NumberCoercionUtil.coerceToBigDecimal(it) }
+        .collect { ValueConverter.asBigDecimal(it) }
         .findAll { it != null } as List<BigDecimal>
   }
 
@@ -438,7 +438,7 @@ class ScaleEngine {
     }
     // Auto-detect: discrete if any non-null value is non-numeric
     !values.every { Object value ->
-      value == null || NumberCoercionUtil.coerceToBigDecimal(value) != null
+      value == null || ValueConverter.asBigDecimal(value) != null
     }
   }
 }

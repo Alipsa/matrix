@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render.stat
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.stats.kde.KernelDensity
 
 /**
@@ -29,7 +29,7 @@ class YDensityStat {
     groups.each { Object centerX, List<LayerData> bucket ->
       List<Number> values = []
       bucket.each { LayerData datum ->
-        BigDecimal value = NumberCoercionUtil.coerceToBigDecimal(datum.y)
+        BigDecimal value = ValueConverter.asBigDecimal(datum.y)
         if (value != null) {
           values << value
         }

@@ -5,7 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 import static se.alipsa.matrix.ext.NumberExtension.PI
 
@@ -28,22 +28,22 @@ class PieRenderer {
     BigDecimal cx = panelWidth / 2.0
     BigDecimal cy = panelHeight / 2.0
     BigDecimal outerRadius = panelWidth.min(panelHeight) * 0.45
-    BigDecimal innerRadiusRatio = NumberCoercionUtil.coerceToBigDecimal(context.chart.coord?.params?.innerRadius)
+    BigDecimal innerRadiusRatio = ValueConverter.asBigDecimal(context.chart.coord?.params?.innerRadius)
     innerRadiusRatio = innerRadiusRatio == null ? 0.0 : innerRadiusRatio.max(0).min(1)
     BigDecimal innerRadius = outerRadius * innerRadiusRatio
     String theta = context.chart.coord?.params?.theta?.toString()?.toLowerCase() ?: 'x'
-    BigDecimal start = NumberCoercionUtil.coerceToBigDecimal(context.chart.coord?.params?.start) ?: (-PI / 2)
+    BigDecimal start = ValueConverter.asBigDecimal(context.chart.coord?.params?.start) ?: (-PI / 2)
     Integer directionParam = context.chart.coord?.params?.direction as Integer
     boolean clockwise = context.chart.coord?.params?.containsKey('clockwise')
         ? context.chart.coord?.params?.clockwise as boolean
         : (directionParam == null || directionParam >= 0)
 
     List<BigDecimal> values = layerData.collect { LayerData datum ->
-      BigDecimal ymin = NumberCoercionUtil.coerceToBigDecimal(datum.ymin)
-      BigDecimal ymax = NumberCoercionUtil.coerceToBigDecimal(datum.ymax)
+      BigDecimal ymin = ValueConverter.asBigDecimal(datum.ymin)
+      BigDecimal ymax = ValueConverter.asBigDecimal(datum.ymax)
       BigDecimal v = (ymin != null && ymax != null)
           ? (ymax - ymin).abs()
-          : NumberCoercionUtil.coerceToBigDecimal(datum.y)
+          : ValueConverter.asBigDecimal(datum.y)
       v != null && v > 0 ? v : 0.0
     }
     BigDecimal total = values.sum() as BigDecimal

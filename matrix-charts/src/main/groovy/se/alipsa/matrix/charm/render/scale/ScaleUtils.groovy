@@ -1,7 +1,7 @@
 package se.alipsa.matrix.charm.render.scale
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Utility methods for scale operations.
@@ -16,7 +16,7 @@ class ScaleUtils {
    * @return the BigDecimal value, or null if the value cannot be converted
    */
   static BigDecimal coerceToNumber(Object value) {
-    NumberCoercionUtil.coerceToBigDecimal(value)
+    ValueConverter.asBigDecimal(value)
   }
 
   /**

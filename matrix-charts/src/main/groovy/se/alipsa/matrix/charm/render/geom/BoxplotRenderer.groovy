@@ -7,7 +7,7 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataRowAccess
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders boxplot geometry.
@@ -32,7 +32,7 @@ class BoxplotRenderer {
       BigDecimal step = scale.levels.isEmpty() ? 20 : (scale.rangeEnd - scale.rangeStart) / scale.levels.size()
       baseBoxWidth = step * 0.5
     } else {
-      baseBoxWidth = NumberCoercionUtil.coerceToBigDecimal(layer.params.boxWidth) ?: 20
+      baseBoxWidth = ValueConverter.asBigDecimal(layer.params.boxWidth) ?: 20
     }
 
     layerData.each { LayerData datum ->
@@ -42,8 +42,8 @@ class BoxplotRenderer {
         return
       }
       BigDecimal boxWidth = baseBoxWidth
-      BigDecimal xmin = NumberCoercionUtil.coerceToBigDecimal(datum.xmin ?: LayerDataRowAccess.value(datum, 'xmin'))
-      BigDecimal xmax = NumberCoercionUtil.coerceToBigDecimal(datum.xmax ?: LayerDataRowAccess.value(datum, 'xmax'))
+      BigDecimal xmin = ValueConverter.asBigDecimal(datum.xmin ?: LayerDataRowAccess.value(datum, 'xmin'))
+      BigDecimal xmax = ValueConverter.asBigDecimal(datum.xmax ?: LayerDataRowAccess.value(datum, 'xmax'))
       if (xmin != null && xmax != null) {
         BigDecimal x1 = context.xScale.transform(xmin)
         BigDecimal x2 = context.xScale.transform(xmax)
@@ -52,7 +52,7 @@ class BoxplotRenderer {
           xCenter = (x1 + x2) / 2
         }
       } else {
-        BigDecimal relVarWidth = NumberCoercionUtil.coerceToBigDecimal(datum.meta.relvarwidth)
+        BigDecimal relVarWidth = ValueConverter.asBigDecimal(datum.meta.relvarwidth)
         if (relVarWidth != null && relVarWidth > 0) {
           boxWidth = baseBoxWidth * relVarWidth
         }

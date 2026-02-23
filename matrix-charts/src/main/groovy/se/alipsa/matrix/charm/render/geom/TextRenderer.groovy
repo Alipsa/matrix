@@ -5,7 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders text geometry.
@@ -17,14 +17,14 @@ class TextRenderer {
    * Render text labels at x/y positions.
    */
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
-    BigDecimal size = NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: 10
+    BigDecimal size = ValueConverter.asBigDecimal(layer.params.size) ?: 10
     String family = layer.params.family?.toString() ?: 'sans-serif'
     String fontface = layer.params.fontface?.toString() ?: 'normal'
-    BigDecimal angle = NumberCoercionUtil.coerceToBigDecimal(layer.params.angle) ?: 0
-    BigDecimal hjust = NumberCoercionUtil.coerceToBigDecimal(layer.params.hjust) ?: 0.5
-    BigDecimal vjust = NumberCoercionUtil.coerceToBigDecimal(layer.params.vjust) ?: 0.5
-    BigDecimal nudgeX = NumberCoercionUtil.coerceToBigDecimal(layer.params.nudge_x) ?: 0
-    BigDecimal nudgeY = NumberCoercionUtil.coerceToBigDecimal(layer.params.nudge_y) ?: 0
+    BigDecimal angle = ValueConverter.asBigDecimal(layer.params.angle) ?: 0
+    BigDecimal hjust = ValueConverter.asBigDecimal(layer.params.hjust) ?: 0.5
+    BigDecimal vjust = ValueConverter.asBigDecimal(layer.params.vjust) ?: 0.5
+    BigDecimal nudgeX = ValueConverter.asBigDecimal(layer.params.nudge_x) ?: 0
+    BigDecimal nudgeY = ValueConverter.asBigDecimal(layer.params.nudge_y) ?: 0
     int elementIndex = 0
 
     layerData.each { LayerData datum ->

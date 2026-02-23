@@ -22,7 +22,7 @@ import se.alipsa.matrix.charm.render.geom.GeomUtils
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ColorCharmScale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.charts.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
@@ -67,21 +67,21 @@ class AnnotationEngine {
       return
     }
 
-    BigDecimal sizeValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.size)
+    BigDecimal sizeValue = ValueConverter.asBigDecimal(spec.params?.size)
     BigDecimal size = sizeValue == null ? 11 : sizeValue
     String family = spec.params?.family?.toString() ?: 'sans-serif'
     String fontface = spec.params?.fontface?.toString() ?: 'normal'
-    BigDecimal hjustValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.hjust)
+    BigDecimal hjustValue = ValueConverter.asBigDecimal(spec.params?.hjust)
     BigDecimal hjust = hjustValue == null ? 0.5 : hjustValue
-    BigDecimal vjustValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.vjust)
+    BigDecimal vjustValue = ValueConverter.asBigDecimal(spec.params?.vjust)
     BigDecimal vjust = vjustValue == null ? 0.5 : vjustValue
-    BigDecimal nudgeXValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.nudge_x)
+    BigDecimal nudgeXValue = ValueConverter.asBigDecimal(spec.params?.nudge_x)
     BigDecimal nudgeX = nudgeXValue == null ? 0 : nudgeXValue
-    BigDecimal nudgeYValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.nudge_y)
+    BigDecimal nudgeYValue = ValueConverter.asBigDecimal(spec.params?.nudge_y)
     BigDecimal nudgeY = nudgeYValue == null ? 0 : nudgeYValue
-    BigDecimal angleValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.angle)
+    BigDecimal angleValue = ValueConverter.asBigDecimal(spec.params?.angle)
     BigDecimal angle = angleValue == null ? 0 : angleValue
-    BigDecimal alphaValue = NumberCoercionUtil.coerceToBigDecimal(spec.params?.alpha)
+    BigDecimal alphaValue = ValueConverter.asBigDecimal(spec.params?.alpha)
     BigDecimal alpha = alphaValue == null ? 1.0 : alphaValue
     String color = normalizeColor(spec.params?.color ?: spec.params?.colour ?: '#000000')
     BigDecimal drawX = x + nudgeX * 10
@@ -127,9 +127,9 @@ class AnnotationEngine {
 
     String fill = normalizeColor(spec.params?.fill ?: '#595959')
     String stroke = normalizeColor(spec.params?.color ?: spec.params?.colour ?: 'none')
-    BigDecimal alpha = NumberCoercionUtil.coerceToBigDecimal(spec.params?.alpha) ?: 1.0
-    BigDecimal strokeWidth = NumberCoercionUtil.coerceToBigDecimal(spec.params?.size) ?:
-        NumberCoercionUtil.coerceToBigDecimal(spec.params?.linewidth) ?: 0.5
+    BigDecimal alpha = ValueConverter.asBigDecimal(spec.params?.alpha) ?: 1.0
+    BigDecimal strokeWidth = ValueConverter.asBigDecimal(spec.params?.size) ?:
+        ValueConverter.asBigDecimal(spec.params?.linewidth) ?: 0.5
 
     def rect = dataLayer.addRect(width, height)
         .x([bounds.xminPx, bounds.xmaxPx].min())
@@ -169,9 +169,9 @@ class AnnotationEngine {
     }
 
     String stroke = normalizeColor(spec.params?.color ?: spec.params?.colour ?: '#000000')
-    BigDecimal lineWidth = NumberCoercionUtil.coerceToBigDecimal(spec.params?.size) ?:
-        NumberCoercionUtil.coerceToBigDecimal(spec.params?.linewidth) ?: 0.5
-    BigDecimal alpha = NumberCoercionUtil.coerceToBigDecimal(spec.params?.alpha) ?: 1.0
+    BigDecimal lineWidth = ValueConverter.asBigDecimal(spec.params?.size) ?:
+        ValueConverter.asBigDecimal(spec.params?.linewidth) ?: 0.5
+    BigDecimal alpha = ValueConverter.asBigDecimal(spec.params?.alpha) ?: 1.0
     String dashArray = GeomUtils.dashArray(spec.params?.linetype)
 
     def line = dataLayer.addLine()
@@ -248,14 +248,14 @@ class AnnotationEngine {
     int base = (params.base ?: 10) as int
     String sides = (params.sides ?: 'bl').toString().toLowerCase()
     boolean outside = (params.outside ?: false) as boolean
-    BigDecimal shortLen = NumberCoercionUtil.coerceToBigDecimal(params.short) ?: 1.5
-    BigDecimal midLen = NumberCoercionUtil.coerceToBigDecimal(params.mid) ?: 2.25
-    BigDecimal longLen = NumberCoercionUtil.coerceToBigDecimal(params.long) ?: 4.5
+    BigDecimal shortLen = ValueConverter.asBigDecimal(params.short) ?: 1.5
+    BigDecimal midLen = ValueConverter.asBigDecimal(params.mid) ?: 2.25
+    BigDecimal longLen = ValueConverter.asBigDecimal(params.long) ?: 4.5
     String color = normalizeColor(params.colour ?: params.color ?: 'black')
-    BigDecimal lineWidth = NumberCoercionUtil.coerceToBigDecimal(params.linewidth) ?:
-        NumberCoercionUtil.coerceToBigDecimal(params.size) ?: 0.5
+    BigDecimal lineWidth = ValueConverter.asBigDecimal(params.linewidth) ?:
+        ValueConverter.asBigDecimal(params.size) ?: 0.5
     String linetype = params.linetype?.toString() ?: 'solid'
-    BigDecimal alpha = NumberCoercionUtil.coerceToBigDecimal(params.alpha) ?: 1.0
+    BigDecimal alpha = ValueConverter.asBigDecimal(params.alpha) ?: 1.0
     String dashArray = GeomUtils.dashArray(linetype)
 
     int elementIndex = annotationElementIndexBase(annotationIndex)
@@ -360,9 +360,9 @@ class AnnotationEngine {
 
     String fillParam = normalizeColor(spec.params?.fill ?: 'gray')
     String colorParam = normalizeColor(spec.params?.colour ?: spec.params?.color ?: 'black')
-    BigDecimal lineWidth = NumberCoercionUtil.coerceToBigDecimal(spec.params?.linewidth) ?:
-        NumberCoercionUtil.coerceToBigDecimal(spec.params?.size) ?: 1
-    BigDecimal alpha = NumberCoercionUtil.coerceToBigDecimal(spec.params?.alpha) ?: 1.0
+    BigDecimal lineWidth = ValueConverter.asBigDecimal(spec.params?.linewidth) ?:
+        ValueConverter.asBigDecimal(spec.params?.size) ?: 1
+    BigDecimal alpha = ValueConverter.asBigDecimal(spec.params?.alpha) ?: 1.0
     String dashArray = GeomUtils.dashArray(spec.params?.linetype)
     String fillCol = spec.mapping?.get('fill')
     String colorCol = spec.mapping?.get('color')

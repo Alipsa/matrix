@@ -5,7 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders smoothed lines, optionally with confidence bands.
@@ -32,11 +32,11 @@ class SmoothRenderer {
       LayerData first = sorted.first()
       String stroke = GeomUtils.resolveStroke(context, layer, first)
       String fill = GeomUtils.resolveFill(context, layer, first)
-      BigDecimal lineWidth = NumberCoercionUtil.coerceToBigDecimal(first.size) ?:
-          NumberCoercionUtil.coerceToBigDecimal(layer.params.lineWidth) ?:
-          NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: 1.5
+      BigDecimal lineWidth = ValueConverter.asBigDecimal(first.size) ?:
+          ValueConverter.asBigDecimal(layer.params.lineWidth) ?:
+          ValueConverter.asBigDecimal(layer.params.size) ?: 1.5
       BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, first)
-      BigDecimal bandAlpha = NumberCoercionUtil.coerceToBigDecimal(layer.params.fillAlpha) ?: 0.2
+      BigDecimal bandAlpha = ValueConverter.asBigDecimal(layer.params.fillAlpha) ?: 0.2
       String dashArray = GeomUtils.dashArray(first.linetype ?: layer.params.linetype)
 
       List<BigDecimal[]> linePoints = []

@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataUtil
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Dodge position adjustment - places overlapping objects side by side.
@@ -30,7 +30,7 @@ class DodgePosition {
     }
 
     Map<String, Object> params = PositionEngine.effectiveParams(layer)
-    BigDecimal width = params.width != null ? NumberCoercionUtil.coerceToBigDecimal(params.width) ?: 0.9 : 0.9
+    BigDecimal width = params.width != null ? ValueConverter.asBigDecimal(params.width) ?: 0.9 : 0.9
 
     // Group data by x value
     Map<Object, List<LayerData>> byX = new LinkedHashMap<>()
@@ -70,7 +70,7 @@ class DodgePosition {
       bucket.each { LayerData datum ->
         LayerData updated = LayerDataUtil.copyDatum(datum)
         Object group = resolveGroup(datum)
-        BigDecimal xNum = NumberCoercionUtil.coerceToBigDecimal(datum.x)
+        BigDecimal xNum = ValueConverter.asBigDecimal(datum.x)
         if (xNum != null && groupOffsets.containsKey(group)) {
           updated.x = xNum + groupOffsets.get(group)
         }

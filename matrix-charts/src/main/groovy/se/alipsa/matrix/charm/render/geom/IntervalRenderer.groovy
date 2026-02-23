@@ -8,7 +8,7 @@ import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders interval geometries: errorbar, errorbarh, crossbar, linerange, pointrange.
@@ -21,7 +21,7 @@ class IntervalRenderer {
       return
     }
 
-    BigDecimal widthRatio = NumberCoercionUtil.coerceToBigDecimal(layer.params.width) ?: 0.5
+    BigDecimal widthRatio = ValueConverter.asBigDecimal(layer.params.width) ?: 0.5
     int elementIndex = 0
 
     layerData.each { LayerData datum ->
@@ -65,7 +65,7 @@ class IntervalRenderer {
         case CharmGeomType.POINTRANGE -> {
           if (x != null && y != null && ymin != null && ymax != null) {
             drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-pointrange', nextElementIndex++)
-            BigDecimal pointRadius = NumberCoercionUtil.coerceToBigDecimal(layer.params.size) ?: 3
+            BigDecimal pointRadius = ValueConverter.asBigDecimal(layer.params.size) ?: 3
             String fill = GeomUtils.resolveFill(context, layer, datum)
             String stroke = GeomUtils.resolveStroke(context, layer, datum)
             BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)

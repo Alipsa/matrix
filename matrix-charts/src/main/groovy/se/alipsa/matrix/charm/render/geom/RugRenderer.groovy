@@ -5,7 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
-import se.alipsa.matrix.charm.util.NumberCoercionUtil
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Renders rug geometry as small axis ticks.
@@ -15,7 +15,7 @@ class RugRenderer {
 
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData, int panelWidth, int panelHeight) {
     String sides = layer.params.sides?.toString()?.toLowerCase() ?: 'bl'
-    BigDecimal lengthRatio = NumberCoercionUtil.coerceToBigDecimal(layer.params.length) ?: 0.03
+    BigDecimal lengthRatio = ValueConverter.asBigDecimal(layer.params.length) ?: 0.03
     BigDecimal tickX = panelWidth * lengthRatio
     BigDecimal tickY = panelHeight * lengthRatio
 
