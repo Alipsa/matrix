@@ -4,7 +4,6 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
   id('groovy')
   id('java-library')
-  //id 'org.openjfx.javafxplugin' version '0.0.13'
   id('maven-publish')
   id('signing')
   id("se.alipsa.nexus-release-plugin") version '2.0.1'
@@ -12,7 +11,7 @@ plugins {
 
 group = 'se.alipsa.matrix'
 version = '0.5.0-SNAPSHOT'
-description = "Groovy chart library for plotting with matrix ([][] data)"
+description = "Groovy ggplot2-style charting API for matrix"
 
 ext.nexusUrl = version.contains("SNAPSHOT")
     ? "https://oss.sonatype.org/content/repositories/snapshots/"
@@ -35,20 +34,9 @@ compileGroovy {
   options.deprecation = true
 }
 
-// we should consider using monocle to allow this to work for back-end headless apps:
-// https://wiki.openjdk.org/display/OpenJFX/Monocle
-/*
-this makes the javafx dependencies added to the pom
-javafx {
-  version = "19.0.2.1"
-  modules = ['javafx.controls', 'javafx.swing']
-}
- */
-
 dependencies {
   OperatingSystem os = OperatingSystem.current()
 
-  // check https://repo1.maven.org/maven2/org/openjfx/javafx/20/javafx-20.pom for the platform property
   def qualifier = 'unknown'
   if (os.isLinux()) {
     qualifier='linux'
@@ -58,17 +46,11 @@ dependencies {
     qualifier = 'mac-aarch64'
   }
   def javaFxVersion = '23.0.2'
-  // compile only dependencies are not included in the pom
+
   compileOnly libs.groovy
   compileOnly project(':matrix-core')
   compileOnly project(':matrix-stats')
-  //compileOnly project(':matrix-groovy-ext')
-  api("se.alipsa.groovy:gsvg:1.0.0")
-  api("se.alipsa.groovy:gsvg-export:1.0.0")
-
-  api 'se.alipsa:fxsvgimage:1.5.1'
-  //api 'org.girod:fxsvgimage:1.4'
-  api 'com.github.weisj:jsvg:2.0.0'
+  api project(':matrix-charts')
 
   compileOnly "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   compileOnly "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
@@ -77,13 +59,10 @@ dependencies {
 
   testImplementation libs.groovy
   testImplementation libs.groovy.xml
-  //testImplementation "org.testfx:openjfx-monocle:jdk-11+26"
 
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-stats')
   testImplementation project(':matrix-datasets')
-  testImplementation project(':matrix-ggcharts')
-  //testImplementation project(':matrix-groovy-ext')
   testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-controls:${javaFxVersion}:$qualifier"
@@ -94,17 +73,14 @@ dependencies {
   testRuntimeOnly libs.junit.platform.launcher
   testImplementation libs.slf4j.simple
   testImplementation libs.groovy.sql
-  //testImplementation 'org.testfx:testfx-core:4.0.16-alpha'
 }
 
 test {
   testLogging.showStandardStreams = true
-  // run using gradle -Pheadless=true test
   jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
   maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
   useJUnitPlatform()
   testLogging {
-    // set options for log level LIFECYCLE
     events TestLogEvent.FAILED,
         TestLogEvent.SKIPPED,
         TestLogEvent.STANDARD_OUT
@@ -114,7 +90,6 @@ test {
     showStackTraces = true
     showStandardStreams = true
 
-    // set options for log level DEBUG and INFO
     debug {
       events TestLogEvent.STARTED,
           TestLogEvent.FAILED,
@@ -130,9 +105,8 @@ test {
     def totalDuration = 0
     afterSuite { desc, result ->
       def duration = result.endTime - result.startTime
-      //println "Duration of $desc: $duration ms"
       totalDuration += duration
-      if (!desc.parent) { // will match the outermost suite
+      if (!desc.parent) {
         println "\nTotal test duration: ${totalDuration/1000} s"
         def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
         def startItem = '|  ', endItem = '  |'
@@ -140,23 +114,6 @@ test {
         println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
       }
     }
-  }
-}
-
-tasks.register('printCp') {
-  description = "Utility task to print the classpath, excluding Groovy dependencies, to easily run examples"
-  // Combine configurations into a single FileCollection
-  def fullClasspath = configurations.testRuntimeClasspath +
-      configurations.compileClasspath +
-      tasks.jar.outputs.files
-
-  inputs.files(fullClasspath)
-
-  doLast {
-    def filteredPath = fullClasspath.filter { file ->
-      !file.path.contains("org/apache/groovy")
-    }.asPath // .asPath handles the OS-specific separator ( : or ; )
-    println filteredPath
   }
 }
 
@@ -170,6 +127,19 @@ tasks.register('testFast', Test) {
   }
   jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
   maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
+}
+
+tasks.register('verifyGgRegression', Test) {
+  description = 'Runs gg test suite as a regression gate before merge'
+  group = 'verification'
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+  useJUnitPlatform()
+  jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
+  filter {
+    includeTestsMatching 'gg.*'
+  }
 }
 
 //Maven Central uploads
@@ -190,16 +160,16 @@ publishing {
       artifact(javadocJar)
       artifact(sourcesJar)
       pom {
-        name = 'Groovy Matrix Plotting'
+        name = 'Groovy Matrix GGPlot'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-charts"
+        url = "https://github.com/Alipsa/matrix/matrix-ggcharts"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-charts/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-ggcharts/master/LICENSE'
           }
         }
         developers {
@@ -209,7 +179,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-charts/tree/master'
+          url = 'https://github.com/Alipsa/matrix/matrix-ggcharts/tree/master'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }
@@ -232,7 +202,6 @@ publishing {
 
 signing {
   if (project.properties['signing.keyId'] != null) {
-    //project.logger.lifecycle("Signing artifacts...")
     sign publishing.publications.maven
   } else {
     project.logger.debug("signing.keyId is not defined, skipping signing of artifacts...")

@@ -1,4 +1,4 @@
-package se.alipsa.matrix.charm.bridge
+package se.alipsa.matrix.gg.bridge
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
@@ -1013,7 +1013,7 @@ class GgCharmCompiler {
     theme.baseSize = source.baseSize
     theme.baseLineHeight = source.baseLineHeight
     theme.themeName = source.themeName
-    theme.explicitNulls = source.explicitNulls != null ? new HashSet<>(source.explicitNulls) : new HashSet<>()
+    theme.explicitNulls = source.explicitNulls != null ? new HashSet<String>(source.explicitNulls) : new HashSet<String>()
     theme
   }
 

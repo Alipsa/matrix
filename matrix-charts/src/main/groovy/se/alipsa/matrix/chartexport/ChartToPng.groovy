@@ -5,7 +5,6 @@ import com.github.weisj.jsvg.parser.LoaderContext
 import com.github.weisj.jsvg.parser.SVGLoader
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
-import se.alipsa.matrix.gg.GgChart
 
 import javax.imageio.ImageIO
 import java.awt.Graphics2D
@@ -16,9 +15,11 @@ import java.nio.charset.StandardCharsets
 /**
  * Exports charts as PNG images.
  *
- * <p>Accepts SVG strings, {@link Svg} objects, {@link GgChart} instances,
+ * <p>Accepts SVG strings, {@link Svg} objects,
  * and {@link CharmChart} instances. All paths converge through SVG rendering
  * via jsvg, with no JavaFX toolkit dependency.</p>
+ *
+ * <p>For GgChart export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggcharts.</p>
  */
 class ChartToPng {
 
@@ -92,24 +93,6 @@ class ChartToPng {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
     export(svgChart.toXml(), os)
-  }
-
-  /**
-   * Export a {@link GgChart} as a PNG image file.
-   *
-   * @param chart the {@link GgChart} object to export
-   * @param targetFile the {@link File} where the PNG image will be written
-   * @throws IOException if an error occurs during file writing
-   * @throws IllegalArgumentException if chart or targetFile is null
-   */
-  static void export(GgChart chart, File targetFile) throws IOException {
-    if (chart == null) {
-      throw new IllegalArgumentException("chart cannot be null")
-    }
-    if (targetFile == null) {
-      throw new IllegalArgumentException("targetFile cannot be null")
-    }
-    export(chart.render(), targetFile)
   }
 
   /**

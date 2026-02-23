@@ -7,6 +7,7 @@ import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.gg.GgChart
+import se.alipsa.matrix.gg.export.GgExport
 
 import java.awt.image.BufferedImage
 
@@ -20,20 +21,16 @@ import testutil.Slow
 class ChartToImageTest {
 
   @Test
-  void testExportToBufferedImage() {
+  void testExportGgChartToBufferedImage() {
     def mpg = Dataset.mpg()
     GgChart chart = ggplot(mpg, aes(x: 'cty', y: 'hwy')) +
         geom_point() +
         geom_smooth(method: 'lm') +
         labs(title: 'City vs Highway MPG', x: 'City MPG', y: 'Highway MPG')
-    Svg svg = chart.render()
 
-    BufferedImage image = ChartToImage.export(svg)
+    BufferedImage image = GgExport.toImage(chart)
 
-    // Verify image is not null
     assertNotNull(image, "BufferedImage should not be null")
-
-    // Verify image dimensions are reasonable (greater than zero)
     assertTrue(image.getWidth() > 0, "Image width should be greater than 0")
     assertTrue(image.getHeight() > 0, "Image height should be greater than 0")
   }
