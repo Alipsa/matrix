@@ -37,13 +37,14 @@ compileGroovy {
 dependencies {
   OperatingSystem os = OperatingSystem.current()
 
+  def arch = System.getProperty('os.arch')
   def qualifier = 'unknown'
   if (os.isLinux()) {
-    qualifier='linux'
+    qualifier = arch == 'aarch64' ? 'linux-aarch64' : 'linux'
   } else if (os.isWindows()) {
     qualifier = 'win'
   } else if (os.isMacOsX()) {
-    qualifier = 'mac-aarch64'
+    qualifier = arch == 'aarch64' ? 'mac-aarch64' : 'mac'
   }
   def javaFxVersion = '23.0.2'
 
@@ -139,6 +140,7 @@ tasks.register('verifyGgRegression', Test) {
   maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
   filter {
     includeTestsMatching 'gg.*'
+    includeTestsMatching 'export.*'
   }
 }
 

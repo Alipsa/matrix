@@ -1,7 +1,7 @@
 package se.alipsa.matrix.gg.export
 
 import groovy.transform.CompileStatic
-import se.alipsa.groovy.svg.Svg
+import org.girod.javafx.svgimage.SVGImage
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJfx
 import se.alipsa.matrix.chartexport.ChartToJpeg
@@ -92,7 +92,7 @@ class GgExport {
    * @return a JavaFX SVGImage representing the rendered chart
    * @throws IllegalArgumentException if chart is null
    */
-  static Object toJfx(GgChart chart) {
+  static SVGImage toJfx(GgChart chart) {
     if (chart == null) {
       throw new IllegalArgumentException("chart must not be null")
     }

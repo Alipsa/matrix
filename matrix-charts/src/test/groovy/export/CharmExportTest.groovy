@@ -1,7 +1,6 @@
 package export
 
 import org.junit.jupiter.api.Test
-import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.chartexport.ChartToImage

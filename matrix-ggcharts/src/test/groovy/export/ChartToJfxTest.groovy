@@ -52,9 +52,10 @@ class ChartToJfxTest {
         geom_smooth(method: 'lm') +
         labs(title: 'City vs Highway MPG', x: 'City MPG', y: 'Highway MPG')
 
-    Object svgImage = GgExport.toJfx(chart)
+    SVGImage svgImage = GgExport.toJfx(chart)
 
     assertNotNull(svgImage, "SVGImage should not be null")
+    assertNotNull(svgImage.getSVGContent(), "SVG content should not be null")
   }
 
   @Test
