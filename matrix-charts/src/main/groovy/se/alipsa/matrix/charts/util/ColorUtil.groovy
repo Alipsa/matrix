@@ -56,7 +56,7 @@ class ColorUtil {
         if (matcher.matches()) {
             int pct = Integer.parseInt(matcher.group(1))
             pct = 0.max(pct.min(100)) as int
-            int value = (255 * (pct / 100.0f)).round()
+            int value = (255 * (pct / 100.0f)).round() as int
             String hex = pad(Integer.toHexString(value))
             return "#${hex}${hex}${hex}"
         }
