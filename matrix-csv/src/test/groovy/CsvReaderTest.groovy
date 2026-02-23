@@ -1,7 +1,7 @@
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvImporter
+import se.alipsa.matrix.csv.CsvOption
 import se.alipsa.matrix.csv.CsvReader
 
 import static org.junit.jupiter.api.Assertions.*
@@ -35,7 +35,7 @@ class CsvReaderTest {
   void readCsvWithMapFormat() {
     URL url = getClass().getResource("/basic.csv")
 
-    Matrix b = CsvReader.read((CsvImporter.Format.Trim): true, url)
+    Matrix b = CsvReader.read((CsvOption.Trim): true, url)
     assertEquals(4, b.rowCount(), "Number of rows")
     assertEquals(['id', 'name', 'date', 'amount'], b.columnNames(), "Column names")
     assertEquals(['4', 'Arne', '2023-07-01', '222.99'], b.row(3), "last row")

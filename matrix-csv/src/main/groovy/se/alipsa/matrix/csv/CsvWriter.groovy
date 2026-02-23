@@ -10,8 +10,8 @@ import java.nio.file.Path
 /**
  * Writes Matrix data to CSV format using Apache Commons CSV.
  *
- * <p>Provides flexible CSV export with support for File, Path, Writer, PrintWriter,
- * CSVPrinter outputs, and String generation. Character-based format suitable for
+ * <p>Provides flexible CSV export with support for File, Path, Writer, PrintWriter
+ * outputs, and String generation. Character-based format suitable for
  * human-readable data exchange.</p>
  *
  * <h3>Basic Usage</h3>
@@ -24,6 +24,12 @@ import java.nio.file.Path
  * // Write to string
  * String csvContent = CsvWriter.writeString(data)
  *
+ * // Write with custom CsvFormat
+ * CsvFormat format = CsvFormat.builder()
+ *     .delimiter(';' as char)
+ *     .build()
+ * CsvWriter.write(data, new File("output.csv"), format)
+ *
  * // Write Excel CSV
  * CsvWriter.writeExcelCsv(data, new File("output.csv"))
  *
@@ -32,9 +38,106 @@ import java.nio.file.Path
  * </pre>
  *
  * @see CsvReader
+ * @see CsvFormat
  */
 @CompileStatic
 class CsvWriter {
+
+  // ──────────────────────────────────────────────────────────────
+  // CsvFormat-based API (new, preferred)
+  // ──────────────────────────────────────────────────────────────
+
+  /**
+   * Write a Matrix to a CSV file using a {@link CsvFormat}.
+   * The out File is normally the destination file but out could also be a directory,
+   * in which case the file will be composed of the directory + the matrix name + .csv
+   *
+   * @param matrix the matrix to write
+   * @param out the file to write to or a directory to write to
+   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
+   * @param withHeader whether to include the columns names in the first row (default: true)
+   */
+  static void write(Matrix matrix, File out, CsvFormat format, boolean withHeader = true) {
+    validateMatrix(matrix)
+    out = ensureFileOutput(matrix, out)
+    write(matrix, format, new PrintWriter(out), withHeader)
+  }
+
+  /**
+   * Write a Matrix to a CSV file specified by Path using a {@link CsvFormat}.
+   *
+   * @param matrix the matrix to write
+   * @param path the path to write to
+   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
+   * @param withHeader whether to include the columns names in the first row (default: true)
+   */
+  static void write(Matrix matrix, Path path, CsvFormat format, boolean withHeader = true) {
+    write(matrix, path.toFile(), format, withHeader)
+  }
+
+  /**
+   * Write a Matrix to a CSV file specified by String path using a {@link CsvFormat}.
+   *
+   * @param matrix the matrix to write
+   * @param filePath the file path to write to
+   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
+   * @param withHeader whether to include the columns names in the first row (default: true)
+   */
+  static void write(Matrix matrix, String filePath, CsvFormat format, boolean withHeader = true) {
+    write(matrix, new File(filePath), format, withHeader)
+  }
+
+  /**
+   * Write a Matrix as a CSV to the Writer specified using a {@link CsvFormat}.
+   *
+   * @param matrix the matrix to write
+   * @param writer the Writer to write to
+   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
+   * @param withHeader whether to include the columns names in the first row (default: true)
+   */
+  static void write(Matrix matrix, Writer writer, CsvFormat format, boolean withHeader = true) {
+    write(matrix, format, new PrintWriter(writer), withHeader)
+  }
+
+  /**
+   * Write a Matrix as a CSV to the PrintWriter specified using a {@link CsvFormat}.
+   *
+   * @param matrix the matrix to write
+   * @param format CsvFormat configuration
+   * @param printWriter the PrintWriter to write to
+   * @param withHeader whether to include the columns names in the first row (default: true)
+   */
+  static void write(Matrix matrix, CsvFormat format, PrintWriter printWriter, boolean withHeader = true) {
+    CSVFormat apacheFormat = format.toCSVFormat()
+    try (CSVPrinter printer = new CSVPrinter(printWriter, apacheFormat)) {
+      if (withHeader) {
+        if (matrix.columnNames() != null) {
+          printer.printRecord(matrix.columnNames())
+        } else {
+          printer.printRecord((1..matrix.columnCount()).collect { 'c' + it })
+        }
+      }
+      printer.printRecords(matrix.rows())
+    }
+  }
+
+  /**
+   * Write a Matrix to a String in CSV format using a {@link CsvFormat}.
+   *
+   * @param matrix the matrix to write
+   * @param format CsvFormat configuration
+   * @param withHeader whether to include the columns names in the first row (default: true)
+   * @return String containing the CSV data
+   */
+  static String writeString(Matrix matrix, CsvFormat format, boolean withHeader = true) {
+    StringWriter stringWriter = new StringWriter()
+    write(matrix, stringWriter, format, withHeader)
+    stringWriter.toString()
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // CSVFormat-based API (deprecated — use CsvFormat overloads)
+  // ──────────────────────────────────────────────────────────────
 
   /**
    * Write a Matrix to a CSV file.
@@ -45,7 +148,9 @@ class CsvWriter {
    * @param out the file to write to or a directory to write to
    * @param format CSVFormat configuration (default: CSVFormat.DEFAULT)
    * @param withHeader whether to include the columns names in the first row (default: true)
+   * @deprecated Use {@link #write(Matrix, File, CsvFormat, boolean)} instead
    */
+  @Deprecated
   static void write(Matrix matrix, File out, CSVFormat format = CSVFormat.DEFAULT, boolean withHeader = true) {
     validateMatrix(matrix)
     out = ensureFileOutput(matrix, out)
@@ -59,7 +164,9 @@ class CsvWriter {
    * @param path the path to write to
    * @param format CSVFormat configuration (default: CSVFormat.DEFAULT)
    * @param withHeader whether to include the columns names in the first row (default: true)
+   * @deprecated Use {@link #write(Matrix, Path, CsvFormat, boolean)} instead
    */
+  @Deprecated
   static void write(Matrix matrix, Path path, CSVFormat format = CSVFormat.DEFAULT, boolean withHeader = true) {
     write(matrix, path.toFile(), format, withHeader)
   }
@@ -71,7 +178,9 @@ class CsvWriter {
    * @param filePath the file path to write to
    * @param format CSVFormat configuration (default: CSVFormat.DEFAULT)
    * @param withHeader whether to include the columns names in the first row (default: true)
+   * @deprecated Use {@link #write(Matrix, String, CsvFormat, boolean)} instead
    */
+  @Deprecated
   static void write(Matrix matrix, String filePath, CSVFormat format = CSVFormat.DEFAULT, boolean withHeader = true) {
     write(matrix, new File(filePath), format, withHeader)
   }
@@ -83,7 +192,9 @@ class CsvWriter {
    * @param writer the Writer to write to
    * @param format CSVFormat configuration (default: CSVFormat.DEFAULT)
    * @param withHeader whether to include the columns names in the first row (default: true)
+   * @deprecated Use {@link #write(Matrix, Writer, CsvFormat, boolean)} instead
    */
+  @Deprecated
   static void write(Matrix matrix, Writer writer, CSVFormat format = CSVFormat.DEFAULT, boolean withHeader = true) {
     write(matrix, format, new PrintWriter(writer), withHeader)
   }
@@ -95,16 +206,18 @@ class CsvWriter {
    * @param format CSVFormat configuration (default: CSVFormat.DEFAULT)
    * @param printWriter the PrintWriter to write to
    * @param withHeader whether to include the columns names in the first row (default: true)
+   * @deprecated Use {@link #write(Matrix, CsvFormat, PrintWriter, boolean)} instead
    */
+  @Deprecated
   static void write(Matrix matrix, CSVFormat format = CSVFormat.DEFAULT, PrintWriter printWriter, boolean withHeader = true) {
-    try(CSVPrinter printer = new CSVPrinter(printWriter, format)) {
+    try (CSVPrinter printer = new CSVPrinter(printWriter, format)) {
       if (format.header != null && format.header.length == matrix.columnCount()) {
         printer.printRecord(format.header)
       } else if (withHeader) {
         if (matrix.columnNames() != null) {
           printer.printRecord(matrix.columnNames())
         } else {
-          printer.printRecord((1..matrix.columnCount()).collect{ 'c' + it})
+          printer.printRecord((1..matrix.columnCount()).collect { 'c' + it })
         }
       }
       printer.printRecords(matrix.rows())
@@ -117,10 +230,12 @@ class CsvWriter {
    * @param matrix the matrix to write
    * @param printer the CSVPrinter to use
    * @param withHeader whether to include the columns names in the first row (default: true)
+   * @deprecated Use the Writer-based {@link #write(Matrix, Writer, CsvFormat, boolean)} overload instead
    */
+  @Deprecated
   static void write(Matrix matrix, CSVPrinter printer, boolean withHeader = true) {
     validateMatrix(matrix)
-    if(withHeader) {
+    if (withHeader) {
       printer.printRecord(matrix.columnNames())
     }
     printer.printRecords(matrix.rows())
@@ -133,12 +248,18 @@ class CsvWriter {
    * @param format CSVFormat configuration (default: CSVFormat.DEFAULT)
    * @param withHeader whether to include the columns names in the first row (default: true)
    * @return String containing the CSV data
+   * @deprecated Use {@link #writeString(Matrix, CsvFormat, boolean)} instead
    */
+  @Deprecated
   static String writeString(Matrix matrix, CSVFormat format = CSVFormat.DEFAULT, boolean withHeader = true) {
     StringWriter stringWriter = new StringWriter()
     write(matrix, stringWriter, format, withHeader)
-    return stringWriter.toString()
+    stringWriter.toString()
   }
+
+  // ──────────────────────────────────────────────────────────────
+  // Convenience format methods
+  // ──────────────────────────────────────────────────────────────
 
   /**
    * Write a Matrix to an Excel-compatible CSV file.
@@ -152,7 +273,7 @@ class CsvWriter {
   static void writeExcelCsv(Matrix matrix, File out, boolean withHeader = true) {
     validateMatrix(matrix)
     out = ensureFileOutput(matrix, out)
-    write(matrix, CSVFormat.EXCEL, new PrintWriter(out), withHeader)
+    write(matrix, CsvFormat.EXCEL, new PrintWriter(out), withHeader)
   }
 
   /**
@@ -163,7 +284,7 @@ class CsvWriter {
    * @return String containing the Excel CSV data
    */
   static String writeExcelCsvString(Matrix matrix, boolean withHeader = true) {
-    return writeString(matrix, CSVFormat.EXCEL, withHeader)
+    writeString(matrix, CsvFormat.EXCEL, withHeader)
   }
 
   /**
@@ -178,7 +299,7 @@ class CsvWriter {
   static void writeTsv(Matrix matrix, File out, boolean withHeader = true) {
     validateMatrix(matrix)
     out = ensureFileOutput(matrix, out)
-    write(matrix, CSVFormat.TDF, new PrintWriter(out), withHeader)
+    write(matrix, CsvFormat.TDF, new PrintWriter(out), withHeader)
   }
 
   /**
@@ -189,8 +310,12 @@ class CsvWriter {
    * @return String containing the TSV data
    */
   static String writeTsvString(Matrix matrix, boolean withHeader = true) {
-    return writeString(matrix, CSVFormat.TDF, withHeader)
+    writeString(matrix, CsvFormat.TDF, withHeader)
   }
+
+  // ──────────────────────────────────────────────────────────────
+  // Internal helper methods
+  // ──────────────────────────────────────────────────────────────
 
   /**
    * Validate that the Matrix is not null and has columns.
@@ -222,6 +347,6 @@ class CsvWriter {
       String fileName = (matrix.matrixName ?: 'matrix') + '.csv'
       return new File(out, fileName)
     }
-    return out
+    out
   }
 }

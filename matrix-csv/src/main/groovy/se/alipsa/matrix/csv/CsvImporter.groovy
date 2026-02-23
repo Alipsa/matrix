@@ -37,24 +37,24 @@ class CsvImporter {
   /**
    * Configuration options for CSV parsing.
    *
-   * <p>These enum values are used as keys in the format Map passed to
-   * {@link #importCsv(Map, URL)} and related methods.</p>
+   * @deprecated Use {@link CsvOption} instead. This enum will be removed in v2.0.
    */
+  @Deprecated
   enum Format {
-    Trim, // trim values inside the quote, default to true
-    Delimiter, // the character used to separate values, default to ,
-    IgnoreEmptyLines, // skip blank lines, default to true
-    Quote, // The char surrounding dates and strings, default to "
-    CommentMarker, // The char to designate a line comment, defaults to null i.e. not comments allowed
-    Escape, // Sets the escape character. defaults to null (no escape character)
-    Header, // List of strings containing the header, overrides whatever is set for FirstRowAsHeader
-    DuplicateHeaderMode, // Determines how duplicate header fields should be handled, default to ALLOW_EMPTY
-    IgnoreSurroundingSpaces, // ignore spaces around the quotes, default to true
-    NullString, // Converts strings equal to the given nullString to null when reading records, default null (no substitution)
-    RecordSeparator, // the marker for a new line, defaults to \n
-    FirstRowAsHeader, // if the first row contains the header, defaults to true unless Header is set
-    Charset, // the charset used, deafults to UTF-8
-    TableName // the name of the Matrix, defaults to ''
+    Trim,
+    Delimiter,
+    IgnoreEmptyLines,
+    Quote,
+    CommentMarker,
+    Escape,
+    Header,
+    DuplicateHeaderMode,
+    IgnoreSurroundingSpaces,
+    NullString,
+    RecordSeparator,
+    FirstRowAsHeader,
+    Charset,
+    TableName
   }
 
   /**
