@@ -55,7 +55,7 @@ class ColorUtil {
         def matcher = trimmed =~ /(?i)gr[ae]y(\d{1,3})/
         if (matcher.matches()) {
             int pct = Integer.parseInt(matcher.group(1))
-            pct = 0.max(pct.min(100))
+            pct = 0.max(pct.min(100)) as int
             int value = (255 * (pct / 100.0f)).round()
             String hex = pad(Integer.toHexString(value))
             return "#${hex}${hex}${hex}"
