@@ -23,8 +23,8 @@ The Matrix project consist of the following modules:
    for doing this built in)
 1. _[matrix-arff](https://github.com/Alipsa/matrix/blob/main/matrix-arff/README.md)_ provides reading and writing of ARFF (Attribute-Relation File Format) files.
 1. _[matrix-json](https://github.com/Alipsa/matrix/blob/main/matrix-json/README.md)_ provides ways to import and export between a Matrix and Json
-1. _[matrix-charts](https://github.com/Alipsa/matrix/blob/main/matrix-charts/README.md)_ provides the Charm rendering engine and a familiar chart-type-first API for creating charts in various formats (file, javafx, svg) based on Matrix data.
-1. _[matrix-ggcharts](https://github.com/Alipsa/matrix/blob/main/matrix-ggcharts/README.md)_ provides a ggplot2-style charting API based on the grammar of graphics (the api is very close to the ggplot2 library in R). Delegates to the Charm engine in matrix-charts.
+1. _[matrix-charts](https://github.com/Alipsa/matrix/blob/main/matrix-charts/README.md)_ provides a grammar of graphics based groovy api for chart rendering based on the Charm rendering engine and also a familiar chart-type-first API for creating charts in various formats (file, javafx, svg) based on Matrix data.
+1. _[matrix-ggcharts](https://github.com/Alipsa/matrix/blob/main/matrix-ggcharts/README.md)_ provides a ggplot2-style charting API (very close to the ggplot2 library in R). Delegates to the Charm engine in matrix-charts.
 1. _[matrix-xcharts](https://github.com/Alipsa/matrix/blob/main/matrix-xcharts/README.md)_ allows you to create charts in various formats (file, svg, swing) based on Matrix data and the [XCharts library](https://github.com/knowm/XChart). 
 1. _[matrix-sql](https://github.com/Alipsa/matrix/blob/main/matrix-sql/readme.md)_ relational database interaction
 1. _[matrix-bom](https://github.com/Alipsa/matrix/blob/main/matrix-bom/readme.md)_ Bill of materials for simpler dependency management.
