@@ -32,10 +32,10 @@ class ColorUtil {
                 double greenValue = color.getClass().getMethod('getGreen').invoke(color) as double
                 double blueValue = color.getClass().getMethod('getBlue').invoke(color) as double
                 double alphaValue = color.getClass().getMethod('getOpacity').invoke(color) as double
-                final String red = pad(Integer.toHexString((int) Math.round(redValue * 255)))
-                final String green = pad(Integer.toHexString((int) Math.round(greenValue * 255)))
-                final String blue = pad(Integer.toHexString((int) Math.round(blueValue * 255)))
-                final String alpha = pad(Integer.toHexString((int) Math.round(alphaValue * 255)))
+                final String red = pad(Integer.toHexString((redValue * 255).round() as int))
+                final String green = pad(Integer.toHexString((greenValue * 255).round() as int))
+                final String blue = pad(Integer.toHexString((blueValue * 255).round() as int))
+                final String alpha = pad(Integer.toHexString((alphaValue * 255).round() as int))
                 return '#' + red + green + blue + alpha
             } catch (ReflectiveOperationException ignored) {
                 return defaultIfNull
@@ -55,8 +55,8 @@ class ColorUtil {
         def matcher = trimmed =~ /(?i)gr[ae]y(\d{1,3})/
         if (matcher.matches()) {
             int pct = Integer.parseInt(matcher.group(1))
-            pct = Math.max(0, Math.min(100, pct))
-            int value = Math.round(255 * (pct / 100.0f))
+            pct = 0.max(pct.min(100)) as int
+            int value = (255 * (pct / 100.0f)).round() as int
             String hex = pad(Integer.toHexString(value))
             return "#${hex}${hex}${hex}"
         }

@@ -245,7 +245,7 @@ class Annotate {
     int nRows = 1
     values.each { val ->
       if (val instanceof List) {
-        nRows = Math.max(nRows, (val as List).size())
+        nRows = nRows.max((val as List).size()) as int
       }
     }
 

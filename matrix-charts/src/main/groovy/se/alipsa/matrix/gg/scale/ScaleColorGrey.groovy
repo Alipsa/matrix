@@ -43,7 +43,7 @@ class ScaleColorGrey extends ScaleDiscrete {
   private void applyParams(Map params) {
     if (params.start != null) this.start = params.start as Number
     if (params.end != null) this.end = params.end as Number
-    if (params.direction != null) this.direction = (params.direction as Number).intValue()
+    if (params.direction != null) this.direction = params.direction as int
     if (params.name) this.name = params.name as String
     if (params.limits) this.limits = params.limits as List
     if (params.breaks) this.breaks = params.breaks as List

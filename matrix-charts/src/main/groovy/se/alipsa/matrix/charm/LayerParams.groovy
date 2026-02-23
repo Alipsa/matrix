@@ -17,7 +17,7 @@ class LayerParams {
    * @return collected values
    */
   Map<String, Object> values() {
-    new LinkedHashMap<>(values)
+    [*:values]
   }
 
   /**

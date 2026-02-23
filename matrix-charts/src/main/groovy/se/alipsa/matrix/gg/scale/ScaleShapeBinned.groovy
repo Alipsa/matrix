@@ -68,7 +68,7 @@ class ScaleShapeBinned extends ScaleContinuous {
     normalized = normalized.max(BigDecimal.ZERO).min(BigDecimal.ONE)
 
     // Determine which bin this value falls into
-    int binsCount = Math.max(1, bins)
+    int binsCount = 1.max(bins) as int
     if (binsCount == 1) {
       return shapes.isEmpty() ? naValue : shapes[0]
     }
@@ -78,8 +78,8 @@ class ScaleShapeBinned extends ScaleContinuous {
     int binIndex = scaled.floor() as int
 
     // Clamp to valid range [0, binsCount-1]
-    binIndex = Math.min(binIndex, binsCount - 1)
-    binIndex = Math.max(binIndex, 0)
+    binIndex = binIndex.min(binsCount - 1) as int
+    binIndex = binIndex.max(0) as int
 
     // Map bin to shape (cycle through shapes if more bins than shapes)
     if (shapes.isEmpty()) return naValue

@@ -1120,7 +1120,7 @@ class GgPlot {
 
     int nRows = 1
     values.each { List<Object> val ->
-      nRows = Math.max(nRows, val.size())
+      nRows = nRows.max(val.size()) as int
     }
 
     List<List<Object>> expandedValues = values.collect { List<Object> val ->

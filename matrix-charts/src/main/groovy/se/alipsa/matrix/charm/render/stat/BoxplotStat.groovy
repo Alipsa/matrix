@@ -53,7 +53,7 @@ class BoxplotStat {
     }
 
     BigDecimal maxSqrtN = groups.values().collect { List<BigDecimal> values ->
-      Math.sqrt(values.size() as double) as BigDecimal
+      (values.size() as BigDecimal).sqrt()
     }.max() ?: 1.0
 
     List<LayerData> result = []
@@ -93,7 +93,7 @@ class BoxplotStat {
       datum.meta.whiskerHigh = whiskerHigh
       datum.meta.outliers = outliers
       datum.meta.n = n
-      datum.meta.relvarwidth = maxSqrtN > 0 ? (Math.sqrt(n as double) as BigDecimal) / maxSqrtN : 1.0
+      datum.meta.relvarwidth = maxSqrtN > 0 ? (n as BigDecimal).sqrt() / maxSqrtN : 1.0
       result << datum
     }
     result

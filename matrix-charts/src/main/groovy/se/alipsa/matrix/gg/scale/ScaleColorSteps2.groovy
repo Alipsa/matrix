@@ -88,13 +88,13 @@ class ScaleColorSteps2 extends ScaleContinuous {
     normalized = 0.max(normalized.min(1))
 
     // Calculate bin index
-    int binsCount = Math.max(1, colors.size())
+    int binsCount = 1.max(colors.size()) as int
     if (binsCount == 1) return colors[0]
 
     BigDecimal scaled = normalized * binsCount
     int binIndex = scaled.floor() as int
-    binIndex = Math.min(binIndex, binsCount - 1)
-    binIndex = Math.max(binIndex, 0)
+    binIndex = binIndex.min(binsCount - 1) as int
+    binIndex = binIndex.max(0) as int
 
     return colors[binIndex]
   }

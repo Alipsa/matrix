@@ -66,7 +66,7 @@ class ScaleSizeBinned extends ScaleContinuous {
     BigDecimal normalized = (v - dMin) / (dMax - dMin)
     normalized = normalized.max(BigDecimal.ZERO).min(BigDecimal.ONE)
 
-    int binsCount = Math.max(1, bins)
+    int binsCount = 1.max(bins) as int
     if (binsCount == 1) return rMin
 
     BigDecimal scaled = normalized * binsCount

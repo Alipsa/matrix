@@ -256,8 +256,8 @@ class AxisRenderer {
           "but got domainMin=${dMin}, domainMax=${dMax}. Skipping log tick rendering.")
       return
     }
-    int minExp = Math.floor(Math.log10(dMin as double)) as int
-    int maxExp = Math.ceil(Math.log10(dMax as double)) as int
+    int minExp = (dMin as BigDecimal).log10().floor() as int
+    int maxExp = (dMax as BigDecimal).log10().ceil() as int
 
     // Cap exponent range to avoid excessive tick generation on very wide domains.
     // Configurable via guide param 'maxExponentRange'; defaults to 50.

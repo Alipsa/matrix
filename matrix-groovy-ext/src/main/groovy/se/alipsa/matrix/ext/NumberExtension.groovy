@@ -550,6 +550,50 @@ class NumberExtension {
     return result * multiplier
   }
 
+  /**
+   * Returns the arcsine (inverse sine) of this Number as a BigDecimal.
+   * <p>
+   * This is a convenience wrapper that converts the Number to BigDecimal.
+   *
+   * @param self the Number value (must be in [-1, 1])
+   * @return the arcsine of the value in radians
+   */
+  static BigDecimal asin(Number self) {
+    asin(self as BigDecimal)
+  }
+
+  /**
+   * Returns the arcsine (inverse sine) of this BigDecimal value.
+   * <p>
+   * Uses the identity: asin(x) = atan(x / sqrt(1 - x²))
+   * The result is in the range [-π/2, π/2].
+   *
+   * <h3>Usage Example</h3>
+   * <pre>{@code
+   * BigDecimal val = 0.5
+   * val.asin()  // → π/6 (approximately 0.5236)
+   *
+   * BigDecimal one = 1.0
+   * one.asin()  // → π/2
+   * }</pre>
+   *
+   * @param self the BigDecimal value (must be in [-1, 1])
+   * @return the arcsine of the value in radians as a BigDecimal
+   * @throws ArithmeticException if the value is outside [-1, 1]
+   */
+  static BigDecimal asin(BigDecimal self) {
+    if (self < -1 || self > 1) {
+      throw new ArithmeticException("asin undefined for value outside [-1, 1]: ${self}")
+    }
+    if (self == 0) return BigDecimal.ZERO
+    if (self == 1) return PI / 2
+    if (self == -1) return (PI / 2).negate()
+    // asin(x) = atan(x / sqrt(1 - x²))
+    BigDecimal xSquared = self ** 2
+    BigDecimal denominator = sqrt(1 - xSquared)
+    atan(self / denominator)
+  }
+
   static BigDecimal atan2(Number y, Number x) {
     atan2(y as BigDecimal, x as BigDecimal)
   }

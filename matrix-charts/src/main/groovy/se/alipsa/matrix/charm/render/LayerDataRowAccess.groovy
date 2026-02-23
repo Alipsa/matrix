@@ -77,7 +77,7 @@ class LayerDataRowAccess {
   private static Integer rowIndex(LayerData datum) {
     Object stored = datum?.meta?.__rowIndex
     if (stored instanceof Number) {
-      return (stored as Number).intValue()
+      return stored as int
     }
     datum?.rowIndex
   }

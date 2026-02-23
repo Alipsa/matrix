@@ -282,7 +282,7 @@ class ScaleEngine {
     if (binwidth == null || binwidth <= 0) {
       binwidth = (max - min) / bins
     } else {
-      bins = ((max - min) / binwidth).ceil().intValue()
+      bins = ((max - min) / binwidth).ceil() as int
       bins = bins < 1 ? 1 : bins
       max = min + binwidth * bins
     }
