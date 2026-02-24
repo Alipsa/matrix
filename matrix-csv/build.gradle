@@ -46,6 +46,7 @@ dependencies {
     testImplementation('se.alipsa.matrix:matrix-datasets:1.1.0')
   }*/
   api 'org.apache.commons:commons-csv:1.14.1'
+  implementation 'commons-io:commons-io:2.21.0'
   compileOnly libs.groovy
   testImplementation libs.groovy
 
