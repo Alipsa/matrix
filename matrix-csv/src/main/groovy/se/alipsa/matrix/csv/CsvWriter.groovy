@@ -262,8 +262,15 @@ class CsvWriter {
       }
     }
     if (out.isDirectory()) {
-      String fileName = (matrix.matrixName ?: 'matrix') + '.csv'
-      return new File(out, fileName)
+      String safeName = (matrix.matrixName ?: 'matrix')
+          .replaceAll('[/\\\\]', '_')
+          .replaceAll('\\.{2,}', '_')
+      String fileName = safeName + '.csv'
+      File target = new File(out, fileName)
+      if (!target.canonicalPath.startsWith(out.canonicalPath)) {
+        throw new IllegalArgumentException("Matrix name results in a path outside the target directory: ${matrix.matrixName}")
+      }
+      return target
     }
     out
   }
@@ -412,16 +419,16 @@ class CsvWriter {
       validateMatrix(_matrix)
       CsvFormat format = buildFormat()
       CSVFormat apacheFormat = format.toCSVFormat()
-      CSVPrinter printer = new CSVPrinter(printWriter, apacheFormat)
-      if (_withHeader) {
-        if (_matrix.columnNames() != null) {
-          printer.printRecord(_matrix.columnNames())
-        } else {
-          printer.printRecord((1.._matrix.columnCount()).collect { 'c' + it })
+      try (CSVPrinter printer = new CSVPrinter(printWriter, apacheFormat)) {
+        if (_withHeader) {
+          if (_matrix.columnNames() != null) {
+            printer.printRecord(_matrix.columnNames())
+          } else {
+            printer.printRecord((1.._matrix.columnCount()).collect { 'c' + it })
+          }
         }
+        printer.printRecords(_matrix.rows())
       }
-      printer.printRecords(_matrix.rows())
-      printer.flush()
     }
 
     /**
