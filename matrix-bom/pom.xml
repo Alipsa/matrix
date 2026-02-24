@@ -96,9 +96,9 @@
     </dependency>
     <dependency>
       <groupId>se.alipsa.matrix</groupId>
-      <artifactId>matrix-ggcharts</artifactId>
+      <artifactId>matrix-ggplot</artifactId>
     </dependency>
-    <!-- matrix-ggcharts provides the gg API used in testCharts() -->
+    <!-- matrix-ggplot provides the gg API used in testCharts() -->
     <!-- it transitively brings in matrix-charts (charm rendering engine) -->
     <dependency>
       <groupId>se.alipsa.matrix</groupId>

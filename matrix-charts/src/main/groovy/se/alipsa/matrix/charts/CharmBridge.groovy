@@ -1,7 +1,6 @@
 package se.alipsa.matrix.charts
 
 import groovy.transform.CompileStatic
-import groovy.transform.PackageScope
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.PositionSpec
@@ -14,7 +13,7 @@ import se.alipsa.matrix.core.Matrix
 import java.awt.Color
 
 /**
- * Package-private bridge that converts the legacy {@code charts} data model
+ * Bridge that converts the legacy {@code charts} data model
  * into Charm {@link se.alipsa.matrix.charm.Chart} objects.
  *
  * <p>Each chart type factory (AreaChart, BarChart, etc.) populates a legacy
@@ -22,7 +21,6 @@ import java.awt.Color
  * This bridge converts that into a Charm PlotSpec → immutable Chart → SVG.</p>
  */
 @CompileStatic
-@PackageScope
 class CharmBridge {
 
   /**
@@ -67,7 +65,7 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
-    spec.aes(multiSeries ? [x: 'x', y: 'y', fill: 'series'] : [x: 'x', y: 'y'])
+    spec.mapping(multiSeries ? [x: 'x', y: 'y', fill: 'series'] : [x: 'x', y: 'y'])
     spec.area()
     applyLabelsAndTheme(spec, chart)
     spec
@@ -82,9 +80,9 @@ class CharmBridge {
 
     PlotSpec spec = Charts.plot(data)
     if (horizontal) {
-      spec.aes(multiSeries ? [x: 'y', y: 'x', fill: 'series'] : [x: 'y', y: 'x'])
+      spec.mapping(multiSeries ? [x: 'y', y: 'x', fill: 'series'] : [x: 'y', y: 'x'])
     } else {
-      spec.aes(multiSeries ? [x: 'x', y: 'y', fill: 'series'] : [x: 'x', y: 'y'])
+      spec.mapping(multiSeries ? [x: 'x', y: 'y', fill: 'series'] : [x: 'x', y: 'y'])
     }
     spec.layer(geom, [position: position])
     applyLabelsAndTheme(spec, chart)
@@ -106,7 +104,7 @@ class CharmBridge {
         .build()
 
     PlotSpec spec = Charts.plot(data)
-    spec.aes([x: 'x', y: 'y'])
+    spec.mapping([x: 'x', y: 'y'])
     spec.layer(CharmGeomType.BOXPLOT)
     applyLabelsAndTheme(spec, chart)
     spec
@@ -124,7 +122,7 @@ class CharmBridge {
         .build()
 
     PlotSpec spec = Charts.plot(data)
-    spec.aes([x: 'x'])
+    spec.mapping([x: 'x'])
     spec.layer(CharmGeomType.HISTOGRAM, [bins: chart.numberOfBins])
     applyLabelsAndTheme(spec, chart as Chart)
     spec
@@ -134,7 +132,7 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
-    spec.aes(multiSeries ? [x: 'x', y: 'y', color: 'series'] : [x: 'x', y: 'y'])
+    spec.mapping(multiSeries ? [x: 'x', y: 'y', color: 'series'] : [x: 'x', y: 'y'])
     spec.line()
     applyLabelsAndTheme(spec, chart)
     spec
@@ -154,7 +152,7 @@ class CharmBridge {
         .build()
 
     PlotSpec spec = Charts.plot(data)
-    spec.aes([x: 'x', y: 'y', fill: 'x'])
+    spec.mapping([x: 'x', y: 'y', fill: 'x'])
     spec.pie()
     applyLabelsAndTheme(spec, chart)
     spec
@@ -163,7 +161,7 @@ class CharmBridge {
   private static PlotSpec buildScatterSpec(ScatterChart chart) {
     Matrix data = buildLongFormatMatrix(chart)
     PlotSpec spec = Charts.plot(data)
-    spec.aes([x: 'x', y: 'y'])
+    spec.mapping([x: 'x', y: 'y'])
     spec.points()
     applyLabelsAndTheme(spec, chart)
     spec

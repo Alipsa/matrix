@@ -24,7 +24,7 @@ class CharmApiDesignTest {
   void testClosureDslPrimarySyntaxBuildAndRender() {
     Matrix mpg = Dataset.mpg()
     PlotSpec spec = plot(mpg) {
-      aes {
+      mapping {
         x = col['cty']
         y = col['hwy']
         color = col['class']
@@ -46,7 +46,7 @@ class CharmApiDesignTest {
     assertNotNull(svg)
     assertEquals(2, compiled.layers.size())
     assertEquals('City vs Highway MPG', compiled.labels.title)
-    assertEquals('cty', compiled.aes.x.columnName())
+    assertEquals('cty', compiled.mapping.x.columnName())
   }
 
   @Test
@@ -59,7 +59,7 @@ class CharmApiDesignTest {
   @Test
   void testScaleThemeAndCoordDslExamples() {
     PlotSpec spec = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x = col.cty
         y = col.hwy
       }
@@ -91,7 +91,7 @@ class CharmApiDesignTest {
     Chart chart = StaticApiSample.build(Dataset.mpg())
     Svg svg = chart.render()
     assertNotNull(svg)
-    assertEquals('class', chart.aes.color.columnName())
+    assertEquals('class', chart.mapping.color.columnName())
   }
 
   @Test
@@ -104,7 +104,7 @@ class CharmApiDesignTest {
       import static se.alipsa.matrix.charm.Charts.chart
 
       CharmChart c = chart(mpg) {
-        aes {
+        mapping {
           x = col.cty
           y = col.hwy
         }
@@ -137,7 +137,7 @@ class CharmApiDesignTest {
     static Chart build(Matrix data) {
       Cols col = new Cols()
       PlotSpec spec = chart(data)
-      spec.aes(x: col['cty'], y: col['hwy'], color: col['class'])
+      spec.mapping(x: col['cty'], y: col['hwy'], color: col['class'])
       spec.layer(CharmGeomType.POINT, [size: 2, alpha: 0.7])
       spec.layer(CharmGeomType.SMOOTH, [method: 'lm'])
       spec.build()

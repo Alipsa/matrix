@@ -24,7 +24,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -62,7 +62,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -91,7 +91,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -135,7 +135,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -163,7 +163,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -193,7 +193,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -221,7 +221,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     def spec = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -254,7 +254,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -351,7 +351,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -413,7 +413,7 @@ class CharmAnnotationRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -440,7 +440,7 @@ class CharmAnnotationRendererTest {
   private static Chart withCssIdsEnabled(Chart chart) {
     new Chart(
         chart.data,
-        chart.aes,
+        chart.mapping,
         chart.layers,
         chart.scale,
         chart.theme,

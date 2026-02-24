@@ -5,6 +5,7 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
+import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.GuidesSpec
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
@@ -248,16 +249,35 @@ class AxisRenderer {
     int baseTickLen = context.config.axisTickLength
     G tickGroup = axes.addG().id(isXAxis ? 'x-axis' : 'y-axis')
 
-    // Determine range of powers of 10; log scale requires positive domain
+    // Determine range of powers of 10
     BigDecimal dMin = scale.domainMin
     BigDecimal dMax = scale.domainMax
-    if (dMin == null || dMax == null || dMin <= 0 || dMax <= 0) {
-      log.warn("renderAxisLogticks: log scale requires positive domain bounds, " +
-          "but got domainMin=${dMin}, domainMax=${dMax}. Skipping log tick rendering.")
+    if (dMin == null || dMax == null) {
+      log.warn("renderAxisLogticks: domain bounds are null. Skipping log tick rendering.")
       return
     }
-    int minExp = (dMin as BigDecimal).log10().floor() as int
-    int maxExp = (dMax as BigDecimal).log10().ceil() as int
+
+    // When the scale uses a log10 transform, or the guide declares prescaleBase,
+    // domain bounds are already in log space (exponents). Otherwise they are in
+    // data space and we need to take log10 to derive exponents.
+    boolean domainIsLogSpace = scale.transformStrategy instanceof Log10ScaleTransform ||
+        params['prescaleBase'] != null
+
+    int minExp, maxExp
+    if (domainIsLogSpace) {
+      // Domain bounds ARE the exponents (e.g. -0.1 .. 2.1 for data range ~0.8 .. 126)
+      minExp = dMin.floor() as int
+      maxExp = dMax.ceil() as int
+    } else {
+      // Domain is in data space; need positive values for log
+      if (dMin <= 0 || dMax <= 0) {
+        log.warn("renderAxisLogticks: log scale requires positive domain bounds, " +
+            "but got domainMin=${dMin}, domainMax=${dMax}. Skipping log tick rendering.")
+        return
+      }
+      minExp = dMin.log10().floor() as int
+      maxExp = dMax.log10().ceil() as int
+    }
 
     // Cap exponent range to avoid excessive tick generation on very wide domains.
     // Configurable via guide param 'maxExponentRange'; defaults to 50.

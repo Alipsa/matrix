@@ -10,8 +10,8 @@ class Layer {
 
   private final GeomSpec geomSpec
   private final StatSpec statSpec
-  private final Aes aes
-  private final boolean inheritAes
+  private final Mapping mapping
+  private final boolean inheritMapping
   private final PositionSpec positionSpec
   private final Map<String, Object> params
 
@@ -20,23 +20,23 @@ class Layer {
    *
    * @param geomSpec geometry specification
    * @param statSpec statistical transformation specification
-   * @param aes layer-specific mappings
-   * @param inheritAes true when plot-level mappings are inherited
+   * @param mapping layer-specific mappings
+   * @param inheritMapping true when plot-level mappings are inherited
    * @param positionSpec position adjustment specification
    * @param params free-form layer parameters
    */
   Layer(
       GeomSpec geomSpec,
       StatSpec statSpec = StatSpec.of(CharmStatType.IDENTITY),
-      Aes aes = null,
-      boolean inheritAes = true,
+      Mapping mapping = null,
+      boolean inheritMapping = true,
       PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY),
       Map<String, Object> params = [:]
   ) {
     this.geomSpec = geomSpec ?: GeomSpec.of(CharmGeomType.POINT)
     this.statSpec = statSpec ?: StatSpec.of(CharmStatType.IDENTITY)
-    this.aes = aes
-    this.inheritAes = inheritAes
+    this.mapping = mapping
+    this.inheritMapping = inheritMapping
     this.positionSpec = positionSpec ?: PositionSpec.of(CharmPositionType.IDENTITY)
     this.params = params == null ? [:] : new LinkedHashMap<>(params)
   }
@@ -78,21 +78,21 @@ class Layer {
   }
 
   /**
-   * Returns layer-specific aesthetics.
+   * Returns layer-specific mappings.
    *
-   * @return layer aes or null
+   * @return layer mapping or null
    */
-  Aes getAes() {
-    aes?.copy()
+  Mapping getMapping() {
+    mapping?.copy()
   }
 
   /**
-   * Returns whether layer inherits plot-level aesthetics.
+   * Returns whether layer inherits plot-level mappings.
    *
-   * @return true if inheriting aesthetics
+   * @return true if inheriting mappings
    */
-  boolean isInheritAes() {
-    inheritAes
+  boolean isInheritMapping() {
+    inheritMapping
   }
 
   /**
@@ -128,6 +128,6 @@ class Layer {
    * @return copied layer
    */
   Layer copy() {
-    new Layer(geomSpec.copy(), statSpec.copy(), aes?.copy(), inheritAes, positionSpec.copy(), params)
+    new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), params)
   }
 }

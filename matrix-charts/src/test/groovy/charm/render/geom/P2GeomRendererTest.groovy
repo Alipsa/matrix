@@ -46,7 +46,7 @@ class P2GeomRendererTest {
 
     cases.each { Map<String, Object> tc ->
       Chart chart = plot(data) {
-        aes(tc.aes as Map<String, String>)
+        mapping(tc.aes as Map<String, String>)
         layer(tc.geom as CharmGeomType, tc.options as Map<String, Object>)
       }.build()
 
@@ -64,7 +64,7 @@ class P2GeomRendererTest {
 
     [CharmGeomType.BLANK, CharmGeomType.CUSTOM].each { CharmGeomType geom ->
       Chart chart = plot(data) {
-        aes([x: 'x', y: 'y'])
+        mapping([x: 'x', y: 'y'])
         layer(geom, [:])
       }.build()
 
@@ -77,7 +77,7 @@ class P2GeomRendererTest {
   private static Chart withCssClasses(Chart chart) {
     new Chart(
         chart.data,
-        chart.aes,
+        chart.mapping,
         chart.layers,
         chart.scale,
         chart.theme,

@@ -13,7 +13,7 @@ import se.alipsa.matrix.charm.render.CharmRenderer
 class Chart {
 
   private final Matrix data
-  private final AesSpec aes
+  private final MappingSpec mapping
   private final List<LayerSpec> layers
   private final ScaleSpec scale
   private final ThemeSpec theme
@@ -28,7 +28,7 @@ class Chart {
    * Creates a new compiled chart model.
    *
    * @param data source matrix
-   * @param aes plot-level aesthetics
+   * @param mapping plot-level mappings
    * @param layers layer list
    * @param scale scale spec
    * @param theme theme spec
@@ -41,7 +41,7 @@ class Chart {
    */
   Chart(
       Matrix data,
-      Aes aes,
+      Mapping mapping,
       List<LayerSpec> layers,
       ScaleSpec scale,
       Theme theme,
@@ -53,7 +53,7 @@ class Chart {
       CssAttributesSpec cssAttributes = null
   ) {
     this.data = data
-    this.aes = toAesSpec(aes)
+    this.mapping = toMappingSpec(mapping)
     this.layers = Collections.unmodifiableList(
         layers.collect { Layer layer -> toLayerSpec(layer) }
     )
@@ -79,12 +79,12 @@ class Chart {
   }
 
   /**
-   * Returns plot-level aesthetics.
+   * Returns plot-level mappings.
    *
-   * @return aesthetics
+   * @return mappings
    */
-  AesSpec getAes() {
-    aes?.copy()
+  MappingSpec getMapping() {
+    mapping?.copy()
   }
 
   /**
@@ -171,21 +171,21 @@ class Chart {
     cssAttributes?.copy()
   }
 
-  private static AesSpec toAesSpec(Aes value) {
+  private static MappingSpec toMappingSpec(Mapping value) {
     if (value == null) {
-      return new AesSpec()
+      return new MappingSpec()
     }
-    if (value instanceof AesSpec) {
-      return (value as AesSpec).copy()
+    if (value instanceof MappingSpec) {
+      return (value as MappingSpec).copy()
     }
-    AesSpec converted = new AesSpec()
+    MappingSpec converted = new MappingSpec()
     converted.apply(value.mappings())
     converted
   }
 
   private static LayerSpec toLayerSpec(Layer value) {
     Map<String, Object> frozenParams = deepFreezeParams(value.params)
-    new LayerSpec(value.geomSpec.copy(), value.statSpec.copy(), value.aes, value.inheritAes, value.positionSpec.copy(), frozenParams)
+    new LayerSpec(value.geomSpec.copy(), value.statSpec.copy(), value.mapping, value.inheritMapping, value.positionSpec.copy(), frozenParams)
   }
 
   private static Map<String, Object> deepFreezeParams(Map<String, Object> params) {

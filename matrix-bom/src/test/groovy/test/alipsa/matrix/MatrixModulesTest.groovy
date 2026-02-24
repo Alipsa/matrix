@@ -10,6 +10,9 @@ import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
+import se.alipsa.matrix.charm.Chart
+import se.alipsa.matrix.charts.ScatterChart
+import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
 import se.alipsa.matrix.csv.CsvExporter
@@ -39,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static se.alipsa.matrix.gg.GgPlot.*
+import static se.alipsa.matrix.charm.Charts.plot
 
 /**
  * We do some basic tests for each module to verify they work together.
@@ -161,23 +165,6 @@ class MatrixModulesTest {
   }
 
   @Test
-  void testXChart() {
-    Matrix matrix = Matrix.builder(
-        metal: ['Gold', 'Silver', 'Platinum', 'Copper', 'Zinc'],
-        ratio: [24, 21, 39, 17, 40],
-        [String, Number],
-        'Metal ratio',
-    ).build()
-
-    File file = new File("target/testPieChart.png")
-    def pc = PieChart.create(matrix)
-        .addSeries(matrix.metal, matrix.ratio)
-
-    pc.exportPng(file)
-    assertTrue(file.exists())
-  }
-
-  @Test
   void testAvro() {
     // Just a simple round trip test to verify that the Avro module is working
     Matrix mtcars = Dataset.mtcars()
@@ -231,26 +218,6 @@ class MatrixModulesTest {
   }
 
   @Test
-  void testCharts() {
-    // Test ggplot2-style charting
-    Matrix mtcars = Dataset.mtcars()
-    def chart = ggplot(mtcars, aes(x: 'wt', y: 'mpg', color: 'cyl')) +
-        geom_point() +
-        labs(title: 'MPG vs Weight')
-
-    // Verify chart is created
-    assertNotNull(chart, "Chart should be created")
-    assertNotNull(chart.data, "Chart should have data")
-    assertEquals('MPG vs Weight', chart.labels.title, "Chart should have correct title")
-
-    // Render to SVG to verify full pipeline works
-    Svg svgObj = chart.render()
-    String svg = SvgWriter.toXml(svgObj)
-    assertTrue(svg.contains('<svg'), "Output should contain SVG tag")
-    assertTrue(svg.contains('MPG vs Weight'), "SVG should contain title")
-  }
-
-  @Test
   void testGroovyExt() {
     // Test NumberExtension methods work with different Number types
 
@@ -277,5 +244,77 @@ class MatrixModulesTest {
     BigDecimal angle = Math.PI / 2 as BigDecimal
     assertEquals(1.0, angle.sin().doubleValue(), 0.0001, "sin(π/2) should be 1")
     assertEquals(0.0, angle.cos().doubleValue(), 0.0001, "cos(π/2) should be 0")
+  }
+
+  @Test
+  void testCharts() {
+    // Test charm-style charting with DSL closure syntax
+    Matrix mtcars = Dataset.mtcars()
+    def spec = plot(mtcars) {
+      mapping {
+        x = col.wt
+        y = col.mpg
+        color = col.cyl
+      }
+      points()
+      labels { title = 'MPG vs Weight' }
+    }
+
+    // Verify spec is created
+    assertNotNull(spec, "PlotSpec should be created")
+    assertNotNull(spec.data, "PlotSpec should have data")
+    assertEquals('MPG vs Weight', spec.labels.title, "PlotSpec should have correct title")
+
+    // Build and render to SVG to verify full pipeline works
+    Chart charmChart = spec.build()
+    Svg svgObj = charmChart.render()
+    String svg = SvgWriter.toXml(svgObj)
+    assertTrue(svg.contains('<svg'), "Output should contain SVG tag")
+    assertTrue(svg.contains('MPG vs Weight'), "SVG should contain title")
+
+    // Test legacy chart export via ChartToSvg
+    ScatterChart scatterChart = ScatterChart.builder(mtcars)
+        .title('MPG vs Weight')
+        .x('wt')
+        .y('mpg')
+        .build()
+    ChartToSvg.export(scatterChart, new File('target/scatter_chart.svg'))
+  }
+
+  @Test
+  void testGgCharts() {
+    // Test ggplot2-style charting
+    Matrix mtcars = Dataset.mtcars()
+    def chart = ggplot(mtcars, aes(x: 'wt', y: 'mpg', color: 'cyl')) +
+        geom_point() +
+        labs(title: 'MPG vs Weight')
+
+    // Verify chart is created
+    assertNotNull(chart, "Chart should be created")
+    assertNotNull(chart.data, "Chart should have data")
+    assertEquals('MPG vs Weight', chart.labels.title, "Chart should have correct title")
+
+    // Render to SVG to verify full pipeline works
+    Svg svgObj = chart.render()
+    String svg = SvgWriter.toXml(svgObj)
+    assertTrue(svg.contains('<svg'), "Output should contain SVG tag")
+    assertTrue(svg.contains('MPG vs Weight'), "SVG should contain title")
+  }
+
+  @Test
+  void testXChart() {
+    Matrix matrix = Matrix.builder(
+        metal: ['Gold', 'Silver', 'Platinum', 'Copper', 'Zinc'],
+        ratio: [24, 21, 39, 17, 40],
+        [String, Number],
+        'Metal ratio',
+    ).build()
+
+    File file = new File("target/testPieChart.png")
+    def pc = PieChart.create(matrix)
+        .addSeries(matrix.metal, matrix.ratio)
+
+    pc.exportPng(file)
+    assertTrue(file.exists())
   }
 }

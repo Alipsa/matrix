@@ -25,7 +25,7 @@ class CharmAxisGuideTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       guides {
         x = axis(angle: -45)
@@ -49,7 +49,7 @@ class CharmAxisGuideTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       guides {
         x = axis()
@@ -76,7 +76,7 @@ class CharmAxisGuideTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
     }.build()
 
@@ -97,7 +97,7 @@ class CharmAxisGuideTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       scale {
         x = se.alipsa.matrix.charm.Scale.transform('log10')
@@ -125,7 +125,7 @@ class CharmAxisGuideTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       guides {
         x = GuideSpec.axisStack([

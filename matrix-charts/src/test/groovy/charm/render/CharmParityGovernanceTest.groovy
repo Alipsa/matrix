@@ -212,15 +212,15 @@ class CharmParityGovernanceTest {
     if (Files.exists(modulePath)) {
       return modulePath
     }
-    // Try sibling matrix-ggcharts module (gg docs moved there during extraction)
-    Path siblingGgchartsPath = Paths.get('../matrix-ggcharts').resolve(relativePath)
-    if (Files.exists(siblingGgchartsPath)) {
-      return siblingGgchartsPath
+    // Try sibling matrix-ggplot module (gg docs moved there during extraction)
+    Path siblingGgplotPath = Paths.get('../matrix-ggplot').resolve(relativePath)
+    if (Files.exists(siblingGgplotPath)) {
+      return siblingGgplotPath
     }
     // Try from project root
-    Path ggchartsPath = Paths.get('matrix-ggcharts').resolve(relativePath)
-    if (Files.exists(ggchartsPath)) {
-      return ggchartsPath
+    Path ggplotPath = Paths.get('matrix-ggplot').resolve(relativePath)
+    if (Files.exists(ggplotPath)) {
+      return ggplotPath
     }
     Path repoPath = Paths.get('matrix-charts').resolve(relativePath)
     if (Files.exists(repoPath)) {

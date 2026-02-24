@@ -82,7 +82,7 @@ dependencies {
   testImplementation project(':matrix-core')
   testImplementation project(':matrix-stats')
   testImplementation project(':matrix-datasets')
-  testImplementation project(':matrix-ggcharts')
+  testImplementation project(':matrix-ggplot')
   //testImplementation project(':matrix-groovy-ext')
   testImplementation "org.openjfx:javafx-graphics:${javaFxVersion}:$qualifier"
   testImplementation "org.openjfx:javafx-base:${javaFxVersion}:$qualifier"
@@ -101,6 +101,7 @@ test {
   testLogging.showStandardStreams = true
   // run using gradle -Pheadless=true test
   jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  systemProperty 'java.util.logging.config.file', "${rootDir}/test-logging.properties"
   maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
   useJUnitPlatform()
   testLogging {

@@ -56,7 +56,7 @@ class ChartsDataConversionTest {
   @Test
   void testConvenienceInputSupportsConfigureClosure() {
     Chart chart = plot([[x: 1, y: 2], [x: 2, y: 3]]) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -66,8 +66,8 @@ class ChartsDataConversionTest {
     }.build()
 
     assertEquals(1, chart.layers.size())
-    assertEquals('x', chart.aes.x.columnName())
-    assertEquals('y', chart.aes.y.columnName())
+    assertEquals('x', chart.mapping.x.columnName())
+    assertEquals('y', chart.mapping.y.columnName())
   }
 
   @Test

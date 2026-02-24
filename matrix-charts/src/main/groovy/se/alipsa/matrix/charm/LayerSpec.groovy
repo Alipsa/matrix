@@ -13,20 +13,20 @@ class LayerSpec extends Layer {
    *
    * @param geomSpec geometry specification
    * @param statSpec stat specification
-   * @param aes layer aes
-   * @param inheritAes inherit flag
+   * @param mapping layer mapping
+   * @param inheritMapping inherit flag
    * @param positionSpec position specification
    * @param params layer params
    */
   LayerSpec(
       GeomSpec geomSpec,
       StatSpec statSpec = StatSpec.of(CharmStatType.IDENTITY),
-      Aes aes = null,
-      boolean inheritAes = true,
+      Mapping mapping = null,
+      boolean inheritMapping = true,
       PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY),
       Map<String, Object> params = [:]
   ) {
-    super(geomSpec, statSpec, aes, inheritAes, positionSpec, params)
+    super(geomSpec, statSpec, mapping, inheritMapping, positionSpec, params)
   }
 
   /**
@@ -36,7 +36,7 @@ class LayerSpec extends Layer {
    */
   @Override
   LayerSpec copy() {
-    Aes layerAes = super.getAes()
-    new LayerSpec(geomSpec.copy(), statSpec.copy(), layerAes, inheritAes, positionSpec.copy(), params)
+    Mapping layerMapping = super.getMapping()
+    new LayerSpec(geomSpec.copy(), statSpec.copy(), layerMapping, inheritMapping, positionSpec.copy(), params)
   }
 }

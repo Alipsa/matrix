@@ -9,7 +9,7 @@ def data = Matrix.builder().data(
 ).types(String, Integer, Integer).build()
 
 def chart = plot(data) {
-  aes {
+  mapping {
     x = col.month
     y = col.sales
   }

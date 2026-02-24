@@ -1,8 +1,8 @@
-# Matrix GGCharts
+# Matrix GGPlot
 
 Groovy ggplot2-style charting API for matrix data.
 
-Matrix-ggcharts provides a compatibility layer mimicking R's ggplot2 API, making it easy to
+Matrix-ggplot provides a compatibility layer mimicking R's ggplot2 API, making it easy to
 port R plotting code to Groovy with minimal modifications. It delegates to the
 [Charm](../matrix-charts/docs/charm.md) rendering engine in matrix-charts under the hood.
 
@@ -12,12 +12,12 @@ port R plotting code to Groovy with minimal modifications. It delegates to the
 
 ```groovy
 implementation(platform('se.alipsa.matrix:matrix-bom:2.4.1'))
-implementation 'se.alipsa.matrix:matrix-ggcharts'
+implementation 'se.alipsa.matrix:matrix-ggplot'
 implementation 'se.alipsa.matrix:matrix-core'
 implementation 'se.alipsa.matrix:matrix-stats'
 ```
 
-> Note: `matrix-charts` (the Charm rendering engine) is pulled in transitively via `matrix-ggcharts`.
+> Note: `matrix-charts` (the Charm rendering engine) is pulled in transitively via `matrix-ggplot`.
 
 ### Maven
 
@@ -36,7 +36,7 @@ implementation 'se.alipsa.matrix:matrix-stats'
 <dependencies>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>
-    <artifactId>matrix-ggcharts</artifactId>
+    <artifactId>matrix-ggplot</artifactId>
   </dependency>
   <dependency>
     <groupId>se.alipsa.matrix</groupId>

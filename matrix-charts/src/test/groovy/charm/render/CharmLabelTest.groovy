@@ -27,7 +27,7 @@ class CharmLabelTest {
   @Test
   void testTitleRendered() {
     Chart chart = plot(sampleData()) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       labels { title = 'My Title' }
     }.build()
@@ -40,7 +40,7 @@ class CharmLabelTest {
   @Test
   void testSubtitleRendered() {
     Chart chart = plot(sampleData()) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       labels {
         title = 'Title'
@@ -56,7 +56,7 @@ class CharmLabelTest {
   @Test
   void testCaptionRendered() {
     Chart chart = plot(sampleData()) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       labels {
         title = 'Title'
@@ -72,7 +72,7 @@ class CharmLabelTest {
   @Test
   void testAxisLabelsRendered() {
     Chart chart = plot(sampleData()) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       labels {
         x = 'X Label'
@@ -89,7 +89,7 @@ class CharmLabelTest {
   @Test
   void testCoordFlipSwapsAxisLabels() {
     Chart chart = plot(sampleData()) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       labels {
         x = 'Original X'
@@ -111,7 +111,7 @@ class CharmLabelTest {
     theme.explicitNulls.add('plotTitle')
 
     Chart chart = plot(sampleData()) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       labels { title = 'Should be hidden' }
     }.build()
@@ -123,7 +123,7 @@ class CharmLabelTest {
 
     Chart chartWithNulls = new Chart(
         sampleData(),
-        new se.alipsa.matrix.charm.AesSpec().tap { apply([x: 'x', y: 'y']) },
+        new se.alipsa.matrix.charm.MappingSpec().tap { apply([x: 'x', y: 'y']) },
         [new se.alipsa.matrix.charm.LayerSpec(
             se.alipsa.matrix.charm.GeomSpec.of(se.alipsa.matrix.charm.CharmGeomType.POINT),
             se.alipsa.matrix.charm.StatSpec.of(se.alipsa.matrix.charm.CharmStatType.IDENTITY),

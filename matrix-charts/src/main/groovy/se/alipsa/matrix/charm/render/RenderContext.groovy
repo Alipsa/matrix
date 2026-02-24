@@ -102,6 +102,6 @@ class LayerData {
 @CompileStatic
 class LayerRenderJob {
   se.alipsa.matrix.charm.LayerSpec layer
-  se.alipsa.matrix.charm.Aes aes
+  se.alipsa.matrix.charm.Mapping mapping
   List<LayerData> data = []
 }

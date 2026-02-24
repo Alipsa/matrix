@@ -3,7 +3,7 @@ package se.alipsa.matrix.gg.bridge
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.matrix.charm.Aes
+import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.AnnotationSpec
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmCoordType
@@ -105,8 +105,8 @@ class GgCharmCompiler {
     // Guide gate removed in Phase 10 — all guides now delegated to Charm.
     // Theme gate and label gate removed in Phase 9 — all themes and labels now delegated.
 
-    Aes plotAes = mapAes(plotSourceAes, plotData, 'plot', reasons)
-    if (!reasons.isEmpty() || plotAes == null) {
+    Mapping plotMapping = mapMapping(plotSourceAes, plotData, 'plot', reasons)
+    if (!reasons.isEmpty() || plotMapping == null) {
       return GgCharmCompilation.fallback(reasons)
     }
 
@@ -127,7 +127,7 @@ class GgCharmCompiler {
       if (!annotationSpecs.isEmpty()) {
         mappedAnnotations.addAll(annotationSpecs)
       } else {
-        LayerSpec mapped = mapLayer(layer, idx, plotAes, plotData, mappedCoord, reasons)
+        LayerSpec mapped = mapLayer(layer, idx, plotMapping, plotData, mappedCoord, reasons)
         if (mapped != null) {
           mappedLayers << mapped
         }
@@ -148,7 +148,7 @@ class GgCharmCompiler {
 
     Chart mappedChart = new Chart(
         plotData,
-        plotAes,
+        plotMapping,
         mappedLayers,
         mappedScales,
         mapTheme(ggChart.theme),
@@ -178,7 +178,7 @@ class GgCharmCompiler {
   private LayerSpec mapLayer(
       Layer layer,
       int idx,
-      Aes plotAes,
+      Mapping plotMapping,
       Matrix plotData,
       Coord mappedCoord,
       List<String> reasons
@@ -202,14 +202,14 @@ class GgCharmCompiler {
       return null
     }
 
-    Matrix aesData = layer.data ?: plotData
-    Aes layerAes = mapAes(layer.aes, aesData, "layer ${idx}", reasons)
+    Matrix mappingData = layer.data ?: plotData
+    Mapping layerMapping = mapMapping(layer.aes, mappingData, "layer ${idx}", reasons)
     if (!reasons.isEmpty()) {
       return null
     }
 
-    Aes effectiveAes = mergeAes(plotAes, layerAes, layer.inheritAes)
-    applyParamColumnAesthetics(effectiveAes, layer.params)
+    Mapping effectiveMapping = mergeMappings(plotMapping, layerMapping, layer.inheritAes)
+    applyParamColumnAesthetics(effectiveMapping, layer.params)
 
     Map<String, Object> layerParams = normalizeLayerParams(geomSpec.type, layer.params)
     if (layer.data != null) {
@@ -233,7 +233,7 @@ class GgCharmCompiler {
     new LayerSpec(
         delegatedGeom,
         StatSpec.of(statType, statParams),
-        effectiveAes,
+        effectiveMapping,
         layer.inheritAes,
         PositionSpec.of(positionType, positionParams),
         layerParams
@@ -836,16 +836,16 @@ class GgCharmCompiler {
     null
   }
 
-  private static Aes mergeAes(Aes plotAes, Aes layerAes, boolean inheritAes) {
-    Aes merged = inheritAes ? plotAes.copy() : new Aes()
-    if (layerAes != null) {
-      merged.apply(layerAes.mappings())
+  private static Mapping mergeMappings(Mapping plotMapping, Mapping layerMapping, boolean inheritAes) {
+    Mapping merged = inheritAes ? plotMapping.copy() : new Mapping()
+    if (layerMapping != null) {
+      merged.apply(layerMapping.mappings())
     }
     merged
   }
 
-  private static void applyParamColumnAesthetics(Aes aes, Map params) {
-    if (aes == null || params == null) {
+  private static void applyParamColumnAesthetics(Mapping mapping, Map params) {
+    if (mapping == null || params == null) {
       return
     }
     Map<String, Object> mapped = [:]
@@ -856,7 +856,7 @@ class GgCharmCompiler {
       }
     }
     if (!mapped.isEmpty()) {
-      aes.apply(mapped)
+      mapping.apply(mapped)
     }
   }
 
@@ -915,7 +915,7 @@ class GgCharmCompiler {
     value
   }
 
-  private static Aes mapAes(GgAes source, Matrix data, String context, List<String> reasons) {
+  private static Mapping mapMapping(GgAes source, Matrix data, String context, List<String> reasons) {
     if (source == null) {
       return null
     }
@@ -962,9 +962,9 @@ class GgCharmCompiler {
     if (!reasons.isEmpty()) {
       return null
     }
-    Aes aes = new Aes()
-    aes.apply(mapped)
-    aes
+    Mapping mapping = new Mapping()
+    mapping.apply(mapped)
+    mapping
   }
 
   private static Theme mapTheme(GgTheme source) {

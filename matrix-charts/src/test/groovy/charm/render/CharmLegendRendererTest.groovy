@@ -26,7 +26,7 @@ class CharmLegendRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
     }.build()
 
@@ -51,7 +51,7 @@ class CharmLegendRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
     }.build()
 
@@ -72,7 +72,7 @@ class CharmLegendRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
       guides {
         color = none()
@@ -95,7 +95,7 @@ class CharmLegendRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
       theme {
         legend { position = 'right' }
@@ -119,7 +119,7 @@ class CharmLegendRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
       theme {
         legend { position = 'none' }
@@ -142,7 +142,7 @@ class CharmLegendRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
       labels {
         guides['color'] = 'Category'
@@ -163,7 +163,7 @@ class CharmLegendRendererTest {
         .build()
 
     def spec = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
       guides {
         color = 'legend'
@@ -183,7 +183,7 @@ class CharmLegendRendererTest {
         .build()
 
     def spec = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
       guides {
         color = colorbar()
@@ -203,7 +203,7 @@ class CharmLegendRendererTest {
         .build()
 
     def spec = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
       guides {
         color = false
@@ -225,7 +225,7 @@ class CharmLegendRendererTest {
 
     ['left', 'top', 'bottom'].each { String pos ->
       Chart chart = plot(data) {
-        aes { x = col.x; y = col.y; color = col.cat }
+        mapping { x = col.x; y = col.y; color = col.cat }
         points {}
         theme {
           legend { position = pos }

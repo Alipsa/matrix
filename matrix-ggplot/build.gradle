@@ -79,6 +79,7 @@ dependencies {
 test {
   testLogging.showStandardStreams = true
   jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
+  systemProperty 'java.util.logging.config.file', "${rootDir}/test-logging.properties"
   maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
   useJUnitPlatform()
   testLogging {
@@ -164,14 +165,14 @@ publishing {
       pom {
         name = 'Groovy Matrix GGPlot'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-ggcharts"
+        url = "https://github.com/Alipsa/matrix/matrix-ggplot"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-ggcharts/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-ggplot/master/LICENSE'
           }
         }
         developers {
@@ -181,7 +182,7 @@ publishing {
           }
         }
         scm {
-          url = 'https://github.com/Alipsa/matrix/matrix-ggcharts/tree/master'
+          url = 'https://github.com/Alipsa/matrix/matrix-ggplot/tree/master'
           connection = 'scm:git:https://github.com/Alipsa/matrix.git'
           developerConnection = 'scm:git:https://github.com/Alipsa/matrix.git'
         }

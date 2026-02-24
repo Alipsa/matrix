@@ -36,10 +36,10 @@
     <matrixAvroVersion>0.1.1-SNAPSHOT</matrixAvroVersion>
     <matrixBigQueryVersion>0.5.2-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>0.5.0-SNAPSHOT</matrixChartsVersion>
-    <matrixGgchartsVersion>0.5.0-SNAPSHOT</matrixGgchartsVersion>
     <matrixCoreVersion>3.7.0-SNAPSHOT</matrixCoreVersion>
-    <matrixCsvVersion>2.2.3-SNAPSHOT</matrixCsvVersion>
+    <matrixCsvVersion>2.3.0-SNAPSHOT</matrixCsvVersion>
     <matrixDatasetsVersion>2.1.3-SNAPSHOT</matrixDatasetsVersion>
+    <matrixGgplotVersion>0.5.0-SNAPSHOT</matrixGgplotVersion>
     <matrixGroovyExtVersion>0.1.1-SNAPSHOT</matrixGroovyExtVersion>
     <matrixGsheetsVersion>0.1.2-SNAPSHOT</matrixGsheetsVersion>
     <matrixJsonVersion>2.1.3-SNAPSHOT</matrixJsonVersion>
@@ -80,8 +80,8 @@
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>
-        <artifactId>matrix-ggcharts</artifactId>
-        <version>${matrixGgchartsVersion}</version>
+        <artifactId>matrix-ggplot</artifactId>
+        <version>${matrixGgplotVersion}</version>
       </dependency>
       <dependency>
         <groupId>se.alipsa.matrix</groupId>

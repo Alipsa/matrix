@@ -4,10 +4,10 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
 /**
- * Closure delegate for `aes {}` configuration blocks.
+ * Closure delegate for `mapping {}` configuration blocks.
  */
 @CompileStatic
-class AesDsl {
+class MappingDsl {
 
   private final Cols col = new Cols()
   Object x
