@@ -87,7 +87,11 @@ class CsvReader {
    * @throws IllegalArgumentException if format options are invalid or columns are mismatched
    */
   static Matrix read(Map format, String url) throws IOException {
-    read(format, new URI(url).toURL())
+    try {
+      read(format, new URI(url).toURL())
+    } catch (URISyntaxException e) {
+      throw new IOException("Invalid URL: ${url}", e)
+    }
   }
 
   /**
@@ -290,7 +294,11 @@ class CsvReader {
    */
   @Deprecated
   static Matrix readUrl(String url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
-    read(new URI(url).toURL(), format, firstRowAsHeader, charset)
+    try {
+      read(new URI(url).toURL(), format, firstRowAsHeader, charset)
+    } catch (URISyntaxException e) {
+      throw new IOException("Invalid URL: ${url}", e)
+    }
   }
 
   /**
@@ -946,7 +954,11 @@ class CsvReader {
      * @throws IOException if reading the URL fails
      */
     Matrix fromUrl(String url) throws IOException {
-      from(new URI(url).toURL())
+      try {
+        from(new URI(url).toURL())
+      } catch (URISyntaxException e) {
+        throw new IOException("Invalid URL: ${url}", e)
+      }
     }
 
     /**
