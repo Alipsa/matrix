@@ -1,5 +1,10 @@
 # Release history
 
+## v2.1.3, In progress
+- upgrade dependencies
+  - com.fasterxml.jackson.core:jackson-core 2.21.0 -> 2.21.1 
+  - com.fasterxml.jackson.core:jackson-databind 2.21.0 -> 2.21.1
+
 ## v2.1.2, 2026-01-31
 - deprecate JsonImporter and JsonExporter in favor of JsonReader and JsonWriter
 - change implementation to use Jackson streaming API instead of JsonSlurper for improved memory efficiency (O(1) memory regardless of JSON size)
