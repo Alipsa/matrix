@@ -421,16 +421,16 @@ class CsvWriter {
       validateMatrix(_matrix)
       CsvFormat format = buildFormat()
       CSVFormat apacheFormat = format.toCSVFormat()
-      try (CSVPrinter printer = new CSVPrinter(printWriter, apacheFormat)) {
-        if (_withHeader) {
-          if (_matrix.columnNames() != null) {
-            printer.printRecord(_matrix.columnNames())
-          } else {
-            printer.printRecord((1.._matrix.columnCount()).collect { 'c' + it })
-          }
+      CSVPrinter printer = new CSVPrinter(printWriter, apacheFormat)
+      if (_withHeader) {
+        if (_matrix.columnNames() != null) {
+          printer.printRecord(_matrix.columnNames())
+        } else {
+          printer.printRecord((1.._matrix.columnCount()).collect { 'c' + it })
         }
-        printer.printRecords(_matrix.rows())
       }
+      printer.printRecords(_matrix.rows())
+      printer.flush()
     }
 
     /**
