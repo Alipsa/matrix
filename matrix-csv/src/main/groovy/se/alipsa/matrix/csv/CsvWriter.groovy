@@ -23,7 +23,7 @@ import java.nio.file.Path
  * String csv = CsvWriter.write(matrix).asString()
  *
  * // Write with custom delimiter
- * CsvWriter.write(matrix).delimiter(';' as char).to(file)
+ * CsvWriter.write(matrix).delimiter(';').to(file)
  *
  * // Write Excel CSV
  * CsvWriter.write(matrix).excel().to(file)
@@ -46,7 +46,7 @@ class CsvWriter {
    *
    * <pre>
    * CsvWriter.write(matrix).to(file)
-   * CsvWriter.write(matrix).delimiter(';' as char).to(file)
+   * CsvWriter.write(matrix).delimiter(';').to(file)
    * String csv = CsvWriter.write(matrix).asString()
    * </pre>
    *
@@ -280,7 +280,7 @@ class CsvWriter {
    *
    * <pre>
    * CsvWriter.write(matrix)
-   *     .delimiter(';' as char)
+   *     .delimiter(';')
    *     .to(file)
    * </pre>
    */
@@ -307,14 +307,26 @@ class CsvWriter {
     /** Sets the field delimiter character. */
     WriteBuilder delimiter(char c) { _delimiter = c; this }
 
+    /** Sets the field delimiter as a single-character string. */
+    WriteBuilder delimiter(String s) { _delimiter = s.charAt(0); this }
+
     /** Sets the quote character for enclosing fields. */
     WriteBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
+
+    /** Sets the quote character as a single-character string, or {@code null} to disable. */
+    WriteBuilder quoteCharacter(String s) { _quoteCharacter = s?.charAt(0); this }
 
     /** Sets the escape character. */
     WriteBuilder escapeCharacter(Character c) { _escapeCharacter = c; this }
 
+    /** Sets the escape character as a single-character string, or {@code null} to disable. */
+    WriteBuilder escapeCharacter(String s) { _escapeCharacter = s?.charAt(0); this }
+
     /** Sets the comment marker character. */
     WriteBuilder commentMarker(Character c) { _commentMarker = c; this }
+
+    /** Sets the comment marker as a single-character string, or {@code null} to disable. */
+    WriteBuilder commentMarker(String s) { _commentMarker = s?.charAt(0); this }
 
     /** Sets whether to trim whitespace from values. */
     WriteBuilder trim(boolean b) { _trim = b; this }

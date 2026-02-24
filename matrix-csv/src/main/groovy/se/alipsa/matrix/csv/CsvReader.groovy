@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
+import java.text.NumberFormat
 
 /**
  * Reads CSV files into Matrix objects using Apache Commons CSV.
@@ -24,7 +25,7 @@ import java.nio.file.Path
  * Matrix m = CsvReader.read().from(file)
  *
  * // Read with custom delimiter
- * Matrix m = CsvReader.read().delimiter(';' as char).from(file)
+ * Matrix m = CsvReader.read().delimiter(';').from(file)
  *
  * // Read from String content
  * Matrix m = CsvReader.read().fromString(csvContent)
@@ -38,7 +39,14 @@ import java.nio.file.Path
  *
  * <h3>Map-based API</h3>
  * <pre>
- * Matrix m = CsvReader.read(Delimiter: ';', Quote: '"', file)
+ * // Named arguments (camelCase, case-insensitive)
+ * Matrix m = CsvReader.read(delimiter: ';', quote: '"', file)
+ *
+ * // With type conversion
+ * Matrix m = CsvReader.read(
+ *     types: [Integer, String, LocalDate, BigDecimal],
+ *     dateTimeFormat: 'yyyy-MM-dd',
+ *     file)
  * </pre>
  *
  * @see CsvWriter
@@ -63,7 +71,8 @@ class CsvReader {
   static Matrix read(Map format, URL url) throws IOException {
     Map r = parseMap(format)
     try (CSVParser parser = CSVParser.parse(url, r.charset as Charset, r.apacheFormat as CSVFormat)) {
-      parse(tableName(url), parser, r.firstRowAsHeader as boolean)
+      convertIfNeeded(parse(tableName(url), parser, r.firstRowAsHeader as boolean),
+          r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
     }
   }
 
@@ -92,7 +101,8 @@ class CsvReader {
   static Matrix read(Map format, InputStream is) throws IOException {
     Map r = parseMap(format)
     try (CSVParser parser = CSVParser.parse(is, r.charset as Charset, r.apacheFormat as CSVFormat)) {
-      parse(r.tableName as String, parser, r.firstRowAsHeader as boolean)
+      convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
+          r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
     }
   }
 
@@ -111,7 +121,8 @@ class CsvReader {
     try (ReaderInputStream readerInputStream = ReaderInputStream.builder()
         .setCharset(charset).setReader(reader).get()) {
       try (CSVParser parser = CSVParser.parse(readerInputStream, charset, r.apacheFormat as CSVFormat)) {
-        parse(r.tableName as String, parser, r.firstRowAsHeader as boolean)
+        convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
+            r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
       }
     }
   }
@@ -128,7 +139,8 @@ class CsvReader {
   static Matrix read(Map format, File file) throws IOException {
     Map r = parseMap(format)
     try (CSVParser parser = CSVParser.parse(file, r.charset as Charset, r.apacheFormat as CSVFormat)) {
-      parse(tableName(file), parser, r.firstRowAsHeader as boolean)
+      convertIfNeeded(parse(tableName(file), parser, r.firstRowAsHeader as boolean),
+          r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
     }
   }
 
@@ -158,6 +170,9 @@ class CsvReader {
       firstRowAsHeader = format.getOrDefault(CsvOption.FirstRowAsHeader, true)
     }
     r.firstRowAsHeader = firstRowAsHeader
+    r.types = format.get(CsvOption.Types) as List<Class>
+    r.dateTimeFormat = format.get(CsvOption.DateTimeFormat) as String
+    r.numberFormat = format.get(CsvOption.NumberFormat) as NumberFormat
     r
   }
 
@@ -173,7 +188,7 @@ class CsvReader {
    *
    * <pre>
    * Matrix m = CsvReader.read().from(file)
-   * Matrix m = CsvReader.read().delimiter(';' as char).from(file)
+   * Matrix m = CsvReader.read().delimiter(';').from(file)
    * Matrix m = CsvReader.read().tsv().from(file)
    * </pre>
    *
@@ -636,10 +651,27 @@ class CsvReader {
         // Backward compatibility: convert deprecated CsvImporter.Format to CsvOption by name
         m.put(CsvOption.valueOf(k.name()), v)
       } else {
-        m.put(CsvOption.valueOf(String.valueOf(k)), v)
+        String key = String.valueOf(k)
+        CsvOption option = CsvOption.values().find { it.name().equalsIgnoreCase(key) }
+        if (option == null) {
+          throw new IllegalArgumentException("Unknown CsvOption: '${key}'")
+        }
+        m.put(option, v)
       }
     }
     m
+  }
+
+  /**
+   * Applies type conversion to a Matrix if types are specified.
+   * Used by the Map-based API methods.
+   */
+  private static Matrix convertIfNeeded(Matrix matrix, List<Class> types, String dtf, NumberFormat nf) {
+    if (types != null) {
+      matrix.convert(types, dtf, nf)
+    } else {
+      matrix
+    }
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -654,7 +686,7 @@ class CsvReader {
    *
    * <pre>
    * Matrix m = CsvReader.read()
-   *     .delimiter(';' as char)
+   *     .delimiter(';')
    *     .trim(true)
    *     .from(file)
    * </pre>
@@ -674,20 +706,35 @@ class CsvReader {
     private List<String> _header = null
     private Charset _charset = StandardCharsets.UTF_8
     private String _matrixName = ''
+    private List<Class> _types = null
+    private String _dateTimeFormat = null
+    private NumberFormat _numberFormat = null
 
     // ── Format configuration methods ──────────────────────────
 
     /** Sets the field delimiter character. */
     ReadBuilder delimiter(char c) { _delimiter = c; this }
 
+    /** Sets the field delimiter as a single-character string. */
+    ReadBuilder delimiter(String s) { _delimiter = s.charAt(0); this }
+
     /** Sets the quote character for enclosing fields. */
     ReadBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
+
+    /** Sets the quote character as a single-character string, or {@code null} to disable. */
+    ReadBuilder quoteCharacter(String s) { _quoteCharacter = s?.charAt(0); this }
 
     /** Sets the escape character. */
     ReadBuilder escapeCharacter(Character c) { _escapeCharacter = c; this }
 
+    /** Sets the escape character as a single-character string, or {@code null} to disable. */
+    ReadBuilder escapeCharacter(String s) { _escapeCharacter = s?.charAt(0); this }
+
     /** Sets the comment marker character. */
     ReadBuilder commentMarker(Character c) { _commentMarker = c; this }
+
+    /** Sets the comment marker as a single-character string, or {@code null} to disable. */
+    ReadBuilder commentMarker(String s) { _commentMarker = s?.charAt(0); this }
 
     /** Sets whether to trim whitespace from values. */
     ReadBuilder trim(boolean b) { _trim = b; this }
@@ -727,6 +774,71 @@ class CsvReader {
     /** Sets the name for the resulting Matrix (default: empty string). */
     ReadBuilder matrixName(String name) { _matrixName = name; this }
 
+    // ── Type conversion methods ─────────────────────────────
+
+    /**
+     * Sets column types by position for automatic conversion after reading.
+     *
+     * <pre>
+     * Matrix m = CsvReader.read()
+     *     .types([Integer, String, BigDecimal])
+     *     .from(file)
+     * </pre>
+     *
+     * @param types list of Class objects, one per column
+     * @return this builder
+     */
+    ReadBuilder types(List<Class> types) { _types = types; this }
+
+    /**
+     * Sets column types by position for automatic conversion after reading (varargs).
+     *
+     * <pre>
+     * Matrix m = CsvReader.read()
+     *     .types(Integer, String, BigDecimal)
+     *     .from(file)
+     * </pre>
+     *
+     * @param types Class objects, one per column
+     * @return this builder
+     */
+    ReadBuilder types(Class... types) { _types = types.toList(); this }
+
+    /**
+     * Sets both header and types from a map of column name to type.
+     *
+     * <pre>
+     * Matrix m = CsvReader.read()
+     *     .columns(id: Integer, name: String, amount: BigDecimal)
+     *     .from(file)
+     * </pre>
+     *
+     * @param columnMap map of column names to their types
+     * @return this builder
+     */
+    ReadBuilder columns(Map<String, Class> columnMap) {
+      _header = columnMap.keySet().toList()
+      _types = columnMap.values().toList()
+      _firstRowAsHeader = false
+      this
+    }
+
+    /**
+     * Sets the date/time parse pattern for type conversion (e.g. {@code 'yyyy-MM-dd'}).
+     *
+     * @param pattern date/time format pattern
+     * @return this builder
+     */
+    ReadBuilder dateTimeFormat(String pattern) { _dateTimeFormat = pattern; this }
+
+    /**
+     * Sets the NumberFormat for locale-aware number parsing during type conversion.
+     *
+     * @param nf the NumberFormat instance
+     * @return this builder
+     */
+    ReadBuilder numberFormat(NumberFormat nf) { _numberFormat = nf; this }
+
     // ── Preset methods ────────────────────────────────────────
 
     /** Configures Excel-compatible CSV format with CRLF record separators. */
@@ -750,7 +862,7 @@ class CsvReader {
     Matrix from(File file) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
       try (CSVParser parser = CSVParser.parse(file, _charset, apacheFormat)) {
-        parse(tableName(file), parser, _firstRowAsHeader)
+        convertIfNeeded(parse(tableName(file), parser, _firstRowAsHeader))
       }
     }
 
@@ -775,7 +887,7 @@ class CsvReader {
     Matrix from(URL url) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
       try (CSVParser parser = CSVParser.parse(url, _charset, apacheFormat)) {
-        parse(tableName(url), parser, _firstRowAsHeader)
+        convertIfNeeded(parse(tableName(url), parser, _firstRowAsHeader))
       }
     }
 
@@ -789,7 +901,7 @@ class CsvReader {
     Matrix from(InputStream is) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
       try (CSVParser parser = CSVParser.parse(is, _charset, apacheFormat)) {
-        parse(_matrixName, parser, _firstRowAsHeader)
+        convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
       }
     }
 
@@ -805,7 +917,7 @@ class CsvReader {
       try (ReaderInputStream readerInputStream = ReaderInputStream.builder()
           .setCharset(_charset).setReader(reader).get()) {
         try (CSVParser parser = CSVParser.parse(readerInputStream, _charset, apacheFormat)) {
-          parse(_matrixName, parser, _firstRowAsHeader)
+          convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
         }
       }
     }
@@ -841,6 +953,14 @@ class CsvReader {
      */
     Matrix fromFile(String filePath) throws IOException {
       from(new File(filePath))
+    }
+
+    private Matrix convertIfNeeded(Matrix matrix) {
+      if (_types != null) {
+        matrix.convert(_types, _dateTimeFormat, _numberFormat)
+      } else {
+        matrix
+      }
     }
 
     private CSVFormat buildCSVFormat() {

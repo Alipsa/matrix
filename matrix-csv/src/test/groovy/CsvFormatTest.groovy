@@ -6,6 +6,8 @@ import se.alipsa.matrix.csv.CsvWriter
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
+import java.text.NumberFormat
+import java.time.LocalDate
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -36,7 +38,7 @@ Bob,25'''
 2;Bob;200.00'''
 
     Matrix matrix = CsvReader.read()
-        .delimiter(';' as char)
+        .delimiter(';')
         .fromString(csvContent)
 
     assertEquals(2, matrix.rowCount(), "Number of rows")
@@ -315,7 +317,7 @@ Alice,30'''
         .build()
 
     String csvContent = CsvWriter.write(matrix)
-        .delimiter(';' as char)
+        .delimiter(';')
         .asString()
 
     assertTrue(csvContent.contains('name;value'), "Should use semicolon delimiter")
@@ -410,8 +412,8 @@ Alice,30'''
         ])
         .build()
 
-    String csvContent = CsvWriter.write(original).delimiter(';' as char).asString()
-    Matrix result = CsvReader.read().delimiter(';' as char).fromString(csvContent)
+    String csvContent = CsvWriter.write(original).delimiter(';').asString()
+    Matrix result = CsvReader.read().delimiter(';').fromString(csvContent)
 
     assertEquals(original.rowCount(), result.rowCount(), "Row count should match")
     assertEquals(original.columnNames(), result.columnNames(), "Column names should match")
@@ -554,5 +556,89 @@ Bob,100'''
     for (int i = 0; i < original.rowCount(); i++) {
       assertEquals(original.row(i).toList(), result.row(i).toList(), "Row $i should match")
     }
+  }
+
+  // ── Type conversion tests ──────────────────────────────────
+
+  @Test
+  void readWithTypesList() {
+    String csvContent = '''id,name,amount
+1,Alice,100.50
+2,Bob,200.75'''
+
+    Matrix matrix = CsvReader.read()
+        .types(Integer, String, BigDecimal)
+        .fromString(csvContent)
+
+    assertEquals(2, matrix.rowCount())
+    assertEquals(Integer, matrix.type(0), "id column type")
+    assertEquals(String, matrix.type(1), "name column type")
+    assertEquals(BigDecimal, matrix.type(2), "amount column type")
+    assertEquals(1, matrix.row(0)[0])
+    assertEquals(200.75, matrix.row(1)[2])
+  }
+
+  @Test
+  void readWithColumns() {
+    String csvContent = '''1,Alice,100.50
+2,Bob,200.75'''
+
+    Matrix matrix = CsvReader.read()
+        .columns(id: Integer, name: String, amount: BigDecimal)
+        .fromString(csvContent)
+
+    assertEquals(2, matrix.rowCount())
+    assertEquals(['id', 'name', 'amount'], matrix.columnNames(), "Column names from columns()")
+    assertEquals(Integer, matrix.type(0), "id column type")
+    assertEquals(String, matrix.type(1), "name column type")
+    assertEquals(BigDecimal, matrix.type(2), "amount column type")
+    assertEquals(2, matrix.row(1)[0])
+    assertEquals('Bob', matrix.row(1)[1])
+  }
+
+  @Test
+  void readWithTypesAndDateTimeFormat() {
+    String csvContent = '''id,name,date
+1,Alice,2023-01-15
+2,Bob,2023-06-20'''
+
+    Matrix matrix = CsvReader.read()
+        .types(Integer, String, LocalDate)
+        .dateTimeFormat('yyyy-MM-dd')
+        .fromString(csvContent)
+
+    assertEquals(2, matrix.rowCount())
+    assertEquals(LocalDate, matrix.type(2), "date column type")
+    assertEquals(LocalDate.of(2023, 1, 15), matrix.row(0)[2])
+    assertEquals(LocalDate.of(2023, 6, 20), matrix.row(1)[2])
+  }
+
+  @Test
+  void readWithTypesAndNumberFormat() {
+    String csvContent = '''id,name,amount
+1,Alice,"1.234,56"
+2,Bob,"2.345,67"'''
+
+    NumberFormat germanFormat = NumberFormat.getInstance(Locale.GERMANY)
+    Matrix matrix = CsvReader.read()
+        .types(Integer, String, BigDecimal)
+        .numberFormat(germanFormat)
+        .fromString(csvContent)
+
+    assertEquals(2, matrix.rowCount())
+    assertEquals(BigDecimal, matrix.type(2), "amount column type")
+    assertEquals(1234.56, (matrix.row(0)[2] as BigDecimal).doubleValue(), 0.01)
+  }
+
+  @Test
+  void readWithoutTypesReturnsAllStrings() {
+    String csvContent = '''id,name,amount
+1,Alice,100.50'''
+
+    Matrix matrix = CsvReader.read().fromString(csvContent)
+
+    assertEquals(String, matrix.type(0), "id should remain String")
+    assertEquals(String, matrix.type(1), "name should remain String")
+    assertEquals(String, matrix.type(2), "amount should remain String")
   }
 }

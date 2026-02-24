@@ -4,7 +4,9 @@ package se.alipsa.matrix.csv
  * Configuration options for the Map-based CSV reading API.
  *
  * <p>These enum values are used as keys in the format Map passed to
- * {@link CsvReader#read(Map, URL)} and related methods.</p>
+ * {@link CsvReader#read(Map, URL)} and related methods. Keys are
+ * case-insensitive, so both {@code Delimiter: ';'} and {@code delimiter: ';'}
+ * work when using Groovy named arguments.</p>
  *
  * <h3>Usage</h3>
  * <pre>
@@ -15,8 +17,14 @@ package se.alipsa.matrix.csv
  *     (CsvOption.Header): ['id', 'name', 'amount'],
  *     file)
  *
- * // Or with Groovy named arguments (string keys converted automatically)
- * Matrix m = CsvReader.read(Delimiter: ';', Trim: true, file)
+ * // Or with Groovy named arguments (camelCase recommended, case-insensitive)
+ * Matrix m = CsvReader.read(delimiter: ';', trim: true, file)
+ *
+ * // With type conversion
+ * Matrix m = CsvReader.read(
+ *     types: [Integer, String, LocalDate, BigDecimal],
+ *     dateTimeFormat: 'yyyy-MM-dd',
+ *     file)
  * </pre>
  *
  * @see CsvReader
@@ -50,5 +58,11 @@ enum CsvOption {
   /** The charset used. Default: {@code UTF-8}. */
   Charset,
   /** The name of the Matrix. Default: {@code ''}. */
-  TableName
+  TableName,
+  /** {@code List<Class>} of column types by position. Used for automatic type conversion after reading. */
+  Types,
+  /** {@code String} date/time parse pattern (e.g. {@code 'yyyy-MM-dd'}). Used with {@link #Types} for date/time conversion. */
+  DateTimeFormat,
+  /** {@code java.text.NumberFormat} instance for locale-aware number parsing. Used with {@link #Types}. */
+  NumberFormat
 }
