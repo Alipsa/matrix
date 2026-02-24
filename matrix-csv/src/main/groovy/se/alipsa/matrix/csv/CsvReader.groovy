@@ -107,7 +107,7 @@ class CsvReader {
 
   /**
    * Read a CSV file from a Reader with custom format options.
-   * The caller is responsible for closing the Reader.
+   * The Reader will be closed automatically after reading.
    *
    * @param format Map of format options using {@link CsvOption} enum keys
    * @param reader Reader to read the CSV data from
@@ -220,6 +220,7 @@ class CsvReader {
 
   /**
    * Read a CSV file from a Reader using Apache Commons CSV format.
+   * The Reader will be closed automatically after reading.
    *
    * @param reader Reader to read the CSV data from
    * @param format CSVFormat configuration (default: CSVFormat.DEFAULT)
@@ -907,7 +908,7 @@ class CsvReader {
     }
 
     /**
-     * Reads CSV data from a Reader. The caller is responsible for closing the Reader.
+     * Reads CSV data from a Reader. The Reader will be closed automatically after reading.
      *
      * @param reader the Reader to read from
      * @return Matrix containing the imported data

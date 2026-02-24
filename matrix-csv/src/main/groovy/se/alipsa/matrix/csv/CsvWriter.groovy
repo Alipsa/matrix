@@ -267,7 +267,9 @@ class CsvWriter {
           .replaceAll('\\.{2,}', '_')
       String fileName = safeName + '.csv'
       File target = new File(out, fileName)
-      if (!target.canonicalPath.startsWith(out.canonicalPath)) {
+      java.nio.file.Path targetPath = target.toPath().normalize()
+      java.nio.file.Path dirPath = out.toPath().normalize()
+      if (!targetPath.startsWith(dirPath)) {
         throw new IllegalArgumentException("Matrix name results in a path outside the target directory: ${matrix.matrixName}")
       }
       return target
@@ -345,13 +347,13 @@ class CsvWriter {
     /** Sets the comment marker as a single-character string, or {@code null} to disable. */
     WriteBuilder commentMarker(String s) { _commentMarker = s?.charAt(0); this }
 
-    /** Sets whether to trim whitespace from values. */
+    /** Sets whether to trim whitespace. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
     WriteBuilder trim(boolean b) { _trim = b; this }
 
-    /** Sets whether to ignore empty lines. */
+    /** Sets whether to ignore empty lines. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
     WriteBuilder ignoreEmptyLines(boolean b) { _ignoreEmptyLines = b; this }
 
-    /** Sets whether to ignore spaces around quoted values. */
+    /** Sets whether to ignore spaces around quoted values. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
     WriteBuilder ignoreSurroundingSpaces(boolean b) { _ignoreSurroundingSpaces = b; this }
 
     /** Sets the string to interpret as null. */
