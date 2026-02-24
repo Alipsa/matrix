@@ -486,13 +486,15 @@ class CsvReader {
       f.setSkipHeaderRecord(true)
     }
 
-    // DuplicateHeaderMode (string handling only — pass the enum name as a String)
+    // DuplicateHeaderMode (accepts String name or DuplicateHeaderMode enum value)
     if (format.containsKey(CsvOption.DuplicateHeaderMode)) {
       def val = format.get(CsvOption.DuplicateHeaderMode)
       if (val instanceof String) {
         f.setDuplicateHeaderMode(DuplicateHeaderMode.valueOf(val))
+      } else if (val instanceof DuplicateHeaderMode) {
+        f.setDuplicateHeaderMode(val as DuplicateHeaderMode)
       } else {
-        throw new IllegalArgumentException("The value for DuplicateHeaderMode must be a String (e.g. 'ALLOW_ALL', 'ALLOW_EMPTY', 'DISALLOW') but was $val")
+        throw new IllegalArgumentException("The value for DuplicateHeaderMode must be a String or DuplicateHeaderMode enum (e.g. 'ALLOW_ALL', 'ALLOW_EMPTY', 'DISALLOW') but was $val")
       }
     } else {
       f.setDuplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY)
