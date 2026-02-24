@@ -357,7 +357,9 @@ class CsvWriter {
     void to(File out) {
       validateMatrix(_matrix)
       out = ensureFileOutput(_matrix, out)
-      to(new PrintWriter(out))
+      try (PrintWriter pw = new PrintWriter(out)) {
+        to(pw)
+      }
     }
 
     /**
@@ -370,12 +372,13 @@ class CsvWriter {
     }
 
     /**
-     * Writes CSV data to a Writer.
+     * Writes CSV data to a Writer. The caller is responsible for closing the Writer.
      *
      * @param writer the Writer to write to
      */
     void to(Writer writer) {
-      to(new PrintWriter(writer))
+      PrintWriter pw = writer instanceof PrintWriter ? writer as PrintWriter : new PrintWriter(writer)
+      to(pw)
     }
 
     /**
