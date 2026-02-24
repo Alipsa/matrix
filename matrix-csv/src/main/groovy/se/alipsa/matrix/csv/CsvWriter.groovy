@@ -3,6 +3,7 @@ package se.alipsa.matrix.csv
 import groovy.transform.CompileStatic
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
+import org.apache.commons.io.output.CloseShieldWriter
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Path
@@ -428,16 +429,16 @@ class CsvWriter {
       validateMatrix(_matrix)
       CsvFormat format = buildFormat()
       CSVFormat apacheFormat = format.toCSVFormat()
-      CSVPrinter printer = new CSVPrinter(printWriter, apacheFormat)
-      if (_withHeader) {
-        if (_matrix.columnNames() != null) {
-          printer.printRecord(_matrix.columnNames())
-        } else {
-          printer.printRecord((1.._matrix.columnCount()).collect { 'c' + it })
+      try (CSVPrinter printer = new CSVPrinter(CloseShieldWriter.wrap(printWriter), apacheFormat)) {
+        if (_withHeader) {
+          if (_matrix.columnNames() != null) {
+            printer.printRecord(_matrix.columnNames())
+          } else {
+            printer.printRecord((1.._matrix.columnCount()).collect { 'c' + it })
+          }
         }
+        printer.printRecords(_matrix.rows())
       }
-      printer.printRecords(_matrix.rows())
-      printer.flush()
     }
 
     /**

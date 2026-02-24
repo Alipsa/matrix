@@ -4,6 +4,8 @@ import groovy.transform.CompileStatic
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.DuplicateHeaderMode
+import org.apache.commons.io.input.CloseShieldInputStream
+import org.apache.commons.io.input.CloseShieldReader
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.charset.Charset
@@ -99,9 +101,10 @@ class CsvReader {
    */
   static Matrix read(Map format, InputStream is) throws IOException {
     Map r = parseMap(format)
-    CSVParser parser = CSVParser.parse(is, r.charset as Charset, r.apacheFormat as CSVFormat)
-    convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
-        r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
+    try (CSVParser parser = CSVParser.parse(CloseShieldInputStream.wrap(is), r.charset as Charset, r.apacheFormat as CSVFormat)) {
+      convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
+          r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
+    }
   }
 
   /**
@@ -116,9 +119,10 @@ class CsvReader {
    */
   static Matrix read(Map format, Reader reader) throws IOException {
     Map r = parseMap(format)
-    CSVParser parser = CSVParser.parse(reader, r.apacheFormat as CSVFormat)
-    convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
-        r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
+    try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), r.apacheFormat as CSVFormat)) {
+      convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
+          r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
+    }
   }
 
   /**
@@ -211,8 +215,9 @@ class CsvReader {
    */
   @Deprecated
   static Matrix read(InputStream is, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
-    CSVParser parser = CSVParser.parse(is, charset, format)
-    parse(matrixName, parser, firstRowAsHeader)
+    try (CSVParser parser = CSVParser.parse(CloseShieldInputStream.wrap(is), charset, format)) {
+      parse(matrixName, parser, firstRowAsHeader)
+    }
   }
 
   /**
@@ -231,8 +236,9 @@ class CsvReader {
    */
   @Deprecated
   static Matrix read(Reader reader, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
-    CSVParser parser = CSVParser.parse(reader, format)
-    parse(matrixName, parser, firstRowAsHeader)
+    try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), format)) {
+      parse(matrixName, parser, firstRowAsHeader)
+    }
   }
 
   /**
@@ -900,8 +906,9 @@ class CsvReader {
      */
     Matrix from(InputStream is) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      CSVParser parser = CSVParser.parse(is, _charset, apacheFormat)
-      convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
+      try (CSVParser parser = CSVParser.parse(CloseShieldInputStream.wrap(is), _charset, apacheFormat)) {
+        convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
+      }
     }
 
     /**
@@ -913,8 +920,9 @@ class CsvReader {
      */
     Matrix from(Reader reader) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      CSVParser parser = CSVParser.parse(reader, apacheFormat)
-      convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
+      try (CSVParser parser = CSVParser.parse(CloseShieldReader.wrap(reader), apacheFormat)) {
+        convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
+      }
     }
 
     /**
