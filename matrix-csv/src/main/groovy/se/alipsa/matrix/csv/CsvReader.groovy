@@ -71,8 +71,9 @@ class CsvReader {
    */
   static Matrix read(Map format, URL url) throws IOException {
     Map r = parseMap(format)
+    String name = r.tableName ? r.tableName as String : tableName(url)
     try (CSVParser parser = CSVParser.parse(url, r.charset as Charset, r.apacheFormat as CSVFormat)) {
-      convertIfNeeded(parse(tableName(url), parser, r.firstRowAsHeader as boolean),
+      convertIfNeeded(parse(name, parser, r.firstRowAsHeader as boolean),
           r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
     }
   }
@@ -140,8 +141,9 @@ class CsvReader {
    */
   static Matrix read(Map format, File file) throws IOException {
     Map r = parseMap(format)
+    String name = r.tableName ? r.tableName as String : tableName(file)
     try (CSVParser parser = CSVParser.parse(file, r.charset as Charset, r.apacheFormat as CSVFormat)) {
-      convertIfNeeded(parse(tableName(file), parser, r.firstRowAsHeader as boolean),
+      convertIfNeeded(parse(name, parser, r.firstRowAsHeader as boolean),
           r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
     }
   }
@@ -725,8 +727,8 @@ class CsvReader {
 
     /** Sets the field delimiter as a single-character string. */
     ReadBuilder delimiter(String s) {
-      if (s == null || s.isEmpty()) {
-        throw new IllegalArgumentException("Delimiter string must not be null or empty")
+      if (s == null || s.length() != 1) {
+        throw new IllegalArgumentException("Delimiter must be a single character string, got: ${s}")
       }
       _delimiter = s.charAt(0)
       this
@@ -736,19 +738,37 @@ class CsvReader {
     ReadBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
 
     /** Sets the quote character as a single-character string, or {@code null}/empty to disable. */
-    ReadBuilder quoteCharacter(String s) { _quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
+    ReadBuilder quoteCharacter(String s) {
+      if (s != null && s.length() > 1) {
+        throw new IllegalArgumentException("Quote character must be a single character string, got: ${s}")
+      }
+      _quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      this
+    }
 
     /** Sets the escape character. */
     ReadBuilder escapeCharacter(Character c) { _escapeCharacter = c; this }
 
     /** Sets the escape character as a single-character string, or {@code null}/empty to disable. */
-    ReadBuilder escapeCharacter(String s) { _escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
+    ReadBuilder escapeCharacter(String s) {
+      if (s != null && s.length() > 1) {
+        throw new IllegalArgumentException("Escape character must be a single character string, got: ${s}")
+      }
+      _escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      this
+    }
 
     /** Sets the comment marker character. */
     ReadBuilder commentMarker(Character c) { _commentMarker = c; this }
 
     /** Sets the comment marker as a single-character string, or {@code null}/empty to disable. */
-    ReadBuilder commentMarker(String s) { _commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
+    ReadBuilder commentMarker(String s) {
+      if (s != null && s.length() > 1) {
+        throw new IllegalArgumentException("Comment marker must be a single character string, got: ${s}")
+      }
+      _commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      this
+    }
 
     /** Sets whether to trim whitespace from values. */
     ReadBuilder trim(boolean b) { _trim = b; this }
@@ -877,8 +897,9 @@ class CsvReader {
      */
     Matrix from(File file) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
+      String name = _matrixName ? _matrixName : tableName(file)
       try (CSVParser parser = CSVParser.parse(file, _charset, apacheFormat)) {
-        convertIfNeeded(parse(tableName(file), parser, _firstRowAsHeader))
+        convertIfNeeded(parse(name, parser, _firstRowAsHeader))
       }
     }
 
@@ -902,8 +923,9 @@ class CsvReader {
      */
     Matrix from(URL url) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
+      String name = _matrixName ? _matrixName : tableName(url)
       try (CSVParser parser = CSVParser.parse(url, _charset, apacheFormat)) {
-        convertIfNeeded(parse(tableName(url), parser, _firstRowAsHeader))
+        convertIfNeeded(parse(name, parser, _firstRowAsHeader))
       }
     }
 

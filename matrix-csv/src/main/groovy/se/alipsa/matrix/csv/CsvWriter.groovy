@@ -330,8 +330,8 @@ class CsvWriter {
 
     /** Sets the field delimiter as a single-character string. */
     WriteBuilder delimiter(String s) {
-      if (s == null || s.isEmpty()) {
-        throw new IllegalArgumentException("Delimiter string must not be null or empty")
+      if (s == null || s.length() != 1) {
+        throw new IllegalArgumentException("Delimiter must be a single character string, got: ${s}")
       }
       _delimiter = s.charAt(0)
       this
@@ -341,19 +341,37 @@ class CsvWriter {
     WriteBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
 
     /** Sets the quote character as a single-character string, or {@code null}/empty to disable. */
-    WriteBuilder quoteCharacter(String s) { _quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
+    WriteBuilder quoteCharacter(String s) {
+      if (s != null && s.length() > 1) {
+        throw new IllegalArgumentException("Quote character must be a single character string, got: ${s}")
+      }
+      _quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      this
+    }
 
     /** Sets the escape character. */
     WriteBuilder escapeCharacter(Character c) { _escapeCharacter = c; this }
 
     /** Sets the escape character as a single-character string, or {@code null}/empty to disable. */
-    WriteBuilder escapeCharacter(String s) { _escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
+    WriteBuilder escapeCharacter(String s) {
+      if (s != null && s.length() > 1) {
+        throw new IllegalArgumentException("Escape character must be a single character string, got: ${s}")
+      }
+      _escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      this
+    }
 
     /** Sets the comment marker character. */
     WriteBuilder commentMarker(Character c) { _commentMarker = c; this }
 
     /** Sets the comment marker as a single-character string, or {@code null}/empty to disable. */
-    WriteBuilder commentMarker(String s) { _commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
+    WriteBuilder commentMarker(String s) {
+      if (s != null && s.length() > 1) {
+        throw new IllegalArgumentException("Comment marker must be a single character string, got: ${s}")
+      }
+      _commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0)
+      this
+    }
 
     /** Sets whether to trim whitespace. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
     WriteBuilder trim(boolean b) { _trim = b; this }
