@@ -48,7 +48,7 @@ dependencies {
   implementation 'com.google.oauth-client:google-oauth-client-jetty:1.39.0'
   implementation 'com.google.apis:google-api-services-sheets:v4-rev20251110-2.0.0'
   // For deleting sheets
-  implementation 'com.google.apis:google-api-services-drive:v3-rev20251210-2.0.0'
+  implementation 'com.google.apis:google-api-services-drive:v3-rev20260128-2.0.0'
   testImplementation project(':matrix-core')
   testImplementation libs.junit.jupiter.api
   testRuntimeOnly libs.junit.jupiter.engine

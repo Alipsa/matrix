@@ -7,82 +7,228 @@ a CSV file in the format of choice.
 To use it in your project, add the following dependencies to your code
 ```groovy
 implementation 'se.alipsa.matrix:matrix-core:3.6.0'
-implementation 'se.alipsa.matrix:matrix-csv:2.2.2' 
+implementation 'se.alipsa.matrix:matrix-csv:2.2.2'
 ```
 
 ## Import a CSV file into a Matrix
-Matrix-csv uses apache-commons csv to parse the csv file. Here is a simple example:
+
+### Using the fluent API (recommended)
+
+The fluent API provides a chainable builder pattern for reading CSV files:
 
 ```groovy
-import org.apache.commons.csv.CSVFormat
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvImporter
+import se.alipsa.matrix.csv.CsvReader
 
-URL url = getClass().getResource("/basic.csv")
-CSVFormat format = CSVFormat.Builder.create().setTrim(true).build()
-Matrix basic = CsvImporter.importCsv(url, format)
+// Simple read with defaults
+Matrix m = CsvReader.read().from(file)
+
+// Read with custom delimiter
+Matrix m = CsvReader.read()
+    .delimiter(';')
+    .from(file)
+
+// Read from a String
+String csvContent = "name,age\nAlice,30\nBob,25"
+Matrix m = CsvReader.read().fromString(csvContent)
+
+// Read from a URL
+Matrix m = CsvReader.read().from(url)
+
+// Read TSV preset
+Matrix m = CsvReader.read().tsv().from(file)
+
+// Read with explicit header (no header row in data)
+Matrix m = CsvReader.read()
+    .header(['id', 'name', 'amount'])
+    .from(file)
+
+// Read with matrix name and charset
+Matrix m = CsvReader.read()
+    .matrixName('myData')
+    .charset(StandardCharsets.ISO_8859_1)
+    .from(file)
+
+// Read with type conversion (types by position)
+Matrix m = CsvReader.read()
+    .types(Integer, String, LocalDate, BigDecimal)
+    .dateTimeFormat('yyyy-MM-dd')
+    .from(file)
+
+// Read with columns() — sets both header and types in one call
+Matrix m = CsvReader.read()
+    .columns(id: Integer, name: String, date: LocalDate, amount: BigDecimal)
+    .dateTimeFormat('yyyy-MM-dd')
+    .from(file)
+
+// Read with header + types separately
+Matrix m = CsvReader.read()
+    .header(['id', 'name', 'amount'])
+    .types(Integer, String, BigDecimal)
+    .from(file)
 ```
 
-For more advanced cases see [the apache commons csv user guide](https://commons.apache.org/proper/commons-csv/user-guide.html)
+### Using named arguments (Map-based API)
 
-A slightly more complicated example:
-Given the following text file:
-```
-1;"Per";"2023-Apr-30";234,12
-2;"Karin";"2023-May-10";345,22
+You can also use Groovy named arguments for concise format configuration.
+Keys are case-insensitive, so both `delimiter: ';'` and `Delimiter: ';'` work:
 
-3;"Tage";"2023-Jun-20";3489,01
-4;"Arne";"2023-Jul-01";222,99
-```
-
-...we can parse as follows:
 ```groovy
-import org.apache.commons.csv.CSVFormat
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvImporter
+import se.alipsa.matrix.csv.CsvReader
 
 URL url = getClass().getResource("/colonQuotesEmptyLine.csv")
-CSVFormat format = CSVFormat.Builder.create()
-    .setTrim(true)
-    .setDelimiter(';')
-    .setIgnoreEmptyLines(true)
-    .setQuote('"' as Character)
-    .setHeader('id', 'name', 'date', 'amount')
-    .build()
-Matrix matrix = CsvImporter.importCsv(url, format)
+Matrix matrix = CsvReader.read(
+    trim: true,
+    delimiter: ';',
+    ignoreEmptyLines: true,
+    quote: '"',
+    header: ['id', 'name', 'date', 'amount'],
+    url)
+
+// With type conversion
+Matrix m = CsvReader.read(
+    types: [Integer, String, LocalDate, BigDecimal],
+    dateTimeFormat: 'yyyy-MM-dd',
+    file)
 ```
 
-The resulting Matrix will be all strings. To convert the content to the appropriate type, use the `convert` method e.g.
+### Using CSVFormat (deprecated)
+
+The methods accepting Apache Commons CSV `CSVFormat` directly are deprecated.
+Migrate to the fluent API to decouple from the third-party library:
+
 ```groovy
-Matrix table = matrix.convert(
+// Before (deprecated)
+import org.apache.commons.csv.CSVFormat
+CSVFormat format = CSVFormat.Builder.create().setTrim(true).build()
+Matrix basic = CsvReader.read(url, format)
+
+// After (recommended)
+Matrix basic = CsvReader.read().trim(true).from(url)
+```
+
+### Type conversion
+
+Type conversion can be done inline during reading using `types()`, `columns()`,
+`dateTimeFormat()`, and `numberFormat()`:
+
+```groovy
+// Integrated approach (recommended)
+Matrix table = CsvReader.read()
+    .types(Integer, String, LocalDate, BigDecimal)
+    .dateTimeFormat('yyyy-MM-dd')
+    .from(file)
+
+// Or with columns() for header + types in one call
+Matrix table = CsvReader.read()
+    .columns(id: Integer, name: String, date: LocalDate, amount: BigDecimal)
+    .dateTimeFormat('yyyy-MM-dd')
+    .from(file)
+```
+
+Alternatively, you can convert after reading using the Matrix `convert` method:
+```groovy
+Matrix raw = CsvReader.read().from(file)
+Matrix table = raw.convert(
   [
-      "id": Integer, 
-      "name": String, 
-      "date": LocalDate, 
+      "id": Integer,
+      "name": String,
+      "date": LocalDate,
       "amount": BigDecimal
   ],
   DateTimeFormatter.ofPattern("yyyy-MMM-dd"),
   NumberFormat.getInstance(Locale.GERMANY)
 )
-//the following assertions then applies
-assert 4 == table.rowCount() // Number of rows
-assert ['id', 'name', 'date', 'amount'] == table.columnNames() // Column names
-assert [4, 'Arne', LocalDate.parse('2023-07-01'), 222.99] == table.row(3) // last row
 ```
 
 ## Exporting a Matrix to a CSV file
 
-```groovy
-import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.csv.CsvExporter
-import org.apache.commons.csv.CSVFormat
+### Using the fluent API (recommended)
 
-File file = File.createTempFile('mtcars', '.csv')
-CsvExporter.exportToCsv(Dataset.mtcars(), CSVFormat.DEFAULT, file)
+```groovy
+import se.alipsa.matrix.csv.CsvWriter
+
+// Write to file with defaults
+CsvWriter.write(matrix).to(file)
+
+// Write to string
+String csv = CsvWriter.write(matrix).asString()
+
+// Write with custom delimiter
+CsvWriter.write(matrix)
+    .delimiter(';')
+    .to(file)
+
+// Write without header
+CsvWriter.write(matrix).withHeader(false).to(file)
+
+// Write Excel CSV
+CsvWriter.write(matrix).excel().to(file)
+
+// Write TSV
+CsvWriter.write(matrix).tsv().to(file)
+
+// Convenience methods (also available)
+CsvWriter.writeExcelCsv(matrix, file)
+CsvWriter.writeTsv(matrix, file)
 ```
-exportToCsv() takes a File or a Writer as output parameter.
+
+### Using CSVFormat (deprecated)
+
+```groovy
+// Before (deprecated)
+import org.apache.commons.csv.CSVFormat
+CsvWriter.write(matrix, file, CSVFormat.DEFAULT)
+
+// After (recommended)
+CsvWriter.write(matrix).to(file)
+```
+
+## Fluent builder options
+
+### Format configuration (read and write)
+
+| Method                             | Default | Description                              |
+|------------------------------------|---------|------------------------------------------|
+| `delimiter(char)`                  | `,`     | Field separator character                |
+| `quoteCharacter(Character)`        | `"`     | Quote character for enclosing fields     |
+| `escapeCharacter(Character)`       | `null`  | Escape character for special characters  |
+| `commentMarker(Character)`         | `null`  | Character marking comment lines          |
+| `trim(boolean)`                    | `true`  | Trim whitespace from values              |
+| `ignoreEmptyLines(boolean)`        | `true`  | Skip blank lines when reading            |
+| `ignoreSurroundingSpaces(boolean)` | `true`  | Ignore spaces around quoted values       |
+| `nullString(String)`               | `null`  | String to interpret as null when reading |
+| `recordSeparator(String)`          | `\n`    | Record separator for writing             |
+
+### Read-specific options
+
+| Method                          | Default | Description                                             |
+|---------------------------------|---------|---------------------------------------------------------|
+| `firstRowAsHeader(boolean)`     | `true`  | Whether the first row contains column names             |
+| `header(List<String>)`          | `null`  | Explicit header; sets firstRowAsHeader to false          |
+| `charset(Charset)`              | `UTF-8` | Character encoding                                      |
+| `matrixName(String)`            | `''`    | Name for the resulting Matrix                           |
+| `types(List<Class>)`            | `null`  | Column types by position for automatic type conversion  |
+| `types(Class...)`               | `null`  | Column types (varargs), e.g. `types(Integer, String)`   |
+| `columns(Map<String, Class>)`   | `null`  | Sets both header and types from a name-to-type map      |
+| `dateTimeFormat(String)`        | `null`  | Date/time parse pattern (e.g. `'yyyy-MM-dd'`)           |
+| `numberFormat(NumberFormat)`    | `null`  | Locale-aware number parsing format                      |
+
+### Write-specific options
+
+| Method                | Default | Description                                        |
+|-----------------------|---------|----------------------------------------------------|
+| `withHeader(boolean)` | `true`  | Include column names in the first row              |
+
+### Preset methods (read and write)
+
+| Method       | Effect                                         |
+|--------------|-------------------------------------------------|
+| `excel()`    | Sets `recordSeparator('\r\n')`                  |
+| `tsv()`      | Sets `delimiter('\t')`                          |
+| `rfc4180()`  | Sets `recordSeparator('\r\n')`                  |
 
 
 # Release version compatibility matrix
-See the [Matrix BOM](https://mvnrepository.com/artifact/se.alipsa.matrix/matrix-bom) for the recommended combinations of matrix library versions. 
-
+See the [Matrix BOM](https://mvnrepository.com/artifact/se.alipsa.matrix/matrix-bom) for the recommended combinations of matrix library versions.

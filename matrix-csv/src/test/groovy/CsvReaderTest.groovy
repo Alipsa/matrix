@@ -1,8 +1,10 @@
 import org.apache.commons.csv.CSVFormat
 import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvImporter
+import se.alipsa.matrix.csv.CsvOption
 import se.alipsa.matrix.csv.CsvReader
+
+import java.time.LocalDate
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -35,7 +37,7 @@ class CsvReaderTest {
   void readCsvWithMapFormat() {
     URL url = getClass().getResource("/basic.csv")
 
-    Matrix b = CsvReader.read((CsvImporter.Format.Trim): true, url)
+    Matrix b = CsvReader.read((CsvOption.Trim): true, url)
     assertEquals(4, b.rowCount(), "Number of rows")
     assertEquals(['id', 'name', 'date', 'amount'], b.columnNames(), "Column names")
     assertEquals(['4', 'Arne', '2023-07-01', '222.99'], b.row(3), "last row")
@@ -230,5 +232,37 @@ Alice,95'''
 
     assertEquals('TestMatrix', matrix.matrixName, "Matrix name should be set")
     assertEquals(2, matrix.rowCount(), "Number of rows")
+  }
+
+  @Test
+  void readWithTypesOption() {
+    URL url = getClass().getResource("/basic.csv")
+
+    Matrix m = CsvReader.read(
+        types: [Integer, String, LocalDate, BigDecimal],
+        dateTimeFormat: 'yyyy-MM-dd',
+        url)
+
+    assertEquals(4, m.rowCount(), "Number of rows")
+    assertEquals(Integer, m.type(0), "id column type")
+    assertEquals(String, m.type(1), "name column type")
+    assertEquals(LocalDate, m.type(2), "date column type")
+    assertEquals(BigDecimal, m.type(3), "amount column type")
+    assertEquals(4, m.row(3)[0])
+    assertEquals(LocalDate.of(2023, 7, 1), m.row(3)[2])
+    assertEquals(222.99, m.row(3)[3])
+  }
+
+  @Test
+  void readWithCaseInsensitiveKeys() {
+    URL url = getClass().getResource("/basic.csv")
+
+    // camelCase keys
+    Matrix m1 = CsvReader.read(trim: true, url)
+    assertEquals(4, m1.rowCount(), "camelCase keys should work")
+
+    // PascalCase keys
+    Matrix m2 = CsvReader.read(Trim: true, url)
+    assertEquals(4, m2.rowCount(), "PascalCase keys should work")
   }
 }

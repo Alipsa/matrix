@@ -61,17 +61,19 @@ allprojects {
     // Plugin is not compatible with configuration cache (uses Task.project at execution time).
     // This invalidates the cache entry when dependencyUpdates is in the task graph.
     // Also run with --no-parallel on Gradle 9.x: ./gradlew dependencyUpdates --no-parallel
-    notCompatibleWithConfigurationCache("dependencyUpdates plugin uses Task.project at execution time")
+    //notCompatibleWithConfigurationCache("dependencyUpdates plugin uses Task.project at execution time")
 
     gradleReleaseChannel = "current"
     checkForGradleUpdate = false // optional: silence Gradle RC noise
     def projectName = project.name
-    def rootExt = rootProject.ext
+    def markerFile = rootProject.layout.buildDirectory
+        .file("dependencyUpdates/.hasOutdated").get().asFile
 
     outputFormatter = { result ->
       def outdated = result.outdated.dependencies
       if (outdated) {
-        rootExt.set('_hasOutdatedDeps', true)
+        markerFile.parentFile.mkdirs()
+        markerFile.text = 'true'
         println "${projectName}:"
         outdated.each { dep ->
           def latest = dep.available.release ?: dep.available.milestone ?: dep.available.integration
@@ -101,13 +103,16 @@ allprojects {
 // Summary task that runs after all dependencyUpdates tasks complete
 tasks.register('dependencyUpdatesSummary') {
   description = 'Prints a summary after all dependency update checks'
+  def markerFile = rootProject.layout.buildDirectory
+      .file("dependencyUpdates/.hasOutdated").get().asFile
   dependsOn allprojects.collect { p ->
     p.tasks.matching { it.name == 'dependencyUpdates' }
   }
   doLast {
-    if (!rootProject.ext.has('_hasOutdatedDeps')) {
+    if (!markerFile.exists()) {
       println 'All dependencies are up-to-date.'
     }
+    markerFile.delete()
   }
 }
 
