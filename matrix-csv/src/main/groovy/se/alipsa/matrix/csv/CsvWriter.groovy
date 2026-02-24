@@ -262,9 +262,16 @@ class CsvWriter {
       }
     }
     if (out.isDirectory()) {
-      String safeName = (matrix.matrixName ?: 'matrix')
+      String baseName = matrix.matrixName?.trim()
+      if (!baseName) {
+        baseName = 'matrix'
+      }
+      String safeName = baseName
           .replaceAll('[/\\\\]', '_')
           .replaceAll('\\.{2,}', '_')
+      if (!safeName || safeName.matches('_+')) {
+        safeName = 'matrix'
+      }
       String fileName = safeName + '.csv'
       File target = new File(out, fileName)
       java.nio.file.Path targetPath = target.toPath().normalize()
@@ -332,20 +339,20 @@ class CsvWriter {
     /** Sets the quote character for enclosing fields. */
     WriteBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
 
-    /** Sets the quote character as a single-character string, or {@code null} to disable. */
-    WriteBuilder quoteCharacter(String s) { _quoteCharacter = s?.charAt(0); this }
+    /** Sets the quote character as a single-character string, or {@code null}/empty to disable. */
+    WriteBuilder quoteCharacter(String s) { _quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
 
     /** Sets the escape character. */
     WriteBuilder escapeCharacter(Character c) { _escapeCharacter = c; this }
 
-    /** Sets the escape character as a single-character string, or {@code null} to disable. */
-    WriteBuilder escapeCharacter(String s) { _escapeCharacter = s?.charAt(0); this }
+    /** Sets the escape character as a single-character string, or {@code null}/empty to disable. */
+    WriteBuilder escapeCharacter(String s) { _escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
 
     /** Sets the comment marker character. */
     WriteBuilder commentMarker(Character c) { _commentMarker = c; this }
 
-    /** Sets the comment marker as a single-character string, or {@code null} to disable. */
-    WriteBuilder commentMarker(String s) { _commentMarker = s?.charAt(0); this }
+    /** Sets the comment marker as a single-character string, or {@code null}/empty to disable. */
+    WriteBuilder commentMarker(String s) { _commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
 
     /** Sets whether to trim whitespace. Note: this is a parsing option and has no effect on write output; present for internal format consistency. */
     WriteBuilder trim(boolean b) { _trim = b; this }

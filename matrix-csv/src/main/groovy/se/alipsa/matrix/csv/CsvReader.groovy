@@ -719,20 +719,20 @@ class CsvReader {
     /** Sets the quote character for enclosing fields. */
     ReadBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
 
-    /** Sets the quote character as a single-character string, or {@code null} to disable. */
-    ReadBuilder quoteCharacter(String s) { _quoteCharacter = s?.charAt(0); this }
+    /** Sets the quote character as a single-character string, or {@code null}/empty to disable. */
+    ReadBuilder quoteCharacter(String s) { _quoteCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
 
     /** Sets the escape character. */
     ReadBuilder escapeCharacter(Character c) { _escapeCharacter = c; this }
 
-    /** Sets the escape character as a single-character string, or {@code null} to disable. */
-    ReadBuilder escapeCharacter(String s) { _escapeCharacter = s?.charAt(0); this }
+    /** Sets the escape character as a single-character string, or {@code null}/empty to disable. */
+    ReadBuilder escapeCharacter(String s) { _escapeCharacter = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
 
     /** Sets the comment marker character. */
     ReadBuilder commentMarker(Character c) { _commentMarker = c; this }
 
-    /** Sets the comment marker as a single-character string, or {@code null} to disable. */
-    ReadBuilder commentMarker(String s) { _commentMarker = s?.charAt(0); this }
+    /** Sets the comment marker as a single-character string, or {@code null}/empty to disable. */
+    ReadBuilder commentMarker(String s) { _commentMarker = (s == null || s.isEmpty()) ? null : s.charAt(0); this }
 
     /** Sets whether to trim whitespace from values. */
     ReadBuilder trim(boolean b) { _trim = b; this }
@@ -804,6 +804,8 @@ class CsvReader {
 
     /**
      * Sets both header and types from a map of column name to type.
+     * The map must preserve insertion order (e.g. a Groovy map literal
+     * or {@code LinkedHashMap}) so that column names and types stay aligned.
      *
      * <pre>
      * Matrix m = CsvReader.read()
@@ -811,7 +813,7 @@ class CsvReader {
      *     .from(file)
      * </pre>
      *
-     * @param columnMap map of column names to their types
+     * @param columnMap ordered map of column names to their types
      * @return this builder
      */
     ReadBuilder columns(Map<String, Class> columnMap) {
