@@ -6,30 +6,17 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.DuplicateHeaderMode
 
 /**
- * Immutable CSV format configuration class that decouples the public API from
- * the Apache Commons CSV implementation.
+ * Internal immutable CSV format configuration class used by the fluent builder APIs
+ * in {@link CsvReader} and {@link CsvWriter}.
  *
- * <p>Use the {@link #builder()} method to create custom formats, or use one of
- * the predefined constants ({@link #DEFAULT}, {@link #EXCEL}, {@link #TDF}, {@link #RFC4180}).</p>
- *
- * <h3>Basic Usage</h3>
- * <pre>
- * // Use a predefined format
- * Matrix m = CsvReader.read(file, CsvFormat.DEFAULT)
- *
- * // Build a custom format
- * CsvFormat format = CsvFormat.builder()
- *     .delimiter(';' as char)
- *     .quoteCharacter('"' as Character)
- *     .trim(true)
- *     .build()
- * Matrix m = CsvReader.read(file, format)
- * </pre>
- *
- * @see CsvReader
- * @see CsvWriter
+ * <p>This class is package-private. Use the fluent API entry points instead:</p>
+ * <ul>
+ *   <li>{@code CsvReader.read().from(file)}</li>
+ *   <li>{@code CsvWriter.write(matrix).to(file)}</li>
+ * </ul>
  */
 @CompileStatic
+@PackageScope
 class CsvFormat {
 
   /** Default CSV format: comma-delimited, double-quote quoted, trimmed, ignoring empty lines. */

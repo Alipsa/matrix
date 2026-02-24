@@ -16,41 +16,32 @@ import java.nio.file.Path
  *
  * <p>Provides flexible CSV parsing with support for multiple input sources
  * (File, Path, URL, InputStream, Reader, String content) and configurable
- * format options through {@link CsvFormat} or the {@link CsvOption} enum.</p>
+ * format options through the fluent API or the {@link CsvOption} enum.</p>
  *
- * <h3>Basic Usage</h3>
+ * <h3>Fluent API (recommended)</h3>
  * <pre>
- * // Simple read with default format
- * Matrix m = CsvReader.read(new File("data.csv"))
+ * // Simple read with defaults
+ * Matrix m = CsvReader.read().from(file)
+ *
+ * // Read with custom delimiter
+ * Matrix m = CsvReader.read().delimiter(';' as char).from(file)
  *
  * // Read from String content
- * String csvContent = "name,age\nAlice,30\nBob,25"
- * Matrix m = CsvReader.readString(csvContent)
+ * Matrix m = CsvReader.read().fromString(csvContent)
  *
- * // Custom format with CsvFormat builder
- * CsvFormat format = CsvFormat.builder()
- *     .delimiter(';' as char)
- *     .quoteCharacter('"' as Character)
- *     .build()
- * Matrix m = CsvReader.read(new File("data.csv"), format)
+ * // Read TSV
+ * Matrix m = CsvReader.read().tsv().from(file)
  *
- * // Custom format with named arguments
- * Matrix m = CsvReader.read(Delimiter: ';', Quote: '"', new File("data.csv"))
+ * // Read with explicit header
+ * Matrix m = CsvReader.read().header(['id', 'name', 'amount']).from(file)
  * </pre>
  *
- * <h3>Format Options</h3>
- * <p>Use the {@link CsvFormat} builder to customize parsing behavior:</p>
- * <ul>
- *   <li><b>delimiter</b> - Field separator (default: comma)</li>
- *   <li><b>quoteCharacter</b> - Quote character (default: double quote)</li>
- *   <li><b>escapeCharacter</b> - Escape character for special characters</li>
- *   <li><b>trim</b> - Trim whitespace from values (default: true)</li>
- *   <li><b>commentMarker</b> - Character marking comment lines (default: null)</li>
- *   <li><b>nullString</b> - String to convert to null values (default: null)</li>
- * </ul>
+ * <h3>Map-based API</h3>
+ * <pre>
+ * Matrix m = CsvReader.read(Delimiter: ';', Quote: '"', file)
+ * </pre>
  *
  * @see CsvWriter
- * @see CsvFormat
  * @see CsvOption
  */
 @CompileStatic
@@ -171,141 +162,29 @@ class CsvReader {
   }
 
   // ──────────────────────────────────────────────────────────────
-  // CsvFormat-based API (new, preferred)
+  // Fluent builder API (recommended)
   // ──────────────────────────────────────────────────────────────
 
   /**
-   * Read a CSV file from an InputStream using a {@link CsvFormat}.
+   * Entry point for the fluent CSV reading API.
    *
-   * @param is InputStream to read the CSV data from
-   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
-   * @param firstRowAsHeader whether the first row contains column names (default: true)
-   * @param charset character encoding to use (default: UTF-8)
-   * @param matrixName name for the resulting Matrix (default: empty string)
-   * @return Matrix containing the imported data
-   * @throws IOException if reading the stream fails
-   * @throws IllegalArgumentException if columns are mismatched between rows
-   */
-  static Matrix read(InputStream is, CsvFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
-    try (CSVParser parser = CSVParser.parse(is, charset, format.toCSVFormat())) {
-      parse(matrixName, parser, firstRowAsHeader)
-    }
-  }
-
-  /**
-   * Read a CSV file from a Reader using a {@link CsvFormat}.
+   * <p>Returns a {@link ReadBuilder} that allows chaining format configuration
+   * methods before triggering I/O with a terminal {@code from*()} method.</p>
    *
-   * @param reader Reader to read the CSV data from
-   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
-   * @param firstRowAsHeader whether the first row contains column names (default: true)
-   * @param charset character encoding to use (default: UTF-8)
-   * @param matrixName name for the resulting Matrix (default: empty string)
-   * @return Matrix containing the imported data
-   * @throws IOException if reading from the Reader fails
-   * @throws IllegalArgumentException if columns are mismatched between rows
-   */
-  static Matrix read(Reader reader, CsvFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
-    try (ReaderInputStream readerInputStream = ReaderInputStream.builder()
-        .setCharset(charset).setReader(reader).get()) {
-      read(readerInputStream, format, firstRowAsHeader, charset, matrixName)
-    }
-  }
-
-  /**
-   * Read CSV content from a String using a {@link CsvFormat}.
+   * <pre>
+   * Matrix m = CsvReader.read().from(file)
+   * Matrix m = CsvReader.read().delimiter(';' as char).from(file)
+   * Matrix m = CsvReader.read().tsv().from(file)
+   * </pre>
    *
-   * @param csvContent String containing CSV data
-   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
-   * @param firstRowAsHeader whether the first row contains column names (default: true)
-   * @return Matrix containing the imported data
-   * @throws IOException if parsing fails
-   * @throws IllegalArgumentException if columns are mismatched between rows
+   * @return a new {@link ReadBuilder}
    */
-  static Matrix readString(String csvContent, CsvFormat format, boolean firstRowAsHeader = true) throws IOException {
-    read(new StringReader(csvContent), format, firstRowAsHeader, StandardCharsets.UTF_8, '')
-  }
-
-  /**
-   * Read a CSV file from a URL using a {@link CsvFormat}.
-   *
-   * @param url URL pointing to the CSV file to read
-   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
-   * @param firstRowAsHeader whether the first row contains column names (default: true)
-   * @param charset character encoding to use (default: UTF-8)
-   * @return Matrix containing the imported data with name derived from URL
-   * @throws IOException if reading the URL fails
-   * @throws IllegalArgumentException if columns are mismatched between rows
-   */
-  static Matrix read(URL url, CsvFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
-    try (CSVParser parser = CSVParser.parse(url, charset, format.toCSVFormat())) {
-      parse(tableName(url), parser, firstRowAsHeader)
-    }
-  }
-
-  /**
-   * Read a CSV file from a URL string using a {@link CsvFormat}.
-   *
-   * @param url String URL pointing to the CSV file to read
-   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
-   * @param firstRowAsHeader whether the first row contains column names (default: true)
-   * @param charset character encoding to use (default: UTF-8)
-   * @return Matrix containing the imported data with name derived from URL
-   * @throws IOException if reading the URL fails or URL is invalid
-   * @throws IllegalArgumentException if columns are mismatched between rows
-   */
-  static Matrix readUrl(String url, CsvFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
-    read(new URI(url).toURL(), format, firstRowAsHeader, charset)
-  }
-
-  /**
-   * Read a CSV file from a Path using a {@link CsvFormat}.
-   *
-   * @param path Path to the CSV file to read
-   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
-   * @param firstRowAsHeader whether the first row contains column names (default: true)
-   * @param charset character encoding to use (default: UTF-8)
-   * @return Matrix containing the imported data with name derived from file name
-   * @throws IOException if reading the file fails
-   * @throws IllegalArgumentException if columns are mismatched between rows
-   */
-  static Matrix read(Path path, CsvFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
-    read(path.toFile(), format, firstRowAsHeader, charset)
-  }
-
-  /**
-   * Read a CSV file from a File using a {@link CsvFormat}.
-   *
-   * @param file File to read the CSV data from
-   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
-   * @param firstRowAsHeader whether the first row contains column names (default: true)
-   * @param charset character encoding to use (default: UTF-8)
-   * @return Matrix containing the imported data with name derived from file name
-   * @throws IOException if reading the file fails
-   * @throws IllegalArgumentException if columns are mismatched between rows
-   */
-  static Matrix read(File file, CsvFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
-    try (CSVParser parser = CSVParser.parse(file, charset, format.toCSVFormat())) {
-      parse(tableName(file), parser, firstRowAsHeader)
-    }
-  }
-
-  /**
-   * Read a CSV file from a file path string using a {@link CsvFormat}.
-   *
-   * @param filePath path to the CSV file as a String
-   * @param format CsvFormat configuration (default: CsvFormat.DEFAULT)
-   * @param firstRowAsHeader whether the first row contains column names (default: true)
-   * @param charset character encoding to use (default: UTF-8)
-   * @return Matrix containing the imported data with default settings
-   * @throws IOException if reading the file fails or file not found
-   * @throws IllegalArgumentException if columns are mismatched between rows
-   */
-  static Matrix readFile(String filePath, CsvFormat format, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
-    read(new File(filePath), format, firstRowAsHeader, charset)
+  static ReadBuilder read() {
+    new ReadBuilder()
   }
 
   // ──────────────────────────────────────────────────────────────
-  // CSVFormat-based API (deprecated — use CsvFormat overloads)
+  // CSVFormat-based API (deprecated — use fluent API)
   // ──────────────────────────────────────────────────────────────
 
   /**
@@ -319,7 +198,7 @@ class CsvReader {
    * @return Matrix containing the imported data
    * @throws IOException if reading the stream fails
    * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@link #read(InputStream, CsvFormat, boolean, Charset, String)} instead
+   * @deprecated Use {@code CsvReader.read().from(inputStream)} instead
    */
   @Deprecated
   static Matrix read(InputStream is, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
@@ -339,7 +218,7 @@ class CsvReader {
    * @return Matrix containing the imported data
    * @throws IOException if reading from the Reader fails
    * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@link #read(Reader, CsvFormat, boolean, Charset, String)} instead
+   * @deprecated Use {@code CsvReader.read().from(reader)} instead
    */
   @Deprecated
   static Matrix read(Reader reader, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
@@ -358,7 +237,7 @@ class CsvReader {
    * @return Matrix containing the imported data
    * @throws IOException if parsing fails
    * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@link #readString(String, CsvFormat, boolean)} instead
+   * @deprecated Use {@code CsvReader.read().fromString(csvContent)} instead
    */
   @Deprecated
   static Matrix readString(String csvContent, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true) throws IOException {
@@ -375,7 +254,7 @@ class CsvReader {
    * @return Matrix containing the imported data with name derived from URL
    * @throws IOException if reading the URL fails
    * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@link #read(URL, CsvFormat, boolean, Charset)} instead
+   * @deprecated Use {@code CsvReader.read().from(url)} instead
    */
   @Deprecated
   static Matrix read(URL url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
@@ -394,7 +273,7 @@ class CsvReader {
    * @return Matrix containing the imported data with name derived from URL
    * @throws IOException if reading the URL fails or URL is invalid
    * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@link #readUrl(String, CsvFormat, boolean, Charset)} instead
+   * @deprecated Use {@code CsvReader.read().fromUrl(url)} instead
    */
   @Deprecated
   static Matrix readUrl(String url, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
@@ -411,7 +290,7 @@ class CsvReader {
    * @return Matrix containing the imported data with name derived from file name
    * @throws IOException if reading the file fails
    * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@link #read(Path, CsvFormat, boolean, Charset)} instead
+   * @deprecated Use {@code CsvReader.read().from(path)} instead
    */
   @Deprecated
   static Matrix read(Path path, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
@@ -428,7 +307,7 @@ class CsvReader {
    * @return Matrix containing the imported data with name derived from file name
    * @throws IOException if reading the file fails
    * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@link #read(File, CsvFormat, boolean, Charset)} instead
+   * @deprecated Use {@code CsvReader.read().from(file)} instead
    */
   @Deprecated
   static Matrix read(File file, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
@@ -447,7 +326,7 @@ class CsvReader {
    * @return Matrix containing the imported data with default settings
    * @throws IOException if reading the file fails or file not found
    * @throws IllegalArgumentException if columns are mismatched between rows
-   * @deprecated Use {@link #readFile(String, CsvFormat, boolean, Charset)} instead
+   * @deprecated Use {@code CsvReader.read().fromFile(filePath)} instead
    */
   @Deprecated
   static Matrix readFile(String filePath, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8) throws IOException {
@@ -761,5 +640,229 @@ class CsvReader {
       }
     }
     m
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // ReadBuilder
+  // ──────────────────────────────────────────────────────────────
+
+  /**
+   * Fluent builder for reading CSV data into a Matrix.
+   *
+   * <p>Obtained via {@link CsvReader#read()}. Chain format configuration methods
+   * and finish with a terminal {@code from*()} method to trigger I/O.</p>
+   *
+   * <pre>
+   * Matrix m = CsvReader.read()
+   *     .delimiter(';' as char)
+   *     .trim(true)
+   *     .from(file)
+   * </pre>
+   */
+  @CompileStatic
+  static class ReadBuilder {
+    private char _delimiter = ',' as char
+    private Character _quoteCharacter = '"' as Character
+    private Character _escapeCharacter = null
+    private Character _commentMarker = null
+    private boolean _trim = true
+    private boolean _ignoreEmptyLines = true
+    private boolean _ignoreSurroundingSpaces = true
+    private String _nullString = null
+    private String _recordSeparator = '\n'
+    private boolean _firstRowAsHeader = true
+    private List<String> _header = null
+    private Charset _charset = StandardCharsets.UTF_8
+    private String _matrixName = ''
+
+    // ── Format configuration methods ──────────────────────────
+
+    /** Sets the field delimiter character. */
+    ReadBuilder delimiter(char c) { _delimiter = c; this }
+
+    /** Sets the quote character for enclosing fields. */
+    ReadBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
+
+    /** Sets the escape character. */
+    ReadBuilder escapeCharacter(Character c) { _escapeCharacter = c; this }
+
+    /** Sets the comment marker character. */
+    ReadBuilder commentMarker(Character c) { _commentMarker = c; this }
+
+    /** Sets whether to trim whitespace from values. */
+    ReadBuilder trim(boolean b) { _trim = b; this }
+
+    /** Sets whether to ignore empty lines. */
+    ReadBuilder ignoreEmptyLines(boolean b) { _ignoreEmptyLines = b; this }
+
+    /** Sets whether to ignore spaces around quoted values. */
+    ReadBuilder ignoreSurroundingSpaces(boolean b) { _ignoreSurroundingSpaces = b; this }
+
+    /** Sets the string to interpret as null when reading. */
+    ReadBuilder nullString(String s) { _nullString = s; this }
+
+    /** Sets the record separator string. */
+    ReadBuilder recordSeparator(String s) { _recordSeparator = s; this }
+
+    // ── Reader-specific methods ───────────────────────────────
+
+    /** Sets whether the first row contains column names (default: true). */
+    ReadBuilder firstRowAsHeader(boolean b) { _firstRowAsHeader = b; this }
+
+    /**
+     * Sets an explicit header; also sets firstRowAsHeader to false.
+     *
+     * @param names the column names to use
+     * @return this builder
+     */
+    ReadBuilder header(List<String> names) {
+      _header = names
+      _firstRowAsHeader = false
+      this
+    }
+
+    /** Sets the character encoding (default: UTF-8). */
+    ReadBuilder charset(Charset cs) { _charset = cs; this }
+
+    /** Sets the name for the resulting Matrix (default: empty string). */
+    ReadBuilder matrixName(String name) { _matrixName = name; this }
+
+    // ── Preset methods ────────────────────────────────────────
+
+    /** Configures Excel-compatible CSV format with CRLF record separators. */
+    ReadBuilder excel() { _recordSeparator = '\r\n'; this }
+
+    /** Configures tab-delimited format (TSV). */
+    ReadBuilder tsv() { _delimiter = '\t' as char; this }
+
+    /** Configures RFC 4180 compliant format with CRLF record separators. */
+    ReadBuilder rfc4180() { _recordSeparator = '\r\n'; this }
+
+    // ── Terminal operations ───────────────────────────────────
+
+    /**
+     * Reads CSV data from a File.
+     *
+     * @param file the file to read from
+     * @return Matrix containing the imported data
+     * @throws IOException if reading the file fails
+     */
+    Matrix from(File file) throws IOException {
+      CSVFormat apacheFormat = buildCSVFormat()
+      try (CSVParser parser = CSVParser.parse(file, _charset, apacheFormat)) {
+        parse(tableName(file), parser, _firstRowAsHeader)
+      }
+    }
+
+    /**
+     * Reads CSV data from a Path.
+     *
+     * @param path the path to read from
+     * @return Matrix containing the imported data
+     * @throws IOException if reading the file fails
+     */
+    Matrix from(Path path) throws IOException {
+      from(path.toFile())
+    }
+
+    /**
+     * Reads CSV data from a URL.
+     *
+     * @param url the URL to read from
+     * @return Matrix containing the imported data
+     * @throws IOException if reading the URL fails
+     */
+    Matrix from(URL url) throws IOException {
+      CSVFormat apacheFormat = buildCSVFormat()
+      try (CSVParser parser = CSVParser.parse(url, _charset, apacheFormat)) {
+        parse(tableName(url), parser, _firstRowAsHeader)
+      }
+    }
+
+    /**
+     * Reads CSV data from an InputStream.
+     *
+     * @param is the InputStream to read from
+     * @return Matrix containing the imported data
+     * @throws IOException if reading the stream fails
+     */
+    Matrix from(InputStream is) throws IOException {
+      CSVFormat apacheFormat = buildCSVFormat()
+      try (CSVParser parser = CSVParser.parse(is, _charset, apacheFormat)) {
+        parse(_matrixName, parser, _firstRowAsHeader)
+      }
+    }
+
+    /**
+     * Reads CSV data from a Reader.
+     *
+     * @param reader the Reader to read from
+     * @return Matrix containing the imported data
+     * @throws IOException if reading from the Reader fails
+     */
+    Matrix from(Reader reader) throws IOException {
+      CSVFormat apacheFormat = buildCSVFormat()
+      try (ReaderInputStream readerInputStream = ReaderInputStream.builder()
+          .setCharset(_charset).setReader(reader).get()) {
+        try (CSVParser parser = CSVParser.parse(readerInputStream, _charset, apacheFormat)) {
+          parse(_matrixName, parser, _firstRowAsHeader)
+        }
+      }
+    }
+
+    /**
+     * Reads CSV data from a String containing CSV content.
+     *
+     * @param csvContent the CSV string to parse
+     * @return Matrix containing the imported data
+     * @throws IOException if parsing fails
+     */
+    Matrix fromString(String csvContent) throws IOException {
+      from(new StringReader(csvContent))
+    }
+
+    /**
+     * Reads CSV data from a URL specified as a String.
+     *
+     * @param url the URL string to read from
+     * @return Matrix containing the imported data
+     * @throws IOException if reading the URL fails
+     */
+    Matrix fromUrl(String url) throws IOException {
+      from(new URI(url).toURL())
+    }
+
+    /**
+     * Reads CSV data from a file path specified as a String.
+     *
+     * @param filePath the file path to read from
+     * @return Matrix containing the imported data
+     * @throws IOException if reading the file fails
+     */
+    Matrix fromFile(String filePath) throws IOException {
+      from(new File(filePath))
+    }
+
+    private CSVFormat buildCSVFormat() {
+      CsvFormat format = CsvFormat.builder()
+          .delimiter(_delimiter)
+          .quoteCharacter(_quoteCharacter)
+          .escapeCharacter(_escapeCharacter)
+          .commentMarker(_commentMarker)
+          .trim(_trim)
+          .ignoreEmptyLines(_ignoreEmptyLines)
+          .ignoreSurroundingSpaces(_ignoreSurroundingSpaces)
+          .nullString(_nullString)
+          .recordSeparator(_recordSeparator)
+          .build()
+      CSVFormat csvFormat = format.toCSVFormat()
+      if (_header != null) {
+        csvFormat = CSVFormat.Builder.create(csvFormat)
+            .setHeader(_header as String[])
+            .setSkipHeaderRecord(false)
+            .build()
+      }
+      csvFormat
+    }
   }
 }

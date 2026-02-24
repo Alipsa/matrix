@@ -12,39 +12,43 @@ implementation 'se.alipsa.matrix:matrix-csv:2.2.2'
 
 ## Import a CSV file into a Matrix
 
-### Using CsvFormat (recommended)
+### Using the fluent API (recommended)
 
-`CsvFormat` is an immutable configuration class that decouples your code from the
-underlying CSV implementation. Use the builder pattern to customize parsing behavior:
+The fluent API provides a chainable builder pattern for reading CSV files:
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.csv.CsvFormat
 import se.alipsa.matrix.csv.CsvReader
 
-// Simple read with default format
-URL url = getClass().getResource("/basic.csv")
-Matrix basic = CsvReader.read(url, CsvFormat.DEFAULT)
+// Simple read with defaults
+Matrix m = CsvReader.read().from(file)
 
-// Custom format with semicolon delimiter
-CsvFormat format = CsvFormat.builder()
+// Read with custom delimiter
+Matrix m = CsvReader.read()
     .delimiter(';' as char)
-    .trim(true)
-    .ignoreEmptyLines(true)
-    .quoteCharacter('"' as Character)
-    .build()
-Matrix matrix = CsvReader.read(url, format)
+    .from(file)
 
 // Read from a String
 String csvContent = "name,age\nAlice,30\nBob,25"
-Matrix m = CsvReader.readString(csvContent, CsvFormat.DEFAULT)
-```
+Matrix m = CsvReader.read().fromString(csvContent)
 
-Predefined format constants are available:
-- `CsvFormat.DEFAULT` — comma-delimited, trimmed, ignoring empty lines
-- `CsvFormat.EXCEL` — Excel-compatible with CRLF line endings
-- `CsvFormat.TDF` — tab-delimited
-- `CsvFormat.RFC4180` — RFC 4180 compliant with CRLF line endings
+// Read from a URL
+Matrix m = CsvReader.read().from(url)
+
+// Read TSV preset
+Matrix m = CsvReader.read().tsv().from(file)
+
+// Read with explicit header (no header row in data)
+Matrix m = CsvReader.read()
+    .header(['id', 'name', 'amount'])
+    .from(file)
+
+// Read with matrix name and charset
+Matrix m = CsvReader.read()
+    .matrixName('myData')
+    .charset(StandardCharsets.ISO_8859_1)
+    .from(file)
+```
 
 ### Using named arguments (Map-based API)
 
@@ -67,7 +71,7 @@ Matrix matrix = CsvReader.read(
 ### Using CSVFormat (deprecated)
 
 The methods accepting Apache Commons CSV `CSVFormat` directly are deprecated.
-Migrate to `CsvFormat` to decouple from the third-party library:
+Migrate to the fluent API to decouple from the third-party library:
 
 ```groovy
 // Before (deprecated)
@@ -76,9 +80,7 @@ CSVFormat format = CSVFormat.Builder.create().setTrim(true).build()
 Matrix basic = CsvReader.read(url, format)
 
 // After (recommended)
-import se.alipsa.matrix.csv.CsvFormat
-CsvFormat format = CsvFormat.builder().trim(true).build()
-Matrix basic = CsvReader.read(url, format)
+Matrix basic = CsvReader.read().trim(true).from(url)
 ```
 
 ### Type conversion
@@ -103,26 +105,32 @@ assert [4, 'Arne', LocalDate.parse('2023-07-01'), 222.99] == table.row(3) // las
 
 ## Exporting a Matrix to a CSV file
 
-### Using CsvFormat (recommended)
+### Using the fluent API (recommended)
 
 ```groovy
-import se.alipsa.matrix.csv.CsvFormat
 import se.alipsa.matrix.csv.CsvWriter
 
-// Write with default format
-File file = new File('output.csv')
-CsvWriter.write(matrix, file, CsvFormat.DEFAULT)
+// Write to file with defaults
+CsvWriter.write(matrix).to(file)
 
 // Write to string
-String csvContent = CsvWriter.writeString(matrix, CsvFormat.DEFAULT)
+String csv = CsvWriter.write(matrix).asString()
 
-// Write with custom format
-CsvFormat format = CsvFormat.builder()
+// Write with custom delimiter
+CsvWriter.write(matrix)
     .delimiter(';' as char)
-    .build()
-CsvWriter.write(matrix, file, format)
+    .to(file)
 
-// Convenience methods for Excel CSV and TSV
+// Write without header
+CsvWriter.write(matrix).withHeader(false).to(file)
+
+// Write Excel CSV
+CsvWriter.write(matrix).excel().to(file)
+
+// Write TSV
+CsvWriter.write(matrix).tsv().to(file)
+
+// Convenience methods (also available)
 CsvWriter.writeExcelCsv(matrix, file)
 CsvWriter.writeTsv(matrix, file)
 ```
@@ -135,23 +143,47 @@ import org.apache.commons.csv.CSVFormat
 CsvWriter.write(matrix, file, CSVFormat.DEFAULT)
 
 // After (recommended)
-import se.alipsa.matrix.csv.CsvFormat
-CsvWriter.write(matrix, file, CsvFormat.DEFAULT)
+CsvWriter.write(matrix).to(file)
 ```
 
-## CsvFormat builder options
+## Fluent builder options
 
-| Option                   | Default | Description                                       |
-|--------------------------|---------|---------------------------------------------------|
-| `delimiter(char)`        | `,`     | Field separator character                          |
-| `quoteCharacter(Character)` | `"`  | Quote character for enclosing fields               |
-| `escapeCharacter(Character)` | `null` | Escape character for special characters          |
-| `commentMarker(Character)` | `null` | Character marking comment lines                   |
-| `trim(boolean)`          | `true`  | Trim whitespace from values                       |
-| `ignoreEmptyLines(boolean)` | `true` | Skip blank lines when reading                    |
-| `ignoreSurroundingSpaces(boolean)` | `true` | Ignore spaces around quoted values       |
-| `nullString(String)`     | `null`  | String to interpret as null when reading           |
-| `recordSeparator(String)` | `\n`   | Record separator for writing                      |
+### Format configuration (read and write)
+
+| Method                              | Default | Description                                       |
+|-------------------------------------|---------|---------------------------------------------------|
+| `delimiter(char)`                   | `,`     | Field separator character                          |
+| `quoteCharacter(Character)`         | `"`     | Quote character for enclosing fields               |
+| `escapeCharacter(Character)`        | `null`  | Escape character for special characters            |
+| `commentMarker(Character)`          | `null`  | Character marking comment lines                    |
+| `trim(boolean)`                     | `true`  | Trim whitespace from values                        |
+| `ignoreEmptyLines(boolean)`         | `true`  | Skip blank lines when reading                      |
+| `ignoreSurroundingSpaces(boolean)`  | `true`  | Ignore spaces around quoted values                 |
+| `nullString(String)`                | `null`  | String to interpret as null when reading           |
+| `recordSeparator(String)`           | `\n`    | Record separator for writing                       |
+
+### Read-specific options
+
+| Method                   | Default | Description                                        |
+|--------------------------|---------|----------------------------------------------------|
+| `firstRowAsHeader(boolean)` | `true` | Whether the first row contains column names       |
+| `header(List<String>)`   | `null`  | Explicit header; sets firstRowAsHeader to false     |
+| `charset(Charset)`       | `UTF-8` | Character encoding                                 |
+| `matrixName(String)`     | `''`    | Name for the resulting Matrix                      |
+
+### Write-specific options
+
+| Method                | Default | Description                                        |
+|-----------------------|---------|----------------------------------------------------|
+| `withHeader(boolean)` | `true`  | Include column names in the first row              |
+
+### Preset methods (read and write)
+
+| Method       | Effect                                         |
+|--------------|-------------------------------------------------|
+| `excel()`    | Sets `recordSeparator('\r\n')`                  |
+| `tsv()`      | Sets `delimiter('\t')`                          |
+| `rfc4180()`  | Sets `recordSeparator('\r\n')`                  |
 
 
 # Release version compatibility matrix
