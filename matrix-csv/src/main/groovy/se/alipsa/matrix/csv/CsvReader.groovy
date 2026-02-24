@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.DuplicateHeaderMode
-import org.apache.commons.io.input.ReaderInputStream
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.charset.Charset
@@ -108,6 +107,7 @@ class CsvReader {
 
   /**
    * Read a CSV file from a Reader with custom format options.
+   * The caller is responsible for closing the Reader.
    *
    * @param format Map of format options using {@link CsvOption} enum keys
    * @param reader Reader to read the CSV data from
@@ -117,14 +117,9 @@ class CsvReader {
    */
   static Matrix read(Map format, Reader reader) throws IOException {
     Map r = parseMap(format)
-    Charset charset = r.charset as Charset
-    try (ReaderInputStream readerInputStream = ReaderInputStream.builder()
-        .setCharset(charset).setReader(reader).get()) {
-      try (CSVParser parser = CSVParser.parse(readerInputStream, charset, r.apacheFormat as CSVFormat)) {
-        convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
-            r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
-      }
-    }
+    CSVParser parser = CSVParser.parse(reader, r.apacheFormat as CSVFormat)
+    convertIfNeeded(parse(r.tableName as String, parser, r.firstRowAsHeader as boolean),
+        r.types as List<Class>, r.dateTimeFormat as String, r.numberFormat as NumberFormat)
   }
 
   /**
@@ -237,10 +232,8 @@ class CsvReader {
    */
   @Deprecated
   static Matrix read(Reader reader, CSVFormat format = CSVFormat.DEFAULT, boolean firstRowAsHeader = true, Charset charset = StandardCharsets.UTF_8, String matrixName = '') throws IOException {
-    try (ReaderInputStream readerInputStream = ReaderInputStream.builder()
-        .setCharset(charset).setReader(reader).get()) {
-      read(readerInputStream, format, firstRowAsHeader, charset, matrixName)
-    }
+    CSVParser parser = CSVParser.parse(reader, format)
+    parse(matrixName, parser, firstRowAsHeader)
   }
 
   /**
@@ -716,7 +709,13 @@ class CsvReader {
     ReadBuilder delimiter(char c) { _delimiter = c; this }
 
     /** Sets the field delimiter as a single-character string. */
-    ReadBuilder delimiter(String s) { _delimiter = s.charAt(0); this }
+    ReadBuilder delimiter(String s) {
+      if (s == null || s.isEmpty()) {
+        throw new IllegalArgumentException("Delimiter string must not be null or empty")
+      }
+      _delimiter = s.charAt(0)
+      this
+    }
 
     /** Sets the quote character for enclosing fields. */
     ReadBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
@@ -906,7 +905,7 @@ class CsvReader {
     }
 
     /**
-     * Reads CSV data from a Reader.
+     * Reads CSV data from a Reader. The caller is responsible for closing the Reader.
      *
      * @param reader the Reader to read from
      * @return Matrix containing the imported data
@@ -914,12 +913,8 @@ class CsvReader {
      */
     Matrix from(Reader reader) throws IOException {
       CSVFormat apacheFormat = buildCSVFormat()
-      try (ReaderInputStream readerInputStream = ReaderInputStream.builder()
-          .setCharset(_charset).setReader(reader).get()) {
-        try (CSVParser parser = CSVParser.parse(readerInputStream, _charset, apacheFormat)) {
-          convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
-        }
-      }
+      CSVParser parser = CSVParser.parse(reader, apacheFormat)
+      convertIfNeeded(parse(_matrixName, parser, _firstRowAsHeader))
     }
 
     /**

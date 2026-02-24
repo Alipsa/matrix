@@ -291,6 +291,10 @@ class CsvWriter {
     private Character _quoteCharacter = '"' as Character
     private Character _escapeCharacter = null
     private Character _commentMarker = null
+    // These three options are primarily relevant for parsing/reading CSV.
+    // They are forwarded to the underlying Apache Commons CSVFormat for
+    // API symmetry with CsvReader and CsvFormat, but callers should not
+    // rely on them to transform Matrix cell contents during write.
     private boolean _trim = true
     private boolean _ignoreEmptyLines = true
     private boolean _ignoreSurroundingSpaces = true
@@ -308,7 +312,13 @@ class CsvWriter {
     WriteBuilder delimiter(char c) { _delimiter = c; this }
 
     /** Sets the field delimiter as a single-character string. */
-    WriteBuilder delimiter(String s) { _delimiter = s.charAt(0); this }
+    WriteBuilder delimiter(String s) {
+      if (s == null || s.isEmpty()) {
+        throw new IllegalArgumentException("Delimiter string must not be null or empty")
+      }
+      _delimiter = s.charAt(0)
+      this
+    }
 
     /** Sets the quote character for enclosing fields. */
     WriteBuilder quoteCharacter(Character c) { _quoteCharacter = c; this }
@@ -394,7 +404,7 @@ class CsvWriter {
     }
 
     /**
-     * Writes CSV data to a PrintWriter.
+     * Writes CSV data to a PrintWriter. The caller is responsible for closing the PrintWriter.
      *
      * @param printWriter the PrintWriter to write to
      */
@@ -402,16 +412,16 @@ class CsvWriter {
       validateMatrix(_matrix)
       CsvFormat format = buildFormat()
       CSVFormat apacheFormat = format.toCSVFormat()
-      try (CSVPrinter printer = new CSVPrinter(printWriter, apacheFormat)) {
-        if (_withHeader) {
-          if (_matrix.columnNames() != null) {
-            printer.printRecord(_matrix.columnNames())
-          } else {
-            printer.printRecord((1.._matrix.columnCount()).collect { 'c' + it })
-          }
+      CSVPrinter printer = new CSVPrinter(printWriter, apacheFormat)
+      if (_withHeader) {
+        if (_matrix.columnNames() != null) {
+          printer.printRecord(_matrix.columnNames())
+        } else {
+          printer.printRecord((1.._matrix.columnCount()).collect { 'c' + it })
         }
-        printer.printRecords(_matrix.rows())
       }
+      printer.printRecords(_matrix.rows())
+      printer.flush()
     }
 
     /**
