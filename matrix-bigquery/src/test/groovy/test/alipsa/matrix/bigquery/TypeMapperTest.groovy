@@ -1,6 +1,5 @@
 package test.alipsa.matrix.bigquery
 
-import com.google.cloud.bigquery.LegacySQLTypeName
 import com.google.cloud.bigquery.StandardSQLTypeName
 import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
@@ -79,88 +78,106 @@ class TypeMapperTest {
     assertEquals(StandardSQLTypeName.STRING, TypeMapper.toStandardSqlType(Map))
   }
 
-  // Tests for convertType(LegacySQLTypeName)
+  // Tests for convertType(StandardSQLTypeName)
 
   @Test
   void testConvertTypeNumeric() {
-    assertEquals(BigDecimal, TypeMapper.convertType(LegacySQLTypeName.BIGNUMERIC))
-    assertEquals(BigDecimal, TypeMapper.convertType(LegacySQLTypeName.NUMERIC))
-    assertEquals(Long, TypeMapper.convertType(LegacySQLTypeName.INTEGER))
-    assertEquals(Double, TypeMapper.convertType(LegacySQLTypeName.FLOAT))
+    assertEquals(BigDecimal, TypeMapper.convertType(StandardSQLTypeName.BIGNUMERIC))
+    assertEquals(BigDecimal, TypeMapper.convertType(StandardSQLTypeName.NUMERIC))
+    assertEquals(Long, TypeMapper.convertType(StandardSQLTypeName.INT64))
+    assertEquals(Double, TypeMapper.convertType(StandardSQLTypeName.FLOAT64))
   }
 
   @Test
   void testConvertTypeBoolean() {
-    assertEquals(Boolean, TypeMapper.convertType(LegacySQLTypeName.BOOLEAN))
+    assertEquals(Boolean, TypeMapper.convertType(StandardSQLTypeName.BOOL))
   }
 
   @Test
   void testConvertTypeString() {
-    assertEquals(String, TypeMapper.convertType(LegacySQLTypeName.STRING))
+    assertEquals(String, TypeMapper.convertType(StandardSQLTypeName.STRING))
   }
 
   @Test
   void testConvertTypeBytes() {
-    assertEquals(byte[], TypeMapper.convertType(LegacySQLTypeName.BYTES))
+    assertEquals(byte[], TypeMapper.convertType(StandardSQLTypeName.BYTES))
   }
 
   @Test
   void testConvertTypeDateTime() {
-    assertEquals(LocalDate, TypeMapper.convertType(LegacySQLTypeName.DATE))
-    assertEquals(LocalDateTime, TypeMapper.convertType(LegacySQLTypeName.DATETIME))
-    assertEquals(Instant, TypeMapper.convertType(LegacySQLTypeName.TIMESTAMP))
-    assertEquals(LocalTime, TypeMapper.convertType(LegacySQLTypeName.TIME))
+    assertEquals(LocalDate, TypeMapper.convertType(StandardSQLTypeName.DATE))
+    assertEquals(LocalDateTime, TypeMapper.convertType(StandardSQLTypeName.DATETIME))
+    assertEquals(Instant, TypeMapper.convertType(StandardSQLTypeName.TIMESTAMP))
+    assertEquals(LocalTime, TypeMapper.convertType(StandardSQLTypeName.TIME))
   }
 
-  // Tests for convert(Object, LegacySQLTypeName)
+  // Tests for convert(Object, StandardSQLTypeName)
 
   @Test
   void testConvertNullValue() {
-    assertNull(TypeMapper.convert(null, LegacySQLTypeName.STRING))
-    assertNull(TypeMapper.convert(null, LegacySQLTypeName.INTEGER))
-    assertNull(TypeMapper.convert(null, LegacySQLTypeName.BOOLEAN))
+    assertNull(TypeMapper.convert(null, StandardSQLTypeName.STRING))
+    assertNull(TypeMapper.convert(null, StandardSQLTypeName.INT64))
+    assertNull(TypeMapper.convert(null, StandardSQLTypeName.BOOL))
   }
 
   @Test
   void testConvertToString() {
-    assertEquals("hello", TypeMapper.convert("hello", LegacySQLTypeName.STRING))
-    assertEquals("123", TypeMapper.convert(123, LegacySQLTypeName.STRING))
-    assertEquals("true", TypeMapper.convert(true, LegacySQLTypeName.STRING))
+    assertEquals("hello", TypeMapper.convert("hello", StandardSQLTypeName.STRING))
+    assertEquals("123", TypeMapper.convert(123, StandardSQLTypeName.STRING))
+    assertEquals("true", TypeMapper.convert(true, StandardSQLTypeName.STRING))
   }
 
   @Test
   void testConvertToBoolean() {
-    assertEquals(true, TypeMapper.convert(true, LegacySQLTypeName.BOOLEAN))
-    assertEquals(true, TypeMapper.convert("true", LegacySQLTypeName.BOOLEAN))
-    assertEquals(false, TypeMapper.convert(false, LegacySQLTypeName.BOOLEAN))
-    assertEquals(false, TypeMapper.convert("false", LegacySQLTypeName.BOOLEAN))
+    assertEquals(true, TypeMapper.convert(true, StandardSQLTypeName.BOOL))
+    assertEquals(true, TypeMapper.convert("true", StandardSQLTypeName.BOOL))
+    assertEquals(false, TypeMapper.convert(false, StandardSQLTypeName.BOOL))
+    assertEquals(false, TypeMapper.convert("false", StandardSQLTypeName.BOOL))
   }
 
   @Test
   void testConvertToLong() {
-    assertEquals(123L, TypeMapper.convert(123, LegacySQLTypeName.INTEGER))
-    assertEquals(456L, TypeMapper.convert("456", LegacySQLTypeName.INTEGER))
-    assertEquals(789L, TypeMapper.convert(789L, LegacySQLTypeName.INTEGER))
+    assertEquals(123L, TypeMapper.convert(123, StandardSQLTypeName.INT64))
+    assertEquals(456L, TypeMapper.convert("456", StandardSQLTypeName.INT64))
+    assertEquals(789L, TypeMapper.convert(789L, StandardSQLTypeName.INT64))
   }
 
   @Test
   void testConvertToBigDecimal() {
-    assertEquals(new BigDecimal("123.45"), TypeMapper.convert(123.45, LegacySQLTypeName.BIGNUMERIC))
-    assertEquals(new BigDecimal("678.90"), TypeMapper.convert("678.90", LegacySQLTypeName.NUMERIC))
-    assertEquals(new BigDecimal("100"), TypeMapper.convert(100, LegacySQLTypeName.BIGNUMERIC))
+    assertEquals(new BigDecimal("123.45"), TypeMapper.convert(123.45, StandardSQLTypeName.BIGNUMERIC))
+    assertEquals(new BigDecimal("678.90"), TypeMapper.convert("678.90", StandardSQLTypeName.NUMERIC))
+    assertEquals(new BigDecimal("100"), TypeMapper.convert(100, StandardSQLTypeName.BIGNUMERIC))
+  }
+
+  @Test
+  void testConvertToDouble() {
+    assertEquals(1.5d, TypeMapper.convert(1.5d, StandardSQLTypeName.FLOAT64) as double, 0.0001d)
+    assertEquals(2.0d, TypeMapper.convert("2.0", StandardSQLTypeName.FLOAT64) as double, 0.0001d)
+  }
+
+  @Test
+  void testConvertToLocalDate() {
+    LocalDate expected = LocalDate.of(2024, 1, 15)
+    assertEquals(expected, TypeMapper.convert("2024-01-15", StandardSQLTypeName.DATE))
+  }
+
+  @Test
+  void testConvertToLocalDateTime() {
+    LocalDateTime expected = LocalDateTime.of(2024, 1, 15, 10, 30, 0)
+    assertEquals(expected, TypeMapper.convert("2024-01-15T10:30:00", StandardSQLTypeName.DATETIME))
   }
 
   @Test
   void testConvertToTime() {
     // Test string parsing
-    LocalTime time1 = TypeMapper.convert("12:34:56", LegacySQLTypeName.TIME) as LocalTime
+    LocalTime time1 = TypeMapper.convert("12:34:56", StandardSQLTypeName.TIME) as LocalTime
     assertEquals(12, time1.hour)
     assertEquals(34, time1.minute)
     assertEquals(56, time1.second)
 
     // Test microseconds conversion
     long micros = 12 * 3600 * 1_000_000L + 34 * 60 * 1_000_000L + 56 * 1_000_000L
-    LocalTime time2 = TypeMapper.convert(micros, LegacySQLTypeName.TIME) as LocalTime
+    LocalTime time2 = TypeMapper.convert(micros, StandardSQLTypeName.TIME) as LocalTime
     assertEquals(12, time2.hour)
     assertEquals(34, time2.minute)
     assertEquals(56, time2.second)
@@ -168,8 +185,8 @@ class TypeMapperTest {
 
   @Test
   void testConvertDefaultToString() {
-    // Unknown types default to string conversion
-    assertEquals("someValue", TypeMapper.convert("someValue", LegacySQLTypeName.RECORD))
+    // Unknown/unsupported types default to string conversion
+    assertEquals("someValue", TypeMapper.convert("someValue", StandardSQLTypeName.STRUCT))
   }
 
   // Tests for convertToInstant(Object)
@@ -214,17 +231,17 @@ class TypeMapperTest {
 
   @Test
   void testRoundtripConversion() {
-    // Test that converting a type to SQL and back gives us the expected Java type
-    // Note: BIGNUMERIC maps to NUMERIC in LegacySQLTypeName
+    // toStandardSqlType → convertType roundtrip
     StandardSQLTypeName sqlType = TypeMapper.toStandardSqlType(BigDecimal)
     assertEquals(StandardSQLTypeName.BIGNUMERIC, sqlType)
+    assertEquals(BigDecimal, TypeMapper.convertType(sqlType))
 
-    // INT64 maps to INTEGER in LegacySQLTypeName
     StandardSQLTypeName intSqlType = TypeMapper.toStandardSqlType(Integer)
     assertEquals(StandardSQLTypeName.INT64, intSqlType)
+    assertEquals(Long, TypeMapper.convertType(intSqlType))
 
-    // String stays as STRING
     StandardSQLTypeName strSqlType = TypeMapper.toStandardSqlType(String)
     assertEquals(StandardSQLTypeName.STRING, strSqlType)
+    assertEquals(String, TypeMapper.convertType(strSqlType))
   }
 }
