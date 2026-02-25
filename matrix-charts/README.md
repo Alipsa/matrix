@@ -14,7 +14,7 @@ There are 2 APIs in matrix-charts, sharing the same Charm rendering engine:
     (begin with the chart type, e.g. `AreaChart`, then add data and styling).
     Backed by Charm internally.
 
-> For ggplot2-style API, see **[matrix-ggcharts](../matrix-ggcharts/README.md)** — a compatibility
+> For ggplot2-style API, see **[matrix-ggplot](../matrix-ggplot/README.md)** — a compatibility
 > layer mimicking the ggplot2 API in R. It depends on matrix-charts and delegates to Charm under the hood.
 
 > Note: the [matrix-xchart](../matrix-xchart/readme.md) module exists as an alternative charting module

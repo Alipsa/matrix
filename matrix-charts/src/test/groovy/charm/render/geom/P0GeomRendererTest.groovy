@@ -125,10 +125,10 @@ class P0GeomRendererTest {
     assertEquals(0, countClass(empty.render(), 'charm-text'))
   }
 
-  private static Chart buildChart(String fixturePath, CharmGeomType geomType, Map<String, String> mapping) {
+  private static Chart buildChart(String fixturePath, CharmGeomType geomType, Map<String, String> mappingSpec) {
     Matrix data = loadFixtureMatrix("charm-parity/${fixturePath}")
     plot(data) {
-      aes(mapping)
+      mapping(mappingSpec)
       layer(geomType, [:])
       theme {
         legend { position = 'none' }
@@ -136,14 +136,14 @@ class P0GeomRendererTest {
     }.build()
   }
 
-  private static Chart buildEmptyLike(String fixturePath, CharmGeomType geomType, Map<String, String> mapping) {
+  private static Chart buildEmptyLike(String fixturePath, CharmGeomType geomType, Map<String, String> mappingSpec) {
     Matrix data = loadFixtureMatrix("charm-parity/${fixturePath}")
     Matrix empty = Matrix.builder()
         .columnNames(data.columnNames())
         .rows([])
         .build()
     plot(empty) {
-      aes(mapping)
+      mapping(mappingSpec)
       layer(geomType, [:])
       theme {
         legend { position = 'none' }

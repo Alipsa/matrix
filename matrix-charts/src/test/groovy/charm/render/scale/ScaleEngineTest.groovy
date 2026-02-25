@@ -137,7 +137,7 @@ class ScaleEngineTest {
         .build()
 
     Chart chart = Charts.plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
         color = col.color
@@ -169,7 +169,7 @@ class ScaleEngineTest {
         .build()
 
     Chart chart = Charts.plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -312,7 +312,7 @@ class ScaleEngineTest {
         .build()
 
     Chart chart = Charts.plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
         linetype = col.linetype
@@ -372,7 +372,7 @@ class ScaleEngineTest {
         .build()
 
     PlotSpec spec = Charts.plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
         size = col.size

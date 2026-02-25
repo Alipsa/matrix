@@ -32,7 +32,7 @@ class CharmRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -64,7 +64,7 @@ class CharmRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -93,7 +93,7 @@ class CharmRendererTest {
         .build()
 
     Chart barChart = plot(barData) {
-      aes {
+      mapping {
         x = col.cat
         y = col.value
       }
@@ -108,7 +108,7 @@ class CharmRendererTest {
     assertTrue(barCounts.rect >= 2)
 
     Chart histogram = plot(barData) {
-      aes {
+      mapping {
         x = col.value
       }
       layer(CharmGeomType.HISTOGRAM, [bins: 4, fill: '#cc6677'])
@@ -136,7 +136,7 @@ class CharmRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -166,7 +166,7 @@ class CharmRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -197,7 +197,7 @@ class CharmRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -229,7 +229,7 @@ class CharmRendererTest {
         .build()
 
     Chart chart = Charts.plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -250,7 +250,7 @@ class CharmRendererTest {
     assertEquals('640', first.width.toString())
     assertEquals('420', first.height.toString())
     assertEquals(primitiveCounts(first), primitiveCounts(second))
-    assertEquals('x', chart.aes.x.columnName())
+    assertEquals('x', chart.mapping.x.columnName())
     assertEquals(1, chart.layers.size())
   }
 
@@ -275,7 +275,7 @@ class CharmRendererTest {
         .build()
 
     Chart chart = plot(chartData) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -325,7 +325,7 @@ class CharmRendererTest {
 
     // Baseline: two point layers both using the narrow chart data
     Chart baseline = plot(narrowData) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -338,7 +338,7 @@ class CharmRendererTest {
 
     // Test chart: second layer uses wide data, which should shift scale domain
     Chart withLayerData = plot(narrowData) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }

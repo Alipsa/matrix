@@ -97,6 +97,6 @@ class ChartToJfxTest {
         .columnNames('x', 'y')
         .rows([[1, 3], [2, 5], [3, 4]])
         .build()
-    Charts.plot(data).aes(x: 'x', y: 'y').points().build()
+    Charts.plot(data).mapping(x: 'x', y: 'y').points().build()
   }
 }

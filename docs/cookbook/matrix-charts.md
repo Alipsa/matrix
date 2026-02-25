@@ -113,8 +113,8 @@ All builders share these methods inherited from `Chart.ChartBuilder`:
 ## GGPlot-style Charting
 
 For ggplot2-style charting (e.g. `ggplot()`, `geom_point()`, `geom_smooth()`, etc.),
-see the separate [matrix-ggcharts](../../matrix-ggcharts/README.md) module and its
-[ggPlot documentation](../../matrix-ggcharts/docs/ggPlot.md).
+see the separate [matrix-ggplot](../../matrix-ggplot/README.md) module and its
+[ggPlot documentation](../../matrix-ggplot/docs/ggPlot.md).
 
 ---
 [Back to index](cookbook.md)

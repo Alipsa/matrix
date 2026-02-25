@@ -9,7 +9,7 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class PlotSpec {
 
-  private static final Map<CharmGeomType, List<String>> REQUIRED_AESTHETICS = [
+  private static final Map<CharmGeomType, List<String>> REQUIRED_MAPPINGS = [
       (CharmGeomType.POINT)    : ['x', 'y'],
       (CharmGeomType.LINE)     : ['x', 'y'],
       (CharmGeomType.SMOOTH)   : ['x', 'y'],
@@ -47,7 +47,7 @@ class PlotSpec {
   ]
 
   private final Matrix data
-  private AesSpec aes = new AesSpec()
+  private MappingSpec mapping = new MappingSpec()
   private final List<LayerSpec> layers = []
   private ScaleSpec scale = new ScaleSpec()
   private ThemeSpec theme = new ThemeSpec()
@@ -79,12 +79,12 @@ class PlotSpec {
   }
 
   /**
-   * Returns plot-level aesthetics.
+   * Returns plot-level mappings.
    *
-   * @return plot-level aesthetics
+   * @return plot-level mappings
    */
-  AesSpec getAes() {
-    aes
+  MappingSpec getMapping() {
+    mapping
   }
 
   /**
@@ -160,28 +160,28 @@ class PlotSpec {
   }
 
   /**
-   * Configures aesthetics using closure syntax.
+   * Configures mappings using closure syntax.
    *
-   * @param configure closure for aesthetic mapping
+   * @param configure closure for mapping configuration
    * @return this plot spec
    */
-  PlotSpec aes(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure<?> configure) {
-    AesDsl dsl = new AesDsl()
+  PlotSpec mapping(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = MappingDsl) Closure<?> configure) {
+    MappingDsl dsl = new MappingDsl()
     Closure<?> body = configure.rehydrate(dsl, this, this)
     body.resolveStrategy = Closure.DELEGATE_ONLY
     body.call()
-    aes.apply(dsl.toMapping())
+    mapping.apply(dsl.toMapping())
     this
   }
 
   /**
-   * Configures aesthetics using named arguments.
+   * Configures mappings using named arguments.
    *
-   * @param mapping named mapping entries
+   * @param mappingEntries named mapping entries
    * @return this plot spec
    */
-  PlotSpec aes(Map<String, ?> mapping) {
-    aes.apply(mapping)
+  PlotSpec mapping(Map<String, ?> mappingEntries) {
+    mapping.apply(mappingEntries)
     this
   }
 
@@ -260,14 +260,14 @@ class PlotSpec {
       throw new CharmValidationException("Unsupported geom type '${geomType}'. Supported types: ${CharmGeomType.SUPPORTED}")
     }
     Map<String, Object> params = new LinkedHashMap<>(options ?: [:])
-    Aes layerAes = coerceLayerAes(params.remove('aes'))
-    boolean inheritAes = params.containsKey('inheritAes')
-        ? parseBooleanOption(params.remove('inheritAes'), 'inheritAes')
+    Mapping layerMapping = coerceLayerMapping(params.remove('mapping'))
+    boolean inheritMapping = params.containsKey('inheritMapping')
+        ? parseBooleanOption(params.remove('inheritMapping'), 'inheritMapping')
         : true
     PositionSpec positionSpec = coercePosition(params.remove('position'))
     StatSpec statSpec = coerceStat(params.remove('stat'), geomType)
     GeomSpec geomSpec = GeomSpec.of(geomType)
-    LayerSpec layer = new LayerSpec(geomSpec, statSpec, layerAes, inheritAes, positionSpec, params)
+    LayerSpec layer = new LayerSpec(geomSpec, statSpec, layerMapping, inheritMapping, positionSpec, params)
     layers << layer
     this
   }
@@ -380,7 +380,7 @@ class PlotSpec {
       List<AnnotationSpec> compiledAnnotations = annotations.collect { AnnotationSpec a -> a.copy() }
       new Chart(
           data,
-          aes.copy(),
+          mapping.copy(),
           compiledLayers,
           scale.copy(),
           theme.copy(),
@@ -411,8 +411,8 @@ class PlotSpec {
     layers << new LayerSpec(
         GeomSpec.of(geomType),
         StatSpec.of(statType),
-        options.layerAes(),
-        options.inheritAes,
+        options.layerMapping(),
+        options.inheritMapping,
         options.positionSpec,
         options.values()
     )
@@ -420,14 +420,14 @@ class PlotSpec {
   }
 
   private void validate() {
-    validateAes('plot aes', aes)
+    validateMapping('plot mapping', mapping)
     layers.eachWithIndex { LayerSpec layer, int idx ->
       validateLayerSemantics(layer, idx)
-      Aes layerAes = layer.aes
-      if (layerAes != null) {
-        validateAes("layer ${idx} aes", layerAes)
+      Mapping layerMapping = layer.mapping
+      if (layerMapping != null) {
+        validateMapping("layer ${idx} mapping", layerMapping)
       }
-      validateRequiredAesthetics(layer, layerAes, idx)
+      validateRequiredMappings(layer, layerMapping, idx)
     }
     facet.rows.each { ColumnExpr expr -> validateColumn(expr, 'facet.rows') }
     facet.cols.each { ColumnExpr expr -> validateColumn(expr, 'facet.cols') }
@@ -447,32 +447,32 @@ class PlotSpec {
     }
   }
 
-  private void validateRequiredAesthetics(LayerSpec layer, Aes layerAes, int idx) {
-    List<String> required = REQUIRED_AESTHETICS[layer.geomType] ?: []
+  private void validateRequiredMappings(LayerSpec layer, Mapping layerMapping, int idx) {
+    List<String> required = REQUIRED_MAPPINGS[layer.geomType] ?: []
     if (required.isEmpty()) {
       return
     }
-    Aes effective = effectiveAes(layer, layerAes)
+    Mapping effective = effectiveMapping(layer, layerMapping)
     Map<String, ColumnExpr> mappings = effective.mappings()
     List<String> missing = required.findAll { String key -> !mappings.containsKey(key) }
     if (!missing.isEmpty()) {
-      String inheritText = layer.inheritAes ? 'with inherited plot mappings' : 'without inherited plot mappings'
+      String inheritText = layer.inheritMapping ? 'with inherited plot mappings' : 'without inherited plot mappings'
       throw new CharmValidationException(
-          "Layer ${idx} (${layer.geomType}) is missing required aesthetics [${missing.join(', ')}] ${inheritText}"
+          "Layer ${idx} (${layer.geomType}) is missing required mappings [${missing.join(', ')}] ${inheritText}"
       )
     }
   }
 
-  private Aes effectiveAes(LayerSpec layer, Aes layerAes) {
-    Aes effective = layer.inheritAes ? aes.copy() : new Aes()
-    if (layerAes != null) {
-      effective.apply(layerAes.mappings())
+  private Mapping effectiveMapping(LayerSpec layer, Mapping layerMapping) {
+    Mapping effective = layer.inheritMapping ? mapping.copy() : new Mapping()
+    if (layerMapping != null) {
+      effective.apply(layerMapping.mappings())
     }
     effective
   }
 
-  private void validateAes(String context, Aes aesValue) {
-    aesValue.mappings().each { String key, ColumnExpr value ->
+  private void validateMapping(String context, Mapping mappingValue) {
+    mappingValue.mappings().each { String key, ColumnExpr value ->
       validateColumn(value, "${context}.${key}")
     }
   }
@@ -489,20 +489,20 @@ class PlotSpec {
     }
   }
 
-  private static Aes coerceLayerAes(Object value) {
+  private static Mapping coerceLayerMapping(Object value) {
     if (value == null) {
       return null
     }
-    if (value instanceof Aes) {
-      return (value as Aes).copy()
+    if (value instanceof Mapping) {
+      return (value as Mapping).copy()
     }
     if (value instanceof Map) {
-      Aes mapped = new Aes()
+      Mapping mapped = new Mapping()
       mapped.apply(value as Map<String, ?>)
       return mapped
     }
     throw new CharmValidationException(
-        "Unsupported layer aes value type '${value.getClass().name}'. Expected Aes or Map."
+        "Unsupported layer mapping value type '${value.getClass().name}'. Expected Mapping or Map."
     )
   }
 
@@ -944,7 +944,7 @@ class PlotSpec {
       if (values == null) {
         return []
       }
-      values.collect { Object v -> Aes.coerceToColumnExpr(v, 'facet') }
+      values.collect { Object v -> Mapping.coerceToColumnExpr(v, 'facet') }
     }
 
     /**

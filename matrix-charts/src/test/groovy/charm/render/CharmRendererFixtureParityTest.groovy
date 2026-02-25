@@ -32,7 +32,7 @@ class CharmRendererFixtureParityTest {
         .build()
 
     Chart charmChart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -72,7 +72,7 @@ class CharmRendererFixtureParityTest {
         .build()
 
     Chart charmChart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -104,7 +104,7 @@ class CharmRendererFixtureParityTest {
         .build()
 
     Chart charmChart = plot(data) {
-      aes {
+      mapping {
         x = col.x
       }
       layer(CharmGeomType.HISTOGRAM, [bins: 5])
@@ -142,7 +142,7 @@ class CharmRendererFixtureParityTest {
         .build()
 
     Chart charmChart = plot(data) {
-      aes {
+      mapping {
         x = col.category
         y = col.value
       }
@@ -177,7 +177,7 @@ class CharmRendererFixtureParityTest {
         .build()
 
     Chart charmChart = plot(data) {
-      aes {
+      mapping {
         x = col.group
         y = col.value
       }

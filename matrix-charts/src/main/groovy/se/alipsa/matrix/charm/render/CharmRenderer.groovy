@@ -3,7 +3,7 @@ package se.alipsa.matrix.charm.render
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.matrix.charm.Aes
+import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.AnnotationSpec
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmGeomType
@@ -96,8 +96,8 @@ class CharmRenderer {
     context.chart.layers.each { LayerSpec layer ->
       Matrix sourceData = resolveLayerData(context.chart.data, layer)
       List<Integer> rowIndexes = defaultRowIndexes(sourceData?.rowCount() ?: 0)
-      Aes aes = effectiveAes(context.chart.aes, layer)
-      List<LayerData> pipelineData = runPipeline(context, layer, sourceData, aes, rowIndexes)
+      Mapping mapping = effectiveMapping(context.chart.mapping, layer)
+      List<LayerData> pipelineData = runPipeline(context, layer, sourceData, mapping, rowIndexes)
       xValues.addAll(pipelineData.collect { LayerData d -> d.x })
       yValues.addAll(pipelineData.collect { LayerData d -> d.y })
       colorValues.addAll(pipelineData.collect { LayerData d -> d.color })
@@ -250,8 +250,8 @@ class CharmRenderer {
         } else {
           rowIndexes = panel.rowIndexes
         }
-        Aes aes = effectiveAes(context.chart.aes, layer)
-        List<LayerData> layerData = runPipeline(context, layer, sourceData, aes, rowIndexes)
+        Mapping mapping = effectiveMapping(context.chart.mapping, layer)
+        List<LayerData> layerData = runPipeline(context, layer, sourceData, mapping, rowIndexes)
         renderLayer(dataLayer, context, layer, layerData, panelWidth, panelHeight)
       }
       renderAnnotationsFromOrder(dataLayer, context, annotationsByOrder, context.chart.layers.size())
@@ -344,7 +344,7 @@ class CharmRenderer {
       RenderContext context,
       LayerSpec layer,
       Matrix dataMatrix,
-      Aes aes,
+      Mapping mapping,
       List<Integer> rowIndexes
   ) {
     Map<List<Integer>, List<LayerData>> layerCache = context.pipelineCache[layer]
@@ -358,7 +358,7 @@ class CharmRenderer {
       return cached
     }
 
-    List<LayerData> mapped = mapData(dataMatrix, aes, rowIndexes)
+    List<LayerData> mapped = mapData(dataMatrix, mapping, rowIndexes)
     List<LayerData> statData = applyStat(layer, mapped)
     List<LayerData> posData = applyPosition(layer, statData)
     List<LayerData> result = layer.geomType == CharmGeomType.PIE
@@ -368,28 +368,28 @@ class CharmRenderer {
     result
   }
 
-  private List<LayerData> mapData(Matrix data, Aes aes, List<Integer> rowIndexes) {
+  private List<LayerData> mapData(Matrix data, Mapping mapping, List<Integer> rowIndexes) {
     List<LayerData> values = []
     rowIndexes.each { int rowIndex ->
       LayerData datum = new LayerData(rowIndex: rowIndex)
       LayerDataRowAccess.attach(datum, data, rowIndex)
-      datum.x = readValue(data, rowIndex, aes.x?.columnName())
-      datum.y = readValue(data, rowIndex, aes.y?.columnName())
-      datum.color = readValue(data, rowIndex, aes.color?.columnName())
-      datum.fill = readValue(data, rowIndex, aes.fill?.columnName())
-      datum.xend = readValue(data, rowIndex, aes.xend?.columnName())
-      datum.yend = readValue(data, rowIndex, aes.yend?.columnName())
-      datum.xmin = readValue(data, rowIndex, aes.xmin?.columnName())
-      datum.xmax = readValue(data, rowIndex, aes.xmax?.columnName())
-      datum.ymin = readValue(data, rowIndex, aes.ymin?.columnName())
-      datum.ymax = readValue(data, rowIndex, aes.ymax?.columnName())
-      datum.size = readValue(data, rowIndex, aes.size?.columnName())
-      datum.shape = readValue(data, rowIndex, aes.shape?.columnName())
-      datum.alpha = readValue(data, rowIndex, aes.alpha?.columnName())
-      datum.linetype = readValue(data, rowIndex, aes.linetype?.columnName())
-      datum.group = readValue(data, rowIndex, aes.group?.columnName())
-      datum.label = readValue(data, rowIndex, aes.label?.columnName())
-      datum.weight = readValue(data, rowIndex, aes.weight?.columnName())
+      datum.x = readValue(data, rowIndex, mapping.x?.columnName())
+      datum.y = readValue(data, rowIndex, mapping.y?.columnName())
+      datum.color = readValue(data, rowIndex, mapping.color?.columnName())
+      datum.fill = readValue(data, rowIndex, mapping.fill?.columnName())
+      datum.xend = readValue(data, rowIndex, mapping.xend?.columnName())
+      datum.yend = readValue(data, rowIndex, mapping.yend?.columnName())
+      datum.xmin = readValue(data, rowIndex, mapping.xmin?.columnName())
+      datum.xmax = readValue(data, rowIndex, mapping.xmax?.columnName())
+      datum.ymin = readValue(data, rowIndex, mapping.ymin?.columnName())
+      datum.ymax = readValue(data, rowIndex, mapping.ymax?.columnName())
+      datum.size = readValue(data, rowIndex, mapping.size?.columnName())
+      datum.shape = readValue(data, rowIndex, mapping.shape?.columnName())
+      datum.alpha = readValue(data, rowIndex, mapping.alpha?.columnName())
+      datum.linetype = readValue(data, rowIndex, mapping.linetype?.columnName())
+      datum.group = readValue(data, rowIndex, mapping.group?.columnName())
+      datum.label = readValue(data, rowIndex, mapping.label?.columnName())
+      datum.weight = readValue(data, rowIndex, mapping.weight?.columnName())
       values << datum
     }
     values
@@ -415,12 +415,12 @@ class CharmRenderer {
   }
 
 
-  private static Aes effectiveAes(Aes plotAes, LayerSpec layer) {
-    Aes aes = layer.inheritAes ? plotAes.copy() : new Aes()
-    if (layer.aes != null) {
-      aes.apply(layer.aes.mappings())
+  private static Mapping effectiveMapping(Mapping plotMapping, LayerSpec layer) {
+    Mapping mapping = layer.inheritMapping ? plotMapping.copy() : new Mapping()
+    if (layer.mapping != null) {
+      mapping.apply(layer.mapping.mappings())
     }
-    aes
+    mapping
   }
 
   private void renderLabels(RenderContext context) {

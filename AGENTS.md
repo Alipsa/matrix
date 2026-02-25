@@ -7,7 +7,7 @@ This is a Gradle multi-module Groovy/Java project. Each module lives in a `matri
 - `./gradlew build`: build all modules.
 - `./gradlew :matrix-core:build`: build a single module.
 - `./gradlew test`: run all unit tests.
-- `./gradlew :matrix-ggcharts:test --tests "gg.GgPlotTest"`: run a single gg test class.
+- `./gradlew :matrix-ggplot:test --tests "gg.GgPlotTest"`: run a single gg test class.
 - `./gradlew test -PrunSlowTests=true`: include slow integration tests.
 - `RUN_EXTERNAL_TESTS=true ./gradlew test`: enable external tests (BigQuery, GSheets).
 - `./gradlew publishToMavenLocal`: publish artifacts locally.
@@ -145,7 +145,7 @@ try {
 **Example**: If you're implementing HCL color conversion and find similar code already exists in `ScaleColorManual`, don't copy it—extract it to a `ColorSpaceUtil` class that both can use.
 
 ## Testing Guidelines
-JUnit Jupiter (JUnit 5) is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module’s `src/test` tree. Use `-PrunSlowTests=true` and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true` and `./gradlew :matrix-ggcharts:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).
+JUnit Jupiter (JUnit 5) is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module’s `src/test` tree. Use `-PrunSlowTests=true` and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true` and `./gradlew :matrix-ggplot:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).
 
 ## Commit & Pull Request Guidelines
 Commit messages in this repo are short, imperative summaries (e.g., “Fix …”, “Update …”, “Add …”), optionally mentioning the module. For pull requests, include a concise summary, list the modules touched, and record the tests you ran (with commands). Link relevant issues and add screenshots for visual/chart output changes.
@@ -199,10 +199,10 @@ Matrix is a Groovy library for working with tabular (2D) data. It provides Matri
 ./gradlew :matrix-charts:test
 
 # Run a single test class
-./gradlew :matrix-ggcharts:test --tests "gg.GgPlotTest"
+./gradlew :matrix-ggplot:test --tests "gg.GgPlotTest"
 
 # Run a single test method
-./gradlew :matrix-ggcharts:test --tests "gg.GgPlotTest.testPointChartRender"
+./gradlew :matrix-ggplot:test --tests "gg.GgPlotTest.testPointChartRender"
 
 # Include slow integration tests
 ./gradlew test -PrunSlowTests=true
@@ -212,14 +212,14 @@ RUN_EXTERNAL_TESTS=true ./gradlew test
 
 # Run GUI tests in headless mode (for CI)
 ./gradlew :matrix-charts:test -Pheadless=true
-./gradlew :matrix-ggcharts:test -Pheadless=true
+./gradlew :matrix-ggplot:test -Pheadless=true
 
 # Fast unit tests only (no chart rendering) — use for quick dev-cycle feedback
-./gradlew :matrix-ggcharts:testFast
+./gradlew :matrix-ggplot:testFast
 
 # Full test suite (always run before merge)
 ./gradlew :matrix-charts:test -Pheadless=true
-./gradlew :matrix-ggcharts:test -Pheadless=true
+./gradlew :matrix-ggplot:test -Pheadless=true
 ```
 
 ## Testing Patterns
@@ -298,7 +298,7 @@ import static se.alipsa.matrix.gg.GgPlot.*
 | **matrix-stats**       | Statistical tests (t-test, correlation, regression) using Smile ML        |
 | **matrix-datasets**    | Common datasets (mtcars, iris, diamonds, etc.)                            |
 | **matrix-charts**      | Charm rendering engine and chart-type-first API with SVG output           |
-| **matrix-ggcharts**    | GGPlot2-style charting API, delegates to Charm in matrix-charts           |
+| **matrix-ggplot**    | GGPlot2-style charting API, delegates to Charm in matrix-charts           |
 | **matrix-csv**         | Advanced CSV import/export via commons-csv                                |
 | **matrix-groovy-ext**  | Groovy extensions to Number and BigDecimal enabling more ideomatic groovy |
 | **matrix-json**        | JSON import/export via Jackson                                            |
@@ -326,7 +326,7 @@ chartexport/      -> Export to PNG, JPEG, Swing, JavaFX, BufferedImage
 charts/           -> Chart-type-first API (AreaChart, BarChart, PieChart, etc.)
 ```
 
-### matrix-ggcharts (GGPlot2-style API)
+### matrix-ggplot (GGPlot2-style API)
 Provides a ggplot2-compatible API that delegates to Charm in matrix-charts:
 
 ```
@@ -336,7 +336,7 @@ gg/bridge/        -> Bridge converting gg specs to Charm model
 gg/export/        -> GgExport convenience wrapper for chart export
 ```
 
-**Data flow** (spans both modules): Data + Aes -> GgChart (matrix-ggcharts) -> GgCharmCompiler bridge -> Charm model (matrix-charts) -> Stat transformation -> Position adjustment -> Scale computation -> Coord transformation -> Geom rendering -> Theme styling -> SVG output
+**Data flow** (spans both modules): Data + Mapping -> GgChart (matrix-ggplot) -> GgCharmCompiler bridge -> Charm model (matrix-charts) -> Stat transformation -> Position adjustment -> Scale computation -> Coord transformation -> Geom rendering -> Theme styling -> SVG output
 
 **Key patterns**:
 - Deferred rendering: collect specifications, render on `chart.render()`

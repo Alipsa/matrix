@@ -7,7 +7,7 @@ import groovy.transform.CompileStatic
  * Canonical aesthetic mappings for a plot or layer.
  */
 @CompileStatic
-class Aes {
+class Mapping {
 
   private final Cols col = new Cols()
 
@@ -340,10 +340,10 @@ class Aes {
   /**
    * Creates a shallow copy of this mapping.
    *
-   * @return a copied aes instance
+   * @return a copied mapping instance
    */
-  Aes copy() {
-    Aes cloned = new Aes()
+  Mapping copy() {
+    Mapping cloned = new Mapping()
     cloned.x = x
     cloned.y = y
     cloned.color = color

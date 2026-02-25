@@ -29,18 +29,18 @@ class CharmCoreModelTest {
   void testNamedArgMappingCoercionAcceptsStringAndColumnExpr() {
     Cols col = new Cols()
     PlotSpec spec = plot(Dataset.mpg())
-    spec.aes(x: 'cty', y: col['hwy'], color: col['class'])
+    spec.mapping(x: 'cty', y: col['hwy'], color: col['class'])
 
-    assertEquals('cty', spec.aes.x.columnName())
-    assertEquals('hwy', spec.aes.y.columnName())
-    assertEquals('class', spec.aes.color.columnName())
+    assertEquals('cty', spec.mapping.x.columnName())
+    assertEquals('hwy', spec.mapping.y.columnName())
+    assertEquals('class', spec.mapping.color.columnName())
   }
 
   @Test
   void testUnsupportedMappingTypeThrowsClearError() {
     PlotSpec spec = plot(Dataset.mpg())
     CharmMappingException e = assertThrows(CharmMappingException.class) {
-      spec.aes(x: 123)
+      spec.mapping(x: 123)
     }
     assertTrue(e.message.contains("Unsupported mapping for 'x'"))
     assertTrue(e.message.contains('ColumnExpr and CharSequence'))
@@ -49,7 +49,7 @@ class CharmCoreModelTest {
   @Test
   void testClosureAssignmentRuleRequiresEqualsToApplyMappings() {
     PlotSpec spec = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x: col.cty
         y: col.hwy
       }
@@ -59,7 +59,7 @@ class CharmCoreModelTest {
     CharmValidationException e = assertThrows(CharmValidationException.class) {
       spec.build()
     }
-    assertTrue(e.message.contains('missing required aesthetics'))
+    assertTrue(e.message.contains('missing required mappings'))
   }
 
   @Test
@@ -72,7 +72,7 @@ class CharmCoreModelTest {
   @Test
   void testBuildValidationRejectsUnknownColumn() {
     PlotSpec spec = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x = col['does_not_exist']
         y = col.hwy
       }
@@ -94,19 +94,19 @@ class CharmCoreModelTest {
     CharmValidationException e = assertThrows(CharmValidationException.class) {
       spec.build()
     }
-    assertTrue(e.message.contains('missing required aesthetics'))
+    assertTrue(e.message.contains('missing required mappings'))
     assertTrue(e.message.contains('POINT'))
   }
 
   @Test
-  void testInheritAesFalseRequiresLayerAes() {
+  void testInheritMappingFalseRequiresLayerMapping() {
     PlotSpec spec = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x = col.cty
         y = col.hwy
       }
       points {
-        inheritAes = false
+        inheritMapping = false
       }
     }
 
@@ -117,15 +117,15 @@ class CharmCoreModelTest {
   }
 
   @Test
-  void testLayerAesCanOverrideWhenNotInheriting() {
+  void testLayerMappingCanOverrideWhenNotInheriting() {
     Chart chart = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x = col.displ
         y = col.hwy
       }
       points {
-        inheritAes = false
-        aes {
+        inheritMapping = false
+        mapping {
           x = col.cty
           y = col.hwy
         }
@@ -133,14 +133,14 @@ class CharmCoreModelTest {
     }.build()
 
     assertEquals(1, chart.layers.size())
-    assertNotNull(chart.layers.first().aes)
-    assertEquals('cty', chart.layers.first().aes.x.columnName())
+    assertNotNull(chart.layers.first().mapping)
+    assertEquals('cty', chart.layers.first().mapping.x.columnName())
   }
 
   @Test
   void testSmoothAndTileDslMapToExpectedLayerModel() {
     PlotSpec spec = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x = col.cty
         y = col.hwy
       }
@@ -163,7 +163,7 @@ class CharmCoreModelTest {
   @Test
   void testUnsupportedGeomStatCombinationFailsValidation() {
     PlotSpec spec = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x = col.cty
         y = col.hwy
       }
@@ -177,34 +177,34 @@ class CharmCoreModelTest {
   }
 
   @Test
-  void testLayerMapInheritAesParsesFalseString() {
+  void testLayerMapInheritMappingParsesFalseString() {
     Chart chart = plot(Dataset.mpg()) {
       layer(CharmGeomType.POINT, [
-          inheritAes: 'false',
-          aes       : [x: 'cty', y: 'hwy'],
-          size      : 2
+          inheritMapping: 'false',
+          mapping       : [x: 'cty', y: 'hwy'],
+          size          : 2
       ])
     }.build()
 
     assertEquals(1, chart.layers.size())
-    assertEquals(false, chart.layers.first().inheritAes)
+    assertEquals(false, chart.layers.first().inheritMapping)
   }
 
   @Test
-  void testLayerMapInheritAesRejectsInvalidString() {
+  void testLayerMapInheritMappingRejectsInvalidString() {
     CharmValidationException e = assertThrows(CharmValidationException.class) {
       plot(Dataset.mpg()) {
-        layer(CharmGeomType.POINT, [inheritAes: 'not-a-bool', aes: [x: 'cty', y: 'hwy']])
+        layer(CharmGeomType.POINT, [inheritMapping: 'not-a-bool', mapping: [x: 'cty', y: 'hwy']])
       }.build()
     }
     assertTrue(e.message.contains("Unsupported boolean value 'not-a-bool'"))
-    assertTrue(e.message.contains("layer option 'inheritAes'"))
+    assertTrue(e.message.contains("layer option 'inheritMapping'"))
   }
 
   @Test
   void testLayerDslPositionParsesStringValue() {
     Chart chart = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x = col.cty
         y = col.hwy
       }
@@ -220,7 +220,7 @@ class CharmCoreModelTest {
   void testLayerDslPositionRejectsInvalidStringValue() {
     CharmValidationException e = assertThrows(CharmValidationException.class) {
       plot(Dataset.mpg()) {
-        aes {
+        mapping {
           x = col.cty
           y = col.hwy
         }
@@ -235,7 +235,7 @@ class CharmCoreModelTest {
   @Test
   void testScaleTransformsUseStrategyObjects() {
     PlotSpec spec = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x = col.cty
         y = col.hwy
       }
@@ -310,7 +310,7 @@ class CharmCoreModelTest {
   void testBuildReturnsImmutableChartState() {
     Matrix data = Dataset.mpg()
     PlotSpec spec = plot(data) {
-      aes {
+      mapping {
         x = col.cty
         y = col.hwy
       }
@@ -337,20 +337,20 @@ class CharmCoreModelTest {
   }
 
   @Test
-  void testLayerAesGetterReturnsDefensiveCopy() {
+  void testLayerMappingGetterReturnsDefensiveCopy() {
     Chart chart = plot(Dataset.mpg()) {
       points {
-        aes {
+        mapping {
           x = col.cty
           y = col.hwy
         }
       }
     }.build()
 
-    def firstRead = chart.layers.first().aes
+    def firstRead = chart.layers.first().mapping
     firstRead.x = 'displ'
 
-    def secondRead = chart.layers.first().aes
+    def secondRead = chart.layers.first().mapping
     assertEquals('cty', secondRead.x.columnName())
   }
 
@@ -364,7 +364,7 @@ class CharmCoreModelTest {
 
     Chart chart = plot(Dataset.mpg()) {
       layer(CharmGeomType.POINT, [
-          aes    : [x: 'cty', y: 'hwy'],
+          mapping: [x: 'cty', y: 'hwy'],
           payload: externalPayload,
           tags   : tags
       ])

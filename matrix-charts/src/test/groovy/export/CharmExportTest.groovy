@@ -1,11 +1,14 @@
 package export
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charts.ScatterChart
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng
+import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
@@ -92,11 +95,71 @@ class CharmExportTest {
     assertEquals((byte) 0x47, bytes[3])
   }
 
+  @Test
+  void testChartToSvgCharmChartFile(@TempDir Path tempDir) {
+    CharmChart chart = buildCharmChart()
+    File file = tempDir.resolve("testChartToSvg.svg").toFile()
+
+    ChartToSvg.export(chart, file)
+    assertTrue(file.exists(), "SVG file should be created")
+    assertTrue(file.length() > 0, "SVG file should not be empty")
+    String content = file.text
+    assertTrue(content.contains('<svg'), "File should contain SVG content")
+  }
+
+  @Test
+  void testChartToSvgCharmChartOutputStream() {
+    CharmChart chart = buildCharmChart()
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    ChartToSvg.export(chart, baos)
+    String svg = baos.toString('UTF-8')
+    assertTrue(svg.length() > 0, "SVG output should not be empty")
+    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+  }
+
+  @Test
+  void testChartToSvgCharmChartWriter() {
+    CharmChart chart = buildCharmChart()
+    StringWriter writer = new StringWriter()
+    ChartToSvg.export(chart, writer)
+    String svg = writer.toString()
+    assertTrue(svg.length() > 0, "SVG output should not be empty")
+    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+  }
+
+  @Test
+  void testChartToSvgLegacyOutputStream() {
+    def chart = buildLegacyChart()
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    ChartToSvg.export(chart, baos)
+    String svg = baos.toString('UTF-8')
+    assertTrue(svg.length() > 0, "SVG output should not be empty")
+    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+  }
+
+  @Test
+  void testChartToSvgLegacyWriter() {
+    def chart = buildLegacyChart()
+    StringWriter writer = new StringWriter()
+    ChartToSvg.export(chart, writer)
+    String svg = writer.toString()
+    assertTrue(svg.length() > 0, "SVG output should not be empty")
+    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+  }
+
+  private static se.alipsa.matrix.charts.Chart buildLegacyChart() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 3], [2, 5], [3, 4]])
+        .build()
+    ScatterChart.create('Test', data, 'x', 'y')
+  }
+
   private static CharmChart buildCharmChart() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
         .rows([[1, 3], [2, 5], [3, 4]])
         .build()
-    Charts.plot(data).aes(x: 'x', y: 'y').points().build()
+    Charts.plot(data).mapping(x: 'x', y: 'y').points().build()
   }
 }

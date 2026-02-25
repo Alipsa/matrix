@@ -193,7 +193,7 @@ class CharmFacetThemeTest {
   @Test
   void testFacetedChartWithBwThemeRenders() {
     Chart chart = plot(facetData()) {
-      aes { x = col.x; y = col.y }
+      mapping { x = col.x; y = col.y }
       points {}
       facet {
         wrap {
@@ -214,7 +214,7 @@ class CharmFacetThemeTest {
 
     Chart themed = new Chart(
         facetData(),
-        chart.aes,
+        chart.mapping,
         chart.layers,
         chart.scale,
         ts,
@@ -239,7 +239,7 @@ class CharmFacetThemeTest {
 
     Chart chart = new Chart(
         facetData(),
-        new se.alipsa.matrix.charm.AesSpec().tap { apply([x: 'x', y: 'y']) },
+        new se.alipsa.matrix.charm.MappingSpec().tap { apply([x: 'x', y: 'y']) },
         [new se.alipsa.matrix.charm.LayerSpec(
             se.alipsa.matrix.charm.GeomSpec.of(se.alipsa.matrix.charm.CharmGeomType.POINT),
             se.alipsa.matrix.charm.StatSpec.of(se.alipsa.matrix.charm.CharmStatType.IDENTITY),

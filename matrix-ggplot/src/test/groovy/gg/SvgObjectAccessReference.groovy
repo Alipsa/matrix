@@ -7,6 +7,7 @@ import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Path
 import se.alipsa.groovy.svg.Text
+import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.datasets.Dataset
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -24,6 +25,8 @@ import static se.alipsa.matrix.gg.GgPlot.*
  * - Better memory efficiency
  */
 class SvgObjectAccessReference {
+
+    private static final Logger log = Logger.getLogger(SvgObjectAccessReference)
 
     /**
      * Demonstrates all SVG object access patterns documented in AGENTS.md.
@@ -103,6 +106,6 @@ class SvgObjectAccessReference {
         assertEquals(hasCirclesDirect, hasCirclesSerial, "Both methods should find circles")
 
         // Document timing (informational - no strict assertion to avoid flakiness)
-        println("Direct access: ${directTimeNs / 1_000_000}ms, Serialization: ${serialTimeNs / 1_000_000}ms")
+        log.info("Direct access: ${directTimeNs / 1_000_000}ms, Serialization: ${serialTimeNs / 1_000_000}ms")
     }
 }

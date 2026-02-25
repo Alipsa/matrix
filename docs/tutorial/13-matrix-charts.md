@@ -414,14 +414,14 @@ println "Charts have been exported successfully."
 
 5. **Size Appropriately**: Export charts at appropriate dimensions for their intended use.
 
-## GGPlot-style Charting (matrix-ggcharts)
+## GGPlot-style Charting (matrix-ggplot)
 
-For ggplot2-style charting, see the separate [matrix-ggcharts](../../matrix-ggcharts/README.md) module.
+For ggplot2-style charting, see the separate [matrix-ggplot](../../matrix-ggplot/README.md) module.
 It provides a compatibility layer mimicking R's ggplot2 API and delegates to the Charm rendering
 engine in matrix-charts. Add it as a dependency:
 
 ```groovy
-implementation 'se.alipsa.matrix:matrix-ggcharts'
+implementation 'se.alipsa.matrix:matrix-ggplot'
 ```
 
 ## Conclusion

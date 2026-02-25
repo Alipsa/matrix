@@ -6,7 +6,7 @@ import groovy.transform.CompileStatic
  * Typed aesthetic mapping specification for Charm core.
  */
 @CompileStatic
-class AesSpec extends Aes {
+class MappingSpec extends Mapping {
 
   /**
    * Builder-style x mapping assignment.
@@ -14,7 +14,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec x(Object value) {
+  MappingSpec x(Object value) {
     setX(value)
     this
   }
@@ -25,7 +25,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec y(Object value) {
+  MappingSpec y(Object value) {
     setY(value)
     this
   }
@@ -36,7 +36,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec color(Object value) {
+  MappingSpec color(Object value) {
     setColor(value)
     this
   }
@@ -47,7 +47,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec fill(Object value) {
+  MappingSpec fill(Object value) {
     setFill(value)
     this
   }
@@ -58,7 +58,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec size(Object value) {
+  MappingSpec size(Object value) {
     setSize(value)
     this
   }
@@ -69,7 +69,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec shape(Object value) {
+  MappingSpec shape(Object value) {
     setShape(value)
     this
   }
@@ -80,7 +80,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec group(Object value) {
+  MappingSpec group(Object value) {
     setGroup(value)
     this
   }
@@ -91,7 +91,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec xend(Object value) {
+  MappingSpec xend(Object value) {
     setXend(value)
     this
   }
@@ -102,7 +102,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec yend(Object value) {
+  MappingSpec yend(Object value) {
     setYend(value)
     this
   }
@@ -113,7 +113,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec xmin(Object value) {
+  MappingSpec xmin(Object value) {
     setXmin(value)
     this
   }
@@ -124,7 +124,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec xmax(Object value) {
+  MappingSpec xmax(Object value) {
     setXmax(value)
     this
   }
@@ -135,7 +135,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec ymin(Object value) {
+  MappingSpec ymin(Object value) {
     setYmin(value)
     this
   }
@@ -146,7 +146,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec ymax(Object value) {
+  MappingSpec ymax(Object value) {
     setYmax(value)
     this
   }
@@ -157,7 +157,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec alpha(Object value) {
+  MappingSpec alpha(Object value) {
     setAlpha(value)
     this
   }
@@ -168,7 +168,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec linetype(Object value) {
+  MappingSpec linetype(Object value) {
     setLinetype(value)
     this
   }
@@ -179,7 +179,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec label(Object value) {
+  MappingSpec label(Object value) {
     setLabel(value)
     this
   }
@@ -190,7 +190,7 @@ class AesSpec extends Aes {
    * @param value mapping value
    * @return this spec
    */
-  AesSpec weight(Object value) {
+  MappingSpec weight(Object value) {
     setWeight(value)
     this
   }
@@ -201,19 +201,19 @@ class AesSpec extends Aes {
    * @param mapping mapping map
    * @return this spec
    */
-  AesSpec mappings(Map<String, ?> mapping) {
+  MappingSpec mappings(Map<String, ?> mapping) {
     apply(mapping)
     this
   }
 
   /**
-   * Copies this mapping as AesSpec.
+   * Copies this mapping as MappingSpec.
    *
    * @return copied mapping
    */
   @Override
-  AesSpec copy() {
-    AesSpec cloned = new AesSpec()
+  MappingSpec copy() {
+    MappingSpec cloned = new MappingSpec()
     cloned.apply(mappings())
     cloned
   }

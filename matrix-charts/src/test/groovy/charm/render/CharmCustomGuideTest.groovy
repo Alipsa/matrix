@@ -29,7 +29,7 @@ class CharmCustomGuideTest {
         .build()
 
     PlotSpec spec = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
     }
     spec.guides.setSpec('custom', GuideSpec.custom({ ctx ->
@@ -61,7 +61,7 @@ class CharmCustomGuideTest {
         .build()
 
     PlotSpec spec = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
     }
     spec.guides.setSpec('custom', GuideSpec.custom({ ctx ->
@@ -86,7 +86,7 @@ class CharmCustomGuideTest {
         .build()
 
     PlotSpec spec = plot(data) {
-      aes { x = col.x; y = col.y; color = col.cat }
+      mapping { x = col.x; y = col.y; color = col.cat }
       points {}
     }
     spec.guides.setSpec('custom', GuideSpec.custom({ ctx ->

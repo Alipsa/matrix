@@ -9,43 +9,43 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class LayerDsl extends LayerParams {
 
-  private Aes layerAes
-  boolean inheritAes = true
+  private Mapping layerMapping
+  boolean inheritMapping = true
   private PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY)
 
   /**
-   * Configures layer-level aesthetics.
+   * Configures layer-level mappings.
    *
-   * @param configure aes closure
+   * @param configure mapping closure
    */
-  void aes(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure<?> configure) {
-    AesDsl dsl = new AesDsl()
+  void mapping(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = MappingDsl) Closure<?> configure) {
+    MappingDsl dsl = new MappingDsl()
     Closure<?> body = configure.rehydrate(dsl, this, this)
     body.resolveStrategy = Closure.DELEGATE_ONLY
     body.call()
-    Aes mapped = new Aes()
+    Mapping mapped = new Mapping()
     mapped.apply(dsl.toMapping())
-    this.layerAes = mapped
+    this.layerMapping = mapped
   }
 
   /**
-   * Configures layer-level aesthetics using named arguments.
+   * Configures layer-level mappings using named arguments.
    *
-   * @param mapping aes mapping
+   * @param mappingEntries mapping entries
    */
-  void aes(Map<String, ?> mapping) {
-    Aes mapped = new Aes()
-    mapped.apply(mapping)
-    this.layerAes = mapped
+  void mapping(Map<String, ?> mappingEntries) {
+    Mapping mapped = new Mapping()
+    mapped.apply(mappingEntries)
+    this.layerMapping = mapped
   }
 
   /**
    * Returns copied layer-level mappings, if provided.
    *
-   * @return layer aes or null
+   * @return layer mapping or null
    */
-  Aes layerAes() {
-    layerAes?.copy()
+  Mapping layerMapping() {
+    layerMapping?.copy()
   }
 
   /**

@@ -45,7 +45,7 @@ class P1GeomRendererTest {
 
     cases.each { Map<String, Object> tc ->
       Chart chart = plot(data) {
-        aes(tc.aes as Map<String, String>)
+        mapping(tc.aes as Map<String, String>)
         layer(tc.geom as CharmGeomType, tc.options as Map<String, Object>)
         theme {
           legend { position = 'none' }
@@ -75,7 +75,7 @@ class P1GeomRendererTest {
 
     cases.each { Map<String, Object> tc ->
       Chart chart = plot(data) {
-        aes(tc.aes as Map<String, String>)
+        mapping(tc.aes as Map<String, String>)
         layer(tc.geom as CharmGeomType, tc.options as Map<String, Object>)
       }.build()
 
@@ -94,7 +94,7 @@ class P1GeomRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes([x: 'x', y: 'y'])
+      mapping([x: 'x', y: 'y'])
       layer(CharmGeomType.HLINE, [:])
       layer(CharmGeomType.VLINE, [:])
     }.build()
@@ -112,7 +112,7 @@ class P1GeomRendererTest {
         .build()
 
     Chart chart = plot(data) {
-      aes([x: 'x', y: 'y'])
+      mapping([x: 'x', y: 'y'])
       layer(CharmGeomType.HLINE, [yintercept: 0.0])
       layer(CharmGeomType.VLINE, [xintercept: 0.0])
     }.build()
@@ -125,7 +125,7 @@ class P1GeomRendererTest {
   private static Chart withCssIdsEnabled(Chart chart) {
     new Chart(
         chart.data,
-        chart.aes,
+        chart.mapping,
         chart.layers,
         chart.scale,
         chart.theme,

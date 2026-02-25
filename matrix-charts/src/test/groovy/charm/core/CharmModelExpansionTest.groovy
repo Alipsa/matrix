@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
-import se.alipsa.matrix.charm.Aes
+import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.charm.CharmGeomType
@@ -319,7 +319,7 @@ class CharmModelExpansionTest {
         .build()
 
     PlotSpec spec = plot(data)
-    spec.aes(x: 'x', y: 'y')
+    spec.mapping(x: 'x', y: 'y')
     spec.layer(CharmGeomType.BIN2D, [:])
     spec.layer(CharmGeomType.COUNT, [:])
     spec.layer(CharmGeomType.RASTER, [:])
@@ -334,7 +334,7 @@ class CharmModelExpansionTest {
         .build()
 
     PlotSpec spec = plot(data)
-    spec.aes(x: 'x', y: 'y')
+    spec.mapping(x: 'x', y: 'y')
     spec.layer(CharmGeomType.POINT, [:])
     spec.layer(CharmGeomType.LINE, [:])
     spec.layer(CharmGeomType.DENSITY, [stat: CharmStatType.DENSITY])
@@ -352,7 +352,7 @@ class CharmModelExpansionTest {
   @Test
   void testPlotSpecPointsLineConvenienceMethodsStillWork() {
     Chart chart = plot(Dataset.mpg()) {
-      aes {
+      mapping {
         x = col.cty
         y = col.hwy
       }
@@ -378,7 +378,7 @@ class CharmModelExpansionTest {
         .build()
 
     Chart chart = plot(data) {
-      aes {
+      mapping {
         x = col.x
         y = col.y
       }
@@ -395,9 +395,9 @@ class CharmModelExpansionTest {
   }
 
   @Test
-  void testAesExpandedChannels() {
-    Aes aes = new Aes()
-    aes.apply([
+  void testMappingExpandedChannels() {
+    Mapping mapping = new Mapping()
+    mapping.apply([
         x       : 'x',
         y       : 'y',
         xend    : 'xend',
@@ -412,25 +412,25 @@ class CharmModelExpansionTest {
         weight  : 'wt'
     ])
 
-    assertEquals('x', aes.x.columnName())
-    assertEquals('y', aes.y.columnName())
-    assertEquals('xend', aes.xend.columnName())
-    assertEquals('yend', aes.yend.columnName())
-    assertEquals('xmin', aes.xmin.columnName())
-    assertEquals('xmax', aes.xmax.columnName())
-    assertEquals('ymin', aes.ymin.columnName())
-    assertEquals('ymax', aes.ymax.columnName())
-    assertEquals('alpha', aes.alpha.columnName())
-    assertEquals('lt', aes.linetype.columnName())
-    assertEquals('lbl', aes.label.columnName())
-    assertEquals('wt', aes.weight.columnName())
+    assertEquals('x', mapping.x.columnName())
+    assertEquals('y', mapping.y.columnName())
+    assertEquals('xend', mapping.xend.columnName())
+    assertEquals('yend', mapping.yend.columnName())
+    assertEquals('xmin', mapping.xmin.columnName())
+    assertEquals('xmax', mapping.xmax.columnName())
+    assertEquals('ymin', mapping.ymin.columnName())
+    assertEquals('ymax', mapping.ymax.columnName())
+    assertEquals('alpha', mapping.alpha.columnName())
+    assertEquals('lt', mapping.linetype.columnName())
+    assertEquals('lbl', mapping.label.columnName())
+    assertEquals('wt', mapping.weight.columnName())
   }
 
   @Test
-  void testAesCopyPreservesExpandedChannels() {
-    Aes aes = new Aes()
-    aes.apply([xend: 'xe', yend: 'ye', alpha: 'a', label: 'l'])
-    Aes copy = aes.copy()
+  void testMappingCopyPreservesExpandedChannels() {
+    Mapping mapping = new Mapping()
+    mapping.apply([xend: 'xe', yend: 'ye', alpha: 'a', label: 'l'])
+    Mapping copy = mapping.copy()
     assertEquals('xe', copy.xend.columnName())
     assertEquals('ye', copy.yend.columnName())
     assertEquals('a', copy.alpha.columnName())
@@ -438,10 +438,10 @@ class CharmModelExpansionTest {
   }
 
   @Test
-  void testAesMappingsIncludesExpandedChannels() {
-    Aes aes = new Aes()
-    aes.apply([x: 'x', xmin: 'xm', weight: 'w'])
-    Map<String, ColumnExpr> mappings = aes.mappings()
+  void testMappingsIncludesExpandedChannels() {
+    Mapping mapping = new Mapping()
+    mapping.apply([x: 'x', xmin: 'xm', weight: 'w'])
+    Map<String, ColumnExpr> mappings = mapping.mappings()
     assertTrue(mappings.containsKey('x'))
     assertTrue(mappings.containsKey('xmin'))
     assertTrue(mappings.containsKey('weight'))

@@ -1,5 +1,5 @@
 plugins {
-  id "com.github.ben-manes.versions" version "0.54.0-SNAPSHOT" apply false
+  id "com.github.ben-manes.versions" version "0.54.2-SNAPSHOT" apply false
   //id "com.github.ben-manes.versions" version "0.53.0" apply false
 }
 
@@ -57,12 +57,10 @@ allprojects {
       }
     }
   }
-  tasks.matching { it.name == "dependencyUpdates" }.configureEach {
-    // Plugin is not compatible with configuration cache (uses Task.project at execution time).
-    // This invalidates the cache entry when dependencyUpdates is in the task graph.
-    // Also run with --no-parallel on Gradle 9.x: ./gradlew dependencyUpdates --no-parallel
-    //notCompatibleWithConfigurationCache("dependencyUpdates plugin uses Task.project at execution time")
+}
 
+subprojects {
+  tasks.matching { it.name == "dependencyUpdates" }.configureEach {
     gradleReleaseChannel = "current"
     checkForGradleUpdate = false // optional: silence Gradle RC noise
     def projectName = project.name
@@ -116,7 +114,14 @@ tasks.register('dependencyUpdatesSummary') {
   }
 }
 
-// Wire: running dependencyUpdates on root also triggers the summary
-tasks.matching { it.name == 'dependencyUpdates' }.configureEach {
+// Root-level dependencyUpdates lifecycle task (plugin is apply-false on root).
+// Running `./gradlew dependencyUpdates` resolves to this task, which delegates
+// to all subproject dependencyUpdates tasks and triggers the summary.
+tasks.register('dependencyUpdates') {
+  description = 'Runs dependency update checks for all subprojects'
+  group = 'Help'
+  dependsOn subprojects.collect { p ->
+    p.tasks.matching { it.name == 'dependencyUpdates' }
+  }
   finalizedBy tasks.named('dependencyUpdatesSummary')
 }
