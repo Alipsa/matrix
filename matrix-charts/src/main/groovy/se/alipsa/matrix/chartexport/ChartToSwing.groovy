@@ -9,7 +9,7 @@ import se.alipsa.matrix.charm.Chart as CharmChart
  * <p>Accepts SVG strings, {@link Svg} objects,
  * and {@link CharmChart} instances. All paths converge through SVG rendering.</p>
  *
- * <p>For GgChart export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
+ * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
 class ChartToSwing {
 

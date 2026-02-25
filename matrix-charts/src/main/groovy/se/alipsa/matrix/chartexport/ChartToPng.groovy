@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets
  * and {@link CharmChart} instances. All paths converge through SVG rendering
  * via jsvg, with no JavaFX toolkit dependency.</p>
  *
- * <p>For GgChart export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
+ * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
 class ChartToPng {
 
