@@ -2,7 +2,6 @@ package se.alipsa.matrix.chartexport
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charts.Chart
 import se.alipsa.matrix.charts.CharmBridge
@@ -138,21 +137,19 @@ class ChartToSvg {
   }
 
   private static void writeSvg(Svg svg, File targetFile) throws IOException {
-    String xml = SvgWriter.toXmlPretty(svg)
     targetFile.withWriter('UTF-8') { Writer writer ->
-      writer.write(xml)
+      writer.write(svg.toXml())
       writer.flush()
     }
   }
 
   private static void writeSvg(Svg svg, OutputStream os) throws IOException {
-    String xml = SvgWriter.toXmlPretty(svg)
-    os.write(xml.getBytes('UTF-8'))
+    os.write(svg.toXml().getBytes('UTF-8'))
     os.flush()
   }
 
   private static void writeSvg(Svg svg, Writer writer) throws IOException {
-    writer.write(SvgWriter.toXmlPretty(svg))
+    writer.write(svg.toXml())
     writer.flush()
   }
 }
