@@ -5,6 +5,7 @@ import org.apache.commons.csv.CSVFormat
 import org.apache.commons.io.input.ReaderInputStream
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import se.alipsa.groovy.datautil.ConnectionInfo
 import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.MatrixArffWriter
@@ -49,6 +50,8 @@ import static se.alipsa.matrix.charm.Charts.plot
  */
 class MatrixModulesTest {
 
+  @TempDir
+  java.nio.file.Path tempDir
 
   @Test
   void testStat() {
@@ -278,8 +281,7 @@ class MatrixModulesTest {
         .x('wt')
         .y('mpg')
         .build()
-    File svgFile = new File('target/scatter_chart.svg')
-    svgFile.parentFile?.mkdirs()
+    File svgFile = tempDir.resolve('scatter_chart.svg').toFile()
     ChartToSvg.export(scatterChart, svgFile)
     assertTrue(svgFile.exists(), "SVG file should be created by ChartToSvg.export")
     assertTrue(svgFile.length() > 0, "SVG file should not be empty")
@@ -314,11 +316,11 @@ class MatrixModulesTest {
         'Metal ratio',
     ).build()
 
-    File file = new File("target/testPieChart.png")
+    File file = tempDir.resolve("testPieChart.png").toFile()
     def pc = PieChart.create(matrix)
         .addSeries(matrix.metal, matrix.ratio)
 
     pc.exportPng(file)
-    assertTrue(file.exists())
+    assertTrue(file.exists(), "PNG file should be created")
   }
 }

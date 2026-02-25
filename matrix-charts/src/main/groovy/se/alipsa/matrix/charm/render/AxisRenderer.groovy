@@ -266,7 +266,19 @@ class AxisRenderer {
     // Otherwise, the domain is in raw data space and we need to take log10 to derive
     // exponents.
     Object prescaleBaseRaw = params['prescaleBase']
-    Number prescaleBase = prescaleBaseRaw instanceof Number ? (Number) prescaleBaseRaw : null
+    Number prescaleBase
+    if (prescaleBaseRaw instanceof Number) {
+      prescaleBase = (Number) prescaleBaseRaw
+    } else if (prescaleBaseRaw instanceof CharSequence) {
+      try {
+        prescaleBase = new BigDecimal(prescaleBaseRaw.toString())
+      } catch (NumberFormatException ignored) {
+        log.warn("renderAxisLogticks: prescaleBase param '${prescaleBaseRaw}' is not a valid number; ignoring.")
+        prescaleBase = null
+      }
+    } else {
+      prescaleBase = null
+    }
     boolean domainIsLogSpace = scale.transformStrategy instanceof Log10ScaleTransform ||
         (prescaleBase != null && prescaleBase.doubleValue() == 10d)
 
