@@ -59,7 +59,7 @@ class CharmCoreModelTest {
     CharmValidationException e = assertThrows(CharmValidationException.class) {
       spec.build()
     }
-    assertTrue(e.message.contains('missing required aesthetics'))
+    assertTrue(e.message.contains('missing required mappings'))
   }
 
   @Test
@@ -94,7 +94,7 @@ class CharmCoreModelTest {
     CharmValidationException e = assertThrows(CharmValidationException.class) {
       spec.build()
     }
-    assertTrue(e.message.contains('missing required aesthetics'))
+    assertTrue(e.message.contains('missing required mappings'))
     assertTrue(e.message.contains('POINT'))
   }
 

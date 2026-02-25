@@ -458,7 +458,7 @@ class PlotSpec {
     if (!missing.isEmpty()) {
       String inheritText = layer.inheritMapping ? 'with inherited plot mappings' : 'without inherited plot mappings'
       throw new CharmValidationException(
-          "Layer ${idx} (${layer.geomType}) is missing required aesthetics [${missing.join(', ')}] ${inheritText}"
+          "Layer ${idx} (${layer.geomType}) is missing required mappings [${missing.join(', ')}] ${inheritText}"
       )
     }
   }

@@ -257,14 +257,17 @@ class AxisRenderer {
       return
     }
 
-    // When the scale uses a log10 transform, or the guide declares prescaleBase,
-    // domain bounds are already in log space (exponents). prescaleBase means that
+    // When the scale uses a log10 transform, or the guide declares prescaleBase == 10,
+    // domain bounds are already in log10 space (exponents). prescaleBase means that
     // the input data has been pre-transformed using log(base = prescaleBase) before
     // reaching this renderer, so domainMin/domainMax are the logged values themselves.
+    // We only treat this as log-space when prescaleBase is 10, since the tick generator
+    // below is hard-coded to base-10 powers.
     // Otherwise, the domain is in raw data space and we need to take log10 to derive
     // exponents.
+    Number prescaleBase = params['prescaleBase'] as Number
     boolean domainIsLogSpace = scale.transformStrategy instanceof Log10ScaleTransform ||
-        params['prescaleBase'] != null
+        (prescaleBase != null && prescaleBase.doubleValue() == 10d)
 
     int minExp, maxExp
     if (domainIsLogSpace) {

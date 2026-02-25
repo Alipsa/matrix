@@ -278,11 +278,15 @@ class MatrixModulesTest {
         .x('wt')
         .y('mpg')
         .build()
-    ChartToSvg.export(scatterChart, new File('target/scatter_chart.svg'))
+    File svgFile = new File('target/scatter_chart.svg')
+    svgFile.parentFile?.mkdirs()
+    ChartToSvg.export(scatterChart, svgFile)
+    assertTrue(svgFile.exists(), "SVG file should be created by ChartToSvg.export")
+    assertTrue(svgFile.length() > 0, "SVG file should not be empty")
   }
 
   @Test
-  void testGgCharts() {
+  void testGgPlot() {
     // Test ggplot2-style charting
     Matrix mtcars = Dataset.mtcars()
     def chart = ggplot(mtcars, aes(x: 'wt', y: 'mpg', color: 'cyl')) +
