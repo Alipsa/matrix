@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charts.ScatterChart
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng
@@ -124,6 +125,34 @@ class CharmExportTest {
     String svg = writer.toString()
     assertTrue(svg.length() > 0, "SVG output should not be empty")
     assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+  }
+
+  @Test
+  void testChartToSvgLegacyOutputStream() {
+    def chart = buildLegacyChart()
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    ChartToSvg.export(chart, baos)
+    String svg = baos.toString('UTF-8')
+    assertTrue(svg.length() > 0, "SVG output should not be empty")
+    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+  }
+
+  @Test
+  void testChartToSvgLegacyWriter() {
+    def chart = buildLegacyChart()
+    StringWriter writer = new StringWriter()
+    ChartToSvg.export(chart, writer)
+    String svg = writer.toString()
+    assertTrue(svg.length() > 0, "SVG output should not be empty")
+    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+  }
+
+  private static se.alipsa.matrix.charts.Chart buildLegacyChart() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 3], [2, 5], [3, 4]])
+        .build()
+    ScatterChart.create('Test', data, 'x', 'y')
   }
 
   private static CharmChart buildCharmChart() {

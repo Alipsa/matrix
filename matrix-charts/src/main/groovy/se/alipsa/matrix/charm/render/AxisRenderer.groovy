@@ -280,7 +280,7 @@ class AxisRenderer {
       prescaleBase = null
     }
     boolean domainIsLogSpace = scale.transformStrategy instanceof Log10ScaleTransform ||
-        (prescaleBase != null && prescaleBase.doubleValue() == 10d)
+        (prescaleBase != null && new BigDecimal(prescaleBase.toString()).compareTo(BigDecimal.TEN) == 0)
 
     int minExp, maxExp
     if (domainIsLogSpace) {
