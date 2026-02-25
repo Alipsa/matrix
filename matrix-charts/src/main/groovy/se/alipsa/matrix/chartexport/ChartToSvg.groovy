@@ -137,6 +137,7 @@ class ChartToSvg {
   }
 
   private static void writeSvg(Svg svg, File targetFile) throws IOException {
+    targetFile.parentFile?.mkdirs()
     targetFile.withWriter('UTF-8') { Writer writer ->
       writer.write(svg.toXml())
       writer.flush()

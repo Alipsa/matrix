@@ -428,9 +428,9 @@ class CharmModelExpansionTest {
 
   @Test
   void testMappingCopyPreservesExpandedChannels() {
-    Mapping aes = new Mapping()
-    aes.apply([xend: 'xe', yend: 'ye', alpha: 'a', label: 'l'])
-    Mapping copy = aes.copy()
+    Mapping mapping = new Mapping()
+    mapping.apply([xend: 'xe', yend: 'ye', alpha: 'a', label: 'l'])
+    Mapping copy = mapping.copy()
     assertEquals('xe', copy.xend.columnName())
     assertEquals('ye', copy.yend.columnName())
     assertEquals('a', copy.alpha.columnName())
@@ -439,9 +439,9 @@ class CharmModelExpansionTest {
 
   @Test
   void testMappingsIncludesExpandedChannels() {
-    Mapping aes = new Mapping()
-    aes.apply([x: 'x', xmin: 'xm', weight: 'w'])
-    Map<String, ColumnExpr> mappings = aes.mappings()
+    Mapping mapping = new Mapping()
+    mapping.apply([x: 'x', xmin: 'xm', weight: 'w'])
+    Map<String, ColumnExpr> mappings = mapping.mappings()
     assertTrue(mappings.containsKey('x'))
     assertTrue(mappings.containsKey('xmin'))
     assertTrue(mappings.containsKey('weight'))

@@ -1,6 +1,7 @@
 package export
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.chartexport.ChartToImage
@@ -94,12 +95,9 @@ class CharmExportTest {
   }
 
   @Test
-  void testChartToSvgCharmChartFile() {
+  void testChartToSvgCharmChartFile(@TempDir Path tempDir) {
     CharmChart chart = buildCharmChart()
-    Path buildDir = Paths.get(
-        getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
-    ).getParent().getParent().getParent()
-    File file = buildDir.resolve("testChartToSvg.svg").toFile()
+    File file = tempDir.resolve("testChartToSvg.svg").toFile()
 
     ChartToSvg.export(chart, file)
     assertTrue(file.exists(), "SVG file should be created")
