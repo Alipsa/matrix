@@ -316,11 +316,11 @@ class MatrixModulesTest {
         'Metal ratio',
     ).build()
 
-    File file = tempDir.resolve("testPieChart.png").toFile()
+    File pngFile = tempDir.resolve("testPieChart.png").toFile()
     def pc = PieChart.create(matrix)
         .addSeries(matrix.metal, matrix.ratio)
 
-    pc.exportPng(file)
-    assertTrue(file.exists(), "PNG file should be created")
+    pc.exportPng(pngFile)
+    assertTrue(pngFile.exists(), "PNG file should be created")
   }
 }

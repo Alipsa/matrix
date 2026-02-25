@@ -202,8 +202,8 @@ class GgCharmCompiler {
       return null
     }
 
-    Matrix mappingData = layer.data ?: plotData
-    Mapping layerMapping = mapMapping(layer.aes, mappingData, "layer ${idx}", reasons)
+    Matrix layerData = layer.data ?: plotData
+    Mapping layerMapping = mapMapping(layer.aes, layerData, "layer ${idx}", reasons)
     if (!reasons.isEmpty()) {
       return null
     }
