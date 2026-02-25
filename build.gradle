@@ -1,5 +1,5 @@
 plugins {
-  id "com.github.ben-manes.versions" version "0.54.2-SNAPSHOT" apply false
+  id "com.github.ben-manes.versions" version "0.54.0-SNAPSHOT" apply false
   //id "com.github.ben-manes.versions" version "0.53.0" apply false
 }
 
@@ -65,13 +65,13 @@ subprojects {
     checkForGradleUpdate = false // optional: silence Gradle RC noise
     def projectName = project.name
     def markerFile = rootProject.layout.buildDirectory
-        .file("dependencyUpdates/.hasOutdated").get().asFile
+        .file("dependencyUpdates/.outdated-${project.name}").get().asFile
 
     outputFormatter = { result ->
       def outdated = result.outdated.dependencies
       if (outdated) {
         markerFile.parentFile.mkdirs()
-        markerFile.text = 'true'
+        markerFile.text = outdated.size().toString()
         println "${projectName}:"
         outdated.each { dep ->
           def latest = dep.available.release ?: dep.available.milestone ?: dep.available.integration
@@ -101,16 +101,24 @@ subprojects {
 // Summary task that runs after all dependencyUpdates tasks complete
 tasks.register('dependencyUpdatesSummary') {
   description = 'Prints a summary after all dependency update checks'
-  def markerFile = rootProject.layout.buildDirectory
-      .file("dependencyUpdates/.hasOutdated").get().asFile
+  def markerDir = rootProject.layout.buildDirectory
+      .dir("dependencyUpdates").get().asFile
   dependsOn allprojects.collect { p ->
     p.tasks.matching { it.name == 'dependencyUpdates' }
   }
   doLast {
-    if (!markerFile.exists()) {
-      println 'All dependencies are up-to-date.'
+    def markers = markerDir.listFiles()?.findAll { it.name.startsWith('.outdated-') } ?: []
+    if (markers.isEmpty()) {
+      println '\n ✅  All dependencies are up-to-date.'
+    } else {
+      def total = markers.sum { it.text.trim().toInteger() }
+      if (total == 1) {
+        println "\n ⚠️  ${total} dependency update available."
+      } else {
+        println "\n ⚠️  ${total} dependency updates available."
+      }
     }
-    markerFile.delete()
+    markers.each { it.delete() }
   }
 }
 

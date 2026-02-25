@@ -40,7 +40,7 @@ dependencies {
     implementation 'org.apache.ivy:ivy:2.5.3'
     api 'org.apache.parquet:parquet-column:1.17.0'
     api 'org.apache.parquet:parquet-hadoop:1.17.0'
-    implementation('org.apache.hadoop:hadoop-common:3.4.2') {
+    implementation('org.apache.hadoop:hadoop-common:3.4.3') {
         //exclude group: 'org.slf4j'         // optional: avoid conflicts
         //exclude group: 'com.google.guava'  // optional: prevent old guava
         //exclude group: 'org.apache.hadoop.thirdparty'
@@ -49,7 +49,7 @@ dependencies {
         exclude group: 'io.netty'                   // ✅ Netty
         exclude group: 'com.squareup.okhttp3'       // optional, sometimes pulled transitively
     }
-  implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.4.2'
+  implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.4.3'
     testImplementation libs.junit.jupiter.api
     testRuntimeOnly libs.junit.jupiter.engine
     testRuntimeOnly libs.junit.platform.launcher
