@@ -336,7 +336,7 @@ gg/bridge/        -> Bridge converting gg specs to Charm model
 gg/export/        -> GgExport convenience wrapper for chart export
 ```
 
-**Data flow** (spans both modules): Data + Aes -> GgChart (matrix-ggplot) -> GgCharmCompiler bridge -> Charm model (matrix-charts) -> Stat transformation -> Position adjustment -> Scale computation -> Coord transformation -> Geom rendering -> Theme styling -> SVG output
+**Data flow** (spans both modules): Data + Mapping -> GgChart (matrix-ggplot) -> GgCharmCompiler bridge -> Charm model (matrix-charts) -> Stat transformation -> Position adjustment -> Scale computation -> Coord transformation -> Geom rendering -> Theme styling -> SVG output
 
 **Key patterns**:
 - Deferred rendering: collect specifications, render on `chart.render()`
