@@ -157,26 +157,7 @@ class TypeMapper {
     if (fv.isNull()) return null
 
     switch (colType) {
-      case StandardSQLTypeName.BYTES -> {
-        try {
-          return fv.getBytesValue()
-        } catch (IllegalStateException | UnsupportedOperationException | ClassCastException ignored) {
-          // Fallbacks depending on client version/driver:
-          // - IllegalStateException: when FieldValue state doesn't allow getBytesValue()
-          // - UnsupportedOperationException: when the method isn't supported by driver version
-          // - ClassCastException: when internal type doesn't match expected byte array
-          Object v = fv.getValue()
-          if (v instanceof byte[]) return (byte[]) v
-          if (v instanceof CharSequence) return Base64.decoder.decode(v.toString())
-          if (v instanceof ByteBuffer) {
-            ByteBuffer bb = (ByteBuffer) v
-            byte[] out = new byte[bb.remaining()]
-            bb.get(out)
-            return out
-          }
-          throw new IllegalStateException("Unsupported BYTES value type: ${v?.getClass()?.name}")
-        }
-      }
+      case StandardSQLTypeName.BYTES -> convertBytesValue(fv)
       case StandardSQLTypeName.BIGNUMERIC, StandardSQLTypeName.NUMERIC -> fv.getNumericValue()
       case StandardSQLTypeName.BOOL -> fv.getBooleanValue()
       case StandardSQLTypeName.INT64 -> fv.getLongValue()
@@ -194,6 +175,27 @@ class TypeMapper {
         }
       }
       default -> fv.getStringValue()
+    }
+  }
+
+  private static byte[] convertBytesValue(FieldValue fv) {
+    try {
+      fv.getBytesValue()
+    } catch (IllegalStateException | UnsupportedOperationException | ClassCastException ignored) {
+      // Fallbacks depending on client version/driver:
+      // - IllegalStateException: when FieldValue state doesn't allow getBytesValue()
+      // - UnsupportedOperationException: when the method isn't supported by driver version
+      // - ClassCastException: when internal type doesn't match expected byte array
+      Object v = fv.getValue()
+      if (v instanceof byte[]) return (byte[]) v
+      if (v instanceof CharSequence) return Base64.decoder.decode(v.toString())
+      if (v instanceof ByteBuffer) {
+        ByteBuffer bb = (ByteBuffer) v
+        byte[] out = new byte[bb.remaining()]
+        bb.get(out)
+        return out
+      }
+      throw new IllegalStateException("Unsupported BYTES value type: ${v?.getClass()?.name}")
     }
   }
 
