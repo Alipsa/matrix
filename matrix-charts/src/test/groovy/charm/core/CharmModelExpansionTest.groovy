@@ -396,8 +396,8 @@ class CharmModelExpansionTest {
 
   @Test
   void testMappingExpandedChannels() {
-    Mapping aes = new Mapping()
-    aes.apply([
+    Mapping mapping = new Mapping()
+    mapping.apply([
         x       : 'x',
         y       : 'y',
         xend    : 'xend',
@@ -412,18 +412,18 @@ class CharmModelExpansionTest {
         weight  : 'wt'
     ])
 
-    assertEquals('x', aes.x.columnName())
-    assertEquals('y', aes.y.columnName())
-    assertEquals('xend', aes.xend.columnName())
-    assertEquals('yend', aes.yend.columnName())
-    assertEquals('xmin', aes.xmin.columnName())
-    assertEquals('xmax', aes.xmax.columnName())
-    assertEquals('ymin', aes.ymin.columnName())
-    assertEquals('ymax', aes.ymax.columnName())
-    assertEquals('alpha', aes.alpha.columnName())
-    assertEquals('lt', aes.linetype.columnName())
-    assertEquals('lbl', aes.label.columnName())
-    assertEquals('wt', aes.weight.columnName())
+    assertEquals('x', mapping.x.columnName())
+    assertEquals('y', mapping.y.columnName())
+    assertEquals('xend', mapping.xend.columnName())
+    assertEquals('yend', mapping.yend.columnName())
+    assertEquals('xmin', mapping.xmin.columnName())
+    assertEquals('xmax', mapping.xmax.columnName())
+    assertEquals('ymin', mapping.ymin.columnName())
+    assertEquals('ymax', mapping.ymax.columnName())
+    assertEquals('alpha', mapping.alpha.columnName())
+    assertEquals('lt', mapping.linetype.columnName())
+    assertEquals('lbl', mapping.label.columnName())
+    assertEquals('wt', mapping.weight.columnName())
   }
 
   @Test

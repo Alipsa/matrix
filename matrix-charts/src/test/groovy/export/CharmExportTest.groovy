@@ -6,6 +6,7 @@ import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng
+import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.chartexport.ChartToSwing
 import se.alipsa.matrix.chartexport.SvgPanel
 import se.alipsa.matrix.core.Matrix
@@ -90,6 +91,41 @@ class CharmExportTest {
     assertEquals((byte) 0x50, bytes[1])
     assertEquals((byte) 0x4E, bytes[2])
     assertEquals((byte) 0x47, bytes[3])
+  }
+
+  @Test
+  void testChartToSvgCharmChartFile() {
+    CharmChart chart = buildCharmChart()
+    Path buildDir = Paths.get(
+        getClass().getProtectionDomain().getCodeSource().getLocation().toURI()
+    ).getParent().getParent().getParent()
+    File file = buildDir.resolve("testChartToSvg.svg").toFile()
+
+    ChartToSvg.export(chart, file)
+    assertTrue(file.exists(), "SVG file should be created")
+    assertTrue(file.length() > 0, "SVG file should not be empty")
+    String content = file.text
+    assertTrue(content.contains('<svg'), "File should contain SVG content")
+  }
+
+  @Test
+  void testChartToSvgCharmChartOutputStream() {
+    CharmChart chart = buildCharmChart()
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    ChartToSvg.export(chart, baos)
+    String svg = baos.toString('UTF-8')
+    assertTrue(svg.length() > 0, "SVG output should not be empty")
+    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
+  }
+
+  @Test
+  void testChartToSvgCharmChartWriter() {
+    CharmChart chart = buildCharmChart()
+    StringWriter writer = new StringWriter()
+    ChartToSvg.export(chart, writer)
+    String svg = writer.toString()
+    assertTrue(svg.length() > 0, "SVG output should not be empty")
+    assertTrue(svg.contains('<svg'), "Output should contain SVG content")
   }
 
   private static CharmChart buildCharmChart() {

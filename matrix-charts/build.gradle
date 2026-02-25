@@ -101,7 +101,10 @@ test {
   testLogging.showStandardStreams = true
   // run using gradle -Pheadless=true test
   jvmArgs "-Dheadless=${project.hasProperty('headless') ? project.headless : false}"
-  systemProperty 'java.util.logging.config.file', "${rootDir}/test-logging.properties"
+  def loggingConfig = file("${rootDir}/test-logging.properties")
+  if (loggingConfig.exists()) {
+    systemProperty 'java.util.logging.config.file', loggingConfig.absolutePath
+  }
   maxParallelForks = Math.max(1, Runtime.getRuntime().availableProcessors().intdiv(2))
   useJUnitPlatform()
   testLogging {

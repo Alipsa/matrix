@@ -836,8 +836,8 @@ class GgCharmCompiler {
     null
   }
 
-  private static Mapping mergeMappings(Mapping plotMapping, Mapping layerMapping, boolean inheritAes) {
-    Mapping merged = inheritAes ? plotMapping.copy() : new Mapping()
+  private static Mapping mergeMappings(Mapping plotMapping, Mapping layerMapping, boolean inheritMapping) {
+    Mapping merged = inheritMapping ? plotMapping.copy() : new Mapping()
     if (layerMapping != null) {
       merged.apply(layerMapping.mappings())
     }
