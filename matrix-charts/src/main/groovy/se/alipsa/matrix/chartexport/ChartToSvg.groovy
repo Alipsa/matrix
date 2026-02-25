@@ -144,7 +144,7 @@ class ChartToSvg {
   }
 
   private static void writeSvg(Svg svg, OutputStream os) throws IOException {
-    os.write(svg.toXml().getBytes('UTF-8'))
+    os.write(svg.toXml().getBytes(java.nio.charset.StandardCharsets.UTF_8))
     os.flush()
   }
 

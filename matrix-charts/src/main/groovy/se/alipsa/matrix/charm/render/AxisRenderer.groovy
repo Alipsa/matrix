@@ -265,7 +265,8 @@ class AxisRenderer {
     // below is hard-coded to base-10 powers.
     // Otherwise, the domain is in raw data space and we need to take log10 to derive
     // exponents.
-    Number prescaleBase = params['prescaleBase'] as Number
+    Object prescaleBaseRaw = params['prescaleBase']
+    Number prescaleBase = prescaleBaseRaw instanceof Number ? (Number) prescaleBaseRaw : null
     boolean domainIsLogSpace = scale.transformStrategy instanceof Log10ScaleTransform ||
         (prescaleBase != null && prescaleBase.doubleValue() == 10d)
 

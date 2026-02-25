@@ -9,7 +9,7 @@ import se.alipsa.matrix.core.Matrix
 @CompileStatic
 class PlotSpec {
 
-  private static final Map<CharmGeomType, List<String>> REQUIRED_AESTHETICS = [
+  private static final Map<CharmGeomType, List<String>> REQUIRED_MAPPINGS = [
       (CharmGeomType.POINT)    : ['x', 'y'],
       (CharmGeomType.LINE)     : ['x', 'y'],
       (CharmGeomType.SMOOTH)   : ['x', 'y'],
@@ -427,7 +427,7 @@ class PlotSpec {
       if (layerMapping != null) {
         validateMapping("layer ${idx} mapping", layerMapping)
       }
-      validateRequiredAesthetics(layer, layerMapping, idx)
+      validateRequiredMappings(layer, layerMapping, idx)
     }
     facet.rows.each { ColumnExpr expr -> validateColumn(expr, 'facet.rows') }
     facet.cols.each { ColumnExpr expr -> validateColumn(expr, 'facet.cols') }
@@ -447,8 +447,8 @@ class PlotSpec {
     }
   }
 
-  private void validateRequiredAesthetics(LayerSpec layer, Mapping layerMapping, int idx) {
-    List<String> required = REQUIRED_AESTHETICS[layer.geomType] ?: []
+  private void validateRequiredMappings(LayerSpec layer, Mapping layerMapping, int idx) {
+    List<String> required = REQUIRED_MAPPINGS[layer.geomType] ?: []
     if (required.isEmpty()) {
       return
     }
