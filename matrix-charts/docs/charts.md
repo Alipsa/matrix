@@ -690,9 +690,9 @@ ChartToJpeg.export(chart, outputStream, 0.9)
 ### Base64 Data URI
 
 ```groovy
-import se.alipsa.matrix.chartexport.ChartToPng
+import se.alipsa.matrix.chartexport.ChartToImage
 
-String dataUri = ChartToPng.base64(chart)
+String dataUri = ChartToImage.base64(chart)
 // Returns: "data:image/png;base64,iVBOR..."
 ```
 

@@ -2,6 +2,7 @@ package se.alipsa.matrix.charts
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.chartexport.ChartToJfx
 
@@ -73,8 +74,7 @@ class Plot {
    * @return data URI string
    */
   static String base64(Chart chart, double width = 800, double height = 600) {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream()
-    png(chart, baos, width, height)
-    "data:image/png;base64," + Base64.encoder.encodeToString(baos.toByteArray())
+    Svg svg = CharmBridge.renderSvg(chart, width as int, height as int)
+    ChartToImage.base64(svg)
   }
 }
