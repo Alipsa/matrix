@@ -463,6 +463,179 @@ class LayersDsl {
     b
   }
 
-  // Additional factory methods will be added as builders are introduced
-  // in subsequent phase (11).
+  /**
+   * Creates and registers a simple feature builder.
+   *
+   * @return new sf builder
+   */
+  SfBuilder geomSf() {
+    SfBuilder b = new SfBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a simple feature label builder.
+   *
+   * @return new sf label builder
+   */
+  SfLabelBuilder geomSfLabel() {
+    SfLabelBuilder b = new SfLabelBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a simple feature text builder.
+   *
+   * @return new sf text builder
+   */
+  SfTextBuilder geomSfText() {
+    SfTextBuilder b = new SfTextBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a polygon builder.
+   *
+   * @return new polygon builder
+   */
+  PolygonBuilder geomPolygon() {
+    PolygonBuilder b = new PolygonBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a map builder.
+   *
+   * @return new map builder
+   */
+  MapBuilder geomMap() {
+    MapBuilder b = new MapBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a 2D density contour builder.
+   *
+   * @return new density2d builder
+   */
+  Density2dBuilder geomDensity2d() {
+    Density2dBuilder b = new Density2dBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a filled 2D density builder.
+   *
+   * @return new density2d filled builder
+   */
+  Density2dFilledBuilder geomDensity2dFilled() {
+    Density2dFilledBuilder b = new Density2dFilledBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a filled contour builder.
+   *
+   * @return new contour filled builder
+   */
+  ContourFilledBuilder geomContourFilled() {
+    ContourFilledBuilder b = new ContourFilledBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a spoke builder.
+   *
+   * @return new spoke builder
+   */
+  SpokeBuilder geomSpoke() {
+    SpokeBuilder b = new SpokeBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a magnification builder.
+   *
+   * @return new mag builder
+   */
+  MagBuilder geomMag() {
+    MagBuilder b = new MagBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a parallel coordinate builder.
+   *
+   * @return new parallel builder
+   */
+  ParallelBuilder geomParallel() {
+    ParallelBuilder b = new ParallelBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a log ticks builder.
+   *
+   * @return new logticks builder
+   */
+  LogticksBuilder geomLogticks() {
+    LogticksBuilder b = new LogticksBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a blank builder.
+   *
+   * @return new blank builder
+   */
+  BlankBuilder geomBlank() {
+    BlankBuilder b = new BlankBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a raster annotation builder.
+   *
+   * @return new raster annotation builder
+   */
+  RasterAnnBuilder geomRasterAnn() {
+    RasterAnnBuilder b = new RasterAnnBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a horizontal error bar builder.
+   *
+   * @return new errorbarh builder
+   */
+  ErrorbarhBuilder geomErrorbarh() {
+    ErrorbarhBuilder b = new ErrorbarhBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a custom builder.
+   *
+   * @return new custom builder
+   */
+  CustomBuilder geomCustom() {
+    CustomBuilder b = new CustomBuilder()
+    collected << b
+    b
+  }
 }

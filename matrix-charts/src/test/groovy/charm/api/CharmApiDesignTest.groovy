@@ -1316,6 +1316,402 @@ class CharmApiDesignTest {
     assertEquals(200, chart.layers[1].params['n'])
   }
 
+  // ── Phase 11: Spatial + remaining builders ──
+
+  @Test
+  void testSfBuilderRendersSfLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomSf().fill('#336699').color('#000000').alpha(0.8).size(1)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.SF, chart.layers.first().geomType)
+    assertEquals(CharmStatType.SF, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals('#000000', chart.layers.first().params['color'])
+    assertEquals(0.8, chart.layers.first().params['alpha'])
+    assertEquals(1, chart.layers.first().params['size'])
+  }
+
+  @Test
+  void testSfLabelBuilderRendersSfLabelLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'label')
+        .rows([[1, 2, 'A'], [2, 4, 'B'], [3, 3, 'C']])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; label = 'label' }
+      layers {
+        geomPoint().size(2)
+        geomSfLabel().size(3).color('#000000').family('serif')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.SF_LABEL, chart.layers[1].geomType)
+    assertEquals(CharmStatType.SF_COORDINATES, chart.layers[1].statType)
+    assertEquals(3, chart.layers[1].params['size'])
+    assertEquals('#000000', chart.layers[1].params['color'])
+    assertEquals('serif', chart.layers[1].params['family'])
+  }
+
+  @Test
+  void testSfTextBuilderRendersSfTextLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'label')
+        .rows([[1, 2, 'A'], [2, 4, 'B'], [3, 3, 'C']])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; label = 'label' }
+      layers {
+        geomPoint().size(2)
+        geomSfText().size(3).color('#000000').family('sans-serif')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.SF_TEXT, chart.layers[1].geomType)
+    assertEquals(CharmStatType.SF_COORDINATES, chart.layers[1].statType)
+    assertEquals(3, chart.layers[1].params['size'])
+    assertEquals('#000000', chart.layers[1].params['color'])
+    assertEquals('sans-serif', chart.layers[1].params['family'])
+  }
+
+  @Test
+  void testPolygonBuilderRendersPolygonLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'group')
+        .rows([[0, 0, 'a'], [1, 0, 'a'], [1, 1, 'a'], [0, 1, 'a']])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; group = 'group' }
+      layers {
+        geomPolygon().fill('#336699').color('#000000').alpha(0.5).size(1)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.POLYGON, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals('#000000', chart.layers.first().params['color'])
+    assertEquals(0.5, chart.layers.first().params['alpha'])
+    assertEquals(1, chart.layers.first().params['size'])
+  }
+
+  @Test
+  void testMapBuilderRendersMapLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'group')
+        .rows([[0, 0, 'a'], [1, 0, 'a'], [1, 1, 'a'], [0, 1, 'a']])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; group = 'group' }
+      layers {
+        geomMap().fill('#336699').color('#000000').alpha(0.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.MAP, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals('#000000', chart.layers.first().params['color'])
+    assertEquals(0.5, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testDensity2dBuilderRendersDensity2dLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomDensity2d().color('#336699').size(1).bins(10)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.DENSITY_2D, chart.layers.first().geomType)
+    assertEquals(CharmStatType.DENSITY_2D, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
+    assertEquals(10, chart.layers.first().params['bins'])
+  }
+
+  @Test
+  void testDensity2dFilledBuilderRendersDensity2dFilledLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomDensity2dFilled().fill('#336699').alpha(0.5).bins(10)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.DENSITY_2D_FILLED, chart.layers.first().geomType)
+    assertEquals(CharmStatType.DENSITY_2D, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals(0.5, chart.layers.first().params['alpha'])
+    assertEquals(10, chart.layers.first().params['bins'])
+  }
+
+  @Test
+  void testContourFilledBuilderRendersContourFilledLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomContourFilled().fill('#336699').alpha(0.5).bins(10)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.CONTOUR_FILLED, chart.layers.first().geomType)
+    assertEquals(CharmStatType.CONTOUR, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals(0.5, chart.layers.first().params['alpha'])
+    assertEquals(10, chart.layers.first().params['bins'])
+  }
+
+  @Test
+  void testSpokeBuilderRendersSpokeLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint().size(2)
+        geomSpoke().color('#336699').size(1).alpha(0.7)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.SPOKE, chart.layers[1].geomType)
+    assertEquals(CharmStatType.SPOKE, chart.layers[1].statType)
+    assertEquals('#336699', chart.layers[1].params['color'])
+    assertEquals(1, chart.layers[1].params['size'])
+    assertEquals(0.7, chart.layers[1].params['alpha'])
+  }
+
+  @Test
+  void testMagBuilderRendersMagLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint().size(2)
+        geomMag().color('#336699').size(1).alpha(0.7)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.MAG, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
+    assertEquals('#336699', chart.layers[1].params['color'])
+    assertEquals(1, chart.layers[1].params['size'])
+    assertEquals(0.7, chart.layers[1].params['alpha'])
+  }
+
+  @Test
+  void testParallelBuilderRendersParallelLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomParallel().color('#336699').size(1).alpha(0.3)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.PARALLEL, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
+    assertEquals(0.3, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testLogticksBuilderRendersLogticksLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint().size(2)
+        geomLogticks().sides('bl').color('#333333').size(0.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.LOGTICKS, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
+    assertEquals('bl', chart.layers[1].params['sides'])
+    assertEquals('#333333', chart.layers[1].params['color'])
+    assertEquals(0.5, chart.layers[1].params['size'])
+  }
+
+  @Test
+  void testBlankBuilderRendersBlankLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomBlank()
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.BLANK, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+  }
+
+  @Test
+  void testRasterAnnBuilderRendersRasterAnnLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint().size(2)
+        geomRasterAnn().alpha(0.8).interpolate(true)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.RASTER_ANN, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
+    assertEquals(0.8, chart.layers[1].params['alpha'])
+    assertEquals(true, chart.layers[1].params['interpolate'])
+  }
+
+  @Test
+  void testErrorbarhBuilderRendersErrorbarhLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('y', 'lo', 'hi')
+        .rows([[1, 0.5, 1.5], [2, 1.5, 2.5], [3, 2.5, 3.5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { y = 'y'; xmin = 'lo'; xmax = 'hi' }
+      layers {
+        geomErrorbarh().height(0.2).color('#333333').size(1)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.ERRORBARH, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals(0.2, chart.layers.first().params['height'])
+    assertEquals('#333333', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
+  }
+
+  @Test
+  void testCustomBuilderRendersCustomLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint().size(2)
+        geomCustom().color('#336699').fill('#99ccff').size(3)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.CUSTOM, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
+    assertEquals('#336699', chart.layers[1].params['color'])
+    assertEquals('#99ccff', chart.layers[1].params['fill'])
+    assertEquals(3, chart.layers[1].params['size'])
+  }
+
+  @Test
+  void testCustomBuilderRendererStoredInParams() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint().size(2)
+        geomCustom().renderer { svg, layerData -> }
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertNotNull(chart.layers[1].params['renderer'])
+    assertTrue(chart.layers[1].params['renderer'] instanceof Closure)
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 
