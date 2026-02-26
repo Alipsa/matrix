@@ -591,7 +591,7 @@ def node = Plot.jfx(chart)
 **From charts API to Charm DSL:**
 ```groovy
 // Old charts API
-def barChart = BarChart.createVertical("Sales", data, "month", ChartType.NONE, "sales")
+def barChart = BarChart.createVertical("Sales", data, "month", ChartType.BASIC, "sales")
 Plot.png(barChart, new File("chart.png"))
 
 // New Charm DSL

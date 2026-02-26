@@ -72,7 +72,7 @@ Named argument maps use `:` inside parentheses:
 
 ```groovy
 text(x: 2, y: 12)
-aes(x: 'cty', y: 'hwy')
+mapping(x: 'cty', y: 'hwy')
 ```
 
 Colon syntax MUST NOT appear inside DSL closures.
@@ -81,10 +81,10 @@ Colon syntax MUST NOT appear inside DSL closures.
 
 ### Rule 3 — Column references use `col`
 
-Inside `aes {}` and other mapping locations, column references SHOULD use `col`:
+Inside `mapping {}` and other mapping locations, column references SHOULD use `col`:
 
 ```groovy
-aes {
+mapping {
   x = col.cty
   y = col.hwy
   color = col['class']
@@ -112,7 +112,7 @@ Represents the full plot specification.
 **Fields:**
 
 * `Matrix data`
-* `AesSpec aes`
+* `MappingSpec mapping`
 * `List<LayerSpec> layers`
 * `ScaleSpec scale`
 * `ThemeSpec theme`
@@ -131,7 +131,7 @@ Represents the full plot specification.
 
 ---
 
-### 5.2 AesSpec
+### 5.2 MappingSpec
 
 Represents aesthetic mappings.
 
@@ -145,7 +145,7 @@ Represents aesthetic mappings.
 * `ColumnExpr shape`
 * `ColumnExpr group`
 
-#### Aesthetic Coercion (explicit and deterministic)
+#### Mapping Coercion (explicit and deterministic)
 
 Accepted inputs:
 
@@ -159,9 +159,9 @@ Invalid inputs MUST throw `IllegalArgumentException`.
 Examples:
 
 ```groovy
-aes { x = col.cty }     // ColumnExpr
-aes { x = 'cty' }       // CharSequence → named-column ColumnExpr('cty')
-aes(x: 'cty', y: 'hwy') // map form uses identical coercion logic
+mapping { x = col.cty }     // ColumnExpr
+mapping { x = 'cty' }       // CharSequence → named-column ColumnExpr('cty')
+mapping(x: 'cty', y: 'hwy') // map form uses identical coercion logic
 ```
 
 ---
@@ -193,31 +193,43 @@ Represents a geometry/stat layer.
 
 **Fields:**
 
-* `Geom geom`
-* `Stat stat`
-* `AesSpec aes` (optional override)
-* `boolean inheritAes = true`
-* `Position position`
+* `GeomSpec geomSpec`
+* `StatSpec statSpec`
+* `Mapping mapping` (optional override)
+* `boolean inheritMapping = true`
+* `PositionSpec positionSpec`
 * `Map<String,Object> params`
+
+Layers are created using fluent `LayerBuilder` subclasses inside `layers {}` blocks
+or via `addLayer()`:
+
+```groovy
+layers {
+  geomPoint().size(2)
+  geomSmooth().method('lm')
+}
+// or programmatically:
+addLayer(new PointBuilder().size(2))
+```
 
 #### Inheritance rule
 
-Layers inherit plot-level aesthetics unless:
+Layers inherit plot-level mappings unless:
 
-* overridden in layer `aes {}` or `aes(...)`
-* `inheritAes = false`
+* overridden in layer `mapping {}` or `mapping(...)`
+* `inheritMapping(false)` is called on the builder
 
-#### smooth {} mapping
+#### geomSmooth() example
 
 ```groovy
-smooth { method = 'lm' }
+layers { geomSmooth().method('lm') }
 ```
 
 Compiles to:
 
-* `geom = SMOOTH`
+* `geomSpec = GeomSpec.of(CharmGeomType.SMOOTH)`
+* `statSpec = StatSpec.of(CharmStatType.SMOOTH)`
 * `params.method = 'lm'`
-* appropriate stat selection (implementation-defined but semantically stable)
 
 ---
 
@@ -272,8 +284,8 @@ Represents styling configuration.
 
 ```groovy
 theme {
-  legend { position = 'top' }
-  axis { lineWidth = 0.75 }
+  legendPosition = 'top'
+  axisLineWidth = 0.75
 }
 ```
 
@@ -480,15 +492,16 @@ chart.writeTo('plot.svg')
 ```groovy
 plot(mpg) {
 
-  aes {
+  mapping {
     x = col.cty
     y = col.hwy
     color = col['class']
   }
 
-  points { size = 2 }
-
-  smooth { method = 'lm' }
+  layers {
+    geomPoint().size(2)
+    geomSmooth().method('lm')
+  }
 
   facet {
     rows = [col.year]

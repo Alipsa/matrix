@@ -67,13 +67,15 @@ import static se.alipsa.matrix.charm.Charts.plot
 import se.alipsa.matrix.datasets.Dataset
 
 def chart = plot(Dataset.mpg()) {
-  aes {
+  mapping {
     x = col.cty
     y = col.hwy
     color = col['class']
   }
-  points { size = 2 }
-  smooth { method = 'lm' }
+  layers {
+    geomPoint().size(2)
+    geomSmooth().method('lm')
+  }
   labels { title = 'City vs Highway MPG' }
 }.build()
 
@@ -99,7 +101,7 @@ def empData = Matrix.builder().data(
     .build()
 
 def areaChart = AreaChart.create("Salaries", empData, "emp_name", "salary")
-def barChart = BarChart.createVertical("Salaries", empData, "emp_name", ChartType.NONE, "salary")
+def barChart = BarChart.createVertical("Salaries", empData, "emp_name", ChartType.BASIC, "salary")
 def pieChart = PieChart.create("Salaries", empData, "emp_name", "salary")
 
 // Export to PNG via chartexport
