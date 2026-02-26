@@ -8,7 +8,7 @@ import se.alipsa.matrix.charm.CharmStatType
  * Fluent builder for custom user-defined layers.
  *
  * <p>Produces a {@code CUSTOM / IDENTITY} layer specification. The rendering
- * closure or supplier is stored in params and interpreted by the renderer.</p>
+ * closure is stored in params and interpreted by the renderer.</p>
  *
  * <pre>{@code
  * plot(data) {

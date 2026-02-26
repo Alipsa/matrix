@@ -29,6 +29,7 @@ class ErrorbarhBuilder extends LayerBuilder {
    */
   ErrorbarhBuilder height(Number value) {
     params['height'] = value
+    params['width'] = value
     this
   }
 

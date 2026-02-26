@@ -75,6 +75,17 @@ class MapBuilder extends LayerBuilder {
     this
   }
 
+  /**
+   * Sets map region outline line type.
+   *
+   * @param value linetype name or integer code
+   * @return this builder
+   */
+  MapBuilder linetype(Object value) {
+    params['linetype'] = value
+    this
+  }
+
   @Override
   protected CharmGeomType geomType() {
     CharmGeomType.MAP

@@ -748,7 +748,7 @@ Remaining geom types: `SF`, `SF_LABEL`, `SF_TEXT`, `POLYGON`, `MAP`, `PARALLEL`,
 - 11.4 [x] Implement `SpokeBuilder`, `MagBuilder`, `ParallelBuilder` for specialized geoms.
 - 11.5 [x] Implement `LogticksBuilder`, `BlankBuilder`, `RasterAnnBuilder` for annotation geoms.
 - 11.6 [x] Implement `ErrorbarhBuilder` (horizontal error bars).
-- 11.7 [x] `CustomBuilder` — accepts a `Closure` or `Supplier` for user-defined rendering.
+- 11.7 [x] `CustomBuilder` — accepts a `Closure` renderer for user-defined rendering.
 - 11.8 [x] Add all factory methods to `Geoms` and `LayersDsl`.
 - 11.9 [x] Add tests for each builder.
 - 11.10 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green (537 passed).
