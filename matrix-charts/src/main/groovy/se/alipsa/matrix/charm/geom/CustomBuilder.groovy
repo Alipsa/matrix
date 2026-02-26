@@ -34,17 +34,6 @@ class CustomBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets a custom rendering supplier.
-   *
-   * @param value rendering supplier
-   * @return this builder
-   */
-  CustomBuilder renderer(Object value) {
-    params['renderer'] = value
-    this
-  }
-
-  /**
    * Sets custom layer colour.
    *
    * @param value colour value

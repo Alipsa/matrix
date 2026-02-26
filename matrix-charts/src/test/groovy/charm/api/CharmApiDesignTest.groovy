@@ -1691,6 +1691,27 @@ class CharmApiDesignTest {
     assertEquals(3, chart.layers[1].params['size'])
   }
 
+  @Test
+  void testCustomBuilderRendererStoredInParams() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint().size(2)
+        geomCustom().renderer { svg, layerData -> }
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertNotNull(chart.layers[1].params['renderer'])
+    assertTrue(chart.layers[1].params['renderer'] instanceof Closure)
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 
