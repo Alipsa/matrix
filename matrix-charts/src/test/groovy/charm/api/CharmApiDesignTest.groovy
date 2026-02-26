@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.RectAnnotationSpec
 import se.alipsa.matrix.charm.SegmentAnnotationSpec
 import se.alipsa.matrix.charm.TextAnnotationSpec
+import se.alipsa.matrix.charm.geom.Geoms
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
@@ -330,6 +331,85 @@ class CharmApiDesignTest {
     assertEquals('monospace', spec.theme.baseFamily)
     assertEquals(14, spec.theme.baseSize)
     assertEquals(1.5, spec.theme.baseLineHeight)
+  }
+
+  @Test
+  void testLayersDslClosureStyleRendersPointElements() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg) {
+      mapping {
+        x = 'cty'
+        y = 'hwy'
+      }
+      layers {
+        geomPoint().size(2).alpha(0.7)
+      }
+    }.build()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.POINT, chart.layers.first().geomType)
+    assertEquals(2, chart.layers.first().params['size'])
+    assertEquals(0.7, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testLayersDslPureChainStyleRendersPointElements() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg)
+        .mapping(x: 'cty', y: 'hwy')
+        .layers {
+          geomPoint().size(2)
+        }.build()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    assertEquals(1, chart.layers.size())
+    assertEquals(2, chart.layers.first().params['size'])
+  }
+
+  @Test
+  void testAddLayerEscapeHatchRendersPointElements() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg) {
+      mapping {
+        x = 'cty'
+        y = 'hwy'
+      }
+      addLayer Geoms.geomPoint().size(2).color('#ff0000')
+    }.build()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    assertEquals(1, chart.layers.size())
+    assertEquals(2, chart.layers.first().params['size'])
+    assertEquals('#ff0000', chart.layers.first().params['color'])
+  }
+
+  @Test
+  void testLayerBuilderMappingAndPositionWork() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg) {
+      mapping {
+        x = 'displ'
+        y = 'hwy'
+      }
+      layers {
+        geomPoint()
+            .mapping { x = 'cty'; y = 'hwy' }
+            .inheritMapping(false)
+            .position('jitter')
+            .size(3)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertNotNull(chart.layers.first().mapping)
+    assertEquals('cty', chart.layers.first().mapping.x.columnName())
+    assertEquals(false, chart.layers.first().inheritMapping)
+    assertEquals(se.alipsa.matrix.charm.CharmPositionType.JITTER, chart.layers.first().positionType)
   }
 
   @CompileStatic
