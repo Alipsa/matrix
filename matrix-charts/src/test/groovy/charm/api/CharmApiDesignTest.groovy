@@ -177,6 +177,62 @@ class CharmApiDesignTest {
     assertNotNull(colourChart.render())
   }
 
+  @Test
+  void testLayerDslExplicitFieldsRenderCorrectly() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg) {
+      mapping {
+        x = 'cty'
+        y = 'hwy'
+      }
+      points {
+        size = 3
+        alpha = 0.7
+        color = '#ff0000'
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(3, chart.layers.first().params['size'])
+    assertEquals(0.7, chart.layers.first().params['alpha'])
+    assertEquals('#ff0000', chart.layers.first().params['color'])
+  }
+
+  @Test
+  void testLayerDslLinetypeStringAndIntegerBothWork() {
+    Matrix mpg = Dataset.mpg()
+    Chart stringChart = plot(mpg) {
+      mapping { x = 'cty'; y = 'hwy' }
+      line { linetype = 'dashed'; color = 'blue' }
+    }.build()
+
+    Chart intChart = plot(mpg) {
+      mapping { x = 'cty'; y = 'hwy' }
+      line { linetype = 2 }
+    }.build()
+
+    assertNotNull(stringChart.render())
+    assertNotNull(intChart.render())
+    assertEquals('dashed', stringChart.layers.first().params.linetype)
+    assertEquals(2, intChart.layers.first().params.linetype)
+  }
+
+  @Test
+  void testLayerDslUnrecognisedGeomPropsStillWork() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg) {
+      mapping { x = 'cty'; y = 'hwy' }
+      smooth {
+        method = 'lm'
+        se = false
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals('lm', chart.layers.first().params.method)
+    assertEquals(false, chart.layers.first().params.se)
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 

@@ -478,7 +478,7 @@ examples.
 **Goal:** Common aesthetic properties are declared explicitly in `LayerDsl` so IDEs can autocomplete them.
 
 **Tasks:**
-- 2.1 [ ] Add explicit typed fields to `LayerDsl` (note: `shape` and `linetype` use `Object`
+- 2.1 [x] Add explicit typed fields to `LayerDsl` (note: `shape` and `linetype` use `Object`
   for now because internal code passes both strings and integers — Phase 12 task 12.5
   tightens these to specific types before the first public release):
   ```groovy
@@ -489,16 +489,17 @@ examples.
   Object shape     // tightened in Phase 12
   Object linetype  // tightened in Phase 12
   ```
-- 2.2 [ ] Override `values()` in `LayerDsl` to merge these explicit fields into the map from
+- 2.2 [x] Override `values()` in `LayerDsl` to merge these explicit fields into the map from
   `LayerParams.values()`, so all params reach the renderer. Explicit fields take precedence.
   Unrecognised geom-specific params (e.g. `method`, `se`, `bins`) still fall through to
   `propertyMissing`.
-- 2.3 [ ] Add tests to `CharmApiDesignTest`:
+- 2.3 [x] Add tests to `CharmApiDesignTest`:
   - `points { size = 3; alpha = 0.7; color = '#ff0000' }` renders correctly.
   - `line { linetype = 'dashed'; color = 'blue' }` renders correctly.
   - `line { linetype = 2 }` (integer linetype) still works.
   - Assigning an unrecognised property (e.g. `method = 'lm'` inside `smooth {}`) still works.
-- 2.4 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
+  Tests verified with `./gradlew :matrix-charts:test -Pheadless=true` — 474 tests passed.
+- 2.4 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
 
 **Success criteria:**
 - IntelliJ shows `size`, `alpha`, `color`, `fill`, `shape`, `linetype` in autocomplete inside
