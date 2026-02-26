@@ -59,7 +59,7 @@ class PointrangeBuilder extends LayerBuilder {
    * @param value shape name or integer code
    * @return this builder
    */
-  PointrangeBuilder shape(Object value) {
+  PointrangeBuilder shape(String value) {
     params['shape'] = value
     this
   }

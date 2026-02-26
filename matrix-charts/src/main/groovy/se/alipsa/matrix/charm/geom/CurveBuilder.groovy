@@ -59,7 +59,7 @@ class CurveBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  CurveBuilder linetype(Object value) {
+  CurveBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

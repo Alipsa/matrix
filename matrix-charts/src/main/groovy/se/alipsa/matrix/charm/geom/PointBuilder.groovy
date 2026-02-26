@@ -81,7 +81,7 @@ class PointBuilder extends LayerBuilder {
    * @param value shape name or integer code
    * @return this builder
    */
-  PointBuilder shape(Object value) {
+  PointBuilder shape(String value) {
     params['shape'] = value
     this
   }
@@ -92,7 +92,7 @@ class PointBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  PointBuilder linetype(Object value) {
+  PointBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

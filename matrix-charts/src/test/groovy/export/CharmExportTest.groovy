@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.charts.ScatterChart
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
@@ -160,6 +161,6 @@ class CharmExportTest {
         .columnNames('x', 'y')
         .rows([[1, 3], [2, 5], [3, 4]])
         .build()
-    Charts.plot(data).mapping(x: 'x', y: 'y').points().build()
+    Charts.plot(data).mapping(x: 'x', y: 'y').addLayer(new PointBuilder()).build()
   }
 }

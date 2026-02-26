@@ -27,7 +27,7 @@ class CharmLegendRendererTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
     }.build()
 
     Svg svg = chart.render()
@@ -52,7 +52,7 @@ class CharmLegendRendererTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
     }.build()
 
     Svg svg = chart.render()
@@ -73,7 +73,7 @@ class CharmLegendRendererTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
       guides {
         color = none()
       }
@@ -96,7 +96,7 @@ class CharmLegendRendererTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
       theme {
         legendPosition = 'right'
       }
@@ -120,7 +120,7 @@ class CharmLegendRendererTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
       theme {
         legendPosition = 'none'
       }
@@ -143,7 +143,7 @@ class CharmLegendRendererTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
       labels {
         guides['color'] = 'Category'
       }
@@ -164,7 +164,7 @@ class CharmLegendRendererTest {
 
     def spec = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
       guides {
         color = 'legend'
         fill = 'none'
@@ -184,7 +184,7 @@ class CharmLegendRendererTest {
 
     def spec = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
       guides {
         color = colorbar()
         fill = colorsteps()
@@ -204,7 +204,7 @@ class CharmLegendRendererTest {
 
     def spec = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
       guides {
         color = false
       }
@@ -226,7 +226,7 @@ class CharmLegendRendererTest {
     ['left', 'top', 'bottom'].each { String pos ->
       Chart chart = plot(data) {
         mapping { x = 'x'; y = 'y'; color = 'cat' }
-        points {}
+        layers { geomPoint() }
         theme {
           legendPosition = pos
         }

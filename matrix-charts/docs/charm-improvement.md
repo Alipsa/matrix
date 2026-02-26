@@ -766,32 +766,23 @@ Remaining geom types: `SF`, `SF_LABEL`, `SF_TEXT`, `POLYGON`, `MAP`, `PARALLEL`,
 remove or replace the old closure-only paths, and update documentation.
 
 **Tasks:**
-- 12.1 [ ] Wire existing `PlotSpec` closure convenience methods to delegate to their builder
-  counterparts internally. Example: `PlotSpec.points(Closure)` constructs a `PointBuilder`,
-  applies the closure params to it, then calls `addLayer(builder)`. This unifies the two
-  implementations.
-- 12.2 [ ] Migrate `CharmBridge.groovy` to use builders. `CharmBridge` currently calls
-  `spec.area()`, `spec.line()`, `spec.points()`, `spec.pie()`, and `spec.layer()` — all of
-  which are removed in this phase. Rewrite these calls to use `layers {}` / builders.
-  `GgCharmCompiler` constructs `LayerSpec` directly (bypasses PlotSpec) and is unaffected.
-- 12.3 [ ] Before removing any `PlotSpec` closure method, grep `CharmBridge.groovy` and
-  `GgCharmCompiler` for usages of old closure methods AND direct `addLayer()` calls. Verify
-  all have been migrated in 12.2; then remove the old closure methods from `PlotSpec`.
-  Update all affected tests.
-- 12.4 [ ] Remove `PlotSpec.layer(CharmGeomType, Map)` — the generic programmatic API.
-  After `CharmBridge` migration in 12.2, this method has no callers. No deprecation needed
-  since the charm API has not been published yet.
-- 12.5 [ ] Tighten `Object` types for `shape` and `linetype` in `LayerDsl` and all builder
-  classes. With all internal code migrated, audit actual usage to determine the correct
-  specific types (e.g. `String` if integers are no longer passed, or a dedicated enum/sealed
-  type). Update all builders' `shape(Object)` and `linetype(Object)` signatures accordingly.
-- 12.6 [ ] Add an integration test in `CharmApiDesignTest` that builds the same chart two ways
-  (closure DSL and pure builder chain) and asserts equivalent structure using direct SVG object
-  access (element counts and types), not full XML string comparison.
-- 12.7 [ ] Update `matrix-charts/examples/charm/SimpleCharmChart.groovy` to demonstrate
-  both styles with a comment indicating the builder chain is the canonical form.
-- 12.8 [ ] Update `matrix-charts/docs/charm.md` with a "Builder API" section.
-- 12.9 [ ] Run `./gradlew :matrix-charts:test :matrix-ggplot:test -Pheadless=true` — all tests green.
+- 12.1 [x] ~~Wire existing `PlotSpec` closure convenience methods to delegate to their builder
+  counterparts internally.~~ Skipped — all callers migrated directly, old methods removed.
+- 12.2 [x] Migrate `CharmBridge.groovy` to use builders. Calls to `spec.area()`, `spec.line()`,
+  `spec.points()`, `spec.pie()`, and `spec.layer()` replaced with `spec.addLayer(new XBuilder())`.
+- 12.3 [x] Removed old closure methods (`points()`, `line()`, `tile()`, `smooth()`, `area()`,
+  `pie()`) and private `addLayer(geom, stat, closure)` helper from `PlotSpec`. All tests migrated
+  to `layers { geomX() }` or `addLayer(new XBuilder())`.
+- 12.4 [x] Removed `PlotSpec.layer(CharmGeomType, Map)` and supporting utilities
+  (`GEOM_DEFAULT_STATS`, `defaultStatForGeom()`, `coerceLayerMapping()`, `coercePosition()`,
+  `coerceStat()`, `parseBooleanOption()`).
+- 12.5 [x] Tightened `Object` → `String` for `shape` in 4 builders (JitterBuilder, PointBuilder,
+  PointrangeBuilder, QqBuilder) and `linetype` in 28 builders + `LayerDsl`.
+- 12.6 [x] Added `testBuilderChainAndLayersDslProduceEquivalentSvg` to `CharmApiDesignTest`.
+- 12.7 [x] Updated `SimpleCharmChart.groovy` to use `layers { geomLine(); geomPoint().size(3) }`.
+- 12.8 [x] Updated `charm.md` — replaced all `aes {}` / `points {}` / `layer()` examples with
+  `mapping {}` / `layers { geomX() }` / `addLayer()` builder API.
+- 12.9 [x] All tests green: 538 matrix-charts + 1666 matrix-ggplot = 2204 tests passing.
 
 **Success criteria:**
 - `layers { geomX() }` is the canonical closure syntax for adding geom layers; old `points {}`,

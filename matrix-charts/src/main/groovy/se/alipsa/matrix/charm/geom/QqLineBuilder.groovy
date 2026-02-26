@@ -59,7 +59,7 @@ class QqLineBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  QqLineBuilder linetype(Object value) {
+  QqLineBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

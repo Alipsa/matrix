@@ -59,7 +59,7 @@ class ContourBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  ContourBuilder linetype(Object value) {
+  ContourBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

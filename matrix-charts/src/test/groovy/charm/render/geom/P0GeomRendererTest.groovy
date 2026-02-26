@@ -5,6 +5,7 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.core.Matrix
 
 import static charm.render.CharmRenderTestUtil.loadSimpleCsvResource
@@ -127,9 +128,10 @@ class P0GeomRendererTest {
 
   private static Chart buildChart(String fixturePath, CharmGeomType geomType, Map<String, String> mappingSpec) {
     Matrix data = loadFixtureMatrix("charm-parity/${fixturePath}")
+    LayerBuilder builder = builderFor(geomType)
     plot(data) {
       mapping(mappingSpec)
-      layer(geomType, [:])
+      addLayer(builder)
       theme {
         legendPosition = 'none'
       }
@@ -142,13 +144,22 @@ class P0GeomRendererTest {
         .columnNames(data.columnNames())
         .rows([])
         .build()
+    LayerBuilder builder = builderFor(geomType)
     plot(empty) {
       mapping(mappingSpec)
-      layer(geomType, [:])
+      addLayer(builder)
       theme {
         legendPosition = 'none'
       }
     }.build()
+  }
+
+  private static LayerBuilder builderFor(CharmGeomType geomType) {
+    String className = geomType.name()
+        .split('_')
+        .collect { it.toLowerCase().capitalize() }
+        .join('') + 'Builder'
+    Class.forName("se.alipsa.matrix.charm.geom.${className}").getDeclaredConstructor().newInstance() as LayerBuilder
   }
 
   private static int countClass(Svg svg, String className) {

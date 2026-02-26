@@ -59,7 +59,7 @@ class QqBuilder extends LayerBuilder {
    * @param value shape name or integer code
    * @return this builder
    */
-  QqBuilder shape(Object value) {
+  QqBuilder shape(String value) {
     params['shape'] = value
     this
   }

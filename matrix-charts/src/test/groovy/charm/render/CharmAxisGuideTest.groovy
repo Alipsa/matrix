@@ -26,7 +26,7 @@ class CharmAxisGuideTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       guides {
         x = axis(angle: -45)
       }
@@ -50,7 +50,7 @@ class CharmAxisGuideTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       guides {
         x = axis()
       }
@@ -77,7 +77,7 @@ class CharmAxisGuideTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
     }.build()
 
     Svg svg = chart.render()
@@ -98,7 +98,7 @@ class CharmAxisGuideTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       scale {
         x = se.alipsa.matrix.charm.Scale.transform('log10')
       }
@@ -126,7 +126,7 @@ class CharmAxisGuideTest {
 
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       guides {
         x = GuideSpec.axisStack([
             first: GuideSpec.axis(),

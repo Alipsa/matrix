@@ -56,17 +56,14 @@ import static se.alipsa.matrix.charm.Charts.plot
 import se.alipsa.matrix.datasets.Dataset
 
 def chart = plot(Dataset.mpg()) {
-  aes {
-    x = col.cty
-    y = col.hwy
-    color = col['class']
+  mapping {
+    x = 'cty'
+    y = 'hwy'
+    color = 'class'
   }
-  points {
-    size = 2
-    alpha = 0.7
-  }
-  smooth {
-    method = 'lm'
+  layers {
+    geomPoint().size(2).alpha(0.7)
+    geomSmooth().method('lm')
   }
   labels {
     title = 'City vs Highway MPG'
@@ -102,8 +99,8 @@ Charm follows the Grammar of Graphics approach where plots are built by composin
 
 ```groovy
 plot(data) {
-  aes { ... }       // Aesthetic mappings (data -> visual properties)
-  points { ... }    // Geometric objects (how to display)
+  mapping { ... }   // Aesthetic mappings (data -> visual properties)
+  layers { ... }    // Geometric objects (how to display)
   scale { ... }     // Scale transformations (data -> coordinates)
   theme { ... }     // Visual styling
   facet { ... }     // Multi-panel layout
@@ -120,7 +117,7 @@ Charm uses two syntax forms depending on context:
 **Rule 1 -- Inside closures: use property assignment (`=`)**
 
 ```groovy
-aes {
+mapping {
   x = col.cty        // correct
   y = col.hwy        // correct
 }
@@ -129,18 +126,18 @@ aes {
 **Rule 2 -- Outside closures: use named arguments (`:`)**
 
 ```groovy
-spec.aes(x: 'cty', y: 'hwy')   // correct
-spec.layer(Geom.POINT, [size: 2])
+spec.mapping(x: 'cty', y: 'hwy')   // correct
+spec.addLayer(geomPoint().size(2))
 ```
 
 Mixing these forms (colon syntax inside closures) will silently fail. The closure form creates property assignments, not map entries.
 
 ### Column References
 
-Column references use the `col` proxy object inside `aes {}` blocks:
+Column references use the `col` proxy object inside `mapping {}` blocks:
 
 ```groovy
-aes {
+mapping {
   x = col.cty          // dot syntax (dynamic scripts)
   y = col['hwy']       // bracket syntax (static-safe)
   color = col['class'] // bracket required for reserved words
@@ -151,7 +148,7 @@ String column names are accepted but `col` references are preferred:
 
 ```groovy
 // Accepted but discouraged
-aes {
+mapping {
   x = 'cty'
   y = 'hwy'
 }
@@ -167,22 +164,24 @@ import static se.alipsa.matrix.charm.Charts.chart  // alias for import conflicts
 
 // Closure DSL (primary)
 PlotSpec spec = plot(data) {
-  aes { x = col.x; y = col.y }
-  points {}
+  mapping { x = col.x; y = col.y }
+  layers { geomPoint() }
 }
 
 // Programmatic (for @CompileStatic)
+import se.alipsa.matrix.charm.geom.PointBuilder
+
 PlotSpec spec = plot(data)
-spec.aes(x: 'x', y: 'y')
-spec.layer(Geom.POINT, [:])
+spec.mapping(x: 'x', y: 'y')
+spec.addLayer(new PointBuilder().size(2))
 ```
 
-### Aesthetics
+### Aesthetics (Mappings)
 
 Map data columns to visual properties:
 
 ```groovy
-aes {
+mapping {
   x = col.x_column         // x position
   y = col.y_column         // y position
   color = col.category     // point/line color
@@ -195,53 +194,62 @@ aes {
 
 ## Layers and Geoms
 
-### Closure Shortcuts
+### Builder DSL
 
-Each geom type has a named closure method:
+Layers are added inside a `layers {}` block using fluent builder methods:
 
 ```groovy
 plot(data) {
-  aes { x = col.x; y = col.y }
-
-  points {}                 // scatter plot
-  line {}                   // line plot
-  smooth { method = 'lm' } // regression / smoothed line
-  tile {}                   // heatmap tiles
-  area {}                   // filled area
-  pie {}                    // pie chart
+  mapping { x = col.x; y = col.y }
+  layers {
+    geomPoint()                 // scatter plot
+    geomLine()                  // line plot
+    geomSmooth().method('lm')   // regression / smoothed line
+    geomTile()                  // heatmap tiles
+    geomArea()                  // filled area
+    geomPie()                   // pie chart
+  }
 }
 ```
 
 ### Layer Parameters
 
-Configure layers inside their closure:
+Configure layers using fluent builder methods:
 
 ```groovy
-points {
-  size = 3
-  alpha = 0.5
-  fill = '#336699'
-}
-
-smooth {
-  method = 'lm'
+layers {
+  geomPoint().size(3).alpha(0.5).fill('#336699')
+  geomSmooth().method('lm')
+  geomHistogram().bins(4).fill('#cc6677')
 }
 ```
 
-### Explicit layer() Method
+### Programmatic addLayer()
 
-For programmatic or dynamic layer creation:
+For `@CompileStatic` or dynamic layer creation, use `addLayer()` with builder instances:
 
 ```groovy
+import se.alipsa.matrix.charm.geom.PointBuilder
+import se.alipsa.matrix.charm.geom.SmoothBuilder
+
 plot(data) {
-  aes { x = col.x; y = col.y }
-  layer(Geom.POINT, [size: 2, alpha: 0.7])
-  layer(Geom.SMOOTH, [method: 'lm'])
-  layer(Geom.HISTOGRAM, [bins: 4, fill: '#cc6677'])
+  mapping(x: 'x', y: 'y')
+  addLayer(new PointBuilder().size(2).alpha(0.7))
+  addLayer(new SmoothBuilder().method('lm'))
 }
 ```
 
-Available `Geom` types: `POINT`, `LINE`, `BAR`, `COL`, `TILE`, `HISTOGRAM`, `BOXPLOT`, `SMOOTH`, `AREA`, `PIE`.
+Available geom builders: `PointBuilder`, `LineBuilder`, `BarBuilder`, `ColBuilder`, `TileBuilder`,
+`HistogramBuilder`, `BoxplotBuilder`, `SmoothBuilder`, `AreaBuilder`, `PieBuilder`, `DensityBuilder`,
+`ViolinBuilder`, `TextBuilder`, `LabelBuilder`, `SegmentBuilder`, `HlineBuilder`, `VlineBuilder`,
+`AblineBuilder`, `RibbonBuilder`, `ErrorbarBuilder`, `ErrorbarhBuilder`, `PathBuilder`, `StepBuilder`,
+`JitterBuilder`, `RugBuilder`, `ContourBuilder`, `HexBuilder`, `Bin2dBuilder`, `RasterBuilder`,
+`DotplotBuilder`, `FunctionBuilder`, `CurveBuilder`, `RectBuilder`, `CrossbarBuilder`,
+`LinerangeBuilder`, `PointrangeBuilder`, `FreqpolyBuilder`, `QqBuilder`, `QqLineBuilder`,
+`QuantileBuilder`, `CountBuilder`, `PolygonBuilder`, `MapBuilder`, `Density2dBuilder`,
+`Density2dFilledBuilder`, `ContourFilledBuilder`, `SpokeBuilder`, `MagBuilder`, `ParallelBuilder`,
+`LogticksBuilder`, `BlankBuilder`, `RasterAnnBuilder`, `SfBuilder`, `SfLabelBuilder`, `SfTextBuilder`,
+`CustomBuilder`.
 
 ### Layer-Level Aesthetics
 
@@ -249,14 +257,10 @@ Layers can override plot-level aesthetics:
 
 ```groovy
 plot(data) {
-  aes { x = col.x; y = col.y }
-  points {}
-  points {
-    inheritAes = false
-    aes {
-      x = col.other_x
-      y = col.other_y
-    }
+  mapping { x = col.x; y = col.y }
+  layers {
+    geomPoint()
+    geomPoint().inheritMapping(false).mapping(x: 'other_x', y: 'other_y')
   }
 }
 ```
@@ -290,22 +294,18 @@ scale {
 
 ## Themes
 
-Configure visual styling with nested closures:
+Configure visual styling with flat property setters:
 
 ```groovy
 theme {
-  legend {
-    position = 'top'        // 'top', 'bottom', 'left', 'right', 'none'
-  }
-  axis {
-    lineWidth = 0.75
-  }
-  text {
-    fontSize = 12
-  }
-  grid {
-    visible = true
-  }
+  legendPosition = 'top'       // 'top', 'bottom', 'left', 'right', 'none'
+  legendDirection = 'horizontal'
+  axisLineWidth = 0.75
+  textSize = 12
+  textColor = '#333333'
+  gridColor = '#eeeeee'
+  baseFamily = 'sans-serif'
+  baseSize = 11
 }
 ```
 
@@ -401,8 +401,8 @@ Charm defines a four-step lifecycle:
 
 ```groovy
 PlotSpec spec = plot(data) {
-  aes { x = col.x; y = col.y }
-  points {}
+  mapping { x = col.x; y = col.y }
+  layers { geomPoint() }
 }
 ```
 
@@ -506,6 +506,7 @@ Charm core is implemented with `@CompileStatic`. Users writing `@CompileStatic` 
 ```groovy
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.*
+import se.alipsa.matrix.charm.geom.PointBuilder
 import static se.alipsa.matrix.charm.Charts.plot
 
 @CompileStatic
@@ -513,8 +514,8 @@ class MyCharts {
   Chart createChart(Matrix data) {
     Cols col = new Cols()
     PlotSpec spec = plot(data)
-    spec.aes(x: col['x'], y: col['y'], color: col['category'])
-    spec.layer(Geom.POINT, [size: 2, alpha: 0.7])
+    spec.mapping(x: col['x'], y: col['y'], color: col['category'])
+    spec.addLayer(new PointBuilder().size(2).alpha(0.7))
     spec.build()
   }
 }
@@ -598,8 +599,8 @@ import static se.alipsa.matrix.charm.Charts.plot
 import se.alipsa.matrix.chartexport.ChartToPng
 
 def chart = plot(data) {
-  aes { x = col.month; y = col.sales }
-  layer(Geom.BAR, [:])
+  mapping { x = col.month; y = col.sales }
+  layers { geomBar() }
   labels { title = 'Sales' }
 }.build()
 
@@ -615,12 +616,14 @@ import static se.alipsa.matrix.charm.Charts.plot
 import se.alipsa.matrix.datasets.Dataset
 
 def chart = plot(Dataset.mpg()) {
-  aes {
+  mapping {
     x = col.cty
     y = col.hwy
   }
-  points {}
-  smooth { method = 'lm' }
+  layers {
+    geomPoint()
+    geomSmooth().method('lm')
+  }
   labels {
     title = 'City vs Highway MPG'
     x = 'City MPG'
@@ -635,11 +638,11 @@ chart.writeTo('scatter_regression.svg')
 
 ```groovy
 def chart = plot(Dataset.mpg()) {
-  aes {
+  mapping {
     x = col.cty
     y = col.hwy
   }
-  points {}
+  layers { geomPoint() }
   facet {
     wrap {
       vars = [col.drv]
@@ -664,12 +667,12 @@ def data = Matrix.builder().data(
 ).types(Integer, Integer, Integer).build()
 
 def chart = plot(data) {
-  aes {
+  mapping {
     x = col.x
     y = col.y
     fill = col.value
   }
-  tile {}
+  layers { geomTile() }
   labels { title = 'Heatmap' }
 }.build()
 
@@ -680,19 +683,21 @@ chart.writeTo('heatmap.svg')
 
 ```groovy
 def chart = plot(Dataset.mpg()) {
-  aes {
+  mapping {
     x = col.cty
     y = col.hwy
     color = col['class']
   }
-  points { size = 2 }
-  smooth { method = 'lm' }
+  layers {
+    geomPoint().size(2)
+    geomSmooth().method('lm')
+  }
   scale {
     x = log10()
   }
   theme {
-    legend { position = 'top' }
-    axis { lineWidth = 0.75 }
+    legendPosition = 'top'
+    axisLineWidth = 0.75
   }
   labels {
     title = 'City vs Highway MPG'

@@ -14,6 +14,11 @@ import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.ReverseScaleTransform
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
+import se.alipsa.matrix.charm.GeomSpec
+import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.PositionSpec
+import se.alipsa.matrix.charm.StatSpec
+import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.core.Matrix
 
@@ -53,7 +58,7 @@ class CharmCoreModelTest {
         x: 'cty'
         y: 'hwy'
       }
-      points {}
+      layers { geomPoint() }
     }
 
     CharmValidationException e = assertThrows(CharmValidationException.class) {
@@ -76,7 +81,7 @@ class CharmCoreModelTest {
         x = 'does_not_exist'
         y = 'hwy'
       }
-      points {}
+      layers { geomPoint() }
     }
 
     CharmValidationException e = assertThrows(CharmValidationException.class) {
@@ -88,7 +93,7 @@ class CharmCoreModelTest {
   @Test
   void testMissingRequiredAesFailsForPointLayer() {
     PlotSpec spec = plot(Dataset.mpg()) {
-      points {}
+      layers { geomPoint() }
     }
 
     CharmValidationException e = assertThrows(CharmValidationException.class) {
@@ -105,9 +110,7 @@ class CharmCoreModelTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {
-        inheritMapping = false
-      }
+      layers { geomPoint().inheritMapping(false) }
     }
 
     CharmValidationException e = assertThrows(CharmValidationException.class) {
@@ -123,13 +126,7 @@ class CharmCoreModelTest {
         x = 'displ'
         y = 'hwy'
       }
-      points {
-        inheritMapping = false
-        mapping {
-          x = 'cty'
-          y = 'hwy'
-        }
-      }
+      layers { geomPoint().inheritMapping(false).mapping(x: 'cty', y: 'hwy') }
     }.build()
 
     assertEquals(1, chart.layers.size())
@@ -144,11 +141,9 @@ class CharmCoreModelTest {
         x = 'cty'
         y = 'hwy'
       }
-      smooth {
-        method = 'lm'
-      }
-      tile {
-        alpha = 0.3
+      layers {
+        geomSmooth().method('lm')
+        geomTile().alpha(0.3)
       }
     }
 
@@ -167,7 +162,14 @@ class CharmCoreModelTest {
         x = 'cty'
         y = 'hwy'
       }
-      layer(CharmGeomType.SMOOTH, [stat: CharmStatType.IDENTITY, method: 'lm'])
+      // Directly construct an invalid LayerSpec to test validation
+      layers << new LayerSpec(
+          GeomSpec.of(CharmGeomType.SMOOTH),
+          StatSpec.of(CharmStatType.IDENTITY),
+          null, true,
+          PositionSpec.of(CharmPositionType.IDENTITY),
+          [method: 'lm']
+      )
     }
 
     CharmValidationException e = assertThrows(CharmValidationException.class) {
@@ -179,26 +181,14 @@ class CharmCoreModelTest {
   @Test
   void testLayerMapInheritMappingParsesFalseString() {
     Chart chart = plot(Dataset.mpg()) {
-      layer(CharmGeomType.POINT, [
-          inheritMapping: 'false',
-          mapping       : [x: 'cty', y: 'hwy'],
-          size          : 2
-      ])
+      addLayer(new PointBuilder()
+          .inheritMapping(false)
+          .mapping(x: 'cty', y: 'hwy')
+          .size(2))
     }.build()
 
     assertEquals(1, chart.layers.size())
     assertEquals(false, chart.layers.first().inheritMapping)
-  }
-
-  @Test
-  void testLayerMapInheritMappingRejectsInvalidString() {
-    CharmValidationException e = assertThrows(CharmValidationException.class) {
-      plot(Dataset.mpg()) {
-        layer(CharmGeomType.POINT, [inheritMapping: 'not-a-bool', mapping: [x: 'cty', y: 'hwy']])
-      }.build()
-    }
-    assertTrue(e.message.contains("Unsupported boolean value 'not-a-bool'"))
-    assertTrue(e.message.contains("layer option 'inheritMapping'"))
   }
 
   @Test
@@ -208,9 +198,7 @@ class CharmCoreModelTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {
-        position = 'stack'
-      }
+      layers { geomPoint().position('stack') }
     }.build()
 
     assertEquals(CharmPositionType.STACK, chart.layers.first().positionType)
@@ -224,9 +212,7 @@ class CharmCoreModelTest {
           x = 'cty'
           y = 'hwy'
         }
-        points {
-          position = 'bogus-position'
-        }
+        layers { geomPoint().position('bogus-position') }
       }
     }
     assertTrue(e.message.contains("Unsupported layer position 'bogus-position'"))
@@ -239,7 +225,7 @@ class CharmCoreModelTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {}
+      layers { geomPoint() }
       scale {
         x = log10()
         y = reverse()
@@ -314,9 +300,7 @@ class CharmCoreModelTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {
-        size = 2
-      }
+      layers { geomPoint().size(2) }
       labels {
         title = 'Original'
       }
@@ -339,12 +323,7 @@ class CharmCoreModelTest {
   @Test
   void testLayerMappingGetterReturnsDefensiveCopy() {
     Chart chart = plot(Dataset.mpg()) {
-      points {
-        mapping {
-          x = 'cty'
-          y = 'hwy'
-        }
-      }
+      layers { geomPoint().mapping(x: 'cty', y: 'hwy') }
     }.build()
 
     def firstRead = chart.layers.first().mapping
@@ -363,11 +342,10 @@ class CharmCoreModelTest {
     Set<String> tags = ['a', 'b'] as Set<String>
 
     Chart chart = plot(Dataset.mpg()) {
-      layer(CharmGeomType.POINT, [
-          mapping: [x: 'cty', y: 'hwy'],
-          payload: externalPayload,
-          tags   : tags
-      ])
+      addLayer(new PointBuilder()
+          .mapping(x: 'cty', y: 'hwy')
+          .param('payload', externalPayload)
+          .param('tags', tags))
     }.build()
 
     externalPayload.nested.kind = 'changed'

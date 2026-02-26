@@ -28,7 +28,7 @@ class PieRendererTest {
 
     Chart chart = plot(data) {
       mapping(x: 'category', y: 'value', fill: 'fill')
-      layer(CharmGeomType.PIE, [:])
+      layers { geomPie() }
       theme {
         legendPosition = 'none'
       }
@@ -45,7 +45,7 @@ class PieRendererTest {
         .build()
     Chart emptyChart = plot(empty) {
       mapping(x: 'category', y: 'value')
-      layer(CharmGeomType.PIE, [:])
+      layers { geomPie() }
     }.build()
     assertEquals(0, countClass(emptyChart.render(), 'charm-pie'))
 
@@ -59,7 +59,7 @@ class PieRendererTest {
         .build()
     Chart nonPositiveChart = plot(nonPositive) {
       mapping(x: 'category', y: 'value')
-      layer(CharmGeomType.PIE, [:])
+      layers { geomPie() }
     }.build()
     assertEquals(0, countClass(nonPositiveChart.render(), 'charm-pie'))
   }

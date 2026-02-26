@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.MappingDsl
 import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.StatSpec
+import se.alipsa.matrix.core.Matrix
 
 /**
  * Abstract base class for fluent layer builders.
@@ -78,6 +79,29 @@ abstract class LayerBuilder {
    */
   LayerBuilder position(Object value) {
     this.positionSpec = LayerDsl.parsePosition(value)
+    this
+  }
+
+  /**
+   * Sets an arbitrary parameter on this layer.
+   *
+   * @param key parameter name
+   * @param value parameter value
+   * @return this builder
+   */
+  LayerBuilder param(String key, Object value) {
+    params[key] = value
+    this
+  }
+
+  /**
+   * Sets layer-specific data, overriding the chart-level data.
+   *
+   * @param value the data matrix for this layer
+   * @return this builder
+   */
+  LayerBuilder data(Matrix value) {
+    params['__layer_data'] = value
     this
   }
 

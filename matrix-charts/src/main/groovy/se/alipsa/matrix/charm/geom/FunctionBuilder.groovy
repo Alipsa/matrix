@@ -59,7 +59,7 @@ class FunctionBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  FunctionBuilder linetype(Object value) {
+  FunctionBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

@@ -71,7 +71,7 @@ class ErrorbarhBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  ErrorbarhBuilder linetype(Object value) {
+  ErrorbarhBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

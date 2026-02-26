@@ -28,7 +28,7 @@ class CharmAnnotationRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         custom {
           grob = { G g, Map b ->
@@ -69,7 +69,7 @@ class CharmAnnotationRendererTest {
       scale {
         x = Scale.transform('log10')
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         logticks {
           params = [sides: 'b', base: 10]
@@ -95,7 +95,7 @@ class CharmAnnotationRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         raster {
           raster = [
@@ -139,7 +139,7 @@ class CharmAnnotationRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         map {
           map = mapData
@@ -167,7 +167,7 @@ class CharmAnnotationRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         text {
           x = 2
@@ -197,7 +197,7 @@ class CharmAnnotationRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         rect {
           xmin = 1
@@ -225,7 +225,7 @@ class CharmAnnotationRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         raster {
           raster = [['#eeeeee']]
@@ -258,7 +258,7 @@ class CharmAnnotationRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         text {
           x = 1
@@ -358,7 +358,7 @@ class CharmAnnotationRendererTest {
       scale {
         x = Scale.transform('log10')
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         logticks {
           params = [sides: 'b', base: 10]
@@ -417,7 +417,7 @@ class CharmAnnotationRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         map {
           map = mapData

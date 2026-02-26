@@ -59,7 +59,7 @@ class PathBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  PathBuilder linetype(Object value) {
+  PathBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

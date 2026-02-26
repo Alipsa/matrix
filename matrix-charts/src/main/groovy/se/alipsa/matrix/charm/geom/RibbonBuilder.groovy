@@ -71,7 +71,7 @@ class RibbonBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  RibbonBuilder linetype(Object value) {
+  RibbonBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

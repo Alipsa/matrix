@@ -13,6 +13,8 @@ import se.alipsa.matrix.charm.RectAnnotationSpec
 import se.alipsa.matrix.charm.SegmentAnnotationSpec
 import se.alipsa.matrix.charm.TextAnnotationSpec
 import se.alipsa.matrix.charm.geom.Geoms
+import se.alipsa.matrix.charm.geom.PointBuilder
+import se.alipsa.matrix.charm.geom.SmoothBuilder
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
@@ -34,12 +36,9 @@ class CharmApiDesignTest {
         y = 'hwy'
         color = 'class'
       }
-      points {
-        size = 2
-        alpha = 0.7
-      }
-      smooth {
-        method = 'lm'
+      layers {
+        geomPoint().size(2).alpha(0.7)
+        geomSmooth().method('lm')
       }
       labels {
         title = 'City vs Highway MPG'
@@ -68,7 +67,7 @@ class CharmApiDesignTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {}
+      layers { geomPoint() }
       scale {
         x = log10()
         y = sqrt()
@@ -113,7 +112,7 @@ class CharmApiDesignTest {
           x = 'cty'
           y = 'hwy'
         }
-        points {}
+        layers { geomPoint() }
       }.build()
 
       assert LegacyChart != null
@@ -144,7 +143,7 @@ class CharmApiDesignTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {}
+      layers { geomPoint() }
     }.build()
 
     Svg svg = chart.render()
@@ -162,7 +161,7 @@ class CharmApiDesignTest {
         y = 'hwy'
         color = 'drv'
       }
-      points {}
+      layers { geomPoint() }
     }.build()
 
     Chart colourChart = plot(mpg) {
@@ -171,7 +170,7 @@ class CharmApiDesignTest {
         y = 'hwy'
         colour = 'drv'
       }
-      points {}
+      layers { geomPoint() }
     }.build()
 
     assertEquals(
@@ -190,11 +189,7 @@ class CharmApiDesignTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {
-        size = 3
-        alpha = 0.7
-        color = '#ff0000'
-      }
+      layers { geomPoint().size(3).alpha(0.7).color('#ff0000') }
     }.build()
 
     assertNotNull(chart.render())
@@ -204,22 +199,16 @@ class CharmApiDesignTest {
   }
 
   @Test
-  void testLayerDslLinetypeStringAndIntegerBothWork() {
+  void testLayerBuilderLinetypeWorks() {
     Matrix mpg = Dataset.mpg()
-    Chart stringChart = plot(mpg) {
+    Chart chart = plot(mpg) {
       mapping { x = 'cty'; y = 'hwy' }
-      line { linetype = 'dashed'; color = 'blue' }
+      layers { geomLine().linetype('dashed').color('blue') }
     }.build()
 
-    Chart intChart = plot(mpg) {
-      mapping { x = 'cty'; y = 'hwy' }
-      line { linetype = 2 }
-    }.build()
-
-    assertNotNull(stringChart.render())
-    assertNotNull(intChart.render())
-    assertEquals('dashed', stringChart.layers.first().params.linetype)
-    assertEquals(2, intChart.layers.first().params.linetype)
+    assertNotNull(chart.render())
+    assertEquals('dashed', chart.layers.first().params.linetype)
+    assertEquals('blue', chart.layers.first().params.color)
   }
 
   @Test
@@ -227,10 +216,7 @@ class CharmApiDesignTest {
     Matrix mpg = Dataset.mpg()
     Chart chart = plot(mpg) {
       mapping { x = 'cty'; y = 'hwy' }
-      smooth {
-        method = 'lm'
-        se = false
-      }
+      layers { geomSmooth().method('lm').se(false) }
     }.build()
 
     assertNotNull(chart.render())
@@ -246,7 +232,7 @@ class CharmApiDesignTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {}
+      layers { geomPoint() }
       annotate {
         text {
           x = 15
@@ -295,7 +281,7 @@ class CharmApiDesignTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {}
+      layers { geomPoint() }
       theme {
         legendPosition = 'top'
         legendDirection = 'horizontal'
@@ -1712,14 +1698,63 @@ class CharmApiDesignTest {
     assertTrue(chart.layers[1].params['renderer'] instanceof Closure)
   }
 
+  @Test
+  void testBuilderChainAndLayersDslProduceEquivalentSvg() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [1, 3],
+            [2, 5],
+            [3, 4],
+            [4, 7]
+        ])
+        .build()
+
+    // Way 1: layers {} closure DSL
+    Chart dslChart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers { geomPoint().size(3).alpha(0.7) }
+      theme { legendPosition = 'none' }
+    }.build()
+
+    // Way 2: addLayer() programmatic API
+    PlotSpec spec = plot(data)
+    spec.mapping(x: 'x', y: 'y')
+    spec.addLayer(new PointBuilder().size(3).alpha(0.7))
+    spec.theme { legendPosition = 'none' }
+    Chart progChart = spec.build()
+
+    Svg dslSvg = dslChart.render()
+    Svg progSvg = progChart.render()
+
+    // Count SVG primitives — should match
+    def dslCounts = countPrimitives(dslSvg)
+    def progCounts = countPrimitives(progSvg)
+    assertEquals(dslCounts.circle, progCounts.circle,
+        'Circle count should match between DSL and programmatic API')
+    assertEquals(dslCounts.line, progCounts.line,
+        'Line count should match between DSL and programmatic API')
+    assertEquals(dslCounts.text, progCounts.text,
+        'Text count should match between DSL and programmatic API')
+  }
+
+  private static Map<String, Integer> countPrimitives(Svg svg) {
+    List elements = svg.descendants()
+    [
+        circle: elements.count { it instanceof se.alipsa.groovy.svg.Circle } as int,
+        line  : elements.count { it instanceof se.alipsa.groovy.svg.Line } as int,
+        text  : elements.count { it instanceof se.alipsa.groovy.svg.Text } as int
+    ]
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 
     static Chart build(Matrix data) {
       PlotSpec spec = chart(data)
       spec.mapping(x: 'cty', y: 'hwy', color: 'class')
-      spec.layer(CharmGeomType.POINT, [size: 2, alpha: 0.7])
-      spec.layer(CharmGeomType.SMOOTH, [method: 'lm'])
+      spec.addLayer(new PointBuilder().size(2).alpha(0.7))
+      spec.addLayer(new SmoothBuilder().method('lm'))
       spec.build()
     }
   }

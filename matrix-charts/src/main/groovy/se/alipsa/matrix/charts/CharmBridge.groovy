@@ -1,11 +1,18 @@
 package se.alipsa.matrix.charts
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charm.geom.AreaBuilder
+import se.alipsa.matrix.charm.geom.BarBuilder
+import se.alipsa.matrix.charm.geom.BoxplotBuilder
+import se.alipsa.matrix.charm.geom.ColBuilder
+import se.alipsa.matrix.charm.geom.HistogramBuilder
+import se.alipsa.matrix.charm.geom.LineBuilder
+import se.alipsa.matrix.charm.geom.PieBuilder
+import se.alipsa.matrix.charm.geom.PointBuilder
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
@@ -66,7 +73,7 @@ class CharmBridge {
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
     spec.mapping(multiSeries ? [x: 'x', y: 'y', fill: 'series'] : [x: 'x', y: 'y'])
-    spec.area()
+    spec.addLayer(new AreaBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
   }
@@ -75,16 +82,16 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     boolean multiSeries = chart.valueSeries.size() > 1
     boolean horizontal = chart.direction == ChartDirection.HORIZONTAL
-    CharmGeomType geom = horizontal ? CharmGeomType.BAR : CharmGeomType.COL
     PositionSpec position = chart.stacked ? PositionSpec.of(CharmPositionType.STACK) : PositionSpec.of(CharmPositionType.IDENTITY)
 
     PlotSpec spec = Charts.plot(data)
     if (horizontal) {
       spec.mapping(multiSeries ? [x: 'y', y: 'x', fill: 'series'] : [x: 'y', y: 'x'])
+      spec.addLayer(new BarBuilder().position(position))
     } else {
       spec.mapping(multiSeries ? [x: 'x', y: 'y', fill: 'series'] : [x: 'x', y: 'y'])
+      spec.addLayer(new ColBuilder().position(position))
     }
-    spec.layer(geom, [position: position])
     applyLabelsAndTheme(spec, chart)
     spec
   }
@@ -105,7 +112,7 @@ class CharmBridge {
 
     PlotSpec spec = Charts.plot(data)
     spec.mapping([x: 'x', y: 'y'])
-    spec.layer(CharmGeomType.BOXPLOT)
+    spec.addLayer(new BoxplotBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
   }
@@ -123,7 +130,7 @@ class CharmBridge {
 
     PlotSpec spec = Charts.plot(data)
     spec.mapping([x: 'x'])
-    spec.layer(CharmGeomType.HISTOGRAM, [bins: chart.numberOfBins])
+    spec.addLayer(new HistogramBuilder().bins(chart.numberOfBins))
     applyLabelsAndTheme(spec, chart as Chart)
     spec
   }
@@ -133,7 +140,7 @@ class CharmBridge {
     boolean multiSeries = chart.valueSeries.size() > 1
     PlotSpec spec = Charts.plot(data)
     spec.mapping(multiSeries ? [x: 'x', y: 'y', color: 'series'] : [x: 'x', y: 'y'])
-    spec.line()
+    spec.addLayer(new LineBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
   }
@@ -153,7 +160,7 @@ class CharmBridge {
 
     PlotSpec spec = Charts.plot(data)
     spec.mapping([x: 'x', y: 'y', fill: 'x'])
-    spec.pie()
+    spec.addLayer(new PieBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
   }
@@ -162,7 +169,7 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     PlotSpec spec = Charts.plot(data)
     spec.mapping([x: 'x', y: 'y'])
-    spec.points()
+    spec.addLayer(new PointBuilder())
     applyLabelsAndTheme(spec, chart)
     spec
   }

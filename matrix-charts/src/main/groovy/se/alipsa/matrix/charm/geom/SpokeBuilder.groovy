@@ -70,7 +70,7 @@ class SpokeBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  SpokeBuilder linetype(Object value) {
+  SpokeBuilder linetype(String value) {
     params['linetype'] = value
     this
   }
