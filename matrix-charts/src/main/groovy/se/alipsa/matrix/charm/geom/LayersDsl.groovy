@@ -144,6 +144,72 @@ class LayersDsl {
     b
   }
 
+  /**
+   * Creates and registers a tile builder.
+   *
+   * @return new tile builder
+   */
+  TileBuilder geomTile() {
+    TileBuilder b = new TileBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a pie builder.
+   *
+   * @return new pie builder
+   */
+  PieBuilder geomPie() {
+    PieBuilder b = new PieBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a rect builder.
+   *
+   * @return new rect builder
+   */
+  RectBuilder geomRect() {
+    RectBuilder b = new RectBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a hex bin builder.
+   *
+   * @return new hex builder
+   */
+  HexBuilder geomHex() {
+    HexBuilder b = new HexBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a 2D bin builder.
+   *
+   * @return new bin2d builder
+   */
+  Bin2dBuilder geomBin2d() {
+    Bin2dBuilder b = new Bin2dBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a raster builder.
+   *
+   * @return new raster builder
+   */
+  RasterBuilder geomRaster() {
+    RasterBuilder b = new RasterBuilder()
+    collected << b
+    b
+  }
+
   // Additional factory methods will be added as builders are introduced
-  // in subsequent phases (7–11).
+  // in subsequent phases (8–11).
 }
