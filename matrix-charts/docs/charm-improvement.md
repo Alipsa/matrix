@@ -685,26 +685,26 @@ as the first concrete builder so the smoke test uses real working code. Keep
 ### Phase 9 — Statistical analysis builders: DensityBuilder, FreqpolyBuilder, QqBuilder, QqLineBuilder, QuantileBuilder, ErrorbarBuilder, CrossbarBuilder, LinerangeBuilder, PointrangeBuilder
 
 **Tasks:**
-- 9.1 [ ] Implement `DensityBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`,
+- 9.1 [x] Implement `DensityBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`,
   `linetype(Object)`, `adjust(Number)`, `kernel(String)`. `build()` → `DENSITY / DENSITY`.
-- 9.2 [ ] Implement `FreqpolyBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
+- 9.2 [x] Implement `FreqpolyBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
   `bins(Integer)`, `binwidth(Number)`. `build()` → `FREQPOLY / BIN`.
-- 9.3 [ ] Implement `QqBuilder`: `color(String)`, `size(Number)`, `shape(Object)`,
+- 9.3 [x] Implement `QqBuilder`: `color(String)`, `size(Number)`, `shape(Object)`,
   `alpha(Number)`. `build()` → `QQ / QQ`.
-- 9.4 [ ] Implement `QqLineBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`.
+- 9.4 [x] Implement `QqLineBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`.
   `build()` → `QQ_LINE / QQ_LINE`.
-- 9.5 [ ] Implement `QuantileBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
+- 9.5 [x] Implement `QuantileBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
   `quantiles(List<Number>)`. `build()` → `QUANTILE / QUANTILE`.
-- 9.6 [ ] Implement `ErrorbarBuilder`: `width(Number)`, `color(String)`, `size(Number)`,
+- 9.6 [x] Implement `ErrorbarBuilder`: `width(Number)`, `color(String)`, `size(Number)`,
   `linetype(Object)`. `build()` → `ERRORBAR / IDENTITY`.
-- 9.7 [ ] Implement `CrossbarBuilder`: `width(Number)`, `fill(String)`, `color(String)`,
+- 9.7 [x] Implement `CrossbarBuilder`: `width(Number)`, `fill(String)`, `color(String)`,
   `fatten(Number)`. `build()` → `CROSSBAR / IDENTITY`.
-- 9.8 [ ] Implement `LinerangeBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`.
+- 9.8 [x] Implement `LinerangeBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`.
   `build()` → `LINERANGE / IDENTITY`.
-- 9.9 [ ] Implement `PointrangeBuilder`: `color(String)`, `size(Number)`, `shape(Object)`,
+- 9.9 [x] Implement `PointrangeBuilder`: `color(String)`, `size(Number)`, `shape(Object)`,
   `fill(String)`, `fatten(Number)`. `build()` → `POINTRANGE / IDENTITY`.
-- 9.10 [ ] Add corresponding factory methods and tests.
-- 9.11 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true`.
+- 9.10 [x] Add corresponding factory methods and tests.
+- 9.11 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green (514 passed).
 
 **Success criteria:** All nine builders compile and each has a passing render test.
 

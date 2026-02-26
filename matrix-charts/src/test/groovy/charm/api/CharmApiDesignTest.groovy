@@ -944,6 +944,208 @@ class CharmApiDesignTest {
     assertEquals('dotted', chart.layers[1].params['linetype'])
   }
 
+  @Test
+  void testDensityBuilderRendersDensityLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('value')
+        .rows([[1.0], [1.5], [2.0], [2.5], [3.0], [3.5], [4.0]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'value' }
+      layers {
+        geomDensity().fill('#336699').alpha(0.5).adjust(1.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.DENSITY, chart.layers.first().geomType)
+    assertEquals(CharmStatType.DENSITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals(0.5, chart.layers.first().params['alpha'])
+    assertEquals(1.5, chart.layers.first().params['adjust'])
+  }
+
+  @Test
+  void testFreqpolyBuilderRendersFreqpolyLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('value')
+        .rows([[1.0], [1.5], [2.0], [2.5], [3.0], [3.5], [4.0]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'value' }
+      layers {
+        geomFreqpoly().bins(10).color('#336699')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.FREQPOLY, chart.layers.first().geomType)
+    assertEquals(CharmStatType.BIN, chart.layers.first().statType)
+    assertEquals(10, chart.layers.first().params['bins'])
+    assertEquals('#336699', chart.layers.first().params['color'])
+  }
+
+  @Test
+  void testQqBuilderRendersQqLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('sample')
+        .rows([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'sample' }
+      layers {
+        geomQq().color('#336699').size(2)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.QQ, chart.layers.first().geomType)
+    assertEquals(CharmStatType.QQ, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(2, chart.layers.first().params['size'])
+  }
+
+  @Test
+  void testQqLineBuilderRendersQqLineLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('sample')
+        .rows([[1.0], [2.0], [3.0], [4.0], [5.0]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'sample' }
+      layers {
+        geomQqLine().color('#cc0000').linetype('dashed')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.QQ_LINE, chart.layers.first().geomType)
+    assertEquals(CharmStatType.QQ_LINE, chart.layers.first().statType)
+    assertEquals('#cc0000', chart.layers.first().params['color'])
+    assertEquals('dashed', chart.layers.first().params['linetype'])
+  }
+
+  @Test
+  void testQuantileBuilderRendersQuantileLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 3], [3, 5], [4, 4], [5, 7]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomQuantile().quantiles([0.25, 0.5, 0.75]).color('#336699')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.QUANTILE, chart.layers.first().geomType)
+    assertEquals(CharmStatType.QUANTILE, chart.layers.first().statType)
+    assertEquals([0.25, 0.5, 0.75], chart.layers.first().params['quantiles'])
+    assertEquals('#336699', chart.layers.first().params['color'])
+  }
+
+  @Test
+  void testErrorbarBuilderRendersErrorbarLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'lo', 'hi')
+        .rows([[1, 1, 3], [2, 2, 5], [3, 3, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; ymin = 'lo'; ymax = 'hi' }
+      layers {
+        geomErrorbar().width(0.2).color('#333333').size(0.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.ERRORBAR, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals(0.2, chart.layers.first().params['width'])
+    assertEquals('#333333', chart.layers.first().params['color'])
+    assertEquals(0.5, chart.layers.first().params['size'])
+  }
+
+  @Test
+  void testCrossbarBuilderRendersCrossbarLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'mid', 'lo', 'hi')
+        .rows([[1, 2, 1, 3], [2, 4, 3, 5], [3, 5, 4, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'mid'; ymin = 'lo'; ymax = 'hi' }
+      layers {
+        geomCrossbar().fill('#eeeeee').width(0.5).fatten(2.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.CROSSBAR, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#eeeeee', chart.layers.first().params['fill'])
+    assertEquals(0.5, chart.layers.first().params['width'])
+    assertEquals(2.5, chart.layers.first().params['fatten'])
+  }
+
+  @Test
+  void testLinerangeBuilderRendersLinerangeLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'lo', 'hi')
+        .rows([[1, 1, 3], [2, 2, 5], [3, 3, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; ymin = 'lo'; ymax = 'hi' }
+      layers {
+        geomLinerange().color('#336699').size(1)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.LINERANGE, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
+  }
+
+  @Test
+  void testPointrangeBuilderRendersPointrangeLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'mid', 'lo', 'hi')
+        .rows([[1, 2, 1, 3], [2, 4, 3, 5], [3, 5, 4, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'mid'; ymin = 'lo'; ymax = 'hi' }
+      layers {
+        geomPointrange().color('#336699').size(1).fatten(3)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.POINTRANGE, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
+    assertEquals(3, chart.layers.first().params['fatten'])
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 

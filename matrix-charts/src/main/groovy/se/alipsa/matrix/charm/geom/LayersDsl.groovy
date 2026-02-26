@@ -287,6 +287,105 @@ class LayersDsl {
     b
   }
 
+  /**
+   * Creates and registers a density builder.
+   *
+   * @return new density builder
+   */
+  DensityBuilder geomDensity() {
+    DensityBuilder b = new DensityBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a frequency polygon builder.
+   *
+   * @return new freqpoly builder
+   */
+  FreqpolyBuilder geomFreqpoly() {
+    FreqpolyBuilder b = new FreqpolyBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a QQ plot builder.
+   *
+   * @return new qq builder
+   */
+  QqBuilder geomQq() {
+    QqBuilder b = new QqBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a QQ line builder.
+   *
+   * @return new qq line builder
+   */
+  QqLineBuilder geomQqLine() {
+    QqLineBuilder b = new QqLineBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a quantile builder.
+   *
+   * @return new quantile builder
+   */
+  QuantileBuilder geomQuantile() {
+    QuantileBuilder b = new QuantileBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers an error bar builder.
+   *
+   * @return new errorbar builder
+   */
+  ErrorbarBuilder geomErrorbar() {
+    ErrorbarBuilder b = new ErrorbarBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a crossbar builder.
+   *
+   * @return new crossbar builder
+   */
+  CrossbarBuilder geomCrossbar() {
+    CrossbarBuilder b = new CrossbarBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a line range builder.
+   *
+   * @return new linerange builder
+   */
+  LinerangeBuilder geomLinerange() {
+    LinerangeBuilder b = new LinerangeBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a point range builder.
+   *
+   * @return new pointrange builder
+   */
+  PointrangeBuilder geomPointrange() {
+    PointrangeBuilder b = new PointrangeBuilder()
+    collected << b
+    b
+  }
+
   // Additional factory methods will be added as builders are introduced
-  // in subsequent phases (9–11).
+  // in subsequent phases (10–11).
 }

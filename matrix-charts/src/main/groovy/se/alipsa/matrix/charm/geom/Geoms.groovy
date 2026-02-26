@@ -238,4 +238,85 @@ class Geoms {
   static VlineBuilder geomVline() {
     new VlineBuilder()
   }
+
+  /**
+   * Creates a new density builder.
+   *
+   * @return density builder
+   */
+  static DensityBuilder geomDensity() {
+    new DensityBuilder()
+  }
+
+  /**
+   * Creates a new frequency polygon builder.
+   *
+   * @return freqpoly builder
+   */
+  static FreqpolyBuilder geomFreqpoly() {
+    new FreqpolyBuilder()
+  }
+
+  /**
+   * Creates a new QQ plot builder.
+   *
+   * @return qq builder
+   */
+  static QqBuilder geomQq() {
+    new QqBuilder()
+  }
+
+  /**
+   * Creates a new QQ line builder.
+   *
+   * @return qq line builder
+   */
+  static QqLineBuilder geomQqLine() {
+    new QqLineBuilder()
+  }
+
+  /**
+   * Creates a new quantile builder.
+   *
+   * @return quantile builder
+   */
+  static QuantileBuilder geomQuantile() {
+    new QuantileBuilder()
+  }
+
+  /**
+   * Creates a new error bar builder.
+   *
+   * @return errorbar builder
+   */
+  static ErrorbarBuilder geomErrorbar() {
+    new ErrorbarBuilder()
+  }
+
+  /**
+   * Creates a new crossbar builder.
+   *
+   * @return crossbar builder
+   */
+  static CrossbarBuilder geomCrossbar() {
+    new CrossbarBuilder()
+  }
+
+  /**
+   * Creates a new line range builder.
+   *
+   * @return linerange builder
+   */
+  static LinerangeBuilder geomLinerange() {
+    new LinerangeBuilder()
+  }
+
+  /**
+   * Creates a new point range builder.
+   *
+   * @return pointrange builder
+   */
+  static PointrangeBuilder geomPointrange() {
+    new PointrangeBuilder()
+  }
 }
