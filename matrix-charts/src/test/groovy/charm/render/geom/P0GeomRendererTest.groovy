@@ -131,7 +131,7 @@ class P0GeomRendererTest {
       mapping(mappingSpec)
       layer(geomType, [:])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
   }
@@ -146,7 +146,7 @@ class P0GeomRendererTest {
       mapping(mappingSpec)
       layer(geomType, [:])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
   }

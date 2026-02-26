@@ -98,7 +98,7 @@ class CharmLegendRendererTest {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
       points {}
       theme {
-        legend { position = 'right' }
+        legendPosition = 'right'
       }
     }.build()
 
@@ -122,7 +122,7 @@ class CharmLegendRendererTest {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
       points {}
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -228,7 +228,7 @@ class CharmLegendRendererTest {
         mapping { x = 'x'; y = 'y'; color = 'cat' }
         points {}
         theme {
-          legend { position = pos }
+          legendPosition = pos
         }
       }.build()
 

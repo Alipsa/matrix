@@ -38,7 +38,7 @@ class CharmRendererTest {
       }
       points {}
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -70,7 +70,7 @@ class CharmRendererTest {
       }
       line {}
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -99,7 +99,7 @@ class CharmRendererTest {
       }
       layer(CharmGeomType.COL, [fill: '#336699'])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -113,7 +113,7 @@ class CharmRendererTest {
       }
       layer(CharmGeomType.HISTOGRAM, [bins: 4, fill: '#cc6677'])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -148,7 +148,7 @@ class CharmRendererTest {
         }
       }
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -178,7 +178,7 @@ class CharmRendererTest {
         }
       }
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -206,7 +206,7 @@ class CharmRendererTest {
         rows = ['grp']
       }
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -238,7 +238,7 @@ class CharmRendererTest {
         title = 'Deterministic'
       }
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -282,7 +282,7 @@ class CharmRendererTest {
       points {}
       layer(CharmGeomType.POINT, [__layer_data: layerData])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -332,7 +332,7 @@ class CharmRendererTest {
       points {}
       points {}
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -345,7 +345,7 @@ class CharmRendererTest {
       points {}
       layer(CharmGeomType.POINT, [__layer_data: wideData])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 

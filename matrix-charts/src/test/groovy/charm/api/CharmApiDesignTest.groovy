@@ -8,6 +8,9 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Cols
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.PlotSpec
+import se.alipsa.matrix.charm.RectAnnotationSpec
+import se.alipsa.matrix.charm.SegmentAnnotationSpec
+import se.alipsa.matrix.charm.TextAnnotationSpec
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
@@ -69,8 +72,8 @@ class CharmApiDesignTest {
         y = sqrt()
       }
       theme {
-        legend { position = 'top' }
-        axis { lineWidth = 0.75 }
+        legendPosition = 'top'
+        axisLineWidth = 0.75
       }
       coord {
         type = 'polar'
@@ -231,6 +234,102 @@ class CharmApiDesignTest {
     assertNotNull(chart.render())
     assertEquals('lm', chart.layers.first().params.method)
     assertEquals(false, chart.layers.first().params.se)
+  }
+
+  @Test
+  void testAnnotationSpecExplicitFieldsWriteThroughToParams() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg) {
+      mapping {
+        x = 'cty'
+        y = 'hwy'
+      }
+      points {}
+      annotate {
+        text {
+          x = 15
+          y = 35
+          label = 'Note'
+          color = '#ff0000'
+          alpha = 0.8
+        }
+        rect {
+          xmin = 10
+          xmax = 20
+          ymin = 25
+          ymax = 40
+          fill = '#0000ff'
+          alpha = 0.3
+        }
+        segment {
+          x = 10
+          y = 25
+          xend = 20
+          yend = 40
+          colour = '#00ff00'
+        }
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(3, chart.annotations.size())
+
+    def textSpec = chart.annotations[0] as TextAnnotationSpec
+    assertEquals('#ff0000', textSpec.params['color'])
+    assertEquals(0.8, textSpec.params['alpha'])
+
+    def rectSpec = chart.annotations[1] as RectAnnotationSpec
+    assertEquals('#0000ff', rectSpec.params['fill'])
+    assertEquals(0.3, rectSpec.params['alpha'])
+
+    def segSpec = chart.annotations[2] as SegmentAnnotationSpec
+    assertEquals('#00ff00', segSpec.params['color'])
+  }
+
+  @Test
+  void testFlatThemeSettersProduceCorrectThemeState() {
+    PlotSpec spec = plot(Dataset.mpg()) {
+      mapping {
+        x = 'cty'
+        y = 'hwy'
+      }
+      points {}
+      theme {
+        legendPosition = 'top'
+        legendDirection = 'horizontal'
+        axisLineWidth = 0.5
+        axisColor = '#ff0000'
+        axisTickLength = 8
+        textColor = '#333333'
+        textSize = 10
+        titleSize = 16
+        gridColor = '#cccccc'
+        gridLineWidth = 0.25
+        gridMinor = '#eeeeee'
+        baseFamily = 'monospace'
+        baseSize = 14
+        baseLineHeight = 1.5
+      }
+    }
+
+    assertEquals('top', spec.theme.legendPosition)
+    assertEquals('horizontal', spec.theme.legendDirection)
+    assertEquals(0.5, spec.theme.axisLineX.size)
+    assertEquals('#ff0000', spec.theme.axisLineX.color)
+    assertEquals(0.5, spec.theme.axisLineY.size)
+    assertEquals('#ff0000', spec.theme.axisLineY.color)
+    assertEquals(8, spec.theme.axisTickLength)
+    assertEquals('#333333', spec.theme.axisTextX.color)
+    assertEquals(10, spec.theme.axisTextX.size)
+    assertEquals('#333333', spec.theme.axisTextY.color)
+    assertEquals(10, spec.theme.axisTextY.size)
+    assertEquals(16, spec.theme.plotTitle.size)
+    assertEquals('#cccccc', spec.theme.panelGridMajor.color)
+    assertEquals(0.25, spec.theme.panelGridMajor.size)
+    assertEquals('#eeeeee', spec.theme.panelGridMinor.color)
+    assertEquals('monospace', spec.theme.baseFamily)
+    assertEquals(14, spec.theme.baseSize)
+    assertEquals(1.5, spec.theme.baseLineHeight)
   }
 
   @CompileStatic

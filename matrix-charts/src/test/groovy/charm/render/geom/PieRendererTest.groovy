@@ -30,7 +30,7 @@ class PieRendererTest {
       mapping(x: 'category', y: 'value', fill: 'fill')
       layer(CharmGeomType.PIE, [:])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 

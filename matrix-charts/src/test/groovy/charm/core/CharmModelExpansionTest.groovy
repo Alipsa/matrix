@@ -384,7 +384,7 @@ class CharmModelExpansionTest {
       }
       points {}
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 

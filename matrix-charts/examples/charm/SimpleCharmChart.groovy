@@ -21,7 +21,7 @@ def chart = plot(data) {
     y = 'Sales (units)'
   }
   theme {
-    legend { position = 'none' }
+    legendPosition = 'none'
   }
 }.build()
 

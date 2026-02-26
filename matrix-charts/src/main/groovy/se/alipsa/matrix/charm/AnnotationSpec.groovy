@@ -25,6 +25,10 @@ abstract class AnnotationSpec {
 
 /**
  * Text annotation specification.
+ *
+ * <p>Common styling properties ({@code color}, {@code fill}, {@code alpha})
+ * are declared as explicit fields for IDE autocomplete. Values are written
+ * through to {@link #params} so the renderer reads them unchanged.</p>
  */
 @CompileStatic
 class TextAnnotationSpec extends AnnotationSpec {
@@ -34,6 +38,39 @@ class TextAnnotationSpec extends AnnotationSpec {
   String label
   Map<String, Object> params = [:]
 
+  /** Stroke/text colour (write-through to params). */
+  String color
+
+  /** Fill colour (write-through to params). */
+  String fill
+
+  /** Opacity 0–1 (write-through to params). */
+  Number alpha
+
+  void setColor(String value) {
+    this.@color = value
+    params['color'] = value
+  }
+
+  /**
+   * Sets the colour aesthetic (British spelling alias).
+   *
+   * @param value colour value
+   */
+  void setColour(String value) {
+    setColor(value)
+  }
+
+  void setFill(String value) {
+    this.@fill = value
+    params['fill'] = value
+  }
+
+  void setAlpha(Number value) {
+    this.@alpha = value
+    params['alpha'] = value
+  }
+
   /**
    * Copies this text annotation.
    *
@@ -41,18 +78,26 @@ class TextAnnotationSpec extends AnnotationSpec {
    */
   @Override
   AnnotationSpec copy() {
-    new TextAnnotationSpec(
+    TextAnnotationSpec c = new TextAnnotationSpec(
         x: x,
         y: y,
         label: label,
         drawOrder: drawOrder,
         params: new LinkedHashMap<>(params)
     )
+    c.@color = this.@color
+    c.@fill = this.@fill
+    c.@alpha = this.@alpha
+    c
   }
 }
 
 /**
  * Rectangle annotation specification.
+ *
+ * <p>Common styling properties ({@code color}, {@code fill}, {@code alpha})
+ * are declared as explicit fields for IDE autocomplete. Values are written
+ * through to {@link #params} so the renderer reads them unchanged.</p>
  */
 @CompileStatic
 class RectAnnotationSpec extends AnnotationSpec {
@@ -63,6 +108,39 @@ class RectAnnotationSpec extends AnnotationSpec {
   Number ymax
   Map<String, Object> params = [:]
 
+  /** Stroke colour (write-through to params). */
+  String color
+
+  /** Fill colour (write-through to params). */
+  String fill
+
+  /** Opacity 0–1 (write-through to params). */
+  Number alpha
+
+  void setColor(String value) {
+    this.@color = value
+    params['color'] = value
+  }
+
+  /**
+   * Sets the colour aesthetic (British spelling alias).
+   *
+   * @param value colour value
+   */
+  void setColour(String value) {
+    setColor(value)
+  }
+
+  void setFill(String value) {
+    this.@fill = value
+    params['fill'] = value
+  }
+
+  void setAlpha(Number value) {
+    this.@alpha = value
+    params['alpha'] = value
+  }
+
   /**
    * Copies this rectangle annotation.
    *
@@ -70,7 +148,7 @@ class RectAnnotationSpec extends AnnotationSpec {
    */
   @Override
   AnnotationSpec copy() {
-    new RectAnnotationSpec(
+    RectAnnotationSpec c = new RectAnnotationSpec(
         xmin: xmin,
         xmax: xmax,
         ymin: ymin,
@@ -78,11 +156,19 @@ class RectAnnotationSpec extends AnnotationSpec {
         drawOrder: drawOrder,
         params: new LinkedHashMap<>(params)
     )
+    c.@color = this.@color
+    c.@fill = this.@fill
+    c.@alpha = this.@alpha
+    c
   }
 }
 
 /**
  * Segment annotation specification.
+ *
+ * <p>Common styling properties ({@code color}, {@code fill}, {@code alpha})
+ * are declared as explicit fields for IDE autocomplete. Values are written
+ * through to {@link #params} so the renderer reads them unchanged.</p>
  */
 @CompileStatic
 class SegmentAnnotationSpec extends AnnotationSpec {
@@ -93,6 +179,39 @@ class SegmentAnnotationSpec extends AnnotationSpec {
   Number yend
   Map<String, Object> params = [:]
 
+  /** Stroke colour (write-through to params). */
+  String color
+
+  /** Fill colour (write-through to params). */
+  String fill
+
+  /** Opacity 0–1 (write-through to params). */
+  Number alpha
+
+  void setColor(String value) {
+    this.@color = value
+    params['color'] = value
+  }
+
+  /**
+   * Sets the colour aesthetic (British spelling alias).
+   *
+   * @param value colour value
+   */
+  void setColour(String value) {
+    setColor(value)
+  }
+
+  void setFill(String value) {
+    this.@fill = value
+    params['fill'] = value
+  }
+
+  void setAlpha(Number value) {
+    this.@alpha = value
+    params['alpha'] = value
+  }
+
   /**
    * Copies this segment annotation.
    *
@@ -100,7 +219,7 @@ class SegmentAnnotationSpec extends AnnotationSpec {
    */
   @Override
   AnnotationSpec copy() {
-    new SegmentAnnotationSpec(
+    SegmentAnnotationSpec c = new SegmentAnnotationSpec(
         x: x,
         xend: xend,
         y: y,
@@ -108,6 +227,10 @@ class SegmentAnnotationSpec extends AnnotationSpec {
         drawOrder: drawOrder,
         params: new LinkedHashMap<>(params)
     )
+    c.@color = this.@color
+    c.@fill = this.@fill
+    c.@alpha = this.@alpha
+    c
   }
 }
 

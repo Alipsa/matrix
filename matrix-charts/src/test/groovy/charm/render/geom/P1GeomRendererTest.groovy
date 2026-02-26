@@ -48,7 +48,7 @@ class P1GeomRendererTest {
         mapping(tc.aes as Map<String, String>)
         layer(tc.geom as CharmGeomType, tc.options as Map<String, Object>)
         theme {
-          legend { position = 'none' }
+          legendPosition = 'none'
         }
       }.build()
 
