@@ -10,8 +10,8 @@ def data = Matrix.builder().data(
 
 def chart = plot(data) {
   mapping {
-    x = col.month
-    y = col.sales
+    x = 'month'
+    y = 'sales'
   }
   line {}
   points { size = 3 }

@@ -232,7 +232,7 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec area(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerDsl) Closure<?> configure = null) {
-    addLayer(CharmGeomType.AREA, CharmStatType.IDENTITY, configure)
+    addLayer(CharmGeomType.AREA, CharmStatType.ALIGN, configure)
   }
 
   /**

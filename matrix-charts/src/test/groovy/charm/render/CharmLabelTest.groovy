@@ -27,7 +27,7 @@ class CharmLabelTest {
   @Test
   void testTitleRendered() {
     Chart chart = plot(sampleData()) {
-      mapping { x = col.x; y = col.y }
+      mapping { x = 'x'; y = 'y' }
       points {}
       labels { title = 'My Title' }
     }.build()
@@ -40,7 +40,7 @@ class CharmLabelTest {
   @Test
   void testSubtitleRendered() {
     Chart chart = plot(sampleData()) {
-      mapping { x = col.x; y = col.y }
+      mapping { x = 'x'; y = 'y' }
       points {}
       labels {
         title = 'Title'
@@ -56,7 +56,7 @@ class CharmLabelTest {
   @Test
   void testCaptionRendered() {
     Chart chart = plot(sampleData()) {
-      mapping { x = col.x; y = col.y }
+      mapping { x = 'x'; y = 'y' }
       points {}
       labels {
         title = 'Title'
@@ -72,7 +72,7 @@ class CharmLabelTest {
   @Test
   void testAxisLabelsRendered() {
     Chart chart = plot(sampleData()) {
-      mapping { x = col.x; y = col.y }
+      mapping { x = 'x'; y = 'y' }
       points {}
       labels {
         x = 'X Label'
@@ -89,7 +89,7 @@ class CharmLabelTest {
   @Test
   void testCoordFlipSwapsAxisLabels() {
     Chart chart = plot(sampleData()) {
-      mapping { x = col.x; y = col.y }
+      mapping { x = 'x'; y = 'y' }
       points {}
       labels {
         x = 'Original X'
@@ -111,7 +111,7 @@ class CharmLabelTest {
     theme.explicitNulls.add('plotTitle')
 
     Chart chart = plot(sampleData()) {
-      mapping { x = col.x; y = col.y }
+      mapping { x = 'x'; y = 'y' }
       points {}
       labels { title = 'Should be hidden' }
     }.build()

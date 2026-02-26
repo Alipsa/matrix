@@ -25,8 +25,8 @@ class CharmAnnotationRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       annotate {
@@ -63,8 +63,8 @@ class CharmAnnotationRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       scale {
         x = Scale.transform('log10')
@@ -92,8 +92,8 @@ class CharmAnnotationRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       annotate {
@@ -136,8 +136,8 @@ class CharmAnnotationRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       annotate {
@@ -164,8 +164,8 @@ class CharmAnnotationRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       annotate {
@@ -194,8 +194,8 @@ class CharmAnnotationRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       annotate {
@@ -222,8 +222,8 @@ class CharmAnnotationRendererTest {
 
     def spec = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       annotate {
@@ -255,8 +255,8 @@ class CharmAnnotationRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       annotate {
@@ -352,8 +352,8 @@ class CharmAnnotationRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       scale {
         x = Scale.transform('log10')
@@ -414,8 +414,8 @@ class CharmAnnotationRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       annotate {

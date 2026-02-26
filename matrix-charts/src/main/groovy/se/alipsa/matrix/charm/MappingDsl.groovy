@@ -1,6 +1,5 @@
 package se.alipsa.matrix.charm
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
 /**
@@ -10,23 +9,32 @@ import groovy.transform.CompileStatic
 class MappingDsl {
 
   private final Cols col = new Cols()
-  Object x
-  Object y
-  Object color
-  Object fill
-  Object size
-  Object shape
-  Object group
-  Object xend
-  Object yend
-  Object xmin
-  Object xmax
-  Object ymin
-  Object ymax
-  Object alpha
-  Object linetype
-  Object label
-  Object weight
+  String x
+  String y
+  String color
+  String fill
+  String size
+  String shape
+  String group
+  String xend
+  String yend
+  String xmin
+  String xmax
+  String ymin
+  String ymax
+  String alpha
+  String linetype
+  String label
+  String weight
+
+  /**
+   * Sets the colour aesthetic (alias for color).
+   *
+   * @param value column name
+   */
+  void setColour(String value) {
+    color = value
+  }
 
   /**
    * Returns the column namespace proxy.
@@ -62,20 +70,5 @@ class MappingDsl {
     if (label != null) mapping.label = label
     if (weight != null) mapping.weight = weight
     mapping
-  }
-
-  /**
-   * Supports `colour` alias.
-   *
-   * @param name property name
-   * @param value property value
-   */
-  @CompileDynamic
-  void propertyMissing(String name, Object value) {
-    if (name == 'colour') {
-      color = value
-      return
-    }
-    throw new CharmMappingException("Unsupported aesthetic '${name}'")
   }
 }

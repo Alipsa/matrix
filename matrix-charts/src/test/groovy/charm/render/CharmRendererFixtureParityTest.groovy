@@ -33,8 +33,8 @@ class CharmRendererFixtureParityTest {
 
     Chart charmChart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       labels {
@@ -73,8 +73,8 @@ class CharmRendererFixtureParityTest {
 
     Chart charmChart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       line {}
       theme {
@@ -105,7 +105,7 @@ class CharmRendererFixtureParityTest {
 
     Chart charmChart = plot(data) {
       mapping {
-        x = col.x
+        x = 'x'
       }
       layer(CharmGeomType.HISTOGRAM, [bins: 5])
       theme {
@@ -143,8 +143,8 @@ class CharmRendererFixtureParityTest {
 
     Chart charmChart = plot(data) {
       mapping {
-        x = col.category
-        y = col.value
+        x = 'category'
+        y = 'value'
       }
       layer(CharmGeomType.COL, [:])
       theme {
@@ -178,8 +178,8 @@ class CharmRendererFixtureParityTest {
 
     Chart charmChart = plot(data) {
       mapping {
-        x = col.group
-        y = col.value
+        x = 'group'
+        y = 'value'
       }
       layer(CharmGeomType.BOXPLOT, [:])
       theme {

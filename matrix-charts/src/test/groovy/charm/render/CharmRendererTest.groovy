@@ -33,8 +33,8 @@ class CharmRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       theme {
@@ -65,8 +65,8 @@ class CharmRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       line {}
       theme {
@@ -94,8 +94,8 @@ class CharmRendererTest {
 
     Chart barChart = plot(barData) {
       mapping {
-        x = col.cat
-        y = col.value
+        x = 'cat'
+        y = 'value'
       }
       layer(CharmGeomType.COL, [fill: '#336699'])
       theme {
@@ -109,7 +109,7 @@ class CharmRendererTest {
 
     Chart histogram = plot(barData) {
       mapping {
-        x = col.value
+        x = 'value'
       }
       layer(CharmGeomType.HISTOGRAM, [bins: 4, fill: '#cc6677'])
       theme {
@@ -137,8 +137,8 @@ class CharmRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       facet {
@@ -167,8 +167,8 @@ class CharmRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       facet {
@@ -198,12 +198,12 @@ class CharmRendererTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       facet {
-        rows = [col.grp]
+        rows = ['grp']
       }
       theme {
         legend { position = 'none' }
@@ -230,8 +230,8 @@ class CharmRendererTest {
 
     Chart chart = Charts.plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       line {}
       labels {
@@ -276,8 +276,8 @@ class CharmRendererTest {
 
     Chart chart = plot(chartData) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       layer(CharmGeomType.POINT, [__layer_data: layerData])
@@ -326,8 +326,8 @@ class CharmRendererTest {
     // Baseline: two point layers both using the narrow chart data
     Chart baseline = plot(narrowData) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       points {}
@@ -339,8 +339,8 @@ class CharmRendererTest {
     // Test chart: second layer uses wide data, which should shift scale domain
     Chart withLayerData = plot(narrowData) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       layer(CharmGeomType.POINT, [__layer_data: wideData])

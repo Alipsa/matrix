@@ -25,9 +25,9 @@ class CharmApiDesignTest {
     Matrix mpg = Dataset.mpg()
     PlotSpec spec = plot(mpg) {
       mapping {
-        x = col['cty']
-        y = col['hwy']
-        color = col['class']
+        x = 'cty'
+        y = 'hwy'
+        color = 'class'
       }
       points {
         size = 2
@@ -60,8 +60,8 @@ class CharmApiDesignTest {
   void testScaleThemeAndCoordDslExamples() {
     PlotSpec spec = plot(Dataset.mpg()) {
       mapping {
-        x = col.cty
-        y = col.hwy
+        x = 'cty'
+        y = 'hwy'
       }
       points {}
       scale {
@@ -105,8 +105,8 @@ class CharmApiDesignTest {
 
       CharmChart c = chart(mpg) {
         mapping {
-          x = col.cty
-          y = col.hwy
+          x = 'cty'
+          y = 'hwy'
         }
         points {}
       }.build()
@@ -131,13 +131,58 @@ class CharmApiDesignTest {
     assertNotNull(svg)
   }
 
+  @Test
+  void testPlainStringMappingRendersIdenticallyToColProxy() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg) {
+      mapping {
+        x = 'cty'
+        y = 'hwy'
+      }
+      points {}
+    }.build()
+
+    Svg svg = chart.render()
+    assertNotNull(svg)
+    assertEquals('cty', chart.mapping.x.columnName())
+    assertEquals('hwy', chart.mapping.y.columnName())
+  }
+
+  @Test
+  void testColourAliasProducesSameChartAsColor() {
+    Matrix mpg = Dataset.mpg()
+    Chart colorChart = plot(mpg) {
+      mapping {
+        x = 'cty'
+        y = 'hwy'
+        color = 'drv'
+      }
+      points {}
+    }.build()
+
+    Chart colourChart = plot(mpg) {
+      mapping {
+        x = 'cty'
+        y = 'hwy'
+        colour = 'drv'
+      }
+      points {}
+    }.build()
+
+    assertEquals(
+        colorChart.mapping.color.columnName(),
+        colourChart.mapping.color.columnName()
+    )
+    assertNotNull(colorChart.render())
+    assertNotNull(colourChart.render())
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 
     static Chart build(Matrix data) {
-      Cols col = new Cols()
       PlotSpec spec = chart(data)
-      spec.mapping(x: col['cty'], y: col['hwy'], color: col['class'])
+      spec.mapping(x: 'cty', y: 'hwy', color: 'class')
       spec.layer(CharmGeomType.POINT, [size: 2, alpha: 0.7])
       spec.layer(CharmGeomType.SMOOTH, [method: 'lm'])
       spec.build()
