@@ -226,7 +226,7 @@ RUN_EXTERNAL_TESTS=true ./gradlew test
 
 ### Testing SVG Chart Output (matrix-charts)
 
-**IMPORTANT:** When testing chart rendering in matrix-charts, you MUST use `SvgWriter.toXml()` to convert SVG objects to strings for assertions. **DO NOT use `svg.toString()`** - it returns the Java object representation (`"se.alipsa.groovy.svg.Svg@hashcode"`), not the SVG XML content.
+**IMPORTANT:** When testing chart rendering in matrix-charts, you MUST use `svg.toXml()` or `SvgWriter.toXml()` to convert SVG objects to strings for assertions. **DO NOT use `svg.toString()`** - it returns the Java object representation (`"se.alipsa.groovy.svg.Svg@hashcode"`), not the SVG XML content.
 
 #### Correct Pattern
 
