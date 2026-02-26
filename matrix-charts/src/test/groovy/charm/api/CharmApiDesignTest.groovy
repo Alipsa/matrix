@@ -893,6 +893,7 @@ class CharmApiDesignTest {
     assertEquals(0, chart.layers[1].params['intercept'])
     assertEquals(1, chart.layers[1].params['slope'])
     assertEquals('#cc0000', chart.layers[1].params['color'])
+    assertEquals('dashed', chart.layers[1].params['linetype'])
   }
 
   @Test
