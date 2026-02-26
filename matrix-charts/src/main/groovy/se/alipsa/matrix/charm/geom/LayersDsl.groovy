@@ -78,6 +78,72 @@ class LayersDsl {
     b
   }
 
+  /**
+   * Creates and registers a bar builder.
+   *
+   * @return new bar builder
+   */
+  BarBuilder geomBar() {
+    BarBuilder b = new BarBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a column builder.
+   *
+   * @return new column builder
+   */
+  ColBuilder geomCol() {
+    ColBuilder b = new ColBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a histogram builder.
+   *
+   * @return new histogram builder
+   */
+  HistogramBuilder geomHistogram() {
+    HistogramBuilder b = new HistogramBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a boxplot builder.
+   *
+   * @return new boxplot builder
+   */
+  BoxplotBuilder geomBoxplot() {
+    BoxplotBuilder b = new BoxplotBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a violin builder.
+   *
+   * @return new violin builder
+   */
+  ViolinBuilder geomViolin() {
+    ViolinBuilder b = new ViolinBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a dotplot builder.
+   *
+   * @return new dotplot builder
+   */
+  DotplotBuilder geomDotplot() {
+    DotplotBuilder b = new DotplotBuilder()
+    collected << b
+    b
+  }
+
   // Additional factory methods will be added as builders are introduced
-  // in subsequent phases (6–11).
+  // in subsequent phases (7–11).
 }

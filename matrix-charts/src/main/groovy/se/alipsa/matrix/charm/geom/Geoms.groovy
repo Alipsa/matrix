@@ -68,10 +68,64 @@ class Geoms {
     new RibbonBuilder()
   }
 
-  // TODO: geomBar()     — Phase 6
-  // TODO: geomCol()     — Phase 6
-  // TODO: geomHistogram() — Phase 6
-  // TODO: geomBoxplot() — Phase 6
-  // TODO: geomViolin()  — Phase 6
-  // TODO: geomDotplot() — Phase 6
+  /**
+   * Creates a new bar builder.
+   *
+   * @return bar builder
+   */
+  static BarBuilder geomBar() {
+    new BarBuilder()
+  }
+
+  /**
+   * Creates a new column builder.
+   *
+   * @return column builder
+   */
+  static ColBuilder geomCol() {
+    new ColBuilder()
+  }
+
+  /**
+   * Creates a new histogram builder.
+   *
+   * @return histogram builder
+   */
+  static HistogramBuilder geomHistogram() {
+    new HistogramBuilder()
+  }
+
+  /**
+   * Creates a new boxplot builder.
+   *
+   * @return boxplot builder
+   */
+  static BoxplotBuilder geomBoxplot() {
+    new BoxplotBuilder()
+  }
+
+  /**
+   * Creates a new violin builder.
+   *
+   * @return violin builder
+   */
+  static ViolinBuilder geomViolin() {
+    new ViolinBuilder()
+  }
+
+  /**
+   * Creates a new dotplot builder.
+   *
+   * @return dotplot builder
+   */
+  static DotplotBuilder geomDotplot() {
+    new DotplotBuilder()
+  }
+
+  // TODO: geomTile()    — Phase 7
+  // TODO: geomPie()     — Phase 7
+  // TODO: geomRect()    — Phase 7
+  // TODO: geomHex()     — Phase 7
+  // TODO: geomBin2d()   — Phase 7
+  // TODO: geomRaster()  — Phase 7
 }

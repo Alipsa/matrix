@@ -517,6 +517,138 @@ class CharmApiDesignTest {
     assertEquals(0.5, chart.layers.first().params['span'])
   }
 
+  @Test
+  void testBarBuilderRendersBarLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('category')
+        .rows([['A'], ['B'], ['A'], ['C'], ['B'], ['A']])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'category' }
+      layers {
+        geomBar().fill('#336699').alpha(0.8)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.BAR, chart.layers.first().geomType)
+    assertEquals(CharmStatType.COUNT, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals(0.8, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testColBuilderRendersColLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('category', 'value')
+        .rows([['A', 10], ['B', 20], ['C', 15]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'category'; y = 'value' }
+      layers {
+        geomCol().fill('#cc6677').width(0.7)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.COL, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#cc6677', chart.layers.first().params['fill'])
+    assertEquals(0.7, chart.layers.first().params['width'])
+  }
+
+  @Test
+  void testHistogramBuilderRendersHistogramLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('value')
+        .rows([[1.2], [2.3], [2.8], [3.5], [4.1], [4.5], [5.0]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'value' }
+      layers {
+        geomHistogram().bins(10).fill('#88aa55').alpha(0.7)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.HISTOGRAM, chart.layers.first().geomType)
+    assertEquals(CharmStatType.BIN, chart.layers.first().statType)
+    assertEquals(10, chart.layers.first().params['bins'])
+    assertEquals('#88aa55', chart.layers.first().params['fill'])
+  }
+
+  @Test
+  void testBoxplotBuilderRendersBoxplotLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('group', 'value')
+        .rows([['A', 1], ['A', 2], ['A', 3], ['B', 4], ['B', 5], ['B', 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'group'; y = 'value' }
+      layers {
+        geomBoxplot().fill('#eeeeee').notch(true).alpha(0.9)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.BOXPLOT, chart.layers.first().geomType)
+    assertEquals(CharmStatType.BOXPLOT, chart.layers.first().statType)
+    assertEquals('#eeeeee', chart.layers.first().params['fill'])
+    assertEquals(true, chart.layers.first().params['notch'])
+  }
+
+  @Test
+  void testViolinBuilderRendersViolinLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('group', 'value')
+        .rows([['A', 1], ['A', 2], ['A', 3], ['B', 4], ['B', 5], ['B', 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'group'; y = 'value' }
+      layers {
+        geomViolin().fill('#cc6677').alpha(0.7)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.VIOLIN, chart.layers.first().geomType)
+    assertEquals(CharmStatType.YDENSITY, chart.layers.first().statType)
+    assertEquals('#cc6677', chart.layers.first().params['fill'])
+    assertEquals(0.7, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testDotplotBuilderRendersDotplotLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('value')
+        .rows([[1.0], [1.5], [2.0], [2.5], [3.0], [3.5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'value' }
+      layers {
+        geomDotplot().fill('#336699').binwidth(0.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.DOTPLOT, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals(0.5, chart.layers.first().params['binwidth'])
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 
