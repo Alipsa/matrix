@@ -515,28 +515,22 @@ examples.
 Note: `ThemeDsl` is a static inner class of `PlotSpec` (at `PlotSpec.groovy:733`).
 
 **Tasks:**
-- 3.1 [ ] Add flat setters to `PlotSpec.ThemeDsl` alongside the existing nested closures:
-  ```groovy
-  void setLegendPosition(Object value)    // delegates to existing legend-position logic
-  void setLegendDirection(String value)
-  void setAxisLineWidth(Number value)
-  void setAxisColor(String value)
-  void setGridColor(String value)
-  void setBaseSize(Number value)
-  void setBaseFamily(String value)
-  ```
-- 3.2 [ ] Remove the existing `legend {}`, `axis {}`, `text {}`, `grid {}` nested closures
-  from `ThemeDsl`. The charm API has not been published yet so there are no external users
-  to break — ship a clean API from day one rather than introducing deprecated methods.
-  Update any internal tests that use the nested closures to use the new flat setters.
-- 3.3 [ ] Add tests to `CharmApiDesignTest`:
-  - `theme { legendPosition = 'top'; axisLineWidth = 0.5 }` produces correct theme state.
-  - Verify that all previously nested theme properties are accessible via flat setters.
-- 3.4 [ ] Audit `AnnotationDsl` and its sub-closures (`text {}`, `rect {}`, `segment {}`)
-  for IDE blind spots. If they rely on `propertyMissing` or `MapDsl`, add explicit typed
-  fields (same treatment as `LayerDsl` in Phase 2). Add tests verifying that autocomplete-
-  relevant fields are declared explicitly.
-- 3.5 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
+- 3.1 [x] Add flat setters to `PlotSpec.ThemeDsl` replacing the nested closures.
+  Added setters: `legendPosition`, `legendDirection`, `axisLineWidth`, `axisColor`,
+  `axisTickLength`, `textColor`, `textSize`, `titleSize`, `gridColor`, `gridLineWidth`,
+  `gridMinor`, `baseFamily`, `baseSize`, `baseLineHeight`.
+- 3.2 [x] Remove the existing `legend {}`, `axis {}`, `text {}`, `grid {}` nested closures
+  and `configureMap()` helper from `ThemeDsl`. Updated 26 occurrences of nested closure usage
+  across 8 test files and 1 example file to use flat setters.
+- 3.3 [x] Add `testFlatThemeSettersProduceCorrectThemeState` to `CharmApiDesignTest` —
+  verifies all 14 flat setters produce correct theme state.
+- 3.4 [x] Audited `AnnotationDsl` — sub-closures delegate directly to typed spec classes
+  (no `propertyMissing` or `MapDsl`). Added explicit `color`, `fill`, `alpha` fields with
+  write-through to `params` on `TextAnnotationSpec`, `RectAnnotationSpec`, and
+  `SegmentAnnotationSpec`. Added `colour` alias. Added
+  `testAnnotationSpecExplicitFieldsWriteThroughToParams` test.
+- 3.5 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — 476 tests passed.
+  Run `./gradlew :matrix-ggplot:test -Pheadless=true` — all tests passed.
 
 **Success criteria:**
 - IntelliJ autocompletes `legendPosition`, `axisLineWidth`, `axisColor`, `gridColor`,

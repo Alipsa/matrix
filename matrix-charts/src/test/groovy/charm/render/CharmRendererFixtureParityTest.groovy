@@ -41,7 +41,7 @@ class CharmRendererFixtureParityTest {
         title = 'Point Fixture'
       }
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -78,7 +78,7 @@ class CharmRendererFixtureParityTest {
       }
       line {}
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -109,7 +109,7 @@ class CharmRendererFixtureParityTest {
       }
       layer(CharmGeomType.HISTOGRAM, [bins: 5])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -148,7 +148,7 @@ class CharmRendererFixtureParityTest {
       }
       layer(CharmGeomType.COL, [:])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
@@ -183,7 +183,7 @@ class CharmRendererFixtureParityTest {
       }
       layer(CharmGeomType.BOXPLOT, [:])
       theme {
-        legend { position = 'none' }
+        legendPosition = 'none'
       }
     }.build()
 
