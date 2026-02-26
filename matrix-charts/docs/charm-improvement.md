@@ -584,17 +584,20 @@ as the first concrete builder so the smoke test uses real working code. Keep
 **Goal:** The four most common geometry builders alongside `PointBuilder` are all available.
 
 **Tasks:**
-- 5.1 [ ] Implement `LineBuilder`: `color(String)`, `alpha(Number)`, `linetype(Object)`,
-  `size(Number)`. `build()` → `LINE / IDENTITY`.
-- 5.2 [ ] Implement `SmoothBuilder`: `method(String)`, `se(boolean)`, `level(Number)`,
-  `span(Number)`, `color(String)`, `fill(String)`, `alpha(Number)`. `build()` → `SMOOTH / SMOOTH`.
-- 5.3 [ ] Implement `AreaBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`,
-  `linetype(Object)`. `build()` → `AREA / ALIGN`.
-- 5.4 [ ] Implement `RibbonBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`,
-  `linetype(Object)`. `build()` → `RIBBON / IDENTITY`.
-- 5.5 [ ] Add `Geoms.geomLine()`, `geomSmooth()`, `geomArea()`, `geomRibbon()` factory methods.
-- 5.6 [ ] Add tests — one render test per builder using both closure and chain styles.
-- 5.7 [ ] Run `./gradlew :matrix-charts:test :matrix-ggplot:test -Pheadless=true` — all tests green.
+- 5.1 [x] Implement `LineBuilder`: `color`, `colour`, `alpha`, `linetype`, `size`.
+  `build()` → `LINE / IDENTITY`.
+- 5.2 [x] Implement `SmoothBuilder`: `method`, `se`, `level`, `span`, `color`, `colour`,
+  `fill`, `alpha`. `build()` → `SMOOTH / SMOOTH`.
+- 5.3 [x] Implement `AreaBuilder`: `fill`, `color`, `colour`, `alpha`, `linetype`.
+  `build()` → `AREA / ALIGN`.
+- 5.4 [x] Implement `RibbonBuilder`: `fill`, `color`, `colour`, `alpha`, `linetype`.
+  `build()` → `RIBBON / IDENTITY`.
+- 5.5 [x] Add `Geoms.geomLine()`, `geomSmooth()`, `geomArea()`, `geomRibbon()` factory
+  methods and corresponding `LayersDsl` factory methods.
+- 5.6 [x] Add 6 tests to `CharmApiDesignTest`: closure-style render test for each builder
+  (line, smooth, area, ribbon), plus chain-style tests for line and smooth via `addLayer`.
+- 5.7 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — 486 tests passed.
+  Run `./gradlew :matrix-ggplot:test -Pheadless=true` — all tests passed.
 
 **Success criteria:**
 - All four builders compile `@CompileStatic`.

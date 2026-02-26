@@ -7,6 +7,7 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Cols
 import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.RectAnnotationSpec
 import se.alipsa.matrix.charm.SegmentAnnotationSpec
@@ -410,6 +411,110 @@ class CharmApiDesignTest {
     assertEquals('cty', chart.layers.first().mapping.x.columnName())
     assertEquals(false, chart.layers.first().inheritMapping)
     assertEquals(se.alipsa.matrix.charm.CharmPositionType.JITTER, chart.layers.first().positionType)
+  }
+
+  @Test
+  void testLineBuilderRendersLineLayer() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg) {
+      mapping { x = 'cty'; y = 'hwy' }
+      layers {
+        geomLine().color('#336699').linetype('dashed').size(1.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.LINE, chart.layers.first().geomType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals('dashed', chart.layers.first().params['linetype'])
+    assertEquals(1.5, chart.layers.first().params['size'])
+  }
+
+  @Test
+  void testSmoothBuilderRendersSmoothLayer() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg) {
+      mapping { x = 'cty'; y = 'hwy' }
+      layers {
+        geomSmooth().method('lm').se(false).color('#cc0000')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.SMOOTH, chart.layers.first().geomType)
+    assertEquals('lm', chart.layers.first().params['method'])
+    assertEquals(false, chart.layers.first().params['se'])
+  }
+
+  @Test
+  void testAreaBuilderRendersAreaLayerWithAlignStat() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 3], [2, 5], [3, 4], [4, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomArea().fill('#336699').alpha(0.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.AREA, chart.layers.first().geomType)
+    assertEquals(CharmStatType.ALIGN, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+  }
+
+  @Test
+  void testRibbonBuilderRendersRibbonLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'ymin', 'ymax')
+        .rows([[1, 2, 4], [2, 3, 6], [3, 4, 7]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; ymin = 'ymin'; ymax = 'ymax' }
+      layers {
+        geomRibbon().fill('#cc6677').alpha(0.3)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.RIBBON, chart.layers.first().geomType)
+    assertEquals('#cc6677', chart.layers.first().params['fill'])
+    assertEquals(0.3, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testLineBuilderChainStyleWorks() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg)
+        .mapping(x: 'cty', y: 'hwy')
+        .addLayer(Geoms.geomLine().alpha(0.8))
+        .build()
+
+    assertNotNull(chart.render())
+    assertEquals(CharmGeomType.LINE, chart.layers.first().geomType)
+    assertEquals(0.8, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testSmoothBuilderChainStyleWorks() {
+    Matrix mpg = Dataset.mpg()
+    Chart chart = plot(mpg)
+        .mapping(x: 'cty', y: 'hwy')
+        .addLayer(Geoms.geomSmooth().method('loess').span(0.5))
+        .build()
+
+    assertNotNull(chart.render())
+    assertEquals(CharmGeomType.SMOOTH, chart.layers.first().geomType)
+    assertEquals('loess', chart.layers.first().params['method'])
+    assertEquals(0.5, chart.layers.first().params['span'])
   }
 
   @CompileStatic

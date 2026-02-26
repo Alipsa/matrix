@@ -34,6 +34,50 @@ class LayersDsl {
     b
   }
 
+  /**
+   * Creates and registers a line builder.
+   *
+   * @return new line builder
+   */
+  LineBuilder geomLine() {
+    LineBuilder b = new LineBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a smooth builder.
+   *
+   * @return new smooth builder
+   */
+  SmoothBuilder geomSmooth() {
+    SmoothBuilder b = new SmoothBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers an area builder.
+   *
+   * @return new area builder
+   */
+  AreaBuilder geomArea() {
+    AreaBuilder b = new AreaBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a ribbon builder.
+   *
+   * @return new ribbon builder
+   */
+  RibbonBuilder geomRibbon() {
+    RibbonBuilder b = new RibbonBuilder()
+    collected << b
+    b
+  }
+
   // Additional factory methods will be added as builders are introduced
-  // in subsequent phases (5–11).
+  // in subsequent phases (6–11).
 }

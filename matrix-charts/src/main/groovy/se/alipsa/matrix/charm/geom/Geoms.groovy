@@ -32,10 +32,42 @@ class Geoms {
     new PointBuilder()
   }
 
-  // TODO: geomLine()    — Phase 5
-  // TODO: geomSmooth()  — Phase 5
-  // TODO: geomArea()    — Phase 5
-  // TODO: geomRibbon()  — Phase 5
+  /**
+   * Creates a new line builder.
+   *
+   * @return line builder
+   */
+  static LineBuilder geomLine() {
+    new LineBuilder()
+  }
+
+  /**
+   * Creates a new smooth builder.
+   *
+   * @return smooth builder
+   */
+  static SmoothBuilder geomSmooth() {
+    new SmoothBuilder()
+  }
+
+  /**
+   * Creates a new area builder.
+   *
+   * @return area builder
+   */
+  static AreaBuilder geomArea() {
+    new AreaBuilder()
+  }
+
+  /**
+   * Creates a new ribbon builder.
+   *
+   * @return ribbon builder
+   */
+  static RibbonBuilder geomRibbon() {
+    new RibbonBuilder()
+  }
+
   // TODO: geomBar()     — Phase 6
   // TODO: geomCol()     — Phase 6
   // TODO: geomHistogram() — Phase 6
