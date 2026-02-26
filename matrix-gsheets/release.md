@@ -2,7 +2,7 @@
 
 ## 0.1.1, 2026-01-31
 Move actual implementation for GsheetsReader and GsheetsWriter and utility methods to GsUtil so that GsImporter and GsExporter are just empty wrappers.
-- com.google.apis:google-api-services-drive v3-rev20251210-2.0.0 -> v3-rev20260128-2.0.0
+- com.google.apis:google-api-services-drive v3-rev20251210-2.0.0 -> v3-rev20260220-2.0.0
 - com.google.api-client:google-api-client 2.8.1 -> 2.9.0
 
 ## 0.1.0, 2026-01-31
