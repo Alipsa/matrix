@@ -437,30 +437,31 @@ phase locks in the types, fixes the `@DelegatesTo` annotation, and removes `col.
 examples.
 
 **Tasks:**
-- 1.1 [ ] Verify that `PlotSpec.mapping(Closure)` is annotated
+- 1.1 [x] Verify that `PlotSpec.mapping(Closure)` is annotated
   `@DelegatesTo(value = MappingDsl, strategy = Closure.DELEGATE_ONLY)`. Add or fix the
   annotation if missing — this is what enables IDE resolution of `x`, `y`, `color`, etc.
   Note: all closure methods in `PlotSpec` consistently use `DELEGATE_ONLY`.
-- 1.2 [ ] Change all `MappingDsl` field types from `Object` to `String`. Column names are
+- 1.2 [x] Change all `MappingDsl` field types from `Object` to `String`. Column names are
   always strings; `Mapping.coerceToColumnExpr()` handles the conversion downstream. This
   lets the IDE flag non-string values as errors at authoring time.
-- 1.3 [ ] Replace the `colour` alias in `propertyMissing` with a real declared
+- 1.3 [x] Replace the `colour` alias in `propertyMissing` with a real declared
   `String colour` field that sets `color`: `void setColour(String v) { color = v }`.
   Remove `propertyMissing` from `MappingDsl` entirely — all valid aesthetics are now
   explicit, and unknown names should produce a compile-time error under `@CompileStatic`.
-- 1.4 [ ] Add a test to `CharmApiDesignTest` asserting that `x = 'cty'` inside `mapping {}`
+- 1.4 [x] Add a test to `CharmApiDesignTest` asserting that `x = 'cty'` inside `mapping {}`
   renders identically to the previous `x = col['cty']` form, using the mpg dataset.
-- 1.5 [ ] Add a test asserting that `colour = 'drv'` (British spelling) produces the same
+- 1.5 [x] Add a test asserting that `colour = 'drv'` (British spelling) produces the same
   chart as `color = 'drv'`.
-- 1.6 [ ] Update all internal tests and examples to use plain strings, removing `col.` usage.
+- 1.6 [x] Update all internal tests and examples to use plain strings, removing `col.` usage.
   Update `matrix-charts/examples/charm/SimpleCharmChart.groovy` likewise.
-- 1.7 [ ] Verify that `PlotSpec.labels(Closure)` has `@DelegatesTo(LabelsSpec)` annotation
+- 1.7 [x] Verify that `PlotSpec.labels(Closure)` has `@DelegatesTo(LabelsSpec)` annotation
   so IDE autocomplete works for `title`, `subtitle`, `x`, `y`, `caption` inside `labels {}`.
-- 1.8 [ ] Fix bug in `PlotSpec.area()`: change stat from `IDENTITY` to `ALIGN` to match
+- 1.8 [x] Fix bug in `PlotSpec.area()`: change stat from `IDENTITY` to `ALIGN` to match
   `GEOM_DEFAULT_STATS[AREA]`. This is a one-line fix with no dependencies — fixing it early
   avoids a stat inconsistency window when `AreaBuilder` (Phase 5) uses `ALIGN` but the old
-  `area {}` closure still uses `IDENTITY`.
-- 1.9 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
+  `area {}` closure still uses `IDENTITY`. Also fixed `AlignStat` to fall back to identity
+  behavior for non-numeric (categorical) x-axis data.
+- 1.9 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
 
 **Success criteria:**
 - IntelliJ shows all aesthetic names (`x`, `y`, `color`, `fill`, `size`, `shape`, `group`,
