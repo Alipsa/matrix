@@ -780,6 +780,170 @@ class CharmApiDesignTest {
     assertEquals(true, chart.layers.first().params['interpolate'])
   }
 
+  @Test
+  void testTextBuilderRendersTextLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'name')
+        .rows([[1, 2, 'A'], [3, 4, 'B'], [5, 6, 'C']])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; label = 'name' }
+      layers {
+        geomText().size(4).color('#333333').family('serif')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.TEXT, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals(4, chart.layers.first().params['size'])
+    assertEquals('#333333', chart.layers.first().params['color'])
+    assertEquals('serif', chart.layers.first().params['family'])
+  }
+
+  @Test
+  void testLabelBuilderRendersLabelLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'name')
+        .rows([[1, 2, 'A'], [3, 4, 'B'], [5, 6, 'C']])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; label = 'name' }
+      layers {
+        geomLabel().size(4).fill('#ffffff').color('#333333')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.LABEL, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals(4, chart.layers.first().params['size'])
+    assertEquals('#ffffff', chart.layers.first().params['fill'])
+    assertEquals('#333333', chart.layers.first().params['color'])
+  }
+
+  @Test
+  void testSegmentBuilderRendersSegmentLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'xend', 'yend')
+        .rows([[1, 1, 3, 3], [2, 2, 4, 4]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; xend = 'xend'; yend = 'yend' }
+      layers {
+        geomSegment().color('#336699').size(1).linetype('dashed')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.SEGMENT, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
+    assertEquals('dashed', chart.layers.first().params['linetype'])
+  }
+
+  @Test
+  void testCurveBuilderRendersCurveLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'xend', 'yend')
+        .rows([[1, 1, 3, 3], [2, 2, 4, 4]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; xend = 'xend'; yend = 'yend' }
+      layers {
+        geomCurve().curvature(0.3).color('#cc6677')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.CURVE, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals(0.3, chart.layers.first().params['curvature'])
+    assertEquals('#cc6677', chart.layers.first().params['color'])
+  }
+
+  @Test
+  void testAblineBuilderRendersAblineLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [3, 4], [5, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint()
+        geomAbline().intercept(0).slope(1).color('#cc0000').linetype('dashed')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.ABLINE, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
+    assertEquals(0, chart.layers[1].params['intercept'])
+    assertEquals(1, chart.layers[1].params['slope'])
+    assertEquals('#cc0000', chart.layers[1].params['color'])
+    assertEquals('dashed', chart.layers[1].params['linetype'])
+  }
+
+  @Test
+  void testHlineBuilderRendersHlineLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [3, 4], [5, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint()
+        geomHline().yintercept(3).color('#cc0000').linetype('dashed')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.HLINE, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
+    assertEquals(3, chart.layers[1].params['yintercept'])
+    assertEquals('#cc0000', chart.layers[1].params['color'])
+    assertEquals('dashed', chart.layers[1].params['linetype'])
+  }
+
+  @Test
+  void testVlineBuilderRendersVlineLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [3, 4], [5, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint()
+        geomVline().xintercept(3).color('#cc0000').linetype('dotted')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.VLINE, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
+    assertEquals(3, chart.layers[1].params['xintercept'])
+    assertEquals('#cc0000', chart.layers[1].params['color'])
+    assertEquals('dotted', chart.layers[1].params['linetype'])
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 

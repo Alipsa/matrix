@@ -175,4 +175,67 @@ class Geoms {
   static RasterBuilder geomRaster() {
     new RasterBuilder()
   }
+
+  /**
+   * Creates a new text builder.
+   *
+   * @return text builder
+   */
+  static TextBuilder geomText() {
+    new TextBuilder()
+  }
+
+  /**
+   * Creates a new label builder.
+   *
+   * @return label builder
+   */
+  static LabelBuilder geomLabel() {
+    new LabelBuilder()
+  }
+
+  /**
+   * Creates a new segment builder.
+   *
+   * @return segment builder
+   */
+  static SegmentBuilder geomSegment() {
+    new SegmentBuilder()
+  }
+
+  /**
+   * Creates a new curve builder.
+   *
+   * @return curve builder
+   */
+  static CurveBuilder geomCurve() {
+    new CurveBuilder()
+  }
+
+  /**
+   * Creates a new abline builder.
+   *
+   * @return abline builder
+   */
+  static AblineBuilder geomAbline() {
+    new AblineBuilder()
+  }
+
+  /**
+   * Creates a new horizontal line builder.
+   *
+   * @return hline builder
+   */
+  static HlineBuilder geomHline() {
+    new HlineBuilder()
+  }
+
+  /**
+   * Creates a new vertical line builder.
+   *
+   * @return vline builder
+   */
+  static VlineBuilder geomVline() {
+    new VlineBuilder()
+  }
 }
