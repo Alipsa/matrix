@@ -1,7 +1,6 @@
 package se.alipsa.matrix.bigquery
 
 import com.google.cloud.bigquery.FieldValue
-import com.google.cloud.bigquery.LegacySQLTypeName
 import com.google.cloud.bigquery.StandardSQLTypeName
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.ValueConverter
@@ -14,7 +13,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 /**
  * Utility class for mapping between Java types and BigQuery SQL types.
@@ -22,7 +20,7 @@ import java.time.format.DateTimeFormatter
  * <p>This class provides bidirectional type mapping:</p>
  * <ul>
  *   <li>{@link #toStandardSqlType}: Java class → BigQuery StandardSQLTypeName (for schema creation)</li>
- *   <li>{@link #convertType}: BigQuery LegacySQLTypeName → Java class (for query results)</li>
+ *   <li>{@link #convertType}: BigQuery StandardSQLTypeName → Java class (for query results)</li>
  *   <li>{@link #convertFieldValue}: BigQuery FieldValue → Java object (for data conversion)</li>
  * </ul>
  *
@@ -49,7 +47,7 @@ import java.time.format.DateTimeFormatter
  *   <li><b>INTERVAL</b>: Duration type - could map to java.time.Duration</li>
  *   <li><b>JSON</b>: JSON documents - could map to Map or JsonNode</li>
  *   <li><b>RANGE</b>: Range of values - would require custom Range class</li>
- *   <li><b>RECORD</b>: Nested structures - could map to Map&lt;String, Object&gt;</li>
+ *   <li><b>STRUCT</b>: Nested structures - could map to Map&lt;String, Object&gt;</li>
  * </ul>
  *
  * @see Bq
@@ -102,7 +100,7 @@ class TypeMapper {
   }
 
   /**
-   * Maps a BigQuery LegacySQLTypeName to a Java class.
+   * Maps a BigQuery StandardSQLTypeName to a Java class.
    *
    * <p>Used when converting BigQuery query results to Matrix column types.
    * Unknown types default to Object.</p>
@@ -110,91 +108,115 @@ class TypeMapper {
    * <h3>Type Mapping</h3>
    * <ul>
    *   <li>BIGNUMERIC, NUMERIC → BigDecimal</li>
-   *   <li>BOOLEAN → Boolean</li>
+   *   <li>BOOL → Boolean</li>
    *   <li>BYTES → byte[]</li>
    *   <li>DATE → LocalDate</li>
    *   <li>DATETIME → LocalDateTime</li>
-   *   <li>FLOAT → Double</li>
-   *   <li>INTEGER → Long</li>
+   *   <li>FLOAT64 → Double</li>
+   *   <li>INT64 → Long</li>
    *   <li>STRING → String</li>
    *   <li>TIMESTAMP → Instant</li>
    *   <li>TIME → LocalTime</li>
    *   <li>Other → Object (default fallback)</li>
    * </ul>
    *
-   * @param typeName the BigQuery type to map
+   * @param typeName the BigQuery StandardSQLTypeName to map
    * @return the corresponding Java class
    */
-  static Class convertType(LegacySQLTypeName typeName) {
-    return switch (typeName) {
-      case LegacySQLTypeName.BIGNUMERIC -> BigDecimal
-      case LegacySQLTypeName.BOOLEAN -> Boolean
-      case LegacySQLTypeName.BYTES -> byte[]
-      case LegacySQLTypeName.DATE -> LocalDate
-      case LegacySQLTypeName.DATETIME -> LocalDateTime
-      case LegacySQLTypeName.FLOAT -> Double
+  static Class convertType(StandardSQLTypeName typeName) {
+    switch (typeName) {
+      case StandardSQLTypeName.BIGNUMERIC -> BigDecimal
+      case StandardSQLTypeName.BOOL -> Boolean
+      case StandardSQLTypeName.BYTES -> byte[]
+      case StandardSQLTypeName.DATE -> LocalDate
+      case StandardSQLTypeName.DATETIME -> LocalDateTime
+      case StandardSQLTypeName.FLOAT64 -> Double
         // GEOGRAPHY: Not yet supported - would require GeoJSON parsing
-      case LegacySQLTypeName.INTEGER -> Long
+      case StandardSQLTypeName.INT64 -> Long
         // INTERVAL: Not yet supported - could map to java.time.Duration
         // JSON: Not yet supported - could map to Map or JsonNode
-      case LegacySQLTypeName.NUMERIC -> BigDecimal
+      case StandardSQLTypeName.NUMERIC -> BigDecimal
         // RANGE: Not yet supported - would require custom Range class
-        // RECORD: Not yet supported - could map to Map<String, Object>
-      case LegacySQLTypeName.STRING -> String
-      case LegacySQLTypeName.TIMESTAMP -> Instant
-      case LegacySQLTypeName.TIME -> LocalTime
+        // STRUCT: Not yet supported - could map to Map<String, Object>
+      case StandardSQLTypeName.STRING -> String
+      case StandardSQLTypeName.TIMESTAMP -> Instant
+      case StandardSQLTypeName.TIME -> LocalTime
       default -> Object
     }
   }
 
   /**
-   * Converts a BigQuery FieldValue to a Java object based on the column type.
+   * Converts a BigQuery FieldValue to a Java object based on the column type,
+   * using typed accessors for accurate and efficient conversion.
    *
    * @param fv the FieldValue from BigQuery
-   * @param colType the LegacySQLTypeName indicating the column's data type
+   * @param colType the StandardSQLTypeName indicating the column's data type
    * @return the converted Java object, or null if the field value is null
    */
-  static Object convertFieldValue(FieldValue fv, LegacySQLTypeName colType) {
+  static Object convertFieldValue(FieldValue fv, StandardSQLTypeName colType) {
     if (fv.isNull()) return null
 
-    if (colType == LegacySQLTypeName.BYTES) {
-      try {
-        // Preferred: typed accessor
-        return fv.getBytesValue()
-      } catch (IllegalStateException | UnsupportedOperationException | ClassCastException ignored) {
-        // Fallbacks depending on client version/driver:
-        // - IllegalStateException: when FieldValue state doesn't allow getBytesValue()
-        // - UnsupportedOperationException: when the method isn't supported by driver version
-        // - ClassCastException: when internal type doesn't match expected byte array
+    switch (colType) {
+      case StandardSQLTypeName.BYTES -> convertBytesValue(fv)
+      case StandardSQLTypeName.BIGNUMERIC, StandardSQLTypeName.NUMERIC -> fv.getNumericValue()
+      case StandardSQLTypeName.BOOL -> fv.getBooleanValue()
+      case StandardSQLTypeName.INT64 -> fv.getLongValue()
+      case StandardSQLTypeName.FLOAT64 -> fv.getDoubleValue()
+      case StandardSQLTypeName.STRING -> fv.getStringValue()
+      case StandardSQLTypeName.TIMESTAMP -> fv.getTimestampInstant()
+      case StandardSQLTypeName.DATE -> LocalDate.parse(fv.getStringValue())
+      case StandardSQLTypeName.DATETIME -> LocalDateTime.parse(fv.getStringValue())
+      case StandardSQLTypeName.TIME -> {
         Object v = fv.getValue()
-        if (v instanceof byte[]) return (byte[]) v
-        if (v instanceof CharSequence) return Base64.decoder.decode(v.toString())
-        if (v instanceof ByteBuffer) {
-          ByteBuffer bb = (ByteBuffer) v
-          byte[] out = new byte[bb.remaining()]
-          bb.get(out)
-          return out
+        if (v instanceof CharSequence) {
+          LocalTime.parse(v.toString(), Bq.bqTimeFormatter)
+        } else if (v instanceof Number) {
+          LocalTime.ofNanoOfDay(((Number) v).longValue() * 1_000L)
         }
-        throw new IllegalStateException("Unsupported BYTES value type: ${v?.getClass()?.name}")
       }
+      default -> fv.getStringValue()
     }
-    convert(fv.getValue(), colType)
+  }
+
+  private static byte[] convertBytesValue(FieldValue fv) {
+    try {
+      fv.getBytesValue()
+    } catch (IllegalStateException | UnsupportedOperationException | ClassCastException ignored) {
+      // Fallbacks depending on client version/driver:
+      // - IllegalStateException: when FieldValue state doesn't allow getBytesValue()
+      // - UnsupportedOperationException: when the method isn't supported by driver version
+      // - ClassCastException: when internal type doesn't match expected byte array
+      Object v = fv.getValue()
+      if (v instanceof byte[]) return (byte[]) v
+      if (v instanceof CharSequence) return Base64.decoder.decode(v.toString())
+      if (v instanceof ByteBuffer) {
+        ByteBuffer bb = (ByteBuffer) v
+        byte[] out = new byte[bb.remaining()]
+        bb.get(out)
+        return out
+      }
+      throw new IllegalStateException("Unsupported BYTES value type: ${v?.getClass()?.name}")
+    }
   }
 
   /**
    * Converts a raw value from BigQuery to the appropriate Java type.
    *
-   * <p>This method handles the actual value conversion based on the BigQuery column type.
+   * <p>This method handles value conversion based on the BigQuery column type when
+   * working with raw Object values rather than FieldValue instances.
    * It uses {@link se.alipsa.matrix.core.ValueConverter} for standard conversions and
    * custom logic for time-related types.</p>
    *
    * <h3>Conversion Rules</h3>
    * <ul>
    *   <li>BIGNUMERIC, NUMERIC → BigDecimal via ValueConverter</li>
-   *   <li>BOOLEAN → Boolean via ValueConverter</li>
-   *   <li>INTEGER → Long via ValueConverter</li>
+   *   <li>BOOL → Boolean via ValueConverter</li>
+   *   <li>FLOAT64 → Double</li>
+   *   <li>INT64 → Long via ValueConverter</li>
    *   <li>STRING → String via ValueConverter</li>
    *   <li>TIMESTAMP → Instant via {@link #convertToInstant} (epoch seconds)</li>
+   *   <li>DATE → LocalDate (parsed from ISO string)</li>
+   *   <li>DATETIME → LocalDateTime (parsed from ISO string)</li>
    *   <li>TIME → LocalTime (parsed from string or converted from microseconds)</li>
    *   <li>Other types → String via ValueConverter (fallback)</li>
    * </ul>
@@ -211,21 +233,24 @@ class TypeMapper {
    * @return the converted Java object, or null if value is null
    * @see ValueConverter
    */
-  static Object convert(Object value, LegacySQLTypeName type) {
+  static Object convert(Object value, StandardSQLTypeName type) {
     if (value == null) return null
     switch (type) {
-      case LegacySQLTypeName.BIGNUMERIC -> ValueConverter.asBigDecimal(value)
-      case LegacySQLTypeName.BOOLEAN -> ValueConverter.asBoolean(value)
+      case StandardSQLTypeName.BIGNUMERIC -> ValueConverter.asBigDecimal(value)
+      case StandardSQLTypeName.BOOL -> ValueConverter.asBoolean(value)
+      case StandardSQLTypeName.FLOAT64 -> value as Double
         // GEOGRAPHY: Not yet supported - would require GeoJSON parsing
-      case LegacySQLTypeName.INTEGER -> ValueConverter.asLong(value)
+      case StandardSQLTypeName.INT64 -> ValueConverter.asLong(value)
         // INTERVAL: Not yet supported - could map to java.time.Duration
         // JSON: Not yet supported - could map to Map or JsonNode
-      case LegacySQLTypeName.NUMERIC -> ValueConverter.asBigDecimal(value)
+      case StandardSQLTypeName.NUMERIC -> ValueConverter.asBigDecimal(value)
         // RANGE: Not yet supported - would require custom Range class
-        // RECORD: Not yet supported - could map to Map<String, Object>
-      case LegacySQLTypeName.STRING -> ValueConverter.asString(value)
-      case LegacySQLTypeName.TIMESTAMP -> convertToInstant(value)
-      case LegacySQLTypeName.TIME -> {
+        // STRUCT: Not yet supported - could map to Map<String, Object>
+      case StandardSQLTypeName.STRING -> ValueConverter.asString(value)
+      case StandardSQLTypeName.TIMESTAMP -> convertToInstant(value)
+      case StandardSQLTypeName.DATE -> LocalDate.parse(ValueConverter.asString(value))
+      case StandardSQLTypeName.DATETIME -> LocalDateTime.parse(ValueConverter.asString(value))
+      case StandardSQLTypeName.TIME -> {
         if (value instanceof CharSequence) {
           LocalTime.parse(value.toString(), Bq.bqTimeFormatter)
         } else if (value instanceof Number) {

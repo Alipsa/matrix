@@ -938,10 +938,10 @@ class Bq {
   static Matrix convertToMatrix(TableResult result) {
     Schema schema = result.getSchema()
     List<String> colNames = []
-    List<LegacySQLTypeName> colTypes = []
+    List<StandardSQLTypeName> colTypes = []
     schema.fields.each {
       colNames << it.name
-      colTypes << it.type
+      colTypes << it.type.standardType
     }
 
     List<List> rows = []
