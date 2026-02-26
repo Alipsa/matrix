@@ -5,9 +5,33 @@ import groovy.transform.CompileStatic
 
 /**
  * Layer DSL delegate for geom configuration blocks.
+ *
+ * <p>Common aesthetic properties ({@code size}, {@code alpha}, {@code color},
+ * {@code fill}, {@code shape}, {@code linetype}) are declared as explicit typed
+ * fields so that IDEs can autocomplete them. Geom-specific properties (e.g.
+ * {@code method}, {@code se}, {@code bins}) still fall through to
+ * {@link LayerParams#propertyMissing(String, Object) propertyMissing}.</p>
  */
 @CompileStatic
 class LayerDsl extends LayerParams {
+
+  /** Point/line size. */
+  Number size
+
+  /** Opacity (0–1). */
+  Number alpha
+
+  /** Stroke/outline colour. */
+  String color
+
+  /** Fill colour. */
+  String fill
+
+  /** Shape (string name or integer code). */
+  Object shape
+
+  /** Line-type (string name or integer code). */
+  Object linetype
 
   private Mapping layerMapping
   boolean inheritMapping = true
@@ -101,6 +125,24 @@ class LayerDsl extends LayerParams {
       }
     }
     throw new CharmValidationException("Unsupported layer position type '${value.getClass().name}'")
+  }
+
+  /**
+   * Returns merged values: explicit typed fields plus free-form params.
+   * Explicit fields take precedence over values stored via {@code propertyMissing}.
+   *
+   * @return merged parameter map
+   */
+  @Override
+  Map<String, Object> values() {
+    Map<String, Object> merged = super.values()
+    if (size != null) merged.size = size
+    if (alpha != null) merged.alpha = alpha
+    if (color != null) merged.color = color
+    if (fill != null) merged.fill = fill
+    if (shape != null) merged.shape = shape
+    if (linetype != null) merged.linetype = linetype
+    merged
   }
 
   /**
