@@ -1146,6 +1146,176 @@ class CharmApiDesignTest {
     assertEquals(3, chart.layers.first().params['fatten'])
   }
 
+  // ── Phase 10: Path/step/jitter builders ──
+
+  @Test
+  void testPathBuilderRendersPathLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPath().color('#336699').size(1).alpha(0.8).lineend('round').linejoin('mitre')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.PATH, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
+    assertEquals(0.8, chart.layers.first().params['alpha'])
+    assertEquals('round', chart.layers.first().params['lineend'])
+    assertEquals('mitre', chart.layers.first().params['linejoin'])
+  }
+
+  @Test
+  void testStepBuilderRendersStepLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomStep().color('#336699').size(1).direction('hv')
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.STEP, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
+    assertEquals('hv', chart.layers.first().params['direction'])
+  }
+
+  @Test
+  void testJitterBuilderRendersJitterLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([['a', 2], ['a', 3], ['b', 4], ['b', 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomJitter().width(0.2).height(0).color('#336699').size(3).alpha(0.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.JITTER, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals(0.2, chart.layers.first().params['width'])
+    assertEquals(0, chart.layers.first().params['height'])
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(3, chart.layers.first().params['size'])
+    assertEquals(0.5, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testRugBuilderRendersRugLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint().size(2)
+        geomRug().color('#336699').size(0.5).sides('bl').outside(true)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.RUG, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
+    assertEquals('#336699', chart.layers[1].params['color'])
+    assertEquals(0.5, chart.layers[1].params['size'])
+    assertEquals('bl', chart.layers[1].params['sides'])
+    assertEquals(true, chart.layers[1].params['outside'])
+  }
+
+  @Test
+  void testCountBuilderRendersCountLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'x']])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomCount().color('#336699').fill('#99ccff').size(3)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.COUNT, chart.layers.first().geomType)
+    assertEquals(CharmStatType.COUNT, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals('#99ccff', chart.layers.first().params['fill'])
+    assertEquals(3, chart.layers.first().params['size'])
+  }
+
+  @Test
+  void testContourBuilderRendersContourLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomContour().color('#336699').size(1).bins(10)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.CONTOUR, chart.layers.first().geomType)
+    assertEquals(CharmStatType.CONTOUR, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
+    assertEquals(10, chart.layers.first().params['bins'])
+  }
+
+  @Test
+  void testFunctionBuilderRendersFunctionLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 4], [3, 3], [4, 5]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomPoint().size(2)
+        geomFunction().color('#336699').size(1).n(200)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(2, chart.layers.size())
+    assertEquals(CharmGeomType.FUNCTION, chart.layers[1].geomType)
+    assertEquals(CharmStatType.FUNCTION, chart.layers[1].statType)
+    assertEquals('#336699', chart.layers[1].params['color'])
+    assertEquals(1, chart.layers[1].params['size'])
+    assertEquals(200, chart.layers[1].params['n'])
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 

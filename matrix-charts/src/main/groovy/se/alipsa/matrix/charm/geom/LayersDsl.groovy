@@ -386,6 +386,83 @@ class LayersDsl {
     b
   }
 
+  /**
+   * Creates and registers a path builder.
+   *
+   * @return new path builder
+   */
+  PathBuilder geomPath() {
+    PathBuilder b = new PathBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a step builder.
+   *
+   * @return new step builder
+   */
+  StepBuilder geomStep() {
+    StepBuilder b = new StepBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a jitter builder.
+   *
+   * @return new jitter builder
+   */
+  JitterBuilder geomJitter() {
+    JitterBuilder b = new JitterBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a rug builder.
+   *
+   * @return new rug builder
+   */
+  RugBuilder geomRug() {
+    RugBuilder b = new RugBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a count builder.
+   *
+   * @return new count builder
+   */
+  CountBuilder geomCount() {
+    CountBuilder b = new CountBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a contour builder.
+   *
+   * @return new contour builder
+   */
+  ContourBuilder geomContour() {
+    ContourBuilder b = new ContourBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a function builder.
+   *
+   * @return new function builder
+   */
+  FunctionBuilder geomFunction() {
+    FunctionBuilder b = new FunctionBuilder()
+    collected << b
+    b
+  }
+
   // Additional factory methods will be added as builders are introduced
-  // in subsequent phases (10–11).
+  // in subsequent phase (11).
 }
