@@ -741,17 +741,17 @@ Remaining geom types: `SF`, `SF_LABEL`, `SF_TEXT`, `POLYGON`, `MAP`, `PARALLEL`,
 `BLANK`, `CUSTOM`, `ERRORBARH`, `POINTRANGE` (if not done above).
 
 **Tasks:**
-- 11.1 [ ] Implement `SfBuilder`, `SfLabelBuilder`, `SfTextBuilder` for spatial geoms.
-- 11.2 [ ] Implement `PolygonBuilder`, `MapBuilder` for map/polygon geoms.
-- 11.3 [ ] Implement `Density2dBuilder`, `Density2dFilledBuilder`, `ContourFilledBuilder`
+- 11.1 [x] Implement `SfBuilder`, `SfLabelBuilder`, `SfTextBuilder` for spatial geoms.
+- 11.2 [x] Implement `PolygonBuilder`, `MapBuilder` for map/polygon geoms.
+- 11.3 [x] Implement `Density2dBuilder`, `Density2dFilledBuilder`, `ContourFilledBuilder`
   for 2D stat geoms.
-- 11.4 [ ] Implement `SpokeBuilder`, `MagBuilder`, `ParallelBuilder` for specialized geoms.
-- 11.5 [ ] Implement `LogticksBuilder`, `BlankBuilder`, `RasterAnnBuilder` for annotation geoms.
-- 11.6 [ ] Implement `ErrorbarhBuilder` (horizontal error bars).
-- 11.7 [ ] `CustomBuilder` — accepts a `Closure` or `Supplier` for user-defined rendering.
-- 11.8 [ ] Add all factory methods to `Geoms` (replacing all remaining `// TODO` stubs).
-- 11.9 [ ] Add tests for each builder.
-- 11.10 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true`.
+- 11.4 [x] Implement `SpokeBuilder`, `MagBuilder`, `ParallelBuilder` for specialized geoms.
+- 11.5 [x] Implement `LogticksBuilder`, `BlankBuilder`, `RasterAnnBuilder` for annotation geoms.
+- 11.6 [x] Implement `ErrorbarhBuilder` (horizontal error bars).
+- 11.7 [x] `CustomBuilder` — accepts a `Closure` or `Supplier` for user-defined rendering.
+- 11.8 [x] Add all factory methods to `Geoms` and `LayersDsl`.
+- 11.9 [x] Add tests for each builder.
+- 11.10 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green (537 passed).
 
 **Success criteria:**
 - `Geoms` has no remaining `// TODO` factory stubs.

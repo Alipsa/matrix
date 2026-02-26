@@ -382,4 +382,148 @@ class Geoms {
   static FunctionBuilder geomFunction() {
     new FunctionBuilder()
   }
+
+  /**
+   * Creates a new simple feature builder.
+   *
+   * @return sf builder
+   */
+  static SfBuilder geomSf() {
+    new SfBuilder()
+  }
+
+  /**
+   * Creates a new simple feature label builder.
+   *
+   * @return sf label builder
+   */
+  static SfLabelBuilder geomSfLabel() {
+    new SfLabelBuilder()
+  }
+
+  /**
+   * Creates a new simple feature text builder.
+   *
+   * @return sf text builder
+   */
+  static SfTextBuilder geomSfText() {
+    new SfTextBuilder()
+  }
+
+  /**
+   * Creates a new polygon builder.
+   *
+   * @return polygon builder
+   */
+  static PolygonBuilder geomPolygon() {
+    new PolygonBuilder()
+  }
+
+  /**
+   * Creates a new map builder.
+   *
+   * @return map builder
+   */
+  static MapBuilder geomMap() {
+    new MapBuilder()
+  }
+
+  /**
+   * Creates a new 2D density contour builder.
+   *
+   * @return density2d builder
+   */
+  static Density2dBuilder geomDensity2d() {
+    new Density2dBuilder()
+  }
+
+  /**
+   * Creates a new filled 2D density builder.
+   *
+   * @return density2d filled builder
+   */
+  static Density2dFilledBuilder geomDensity2dFilled() {
+    new Density2dFilledBuilder()
+  }
+
+  /**
+   * Creates a new filled contour builder.
+   *
+   * @return contour filled builder
+   */
+  static ContourFilledBuilder geomContourFilled() {
+    new ContourFilledBuilder()
+  }
+
+  /**
+   * Creates a new spoke builder.
+   *
+   * @return spoke builder
+   */
+  static SpokeBuilder geomSpoke() {
+    new SpokeBuilder()
+  }
+
+  /**
+   * Creates a new magnification builder.
+   *
+   * @return mag builder
+   */
+  static MagBuilder geomMag() {
+    new MagBuilder()
+  }
+
+  /**
+   * Creates a new parallel coordinate builder.
+   *
+   * @return parallel builder
+   */
+  static ParallelBuilder geomParallel() {
+    new ParallelBuilder()
+  }
+
+  /**
+   * Creates a new log ticks builder.
+   *
+   * @return logticks builder
+   */
+  static LogticksBuilder geomLogticks() {
+    new LogticksBuilder()
+  }
+
+  /**
+   * Creates a new blank builder.
+   *
+   * @return blank builder
+   */
+  static BlankBuilder geomBlank() {
+    new BlankBuilder()
+  }
+
+  /**
+   * Creates a new raster annotation builder.
+   *
+   * @return raster annotation builder
+   */
+  static RasterAnnBuilder geomRasterAnn() {
+    new RasterAnnBuilder()
+  }
+
+  /**
+   * Creates a new horizontal error bar builder.
+   *
+   * @return errorbarh builder
+   */
+  static ErrorbarhBuilder geomErrorbarh() {
+    new ErrorbarhBuilder()
+  }
+
+  /**
+   * Creates a new custom builder.
+   *
+   * @return custom builder
+   */
+  static CustomBuilder geomCustom() {
+    new CustomBuilder()
+  }
 }
