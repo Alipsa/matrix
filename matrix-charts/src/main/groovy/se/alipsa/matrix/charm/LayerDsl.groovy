@@ -24,6 +24,15 @@ class LayerDsl extends LayerParams {
   /** Stroke/outline colour. */
   String color
 
+  /**
+   * Sets the colour aesthetic (British spelling alias for {@link #color}).
+   *
+   * @param value colour value
+   */
+  void setColour(String value) {
+    color = value
+  }
+
   /** Fill colour. */
   String fill
 
