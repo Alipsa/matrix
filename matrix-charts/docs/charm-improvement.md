@@ -549,45 +549,26 @@ as the first concrete builder so the smoke test uses real working code. Keep
 `PlotSpec.addLayer(LayerBuilder)` as a programmatic escape hatch.
 
 **Tasks:**
-- 4.1 [ ] Create `se/alipsa/matrix/charm/geom/LayerBuilder.groovy` — `@CompileStatic` abstract
-  base class with:
-  - `protected Mapping layerMapping`
-  - `protected boolean inheritMapping = true`
-  - `protected PositionSpec positionSpec`
-  - `LayerBuilder mapping(@DelegatesTo(value=MappingDsl, strategy=Closure.DELEGATE_ONLY) Closure<?> c): LayerBuilder` — fluent, returns `this`
-  - `LayerBuilder inheritMapping(boolean v): LayerBuilder` — returns `this`
-  - `LayerBuilder position(Object v): LayerBuilder` — delegates to `LayerDsl.parsePosition()`,
-    returns `this`
-  - `abstract LayerSpec build()`
-- 4.2 [ ] Create `se/alipsa/matrix/charm/geom/PointBuilder.groovy` — concrete builder for
-  `POINT / IDENTITY` with fluent setters: `size(Number)`, `alpha(Number)`, `color(String)`,
-  `fill(String)`, `shape(Object)`, `linetype(Object)`. All return `this`.
-- 4.3 [ ] Create `se/alipsa/matrix/charm/geom/LayersDsl.groovy` — delegate class with factory
-  methods that register-and-return builders:
-  ```groovy
-  class LayersDsl {
-    List<LayerBuilder> collected = []
-    PointBuilder geomPoint() { def b = new PointBuilder(); collected << b; b }
-    // geomLine(), geomSmooth(), etc. added as each builder is introduced in later phases
-  }
-  ```
-- 4.4 [ ] Create `se/alipsa/matrix/charm/geom/Geoms.groovy` — `@CompileStatic` class.
-  Add `static PointBuilder geomPoint() { new PointBuilder() }` now; remaining factory stubs
-  to be filled in subsequent phases (add them as `// TODO` comments for visibility).
-- 4.5 [ ] Add `PlotSpec.layers(@DelegatesTo(LayersDsl) Closure c): PlotSpec` — creates a
-  `LayersDsl`, runs the closure against it, then calls `addLayer(b.build())` for each builder
-  collected. Also add a **new public** `PlotSpec.addLayer(LayerBuilder builder): PlotSpec`
-  overload as a programmatic escape hatch that calls `builder.build()` and appends to `layers`.
-  Note: the existing `addLayer()` method is `private` — this task adds a new public overload
-  accepting a `LayerBuilder`, not to be confused with the private method.
-- 4.6 [ ] Add tests to `CharmApiDesignTest`:
-  - Closure style: `plot(data) { mapping { x = 'cty'; y = 'hwy' }; layers { geomPoint().size(2).alpha(0.7) } }.build().render()`
-    does not throw and produces an SVG with circle/point elements.
-  - Pure chain: `plot(data).mapping { x = 'cty'; y = 'hwy' }.layers { geomPoint().size(2) }.build().render()`
-    works.
-  - Escape hatch: `plot(data) { mapping { x = 'cty'; y = 'hwy' }; addLayer geomPoint().size(2) }.build().render()`
-    still works.
-- 4.7 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
+- 4.1 [x] Create `se/alipsa/matrix/charm/geom/LayerBuilder.groovy` — `@CompileStatic` abstract
+  base with `layerMapping`, `inheritMapping`, `positionSpec`, `params`, fluent `mapping()`,
+  `inheritMapping()`, `position()`, and `build()` producing `LayerSpec`.
+- 4.2 [x] Create `se/alipsa/matrix/charm/geom/PointBuilder.groovy` — concrete builder for
+  `POINT / IDENTITY` with fluent setters: `size`, `alpha`, `color`, `colour`, `fill`, `shape`,
+  `linetype`. All return `this`.
+- 4.3 [x] Create `se/alipsa/matrix/charm/geom/LayersDsl.groovy` — DSL delegate with
+  `geomPoint()` factory that registers and returns the builder.
+- 4.4 [x] Create `se/alipsa/matrix/charm/geom/Geoms.groovy` — static factory with
+  `geomPoint()`. TODO comments for future builder factories (Phases 5–11).
+- 4.5 [x] Add `PlotSpec.layers(@DelegatesTo(LayersDsl) Closure)` and public
+  `PlotSpec.addLayer(LayerBuilder)` overload. The private `addLayer(geom, stat, closure)`
+  method is unchanged.
+- 4.6 [x] Add 4 tests to `CharmApiDesignTest`:
+  - `testLayersDslClosureStyleRendersPointElements` — closure `layers {}` style
+  - `testLayersDslPureChainStyleRendersPointElements` — `.layers {}` chain style
+  - `testAddLayerEscapeHatchRendersPointElements` — `addLayer Geoms.geomPoint()` escape hatch
+  - `testLayerBuilderMappingAndPositionWork` — verifies mapping, inheritMapping, position
+- 4.7 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — 480 tests passed.
+  Run `./gradlew :matrix-ggplot:test -Pheadless=true` — all tests passed.
 
 **Success criteria:**
 - `LayerBuilder`, `PointBuilder`, `LayersDsl`, `Geoms.geomPoint()`, `PlotSpec.layers()`, and

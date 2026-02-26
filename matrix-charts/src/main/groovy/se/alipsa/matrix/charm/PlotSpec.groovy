@@ -273,6 +273,59 @@ class PlotSpec {
   }
 
   /**
+   * Adds layers using the builder-style DSL.
+   *
+   * <p>Inside the closure, factory methods like {@code geomPoint()} return
+   * fluent builders. Each builder is collected and converted into a
+   * {@link LayerSpec} when the closure completes.</p>
+   *
+   * <pre>{@code
+   * plot(data) {
+   *   mapping { x = 'cty'; y = 'hwy' }
+   *   layers {
+   *     geomPoint().size(3).alpha(0.7)
+   *   }
+   * }
+   * }</pre>
+   *
+   * @param configure layers closure
+   * @return this plot spec
+   */
+  PlotSpec layers(
+      @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = se.alipsa.matrix.charm.geom.LayersDsl)
+      Closure<?> configure
+  ) {
+    se.alipsa.matrix.charm.geom.LayersDsl dsl = new se.alipsa.matrix.charm.geom.LayersDsl()
+    Closure<?> body = configure.rehydrate(dsl, this, this)
+    body.resolveStrategy = Closure.DELEGATE_ONLY
+    body.call()
+    dsl.collected.each { se.alipsa.matrix.charm.geom.LayerBuilder builder ->
+      layers << builder.build()
+    }
+    this
+  }
+
+  /**
+   * Adds a single layer from a builder (programmatic escape hatch).
+   *
+   * <pre>{@code
+   * import static se.alipsa.matrix.charm.geom.Geoms.geomPoint
+   *
+   * plot(data) {
+   *   mapping { x = 'cty'; y = 'hwy' }
+   *   addLayer geomPoint().size(3)
+   * }
+   * }</pre>
+   *
+   * @param builder configured layer builder
+   * @return this plot spec
+   */
+  PlotSpec addLayer(se.alipsa.matrix.charm.geom.LayerBuilder builder) {
+    layers << builder.build()
+    this
+  }
+
+  /**
    * Configures scales using closure syntax.
    *
    * @param configure closure for scale options
