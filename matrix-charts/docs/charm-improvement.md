@@ -713,22 +713,22 @@ as the first concrete builder so the smoke test uses real working code. Keep
 ### Phase 10 — Path/step/jitter builders: PathBuilder, StepBuilder, JitterBuilder, RugBuilder, CountBuilder, ContourBuilder, FunctionBuilder
 
 **Tasks:**
-- 10.1 [ ] Implement `PathBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
+- 10.1 [x] Implement `PathBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
   `alpha(Number)`, `lineend(String)`, `linejoin(String)`. `build()` → `PATH / IDENTITY`.
-- 10.2 [ ] Implement `StepBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
+- 10.2 [x] Implement `StepBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
   `direction(String)`. `build()` → `STEP / IDENTITY`.
-- 10.3 [ ] Implement `JitterBuilder`: `width(Number)`, `height(Number)`, `color(String)`,
+- 10.3 [x] Implement `JitterBuilder`: `width(Number)`, `height(Number)`, `color(String)`,
   `size(Number)`, `shape(Object)`, `alpha(Number)`. `build()` → `JITTER / IDENTITY`.
-- 10.4 [ ] Implement `RugBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
+- 10.4 [x] Implement `RugBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
   `sides(String)`, `outside(boolean)`. `build()` → `RUG / IDENTITY`.
-- 10.5 [ ] Implement `CountBuilder`: `color(String)`, `fill(String)`, `size(Number)`.
+- 10.5 [x] Implement `CountBuilder`: `color(String)`, `fill(String)`, `size(Number)`.
   `build()` → `COUNT / COUNT`.
-- 10.6 [ ] Implement `ContourBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
+- 10.6 [x] Implement `ContourBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
   `bins(Integer)`, `binwidth(Number)`. `build()` → `CONTOUR / CONTOUR`.
-- 10.7 [ ] Implement `FunctionBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
+- 10.7 [x] Implement `FunctionBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
   `n(Integer)`. `build()` → `FUNCTION / FUNCTION`.
-- 10.8 [ ] Add corresponding factory methods and tests.
-- 10.9 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true`.
+- 10.8 [x] Add corresponding factory methods and tests.
+- 10.9 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green (521 passed).
 
 **Success criteria:** All seven builders compile and each has a passing render test.
 

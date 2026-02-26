@@ -319,4 +319,67 @@ class Geoms {
   static PointrangeBuilder geomPointrange() {
     new PointrangeBuilder()
   }
+
+  /**
+   * Creates a new path builder.
+   *
+   * @return path builder
+   */
+  static PathBuilder geomPath() {
+    new PathBuilder()
+  }
+
+  /**
+   * Creates a new step builder.
+   *
+   * @return step builder
+   */
+  static StepBuilder geomStep() {
+    new StepBuilder()
+  }
+
+  /**
+   * Creates a new jitter builder.
+   *
+   * @return jitter builder
+   */
+  static JitterBuilder geomJitter() {
+    new JitterBuilder()
+  }
+
+  /**
+   * Creates a new rug builder.
+   *
+   * @return rug builder
+   */
+  static RugBuilder geomRug() {
+    new RugBuilder()
+  }
+
+  /**
+   * Creates a new count builder.
+   *
+   * @return count builder
+   */
+  static CountBuilder geomCount() {
+    new CountBuilder()
+  }
+
+  /**
+   * Creates a new contour builder.
+   *
+   * @return contour builder
+   */
+  static ContourBuilder geomContour() {
+    new ContourBuilder()
+  }
+
+  /**
+   * Creates a new function builder.
+   *
+   * @return function builder
+   */
+  static FunctionBuilder geomFunction() {
+    new FunctionBuilder()
+  }
 }
