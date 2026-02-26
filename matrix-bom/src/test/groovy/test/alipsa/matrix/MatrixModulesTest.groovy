@@ -259,7 +259,7 @@ class MatrixModulesTest {
         y = col.mpg
         color = col.cyl
       }
-      points()
+      layers { geomPoint() }
       labels { title = 'MPG vs Weight' }
     }
 
