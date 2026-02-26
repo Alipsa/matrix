@@ -353,8 +353,8 @@ class CharmModelExpansionTest {
   void testPlotSpecPointsLineConvenienceMethodsStillWork() {
     Chart chart = plot(Dataset.mpg()) {
       mapping {
-        x = col.cty
-        y = col.hwy
+        x = 'cty'
+        y = 'hwy'
       }
       points {}
       line {}
@@ -379,8 +379,8 @@ class CharmModelExpansionTest {
 
     Chart chart = plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
       theme {

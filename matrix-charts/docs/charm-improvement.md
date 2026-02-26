@@ -31,17 +31,17 @@ become the canonical model; the closure DSL becomes convenience syntax that dele
 
 | Category | Examples | Mechanism |
 |---|---|---|
-| Single-object configuration | `mapping {}`, `label {}`, `theme {}`, `scale {}`, `coord {}`, `facet {}` | Flat typed setters on the delegate |
+| Single-object configuration | `mapping {}`, `labels {}`, `theme {}`, `scale {}`, `coord {}`, `facet {}` | Flat typed setters on the delegate |
 | Collection | `layers {}`, `annotate {}` | Factory methods that register items into a list |
 
 **Rule:** Use a flat-setter delegate when configuring a single object; use factory methods that
 register items when populating a collection.
 
-Note: `label {}` is singular — it configures one `LabelsSpec` object (title, subtitle, x-axis
-label, y-axis label, caption). Using the plural `labels {}` was a misnomer; it should be
-renamed to `label {}`. Static positioned text belongs in `annotate { text { … } }`, not in
-`label {}`. Data-mapped text (one mark per data row) belongs in `layers { geomText() }` as
-a proper geom.
+Note: `labels {}` configures one `LabelsSpec` object with multiple label fields (title,
+subtitle, x-axis label, y-axis label, caption) — the plural name is appropriate because
+it sets several labels at once. Static positioned text belongs in
+`annotate { text { … } }`, not in `labels {}`. Data-mapped text (one mark per data row)
+belongs in `layers { geomText() }` as a proper geom.
 
 Legend control is split across two closures:
 - `theme {}` — visual styling and position of the legend box (`legendPosition`, `legendDirection`,
@@ -51,6 +51,107 @@ Legend control is split across two closures:
 
 `guides {}` is a single-object configuration (one `GuidesDsl` object) even though its setters
 are keyed by aesthetic name, so it belongs in the flat-setter category.
+
+---
+
+## Non-goals
+
+This plan does **not** change:
+- The rendering pipeline (`CharmRenderer` and its internal geometry/stat/position pipeline)
+- Export API (`ChartExport`, `GgExport`, PNG/JPEG/Swing/JavaFX exporters)
+- Coordinate systems (`CoordDsl`, `CoordSpec`, cartesian/polar transforms)
+- Statistical transformations (stat implementations: `BinStat`, `DensityStat`, etc.)
+- Faceting (`FacetDsl`, `FacetSpec`)
+- The `matrix-ggplot` public API (`ggplot() + geom_*()` syntax) — only its internal bridge
+  (`GgCharmCompiler`) is updated to use builders
+
+---
+
+## Backward compatibility
+
+**Important context:** The charm API has not been published yet — there are no external
+users. The phased approach exists to make incremental development and testing possible,
+not to maintain backward compatibility with real users. This means:
+
+- **No deprecated methods in the first release.** Where this plan previously suggested
+  deprecation windows (e.g. old closure layer methods), those methods should simply be
+  removed before the first public release. The transition period is internal only.
+- **`Object` types used for flexibility during development** (e.g. `shape` and `linetype`
+  in Phase 2, which accept both strings and integers) are pragmatic during the transition
+  but should be tightened to specific types before release if possible.
+- **`PlotSpec.layer(CharmGeomType, Map)`** — kept during transition for `CharmBridge`;
+  removed (not deprecated) before first release once `CharmBridge` is migrated.
+
+**Impact on dependent modules:**
+1. **`matrix-ggplot` users:** Unaffected — the public `ggplot() + geom_*()` API does not
+   change; only `GgCharmCompiler` internals are migrated.
+2. **`matrix-charts` high-level API users:** `CharmBridge` is migrated in Phase 12 — users
+   of `AreaChart`, `BarChart`, `LineChart`, etc. are unaffected because `CharmBridge` is
+   internal.
+
+---
+
+## Scope clarification: DSL closures not addressed by this plan
+
+The following closures already have explicit typed fields or methods and do **not** need
+the same `propertyMissing` → typed-field treatment addressed in Phases 1–3:
+
+| Closure      | Status | Notes |
+|--------------|--------|-------|
+| `scale {}`   | OK     | `ScaleDsl` has explicit methods (`log10()`, `sqrt()`, etc.) |
+| `coord {}`   | OK     | `CoordDsl` has typed setters |
+| `facet {}`   | OK     | `FacetDsl` has typed setters |
+| `guides {}`  | OK     | `GuidesDsl` has typed setters keyed by aesthetic name |
+
+If any of these are later found to have IDE blind spots (e.g. `propertyMissing` usage),
+add a task to the relevant phase.
+
+**`annotate {}` and its sub-closures** (`text {}`, `rect {}`, `segment {}`) use
+`AnnotationDsl` with nested closures. Phase 3 task 3.4 audits these for IDE blind spots
+and adds explicit typed fields where needed.
+
+---
+
+## `Charts.chart()` / `Charts.plot()` aliases
+
+`Charts.groovy` provides `chart()` as an alias for `plot()`. Both entry points should
+return a chainable `PlotSpec`. This plan does not change the alias relationship — both
+remain available.
+
+---
+
+## `PlotSpec.layer(CharmGeomType, Map)` — existing programmatic API
+
+`PlotSpec.layer(CharmGeomType, Map)` is the current generic programmatic API for adding
+layers. `CharmBridge` uses it (e.g., `spec.layer(geom, [position: position])`).
+
+**Fate:** This method is kept during Phases 4–11 for internal use by `CharmBridge`. In
+Phase 12, `CharmBridge` is migrated to use builders, after which `layer(CharmGeomType, Map)`
+is removed (no deprecation needed — the charm API has not been published yet).
+
+---
+
+## `col` proxy deprecation
+
+Task 1.6 removes `col.` usage from all internal tests and examples, but the `Cols` proxy
+class itself (`MappingDsl.col` field) is not deprecated or removed in this plan. It remains
+available for users who prefer it, though plain strings are the canonical form. A future plan
+may deprecate `Cols` if adoption of plain strings is universal.
+
+---
+
+## Build lifecycle: `plot()` → `build()` → `render()`
+
+For readers unfamiliar with the Charm lifecycle:
+
+1. **`plot(data) { ... }`** — creates a mutable `PlotSpec` and configures it via closures
+2. **`.build()`** — finalizes the spec into an immutable `Chart` object
+3. **`chart.render()`** — renders the `Chart` to an SVG (`se.alipsa.groovy.svg.Svg`)
+4. **Export** — `SvgWriter.toXml(svg)` for XML string, or use `ChartExport` for
+   PNG/JPEG/Swing/JavaFX
+
+All code examples in this document show `.build()` as the terminal operation. Rendering
+and export are separate steps not covered by this plan.
 
 ---
 
@@ -72,7 +173,7 @@ def chart = plot(data) {
   smooth {
     method = 'lm'      // propertyMissing — invisible to IDE
   }
-  label {              // singular — one LabelsSpec (title+subtitle top, caption bottom-right)
+  labels {             // one LabelsSpec — sets title, subtitle, axes, caption
     title    = 'Monthly Sales'
     subtitle = 'January – December 2024'   // renders below title
     x        = 'Month'
@@ -132,8 +233,8 @@ Keep the same syntax but eliminate the IDE-blind spots.
    (they accept both strings and integers in current usage). Keep `propertyMissing` as a fallback
    for geom-specific params not covered by the explicit fields.
 3. `PlotSpec.ThemeDsl` (inner class) — add single-level property setters (`legendPosition`,
-   `axisLineWidth`, `axisColor`, `gridColor`, `baseSize`, `baseFamily`) alongside the existing
-   nested closures.
+   `axisLineWidth`, `axisColor`, `gridColor`, `baseSize`, `baseFamily`) and remove the
+   existing nested closures (`legend {}`, `axis {}`, `text {}`, `grid {}`).
 
 **Result:**
 ```groovy
@@ -151,7 +252,7 @@ plot(data) {
   smooth {
     method = 'lm'      // still via propertyMissing — geom-specific param
   }
-  label {                    // renamed from labels {} — singular, one LabelsSpec
+  labels {                   // one LabelsSpec — sets title, subtitle, axes, caption
     title    = 'Monthly Sales'
     subtitle = 'January – December 2024'   // top, below title
     x        = 'Month'
@@ -179,31 +280,31 @@ plot(data) {
 
 Three distinct label/text concepts require three distinct mechanisms:
 
-| Concept | Example use | Mechanism |
-|---|---|---|
-| Structural chart labels | title, subtitle, axis labels, caption | `label {}` — flat typed setters on `LabelsSpec` |
-| Data-mapped text marks | country name next to each scatter point | `layers { geomText() }` — proper GoG geom, one mark per data row |
-| Static positioned annotations | "outlier" written at coordinates (5, 10) | `annotate { text { x=5; y=10; label='outlier' } }` |
+| Concept                       | Example use                              | Mechanism                                                        |
+|-------------------------------|------------------------------------------|------------------------------------------------------------------|
+| Structural chart labels       | title, subtitle, axis labels, caption    | `labels {}` — flat typed setters on `LabelsSpec`                 |
+| Data-mapped text marks        | country name next to each scatter point  | `layers { geomText() }` — proper GoG geom, one mark per data row |
+| Static positioned annotations | "outlier" written at coordinates (5, 10) | `annotate { text { x=5; y=10; label='outlier' } }`               |
 
-`label {}` is singular because it configures exactly one `LabelsSpec` object. The method
-`PlotSpec.labels(Closure)` should be renamed to `PlotSpec.label(Closure)` (see task 1.7).
+`labels {}` is plural because it configures multiple label fields (title, subtitle, x-axis,
+y-axis, caption) on a single `LabelsSpec` object.
 
 **`LabelsSpec` fields and their rendering positions:**
 
-| Field | Rendered where |
-|---|---|
-| `title` | Top, above the plot panel |
-| `subtitle` | Top, 4 px below the title |
-| `x` | Below the x-axis |
-| `y` | Left of the y-axis (rotated) |
-| `caption` | Bottom-right, grey — use for source citations and footnotes |
+| Field      | Rendered where                                              |
+|------------|-------------------------------------------------------------|
+| `title`    | Top, above the plot panel                                   |
+| `subtitle` | Top, 4 px below the title                                   |
+| `x`        | Below the x-axis                                            |
+| `y`        | Left of the y-axis (rotated)                                |
+| `caption`  | Bottom-right, grey — use for source citations and footnotes |
 
 There is no mechanism to move `subtitle` to the bottom; use `caption` for bottom text.
 `caption` is always bottom-right; `subtitle` is always top (below title).
 
 ---
 
-## Approach C — Typed Geom Builder Objects
+## Approach B — Typed Geom Builder Objects
 
 Introduce a `Geoms` factory class with dedicated builder objects for each geom type.
 Factory method names use a `geom` prefix (`geomPoint()`, `geomLine()`, etc.) to avoid name
@@ -211,7 +312,8 @@ collisions with the existing `PlotSpec` closure methods (`points()`, `line()`, e
 builders are called inside the `plot { }` closure.
 
 `PlotSpec` gets a `layers(@DelegatesTo(LayersDsl) Closure)` method that collects builders via
-`LayersDsl`; `addLayer(LayerBuilder)` is retained as a programmatic escape hatch.
+`LayersDsl`; a new public `addLayer(LayerBuilder)` overload is added as a programmatic escape
+hatch (the existing `addLayer()` is private).
 
 **New package structure:**
 ```
@@ -243,16 +345,16 @@ plot(data) {
     y = 'sales'
     color = 'category'
   }
-  layers {
-    geomPoint().size(3).alpha(0.7).fill('#3366cc')
-    geomSmooth().method('lm').se(false)
-  }
-  label {              // singular — one LabelsSpec
+  labels {
     title    = 'Monthly Sales'
     subtitle = 'January – December 2024'
     x        = 'Month'
     y        = 'Sales (units)'
     caption  = 'Source: internal CRM'
+  }
+  layers {
+    geomPoint().size(3).alpha(0.7).fill('#3366cc')
+    geomSmooth().method('lm').se(false)
   }
   annotate {
     text { x = 3; y = 100; label = 'Peak sales' }
@@ -272,7 +374,7 @@ plot(data)
     geomPoint().size(3).alpha(0.7).fill('#3366cc')
     geomSmooth().method('lm').se(false)
   }
-  .label {
+  .labels {
     title    = 'Monthly Sales'
     subtitle = 'January – December 2024'
     x        = 'Month'; y = 'Sales (units)'
@@ -293,6 +395,37 @@ closure syntax over them.
 
 ---
 
+## API design notes
+
+### `layers` method vs. `layers` field name collision
+
+`PlotSpec` has a `List<LayerSpec> layers` field. Adding a `PlotSpec.layers(Closure)` method
+creates a name overlap (method vs. field). Groovy resolves this correctly — `spec.layers`
+accesses the list while `spec.layers { ... }` calls the method — but it may confuse readers.
+Document this distinction clearly in examples.
+
+### Static import for `Geoms` factory methods
+
+The examples show `import static se.alipsa.matrix.charm.geom.Geoms.*` — users must remember
+this import to use `geomPoint()`, etc. at the top level. Inside `layers {}`, the `LayersDsl`
+delegate provides its own `geomPoint()` factory methods (Phase 4, task 4.3), so the static
+import from `Geoms` is only needed outside of `layers {}` (e.g. for `addLayer(geomPoint())`).
+This distinction should be documented clearly.
+
+### Two parallel ways to set layer aesthetics during transition
+
+During Phases 4–11, both the closure form (`points { size = 3 }`) and the builder form
+(`layers { geomPoint().size(3) }`) coexist. They produce equivalent `LayerSpec` objects but
+via different code paths. Phase 12 removes the closure forms and unifies on builders.
+
+### `label` field name overlap in `MappingDsl`
+
+`MappingDsl` has a field `label` (for the label aesthetic mapping), and `LabelsSpec` has fields
+set via `labels {}`. Inside a `plot {}` closure, these are at different nesting levels so there
+is no actual collision — `label` inside `mapping {}` refers to the aesthetic, while `labels {}`
+at the plot level configures chart labels. Worth noting in user documentation.
+
+---
 
 ## Implementation Plan
 
@@ -304,34 +437,38 @@ phase locks in the types, fixes the `@DelegatesTo` annotation, and removes `col.
 examples.
 
 **Tasks:**
-- 1.1 [ ] Verify that `PlotSpec.mapping(Closure)` is annotated
-  `@DelegatesTo(value = MappingDsl, strategy = Closure.DELEGATE_FIRST)`. Add or fix the
+- 1.1 [x] Verify that `PlotSpec.mapping(Closure)` is annotated
+  `@DelegatesTo(value = MappingDsl, strategy = Closure.DELEGATE_ONLY)`. Add or fix the
   annotation if missing — this is what enables IDE resolution of `x`, `y`, `color`, etc.
-- 1.2 [ ] Change all `MappingDsl` field types from `Object` to `String`. Column names are
+  Note: all closure methods in `PlotSpec` consistently use `DELEGATE_ONLY`.
+- 1.2 [x] Change all `MappingDsl` field types from `Object` to `String`. Column names are
   always strings; `Mapping.coerceToColumnExpr()` handles the conversion downstream. This
   lets the IDE flag non-string values as errors at authoring time.
-- 1.3 [ ] Replace the `colour` alias in `propertyMissing` with a real declared
+- 1.3 [x] Replace the `colour` alias in `propertyMissing` with a real declared
   `String colour` field that sets `color`: `void setColour(String v) { color = v }`.
   Remove `propertyMissing` from `MappingDsl` entirely — all valid aesthetics are now
   explicit, and unknown names should produce a compile-time error under `@CompileStatic`.
-- 1.4 [ ] Add a test to `CharmApiDesignTest` asserting that `x = 'cty'` inside `mapping {}`
+- 1.4 [x] Add a test to `CharmApiDesignTest` asserting that `x = 'cty'` inside `mapping {}`
   renders identically to the previous `x = col['cty']` form, using the mpg dataset.
-- 1.5 [ ] Add a test asserting that `colour = 'drv'` (British spelling) produces the same
+- 1.5 [x] Add a test asserting that `colour = 'drv'` (British spelling) produces the same
   chart as `color = 'drv'`.
-- 1.6 [ ] Update all internal tests and examples to use plain strings, removing `col.` usage.
+- 1.6 [x] Update all internal tests and examples to use plain strings, removing `col.` usage.
   Update `matrix-charts/examples/charm/SimpleCharmChart.groovy` likewise.
-- 1.7 [ ] Add `PlotSpec.label(Closure)` as a rename of `PlotSpec.labels(Closure)`. Keep
-  `labels(Closure)` as a `@Deprecated` delegate to `label()` for one release cycle. Update
-  all internal usages to `label {}`. Update the `@DelegatesTo(LabelsSpec)` annotation on the
-  new method.
-- 1.8 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
+- 1.7 [x] Verify that `PlotSpec.labels(Closure)` has `@DelegatesTo(LabelsSpec)` annotation
+  so IDE autocomplete works for `title`, `subtitle`, `x`, `y`, `caption` inside `labels {}`.
+- 1.8 [x] Fix bug in `PlotSpec.area()`: change stat from `IDENTITY` to `ALIGN` to match
+  `GEOM_DEFAULT_STATS[AREA]`. This is a one-line fix with no dependencies — fixing it early
+  avoids a stat inconsistency window when `AreaBuilder` (Phase 5) uses `ALIGN` but the old
+  `area {}` closure still uses `IDENTITY`. Also fixed `AlignStat` to fall back to identity
+  behavior for non-numeric (categorical) x-axis data.
+- 1.9 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
 
 **Success criteria:**
 - IntelliJ shows all aesthetic names (`x`, `y`, `color`, `fill`, `size`, `shape`, `group`,
   `xend`, `yend`, `xmin`, `xmax`, `ymin`, `ymax`, `alpha`, `linetype`, `label`, `weight`,
   `colour`) in autocomplete inside `mapping {}` (verify manually in IDE).
 - Assigning an unknown name inside `mapping {}` is a compile-time error.
-- `PlotSpec.label(Closure)` exists; `labels(Closure)` is `@Deprecated`.
+- `PlotSpec.area()` uses `ALIGN` stat (bug fix).
 - All tests green.
 
 ---
@@ -342,14 +479,15 @@ examples.
 
 **Tasks:**
 - 2.1 [ ] Add explicit typed fields to `LayerDsl` (note: `shape` and `linetype` use `Object`
-  because current usage passes both strings and integers for these):
+  for now because internal code passes both strings and integers — Phase 12 task 12.5
+  tightens these to specific types before the first public release):
   ```groovy
   Number size
   Number alpha
   String color
   String fill
-  Object shape
-  Object linetype
+  Object shape     // tightened in Phase 12
+  Object linetype  // tightened in Phase 12
   ```
 - 2.2 [ ] Override `values()` in `LayerDsl` to merge these explicit fields into the map from
   `LayerParams.values()`, so all params reach the renderer. Explicit fields take precedence.
@@ -386,18 +524,24 @@ Note: `ThemeDsl` is a static inner class of `PlotSpec` (at `PlotSpec.groovy:733`
   void setBaseSize(Number value)
   void setBaseFamily(String value)
   ```
-- 3.2 [ ] Decide whether to keep or remove the existing `legend {}`, `axis {}`, `text {}`,
-  `grid {}` nested closures. If kept, they should coexist without conflict; if removed, update
-  any internal tests that use them.
+- 3.2 [ ] Remove the existing `legend {}`, `axis {}`, `text {}`, `grid {}` nested closures
+  from `ThemeDsl`. The charm API has not been published yet so there are no external users
+  to break — ship a clean API from day one rather than introducing deprecated methods.
+  Update any internal tests that use the nested closures to use the new flat setters.
 - 3.3 [ ] Add tests to `CharmApiDesignTest`:
-  - `theme { legendPosition = 'top'; axisLineWidth = 0.5 }` produces the same theme state as
-    `theme { legend { position = 'top' }; axis { lineWidth = 0.5 } }`.
-  - Both flat and nested styles can coexist in the same `theme {}` block.
-- 3.4 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
+  - `theme { legendPosition = 'top'; axisLineWidth = 0.5 }` produces correct theme state.
+  - Verify that all previously nested theme properties are accessible via flat setters.
+- 3.4 [ ] Audit `AnnotationDsl` and its sub-closures (`text {}`, `rect {}`, `segment {}`)
+  for IDE blind spots. If they rely on `propertyMissing` or `MapDsl`, add explicit typed
+  fields (same treatment as `LayerDsl` in Phase 2). Add tests verifying that autocomplete-
+  relevant fields are declared explicitly.
+- 3.5 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
 
 **Success criteria:**
 - IntelliJ autocompletes `legendPosition`, `axisLineWidth`, `axisColor`, `gridColor`,
   `baseSize`, `baseFamily` inside `theme {}` (verify manually in IDE).
+- No nested closures (`legend {}`, `axis {}`, etc.) remain in `ThemeDsl`.
+- `annotate {}` sub-closures have explicit typed fields (no `propertyMissing` for common params).
 - All tests green.
 
 ---
@@ -415,7 +559,7 @@ as the first concrete builder so the smoke test uses real working code. Keep
   - `protected Mapping layerMapping`
   - `protected boolean inheritMapping = true`
   - `protected PositionSpec positionSpec`
-  - `LayerBuilder mapping(@DelegatesTo(value=MappingDsl, strategy=Closure.DELEGATE_FIRST) Closure<?> c): LayerBuilder` — fluent, returns `this`
+  - `LayerBuilder mapping(@DelegatesTo(value=MappingDsl, strategy=Closure.DELEGATE_ONLY) Closure<?> c): LayerBuilder` — fluent, returns `this`
   - `LayerBuilder inheritMapping(boolean v): LayerBuilder` — returns `this`
   - `LayerBuilder position(Object v): LayerBuilder` — delegates to `LayerDsl.parsePosition()`,
     returns `this`
@@ -437,8 +581,10 @@ as the first concrete builder so the smoke test uses real working code. Keep
   to be filled in subsequent phases (add them as `// TODO` comments for visibility).
 - 4.5 [ ] Add `PlotSpec.layers(@DelegatesTo(LayersDsl) Closure c): PlotSpec` — creates a
   `LayersDsl`, runs the closure against it, then calls `addLayer(b.build())` for each builder
-  collected. Also add `PlotSpec.addLayer(LayerBuilder builder): PlotSpec` as a programmatic
-  escape hatch that calls `builder.build()` and appends to `layers`.
+  collected. Also add a **new public** `PlotSpec.addLayer(LayerBuilder builder): PlotSpec`
+  overload as a programmatic escape hatch that calls `builder.build()` and appends to `layers`.
+  Note: the existing `addLayer()` method is `private` — this task adds a new public overload
+  accepting a `LayerBuilder`, not to be confused with the private method.
 - 4.6 [ ] Add tests to `CharmApiDesignTest`:
   - Closure style: `plot(data) { mapping { x = 'cty'; y = 'hwy' }; layers { geomPoint().size(2).alpha(0.7) } }.build().render()`
     does not throw and produces an SVG with circle/point elements.
@@ -641,33 +787,42 @@ Remaining geom types: `SF`, `SF_LABEL`, `SF_TEXT`, `POLYGON`, `MAP`, `PARALLEL`,
 remove or replace the old closure-only paths, and update documentation.
 
 **Tasks:**
-- 12.1 [ ] Fix bug in `PlotSpec.area()` (line 235): change stat from `IDENTITY` to `ALIGN`
-  to match `GEOM_DEFAULT_STATS[AREA]` and `AreaBuilder`. Single-series area charts are
-  unaffected (`AlignStat` is a no-op on a single series); stacked/multi-series charts that
-  previously produced silently wrong output via `area {}` will now render correctly.
-- 12.2 [ ] Wire existing `PlotSpec` closure convenience methods to delegate to their builder
+- 12.1 [ ] Wire existing `PlotSpec` closure convenience methods to delegate to their builder
   counterparts internally. Example: `PlotSpec.points(Closure)` constructs a `PointBuilder`,
   applies the closure params to it, then calls `addLayer(builder)`. This unifies the two
   implementations.
+- 12.2 [ ] Migrate `CharmBridge.groovy` to use builders. `CharmBridge` currently calls
+  `spec.area()`, `spec.line()`, `spec.points()`, `spec.pie()`, and `spec.layer()` — all of
+  which are removed in this phase. Rewrite these calls to use `layers {}` / builders.
+  `GgCharmCompiler` constructs `LayerSpec` directly (bypasses PlotSpec) and is unaffected.
 - 12.3 [ ] Before removing any `PlotSpec` closure method, grep `CharmBridge.groovy` and
-  `GgCharmCompiler` for usages of old closure methods AND direct `addLayer()` calls. Migrate
-  any calls found to `layers {}` / builders; then remove the old closure methods from `PlotSpec`.
+  `GgCharmCompiler` for usages of old closure methods AND direct `addLayer()` calls. Verify
+  all have been migrated in 12.2; then remove the old closure methods from `PlotSpec`.
   Update all affected tests.
-- 12.4 [ ] Add an integration test in `CharmApiDesignTest` that builds the same chart two ways
+- 12.4 [ ] Remove `PlotSpec.layer(CharmGeomType, Map)` — the generic programmatic API.
+  After `CharmBridge` migration in 12.2, this method has no callers. No deprecation needed
+  since the charm API has not been published yet.
+- 12.5 [ ] Tighten `Object` types for `shape` and `linetype` in `LayerDsl` and all builder
+  classes. With all internal code migrated, audit actual usage to determine the correct
+  specific types (e.g. `String` if integers are no longer passed, or a dedicated enum/sealed
+  type). Update all builders' `shape(Object)` and `linetype(Object)` signatures accordingly.
+- 12.6 [ ] Add an integration test in `CharmApiDesignTest` that builds the same chart two ways
   (closure DSL and pure builder chain) and asserts equivalent structure using direct SVG object
   access (element counts and types), not full XML string comparison.
-- 12.5 [ ] Update `matrix-charts/examples/charm/SimpleCharmChart.groovy` to demonstrate
+- 12.7 [ ] Update `matrix-charts/examples/charm/SimpleCharmChart.groovy` to demonstrate
   both styles with a comment indicating the builder chain is the canonical form.
-- 12.6 [ ] Update `matrix-charts/docs/charm.md` with a "Builder API" section.
-- 12.7 [ ] Run `./gradlew :matrix-charts:test :matrix-ggplot:test -Pheadless=true` — all tests green.
+- 12.8 [ ] Update `matrix-charts/docs/charm.md` with a "Builder API" section.
+- 12.9 [ ] Run `./gradlew :matrix-charts:test :matrix-ggplot:test -Pheadless=true` — all tests green.
 
 **Success criteria:**
 - `layers { geomX() }` is the canonical closure syntax for adding geom layers; old `points {}`,
-  `line {}`, etc. closure methods are gone. `addLayer(geomX())` is retained as the programmatic
-  escape hatch only.
+  `line {}`, etc. closure methods are gone. The public `addLayer(LayerBuilder)` overload (added
+  in Phase 4) is retained as the programmatic escape hatch only.
 - The integration test asserts equivalent SVG structure for closure-DSL-constructed charts
   that were migrated to the builder chain.
-- `CharmBridge` and `GgCharmCompiler` use only `layers {}` / builders — no direct old closure
-  method calls and no bare `addLayer()` calls.
+- `CharmBridge` fully migrated to builders — no old closure method calls.
+- `GgCharmCompiler` unchanged (already bypasses PlotSpec closure methods).
+- `PlotSpec.layer(CharmGeomType, Map)` is removed.
+- No `Object` types remain for `shape` or `linetype` in the public API.
 - Docs reflect the canonical `layers {}` style.
 - `./gradlew :matrix-charts:test :matrix-ggplot:test -Pheadless=true` fully green.

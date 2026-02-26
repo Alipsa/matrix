@@ -29,7 +29,7 @@ class CharmCoreModelTest {
   void testNamedArgMappingCoercionAcceptsStringAndColumnExpr() {
     Cols col = new Cols()
     PlotSpec spec = plot(Dataset.mpg())
-    spec.mapping(x: 'cty', y: col['hwy'], color: col['class'])
+    spec.mapping(x: 'cty', y: col['hwy'], color: 'class')
 
     assertEquals('cty', spec.mapping.x.columnName())
     assertEquals('hwy', spec.mapping.y.columnName())
@@ -50,8 +50,8 @@ class CharmCoreModelTest {
   void testClosureAssignmentRuleRequiresEqualsToApplyMappings() {
     PlotSpec spec = plot(Dataset.mpg()) {
       mapping {
-        x: col.cty
-        y: col.hwy
+        x: 'cty'
+        y: 'hwy'
       }
       points {}
     }
@@ -73,8 +73,8 @@ class CharmCoreModelTest {
   void testBuildValidationRejectsUnknownColumn() {
     PlotSpec spec = plot(Dataset.mpg()) {
       mapping {
-        x = col['does_not_exist']
-        y = col.hwy
+        x = 'does_not_exist'
+        y = 'hwy'
       }
       points {}
     }
@@ -102,8 +102,8 @@ class CharmCoreModelTest {
   void testInheritMappingFalseRequiresLayerMapping() {
     PlotSpec spec = plot(Dataset.mpg()) {
       mapping {
-        x = col.cty
-        y = col.hwy
+        x = 'cty'
+        y = 'hwy'
       }
       points {
         inheritMapping = false
@@ -120,14 +120,14 @@ class CharmCoreModelTest {
   void testLayerMappingCanOverrideWhenNotInheriting() {
     Chart chart = plot(Dataset.mpg()) {
       mapping {
-        x = col.displ
-        y = col.hwy
+        x = 'displ'
+        y = 'hwy'
       }
       points {
         inheritMapping = false
         mapping {
-          x = col.cty
-          y = col.hwy
+          x = 'cty'
+          y = 'hwy'
         }
       }
     }.build()
@@ -141,8 +141,8 @@ class CharmCoreModelTest {
   void testSmoothAndTileDslMapToExpectedLayerModel() {
     PlotSpec spec = plot(Dataset.mpg()) {
       mapping {
-        x = col.cty
-        y = col.hwy
+        x = 'cty'
+        y = 'hwy'
       }
       smooth {
         method = 'lm'
@@ -164,8 +164,8 @@ class CharmCoreModelTest {
   void testUnsupportedGeomStatCombinationFailsValidation() {
     PlotSpec spec = plot(Dataset.mpg()) {
       mapping {
-        x = col.cty
-        y = col.hwy
+        x = 'cty'
+        y = 'hwy'
       }
       layer(CharmGeomType.SMOOTH, [stat: CharmStatType.IDENTITY, method: 'lm'])
     }
@@ -205,8 +205,8 @@ class CharmCoreModelTest {
   void testLayerDslPositionParsesStringValue() {
     Chart chart = plot(Dataset.mpg()) {
       mapping {
-        x = col.cty
-        y = col.hwy
+        x = 'cty'
+        y = 'hwy'
       }
       points {
         position = 'stack'
@@ -221,8 +221,8 @@ class CharmCoreModelTest {
     CharmValidationException e = assertThrows(CharmValidationException.class) {
       plot(Dataset.mpg()) {
         mapping {
-          x = col.cty
-          y = col.hwy
+          x = 'cty'
+          y = 'hwy'
         }
         points {
           position = 'bogus-position'
@@ -236,8 +236,8 @@ class CharmCoreModelTest {
   void testScaleTransformsUseStrategyObjects() {
     PlotSpec spec = plot(Dataset.mpg()) {
       mapping {
-        x = col.cty
-        y = col.hwy
+        x = 'cty'
+        y = 'hwy'
       }
       points {}
       scale {
@@ -281,9 +281,9 @@ class CharmCoreModelTest {
     CharmValidationException e = assertThrows(CharmValidationException.class) {
       plot(Dataset.mpg()) {
         facet {
-          rows = [col.year]
+          rows = ['year']
           wrap {
-            vars = [col.drv]
+            vars = ['drv']
           }
         }
       }
@@ -299,7 +299,7 @@ class CharmCoreModelTest {
           wrap {
             vars = ['drv']
           }
-          rows = [col.year]
+          rows = ['year']
         }
       }
     }
@@ -311,8 +311,8 @@ class CharmCoreModelTest {
     Matrix data = Dataset.mpg()
     PlotSpec spec = plot(data) {
       mapping {
-        x = col.cty
-        y = col.hwy
+        x = 'cty'
+        y = 'hwy'
       }
       points {
         size = 2
@@ -341,8 +341,8 @@ class CharmCoreModelTest {
     Chart chart = plot(Dataset.mpg()) {
       points {
         mapping {
-          x = col.cty
-          y = col.hwy
+          x = 'cty'
+          y = 'hwy'
         }
       }
     }.build()

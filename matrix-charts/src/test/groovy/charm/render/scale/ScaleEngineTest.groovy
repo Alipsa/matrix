@@ -138,9 +138,9 @@ class ScaleEngineTest {
 
     Chart chart = Charts.plot(data) {
       mapping {
-        x = col.x
-        y = col.y
-        color = col.color
+        x = 'x'
+        y = 'y'
+        color = 'color'
       }
       points {}
     }.build()
@@ -170,8 +170,8 @@ class ScaleEngineTest {
 
     Chart chart = Charts.plot(data) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {}
     }.build()
@@ -313,9 +313,9 @@ class ScaleEngineTest {
 
     Chart chart = Charts.plot(data) {
       mapping {
-        x = col.x
-        y = col.y
-        linetype = col.linetype
+        x = 'x'
+        y = 'y'
+        linetype = 'linetype'
       }
       line {}
     }.build()
@@ -373,12 +373,12 @@ class ScaleEngineTest {
 
     PlotSpec spec = Charts.plot(data) {
       mapping {
-        x = col.x
-        y = col.y
-        size = col.size
-        shape = col.shape
-        alpha = col.alpha
-        linetype = col.linetype
+        x = 'x'
+        y = 'y'
+        size = 'size'
+        shape = 'shape'
+        alpha = 'alpha'
+        linetype = 'linetype'
       }
       points {}
     }

@@ -57,8 +57,8 @@ class ChartsDataConversionTest {
   void testConvenienceInputSupportsConfigureClosure() {
     Chart chart = plot([[x: 1, y: 2], [x: 2, y: 3]]) {
       mapping {
-        x = col.x
-        y = col.y
+        x = 'x'
+        y = 'y'
       }
       points {
         size = 2

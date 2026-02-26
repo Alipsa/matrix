@@ -16,12 +16,17 @@ class AlignStat {
       return []
     }
 
-    Map<Object, List<LayerData>> groups = StatUtils.groupBySeries(data.findAll { LayerData datum ->
+    // Filter to numeric-convertible data for alignment; if none survive, fall back to identity
+    List<LayerData> numericData = data.findAll { LayerData datum ->
       ValueConverter.asBigDecimal(datum.x) != null &&
           ValueConverter.asBigDecimal(datum.y) != null
-    })
+    }
+    if (numericData.isEmpty()) {
+      return data
+    }
+    Map<Object, List<LayerData>> groups = StatUtils.groupBySeries(numericData)
     if (groups.isEmpty()) {
-      return []
+      return data
     }
 
     List<BigDecimal> xGrid = groups.values()
