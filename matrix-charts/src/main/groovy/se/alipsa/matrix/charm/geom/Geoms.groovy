@@ -122,10 +122,57 @@ class Geoms {
     new DotplotBuilder()
   }
 
-  // TODO: geomTile()    — Phase 7
-  // TODO: geomPie()     — Phase 7
-  // TODO: geomRect()    — Phase 7
-  // TODO: geomHex()     — Phase 7
-  // TODO: geomBin2d()   — Phase 7
-  // TODO: geomRaster()  — Phase 7
+  /**
+   * Creates a new tile builder.
+   *
+   * @return tile builder
+   */
+  static TileBuilder geomTile() {
+    new TileBuilder()
+  }
+
+  /**
+   * Creates a new pie builder.
+   *
+   * @return pie builder
+   */
+  static PieBuilder geomPie() {
+    new PieBuilder()
+  }
+
+  /**
+   * Creates a new rect builder.
+   *
+   * @return rect builder
+   */
+  static RectBuilder geomRect() {
+    new RectBuilder()
+  }
+
+  /**
+   * Creates a new hex bin builder.
+   *
+   * @return hex builder
+   */
+  static HexBuilder geomHex() {
+    new HexBuilder()
+  }
+
+  /**
+   * Creates a new 2D bin builder.
+   *
+   * @return bin2d builder
+   */
+  static Bin2dBuilder geomBin2d() {
+    new Bin2dBuilder()
+  }
+
+  /**
+   * Creates a new raster builder.
+   *
+   * @return raster builder
+   */
+  static RasterBuilder geomRaster() {
+    new RasterBuilder()
+  }
 }

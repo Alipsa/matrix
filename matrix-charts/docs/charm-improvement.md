@@ -637,20 +637,20 @@ as the first concrete builder so the smoke test uses real working code. Keep
 ### Phase 7 — Tile/fill builders: TileBuilder, PieBuilder, RectBuilder, HexBuilder, Bin2dBuilder, RasterBuilder
 
 **Tasks:**
-- 7.1 [ ] Implement `TileBuilder`: `fill(String)`, `color(String)`, `width(Number)`,
+- 7.1 [x] Implement `TileBuilder`: `fill(String)`, `color(String)`, `width(Number)`,
   `height(Number)`, `alpha(Number)`. `build()` → `TILE / IDENTITY`.
-- 7.2 [ ] Implement `PieBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`.
+- 7.2 [x] Implement `PieBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`.
   `build()` → `PIE / IDENTITY`.
-- 7.3 [ ] Implement `RectBuilder`: `xmin(Number)`, `xmax(Number)`, `ymin(Number)`,
+- 7.3 [x] Implement `RectBuilder`: `xmin(Number)`, `xmax(Number)`, `ymin(Number)`,
   `ymax(Number)`, `fill(String)`, `color(String)`, `alpha(Number)`. `build()` → `RECT / IDENTITY`.
-- 7.4 [ ] Implement `HexBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`,
-  `bins(Integer)`. `build()` → `HEX / BINHEX`.
-- 7.5 [ ] Implement `Bin2dBuilder`: `fill(String)`, `color(String)`, `bins(Object)`.
+- 7.4 [x] Implement `HexBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`,
+  `bins(Integer)`. `build()` → `HEX / BIN_HEX`.
+- 7.5 [x] Implement `Bin2dBuilder`: `fill(String)`, `color(String)`, `bins(Object)`.
   `build()` → `BIN2D / BIN2D`.
-- 7.6 [ ] Implement `RasterBuilder`: `fill(String)`, `alpha(Number)`, `interpolate(boolean)`.
+- 7.6 [x] Implement `RasterBuilder`: `fill(String)`, `alpha(Number)`, `interpolate(boolean)`.
   `build()` → `RASTER / IDENTITY`.
-- 7.7 [ ] Add corresponding factory methods to `Geoms`.
-- 7.8 [ ] Add tests and run `./gradlew :matrix-charts:test -Pheadless=true`.
+- 7.7 [x] Add corresponding factory methods to `Geoms` and `LayersDsl`.
+- 7.8 [x] Add tests and run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green (498 passed).
 
 **Success criteria:** All six builders compile and each has a passing render test.
 

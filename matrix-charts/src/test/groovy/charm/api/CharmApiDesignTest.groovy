@@ -649,6 +649,137 @@ class CharmApiDesignTest {
     assertEquals(0.5, chart.layers.first().params['binwidth'])
   }
 
+  @Test
+  void testTileBuilderRendersTileLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('col', 'row', 'value')
+        .rows([['A', 'X', 1], ['B', 'X', 2], ['A', 'Y', 3], ['B', 'Y', 4]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'col'; y = 'row' }
+      layers {
+        geomTile().fill('#336699').alpha(0.8)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.TILE, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals(0.8, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testPieBuilderRendersPieLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('category', 'value')
+        .rows([['A', 30], ['B', 50], ['C', 20]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'category'; y = 'value' }
+      layers {
+        geomPie().fill('#cc6677').alpha(0.9)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.PIE, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#cc6677', chart.layers.first().params['fill'])
+  }
+
+  @Test
+  void testRectBuilderRendersRectLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x1', 'x2', 'y1', 'y2')
+        .rows([[1, 3, 1, 3], [4, 6, 4, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { xmin = 'x1'; xmax = 'x2'; ymin = 'y1'; ymax = 'y2' }
+      layers {
+        geomRect().fill('#88aa55').alpha(0.5)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.RECT, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals('#88aa55', chart.layers.first().params['fill'])
+    assertEquals(0.5, chart.layers.first().params['alpha'])
+  }
+
+  @Test
+  void testHexBuilderRendersHexLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomHex().fill('#336699').bins(10)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.HEX, chart.layers.first().geomType)
+    assertEquals(CharmStatType.BIN_HEX, chart.layers.first().statType)
+    assertEquals('#336699', chart.layers.first().params['fill'])
+    assertEquals(10, chart.layers.first().params['bins'])
+  }
+
+  @Test
+  void testBin2dBuilderRendersBin2dLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers {
+        geomBin2d().fill('#cc6677').bins(15)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.BIN2D, chart.layers.first().geomType)
+    assertEquals(CharmStatType.BIN2D, chart.layers.first().statType)
+    assertEquals('#cc6677', chart.layers.first().params['fill'])
+    assertEquals(15, chart.layers.first().params['bins'])
+  }
+
+  @Test
+  void testRasterBuilderRendersRasterLayer() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'z')
+        .rows([[1, 1, 0.5], [2, 1, 0.8], [1, 2, 0.3], [2, 2, 0.9]])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; fill = 'z' }
+      layers {
+        geomRaster().alpha(0.9).interpolate(true)
+      }
+    }.build()
+
+    assertNotNull(chart.render())
+    assertEquals(1, chart.layers.size())
+    assertEquals(CharmGeomType.RASTER, chart.layers.first().geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals(0.9, chart.layers.first().params['alpha'])
+    assertEquals(true, chart.layers.first().params['interpolate'])
+  }
+
   @CompileStatic
   private static class StaticApiSample {
 
