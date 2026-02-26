@@ -659,24 +659,24 @@ as the first concrete builder so the smoke test uses real working code. Keep
 ### Phase 8 — Annotation builders: TextBuilder, LabelBuilder, SegmentBuilder, CurveBuilder, AblineBuilder, HlineBuilder, VlineBuilder
 
 **Tasks:**
-- 8.1 [ ] Implement `TextBuilder`: `size(Number)`, `color(String)`, `angle(Number)`,
+- 8.1 [x] Implement `TextBuilder`: `size(Number)`, `color(String)`, `angle(Number)`,
   `family(String)`, `fontface(Object)`, `hjust(Number)`, `vjust(Number)`.
   `build()` → `TEXT / IDENTITY`.
-- 8.2 [ ] Implement `LabelBuilder`: same params as `TextBuilder` plus `fill(String)`.
+- 8.2 [x] Implement `LabelBuilder`: same params as `TextBuilder` plus `fill(String)`.
   `build()` → `LABEL / IDENTITY`.
-- 8.3 [ ] Implement `SegmentBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
+- 8.3 [x] Implement `SegmentBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
   `arrow(Object)`. `build()` → `SEGMENT / IDENTITY`.
-- 8.4 [ ] Implement `CurveBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
+- 8.4 [x] Implement `CurveBuilder`: `color(String)`, `size(Number)`, `linetype(Object)`,
   `curvature(Number)`, `angle(Number)`, `ncp(Integer)`, `arrow(Object)`.
   `build()` → `CURVE / IDENTITY`.
-- 8.5 [ ] Implement `AblineBuilder`: `intercept(Number)`, `slope(Number)`, `color(String)`,
+- 8.5 [x] Implement `AblineBuilder`: `intercept(Number)`, `slope(Number)`, `color(String)`,
   `size(Number)`, `linetype(Object)`. `build()` → `ABLINE / IDENTITY`.
-- 8.6 [ ] Implement `HlineBuilder`: `yintercept(Number)`, `color(String)`, `size(Number)`,
+- 8.6 [x] Implement `HlineBuilder`: `yintercept(Number)`, `color(String)`, `size(Number)`,
   `linetype(Object)`. `build()` → `HLINE / IDENTITY`.
-- 8.7 [ ] Implement `VlineBuilder`: `xintercept(Number)`, `color(String)`, `size(Number)`,
+- 8.7 [x] Implement `VlineBuilder`: `xintercept(Number)`, `color(String)`, `size(Number)`,
   `linetype(Object)`. `build()` → `VLINE / IDENTITY`.
-- 8.8 [ ] Add corresponding factory methods to `Geoms`.
-- 8.9 [ ] Add tests and run `./gradlew :matrix-charts:test -Pheadless=true`.
+- 8.8 [x] Add corresponding factory methods to `Geoms` and `LayersDsl`.
+- 8.9 [x] Add tests and run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green (505 passed).
 
 **Success criteria:** All seven builders compile and each has a passing render test.
 

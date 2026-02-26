@@ -210,6 +210,83 @@ class LayersDsl {
     b
   }
 
+  /**
+   * Creates and registers a text builder.
+   *
+   * @return new text builder
+   */
+  TextBuilder geomText() {
+    TextBuilder b = new TextBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a label builder.
+   *
+   * @return new label builder
+   */
+  LabelBuilder geomLabel() {
+    LabelBuilder b = new LabelBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a segment builder.
+   *
+   * @return new segment builder
+   */
+  SegmentBuilder geomSegment() {
+    SegmentBuilder b = new SegmentBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a curve builder.
+   *
+   * @return new curve builder
+   */
+  CurveBuilder geomCurve() {
+    CurveBuilder b = new CurveBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers an abline builder.
+   *
+   * @return new abline builder
+   */
+  AblineBuilder geomAbline() {
+    AblineBuilder b = new AblineBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a horizontal line builder.
+   *
+   * @return new hline builder
+   */
+  HlineBuilder geomHline() {
+    HlineBuilder b = new HlineBuilder()
+    collected << b
+    b
+  }
+
+  /**
+   * Creates and registers a vertical line builder.
+   *
+   * @return new vline builder
+   */
+  VlineBuilder geomVline() {
+    VlineBuilder b = new VlineBuilder()
+    collected << b
+    b
+  }
+
   // Additional factory methods will be added as builders are introduced
-  // in subsequent phases (8–11).
+  // in subsequent phases (9–11).
 }
