@@ -100,16 +100,18 @@ def empData = Matrix.builder().data(
     .types(int, String, Number, LocalDate)
     .build()
 
-def areaChart = AreaChart.create("Salaries", empData, "emp_name", "salary")
-def barChart = BarChart.createVertical("Salaries", empData, "emp_name", ChartType.BASIC, "salary")
-def pieChart = PieChart.create("Salaries", empData, "emp_name", "salary")
+def areaChart = AreaChart.builder(empData)
+    .title("Salaries").x("emp_name").y("salary").build()
+
+def barChart = BarChart.builder(empData)
+    .title("Salaries").x("emp_name").y("salary").vertical().build()
+
+def pieChart = PieChart.builder(empData)
+    .title("Salaries").x("emp_name").y("salary").build()
 
 // Export to PNG via chartexport
 ChartToPng.export(areaChart, new File("areaChart.png"))
-
-// Or via the deprecated Plot class
-Plot.png(barChart, new File("barChart.png"))
-Plot.svg(barChart, new File("barChart.svg"))
+ChartToPng.export(barChart, new File("barChart.png"))
 ```
 
 See **[charts.md](docs/charts.md)** for comprehensive documentation.

@@ -5,6 +5,7 @@ A comprehensive guide to using the `se.alipsa.matrix.charts` package for creatin
 ## Table of Contents
 - [Introduction](#introduction)
 - [Quick Start](#quick-start)
+- [Builder API](#builder-api)
 - [Chart Types](#chart-types)
   - [AreaChart](#areachart)
   - [BarChart](#barchart)
@@ -27,8 +28,8 @@ The `se.alipsa.matrix.charts` package provides a chart-type-first API for creati
 All chart types are backed by the [Charm](charm.md) rendering engine internally. Charts render to SVG and can be exported to PNG, JPEG, JavaFX, or Swing via `se.alipsa.matrix.chartexport`.
 
 ### Key Features
-- Static factory methods for quick chart creation
-- Fluent API for configuration (titles, axes, styling)
+- Fluent builder API for creating and configuring charts in one chain
+- Static factory methods for quick one-liner chart creation
 - Works with Matrix data structures or raw lists
 - Multiple output formats (SVG, PNG, JPEG, JavaFX, Swing)
 - Multi-series support for area, bar, and line charts
@@ -55,30 +56,82 @@ def data = Matrix.builder().data(
     sales: [120, 85, 200, 150]
 ).types(String, Integer).build()
 
-def chart = BarChart.createVertical('Fruit Sales', data, 'product', ChartType.BASIC, 'sales')
+def chart = BarChart.builder(data)
+    .title('Fruit Sales')
+    .x('product')
+    .y('sales')
+    .build()
 
 // Export to PNG
 ChartToPng.export(chart, new File('fruit_sales.png'))
-
-// Or use the Plot convenience class
-Plot.png(chart, new File('fruit_sales.png'))
 ```
 
 ### General Workflow
 
-1. **Create** a chart via a static factory method
-2. **Configure** titles, axes, and styling via fluent setters
-3. **Export** to SVG, PNG, JPEG, JavaFX, or Swing
+1. **Create** a chart via the fluent builder (or a static factory method)
+2. **Configure** title, axes, and chart-specific options in the builder chain
+3. **Build** the chart with `.build()`
+4. **Export** to SVG, PNG, JPEG, JavaFX, or Swing
 
 ```groovy
-def chart = LineChart.create('Monthly Revenue', data, 'month', 'revenue')
-    .setXAxisTitle('Month')
-    .setYAxisTitle('Revenue (USD)')
+def chart = LineChart.builder(data)
+    .title('Monthly Revenue')
+    .x('month')
+    .y('revenue')
+    .xAxisTitle('Month')
+    .yAxisTitle('Revenue (USD)')
+    .build()
 
-chart.style.plotBackgroundColor = new java.awt.Color(245, 245, 245)
-
-Plot.png(chart, new File('revenue.png'))
+ChartToPng.export(chart, new File('revenue.png'))
 ```
+
+## Builder API
+
+Every chart type provides a fluent builder via `ChartType.builder(Matrix data)`. The builder returns the concrete chart after calling `.build()`.
+
+### Common Builder Methods
+
+All builders inherit these methods from `Chart.ChartBuilder`:
+
+| Method | Description |
+|---|---|
+| `title(String)` | Chart title |
+| `x(String)` | X-axis (category) column name |
+| `y(String)` | Y-axis (value) column name |
+| `y(String...)` | Multiple y-axis column names (multi-series) |
+| `xAxisTitle(String)` | X-axis label |
+| `yAxisTitle(String)` | Y-axis label |
+| `xAxisScale(BigDecimal start, BigDecimal end, BigDecimal step)` | Custom x-axis scale |
+| `yAxisScale(BigDecimal start, BigDecimal end, BigDecimal step)` | Custom y-axis scale |
+| `xAxisScale(AxisScale)` | X-axis scale from AxisScale object |
+| `yAxisScale(AxisScale)` | Y-axis scale from AxisScale object |
+| `legend(Legend)` | Legend configuration |
+| `style(Style)` | Style configuration |
+| `build()` | Build the chart |
+
+### Chart-Specific Builder Methods
+
+| Chart Type | Extra Methods |
+|---|---|
+| `BarChart.Builder` | `horizontal()`, `vertical()`, `stacked()`, `chartType(ChartType)`, `direction(ChartDirection)` |
+| `Histogram.Builder` | `bins(Integer)`, `binDecimals(int)` |
+| `BoxChart.Builder` | `columns(List<String>)` |
+
+### Example
+
+```groovy
+def chart = BarChart.builder(data)
+    .title('Quarterly Revenue')
+    .x('region')
+    .y('q1', 'q2', 'q3')
+    .stacked()
+    .xAxisTitle('Region')
+    .yAxisTitle('Revenue')
+    .yAxisScale(0, 200, 50)
+    .build()
+```
+
+Static factory methods (e.g. `BarChart.createVertical(...)`, `PieChart.create(...)`) are still available for quick one-liner creation.
 
 ## Chart Types
 
@@ -86,28 +139,36 @@ Plot.png(chart, new File('revenue.png'))
 
 Filled area chart for showing trends and cumulative values.
 
+**Builder:**
+
+```groovy
+AreaChart chart = AreaChart.builder(data)
+    .title('Sales Trend')
+    .x('month')
+    .y('value')
+    .build()
+
+// Multi-series
+AreaChart chart = AreaChart.builder(data)
+    .title('Revenue Comparison')
+    .x('month')
+    .y('online', 'retail')
+    .build()
+```
+
 **Factory Methods:**
 
 ```groovy
-// From a 2-column Matrix (uses matrix name as title)
-AreaChart chart = AreaChart.create(data)
-
-// From Matrix with named columns
 AreaChart chart = AreaChart.create('Sales Trend', data, 'month', 'value')
+AreaChart chart = AreaChart.create(data)  // uses matrix name as title
 
 // From lists
 AreaChart chart = AreaChart.create('Quarterly Sales',
-    ['Q1', 'Q2', 'Q3', 'Q4'],        // categories
-    [10, 25, 15, 30])                  // values
-```
+    ['Q1', 'Q2', 'Q3', 'Q4'], [10, 25, 15, 30])
 
-**Multi-series area chart:**
-
-```groovy
-AreaChart chart = AreaChart.create('Revenue Comparison',
-    ['Q1', 'Q2', 'Q3', 'Q4'],        // categories
-    [10, 25, 15, 30],                  // series 1
-    [5, 15, 10, 20])                   // series 2
+// Multi-series from lists
+AreaChart chart = AreaChart.create('Revenue',
+    ['Q1', 'Q2', 'Q3', 'Q4'], [10, 25, 15, 30], [5, 15, 10, 20])
 ```
 
 **Example:**
@@ -118,34 +179,63 @@ def data = Matrix.builder().data(
     visitors: [1200, 1500, 1800, 1600, 2000, 2200]
 ).types(String, Integer).build()
 
-def chart = AreaChart.create('Website Visitors', data, 'month', 'visitors')
-    .setXAxisTitle('Month')
-    .setYAxisTitle('Visitors')
+def chart = AreaChart.builder(data)
+    .title('Website Visitors')
+    .x('month')
+    .y('visitors')
+    .xAxisTitle('Month')
+    .yAxisTitle('Visitors')
+    .build()
 
-Plot.png(chart, new File('visitors.png'))
+ChartToPng.export(chart, new File('visitors.png'))
 ```
 
 ### BarChart
 
 Vertical or horizontal bar chart with support for stacked and grouped layouts.
 
+**Builder:**
+
+```groovy
+// Vertical bar chart (default)
+BarChart chart = BarChart.builder(data)
+    .title('Sales')
+    .x('category')
+    .y('value')
+    .build()
+
+// Horizontal bar chart
+BarChart chart = BarChart.builder(data)
+    .title('Sales')
+    .x('category')
+    .y('value')
+    .horizontal()
+    .build()
+
+// Stacked multi-series
+BarChart chart = BarChart.builder(data)
+    .title('Revenue')
+    .x('region')
+    .y('q1', 'q2', 'q3')
+    .stacked()
+    .build()
+
+// Grouped with explicit chart type
+BarChart chart = BarChart.builder(data)
+    .title('Revenue')
+    .x('region')
+    .y('q1', 'q2', 'q3')
+    .chartType(ChartType.GROUPED)
+    .build()
+```
+
 **Factory Methods:**
 
 ```groovy
-// Vertical bar chart (most common)
 BarChart chart = BarChart.createVertical('Sales', data, 'category', ChartType.BASIC, 'value')
-
-// Horizontal bar chart
 BarChart chart = BarChart.createHorizontal('Sales', data, 'category', ChartType.BASIC, 'value')
-
-// With explicit direction
 BarChart chart = BarChart.create('Sales', ChartType.STACKED, data, 'category',
     ChartDirection.VERTICAL, 'q1', 'q2', 'q3')
-
-// From lists
-BarChart chart = BarChart.create('Sales', ChartType.BASIC, ChartDirection.VERTICAL,
-    ['A', 'B', 'C'],                  // categories
-    [10, 20, 30])                      // values
 ```
 
 **ChartType options:**
@@ -160,7 +250,7 @@ BarChart chart = BarChart.create('Sales', ChartType.BASIC, ChartDirection.VERTIC
 
 | Direction | Description |
 |---|---|
-| `ChartDirection.VERTICAL` | Bars grow upward |
+| `ChartDirection.VERTICAL` | Bars grow upward (default) |
 | `ChartDirection.HORIZONTAL` | Bars grow rightward |
 
 **Example -- stacked bar chart:**
@@ -173,12 +263,16 @@ def data = Matrix.builder().data(
     q3: [60, 38, 70, 55]
 ).types(String, Integer, Integer, Integer).build()
 
-def chart = BarChart.createVertical('Quarterly Revenue by Region', data, 'region',
-    ChartType.STACKED, 'q1', 'q2', 'q3')
-    .setXAxisTitle('Region')
-    .setYAxisTitle('Revenue')
+def chart = BarChart.builder(data)
+    .title('Quarterly Revenue by Region')
+    .x('region')
+    .y('q1', 'q2', 'q3')
+    .stacked()
+    .xAxisTitle('Region')
+    .yAxisTitle('Revenue')
+    .build()
 
-Plot.png(chart, new File('stacked_bars.png'))
+ChartToPng.export(chart, new File('stacked_bars.png'))
 ```
 
 **Querying bar chart properties:**
@@ -193,13 +287,27 @@ chart.isStacked()      // true if chartType == ChartType.STACKED
 
 Box-and-whisker plot for showing distributions across categories.
 
+**Builder:**
+
+```groovy
+// Category/value mode: split data by a category column
+BoxChart chart = BoxChart.builder(data)
+    .title('Score Distribution')
+    .x('department')
+    .y('score')
+    .build()
+
+// Multi-column mode: each column becomes a separate box
+BoxChart chart = BoxChart.builder(data)
+    .title('Comparison')
+    .columns(['seriesA', 'seriesB', 'seriesC'])
+    .build()
+```
+
 **Factory Methods:**
 
 ```groovy
-// Category-based: split data by a category column
 BoxChart chart = BoxChart.create('Score Distribution', data, 'department', 'score')
-
-// Column-based: treat each named column as a distribution
 BoxChart chart = BoxChart.create('Comparison', data, ['seriesA', 'seriesB', 'seriesC'])
 ```
 
@@ -213,37 +321,43 @@ def data = Matrix.builder().data(
             92, 88, 95, 91, 87]
 ).types(String, Integer).build()
 
-def chart = BoxChart.create('Performance Scores', data, 'department', 'score')
-    .setXAxisTitle('Department')
-    .setYAxisTitle('Score')
+def chart = BoxChart.builder(data)
+    .title('Performance Scores')
+    .x('department')
+    .y('score')
+    .xAxisTitle('Department')
+    .yAxisTitle('Score')
+    .build()
 
-Plot.png(chart, new File('boxplot.png'))
+ChartToPng.export(chart, new File('boxplot.png'))
 ```
 
 ### Histogram
 
 Distribution chart showing frequency of values across bins.
 
+**Builder:**
+
+```groovy
+Histogram chart = Histogram.builder(data)
+    .title('Score Distribution')
+    .x('score')
+    .bins(12)
+    .binDecimals(2)
+    .build()
+```
+
 **Factory Methods:**
 
 ```groovy
-// From Matrix column (most common)
 Histogram chart = Histogram.create('Score Distribution', data, 'score')
-
-// With custom bin count
 Histogram chart = Histogram.create('Score Distribution', data, 'score', 12)
-
-// With custom bin count and decimal precision
 Histogram chart = Histogram.create('Measurements', data, 'value', 10, 2)
 
 // From a map of parameters
 Histogram chart = Histogram.create(
-    title: 'Score Distribution',
-    data: data,
-    columnName: 'score',
-    bins: 8,
-    binDecimals: 1
-)
+    title: 'Score Distribution', data: data,
+    columnName: 'score', bins: 8, binDecimals: 1)
 
 // From a raw list of numbers
 Histogram chart = Histogram.create([1.2, 2.1, 4.1, 4.3, 5.7, 6.2, 6.9, 8.5, 9.9], 5)
@@ -270,27 +384,43 @@ chart.ranges          // Map<MinMax, Integer> -- bin range to frequency count
 import se.alipsa.matrix.datasets.Dataset
 
 def mtcars = Dataset.mtcars()
-def chart = Histogram.create('MPG Distribution', mtcars, 'mpg', 8)
-    .setXAxisTitle('Miles per Gallon')
-    .setYAxisTitle('Frequency')
+def chart = Histogram.builder(mtcars)
+    .title('MPG Distribution')
+    .x('mpg')
+    .bins(8)
+    .xAxisTitle('Miles per Gallon')
+    .yAxisTitle('Frequency')
+    .build()
 
-Plot.png(chart, new File('mpg_histogram.png'))
+ChartToPng.export(chart, new File('mpg_histogram.png'))
 ```
 
 ### LineChart
 
 Line chart for showing trends over a continuous or categorical axis.
 
+**Builder:**
+
+```groovy
+LineChart chart = LineChart.builder(data)
+    .title('Temperature Trend')
+    .x('date')
+    .y('temperature')
+    .build()
+
+// Multi-series
+LineChart chart = LineChart.builder(data)
+    .title('Comparison')
+    .x('month')
+    .y('actual', 'forecast')
+    .build()
+```
+
 **Factory Methods:**
 
 ```groovy
-// From Matrix with title
 LineChart chart = LineChart.create('Temperature Trend', data, 'date', 'temperature')
-
-// From Matrix using matrix name as title
-LineChart chart = LineChart.create(data, 'date', 'temperature')
-
-// Multi-series line chart
+LineChart chart = LineChart.create(data, 'date', 'temperature')  // uses matrix name as title
 LineChart chart = LineChart.create('Comparison', data, 'month', 'actual', 'forecast')
 ```
 
@@ -303,30 +433,40 @@ def data = Matrix.builder().data(
     forecast: [110, 115, 120, 125, 140, 155]
 ).types(String, Integer, Integer).build()
 
-def chart = LineChart.create('Sales: Actual vs Forecast', data, 'month', 'actual', 'forecast')
-    .setXAxisTitle('Month')
-    .setYAxisTitle('Sales')
+def chart = LineChart.builder(data)
+    .title('Sales: Actual vs Forecast')
+    .x('month')
+    .y('actual', 'forecast')
+    .xAxisTitle('Month')
+    .yAxisTitle('Sales')
+    .build()
 
-Plot.png(chart, new File('line_chart.png'))
+ChartToPng.export(chart, new File('line_chart.png'))
 ```
 
 ### PieChart
 
 Pie chart for showing proportional distribution.
 
+**Builder:**
+
+```groovy
+PieChart chart = PieChart.builder(data)
+    .title('Market Share')
+    .x('company')
+    .y('share')
+    .build()
+```
+
 **Factory Methods:**
 
 ```groovy
-// From Matrix with title
 PieChart chart = PieChart.create('Market Share', data, 'company', 'share')
-
-// From Matrix using matrix name as title
-PieChart chart = PieChart.create(data, 'company', 'share')
+PieChart chart = PieChart.create(data, 'company', 'share')  // uses matrix name as title
 
 // From lists
 PieChart chart = PieChart.create('Colors',
-    ['Red', 'Blue', 'Green'],         // labels
-    [40, 35, 25])                      // values
+    ['Red', 'Blue', 'Green'], [40, 35, 25])
 ```
 
 **Example:**
@@ -337,19 +477,32 @@ def data = Matrix.builder().data(
     amount: [1200, 600, 400, 300, 500]
 ).types(String, Integer).build()
 
-def chart = PieChart.create('Monthly Budget', data, 'category', 'amount')
+def chart = PieChart.builder(data)
+    .title('Monthly Budget')
+    .x('category')
+    .y('amount')
+    .build()
 
-Plot.png(chart, new File('budget_pie.png'))
+ChartToPng.export(chart, new File('budget_pie.png'))
 ```
 
 ### ScatterChart
 
 Scatter plot for showing relationships between two numeric variables.
 
+**Builder:**
+
+```groovy
+ScatterChart chart = ScatterChart.builder(data)
+    .title('Height vs Weight')
+    .x('height')
+    .y('weight')
+    .build()
+```
+
 **Factory Methods:**
 
 ```groovy
-// Only factory method
 ScatterChart chart = ScatterChart.create('Height vs Weight', data, 'height', 'weight')
 ```
 
@@ -361,11 +514,15 @@ def data = Matrix.builder().data(
     weight: [55, 62, 68, 72, 78, 85, 90]
 ).types(Integer, Integer).build()
 
-def chart = ScatterChart.create('Height vs Weight', data, 'height', 'weight')
-    .setXAxisTitle('Height (cm)')
-    .setYAxisTitle('Weight (kg)')
+def chart = ScatterChart.builder(data)
+    .title('Height vs Weight')
+    .x('height')
+    .y('weight')
+    .xAxisTitle('Height (cm)')
+    .yAxisTitle('Weight (kg)')
+    .build()
 
-Plot.png(chart, new File('scatter.png'))
+ChartToPng.export(chart, new File('scatter.png'))
 ```
 
 ## Styling
@@ -414,13 +571,16 @@ chart.style.css = 'stroke-width: 2; font-family: Arial;'
 
 ### Fluent Configuration
 
-All setters return the chart instance for method chaining:
+Builder methods handle title and axis configuration. For additional styling, access `chart.style` after building:
 
 ```groovy
-def chart = BarChart.createVertical('Sales', data, 'product', ChartType.BASIC, 'value')
-    .setTitle('Updated Title')
-    .setXAxisTitle('Product')
-    .setYAxisTitle('Units Sold')
+def chart = BarChart.builder(data)
+    .title('Sales')
+    .x('product')
+    .y('value')
+    .xAxisTitle('Product')
+    .yAxisTitle('Units Sold')
+    .build()
 
 chart.style.plotBackgroundColor = new Color(240, 240, 240)
 chart.style.legendVisible = false
@@ -453,22 +613,22 @@ chart.setYAxisTitle('Temperature (\u00B0C)')
 
 ## Multi-Series Charts
 
-Area, bar, and line charts support multiple value series. Pass additional column names to the factory method:
+Area, bar, and line charts support multiple value series. Pass additional column names to the builder's `y()` method:
 
 ```groovy
 // Multi-series line chart
-def chart = LineChart.create('Metrics', data, 'date', 'cpu', 'memory', 'disk')
+def chart = LineChart.builder(data)
+    .title('Metrics').x('date').y('cpu', 'memory', 'disk').build()
 
-// Multi-series bar chart
-def chart = BarChart.createVertical('Sales', data, 'region',
-    ChartType.GROUPED, 'q1', 'q2', 'q3', 'q4')
+// Multi-series grouped bar chart
+def chart = BarChart.builder(data)
+    .title('Sales').x('region').y('q1', 'q2', 'q3', 'q4')
+    .chartType(ChartType.GROUPED).build()
 
-// Multi-series area chart from lists
+// Multi-series area chart from lists (factory method)
 def chart = AreaChart.create('Revenue',
-    ['Q1', 'Q2', 'Q3', 'Q4'],         // categories
-    [100, 120, 110, 130],              // series 1
-    [80, 95, 90, 105],                 // series 2
-    [60, 70, 65, 80])                  // series 3
+    ['Q1', 'Q2', 'Q3', 'Q4'],
+    [100, 120, 110, 130], [80, 95, 90, 105], [60, 70, 65, 80])
 ```
 
 ### Custom Series Names
@@ -589,7 +749,7 @@ charts --builds------> charm ---renders-> Svg (via CharmBridge)
          Svg ----exports----> chartexport ------> PNG/JPEG/JFX/Swing
 ```
 
-- **Charts** (this guide) -- chart-type-first API. Start with `BarChart.createVertical(...)` and configure from there.
+- **Charts** (this guide) -- chart-type-first API. Start with `BarChart.builder(data)` and configure from there.
 - **[Charm](charm.md)** -- core Grammar of Graphics DSL. More expressive, supports closures, scales, faceting, annotations, and custom themes.
 - **[gg](ggPlot.md)** -- ggplot2-compatible wrapper. Best for porting R code or when you prefer `ggplot() + geom_point()` syntax.
 
@@ -619,16 +779,24 @@ def sales = Matrix.builder().data(
 ).types(String, Integer, Integer).build()
 
 // Line chart for trends
-def lineChart = LineChart.create('Sales Trend', sales, 'month', 'online', 'retail')
-    .setXAxisTitle('Month')
-    .setYAxisTitle('Units')
-    .setValueSeriesNames(['Online', 'Retail'])
+def lineChart = LineChart.builder(sales)
+    .title('Sales Trend')
+    .x('month')
+    .y('online', 'retail')
+    .xAxisTitle('Month')
+    .yAxisTitle('Units')
+    .build()
+lineChart.setValueSeriesNames(['Online', 'Retail'])
 ChartToPng.export(lineChart, new File('trend.png'))
 
 // Stacked bar chart for composition
-def barChart = BarChart.createVertical('Sales by Channel', sales, 'month',
-    ChartType.STACKED, 'online', 'retail')
-    .setValueSeriesNames(['Online', 'Retail'])
+def barChart = BarChart.builder(sales)
+    .title('Sales by Channel')
+    .x('month')
+    .y('online', 'retail')
+    .stacked()
+    .build()
+barChart.setValueSeriesNames(['Online', 'Retail'])
 ChartToPng.export(barChart, new File('composition.png'))
 ```
 
@@ -637,13 +805,18 @@ ChartToPng.export(barChart, new File('composition.png'))
 ```groovy
 import se.alipsa.matrix.datasets.Dataset
 import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.chartexport.ChartToPng
 
 def mtcars = Dataset.mtcars()
-def chart = Histogram.create('Engine Displacement', mtcars, 'disp', 10)
-    .setXAxisTitle('Displacement (cu.in.)')
-    .setYAxisTitle('Count')
+def chart = Histogram.builder(mtcars)
+    .title('Engine Displacement')
+    .x('disp')
+    .bins(10)
+    .xAxisTitle('Displacement (cu.in.)')
+    .yAxisTitle('Count')
+    .build()
 
-Plot.png(chart, new File('displacement.png'))
+ChartToPng.export(chart, new File('displacement.png'))
 ```
 
 ### Styled Pie Chart
@@ -656,11 +829,15 @@ def data = Matrix.builder().data(
     usage: [45, 25, 20, 10]
 ).types(String, Integer).build()
 
-def chart = PieChart.create('JVM Language Usage', data, 'language', 'usage')
+def chart = PieChart.builder(data)
+    .title('JVM Language Usage')
+    .x('language')
+    .y('usage')
+    .build()
 chart.style.chartBackgroundColor = Color.WHITE
 chart.style.legendPosition = 'RIGHT'
 
-Plot.png(chart, new File('languages.png'))
+ChartToPng.export(chart, new File('languages.png'))
 ```
 
 ### Box Plot Comparison
@@ -673,11 +850,15 @@ def data = Matrix.builder().data(
              30, 32, 35, 28, 33, 31, 34, 36]
 ).types(String, Integer).build()
 
-def chart = BoxChart.create('Method A vs Method B', data, 'method', 'result')
-    .setXAxisTitle('Method')
-    .setYAxisTitle('Result')
+def chart = BoxChart.builder(data)
+    .title('Method A vs Method B')
+    .x('method')
+    .y('result')
+    .xAxisTitle('Method')
+    .yAxisTitle('Result')
+    .build()
 
-Plot.png(chart, new File('comparison.png'))
+ChartToPng.export(chart, new File('comparison.png'))
 ```
 
 ## Additional Resources
