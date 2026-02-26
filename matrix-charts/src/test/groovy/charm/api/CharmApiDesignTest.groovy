@@ -821,6 +821,7 @@ class CharmApiDesignTest {
     assertEquals(1, chart.layers.size())
     assertEquals(CharmGeomType.LABEL, chart.layers.first().geomType)
     assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
+    assertEquals(4, chart.layers.first().params['size'])
     assertEquals('#ffffff', chart.layers.first().params['fill'])
     assertEquals('#333333', chart.layers.first().params['color'])
   }
@@ -844,6 +845,7 @@ class CharmApiDesignTest {
     assertEquals(CharmGeomType.SEGMENT, chart.layers.first().geomType)
     assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
     assertEquals('#336699', chart.layers.first().params['color'])
+    assertEquals(1, chart.layers.first().params['size'])
     assertEquals('dashed', chart.layers.first().params['linetype'])
   }
 
@@ -887,6 +889,7 @@ class CharmApiDesignTest {
     assertNotNull(chart.render())
     assertEquals(2, chart.layers.size())
     assertEquals(CharmGeomType.ABLINE, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
     assertEquals(0, chart.layers[1].params['intercept'])
     assertEquals(1, chart.layers[1].params['slope'])
     assertEquals('#cc0000', chart.layers[1].params['color'])
@@ -910,6 +913,7 @@ class CharmApiDesignTest {
     assertNotNull(chart.render())
     assertEquals(2, chart.layers.size())
     assertEquals(CharmGeomType.HLINE, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
     assertEquals(3, chart.layers[1].params['yintercept'])
     assertEquals('#cc0000', chart.layers[1].params['color'])
     assertEquals('dashed', chart.layers[1].params['linetype'])
@@ -933,6 +937,7 @@ class CharmApiDesignTest {
     assertNotNull(chart.render())
     assertEquals(2, chart.layers.size())
     assertEquals(CharmGeomType.VLINE, chart.layers[1].geomType)
+    assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
     assertEquals(3, chart.layers[1].params['xintercept'])
     assertEquals('#cc0000', chart.layers[1].params['color'])
     assertEquals('dotted', chart.layers[1].params['linetype'])
