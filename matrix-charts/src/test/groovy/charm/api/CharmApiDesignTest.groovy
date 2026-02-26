@@ -193,9 +193,9 @@ class CharmApiDesignTest {
     }.build()
 
     assertNotNull(chart.render())
-    assertEquals(3, chart.layers.first().params.size)
-    assertEquals(0.7, chart.layers.first().params.alpha)
-    assertEquals('#ff0000', chart.layers.first().params.color)
+    assertEquals(3, chart.layers.first().params['size'])
+    assertEquals(0.7, chart.layers.first().params['alpha'])
+    assertEquals('#ff0000', chart.layers.first().params['color'])
   }
 
   @Test

@@ -136,12 +136,12 @@ class LayerDsl extends LayerParams {
   @Override
   Map<String, Object> values() {
     Map<String, Object> merged = super.values()
-    if (size != null) merged.size = size
-    if (alpha != null) merged.alpha = alpha
-    if (color != null) merged.color = color
-    if (fill != null) merged.fill = fill
-    if (shape != null) merged.shape = shape
-    if (linetype != null) merged.linetype = linetype
+    if (size != null) merged['size'] = size
+    if (alpha != null) merged['alpha'] = alpha
+    if (color != null) merged['color'] = color
+    if (fill != null) merged['fill'] = fill
+    if (shape != null) merged['shape'] = shape
+    if (linetype != null) merged['linetype'] = linetype
     merged
   }
 
