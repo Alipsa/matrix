@@ -29,6 +29,7 @@ class BoxplotBuilder extends LayerBuilder {
    */
   BoxplotBuilder width(Number value) {
     params['width'] = value
+    params['boxWidth'] = value
     this
   }
 
