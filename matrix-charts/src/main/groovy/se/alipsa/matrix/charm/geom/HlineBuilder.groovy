@@ -70,7 +70,7 @@ class HlineBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  HlineBuilder linetype(Object value) {
+  HlineBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

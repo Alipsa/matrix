@@ -70,7 +70,7 @@ class ErrorbarBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  ErrorbarBuilder linetype(Object value) {
+  ErrorbarBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

@@ -28,7 +28,7 @@ class CharmLabelTest {
   void testTitleRendered() {
     Chart chart = plot(sampleData()) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       labels { title = 'My Title' }
     }.build()
 
@@ -41,7 +41,7 @@ class CharmLabelTest {
   void testSubtitleRendered() {
     Chart chart = plot(sampleData()) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       labels {
         title = 'Title'
         subtitle = 'A subtitle'
@@ -57,7 +57,7 @@ class CharmLabelTest {
   void testCaptionRendered() {
     Chart chart = plot(sampleData()) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       labels {
         title = 'Title'
         caption = 'Source: data'
@@ -73,7 +73,7 @@ class CharmLabelTest {
   void testAxisLabelsRendered() {
     Chart chart = plot(sampleData()) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       labels {
         x = 'X Label'
         y = 'Y Label'
@@ -90,7 +90,7 @@ class CharmLabelTest {
   void testCoordFlipSwapsAxisLabels() {
     Chart chart = plot(sampleData()) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       labels {
         x = 'Original X'
         y = 'Original Y'
@@ -112,7 +112,7 @@ class CharmLabelTest {
 
     Chart chart = plot(sampleData()) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       labels { title = 'Should be hidden' }
     }.build()
 

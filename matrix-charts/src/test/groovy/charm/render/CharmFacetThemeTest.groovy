@@ -194,7 +194,7 @@ class CharmFacetThemeTest {
   void testFacetedChartWithBwThemeRenders() {
     Chart chart = plot(facetData()) {
       mapping { x = 'x'; y = 'y' }
-      points {}
+      layers { geomPoint() }
       facet {
         wrap {
           vars = ['cat']

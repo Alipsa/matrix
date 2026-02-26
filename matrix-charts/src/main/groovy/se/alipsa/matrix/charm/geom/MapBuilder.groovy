@@ -81,7 +81,7 @@ class MapBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  MapBuilder linetype(Object value) {
+  MapBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

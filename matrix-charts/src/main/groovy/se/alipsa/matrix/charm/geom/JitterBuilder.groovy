@@ -81,7 +81,7 @@ class JitterBuilder extends LayerBuilder {
    * @param value shape name or integer code
    * @return this builder
    */
-  JitterBuilder shape(Object value) {
+  JitterBuilder shape(String value) {
     params['shape'] = value
     this
   }

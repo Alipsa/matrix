@@ -71,7 +71,7 @@ class LogticksBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  LogticksBuilder linetype(Object value) {
+  LogticksBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

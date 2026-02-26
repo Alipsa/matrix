@@ -59,7 +59,7 @@ class SegmentBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  SegmentBuilder linetype(Object value) {
+  SegmentBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

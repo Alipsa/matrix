@@ -59,7 +59,7 @@ class StepBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  StepBuilder linetype(Object value) {
+  StepBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

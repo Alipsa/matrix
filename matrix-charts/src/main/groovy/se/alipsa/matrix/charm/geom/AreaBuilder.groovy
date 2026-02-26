@@ -71,7 +71,7 @@ class AreaBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  AreaBuilder linetype(Object value) {
+  AreaBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

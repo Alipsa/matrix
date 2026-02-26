@@ -6,6 +6,7 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CssAttributesSpec
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.assertEquals
@@ -44,9 +45,10 @@ class P1GeomRendererTest {
     ]
 
     cases.each { Map<String, Object> tc ->
+      LayerBuilder builder = applyOptions(builderFor(tc.geom as CharmGeomType), tc.options as Map<String, Object>)
       Chart chart = plot(data) {
         mapping(tc.aes as Map<String, String>)
-        layer(tc.geom as CharmGeomType, tc.options as Map<String, Object>)
+        addLayer(builder)
         theme {
           legendPosition = 'none'
         }
@@ -74,9 +76,10 @@ class P1GeomRendererTest {
     ]
 
     cases.each { Map<String, Object> tc ->
+      LayerBuilder builder = applyOptions(builderFor(tc.geom as CharmGeomType), tc.options as Map<String, Object>)
       Chart chart = plot(data) {
         mapping(tc.aes as Map<String, String>)
-        layer(tc.geom as CharmGeomType, tc.options as Map<String, Object>)
+        addLayer(builder)
       }.build()
 
       String svg = SvgWriter.toXml(withCssIdsEnabled(chart).render())
@@ -93,10 +96,12 @@ class P1GeomRendererTest {
         .rows([[0.0, 0.0]])
         .build()
 
+    LayerBuilder hline = builderFor(CharmGeomType.HLINE)
+    LayerBuilder vline = builderFor(CharmGeomType.VLINE)
     Chart chart = plot(data) {
       mapping([x: 'x', y: 'y'])
-      layer(CharmGeomType.HLINE, [:])
-      layer(CharmGeomType.VLINE, [:])
+      addLayer(hline)
+      addLayer(vline)
     }.build()
 
     String svg = SvgWriter.toXml(chart.render())
@@ -111,10 +116,12 @@ class P1GeomRendererTest {
         .rows([])
         .build()
 
+    LayerBuilder hline = builderFor(CharmGeomType.HLINE).param('yintercept', 0.0)
+    LayerBuilder vline = builderFor(CharmGeomType.VLINE).param('xintercept', 0.0)
     Chart chart = plot(data) {
       mapping([x: 'x', y: 'y'])
-      layer(CharmGeomType.HLINE, [yintercept: 0.0])
-      layer(CharmGeomType.VLINE, [xintercept: 0.0])
+      addLayer(hline)
+      addLayer(vline)
     }.build()
 
     String svg = SvgWriter.toXml(chart.render())
@@ -142,6 +149,23 @@ class P1GeomRendererTest {
     (xml =~ /id=['"]([^'"]+)['"]/)
         .collect { it[1] as String }
         .findAll { String id -> id.contains(token) }
+  }
+
+  private static LayerBuilder builderFor(CharmGeomType geomType) {
+    String className = geomType.name()
+        .split('_')
+        .collect { it.toLowerCase().capitalize() }
+        .join('') + 'Builder'
+    Class.forName("se.alipsa.matrix.charm.geom.${className}").getDeclaredConstructor().newInstance() as LayerBuilder
+  }
+
+  private static LayerBuilder applyOptions(LayerBuilder builder, Map<String, Object> options) {
+    options.each { String key, Object value ->
+      if (key == 'stat') return
+      if (key == 'position') { builder.position(value) }
+      else { builder.param(key, value) }
+    }
+    builder
   }
 
   private static Matrix p1Data() {

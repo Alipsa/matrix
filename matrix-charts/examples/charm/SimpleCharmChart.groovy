@@ -13,8 +13,10 @@ def chart = plot(data) {
     x = 'month'
     y = 'sales'
   }
-  line {}
-  points { size = 3 }
+  layers {
+    geomLine()
+    geomPoint().size(3)
+  }
   labels {
     title = 'Monthly Sales'
     x = 'Month'

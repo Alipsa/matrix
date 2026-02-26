@@ -142,7 +142,7 @@ class ScaleEngineTest {
         y = 'y'
         color = 'color'
       }
-      points {}
+      layers { geomPoint() }
     }.build()
 
     RenderConfig config = new RenderConfig(width: 800, height: 600)
@@ -173,7 +173,7 @@ class ScaleEngineTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
     }.build()
 
     RenderConfig config = new RenderConfig(width: 800, height: 600)
@@ -317,7 +317,7 @@ class ScaleEngineTest {
         y = 'y'
         linetype = 'linetype'
       }
-      line {}
+      layers { geomLine() }
     }.build()
 
     RenderConfig config = new RenderConfig(width: 800, height: 600)
@@ -380,7 +380,7 @@ class ScaleEngineTest {
         alpha = 'alpha'
         linetype = 'linetype'
       }
-      points {}
+      layers { geomPoint() }
     }
     spec.scale.size = Scale.binned()
     spec.scale.shape = Scale.discrete()

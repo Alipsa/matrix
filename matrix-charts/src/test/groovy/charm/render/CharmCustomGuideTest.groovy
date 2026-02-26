@@ -30,7 +30,7 @@ class CharmCustomGuideTest {
 
     PlotSpec spec = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
     }
     spec.guides.setSpec('custom', GuideSpec.custom({ ctx ->
       closureCalled = true
@@ -62,7 +62,7 @@ class CharmCustomGuideTest {
 
     PlotSpec spec = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
     }
     spec.guides.setSpec('custom', GuideSpec.custom({ ctx ->
       throw new RuntimeException("Test error")
@@ -87,7 +87,7 @@ class CharmCustomGuideTest {
 
     PlotSpec spec = plot(data) {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
-      points {}
+      layers { geomPoint() }
     }
     spec.guides.setSpec('custom', GuideSpec.custom({ ctx ->
       ctx.svg.addRect(20, 20).x(ctx.x).y(ctx.y).fill('blue')

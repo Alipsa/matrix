@@ -59,7 +59,7 @@ class FreqpolyBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  FreqpolyBuilder linetype(Object value) {
+  FreqpolyBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

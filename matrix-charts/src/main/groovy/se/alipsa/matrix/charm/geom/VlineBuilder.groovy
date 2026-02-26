@@ -70,7 +70,7 @@ class VlineBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  VlineBuilder linetype(Object value) {
+  VlineBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

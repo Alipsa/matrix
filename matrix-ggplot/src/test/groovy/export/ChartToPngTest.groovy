@@ -15,6 +15,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 import se.alipsa.matrix.charm.Charts
+import se.alipsa.matrix.charm.geom.PointBuilder
 import static se.alipsa.matrix.gg.GgPlot.*
 import static org.junit.jupiter.api.Assertions.*
 
@@ -123,6 +124,6 @@ class ChartToPngTest {
         .columnNames('x', 'y')
         .rows([[1, 3], [2, 5], [3, 4]])
         .build()
-    Charts.plot(data).mapping(x: 'x', y: 'y').points().build()
+    Charts.plot(data).mapping(x: 'x', y: 'y').addLayer(new PointBuilder()).build()
   }
 }

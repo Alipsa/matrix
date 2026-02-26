@@ -59,7 +59,7 @@ class LinerangeBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  LinerangeBuilder linetype(Object value) {
+  LinerangeBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

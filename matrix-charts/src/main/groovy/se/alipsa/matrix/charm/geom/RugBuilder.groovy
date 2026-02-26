@@ -59,7 +59,7 @@ class RugBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  RugBuilder linetype(Object value) {
+  RugBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

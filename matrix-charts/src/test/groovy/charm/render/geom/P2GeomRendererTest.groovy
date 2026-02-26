@@ -6,6 +6,7 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.CssAttributesSpec
+import se.alipsa.matrix.charm.geom.LayerBuilder
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.assertFalse
@@ -45,9 +46,10 @@ class P2GeomRendererTest {
     ]
 
     cases.each { Map<String, Object> tc ->
+      LayerBuilder builder = applyOptions(builderFor(tc.geom as CharmGeomType), tc.options as Map<String, Object>)
       Chart chart = plot(data) {
         mapping(tc.aes as Map<String, String>)
-        layer(tc.geom as CharmGeomType, tc.options as Map<String, Object>)
+        addLayer(builder)
       }.build()
 
       String svg = SvgWriter.toXml(withCssClasses(chart).render())
@@ -63,9 +65,10 @@ class P2GeomRendererTest {
     Matrix data = p2Data()
 
     [CharmGeomType.BLANK, CharmGeomType.CUSTOM].each { CharmGeomType geom ->
+      LayerBuilder builder = builderFor(geom)
       Chart chart = plot(data) {
         mapping([x: 'x', y: 'y'])
-        layer(geom, [:])
+        addLayer(builder)
       }.build()
 
       String svg = SvgWriter.toXml(withCssClasses(chart).render())
@@ -88,6 +91,23 @@ class P2GeomRendererTest {
         chart.annotations,
         new CssAttributesSpec(enabled: true, includeIds: false, includeClasses: true, includeDataAttributes: false)
     )
+  }
+
+  private static LayerBuilder builderFor(CharmGeomType geomType) {
+    String className = geomType.name()
+        .split('_')
+        .collect { it.toLowerCase().capitalize() }
+        .join('') + 'Builder'
+    Class.forName("se.alipsa.matrix.charm.geom.${className}").getDeclaredConstructor().newInstance() as LayerBuilder
+  }
+
+  private static LayerBuilder applyOptions(LayerBuilder builder, Map<String, Object> options) {
+    options.each { String key, Object value ->
+      if (key == 'stat') return
+      if (key == 'position') { builder.position(value) }
+      else { builder.param(key, value) }
+    }
+    builder
   }
 
   private static Matrix p2Data() {

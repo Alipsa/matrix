@@ -31,6 +31,14 @@ import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
 
 import se.alipsa.matrix.charm.CharmValidationException
+import se.alipsa.matrix.charm.geom.Bin2dBuilder
+import se.alipsa.matrix.charm.geom.CountBuilder
+import se.alipsa.matrix.charm.geom.DensityBuilder
+import se.alipsa.matrix.charm.geom.LineBuilder
+import se.alipsa.matrix.charm.geom.PointBuilder
+import se.alipsa.matrix.charm.geom.RasterBuilder
+import se.alipsa.matrix.charm.geom.TextBuilder
+import se.alipsa.matrix.charm.geom.ViolinBuilder
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
@@ -320,9 +328,9 @@ class CharmModelExpansionTest {
 
     PlotSpec spec = plot(data)
     spec.mapping(x: 'x', y: 'y')
-    spec.layer(CharmGeomType.BIN2D, [:])
-    spec.layer(CharmGeomType.COUNT, [:])
-    spec.layer(CharmGeomType.RASTER, [:])
+    spec.addLayer(new Bin2dBuilder())
+    spec.addLayer(new CountBuilder())
+    spec.addLayer(new RasterBuilder())
     assertEquals(3, spec.layers.size())
   }
 
@@ -335,11 +343,11 @@ class CharmModelExpansionTest {
 
     PlotSpec spec = plot(data)
     spec.mapping(x: 'x', y: 'y')
-    spec.layer(CharmGeomType.POINT, [:])
-    spec.layer(CharmGeomType.LINE, [:])
-    spec.layer(CharmGeomType.DENSITY, [stat: CharmStatType.DENSITY])
-    spec.layer(CharmGeomType.VIOLIN, [stat: CharmStatType.YDENSITY])
-    spec.layer(CharmGeomType.TEXT, [label: 'ok'])
+    spec.addLayer(new PointBuilder())
+    spec.addLayer(new LineBuilder())
+    spec.addLayer(new DensityBuilder())
+    spec.addLayer(new ViolinBuilder())
+    spec.addLayer(new TextBuilder().label('ok'))
 
     assertEquals(5, spec.layers.size())
     assertEquals(CharmGeomType.POINT, spec.layers[0].geomType)
@@ -356,8 +364,10 @@ class CharmModelExpansionTest {
         x = 'cty'
         y = 'hwy'
       }
-      points {}
-      line {}
+      layers {
+        geomPoint()
+        geomLine()
+      }
     }.build()
 
     assertEquals(2, chart.layers.size())
@@ -382,7 +392,9 @@ class CharmModelExpansionTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers {
+        geomPoint()
+      }
       theme {
         legendPosition = 'none'
       }

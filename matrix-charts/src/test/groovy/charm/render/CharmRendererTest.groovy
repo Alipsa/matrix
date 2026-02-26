@@ -6,7 +6,6 @@ import se.alipsa.groovy.svg.Line
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
@@ -36,7 +35,7 @@ class CharmRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       theme {
         legendPosition = 'none'
       }
@@ -68,7 +67,7 @@ class CharmRendererTest {
         x = 'x'
         y = 'y'
       }
-      line {}
+      layers { geomLine() }
       theme {
         legendPosition = 'none'
       }
@@ -97,7 +96,7 @@ class CharmRendererTest {
         x = 'cat'
         y = 'value'
       }
-      layer(CharmGeomType.COL, [fill: '#336699'])
+      layers { geomCol().fill('#336699') }
       theme {
         legendPosition = 'none'
       }
@@ -111,7 +110,7 @@ class CharmRendererTest {
       mapping {
         x = 'value'
       }
-      layer(CharmGeomType.HISTOGRAM, [bins: 4, fill: '#cc6677'])
+      layers { geomHistogram().bins(4).fill('#cc6677') }
       theme {
         legendPosition = 'none'
       }
@@ -140,7 +139,7 @@ class CharmRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       facet {
         wrap {
           vars = ['grp']
@@ -170,7 +169,7 @@ class CharmRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       facet {
         wrap {
           vars = ['grp']
@@ -201,7 +200,7 @@ class CharmRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
+      layers { geomPoint() }
       facet {
         rows = ['grp']
       }
@@ -233,7 +232,7 @@ class CharmRendererTest {
         x = 'x'
         y = 'y'
       }
-      line {}
+      layers { geomLine() }
       labels {
         title = 'Deterministic'
       }
@@ -279,8 +278,10 @@ class CharmRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
-      layer(CharmGeomType.POINT, [__layer_data: layerData])
+      layers {
+        geomPoint()
+        geomPoint().data(layerData)
+      }
       theme {
         legendPosition = 'none'
       }
@@ -329,8 +330,10 @@ class CharmRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
-      points {}
+      layers {
+        geomPoint()
+        geomPoint()
+      }
       theme {
         legendPosition = 'none'
       }
@@ -342,8 +345,10 @@ class CharmRendererTest {
         x = 'x'
         y = 'y'
       }
-      points {}
-      layer(CharmGeomType.POINT, [__layer_data: wideData])
+      layers {
+        geomPoint()
+        geomPoint().data(wideData)
+      }
       theme {
         legendPosition = 'none'
       }

@@ -60,9 +60,7 @@ class ChartsDataConversionTest {
         x = 'x'
         y = 'y'
       }
-      points {
-        size = 2
-      }
+      layers { geomPoint().size(2) }
     }.build()
 
     assertEquals(1, chart.layers.size())

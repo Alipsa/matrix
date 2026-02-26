@@ -59,7 +59,7 @@ class Density2dBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  Density2dBuilder linetype(Object value) {
+  Density2dBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

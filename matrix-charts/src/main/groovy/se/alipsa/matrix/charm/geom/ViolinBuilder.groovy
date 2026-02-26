@@ -70,7 +70,7 @@ class ViolinBuilder extends LayerBuilder {
    * @param value linetype name or integer code
    * @return this builder
    */
-  ViolinBuilder linetype(Object value) {
+  ViolinBuilder linetype(String value) {
     params['linetype'] = value
     this
   }

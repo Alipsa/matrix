@@ -22,6 +22,17 @@ import se.alipsa.matrix.charm.CharmStatType
 class TextBuilder extends LayerBuilder {
 
   /**
+   * Sets the label text content.
+   *
+   * @param value label text
+   * @return this builder
+   */
+  TextBuilder label(String value) {
+    params['label'] = value
+    this
+  }
+
+  /**
    * Sets text size.
    *
    * @param value size value
