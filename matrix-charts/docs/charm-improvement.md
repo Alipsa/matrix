@@ -611,21 +611,21 @@ as the first concrete builder so the smoke test uses real working code. Keep
 **Goals:** Builders for the main statistical-summary geoms.
 
 **Tasks:**
-- 6.1 [ ] Implement `BarBuilder`: `width(Number)`, `fill(String)`, `color(String)`,
+- 6.1 [x] Implement `BarBuilder`: `width(Number)`, `fill(String)`, `color(String)`,
   `alpha(Number)`, `position(Object)`. `build()` → `BAR / COUNT`.
-- 6.2 [ ] Implement `ColBuilder`: same params as `BarBuilder`. `build()` → `COL / IDENTITY`.
-- 6.3 [ ] Implement `HistogramBuilder`: `bins(Integer)`, `binwidth(Number)`, `fill(String)`,
+- 6.2 [x] Implement `ColBuilder`: same params as `BarBuilder`. `build()` → `COL / IDENTITY`.
+- 6.3 [x] Implement `HistogramBuilder`: `bins(Integer)`, `binwidth(Number)`, `fill(String)`,
   `color(String)`, `alpha(Number)`, `position(Object)`. `build()` → `HISTOGRAM / BIN`.
-- 6.4 [ ] Implement `BoxplotBuilder`: `width(Number)`, `fill(String)`, `color(String)`,
+- 6.4 [x] Implement `BoxplotBuilder`: `width(Number)`, `fill(String)`, `color(String)`,
   `alpha(Number)`, `outlierShape(Object)`, `notch(boolean)`. `build()` → `BOXPLOT / BOXPLOT`.
-- 6.5 [ ] Implement `ViolinBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`,
+- 6.5 [x] Implement `ViolinBuilder`: `fill(String)`, `color(String)`, `alpha(Number)`,
   `linetype(Object)`, `drawQuantiles(List<Number>)`. `build()` → `VIOLIN / YDENSITY`.
-- 6.6 [ ] Implement `DotplotBuilder`: `fill(String)`, `color(String)`, `binwidth(Number)`,
-  `stackratio(Number)`, `dotsize(Number)`. `build()` → `DOTPLOT / BIN`.
-- 6.7 [ ] Add `Geoms.geomBar()`, `geomCol()`, `geomHistogram()`, `geomBoxplot()`,
+- 6.6 [x] Implement `DotplotBuilder`: `fill(String)`, `color(String)`, `binwidth(Number)`,
+  `stackratio(Number)`, `dotsize(Number)`. `build()` → `DOTPLOT / IDENTITY`.
+- 6.7 [x] Add `Geoms.geomBar()`, `geomCol()`, `geomHistogram()`, `geomBoxplot()`,
   `geomViolin()`, `geomDotplot()` factory methods.
-- 6.8 [ ] Add tests — one render test per builder.
-- 6.9 [ ] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green.
+- 6.8 [x] Add tests — one render test per builder.
+- 6.9 [x] Run `./gradlew :matrix-charts:test -Pheadless=true` — all tests green (492 passed).
 
 **Success criteria:**
 - All six builders compile `@CompileStatic`.
