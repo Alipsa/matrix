@@ -648,60 +648,71 @@ chart.valueSeriesNames      // List<String> -- series names
 
 ## Output Formats
 
-### PNG (via Plot)
+All export classes are in the `se.alipsa.matrix.chartexport` package and accept legacy `Chart` objects, Charm `Chart`, `Svg`, or SVG strings.
 
-```groovy
-// To file (default 800x600)
-Plot.png(chart, new File('chart.png'))
-
-// With custom dimensions
-Plot.png(chart, new File('chart.png'), 1024, 768)
-
-// To OutputStream
-ByteArrayOutputStream baos = new ByteArrayOutputStream()
-Plot.png(chart, baos)
-```
-
-### PNG (via chartexport)
+### PNG
 
 ```groovy
 import se.alipsa.matrix.chartexport.ChartToPng
 
+// To file
 ChartToPng.export(chart, new File('chart.png'))
+
+// To OutputStream
+ByteArrayOutputStream baos = new ByteArrayOutputStream()
+ChartToPng.export(chart, baos)
 ```
 
-### SVG (via Plot)
+### SVG
 
 ```groovy
-Plot.svg(chart, new File('chart.svg'))
+import se.alipsa.matrix.chartexport.ChartToSvg
+
+ChartToSvg.export(chart, new File('chart.svg'))
+
+// To OutputStream or Writer
+ChartToSvg.export(chart, outputStream)
+ChartToSvg.export(chart, writer)
+```
+
+### JPEG
+
+```groovy
+import se.alipsa.matrix.chartexport.ChartToJpeg
+
+// quality: 0.0 to 1.0 (default 1.0)
+ChartToJpeg.export(chart, new File('chart.jpg'), 0.9)
+
+// To OutputStream
+ChartToJpeg.export(chart, outputStream, 0.9)
 ```
 
 ### Base64 Data URI
 
 ```groovy
-String dataUri = Plot.base64(chart)
-// Returns: "data:image/png;base64,iVBOR..."
+import se.alipsa.matrix.chartexport.ChartToPng
 
-// With custom dimensions
-String dataUri = Plot.base64(chart, 640, 480)
+String dataUri = ChartToPng.base64(chart)
+// Returns: "data:image/png;base64,iVBOR..."
+```
+
+### BufferedImage
+
+```groovy
+import se.alipsa.matrix.chartexport.ChartToImage
+
+BufferedImage image = ChartToImage.export(chart)
 ```
 
 ### JavaFX
 
 ```groovy
-javafx.scene.Node node = Plot.jfx(chart)
-// Use node in a JavaFX application
+import se.alipsa.matrix.chartexport.ChartToJfx
+
+javafx.scene.Node node = ChartToJfx.export(chart)
 ```
 
-### JPEG (via chartexport)
-
-```groovy
-import se.alipsa.matrix.chartexport.ChartToJpeg
-
-ChartToJpeg.export(chart, new File('chart.jpg'), 0.9)
-```
-
-### Swing (via chartexport)
+### Swing
 
 ```groovy
 import se.alipsa.matrix.chartexport.ChartToSwing
@@ -710,7 +721,7 @@ def panel = ChartToSwing.export(chart)
 // Add panel to a Swing container
 ```
 
-> **Note:** `Plot` is `@Deprecated` but continues to work. For new code, prefer using `ChartToPng`, `ChartToJpeg`, `ChartToJfx`, `ChartToSwing`, or `ChartToImage` from `se.alipsa.matrix.chartexport` directly.
+> **Note:** The `Plot` class is `@Deprecated`. Use the `chartexport` classes above instead.
 
 ## Error Handling
 

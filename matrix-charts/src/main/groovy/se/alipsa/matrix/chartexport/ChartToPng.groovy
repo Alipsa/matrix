@@ -5,6 +5,8 @@ import com.github.weisj.jsvg.parser.LoaderContext
 import com.github.weisj.jsvg.parser.SVGLoader
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charts.Chart
+import se.alipsa.matrix.charts.CharmBridge
 
 import javax.imageio.ImageIO
 import java.awt.Graphics2D
@@ -129,6 +131,86 @@ class ChartToPng {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
     export(chart.render(), os)
+  }
+
+  /**
+   * Export a legacy {@link Chart} (e.g. BarChart, ScatterChart) as a PNG image file.
+   *
+   * @param chart the legacy chart to export
+   * @param targetFile the {@link File} where the PNG image will be written
+   * @throws IOException if an error occurs during file writing
+   * @throws IllegalArgumentException if chart or targetFile is null
+   */
+  static void export(Chart chart, File targetFile) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException("chart cannot be null")
+    }
+    if (targetFile == null) {
+      throw new IllegalArgumentException("targetFile cannot be null")
+    }
+    export(CharmBridge.convert(chart).render(), targetFile)
+  }
+
+  /**
+   * Export a legacy {@link Chart} (e.g. BarChart, ScatterChart) as PNG to an {@link OutputStream}.
+   *
+   * @param chart the legacy chart to export
+   * @param os the output stream to write the PNG to
+   * @throws IOException if an error occurs during writing
+   * @throws IllegalArgumentException if chart or os is null
+   */
+  static void export(Chart chart, OutputStream os) throws IOException {
+    if (chart == null) {
+      throw new IllegalArgumentException("chart cannot be null")
+    }
+    if (os == null) {
+      throw new IllegalArgumentException("outputStream cannot be null")
+    }
+    export(CharmBridge.convert(chart).render(), os)
+  }
+
+  /**
+   * Export an {@link Svg} chart as a base64-encoded PNG data URI.
+   *
+   * @param svgChart the {@link Svg} object containing the chart
+   * @return data URI string (e.g. "data:image/png;base64,iVBOR...")
+   * @throws IllegalArgumentException if svgChart is null
+   */
+  static String base64(Svg svgChart) {
+    if (svgChart == null) {
+      throw new IllegalArgumentException("svgChart cannot be null")
+    }
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    export(svgChart, baos)
+    "data:image/png;base64," + Base64.encoder.encodeToString(baos.toByteArray())
+  }
+
+  /**
+   * Export a Charm {@link CharmChart} as a base64-encoded PNG data URI.
+   *
+   * @param chart the Charm chart to export
+   * @return data URI string (e.g. "data:image/png;base64,iVBOR...")
+   * @throws IllegalArgumentException if chart is null
+   */
+  static String base64(CharmChart chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException("chart cannot be null")
+    }
+    base64(chart.render())
+  }
+
+  /**
+   * Export a legacy {@link Chart} as a base64-encoded PNG data URI.
+   *
+   * @param chart the legacy chart to export
+   * @return data URI string (e.g. "data:image/png;base64,iVBOR...")
+   * @throws IllegalArgumentException if chart is null
+   */
+  static String base64(Chart chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException("chart cannot be null")
+    }
+    base64(CharmBridge.convert(chart).render())
   }
 
   /**

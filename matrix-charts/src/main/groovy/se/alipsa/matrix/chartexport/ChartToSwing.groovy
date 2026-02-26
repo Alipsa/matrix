@@ -2,6 +2,8 @@ package se.alipsa.matrix.chartexport
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charts.Chart
+import se.alipsa.matrix.charts.CharmBridge
 
 /**
  * Exports charts as Swing {@link SvgPanel} components.
@@ -59,6 +61,26 @@ class ChartToSwing {
    * @return a {@link SvgPanel} displaying the rendered chart
    * @throws IllegalArgumentException if svgChart is null or an unsupported type
    */
+  /**
+   * Create a {@link SvgPanel} from a legacy {@link Chart} (e.g. BarChart, ScatterChart).
+   *
+   * @param chart the legacy chart to render
+   * @return a {@link SvgPanel} displaying the rendered chart
+   */
+  static SvgPanel export(Chart chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException("chart cannot be null")
+    }
+    export(CharmBridge.convert(chart).render())
+  }
+
+  /**
+   * Dynamic dispatch overload for untyped chart objects.
+   *
+   * @param svgChart an SVG string, {@link Svg}, {@link CharmChart}, or legacy {@link Chart}
+   * @return a {@link SvgPanel} displaying the rendered chart
+   * @throws IllegalArgumentException if svgChart is null or an unsupported type
+   */
   static SvgPanel export(Object svgChart) {
     if (svgChart == null) {
       throw new IllegalArgumentException("svgChart must not be null")
@@ -71,6 +93,9 @@ class ChartToSwing {
     }
     if (svgChart instanceof CharmChart) {
       return export((CharmChart) svgChart)
+    }
+    if (svgChart instanceof Chart) {
+      return export((Chart) svgChart)
     }
     throw new IllegalArgumentException("Unsupported chart type: ${svgChart.getClass().name}")
   }

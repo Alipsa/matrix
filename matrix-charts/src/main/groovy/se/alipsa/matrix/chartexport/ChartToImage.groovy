@@ -3,6 +3,8 @@ package se.alipsa.matrix.chartexport
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
 import se.alipsa.matrix.charm.Chart as CharmChart
+import se.alipsa.matrix.charts.Chart
+import se.alipsa.matrix.charts.CharmBridge
 
 import java.awt.image.BufferedImage
 
@@ -42,5 +44,19 @@ class ChartToImage {
       throw new IllegalArgumentException("chart must not be null")
     }
     return export(chart.render())
+  }
+
+  /**
+   * Export a legacy {@link Chart} (e.g. BarChart, ScatterChart) to a {@link BufferedImage}.
+   *
+   * @param chart the legacy chart to export
+   * @return rendered image
+   * @throws IllegalArgumentException if chart is null
+   */
+  static BufferedImage export(Chart chart) {
+    if (chart == null) {
+      throw new IllegalArgumentException("chart cannot be null")
+    }
+    return export(CharmBridge.convert(chart).render())
   }
 }
