@@ -233,7 +233,7 @@ layers {
 }
 ```
 
-When both a mapping and a layer parameter exist for the same aesthetic, the mapped values take priority.
+Note: if a mapping exists for the same aesthetic (e.g., `fill` in both `mapping {}` and on the layer), the mapped data values are used instead of the layer parameter.
 
 ### Programmatic addLayer()
 
@@ -289,6 +289,20 @@ scale {
   x = time()        // time axis
   color = continuous()
   fill = discrete()
+}
+```
+
+### Manual Color Scales
+
+Assign specific colors to data values:
+
+```groovy
+scale {
+  // Named map: value -> color
+  fill = manual(['below': '#e74c3c', 'above': '#2ecc71'])
+
+  // Or a list of colors (assigned in order)
+  color = manual(['#e41a1c', '#377eb8', '#4daf4a'])
 }
 ```
 
@@ -728,6 +742,39 @@ def chart = plot(Dataset.mpg()) {
 }.build()
 
 chart.writeTo('styled_chart.svg')
+```
+
+### Conditional Coloring
+
+To color bars (or points) based on a threshold, add a derived column to your data
+and map `fill` to it:
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plot
+import se.alipsa.matrix.core.Matrix
+
+def data = Matrix.builder().data(
+    category: ['A', 'B', 'C', 'D', 'E'],
+    pct: [72, 45, 88, 30, 51]
+).types(String, Integer).build()
+
+// Add a color column based on a threshold
+data.addColumn('status', String) { row -> row['pct'] >= 50 ? 'above' : 'below' }
+
+def chart = plot(data) {
+  mapping {
+    x = 'category'
+    y = 'pct'
+    fill = 'status'     // maps 'above'/'below' to distinct colors
+  }
+  layers { geomBar() }
+  scale {
+    fill = manual(['below': '#e74c3c', 'above': '#2ecc71'])
+  }
+  labels { title = 'Performance by Category' }
+}.build()
+
+chart.writeTo('conditional.svg')
 ```
 
 ## Additional Resources

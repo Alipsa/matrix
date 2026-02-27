@@ -562,6 +562,16 @@ class PlotSpec {
       Scale.discrete()
     }
 
+    /**
+     * Creates a manual color scale from a list of colors or a named map.
+     *
+     * @param values color list or named map (e.g. {@code ['below': '#e74c3c', 'above': '#2ecc71']})
+     * @return scale object
+     */
+    Scale manual(Object values) {
+      Scale.manual(values)
+    }
+
     private Scale coerce(Object value, String axis) {
       if (value == null) {
         return null
