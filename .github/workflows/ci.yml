@@ -29,7 +29,7 @@ jobs:
         run: ./gradlew publishToMavenLocal -x test -Pheadless=true
 
       - name: Install BOM POM
-        run: mvn install -f matrix-bom/bom.xml -N
+        run: mvn install -f matrix-bom/bom.xml
 
       - name: Smoke tests
         run: cd matrix-bom && mvn test
