@@ -334,6 +334,31 @@ theme {
 }
 ```
 
+### Where do colors go? Mapping vs Scale vs Theme vs Layer
+
+Colors appear in four places, each with a distinct role:
+
+| Where | What it controls | Example |
+|-------|-----------------|---------|
+| **mapping** | Which column drives the color | `color = 'class'` |
+| **scale** | How data values translate to specific colors | `fill = manual(['low': '#e74c3c'])` |
+| **theme** | Styling of non-data elements (background, grid, axes) | `gridColor = '#eeeeee'` |
+| **layer** | A constant color for all elements in a layer | `geomBar().fill('#336699')` |
+
+Think of it this way:
+- **mapping** answers *"color varies by what?"*
+- **scale** answers *"which colors represent which values?"*
+- **theme** answers *"what does the chart chrome look like?"*
+- **layer parameter** answers *"make everything in this layer one color"*
+
+For example, to color bars by a `status` column with specific colors:
+
+```groovy
+mapping { fill = 'status' }             // 1. map fill to data
+scale { fill = manual(['ok': 'green', 'bad': 'red']) }  // 2. assign colors
+theme { gridColor = '#f0f0f0' }         // 3. style the background (unrelated to data)
+```
+
 ## Faceting
 
 ### Grid Facets
