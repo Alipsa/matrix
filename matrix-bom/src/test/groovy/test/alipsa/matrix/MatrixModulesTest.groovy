@@ -255,9 +255,9 @@ class MatrixModulesTest {
     Matrix mtcars = Dataset.mtcars()
     def spec = plot(mtcars) {
       mapping {
-        x = col.wt
-        y = col.mpg
-        color = col.cyl
+        x = 'wt'
+        y = 'mpg'
+        color = 'cyl'
       }
       layers { geomPoint() }
       labels { title = 'MPG vs Weight' }

@@ -17,6 +17,7 @@ class LayerSpec extends Layer {
    * @param inheritMapping inherit flag
    * @param positionSpec position specification
    * @param params layer params
+   * @param styleCallback per-datum style override callback
    */
   LayerSpec(
       GeomSpec geomSpec,
@@ -24,9 +25,10 @@ class LayerSpec extends Layer {
       Mapping mapping = null,
       boolean inheritMapping = true,
       PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY),
-      Map<String, Object> params = [:]
+      Map<String, Object> params = [:],
+      Closure styleCallback = null
   ) {
-    super(geomSpec, statSpec, mapping, inheritMapping, positionSpec, params)
+    super(geomSpec, statSpec, mapping, inheritMapping, positionSpec, params, styleCallback)
   }
 
   /**
@@ -37,6 +39,6 @@ class LayerSpec extends Layer {
   @Override
   LayerSpec copy() {
     Mapping layerMapping = super.getMapping()
-    new LayerSpec(geomSpec.copy(), statSpec.copy(), layerMapping, inheritMapping, positionSpec.copy(), params)
+    new LayerSpec(geomSpec.copy(), statSpec.copy(), layerMapping, inheritMapping, positionSpec.copy(), params, styleCallback)
   }
 }

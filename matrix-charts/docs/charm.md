@@ -233,7 +233,36 @@ layers {
 }
 ```
 
-Note: if a mapping exists for the same aesthetic (e.g., `fill` in both `mapping {}` and on the layer), the mapped data values are used instead of the layer parameter.
+Layer params take priority over mapped aesthetics: if both `mapping { fill = 'status' }` and `geomCol().fill('#336699')` are present, the literal layer param wins. This matches ggplot2 behavior.
+
+### Style Callbacks
+
+For per-datum conditional styling, use the `style {}` callback on a layer. The callback receives a `Row` from the original data matrix and a mutable `StyleOverride` object:
+
+```groovy
+def chart = plot(data) {
+  mapping { x = 'month'; y = 'pct' }
+  layers {
+    geomCol().fill('#2ecc71').style { row, s ->
+      if (row['pct'] < 50) s.fill = '#e74c3c'
+      if (row['month'] == 'February') s.color = 'yellow'
+    }
+  }
+}.build()
+```
+
+Available override properties: `fill`, `color`, `alpha` (BigDecimal), `size` (BigDecimal), `shape`, `linetype`.
+
+Style callback overrides have the highest priority in the resolution chain:
+
+```
+1. Style callback override  (style { row, s -> s.fill = 'red' })
+2. Layer param              (geomCol().fill('#336699'))
+3. Mapped aesthetic + scale (mapping { fill = 'status' })
+4. Default                  ('#1f77b4')
+```
+
+**Note:** Style callbacks require that the original data row is preserved, so they work with geoms that use stat=IDENTITY (e.g., `geomCol()`, `geomPoint()`, `geomLine()`). Geoms with aggregating stats (e.g., `geomBar()` with stat=COUNT) produce synthetic data that does not retain per-row metadata.
 
 ### Programmatic addLayer()
 
@@ -800,6 +829,20 @@ def chart = plot(data) {
 }.build()
 
 chart.writeTo('conditional.svg')
+```
+
+Alternatively, use a [style callback](#style-callbacks) for a more direct approach that doesn't require adding a derived column:
+
+```groovy
+def chart = plot(data) {
+  mapping { x = 'category'; y = 'pct' }
+  layers {
+    geomCol().fill('#2ecc71').style { row, s ->
+      if (row['pct'] < 50) s.fill = '#e74c3c'
+    }
+  }
+  labels { title = 'Performance by Category' }
+}.build()
 ```
 
 ## Additional Resources
