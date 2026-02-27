@@ -13,6 +13,7 @@ import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
 
@@ -251,6 +252,56 @@ class CharmRendererTest {
     assertEquals(primitiveCounts(first), primitiveCounts(second))
     assertEquals('x', chart.mapping.x.columnName())
     assertEquals(1, chart.layers.size())
+  }
+
+  @Test
+  void testRenderBuilderFluentApi() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [1, 1],
+            [2, 2],
+            [3, 3]
+        ])
+        .build()
+
+    Chart chart = Charts.plot(data) {
+      mapping {
+        x = 'x'
+        y = 'y'
+      }
+      layers { geomPoint() }
+      theme {
+        legendPosition = 'none'
+      }
+    }.build()
+
+    // Fluent builder via renderConfig()
+    Svg svg = chart.renderConfig()
+        .width(640)
+        .height(420)
+        .marginLeft(100)
+        .render()
+
+    assertEquals('640', svg.width.toString())
+    assertEquals('420', svg.height.toString())
+
+    // Convenience render(width, height)
+    Svg svg2 = chart.render(500, 300)
+    assertEquals('500', svg2.width.toString())
+    assertEquals('300', svg2.height.toString())
+
+    // Default render() still works
+    Svg svgDefault = chart.render()
+    assertEquals('800', svgDefault.width.toString())
+    assertEquals('600', svgDefault.height.toString())
+
+    // Validation rejects non-positive dimensions
+    assertThrows(IllegalArgumentException) { chart.renderConfig().width(0) }
+    assertThrows(IllegalArgumentException) { chart.renderConfig().width(-1) }
+    assertThrows(IllegalArgumentException) { chart.renderConfig().height(0) }
+    assertThrows(IllegalArgumentException) { chart.render(0, 400) }
+    assertThrows(IllegalArgumentException) { chart.render(400, -1) }
   }
 
   @Test
