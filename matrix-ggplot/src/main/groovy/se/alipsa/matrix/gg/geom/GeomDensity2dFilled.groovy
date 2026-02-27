@@ -7,7 +7,7 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
-import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.pictura.util.ColorUtil
 
 /**
  * Filled 2D density contours geometry.

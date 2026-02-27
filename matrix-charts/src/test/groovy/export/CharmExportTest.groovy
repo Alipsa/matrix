@@ -5,7 +5,8 @@ import org.junit.jupiter.api.io.TempDir
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.geom.PointBuilder
-import se.alipsa.matrix.charts.ScatterChart
+import se.alipsa.matrix.pictura.Chart
+import se.alipsa.matrix.pictura.ScatterChart
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng
@@ -148,7 +149,7 @@ class CharmExportTest {
     assertTrue(svg.contains('<svg'), "Output should contain SVG content")
   }
 
-  private static se.alipsa.matrix.charts.Chart buildLegacyChart() {
+  private static Chart buildLegacyChart() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
         .rows([[1, 3], [2, 5], [3, 4]])

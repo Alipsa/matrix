@@ -1,4 +1,4 @@
-package se.alipsa.matrix.charts.util
+package se.alipsa.matrix.pictura.util
 
 import java.awt.Color
 

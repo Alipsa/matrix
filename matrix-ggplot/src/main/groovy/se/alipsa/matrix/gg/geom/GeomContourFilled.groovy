@@ -6,7 +6,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.scale.Scale
-import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.pictura.util.ColorUtil
 
 /**
  * Filled contour geometry for drawing filled regions between contour levels.

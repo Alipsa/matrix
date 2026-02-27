@@ -1,17 +1,17 @@
 package chart
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.charts.AreaChart
-import se.alipsa.matrix.charts.BarChart
-import se.alipsa.matrix.charts.BubbleChart
-import se.alipsa.matrix.charts.Chart
-import se.alipsa.matrix.charts.ChartDirection
-import se.alipsa.matrix.charts.ChartType
-import se.alipsa.matrix.charts.Histogram
-import se.alipsa.matrix.charts.Legend
-import se.alipsa.matrix.charts.LineChart
-import se.alipsa.matrix.charts.PieChart
-import se.alipsa.matrix.charts.ScatterChart
+import se.alipsa.matrix.pictura.AreaChart
+import se.alipsa.matrix.pictura.BarChart
+import se.alipsa.matrix.pictura.BubbleChart
+import se.alipsa.matrix.pictura.Chart
+import se.alipsa.matrix.pictura.ChartDirection
+import se.alipsa.matrix.pictura.ChartType
+import se.alipsa.matrix.pictura.Histogram
+import se.alipsa.matrix.pictura.Legend
+import se.alipsa.matrix.pictura.LineChart
+import se.alipsa.matrix.pictura.PieChart
+import se.alipsa.matrix.pictura.ScatterChart
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.assertEquals

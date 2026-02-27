@@ -96,7 +96,7 @@ class CharmApiDesignTest {
     GroovyShell shell = new GroovyShell(new Binding([mpg: mpg]))
     Object result = shell.evaluate('''
       import se.alipsa.matrix.charm.Chart as CharmChart
-      import se.alipsa.matrix.charts.Chart as LegacyChart
+      import se.alipsa.matrix.pictura.Chart as LegacyChart
       import static se.alipsa.matrix.charm.Charts.chart
 
       CharmChart c = chart(mpg) {

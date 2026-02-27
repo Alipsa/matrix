@@ -1,6 +1,6 @@
 # Charts Guide
 
-A comprehensive guide to using the `se.alipsa.matrix.charts` package for creating data visualizations in Groovy.
+A comprehensive guide to using the `se.alipsa.matrix.pictura` package for creating data visualizations in Groovy.
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -23,7 +23,7 @@ A comprehensive guide to using the `se.alipsa.matrix.charts` package for creatin
 
 ## Introduction
 
-The `se.alipsa.matrix.charts` package provides a chart-type-first API for creating common visualizations. You start by choosing a chart type (e.g. `BarChart`, `LineChart`), then supply data and configure styling. This is a familiar pattern for users of libraries like xchart or JavaFX charts.
+The `se.alipsa.matrix.pictura` package provides a chart-type-first API for creating common visualizations. You start by choosing a chart type (e.g. `BarChart`, `LineChart`), then supply data and configure styling. This is a familiar pattern for users of libraries like xchart or JavaFX charts.
 
 All chart types are backed by the [Charm](charm.md) rendering engine internally. Charts render to SVG and can be exported to PNG, JPEG, JavaFX, or Swing via `se.alipsa.matrix.chartexport`.
 
@@ -48,7 +48,7 @@ implementation 'se.alipsa.matrix:matrix-charts'
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 import se.alipsa.matrix.chartexport.ChartToPng
 
 def data = Matrix.builder().data(
@@ -593,7 +593,7 @@ chart.style.legendVisible = false
 Set explicit start, end, and step values for axes:
 
 ```groovy
-import se.alipsa.matrix.charts.AxisScale
+import se.alipsa.matrix.pictura.AxisScale
 
 // Using AxisScale object
 chart.setXAxisScale(new AxisScale(0, 100, 10))
@@ -780,7 +780,7 @@ charts --builds------> charm ---renders-> Svg (via CharmBridge)
 
 ```groovy
 import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 import se.alipsa.matrix.chartexport.ChartToPng
 
 def sales = Matrix.builder().data(
@@ -815,7 +815,7 @@ ChartToPng.export(barChart, new File('composition.png'))
 
 ```groovy
 import se.alipsa.matrix.datasets.Dataset
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 import se.alipsa.matrix.chartexport.ChartToPng
 
 def mtcars = Dataset.mtcars()

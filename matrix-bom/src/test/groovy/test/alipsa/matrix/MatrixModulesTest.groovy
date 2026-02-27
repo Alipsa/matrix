@@ -12,7 +12,7 @@ import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.charts.ScatterChart
+import se.alipsa.matrix.pictura.ScatterChart
 import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions

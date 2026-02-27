@@ -8,7 +8,7 @@ import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale
-import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.pictura.util.ColorUtil
 
 /**
  * Dot plot geometry for displaying distributions.

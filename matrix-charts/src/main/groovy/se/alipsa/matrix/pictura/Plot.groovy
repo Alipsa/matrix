@@ -1,4 +1,4 @@
-package se.alipsa.matrix.charts
+package se.alipsa.matrix.pictura
 
 import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.Svg

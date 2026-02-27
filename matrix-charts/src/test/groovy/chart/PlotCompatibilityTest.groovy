@@ -1,14 +1,14 @@
 package chart
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.charts.AreaChart
-import se.alipsa.matrix.charts.BarChart
-import se.alipsa.matrix.charts.ChartType
-import se.alipsa.matrix.charts.Histogram
-import se.alipsa.matrix.charts.LineChart
-import se.alipsa.matrix.charts.PieChart
-import se.alipsa.matrix.charts.Plot
-import se.alipsa.matrix.charts.ScatterChart
+import se.alipsa.matrix.pictura.AreaChart
+import se.alipsa.matrix.pictura.BarChart
+import se.alipsa.matrix.pictura.ChartType
+import se.alipsa.matrix.pictura.Histogram
+import se.alipsa.matrix.pictura.LineChart
+import se.alipsa.matrix.pictura.PieChart
+import se.alipsa.matrix.pictura.Plot
+import se.alipsa.matrix.pictura.ScatterChart
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*

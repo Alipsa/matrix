@@ -1,7 +1,7 @@
 package chart
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.charts.Histogram
+import se.alipsa.matrix.pictura.Histogram
 import se.alipsa.matrix.datasets.Dataset
 
 import static org.junit.jupiter.api.Assertions.*

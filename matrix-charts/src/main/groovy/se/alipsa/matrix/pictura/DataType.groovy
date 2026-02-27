@@ -1,4 +1,4 @@
-package se.alipsa.matrix.charts
+package se.alipsa.matrix.pictura
 
 import java.time.Instant
 import java.time.LocalDate

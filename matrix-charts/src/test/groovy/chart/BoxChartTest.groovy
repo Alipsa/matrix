@@ -1,8 +1,8 @@
 package chart
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.charts.BoxChart
-import se.alipsa.matrix.charts.Plot
+import se.alipsa.matrix.pictura.BoxChart
+import se.alipsa.matrix.pictura.Plot
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*

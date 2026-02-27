@@ -4,8 +4,8 @@ import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.charts.LineChart
-import se.alipsa.matrix.charts.Plot
+import se.alipsa.matrix.pictura.LineChart
+import se.alipsa.matrix.pictura.Plot
 import java.time.YearMonth
 
 class LineChartTest {

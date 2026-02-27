@@ -11,7 +11,7 @@ import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
-import se.alipsa.matrix.charts.util.ColorUtil
+import se.alipsa.matrix.pictura.util.ColorUtil
 
 /**
  * Box plot geometry for visualizing distributions through quartiles.

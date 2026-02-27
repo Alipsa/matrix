@@ -80,7 +80,7 @@ Here's a basic example of creating different types of charts:
 ```groovy
 import java.time.LocalDate
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 
 // Create a sample Matrix with employee data
 def empData = Matrix.builder().data(
@@ -103,7 +103,7 @@ Area charts are useful for showing trends over time or comparing values across c
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 
 // Create a Matrix with time series data
 def timeData = Matrix.builder().data(
@@ -126,7 +126,7 @@ Bar charts are excellent for comparing values across different categories. You c
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 
 // Create a Matrix with categorical data
 def productData = Matrix.builder().data(
@@ -170,7 +170,7 @@ Pie charts are useful for showing proportions of a whole.
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 
 // Create a Matrix with market share data
 def marketData = Matrix.builder().data(
@@ -192,7 +192,7 @@ Line charts are ideal for showing trends over time or continuous data.
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 import java.time.LocalDate
 
 // Create a Matrix with time series data
@@ -228,7 +228,7 @@ Scatter charts are useful for showing the relationship between two variables.
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 
 // Create a Matrix with correlation data
 def correlationData = Matrix.builder().data(
@@ -339,7 +339,7 @@ Here's a complete example that demonstrates creating and exporting multiple char
 import java.time.LocalDate
 import javafx.scene.paint.Color
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.charts.*
+import se.alipsa.matrix.pictura.*
 
 // Create a sample Matrix with sales data
 def salesData = Matrix.builder().data(
