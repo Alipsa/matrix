@@ -25,12 +25,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build
-        run: ./gradlew build -Pheadless=true
+      - name: Publish to local Maven
+        run: ./gradlew publishToMavenLocal -x test -Pheadless=true
 
-      - name: Upload test reports
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: '**/build/reports/tests/'
+      - name: Smoke tests
+        run: cd matrix-bom && mvn test
