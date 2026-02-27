@@ -186,7 +186,7 @@ class Chart {
 
   private static LayerSpec toLayerSpec(Layer value) {
     Map<String, Object> frozenParams = deepFreezeParams(value.params)
-    new LayerSpec(value.geomSpec.copy(), value.statSpec.copy(), value.mapping, value.inheritMapping, value.positionSpec.copy(), frozenParams)
+    new LayerSpec(value.geomSpec.copy(), value.statSpec.copy(), value.mapping, value.inheritMapping, value.positionSpec.copy(), frozenParams, value.styleCallback)
   }
 
   private static Map<String, Object> deepFreezeParams(Map<String, Object> params) {

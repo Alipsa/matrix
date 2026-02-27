@@ -5,9 +5,12 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.SvgElement
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.StyleOverride
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.charts.util.ColorUtil
 
@@ -33,48 +36,64 @@ class GeomUtils {
   }
 
   /**
-   * Resolve stroke color from mapped color scale or layer params.
+   * Resolve stroke color: style callback > layer param > mapped aesthetic > default.
    */
   static String resolveStroke(RenderContext context, LayerSpec layer, LayerData datum) {
-    if (datum.color != null && context.colorScale != null) {
-      return context.colorScale.colorFor(datum.color)
+    StyleOverride override = cachedStyleOverride(layer, datum)
+    if (override?.color != null) {
+      return override.color
     }
     if (layer.params.color != null) {
       String raw = layer.params.color.toString()
       return ColorUtil.normalizeColor(raw) ?: raw
     }
+    if (datum.color != null && context.colorScale != null) {
+      return context.colorScale.colorFor(datum.color)
+    }
     '#1f77b4'
   }
 
   /**
-   * Resolve fill color from mapped fill/color scale or layer params.
+   * Resolve fill color: style callback > layer param > mapped fill > mapped color fallback > default.
    */
   static String resolveFill(RenderContext context, LayerSpec layer, LayerData datum) {
+    StyleOverride override = cachedStyleOverride(layer, datum)
+    if (override?.fill != null) {
+      return override.fill
+    }
+    if (layer.params.fill != null) {
+      String raw = layer.params.fill.toString()
+      return ColorUtil.normalizeColor(raw) ?: raw
+    }
     if (datum.fill != null && context.fillScale != null) {
       return context.fillScale.colorFor(datum.fill)
     }
     if (datum.color != null && context.colorScale != null) {
       return context.colorScale.colorFor(datum.color)
     }
-    if (layer.params.fill != null) {
-      String raw = layer.params.fill.toString()
-      return ColorUtil.normalizeColor(raw) ?: raw
-    }
     '#1f77b4'
   }
 
   /**
-   * Resolve alpha from datum/layer/default.
+   * Resolve alpha: style callback > datum > layer param > default.
    */
   static BigDecimal resolveAlpha(LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
+    StyleOverride override = cachedStyleOverride(layer, datum)
+    if (override?.alpha != null) {
+      return override.alpha
+    }
     ValueConverter.asBigDecimal(datum.alpha) ?:
         ValueConverter.asBigDecimal(layer.params.alpha) ?: defaultValue
   }
 
   /**
-   * Resolve alpha from mapped alpha scale, then datum/layer/default.
+   * Resolve alpha: style callback > mapped alpha scale > datum > layer param > default.
    */
   static BigDecimal resolveAlpha(RenderContext context, LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
+    StyleOverride override = cachedStyleOverride(layer, datum)
+    if (override?.alpha != null) {
+      return override.alpha
+    }
     if (datum.alpha != null && context?.alphaScale != null) {
       BigDecimal scaled = context.alphaScale.transform(datum.alpha)
       if (scaled != null) {
@@ -85,9 +104,13 @@ class GeomUtils {
   }
 
   /**
-   * Resolve line width from datum/layer/default.
+   * Resolve line width: style callback (size) > datum > layer param > default.
    */
   static BigDecimal resolveLineWidth(LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
+    StyleOverride override = cachedStyleOverride(layer, datum)
+    if (override?.size != null) {
+      return override.size
+    }
     ValueConverter.asBigDecimal(datum.size) ?:
         ValueConverter.asBigDecimal(layer.params.lineWidth) ?:
         ValueConverter.asBigDecimal(layer.params.linewidth) ?:
@@ -95,9 +118,13 @@ class GeomUtils {
   }
 
   /**
-   * Resolve line width from mapped size scale, then datum/layer/default.
+   * Resolve line width: style callback (size) > mapped size scale > datum > layer param > default.
    */
   static BigDecimal resolveLineWidth(RenderContext context, LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
+    StyleOverride override = cachedStyleOverride(layer, datum)
+    if (override?.size != null) {
+      return override.size
+    }
     if (datum.size != null && context?.sizeScale != null) {
       BigDecimal scaled = context.sizeScale.transform(datum.size)
       if (scaled != null) {
@@ -108,9 +135,13 @@ class GeomUtils {
   }
 
   /**
-   * Resolves linetype, optionally through a trained linetype scale.
+   * Resolves linetype: style callback > mapped linetype scale > datum > layer param.
    */
   static Object resolveLinetype(RenderContext context, LayerSpec layer, LayerData datum) {
+    StyleOverride override = cachedStyleOverride(layer, datum)
+    if (override?.linetype != null) {
+      return override.linetype
+    }
     if (datum.linetype != null && context?.linetypeScale instanceof DiscreteCharmScale) {
       DiscreteCharmScale linetypeScale = context.linetypeScale as DiscreteCharmScale
       String mapped = mappedValue(linetypeScale, datum.linetype)
@@ -129,9 +160,13 @@ class GeomUtils {
   }
 
   /**
-   * Resolve point shape from mapped shape scale, then datum/layer/default.
+   * Resolve point shape: style callback > mapped shape scale > datum > layer param > default.
    */
   static String resolveShape(RenderContext context, LayerSpec layer, LayerData datum, String defaultValue = 'circle') {
+    StyleOverride override = cachedStyleOverride(layer, datum)
+    if (override?.shape != null) {
+      return override.shape
+    }
     if (datum.shape != null && context?.shapeScale instanceof DiscreteCharmScale) {
       DiscreteCharmScale shapeScale = context.shapeScale as DiscreteCharmScale
       String mapped = mappedValue(shapeScale, datum.shape)
@@ -147,6 +182,28 @@ class GeomUtils {
       return datum.shape.toString()
     }
     layer.params.shape?.toString() ?: defaultValue
+  }
+
+  /**
+   * Evaluates the style callback once per datum and caches the result.
+   */
+  private static StyleOverride cachedStyleOverride(LayerSpec layer, LayerData datum) {
+    if (layer.styleCallback == null) {
+      return null
+    }
+    if (datum.meta.containsKey('__styleOverride')) {
+      return datum.meta['__styleOverride'] as StyleOverride
+    }
+    StyleOverride override = new StyleOverride()
+    Object dataRef = datum.meta['__data']
+    Matrix data = dataRef instanceof Matrix ? dataRef as Matrix : null
+    int rowIndex = datum.rowIndex
+    if (data != null && rowIndex >= 0 && rowIndex < data.rowCount()) {
+      Row row = data.row(rowIndex)
+      layer.styleCallback.call(row, override)
+    }
+    datum.meta['__styleOverride'] = override
+    override
   }
 
   private static String mappedValue(DiscreteCharmScale scale, Object value) {

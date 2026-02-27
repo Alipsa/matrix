@@ -14,6 +14,7 @@ class Layer {
   private final boolean inheritMapping
   private final PositionSpec positionSpec
   private final Map<String, Object> params
+  private final Closure styleCallback
 
   /**
    * Creates a new layer.
@@ -24,6 +25,7 @@ class Layer {
    * @param inheritMapping true when plot-level mappings are inherited
    * @param positionSpec position adjustment specification
    * @param params free-form layer parameters
+   * @param styleCallback per-datum style override callback
    */
   Layer(
       GeomSpec geomSpec,
@@ -31,7 +33,8 @@ class Layer {
       Mapping mapping = null,
       boolean inheritMapping = true,
       PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY),
-      Map<String, Object> params = [:]
+      Map<String, Object> params = [:],
+      Closure styleCallback = null
   ) {
     this.geomSpec = geomSpec ?: GeomSpec.of(CharmGeomType.POINT)
     this.statSpec = statSpec ?: StatSpec.of(CharmStatType.IDENTITY)
@@ -39,6 +42,7 @@ class Layer {
     this.inheritMapping = inheritMapping
     this.positionSpec = positionSpec ?: PositionSpec.of(CharmPositionType.IDENTITY)
     this.params = params == null ? [:] : new LinkedHashMap<>(params)
+    this.styleCallback = styleCallback
   }
 
   /**
@@ -123,11 +127,20 @@ class Layer {
   }
 
   /**
+   * Returns the per-datum style override callback, or null.
+   *
+   * @return style callback closure
+   */
+  Closure getStyleCallback() {
+    styleCallback
+  }
+
+  /**
    * Creates a copy of this layer.
    *
    * @return copied layer
    */
   Layer copy() {
-    new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), params)
+    new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), params, styleCallback)
   }
 }

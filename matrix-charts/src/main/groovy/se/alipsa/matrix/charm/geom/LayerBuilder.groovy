@@ -27,6 +27,7 @@ abstract class LayerBuilder {
   protected boolean inheritMapping = true
   protected PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY)
   protected final Map<String, Object> params = [:]
+  protected Closure styleCallback
 
   /**
    * Configures layer-level aesthetic mappings via closure DSL.
@@ -106,6 +107,21 @@ abstract class LayerBuilder {
   }
 
   /**
+   * Sets a per-datum style override callback.
+   *
+   * <p>The closure receives a {@code Row} from the original data matrix and a mutable
+   * {@link se.alipsa.matrix.charm.StyleOverride} object. Non-null properties set on the
+   * override take highest priority, above layer params and mapped aesthetics.</p>
+   *
+   * @param callback style override closure
+   * @return this builder
+   */
+  LayerBuilder style(Closure callback) {
+    this.styleCallback = callback
+    this
+  }
+
+  /**
    * Returns the geometry type for this builder.
    *
    * @return geom type
@@ -131,7 +147,8 @@ abstract class LayerBuilder {
         layerMapping?.copy(),
         inheritMapping,
         positionSpec,
-        new LinkedHashMap<>(params)
+        new LinkedHashMap<>(params),
+        styleCallback
     )
   }
 }
