@@ -422,10 +422,10 @@ Chart chart = spec.build()
 
 ```groovy
 // Default dimensions (800x600)
-Svg svg = chart.render()
+Svg svgDefault = chart.render()
 
 // Custom dimensions
-Svg svg = chart.render(640, 420)
+Svg svgCustom = chart.render(640, 420)
 ```
 
 Rendering is side-effect free and deterministic. The same chart produces the same SVG every time.

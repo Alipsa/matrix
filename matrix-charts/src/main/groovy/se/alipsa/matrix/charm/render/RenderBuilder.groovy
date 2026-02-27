@@ -59,6 +59,8 @@ class RenderBuilder {
   Svg render() {
     try {
       new CharmRenderer().render(chart, config)
+    } catch (CharmRenderException e) {
+      throw e
     } catch (Exception e) {
       throw new CharmRenderException("Failed to render Charm chart: ${e.message}", e)
     }
