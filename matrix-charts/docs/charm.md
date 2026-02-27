@@ -612,7 +612,7 @@ import static se.alipsa.matrix.charm.Charts.plot
 import se.alipsa.matrix.chartexport.ChartToPng
 
 def chart = plot(data) {
-  mapping { x = col.month; y = col.sales }
+  mapping { x = 'month'; y = 'sales' }
   layers { geomBar() }
   labels { title = 'Sales' }
 }.build()
