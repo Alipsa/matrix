@@ -7,7 +7,6 @@ import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.CharmValidationException
 import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.charm.Cols
 import se.alipsa.matrix.charm.CustomScaleTransform
 import se.alipsa.matrix.charm.Log10ScaleTransform
 import se.alipsa.matrix.charm.PlotSpec
@@ -31,10 +30,9 @@ import static se.alipsa.matrix.charm.Charts.plot
 class CharmCoreModelTest {
 
   @Test
-  void testNamedArgMappingCoercionAcceptsStringAndColumnExpr() {
-    Cols col = new Cols()
+  void testNamedArgMappingCoercionAcceptsString() {
     PlotSpec spec = plot(Dataset.mpg())
-    spec.mapping(x: 'cty', y: col['hwy'], color: 'class')
+    spec.mapping(x: 'cty', y: 'hwy', color: 'class')
 
     assertEquals('cty', spec.mapping.x.columnName())
     assertEquals('hwy', spec.mapping.y.columnName())
@@ -65,13 +63,6 @@ class CharmCoreModelTest {
       spec.build()
     }
     assertTrue(e.message.contains('missing required mappings'))
-  }
-
-  @Test
-  void testColBracketAndDotAccessAreSupported() {
-    Cols col = new Cols()
-    assertEquals('class', col['class'].columnName())
-    assertEquals('cty', col.cty.columnName())
   }
 
   @Test

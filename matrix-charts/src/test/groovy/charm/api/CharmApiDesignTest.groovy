@@ -5,7 +5,6 @@ import groovy.transform.CompileStatic
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.charm.Cols
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.PlotSpec
@@ -51,13 +50,6 @@ class CharmApiDesignTest {
     assertEquals(2, compiled.layers.size())
     assertEquals('City vs Highway MPG', compiled.labels.title)
     assertEquals('cty', compiled.mapping.x.columnName())
-  }
-
-  @Test
-  void testDynamicColDotSyntaxResolvesColumnExpr() {
-    Cols col = new Cols()
-    assertEquals('cty', col.cty.columnName())
-    assertEquals('hwy', col.hwy.columnName())
   }
 
   @Test

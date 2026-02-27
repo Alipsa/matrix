@@ -9,8 +9,6 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class Mapping {
 
-  private final Cols col = new Cols()
-
   private ColumnExpr x
   private ColumnExpr y
   private ColumnExpr color
@@ -28,15 +26,6 @@ class Mapping {
   private ColumnExpr linetype
   private ColumnExpr label
   private ColumnExpr weight
-
-  /**
-   * Returns the column namespace proxy for DSL usage.
-   *
-   * @return the `col` proxy
-   */
-  Cols getCol() {
-    col
-  }
 
   /**
    * Returns x mapping.
@@ -451,7 +440,6 @@ class Mapping {
       case 'linetype' -> linetype
       case 'label' -> label
       case 'weight' -> weight
-      case 'col' -> col
       default -> null
     }
   }

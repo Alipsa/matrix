@@ -79,22 +79,25 @@ Colon syntax MUST NOT appear inside DSL closures.
 
 ---
 
-### Rule 3 — Column references use `col`
+### Rule 3 — Column references use strings
 
-Inside `mapping {}` and other mapping locations, column references SHOULD use `col`:
+Inside `mapping {}` and other mapping locations, column references use string column names:
 
 ```groovy
 mapping {
-  x = col.cty
-  y = col.hwy
-  color = col['class']
+  x = 'cty'
+  y = 'hwy'
+  color = 'class'
 }
 ```
 
-Strings are allowed but discouraged:
+Column names can also be looked up from the data by index:
 
 ```groovy
-x = 'cty'
+mapping {
+  x = data[0].name    // first column name
+  y = data[1].name    // second column name
+}
 ```
 
 ---
@@ -159,7 +162,6 @@ Invalid inputs MUST throw `IllegalArgumentException`.
 Examples:
 
 ```groovy
-mapping { x = col.cty }     // ColumnExpr
 mapping { x = 'cty' }       // CharSequence → named-column ColumnExpr('cty')
 mapping(x: 'cty', y: 'hwy') // map form uses identical coercion logic
 ```
@@ -170,20 +172,13 @@ mapping(x: 'cty', y: 'hwy') // map form uses identical coercion logic
 
 Charm core is implemented with `@CompileStatic`.
 
-Column access rules:
+Column references use string column names. `ColumnExpr` and `ColumnRef` are internal types — strings are coerced to `ColumnRef` via `Mapping.coerceToColumnExpr()`.
 
-* `col['name']` → canonical and static-safe
-* `col.name` → convenience form intended for dynamic DSL usage
-
-Users writing `@CompileStatic` chart-building code MUST use bracket syntax.
-
-Column name collisions MUST use bracket syntax:
+Users writing `@CompileStatic` chart-building code should use the programmatic API with string mappings:
 
 ```groovy
-col['class']
+spec.mapping(x: 'cty', y: 'hwy')
 ```
-
-`col.name` is permitted as ergonomic sugar in normal Groovy scripts/DSL closures.
 
 ---
 
@@ -311,16 +306,16 @@ Within `facet {}`, specifying `rows` and/or `cols` configures **GRID** faceting 
 
 ```groovy
 facet {
-  rows = [col.year, col.cyl]
-  cols = [col.drv]
+  rows = ['year', 'cyl']
+  cols = ['drv']
 }
 ```
 This is functionally the same as
 ```groovy
 facet {
   grid {
-    rows = [col.year, col.cyl]
-    cols = [col.drv]
+    rows = ['year', 'cyl']
+    cols = ['drv']
   }
 }
 ```
@@ -333,7 +328,7 @@ To request wrap faceting, users MUST call `wrap{...}` inside `facet {}`:
 ```groovy
 facet {
   wrap {
-    vars = [col.year]
+    vars = ['year']
     ncol = 3
   }
 }
@@ -493,9 +488,9 @@ chart.writeTo('plot.svg')
 plot(mpg) {
 
   mapping {
-    x = col.cty
-    y = col.hwy
-    color = col['class']
+    x = 'cty'
+    y = 'hwy'
+    color = 'class'
   }
 
   layers {
@@ -504,8 +499,8 @@ plot(mpg) {
   }
 
   facet {
-    rows = [col.year]
-    cols = [col.drv]
+    rows = ['year']
+    cols = ['drv']
   }
 
   coord {
@@ -523,7 +518,7 @@ Wrap example:
 ```groovy
 facet {
   wrap {
-    vars = [col.year]
+    vars = ['year']
     ncol = 3
   }
 }
@@ -539,7 +534,7 @@ Charm core MUST:
 * use `@DelegatesTo` and `DELEGATE_ONLY` for DSL closures
 * avoid uncontrolled dynamic dispatch
 
-DSL closures are normally used dynamically by end users; users opting into `@CompileStatic` must use `col['name']` instead of `col.name`.
+DSL closures are normally used dynamically by end users; users opting into `@CompileStatic` should use the programmatic API with string mappings.
 
 ---
 

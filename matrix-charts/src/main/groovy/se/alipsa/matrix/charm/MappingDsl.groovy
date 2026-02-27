@@ -8,7 +8,6 @@ import groovy.transform.CompileStatic
 @CompileStatic
 class MappingDsl {
 
-  private final Cols col = new Cols()
   String x
   String y
   String color
@@ -34,15 +33,6 @@ class MappingDsl {
    */
   void setColour(String value) {
     color = value
-  }
-
-  /**
-   * Returns the column namespace proxy.
-   *
-   * @return `col` proxy
-   */
-  Cols getCol() {
-    col
   }
 
   /**

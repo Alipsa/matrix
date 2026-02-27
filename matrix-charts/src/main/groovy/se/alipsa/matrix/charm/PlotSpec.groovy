@@ -785,7 +785,6 @@ class PlotSpec {
   static class FacetDsl {
 
     private final Facet facet
-    private final Cols col = new Cols()
     private boolean wrapConfigured
     private boolean gridConfigured
 
@@ -798,15 +797,6 @@ class PlotSpec {
       this.facet = facet
       this.wrapConfigured = facet.type == FacetType.WRAP
       this.gridConfigured = facet.type == FacetType.GRID
-    }
-
-    /**
-     * Returns column namespace proxy.
-     *
-     * @return col proxy
-     */
-    Cols getCol() {
-      col
     }
 
     /**

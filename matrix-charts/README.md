@@ -68,9 +68,9 @@ import se.alipsa.matrix.datasets.Dataset
 
 def chart = plot(Dataset.mpg()) {
   mapping {
-    x = col.cty
-    y = col.hwy
-    color = col['class']
+    x = 'cty'
+    y = 'hwy'
+    color = 'class'
   }
   layers {
     geomPoint().size(2)

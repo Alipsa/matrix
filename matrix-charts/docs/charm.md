@@ -35,7 +35,7 @@ All three APIs produce the same SVG output through the Charm renderer.
 - Closure-based DSL with `@CompileStatic` support
 - Immutable compiled chart models (thread-safe after `build()`)
 - Deterministic lifecycle: specification -> compilation -> rendering
-- Column-typed aesthetic mappings via `col` proxy
+- String-based aesthetic mappings (column names as strings)
 - SVG output via gsvg, exportable to PNG, JPEG, JavaFX, and Swing
 
 ## Quick Start
@@ -121,8 +121,8 @@ Charm uses two syntax forms depending on context:
 
 ```groovy
 mapping {
-  x = col.cty        // correct
-  y = col.hwy        // correct
+  x = 'cty'        // correct
+  y = 'hwy'        // correct
 }
 ```
 
@@ -137,22 +137,22 @@ Mixing these forms (colon syntax inside closures) will silently fail. The closur
 
 ### Column References
 
-Column references use the `col` proxy object inside `mapping {}` blocks:
-
-```groovy
-mapping {
-  x = col.cty          // dot syntax (dynamic scripts)
-  y = col['hwy']       // bracket syntax (static-safe)
-  color = col['class'] // bracket required for reserved words
-}
-```
-
-Alternatively use the column names:
+Column references use string column names inside `mapping {}` blocks:
 
 ```groovy
 mapping {
   x = 'cty'
   y = 'hwy'
+  color = 'class'
+}
+```
+
+You can also look up column names from the data by index:
+
+```groovy
+mapping {
+  x = data[0].name    // first column name
+  y = data[1].name    // second column name
 }
 ```
 
@@ -166,7 +166,7 @@ import static se.alipsa.matrix.charm.Charts.chart  // alias for import conflicts
 
 // Closure DSL (primary)
 PlotSpec spec = plot(data) {
-  mapping { x = col.x; y = col.y }
+  mapping { x = 'x'; y = 'y' }
   layers { geomPoint() }
 }
 
@@ -184,13 +184,13 @@ Map data columns to visual properties:
 
 ```groovy
 mapping {
-  x = col.x_column         // x position
-  y = col.y_column         // y position
-  color = col.category     // point/line color
-  fill = col.fill_column   // area fill color
-  size = col.size_column   // point/line size
-  shape = col.shape_column // point shape
-  group = col.group_column // grouping variable
+  x = 'x_column'         // x position
+  y = 'y_column'         // y position
+  color = 'category'     // point/line color
+  fill = 'fill_column'   // area fill color
+  size = 'size_column'   // point/line size
+  shape = 'shape_column' // point shape
+  group = 'group_column' // grouping variable
 }
 ```
 
@@ -202,7 +202,7 @@ Layers are added inside a `layers {}` block using fluent builder methods:
 
 ```groovy
 plot(data) {
-  mapping { x = col.x; y = col.y }
+  mapping { x = 'x'; y = 'y' }
   layers {
     geomPoint()                 // scatter plot
     geomLine()                  // line plot
@@ -259,7 +259,7 @@ Layers can override plot-level aesthetics:
 
 ```groovy
 plot(data) {
-  mapping { x = col.x; y = col.y }
+  mapping { x = 'x'; y = 'y' }
   layers {
     geomPoint()
     geomPoint().inheritMapping(false).mapping(x: 'other_x', y: 'other_y')
@@ -319,8 +319,8 @@ Arrange panels in a grid by row and/or column variables:
 
 ```groovy
 facet {
-  rows = [col.year]
-  cols = [col.drv]
+  rows = ['year']
+  cols = ['drv']
 }
 ```
 
@@ -333,7 +333,7 @@ Wrap panels into rows/columns by one or more variables:
 ```groovy
 facet {
   wrap {
-    vars = [col.drv]
+    vars = ['drv']
     ncol = 2
   }
 }
@@ -403,7 +403,7 @@ Charm defines a four-step lifecycle:
 
 ```groovy
 PlotSpec spec = plot(data) {
-  mapping { x = col.x; y = col.y }
+  mapping { x = 'x'; y = 'y' }
   layers { geomPoint() }
 }
 ```
@@ -515,7 +515,7 @@ def panel = ChartToSwing.export(chart)
 
 ## Static Compilation
 
-Charm core is implemented with `@CompileStatic`. Users writing `@CompileStatic` chart code must use the bracket syntax for column references and the programmatic API:
+Charm core is implemented with `@CompileStatic`. Users writing `@CompileStatic` chart code should use the programmatic API with string mappings:
 
 ```groovy
 import groovy.transform.CompileStatic
@@ -630,8 +630,8 @@ import se.alipsa.matrix.datasets.Dataset
 
 def chart = plot(Dataset.mpg()) {
   mapping {
-    x = col.cty
-    y = col.hwy
+    x = 'cty'
+    y = 'hwy'
   }
   layers {
     geomPoint()
@@ -652,13 +652,13 @@ chart.writeTo('scatter_regression.svg')
 ```groovy
 def chart = plot(Dataset.mpg()) {
   mapping {
-    x = col.cty
-    y = col.hwy
+    x = 'cty'
+    y = 'hwy'
   }
   layers { geomPoint() }
   facet {
     wrap {
-      vars = [col.drv]
+      vars = ['drv']
       ncol = 3
     }
   }
@@ -681,9 +681,9 @@ def data = Matrix.builder().data(
 
 def chart = plot(data) {
   mapping {
-    x = col.x
-    y = col.y
-    fill = col.value
+    x = 'x'
+    y = 'y'
+    fill = 'value'
   }
   layers { geomTile() }
   labels { title = 'Heatmap' }
@@ -697,9 +697,9 @@ chart.writeTo('heatmap.svg')
 ```groovy
 def chart = plot(Dataset.mpg()) {
   mapping {
-    x = col.cty
-    y = col.hwy
-    color = col['class']
+    x = 'cty'
+    y = 'hwy'
+    color = 'class'
   }
   layers {
     geomPoint().size(2)
