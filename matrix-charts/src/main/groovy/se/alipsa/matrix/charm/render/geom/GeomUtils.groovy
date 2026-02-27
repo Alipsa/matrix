@@ -41,7 +41,8 @@ class GeomUtils {
   static String resolveStroke(RenderContext context, LayerSpec layer, LayerData datum) {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.color != null) {
-      return override.color
+      String raw = override.color.toString()
+      return ColorUtil.normalizeColor(raw) ?: raw
     }
     if (layer.params.color != null) {
       String raw = layer.params.color.toString()
@@ -59,7 +60,8 @@ class GeomUtils {
   static String resolveFill(RenderContext context, LayerSpec layer, LayerData datum) {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.fill != null) {
-      return override.fill
+      String raw = override.fill.toString()
+      return ColorUtil.normalizeColor(raw) ?: raw
     }
     if (layer.params.fill != null) {
       String raw = layer.params.fill.toString()

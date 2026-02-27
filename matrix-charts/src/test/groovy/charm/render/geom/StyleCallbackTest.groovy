@@ -156,7 +156,7 @@ class StyleCallbackTest {
       layers {
         geomCol().style { row, s ->
           callCount++
-          s.fill = '#counted'
+          s.fill = '#00ccdd'
         }
       }
     }.build()
