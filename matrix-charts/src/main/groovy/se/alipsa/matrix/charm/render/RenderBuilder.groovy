@@ -24,6 +24,7 @@ class RenderBuilder {
   private final RenderConfig config = new RenderConfig()
 
   RenderBuilder(Chart chart) {
+    if (chart == null) throw new IllegalArgumentException('chart must not be null')
     this.chart = chart
   }
 
