@@ -13,6 +13,7 @@ import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
 
@@ -294,6 +295,13 @@ class CharmRendererTest {
     Svg svgDefault = chart.render()
     assertEquals('800', svgDefault.width.toString())
     assertEquals('600', svgDefault.height.toString())
+
+    // Validation rejects non-positive dimensions
+    assertThrows(IllegalArgumentException) { chart.renderConfig().width(0) }
+    assertThrows(IllegalArgumentException) { chart.renderConfig().width(-1) }
+    assertThrows(IllegalArgumentException) { chart.renderConfig().height(0) }
+    assertThrows(IllegalArgumentException) { chart.render(0, 400) }
+    assertThrows(IllegalArgumentException) { chart.render(400, -1) }
   }
 
   @Test
