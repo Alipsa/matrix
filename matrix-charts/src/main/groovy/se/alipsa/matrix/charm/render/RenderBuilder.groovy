@@ -27,8 +27,16 @@ class RenderBuilder {
     this.chart = chart
   }
 
-  RenderBuilder width(int width) { config.width = width; this }
-  RenderBuilder height(int height) { config.height = height; this }
+  RenderBuilder width(int width) {
+    if (width <= 0) throw new IllegalArgumentException("width must be > 0, was ${width}")
+    config.width = width; this
+  }
+
+  RenderBuilder height(int height) {
+    if (height <= 0) throw new IllegalArgumentException("height must be > 0, was ${height}")
+    config.height = height; this
+  }
+
   RenderBuilder marginTop(int margin) { config.marginTop = margin; this }
   RenderBuilder marginRight(int margin) { config.marginRight = margin; this }
   RenderBuilder marginBottom(int margin) { config.marginBottom = margin; this }
@@ -42,7 +50,6 @@ class RenderBuilder {
   RenderBuilder labelPadding(int padding) { config.labelPadding = padding; this }
   RenderBuilder legendKeySize(int size) { config.legendKeySize = size; this }
   RenderBuilder legendSpacing(int spacing) { config.legendSpacing = spacing; this }
-  RenderBuilder legendPosition(String position) { config.legendPosition = position; this }
 
   /**
    * Renders the chart with the configured settings.

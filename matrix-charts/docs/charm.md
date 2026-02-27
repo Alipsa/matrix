@@ -456,15 +456,14 @@ For simple dimension changes, use `render(width, height)`:
 Svg svg = chart.render(640, 420)
 ```
 
-For full control over margins, tick counts, legend placement, and other rendering
-parameters, use the fluent `renderConfig()` builder:
+For full control over margins, tick counts, and other rendering parameters, use
+the fluent `renderConfig()` builder:
 
 ```groovy
 Svg svg = chart.renderConfig()
     .width(640)
     .height(420)
     .marginLeft(100)
-    .legendPosition('bottom')
     .render()
 ```
 

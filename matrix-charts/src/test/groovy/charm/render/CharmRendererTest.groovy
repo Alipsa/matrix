@@ -280,7 +280,6 @@ class CharmRendererTest {
         .width(640)
         .height(420)
         .marginLeft(100)
-        .legendPosition('bottom')
         .render()
 
     assertEquals('640', svg.width.toString())
