@@ -180,19 +180,26 @@ spec.addLayer(new PointBuilder().size(2))
 
 ### Aesthetics (Mappings)
 
-Map data columns to visual properties:
+Map data columns to visual properties. Every value in a `mapping {}` block is a **column name** from your data matrix:
 
 ```groovy
 mapping {
   x = 'x_column'         // x position
   y = 'y_column'         // y position
-  color = 'category'     // point/line color
-  fill = 'fill_column'   // area fill color
+  color = 'category'     // point/line color (mapped from column values)
+  fill = 'fill_column'   // area fill color (mapped from column values)
   size = 'size_column'   // point/line size
   shape = 'shape_column' // point shape
   group = 'group_column' // grouping variable
 }
 ```
+
+For example, `color = 'class'` means "read values from the `class` column and assign a distinct color to each unique value." The color scale is chosen automatically:
+
+- **Categorical data** (strings) -- each unique value gets a distinct color from a discrete palette
+- **Numeric data** -- values are interpolated along a gradient
+
+This is different from setting a **literal color** on a layer (see [Layer Parameters](#layer-parameters) below).
 
 ## Layers and Geoms
 
@@ -216,7 +223,7 @@ plot(data) {
 
 ### Layer Parameters
 
-Configure layers using fluent builder methods:
+Configure layers using fluent builder methods. Unlike `mapping {}`, values here are **literal** -- `fill('#336699')` sets all points to that color, rather than mapping from data:
 
 ```groovy
 layers {
@@ -225,6 +232,8 @@ layers {
   geomHistogram().bins(4).fill('#cc6677')
 }
 ```
+
+When both a mapping and a layer parameter exist for the same aesthetic, the mapped values take priority.
 
 ### Programmatic addLayer()
 
