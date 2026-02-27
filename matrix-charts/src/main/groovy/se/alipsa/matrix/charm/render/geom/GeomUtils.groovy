@@ -75,24 +75,28 @@ class GeomUtils {
   }
 
   /**
-   * Resolve alpha: style callback > datum > layer param > default.
+   * Resolve alpha: style callback > layer param > datum > default.
    */
   static BigDecimal resolveAlpha(LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.alpha != null) {
       return override.alpha
     }
-    ValueConverter.asBigDecimal(datum.alpha) ?:
-        ValueConverter.asBigDecimal(layer.params.alpha) ?: defaultValue
+    ValueConverter.asBigDecimal(layer.params.alpha) ?:
+        ValueConverter.asBigDecimal(datum.alpha) ?: defaultValue
   }
 
   /**
-   * Resolve alpha: style callback > mapped alpha scale > datum > layer param > default.
+   * Resolve alpha: style callback > layer param > mapped alpha scale > datum > default.
    */
   static BigDecimal resolveAlpha(RenderContext context, LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.alpha != null) {
       return override.alpha
+    }
+    BigDecimal layerAlpha = ValueConverter.asBigDecimal(layer.params.alpha)
+    if (layerAlpha != null) {
+      return layerAlpha
     }
     if (datum.alpha != null && context?.alphaScale != null) {
       BigDecimal scaled = context.alphaScale.transform(datum.alpha)
@@ -100,30 +104,36 @@ class GeomUtils {
         return scaled.min(1.0).max(0.0)
       }
     }
-    resolveAlpha(layer, datum, defaultValue)
+    ValueConverter.asBigDecimal(datum.alpha) ?: defaultValue
   }
 
   /**
-   * Resolve line width: style callback (size) > datum > layer param > default.
+   * Resolve line width: style callback (size) > layer param > datum > default.
    */
   static BigDecimal resolveLineWidth(LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.size != null) {
       return override.size
     }
-    ValueConverter.asBigDecimal(datum.size) ?:
-        ValueConverter.asBigDecimal(layer.params.lineWidth) ?:
+    ValueConverter.asBigDecimal(layer.params.lineWidth) ?:
         ValueConverter.asBigDecimal(layer.params.linewidth) ?:
-        ValueConverter.asBigDecimal(layer.params.size) ?: defaultValue
+        ValueConverter.asBigDecimal(layer.params.size) ?:
+        ValueConverter.asBigDecimal(datum.size) ?: defaultValue
   }
 
   /**
-   * Resolve line width: style callback (size) > mapped size scale > datum > layer param > default.
+   * Resolve line width: style callback (size) > layer param > mapped size scale > datum > default.
    */
   static BigDecimal resolveLineWidth(RenderContext context, LayerSpec layer, LayerData datum, BigDecimal defaultValue = 1.0) {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.size != null) {
       return override.size
+    }
+    BigDecimal layerSize = ValueConverter.asBigDecimal(layer.params.lineWidth) ?:
+        ValueConverter.asBigDecimal(layer.params.linewidth) ?:
+        ValueConverter.asBigDecimal(layer.params.size)
+    if (layerSize != null) {
+      return layerSize
     }
     if (datum.size != null && context?.sizeScale != null) {
       BigDecimal scaled = context.sizeScale.transform(datum.size)
@@ -131,16 +141,19 @@ class GeomUtils {
         return scaled.max(0.0)
       }
     }
-    resolveLineWidth(layer, datum, defaultValue)
+    ValueConverter.asBigDecimal(datum.size) ?: defaultValue
   }
 
   /**
-   * Resolves linetype: style callback > mapped linetype scale > datum > layer param.
+   * Resolves linetype: style callback > layer param > mapped linetype scale > datum.
    */
   static Object resolveLinetype(RenderContext context, LayerSpec layer, LayerData datum) {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.linetype != null) {
       return override.linetype
+    }
+    if (layer.params.linetype != null) {
+      return layer.params.linetype
     }
     if (datum.linetype != null && context?.linetypeScale instanceof DiscreteCharmScale) {
       DiscreteCharmScale linetypeScale = context.linetypeScale as DiscreteCharmScale
@@ -153,19 +166,19 @@ class GeomUtils {
         return DEFAULT_LINETYPES[idx % DEFAULT_LINETYPES.size()]
       }
     }
-    if (datum.linetype != null) {
-      return datum.linetype
-    }
-    layer.params.linetype
+    datum.linetype
   }
 
   /**
-   * Resolve point shape: style callback > mapped shape scale > datum > layer param > default.
+   * Resolve point shape: style callback > layer param > mapped shape scale > datum > default.
    */
   static String resolveShape(RenderContext context, LayerSpec layer, LayerData datum, String defaultValue = 'circle') {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.shape != null) {
       return override.shape
+    }
+    if (layer.params.shape != null) {
+      return layer.params.shape.toString()
     }
     if (datum.shape != null && context?.shapeScale instanceof DiscreteCharmScale) {
       DiscreteCharmScale shapeScale = context.shapeScale as DiscreteCharmScale
@@ -181,7 +194,7 @@ class GeomUtils {
     if (datum.shape != null) {
       return datum.shape.toString()
     }
-    layer.params.shape?.toString() ?: defaultValue
+    defaultValue
   }
 
   /**

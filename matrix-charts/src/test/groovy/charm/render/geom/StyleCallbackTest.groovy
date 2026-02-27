@@ -129,8 +129,8 @@ class StyleCallbackTest {
     def chart = plot(data) {
       mapping { x = 'x'; y = 'y' }
       layers {
-        geomCol().fill('#layer00').style { row, s ->
-          s.fill = '#style00'
+        geomCol().fill('#aa00bb').style { row, s ->
+          s.fill = '#cc00dd'
         }
       }
     }.build()
@@ -139,8 +139,8 @@ class StyleCallbackTest {
     String xml = SvgWriter.toXml(svg)
 
     assertTrue(xml.contains('class="charm-bar"'), 'Should render bar')
-    assertTrue(xml.contains('fill="#style00"'), 'Style callback should override layer param')
-    assertFalse(xml.contains('fill="#layer00"'), 'Layer param fill should not appear when overridden')
+    assertTrue(xml.contains('fill="#cc00dd"'), 'Style callback should override layer param')
+    assertFalse(xml.contains('fill="#aa00bb"'), 'Layer param fill should not appear when overridden')
   }
 
   @Test
