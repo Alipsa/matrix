@@ -254,6 +254,50 @@ class CharmRendererTest {
   }
 
   @Test
+  void testRenderBuilderFluentApi() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y')
+        .rows([
+            [1, 1],
+            [2, 2],
+            [3, 3]
+        ])
+        .build()
+
+    Chart chart = Charts.plot(data) {
+      mapping {
+        x = 'x'
+        y = 'y'
+      }
+      layers { geomPoint() }
+      theme {
+        legendPosition = 'none'
+      }
+    }.build()
+
+    // Fluent builder via renderConfig()
+    Svg svg = chart.renderConfig()
+        .width(640)
+        .height(420)
+        .marginLeft(100)
+        .legendPosition('bottom')
+        .render()
+
+    assertEquals('640', svg.width.toString())
+    assertEquals('420', svg.height.toString())
+
+    // Convenience render(width, height)
+    Svg svg2 = chart.render(500, 300)
+    assertEquals('500', svg2.width.toString())
+    assertEquals('300', svg2.height.toString())
+
+    // Default render() still works
+    Svg svgDefault = chart.render()
+    assertEquals('800', svgDefault.width.toString())
+    assertEquals('600', svgDefault.height.toString())
+  }
+
+  @Test
   void testLayerSpecificDataProducesDifferentOutput() {
     Matrix chartData = Matrix.builder()
         .columnNames('x', 'y')

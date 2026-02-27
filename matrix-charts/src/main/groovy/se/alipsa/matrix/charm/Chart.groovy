@@ -5,6 +5,7 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.charm.render.CharmRenderer
+import se.alipsa.matrix.charm.render.RenderBuilder
 
 /**
  * Immutable compiled Charm chart.
@@ -285,6 +286,23 @@ class Chart {
   }
 
   /**
+   * Returns a fluent render builder for custom configuration.
+   *
+   * <p>Example:</p>
+   * <pre>
+   * Svg svg = chart.renderConfig()
+   *     .width(640)
+   *     .height(420)
+   *     .render()
+   * </pre>
+   *
+   * @return render builder
+   */
+  RenderBuilder renderConfig() {
+    new RenderBuilder(this)
+  }
+
+  /**
    * Renders this chart to an SVG object.
    *
    * @return SVG model object
@@ -295,6 +313,17 @@ class Chart {
     } catch (Exception e) {
       throw new CharmRenderException("Failed to render Charm chart: ${e.message}", e)
     }
+  }
+
+  /**
+   * Renders this chart at the given dimensions.
+   *
+   * @param width SVG width in pixels
+   * @param height SVG height in pixels
+   * @return SVG model object
+   */
+  Svg render(int width, int height) {
+    renderConfig().width(width).height(height).render()
   }
 
   /**

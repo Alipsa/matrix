@@ -81,8 +81,11 @@ chart.writeTo('mpg_chart.svg')
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.chartexport.ChartToPng
 
-// Render to SVG object
+// Render to SVG object (default 800x600)
 Svg svg = chart.render()
+
+// Render at custom dimensions
+Svg svg = chart.render(640, 420)
 
 // Write to SVG file
 chart.writeTo('chart.svg')
@@ -418,7 +421,11 @@ Chart chart = spec.build()
 ### 3. Rendering
 
 ```groovy
+// Default dimensions (800x600)
 Svg svg = chart.render()
+
+// Custom dimensions
+Svg svg = chart.render(640, 420)
 ```
 
 Rendering is side-effect free and deterministic. The same chart produces the same SVG every time.
@@ -443,13 +450,22 @@ APIs handle these steps internally:
 
 ### Custom Render Configuration
 
-```groovy
-import se.alipsa.matrix.charm.render.CharmRenderer
-import se.alipsa.matrix.charm.render.RenderConfig
+For simple dimension changes, use `render(width, height)`:
 
-CharmRenderer renderer = new CharmRenderer()
-RenderConfig config = new RenderConfig(width: 640, height: 420)
-Svg svg = renderer.render(chart, config)
+```groovy
+Svg svg = chart.render(640, 420)
+```
+
+For full control over margins, tick counts, legend placement, and other rendering
+parameters, use the fluent `renderConfig()` builder:
+
+```groovy
+Svg svg = chart.renderConfig()
+    .width(640)
+    .height(420)
+    .marginLeft(100)
+    .legendPosition('bottom')
+    .render()
 ```
 
 ## Output Formats
