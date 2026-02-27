@@ -62,10 +62,9 @@ class HistogramRenderer {
       }
 
       String fill = GeomUtils.resolveFill(context, layer, datum)
-      String stroke = layer.params.color?.toString() ?: 'white'
+      String stroke = GeomUtils.resolveStroke(context, layer, datum, 'white')
       BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
-      BigDecimal strokeWidth = ValueConverter.asBigDecimal(layer.params.lineWidth) ?:
-          ValueConverter.asBigDecimal(layer.params.linewidth) ?: 0.5
+      BigDecimal strokeWidth = GeomUtils.resolveLineWidth(context, layer, datum, 0.5)
 
       def rect = dataLayer.addRect(width, rectHeight)
           .x(xLeft)

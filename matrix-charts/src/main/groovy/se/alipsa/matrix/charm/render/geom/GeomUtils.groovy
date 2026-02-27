@@ -38,7 +38,8 @@ class GeomUtils {
   /**
    * Resolve stroke color: style callback > layer param > mapped aesthetic > default.
    */
-  static String resolveStroke(RenderContext context, LayerSpec layer, LayerData datum) {
+  static String resolveStroke(RenderContext context, LayerSpec layer, LayerData datum,
+                              String defaultColor = '#1f77b4') {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.color != null) {
       String raw = override.color.toString()
@@ -51,7 +52,7 @@ class GeomUtils {
     if (datum.color != null && context.colorScale != null) {
       return context.colorScale.colorFor(datum.color)
     }
-    '#1f77b4'
+    defaultColor
   }
 
   /**
