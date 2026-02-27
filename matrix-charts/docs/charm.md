@@ -526,9 +526,8 @@ import static se.alipsa.matrix.charm.Charts.plot
 @CompileStatic
 class MyCharts {
   Chart createChart(Matrix data) {
-    Cols col = new Cols()
     PlotSpec spec = plot(data)
-    spec.mapping(x: col['x'], y: col['y'], color: col['category'])
+    spec.mapping(x: 'x', y: 'y', color: 'category')
     spec.addLayer(new PointBuilder().size(2).alpha(0.7))
     spec.build()
   }
