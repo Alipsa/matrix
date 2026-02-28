@@ -23,7 +23,7 @@ import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ColorCharmScale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
 import se.alipsa.matrix.core.ValueConverter
-import se.alipsa.matrix.pict.util.ColorUtil
+import se.alipsa.matrix.charm.util.ColorUtil
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.util.Logger
 

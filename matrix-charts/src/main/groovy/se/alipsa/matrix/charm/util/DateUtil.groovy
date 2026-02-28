@@ -1,4 +1,4 @@
-package se.alipsa.matrix.pict.util
+package se.alipsa.matrix.charm.util
 
 import java.time.Month
 import java.time.format.DateTimeFormatter

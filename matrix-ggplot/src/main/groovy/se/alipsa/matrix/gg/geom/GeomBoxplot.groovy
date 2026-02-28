@@ -4,7 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
-import se.alipsa.matrix.pict.util.ColorUtil
+import se.alipsa.matrix.charm.util.ColorUtil
 
 /**
  * Box plot geometry for visualizing distributions through quartiles.

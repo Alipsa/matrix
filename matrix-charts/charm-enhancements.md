@@ -5,19 +5,22 @@ Prioritized plan addressing common ggplot2 pain points where Charm can improve o
 ## Scope and guardrails
 
 - Charm enhancements are the primary design target.
-- `matrix-charts` (Pictura API) and `matrix-ggplot` changes are compatibility work to preserve existing behavior and keep ggplot API semantics close to ggplot2.
+- `matrix-charts` and `matrix-ggplot` changes are compatibility work to preserve existing behavior and keep ggplot API semantics close to ggplot2.
 - No external backward-compatibility constraints yet (Charm not released), but internal module compatibility must be maintained.
 
 ## Locked design decision
 
 - `plotGrid` v1 will use **nested `<svg>` composition per subplot** (not flattened `<g>` merging).
-  - Rationale: lower implementation and regression risk, clean isolation of `defs`/IDs/clips, and faster delivery.
+  - Rationale: lower implementation and regression risk, explicit subplot encapsulation, and faster delivery.
+  - `PlotGridRenderer` must rewrite/prefix subplot-local SVG IDs (`clipPath`, `mask`, `gradient`, `pattern`, etc.) and corresponding references during composition (`url(#...)`, `href="#..."`, and `xlink:href="#..."`), since SVG IDs are document-global even with nested `<svg>`.
   - A flattened mode can be added later if a specific SVG consumer requires it.
   - Legends remain **per subplot** in v1; no global legend merge in the initial implementation.
 - Date/time scales will use **one canonical internal unit: epoch milliseconds**.
   - Applies to `date`, `datetime`, and `time` transform handling inside Charm runtime scale training/ticks/labels.
-  - Default normalization uses **UTC**.
+  - Default normalization uses **UTC/GMT**.
+  - For pure `time` scales, canonical values are **milliseconds since midnight UTC** (`00:00:00.000` to `23:59:59.999`), still represented in the same epoch-millis numeric domain.
   - Users can override timezone via a scale param (for example `zoneId: 'Europe/Stockholm'`) for parsing, break generation, and label formatting.
+  - For gg compatibility, **do not add new timezone arguments to gg scale APIs** unless required for ggplot2 parity. Instead, gg->Charm delegation sets `zoneId` internally so delegated rendering preserves gg runtime behavior.
   - Axis formatters may still render date-only or time-only labels based on transform mode.
 
 ---
@@ -82,55 +85,84 @@ No code changes — documentation only.
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/TemporalScaleUtil.groovy` (new helper)
 
 Ensure all temporal inputs (including date/time/datetime objects and parseable strings) are normalized to epoch milliseconds before domain training, break generation, and label formatting.
-Use UTC by default, with optional per-scale timezone override via `Scale.params.zoneId`.
+Use UTC/GMT by default, with optional per-scale timezone override via `Scale.params.zoneId`.
+For pure `time` transforms, normalize to milliseconds since midnight UTC.
+For calendar-unit stepping (`day/week/month/year`), iterate in timezone-aware temporal types (`ZonedDateTime`/`LocalDate`) and convert each generated breakpoint to epoch millis; do not advance calendar intervals via fixed millisecond deltas.
+
+### 2.0.1 [ ] Add explicit `datetime` transform support in Charm core
+
+**Files:**
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/ScaleTransform.groovy` (add `DatetimeScaleTransform` + registry key)
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/Scale.groovy` (add `datetime()` factory)
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy` (`ScaleDsl` convenience for `datetime()`)
 
 ### 2.1 [ ] Honor configured `Scale.breaks` and `Scale.labels` in runtime scales
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/ContinuousCharmScale.groovy`
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/BinnedCharmScale.groovy`
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/DiscreteCharmScale.groovy`
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/ColorCharmScale.groovy`
 
 Use configured breaks/labels when present, with sane fallbacks when absent.
 
-### 2.2 [ ] Add date/time-aware axis label formatting in Charm core
+### 2.2 [ ] Add date/time/datetime-aware axis label formatting in Charm core
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/AxisRenderer.groovy`
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/ContinuousCharmScale.groovy`
 
-When transform strategy is `date` or `time`, format ticks using scale params (for example `dateFormat`/`timeFormat`) and sensible defaults.
-Formatting should use UTC unless a `zoneId` override is provided on the scale.
+When transform strategy is `date`, `time`, or `datetime`, format ticks using scale params (for example `dateFormat`/`timeFormat`) and sensible defaults.
+Formatting should use UTC/GMT unless a `zoneId` override is provided on the scale.
 
-### 2.3 [ ] Add simple string break spec support for date/time scales
+### 2.3 [ ] Add simple string break spec support for date/time/datetime scales
 
 **Files:**
-- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/Scale.groovy`
-- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/ContinuousCharmScale.groovy` (or helper)
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/ContinuousCharmScale.groovy`
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/TemporalScaleUtil.groovy` (new helper)
 
 Support strings such as:
 - `'1 day'`, `'2 weeks'`, `'3 months'`, `'1 year'`
-- `'30 minutes'`, `'1 hour'`
+- `'30 seconds'`, `'30 minutes'`, `'1 hour'`
+- `'6 hours'` (for datetime ranges)
 
-**Parsing approach:** Parse and resolve string break specs at runtime inside `ContinuousCharmScale` (not at DSL build time, so that the trained domain min/max is already available). Use `java.time.Period` for calendar-unit specs (`day`, `week`, `month`, `year`) and `java.time.Duration` for fixed-duration specs (`minute`, `hour`). Walk from the domain min forward in epoch-millis steps to produce the final break list. Store the raw string on `Scale.breaks` as-is; `ContinuousCharmScale` detects the `String` type and delegates to the parser.
+**Parsing approach:** Parse and resolve string break specs at runtime inside `ContinuousCharmScale` (not at DSL build time, so that the trained domain min/max is already available). Use `java.time.Period` for calendar-unit specs (`day`, `week`, `month`, `year`) and `java.time.Duration` for fixed-duration specs (`second`, `minute`, `hour`). For calendar units, step with temporal arithmetic in the configured/default zone; for fixed units, step with duration arithmetic. Store raw interval specs in `Scale.params` (for example `dateBreaks`/`timeBreaks`), not in `Scale.breaks`. Precedence: explicit `Scale.breaks` list wins; interval specs are fallback when `breaks` is unset.
 
-### 2.4 [ ] Audit existing scale-param propagation in bridge, then add date/time params
+### 2.4 [ ] Audit existing scale-param propagation in bridge, then add date/time/datetime params and explicit mapping
 
 **File:**
 - `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/bridge/GgCharmCompiler.groovy`
 
-First audit how `GgCharmCompiler` currently copies scale parameters from gg specs into Charm `Scale.params` — extend the existing propagation path rather than creating a parallel one. Then forward gg temporal parameters (for example `dateFormat`/`dateBreaks`, `timeFormat`/`timeBreaks`) into `Scale.params` so the Charm runtime date/time formatting and break logic applies when gg charts delegate to Charm.
-Also propagate timezone override params (for example `zoneId`, or gg aliases mapped to `zoneId`) so bridge-rendered temporal scales are deterministic and configurable.
+The existing propagation mechanism lives in `enrichScale()` (lines ~701–720 of `GgCharmCompiler`). It uses explicit field-by-field conditional copies: `name`, `limits`, `expand`, and `guide` are copied into `charmScale.params`, while `breaks` and `labels` are copied to top-level `charmScale.breaks`/`charmScale.labels` fields (as new `ArrayList` copies). Extend this same `enrichScale()` method rather than creating a parallel propagation path.
+
+Add conditional copies for temporal parameters:
+- `dateFormat` / `timeFormat` → `charmScale.params['dateFormat']` / `charmScale.params['timeFormat']`
+- `dateBreaks` / `timeBreaks` → `charmScale.params['dateBreaks']` / `charmScale.params['timeBreaks']`
+- For gg temporal scales (`ScaleX/YDate`, `ScaleX/YTime`, `ScaleX/YDatetime`), set `charmScale.params['zoneId']` internally to the gg runtime default timezone (for example `ZoneId.systemDefault().id`) so delegated Charm rendering preserves gg behavior while Charm itself keeps UTC as default.
+
+**Compatibility rule:** Keep gg API close to ggplot2 — do **not** add new user-facing timezone parameters to gg scales in this phase unless ggplot2 parity requires it.
+
+Keep explicit gg `breaks` lists mapped to `Scale.breaks`; only interval strings should map to params keys. This ensures the Charm runtime date/time formatting and break logic applies when gg charts delegate to Charm.
+
+Also update gg→Charm scale mapping logic so datetime is explicit (not inferred by class-name substring fallback order):
+- `GgCharmMappingRegistry.mapPositionalScale()` should map:
+  - `ScaleXDate`/`ScaleYDate` → `CharmScale.date()`
+  - `ScaleXTime`/`ScaleYTime` → `CharmScale.time()`
+  - `ScaleXDatetime`/`ScaleYDatetime` → `CharmScale.datetime()`
+- In `GgCharmCompiler.fallbackScale()`, check `datetime`/`time` before `date` for class-name fallback safety.
 
 ### 2.5 [ ] Add focused tests for date/time breaks, labels, and gg-bridge propagation
 
 **Files:**
 - `matrix-charts/src/test/groovy/charm/render/scale/DateTimeScaleTest.groovy` (new)
+- `matrix-charts/src/test/groovy/charm/render/scale/ScaleBreakLabelRuntimeTest.groovy` (new; includes `ContinuousCharmScale`, `BinnedCharmScale`, `DiscreteCharmScale`, and `ColorCharmScale`)
 - `matrix-ggplot/src/test/groovy/gg/DateTimeScaleBridgeTest.groovy` (new)
 
 Include assertions for:
 - default UTC behavior
 - explicit `zoneId` override behavior
+- gg->Charm delegation sets `zoneId` for temporal gg scales without introducing new gg timezone API
+- configured breaks/labels are honored for discrete and non-discrete runtime scales
 - consistent break/label output across environments
 
 ### Verification
@@ -241,10 +273,10 @@ Accept a `Labeller` instance on both `FacetDsl` and `WrapDsl`. The `Labeller` fa
 ### 4.3 [ ] Carry `labeller` through the compiled spec and into the renderer
 
 **Files:**
-- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/FacetSpec.groovy` — add `Labeller labeller` field and update `copy()`
-- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/FacetRenderer.groovy` — read `facet.labeller` when formatting strip labels, falling back to the current default behavior when it is `null`
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy` — persist `labeller` in `facet.params['labeller']` for both wrap and grid DSL paths
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/FacetRenderer.groovy` — continue reading `params['labeller']` and apply it when formatting strip labels
 
-`PlotSpec.build()` constructs a `Chart` from compiled specs; if `FacetSpec` does not carry the `Labeller`, it will be silently dropped before rendering. The renderer must use the attached labeller when present.
+Keep `labeller` in facet params for v1 (no new typed field on `FacetSpec`).
 
 ### 4.4 [ ] Add tests for labeller convenience
 
@@ -268,17 +300,17 @@ Add examples showing `value()`, `both()`, and custom closure labellers.
 
 **Priority:** High | **Effort:** Medium
 
-### 5.0 [ ] Check for `commons-text` before implementing string distance
+### 5.0 [ ] Add explicit `commons-text` dependency for string distance
 
-**File:** `matrix-charts/build.gradle` (or `dependencies.gradle`)
+**File:** `matrix-charts/build.gradle`
 
-Check whether `org.apache.commons:commons-text` (which provides `LevenshteinDistance`) is already available as a transitive dependency. If it is, use it directly instead of creating a custom `StringDistance` utility — per the DRY principle. Only create `StringDistance.groovy` if commons-text is absent.
+Add `org.apache.commons:commons-text` explicitly and use `LevenshteinDistance` directly in validation error suggestions. Do not rely on transitive availability and do not create a custom string-distance utility.
 
 ### 5.1 [ ] Add "did you mean?" suggestions for unknown columns
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy`
-- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/util/StringDistance.groovy` (new — only if commons-text unavailable; see 5.0)
+- `matrix-charts/build.gradle` (dependency added in 5.0)
 
 ### 5.2 [ ] Add contextual hints for common semantic mistakes
 
@@ -327,26 +359,28 @@ Key fields:
 `Chart` already provides convenience `render()` methods, but `PlotGridRenderer` should call `CharmRenderer.render(chart, config)` directly to guarantee per-cell render sizing and avoid hidden defaults. Rendering steps:
 1. Compute grid cell dimensions from total width/height and relative weights.
 2. For each subplot `Chart`, construct a per-cell `RenderConfig(cellW, cellH)` and call `CharmRenderer.render(chart, config)` to obtain the cell `Svg`.
-3. Embed each cell `Svg` as a nested `<svg x=… y=…>` positioned at its grid slot in the outer canvas.
-4. Add optional overall title above the grid.
+3. Rewrite/prefix all subplot-local SVG IDs and corresponding references (`url(#...)`, `href="#..."`, and `xlink:href="#..."`) with a per-cell prefix (for example `grid-r1c2-...`) before embedding.
+4. Embed each cell `Svg` as a nested `<svg x=… y=…>` positioned at its grid slot in the outer canvas.
+5. Add optional overall title above the grid.
 
 Legend behavior for v1: render legends independently per subplot. Do not attempt automatic cross-subplot legend merging in the initial implementation.
 
 `PlotGrid.render(int width, int height)` is the public convenience entry point; it constructs a `PlotGridRenderer` and delegates to it.
 
-### 6.3 [ ] Create `PlotGridDsl` and add `plotGrid()` factory to `Pictura`
+### 6.3 [ ] Create `PlotGridDsl` and add `plotGrid()` factory to `Charts`
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotGridDsl.groovy` (new)
-- `matrix-charts/src/main/groovy/se/alipsa/matrix/pictura/Pictura.groovy`
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/Charts.groovy`
 
-`PlotGrid` is the immutable compiled spec (holding `List<Chart>`). `PlotGridDsl` is the mutable closure delegate used inside `plotGrid { ... }` blocks — it mirrors the pattern of `PlotSpec` / `ScaleDsl`. Callers must have a compiled `Chart` (from `PlotSpec.build()` or `Pictura.plot(...).build()`) before adding it to a grid. `PlotGrid.render(int width, int height)` is a convenience wrapper delegating to `PlotGridRenderer`.
+`PlotGrid` is the immutable compiled spec (holding `List<Chart>`). `PlotGridDsl` is the mutable closure delegate used inside `plotGrid { ... }` blocks — it mirrors the pattern of `PlotSpec` / `ScaleDsl`. Callers must have a compiled `Chart` (from `PlotSpec.build()` or `Charts.plot(...).build()`) before adding it to a grid. `PlotGrid.render(int width, int height)` is a convenience wrapper delegating to `PlotGridRenderer`.
 
 ### 6.4 [ ] Add `plot_grid()` compatibility API to ggplot layer
 
 **File:** `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/GgPlot.groovy`
 
 Compile each `GgChart` to Charm `Chart`, then delegate to Charm `PlotGrid`.
+Requirement for v1: all `GgChart` inputs are Charm-delegable. Any adaptation failure is a bridge bug and `plot_grid()` should fail fast (no fallback rendering path inside `plot_grid()`).
 
 ### 6.5 [ ] Keep existing exporters unchanged; use `SvgWriter.toXml()` for SVG output
 
@@ -369,6 +403,7 @@ Test:
 - Relative widths/heights.
 - Title rendering.
 - Per-subplot legends/clips/defs remain correct.
+- No SVG ID collisions across subplots (including clip paths and all reference forms: `url(#...)`, `href="#..."`, and `xlink:href="#..."`).
 
 ### 6.7 [ ] Document `plotGrid` and `plot_grid` API in `charm.md`
 
@@ -432,7 +467,9 @@ Resolution order:
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/AxisRenderer.groovy`
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/CharmRenderer.groovy`
 
-**v1 decision (locked):** Always render a single set of global axes, computed from the global trained `x`/`y` scale domain (i.e., the union of all layers' data ranges). Per-layer positional scales control only how that layer's data points are mapped to pixel coordinates — they do not produce separate axis ticks or labels. When a layer's positional scale domain differs materially from the global domain (more than 10% of total range), emit a `log.warn()` to alert the caller. This keeps the visual output unambiguous while still allowing layers to use different transforms (e.g., log vs. linear on the same plot).
+**v1 decision (locked):** Always render a single set of global axes, computed from the global trained `x`/`y` scale domain (i.e., the union of all layers' data ranges). Per-layer positional scales control only how that layer's data points are mapped to pixel coordinates — they do not produce separate axis ticks or labels. Divergence warnings are based on pixel-space, not raw-domain percentages: emit `log.warn()` when a layer’s mapped span or boundary offset differs from the global axis span by more than 10% of the panel span. This keeps warning behavior meaningful across mixed transforms (for example log vs. linear).
+
+**Documentation note:** When per-layer positional scales use divergent transforms (e.g., log on one layer vs. linear on another), the single global axis may be misleading since tick labels reflect the global scale while individual layers are mapped differently. Document this caveat in `charm.md` (section 7.9) with a recommendation to use `plotGrid` (section 6) instead when layers need truly independent axes.
 
 ### 7.6 [ ] Render separate legend entries for split scales
 
@@ -452,6 +489,15 @@ Use marker components to reset scale scope for subsequent layers while keeping A
 **Files:**
 - `matrix-charts/src/test/groovy/charm/render/scale/PerLayerScaleTest.groovy` (new)
 - `matrix-ggplot/src/test/groovy/gg/PerLayerScaleCompatibilityTest.groovy` (new)
+
+### 7.9 [ ] Document per-layer scale limitations and divergent-transform caveat
+
+**File:** `matrix-charts/docs/charm.md`
+
+Add a "Per-layer scales" section documenting:
+- How per-layer scale overrides work (including positional `x`/`y`)
+- The v1 single-global-axis behavior
+- **Caveat:** when per-layer positional scales use divergent transforms (e.g., log vs. linear), the global axis tick labels may not accurately represent all layers' data. Recommend using `plotGrid` (section 6) when layers need truly independent axes.
 
 ### Verification
 
@@ -475,7 +521,7 @@ Use marker components to reset scale scope for subsequent layers while keeping A
   - `apply(Map)` — add `case 'tooltip' ->` to the switch statement (missing this means `aes(tooltip: 'col')` throws `CharmMappingException`)
   - `copy()` — copy the `tooltip` field (the method copies each field explicitly)
   - `mappings()` — include `tooltip` in the returned map (method enumerates fields explicitly)
-- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/MappingDsl.groovy` (or equivalent DSL wrapper) — add a `tooltip` property setter so `mapping { tooltip = 'colName' }` works in closure scope
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/MappingDsl.groovy` — add a `tooltip` property setter so `mapping { tooltip = 'colName' }` works in closure scope
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/RenderContext.groovy` — add `String tooltip` to `LayerData` inner class (explicit typed field preferred over the existing `meta` map for type safety and clarity)
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/LayerDataUtil.groovy` — include `tooltip` in `copyDatum()`
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/CharmRenderer.groovy` — populate `tooltip` in `mapData()`
@@ -545,25 +591,22 @@ Add a "Tooltips" section covering: mapping `tooltip`, template strings, `tooltip
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/geom/LayerBuilder.groovy`
-- All concrete builder subclasses in `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/geom/` (~60 files)
 
-`LayerBuilder.statType()` is currently `abstract`, implemented separately by each of the ~60 concrete geom builder subclasses. To add a caller-supplied override without touching every subclass individually, use a **template method pattern**:
+Use explicit default-vs-selected naming:
 
-1. Add `protected CharmStatType statOverride` field to `LayerBuilder`.
-2. Add fluent `stat(Object stat)` method that parses the value and sets `statOverride`.
-3. Rename `abstract statType()` in `LayerBuilder` to `abstract defaultStatType()`.
-4. Add a concrete (non-abstract) `statType()` in `LayerBuilder`:
+1. Rename abstract `statType()` in `LayerBuilder` to `defaultStatType()`.
+2. Add `protected CharmStatType statType` field to `LayerBuilder` to hold a caller-selected stat.
+3. Add fluent `stat(Object stat)` method that parses the value and sets the `statType` field.
+4. In `LayerBuilder.build()`, resolve the effective stat as:
    ```groovy
-   protected CharmStatType statType() {
-     statOverride ?: defaultStatType()
-   }
+   CharmStatType effectiveStat = statType ?: defaultStatType()
    ```
-5. In all concrete subclasses that extend `LayerBuilder` (approximately 55–56 files within `geom/`; exclude `LayerBuilder.groovy` itself, `Geoms.groovy`, and `LayersDsl.groovy`), rename their `statType()` override to `defaultStatType()`. This is a mechanical search-and-replace — no logic changes in any subclass.
+5. Update concrete geom builders to rename their overrides from `statType()` to `defaultStatType()` (mechanical rename; logic unchanged).
 
 Also add:
 - `params(Map<String, Object> values)` convenience in addition to `param(key, value)`
 
-No existing behavior changes: when `stat()` is not called, `statOverride` is null and `defaultStatType()` is used exactly as before.
+No existing behavior changes: when `stat()` is not called, `statType` is null and `defaultStatType()` is used exactly as before.
 
 ### 9.2 [ ] Add `SAMPLE` stat and implementation
 
@@ -682,7 +725,7 @@ Recommended sequence based on impact and dependencies:
 After each phase, run:
 
 ```bash
-# Charm core and Pictura API
+# Charm core and pict API
 ./gradlew :matrix-charts:test -Pheadless=true
 
 # ggplot compatibility layer

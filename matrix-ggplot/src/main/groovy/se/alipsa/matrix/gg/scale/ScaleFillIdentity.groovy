@@ -2,7 +2,7 @@ package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.Scale as CharmScale
-import se.alipsa.matrix.pict.util.ColorUtil
+import se.alipsa.matrix.charm.util.ColorUtil
 
 /**
  * Identity scale for fill aesthetic - uses data values directly without mapping.

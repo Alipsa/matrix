@@ -1,7 +1,7 @@
 package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.pict.util.ColorUtil
+import se.alipsa.matrix.charm.util.ColorUtil
 
 /**
  * Filled contour geometry for drawing filled regions between contour levels.

@@ -12,7 +12,7 @@ import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.ValueConverter
-import se.alipsa.matrix.pict.util.ColorUtil
+import se.alipsa.matrix.charm.util.ColorUtil
 
 /**
  * Shared helpers for Charm geom renderers.
