@@ -109,6 +109,8 @@ class ContinuousCharmScale extends CharmScale {
   @Override
   List<String> tickLabels(int count) {
     List<Object> tickValues = ticks(count)
+    String temporalId = TemporalScaleUtil.normalizeTransformId(transformStrategy?.id())
+    boolean temporal = TemporalScaleUtil.isTemporalTransformId(temporalId)
     List<String> configured = scaleSpec?.labels
     if (configured != null && !configured.isEmpty()) {
       List<String> labels = []
@@ -117,13 +119,17 @@ class ContinuousCharmScale extends CharmScale {
           labels << configured[idx]
           return
         }
-        labels << defaultTickLabel(tick)
+        if (temporal) {
+          BigDecimal numeric = ValueConverter.asBigDecimal(tick)
+          labels << TemporalScaleUtil.formatTick(numeric, temporalId, scaleSpec?.params ?: [:])
+        } else {
+          labels << defaultTickLabel(tick)
+        }
       }
       return labels
     }
 
-    String temporalId = TemporalScaleUtil.normalizeTransformId(transformStrategy?.id())
-    if (TemporalScaleUtil.isTemporalTransformId(temporalId)) {
+    if (temporal) {
       return tickValues.collect { Object tick ->
         BigDecimal numeric = ValueConverter.asBigDecimal(tick)
         TemporalScaleUtil.formatTick(numeric, temporalId, scaleSpec?.params ?: [:])

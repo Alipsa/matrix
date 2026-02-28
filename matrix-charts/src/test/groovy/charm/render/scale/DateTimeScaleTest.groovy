@@ -97,4 +97,24 @@ class DateTimeScaleTest {
     assertEquals(0L, (ticks.first() as BigDecimal).longValue())
     assertEquals(7_200_000L, (ticks[1] as BigDecimal).longValue())
   }
+
+  @Test
+  void testMultiWeekDateBreaksStayMondayAligned() {
+    Scale date = Scale.date()
+    date.params['dateBreaks'] = '2 weeks'
+
+    ContinuousCharmScale scale = ScaleEngine.trainPositionalScale(
+        [LocalDate.of(2025, 1, 10), LocalDate.of(2025, 2, 20)],
+        date,
+        0,
+        100
+    ) as ContinuousCharmScale
+
+    List<String> labels = scale.tickLabels(10)
+    assertFalse(labels.isEmpty())
+    labels.each { String label ->
+      LocalDate parsed = LocalDate.parse(label)
+      assertEquals(1, parsed.dayOfWeek.value, "Expected Monday-aligned break, got $parsed")
+    }
+  }
 }

@@ -8,6 +8,8 @@ import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
 
+import java.time.LocalDate
+
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 
@@ -79,5 +81,25 @@ class ScaleBreakLabelRuntimeTest {
     assertNumericTicks(scale.ticks(5), [10, 20])
     assertEquals(['ten', 'twenty'], scale.tickLabels(5))
     assertTrue(scale.colorFor(10) != null)
+  }
+
+  @Test
+  void testContinuousTemporalScaleFallbackLabelsUseTemporalFormatting() {
+    Scale spec = Scale.date()
+    spec.breaks = [
+        LocalDate.of(2025, 1, 1),
+        LocalDate.of(2025, 1, 2),
+        LocalDate.of(2025, 1, 3)
+    ]
+    spec.labels = ['start']
+
+    ContinuousCharmScale scale = ScaleEngine.trainPositionalScale(
+        [LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 3)],
+        spec,
+        0,
+        100
+    ) as ContinuousCharmScale
+
+    assertEquals(['start', '2025-01-02', '2025-01-03'], scale.tickLabels(5))
   }
 }

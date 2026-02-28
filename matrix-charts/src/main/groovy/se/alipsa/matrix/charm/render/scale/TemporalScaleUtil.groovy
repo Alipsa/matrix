@@ -39,6 +39,7 @@ class TemporalScaleUtil {
   private static final String DEFAULT_TIME_FORMAT = 'HH:mm'
   private static final String DEFAULT_DATETIME_FORMAT = 'yyyy-MM-dd HH:mm'
   private static final int MAX_BREAKS = 10_000
+  private static final LocalDate WEEK_ALIGNMENT_BASE = LocalDate.of(1970, 1, 5)
 
   static boolean isTemporalTransform(ScaleTransform strategy) {
     isTemporalTransformId(strategy?.id())
@@ -324,9 +325,9 @@ class TemporalScaleUtil {
       if (interval.amount <= 1) {
         return weekStart
       }
-      long weekIndex = weekStart.toEpochDay().intdiv(7)
-      long alignedWeek = (weekIndex.intdiv(interval.amount)) * interval.amount
-      return LocalDate.ofEpochDay(alignedWeek * 7)
+      long weeksFromBase = java.time.temporal.ChronoUnit.WEEKS.between(WEEK_ALIGNMENT_BASE, weekStart)
+      long alignedWeeks = Math.floorDiv(weeksFromBase, interval.amount as long) * interval.amount
+      return WEEK_ALIGNMENT_BASE.plusWeeks(alignedWeeks)
     }
     if (interval.unit == 'month') {
       LocalDate monthStart = value.withDayOfMonth(1)
