@@ -5,8 +5,8 @@ import org.junit.jupiter.api.io.TempDir
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.geom.PointBuilder
-import se.alipsa.matrix.pictura.Chart
-import se.alipsa.matrix.pictura.ScatterChart
+import se.alipsa.matrix.pict.Chart
+import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.chartexport.ChartToImage
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng

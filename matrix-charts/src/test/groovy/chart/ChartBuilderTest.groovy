@@ -1,7 +1,7 @@
 package chart
 
 import org.junit.jupiter.api.Test
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 

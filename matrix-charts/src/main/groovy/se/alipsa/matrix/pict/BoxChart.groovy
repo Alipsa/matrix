@@ -1,4 +1,4 @@
-package se.alipsa.matrix.pictura
+package se.alipsa.matrix.pict
 
 
 import se.alipsa.matrix.core.Matrix

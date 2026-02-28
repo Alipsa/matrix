@@ -10,7 +10,7 @@ the exporters in the se.alipsa.matrix.chartexport package.
 There are 2 APIs in matrix-charts, sharing the same Charm rendering engine:
 1. **[Charm](docs/charm.md)** The core chart library based on the principles of Grammar of Graphics.
    Idiomatic Groovy closure DSL with typed specifications and immutable compiled charts.
-2. **[Charts](docs/charts.md)** The `se.alipsa.matrix.pictura` package contains charts in a "familiar style"
+2. **[Charts](docs/charts.md)** The `se.alipsa.matrix.pict` package contains charts in a "familiar style"
     (begin with the chart type, e.g. `AreaChart`, then add data and styling).
     Backed by Charm internally.
 
@@ -89,13 +89,13 @@ See **[charm.md](docs/charm.md)** for comprehensive documentation.
 ```groovy
 import java.time.LocalDate
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 import se.alipsa.matrix.chartexport.ChartToPng
 
 def empData = Matrix.builder().data(
     emp_id: 1..5,
-    emp_name: ["Rick","Dan","Michelle","Ryan","Gary"],
-    salary: [623.3,515.2,611.0,729.0,843.25],
+    emp_name: ["Rick", "Dan", "Michelle", "Ryan", "Gary"],
+    salary: [623.3, 515.2, 611.0, 729.0, 843.25],
     start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27"))
     .types(int, String, Number, LocalDate)
     .build()

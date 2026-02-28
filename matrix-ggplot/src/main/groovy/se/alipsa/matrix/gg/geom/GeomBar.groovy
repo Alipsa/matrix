@@ -1,21 +1,9 @@
 package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
-import se.alipsa.groovy.svg.G
-import se.alipsa.matrix.pictura.util.ColorUtil
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.Row
-import se.alipsa.matrix.gg.aes.Aes
-import se.alipsa.matrix.gg.aes.Identity
-import se.alipsa.matrix.gg.coord.CoordPolar
-import se.alipsa.matrix.gg.coord.CoordRadial
-import se.alipsa.matrix.gg.coord.Coord
+import se.alipsa.matrix.pict.util.ColorUtil
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
-import se.alipsa.matrix.gg.scale.Scale
-import se.alipsa.matrix.gg.scale.ScaleDiscrete
-
-import static se.alipsa.matrix.ext.NumberExtension.PI
 
 /**
  * Bar geometry for bar charts (counts/frequencies).

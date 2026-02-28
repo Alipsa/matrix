@@ -80,7 +80,7 @@ Here's a basic example of creating different types of charts:
 ```groovy
 import java.time.LocalDate
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 
 // Create a sample Matrix with employee data
 def empData = Matrix.builder().data(
@@ -89,7 +89,7 @@ def empData = Matrix.builder().data(
     salary: [623.3, 515.2, 611.0, 729.0, 843.25],
     start_date: toLocalDates("2012-01-01", "2013-09-23", "2014-11-15", "2014-05-11", "2015-03-27")
 ).types(int, String, Number, LocalDate)
- .build()
+    .build()
 
 // Create different types of charts
 def areaChart = AreaChart.create("Salaries", empData, "emp_name", "salary")
@@ -103,7 +103,7 @@ Area charts are useful for showing trends over time or comparing values across c
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 
 // Create a Matrix with time series data
 def timeData = Matrix.builder().data(
@@ -111,7 +111,7 @@ def timeData = Matrix.builder().data(
     sales: [10.2, 15.1, 12.7, 14.3, 18.5, 16.2],
     profit: [5.1, 6.3, 5.5, 7.1, 9.2, 8.4]
 ).types(String, Number, Number)
- .build()
+    .build()
 
 // Create an area chart with multiple series
 def areaChart = AreaChart.create("Monthly Performance", timeData, "month", "sales", "profit")
@@ -126,7 +126,7 @@ Bar charts are excellent for comparing values across different categories. You c
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 
 // Create a Matrix with categorical data
 def productData = Matrix.builder().data(
@@ -134,23 +134,23 @@ def productData = Matrix.builder().data(
     sales_2022: [120, 150, 90, 110],
     sales_2023: [140, 160, 100, 130]
 ).types(String, Number, Number)
- .build()
+    .build()
 
 // Create a vertical bar chart with multiple series
 def verticalBarChart = BarChart.createVertical(
-    "Product Sales Comparison", 
-    productData, 
-    "product", 
-    ChartType.GROUPED, 
+    "Product Sales Comparison",
+    productData,
+    "product",
+    ChartType.GROUPED,
     "sales_2022", "sales_2023"
 )
 
 // Create a horizontal bar chart
 def horizontalBarChart = BarChart.createHorizontal(
-    "Product Sales Comparison", 
-    productData, 
-    "product", 
-    ChartType.GROUPED, 
+    "Product Sales Comparison",
+    productData,
+    "product",
+    ChartType.GROUPED,
     "sales_2022", "sales_2023"
 )
 
@@ -170,14 +170,14 @@ Pie charts are useful for showing proportions of a whole.
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 
 // Create a Matrix with market share data
 def marketData = Matrix.builder().data(
     company: ["Company A", "Company B", "Company C", "Others"],
     market_share: [35, 28, 22, 15]
 ).types(String, Number)
- .build()
+    .build()
 
 // Create a pie chart
 def pieChart = PieChart.create("Market Share", marketData, "company", "market_share")
@@ -192,7 +192,7 @@ Line charts are ideal for showing trends over time or continuous data.
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 import java.time.LocalDate
 
 // Create a Matrix with time series data
@@ -208,13 +208,13 @@ def temperatureData = Matrix.builder().data(
     city_a: [5, 7, 12, 18, 23, 28],
     city_b: [2, 4, 9, 15, 20, 25]
 ).types(LocalDate, Number, Number)
- .build()
+    .build()
 
 // Create a line chart
 def lineChart = LineChart.create(
-    "Temperature Trends", 
-    temperatureData, 
-    "date", 
+    "Temperature Trends",
+    temperatureData,
+    "date",
     "city_a", "city_b"
 )
 
@@ -228,20 +228,20 @@ Scatter charts are useful for showing the relationship between two variables.
 
 ```groovy
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 
 // Create a Matrix with correlation data
 def correlationData = Matrix.builder().data(
     height: [165, 170, 175, 180, 185, 190],
     weight: [60, 65, 70, 80, 85, 90]
 ).types(Number, Number)
- .build()
+    .build()
 
 // Create a scatter chart
 def scatterChart = ScatterChart.create(
-    "Height vs Weight", 
-    correlationData, 
-    "height", 
+    "Height vs Weight",
+    correlationData,
+    "height",
     "weight"
 )
 
@@ -339,58 +339,58 @@ Here's a complete example that demonstrates creating and exporting multiple char
 import java.time.LocalDate
 import javafx.scene.paint.Color
 import se.alipsa.matrix.core.*
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 
 // Create a sample Matrix with sales data
 def salesData = Matrix.builder().data(
-        quarter: ['Q1', 'Q2', 'Q3', 'Q4'],
-        product_a: [120, 150, 160, 180],
-        product_b: [90, 110, 130, 150],
-        product_c: [70, 80, 100, 120]
+    quarter: ['Q1', 'Q2', 'Q3', 'Q4'],
+    product_a: [120, 150, 160, 180],
+    product_b: [90, 110, 130, 150],
+    product_c: [70, 80, 100, 120]
 ).types(String, Number, Number, Number)
-        .build()
+    .build()
 
 // Create a bar chart
 def barChart = BarChart.createVertical(
-        "Quarterly Sales by Product",
-        salesData,
-        "quarter",
-        ChartType.GROUPED,
-        "product_a", "product_b", "product_c"
+    "Quarterly Sales by Product",
+    salesData,
+    "quarter",
+    ChartType.GROUPED,
+    "product_a", "product_b", "product_c"
 )
-        .setXAxisTitle("Quarter")
-        .setYAxisTitle("Sales (in thousands)")
+    .setXAxisTitle("Quarter")
+    .setYAxisTitle("Sales (in thousands)")
 File file = new File("quarterly_sales_bar.png")
 Plot.png(barChart, file)
 println "saved barchart to $file.absolutePath"
 
-salesData['quarter'] = [1,2,3,4]
+salesData['quarter'] = [1, 2, 3, 4]
 
 // Create a line chart
 def lineChart = LineChart.create(
-        "Sales Trends",
-        salesData,
-        "quarter",
-        "product_a", "product_b", "product_c"
+    "Sales Trends",
+    salesData,
+    "quarter",
+    "product_a", "product_b", "product_c"
 )
-        .setXAxisTitle("Quarter")
-        .setYAxisTitle("Sales (in thousands)")
+    .setXAxisTitle("Quarter")
+    .setYAxisTitle("Sales (in thousands)")
 file = new File("quarterly_sales_line.png")
 Plot.png(lineChart, file)
 println "saved lineChart to $file.absolutePath"
 
 // Create a pie chart (using only one quarter for demonstration)
 def q4Data = Matrix.builder().data(
-        product: ["Product A", "Product B", "Product C"],
-        sales: [180, 150, 120]
+    product: ["Product A", "Product B", "Product C"],
+    sales: [180, 150, 120]
 ).types(String, Number)
-        .build()
+    .build()
 
 def pieChart = PieChart.create(
-        "Q4 Sales Distribution",
-        q4Data,
-        "product",
-        "sales"
+    "Q4 Sales Distribution",
+    q4Data,
+    "product",
+    "sales"
 )
 file = new File("q4_sales_pie.png")
 Plot.png(pieChart, file)

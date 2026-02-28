@@ -1,4 +1,4 @@
-package se.alipsa.matrix.pictura
+package se.alipsa.matrix.pict
 
 import java.awt.Color
 import java.awt.Font

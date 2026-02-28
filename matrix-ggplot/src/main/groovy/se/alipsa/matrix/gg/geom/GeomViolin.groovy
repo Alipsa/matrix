@@ -1,17 +1,9 @@
 package se.alipsa.matrix.gg.geom
 
 import groovy.transform.CompileStatic
-import se.alipsa.groovy.svg.G
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.core.Stat
 import se.alipsa.matrix.gg.aes.Aes
-import se.alipsa.matrix.gg.aes.Identity
-import se.alipsa.matrix.gg.coord.Coord
 import se.alipsa.matrix.gg.layer.StatType
-import se.alipsa.matrix.gg.scale.Scale
-import se.alipsa.matrix.pictura.util.ColorUtil
-
-import static se.alipsa.matrix.ext.NumberExtension.PI
+import se.alipsa.matrix.pict.util.ColorUtil
 
 /**
  * Violin geometry for showing kernel density estimates.

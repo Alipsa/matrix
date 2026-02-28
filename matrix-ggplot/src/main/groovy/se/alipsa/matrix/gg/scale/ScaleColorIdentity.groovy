@@ -1,7 +1,7 @@
 package se.alipsa.matrix.gg.scale
 
 import groovy.transform.CompileStatic
-import se.alipsa.matrix.pictura.util.ColorUtil
+import se.alipsa.matrix.pict.util.ColorUtil
 
 /**
  * Identity scale for color aesthetic - uses data values directly without mapping.

@@ -199,7 +199,7 @@ These gg utility classes serve both packages and move to a shared location or st
 - [x] `./gradlew :matrix-charts:test -Pheadless=true`
 - [x] `./gradlew test -Pheadless=true`
 
-2.8 [x] `se.alipsa.matrix.pictura` compatibility is preserved: `CharmBridge` and `charts` API tests pass against the evolved charm model.
+2.8 [x] `se.alipsa.matrix.pict` compatibility is preserved: `CharmBridge` and `charts` API tests pass against the evolved charm model.
 
 2.9 [x] `GgPlot` helper API parity is verified (wrappers/utilities such as `ggsave`, `borders`, `xlim`/`ylim`, theme global setters/getters, and annotation helpers).
 
@@ -540,7 +540,7 @@ _Restructure charm's core model types from thin enums to parameterized specs._
 
 5.2.9 [x] Refactor `PlotSpec.groovy` and companion charm DSL classes (`Charts`, `AesDsl`, `LayerDsl`, `MapDsl`, `Cols`, `ColumnRef`, `ColumnExpr`, `Facet`, `Coord`, `Theme`) to the new core model.
 
-5.2.10 [x] Update `se.alipsa.matrix.pictura.CharmBridge` to use the new charm model types/specs and run `./gradlew :matrix-charts:test` to validate charts API compatibility.
+5.2.10 [x] Update `se.alipsa.matrix.pict.CharmBridge` to use the new charm model types/specs and run `./gradlew :matrix-charts:test` to validate charts API compatibility.
 
 ### 5.3 Phase 3 -- Scale System
 
@@ -884,7 +884,7 @@ Executed commands:
 
 7.6 The gg public API (`GgPlot` static methods, `ggplot()`, `aes()`, `geom_*()`, `scale_*()`, `theme_*()`, etc.) does not change. Only the internal implementation changes from self-rendering to charm delegation.
 
-7.7 `se.alipsa.matrix.pictura` remains a traditional chart API built on top of charm; charm model refactors must preserve charts facade behavior at each phase merge.
+7.7 `se.alipsa.matrix.pict` remains a traditional chart API built on top of charm; charm model refactors must preserve charts facade behavior at each phase merge.
 
 7.8 Existing gg tests are retained as integration tests for the gg facade; charm tests validate charm internals directly.
 

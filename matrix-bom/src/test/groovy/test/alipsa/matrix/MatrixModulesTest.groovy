@@ -12,7 +12,7 @@ import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.avro.MatrixAvroReader
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.charm.Chart
-import se.alipsa.matrix.pictura.ScatterChart
+import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.chartexport.ChartToSvg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.MatrixAssertions
@@ -38,12 +38,13 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 
 import java.nio.charset.StandardCharsets
+import java.nio.file.Path
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static org.junit.jupiter.api.Assertions.assertNotNull
-import static se.alipsa.matrix.gg.GgPlot.*
 import static se.alipsa.matrix.charm.Charts.plot
+import static se.alipsa.matrix.gg.GgPlot.*
 
 /**
  * We do some basic tests for each module to verify they work together.
@@ -51,7 +52,7 @@ import static se.alipsa.matrix.charm.Charts.plot
 class MatrixModulesTest {
 
   @TempDir
-  java.nio.file.Path tempDir
+  Path tempDir
 
   @Test
   void testStat() {

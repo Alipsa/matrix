@@ -4,7 +4,7 @@ import se.alipsa.matrix.core.Matrix
 
 import java.time.LocalDate
 
-import se.alipsa.matrix.pictura.*
+import se.alipsa.matrix.pict.*
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.core.ListConverter.*

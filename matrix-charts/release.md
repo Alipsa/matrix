@@ -9,7 +9,7 @@ See [charm.md](docs/charm.md) for the Charm user guide and [ggPlot.md](ggPlot.md
   - Introduced `se.alipsa.matrix.charm` as the single rendering engine for all three charting APIs (Charm, gg, charts).
   - All chart rendering now produces SVG via gsvg. Export to PNG/JPEG/JavaFX/Swing goes through `se.alipsa.matrix.chartexport`.
   - The gg API (`se.alipsa.matrix.gg`) is preserved as a thin compatibility wrapper delegating to Charm.
-  - The pictura API (`se.alipsa.matrix.pictura`) is backed by Charm via `CharmBridge`. `Plot` is `@Deprecated` but functional.
+  - The pictura API (`se.alipsa.matrix.pict`) is backed by Charm via `CharmBridge`. `Plot` is `@Deprecated` but functional.
   - `Plot.png()` no longer requires JavaFX toolkit initialization.
 
 **Breaking Changes**

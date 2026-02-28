@@ -2,8 +2,8 @@ package se.alipsa.matrix.chartexport
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart as CharmChart
-import se.alipsa.matrix.pictura.Chart
-import se.alipsa.matrix.pictura.CharmBridge
+import se.alipsa.matrix.pict.Chart
+import se.alipsa.matrix.pict.CharmBridge
 
 /**
  * Exports charts as Swing {@link SvgPanel} components.

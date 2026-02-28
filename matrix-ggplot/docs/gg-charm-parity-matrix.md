@@ -13,7 +13,7 @@ A feature row may be marked `[x]` only when:
 
 - `gg integration tests`: validate `gg -> charm` delegation behavior through the public gg API
 - `charm direct rendering tests`: validate charm rendering/model behavior directly
-- `charts facade tests`: validate `se.alipsa.matrix.pictura` compatibility through `CharmBridge`
+- `charts facade tests`: validate `se.alipsa.matrix.pict` compatibility through `CharmBridge`
 
 ## Feature Rows
 
