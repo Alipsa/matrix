@@ -180,7 +180,7 @@ Include assertions for:
 
 **Priority:** Medium | **Effort:** Medium
 
-### 3.0 [ ] Audit existing guide factory methods before adding new ones
+### 3.0 [x] Audit existing guide factory methods before adding new ones
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/GuideSpec.groovy`
@@ -188,13 +188,13 @@ Include assertions for:
 
 Check whether `legend()`, `colorbar()`, `colorsteps()`, and `none()` are already available and reuse/delegate those methods rather than duplicating logic in `ScaleDsl`.
 
-### 3.1 [ ] Add `colorBrewer()` and `colorGradient()` convenience methods to `ScaleDsl`
+### 3.1 [x] Add `colorBrewer()` and `colorGradient()` convenience methods to `ScaleDsl`
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy` (`ScaleDsl`)
 
 These are thin wrappers around the existing `Scale.brewer(paletteName)` and `Scale.gradient(from, to)` static factories — both confirmed to exist in `Scale.groovy` — making them available inside a `scale { ... }` closure under `DELEGATE_ONLY` without a `Scale.` prefix.
 
-### 3.2 [ ] Add guide factory methods to `ScaleDsl` for closure-local chaining
+### 3.2 [x] Add guide factory methods to `ScaleDsl` for closure-local chaining
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy` (`ScaleDsl`)
 
@@ -207,20 +207,20 @@ scale {
 }
 ```
 
-### 3.3 [ ] Add `guide(Object)` fluent method to `Scale`
+### 3.3 [x] Add `guide(Object)` fluent method to `Scale`
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/Scale.groovy`
 
 Store normalized guide configuration in scale params and return `this`.
 
-### 3.4 [ ] Materialize scale-attached guides into `GuidesSpec` during build
+### 3.4 [x] Materialize scale-attached guides into `GuidesSpec` during build
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy`
 
 On `build()`, promote scale-level guide metadata into `guides` so `LegendRenderer` sees it.
 Define precedence: explicit `guides {}` entries override scale-attached guide metadata.
 
-### 3.5 [ ] Add `legendPosition()` shorthand to `PlotSpec`
+### 3.5 [x] Add `legendPosition()` shorthand to `PlotSpec`
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy`
 
@@ -235,11 +235,11 @@ PlotSpec legendPosition(Object value) {
 
 Legend position is already settable via `theme { legendPosition = ... }` (through `ThemeDsl`). This shorthand is a convenience only. Precedence: the last write wins — if both are called, the one called last takes effect. Document this in `charm.md` (see 3.7).
 
-### 3.6 [ ] Add tests for legend convenience methods and guide chaining
+### 3.6 [x] Add tests for legend convenience methods and guide chaining
 
 **File:** `matrix-charts/src/test/groovy/charm/render/LegendConvenienceTest.groovy` (new)
 
-### 3.7 [ ] Document legend and guide chaining API in `charm.md`
+### 3.7 [x] Document legend and guide chaining API in `charm.md`
 
 **File:** `matrix-charts/docs/charm.md`
 
@@ -249,6 +249,7 @@ Add examples for `colorBrewer()`/`colorGradient()` + `.guide()` chaining and `le
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
+./gradlew test -Pheadless=true
 ```
 
 ---

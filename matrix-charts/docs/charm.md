@@ -351,6 +351,29 @@ scale {
 }
 ```
 
+### Guide Chaining on Scales
+
+Inside `scale {}` you can use color convenience methods and attach guide specs directly:
+
+```groovy
+scale {
+  color = colorBrewer('Set1').guide(none())
+  fill = colorGradient('#ffffff', '#ff0000').guide(colorbar(title: 'Value'))
+}
+```
+
+Scale-attached guides are promoted into `guides` at build time. If both are set, explicit
+`guides { ... }` entries win for the same aesthetic.
+
+```groovy
+scale {
+  color = colorBrewer('Set1').guide(none())
+}
+guides {
+  color = legend()   // overrides scale-attached none()
+}
+```
+
 ### Custom Transforms
 
 ```groovy
@@ -378,6 +401,14 @@ theme {
   baseSize = 11
 }
 ```
+
+You can also set legend position with a top-level shorthand:
+
+```groovy
+legendPosition('top')
+```
+
+If both shorthand and `theme { legendPosition = ... }` are used, the last call wins.
 
 ### Where do colors go? Mapping vs Scale vs Theme vs Layer
 

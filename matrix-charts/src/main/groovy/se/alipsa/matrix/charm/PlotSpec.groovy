@@ -271,6 +271,17 @@ class PlotSpec {
   }
 
   /**
+   * Sets legend position as a shorthand for {@code theme.legendPosition}.
+   *
+   * @param value legend position ('right', 'left', 'top', 'bottom', 'none', or [x, y])
+   * @return this plot spec
+   */
+  PlotSpec legendPosition(Object value) {
+    theme.legendPosition = value
+    this
+  }
+
+  /**
    * Configures faceting using closure syntax.
    *
    * @param configure closure for facet options
@@ -348,16 +359,18 @@ class PlotSpec {
       validate()
       List<LayerSpec> compiledLayers = layers.collect { LayerSpec layer -> layer.copy() }
       List<AnnotationSpec> compiledAnnotations = annotations.collect { AnnotationSpec a -> a.copy() }
+      ScaleSpec compiledScale = scale.copy()
+      GuidesSpec compiledGuides = materializeScaleGuides(compiledScale, guides)
       new Chart(
           data,
           mapping.copy(),
           compiledLayers,
-          scale.copy(),
+          compiledScale,
           theme.copy(),
           facet.copy(),
           coord.copy(),
           labels.copy(),
-          guides.copy(),
+          compiledGuides,
           compiledAnnotations
       )
     } catch (CharmException e) {
@@ -418,6 +431,34 @@ class PlotSpec {
       effective.apply(layerMapping.mappings())
     }
     effective
+  }
+
+  private static GuidesSpec materializeScaleGuides(ScaleSpec scaleSpec, GuidesSpec explicitGuides) {
+    GuidesSpec materialized = new GuidesSpec()
+    materializeScaleGuide(materialized, 'x', scaleSpec?.x)
+    materializeScaleGuide(materialized, 'y', scaleSpec?.y)
+    materializeScaleGuide(materialized, 'color', scaleSpec?.color)
+    materializeScaleGuide(materialized, 'fill', scaleSpec?.fill)
+    materializeScaleGuide(materialized, 'size', scaleSpec?.size)
+    materializeScaleGuide(materialized, 'shape', scaleSpec?.shape)
+    materializeScaleGuide(materialized, 'alpha', scaleSpec?.alpha)
+    materializeScaleGuide(materialized, 'linetype', scaleSpec?.linetype)
+    materializeScaleGuide(materialized, 'group', scaleSpec?.group)
+    materialized + (explicitGuides?.copy() ?: new GuidesSpec())
+  }
+
+  private static void materializeScaleGuide(GuidesSpec target, String aesthetic, Scale sourceScale) {
+    if (sourceScale == null) {
+      return
+    }
+    Map<String, Object> params = sourceScale.params
+    if (params == null || !params.containsKey('guide')) {
+      return
+    }
+    GuideSpec guide = GuideUtils.coerceGuide(params['guide'], aesthetic)
+    if (guide != null) {
+      target.setSpec(aesthetic, guide)
+    }
   }
 
   private void validateMapping(String context, Mapping mappingValue) {
@@ -660,6 +701,40 @@ class PlotSpec {
     Scale manual(Object values) {
       Scale.manual(values)
     }
+
+    /**
+     * Creates a ColorBrewer color scale.
+     *
+     * @param paletteName palette name
+     * @param direction 1 for normal, -1 for reversed
+     * @return scale object
+     */
+    Scale colorBrewer(String paletteName = 'Set1', int direction = 1) {
+      Scale.brewer(paletteName, direction)
+    }
+
+    /**
+     * Creates a two-color gradient scale.
+     *
+     * @param from low-end color
+     * @param to high-end color
+     * @return scale object
+     */
+    Scale colorGradient(String from = '#132B43', String to = '#56B1F7') {
+      Scale.gradient(from, to)
+    }
+
+    /** Creates a legend guide spec. */
+    GuideSpec legend(Map<String, Object> params = [:]) { GuideSpec.legend(params) }
+
+    /** Creates a colorbar guide spec. */
+    GuideSpec colorbar(Map<String, Object> params = [:]) { GuideSpec.colorbar(params) }
+
+    /** Creates a colorsteps guide spec. */
+    GuideSpec colorsteps(Map<String, Object> params = [:]) { GuideSpec.colorsteps(params) }
+
+    /** Creates a none guide spec. */
+    GuideSpec none() { GuideSpec.none() }
 
     private Scale coerce(Object value, String axis) {
       if (value == null) {
@@ -984,25 +1059,25 @@ class PlotSpec {
     }
 
     /** Sets the color guide. */
-    void setColor(Object value) { guides.setSpec('color', coerceGuide(value, 'color')) }
+    void setColor(Object value) { guides.setSpec('color', GuideUtils.coerceGuide(value, 'color')) }
 
     /** Sets the fill guide. */
-    void setFill(Object value) { guides.setSpec('fill', coerceGuide(value, 'fill')) }
+    void setFill(Object value) { guides.setSpec('fill', GuideUtils.coerceGuide(value, 'fill')) }
 
     /** Sets the size guide. */
-    void setSize(Object value) { guides.setSpec('size', coerceGuide(value, 'size')) }
+    void setSize(Object value) { guides.setSpec('size', GuideUtils.coerceGuide(value, 'size')) }
 
     /** Sets the shape guide. */
-    void setShape(Object value) { guides.setSpec('shape', coerceGuide(value, 'shape')) }
+    void setShape(Object value) { guides.setSpec('shape', GuideUtils.coerceGuide(value, 'shape')) }
 
     /** Sets the alpha guide. */
-    void setAlpha(Object value) { guides.setSpec('alpha', coerceGuide(value, 'alpha')) }
+    void setAlpha(Object value) { guides.setSpec('alpha', GuideUtils.coerceGuide(value, 'alpha')) }
 
     /** Sets the x guide. */
-    void setX(Object value) { guides.setSpec('x', coerceGuide(value, 'x')) }
+    void setX(Object value) { guides.setSpec('x', GuideUtils.coerceGuide(value, 'x')) }
 
     /** Sets the y guide. */
-    void setY(Object value) { guides.setSpec('y', coerceGuide(value, 'y')) }
+    void setY(Object value) { guides.setSpec('y', GuideUtils.coerceGuide(value, 'y')) }
 
     /** Creates a legend guide spec. */
     GuideSpec legend(Map<String, Object> params = [:]) { GuideSpec.legend(params) }
@@ -1022,31 +1097,6 @@ class PlotSpec {
     /** Creates an axis_logticks guide spec. */
     GuideSpec axisLogticks(Map<String, Object> params = [:]) { GuideSpec.axisLogticks(params) }
 
-    private static GuideSpec coerceGuide(Object value, String aesthetic) {
-      if (value == null) {
-        return null
-      }
-      if (value instanceof GuideSpec) {
-        return value as GuideSpec
-      }
-      if (value instanceof GuideType) {
-        return new GuideSpec(value as GuideType)
-      }
-      if (value instanceof CharSequence) {
-        GuideType type = GuideType.fromString(value.toString())
-        if (type == null) {
-          throw new CharmValidationException("Unknown guide type '${value}' for '${aesthetic}'")
-        }
-        return new GuideSpec(type)
-      }
-      if (value == false || value == Boolean.FALSE) {
-        return GuideSpec.none()
-      }
-      throw new CharmValidationException(
-          "Unsupported guide value type '${value.getClass().name}' for '${aesthetic}'. " +
-          "Use GuideSpec, GuideType, String, or false."
-      )
-    }
   }
 
   /**
