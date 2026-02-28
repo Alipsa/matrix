@@ -9,10 +9,8 @@ import se.alipsa.matrix.gg.bridge.GgCharmCompiler
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZoneId
 
 import static org.junit.jupiter.api.Assertions.assertEquals
-import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -40,7 +38,7 @@ class DateTimeScaleBridgeTest {
     assertEquals('date', x.transform)
     assertEquals('1 day', x.params['dateBreaks'])
     assertEquals('yyyy-MM-dd', x.params['dateFormat'])
-    assertEquals(ZoneId.systemDefault().id, x.params['zoneId'])
+    assertNull(x.params['zoneId'])
   }
 
   @Test
@@ -99,8 +97,7 @@ class DateTimeScaleBridgeTest {
     assertEquals(['start', 'mid'], x.labels)
     assertEquals('6 hours', x.params['dateBreaks'])
     assertEquals('yyyy-MM-dd HH:mm', x.params['dateFormat'])
-    assertEquals(ZoneId.systemDefault().id, x.params['zoneId'])
-    assertNotNull(x.params['zoneId'])
+    assertNull(x.params['zoneId'])
   }
 
   @Test

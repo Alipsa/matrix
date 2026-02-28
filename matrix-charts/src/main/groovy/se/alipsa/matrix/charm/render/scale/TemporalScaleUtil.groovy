@@ -17,6 +17,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.TemporalAccessor
+import java.util.Locale
 
 /**
  * Shared temporal scale helpers for canonical conversion, break generation, and label formatting.

@@ -30,8 +30,8 @@ class ScaleXDatetime extends ScaleContinuous {
   /** Break interval specification (e.g., '1 hour', '30 minutes', '1 day') */
   String dateBreaks = null
 
-  /** Time zone used for LocalDateTime and Date conversions. */
-  String zoneId = ZoneId.systemDefault().id
+  /** Time zone used for LocalDateTime and Date conversions; null means use scale default. */
+  String zoneId = null
 
   /** Minimum datetime in the domain (as epoch millis) */
   protected long minEpochMillis = 0
