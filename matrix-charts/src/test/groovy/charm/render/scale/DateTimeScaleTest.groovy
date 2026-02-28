@@ -117,4 +117,21 @@ class DateTimeScaleTest {
       assertEquals(1, parsed.dayOfWeek.value, "Expected Monday-aligned break, got $parsed")
     }
   }
+
+  @Test
+  void testDatetimeDurationBreaksAlignToLocalZoneBoundaries() {
+    Scale datetime = Scale.datetime()
+    datetime.params['zoneId'] = 'Asia/Kolkata'
+    datetime.params['dateBreaks'] = '1 hour'
+    datetime.params['dateFormat'] = 'HH:mm'
+
+    ContinuousCharmScale scale = ScaleEngine.trainPositionalScale(
+        [Instant.parse('2025-01-01T00:10:00Z'), Instant.parse('2025-01-01T03:10:00Z')],
+        datetime,
+        0,
+        100
+    ) as ContinuousCharmScale
+
+    assertEquals(['06:00', '07:00', '08:00'], scale.tickLabels(10))
+  }
 }

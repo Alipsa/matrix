@@ -247,6 +247,9 @@ class TemporalScaleUtil {
     if (stepMillis <= 0) {
       return []
     }
+    if (transformId == DATETIME_TRANSFORM) {
+      return zonedDurationBreaks(min, max, interval, zoneId)
+    }
     return fixedBreaks(min, max, stepMillis as BigDecimal)
   }
 
@@ -309,6 +312,75 @@ class TemporalScaleUtil {
       guard++
     }
     result
+  }
+
+  private static List<BigDecimal> zonedDurationBreaks(
+      BigDecimal min,
+      BigDecimal max,
+      BreakInterval interval,
+      ZoneId zoneId
+  ) {
+    List<BigDecimal> result = []
+    ZonedDateTime minDateTime = Instant.ofEpochMilli(min.longValue()).atZone(zoneId)
+    ZonedDateTime maxDateTime = Instant.ofEpochMilli(max.longValue()).atZone(zoneId)
+    ZonedDateTime current = alignZonedDateTime(minDateTime, interval)
+
+    while (current.isBefore(minDateTime)) {
+      current = advanceZonedDateTime(current, interval)
+    }
+
+    int guard = 0
+    while (!current.isAfter(maxDateTime) && guard < MAX_BREAKS) {
+      result << (current.toInstant().toEpochMilli() as BigDecimal)
+      current = advanceZonedDateTime(current, interval)
+      guard++
+    }
+    result
+  }
+
+  private static ZonedDateTime alignZonedDateTime(ZonedDateTime value, BreakInterval interval) {
+    int amount = interval.amount <= 0 ? 1 : interval.amount
+    ZonedDateTime aligned = value
+    switch (interval.unit) {
+      case 'second' -> {
+        ZonedDateTime secondAligned = value.withNano(0)
+        if (amount <= 1) {
+          aligned = secondAligned
+        } else {
+          int second = secondAligned.second
+          aligned = secondAligned.withSecond((second.intdiv(amount)) * amount)
+        }
+      }
+      case 'minute' -> {
+        ZonedDateTime minuteAligned = value.withSecond(0).withNano(0)
+        if (amount <= 1) {
+          aligned = minuteAligned
+        } else {
+          int minute = minuteAligned.minute
+          aligned = minuteAligned.withMinute((minute.intdiv(amount)) * amount)
+        }
+      }
+      case 'hour' -> {
+        ZonedDateTime hourAligned = value.withMinute(0).withSecond(0).withNano(0)
+        if (amount <= 1) {
+          aligned = hourAligned
+        } else {
+          int hour = hourAligned.hour
+          aligned = hourAligned.withHour((hour.intdiv(amount)) * amount)
+        }
+      }
+      default -> aligned = value
+    }
+    aligned
+  }
+
+  private static ZonedDateTime advanceZonedDateTime(ZonedDateTime value, BreakInterval interval) {
+    switch (interval.unit) {
+      case 'second' -> value.plusSeconds(interval.amount)
+      case 'minute' -> value.plusMinutes(interval.amount)
+      case 'hour' -> value.plusHours(interval.amount)
+      default -> value.plus(interval.duration)
+    }
   }
 
   private static LocalDate alignDate(LocalDate value, BreakInterval interval) {
