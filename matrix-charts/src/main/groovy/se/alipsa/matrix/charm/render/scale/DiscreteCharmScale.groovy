@@ -27,16 +27,32 @@ class DiscreteCharmScale extends CharmScale {
 
   @Override
   List<Object> ticks(int count) {
+    List<String> configuredBreaks = resolveConfiguredBreaks()
+    if (!configuredBreaks.isEmpty()) {
+      List<String> filtered = configuredBreaks.findAll { String level -> levels.contains(level) }
+      if (!filtered.isEmpty()) {
+        return new ArrayList<Object>(filtered)
+      }
+    }
     new ArrayList<Object>(levels)
   }
 
   @Override
   List<String> tickLabels(int count) {
+    List<Object> tickValues = ticks(count)
     List<String> configured = scaleSpec?.labels
-    if (configured != null && configured.size() == levels.size()) {
-      return new ArrayList<>(configured)
+    if (configured != null && !configured.isEmpty()) {
+      List<String> labels = []
+      tickValues.eachWithIndex { Object tick, int idx ->
+        if (idx < configured.size() && configured[idx] != null) {
+          labels << configured[idx]
+          return
+        }
+        labels << tick?.toString()
+      }
+      return labels
     }
-    new ArrayList<>(levels)
+    tickValues.collect { Object tick -> tick?.toString() ?: '' }
   }
 
   @Override
@@ -52,5 +68,15 @@ class DiscreteCharmScale extends CharmScale {
   BigDecimal getBandwidth() {
     if (levels.isEmpty()) return 0
     (rangeEnd - rangeStart).abs() / levels.size()
+  }
+
+  private List<String> resolveConfiguredBreaks() {
+    List configured = scaleSpec?.breaks
+    if (configured == null || configured.isEmpty()) {
+      return []
+    }
+    configured.findResults { Object value ->
+      value?.toString()
+    } as List<String>
   }
 }

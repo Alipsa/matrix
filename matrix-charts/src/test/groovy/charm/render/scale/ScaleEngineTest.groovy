@@ -267,13 +267,13 @@ class ScaleEngineTest {
   void testDatetimeScaleTrainingWithTemporalValues() {
     CharmScale scale = ScaleEngine.trainPositionalScale(
         [LocalDateTime.of(2025, 1, 1, 12, 0), LocalDateTime.of(2025, 1, 2, 18, 0)],
-        Scale.date(),
+        Scale.datetime(),
         0,
         500
     )
     assertTrue(scale instanceof ContinuousCharmScale)
     ContinuousCharmScale continuous = scale as ContinuousCharmScale
-    assertEquals('date', continuous.transformStrategy.id())
+    assertEquals('datetime', continuous.transformStrategy.id())
     assertTrue(continuous.domainMax > continuous.domainMin)
   }
 

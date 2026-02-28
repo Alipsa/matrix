@@ -110,12 +110,35 @@ class ColorCharmScale extends CharmScale {
 
   @Override
   List<Object> ticks(int count) {
-    new ArrayList<Object>(levels)
+    List<Object> configured = resolveConfiguredBreaks()
+    if (!configured.isEmpty()) {
+      return configured
+    }
+    if (isDiscrete()) {
+      return new ArrayList<Object>(levels)
+    }
+    if (domainMin != null && domainMax != null) {
+      return [domainMin, domainMax] as List<Object>
+    }
+    []
   }
 
   @Override
   List<String> tickLabels(int count) {
-    new ArrayList<>(levels)
+    List<Object> tickValues = ticks(count)
+    List<String> configured = scaleSpec?.labels
+    if (configured != null && !configured.isEmpty()) {
+      List<String> labels = []
+      tickValues.eachWithIndex { Object tick, int idx ->
+        if (idx < configured.size() && configured[idx] != null) {
+          labels << configured[idx]
+          return
+        }
+        labels << defaultTickLabel(tick)
+      }
+      return labels
+    }
+    tickValues.collect { Object tick -> defaultTickLabel(tick) }
   }
 
   @Override
@@ -419,8 +442,13 @@ class ColorCharmScale extends CharmScale {
   }
 
   private void trainContinuousDomain(List<Object> dataValues) {
+    boolean temporal = TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)
     List<BigDecimal> numeric = dataValues
-        .collect { ValueConverter.asBigDecimal(it) }
+        .collect { Object value ->
+          temporal
+              ? TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+              : ValueConverter.asBigDecimal(value)
+        }
         .findAll { it != null } as List<BigDecimal>
     if (numeric.isEmpty()) {
       domainMin = 0.0
@@ -545,5 +573,37 @@ class ColorCharmScale extends CharmScale {
       colors << ColorSpaceUtil.hclToHex(hue, 100, 65)
     }
     colors
+  }
+
+  private List<Object> resolveConfiguredBreaks() {
+    List configured = scaleSpec?.breaks
+    if (configured == null || configured.isEmpty()) {
+      return []
+    }
+    if (TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)) {
+      return configured.findResults { Object value ->
+        TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+      } as List<Object>
+    }
+    if (isDiscrete()) {
+      List<String> configuredLevels = configured.findResults { Object value -> value?.toString() } as List<String>
+      List<String> filtered = configuredLevels.findAll { String value -> levels.contains(value) }
+      return new ArrayList<Object>(filtered)
+    }
+    configured.findResults { Object value -> ValueConverter.asBigDecimal(value) } as List<Object>
+  }
+
+  private String defaultTickLabel(Object tick) {
+    if (tick == null) {
+      return ''
+    }
+    if (TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)) {
+      BigDecimal numeric = ValueConverter.asBigDecimal(tick)
+      return TemporalScaleUtil.formatTick(numeric, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+    }
+    if (tick instanceof Number) {
+      return (tick as BigDecimal).stripTrailingZeros().toPlainString()
+    }
+    tick.toString()
   }
 }

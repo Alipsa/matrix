@@ -71,6 +71,15 @@ class Scale {
   }
 
   /**
+   * Creates a datetime transform scale.
+   *
+   * @return scale instance
+   */
+  static Scale datetime() {
+    transform('datetime')
+  }
+
+  /**
    * Creates a reverse transform scale.
    *
    * @return scale instance

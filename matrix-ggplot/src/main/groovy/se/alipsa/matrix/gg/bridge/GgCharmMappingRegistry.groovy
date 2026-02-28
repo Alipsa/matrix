@@ -222,9 +222,11 @@ class GgCharmMappingRegistry {
     if (scale instanceof ScaleXDate || scale instanceof ScaleYDate) {
       return CharmScale.date()
     }
-    if (scale instanceof ScaleXTime || scale instanceof ScaleYTime ||
-        scale instanceof ScaleXDatetime || scale instanceof ScaleYDatetime) {
-      return null
+    if (scale instanceof ScaleXDatetime || scale instanceof ScaleYDatetime) {
+      return CharmScale.datetime()
+    }
+    if (scale instanceof ScaleXTime || scale instanceof ScaleYTime) {
+      return CharmScale.time()
     }
     if (scale instanceof ScaleDiscrete) {
       return CharmScale.discrete()

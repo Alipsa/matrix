@@ -65,6 +65,7 @@ dependencies {
   //compileOnly project(':matrix-groovy-ext')
   api("se.alipsa.groovy:gsvg:1.0.0")
   api("se.alipsa.groovy:gsvg-export:1.0.0")
+  implementation libs.commons.text
 
   api 'se.alipsa:fxsvgimage:1.5.1'
   //api 'org.girod:fxsvgimage:1.4'

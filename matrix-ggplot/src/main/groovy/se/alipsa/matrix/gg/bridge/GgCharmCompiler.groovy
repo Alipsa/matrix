@@ -60,7 +60,14 @@ import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.scale.Scale as GgScale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
+import se.alipsa.matrix.gg.scale.ScaleXDate
+import se.alipsa.matrix.gg.scale.ScaleXDatetime
+import se.alipsa.matrix.gg.scale.ScaleXTime
+import se.alipsa.matrix.gg.scale.ScaleYDate
+import se.alipsa.matrix.gg.scale.ScaleYDatetime
+import se.alipsa.matrix.gg.scale.ScaleYTime
 import se.alipsa.matrix.gg.theme.Theme as GgTheme
+import java.time.ZoneId
 import java.util.Locale
 
 /**
@@ -717,16 +724,59 @@ class GgCharmCompiler {
     if (ggScale.guide != null) {
       charmScale.params['guide'] = normalizeGuide(ggScale.guide)
     }
+    applyTemporalScaleParams(charmScale, ggScale)
+  }
+
+  private static void applyTemporalScaleParams(CharmScale charmScale, GgScale ggScale) {
+    if (ggScale instanceof ScaleXDate || ggScale instanceof ScaleYDate) {
+      ScaleXDate dateScale = ggScale as ScaleXDate
+      if (dateScale.dateFormat) {
+        charmScale.params['dateFormat'] = dateScale.dateFormat
+      }
+      if (dateScale.dateBreaks) {
+        charmScale.params['dateBreaks'] = dateScale.dateBreaks
+      }
+    }
+    if (ggScale instanceof ScaleXDatetime || ggScale instanceof ScaleYDatetime) {
+      ScaleXDatetime datetimeScale = ggScale as ScaleXDatetime
+      if (datetimeScale.dateFormat) {
+        charmScale.params['dateFormat'] = datetimeScale.dateFormat
+      }
+      if (datetimeScale.dateBreaks) {
+        charmScale.params['dateBreaks'] = datetimeScale.dateBreaks
+      }
+    }
+    if (ggScale instanceof ScaleXTime || ggScale instanceof ScaleYTime) {
+      ScaleXTime timeScale = ggScale as ScaleXTime
+      if (timeScale.timeFormat) {
+        charmScale.params['timeFormat'] = timeScale.timeFormat
+      }
+      if (timeScale.timeBreaks) {
+        charmScale.params['timeBreaks'] = timeScale.timeBreaks
+      }
+    }
+    if (isTemporalGgScale(ggScale)) {
+      charmScale.params['zoneId'] = ZoneId.systemDefault().id
+    }
+  }
+
+  private static boolean isTemporalGgScale(GgScale ggScale) {
+    ggScale instanceof ScaleXDate || ggScale instanceof ScaleYDate ||
+        ggScale instanceof ScaleXTime || ggScale instanceof ScaleYTime ||
+        ggScale instanceof ScaleXDatetime || ggScale instanceof ScaleYDatetime
   }
 
   private static CharmScale fallbackScale(GgScale scale, String aesthetic) {
     if (aesthetic == 'x' || aesthetic == 'y') {
       String simple = scale?.class?.simpleName?.toLowerCase(Locale.ROOT) ?: ''
+      if (simple.contains('datetime')) {
+        return CharmScale.datetime()
+      }
+      if (simple.contains('time')) {
+        return CharmScale.time()
+      }
       if (simple.contains('date')) {
         return CharmScale.date()
-      }
-      if (simple.contains('time') || simple.contains('datetime')) {
-        return CharmScale.time()
       }
       return scale instanceof ScaleDiscrete ? CharmScale.discrete() : CharmScale.continuous()
     }

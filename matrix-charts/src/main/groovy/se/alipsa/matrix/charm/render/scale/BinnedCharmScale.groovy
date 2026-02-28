@@ -26,10 +26,19 @@ class BinnedCharmScale extends CharmScale {
 
   @Override
   BigDecimal transform(Object value) {
-    if (value == null || binBoundaries.isEmpty()) return null
+    if (value == null || binBoundaries.isEmpty()) {
+      return null
+    }
 
-    BigDecimal numeric = ValueConverter.asBigDecimal(value)
-    if (numeric == null) return null
+    BigDecimal numeric
+    if (TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)) {
+      numeric = TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+    } else {
+      numeric = ValueConverter.asBigDecimal(value)
+    }
+    if (numeric == null) {
+      return null
+    }
 
     BigDecimal center = findBinCenter(numeric)
     if (center == null) return null
@@ -39,13 +48,30 @@ class BinnedCharmScale extends CharmScale {
 
   @Override
   List<Object> ticks(int count) {
+    List<Object> configured = resolveConfiguredBreaks()
+    if (!configured.isEmpty()) {
+      return configured
+    }
     new ArrayList<Object>(binBoundaries)
   }
 
   @Override
   List<String> tickLabels(int count) {
-    binBoundaries.collect { BigDecimal b ->
-      b.stripTrailingZeros().toPlainString()
+    List<Object> tickValues = ticks(count)
+    List<String> configured = scaleSpec?.labels
+    if (configured != null && !configured.isEmpty()) {
+      List<String> labels = []
+      tickValues.eachWithIndex { Object tick, int idx ->
+        if (idx < configured.size() && configured[idx] != null) {
+          labels << configured[idx]
+          return
+        }
+        labels << defaultTickLabel(tick)
+      }
+      return labels
+    }
+    tickValues.collect { Object tick ->
+      defaultTickLabel(tick)
     }
   }
 
@@ -77,5 +103,39 @@ class BinnedCharmScale extends CharmScale {
       return binCenters.isEmpty() ? binBoundaries.last() : binCenters.last()
     }
     null
+  }
+
+  private List<Object> resolveConfiguredBreaks() {
+    List configured = scaleSpec?.breaks
+    if (configured == null || configured.isEmpty()) {
+      return []
+    }
+    if (TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)) {
+      return configured.findResults { Object value ->
+        TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+      } as List<Object>
+    }
+    configured.findResults { Object value ->
+      ValueConverter.asBigDecimal(value)
+    } as List<Object>
+  }
+
+  private String defaultTickLabel(Object tick) {
+    if (tick == null) {
+      return ''
+    }
+    if (TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)) {
+      BigDecimal numeric = ValueConverter.asBigDecimal(tick)
+      return TemporalScaleUtil.formatTick(
+          numeric,
+          scaleSpec?.transformStrategy,
+          scaleSpec?.params ?: [:]
+      )
+    }
+    BigDecimal numeric = ValueConverter.asBigDecimal(tick)
+    if (numeric == null) {
+      return tick.toString()
+    }
+    numeric.stripTrailingZeros().toPlainString()
   }
 }
