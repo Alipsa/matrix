@@ -108,6 +108,17 @@ class ScaleBreakLabelRuntimeTest {
   }
 
   @Test
+  void testDiscreteColorScaleLabelsWithoutBreaksUseIndexFallback() {
+    Scale spec = Scale.discrete()
+    spec.labels = ['Alpha', 'Beta']
+
+    ColorCharmScale scale = ScaleEngine.trainColorScale(['alpha', 'beta', 'gamma'], spec)
+
+    assertEquals(['alpha', 'beta', 'gamma'], scale.ticks(5))
+    assertEquals(['Alpha', 'Beta', 'gamma'], scale.tickLabels(5))
+  }
+
+  @Test
   void testContinuousTemporalScaleFallbackLabelsUseTemporalFormatting() {
     Scale spec = Scale.date()
     spec.breaks = [

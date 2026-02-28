@@ -130,11 +130,22 @@ class ColorCharmScale extends CharmScale {
     if (configured != null && !configured.isEmpty()) {
       if (isDiscrete()) {
         List<String> configuredBreaks = resolveConfiguredDiscreteBreaks()
-        Map<String, String> labelByBreak = ScaleUtils.labelMapForConfiguredBreaks(configuredBreaks, configured)
-        return tickValues.collect { Object tick ->
-          String mapped = labelByBreak[tick?.toString()]
-          mapped != null ? mapped : defaultTickLabel(tick)
+        if (!configuredBreaks.isEmpty()) {
+          Map<String, String> labelByBreak = ScaleUtils.labelMapForConfiguredBreaks(configuredBreaks, configured)
+          return tickValues.collect { Object tick ->
+            String mapped = labelByBreak[tick?.toString()]
+            mapped != null ? mapped : defaultTickLabel(tick)
+          }
         }
+        List<String> labels = []
+        tickValues.eachWithIndex { Object tick, int idx ->
+          if (idx < configured.size() && configured[idx] != null) {
+            labels << configured[idx]
+            return
+          }
+          labels << defaultTickLabel(tick)
+        }
+        return labels
       }
       List<String> labels = []
       tickValues.eachWithIndex { Object tick, int idx ->
