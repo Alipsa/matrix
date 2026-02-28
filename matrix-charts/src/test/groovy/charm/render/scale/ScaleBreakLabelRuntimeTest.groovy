@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.render.scale.ScaleEngine
 import java.time.LocalDate
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class ScaleBreakLabelRuntimeTest {
@@ -136,5 +137,47 @@ class ScaleBreakLabelRuntimeTest {
     ) as ContinuousCharmScale
 
     assertEquals(['start', '2025-01-02', '2025-01-03'], scale.tickLabels(5))
+  }
+
+  @Test
+  void testContinuousScaleThrowsOnUncoercibleConfiguredBreak() {
+    Scale spec = Scale.continuous()
+    spec.breaks = [0, 'bad', 100]
+    spec.labels = ['low', 'mid', 'high']
+
+    ContinuousCharmScale scale = ScaleEngine.trainPositionalScale([0, 25, 50, 100], spec, 0, 200) as ContinuousCharmScale
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      scale.ticks(5)
+    }
+    assertTrue(ex.message.contains('index 1'))
+  }
+
+  @Test
+  void testBinnedScaleThrowsOnUncoercibleConfiguredBreak() {
+    Scale spec = Scale.binned()
+    spec.breaks = [0, 'bad', 20]
+    spec.labels = ['start', 'bad', 'end']
+
+    BinnedCharmScale scale = ScaleEngine.trainPositionalScale((0..20).collect { it }, spec, 0, 100) as BinnedCharmScale
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      scale.ticks(5)
+    }
+    assertTrue(ex.message.contains('index 1'))
+  }
+
+  @Test
+  void testContinuousColorScaleThrowsOnUncoercibleConfiguredBreak() {
+    Scale spec = Scale.gradient('#000000', '#ffffff')
+    spec.breaks = [10, 'bad', 20]
+    spec.labels = ['ten', 'bad', 'twenty']
+
+    ColorCharmScale scale = ScaleEngine.trainColorScale([0, 10, 20, 30], spec)
+
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException) {
+      scale.ticks(5)
+    }
+    assertTrue(ex.message.contains('index 1'))
   }
 }

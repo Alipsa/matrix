@@ -111,13 +111,19 @@ class BinnedCharmScale extends CharmScale {
       return []
     }
     if (TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)) {
-      return configured.findResults { Object value ->
-        TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
-      } as List<Object>
+      return ScaleUtils.coerceConfiguredBreaksOrThrow(
+          configured,
+          { Object value ->
+            TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+          },
+          'temporal'
+      )
     }
-    configured.findResults { Object value ->
-      ValueConverter.asBigDecimal(value)
-    } as List<Object>
+    ScaleUtils.coerceConfiguredBreaksOrThrow(
+        configured,
+        { Object value -> ValueConverter.asBigDecimal(value) },
+        'numeric'
+    )
   }
 
   private String defaultTickLabel(Object tick) {

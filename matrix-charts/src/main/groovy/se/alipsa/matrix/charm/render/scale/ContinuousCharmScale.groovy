@@ -250,13 +250,17 @@ class ContinuousCharmScale extends CharmScale {
       return []
     }
     if (TemporalScaleUtil.isTemporalTransform(transformStrategy)) {
-      return configured.findResults { Object value ->
-        TemporalScaleUtil.toCanonicalValue(value, transformStrategy, scaleSpec?.params ?: [:])
-      } as List<Object>
+      return ScaleUtils.coerceConfiguredBreaksOrThrow(
+          configured,
+          { Object value -> TemporalScaleUtil.toCanonicalValue(value, transformStrategy, scaleSpec?.params ?: [:]) },
+          'temporal'
+      )
     }
-    configured.findResults { Object value ->
-      ValueConverter.asBigDecimal(value)
-    } as List<Object>
+    ScaleUtils.coerceConfiguredBreaksOrThrow(
+        configured,
+        { Object value -> ValueConverter.asBigDecimal(value) },
+        'numeric'
+    )
   }
 
   private String resolveIntervalSpec(String temporalId) {

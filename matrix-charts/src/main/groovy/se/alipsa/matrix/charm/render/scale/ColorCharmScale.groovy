@@ -600,16 +600,24 @@ class ColorCharmScale extends CharmScale {
       return []
     }
     if (TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)) {
-      return configured.findResults { Object value ->
-        TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
-      } as List<Object>
+      return ScaleUtils.coerceConfiguredBreaksOrThrow(
+          configured,
+          { Object value ->
+            TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+          },
+          'temporal'
+      )
     }
     if (isDiscrete()) {
       List<String> configuredLevels = resolveConfiguredDiscreteBreaks()
       List<String> filtered = configuredLevels.findAll { String value -> levels.contains(value) }
       return new ArrayList<Object>(filtered)
     }
-    configured.findResults { Object value -> ValueConverter.asBigDecimal(value) } as List<Object>
+    ScaleUtils.coerceConfiguredBreaksOrThrow(
+        configured,
+        { Object value -> ValueConverter.asBigDecimal(value) },
+        'numeric'
+    )
   }
 
   private List<String> resolveConfiguredDiscreteBreaks() {

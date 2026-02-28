@@ -164,6 +164,35 @@ class ScaleUtils {
   }
 
   /**
+   * Coerce configured breaks using a converter, failing fast on uncoercible values.
+   *
+   * @param configured configured breaks
+   * @param converter value converter closure
+   * @param context context label used in exception messages
+   * @return coerced breaks
+   */
+  static List<Object> coerceConfiguredBreaksOrThrow(
+      List configured,
+      Closure<Object> converter,
+      String context
+  ) {
+    if (configured == null || configured.isEmpty()) {
+      return []
+    }
+    List<Object> resolved = []
+    configured.eachWithIndex { Object value, int idx ->
+      Object converted = converter.call(value)
+      if (converted == null) {
+        throw new IllegalArgumentException(
+            "Unable to coerce configured ${context} break at index ${idx}: ${value}"
+        )
+      }
+      resolved << converted
+    }
+    resolved
+  }
+
+  /**
    * Find a "nice" number approximately equal to x for axis labeling.
    * Based on Wilkinson's algorithm.
    *

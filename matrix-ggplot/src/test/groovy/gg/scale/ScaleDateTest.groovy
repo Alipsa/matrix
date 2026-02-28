@@ -277,6 +277,23 @@ class ScaleDateTest {
   }
 
   @Test
+  void testDateScaleRespectsTimezoneForBreaksAndInverse() {
+    ScaleXDate scale = new ScaleXDate(zoneId: 'Asia/Tokyo')
+    scale.range = [0, 100]
+
+    LocalDateTime start = LocalDateTime.of(2024, 1, 1, 0, 30)
+    LocalDateTime end = LocalDateTime.of(2024, 1, 2, 0, 30)
+    scale.train([start, end])
+
+    List breaks = scale.getComputedBreaks()
+    assertFalse(breaks.isEmpty())
+    assertEquals(LocalDate.of(2024, 1, 1), breaks.first())
+
+    double transformed = scale.transform(start) as double
+    assertEquals(LocalDate.of(2024, 1, 1), scale.inverse(transformed))
+  }
+
+  @Test
   void testDatetimeScaleTraining() {
     ScaleXDatetime scale = new ScaleXDatetime()
 
