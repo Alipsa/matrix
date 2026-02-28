@@ -183,7 +183,7 @@ class ScaleEngine {
       BigDecimal rangeStart, BigDecimal rangeEnd) {
 
     List<BigDecimal> numeric = values
-        .collect { ValueConverter.asBigDecimal(it) }
+        .collect { Object value -> coerceScaleValue(value, scaleSpec) }
         .findAll { it != null } as List<BigDecimal>
 
     // Apply transform to find domain in transformed space
@@ -206,8 +206,23 @@ class ScaleEngine {
     // Apply limits from params
     List<Number> limits = scaleSpec.params['limits'] as List<Number>
     if (limits != null && limits.size() >= 2) {
-      if (limits[0] != null) min = limits[0] as BigDecimal
-      if (limits[1] != null) max = limits[1] as BigDecimal
+      BigDecimal lower = coerceScaleValue(limits[0], scaleSpec)
+      BigDecimal upper = coerceScaleValue(limits[1], scaleSpec)
+      if (scaleSpec.transformStrategy != null) {
+        lower = scaleSpec.transformStrategy.apply(lower)
+        upper = scaleSpec.transformStrategy.apply(upper)
+      }
+      if (lower != null || upper != null) {
+        BigDecimal candidateMin = lower != null ? lower : min
+        BigDecimal candidateMax = upper != null ? upper : max
+        if (candidateMin <= candidateMax) {
+          min = candidateMin
+          max = candidateMax
+        } else {
+          min = candidateMax
+          max = candidateMin
+        }
+      }
     }
 
     // Apply expansion from params
@@ -255,7 +270,7 @@ class ScaleEngine {
       List<Object> values, Scale scaleSpec,
       BigDecimal rangeStart, BigDecimal rangeEnd) {
 
-    List<BigDecimal> numeric = coerceToNumeric(values)
+    List<BigDecimal> numeric = coerceToNumeric(values, scaleSpec)
     if (numeric.isEmpty()) {
       return new BinnedCharmScale(
           scaleSpec: scaleSpec,
@@ -325,7 +340,7 @@ class ScaleEngine {
       return trainBinnedScale(values, scaleSpec, rangeStart, rangeEnd)
     }
 
-    List<BigDecimal> numeric = coerceToNumeric(values)
+    List<BigDecimal> numeric = coerceToNumeric(values, scaleSpec)
     if (numeric.isEmpty()) {
       return null
     }
@@ -390,7 +405,7 @@ class ScaleEngine {
       return trainBinnedScale(values, scaleSpec, rangeStart, rangeEnd)
     }
 
-    List<BigDecimal> numeric = coerceToNumeric(values)
+    List<BigDecimal> numeric = coerceToNumeric(values, scaleSpec)
     if (numeric.isEmpty()) {
       return null
     }
@@ -417,10 +432,17 @@ class ScaleEngine {
   }
 
   /** Coerces a list of values to BigDecimal, filtering out nulls and non-numeric values. */
-  private static List<BigDecimal> coerceToNumeric(List<Object> values) {
+  private static List<BigDecimal> coerceToNumeric(List<Object> values, Scale scaleSpec = null) {
     values
-        .collect { ValueConverter.asBigDecimal(it) }
+        .collect { Object value -> coerceScaleValue(value, scaleSpec) }
         .findAll { it != null } as List<BigDecimal>
+  }
+
+  private static BigDecimal coerceScaleValue(Object value, Scale scaleSpec) {
+    if (TemporalScaleUtil.isTemporalTransform(scaleSpec?.transformStrategy)) {
+      return TemporalScaleUtil.toCanonicalValue(value, scaleSpec?.transformStrategy, scaleSpec?.params ?: [:])
+    }
+    ValueConverter.asBigDecimal(value)
   }
 
   /** Returns max adjusted to avoid zero-width domain (which would cause division by zero). */

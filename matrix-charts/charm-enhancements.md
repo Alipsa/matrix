@@ -48,7 +48,7 @@ Prioritized plan addressing common ggplot2 pain points where Charm can improve o
 
 **Priority:** Low | **Effort:** Small
 
-### 1.1 [ ] Add "Differences from ggplot2" section to `charm.md`
+### 1.1 [x] Add "Differences from ggplot2" section to `charm.md`
 
 **File:** `matrix-charts/docs/charm.md`
 
@@ -57,7 +57,7 @@ Document and exemplify:
 - `xlim`/`ylim` clamp values to boundaries instead of dropping rows.
 - Legend and guide APIs available in Charm core.
 
-### 1.2 [ ] Add a "Current limitations" note for date/time ergonomics
+### 1.2 [x] Add a "Current limitations" note for date/time ergonomics
 
 **File:** `matrix-charts/docs/charm.md`
 
@@ -67,7 +67,8 @@ Document that:
 
 ### Verification
 
-No code changes — documentation only.
+Verified in:
+- `matrix-charts/docs/charm.md`
 
 ---
 
@@ -75,7 +76,7 @@ No code changes — documentation only.
 
 **Priority:** High | **Effort:** Medium
 
-### 2.0 [ ] Normalize temporal values to canonical epoch-millis unit in Charm runtime
+### 2.0 [x] Normalize temporal values to canonical epoch-millis unit in Charm runtime
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/ScaleEngine.groovy`
@@ -89,14 +90,14 @@ Use UTC/GMT by default, with optional per-scale timezone override via `Scale.par
 For pure `time` transforms, normalize to milliseconds since midnight UTC.
 For calendar-unit stepping (`day/week/month/year`), iterate in timezone-aware temporal types (`ZonedDateTime`/`LocalDate`) and convert each generated breakpoint to epoch millis; do not advance calendar intervals via fixed millisecond deltas.
 
-### 2.0.1 [ ] Add explicit `datetime` transform support in Charm core
+### 2.0.1 [x] Add explicit `datetime` transform support in Charm core
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/ScaleTransform.groovy` (add `DatetimeScaleTransform` + registry key)
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/Scale.groovy` (add `datetime()` factory)
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy` (`ScaleDsl` convenience for `datetime()`)
 
-### 2.1 [ ] Honor configured `Scale.breaks` and `Scale.labels` in runtime scales
+### 2.1 [x] Honor configured `Scale.breaks` and `Scale.labels` in runtime scales
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/ContinuousCharmScale.groovy`
@@ -106,7 +107,7 @@ For calendar-unit stepping (`day/week/month/year`), iterate in timezone-aware te
 
 Use configured breaks/labels when present, with sane fallbacks when absent.
 
-### 2.2 [ ] Add date/time/datetime-aware axis label formatting in Charm core
+### 2.2 [x] Add date/time/datetime-aware axis label formatting in Charm core
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/AxisRenderer.groovy`
@@ -115,7 +116,7 @@ Use configured breaks/labels when present, with sane fallbacks when absent.
 When transform strategy is `date`, `time`, or `datetime`, format ticks using scale params (for example `dateFormat`/`timeFormat`) and sensible defaults.
 Formatting should use UTC/GMT unless a `zoneId` override is provided on the scale.
 
-### 2.3 [ ] Add simple string break spec support for date/time/datetime scales
+### 2.3 [x] Add simple string break spec support for date/time/datetime scales
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/scale/ContinuousCharmScale.groovy`
@@ -128,7 +129,7 @@ Support strings such as:
 
 **Parsing approach:** Parse and resolve string break specs at runtime inside `ContinuousCharmScale` (not at DSL build time, so that the trained domain min/max is already available). Use `java.time.Period` for calendar-unit specs (`day`, `week`, `month`, `year`) and `java.time.Duration` for fixed-duration specs (`second`, `minute`, `hour`). For calendar units, step with temporal arithmetic in the configured/default zone; for fixed units, step with duration arithmetic. Store raw interval specs in `Scale.params` (for example `dateBreaks`/`timeBreaks`), not in `Scale.breaks`. Precedence: explicit `Scale.breaks` list wins; interval specs are fallback when `breaks` is unset.
 
-### 2.4 [ ] Audit existing scale-param propagation in bridge, then add date/time/datetime params and explicit mapping
+### 2.4 [x] Audit existing scale-param propagation in bridge, then add date/time/datetime params and explicit mapping
 
 **File:**
 - `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/bridge/GgCharmCompiler.groovy`
@@ -151,7 +152,7 @@ Also update gg→Charm scale mapping logic so datetime is explicit (not inferred
   - `ScaleXDatetime`/`ScaleYDatetime` → `CharmScale.datetime()`
 - In `GgCharmCompiler.fallbackScale()`, check `datetime`/`time` before `date` for class-name fallback safety.
 
-### 2.5 [ ] Add focused tests for date/time breaks, labels, and gg-bridge propagation
+### 2.5 [x] Add focused tests for date/time breaks, labels, and gg-bridge propagation
 
 **Files:**
 - `matrix-charts/src/test/groovy/charm/render/scale/DateTimeScaleTest.groovy` (new)
@@ -170,6 +171,7 @@ Include assertions for:
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
 ./gradlew :matrix-ggplot:test -Pheadless=true
+./gradlew test
 ```
 
 ---
@@ -300,19 +302,19 @@ Add examples showing `value()`, `both()`, and custom closure labellers.
 
 **Priority:** High | **Effort:** Medium
 
-### 5.0 [ ] Add explicit `commons-text` dependency for string distance
+### 5.0 [x] Add explicit `commons-text` dependency for string distance
 
 **File:** `matrix-charts/build.gradle`
 
 Add `org.apache.commons:commons-text` explicitly and use `LevenshteinDistance` directly in validation error suggestions. Do not rely on transitive availability and do not create a custom string-distance utility.
 
-### 5.1 [ ] Add "did you mean?" suggestions for unknown columns
+### 5.1 [x] Add "did you mean?" suggestions for unknown columns
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy`
 - `matrix-charts/build.gradle` (dependency added in 5.0)
 
-### 5.2 [ ] Add contextual hints for common semantic mistakes
+### 5.2 [x] Add contextual hints for common semantic mistakes
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy`
 
@@ -321,7 +323,7 @@ Examples:
 - `geomBar()` with explicit `y` mapping (recommend `geomCol()`).
 - Literal color accidentally placed in mapping instead of layer param.
 
-### 5.3 [ ] Add tests for improved error messages
+### 5.3 [x] Add tests for improved error messages
 
 **File:** `matrix-charts/src/test/groovy/charm/core/ErrorMessageTest.groovy` (new)
 
@@ -329,6 +331,7 @@ Examples:
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
+./gradlew test
 ```
 
 ---

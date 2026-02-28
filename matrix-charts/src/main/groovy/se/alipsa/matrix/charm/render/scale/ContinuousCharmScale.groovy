@@ -38,14 +38,25 @@ class ContinuousCharmScale extends CharmScale {
 
   @Override
   BigDecimal transform(Object value) {
-    if (value == null) return null
+    if (value == null) {
+      return null
+    }
 
-    BigDecimal numeric = ValueConverter.asBigDecimal(value)
-    if (numeric == null) return null
+    BigDecimal numeric
+    if (TemporalScaleUtil.isTemporalTransform(transformStrategy)) {
+      numeric = TemporalScaleUtil.toCanonicalValue(value, transformStrategy, scaleSpec?.params ?: [:])
+    } else {
+      numeric = ValueConverter.asBigDecimal(value)
+    }
+    if (numeric == null) {
+      return null
+    }
 
     if (transformStrategy != null) {
       numeric = transformStrategy.apply(numeric)
-      if (numeric == null) return null
+      if (numeric == null) {
+        return null
+      }
     }
 
     if (domainMax == domainMin) {
@@ -61,8 +72,28 @@ class ContinuousCharmScale extends CharmScale {
 
   @Override
   List<Object> ticks(int count) {
-    if (domainMin == null || domainMax == null) return []
+    if (domainMin == null || domainMax == null) {
+      return []
+    }
+
+    List<Object> configured = resolveConfiguredBreaks()
+    if (!configured.isEmpty()) {
+      return configured
+    }
+
     int n = count <= 1 ? 2 : count
+
+    String temporalId = TemporalScaleUtil.normalizeTransformId(transformStrategy?.id())
+    if (TemporalScaleUtil.isTemporalTransformId(temporalId)) {
+      String intervalSpec = resolveIntervalSpec(temporalId)
+      List<BigDecimal> temporalBreaks = intervalSpec
+          ? TemporalScaleUtil.breaksFromSpec(temporalId, intervalSpec, domainMin, domainMax, scaleSpec?.params ?: [:])
+          : TemporalScaleUtil.autoBreaks(temporalId, domainMin, domainMax, n, scaleSpec?.params ?: [:])
+      if (temporalBreaks.isEmpty()) {
+        temporalBreaks = TemporalScaleUtil.autoBreaks(temporalId, domainMin, domainMax, n, scaleSpec?.params ?: [:])
+      }
+      return temporalBreaks.collect { BigDecimal value -> value } as List<Object>
+    }
 
     if (transformStrategy instanceof Log10ScaleTransform) {
       return generateLog10Ticks() as List<Object>
@@ -78,6 +109,32 @@ class ContinuousCharmScale extends CharmScale {
   @Override
   List<String> tickLabels(int count) {
     List<Object> tickValues = ticks(count)
+    String temporalId = TemporalScaleUtil.normalizeTransformId(transformStrategy?.id())
+    boolean temporal = TemporalScaleUtil.isTemporalTransformId(temporalId)
+    List<String> configured = scaleSpec?.labels
+    if (configured != null && !configured.isEmpty()) {
+      List<String> labels = []
+      tickValues.eachWithIndex { Object tick, int idx ->
+        if (idx < configured.size() && configured[idx] != null) {
+          labels << configured[idx]
+          return
+        }
+        if (temporal) {
+          BigDecimal numeric = ValueConverter.asBigDecimal(tick)
+          labels << TemporalScaleUtil.formatTick(numeric, temporalId, scaleSpec?.params ?: [:])
+        } else {
+          labels << defaultTickLabel(tick)
+        }
+      }
+      return labels
+    }
+
+    if (temporal) {
+      return tickValues.collect { Object tick ->
+        BigDecimal numeric = ValueConverter.asBigDecimal(tick)
+        TemporalScaleUtil.formatTick(numeric, temporalId, scaleSpec?.params ?: [:])
+      }
+    }
 
     if (transformStrategy instanceof Log10ScaleTransform) {
       return tickValues.collect { Object tick ->
@@ -85,9 +142,7 @@ class ContinuousCharmScale extends CharmScale {
       }
     }
 
-    tickValues.collect { Object tick ->
-      formatNumber(tick as Number)
-    }
+    tickValues.collect { Object tick -> defaultTickLabel(tick) }
   }
 
   @Override
@@ -187,5 +242,44 @@ class ContinuousCharmScale extends CharmScale {
       return String.format('%.2g', bd as double)
     }
     String.format('%.0f', bd as double)
+  }
+
+  private List<Object> resolveConfiguredBreaks() {
+    List configured = scaleSpec?.breaks
+    if (configured == null || configured.isEmpty()) {
+      return []
+    }
+    if (TemporalScaleUtil.isTemporalTransform(transformStrategy)) {
+      return ScaleUtils.coerceConfiguredBreaksOrThrow(
+          configured,
+          { Object value -> TemporalScaleUtil.toCanonicalValue(value, transformStrategy, scaleSpec?.params ?: [:]) },
+          'temporal'
+      )
+    }
+    ScaleUtils.coerceConfiguredBreaksOrThrow(
+        configured,
+        { Object value -> ValueConverter.asBigDecimal(value) },
+        'numeric'
+    )
+  }
+
+  private String resolveIntervalSpec(String temporalId) {
+    Map<String, Object> params = scaleSpec?.params ?: [:]
+    String dateBreaks = params['dateBreaks']?.toString()
+    String timeBreaks = params['timeBreaks']?.toString()
+    if (temporalId == 'time') {
+      return timeBreaks ?: dateBreaks
+    }
+    if (temporalId == 'datetime') {
+      return dateBreaks ?: timeBreaks
+    }
+    dateBreaks
+  }
+
+  private static String defaultTickLabel(Object tick) {
+    if (tick instanceof Number) {
+      return formatNumber(tick as Number)
+    }
+    tick?.toString() ?: ''
   }
 }

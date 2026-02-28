@@ -138,6 +138,61 @@ class ScaleUtils {
   }
 
   /**
+   * Build a stable break-to-label map where label indices correspond to original configured break indices.
+   *
+   * <p>When breaks are filtered later (for example, to trained levels), this mapping preserves
+   * break/label pairing and avoids index drift.</p>
+   *
+   * @param breaks configured break values as strings
+   * @param labels configured labels
+   * @return map of break string to configured label
+   */
+  static Map<String, String> labelMapForConfiguredBreaks(List<String> breaks, List<String> labels) {
+    if (breaks == null || breaks.isEmpty() || labels == null || labels.isEmpty()) {
+      return [:]
+    }
+    Map<String, String> labelByBreak = [:]
+    breaks.eachWithIndex { String breakValue, int idx ->
+      if (breakValue == null || labelByBreak.containsKey(breakValue)) {
+        return
+      }
+      if (idx < labels.size() && labels[idx] != null) {
+        labelByBreak[breakValue] = labels[idx]
+      }
+    }
+    labelByBreak
+  }
+
+  /**
+   * Coerce configured breaks using a converter, failing fast on uncoercible values.
+   *
+   * @param configured configured breaks
+   * @param converter value converter closure
+   * @param context context label used in exception messages
+   * @return coerced breaks
+   */
+  static List<Object> coerceConfiguredBreaksOrThrow(
+      List configured,
+      Closure<Object> converter,
+      String context
+  ) {
+    if (configured == null || configured.isEmpty()) {
+      return []
+    }
+    List<Object> resolved = []
+    configured.eachWithIndex { Object value, int idx ->
+      Object converted = converter.call(value)
+      if (converted == null) {
+        throw new IllegalArgumentException(
+            "Unable to coerce configured ${context} break at index ${idx}: ${value}"
+        )
+      }
+      resolved << converted
+    }
+    resolved
+  }
+
+  /**
    * Find a "nice" number approximately equal to x for axis labeling.
    * Based on Wilkinson's algorithm.
    *

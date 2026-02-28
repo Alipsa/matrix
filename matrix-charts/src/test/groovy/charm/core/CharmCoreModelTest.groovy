@@ -220,14 +220,14 @@ class CharmCoreModelTest {
       scale {
         x = log10()
         y = reverse()
-        color = date()
+        color = datetime()
         fill = custom('times2', { BigDecimal v -> v * 2 }, { BigDecimal v -> v / 2 })
       }
     }
 
     assertEquals('log10', spec.scale.x.transform)
     assertEquals('reverse', spec.scale.y.transform)
-    assertEquals('date', spec.scale.color.transform)
+    assertEquals('datetime', spec.scale.color.transform)
     assertEquals('times2', spec.scale.fill.transform)
     assertTrue(spec.scale.x.transformStrategy instanceof Log10ScaleTransform)
     assertTrue(spec.scale.y.transformStrategy instanceof ReverseScaleTransform)

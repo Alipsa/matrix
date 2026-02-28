@@ -137,6 +137,25 @@ class TimeScaleTransform extends BaseScaleTransform {
 }
 
 @CompileStatic
+class DatetimeScaleTransform extends BaseScaleTransform {
+
+  @Override
+  String id() {
+    'datetime'
+  }
+
+  @Override
+  BigDecimal apply(BigDecimal value) {
+    value
+  }
+
+  @Override
+  BigDecimal invert(BigDecimal value) {
+    value
+  }
+}
+
+@CompileStatic
 class CustomScaleTransform extends BaseScaleTransform {
 
   private final String transformId
@@ -196,7 +215,8 @@ class ScaleTransforms {
       sqrt   : new SqrtScaleTransform(),
       reverse: new ReverseScaleTransform(),
       date   : new DateScaleTransform(),
-      time   : new TimeScaleTransform()
+      time   : new TimeScaleTransform(),
+      datetime: new DatetimeScaleTransform()
   ]
 
   /**

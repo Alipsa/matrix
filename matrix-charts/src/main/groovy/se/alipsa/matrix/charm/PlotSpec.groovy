@@ -1,13 +1,17 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileStatic
+import org.apache.commons.text.similarity.LevenshteinDistance
 import se.alipsa.matrix.core.Matrix
+import java.util.Locale
 
 /**
  * Mutable root plot specification that compiles into an immutable {@link Chart}.
  */
 @CompileStatic
 class PlotSpec {
+
+  private static final LevenshteinDistance COLUMN_DISTANCE = LevenshteinDistance.getDefaultInstance()
 
   private static final Map<CharmGeomType, List<String>> REQUIRED_MAPPINGS = [
       (CharmGeomType.POINT)    : ['x', 'y'],
@@ -366,12 +370,13 @@ class PlotSpec {
   private void validate() {
     validateMapping('plot mapping', mapping)
     layers.eachWithIndex { LayerSpec layer, int idx ->
-      validateLayerSemantics(layer, idx)
       Mapping layerMapping = layer.mapping
       if (layerMapping != null) {
         validateMapping("layer ${idx} mapping", layerMapping)
       }
-      validateRequiredMappings(layer, layerMapping, idx)
+      Mapping effective = effectiveMapping(layer, layerMapping)
+      validateLayerSemantics(layer, idx)
+      validateRequiredMappings(layer, effective, idx)
     }
     facet.rows.each { ColumnExpr expr -> validateColumn(expr, 'facet.rows') }
     facet.cols.each { ColumnExpr expr -> validateColumn(expr, 'facet.cols') }
@@ -391,18 +396,18 @@ class PlotSpec {
     }
   }
 
-  private void validateRequiredMappings(LayerSpec layer, Mapping layerMapping, int idx) {
+  private void validateRequiredMappings(LayerSpec layer, Mapping effective, int idx) {
     List<String> required = REQUIRED_MAPPINGS[layer.geomType] ?: []
     if (required.isEmpty()) {
       return
     }
-    Mapping effective = effectiveMapping(layer, layerMapping)
     Map<String, ColumnExpr> mappings = effective.mappings()
     List<String> missing = required.findAll { String key -> !mappings.containsKey(key) }
     if (!missing.isEmpty()) {
       String inheritText = layer.inheritMapping ? 'with inherited plot mappings' : 'without inherited plot mappings'
+      String hint = requiredMappingHint(layer.geomType, missing)
       throw new CharmValidationException(
-          "Layer ${idx} (${layer.geomType}) is missing required mappings [${missing.join(', ')}] ${inheritText}"
+          "Layer ${idx} (${layer.geomType}) is missing required mappings [${missing.join(', ')}] ${inheritText}${hint}"
       )
     }
   }
@@ -425,11 +430,86 @@ class PlotSpec {
     if (expr == null) {
       return
     }
+    String columnName = expr.columnName()
     List<String> names = data.columnNames()
-    if (!names.contains(expr.columnName())) {
+    if (!names.contains(columnName)) {
+      String suggestion = columnSuggestion(columnName, names)
+      String hint = semanticHintForUnknownColumn(context, columnName)
       throw new CharmValidationException(
-          "Unknown column '${expr.columnName()}' for ${context}. Available columns: ${names.join(', ')}"
+          "Unknown column '${columnName}' for ${context}. Available columns: ${names.join(', ')}${suggestion}${hint}"
       )
+    }
+  }
+
+  private static String requiredMappingHint(CharmGeomType geomType, List<String> missing) {
+    if ((geomType == CharmGeomType.POINT || geomType == CharmGeomType.LINE) && missing.contains('y')) {
+      return '. Hint: point/line layers require both x and y mappings.'
+    }
+    ''
+  }
+
+  private static String semanticHintForUnknownColumn(String context, String columnName) {
+    if (context?.endsWith('.color') || context?.endsWith('.fill')) {
+      String value = columnName?.trim()
+      if (looksLikeLiteralColor(value)) {
+        return ". Hint: '${value}' looks like a literal color. Put literals on the layer, for example geomPoint().color('${value}'), instead of mapping it as a column."
+      }
+    }
+    ''
+  }
+
+  private static boolean looksLikeLiteralColor(String value) {
+    if (!value) {
+      return false
+    }
+    String lower = value.toLowerCase(Locale.ROOT)
+    if (lower.startsWith('#')) {
+      return true
+    }
+    if (lower.startsWith('rgb(') || lower.startsWith('rgba(') || lower.startsWith('hsl(') || lower.startsWith('hsla(')) {
+      return true
+    }
+    lower in ['black', 'white', 'red', 'green', 'blue', 'yellow', 'orange', 'purple', 'grey', 'gray', 'brown', 'pink']
+  }
+
+  private static String columnSuggestion(String columnName, List<String> availableColumns) {
+    if (!columnName || availableColumns == null || availableColumns.isEmpty()) {
+      return ''
+    }
+
+    String target = columnName.toLowerCase(Locale.ROOT)
+    List<ColumnSuggestion> ranked = availableColumns.collect { String candidate ->
+      new ColumnSuggestion(candidate, COLUMN_DISTANCE.apply(target, candidate.toLowerCase(Locale.ROOT)))
+    }
+    ranked.sort { ColumnSuggestion left, ColumnSuggestion right ->
+      int compare = left.distance <=> right.distance
+      compare != 0 ? compare : left.name <=> right.name
+    }
+
+    if (ranked.isEmpty()) {
+      return ''
+    }
+
+    int threshold = Math.max(2, (int) Math.ceil(columnName.size() / 3.0))
+    List<String> suggestions = ranked
+        .findAll { ColumnSuggestion entry -> entry.distance <= threshold }
+        .collect { ColumnSuggestion entry -> entry.name }
+        .take(3)
+
+    if (suggestions.isEmpty()) {
+      return ''
+    }
+    " Did you mean: ${suggestions.join(', ')}?"
+  }
+
+  @CompileStatic
+  private static final class ColumnSuggestion {
+    final String name
+    final int distance
+
+    ColumnSuggestion(String name, Integer distance) {
+      this.name = name
+      this.distance = distance == null ? Integer.MAX_VALUE : distance
     }
   }
 
@@ -530,6 +610,15 @@ class PlotSpec {
      */
     Scale time() {
       Scale.time()
+    }
+
+    /**
+     * Creates a datetime transform scale.
+     *
+     * @return scale object
+     */
+    Scale datetime() {
+      Scale.datetime()
     }
 
     /**

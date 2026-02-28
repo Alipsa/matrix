@@ -4,6 +4,8 @@ A comprehensive guide to using the `se.alipsa.matrix.charm` package for creating
 
 ## Table of Contents
 - [Introduction](#introduction)
+- [Differences from ggplot2](#differences-from-ggplot2)
+- [Current Limitations](#current-limitations)
 - [Quick Start](#quick-start)
 - [Core Concepts](#core-concepts)
 - [DSL Reference](#dsl-reference)
@@ -37,6 +39,19 @@ All three APIs produce the same SVG output through the Charm renderer.
 - Deterministic lifecycle: specification -> compilation -> rendering
 - String-based aesthetic mappings (column names as strings)
 - SVG output via gsvg, exportable to PNG, JPEG, JavaFX, and Swing
+
+## Differences from ggplot2
+
+Charm intentionally keeps a few behavior differences that are useful in Groovy-first workflows:
+
+- Categorical axes preserve encounter order from data by default instead of reordering alphabetically.
+- `xlim`/`ylim` clamp values at boundaries in rendering instead of dropping out-of-range rows.
+- Legend and guide APIs are available directly in Charm core (`guides { ... }`, `GuideSpec` factories) without requiring gg wrappers.
+
+## Current Limitations
+
+- Date/time/datetime transforms are available (`date()`, `time()`, `datetime()`), including interval specs like `dateBreaks` / `timeBreaks`.
+- Temporal ergonomics are still evolving; for advanced control use scale params (`dateFormat`, `timeFormat`, `zoneId`, `dateBreaks`, `timeBreaks`) explicitly.
 
 ## Quick Start
 
@@ -314,8 +329,9 @@ scale {
   x = log10()       // logarithmic x-axis
   y = sqrt()        // square root y-axis
   x = reverse()     // reversed axis
-  x = date()        // date/time axis
-  x = time()        // time axis
+  x = date()        // date axis (epoch-millis internal)
+  x = datetime()    // datetime axis (epoch-millis internal)
+  x = time()        // time-of-day axis (millis since midnight internal)
   color = continuous()
   fill = discrete()
 }
