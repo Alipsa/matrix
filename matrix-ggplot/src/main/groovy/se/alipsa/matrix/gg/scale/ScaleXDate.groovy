@@ -311,7 +311,7 @@ class ScaleXDate extends ScaleContinuous {
     }
 
     if (value instanceof LocalDate) {
-      return (value as LocalDate).toEpochDay() * 86400000L
+      return toEpochMillis(value as LocalDate, effectiveZone)
     }
 
     if (value instanceof LocalDateTime) {
@@ -322,7 +322,7 @@ class ScaleXDate extends ScaleContinuous {
       // Try to convert other temporal types
       try {
         LocalDate ld = LocalDate.from(value as Temporal)
-        return ld.toEpochDay() * 86400000L
+        return toEpochMillis(ld, effectiveZone)
       } catch (Exception ignored) {
         return null
       }
@@ -334,7 +334,7 @@ class ScaleXDate extends ScaleContinuous {
       try {
         // Try parsing as ISO date
         LocalDate ld = LocalDate.parse(s)
-        return ld.toEpochDay() * 86400000L
+        return toEpochMillis(ld, effectiveZone)
       } catch (Exception ignored) {
         try {
           // Try parsing as ISO datetime
@@ -362,5 +362,9 @@ class ScaleXDate extends ScaleContinuous {
 
   private static LocalDate toLocalDate(long epochMillis, ZoneId zone) {
     Instant.ofEpochMilli(epochMillis).atZone(zone).toLocalDate()
+  }
+
+  private static long toEpochMillis(LocalDate date, ZoneId zone) {
+    date.atStartOfDay(zone).toInstant().toEpochMilli()
   }
 }
