@@ -375,7 +375,7 @@ class PlotSpec {
         validateMapping("layer ${idx} mapping", layerMapping)
       }
       Mapping effective = effectiveMapping(layer, layerMapping)
-      validateLayerSemantics(layer, effective, idx)
+      validateLayerSemantics(layer, idx)
       validateRequiredMappings(layer, effective, idx)
     }
     facet.rows.each { ColumnExpr expr -> validateColumn(expr, 'facet.rows') }
@@ -383,7 +383,7 @@ class PlotSpec {
     facet.vars.each { ColumnExpr expr -> validateColumn(expr, 'facet.vars') }
   }
 
-  private void validateLayerSemantics(LayerSpec layer, Mapping effectiveMapping, int idx) {
+  private void validateLayerSemantics(LayerSpec layer, int idx) {
     if (!(layer.geomType in CharmGeomType.SUPPORTED)) {
       throw new CharmValidationException(
           "Layer ${idx}: unsupported geom type '${layer.geomType}'. Supported types: ${CharmGeomType.SUPPORTED}"

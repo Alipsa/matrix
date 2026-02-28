@@ -30,6 +30,9 @@ class ScaleXDatetime extends ScaleContinuous {
   /** Break interval specification (e.g., '1 hour', '30 minutes', '1 day') */
   String dateBreaks = null
 
+  /** Time zone used for LocalDateTime and Date conversions. */
+  String zoneId = ZoneId.systemDefault().id
+
   /** Minimum datetime in the domain (as epoch millis) */
   protected long minEpochMillis = 0
 
@@ -59,6 +62,10 @@ class ScaleXDatetime extends ScaleContinuous {
     if (params.date_breaks) this.dateBreaks = params.date_breaks as String
     if (params.dateBreaks) this.dateBreaks = params.dateBreaks as String
     if (params.date_labels) this.dateFormat = params.date_labels as String
+    if (params.zone_id) this.zoneId = params.zone_id as String
+    if (params.zoneId) this.zoneId = params.zoneId as String
+    if (params.timezone) this.zoneId = params.timezone as String
+    if (params.tz) this.zoneId = params.tz as String
     if (params.nBreaks) this.nBreaks = params.nBreaks as int
   }
 
@@ -125,6 +132,7 @@ class ScaleXDatetime extends ScaleContinuous {
     Double numeric = value instanceof Number ? value as double : null
     if (numeric == null) return null
 
+    ZoneId effectiveZone = resolveZoneId()
     double v = numeric
     double dMin = minEpochMillis
     double dMax = maxEpochMillis
@@ -133,25 +141,26 @@ class ScaleXDatetime extends ScaleContinuous {
 
     if (rMax == rMin) {
       long millis = ((dMin + dMax) / 2) as long
-      return LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(millis), ZoneId.systemDefault())
+      return LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(millis), effectiveZone)
     }
 
     // Inverse linear interpolation
     double normalized = (v - rMin) / (rMax - rMin)
     long epochMillis = (dMin + normalized * (dMax - dMin)) as long
 
-    return LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault())
+    return LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(epochMillis), effectiveZone)
   }
 
   @Override
   List getComputedBreaks() {
     if (breaks) return breaks
 
+    ZoneId effectiveZone = resolveZoneId()
     // Generate datetime breaks
     LocalDateTime minDt = LocalDateTime.ofInstant(
-        java.time.Instant.ofEpochMilli(minEpochMillis), ZoneId.systemDefault())
+        java.time.Instant.ofEpochMilli(minEpochMillis), effectiveZone)
     LocalDateTime maxDt = LocalDateTime.ofInstant(
-        java.time.Instant.ofEpochMilli(maxEpochMillis), ZoneId.systemDefault())
+        java.time.Instant.ofEpochMilli(maxEpochMillis), effectiveZone)
 
     return generateDatetimeBreaks(minDt, maxDt)
   }
@@ -160,6 +169,7 @@ class ScaleXDatetime extends ScaleContinuous {
   List<String> getComputedLabels() {
     if (labels) return labels
 
+    ZoneId effectiveZone = resolveZoneId()
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat)
     return getComputedBreaks().collect { value ->
       if (value instanceof LocalDateTime) {
@@ -167,7 +177,7 @@ class ScaleXDatetime extends ScaleContinuous {
       } else if (value instanceof LocalDate) {
         return (value as LocalDate).atStartOfDay().format(formatter)
       } else if (value instanceof Date) {
-        LocalDateTime ldt = (value as Date).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+        LocalDateTime ldt = (value as Date).toInstant().atZone(effectiveZone).toLocalDateTime()
         return ldt.format(formatter)
       }
       return value?.toString() ?: ''
@@ -297,8 +307,10 @@ class ScaleXDatetime extends ScaleContinuous {
   /**
    * Convert various datetime types to epoch milliseconds.
    */
-  private static Long toEpochMillis(Object value) {
+  private Long toEpochMillis(Object value) {
     if (value == null) return null
+
+    ZoneId effectiveZone = resolveZoneId()
 
     if (value instanceof Number) {
       return (value as Number).longValue()
@@ -309,21 +321,21 @@ class ScaleXDatetime extends ScaleContinuous {
     }
 
     if (value instanceof LocalDateTime) {
-      return (value as LocalDateTime).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+      return (value as LocalDateTime).atZone(effectiveZone).toInstant().toEpochMilli()
     }
 
     if (value instanceof LocalDate) {
-      return (value as LocalDate).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+      return (value as LocalDate).atStartOfDay().atZone(effectiveZone).toInstant().toEpochMilli()
     }
 
     if (value instanceof Temporal) {
       try {
         LocalDateTime ldt = LocalDateTime.from(value as Temporal)
-        return ldt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        return ldt.atZone(effectiveZone).toInstant().toEpochMilli()
       } catch (Exception ignored) {
         try {
           LocalDate ld = LocalDate.from(value as Temporal)
-          return ld.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+          return ld.atStartOfDay().atZone(effectiveZone).toInstant().toEpochMilli()
         } catch (Exception ignored2) {
           return null
         }
@@ -335,11 +347,11 @@ class ScaleXDatetime extends ScaleContinuous {
       if (s.isEmpty()) return null
       try {
         LocalDateTime ldt = LocalDateTime.parse(s)
-        return ldt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        return ldt.atZone(effectiveZone).toInstant().toEpochMilli()
       } catch (Exception ignored) {
         try {
           LocalDate ld = LocalDate.parse(s)
-          return ld.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+          return ld.atStartOfDay().atZone(effectiveZone).toInstant().toEpochMilli()
         } catch (Exception ignored2) {
           return null
         }
@@ -347,5 +359,16 @@ class ScaleXDatetime extends ScaleContinuous {
     }
 
     return null
+  }
+
+  private ZoneId resolveZoneId() {
+    if (!zoneId) {
+      return ZoneId.systemDefault()
+    }
+    try {
+      return ZoneId.of(zoneId)
+    } catch (Exception ignored) {
+      return ZoneId.systemDefault()
+    }
   }
 }

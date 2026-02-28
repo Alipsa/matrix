@@ -13,6 +13,7 @@ import java.time.ZoneId
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.*
 
@@ -43,7 +44,7 @@ class DateTimeScaleBridgeTest {
   }
 
   @Test
-  void testTimeScaleMapsToCharmTimeAndCarriesZoneId() {
+  void testTimeScaleMapsToCharmTimeWithoutZoneOverride() {
     Matrix data = Matrix.builder()
         .columnNames('t', 'y')
         .rows([
@@ -63,7 +64,7 @@ class DateTimeScaleBridgeTest {
     assertEquals('time', x.transform)
     assertEquals('30 minutes', x.params['timeBreaks'])
     assertEquals('HH:mm', x.params['timeFormat'])
-    assertEquals(ZoneId.systemDefault().id, x.params['zoneId'])
+    assertNull(x.params['zoneId'])
   }
 
   @Test
@@ -100,5 +101,27 @@ class DateTimeScaleBridgeTest {
     assertEquals('yyyy-MM-dd HH:mm', x.params['dateFormat'])
     assertEquals(ZoneId.systemDefault().id, x.params['zoneId'])
     assertNotNull(x.params['zoneId'])
+  }
+
+  @Test
+  void testDatetimeScalePropagatesExplicitTimezone() {
+    Matrix data = Matrix.builder()
+        .columnNames('dt', 'y')
+        .rows([
+            [LocalDateTime.of(2025, 1, 1, 0, 0), 1],
+            [LocalDateTime.of(2025, 1, 1, 12, 0), 2]
+        ])
+        .types(LocalDateTime, Integer)
+        .build()
+
+    def chart = ggplot(data, aes(x: 'dt', y: 'y')) +
+        geom_point() +
+        scale_x_datetime(timezone: 'UTC')
+
+    GgCharmCompilation adaptation = new GgCharmCompiler().adapt(chart)
+    assertTrue(adaptation.delegated, adaptation.reasons.join('; '))
+    Scale x = adaptation.charmChart.scale.x
+    assertEquals('datetime', x.transform)
+    assertEquals('UTC', x.params['zoneId'])
   }
 }

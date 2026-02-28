@@ -67,7 +67,6 @@ import se.alipsa.matrix.gg.scale.ScaleYDate
 import se.alipsa.matrix.gg.scale.ScaleYDatetime
 import se.alipsa.matrix.gg.scale.ScaleYTime
 import se.alipsa.matrix.gg.theme.Theme as GgTheme
-import java.time.ZoneId
 import java.util.Locale
 
 /**
@@ -736,6 +735,9 @@ class GgCharmCompiler {
       if (dateScale.dateBreaks) {
         charmScale.params['dateBreaks'] = dateScale.dateBreaks
       }
+      if (dateScale.zoneId) {
+        charmScale.params['zoneId'] = dateScale.zoneId
+      }
     }
     if (ggScale instanceof ScaleXDatetime || ggScale instanceof ScaleYDatetime) {
       ScaleXDatetime datetimeScale = ggScale as ScaleXDatetime
@@ -744,6 +746,9 @@ class GgCharmCompiler {
       }
       if (datetimeScale.dateBreaks) {
         charmScale.params['dateBreaks'] = datetimeScale.dateBreaks
+      }
+      if (datetimeScale.zoneId) {
+        charmScale.params['zoneId'] = datetimeScale.zoneId
       }
     }
     if (ggScale instanceof ScaleXTime || ggScale instanceof ScaleYTime) {
@@ -755,15 +760,6 @@ class GgCharmCompiler {
         charmScale.params['timeBreaks'] = timeScale.timeBreaks
       }
     }
-    if (isTemporalGgScale(ggScale)) {
-      charmScale.params['zoneId'] = ZoneId.systemDefault().id
-    }
-  }
-
-  private static boolean isTemporalGgScale(GgScale ggScale) {
-    ggScale instanceof ScaleXDate || ggScale instanceof ScaleYDate ||
-        ggScale instanceof ScaleXTime || ggScale instanceof ScaleYTime ||
-        ggScale instanceof ScaleXDatetime || ggScale instanceof ScaleYDatetime
   }
 
   private static CharmScale fallbackScale(GgScale scale, String aesthetic) {
