@@ -42,13 +42,18 @@ class DiscreteCharmScale extends CharmScale {
     List<Object> tickValues = ticks(count)
     List<String> configured = scaleSpec?.labels
     if (configured != null && !configured.isEmpty()) {
+      List<String> configuredBreaks = resolveConfiguredBreaks()
+      Map<String, String> labelByBreak = ScaleUtils.labelMapForConfiguredBreaks(configuredBreaks, configured)
       List<String> labels = []
       tickValues.eachWithIndex { Object tick, int idx ->
-        if (idx < configured.size() && configured[idx] != null) {
+        String mapped = labelByBreak[tick?.toString()]
+        if (mapped != null) {
+          labels << mapped
+        } else if (idx < configured.size() && configured[idx] != null) {
           labels << configured[idx]
-          return
+        } else {
+          labels << tick?.toString()
         }
-        labels << tick?.toString()
       }
       return labels
     }

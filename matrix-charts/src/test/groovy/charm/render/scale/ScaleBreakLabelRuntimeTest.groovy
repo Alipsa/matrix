@@ -84,6 +84,30 @@ class ScaleBreakLabelRuntimeTest {
   }
 
   @Test
+  void testDiscreteScaleFilteredBreaksKeepLabelPairing() {
+    Scale spec = Scale.discrete()
+    spec.breaks = ['B', 'X', 'D']
+    spec.labels = ['Bee', 'Missing', 'Dee']
+
+    DiscreteCharmScale scale = ScaleEngine.trainPositionalScale(['A', 'B', 'C', 'D'], spec, 0, 100) as DiscreteCharmScale
+
+    assertEquals(['B', 'D'], scale.ticks(5))
+    assertEquals(['Bee', 'Dee'], scale.tickLabels(5))
+  }
+
+  @Test
+  void testDiscreteColorScaleFilteredBreaksKeepLabelPairing() {
+    Scale spec = Scale.discrete()
+    spec.breaks = ['beta', 'missing', 'gamma']
+    spec.labels = ['Beta', 'Missing', 'Gamma']
+
+    ColorCharmScale scale = ScaleEngine.trainColorScale(['alpha', 'beta', 'gamma'], spec)
+
+    assertEquals(['beta', 'gamma'], scale.ticks(5))
+    assertEquals(['Beta', 'Gamma'], scale.tickLabels(5))
+  }
+
+  @Test
   void testContinuousTemporalScaleFallbackLabelsUseTemporalFormatting() {
     Scale spec = Scale.date()
     spec.breaks = [

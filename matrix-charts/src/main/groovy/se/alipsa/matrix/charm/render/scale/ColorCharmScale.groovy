@@ -128,6 +128,14 @@ class ColorCharmScale extends CharmScale {
     List<Object> tickValues = ticks(count)
     List<String> configured = scaleSpec?.labels
     if (configured != null && !configured.isEmpty()) {
+      if (isDiscrete()) {
+        List<String> configuredBreaks = resolveConfiguredDiscreteBreaks()
+        Map<String, String> labelByBreak = ScaleUtils.labelMapForConfiguredBreaks(configuredBreaks, configured)
+        return tickValues.collect { Object tick ->
+          String mapped = labelByBreak[tick?.toString()]
+          mapped != null ? mapped : defaultTickLabel(tick)
+        }
+      }
       List<String> labels = []
       tickValues.eachWithIndex { Object tick, int idx ->
         if (idx < configured.size() && configured[idx] != null) {
@@ -586,11 +594,19 @@ class ColorCharmScale extends CharmScale {
       } as List<Object>
     }
     if (isDiscrete()) {
-      List<String> configuredLevels = configured.findResults { Object value -> value?.toString() } as List<String>
+      List<String> configuredLevels = resolveConfiguredDiscreteBreaks()
       List<String> filtered = configuredLevels.findAll { String value -> levels.contains(value) }
       return new ArrayList<Object>(filtered)
     }
     configured.findResults { Object value -> ValueConverter.asBigDecimal(value) } as List<Object>
+  }
+
+  private List<String> resolveConfiguredDiscreteBreaks() {
+    List configured = scaleSpec?.breaks
+    if (configured == null || configured.isEmpty()) {
+      return []
+    }
+    configured.findResults { Object value -> value?.toString() } as List<String>
   }
 
   private String defaultTickLabel(Object tick) {

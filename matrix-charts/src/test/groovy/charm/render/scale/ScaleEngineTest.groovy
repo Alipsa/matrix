@@ -230,6 +230,22 @@ class ScaleEngineTest {
   }
 
   @Test
+  void testReverseScaleLimitsPreserveAscendingDomainOrder() {
+    Scale spec = Scale.reverse()
+    spec.params['limits'] = [0, 100]
+
+    CharmScale scale = ScaleEngine.trainPositionalScale(
+        [10, 20, 30], spec, 0, 300
+    )
+
+    assertTrue(scale instanceof ContinuousCharmScale)
+    ContinuousCharmScale continuous = scale as ContinuousCharmScale
+    assertEquals(-100.0, continuous.domainMin)
+    assertEquals(0.0, continuous.domainMax)
+    assertTrue(continuous.domainMin <= continuous.domainMax)
+  }
+
+  @Test
   void testDiscreteScalePreservesLevelOrder() {
     CharmScale scale = ScaleEngine.trainPositionalScale(
         ['Z', 'A', 'M', 'B'], null, 0, 400

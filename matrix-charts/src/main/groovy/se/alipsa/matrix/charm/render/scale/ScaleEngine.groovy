@@ -212,11 +212,16 @@ class ScaleEngine {
         lower = scaleSpec.transformStrategy.apply(lower)
         upper = scaleSpec.transformStrategy.apply(upper)
       }
-      if (lower != null) {
-        min = lower
-      }
-      if (upper != null) {
-        max = upper
+      if (lower != null || upper != null) {
+        BigDecimal candidateMin = lower != null ? lower : min
+        BigDecimal candidateMax = upper != null ? upper : max
+        if (candidateMin <= candidateMax) {
+          min = candidateMin
+          max = candidateMax
+        } else {
+          min = candidateMax
+          max = candidateMin
+        }
       }
     }
 
