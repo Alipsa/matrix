@@ -80,7 +80,6 @@ import se.alipsa.matrix.gg.geom.GeomContourFilled
 import se.alipsa.matrix.gg.geom.GeomPoint
 import se.alipsa.matrix.gg.geom.GeomViolin
 import se.alipsa.matrix.gg.layer.PositionType
-import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.position.Position
 import se.alipsa.matrix.gg.scale.ScaleColorGradient
 import se.alipsa.matrix.gg.scale.ScaleColorGradientN
@@ -142,7 +141,6 @@ import se.alipsa.matrix.gg.stat.StatsBoxplot
 import se.alipsa.matrix.gg.stat.StatsContour
 import se.alipsa.matrix.gg.stat.StatsContourFilled
 import se.alipsa.matrix.gg.stat.StatsCount
-import se.alipsa.matrix.gg.stat.Stats
 import se.alipsa.matrix.gg.stat.StatsDensity
 import se.alipsa.matrix.gg.stat.StatsEllipse
 import se.alipsa.matrix.gg.stat.StatsFunction
