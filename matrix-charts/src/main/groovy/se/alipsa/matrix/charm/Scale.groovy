@@ -480,17 +480,41 @@ class Scale {
   }
 
   /**
+   * Attaches a guide configuration to this scale.
+   *
+   * <p>Accepted values are {@link GuideSpec}, {@link GuideType}, guide type strings
+   * (for example {@code 'legend'} or {@code 'colorbar'}), or {@code false} for
+   * {@link GuideType#NONE}. Passing {@code null} removes any attached guide.</p>
+   *
+   * @param value guide value
+   * @return this scale
+   */
+  Scale guide(Object value) {
+    GuideSpec guideSpec = GuideUtils.coerceGuide(value, 'scale')
+    if (guideSpec == null) {
+      params.remove('guide')
+    } else {
+      params['guide'] = guideSpec
+    }
+    this
+  }
+
+  /**
    * Copies this scale.
    *
    * @return copied scale
    */
   Scale copy() {
+    Map<String, Object> copiedParams = new LinkedHashMap<>(params)
+    if (copiedParams['guide'] instanceof GuideSpec) {
+      copiedParams['guide'] = (copiedParams['guide'] as GuideSpec).copy()
+    }
     new Scale(
         type: type,
         transformStrategy: transformStrategy,
         breaks: new ArrayList(breaks),
         labels: new ArrayList<>(labels),
-        params: new LinkedHashMap<>(params)
+        params: copiedParams
     )
   }
 }
