@@ -421,6 +421,7 @@ class CharmModelExpansionTest {
         alpha   : 'alpha',
         linetype: 'lt',
         label   : 'lbl',
+        tooltip : 'tip',
         weight  : 'wt'
     ])
 
@@ -435,28 +436,31 @@ class CharmModelExpansionTest {
     assertEquals('alpha', mapping.alpha.columnName())
     assertEquals('lt', mapping.linetype.columnName())
     assertEquals('lbl', mapping.label.columnName())
+    assertEquals('tip', mapping.tooltip.columnName())
     assertEquals('wt', mapping.weight.columnName())
   }
 
   @Test
   void testMappingCopyPreservesExpandedChannels() {
     Mapping mapping = new Mapping()
-    mapping.apply([xend: 'xe', yend: 'ye', alpha: 'a', label: 'l'])
+    mapping.apply([xend: 'xe', yend: 'ye', alpha: 'a', label: 'l', tooltip: 't'])
     Mapping copy = mapping.copy()
     assertEquals('xe', copy.xend.columnName())
     assertEquals('ye', copy.yend.columnName())
     assertEquals('a', copy.alpha.columnName())
     assertEquals('l', copy.label.columnName())
+    assertEquals('t', copy.tooltip.columnName())
   }
 
   @Test
   void testMappingsIncludesExpandedChannels() {
     Mapping mapping = new Mapping()
-    mapping.apply([x: 'x', xmin: 'xm', weight: 'w'])
+    mapping.apply([x: 'x', xmin: 'xm', tooltip: 'tip', weight: 'w'])
     Map<String, ColumnExpr> mappings = mapping.mappings()
     assertTrue(mappings.containsKey('x'))
     assertTrue(mappings.containsKey('xmin'))
+    assertTrue(mappings.containsKey('tooltip'))
     assertTrue(mappings.containsKey('weight'))
-    assertEquals(3, mappings.size())
+    assertEquals(4, mappings.size())
   }
 }

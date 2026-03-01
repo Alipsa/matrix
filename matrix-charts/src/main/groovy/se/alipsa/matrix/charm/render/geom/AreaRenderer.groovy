@@ -64,6 +64,7 @@ class AreaRenderer {
       if (alpha < 1.0) {
         path.addAttribute('fill-opacity', alpha)
       }
+      GeomUtils.addTooltip(path, GeomUtils.resolveTooltip(layer, firstDatum))
       GeomUtils.applyCssAttributes(path, context, layer.geomType.name(), elementIndex, firstDatum)
       elementIndex++
     }

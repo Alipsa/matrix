@@ -25,6 +25,7 @@ class Mapping {
   private ColumnExpr alpha
   private ColumnExpr linetype
   private ColumnExpr label
+  private ColumnExpr tooltip
   private ColumnExpr weight
 
   /**
@@ -280,6 +281,20 @@ class Mapping {
   void setLabel(Object value) { label = coerceToColumnExpr(value, 'label') }
 
   /**
+   * Returns tooltip mapping.
+   *
+   * @return tooltip mapping
+   */
+  ColumnExpr getTooltip() { tooltip }
+
+  /**
+   * Sets tooltip mapping.
+   *
+   * @param value mapping input
+   */
+  void setTooltip(Object value) { tooltip = coerceToColumnExpr(value, 'tooltip') }
+
+  /**
    * Returns weight mapping.
    *
    * @return weight mapping
@@ -320,6 +335,7 @@ class Mapping {
         case 'alpha' -> setAlpha(value)
         case 'linetype' -> setLinetype(value)
         case 'label' -> setLabel(value)
+        case 'tooltip' -> setTooltip(value)
         case 'weight' -> setWeight(value)
         default -> throw new CharmMappingException("Unsupported aesthetic '${key}'")
       }
@@ -349,6 +365,7 @@ class Mapping {
     cloned.alpha = alpha
     cloned.linetype = linetype
     cloned.label = label
+    cloned.tooltip = tooltip
     cloned.weight = weight
     cloned
   }
@@ -376,6 +393,7 @@ class Mapping {
     if (alpha != null) values.alpha = alpha
     if (linetype != null) values.linetype = linetype
     if (label != null) values.label = label
+    if (tooltip != null) values.tooltip = tooltip
     if (weight != null) values.weight = weight
     values
   }
@@ -439,6 +457,7 @@ class Mapping {
       case 'alpha' -> alpha
       case 'linetype' -> linetype
       case 'label' -> label
+      case 'tooltip' -> tooltip
       case 'weight' -> weight
       default -> null
     }

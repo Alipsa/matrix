@@ -517,7 +517,7 @@ Add a "Per-layer scales" section documenting:
 
 **Priority:** High | **Effort:** Medium
 
-### 8.1 [ ] Add `tooltip` aesthetic to Charm mapping and pipeline data
+### 8.1 [x] Add `tooltip` aesthetic to Charm mapping and pipeline data
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/Mapping.groovy` — add `ColumnExpr tooltip` field **and** update all four of:
@@ -530,7 +530,7 @@ Add a "Per-layer scales" section documenting:
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/LayerDataUtil.groovy` — include `tooltip` in `copyDatum()`
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/CharmRenderer.groovy` — populate `tooltip` in `mapData()`
 
-### 8.2 [ ] Add layer tooltip configuration API
+### 8.2 [x] Add layer tooltip configuration API
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/geom/LayerBuilder.groovy`
 
@@ -540,7 +540,7 @@ Add:
 
 Default behavior: tooltip rendering is **off** unless explicitly enabled by layer API or explicit tooltip mapping.
 
-### 8.3 [ ] Add tooltip resolver with explicit precedence
+### 8.3 [x] Add tooltip resolver with explicit precedence
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/geom/GeomUtils.groovy`
 
@@ -550,11 +550,11 @@ Resolution order:
 3. Mapped tooltip value
 4. Auto-generated text (only when enabled)
 
-### 8.4 [ ] Add `addTooltip()` helper to attach `<title>` to SVG elements
+### 8.4 [x] Add `addTooltip()` helper to attach `<title>` to SVG elements
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/geom/GeomUtils.groovy`
 
-### 8.5 [ ] Apply tooltip emission to high-usage renderers first
+### 8.5 [x] Apply tooltip emission to high-usage renderers first
 
 **Files:**
 - `BarRenderer.groovy`
@@ -562,17 +562,17 @@ Resolution order:
 - `LineRenderer.groovy`
 - `AreaRenderer.groovy`
 
-### 8.6 [ ] Add gg compatibility support for tooltip aesthetic
+### 8.6 [x] Add gg compatibility support for tooltip aesthetic
 
 **Files:**
 - `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/aes/Aes.groovy`
 - `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/bridge/GgCharmCompiler.groovy`
 
-### 8.7 [ ] Add tests for tooltip rendering and default-off behavior
+### 8.7 [x] Add tests for tooltip rendering and default-off behavior
 
 **File:** `matrix-charts/src/test/groovy/charm/render/geom/TooltipTest.groovy` (new)
 
-### 8.8 [ ] Document tooltip API in `charm.md`
+### 8.8 [x] Document tooltip API in `charm.md`
 
 **File:** `matrix-charts/docs/charm.md`
 
@@ -584,6 +584,10 @@ Add a "Tooltips" section covering: mapping `tooltip`, template strings, `tooltip
 ./gradlew :matrix-charts:test -Pheadless=true
 ./gradlew :matrix-ggplot:test -Pheadless=true
 ```
+
+Executed on this implementation:
+- `./gradlew :matrix-charts:test -Pheadless=true`
+- `./gradlew :matrix-ggplot:test -Pheadless=true`
 
 ---
 
