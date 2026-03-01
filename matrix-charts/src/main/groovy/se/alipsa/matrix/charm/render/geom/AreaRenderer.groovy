@@ -21,7 +21,7 @@ class AreaRenderer {
     }
 
     int elementIndex = 0
-    BigDecimal baseline = context.yScale.transform(0)
+    BigDecimal baseline = context.yScaleForLayer(context.layerIndex).transform(0)
     if (baseline == null) {
       baseline = panelHeight
     }
@@ -31,8 +31,8 @@ class AreaRenderer {
       List<LayerData> sorted = GeomUtils.sortByX(groupData)
       List<BigDecimal[]> points = []
       sorted.each { LayerData datum ->
-        BigDecimal px = context.xScale.transform(datum.x)
-        BigDecimal py = context.yScale.transform(datum.y)
+        BigDecimal px = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+        BigDecimal py = context.yScaleForLayer(context.layerIndex).transform(datum.y)
         if (px != null && py != null) {
           points << ([px, py] as BigDecimal[])
         }

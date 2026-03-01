@@ -58,6 +58,7 @@ import se.alipsa.matrix.gg.geom.GeomRasterAnn
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.scale.NewScaleMarker
 import se.alipsa.matrix.gg.scale.Scale as GgScale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 import se.alipsa.matrix.gg.scale.ScaleXDate
@@ -148,6 +149,9 @@ class GgCharmCompiler {
       return GgCharmCompilation.fallback(reasons)
     }
 
+    // Apply per-layer scales from NewScaleMarker partitioning
+    applyPerLayerScales(ggChart, mappedLayers, reasons)
+
     Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, ggChart.scales)
 
     GuidesSpec mappedGuides = mapGuides(ggChart.guides, ggChart.scales)
@@ -179,6 +183,55 @@ class GgCharmCompiler {
     }
     RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
     charmRenderer.render(adaptation.charmChart, config)
+  }
+
+  /**
+   * Walks the chart's ordered components list and assigns per-layer scales
+   * to the correct mapped layers based on NewScaleMarker positions.
+   */
+  private void applyPerLayerScales(GgChart ggChart, List<LayerSpec> mappedLayers, List<String> reasons) {
+    if (ggChart.components.isEmpty() || !ggChart.components.any { it instanceof NewScaleMarker }) {
+      return
+    }
+
+    // Walk components in order: partition layers and scales around markers
+    // active markers: aesthetic -> true means "next scales for this aesthetic go to per-layer"
+    Map<String, Boolean> activeMarkers = [:]
+    // Track the last layer index before each marker
+    int layerIdx = -1
+
+    ggChart.components.each { Object component ->
+      if (component instanceof Layer) {
+        layerIdx++
+      } else if (component instanceof NewScaleMarker) {
+        NewScaleMarker marker = component as NewScaleMarker
+        activeMarkers[marker.aesthetic] = true
+      } else if (component instanceof GgScale) {
+        GgScale ggScale = component as GgScale
+        String aesthetic = ggScale.aesthetic
+        if (aesthetic != null && activeMarkers[aesthetic] && layerIdx >= 0 && layerIdx < mappedLayers.size()) {
+          // This scale applies to the current layer as a per-layer override
+          CharmScale charmScale = mapSingleScale(ggScale, reasons)
+          if (charmScale != null) {
+            LayerSpec target = mappedLayers[layerIdx]
+            // Need to rebuild LayerSpec with the per-layer scale added
+            Map<String, CharmScale> existingScales = new LinkedHashMap<>(target.scales ?: [:])
+            existingScales[aesthetic] = charmScale
+            LayerSpec updated = new LayerSpec(
+                target.geomSpec,
+                target.statSpec,
+                target.mapping,
+                target.inheritMapping,
+                target.positionSpec,
+                target.params,
+                target.styleCallback,
+                existingScales
+            )
+            mappedLayers[layerIdx] = updated
+          }
+        }
+      }
+    }
   }
 
   private LayerSpec mapLayer(
@@ -680,6 +733,24 @@ class GgCharmCompiler {
       assignScale(mapped, aesthetic, charmScale, idx, reasons)
     }
     mapped
+  }
+
+  /**
+   * Maps a single gg scale to a Charm scale for per-layer use.
+   */
+  private CharmScale mapSingleScale(GgScale scale, List<String> reasons) {
+    if (scale == null) {
+      return null
+    }
+    String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(scale.aesthetic)
+    if (aesthetic == null || aesthetic.isBlank()) {
+      return null
+    }
+    CharmScale charmScale = mapScale(scale, aesthetic)
+    if (charmScale != null) {
+      enrichScale(charmScale, scale)
+    }
+    charmScale
   }
 
   private CharmScale mapScale(GgScale scale, String aesthetic) {

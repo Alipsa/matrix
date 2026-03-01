@@ -44,10 +44,10 @@ class SpokeRenderer {
         yend = y + radius * angle.sin()
       }
 
-      BigDecimal x1 = context.xScale.transform(x)
-      BigDecimal y1 = context.yScale.transform(y)
-      BigDecimal x2 = context.xScale.transform(xend)
-      BigDecimal y2 = context.yScale.transform(yend)
+      BigDecimal x1 = context.xScaleForLayer(context.layerIndex).transform(x)
+      BigDecimal y1 = context.yScaleForLayer(context.layerIndex).transform(y)
+      BigDecimal x2 = context.xScaleForLayer(context.layerIndex).transform(xend)
+      BigDecimal y2 = context.yScaleForLayer(context.layerIndex).transform(yend)
       if (x1 == null || y1 == null || x2 == null || y2 == null) {
         return
       }

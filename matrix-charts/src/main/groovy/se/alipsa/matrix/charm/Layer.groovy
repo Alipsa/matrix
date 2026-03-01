@@ -15,6 +15,7 @@ class Layer {
   private final PositionSpec positionSpec
   private final Map<String, Object> params
   private final Closure styleCallback
+  private final Map<String, Scale> scales
 
   /**
    * Creates a new layer.
@@ -26,6 +27,7 @@ class Layer {
    * @param positionSpec position adjustment specification
    * @param params free-form layer parameters
    * @param styleCallback per-datum style override callback
+   * @param scales per-layer scale overrides keyed by aesthetic name
    */
   Layer(
       GeomSpec geomSpec,
@@ -34,7 +36,8 @@ class Layer {
       boolean inheritMapping = true,
       PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY),
       Map<String, Object> params = [:],
-      Closure styleCallback = null
+      Closure styleCallback = null,
+      Map<String, Scale> scales = [:]
   ) {
     this.geomSpec = geomSpec ?: GeomSpec.of(CharmGeomType.POINT)
     this.statSpec = statSpec ?: StatSpec.of(CharmStatType.IDENTITY)
@@ -43,6 +46,7 @@ class Layer {
     this.positionSpec = positionSpec ?: PositionSpec.of(CharmPositionType.IDENTITY)
     this.params = params == null ? [:] : new LinkedHashMap<>(params)
     this.styleCallback = styleCallback
+    this.scales = scales == null ? [:] : new LinkedHashMap<>(scales)
   }
 
   /**
@@ -136,11 +140,21 @@ class Layer {
   }
 
   /**
+   * Returns per-layer scale overrides keyed by aesthetic name (e.g. 'color', 'x').
+   *
+   * @return unmodifiable scale overrides map, or empty map if none
+   */
+  Map<String, Scale> getScales() {
+    scales ? Collections.unmodifiableMap(scales) : [:]
+  }
+
+  /**
    * Creates a copy of this layer.
    *
    * @return copied layer
    */
   Layer copy() {
-    new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), params, styleCallback)
+    Map<String, Scale> copiedScales = scales ? scales.collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> : [:]
+    new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), params, styleCallback, copiedScales)
   }
 }

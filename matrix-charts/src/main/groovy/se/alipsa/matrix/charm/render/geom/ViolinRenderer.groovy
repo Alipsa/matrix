@@ -31,8 +31,8 @@ class ViolinRenderer {
     }
 
     BigDecimal baseHalfWidth
-    if (context.xScale instanceof DiscreteCharmScale) {
-      DiscreteCharmScale scale = context.xScale as DiscreteCharmScale
+    if (context.xScaleForLayer(context.layerIndex) instanceof DiscreteCharmScale) {
+      DiscreteCharmScale scale = context.xScaleForLayer(context.layerIndex) as DiscreteCharmScale
       BigDecimal step = scale.levels.isEmpty() ? 20 : (scale.rangeEnd - scale.rangeStart) / scale.levels.size()
       baseHalfWidth = step * 0.45
     } else {
@@ -61,7 +61,7 @@ class ViolinRenderer {
         0
       }
 
-      BigDecimal centerX = context.xScale.transform(centerKey)
+      BigDecimal centerX = context.xScaleForLayer(context.layerIndex).transform(centerKey)
       if (centerX == null) {
         return
       }
@@ -69,7 +69,7 @@ class ViolinRenderer {
       List<BigDecimal[]> right = []
       List<BigDecimal[]> left = []
       sorted.each { LayerData datum ->
-        BigDecimal yPx = context.yScale.transform(datum.y)
+        BigDecimal yPx = context.yScaleForLayer(context.layerIndex).transform(datum.y)
         BigDecimal density = ValueConverter.asBigDecimal(datum.meta.density)
         if (yPx == null || density == null) {
           return

@@ -19,6 +19,7 @@ import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.bridge.GgCharmCompiler
 import se.alipsa.matrix.gg.position.Position
+import se.alipsa.matrix.gg.scale.NewScaleMarker
 import se.alipsa.matrix.gg.scale.Scale
 import se.alipsa.matrix.gg.stat.Stats
 import se.alipsa.matrix.gg.theme.Theme
@@ -66,6 +67,12 @@ class GgChart {
 
   /** CSS attribute configuration */
   CssAttributeConfig cssAttributes = new CssAttributeConfig()
+
+  /**
+   * Ordered components list that tracks layers, scales, and new-scale markers
+   * in insertion order for the compiler to partition per-layer scales.
+   */
+  List<Object> components = []
 
   private static final Set<String> STAT_PARAM_KEYS = [
       'method', 'n', 'se', 'level', 'formula', 'degree',
@@ -144,6 +151,7 @@ class GgChart {
         positionParams: positionParams
     )
     layers << layer
+    components << layer
     return this
   }
 
@@ -309,6 +317,10 @@ class GgChart {
         plus(part as Stats)
         continue
       }
+      if (part instanceof NewScaleMarker) {
+        plus(part as NewScaleMarker)
+        continue
+      }
       throw new IllegalArgumentException("Unsupported gg component: ${part.getClass().name}")
     }
     return this
@@ -337,6 +349,7 @@ class GgChart {
       return this
     }
     layers << layer
+    components << layer
     return this
   }
 
@@ -347,7 +360,9 @@ class GgChart {
     if (annotate == null) {
       return this
     }
-    layers << annotate.toLayer()
+    Layer annotateLayer = annotate.toLayer()
+    layers << annotateLayer
+    components << annotateLayer
     return this
   }
 
@@ -356,6 +371,18 @@ class GgChart {
    */
   GgChart plus(Scale scale) {
     scales << scale
+    components << scale
+    return this
+  }
+
+  /**
+   * Add a new-scale marker for per-layer scale partitioning.
+   */
+  GgChart plus(NewScaleMarker marker) {
+    if (marker == null) {
+      return this
+    }
+    components << marker
     return this
   }
 
@@ -465,6 +492,7 @@ class GgChart {
         statParams: statParams
     )
     layers << layer
+    components << layer
     return this
   }
 

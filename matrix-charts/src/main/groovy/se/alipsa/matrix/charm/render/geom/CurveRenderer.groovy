@@ -18,10 +18,10 @@ class CurveRenderer {
     int elementIndex = 0
 
     layerData.each { LayerData datum ->
-      BigDecimal x1 = context.xScale.transform(datum.x)
-      BigDecimal y1 = context.yScale.transform(datum.y)
-      BigDecimal x2 = context.xScale.transform(datum.xend)
-      BigDecimal y2 = context.yScale.transform(datum.yend)
+      BigDecimal x1 = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+      BigDecimal y1 = context.yScaleForLayer(context.layerIndex).transform(datum.y)
+      BigDecimal x2 = context.xScaleForLayer(context.layerIndex).transform(datum.xend)
+      BigDecimal y2 = context.yScaleForLayer(context.layerIndex).transform(datum.yend)
       if (x1 == null || y1 == null || x2 == null || y2 == null) {
         return
       }

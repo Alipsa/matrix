@@ -23,13 +23,13 @@ class PointRenderer {
     int elementIndex = 0
 
     layerData.each { LayerData datum ->
-      BigDecimal x = context.xScale.transform(datum.x)
-      BigDecimal y = context.yScale.transform(datum.y)
+      BigDecimal x = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+      BigDecimal y = context.yScaleForLayer(context.layerIndex).transform(datum.y)
       if (x == null || y == null) {
         return
       }
-      BigDecimal radius = context.sizeScale != null && datum.size != null
-          ? context.sizeScale.transform(datum.size)
+      BigDecimal radius = context.sizeScaleForLayer(context.layerIndex) != null && datum.size != null
+          ? context.sizeScaleForLayer(context.layerIndex).transform(datum.size)
           : ValueConverter.asBigDecimal(datum.size)
       if (radius == null) {
         radius = defaultRadius
