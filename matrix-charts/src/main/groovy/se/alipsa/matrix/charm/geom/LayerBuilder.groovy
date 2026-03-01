@@ -29,6 +29,7 @@ abstract class LayerBuilder {
   protected boolean inheritMapping = true
   protected PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY)
   protected CharmStatType statType
+  protected final Map<String, Object> statParams = [:]
   protected final Map<String, Object> params = [:]
   protected Closure styleCallback
 
@@ -93,6 +94,14 @@ abstract class LayerBuilder {
    * @return this builder
    */
   LayerBuilder stat(Object stat) {
+    if (stat instanceof StatSpec) {
+      StatSpec statSpec = stat as StatSpec
+      this.statType = statSpec.type
+      if (statSpec.params != null) {
+        this.statParams.putAll(statSpec.params)
+      }
+      return this
+    }
     this.statType = parseStatType(stat)
     this
   }
@@ -200,7 +209,7 @@ abstract class LayerBuilder {
     CharmStatType effectiveStat = statType ?: defaultStatType()
     new LayerSpec(
         GeomSpec.of(geomType()),
-        StatSpec.of(effectiveStat),
+        StatSpec.of(effectiveStat, new LinkedHashMap<>(statParams)),
         layerMapping?.copy(),
         inheritMapping,
         positionSpec,
@@ -215,9 +224,6 @@ abstract class LayerBuilder {
     }
     if (stat instanceof CharmStatType) {
       return stat as CharmStatType
-    }
-    if (stat instanceof StatSpec) {
-      return (stat as StatSpec).type
     }
     if (stat instanceof CharSequence) {
       String normalized = stat.toString().trim()

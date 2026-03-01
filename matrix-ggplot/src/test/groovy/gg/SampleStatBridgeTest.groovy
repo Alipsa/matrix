@@ -44,6 +44,17 @@ class SampleStatBridgeTest {
   }
 
   @Test
+  void testGeomPointSampledAlwaysForcesSampleStat() {
+    Matrix data = sampleData()
+    def chart = ggplot(data, aes(x: 'x', y: 'y')) +
+        geom_point_sampled(stat: 'identity', n: 4)
+
+    GgCharmCompilation adaptation = new GgCharmCompiler().adapt(chart)
+    assertTrue(adaptation.delegated, adaptation.reasons.join('; '))
+    assertEquals(CharmStatType.SAMPLE, adaptation.charmChart.layers.first().statType)
+  }
+
+  @Test
   void testStatSampleWrapperCreatesSampleLayer() {
     Matrix data = sampleData()
     def chart = ggplot(data, aes(x: 'x', y: 'y')) +

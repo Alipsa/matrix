@@ -37,6 +37,17 @@ class SampleStatTest {
   }
 
   @Test
+  void testLayerBuilderStatSpecCarriesStatParams() {
+    LayerSpec layer = new PointBuilder()
+        .stat(StatSpec.of(CharmStatType.SAMPLE, [n: 4, method: 'systematic']))
+        .build()
+
+    assertEquals(CharmStatType.SAMPLE, layer.statType)
+    assertEquals(4, layer.statSpec.params['n'])
+    assertEquals('systematic', layer.statSpec.params['method'])
+  }
+
+  @Test
   void testRandomSamplingRespectsSizeAndSeed() {
     LayerSpec layer = sampleLayer([n: 5, seed: 42, method: 'random'])
     List<LayerData> data = sampleData(20)

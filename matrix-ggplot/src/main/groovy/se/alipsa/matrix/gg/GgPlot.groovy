@@ -2113,8 +2113,9 @@ class GgPlot {
    * @return a point geom configured with sample stat
    */
   static GeomPoint geom_point_sampled(Map params = [:]) {
-    Map<String, Object> merged = [stat: 'sample']
+    Map<String, Object> merged = [:]
     merged.putAll(params ?: [:])
+    merged['stat'] = 'sample'
     return new GeomPoint(merged)
   }
 
