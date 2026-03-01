@@ -26,6 +26,8 @@ import java.util.regex.Pattern
  */
 class ChartToPng {
 
+  private static final String CHARM_ANIMATION_MARKER = 'charm-animation'
+
   private static final Pattern CHARM_ANIMATION_STYLE = Pattern.compile(
       '(?is)<style\\b[^>]*>\\s*(?:<!\\[CDATA\\[\\s*)?/\\*\\s*charm-animation\\s*\\*/.*?(?:\\]\\]>\\s*)?</style>'
   )
@@ -205,6 +207,9 @@ class ChartToPng {
   }
 
   private static String stripAnimationCss(String svgContent) {
+    if (!svgContent.contains(CHARM_ANIMATION_MARKER)) {
+      return svgContent
+    }
     CHARM_ANIMATION_STYLE.matcher(svgContent).replaceAll('')
   }
 }

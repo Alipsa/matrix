@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
 import java.nio.file.Files
 
 import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
@@ -108,6 +109,17 @@ class AnimationTest {
     assertFalse(jpegSanitized.contains('charm-animation'))
     assertTrue(pngSanitized.contains('<circle'))
     assertTrue(jpegSanitized.contains('<circle'))
+  }
+
+  @Test
+  void testRasterStripPatternFastPathWhenAnimationMarkerMissing() {
+    String svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="3"/></svg>'
+
+    String pngSanitized = invokeStrip(ChartToPng, svg)
+    String jpegSanitized = invokeStrip(ChartToJpeg, svg)
+
+    assertSame(svg, pngSanitized)
+    assertSame(svg, jpegSanitized)
   }
 
   private static Matrix sampleData() {

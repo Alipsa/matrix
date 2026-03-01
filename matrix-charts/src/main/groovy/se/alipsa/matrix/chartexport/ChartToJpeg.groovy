@@ -19,6 +19,8 @@ import java.util.regex.Pattern
  */
 class ChartToJpeg {
 
+  private static final String CHARM_ANIMATION_MARKER = 'charm-animation'
+
   private static final Pattern CHARM_ANIMATION_STYLE = Pattern.compile(
       '(?is)<style\\b[^>]*>\\s*(?:<!\\[CDATA\\[\\s*)?/\\*\\s*charm-animation\\s*\\*/.*?(?:\\]\\]>\\s*)?</style>'
   )
@@ -56,7 +58,12 @@ class ChartToJpeg {
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
-    export(chart.render(), targetFile, quality)
+    Svg rendered = chart.render()
+    if (!hasActiveAnimation(chart)) {
+      SvgRenderer.toJpeg(rendered, targetFile, [quality: quality])
+      return
+    }
+    SvgRenderer.toJpeg(stripAnimationCss(rendered), targetFile, [quality: quality])
   }
 
   /**
@@ -74,7 +81,8 @@ class ChartToJpeg {
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
-    export(CharmBridge.convert(chart).render(), targetFile, quality)
+    CharmChart converted = CharmBridge.convert(chart)
+    export(converted, targetFile, quality)
   }
 
   /**
@@ -110,7 +118,12 @@ class ChartToJpeg {
     if (os == null) {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
-    export(chart.render(), os, quality)
+    Svg rendered = chart.render()
+    if (!hasActiveAnimation(chart)) {
+      SvgRenderer.toJpeg(rendered, os, [quality: quality])
+      return
+    }
+    SvgRenderer.toJpeg(stripAnimationCss(rendered), os, [quality: quality])
   }
 
   /**
@@ -128,16 +141,27 @@ class ChartToJpeg {
     if (os == null) {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
-    export(CharmBridge.convert(chart).render(), os, quality)
+    CharmChart converted = CharmBridge.convert(chart)
+    export(converted, os, quality)
   }
 
   private static Svg stripAnimationCss(Svg svgChart) {
     String xml = svgChart.toXml()
+    if (!xml.contains(CHARM_ANIMATION_MARKER)) {
+      return svgChart
+    }
     String sanitized = stripAnimationCss(xml)
     sanitized == xml ? svgChart : SvgReader.parse(sanitized)
   }
 
   private static String stripAnimationCss(String svgXml) {
+    if (!svgXml.contains(CHARM_ANIMATION_MARKER)) {
+      return svgXml
+    }
     CHARM_ANIMATION_STYLE.matcher(svgXml).replaceAll('')
+  }
+
+  private static boolean hasActiveAnimation(CharmChart chart) {
+    chart.animation?.isActive() ?: false
   }
 }
