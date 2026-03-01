@@ -135,7 +135,7 @@ class LegendRenderer {
       // Per-layer scale entries have keys like "color_layer1"
       boolean isPerLayer = aesthetic.contains('_layer')
       String baseAesthetic = isPerLayer ? aesthetic.replaceAll(/_layer\d+$/, '') : aesthetic
-      GuideType guideType = resolveGuideType(baseAesthetic, context, guides)
+      GuideType guideType = resolveGuideType(baseAesthetic, context, guides, scaleObj)
 
       // Render per-layer legend title
       if (isPerLayer) {
@@ -166,8 +166,8 @@ class LegendRenderer {
               currentY = renderColorbarFromScale(legend, context, baseAesthetic, scaleObj, currentY, isVertical)
             }
             case GuideType.COLORSTEPS -> {
-              GuideSpec spec = guides?.getSpec(baseAesthetic)
-              currentY = renderColorStepsFromScale(legend, context, baseAesthetic, scaleObj, currentY, isVertical, spec?.params ?: [:])
+              Map<String, Object> params = resolveGuideParams(baseAesthetic, guides, scaleObj)
+              currentY = renderColorStepsFromScale(legend, context, baseAesthetic, scaleObj, currentY, isVertical, params)
             }
             case GuideType.LEGEND -> {
               if (isColorAesthetic(baseAesthetic)) {
@@ -951,32 +951,110 @@ class LegendRenderer {
     if (cs == null || cs.domainMin == null || cs.domainMax == null) {
       return startY
     }
-    // Delegate to existing colorbar renderer after setting context temporarily
+    if ('fill' == aesthetic) {
+      ColorCharmScale previous = context.fillScale
+      try {
+        context.fillScale = cs
+        return renderColorbar(group, context, aesthetic, startY, vertical)
+      } finally {
+        context.fillScale = previous
+      }
+    }
+    if ('color' == aesthetic || 'colour' == aesthetic) {
+      ColorCharmScale previous = context.colorScale
+      try {
+        context.colorScale = cs
+        return renderColorbar(group, context, aesthetic, startY, vertical)
+      } finally {
+        context.colorScale = previous
+      }
+    }
     renderColorbar(group, context, aesthetic, startY, vertical)
   }
 
   /** Renders color steps from an explicit scale object (for per-layer or global). */
   private int renderColorStepsFromScale(G group, RenderContext context, String aesthetic,
                                           Object scaleObj, int startY, boolean vertical, Map<String, Object> guideParams) {
+    ColorCharmScale cs = resolveColorScaleObj(context, aesthetic, scaleObj)
+    if (cs == null || cs.domainMin == null || cs.domainMax == null) {
+      return startY
+    }
+    if ('fill' == aesthetic) {
+      ColorCharmScale previous = context.fillScale
+      try {
+        context.fillScale = cs
+        return renderColorSteps(group, context, aesthetic, startY, vertical, guideParams)
+      } finally {
+        context.fillScale = previous
+      }
+    }
+    if ('color' == aesthetic || 'colour' == aesthetic) {
+      ColorCharmScale previous = context.colorScale
+      try {
+        context.colorScale = cs
+        return renderColorSteps(group, context, aesthetic, startY, vertical, guideParams)
+      } finally {
+        context.colorScale = previous
+      }
+    }
     renderColorSteps(group, context, aesthetic, startY, vertical, guideParams)
   }
 
   /** Renders a continuous-as-discrete legend from an explicit ColorCharmScale. */
   private int renderContinuousAsDiscreteFromScale(G group, RenderContext context, String aesthetic,
                                                      ColorCharmScale cs, int startY, boolean vertical) {
+    if (cs == null) {
+      return startY
+    }
+    if ('fill' == aesthetic) {
+      ColorCharmScale previous = context.fillScale
+      try {
+        context.fillScale = cs
+        return renderContinuousAsDiscrete(group, context, aesthetic, startY, vertical)
+      } finally {
+        context.fillScale = previous
+      }
+    }
+    if ('color' == aesthetic || 'colour' == aesthetic) {
+      ColorCharmScale previous = context.colorScale
+      try {
+        context.colorScale = cs
+        return renderContinuousAsDiscrete(group, context, aesthetic, startY, vertical)
+      } finally {
+        context.colorScale = previous
+      }
+    }
     renderContinuousAsDiscrete(group, context, aesthetic, startY, vertical)
   }
 
   /** Renders a size legend from an explicit scale. */
   private int renderSizeLegendFromScale(G group, RenderContext context, CharmScale scale,
                                           int startY, boolean vertical) {
-    renderSizeLegend(group, context, startY, vertical)
+    if (scale == null) {
+      return renderSizeLegend(group, context, startY, vertical)
+    }
+    CharmScale previous = context.sizeScale
+    try {
+      context.sizeScale = scale
+      return renderSizeLegend(group, context, startY, vertical)
+    } finally {
+      context.sizeScale = previous
+    }
   }
 
   /** Renders an alpha legend from an explicit scale. */
   private int renderAlphaLegendFromScale(G group, RenderContext context, CharmScale scale,
                                            int startY, boolean vertical) {
-    renderAlphaLegend(group, context, startY, vertical)
+    if (scale == null) {
+      return renderAlphaLegend(group, context, startY, vertical)
+    }
+    CharmScale previous = context.alphaScale
+    try {
+      context.alphaScale = scale
+      return renderAlphaLegend(group, context, startY, vertical)
+    } finally {
+      context.alphaScale = previous
+    }
   }
 
   /** Resolves a per-layer legend title from the scale name param or a generated label. */
@@ -1004,65 +1082,68 @@ class LegendRenderer {
     Map<String, Object> result = [:]
 
     if (context.colorScale != null && !context.colorScale.levels.isEmpty()) {
-      if (resolveGuideType('color', context, guides) != GuideType.NONE) {
+      if (resolveGuideType('color', context, guides, context.colorScale) != GuideType.NONE) {
         result['color'] = context.colorScale
       }
     } else if (context.colorScale != null && context.colorScale.domainMin != null) {
-      if (resolveGuideType('color', context, guides) != GuideType.NONE) {
+      if (resolveGuideType('color', context, guides, context.colorScale) != GuideType.NONE) {
         result['color'] = context.colorScale
       }
     }
 
     if (context.fillScale != null && !context.fillScale.levels.isEmpty()) {
-      if (resolveGuideType('fill', context, guides) != GuideType.NONE) {
+      if (resolveGuideType('fill', context, guides, context.fillScale) != GuideType.NONE) {
         result['fill'] = context.fillScale
       }
     } else if (context.fillScale != null && context.fillScale.domainMin != null) {
-      if (resolveGuideType('fill', context, guides) != GuideType.NONE) {
+      if (resolveGuideType('fill', context, guides, context.fillScale) != GuideType.NONE) {
         result['fill'] = context.fillScale
       }
     }
 
     if (context.sizeScale != null) {
-      if (resolveGuideType('size', context, guides) != GuideType.NONE) {
+      if (resolveGuideType('size', context, guides, context.sizeScale) != GuideType.NONE) {
         result['size'] = context.sizeScale
       }
     }
 
     if (context.shapeScale != null) {
-      if (resolveGuideType('shape', context, guides) != GuideType.NONE) {
+      if (resolveGuideType('shape', context, guides, context.shapeScale) != GuideType.NONE) {
         result['shape'] = context.shapeScale
       }
     }
 
     if (context.alphaScale != null) {
-      if (resolveGuideType('alpha', context, guides) != GuideType.NONE) {
+      if (resolveGuideType('alpha', context, guides, context.alphaScale) != GuideType.NONE) {
         result['alpha'] = context.alphaScale
       }
     }
 
     if (context.linetypeScale != null) {
-      if (resolveGuideType('linetype', context, guides) != GuideType.NONE) {
+      if (resolveGuideType('linetype', context, guides, context.linetypeScale) != GuideType.NONE) {
         result['linetype'] = context.linetypeScale
       }
     }
 
     // Per-layer scale overrides produce additional legend entries
     context.layerScales.each { Integer idx, TrainedScales layerTrained ->
-      addPerLayerLegendEntry(result, 'color', idx, layerTrained.color, guides)
-      addPerLayerLegendEntry(result, 'fill', idx, layerTrained.fill as CharmScale, guides)
-      addPerLayerLegendEntry(result, 'size', idx, layerTrained.size, guides)
-      addPerLayerLegendEntry(result, 'shape', idx, layerTrained.shape, guides)
-      addPerLayerLegendEntry(result, 'alpha', idx, layerTrained.alpha, guides)
-      addPerLayerLegendEntry(result, 'linetype', idx, layerTrained.linetype, guides)
+      addPerLayerLegendEntry(result, context, guides, 'color', idx, layerTrained.color)
+      addPerLayerLegendEntry(result, context, guides, 'fill', idx, layerTrained.fill as CharmScale)
+      addPerLayerLegendEntry(result, context, guides, 'size', idx, layerTrained.size)
+      addPerLayerLegendEntry(result, context, guides, 'shape', idx, layerTrained.shape)
+      addPerLayerLegendEntry(result, context, guides, 'alpha', idx, layerTrained.alpha)
+      addPerLayerLegendEntry(result, context, guides, 'linetype', idx, layerTrained.linetype)
     }
 
     result
   }
 
-  private static void addPerLayerLegendEntry(Map<String, Object> result, String aesthetic,
-                                               int layerIdx, CharmScale scale, GuidesSpec guides) {
+  private void addPerLayerLegendEntry(Map<String, Object> result, RenderContext context, GuidesSpec guides,
+                                        String aesthetic, int layerIdx, CharmScale scale) {
     if (scale == null) {
+      return
+    }
+    if (resolveGuideType(aesthetic, context, guides, scale) == GuideType.NONE) {
       return
     }
     boolean hasContent = false
@@ -1080,23 +1161,98 @@ class LegendRenderer {
     }
   }
 
-  private GuideType resolveGuideType(String aesthetic, RenderContext context, GuidesSpec guides) {
+  private GuideType resolveGuideType(String aesthetic, RenderContext context, GuidesSpec guides, Object scaleObj = null) {
     // Check explicit guide spec
     GuideSpec spec = guides?.getSpec(aesthetic)
     if (spec != null) {
       return spec.type
     }
 
+    GuideSpec scaleGuide = guideSpecFromScale(scaleObj)
+    if (scaleGuide != null) {
+      return scaleGuide.type
+    }
+
     // Default: discrete scales -> LEGEND, continuous color -> COLORBAR
     if (isColorAesthetic(aesthetic)) {
-      ColorCharmScale cs = aesthetic == 'fill' ? context.fillScale : context.colorScale
+      ColorCharmScale cs = resolveColorScaleObj(context, aesthetic, scaleObj)
+      if (cs == null) {
+        return GuideType.NONE
+      }
       if (cs != null && !cs.levels.isEmpty()) {
         return GuideType.LEGEND
+      }
+      if (cs.domainMin == null || cs.domainMax == null) {
+        return GuideType.NONE
       }
       return GuideType.COLORBAR
     }
 
+    if (scaleObj instanceof DiscreteCharmScale || scaleObj instanceof ContinuousCharmScale) {
+      return GuideType.LEGEND
+    }
+
     GuideType.LEGEND
+  }
+
+  private static Map<String, Object> resolveGuideParams(String aesthetic, GuidesSpec guides, Object scaleObj) {
+    GuideSpec explicit = guides?.getSpec(aesthetic)
+    if (explicit != null) {
+      return explicit.params ?: [:]
+    }
+    GuideSpec fromScale = guideSpecFromScale(scaleObj)
+    fromScale?.params ?: [:]
+  }
+
+  private static GuideSpec guideSpecFromScale(Object scaleObj) {
+    if (!(scaleObj instanceof CharmScale)) {
+      return null
+    }
+    Object guide = (scaleObj as CharmScale).scaleSpec?.params?.get('guide')
+    toGuideSpec(guide)
+  }
+
+  private static GuideSpec toGuideSpec(Object guide) {
+    if (guide == null) {
+      return null
+    }
+    if (guide instanceof GuideSpec) {
+      return guide as GuideSpec
+    }
+    if (guide instanceof GuideType) {
+      return new GuideSpec(guide as GuideType)
+    }
+    if (guide == false || guide == Boolean.FALSE) {
+      return GuideSpec.none()
+    }
+    if (guide instanceof CharSequence) {
+      GuideType type = GuideType.fromString(guide.toString())
+      if (type != null) {
+        return new GuideSpec(type)
+      }
+      return null
+    }
+    if (guide instanceof Map) {
+      Map guideMap = guide as Map
+      Object typeValue = guideMap['type']
+      GuideType type = null
+      if (typeValue instanceof GuideType) {
+        type = typeValue as GuideType
+      } else if (typeValue != null) {
+        type = GuideType.fromString(typeValue.toString())
+      }
+      if (type == null) {
+        return null
+      }
+      Map<String, Object> params
+      if (guideMap['params'] instanceof Map) {
+        params = new LinkedHashMap<>(guideMap['params'] as Map<String, Object>)
+      } else {
+        params = (guideMap.findAll { Object key, Object value -> key != 'type' } as Map<String, Object>)
+      }
+      return new GuideSpec(type, params ?: [:])
+    }
+    null
   }
 
   private String resolveLegendTitle(RenderContext context, Map<String, Object> legendScales) {

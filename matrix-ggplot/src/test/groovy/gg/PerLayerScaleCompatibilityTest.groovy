@@ -3,9 +3,12 @@ package gg
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Svg
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
 import se.alipsa.matrix.gg.scale.NewScaleMarker
+
+import java.util.Locale
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -35,6 +38,12 @@ class PerLayerScaleCompatibilityTest {
     Svg svg = chart.render()
     assertNotNull(svg)
 
+    String content = normalizeSvg(svg)
+    assertContainsColor(content, '#FF0000')
+    assertContainsColor(content, '#00FF00')
+    assertContainsColor(content, '#0000FF')
+    assertContainsColor(content, '#FFFF00')
+
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() >= 12, "Expected at least 12 circles (6 per layer), got ${circles.size()}")
   }
@@ -58,6 +67,12 @@ class PerLayerScaleCompatibilityTest {
 
     Svg svg = chart.render()
     assertNotNull(svg)
+
+    String content = normalizeSvg(svg)
+    assertContainsColor(content, '#FF0000')
+    assertContainsColor(content, '#00FF00')
+    assertContainsColor(content, '#0000FF')
+    assertContainsColor(content, '#FFFF00')
   }
 
   @Test
@@ -76,6 +91,10 @@ class PerLayerScaleCompatibilityTest {
     // No new_scale_color() marker — the scale should be global
     Svg svg = chart.render()
     assertNotNull(svg)
+
+    String content = normalizeSvg(svg)
+    assertContainsColor(content, '#FF0000')
+    assertContainsColor(content, '#00FF00')
 
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() >= 3, "Expected at least 3 circles, got ${circles.size()}")
@@ -102,6 +121,11 @@ class PerLayerScaleCompatibilityTest {
 
     Svg svg = chart.render()
     assertNotNull(svg)
+
+    String content = normalizeSvg(svg)
+    assertContainsColor(content, '#FF0000')
+    assertContainsColor(content, '#111111')
+    assertContainsColor(content, '#AAAAAA')
 
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() >= 9, "Expected at least 9 circles (3 per layer), got ${circles.size()}")
@@ -134,5 +158,14 @@ class PerLayerScaleCompatibilityTest {
     // Components should track layers and markers in order
     assertFalse(chart.components.isEmpty(), 'Components list should not be empty')
     assertTrue(chart.components.any { it instanceof NewScaleMarker }, 'Should contain a NewScaleMarker')
+  }
+
+  private static String normalizeSvg(Svg svg) {
+    SvgWriter.toXml(svg).toLowerCase(Locale.ROOT)
+  }
+
+  private static void assertContainsColor(String content, String color) {
+    String normalized = color.toLowerCase(Locale.ROOT)
+    assertTrue(content.contains(normalized), "Expected rendered svg to contain color ${color}")
   }
 }

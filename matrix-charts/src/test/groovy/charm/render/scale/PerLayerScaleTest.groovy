@@ -4,17 +4,16 @@ import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Circle
 import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.Text
+import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderConfig
-import se.alipsa.matrix.charm.render.scale.CharmScale
-import se.alipsa.matrix.charm.render.scale.ColorCharmScale
-import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
 import se.alipsa.matrix.charm.render.scale.TrainedScales
 import se.alipsa.matrix.core.Matrix
+
+import java.util.Locale
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.charm.Charts.plot
@@ -47,6 +46,12 @@ class PerLayerScaleTest {
     Svg svg = chart.render()
     assertNotNull(svg)
 
+    String content = normalizeSvg(svg)
+    assertContainsColor(content, '#FF0000')
+    assertContainsColor(content, '#00FF00')
+    assertContainsColor(content, '#0000FF')
+    assertContainsColor(content, '#FFFF00')
+
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() >= 8, "Expected at least 8 circles (4 per layer), got ${circles.size()}")
   }
@@ -74,6 +79,12 @@ class PerLayerScaleTest {
     Svg svg = chart.render()
     assertNotNull(svg)
 
+    String content = normalizeSvg(svg)
+    assertContainsColor(content, '#FF0000')
+    assertContainsColor(content, '#00FF00')
+    assertContainsColor(content, '#0000FF')
+    assertContainsColor(content, '#FFFF00')
+
     // First layer should use global color scale, second uses per-layer override
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() >= 6, "Expected at least 6 circles, got ${circles.size()}")
@@ -91,7 +102,7 @@ class PerLayerScaleTest {
         .build()
 
     Chart chart = plot(data) {
-      mapping { x = 'cat'; y = 'value' }
+      mapping { x = 'cat'; y = 'value'; fill = 'cat' }
       layers {
         geomCol().scale('fill', Scale.manual([A: '#FF0000', B: '#00FF00', C: '#0000FF']))
       }
@@ -100,8 +111,44 @@ class PerLayerScaleTest {
     Svg svg = chart.render()
     assertNotNull(svg)
 
+    String content = normalizeSvg(svg)
+    assertContainsColor(content, '#FF0000')
+    assertContainsColor(content, '#00FF00')
+    assertContainsColor(content, '#0000FF')
+
     def rects = svg.descendants().findAll { it instanceof Rect }
     assertTrue(rects.size() >= 3, "Expected at least 3 bars, got ${rects.size()}")
+  }
+
+  @Test
+  void testPerLayerGuideNoneSuppressesPerLayerLegendEntry() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'cat')
+        .rows([
+            [1, 2, 'A'],
+            [2, 4, 'B'],
+            [3, 6, 'A'],
+            [4, 8, 'B']
+        ])
+        .build()
+
+    Scale globalScale = Scale.manual([A: '#FF0000', B: '#00FF00'])
+    globalScale.params['name'] = 'Global Colors'
+    Scale perLayerScale = Scale.manual([A: '#0000FF', B: '#FFFF00']).guide(false)
+    perLayerScale.params['name'] = 'Per-layer Colors'
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; color = 'cat' }
+      scale { color = globalScale }
+      layers {
+        geomPoint()
+        geomPoint().scale('color', perLayerScale)
+      }
+    }.build()
+
+    String content = normalizeSvg(chart.render())
+    assertTrue(content.contains('global colors'), 'Global legend title should be present')
+    assertFalse(content.contains('per-layer colors'), 'Per-layer legend title should be suppressed when guide(false) is set')
   }
 
   @Test
@@ -222,8 +269,21 @@ class PerLayerScaleTest {
     Svg svg = chart.render()
     assertNotNull(svg)
 
+    String content = normalizeSvg(svg)
+    assertContainsColor(content, '#FF0000')
+    assertContainsColor(content, '#0000FF')
+
     // Should have both circle and line elements
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() > 0, 'Expected point circles')
+  }
+
+  private static String normalizeSvg(Svg svg) {
+    SvgWriter.toXml(svg).toLowerCase(Locale.ROOT)
+  }
+
+  private static void assertContainsColor(String content, String color) {
+    String normalized = color.toLowerCase(Locale.ROOT)
+    assertTrue(content.contains(normalized), "Expected rendered svg to contain color ${color}")
   }
 }

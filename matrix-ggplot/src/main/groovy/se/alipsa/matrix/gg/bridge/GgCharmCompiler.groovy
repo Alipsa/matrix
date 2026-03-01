@@ -144,7 +144,8 @@ class GgCharmCompiler {
       return GgCharmCompilation.fallback(reasons)
     }
 
-    ScaleSpec mappedScales = mapScales(ggChart.scales, reasons)
+    List<GgScale> globalScales = extractGlobalScales(ggChart)
+    ScaleSpec mappedScales = mapScales(globalScales, reasons)
     if (!reasons.isEmpty()) {
       return GgCharmCompilation.fallback(reasons)
     }
@@ -152,9 +153,9 @@ class GgCharmCompiler {
     // Apply per-layer scales from NewScaleMarker partitioning
     applyPerLayerScales(ggChart, mappedLayers, reasons)
 
-    Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, ggChart.scales)
+    Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, globalScales)
 
-    GuidesSpec mappedGuides = mapGuides(ggChart.guides, ggChart.scales)
+    GuidesSpec mappedGuides = mapGuides(ggChart.guides, globalScales)
 
     Chart mappedChart = new Chart(
         plotData,
@@ -205,10 +206,13 @@ class GgCharmCompiler {
         layerIdx++
       } else if (component instanceof NewScaleMarker) {
         NewScaleMarker marker = component as NewScaleMarker
-        activeMarkers[marker.aesthetic] = true
+        String markerAesthetic = GgCharmMappingRegistry.normalizeAesthetic(marker.aesthetic)
+        if (markerAesthetic != null) {
+          activeMarkers[markerAesthetic] = true
+        }
       } else if (component instanceof GgScale) {
         GgScale ggScale = component as GgScale
-        String aesthetic = ggScale.aesthetic
+        String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(ggScale.aesthetic)
         if (aesthetic != null && activeMarkers[aesthetic] && layerIdx >= 0 && layerIdx < mappedLayers.size()) {
           // This scale applies to the current layer as a per-layer override
           CharmScale charmScale = mapSingleScale(ggScale, reasons)
@@ -232,6 +236,46 @@ class GgCharmCompiler {
         }
       }
     }
+  }
+
+  /**
+   * Returns global chart-level scales by walking ordered components and excluding
+   * scales that are activated after a new-scale marker for the same aesthetic.
+   */
+  private static List<GgScale> extractGlobalScales(GgChart ggChart) {
+    List<GgScale> allScales = ggChart?.scales ?: []
+    if (allScales.isEmpty()) {
+      return []
+    }
+    if (ggChart?.components == null || ggChart.components.isEmpty()) {
+      return new ArrayList<>(allScales)
+    }
+    if (!ggChart.components.any { it instanceof NewScaleMarker }) {
+      return new ArrayList<>(allScales)
+    }
+
+    int componentScaleCount = ggChart.components.count { it instanceof GgScale } as int
+    if (componentScaleCount == 0) {
+      return new ArrayList<>(allScales)
+    }
+
+    Map<String, Boolean> markerActivated = [:]
+    List<GgScale> globalScales = []
+    ggChart.components.each { Object component ->
+      if (component instanceof NewScaleMarker) {
+        String markerAesthetic = GgCharmMappingRegistry.normalizeAesthetic((component as NewScaleMarker).aesthetic)
+        if (markerAesthetic != null) {
+          markerActivated[markerAesthetic] = true
+        }
+      } else if (component instanceof GgScale) {
+        GgScale scale = component as GgScale
+        String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(scale.aesthetic)
+        if (aesthetic == null || !Boolean.TRUE.equals(markerActivated[aesthetic])) {
+          globalScales << scale
+        }
+      }
+    }
+    globalScales
   }
 
   private LayerSpec mapLayer(
