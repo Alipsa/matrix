@@ -87,6 +87,8 @@ enum StatType {
     SUMMARY_BIN,
     /** Remove duplicate observations */
     UNIQUE,
+    /** Sample observations from large datasets */
+    SAMPLE,
     /** Compute y values from function of x */
     FUNCTION,
     /** Expand simple feature geometries to x/y coordinates */

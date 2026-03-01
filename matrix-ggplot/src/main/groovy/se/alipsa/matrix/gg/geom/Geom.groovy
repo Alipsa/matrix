@@ -56,6 +56,7 @@ class Geom {
       (StatType.ELLIPSE)   : CharmStatType.ELLIPSE,
       (StatType.SUMMARY_BIN): CharmStatType.SUMMARY_BIN,
       (StatType.UNIQUE)    : CharmStatType.UNIQUE,
+      (StatType.SAMPLE)    : CharmStatType.SAMPLE,
       (StatType.FUNCTION)  : CharmStatType.FUNCTION,
       (StatType.SF)        : CharmStatType.SF,
       (StatType.SF_COORDINATES): CharmStatType.SF_COORDINATES,

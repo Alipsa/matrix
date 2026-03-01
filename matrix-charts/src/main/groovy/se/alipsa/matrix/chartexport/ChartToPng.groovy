@@ -40,7 +40,7 @@ class ChartToPng {
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
-    ImageIO.write(renderToImage(svgChart), "png", targetFile)
+    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), "png", targetFile)
   }
 
   /**
@@ -58,7 +58,7 @@ class ChartToPng {
     if (os == null) {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
-    ImageIO.write(renderToImage(svgChart), "png", os)
+    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), "png", os)
   }
 
   /**
@@ -197,5 +197,9 @@ class ChartToPng {
     svgDocument.render(null, g)
     g.dispose()
     image
+  }
+
+  private static String stripAnimationCss(String svgContent) {
+    AnimationCssStripper.stripFromXml(svgContent)
   }
 }

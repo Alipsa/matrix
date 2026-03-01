@@ -56,6 +56,7 @@ class StatEngine {
       case CharmStatType.FUNCTION -> FunctionStat.compute(layer, data)
       case CharmStatType.SUMMARY_BIN -> SummaryBinStat.compute(layer, data)
       case CharmStatType.UNIQUE -> UniqueStat.compute(layer, data)
+      case CharmStatType.SAMPLE -> SampleStat.compute(layer, data)
       case CharmStatType.QUANTILE -> QuantileStat.compute(layer, data)
       case CharmStatType.DENSITY_2D -> Density2DStat.compute(layer, data)
       case CharmStatType.BIN_HEX -> BinHexStat.compute(layer, data)

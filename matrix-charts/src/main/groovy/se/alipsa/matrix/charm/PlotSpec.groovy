@@ -59,6 +59,7 @@ class PlotSpec {
   private CoordSpec coord = new CoordSpec()
   private LabelsSpec labels = new LabelsSpec()
   private GuidesSpec guides = new GuidesSpec()
+  private AnimationSpec animation
   private final List<AnnotationSpec> annotations = []
 
   /**
@@ -152,6 +153,15 @@ class PlotSpec {
    */
   GuidesSpec getGuides() {
     guides
+  }
+
+  /**
+   * Returns animation specification.
+   *
+   * @return animation spec or null
+   */
+  AnimationSpec getAnimation() {
+    animation?.copy()
   }
 
   /**
@@ -336,6 +346,21 @@ class PlotSpec {
   }
 
   /**
+   * Configures optional SVG animation using closure syntax.
+   *
+   * @param configure closure for animation options
+   * @return this plot spec
+   */
+  PlotSpec animation(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AnimationSpec) Closure<?> configure) {
+    AnimationSpec spec = animation?.copy() ?: new AnimationSpec()
+    Closure<?> body = configure.rehydrate(spec, this, this)
+    body.resolveStrategy = Closure.DELEGATE_ONLY
+    body.call()
+    animation = spec
+    this
+  }
+
+  /**
    * Adds annotations via closure DSL.
    *
    * @param configure closure for annotation declarations
@@ -361,6 +386,7 @@ class PlotSpec {
       List<AnnotationSpec> compiledAnnotations = annotations.collect { AnnotationSpec a -> a.copy() }
       ScaleSpec compiledScale = scale.copy()
       GuidesSpec compiledGuides = materializeScaleGuides(compiledScale, guides)
+      AnimationSpec compiledAnimation = animation?.copy()
       new Chart(
           data,
           mapping.copy(),
@@ -371,7 +397,9 @@ class PlotSpec {
           coord.copy(),
           labels.copy(),
           compiledGuides,
-          compiledAnnotations
+          compiledAnnotations,
+          null,
+          compiledAnimation
       )
     } catch (CharmException e) {
       throw e

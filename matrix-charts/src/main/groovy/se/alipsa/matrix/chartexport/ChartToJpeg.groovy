@@ -31,7 +31,7 @@ class ChartToJpeg {
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
-    SvgRenderer.toJpeg(svgChart, targetFile, [quality: quality])
+    SvgRenderer.toJpeg(stripAnimationCss(svgChart), targetFile, [quality: quality])
   }
 
   /**
@@ -49,7 +49,12 @@ class ChartToJpeg {
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
-    export(chart.render(), targetFile, quality)
+    Svg rendered = chart.render()
+    if (!hasActiveAnimation(chart)) {
+      SvgRenderer.toJpeg(rendered, targetFile, [quality: quality])
+      return
+    }
+    SvgRenderer.toJpeg(stripAnimationCss(rendered), targetFile, [quality: quality])
   }
 
   /**
@@ -67,7 +72,8 @@ class ChartToJpeg {
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
-    export(CharmBridge.convert(chart).render(), targetFile, quality)
+    CharmChart converted = CharmBridge.convert(chart)
+    export(converted, targetFile, quality)
   }
 
   /**
@@ -85,7 +91,7 @@ class ChartToJpeg {
     if (os == null) {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
-    SvgRenderer.toJpeg(svgChart, os, [quality: quality])
+    SvgRenderer.toJpeg(stripAnimationCss(svgChart), os, [quality: quality])
   }
 
   /**
@@ -103,7 +109,12 @@ class ChartToJpeg {
     if (os == null) {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
-    export(chart.render(), os, quality)
+    Svg rendered = chart.render()
+    if (!hasActiveAnimation(chart)) {
+      SvgRenderer.toJpeg(rendered, os, [quality: quality])
+      return
+    }
+    SvgRenderer.toJpeg(stripAnimationCss(rendered), os, [quality: quality])
   }
 
   /**
@@ -121,6 +132,19 @@ class ChartToJpeg {
     if (os == null) {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
-    export(CharmBridge.convert(chart).render(), os, quality)
+    CharmChart converted = CharmBridge.convert(chart)
+    export(converted, os, quality)
+  }
+
+  private static Svg stripAnimationCss(Svg svgChart) {
+    AnimationCssStripper.stripFromSvg(svgChart)
+  }
+
+  private static String stripAnimationCss(String svgXml) {
+    AnimationCssStripper.stripFromXml(svgXml)
+  }
+
+  private static boolean hasActiveAnimation(CharmChart chart) {
+    chart.animation?.isActive() ?: false
   }
 }

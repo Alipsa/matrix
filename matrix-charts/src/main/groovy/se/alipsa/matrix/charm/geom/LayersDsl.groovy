@@ -35,6 +35,22 @@ class LayersDsl {
   }
 
   /**
+   * Creates and registers a sampled point builder.
+   *
+   * <p>Equivalent to {@code geomPoint().stat('sample')} with optional stat params
+   * such as {@code n}, {@code seed}, and {@code method}.</p>
+   *
+   * @param params optional sampling parameters
+   * @return sampled point builder
+   */
+  PointBuilder geomPointSampled(Map<String, Object> params = [:]) {
+    PointBuilder b = geomPoint()
+    b.stat('sample')
+    b.params(params)
+    b
+  }
+
+  /**
    * Creates and registers a line builder.
    *
    * @return new line builder

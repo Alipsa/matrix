@@ -69,7 +69,7 @@ class SfTextBuilder extends LayerBuilder {
   }
 
   @Override
-  protected CharmStatType statType() {
+  protected CharmStatType defaultStatType() {
     CharmStatType.SF_COORDINATES
   }
 }

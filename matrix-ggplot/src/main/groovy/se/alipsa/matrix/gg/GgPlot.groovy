@@ -149,6 +149,7 @@ import se.alipsa.matrix.gg.stat.StatsSfCoordinates
 import se.alipsa.matrix.gg.stat.StatsSmooth
 import se.alipsa.matrix.gg.stat.StatsSpoke
 import se.alipsa.matrix.gg.stat.StatsSum
+import se.alipsa.matrix.gg.stat.StatsSample
 import se.alipsa.matrix.gg.stat.StatsSummaryBin
 import se.alipsa.matrix.gg.stat.StatsSummaryHex
 import se.alipsa.matrix.gg.stat.StatsSummary2d
@@ -2102,6 +2103,29 @@ class GgPlot {
 
   static GeomPoint geom_point(Map params) {
     return new GeomPoint(params)
+  }
+
+  /**
+   * Convenience helper for large datasets: point geom with stat=sample.
+   *
+   * @param params optional sampling/layer params (e.g. n, seed, method)
+   * @return a point geom configured with sample stat
+   */
+  static GeomPoint geom_point_sampled(Map params = [:]) {
+    Map<String, Object> merged = [:]
+    merged.putAll(params ?: [:])
+    merged['stat'] = 'sample'
+    return new GeomPoint(merged)
+  }
+
+  /**
+   * Convenience helper for large datasets with layer-specific mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a point geom configured with sample stat
+   */
+  static GeomPoint geom_point_sampled(Aes mapping) {
+    return geom_point_sampled([mapping: mapping])
   }
 
   /**
@@ -4233,6 +4257,15 @@ class GgPlot {
    */
   static StatsUnique stat_unique(Map params = [:]) {
     return new StatsUnique(params)
+  }
+
+  /**
+   * Create a sampling stat for large datasets.
+   *
+   * @param params stat parameters (n, seed, method)
+   */
+  static StatsSample stat_sample(Map params = [:]) {
+    return new StatsSample(params)
   }
 
   /**

@@ -70,7 +70,7 @@ class GgChart {
   private static final Set<String> STAT_PARAM_KEYS = [
       'method', 'n', 'se', 'level', 'formula', 'degree',
       'bins', 'binwidth', 'fun', 'fun.y', 'fun.data', 'fun.args', 'width', 'coef',
-      'geometry', 'quantiles', 'xlim'
+      'geometry', 'quantiles', 'xlim', 'seed'
   ] as Set<String>
 
   private static final Map<PositionType, Set<String>> POSITION_PARAM_KEYS = [
@@ -158,7 +158,7 @@ class GgChart {
    * </ul>
    * Supported stat names are: 'identity', 'count', 'bin', 'boxplot', 'smooth',
    * 'summary', 'density', 'ydensity', 'bin2d', 'contour', 'ecdf', 'qq', 'qq_line',
-   * 'unique', 'function', 'sf', and 'sf_coordinates'.
+   * 'unique', 'sample', 'function', 'sf', and 'sf_coordinates'.
    *
    * @param stat the stat specification to parse (may be null, StatType, Stat, or String)
    * @return the corresponding StatType, or null if the input is null
@@ -190,6 +190,7 @@ class GgChart {
         case 'qq' -> StatType.QQ
         case 'qq_line', 'qqline' -> StatType.QQ_LINE
         case 'unique' -> StatType.UNIQUE
+        case 'sample' -> StatType.SAMPLE
         case 'function' -> StatType.FUNCTION
         case 'sf' -> StatType.SF
         case 'sf_coordinates', 'sf_coords' -> StatType.SF_COORDINATES

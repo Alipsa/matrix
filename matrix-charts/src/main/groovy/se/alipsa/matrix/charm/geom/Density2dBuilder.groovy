@@ -92,7 +92,7 @@ class Density2dBuilder extends LayerBuilder {
   }
 
   @Override
-  protected CharmStatType statType() {
+  protected CharmStatType defaultStatType() {
     CharmStatType.DENSITY_2D
   }
 }

@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Mapping
+import se.alipsa.matrix.charm.AnimationSpec
 import se.alipsa.matrix.charm.AnnotationSpec
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmGeomType
@@ -80,6 +81,7 @@ class CharmRenderer {
     renderPanels(context)
     renderLabels(context)
     legendRenderer.render(context)
+    injectAnimationStyle(context)
     svg
   }
 
@@ -229,7 +231,7 @@ class CharmRenderer {
           .styleClass('charm-panel')
 
       gridRenderer.render(plotArea, context, panelWidth, panelHeight)
-      G dataLayer = plotArea.addG().id("data-${panel.row}-${panel.col}")
+      G dataLayer = plotArea.addG().id("data-${panel.row}-${panel.col}").styleClass('charm-data-layer')
       String clipId = "panel-clip-${panel.row}-${panel.col}"
       context.defs.addClipPath().id(clipId).addRect(panelWidth, panelHeight).x(0).y(0)
       dataLayer.addAttribute('clip-path', "url(#${clipId})")
@@ -271,6 +273,16 @@ class CharmRenderer {
       int panelHeight
   ) {
     GeomEngine.render(dataLayer, context, layer, layerData, panelWidth, panelHeight)
+  }
+
+  private static void injectAnimationStyle(RenderContext context) {
+    AnimationSpec animation = context.chart.animation
+    if (animation == null || !animation.active) {
+      return
+    }
+    context.svg.addStyle()
+        .type('text/css')
+        .addCdataContent(animation.toCss())
   }
 
   private static void renderAnnotationsAtOrder(

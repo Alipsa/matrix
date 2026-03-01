@@ -300,6 +300,7 @@ class GgCharmCompiler {
       case StatType.ELLIPSE -> CharmGeomType.PATH
       case StatType.SUMMARY_BIN -> CharmGeomType.BAR
       case StatType.UNIQUE -> CharmGeomType.POINT
+      case StatType.SAMPLE -> CharmGeomType.POINT
       case StatType.FUNCTION -> CharmGeomType.FUNCTION
       case StatType.SF -> CharmGeomType.SF
       case StatType.SF_COORDINATES -> CharmGeomType.POINT
