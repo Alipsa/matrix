@@ -150,6 +150,9 @@ class ScaleEngine {
         trained.linetype = trainLinetypeScale(linetypeValues, layerScaleSpecs['linetype'])
       }
     }
+    if (chart != null && (trained.x != null || trained.y != null)) {
+      applyFixedCoordScaling(chart, config, trained)
+    }
     trained
   }
 

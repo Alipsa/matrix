@@ -180,8 +180,7 @@ class LegendRenderer {
                   currentY = renderContinuousAsDiscreteFromScale(legend, context, baseAesthetic, cs, currentY, isVertical)
                 }
               } else if (baseAesthetic == 'shape') {
-                currentY = renderDiscreteLegend(legend, context, baseAesthetic, currentY, isVertical,
-                    usesPoints, null)
+                currentY = renderShapeLegendFromScale(legend, context, scaleObj, currentY, isVertical, usesPoints)
               }
             }
             default -> {
@@ -1054,6 +1053,21 @@ class LegendRenderer {
       return renderAlphaLegend(group, context, startY, vertical)
     } finally {
       context.alphaScale = previous
+    }
+  }
+
+  /** Renders a shape legend from an explicit discrete scale when available. */
+  private int renderShapeLegendFromScale(G group, RenderContext context, Object scaleObj,
+                                          int startY, boolean vertical, boolean usesPoints) {
+    if (!(scaleObj instanceof DiscreteCharmScale)) {
+      return renderDiscreteLegend(group, context, 'shape', startY, vertical, usesPoints, null)
+    }
+    CharmScale previous = context.shapeScale
+    try {
+      context.shapeScale = scaleObj as CharmScale
+      return renderDiscreteLegend(group, context, 'shape', startY, vertical, usesPoints, null)
+    } finally {
+      context.shapeScale = previous
     }
   }
 

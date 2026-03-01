@@ -145,7 +145,7 @@ class Layer {
    * @return unmodifiable scale overrides map, or empty map if none
    */
   Map<String, Scale> getScales() {
-    scales ? Collections.unmodifiableMap(scales) : [:]
+    scales ? Collections.unmodifiableMap(scales) : Collections.<String, Scale>emptyMap()
   }
 
   /**
