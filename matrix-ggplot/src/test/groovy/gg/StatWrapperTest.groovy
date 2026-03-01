@@ -7,6 +7,7 @@ import se.alipsa.matrix.gg.stat.StatsEcdf
 import se.alipsa.matrix.gg.stat.StatsQq
 import se.alipsa.matrix.gg.stat.StatsQqLine
 import se.alipsa.matrix.gg.stat.StatsSmooth
+import se.alipsa.matrix.gg.stat.Stats
 import se.alipsa.matrix.gg.stat.StatsYDensity
 
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -23,5 +24,6 @@ class StatWrapperTest {
     assertTrue(stat_ecdf() instanceof StatsEcdf)
     assertTrue(stat_qq() instanceof StatsQq)
     assertTrue(stat_qq_line() instanceof StatsQqLine)
+    assertTrue(stat_sample() instanceof Stats)
   }
 }

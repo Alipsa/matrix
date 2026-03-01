@@ -31,6 +31,18 @@ class StatEngineTest {
   }
 
   @Test
+  void testDispatchSample() {
+    LayerSpec layer = makeLayer(CharmStatType.SAMPLE, [n: 2, seed: 7, method: 'random'])
+    List<LayerData> data = (1..8).collect {
+      new LayerData(x: it, y: it * 2, rowIndex: it - 1)
+    }
+
+    List<LayerData> result = StatEngine.apply(layer, data)
+    assertEquals(2, result.size())
+    assertEquals(result*.rowIndex.sort(), result*.rowIndex)
+  }
+
+  @Test
   void testDispatchBin() {
     LayerSpec layer = makeLayer(CharmStatType.BIN, [bins: 5])
     List<LayerData> data = (1..20).collect { new LayerData(x: it, y: 0, rowIndex: it - 1) }

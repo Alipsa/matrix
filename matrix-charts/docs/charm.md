@@ -15,6 +15,7 @@ A comprehensive guide to using the `se.alipsa.matrix.charm` package for creating
 - [Faceting](#faceting)
 - [Coordinate Systems](#coordinate-systems)
 - [Labels and Annotations](#labels-and-annotations)
+- [Animations](#animations)
 - [Lifecycle](#lifecycle)
 - [Output Formats](#output-formats)
 - [Static Compilation](#static-compilation)
@@ -316,6 +317,34 @@ plot(data) {
 
 Tooltips are emitted as SVG `<title>` children, so they are shown by browsers/SVG viewers on hover.
 
+### Large Dataset Helpers
+
+Use sampling when plotting very large datasets where full-point rendering is expensive.
+
+```groovy
+plot(data) {
+  mapping { x = 'x'; y = 'y' }
+  layers {
+    geomPointSampled(n: 10000, seed: 42, method: 'random')
+  }
+}
+```
+
+You can also override stat explicitly on any layer:
+
+```groovy
+layers {
+  geomPoint()
+      .stat('sample')
+      .params(n: 5000, method: 'systematic')
+}
+```
+
+Sampling parameters:
+- `n` sample size (default `10000`)
+- `seed` optional deterministic seed
+- `method` `random` or `systematic`
+
 ### Programmatic addLayer()
 
 For `@CompileStatic` or dynamic layer creation, use `addLayer()` with builder instances:
@@ -555,6 +584,38 @@ annotate {
   }
 }
 ```
+
+## Animations
+
+Charm supports optional CSS animation injection for SVG output:
+
+```groovy
+plot(data) {
+  mapping { x = 'x'; y = 'y' }
+  layers { geomPoint() }
+  animation {
+    selector = '.charm-point'
+    name = 'pulse'
+    duration = '1.2s'
+    keyframes = 'from { opacity: 0.2; } to { opacity: 1; }'
+  }
+}
+```
+
+Available properties in `animation {}`:
+- `enabled`
+- `selector`
+- `name`
+- `duration`
+- `timingFunction`
+- `delay`
+- `iterationCount`
+- `direction`
+- `fillMode`
+- `playState`
+- `keyframes`
+
+Note: CSS `@keyframes` animations are embedded in the SVG `<style>` block and are visible only in SVG viewers that support CSS animation. Animation styles are silently stripped when exporting to PNG/JPEG with `ChartToPng`/`ChartToJpeg` because raster output is static.
 
 ## Lifecycle
 

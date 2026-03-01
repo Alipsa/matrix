@@ -13,6 +13,8 @@ import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.core.Matrix
 
+import java.util.Locale
+
 /**
  * Abstract base class for fluent layer builders.
  *
@@ -26,6 +28,7 @@ abstract class LayerBuilder {
   protected Mapping layerMapping
   protected boolean inheritMapping = true
   protected PositionSpec positionSpec = PositionSpec.of(CharmPositionType.IDENTITY)
+  protected CharmStatType statType
   protected final Map<String, Object> params = [:]
   protected Closure styleCallback
 
@@ -84,6 +87,17 @@ abstract class LayerBuilder {
   }
 
   /**
+   * Sets the statistical transformation for this layer.
+   *
+   * @param stat stat value as enum, spec, or string name
+   * @return this builder
+   */
+  LayerBuilder stat(Object stat) {
+    this.statType = parseStatType(stat)
+    this
+  }
+
+  /**
    * Sets an arbitrary parameter on this layer.
    *
    * @param key parameter name
@@ -92,6 +106,19 @@ abstract class LayerBuilder {
    */
   LayerBuilder param(String key, Object value) {
     params[key] = value
+    this
+  }
+
+  /**
+   * Sets multiple arbitrary parameters on this layer.
+   *
+   * @param values parameter values
+   * @return this builder
+   */
+  LayerBuilder params(Map<String, Object> values) {
+    if (values != null) {
+      params.putAll(values)
+    }
     this
   }
 
@@ -162,7 +189,7 @@ abstract class LayerBuilder {
    *
    * @return stat type
    */
-  protected abstract CharmStatType statType()
+  protected abstract CharmStatType defaultStatType()
 
   /**
    * Builds the configured {@link LayerSpec}.
@@ -170,14 +197,39 @@ abstract class LayerBuilder {
    * @return immutable layer specification
    */
   LayerSpec build() {
+    CharmStatType effectiveStat = statType ?: defaultStatType()
     new LayerSpec(
         GeomSpec.of(geomType()),
-        StatSpec.of(statType()),
+        StatSpec.of(effectiveStat),
         layerMapping?.copy(),
         inheritMapping,
         positionSpec,
         new LinkedHashMap<>(params),
         styleCallback
     )
+  }
+
+  private static CharmStatType parseStatType(Object stat) {
+    if (stat == null) {
+      return null
+    }
+    if (stat instanceof CharmStatType) {
+      return stat as CharmStatType
+    }
+    if (stat instanceof StatSpec) {
+      return (stat as StatSpec).type
+    }
+    if (stat instanceof CharSequence) {
+      String normalized = stat.toString().trim()
+      if (normalized.isEmpty()) {
+        return null
+      }
+      try {
+        return CharmStatType.valueOf(normalized.toUpperCase(Locale.ROOT))
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("Unsupported stat '${stat}'", e)
+      }
+    }
+    throw new IllegalArgumentException("Unsupported stat type '${stat.getClass().name}'")
   }
 }

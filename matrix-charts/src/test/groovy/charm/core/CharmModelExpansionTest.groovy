@@ -65,12 +65,13 @@ class CharmModelExpansionTest {
   }
 
   @Test
-  void testCharmStatTypeHas26Values() {
+  void testCharmStatTypeHas27Values() {
     CharmStatType[] values = CharmStatType.values()
-    assertEquals(26, values.length)
+    assertEquals(27, values.length)
     assertNotNull(CharmStatType.IDENTITY)
     assertNotNull(CharmStatType.ALIGN)
     assertNotNull(CharmStatType.SPOKE)
+    assertNotNull(CharmStatType.SAMPLE)
   }
 
   @Test

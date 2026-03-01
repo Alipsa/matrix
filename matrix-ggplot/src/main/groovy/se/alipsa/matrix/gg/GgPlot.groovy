@@ -80,6 +80,7 @@ import se.alipsa.matrix.gg.geom.GeomContourFilled
 import se.alipsa.matrix.gg.geom.GeomPoint
 import se.alipsa.matrix.gg.geom.GeomViolin
 import se.alipsa.matrix.gg.layer.PositionType
+import se.alipsa.matrix.gg.layer.StatType
 import se.alipsa.matrix.gg.position.Position
 import se.alipsa.matrix.gg.scale.ScaleColorGradient
 import se.alipsa.matrix.gg.scale.ScaleColorGradientN
@@ -141,6 +142,7 @@ import se.alipsa.matrix.gg.stat.StatsBoxplot
 import se.alipsa.matrix.gg.stat.StatsContour
 import se.alipsa.matrix.gg.stat.StatsContourFilled
 import se.alipsa.matrix.gg.stat.StatsCount
+import se.alipsa.matrix.gg.stat.Stats
 import se.alipsa.matrix.gg.stat.StatsDensity
 import se.alipsa.matrix.gg.stat.StatsEllipse
 import se.alipsa.matrix.gg.stat.StatsFunction
@@ -2102,6 +2104,28 @@ class GgPlot {
 
   static GeomPoint geom_point(Map params) {
     return new GeomPoint(params)
+  }
+
+  /**
+   * Convenience helper for large datasets: point geom with stat=sample.
+   *
+   * @param params optional sampling/layer params (e.g. n, seed, method)
+   * @return a point geom configured with sample stat
+   */
+  static GeomPoint geom_point_sampled(Map params = [:]) {
+    Map<String, Object> merged = [stat: 'sample']
+    merged.putAll(params ?: [:])
+    return new GeomPoint(merged)
+  }
+
+  /**
+   * Convenience helper for large datasets with layer-specific mapping.
+   *
+   * @param mapping aesthetic mapping for this layer
+   * @return a point geom configured with sample stat
+   */
+  static GeomPoint geom_point_sampled(Aes mapping) {
+    return geom_point_sampled([mapping: mapping])
   }
 
   /**
@@ -4233,6 +4257,15 @@ class GgPlot {
    */
   static StatsUnique stat_unique(Map params = [:]) {
     return new StatsUnique(params)
+  }
+
+  /**
+   * Create a sampling stat for large datasets.
+   *
+   * @param params stat parameters (n, seed, method)
+   */
+  static Stats stat_sample(Map params = [:]) {
+    return new Stats(StatType.SAMPLE, params)
   }
 
   /**

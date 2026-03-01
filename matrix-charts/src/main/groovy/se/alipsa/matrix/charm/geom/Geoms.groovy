@@ -33,6 +33,22 @@ class Geoms {
   }
 
   /**
+   * Creates a new sampled point builder.
+   *
+   * <p>Equivalent to {@code geomPoint().stat('sample')} with optional stat params
+   * such as {@code n}, {@code seed}, and {@code method}.</p>
+   *
+   * @param params optional sampling parameters
+   * @return sampled point builder
+   */
+  static PointBuilder geomPointSampled(Map<String, Object> params = [:]) {
+    PointBuilder builder = new PointBuilder()
+    builder.stat('sample')
+    builder.params(params)
+    builder
+  }
+
+  /**
    * Creates a new line builder.
    *
    * @return line builder

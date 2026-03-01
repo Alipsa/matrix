@@ -114,7 +114,7 @@ class SmoothBuilder extends LayerBuilder {
   }
 
   @Override
-  protected CharmStatType statType() {
+  protected CharmStatType defaultStatType() {
     CharmStatType.SMOOTH
   }
 }

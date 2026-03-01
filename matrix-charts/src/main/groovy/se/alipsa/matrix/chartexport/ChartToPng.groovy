@@ -13,6 +13,7 @@ import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.nio.charset.StandardCharsets
+import java.util.regex.Pattern
 
 /**
  * Exports charts as PNG images.
@@ -24,6 +25,10 @@ import java.nio.charset.StandardCharsets
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
 class ChartToPng {
+
+  private static final Pattern CHARM_ANIMATION_STYLE = Pattern.compile(
+      '(?is)<style\\b[^>]*>\\s*/\\*\\s*charm-animation\\s*\\*/.*?</style>'
+  )
 
   /**
    * Export an SVG chart as a PNG image file.
@@ -40,7 +45,7 @@ class ChartToPng {
     if (targetFile == null) {
       throw new IllegalArgumentException("targetFile cannot be null")
     }
-    ImageIO.write(renderToImage(svgChart), "png", targetFile)
+    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), "png", targetFile)
   }
 
   /**
@@ -58,7 +63,7 @@ class ChartToPng {
     if (os == null) {
       throw new IllegalArgumentException("outputStream cannot be null")
     }
-    ImageIO.write(renderToImage(svgChart), "png", os)
+    ImageIO.write(renderToImage(stripAnimationCss(svgChart)), "png", os)
   }
 
   /**
@@ -197,5 +202,9 @@ class ChartToPng {
     svgDocument.render(null, g)
     g.dispose()
     image
+  }
+
+  private static String stripAnimationCss(String svgContent) {
+    CHARM_ANIMATION_STYLE.matcher(svgContent).replaceAll('')
   }
 }

@@ -605,7 +605,7 @@ Executed on this implementation:
 
 **Priority:** Medium | **Effort:** Medium
 
-### 9.1 [ ] Add explicit layer stat override API in Charm DSL
+### 9.1 [x] Add explicit layer stat override API in Charm DSL
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/geom/LayerBuilder.groovy`
@@ -626,7 +626,7 @@ Also add:
 
 No existing behavior changes: when `stat()` is not called, `statType` is null and `defaultStatType()` is used exactly as before.
 
-### 9.2 [ ] Add `SAMPLE` stat and implementation
+### 9.2 [x] Add `SAMPLE` stat and implementation
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/CharmStatType.groovy` — add `SAMPLE` enum value
@@ -638,7 +638,7 @@ Parameters:
 - `seed` (optional)
 - `method` in `random|systematic` — **omit `stratified` from v1**; stratified sampling requires a `stratifyBy` column parameter that adds meaningful API surface; add in a follow-up once the basic stat is stable
 
-### 9.3 [ ] Add Charm convenience constructors for sampled points
+### 9.3 [x] Add Charm convenience constructors for sampled points
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/geom/Geoms.groovy`
@@ -647,7 +647,7 @@ Parameters:
 Example target API:
 - `geomPointSampled(Map params = [:])`
 
-### 9.4 [ ] Add gg `SAMPLE` stat semantics (not helper-only)
+### 9.4 [x] Add gg `SAMPLE` stat semantics (not helper-only)
 
 **Files:**
 - `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/layer/Layer.groovy` (`StatType`) — add `SAMPLE`
@@ -655,18 +655,18 @@ Example target API:
 
 Implement sampling as a first-class gg stat so it composes with existing layer/stat behavior and is not tied to a single helper API.
 
-### 9.5 [ ] Add gg convenience helper preserving ggplot-like style
+### 9.5 [x] Add gg convenience helper preserving ggplot-like style
 
 **File:** `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/GgPlot.groovy`
 
 Example:
 - `geom_point_sampled(Map params = [:])` as a convenience that configures point + sample stat.
 
-### 9.6 [ ] Add tests for sampling correctness and reproducibility
+### 9.6 [x] Add tests for sampling correctness and reproducibility
 
 **File:** `matrix-charts/src/test/groovy/charm/render/stat/SampleStatTest.groovy` (new)
 
-### 9.7 [ ] Document sampling API in `charm.md`
+### 9.7 [x] Document sampling API in `charm.md`
 
 **File:** `matrix-charts/docs/charm.md`
 
@@ -679,35 +679,40 @@ Add a "Large dataset helpers" section covering `geomPointSampled()`, the `stat()
 ./gradlew :matrix-ggplot:test -Pheadless=true
 ```
 
+Executed on this implementation:
+- `./gradlew :matrix-charts:test -Pheadless=true`
+- `./gradlew :matrix-ggplot:test -Pheadless=true`
+- `./gradlew test`
+
 ---
 
 ## 10. CSS animation helpers
 
 **Priority:** Low | **Effort:** Small
 
-### 10.1 [ ] Create `AnimationSpec` model
+### 10.1 [x] Create `AnimationSpec` model
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/AnimationSpec.groovy` (new)
 
-### 10.2 [ ] Add animation field wiring through PlotSpec -> Chart
+### 10.2 [x] Add animation field wiring through PlotSpec -> Chart
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy`
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/Chart.groovy`
 
-### 10.3 [ ] Add `animation {}` DSL block to PlotSpec
+### 10.3 [x] Add `animation {}` DSL block to PlotSpec
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy`
 
-### 10.4 [ ] Inject optional `<style>`/`@keyframes` at render time
+### 10.4 [x] Inject optional `<style>`/`@keyframes` at render time
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/CharmRenderer.groovy`
 
-### 10.5 [ ] Add tests for animation CSS injection and no-op default
+### 10.5 [x] Add tests for animation CSS injection and no-op default
 
 **File:** `matrix-charts/src/test/groovy/charm/render/AnimationTest.groovy` (new)
 
-### 10.6 [ ] Document animation API and limitations in `charm.md`
+### 10.6 [x] Document animation API and limitations in `charm.md`
 
 **File:** `matrix-charts/docs/charm.md`
 
@@ -720,6 +725,11 @@ Add an "Animations" section covering the `animation {}` DSL, available propertie
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
 ```
+
+Executed on this implementation:
+- `./gradlew :matrix-charts:test -Pheadless=true`
+- `./gradlew :matrix-ggplot:test -Pheadless=true`
+- `./gradlew test`
 
 ---
 

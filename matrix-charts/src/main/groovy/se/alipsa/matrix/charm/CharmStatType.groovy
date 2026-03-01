@@ -32,6 +32,7 @@ enum CharmStatType {
   ELLIPSE,
   SUMMARY_BIN,
   UNIQUE,
+  SAMPLE,
   FUNCTION,
   SF,
   SF_COORDINATES,

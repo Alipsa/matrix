@@ -24,6 +24,7 @@ class Chart {
   private final GuidesSpec guides
   private final List<AnnotationSpec> annotations
   private final CssAttributesSpec cssAttributes
+  private final AnimationSpec animation
 
   /**
    * Creates a new compiled chart model.
@@ -39,6 +40,7 @@ class Chart {
    * @param guides guides spec
    * @param annotations annotation list
    * @param cssAttributes css attribute configuration
+   * @param animation animation specification
    */
   Chart(
       Matrix data,
@@ -51,7 +53,8 @@ class Chart {
       Labels labels,
       GuidesSpec guides,
       List<AnnotationSpec> annotations,
-      CssAttributesSpec cssAttributes = null
+      CssAttributesSpec cssAttributes = null,
+      AnimationSpec animation = null
   ) {
     this.data = data
     this.mapping = toMappingSpec(mapping)
@@ -68,6 +71,7 @@ class Chart {
         annotations.collect { AnnotationSpec a -> a.copy() }
     )
     this.cssAttributes = cssAttributes?.copy() ?: new CssAttributesSpec()
+    this.animation = animation?.copy()
   }
 
   /**
@@ -170,6 +174,15 @@ class Chart {
    */
   CssAttributesSpec getCssAttributes() {
     cssAttributes?.copy()
+  }
+
+  /**
+   * Returns animation specification.
+   *
+   * @return animation spec or null
+   */
+  AnimationSpec getAnimation() {
+    animation?.copy()
   }
 
   private static MappingSpec toMappingSpec(Mapping value) {
