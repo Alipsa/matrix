@@ -104,6 +104,23 @@ class TooltipTest {
   }
 
   @Test
+  void testTemplateMappedXAndYAreNotOverwrittenByRowColumns() {
+    Matrix data = Matrix.builder()
+        .columnNames('actualX', 'actualY', 'x', 'y')
+        .rows([[10, 20, 'raw-x', 'raw-y']])
+        .build()
+
+    def chart = plot(data) {
+      mapping { x = 'actualX'; y = 'actualY' }
+      layers { geomPoint().tooltip('mapped {x}/{y}') }
+    }.build()
+
+    String xml = SvgWriter.toXml(chart.render())
+    assertTrue(xml.contains('<title>mapped 10/20</title>'))
+    assertFalse(xml.contains('mapped raw-x/raw-y'))
+  }
+
+  @Test
   void testHighUsageRenderersEmitTooltips() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'tip')

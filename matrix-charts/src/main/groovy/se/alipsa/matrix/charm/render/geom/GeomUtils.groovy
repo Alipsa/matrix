@@ -576,7 +576,9 @@ class GeomUtils {
     values.tooltip = datum.tooltip
     values.rowIndex = datum.rowIndex
     LayerDataRowAccess.rowMap(datum).each { String key, Object value ->
-      values[key] = value
+      if (!values.containsKey(key)) {
+        values[key] = value
+      }
     }
     values
   }

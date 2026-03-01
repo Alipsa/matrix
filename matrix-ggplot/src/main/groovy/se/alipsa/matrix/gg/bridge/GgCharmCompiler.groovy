@@ -88,7 +88,7 @@ class GgCharmCompiler {
       'alpha', 'linetype', 'label', 'tooltip', 'weight'
   ] as List<String>
   private static final Set<String> PARAM_COLUMN_AESTHETICS = [
-      'x', 'y', 'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax', 'label', 'weight'
+      'x', 'y', 'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax', 'label', 'tooltip', 'weight'
   ] as Set<String>
 
   private final GgCharmMappingRegistry mappingRegistry = new GgCharmMappingRegistry()
