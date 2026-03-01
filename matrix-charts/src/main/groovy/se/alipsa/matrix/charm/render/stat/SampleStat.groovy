@@ -7,7 +7,6 @@ import se.alipsa.matrix.charm.render.LayerDataUtil
 import se.alipsa.matrix.core.ValueConverter
 import se.alipsa.matrix.core.util.Logger
 
-import java.util.Collections
 import java.util.Locale
 import java.util.Random
 
@@ -68,10 +67,17 @@ class SampleStat {
   }
 
   private static List<Integer> randomIndexes(int total, int n, Long seed) {
-    List<Integer> all = (0..<total).collect { int idx -> idx }
     Random random = seed == null ? new Random() : new Random(seed)
-    Collections.shuffle(all, random)
-    List<Integer> sampled = new ArrayList<>(all.subList(0, n))
+    List<Integer> sampled = new ArrayList<>(n)
+    for (int i = 0; i < n; i++) {
+      sampled << i
+    }
+    for (int i = n; i < total; i++) {
+      int j = random.nextInt(i + 1)
+      if (j < n) {
+        sampled[j] = i
+      }
+    }
     sampled.sort()
     sampled
   }

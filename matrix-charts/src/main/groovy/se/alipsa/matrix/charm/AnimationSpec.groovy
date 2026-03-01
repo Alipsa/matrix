@@ -35,6 +35,7 @@ class AnimationSpec {
    * @return CSS text
    */
   String toCss() {
+    validateForCdata()
     String keyframeName = normalized(name, 'charm-fade-in')
     String targetSelector = normalized(selector, '.charm-data-layer *')
     String keyframeBody = normalized(keyframes, 'from { opacity: 0; } to { opacity: 1; }')
@@ -87,5 +88,24 @@ ${targetSelector} {
   private static String normalized(String value, String fallback) {
     String trimmed = value?.trim()
     trimmed ? trimmed : fallback
+  }
+
+  private void validateForCdata() {
+    ensureNoCdataTerminator(selector, 'selector')
+    ensureNoCdataTerminator(name, 'name')
+    ensureNoCdataTerminator(duration, 'duration')
+    ensureNoCdataTerminator(timingFunction, 'timingFunction')
+    ensureNoCdataTerminator(delay, 'delay')
+    ensureNoCdataTerminator(iterationCount, 'iterationCount')
+    ensureNoCdataTerminator(direction, 'direction')
+    ensureNoCdataTerminator(fillMode, 'fillMode')
+    ensureNoCdataTerminator(playState, 'playState')
+    ensureNoCdataTerminator(keyframes, 'keyframes')
+  }
+
+  private static void ensureNoCdataTerminator(String value, String fieldName) {
+    if (value != null && value.contains(']]>')) {
+      throw new IllegalArgumentException("Animation field '${fieldName}' must not contain ']]>'")
+    }
   }
 }

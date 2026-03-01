@@ -2,6 +2,7 @@ package charm.render
 
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.io.SvgWriter
+import se.alipsa.matrix.charm.CharmRenderException
 import se.alipsa.matrix.chartexport.ChartToJpeg
 import se.alipsa.matrix.chartexport.ChartToPng
 import se.alipsa.matrix.core.Matrix
@@ -9,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
 import java.nio.file.Files
 
 import static org.junit.jupiter.api.Assertions.assertFalse
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.charm.Charts.plot
 
@@ -73,10 +75,51 @@ class AnimationTest {
     }
   }
 
+  @Test
+  void testAnimationRejectsCdataTerminatorInCssFields() {
+    Matrix data = sampleData()
+    def chart = plot(data) {
+      mapping { x = 'x'; y = 'y' }
+      layers { geomPoint() }
+      animation {
+        keyframes = 'from { opacity: 0; } ]]> to { opacity: 1; }'
+      }
+    }.build()
+
+    assertThrows(CharmRenderException) {
+      chart.render()
+    }
+  }
+
+  @Test
+  void testRasterStripPatternRemovesCdataAnimationStyle() {
+    String svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+  <style type="text/css"><![CDATA[/* charm-animation */
+@keyframes pulse { from { opacity: 0; } to { opacity: 1; } }
+.charm-point { animation-name: pulse; }
+]]></style>
+  <circle cx="5" cy="5" r="3" />
+</svg>'''
+
+    String pngSanitized = invokeStrip(ChartToPng, svg)
+    String jpegSanitized = invokeStrip(ChartToJpeg, svg)
+
+    assertFalse(pngSanitized.contains('charm-animation'))
+    assertFalse(jpegSanitized.contains('charm-animation'))
+    assertTrue(pngSanitized.contains('<circle'))
+    assertTrue(jpegSanitized.contains('<circle'))
+  }
+
   private static Matrix sampleData() {
     Matrix.builder()
         .columnNames('x', 'y')
         .rows([[1, 2], [2, 4], [3, 6]])
         .build()
+  }
+
+  private static String invokeStrip(Class<?> clazz, String svg) {
+    def method = clazz.getDeclaredMethod('stripAnimationCss', String)
+    method.setAccessible(true)
+    method.invoke(null, svg) as String
   }
 }

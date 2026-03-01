@@ -27,7 +27,7 @@ import java.util.regex.Pattern
 class ChartToPng {
 
   private static final Pattern CHARM_ANIMATION_STYLE = Pattern.compile(
-      '(?is)<style\\b[^>]*>\\s*/\\*\\s*charm-animation\\s*\\*/.*?</style>'
+      '(?is)<style\\b[^>]*>\\s*(?:<!\\[CDATA\\[\\s*)?/\\*\\s*charm-animation\\s*\\*/.*?(?:\\]\\]>\\s*)?</style>'
   )
 
   /**
