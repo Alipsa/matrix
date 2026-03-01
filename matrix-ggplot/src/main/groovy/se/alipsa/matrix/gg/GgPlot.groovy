@@ -151,6 +151,7 @@ import se.alipsa.matrix.gg.stat.StatsSfCoordinates
 import se.alipsa.matrix.gg.stat.StatsSmooth
 import se.alipsa.matrix.gg.stat.StatsSpoke
 import se.alipsa.matrix.gg.stat.StatsSum
+import se.alipsa.matrix.gg.stat.StatsSample
 import se.alipsa.matrix.gg.stat.StatsSummaryBin
 import se.alipsa.matrix.gg.stat.StatsSummaryHex
 import se.alipsa.matrix.gg.stat.StatsSummary2d
@@ -4265,8 +4266,8 @@ class GgPlot {
    *
    * @param params stat parameters (n, seed, method)
    */
-  static Stats stat_sample(Map params = [:]) {
-    return new Stats(StatType.SAMPLE, params)
+  static StatsSample stat_sample(Map params = [:]) {
+    return new StatsSample(params)
   }
 
   /**
