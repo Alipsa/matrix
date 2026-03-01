@@ -83,6 +83,7 @@ class BarRenderer {
       String stroke = GeomUtils.resolveStroke(context, layer, datum)
       BigDecimal alpha = GeomUtils.resolveAlpha(context, layer, datum)
       BigDecimal strokeWidth = GeomUtils.resolveLineWidth(context, layer, datum, 0.5)
+      String tooltip = GeomUtils.resolveTooltip(layer, datum)
 
       def rect = barGroup.addRect(width, rectHeight)
           .x(xLeft)
@@ -94,6 +95,7 @@ class BarRenderer {
       if (alpha < 1.0) {
         rect.addAttribute('fill-opacity', alpha)
       }
+      GeomUtils.addTooltip(rect, tooltip)
       GeomUtils.applyCssAttributes(rect, context, layer.geomType.name(), elementIndex, datum)
       elementIndex++
     }

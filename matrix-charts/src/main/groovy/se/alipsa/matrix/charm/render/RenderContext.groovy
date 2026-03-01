@@ -91,6 +91,7 @@ class LayerData {
   Object linetype
   Object group
   Object label
+  String tooltip
   Object weight
   int rowIndex
   Map<String, Object> meta = [:]

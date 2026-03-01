@@ -85,10 +85,10 @@ class GgCharmCompiler {
   private static final List<String> AESTHETIC_KEYS = [
       'x', 'y', 'color', 'fill', 'size', 'shape', 'group',
       'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax',
-      'alpha', 'linetype', 'label', 'weight'
+      'alpha', 'linetype', 'label', 'tooltip', 'weight'
   ] as List<String>
   private static final Set<String> PARAM_COLUMN_AESTHETICS = [
-      'x', 'y', 'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax', 'label', 'weight'
+      'x', 'y', 'xend', 'yend', 'xmin', 'xmax', 'ymin', 'ymax', 'label', 'tooltip', 'weight'
   ] as Set<String>
 
   private final GgCharmMappingRegistry mappingRegistry = new GgCharmMappingRegistry()

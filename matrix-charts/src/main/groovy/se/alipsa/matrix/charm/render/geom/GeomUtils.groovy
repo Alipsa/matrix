@@ -7,6 +7,7 @@ import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.StyleOverride
 import se.alipsa.matrix.charm.render.LayerData
+import se.alipsa.matrix.charm.render.LayerDataRowAccess
 import se.alipsa.matrix.charm.render.RenderContext
 import se.alipsa.matrix.charm.render.scale.DiscreteCharmScale
 import se.alipsa.matrix.core.Matrix
@@ -198,6 +199,50 @@ class GeomUtils {
       return datum.shape.toString()
     }
     defaultValue
+  }
+
+  /**
+   * Resolves the tooltip text for a rendered element.
+   *
+   * Resolution order:
+   * 1) disabled -> null
+   * 2) layer template
+   * 3) mapped tooltip value
+   * 4) auto-generated text (only when enabled)
+   */
+  static String resolveTooltip(LayerSpec layer, LayerData datum) {
+    Boolean enabled = ValueConverter.asBoolean(layer?.params?.tooltipEnabled)
+    if (Boolean.FALSE == enabled) {
+      return null
+    }
+
+    Object templateValue = layer?.params?.tooltipTemplate
+    if (templateValue instanceof CharSequence) {
+      String rendered = renderTooltipTemplate(templateValue.toString(), datum)
+      if (rendered != null && !rendered.isBlank()) {
+        return rendered
+      }
+    }
+
+    String mapped = datum?.tooltip
+    if (mapped != null && !mapped.isBlank()) {
+      return mapped
+    }
+
+    if (Boolean.TRUE == enabled) {
+      return autoTooltip(datum)
+    }
+    null
+  }
+
+  /**
+   * Adds an SVG {@code <title>} child when tooltip text is available.
+   */
+  static void addTooltip(SvgElement element, String tooltip) {
+    if (element == null || tooltip == null || tooltip.isBlank()) {
+      return
+    }
+    element.addTitle(tooltip)
   }
 
   /**
@@ -474,5 +519,71 @@ class GeomUtils {
     if (alpha < 1.0) {
       element.addAttribute('stroke-opacity', alpha)
     }
+  }
+
+  private static String renderTooltipTemplate(String template, LayerData datum) {
+    if (template == null || template.isBlank()) {
+      return null
+    }
+    String rendered = template
+    Map<String, Object> values = tooltipValues(datum)
+    values.each { String key, Object value ->
+      rendered = rendered.replace("{${key}}", valueToTooltip(value))
+    }
+    rendered
+  }
+
+  private static String autoTooltip(LayerData datum) {
+    if (datum == null) {
+      return null
+    }
+    Map<String, Object> row = LayerDataRowAccess.rowMap(datum)
+    if (row != null && !row.isEmpty()) {
+      return row.collect { String key, Object value -> "${key}: ${valueToTooltip(value)}" }.join(', ')
+    }
+    Map<String, Object> values = tooltipValues(datum)
+    Map<String, Object> filtered = values.findAll { String key, Object value ->
+      value != null && !key.startsWith('__')
+    }
+    if (filtered.isEmpty()) {
+      return null
+    }
+    filtered.collect { String key, Object value -> "${key}: ${valueToTooltip(value)}" }.join(', ')
+  }
+
+  private static Map<String, Object> tooltipValues(LayerData datum) {
+    Map<String, Object> values = [:]
+    if (datum == null) {
+      return values
+    }
+    values.x = datum.x
+    values.y = datum.y
+    values.color = datum.color
+    values.fill = datum.fill
+    values.xend = datum.xend
+    values.yend = datum.yend
+    values.xmin = datum.xmin
+    values.xmax = datum.xmax
+    values.ymin = datum.ymin
+    values.ymax = datum.ymax
+    values.size = datum.size
+    values.shape = datum.shape
+    values.alpha = datum.alpha
+    values.linetype = datum.linetype
+    values.group = datum.group
+    values.label = datum.label
+    values.weight = datum.weight
+    values.tooltip = datum.tooltip
+    values.rowIndex = datum.rowIndex
+    LayerDataRowAccess.rowMap(datum).each { String key, Object value ->
+      if (!values.containsKey(key)) {
+        values[key] = value
+      }
+    }
+    values
+  }
+
+  private static String valueToTooltip(Object value) {
+    value == null ? '' : value.toString()
   }
 }

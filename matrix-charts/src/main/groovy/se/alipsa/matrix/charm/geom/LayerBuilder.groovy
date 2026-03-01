@@ -122,6 +122,35 @@ abstract class LayerBuilder {
   }
 
   /**
+   * Sets a tooltip template for this layer.
+   *
+   * <p>Use placeholders like {@code {x}}, {@code {y}}, or any column name
+   * from the source row (for example {@code {category}}).</p>
+   *
+   * @param template tooltip template
+   * @return this builder
+   */
+  LayerBuilder tooltip(String template) {
+    params['tooltipTemplate'] = template
+    params['tooltipEnabled'] = true
+    this
+  }
+
+  /**
+   * Enables or disables tooltip rendering for this layer.
+   *
+   * <p>When enabled and no mapped/template tooltip is available, a default
+   * tooltip string is generated from row values.</p>
+   *
+   * @param enabled true to enable, false to disable
+   * @return this builder
+   */
+  LayerBuilder tooltip(boolean enabled) {
+    params['tooltipEnabled'] = enabled
+    this
+  }
+
+  /**
    * Returns the geometry type for this builder.
    *
    * @return geom type

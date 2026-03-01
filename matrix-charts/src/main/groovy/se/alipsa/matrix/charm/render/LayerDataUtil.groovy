@@ -37,6 +37,7 @@ class LayerDataUtil {
         linetype: datum.linetype,
         group: datum.group,
         label: datum.label,
+        tooltip: datum.tooltip,
         weight: datum.weight,
         rowIndex: datum.rowIndex,
         meta: datum.meta != null ? new LinkedHashMap<>(datum.meta) : [:]

@@ -24,6 +24,7 @@ class MappingDsl {
   String alpha
   String linetype
   String label
+  String tooltip
   String weight
 
   /**
@@ -58,6 +59,7 @@ class MappingDsl {
     if (alpha != null) mapping.alpha = alpha
     if (linetype != null) mapping.linetype = linetype
     if (label != null) mapping.label = label
+    if (tooltip != null) mapping.tooltip = tooltip
     if (weight != null) mapping.weight = weight
     mapping
   }

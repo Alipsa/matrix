@@ -389,6 +389,7 @@ class CharmRenderer {
       datum.linetype = readValue(data, rowIndex, mapping.linetype?.columnName())
       datum.group = readValue(data, rowIndex, mapping.group?.columnName())
       datum.label = readValue(data, rowIndex, mapping.label?.columnName())
+      datum.tooltip = readValue(data, rowIndex, mapping.tooltip?.columnName())?.toString()
       datum.weight = readValue(data, rowIndex, mapping.weight?.columnName())
       values << datum
     }

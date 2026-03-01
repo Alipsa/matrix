@@ -55,7 +55,9 @@ class LineRenderer {
         if (alpha < 1.0) {
           line.addAttribute('stroke-opacity', alpha)
         }
-        GeomUtils.applyCssAttributes(line, context, layer.geomType.name(), elementIndex, sorted[i])
+        LayerData datum = sorted[i]
+        GeomUtils.addTooltip(line, GeomUtils.resolveTooltip(layer, datum))
+        GeomUtils.applyCssAttributes(line, context, layer.geomType.name(), elementIndex, datum)
         elementIndex++
       }
     }

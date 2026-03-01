@@ -38,9 +38,11 @@ class PointRenderer {
       String shape = GeomUtils.resolveShape(context, layer, datum, defaultShape)
       String fill = GeomUtils.resolveFill(context, layer, datum)
       String stroke = GeomUtils.resolveStroke(context, layer, datum)
+      String tooltip = GeomUtils.resolveTooltip(layer, datum)
 
       List<SvgElement> elements = GeomUtils.drawPoint(dataLayer, x, y, radius, fill, stroke, shape, alpha)
       elements.each { SvgElement element ->
+        GeomUtils.addTooltip(element, tooltip)
         GeomUtils.applyCssAttributes(element, context, layer.geomType.name(), elementIndex, datum)
         elementIndex++
       }

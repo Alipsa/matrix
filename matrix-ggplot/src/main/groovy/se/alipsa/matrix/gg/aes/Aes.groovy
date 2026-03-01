@@ -47,6 +47,8 @@ class Aes {
   // Text
   /** Label text - column name or I(value) */
   def label
+  /** Tooltip text - column name or I(value) */
+  def tooltip
 
   // Statistical weights
   /** Weight for statistical computations - column name */
@@ -78,6 +80,8 @@ class Aes {
 
   String getMapIdColName() { extractColName(map_id) }
 
+  String getTooltipColName() { extractColName(tooltip) }
+
   Aes() {}
 
   Aes(List<String> colNames) {
@@ -107,6 +111,7 @@ class Aes {
     linewidth = params.linewidth ?: params.lineWidth
     group = params.group
     label = params.label
+    tooltip = params.tooltip
     weight = params.weight
     geometry = params.geometry
     map_id = params.map_id ?: params.mapId
@@ -129,7 +134,7 @@ class Aes {
    * This method provides type-safe access to aesthetic values without dynamic property access.
    * <p>
    * Supported aesthetic names: x, y, color, colour, fill, size, shape, alpha,
-   * linetype, linewidth, group, label, weight, geometry, map_id
+   * linetype, linewidth, group, label, tooltip, weight, geometry, map_id
    *
    * @param aesthetic the aesthetic name (e.g., 'x', 'y', 'color', 'fill', etc.)
    * @return the value of the aesthetic, or null if not found or unknown aesthetic name
@@ -148,6 +153,7 @@ class Aes {
       case 'linewidth': return linewidth
       case 'group': return group
       case 'label': return label
+      case 'tooltip': return tooltip
       case 'weight': return weight
       case 'geometry': return geometry
       case 'map_id': return map_id
@@ -310,6 +316,7 @@ class Aes {
     result.linewidth = base.linewidth
     result.group = base.group
     result.label = base.label
+    result.tooltip = base.tooltip
     result.weight = base.weight
     result.geometry = base.geometry
     result.map_id = base.map_id
@@ -347,6 +354,9 @@ class Aes {
     if (this.label != null) {
       result.label = this.label
     }
+    if (this.tooltip != null) {
+      result.tooltip = this.tooltip
+    }
     if (this.weight != null) {
       result.weight = this.weight
     }
@@ -368,6 +378,7 @@ class Aes {
     if (fill != null) parts << "fillCol=$fill"
     if (size != null) parts << "size=$size"
     if (group != null) parts << "group=$group"
+    if (tooltip != null) parts << "tooltip=$tooltip"
     if (geometry != null) parts << "geometry=$geometry"
     if (map_id != null) parts << "map_id=$map_id"
     return "Aes(${parts.join(', ')})"

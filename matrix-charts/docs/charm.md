@@ -279,6 +279,43 @@ Style callback overrides have the highest priority in the resolution chain:
 
 **Note:** Style callbacks require that the original data row is preserved, so they work with geoms that use stat=IDENTITY (e.g., `geomCol()`, `geomPoint()`, `geomLine()`). Geoms with aggregating stats (e.g., `geomBar()` with stat=COUNT) produce synthetic data that does not retain per-row metadata.
 
+### Tooltips
+
+Charm can emit SVG tooltips via `<title>` elements on rendered geom primitives.
+
+Tooltip output is off by default unless:
+- you map a tooltip aesthetic (`mapping { tooltip = 'columnName' }`), or
+- you enable it on a layer with `tooltip(true)` or `tooltip('template ...')`.
+
+#### Tooltip mapping
+
+```groovy
+plot(data) {
+  mapping { x = 'x'; y = 'y'; tooltip = 'details' }
+  layers { geomPoint() }
+}
+```
+
+#### Layer template
+
+Template placeholders use `{columnName}` and can also reference mapped fields like `{x}` and `{y}`:
+
+```groovy
+plot(data) {
+  mapping { x = 'month'; y = 'value' }
+  layers {
+    geomCol().tooltip('Month {month}: {value}')
+  }
+}
+```
+
+#### Enable/disable behavior
+
+- `tooltip(true)` enables tooltips and falls back to auto-generated row text when no mapping/template exists.
+- `tooltip(false)` disables tooltips for that layer, even if `mapping { tooltip = ... }` is set.
+
+Tooltips are emitted as SVG `<title>` children, so they are shown by browsers/SVG viewers on hover.
+
 ### Programmatic addLayer()
 
 For `@CompileStatic` or dynamic layer creation, use `addLayer()` with builder instances:
