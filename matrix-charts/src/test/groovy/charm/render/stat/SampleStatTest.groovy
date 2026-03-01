@@ -101,6 +101,16 @@ class SampleStatTest {
   }
 
   @Test
+  void testSystematicSamplingIndexesStayWithinBounds() {
+    List<LayerData> data = sampleData(101)
+    LayerSpec layer = sampleLayer([n: 97, method: 'systematic', seed: 123])
+    List<LayerData> sampled = SampleStat.compute(layer, data)
+
+    assertEquals(97, sampled.size())
+    assertTrue(sampled.every { it.rowIndex >= 0 && it.rowIndex < data.size() })
+  }
+
+  @Test
   void testSampleReturnsAllRowsWhenNExceedsInputSize() {
     LayerSpec layer = sampleLayer([n: 100, method: 'random'])
     List<LayerData> data = sampleData(8)
@@ -108,6 +118,16 @@ class SampleStatTest {
 
     assertEquals(8, sampled.size())
     assertTrue(sampled*.rowIndex.containsAll((0..<8)))
+  }
+
+  @Test
+  void testSampleReturnsAllRowsWhenNExceedsIntegerRange() {
+    List<LayerData> data = sampleData(12_000)
+    LayerSpec layer = sampleLayer([n: Integer.MAX_VALUE + 1G, method: 'random'])
+    List<LayerData> sampled = SampleStat.compute(layer, data)
+
+    assertEquals(data.size(), sampled.size())
+    assertTrue(sampled*.rowIndex.containsAll((0..<data.size())))
   }
 
   private static LayerSpec sampleLayer(Map<String, Object> statParams) {

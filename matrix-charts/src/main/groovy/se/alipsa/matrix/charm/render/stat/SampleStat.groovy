@@ -25,6 +25,7 @@ class SampleStat {
 
   private static final Logger log = Logger.getLogger(SampleStat)
   private static final int DEFAULT_SAMPLE_SIZE = 10_000
+  private static final BigDecimal MAX_INT = Integer.MAX_VALUE
 
   static List<LayerData> compute(LayerSpec layer, List<LayerData> data) {
     if (data == null || data.isEmpty()) {
@@ -53,7 +54,14 @@ class SampleStat {
 
   private static int resolveSampleSize(Object raw) {
     BigDecimal parsed = ValueConverter.asBigDecimal(raw)
-    int n = parsed == null ? DEFAULT_SAMPLE_SIZE : parsed.intValue()
+    if (parsed == null) {
+      return DEFAULT_SAMPLE_SIZE
+    }
+    if (parsed > MAX_INT) {
+      log.warn("Sample size n exceeds Integer.MAX_VALUE (${parsed}); clamping to ${Integer.MAX_VALUE}")
+      return Integer.MAX_VALUE
+    }
+    int n = parsed.intValue()
     if (n < 1) {
       log.warn("Sample size n must be >= 1, got ${raw}; using default ${DEFAULT_SAMPLE_SIZE}")
       return DEFAULT_SAMPLE_SIZE
@@ -87,6 +95,11 @@ class SampleStat {
     List<Integer> sampled = []
     for (int i = 0; i < n; i++) {
       int idx = Math.floor(((i + offset) * total) / n) as int
+      if (idx < 0) {
+        idx = 0
+      } else if (idx >= total) {
+        idx = total - 1
+      }
       sampled << idx
     }
     sampled
