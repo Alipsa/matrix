@@ -578,6 +578,14 @@ Resolution order:
 
 Add a "Tooltips" section covering: mapping `tooltip`, template strings, `tooltip(true/false)` on a layer, and the SVG `<title>` mechanism.
 
+### 8.9 [x] Address PR review feedback for tooltip bridging and placeholder precedence
+
+**Files:**
+- `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/bridge/GgCharmCompiler.groovy` — include `tooltip` in `PARAM_COLUMN_AESTHETICS` so `geom_* (tooltip: 'col')` layer params can flow into Charm mapping.
+- `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/geom/GeomUtils.groovy` — prevent row-map keys from overwriting mapped aesthetic placeholders in tooltip templates.
+- `matrix-charts/src/test/groovy/charm/render/geom/TooltipTest.groovy` — add regression test for `{x}`/`{y}` placeholder stability when data contains `x`/`y` columns not used for mapped axes.
+- `matrix-ggplot/src/test/groovy/gg/TooltipBridgeTest.groovy` — add regression test for layer-param tooltip column propagation through gg -> Charm bridge.
+
 ### Verification
 
 ```bash
@@ -588,6 +596,8 @@ Add a "Tooltips" section covering: mapping `tooltip`, template strings, `tooltip
 Executed on this implementation:
 - `./gradlew :matrix-charts:test -Pheadless=true`
 - `./gradlew :matrix-ggplot:test -Pheadless=true`
+- `./gradlew :matrix-charts:test --tests "charm.render.geom.TooltipTest" -Pheadless=true`
+- `./gradlew :matrix-ggplot:test --tests "gg.TooltipBridgeTest" -Pheadless=true`
 
 ---
 
