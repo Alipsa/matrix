@@ -94,6 +94,7 @@ abstract class LayerBuilder {
    * @return this builder
    */
   LayerBuilder stat(Object stat) {
+    statParams.clear()
     if (stat instanceof StatSpec) {
       StatSpec statSpec = stat as StatSpec
       this.statType = statSpec.type
