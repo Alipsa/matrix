@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.CharmValidationException
 import se.alipsa.matrix.charm.GeomSpec
 import se.alipsa.matrix.charm.LayerDsl
 import se.alipsa.matrix.charm.LayerSpec
@@ -234,9 +235,9 @@ abstract class LayerBuilder {
       try {
         return CharmStatType.valueOf(normalized.toUpperCase(Locale.ROOT))
       } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("Unsupported stat '${stat}'", e)
+        throw new CharmValidationException("Unsupported stat '${stat}'", e)
       }
     }
-    throw new IllegalArgumentException("Unsupported stat type '${stat.getClass().name}'")
+    throw new CharmValidationException("Unsupported stat type '${stat.getClass().name}'")
   }
 }

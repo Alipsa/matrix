@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.CharmValidationException
 import se.alipsa.matrix.charm.GeomSpec
 import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.PositionSpec
@@ -14,6 +15,7 @@ import se.alipsa.matrix.charm.render.stat.SampleStat
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertNotSame
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class SampleStatTest {
@@ -56,6 +58,24 @@ class SampleStatTest {
 
     assertEquals(CharmStatType.SAMPLE, layer.statType)
     assertTrue(layer.statSpec.params.isEmpty())
+  }
+
+  @Test
+  void testLayerBuilderRejectsUnsupportedStatNameWithValidationError() {
+    CharmValidationException e = assertThrows(CharmValidationException) {
+      new PointBuilder().stat('not_a_stat')
+    }
+
+    assertTrue(e.message.contains("Unsupported stat 'not_a_stat'"))
+  }
+
+  @Test
+  void testLayerBuilderRejectsUnsupportedStatTypeWithValidationError() {
+    CharmValidationException e = assertThrows(CharmValidationException) {
+      new PointBuilder().stat([:])
+    }
+
+    assertTrue(e.message.contains("Unsupported stat type"))
   }
 
   @Test
