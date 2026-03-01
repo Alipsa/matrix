@@ -2,12 +2,9 @@ package se.alipsa.matrix.chartexport
 
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.export.SvgRenderer
-import se.alipsa.groovy.svg.io.SvgReader
 import se.alipsa.matrix.charm.Chart as CharmChart
 import se.alipsa.matrix.pict.Chart
 import se.alipsa.matrix.pict.CharmBridge
-
-import java.util.regex.Pattern
 
 /**
  * Exports charts as JPEG images.
@@ -18,12 +15,6 @@ import java.util.regex.Pattern
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
 class ChartToJpeg {
-
-  private static final String CHARM_ANIMATION_MARKER = 'charm-animation'
-
-  private static final Pattern CHARM_ANIMATION_STYLE = Pattern.compile(
-      '(?is)<style\\b[^>]*>\\s*(?:<!\\[CDATA\\[\\s*)?/\\*\\s*charm-animation\\s*\\*/.*?(?:\\]\\]>\\s*)?</style>'
-  )
 
   /**
    * Export an {@link Svg} chart as a JPEG image file.
@@ -146,19 +137,11 @@ class ChartToJpeg {
   }
 
   private static Svg stripAnimationCss(Svg svgChart) {
-    String xml = svgChart.toXml()
-    if (!xml.contains(CHARM_ANIMATION_MARKER)) {
-      return svgChart
-    }
-    String sanitized = stripAnimationCss(xml)
-    sanitized == xml ? svgChart : SvgReader.parse(sanitized)
+    AnimationCssStripper.stripFromSvg(svgChart)
   }
 
   private static String stripAnimationCss(String svgXml) {
-    if (!svgXml.contains(CHARM_ANIMATION_MARKER)) {
-      return svgXml
-    }
-    CHARM_ANIMATION_STYLE.matcher(svgXml).replaceAll('')
+    AnimationCssStripper.stripFromXml(svgXml)
   }
 
   private static boolean hasActiveAnimation(CharmChart chart) {

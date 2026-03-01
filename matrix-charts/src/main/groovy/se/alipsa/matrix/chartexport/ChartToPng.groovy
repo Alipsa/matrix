@@ -13,7 +13,6 @@ import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.nio.charset.StandardCharsets
-import java.util.regex.Pattern
 
 /**
  * Exports charts as PNG images.
@@ -25,12 +24,6 @@ import java.util.regex.Pattern
  * <p>For GgPlot export, see {@code se.alipsa.matrix.gg.export.GgExport} in matrix-ggplot.</p>
  */
 class ChartToPng {
-
-  private static final String CHARM_ANIMATION_MARKER = 'charm-animation'
-
-  private static final Pattern CHARM_ANIMATION_STYLE = Pattern.compile(
-      '(?is)<style\\b[^>]*>\\s*(?:<!\\[CDATA\\[\\s*)?/\\*\\s*charm-animation\\s*\\*/.*?(?:\\]\\]>\\s*)?</style>'
-  )
 
   /**
    * Export an SVG chart as a PNG image file.
@@ -207,9 +200,6 @@ class ChartToPng {
   }
 
   private static String stripAnimationCss(String svgContent) {
-    if (!svgContent.contains(CHARM_ANIMATION_MARKER)) {
-      return svgContent
-    }
-    CHARM_ANIMATION_STYLE.matcher(svgContent).replaceAll('')
+    AnimationCssStripper.stripFromXml(svgContent)
   }
 }
