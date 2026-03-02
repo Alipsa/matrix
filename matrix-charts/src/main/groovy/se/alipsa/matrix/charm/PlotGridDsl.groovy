@@ -47,25 +47,25 @@ class PlotGridDsl {
   /**
    * Adds multiple charts to the grid.
    *
-   * @param charts charts to add
+   * @param chartsToAdd charts to add
    * @return this DSL for chaining
    */
-  PlotGridDsl add(Chart... charts) {
-    charts.each { Chart c -> add(c) }
+  PlotGridDsl add(Chart... chartsToAdd) {
+    chartsToAdd.each { Chart c -> add(c) }
     this
   }
 
   /**
    * Adds a list of charts to the grid.
    *
-   * @param charts charts to add
+   * @param chartsToAdd charts to add
    * @return this DSL for chaining
    */
-  PlotGridDsl add(List<Chart> charts) {
-    if (charts == null) {
+  PlotGridDsl add(List<Chart> chartsToAdd) {
+    if (chartsToAdd == null) {
       throw new IllegalArgumentException('charts list cannot be null')
     }
-    charts.each { Chart c -> add(c) }
+    chartsToAdd.each { Chart c -> add(c) }
     this
   }
 
