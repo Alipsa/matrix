@@ -267,6 +267,8 @@ class PlotGridRenderer {
       String newId = idMap[oldId]
       if (newId != null) {
         matcher.appendReplacement(sb, "url(#${Matcher.quoteReplacement(newId)})")
+      } else {
+        matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group(0)))
       }
     }
     matcher.appendTail(sb)
