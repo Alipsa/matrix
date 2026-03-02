@@ -132,7 +132,7 @@ class LegendRenderer {
 
     // Render each legend scale
     legendScales.each { String aesthetic, Object scaleObj ->
-      // Per-layer scale entries have keys like "color_layer1"
+      // Per-layer scale entries have keys like "color_layer0" (0-based layer index)
       boolean isPerLayer = aesthetic.contains('_layer')
       String baseAesthetic = isPerLayer ? aesthetic.replaceAll(/_layer\d+$/, '') : aesthetic
       GuideType guideType = resolveGuideType(baseAesthetic, context, guides, scaleObj)
