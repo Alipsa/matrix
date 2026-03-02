@@ -4416,11 +4416,17 @@ class GgPlot {
       throw new IllegalArgumentException('plot_grid requires a non-empty charts list')
     }
     List<se.alipsa.matrix.charm.Chart> compiled = compileCharts(rawCharts)
+    if (params.containsKey('ncol') && params['ncol'] == null) {
+      throw new IllegalArgumentException('plot_grid ncol must not be null')
+    }
     int ncol = params.containsKey('ncol') ? (params['ncol'] as int) : 1
     Integer nrow = params['nrow'] != null ? params['nrow'] as Integer : null
     List<BigDecimal> widths = params['widths'] as List<BigDecimal>
     List<BigDecimal> heights = params['heights'] as List<BigDecimal>
     String title = params['title'] as String
+    if (params.containsKey('spacing') && params['spacing'] == null) {
+      throw new IllegalArgumentException('plot_grid spacing must not be null')
+    }
     int spacing = params.containsKey('spacing') ? (params['spacing'] as int) : 10
     new se.alipsa.matrix.charm.PlotGrid(compiled, ncol, nrow, widths, heights, title, spacing)
   }

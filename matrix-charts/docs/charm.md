@@ -787,8 +787,8 @@ def c2 = ggplot(data, aes(x: 'x', y: 'y')) + geom_line()
 PlotGrid grid = plot_grid(charts: [c1, c2], ncol: 2, title: 'My Dashboard')
 
 // Convenience overloads
-PlotGrid grid = plot_grid([c1, c2], 2)
-PlotGrid grid = plot_grid(c1, c2)
+grid = plot_grid([c1, c2], 2)
+grid = plot_grid(c1, c2)
 ```
 
 ### Export
