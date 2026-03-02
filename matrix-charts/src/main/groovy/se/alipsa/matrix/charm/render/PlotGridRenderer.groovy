@@ -156,7 +156,7 @@ class PlotGridRenderer {
     List<BigDecimal> effective = []
     for (int i = 0; i < count; i++) {
       if (i < weights.size()) {
-        BigDecimal value = weights[i]
+        BigDecimal value = weights[i] as BigDecimal
         if (value == null) {
           throw new IllegalArgumentException("Weight at index $i must not be null")
         }

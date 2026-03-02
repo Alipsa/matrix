@@ -4455,6 +4455,9 @@ class GgPlot {
    * @return compiled charts
    */
   private static List<se.alipsa.matrix.charm.Chart> compileCharts(List<?> rawCharts) {
+    if (rawCharts == null) {
+      throw new IllegalArgumentException("plot_grid requires a non-null list of charts")
+    }
     se.alipsa.matrix.gg.bridge.GgCharmCompiler compiler = new se.alipsa.matrix.gg.bridge.GgCharmCompiler()
     rawCharts.collect { Object item ->
       if (item instanceof se.alipsa.matrix.charm.Chart) {
