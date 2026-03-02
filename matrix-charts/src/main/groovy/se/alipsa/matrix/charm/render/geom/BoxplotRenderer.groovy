@@ -25,10 +25,10 @@ class BoxplotRenderer {
 
     G boxplotGroup = dataLayer.addG().styleClass('geom-boxplot')
     int elementIndex = 0
-    boolean discreteX = context.xScale.isDiscrete()
+    boolean discreteX = context.xScaleForLayer(context.layerIndex).isDiscrete()
     BigDecimal baseBoxWidth
-    if (discreteX && context.xScale instanceof DiscreteCharmScale) {
-      DiscreteCharmScale scale = context.xScale as DiscreteCharmScale
+    if (discreteX && context.xScaleForLayer(context.layerIndex) instanceof DiscreteCharmScale) {
+      DiscreteCharmScale scale = context.xScaleForLayer(context.layerIndex) as DiscreteCharmScale
       BigDecimal step = scale.levels.isEmpty() ? 20 : (scale.rangeEnd - scale.rangeStart) / scale.levels.size()
       baseBoxWidth = step * 0.5
     } else {
@@ -37,7 +37,7 @@ class BoxplotRenderer {
 
     layerData.each { LayerData datum ->
       Object xValue = datum.x ?: LayerDataRowAccess.value(datum, 'x')
-      BigDecimal xCenter = context.xScale.transform(xValue)
+      BigDecimal xCenter = context.xScaleForLayer(context.layerIndex).transform(xValue)
       if (xCenter == null) {
         return
       }
@@ -45,8 +45,8 @@ class BoxplotRenderer {
       BigDecimal xmin = ValueConverter.asBigDecimal(datum.xmin ?: LayerDataRowAccess.value(datum, 'xmin'))
       BigDecimal xmax = ValueConverter.asBigDecimal(datum.xmax ?: LayerDataRowAccess.value(datum, 'xmax'))
       if (xmin != null && xmax != null) {
-        BigDecimal x1 = context.xScale.transform(xmin)
-        BigDecimal x2 = context.xScale.transform(xmax)
+        BigDecimal x1 = context.xScaleForLayer(context.layerIndex).transform(xmin)
+        BigDecimal x2 = context.xScaleForLayer(context.layerIndex).transform(xmax)
         if (x1 != null && x2 != null) {
           boxWidth = (x2 - x1).abs()
           xCenter = (x1 + x2) / 2
@@ -63,11 +63,11 @@ class BoxplotRenderer {
       Object q3Value = datum.meta.q3 ?: LayerDataRowAccess.value(datum, 'q3') ?: LayerDataRowAccess.value(datum, 'upper')
       Object whiskerLowValue = datum.meta.whiskerLow ?: LayerDataRowAccess.value(datum, 'whiskerLow') ?: LayerDataRowAccess.value(datum, 'ymin')
       Object whiskerHighValue = datum.meta.whiskerHigh ?: LayerDataRowAccess.value(datum, 'whiskerHigh') ?: LayerDataRowAccess.value(datum, 'ymax')
-      BigDecimal q1 = context.yScale.transform(q1Value)
-      BigDecimal median = context.yScale.transform(medianValue)
-      BigDecimal q3 = context.yScale.transform(q3Value)
-      BigDecimal whiskerLow = context.yScale.transform(whiskerLowValue)
-      BigDecimal whiskerHigh = context.yScale.transform(whiskerHighValue)
+      BigDecimal q1 = context.yScaleForLayer(context.layerIndex).transform(q1Value)
+      BigDecimal median = context.yScaleForLayer(context.layerIndex).transform(medianValue)
+      BigDecimal q3 = context.yScaleForLayer(context.layerIndex).transform(q3Value)
+      BigDecimal whiskerLow = context.yScaleForLayer(context.layerIndex).transform(whiskerLowValue)
+      BigDecimal whiskerHigh = context.yScaleForLayer(context.layerIndex).transform(whiskerHighValue)
       if ([q1, median, q3, whiskerLow, whiskerHigh].any { it == null }) {
         return
       }
@@ -118,7 +118,7 @@ class BoxplotRenderer {
       Object outlierValue = datum.meta.outliers ?: LayerDataRowAccess.value(datum, 'outliers')
       List outliers = outlierValue instanceof List ? outlierValue as List : []
       outliers.each { Object outlierVal ->
-        BigDecimal oy = context.yScale.transform(outlierVal)
+        BigDecimal oy = context.yScaleForLayer(context.layerIndex).transform(outlierVal)
         if (oy != null) {
           def outlier = boxplotGroup.addCircle().cx(xCenter).cy(oy).r(3)
               .fill('none').stroke(stroke)

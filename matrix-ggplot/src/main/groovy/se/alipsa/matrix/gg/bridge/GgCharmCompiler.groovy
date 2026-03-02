@@ -58,6 +58,7 @@ import se.alipsa.matrix.gg.geom.GeomRasterAnn
 import se.alipsa.matrix.gg.layer.Layer
 import se.alipsa.matrix.gg.layer.PositionType
 import se.alipsa.matrix.gg.layer.StatType
+import se.alipsa.matrix.gg.scale.NewScaleMarker
 import se.alipsa.matrix.gg.scale.Scale as GgScale
 import se.alipsa.matrix.gg.scale.ScaleDiscrete
 import se.alipsa.matrix.gg.scale.ScaleXDate
@@ -128,14 +129,18 @@ class GgCharmCompiler {
 
     List<LayerSpec> mappedLayers = []
     List<AnnotationSpec> mappedAnnotations = []
+    Set<Layer> annotationLayers = [] as Set<Layer>
+    Set<Layer> mappedLayerIdentities = [] as Set<Layer>
     ggChart.layers.eachWithIndex { Layer layer, int idx ->
       List<AnnotationSpec> annotationSpecs = mapAnnotationLayer(layer, idx, reasons)
       if (!annotationSpecs.isEmpty()) {
         mappedAnnotations.addAll(annotationSpecs)
+        annotationLayers << layer
       } else {
         LayerSpec mapped = mapLayer(layer, idx, plotMapping, plotData, mappedCoord, reasons)
         if (mapped != null) {
           mappedLayers << mapped
+          mappedLayerIdentities << layer
         }
       }
     }
@@ -143,14 +148,27 @@ class GgCharmCompiler {
       return GgCharmCompilation.fallback(reasons)
     }
 
-    ScaleSpec mappedScales = mapScales(ggChart.scales, reasons)
+    // Layers to skip in component walks: annotation layers + unmapped layers
+    Set<Layer> skippedLayers = [] as Set<Layer>
+    skippedLayers.addAll(annotationLayers)
+    ggChart.layers.each { Layer layer ->
+      if (!annotationLayers.contains(layer) && !mappedLayerIdentities.contains(layer)) {
+        skippedLayers << layer
+      }
+    }
+
+    List<GgScale> globalScales = extractGlobalScales(ggChart, skippedLayers)
+    ScaleSpec mappedScales = mapScales(globalScales, reasons)
     if (!reasons.isEmpty()) {
       return GgCharmCompilation.fallback(reasons)
     }
 
-    Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, ggChart.scales)
+    // Apply per-layer scales from NewScaleMarker partitioning
+    applyPerLayerScales(ggChart, mappedLayers, skippedLayers, reasons)
 
-    GuidesSpec mappedGuides = mapGuides(ggChart.guides, ggChart.scales)
+    Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, globalScales)
+
+    GuidesSpec mappedGuides = mapGuides(ggChart.guides, globalScales)
 
     Chart mappedChart = new Chart(
         plotData,
@@ -179,6 +197,115 @@ class GgCharmCompiler {
     }
     RenderConfig config = new RenderConfig(width: ggChart.width, height: ggChart.height)
     charmRenderer.render(adaptation.charmChart, config)
+  }
+
+  /**
+   * Walks the chart's ordered components list and assigns per-layer scales
+   * to the correct mapped layers based on NewScaleMarker positions.
+   */
+  private void applyPerLayerScales(GgChart ggChart, List<LayerSpec> mappedLayers,
+                                     Set<Layer> skippedLayers, List<String> reasons) {
+    if (ggChart.components.isEmpty() || !ggChart.components.any { it instanceof NewScaleMarker }) {
+      return
+    }
+
+    // Walk components in order: partition layers and scales around markers
+    // active markers: aesthetic -> true means "next scales for this aesthetic go to per-layer"
+    Map<String, Boolean> activeMarkers = [:]
+    // Track the mapped layer index (skipping annotation and unmapped layers)
+    int layerIdx = -1
+
+    ggChart.components.each { Object component ->
+      if (component instanceof Layer) {
+        // Only count successfully mapped layers toward mappedLayers index
+        if (!skippedLayers.contains(component)) {
+          layerIdx++
+        }
+      } else if (component instanceof NewScaleMarker) {
+        // Only activate per-layer partitioning after at least one layer has been seen;
+        // markers before any layer are ignored so subsequent scales remain global.
+        if (layerIdx >= 0) {
+          NewScaleMarker marker = component as NewScaleMarker
+          String markerAesthetic = GgCharmMappingRegistry.normalizeAesthetic(marker.aesthetic)
+          if (markerAesthetic != null) {
+            activeMarkers[markerAesthetic] = true
+          }
+        }
+      } else if (component instanceof GgScale) {
+        GgScale ggScale = component as GgScale
+        String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(ggScale.aesthetic)
+        if (aesthetic != null && activeMarkers[aesthetic] && layerIdx >= 0 && layerIdx < mappedLayers.size()) {
+          // This scale applies to the current layer as a per-layer override
+          CharmScale charmScale = mapSingleScale(ggScale, reasons)
+          if (charmScale != null) {
+            LayerSpec target = mappedLayers[layerIdx]
+            // Need to rebuild LayerSpec with the per-layer scale added
+            Map<String, CharmScale> existingScales = new LinkedHashMap<>(target.scales ?: [:])
+            existingScales[aesthetic] = charmScale
+            LayerSpec updated = new LayerSpec(
+                target.geomSpec,
+                target.statSpec,
+                target.mapping,
+                target.inheritMapping,
+                target.positionSpec,
+                target.params,
+                target.styleCallback,
+                existingScales
+            )
+            mappedLayers[layerIdx] = updated
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Returns global chart-level scales by walking ordered components and excluding
+   * scales that are activated after a new-scale marker for the same aesthetic.
+   */
+  private static List<GgScale> extractGlobalScales(GgChart ggChart, Set<Layer> skippedLayers = [] as Set) {
+    List<GgScale> allScales = ggChart?.scales ?: []
+    if (allScales.isEmpty()) {
+      return []
+    }
+    if (ggChart?.components == null || ggChart.components.isEmpty()) {
+      return new ArrayList<>(allScales)
+    }
+    if (!ggChart.components.any { it instanceof NewScaleMarker }) {
+      return new ArrayList<>(allScales)
+    }
+
+    int componentScaleCount = ggChart.components.count { it instanceof GgScale } as int
+    if (componentScaleCount == 0) {
+      return new ArrayList<>(allScales)
+    }
+
+    Map<String, Boolean> markerActivated = [:]
+    boolean layerSeen = false
+    List<GgScale> globalScales = []
+    ggChart.components.each { Object component ->
+      if (component instanceof Layer) {
+        if (!skippedLayers.contains(component)) {
+          layerSeen = true
+        }
+      } else if (component instanceof NewScaleMarker) {
+        // Only activate after at least one layer; markers before any layer are
+        // ignored so subsequent scales are kept as global.
+        if (layerSeen) {
+          String markerAesthetic = GgCharmMappingRegistry.normalizeAesthetic((component as NewScaleMarker).aesthetic)
+          if (markerAesthetic != null) {
+            markerActivated[markerAesthetic] = true
+          }
+        }
+      } else if (component instanceof GgScale) {
+        GgScale scale = component as GgScale
+        String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(scale.aesthetic)
+        if (aesthetic == null || !Boolean.TRUE.equals(markerActivated[aesthetic])) {
+          globalScales << scale
+        }
+      }
+    }
+    globalScales
   }
 
   private LayerSpec mapLayer(
@@ -680,6 +807,24 @@ class GgCharmCompiler {
       assignScale(mapped, aesthetic, charmScale, idx, reasons)
     }
     mapped
+  }
+
+  /**
+   * Maps a single gg scale to a Charm scale for per-layer use.
+   */
+  private CharmScale mapSingleScale(GgScale scale, List<String> reasons) {
+    if (scale == null) {
+      return null
+    }
+    String aesthetic = GgCharmMappingRegistry.normalizeAesthetic(scale.aesthetic)
+    if (aesthetic == null || aesthetic.isBlank()) {
+      return null
+    }
+    CharmScale charmScale = mapScale(scale, aesthetic)
+    if (charmScale != null) {
+      enrichScale(charmScale, scale)
+    }
+    charmScale
   }
 
   private CharmScale mapScale(GgScale scale, String aesthetic) {

@@ -24,16 +24,16 @@ class BarRenderer {
 
     G barGroup = dataLayer.addG().styleClass('geombar')
     int elementIndex = 0
-    BigDecimal baseline = context.yScale.transform(0)
+    BigDecimal baseline = context.yScaleForLayer(context.layerIndex).transform(0)
     if (baseline == null) {
       baseline = panelHeight
     }
 
-    boolean discreteX = context.xScale.isDiscrete()
+    boolean discreteX = context.xScaleForLayer(context.layerIndex).isDiscrete()
     BigDecimal widthFactor = ValueConverter.asBigDecimal(layer.params.width) ?: 0.75
     BigDecimal barWidth
-    if (discreteX && context.xScale instanceof DiscreteCharmScale) {
-      DiscreteCharmScale scale = context.xScale as DiscreteCharmScale
+    if (discreteX && context.xScaleForLayer(context.layerIndex) instanceof DiscreteCharmScale) {
+      DiscreteCharmScale scale = context.xScaleForLayer(context.layerIndex) as DiscreteCharmScale
       BigDecimal step = scale.levels.isEmpty() ? 20 : (scale.rangeEnd - scale.rangeStart) / scale.levels.size()
       barWidth = step * widthFactor
     } else {
@@ -44,15 +44,15 @@ class BarRenderer {
       BigDecimal xLeft
       BigDecimal width
       if (datum.xmin != null && datum.xmax != null) {
-        BigDecimal x1 = context.xScale.transform(datum.xmin)
-        BigDecimal x2 = context.xScale.transform(datum.xmax)
+        BigDecimal x1 = context.xScaleForLayer(context.layerIndex).transform(datum.xmin)
+        BigDecimal x2 = context.xScaleForLayer(context.layerIndex).transform(datum.xmax)
         if (x1 == null || x2 == null) {
           return
         }
         xLeft = [x1, x2].min()
         width = (x2 - x1).abs()
       } else {
-        BigDecimal xCenter = context.xScale.transform(datum.x)
+        BigDecimal xCenter = context.xScaleForLayer(context.layerIndex).transform(datum.x)
         if (xCenter == null) {
           return
         }
@@ -63,10 +63,10 @@ class BarRenderer {
       BigDecimal yTop
       BigDecimal yBottom
       if (datum.ymin != null && datum.ymax != null) {
-        yTop = context.yScale.transform(datum.ymax)
-        yBottom = context.yScale.transform(datum.ymin)
+        yTop = context.yScaleForLayer(context.layerIndex).transform(datum.ymax)
+        yBottom = context.yScaleForLayer(context.layerIndex).transform(datum.ymin)
       } else {
-        yTop = context.yScale.transform(datum.y)
+        yTop = context.yScaleForLayer(context.layerIndex).transform(datum.y)
         yBottom = baseline
       }
       if (yTop == null || yBottom == null) {

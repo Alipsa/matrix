@@ -6,6 +6,7 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.ScaleType
 import se.alipsa.matrix.core.ValueConverter
+import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.RenderConfig
 
 /**
@@ -74,6 +75,84 @@ class ScaleEngine {
       trained.linetype = trainLinetypeScale(linetypeValues, chart.scale.linetype)
     }
 
+    trained
+  }
+
+  /**
+   * Trains per-layer scale overrides for a single layer.
+   *
+   * <p>Only the aesthetics present in {@code layerScaleSpecs} are trained;
+   * others are left null so that {@link se.alipsa.matrix.charm.render.RenderContext}
+   * falls back to the global scale.</p>
+   *
+   * @param layerScaleSpecs per-layer scale specs keyed by aesthetic name
+   * @param config render configuration
+   * @param layerData pipeline data for this layer only
+   * @param chart compiled chart (for coord info)
+   * @return trained scales with only overridden aesthetics populated
+   */
+  static TrainedScales trainLayerScales(Map<String, Scale> layerScaleSpecs,
+                                         RenderConfig config,
+                                         List<LayerData> layerData,
+                                         Chart chart) {
+    TrainedScales trained = new TrainedScales()
+    if (layerScaleSpecs == null || layerScaleSpecs.isEmpty()) {
+      return trained
+    }
+
+    if (layerScaleSpecs.containsKey('x')) {
+      List<Object> xValues = layerData.collect { LayerData d -> d.x }
+      trained.x = trainPositionalScale(xValues, layerScaleSpecs['x'], 0, config.plotWidth())
+    }
+    if (layerScaleSpecs.containsKey('y')) {
+      List<Object> yValues = layerData.collect { LayerData d -> d.y }
+      trained.y = trainPositionalScale(yValues, layerScaleSpecs['y'], config.plotHeight(), 0)
+    }
+    if (layerScaleSpecs.containsKey('color')) {
+      List<Object> colorValues = layerData.collect { LayerData d -> d.color }
+      boolean hasColor = colorValues.any { it != null }
+      if (hasColor) {
+        trained.color = trainColorScale(colorValues, layerScaleSpecs['color'])
+      }
+    }
+    if (layerScaleSpecs.containsKey('fill')) {
+      List<Object> fillValues = layerData.collect { LayerData d -> d.fill }
+      boolean hasFill = fillValues.any { it != null }
+      if (hasFill) {
+        trained.fill = trainColorScale(fillValues, layerScaleSpecs['fill'])
+      }
+    }
+    if (layerScaleSpecs.containsKey('size')) {
+      List<Object> sizeValues = layerData.collect { LayerData d -> d.size }
+      boolean hasSize = sizeValues.any { it != null }
+      if (hasSize) {
+        trained.size = trainSizeScale(sizeValues, layerScaleSpecs['size'])
+      }
+    }
+    if (layerScaleSpecs.containsKey('shape')) {
+      List<Object> shapeValues = layerData.collect { LayerData d -> d.shape }
+      boolean hasShape = shapeValues.any { it != null }
+      if (hasShape) {
+        trained.shape = trainShapeScale(shapeValues, layerScaleSpecs['shape'])
+      }
+    }
+    if (layerScaleSpecs.containsKey('alpha')) {
+      List<Object> alphaValues = layerData.collect { LayerData d -> d.alpha }
+      boolean hasAlpha = alphaValues.any { it != null }
+      if (hasAlpha) {
+        trained.alpha = trainAlphaScale(alphaValues, layerScaleSpecs['alpha'])
+      }
+    }
+    if (layerScaleSpecs.containsKey('linetype')) {
+      List<Object> linetypeValues = layerData.collect { LayerData d -> d.linetype }
+      boolean hasLinetype = linetypeValues.any { it != null }
+      if (hasLinetype) {
+        trained.linetype = trainLinetypeScale(linetypeValues, layerScaleSpecs['linetype'])
+      }
+    }
+    if (chart != null && (trained.x != null || trained.y != null)) {
+      applyFixedCoordScaling(chart, config, trained)
+    }
     trained
   }
 

@@ -7,6 +7,7 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CssAttributesSpec
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ColorCharmScale
+import se.alipsa.matrix.charm.render.scale.TrainedScales
 
 /**
  * Per-render write-once context.
@@ -38,6 +39,9 @@ class RenderContext {
   List<PanelSpec> panels = []
   final Map<se.alipsa.matrix.charm.LayerSpec, Map<List<Integer>, List<LayerData>>> pipelineCache = [:]
 
+  /** Per-layer trained scales, keyed by layer index. */
+  Map<Integer, TrainedScales> layerScales = [:]
+
   /**
    * Creates render context.
    *
@@ -50,6 +54,86 @@ class RenderContext {
     this.cssAttributes = chart.cssAttributes
     this.config = config
     this.svg = svg
+  }
+
+  /**
+   * Returns the x scale for the given layer, falling back to the global x scale.
+   *
+   * @param layerIdx layer index
+   * @return per-layer x scale or global x scale
+   */
+  CharmScale xScaleForLayer(int layerIdx) {
+    layerScales[layerIdx]?.x ?: xScale
+  }
+
+  /**
+   * Returns the y scale for the given layer, falling back to the global y scale.
+   *
+   * @param layerIdx layer index
+   * @return per-layer y scale or global y scale
+   */
+  CharmScale yScaleForLayer(int layerIdx) {
+    layerScales[layerIdx]?.y ?: yScale
+  }
+
+  /**
+   * Returns the color scale for the given layer, falling back to the global color scale.
+   *
+   * @param layerIdx layer index
+   * @return per-layer color scale or global color scale
+   */
+  ColorCharmScale colorScaleForLayer(int layerIdx) {
+    layerScales[layerIdx]?.color ?: colorScale
+  }
+
+  /**
+   * Returns the fill scale for the given layer, falling back to the global fill scale.
+   *
+   * @param layerIdx layer index
+   * @return per-layer fill scale or global fill scale
+   */
+  ColorCharmScale fillScaleForLayer(int layerIdx) {
+    layerScales[layerIdx]?.fill ?: fillScale
+  }
+
+  /**
+   * Returns the size scale for the given layer, falling back to the global size scale.
+   *
+   * @param layerIdx layer index
+   * @return per-layer size scale or global size scale
+   */
+  CharmScale sizeScaleForLayer(int layerIdx) {
+    layerScales[layerIdx]?.size ?: sizeScale
+  }
+
+  /**
+   * Returns the shape scale for the given layer, falling back to the global shape scale.
+   *
+   * @param layerIdx layer index
+   * @return per-layer shape scale or global shape scale
+   */
+  CharmScale shapeScaleForLayer(int layerIdx) {
+    layerScales[layerIdx]?.shape ?: shapeScale
+  }
+
+  /**
+   * Returns the alpha scale for the given layer, falling back to the global alpha scale.
+   *
+   * @param layerIdx layer index
+   * @return per-layer alpha scale or global alpha scale
+   */
+  CharmScale alphaScaleForLayer(int layerIdx) {
+    layerScales[layerIdx]?.alpha ?: alphaScale
+  }
+
+  /**
+   * Returns the linetype scale for the given layer, falling back to the global linetype scale.
+   *
+   * @param layerIdx layer index
+   * @return per-layer linetype scale or global linetype scale
+   */
+  CharmScale linetypeScaleForLayer(int layerIdx) {
+    layerScales[layerIdx]?.linetype ?: linetypeScale
   }
 }
 

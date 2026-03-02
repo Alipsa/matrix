@@ -22,7 +22,7 @@ class HistogramRenderer {
     }
 
     int elementIndex = 0
-    BigDecimal baseline = context.yScale.transform(0)
+    BigDecimal baseline = context.yScaleForLayer(context.layerIndex).transform(0)
     if (baseline == null) {
       baseline = panelHeight
     }
@@ -33,15 +33,15 @@ class HistogramRenderer {
       BigDecimal xLeft
       BigDecimal width
       if (startVal != null && endVal != null) {
-        BigDecimal xStart = context.xScale.transform(startVal)
-        BigDecimal xEnd = context.xScale.transform(endVal)
+        BigDecimal xStart = context.xScaleForLayer(context.layerIndex).transform(startVal)
+        BigDecimal xEnd = context.xScaleForLayer(context.layerIndex).transform(endVal)
         if (xStart == null || xEnd == null) {
           return
         }
         xLeft = [xStart, xEnd].min()
         width = (xEnd - xStart).abs()
       } else {
-        BigDecimal xCenter = context.xScale.transform(datum.x)
+        BigDecimal xCenter = context.xScaleForLayer(context.layerIndex).transform(datum.x)
         if (xCenter == null) {
           return
         }
@@ -50,7 +50,7 @@ class HistogramRenderer {
         width = fallbackWidth
       }
 
-      BigDecimal yValue = context.yScale.transform(datum.y)
+      BigDecimal yValue = context.yScaleForLayer(context.layerIndex).transform(datum.y)
       if (yValue == null) {
         return
       }

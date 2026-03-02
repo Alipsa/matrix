@@ -41,8 +41,8 @@ class ContourRenderer {
 
       List<BigDecimal[]> points = []
       groupData.each { LayerData datum ->
-        BigDecimal x = context.xScale.transform(datum.x)
-        BigDecimal y = context.yScale.transform(datum.y)
+        BigDecimal x = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+        BigDecimal y = context.yScaleForLayer(context.layerIndex).transform(datum.y)
         if (x != null && y != null) {
           points << ([x, y] as BigDecimal[])
         }

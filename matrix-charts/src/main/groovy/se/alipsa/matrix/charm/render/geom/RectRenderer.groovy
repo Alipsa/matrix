@@ -15,10 +15,10 @@ class RectRenderer {
   static void render(G dataLayer, RenderContext context, LayerSpec layer, List<LayerData> layerData) {
     int elementIndex = 0
     layerData.each { LayerData datum ->
-      BigDecimal xMin = context.xScale.transform(datum.xmin)
-      BigDecimal xMax = context.xScale.transform(datum.xmax)
-      BigDecimal yMin = context.yScale.transform(datum.ymin)
-      BigDecimal yMax = context.yScale.transform(datum.ymax)
+      BigDecimal xMin = context.xScaleForLayer(context.layerIndex).transform(datum.xmin)
+      BigDecimal xMax = context.xScaleForLayer(context.layerIndex).transform(datum.xmax)
+      BigDecimal yMin = context.yScaleForLayer(context.layerIndex).transform(datum.ymin)
+      BigDecimal yMax = context.yScaleForLayer(context.layerIndex).transform(datum.ymax)
       if (xMin == null || xMax == null || yMin == null || yMax == null) {
         return
       }

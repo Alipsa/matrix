@@ -86,6 +86,7 @@ import se.alipsa.matrix.gg.scale.ScaleColorGradientN
 import se.alipsa.matrix.gg.scale.ScaleColorSteps
 import se.alipsa.matrix.gg.scale.ScaleColorSteps2
 import se.alipsa.matrix.gg.scale.ScaleColorStepsN
+import se.alipsa.matrix.gg.scale.NewScaleMarker
 import se.alipsa.matrix.gg.scale.ScaleColorManual
 import se.alipsa.matrix.gg.scale.ScaleColorBrewer
 import se.alipsa.matrix.gg.scale.ScaleColorDistiller
@@ -4090,6 +4091,52 @@ class GgPlot {
    */
   static ScaleLinetypeIdentity scale_linetype_identity(Map params = [:]) {
     return new ScaleLinetypeIdentity(params)
+  }
+
+  // ---- Per-layer scale markers ----
+
+  /**
+   * Signals a per-layer color scale reset.
+   *
+   * <p>When placed between two layers, subsequent {@code scale_color_*} calls
+   * will be attached to the next layer rather than the chart-level scale.
+   * This allows different layers to use independent color scales.</p>
+   *
+   * <p>Example:
+   * <pre>
+   *   ggplot(data, aes(x: 'x', y: 'y', color: 'group1')) +
+   *       geom_point() +
+   *       scale_color_manual(values: ['A': 'red', 'B': 'blue']) +
+   *       new_scale_color() +
+   *       geom_line(aes(color: 'group2')) +
+   *       scale_color_manual(values: ['X': 'green', 'Y': 'orange'])
+   * </pre></p>
+   *
+   * @return new scale marker for color
+   */
+  static NewScaleMarker new_scale_color() {
+    new NewScaleMarker('color')
+  }
+
+  /**
+   * British spelling alias for {@link #new_scale_color()}.
+   *
+   * @return new scale marker for colour
+   */
+  static NewScaleMarker new_scale_colour() {
+    new NewScaleMarker('color')
+  }
+
+  /**
+   * Signals a per-layer fill scale reset.
+   *
+   * <p>When placed between two layers, subsequent {@code scale_fill_*} calls
+   * will be attached to the next layer rather than the chart-level scale.</p>
+   *
+   * @return new scale marker for fill
+   */
+  static NewScaleMarker new_scale_fill() {
+    new NewScaleMarker('fill')
   }
 
   static StatsBin2D stat_bin_2d() {

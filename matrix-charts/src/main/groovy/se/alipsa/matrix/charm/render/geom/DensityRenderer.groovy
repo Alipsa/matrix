@@ -21,7 +21,7 @@ class DensityRenderer {
     }
 
     int elementIndex = 0
-    BigDecimal baseline = context.yScale.transform(0)
+    BigDecimal baseline = context.yScaleForLayer(context.layerIndex).transform(0)
     if (baseline == null) {
       baseline = panelHeight
     }
@@ -31,8 +31,8 @@ class DensityRenderer {
       List<LayerData> sorted = GeomUtils.sortByX(groupData)
       List<BigDecimal[]> points = []
       sorted.each { LayerData datum ->
-        BigDecimal x = context.xScale.transform(datum.x)
-        BigDecimal y = context.yScale.transform(datum.y)
+        BigDecimal x = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+        BigDecimal y = context.yScaleForLayer(context.layerIndex).transform(datum.y)
         if (x != null && y != null) {
           points << ([x, y] as BigDecimal[])
         }

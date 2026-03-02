@@ -22,8 +22,8 @@ class TileRenderer {
     int elementIndex = 0
 
     layerData.each { LayerData datum ->
-      BigDecimal xCenter = context.xScale.transform(datum.x)
-      BigDecimal yCenter = context.yScale.transform(datum.y)
+      BigDecimal xCenter = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+      BigDecimal yCenter = context.yScaleForLayer(context.layerIndex).transform(datum.y)
       if (xCenter == null || yCenter == null) {
         return
       }
@@ -31,15 +31,15 @@ class TileRenderer {
       BigDecimal halfW
       BigDecimal halfH
       if (datum.xmin != null && datum.xmax != null) {
-        BigDecimal xLeft = context.xScale.transform(datum.xmin)
-        BigDecimal xRight = context.xScale.transform(datum.xmax)
+        BigDecimal xLeft = context.xScaleForLayer(context.layerIndex).transform(datum.xmin)
+        BigDecimal xRight = context.xScaleForLayer(context.layerIndex).transform(datum.xmax)
         if (xLeft != null && xRight != null) {
           halfW = (xRight - xLeft).abs() / 2
         }
       }
       if (datum.ymin != null && datum.ymax != null) {
-        BigDecimal yBottom = context.yScale.transform(datum.ymin)
-        BigDecimal yTop = context.yScale.transform(datum.ymax)
+        BigDecimal yBottom = context.yScaleForLayer(context.layerIndex).transform(datum.ymin)
+        BigDecimal yTop = context.yScaleForLayer(context.layerIndex).transform(datum.ymax)
         if (yBottom != null && yTop != null) {
           halfH = (yTop - yBottom).abs() / 2
         }

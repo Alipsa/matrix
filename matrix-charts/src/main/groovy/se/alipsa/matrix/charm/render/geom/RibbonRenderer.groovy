@@ -24,9 +24,9 @@ class RibbonRenderer {
       List<BigDecimal[]> upper = []
       List<BigDecimal[]> lower = []
       sorted.each { LayerData datum ->
-        BigDecimal x = context.xScale.transform(datum.x)
-        BigDecimal yMax = context.yScale.transform(datum.ymax)
-        BigDecimal yMin = context.yScale.transform(datum.ymin)
+        BigDecimal x = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+        BigDecimal yMax = context.yScaleForLayer(context.layerIndex).transform(datum.ymax)
+        BigDecimal yMin = context.yScaleForLayer(context.layerIndex).transform(datum.ymin)
         if (x != null && yMax != null && yMin != null) {
           upper << ([x, yMax] as BigDecimal[])
           lower << ([x, yMin] as BigDecimal[])

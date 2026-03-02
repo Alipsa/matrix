@@ -21,15 +21,18 @@ class PointRenderer {
     BigDecimal defaultRadius = ValueConverter.asBigDecimal(layer.params.size) ?: context.config.pointRadius
     String defaultShape = layer.params.shape?.toString() ?: 'circle'
     int elementIndex = 0
+    def xScale = context.xScaleForLayer(context.layerIndex)
+    def yScale = context.yScaleForLayer(context.layerIndex)
+    def sizeScale = context.sizeScaleForLayer(context.layerIndex)
 
     layerData.each { LayerData datum ->
-      BigDecimal x = context.xScale.transform(datum.x)
-      BigDecimal y = context.yScale.transform(datum.y)
+      BigDecimal x = xScale.transform(datum.x)
+      BigDecimal y = yScale.transform(datum.y)
       if (x == null || y == null) {
         return
       }
-      BigDecimal radius = context.sizeScale != null && datum.size != null
-          ? context.sizeScale.transform(datum.size)
+      BigDecimal radius = sizeScale != null && datum.size != null
+          ? sizeScale.transform(datum.size)
           : ValueConverter.asBigDecimal(datum.size)
       if (radius == null) {
         radius = defaultRadius

@@ -26,17 +26,17 @@ class IntervalRenderer {
 
     layerData.each { LayerData datum ->
       int nextElementIndex = elementIndex
-      BigDecimal x = context.xScale.transform(datum.x)
-      BigDecimal y = context.yScale.transform(datum.y)
-      BigDecimal xmin = context.xScale.transform(datum.xmin)
-      BigDecimal xmax = context.xScale.transform(datum.xmax)
-      BigDecimal ymin = context.yScale.transform(datum.ymin)
-      BigDecimal ymax = context.yScale.transform(datum.ymax)
+      BigDecimal x = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+      BigDecimal y = context.yScaleForLayer(context.layerIndex).transform(datum.y)
+      BigDecimal xmin = context.xScaleForLayer(context.layerIndex).transform(datum.xmin)
+      BigDecimal xmax = context.xScaleForLayer(context.layerIndex).transform(datum.xmax)
+      BigDecimal ymin = context.yScaleForLayer(context.layerIndex).transform(datum.ymin)
+      BigDecimal ymax = context.yScaleForLayer(context.layerIndex).transform(datum.ymax)
 
       switch (layer.geomType) {
         case CharmGeomType.ERRORBAR -> {
           if (x != null && ymin != null && ymax != null) {
-            BigDecimal halfWidth = capHalfWidth(context.xScale, x, widthRatio)
+            BigDecimal halfWidth = capHalfWidth(context.xScaleForLayer(context.layerIndex), x, widthRatio)
             drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-errorbar', nextElementIndex++)
             drawSegment(dataLayer, context, layer, datum, x - halfWidth, ymin, x + halfWidth, ymin, 'charm-errorbar', nextElementIndex++)
             drawSegment(dataLayer, context, layer, datum, x - halfWidth, ymax, x + halfWidth, ymax, 'charm-errorbar', nextElementIndex++)
@@ -44,7 +44,7 @@ class IntervalRenderer {
         }
         case CharmGeomType.ERRORBARH -> {
           if (y != null && xmin != null && xmax != null) {
-            BigDecimal halfHeight = capHalfWidth(context.yScale, y, widthRatio)
+            BigDecimal halfHeight = capHalfWidth(context.yScaleForLayer(context.layerIndex), y, widthRatio)
             drawSegment(dataLayer, context, layer, datum, xmin, y, xmax, y, 'charm-errorbarh', nextElementIndex++)
             drawSegment(dataLayer, context, layer, datum, xmin, y - halfHeight, xmin, y + halfHeight, 'charm-errorbarh', nextElementIndex++)
             drawSegment(dataLayer, context, layer, datum, xmax, y - halfHeight, xmax, y + halfHeight, 'charm-errorbarh', nextElementIndex++)
@@ -57,7 +57,7 @@ class IntervalRenderer {
         }
         case CharmGeomType.CROSSBAR -> {
           if (x != null && y != null && ymin != null && ymax != null) {
-            BigDecimal halfWidth = capHalfWidth(context.xScale, x, widthRatio)
+            BigDecimal halfWidth = capHalfWidth(context.xScaleForLayer(context.layerIndex), x, widthRatio)
             drawSegment(dataLayer, context, layer, datum, x, ymin, x, ymax, 'charm-crossbar', nextElementIndex++)
             drawSegment(dataLayer, context, layer, datum, x - halfWidth, y, x + halfWidth, y, 'charm-crossbar', nextElementIndex++)
           }
