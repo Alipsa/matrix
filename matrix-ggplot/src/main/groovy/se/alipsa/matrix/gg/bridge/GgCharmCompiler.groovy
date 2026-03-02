@@ -129,10 +129,12 @@ class GgCharmCompiler {
 
     List<LayerSpec> mappedLayers = []
     List<AnnotationSpec> mappedAnnotations = []
+    Set<Layer> annotationLayers = [] as Set<Layer>
     ggChart.layers.eachWithIndex { Layer layer, int idx ->
       List<AnnotationSpec> annotationSpecs = mapAnnotationLayer(layer, idx, reasons)
       if (!annotationSpecs.isEmpty()) {
         mappedAnnotations.addAll(annotationSpecs)
+        annotationLayers << layer
       } else {
         LayerSpec mapped = mapLayer(layer, idx, plotMapping, plotData, mappedCoord, reasons)
         if (mapped != null) {
@@ -151,7 +153,7 @@ class GgCharmCompiler {
     }
 
     // Apply per-layer scales from NewScaleMarker partitioning
-    applyPerLayerScales(ggChart, mappedLayers, reasons)
+    applyPerLayerScales(ggChart, mappedLayers, annotationLayers, reasons)
 
     Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, globalScales)
 
@@ -190,7 +192,8 @@ class GgCharmCompiler {
    * Walks the chart's ordered components list and assigns per-layer scales
    * to the correct mapped layers based on NewScaleMarker positions.
    */
-  private void applyPerLayerScales(GgChart ggChart, List<LayerSpec> mappedLayers, List<String> reasons) {
+  private void applyPerLayerScales(GgChart ggChart, List<LayerSpec> mappedLayers,
+                                     Set<Layer> annotationLayers, List<String> reasons) {
     if (ggChart.components.isEmpty() || !ggChart.components.any { it instanceof NewScaleMarker }) {
       return
     }
@@ -198,12 +201,15 @@ class GgCharmCompiler {
     // Walk components in order: partition layers and scales around markers
     // active markers: aesthetic -> true means "next scales for this aesthetic go to per-layer"
     Map<String, Boolean> activeMarkers = [:]
-    // Track the last layer index before each marker
+    // Track the mapped layer index (skipping annotation layers)
     int layerIdx = -1
 
     ggChart.components.each { Object component ->
       if (component instanceof Layer) {
-        layerIdx++
+        // Only count non-annotation layers toward mappedLayers index
+        if (!annotationLayers.contains(component)) {
+          layerIdx++
+        }
       } else if (component instanceof NewScaleMarker) {
         NewScaleMarker marker = component as NewScaleMarker
         String markerAesthetic = GgCharmMappingRegistry.normalizeAesthetic(marker.aesthetic)
