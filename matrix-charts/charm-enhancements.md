@@ -346,7 +346,7 @@ Examples:
 
 **Priority:** High | **Effort:** Large
 
-### 6.1 [ ] Create `PlotGrid` specification class
+### 6.1 [x] Create `PlotGrid` specification class
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotGrid.groovy` (new)
 
@@ -359,7 +359,7 @@ Key fields:
 - `String title`
 - `int spacing = 10`
 
-### 6.2 [ ] Create `PlotGridRenderer` using nested `<svg>` composition
+### 6.2 [x] Create `PlotGridRenderer` using nested `<svg>` composition
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/PlotGridRenderer.groovy` (new)
 
@@ -376,7 +376,7 @@ Legend behavior for v1: render legends independently per subplot. Do not attempt
 
 `PlotGrid.render(int width, int height)` is the public convenience entry point; it constructs a `PlotGridRenderer` and delegates to it.
 
-### 6.3 [ ] Create `PlotGridDsl` and add `plotGrid()` factory to `Charts`
+### 6.3 [x] Create `PlotGridDsl` and add `plotGrid()` factory to `Charts`
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotGridDsl.groovy` (new)
@@ -384,14 +384,14 @@ Legend behavior for v1: render legends independently per subplot. Do not attempt
 
 `PlotGrid` is the immutable compiled spec (holding `List<Chart>`). `PlotGridDsl` is the mutable closure delegate used inside `plotGrid { ... }` blocks — it mirrors the pattern of `PlotSpec` / `ScaleDsl`. Callers must have a compiled `Chart` (from `PlotSpec.build()` or `Charts.plot(...).build()`) before adding it to a grid. `PlotGrid.render(int width, int height)` is a convenience wrapper delegating to `PlotGridRenderer`.
 
-### 6.4 [ ] Add `plot_grid()` compatibility API to ggplot layer
+### 6.4 [x] Add `plot_grid()` compatibility API to ggplot layer
 
 **File:** `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/GgPlot.groovy`
 
 Compile each `GgChart` to Charm `Chart`, then delegate to Charm `PlotGrid`.
 Requirement for v1: all `GgChart` inputs are Charm-delegable. Any adaptation failure is a bridge bug and `plot_grid()` should fail fast (no fallback rendering path inside `plot_grid()`).
 
-### 6.5 [ ] Keep existing exporters unchanged; use `SvgWriter.toXml()` for SVG output
+### 6.5 [x] Keep existing exporters unchanged; use `SvgWriter.toXml()` for SVG output
 
 Use:
 
@@ -403,7 +403,7 @@ ChartToPng.export(svg, new File('dashboard.png'))
 new File('dashboard.svg').text = SvgWriter.toXml(svg)
 ```
 
-### 6.6 [ ] Add tests for PlotGrid behavior and isolation
+### 6.6 [x] Add tests for PlotGrid behavior and isolation
 
 **File:** `matrix-charts/src/test/groovy/charm/render/PlotGridTest.groovy` (new)
 
@@ -414,7 +414,7 @@ Test:
 - Per-subplot legends/clips/defs remain correct.
 - No SVG ID collisions across subplots (including clip paths and all reference forms: `url(#...)`, `href="#..."`, and `xlink:href="#..."`).
 
-### 6.7 [ ] Document `plotGrid` and `plot_grid` API in `charm.md`
+### 6.7 [x] Document `plotGrid` and `plot_grid` API in `charm.md`
 
 **File:** `matrix-charts/docs/charm.md`
 
@@ -426,6 +426,12 @@ Add a "Multi-plot composition" section with a `plotGrid { }` DSL example and not
 ./gradlew :matrix-charts:test -Pheadless=true
 ./gradlew :matrix-ggplot:test -Pheadless=true
 ```
+
+Executed on this implementation:
+- `./gradlew :matrix-charts:test --tests "charm.render.PlotGridTest" -Pheadless=true`
+- `./gradlew :matrix-charts:test -Pheadless=true`
+- `./gradlew :matrix-ggplot:test -Pheadless=true`
+- `./gradlew test`
 
 ---
 

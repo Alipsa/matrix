@@ -159,6 +159,43 @@ class Charts {
     plot(observations, configure)
   }
 
+  /**
+   * Creates a plot grid using a DSL closure.
+   *
+   * <p>Example:</p>
+   * <pre>
+   * PlotGrid grid = Charts.plotGrid {
+   *   add chart1, chart2
+   *   ncol 2
+   *   title 'Dashboard'
+   *   widths [1.0, 2.0]
+   * }
+   * </pre>
+   *
+   * @param configure grid configuration closure
+   * @return compiled plot grid
+   */
+  static PlotGrid plotGrid(
+      @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = PlotGridDsl) Closure<?> configure
+  ) {
+    PlotGridDsl dsl = new PlotGridDsl()
+    Closure<?> body = configure.rehydrate(dsl, dsl, dsl)
+    body.resolveStrategy = Closure.DELEGATE_ONLY
+    body.call()
+    dsl.build()
+  }
+
+  /**
+   * Creates a plot grid from a list of charts arranged in the given number of columns.
+   *
+   * @param charts list of compiled charts
+   * @param ncol number of columns (default 1)
+   * @return compiled plot grid
+   */
+  static PlotGrid plotGrid(List<Chart> charts, int ncol = 1) {
+    new PlotGrid(charts, ncol)
+  }
+
   private static Matrix toMatrix(Map<String, List> columns) {
     if (columns == null || columns.isEmpty()) {
       throw new IllegalArgumentException('columns cannot be null or empty')

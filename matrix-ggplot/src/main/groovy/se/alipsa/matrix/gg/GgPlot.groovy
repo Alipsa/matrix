@@ -4385,6 +4385,97 @@ class GgPlot {
     return new StatsAlign(params)
   }
 
+  // --- Multi-plot composition ---
+
+  /**
+   * Arranges multiple charts into a grid layout.
+   *
+   * <p>Each chart is compiled to a Charm {@link se.alipsa.matrix.charm.Chart} and
+   * composed into a single SVG with nested {@code <svg>} elements.</p>
+   *
+   * <p>Supported parameters:</p>
+   * <ul>
+   *   <li>{@code charts} — list of {@link GgChart} or {@link se.alipsa.matrix.charm.Chart} instances (required)</li>
+   *   <li>{@code ncol} — number of columns (default 1)</li>
+   *   <li>{@code nrow} — number of rows (auto-computed when null)</li>
+   *   <li>{@code widths} — fractional column weights</li>
+   *   <li>{@code heights} — fractional row weights</li>
+   *   <li>{@code title} — overall grid title</li>
+   *   <li>{@code spacing} — pixel gap between cells (default 10)</li>
+   * </ul>
+   *
+   * @param params named parameters
+   * @return compiled plot grid
+   */
+  static se.alipsa.matrix.charm.PlotGrid plot_grid(Map params) {
+    List<?> rawCharts = params['charts'] as List<?>
+    if (rawCharts == null || rawCharts.isEmpty()) {
+      throw new IllegalArgumentException('plot_grid requires a non-empty charts list')
+    }
+    List<se.alipsa.matrix.charm.Chart> compiled = compileCharts(rawCharts)
+    int ncol = (params['ncol'] ?: 1) as int
+    Integer nrow = params['nrow'] != null ? params['nrow'] as Integer : null
+    List<BigDecimal> widths = params['widths'] as List<BigDecimal>
+    List<BigDecimal> heights = params['heights'] as List<BigDecimal>
+    String title = params['title'] as String
+    int spacing = (params['spacing'] ?: 10) as int
+    new se.alipsa.matrix.charm.PlotGrid(compiled, ncol, nrow, widths, heights, title, spacing)
+  }
+
+  /**
+   * Arranges charts into a grid with the given number of columns.
+   *
+   * @param charts list of gg charts
+   * @param ncol number of columns (default 1)
+   * @return compiled plot grid
+   */
+  static se.alipsa.matrix.charm.PlotGrid plot_grid(List<GgChart> charts, int ncol = 1) {
+    List<se.alipsa.matrix.charm.Chart> compiled = compileCharts(charts)
+    new se.alipsa.matrix.charm.PlotGrid(compiled, ncol)
+  }
+
+  /**
+   * Arranges charts into a single-column grid.
+   *
+   * @param charts varargs gg charts
+   * @return compiled plot grid
+   */
+  static se.alipsa.matrix.charm.PlotGrid plot_grid(GgChart... charts) {
+    List<se.alipsa.matrix.charm.Chart> compiled = compileCharts(charts as List<?>)
+    new se.alipsa.matrix.charm.PlotGrid(compiled)
+  }
+
+  /**
+   * Compiles a mixed list of GgChart and/or Chart instances to Charm Charts.
+   *
+   * @param rawCharts list of charts
+   * @return compiled charts
+   */
+  private static List<se.alipsa.matrix.charm.Chart> compileCharts(List<?> rawCharts) {
+    se.alipsa.matrix.gg.bridge.GgCharmCompiler compiler = new se.alipsa.matrix.gg.bridge.GgCharmCompiler()
+    rawCharts.collect { Object item ->
+      if (item instanceof se.alipsa.matrix.charm.Chart) {
+        return item as se.alipsa.matrix.charm.Chart
+      }
+      if (item instanceof GgChart) {
+        GgChart ggChart = item as GgChart
+        if (ggChart.coord == null) {
+          ggChart.coord = new CoordCartesian()
+        }
+        se.alipsa.matrix.gg.bridge.GgCharmCompilation result = compiler.adapt(ggChart)
+        if (!result.delegated || result.charmChart == null) {
+          throw new IllegalStateException(
+              "Failed to compile GgChart for plot_grid: ${result.reasons.join('; ')}"
+          )
+        }
+        return result.charmChart
+      }
+      throw new IllegalArgumentException(
+          "plot_grid accepts Chart or GgChart instances, got: ${item?.getClass()?.name}"
+      )
+    } as List<se.alipsa.matrix.charm.Chart>
+  }
+
   static class As {
 
     /**
