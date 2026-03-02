@@ -248,10 +248,8 @@ abstract class LayerBuilder {
     body.call()
     if (dsl.collected != null) {
       dsl.collected.each { k, v ->
-        String key = k == null ? null : k.toString().trim()
-        if (key && v != null) {
-          layerScales[key] = v
-        }
+        // Delegate to scale(String, Scale) for consistent normalization and validation
+        scale(k?.toString(), v as Scale)
       }
     }
     this
