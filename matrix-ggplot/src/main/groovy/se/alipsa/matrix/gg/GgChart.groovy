@@ -370,6 +370,9 @@ class GgChart {
    * Add a scale specification.
    */
   GgChart plus(Scale scale) {
+    if (scale == null) {
+      return this
+    }
     scales << scale
     components << scale
     return this

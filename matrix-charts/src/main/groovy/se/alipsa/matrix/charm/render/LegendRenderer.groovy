@@ -271,7 +271,7 @@ class LegendRenderer {
         if (shapeForKeys != null) {
           // Merged shape+color: draw shape with color fill
           int idx = shapeForKeys.levels.indexOf(level)
-          String shapeName = idx >= 0 ? shapeForKeys.levels[idx] : 'circle'
+          String shapeName = resolveShapeName(shapeForKeys, idx)
           BigDecimal centerX = (x + keySize / 2).round()
           BigDecimal centerY = (y + keySize / 2).round()
           drawLegendShape(group, centerX, centerY, keySize, shapeName, color, '#666666')
@@ -836,6 +836,40 @@ class LegendRenderer {
 
   // ---- Shape Drawing ----
 
+  private static final List<String> DEFAULT_SHAPES = [
+      'circle', 'square', 'triangle', 'diamond', 'plus', 'x', 'cross'
+  ].asImmutable()
+
+  /**
+   * Resolves the actual shape name for a legend key from a discrete shape scale.
+   *
+   * <p>Uses the scale's explicit values mapping (Map or List) when available,
+   * otherwise falls back to the default shape set by index.</p>
+   *
+   * @param shapeScale discrete shape scale
+   * @param levelIndex index of the level in the scale's levels list
+   * @return resolved shape name
+   */
+  private static String resolveShapeName(DiscreteCharmScale shapeScale, int levelIndex) {
+    if (levelIndex < 0) {
+      return 'circle'
+    }
+    Object values = shapeScale?.scaleSpec?.params?.values
+    if (values instanceof Map) {
+      String level = shapeScale.levels[levelIndex]
+      Object mapped = (values as Map)[level]
+      if (mapped != null) {
+        return mapped.toString()
+      }
+    } else if (values instanceof List) {
+      List listValues = values as List
+      if (!listValues.isEmpty()) {
+        return listValues[levelIndex % listValues.size()]?.toString() ?: 'circle'
+      }
+    }
+    DEFAULT_SHAPES[levelIndex % DEFAULT_SHAPES.size()]
+  }
+
   private void drawLegendShape(G group, Number centerX, Number centerY, int size,
                                 String shape, String fillColor, String strokeColor) {
     String stroke = strokeColor ?: fillColor
@@ -924,7 +958,7 @@ class LegendRenderer {
       String color = cs.colorFor(level)
       if (shapeForKeys != null) {
         int idx = shapeForKeys.levels.indexOf(level)
-        String shapeName = idx >= 0 ? shapeForKeys.levels[idx] : 'circle'
+        String shapeName = resolveShapeName(shapeForKeys, idx)
         drawLegendShape(group, (x + keySize / 2).round(), (y + keySize / 2).round(), keySize, shapeName, color, '#666666')
       } else if (usesPoints) {
         BigDecimal radius = ((keySize - 2) / 2).round()

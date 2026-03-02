@@ -160,7 +160,8 @@ class CharmRenderer {
     BigDecimal layerSpan = (layerCont.domainMax - layerCont.domainMin).abs()
     BigDecimal pct = ((layerSpan - globalSpan) / globalSpan * 100).abs()
     if (pct > 10) {
-      log.warn("Layer $layerIdx uses a per-layer $axis scale that diverges from the global axis by ${pct.setScale(1, java.math.RoundingMode.HALF_UP)}%; axis ticks may be misleading")
+      int displayLayer = layerIdx + 1
+      log.warn("Layer $displayLayer uses a per-layer $axis scale that diverges from the global axis by ${pct.setScale(1, java.math.RoundingMode.HALF_UP)}%; axis ticks may be misleading")
     }
   }
 
