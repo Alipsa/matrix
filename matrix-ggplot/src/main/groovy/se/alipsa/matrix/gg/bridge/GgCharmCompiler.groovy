@@ -130,6 +130,7 @@ class GgCharmCompiler {
     List<LayerSpec> mappedLayers = []
     List<AnnotationSpec> mappedAnnotations = []
     Set<Layer> annotationLayers = [] as Set<Layer>
+    Set<Layer> mappedLayerIdentities = [] as Set<Layer>
     ggChart.layers.eachWithIndex { Layer layer, int idx ->
       List<AnnotationSpec> annotationSpecs = mapAnnotationLayer(layer, idx, reasons)
       if (!annotationSpecs.isEmpty()) {
@@ -139,6 +140,7 @@ class GgCharmCompiler {
         LayerSpec mapped = mapLayer(layer, idx, plotMapping, plotData, mappedCoord, reasons)
         if (mapped != null) {
           mappedLayers << mapped
+          mappedLayerIdentities << layer
         }
       }
     }
@@ -146,14 +148,23 @@ class GgCharmCompiler {
       return GgCharmCompilation.fallback(reasons)
     }
 
-    List<GgScale> globalScales = extractGlobalScales(ggChart, annotationLayers)
+    // Layers to skip in component walks: annotation layers + unmapped layers
+    Set<Layer> skippedLayers = [] as Set<Layer>
+    skippedLayers.addAll(annotationLayers)
+    ggChart.layers.each { Layer layer ->
+      if (!annotationLayers.contains(layer) && !mappedLayerIdentities.contains(layer)) {
+        skippedLayers << layer
+      }
+    }
+
+    List<GgScale> globalScales = extractGlobalScales(ggChart, skippedLayers)
     ScaleSpec mappedScales = mapScales(globalScales, reasons)
     if (!reasons.isEmpty()) {
       return GgCharmCompilation.fallback(reasons)
     }
 
     // Apply per-layer scales from NewScaleMarker partitioning
-    applyPerLayerScales(ggChart, mappedLayers, annotationLayers, reasons)
+    applyPerLayerScales(ggChart, mappedLayers, skippedLayers, reasons)
 
     Labels mappedLabels = mapLabels(ggChart.labels, ggChart.guides, globalScales)
 
@@ -193,7 +204,7 @@ class GgCharmCompiler {
    * to the correct mapped layers based on NewScaleMarker positions.
    */
   private void applyPerLayerScales(GgChart ggChart, List<LayerSpec> mappedLayers,
-                                     Set<Layer> annotationLayers, List<String> reasons) {
+                                     Set<Layer> skippedLayers, List<String> reasons) {
     if (ggChart.components.isEmpty() || !ggChart.components.any { it instanceof NewScaleMarker }) {
       return
     }
@@ -201,13 +212,13 @@ class GgCharmCompiler {
     // Walk components in order: partition layers and scales around markers
     // active markers: aesthetic -> true means "next scales for this aesthetic go to per-layer"
     Map<String, Boolean> activeMarkers = [:]
-    // Track the mapped layer index (skipping annotation layers)
+    // Track the mapped layer index (skipping annotation and unmapped layers)
     int layerIdx = -1
 
     ggChart.components.each { Object component ->
       if (component instanceof Layer) {
-        // Only count non-annotation layers toward mappedLayers index
-        if (!annotationLayers.contains(component)) {
+        // Only count successfully mapped layers toward mappedLayers index
+        if (!skippedLayers.contains(component)) {
           layerIdx++
         }
       } else if (component instanceof NewScaleMarker) {
@@ -252,7 +263,7 @@ class GgCharmCompiler {
    * Returns global chart-level scales by walking ordered components and excluding
    * scales that are activated after a new-scale marker for the same aesthetic.
    */
-  private static List<GgScale> extractGlobalScales(GgChart ggChart, Set<Layer> annotationLayers = [] as Set) {
+  private static List<GgScale> extractGlobalScales(GgChart ggChart, Set<Layer> skippedLayers = [] as Set) {
     List<GgScale> allScales = ggChart?.scales ?: []
     if (allScales.isEmpty()) {
       return []
@@ -274,7 +285,7 @@ class GgCharmCompiler {
     List<GgScale> globalScales = []
     ggChart.components.each { Object component ->
       if (component instanceof Layer) {
-        if (!annotationLayers.contains(component)) {
+        if (!skippedLayers.contains(component)) {
           layerSeen = true
         }
       } else if (component instanceof NewScaleMarker) {
