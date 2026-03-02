@@ -211,10 +211,14 @@ class GgCharmCompiler {
           layerIdx++
         }
       } else if (component instanceof NewScaleMarker) {
-        NewScaleMarker marker = component as NewScaleMarker
-        String markerAesthetic = GgCharmMappingRegistry.normalizeAesthetic(marker.aesthetic)
-        if (markerAesthetic != null) {
-          activeMarkers[markerAesthetic] = true
+        // Only activate per-layer partitioning after at least one layer has been seen;
+        // markers before any layer are ignored so subsequent scales remain global.
+        if (layerIdx >= 0) {
+          NewScaleMarker marker = component as NewScaleMarker
+          String markerAesthetic = GgCharmMappingRegistry.normalizeAesthetic(marker.aesthetic)
+          if (markerAesthetic != null) {
+            activeMarkers[markerAesthetic] = true
+          }
         }
       } else if (component instanceof GgScale) {
         GgScale ggScale = component as GgScale
@@ -266,12 +270,19 @@ class GgCharmCompiler {
     }
 
     Map<String, Boolean> markerActivated = [:]
+    boolean layerSeen = false
     List<GgScale> globalScales = []
     ggChart.components.each { Object component ->
-      if (component instanceof NewScaleMarker) {
-        String markerAesthetic = GgCharmMappingRegistry.normalizeAesthetic((component as NewScaleMarker).aesthetic)
-        if (markerAesthetic != null) {
-          markerActivated[markerAesthetic] = true
+      if (component instanceof Layer) {
+        layerSeen = true
+      } else if (component instanceof NewScaleMarker) {
+        // Only activate after at least one layer; markers before any layer are
+        // ignored so subsequent scales are kept as global.
+        if (layerSeen) {
+          String markerAesthetic = GgCharmMappingRegistry.normalizeAesthetic((component as NewScaleMarker).aesthetic)
+          if (markerAesthetic != null) {
+            markerActivated[markerAesthetic] = true
+          }
         }
       } else if (component instanceof GgScale) {
         GgScale scale = component as GgScale
