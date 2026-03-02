@@ -197,14 +197,31 @@ abstract class LayerBuilder {
    * @param scale the scale to use for this aesthetic on this layer
    * @return this builder
    */
+  private static final Set<String> SUPPORTED_AESTHETICS = [
+      'x', 'y', 'color', 'fill', 'size', 'shape', 'alpha', 'linetype'
+  ] as Set<String>
+
   LayerBuilder scale(String aesthetic, Scale scale) {
-    if (aesthetic != null && scale != null) {
-      String key = aesthetic.trim().toLowerCase(Locale.ROOT)
-      if (key == 'colour') {
-        key = 'color'
-      }
-      layerScales[key] = scale
+    if (scale == null) {
+      return this
     }
+    if (aesthetic == null) {
+      throw new CharmValidationException("Layer scale aesthetic must not be null")
+    }
+    String key = aesthetic.trim().toLowerCase(Locale.ROOT)
+    if (key.isEmpty()) {
+      throw new CharmValidationException("Layer scale aesthetic must be non-blank")
+    }
+    if (key == 'colour') {
+      key = 'color'
+    }
+    if (!SUPPORTED_AESTHETICS.contains(key)) {
+      throw new CharmValidationException(
+          "Unsupported layer scale aesthetic '${aesthetic}'. " +
+          "Supported aesthetics are: ${SUPPORTED_AESTHETICS.sort().join(', ')}"
+      )
+    }
+    layerScales[key] = scale
     this
   }
 

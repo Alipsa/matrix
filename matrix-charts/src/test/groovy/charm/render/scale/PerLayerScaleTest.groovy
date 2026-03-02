@@ -91,7 +91,7 @@ class PerLayerScaleTest {
   }
 
   @Test
-  void testPerLayerFillScaleWithDifferentGradient() {
+  void testPerLayerManualFillScaleRendersExpectedColors() {
     Matrix data = Matrix.builder()
         .columnNames('cat', 'value')
         .rows([

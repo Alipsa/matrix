@@ -158,10 +158,13 @@ class CharmRenderer {
       return
     }
     BigDecimal layerSpan = (layerCont.domainMax - layerCont.domainMin).abs()
-    BigDecimal pct = ((layerSpan - globalSpan) / globalSpan * 100).abs()
-    if (pct > 10) {
+    BigDecimal spanPct = ((layerSpan - globalSpan) / globalSpan * 100).abs()
+    BigDecimal minOffsetPct = ((layerCont.domainMin - globalCont.domainMin) / globalSpan * 100).abs()
+    BigDecimal maxOffsetPct = ((layerCont.domainMax - globalCont.domainMax) / globalSpan * 100).abs()
+    BigDecimal divergencePct = spanPct.max(minOffsetPct).max(maxOffsetPct)
+    if (divergencePct > 10) {
       int displayLayer = layerIdx + 1
-      log.warn("Layer $displayLayer uses a per-layer $axis scale that diverges from the global axis by ${pct.setScale(1, java.math.RoundingMode.HALF_UP)}%; axis ticks may be misleading")
+      log.warn("Layer $displayLayer uses a per-layer $axis scale that diverges from the global axis by ${divergencePct.setScale(1, java.math.RoundingMode.HALF_UP)}%; axis ticks may be misleading")
     }
   }
 
