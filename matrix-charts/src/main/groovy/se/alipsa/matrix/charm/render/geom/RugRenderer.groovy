@@ -21,8 +21,8 @@ class RugRenderer {
 
     int elementIndex = 0
     layerData.each { LayerData datum ->
-      BigDecimal x = context.xScale.transform(datum.x)
-      BigDecimal y = context.yScale.transform(datum.y)
+      BigDecimal x = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+      BigDecimal y = context.yScaleForLayer(context.layerIndex).transform(datum.y)
       if (x == null || y == null) {
         return
       }

@@ -38,10 +38,10 @@ class LineRenderer {
       String dashArray = GeomUtils.dashArray(first.linetype ?: layer.params.linetype)
 
       for (int i = 0; i < sorted.size() - 1; i++) {
-        BigDecimal x1 = context.xScale.transform(sorted[i].x)
-        BigDecimal y1 = context.yScale.transform(sorted[i].y)
-        BigDecimal x2 = context.xScale.transform(sorted[i + 1].x)
-        BigDecimal y2 = context.yScale.transform(sorted[i + 1].y)
+        BigDecimal x1 = context.xScaleForLayer(context.layerIndex).transform(sorted[i].x)
+        BigDecimal y1 = context.yScaleForLayer(context.layerIndex).transform(sorted[i].y)
+        BigDecimal x2 = context.xScaleForLayer(context.layerIndex).transform(sorted[i + 1].x)
+        BigDecimal y2 = context.yScaleForLayer(context.layerIndex).transform(sorted[i + 1].y)
         if (x1 == null || y1 == null || x2 == null || y2 == null) {
           continue
         }

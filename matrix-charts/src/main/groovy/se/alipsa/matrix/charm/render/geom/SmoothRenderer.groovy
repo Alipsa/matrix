@@ -44,12 +44,12 @@ class SmoothRenderer {
       List<BigDecimal[]> lower = []
 
       sorted.each { LayerData datum ->
-        BigDecimal x = context.xScale.transform(datum.x)
-        BigDecimal y = context.yScale.transform(datum.y)
+        BigDecimal x = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+        BigDecimal y = context.yScaleForLayer(context.layerIndex).transform(datum.y)
         if (x != null && y != null) {
           linePoints << ([x, y] as BigDecimal[])
-          BigDecimal yMax = context.yScale.transform(datum.meta?.ymax)
-          BigDecimal yMin = context.yScale.transform(datum.meta?.ymin)
+          BigDecimal yMax = context.yScaleForLayer(context.layerIndex).transform(datum.meta?.ymax)
+          BigDecimal yMin = context.yScaleForLayer(context.layerIndex).transform(datum.meta?.ymin)
           if (yMax != null && yMin != null) {
             upper << ([x, yMax] as BigDecimal[])
             lower << ([x, yMin] as BigDecimal[])

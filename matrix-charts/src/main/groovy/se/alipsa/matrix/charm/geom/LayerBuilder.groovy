@@ -11,6 +11,7 @@ import se.alipsa.matrix.charm.LayerSpec
 import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.MappingDsl
 import se.alipsa.matrix.charm.PositionSpec
+import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.core.Matrix
 
@@ -33,6 +34,7 @@ abstract class LayerBuilder {
   protected final Map<String, Object> statParams = [:]
   protected final Map<String, Object> params = [:]
   protected Closure styleCallback
+  protected final Map<String, Scale> layerScales = [:]
 
   /**
    * Configures layer-level aesthetic mappings via closure DSL.
@@ -189,6 +191,56 @@ abstract class LayerBuilder {
   }
 
   /**
+   * Adds a per-layer scale override for a single aesthetic.
+   *
+   * @param aesthetic aesthetic name (e.g. 'color', 'fill', 'x', 'y', 'size', 'shape', 'alpha', 'linetype')
+   * @param scale the scale to use for this aesthetic on this layer
+   * @return this builder
+   */
+  LayerBuilder scale(String aesthetic, Scale scale) {
+    if (aesthetic != null && scale != null) {
+      String key = aesthetic.trim().toLowerCase(Locale.ROOT)
+      if (key == 'colour') {
+        key = 'color'
+      }
+      layerScales[key] = scale
+    }
+    this
+  }
+
+  /**
+   * Configures per-layer scale overrides via closure DSL.
+   *
+   * <p>Example usage:
+   * <pre>
+   *   geom_point().scale {
+   *     color Scale.manual(['A': 'red', 'B': 'blue'])
+   *     x Scale.transform('log10')
+   *   }
+   * </pre>
+   *
+   * @param configure scale configuration closure
+   * @return this builder
+   */
+  LayerBuilder scale(
+      @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = LayerScaleDsl) Closure<?> configure
+  ) {
+    LayerScaleDsl dsl = new LayerScaleDsl()
+    Closure<?> body = configure.rehydrate(dsl, this, this)
+    body.resolveStrategy = Closure.DELEGATE_ONLY
+    body.call()
+    if (dsl.collected != null) {
+      dsl.collected.each { k, v ->
+        String key = k == null ? null : k.toString().trim()
+        if (key && v != null) {
+          layerScales[key] = v
+        }
+      }
+    }
+    this
+  }
+
+  /**
    * Returns the geometry type for this builder.
    *
    * @return geom type
@@ -216,7 +268,8 @@ abstract class LayerBuilder {
         inheritMapping,
         positionSpec,
         new LinkedHashMap<>(params),
-        styleCallback
+        styleCallback,
+        new LinkedHashMap<>(layerScales)
     )
   }
 
@@ -239,5 +292,41 @@ abstract class LayerBuilder {
       }
     }
     throw new CharmValidationException("Unsupported stat type '${stat.getClass().name}'")
+  }
+
+  /**
+   * DSL for configuring per-layer scale overrides.
+   *
+   * <p>Each method sets a scale for an aesthetic channel. Accepts any
+   * {@link Scale} instance (e.g. {@code Scale.manual(...)}, {@code Scale.transform('log10')}).</p>
+   */
+  @CompileStatic
+  static class LayerScaleDsl {
+
+    final Map<String, Scale> collected = [:]
+
+    /** Sets the x scale override. */
+    void x(Scale scale) { collected['x'] = scale }
+
+    /** Sets the y scale override. */
+    void y(Scale scale) { collected['y'] = scale }
+
+    /** Sets the color scale override. */
+    void color(Scale scale) { collected['color'] = scale }
+
+    /** Sets the fill scale override. */
+    void fill(Scale scale) { collected['fill'] = scale }
+
+    /** Sets the size scale override. */
+    void size(Scale scale) { collected['size'] = scale }
+
+    /** Sets the shape scale override. */
+    void shape(Scale scale) { collected['shape'] = scale }
+
+    /** Sets the alpha scale override. */
+    void alpha(Scale scale) { collected['alpha'] = scale }
+
+    /** Sets the linetype scale override. */
+    void linetype(Scale scale) { collected['linetype'] = scale }
   }
 }

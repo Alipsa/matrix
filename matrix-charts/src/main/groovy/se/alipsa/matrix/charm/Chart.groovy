@@ -199,7 +199,11 @@ class Chart {
 
   private static LayerSpec toLayerSpec(Layer value) {
     Map<String, Object> frozenParams = deepFreezeParams(value.params)
-    new LayerSpec(value.geomSpec.copy(), value.statSpec.copy(), value.mapping, value.inheritMapping, value.positionSpec.copy(), frozenParams, value.styleCallback)
+    Map<String, Scale> copiedScales = value.scales ?
+        value.scales.findAll { String k, Scale v -> v != null }
+            .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
+        [:]
+    new LayerSpec(value.geomSpec.copy(), value.statSpec.copy(), value.mapping, value.inheritMapping, value.positionSpec.copy(), frozenParams, value.styleCallback, copiedScales)
   }
 
   private static Map<String, Object> deepFreezeParams(Map<String, Object> params) {

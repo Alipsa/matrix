@@ -20,6 +20,7 @@ import se.alipsa.matrix.core.util.Logger
 import se.alipsa.matrix.charm.render.geom.GeomEngine
 import se.alipsa.matrix.charm.render.annotation.AnnotationEngine
 import se.alipsa.matrix.charm.render.scale.CharmScale
+import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
 import se.alipsa.matrix.charm.render.scale.ScaleEngine
 import se.alipsa.matrix.charm.render.scale.TrainedScales
 import se.alipsa.matrix.charm.render.stat.StatEngine
@@ -121,6 +122,47 @@ class CharmRenderer {
     context.shapeScale = trained.shape
     context.alphaScale = trained.alpha
     context.linetypeScale = trained.linetype
+
+    // Per-layer scale training
+    context.chart.layers.eachWithIndex { LayerSpec layer, int idx ->
+      if (layer.scales != null && !layer.scales.isEmpty()) {
+        Matrix sourceData = resolveLayerData(context.chart.data, layer)
+        List<Integer> rowIndexes = defaultRowIndexes(sourceData?.rowCount() ?: 0)
+        Mapping mapping = effectiveMapping(context.chart.mapping, layer)
+        List<LayerData> layerPipelineData = runPipeline(context, layer, sourceData, mapping, rowIndexes)
+        TrainedScales layerTrained = ScaleEngine.trainLayerScales(
+            layer.scales, context.config, layerPipelineData, context.chart)
+        context.layerScales[idx] = layerTrained
+        checkScaleDivergence(idx, layerTrained, context)
+      }
+    }
+  }
+
+  private static void checkScaleDivergence(int layerIdx, TrainedScales layerTrained, RenderContext context) {
+    checkPositionalDivergence('x', layerIdx, layerTrained.x, context.xScale)
+    checkPositionalDivergence('y', layerIdx, layerTrained.y, context.yScale)
+  }
+
+  private static void checkPositionalDivergence(String axis, int layerIdx,
+                                                  CharmScale layerScale, CharmScale globalScale) {
+    if (layerScale == null || globalScale == null) {
+      return
+    }
+    if (!(layerScale instanceof ContinuousCharmScale) || !(globalScale instanceof ContinuousCharmScale)) {
+      return
+    }
+    ContinuousCharmScale layerCont = layerScale as ContinuousCharmScale
+    ContinuousCharmScale globalCont = globalScale as ContinuousCharmScale
+    BigDecimal globalSpan = (globalCont.domainMax - globalCont.domainMin).abs()
+    if (globalSpan == 0) {
+      return
+    }
+    BigDecimal layerSpan = (layerCont.domainMax - layerCont.domainMin).abs()
+    BigDecimal pct = ((layerSpan - globalSpan) / globalSpan * 100).abs()
+    if (pct > 10) {
+      int displayLayer = layerIdx + 1
+      log.warn("Layer $displayLayer uses a per-layer $axis scale that diverges from the global axis by ${pct.setScale(1, java.math.RoundingMode.HALF_UP)}%; axis ticks may be misleading")
+    }
   }
 
   private void renderCanvas(RenderContext context) {

@@ -11,6 +11,7 @@ A comprehensive guide to using the `se.alipsa.matrix.charm` package for creating
 - [DSL Reference](#dsl-reference)
 - [Layers and Geoms](#layers-and-geoms)
 - [Scales](#scales)
+  - [Per-Layer Scales](#per-layer-scales)
 - [Themes](#themes)
 - [Faceting](#faceting)
 - [Coordinate Systems](#coordinate-systems)
@@ -450,6 +451,87 @@ scale {
   )
 }
 ```
+
+### Per-Layer Scales
+
+Individual layers can override the global scale for any aesthetic. This enables multiple
+layers in the same chart to use different color palettes, transforms, or size mappings.
+
+#### DSL Usage
+
+Use the `scale` method on a layer builder to set per-layer overrides:
+
+```groovy
+plot(data) {
+  mapping { x = 'x'; y = 'y'; color = 'group' }
+  layers {
+    geomPoint().scale('color', Scale.manual([A: '#FF0000', B: '#00FF00']))
+    geomLine().scale('color', Scale.manual([A: '#0000FF', B: '#FFFF00']))
+  }
+}.build()
+```
+
+Or use the closure DSL for multiple overrides at once:
+
+```groovy
+layers {
+  geomPoint().scale {
+    color Scale.manual([A: 'red', B: 'blue'])
+    x Scale.transform('log10')
+  }
+}
+```
+
+#### Resolution Order
+
+When resolving a mapped aesthetic, the renderer checks in this order:
+
+1. **Style callback** -- per-datum override (highest priority)
+2. **Layer parameter** -- literal value on the layer builder
+3. **Per-layer scale** -- trained from layer data only
+4. **Global scale** -- trained from all layers
+5. **Default** -- built-in fallback
+
+#### Supported Aesthetics
+
+Per-layer overrides are supported for all aesthetic channels: `x`, `y`, `color`, `fill`,
+`size`, `shape`, `alpha`, and `linetype`.
+
+#### Axis Behavior (v1)
+
+In the current version, axis ticks and labels always reflect the **global** scale. Per-layer
+positional overrides (x/y) change how data points are mapped to pixel space within that
+layer, but the axis remains global. A warning is logged when a per-layer positional scale
+diverges significantly from the global axis.
+
+**Caveat:** Using divergent positional transforms (e.g., log10 on one layer, linear on
+another) produces valid pixel positions per layer, but the axis labels may be misleading
+for one of the layers. For truly independent axes, consider using separate charts in a
+grid layout.
+
+#### Split Legends
+
+When a layer overrides a non-positional aesthetic (color, fill, size, etc.), a separate
+legend section is rendered for that layer. The legend title defaults to
+`"<aesthetic> (layer N)"` unless the per-layer scale has a `name` parameter set.
+
+#### gg Compatibility
+
+The gg API supports the same feature via `new_scale_color()` and `new_scale_fill()` markers:
+
+```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+
+def chart = ggplot(data, aes(x: 'x', y: 'y', color: 'grp')) +
+    geom_point() +
+    scale_color_manual(values: [A: '#FF0000', B: '#00FF00']) +
+    new_scale_color() +
+    geom_point() +
+    scale_color_manual(values: [A: '#0000FF', B: '#FFFF00'])
+```
+
+Scales before any marker are global. After a `new_scale_color()` marker, the next
+`scale_color_*()` call applies to the preceding layer as a per-layer override.
 
 ## Themes
 

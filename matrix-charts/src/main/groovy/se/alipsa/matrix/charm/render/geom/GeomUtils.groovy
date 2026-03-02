@@ -50,8 +50,10 @@ class GeomUtils {
       String raw = layer.params.color.toString()
       return ColorUtil.normalizeColor(raw) ?: raw
     }
-    if (datum.color != null && context.colorScale != null) {
-      return context.colorScale.colorFor(datum.color)
+    int layerIdx = context.layerIndex
+    def colorScale = context.colorScaleForLayer(layerIdx)
+    if (datum.color != null && colorScale != null) {
+      return colorScale.colorFor(datum.color)
     }
     defaultColor
   }
@@ -69,11 +71,14 @@ class GeomUtils {
       String raw = layer.params.fill.toString()
       return ColorUtil.normalizeColor(raw) ?: raw
     }
-    if (datum.fill != null && context.fillScale != null) {
-      return context.fillScale.colorFor(datum.fill)
+    int layerIdx = context.layerIndex
+    def fillScale = context.fillScaleForLayer(layerIdx)
+    if (datum.fill != null && fillScale != null) {
+      return fillScale.colorFor(datum.fill)
     }
-    if (datum.color != null && context.colorScale != null) {
-      return context.colorScale.colorFor(datum.color)
+    def colorScale = context.colorScaleForLayer(layerIdx)
+    if (datum.color != null && colorScale != null) {
+      return colorScale.colorFor(datum.color)
     }
     '#1f77b4'
   }
@@ -102,8 +107,10 @@ class GeomUtils {
     if (layerAlpha != null) {
       return layerAlpha
     }
-    if (datum.alpha != null && context?.alphaScale != null) {
-      BigDecimal scaled = context.alphaScale.transform(datum.alpha)
+    int layerIdx = context.layerIndex
+    def alphaScale = context.alphaScaleForLayer(layerIdx)
+    if (datum.alpha != null && alphaScale != null) {
+      BigDecimal scaled = alphaScale.transform(datum.alpha)
       if (scaled != null) {
         return scaled.min(1.0).max(0.0)
       }
@@ -139,8 +146,10 @@ class GeomUtils {
     if (layerSize != null) {
       return layerSize
     }
-    if (datum.size != null && context?.sizeScale != null) {
-      BigDecimal scaled = context.sizeScale.transform(datum.size)
+    int layerIdx = context.layerIndex
+    def sizeScale = context.sizeScaleForLayer(layerIdx)
+    if (datum.size != null && sizeScale != null) {
+      BigDecimal scaled = sizeScale.transform(datum.size)
       if (scaled != null) {
         return scaled.max(0.0)
       }
@@ -159,8 +168,9 @@ class GeomUtils {
     if (layer.params.linetype != null) {
       return layer.params.linetype
     }
-    if (datum.linetype != null && context?.linetypeScale instanceof DiscreteCharmScale) {
-      DiscreteCharmScale linetypeScale = context.linetypeScale as DiscreteCharmScale
+    def resolvedLinetypeScale = context.linetypeScaleForLayer(context.layerIndex)
+    if (datum.linetype != null && resolvedLinetypeScale instanceof DiscreteCharmScale) {
+      DiscreteCharmScale linetypeScale = resolvedLinetypeScale as DiscreteCharmScale
       String mapped = mappedValue(linetypeScale, datum.linetype)
       if (mapped != null) {
         return mapped
@@ -184,8 +194,9 @@ class GeomUtils {
     if (layer.params.shape != null) {
       return layer.params.shape.toString()
     }
-    if (datum.shape != null && context?.shapeScale instanceof DiscreteCharmScale) {
-      DiscreteCharmScale shapeScale = context.shapeScale as DiscreteCharmScale
+    def resolvedShapeScale = context.shapeScaleForLayer(context.layerIndex)
+    if (datum.shape != null && resolvedShapeScale instanceof DiscreteCharmScale) {
+      DiscreteCharmScale shapeScale = resolvedShapeScale as DiscreteCharmScale
       String mapped = mappedValue(shapeScale, datum.shape)
       if (mapped != null) {
         return mapped

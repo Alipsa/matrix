@@ -24,38 +24,38 @@ class SegmentRenderer {
       case CharmGeomType.HLINE -> {
         List<BigDecimal> yValues = collectReferenceValues(layerData, layer.params.yintercept, true)
         yValues.each { BigDecimal yRef ->
-          BigDecimal yPx = context.yScale.transform(yRef)
+          BigDecimal yPx = context.yScaleForLayer(context.layerIndex).transform(yRef)
           if (yPx == null) {
             return
           }
-          drawLine(dataLayer, context, layer, styleDatum, context.xScale.rangeStart, yPx, context.xScale.rangeEnd, yPx, elementIndex)
+          drawLine(dataLayer, context, layer, styleDatum, context.xScaleForLayer(context.layerIndex).rangeStart, yPx, context.xScaleForLayer(context.layerIndex).rangeEnd, yPx, elementIndex)
           elementIndex++
         }
       }
       case CharmGeomType.VLINE -> {
         List<BigDecimal> xValues = collectReferenceValues(layerData, layer.params.xintercept, false)
         xValues.each { BigDecimal xRef ->
-          BigDecimal xPx = context.xScale.transform(xRef)
+          BigDecimal xPx = context.xScaleForLayer(context.layerIndex).transform(xRef)
           if (xPx == null) {
             return
           }
-          drawLine(dataLayer, context, layer, styleDatum, xPx, context.yScale.rangeStart, xPx, context.yScale.rangeEnd, elementIndex)
+          drawLine(dataLayer, context, layer, styleDatum, xPx, context.yScaleForLayer(context.layerIndex).rangeStart, xPx, context.yScaleForLayer(context.layerIndex).rangeEnd, elementIndex)
           elementIndex++
         }
       }
       case CharmGeomType.ABLINE -> {
         BigDecimal intercept = ValueConverter.asBigDecimal(layer.params.intercept) ?: 0
         BigDecimal slope = ValueConverter.asBigDecimal(layer.params.slope) ?: 1
-        if (context.xScale instanceof ContinuousCharmScale) {
-          ContinuousCharmScale xScale = context.xScale as ContinuousCharmScale
+        if (context.xScaleForLayer(context.layerIndex) instanceof ContinuousCharmScale) {
+          ContinuousCharmScale xScale = context.xScaleForLayer(context.layerIndex) as ContinuousCharmScale
           BigDecimal x1 = xScale.domainMin
           BigDecimal x2 = xScale.domainMax
           BigDecimal y1 = intercept + slope * x1
           BigDecimal y2 = intercept + slope * x2
-          BigDecimal px1 = context.xScale.transform(x1)
-          BigDecimal py1 = context.yScale.transform(y1)
-          BigDecimal px2 = context.xScale.transform(x2)
-          BigDecimal py2 = context.yScale.transform(y2)
+          BigDecimal px1 = context.xScaleForLayer(context.layerIndex).transform(x1)
+          BigDecimal py1 = context.yScaleForLayer(context.layerIndex).transform(y1)
+          BigDecimal px2 = context.xScaleForLayer(context.layerIndex).transform(x2)
+          BigDecimal py2 = context.yScaleForLayer(context.layerIndex).transform(y2)
           if (px1 != null && py1 != null && px2 != null && py2 != null) {
             drawLine(dataLayer, context, layer, styleDatum, px1, py1, px2, py2, elementIndex)
           }
@@ -63,10 +63,10 @@ class SegmentRenderer {
       }
       default -> {
         layerData.each { LayerData datum ->
-          BigDecimal x1 = context.xScale.transform(datum.x)
-          BigDecimal y1 = context.yScale.transform(datum.y)
-          BigDecimal x2 = context.xScale.transform(datum.xend)
-          BigDecimal y2 = context.yScale.transform(datum.yend)
+          BigDecimal x1 = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+          BigDecimal y1 = context.yScaleForLayer(context.layerIndex).transform(datum.y)
+          BigDecimal x2 = context.xScaleForLayer(context.layerIndex).transform(datum.xend)
+          BigDecimal y2 = context.yScaleForLayer(context.layerIndex).transform(datum.yend)
           if (x1 == null || y1 == null || x2 == null || y2 == null) {
             return
           }

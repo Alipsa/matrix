@@ -35,10 +35,10 @@ class StepRenderer {
 
       List<BigDecimal[]> points = []
       for (int i = 1; i < sorted.size(); i++) {
-        BigDecimal xPrev = context.xScale.transform(sorted[i - 1].x)
-        BigDecimal yPrev = context.yScale.transform(sorted[i - 1].y)
-        BigDecimal xCurr = context.xScale.transform(sorted[i].x)
-        BigDecimal yCurr = context.yScale.transform(sorted[i].y)
+        BigDecimal xPrev = context.xScaleForLayer(context.layerIndex).transform(sorted[i - 1].x)
+        BigDecimal yPrev = context.yScaleForLayer(context.layerIndex).transform(sorted[i - 1].y)
+        BigDecimal xCurr = context.xScaleForLayer(context.layerIndex).transform(sorted[i].x)
+        BigDecimal yCurr = context.yScaleForLayer(context.layerIndex).transform(sorted[i].y)
         if (xPrev == null || yPrev == null || xCurr == null || yCurr == null) {
           continue
         }

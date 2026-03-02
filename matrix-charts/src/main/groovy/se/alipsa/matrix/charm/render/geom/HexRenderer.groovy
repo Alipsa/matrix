@@ -20,8 +20,8 @@ class HexRenderer {
 
     int elementIndex = 0
     layerData.each { LayerData datum ->
-      BigDecimal cx = context.xScale.transform(datum.x)
-      BigDecimal cy = context.yScale.transform(datum.y)
+      BigDecimal cx = context.xScaleForLayer(context.layerIndex).transform(datum.x)
+      BigDecimal cy = context.yScaleForLayer(context.layerIndex).transform(datum.y)
       if (cx == null || cy == null) {
         return
       }
