@@ -146,7 +146,7 @@ class GgCharmCompiler {
       return GgCharmCompilation.fallback(reasons)
     }
 
-    List<GgScale> globalScales = extractGlobalScales(ggChart)
+    List<GgScale> globalScales = extractGlobalScales(ggChart, annotationLayers)
     ScaleSpec mappedScales = mapScales(globalScales, reasons)
     if (!reasons.isEmpty()) {
       return GgCharmCompilation.fallback(reasons)
@@ -252,7 +252,7 @@ class GgCharmCompiler {
    * Returns global chart-level scales by walking ordered components and excluding
    * scales that are activated after a new-scale marker for the same aesthetic.
    */
-  private static List<GgScale> extractGlobalScales(GgChart ggChart) {
+  private static List<GgScale> extractGlobalScales(GgChart ggChart, Set<Layer> annotationLayers = [] as Set) {
     List<GgScale> allScales = ggChart?.scales ?: []
     if (allScales.isEmpty()) {
       return []
@@ -274,7 +274,9 @@ class GgCharmCompiler {
     List<GgScale> globalScales = []
     ggChart.components.each { Object component ->
       if (component instanceof Layer) {
-        layerSeen = true
+        if (!annotationLayers.contains(component)) {
+          layerSeen = true
+        }
       } else if (component instanceof NewScaleMarker) {
         // Only activate after at least one layer; markers before any layer are
         // ignored so subsequent scales are kept as global.
