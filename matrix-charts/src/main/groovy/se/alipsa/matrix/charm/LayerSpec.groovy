@@ -41,7 +41,10 @@ class LayerSpec extends Layer {
   @Override
   LayerSpec copy() {
     Mapping layerMapping = super.getMapping()
-    Map<String, Scale> copiedScales = scales ? scales.collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> : [:]
+    Map<String, Scale> copiedScales = scales ?
+        scales.findAll { String k, Scale v -> v != null }
+            .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
+        [:]
     new LayerSpec(geomSpec.copy(), statSpec.copy(), layerMapping, inheritMapping, positionSpec.copy(), params, styleCallback, copiedScales)
   }
 }

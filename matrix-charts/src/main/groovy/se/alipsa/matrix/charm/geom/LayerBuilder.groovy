@@ -199,7 +199,11 @@ abstract class LayerBuilder {
    */
   LayerBuilder scale(String aesthetic, Scale scale) {
     if (aesthetic != null && scale != null) {
-      layerScales[aesthetic] = scale
+      String key = aesthetic.trim().toLowerCase(Locale.ROOT)
+      if (key == 'colour') {
+        key = 'color'
+      }
+      layerScales[key] = scale
     }
     this
   }
@@ -225,7 +229,14 @@ abstract class LayerBuilder {
     Closure<?> body = configure.rehydrate(dsl, this, this)
     body.resolveStrategy = Closure.DELEGATE_ONLY
     body.call()
-    layerScales.putAll(dsl.collected)
+    if (dsl.collected != null) {
+      dsl.collected.each { k, v ->
+        String key = k == null ? null : k.toString().trim()
+        if (key && v != null) {
+          layerScales[key] = v
+        }
+      }
+    }
     this
   }
 

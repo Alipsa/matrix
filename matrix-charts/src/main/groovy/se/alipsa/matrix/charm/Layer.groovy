@@ -154,7 +154,10 @@ class Layer {
    * @return copied layer
    */
   Layer copy() {
-    Map<String, Scale> copiedScales = scales ? scales.collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> : [:]
+    Map<String, Scale> copiedScales = scales ?
+        scales.findAll { String k, Scale v -> v != null }
+            .collectEntries { String k, Scale v -> [(k): v.copy()] } as Map<String, Scale> :
+        [:]
     new Layer(geomSpec.copy(), statSpec.copy(), mapping?.copy(), inheritMapping, positionSpec.copy(), params, styleCallback, copiedScales)
   }
 }
