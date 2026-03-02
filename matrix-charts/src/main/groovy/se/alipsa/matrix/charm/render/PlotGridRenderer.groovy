@@ -4,10 +4,8 @@ import groovy.transform.CompileStatic
 import org.dom4j.Attribute
 import org.dom4j.Element
 import se.alipsa.groovy.svg.Svg
-import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotGrid
-import se.alipsa.matrix.core.util.Logger
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -23,8 +21,6 @@ import java.util.regex.Pattern
  */
 @CompileStatic
 class PlotGridRenderer {
-
-  private static final Logger log = Logger.getLogger(PlotGridRenderer)
 
   /** Matches url(#someId) references in attribute values. */
   private static final Pattern URL_REF_PATTERN = Pattern.compile('url\\(#([^)]+)\\)')

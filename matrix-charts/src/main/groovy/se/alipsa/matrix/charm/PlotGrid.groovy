@@ -57,9 +57,16 @@ class PlotGrid {
     if (ncol < 1) {
       throw new IllegalArgumentException("ncol must be >= 1, got $ncol")
     }
+    int minRows = Math.ceil(charts.size() / (double) ncol) as int
+    if (nrow != null && nrow < 1) {
+      throw new IllegalArgumentException("nrow must be >= 1, got $nrow")
+    }
+    if (nrow != null && nrow < minRows) {
+      throw new IllegalArgumentException("nrow=$nrow is too small for ${charts.size()} charts with ncol=$ncol (need at least $minRows)")
+    }
     this.charts = Collections.unmodifiableList(new ArrayList<>(charts))
     this.ncol = ncol
-    this.nrow = nrow != null ? nrow : Math.ceil(charts.size() / (double) ncol) as int
+    this.nrow = nrow != null ? nrow : minRows
     this.widths = widths != null ? Collections.unmodifiableList(new ArrayList<>(widths)) : null
     this.heights = heights != null ? Collections.unmodifiableList(new ArrayList<>(heights)) : null
     this.title = title

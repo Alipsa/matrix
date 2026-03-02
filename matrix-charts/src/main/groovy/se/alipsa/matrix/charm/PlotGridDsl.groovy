@@ -62,6 +62,9 @@ class PlotGridDsl {
    * @return this DSL for chaining
    */
   PlotGridDsl add(List<Chart> charts) {
+    if (charts == null) {
+      throw new IllegalArgumentException('charts list cannot be null')
+    }
     charts.each { Chart c -> add(c) }
     this
   }
