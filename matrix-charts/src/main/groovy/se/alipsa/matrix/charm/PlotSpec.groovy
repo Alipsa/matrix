@@ -2,6 +2,7 @@ package se.alipsa.matrix.charm
 
 import groovy.transform.CompileStatic
 import org.apache.commons.text.similarity.LevenshteinDistance
+import se.alipsa.matrix.charm.facet.Labeller
 import se.alipsa.matrix.core.Matrix
 import java.util.Locale
 
@@ -1042,7 +1043,47 @@ class PlotSpec {
       facet.vars = coerceColumns(wrapDsl.vars)
       facet.ncol = wrapDsl.ncol
       facet.nrow = wrapDsl.nrow
+      if (wrapDsl.labeller != null) {
+        facet.params['labeller'] = wrapDsl.labeller
+      }
       wrapConfigured = true
+    }
+
+    /**
+     * Sets the labeller for facet strip labels.
+     *
+     * @param labeller labeller instance
+     */
+    void setLabeller(Object labeller) {
+      facet.params['labeller'] = labeller
+    }
+
+    /**
+     * Creates a value-only labeller (e.g. {@code "setosa"}).
+     *
+     * @return value labeller
+     */
+    static Labeller value() {
+      Labeller.value()
+    }
+
+    /**
+     * Creates a "variable: value" labeller (e.g. {@code "Species: setosa"}).
+     *
+     * @return both-style labeller
+     */
+    static Labeller both() {
+      Labeller.both()
+    }
+
+    /**
+     * Creates a custom labeller from a closure.
+     *
+     * @param fn labelling closure
+     * @return custom labeller
+     */
+    static Labeller label(Closure<String> fn) {
+      Labeller.label(fn)
     }
 
     private void assertGridMode() {
@@ -1059,13 +1100,14 @@ class PlotSpec {
     }
 
     /**
-     * Delegate used for `wrap {}` configuration.
+     * Delegate used for {@code wrap {}} configuration.
      */
     @CompileStatic
     static class WrapDsl {
       List vars = []
       Integer ncol
       Integer nrow
+      Object labeller
     }
   }
 

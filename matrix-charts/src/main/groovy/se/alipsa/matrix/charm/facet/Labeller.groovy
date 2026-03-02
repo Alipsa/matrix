@@ -95,4 +95,53 @@ class Labeller {
   String label(String varName, Object value) {
     label([(varName): value])
   }
+
+  // ---- Static factory methods ----
+
+  /**
+   * Creates a labeller that formats each strip as the facet value only.
+   *
+   * <p>For single-variable facets this produces e.g. {@code "setosa"}.
+   * For multi-variable facets the values are joined with newlines (multiLine)
+   * or commas (single-line).</p>
+   *
+   * @param multiLine whether to join multiple variables with newlines
+   * @return a value-only labeller
+   */
+  static Labeller value(boolean multiLine = true) {
+    new Labeller({ Map<String, Object> vals ->
+      List<String> parts = vals.values().collect { it?.toString() ?: '' }
+      multiLine ? parts.join('\n') : parts.join(', ')
+    } as Closure<String>, multiLine)
+  }
+
+  /**
+   * Creates a labeller that formats each strip as {@code "variable: value"}.
+   *
+   * <p>For example {@code "Species: setosa"}. Multiple variables are joined
+   * with newlines (multiLine) or commas (single-line).</p>
+   *
+   * @param sep separator between variable name and value
+   * @param multiLine whether to join multiple variables with newlines
+   * @return a both-style labeller
+   */
+  static Labeller both(String sep = ': ', boolean multiLine = true) {
+    new Labeller({ Map<String, Object> vals ->
+      List<String> parts = vals.collect { String k, Object v -> "${k}${sep}${v}".toString() }
+      multiLine ? parts.join('\n') : parts.join(', ')
+    } as Closure<String>, multiLine)
+  }
+
+  /**
+   * Creates a labeller backed by a custom closure.
+   *
+   * <p>The closure receives a {@code Map<String, Object>} of variable names
+   * to values and must return a formatted label string.</p>
+   *
+   * @param fn labelling closure
+   * @return a custom labeller
+   */
+  static Labeller label(Closure<String> fn) {
+    new Labeller(fn)
+  }
 }

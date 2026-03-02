@@ -258,7 +258,7 @@ Add examples for `colorBrewer()`/`colorGradient()` + `.guide()` chaining and `le
 
 **Priority:** Low | **Effort:** Small
 
-### 4.1 [ ] Add built-in labeller factory methods
+### 4.1 [x] Add built-in labeller factory methods
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/facet/Labeller.groovy`
 
@@ -267,13 +267,13 @@ Add:
 - `static Labeller both()` — formats each strip as `"variable: value"` (e.g. `"Species: setosa"`).
 - `static Labeller label(Closure<String> fn)` — wraps an arbitrary labelling closure.
 
-### 4.2 [ ] Add `labeller` support in Charm facet DSL
+### 4.2 [x] Add `labeller` support in Charm facet DSL
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy` (`FacetDsl` / `WrapDsl`)
 
 Accept a `Labeller` instance on both `FacetDsl` and `WrapDsl`. The `Labeller` factories from 4.1 should be exposed in the closure scope via delegation so callers can write `labeller = both()` without an import.
 
-### 4.3 [ ] Carry `labeller` through the compiled spec and into the renderer
+### 4.3 [x] Carry `labeller` through the compiled spec and into the renderer
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/PlotSpec.groovy` — persist `labeller` in `facet.params['labeller']` for both wrap and grid DSL paths
@@ -281,11 +281,11 @@ Accept a `Labeller` instance on both `FacetDsl` and `WrapDsl`. The `Labeller` fa
 
 Keep `labeller` in facet params for v1 (no new typed field on `FacetSpec`).
 
-### 4.4 [ ] Add tests for labeller convenience
+### 4.4 [x] Add tests for labeller convenience
 
 **File:** `matrix-charts/src/test/groovy/charm/render/FacetLabellerTest.groovy` (new)
 
-### 4.5 [ ] Document labeller convenience in `charm.md`
+### 4.5 [x] Document labeller convenience in `charm.md`
 
 **File:** `matrix-charts/docs/charm.md`
 
@@ -296,6 +296,11 @@ Add examples showing `value()`, `both()`, and custom closure labellers.
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
 ```
+
+Executed on this implementation:
+- `./gradlew :matrix-charts:test --tests "charm.render.FacetLabellerTest" -Pheadless=true`
+- `./gradlew :matrix-charts:test -Pheadless=true`
+- `./gradlew :matrix-ggplot:test -Pheadless=true`
 
 ---
 
@@ -428,7 +433,7 @@ Add a "Multi-plot composition" section with a `plotGrid { }` DSL example and not
 
 **Priority:** Medium | **Effort:** Large
 
-### 7.1 [ ] Add layer-level scale DSL and model storage
+### 7.1 [x] Add layer-level scale DSL and model storage
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/geom/LayerBuilder.groovy`
@@ -437,7 +442,7 @@ Add a "Multi-plot composition" section with a `plotGrid { }` DSL example and not
 
 Add `scale { ... }` support and persist as `Map<String, Scale>` by aesthetic.
 
-### 7.2 [ ] Add render-context storage for per-layer trained scales
+### 7.2 [x] Add render-context storage for per-layer trained scales
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/RenderContext.groovy`
 
@@ -445,7 +450,7 @@ Add structure such as:
 - `Map<Integer, TrainedScales> layerScales`
 - helpers for selecting active scales per layer during rendering
 
-### 7.3 [ ] Train global and per-layer scales in `CharmRenderer`/`ScaleEngine`
+### 7.3 [x] Train global and per-layer scales in `CharmRenderer`/`ScaleEngine`
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/CharmRenderer.groovy`
@@ -453,7 +458,7 @@ Add structure such as:
 
 Train overrides for all aesthetics, including `x`/`y`, not only non-positional channels.
 
-### 7.4 [ ] Resolve mapped aesthetics and positional transforms with per-layer-first fallback logic
+### 7.4 [x] Resolve mapped aesthetics and positional transforms with per-layer-first fallback logic
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/geom/GeomUtils.groovy`
@@ -465,7 +470,7 @@ Resolution order:
 3. Global trained scale
 4. Defaults
 
-### 7.5 [ ] Implement v1 axis behavior when per-layer `x`/`y` scales diverge
+### 7.5 [x] Implement v1 axis behavior when per-layer `x`/`y` scales diverge
 
 **Files:**
 - `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/AxisRenderer.groovy`
@@ -475,11 +480,11 @@ Resolution order:
 
 **Documentation note:** When per-layer positional scales use divergent transforms (e.g., log on one layer vs. linear on another), the single global axis may be misleading since tick labels reflect the global scale while individual layers are mapped differently. Document this caveat in `charm.md` (section 7.9) with a recommendation to use `plotGrid` (section 6) instead when layers need truly independent axes.
 
-### 7.6 [ ] Render separate legend entries for split scales
+### 7.6 [x] Render separate legend entries for split scales
 
 **File:** `matrix-charts/src/main/groovy/se/alipsa/matrix/charm/render/LegendRenderer.groovy`
 
-### 7.7 [ ] Add gg compatibility path (`new_scale_color()` / `new_scale_fill()`)
+### 7.7 [x] Add gg compatibility path (`new_scale_color()` / `new_scale_fill()`)
 
 **Files:**
 - `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/GgPlot.groovy`
@@ -488,13 +493,13 @@ Resolution order:
 
 Use marker components to reset scale scope for subsequent layers while keeping API close to ggplot2 semantics.
 
-### 7.8 [ ] Add tests for per-layer scales in Charm and gg compatibility
+### 7.8 [x] Add tests for per-layer scales in Charm and gg compatibility
 
 **Files:**
 - `matrix-charts/src/test/groovy/charm/render/scale/PerLayerScaleTest.groovy` (new)
 - `matrix-ggplot/src/test/groovy/gg/PerLayerScaleCompatibilityTest.groovy` (new)
 
-### 7.9 [ ] Document per-layer scale limitations and divergent-transform caveat
+### 7.9 [x] Document per-layer scale limitations and divergent-transform caveat
 
 **File:** `matrix-charts/docs/charm.md`
 
@@ -510,6 +515,10 @@ Add a "Per-layer scales" section documenting:
 ./gradlew :matrix-ggplot:test -Pheadless=true
 ./gradlew test
 ```
+
+Executed on this implementation:
+- `./gradlew :matrix-charts:test -Pheadless=true`
+- `./gradlew :matrix-ggplot:test -Pheadless=true`
 
 ---
 

@@ -615,6 +615,53 @@ This is equivalent to `facet_wrap()` in the gg API.
 
 Grid and wrap modes cannot be combined in the same `facet {}` block.
 
+### Facet Labellers
+
+Control how facet strip labels are formatted using the `labeller` property:
+
+```groovy
+// Value only (default) — shows "setosa"
+facet {
+  wrap { vars = ['Species'] }
+  labeller = value()
+}
+
+// Variable and value — shows "Species: setosa"
+facet {
+  wrap { vars = ['Species'] }
+  labeller = both()
+}
+
+// Custom closure
+facet {
+  rows = ['cyl']
+  labeller = label { vals -> vals.collect { k, v -> "${v} (${k})" }.join(', ') }
+}
+```
+
+Built-in labeller factories available inside `facet {}` blocks:
+
+| Factory | Description | Example output |
+|---------|-------------|----------------|
+| `value()` | Value only (default) | `setosa` |
+| `both()` | Variable: value | `Species: setosa` |
+| `both(' = ')` | Custom separator | `Species = setosa` |
+| `label { ... }` | Custom closure | *(user-defined)* |
+
+The `labeller` can also be set inside `wrap {}`:
+
+```groovy
+facet {
+  wrap {
+    vars = ['drv']
+    ncol = 2
+    labeller = Labeller.both()
+  }
+}
+```
+
+For programmatic use, the factory methods are also available as static methods on `se.alipsa.matrix.charm.facet.Labeller`.
+
 ## Coordinate Systems
 
 ```groovy
