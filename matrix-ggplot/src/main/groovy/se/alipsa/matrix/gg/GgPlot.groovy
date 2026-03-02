@@ -4408,6 +4408,9 @@ class GgPlot {
    * @return compiled plot grid
    */
   static se.alipsa.matrix.charm.PlotGrid plot_grid(Map params) {
+    if (params == null) {
+      throw new IllegalArgumentException('plot_grid params cannot be null')
+    }
     List<?> rawCharts = params['charts'] as List<?>
     if (rawCharts == null || rawCharts.isEmpty()) {
       throw new IllegalArgumentException('plot_grid requires a non-empty charts list')

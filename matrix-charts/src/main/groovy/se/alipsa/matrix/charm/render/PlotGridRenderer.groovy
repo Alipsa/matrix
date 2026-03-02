@@ -62,6 +62,13 @@ class PlotGridRenderer {
 
     int usableWidth = totalWidth - (grid.ncol - 1) * grid.spacing
     int usableHeight = totalHeight - titleOffset - (grid.nrow - 1) * grid.spacing
+
+    if (usableWidth <= 0 || usableHeight <= 0) {
+      throw new IllegalArgumentException(
+          "Not enough space to render PlotGrid: usableWidth=${usableWidth}, usableHeight=${usableHeight}. " +
+          "Increase totalWidth/totalHeight or reduce ncol/nrow, spacing, or title height.")
+    }
+
     List<Integer> colWidths = distributeSpace(usableWidth, grid.ncol, grid.widths)
     List<Integer> rowHeights = distributeSpace(usableHeight, grid.nrow, grid.heights)
 
@@ -145,10 +152,21 @@ class PlotGridRenderer {
       return (1..count).collect { equal }
     }
 
-    // Pad or truncate to match count
+    // Pad or truncate to match count, validating each provided weight
     List<BigDecimal> effective = []
     for (int i = 0; i < count; i++) {
-      effective << (i < weights.size() ? weights[i] : 1.0 as BigDecimal)
+      if (i < weights.size()) {
+        BigDecimal value = weights[i]
+        if (value == null) {
+          throw new IllegalArgumentException("Weight at index $i must not be null")
+        }
+        if (value < 0) {
+          throw new IllegalArgumentException("Weight at index $i must be >= 0 but was $value")
+        }
+        effective << value
+      } else {
+        effective << (1.0 as BigDecimal)
+      }
     }
 
     BigDecimal sum = effective.sum() as BigDecimal

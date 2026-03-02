@@ -57,6 +57,9 @@ class PlotGrid {
     if (ncol < 1) {
       throw new IllegalArgumentException("ncol must be >= 1, got $ncol")
     }
+    if (spacing < 0) {
+      throw new IllegalArgumentException("spacing must be >= 0, got $spacing")
+    }
     int minRows = Math.ceil(charts.size() / (double) ncol) as int
     if (nrow != null && nrow < 1) {
       throw new IllegalArgumentException("nrow must be >= 1, got $nrow")
@@ -153,6 +156,10 @@ class PlotGrid {
    * @return SVG model object
    */
   Svg render(int width, int height) {
-    new PlotGridRenderer().render(this, width, height)
+    try {
+      new PlotGridRenderer().render(this, width, height)
+    } catch (Exception e) {
+      throw new CharmRenderException("Failed to render PlotGrid at ${width}x${height}px", e)
+    }
   }
 }
