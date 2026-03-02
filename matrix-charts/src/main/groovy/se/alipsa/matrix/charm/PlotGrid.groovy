@@ -156,8 +156,13 @@ class PlotGrid {
    * @return SVG model object
    */
   Svg render(int width, int height) {
+    if (width <= 0 || height <= 0) {
+      throw new IllegalArgumentException("PlotGrid render dimensions must be positive: width=$width, height=$height")
+    }
     try {
       new PlotGridRenderer().render(this, width, height)
+    } catch (IllegalArgumentException e) {
+      throw e
     } catch (Exception e) {
       throw new CharmRenderException("Failed to render PlotGrid at ${width}x${height}px", e)
     }

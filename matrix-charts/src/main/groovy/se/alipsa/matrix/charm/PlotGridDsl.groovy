@@ -51,6 +51,9 @@ class PlotGridDsl {
    * @return this DSL for chaining
    */
   PlotGridDsl add(Chart... chartsToAdd) {
+    if (chartsToAdd == null) {
+      throw new IllegalArgumentException('charts array cannot be null')
+    }
     chartsToAdd.each { Chart c -> add(c) }
     this
   }
