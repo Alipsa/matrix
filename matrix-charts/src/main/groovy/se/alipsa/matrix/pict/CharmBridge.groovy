@@ -240,6 +240,21 @@ class CharmBridge {
     }
     if (chart.style?.legendVisible == false) {
       theme.legendPosition = LegendPosition.NONE
+    } else if (chart.style?.legendPosition) {
+      theme.legendPosition = mapPosition(chart.style.legendPosition)
+    }
+  }
+
+  /**
+   * Maps a pict {@link Style.Position} to Charm's {@link LegendPosition}.
+   */
+  private static LegendPosition mapPosition(Style.Position pos) {
+    switch (pos) {
+      case Style.Position.TOP -> LegendPosition.TOP
+      case Style.Position.BOTTOM -> LegendPosition.BOTTOM
+      case Style.Position.LEFT -> LegendPosition.LEFT
+      case Style.Position.RIGHT -> LegendPosition.RIGHT
+      default -> LegendPosition.RIGHT
     }
   }
 

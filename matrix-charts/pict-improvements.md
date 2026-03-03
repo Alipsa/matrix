@@ -81,13 +81,15 @@ All existing chart tests (ChartBuilderTest, ChartFactoryBaselineTest, ChartsChar
 
 ## Phase 2 — Style field naming and typed Position setter
 
-### 2a. Fix `Style` field capitalization
+### 2a. [x] Fix `Style` field capitalization
 
 Rename `XAxisVisible` → `xAxisVisible` and `YAxisVisible` → `yAxisVisible`. Since backwards compatibility is not a concern, a direct rename is sufficient.
 
 **File:** `Style.groovy`
 
-### 2b. Add typed `Position` setter to `Style`
+Completed in Phase 1 — fields were already named correctly.
+
+### 2b. [x] Add typed `Position` setter to `Style`
 
 Currently only a `setLegendPosition(String)` setter exists. Add a typed overload:
 
@@ -99,7 +101,9 @@ void setLegendPosition(Position pos) {
 
 This lets users write `chart.style.legendPosition = Position.TOP` directly.
 
-### 2c. Map `Style.legendPosition` to Charm in `CharmBridge`
+Completed in Phase 1 — both `setLegendPosition(String)` and `setLegendPosition(Position)` overloads already exist.
+
+### 2c. [x] Map `Style.legendPosition` to Charm in `CharmBridge`
 
 Currently CharmBridge only checks `legendVisible == false`. Also map `Style.legendPosition` to Charm's `LegendPosition`:
 
@@ -115,6 +119,7 @@ Add a private mapping method `Style.Position` → `LegendPosition`.
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
+# Results: SUCCESS (661 tests, 661 passed, 0 failed, 0 skipped)
 ```
 
 ---

@@ -16,6 +16,7 @@ import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.ScatterChart
+import se.alipsa.matrix.pict.Style
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*
@@ -281,5 +282,51 @@ class ChartsCharmIntegrationTest {
     def texts = svg.descendants().findAll { it instanceof Text }
     def titleTexts = texts.findAll { it.content == 'Styled' }
     assertTrue(titleTexts.size() > 0, 'Title should be rendered')
+  }
+
+  @Test
+  void testLegendPositionMapping() {
+    Matrix data = Matrix.builder()
+        .matrixName('LegendPosData')
+        .columns([
+            x     : [1, 2, 3, 4],
+            seriesA: [10, 20, 15, 25],
+            seriesB: [5, 15, 10, 20]
+        ])
+        .types([int, Number, Number])
+        .build()
+
+    LineChart chart = LineChart.create('Legend Position', data, 'x', 'seriesA', 'seriesB')
+    chart.style.legendPosition = Style.Position.TOP
+
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+
+    // Verify chart renders successfully with legend position set
+    def texts = svg.descendants().findAll { it instanceof Text }
+    def titleTexts = texts.findAll { it.content == 'Legend Position' }
+    assertTrue(titleTexts.size() > 0, 'Title should be rendered')
+  }
+
+  @Test
+  void testLegendPositionStringOverload() {
+    Matrix data = Matrix.builder()
+        .matrixName('LegendStrData')
+        .columns([
+            x: ['A', 'B', 'C'],
+            y: [10, 20, 30]
+        ])
+        .types([String, Number])
+        .build()
+
+    BarChart chart = BarChart.createVertical('String Position', data, 'x', ChartType.BASIC, 'y')
+    chart.style.legendPosition = 'bottom'
+
+    assertEquals(Style.Position.BOTTOM, chart.style.legendPosition)
+
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
   }
 }
