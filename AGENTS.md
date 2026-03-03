@@ -15,6 +15,27 @@ This is a Gradle multi-module Groovy/Java project. Each module lives in a `matri
 
 ## Coding Style & Naming Conventions
 Use Groovy 5.0.3 and target Java 21. Follow the existing 2-space indentation and import style in each file. Prefer `@CompileStatic` and only fall back to @CompileDynamic when the static compilation would be significantly more convoluted. Classes are PascalCase, methods/fields are camelCase, and packages follow `se.alipsa.matrix.*`. Test classes are named `*Test.groovy` or `*Test.java` and live in module test directories. Always add GroovyDoc for public classes and public methods. There is no enforced formatter, so match the surrounding file conventions.
+
+### Avoid `Object` Parameters — Use Typed Overloads
+**CRITICAL:** Never use `Object` as a method parameter or field type when specific types are known. `Object` parameters are not type-safe and provide no IDE assistance. Instead, use method overloads with concrete types:
+
+```groovy
+// Good - typed overloads, clear API
+void setLegendPosition(LegendPosition value) { ... }
+void setLegendPosition(List<Number> value) { ... }
+
+PlotSpec legendPosition(LegendPosition value) { ... }
+PlotSpec legendPosition(List<Number> value) { ... }
+
+PointBuilder shape(ShapeName value) { ... }
+LineBuilder linetype(LinetypeName value) { ... }
+
+// Bad - Object provides no type safety or IDE help
+void setLegendPosition(Object value) { ... }
+PointBuilder shape(Object value) { ... }
+```
+
+When a value can legitimately be one of several types (e.g. an enum or a list), provide a separate overload for each type. Use enums instead of strings for fixed sets of values (e.g. positions, directions, shape names, line types) and do any string-to-enum conversion at API boundaries (bridges, adapters).
 Prefer idiomatic groovy constructs.
 Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Groovy has its own idioms and best practices that differ from Java. Write code that is idiomatic Groovy rather than Java code written in Groovy syntax. Some examples:
  - Use Groovy's native collection literals and methods e.g. closures, `each`, `collect`, and `findAll` instead of Java-style loops and streams. Use `[]` instead of `new ArrayList<>()` and `[:]` instead of `new LinkedHashMap<>()`/`new HashMap<>()`.
