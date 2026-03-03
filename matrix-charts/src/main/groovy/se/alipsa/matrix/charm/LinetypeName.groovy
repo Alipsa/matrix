@@ -23,7 +23,8 @@ enum LinetypeName {
    * @return matching constant, or {@code null} if unrecognised
    */
   static LinetypeName fromString(String value) {
-    LOOKUP[value?.trim()?.toLowerCase(Locale.ROOT)]
+    String key = value?.trim()?.toLowerCase(Locale.ROOT)
+    key ? LOOKUP[key] : null
   }
 
   /**

@@ -54,12 +54,23 @@ class Density2dBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets contour line type.
+   * Sets line type by string name.
    *
-   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
+   * @param value linetype name
    * @return this builder
    */
-  Density2dBuilder linetype(Object value) {
+  Density2dBuilder linetype(String value) {
+    params['linetype'] = value
+    this
+  }
+
+  /**
+   * Sets line type by {@link se.alipsa.matrix.charm.LinetypeName} enum.
+   *
+   * @param value linetype enum constant
+   * @return this builder
+   */
+  Density2dBuilder linetype(se.alipsa.matrix.charm.LinetypeName value) {
     params['linetype'] = value
     this
   }

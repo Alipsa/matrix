@@ -20,7 +20,8 @@ enum LegendDirection {
    * @return matching constant, or {@code null} if unrecognised
    */
   static LegendDirection fromString(String value) {
-    LOOKUP[value?.trim()?.toLowerCase(Locale.ROOT)]
+    String key = value?.trim()?.toLowerCase(Locale.ROOT)
+    key ? LOOKUP[key] : null
   }
 
   /**

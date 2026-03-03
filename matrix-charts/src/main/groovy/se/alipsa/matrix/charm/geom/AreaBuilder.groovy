@@ -66,12 +66,23 @@ class AreaBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets area outline line type.
+   * Sets line type by string name.
    *
-   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
+   * @param value linetype name
    * @return this builder
    */
-  AreaBuilder linetype(Object value) {
+  AreaBuilder linetype(String value) {
+    params['linetype'] = value
+    this
+  }
+
+  /**
+   * Sets line type by {@link se.alipsa.matrix.charm.LinetypeName} enum.
+   *
+   * @param value linetype enum constant
+   * @return this builder
+   */
+  AreaBuilder linetype(se.alipsa.matrix.charm.LinetypeName value) {
     params['linetype'] = value
     this
   }

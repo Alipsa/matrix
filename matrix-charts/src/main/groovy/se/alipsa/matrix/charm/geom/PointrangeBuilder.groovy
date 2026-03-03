@@ -54,12 +54,23 @@ class PointrangeBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets point shape.
+   * Sets point shape by string name.
    *
-   * @param value {@link se.alipsa.matrix.charm.ShapeName} enum or string name
+   * @param value shape name
    * @return this builder
    */
-  PointrangeBuilder shape(Object value) {
+  PointrangeBuilder shape(String value) {
+    params['shape'] = value
+    this
+  }
+
+  /**
+   * Sets point shape by {@link se.alipsa.matrix.charm.ShapeName} enum.
+   *
+   * @param value shape enum constant
+   * @return this builder
+   */
+  PointrangeBuilder shape(se.alipsa.matrix.charm.ShapeName value) {
     params['shape'] = value
     this
   }
