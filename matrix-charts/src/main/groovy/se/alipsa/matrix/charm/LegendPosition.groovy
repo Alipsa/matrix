@@ -7,8 +7,7 @@ import groovy.transform.CompileStatic
  *
  * <p>Use these values in place of raw strings for IDE auto-complete and
  * compile-time safety. Absolute positioning via {@code [x, y]} lists is
- * still supported by the {@link Theme#legendPosition} field (typed as
- * {@code Object}).</p>
+ * supported by the separate {@link Theme#legendPositionCoords} field.</p>
  */
 @CompileStatic
 enum LegendPosition {

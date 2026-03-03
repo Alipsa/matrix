@@ -41,11 +41,11 @@ class LegendRenderer {
    * @param context render context
    */
   void render(RenderContext context) {
-    Object legendPos = context.chart.theme.legendPosition ?: context.config.legendPosition
-    Object normalizedPos = LegendPosition.normalize(legendPos)
-    if (normalizedPos == LegendPosition.NONE) {
+    LegendPosition legendPos = context.chart.theme.legendPosition ?: LegendPosition.RIGHT
+    if (legendPos == LegendPosition.NONE) {
       return
     }
+    List<Number> posCoords = context.chart.theme.legendPositionCoords
 
     GuidesSpec guides = context.chart.guides
 
@@ -75,31 +75,30 @@ class LegendRenderer {
     int legendX, legendY
     boolean isVertical = context.chart.theme.legendDirection != LegendDirection.HORIZONTAL
 
-    switch (normalizedPos) {
-      case LegendPosition.RIGHT -> {
-        legendX = context.config.width - context.config.marginRight + LEGEND_PLOT_GAP
-        legendY = context.config.marginTop + 20
-      }
-      case LegendPosition.LEFT -> {
-        legendX = 10
-        legendY = context.config.marginTop + 20
-      }
-      case LegendPosition.TOP -> {
-        legendX = context.config.marginLeft
-        legendY = 10
-        isVertical = false
-      }
-      case LegendPosition.BOTTOM -> {
-        legendX = context.config.marginLeft
-        legendY = context.config.height - 40
-        isVertical = false
-      }
-      default -> {
-        if (normalizedPos instanceof List && (normalizedPos as List).size() >= 2) {
-          List pos = normalizedPos as List
-          legendX = pos[0] as int
-          legendY = pos[1] as int
-        } else {
+    if (posCoords != null && posCoords.size() >= 2) {
+      legendX = posCoords[0] as int
+      legendY = posCoords[1] as int
+    } else {
+      switch (legendPos) {
+        case LegendPosition.RIGHT -> {
+          legendX = context.config.width - context.config.marginRight + LEGEND_PLOT_GAP
+          legendY = context.config.marginTop + 20
+        }
+        case LegendPosition.LEFT -> {
+          legendX = 10
+          legendY = context.config.marginTop + 20
+        }
+        case LegendPosition.TOP -> {
+          legendX = context.config.marginLeft
+          legendY = 10
+          isVertical = false
+        }
+        case LegendPosition.BOTTOM -> {
+          legendX = context.config.marginLeft
+          legendY = context.config.height - 40
+          isVertical = false
+        }
+        default -> {
           legendX = context.config.width - context.config.marginRight + LEGEND_PLOT_GAP
           legendY = context.config.marginTop + 20
         }
@@ -219,9 +218,8 @@ class LegendRenderer {
    * @return estimated legend width in pixels, or 0 if no legend needed
    */
   int estimateLegendWidth(RenderContext context) {
-    Object legendPos = context.chart.theme.legendPosition ?: context.config.legendPosition
-    Object normalizedPos = LegendPosition.normalize(legendPos)
-    if (normalizedPos == LegendPosition.NONE) {
+    LegendPosition legendPos = context.chart.theme.legendPosition ?: LegendPosition.RIGHT
+    if (legendPos == LegendPosition.NONE) {
       return 0
     }
 
@@ -230,7 +228,7 @@ class LegendRenderer {
       return 0
     }
 
-    if (normalizedPos == LegendPosition.RIGHT || normalizedPos == LegendPosition.LEFT) {
+    if (legendPos == LegendPosition.RIGHT || legendPos == LegendPosition.LEFT) {
       150
     } else {
       0

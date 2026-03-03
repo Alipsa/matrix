@@ -301,7 +301,7 @@ class PlotSpec {
    * @return this plot spec
    */
   PlotSpec legendPosition(List<Number> value) {
-    theme.legendPosition = value
+    theme.legendPositionCoords = value
     this
   }
 
@@ -874,7 +874,7 @@ class PlotSpec {
      * @param value coordinate list
      */
     void setLegendPosition(List<Number> value) {
-      theme.legendPosition = value
+      theme.legendPositionCoords = value
     }
 
     /**

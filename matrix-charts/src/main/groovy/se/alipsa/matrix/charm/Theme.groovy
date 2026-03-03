@@ -79,8 +79,11 @@ class Theme {
 
   // ============ Legend elements ============
 
-  /** Legend position: {@link LegendPosition} enum or {@code List<Number>} for absolute [x, y]. */
-  Object legendPosition = LegendPosition.RIGHT
+  /** Legend position. */
+  LegendPosition legendPosition = LegendPosition.RIGHT
+
+  /** Absolute legend position as {@code [x, y]} coordinates, overrides {@link #legendPosition} when set. */
+  List<Number> legendPositionCoords
 
   /** Legend direction. */
   LegendDirection legendDirection = LegendDirection.VERTICAL
@@ -169,8 +172,8 @@ class Theme {
     copy.axisTitleY = axisTitleY?.copy()
     copy.axisTickLength = axisTickLength
 
-    copy.legendPosition = legendPosition instanceof List
-        ? [*(legendPosition as List)] : legendPosition
+    copy.legendPosition = legendPosition
+    copy.legendPositionCoords = legendPositionCoords != null ? [*legendPositionCoords] : null
     copy.legendDirection = legendDirection
     copy.legendBackground = legendBackground?.copy()
     copy.legendKey = legendKey?.copy()
@@ -226,6 +229,7 @@ class Theme {
     mergeField(merged, other, 'axisTitleY')
     mergeField(merged, other, 'axisTickLength')
     mergeField(merged, other, 'legendPosition')
+    mergeField(merged, other, 'legendPositionCoords')
     mergeField(merged, other, 'legendDirection')
     mergeField(merged, other, 'legendBackground')
     mergeField(merged, other, 'legendKey')

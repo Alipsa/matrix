@@ -14,7 +14,7 @@ import se.alipsa.matrix.charm.LinetypeName
  * plot(data) {
  *   mapping { x = 'x'; y = 'y' }
  *   layers {
- *     geomLine().color('#336699').linetype('dashed')
+ *     geomLine().color('#336699').linetype(DASHED)
  *   }
  * }
  * }</pre>

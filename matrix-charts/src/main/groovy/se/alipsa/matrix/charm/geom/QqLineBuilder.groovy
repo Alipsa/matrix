@@ -14,7 +14,7 @@ import se.alipsa.matrix.charm.LinetypeName
  * plot(data) {
  *   mapping { x = 'sample' }
  *   layers {
- *     geomQqLine().color('#cc0000').linetype('dashed')
+ *     geomQqLine().color('#cc0000').linetype(DASHED)
  *   }
  * }
  * }</pre>

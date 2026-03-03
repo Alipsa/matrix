@@ -75,7 +75,14 @@ class Theme implements Cloneable {
 
   // ============ Legend elements ============
 
-  /** Legend position: 'right', 'left', 'top', 'bottom', 'none', or [x, y]. Kept as strings for ggplot2 API parity; conversion happens in the bridge. */
+  /**
+   * Legend position: {@code String} ('right', 'left', 'top', 'bottom', 'none') or
+   * {@code List<Number>} for absolute [x, y] coordinates.
+   *
+   * <p>This field intentionally uses ggplot2-compatible string values.
+   * Conversion to Charm's typed {@link se.alipsa.matrix.charm.LegendPosition} enum
+   * happens in {@link se.alipsa.matrix.gg.bridge.GgCharmCompiler}.</p>
+   */
   Object legendPosition = 'right'
 
   /** Legend direction: 'vertical' or 'horizontal' */

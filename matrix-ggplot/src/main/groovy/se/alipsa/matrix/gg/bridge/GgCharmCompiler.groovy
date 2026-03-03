@@ -1189,7 +1189,14 @@ class GgCharmCompiler {
     theme.axisTitleY = mapText(source.axisTitleY)
     theme.axisTickLength = source.axisTickLength
 
-    theme.legendPosition = LegendPosition.normalize(source.legendPosition) ?: LegendPosition.RIGHT
+    Object normalizedLegendPos = LegendPosition.normalize(source.legendPosition)
+    if (normalizedLegendPos instanceof List) {
+      theme.legendPositionCoords = normalizedLegendPos as List<Number>
+    } else {
+      theme.legendPosition = normalizedLegendPos instanceof LegendPosition
+          ? normalizedLegendPos as LegendPosition
+          : LegendPosition.RIGHT
+    }
     Object dirNormalized = LegendDirection.normalize(source.legendDirection)
     theme.legendDirection = dirNormalized instanceof LegendDirection
         ? dirNormalized as LegendDirection
