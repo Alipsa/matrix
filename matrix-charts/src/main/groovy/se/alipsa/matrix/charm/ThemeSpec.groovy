@@ -66,6 +66,7 @@ class ThemeSpec extends Theme {
   ThemeSpec legendPosition(LegendPosition value) {
     setLegendPosition(value)
     setLegendPositionCoords(null)
+    explicitNulls.add('legendPositionCoords')
     this
   }
 
@@ -77,6 +78,7 @@ class ThemeSpec extends Theme {
    */
   ThemeSpec legendPosition(List<Number> value) {
     setLegendPositionCoords(value)
+    explicitNulls.remove('legendPositionCoords')
     if (getLegendPosition() == LegendPosition.NONE) {
       setLegendPosition(LegendPosition.RIGHT)
     }

@@ -269,7 +269,7 @@ def chart = plot(data) {
 }.build()
 ```
 
-Available override properties: `fill`, `color`, `alpha` (BigDecimal), `size` (BigDecimal), `shape` (`ShapeName`), `linetype` (`LinetypeName`).
+Available override properties: `fill`, `color`, `alpha` (BigDecimal), `size` (BigDecimal), `shape` (String), `linetype` (String).
 
 Style callback overrides have the highest priority in the resolution chain:
 

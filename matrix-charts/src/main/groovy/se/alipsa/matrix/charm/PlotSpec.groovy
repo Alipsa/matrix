@@ -292,6 +292,7 @@ class PlotSpec {
   PlotSpec legendPosition(LegendPosition value) {
     theme.legendPosition = value
     theme.legendPositionCoords = null
+    theme.explicitNulls.add('legendPositionCoords')
     this
   }
 
@@ -303,6 +304,7 @@ class PlotSpec {
    */
   PlotSpec legendPosition(List<Number> value) {
     theme.legendPositionCoords = value
+    theme.explicitNulls.remove('legendPositionCoords')
     if (theme.legendPosition == LegendPosition.NONE) {
       theme.legendPosition = LegendPosition.RIGHT
     }
@@ -871,6 +873,7 @@ class PlotSpec {
     void setLegendPosition(LegendPosition value) {
       theme.legendPosition = value
       theme.legendPositionCoords = null
+      theme.explicitNulls.add('legendPositionCoords')
     }
 
     /**
@@ -880,6 +883,7 @@ class PlotSpec {
      */
     void setLegendPosition(List<Number> value) {
       theme.legendPositionCoords = value
+      theme.explicitNulls.remove('legendPositionCoords')
       if (theme.legendPosition == LegendPosition.NONE) {
         theme.legendPosition = LegendPosition.RIGHT
       }
