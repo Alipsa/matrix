@@ -1,5 +1,7 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
+
 import java.awt.Color
 import java.awt.Font
 
@@ -51,6 +53,7 @@ import java.awt.Font
  *  </ol>
  *
  */
+@CompileStatic
 class Style {
 
   String css
@@ -74,10 +77,10 @@ class Style {
   /** whether to show the title or not */
   Boolean titleVisible
 
-  Boolean XAxisVisible
-  Boolean YAxisVisible
+  Boolean xAxisVisible
+  Boolean yAxisVisible
 
-  Map yLabels = [:]
+  Map<String, String> yLabels = [:]
 
   boolean isLegendVisible() {
     Boolean.TRUE == legendVisible
@@ -97,5 +100,9 @@ class Style {
 
   void setLegendPosition(String pos) {
     legendPosition = Position.valueOf(pos.toUpperCase())
+  }
+
+  void setLegendPosition(Position pos) {
+    legendPosition = pos
   }
 }

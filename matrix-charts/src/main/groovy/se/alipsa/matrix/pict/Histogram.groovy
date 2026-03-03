@@ -1,10 +1,12 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.Stat
 
 import java.math.RoundingMode
 
+@CompileStatic
 class Histogram extends Chart<Histogram> {
 
   List<? extends Number> originalData = []
@@ -14,9 +16,9 @@ class Histogram extends Chart<Histogram> {
   static Histogram create(Map params) {
     String title = params.title as String
     Matrix data = params.data as Matrix
-    String columnName = params.columnName
+    String columnName = params.columnName as String
     Integer bins = params.getOrDefault('bins', 9) as Integer
-    int binDecimals = params.getOrDefault('binDecimals', 1) as Integer
+    int binDecimals = params.getOrDefault('binDecimals', 1) as int
     return create(title, data, columnName, bins, binDecimals)
   }
 
@@ -26,7 +28,7 @@ class Histogram extends Chart<Histogram> {
     chart.numberOfBins = bins
     if (Number.isAssignableFrom(data.type(columnName))) {
       chart.originalData = data.column(columnName) as List<? extends Number>
-      chart.ranges  = createRanges(chart.originalData, bins, binDecimals)
+      chart.ranges = createRanges(chart.originalData, bins, binDecimals)
     } else {
       throw new IllegalArgumentException("Column must be numeric in a histogram (hint: you can Barplot a Frequency)")
     }
@@ -37,30 +39,30 @@ class Histogram extends Chart<Histogram> {
     Histogram chart = new Histogram()
     chart.originalData = column
     chart.numberOfBins = bins
-    chart.ranges  = createRanges(column as List<? extends Number>, bins)
+    chart.ranges = createRanges(column, bins)
     return chart
   }
 
   private static Map<MinMax, Integer> createRanges(List<? extends Number> column, int bins, int binDecimals = 1) {
     List<MinMax> ranges = []
-    def minValue = Stat.min(column) as BigDecimal
-    def maxValue = Stat.max(column) as BigDecimal
-    def chunk = (maxValue - minValue) / bins
-    //println "minValue = $minValue, maxValue = $maxValue, chunk size = $chunk"
-    def chunkMin = minValue
-    def chunkMax
+    BigDecimal minValue = Stat.min(column) as BigDecimal
+    BigDecimal maxValue = Stat.max(column) as BigDecimal
+    BigDecimal chunk = (maxValue - minValue) / bins
+    BigDecimal chunkMin = minValue
+    BigDecimal chunkMax
     for (int i = 0; i < bins; i++) {
       chunkMax = chunkMin + chunk
       ranges.add(new MinMax(chunkMin, chunkMax, binDecimals))
       chunkMin = chunkMax
     }
     Map<MinMax, Integer> dist = new LinkedHashMap<>()
-    for (group in ranges) {
+    for (MinMax group in ranges) {
       dist.put(group, 0)
     }
     for (Number value in column) {
-      for (group in ranges) {
-        if (value <= group.maxValue) {
+      BigDecimal bdValue = (value instanceof BigDecimal) ? (BigDecimal) value : new BigDecimal(value.toString())
+      for (MinMax group in ranges) {
+        if (bdValue.compareTo(group.maxValue) <= 0) {
           Integer num = dist[group]
           dist[group] = num + 1
           break
@@ -102,6 +104,7 @@ class Histogram extends Chart<Histogram> {
   /**
    * Fluent builder for {@link Histogram}.
    */
+  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, Histogram> {
 
     private Integer bins = 9
@@ -131,13 +134,14 @@ class Histogram extends Chart<Histogram> {
      * @return the histogram
      */
     Histogram build() {
-      def chart = Histogram.create(title, data, xCol, bins, binDecimals)
+      Histogram chart = Histogram.create(this.@title, data, xCol, bins, binDecimals)
       applyTo(chart)
       chart
     }
   }
 }
 
+@CompileStatic
 class MinMax {
   BigDecimal minValue
   BigDecimal maxValue

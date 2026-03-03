@@ -1,11 +1,12 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
-
+@CompileStatic
 class PieChart extends Chart<PieChart> {
 
-  static PieChart create(String title, List<?> groupCol, List<?> numberCol){
+  static PieChart create(String title, List<?> groupCol, List<?> numberCol) {
     PieChart chart = new PieChart()
     chart.categorySeries = groupCol
     chart.valueSeries = [numberCol]
@@ -13,12 +14,12 @@ class PieChart extends Chart<PieChart> {
     return chart
   }
 
-  static PieChart create(Matrix table, String groupColName, String numberColName){
+  static PieChart create(Matrix table, String groupColName, String numberColName) {
     return create(table.matrixName, table, groupColName, numberColName)
   }
 
-  static PieChart create(String title, Matrix table, String groupColName, String numberColName){
-    return create(title, table.column(groupColName), table.column(numberColName))
+  static PieChart create(String title, Matrix table, String groupColName, String numberColName) {
+    return create(title, table.column(groupColName) as List<?>, table.column(numberColName) as List<?>)
   }
 
   /**
@@ -41,6 +42,7 @@ class PieChart extends Chart<PieChart> {
   /**
    * Fluent builder for {@link PieChart}.
    */
+  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, PieChart> {
 
     Builder(Matrix data) { super(data) }
@@ -52,10 +54,10 @@ class PieChart extends Chart<PieChart> {
      * @return the pie chart
      */
     PieChart build() {
-      def chart = new PieChart()
+      PieChart chart = new PieChart()
       applyTo(chart)
-      chart.categorySeries = data.column(xCol)
-      chart.valueSeries = [data.column(yCols[0])]
+      chart.categorySeries = data.column(xCol) as List<?>
+      chart.valueSeries = [data.column(yCols[0]) as List<?>]
       chart.valueSeriesNames = yCols
       chart
     }

@@ -1,5 +1,7 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
+
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -11,6 +13,7 @@ import java.time.LocalTime
  * a DOUBLE (numeric). This class makes this easy to do that.
  * TODO: maybe do something with dates
  */
+@CompileStatic
 class DataType {
 
   public static final String NUMERIC = "numeric"
@@ -19,7 +22,7 @@ class DataType {
   static boolean equals(Class one, Class two) {
     String oneType = dataType(one)
     String twoType = dataType(two)
-    return oneType.equals(twoType)
+    return oneType == twoType
   }
 
   static boolean differs(Class one, Class two) {
@@ -34,7 +37,7 @@ class DataType {
   }
 
   static boolean isCharacter(Class columnType) {
-    return CHARACTER.equals(dataType(columnType))
+    return CHARACTER == dataType(columnType)
   }
 
   static String sqlType(Class columnType, int... varcharSize) {
@@ -62,7 +65,7 @@ class DataType {
     if (LocalDate == columnType) {
       return "DATE"
     }
-    if(LocalTime == columnType) {
+    if (LocalTime == columnType) {
       return "TIME"
     }
     if (LocalDateTime == columnType) {

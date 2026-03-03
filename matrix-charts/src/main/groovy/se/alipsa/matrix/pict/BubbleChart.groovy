@@ -1,5 +1,6 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -10,6 +11,7 @@ import se.alipsa.matrix.core.Matrix
  * Use {@code ScatterChart} as an alternative in the meantime.
  */
 @Deprecated
+@CompileStatic
 class BubbleChart {
 
   static BubbleChart create(String title, Matrix table, String xCol, String yCol, String sizeColumn, String groupCol) {

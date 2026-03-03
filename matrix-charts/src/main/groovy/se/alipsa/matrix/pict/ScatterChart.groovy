@@ -1,14 +1,16 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
+@CompileStatic
 class ScatterChart extends Chart<ScatterChart> {
 
   static ScatterChart create(String title, Matrix data, String xAxis, String yAxis) {
     ScatterChart chart = new ScatterChart()
     chart.title = title
-    chart.categorySeries = data.column(xAxis)
-    chart.valueSeries = [data.column(yAxis)]
+    chart.categorySeries = data.column(xAxis) as List<?>
+    chart.valueSeries = [data.column(yAxis) as List<?>]
     chart.xAxisTitle = xAxis
     chart.yAxisTitle = yAxis
     return chart
@@ -34,6 +36,7 @@ class ScatterChart extends Chart<ScatterChart> {
   /**
    * Fluent builder for {@link ScatterChart}.
    */
+  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, ScatterChart> {
 
     Builder(Matrix data) { super(data) }
@@ -44,10 +47,10 @@ class ScatterChart extends Chart<ScatterChart> {
      * @return the scatter chart
      */
     ScatterChart build() {
-      def chart = new ScatterChart()
+      ScatterChart chart = new ScatterChart()
       applyTo(chart)
-      chart.categorySeries = data.column(xCol)
-      chart.valueSeries = yCols.collect { data.column(it) }
+      chart.categorySeries = data.column(xCol) as List<?>
+      chart.valueSeries = yCols.collect { String col -> data.column(col) as List<?> }
       chart.valueSeriesNames = yCols
       chart
     }
