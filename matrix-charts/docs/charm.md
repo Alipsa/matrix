@@ -269,7 +269,7 @@ def chart = plot(data) {
 }.build()
 ```
 
-Available override properties: `fill`, `color`, `alpha` (BigDecimal), `size` (BigDecimal), `shape`, `linetype`.
+Available override properties: `fill`, `color`, `alpha` (BigDecimal), `size` (BigDecimal), `shape` (`ShapeName`), `linetype` (`LinetypeName`).
 
 Style callback overrides have the highest priority in the resolution chain:
 
@@ -539,9 +539,12 @@ Scales before any marker are global. After a `new_scale_color()` marker, the nex
 Configure visual styling with flat property setters:
 
 ```groovy
+import se.alipsa.matrix.charm.LegendPosition
+import se.alipsa.matrix.charm.LegendDirection
+
 theme {
-  legendPosition = 'top'       // 'top', 'bottom', 'left', 'right', 'none'
-  legendDirection = 'horizontal'
+  legendPosition = TOP          // LegendPosition: RIGHT, LEFT, TOP, BOTTOM, NONE
+  legendDirection = HORIZONTAL  // LegendDirection: VERTICAL, HORIZONTAL
   axisLineWidth = 0.75
   textSize = 12
   textColor = '#333333'
@@ -554,10 +557,14 @@ theme {
 You can also set legend position with a top-level shorthand:
 
 ```groovy
-legendPosition('top')
+legendPosition(LegendPosition.TOP)
+
+// Or with absolute [x, y] coordinates:
+legendPosition([100, 200])
 ```
 
 If both shorthand and `theme { legendPosition = ... }` are used, the last call wins.
+Setting an enum position clears any previously set coordinates, and vice versa.
 
 ### Where do colors go? Mapping vs Scale vs Theme vs Layer
 
@@ -1133,7 +1140,7 @@ def chart = plot(Dataset.mpg()) {
     x = log10()
   }
   theme {
-    legendPosition = 'top'
+    legendPosition = TOP
     axisLineWidth = 0.75
   }
   labels {
