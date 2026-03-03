@@ -52,7 +52,7 @@ protected List<List> valueSeries
 
 // After
 protected List<?> categorySeries
-protected List<List<? extends Number>> valueSeries
+protected List<List<?>> valueSeries
 ```
 
 Update getters (`getCategorySeries()`, `getValueSeries()`, `getValueSerie()`) to match.

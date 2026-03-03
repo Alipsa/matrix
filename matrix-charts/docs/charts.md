@@ -559,8 +559,8 @@ chart.style.legendBackgroundColor = new Color(250, 250, 250)
 
 ```groovy
 chart.style.titleVisible = false
-chart.style.XAxisVisible = false
-chart.style.YAxisVisible = false
+chart.style.xAxisVisible = false
+chart.style.yAxisVisible = false
 ```
 
 ### CSS Styling
