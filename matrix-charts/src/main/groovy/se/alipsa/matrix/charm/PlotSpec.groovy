@@ -291,6 +291,7 @@ class PlotSpec {
    */
   PlotSpec legendPosition(LegendPosition value) {
     theme.legendPosition = value
+    theme.legendPositionCoords = null
     this
   }
 
@@ -866,6 +867,7 @@ class PlotSpec {
      */
     void setLegendPosition(LegendPosition value) {
       theme.legendPosition = value
+      theme.legendPositionCoords = null
     }
 
     /**

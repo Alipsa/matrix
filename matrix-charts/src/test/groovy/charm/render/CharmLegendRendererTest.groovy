@@ -215,6 +215,75 @@ class CharmLegendRendererTest {
   }
 
   @Test
+  void testLegendPositionCoords() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'cat')
+        .rows([
+            [1, 2, 'A'],
+            [2, 3, 'B']
+        ])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; color = 'cat' }
+      layers { geomPoint() }
+      legendPosition([100, 200])
+    }.build()
+
+    Svg svg = chart.render()
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('id="legend"'), 'Legend should be present with coordinate positioning')
+    assertTrue(content.contains('translate(100'), 'Legend x should use specified coordinate')
+  }
+
+  @Test
+  void testLegendPositionNoneOverridesCoords() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'cat')
+        .rows([
+            [1, 2, 'A'],
+            [2, 3, 'B']
+        ])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; color = 'cat' }
+      layers { geomPoint() }
+      legendPosition([100, 200])
+      theme {
+        legendPosition = NONE
+      }
+    }.build()
+
+    Svg svg = chart.render()
+    String content = SvgWriter.toXml(svg)
+    assertFalse(content.contains('id="legend"'), 'NONE should suppress legend even when coords are set')
+  }
+
+  @Test
+  void testLegendPositionEnumClearsCoordsLastWriteWins() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'cat')
+        .rows([
+            [1, 2, 'A'],
+            [2, 3, 'B']
+        ])
+        .build()
+
+    // Set coords first, then override with enum position
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; color = 'cat' }
+      layers { geomPoint() }
+      legendPosition([100, 200])
+      legendPosition(LegendPosition.LEFT)
+    }.build()
+
+    assertNull(chart.theme.legendPositionCoords,
+        'Setting enum position should clear coords')
+    assertEquals(LegendPosition.LEFT, chart.theme.legendPosition)
+  }
+
+  @Test
   void testLegendPositionLeftTopBottom() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'cat')
