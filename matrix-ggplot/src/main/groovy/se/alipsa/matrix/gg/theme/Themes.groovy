@@ -371,6 +371,17 @@ class Themes {
         }
       } else if (propName == 'legendPosition' && effectiveValue instanceof List) {
         theme.legendPositionCoords = effectiveValue as List<Number>
+      } else if (propName == 'legendPosition') {
+        // Non-list legendPosition: clear any stale coords so enum takes effect
+        theme.legendPositionCoords = null
+        if (theme.hasProperty(propName)) {
+          theme.setProperty(propName, effectiveValue)
+          if (isBlank) {
+            theme.explicitNulls.add(propName)
+          } else {
+            theme.explicitNulls.remove(propName)
+          }
+        }
       } else if (theme.hasProperty(propName)) {
         theme.setProperty(propName, effectiveValue)
         if (isBlank) {

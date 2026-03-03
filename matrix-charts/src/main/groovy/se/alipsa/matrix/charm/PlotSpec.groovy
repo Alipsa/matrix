@@ -303,6 +303,9 @@ class PlotSpec {
    */
   PlotSpec legendPosition(List<Number> value) {
     theme.legendPositionCoords = value
+    if (theme.legendPosition == LegendPosition.NONE) {
+      theme.legendPosition = LegendPosition.RIGHT
+    }
     this
   }
 
@@ -877,6 +880,9 @@ class PlotSpec {
      */
     void setLegendPosition(List<Number> value) {
       theme.legendPositionCoords = value
+      if (theme.legendPosition == LegendPosition.NONE) {
+        theme.legendPosition = LegendPosition.RIGHT
+      }
     }
 
     /**
