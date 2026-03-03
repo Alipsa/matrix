@@ -130,6 +130,15 @@ class PlotGridTest {
       assertTrue(definedIds.contains(refId),
           "url(#$refId) references an undefined ID. Defined IDs: $definedIds")
     }
+
+    // Validate href="#..." and xlink:href="#..." references
+    Pattern hrefPattern = Pattern.compile('(?:xlink:)?href="#([^"]+)"')
+    Matcher hrefMatcher = hrefPattern.matcher(xml)
+    while (hrefMatcher.find()) {
+      String refId = hrefMatcher.group(1)
+      assertTrue(definedIds.contains(refId),
+          "href=\"#$refId\" references an undefined ID. Defined IDs: $definedIds")
+    }
   }
 
   @Test

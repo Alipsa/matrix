@@ -92,6 +92,14 @@ class PlotGridRenderer {
       int cellY = titleOffset + computeOffset(rowHeights, row, grid.spacing)
 
       RenderConfig cellConfig = new RenderConfig(width: cellW, height: cellH)
+      int plotW = cellConfig.plotWidth()
+      int plotH = cellConfig.plotHeight()
+      if (plotW <= 0 || plotH <= 0) {
+        throw new IllegalArgumentException(
+            "PlotGrid cell at row=${row}, col=${col} (chart index=${index}) is too small for default margins: " +
+            "cellWidth=${cellW}, cellHeight=${cellH}, plotWidth=${plotW}, plotHeight=${plotH}. " +
+            "Increase totalWidth/totalHeight or adjust ncol/nrow, spacing, or margins.")
+      }
       Svg cellSvg = renderer.render(chart, cellConfig)
 
       String prefix = "g${row}c${col}-"
