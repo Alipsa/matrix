@@ -82,7 +82,13 @@ class Theme {
   /** Legend position. */
   LegendPosition legendPosition = LegendPosition.RIGHT
 
-  /** Absolute legend position as {@code [x, y]} coordinates, overrides {@link #legendPosition} when set. */
+  /**
+   * Absolute legend position as {@code [x, y]} coordinates.
+   * When non-null, overrides {@link #legendPosition} for placement.
+   * Note: {@link LegendPosition#NONE} suppresses the legend entirely
+   * regardless of coords; DSL setters automatically reset NONE to RIGHT
+   * when coords are assigned.
+   */
   List<Number> legendPositionCoords
 
   /** Legend direction. */
