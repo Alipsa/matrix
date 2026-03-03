@@ -1,5 +1,6 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -10,14 +11,15 @@ import se.alipsa.matrix.core.Matrix
  * inout.view(Plot.jfx(chart))
  * </code>
  */
+@CompileStatic
 abstract class Chart<T extends Chart> {
 
   protected String title
   protected String xAxisTitle = ""
   protected String yAxisTitle = ""
 
-  protected List categorySeries
-  protected List<List> valueSeries
+  protected List<?> categorySeries
+  protected List<List<?>> valueSeries
   protected List<String> valueSeriesNames
 
   protected AxisScale xAxisScale = null
@@ -31,11 +33,11 @@ abstract class Chart<T extends Chart> {
     return title
   }
 
-  List getCategorySeries() {
+  List<?> getCategorySeries() {
     return categorySeries
   }
 
-  List<List> getValueSeries() {
+  List<List<?>> getValueSeries() {
     return valueSeries
   }
 
@@ -52,7 +54,7 @@ abstract class Chart<T extends Chart> {
       throw new IllegalArgumentException("Table " + idx + "(" + firstTable.matrixName + ") does not contain 2 columns.")
     }
 
-    for (table in series) {
+    for (Matrix table in series) {
       if (idx == 0) {
         idx++
         continue
@@ -130,7 +132,7 @@ abstract class Chart<T extends Chart> {
     this as T
   }
 
-  T setValueSeries(List<List> valueSeries) {
+  T setValueSeries(List<List<?>> valueSeries) {
     this.valueSeries = valueSeries
     this as T
   }
@@ -182,6 +184,7 @@ abstract class Chart<T extends Chart> {
    * @param <B> the concrete builder type (for fluent method chaining)
    * @param <C> the concrete chart type produced by this builder
    */
+  @CompileStatic
   abstract static class ChartBuilder<B extends ChartBuilder, C extends Chart> {
 
     protected Matrix data

@@ -1,8 +1,9 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
-
+@CompileStatic
 class AreaChart extends Chart<AreaChart> {
 
   static AreaChart create(Matrix data) {
@@ -11,8 +12,8 @@ class AreaChart extends Chart<AreaChart> {
     }
     AreaChart chart = new AreaChart()
     chart.title = data.matrixName
-    chart.categorySeries = data.column(0)
-    chart.valueSeries = [data.column(1)]
+    chart.categorySeries = data.column(0) as List<?>
+    chart.valueSeries = [data.column(1) as List<?>]
     chart.valueSeriesNames = [data.columnName(1)]
     return chart
   }
@@ -21,7 +22,7 @@ class AreaChart extends Chart<AreaChart> {
     AreaChart chart = new AreaChart()
     chart.title = title
     chart.categorySeries = groupColumn
-    chart.valueSeries = valueColumn
+    chart.valueSeries = valueColumn as List<List<?>>
     return chart
   }
 
@@ -30,9 +31,9 @@ class AreaChart extends Chart<AreaChart> {
    *         "Boston Robberies by month: Jan 1966-Oct 1975", robberies, "Record", "Robberies")
    */
   static AreaChart create(String title, Matrix data, String xCol, String yCol) {
-    def xColumn = data.column(xCol)
-    def yColumn = data.column(yCol)
-    def chart = create(title, xColumn, yColumn)
+    List<?> xColumn = data.column(xCol) as List<?>
+    List<?> yColumn = data.column(yCol) as List<?>
+    AreaChart chart = create(title, xColumn, yColumn)
     chart.valueSeriesNames = [yCol]
     return chart
   }
@@ -64,6 +65,7 @@ class AreaChart extends Chart<AreaChart> {
   /**
    * Fluent builder for {@link AreaChart}.
    */
+  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, AreaChart> {
 
     Builder(Matrix data) { super(data) }
@@ -74,10 +76,10 @@ class AreaChart extends Chart<AreaChart> {
      * @return the area chart
      */
     AreaChart build() {
-      def chart = new AreaChart()
+      AreaChart chart = new AreaChart()
       applyTo(chart)
-      chart.categorySeries = data.column(xCol)
-      chart.valueSeries = yCols.collect { data.column(it) }
+      chart.categorySeries = data.column(xCol) as List<?>
+      chart.valueSeries = yCols.collect { String col -> data.column(col) as List<?> }
       chart.valueSeriesNames = yCols
       chart
     }

@@ -98,12 +98,14 @@ class CharmBridge {
   }
 
   private static PlotSpec buildBoxSpec(BoxChart chart) {
-    List<List> rows = []
-    chart.categorySeries.eachWithIndex { Object category, int idx ->
-      List values = chart.valueSeries[idx]
-      values.each { Object val ->
-        List row = [category.toString(), val]
-        rows.add(row)
+    List<List<?>> rows = []
+    List<?> categories = chart.categorySeries
+    List<List<?>> allValues = chart.valueSeries
+    for (int idx = 0; idx < categories.size(); idx++) {
+      String category = categories[idx].toString()
+      List<?> values = allValues[idx]
+      for (Object val : values) {
+        rows.add([category, val] as List<?>)
       }
     }
     Matrix data = Matrix.builder()
@@ -119,10 +121,9 @@ class CharmBridge {
   }
 
   private static PlotSpec buildHistogramSpec(Histogram chart) {
-    List<List> rows = []
-    chart.originalData.each { Number val ->
-      List row = [val]
-      rows.add(row)
+    List<List<?>> rows = []
+    for (Number val : chart.originalData) {
+      rows.add([val] as List<?>)
     }
     Matrix data = Matrix.builder()
         .columnNames('x')
@@ -147,11 +148,11 @@ class CharmBridge {
   }
 
   private static PlotSpec buildPieSpec(PieChart chart) {
-    List categories = chart.categorySeries
-    List values = chart.valueSeries[0]
-    List<List> rows = []
-    categories.eachWithIndex { Object cat, int idx ->
-      rows << [cat.toString(), values[idx]]
+    List<?> categories = chart.categorySeries
+    List<?> values = chart.valueSeries[0]
+    List<List<?>> rows = []
+    for (int idx = 0; idx < categories.size(); idx++) {
+      rows.add([categories[idx].toString(), values[idx]] as List<?>)
     }
     Matrix data = Matrix.builder()
         .columnNames('x', 'y')
@@ -181,14 +182,14 @@ class CharmBridge {
    * Multi series: columns ['x', 'y', 'series']
    */
   private static Matrix buildLongFormatMatrix(Chart chart) {
-    List categories = chart.categorySeries
-    List<List> valueLists = chart.valueSeries
+    List<?> categories = chart.categorySeries
+    List<List<?>> valueLists = chart.valueSeries
     List<String> seriesNames = chart.valueSeriesNames
 
     if (valueLists.size() == 1) {
-      List<List> rows = []
-      categories.eachWithIndex { Object cat, int idx ->
-        rows << [cat, valueLists[0][idx]]
+      List<List<?>> rows = []
+      for (int idx = 0; idx < categories.size(); idx++) {
+        rows.add([categories[idx], valueLists[0][idx]] as List<?>)
       }
       return Matrix.builder()
           .columnNames('x', 'y')
@@ -196,12 +197,13 @@ class CharmBridge {
           .build()
     }
 
-    List<List> rows = []
-    valueLists.eachWithIndex { List values, int seriesIdx ->
+    List<List<?>> rows = []
+    for (int seriesIdx = 0; seriesIdx < valueLists.size(); seriesIdx++) {
+      List<?> values = valueLists[seriesIdx]
       String seriesName = seriesNames != null && seriesIdx < seriesNames.size()
           ? seriesNames[seriesIdx] : "series${seriesIdx}"
-      categories.eachWithIndex { Object cat, int catIdx ->
-        rows << [cat, values[catIdx], seriesName]
+      for (int catIdx = 0; catIdx < categories.size(); catIdx++) {
+        rows.add([categories[catIdx], values[catIdx], seriesName] as List<?>)
       }
     }
     Matrix.builder()

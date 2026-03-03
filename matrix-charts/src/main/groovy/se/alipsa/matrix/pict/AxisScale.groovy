@@ -1,5 +1,8 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class AxisScale {
   private BigDecimal start
   private BigDecimal end

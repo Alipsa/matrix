@@ -1,7 +1,9 @@
 package se.alipsa.matrix.pict
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
+@CompileStatic
 class BarChart extends Chart<BarChart> {
 
   protected ChartType chartType = ChartType.BASIC
@@ -19,16 +21,16 @@ class BarChart extends Chart<BarChart> {
     BarChart chart = new BarChart()
     chart.title = title
     chart.categorySeries = groupColumn
-    chart.valueSeries = valueColumn
+    chart.valueSeries = valueColumn as List<List<?>>
     chart.chartType = chartType
     chart.direction = direction
-    chart.valueSeriesNames = 1..valueColumn.size() as List<String>
+    chart.valueSeriesNames = (1..valueColumn.length).collect { int i -> String.valueOf(i) }
     return chart
   }
 
   static BarChart create(String title, ChartType chartType, Matrix data, String categoryColumnName, ChartDirection direction, String... valueColumn) {
-    List<?> groupColumn = data.column(categoryColumnName)
-    List<List> valueColumns = data.columns(valueColumn.toList())
+    List<?> groupColumn = data.column(categoryColumnName) as List<?>
+    List<List<?>> valueColumns = data.columns(valueColumn.toList()) as List<List<?>>
     BarChart chart = new BarChart()
     chart.title = title
     chart.categorySeries = groupColumn
@@ -95,6 +97,7 @@ class BarChart extends Chart<BarChart> {
   /**
    * Fluent builder for {@link BarChart}.
    */
+  @CompileStatic
   static class Builder extends Chart.ChartBuilder<Builder, BarChart> {
 
     private ChartType chartType = ChartType.BASIC
@@ -123,12 +126,12 @@ class BarChart extends Chart<BarChart> {
      * @return the bar chart
      */
     BarChart build() {
-      def chart = new BarChart()
+      BarChart chart = new BarChart()
       applyTo(chart)
       chart.chartType = chartType
       chart.direction = direction
-      chart.categorySeries = data.column(xCol)
-      chart.valueSeries = yCols.collect { data.column(it) }
+      chart.categorySeries = data.column(xCol) as List<?>
+      chart.valueSeries = yCols.collect { String col -> data.column(col) as List<?> }
       chart.valueSeriesNames = yCols
       chart
     }
