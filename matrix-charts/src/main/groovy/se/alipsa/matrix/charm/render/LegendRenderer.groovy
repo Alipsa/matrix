@@ -73,7 +73,7 @@ class LegendRenderer {
 
     // Calculate position
     int legendX, legendY
-    boolean isVertical = LegendDirection.normalize(context.chart.theme.legendDirection) != LegendDirection.HORIZONTAL
+    boolean isVertical = context.chart.theme.legendDirection != LegendDirection.HORIZONTAL
 
     switch (normalizedPos) {
       case LegendPosition.RIGHT -> {

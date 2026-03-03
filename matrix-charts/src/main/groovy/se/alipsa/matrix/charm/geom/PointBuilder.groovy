@@ -3,6 +3,8 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.LinetypeName
+import se.alipsa.matrix.charm.ShapeName
 
 /**
  * Fluent builder for point (scatter) layers.
@@ -76,45 +78,23 @@ class PointBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets point shape by string name.
+   * Sets point shape.
    *
    * @param value shape name
    * @return this builder
    */
-  PointBuilder shape(String value) {
+  PointBuilder shape(ShapeName value) {
     params['shape'] = value
     this
   }
 
   /**
-   * Sets point shape by {@link se.alipsa.matrix.charm.ShapeName} enum.
-   *
-   * @param value shape enum constant
-   * @return this builder
-   */
-  PointBuilder shape(se.alipsa.matrix.charm.ShapeName value) {
-    params['shape'] = value
-    this
-  }
-
-  /**
-   * Sets point line type by string name.
+   * Sets point line type.
    *
    * @param value linetype name
    * @return this builder
    */
-  PointBuilder linetype(String value) {
-    params['linetype'] = value
-    this
-  }
-
-  /**
-   * Sets point line type by {@link se.alipsa.matrix.charm.LinetypeName} enum.
-   *
-   * @param value linetype enum constant
-   * @return this builder
-   */
-  PointBuilder linetype(se.alipsa.matrix.charm.LinetypeName value) {
+  PointBuilder linetype(LinetypeName value) {
     params['linetype'] = value
     this
   }

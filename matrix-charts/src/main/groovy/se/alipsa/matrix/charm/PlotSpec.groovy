@@ -286,11 +286,22 @@ class PlotSpec {
   /**
    * Sets legend position as a shorthand for {@code theme.legendPosition}.
    *
-   * @param value legend position ({@link LegendPosition} enum, string, or {@code [x, y]} list)
+   * @param value legend position
    * @return this plot spec
    */
-  PlotSpec legendPosition(Object value) {
-    theme.legendPosition = LegendPosition.normalize(value)
+  PlotSpec legendPosition(LegendPosition value) {
+    theme.legendPosition = value
+    this
+  }
+
+  /**
+   * Sets legend position from absolute {@code [x, y]} coordinates.
+   *
+   * @param value coordinate list
+   * @return this plot spec
+   */
+  PlotSpec legendPosition(List<Number> value) {
+    theme.legendPosition = value
     this
   }
 
@@ -849,24 +860,30 @@ class PlotSpec {
     // ---- Legend ----
 
     /**
-     * Sets legend position ({@link LegendPosition} enum, string, or {@code [x, y]} list).
+     * Sets legend position from a {@link LegendPosition} enum constant.
      *
      * @param value legend position
      */
-    void setLegendPosition(Object value) {
-      theme.legendPosition = LegendPosition.normalize(value)
+    void setLegendPosition(LegendPosition value) {
+      theme.legendPosition = value
     }
 
     /**
-     * Sets legend direction ({@link LegendDirection} enum or string).
+     * Sets legend position from absolute {@code [x, y]} coordinates.
+     *
+     * @param value coordinate list
+     */
+    void setLegendPosition(List<Number> value) {
+      theme.legendPosition = value
+    }
+
+    /**
+     * Sets legend direction.
      *
      * @param value legend direction
      */
-    void setLegendDirection(Object value) {
-      Object normalized = LegendDirection.normalize(value)
-      theme.legendDirection = normalized instanceof LegendDirection
-          ? (normalized as LegendDirection).name().toLowerCase(Locale.ROOT)
-          : value?.toString()
+    void setLegendDirection(LegendDirection value) {
+      theme.legendDirection = value
     }
 
     // ---- Axis ----

@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.ShapeName
 
 /**
  * Fluent builder for jitter layers.
@@ -76,23 +77,12 @@ class JitterBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets point shape by string name.
+   * Sets point shape.
    *
    * @param value shape name
    * @return this builder
    */
-  JitterBuilder shape(String value) {
-    params['shape'] = value
-    this
-  }
-
-  /**
-   * Sets point shape by {@link se.alipsa.matrix.charm.ShapeName} enum.
-   *
-   * @param value shape enum constant
-   * @return this builder
-   */
-  JitterBuilder shape(se.alipsa.matrix.charm.ShapeName value) {
+  JitterBuilder shape(ShapeName value) {
     params['shape'] = value
     this
   }

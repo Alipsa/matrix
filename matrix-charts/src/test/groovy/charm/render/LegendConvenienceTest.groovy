@@ -105,21 +105,21 @@ class LegendConvenienceTest {
   @Test
   void testLegendPositionShorthandSetsThemeLegendPosition() {
     PlotSpec spec = plot(Dataset.mpg())
-    spec.legendPosition('bottom')
+    spec.legendPosition(LegendPosition.BOTTOM)
     assertEquals(LegendPosition.BOTTOM, spec.theme.legendPosition)
   }
 
   @Test
   void testLegendPositionLastWriteWinsAgainstThemeDsl() {
     PlotSpec firstThemeThenShorthand = plot(Dataset.mpg()) {
-      theme { legendPosition = 'left' }
-      legendPosition('top')
+      theme { legendPosition = LEFT }
+      legendPosition(LegendPosition.TOP)
     }
     assertEquals(LegendPosition.TOP, firstThemeThenShorthand.theme.legendPosition)
 
     PlotSpec firstShorthandThenTheme = plot(Dataset.mpg()) {
-      legendPosition('top')
-      theme { legendPosition = 'left' }
+      legendPosition(LegendPosition.TOP)
+      theme { legendPosition = LEFT }
     }
     assertEquals(LegendPosition.LEFT, firstShorthandThenTheme.theme.legendPosition)
   }

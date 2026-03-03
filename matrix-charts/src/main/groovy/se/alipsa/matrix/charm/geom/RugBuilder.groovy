@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.LinetypeName
 
 /**
  * Fluent builder for rug layers.
@@ -54,23 +55,12 @@ class RugBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets line type by string name.
+   * Sets line type.
    *
    * @param value linetype name
    * @return this builder
    */
-  RugBuilder linetype(String value) {
-    params['linetype'] = value
-    this
-  }
-
-  /**
-   * Sets line type by {@link se.alipsa.matrix.charm.LinetypeName} enum.
-   *
-   * @param value linetype enum constant
-   * @return this builder
-   */
-  RugBuilder linetype(se.alipsa.matrix.charm.LinetypeName value) {
+  RugBuilder linetype(LinetypeName value) {
     params['linetype'] = value
     this
   }

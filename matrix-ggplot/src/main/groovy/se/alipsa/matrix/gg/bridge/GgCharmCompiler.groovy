@@ -1192,8 +1192,8 @@ class GgCharmCompiler {
     theme.legendPosition = LegendPosition.normalize(source.legendPosition) ?: LegendPosition.RIGHT
     Object dirNormalized = LegendDirection.normalize(source.legendDirection)
     theme.legendDirection = dirNormalized instanceof LegendDirection
-        ? (dirNormalized as LegendDirection).name().toLowerCase(Locale.ROOT)
-        : (source.legendDirection ?: 'vertical')
+        ? dirNormalized as LegendDirection
+        : LegendDirection.VERTICAL
     theme.legendBackground = mapRect(source.legendBackground)
     theme.legendKey = mapRect(source.legendKey)
     theme.legendKeySize = source.legendKeySize != null ? new ArrayList<>(source.legendKeySize) : null

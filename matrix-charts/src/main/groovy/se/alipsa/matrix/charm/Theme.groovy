@@ -82,8 +82,8 @@ class Theme {
   /** Legend position: {@link LegendPosition} enum or {@code List<Number>} for absolute [x, y]. */
   Object legendPosition = LegendPosition.RIGHT
 
-  /** Legend direction ('vertical' or 'horizontal'). */
-  String legendDirection = 'vertical'
+  /** Legend direction. */
+  LegendDirection legendDirection = LegendDirection.VERTICAL
 
   /** Legend background */
   ElementRect legendBackground

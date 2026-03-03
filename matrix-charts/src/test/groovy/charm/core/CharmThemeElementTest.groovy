@@ -1,6 +1,7 @@
 package charm.core
 
 import org.junit.jupiter.api.Test
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.Theme
 import se.alipsa.matrix.charm.theme.CharmThemes
 import se.alipsa.matrix.charm.theme.ElementBlank
@@ -67,7 +68,7 @@ class CharmThemeElementTest {
     theme.plotBackground = new ElementRect(fill: '#fafafa')
     theme.plotTitle = new ElementText(size: 20, color: '#000')
     theme.panelGridMajor = new ElementLine(color: '#ddd')
-    theme.legendPosition = 'bottom'
+    theme.legendPosition = LegendPosition.BOTTOM
     theme.stripBackground = new ElementRect(fill: '#eee')
     theme.themeName = 'custom'
     theme.baseSize = 14
@@ -78,7 +79,7 @@ class CharmThemeElementTest {
     assertEquals('#fafafa', copy.plotBackground.fill)
     assertEquals(20, copy.plotTitle.size)
     assertEquals('#ddd', copy.panelGridMajor.color)
-    assertEquals('bottom', copy.legendPosition)
+    assertEquals(LegendPosition.BOTTOM, copy.legendPosition)
     assertEquals('#eee', copy.stripBackground.fill)
     assertEquals('custom', copy.themeName)
     assertEquals(14, copy.baseSize)
@@ -90,11 +91,11 @@ class CharmThemeElementTest {
     Theme base = CharmThemes.gray()
     Theme override = new Theme()
     override.plotBackground = new ElementRect(fill: '#ff0000')
-    override.legendPosition = 'bottom'
+    override.legendPosition = LegendPosition.BOTTOM
 
     Theme merged = base.plus(override)
     assertEquals('#ff0000', merged.plotBackground.fill)
-    assertEquals('bottom', merged.legendPosition)
+    assertEquals(LegendPosition.BOTTOM, merged.legendPosition)
     // Base values preserved where not overridden
     assertEquals('gray', merged.themeName)
   }

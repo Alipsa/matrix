@@ -50,7 +50,7 @@ class P1GeomRendererTest {
         mapping(tc.aes as Map<String, String>)
         addLayer(builder)
         theme {
-          legendPosition = 'none'
+          legendPosition = NONE
         }
       }.build()
 

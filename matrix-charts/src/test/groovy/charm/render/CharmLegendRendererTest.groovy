@@ -7,6 +7,7 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*
@@ -98,7 +99,7 @@ class CharmLegendRendererTest {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
       layers { geomPoint() }
       theme {
-        legendPosition = 'right'
+        legendPosition = RIGHT
       }
     }.build()
 
@@ -122,7 +123,7 @@ class CharmLegendRendererTest {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
       layers { geomPoint() }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -223,7 +224,7 @@ class CharmLegendRendererTest {
         ])
         .build()
 
-    ['left', 'top', 'bottom'].each { String pos ->
+    [LegendPosition.LEFT, LegendPosition.TOP, LegendPosition.BOTTOM].each { LegendPosition pos ->
       Chart chart = plot(data) {
         mapping { x = 'x'; y = 'y'; color = 'cat' }
         layers { geomPoint() }

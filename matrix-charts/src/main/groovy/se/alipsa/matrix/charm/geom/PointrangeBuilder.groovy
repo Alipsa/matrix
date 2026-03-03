@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.ShapeName
 
 /**
  * Fluent builder for point range layers.
@@ -54,23 +55,12 @@ class PointrangeBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets point shape by string name.
+   * Sets point shape.
    *
    * @param value shape name
    * @return this builder
    */
-  PointrangeBuilder shape(String value) {
-    params['shape'] = value
-    this
-  }
-
-  /**
-   * Sets point shape by {@link se.alipsa.matrix.charm.ShapeName} enum.
-   *
-   * @param value shape enum constant
-   * @return this builder
-   */
-  PointrangeBuilder shape(se.alipsa.matrix.charm.ShapeName value) {
+  PointrangeBuilder shape(ShapeName value) {
     params['shape'] = value
     this
   }
