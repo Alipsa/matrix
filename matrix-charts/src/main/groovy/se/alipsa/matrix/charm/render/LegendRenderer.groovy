@@ -41,7 +41,7 @@ class LegendRenderer {
    * @param context render context
    */
   void render(RenderContext context) {
-    LegendPosition legendPos = context.chart.theme.legendPosition ?: LegendPosition.RIGHT
+    LegendPosition legendPos = context.chart.theme.legendPosition ?: context.config.legendPosition
     if (legendPos == LegendPosition.NONE) {
       return
     }
@@ -218,7 +218,7 @@ class LegendRenderer {
    * @return estimated legend width in pixels, or 0 if no legend needed
    */
   int estimateLegendWidth(RenderContext context) {
-    LegendPosition legendPos = context.chart.theme.legendPosition ?: LegendPosition.RIGHT
+    LegendPosition legendPos = context.chart.theme.legendPosition ?: context.config.legendPosition
     if (legendPos == LegendPosition.NONE) {
       return 0
     }

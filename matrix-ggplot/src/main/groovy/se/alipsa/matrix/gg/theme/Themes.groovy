@@ -369,6 +369,8 @@ class Themes {
           theme.explicitNulls.remove('panelGridMajor')
           theme.explicitNulls.remove('panelGridMinor')
         }
+      } else if (propName == 'legendPosition' && effectiveValue instanceof List) {
+        theme.legendPositionCoords = effectiveValue as List<Number>
       } else if (theme.hasProperty(propName)) {
         theme.setProperty(propName, effectiveValue)
         if (isBlank) {

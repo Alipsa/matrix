@@ -1190,12 +1190,11 @@ class GgCharmCompiler {
     theme.axisTickLength = source.axisTickLength
 
     Object normalizedLegendPos = LegendPosition.normalize(source.legendPosition)
-    if (normalizedLegendPos instanceof List) {
-      theme.legendPositionCoords = normalizedLegendPos as List<Number>
-    } else {
-      theme.legendPosition = normalizedLegendPos instanceof LegendPosition
-          ? normalizedLegendPos as LegendPosition
-          : LegendPosition.RIGHT
+    theme.legendPosition = normalizedLegendPos instanceof LegendPosition
+        ? normalizedLegendPos as LegendPosition
+        : LegendPosition.RIGHT
+    if (source.legendPositionCoords != null) {
+      theme.legendPositionCoords = new ArrayList<>(source.legendPositionCoords)
     }
     Object dirNormalized = LegendDirection.normalize(source.legendDirection)
     theme.legendDirection = dirNormalized instanceof LegendDirection
