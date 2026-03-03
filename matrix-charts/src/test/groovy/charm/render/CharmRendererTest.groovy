@@ -38,7 +38,7 @@ class CharmRendererTest {
       }
       layers { geomPoint() }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -70,7 +70,7 @@ class CharmRendererTest {
       }
       layers { geomLine() }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -99,7 +99,7 @@ class CharmRendererTest {
       }
       layers { geomCol().fill('#336699') }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -113,7 +113,7 @@ class CharmRendererTest {
       }
       layers { geomHistogram().bins(4).fill('#cc6677') }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -148,7 +148,7 @@ class CharmRendererTest {
         }
       }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -178,7 +178,7 @@ class CharmRendererTest {
         }
       }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -206,7 +206,7 @@ class CharmRendererTest {
         rows = ['grp']
       }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -238,7 +238,7 @@ class CharmRendererTest {
         title = 'Deterministic'
       }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -272,7 +272,7 @@ class CharmRendererTest {
       }
       layers { geomPoint() }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -334,7 +334,7 @@ class CharmRendererTest {
         geomPoint().data(layerData)
       }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -386,7 +386,7 @@ class CharmRendererTest {
         geomPoint()
       }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -401,7 +401,7 @@ class CharmRendererTest {
         geomPoint().data(wideData)
       }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 

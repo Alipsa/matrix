@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.LinetypeName
 
 /**
  * Fluent builder for curve layers.
@@ -54,12 +55,12 @@ class CurveBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets curve line type.
+   * Sets line type.
    *
-   * @param value linetype name or integer code
+   * @param value linetype name
    * @return this builder
    */
-  CurveBuilder linetype(String value) {
+  CurveBuilder linetype(LinetypeName value) {
     params['linetype'] = value
     this
   }

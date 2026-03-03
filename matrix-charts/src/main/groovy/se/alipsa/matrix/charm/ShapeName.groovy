@@ -1,0 +1,48 @@
+package se.alipsa.matrix.charm
+
+import groovy.transform.CompileStatic
+
+/**
+ * Typed point shape name constants.
+ *
+ * <p>Use these in {@code geomPoint().shape(ShapeName.CIRCLE)} or inside
+ * the {@code layers {}} DSL where the constants are directly available.</p>
+ */
+@CompileStatic
+enum ShapeName {
+  CIRCLE, SQUARE, TRIANGLE, DIAMOND, PLUS, X, CROSS
+
+  private static final Map<String, ShapeName> LOOKUP = values().collectEntries {
+    [(it.name().toLowerCase(Locale.ROOT)): it]
+  }
+
+  /**
+   * Resolves a string to the matching enum constant (case-insensitive).
+   *
+   * @param value shape string
+   * @return matching constant, or {@code null} if unrecognised
+   */
+  static ShapeName fromString(String value) {
+    String key = value?.trim()?.toLowerCase(Locale.ROOT)
+    key ? LOOKUP[key] : null
+  }
+
+  /**
+   * Normalises an {@code Object} to a {@link ShapeName} when possible.
+   *
+   * @param value raw value (enum, string, or data-mapped value)
+   * @return resolved enum, or the input unchanged if unrecognised
+   */
+  static Object normalize(Object value) {
+    if (value == null || value instanceof ShapeName) {
+      return value
+    }
+    if (value instanceof CharSequence) {
+      ShapeName shape = fromString(value.toString())
+      if (shape != null) {
+        return shape
+      }
+    }
+    value
+  }
+}

@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.LinetypeName
 
 /**
  * Fluent builder for density layers.
@@ -65,12 +66,12 @@ class DensityBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets density outline line type.
+   * Sets line type.
    *
-   * @param value linetype name or integer code
+   * @param value linetype name
    * @return this builder
    */
-  DensityBuilder linetype(String value) {
+  DensityBuilder linetype(LinetypeName value) {
     params['linetype'] = value
     this
   }

@@ -2,6 +2,7 @@ package se.alipsa.matrix.pict
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.Charts
@@ -236,7 +237,7 @@ class CharmBridge {
       )
     }
     if (chart.style?.legendVisible == false) {
-      theme.legendPosition = 'none'
+      theme.legendPosition = LegendPosition.NONE
     }
   }
 

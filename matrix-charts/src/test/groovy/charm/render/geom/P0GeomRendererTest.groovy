@@ -133,7 +133,7 @@ class P0GeomRendererTest {
       mapping(mappingSpec)
       addLayer(builder)
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
   }
@@ -149,7 +149,7 @@ class P0GeomRendererTest {
       mapping(mappingSpec)
       addLayer(builder)
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
   }

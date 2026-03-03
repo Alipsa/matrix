@@ -36,11 +36,11 @@ class LayerDsl extends LayerParams {
   /** Fill colour. */
   String fill
 
-  /** Shape (string name). */
-  String shape
+  /** Point shape. */
+  ShapeName shape
 
-  /** Line-type (string name). */
-  String linetype
+  /** Line type. */
+  LinetypeName linetype
 
   private Mapping layerMapping
   boolean inheritMapping = true

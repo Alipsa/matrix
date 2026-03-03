@@ -1,6 +1,8 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileStatic
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 import org.apache.commons.text.similarity.LevenshteinDistance
 import se.alipsa.matrix.charm.facet.Labeller
 import se.alipsa.matrix.core.Matrix
@@ -284,11 +286,28 @@ class PlotSpec {
   /**
    * Sets legend position as a shorthand for {@code theme.legendPosition}.
    *
-   * @param value legend position ('right', 'left', 'top', 'bottom', 'none', or [x, y])
+   * @param value legend position
    * @return this plot spec
    */
-  PlotSpec legendPosition(Object value) {
+  PlotSpec legendPosition(LegendPosition value) {
     theme.legendPosition = value
+    theme.legendPositionCoords = null
+    theme.explicitNulls.add('legendPositionCoords')
+    this
+  }
+
+  /**
+   * Sets legend position from absolute {@code [x, y]} coordinates.
+   *
+   * @param value coordinate list
+   * @return this plot spec
+   */
+  PlotSpec legendPosition(List<Number> value) {
+    theme.legendPositionCoords = value
+    theme.explicitNulls.remove('legendPositionCoords')
+    if (theme.legendPosition == LegendPosition.NONE) {
+      theme.legendPosition = LegendPosition.RIGHT
+    }
     this
   }
 
@@ -590,6 +609,24 @@ class PlotSpec {
   @CompileStatic
   static class ScaleDsl {
 
+    // ---- Legend position constants for guide configuration ----
+    /** @see LegendPosition#RIGHT */
+    static final LegendPosition RIGHT = LegendPosition.RIGHT
+    /** @see LegendPosition#LEFT */
+    static final LegendPosition LEFT = LegendPosition.LEFT
+    /** @see LegendPosition#TOP */
+    static final LegendPosition TOP = LegendPosition.TOP
+    /** @see LegendPosition#BOTTOM */
+    static final LegendPosition BOTTOM = LegendPosition.BOTTOM
+    /** @see LegendPosition#NONE */
+    static final LegendPosition NONE = LegendPosition.NONE
+
+    // ---- Legend direction constants for guide configuration ----
+    /** @see LegendDirection#VERTICAL */
+    static final LegendDirection VERTICAL = LegendDirection.VERTICAL
+    /** @see LegendDirection#HORIZONTAL */
+    static final LegendDirection HORIZONTAL = LegendDirection.HORIZONTAL
+
     private final ScaleSpec scale
 
     /**
@@ -699,7 +736,11 @@ class PlotSpec {
      * @param inverse inverse transform
      * @return scale object
      */
-    Scale custom(String id, Closure<BigDecimal> forward, Closure<BigDecimal> inverse = null) {
+    Scale custom(String id,
+                  @ClosureParams(value = SimpleType, options = ['java.math.BigDecimal'])
+                  Closure<BigDecimal> forward,
+                  @ClosureParams(value = SimpleType, options = ['java.math.BigDecimal'])
+                  Closure<BigDecimal> inverse = null) {
       Scale.custom(id, forward, inverse)
     }
 
@@ -793,6 +834,24 @@ class PlotSpec {
   @CompileStatic
   static class ThemeDsl {
 
+    // ---- Legend position constants for IDE auto-complete ----
+    /** @see LegendPosition#RIGHT */
+    static final LegendPosition RIGHT = LegendPosition.RIGHT
+    /** @see LegendPosition#LEFT */
+    static final LegendPosition LEFT = LegendPosition.LEFT
+    /** @see LegendPosition#TOP */
+    static final LegendPosition TOP = LegendPosition.TOP
+    /** @see LegendPosition#BOTTOM */
+    static final LegendPosition BOTTOM = LegendPosition.BOTTOM
+    /** @see LegendPosition#NONE */
+    static final LegendPosition NONE = LegendPosition.NONE
+
+    // ---- Legend direction constants for IDE auto-complete ----
+    /** @see LegendDirection#VERTICAL */
+    static final LegendDirection VERTICAL = LegendDirection.VERTICAL
+    /** @see LegendDirection#HORIZONTAL */
+    static final LegendDirection HORIZONTAL = LegendDirection.HORIZONTAL
+
     private final Theme theme
 
     /**
@@ -807,20 +866,35 @@ class PlotSpec {
     // ---- Legend ----
 
     /**
-     * Sets legend position ('right', 'left', 'top', 'bottom', 'none', or [x, y]).
+     * Sets legend position from a {@link LegendPosition} enum constant.
      *
      * @param value legend position
      */
-    void setLegendPosition(Object value) {
+    void setLegendPosition(LegendPosition value) {
       theme.legendPosition = value
+      theme.legendPositionCoords = null
+      theme.explicitNulls.add('legendPositionCoords')
     }
 
     /**
-     * Sets legend direction ('vertical' or 'horizontal').
+     * Sets legend position from absolute {@code [x, y]} coordinates.
+     *
+     * @param value coordinate list
+     */
+    void setLegendPosition(List<Number> value) {
+      theme.legendPositionCoords = value
+      theme.explicitNulls.remove('legendPositionCoords')
+      if (theme.legendPosition == LegendPosition.NONE) {
+        theme.legendPosition = LegendPosition.RIGHT
+      }
+    }
+
+    /**
+     * Sets legend direction.
      *
      * @param value legend direction
      */
-    void setLegendDirection(String value) {
+    void setLegendDirection(LegendDirection value) {
       theme.legendDirection = value
     }
 

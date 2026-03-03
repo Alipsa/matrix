@@ -155,6 +155,7 @@ abstract class LayerBuilder {
    *
    * @param callback style override closure
    * @return this builder
+   * @see se.alipsa.matrix.charm.StyleOverride
    */
   LayerBuilder style(Closure callback) {
     this.styleCallback = callback

@@ -8,6 +8,8 @@ import se.alipsa.matrix.charm.Mapping
 import se.alipsa.matrix.charm.CharmCoordType
 import se.alipsa.matrix.charm.CharmExpression
 import se.alipsa.matrix.charm.CharmGeomType
+import se.alipsa.matrix.charm.LinetypeName
+import se.alipsa.matrix.charm.ShapeName
 import se.alipsa.matrix.charm.CharmPositionType
 import se.alipsa.matrix.charm.CharmStatType
 import se.alipsa.matrix.charm.Chart
@@ -211,9 +213,9 @@ class CharmModelExpansionTest {
     ld.ymin = 0
     ld.ymax = 6
     ld.size = 3
-    ld.shape = 'circle'
+    ld.shape = ShapeName.CIRCLE
     ld.alpha = 0.5
-    ld.linetype = 'dashed'
+    ld.linetype = LinetypeName.DASHED
     ld.group = 'A'
     ld.label = 'point1'
     ld.weight = 1.0
@@ -227,9 +229,9 @@ class CharmModelExpansionTest {
     assertEquals(0, ld.ymin)
     assertEquals(6, ld.ymax)
     assertEquals(3, ld.size)
-    assertEquals('circle', ld.shape)
+    assertEquals(ShapeName.CIRCLE, ld.shape)
     assertEquals(0.5, ld.alpha)
-    assertEquals('dashed', ld.linetype)
+    assertEquals(LinetypeName.DASHED, ld.linetype)
     assertEquals('A', ld.group)
     assertEquals('point1', ld.label)
     assertEquals(1.0, ld.weight)
@@ -397,7 +399,7 @@ class CharmModelExpansionTest {
         geomPoint()
       }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 

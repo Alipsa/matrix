@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.LinetypeName
 
 /**
  * Fluent builder for frequency polygon layers.
@@ -56,10 +57,10 @@ class FreqpolyBuilder extends LayerBuilder {
   /**
    * Sets line type.
    *
-   * @param value linetype name or integer code
+   * @param value linetype name
    * @return this builder
    */
-  FreqpolyBuilder linetype(String value) {
+  FreqpolyBuilder linetype(LinetypeName value) {
     params['linetype'] = value
     this
   }

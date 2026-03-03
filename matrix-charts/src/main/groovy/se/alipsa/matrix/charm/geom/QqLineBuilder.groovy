@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.LinetypeName
 
 /**
  * Fluent builder for QQ line layers.
@@ -13,7 +14,7 @@ import se.alipsa.matrix.charm.CharmStatType
  * plot(data) {
  *   mapping { x = 'sample' }
  *   layers {
- *     geomQqLine().color('#cc0000').linetype('dashed')
+ *     geomQqLine().color('#cc0000').linetype(DASHED)
  *   }
  * }
  * }</pre>
@@ -56,10 +57,10 @@ class QqLineBuilder extends LayerBuilder {
   /**
    * Sets line type.
    *
-   * @param value linetype name or integer code
+   * @param value linetype name
    * @return this builder
    */
-  QqLineBuilder linetype(String value) {
+  QqLineBuilder linetype(LinetypeName value) {
     params['linetype'] = value
     this
   }

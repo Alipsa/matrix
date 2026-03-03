@@ -75,8 +75,16 @@ class Theme implements Cloneable {
 
   // ============ Legend elements ============
 
-  /** Legend position: 'right', 'left', 'top', 'bottom', 'none', or [x, y] */
-  def legendPosition = 'right'
+  /**
+   * Legend position as ggplot2-compatible string ('right', 'left', 'top', 'bottom', 'none').
+   *
+   * <p>Conversion to Charm's typed {@link se.alipsa.matrix.charm.LegendPosition} enum
+   * happens in {@link se.alipsa.matrix.gg.bridge.GgCharmCompiler}.</p>
+   */
+  String legendPosition = 'right'
+
+  /** Absolute legend position as {@code [x, y]} coordinates, overrides {@link #legendPosition} when set. */
+  List<Number> legendPositionCoords
 
   /** Legend direction: 'vertical' or 'horizontal' */
   String legendDirection = 'vertical'
@@ -145,9 +153,7 @@ class Theme implements Cloneable {
     copy.legendMargin = copyList(legendMargin)
     copy.discreteColors = copyList(discreteColors)
     copy.gradientColors = copyList(gradientColors)
-    if (legendPosition instanceof List) {
-      copy.legendPosition = copyList(legendPosition as List)
-    }
+    copy.legendPositionCoords = copyList(legendPositionCoords)
     copy.explicitNulls = new HashSet<>(explicitNulls)
 
     copy.plotBackground = cloneRect(plotBackground)

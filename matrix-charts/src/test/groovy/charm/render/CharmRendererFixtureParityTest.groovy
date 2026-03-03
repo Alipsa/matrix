@@ -40,7 +40,7 @@ class CharmRendererFixtureParityTest {
         title = 'Point Fixture'
       }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -77,7 +77,7 @@ class CharmRendererFixtureParityTest {
       }
       layers { geomLine() }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -108,7 +108,7 @@ class CharmRendererFixtureParityTest {
       }
       layers { geomHistogram().bins(5) }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -147,7 +147,7 @@ class CharmRendererFixtureParityTest {
       }
       layers { geomCol() }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -182,7 +182,7 @@ class CharmRendererFixtureParityTest {
       }
       layers { geomBoxplot() }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 

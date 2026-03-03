@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.datasets.Dataset
@@ -104,22 +105,22 @@ class LegendConvenienceTest {
   @Test
   void testLegendPositionShorthandSetsThemeLegendPosition() {
     PlotSpec spec = plot(Dataset.mpg())
-    spec.legendPosition('bottom')
-    assertEquals('bottom', spec.theme.legendPosition)
+    spec.legendPosition(LegendPosition.BOTTOM)
+    assertEquals(LegendPosition.BOTTOM, spec.theme.legendPosition)
   }
 
   @Test
   void testLegendPositionLastWriteWinsAgainstThemeDsl() {
     PlotSpec firstThemeThenShorthand = plot(Dataset.mpg()) {
-      theme { legendPosition = 'left' }
-      legendPosition('top')
+      theme { legendPosition = LEFT }
+      legendPosition(LegendPosition.TOP)
     }
-    assertEquals('top', firstThemeThenShorthand.theme.legendPosition)
+    assertEquals(LegendPosition.TOP, firstThemeThenShorthand.theme.legendPosition)
 
     PlotSpec firstShorthandThenTheme = plot(Dataset.mpg()) {
-      legendPosition('top')
-      theme { legendPosition = 'left' }
+      legendPosition(LegendPosition.TOP)
+      theme { legendPosition = LEFT }
     }
-    assertEquals('left', firstShorthandThenTheme.theme.legendPosition)
+    assertEquals(LegendPosition.LEFT, firstShorthandThenTheme.theme.legendPosition)
   }
 }

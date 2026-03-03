@@ -7,6 +7,7 @@ import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.Charts
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*
@@ -98,7 +99,7 @@ class CharmLegendRendererTest {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
       layers { geomPoint() }
       theme {
-        legendPosition = 'right'
+        legendPosition = RIGHT
       }
     }.build()
 
@@ -122,7 +123,7 @@ class CharmLegendRendererTest {
       mapping { x = 'x'; y = 'y'; color = 'cat' }
       layers { geomPoint() }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 
@@ -214,6 +215,75 @@ class CharmLegendRendererTest {
   }
 
   @Test
+  void testLegendPositionCoords() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'cat')
+        .rows([
+            [1, 2, 'A'],
+            [2, 3, 'B']
+        ])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; color = 'cat' }
+      layers { geomPoint() }
+      legendPosition([100, 200])
+    }.build()
+
+    Svg svg = chart.render()
+    String content = SvgWriter.toXml(svg)
+    assertTrue(content.contains('id="legend"'), 'Legend should be present with coordinate positioning')
+    assertTrue(content.contains('translate(100'), 'Legend x should use specified coordinate')
+  }
+
+  @Test
+  void testLegendPositionNoneOverridesCoords() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'cat')
+        .rows([
+            [1, 2, 'A'],
+            [2, 3, 'B']
+        ])
+        .build()
+
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; color = 'cat' }
+      layers { geomPoint() }
+      legendPosition([100, 200])
+      theme {
+        legendPosition = NONE
+      }
+    }.build()
+
+    Svg svg = chart.render()
+    String content = SvgWriter.toXml(svg)
+    assertFalse(content.contains('id="legend"'), 'NONE should suppress legend even when coords are set')
+  }
+
+  @Test
+  void testLegendPositionEnumClearsCoordsLastWriteWins() {
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'cat')
+        .rows([
+            [1, 2, 'A'],
+            [2, 3, 'B']
+        ])
+        .build()
+
+    // Set coords first, then override with enum position
+    Chart chart = plot(data) {
+      mapping { x = 'x'; y = 'y'; color = 'cat' }
+      layers { geomPoint() }
+      legendPosition([100, 200])
+      legendPosition(LegendPosition.LEFT)
+    }.build()
+
+    assertNull(chart.theme.legendPositionCoords,
+        'Setting enum position should clear coords')
+    assertEquals(LegendPosition.LEFT, chart.theme.legendPosition)
+  }
+
+  @Test
   void testLegendPositionLeftTopBottom() {
     Matrix data = Matrix.builder()
         .columnNames('x', 'y', 'cat')
@@ -223,7 +293,7 @@ class CharmLegendRendererTest {
         ])
         .build()
 
-    ['left', 'top', 'bottom'].each { String pos ->
+    [LegendPosition.LEFT, LegendPosition.TOP, LegendPosition.BOTTOM].each { LegendPosition pos ->
       Chart chart = plot(data) {
         mapping { x = 'x'; y = 'y'; color = 'cat' }
         layers { geomPoint() }

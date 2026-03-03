@@ -269,7 +269,7 @@ Represents styling configuration.
 * Plot: `plotBackground` (`ElementRect`), `plotTitle`/`plotSubtitle`/`plotCaption` (`ElementText`), `plotMargin`
 * Panel: `panelBackground`/`panelBorder` (`ElementRect`), `panelGridMajor`/`panelGridMinor` (`ElementLine`), `panelSpacing`
 * Axis: `axisLineX`/`axisLineY`, `axisTicksX`/`axisTicksY` (`ElementLine`), `axisTextX`/`axisTextY`, `axisTitleX`/`axisTitleY` (`ElementText`), `axisTickLength`
-* Legend: `legendPosition`, `legendDirection`, `legendBackground`, `legendKey` (`ElementRect`), `legendKeySize`, `legendTitle`, `legendText`, `legendMargin`
+* Legend: `legendPosition` (`LegendPosition`), `legendPositionCoords` (`List<Number>` for absolute `[x,y]`), `legendDirection` (`LegendDirection`), `legendBackground`, `legendKey` (`ElementRect`), `legendKeySize`, `legendTitle`, `legendText`, `legendMargin`
 * Facet strips: `stripBackground` (`ElementRect`), `stripText` (`ElementText`)
 * Defaults/meta: `discreteColors`, `gradientColors`, `baseFamily`, `baseSize`, `baseLineHeight`, `themeName`, `explicitNulls`
 
@@ -279,7 +279,8 @@ Represents styling configuration.
 
 ```groovy
 theme {
-  legendPosition = 'top'
+  legendPosition = TOP          // LegendPosition enum: RIGHT, LEFT, TOP, BOTTOM, NONE
+  legendDirection = HORIZONTAL  // LegendDirection enum: VERTICAL, HORIZONTAL
   axisLineWidth = 0.75
 }
 ```

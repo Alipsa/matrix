@@ -79,11 +79,20 @@ class Theme {
 
   // ============ Legend elements ============
 
-  /** Legend position: 'right', 'left', 'top', 'bottom', 'none', or [x, y] */
-  def legendPosition = 'right'
+  /** Legend position. */
+  LegendPosition legendPosition = LegendPosition.RIGHT
 
-  /** Legend direction: 'vertical' or 'horizontal' */
-  String legendDirection = 'vertical'
+  /**
+   * Absolute legend position as {@code [x, y]} coordinates.
+   * When non-null, overrides {@link #legendPosition} for placement.
+   * Note: {@link LegendPosition#NONE} suppresses the legend entirely
+   * regardless of coords; DSL setters automatically reset NONE to RIGHT
+   * when coords are assigned.
+   */
+  List<Number> legendPositionCoords
+
+  /** Legend direction. */
+  LegendDirection legendDirection = LegendDirection.VERTICAL
 
   /** Legend background */
   ElementRect legendBackground
@@ -169,8 +178,8 @@ class Theme {
     copy.axisTitleY = axisTitleY?.copy()
     copy.axisTickLength = axisTickLength
 
-    copy.legendPosition = legendPosition instanceof List
-        ? [*(legendPosition as List)] : legendPosition
+    copy.legendPosition = legendPosition
+    copy.legendPositionCoords = legendPositionCoords != null ? [*legendPositionCoords] : null
     copy.legendDirection = legendDirection
     copy.legendBackground = legendBackground?.copy()
     copy.legendKey = legendKey?.copy()
@@ -226,6 +235,7 @@ class Theme {
     mergeField(merged, other, 'axisTitleY')
     mergeField(merged, other, 'axisTickLength')
     mergeField(merged, other, 'legendPosition')
+    mergeField(merged, other, 'legendPositionCoords')
     mergeField(merged, other, 'legendDirection')
     mergeField(merged, other, 'legendBackground')
     mergeField(merged, other, 'legendKey')

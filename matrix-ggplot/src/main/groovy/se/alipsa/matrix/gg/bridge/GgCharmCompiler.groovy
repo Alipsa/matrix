@@ -32,6 +32,8 @@ import se.alipsa.matrix.charm.SegmentAnnotationSpec
 import se.alipsa.matrix.charm.StatSpec
 import se.alipsa.matrix.charm.TextAnnotationSpec
 import se.alipsa.matrix.charm.Theme
+import se.alipsa.matrix.charm.LegendDirection
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.CustomAnnotationSpec
 import se.alipsa.matrix.charm.render.CharmRenderer
 import se.alipsa.matrix.charm.render.RenderConfig
@@ -1187,8 +1189,17 @@ class GgCharmCompiler {
     theme.axisTitleY = mapText(source.axisTitleY)
     theme.axisTickLength = source.axisTickLength
 
-    theme.legendPosition = source.legendPosition ?: 'right'
-    theme.legendDirection = source.legendDirection ?: 'vertical'
+    Object normalizedLegendPos = LegendPosition.normalize(source.legendPosition)
+    theme.legendPosition = normalizedLegendPos instanceof LegendPosition
+        ? normalizedLegendPos as LegendPosition
+        : LegendPosition.RIGHT
+    if (source.legendPositionCoords != null) {
+      theme.legendPositionCoords = new ArrayList<>(source.legendPositionCoords)
+    }
+    Object dirNormalized = LegendDirection.normalize(source.legendDirection)
+    theme.legendDirection = dirNormalized instanceof LegendDirection
+        ? dirNormalized as LegendDirection
+        : LegendDirection.VERTICAL
     theme.legendBackground = mapRect(source.legendBackground)
     theme.legendKey = mapRect(source.legendKey)
     theme.legendKeySize = source.legendKeySize != null ? new ArrayList<>(source.legendKeySize) : null

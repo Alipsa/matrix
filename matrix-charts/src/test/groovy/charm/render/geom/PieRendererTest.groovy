@@ -30,7 +30,7 @@ class PieRendererTest {
       mapping(x: 'category', y: 'value', fill: 'fill')
       layers { geomPie() }
       theme {
-        legendPosition = 'none'
+        legendPosition = NONE
       }
     }.build()
 

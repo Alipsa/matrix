@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.LinetypeName
 
 /**
  * Fluent builder for log tick annotation layers.
@@ -66,12 +67,12 @@ class LogticksBuilder extends LayerBuilder {
   }
 
   /**
-   * Sets log tick line type.
+   * Sets line type.
    *
-   * @param value linetype name or integer code
+   * @param value linetype name
    * @return this builder
    */
-  LogticksBuilder linetype(String value) {
+  LogticksBuilder linetype(LinetypeName value) {
     params['linetype'] = value
     this
   }

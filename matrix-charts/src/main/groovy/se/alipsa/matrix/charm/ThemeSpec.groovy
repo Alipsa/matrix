@@ -63,8 +63,25 @@ class ThemeSpec extends Theme {
    * @param value legend position
    * @return this spec
    */
-  ThemeSpec legendPosition(Object value) {
+  ThemeSpec legendPosition(LegendPosition value) {
     setLegendPosition(value)
+    setLegendPositionCoords(null)
+    explicitNulls.add('legendPositionCoords')
+    this
+  }
+
+  /**
+   * Builder-style legend position setter for absolute coordinates.
+   *
+   * @param value coordinate list [x, y]
+   * @return this spec
+   */
+  ThemeSpec legendPosition(List<Number> value) {
+    setLegendPositionCoords(value)
+    explicitNulls.remove('legendPositionCoords')
+    if (getLegendPosition() == LegendPosition.NONE) {
+      setLegendPosition(LegendPosition.RIGHT)
+    }
     this
   }
 

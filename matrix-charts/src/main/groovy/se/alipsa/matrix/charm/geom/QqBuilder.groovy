@@ -3,6 +3,7 @@ package se.alipsa.matrix.charm.geom
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.ShapeName
 
 /**
  * Fluent builder for QQ plot layers.
@@ -56,10 +57,10 @@ class QqBuilder extends LayerBuilder {
   /**
    * Sets point shape.
    *
-   * @param value shape name or integer code
+   * @param value shape name
    * @return this builder
    */
-  QqBuilder shape(String value) {
+  QqBuilder shape(ShapeName value) {
     params['shape'] = value
     this
   }

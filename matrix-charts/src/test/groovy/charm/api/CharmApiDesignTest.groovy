@@ -7,6 +7,9 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.LegendDirection
+import se.alipsa.matrix.charm.LegendPosition
+import se.alipsa.matrix.charm.LinetypeName
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.RectAnnotationSpec
 import se.alipsa.matrix.charm.SegmentAnnotationSpec
@@ -65,7 +68,7 @@ class CharmApiDesignTest {
         y = sqrt()
       }
       theme {
-        legendPosition = 'top'
+        legendPosition = TOP
         axisLineWidth = 0.75
       }
       coord {
@@ -77,7 +80,7 @@ class CharmApiDesignTest {
 
     assertEquals('log10', spec.scale.x.transform)
     assertEquals('sqrt', spec.scale.y.transform)
-    assertEquals('top', spec.theme.legendPosition)
+    assertEquals(LegendPosition.TOP, spec.theme.legendPosition)
     assertEquals(0.75, spec.theme.axisLineX.size)
     assertEquals('y', spec.coord.params.theta)
   }
@@ -195,11 +198,11 @@ class CharmApiDesignTest {
     Matrix mpg = Dataset.mpg()
     Chart chart = plot(mpg) {
       mapping { x = 'cty'; y = 'hwy' }
-      layers { geomLine().linetype('dashed').color('blue') }
+      layers { geomLine().linetype(DASHED).color('blue') }
     }.build()
 
     assertNotNull(chart.render())
-    assertEquals('dashed', chart.layers.first().params.linetype)
+    assertEquals(LinetypeName.DASHED, chart.layers.first().params.linetype)
     assertEquals('blue', chart.layers.first().params.color)
   }
 
@@ -275,8 +278,8 @@ class CharmApiDesignTest {
       }
       layers { geomPoint() }
       theme {
-        legendPosition = 'top'
-        legendDirection = 'horizontal'
+        legendPosition = TOP
+        legendDirection = HORIZONTAL
         axisLineWidth = 0.5
         axisColor = '#ff0000'
         axisTickLength = 8
@@ -292,8 +295,8 @@ class CharmApiDesignTest {
       }
     }
 
-    assertEquals('top', spec.theme.legendPosition)
-    assertEquals('horizontal', spec.theme.legendDirection)
+    assertEquals(LegendPosition.TOP, spec.theme.legendPosition)
+    assertEquals(LegendDirection.HORIZONTAL, spec.theme.legendDirection)
     assertEquals(0.5, spec.theme.axisLineX.size)
     assertEquals('#ff0000', spec.theme.axisLineX.color)
     assertEquals(0.5, spec.theme.axisLineY.size)
@@ -397,7 +400,7 @@ class CharmApiDesignTest {
     Chart chart = plot(mpg) {
       mapping { x = 'cty'; y = 'hwy' }
       layers {
-        geomLine().color('#336699').linetype('dashed').size(1.5)
+        geomLine().color('#336699').linetype(DASHED).size(1.5)
       }
     }.build()
 
@@ -405,7 +408,7 @@ class CharmApiDesignTest {
     assertEquals(1, chart.layers.size())
     assertEquals(CharmGeomType.LINE, chart.layers.first().geomType)
     assertEquals('#336699', chart.layers.first().params['color'])
-    assertEquals('dashed', chart.layers.first().params['linetype'])
+    assertEquals(LinetypeName.DASHED, chart.layers.first().params['linetype'])
     assertEquals(1.5, chart.layers.first().params['size'])
   }
 
@@ -814,7 +817,7 @@ class CharmApiDesignTest {
     Chart chart = plot(data) {
       mapping { x = 'x'; y = 'y'; xend = 'xend'; yend = 'yend' }
       layers {
-        geomSegment().color('#336699').size(1).linetype('dashed')
+        geomSegment().color('#336699').size(1).linetype(DASHED)
       }
     }.build()
 
@@ -824,7 +827,7 @@ class CharmApiDesignTest {
     assertEquals(CharmStatType.IDENTITY, chart.layers.first().statType)
     assertEquals('#336699', chart.layers.first().params['color'])
     assertEquals(1, chart.layers.first().params['size'])
-    assertEquals('dashed', chart.layers.first().params['linetype'])
+    assertEquals(LinetypeName.DASHED, chart.layers.first().params['linetype'])
   }
 
   @Test
@@ -860,7 +863,7 @@ class CharmApiDesignTest {
       mapping { x = 'x'; y = 'y' }
       layers {
         geomPoint()
-        geomAbline().intercept(0).slope(1).color('#cc0000').linetype('dashed')
+        geomAbline().intercept(0).slope(1).color('#cc0000').linetype(DASHED)
       }
     }.build()
 
@@ -871,7 +874,7 @@ class CharmApiDesignTest {
     assertEquals(0, chart.layers[1].params['intercept'])
     assertEquals(1, chart.layers[1].params['slope'])
     assertEquals('#cc0000', chart.layers[1].params['color'])
-    assertEquals('dashed', chart.layers[1].params['linetype'])
+    assertEquals(LinetypeName.DASHED, chart.layers[1].params['linetype'])
   }
 
   @Test
@@ -885,7 +888,7 @@ class CharmApiDesignTest {
       mapping { x = 'x'; y = 'y' }
       layers {
         geomPoint()
-        geomHline().yintercept(3).color('#cc0000').linetype('dashed')
+        geomHline().yintercept(3).color('#cc0000').linetype(DASHED)
       }
     }.build()
 
@@ -895,7 +898,7 @@ class CharmApiDesignTest {
     assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
     assertEquals(3, chart.layers[1].params['yintercept'])
     assertEquals('#cc0000', chart.layers[1].params['color'])
-    assertEquals('dashed', chart.layers[1].params['linetype'])
+    assertEquals(LinetypeName.DASHED, chart.layers[1].params['linetype'])
   }
 
   @Test
@@ -909,7 +912,7 @@ class CharmApiDesignTest {
       mapping { x = 'x'; y = 'y' }
       layers {
         geomPoint()
-        geomVline().xintercept(3).color('#cc0000').linetype('dotted')
+        geomVline().xintercept(3).color('#cc0000').linetype(DOTTED)
       }
     }.build()
 
@@ -919,7 +922,7 @@ class CharmApiDesignTest {
     assertEquals(CharmStatType.IDENTITY, chart.layers[1].statType)
     assertEquals(3, chart.layers[1].params['xintercept'])
     assertEquals('#cc0000', chart.layers[1].params['color'])
-    assertEquals('dotted', chart.layers[1].params['linetype'])
+    assertEquals(LinetypeName.DOTTED, chart.layers[1].params['linetype'])
   }
 
   @Test
@@ -999,7 +1002,7 @@ class CharmApiDesignTest {
     Chart chart = plot(data) {
       mapping { x = 'sample' }
       layers {
-        geomQqLine().color('#cc0000').linetype('dashed')
+        geomQqLine().color('#cc0000').linetype(DASHED)
       }
     }.build()
 
@@ -1008,7 +1011,7 @@ class CharmApiDesignTest {
     assertEquals(CharmGeomType.QQ_LINE, chart.layers.first().geomType)
     assertEquals(CharmStatType.QQ_LINE, chart.layers.first().statType)
     assertEquals('#cc0000', chart.layers.first().params['color'])
-    assertEquals('dashed', chart.layers.first().params['linetype'])
+    assertEquals(LinetypeName.DASHED, chart.layers.first().params['linetype'])
   }
 
   @Test
@@ -1706,14 +1709,14 @@ class CharmApiDesignTest {
     Chart dslChart = plot(data) {
       mapping { x = 'x'; y = 'y' }
       layers { geomPoint().size(3).alpha(0.7) }
-      theme { legendPosition = 'none' }
+      theme { legendPosition = NONE }
     }.build()
 
     // Way 2: addLayer() programmatic API
     PlotSpec spec = plot(data)
     spec.mapping(x: 'x', y: 'y')
     spec.addLayer(new PointBuilder().size(3).alpha(0.7))
-    spec.theme { legendPosition = 'none' }
+    spec.theme { legendPosition = NONE }
     Chart progChart = spec.build()
 
     Svg dslSvg = dslChart.render()
