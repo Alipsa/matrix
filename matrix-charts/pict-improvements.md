@@ -8,9 +8,9 @@ Phased plan for improving IDE auto-complete, type safety, and usability of `se.a
 
 Low-risk changes that don't alter public API semantics. Each change is independently testable.
 
-### 1a. Add `@CompileStatic` to all chart classes and support classes
+### 1a. Add `@CompileStatic` to chart classes and support classes
 
-Add `@CompileStatic` to:
+Add `@CompileStatic` to all chart and support classes in the pict package:
 
 | File | Class |
 |------|-------|
@@ -18,6 +18,7 @@ Add `@CompileStatic` to:
 | `AreaChart.groovy` | `AreaChart`, `Builder` |
 | `BarChart.groovy` | `BarChart`, `Builder` |
 | `BoxChart.groovy` | `BoxChart`, `Builder` |
+| `BubbleChart.groovy` | `BubbleChart` |
 | `Histogram.groovy` | `Histogram`, `Builder`, `MinMax` |
 | `LineChart.groovy` | `LineChart`, `Builder` |
 | `PieChart.groovy` | `PieChart`, `Builder` |
@@ -26,6 +27,8 @@ Add `@CompileStatic` to:
 | `AxisScale.groovy` | `AxisScale` |
 | `Legend.groovy` | `Legend` |
 | `DataType.groovy` | `DataType` |
+| `Plot.groovy` | `Plot` |
+| `InitializationException.groovy` | `InitializationException` |
 
 This will surface any dynamic dispatch issues that need explicit typing.
 
