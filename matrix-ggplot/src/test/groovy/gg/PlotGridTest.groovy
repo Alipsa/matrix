@@ -1,12 +1,10 @@
 package gg
 
+import org.dom4j.Element
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
-
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -77,15 +75,8 @@ class PlotGridTest {
     def grid = plot_grid([c1, c2], 2)
     Svg svg = grid.render(800, 600)
 
-    String xml = se.alipsa.groovy.svg.io.SvgWriter.toXml(svg)
-
-    // Collect all id attribute values
-    Pattern idPattern = Pattern.compile('\\bid="([^"]+)"')
-    Matcher matcher = idPattern.matcher(xml)
-    List<String> ids = []
-    while (matcher.find()) {
-      ids << matcher.group(1)
-    }
+    // Collect all id attribute values via DOM traversal
+    List<String> ids = collectIds(svg)
 
     Set<String> unique = new HashSet<>(ids)
     assertEquals(unique.size(), ids.size(),
@@ -104,5 +95,21 @@ class PlotGridTest {
     assertThrows(IllegalArgumentException) {
       plot_grid(charts: [])
     }
+  }
+
+  /** Collects all id attribute values from the SVG DOM tree. */
+  private static List<String> collectIds(Svg svg) {
+    collectAllElements(svg.element)
+        .collect { it.attributeValue('id') }
+        .findAll { it != null && !it.isEmpty() }
+  }
+
+  /** Recursively collects an element and all its descendants. */
+  private static List<Element> collectAllElements(Element root) {
+    List<Element> result = [root]
+    root.elements().each { Element child ->
+      result.addAll(collectAllElements(child))
+    }
+    result
   }
 }

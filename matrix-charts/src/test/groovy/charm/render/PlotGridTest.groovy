@@ -1,15 +1,13 @@
 package charm.render
 
+import org.dom4j.Attribute
+import org.dom4j.Element
 import org.junit.jupiter.api.Test
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
-import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.PlotGrid
 import se.alipsa.matrix.core.Matrix
-
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.charm.Charts.plot
@@ -91,16 +89,8 @@ class PlotGridTest {
     PlotGrid grid = plotGrid([chart, chart], 2)
     Svg svg = grid.render(800, 600)
 
-    String xml = SvgWriter.toXml(svg)
-    // Collect all id attribute values
-    Pattern idPattern = Pattern.compile('\\bid="([^"]+)"')
-    Matcher matcher = idPattern.matcher(xml)
-    List<String> ids = []
-    while (matcher.find()) {
-      ids << matcher.group(1)
-    }
+    List<String> ids = collectIds(svg)
 
-    // Check no duplicates
     Set<String> unique = new HashSet<>(ids)
     assertEquals(unique.size(), ids.size(),
         "All IDs should be unique. Duplicates: ${ids.findAll { String id -> ids.count(id) > 1 }.unique()}")
@@ -112,32 +102,39 @@ class PlotGridTest {
     PlotGrid grid = plotGrid([chart, chart], 2)
     Svg svg = grid.render(800, 600)
 
-    String xml = SvgWriter.toXml(svg)
+    Set<String> definedIds = collectIds(svg) as Set<String>
+    Set<String> hrefAttrs = ['href', 'xlink:href'] as Set<String>
 
-    // Collect all defined IDs
-    Pattern idPattern = Pattern.compile('\\bid="([^"]+)"')
-    Matcher idMatcher = idPattern.matcher(xml)
-    Set<String> definedIds = []
-    while (idMatcher.find()) {
-      definedIds << idMatcher.group(1)
-    }
+    // Traverse element tree and validate all url(#...) and href="#..." references
+    collectAllElements(svg.element).each { Element elem ->
+      (elem.attributes() as List<Attribute>).each { Attribute attr ->
+        String val = attr.value
+        if (val == null) return
 
-    // Collect all url(#ref) references
-    Pattern urlRefPattern = Pattern.compile('url\\(#([^)]+)\\)')
-    Matcher urlMatcher = urlRefPattern.matcher(xml)
-    while (urlMatcher.find()) {
-      String refId = urlMatcher.group(1)
-      assertTrue(definedIds.contains(refId),
-          "url(#$refId) references an undefined ID. Defined IDs: $definedIds")
-    }
+        // Check url(#ref) references
+        int searchFrom = 0
+        while (true) {
+          int start = val.indexOf('url(#', searchFrom)
+          if (start < 0) break
+          start += 5
+          int end = val.indexOf(')', start)
+          if (end > start) {
+            String refId = val.substring(start, end)
+            assertTrue(definedIds.contains(refId),
+                "url(#$refId) references an undefined ID. Defined IDs: $definedIds")
+          }
+          searchFrom = (end > start) ? end + 1 : start
+        }
 
-    // Validate href="#..." and xlink:href="#..." references
-    Pattern hrefPattern = Pattern.compile('(?:xlink:)?href="#([^"]+)"')
-    Matcher hrefMatcher = hrefPattern.matcher(xml)
-    while (hrefMatcher.find()) {
-      String refId = hrefMatcher.group(1)
-      assertTrue(definedIds.contains(refId),
-          "href=\"#$refId\" references an undefined ID. Defined IDs: $definedIds")
+        // Check href="#..." and xlink:href="#..." references
+        if (hrefAttrs.contains(attr.name) || hrefAttrs.contains(attr.qualifiedName)) {
+          if (val.startsWith('#')) {
+            String refId = val.substring(1)
+            assertTrue(definedIds.contains(refId),
+                "href=\"#$refId\" references an undefined ID. Defined IDs: $definedIds")
+          }
+        }
+      }
     }
   }
 
@@ -149,8 +146,8 @@ class PlotGridTest {
     Svg svg = grid.render(800, 600)
     assertNotNull(svg)
 
-    String xml = SvgWriter.toXml(svg)
-    assertTrue(xml.contains('<svg'), 'Should produce valid SVG')
+    List<Svg> nestedSvgs = svg.descendants(Svg)
+    assertTrue(nestedSvgs.size() >= 2, 'Should contain nested SVG subplots')
   }
 
   @Test
@@ -213,5 +210,21 @@ class PlotGridTest {
       mapping { x = 'x'; y = 'y'; color = 'group' }
       layers { geomPoint() }
     }.build()
+  }
+
+  /** Collects all id attribute values from the SVG DOM tree. */
+  private static List<String> collectIds(Svg svg) {
+    collectAllElements(svg.element)
+        .collect { it.attributeValue('id') }
+        .findAll { it != null && !it.isEmpty() }
+  }
+
+  /** Recursively collects an element and all its descendants. */
+  private static List<Element> collectAllElements(Element root) {
+    List<Element> result = [root]
+    root.elements().each { Element child ->
+      result.addAll(collectAllElements(child))
+    }
+    result
   }
 }
