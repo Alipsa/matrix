@@ -17,6 +17,7 @@ A comprehensive guide to using the `se.alipsa.matrix.charm` package for creating
 - [Coordinate Systems](#coordinate-systems)
 - [Labels and Annotations](#labels-and-annotations)
 - [Animations](#animations)
+- [Multi-plot Composition](#multi-plot-composition)
 - [Lifecycle](#lifecycle)
 - [Output Formats](#output-formats)
 - [Static Compilation](#static-compilation)
@@ -745,6 +746,78 @@ Available properties in `animation {}`:
 - `keyframes`
 
 Note: CSS `@keyframes` animations are embedded in the SVG `<style>` block and are visible only in SVG viewers that support CSS animation. Animation styles are silently stripped when exporting to PNG/JPEG with `ChartToPng`/`ChartToJpeg` because raster output is static.
+
+## Multi-plot Composition
+
+Charm provides `PlotGrid` for arranging multiple independent charts into a single SVG. Each subplot is rendered into a nested `<svg>` element for viewport isolation (independent clipping and coordinate spaces).
+
+### DSL Usage
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plotGrid
+
+PlotGrid grid = plotGrid {
+  add chart1, chart2, chart3, chart4
+  ncol 2
+  title 'Dashboard'
+  widths [1.0, 2.0]      // Second column is twice as wide
+  heights [1.0, 3.0]     // Second row is three times as tall
+  spacing 15              // 15px gap between cells
+}
+Svg svg = grid.render(1200, 800)
+```
+
+### Convenience API
+
+```groovy
+// Simple list with column count
+PlotGrid grid = plotGrid([chart1, chart2, chart3], 2)
+Svg svg = grid.render()  // Default 800x600
+```
+
+### gg-layer API
+
+```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+
+def c1 = ggplot(data, aes(x: 'x', y: 'y')) + geom_point()
+def c2 = ggplot(data, aes(x: 'x', y: 'y')) + geom_line()
+
+// Map-based API with all options
+PlotGrid grid = plot_grid(charts: [c1, c2], ncol: 2, title: 'My Dashboard')
+
+// Convenience overloads
+grid = plot_grid([c1, c2], 2)
+grid = plot_grid(c1, c2)
+```
+
+### Export
+
+`PlotGrid.render()` returns an `Svg` that works with all existing exporters:
+
+```groovy
+Svg svg = grid.render(1200, 800)
+ChartToPng.export(svg, new File('dashboard.png'))
+new File('dashboard.svg').text = SvgWriter.toXml(svg)
+```
+
+### Options
+
+| Option    | Type              | Default | Description                                           |
+|-----------|-------------------|---------|-------------------------------------------------------|
+| `ncol`    | `int`             | 1       | Number of columns                                     |
+| `nrow`    | `Integer`         | auto    | Number of rows (auto-computed from charts/ncol)        |
+| `widths`  | `List<BigDecimal>` | equal  | Fractional column weights (e.g. `[1.0, 2.0]`)        |
+| `heights` | `List<BigDecimal>` | equal  | Fractional row weights                                |
+| `title`   | `String`          | none    | Overall grid title                                    |
+| `spacing` | `int`             | 10      | Pixel gap between cells                               |
+
+### Notes
+
+- v1 renders legends independently per subplot (no cross-subplot legend merging).
+- Each subplot is fully isolated in its own `<svg>` viewport with independent clipping.
+- SVG IDs are automatically prefixed per cell to prevent collisions across subplots.
+- Empty grid slots (when `charts.size < ncol * nrow`) are simply left blank.
 
 ## Lifecycle
 
