@@ -863,7 +863,10 @@ class PlotSpec {
      * @param value legend direction
      */
     void setLegendDirection(Object value) {
-      theme.legendDirection = LegendDirection.normalize(value)
+      Object normalized = LegendDirection.normalize(value)
+      theme.legendDirection = normalized instanceof LegendDirection
+          ? (normalized as LegendDirection).name().toLowerCase(Locale.ROOT)
+          : value?.toString()
     }
 
     // ---- Axis ----

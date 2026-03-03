@@ -295,7 +295,7 @@ class CharmApiDesignTest {
     }
 
     assertEquals(LegendPosition.TOP, spec.theme.legendPosition)
-    assertEquals(LegendDirection.HORIZONTAL, spec.theme.legendDirection)
+    assertEquals('horizontal', spec.theme.legendDirection)
     assertEquals(0.5, spec.theme.axisLineX.size)
     assertEquals('#ff0000', spec.theme.axisLineX.color)
     assertEquals(0.5, spec.theme.axisLineY.size)

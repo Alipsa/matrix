@@ -82,27 +82,8 @@ class Theme {
   /** Legend position: {@link LegendPosition} enum or {@code List<Number>} for absolute [x, y]. */
   Object legendPosition = LegendPosition.RIGHT
 
-  /** Legend direction: {@link LegendDirection} enum or {@code String} ('vertical', 'horizontal'). */
-  Object legendDirection = LegendDirection.VERTICAL
-
-  /**
-   * Sets the legend direction from a {@link LegendDirection} enum constant.
-   *
-   * @param value legend direction enum
-   */
-  void setLegendDirection(LegendDirection value) {
-    this.legendDirection = value
-  }
-
-  /**
-   * Sets the legend direction from a string value.
-   * Preserves binary compatibility with the original {@code String} accessor.
-   *
-   * @param value legend direction string ('vertical' or 'horizontal')
-   */
-  void setLegendDirection(String value) {
-    this.legendDirection = LegendDirection.normalize(value)
-  }
+  /** Legend direction ('vertical' or 'horizontal'). */
+  String legendDirection = 'vertical'
 
   /** Legend background */
   ElementRect legendBackground
