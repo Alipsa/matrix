@@ -383,6 +383,263 @@ Add a test to verify that invalid AxisScale values throw `IllegalArgumentExcepti
 
 ---
 
+## Phase 8 — Implement BubbleChart
+
+Charm's POINT geom already supports size aesthetic mapping, so the BubbleChart stub can be fully implemented. A bubble chart is a scatter plot where each point's radius encodes a third numeric variable.
+
+### 8a. Promote `BubbleChart` from stub to full chart class
+
+**File:** `BubbleChart.groovy`
+
+Remove `@Deprecated` and the stub `create()` method. Make `BubbleChart` extend `Chart<BubbleChart>` and add a `sizeSeries` field to hold the size column data:
+
+```groovy
+@CompileStatic
+class BubbleChart extends Chart<BubbleChart> {
+
+  /** Size values — one per data point, mapped to point radius. */
+  List<? extends Number> sizeSeries = []
+
+  /** Optional grouping column name. */
+  String groupColumn
+}
+```
+
+### 8b. Add factory methods
+
+**File:** `BubbleChart.groovy`
+
+Provide two `create()` overloads matching the original stub signature (with optional `groupCol`):
+
+```groovy
+static BubbleChart create(String title, Matrix data, String xCol, String yCol, String sizeCol) {
+  BubbleChart chart = new BubbleChart()
+  chart.title = title
+  chart.categorySeries = data.column(xCol) as List<?>
+  chart.valueSeries = [data.column(yCol) as List<?>]
+  chart.sizeSeries = data.column(sizeCol) as List<? extends Number>
+  chart.xAxisTitle = xCol
+  chart.yAxisTitle = yCol
+  return chart
+}
+
+static BubbleChart create(String title, Matrix data, String xCol, String yCol, String sizeCol, String groupCol) {
+  BubbleChart chart = create(title, data, xCol, yCol, sizeCol)
+  if (groupCol) {
+    chart.groupColumn = groupCol
+    List<?> groups = data.column(groupCol) as List<?>
+    // Re-structure as grouped series — store group names and rebuild value/size per group
+    // For simplicity, store groupCol data alongside and let CharmBridge handle grouping via aesthetic mapping
+    chart.valueSeriesNames = [yCol]
+  }
+  return chart
+}
+```
+
+The grouped variant stores the group column name and lets CharmBridge map it to the `color` aesthetic, matching how other chart types handle multi-series.
+
+### 8c. Add fluent builder
+
+**File:** `BubbleChart.groovy`
+
+```groovy
+static Builder builder(Matrix data) { new Builder(data) }
+
+@CompileStatic
+static class Builder extends Chart.ChartBuilder<Builder, BubbleChart> {
+
+  private String sizeCol
+  private String groupCol
+
+  Builder(Matrix data) { super(data) }
+
+  /** Sets the column mapped to point size. */
+  Builder size(String col) { this.sizeCol = col; this }
+
+  /** Sets the column used for grouping (color aesthetic). */
+  Builder group(String col) { this.groupCol = col; this }
+
+  BubbleChart build() {
+    BubbleChart chart = groupCol
+        ? BubbleChart.create(this.@title, data, xCol, yCols[0], sizeCol, groupCol)
+        : BubbleChart.create(this.@title, data, xCol, yCols[0], sizeCol)
+    applyTo(chart)
+    chart
+  }
+}
+```
+
+### 8d. Add CharmBridge conversion
+
+**File:** `CharmBridge.groovy`
+
+Add a case in `buildSpec()`:
+
+```groovy
+case BubbleChart -> buildBubbleSpec(chart as BubbleChart)
+```
+
+Implement `buildBubbleSpec()`. Unlike other chart types, BubbleChart cannot reuse `buildLongFormatMatrix()` because it needs a `size` column. Build a dedicated long-format matrix:
+
+```groovy
+private static PlotSpec buildBubbleSpec(BubbleChart chart) {
+  List<?> xValues = chart.categorySeries
+  List<?> yValues = chart.valueSeries[0]
+  List<? extends Number> sizeValues = chart.sizeSeries
+
+  List<List> rows = []
+  if (chart.groupColumn) {
+    // Group column is stored in the original data — rebuild from chart fields
+    // For grouped bubble charts, include a 'group' column for color mapping
+    for (int i = 0; i < xValues.size(); i++) {
+      rows.add([xValues[i], yValues[i], sizeValues[i]] as List)
+    }
+    // Note: grouping via color aesthetic requires the group data to be passed through
+  } else {
+    for (int i = 0; i < xValues.size(); i++) {
+      rows.add([xValues[i], yValues[i], sizeValues[i]] as List)
+    }
+  }
+
+  Matrix data = Matrix.builder()
+      .columnNames('x', 'y', 'size')
+      .rows(rows)
+      .build()
+
+  PlotSpec spec = Charts.plot(data)
+  spec.mapping([x: 'x', y: 'y', size: 'size'])
+  spec.addLayer(new PointBuilder())
+  applyLabelsAndTheme(spec, chart)
+  spec
+}
+```
+
+For grouped bubble charts, the group column data needs to be carried through to the long-format matrix and mapped to the `color` aesthetic. This requires storing the raw group column in BubbleChart (or accepting the full Matrix). Refine the approach:
+
+- Store the group column values as a `List<?> groupSeries` field on BubbleChart.
+- In `buildBubbleSpec()`, if `groupSeries` is non-empty, add a `'group'` column to the matrix and map `color: 'group'`.
+
+### 8e. Handle grouped bubble charts
+
+**File:** `BubbleChart.groovy`
+
+Add a field for group series data:
+
+```groovy
+List<?> groupSeries = []
+```
+
+Update the grouped `create()` to populate it:
+
+```groovy
+chart.groupSeries = data.column(groupCol) as List<?>
+```
+
+**File:** `CharmBridge.groovy`
+
+In `buildBubbleSpec()`, branch on whether `groupSeries` is populated:
+
+```groovy
+if (chart.groupSeries) {
+  for (int i = 0; i < xValues.size(); i++) {
+    rows.add([xValues[i], yValues[i], sizeValues[i], chart.groupSeries[i]] as List)
+  }
+  Matrix data = Matrix.builder()
+      .columnNames('x', 'y', 'size', 'group')
+      .rows(rows)
+      .build()
+  PlotSpec spec = Charts.plot(data)
+  spec.mapping([x: 'x', y: 'y', size: 'size', color: 'group'])
+  spec.addLayer(new PointBuilder())
+  applyLabelsAndTheme(spec, chart)
+  return spec
+}
+```
+
+### 8f. Add tests
+
+**File:** `ChartsCharmIntegrationTest.groovy` (or a new `BubbleChartTest.groovy`)
+
+```groovy
+@Test
+void testBubbleChartRendersScaledCircles() {
+  Matrix data = Matrix.builder()
+      .matrixName('BubbleData')
+      .columns([x: [1, 2, 3, 4], y: [10, 20, 15, 25], size: [5, 15, 10, 20]])
+      .types([Number, Number, Number])
+      .build()
+
+  BubbleChart chart = BubbleChart.create('Bubble Test', data, 'x', 'y', 'size')
+  Chart charmChart = CharmBridge.convert(chart)
+  Svg svg = charmChart.render()
+  assertNotNull(svg)
+
+  def circles = svg.descendants().findAll { it instanceof Circle }
+  assertEquals(4, circles.size())
+
+  // Verify circles have varying radii (size aesthetic applied)
+  def radii = circles.collect { it.r as BigDecimal }.toSet()
+  assertTrue(radii.size() > 1, 'Bubble chart circles should have varying radii')
+}
+
+@Test
+void testBubbleChartBuilder() {
+  Matrix data = Matrix.builder()
+      .matrixName('BubbleData')
+      .columns([x: [1, 2, 3], y: [10, 20, 30], s: [5, 10, 15]])
+      .types([Number, Number, Number])
+      .build()
+
+  BubbleChart chart = BubbleChart.builder(data)
+      .title('Builder Bubble')
+      .x('x')
+      .y('y')
+      .size('s')
+      .build()
+
+  assertNotNull(chart)
+  assertEquals('Builder Bubble', chart.title)
+  assertEquals(3, chart.sizeSeries.size())
+}
+
+@Test
+void testGroupedBubbleChart() {
+  Matrix data = Matrix.builder()
+      .matrixName('GroupedBubble')
+      .columns([
+          x: [1, 2, 3, 4],
+          y: [10, 20, 15, 25],
+          size: [5, 15, 10, 20],
+          group: ['A', 'A', 'B', 'B']
+      ])
+      .types([Number, Number, Number, String])
+      .build()
+
+  BubbleChart chart = BubbleChart.create('Grouped', data, 'x', 'y', 'size', 'group')
+  Chart charmChart = CharmBridge.convert(chart)
+  Svg svg = charmChart.render()
+  assertNotNull(svg)
+}
+```
+
+### 8g. Update documentation
+
+**File:** `docs/charts.md`
+
+Add a BubbleChart section with factory and builder examples.
+
+**File:** `BubbleChart.groovy`
+
+Replace the deprecated class-level GroovyDoc with proper documentation.
+
+### Verification
+
+```bash
+./gradlew :matrix-charts:test -Pheadless=true
+```
+
+---
+
 ## Summary
 
 | Phase | Scope | Risk | Files changed |
@@ -394,3 +651,4 @@ Add a test to verify that invalid AxisScale values throw `IllegalArgumentExcepti
 | 5 | Legend API + builder + bridge | Medium | `Legend`, `Chart`, `CharmBridge`, `Style` |
 | 6 | Fluent style in builder + bridge | Medium | `Chart`, `CharmBridge` |
 | 7 | AxisScale validation + immutability | Low | `AxisScale` |
+| 8 | Implement BubbleChart (size aesthetic) | Low | `BubbleChart`, `CharmBridge`, tests, docs |
