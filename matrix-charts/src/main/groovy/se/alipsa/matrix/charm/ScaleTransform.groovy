@@ -1,6 +1,8 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileStatic
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 
 /**
  * Transformation strategy for Charm scales.
@@ -263,7 +265,11 @@ class ScaleTransforms {
    * @param inverse inverse transform closure
    * @return custom transform
    */
-  static ScaleTransform custom(String id, Closure<BigDecimal> forward, Closure<BigDecimal> inverse = null) {
+  static ScaleTransform custom(String id,
+                                @ClosureParams(value = SimpleType, options = ['java.math.BigDecimal'])
+                                Closure<BigDecimal> forward,
+                                @ClosureParams(value = SimpleType, options = ['java.math.BigDecimal'])
+                                Closure<BigDecimal> inverse = null) {
     new CustomScaleTransform(id, forward, inverse)
   }
 }

@@ -78,10 +78,10 @@ class JitterBuilder extends LayerBuilder {
   /**
    * Sets point shape.
    *
-   * @param value shape name or integer code
+   * @param value {@link se.alipsa.matrix.charm.ShapeName} enum or string name
    * @return this builder
    */
-  JitterBuilder shape(String value) {
+  JitterBuilder shape(Object value) {
     params['shape'] = value
     this
   }

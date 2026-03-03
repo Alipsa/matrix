@@ -67,10 +67,10 @@ class SpokeBuilder extends LayerBuilder {
   /**
    * Sets spoke line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  SpokeBuilder linetype(String value) {
+  SpokeBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

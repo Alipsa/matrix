@@ -1,6 +1,7 @@
 package se.alipsa.matrix.charm.render
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.LegendPosition
 
 /**
  * Render configuration for Charm SVG output.
@@ -23,7 +24,7 @@ class RenderConfig {
   int labelPadding = 30
   int legendKeySize = 12
   int legendSpacing = 8
-  String legendPosition = 'right'
+  Object legendPosition = LegendPosition.RIGHT
 
   /**
    * Returns computed plot width.

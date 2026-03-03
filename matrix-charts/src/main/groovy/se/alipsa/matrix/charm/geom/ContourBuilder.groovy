@@ -56,10 +56,10 @@ class ContourBuilder extends LayerBuilder {
   /**
    * Sets contour line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  ContourBuilder linetype(String value) {
+  ContourBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

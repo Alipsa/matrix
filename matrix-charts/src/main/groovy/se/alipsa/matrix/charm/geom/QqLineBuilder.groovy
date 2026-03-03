@@ -56,10 +56,10 @@ class QqLineBuilder extends LayerBuilder {
   /**
    * Sets line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  QqLineBuilder linetype(String value) {
+  QqLineBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

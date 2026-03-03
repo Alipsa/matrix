@@ -5,6 +5,8 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.groovy.svg.SvgElement
 import se.alipsa.matrix.charm.FacetType
 import se.alipsa.matrix.charm.LayerSpec
+import se.alipsa.matrix.charm.LinetypeName
+import se.alipsa.matrix.charm.ShapeName
 import se.alipsa.matrix.charm.StyleOverride
 import se.alipsa.matrix.charm.render.LayerData
 import se.alipsa.matrix.charm.render.LayerDataRowAccess
@@ -25,11 +27,13 @@ class GeomUtils {
       '#F8766D', '#C49A00', '#53B400',
       '#00C094', '#00B6EB', '#A58AFF', '#FB61D7'
   ].asImmutable()
-  private static final List<String> DEFAULT_SHAPES = [
-      'circle', 'square', 'triangle', 'diamond', 'plus', 'x', 'cross'
+  private static final List<ShapeName> DEFAULT_SHAPES = [
+      ShapeName.CIRCLE, ShapeName.SQUARE, ShapeName.TRIANGLE,
+      ShapeName.DIAMOND, ShapeName.PLUS, ShapeName.X, ShapeName.CROSS
   ].asImmutable()
-  private static final List<String> DEFAULT_LINETYPES = [
-      'solid', 'dashed', 'dotted', 'dotdash', 'longdash', 'twodash'
+  private static final List<LinetypeName> DEFAULT_LINETYPES = [
+      LinetypeName.SOLID, LinetypeName.DASHED, LinetypeName.DOTTED,
+      LinetypeName.DOTDASH, LinetypeName.LONGDASH, LinetypeName.TWODASH
   ].asImmutable()
 
   private GeomUtils() {
@@ -163,24 +167,24 @@ class GeomUtils {
   static Object resolveLinetype(RenderContext context, LayerSpec layer, LayerData datum) {
     StyleOverride override = cachedStyleOverride(layer, datum)
     if (override?.linetype != null) {
-      return override.linetype
+      return LinetypeName.normalize(override.linetype)
     }
     if (layer.params.linetype != null) {
-      return layer.params.linetype
+      return LinetypeName.normalize(layer.params.linetype)
     }
     def resolvedLinetypeScale = context.linetypeScaleForLayer(context.layerIndex)
     if (datum.linetype != null && resolvedLinetypeScale instanceof DiscreteCharmScale) {
       DiscreteCharmScale linetypeScale = resolvedLinetypeScale as DiscreteCharmScale
       String mapped = mappedValue(linetypeScale, datum.linetype)
       if (mapped != null) {
-        return mapped
+        return LinetypeName.normalize(mapped)
       }
       int idx = linetypeScale.levels.indexOf(datum.linetype.toString())
       if (idx >= 0) {
         return DEFAULT_LINETYPES[idx % DEFAULT_LINETYPES.size()]
       }
     }
-    datum.linetype
+    datum.linetype != null ? LinetypeName.normalize(datum.linetype) : datum.linetype
   }
 
   /**
@@ -192,7 +196,8 @@ class GeomUtils {
       return override.shape
     }
     if (layer.params.shape != null) {
-      return layer.params.shape.toString()
+      Object normalized = ShapeName.normalize(layer.params.shape)
+      return normalized instanceof ShapeName ? (normalized as ShapeName).name().toLowerCase(Locale.ROOT) : layer.params.shape.toString()
     }
     def resolvedShapeScale = context.shapeScaleForLayer(context.layerIndex)
     if (datum.shape != null && resolvedShapeScale instanceof DiscreteCharmScale) {
@@ -203,11 +208,12 @@ class GeomUtils {
       }
       int idx = shapeScale.levels.indexOf(datum.shape.toString())
       if (idx >= 0) {
-        return DEFAULT_SHAPES[idx % DEFAULT_SHAPES.size()]
+        return DEFAULT_SHAPES[idx % DEFAULT_SHAPES.size()].name().toLowerCase(Locale.ROOT)
       }
     }
     if (datum.shape != null) {
-      return datum.shape.toString()
+      Object normalized = ShapeName.normalize(datum.shape)
+      return normalized instanceof ShapeName ? (normalized as ShapeName).name().toLowerCase(Locale.ROOT) : datum.shape.toString()
     }
     defaultValue
   }
@@ -304,19 +310,29 @@ class GeomUtils {
   }
 
   /**
-   * Returns stroke-dasharray for a linetype string.
+   * Returns stroke-dasharray for a linetype value ({@link LinetypeName} enum or string).
+   *
+   * @param linetype linetype enum or string
+   * @return SVG stroke-dasharray value, or {@code null} for solid
    */
   static String dashArray(Object linetype) {
-    switch (linetype?.toString()?.toLowerCase()) {
-      case 'dashed' -> '8,4'
-      case 'dotted' -> '2,2'
-      case 'dotdash' -> '2,2,8,2'
-      case 'longdash' -> '12,4'
-      case 'twodash' -> '4,2,8,2'
-      case 'solid' -> null
-      default -> null
+    if (linetype == null) {
+      return null
     }
+    Object normalized = LinetypeName.normalize(linetype)
+    String key = normalized instanceof LinetypeName
+        ? (normalized as LinetypeName).name().toLowerCase(Locale.ROOT)
+        : linetype.toString().toLowerCase(Locale.ROOT)
+    DASH_ARRAYS_BY_STRING[key]
   }
+
+  private static final Map<String, String> DASH_ARRAYS_BY_STRING = [
+      dashed  : '8,4',
+      dotted  : '2,2',
+      dotdash : '2,2,8,2',
+      longdash: '12,4',
+      twodash : '4,2,8,2'
+  ]
 
   /**
    * Stable grouping for line/area-like geoms.
@@ -368,7 +384,7 @@ class GeomUtils {
     BigDecimal half = size / 2
     List<SvgElement> elements = []
 
-    switch (shape?.toLowerCase()) {
+    switch (shape?.toLowerCase(Locale.ROOT)) {
       case 'square' -> {
         def rect = group.addRect(size, size).x(cx - half).y(cy - half).fill(fill).stroke(stroke).styleClass('charm-point')
         applyAlpha(rect, alpha)

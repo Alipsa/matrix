@@ -78,10 +78,10 @@ class PointBuilder extends LayerBuilder {
   /**
    * Sets point shape.
    *
-   * @param value shape name or integer code
+   * @param value {@link se.alipsa.matrix.charm.ShapeName} enum or string name
    * @return this builder
    */
-  PointBuilder shape(String value) {
+  PointBuilder shape(Object value) {
     params['shape'] = value
     this
   }
@@ -89,10 +89,10 @@ class PointBuilder extends LayerBuilder {
   /**
    * Sets point line type (for outlined shapes).
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  PointBuilder linetype(String value) {
+  PointBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

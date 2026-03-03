@@ -79,11 +79,11 @@ class Theme {
 
   // ============ Legend elements ============
 
-  /** Legend position: 'right', 'left', 'top', 'bottom', 'none', or [x, y] */
-  def legendPosition = 'right'
+  /** Legend position: {@link LegendPosition} enum or {@code List<Number>} for absolute [x, y]. */
+  Object legendPosition = LegendPosition.RIGHT
 
-  /** Legend direction: 'vertical' or 'horizontal' */
-  String legendDirection = 'vertical'
+  /** Legend direction: {@link LegendDirection} enum. */
+  LegendDirection legendDirection = LegendDirection.VERTICAL
 
   /** Legend background */
   ElementRect legendBackground

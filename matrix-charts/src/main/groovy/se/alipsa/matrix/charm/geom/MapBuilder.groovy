@@ -78,10 +78,10 @@ class MapBuilder extends LayerBuilder {
   /**
    * Sets map region outline line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  MapBuilder linetype(String value) {
+  MapBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

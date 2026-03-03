@@ -1,6 +1,8 @@
 package se.alipsa.matrix.charm.geom
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.charm.LinetypeName
+import se.alipsa.matrix.charm.ShapeName
 
 /**
  * DSL delegate for the {@code layers {}} block in {@link se.alipsa.matrix.charm.PlotSpec}.
@@ -22,6 +24,36 @@ class LayersDsl {
 
   /** Builders collected during DSL evaluation. */
   final List<LayerBuilder> collected = []
+
+  // ---- Shape constants for IDE auto-complete ----
+  /** @see ShapeName#CIRCLE */
+  static final ShapeName CIRCLE = ShapeName.CIRCLE
+  /** @see ShapeName#SQUARE */
+  static final ShapeName SQUARE = ShapeName.SQUARE
+  /** @see ShapeName#TRIANGLE */
+  static final ShapeName TRIANGLE = ShapeName.TRIANGLE
+  /** @see ShapeName#DIAMOND */
+  static final ShapeName DIAMOND = ShapeName.DIAMOND
+  /** @see ShapeName#PLUS */
+  static final ShapeName PLUS = ShapeName.PLUS
+  /** @see ShapeName#X */
+  static final ShapeName X = ShapeName.X
+  /** @see ShapeName#CROSS */
+  static final ShapeName CROSS = ShapeName.CROSS
+
+  // ---- Linetype constants for IDE auto-complete ----
+  /** @see LinetypeName#SOLID */
+  static final LinetypeName SOLID = LinetypeName.SOLID
+  /** @see LinetypeName#DASHED */
+  static final LinetypeName DASHED = LinetypeName.DASHED
+  /** @see LinetypeName#DOTTED */
+  static final LinetypeName DOTTED = LinetypeName.DOTTED
+  /** @see LinetypeName#DOTDASH */
+  static final LinetypeName DOTDASH = LinetypeName.DOTDASH
+  /** @see LinetypeName#LONGDASH */
+  static final LinetypeName LONGDASH = LinetypeName.LONGDASH
+  /** @see LinetypeName#TWODASH */
+  static final LinetypeName TWODASH = LinetypeName.TWODASH
 
   /**
    * Creates and registers a point builder.

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.Scale
 import se.alipsa.matrix.datasets.Dataset
@@ -105,7 +106,7 @@ class LegendConvenienceTest {
   void testLegendPositionShorthandSetsThemeLegendPosition() {
     PlotSpec spec = plot(Dataset.mpg())
     spec.legendPosition('bottom')
-    assertEquals('bottom', spec.theme.legendPosition)
+    assertEquals(LegendPosition.BOTTOM, spec.theme.legendPosition)
   }
 
   @Test
@@ -114,12 +115,12 @@ class LegendConvenienceTest {
       theme { legendPosition = 'left' }
       legendPosition('top')
     }
-    assertEquals('top', firstThemeThenShorthand.theme.legendPosition)
+    assertEquals(LegendPosition.TOP, firstThemeThenShorthand.theme.legendPosition)
 
     PlotSpec firstShorthandThenTheme = plot(Dataset.mpg()) {
       legendPosition('top')
       theme { legendPosition = 'left' }
     }
-    assertEquals('left', firstShorthandThenTheme.theme.legendPosition)
+    assertEquals(LegendPosition.LEFT, firstShorthandThenTheme.theme.legendPosition)
   }
 }

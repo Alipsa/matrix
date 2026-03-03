@@ -67,10 +67,10 @@ class ErrorbarBuilder extends LayerBuilder {
   /**
    * Sets error bar line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  ErrorbarBuilder linetype(String value) {
+  ErrorbarBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

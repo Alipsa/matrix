@@ -56,10 +56,10 @@ class QqBuilder extends LayerBuilder {
   /**
    * Sets point shape.
    *
-   * @param value shape name or integer code
+   * @param value {@link se.alipsa.matrix.charm.ShapeName} enum or string name
    * @return this builder
    */
-  QqBuilder shape(String value) {
+  QqBuilder shape(Object value) {
     params['shape'] = value
     this
   }

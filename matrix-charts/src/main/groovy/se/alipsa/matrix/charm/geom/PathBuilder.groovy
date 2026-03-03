@@ -56,10 +56,10 @@ class PathBuilder extends LayerBuilder {
   /**
    * Sets path line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  PathBuilder linetype(String value) {
+  PathBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

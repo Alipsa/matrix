@@ -56,10 +56,10 @@ class SegmentBuilder extends LayerBuilder {
   /**
    * Sets segment line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  SegmentBuilder linetype(String value) {
+  SegmentBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

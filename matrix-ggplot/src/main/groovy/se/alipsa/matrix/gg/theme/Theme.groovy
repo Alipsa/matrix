@@ -75,8 +75,8 @@ class Theme implements Cloneable {
 
   // ============ Legend elements ============
 
-  /** Legend position: 'right', 'left', 'top', 'bottom', 'none', or [x, y] */
-  def legendPosition = 'right'
+  /** Legend position: 'right', 'left', 'top', 'bottom', 'none', or [x, y]. Kept as strings for ggplot2 API parity; conversion happens in the bridge. */
+  Object legendPosition = 'right'
 
   /** Legend direction: 'vertical' or 'horizontal' */
   String legendDirection = 'vertical'

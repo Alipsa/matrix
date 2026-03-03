@@ -7,6 +7,8 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.matrix.charm.Chart
 import se.alipsa.matrix.charm.CharmGeomType
 import se.alipsa.matrix.charm.CharmStatType
+import se.alipsa.matrix.charm.LegendDirection
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PlotSpec
 import se.alipsa.matrix.charm.RectAnnotationSpec
 import se.alipsa.matrix.charm.SegmentAnnotationSpec
@@ -77,7 +79,7 @@ class CharmApiDesignTest {
 
     assertEquals('log10', spec.scale.x.transform)
     assertEquals('sqrt', spec.scale.y.transform)
-    assertEquals('top', spec.theme.legendPosition)
+    assertEquals(LegendPosition.TOP, spec.theme.legendPosition)
     assertEquals(0.75, spec.theme.axisLineX.size)
     assertEquals('y', spec.coord.params.theta)
   }
@@ -292,8 +294,8 @@ class CharmApiDesignTest {
       }
     }
 
-    assertEquals('top', spec.theme.legendPosition)
-    assertEquals('horizontal', spec.theme.legendDirection)
+    assertEquals(LegendPosition.TOP, spec.theme.legendPosition)
+    assertEquals(LegendDirection.HORIZONTAL, spec.theme.legendDirection)
     assertEquals(0.5, spec.theme.axisLineX.size)
     assertEquals('#ff0000', spec.theme.axisLineX.color)
     assertEquals(0.5, spec.theme.axisLineY.size)

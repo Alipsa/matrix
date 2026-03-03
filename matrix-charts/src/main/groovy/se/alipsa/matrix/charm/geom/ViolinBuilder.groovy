@@ -67,10 +67,10 @@ class ViolinBuilder extends LayerBuilder {
   /**
    * Sets violin outline line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  ViolinBuilder linetype(String value) {
+  ViolinBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

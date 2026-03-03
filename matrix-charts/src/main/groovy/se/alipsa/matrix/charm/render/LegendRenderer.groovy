@@ -6,6 +6,8 @@ import se.alipsa.groovy.svg.G
 import se.alipsa.matrix.charm.GuideSpec
 import se.alipsa.matrix.charm.GuideType
 import se.alipsa.matrix.charm.GuidesSpec
+import se.alipsa.matrix.charm.LegendDirection
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.render.scale.CharmScale
 import se.alipsa.matrix.charm.render.scale.ColorCharmScale
 import se.alipsa.matrix.charm.render.scale.ContinuousCharmScale
@@ -40,7 +42,8 @@ class LegendRenderer {
    */
   void render(RenderContext context) {
     Object legendPos = context.chart.theme.legendPosition ?: context.config.legendPosition
-    if (legendPos == 'none') {
+    Object normalizedPos = LegendPosition.normalize(legendPos)
+    if (normalizedPos == LegendPosition.NONE) {
       return
     }
 
@@ -70,30 +73,30 @@ class LegendRenderer {
 
     // Calculate position
     int legendX, legendY
-    boolean isVertical = context.chart.theme.legendDirection != 'horizontal'
+    boolean isVertical = context.chart.theme.legendDirection != LegendDirection.HORIZONTAL
 
-    switch (legendPos) {
-      case 'right' -> {
+    switch (normalizedPos) {
+      case LegendPosition.RIGHT -> {
         legendX = context.config.width - context.config.marginRight + LEGEND_PLOT_GAP
         legendY = context.config.marginTop + 20
       }
-      case 'left' -> {
+      case LegendPosition.LEFT -> {
         legendX = 10
         legendY = context.config.marginTop + 20
       }
-      case 'top' -> {
+      case LegendPosition.TOP -> {
         legendX = context.config.marginLeft
         legendY = 10
         isVertical = false
       }
-      case 'bottom' -> {
+      case LegendPosition.BOTTOM -> {
         legendX = context.config.marginLeft
         legendY = context.config.height - 40
         isVertical = false
       }
       default -> {
-        if (legendPos instanceof List && (legendPos as List).size() >= 2) {
-          List pos = legendPos as List
+        if (normalizedPos instanceof List && (normalizedPos as List).size() >= 2) {
+          List pos = normalizedPos as List
           legendX = pos[0] as int
           legendY = pos[1] as int
         } else {
@@ -217,7 +220,8 @@ class LegendRenderer {
    */
   int estimateLegendWidth(RenderContext context) {
     Object legendPos = context.chart.theme.legendPosition ?: context.config.legendPosition
-    if (legendPos == 'none') {
+    Object normalizedPos = LegendPosition.normalize(legendPos)
+    if (normalizedPos == LegendPosition.NONE) {
       return 0
     }
 
@@ -226,7 +230,7 @@ class LegendRenderer {
       return 0
     }
 
-    if (legendPos == 'right' || legendPos == 'left') {
+    if (normalizedPos == LegendPosition.RIGHT || normalizedPos == LegendPosition.LEFT) {
       150
     } else {
       0

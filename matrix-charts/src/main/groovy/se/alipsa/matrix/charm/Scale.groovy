@@ -1,6 +1,8 @@
 package se.alipsa.matrix.charm
 
 import groovy.transform.CompileStatic
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 
 /**
  * Scale configuration for one aesthetic axis/channel.
@@ -96,7 +98,11 @@ class Scale {
    * @param inverse inverse transform
    * @return scale instance
    */
-  static Scale custom(String id, Closure<BigDecimal> forward, Closure<BigDecimal> inverse = null) {
+  static Scale custom(String id,
+                       @ClosureParams(value = SimpleType, options = ['java.math.BigDecimal'])
+                       Closure<BigDecimal> forward,
+                       @ClosureParams(value = SimpleType, options = ['java.math.BigDecimal'])
+                       Closure<BigDecimal> inverse = null) {
     transform(ScaleTransforms.custom(id, forward, inverse))
   }
 

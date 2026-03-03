@@ -78,10 +78,10 @@ class AblineBuilder extends LayerBuilder {
   /**
    * Sets line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  AblineBuilder linetype(String value) {
+  AblineBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

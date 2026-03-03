@@ -56,10 +56,10 @@ class CurveBuilder extends LayerBuilder {
   /**
    * Sets curve line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  CurveBuilder linetype(String value) {
+  CurveBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }

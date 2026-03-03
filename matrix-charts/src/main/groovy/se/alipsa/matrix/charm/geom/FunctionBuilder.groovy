@@ -56,10 +56,10 @@ class FunctionBuilder extends LayerBuilder {
   /**
    * Sets function line type.
    *
-   * @param value linetype name or integer code
+   * @param value {@link se.alipsa.matrix.charm.LinetypeName} enum or string name
    * @return this builder
    */
-  FunctionBuilder linetype(String value) {
+  FunctionBuilder linetype(Object value) {
     params['linetype'] = value
     this
   }
