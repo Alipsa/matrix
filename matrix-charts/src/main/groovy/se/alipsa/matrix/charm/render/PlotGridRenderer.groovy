@@ -80,6 +80,14 @@ class PlotGridRenderer {
 
       int cellW = colWidths[col]
       int cellH = rowHeights[row]
+
+      if (cellW <= 0 || cellH <= 0) {
+        throw new IllegalArgumentException(
+            "PlotGrid cell at row=${row}, col=${col} (chart index=${index}) has non-positive size: " +
+            "width=${cellW}, height=${cellH}. " +
+            "Increase totalWidth/totalHeight or adjust ncol/nrow, spacing, or relative widths/heights.")
+      }
+
       int cellX = computeOffset(colWidths, col, grid.spacing)
       int cellY = titleOffset + computeOffset(rowHeights, row, grid.spacing)
 
