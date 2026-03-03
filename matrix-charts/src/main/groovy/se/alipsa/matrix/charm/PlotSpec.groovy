@@ -863,8 +863,7 @@ class PlotSpec {
      * @param value legend direction
      */
     void setLegendDirection(Object value) {
-      Object normalized = LegendDirection.normalize(value)
-      theme.legendDirection = normalized instanceof LegendDirection ? normalized as LegendDirection : LegendDirection.VERTICAL
+      theme.legendDirection = LegendDirection.normalize(value)
     }
 
     // ---- Axis ----

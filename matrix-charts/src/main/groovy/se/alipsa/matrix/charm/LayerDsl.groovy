@@ -36,11 +36,29 @@ class LayerDsl extends LayerParams {
   /** Fill colour. */
   String fill
 
-  /** Shape ({@link ShapeName} enum or string). */
-  Object shape
+  /** Shape name (string value). */
+  String shape
 
-  /** Line-type ({@link LinetypeName} enum or string). */
-  Object linetype
+  /**
+   * Sets the shape from a {@link ShapeName} enum constant.
+   *
+   * @param value shape enum
+   */
+  void setShape(ShapeName value) {
+    this.shape = value?.name()?.toLowerCase(Locale.ROOT)
+  }
+
+  /** Line-type name (string value). */
+  String linetype
+
+  /**
+   * Sets the line-type from a {@link LinetypeName} enum constant.
+   *
+   * @param value linetype enum
+   */
+  void setLinetype(LinetypeName value) {
+    this.linetype = value?.name()?.toLowerCase(Locale.ROOT)
+  }
 
   private Mapping layerMapping
   boolean inheritMapping = true

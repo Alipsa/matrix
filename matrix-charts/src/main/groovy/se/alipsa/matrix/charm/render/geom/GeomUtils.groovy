@@ -332,7 +332,7 @@ class GeomUtils {
       dotdash : '2,2,8,2',
       longdash: '12,4',
       twodash : '4,2,8,2'
-  ]
+  ].asImmutable()
 
   /**
    * Stable grouping for line/area-like geoms.
