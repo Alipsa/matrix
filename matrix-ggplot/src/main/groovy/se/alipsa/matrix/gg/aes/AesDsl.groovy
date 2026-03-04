@@ -61,24 +61,42 @@ class AesDsl {
   @CompileDynamic
   def getProperty(String name) {
     switch (name) {
-      case 'x': this.@x != null ? this.@x : 'x'
-      case 'y': this.@y != null ? this.@y : 'y'
-      case 'color': this.@color != null ? this.@color : 'color'
-      case 'colour': this.@color != null ? this.@color : 'colour'
-      case 'col': this.@color != null ? this.@color : 'col'
-      case 'fill': this.@fill != null ? this.@fill : 'fill'
-      case 'size': this.@size != null ? this.@size : 'size'
-      case 'shape': this.@shape != null ? this.@shape : 'shape'
-      case 'alpha': this.@alpha != null ? this.@alpha : 'alpha'
-      case 'linetype': this.@linetype != null ? this.@linetype : 'linetype'
-      case 'linewidth': this.@linewidth != null ? this.@linewidth : 'linewidth'
-      case 'group': this.@group != null ? this.@group : 'group'
-      case 'label': this.@label != null ? this.@label : 'label'
-      case 'tooltip': this.@tooltip != null ? this.@tooltip : 'tooltip'
-      case 'weight': this.@weight != null ? this.@weight : 'weight'
-      case 'geometry': this.@geometry != null ? this.@geometry : 'geometry'
-      case 'map_id': this.@map_id != null ? this.@map_id : 'map_id'
-      default: propertyMissing(name)
+      case 'x':
+        return this.@x != null ? this.@x : 'x'
+      case 'y':
+        return this.@y != null ? this.@y : 'y'
+      case 'color':
+        return this.@color != null ? this.@color : 'color'
+      case 'colour':
+        return this.@color != null ? this.@color : 'colour'
+      case 'col':
+        return this.@color != null ? this.@color : 'col'
+      case 'fill':
+        return this.@fill != null ? this.@fill : 'fill'
+      case 'size':
+        return this.@size != null ? this.@size : 'size'
+      case 'shape':
+        return this.@shape != null ? this.@shape : 'shape'
+      case 'alpha':
+        return this.@alpha != null ? this.@alpha : 'alpha'
+      case 'linetype':
+        return this.@linetype != null ? this.@linetype : 'linetype'
+      case 'linewidth':
+        return this.@linewidth != null ? this.@linewidth : 'linewidth'
+      case 'group':
+        return this.@group != null ? this.@group : 'group'
+      case 'label':
+        return this.@label != null ? this.@label : 'label'
+      case 'tooltip':
+        return this.@tooltip != null ? this.@tooltip : 'tooltip'
+      case 'weight':
+        return this.@weight != null ? this.@weight : 'weight'
+      case 'geometry':
+        return this.@geometry != null ? this.@geometry : 'geometry'
+      case 'map_id':
+        return this.@map_id != null ? this.@map_id : 'map_id'
+      default:
+        return propertyMissing(name)
     }
   }
 

@@ -266,13 +266,7 @@ class GgPlot {
     Closure body = configure.rehydrate(dsl, configure.owner, configure.thisObject)
     body.resolveStrategy = Closure.DELEGATE_ONLY
     if (configure.maximumNumberOfParameters > 0) {
-      try {
-        body.call()
-      } catch (Exception ignored) {
-        Aes aes = new Aes()
-        aes.x = configure
-        return aes
-      }
+      body.call(dsl)
       if (!dsl.hasMappings()) {
         Aes aes = new Aes()
         aes.x = configure

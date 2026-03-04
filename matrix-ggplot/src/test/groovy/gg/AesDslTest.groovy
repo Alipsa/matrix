@@ -136,6 +136,14 @@ class AesDslTest {
   }
 
   @Test
+  void testReadingAssignedAestheticUsesAssignedValue() {
+    Aes mapping = aes { x = mpg; y = x }
+
+    assertEquals('mpg', mapping.x)
+    assertEquals('mpg', mapping.y)
+  }
+
+  @Test
   void testClosureAesRendersPointChart() {
     Matrix data = Matrix.builder()
         .columnNames(['x', 'y'])
