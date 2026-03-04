@@ -102,11 +102,67 @@ class ChartFactoryBaselineTest {
   }
 
   @Test
-  void testBubbleChartIsStillStubbed() {
-    RuntimeException ex = assertThrows(RuntimeException) {
-      BubbleChart.create('Bubble', employeeData(), 'emp_id', 'salary', 'salary', 'emp_name')
+  void testBubbleChartFactory() {
+    Matrix data = Matrix.builder()
+        .matrixName('BubbleData')
+        .columns([x: [1, 2, 3], y: [10, 20, 30], s: [5, 10, 15]])
+        .types([Number, Number, Number])
+        .build()
+
+    BubbleChart chart = BubbleChart.create('Bubble', data, 'x', 'y', 's')
+    assertEquals('Bubble', chart.title)
+    assertEquals(data.column('x'), chart.categorySeries)
+    assertEquals(1, chart.valueSeries.size())
+    assertEquals(3, chart.sizeSeries.size())
+    assertEquals('x', chart.xAxisTitle)
+    assertEquals('y', chart.yAxisTitle)
+  }
+
+  @Test
+  void testBubbleChartBuilderValidation() {
+    Matrix data = Matrix.builder()
+        .matrixName('BubbleData')
+        .columns([x: [1, 2, 3], y: [10, 20, 30], s: [5, 10, 15]])
+        .types([Number, Number, Number])
+        .build()
+
+    // Missing x
+    IllegalStateException noX = assertThrows(IllegalStateException) {
+      BubbleChart.builder(data).y('y').size('s').build()
     }
-    assertEquals('Not yet implemented', ex.message)
+    assertTrue(noX.message.contains('x(...)'))
+
+    // Missing y
+    IllegalStateException noY = assertThrows(IllegalStateException) {
+      BubbleChart.builder(data).x('x').size('s').build()
+    }
+    assertTrue(noY.message.contains('y(...)'))
+
+    // Missing size
+    IllegalStateException noSize = assertThrows(IllegalStateException) {
+      BubbleChart.builder(data).x('x').y('y').build()
+    }
+    assertTrue(noSize.message.contains('size(...)'))
+
+    // Multiple y columns
+    IllegalStateException multiY = assertThrows(IllegalStateException) {
+      BubbleChart.builder(data).x('x').y('y', 's').size('s').build()
+    }
+    assertTrue(multiY.message.contains('exactly one'))
+  }
+
+  @Test
+  void testBubbleChartGroupedFactory() {
+    Matrix data = Matrix.builder()
+        .matrixName('GroupedBubble')
+        .columns([x: [1, 2, 3], y: [10, 20, 30], s: [5, 10, 15], g: ['A', 'A', 'B']])
+        .types([Number, Number, Number, String])
+        .build()
+
+    BubbleChart chart = BubbleChart.create('Grouped', data, 'x', 'y', 's', 'g')
+    assertEquals('Grouped', chart.title)
+    assertEquals('g', chart.groupColumn)
+    assertEquals(3, chart.groupSeries.size())
   }
 
   @Test

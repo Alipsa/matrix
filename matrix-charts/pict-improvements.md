@@ -402,7 +402,7 @@ No callers used the no-arg constructor. All existing usages are the 3-arg constr
 
 Charm's POINT geom already supports size aesthetic mapping, so the BubbleChart stub can be fully implemented. A bubble chart is a scatter plot where each point's radius encodes a third numeric variable.
 
-### 8a. Promote `BubbleChart` from stub to full chart class
+### 8a. [x] Promote `BubbleChart` from stub to full chart class
 
 **File:** `BubbleChart.groovy`
 
@@ -420,7 +420,7 @@ class BubbleChart extends Chart<BubbleChart> {
 }
 ```
 
-### 8b. Add factory methods
+### 8b. [x] Add factory methods
 
 **File:** `BubbleChart.groovy`
 
@@ -453,7 +453,7 @@ static BubbleChart create(String title, Matrix data, String xCol, String yCol, S
 
 The grouped variant stores the group column name and lets CharmBridge map it to the `color` aesthetic, matching how other chart types handle multi-series.
 
-### 8c. Add fluent builder
+### 8c. [x] Add fluent builder
 
 **File:** `BubbleChart.groovy`
 
@@ -484,7 +484,7 @@ static class Builder extends Chart.ChartBuilder<Builder, BubbleChart> {
 }
 ```
 
-### 8d. Add CharmBridge conversion
+### 8d. [x] Add CharmBridge conversion
 
 **File:** `CharmBridge.groovy`
 
@@ -534,7 +534,7 @@ For grouped bubble charts, the group column data needs to be carried through to 
 - Store the group column values as a `List<?> groupSeries` field on BubbleChart.
 - In `buildBubbleSpec()`, if `groupSeries` is non-empty, add a `'group'` column to the matrix and map `color: 'group'`.
 
-### 8e. Handle grouped bubble charts
+### 8e. [x] Handle grouped bubble charts
 
 **File:** `BubbleChart.groovy`
 
@@ -571,7 +571,7 @@ if (chart.groupSeries) {
 }
 ```
 
-### 8f. Add tests
+### 8f. [x] Add tests
 
 **File:** `ChartsCharmIntegrationTest.groovy` (or a new `BubbleChartTest.groovy`)
 
@@ -637,7 +637,7 @@ void testGroupedBubbleChart() {
 }
 ```
 
-### 8g. Update documentation
+### 8g. [x] Update documentation
 
 **File:** `docs/charts.md`
 
@@ -651,6 +651,10 @@ Replace the deprecated class-level GroovyDoc with proper documentation.
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
+# Results: SUCCESS (676 tests, 676 passed, 0 failed, 0 skipped)
+
+./gradlew :matrix-ggplot:test -Pheadless=true
+# Results: SUCCESS (all tests passed)
 ```
 
 ---
