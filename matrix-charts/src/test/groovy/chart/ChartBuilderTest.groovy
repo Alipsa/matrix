@@ -274,6 +274,48 @@ class ChartBuilderTest {
   }
 
   @Test
+  void testAxisScaleValidation() {
+    // start >= end
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(10.0, 5.0, 1.0)
+    }
+    // start == end
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(5.0, 5.0, 1.0)
+    }
+    // step <= 0
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(0.0, 10.0, 0.0)
+    }
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(0.0, 10.0, -1.0)
+    }
+    // null arguments
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(null, 10.0, 1.0)
+    }
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(0.0, null, 1.0)
+    }
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(0.0, 10.0, null)
+    }
+  }
+
+  @Test
+  void testAxisScaleImmutability() {
+    def scale = new AxisScale(0.0, 100.0, 10.0)
+    assertEquals(0.0, scale.start)
+    assertEquals(100.0, scale.end)
+    assertEquals(10.0, scale.step)
+
+    // Verify no setters exist
+    assertFalse(AxisScale.methods.any { it.name == 'setStart' }, 'setStart should not exist')
+    assertFalse(AxisScale.methods.any { it.name == 'setEnd' }, 'setEnd should not exist')
+    assertFalse(AxisScale.methods.any { it.name == 'setStep' }, 'setStep should not exist')
+  }
+
+  @Test
   void testBuilderWithStyle() {
     def data = Matrix.builder()
         .columnNames(['x', 'y'])

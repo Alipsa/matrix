@@ -354,7 +354,7 @@ Axis visibility (`xAxisVisible`/`yAxisVisible`) is bridged via the
 
 ## Phase 7 — AxisScale validation
 
-### 7a. Add validation to `AxisScale`
+### 7a. [x] Add validation to `AxisScale`
 
 **File:** `AxisScale.groovy`
 
@@ -383,7 +383,7 @@ class AxisScale {
 
 Make fields `final` (immutable after construction). Remove the no-arg constructor and setters — the builder already creates `AxisScale` via the 3-arg constructor.
 
-### 7b. Check for callers using the no-arg constructor
+### 7b. [x] Check for callers using the no-arg constructor
 
 Search for `new AxisScale()` (no-arg). If any exist, replace with 3-arg construction.
 
@@ -391,9 +391,10 @@ Search for `new AxisScale()` (no-arg). If any exist, replace with 3-arg construc
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
+# Results: SUCCESS (671 tests, 671 passed, 0 failed, 0 skipped)
 ```
 
-Add a test to verify that invalid AxisScale values throw `IllegalArgumentException`.
+No callers used the no-arg constructor. All existing usages are the 3-arg constructor.
 
 ---
 
