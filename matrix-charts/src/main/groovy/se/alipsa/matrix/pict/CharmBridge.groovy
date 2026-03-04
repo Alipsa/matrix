@@ -20,6 +20,7 @@ import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
 
 import java.awt.Color
+import java.awt.Font
 
 /**
  * Bridge that converts the legacy {@code charts} data model
@@ -254,6 +255,11 @@ class CharmBridge {
             fill: colorToHex(legend.backgroundColor)
         )
       }
+      if (legend.font) {
+        se.alipsa.matrix.charm.theme.ElementText fontElement = mapFont(legend.font)
+        theme.legendText = fontElement
+        theme.legendTitle = fontElement.copy()
+      }
       if (legend.title) {
         labels.guides['color'] = legend.title
         labels.guides['fill'] = legend.title
@@ -283,6 +289,21 @@ class CharmBridge {
       case Legend.Direction.VERTICAL -> LegendDirection.VERTICAL
       default -> LegendDirection.VERTICAL
     }
+  }
+
+  /**
+   * Maps a java.awt.Font to Charm's {@link se.alipsa.matrix.charm.theme.ElementText}.
+   */
+  private static se.alipsa.matrix.charm.theme.ElementText mapFont(Font font) {
+    String face = font.bold && font.italic ? 'bold.italic'
+        : font.bold ? 'bold'
+        : font.italic ? 'italic'
+        : 'plain'
+    new se.alipsa.matrix.charm.theme.ElementText(
+        family: font.family,
+        face: face,
+        size: font.size
+    )
   }
 
   private static String colorToHex(Color color) {

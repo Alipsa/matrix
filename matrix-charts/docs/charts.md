@@ -554,6 +554,7 @@ Legend configuration is managed via the `Legend` class, either as a standalone o
 ```groovy
 import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.Style
+import java.awt.Color
 
 // Configure legend on a chart directly
 chart.legend = new Legend(

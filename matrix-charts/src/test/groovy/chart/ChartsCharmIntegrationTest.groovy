@@ -18,8 +18,12 @@ import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.pict.Style
+import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.core.Matrix
+
+import java.awt.Color
+import java.awt.Font
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -306,6 +310,54 @@ class ChartsCharmIntegrationTest {
     assertNotNull(charmChart.theme)
     assertEquals(LegendPosition.TOP, charmChart.theme.legendPosition,
         'Legend position should be mapped to TOP in Charm theme')
+
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testLegendFieldsBridgedToCharmTheme() {
+    Matrix data = Matrix.builder()
+        .matrixName('LegendFieldsData')
+        .columns([
+            x     : [1, 2, 3, 4],
+            seriesA: [10, 20, 15, 25],
+            seriesB: [5, 15, 10, 20]
+        ])
+        .types([int, Number, Number])
+        .build()
+
+    LineChart chart = LineChart.create('Legend Fields', data, 'x', 'seriesA', 'seriesB')
+    chart.legend = new Legend(
+        position: Style.Position.LEFT,
+        direction: Legend.Direction.HORIZONTAL,
+        backgroundColor: new Color(200, 200, 200),
+        font: new Font('Serif', Font.BOLD, 14),
+        title: 'My Series'
+    )
+
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    assertNotNull(charmChart)
+
+    assertEquals(LegendPosition.LEFT, charmChart.theme.legendPosition,
+        'Legend position should be mapped to LEFT')
+    assertEquals(LegendDirection.HORIZONTAL, charmChart.theme.legendDirection,
+        'Legend direction should be mapped to HORIZONTAL')
+    assertNotNull(charmChart.theme.legendBackground,
+        'Legend background should be set')
+    assertEquals('#c8c8c8', charmChart.theme.legendBackground.fill,
+        'Legend background fill should match')
+    assertNotNull(charmChart.theme.legendText,
+        'Legend text element should be set from font')
+    assertEquals('Serif', charmChart.theme.legendText.family)
+    assertEquals('bold', charmChart.theme.legendText.face)
+    assertEquals(14, charmChart.theme.legendText.size)
+    assertNotNull(charmChart.theme.legendTitle,
+        'Legend title element should be set from font')
+    assertEquals('My Series', charmChart.labels.guides['color'],
+        'Legend title should be mapped to color guide label')
+    assertEquals('My Series', charmChart.labels.guides['fill'],
+        'Legend title should be mapped to fill guide label')
 
     Svg svg = charmChart.render()
     assertNotNull(svg)
