@@ -5,6 +5,9 @@ import se.alipsa.matrix.pict.*
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.datasets.Dataset
 
+import java.awt.Color
+import java.awt.Font
+
 import static org.junit.jupiter.api.Assertions.*
 
 class ChartBuilderTest {
@@ -279,7 +282,7 @@ class ChartBuilderTest {
         .build()
 
     def style = new Style()
-    style.legendVisible = true
+    style.titleVisible = true
 
     def chart = LineChart.builder(data)
         .title('Styled')
@@ -288,7 +291,7 @@ class ChartBuilderTest {
         .style(style)
         .build()
 
-    assertTrue(chart.style.legendVisible)
+    assertTrue(chart.style.titleVisible)
   }
 
   @Test
@@ -299,7 +302,11 @@ class ChartBuilderTest {
         .types([int, int])
         .build()
 
-    def legend = new Legend()
+    def legend = new Legend(
+        visible: true,
+        position: Style.Position.TOP,
+        direction: Legend.Direction.HORIZONTAL
+    )
 
     def chart = ScatterChart.builder(data)
         .title('With Legend')
@@ -309,5 +316,37 @@ class ChartBuilderTest {
         .build()
 
     assertNotNull(chart.legend)
+    assertTrue(chart.legend.visible)
+    assertEquals(Style.Position.TOP, chart.legend.position)
+    assertEquals(Legend.Direction.HORIZONTAL, chart.legend.direction)
+  }
+
+  @Test
+  void testBuilderFluentLegendMethods() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 10], [2, 20]])
+        .types([int, int])
+        .build()
+
+    def chart = LineChart.builder(data)
+        .title('Fluent Legend')
+        .x('x')
+        .y('y')
+        .legendTitle('My Legend')
+        .legendVisible(true)
+        .legendPosition(Style.Position.BOTTOM)
+        .legendFont(new Font('SansSerif', Font.PLAIN, 10))
+        .legendBackgroundColor(Color.LIGHT_GRAY)
+        .legendDirection(Legend.Direction.HORIZONTAL)
+        .build()
+
+    assertNotNull(chart.legend)
+    assertEquals('My Legend', chart.legend.title)
+    assertTrue(chart.legend.visible)
+    assertEquals(Style.Position.BOTTOM, chart.legend.position)
+    assertNotNull(chart.legend.font)
+    assertEquals(Color.LIGHT_GRAY, chart.legend.backgroundColor)
+    assertEquals(Legend.Direction.HORIZONTAL, chart.legend.direction)
   }
 }

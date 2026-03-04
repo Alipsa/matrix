@@ -15,6 +15,7 @@ import se.alipsa.matrix.pict.ChartType
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
+import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.pict.Style
 import se.alipsa.matrix.charm.LegendPosition
@@ -274,7 +275,7 @@ class ChartsCharmIntegrationTest {
     BarChart chart = BarChart.createVertical('Styled', data, 'x', ChartType.BASIC, 'y')
     chart.style.plotBackgroundColor = new java.awt.Color(240, 240, 240)
     chart.style.chartBackgroundColor = new java.awt.Color(255, 255, 255)
-    chart.style.legendVisible = false
+    chart.legend = new Legend(visible: false)
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
     Svg svg = charmChart.render()
@@ -298,7 +299,7 @@ class ChartsCharmIntegrationTest {
         .build()
 
     LineChart chart = LineChart.create('Legend Position', data, 'x', 'seriesA', 'seriesB')
-    chart.style.legendPosition = Style.Position.TOP
+    chart.legend = new Legend(position: Style.Position.TOP)
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
     assertNotNull(charmChart)
@@ -311,7 +312,7 @@ class ChartsCharmIntegrationTest {
   }
 
   @Test
-  void testLegendPositionStringOverload() {
+  void testLegendPositionBottomMapping() {
     Matrix data = Matrix.builder()
         .matrixName('LegendStrData')
         .columns([
@@ -321,10 +322,10 @@ class ChartsCharmIntegrationTest {
         .types([String, Number])
         .build()
 
-    BarChart chart = BarChart.createVertical('String Position', data, 'x', ChartType.BASIC, 'y')
-    chart.style.legendPosition = 'bottom'
+    BarChart chart = BarChart.createVertical('Bottom Legend', data, 'x', ChartType.BASIC, 'y')
+    chart.legend = new Legend(position: Style.Position.BOTTOM)
 
-    assertEquals(Style.Position.BOTTOM, chart.style.legendPosition)
+    assertEquals(Style.Position.BOTTOM, chart.legend.position)
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
     assertNotNull(charmChart)

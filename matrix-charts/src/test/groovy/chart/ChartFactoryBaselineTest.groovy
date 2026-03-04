@@ -11,6 +11,7 @@ import se.alipsa.matrix.pict.DataType
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.LineChart
+import se.alipsa.matrix.pict.Style
 import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.core.Matrix
@@ -109,10 +110,10 @@ class ChartFactoryBaselineTest {
   }
 
   @Test
-  void testStyleLegendTitleAndAxisSetters() {
+  void testLegendTitleAndAxisSetters() {
     Matrix data = employeeData()
     LineChart chart = LineChart.create('Line Salaries', data, 'emp_id', 'salary')
-    Legend legend = new Legend()
+    Legend legend = new Legend(visible: false, position: Style.Position.TOP)
 
     chart.setLegend(legend)
         .setTitle('Updated Title')
@@ -124,10 +125,10 @@ class ChartFactoryBaselineTest {
     assertEquals('Employee ID', chart.xAxisTitle)
     assertEquals('Salary', chart.yAxisTitle)
 
-    assertNotNull(chart.style)
-    assertNull(chart.style.legendVisible)
-    chart.style.legendVisible = true
-    assertTrue(chart.style.legendVisible)
+    assertFalse(chart.legend.visible)
+    assertEquals(Style.Position.TOP, chart.legend.position)
+    chart.legend.visible = true
+    assertTrue(chart.legend.visible)
   }
 
   @Test

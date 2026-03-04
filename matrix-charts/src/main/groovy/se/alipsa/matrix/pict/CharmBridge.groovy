@@ -2,6 +2,7 @@ package se.alipsa.matrix.pict
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.PlotSpec
@@ -238,10 +239,25 @@ class CharmBridge {
           fill: colorToHex(chart.style.chartBackgroundColor)
       )
     }
-    if (chart.style?.legendVisible == false) {
-      theme.legendPosition = LegendPosition.NONE
-    } else if (chart.style?.legendPosition) {
-      theme.legendPosition = mapPosition(chart.style.legendPosition)
+    Legend legend = chart.legend
+    if (legend != null) {
+      if (!legend.visible) {
+        theme.legendPosition = LegendPosition.NONE
+      } else if (legend.position) {
+        theme.legendPosition = mapPosition(legend.position)
+      }
+      if (legend.direction) {
+        theme.legendDirection = mapDirection(legend.direction)
+      }
+      if (legend.backgroundColor) {
+        theme.legendBackground = new se.alipsa.matrix.charm.theme.ElementRect(
+            fill: colorToHex(legend.backgroundColor)
+        )
+      }
+      if (legend.title) {
+        labels.guides['color'] = legend.title
+        labels.guides['fill'] = legend.title
+      }
     }
   }
 
@@ -255,6 +271,17 @@ class CharmBridge {
       case Style.Position.LEFT -> LegendPosition.LEFT
       case Style.Position.RIGHT -> LegendPosition.RIGHT
       default -> LegendPosition.RIGHT
+    }
+  }
+
+  /**
+   * Maps a pict {@link Legend.Direction} to Charm's {@link LegendDirection}.
+   */
+  private static LegendDirection mapDirection(Legend.Direction dir) {
+    switch (dir) {
+      case Legend.Direction.HORIZONTAL -> LegendDirection.HORIZONTAL
+      case Legend.Direction.VERTICAL -> LegendDirection.VERTICAL
+      default -> LegendDirection.VERTICAL
     }
   }
 

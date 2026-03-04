@@ -3,7 +3,6 @@ package se.alipsa.matrix.pict
 import groovy.transform.CompileStatic
 
 import java.awt.Color
-import java.awt.Font
 
 /**
  * Most of the styles are specified using java.awt classes (Because they are always accessible)
@@ -64,16 +63,6 @@ class Style {
   /** The background color of the area outside of the plot area */
   Color chartBackgroundColor
 
-  /** The font used for the legend */
-  Font legendFont
-
-  /** whether to show the legend or not */
-  Boolean legendVisible
-
-  Color legendBackgroundColor
-
-  Position legendPosition
-
   /** whether to show the title or not */
   Boolean titleVisible
 
@@ -94,11 +83,4 @@ class Style {
     TOP, RIGHT, BOTTOM, LEFT
   }
 
-  void setLegendPosition(String pos) {
-    legendPosition = Position.valueOf(pos.toUpperCase())
-  }
-
-  void setLegendPosition(Position pos) {
-    legendPosition = pos
-  }
 }
