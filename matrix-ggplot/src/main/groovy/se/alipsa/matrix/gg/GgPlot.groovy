@@ -54,6 +54,7 @@ import se.alipsa.matrix.gg.geom.GeomCrossbar
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.AesDsl
 import se.alipsa.matrix.gg.aes.AfterScale
 import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.CutWidth
@@ -216,9 +217,39 @@ class GgPlot {
    * Create aesthetic mappings.
    * All parameters are treated as column name mappings.
    * Use I(value) for constant values.
+   *
+   * <p>For unquoted column names, see {@link #aes(groovy.lang.Closure)}:
+   * <pre>{@code
+   * aes { x = mpg; y = wt; color = cyl }
+   * }</pre>
    */
   static Aes aes(Map params) {
     return new Aes(params)
+  }
+
+  /**
+   * Create aesthetic mappings using a closure with unquoted column names.
+   *
+   * <p>Inside the closure, bare identifiers resolve to column name strings:
+   * <pre>{@code
+   * aes { x = mpg; y = wt; color = cyl }
+   * // equivalent to: aes(x: 'mpg', y: 'wt', color: 'cyl')
+   * }</pre>
+   *
+   * <p>Quoted names still work for columns with spaces:
+   * <pre>{@code
+   * aes { x = 'Sepal Length'; y = 'Petal Width' }
+   * }</pre>
+   *
+   * @param configure closure delegating to {@link AesDsl}
+   * @return a new Aes instance
+   */
+  static Aes aes(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure configure) {
+    AesDsl dsl = new AesDsl()
+    Closure body = configure.rehydrate(dsl, configure.owner, configure.thisObject)
+    body.resolveStrategy = Closure.DELEGATE_ONLY
+    body.call()
+    dsl.toAes()
   }
 
   static Aes aes(String... colNames) {
@@ -245,6 +276,7 @@ class GgPlot {
    * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
    *
    * Example: aes('cty', 'hwy')
+   * Closure alternative: aes { x = cty; y = hwy }
    *
    * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
    * @param y y mapping (column name, Factor, Identity, AfterStat, or closure)
