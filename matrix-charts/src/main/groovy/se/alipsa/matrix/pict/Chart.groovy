@@ -3,6 +3,9 @@ package se.alipsa.matrix.pict
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
+import java.awt.Color
+import java.awt.Font
+
 /**
  * Represents a chart in some form.
  * A chart can be exported into various formats using the Plot class e.g:
@@ -240,6 +243,28 @@ abstract class Chart<T extends Chart> {
 
     /** Sets the legend configuration. */
     B legend(Legend legend) { this.legend = legend; this as B }
+
+    /** Sets the legend title. */
+    B legendTitle(String title) { ensureLegend(); legend.title = title; this as B }
+
+    /** Sets the legend visibility. */
+    B legendVisible(boolean visible) { ensureLegend(); legend.visible = visible; this as B }
+
+    /** Sets the legend position. */
+    B legendPosition(Style.Position position) { ensureLegend(); legend.position = position; this as B }
+
+    /** Sets the legend font. */
+    B legendFont(Font font) { ensureLegend(); legend.font = font; this as B }
+
+    /** Sets the legend background color. */
+    B legendBackgroundColor(Color color) { ensureLegend(); legend.backgroundColor = color; this as B }
+
+    /** Sets the legend direction (vertical or horizontal key layout). */
+    B legendDirection(Legend.Direction direction) { ensureLegend(); legend.direction = direction; this as B }
+
+    private void ensureLegend() {
+      if (legend == null) legend = new Legend()
+    }
 
     /** Sets the style configuration. */
     B style(Style style) { this.style = style; this as B }

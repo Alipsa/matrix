@@ -196,7 +196,7 @@ The remaining work was smaller than originally scoped:
 
 ## Phase 5 — Legend API
 
-### 5a. Implement `Legend` class with typed properties
+### 5a. [x] Implement `Legend` class with typed properties
 
 **File:** `Legend.groovy`
 
@@ -227,7 +227,7 @@ class Legend {
 }
 ```
 
-### 5b. Add builder support for Legend
+### 5b. [x] Add builder support for Legend
 
 **File:** `Chart.groovy` (ChartBuilder)
 
@@ -246,7 +246,7 @@ private void ensureLegend() {
 }
 ```
 
-### 5c. Bridge Legend properties to Charm in `CharmBridge`
+### 5c. [x] Bridge Legend properties to Charm in `CharmBridge`
 
 **File:** `CharmBridge.groovy` (in `applyLabelsAndTheme`)
 
@@ -273,7 +273,7 @@ if (legend != null) {
 }
 ```
 
-### 5d. Migrate `Style` legend fields to `Legend`
+### 5d. [x] Migrate `Style` legend fields to `Legend`
 
 Move legend-related fields from `Style` to `Legend`:
 - `Style.legendVisible` → `Legend.visible`
@@ -289,9 +289,11 @@ Update `CharmBridge.applyLabelsAndTheme()` to read from `Legend` instead of `Sty
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
-```
+# Results: SUCCESS (665 tests, 665 passed, 0 failed, 0 skipped)
 
-Add tests to `ChartBuilderTest` verifying legend configuration via the builder and SVG output.
+./gradlew :matrix-ggplot:test -Pheadless=true
+# Results: SUCCESS (1690 tests, 1690 passed, 0 failed, 0 skipped)
+```
 
 ---
 

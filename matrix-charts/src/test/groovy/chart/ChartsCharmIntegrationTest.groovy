@@ -15,10 +15,15 @@ import se.alipsa.matrix.pict.ChartType
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
+import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.pict.Style
+import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.core.Matrix
+
+import java.awt.Color
+import java.awt.Font
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -274,7 +279,7 @@ class ChartsCharmIntegrationTest {
     BarChart chart = BarChart.createVertical('Styled', data, 'x', ChartType.BASIC, 'y')
     chart.style.plotBackgroundColor = new java.awt.Color(240, 240, 240)
     chart.style.chartBackgroundColor = new java.awt.Color(255, 255, 255)
-    chart.style.legendVisible = false
+    chart.legend = new Legend(visible: false)
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
     Svg svg = charmChart.render()
@@ -298,7 +303,7 @@ class ChartsCharmIntegrationTest {
         .build()
 
     LineChart chart = LineChart.create('Legend Position', data, 'x', 'seriesA', 'seriesB')
-    chart.style.legendPosition = Style.Position.TOP
+    chart.legend = new Legend(position: Style.Position.TOP)
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
     assertNotNull(charmChart)
@@ -311,7 +316,55 @@ class ChartsCharmIntegrationTest {
   }
 
   @Test
-  void testLegendPositionStringOverload() {
+  void testLegendFieldsBridgedToCharmTheme() {
+    Matrix data = Matrix.builder()
+        .matrixName('LegendFieldsData')
+        .columns([
+            x     : [1, 2, 3, 4],
+            seriesA: [10, 20, 15, 25],
+            seriesB: [5, 15, 10, 20]
+        ])
+        .types([int, Number, Number])
+        .build()
+
+    LineChart chart = LineChart.create('Legend Fields', data, 'x', 'seriesA', 'seriesB')
+    chart.legend = new Legend(
+        position: Style.Position.LEFT,
+        direction: Legend.Direction.HORIZONTAL,
+        backgroundColor: new Color(200, 200, 200),
+        font: new Font('Serif', Font.BOLD, 14),
+        title: 'My Series'
+    )
+
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    assertNotNull(charmChart)
+
+    assertEquals(LegendPosition.LEFT, charmChart.theme.legendPosition,
+        'Legend position should be mapped to LEFT')
+    assertEquals(LegendDirection.HORIZONTAL, charmChart.theme.legendDirection,
+        'Legend direction should be mapped to HORIZONTAL')
+    assertNotNull(charmChart.theme.legendBackground,
+        'Legend background should be set')
+    assertEquals('#c8c8c8', charmChart.theme.legendBackground.fill,
+        'Legend background fill should match')
+    assertNotNull(charmChart.theme.legendText,
+        'Legend text element should be set from font')
+    assertEquals('Serif', charmChart.theme.legendText.family)
+    assertEquals('bold', charmChart.theme.legendText.face)
+    assertEquals(14, charmChart.theme.legendText.size)
+    assertNotNull(charmChart.theme.legendTitle,
+        'Legend title element should be set from font')
+    assertEquals('My Series', charmChart.labels.guides['color'],
+        'Legend title should be mapped to color guide label')
+    assertEquals('My Series', charmChart.labels.guides['fill'],
+        'Legend title should be mapped to fill guide label')
+
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testLegendPositionBottomMapping() {
     Matrix data = Matrix.builder()
         .matrixName('LegendStrData')
         .columns([
@@ -321,10 +374,10 @@ class ChartsCharmIntegrationTest {
         .types([String, Number])
         .build()
 
-    BarChart chart = BarChart.createVertical('String Position', data, 'x', ChartType.BASIC, 'y')
-    chart.style.legendPosition = 'bottom'
+    BarChart chart = BarChart.createVertical('Bottom Legend', data, 'x', ChartType.BASIC, 'y')
+    chart.legend = new Legend(position: Style.Position.BOTTOM)
 
-    assertEquals(Style.Position.BOTTOM, chart.style.legendPosition)
+    assertEquals(Style.Position.BOTTOM, chart.legend.position)
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
     assertNotNull(charmChart)

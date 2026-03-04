@@ -105,7 +105,13 @@ All builders inherit these methods from `Chart.ChartBuilder`:
 | `yAxisScale(BigDecimal start, BigDecimal end, BigDecimal step)` | Custom y-axis scale |
 | `xAxisScale(AxisScale)` | X-axis scale from AxisScale object |
 | `yAxisScale(AxisScale)` | Y-axis scale from AxisScale object |
-| `legend(Legend)` | Legend configuration |
+| `legend(Legend)` | Legend configuration object |
+| `legendTitle(String)` | Legend title text |
+| `legendVisible(boolean)` | Whether the legend is visible |
+| `legendPosition(Style.Position)` | Legend position (TOP, RIGHT, BOTTOM, LEFT) |
+| `legendFont(Font)` | Legend font (`java.awt.Font`) |
+| `legendBackgroundColor(Color)` | Legend background color (`java.awt.Color`) |
+| `legendDirection(Legend.Direction)` | Legend key layout (VERTICAL, HORIZONTAL) |
 | `style(Style)` | Style configuration |
 | `build()` | Build the chart |
 
@@ -543,16 +549,50 @@ chart.style.chartBackgroundColor = Color.WHITE
 
 ### Legend
 
+Legend configuration is managed via the `Legend` class, either as a standalone object or through fluent builder methods.
+
+Using Groovy's map constructor:
+
 ```groovy
-// Hide the legend
-chart.style.legendVisible = false
+import se.alipsa.matrix.pict.Legend
+import se.alipsa.matrix.pict.Style
 
-// Position the legend
-chart.style.legendPosition = 'TOP'     // TOP, RIGHT, BOTTOM, LEFT
+chart.legend = new Legend(
+    visible: true,
+    position: Style.Position.TOP,
+    direction: Legend.Direction.HORIZONTAL
+)
+```
 
-// Legend font and background
-chart.style.legendFont = new java.awt.Font('SansSerif', java.awt.Font.PLAIN, 10)
-chart.style.legendBackgroundColor = new Color(250, 250, 250)
+Setting individual properties:
+
+```groovy
+import se.alipsa.matrix.pict.Legend
+import se.alipsa.matrix.pict.Style
+import java.awt.Color
+
+chart.legend = new Legend()
+chart.legend.visible = false
+chart.legend.position = Style.Position.BOTTOM
+chart.legend.font = new java.awt.Font('SansSerif', java.awt.Font.PLAIN, 10)
+chart.legend.backgroundColor = new Color(250, 250, 250)
+chart.legend.title = 'Series'
+```
+
+Using the fluent builder:
+
+```groovy
+import se.alipsa.matrix.pict.*
+
+def chart = BarChart.builder(data)
+    .title('Sales')
+    .x('product')
+    .y('revenue')
+    .legendVisible(true)
+    .legendPosition(Style.Position.TOP)
+    .legendDirection(Legend.Direction.HORIZONTAL)
+    .legendTitle('Product Lines')
+    .build()
 ```
 
 ### Title and Axis Visibility
@@ -571,19 +611,22 @@ chart.style.css = 'stroke-width: 2; font-family: Arial;'
 
 ### Fluent Configuration
 
-Builder methods handle title and axis configuration. For additional styling, access `chart.style` after building:
+Builder methods handle title, axis, and legend configuration. For additional styling, access `chart.style` after building:
 
 ```groovy
+import se.alipsa.matrix.pict.*
+import java.awt.Color
+
 def chart = BarChart.builder(data)
     .title('Sales')
     .x('product')
     .y('value')
     .xAxisTitle('Product')
     .yAxisTitle('Units Sold')
+    .legendVisible(false)
     .build()
 
 chart.style.plotBackgroundColor = new Color(240, 240, 240)
-chart.style.legendVisible = false
 ```
 
 ## Axis Configuration
@@ -833,6 +876,7 @@ ChartToPng.export(chart, new File('displacement.png'))
 ### Styled Pie Chart
 
 ```groovy
+import se.alipsa.matrix.pict.*
 import java.awt.Color
 
 def data = Matrix.builder().data(
@@ -844,9 +888,9 @@ def chart = PieChart.builder(data)
     .title('JVM Language Usage')
     .x('language')
     .y('usage')
+    .legendPosition(Style.Position.RIGHT)
     .build()
 chart.style.chartBackgroundColor = Color.WHITE
-chart.style.legendPosition = 'RIGHT'
 
 ChartToPng.export(chart, new File('languages.png'))
 ```

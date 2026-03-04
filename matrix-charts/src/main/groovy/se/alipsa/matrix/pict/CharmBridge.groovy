@@ -2,6 +2,7 @@ package se.alipsa.matrix.pict
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.charm.CharmPositionType
+import se.alipsa.matrix.charm.LegendDirection
 import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.charm.PositionSpec
 import se.alipsa.matrix.charm.PlotSpec
@@ -19,6 +20,7 @@ import se.alipsa.matrix.charm.render.RenderConfig
 import se.alipsa.matrix.core.Matrix
 
 import java.awt.Color
+import java.awt.Font
 
 /**
  * Bridge that converts the legacy {@code charts} data model
@@ -238,10 +240,30 @@ class CharmBridge {
           fill: colorToHex(chart.style.chartBackgroundColor)
       )
     }
-    if (chart.style?.legendVisible == false) {
-      theme.legendPosition = LegendPosition.NONE
-    } else if (chart.style?.legendPosition) {
-      theme.legendPosition = mapPosition(chart.style.legendPosition)
+    Legend legend = chart.legend
+    if (legend != null) {
+      if (!legend.visible) {
+        theme.legendPosition = LegendPosition.NONE
+      } else if (legend.position) {
+        theme.legendPosition = mapPosition(legend.position)
+      }
+      if (legend.direction) {
+        theme.legendDirection = mapDirection(legend.direction)
+      }
+      if (legend.backgroundColor) {
+        theme.legendBackground = new se.alipsa.matrix.charm.theme.ElementRect(
+            fill: colorToHex(legend.backgroundColor)
+        )
+      }
+      if (legend.font) {
+        se.alipsa.matrix.charm.theme.ElementText fontElement = mapFont(legend.font)
+        theme.legendText = fontElement
+        theme.legendTitle = fontElement.copy()
+      }
+      if (legend.title) {
+        labels.guides['color'] = legend.title
+        labels.guides['fill'] = legend.title
+      }
     }
   }
 
@@ -256,6 +278,32 @@ class CharmBridge {
       case Style.Position.RIGHT -> LegendPosition.RIGHT
       default -> LegendPosition.RIGHT
     }
+  }
+
+  /**
+   * Maps a pict {@link Legend.Direction} to Charm's {@link LegendDirection}.
+   */
+  private static LegendDirection mapDirection(Legend.Direction dir) {
+    switch (dir) {
+      case Legend.Direction.HORIZONTAL -> LegendDirection.HORIZONTAL
+      case Legend.Direction.VERTICAL -> LegendDirection.VERTICAL
+      default -> LegendDirection.VERTICAL
+    }
+  }
+
+  /**
+   * Maps a java.awt.Font to Charm's {@link se.alipsa.matrix.charm.theme.ElementText}.
+   */
+  private static se.alipsa.matrix.charm.theme.ElementText mapFont(Font font) {
+    String face = font.bold && font.italic ? 'bold.italic'
+        : font.bold ? 'bold'
+        : font.italic ? 'italic'
+        : 'plain'
+    new se.alipsa.matrix.charm.theme.ElementText(
+        family: font.family,
+        face: face,
+        size: font.size
+    )
   }
 
   private static String colorToHex(Color color) {
