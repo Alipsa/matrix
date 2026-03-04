@@ -170,32 +170,26 @@ Only two callers found: `Chart.groovy` lines 67 and 71, both calling `DataType.d
 
 ## Phase 4 — Type closure parameters in `CharmBridge`
 
-### 4a. Replace `Object` closure parameters with specific types
+Phase 1's `@CompileStatic` addition already converted all closures to `for` loops with explicit indexing.
+The remaining work was smaller than originally scoped:
+
+### 4a. [x] Replace raw `List<List>` with `List<List<?>>` and `Object` with `Number`
 
 **File:** `CharmBridge.groovy`
 
-```groovy
-// Before (buildBoxSpec)
-chart.categorySeries.eachWithIndex { Object category, int idx ->
-  values.each { Object val ->
-
-// After
-chart.categorySeries.eachWithIndex { Serializable category, int idx ->
-  values.each { Number val ->
-```
-
-Since `categorySeries` holds category labels (typically String) and `valueSeries` holds numbers, use the narrowest safe type. With `List<?>` on `categorySeries`, closures can't be tighter than `Object` without a cast — so the practical approach here is to cast the list at the top of the method:
-
-```groovy
-List<String> categories = chart.categorySeries.collect { it.toString() }
-```
-
-Apply the same pattern in `buildPieSpec`, `buildLongFormatMatrix`.
+- `buildBoxSpec`: `List<List>` → `List<List<?>>`, `Object val` → `Number val` (with `List<Number>` cast)
+- `buildHistogramSpec`: `List<List>` → `List<List<?>>`
+- `buildPieSpec`: `List<List>` → `List<List<?>>`
+- `buildLongFormatMatrix` (both declarations): `List<List>` → `List<List<?>>`
 
 ### Verification
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
+# Results: SUCCESS (664 tests, 664 passed, 0 failed, 0 skipped)
+
+./gradlew :matrix-ggplot:test -Pheadless=true
+# Results: SUCCESS (1690 tests, 1690 passed, 0 failed, 0 skipped)
 ```
 
 ---

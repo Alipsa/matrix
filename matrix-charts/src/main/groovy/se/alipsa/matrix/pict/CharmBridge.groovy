@@ -98,13 +98,13 @@ class CharmBridge {
   }
 
   private static PlotSpec buildBoxSpec(BoxChart chart) {
-    List<List> rows = []
+    List<List<?>> rows = []
     List<?> categories = chart.categorySeries
     List<List<?>> allValues = chart.valueSeries
     for (int idx = 0; idx < categories.size(); idx++) {
       String category = categories[idx].toString()
-      List<?> values = allValues[idx]
-      for (Object val : values) {
+      List<Number> values = allValues[idx] as List<Number>
+      for (Number val : values) {
         rows.add([category, val] as List<?>)
       }
     }
@@ -121,7 +121,7 @@ class CharmBridge {
   }
 
   private static PlotSpec buildHistogramSpec(Histogram chart) {
-    List<List> rows = []
+    List<List<?>> rows = []
     for (Number val : chart.originalData) {
       rows.add([val] as List<?>)
     }
@@ -150,7 +150,7 @@ class CharmBridge {
   private static PlotSpec buildPieSpec(PieChart chart) {
     List<?> categories = chart.categorySeries
     List<?> values = chart.valueSeries[0]
-    List<List> rows = []
+    List<List<?>> rows = []
     for (int idx = 0; idx < categories.size(); idx++) {
       rows.add([categories[idx].toString(), values[idx]] as List<?>)
     }
@@ -187,7 +187,7 @@ class CharmBridge {
     List<String> seriesNames = chart.valueSeriesNames
 
     if (valueLists.size() == 1) {
-      List<List> rows = []
+      List<List<?>> rows = []
       for (int idx = 0; idx < categories.size(); idx++) {
         rows.add([categories[idx], valueLists[0][idx]] as List<?>)
       }
@@ -197,7 +197,7 @@ class CharmBridge {
           .build()
     }
 
-    List<List> rows = []
+    List<List<?>> rows = []
     for (int seriesIdx = 0; seriesIdx < valueLists.size(); seriesIdx++) {
       List<?> values = valueLists[seriesIdx]
       String seriesName = seriesNames != null && seriesIdx < seriesNames.size()
