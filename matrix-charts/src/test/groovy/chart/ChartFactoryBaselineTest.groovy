@@ -7,12 +7,18 @@ import se.alipsa.matrix.pict.BubbleChart
 import se.alipsa.matrix.pict.Chart
 import se.alipsa.matrix.pict.ChartDirection
 import se.alipsa.matrix.pict.ChartType
+import se.alipsa.matrix.pict.DataType
 import se.alipsa.matrix.pict.Histogram
 import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.core.Matrix
+
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
@@ -136,6 +142,46 @@ class ChartFactoryBaselineTest {
       Histogram.create('Names', nonNumeric, 'name', 5)
     }
     assertTrue(ex.message.contains('Column must be numeric in a histogram'))
+  }
+
+  @Test
+  void testDataTypeOfClassifiesCorrectly() {
+    assertEquals(DataType.NUMERIC, DataType.of(Integer))
+    assertEquals(DataType.NUMERIC, DataType.of(Double))
+    assertEquals(DataType.NUMERIC, DataType.of(Long))
+    assertEquals(DataType.NUMERIC, DataType.of(Short))
+    assertEquals(DataType.NUMERIC, DataType.of(Float))
+    assertEquals(DataType.NUMERIC, DataType.of(BigDecimal))
+    assertEquals(DataType.CHARACTER, DataType.of(String))
+    assertEquals(DataType.CHARACTER, DataType.of(Boolean))
+    assertEquals(DataType.CHARACTER, DataType.of(LocalDate))
+  }
+
+  @Test
+  void testDataTypeDiffersAndEquals() {
+    assertTrue(DataType.differs(String, Integer))
+    assertTrue(DataType.differs(Boolean, Double))
+    assertFalse(DataType.differs(Integer, Double))
+    assertFalse(DataType.differs(Long, Float))
+    assertTrue(DataType.equals(Integer, Double))
+    assertFalse(DataType.equals(String, Integer))
+  }
+
+  @Test
+  void testDataTypeSqlTypeMappings() {
+    assertEquals('SMALLINT', DataType.sqlType(Short))
+    assertEquals('INTEGER', DataType.sqlType(Integer))
+    assertEquals('BIGINT', DataType.sqlType(Long))
+    assertEquals('REAL', DataType.sqlType(Float))
+    assertEquals('BIT', DataType.sqlType(Boolean))
+    assertEquals('DOUBLE', DataType.sqlType(Double))
+    assertEquals('VARCHAR(8000)', DataType.sqlType(String))
+    assertEquals('VARCHAR(255)', DataType.sqlType(String, 255))
+    assertEquals('DATE', DataType.sqlType(LocalDate))
+    assertEquals('TIME', DataType.sqlType(LocalTime))
+    assertEquals('TIMESTAMP', DataType.sqlType(LocalDateTime))
+    assertEquals('TIMESTAMP', DataType.sqlType(Instant))
+    assertEquals('BLOB', DataType.sqlType(BigDecimal))
   }
 
   @Test
