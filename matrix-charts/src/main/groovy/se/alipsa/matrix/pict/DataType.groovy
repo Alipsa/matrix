@@ -8,9 +8,10 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 /**
- * When plotting a chart we need to be able to determine whether the column is numeric or categorical.
- * When validating a series input we can consider LONG and DOUBLE columns to be OK but not a STRING (categorical) and
- * a DOUBLE (numeric). This enum makes it easy to do that.
+ * Classifies column types as either {@link #NUMERIC} or {@link #CHARACTER} for chart validation.
+ *
+ * <p>When validating series inputs, columns of the same category (e.g. Long and Double are both numeric)
+ * are considered compatible, while a mismatch (e.g. String vs Double) is not.</p>
  */
 @CompileStatic
 enum DataType {
