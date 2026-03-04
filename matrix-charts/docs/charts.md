@@ -112,7 +112,13 @@ All builders inherit these methods from `Chart.ChartBuilder`:
 | `legendFont(Font)` | Legend font (`java.awt.Font`) |
 | `legendBackgroundColor(Color)` | Legend background color (`java.awt.Color`) |
 | `legendDirection(Legend.Direction)` | Legend key layout (VERTICAL, HORIZONTAL) |
-| `style(Style)` | Style configuration |
+| `style(Style)` | Style configuration object |
+| `plotBackgroundColor(Color)` | Plot area background color (`java.awt.Color`) |
+| `chartBackgroundColor(Color)` | Chart background color (`java.awt.Color`) |
+| `titleVisible(boolean)` | Whether the title is visible |
+| `xAxisVisible(boolean)` | Whether the x-axis is visible |
+| `yAxisVisible(boolean)` | Whether the y-axis is visible |
+| `css(String)` | Custom CSS string |
 | `build()` | Build the chart |
 
 ### Chart-Specific Builder Methods
@@ -611,7 +617,7 @@ chart.style.css = 'stroke-width: 2; font-family: Arial;'
 
 ### Fluent Configuration
 
-Builder methods handle title, axis, and legend configuration. For additional styling, access `chart.style` after building:
+Builder methods handle title, axis, legend, and style configuration:
 
 ```groovy
 import se.alipsa.matrix.pict.*
@@ -624,9 +630,11 @@ def chart = BarChart.builder(data)
     .xAxisTitle('Product')
     .yAxisTitle('Units Sold')
     .legendVisible(false)
+    .plotBackgroundColor(new Color(240, 240, 240))
+    .chartBackgroundColor(Color.WHITE)
+    .xAxisVisible(true)
+    .yAxisVisible(true)
     .build()
-
-chart.style.plotBackgroundColor = new Color(240, 240, 240)
 ```
 
 ## Axis Configuration

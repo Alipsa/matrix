@@ -388,4 +388,62 @@ class ChartsCharmIntegrationTest {
     Svg svg = charmChart.render()
     assertNotNull(svg)
   }
+
+  @Test
+  void testXAxisVisibilityBridgedToCharmTheme() {
+    Matrix data = Matrix.builder()
+        .matrixName('AxisVisData')
+        .columns([
+            x: [1, 2, 3],
+            y: [10, 20, 30]
+        ])
+        .types([Number, Number])
+        .build()
+
+    LineChart chart = LineChart.create('Hide X Axis', data, 'x', 'y')
+    chart.style.xAxisVisible = false
+
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    assertNotNull(charmChart)
+    assertTrue(charmChart.theme.explicitNulls.contains('axisLineX'),
+        'axisLineX should be blanked')
+    assertTrue(charmChart.theme.explicitNulls.contains('axisTextX'),
+        'axisTextX should be blanked')
+    assertTrue(charmChart.theme.explicitNulls.contains('axisTicksX'),
+        'axisTicksX should be blanked')
+    assertTrue(charmChart.theme.explicitNulls.contains('axisTitleX'),
+        'axisTitleX should be blanked')
+
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testYAxisVisibilityBridgedToCharmTheme() {
+    Matrix data = Matrix.builder()
+        .matrixName('AxisVisData')
+        .columns([
+            x: [1, 2, 3],
+            y: [10, 20, 30]
+        ])
+        .types([Number, Number])
+        .build()
+
+    LineChart chart = LineChart.create('Hide Y Axis', data, 'x', 'y')
+    chart.style.yAxisVisible = false
+
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    assertNotNull(charmChart)
+    assertTrue(charmChart.theme.explicitNulls.contains('axisLineY'),
+        'axisLineY should be blanked')
+    assertTrue(charmChart.theme.explicitNulls.contains('axisTextY'),
+        'axisTextY should be blanked')
+    assertTrue(charmChart.theme.explicitNulls.contains('axisTicksY'),
+        'axisTicksY should be blanked')
+    assertTrue(charmChart.theme.explicitNulls.contains('axisTitleY'),
+        'axisTitleY should be blanked')
+
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+  }
 }

@@ -269,6 +269,28 @@ abstract class Chart<T extends Chart> {
     /** Sets the style configuration. */
     B style(Style style) { this.style = style; this as B }
 
+    /** Sets the plot background color. */
+    B plotBackgroundColor(Color color) { ensureStyle(); style.plotBackgroundColor = color; this as B }
+
+    /** Sets the chart background color. */
+    B chartBackgroundColor(Color color) { ensureStyle(); style.chartBackgroundColor = color; this as B }
+
+    /** Sets title visibility. */
+    B titleVisible(boolean visible) { ensureStyle(); style.titleVisible = visible; this as B }
+
+    /** Sets x-axis visibility. */
+    B xAxisVisible(boolean visible) { ensureStyle(); style.xAxisVisible = visible; this as B }
+
+    /** Sets y-axis visibility. */
+    B yAxisVisible(boolean visible) { ensureStyle(); style.yAxisVisible = visible; this as B }
+
+    /** Sets custom CSS. */
+    B css(String css) { ensureStyle(); style.css = css; this as B }
+
+    private void ensureStyle() {
+      if (style == null) style = new Style()
+    }
+
     /**
      * Applies shared builder fields to the chart instance.
      * Called by subclass {@link #build()} implementations.
