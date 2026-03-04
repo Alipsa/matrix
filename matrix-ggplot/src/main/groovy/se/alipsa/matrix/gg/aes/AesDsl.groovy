@@ -54,6 +54,24 @@ class AesDsl {
   }
 
   /**
+   * Alias for camelCase {@code lineWidth}, matching map-based {@code aes(Map)}.
+   *
+   * @param value mapped value for linewidth
+   */
+  void setLineWidth(def value) {
+    linewidth = value
+  }
+
+  /**
+   * Alias for camelCase {@code mapId}, matching map-based {@code aes(Map)}.
+   *
+   * @param value mapped value for map id
+   */
+  void setMapId(def value) {
+    map_id = value
+  }
+
+  /**
    * Resolves property reads for known aesthetics. If an aesthetic has not
    * been assigned yet, reading it returns its own name so expressions like
    * {@code x = x} map to column {@code 'x'}.
@@ -83,6 +101,8 @@ class AesDsl {
         return this.@linetype != null ? this.@linetype : 'linetype'
       case 'linewidth':
         return this.@linewidth != null ? this.@linewidth : 'linewidth'
+      case 'lineWidth':
+        return this.@linewidth != null ? this.@linewidth : 'lineWidth'
       case 'group':
         return this.@group != null ? this.@group : 'group'
       case 'label':
@@ -95,6 +115,8 @@ class AesDsl {
         return this.@geometry != null ? this.@geometry : 'geometry'
       case 'map_id':
         return this.@map_id != null ? this.@map_id : 'map_id'
+      case 'mapId':
+        return this.@map_id != null ? this.@map_id : 'mapId'
       default:
         return propertyMissing(name)
     }

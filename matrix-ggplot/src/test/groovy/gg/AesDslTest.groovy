@@ -126,6 +126,14 @@ class AesDslTest {
   }
 
   @Test
+  void testCamelCaseAliasesForLineWidthAndMapId() {
+    Aes mapping = aes { lineWidth = widthCol; mapId = idCol }
+
+    assertEquals('widthCol', mapping.linewidth)
+    assertEquals('idCol', mapping.map_id)
+  }
+
+  @Test
   void testColumnNamesMatchingAestheticNames() {
     Aes mapping = aes { x = x; y = y; color = color; fill = fill }
 
