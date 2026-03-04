@@ -1,6 +1,7 @@
 package se.alipsa.matrix.gg.aes
 
 import groovy.transform.CompileDynamic
+import groovy.transform.CompileStatic
 
 /**
  * Closure delegate for building {@link Aes} mappings with unquoted column names.
@@ -14,7 +15,7 @@ import groovy.transform.CompileDynamic
  * resolved through {@link #propertyMissing(String)} and become column name
  * strings (for example {@code 'mpg'}).</p>
  */
-@CompileDynamic
+@CompileStatic
 class AesDsl {
 
   // Known aesthetics kept as explicit fields for IDE completion.
@@ -57,6 +58,7 @@ class AesDsl {
    * been assigned yet, reading it returns its own name so expressions like
    * {@code x = x} map to column {@code 'x'}.
    */
+  @CompileDynamic
   def getProperty(String name) {
     switch (name) {
       case 'x': this.@x != null ? this.@x : 'x'
@@ -87,6 +89,7 @@ class AesDsl {
    * @param name property name
    * @return the property name
    */
+  @CompileDynamic
   String propertyMissing(String name) {
     name
   }
