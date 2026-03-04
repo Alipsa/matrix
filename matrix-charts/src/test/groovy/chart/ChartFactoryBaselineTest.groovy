@@ -17,6 +17,7 @@ import se.alipsa.matrix.core.Matrix
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertNotNull
+import static org.junit.jupiter.api.Assertions.assertNull
 import static org.junit.jupiter.api.Assertions.assertSame
 import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
@@ -118,7 +119,7 @@ class ChartFactoryBaselineTest {
     assertEquals('Salary', chart.yAxisTitle)
 
     assertNotNull(chart.style)
-    assertFalse(chart.style.legendVisible)
+    assertNull(chart.style.legendVisible)
     chart.style.legendVisible = true
     assertTrue(chart.style.legendVisible)
   }

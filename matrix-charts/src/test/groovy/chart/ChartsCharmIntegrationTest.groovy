@@ -17,6 +17,7 @@ import se.alipsa.matrix.pict.LineChart
 import se.alipsa.matrix.pict.PieChart
 import se.alipsa.matrix.pict.ScatterChart
 import se.alipsa.matrix.pict.Style
+import se.alipsa.matrix.charm.LegendPosition
 import se.alipsa.matrix.core.Matrix
 
 import static org.junit.jupiter.api.Assertions.*
@@ -300,13 +301,13 @@ class ChartsCharmIntegrationTest {
     chart.style.legendPosition = Style.Position.TOP
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    assertNotNull(charmChart)
+    assertNotNull(charmChart.theme)
+    assertEquals(LegendPosition.TOP, charmChart.theme.legendPosition,
+        'Legend position should be mapped to TOP in Charm theme')
+
     Svg svg = charmChart.render()
     assertNotNull(svg)
-
-    // Verify chart renders successfully with legend position set
-    def texts = svg.descendants().findAll { it instanceof Text }
-    def titleTexts = texts.findAll { it.content == 'Legend Position' }
-    assertTrue(titleTexts.size() > 0, 'Title should be rendered')
   }
 
   @Test
@@ -326,6 +327,11 @@ class ChartsCharmIntegrationTest {
     assertEquals(Style.Position.BOTTOM, chart.style.legendPosition)
 
     se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    assertNotNull(charmChart)
+    assertNotNull(charmChart.theme)
+    assertEquals(LegendPosition.BOTTOM, charmChart.theme.legendPosition,
+        'Legend position should be mapped to BOTTOM in Charm theme')
+
     Svg svg = charmChart.render()
     assertNotNull(svg)
   }

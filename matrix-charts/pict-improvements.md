@@ -119,7 +119,7 @@ Add a private mapping method `Style.Position` → `LegendPosition`.
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
-# Results: SUCCESS (661 tests, 661 passed, 0 failed, 0 skipped)
+# Results: SUCCESS
 ```
 
 ---
