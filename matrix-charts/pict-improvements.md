@@ -160,7 +160,10 @@ Only two callers found: `Chart.groovy` lines 67 and 71, both calling `DataType.d
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
-# Results: SUCCESS (661 tests, 661 passed, 0 failed, 0 skipped)
+# Results: SUCCESS (664 tests, 664 passed, 0 failed, 0 skipped)
+
+./gradlew :matrix-ggplot:test -Pheadless=true
+# Results: SUCCESS (all tests passed)
 ```
 
 ---
