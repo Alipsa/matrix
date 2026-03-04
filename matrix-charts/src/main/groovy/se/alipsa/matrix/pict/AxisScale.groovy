@@ -13,6 +13,9 @@ class AxisScale {
   private final BigDecimal step
 
   AxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
+    if (start == null || end == null || step == null) {
+      throw new IllegalArgumentException("start, end, and step must not be null")
+    }
     if (start >= end) {
       throw new IllegalArgumentException("start ($start) must be less than end ($end)")
     }
