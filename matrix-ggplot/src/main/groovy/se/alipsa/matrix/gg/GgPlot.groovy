@@ -241,10 +241,24 @@ class GgPlot {
    * aes { x = 'Sepal Length'; y = 'Petal Width' }
    * }</pre>
    *
+   * <p>Backward compatibility note: if the closure declares explicit
+   * parameters (for example {@code aes { row -> row.mpg }}), it is treated
+   * as the legacy positional {@code x} expression mapping rather than the DSL
+   * form.
+   *
    * @param configure closure delegating to {@link AesDsl}
    * @return a new Aes instance
    */
   static Aes aes(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure configure) {
+    boolean hasZeroArgDoCall = configure.class.declaredMethods.any { java.lang.reflect.Method method ->
+      method.name == 'doCall' && method.parameterCount == 0
+    }
+    boolean hasExplicitParameters = configure.maximumNumberOfParameters > 0 && !hasZeroArgDoCall
+    if (hasExplicitParameters) {
+      Aes aes = new Aes()
+      aes.x = configure
+      return aes
+    }
     AesDsl dsl = new AesDsl()
     Closure body = configure.rehydrate(dsl, configure.owner, configure.thisObject)
     body.resolveStrategy = Closure.DELEGATE_ONLY

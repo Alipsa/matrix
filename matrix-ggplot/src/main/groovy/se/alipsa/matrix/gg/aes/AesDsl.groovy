@@ -44,6 +44,15 @@ class AesDsl {
   }
 
   /**
+   * Alias for short {@code col} spelling, matching map-based {@code aes(Map)}.
+   *
+   * @param value mapped value for the color aesthetic
+   */
+  void setCol(def value) {
+    color = value
+  }
+
+  /**
    * Resolves property reads for known aesthetics. If an aesthetic has not
    * been assigned yet, reading it returns its own name so expressions like
    * {@code x = x} map to column {@code 'x'}.
@@ -54,6 +63,7 @@ class AesDsl {
       case 'y': this.@y != null ? this.@y : 'y'
       case 'color': this.@color != null ? this.@color : 'color'
       case 'colour': this.@color != null ? this.@color : 'colour'
+      case 'col': this.@color != null ? this.@color : 'col'
       case 'fill': this.@fill != null ? this.@fill : 'fill'
       case 'size': this.@size != null ? this.@size : 'size'
       case 'shape': this.@shape != null ? this.@shape : 'shape'

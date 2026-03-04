@@ -46,6 +46,22 @@ class AesDslTest {
   }
 
   @Test
+  void testColAliasSetsColor() {
+    Aes mapping = aes { col = species }
+
+    assertEquals('species', mapping.color)
+  }
+
+  @Test
+  void testClosureWithParameterUsesLegacyPositionalXBehavior() {
+    Aes mapping = aes { row -> row.mpg }
+
+    assertTrue(mapping.x instanceof Closure)
+    assertEquals(1, (mapping.x as Closure).maximumNumberOfParameters)
+    assertNull(mapping.y)
+  }
+
+  @Test
   void testIdentityWrapperInClosureAes() {
     Aes mapping = aes { x = mpg; color = I('red') }
 
