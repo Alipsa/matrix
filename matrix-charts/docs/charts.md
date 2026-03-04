@@ -109,8 +109,8 @@ All builders inherit these methods from `Chart.ChartBuilder`:
 | `legendTitle(String)` | Legend title text |
 | `legendVisible(boolean)` | Whether the legend is visible |
 | `legendPosition(Style.Position)` | Legend position (TOP, RIGHT, BOTTOM, LEFT) |
-| `legendFont(Font)` | Legend font |
-| `legendBackgroundColor(Color)` | Legend background color |
+| `legendFont(Font)` | Legend font (`java.awt.Font`) |
+| `legendBackgroundColor(Color)` | Legend background color (`java.awt.Color`) |
 | `legendDirection(Legend.Direction)` | Legend key layout (VERTICAL, HORIZONTAL) |
 | `style(Style)` | Style configuration |
 | `build()` | Build the chart |
@@ -567,6 +567,8 @@ chart.legend = new Legend(
 Setting individual properties:
 
 ```groovy
+import se.alipsa.matrix.pict.Legend
+import se.alipsa.matrix.pict.Style
 import java.awt.Color
 
 chart.legend = new Legend()
@@ -580,6 +582,8 @@ chart.legend.title = 'Series'
 Using the fluent builder:
 
 ```groovy
+import se.alipsa.matrix.pict.*
+
 def chart = BarChart.builder(data)
     .title('Sales')
     .x('product')
@@ -610,6 +614,9 @@ chart.style.css = 'stroke-width: 2; font-family: Arial;'
 Builder methods handle title, axis, and legend configuration. For additional styling, access `chart.style` after building:
 
 ```groovy
+import se.alipsa.matrix.pict.*
+import java.awt.Color
+
 def chart = BarChart.builder(data)
     .title('Sales')
     .x('product')
@@ -869,6 +876,7 @@ ChartToPng.export(chart, new File('displacement.png'))
 ### Styled Pie Chart
 
 ```groovy
+import se.alipsa.matrix.pict.*
 import java.awt.Color
 
 def data = Matrix.builder().data(
