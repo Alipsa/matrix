@@ -240,6 +240,20 @@ class CharmBridge {
           fill: colorToHex(chart.style.chartBackgroundColor)
       )
     }
+    if (chart.style?.xAxisVisible == false) {
+      theme.axisLineX = null
+      theme.axisTextX = null
+      theme.axisTicksX = null
+      theme.axisTitleX = null
+      theme.explicitNulls.addAll(['axisLineX', 'axisTextX', 'axisTicksX', 'axisTitleX'])
+    }
+    if (chart.style?.yAxisVisible == false) {
+      theme.axisLineY = null
+      theme.axisTextY = null
+      theme.axisTicksY = null
+      theme.axisTitleY = null
+      theme.explicitNulls.addAll(['axisLineY', 'axisTextY', 'axisTicksY', 'axisTitleY'])
+    }
     Legend legend = chart.legend
     if (legend != null) {
       if (!legend.visible) {

@@ -349,4 +349,33 @@ class ChartBuilderTest {
     assertEquals(Color.LIGHT_GRAY, chart.legend.backgroundColor)
     assertEquals(Legend.Direction.HORIZONTAL, chart.legend.direction)
   }
+
+  @Test
+  void testBuilderFluentStyleMethods() {
+    def data = Matrix.builder()
+        .columnNames(['x', 'y'])
+        .rows([[1, 10], [2, 20]])
+        .types([int, int])
+        .build()
+
+    def chart = LineChart.builder(data)
+        .title('Fluent Style')
+        .x('x')
+        .y('y')
+        .plotBackgroundColor(Color.WHITE)
+        .chartBackgroundColor(Color.LIGHT_GRAY)
+        .titleVisible(false)
+        .xAxisVisible(false)
+        .yAxisVisible(false)
+        .css('stroke-width: 2;')
+        .build()
+
+    assertNotNull(chart.style)
+    assertEquals(Color.WHITE, chart.style.plotBackgroundColor)
+    assertEquals(Color.LIGHT_GRAY, chart.style.chartBackgroundColor)
+    assertFalse(chart.style.titleVisible)
+    assertFalse(chart.style.xAxisVisible)
+    assertFalse(chart.style.yAxisVisible)
+    assertEquals('stroke-width: 2;', chart.style.css)
+  }
 }

@@ -299,7 +299,7 @@ Update `CharmBridge.applyLabelsAndTheme()` to read from `Legend` instead of `Sty
 
 ## Phase 6 — Fluent Style configuration in builder
 
-### 6a. Add individual style methods to `ChartBuilder`
+### 6a. [x] Add individual style methods to `ChartBuilder`
 
 **File:** `Chart.groovy` (ChartBuilder)
 
@@ -327,7 +327,7 @@ BarChart.builder(data)
     .build()
 ```
 
-### 6b. Bridge new Style fields to Charm
+### 6b. [x] Bridge new Style fields to Charm
 
 Extend `CharmBridge.applyLabelsAndTheme()` to handle the axis visibility and CSS fields:
 
@@ -339,9 +339,16 @@ Extend `CharmBridge.applyLabelsAndTheme()` to handle the axis visibility and CSS
 
 ```bash
 ./gradlew :matrix-charts:test -Pheadless=true
+# Results: SUCCESS (669 tests, 669 passed, 0 failed, 0 skipped)
+
+./gradlew :matrix-ggplot:test -Pheadless=true
+# Results: SUCCESS (1690 tests, 1690 passed, 0 failed, 0 skipped)
 ```
 
-Add tests to `ChartBuilderTest` verifying fluent style configuration.
+Note: `Style.css` is stored on the chart but is not bridged to Charm since
+the Charm renderer has no mechanism for arbitrary CSS injection.
+Axis visibility (`xAxisVisible`/`yAxisVisible`) is bridged via the
+`explicitNulls` pattern used by Charm's `AxisRenderer`.
 
 ---
 
