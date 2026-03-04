@@ -120,9 +120,22 @@ class BubbleChart extends Chart<BubbleChart> {
      * @return the bubble chart
      */
     BubbleChart build() {
+      if (xCol == null) {
+        throw new IllegalStateException("x(...) must be called before build() to specify the x-axis column")
+      }
+      if (yCols == null || yCols.isEmpty()) {
+        throw new IllegalStateException("y(...) must be called before build() to specify exactly one y-axis column")
+      }
+      if (yCols.size() != 1) {
+        throw new IllegalStateException("BubbleChart requires exactly one y-axis column, but got ${yCols.size()}")
+      }
+      if (sizeCol == null) {
+        throw new IllegalStateException("size(...) must be called before build() to specify the bubble size column")
+      }
+      String yCol = yCols[0]
       BubbleChart chart = groupCol
-          ? BubbleChart.create(this.@title, data, xCol, yCols[0], sizeCol, groupCol)
-          : BubbleChart.create(this.@title, data, xCol, yCols[0], sizeCol)
+          ? BubbleChart.create(this.@title, data, xCol, yCol, sizeCol, groupCol)
+          : BubbleChart.create(this.@title, data, xCol, yCol, sizeCol)
       applyTo(chart)
       chart
     }

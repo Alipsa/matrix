@@ -119,6 +119,39 @@ class ChartFactoryBaselineTest {
   }
 
   @Test
+  void testBubbleChartBuilderValidation() {
+    Matrix data = Matrix.builder()
+        .matrixName('BubbleData')
+        .columns([x: [1, 2, 3], y: [10, 20, 30], s: [5, 10, 15]])
+        .types([Number, Number, Number])
+        .build()
+
+    // Missing x
+    IllegalStateException noX = assertThrows(IllegalStateException) {
+      BubbleChart.builder(data).y('y').size('s').build()
+    }
+    assertTrue(noX.message.contains('x(...)'))
+
+    // Missing y
+    IllegalStateException noY = assertThrows(IllegalStateException) {
+      BubbleChart.builder(data).x('x').size('s').build()
+    }
+    assertTrue(noY.message.contains('y(...)'))
+
+    // Missing size
+    IllegalStateException noSize = assertThrows(IllegalStateException) {
+      BubbleChart.builder(data).x('x').y('y').build()
+    }
+    assertTrue(noSize.message.contains('size(...)'))
+
+    // Multiple y columns
+    IllegalStateException multiY = assertThrows(IllegalStateException) {
+      BubbleChart.builder(data).x('x').y('y', 's').size('s').build()
+    }
+    assertTrue(multiY.message.contains('exactly one'))
+  }
+
+  @Test
   void testBubbleChartGroupedFactory() {
     Matrix data = Matrix.builder()
         .matrixName('GroupedBubble')
