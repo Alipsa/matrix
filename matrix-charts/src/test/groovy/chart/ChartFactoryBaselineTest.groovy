@@ -102,11 +102,34 @@ class ChartFactoryBaselineTest {
   }
 
   @Test
-  void testBubbleChartIsStillStubbed() {
-    RuntimeException ex = assertThrows(RuntimeException) {
-      BubbleChart.create('Bubble', employeeData(), 'emp_id', 'salary', 'salary', 'emp_name')
-    }
-    assertEquals('Not yet implemented', ex.message)
+  void testBubbleChartFactory() {
+    Matrix data = Matrix.builder()
+        .matrixName('BubbleData')
+        .columns([x: [1, 2, 3], y: [10, 20, 30], s: [5, 10, 15]])
+        .types([Number, Number, Number])
+        .build()
+
+    BubbleChart chart = BubbleChart.create('Bubble', data, 'x', 'y', 's')
+    assertEquals('Bubble', chart.title)
+    assertEquals(data.column('x'), chart.categorySeries)
+    assertEquals(1, chart.valueSeries.size())
+    assertEquals(3, chart.sizeSeries.size())
+    assertEquals('x', chart.xAxisTitle)
+    assertEquals('y', chart.yAxisTitle)
+  }
+
+  @Test
+  void testBubbleChartGroupedFactory() {
+    Matrix data = Matrix.builder()
+        .matrixName('GroupedBubble')
+        .columns([x: [1, 2, 3], y: [10, 20, 30], s: [5, 10, 15], g: ['A', 'A', 'B']])
+        .types([Number, Number, Number, String])
+        .build()
+
+    BubbleChart chart = BubbleChart.create('Grouped', data, 'x', 'y', 's', 'g')
+    assertEquals('Grouped', chart.title)
+    assertEquals('g', chart.groupColumn)
+    assertEquals(3, chart.groupSeries.size())
   }
 
   @Test

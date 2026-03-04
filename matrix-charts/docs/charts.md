@@ -14,6 +14,7 @@ A comprehensive guide to using the `se.alipsa.matrix.pict` package for creating 
   - [LineChart](#linechart)
   - [PieChart](#piechart)
   - [ScatterChart](#scatterchart)
+  - [BubbleChart](#bubblechart)
 - [Styling](#styling)
 - [Axis Configuration](#axis-configuration)
 - [Multi-Series Charts](#multi-series-charts)
@@ -537,6 +538,64 @@ def chart = ScatterChart.builder(data)
 ChartToPng.export(chart, new File('scatter.png'))
 ```
 
+### BubbleChart
+
+Bubble chart — a scatter plot where each point's radius encodes a third numeric variable.
+
+**Builder:**
+
+```groovy
+BubbleChart chart = BubbleChart.builder(data)
+    .title('Population')
+    .x('gdp')
+    .y('lifeExpectancy')
+    .size('population')
+    .build()
+
+// Grouped (colour by continent)
+BubbleChart chart = BubbleChart.builder(data)
+    .title('Population')
+    .x('gdp')
+    .y('lifeExpectancy')
+    .size('population')
+    .group('continent')
+    .build()
+```
+
+**Factory Methods:**
+
+```groovy
+BubbleChart chart = BubbleChart.create('Title', data, 'x', 'y', 'size')
+BubbleChart chart = BubbleChart.create('Title', data, 'x', 'y', 'size', 'group')
+```
+
+**Example:**
+
+```groovy
+def data = Matrix.builder().data(
+    city: ['London', 'Paris', 'Berlin', 'Madrid', 'Rome'],
+    lat: [51.5, 48.9, 52.5, 40.4, 41.9],
+    lon: [-0.1, 2.3, 13.4, -3.7, 12.5],
+    population: [9, 11, 4, 7, 3]
+).types(String, Number, Number, Number).build()
+
+def chart = BubbleChart.builder(data)
+    .title('European Cities')
+    .x('lon')
+    .y('lat')
+    .size('population')
+    .xAxisTitle('Longitude')
+    .yAxisTitle('Latitude')
+    .build()
+
+ChartToPng.export(chart, new File('bubbles.png'))
+```
+
+| Chart-Specific Builder Method | Description |
+|---|---|
+| `size(String)` | Column mapped to point radius |
+| `group(String)` | Column mapped to colour aesthetic (optional) |
+
 ## Styling
 
 All chart types share the same `Style` object accessible via `chart.style`.
@@ -795,10 +854,6 @@ IllegalArgumentException: "The series contains no data"
 // Mismatched column types across series
 IllegalArgumentException: "Column mismatch in series..."
 ```
-
-### BubbleChart
-
-`BubbleChart` is deprecated and not yet implemented. Calling `BubbleChart.create(...)` throws `RuntimeException("Not yet implemented")`. Use the [Charm](charm.md) or [gg](ggPlot.md) API with a point geom and size aesthetic for bubble-style plots.
 
 ## Relationship to Charm and gg APIs
 

@@ -67,6 +67,7 @@ class CharmBridge {
       case LineChart -> buildLineSpec(chart as LineChart)
       case PieChart -> buildPieSpec(chart as PieChart)
       case ScatterChart -> buildScatterSpec(chart as ScatterChart)
+      case BubbleChart -> buildBubbleSpec(chart as BubbleChart)
       default -> throw new IllegalArgumentException("Unsupported chart type: ${chart.getClass().name}")
     }
   }
@@ -173,6 +174,42 @@ class CharmBridge {
     Matrix data = buildLongFormatMatrix(chart)
     PlotSpec spec = Charts.plot(data)
     spec.mapping([x: 'x', y: 'y'])
+    spec.addLayer(new PointBuilder())
+    applyLabelsAndTheme(spec, chart)
+    spec
+  }
+
+  private static PlotSpec buildBubbleSpec(BubbleChart chart) {
+    List<?> xValues = chart.categorySeries
+    List<?> yValues = chart.valueSeries[0]
+    List<? extends Number> sizeValues = chart.sizeSeries
+
+    if (chart.groupSeries) {
+      List<List<?>> rows = []
+      for (int i = 0; i < xValues.size(); i++) {
+        rows.add([xValues[i], yValues[i], sizeValues[i], chart.groupSeries[i]] as List<?>)
+      }
+      Matrix data = Matrix.builder()
+          .columnNames('x', 'y', 'size', 'group')
+          .rows(rows)
+          .build()
+      PlotSpec spec = Charts.plot(data)
+      spec.mapping([x: 'x', y: 'y', size: 'size', color: 'group'])
+      spec.addLayer(new PointBuilder())
+      applyLabelsAndTheme(spec, chart)
+      return spec
+    }
+
+    List<List<?>> rows = []
+    for (int i = 0; i < xValues.size(); i++) {
+      rows.add([xValues[i], yValues[i], sizeValues[i]] as List<?>)
+    }
+    Matrix data = Matrix.builder()
+        .columnNames('x', 'y', 'size')
+        .rows(rows)
+        .build()
+    PlotSpec spec = Charts.plot(data)
+    spec.mapping([x: 'x', y: 'y', size: 'size'])
     spec.addLayer(new PointBuilder())
     applyLabelsAndTheme(spec, chart)
     spec

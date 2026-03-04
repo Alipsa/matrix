@@ -10,6 +10,7 @@ import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.pict.AreaChart
 import se.alipsa.matrix.pict.BarChart
 import se.alipsa.matrix.pict.BoxChart
+import se.alipsa.matrix.pict.BubbleChart
 import se.alipsa.matrix.pict.CharmBridge
 import se.alipsa.matrix.pict.ChartType
 import se.alipsa.matrix.pict.Histogram
@@ -443,6 +444,107 @@ class ChartsCharmIntegrationTest {
     assertTrue(charmChart.theme.explicitNulls.contains('axisTitleY'),
         'axisTitleY should be blanked')
 
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+  }
+
+  @Test
+  void testBubbleChartRendersScaledCircles() {
+    Matrix data = Matrix.builder()
+        .matrixName('BubbleData')
+        .columns([x: [1, 2, 3, 4], y: [10, 20, 15, 25], size: [5, 15, 10, 20]])
+        .types([Number, Number, Number])
+        .build()
+
+    BubbleChart chart = BubbleChart.create('Bubble Test', data, 'x', 'y', 'size')
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+
+    def circles = svg.descendants().findAll { it instanceof Circle }
+    assertTrue(circles.size() >= 4, "Bubble chart should render at least 4 circles, got ${circles.size()}")
+
+    // Verify circles have varying radii (size aesthetic applied)
+    def radii = circles.collect { it.r as BigDecimal }.toSet()
+    assertTrue(radii.size() > 1, 'Bubble chart circles should have varying radii')
+  }
+
+  @Test
+  void testBubbleChartBuilder() {
+    Matrix data = Matrix.builder()
+        .matrixName('BubbleData')
+        .columns([x: [1, 2, 3], y: [10, 20, 30], s: [5, 10, 15]])
+        .types([Number, Number, Number])
+        .build()
+
+    BubbleChart chart = BubbleChart.builder(data)
+        .title('Builder Bubble')
+        .x('x')
+        .y('y')
+        .size('s')
+        .build()
+
+    assertNotNull(chart)
+    assertEquals('Builder Bubble', chart.title)
+    assertEquals(3, chart.sizeSeries.size())
+
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+
+    def circles = svg.descendants().findAll { it instanceof Circle }
+    assertTrue(circles.size() >= 3, "Builder bubble chart should render at least 3 circles, got ${circles.size()}")
+  }
+
+  @Test
+  void testGroupedBubbleChart() {
+    Matrix data = Matrix.builder()
+        .matrixName('GroupedBubble')
+        .columns([
+            x    : [1, 2, 3, 4],
+            y    : [10, 20, 15, 25],
+            size : [5, 15, 10, 20],
+            group: ['A', 'A', 'B', 'B']
+        ])
+        .types([Number, Number, Number, String])
+        .build()
+
+    BubbleChart chart = BubbleChart.create('Grouped', data, 'x', 'y', 'size', 'group')
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
+    Svg svg = charmChart.render()
+    assertNotNull(svg)
+
+    def circles = svg.descendants().findAll { it instanceof Circle }
+    assertTrue(circles.size() >= 4, "Grouped bubble chart should render at least 4 circles, got ${circles.size()}")
+  }
+
+  @Test
+  void testBubbleChartBuilderWithGroup() {
+    Matrix data = Matrix.builder()
+        .matrixName('GroupedBubble')
+        .columns([
+            x    : [1, 2, 3, 4],
+            y    : [10, 20, 15, 25],
+            size : [5, 15, 10, 20],
+            group: ['A', 'A', 'B', 'B']
+        ])
+        .types([Number, Number, Number, String])
+        .build()
+
+    BubbleChart chart = BubbleChart.builder(data)
+        .title('Grouped Builder')
+        .x('x')
+        .y('y')
+        .size('size')
+        .group('group')
+        .build()
+
+    assertNotNull(chart)
+    assertEquals('Grouped Builder', chart.title)
+    assertEquals('group', chart.groupColumn)
+    assertEquals(4, chart.groupSeries.size())
+
+    se.alipsa.matrix.charm.Chart charmChart = CharmBridge.convert(chart)
     Svg svg = charmChart.render()
     assertNotNull(svg)
   }
