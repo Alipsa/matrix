@@ -1,9 +1,10 @@
-# Charts Guide
+# PICT Guide
 
 A comprehensive guide to using the `se.alipsa.matrix.pict` package for creating data visualizations in Groovy.
 
 ## Table of Contents
 - [Introduction](#introduction)
+- [Recent Changes](#recent-changes)
 - [Quick Start](#quick-start)
 - [Builder API](#builder-api)
 - [Chart Types](#chart-types)
@@ -34,6 +35,17 @@ All chart types are backed by the [Charm](charm.md) rendering engine internally.
 - Works with Matrix data structures or raw lists
 - Multiple output formats (SVG, PNG, JPEG, JavaFX, Swing)
 - Multi-series support for area, bar, and line charts
+
+## Recent Changes
+
+This guide reflects the current PICT implementation, including:
+
+- `BubbleChart` is fully implemented (factory + builder + grouped bubbles via `group(...)`)
+- Legend API is centered around `Legend` and fluent builder methods (`legendTitle`, `legendPosition`, etc.)
+- Builder style methods now include `titleVisible`, `xAxisVisible`, `yAxisVisible`, and `css`
+- `AxisScale` is immutable and validated (`start < end`, `step > 0`, non-null values)
+- Axis visibility flags are bridged to Charm rendering (`xAxisVisible(false)`, `yAxisVisible(false)`)
+- `Style.css` is stored in the chart style but not injected into rendered SVG by Charm
 
 ## Quick Start
 
@@ -119,7 +131,7 @@ All builders inherit these methods from `Chart.ChartBuilder`:
 | `titleVisible(boolean)` | Whether the title is visible |
 | `xAxisVisible(boolean)` | Whether the x-axis is visible |
 | `yAxisVisible(boolean)` | Whether the y-axis is visible |
-| `css(String)` | Custom CSS string |
+| `css(String)` | Custom CSS string (stored on style; not injected by Charm renderer) |
 | `build()` | Build the chart |
 
 ### Chart-Specific Builder Methods
@@ -129,6 +141,7 @@ All builders inherit these methods from `Chart.ChartBuilder`:
 | `BarChart.Builder` | `horizontal()`, `vertical()`, `stacked()`, `chartType(ChartType)`, `direction(ChartDirection)` |
 | `Histogram.Builder` | `bins(Integer)`, `binDecimals(int)` |
 | `BoxChart.Builder` | `columns(List<String>)` |
+| `BubbleChart.Builder` | `size(String)`, `group(String)` |
 
 ### Example
 
@@ -674,6 +687,8 @@ chart.style.yAxisVisible = false
 chart.style.css = 'stroke-width: 2; font-family: Arial;'
 ```
 
+`Style.css` is currently persisted on the chart style object for compatibility, but is not injected into Charm-rendered SVG output.
+
 ### Fluent Configuration
 
 Builder methods handle title, axis, legend, and style configuration:
@@ -713,6 +728,11 @@ chart.setYAxisScale(new AxisScale(0, 500, 50))
 chart.setXAxisScale(0, 100, 10)
 chart.setYAxisScale(0, 500, 50)
 ```
+
+`AxisScale` validates constructor arguments:
+- `start`, `end`, and `step` must be non-null
+- `start` must be less than `end`
+- `step` must be greater than `0`
 
 ### Axis Titles
 
@@ -862,19 +882,19 @@ All three APIs in matrix-charts share the same Charm rendering engine:
 ```
 charm ----renders----> Svg (gsvg)
 gg ------adapts------> charm ---renders-> Svg
-charts --builds------> charm ---renders-> Svg (via CharmBridge)
-         Svg ----exports----> chartexport ------> PNG/JPEG/JFX/Swing
+pict ----builds------> charm ---renders-> Svg (via CharmBridge)
+        Svg ----exports----> chartexport ------> PNG/JPEG/JFX/Swing
 ```
 
-- **Charts** (this guide) -- chart-type-first API. Start with `BarChart.builder(data)` and configure from there.
+- **PICT** (this guide) -- chart-type-first API. Start with `BarChart.builder(data)` and configure from there.
 - **[Charm](charm.md)** -- core Grammar of Graphics DSL. More expressive, supports closures, scales, faceting, annotations, and custom themes.
-- **[gg](ggPlot.md)** -- ggplot2-compatible wrapper. Best for porting R code or when you prefer `ggplot() + geom_point()` syntax.
+- **[gg](../../matrix-ggplot/docs/ggPlot.md)** -- ggplot2-compatible wrapper. Best for porting R code or when you prefer `ggplot() + geom_point()` syntax.
 
 ### When to Use Which
 
 | Use case | Recommended API |
 |---|---|
-| Quick bar/pie/line chart with minimal configuration | **Charts** |
+| Quick bar/pie/line chart with minimal configuration | **PICT** |
 | Full Grammar of Graphics with faceting, annotations, and custom scales | **Charm** |
 | Porting R ggplot2 code to Groovy | **gg** |
 | `@CompileStatic` chart code | **Charm** (programmatic API) |
@@ -982,5 +1002,5 @@ ChartToPng.export(chart, new File('comparison.png'))
 ## Additional Resources
 
 - **[charm.md](charm.md)** -- Charm DSL guide (Grammar of Graphics)
-- **[ggPlot.md](ggPlot.md)** -- ggplot2-compatible API guide (54+ geoms)
+- **[ggPlot.md](../../matrix-ggplot/docs/ggPlot.md)** -- ggplot2-compatible API guide (54+ geoms)
 - **API Documentation** -- [JavaDoc](https://javadoc.io/doc/se.alipsa.matrix/matrix-charts)

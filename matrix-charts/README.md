@@ -10,7 +10,7 @@ the exporters in the se.alipsa.matrix.chartexport package.
 There are 2 APIs in matrix-charts, sharing the same Charm rendering engine:
 1. **[Charm](docs/charm.md)** The core chart library based on the principles of Grammar of Graphics.
    Idiomatic Groovy closure DSL with typed specifications and immutable compiled charts.
-2. **[Charts](docs/charts.md)** The `se.alipsa.matrix.pict` package contains charts in a "familiar style"
+2. **[PICT](docs/pict.md)** The `se.alipsa.matrix.pict` package contains charts in a "familiar style"
     (begin with the chart type, e.g. `AreaChart`, then add data and styling).
     Backed by Charm internally.
 
@@ -114,7 +114,7 @@ ChartToPng.export(areaChart, new File("areaChart.png"))
 ChartToPng.export(barChart, new File("barChart.png"))
 ```
 
-See **[charts.md](docs/charts.md)** for comprehensive documentation.
+See **[pict.md](docs/pict.md)** for comprehensive documentation.
 
 # Release version compatibility matrix
 See the [Matrix BOM](https://mvnrepository.com/artifact/se.alipsa.matrix/matrix-bom) for the recommended matrix library versions.

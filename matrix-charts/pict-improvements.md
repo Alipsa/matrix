@@ -639,7 +639,7 @@ void testGroupedBubbleChart() {
 
 ### 8g. [x] Update documentation
 
-**File:** `docs/charts.md`
+**File:** `docs/pict.md`
 
 Add a BubbleChart section with factory and builder examples.
 
