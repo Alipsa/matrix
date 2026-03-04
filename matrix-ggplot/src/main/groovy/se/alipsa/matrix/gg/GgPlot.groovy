@@ -241,10 +241,13 @@ class GgPlot {
    * aes { x = 'Sepal Length'; y = 'Petal Width' }
    * }</pre>
    *
-   * <p>Backward compatibility note: if the closure declares explicit
-   * parameters (for example {@code aes { row -> row.mpg }}), it is treated
-   * as the legacy positional {@code x} expression mapping rather than the DSL
-   * form.
+   * <p>Backward compatibility note: closures intended as positional
+   * expression mappings are preserved:
+   * <ul>
+   *   <li>Explicit-parameter closure: {@code aes { row -> row.mpg }}</li>
+   *   <li>Implicit-it expression closure: {@code aes { it.mpg }}</li>
+   * </ul>
+   * These are treated as legacy positional {@code x} mappings instead of DSL.
    *
    * @param configure closure delegating to {@link AesDsl}
    * @return a new Aes instance
@@ -262,8 +265,17 @@ class GgPlot {
     AesDsl dsl = new AesDsl()
     Closure body = configure.rehydrate(dsl, configure.owner, configure.thisObject)
     body.resolveStrategy = Closure.DELEGATE_ONLY
-    body.call()
-    dsl.toAes()
+    if (configure.maximumNumberOfParameters > 0) {
+      body.call([:])
+      if (!dsl.hasMappings()) {
+        Aes aes = new Aes()
+        aes.x = configure
+        return aes
+      }
+    } else {
+      body.call()
+    }
+    return dsl.toAes()
   }
 
   static Aes aes(String... colNames) {

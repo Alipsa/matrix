@@ -115,4 +115,25 @@ class AesDsl {
     if (this.@map_id != null) aes.map_id = this.@map_id
     aes
   }
+
+  /**
+   * @return true when at least one aesthetic has been explicitly set
+   */
+  boolean hasMappings() {
+    this.@x != null ||
+        this.@y != null ||
+        this.@color != null ||
+        this.@fill != null ||
+        this.@size != null ||
+        this.@shape != null ||
+        this.@alpha != null ||
+        this.@linetype != null ||
+        this.@linewidth != null ||
+        this.@group != null ||
+        this.@label != null ||
+        this.@tooltip != null ||
+        this.@weight != null ||
+        this.@geometry != null ||
+        this.@map_id != null
+  }
 }

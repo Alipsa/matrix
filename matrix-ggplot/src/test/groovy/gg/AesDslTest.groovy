@@ -62,6 +62,15 @@ class AesDslTest {
   }
 
   @Test
+  void testImplicitItExpressionClosureUsesLegacyPositionalXBehavior() {
+    Aes mapping = aes { it.mpg }
+
+    assertTrue(mapping.x instanceof Closure)
+    assertEquals(1, (mapping.x as Closure).maximumNumberOfParameters)
+    assertNull(mapping.y)
+  }
+
+  @Test
   void testIdentityWrapperInClosureAes() {
     Aes mapping = aes { x = mpg; color = I('red') }
 
