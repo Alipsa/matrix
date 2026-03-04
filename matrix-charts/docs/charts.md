@@ -551,19 +551,24 @@ chart.style.chartBackgroundColor = Color.WHITE
 
 Legend configuration is managed via the `Legend` class, either as a standalone object or through fluent builder methods.
 
+Using Groovy's map constructor:
+
 ```groovy
 import se.alipsa.matrix.pict.Legend
 import se.alipsa.matrix.pict.Style
-import java.awt.Color
 
-// Configure legend on a chart directly
 chart.legend = new Legend(
     visible: true,
     position: Style.Position.TOP,
     direction: Legend.Direction.HORIZONTAL
 )
+```
 
-// Or configure individual properties
+Setting individual properties:
+
+```groovy
+import java.awt.Color
+
 chart.legend = new Legend()
 chart.legend.visible = false
 chart.legend.position = Style.Position.BOTTOM
