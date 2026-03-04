@@ -274,6 +274,33 @@ class ChartBuilderTest {
   }
 
   @Test
+  void testAxisScaleValidation() {
+    // start >= end
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(10.0, 5.0, 1.0)
+    }
+    // start == end
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(5.0, 5.0, 1.0)
+    }
+    // step <= 0
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(0.0, 10.0, 0.0)
+    }
+    assertThrows(IllegalArgumentException) {
+      new AxisScale(0.0, 10.0, -1.0)
+    }
+  }
+
+  @Test
+  void testAxisScaleImmutability() {
+    def scale = new AxisScale(0.0, 100.0, 10.0)
+    assertEquals(0.0, scale.start)
+    assertEquals(100.0, scale.end)
+    assertEquals(10.0, scale.step)
+  }
+
+  @Test
   void testBuilderWithStyle() {
     def data = Matrix.builder()
         .columnNames(['x', 'y'])

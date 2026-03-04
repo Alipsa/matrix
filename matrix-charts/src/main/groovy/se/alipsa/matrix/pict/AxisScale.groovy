@@ -2,17 +2,23 @@ package se.alipsa.matrix.pict
 
 import groovy.transform.CompileStatic
 
+/**
+ * Defines a custom axis scale with start, end, and step values.
+ * Instances are immutable after construction.
+ */
 @CompileStatic
 class AxisScale {
-  private BigDecimal start
-  private BigDecimal end
-  private BigDecimal step
-
-  AxisScale() {
-
-  }
+  private final BigDecimal start
+  private final BigDecimal end
+  private final BigDecimal step
 
   AxisScale(BigDecimal start, BigDecimal end, BigDecimal step) {
+    if (start >= end) {
+      throw new IllegalArgumentException("start ($start) must be less than end ($end)")
+    }
+    if (step <= 0) {
+      throw new IllegalArgumentException("step ($step) must be positive")
+    }
     this.start = start
     this.end = end
     this.step = step
@@ -22,23 +28,11 @@ class AxisScale {
     return start
   }
 
-  void setStart(BigDecimal start) {
-    this.start = start
-  }
-
   BigDecimal getEnd() {
     return end
   }
 
-  void setEnd(BigDecimal end) {
-    this.end = end
-  }
-
   BigDecimal getStep() {
     return step
-  }
-
-  void setStep(BigDecimal step) {
-    this.step = step
   }
 }
