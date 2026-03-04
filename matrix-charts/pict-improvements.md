@@ -126,7 +126,7 @@ Add a private mapping method `Style.Position` → `LegendPosition`.
 
 ## Phase 3 — Convert `DataType` constants to enum
 
-### 3a. Convert `DataType` to enum
+### 3a. [x] Convert `DataType` to enum
 
 **File:** `DataType.groovy`
 
@@ -150,14 +150,20 @@ enum DataType {
 
 Move the classification logic (`dataType()`, `isCharacter()`, `equals()`, `differs()`) to instance/static methods on the enum. Keep `sqlType()` as a static utility method.
 
-### 3b. Update callers
+### 3b. [x] Update callers
 
 Search for `DataType.NUMERIC`, `DataType.CHARACTER`, `DataType.dataType()`, `DataType.isCharacter()` across the codebase and update to enum usage.
+
+Only two callers found: `Chart.groovy` lines 67 and 71, both calling `DataType.differs(Class, Class)` — signature unchanged, no edits needed.
 
 ### Verification
 
 ```bash
-./gradlew :matrix-charts:test :matrix-ggplot:test -Pheadless=true
+./gradlew :matrix-charts:test -Pheadless=true
+# Results: SUCCESS (664 tests, 664 passed, 0 failed, 0 skipped)
+
+./gradlew :matrix-ggplot:test -Pheadless=true
+# Results: SUCCESS (all tests passed)
 ```
 
 ---
