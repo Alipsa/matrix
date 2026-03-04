@@ -82,10 +82,6 @@ class Style {
 
   Map<String, String> yLabels = [:]
 
-  boolean isLegendVisible() {
-    Boolean.TRUE == legendVisible
-  }
-
   void setCss(String css) {
     this.css = css
   }
