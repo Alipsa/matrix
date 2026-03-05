@@ -60,6 +60,178 @@ class Aes {
   /** Map id column for geom_map - column name or I(value) */
   def map_id
 
+  // Typed setter overloads improve IDE completion while preserving wrapper support.
+  void setX(String columnName) { this.@x = columnName }
+  void setX(Identity constant) { this.@x = constant }
+  void setX(Factor factor) { this.@x = factor }
+  void setX(Expression expr) { this.@x = expr }
+  void setX(AfterStat stat) { this.@x = stat }
+  void setX(AfterScale scale) { this.@x = scale }
+  void setX(CutWidth cut) { this.@x = cut }
+  void setX(Closure expression) { this.@x = expression }
+
+  void setY(String columnName) { this.@y = columnName }
+  void setY(Identity constant) { this.@y = constant }
+  void setY(Factor factor) { this.@y = factor }
+  void setY(Expression expr) { this.@y = expr }
+  void setY(AfterStat stat) { this.@y = stat }
+  void setY(AfterScale scale) { this.@y = scale }
+  void setY(CutWidth cut) { this.@y = cut }
+  void setY(Closure expression) { this.@y = expression }
+
+  void setColor(String columnName) { this.@color = columnName }
+  void setColor(Identity constant) { this.@color = constant }
+  void setColor(Factor factor) { this.@color = factor }
+  void setColor(Expression expr) { this.@color = expr }
+  void setColor(AfterStat stat) { this.@color = stat }
+  void setColor(AfterScale scale) { this.@color = scale }
+  void setColor(CutWidth cut) { this.@color = cut }
+  void setColor(Closure expression) { this.@color = expression }
+
+  void setColour(String columnName) { setColor(columnName) }
+  void setColour(Identity constant) { setColor(constant) }
+  void setColour(Factor factor) { setColor(factor) }
+  void setColour(Expression expr) { setColor(expr) }
+  void setColour(AfterStat stat) { setColor(stat) }
+  void setColour(AfterScale scale) { setColor(scale) }
+  void setColour(CutWidth cut) { setColor(cut) }
+  void setColour(Closure expression) { setColor(expression) }
+
+  void setCol(String columnName) { setColor(columnName) }
+  void setCol(Identity constant) { setColor(constant) }
+  void setCol(Factor factor) { setColor(factor) }
+  void setCol(Expression expr) { setColor(expr) }
+  void setCol(AfterStat stat) { setColor(stat) }
+  void setCol(AfterScale scale) { setColor(scale) }
+  void setCol(CutWidth cut) { setColor(cut) }
+  void setCol(Closure expression) { setColor(expression) }
+
+  void setFill(String columnName) { this.@fill = columnName }
+  void setFill(Identity constant) { this.@fill = constant }
+  void setFill(Factor factor) { this.@fill = factor }
+  void setFill(Expression expr) { this.@fill = expr }
+  void setFill(AfterStat stat) { this.@fill = stat }
+  void setFill(AfterScale scale) { this.@fill = scale }
+  void setFill(CutWidth cut) { this.@fill = cut }
+  void setFill(Closure expression) { this.@fill = expression }
+
+  void setSize(String columnName) { this.@size = columnName }
+  void setSize(Identity constant) { this.@size = constant }
+  void setSize(Factor factor) { this.@size = factor }
+  void setSize(Expression expr) { this.@size = expr }
+  void setSize(AfterStat stat) { this.@size = stat }
+  void setSize(AfterScale scale) { this.@size = scale }
+  void setSize(CutWidth cut) { this.@size = cut }
+  void setSize(Closure expression) { this.@size = expression }
+
+  void setShape(String columnName) { this.@shape = columnName }
+  void setShape(Identity constant) { this.@shape = constant }
+  void setShape(Factor factor) { this.@shape = factor }
+  void setShape(Expression expr) { this.@shape = expr }
+  void setShape(AfterStat stat) { this.@shape = stat }
+  void setShape(AfterScale scale) { this.@shape = scale }
+  void setShape(CutWidth cut) { this.@shape = cut }
+  void setShape(Closure expression) { this.@shape = expression }
+
+  void setAlpha(String columnName) { this.@alpha = columnName }
+  void setAlpha(Identity constant) { this.@alpha = constant }
+  void setAlpha(Factor factor) { this.@alpha = factor }
+  void setAlpha(Expression expr) { this.@alpha = expr }
+  void setAlpha(AfterStat stat) { this.@alpha = stat }
+  void setAlpha(AfterScale scale) { this.@alpha = scale }
+  void setAlpha(CutWidth cut) { this.@alpha = cut }
+  void setAlpha(Closure expression) { this.@alpha = expression }
+
+  void setLinetype(String columnName) { this.@linetype = columnName }
+  void setLinetype(Identity constant) { this.@linetype = constant }
+  void setLinetype(Factor factor) { this.@linetype = factor }
+  void setLinetype(Expression expr) { this.@linetype = expr }
+  void setLinetype(AfterStat stat) { this.@linetype = stat }
+  void setLinetype(AfterScale scale) { this.@linetype = scale }
+  void setLinetype(CutWidth cut) { this.@linetype = cut }
+  void setLinetype(Closure expression) { this.@linetype = expression }
+
+  void setLinewidth(String columnName) { this.@linewidth = columnName }
+  void setLinewidth(Identity constant) { this.@linewidth = constant }
+  void setLinewidth(Factor factor) { this.@linewidth = factor }
+  void setLinewidth(Expression expr) { this.@linewidth = expr }
+  void setLinewidth(AfterStat stat) { this.@linewidth = stat }
+  void setLinewidth(AfterScale scale) { this.@linewidth = scale }
+  void setLinewidth(CutWidth cut) { this.@linewidth = cut }
+  void setLinewidth(Closure expression) { this.@linewidth = expression }
+
+  void setLineWidth(String columnName) { setLinewidth(columnName) }
+  void setLineWidth(Identity constant) { setLinewidth(constant) }
+  void setLineWidth(Factor factor) { setLinewidth(factor) }
+  void setLineWidth(Expression expr) { setLinewidth(expr) }
+  void setLineWidth(AfterStat stat) { setLinewidth(stat) }
+  void setLineWidth(AfterScale scale) { setLinewidth(scale) }
+  void setLineWidth(CutWidth cut) { setLinewidth(cut) }
+  void setLineWidth(Closure expression) { setLinewidth(expression) }
+
+  void setGroup(String columnName) { this.@group = columnName }
+  void setGroup(Identity constant) { this.@group = constant }
+  void setGroup(Factor factor) { this.@group = factor }
+  void setGroup(Expression expr) { this.@group = expr }
+  void setGroup(AfterStat stat) { this.@group = stat }
+  void setGroup(AfterScale scale) { this.@group = scale }
+  void setGroup(CutWidth cut) { this.@group = cut }
+  void setGroup(Closure expression) { this.@group = expression }
+
+  void setLabel(String columnName) { this.@label = columnName }
+  void setLabel(Identity constant) { this.@label = constant }
+  void setLabel(Factor factor) { this.@label = factor }
+  void setLabel(Expression expr) { this.@label = expr }
+  void setLabel(AfterStat stat) { this.@label = stat }
+  void setLabel(AfterScale scale) { this.@label = scale }
+  void setLabel(CutWidth cut) { this.@label = cut }
+  void setLabel(Closure expression) { this.@label = expression }
+
+  void setTooltip(String columnName) { this.@tooltip = columnName }
+  void setTooltip(Identity constant) { this.@tooltip = constant }
+  void setTooltip(Factor factor) { this.@tooltip = factor }
+  void setTooltip(Expression expr) { this.@tooltip = expr }
+  void setTooltip(AfterStat stat) { this.@tooltip = stat }
+  void setTooltip(AfterScale scale) { this.@tooltip = scale }
+  void setTooltip(CutWidth cut) { this.@tooltip = cut }
+  void setTooltip(Closure expression) { this.@tooltip = expression }
+
+  void setWeight(String columnName) { this.@weight = columnName }
+  void setWeight(Identity constant) { this.@weight = constant }
+  void setWeight(Factor factor) { this.@weight = factor }
+  void setWeight(Expression expr) { this.@weight = expr }
+  void setWeight(AfterStat stat) { this.@weight = stat }
+  void setWeight(AfterScale scale) { this.@weight = scale }
+  void setWeight(CutWidth cut) { this.@weight = cut }
+  void setWeight(Closure expression) { this.@weight = expression }
+
+  void setGeometry(String columnName) { this.@geometry = columnName }
+  void setGeometry(Identity constant) { this.@geometry = constant }
+  void setGeometry(Factor factor) { this.@geometry = factor }
+  void setGeometry(Expression expr) { this.@geometry = expr }
+  void setGeometry(AfterStat stat) { this.@geometry = stat }
+  void setGeometry(AfterScale scale) { this.@geometry = scale }
+  void setGeometry(CutWidth cut) { this.@geometry = cut }
+  void setGeometry(Closure expression) { this.@geometry = expression }
+
+  void setMap_id(String columnName) { this.@map_id = columnName }
+  void setMap_id(Identity constant) { this.@map_id = constant }
+  void setMap_id(Factor factor) { this.@map_id = factor }
+  void setMap_id(Expression expr) { this.@map_id = expr }
+  void setMap_id(AfterStat stat) { this.@map_id = stat }
+  void setMap_id(AfterScale scale) { this.@map_id = scale }
+  void setMap_id(CutWidth cut) { this.@map_id = cut }
+  void setMap_id(Closure expression) { this.@map_id = expression }
+
+  void setMapId(String columnName) { setMap_id(columnName) }
+  void setMapId(Identity constant) { setMap_id(constant) }
+  void setMapId(Factor factor) { setMap_id(factor) }
+  void setMapId(Expression expr) { setMap_id(expr) }
+  void setMapId(AfterStat stat) { setMap_id(stat) }
+  void setMapId(AfterScale scale) { setMap_id(scale) }
+  void setMapId(CutWidth cut) { setMap_id(cut) }
+  void setMapId(Closure expression) { setMap_id(expression) }
+
   // Legacy property names for backward compatibility
   // Using lowercase after 'get' so Groovy maps to xColName, not XColName
   String getxColName() { extractColName(x) }
@@ -86,35 +258,45 @@ class Aes {
 
   Aes(List<String> colNames) {
     if (colNames.size() > 0) {
-      x = colNames[0]
+      setX(colNames[0])
     }
     if (colNames.size() > 1) {
-      y = colNames[1]
+      setY(colNames[1])
     }
   }
 
   Aes(List<String> colNames, String colorColumn) {
     this(colNames)
-    this.color = colorColumn
+    setColor(colorColumn)
   }
 
   Aes(Map params) {
     // Handle both old-style (xCol, yCol) and new-style (x, y) parameter names
-    x = params.x ?: params.xCol
-    y = params.y ?: params.yCol
-    color = params.color ?: params.col ?: params.colour ?: params.colorCol
-    fill = params.fill
-    size = params.size
-    shape = params.shape
-    alpha = params.alpha
-    linetype = params.linetype
-    linewidth = params.linewidth ?: params.lineWidth
-    group = params.group
-    label = params.label
-    tooltip = params.tooltip
-    weight = params.weight
-    geometry = params.geometry
-    map_id = params.map_id ?: params.mapId
+    def xValue = firstNonNull([params.x, params.xCol])
+    if (xValue != null) assignAesthetic('x', xValue)
+
+    def yValue = firstNonNull([params.y, params.yCol])
+    if (yValue != null) assignAesthetic('y', yValue)
+
+    def colorValue = firstNonNull([params.color, params.col, params.colour, params.colorCol])
+    if (colorValue != null) assignAesthetic('color', colorValue)
+    if (params.fill != null) assignAesthetic('fill', params.fill)
+    if (params.size != null) assignAesthetic('size', params.size)
+    if (params.shape != null) assignAesthetic('shape', params.shape)
+    if (params.alpha != null) assignAesthetic('alpha', params.alpha)
+    if (params.linetype != null) assignAesthetic('linetype', params.linetype)
+
+    def linewidthValue = firstNonNull([params.linewidth, params.lineWidth])
+    if (linewidthValue != null) assignAesthetic('linewidth', linewidthValue)
+
+    if (params.group != null) assignAesthetic('group', params.group)
+    if (params.label != null) assignAesthetic('label', params.label)
+    if (params.tooltip != null) assignAesthetic('tooltip', params.tooltip)
+    if (params.weight != null) assignAesthetic('weight', params.weight)
+    if (params.geometry != null) assignAesthetic('geometry', params.geometry)
+
+    def mapIdValue = firstNonNull([params.map_id, params.mapId])
+    if (mapIdValue != null) assignAesthetic('map_id', mapIdValue)
   }
 
   /**
@@ -125,8 +307,55 @@ class Aes {
   Aes(Map params, String xCol, String yCol) {
     this(params)
     // Override x and y with the positional arguments
-    this.x = xCol
-    this.y = yCol
+    setX(xCol)
+    setY(yCol)
+  }
+
+  /**
+   * Assign through typed setters when possible, with direct-field fallback
+   * for legacy value types that do not have explicit typed overloads.
+   */
+  private void assignAesthetic(String name, def value) {
+    try {
+      setProperty(name, value)
+    } catch (MissingMethodException ignored) {
+      switch (name) {
+        case 'x' -> this.@x = value
+        case 'y' -> this.@y = value
+        case 'color' -> this.@color = value
+        case 'fill' -> this.@fill = value
+        case 'size' -> this.@size = value
+        case 'shape' -> this.@shape = value
+        case 'alpha' -> this.@alpha = value
+        case 'linetype' -> this.@linetype = value
+        case 'linewidth' -> this.@linewidth = value
+        case 'group' -> this.@group = value
+        case 'label' -> this.@label = value
+        case 'tooltip' -> this.@tooltip = value
+        case 'weight' -> this.@weight = value
+        case 'geometry' -> this.@geometry = value
+        case 'map_id' -> this.@map_id = value
+        default -> throw ignored
+      }
+    }
+  }
+
+  /**
+   * Assign an aesthetic by name, using typed setter overloads when available.
+   * Falls back to direct field assignment for legacy value types.
+   *
+   * @param name the aesthetic name (for example {@code x}, {@code color}, {@code group})
+   * @param value the value to assign
+   */
+  void setAesthetic(String name, def value) {
+    assignAesthetic(name, value)
+  }
+
+  /**
+   * Return the first non-null value from a precedence-ordered list.
+   */
+  private static def firstNonNull(List values) {
+    values.find { it != null }
   }
 
   /**
@@ -141,23 +370,22 @@ class Aes {
    */
   Object getAestheticValue(String aesthetic) {
     switch (aesthetic) {
-      case 'x': return x
-      case 'y': return y
-      case 'color': return color
-      case 'colour': return color
-      case 'fill': return fill
-      case 'size': return size
-      case 'shape': return shape
-      case 'alpha': return alpha
-      case 'linetype': return linetype
-      case 'linewidth': return linewidth
-      case 'group': return group
-      case 'label': return label
-      case 'tooltip': return tooltip
-      case 'weight': return weight
-      case 'geometry': return geometry
-      case 'map_id': return map_id
-      default: return null
+      case 'x' -> x
+      case 'y' -> y
+      case 'color', 'colour' -> color
+      case 'fill' -> fill
+      case 'size' -> size
+      case 'shape' -> shape
+      case 'alpha' -> alpha
+      case 'linetype' -> linetype
+      case 'linewidth' -> linewidth
+      case 'group' -> group
+      case 'label' -> label
+      case 'tooltip' -> tooltip
+      case 'weight' -> weight
+      case 'geometry' -> geometry
+      case 'map_id' -> map_id
+      default -> null
     }
   }
 
@@ -271,7 +499,7 @@ class Aes {
       return (Expression) value
     }
     if (value instanceof Closure) {
-      return new Expression((Closure<Number>) value)
+      return new Expression((Closure) value)
     }
     return null
   }
@@ -305,66 +533,66 @@ class Aes {
     if (base == null) return this
     Aes result = new Aes()
     // Start with base values
-    result.x = base.x
-    result.y = base.y
-    result.color = base.color
-    result.fill = base.fill
-    result.size = base.size
-    result.shape = base.shape
-    result.alpha = base.alpha
-    result.linetype = base.linetype
-    result.linewidth = base.linewidth
-    result.group = base.group
-    result.label = base.label
-    result.tooltip = base.tooltip
-    result.weight = base.weight
-    result.geometry = base.geometry
-    result.map_id = base.map_id
+    result.@x = base.x
+    result.@y = base.y
+    result.@color = base.color
+    result.@fill = base.fill
+    result.@size = base.size
+    result.@shape = base.shape
+    result.@alpha = base.alpha
+    result.@linetype = base.linetype
+    result.@linewidth = base.linewidth
+    result.@group = base.group
+    result.@label = base.label
+    result.@tooltip = base.tooltip
+    result.@weight = base.weight
+    result.@geometry = base.geometry
+    result.@map_id = base.map_id
     // Override with this Aes's non-null values and corresponding column names
     if (this.x != null) {
-      result.x = this.x
+      result.@x = this.x
     }
     if (this.y != null) {
-      result.y = this.y
+      result.@y = this.y
     }
     if (this.color != null) {
-      result.color = this.color
+      result.@color = this.color
     }
     if (this.fill != null) {
-      result.fill = this.fill
+      result.@fill = this.fill
     }
     if (this.size != null) {
-      result.size = this.size
+      result.@size = this.size
     }
     if (this.shape != null) {
-      result.shape = this.shape
+      result.@shape = this.shape
     }
     if (this.alpha != null) {
-      result.alpha = this.alpha
+      result.@alpha = this.alpha
     }
     if (this.linetype != null) {
-      result.linetype = this.linetype
+      result.@linetype = this.linetype
     }
     if (this.linewidth != null) {
-      result.linewidth = this.linewidth
+      result.@linewidth = this.linewidth
     }
     if (this.group != null) {
-      result.group = this.group
+      result.@group = this.group
     }
     if (this.label != null) {
-      result.label = this.label
+      result.@label = this.label
     }
     if (this.tooltip != null) {
-      result.tooltip = this.tooltip
+      result.@tooltip = this.tooltip
     }
     if (this.weight != null) {
-      result.weight = this.weight
+      result.@weight = this.weight
     }
     if (this.geometry != null) {
-      result.geometry = this.geometry
+      result.@geometry = this.geometry
     }
     if (this.map_id != null) {
-      result.map_id = this.map_id
+      result.@map_id = this.map_id
     }
     return result
   }

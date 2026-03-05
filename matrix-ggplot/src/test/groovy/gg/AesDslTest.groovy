@@ -6,6 +6,9 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.io.SvgWriter
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.AfterScale
+import se.alipsa.matrix.gg.aes.AfterStat
+import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
 
@@ -194,5 +197,22 @@ class AesDslTest {
 
     Svg svg = chart.render()
     assertNotNull(svg)
+  }
+
+  @Test
+  void testDslToAesSupportsMixedWrapperTypes() {
+    Aes mapping = aes {
+      x = factor(cyl)
+      y = after_stat('count')
+      color = after_scale('fill')
+      group = cut_width('displ', 1)
+      fill = I('red')
+    }
+
+    assertInstanceOf(Factor, mapping.x)
+    assertInstanceOf(AfterStat, mapping.y)
+    assertInstanceOf(AfterScale, mapping.color)
+    assertInstanceOf(CutWidth, mapping.group)
+    assertInstanceOf(Identity, mapping.fill)
   }
 }
