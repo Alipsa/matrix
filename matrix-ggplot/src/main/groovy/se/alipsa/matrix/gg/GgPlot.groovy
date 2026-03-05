@@ -279,15 +279,14 @@ class GgPlot {
     if (data == null) {
       throw new IllegalArgumentException('qplot requires a data parameter (Matrix)')
     }
-    String xCol = params.x as String
-    if (!xCol?.trim()) {
+    String xCol = (params.x as String)?.trim()
+    if (!xCol) {
       throw new IllegalArgumentException('qplot requires an x aesthetic (e.g. x: \'columnName\')')
     }
-    String yCol = params.y as String
+    String yCol = (params.y as String)?.trim() ?: null
 
     // Build aesthetics from recognized aes params
-    Map aesParams = [:]
-    if (xCol) aesParams.x = xCol
+    Map aesParams = [x: xCol]
     if (yCol) aesParams.y = yCol
     String colorCol = (params.color ?: params.colour ?: params.col) as String
     if (colorCol) aesParams.color = colorCol
@@ -300,7 +299,7 @@ class GgPlot {
 
     // Build geom params (e.g. bins for histogram)
     Map geomParams = [:]
-    if (params.bins != null) geomParams.bins = params.bins
+    if (params.bins != null) geomParams.bins = validateBins(params.bins)
 
     // Determine geom
     Geom geom = inferGeom(params.geom as String, data, xCol, yCol, geomParams)
@@ -363,7 +362,7 @@ class GgPlot {
       throw new IllegalArgumentException('qplot requires an x aesthetic')
     }
     Map geomParams = [:]
-    if (safeParams.bins != null) geomParams.bins = safeParams.bins
+    if (safeParams.bins != null) geomParams.bins = validateBins(safeParams.bins)
     Geom geom = inferGeom(safeParams.geom as String, data, xCol, mapping.y as String, geomParams)
     GgChart chart = new GgChart(data, mapping) + geom
     if (safeParams.title) chart = chart + ggtitle(safeParams.title as String)
@@ -404,6 +403,15 @@ class GgPlot {
   private static final Set<Class> PRIMITIVE_NUMERIC_TYPES = [
       int, long, short, byte, float, double
   ] as Set<Class>
+
+  /** Validate and coerce the bins parameter to a positive integer. */
+  private static int validateBins(Object value) {
+    int bins = (value as Number).intValue()
+    if (bins <= 0) {
+      throw new IllegalArgumentException("qplot 'bins' must be a positive integer, was: ${value}")
+    }
+    bins
+  }
 
   /** Check whether a column in the matrix holds a numeric type. */
   private static boolean isNumericColumn(Matrix data, String columnName) {

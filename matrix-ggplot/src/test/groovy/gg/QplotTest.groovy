@@ -180,6 +180,20 @@ class QplotTest {
   }
 
   @Test
+  void testZeroBinsThrows() {
+    assertThrows(IllegalArgumentException) {
+      qplot(data: numericData, x: 'value', bins: 0)
+    }
+  }
+
+  @Test
+  void testNegativeBinsThrows() {
+    assertThrows(IllegalArgumentException) {
+      qplot(data: numericData, x: 'value', bins: -5)
+    }
+  }
+
+  @Test
   void testAxisLabels() {
     Svg svg = qplot(data: numericData, x: 'x', y: 'y', xlab: 'X Axis', ylab: 'Y Axis').render()
     assertNotNull(svg)
