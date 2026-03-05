@@ -272,13 +272,13 @@ class Aes {
 
   Aes(Map params) {
     // Handle both old-style (xCol, yCol) and new-style (x, y) parameter names
-    def xValue = params.x != null ? params.x : params.xCol
+    def xValue = firstNonNull([params.x, params.xCol])
     if (xValue != null) assignAesthetic('x', xValue)
 
-    def yValue = params.y != null ? params.y : params.yCol
+    def yValue = firstNonNull([params.y, params.yCol])
     if (yValue != null) assignAesthetic('y', yValue)
 
-    def colorValue = params.color != null ? params.color : (params.col != null ? params.col : (params.colour != null ? params.colour : params.colorCol))
+    def colorValue = firstNonNull([params.color, params.col, params.colour, params.colorCol])
     if (colorValue != null) assignAesthetic('color', colorValue)
     if (params.fill != null) assignAesthetic('fill', params.fill)
     if (params.size != null) assignAesthetic('size', params.size)
@@ -286,7 +286,7 @@ class Aes {
     if (params.alpha != null) assignAesthetic('alpha', params.alpha)
     if (params.linetype != null) assignAesthetic('linetype', params.linetype)
 
-    def linewidthValue = params.linewidth != null ? params.linewidth : params.lineWidth
+    def linewidthValue = firstNonNull([params.linewidth, params.lineWidth])
     if (linewidthValue != null) assignAesthetic('linewidth', linewidthValue)
 
     if (params.group != null) assignAesthetic('group', params.group)
@@ -295,7 +295,7 @@ class Aes {
     if (params.weight != null) assignAesthetic('weight', params.weight)
     if (params.geometry != null) assignAesthetic('geometry', params.geometry)
 
-    def mapIdValue = params.map_id != null ? params.map_id : params.mapId
+    def mapIdValue = firstNonNull([params.map_id, params.mapId])
     if (mapIdValue != null) assignAesthetic('map_id', mapIdValue)
   }
 
@@ -342,9 +342,20 @@ class Aes {
 
   /**
    * Assign an aesthetic by name, using typed setter overloads when available.
+   * Falls back to direct field assignment for legacy value types.
+   *
+   * @param name the aesthetic name (for example {@code x}, {@code color}, {@code group})
+   * @param value the value to assign
    */
   void setAesthetic(String name, def value) {
     assignAesthetic(name, value)
+  }
+
+  /**
+   * Return the first non-null value from a precedence-ordered list.
+   */
+  private static def firstNonNull(List values) {
+    values.find { it != null }
   }
 
   /**
