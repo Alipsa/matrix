@@ -93,4 +93,11 @@ class ColumnRefTest {
 
     assertEquals(['z', 'a', 'm'], data.columnNames())
   }
+
+  @Test
+  void testColsWithNullMatrixThrows() {
+    assertThrows(IllegalArgumentException) {
+      cols(null)
+    }
+  }
 }
