@@ -272,11 +272,17 @@ class GgPlot {
    * @return a renderable GgChart
    */
   static GgChart qplot(Map params) {
+    if (params == null) {
+      throw new IllegalArgumentException('qplot requires a non-null params Map')
+    }
     Matrix data = params.data as Matrix
     if (data == null) {
       throw new IllegalArgumentException('qplot requires a data parameter (Matrix)')
     }
     String xCol = params.x as String
+    if (!xCol?.trim()) {
+      throw new IllegalArgumentException('qplot requires an x aesthetic (e.g. x: \'columnName\')')
+    }
     String yCol = params.y as String
 
     // Build aesthetics from recognized aes params
@@ -320,8 +326,15 @@ class GgPlot {
    * @return a renderable GgChart
    */
   static GgChart qplot(Matrix data, @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure configure) {
+    if (data == null) {
+      throw new IllegalArgumentException('qplot requires a non-null data Matrix')
+    }
     Aes mapping = aes(configure)
-    Geom geom = inferGeom(null, data, mapping.x as String, mapping.y as String, [:])
+    String xCol = mapping.x as String
+    if (!xCol?.trim()) {
+      throw new IllegalArgumentException('qplot requires an x aesthetic')
+    }
+    Geom geom = inferGeom(null, data, xCol, mapping.y as String, [:])
     new GgChart(data, mapping) + geom
   }
 
@@ -340,14 +353,22 @@ class GgPlot {
    * @return a renderable GgChart
    */
   static GgChart qplot(Map params, Matrix data, @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure configure) {
+    if (data == null) {
+      throw new IllegalArgumentException('qplot requires a non-null data Matrix')
+    }
+    Map safeParams = params ?: [:]
     Aes mapping = aes(configure)
+    String xCol = mapping.x as String
+    if (!xCol?.trim()) {
+      throw new IllegalArgumentException('qplot requires an x aesthetic')
+    }
     Map geomParams = [:]
-    if (params.bins != null) geomParams.bins = params.bins
-    Geom geom = inferGeom(params.geom as String, data, mapping.x as String, mapping.y as String, geomParams)
+    if (safeParams.bins != null) geomParams.bins = safeParams.bins
+    Geom geom = inferGeom(safeParams.geom as String, data, xCol, mapping.y as String, geomParams)
     GgChart chart = new GgChart(data, mapping) + geom
-    if (params.title) chart = chart + ggtitle(params.title as String)
-    if (params.xlab) chart = chart + xlab(params.xlab as String)
-    if (params.ylab) chart = chart + ylab(params.ylab as String)
+    if (safeParams.title) chart = chart + ggtitle(safeParams.title as String)
+    if (safeParams.xlab) chart = chart + xlab(safeParams.xlab as String)
+    if (safeParams.ylab) chart = chart + ylab(safeParams.ylab as String)
     chart
   }
 
@@ -380,10 +401,22 @@ class GgPlot {
     new GeomBar(geomParams)
   }
 
+  private static final Set<Class> PRIMITIVE_NUMERIC_TYPES = [
+      int, long, short, byte, float, double
+  ] as Set<Class>
+
   /** Check whether a column in the matrix holds a numeric type. */
   private static boolean isNumericColumn(Matrix data, String columnName) {
-    Class type = data.type(columnName)
-    type != null && Number.isAssignableFrom(type)
+    int idx = data.columnIndex(columnName)
+    if (idx < 0) {
+      throw new IllegalArgumentException(
+          "Column '${columnName}' not found. Available: ${data.columnNames()}")
+    }
+    Class type = data.type(idx)
+    if (type == null) {
+      return false
+    }
+    Number.isAssignableFrom(type) || PRIMITIVE_NUMERIC_TYPES.contains(type)
   }
 
   // ============ Aesthetic mappings ============

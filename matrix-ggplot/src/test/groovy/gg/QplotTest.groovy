@@ -7,6 +7,12 @@ import se.alipsa.groovy.svg.Rect
 import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.gg.GgChart
+import se.alipsa.matrix.gg.geom.GeomBar
+import se.alipsa.matrix.gg.geom.GeomCol
+import se.alipsa.matrix.gg.geom.GeomHistogram
+import se.alipsa.matrix.gg.geom.GeomLine
+import se.alipsa.matrix.gg.geom.GeomPoint
 
 import static org.junit.jupiter.api.Assertions.*
 import static se.alipsa.matrix.gg.GgPlot.*
@@ -40,7 +46,9 @@ class QplotTest {
   @Test
   void testScatterInferred() {
     // Two numeric columns -> geom_point
-    Svg svg = qplot(data: numericData, x: 'x', y: 'y').render()
+    GgChart chart = qplot(data: numericData, x: 'x', y: 'y')
+    assertInstanceOf(GeomPoint, chart.layers[0].geom)
+    Svg svg = chart.render()
     assertNotNull(svg)
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() > 0, 'Scatter plot should render circles')
@@ -49,7 +57,9 @@ class QplotTest {
   @Test
   void testHistogramInferred() {
     // Single numeric column -> geom_histogram
-    Svg svg = qplot(data: numericData, x: 'value').render()
+    GgChart chart = qplot(data: numericData, x: 'value')
+    assertInstanceOf(GeomHistogram, chart.layers[0].geom)
+    Svg svg = chart.render()
     assertNotNull(svg)
     def rects = svg.descendants().findAll { it instanceof Rect }
     assertTrue(rects.size() > 0, 'Histogram should render rects')
@@ -58,7 +68,9 @@ class QplotTest {
   @Test
   void testBarInferred() {
     // Single non-numeric column -> geom_bar
-    Svg svg = qplot(data: mixedData, x: 'category').render()
+    GgChart chart = qplot(data: mixedData, x: 'category')
+    assertInstanceOf(GeomBar, chart.layers[0].geom)
+    Svg svg = chart.render()
     assertNotNull(svg)
     def rects = svg.descendants().findAll { it instanceof Rect }
     assertTrue(rects.size() > 0, 'Bar chart should render rects')
@@ -67,7 +79,9 @@ class QplotTest {
   @Test
   void testColInferred() {
     // Discrete x + numeric y -> geom_col
-    Svg svg = qplot(data: mixedData, x: 'category', y: 'amount').render()
+    GgChart chart = qplot(data: mixedData, x: 'category', y: 'amount')
+    assertInstanceOf(GeomCol, chart.layers[0].geom)
+    Svg svg = chart.render()
     assertNotNull(svg)
     def rects = svg.descendants().findAll { it instanceof Rect }
     assertTrue(rects.size() > 0, 'Column chart should render rects')
@@ -75,7 +89,9 @@ class QplotTest {
 
   @Test
   void testExplicitGeomLine() {
-    Svg svg = qplot(data: numericData, x: 'x', y: 'y', geom: 'line').render()
+    GgChart chart = qplot(data: numericData, x: 'x', y: 'y', geom: 'line')
+    assertInstanceOf(GeomLine, chart.layers[0].geom)
+    Svg svg = chart.render()
     assertNotNull(svg)
     def lines = svg.descendants().findAll { it instanceof Line }
     assertTrue(lines.size() > 0, 'Line chart should render lines')
@@ -100,7 +116,9 @@ class QplotTest {
 
   @Test
   void testClosureBased() {
-    Svg svg = qplot(numericData) { x = x; y = y }.render()
+    GgChart chart = qplot(numericData) { x = x; y = y }
+    assertInstanceOf(GeomPoint, chart.layers[0].geom)
+    Svg svg = chart.render()
     assertNotNull(svg)
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() > 0, 'Closure-based qplot should render circles')
@@ -108,7 +126,9 @@ class QplotTest {
 
   @Test
   void testClosureWithParams() {
-    Svg svg = qplot(numericData, geom: 'line') { x = x; y = y }.render()
+    GgChart chart = qplot(numericData, geom: 'line') { x = x; y = y }
+    assertInstanceOf(GeomLine, chart.layers[0].geom)
+    Svg svg = chart.render()
     assertNotNull(svg)
     def lines = svg.descendants().findAll { it instanceof Line }
     assertTrue(lines.size() > 0, 'Closure-based qplot with geom override should render lines')
@@ -116,7 +136,9 @@ class QplotTest {
 
   @Test
   void testHistogramWithBins() {
-    Svg svg = qplot(data: numericData, x: 'value', bins: 5).render()
+    GgChart chart = qplot(data: numericData, x: 'value', bins: 5)
+    assertInstanceOf(GeomHistogram, chart.layers[0].geom)
+    Svg svg = chart.render()
     assertNotNull(svg)
     def rects = svg.descendants().findAll { it instanceof Rect }
     assertTrue(rects.size() > 0, 'Histogram with custom bins should render rects')
@@ -133,6 +155,27 @@ class QplotTest {
   void testMissingDataThrows() {
     assertThrows(IllegalArgumentException) {
       qplot(data: null, x: 'x')
+    }
+  }
+
+  @Test
+  void testMissingXThrows() {
+    assertThrows(IllegalArgumentException) {
+      qplot(data: numericData)
+    }
+  }
+
+  @Test
+  void testNullParamsMapThrows() {
+    assertThrows(IllegalArgumentException) {
+      qplot((Map) null)
+    }
+  }
+
+  @Test
+  void testUnknownColumnThrows() {
+    assertThrows(IllegalArgumentException) {
+      qplot(data: numericData, x: 'nonexistent')
     }
   }
 
