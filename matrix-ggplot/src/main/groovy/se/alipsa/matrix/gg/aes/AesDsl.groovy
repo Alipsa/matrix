@@ -139,6 +139,7 @@ class AesDsl {
    *
    * @return a populated Aes object
    */
+  @CompileDynamic
   Aes toAes() {
     Aes aes = new Aes()
     if (this.@x != null) aes.x = this.@x

@@ -527,7 +527,7 @@ class GgPlot {
     boolean hasExplicitParameters = configure.maximumNumberOfParameters > 0 && !hasZeroArgDoCall
     if (hasExplicitParameters) {
       Aes aes = new Aes()
-      aes.x = configure
+      aes.setProperty('x', configure)
       return aes
     }
     AesDsl dsl = new AesDsl()
@@ -537,7 +537,7 @@ class GgPlot {
       body.call(dsl)
       if (!dsl.hasMappings()) {
         Aes aes = new Aes()
-        aes.x = configure
+        aes.setProperty('x', configure)
         return aes
       }
     } else {
@@ -561,7 +561,7 @@ class GgPlot {
    */
   static Aes aes(Object x) {
     Aes aes = new Aes()
-    aes.x = x
+    aes.setProperty('x', x)
     return aes
   }
 
@@ -578,8 +578,8 @@ class GgPlot {
    */
   static Aes aes(Object x, Object y) {
     Aes aes = new Aes()
-    aes.x = x
-    aes.y = y
+    aes.setProperty('x', x)
+    aes.setProperty('y', y)
     return aes
   }
 
@@ -603,7 +603,7 @@ class GgPlot {
    */
   static Aes aes(Map params, Object x) {
     Aes aes = new Aes(params)
-    aes.x = x
+    aes.setProperty('x', x)
     return aes
   }
 
@@ -620,8 +620,8 @@ class GgPlot {
    */
   static Aes aes(Map params, Object x, Object y) {
     Aes aes = new Aes(params)
-    aes.x = x
-    aes.y = y
+    aes.setProperty('x', x)
+    aes.setProperty('y', y)
     return aes
   }
 
