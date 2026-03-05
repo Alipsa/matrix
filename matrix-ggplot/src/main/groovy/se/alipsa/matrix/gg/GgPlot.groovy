@@ -57,8 +57,8 @@ import se.alipsa.matrix.gg.aes.Aes
 import se.alipsa.matrix.gg.aes.AesDsl
 import se.alipsa.matrix.gg.aes.AfterScale
 import se.alipsa.matrix.gg.aes.AfterStat
-import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.ColumnRef
+import se.alipsa.matrix.gg.aes.CutWidth
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity

@@ -36,10 +36,10 @@ class ColumnRef {
    * <p>This handles names that would otherwise be intercepted by Groovy/Object
    * properties (for example {@code class} or {@code metaClass}).
    *
-  * @param name the requested column/property name
-  * @return the same name if it exists in the matrix
-  * @throws IllegalArgumentException if the column does not exist
-  */
+   * @param name the requested column/property name
+   * @return the same name if it exists in the matrix
+   * @throws IllegalArgumentException if the column does not exist
+   */
   @CompileDynamic
   Object getProperty(String name) {
     if (this.@columns.contains(name)) {
