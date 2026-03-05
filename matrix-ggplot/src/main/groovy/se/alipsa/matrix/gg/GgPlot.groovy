@@ -54,6 +54,7 @@ import se.alipsa.matrix.gg.geom.GeomCrossbar
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.ListConverter
 import se.alipsa.matrix.gg.aes.Aes
+import se.alipsa.matrix.gg.aes.AesDsl
 import se.alipsa.matrix.gg.aes.AfterScale
 import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.CutWidth
@@ -216,9 +217,65 @@ class GgPlot {
    * Create aesthetic mappings.
    * All parameters are treated as column name mappings.
    * Use I(value) for constant values.
+   *
+   * <p>For unquoted column names, see {@link #aes(groovy.lang.Closure)}:
+   * <pre>{@code
+   * aes { x = mpg; y = wt; color = cyl }
+   * }</pre>
    */
   static Aes aes(Map params) {
     return new Aes(params)
+  }
+
+  /**
+   * Create aesthetic mappings using a closure with unquoted column names.
+   *
+   * <p>Inside the closure, bare identifiers resolve to column name strings:
+   * <pre>{@code
+   * aes { x = mpg; y = wt; color = cyl }
+   * // equivalent to: aes(x: 'mpg', y: 'wt', color: 'cyl')
+   * }</pre>
+   *
+   * <p>Quoted names still work for columns with spaces:
+   * <pre>{@code
+   * aes { x = 'Sepal Length'; y = 'Petal Width' }
+   * }</pre>
+   *
+   * <p>Backward compatibility note: closures intended as positional
+   * expression mappings are preserved:
+   * <ul>
+   *   <li>Explicit-parameter closure: {@code aes { row -> row.mpg }}</li>
+   *   <li>Implicit-it expression closure: {@code aes { it.mpg }}</li>
+   * </ul>
+   * These are treated as legacy positional {@code x} mappings instead of DSL.
+   *
+   * @param configure closure delegating to {@link AesDsl}
+   * @return a new Aes instance
+   */
+  static Aes aes(@DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure configure) {
+    boolean hasZeroArgDoCall = configure.class.declaredMethods.any { java.lang.reflect.Method method ->
+      method.name == 'doCall' && method.parameterCount == 0
+    }
+    boolean hasExplicitParameters = configure.maximumNumberOfParameters > 0 && !hasZeroArgDoCall
+    if (hasExplicitParameters) {
+      Aes aes = new Aes()
+      aes.x = configure
+      return aes
+    }
+    AesDsl dsl = new AesDsl()
+    Closure body = configure.rehydrate(dsl, configure.owner, configure.thisObject)
+    body.resolveStrategy = Closure.DELEGATE_ONLY
+    if (configure.maximumNumberOfParameters > 0) {
+      body.call(dsl)
+      if (!dsl.hasMappings()) {
+        Aes aes = new Aes()
+        aes.x = configure
+        return aes
+      }
+    } else {
+      body.call()
+    }
+    return dsl.toAes()
   }
 
   static Aes aes(String... colNames) {
@@ -245,6 +302,7 @@ class GgPlot {
    * Accepts column names (String), constants via I(...), Factor, AfterStat, or closures.
    *
    * Example: aes('cty', 'hwy')
+   * Closure alternative: aes { x = cty; y = hwy }
    *
    * @param x x mapping (column name, Factor, Identity, AfterStat, or closure)
    * @param y y mapping (column name, Factor, Identity, AfterStat, or closure)
