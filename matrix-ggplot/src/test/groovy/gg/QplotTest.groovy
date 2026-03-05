@@ -8,6 +8,7 @@ import se.alipsa.groovy.svg.Svg
 import se.alipsa.groovy.svg.Text
 import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.gg.GgChart
+import se.alipsa.matrix.gg.aes.Identity
 import se.alipsa.matrix.gg.geom.GeomBar
 import se.alipsa.matrix.gg.geom.GeomCol
 import se.alipsa.matrix.gg.geom.GeomHistogram
@@ -99,10 +100,19 @@ class QplotTest {
 
   @Test
   void testColorAesthetic() {
-    Svg svg = qplot(data: mixedData, x: 'amount', y: 'amount', color: 'group').render()
+    GgChart chart = qplot(data: mixedData, x: 'amount', y: 'amount', color: 'group')
+    Svg svg = chart.render()
     assertNotNull(svg)
+    assertEquals('group', chart.globalAes.color)
     def circles = svg.descendants().findAll { it instanceof Circle }
     assertTrue(circles.size() > 0, 'Colored scatter should render circles')
+  }
+
+  @Test
+  void testColorIdentityPassthrough() {
+    GgChart chart = qplot(data: numericData, x: 'x', y: 'y', color: I('red'))
+    assertInstanceOf(Identity, chart.globalAes.color)
+    assertEquals('red', (chart.globalAes.color as Identity).value)
   }
 
   @Test
@@ -132,6 +142,12 @@ class QplotTest {
     assertNotNull(svg)
     def lines = svg.descendants().findAll { it instanceof Line }
     assertTrue(lines.size() > 0, 'Closure-based qplot with geom override should render lines')
+  }
+
+  @Test
+  void testClosureWithExplicitParamsMap() {
+    GgChart chart = qplot(numericData, [geom: 'line']) { x = x; y = y }
+    assertInstanceOf(GeomLine, chart.layers[0].geom)
   }
 
   @Test
@@ -190,6 +206,13 @@ class QplotTest {
   void testNegativeBinsThrows() {
     assertThrows(IllegalArgumentException) {
       qplot(data: numericData, x: 'value', bins: -5)
+    }
+  }
+
+  @Test
+  void testNonNumericBinsThrows() {
+    assertThrows(IllegalArgumentException) {
+      qplot(data: numericData, x: 'value', bins: 'abc')
     }
   }
 

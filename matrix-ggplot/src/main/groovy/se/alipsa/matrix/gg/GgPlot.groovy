@@ -288,8 +288,8 @@ class GgPlot {
     // Build aesthetics from recognized aes params
     Map aesParams = [x: xCol]
     if (yCol) aesParams.y = yCol
-    String colorCol = (params.color ?: params.colour ?: params.col) as String
-    if (colorCol) aesParams.color = colorCol
+    def colorCol = params.color ?: params.colour ?: params.col
+    if (colorCol != null) aesParams.color = colorCol
     if (params.fill) aesParams.fill = params.fill
     if (params.size) aesParams.size = params.size
     if (params.shape) aesParams.shape = params.shape
@@ -299,7 +299,16 @@ class GgPlot {
 
     // Build geom params (e.g. bins for histogram)
     Map geomParams = [:]
-    if (params.bins != null) geomParams.bins = validateBins(params.bins)
+    if (params.bins != null) {
+      def binsValue = params.bins
+      if (binsValue instanceof Number) {
+        geomParams.bins = validateBins(binsValue as Number)
+      } else if (binsValue instanceof CharSequence) {
+        geomParams.bins = validateBins(binsValue as CharSequence)
+      } else {
+        throw new IllegalArgumentException("qplot 'bins' must be a numeric value, was: ${binsValue}")
+      }
+    }
 
     // Determine geom
     Geom geom = inferGeom(params.geom as String, data, xCol, yCol, geomParams)
@@ -362,13 +371,43 @@ class GgPlot {
       throw new IllegalArgumentException('qplot requires an x aesthetic')
     }
     Map geomParams = [:]
-    if (safeParams.bins != null) geomParams.bins = validateBins(safeParams.bins)
+    if (safeParams.bins != null) {
+      def binsValue = safeParams.bins
+      if (binsValue instanceof Number) {
+        geomParams.bins = validateBins(binsValue as Number)
+      } else if (binsValue instanceof CharSequence) {
+        geomParams.bins = validateBins(binsValue as CharSequence)
+      } else {
+        throw new IllegalArgumentException("qplot 'bins' must be a numeric value, was: ${binsValue}")
+      }
+    }
     Geom geom = inferGeom(safeParams.geom as String, data, xCol, mapping.y as String, geomParams)
     GgChart chart = new GgChart(data, mapping) + geom
     if (safeParams.title) chart = chart + ggtitle(safeParams.title as String)
     if (safeParams.xlab) chart = chart + xlab(safeParams.xlab as String)
     if (safeParams.ylab) chart = chart + ylab(safeParams.ylab as String)
     chart
+  }
+
+  /**
+   * Quick plot with closure-based aesthetics and additional parameters.
+   *
+   * <p>Equivalent to {@link #qplot(java.util.Map, se.alipsa.matrix.core.Matrix, groovy.lang.Closure)}
+   * but with positional order {@code qplot(data, params) { ... }}.
+   *
+   * <p>Examples:
+   * <pre>{@code
+   * qplot(mtcars, [geom: 'line']) { x = mpg; y = wt }
+   * qplot(mtcars, [bins: 15]) { x = mpg }
+   * }</pre>
+   *
+   * @param data the Matrix
+   * @param params additional parameters (geom, title, xlab, ylab, bins)
+   * @param configure closure delegating to {@link AesDsl}
+   * @return a renderable GgChart
+   */
+  static GgChart qplot(Matrix data, Map params, @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure configure) {
+    qplot(params, data, configure)
   }
 
   /**
@@ -405,12 +444,25 @@ class GgPlot {
   ] as Set<Class>
 
   /** Validate and coerce the bins parameter to a positive integer. */
-  private static int validateBins(Object value) {
-    int bins = (value as Number).intValue()
+  private static int validateBins(Number value) {
+    int bins = value.intValue()
     if (bins <= 0) {
       throw new IllegalArgumentException("qplot 'bins' must be a positive integer, was: ${value}")
     }
     bins
+  }
+
+  /** Validate and coerce String/CharSequence bins parameter to a positive integer. */
+  private static int validateBins(CharSequence value) {
+    String rawValue = value?.toString()?.trim()
+    if (!rawValue) {
+      throw new IllegalArgumentException("qplot 'bins' must be a positive integer, was: ${value}")
+    }
+    try {
+      return validateBins(Integer.parseInt(rawValue))
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("qplot 'bins' must be a numeric value, was: ${value}", e)
+    }
   }
 
   /** Check whether a column in the matrix holds a numeric type. */
