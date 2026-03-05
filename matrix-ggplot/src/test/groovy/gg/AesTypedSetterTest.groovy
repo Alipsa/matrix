@@ -10,6 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf
 import static org.junit.jupiter.api.Assertions.assertNotNull
 import static org.junit.jupiter.api.Assertions.assertTrue
 import static se.alipsa.matrix.gg.GgPlot.I
+import static se.alipsa.matrix.gg.GgPlot.after_scale
+import static se.alipsa.matrix.gg.GgPlot.after_stat
+import static se.alipsa.matrix.gg.GgPlot.cut_width
 import static se.alipsa.matrix.gg.GgPlot.factor
 
 class AesTypedSetterTest {
@@ -42,13 +45,49 @@ class AesTypedSetterTest {
   }
 
   @Test
-  void testClosureAssignmentWrapsExpression() {
+  void testClosureAssignmentIsExpressionCompatible() {
     Aes aes = new Aes()
     aes.x = { row -> row.mpg * 2 }
 
     assertTrue(aes.isExpression('x'))
     assertTrue(aes.x instanceof Closure)
     assertNotNull(aes.getExpression('x'))
+  }
+
+  @Test
+  void testAfterStatAssignment() {
+    Aes aes = new Aes()
+    aes.y = after_stat('count')
+
+    assertTrue(aes.isAfterStat('y'))
+    assertEquals('count', aes.getAfterStatName('y'))
+  }
+
+  @Test
+  void testAfterScaleAssignment() {
+    Aes aes = new Aes()
+    aes.color = after_scale('fill')
+
+    assertTrue(aes.isAfterScale('color'))
+    assertEquals('fill', aes.getAfterScaleName('color'))
+  }
+
+  @Test
+  void testCutWidthAssignment() {
+    Aes aes = new Aes()
+    aes.group = cut_width('displ', 1)
+
+    assertTrue(aes.isCutWidth('group'))
+    assertEquals('displ', aes.getCutWidth('group').column)
+  }
+
+  @Test
+  void testAssignAestheticFallbackForUnmappedType() {
+    List<Integer> values = [1, 2, 3]
+    Aes aes = new Aes([x: values])
+
+    assertTrue(aes.x instanceof List)
+    assertEquals(values, aes.x)
   }
 
   @Test

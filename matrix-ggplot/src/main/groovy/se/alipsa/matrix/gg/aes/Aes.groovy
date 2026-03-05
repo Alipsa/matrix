@@ -341,6 +341,13 @@ class Aes {
   }
 
   /**
+   * Assign an aesthetic by name, using typed setter overloads when available.
+   */
+  void setAesthetic(String name, def value) {
+    assignAesthetic(name, value)
+  }
+
+  /**
    * Get the value of an aesthetic by name.
    * This method provides type-safe access to aesthetic values without dynamic property access.
    * <p>
@@ -352,23 +359,22 @@ class Aes {
    */
   Object getAestheticValue(String aesthetic) {
     switch (aesthetic) {
-      case 'x': return x
-      case 'y': return y
-      case 'color': return color
-      case 'colour': return color
-      case 'fill': return fill
-      case 'size': return size
-      case 'shape': return shape
-      case 'alpha': return alpha
-      case 'linetype': return linetype
-      case 'linewidth': return linewidth
-      case 'group': return group
-      case 'label': return label
-      case 'tooltip': return tooltip
-      case 'weight': return weight
-      case 'geometry': return geometry
-      case 'map_id': return map_id
-      default: return null
+      case 'x' -> x
+      case 'y' -> y
+      case 'color', 'colour' -> color
+      case 'fill' -> fill
+      case 'size' -> size
+      case 'shape' -> shape
+      case 'alpha' -> alpha
+      case 'linetype' -> linetype
+      case 'linewidth' -> linewidth
+      case 'group' -> group
+      case 'label' -> label
+      case 'tooltip' -> tooltip
+      case 'weight' -> weight
+      case 'geometry' -> geometry
+      case 'map_id' -> map_id
+      default -> null
     }
   }
 
