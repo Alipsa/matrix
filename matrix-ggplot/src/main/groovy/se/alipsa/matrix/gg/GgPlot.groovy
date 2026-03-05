@@ -74,6 +74,7 @@ import se.alipsa.matrix.gg.facet.FacetGrid
 import se.alipsa.matrix.gg.facet.FacetWrap
 import se.alipsa.matrix.gg.facet.Labeller
 import se.alipsa.matrix.gg.geom.GeomAbline
+import se.alipsa.matrix.gg.geom.Geom
 import se.alipsa.matrix.gg.geom.GeomArea
 import se.alipsa.matrix.gg.geom.GeomBar
 import se.alipsa.matrix.gg.geom.GeomCol
@@ -212,6 +213,273 @@ class GgPlot {
     }
     return new GgChart(data, mapping)
   }
+
+  // ============ Quick plot ============
+
+  /** Geom name to constructor mapping for qplot geom inference. */
+  private static final Map<String, Closure<Geom>> GEOM_FACTORIES = (Map<String, Closure<Geom>>) [
+      point    : { Map p -> new GeomPoint(p) },
+      line     : { Map p -> new GeomLine(p) },
+      bar      : { Map p -> new GeomBar(p) },
+      col      : { Map p -> new GeomCol(p) },
+      histogram: { Map p -> new GeomHistogram(p) },
+      boxplot  : { Map p -> new GeomBoxplot(p) },
+      density  : { Map p -> new GeomDensity(p) },
+      smooth   : { Map p -> new GeomSmooth(p) },
+      area     : { Map p -> new GeomArea(p) },
+      violin   : { Map p -> new GeomViolin(p) },
+      jitter   : { Map p -> new GeomJitter(p) },
+      dotplot  : { Map p -> new GeomDotplot(p) },
+      freqpoly : { Map p -> new GeomFreqpoly(p) },
+      step     : { Map p -> new GeomStep(p) },
+      rug      : { Map p -> new GeomRug(p) },
+      text     : { Map p -> new GeomText(p) },
+      label    : { Map p -> new GeomLabel(p) },
+      tile     : { Map p -> new GeomTile(p) },
+      hex      : { Map p -> new GeomHex(p) },
+      bin2d    : { Map p -> new GeomBin2d(p) },
+      segment  : { Map p -> new GeomSegment(p) },
+      path     : { Map p -> new GeomPath(p) },
+      polygon  : { Map p -> new GeomPolygon(p) },
+      ribbon   : { Map p -> new GeomRibbon(p) },
+      rect     : { Map p -> new GeomRect(p) },
+      contour  : { Map p -> new GeomContour(p) },
+      errorbar : { Map p -> new GeomErrorbar(p) },
+  ]
+
+  /**
+   * Quick plot -- convenience function for rapid exploratory charting.
+   *
+   * <p>Infers geom from data and aesthetics:
+   * <ul>
+   *   <li>x + y numeric -> {@code geom_point()}</li>
+   *   <li>x discrete, no y -> {@code geom_bar()}</li>
+   *   <li>x numeric, no y -> {@code geom_histogram()}</li>
+   *   <li>x discrete + y numeric -> {@code geom_col()}</li>
+   * </ul>
+   *
+   * <p>Override with {@code geom: 'line'}, {@code geom: 'boxplot'}, etc.
+   *
+   * <p>Examples:
+   * <pre>{@code
+   * qplot(data: mtcars, x: 'mpg', y: 'wt', color: 'cyl')
+   * qplot(data: mtcars, x: 'cyl', geom: 'bar')
+   * qplot(data: mtcars, x: 'mpg', geom: 'histogram', bins: 15)
+   * }</pre>
+   *
+   * @param params named parameters: data (Matrix, required), x, y, geom, color/colour/col,
+   *        fill, size, shape, alpha, linetype, title, xlab, ylab, bins
+   * @return a renderable GgChart
+   */
+  static GgChart qplot(Map params) {
+    if (params == null) {
+      throw new IllegalArgumentException('qplot requires a non-null params Map')
+    }
+    Matrix data = params.data as Matrix
+    if (data == null) {
+      throw new IllegalArgumentException('qplot requires a data parameter (Matrix)')
+    }
+    String xCol = (params.x as String)?.trim()
+    if (!xCol) {
+      throw new IllegalArgumentException('qplot requires an x aesthetic (e.g. x: \'columnName\')')
+    }
+    String yCol = (params.y as String)?.trim() ?: null
+
+    // Build aesthetics from recognized aes params
+    Map aesParams = [x: xCol]
+    if (yCol) aesParams.y = yCol
+    def colorCol = params.color ?: params.colour ?: params.col
+    if (colorCol != null) aesParams.color = colorCol
+    if (params.fill) aesParams.fill = params.fill
+    if (params.size) aesParams.size = params.size
+    if (params.shape) aesParams.shape = params.shape
+    if (params.alpha != null) aesParams.alpha = params.alpha
+    if (params.linetype) aesParams.linetype = params.linetype
+    Aes mapping = new Aes(aesParams)
+
+    // Build geom params (e.g. bins for histogram)
+    Map geomParams = [:]
+    if (params.bins != null) {
+      def binsValue = params.bins
+      if (binsValue instanceof Number) {
+        geomParams.bins = validateBins(binsValue as Number)
+      } else if (binsValue instanceof CharSequence) {
+        geomParams.bins = validateBins(binsValue as CharSequence)
+      } else {
+        throw new IllegalArgumentException("qplot 'bins' must be a numeric value, was: ${binsValue}")
+      }
+    }
+
+    // Determine geom
+    Geom geom = inferGeom(params.geom as String, data, xCol, yCol, geomParams)
+
+    // Assemble chart
+    GgChart chart = new GgChart(data, mapping) + geom
+    if (params.title) chart = chart + ggtitle(params.title as String)
+    if (params.xlab) chart = chart + xlab(params.xlab as String)
+    if (params.ylab) chart = chart + ylab(params.ylab as String)
+    chart
+  }
+
+  /**
+   * Quick plot with closure-based aesthetics.
+   *
+   * <p>Examples:
+   * <pre>{@code
+   * qplot(mtcars) { x = mpg; y = wt; color = cyl }
+   * }</pre>
+   *
+   * @param data the Matrix
+   * @param configure closure delegating to {@link AesDsl}
+   * @return a renderable GgChart
+   */
+  static GgChart qplot(Matrix data, @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure configure) {
+    if (data == null) {
+      throw new IllegalArgumentException('qplot requires a non-null data Matrix')
+    }
+    Aes mapping = aes(configure)
+    String xCol = mapping.x as String
+    if (!xCol?.trim()) {
+      throw new IllegalArgumentException('qplot requires an x aesthetic')
+    }
+    Geom geom = inferGeom(null, data, xCol, mapping.y as String, [:])
+    new GgChart(data, mapping) + geom
+  }
+
+  /**
+   * Quick plot with closure-based aesthetics and additional parameters.
+   *
+   * <p>Examples:
+   * <pre>{@code
+   * qplot(mtcars, geom: 'line') { x = mpg; y = wt }
+   * qplot(mtcars, bins: 15) { x = mpg }
+   * }</pre>
+   *
+   * @param params additional parameters (geom, title, xlab, ylab, bins)
+   * @param data the Matrix
+   * @param configure closure delegating to {@link AesDsl}
+   * @return a renderable GgChart
+   */
+  static GgChart qplot(Map params, Matrix data, @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure configure) {
+    if (data == null) {
+      throw new IllegalArgumentException('qplot requires a non-null data Matrix')
+    }
+    Map safeParams = params ?: [:]
+    Aes mapping = aes(configure)
+    String xCol = mapping.x as String
+    if (!xCol?.trim()) {
+      throw new IllegalArgumentException('qplot requires an x aesthetic')
+    }
+    Map geomParams = [:]
+    if (safeParams.bins != null) {
+      def binsValue = safeParams.bins
+      if (binsValue instanceof Number) {
+        geomParams.bins = validateBins(binsValue as Number)
+      } else if (binsValue instanceof CharSequence) {
+        geomParams.bins = validateBins(binsValue as CharSequence)
+      } else {
+        throw new IllegalArgumentException("qplot 'bins' must be a numeric value, was: ${binsValue}")
+      }
+    }
+    Geom geom = inferGeom(safeParams.geom as String, data, xCol, mapping.y as String, geomParams)
+    GgChart chart = new GgChart(data, mapping) + geom
+    if (safeParams.title) chart = chart + ggtitle(safeParams.title as String)
+    if (safeParams.xlab) chart = chart + xlab(safeParams.xlab as String)
+    if (safeParams.ylab) chart = chart + ylab(safeParams.ylab as String)
+    chart
+  }
+
+  /**
+   * Quick plot with closure-based aesthetics and additional parameters.
+   *
+   * <p>Equivalent to {@link #qplot(java.util.Map, se.alipsa.matrix.core.Matrix, groovy.lang.Closure)}
+   * but with positional order {@code qplot(data, params) { ... }}.
+   *
+   * <p>Examples:
+   * <pre>{@code
+   * qplot(mtcars, [geom: 'line']) { x = mpg; y = wt }
+   * qplot(mtcars, [bins: 15]) { x = mpg }
+   * }</pre>
+   *
+   * @param data the Matrix
+   * @param params additional parameters (geom, title, xlab, ylab, bins)
+   * @param configure closure delegating to {@link AesDsl}
+   * @return a renderable GgChart
+   */
+  static GgChart qplot(Matrix data, Map params, @DelegatesTo(strategy = Closure.DELEGATE_ONLY, value = AesDsl) Closure configure) {
+    qplot(params, data, configure)
+  }
+
+  /**
+   * Infer the appropriate geom for qplot based on data types and explicit override.
+   */
+  private static Geom inferGeom(String geomName, Matrix data, String xCol, String yCol, Map geomParams) {
+    if (geomName) {
+      Closure<Geom> factory = GEOM_FACTORIES[geomName.toLowerCase(Locale.ROOT)]
+      if (factory == null) {
+        throw new IllegalArgumentException(
+            "Unknown geom '${geomName}'. Available: ${GEOM_FACTORIES.keySet().sort()}")
+      }
+      return factory.call(geomParams)
+    }
+    boolean xNumeric = xCol ? isNumericColumn(data, xCol) : false
+    boolean yPresent = yCol != null && !yCol.isEmpty()
+    boolean yNumeric = yPresent ? isNumericColumn(data, yCol) : false
+
+    if (yPresent) {
+      if (!xNumeric && yNumeric) {
+        return new GeomCol(geomParams)
+      }
+      return new GeomPoint(geomParams)
+    }
+    // Only x
+    if (xNumeric) {
+      return new GeomHistogram(geomParams)
+    }
+    new GeomBar(geomParams)
+  }
+
+  private static final Set<Class> PRIMITIVE_NUMERIC_TYPES = [
+      int, long, short, byte, float, double
+  ] as Set<Class>
+
+  /** Validate and coerce the bins parameter to a positive integer. */
+  private static int validateBins(Number value) {
+    int bins = value.intValue()
+    if (bins <= 0) {
+      throw new IllegalArgumentException("qplot 'bins' must be a positive integer, was: ${value}")
+    }
+    bins
+  }
+
+  /** Validate and coerce String/CharSequence bins parameter to a positive integer. */
+  private static int validateBins(CharSequence value) {
+    String rawValue = value?.toString()?.trim()
+    if (!rawValue) {
+      throw new IllegalArgumentException("qplot 'bins' must be a positive integer, was: ${value}")
+    }
+    try {
+      return validateBins(Integer.parseInt(rawValue))
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("qplot 'bins' must be a numeric value, was: ${value}", e)
+    }
+  }
+
+  /** Check whether a column in the matrix holds a numeric type. */
+  private static boolean isNumericColumn(Matrix data, String columnName) {
+    int idx = data.columnIndex(columnName)
+    if (idx < 0) {
+      throw new IllegalArgumentException(
+          "Column '${columnName}' not found. Available: ${data.columnNames()}")
+    }
+    Class type = data.type(idx)
+    if (type == null) {
+      return false
+    }
+    Number.isAssignableFrom(type) || PRIMITIVE_NUMERIC_TYPES.contains(type)
+  }
+
+  // ============ Aesthetic mappings ============
 
   /**
    * Create aesthetic mappings.

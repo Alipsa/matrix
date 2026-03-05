@@ -147,7 +147,7 @@ qplot(data: mtcars, x: 'mpg', geom: 'histogram', bins: 15)
 qplot(mtcars) { x = mpg; y = wt; color = cyl }
 ```
 
-### 2.1 [ ] Implement `qplot()` in `GgPlot`
+### 2.1 [x] Implement `qplot()` in `GgPlot`
 
 **File:** `matrix-ggplot/src/main/groovy/se/alipsa/matrix/gg/GgPlot.groovy`
 
@@ -193,7 +193,7 @@ static GgChart qplot(Matrix data, @DelegatesTo(AesDsl) Closure configure) { ... 
 5. If x is discrete and y is numeric → `geom_col()` (column chart)
 6. Default → `geom_point()`
 
-### 2.2 [ ] Add tests for `qplot()`
+### 2.2 [x] Add tests for `qplot()`
 
 **File:** `matrix-ggplot/src/test/groovy/gg/QplotTest.groovy`
 
@@ -351,6 +351,53 @@ Test cases:
 
 ---
 
+## Phase 5 — Documentation updates
+
+Update all relevant documentation to cover the features added in Phases 1–4. No code changes — documentation only.
+
+### 5.1 [ ] Update `matrix-ggplot/README.md`
+
+Add sections or examples covering:
+- Closure-based `aes` syntax with unquoted column names (Phase 1)
+- `qplot()` quick plot with geom inference (Phase 2)
+- `cols()` validation helper (Phase 4, if implemented)
+- Show both map-based and closure-based styles side by side
+
+### 5.2 [ ] Update `matrix-ggplot/docs/ggPlot.md`
+
+This is the main ggplot API reference. Add:
+- **Aesthetic mappings** section: document the closure-based `aes` syntax alongside the existing map-based syntax, including `propertyMissing` behavior, quoted names for columns with spaces, and compatibility with `I()`, `factor()`, `after_stat()`, etc.
+- **Quick plot** section: document `qplot()` with all three overloads (`Map`, `Matrix + Closure`, `Map + Matrix + Closure`), geom inference rules, supported parameters, and examples
+- **Typed Aes fields** section (Phase 3, if implemented): document the typed setter overloads and IDE benefits
+- **Column references** section (Phase 4, if implemented): document `cols()` with validation behavior and error messages
+
+### 5.3 [ ] Update `docs/R-comparison.md`
+
+Update the R vs Matrix comparison table and examples to show:
+- Closure-based `aes` — demonstrate how close it is to R's NSE (`aes(x = mpg)` vs `aes { x = mpg }`)
+- `qplot()` — show R's `qplot()` alongside Matrix's `qplot()` to highlight API parity
+- Update the feature comparison table if it lists limitations that are now resolved
+
+### 5.4 [ ] Update `docs/tutorial/13-matrix-charts.md`
+
+Add a note or brief subsection in the charts tutorial pointing to:
+- The closure-based `aes` as the preferred syntax for new code
+- `qplot()` for quick exploratory plots
+- Link to the full ggPlot docs for details
+
+### 5.5 [ ] Update `docs/cookbook/matrix-charts.md`
+
+Add cookbook-style recipes demonstrating:
+- Quick scatter plot with `qplot()`
+- Quick histogram with `qplot()`
+- Closure-based `aes` in a typical ggplot pipeline
+
+### Verification
+
+Documentation-only phase — no test run required.
+
+---
+
 ## Summary
 
 | Phase | Scope | Effort | Impact | R compat |
@@ -359,3 +406,4 @@ Test cases:
 | 2 | `qplot()` quick plot | Low | Medium — great for exploration | Direct R equivalent |
 | 3 | Typed `Aes` fields | Medium | Medium — better IDE hints | No R impact |
 | 4 | `cols()` validation helper | Low | Low-Medium — catches typos early | No R equivalent |
+| 5 | Documentation updates | Low | High — makes features discoverable | Improves R comparison |
