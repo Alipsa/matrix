@@ -64,4 +64,33 @@ class ColumnRefTest {
     assertTrue(xml.contains('<svg'))
     assertTrue(xml.contains('<circle'))
   }
+
+  @Test
+  void testReservedPropertyNameClassResolvesAsColumn() {
+    Matrix data = Matrix.builder()
+        .columnNames(['class', 'y'])
+        .rows([
+            ['a', 1],
+            ['b', 2]
+        ])
+        .build()
+    ColumnRef c = cols(data)
+
+    assertEquals('class', c.class)
+    assertEquals('y', c.y)
+  }
+
+  @Test
+  void testColsDoesNotMutateMatrixColumnOrder() {
+    Matrix data = Matrix.builder()
+        .columnNames(['z', 'a', 'm'])
+        .rows([
+            [1, 2, 3]
+        ])
+        .build()
+
+    cols(data)
+
+    assertEquals(['z', 'a', 'm'], data.columnNames())
+  }
 }

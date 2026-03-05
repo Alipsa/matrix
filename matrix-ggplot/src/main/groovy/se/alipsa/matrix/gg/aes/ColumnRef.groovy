@@ -24,21 +24,46 @@ class ColumnRef {
     if (data == null) {
       throw new IllegalArgumentException('cols() requires a non-null Matrix')
     }
-    this.columns = data.columnNames().toSet()
-    this.sortedColumns = data.columnNames().sort()
+    List<String> columnNames = data.columnNames().toList()
+    this.columns = columnNames.toSet()
+    this.sortedColumns = columnNames.toList().sort()
   }
 
   /**
-   * Resolve a property access to a validated column name.
+   * Resolve property reads to validated column names first.
+   *
+   * <p>This handles names that would otherwise be intercepted by Groovy/Object
+   * properties (for example {@code class} or {@code metaClass}).
+   *
+   * @param name the requested column/property name
+   * @return the same name if it exists in the matrix
+   * @throws IllegalArgumentException if the column does not exist
+   */
+  Object getProperty(String name) {
+    if (this.@columns.contains(name)) {
+      return name
+    }
+    if ('columns' == name) {
+      return this.@columns
+    }
+    if ('sortedColumns' == name) {
+      return this.@sortedColumns
+    }
+    throw new IllegalArgumentException(
+        "Column '${name}' not found in matrix. Available: ${this.@sortedColumns}")
+  }
+
+  /**
+   * Resolve missing-property access to a validated column name.
    *
    * @param name the requested column/property name
    * @return the same name if it exists in the matrix
    * @throws IllegalArgumentException if the column does not exist
    */
   String propertyMissing(String name) {
-    if (!columns.contains(name)) {
+    if (!this.@columns.contains(name)) {
       throw new IllegalArgumentException(
-          "Column '${name}' not found in matrix. Available: ${sortedColumns}")
+          "Column '${name}' not found in matrix. Available: ${this.@sortedColumns}")
     }
     name
   }
