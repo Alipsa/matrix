@@ -58,6 +58,7 @@ import se.alipsa.matrix.gg.aes.AesDsl
 import se.alipsa.matrix.gg.aes.AfterScale
 import se.alipsa.matrix.gg.aes.AfterStat
 import se.alipsa.matrix.gg.aes.CutWidth
+import se.alipsa.matrix.gg.aes.ColumnRef
 import se.alipsa.matrix.gg.aes.Expression
 import se.alipsa.matrix.gg.aes.Factor
 import se.alipsa.matrix.gg.aes.Identity
@@ -747,6 +748,21 @@ class GgPlot {
    */
   static Factor factor(Object value) {
     return new Factor(value)
+  }
+
+  /**
+   * Creates a column reference proxy for validated, unquoted column names.
+   *
+   * <pre>{@code
+   * def c = cols(mtcars)
+   * ggplot(mtcars, aes(x: c.mpg, y: c.wt))
+   * }</pre>
+   *
+   * @param data the Matrix whose column names to expose
+   * @return a proxy that resolves property access to validated column names
+   */
+  static ColumnRef cols(Matrix data) {
+    return new ColumnRef(data)
   }
 
   /**
