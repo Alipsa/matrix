@@ -132,7 +132,10 @@ column name strings (`mpg` -> `'mpg'`). Use quotes for column names with spaces/
 aes { x = 'Sepal Length'; y = 'Petal Width' }
 ```
 
-Closure `aes` is `DELEGATE_ONLY`, which prevents accidental capture of variables from outer scope.
+Closure `aes` is `DELEGATE_ONLY`, which directs property and method resolution to the `aes`
+delegate instead of the closure owner. This does not change normal Groovy lexical scoping, so
+in-scope variables with the same names can still be captured; avoid name collisions between local
+variables and column names.
 
 Wrappers and expressions are supported in both styles:
 - `I(...)` for constants

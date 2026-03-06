@@ -1,7 +1,7 @@
 # Matrix Charts
 
 Matrix Charts provides various predefined charts that can easily be created based on
-Matrix data. There are two different Plot classes that can either produce Java FX (Plot) or Swing based
+Matrix data. There are two different Plot classes that can either produce JavaFX (Plot) or Swing-based
 charts (SwingPlot) respectively.
 
 ## Fluent Builder API

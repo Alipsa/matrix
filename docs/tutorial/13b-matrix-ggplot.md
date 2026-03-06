@@ -22,7 +22,7 @@ import static se.alipsa.matrix.gg.GgPlot.*
 import se.alipsa.matrix.datasets.Dataset
 
 def mtcars = Dataset.mtcars()
-def chart = ggplot(mtcars, aes('mpg', 'wt', color: 'cyl')) +
+def chart = ggplot(mtcars, aes(x: 'mpg', y: 'wt', color: 'cyl')) +
     geom_point() +
     geom_smooth(method: 'lm') +
     labs(title: 'MPG vs Weight')
