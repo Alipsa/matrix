@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Matrix library is a **mature, feature-rich** data manipulation and visualization toolkit for the JVM/Groovy ecosystem. It combines functionality that in Python requires **three separate libraries** (pandas for tabular data, numpy for numerical arrays, matplotlib/seaborn for visualization).
+The Matrix library is a **mature, feature-rich** data manipulation and visualization toolkit for the JVM/Groovy ecosystem. It combines functionality that in Python typically spans multiple libraries (pandas for tabular data, numpy for numerical arrays, matplotlib/seaborn/plotly for visualization), while offering three native charting styles: `pict`, Charm, and `matrix-ggplot`.
 
 ---
 
@@ -20,7 +20,7 @@ The Matrix library is a **mature, feature-rich** data manipulation and visualiza
 
 - **Clean Groovy syntax** - Property access (`matrix.salary`), closures, operator overloading
 - **Type flexibility** - Any Java/Groovy object type supported per column
-- **Unified library** - Data manipulation + statistics + visualization in one package
+- **Unified library** - Data manipulation + statistics + multiple visualization APIs in one package
 - **GINQ integration** - SQL-like query syntax directly in Groovy (more powerful than pandas' `query()` method)
 
 ```groovy
@@ -241,26 +241,30 @@ table.toClipboard()
 
 ## 5. Visualization Comparison
 
-| Feature                 | Matrix (ggplot API)             | Matplotlib/Seaborn          |
-|-------------------------|---------------------------------|-----------------------------|
-| **Geoms**               | 57 geom types                   | Extensive via both libs     |
-| **Grammar of Graphics** | Full implementation             | Different paradigm          |
-| **Statistical plots**   | geom_smooth, geom_density, etc. | seaborn specializes in this |
-| **Faceting**            | facet_wrap, facet_grid          | seaborn FacetGrid           |
-| **Themes**              | 7 built-in themes               | Many matplotlib styles      |
-| **Interactive**         | Limited (JavaFX)                | Plotly, Bokeh, Altair       |
-| **Output**              | SVG, PNG, JPG                   | PNG, PDF, SVG, interactive  |
+| Feature                 | Matrix (`pict` + Charm + ggplot)                    | Matplotlib/Seaborn            |
+|-------------------------|-----------------------------------------------------|-------------------------------|
+| **Visualization APIs**  | Chart-type-first + Grammar-of-Graphics + ggplot API| Multiple Python plotting libs |
+| **Chart-type-first API**| Yes (`se.alipsa.matrix.pict`)                       | Mostly imperative             |
+| **Grammar of Graphics** | Charm core + ggplot-compatible wrapper              | seaborn only partially gg-like|
+| **Quick plots**         | `pict` factories/builders + `qplot(...)`            | `plt.*` / seaborn convenience |
+| **Statistical plots**   | smooth, density, boxplot, qq, contour, etc.         | seaborn specializes in this   |
+| **Faceting**            | facet_wrap, facet_grid                               | seaborn FacetGrid             |
+| **Themes**              | Built-in themes + theme customization                | Many matplotlib styles        |
+| **Interactivity**       | SVG tooltips + JavaFX/Swing embedding                | Plotly, Bokeh, Altair         |
+| **Animation**           | CSS SVG animation in Charm (SVG viewers)             | matplotlib animation ecosystem|
+| **Output**              | SVG, PNG, JPG, JavaFX, Swing                         | PNG, PDF, SVG, interactive    |
+| **Column helpers**      | closure `aes { ... }`, `cols()` validation, `qplot()`| No direct equivalent          |
 
 ### Matrix Strengths
 
-- **True ggplot2 API** - Familiar to R users
-- **Integrated** - No separate library needed
-- **SVG output** - Clean vector graphics
+- **Multiple charting paradigms** - `pict` for quick chart-type-first usage, Charm for expressive DSL, ggplot API for migration
+- **Integrated rendering pipeline** - SVG-first with consistent PNG/JPEG/JavaFX/Swing export
+- **R-friendly option** - ggplot-compatible API in the same stack
 
 ### Weaknesses
 
-- **No interactive charts** - Matplotlib has Plotly, Bokeh integration
-- **Limited animation** - Matplotlib can animate
+- **Interactive web ecosystem is smaller** - Python has richer notebook/web-native plotting stacks
+- **Animation is SVG-centric** - Charm animations are CSS-in-SVG (raster exports remain static)
 - **No Jupyter integration** - Python notebooks auto-display charts
 
 ---
@@ -317,9 +321,9 @@ This allows users to choose the appropriate data structure based on their needs:
 
 1. **JVM Integration** - Works seamlessly with Java/Groovy ecosystem
 2. **Clean Groovy Syntax** - Property access, closures, operator overloading
-3. **Unified Package** - Data manipulation + statistics + visualization
+3. **Unified Package** - Data manipulation + statistics + multiple visualization APIs
 4. **Type System** - Flexible types with BigDecimal precision
-5. **Grammar of Graphics** - Full ggplot2-style API (57 geoms)
+5. **Flexible charting stack** - `pict`, Charm DSL, and ggplot-compatible API
 6. **Comprehensive I/O** - CSV, JSON, SQL, Excel, Parquet, BigQuery, Google Sheets
 7. **Statistical Functions** - Regression, hypothesis tests, correlation, normality tests, time series
 8. **Smile ML Integration** - Classification, clustering, PCA, distributions via matrix-smile
@@ -332,7 +336,7 @@ This allows users to choose the appropriate data structure based on their needs:
 2. **No Rolling/Window Operations** - Missing time-series analysis
 3. **No Multi-Index** - Hierarchical indexing not supported
 4. **Limited Linear Algebra** - No eigenvalues, SVD, matrix inverse
-5. **No Interactive Visualization** - Only static SVG/PNG
+5. **Interactive visualization ecosystem is narrower** - strongest support is SVG + desktop embedding
 6. **Performance Gap** - JVM vs native C for heavy computation (mitigated by Tablesaw integration)
 7. **No Cumulative Operations** - cumsum, cumprod, etc.
 
@@ -444,6 +448,6 @@ The Matrix library is a **well-designed, comprehensive toolkit** that provides p
 
 1. **Unified solution** (data + stats + viz in one library)
 2. **Idiomatic Groovy** with excellent syntax
-3. **Strong ggplot2 implementation**
+3. **Strong charting stack** (`pict` + Charm + ggplot-compatible API)
 
 The primary gaps versus numpy+pandas are in **time-series operations** (rolling, cumulative, diff/shift) and **numerical computing** (linear algebra, N-dimensional arrays). Adding rolling window operations would significantly enhance the library for time-series analysis use cases.
