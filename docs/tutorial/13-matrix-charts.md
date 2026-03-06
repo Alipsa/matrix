@@ -424,6 +424,22 @@ engine in matrix-charts. Add it as a dependency:
 implementation 'se.alipsa.matrix:matrix-ggplot'
 ```
 
+For new ggplot-style code, prefer closure-based aesthetic mappings:
+
+```groovy
+ggplot(data, aes { x = mpg; y = wt; color = cyl }) + geom_point()
+```
+
+For quick exploratory plots, use `qplot()`:
+
+```groovy
+qplot(data: data, x: 'mpg', y: 'wt', color: 'cyl')
+qplot(data) { x = mpg; y = wt }
+```
+
+See the full reference for complete API details and overloads:
+- [matrix-ggplot/docs/ggPlot.md](../../matrix-ggplot/docs/ggPlot.md)
+
 ## Conclusion
 
 The matrix-charts module provides a powerful and flexible way to create various types of charts from Matrix data. It offers a simple API for generating visualizations that can be exported to different formats, making it easy to include data visualizations in your Groovy applications.

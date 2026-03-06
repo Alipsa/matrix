@@ -286,6 +286,8 @@ The matrix-smile module provides comprehensive ML capabilities:
 | **Extensions**          | Limited                         | 100+ extension packages          |
 | **Interactive**         | Limited (JavaFX)                | plotly, ggiraph, shiny           |
 | **Output**              | SVG, PNG, JPG                   | PNG, PDF, SVG, interactive       |
+| **Unquoted aes mapping** | `aes { x = mpg; y = wt }`      | `aes(mpg, wt)`                   |
+| **Quick plot helper**   | `qplot(...)`                    | `qplot(...)`                     |
 
 ### Matrix Strengths
 
@@ -304,6 +306,15 @@ def chart = ggplot(data, aes('cty', 'hwy', color: 'class')) +
     labs(title: 'Fuel Economy', x: 'City MPG', y: 'Highway MPG')
 ```
 
+```groovy
+// Matrix closure-based API (close to R NSE style)
+def chart = ggplot(data, aes { x = cty; y = hwy; color = cyl }) +
+    geom_point() +
+    geom_smooth(method: 'lm')
+
+def quick = qplot(data: data, x: 'cty', y: 'hwy', color: 'cyl')
+```
+
 ```r
 # Nearly identical R ggplot2 code
 ggplot(data, aes(cty, hwy, color = class)) +
@@ -313,6 +324,9 @@ ggplot(data, aes(cty, hwy, color = class)) +
     facet_wrap(~drv) +
     theme_minimal() +
     labs(title = 'Fuel Economy', x = 'City MPG', y = 'Highway MPG')
+
+# Quick exploratory plot
+qplot(cty, hwy, data = data, color = class)
 ```
 
 ### R/ggplot2 Advantages
@@ -511,13 +525,15 @@ For R users transitioning to Matrix, here's a quick reference:
 | `df %>% group_by(g) %>% summarise(...)` | `Stat.sumBy(df, 'val', 'g')`                   |
 | `left_join(a, b, by='key')`             | `Joiner.merge(a, b, 'key', true)`              |
 | `ggplot(df, aes(x, y)) + geom_point()`  | `ggplot(df, aes('x', 'y')) + geom_point()`     |
+| `ggplot(df, aes(x, y)) + geom_point()`  | `ggplot(df, aes { x = x; y = y }) + geom_point()` |
+| `qplot(x, y, data=df)`                  | `qplot(data: df, x: 'x', y: 'y')`              |
 
 ### Key Differences
 
-1. **Column names are strings** - Use `'column'` not bare `column`
+1. **Column references support two styles** - quoted map style (`'column'`) and closure `aes { x = column }`
 2. **Closures instead of expressions** - Use `{ it.x > 5 }` not `x > 5`
 3. **Method chaining** - Use `.method()` not `%>%`
-4. **No tidy evaluation** - All evaluation is standard Groovy
+4. **Limited NSE-style behavior** - only `aes { ... }` and `cols()` use dynamic column resolution; the rest is standard Groovy
 
 ---
 

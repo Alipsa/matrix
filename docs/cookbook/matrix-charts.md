@@ -116,5 +116,36 @@ For ggplot2-style charting (e.g. `ggplot()`, `geom_point()`, `geom_smooth()`, et
 see the separate [matrix-ggplot](../../matrix-ggplot/README.md) module and its
 [ggPlot documentation](../../matrix-ggplot/docs/ggPlot.md).
 
+### Recipe: Quick Scatter with `qplot()`
+
+```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+
+def chart = qplot(data: mtcars, x: 'mpg', y: 'wt', color: 'cyl')
+ggsave('quick-scatter.svg', chart)
+```
+
+### Recipe: Quick Histogram with `qplot()`
+
+```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+
+def chart = qplot(data: mtcars, x: 'mpg', bins: 20, title: 'MPG distribution')
+ggsave('quick-hist.svg', chart)
+```
+
+### Recipe: Closure-based `aes` in a ggplot Pipeline
+
+```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+
+def chart = ggplot(mtcars, aes { x = mpg; y = wt; color = cyl }) +
+    geom_point(alpha: 0.7) +
+    geom_smooth(method: 'lm') +
+    labs(title: 'MPG vs Weight', x: 'Miles per gallon', y: 'Weight')
+
+ggsave('closure-aes-pipeline.svg', chart)
+```
+
 ---
 [Back to index](cookbook.md)

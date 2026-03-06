@@ -355,7 +355,7 @@ Test cases:
 
 Update all relevant documentation to cover the features added in Phases 1–4. No code changes — documentation only.
 
-### 5.1 [ ] Update `matrix-ggplot/README.md`
+### 5.1 [x] Update `matrix-ggplot/README.md`
 
 Add sections or examples covering:
 - Closure-based `aes` syntax with unquoted column names (Phase 1)
@@ -363,7 +363,7 @@ Add sections or examples covering:
 - `cols()` validation helper (Phase 4, if implemented)
 - Show both map-based and closure-based styles side by side
 
-### 5.2 [ ] Update `matrix-ggplot/docs/ggPlot.md`
+### 5.2 [x] Update `matrix-ggplot/docs/ggPlot.md`
 
 This is the main ggplot API reference. Add:
 - **Aesthetic mappings** section: document the closure-based `aes` syntax alongside the existing map-based syntax, including `propertyMissing` behavior, quoted names for columns with spaces, and compatibility with `I()`, `factor()`, `after_stat()`, etc.
@@ -371,21 +371,21 @@ This is the main ggplot API reference. Add:
 - **Typed Aes fields** section (Phase 3, if implemented): document the typed setter overloads and IDE benefits
 - **Column references** section (Phase 4, if implemented): document `cols()` with validation behavior and error messages
 
-### 5.3 [ ] Update `docs/R-comparison.md`
+### 5.3 [x] Update `docs/R-comparison.md`
 
 Update the R vs Matrix comparison table and examples to show:
 - Closure-based `aes` — demonstrate how close it is to R's NSE (`aes(x = mpg)` vs `aes { x = mpg }`)
 - `qplot()` — show R's `qplot()` alongside Matrix's `qplot()` to highlight API parity
 - Update the feature comparison table if it lists limitations that are now resolved
 
-### 5.4 [ ] Update `docs/tutorial/13-matrix-charts.md`
+### 5.4 [x] Update `docs/tutorial/13-matrix-charts.md`
 
 Add a note or brief subsection in the charts tutorial pointing to:
 - The closure-based `aes` as the preferred syntax for new code
 - `qplot()` for quick exploratory plots
 - Link to the full ggPlot docs for details
 
-### 5.5 [ ] Update `docs/cookbook/matrix-charts.md`
+### 5.5 [x] Update `docs/cookbook/matrix-charts.md`
 
 Add cookbook-style recipes demonstrating:
 - Quick scatter plot with `qplot()`
