@@ -170,7 +170,7 @@ def mtcars = Dataset.mtcars()
 // Map-based
 qplot(data: mtcars, x: 'mpg', y: 'wt', color: 'cyl')
 qplot(data: mtcars, x: 'mpg', bins: 15)
-qplot(data: mtcars, x: 'class')
+qplot(data: mtcars, x: 'gear')
 
 // Closure-based
 qplot(mtcars) { x = mpg; y = wt; color = cyl }
@@ -671,14 +671,14 @@ In practice, these are equivalent:
 
 ```R
 # R
-aes(x, y, color = cyl)
+aes(mpg, wt, color = cyl)
 ```
 ```groovy
 // Groovy map-based
-aes('x', 'y', color: 'cyl')
+aes('mpg', 'wt', color: 'cyl')
 
 // Groovy closure-based
-aes { x = 'x'; y = 'y'; color = cyl }
+aes { x = mpg; y = wt; color = cyl }
 ```
 
 Use quotes for column names containing spaces/special characters in either style.
