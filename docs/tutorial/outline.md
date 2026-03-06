@@ -92,6 +92,9 @@
   - Google BigQuery integration
 - [Matrix Charts Module](13-matrix-charts.md)
   - Alternative charting capabilities
+- [Matrix GGPlot Module](13b-matrix-ggplot.md)
+  - ggplot2-compatible charting API
+  - Closure-based `aes`, `qplot`, and `cols()` helpers
 - [Matrix Tablesaw Module](14-matrix-tablesaw.md)
   - Interoperability with Tablesaw library
 
