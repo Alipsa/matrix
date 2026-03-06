@@ -311,7 +311,7 @@ def chart = ggplot(data, aes('cty', 'hwy', color: 'class')) +
 
 ```groovy
 // Matrix closure-based API (close to R NSE style)
-def chart = ggplot(data, aes { x = cty; y = hwy; color = class }) +
+def chart = ggplot(data, aes { x = cty; y = hwy; color = 'class' }) +
     geom_point() +
     geom_smooth(method: 'lm')
 

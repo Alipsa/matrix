@@ -1,6 +1,8 @@
 # GG-Charm Parity Matrix
 
-This matrix tracks feature parity progress for the migration plan in `matrix-charts/docs/gg-charm-migration.md`.
+This matrix tracks ggplot-to-Charm feature parity inside the current `matrix-charts` and
+`matrix-ggplot` codebase. Use it as the authoritative status document for implemented features,
+tests, and recorded verification commands.
 
 ## Completion Rule
 
