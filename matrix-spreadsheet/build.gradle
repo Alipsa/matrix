@@ -7,7 +7,7 @@ plugins {
   id('jacoco')
   id('signing')
   id('maven-publish')
-  id("se.alipsa.nexus-release-plugin") version '2.0.1'
+  id("se.alipsa.nexus-release-plugin") version '2.1.1'
 }
 
 group = 'se.alipsa.matrix'
@@ -43,7 +43,7 @@ dependencies {
   compileOnly 'com.github.javaparser:javaparser-core:3.28.0'
 
 
-  def fastExcelVersion = '0.19.0'
+  def fastExcelVersion = '0.20.0'
   compileOnly project(':matrix-core')
   testImplementation project(':matrix-core')
   // Removed libs.log4jApi - migrated to matrix-core Logger
