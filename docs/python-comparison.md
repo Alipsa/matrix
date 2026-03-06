@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Matrix library is a **mature, feature-rich** data manipulation and visualization toolkit for the JVM/Groovy ecosystem. It combines functionality that in Python typically spans multiple libraries (pandas for tabular data, numpy for numerical arrays, matplotlib/seaborn/plotly for visualization), while offering three native charting styles: `pict`, Charm, and `matrix-ggplot`.
+The Matrix library is a **mature, feature-rich** data manipulation and visualization toolkit for the JVM/Groovy ecosystem. It combines functionality that in Python typically spans multiple libraries (pandas for tabular data, numpy for numerical arrays, matplotlib/seaborn/plotly for visualization), while offering four native charting styles: `matrix-xchart`, `pict`, Charm, and `matrix-ggplot`.
 
 ---
 
@@ -241,12 +241,12 @@ table.toClipboard()
 
 ## 5. Visualization Comparison
 
-| Feature                 | Matrix (`pict` + Charm + ggplot)                    | Matplotlib/Seaborn            |
+| Feature                 | Matrix (`xchart` + `pict` + Charm + ggplot)         | Matplotlib/Seaborn            |
 |-------------------------|-----------------------------------------------------|-------------------------------|
-| **Visualization APIs**  | Chart-type-first + Grammar-of-Graphics + ggplot API| Multiple Python plotting libs |
+| **Visualization APIs**  | XChart wrappers + chart-type-first + Grammar-of-Graphics + ggplot API | Multiple Python plotting libs |
 | **Chart-type-first API**| Yes (`se.alipsa.matrix.pict`)                       | Mostly imperative             |
 | **Grammar of Graphics** | Charm core + ggplot-compatible wrapper              | seaborn only partially gg-like|
-| **Quick plots**         | `pict` factories/builders + `qplot(...)`            | `plt.*` / seaborn convenience |
+| **Quick plots**         | `matrix-xchart`, `pict` builders/factories + `qplot(...)` | `plt.*` / seaborn convenience |
 | **Statistical plots**   | smooth, density, boxplot, qq, contour, etc.         | seaborn specializes in this   |
 | **Faceting**            | facet_wrap, facet_grid                               | seaborn FacetGrid             |
 | **Themes**              | Built-in themes + theme customization                | Many matplotlib styles        |
@@ -257,7 +257,7 @@ table.toClipboard()
 
 ### Matrix Strengths
 
-- **Multiple charting paradigms** - `pict` for quick chart-type-first usage, Charm for expressive DSL, ggplot API for migration
+- **Multiple charting paradigms** - `matrix-xchart` for XChart integration, `pict` for quick chart-type-first usage, Charm for expressive DSL, ggplot API for migration
 - **Integrated rendering pipeline** - SVG-first with consistent PNG/JPEG/JavaFX/Swing export
 - **R-friendly option** - ggplot-compatible API in the same stack
 
@@ -323,7 +323,7 @@ This allows users to choose the appropriate data structure based on their needs:
 2. **Clean Groovy Syntax** - Property access, closures, operator overloading
 3. **Unified Package** - Data manipulation + statistics + multiple visualization APIs
 4. **Type System** - Flexible types with BigDecimal precision
-5. **Flexible charting stack** - `pict`, Charm DSL, and ggplot-compatible API
+5. **Flexible charting stack** - `matrix-xchart`, `pict`, Charm DSL, and ggplot-compatible API
 6. **Comprehensive I/O** - CSV, JSON, SQL, Excel, Parquet, BigQuery, Google Sheets
 7. **Statistical Functions** - Regression, hypothesis tests, correlation, normality tests, time series
 8. **Smile ML Integration** - Classification, clustering, PCA, distributions via matrix-smile
@@ -448,6 +448,6 @@ The Matrix library is a **well-designed, comprehensive toolkit** that provides p
 
 1. **Unified solution** (data + stats + viz in one library)
 2. **Idiomatic Groovy** with excellent syntax
-3. **Strong charting stack** (`pict` + Charm + ggplot-compatible API)
+3. **Strong charting stack** (`matrix-xchart` + `pict` + Charm + ggplot-compatible API)
 
 The primary gaps versus numpy+pandas are in **time-series operations** (rolling, cumulative, diff/shift) and **numerical computing** (linear algebra, N-dimensional arrays). Adding rolling window operations would significantly enhance the library for time-series analysis use cases.
