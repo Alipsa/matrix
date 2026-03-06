@@ -65,6 +65,10 @@ write(chart.render(), new File('my_plot.svg'))
 
 ## Aesthetic Mapping Styles
 
+```groovy
+def mtcars = Dataset.mtcars()
+```
+
 Map-based mappings remain fully supported:
 
 ```groovy
@@ -80,7 +84,7 @@ ggplot(mtcars, aes { x = mpg; y = wt; color = cyl }) + geom_point()
 Use quotes for column names with spaces/special characters:
 
 ```groovy
-ggplot(irisLike, aes { x = 'Sepal Length'; y = 'Petal Width' }) + geom_point()
+ggplot(Dataset.iris(), aes { x = 'Sepal.Length'; y = 'Petal.Width' }) + geom_point()
 ```
 
 Wrappers work in both styles, including `I()`, `factor()`, `expr {}`, `after_stat()`, `after_scale()`, and `cut_width()`.

@@ -308,11 +308,11 @@ def chart = ggplot(data, aes('cty', 'hwy', color: 'class')) +
 
 ```groovy
 // Matrix closure-based API (close to R NSE style)
-def chart = ggplot(data, aes { x = cty; y = hwy; color = cyl }) +
+def chart = ggplot(data, aes { x = cty; y = hwy; color = class }) +
     geom_point() +
     geom_smooth(method: 'lm')
 
-def quick = qplot(data: data, x: 'cty', y: 'hwy', color: 'cyl')
+def quick = qplot(data: data, x: 'cty', y: 'hwy', color: 'class')
 ```
 
 ```r

@@ -120,7 +120,9 @@ see the separate [matrix-ggplot](../../matrix-ggplot/README.md) module and its
 
 ```groovy
 import static se.alipsa.matrix.gg.GgPlot.*
+import se.alipsa.matrix.datasets.Dataset
 
+def mtcars = Dataset.mtcars()
 def chart = qplot(data: mtcars, x: 'mpg', y: 'wt', color: 'cyl')
 ggsave('quick-scatter.svg', chart)
 ```
@@ -129,7 +131,9 @@ ggsave('quick-scatter.svg', chart)
 
 ```groovy
 import static se.alipsa.matrix.gg.GgPlot.*
+import se.alipsa.matrix.datasets.Dataset
 
+def mtcars = Dataset.mtcars()
 def chart = qplot(data: mtcars, x: 'mpg', bins: 20, title: 'MPG distribution')
 ggsave('quick-hist.svg', chart)
 ```
@@ -138,7 +142,9 @@ ggsave('quick-hist.svg', chart)
 
 ```groovy
 import static se.alipsa.matrix.gg.GgPlot.*
+import se.alipsa.matrix.datasets.Dataset
 
+def mtcars = Dataset.mtcars()
 def chart = ggplot(mtcars, aes { x = mpg; y = wt; color = cyl }) +
     geom_point(alpha: 0.7) +
     geom_smooth(method: 'lm') +

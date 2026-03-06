@@ -433,6 +433,11 @@ ggplot(data, aes { x = mpg; y = wt; color = cyl }) + geom_point()
 For quick exploratory plots, use `qplot()`:
 
 ```groovy
+import static se.alipsa.matrix.gg.GgPlot.*
+import se.alipsa.matrix.datasets.Dataset
+
+def data = Dataset.mtcars()
+
 qplot(data: data, x: 'mpg', y: 'wt', color: 'cyl')
 qplot(data) { x = mpg; y = wt }
 ```

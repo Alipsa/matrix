@@ -162,6 +162,8 @@ Supported overloads:
 - `qplot(Matrix data, Map params, Closure configure)` (same behavior, alternate argument order)
 
 ```groovy
+def mtcars = Dataset.mtcars()
+
 // Map-based
 qplot(data: mtcars, x: 'mpg', y: 'wt', color: 'cyl')
 qplot(data: mtcars, x: 'mpg', bins: 15)
@@ -174,10 +176,10 @@ qplot([geom: 'line', title: 'MPG vs Weight'], mtcars) { x = mpg; y = wt }
 
 Geom inference rules:
 1. Explicit `geom` parameter wins.
-2. `x` + `y` present and `x` numeric + `y` numeric -> `geom_point()`
+2. `x` + `y` present and NOT (`x` discrete + `y` numeric) -> `geom_point()`
 3. `x` + `y` present and `x` discrete + `y` numeric -> `geom_col()`
-4. Only `x`, numeric -> `geom_histogram()`
-5. Only `x`, non-numeric -> `geom_bar()`
+4. Only `x` present and `x` numeric -> `geom_histogram()`
+5. Only `x` present and `x` non-numeric/discrete -> `geom_bar()`
 
 Common `qplot` parameters:
 - Required: `data`, `x`
