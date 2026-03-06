@@ -675,7 +675,7 @@ aes(x, y, color = cyl)
 aes('x', 'y', color: 'cyl')
 
 // Groovy closure-based
-aes { x = x; y = y; color = cyl }
+aes { x = 'x'; y = 'y'; color = cyl }
 ```
 
 Use quotes for column names containing spaces/special characters in either style.

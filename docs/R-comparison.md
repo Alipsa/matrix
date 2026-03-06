@@ -528,7 +528,7 @@ For R users transitioning to Matrix, here's a quick reference:
 | `df %>% group_by(g) %>% summarise(...)` | `Stat.sumBy(df, 'val', 'g')`                   |
 | `left_join(a, b, by='key')`             | `Joiner.merge(a, b, 'key', true)`              |
 | `ggplot(df, aes(x, y)) + geom_point()`  | `ggplot(df, aes('x', 'y')) + geom_point()`     |
-| `ggplot(df, aes(x, y)) + geom_point()`  | `ggplot(df, aes { x = x; y = y }) + geom_point()` |
+| `ggplot(df, aes(x, y)) + geom_point()`  | `ggplot(df, aes { x = 'x'; y = 'y' }) + geom_point()` |
 | `qplot(x, y, data=df)`                  | `qplot(data: df, x: 'x', y: 'y')`              |
 
 ### Key Differences
