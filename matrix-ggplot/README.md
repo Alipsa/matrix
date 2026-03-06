@@ -142,7 +142,6 @@ def panel = GgExport.toSwing(chart)
 ## Documentation
 
 - **[ggPlot.md](docs/ggPlot.md)** — comprehensive API reference and examples
-- **[gg-charm-migration.md](docs/gg-charm-migration.md)** — migration plan from gg to Charm
 - **[gg-charm-parity-matrix.md](docs/gg-charm-parity-matrix.md)** — feature parity tracking
 
 ## Release version compatibility matrix
