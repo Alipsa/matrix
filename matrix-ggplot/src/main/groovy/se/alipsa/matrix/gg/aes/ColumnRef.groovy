@@ -9,6 +9,11 @@ import se.alipsa.matrix.core.Matrix
  *
  * <p>Property access returns the column name when it exists, otherwise throws
  * an {@link IllegalArgumentException} with available columns.
+ *
+ * <p>Column access via {@code c.mpg} relies on Groovy dynamic property
+ * resolution and therefore only works in dynamic or untyped contexts (for
+ * example scripts/tests or code annotated with {@code @CompileDynamic}).
+ * In {@code @CompileStatic} code, use quoted column names instead.
  */
 @CompileStatic
 class ColumnRef {

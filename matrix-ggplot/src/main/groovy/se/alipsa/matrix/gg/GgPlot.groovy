@@ -758,6 +758,11 @@ class GgPlot {
    * ggplot(mtcars, aes(x: c.mpg, y: c.wt))
    * }</pre>
    *
+   * <p>The {@code c.mpg} style relies on dynamic property resolution, so it
+   * works in dynamic or untyped contexts (scripts/tests or
+   * {@code @CompileDynamic}). In {@code @CompileStatic} code, use quoted
+   * column names instead.
+   *
    * @param data the Matrix whose column names to expose
    * @return a proxy that resolves property access to validated column names
    */
