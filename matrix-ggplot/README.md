@@ -63,6 +63,59 @@ def chart = ggplot(Dataset.mpg(), aes('cty', 'hwy')) +
 write(chart.render(), new File('my_plot.svg'))
 ```
 
+## Aesthetic Mapping Styles
+
+```groovy
+def mtcars = Dataset.mtcars()
+```
+
+Map-based mappings remain fully supported:
+
+```groovy
+ggplot(mtcars, aes(x: 'mpg', y: 'wt', color: 'cyl')) + geom_point()
+```
+
+Closure-based mappings let you use unquoted column names:
+
+```groovy
+ggplot(mtcars, aes { x = mpg; y = wt; color = cyl }) + geom_point()
+```
+
+Use quotes for column names with spaces/special characters:
+
+```groovy
+ggplot(Dataset.iris(), aes { x = 'Sepal Length'; y = 'Petal Width' }) + geom_point()
+```
+
+Wrappers work in both styles, including `I()`, `factor()`, `expr {}`, `after_stat()`, `after_scale()`, and `cut_width()`.
+
+## Quick Plots with `qplot()`
+
+```groovy
+// Geom inferred as point (x and y)
+qplot(data: mtcars, x: 'mpg', y: 'wt', color: 'cyl')
+
+// Geom inferred as histogram (numeric x only)
+qplot(data: mtcars, x: 'mpg', bins: 15)
+
+// Closure-based quick plot
+qplot(mtcars) { x = mpg; y = wt; color = cyl }
+```
+
+`qplot()` infers an appropriate geom and can be overridden with `geom: 'line'`, `geom: 'bar'`, etc.
+
+## Validated Column References with `cols()`
+
+```groovy
+def c = cols(mtcars)
+ggplot(mtcars, aes(x: c.mpg, y: c.wt)) + geom_point()   // valid
+ggplot(mtcars, aes(x: c.mpgg, y: c.wt)) + geom_point()  // throws IllegalArgumentException
+```
+
+`cols()` helps catch column typos early by validating property access against matrix columns.
+The `c.mpg` style relies on dynamic property resolution and therefore works in dynamic/untyped
+contexts (scripts/tests or `@CompileDynamic`). In `@CompileStatic` code, use quoted column names.
+
 ## Key Features
 
 - 54+ geoms (geometric objects) including point, line, bar, histogram, boxplot, heatmap, and more
@@ -89,7 +142,6 @@ def panel = GgExport.toSwing(chart)
 ## Documentation
 
 - **[ggPlot.md](docs/ggPlot.md)** — comprehensive API reference and examples
-- **[gg-charm-migration.md](docs/gg-charm-migration.md)** — migration plan from gg to Charm
 - **[gg-charm-parity-matrix.md](docs/gg-charm-parity-matrix.md)** — feature parity tracking
 
 ## Release version compatibility matrix

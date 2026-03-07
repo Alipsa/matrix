@@ -1,7 +1,7 @@
 # Matrix Charts
 
-Matrix Charts provides various predefined charts that can easily be created based om
-Matrix data. There are two different Plot classes that can either product Java FX (Plot) or Swing based
+Matrix Charts provides various predefined charts that can easily be created based on
+Matrix data. There are two different Plot classes that can either produce JavaFX (Plot) or Swing-based
 charts (SwingPlot) respectively.
 
 ## Fluent Builder API
@@ -110,11 +110,87 @@ All builders share these methods inherited from `Chart.ChartBuilder`:
 - `legend(Legend)` — legend configuration
 - `style(Style)` — style configuration
 
-## GGPlot-style Charting
+## Charm API Recipes
 
-For ggplot2-style charting (e.g. `ggplot()`, `geom_point()`, `geom_smooth()`, etc.),
-see the separate [matrix-ggplot](../../matrix-ggplot/README.md) module and its
-[ggPlot documentation](../../matrix-ggplot/docs/ggPlot.md).
+The `matrix-charts` module also includes the Charm Grammar-of-Graphics DSL.
+Use Charm when you want a Groovy-native layered API without ggplot compatibility wrappers.
+
+### Recipe: Basic Charm Scatter
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plot
+import se.alipsa.matrix.datasets.Dataset
+
+def mtcars = Dataset.mtcars()
+def chart = plot(mtcars) {
+  mapping {
+    x = 'mpg'
+    y = 'wt'
+    color = 'cyl'
+  }
+  layers {
+    geomPoint().size(2).alpha(0.7)
+  }
+  labels {
+    title = 'MPG vs Weight'
+    x = 'Miles per gallon'
+    y = 'Weight'
+  }
+}.build()
+
+chart.writeTo('charm-scatter.svg')
+```
+
+### Recipe: Charm Scatter with Trend Line
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plot
+import se.alipsa.matrix.datasets.Dataset
+
+def mtcars = Dataset.mtcars()
+def chart = plot(mtcars) {
+  mapping {
+    x = 'mpg'
+    y = 'wt'
+    color = 'cyl'
+  }
+  layers {
+    geomPoint().size(2).alpha(0.7)
+    geomSmooth().method('lm')
+  }
+}.build()
+
+chart.writeTo('charm-scatter-smooth.svg')
+```
+
+### Recipe: Charm Histogram
+
+```groovy
+import static se.alipsa.matrix.charm.Charts.plot
+import se.alipsa.matrix.datasets.Dataset
+
+def mtcars = Dataset.mtcars()
+def chart = plot(mtcars) {
+  mapping {
+    x = 'mpg'
+  }
+  layers {
+    geomHistogram().bins(20).fill('#5F9EA0').alpha(0.8)
+  }
+  labels {
+    title = 'MPG Distribution'
+    x = 'Miles per gallon'
+    y = 'Count'
+  }
+}.build()
+
+chart.writeTo('charm-histogram.svg')
+```
+
+## GGPlot Cookbook
+
+GGPlot recipes are documented in [Matrix GGPlot](matrix-ggplot.md).
+For full API reference, see [matrix-ggplot/docs/ggPlot.md](../../matrix-ggplot/docs/ggPlot.md).
 
 ---
 [Back to index](cookbook.md)

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The Matrix library is a **mature, feature-rich** data manipulation and visualization toolkit for the JVM/Groovy ecosystem. It draws significant inspiration from R's tidyverse, particularly in its ggplot2-style charting API. This document compares Matrix to R's base data structures and the tidyverse ecosystem (dplyr, tidyr, ggplot2, readr, purrr, etc.).
+The Matrix library is a **mature, feature-rich** data manipulation and visualization toolkit for the JVM/Groovy ecosystem. It now provides four complementary visualization APIs: `matrix-xchart` (XChart-backed), `pict` (chart-type-first), `Charm` (Groovy-native Grammar of Graphics), and `matrix-ggplot` (ggplot2-compatible). This document compares Matrix to R's base data structures and the tidyverse ecosystem (dplyr, tidyr, ggplot2, readr, purrr, etc.).
 
 ---
 
@@ -20,7 +20,7 @@ The Matrix library is a **mature, feature-rich** data manipulation and visualiza
 
 - **JVM ecosystem** - Integrates seamlessly with Java/Groovy libraries and enterprise systems
 - **Static typing option** - `@CompileStatic` for compile-time type checking
-- **Familiar ggplot2 API** - R users feel at home with the charting syntax
+- **Flexible charting stack** - Choose `matrix-xchart`, `pict`, `Charm`, or ggplot2-compatible `matrix-ggplot`
 - **GINQ integration** - SQL-like query syntax directly in Groovy
 
 ```groovy
@@ -276,22 +276,27 @@ The matrix-smile module provides comprehensive ML capabilities:
 
 ## 5. Visualization Comparison
 
-| Feature                 | Matrix (ggplot API)             | ggplot2                          |
-|-------------------------|---------------------------------|----------------------------------|
-| **Geoms**               | 57 geom types                   | 50+ geom types                   |
-| **Grammar of Graphics** | Full implementation             | Original R implementation        |
-| **Statistical plots**   | geom_smooth, geom_density, etc. | Full support                     |
-| **Faceting**            | facet_wrap, facet_grid          | facet_wrap, facet_grid           |
-| **Themes**              | 7 built-in themes               | Many themes + ggthemes package   |
-| **Extensions**          | Limited                         | 100+ extension packages          |
-| **Interactive**         | Limited (JavaFX)                | plotly, ggiraph, shiny           |
-| **Output**              | SVG, PNG, JPG                   | PNG, PDF, SVG, interactive       |
+| Feature                 | Matrix (`xchart` + `pict` + Charm + ggplot)          | ggplot2                          |
+|-------------------------|------------------------------------------------------|----------------------------------|
+| **Visualization APIs**  | XChart wrappers + chart-type-first + Charm DSL + ggplot API | ggplot2 only (plus extensions)   |
+| **Grammar of Graphics** | Charm core + ggplot-compatible wrapper               | Original implementation          |
+| **Quick charts**        | `matrix-xchart`, `pict` builders/factories, and `qplot(...)` | `qplot(...)`              |
+| **Statistical plots**   | geom_smooth, geom_density, boxplot, qq, contour, etc.| Full support                     |
+| **Faceting**            | facet_wrap, facet_grid                                | facet_wrap, facet_grid           |
+| **Themes**              | Built-in themes + theme customization                 | Many themes + ggthemes package   |
+| **Extensions**          | Smaller ecosystem                                     | 100+ extension packages          |
+| **Interactivity**       | SVG tooltips + JavaFX/Swing export                    | plotly, ggiraph, shiny           |
+| **Animation**           | CSS SVG animation in Charm (SVG viewers)              | gganimate ecosystem              |
+| **Output**              | SVG, PNG, JPG, JavaFX, Swing                          | PNG, PDF, SVG, interactive       |
+| **Unquoted aes mapping**| `aes { x = mpg; y = wt }`                             | `aes(mpg, wt)`                   |
+| **Column validation**   | `cols(data).mpg` validates column names               | NSE symbols (validation at eval) |
+| **Quick plot helper**   | `qplot(...)`                                          | `qplot(...)`                     |
 
 ### Matrix Strengths
 
-- **Familiar API** - R users can transfer ggplot2 knowledge directly
-- **Integrated** - No separate library needed
-- **SVG output** - Clean vector graphics for web/print
+- **Four charting styles in one stack** - `matrix-xchart` for XChart integration, `pict` for quick chart types, Charm for expressive DSL, ggplot wrapper for R parity
+- **Familiar migration path** - R users can transfer ggplot2 knowledge directly
+- **Integrated rendering/export** - unified SVG pipeline with PNG/JPEG/JavaFX/Swing outputs
 
 ```groovy
 // Matrix ggplot-style API
@@ -304,6 +309,15 @@ def chart = ggplot(data, aes('cty', 'hwy', color: 'class')) +
     labs(title: 'Fuel Economy', x: 'City MPG', y: 'Highway MPG')
 ```
 
+```groovy
+// Matrix closure-based API (close to R NSE style)
+def chart = ggplot(data, aes { x = cty; y = hwy; color = 'class' }) +
+    geom_point() +
+    geom_smooth(method: 'lm')
+
+def quick = qplot(data: data, x: 'cty', y: 'hwy', color: 'class')
+```
+
 ```r
 # Nearly identical R ggplot2 code
 ggplot(data, aes(cty, hwy, color = class)) +
@@ -313,6 +327,9 @@ ggplot(data, aes(cty, hwy, color = class)) +
     facet_wrap(~drv) +
     theme_minimal() +
     labs(title = 'Fuel Economy', x = 'City MPG', y = 'Highway MPG')
+
+# Quick exploratory plot
+qplot(cty, hwy, data = data, color = class)
 ```
 
 ### R/ggplot2 Advantages
@@ -376,7 +393,7 @@ Matrix result = TableSaw.toMatrix(table)
 
 1. **JVM Integration** - Works seamlessly with Java/Groovy ecosystem and enterprise systems
 2. **Clean Groovy Syntax** - Property access, closures, operator overloading
-3. **Familiar ggplot2 API** - R users can transfer knowledge directly
+3. **Flexible visualization stack** - `matrix-xchart` + `pict` + Charm + ggplot-compatible API
 4. **Type System** - Flexible types with BigDecimal precision
 5. **Comprehensive I/O** - CSV, JSON, SQL, Excel, Parquet, BigQuery, Google Sheets
 6. **Statistical Functions** - Regression, hypothesis tests, correlation, normality tests
@@ -392,7 +409,7 @@ Matrix result = TableSaw.toMatrix(table)
 3. **Smaller Ecosystem** - R's CRAN has 20,000+ specialized packages
 4. **Limited Formula Interface** - R's `y ~ x1 + x2` is more expressive for models
 5. **Limited ggplot Extensions** - R has 100+ ggplot2 extension packages
-6. **No Interactive Visualization** - R has plotly, shiny integration
+6. **Interactive story is narrower** - no Shiny-equivalent web stack; strongest output is still SVG/raster with JavaFX/Swing embedding
 7. **No Cumulative Operations** - cumsum, cumprod, etc.
 
 ---
@@ -511,13 +528,15 @@ For R users transitioning to Matrix, here's a quick reference:
 | `df %>% group_by(g) %>% summarise(...)` | `Stat.sumBy(df, 'val', 'g')`                   |
 | `left_join(a, b, by='key')`             | `Joiner.merge(a, b, 'key', true)`              |
 | `ggplot(df, aes(x, y)) + geom_point()`  | `ggplot(df, aes('x', 'y')) + geom_point()`     |
+| `ggplot(df, aes(x, y)) + geom_point()`  | `ggplot(df, aes { x = 'x'; y = 'y' }) + geom_point()` |
+| `qplot(x, y, data=df)`                  | `qplot(data: df, x: 'x', y: 'y')`              |
 
 ### Key Differences
 
-1. **Column names are strings** - Use `'column'` not bare `column`
+1. **Column references support two styles** - quoted map style (`'column'`) and closure `aes { x = column }`
 2. **Closures instead of expressions** - Use `{ it.x > 5 }` not `x > 5`
 3. **Method chaining** - Use `.method()` not `%>%`
-4. **No tidy evaluation** - All evaluation is standard Groovy
+4. **Limited NSE-style behavior** - only `aes { ... }` and `cols()` use dynamic column resolution; the rest is standard Groovy
 
 ---
 
@@ -526,7 +545,7 @@ For R users transitioning to Matrix, here's a quick reference:
 The Matrix library provides a **compelling alternative to R** for JVM-based data analysis. Its main advantages are:
 
 1. **JVM integration** - Perfect for enterprise environments with Java infrastructure
-2. **Familiar ggplot2 API** - Minimal learning curve for R users
+2. **Strong visualization stack** - `matrix-xchart`, `pict`, Charm DSL, and ggplot2-compatible API
 3. **Strong typing option** - Compile-time safety when needed
 4. **Comprehensive feature set** - Data manipulation, statistics, visualization in one package
 

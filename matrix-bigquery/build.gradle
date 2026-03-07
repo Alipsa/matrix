@@ -6,7 +6,7 @@ plugins {
   id 'java-library'
   id 'signing'
   id 'maven-publish'
-  id("se.alipsa.nexus-release-plugin") version '2.0.1'
+  id("se.alipsa.nexus-release-plugin") version '2.1.1'
 }
 
 group = 'se.alipsa.matrix'
@@ -40,11 +40,11 @@ dependencies {
   testImplementation project(':matrix-datasets')
   compileOnly libs.groovy
 
-  api('com.google.cloud:google-cloud-bigquery:2.59.0')
+  api('com.google.cloud:google-cloud-bigquery:2.60.0')
   api 'com.google.cloud:google-cloud-resourcemanager:1.88.0'
   implementation platform('com.google.auth:google-auth-library-bom:1.43.0')
   implementation 'com.google.auth:google-auth-library-oauth2-http'
-  implementation('com.google.cloud:google-cloud-bigquerystorage:3.22.0')
+  implementation('com.google.cloud:google-cloud-bigquerystorage:3.22.1')
   implementation 'me.tongfei:progressbar:0.10.2'
 
   // https://mvnrepository.com/artifact/org.testcontainers/gcloud

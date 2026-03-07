@@ -6,6 +6,9 @@ A comprehensive guide to using the `se.alipsa.matrix.gg` package for creating gg
 - [Introduction](#introduction)
 - [Quick Start](#quick-start)
 - [Core Concepts](#core-concepts)
+- [Quick Plot (qplot)](#quick-plot-qplot)
+- [Typed Aes Setters](#typed-aes-setters)
+- [Column References with cols](#column-references-with-cols)
 - [Available Components](#available-components)
 - [Examples](#examples)
 - [Differences from R's ggplot2](#differences-from-rs-ggplot2)
@@ -86,7 +89,7 @@ ggsave("my_plot.svg", plot: chart)
 
 **Key differences:**
 1. Use a Matrix instead of a data.frame
-2. Quote column names and constants
+2. You can use either quoted map-based `aes(...)` or closure-based `aes { ... }` with unquoted column names
 
 ## Core Concepts
 
@@ -109,22 +112,37 @@ ggplot(data, aes(x, y)) +           // Data and aesthetics
 Aesthetics map data columns to visual properties:
 
 ```groovy
-// Basic aesthetics
+// Map-based style (always valid)
 aes('x_column', 'y_column')
-aes(x: 'x_column', y: 'y_column')
+aes(x: 'x_column', y: 'y_column', color: 'category')
 
-// Additional aesthetics
-aes('x_col', 'y_col',
-    color: 'category',
-    size: 'value',
-    shape: 'group',
-    alpha: 'transparency_col',
-    fill: 'fill_col')
+// Closure-based style (unquoted column names)
+aes { x = x_column; y = y_column; color = category }
 
-// Grouping and faceting
-aes('x', 'y', group: 'category')
-aes('x', 'y', group: cut_width('continuous_var', 1))
+// Grouping and wrappers
+aes { x = x_col; y = y_col; group = cut_width(displ, 1) }
+aes { x = mpg; color = I('red') }
+aes { x = factor(cyl); y = mpg }
 ```
+
+Closure-based `aes` uses Groovy dynamic property lookup (`propertyMissing`) so bare names become
+column name strings (`mpg` -> `'mpg'`). Use quotes for column names with spaces/special characters:
+
+```groovy
+aes { x = 'Sepal Length'; y = 'Petal Width' }
+```
+
+Closure `aes` is `DELEGATE_ONLY`, which directs property and method resolution to the `aes`
+delegate instead of the closure owner. This does not change normal Groovy lexical scoping, so
+in-scope variables with the same names can still be captured; avoid name collisions between local
+variables and column names.
+
+Wrappers and expressions are supported in both styles:
+- `I(...)` for constants
+- `factor(...)` for categorical mapping
+- `expr { ... }` for computed values
+- `after_stat(...)` and `after_scale(...)` for computed/scaled references
+- `cut_width(...)` for fixed-width binning
 
 **Common aesthetics:**
 - `x`, `y` - Position
@@ -135,6 +153,75 @@ aes('x', 'y', group: cut_width('continuous_var', 1))
 - `alpha` - Transparency (0-1)
 - `linetype` - Line type (solid, dashed, dotted, etc.)
 - `group` - Grouping variable
+
+### Quick Plot (qplot)
+
+`qplot()` is a convenience API for fast exploratory plotting with geom inference.
+
+Supported overloads:
+- `qplot(Map params)`
+- `qplot(Matrix data, Closure configure)`
+- `qplot(Map params, Matrix data, Closure configure)`
+- `qplot(Matrix data, Map params, Closure configure)` (same behavior, alternate argument order)
+
+```groovy
+def mtcars = Dataset.mtcars()
+
+// Map-based
+qplot(data: mtcars, x: 'mpg', y: 'wt', color: 'cyl')
+qplot(data: mtcars, x: 'mpg', bins: 15)
+qplot(data: mtcars, x: 'gear')
+
+// Closure-based
+qplot(mtcars) { x = mpg; y = wt; color = cyl }
+qplot([geom: 'line', title: 'MPG vs Weight'], mtcars) { x = mpg; y = wt }
+```
+
+Geom inference rules:
+1. Explicit `geom` parameter wins.
+2. `x` + `y` present and NOT (`x` discrete + `y` numeric) -> `geom_point()`
+3. `x` + `y` present and `x` discrete + `y` numeric -> `geom_col()`
+4. Only `x` present and `x` numeric -> `geom_histogram()`
+5. Only `x` present and `x` non-numeric/discrete -> `geom_bar()`
+
+Common `qplot` parameters:
+- Required: `data`, `x`
+- Optional aesthetics: `y`, `color`/`colour`/`col`, `fill`, `size`, `shape`, `alpha`, `linetype`
+- Optional behavior: `geom`, `bins`
+- Optional labels: `title`, `xlab`, `ylab`
+
+### Typed Aes Setters
+
+`Aes` includes typed setter overloads to improve IDE hints while keeping wrappers fully supported.
+For example, IDEs can show `setX(String)` as the common path while still offering alternatives.
+
+```groovy
+def mapping = new Aes()
+mapping.x = 'mpg'
+mapping.y = 'wt'
+mapping.color = factor('cyl')
+mapping.size = I(2.5)
+```
+
+Supported typed values include:
+- `String` column names
+- `Identity`, `Factor`, `Expression`, `AfterStat`, `AfterScale`, `CutWidth`
+- `Closure` (for computed expressions in existing APIs)
+
+### Column References with cols()
+
+`cols(Matrix)` returns a validating proxy for unquoted property-style column references.
+
+```groovy
+def c = cols(mtcars)
+ggplot(mtcars, aes(x: c.mpg, y: c.wt)) + geom_point()
+```
+
+Unknown properties throw an `IllegalArgumentException` listing available columns, which helps
+catch typos early.
+
+Note: `c.mpg` relies on dynamic property resolution. It works in dynamic/untyped contexts
+(scripts/tests or `@CompileDynamic`). In `@CompileStatic` code, use quoted column names.
 
 ### Geoms (Geometric Objects)
 
@@ -395,6 +482,7 @@ ggplot(data, aes('x', 'y')) +
 - `position_nudge()` - Nudge position adjustment
 - `expr()` - Define expressions
 - `I()` - Use value "as is" (identity)
+- `cols()` - Validate column names via property-style access
 
 ## Examples
 
@@ -575,17 +663,25 @@ write(chart, new File('penguins.svg'))
 While the API is designed to be as close as possible to R's ggplot2, there are some differences due to language constraints:
 
 ### 1. Quoting
-Column names and string constants must be quoted:
+R uses non-standard evaluation, while Groovy supports two styles:
+- Map/positional style with quoted column names
+- Closure style with unquoted column names
+
+In practice, these are equivalent:
 
 ```R
 # R
-aes(x, y, color = class)
+aes(mpg, wt, color = cyl)
 ```
-Must be written as:
 ```groovy
-// Groovy
-aes('x', 'y', color: 'class')
+// Groovy map-based
+aes('mpg', 'wt', color: 'cyl')
+
+// Groovy closure-based
+aes { x = mpg; y = wt; color = cyl }
 ```
+
+Use quotes for column names containing spaces/special characters in either style.
 
 ### 2. Named Arguments
 Use Groovy's Map syntax for named arguments:

@@ -414,20 +414,50 @@ println "Charts have been exported successfully."
 
 5. **Size Appropriately**: Export charts at appropriate dimensions for their intended use.
 
-## GGPlot-style Charting (matrix-ggplot)
+## Charm DSL (matrix-charts core)
 
-For ggplot2-style charting, see the separate [matrix-ggplot](../../matrix-ggplot/README.md) module.
-It provides a compatibility layer mimicking R's ggplot2 API and delegates to the Charm rendering
-engine in matrix-charts. Add it as a dependency:
+Beyond chart-type-first classes (`AreaChart`, `BarChart`, `LineChart`, etc.), `matrix-charts`
+also includes the Charm Grammar-of-Graphics DSL.
 
 ```groovy
-implementation 'se.alipsa.matrix:matrix-ggplot'
+import static se.alipsa.matrix.charm.Charts.plot
+import se.alipsa.matrix.datasets.Dataset
+
+def mtcars = Dataset.mtcars()
+def chart = plot(mtcars) {
+  mapping {
+    x = 'mpg'
+    y = 'wt'
+    color = 'cyl'
+  }
+  layers {
+    geomPoint().size(2).alpha(0.7)
+    geomSmooth().method('lm')
+  }
+  labels {
+    title = 'MPG vs Weight'
+    x = 'Miles per gallon'
+    y = 'Weight'
+  }
+}.build()
+
+chart.writeTo('charm-mtcars.svg')
 ```
+
+For full Charm coverage, see:
+- [matrix-charts/docs/charm.md](../../matrix-charts/docs/charm.md)
+
+## GGPlot-style Charting (separate module)
+
+GGPlot compatibility (`ggplot`, `aes`, `geom_*`, `qplot`) belongs to the separate
+`matrix-ggplot` module and is covered in:
+- [Matrix GGPlot Module tutorial](13b-matrix-ggplot.md)
+- [matrix-ggplot/docs/ggPlot.md](../../matrix-ggplot/docs/ggPlot.md)
 
 ## Conclusion
 
 The matrix-charts module provides a powerful and flexible way to create various types of charts from Matrix data. It offers a simple API for generating visualizations that can be exported to different formats, making it easy to include data visualizations in your Groovy applications.
 
-In the next section, we'll explore the matrix-tablesaw module, which provides interoperability with the Tablesaw library for advanced data manipulation and analysis.
+In the next section, we'll cover the matrix-ggplot module for ggplot2-compatible charting built on top of matrix-charts.
 
-Go to [previous section](12-matrix-bigquery.md) | Go to [next section](14-matrix-tablesaw.md) | Back to [outline](outline.md)
+Go to [previous section](12-matrix-bigquery.md) | Go to [next section](13b-matrix-ggplot.md) | Back to [outline](outline.md)

@@ -8,7 +8,7 @@ plugins {
   id('maven-publish')
   id('jacoco')
   id('codenarc')
-  id("se.alipsa.nexus-release-plugin") version '2.0.1'
+  id("se.alipsa.nexus-release-plugin") version '2.1.1'
 }
 
 group = 'se.alipsa.matrix'
