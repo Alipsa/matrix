@@ -280,7 +280,7 @@ class ColumnTest {
     }
 
     assert [3, 4, 6, 8, 9] == result
-    assert Integer == result.type
+    assert Object == result.type
   }
 
   @Test

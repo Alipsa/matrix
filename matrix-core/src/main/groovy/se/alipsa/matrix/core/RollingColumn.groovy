@@ -115,16 +115,11 @@ class RollingColumn {
     if (function == null) {
       throw new IllegalArgumentException('rolling function cannot be null')
     }
-    Class resultType = Object
-    Column result = new Column(source.name, resultType)
+    Column result = new Column(source.name, Object)
     for (int rowIndex = 0; rowIndex < source.size(); rowIndex++) {
       Column window = slice(rowIndex)
       List<?> nonNullValues = RollingWindowHelper.nonNullValues(window)
       Object value = nonNullValues.size() < options.minPeriods ? null : function.call(window)
-      if (resultType == Object && value != null) {
-        resultType = value.class
-        result.type = resultType
-      }
       result.add(value)
     }
     result

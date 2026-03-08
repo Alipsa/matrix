@@ -4,6 +4,8 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 
+import java.util.AbstractList
+
 /**
  * Rolling window operations for a {@link Matrix}.
  */
@@ -41,11 +43,17 @@ class RollingMatrix {
       positions[rowIndex] = orderedPosition
     }
     this.orderedPositionsByRowIndex = positions
-    List<List<Integer>> windowIndices = new ArrayList<>(source.rowCount())
-    for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
-      windowIndices.add(computeWindowRowIndices(rowIndex))
+    this.windowIndicesByRowIndex = new AbstractList<List<Integer>>() {
+      @Override
+      int size() {
+        source.rowCount()
+      }
+
+      @Override
+      List<Integer> get(int rowIndex) {
+        computeWindowRowIndices(rowIndex)
+      }
     }
-    this.windowIndicesByRowIndex = windowIndices
   }
 
   /**
@@ -117,16 +125,11 @@ class RollingMatrix {
     if (function == null) {
       throw new IllegalArgumentException('rolling function cannot be null')
     }
-    Class resultType = Object
-    Column result = new Column('rolling', resultType)
+    Column result = new Column('rolling', Object)
     for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
       List<Integer> windowIndices = windowIndicesByRowIndex[rowIndex]
       Matrix window = source.subset(windowIndices)
       Object value = window.rowCount() < options.minPeriods ? null : function.call(window)
-      if (resultType == Object && value != null) {
-        resultType = value.class
-        result.type = resultType
-      }
       result.add(value)
     }
     result
@@ -141,10 +144,16 @@ class RollingMatrix {
       }
       Class resultType = decimalResult ? BigDecimal : source.type(index)
       Column rolledColumn = new Column(columnName, resultType)
+      List<Number> values = new ArrayList<Number>()
       for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
-        List<Number> values = windowIndicesByRowIndex[rowIndex]
-            .collect { Integer indexInSource -> sourceColumn[indexInSource] }
-            .findAll { it instanceof Number } as List<Number>
+        values.clear()
+        List<Integer> windowIndices = windowIndicesByRowIndex[rowIndex]
+        for (int i = 0; i < windowIndices.size(); i++) {
+          Object value = sourceColumn[windowIndices.get(i)]
+          if (value instanceof Number) {
+            values.add(value as Number)
+          }
+        }
         rolledColumn.add(values.size() < options.minPeriods ? null : function.call(values))
       }
       result.replace(columnName, resultType, rolledColumn)

@@ -1602,7 +1602,7 @@ class MatrixTest {
     }
 
     assertIterableEquals(['2-3', '1', '1-2'], result)
-    assertEquals(String, result.type)
+    assertEquals(Object, result.type)
   }
 
   @Test
