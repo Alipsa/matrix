@@ -318,4 +318,149 @@ class ColumnTest {
       strings.rolling(window: 2).mean()
     }
   }
+
+  @Test
+  void testCumsumBasic() {
+    Column c = new Column('value', [1, 2, 3, 4], Integer)
+    Column result = c.cumsum()
+
+    assert [1, 3, 6, 10] == result
+    assert 'value' == result.name
+    assert BigDecimal == result.type
+  }
+
+  @Test
+  void testCumsumWithNulls() {
+    Column c = new Column('value', [1, null, 3, 4], Integer)
+    assert [1, null, 4, 8] == c.cumsum()
+
+    Column allNulls = new Column('value', [null, null, null], Integer)
+    assert [null, null, null] == allNulls.cumsum()
+
+    Column leadingNulls = new Column('value', [null, null, 5], Integer)
+    assert [null, null, 5] == leadingNulls.cumsum()
+  }
+
+  @Test
+  void testCumsumEmptyAndSingleElement() {
+    Column empty = new Column('value', [], Integer)
+    assert [] == empty.cumsum()
+
+    Column emptyStrings = new Column('label', [], String)
+    assertThrows(IllegalArgumentException) { emptyStrings.cumsum() }
+    assertThrows(IllegalArgumentException) { emptyStrings.cumprod() }
+
+    Column single = new Column('value', [7], Integer)
+    assert [7] == single.cumsum()
+  }
+
+  @Test
+  void testCumprodBasic() {
+    Column c = new Column('value', [1, 2, 3, 4], Integer)
+    Column result = c.cumprod()
+
+    assert [1, 2, 6, 24] == result
+    assert 'value' == result.name
+    assert BigDecimal == result.type
+  }
+
+  @Test
+  void testCumprodWithNulls() {
+    Column c = new Column('value', [2, null, 3, 4], Integer)
+    assert [2, null, 6, 24] == c.cumprod()
+
+    Column allNulls = new Column('value', [null, null, null], Integer)
+    assert [null, null, null] == allNulls.cumprod()
+  }
+
+  @Test
+  void testCumminBasic() {
+    Column c = new Column('value', [3, 1, 4, 1, 5], Integer)
+    Column result = c.cummin()
+
+    assert [3, 1, 1, 1, 1] == result
+    assert 'value' == result.name
+    assert Integer == result.type
+  }
+
+  @Test
+  void testCumminWithNullsAndStrings() {
+    Column c = new Column('value', [3, null, 1, 4], Integer)
+    assert [3, null, 1, 1] == c.cummin()
+
+    Column strings = new Column('label', ['c', 'a', 'b'], String)
+    assert ['c', 'a', 'a'] == strings.cummin()
+  }
+
+  @Test
+  void testCummaxBasic() {
+    Column c = new Column('value', [1, 3, 2, 5, 4], Integer)
+    Column result = c.cummax()
+
+    assert [1, 3, 3, 5, 5] == result
+    assert 'value' == result.name
+    assert Integer == result.type
+  }
+
+  @Test
+  void testCummaxWithNullsAndStrings() {
+    Column c = new Column('value', [1, null, 5, 3], Integer)
+    assert [1, null, 5, 5] == c.cummax()
+
+    Column strings = new Column('label', ['a', 'c', 'b'], String)
+    assert ['a', 'c', 'c'] == strings.cummax()
+  }
+
+  @Test
+  void testCumminCummaxHandleMixedNumericTypes() {
+    Column mixedNumbers = new Column('value', [2, 1.5G, 3L, 0.5G], Object)
+
+    assert [2, 1.5G, 1.5G, 0.5G] == mixedNumbers.cummin()
+    assert [2, 2, 3L, 3L] == mixedNumbers.cummax()
+  }
+
+  @Test
+  void testCumminCummaxRejectNonComparableMixedValues() {
+    Column mixedValues = new Column('value', [1, 'a', 2], Object)
+
+    def minError = assertThrows(IllegalArgumentException) { mixedValues.cummin() }
+    assert "cummin requires mutually comparable values within column 'value'" == minError.message
+
+    def maxError = assertThrows(IllegalArgumentException) { mixedValues.cummax() }
+    assert "cummax requires mutually comparable values within column 'value'" == maxError.message
+  }
+
+  @Test
+  void testCumsumCumprodRejectNonNumericColumn() {
+    Column strings = new Column('label', ['a', 'b', 'c'], String)
+
+    assertThrows(IllegalArgumentException) { strings.cumsum() }
+    assertThrows(IllegalArgumentException) { strings.cumprod() }
+  }
+
+  @Test
+  void testCumsumCumprodRejectStrayNonNumericValuesInNumericColumn() {
+    Column mixed = new Column('value', [1, 'oops', 3], Integer)
+
+    def sumError = assertThrows(IllegalArgumentException) { mixed.cumsum() }
+    assert "cumsum requires numeric values within column 'value' but found String" == sumError.message
+
+    def prodError = assertThrows(IllegalArgumentException) { mixed.cumprod() }
+    assert "cumprod requires numeric values within column 'value' but found String" == prodError.message
+  }
+
+  @Test
+  void testCumulativeNumericOpsRejectNaNAndInfinity() {
+    Column nanValues = new Column('value', [1.0d, Double.NaN, 3.0d], Double)
+    Column infinityValues = new Column('value', [1.0d, Double.POSITIVE_INFINITY, 3.0d], Double)
+
+    assert "cumsum requires finite numeric values within column 'value' but found NaN" ==
+        assertThrows(IllegalArgumentException) { nanValues.cumsum() }.message
+    assert "cumprod requires finite numeric values within column 'value' but found Infinity" ==
+        assertThrows(IllegalArgumentException) { infinityValues.cumprod() }.message
+    assert "cummin requires finite numeric values within column 'value' but found Infinity" ==
+        assertThrows(IllegalArgumentException) { infinityValues.cummin() }.message
+    assert "cummax requires finite numeric values within column 'value' but found NaN" ==
+        assertThrows(IllegalArgumentException) { nanValues.cummax() }.message
+  }
 }

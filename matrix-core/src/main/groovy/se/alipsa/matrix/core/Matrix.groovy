@@ -5,6 +5,7 @@ import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.MatrixPrinter
 import se.alipsa.matrix.core.util.RowComparator
+import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 
 import java.text.NumberFormat
@@ -508,6 +509,87 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   RollingMatrix rolling(Map<String, ?> options) {
     new RollingMatrix(this, RollingWindowOptions.matrix(options))
+  }
+
+  /**
+   * Compute the cumulative sum for each numeric column.
+   *
+   * <p>Non-numeric columns are preserved unchanged.</p>
+   *
+   * @return a new matrix with cumulative sums for numeric columns
+   */
+  Matrix cumsum() {
+    applyCumulativeToNumeric { Column col -> col.cumsum() }
+  }
+
+  /**
+   * Compute the cumulative product for each numeric column.
+   *
+   * <p>Non-numeric columns are preserved unchanged.</p>
+   *
+   * @return a new matrix with cumulative products for numeric columns
+   */
+  Matrix cumprod() {
+    applyCumulativeToNumeric { Column col -> col.cumprod() }
+  }
+
+  /**
+   * Compute the cumulative minimum for each column containing Comparable values.
+   *
+   * <p>Columns that do not contain Comparable values are preserved unchanged.
+   * Columns whose non-null values are individually Comparable but not mutually
+   * comparable are also preserved unchanged.</p>
+   *
+   * @return a new matrix with cumulative minima
+   */
+  Matrix cummin() {
+    applyCumulativeToComparable { Column col -> col.cummin() }
+  }
+
+  /**
+   * Compute the cumulative maximum for each column containing Comparable values.
+   *
+   * <p>Columns that do not contain Comparable values are preserved unchanged.
+   * Columns whose non-null values are individually Comparable but not mutually
+   * comparable are also preserved unchanged.</p>
+   *
+   * @return a new matrix with cumulative maxima
+   */
+  Matrix cummax() {
+    applyCumulativeToComparable { Column col -> col.cummax() }
+  }
+
+  private Matrix applyCumulativeToNumeric(Closure<Column> operation) {
+    Matrix result = this.clone()
+    columnNames().eachWithIndex { String colName, int index ->
+      Column col = column(index)
+      if (RollingWindowHelper.isNumericColumn(col)) {
+        Column cumCol = operation.call(col)
+        result.replace(colName, cumCol.type, cumCol)
+      }
+    }
+    result
+  }
+
+  private Matrix applyCumulativeToComparable(Closure<Column> operation) {
+    Matrix result = this.clone()
+    columnNames().eachWithIndex { String colName, int index ->
+      Column col = column(index)
+      List<?> presentValues = RollingWindowHelper.nonNullValues(col)
+      if (!presentValues.isEmpty() && presentValues.every { it instanceof Comparable }) {
+        try {
+          Column cumCol = operation.call(col)
+          result.replace(colName, cumCol.type, cumCol)
+        } catch (IllegalArgumentException e) {
+          // Preserve the original column when values are individually Comparable
+          // but not mutually comparable for cumulative min/max.
+          if (!(e.cause instanceof ClassCastException)) {
+            throw e
+          }
+        }
+      }
+    }
+    result
   }
 
   /**
