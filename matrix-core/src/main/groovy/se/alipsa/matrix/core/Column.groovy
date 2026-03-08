@@ -2,6 +2,7 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.RollingWindowOptions
 
 /**
  * A column is a list with some arithmetic operations changed compared to how lists normally behaves in Groovy.
@@ -297,6 +298,36 @@ class Column extends ArrayList {
   @CompileDynamic
   Number variance(boolean isBiasedCorrected = true) {
     Stat.variance(this, isBiasedCorrected)
+  }
+
+  /**
+   * Create a trailing rolling view over this column.
+   *
+   * Equivalent to {@code rolling(window: window)}.
+   *
+   * @param window the rolling window size
+   * @return a rolling view for chained aggregations
+   */
+  RollingColumn rolling(int window) {
+    new RollingColumn(this, new RollingWindowOptions(window, window))
+  }
+
+  /**
+   * Create a rolling view over this column.
+   *
+   * Supported options are:
+   * {@code window} (required), {@code minPeriods} (defaults to {@code window}),
+   * and {@code center} (defaults to {@code false}).
+   *
+   * Built-in numeric aggregations ignore null values and return null when the
+   * window contains fewer than {@code minPeriods} non-null numeric values.
+   * Custom {@code apply {}} receives the raw window values.
+   *
+   * @param options rolling options
+   * @return a rolling view for chained aggregations
+   */
+  RollingColumn rolling(Map<String, ?> options) {
+    new RollingColumn(this, RollingWindowOptions.column(options))
   }
 
   List getValues() {

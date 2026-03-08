@@ -1,4 +1,5 @@
 import se.alipsa.matrix.core.Converter
+import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Grid
 import se.alipsa.matrix.core.Row
 import se.alipsa.matrix.core.Stat
@@ -1563,5 +1564,108 @@ class MatrixTest {
   void testAnonymousHeaders() {
     assertIterableEquals(['c1', 'c2', 'c3'], Matrix.anonymousHeader(['a', 'b', 'c']))
     assertIterableEquals(['c1', 'c2', 'c3'], Matrix.anonymousHeader(3))
+  }
+
+  @Test
+  void testRollingMeanUsesByOrderingAndPreservesOriginalRows() {
+    Matrix table = Matrix.builder()
+        .matrixName('series')
+        .data(
+            day: [3, 1, 2],
+            label: ['c', 'a', 'b'],
+            value: [30, 10, 20]
+        )
+        .types(Integer, String, Integer)
+        .build()
+
+    Matrix result = table.rolling(window: 2, minPeriods: 1, by: 'day').mean()
+
+    assertEquals('series', result.matrixName)
+    assertIterableEquals([3, 1, 2], result.day)
+    assertIterableEquals(['c', 'a', 'b'], result.label)
+    assert [25.0, 10.0, 15.0] == result.value
+    assertEquals(BigDecimal, result.type('value'))
+  }
+
+  @Test
+  void testRollingApplyReceivesWindowInByOrderAndRestoresOriginalOrder() {
+    Matrix table = Matrix.builder()
+        .data(
+            day: [3, 1, 2],
+            value: [30, 10, 20]
+        )
+        .types(Integer, Integer)
+        .build()
+
+    Column result = table.rolling(window: 2, minPeriods: 1, by: 'day').apply { Matrix window ->
+      window.day.join('-')
+    }
+
+    assertIterableEquals(['2-3', '1', '1-2'], result)
+    assertEquals(Object, result.type)
+  }
+
+  @Test
+  void testRollingCenterAppliesToNumericColumnsOnly() {
+    Matrix table = Matrix.builder()
+        .data(
+            id: ['a', 'b', 'c', 'd', 'e'],
+            value: [1, 2, 3, 4, 5]
+        )
+        .types(String, Integer)
+        .build()
+
+    Matrix result = table.rolling(window: 3, minPeriods: 2, center: true).sum()
+
+    assertIterableEquals(['a', 'b', 'c', 'd', 'e'], result.id)
+    assert [3, 6, 9, 12, 9] == result.value
+    assertEquals(BigDecimal, result.type('value'))
+  }
+
+  @Test
+  void testRollingMinMaxAndSdCoverNumericMatrixAggregations() {
+    Matrix table = Matrix.builder()
+        .data(
+            day: [3, 1, 2, 4],
+            value: [30, null, 20, 50],
+            volume: [300, 100, 200, 400]
+        )
+        .types(Integer, Integer, Integer)
+        .build()
+
+    Matrix minResult = table.rolling(window: 2, minPeriods: 1, by: 'day').min()
+    Matrix maxResult = table.rolling(window: 2, minPeriods: 1, by: 'day').max()
+    Matrix sdResult = table.rolling(window: 2, minPeriods: 2, by: 'day').sd()
+
+    assertIterableEquals([3, 1, 2, 4], minResult.day)
+    assert [20, null, 20, 30] == minResult.value
+    assert [200, 100, 100, 300] == minResult.volume
+
+    assert [30, null, 20, 50] == maxResult.value
+    assert [300, 100, 200, 400] == maxResult.volume
+
+    assertEquals(7.0710678118654755d, sdResult.value[0] as double, 1.0e-12d)
+    assertNull(sdResult.value[1])
+    assertNull(sdResult.value[2])
+    assertEquals(14.142135623730951d, sdResult.value[3] as double, 1.0e-12d)
+
+    assertEquals(70.71067811865476d, sdResult.volume[0] as double, 1.0e-12d)
+    assertNull(sdResult.volume[1])
+    assertEquals(70.71067811865476d, sdResult.volume[2] as double, 1.0e-12d)
+    assertEquals(70.71067811865476d, sdResult.volume[3] as double, 1.0e-12d)
+    assertEquals(BigDecimal, sdResult.type('value'))
+    assertEquals(BigDecimal, sdResult.type('volume'))
+  }
+
+  @Test
+  void testRollingRejectsUnknownByColumn() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, 2, 3])
+        .types(Integer)
+        .build()
+
+    assertThrows(IllegalArgumentException) {
+      table.rolling(window: 2, by: 'day').mean()
+    }
   }
 }

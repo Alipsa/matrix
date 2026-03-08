@@ -2,6 +2,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.core.Column
 import se.alipsa.matrix.core.Stat
 
+import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertThrows
 
 class ColumnTest {
@@ -237,5 +238,84 @@ class ColumnTest {
     assertThrows(IllegalArgumentException) { c * null }
     assertThrows(IllegalArgumentException) { c / null }
     assertThrows(IllegalArgumentException) { c ** null }
+  }
+
+  @Test
+  void testRollingMeanUsesMinPeriodsAndSkipsNulls() {
+    Column c = new Column('value', [1, null, 3, 4, 5], Integer)
+
+    Column result = c.rolling(window: 3, minPeriods: 2).mean()
+
+    assert [null, null, 2.0, 3.5, 4.0] == result
+    assert 'value' == result.name
+    assert BigDecimal == result.type
+  }
+
+  @Test
+  void testRollingSumMaxAndSdHandleNullsAndThresholds() {
+    Column c = new Column('value', [1, null, 3, 4, 5], Integer)
+
+    Column sum = c.rolling(window: 3, minPeriods: 2).sum()
+    Column max = c.rolling(window: 3, minPeriods: 2).max()
+    Column sd = c.rolling(window: 3, minPeriods: 2).sd()
+
+    assert [null, null, 4, 7, 12] == sum
+    assert [null, null, 3, 4, 5] == max
+    assert sd[0] == null
+    assert sd[1] == null
+    assertEquals(1.4142135623730951d, sd[2] as double, 1.0e-12d)
+    assertEquals(0.7071067811865476d, sd[3] as double, 1.0e-12d)
+    assertEquals(1.0d, sd[4] as double, 1.0e-12d)
+    assert BigDecimal == sum.type
+    assert Integer == max.type
+    assert BigDecimal == sd.type
+  }
+
+  @Test
+  void testRollingCenteredApplyReceivesWindowSlice() {
+    Column c = new Column('value', [1, 2, 3, 4, 5], Integer)
+
+    Column result = c.rolling(window: 3, minPeriods: 2, center: true).apply { Column window ->
+      window.first() + window.last()
+    }
+
+    assert [3, 4, 6, 8, 9] == result
+    assert Object == result.type
+  }
+
+  @Test
+  void testRollingMinSupportsComparableColumns() {
+    Column c = new Column('grade', ['c', null, 'a', 'b'], String)
+
+    Column result = c.rolling(window: 2, minPeriods: 1).min()
+
+    assert ['c', 'c', 'a', 'a'] == result
+    assert String == result.type
+  }
+
+  @Test
+  void testRollingRejectsInvalidConfigAndNonNumericMean() {
+    Column strings = new Column('label', ['a', 'b', 'c'], String)
+
+    assertThrows(IllegalArgumentException) {
+      strings.rolling([:])
+    }
+    assertThrows(IllegalArgumentException) {
+      strings.rolling(window: 2, minPeriods: 3)
+    }
+    assertThrows(IllegalArgumentException) {
+      strings.rolling(window: 2.5)
+    }
+    assertThrows(IllegalArgumentException) {
+      strings.rolling(window: 2, minPeriods: 1.5)
+    }
+    assertThrows(IllegalArgumentException) {
+      strings.rolling([(1): 2])
+    }
+    Map options = ["${'window'}": 2, "${'minPeriods'}": 1]
+    assert ['a', 'a', 'b'] == strings.rolling(options).min()
+    assertThrows(IllegalArgumentException) {
+      strings.rolling(window: 2).mean()
+    }
   }
 }
