@@ -318,7 +318,7 @@ class Grid<T> implements Iterable<List<T>> {
    * @return true if the grid is valid for the supplied type, false otherwise
    */
   static boolean isValid(Grid grid, Class<?> elementType) {
-    isValid(grid?.data, elementType)
+    return isValid(grid?.data, elementType)
   }
 
   /**
@@ -377,7 +377,7 @@ class Grid<T> implements Iterable<List<T>> {
         }
       }
     }
-    true
+    return true
   }
 
   private static Class<?> safeElementType(Class<?> elementType) {
