@@ -29,7 +29,7 @@ class CumulativeHelper {
       if (element == null) {
         result.add(null)
       } else {
-        BigDecimal value = (element as Number) as BigDecimal
+        BigDecimal value = numericValue(element, source, 'cumsum')
         accumulator = accumulator == null ? value : accumulator + value
         result.add(accumulator)
       }
@@ -53,7 +53,7 @@ class CumulativeHelper {
       if (element == null) {
         result.add(null)
       } else {
-        BigDecimal value = (element as Number) as BigDecimal
+        BigDecimal value = numericValue(element, source, 'cumprod')
         accumulator = accumulator == null ? value : accumulator * value
         result.add(accumulator)
       }
@@ -152,5 +152,14 @@ class CumulativeHelper {
           e
       )
     }
+  }
+
+  private static BigDecimal numericValue(Object element, Column source, String operationName) {
+    if (!(element instanceof Number)) {
+      throw new IllegalArgumentException(
+          "${operationName} requires numeric values within column '${source.name}' but found ${element.class.simpleName}"
+      )
+    }
+    (element as Number) as BigDecimal
   }
 }

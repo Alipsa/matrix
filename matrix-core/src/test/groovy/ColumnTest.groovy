@@ -437,4 +437,15 @@ class ColumnTest {
     assertThrows(IllegalArgumentException) { strings.cumsum() }
     assertThrows(IllegalArgumentException) { strings.cumprod() }
   }
+
+  @Test
+  void testCumsumCumprodRejectStrayNonNumericValuesInNumericColumn() {
+    Column mixed = new Column('value', [1, 'oops', 3], Integer)
+
+    def sumError = assertThrows(IllegalArgumentException) { mixed.cumsum() }
+    assert "cumsum requires numeric values within column 'value' but found String" == sumError.message
+
+    def prodError = assertThrows(IllegalArgumentException) { mixed.cumprod() }
+    assert "cumprod requires numeric values within column 'value' but found String" == prodError.message
+  }
 }

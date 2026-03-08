@@ -576,9 +576,12 @@ class Matrix implements Iterable<Row>, Cloneable {
         try {
           Column cumCol = operation.call(col)
           result.replace(colName, cumCol.type, cumCol)
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException e) {
           // Preserve the original column when values are individually Comparable
           // but not mutually comparable for cumulative min/max.
+          if (!(e.cause instanceof ClassCastException)) {
+            throw e
+          }
         }
       }
     }
