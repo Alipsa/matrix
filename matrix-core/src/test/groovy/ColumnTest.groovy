@@ -617,4 +617,142 @@ class ColumnTest {
     assert "diff requires finite numeric values within column 'value' but found Infinity" ==
         assertThrows(IllegalArgumentException) { infinityValues.diff() }.message
   }
+
+  // --- 1.4 Edge-case tests: Rolling ---
+
+  @Test
+  void testRollingOnEmptyColumn() {
+    Column empty = new Column('value', [], Integer)
+    assert [] == empty.rolling(window: 2, minPeriods: 1).mean()
+    assert [] == empty.rolling(window: 2, minPeriods: 1).sum()
+    assert [] == empty.rolling(window: 2, minPeriods: 1).min()
+    assert [] == empty.rolling(window: 2, minPeriods: 1).max()
+    assert [] == empty.rolling(window: 2, minPeriods: 1).sd()
+    assert [] == empty.rolling(window: 2, minPeriods: 1).apply { it.size() }
+  }
+
+  @Test
+  void testRollingOnSingleRowColumn() {
+    Column single = new Column('value', [5], Integer)
+    assert [5.0] == single.rolling(window: 3, minPeriods: 1).mean()
+    assert [null] == single.rolling(window: 3, minPeriods: 2).mean()
+  }
+
+  @Test
+  void testRollingOnAllNullColumn() {
+    Column allNulls = new Column('value', [null, null, null], Integer)
+    assert [null, null, null] == allNulls.rolling(window: 2, minPeriods: 1).mean()
+    assert [null, null, null] == allNulls.rolling(window: 2, minPeriods: 1).sum()
+    assert [null, null, null] == allNulls.rolling(window: 2, minPeriods: 1).min()
+    assert [null, null, null] == allNulls.rolling(window: 2, minPeriods: 1).max()
+    assert [null, null, null] == allNulls.rolling(window: 2, minPeriods: 1).sd()
+  }
+
+  @Test
+  void testRollingWithWindowOfOne() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+    assert [1.0, 2.0, 3.0] == c.rolling(window: 1).mean()
+    assert [null, null, null] == c.rolling(window: 1).sd()
+  }
+
+  @Test
+  void testRollingWithWindowLargerThanColumn() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+    Column sum = c.rolling(window: 10, minPeriods: 1).sum()
+    assert [1, 3, 6] == sum
+  }
+
+  @Test
+  void testRollingApplyRejectsNullClosure() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+    assertThrows(IllegalArgumentException) { c.rolling(2).apply(null) }
+  }
+
+  @Test
+  void testRollingIntShorthand() {
+    Column c = new Column('value', [1, 2, 3, 4, 5], Integer)
+    assert c.rolling(3).mean() == c.rolling(window: 3).mean()
+  }
+
+  // --- 1.4 Edge-case tests: Cumulative ---
+
+  @Test
+  void testCumprodEmptyAndSingleElement() {
+    Column empty = new Column('value', [], Integer)
+    assert [] == empty.cumprod()
+
+    Column single = new Column('value', [7], Integer)
+    assert [7] == single.cumprod()
+  }
+
+  @Test
+  void testCumminCummaxEmptyAndSingleElement() {
+    Column empty = new Column('value', [], Integer)
+    assert [] == empty.cummin()
+    assert [] == empty.cummax()
+
+    Column single = new Column('value', [5], Integer)
+    assert [5] == single.cummin()
+    assert [5] == single.cummax()
+  }
+
+  @Test
+  void testCumsumBigDecimalPrecision() {
+    Column c = new Column('value', [0.1, 0.2, 0.3], BigDecimal)
+    assert [0.1, 0.3, 0.6] == c.cumsum()
+  }
+
+  @Test
+  void testCumprodWithZero() {
+    Column c = new Column('value', [2, 3, 0, 5], Integer)
+    assert [2, 6, 0, 0] == c.cumprod()
+  }
+
+  @Test
+  void testCumsumOnNormalDoubleColumn() {
+    Column c = new Column('value', [1.0d, 2.0d, 3.0d], Double)
+    Column result = c.cumsum()
+    assert [1.0, 3.0, 6.0] == result
+    assert BigDecimal == result.type
+  }
+
+  // --- 1.4 Edge-case tests: Shift/Lag/Lead/Diff ---
+
+  @Test
+  void testShiftDefaultParameter() {
+    Column c = new Column('value', [1, 2, 3, 4], Integer)
+    assert c.shift() == c.shift(1)
+  }
+
+  @Test
+  void testLagLeadDefaultParameter() {
+    Column c = new Column('value', [1, 2, 3, 4], Integer)
+    assert c.lag() == c.lag(1)
+    assert c.lead() == c.lead(1)
+  }
+
+  @Test
+  void testDiffDefaultParameter() {
+    Column c = new Column('value', [1, 3, 6, 10], Integer)
+    assert c.diff() == c.diff(1)
+  }
+
+  @Test
+  void testDiffAllNullColumn() {
+    Column c = new Column('value', [null, null, null], Integer)
+    assert [null, null, null] == c.diff()
+  }
+
+  @Test
+  void testDiffPeriodsLargerThanColumnSize() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+    assert [null, null, null] == c.diff(10)
+  }
+
+  @Test
+  void testLagLeadZero() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+    assert [1, 2, 3] == c.lag(0)
+    assert [1, 2, 3] == c.lead(0)
+  }
 }
