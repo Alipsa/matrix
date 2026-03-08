@@ -64,11 +64,12 @@ class RollingWindowOptions {
     Set<String> allowedKeys = allowBy
         ? ['window', 'minPeriods', 'center', 'by'] as Set<String>
         : ['window', 'minPeriods', 'center'] as Set<String>
-    Set<String> unknownKeys = options.keySet().findAll { String key -> !(key in allowedKeys) } as Set<String>
+    Set<String> optionKeys = options.keySet().collect { Object key -> String.valueOf(key) } as Set<String>
+    Set<String> unknownKeys = optionKeys.findAll { String key -> !(key in allowedKeys) } as Set<String>
     if (!unknownKeys.isEmpty()) {
       throw new IllegalArgumentException("Unknown rolling option(s): ${unknownKeys.sort().join(', ')}")
     }
-    if (!options.containsKey('window')) {
+    if (!optionKeys.contains('window')) {
       throw new IllegalArgumentException('rolling options must include window')
     }
     int window = intValue(options['window'], 'window')

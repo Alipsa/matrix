@@ -1623,6 +1623,41 @@ class MatrixTest {
   }
 
   @Test
+  void testRollingMinMaxAndSdCoverNumericMatrixAggregations() {
+    Matrix table = Matrix.builder()
+        .data(
+            day: [3, 1, 2, 4],
+            value: [30, null, 20, 50],
+            volume: [300, 100, 200, 400]
+        )
+        .types(Integer, Integer, Integer)
+        .build()
+
+    Matrix minResult = table.rolling(window: 2, minPeriods: 1, by: 'day').min()
+    Matrix maxResult = table.rolling(window: 2, minPeriods: 1, by: 'day').max()
+    Matrix sdResult = table.rolling(window: 2, minPeriods: 2, by: 'day').sd()
+
+    assertIterableEquals([3, 1, 2, 4], minResult.day)
+    assert [20, null, 20, 30] == minResult.value
+    assert [200, 100, 100, 300] == minResult.volume
+
+    assert [30, null, 20, 50] == maxResult.value
+    assert [300, 100, 200, 400] == maxResult.volume
+
+    assertEquals(7.0710678118654755d, sdResult.value[0] as double, 1.0e-12d)
+    assertNull(sdResult.value[1])
+    assertNull(sdResult.value[2])
+    assertEquals(14.142135623730951d, sdResult.value[3] as double, 1.0e-12d)
+
+    assertEquals(70.71067811865476d, sdResult.volume[0] as double, 1.0e-12d)
+    assertNull(sdResult.volume[1])
+    assertEquals(70.71067811865476d, sdResult.volume[2] as double, 1.0e-12d)
+    assertEquals(70.71067811865476d, sdResult.volume[3] as double, 1.0e-12d)
+    assertEquals(BigDecimal, sdResult.type('value'))
+    assertEquals(BigDecimal, sdResult.type('volume'))
+  }
+
+  @Test
   void testRollingRejectsUnknownByColumn() {
     Matrix table = Matrix.builder()
         .data(value: [1, 2, 3])
