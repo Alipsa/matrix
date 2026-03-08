@@ -104,8 +104,8 @@ class RollingWindowHelper {
     if (isNumericType(column.type)) {
       return true
     }
-    List<?> nonNullValues = nonNullValues(column)
-    !nonNullValues.isEmpty() && nonNullValues.every { it instanceof Number }
+    List<?> presentValues = nonNullValues(column)
+    !presentValues.isEmpty() && presentValues.every { it instanceof Number }
   }
 
   /**

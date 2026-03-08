@@ -4,8 +4,6 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 
-import java.util.AbstractList
-
 /**
  * Rolling window operations for a {@link Matrix}.
  */
@@ -16,7 +14,7 @@ class RollingMatrix {
   private final RollingWindowOptions options
   private final List<Integer> orderedRowIndices
   private final Map<Integer, Integer> orderedPositionsByRowIndex
-  private final List<List<Integer>> windowIndicesByRowIndex
+  private final List<IntRange> windowRangesByRowIndex
 
   /**
    * Create a rolling view over a matrix.
@@ -43,17 +41,11 @@ class RollingMatrix {
       positions[rowIndex] = orderedPosition
     }
     this.orderedPositionsByRowIndex = positions
-    this.windowIndicesByRowIndex = new AbstractList<List<Integer>>() {
-      @Override
-      int size() {
-        source.rowCount()
-      }
-
-      @Override
-      List<Integer> get(int rowIndex) {
-        computeWindowRowIndices(rowIndex)
-      }
+    List<IntRange> ranges = new ArrayList<>(source.rowCount())
+    for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
+      ranges.add(computeWindowRange(rowIndex))
     }
+    this.windowRangesByRowIndex = ranges
   }
 
   /**
@@ -127,10 +119,15 @@ class RollingMatrix {
     }
     Column result = new Column('rolling', Object)
     for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
-      List<Integer> windowIndices = windowIndicesByRowIndex[rowIndex]
+      IntRange windowRange = windowRangesByRowIndex[rowIndex]
+      int availableRows = windowRange.to - windowRange.from + 1
+      if (availableRows < options.minPeriods) {
+        result.add(null)
+        continue
+      }
+      List<Integer> windowIndices = orderedRowIndices.subList(windowRange.from, windowRange.to + 1)
       Matrix window = source.subset(windowIndices)
-      Object value = window.rowCount() < options.minPeriods ? null : function.call(window)
-      result.add(value)
+      result.add(function.call(window))
     }
     result
   }
@@ -147,9 +144,9 @@ class RollingMatrix {
       List<Number> values = new ArrayList<Number>()
       for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
         values.clear()
-        List<Integer> windowIndices = windowIndicesByRowIndex[rowIndex]
-        for (int i = 0; i < windowIndices.size(); i++) {
-          Object value = sourceColumn[windowIndices.get(i)]
+        IntRange windowRange = windowRangesByRowIndex[rowIndex]
+        for (int orderedIndex = windowRange.from; orderedIndex <= windowRange.to; orderedIndex++) {
+          Object value = sourceColumn[orderedRowIndices[orderedIndex]]
           if (value instanceof Number) {
             values.add(value as Number)
           }
@@ -171,12 +168,11 @@ class RollingMatrix {
     RollingWindowHelper.isNumericColumn(column)
   }
 
-  private List<Integer> computeWindowRowIndices(int rowIndex) {
+  private IntRange computeWindowRange(int rowIndex) {
     if (orderedRowIndices.isEmpty()) {
-      return []
+      return 0..-1
     }
     int orderedPosition = orderedPositionsByRowIndex[rowIndex]
-    IntRange range = RollingWindowHelper.windowRange(orderedRowIndices.size(), orderedPosition, options)
-    orderedRowIndices.subList(range.from, range.to + 1)
+    RollingWindowHelper.windowRange(orderedRowIndices.size(), orderedPosition, options)
   }
 }
