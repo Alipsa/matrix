@@ -536,7 +536,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Compute the cumulative minimum for each column containing Comparable values.
    *
-   * <p>Columns that do not contain Comparable values are preserved unchanged.</p>
+   * <p>Columns that do not contain Comparable values are preserved unchanged.
+   * Columns whose non-null values are individually Comparable but not mutually
+   * comparable are also preserved unchanged.</p>
    *
    * @return a new matrix with cumulative minima
    */
@@ -547,7 +549,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Compute the cumulative maximum for each column containing Comparable values.
    *
-   * <p>Columns that do not contain Comparable values are preserved unchanged.</p>
+   * <p>Columns that do not contain Comparable values are preserved unchanged.
+   * Columns whose non-null values are individually Comparable but not mutually
+   * comparable are also preserved unchanged.</p>
    *
    * @return a new matrix with cumulative maxima
    */

@@ -64,9 +64,12 @@ class CumulativeHelper {
   /**
    * Compute the cumulative minimum of a Comparable column.
    *
-   * @param source the source column (values must be Comparable)
+   * @param source the source column (values must be Comparable and mutually comparable)
    * @return a new column containing cumulative minima (preserves source type)
-   * @throws IllegalArgumentException if non-null values are not Comparable
+   * @throws IllegalArgumentException if non-null values are not Comparable, or if
+   *                                  they are Comparable but not mutually comparable
+   *                                  (for example, when {@code compareTo} throws a
+   *                                  {@link ClassCastException} that is wrapped)
    */
   static Column cummin(Column source) {
     requireComparable(source, 'cummin')
@@ -93,9 +96,12 @@ class CumulativeHelper {
   /**
    * Compute the cumulative maximum of a Comparable column.
    *
-   * @param source the source column (values must be Comparable)
+   * @param source the source column (values must be Comparable and mutually comparable)
    * @return a new column containing cumulative maxima (preserves source type)
-   * @throws IllegalArgumentException if non-null values are not Comparable
+   * @throws IllegalArgumentException if non-null values are not Comparable, or if
+   *                                  they are Comparable but not mutually comparable
+   *                                  (for example, when {@code compareTo} throws a
+   *                                  {@link ClassCastException} that is wrapped)
    */
   static Column cummax(Column source) {
     requireComparable(source, 'cummax')

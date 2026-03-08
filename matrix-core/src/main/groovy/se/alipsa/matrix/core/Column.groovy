@@ -328,7 +328,9 @@ class Column extends ArrayList {
   /**
    * Compute the cumulative minimum of this column.
    *
-   * <p>Works on any Comparable column (numbers, strings, dates). Null values are skipped.</p>
+   * <p>Works on columns whose non-null values are individually Comparable and
+   * mutually comparable (for example numbers, strings, or dates within the same
+   * comparable family). Null values are skipped.</p>
    *
    * @return a new column containing the cumulative minima
    */
@@ -339,7 +341,9 @@ class Column extends ArrayList {
   /**
    * Compute the cumulative maximum of this column.
    *
-   * <p>Works on any Comparable column (numbers, strings, dates). Null values are skipped.</p>
+   * <p>Works on columns whose non-null values are individually Comparable and
+   * mutually comparable (for example numbers, strings, or dates within the same
+   * comparable family). Null values are skipped.</p>
    *
    * @return a new column containing the cumulative maxima
    */
