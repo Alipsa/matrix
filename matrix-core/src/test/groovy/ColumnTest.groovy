@@ -318,4 +318,100 @@ class ColumnTest {
       strings.rolling(window: 2).mean()
     }
   }
+
+  @Test
+  void testCumsumBasic() {
+    Column c = new Column('value', [1, 2, 3, 4], Integer)
+    Column result = c.cumsum()
+
+    assert [1, 3, 6, 10] == result
+    assert 'value' == result.name
+    assert BigDecimal == result.type
+  }
+
+  @Test
+  void testCumsumWithNulls() {
+    Column c = new Column('value', [1, null, 3, 4], Integer)
+    assert [1, null, 4, 8] == c.cumsum()
+
+    Column allNulls = new Column('value', [null, null, null], Integer)
+    assert [null, null, null] == allNulls.cumsum()
+
+    Column leadingNulls = new Column('value', [null, null, 5], Integer)
+    assert [null, null, 5] == leadingNulls.cumsum()
+  }
+
+  @Test
+  void testCumsumEmptyAndSingleElement() {
+    Column empty = new Column('value', [], Integer)
+    assert [] == empty.cumsum()
+
+    Column single = new Column('value', [7], Integer)
+    assert [7] == single.cumsum()
+  }
+
+  @Test
+  void testCumprodBasic() {
+    Column c = new Column('value', [1, 2, 3, 4], Integer)
+    Column result = c.cumprod()
+
+    assert [1, 2, 6, 24] == result
+    assert 'value' == result.name
+    assert BigDecimal == result.type
+  }
+
+  @Test
+  void testCumprodWithNulls() {
+    Column c = new Column('value', [2, null, 3, 4], Integer)
+    assert [2, null, 6, 24] == c.cumprod()
+
+    Column allNulls = new Column('value', [null, null, null], Integer)
+    assert [null, null, null] == allNulls.cumprod()
+  }
+
+  @Test
+  void testCumminBasic() {
+    Column c = new Column('value', [3, 1, 4, 1, 5], Integer)
+    Column result = c.cummin()
+
+    assert [3, 1, 1, 1, 1] == result
+    assert 'value' == result.name
+    assert Integer == result.type
+  }
+
+  @Test
+  void testCumminWithNullsAndStrings() {
+    Column c = new Column('value', [3, null, 1, 4], Integer)
+    assert [3, null, 1, 1] == c.cummin()
+
+    Column strings = new Column('label', ['c', 'a', 'b'], String)
+    assert ['c', 'a', 'a'] == strings.cummin()
+  }
+
+  @Test
+  void testCummaxBasic() {
+    Column c = new Column('value', [1, 3, 2, 5, 4], Integer)
+    Column result = c.cummax()
+
+    assert [1, 3, 3, 5, 5] == result
+    assert 'value' == result.name
+    assert Integer == result.type
+  }
+
+  @Test
+  void testCummaxWithNullsAndStrings() {
+    Column c = new Column('value', [1, null, 5, 3], Integer)
+    assert [1, null, 5, 5] == c.cummax()
+
+    Column strings = new Column('label', ['a', 'c', 'b'], String)
+    assert ['a', 'c', 'c'] == strings.cummax()
+  }
+
+  @Test
+  void testCumsumCumprodRejectNonNumericColumn() {
+    Column strings = new Column('label', ['a', 'b', 'c'], String)
+
+    assertThrows(IllegalArgumentException) { strings.cumsum() }
+    assertThrows(IllegalArgumentException) { strings.cumprod() }
+  }
 }

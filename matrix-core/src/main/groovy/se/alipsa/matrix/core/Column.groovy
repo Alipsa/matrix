@@ -2,6 +2,7 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.CumulativeHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 
 /**
@@ -298,6 +299,52 @@ class Column extends ArrayList {
   @CompileDynamic
   Number variance(boolean isBiasedCorrected = true) {
     Stat.variance(this, isBiasedCorrected)
+  }
+
+  /**
+   * Compute the cumulative sum of this column.
+   *
+   * <p>Requires a numeric column. Null values are skipped (the output position is null
+   * and the running total is unchanged).</p>
+   *
+   * @return a new column containing the cumulative sums
+   */
+  Column cumsum() {
+    CumulativeHelper.cumsum(this)
+  }
+
+  /**
+   * Compute the cumulative product of this column.
+   *
+   * <p>Requires a numeric column. Null values are skipped (the output position is null
+   * and the running product is unchanged).</p>
+   *
+   * @return a new column containing the cumulative products
+   */
+  Column cumprod() {
+    CumulativeHelper.cumprod(this)
+  }
+
+  /**
+   * Compute the cumulative minimum of this column.
+   *
+   * <p>Works on any Comparable column (numbers, strings, dates). Null values are skipped.</p>
+   *
+   * @return a new column containing the cumulative minima
+   */
+  Column cummin() {
+    CumulativeHelper.cummin(this)
+  }
+
+  /**
+   * Compute the cumulative maximum of this column.
+   *
+   * <p>Works on any Comparable column (numbers, strings, dates). Null values are skipped.</p>
+   *
+   * @return a new column containing the cumulative maxima
+   */
+  Column cummax() {
+    CumulativeHelper.cummax(this)
   }
 
   /**

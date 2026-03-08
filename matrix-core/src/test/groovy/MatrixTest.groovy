@@ -1668,4 +1668,71 @@ class MatrixTest {
       table.rolling(window: 2, by: 'day').mean()
     }
   }
+
+  @Test
+  void testCumsumAppliesToNumericColumnsOnly() {
+    Matrix table = Matrix.builder()
+        .data(label: ['a', 'b', 'c'], value: [1, 2, 3])
+        .types(String, Integer)
+        .build()
+
+    Matrix result = table.cumsum()
+
+    assert ['a', 'b', 'c'] == result.column('label') as List
+    assert [1, 3, 6] == result.column('value') as List
+    assert BigDecimal == result.type('value')
+    assert String == result.type('label')
+  }
+
+  @Test
+  void testCumprodAppliesToNumericColumnsOnly() {
+    Matrix table = Matrix.builder()
+        .data(label: ['a', 'b', 'c'], value: [1, 2, 3])
+        .types(String, Integer)
+        .build()
+
+    Matrix result = table.cumprod()
+
+    assert ['a', 'b', 'c'] == result.column('label') as List
+    assert [1, 2, 6] == result.column('value') as List
+    assert BigDecimal == result.type('value')
+  }
+
+  @Test
+  void testCumminCummaxApplyToComparableColumns() {
+    Matrix table = Matrix.builder()
+        .data(label: ['c', 'a', 'b'], value: [3, 1, 4])
+        .types(String, Integer)
+        .build()
+
+    Matrix minResult = table.cummin()
+    assert ['c', 'a', 'a'] == minResult.column('label') as List
+    assert [3, 1, 1] == minResult.column('value') as List
+
+    Matrix maxResult = table.cummax()
+    assert ['c', 'c', 'c'] == maxResult.column('label') as List
+    assert [3, 3, 4] == maxResult.column('value') as List
+  }
+
+  @Test
+  void testCumsumPreservesMatrixName() {
+    Matrix table = Matrix.builder('myData')
+        .data(value: [1, 2, 3])
+        .types(Integer)
+        .build()
+
+    Matrix result = table.cumsum()
+    assert 'myData' == result.matrixName
+  }
+
+  @Test
+  void testCumulativeWithNullsInMatrix() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, null, 3, 4])
+        .types(Integer)
+        .build()
+
+    Matrix result = table.cumsum()
+    assert [1, null, 4, 8] == result.column('value') as List
+  }
 }
