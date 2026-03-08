@@ -75,11 +75,11 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   List<T> getAt(int row) {
-    return data[row]
+    data[row]
   }
 
   T getAt(int row, int column) {
-    return data[row][column]
+    data[row][column]
   }
 
   def leftShift(List<T> row) {
@@ -109,7 +109,7 @@ class Grid<T> implements Iterable<List<T>> {
     def grid = new Grid()
     grid.addAll(data)
     grid.add(row)
-    return grid
+    grid
   }
 
   String plus(String str) {
@@ -181,7 +181,7 @@ class Grid<T> implements Iterable<List<T>> {
     StringBuilder sb = new StringBuilder('[\n')
     data.each { sb.append('  ').append(String.valueOf(it)).append('\n') }
     sb.append(']\n')
-    return sb.toString()
+    sb.toString()
   }
 
   /**
@@ -190,7 +190,7 @@ class Grid<T> implements Iterable<List<T>> {
    * Note that this enables mutability, i.e. changes to the result is reflected in the Grid
    */
   List<List<T>> getData() {
-    return data
+    data
   }
 
   /**
@@ -222,7 +222,7 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   Iterator<List<T>> iterator() {
-    return data.iterator()
+    data.iterator()
   }
 
   Grid<T> transpose() {
@@ -230,7 +230,7 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   static <N> Grid<N> convert(Grid grid, Integer colNum, Class<N> type, NumberFormat format = null) {
-    return new Grid(convert(grid.data, [colNum], type, format))
+    new Grid(convert(grid.data, [colNum], type, format))
   }
 
   static <N> List<List<N>> convert(List<List<?>> rowList, Integer colNum, Class<N> type, NumberFormat format = null) {
@@ -242,11 +242,11 @@ class Grid<T> implements Iterable<List<T>> {
       if (value == null) continue
       m[r].set(colNum, ValueConverter.convert(value, type, null, format))
     }
-    return m as List<List<N>>
+    m as List<List<N>>
   }
 
   static <N> Grid<N> convert(Grid grid, List<Integer> colNums, Class<N> type, NumberFormat format = null) {
-    return new Grid(convert(grid.data, colNums, type, format))
+    new Grid(convert(grid.data, colNums, type, format))
   }
 
   @CompileDynamic
@@ -264,11 +264,11 @@ class Grid<T> implements Iterable<List<T>> {
         }
       }
     }
-    return m
+    m
   }
 
   static Grid convert(Grid grid, int colNum, Closure converter) {
-    return new Grid(convert(grid.data, colNum, converter))
+    new Grid(convert(grid.data, colNum, converter))
   }
 
   static List<List<?>> convert(List<List<?>> rowList, int colNum, Closure converter) {
@@ -279,7 +279,7 @@ class Grid<T> implements Iterable<List<T>> {
       if (value == null) continue
       m[r].set(colNum, converter.call(value))
     }
-    return m as List<List<?>>
+    m as List<List<?>>
   }
 
   static List<List> clone(List<List> rowList) {
@@ -287,16 +287,16 @@ class Grid<T> implements Iterable<List<T>> {
     for (row in rowList) {
       copy.add(row.collect())
     }
-    return copy
+    copy
   }
 
   static Grid transpose(Grid grid) {
-    return new Grid(transpose(grid.data))
+    new Grid(transpose(grid.data))
   }
 
   static List<List<?>> transpose(List<List<?>> rowList) {
     if (rowList == null) return null
-    return rowList.transpose()
+    rowList.transpose()
   }
 
   /**
@@ -306,7 +306,7 @@ class Grid<T> implements Iterable<List<T>> {
    * @return true if the grid is valid, false otherwise
    */
   static boolean isValid(Grid grid) {
-    return isValid(grid.data)
+    isValid(grid.data)
   }
 
   /**
@@ -318,7 +318,7 @@ class Grid<T> implements Iterable<List<T>> {
    * @return true if the grid is valid for the supplied type, false otherwise
    */
   static boolean isValid(Grid grid, Class<?> elementType) {
-    return isValid(grid?.data, elementType)
+    isValid(grid?.data, elementType)
   }
 
   /**
@@ -353,7 +353,7 @@ class Grid<T> implements Iterable<List<T>> {
       }
       prevNumCols = numCols
     }
-    return true
+    true
   }
 
   /**
@@ -377,7 +377,7 @@ class Grid<T> implements Iterable<List<T>> {
         }
       }
     }
-    return true
+    true
   }
 
   private static Class<?> safeElementType(Class<?> elementType) {
