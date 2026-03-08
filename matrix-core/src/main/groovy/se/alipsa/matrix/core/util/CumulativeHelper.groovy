@@ -126,7 +126,7 @@ class CumulativeHelper {
     result
   }
 
-  private static void requireNumeric(Column source, String operationName) {
+  static void requireNumeric(Column source, String operationName) {
     if (source == null) {
       throw new IllegalArgumentException("${operationName} requires a non-null column")
     }
@@ -163,7 +163,7 @@ class CumulativeHelper {
     }
   }
 
-  private static BigDecimal numericValue(Object element, Column source, String operationName) {
+  static BigDecimal numericValue(Object element, Column source, String operationName) {
     if (!(element instanceof Number)) {
       throw new IllegalArgumentException(
           "${operationName} requires numeric values within column '${source.name}' but found ${element.class.simpleName}"

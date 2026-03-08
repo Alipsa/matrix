@@ -4,6 +4,7 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.util.CumulativeHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
+import se.alipsa.matrix.core.util.ShiftHelper
 
 /**
  * A column is a list with some arithmetic operations changed compared to how lists normally behaves in Groovy.
@@ -349,6 +350,58 @@ class Column extends ArrayList {
    */
   Column cummax() {
     CumulativeHelper.cummax(this)
+  }
+
+  /**
+   * Shift the values in this column by the given number of positions.
+   *
+   * <p>Positive periods shift forward (nulls pad the start).
+   * Negative periods shift backward (nulls pad the end).
+   * Works on any column type.</p>
+   *
+   * @param periods the number of positions to shift (default 1)
+   * @return a new column with shifted values
+   */
+  Column shift(int periods = 1) {
+    ShiftHelper.shift(this, periods)
+  }
+
+  /**
+   * Return this column lagged by {@code n} positions (look back).
+   *
+   * <p>Equivalent to {@code shift(n)}. The first {@code n} positions are null.</p>
+   *
+   * @param n the number of positions to lag (must be non-negative, default 1)
+   * @return a new column with lagged values
+   */
+  Column lag(int n = 1) {
+    ShiftHelper.lag(this, n)
+  }
+
+  /**
+   * Return this column led by {@code n} positions (look ahead).
+   *
+   * <p>Equivalent to {@code shift(-n)}. The last {@code n} positions are null.</p>
+   *
+   * @param n the number of positions to lead (must be non-negative, default 1)
+   * @return a new column with led values
+   */
+  Column lead(int n = 1) {
+    ShiftHelper.lead(this, n)
+  }
+
+  /**
+   * Compute element-wise differences with a lagged version of this column.
+   *
+   * <p>For each position {@code i}, computes {@code column[i] - column[i - periods]}.
+   * Boundary positions and positions referencing or containing null yield null.
+   * Requires a numeric column.</p>
+   *
+   * @param periods the lag distance for differencing (default 1)
+   * @return a new column containing the differences (BigDecimal)
+   */
+  Column diff(int periods = 1) {
+    ShiftHelper.diff(this, periods)
   }
 
   /**

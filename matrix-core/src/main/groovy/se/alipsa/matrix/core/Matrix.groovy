@@ -559,6 +559,65 @@ class Matrix implements Iterable<Row>, Cloneable {
     applyCumulativeToComparable { Column col -> col.cummax() }
   }
 
+  /**
+   * Shift all columns by the given number of positions.
+   *
+   * <p>Positive periods shift forward (nulls pad the start).
+   * Negative periods shift backward (nulls pad the end).</p>
+   *
+   * @param periods the number of positions to shift (default 1)
+   * @return a new matrix with shifted columns
+   */
+  Matrix shift(int periods = 1) {
+    applyToAllColumns { Column col -> col.shift(periods) }
+  }
+
+  /**
+   * Lag all columns by {@code n} positions (look back).
+   *
+   * <p>Equivalent to {@code shift(n)}.</p>
+   *
+   * @param n the number of positions to lag (must be non-negative, default 1)
+   * @return a new matrix with lagged columns
+   */
+  Matrix lag(int n = 1) {
+    applyToAllColumns { Column col -> col.lag(n) }
+  }
+
+  /**
+   * Lead all columns by {@code n} positions (look ahead).
+   *
+   * <p>Equivalent to {@code shift(-n)}.</p>
+   *
+   * @param n the number of positions to lead (must be non-negative, default 1)
+   * @return a new matrix with led columns
+   */
+  Matrix lead(int n = 1) {
+    applyToAllColumns { Column col -> col.lead(n) }
+  }
+
+  /**
+   * Compute element-wise differences for each numeric column.
+   *
+   * <p>Non-numeric columns are preserved unchanged.</p>
+   *
+   * @param periods the lag distance for differencing (default 1)
+   * @return a new matrix with differenced numeric columns
+   */
+  Matrix diff(int periods) {
+    applyCumulativeToNumeric { Column col -> col.diff(periods) }
+  }
+
+  private Matrix applyToAllColumns(Closure<Column> operation) {
+    Matrix result = this.clone()
+    columnNames().eachWithIndex { String colName, int index ->
+      Column col = column(index)
+      Column transformed = operation.call(col)
+      result.replace(colName, transformed.type, transformed)
+    }
+    result
+  }
+
   private Matrix applyCumulativeToNumeric(Closure<Column> operation) {
     Matrix result = this.clone()
     columnNames().eachWithIndex { String colName, int index ->
