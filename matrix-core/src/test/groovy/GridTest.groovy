@@ -205,6 +205,36 @@ class GridTest {
     }
 
     @Test
+    void testTypedValidate() {
+        assertTrue(isValid([[1, 2], [3.0, null]], Number), "mixed numeric values")
+        assertTrue(isValid([[1, 2], [3, null]], int), "primitive target types use wrapper validation")
+        assertTrue(isValid([], Number), "empty grid")
+        assertTrue(isValid([[null, null], [null, null]], BigDecimal), "all-null grid")
+        assertFalse(isValid([[1, 2], ['3', 4]], Number), "string is not a Number")
+        assertFalse(isValid([[1, 2], [3.0, 4]], Integer), "double is not an Integer")
+    }
+
+    @Test
+    void testTypedConstructorRejectsInvalidValues() {
+        Grid<Number> numeric = new Grid<Number>([
+            [1, 2],
+            [3.0, null]
+        ], Number)
+        assertEquals(3.0, numeric[1, 0])
+
+        Grid<Integer> singleRow = new Grid<Integer>([1, 2, 3], Integer)
+        assertIterableEquals([1, 2, 3], singleRow[0])
+
+        def error = assertThrows(IllegalArgumentException) {
+            new Grid<BigDecimal>([
+                [1.0, 2.0],
+                ['3.0', 4.0]
+            ], BigDecimal)
+        }
+        assertEquals("data is invalid for element type BigDecimal", error.message)
+    }
+
+    @Test
     void testIteration() {
         Grid foo = new Grid()
         foo.addAll([

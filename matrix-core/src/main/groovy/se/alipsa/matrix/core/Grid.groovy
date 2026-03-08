@@ -2,6 +2,7 @@ package se.alipsa.matrix.core
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.ClassUtils
 
 import java.text.NumberFormat
 
@@ -29,6 +30,24 @@ class Grid<T> implements Iterable<List<T>> {
       this.data = [data] as List<List<T>>
     } else {
       throw new IllegalArgumentException("data is invalid")
+    }
+  }
+
+  /**
+   * Create a Grid from row data and validate that all non-null values are
+   * assignable to the supplied element type.
+   *
+   * @param data the row data
+   * @param elementType the target element type
+   * @throws IllegalArgumentException if the row structure is invalid or contains incompatible values
+   */
+  Grid(List<List<T>> data, Class<T> elementType) {
+    if (isValid(data, elementType)) {
+      this.data = data
+    } else if (data instanceof List && isValid([data], elementType)) {
+      this.data = [data] as List<List<T>>
+    } else {
+      throw new IllegalArgumentException("data is invalid for element type ${safeElementType(elementType).simpleName}")
     }
   }
 
@@ -291,6 +310,18 @@ class Grid<T> implements Iterable<List<T>> {
   }
 
   /**
+   * Validates that a Grid has a valid structure and that all non-null values are
+   * compatible with the supplied element type.
+   *
+   * @param grid the Grid to validate
+   * @param elementType the target element type to validate against
+   * @return true if the grid is valid for the supplied type, false otherwise
+   */
+  static boolean isValid(Grid grid, Class<?> elementType) {
+    isValid(grid?.data, elementType)
+  }
+
+  /**
    * Validates that a row list has a valid Grid structure.
    * A valid Grid must be:
    * - A non-null List of Lists
@@ -323,6 +354,34 @@ class Grid<T> implements Iterable<List<T>> {
       prevNumCols = numCols
     }
     return true
+  }
+
+  /**
+   * Validates that a row list has a valid Grid structure and that all non-null
+   * values are assignable to the supplied element type.
+   *
+   * @param rowList the row list to validate
+   * @param elementType the target element type to validate against
+   * @return true if the row list forms a valid grid structure for the target type
+   */
+  static boolean isValid(Object rowList, Class<?> elementType) {
+    if (!isValid(rowList)) {
+      return false
+    }
+    Class<?> safeType = safeElementType(elementType)
+    List list = rowList as List
+    for (row in list) {
+      for (value in (row as List)) {
+        if (value != null && !safeType.isInstance(value)) {
+          return false
+        }
+      }
+    }
+    true
+  }
+
+  private static Class<?> safeElementType(Class<?> elementType) {
+    ClassUtils.convertPrimitiveToWrapper(elementType) ?: Object
   }
 
 

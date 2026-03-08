@@ -1959,16 +1959,37 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**f
    * Convert this table into a Grid
+   *
+   * <p>When {@code convertValues} is {@code false}, all matrix column types must
+   * already be assignable to {@code type}. Use {@code convertValues = true} to
+   * coerce the values before creating the typed grid.</p>
+   *
+   * @param type the target element type of the grid
+   * @param convertValues whether to convert existing values to the target type before validation
    * @return a Grid corresponding to the data content of this table
    */
   <T> Grid<T> grid(Class<T> type, boolean convertValues = false) {
     List<List<T>> r
     if (convertValues) {
       r = convert(type).rows() as List<List<T>>
+      return new Grid<T>(r, type)
     } else {
+      validateGridTargetType(type)
       r = rows() as List<List<T>>
     }
     return new Grid<T>(r)
+  }
+
+  private <T> void validateGridTargetType(Class<T> type) {
+    Class<?> targetType = convertPrimitiveToWrapper(type)
+    columnNames().eachWithIndex { String colName, int index ->
+      Class<?> columnType = convertPrimitiveToWrapper(this.type(index))
+      if (columnType != null && targetType != Object && !targetType.isAssignableFrom(columnType)) {
+        throw new IllegalArgumentException(
+            "Cannot create Grid<${targetType.simpleName}> without conversion because column '${colName}' has type ${columnType.simpleName}"
+        )
+      }
+    }
   }
 
   /**
