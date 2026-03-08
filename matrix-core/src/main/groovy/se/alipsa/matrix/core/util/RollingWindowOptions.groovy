@@ -61,10 +61,14 @@ class RollingWindowOptions {
     if (options == null || options.isEmpty()) {
       throw new IllegalArgumentException('rolling options cannot be null or empty')
     }
+    Map<String, ?> normalizedOptions = [:]
+    options.each { Object key, Object value ->
+      normalizedOptions[String.valueOf(key)] = value
+    }
     Set<String> allowedKeys = allowBy
         ? ['window', 'minPeriods', 'center', 'by'] as Set<String>
         : ['window', 'minPeriods', 'center'] as Set<String>
-    Set<String> optionKeys = options.keySet().collect { Object key -> String.valueOf(key) } as Set<String>
+    Set<String> optionKeys = normalizedOptions.keySet()
     Set<String> unknownKeys = optionKeys.findAll { String key -> !(key in allowedKeys) } as Set<String>
     if (!unknownKeys.isEmpty()) {
       throw new IllegalArgumentException("Unknown rolling option(s): ${unknownKeys.sort().join(', ')}")
@@ -72,12 +76,12 @@ class RollingWindowOptions {
     if (!optionKeys.contains('window')) {
       throw new IllegalArgumentException('rolling options must include window')
     }
-    int window = intValue(options['window'], 'window')
-    int minPeriods = options.containsKey('minPeriods')
-        ? intValue(options['minPeriods'], 'minPeriods')
+    int window = intValue(normalizedOptions['window'], 'window')
+    int minPeriods = normalizedOptions.containsKey('minPeriods')
+        ? intValue(normalizedOptions['minPeriods'], 'minPeriods')
         : window
-    boolean center = options.containsKey('center') && booleanValue(options['center'], 'center')
-    Object byValue = options['by']
+    boolean center = normalizedOptions.containsKey('center') && booleanValue(normalizedOptions['center'], 'center')
+    Object byValue = normalizedOptions['by']
     String by = byValue == null ? null : String.valueOf(byValue)
     new RollingWindowOptions(window, minPeriods, center, by)
   }

@@ -312,6 +312,8 @@ class ColumnTest {
     assertThrows(IllegalArgumentException) {
       strings.rolling([(1): 2])
     }
+    Map options = ["${'window'}": 2, "${'minPeriods'}": 1]
+    assert ['a', 'a', 'b'] == strings.rolling(options).min()
     assertThrows(IllegalArgumentException) {
       strings.rolling(window: 2).mean()
     }
