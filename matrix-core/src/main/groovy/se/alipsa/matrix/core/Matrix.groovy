@@ -573,8 +573,13 @@ class Matrix implements Iterable<Row>, Cloneable {
       Column col = column(index)
       List<?> presentValues = RollingWindowHelper.nonNullValues(col)
       if (!presentValues.isEmpty() && presentValues.every { it instanceof Comparable }) {
-        Column cumCol = operation.call(col)
-        result.replace(colName, cumCol.type, cumCol)
+        try {
+          Column cumCol = operation.call(col)
+          result.replace(colName, cumCol.type, cumCol)
+        } catch (IllegalArgumentException ignored) {
+          // Preserve the original column when values are individually Comparable
+          // but not mutually comparable for cumulative min/max.
+        }
       }
     }
     result

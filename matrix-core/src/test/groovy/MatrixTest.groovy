@@ -1715,6 +1715,22 @@ class MatrixTest {
   }
 
   @Test
+  void testCumminCummaxPreserveColumnsWithNonComparableMixedValues() {
+    Matrix table = Matrix.builder()
+        .data(mixed: [1, 'a', 2], value: [3, 1, 4])
+        .types(Object, Integer)
+        .build()
+
+    Matrix minResult = table.cummin()
+    assert [1, 'a', 2] == minResult.column('mixed') as List
+    assert [3, 1, 1] == minResult.column('value') as List
+
+    Matrix maxResult = table.cummax()
+    assert [1, 'a', 2] == maxResult.column('mixed') as List
+    assert [3, 3, 4] == maxResult.column('value') as List
+  }
+
+  @Test
   void testCumsumPreservesMatrixName() {
     Matrix table = Matrix.builder('myData')
         .data(value: [1, 2, 3])

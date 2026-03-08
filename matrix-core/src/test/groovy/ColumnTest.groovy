@@ -346,6 +346,10 @@ class ColumnTest {
     Column empty = new Column('value', [], Integer)
     assert [] == empty.cumsum()
 
+    Column emptyStrings = new Column('label', [], String)
+    assertThrows(IllegalArgumentException) { emptyStrings.cumsum() }
+    assertThrows(IllegalArgumentException) { emptyStrings.cumprod() }
+
     Column single = new Column('value', [7], Integer)
     assert [7] == single.cumsum()
   }
@@ -405,6 +409,25 @@ class ColumnTest {
 
     Column strings = new Column('label', ['a', 'c', 'b'], String)
     assert ['a', 'c', 'c'] == strings.cummax()
+  }
+
+  @Test
+  void testCumminCummaxHandleMixedNumericTypes() {
+    Column mixedNumbers = new Column('value', [2, 1.5G, 3L, 0.5G], Object)
+
+    assert [2, 1.5G, 1.5G, 0.5G] == mixedNumbers.cummin()
+    assert [2, 2, 3L, 3L] == mixedNumbers.cummax()
+  }
+
+  @Test
+  void testCumminCummaxRejectNonComparableMixedValues() {
+    Column mixedValues = new Column('value', [1, 'a', 2], Object)
+
+    def minError = assertThrows(IllegalArgumentException) { mixedValues.cummin() }
+    assert "cummin requires mutually comparable values within column 'value'" == minError.message
+
+    def maxError = assertThrows(IllegalArgumentException) { mixedValues.cummax() }
+    assert "cummax requires mutually comparable values within column 'value'" == maxError.message
   }
 
   @Test

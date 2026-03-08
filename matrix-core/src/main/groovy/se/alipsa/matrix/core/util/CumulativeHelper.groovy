@@ -79,7 +79,11 @@ class CumulativeHelper {
         result.add(null)
       } else {
         Comparable value = element as Comparable
-        accumulator = accumulator == null ? value : (value.compareTo(accumulator) < 0 ? value : accumulator)
+        if (accumulator == null) {
+          accumulator = value
+        } else if (compareValues(value, accumulator, 'cummin', source) < 0) {
+          accumulator = value
+        }
         result.add(accumulator)
       }
     }
@@ -104,7 +108,11 @@ class CumulativeHelper {
         result.add(null)
       } else {
         Comparable value = element as Comparable
-        accumulator = accumulator == null ? value : (value.compareTo(accumulator) > 0 ? value : accumulator)
+        if (accumulator == null) {
+          accumulator = value
+        } else if (compareValues(value, accumulator, 'cummax', source) > 0) {
+          accumulator = value
+        }
         result.add(accumulator)
       }
     }
@@ -115,7 +123,7 @@ class CumulativeHelper {
     if (source == null) {
       throw new IllegalArgumentException("${operationName} requires a non-null column")
     }
-    if (!source.isEmpty() && !RollingWindowHelper.isNumericColumn(source)) {
+    if (!RollingWindowHelper.isNumericColumn(source)) {
       throw new IllegalArgumentException("${operationName} requires a numeric column")
     }
   }
@@ -129,6 +137,20 @@ class CumulativeHelper {
       if (!presentValues.isEmpty() && !presentValues.every { it instanceof Comparable }) {
         throw new IllegalArgumentException("${operationName} requires a column with Comparable values")
       }
+    }
+  }
+
+  private static int compareValues(Comparable left, Comparable right, String operationName, Column source) {
+    if (left instanceof Number && right instanceof Number) {
+      return ((left as Number) as BigDecimal) <=> ((right as Number) as BigDecimal)
+    }
+    try {
+      left.compareTo(right)
+    } catch (ClassCastException e) {
+      throw new IllegalArgumentException(
+          "${operationName} requires mutually comparable values within column '${source.name}'",
+          e
+      )
     }
   }
 }
