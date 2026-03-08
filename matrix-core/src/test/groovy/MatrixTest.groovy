@@ -299,7 +299,7 @@ class MatrixTest {
     Matrix filterResult = table.filter { it[0] > 1 && !it.firstname.startsWith('M') }
     Matrix empty = table.filter { it.place > 10 }
 
-    assertEquals([[3, 'Lotte', '2023-05-27']], filterResult.rows())
+    assertIterableEquals([[3, 'Lotte', '2023-05-27']], filterResult.rows())
     assertEquals('people', empty.matrixName)
     assertIterableEquals(table.columnNames(), empty.columnNames())
     assertIterableEquals(table.types(), empty.types())
