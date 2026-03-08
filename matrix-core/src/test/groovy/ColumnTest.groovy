@@ -543,6 +543,16 @@ class ColumnTest {
   }
 
   @Test
+  void testShiftAndDiffRejectIntegerMinValue() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+
+    assert "shift does not support periods == Integer.MIN_VALUE" ==
+        assertThrows(IllegalArgumentException) { c.shift(Integer.MIN_VALUE) }.message
+    assert "diff does not support periods == Integer.MIN_VALUE" ==
+        assertThrows(IllegalArgumentException) { c.diff(Integer.MIN_VALUE) }.message
+  }
+
+  @Test
   void testLagEqualsShift() {
     Column c = new Column('value', [1, 2, 3, 4, 5], Integer)
     assert c.lag(2) == c.shift(2)

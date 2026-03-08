@@ -1800,6 +1800,26 @@ class MatrixTest {
   }
 
   @Test
+  void testDiffUsesDefaultPeriods() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, 3, 6])
+        .types(Integer)
+        .build()
+
+    assert [null, 2, 3] == table.diff().column('value') as List
+  }
+
+  @Test
+  void testDiffSupportsNegativePeriods() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, 3, 6, 10])
+        .types(Integer)
+        .build()
+
+    assert [-2, -3, -4, null] == table.diff(-1).column('value') as List
+  }
+
+  @Test
   void testDiffPreservesMatrixName() {
     Matrix table = Matrix.builder('myData')
         .data(value: [1, 2, 3])

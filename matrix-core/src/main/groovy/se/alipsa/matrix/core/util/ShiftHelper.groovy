@@ -25,6 +25,7 @@ class ShiftHelper {
    */
   static Column shift(Column source, int periods) {
     requireNonNull(source, 'shift')
+    validatePeriods(periods, 'shift')
     int size = source.size()
     Class resultType = source.type != null ? source.type : Object
     Column result = new Column(source.name, resultType)
@@ -108,6 +109,7 @@ class ShiftHelper {
    */
   static Column diff(Column source, int periods) {
     CumulativeHelper.requireNumeric(source, 'diff')
+    validatePeriods(periods, 'diff')
     int size = source.size()
     Column result = new Column(source.name, BigDecimal)
     for (int i = 0; i < size; i++) {
@@ -132,6 +134,12 @@ class ShiftHelper {
   private static void requireNonNull(Column source, String operationName) {
     if (source == null) {
       throw new IllegalArgumentException("${operationName} requires a non-null column")
+    }
+  }
+
+  private static void validatePeriods(int periods, String operationName) {
+    if (periods == Integer.MIN_VALUE) {
+      throw new IllegalArgumentException("${operationName} does not support periods == Integer.MIN_VALUE")
     }
   }
 }

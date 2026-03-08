@@ -519,7 +519,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new matrix with cumulative sums for numeric columns
    */
   Matrix cumsum() {
-    applyCumulativeToNumeric { Column col -> col.cumsum() }
+    applyToNumericColumns { Column col -> col.cumsum() }
   }
 
   /**
@@ -530,7 +530,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new matrix with cumulative products for numeric columns
    */
   Matrix cumprod() {
-    applyCumulativeToNumeric { Column col -> col.cumprod() }
+    applyToNumericColumns { Column col -> col.cumprod() }
   }
 
   /**
@@ -604,8 +604,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param periods the lag distance for differencing (default 1)
    * @return a new matrix with differenced numeric columns
    */
-  Matrix diff(int periods) {
-    applyCumulativeToNumeric { Column col -> col.diff(periods) }
+  Matrix diff(int periods = 1) {
+    applyToNumericColumns { Column col -> col.diff(periods) }
   }
 
   private Matrix applyToAllColumns(Closure<Column> operation) {
@@ -618,7 +618,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     result
   }
 
-  private Matrix applyCumulativeToNumeric(Closure<Column> operation) {
+  private Matrix applyToNumericColumns(Closure<Column> operation) {
     Matrix result = this.clone()
     columnNames().eachWithIndex { String colName, int index ->
       Column col = column(index)
