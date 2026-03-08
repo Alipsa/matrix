@@ -5,6 +5,7 @@ import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.MatrixPrinter
 import se.alipsa.matrix.core.util.RowComparator
+import se.alipsa.matrix.core.util.RollingWindowOptions
 
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -473,6 +474,40 @@ class Matrix implements Iterable<Row>, Cloneable {
       row[columnName] = function.call(row)
     }
     this
+  }
+
+  /**
+   * Create a trailing rolling view over this matrix.
+   *
+   * Equivalent to {@code rolling(window: window)}.
+   *
+   * Built-in numeric aggregations are applied to numeric columns while other
+   * columns are preserved unchanged.
+   *
+   * @param window the rolling window size
+   * @return a rolling view for chained aggregations
+   */
+  RollingMatrix rolling(int window) {
+    new RollingMatrix(this, new RollingWindowOptions(window, window))
+  }
+
+  /**
+   * Create a rolling view over this matrix.
+   *
+   * Supported options are:
+   * {@code window} (required), {@code minPeriods} (defaults to {@code window}),
+   * {@code center} (defaults to {@code false}), and {@code by} to sort window
+   * evaluation by a column while restoring results to the original row order.
+   *
+   * Built-in numeric aggregations are applied to numeric columns only. Other
+   * columns, and the {@code by} column when supplied, are preserved unchanged in
+   * the result. Custom {@code apply {}} receives the raw window matrix.
+   *
+   * @param options rolling options
+   * @return a rolling view for chained aggregations
+   */
+  RollingMatrix rolling(Map<String, ?> options) {
+    new RollingMatrix(this, RollingWindowOptions.matrix(options))
   }
 
   /**

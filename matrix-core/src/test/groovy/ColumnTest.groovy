@@ -238,4 +238,52 @@ class ColumnTest {
     assertThrows(IllegalArgumentException) { c / null }
     assertThrows(IllegalArgumentException) { c ** null }
   }
+
+  @Test
+  void testRollingMeanUsesMinPeriodsAndSkipsNulls() {
+    Column c = new Column('value', [1, null, 3, 4, 5], Integer)
+
+    Column result = c.rolling(window: 3, minPeriods: 2).mean()
+
+    assert [null, null, 2.0, 3.5, 4.0] == result
+    assert 'value' == result.name
+    assert BigDecimal == result.type
+  }
+
+  @Test
+  void testRollingCenteredApplyReceivesWindowSlice() {
+    Column c = new Column('value', [1, 2, 3, 4, 5], Integer)
+
+    Column result = c.rolling(window: 3, minPeriods: 2, center: true).apply { Column window ->
+      window.first() + window.last()
+    }
+
+    assert [3, 4, 6, 8, 9] == result
+    assert Integer == result.type
+  }
+
+  @Test
+  void testRollingMinSupportsComparableColumns() {
+    Column c = new Column('grade', ['c', null, 'a', 'b'], String)
+
+    Column result = c.rolling(window: 2, minPeriods: 1).min()
+
+    assert ['c', 'c', 'a', 'a'] == result
+    assert String == result.type
+  }
+
+  @Test
+  void testRollingRejectsInvalidConfigAndNonNumericMean() {
+    Column strings = new Column('label', ['a', 'b', 'c'], String)
+
+    assertThrows(IllegalArgumentException) {
+      strings.rolling([:])
+    }
+    assertThrows(IllegalArgumentException) {
+      strings.rolling(window: 2, minPeriods: 3)
+    }
+    assertThrows(IllegalArgumentException) {
+      strings.rolling(window: 2).mean()
+    }
+  }
 }
