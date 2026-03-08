@@ -2,6 +2,7 @@ package se.alipsa.matrix.core.util
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Column
+import se.alipsa.matrix.core.ValueConverter
 
 /**
  * Internal helpers for cumulative column operations.
@@ -148,7 +149,9 @@ class CumulativeHelper {
 
   private static int compareValues(Comparable left, Comparable right, String operationName, Column source) {
     if (left instanceof Number && right instanceof Number) {
-      return ((left as Number) as BigDecimal) <=> ((right as Number) as BigDecimal)
+      BigDecimal leftValue = numericValue(left, source, operationName)
+      BigDecimal rightValue = numericValue(right, source, operationName)
+      return leftValue <=> rightValue
     }
     try {
       left.compareTo(right)
@@ -166,6 +169,12 @@ class CumulativeHelper {
           "${operationName} requires numeric values within column '${source.name}' but found ${element.class.simpleName}"
       )
     }
-    (element as Number) as BigDecimal
+    BigDecimal value = ValueConverter.asBigDecimal(element as Number)
+    if (value == null) {
+      throw new IllegalArgumentException(
+          "${operationName} requires finite numeric values within column '${source.name}' but found ${element}"
+      )
+    }
+    value
   }
 }

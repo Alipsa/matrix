@@ -448,4 +448,19 @@ class ColumnTest {
     def prodError = assertThrows(IllegalArgumentException) { mixed.cumprod() }
     assert "cumprod requires numeric values within column 'value' but found String" == prodError.message
   }
+
+  @Test
+  void testCumulativeNumericOpsRejectNaNAndInfinity() {
+    Column nanValues = new Column('value', [1.0d, Double.NaN, 3.0d], Double)
+    Column infinityValues = new Column('value', [1.0d, Double.POSITIVE_INFINITY, 3.0d], Double)
+
+    assert "cumsum requires finite numeric values within column 'value' but found NaN" ==
+        assertThrows(IllegalArgumentException) { nanValues.cumsum() }.message
+    assert "cumprod requires finite numeric values within column 'value' but found Infinity" ==
+        assertThrows(IllegalArgumentException) { infinityValues.cumprod() }.message
+    assert "cummin requires finite numeric values within column 'value' but found Infinity" ==
+        assertThrows(IllegalArgumentException) { infinityValues.cummin() }.message
+    assert "cummax requires finite numeric values within column 'value' but found NaN" ==
+        assertThrows(IllegalArgumentException) { nanValues.cummax() }.message
+  }
 }
