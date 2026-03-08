@@ -3041,6 +3041,20 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Alias for {@link #subset(groovy.lang.Closure)} using more common dataframe naming.
+   *
+   * <p>This method preserves the exact behavior of {@code subset(Closure)} and
+   * exists for API familiarity. {@code subset(...)} remains the primary
+   * backwards-compatible filtering API.</p>
+   *
+   * @param criteria takes a row (List) as parameter and returns true if the row should be included
+   * @return a new Matrix with the rows matching the criteria supplied retained
+   */
+  Matrix filter(Closure<Boolean> criteria) {
+    subset(criteria)
+  }
+
+  /**
    * Return a new Matrix containing only rows within the specified index range.
    *
    * @param rows the row index range to include

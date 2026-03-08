@@ -265,6 +265,69 @@ class MatrixTest {
   }
 
   @Test
+  void testFilterAliasesSubsetClosure() {
+    Matrix table = Matrix.builder('people')
+        .data(
+            place: [1, 2, 3],
+            firstname: ['Lorena', 'Marianne', 'Lotte'],
+            start: ['2021-12-01', '2022-07-10', '2023-05-27']
+        )
+        .types(Integer, String, String)
+        .build()
+
+    Matrix subsetResult = table.subset { it.place > 1 }
+    Matrix filterResult = table.filter { it.place > 1 }
+
+    assertEquals(subsetResult, filterResult)
+    assertEquals('people', filterResult.matrixName)
+    assertIterableEquals(table.columnNames(), filterResult.columnNames())
+    assertIterableEquals(table.types(), filterResult.types())
+    assertIterableEquals([[2, 'Marianne', '2022-07-10'], [3, 'Lotte', '2023-05-27']], filterResult.rows())
+  }
+
+  @Test
+  void testFilterSupportsRowIndexAndEmptyResults() {
+    Matrix table = Matrix.builder('people')
+        .data(
+            place: [1, 2, 3],
+            firstname: ['Lorena', 'Marianne', 'Lotte'],
+            start: ['2021-12-01', '2022-07-10', '2023-05-27']
+        )
+        .types(Integer, String, String)
+        .build()
+
+    Matrix filterResult = table.filter { it[0] > 1 && !it.firstname.startsWith('M') }
+    Matrix empty = table.filter { it.place > 10 }
+
+    assertEquals([[3, 'Lotte', '2023-05-27']], filterResult.rows())
+    assertEquals('people', empty.matrixName)
+    assertIterableEquals(table.columnNames(), empty.columnNames())
+    assertIterableEquals(table.types(), empty.types())
+    assertEquals(0, empty.rowCount())
+  }
+
+  @Test
+  void testFilterMatchesSubsetFailureMode() {
+    Matrix table = Matrix.builder()
+        .data(
+            place: [1, 2, 3],
+            firstname: ['Lorena', 'Marianne', 'Lotte']
+        )
+        .types(Integer, String)
+        .build()
+
+    Exception subsetError = assertThrows(Exception) {
+      table.subset { it.unknownColumn == 2 }
+    }
+    Exception filterError = assertThrows(Exception) {
+      table.filter { it.unknownColumn == 2 }
+    }
+
+    assertEquals(subsetError.class, filterError.class)
+    assertEquals(subsetError.message, filterError.message)
+  }
+
+  @Test
   void testRowDetach() {
     Matrix m = Matrix.builder().rows([
         [1, 'Abc'],
