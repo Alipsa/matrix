@@ -1751,4 +1751,92 @@ class MatrixTest {
     Matrix result = table.cumsum()
     assert [1, null, 4, 8] == result.column('value') as List
   }
+
+  @Test
+  void testShiftAppliesToAllColumns() {
+    Matrix table = Matrix.builder()
+        .data(label: ['a', 'b', 'c'], value: [1, 2, 3])
+        .types(String, Integer)
+        .build()
+
+    Matrix result = table.shift(1)
+    assert [null, 'a', 'b'] == result.column('label') as List
+    assert [null, 1, 2] == result.column('value') as List
+  }
+
+  @Test
+  void testShiftPreservesMatrixName() {
+    Matrix table = Matrix.builder('myData')
+        .data(value: [1, 2, 3])
+        .types(Integer)
+        .build()
+
+    assert 'myData' == table.shift(1).matrixName
+  }
+
+  @Test
+  void testLagLeadMatrix() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, 2, 3, 4])
+        .types(Integer)
+        .build()
+
+    assert [null, 1, 2, 3] == table.lag(1).column('value') as List
+    assert [2, 3, 4, null] == table.lead(1).column('value') as List
+  }
+
+  @Test
+  void testDiffAppliesToNumericColumnsOnly() {
+    Matrix table = Matrix.builder()
+        .data(label: ['a', 'b', 'c'], value: [1, 3, 6])
+        .types(String, Integer)
+        .build()
+
+    Matrix result = table.diff(1)
+    assert ['a', 'b', 'c'] == result.column('label') as List
+    assert [null, 2, 3] == result.column('value') as List
+    assert BigDecimal == result.type('value')
+    assert String == result.type('label')
+  }
+
+  @Test
+  void testDiffUsesDefaultPeriods() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, 3, 6])
+        .types(Integer)
+        .build()
+
+    assert [null, 2, 3] == table.diff().column('value') as List
+  }
+
+  @Test
+  void testDiffSupportsNegativePeriods() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, 3, 6, 10])
+        .types(Integer)
+        .build()
+
+    assert [-2, -3, -4, null] == table.diff(-1).column('value') as List
+  }
+
+  @Test
+  void testDiffPreservesMatrixName() {
+    Matrix table = Matrix.builder('myData')
+        .data(value: [1, 2, 3])
+        .types(Integer)
+        .build()
+
+    assert 'myData' == table.diff(1).matrixName
+  }
+
+  @Test
+  void testDiffWithNullsInMatrix() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, null, 3, 4])
+        .types(Integer)
+        .build()
+
+    Matrix result = table.diff(1)
+    assert [null, null, null, 1] == result.column('value') as List
+  }
 }

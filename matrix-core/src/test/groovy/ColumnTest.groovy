@@ -463,4 +463,158 @@ class ColumnTest {
     assert "cummax requires finite numeric values within column 'value' but found NaN" ==
         assertThrows(IllegalArgumentException) { nanValues.cummax() }.message
   }
+
+  @Test
+  void testShiftForward() {
+    Column c = new Column('value', [1, 2, 3, 4, 5], Integer)
+    assert [null, null, 1, 2, 3] == c.shift(2)
+  }
+
+  @Test
+  void testShiftBackward() {
+    Column c = new Column('value', [1, 2, 3, 4, 5], Integer)
+    assert [3, 4, 5, null, null] == c.shift(-2)
+  }
+
+  @Test
+  void testShiftZero() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+    assert [1, 2, 3] == c.shift(0)
+  }
+
+  @Test
+  void testShiftLargerThanSize() {
+    Column c = new Column('value', [1, 2], Integer)
+    assert [null, null] == c.shift(5)
+    assert [null, null] == c.shift(-5)
+  }
+
+  @Test
+  void testShiftWithNulls() {
+    Column c = new Column('value', [1, null, 3, 4], Integer)
+    assert [null, 1, null, 3] == c.shift(1)
+  }
+
+  @Test
+  void testShiftEmptyColumn() {
+    Column empty = new Column('value', [], Integer)
+    assert [] == empty.shift(1)
+  }
+
+  @Test
+  void testShiftPreservesNameAndType() {
+    Column c = new Column('price', [10, 20, 30], Integer)
+    Column result = c.shift(1)
+    assert 'price' == result.name
+    assert Integer == result.type
+  }
+
+  @Test
+  void testShiftWithStrings() {
+    Column c = new Column('label', ['a', 'b', 'c'], String)
+    assert [null, 'a', 'b'] == c.shift(1)
+    assert ['b', 'c', null] == c.shift(-1)
+  }
+
+  @Test
+  void testLagBasic() {
+    Column c = new Column('value', [1, 2, 3, 4], Integer)
+    assert [null, 1, 2, 3] == c.lag(1)
+    assert [null, null, 1, 2] == c.lag(2)
+  }
+
+  @Test
+  void testLeadBasic() {
+    Column c = new Column('value', [1, 2, 3, 4], Integer)
+    assert [2, 3, 4, null] == c.lead(1)
+    assert [3, 4, null, null] == c.lead(2)
+  }
+
+  @Test
+  void testLagRejectsNegative() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+    assertThrows(IllegalArgumentException) { c.lag(-1) }
+  }
+
+  @Test
+  void testLeadRejectsNegative() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+    assertThrows(IllegalArgumentException) { c.lead(-1) }
+  }
+
+  @Test
+  void testShiftAndDiffRejectIntegerMinValue() {
+    Column c = new Column('value', [1, 2, 3], Integer)
+
+    assert "shift does not support periods == Integer.MIN_VALUE" ==
+        assertThrows(IllegalArgumentException) { c.shift(Integer.MIN_VALUE) }.message
+    assert "diff does not support periods == Integer.MIN_VALUE" ==
+        assertThrows(IllegalArgumentException) { c.diff(Integer.MIN_VALUE) }.message
+  }
+
+  @Test
+  void testLagEqualsShift() {
+    Column c = new Column('value', [1, 2, 3, 4, 5], Integer)
+    assert c.lag(2) == c.shift(2)
+  }
+
+  @Test
+  void testLeadEqualsShiftNegative() {
+    Column c = new Column('value', [1, 2, 3, 4, 5], Integer)
+    assert c.lead(2) == c.shift(-2)
+  }
+
+  @Test
+  void testDiffBasic() {
+    Column c = new Column('value', [1, 3, 6, 10], Integer)
+    Column result = c.diff()
+
+    assert [null, 2, 3, 4] == result
+    assert 'value' == result.name
+    assert BigDecimal == result.type
+  }
+
+  @Test
+  void testDiffPeriods2() {
+    Column c = new Column('value', [1, 3, 6, 10], Integer)
+    assert [null, null, 5, 7] == c.diff(2)
+  }
+
+  @Test
+  void testDiffNegativePeriods() {
+    Column c = new Column('value', [1, 3, 6, 10], Integer)
+    assert [-2, -3, -4, null] == c.diff(-1)
+  }
+
+  @Test
+  void testDiffWithNulls() {
+    Column c = new Column('value', [1, null, 3, 4], Integer)
+    assert [null, null, null, 1] == c.diff()
+  }
+
+  @Test
+  void testDiffEmptyAndSingleElement() {
+    Column empty = new Column('value', [], Integer)
+    assert [] == empty.diff()
+
+    Column single = new Column('value', [5], Integer)
+    assert [null] == single.diff()
+  }
+
+  @Test
+  void testDiffRejectsNonNumericColumn() {
+    Column strings = new Column('label', ['a', 'b', 'c'], String)
+    assertThrows(IllegalArgumentException) { strings.diff() }
+  }
+
+  @Test
+  void testDiffRejectsNaNAndInfinity() {
+    Column nanValues = new Column('value', [1.0d, Double.NaN, 3.0d], Double)
+    Column infinityValues = new Column('value', [1.0d, Double.POSITIVE_INFINITY, 3.0d], Double)
+
+    assert "diff requires finite numeric values within column 'value' but found NaN" ==
+        assertThrows(IllegalArgumentException) { nanValues.diff() }.message
+    assert "diff requires finite numeric values within column 'value' but found Infinity" ==
+        assertThrows(IllegalArgumentException) { infinityValues.diff() }.message
+  }
 }
