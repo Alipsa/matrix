@@ -1839,4 +1839,117 @@ class MatrixTest {
     Matrix result = table.diff(1)
     assert [null, null, null, 1] == result.column('value') as List
   }
+
+  // --- 1.4 Edge-case tests: Rolling Matrix ---
+
+  @Test
+  void testRollingOnEmptyMatrix() {
+    Matrix table = Matrix.builder()
+        .data(value: [])
+        .types(Integer)
+        .build()
+
+    Matrix result = table.rolling(window: 2, minPeriods: 1).mean()
+    assert 0 == result.rowCount()
+  }
+
+  @Test
+  void testRollingOnSingleRowMatrix() {
+    Matrix table = Matrix.builder()
+        .data(value: [5])
+        .types(Integer)
+        .build()
+
+    Matrix result = table.rolling(window: 3, minPeriods: 1).mean()
+    assert 1 == result.rowCount()
+    assert 5.0 == result.column('value')[0]
+  }
+
+  @Test
+  void testRollingOnMatrixWithNoNumericColumns() {
+    Matrix table = Matrix.builder()
+        .data(label: ['a', 'b', 'c'])
+        .types(String)
+        .build()
+
+    Matrix result = table.rolling(window: 2, minPeriods: 1).sum()
+    assert ['a', 'b', 'c'] == result.column('label') as List
+  }
+
+  @Test
+  void testRollingMatrixApplyRejectsNullClosure() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, 2, 3])
+        .types(Integer)
+        .build()
+
+    assertThrows(IllegalArgumentException) { table.rolling(2).apply(null) }
+  }
+
+  @Test
+  void testRollingMatrixIntShorthand() {
+    Matrix table = Matrix.builder()
+        .data(value: [1, 2, 3, 4, 5])
+        .types(Integer)
+        .build()
+
+    assert table.rolling(3).mean().column('value') as List ==
+        table.rolling(window: 3).mean().column('value') as List
+  }
+
+  // --- 1.4 Edge-case tests: Cumulative Matrix ---
+
+  @Test
+  void testCumulativeOnEmptyMatrix() {
+    Matrix table = Matrix.builder()
+        .data(value: [])
+        .types(Integer)
+        .build()
+
+    assert 0 == table.cumsum().rowCount()
+    assert 0 == table.cumprod().rowCount()
+    assert 0 == table.cummin().rowCount()
+    assert 0 == table.cummax().rowCount()
+  }
+
+  @Test
+  void testCumulativeOnSingleRowMatrix() {
+    Matrix table = Matrix.builder()
+        .data(value: [5])
+        .types(Integer)
+        .build()
+
+    assert [5] == table.cumsum().column('value') as List
+    assert [5] == table.cumprod().column('value') as List
+    assert [5] == table.cummin().column('value') as List
+    assert [5] == table.cummax().column('value') as List
+  }
+
+  // --- 1.4 Edge-case tests: Shift/Lag/Lead/Diff Matrix ---
+
+  @Test
+  void testShiftOnEmptyMatrix() {
+    Matrix table = Matrix.builder()
+        .data(value: [])
+        .types(Integer)
+        .build()
+
+    assert 0 == table.shift(1).rowCount()
+    assert 0 == table.lag(1).rowCount()
+    assert 0 == table.lead(1).rowCount()
+    assert 0 == table.diff(1).rowCount()
+  }
+
+  @Test
+  void testShiftOnSingleRowMatrix() {
+    Matrix table = Matrix.builder()
+        .data(value: [5])
+        .types(Integer)
+        .build()
+
+    assert [null] == table.shift(1).column('value') as List
+    assert [null] == table.lag(1).column('value') as List
+    assert [null] == table.lead(1).column('value') as List
+    assert [null] == table.diff(1).column('value') as List
+  }
 }
