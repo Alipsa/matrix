@@ -60,7 +60,7 @@ class RollingWindowHelper {
       return indexes
     }
     if (!(by in matrix.columnNames())) {
-      throw new IllegalArgumentException("The column name ${by} does not exist is this table (${matrix.matrixName})")
+      throw new IllegalArgumentException("The column name ${by} does not exist in this matrix (${matrix.matrixName})")
     }
     List<List<?>> sortableRows = []
     Column column = matrix.column(by)

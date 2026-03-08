@@ -14,6 +14,7 @@ class RollingMatrix {
   private final RollingWindowOptions options
   private final List<Integer> orderedRowIndices
   private final Map<Integer, Integer> orderedPositionsByRowIndex
+  private final List<List<Integer>> windowIndicesByRowIndex
 
   /**
    * Create a rolling view over a matrix.
@@ -40,6 +41,11 @@ class RollingMatrix {
       positions[rowIndex] = orderedPosition
     }
     this.orderedPositionsByRowIndex = positions
+    List<List<Integer>> windowIndices = new ArrayList<>(source.rowCount())
+    for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
+      windowIndices.add(computeWindowRowIndices(rowIndex))
+    }
+    this.windowIndicesByRowIndex = windowIndices
   }
 
   /**
@@ -114,7 +120,7 @@ class RollingMatrix {
     Class resultType = Object
     Column result = new Column('rolling', resultType)
     for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
-      List<Integer> windowIndices = windowRowIndices(rowIndex)
+      List<Integer> windowIndices = windowIndicesByRowIndex[rowIndex]
       Matrix window = source.subset(windowIndices)
       Object value = window.rowCount() < options.minPeriods ? null : function.call(window)
       if (resultType == Object && value != null) {
@@ -136,7 +142,7 @@ class RollingMatrix {
       Class resultType = decimalResult ? BigDecimal : source.type(index)
       Column rolledColumn = new Column(columnName, resultType)
       for (int rowIndex = 0; rowIndex < source.rowCount(); rowIndex++) {
-        List<Number> values = windowRowIndices(rowIndex)
+        List<Number> values = windowIndicesByRowIndex[rowIndex]
             .collect { Integer indexInSource -> sourceColumn[indexInSource] }
             .findAll { it instanceof Number } as List<Number>
         rolledColumn.add(values.size() < options.minPeriods ? null : function.call(values))
@@ -156,7 +162,7 @@ class RollingMatrix {
     RollingWindowHelper.isNumericColumn(column)
   }
 
-  private List<Integer> windowRowIndices(int rowIndex) {
+  private List<Integer> computeWindowRowIndices(int rowIndex) {
     if (orderedRowIndices.isEmpty()) {
       return []
     }

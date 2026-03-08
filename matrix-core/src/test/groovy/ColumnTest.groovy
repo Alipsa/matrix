@@ -283,6 +283,12 @@ class ColumnTest {
       strings.rolling(window: 2, minPeriods: 3)
     }
     assertThrows(IllegalArgumentException) {
+      strings.rolling(window: 2.5)
+    }
+    assertThrows(IllegalArgumentException) {
+      strings.rolling(window: 2, minPeriods: 1.5)
+    }
+    assertThrows(IllegalArgumentException) {
       strings.rolling(window: 2).mean()
     }
   }

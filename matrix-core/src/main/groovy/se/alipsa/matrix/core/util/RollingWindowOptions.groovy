@@ -85,7 +85,11 @@ class RollingWindowOptions {
     if (!(value instanceof Number)) {
       throw new IllegalArgumentException("rolling ${name} must be a number but was ${value}")
     }
-    (value as Number).intValue()
+    try {
+      new BigDecimal(String.valueOf(value)).intValueExact()
+    } catch (NumberFormatException | ArithmeticException e) {
+      throw new IllegalArgumentException("rolling ${name} must be an integer within int range but was ${value}", e)
+    }
   }
 
   private static boolean booleanValue(Object value, String name) {
