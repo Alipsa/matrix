@@ -1342,7 +1342,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param row the row values to inspect
    * @return true if at least one value is non-null, otherwise false
    */
-  static boolean containsValues(Iterable row) {
+  private static boolean containsValues(Iterable row) {
     def strVal
     for (def element in row) {
       strVal = String.valueOf(element)
@@ -1682,7 +1682,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param msg the error message
    * @param throwException whether to throw an IllegalArgumentException instead of logging
    */
-  static void handleError(String msg, boolean throwException) {
+  private static void handleError(String msg, boolean throwException) {
     if (throwException) {
       throw new IllegalArgumentException(msg)
     } else {
@@ -3852,7 +3852,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param template a collection used only for sizing
    * @return a list of Object classes matching the template size
    */
-  static List<Class> createObjectTypes(Collection template) {
+  private static List<Class> createObjectTypes(Collection template) {
     [Object] * template.size() as List<Class>
   }
 
