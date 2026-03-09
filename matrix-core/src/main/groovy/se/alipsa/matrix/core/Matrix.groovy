@@ -310,7 +310,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @since 3.7.0
    */
   Matrix and(Collection<Column> columns) {
-    for (Column column : columns) {
+    for (def col : columns) {
+      if (!(col instanceof Column)) {
+        String typeName = col == null ? 'null' : col.class.name
+        throw new IllegalArgumentException("and(Collection<Column>) expects Column instances, but found ${typeName}")
+      }
+      Column column = (Column) col
       addColumn(column.name, column.type, column)
     }
     this
@@ -365,7 +370,11 @@ class Matrix implements Iterable<Row>, Cloneable {
           }
         }
       }
-      addColumn(name, type, list)
+      if (list == null) {
+        addColumn(name, type)
+      } else {
+        addColumn(name, type, list)
+      }
     }
     this
   }
