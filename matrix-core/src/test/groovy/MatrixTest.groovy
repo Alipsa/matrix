@@ -2190,6 +2190,25 @@ class MatrixTest {
   }
 
   @Test
+  void testLookupIndicesReturnsDefensiveCopyForFullKey() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        sales: [100, 200, 300]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    List<Integer> result = m.lookupIndices('USA')
+
+    def indexMapField = Matrix.getDeclaredField('indexMap')
+    indexMapField.accessible = true
+    Map<List<?>, List<Integer>> indexMap = indexMapField.get(m) as Map<List<?>, List<Integer>>
+
+    assertEquals([0, 2], result)
+    assertNotSame(indexMap[['USA']], result)
+    assertThrows(UnsupportedOperationException) { result.add(99) }
+  }
+
+  @Test
   void testIndexDirtyAfterAddRow() {
     def m = Matrix.builder().data(
         country: ['USA', 'UK'],
