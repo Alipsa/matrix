@@ -77,17 +77,23 @@ class MatrixBuilder {
     m
   }
 
+  private void clearPendingIndexColumns() {
+    indexColumns = null
+  }
+
   MatrixBuilder matrixName(String name) {
     this.matrixName = name
     this
   }
 
   MatrixBuilder columnNames(List<String> columnNames) {
+    clearPendingIndexColumns()
     headerList = columnNames
     this
   }
 
   MatrixBuilder columnNames(Set<String> columnNames) {
+    clearPendingIndexColumns()
     headerList = new ArrayList<>(columnNames)
     this
   }
@@ -109,6 +115,7 @@ class MatrixBuilder {
    * @return this builder
    */
   MatrixBuilder columns(List<List> columns) {
+    clearPendingIndexColumns()
     if (columns.size() > 0 && !columns[0] instanceof List) {
       throw new IllegalArgumentException("The List of columns does not contain lists but ${columns[0].class}")
     }
@@ -117,11 +124,13 @@ class MatrixBuilder {
   }
 
   MatrixBuilder columns(List... columns) {
+    clearPendingIndexColumns()
     this.columns = columns as List<List>
     this
   }
 
   MatrixBuilder columns(Map<String, List> columData) {
+    clearPendingIndexColumns()
     List<String> headers = []
     List<List> cols = []
     columData.each { k, v ->
@@ -149,6 +158,7 @@ class MatrixBuilder {
     if (rows == null || rows.isEmpty()) {
       return this
     }
+    clearPendingIndexColumns()
     this.columns = rows.transpose()
     this
   }
@@ -160,6 +170,7 @@ class MatrixBuilder {
    * @return this builder
    */
   MatrixBuilder addRow(List row) {
+    clearPendingIndexColumns()
     if (columns == null) {
       columns = []
     }
@@ -792,6 +803,7 @@ class MatrixBuilder {
 
 
   MatrixBuilder types(List<Class> types) {
+    clearPendingIndexColumns()
     this.dataTypes = ClassUtils.convertPrimitivesToWrapper(types)
     this
   }
@@ -804,6 +816,7 @@ class MatrixBuilder {
   @SafeVarargs
   final MatrixBuilder types(List<Class>... types) {
     if (types.length > 0) {
+      clearPendingIndexColumns()
       this.dataTypes = types[0]
     }
     this

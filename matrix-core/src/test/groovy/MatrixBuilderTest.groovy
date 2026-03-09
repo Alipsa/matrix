@@ -534,4 +534,28 @@ FR,400'''
     Matrix plain = builder.csvString(plainCsv).build()
     assert !plain.hasIndex()
   }
+
+  @Test
+  void testNonCsvBuilderReuseClearsPendingIndexColumns() {
+    String indexedCsv = '''#types: String,Integer
+#index: country
+country,sales
+USA,100
+UK,200'''
+
+    MatrixBuilder builder = Matrix.builder()
+    Matrix indexed = builder.csvString(indexedCsv).build()
+    assertTrue(indexed.hasIndex())
+
+    Matrix manual = builder
+        .columnNames('city', 'temp')
+        .rows([
+            ['Paris', 21],
+            ['Berlin', 18]
+        ])
+        .types(String, Integer)
+        .build()
+
+    assert !manual.hasIndex()
+  }
 }

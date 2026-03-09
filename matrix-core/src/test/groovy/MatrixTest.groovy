@@ -235,6 +235,22 @@ class MatrixTest {
   }
 
   @Test
+  void testConvertIndexedColumnInvalidatesIndex() {
+    def m = Matrix.builder().data(
+        place: ['1', '2', '1'],
+        sales: [100, 200, 300]
+    ).types(String, Integer).build()
+
+    m.createIndex('place')
+    assertEquals([0, 2], m.lookupIndices('1'))
+
+    m.convert('place', Integer, { Object it -> Integer.valueOf(String.valueOf(it)) })
+
+    assertEquals([0, 2], m.lookupIndices(1))
+    assertEquals(2, m.lookup(1).rowCount())
+  }
+
+  @Test
   void testGetRowsForCriteria() {
     def data = [
         'place'    : [1, 2, 3],

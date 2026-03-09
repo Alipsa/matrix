@@ -147,6 +147,19 @@ class GroupedMatrix {
   Matrix agg(Map<String, Closure> aggregations) {
     List<String> colNames = new ArrayList<>(groupColumns)
     List<String> aggKeys = aggregations.keySet() as List<String>
+    List<String> sourceColumns = source.columnNames()
+    List<String> missingColumns = aggKeys.findAll { !(it in sourceColumns) }
+    if (!missingColumns.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Aggregation column(s) ${missingColumns} do not exist in source columns ${sourceColumns}"
+      )
+    }
+    List<String> overlappingColumns = aggKeys.findAll { it in groupColumns }
+    if (!overlappingColumns.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Aggregation column(s) ${overlappingColumns} overlap group columns ${groupColumns}"
+      )
+    }
     colNames.addAll(aggKeys)
 
     // Build types: group column types from source, agg types inferred as common supertype

@@ -938,6 +938,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
     mColumns = convertedColumns
+    invalidateIndex()
     this
   }
 
@@ -1050,6 +1051,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     mColumns.clear()
     mColumns.addAll(convertedColumns)
+    invalidateIndex()
     this
   }
 
@@ -1070,6 +1072,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     column.clear()
     column.addAll(col)
     column.type = columnType
+    invalidateIndex()
     this
   }
 

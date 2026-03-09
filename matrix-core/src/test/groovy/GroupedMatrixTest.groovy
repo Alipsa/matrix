@@ -166,6 +166,34 @@ class GroupedMatrixTest {
   }
 
   @Test
+  void testAggRejectsMissingAggregationColumn() {
+    def m = Matrix.builder().data(
+        dept: ['IT', 'OPS'],
+        salary: [100, 200]
+    ).types(String, Integer).build()
+
+    def grouped = Stat.groupBy(m, 'dept')
+    def ex = assertThrows(IllegalArgumentException) {
+      grouped.agg(bonus: { Stat.sum(it) })
+    }
+    assertTrue(ex.message.contains('do not exist'))
+  }
+
+  @Test
+  void testAggRejectsGroupColumnAggregationKey() {
+    def m = Matrix.builder().data(
+        dept: ['IT', 'OPS'],
+        salary: [100, 200]
+    ).types(String, Integer).build()
+
+    def grouped = Stat.groupBy(m, 'dept')
+    def ex = assertThrows(IllegalArgumentException) {
+      grouped.agg(dept: { Stat.count(it) })
+    }
+    assertTrue(ex.message.contains('overlap group columns'))
+  }
+
+  @Test
   void testToStringKeyMap() {
     def m = Matrix.builder().data(
         a: [1, 1, 2],
