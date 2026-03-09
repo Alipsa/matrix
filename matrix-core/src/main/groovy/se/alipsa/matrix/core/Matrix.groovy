@@ -1259,7 +1259,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param params the rendering parameters
    * @return the formatted text table
    */
-
   String content(Map params) {
     boolean includeTitle = params.getOrDefault('includeTitle', true)
     boolean includeHeader = params.getOrDefault('includeHeader', true)
@@ -1949,7 +1948,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     return result
   }
 
-  /**f
+  /**
    * Convert this table into a Grid
    * @return a Grid corresponding to the data content of this table
    */
@@ -1957,7 +1956,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     return new Grid<Object>(rows() as List<List<Object>>)
   }
 
-  /**f
+  /**
    * Convert this table into a Grid
    *
    * <p>When {@code convertValues} is {@code false}, all matrix column types must
