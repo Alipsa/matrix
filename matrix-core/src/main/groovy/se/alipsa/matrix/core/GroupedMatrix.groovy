@@ -33,7 +33,7 @@ class GroupedMatrix {
   GroupedMatrix(Matrix source, List<String> groupColumns, Map<List<?>, Matrix> groups) {
     this.source = source
     this.groupColumns = Collections.unmodifiableList(new ArrayList<>(groupColumns))
-    this.groups = groups
+    this.groups = Collections.unmodifiableMap(new LinkedHashMap<>(groups))
   }
 
   /**
@@ -126,6 +126,9 @@ class GroupedMatrix {
    * <p>The result is a new Matrix with the group columns followed by one column
    * per aggregation entry. Each aggregation closure receives a {@link Column}.</p>
    *
+   * <p>The map keys must be existing source column names in the grouped sub-matrices.
+   * Each closure receives the {@link Column} for that column name.</p>
+   *
    * <pre>{@code
    * grouped.agg(
    *   sales: { Stat.sum(it) },
@@ -133,7 +136,7 @@ class GroupedMatrix {
    * )
    * }</pre>
    *
-   * @param aggregations map of output column name to aggregation closure
+   * @param aggregations map of source column name to aggregation closure
    * @return a new Matrix with group columns and aggregated values
    */
   Matrix agg(Map<String, Closure> aggregations) {
@@ -148,11 +151,7 @@ class GroupedMatrix {
       for (Map.Entry<String, Closure> aggEntry : aggregations.entrySet()) {
         String colName = aggEntry.key
         Closure fn = aggEntry.value
-        if (group.columnNames().contains(colName)) {
-          row.add(fn.call(group.column(colName)))
-        } else {
-          row.add(fn.call(group.column(colName)))
-        }
+        row.add(fn.call(group.column(colName)))
       }
       rows.add(row)
     }

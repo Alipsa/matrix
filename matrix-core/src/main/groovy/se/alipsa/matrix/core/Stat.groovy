@@ -308,14 +308,15 @@ class Stat {
                 throw new IllegalArgumentException("Column '${groupCols[i]}' does not exist in the matrix")
             }
         }
-        // Build groups by compound key
+        // Build groups by compound key (keys are immutable to protect map integrity)
         Map<List<?>, List<Integer>> keyToRows = new LinkedHashMap<>()
         for (int r = 0; r < nRows; r++) {
             List<?> key = new ArrayList<>(nLevels)
             for (int i = 0; i < nLevels; i++) {
                 key.add(table.column(colIndices[i])[r])
             }
-            keyToRows.computeIfAbsent(key, k -> []).add(r)
+            List<?> immutableKey = Collections.unmodifiableList(key)
+            keyToRows.computeIfAbsent(immutableKey, k -> []).add(r)
         }
         // Build sub-matrices
         Map<List<?>, Matrix> groups = new LinkedHashMap<>()

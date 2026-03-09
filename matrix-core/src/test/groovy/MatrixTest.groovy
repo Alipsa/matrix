@@ -2113,10 +2113,12 @@ class MatrixTest {
     Matrix uk = m.lookup('UK')
     assertEquals(2, uk.rowCount())
 
-    // Missing key returns empty matrix
+    // Missing key returns empty matrix with index preserved
     Matrix de = m.lookup('DE')
     assertEquals(0, de.rowCount())
     assertEquals(['country', 'quarter', 'sales'], de.columnNames())
+    assertTrue(de.hasIndex())
+    assertEquals(['country', 'quarter'], de.indexedColumns())
   }
 
   @Test
@@ -2174,6 +2176,17 @@ class MatrixTest {
 
     m.createIndex('x')
     assertThrows(IllegalArgumentException) { m.lookup(1, 'a') }
+    assertThrows(IllegalArgumentException) { m.lookupIndices(1, 'a') }
+  }
+
+  @Test
+  void testLookupIndicesEmptyKeysThrows() {
+    def m = Matrix.builder().data(
+        x: [1, 2]
+    ).types(Integer).build()
+
+    m.createIndex('x')
+    assertThrows(IllegalArgumentException) { m.lookupIndices() }
   }
 
   @Test

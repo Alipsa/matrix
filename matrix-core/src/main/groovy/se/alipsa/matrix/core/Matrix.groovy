@@ -3848,6 +3848,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   private void copyIndexTo(Matrix target) {
     if (!indexedColumnNames.isEmpty()) {
       target.@indexedColumnNames = new ArrayList<>(indexedColumnNames)
+      target.@indexMap = null
       target.@indexDirty = true
     }
   }
@@ -3969,11 +3970,13 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     List<Integer> indices = lookupIndices(keys)
     if (indices.isEmpty()) {
-      return builder()
+      Matrix empty = builder()
           .matrixName(mName)
           .columnNames(columnNames())
           .types(types())
           .build()
+      copyIndexTo(empty)
+      return empty
     }
     Matrix result = builder()
         .matrixName(mName)
@@ -3997,6 +4000,14 @@ class Matrix implements Iterable<Row>, Cloneable {
   List<Integer> lookupIndices(Object... keys) {
     if (indexedColumnNames.isEmpty()) {
       throw new IllegalStateException("No index has been created. Call createIndex() first.")
+    }
+    if (keys.length == 0) {
+      throw new IllegalArgumentException("At least one key value must be provided")
+    }
+    if (keys.length > indexedColumnNames.size()) {
+      throw new IllegalArgumentException(
+          "Too many keys: got ${keys.length} but index has ${indexedColumnNames.size()} level(s) (${indexedColumnNames})"
+      )
     }
     if (indexDirty) {
       buildIndex()
