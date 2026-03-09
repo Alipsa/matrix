@@ -2355,6 +2355,24 @@ class MatrixTest {
   }
 
   @Test
+  void testDropInvalidColumnIndexPreservesIndex() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        sales: [100, 200, 300]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+
+    assertThrows(IndexOutOfBoundsException) {
+      m.drop([2])
+    }
+
+    assertTrue(m.hasIndex())
+    assertEquals(['country'], m.indexedColumns())
+    assertEquals([0, 2], m.lookupIndices('USA'))
+  }
+
+  @Test
   void testSelectColumnsPreservesIndex() {
     def m = Matrix.builder().data(
         country: ['USA', 'UK'],

@@ -1606,18 +1606,25 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this modified matrix
    */
   Matrix drop(List<Integer> columnIndices) {
+    int columnCount = mColumns.size()
+    for (int colIdx : columnIndices) {
+      if (colIdx < 0 || colIdx >= columnCount) {
+        throw new IndexOutOfBoundsException("Column index ${colIdx} out of range for matrix with ${columnCount} columns")
+      }
+    }
     // Check if any indexed column is being dropped
     if (!indexedColumnNames.isEmpty()) {
       List<String> names = columnNames()
       for (int colIdx : columnIndices) {
-        if (colIdx >= 0 && colIdx < names.size() && indexedColumnNames.contains(names[colIdx])) {
+        if (indexedColumnNames.contains(names[colIdx])) {
           resetIndex()
           break
         }
       }
     }
-    Collections.sort(columnIndices)
-    columnIndices.eachWithIndex { colIdx, idx ->
+    List<Integer> sortedIndices = new ArrayList<>(columnIndices)
+    Collections.sort(sortedIndices)
+    sortedIndices.eachWithIndex { colIdx, idx ->
       // Each time we iterate and remove, all of the below will have one less item
       // so we need to adjust the colIdx to still match
       mColumns.remove(colIdx - idx)
