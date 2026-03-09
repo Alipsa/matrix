@@ -272,9 +272,13 @@ class Stat {
     }
 
     /**
-     * Splits the table into separate tables, one for each value in the named columns.
-     * The key values are a compound of the grouped values in the order specified in columnNames
-     * separated by underscore.
+     * Splits the table into separate sub-matrices, one for each unique combination
+     * of values in the named columns. Returns a {@link GroupedMatrix} with structured
+     * {@code List<?>} compound keys for type-safe access.
+     *
+     * <p>Use {@link GroupedMatrix#toStringKeyMap()} to obtain the legacy
+     * underscore-joined string keys if needed for backward compatibility.</p>
+     *
      * Example usage:
      * <pre><code>
      * def ab = Matrix.builder().data(
