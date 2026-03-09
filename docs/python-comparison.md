@@ -79,16 +79,22 @@ df['salary'] * df['inflation_rate']
 df['salary'] + df['bonus']
 ```
 
-**GroupBy operations:** Matrix provides `Stat.groupBy()` which returns a `Map<String, Matrix>` allowing flexible aggregations:
+**GroupBy operations:** Matrix provides `Stat.groupBy()` which returns a `GroupedMatrix` with structured compound keys and built-in aggregation:
 
 ```groovy
 // Group by one or more columns
-Map<String, Matrix> groups = Stat.groupBy(table, 'department', 'region')
+GroupedMatrix grouped = Stat.groupBy(table, 'department', 'region')
+// or use the convenience method:
+GroupedMatrix grouped = table.groupBy('department', 'region')
 
-// Apply any aggregation to groups
-groups.collectEntries { key, group ->
-    [key, [sum: Stat.sum(group['salary']), mean: Stat.mean(group['salary'])]]
-}
+// Access groups by structured key
+Matrix itGroup = grouped.get('IT', 'East')
+
+// Aggregate with named closures
+Matrix totals = grouped.agg(salary: { Stat.sum(it) })
+
+// Legacy string-keyed map (backward compat)
+Map<String, Matrix> legacy = grouped.toStringKeyMap()
 
 // Convenience methods for common aggregations
 Matrix sums = Stat.sumBy(table, 'salary', 'department')

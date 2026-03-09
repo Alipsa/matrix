@@ -479,6 +479,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     col.type = updatedClass
     col.name = columnName(columnNumber)
     mColumns[columnNumber] = col
+    invalidateIndex()
     this
   }
 
@@ -536,6 +537,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       cols << new Column(columnName(idx), it as List, dataTypes[idx])
     }
     mColumns = cols
+    invalidateIndex()
     this
   }
 
@@ -2531,7 +2533,11 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow for method chaining
    */
   Matrix rename(int columnIndex, String after) {
+    String before = mColumns[columnIndex].name
     mColumns[columnIndex].name = after
+    if (indexedColumnNames.contains(before)) {
+      resetIndex()
+    }
     this
   }
 
@@ -2560,6 +2566,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix replace(String columnName, Object from, Object to) {
     Collections.replaceAll(column(columnName) as List<Object>, from, to)
+    invalidateIndex()
     this
   }
 
@@ -2573,6 +2580,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix replace(int columnIndex, Object from, Object to) {
     Collections.replaceAll(column(columnIndex) as List<Object>, from, to)
+    invalidateIndex()
     this
   }
 
@@ -2597,6 +2605,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     col.clear()
     col.addAll(values)
     col.type = type
+    invalidateIndex()
     this
   }
 
@@ -2922,6 +2931,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       col.clear()
       col.addAll(values)
+      invalidateIndex()
     } else {
       if (values.isEmpty()) {
         addColumn(propertyName, Object, values)
@@ -3194,6 +3204,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * If the matrix has a name, it will be included as a comment header (#name: matrixName).
    * If includeTypes is true, type information will be included as a comment header (#types: Integer, String, ...).
    * Metadata will be included as comment headers (#metadata.key: value).
+   * If the matrix has an index (via {@link #createIndex}), it will be included as a comment header
+   * (#index: col1,col2) so that the index can be restored on round-trip.
    * These comment headers can be read back using Matrix.builder().csvString() to fully restore the matrix.
    *
    * <p><b>Metadata Constraints:</b> Only metadata values of the following types can be serialized and round-tripped:
@@ -4018,7 +4030,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       List<Integer> result = indexMap[keys as List<?>]
       return result != null ? result : []
     }
-    // Partial key — scan keys that match the prefix
+    // Partial key — scan keys that match the prefix, sort to preserve original row order
     List<?> prefix = keys as List<?>
     List<Integer> result = []
     for (Map.Entry<List<?>, List<Integer>> entry : indexMap.entrySet()) {
@@ -4026,6 +4038,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         result.addAll(entry.value)
       }
     }
+    Collections.sort(result)
     result
   }
 

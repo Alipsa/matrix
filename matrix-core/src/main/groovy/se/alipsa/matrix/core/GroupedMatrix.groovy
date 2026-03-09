@@ -143,7 +143,14 @@ class GroupedMatrix {
     List<String> colNames = new ArrayList<>(groupColumns)
     colNames.addAll(aggregations.keySet())
 
+    // Build types: group column types from source, aggregation column types inferred from first result
+    List<Class> types = new ArrayList<>()
+    for (String gc : groupColumns) {
+      types.add(source.type(gc))
+    }
+
     List<List> rows = []
+    boolean typesInferred = false
     for (Map.Entry<List<?>, Matrix> entry : groups.entrySet()) {
       List<?> key = entry.key
       Matrix group = entry.value
@@ -151,14 +158,26 @@ class GroupedMatrix {
       for (Map.Entry<String, Closure> aggEntry : aggregations.entrySet()) {
         String colName = aggEntry.key
         Closure fn = aggEntry.value
-        row.add(fn.call(group.column(colName)))
+        Object result = fn.call(group.column(colName))
+        row.add(result)
+        if (!typesInferred && result != null) {
+          types.add(result.class)
+        }
+      }
+      if (!typesInferred && row.size() == colNames.size()) {
+        typesInferred = true
       }
       rows.add(row)
+    }
+    // Fill remaining types with Object if first group had all-null results
+    while (types.size() < colNames.size()) {
+      types.add(Object)
     }
 
     Matrix.builder()
         .columnNames(colNames)
         .rows(rows)
+        .types(types)
         .build()
   }
 
