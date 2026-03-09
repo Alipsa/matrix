@@ -670,6 +670,13 @@ class MatrixTest {
     assertIterableEquals(empData.columnNames() + ['foo', 'bar'], a.columnNames())
     assertIterableEquals(empData2.foo, a.foo)
     assertIterableEquals(empData2.bar, a.bar)
+
+    // Test & with smaller matrix pads with nulls (not element-wise arithmetic)
+    Matrix base = Matrix.builder().data(x: [1, 2, 3]).build()
+    Matrix smaller = Matrix.builder().data(y: [10, 20]).build()
+    base & smaller
+    assertEquals(2, base.columnCount())
+    assertIterableEquals([10, 20, null], base.column('y'))
   }
 
   @Test

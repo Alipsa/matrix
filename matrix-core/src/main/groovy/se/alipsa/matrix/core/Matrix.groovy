@@ -338,7 +338,8 @@ class Matrix implements Iterable<Row>, Cloneable {
       Column c = cols[idx]
       def col
       if (c.size() < nrow) {
-        col = c + [null] * (nrow - c.size())
+        col = new ArrayList(c)
+        col.addAll(Collections.nCopies(nrow - c.size(), null))
       } else if (c.size() > nrow) {
         col = c.subList(0, nrow)
       } else {
