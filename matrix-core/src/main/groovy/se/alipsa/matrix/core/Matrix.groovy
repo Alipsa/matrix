@@ -4008,7 +4008,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param keys the key values to match
    * @return a new Matrix containing the matching rows
    * @throws IllegalStateException if no index has been created
-   * @throws IllegalArgumentException if more keys than indexed columns are provided
+   * @throws IllegalArgumentException if no keys are provided or more keys than indexed columns are provided
    */
   Matrix lookup(Object... keys) {
     List<Integer> indices = lookupIndices(keys)
@@ -4039,6 +4039,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param keys the key values to match
    * @return list of matching row indices
    * @throws IllegalStateException if no index has been created
+   * @throws IllegalArgumentException if no keys are provided or more keys than indexed columns are provided
    */
   List<Integer> lookupIndices(Object... keys) {
     validateLookupKeys(keys)

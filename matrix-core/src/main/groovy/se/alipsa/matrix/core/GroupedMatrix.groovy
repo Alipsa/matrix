@@ -165,6 +165,9 @@ class GroupedMatrix {
    * @return a new Matrix with group columns and aggregated values
    */
   Matrix agg(Map<String, Closure> aggregations) {
+    if (aggregations == null) {
+      throw new IllegalArgumentException("aggregations must not be null")
+    }
     List<String> colNames = new ArrayList<>(groupColumns)
     List<String> aggKeys = aggregations.keySet() as List<String>
     List<String> sourceColumns = source.columnNames()
@@ -228,6 +231,9 @@ class GroupedMatrix {
    * @return a new Matrix with group columns and aggregated values
    */
   Matrix agg(Closure aggregation) {
+    if (aggregation == null) {
+      throw new IllegalArgumentException("aggregation must not be null")
+    }
     List<String> nonGroupCols = source.columnNames().findAll { !(it in groupColumns) }
     Map<String, Closure> aggregations = [:]
     for (String col : nonGroupCols) {

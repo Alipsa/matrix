@@ -194,6 +194,23 @@ class GroupedMatrixTest {
   }
 
   @Test
+  void testAggRejectsNullAggregationInputs() {
+    def m = Matrix.builder().data(
+        dept: ['IT', 'OPS'],
+        salary: [100, 200]
+    ).types(String, Integer).build()
+
+    def grouped = Stat.groupBy(m, 'dept')
+
+    assertThrows(IllegalArgumentException) {
+      grouped.agg((Map<String, Closure>) null)
+    }
+    assertThrows(IllegalArgumentException) {
+      grouped.agg((Closure) null)
+    }
+  }
+
+  @Test
   void testToStringKeyMap() {
     def m = Matrix.builder().data(
         a: [1, 1, 2],
