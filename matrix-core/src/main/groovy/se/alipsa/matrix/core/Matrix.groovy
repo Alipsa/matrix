@@ -313,7 +313,11 @@ class Matrix implements Iterable<Row>, Cloneable {
     for (def col : columns) {
       if (!(col instanceof Column)) {
         String typeName = col == null ? 'null' : col.class.name
-        throw new IllegalArgumentException("and(Collection<Column>) expects Column instances, but found ${typeName}")
+        throw new IllegalArgumentException(
+            "'&' now appends columns and expects Column instances. " +
+            "If you intended to append rows, use '<<', addRow or addRows instead. " +
+            "Found element of type ${typeName}."
+        )
       }
       Column column = (Column) col
       addColumn(column.name, column.type, column)
