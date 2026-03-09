@@ -39,7 +39,7 @@ class TypeHelper {
       }
       if (headerList.size() != types.size()) {
         log.warn("Headers (${headerList.size()} elements): $headerList")
-        log.warn("Types:  (${types.size()} elements): ${types.collect { it.simpleName }}")
+        log.warn("Types:  (${types.size()} elements): ${types.collect { it?.simpleName }}")
         throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${types.size()})")
       }
     }

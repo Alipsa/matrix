@@ -55,7 +55,10 @@ class CsvHelper {
   }
 
   static String typeLabel(Class type) {
-    if (type != null && type.isPrimitive()) {
+    if (type == null) {
+      return 'Object'
+    }
+    if (type.isPrimitive()) {
       return primitiveWrapper(type).simpleName
     }
     if (type == String || type == BigDecimal || type == BigInteger || type == Number || type == Object) {
