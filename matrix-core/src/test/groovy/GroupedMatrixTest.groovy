@@ -240,6 +240,27 @@ class GroupedMatrixTest {
   }
 
   @Test
+  void testConstructorValidatesInputs() {
+    def m = Matrix.builder().data(
+        dept: ['IT'],
+        salary: [100]
+    ).types(String, Integer).build()
+
+    assertThrows(IllegalArgumentException) {
+      new GroupedMatrix(null, ['dept'], [(['IT']): m])
+    }
+    assertThrows(IllegalArgumentException) {
+      new GroupedMatrix(m, [], [(['IT']): m])
+    }
+    assertThrows(IllegalArgumentException) {
+      new GroupedMatrix(m, ['dept'], [(['IT', 'OPS']): m])
+    }
+    assertThrows(IllegalArgumentException) {
+      new GroupedMatrix(m, ['dept'], [(['IT']): null])
+    }
+  }
+
+  @Test
   void testSource() {
     def m = Matrix.builder().data(
         dept: ['IT', 'OPS'],

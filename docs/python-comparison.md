@@ -354,8 +354,6 @@ This allows users to choose the appropriate data structure based on their needs:
 
 | Enhancement                   | Value | Effort | Notes                           |
 |-------------------------------|-------|--------|---------------------------------|
-| **Rolling/Window Operations** | High  | Medium | Essential for time-series       |
-| **Cumulative Operations**     | High  | Easy   | cumsum, cumprod, cummax, cummin |
 | **Diff/Shift Operations**     | High  | Easy   | diff(), shift(), lag/lead       |
 
 ### Medium Priority (Good Value)
@@ -378,28 +376,7 @@ This allows users to choose the appropriate data structure based on their needs:
 
 Here are some enhancements that would be relatively easy to add:
 
-### 1. Cumulative Operations (Add to Column class)
-
-```groovy
-// In Column.groovy
-List<Number> cumsum() {
-    Number sum = 0
-    this.collect {
-        sum = sum + (it as Number)
-        sum
-    }
-}
-
-List<Number> cumprod() {
-    Number prod = 1
-    this.collect {
-        prod = prod * (it as Number)
-        prod
-    }
-}
-```
-
-### 2. Diff/Shift Operations
+### 1. Diff/Shift Operations
 
 ```groovy
 // In Column.groovy
@@ -418,34 +395,6 @@ List shift(int periods) {
 }
 ```
 
-### 3. Rolling Window (New class)
-
-```groovy
-class Rolling {
-    Column column
-    int window
-
-    Rolling(Column col, int w) {
-        this.column = col
-        this.window = w
-    }
-
-    List<BigDecimal> mean() {
-        (0..<column.size()).collect { i ->
-            if (i < window - 1) return null
-            def slice = column[(i - window + 1)..i]
-            Stat.mean(slice)
-        }
-    }
-
-    List<BigDecimal> sum() { /* similar */ }
-    List<BigDecimal> std() { /* similar */ }
-    List apply(Closure fn) { /* apply fn to each window */ }
-}
-
-// Usage: table['price'].rolling(7).mean()
-```
-
 ---
 
 ## Conclusion
@@ -456,4 +405,4 @@ The Matrix library is a **well-designed, comprehensive toolkit** that provides p
 2. **Idiomatic Groovy** with excellent syntax
 3. **Strong charting stack** (`matrix-xchart` + `pict` + Charm + ggplot-compatible API)
 
-The primary gaps versus numpy+pandas are in **time-series operations** (rolling, cumulative, diff/shift) and **numerical computing** (linear algebra, N-dimensional arrays). Adding rolling window operations would significantly enhance the library for time-series analysis use cases.
+The primary gaps versus numpy+pandas are in **numerical computing** (linear algebra, N-dimensional arrays) and a few **time-series utilities** such as diff/shift-style helpers. Rolling and cumulative operations are already available in v3.7.0.

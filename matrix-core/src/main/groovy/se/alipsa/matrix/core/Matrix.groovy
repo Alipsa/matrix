@@ -4007,17 +4007,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @throws IllegalArgumentException if more keys than indexed columns are provided
    */
   Matrix lookup(Object... keys) {
-    if (indexedColumnNames.isEmpty()) {
-      throw new IllegalStateException("No index has been created. Call createIndex() first.")
-    }
-    if (keys.length > indexedColumnNames.size()) {
-      throw new IllegalArgumentException(
-          "Too many keys: got ${keys.length} but index has ${indexedColumnNames.size()} level(s) (${indexedColumnNames})"
-      )
-    }
-    if (keys.length == 0) {
-      throw new IllegalArgumentException("At least one key value must be provided")
-    }
     List<Integer> indices = lookupIndices(keys)
     if (indices.isEmpty()) {
       Matrix empty = builder()
@@ -4048,17 +4037,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @throws IllegalStateException if no index has been created
    */
   List<Integer> lookupIndices(Object... keys) {
-    if (indexedColumnNames.isEmpty()) {
-      throw new IllegalStateException("No index has been created. Call createIndex() first.")
-    }
-    if (keys.length == 0) {
-      throw new IllegalArgumentException("At least one key value must be provided")
-    }
-    if (keys.length > indexedColumnNames.size()) {
-      throw new IllegalArgumentException(
-          "Too many keys: got ${keys.length} but index has ${indexedColumnNames.size()} level(s) (${indexedColumnNames})"
-      )
-    }
+    validateLookupKeys(keys)
     if (indexDirty) {
       buildIndex()
     }
@@ -4080,6 +4059,20 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     Collections.sort(result)
     Collections.unmodifiableList(result)
+  }
+
+  private void validateLookupKeys(Object... keys) {
+    if (indexedColumnNames.isEmpty()) {
+      throw new IllegalStateException("No index has been created. Call createIndex() first.")
+    }
+    if (keys.length == 0) {
+      throw new IllegalArgumentException("At least one key value must be provided")
+    }
+    if (keys.length > indexedColumnNames.size()) {
+      throw new IllegalArgumentException(
+          "Too many keys: got ${keys.length} but index has ${indexedColumnNames.size()} level(s) (${indexedColumnNames})"
+      )
+    }
   }
 
   /**

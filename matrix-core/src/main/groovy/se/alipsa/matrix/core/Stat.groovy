@@ -329,12 +329,14 @@ class Stat {
         }
         // Build sub-matrices
         Map<List<?>, Matrix> groups = new LinkedHashMap<>()
+        List<String> cachedColumnNames = table.columnNames()
+        List<Class> cachedTypes = table.types()
         for (Map.Entry<List<?>, List<Integer>> entry : keyToRows.entrySet()) {
             groups[entry.key] = Matrix.builder()
                 .matrixName(entry.key.collect { String.valueOf(it) }.join('_'))
-                .columnNames(table.columnNames())
+                .columnNames(cachedColumnNames)
                 .rows(table.rows(entry.value) as List<List>)
-                .types(table.types())
+                .types(cachedTypes)
                 .build()
         }
         new GroupedMatrix(table, groupCols, groups)

@@ -31,10 +31,30 @@ class GroupedMatrix {
    * @param groups mapping from compound key to sub-matrix
    */
   GroupedMatrix(Matrix source, List<String> groupColumns, Map<List<?>, Matrix> groups) {
+    if (source == null) {
+      throw new IllegalArgumentException("source must not be null")
+    }
+    if (groupColumns == null || groupColumns.isEmpty()) {
+      throw new IllegalArgumentException("groupColumns must not be null or empty")
+    }
+    if (groups == null) {
+      throw new IllegalArgumentException("groups must not be null")
+    }
     this.source = source
     this.groupColumns = Collections.unmodifiableList(new ArrayList<>(groupColumns))
     Map<List<?>, Matrix> normalizedGroups = new LinkedHashMap<>()
     for (Map.Entry<List<?>, Matrix> entry : groups.entrySet()) {
+      if (entry.key == null) {
+        throw new IllegalArgumentException("group keys must not be null")
+      }
+      if (entry.value == null) {
+        throw new IllegalArgumentException("group values must not be null")
+      }
+      if (entry.key.size() != groupColumns.size()) {
+        throw new IllegalArgumentException(
+            "Group key ${entry.key} has ${entry.key.size()} level(s) but expected ${groupColumns.size()} for ${groupColumns}"
+        )
+      }
       List<?> normalizedKey = Collections.unmodifiableList(new ArrayList<>(entry.key))
       normalizedGroups[normalizedKey] = entry.value
     }
