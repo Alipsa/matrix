@@ -320,7 +320,7 @@ class Stat {
         // Build groups by compound key (keys are immutable to protect map integrity)
         Map<List<?>, List<Integer>> keyToRows = new LinkedHashMap<>()
         for (int r = 0; r < nRows; r++) {
-            List<?> key = new ArrayList<>(nLevels)
+            List<Object> key = new ArrayList<>(nLevels)
             for (int i = 0; i < nLevels; i++) {
                 key.add(cachedColumns[i][r])
             }

@@ -3905,7 +3905,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     Map<List<?>, List<Integer>> map = new LinkedHashMap<>()
     for (int r = 0; r < nRows; r++) {
-      List<?> key = new ArrayList<>(nLevels)
+      List<Object> key = new ArrayList<>(nLevels)
       for (int i = 0; i < nLevels; i++) {
         key.add(mColumns[colIndices[i]][r])
       }
