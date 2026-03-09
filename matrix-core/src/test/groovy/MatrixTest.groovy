@@ -826,11 +826,8 @@ class MatrixTest {
         "Current Funding" : [2700, 225, 2.922, 1.871]
     ]
     table = Matrix.builder().data(report2).types([Double, String, BigDecimal]).build()
-    Grid<BigDecimal> tg2 = table.grid(BigDecimal)
-    assertEquals(new BigDecimal("12.23"), tg2[3, 0])
-    // no explicit conversion so this should fail since BigDecimal cannot equal a String
-    assertNotEquals(new BigDecimal("3.664"), tg2[2, 1])
-    assertEquals(new BigDecimal("380.263"), tg2[1, 0])
+    def error = assertThrows(IllegalArgumentException) { table.grid(BigDecimal) }
+    assertEquals("Cannot create Grid<BigDecimal> without conversion because column 'Full Funding' has type Double", error.message)
     // explicit conversion, everything should check out
     Grid<BigDecimal> tg3 = table.grid(BigDecimal, true)
     assertEquals(new BigDecimal("12.23"), tg3[3, 0])

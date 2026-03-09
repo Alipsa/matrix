@@ -742,6 +742,9 @@ class MatrixJavaTest {
         m("Current Funding", 2700, 225, 2.922, 1.871)
     );
     table = Matrix.builder().data(report2).types(cr(Double.class, 3)).build();
+    Matrix mixedTable = table;
+    IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> mixedTable.grid(BigDecimal.class));
+    assertEquals("Cannot create Grid<BigDecimal> without conversion because column 'Full Funding' has type Double", error.getMessage());
     Grid<BigDecimal> tg2 = table.grid(BigDecimal.class, true);
     assertEquals(new BigDecimal("3.664"), tg2.getAt(2, 1));
     assertEquals(new BigDecimal("380.263"), tg2.getAt(1, 0));
