@@ -3854,6 +3854,20 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
+   * Manually mark the index as dirty so it is rebuilt on the next {@link #lookup} call.
+   *
+   * <p>This is needed when indexed column data is mutated directly through column references
+   * (e.g. {@code matrix.column('country')[0] = 'UK'} or {@code matrix['country'][0] = 'UK'}),
+   * since such mutations bypass Matrix's own mutating methods and cannot be detected
+   * automatically.</p>
+   *
+   * <p>Has no effect if no index has been created.</p>
+   */
+  void markIndexDirty() {
+    invalidateIndex()
+  }
+
+  /**
    * Copy index configuration from this matrix to another.
    * The target's index is marked dirty so it rebuilds on next lookup.
    */
@@ -3884,7 +3898,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       for (int i = 0; i < nLevels; i++) {
         key.add(mColumns[colIndices[i]][r])
       }
-      map.computeIfAbsent(key, k -> []).add(r)
+      map.computeIfAbsent(Collections.unmodifiableList(key), k -> []).add(r)
     }
     indexMap = map
     indexDirty = false
@@ -3911,9 +3925,13 @@ class Matrix implements Iterable<Row>, Cloneable {
       throw new IllegalArgumentException("At least one column name must be specified for createIndex")
     }
     List<String> names = this.columnNames()
+    Set<String> seen = new LinkedHashSet<>()
     for (String col : columnNames) {
       if (!names.contains(col)) {
         throw new IllegalArgumentException("Column '${col}' does not exist in the matrix. Available columns: ${names}")
+      }
+      if (!seen.add(col)) {
+        throw new IllegalArgumentException("Duplicate column name '${col}' in createIndex")
       }
     }
     this.@indexedColumnNames = columnNames as List<String>
