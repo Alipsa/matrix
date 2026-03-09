@@ -40,8 +40,8 @@ class CsvHelper {
     }
 
     if (stringValue.contains(quoteString) ||
-        stringValue.contains(delimiter) ||
-        stringValue.contains(rowDelimiter) ||
+        (delimiter != null && stringValue.contains(delimiter)) ||
+        (rowDelimiter != null && stringValue.contains(rowDelimiter)) ||
         stringValue.contains('\n') ||
         stringValue.contains('\r')) {
       shouldQuote = true
