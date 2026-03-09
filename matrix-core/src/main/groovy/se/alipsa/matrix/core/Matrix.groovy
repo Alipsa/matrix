@@ -3947,7 +3947,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         throw new IllegalArgumentException("Duplicate column name '${col}' in createIndex")
       }
     }
-    this.@indexedColumnNames = columnNames as List<String>
+    this.@indexedColumnNames = new ArrayList<>(columnNames as List<String>)
     buildIndex()
     this
   }

@@ -2435,4 +2435,20 @@ class MatrixTest {
     assertEquals([0, 2], m.lookupIndices('USA'))
     assertEquals(1, m.lookup('UK').rowCount())
   }
+
+  @Test
+  void testCreateIndexDefensivelyCopiesVarargsArray() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        quarter: ['Q1', 'Q2', 'Q3'],
+        sales: [100, 200, 300]
+    ).types(String, String, Integer).build()
+
+    String[] indexColumns = ['country'] as String[]
+    m.createIndex(indexColumns)
+    indexColumns[0] = 'sales'
+
+    assertEquals(['country'], m.indexedColumns())
+    assertEquals([0, 2], m.lookupIndices('USA'))
+  }
 }
