@@ -36,7 +36,7 @@ class BiqQueryTest {
     Bq bq = new Bq(options)
     String dsName = "BigQueryModuleTest"
     bq.createDataset(dsName)
-    Matrix airq = Dataset.airquality().renameColumn('Solar.R', 'Solar_r')
+    Matrix airq = Dataset.airquality().rename('Solar.R', 'Solar_r')
     assertTrue(bq.saveToBigQuery(airq, dsName), "Failed to save matrix to big query")
     Matrix m = bq.query("select * from `${dsName}.${airq.matrixName}`")
         .withMatrixName(airq.matrixName)

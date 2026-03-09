@@ -2512,19 +2512,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @param before the existing column name
    * @param after the new column name
    * @return the (mutated) table to allow for chaining
-   * @deprecated Use rename(before, after) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix renameColumn(String before, String after) {
-    rename(before, after)
-  }
-
-  /**
-   * renames the column and returns the table to allow for chaining
-   *
-   * @param before the existing column name
-   * @param after the new column name
-   * @return the (mutated) table to allow for chaining
    */
   Matrix rename(String before, String after) {
     rename(columnIndex(before), after)
@@ -2533,16 +2520,6 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**
    * Renames the column and returns the table to allow for chaining.
-   *
-   * @deprecated use rename(int, String) instead
-   */
-  @Deprecated(forRemoval = true, since = "3.7.0")
-  Matrix renameColumn(int columnIndex, String after) {
-    rename(columnIndex, after)
-  }
-
-  /**
-   * renames the column and returns the table to allow for chaining
    *
    * @param columnIndex the index of the column to rename
    * @param after the new column name

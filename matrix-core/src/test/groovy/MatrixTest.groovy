@@ -868,8 +868,8 @@ class MatrixTest {
         .types([int, String, Number, LocalDate])
         .build()
 
-    empData.renameColumn('emp_id', 'id')
-    empData.renameColumn(1, 'name')
+    empData.rename('emp_id', 'id')
+    empData.rename(1, 'name')
 
     assertEquals('id', empData.columnNames()[0])
     assertEquals('name', empData.columnNames()[1])
