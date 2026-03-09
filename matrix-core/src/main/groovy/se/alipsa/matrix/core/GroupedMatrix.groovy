@@ -144,7 +144,7 @@ class GroupedMatrix {
     List<String> aggKeys = aggregations.keySet() as List<String>
     colNames.addAll(aggKeys)
 
-    // Build types: group column types from source, per-slot aggregation types inferred from first non-null
+    // Build types: group column types from source, agg types inferred as common supertype
     List<Class> types = new ArrayList<>()
     for (String gc : groupColumns) {
       types.add(source.type(gc))
@@ -161,8 +161,13 @@ class GroupedMatrix {
         Closure fn = aggregations[aggKeys[i]]
         Object result = fn.call(group.column(aggKeys[i]))
         row.add(result)
-        if (aggTypes[i] == null && result != null) {
-          aggTypes[i] = result.class
+        if (result != null) {
+          Class resultType = result.class
+          if (aggTypes[i] == null) {
+            aggTypes[i] = resultType
+          } else if (aggTypes[i] != resultType) {
+            aggTypes[i] = commonSuperType(aggTypes[i], resultType)
+          }
         }
       }
       rows.add(row)
@@ -216,6 +221,21 @@ class GroupedMatrix {
       result[key] = entry.value
     }
     result
+  }
+
+  /**
+   * Find the nearest common superclass of two types.
+   */
+  private static Class commonSuperType(Class a, Class b) {
+    if (a.isAssignableFrom(b)) return a
+    if (b.isAssignableFrom(a)) return b
+    // Walk up a's hierarchy until we find a common ancestor
+    Class current = a
+    while (current != null) {
+      if (current.isAssignableFrom(b)) return current
+      current = current.superclass
+    }
+    Object
   }
 
   @Override

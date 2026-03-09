@@ -560,7 +560,7 @@ class MatrixBuilder {
           } else if (after.toLowerCase().startsWith('index:')) {
             String indexSpec = after.substring('index:'.length()).trim()
             if (!indexSpec.isEmpty()) {
-              parsedIndex = indexSpec.split(',').collect { it.trim() } as List<String>
+              parsedIndex = indexSpec.split(',').collect { it.trim() }.findAll { !it.isEmpty() } as List<String>
             }
           } else if (after.toLowerCase().startsWith('types:')) {
             String typeSpec = after.substring('types:'.length()).trim()
