@@ -20,7 +20,7 @@ class ComparisonHelper {
     if (throwException) {
       throw new IllegalArgumentException(msg)
     } else {
-      log.info(msg)
+      log.warn(msg)
     }
   }
 
