@@ -312,12 +312,17 @@ class Stat {
                 throw new IllegalArgumentException("Column '${groupCols[i]}' does not exist in the matrix")
             }
         }
+        // Cache column references for the hot loop
+        List[] cachedColumns = new List[nLevels]
+        for (int i = 0; i < nLevels; i++) {
+            cachedColumns[i] = table.column(colIndices[i])
+        }
         // Build groups by compound key (keys are immutable to protect map integrity)
         Map<List<?>, List<Integer>> keyToRows = new LinkedHashMap<>()
         for (int r = 0; r < nRows; r++) {
             List<?> key = new ArrayList<>(nLevels)
             for (int i = 0; i < nLevels; i++) {
-                key.add(table.column(colIndices[i])[r])
+                key.add(cachedColumns[i][r])
             }
             List<?> immutableKey = Collections.unmodifiableList(key)
             keyToRows.computeIfAbsent(immutableKey, k -> []).add(r)

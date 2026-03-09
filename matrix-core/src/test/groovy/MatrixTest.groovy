@@ -2264,6 +2264,31 @@ class MatrixTest {
   }
 
   @Test
+  void testSubsetOverloadsPreserveIndex() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA', 'UK'],
+        sales: [100, 200, 300, 400]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+
+    // subset(IntRange)
+    Matrix sub1 = m.subset(0..2)
+    assertTrue(sub1.hasIndex())
+    assertEquals(['country'], sub1.indexedColumns())
+
+    // subset(List<Integer>)
+    Matrix sub2 = m.subset([0, 1, 3])
+    assertTrue(sub2.hasIndex())
+    assertEquals(['country'], sub2.indexedColumns())
+
+    // subset(Integer...)
+    Matrix sub3 = m.subset(1, 2)
+    assertTrue(sub3.hasIndex())
+    assertEquals(['country'], sub3.indexedColumns())
+  }
+
+  @Test
   void testDropIndexedColumnClearsIndex() {
     def m = Matrix.builder().data(
         country: ['USA', 'UK'],

@@ -3098,12 +3098,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the selected rows
    */
   Matrix subset(IntRange rows) {
-    builder()
+    Matrix result = builder()
         .rows(this.rows(rows) as List<List>)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
         .build()
+    copyIndexTo(result)
+    result
   }
 
   /**
@@ -3113,12 +3115,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the selected rows
    */
   Matrix subset(List<Integer> rows) {
-    builder()
+    Matrix result = builder()
         .rows(this.rows(rows) as List<List>)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
         .build()
+    copyIndexTo(result)
+    result
   }
 
   /**
@@ -3131,12 +3135,14 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (rows == null || rows.length == 0) {
       return this.clone()
     }
-    builder()
+    Matrix result = builder()
         .rows(this.rows(rows as List) as List<List>)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
         .build()
+    copyIndexTo(result)
+    result
   }
 
   /**
@@ -3957,7 +3963,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return list of indexed column names (empty if no index)
    */
   List<String> indexedColumns() {
-    Collections.unmodifiableList(indexedColumnNames)
+    Collections.unmodifiableList(new ArrayList<>(indexedColumnNames))
   }
 
   /**
