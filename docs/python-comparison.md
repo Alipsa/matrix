@@ -85,7 +85,7 @@ df['salary'] + df['bonus']
 // Group by one or more columns
 GroupedMatrix grouped = Stat.groupBy(table, 'department', 'region')
 // or use the convenience method:
-GroupedMatrix grouped = table.groupBy('department', 'region')
+GroupedMatrix grouped2 = table.groupBy('department', 'region')
 
 // Access groups by structured key
 Matrix itGroup = grouped.get('IT', 'East')
