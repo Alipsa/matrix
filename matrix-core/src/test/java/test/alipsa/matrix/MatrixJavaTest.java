@@ -185,7 +185,7 @@ class MatrixJavaTest {
     assertEquals(YearMonth.of(2015, 3), table3.getAt(4, 0));
 
     Matrix table5 = empData.clone();
-    table5.leftShift(m("vacation", c(10, 15, 12, 20, 30)));
+    table5.and(m("vacation", c(10, 15, 12, 20, 30)));
     assertIterableEquals(c(10, 15, 12, 20, 30), (List<?>)table5.getProperty("vacation"));
 
     var t5 = Matrix.builder()
@@ -193,7 +193,7 @@ class MatrixJavaTest {
         .types(Integer.class)
         .columns(c(c(5, 5, 1, 2, 22)))
         .build();
-    table5.leftShift(t5);
+    table5.and(t5);
     assertIterableEquals(c(5, 5, 1, 2, 22), (List<?>)table5.getProperty("rv"));
   }
   @Test

@@ -290,33 +290,72 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Mutable operation to add a row.
+   * Mutable operation to append a column.
    *
-   * This differs from {@code plus(List)} which returns a new matrix without mutating this instance.
-   *
-   * @param row the row list to add
+   * @param column the column to append
    * @return this matrix (altered)
    *
-   * Note: In v3.7.0, the `&` operator is planned to append columns instead of rows.
-   * Use addRow/addRows for forward-compatible code.
+   * @since 3.7.0 — previously {@code &} appended rows; use {@code addRow}/{@code addRows} for row operations.
    */
-  Matrix and(List row) {
-    addRow(row)
+  Matrix and(Column column) {
+    addColumn(column.name, column.type, column)
   }
 
   /**
-   * Mutable operation to add all rows from another matrix.
+   * Mutable operation to append multiple columns.
    *
-   * This differs from {@code plus(Matrix)} which returns a new matrix without mutating this instance.
-   *
-   * @param row the row list to add
+   * @param columns the columns to append
    * @return this matrix (altered)
    *
-   * Note: In v3.7.0, the `&` operator is planned to append columns instead of rows.
-   * Use addRow/addRows for forward-compatible code.
+   * @since 3.7.0
    */
-  Matrix and(Matrix matrix) {
-    addRows(matrix.rowList())
+  Matrix and(Collection<Column> columns) {
+    columns.each { column ->
+      addColumn(column.name, column.type, column)
+    }
+    this
+  }
+
+  /**
+   * Mutable operation to append columns from another matrix.
+   * This is not a join — columns are added as-is. If the specified matrix has more rows than this,
+   * only a subset is added. If it is smaller, nulls fill the extra space.
+   *
+   * @param m the matrix containing the columns to add
+   * @return this matrix (altered)
+   *
+   * @since 3.7.0 — previously {@code &} appended rows; use {@code addRow}/{@code addRows} for row operations.
+   */
+  Matrix and(Matrix m) {
+    int nrow = rowCount()
+    m.columns().eachWithIndex { c, idx ->
+      def col
+      if (c.size() < nrow) {
+        col = c + [null] * (nrow - c.size())
+      } else if (c.size() > nrow) {
+        col = c.subList(0, nrow)
+      } else {
+        col = c
+      }
+      addColumn(m.columnName(idx), m.type(idx), col)
+    }
+    this
+  }
+
+  /**
+   * Mutable operation to append columns from a map of column name to values.
+   *
+   * @param columns a map where keys are column names and values are column data lists
+   * @return this matrix (altered)
+   *
+   * @since 3.7.0 — previously {@code &} appended rows; use {@code addRow}/{@code addRows} for row operations.
+   */
+  Matrix and(Map<String, List> columns) {
+    columns.each { name, list ->
+      def type = list.isEmpty() ? Object : list[0].class
+      addColumn(name, type, list)
+    }
+    this
   }
 
   /**
@@ -2145,7 +2184,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Append a row to a clone of this matrix.
    *
-   * This differs from {@code and(List)} which mutates this instance.
+   * This differs from {@code leftShift(List)} ({@code <<}) which mutates this instance.
    *
    * @param row the row to append
    * @return a new matrix with the row appended to the end
@@ -2160,7 +2199,7 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Append all rows from another matrix to a clone of this one.
    *
-   * This differs from {@code and(Matrix)} which mutates this instance.
+   * This differs from {@code leftShift(Matrix)} ({@code <<}) which mutates this instance.
    *
    * @param table the matrix to append from
    * @return a new matrix containing the rows of the former and the new rows added
@@ -2347,67 +2386,33 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Append a column to this matrix.
+   * Mutable operation to append a row.
    *
-   * Note: In v3.7.0, the `<<` operator is planned to append rows instead of columns.
-   * Use addColumn for forward-compatible code.
+   * This differs from {@code plus(List)} which returns a new matrix without mutating this instance.
+   *
+   * @param row the row list to add
+   * @return this matrix (altered)
+   *
+   * @since 3.7.0 — previously {@code <<} appended columns; use {@code addColumn} for column operations,
+   * or the {@code &} operator.
    */
-  def leftShift(Column column) {
-    addColumn(column.name, column.type, column)
+  Matrix leftShift(List row) {
+    addRow(row)
   }
 
   /**
-   * Append multiple columns to this matrix.
+   * Mutable operation to append all rows from another matrix.
    *
-   * Note: In v3.7.0, the `<<` operator is planned to append rows instead of columns.
-   * Use addColumn for forward-compatible code.
+   * This differs from {@code plus(Matrix)} which returns a new matrix without mutating this instance.
+   *
+   * @param m the matrix whose rows will be appended
+   * @return this matrix (altered)
+   *
+   * @since 3.7.0 — previously {@code <<} appended columns; use {@code addColumn} for column operations,
+   * or the {@code &} operator.
    */
-  def leftShift(Collection<Column> columns) {
-    columns.each { column ->
-      if (!column instanceof Column) {
-        throw new IllegalArgumentException("leftShift to add columns should be specified with a list of columns, a Map or another Matrix")
-      }
-      addColumn(column.name, column.type, column)
-    }
-  }
-
-  /**
-   * Adds the column from the specified matrix to this one. Note that this is not a join on some matching criteria
-   * but just a "raw" add. If the specified Matrix has more rows than this, only a subset will be added. If it is smaller
-   * nulls will be used to fill the extra space.
-   *
-   * @param m the matrix containing the columns to add
-   * @return this Matrix (mutated)
-   *
-   * Note: In v3.7.0, the `<<` operator is planned to append rows instead of columns.
-   * Use addColumn for forward-compatible code.
-   */
-  def leftShift(Matrix m) {
-    int nrow = rowCount()
-    m.columns().eachWithIndex {c, idx ->
-      def col
-      if (c.size() < nrow) {
-        col = c + [null]*(nrow-c.size())
-      } else if (c.size() > nrow) {
-        col = c.subList(0, nrow)
-      } else {
-        col = c
-      }
-      addColumn(m.columnName(idx), m.type(idx), col)
-    }
-  }
-
-  /**
-   * Append columns to this matrix from a map of column name to values.
-   *
-   * Note: In v3.7.0, the `<<` operator is planned to append rows instead of columns.
-   * Use addColumn for forward-compatible code.
-   */
-  def leftShift(Map<String, List> columns) {
-    columns.each { name, list ->
-      def type = list.isEmpty() ? Object : list[0].class
-      addColumn(name, type, list)
-    }
+  Matrix leftShift(Matrix m) {
+    addRows(m.rowList())
   }
 
   /**
