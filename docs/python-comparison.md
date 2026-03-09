@@ -333,12 +333,12 @@ This allows users to choose the appropriate data structure based on their needs:
 ### Matrix Library Weaknesses
 
 1. **No N-dimensional Arrays** - Only 2D structures
-2. **No Rolling/Window Operations** - Missing time-series analysis
-3. **No Multi-Index** - Hierarchical indexing not supported
+2. ~~**No Rolling/Window Operations**~~ - Added in v3.7.0 (`rolling()`, `cumsum()`, etc.)
+3. ~~**No Multi-Index**~~ - v3.7.0 adds `createIndex()`/`lookup()` for database-style indexing and `GroupedMatrix` for structured group-by results
 4. **Limited Linear Algebra** - No eigenvalues, SVD, matrix inverse
 5. **Interactive visualization ecosystem is narrower** - strongest support is SVG + desktop embedding
 6. **Performance Gap** - JVM vs native C for heavy computation (mitigated by Tablesaw integration)
-7. **No Cumulative Operations** - cumsum, cumprod, etc.
+7. ~~**No Cumulative Operations**~~ - Added in v3.7.0 (`cumsum()`, `cumprod()`, `cummin()`, `cummax()`)
 
 ---
 

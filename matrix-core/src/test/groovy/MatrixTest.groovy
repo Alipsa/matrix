@@ -2083,4 +2083,244 @@ class MatrixTest {
     }
     assertEquals(3, count)
   }
+
+  // ---- Index API tests ----
+
+  @Test
+  void testCreateIndexAndLookup() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'USA', 'UK', 'UK', 'USA'],
+        quarter: ['Q1', 'Q2', 'Q1', 'Q2', 'Q1'],
+        sales: [100, 200, 150, 250, 300]
+    ).types(String, String, Integer).build()
+
+    assertFalse(m.hasIndex())
+    assertEquals([], m.indexedColumns())
+
+    m.createIndex('country', 'quarter')
+    assertTrue(m.hasIndex())
+    assertEquals(['country', 'quarter'], m.indexedColumns())
+
+    // Full key lookup
+    Matrix usaQ1 = m.lookup('USA', 'Q1')
+    assertEquals(2, usaQ1.rowCount())
+    assertEquals([100, 300], usaQ1['sales'] as List)
+
+    // Partial key lookup
+    Matrix usa = m.lookup('USA')
+    assertEquals(3, usa.rowCount())
+
+    Matrix uk = m.lookup('UK')
+    assertEquals(2, uk.rowCount())
+
+    // Missing key returns empty matrix
+    Matrix de = m.lookup('DE')
+    assertEquals(0, de.rowCount())
+    assertEquals(['country', 'quarter', 'sales'], de.columnNames())
+  }
+
+  @Test
+  void testLookupIndices() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        sales: [100, 200, 300]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    assertEquals([0, 2], m.lookupIndices('USA'))
+    assertEquals([1], m.lookupIndices('UK'))
+    assertEquals([], m.lookupIndices('DE'))
+  }
+
+  @Test
+  void testResetIndex() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK'],
+        sales: [100, 200]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    assertTrue(m.hasIndex())
+
+    m.resetIndex()
+    assertFalse(m.hasIndex())
+    assertEquals([], m.indexedColumns())
+  }
+
+  @Test
+  void testIndexNoIndexThrows() {
+    def m = Matrix.builder().data(
+        x: [1, 2, 3]
+    ).types(Integer).build()
+
+    assertThrows(IllegalStateException) { m.lookup(1) }
+    assertThrows(IllegalStateException) { m.lookupIndices(1) }
+  }
+
+  @Test
+  void testIndexInvalidColumnThrows() {
+    def m = Matrix.builder().data(
+        x: [1, 2, 3]
+    ).types(Integer).build()
+
+    assertThrows(IllegalArgumentException) { m.createIndex('nonexistent') }
+  }
+
+  @Test
+  void testIndexTooManyKeysThrows() {
+    def m = Matrix.builder().data(
+        x: [1, 2], y: ['a', 'b']
+    ).types(Integer, String).build()
+
+    m.createIndex('x')
+    assertThrows(IllegalArgumentException) { m.lookup(1, 'a') }
+  }
+
+  @Test
+  void testIndexDirtyAfterAddRow() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK'],
+        sales: [100, 200]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    assertEquals([0], m.lookupIndices('USA'))
+
+    // Mutate — index should auto-rebuild on next lookup
+    m.addRow(['USA', 500])
+    assertEquals([0, 2], m.lookupIndices('USA'))
+  }
+
+  @Test
+  void testIndexDirtyAfterRemoveRows() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        sales: [100, 200, 300]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    assertEquals(2, m.lookup('USA').rowCount())
+
+    m.removeRows(0)
+    assertEquals(1, m.lookup('USA').rowCount())
+    assertEquals([300], m.lookup('USA')['sales'] as List)
+  }
+
+  @Test
+  void testIndexDirtyAfterOrderBy() {
+    def m = Matrix.builder().data(
+        country: ['UK', 'USA', 'UK'],
+        sales: [200, 100, 300]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    m.orderBy('sales')
+    // After sorting, index should rebuild and still find correct rows
+    assertEquals(2, m.lookup('UK').rowCount())
+    assertEquals([200, 300], m.lookup('UK')['sales'] as List)
+  }
+
+  @Test
+  void testClonePreservesIndex() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK'],
+        sales: [100, 200]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    Matrix copy = m.clone()
+
+    assertTrue(copy.hasIndex())
+    assertEquals(['country'], copy.indexedColumns())
+    assertEquals(1, copy.lookup('USA').rowCount())
+  }
+
+  @Test
+  void testSubsetPreservesIndex() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        sales: [100, 200, 300]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    Matrix sub = m.subset { it['sales'] as int > 100 }
+
+    assertTrue(sub.hasIndex())
+    assertEquals(1, sub.lookup('USA').rowCount())
+    assertEquals(1, sub.lookup('UK').rowCount())
+  }
+
+  @Test
+  void testDropIndexedColumnClearsIndex() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK'],
+        quarter: ['Q1', 'Q2'],
+        sales: [100, 200]
+    ).types(String, String, Integer).build()
+
+    m.createIndex('country', 'quarter')
+    assertTrue(m.hasIndex())
+
+    m.drop('country')
+    assertFalse(m.hasIndex())
+  }
+
+  @Test
+  void testSelectColumnsPreservesIndex() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK'],
+        quarter: ['Q1', 'Q2'],
+        sales: [100, 200]
+    ).types(String, String, Integer).build()
+
+    m.createIndex('country')
+
+    // Select includes indexed column — index preserved
+    Matrix sel = m.selectColumns('country', 'sales')
+    assertTrue(sel.hasIndex())
+    assertEquals(1, sel.lookup('USA').rowCount())
+
+    // Select excludes indexed column — index dropped
+    Matrix sel2 = m.selectColumns('quarter', 'sales')
+    assertFalse(sel2.hasIndex())
+  }
+
+  @Test
+  void testIndexCsvRoundTrip() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK'],
+        sales: [100, 200]
+    ).types(String, Integer).build()
+    m.createIndex('country')
+
+    String csv = m.toCsvString(includeTypes: true)
+    assertTrue(csv.contains('#index: country'))
+  }
+
+  @Test
+  void testMatrixGroupBy() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'USA', 'UK', 'UK'],
+        sales: [100, 200, 150, 250]
+    ).types(String, Integer).build()
+
+    def grouped = m.groupBy('country')
+    assertEquals(2, grouped.groupCount())
+    assertEquals(2, grouped.get('USA').rowCount())
+    assertEquals(2, grouped.get('UK').rowCount())
+  }
+
+  @Test
+  void testLookupPreservesIndexOnResult() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'USA', 'UK'],
+        quarter: ['Q1', 'Q2', 'Q1'],
+        sales: [100, 200, 150]
+    ).types(String, String, Integer).build()
+
+    m.createIndex('country', 'quarter')
+    Matrix usa = m.lookup('USA')
+    assertTrue(usa.hasIndex())
+    assertEquals(['country', 'quarter'], usa.indexedColumns())
+  }
 }

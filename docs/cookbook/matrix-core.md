@@ -601,4 +601,71 @@ Given that matrix.col1 contains the value [1,2,3,4]
 
 Other operations are just like the groovy default behavior
 
+## Indexing and Lookup
+
+Matrix supports database-style indexing over one or more columns for fast row lookup.
+The indexed columns remain normal data columns — the index is an internal lookup structure.
+
+```groovy
+def sales = Matrix.builder().data(
+    country: ['USA', 'USA', 'UK', 'UK', 'USA'],
+    quarter: ['Q1', 'Q2', 'Q1', 'Q2', 'Q1'],
+    revenue: [100, 200, 150, 250, 300]
+).types(String, String, Integer).build()
+
+// Create an index over country and quarter
+sales.createIndex('country', 'quarter')
+
+// Full key lookup
+Matrix usaQ1 = sales.lookup('USA', 'Q1')   // 2 rows: revenue 100, 300
+
+// Partial key lookup (first level only)
+Matrix usa = sales.lookup('USA')            // 3 rows: all USA data
+
+// Check and manage the index
+sales.hasIndex()          // true
+sales.indexedColumns()    // ['country', 'quarter']
+sales.resetIndex()        // drops the index; data unchanged
+```
+
+The index is **lazy-invalidated**: mutations (`addRow`, `removeRow`, `orderBy`, etc.)
+mark the index as stale, and it rebuilds transparently on the next `lookup()` call.
+
+## GroupedMatrix
+
+`Stat.groupBy` (and the convenience `Matrix.groupBy`) returns a `GroupedMatrix`
+with structured compound keys instead of underscore-joined strings.
+
+```groovy
+def data = Matrix.builder().data(
+    dept: ['IT', 'IT', 'OPS', 'OPS'],
+    salary: [100, 150, 200, 250]
+).types(String, Integer).build()
+
+def grouped = data.groupBy('dept')
+
+// Access groups
+grouped.get('IT')                        // sub-Matrix with IT rows
+grouped.keys()                           // [['IT'], ['OPS']]
+grouped.level('dept')                    // ['IT', 'OPS'] as Set
+grouped.groupCount()                     // 2
+
+// Iterate
+grouped.each { key, group ->
+    println "${key}: ${group.rowCount()} rows"
+}
+
+// Aggregate
+Matrix totals = grouped.agg(salary: { Stat.sum(it) })
+// Result: dept | salary
+//         IT   | 250
+//         OPS  | 450
+
+// Aggregate all non-group columns with a single closure
+Matrix means = grouped.agg { Stat.mean(it) }
+
+// Backward-compatible string key map
+Map<String, Matrix> legacy = grouped.toStringKeyMap()
+```
+
 [Back to index](cookbook.md)  |  [Next (Matrix Stats)](matrix-stats.md)
