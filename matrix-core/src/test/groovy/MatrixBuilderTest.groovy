@@ -512,4 +512,26 @@ class MatrixBuilderTest {
     assertEquals(92.1, deserialized[2, 'score'] as BigDecimal)
     assertEquals(asLocalDate('2023-03-10'), deserialized[2, 'date'])
   }
+
+  @Test
+  void testCsvStringDoesNotLeakIndexBetweenParsesOnSameBuilder() {
+    String indexedCsv = '''#types: String,Integer
+#index: country
+country,sales
+USA,100
+UK,200'''
+    String plainCsv = '''#types: String,Integer
+country,sales
+DE,300
+FR,400'''
+
+    MatrixBuilder builder = Matrix.builder()
+
+    Matrix indexed = builder.csvString(indexedCsv).build()
+    assertTrue(indexed.hasIndex())
+    assertEquals(['country'], indexed.indexedColumns())
+
+    Matrix plain = builder.csvString(plainCsv).build()
+    assert !plain.hasIndex()
+  }
 }

@@ -532,6 +532,8 @@ class MatrixBuilder {
   }
 
   private MatrixBuilder parseDelimitedRows(List<String> lines, String delimiter, String stringQuote, boolean firstRowAsHeader, List<String> nullStrings, String lineComment) {
+    // Parsing a new CSV input should not inherit index metadata from a previous parse on the same builder.
+    indexColumns = null
     List<List> data = []
     final boolean stripQuotes = stringQuote != ''
     int maxCols = 0

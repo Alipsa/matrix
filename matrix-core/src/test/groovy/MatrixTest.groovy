@@ -2387,4 +2387,20 @@ class MatrixTest {
     assertTrue(usa.hasIndex())
     assertEquals(['country', 'quarter'], usa.indexedColumns())
   }
+
+  @Test
+  void testRenameIndexedColumnPreservesIndexConfiguration() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        sales: [100, 200, 300]
+    ).types(String, Integer).build()
+
+    m.createIndex('country')
+    m.rename('country', 'nation')
+
+    assertTrue(m.hasIndex())
+    assertEquals(['nation'], m.indexedColumns())
+    assertEquals([0, 2], m.lookupIndices('USA'))
+    assertEquals(1, m.lookup('UK').rowCount())
+  }
 }

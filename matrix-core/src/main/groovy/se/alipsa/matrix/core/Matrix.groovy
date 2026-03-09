@@ -2536,7 +2536,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     String before = mColumns[columnIndex].name
     mColumns[columnIndex].name = after
     if (indexedColumnNames.contains(before)) {
-      resetIndex()
+      this.@indexedColumnNames = indexedColumnNames.collect { it == before ? after : it } as List<String>
+      this.@indexMap = null
+      this.@indexDirty = true
     }
     this
   }
