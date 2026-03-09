@@ -558,4 +558,29 @@ UK,200'''
 
     assert !manual.hasIndex()
   }
+
+  @Test
+  void testEmptyRowsClearsPendingIndexColumns() {
+    String indexedCsv = '''#types: String,Integer
+#index: country
+country,sales
+USA,100
+UK,200'''
+
+    MatrixBuilder builder = Matrix.builder()
+    Matrix indexed = builder.csvString(indexedCsv).build()
+    assertTrue(indexed.hasIndex())
+
+    Matrix manual = builder
+        .columnNames('city', 'temp')
+        .rows([])
+        .columns([
+            ['Paris', 'Berlin'],
+            [21, 18]
+        ])
+        .types(String, Integer)
+        .build()
+
+    assert !manual.hasIndex()
+  }
 }

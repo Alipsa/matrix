@@ -155,10 +155,10 @@ class MatrixBuilder {
    * @return this builder
    */
   MatrixBuilder rows(List<List> rows) {
+    clearPendingIndexColumns()
     if (rows == null || rows.isEmpty()) {
       return this
     }
-    clearPendingIndexColumns()
     this.columns = rows.transpose()
     this
   }
