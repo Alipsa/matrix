@@ -310,7 +310,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @since 3.7.0
    */
   Matrix and(Collection<Column> columns) {
-    columns.each { column ->
+    for (Column column : columns) {
       addColumn(column.name, column.type, column)
     }
     this
@@ -328,7 +328,9 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix and(Matrix m) {
     int nrow = rowCount()
-    m.columns().eachWithIndex { c, idx ->
+    List<Column> cols = m.columns()
+    for (int idx = 0; idx < cols.size(); idx++) {
+      Column c = cols[idx]
       def col
       if (c.size() < nrow) {
         col = c + [null] * (nrow - c.size())
@@ -351,8 +353,18 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @since 3.7.0 — previously {@code &} appended rows; use {@code addRow}/{@code addRows} for row operations.
    */
   Matrix and(Map<String, List> columns) {
-    columns.each { name, list ->
-      def type = list.isEmpty() ? Object : list[0].class
+    for (Map.Entry<String, List> entry : columns.entrySet()) {
+      String name = entry.key
+      List list = entry.value
+      Class type = Object
+      if (list != null && !list.isEmpty()) {
+        for (def val : list) {
+          if (val != null) {
+            type = val.class
+            break
+          }
+        }
+      }
       addColumn(name, type, list)
     }
     this
