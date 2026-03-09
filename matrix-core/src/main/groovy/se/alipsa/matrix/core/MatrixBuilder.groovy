@@ -44,6 +44,7 @@ class MatrixBuilder {
   List<List> columns
   List<Class> dataTypes
   Map<String, Object> metadata = [:]
+  private List<String> indexColumns = null
 
   /**
    * Create a MatrixBuilder with no name. This is package scoped as the way to create a MatrixBuilder
@@ -69,6 +70,9 @@ class MatrixBuilder {
     Matrix m = new Matrix(matrixName, headerList, columns, dataTypes)
     if (!metadata.isEmpty()) {
       (m.metaData as Map<String, Object>).putAll(metadata)
+    }
+    if (indexColumns != null && !indexColumns.isEmpty()) {
+      m.createIndex(indexColumns as String[])
     }
     m
   }
@@ -457,6 +461,7 @@ class MatrixBuilder {
    * <ul>
    *   <li>#name: matrixName</li>
    *   <li>#types: String,Integer,BigDecimal</li>
+   *   <li>#index: col1,col2 (creates an index via {@link Matrix#createIndex})</li>
    *   <li>#metadata.key: value</li>
    * </ul>
    *
@@ -532,6 +537,7 @@ class MatrixBuilder {
     int maxCols = 0
     List<Class> parsedTypes = null
     String parsedName = null
+    List<String> parsedIndex = null
     Map<String, Object> parsedMetadata = [:]
     for (String line in lines) {
       if (lineComment != null && !lineComment.isEmpty()) {
@@ -550,6 +556,11 @@ class MatrixBuilder {
               String key = metaSpec.substring(0, colonPos).trim()
               String value = metaSpec.substring(colonPos + 1).trim()
               parsedMetadata[key] = parseMetadataValue(value)
+            }
+          } else if (after.toLowerCase().startsWith('index:')) {
+            String indexSpec = after.substring('index:'.length()).trim()
+            if (!indexSpec.isEmpty()) {
+              parsedIndex = indexSpec.split(',').collect { it.trim() } as List<String>
             }
           } else if (after.toLowerCase().startsWith('types:')) {
             String typeSpec = after.substring('types:'.length()).trim()
@@ -614,6 +625,9 @@ class MatrixBuilder {
       parsedMetadata.each { key, value ->
         metadata.put(key, value)
       }
+    }
+    if (parsedIndex != null) {
+      indexColumns = parsedIndex
     }
     this
   }

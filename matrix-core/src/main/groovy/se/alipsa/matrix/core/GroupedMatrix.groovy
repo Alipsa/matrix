@@ -141,37 +141,34 @@ class GroupedMatrix {
    */
   Matrix agg(Map<String, Closure> aggregations) {
     List<String> colNames = new ArrayList<>(groupColumns)
-    colNames.addAll(aggregations.keySet())
+    List<String> aggKeys = aggregations.keySet() as List<String>
+    colNames.addAll(aggKeys)
 
-    // Build types: group column types from source, aggregation column types inferred from first result
+    // Build types: group column types from source, per-slot aggregation types inferred from first non-null
     List<Class> types = new ArrayList<>()
     for (String gc : groupColumns) {
       types.add(source.type(gc))
     }
+    int nAgg = aggKeys.size()
+    Class[] aggTypes = new Class[nAgg]
 
     List<List> rows = []
-    boolean typesInferred = false
     for (Map.Entry<List<?>, Matrix> entry : groups.entrySet()) {
       List<?> key = entry.key
       Matrix group = entry.value
       List row = new ArrayList(key)
-      for (Map.Entry<String, Closure> aggEntry : aggregations.entrySet()) {
-        String colName = aggEntry.key
-        Closure fn = aggEntry.value
-        Object result = fn.call(group.column(colName))
+      for (int i = 0; i < nAgg; i++) {
+        Closure fn = aggregations[aggKeys[i]]
+        Object result = fn.call(group.column(aggKeys[i]))
         row.add(result)
-        if (!typesInferred && result != null) {
-          types.add(result.class)
+        if (aggTypes[i] == null && result != null) {
+          aggTypes[i] = result.class
         }
-      }
-      if (!typesInferred && row.size() == colNames.size()) {
-        typesInferred = true
       }
       rows.add(row)
     }
-    // Fill remaining types with Object if first group had all-null results
-    while (types.size() < colNames.size()) {
-      types.add(Object)
+    for (int i = 0; i < nAgg; i++) {
+      types.add(aggTypes[i] != null ? aggTypes[i] : Object)
     }
 
     Matrix.builder()

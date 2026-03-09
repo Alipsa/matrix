@@ -2308,6 +2308,13 @@ class MatrixTest {
 
     String csv = m.toCsvString(includeTypes: true)
     assertTrue(csv.contains('#index: country'))
+
+    // Round-trip: parse CSV back and verify index is restored
+    Matrix restored = Matrix.builder().csvString(csv).build()
+    assertTrue(restored.hasIndex())
+    assertEquals(['country'], restored.indexedColumns())
+    assertEquals(1, restored.lookup('USA').rowCount())
+    assertEquals(1, restored.lookup('UK').rowCount())
   }
 
   @Test

@@ -4026,9 +4026,9 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     int keyLen = keys.length
     if (keyLen == indexedColumnNames.size()) {
-      // Full key — direct map lookup
+      // Full key — direct map lookup; return defensive copy to protect internal state
       List<Integer> result = indexMap[keys as List<?>]
-      return result != null ? result : []
+      return result != null ? Collections.unmodifiableList(result) : []
     }
     // Partial key — scan keys that match the prefix, sort to preserve original row order
     List<?> prefix = keys as List<?>
