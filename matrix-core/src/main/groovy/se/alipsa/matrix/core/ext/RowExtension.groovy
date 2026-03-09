@@ -1,6 +1,7 @@
-package se.alipsa.matrix.core
+package se.alipsa.matrix.core.ext
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.Row
 
 /**
  * Overrides DefaultGroovyMethods so we can define our own getAt and putAt
