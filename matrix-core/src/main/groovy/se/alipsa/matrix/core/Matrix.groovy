@@ -3,10 +3,13 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.matrix.core.util.ClipboardUtil
+import se.alipsa.matrix.core.util.ComparisonHelper
+import se.alipsa.matrix.core.util.CsvHelper
 import se.alipsa.matrix.core.util.MatrixPrinter
 import se.alipsa.matrix.core.util.RowComparator
 import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
+import se.alipsa.matrix.core.util.TypeHelper
 
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -113,7 +116,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
 
     mName = name
-    def mTypes = sanitizeTypes(headerList, dataTypes)
+    def mTypes = TypeHelper.sanitizeTypes(headerList, dataTypes)
     def mHeaders = headerList.collect { String.valueOf(it) }
     if (mHeaders.size() != mTypes.size()) {
       throw new IllegalArgumentException("Number of elements in the headerList (${headerList}) differs from number of datatypes (${dataTypes})")
@@ -1334,20 +1337,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
 
-  /**
-   * Determine whether the supplied row contains any non-null values.
-   *
-   * @param row the row values to inspect
-   * @return true if at least one value is non-null, otherwise false
-   */
-  private static boolean containsValues(Iterable row) {
-    def strVal
-    for (def element in row) {
-      strVal = String.valueOf(element)
-      if (element != null && strVal != 'null' && !strVal.isBlank()) return true
-    }
-    return false
-  }
 
   /**
    * Return a copy of this matrix.
@@ -1646,45 +1635,31 @@ class Matrix implements Iterable<Row>, Cloneable {
 
     Matrix matrix = (Matrix) o
     if (!ignoreMatrixName && mName != matrix.mName) {
-      handleError("$message - Matrix.equals: names do not match", throwException)
+      ComparisonHelper.handleError("$message - Matrix.equals: names do not match", throwException)
       return false
     }
     if (mColumns.size() != matrix.columnCount()) {
-      handleError("$message - Matrix.equals: number of columns differ", throwException)
+      ComparisonHelper.handleError("$message - Matrix.equals: number of columns differ", throwException)
       return false
     }
     if (!ignoreColumnNames && columnNames() != matrix.columnNames()) {
-      handleError("$message - Matrix.equals: column names differ", throwException)
+      ComparisonHelper.handleError("$message - Matrix.equals: column names differ", throwException)
       return false
     }
     if (!ignoreTypes && types() != matrix.types()) {
-      handleError("$message - Matrix.equals: column types differ", throwException)
+      ComparisonHelper.handleError("$message - Matrix.equals: column types differ", throwException)
       return false
     }
     //if (mColumns != matrix.mColumns) return false
     List valueDiff = checkValues(matrix, allowedDiff, ignoreTypes)
     if (valueDiff.size() > 0) {
-      handleError("$message - Matrix.equals: value(s) differ: row ${valueDiff[0]}, column ${valueDiff[1]} expected ${valueDiff[2]} but was ${valueDiff[3]}", throwException)
+      ComparisonHelper.handleError("$message - Matrix.equals: value(s) differ: row ${valueDiff[0]}, column ${valueDiff[1]} expected ${valueDiff[2]} but was ${valueDiff[3]}", throwException)
       return false
     }
 
     return true
   }
 
-
-  /**
-   * Handle comparison errors for matrix equality checks.
-   *
-   * @param msg the error message
-   * @param throwException whether to throw an IllegalArgumentException instead of logging
-   */
-  private static void handleError(String msg, boolean throwException) {
-    if (throwException) {
-      throw new IllegalArgumentException(msg)
-    } else {
-      println(msg)
-    }
-  }
 
   private List checkValues(Matrix matrix, Double allowedDiff, boolean ignoreTypes = false) {
     List valueDiff = []
@@ -2624,7 +2599,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix with the empty rows removed
    */
   Matrix removeEmptyRows() {
-    removeRows(rowIndices { !containsValues(it as Iterable) })
+    removeRows(rowIndices { !ComparisonHelper.containsValues(it as Iterable) })
   }
 
   /**
@@ -2636,7 +2611,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     int i = 0
     List<Integer> columnsToRemove = []
     for (List col in mColumns) {
-      if (!containsValues(col)) {
+      if (!ComparisonHelper.containsValues(col)) {
         columnsToRemove.add(i as Integer)
       }
       i++
@@ -2749,24 +2724,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     return r.values() as List
   }
 
-  private static List<Class> sanitizeTypes(Collection<String> headerList, List<Class>... dataTypesOpt) {
-    List<Class> types = []
-    if (dataTypesOpt.length > 0) {
-      types = convertPrimitivesToWrapper(dataTypesOpt[0])
-      if (types.isEmpty()) {
-        types = createObjectTypes(headerList)
-      }
-      if (headerList.size() != types.size()) {
-        println "Headers (${headerList.size()} elements): $headerList"
-        println "Types:  (${types.size()} elements): ${types.collect { it.simpleName }}"
-        throw new IllegalArgumentException("Number of columns (${headerList.size()}) differs from number of datatypes provided (${types.size()})")
-      }
-    }
-    if (types.isEmpty()) {
-      types = createObjectTypes(headerList)
-    }
-    return types
-  }
+
 
   /**
    * Select columns by name and return a new Matrix containing only those columns.
@@ -3242,21 +3200,21 @@ class Matrix implements Iterable<Row>, Cloneable {
             .append('metadata.')
             .append(key)
             .append(': ')
-            .append(serializeMetadataValue(value))
+            .append(CsvHelper.serializeMetadataValue(value))
             .append(rowDelimiter)
         }
       }
       if (includeTypes) {
         sb.append(lineComment)
           .append('types: ')
-          .append(types().collect { typeLabel(it) }.join(','))
+          .append(types().collect { CsvHelper.typeLabel(it) }.join(','))
           .append(rowDelimiter)
       }
     }
 
     boolean wroteHeader = false
     if (includeHeader) {
-      sb.append(buildCsvRow(columnNames(), quoteString, delimiter, rowDelimiter, null, customQuoteString))
+      sb.append(CsvHelper.buildCsvRow(columnNames(), quoteString, delimiter, rowDelimiter, null, customQuoteString))
       wroteHeader = true
     }
 
@@ -3266,7 +3224,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       if (wroteHeader || i > 0 || includeHeader) {
         sb.append(rowDelimiter)
       }
-      sb.append(buildCsvRow(row(i), quoteString, delimiter, rowDelimiter, columnTypes, customQuoteString))
+      sb.append(CsvHelper.buildCsvRow(row(i), quoteString, delimiter, rowDelimiter, columnTypes, customQuoteString))
       wroteHeader = true
     }
     sb.toString()
@@ -3558,76 +3516,6 @@ class Matrix implements Iterable<Row>, Cloneable {
     alignment
   }
 
-  private static String buildCsvRow(List<?> values, String quoteString, String delimiter, String rowDelimiter, List<Class> types, boolean customQuoteString) {
-    StringBuilder rowBuilder = new StringBuilder()
-    int max = values.size()
-    for (int i = 0; i < max; i++) {
-      Class type = (types != null && i < types.size()) ? types[i] : null
-      rowBuilder.append(escapeCsvValue(values[i], quoteString, delimiter, rowDelimiter, type, customQuoteString))
-      if (i < max - 1) {
-        rowBuilder.append(delimiter)
-      }
-    }
-    rowBuilder.toString()
-  }
-
-  private static String escapeCsvValue(Object value, String quoteString, String delimiter, String rowDelimiter, Class type, boolean customQuoteString) {
-    String stringValue = ValueConverter.asString(value) ?: ''
-    if (quoteString == null || quoteString.isEmpty()) {
-      return stringValue
-    }
-
-    // Determine if we should quote based on type or special characters
-    boolean shouldQuote = false
-
-    // Quote string-typed values only when a custom quote string was specified
-    if (customQuoteString && type == String && stringValue && !stringValue.isBlank()) {
-      shouldQuote = true
-    }
-
-    // Always quote if the value contains special characters
-    if (stringValue.contains(quoteString) ||
-        stringValue.contains(delimiter) ||
-        stringValue.contains(rowDelimiter) ||
-        stringValue.contains('\n') ||
-        stringValue.contains('\r')) {
-      shouldQuote = true
-    }
-
-    if (!shouldQuote) {
-      return stringValue
-    }
-    String escaped = stringValue.replace(quoteString, quoteString + quoteString)
-    "${quoteString}${escaped}${quoteString}"
-  }
-
-  private static String typeLabel(Class type) {
-    if (type != null && type.isPrimitive()) {
-      return primitiveWrapper(type)
-    }
-    if (type == String || type == BigDecimal || type == BigInteger || type == Number || type == Object) {
-      return type.simpleName
-    }
-    String pkg = type.package?.name ?: ''
-    if (pkg.startsWith('java.lang') || pkg.startsWith('java.math') || pkg.startsWith('java.time') || pkg.startsWith('java.util') || pkg.startsWith('java.io') || pkg.startsWith('java.net')) {
-      return type.simpleName
-    }
-    type.name
-  }
-
-  private static String serializeMetadataValue(Object value) {
-    if (value == null) {
-      return ''
-    }
-    if (value instanceof LocalDate) {
-      return value.toString()
-    }
-    if (value instanceof LocalDateTime) {
-      return value.toString()
-    }
-    return value.toString()
-  }
-
   /**
    * Transpose the matrix using a column as the new header row.
    *
@@ -3646,7 +3534,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     } else {
       header = ListConverter.toStrings(column(columnNameAsHeader))
     }
-    return transpose(header, createObjectTypes(header), includeHeaderAsRow)
+    return transpose(header, TypeHelper.createObjectTypes(header), includeHeaderAsRow)
   }
 
   /**
@@ -3683,7 +3571,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix turned 90 degrees
    */
   Matrix transpose(List<String> header, boolean includeHeaderAsRow = false) {
-    return transpose(header, createObjectTypes(header), includeHeaderAsRow)
+    return transpose(header, TypeHelper.createObjectTypes(header), includeHeaderAsRow)
   }
 
   /**
@@ -3838,16 +3726,6 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Map<String, ?> getMetaData() {
     return metaData
-  }
-
-  /**
-   * Create a list of Object types sized to the supplied template.
-   *
-   * @param template a collection used only for sizing
-   * @return a list of Object classes matching the template size
-   */
-  private static List<Class> createObjectTypes(Collection template) {
-    [Object] * template.size() as List<Class>
   }
 
   /**

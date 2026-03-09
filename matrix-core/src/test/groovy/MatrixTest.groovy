@@ -2016,4 +2016,71 @@ class MatrixTest {
     assert [null] == table.lead(1).column('value') as List
     assert [null] == table.diff(1).column('value') as List
   }
+
+  @Test
+  void testAddRows() {
+    Matrix m = Matrix.builder().columns(x: [1], y: ['a']).build()
+    m.addRows([[2, 'b'], [3, 'c']])
+    assertEquals(3, m.rowCount())
+    assertIterableEquals([1, 2, 3], m.column('x'))
+    assertIterableEquals(['a', 'b', 'c'], m.column('y'))
+  }
+
+  @Test
+  void testLeftShiftAppendRow() {
+    Matrix m = Matrix.builder().columns(x: [1, 2], y: ['a', 'b']).build()
+    m << [3, 'c']
+    assertEquals(3, m.rowCount())
+    assertIterableEquals([1, 2, 3], m.column('x'))
+
+    Matrix n = Matrix.builder().columns(x: [4], y: ['d']).build()
+    m << n
+    assertEquals(4, m.rowCount())
+    assertIterableEquals([1, 2, 3, 4], m.column('x'))
+  }
+
+  @Test
+  void testAsType() {
+    Matrix m = Matrix.builder().columns(x: [1, 2], y: ['a', 'b']).build()
+
+    List list = m as List
+    assertNotNull(list)
+    assertEquals(2, list.size())
+
+    Grid grid = m as Grid
+    assertNotNull(grid)
+    assertEquals(2, grid.size())
+
+    Map map = m as Map
+    assertNotNull(map)
+    assertTrue(map.containsKey('x'))
+    assertTrue(map.containsKey('y'))
+  }
+
+  @Test
+  void testCloneEmpty() {
+    Matrix m = Matrix.builder().columns(x: [1, 2], y: ['a', 'b']).types(Integer, String).build()
+    Matrix empty = m.cloneEmpty()
+    assertEquals(0, empty.rowCount())
+    assertEquals(2, empty.columnCount())
+    assertIterableEquals(['x', 'y'], empty.columnNames())
+    assertIterableEquals([Integer, String], empty.types())
+  }
+
+  @Test
+  void testColumnIndices() {
+    Matrix m = Matrix.builder().columns(a: [1], b: [2], c: [3]).build()
+    assertIterableEquals([0, 2], m.columnIndices(['a', 'c']))
+    assertIterableEquals([1], m.columnIndices(['b']))
+  }
+
+  @Test
+  void testIterator() {
+    Matrix m = Matrix.builder().columns(x: [1, 2, 3]).build()
+    int count = 0
+    for (Row row : m) {
+      count++
+    }
+    assertEquals(3, count)
+  }
 }
