@@ -533,11 +533,11 @@ The Matrix, Row and Column defines short notation and operators for common opera
 |----------|-------------|--------------------------|-------------------------------------------|-----------------------------------------------------------|
 | +        | plus        | List                     | immutable operation to add a row          | Matrix m2 = m + ['Foo',3,4,5,6]                           |
 | +        | plus        | Matrix                   | immutable operation to add all rows       | Matrix m2 = m + m1                                        |
-| &        | and         | List                     | mutable operation to add a row            | m & ['Foo',3,4,5,6]                                       |
-| &        | and         | Matrix                   | mutable operation to add all rows         | m & m1                                                    |
-| <<       | leftShift   | Column                   | add column to the matrix                  | m << n.salary                                             |
-| <<       | leftShift   | Map                      | add column to the matrix                  | m << [place: [1,2,3]]                                     |
-| <<       | leftShift   | Matrix                   | add add columns to the matrix             | m << n                                                    |
+| <<       | leftShift   | List                     | mutable operation to add a row            | m << ['Foo',3,4,5,6]                                      |
+| <<       | leftShift   | Matrix                   | mutable operation to add all rows         | m << m1                                                   |
+| &        | and         | Column                   | add column to the matrix                  | m & n.salary                                              |
+| &        | and         | Map                      | add column to the matrix                  | m & [place: [1,2,3]]                                      |
+| &        | and         | Matrix                   | add columns to the matrix                 | m & n                                                     |
 | .        | getProperty | String                   | return the column                         | Column s = m.salary                                       |
 | . =      | setProperty | String                   | add or replace the column                 | m.salary = [50000, 60000, 55000]                          |
 | []       | getAt       | String                   | return the column                         | Column c = m['salary']                                    |

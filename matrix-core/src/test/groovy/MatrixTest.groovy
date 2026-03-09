@@ -92,8 +92,8 @@ class MatrixTest {
     def m2 = m + ['Foo', 3, 4, 5, 6]
     assertIterableEquals(['Foo', 3, 4, 5, 6], m2.row(m2.lastRowIndex()))
 
-    // test add row mutable
-    m & [3, 4, 5, 6, 7]
+    // test add row mutable with <<
+    m << [3, 4, 5, 6, 7]
     assertIterableEquals([3, 4, 5, 6, 7], m.row(m.lastRowIndex()))
 
     Matrix n = Matrix.builder().columns(
@@ -103,7 +103,7 @@ class MatrixTest {
         Y4: [16, 17],
         Y5: [18, 19]
     ).build()
-    m & n
+    m << n
     assertIterableEquals([11, 13, 15, 17, 19], m.row(m.lastRowIndex()))
   }
 
@@ -575,18 +575,15 @@ class MatrixTest {
     assertEquals(YearMonth.of(2015, 3), table3[4, 0])
 
     Matrix table5 = empData.clone()
-    table5 << [vacation: [10, 15, 12, 20, 30]]
+    table5 & [vacation: [10, 15, 12, 20, 30]]
     assertIterableEquals([10, 15, 12, 20, 30], table5.vacation)
-
-    //table5.leftShift(table5['vacation'], 2)
-    //table5 << (table5['vacation'], 2)
 
     def t5 = Matrix.builder()
         .columnNames('rv')
         .types(Integer)
         .columns([[5, 5, 1, 2, 22]])
         .build()
-    table5 << t5
+    table5 & t5
     assertIterableEquals([5, 5, 1, 2, 22], table5.rv)
   }
 
@@ -637,7 +634,7 @@ class MatrixTest {
 
     def salaryPerYearMonth = counts
         .orderBy("yearMonth", true)
-        << sums.salary
+        & sums.salary
 
     assertEquals(asYearMonth("2019-05"), salaryPerYearMonth[0, 0], salaryPerYearMonth.content())
     assertEquals(611.0 + 729.0, salaryPerYearMonth[0, 2], salaryPerYearMonth.content())
@@ -646,11 +643,11 @@ class MatrixTest {
     assertEquals(1, salaryPerYearMonth[1, 1], salaryPerYearMonth.content())
 
     Matrix m = Matrix.builder().data(id: [1, 2, 3]).build()
-    m << [salary: [10000, 9979, 8980]]
+    m & [salary: [10000, 9979, 8980]]
     assertIterableEquals([10000, 9979, 8980], m.salary)
 
     Matrix n = Matrix.builder().data(years: [2, 4, 3], vacation: [12, 20, 30]).build()
-    m << n
+    m & n
     assertEquals(4, m.columnCount())
     assertIterableEquals(['id', 'salary', 'years', 'vacation'], m.columnNames())
 
@@ -661,7 +658,7 @@ class MatrixTest {
     assertEquals(['jabba', 'dabba', 'doo'], m.column('foo'))
 
     def e = empData.clone()
-    e << empData2[0..1]
+    e & empData2[0..1]
     e.addColumns(empData3, 0..1)
     def expected = empData.columnNames() + empData2.columnNames()[0..1] + empData3.columnNames()[0..1]
     assertIterableEquals(expected, e.columnNames())
@@ -673,6 +670,13 @@ class MatrixTest {
     assertIterableEquals(empData.columnNames() + ['foo', 'bar'], a.columnNames())
     assertIterableEquals(empData2.foo, a.foo)
     assertIterableEquals(empData2.bar, a.bar)
+
+    // Test & with smaller matrix pads with nulls (not element-wise arithmetic)
+    Matrix base = Matrix.builder().data(x: [1, 2, 3]).build()
+    Matrix smaller = Matrix.builder().data(y: [10, 20]).build()
+    base & smaller
+    assertEquals(2, base.columnCount())
+    assertIterableEquals([10, 20, null], base.column('y'))
   }
 
   @Test
