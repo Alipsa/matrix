@@ -244,8 +244,8 @@ will output
 - Class<?> type(int i): as above
 - List<Class<?>> types(List<String> columnNames): as above but for a list of columns
 - List<Class<?>> types(): as above but for all variables 
-- Matrix renameColumn(int columnIndex, String after): Rename the specified column
-- Matrix renameColumn(String before, String after): as above
+- Matrix rename(int columnIndex, String after): Rename the specified column
+- Matrix rename(String before, String after): as above
 - String columnName(int index): the variable name for the specified column
 - void columnNames(List<String> names): set all variable names
 - List<String> columnNames(): gives you all variable names

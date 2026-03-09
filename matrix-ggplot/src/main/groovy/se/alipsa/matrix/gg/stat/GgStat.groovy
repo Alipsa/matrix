@@ -210,9 +210,9 @@ class GgStat {
     Matrix freq = Stat.frequency(data[xCol])
     // Rename columns to match ggplot2 computed variables:
     // "Value" -> original x column name, "Frequency" -> "count", "Percent" -> "percent"
-    return freq.renameColumn(Stat.FREQUENCY_VALUE, xCol)
-               .renameColumn(Stat.FREQUENCY_FREQUENCY, 'count')
-               .renameColumn(Stat.FREQUENCY_PERCENT, 'percent')
+    return freq.rename(Stat.FREQUENCY_VALUE, xCol)
+               .rename(Stat.FREQUENCY_FREQUENCY, 'count')
+               .rename(Stat.FREQUENCY_PERCENT, 'percent')
   }
 
   /**
