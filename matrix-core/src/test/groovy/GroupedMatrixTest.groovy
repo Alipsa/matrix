@@ -195,6 +195,23 @@ class GroupedMatrixTest {
   }
 
   @Test
+  void testConstructorDefensivelyCopiesMutableKeys() {
+    def m = Matrix.builder().data(
+        dept: ['IT'],
+        salary: [100]
+    ).types(String, Integer).build()
+    List<String> mutableKey = ['IT']
+    Map<List<?>, Matrix> groups = [(mutableKey): m]
+
+    GroupedMatrix grouped = new GroupedMatrix(m, ['dept'], groups)
+    mutableKey[0] = 'OPS'
+
+    assertNotNull(grouped.get('IT'))
+    assertNull(grouped.get('OPS'))
+    assertThrows(UnsupportedOperationException) { (grouped.keys()[0] as List).add('extra') }
+  }
+
+  @Test
   void testSource() {
     def m = Matrix.builder().data(
         dept: ['IT', 'OPS'],

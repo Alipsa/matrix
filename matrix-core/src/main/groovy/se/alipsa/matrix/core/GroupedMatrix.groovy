@@ -33,7 +33,12 @@ class GroupedMatrix {
   GroupedMatrix(Matrix source, List<String> groupColumns, Map<List<?>, Matrix> groups) {
     this.source = source
     this.groupColumns = Collections.unmodifiableList(new ArrayList<>(groupColumns))
-    this.groups = Collections.unmodifiableMap(new LinkedHashMap<>(groups))
+    Map<List<?>, Matrix> normalizedGroups = new LinkedHashMap<>()
+    for (Map.Entry<List<?>, Matrix> entry : groups.entrySet()) {
+      List<?> normalizedKey = Collections.unmodifiableList(new ArrayList<>(entry.key))
+      normalizedGroups[normalizedKey] = entry.value
+    }
+    this.groups = Collections.unmodifiableMap(normalizedGroups)
   }
 
   /**
