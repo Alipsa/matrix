@@ -537,6 +537,22 @@ class MatrixTest {
   }
 
   @Test
+  void testApplyRowsInvalidatesIndex() {
+    def table = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        sales: [100, 200, 300]
+    ).types(String, Integer).build()
+    table.createIndex('country')
+
+    table.applyRows('country') { Row row ->
+      (row.sales as int) >= 200 ? 'EMEA' : row.country
+    }
+
+    assertEquals([0], table.lookupIndices('USA'))
+    assertEquals([1, 2], table.lookupIndices('EMEA'))
+  }
+
+  @Test
   void testAppendColumnValue() {
     String name = 'numbers'
     List<String> header = ['foo', 'bar']

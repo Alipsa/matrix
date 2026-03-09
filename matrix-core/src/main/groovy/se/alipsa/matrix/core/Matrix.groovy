@@ -3,6 +3,7 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.matrix.core.util.ClipboardUtil
+import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.ComparisonHelper
 import se.alipsa.matrix.core.util.CsvHelper
 import se.alipsa.matrix.core.util.MatrixPrinter
@@ -554,6 +555,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     this.rows().each { row ->
       row[columnName] = function.call(row)
     }
+    invalidateIndex()
     this
   }
 
@@ -3904,12 +3906,12 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
     Map<List<?>, List<Integer>> map = new LinkedHashMap<>()
+    List<Object> probe = CompoundKeyUtil.createProbe(nLevels)
     for (int r = 0; r < nRows; r++) {
-      List<Object> key = new ArrayList<>(nLevels)
       for (int i = 0; i < nLevels; i++) {
-        key.add(mColumns[colIndices[i]][r])
+        probe.set(i, mColumns[colIndices[i]][r])
       }
-      map.computeIfAbsent(Collections.unmodifiableList(key), k -> []).add(r)
+      CompoundKeyUtil.getOrCreateRowBucket(map, probe).add(r)
     }
     indexMap = map
     indexDirty = false

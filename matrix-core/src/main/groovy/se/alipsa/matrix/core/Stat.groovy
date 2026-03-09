@@ -1,6 +1,7 @@
 package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
@@ -319,13 +320,12 @@ class Stat {
         }
         // Build groups by compound key (keys are immutable to protect map integrity)
         Map<List<?>, List<Integer>> keyToRows = new LinkedHashMap<>()
+        List<Object> probe = CompoundKeyUtil.createProbe(nLevels)
         for (int r = 0; r < nRows; r++) {
-            List<Object> key = new ArrayList<>(nLevels)
             for (int i = 0; i < nLevels; i++) {
-                key.add(cachedColumns[i][r])
+                probe.set(i, cachedColumns[i][r])
             }
-            List<?> immutableKey = Collections.unmodifiableList(key)
-            keyToRows.computeIfAbsent(immutableKey, k -> []).add(r)
+            CompoundKeyUtil.getOrCreateRowBucket(keyToRows, probe).add(r)
         }
         // Build sub-matrices
         Map<List<?>, Matrix> groups = new LinkedHashMap<>()
