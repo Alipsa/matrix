@@ -1337,8 +1337,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Determine whether the supplied row contains any non-null values.
    *
-   * Note: this helper is internal-only and will become private in v3.7.0.
-   *
    * @param row the row values to inspect
    * @return true if at least one value is non-null, otherwise false
    */
@@ -1676,8 +1674,6 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**
    * Handle comparison errors for matrix equality checks.
-   *
-   * Note: this helper is internal-only and will become private in v3.7.0.
    *
    * @param msg the error message
    * @param throwException whether to throw an IllegalArgumentException instead of logging
@@ -3846,8 +3842,6 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   /**
    * Create a list of Object types sized to the supplied template.
-   *
-   * Note: This method is internal and will be made private in v3.7.0.
    *
    * @param template a collection used only for sizing
    * @return a list of Object classes matching the template size
