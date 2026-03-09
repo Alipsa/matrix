@@ -2373,6 +2373,26 @@ class MatrixTest {
   }
 
   @Test
+  void testDropDuplicateColumnIndicesThrowsWithoutMutation() {
+    def m = Matrix.builder().data(
+        country: ['USA', 'UK', 'USA'],
+        quarter: ['Q1', 'Q2', 'Q3'],
+        sales: [100, 200, 300]
+    ).types(String, String, Integer).build()
+
+    m.createIndex('country')
+
+    assertThrows(IllegalArgumentException) {
+      m.drop([1, 1])
+    }
+
+    assertTrue(m.hasIndex())
+    assertEquals(['country'], m.indexedColumns())
+    assertEquals(['country', 'quarter', 'sales'], m.columnNames())
+    assertEquals([0, 2], m.lookupIndices('USA'))
+  }
+
+  @Test
   void testSelectColumnsPreservesIndex() {
     def m = Matrix.builder().data(
         country: ['USA', 'UK'],

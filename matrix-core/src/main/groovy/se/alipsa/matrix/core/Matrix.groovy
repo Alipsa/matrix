@@ -1607,9 +1607,13 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix drop(List<Integer> columnIndices) {
     int columnCount = mColumns.size()
+    Set<Integer> seen = new LinkedHashSet<>()
     for (int colIdx : columnIndices) {
       if (colIdx < 0 || colIdx >= columnCount) {
         throw new IndexOutOfBoundsException("Column index ${colIdx} out of range for matrix with ${columnCount} columns")
+      }
+      if (!seen.add(colIdx)) {
+        throw new IllegalArgumentException("Duplicate column index ${colIdx} in drop(${columnIndices})")
       }
     }
     // Check if any indexed column is being dropped
