@@ -643,4 +643,73 @@ class MatrixParquetTest {
     assert parquetBytes != null
     assert parquetBytes.length > 0
   }
+
+  @Test
+  void testIndexPreservedInParquetFile() {
+    def data = Matrix.builder('IndexTest').columns(
+        country: ['USA', 'USA', 'UK', 'UK'],
+        quarter: ['Q1', 'Q2', 'Q1', 'Q2'],
+        sales: [100, 200, 150, 250]
+    ).types([String, String, Integer]).build()
+
+    data.createIndex('country', 'quarter')
+    assert data.hasIndex()
+    assertEquals(['country', 'quarter'], data.indexedColumns())
+
+    File dir = new File('build/indexTest')
+    if (dir.exists()) {
+      if (dir.isDirectory()) {
+        dir.listFiles().each { it.delete() }
+      }
+      dir.delete()
+    }
+    dir.mkdirs()
+
+    File file = MatrixParquetWriter.write(data, dir)
+    Matrix result = MatrixParquetReader.read(file)
+
+    assertTrue(result.hasIndex(), 'Index should be preserved after Parquet roundtrip')
+    assertEquals(['country', 'quarter'], result.indexedColumns())
+
+    // Verify the index is functional
+    Matrix usaQ1 = result.lookup('USA', 'Q1')
+    assertEquals(1, usaQ1.rowCount())
+    assertEquals(100, usaQ1[0, 'sales'])
+  }
+
+  @Test
+  void testIndexPreservedInParquetBytes() {
+    def data = Matrix.builder('IndexBytesTest').columns(
+        city: ['Stockholm', 'London', 'Stockholm'],
+        year: [2023, 2023, 2024],
+        population: [1000000, 9000000, 1010000]
+    ).types([String, Integer, Integer]).build()
+
+    data.createIndex('city')
+
+    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, true)
+    Matrix result = MatrixParquetReader.read(parquetBytes)
+
+    assertTrue(result.hasIndex(), 'Index should be preserved after byte array roundtrip')
+    assertEquals(['city'], result.indexedColumns())
+
+    Matrix stockholm = result.lookup('Stockholm')
+    assertEquals(2, stockholm.rowCount())
+  }
+
+  @Test
+  void testNoIndexNotAffected() {
+    def data = Matrix.builder('NoIndexTest').columns(
+        name: ['Alice', 'Bob'],
+        age: [30, 25]
+    ).types([String, Integer]).build()
+
+    assert !data.hasIndex()
+
+    byte[] parquetBytes = MatrixParquetWriter.writeBytes(data, true)
+    Matrix result = MatrixParquetReader.read(parquetBytes)
+
+    assert !result.hasIndex()
+    assertEquals([], result.indexedColumns())
+  }
 }
