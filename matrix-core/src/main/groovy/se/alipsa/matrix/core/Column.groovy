@@ -235,10 +235,11 @@ class Column extends ArrayList {
    * </pre>
    *
    * @param transform a closure that receives this column and returns any value
+   * @param <R> the return type inferred from the closure
    * @return the result of {@code transform.call(this)}
    */
   @CompileDynamic
-  Object pipe(Closure transform) {
+  public <R> R pipe(Closure<R> transform) {
     transform.call(this)
   }
 
