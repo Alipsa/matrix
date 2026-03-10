@@ -89,6 +89,9 @@ class MatrixParquetReader {
   /** Metadata key for storing Matrix column types in Parquet file */
   static final String METADATA_COLUMN_TYPES = "matrix.columnTypes"
 
+  /** Metadata key for storing Matrix index column names in Parquet file */
+  static final String METADATA_INDEX_COLUMNS = "matrix.indexColumns"
+
   /** Parquet schema field name for repeated list entries */
   private static final String FIELD_LIST = 'list'
 
@@ -562,8 +565,8 @@ class MatrixParquetReader {
     def footer = ParquetFileReader.readFooter(conf, path)
     def keyValueMetaData = footer.getFileMetaData().getKeyValueMetaData()
     def typeString = keyValueMetaData.get(METADATA_COLUMN_TYPES)
+    def indexString = keyValueMetaData.get(METADATA_INDEX_COLUMNS)
 
-    //println("typeString: $typeString")
     List<Class> fieldTypes
     if (typeString != null) {
       fieldTypes = parseTypeString(typeString)
@@ -585,10 +588,11 @@ class MatrixParquetReader {
       fieldTypes = extractFieldTypes(schema)
     }
     if (row == null) {
-      return Matrix.builder(matrixName)
+      Matrix m = Matrix.builder(matrixName)
           .columnNames(fieldNames)
           .types(fieldTypes)
           .build()
+      return restoreIndex(m, indexString)
     }
 
     def builder = Matrix.builder(matrixName)
@@ -606,7 +610,23 @@ class MatrixParquetReader {
       builder.addRow(rowData as Object[])
       row = reader.read()
     }
-    return builder.build()
+    Matrix m = builder.build()
+    restoreIndex(m, indexString)
+  }
+
+  /**
+   * Restores the index on a Matrix from the serialized index column names string.
+   *
+   * @param matrix the matrix to restore the index on
+   * @param indexString comma-separated index column names, or null if no index
+   * @return the matrix with index restored (or unchanged if no index metadata)
+   */
+  private static Matrix restoreIndex(Matrix matrix, String indexString) {
+    if (indexString != null && !indexString.trim().isEmpty()) {
+      String[] indexColumns = indexString.split(',').collect { it.trim() } as String[]
+      matrix.createIndex(indexColumns)
+    }
+    matrix
   }
 
   private static Matrix readFromInputStream(InputStream is, String matrixName, ZoneId zoneId) {

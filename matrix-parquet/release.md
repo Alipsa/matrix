@@ -1,8 +1,9 @@
 # Matrix-parquet Release History
 
-## v0.4.1, in progress
+## v0.5.0, in progress
 - org.apache.hadoop:hadoop-common 3.4.2 -> 3.4.3
 - org.apache.hadoop:hadoop-mapreduce-client-core 3.4.2 -> 3.4.3
+- Add indexing support
 
 ## v0.4.0, 2026-01-31
 - remove parquet-carpet dependency (MatrixCarpetIO) - now using native Parquet implementation

@@ -88,6 +88,9 @@ class MatrixParquetWriter {
   /** Metadata key for storing Matrix column types in Parquet file */
   static final String METADATA_COLUMN_TYPES = "matrix.columnTypes"
 
+  /** Metadata key for storing Matrix index column names in Parquet file */
+  static final String METADATA_INDEX_COLUMNS = "matrix.indexColumns"
+
   /** Parquet schema field name for list elements */
   private static final String FIELD_ELEMENT = 'element'
 
@@ -334,6 +337,9 @@ class MatrixParquetWriter {
     def conf = new Configuration()
     def extraMeta = new HashMap<String, String>()
     extraMeta.put(METADATA_COLUMN_TYPES, matrix.types().collect { it.name }.join(','))
+    if (matrix.hasIndex()) {
+      extraMeta.put(METADATA_INDEX_COLUMNS, matrix.indexedColumns().join(','))
+    }
 
     def writer = ExampleParquetWriter.builder(new Path(file.toURI()))
         .withConf(conf)
@@ -384,6 +390,9 @@ class MatrixParquetWriter {
     def conf = new Configuration()
     def extraMeta = new HashMap<String, String>()
     extraMeta.put(METADATA_COLUMN_TYPES, matrix.types().collect { it.name }.join(','))
+    if (matrix.hasIndex()) {
+      extraMeta.put(METADATA_INDEX_COLUMNS, matrix.indexedColumns().join(','))
+    }
 
     InMemoryOutputFile outputFile = new InMemoryOutputFile()
 
