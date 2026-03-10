@@ -803,7 +803,6 @@ class MatrixBuilder {
 
 
   MatrixBuilder types(List<Class> types) {
-    clearPendingIndexColumns()
     this.dataTypes = ClassUtils.convertPrimitivesToWrapper(types)
     this
   }
@@ -816,7 +815,6 @@ class MatrixBuilder {
   @SafeVarargs
   final MatrixBuilder types(List<Class>... types) {
     if (types.length > 0) {
-      clearPendingIndexColumns()
       this.dataTypes = types[0]
     }
     this

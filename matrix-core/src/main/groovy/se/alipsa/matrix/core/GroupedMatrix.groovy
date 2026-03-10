@@ -243,9 +243,12 @@ class GroupedMatrix {
   }
 
   /**
-   * Convert to a backward-compatible map with compound list keys.
+   * Convert to a map with compound list keys.
    *
-   * @return a map from compound key (as List) to sub-matrix
+   * <p>Note: this is <em>not</em> the legacy format. For backward compatibility with
+   * the pre-3.7.0 {@code Map<String, Matrix>} return type, use {@link #toStringKeyMap()}.</p>
+   *
+   * @return an unmodifiable map from compound key (as List) to sub-matrix
    */
   Map<List<?>, Matrix> toMap() {
     Collections.unmodifiableMap(groups)
