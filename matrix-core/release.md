@@ -20,6 +20,38 @@
   - Added Matrix.toClipboard(...)
   - Added MatrixBuilder.clipboard(...)
 
+- Time-series and rolling-window operations
+  - Added `Matrix.rolling(...)` and `Column.rolling(...)`
+  - Built-in rolling aggregations: `mean()`, `sum()`, `min()`, `max()`, `sd()`
+  - Added custom rolling `apply {}` support
+  - Matrix rolling supports `by:` ordering while restoring original row order
+
+- Cumulative and shift-style column operations
+  - Added `cumsum()`, `cumprod()`, `cummin()`, `cummax()` on `Column`
+  - Added matching `Matrix` convenience wrappers that apply per column
+  - Added `diff()`, `shift()`, `lag()`, and `lead()` on `Column` and `Matrix`
+
+- Filtering and pipeline convenience
+  - Added `Matrix.filter(Closure)` as an alias for `subset(Closure)`
+  - Added `pipe(Closure)` to `Matrix`, `Column`, and `GroupedMatrix`
+  - Added Groovy `|` pipe operator support via extension methods
+
+- Database-style indexing and grouped results
+  - Added `createIndex(...)`, `resetIndex()`, `hasIndex()`, `indexedColumns()`
+  - Added `lookup(...)` and `lookupIndices(...)` with lazy index rebuilds after mutation
+  - CSV round-trip now preserves active indexes via `#index:` metadata
+  - Added `GroupedMatrix` as the structured result type for `Stat.groupBy(...)`
+  - Added `Matrix.groupBy(...)` convenience overloads
+  - `GroupedMatrix` provides `get(...)`, `keys()`, `level(...)`, `each(...)`, `agg(...)`, `toMap()`, and `toStringKeyMap()`
+
+- API alignment and cleanup
+  - *Breaking change:* `Matrix <<` now appends rows and `Matrix &` appends columns
+  - *Breaking change:* `Stat.groupBy(...)` now returns `GroupedMatrix` instead of `Map<String, Matrix>`
+  - Removed deprecated `renameColumn(...)` overloads in favor of `rename(...)`
+  - Strengthened `Grid` validation to reject mixed element types in typed list-of-lists construction
+  - Moved `RowExtension` and `ColumnExtension` to `se.alipsa.matrix.core.ext`
+  - Internal helper methods such as `createObjectTypes`, `containsValues`, and `handleError` are no longer public API
+
 ### 3.6.0, 2026-01-30
 - Matrix.getAt() now returns Column instead of List (Column extends ArrayList)
 - deprecate renameColumn and dropColumns in favor of rename and drop

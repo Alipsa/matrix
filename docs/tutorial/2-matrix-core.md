@@ -256,6 +256,14 @@ def subSet = table.subset('place', { it > 1 })
 assert table.rows(1..2) == subSet.grid().rowList
 ```
 
+There is also a `filter {}` alias with the same behavior, which can read more naturally
+for dataframe-style code:
+
+```groovy
+def highPlaces = table.filter { it.place > 1 }
+assert table.rows(1..2) == highPlaces.grid().rowList
+```
+
 ## Performing Calculations
 
 ### Using the Apply Method
@@ -340,6 +348,84 @@ def mean = mean(table.v0)
 def median = median(table.v0)
 def sd = sd(table.v0)
 def variance = variance(table.v0)
+```
+
+### Rolling, Cumulative, and Shift Operations
+
+Matrix 3.7.0 adds time-series style helpers directly on `Column` and `Matrix`.
+
+```groovy
+import se.alipsa.matrix.core.*
+
+def prices = Matrix.builder('prices').data(
+    day: [1, 2, 3, 4, 5],
+    close: [100, 105, 102, 108, 110],
+    volume: [10, 12, 11, 15, 18]
+).types(Integer, Integer, Integer).build()
+
+// Rolling windows on a single column
+def movingAverage = prices.close.rolling(3).mean()  // [null, null, 102.33..., 105, 106.66...]
+
+// Rolling windows across a matrix
+def rollingMean = prices.rolling(window: 2).mean()
+
+// Cumulative operations
+assert prices.volume.cumsum() == [10, 22, 33, 48, 66]
+assert prices.cummax().close == [100, 105, 105, 108, 110]
+
+// Shift-style helpers
+assert prices.close.lag() == [null, 100, 105, 102, 108]
+assert prices.close.lead() == [105, 102, 108, 110, null]
+assert prices.close.diff() == [null, 5, -3, 6, 2]
+```
+
+Rolling windows can also be centered, require fewer observations via `minPeriods`, and for
+matrices can be evaluated in a sorted order via `by:` while preserving original row order.
+
+### Indexing and Grouped Access
+
+Matrix now supports database-style indexes on ordinary data columns:
+
+```groovy
+def sales = Matrix.builder().data(
+    country: ['USA', 'USA', 'UK', 'UK', 'USA'],
+    quarter: ['Q1', 'Q2', 'Q1', 'Q2', 'Q1'],
+    revenue: [100, 200, 150, 250, 300]
+).types(String, String, Integer).build()
+
+sales.createIndex('country', 'quarter')
+
+assert sales.hasIndex()
+assert sales.indexedColumns() == ['country', 'quarter']
+assert sales.lookup('USA', 'Q1').revenue == [100, 300]
+assert sales.lookup('USA').rowCount() == 3
+```
+
+Grouping now returns a `GroupedMatrix` instead of a plain map:
+
+```groovy
+def grouped = sales.groupBy('country')
+
+assert grouped.groupCount() == 2
+assert grouped.get('USA').rowCount() == 3
+assert grouped.level('country') == ['USA', 'UK'] as Set
+
+def totals = grouped.agg(revenue: { Stat.sum(it) })
+println totals.content()
+```
+
+If you need the pre-3.7.0 map style for older code, use `grouped.toStringKeyMap()`.
+
+### Pipe-Style Chaining
+
+For left-to-right transformation pipelines, use `pipe {}` or the Groovy `|` operator:
+
+```groovy
+def result = prices
+    .pipe { it.filter { row -> row.close >= 102 } }
+    .pipe { it.orderBy('close', true) }
+
+def result2 = prices | { it.selectColumns('close', 'volume') } | { it.cumsum() }
 ```
 
 ## Using Groovy Integrated Queries (Ginq)

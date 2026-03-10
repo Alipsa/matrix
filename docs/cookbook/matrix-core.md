@@ -538,6 +538,7 @@ The Matrix, Row and Column defines short notation and operators for common opera
 | &        | and         | Column                   | add column to the matrix                  | m & n.salary                                              |
 | &        | and         | Map                      | add column to the matrix                  | m & [place: [1,2,3]]                                      |
 | &        | and         | Matrix                   | add columns to the matrix                 | m & n                                                     |
+| \|       | or          | Closure                  | pipe the matrix into a closure            | m \| { it.selectColumns('salary') } \| { it.orderBy('salary') } |
 | .        | getProperty | String                   | return the column                         | Column s = m.salary                                       |
 | . =      | setProperty | String                   | add or replace the column                 | m.salary = [50000, 60000, 55000]                          |
 | []       | getAt       | String                   | return the column                         | Column c = m['salary']                                    |
@@ -578,8 +579,8 @@ Given that matrix.col1 contains the value [1,2,3,4]
 | **       | power       | Number    | power of the value                   | assert matrix.col1 ** 2 == [1, 4, 9, 16]              |
 | <<       | leftShift   | List      | add the values                       | assert matrix.col1 << [5,6] == [1, 2, 3, 4, 5, 6]     |
 | <<       | leftShift   | Object    | add the value to the column          | assert matrix.col1 << 5 == [1, 2, 3, 4, 5]            |
-
-
+| \|       | or          | Closure    | pipe the column into a closure       | assert (matrix.col1 \| { it.removeNulls() } \| { it.cumsum() }) == [1, 3, 6, 10] |
+| \|       | or          | Collection | set union with another collection    | assert (matrix.col1 \| [3, 5, 6]) == [1, 2, 3, 4, 5, 6] as Set |
 
 
 ### Row
@@ -600,6 +601,50 @@ Given that matrix.col1 contains the value [1,2,3,4]
 | []       | putAt       | Number              | update the value                                              | r[1] = 50000                           |
 
 Other operations are just like the groovy default behavior
+
+## Rolling, cumulative, and shift operations
+
+Time-series style helpers are available both on individual columns and entire matrices.
+
+```groovy
+def prices = Matrix.builder().data(
+    day: [1, 2, 3, 4, 5],
+    close: [100, 105, 102, 108, 110],
+    volume: [10, 12, 11, 15, 18]
+).types(Integer, Integer, Integer).build()
+
+// Rolling windows
+def rollingClose = prices.close.rolling(window: 3, minPeriods: 2).mean()
+def rollingMatrix = prices.rolling(window: 2).sum()
+
+// Cumulative operations
+assert prices.volume.cumsum() == [10, 22, 33, 48, 66]
+assert prices.cummax().close == [100, 105, 105, 108, 110]
+
+// Shift / lag / lead / diff
+assert prices.close.shift(1) == [null, 100, 105, 102, 108]
+assert prices.close.lag() == [null, 100, 105, 102, 108]
+assert prices.close.lead() == [105, 102, 108, 110, null]
+assert prices.close.diff() == [null, 5, -3, 6, 2]
+```
+
+Use `center: true` for centered windows, and for matrix rolling you can supply `by: 'dateColumn'`
+to evaluate windows in sorted order while still returning results in the original row order.
+
+## Filter alias and pipelines
+
+`subset {}` remains the core row-filtering API, and `filter {}` is now an alias with the same behavior.
+For left-to-right transformations, use `pipe {}` or the `|` operator.
+
+```groovy
+def filtered = prices.filter { it.close >= 102 }
+
+def report = prices
+    .pipe { it.filter { row -> row.volume >= 11 } }
+    .pipe { it.selectColumns('close', 'volume') }
+
+def report2 = prices | { it.selectColumns('close') } | { it.cumsum() }
+```
 
 ## Indexing and Lookup
 
@@ -663,6 +708,9 @@ Matrix totals = grouped.agg(salary: { Stat.sum(it) })
 
 // Aggregate all non-group columns with a single closure
 Matrix means = grouped.agg { Stat.mean(it) }
+
+// Pipe into a grouped aggregation
+Matrix totals2 = grouped | { it.agg(salary: { Stat.sum(it) }) }
 
 // Backward-compatible string key map
 Map<String, Matrix> legacy = grouped.toStringKeyMap()
