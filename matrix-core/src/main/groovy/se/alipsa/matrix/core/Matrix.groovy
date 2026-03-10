@@ -1,5 +1,6 @@
 package se.alipsa.matrix.core
 
+import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.matrix.core.util.ClipboardUtil
@@ -395,6 +396,38 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
     this
+  }
+
+  /**
+   * Passes this matrix to the given transform closure and returns its result.
+   *
+   * <p>Useful for building readable left-to-right pipelines:</p>
+   * <pre>{@code
+   * matrix.pipe { it.selectColumns('a', 'b') }
+   *       .pipe { it.orderBy('a') }
+   * }</pre>
+   *
+   * @param transform a closure that receives this matrix and returns any value
+   * @return the result of {@code transform.call(this)}
+   */
+  @CompileDynamic
+  Object pipe(Closure transform) {
+    transform.call(this)
+  }
+
+  /**
+   * Operator overload for {@code |} — syntactic sugar for {@link #pipe(Closure)}.
+   *
+   * <pre>{@code
+   * matrix | { it.selectColumns('a') } | { it.orderBy('a') }
+   * }</pre>
+   *
+   * @param transform a closure that receives this matrix and returns any value
+   * @return the result of {@code transform.call(this)}
+   */
+  @CompileDynamic
+  Object or(Closure transform) {
+    pipe(transform)
   }
 
   /**
