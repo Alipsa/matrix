@@ -49,15 +49,17 @@ class PipeExtension {
 
   /**
    * Set-union operator for {@link Column} with a {@code Collection} argument.
-   * Preserves the default {@code |} behaviour so that {@code column | [3, 4]}
-   * returns the set union.
+   * Reproduces the standard Groovy {@code |} set-union semantics: returns
+   * a new {@code Set} containing all unique elements from both operands.
    *
    * @param self the column instance
    * @param right the collection to union with
-   * @return a new collection containing all unique elements from both operands
+   * @return a new set containing the union of both collections
    */
-  static Collection or(Column self, Collection right) {
-    (self as Set) + (right as Set)
+  static Set or(Column self, Collection right) {
+    Set result = new LinkedHashSet(self)
+    result.addAll(right)
+    result
   }
 
   /**
