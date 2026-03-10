@@ -225,6 +225,24 @@ class Column extends ArrayList {
     result
   }
 
+  /**
+   * Passes this column to the given transform closure and returns its result.
+   *
+   * <p>Useful for building readable left-to-right pipelines:</p>
+   * <pre>
+   * column.pipe { it.removeNulls() }
+   *       .pipe { it.cumsum() }
+   * </pre>
+   *
+   * @param transform a closure that receives this column and returns any value
+   * @param <R> the return type inferred from the closure
+   * @return the result of {@code transform.call(this)}
+   */
+  @CompileDynamic
+  public <R> R pipe(Closure<R> transform) {
+    transform.call(this)
+  }
+
   List removeNulls() {
     this.findAll { it != null } as Column
   }
