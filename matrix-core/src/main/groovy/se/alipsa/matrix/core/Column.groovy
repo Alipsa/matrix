@@ -225,53 +225,6 @@ class Column extends ArrayList {
     result
   }
 
-  /**
-   * Passes this column to the given transform closure and returns its result.
-   *
-   * <p>Useful for building readable left-to-right pipelines:</p>
-   * <pre>{@code
-   * column.pipe { it.removeNulls() }
-   *       .pipe { it.cumsum() }
-   * }</pre>
-   *
-   * @param transform a closure that receives this column and returns any value
-   * @return the result of {@code transform.call(this)}
-   */
-  @CompileDynamic
-  Object pipe(Closure transform) {
-    transform.call(this)
-  }
-
-  /**
-   * Operator overload for {@code |} — syntactic sugar for {@link #pipe(Closure)}.
-   *
-   * <p>Note: Groovy's built-in {@code or(Collection)} for set-union still works
-   * because {@code Closure} is not a {@code Collection}.</p>
-   *
-   * <pre>{@code
-   * column | { it.removeNulls() } | { it.cumsum() }
-   * }</pre>
-   *
-   * @param transform a closure that receives this column and returns any value
-   * @return the result of {@code transform.call(this)}
-   */
-  @CompileDynamic
-  Object or(Closure transform) {
-    pipe(transform)
-  }
-
-  /**
-   * Set-union operator for collections — preserves the default {@code |} behaviour
-   * for {@code Collection} arguments so that {@code column | [3, 4]} still returns
-   * the set union.
-   *
-   * @param right the collection to union with
-   * @return a new collection containing all unique elements from both operands
-   */
-  Collection or(Collection right) {
-    (this as Set) + (right as Set)
-  }
-
   List removeNulls() {
     this.findAll { it != null } as Column
   }

@@ -310,28 +310,4 @@ class GroupedMatrixTest {
     def grouped = Stat.groupBy(m, 'dept')
     assertTrue(grouped.toString().contains('groups=2'))
   }
-
-  @Test
-  void testPipeBasic() {
-    def m = Matrix.builder().data(
-        dept: ['IT', 'OPS', 'IT', 'OPS'],
-        salary: [100, 200, 150, 250]
-    ).types(String, Integer).build()
-
-    def result = Stat.groupBy(m, 'dept').pipe { it.agg(salary: { Stat.sum(it) }) }
-    assertEquals(2, result.rowCount())
-    assertTrue(result.columnNames().contains('salary'))
-  }
-
-  @Test
-  void testOrOperator() {
-    def m = Matrix.builder().data(
-        dept: ['IT', 'OPS', 'IT', 'OPS'],
-        salary: [100, 200, 150, 250]
-    ).types(String, Integer).build()
-
-    def result = Stat.groupBy(m, 'dept') | { it.agg(salary: { Stat.sum(it) }) }
-    assertEquals(2, result.rowCount())
-    assertTrue(result.columnNames().contains('salary'))
-  }
 }

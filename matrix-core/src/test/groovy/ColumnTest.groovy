@@ -755,33 +755,4 @@ class ColumnTest {
     assert [1, 2, 3] == c.lag(0)
     assert [1, 2, 3] == c.lead(0)
   }
-
-  @Test
-  void testPipeBasic() {
-    Column c = new Column('value', [1, 2, 3], Integer)
-    def result = c.pipe { it.cumsum() }
-    assert [1, 3, 6] == result
-  }
-
-  @Test
-  void testPipeChained() {
-    Column c = new Column('value', [1, null, 3], Integer)
-    def result = c.pipe { it.removeNulls() }
-                  .pipe { it.cumsum() }
-    assert [1, 4] == result
-  }
-
-  @Test
-  void testOrOperator() {
-    Column c = new Column('value', [1, null, 3], Integer)
-    def result = c | { it.removeNulls() } | { it.cumsum() }
-    assert [1, 4] == result
-  }
-
-  @Test
-  void testOrWithCollectionStillWorks() {
-    Column c = new Column('value', [1, 2, 3], Integer)
-    def result = c | [3, 4, 5]
-    assert result.containsAll([1, 2, 3, 4, 5])
-  }
 }

@@ -1,6 +1,5 @@
 package se.alipsa.matrix.core
 
-import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 
 /**
@@ -144,37 +143,6 @@ class GroupedMatrix {
       action.call(entry.key, entry.value)
     }
     this
-  }
-
-  /**
-   * Passes this grouped matrix to the given transform closure and returns its result.
-   *
-   * <p>Useful for building readable left-to-right pipelines:</p>
-   * <pre>{@code
-   * Stat.groupBy(m, 'dept').pipe { it.agg(salary: { Stat.sum(it) }) }
-   * }</pre>
-   *
-   * @param transform a closure that receives this grouped matrix and returns any value
-   * @return the result of {@code transform.call(this)}
-   */
-  @CompileDynamic
-  Object pipe(Closure transform) {
-    transform.call(this)
-  }
-
-  /**
-   * Operator overload for {@code |} — syntactic sugar for {@link #pipe(Closure)}.
-   *
-   * <pre>{@code
-   * Stat.groupBy(m, 'dept') | { it.agg(salary: { Stat.sum(it) }) }
-   * }</pre>
-   *
-   * @param transform a closure that receives this grouped matrix and returns any value
-   * @return the result of {@code transform.call(this)}
-   */
-  @CompileDynamic
-  Object or(Closure transform) {
-    pipe(transform)
   }
 
   /**
