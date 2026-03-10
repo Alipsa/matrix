@@ -242,36 +242,6 @@ class Column extends ArrayList {
     transform.call(this)
   }
 
-  /**
-   * Operator overload for {@code |} — syntactic sugar for {@link #pipe(Closure)}.
-   *
-   * <p>The {@code |} operator with a {@code Collection} argument is handled by
-   * the separate {@link #or(Collection)} overload, which preserves set-union behaviour.</p>
-   *
-   * <pre>
-   * column | { it.removeNulls() } | { it.cumsum() }
-   * </pre>
-   *
-   * @param transform a closure that receives this column and returns any value
-   * @return the result of {@code transform.call(this)}
-   */
-  @CompileDynamic
-  Object or(Closure transform) {
-    pipe(transform)
-  }
-
-  /**
-   * Set-union operator for collections — preserves the default {@code |} behaviour
-   * for {@code Collection} arguments so that {@code column | [3, 4]} still returns
-   * the set union.
-   *
-   * @param right the collection to union with
-   * @return a new collection containing all unique elements from both operands
-   */
-  Collection or(Collection right) {
-    (this as Set) + (right as Set)
-  }
-
   List removeNulls() {
     this.findAll { it != null } as Column
   }

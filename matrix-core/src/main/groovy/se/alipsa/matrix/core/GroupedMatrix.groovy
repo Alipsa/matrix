@@ -163,21 +163,6 @@ class GroupedMatrix {
   }
 
   /**
-   * Operator overload for {@code |} — syntactic sugar for {@link #pipe(Closure)}.
-   *
-   * <pre>
-   * Stat.groupBy(m, 'dept') | { it.agg(salary: { Stat.sum(it) }) }
-   * </pre>
-   *
-   * @param transform a closure that receives this grouped matrix and returns any value
-   * @return the result of {@code transform.call(this)}
-   */
-  @CompileDynamic
-  Object or(Closure transform) {
-    pipe(transform)
-  }
-
-  /**
    * Aggregate each group using named column aggregations.
    *
    * <p>The result is a new Matrix with the group columns followed by one column

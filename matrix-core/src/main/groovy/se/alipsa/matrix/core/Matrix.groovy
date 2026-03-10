@@ -416,21 +416,6 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Operator overload for {@code |} — syntactic sugar for {@link #pipe(Closure)}.
-   *
-   * <pre>
-   * matrix | { it.selectColumns('a') } | { it.orderBy('a') }
-   * </pre>
-   *
-   * @param transform a closure that receives this matrix and returns any value
-   * @return the result of {@code transform.call(this)}
-   */
-  @CompileDynamic
-  Object or(Closure transform) {
-    pipe(transform)
-  }
-
-  /**
    * Apply executes a Closure on each value of the specified column
    *
    * @param columnName the column to apply to
