@@ -402,10 +402,10 @@ class Matrix implements Iterable<Row>, Cloneable {
    * Passes this matrix to the given transform closure and returns its result.
    *
    * <p>Useful for building readable left-to-right pipelines:</p>
-   * <pre>{@code
+   * <pre>
    * matrix.pipe { it.selectColumns('a', 'b') }
    *       .pipe { it.orderBy('a') }
-   * }</pre>
+   * </pre>
    *
    * @param transform a closure that receives this matrix and returns any value
    * @return the result of {@code transform.call(this)}
@@ -418,9 +418,9 @@ class Matrix implements Iterable<Row>, Cloneable {
   /**
    * Operator overload for {@code |} — syntactic sugar for {@link #pipe(Closure)}.
    *
-   * <pre>{@code
+   * <pre>
    * matrix | { it.selectColumns('a') } | { it.orderBy('a') }
-   * }</pre>
+   * </pre>
    *
    * @param transform a closure that receives this matrix and returns any value
    * @return the result of {@code transform.call(this)}

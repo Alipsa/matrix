@@ -782,6 +782,8 @@ class ColumnTest {
   void testOrWithCollectionStillWorks() {
     Column c = new Column('value', [1, 2, 3], Integer)
     def result = c | [3, 4, 5]
-    assert result.containsAll([1, 2, 3, 4, 5])
+    assert result instanceof Collection
+    assert result as Set == [1, 2, 3, 4, 5] as Set
+    assert result.size() == 5
   }
 }

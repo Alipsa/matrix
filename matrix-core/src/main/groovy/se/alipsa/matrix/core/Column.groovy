@@ -229,10 +229,10 @@ class Column extends ArrayList {
    * Passes this column to the given transform closure and returns its result.
    *
    * <p>Useful for building readable left-to-right pipelines:</p>
-   * <pre>{@code
+   * <pre>
    * column.pipe { it.removeNulls() }
    *       .pipe { it.cumsum() }
-   * }</pre>
+   * </pre>
    *
    * @param transform a closure that receives this column and returns any value
    * @return the result of {@code transform.call(this)}
@@ -245,12 +245,12 @@ class Column extends ArrayList {
   /**
    * Operator overload for {@code |} — syntactic sugar for {@link #pipe(Closure)}.
    *
-   * <p>Note: Groovy's built-in {@code or(Collection)} for set-union still works
-   * because {@code Closure} is not a {@code Collection}.</p>
+   * <p>The {@code |} operator with a {@code Collection} argument is handled by
+   * the separate {@link #or(Collection)} overload, which preserves set-union behaviour.</p>
    *
-   * <pre>{@code
+   * <pre>
    * column | { it.removeNulls() } | { it.cumsum() }
-   * }</pre>
+   * </pre>
    *
    * @param transform a closure that receives this column and returns any value
    * @return the result of {@code transform.call(this)}

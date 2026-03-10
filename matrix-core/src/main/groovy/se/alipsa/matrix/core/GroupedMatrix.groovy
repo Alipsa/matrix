@@ -150,9 +150,9 @@ class GroupedMatrix {
    * Passes this grouped matrix to the given transform closure and returns its result.
    *
    * <p>Useful for building readable left-to-right pipelines:</p>
-   * <pre>{@code
+   * <pre>
    * Stat.groupBy(m, 'dept').pipe { it.agg(salary: { Stat.sum(it) }) }
-   * }</pre>
+   * </pre>
    *
    * @param transform a closure that receives this grouped matrix and returns any value
    * @return the result of {@code transform.call(this)}
@@ -165,9 +165,9 @@ class GroupedMatrix {
   /**
    * Operator overload for {@code |} — syntactic sugar for {@link #pipe(Closure)}.
    *
-   * <pre>{@code
+   * <pre>
    * Stat.groupBy(m, 'dept') | { it.agg(salary: { Stat.sum(it) }) }
-   * }</pre>
+   * </pre>
    *
    * @param transform a closure that receives this grouped matrix and returns any value
    * @return the result of {@code transform.call(this)}
