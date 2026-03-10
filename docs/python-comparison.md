@@ -79,16 +79,22 @@ df['salary'] * df['inflation_rate']
 df['salary'] + df['bonus']
 ```
 
-**GroupBy operations:** Matrix provides `Stat.groupBy()` which returns a `Map<String, Matrix>` allowing flexible aggregations:
+**GroupBy operations:** Matrix provides `Stat.groupBy()` which returns a `GroupedMatrix` with structured compound keys and built-in aggregation:
 
 ```groovy
 // Group by one or more columns
-Map<String, Matrix> groups = Stat.groupBy(table, 'department', 'region')
+GroupedMatrix grouped = Stat.groupBy(table, 'department', 'region')
+// or use the convenience method:
+GroupedMatrix grouped2 = table.groupBy('department', 'region')
 
-// Apply any aggregation to groups
-groups.collectEntries { key, group ->
-    [key, [sum: Stat.sum(group['salary']), mean: Stat.mean(group['salary'])]]
-}
+// Access groups by structured key
+Matrix itGroup = grouped.get('IT', 'East')
+
+// Aggregate with named closures
+Matrix totals = grouped.agg(salary: { Stat.sum(it) })
+
+// Legacy string-keyed map (backward compat)
+Map<String, Matrix> legacy = grouped.toStringKeyMap()
 
 // Convenience methods for common aggregations
 Matrix sums = Stat.sumBy(table, 'salary', 'department')
@@ -333,12 +339,12 @@ This allows users to choose the appropriate data structure based on their needs:
 ### Matrix Library Weaknesses
 
 1. **No N-dimensional Arrays** - Only 2D structures
-2. **No Rolling/Window Operations** - Missing time-series analysis
-3. **No Multi-Index** - Hierarchical indexing not supported
+2. ~~**No Rolling/Window Operations**~~ - Added in v3.7.0 (`rolling()`, `cumsum()`, etc.)
+3. ~~**No Multi-Index**~~ - v3.7.0 adds `createIndex()`/`lookup()` for database-style indexing and `GroupedMatrix` for structured group-by results
 4. **Limited Linear Algebra** - No eigenvalues, SVD, matrix inverse
 5. **Interactive visualization ecosystem is narrower** - strongest support is SVG + desktop embedding
 6. **Performance Gap** - JVM vs native C for heavy computation (mitigated by Tablesaw integration)
-7. **No Cumulative Operations** - cumsum, cumprod, etc.
+7. ~~**No Cumulative Operations**~~ - Added in v3.7.0 (`cumsum()`, `cumprod()`, `cummin()`, `cummax()`)
 
 ---
 
@@ -348,8 +354,6 @@ This allows users to choose the appropriate data structure based on their needs:
 
 | Enhancement                   | Value | Effort | Notes                           |
 |-------------------------------|-------|--------|---------------------------------|
-| **Rolling/Window Operations** | High  | Medium | Essential for time-series       |
-| **Cumulative Operations**     | High  | Easy   | cumsum, cumprod, cummax, cummin |
 | **Diff/Shift Operations**     | High  | Easy   | diff(), shift(), lag/lead       |
 
 ### Medium Priority (Good Value)
@@ -372,28 +376,7 @@ This allows users to choose the appropriate data structure based on their needs:
 
 Here are some enhancements that would be relatively easy to add:
 
-### 1. Cumulative Operations (Add to Column class)
-
-```groovy
-// In Column.groovy
-List<Number> cumsum() {
-    Number sum = 0
-    this.collect {
-        sum = sum + (it as Number)
-        sum
-    }
-}
-
-List<Number> cumprod() {
-    Number prod = 1
-    this.collect {
-        prod = prod * (it as Number)
-        prod
-    }
-}
-```
-
-### 2. Diff/Shift Operations
+### 1. Diff/Shift Operations
 
 ```groovy
 // In Column.groovy
@@ -412,34 +395,6 @@ List shift(int periods) {
 }
 ```
 
-### 3. Rolling Window (New class)
-
-```groovy
-class Rolling {
-    Column column
-    int window
-
-    Rolling(Column col, int w) {
-        this.column = col
-        this.window = w
-    }
-
-    List<BigDecimal> mean() {
-        (0..<column.size()).collect { i ->
-            if (i < window - 1) return null
-            def slice = column[(i - window + 1)..i]
-            Stat.mean(slice)
-        }
-    }
-
-    List<BigDecimal> sum() { /* similar */ }
-    List<BigDecimal> std() { /* similar */ }
-    List apply(Closure fn) { /* apply fn to each window */ }
-}
-
-// Usage: table['price'].rolling(7).mean()
-```
-
 ---
 
 ## Conclusion
@@ -450,4 +405,4 @@ The Matrix library is a **well-designed, comprehensive toolkit** that provides p
 2. **Idiomatic Groovy** with excellent syntax
 3. **Strong charting stack** (`matrix-xchart` + `pict` + Charm + ggplot-compatible API)
 
-The primary gaps versus numpy+pandas are in **time-series operations** (rolling, cumulative, diff/shift) and **numerical computing** (linear algebra, N-dimensional arrays). Adding rolling window operations would significantly enhance the library for time-series analysis use cases.
+The primary gaps versus numpy+pandas are in **numerical computing** (linear algebra, N-dimensional arrays) and a few **time-series utilities** such as diff/shift-style helpers. Rolling and cumulative operations are already available in v3.7.0.

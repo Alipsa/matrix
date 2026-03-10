@@ -44,6 +44,7 @@ class MatrixBuilder {
   List<List> columns
   List<Class> dataTypes
   Map<String, Object> metadata = [:]
+  private List<String> indexColumns = null
 
   /**
    * Create a MatrixBuilder with no name. This is package scoped as the way to create a MatrixBuilder
@@ -70,7 +71,14 @@ class MatrixBuilder {
     if (!metadata.isEmpty()) {
       (m.metaData as Map<String, Object>).putAll(metadata)
     }
+    if (indexColumns != null && !indexColumns.isEmpty()) {
+      m.createIndex(indexColumns as String[])
+    }
     m
+  }
+
+  private void clearPendingIndexColumns() {
+    indexColumns = null
   }
 
   MatrixBuilder matrixName(String name) {
@@ -79,11 +87,13 @@ class MatrixBuilder {
   }
 
   MatrixBuilder columnNames(List<String> columnNames) {
+    clearPendingIndexColumns()
     headerList = columnNames
     this
   }
 
   MatrixBuilder columnNames(Set<String> columnNames) {
+    clearPendingIndexColumns()
     headerList = new ArrayList<>(columnNames)
     this
   }
@@ -105,6 +115,7 @@ class MatrixBuilder {
    * @return this builder
    */
   MatrixBuilder columns(List<List> columns) {
+    clearPendingIndexColumns()
     if (columns.size() > 0 && !columns[0] instanceof List) {
       throw new IllegalArgumentException("The List of columns does not contain lists but ${columns[0].class}")
     }
@@ -113,11 +124,13 @@ class MatrixBuilder {
   }
 
   MatrixBuilder columns(List... columns) {
+    clearPendingIndexColumns()
     this.columns = columns as List<List>
     this
   }
 
   MatrixBuilder columns(Map<String, List> columData) {
+    clearPendingIndexColumns()
     List<String> headers = []
     List<List> cols = []
     columData.each { k, v ->
@@ -142,6 +155,7 @@ class MatrixBuilder {
    * @return this builder
    */
   MatrixBuilder rows(List<List> rows) {
+    clearPendingIndexColumns()
     if (rows == null || rows.isEmpty()) {
       return this
     }
@@ -156,6 +170,7 @@ class MatrixBuilder {
    * @return this builder
    */
   MatrixBuilder addRow(List row) {
+    clearPendingIndexColumns()
     if (columns == null) {
       columns = []
     }
@@ -457,6 +472,7 @@ class MatrixBuilder {
    * <ul>
    *   <li>#name: matrixName</li>
    *   <li>#types: String,Integer,BigDecimal</li>
+   *   <li>#index: col1,col2 (creates an index via {@link Matrix#createIndex})</li>
    *   <li>#metadata.key: value</li>
    * </ul>
    *
@@ -527,11 +543,14 @@ class MatrixBuilder {
   }
 
   private MatrixBuilder parseDelimitedRows(List<String> lines, String delimiter, String stringQuote, boolean firstRowAsHeader, List<String> nullStrings, String lineComment) {
+    // Parsing a new CSV input should not inherit index metadata from a previous parse on the same builder.
+    indexColumns = null
     List<List> data = []
     final boolean stripQuotes = stringQuote != ''
     int maxCols = 0
     List<Class> parsedTypes = null
     String parsedName = null
+    List<String> parsedIndex = null
     Map<String, Object> parsedMetadata = [:]
     for (String line in lines) {
       if (lineComment != null && !lineComment.isEmpty()) {
@@ -550,6 +569,11 @@ class MatrixBuilder {
               String key = metaSpec.substring(0, colonPos).trim()
               String value = metaSpec.substring(colonPos + 1).trim()
               parsedMetadata[key] = parseMetadataValue(value)
+            }
+          } else if (after.toLowerCase().startsWith('index:')) {
+            String indexSpec = after.substring('index:'.length()).trim()
+            if (!indexSpec.isEmpty()) {
+              parsedIndex = indexSpec.split(',').collect { it.trim() }.findAll { !it.isEmpty() } as List<String>
             }
           } else if (after.toLowerCase().startsWith('types:')) {
             String typeSpec = after.substring('types:'.length()).trim()
@@ -614,6 +638,9 @@ class MatrixBuilder {
       parsedMetadata.each { key, value ->
         metadata.put(key, value)
       }
+    }
+    if (parsedIndex != null) {
+      indexColumns = parsedIndex
     }
     this
   }

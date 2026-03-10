@@ -3,6 +3,7 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
 import se.alipsa.matrix.core.util.ClipboardUtil
+import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.ComparisonHelper
 import se.alipsa.matrix.core.util.CsvHelper
 import se.alipsa.matrix.core.util.MatrixPrinter
@@ -44,6 +45,13 @@ class Matrix implements Iterable<Row>, Cloneable {
   public static final Boolean ASC = Boolean.FALSE
   public static final Boolean DESC = Boolean.TRUE
   private Map<String, ?> metaData = [:]
+
+  /** Column names over which an index has been created. Empty means no index. */
+  private List<String> indexedColumnNames = []
+  /** Internal lookup: compound key values → list of row positions. */
+  private Map<List<?>, List<Integer>> indexMap = null
+  /** Whether the index needs rebuilding before the next lookup. */
+  private boolean indexDirty = false
 
   static {
     // Splits "5.0.1" into [5, 0, 1]
@@ -253,6 +261,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     for (int c = 0; c < row.size(); c++) {
       mColumns[c].add(row[c])
     }
+    invalidateIndex()
     return this
   }
 
@@ -273,6 +282,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     for (int c = 0; c < row.size(); c++) {
       mColumns[c].add(position, row[c])
     }
+    invalidateIndex()
     return this
   }
 
@@ -425,6 +435,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     col.type = updatedClass
     col.name = columnName(columnNumber)
     mColumns[columnNumber] = col
+    invalidateIndex()
     this
   }
 
@@ -469,6 +480,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     col.type = updatedClass
     col.name = columnName(columnNumber)
     mColumns[columnNumber] = col
+    invalidateIndex()
     this
   }
 
@@ -526,6 +538,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       cols << new Column(columnName(idx), it as List, dataTypes[idx])
     }
     mColumns = cols
+    invalidateIndex()
     this
   }
 
@@ -542,6 +555,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     this.rows().each { row ->
       row[columnName] = function.call(row)
     }
+    invalidateIndex()
     this
   }
 
@@ -926,6 +940,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
     }
     mColumns = convertedColumns
+    invalidateIndex()
     this
   }
 
@@ -1038,6 +1053,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     }
     mColumns.clear()
     mColumns.addAll(convertedColumns)
+    invalidateIndex()
     this
   }
 
@@ -1058,6 +1074,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     column.clear()
     column.addAll(col)
     column.type = columnType
+    invalidateIndex()
     this
   }
 
@@ -1354,7 +1371,9 @@ class Matrix implements Iterable<Row>, Cloneable {
       headers << it.name
       types << it.type
     }
-    return new Matrix(mName, headers, mColumns as List<List>, types)
+    Matrix copy = new Matrix(mName, headers, mColumns as List<List>, types)
+    copyIndexTo(copy)
+    copy
   }
 
   /**
@@ -1464,6 +1483,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix dropExcept(String... columnNames) {
     def retainColNames = columnNames.length > 0 ? columnNames as List : []
+    if (!indexedColumnNames.isEmpty()) {
+      for (String idxCol : indexedColumnNames) {
+        if (!retainColNames.contains(idxCol)) {
+          resetIndex()
+          break
+        }
+      }
+    }
     for (String columnName : this.columnNames()) {
       if (retainColNames.contains(columnName)) {
         continue
@@ -1579,8 +1606,29 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this modified matrix
    */
   Matrix drop(List<Integer> columnIndices) {
-    Collections.sort(columnIndices)
-    columnIndices.eachWithIndex { colIdx, idx ->
+    int columnCount = mColumns.size()
+    Set<Integer> seen = new LinkedHashSet<>()
+    for (int colIdx : columnIndices) {
+      if (colIdx < 0 || colIdx >= columnCount) {
+        throw new IndexOutOfBoundsException("Column index ${colIdx} out of range for matrix with ${columnCount} columns")
+      }
+      if (!seen.add(colIdx)) {
+        throw new IllegalArgumentException("Duplicate column index ${colIdx} in drop(${columnIndices})")
+      }
+    }
+    // Check if any indexed column is being dropped
+    if (!indexedColumnNames.isEmpty()) {
+      List<String> names = columnNames()
+      for (int colIdx : columnIndices) {
+        if (indexedColumnNames.contains(names[colIdx])) {
+          resetIndex()
+          break
+        }
+      }
+    }
+    List<Integer> sortedIndices = new ArrayList<>(columnIndices)
+    Collections.sort(sortedIndices)
+    sortedIndices.eachWithIndex { colIdx, idx ->
       // Each time we iterate and remove, all of the below will have one less item
       // so we need to adjust the colIdx to still match
       mColumns.remove(colIdx - idx)
@@ -2082,6 +2130,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     mColumns.each {
       it.add(to, it.remove(from))
     }
+    invalidateIndex()
     this
   }
 
@@ -2131,6 +2180,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       Collections.reverse(rows)
     }
     updateValues(rows)
+    invalidateIndex()
     return this
     //return create(mName, mHeaders, rows as List<List>, mTypes)
   }
@@ -2175,6 +2225,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     List<Row> rows = this.rows()
     Collections.sort(rows, comparator)
     updateValues(rows)
+    invalidateIndex()
     return this
   }
 
@@ -2253,6 +2304,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     } else {
       throw new IndexOutOfBoundsException("Row index ($rowIndex) is outside the size of the column ${column.size()}")
     }
+    invalidateIndex()
   }
 
 
@@ -2497,7 +2549,13 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return this matrix (mutated) to allow for method chaining
    */
   Matrix rename(int columnIndex, String after) {
+    String before = mColumns[columnIndex].name
     mColumns[columnIndex].name = after
+    if (indexedColumnNames.contains(before)) {
+      this.@indexedColumnNames = indexedColumnNames.collect { it == before ? after : it } as List<String>
+      this.@indexMap = null
+      this.@indexDirty = true
+    }
     this
   }
 
@@ -2512,6 +2570,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     columns().each {
       Collections.replaceAll(it as List<Object>, from, to)
     }
+    invalidateIndex()
     this
   }
 
@@ -2525,6 +2584,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix replace(String columnName, Object from, Object to) {
     Collections.replaceAll(column(columnName) as List<Object>, from, to)
+    invalidateIndex()
     this
   }
 
@@ -2538,6 +2598,7 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix replace(int columnIndex, Object from, Object to) {
     Collections.replaceAll(column(columnIndex) as List<Object>, from, to)
+    invalidateIndex()
     this
   }
 
@@ -2562,6 +2623,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     col.clear()
     col.addAll(values)
     col.type = type
+    invalidateIndex()
     this
   }
 
@@ -2590,6 +2652,7 @@ class Matrix implements Iterable<Row>, Cloneable {
         col.remove((int) idx - count)
       }
     }
+    invalidateIndex()
     this
   }
 
@@ -2752,12 +2815,19 @@ class Matrix implements Iterable<Row>, Cloneable {
       colNames.add(name)
       dataTypes.add(type(name))
     }
-    return builder()
+    Matrix result = builder()
         .matrixName(mName)
         .columnNames(colNames)
         .columns(cols)
         .types(dataTypes)
         .build()
+    if (!indexedColumnNames.isEmpty()) {
+      List<String> selectedNames = columnNames as List<String>
+      if (indexedColumnNames.every { selectedNames.contains(it) }) {
+        copyIndexTo(result)
+      }
+    }
+    result
   }
 
 
@@ -2879,6 +2949,7 @@ class Matrix implements Iterable<Row>, Cloneable {
       }
       col.clear()
       col.addAll(values)
+      invalidateIndex()
     } else {
       if (values.isEmpty()) {
         addColumn(propertyName, Object, values)
@@ -3014,12 +3085,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the rows matching the criteria supplied retained
    */
   Matrix subset(Closure<Boolean> criteria) {
-    builder()
+    Matrix result = builder()
         .rows(rows(criteria) as List<List>)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
         .build()
+    copyIndexTo(result)
+    result
   }
 
   /**
@@ -3043,12 +3116,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the selected rows
    */
   Matrix subset(IntRange rows) {
-    builder()
+    Matrix result = builder()
         .rows(this.rows(rows) as List<List>)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
         .build()
+    copyIndexTo(result)
+    result
   }
 
   /**
@@ -3058,12 +3133,14 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @return a new Matrix with the selected rows
    */
   Matrix subset(List<Integer> rows) {
-    builder()
+    Matrix result = builder()
         .rows(this.rows(rows) as List<List>)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
         .build()
+    copyIndexTo(result)
+    result
   }
 
   /**
@@ -3076,12 +3153,14 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (rows == null || rows.length == 0) {
       return this.clone()
     }
-    builder()
+    Matrix result = builder()
         .rows(this.rows(rows as List) as List<List>)
         .matrixName(this.matrixName)
         .columnNames(this.columnNames())
         .types(this.types())
         .build()
+    copyIndexTo(result)
+    result
   }
 
   /**
@@ -3149,6 +3228,8 @@ class Matrix implements Iterable<Row>, Cloneable {
    * If the matrix has a name, it will be included as a comment header (#name: matrixName).
    * If includeTypes is true, type information will be included as a comment header (#types: Integer, String, ...).
    * Metadata will be included as comment headers (#metadata.key: value).
+   * If the matrix has an index (via {@link #createIndex}), it will be included as a comment header
+   * (#index: col1,col2) so that the index can be restored on round-trip.
    * These comment headers can be read back using Matrix.builder().csvString() to fully restore the matrix.
    *
    * <p><b>Metadata Constraints:</b> Only metadata values of the following types can be serialized and round-tripped:
@@ -3184,7 +3265,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     boolean customQuoteString = options.containsKey('quoteString')
 
     StringBuilder sb = new StringBuilder()
-    if (includeTypes || matrixName || !metaData.isEmpty()) {
+    if (includeTypes || matrixName || !metaData.isEmpty() || !indexedColumnNames.isEmpty()) {
       if (lineComment == null || lineComment.isEmpty()) {
         lineComment = '#'
       }
@@ -3203,6 +3284,12 @@ class Matrix implements Iterable<Row>, Cloneable {
             .append(CsvHelper.serializeMetadataValue(value))
             .append(rowDelimiter)
         }
+      }
+      if (!indexedColumnNames.isEmpty()) {
+        sb.append(lineComment)
+          .append('index: ')
+          .append(indexedColumnNames.join(','))
+          .append(rowDelimiter)
       }
       if (includeTypes) {
         sb.append(lineComment)
@@ -3776,5 +3863,240 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   Matrix moveValue(int rowIndex, String fromColumn, int toColumn) {
     moveValue(rowIndex, columnIndex(fromColumn), toColumn)
+  }
+
+  // ---- Index API ----
+
+  /**
+   * Mark the internal index as dirty so it is rebuilt on the next {@link #lookup} call.
+   * Called automatically by mutating operations.
+   */
+  private void invalidateIndex() {
+    if (!indexedColumnNames.isEmpty()) {
+      indexDirty = true
+    }
+  }
+
+  /**
+   * Manually mark the index as dirty so it is rebuilt on the next {@link #lookup} call.
+   *
+   * <p>This is needed when indexed column data is mutated directly through column references
+   * (e.g. {@code matrix.column('country')[0] = 'UK'} or {@code matrix['country'][0] = 'UK'}),
+   * since such mutations bypass Matrix's own mutating methods and cannot be detected
+   * automatically.</p>
+   *
+   * <p>Has no effect if no index has been created.</p>
+   */
+  void markIndexDirty() {
+    invalidateIndex()
+  }
+
+  /**
+   * Copy index configuration from this matrix to another.
+   * The target's index is marked dirty so it rebuilds on next lookup.
+   */
+  private void copyIndexTo(Matrix target) {
+    if (!indexedColumnNames.isEmpty()) {
+      target.@indexedColumnNames = new ArrayList<>(indexedColumnNames)
+      target.@indexMap = null
+      target.@indexDirty = true
+    }
+  }
+
+  /**
+   * Build (or rebuild) the internal index map from the current data.
+   */
+  private void buildIndex() {
+    int nRows = rowCount()
+    int nLevels = indexedColumnNames.size()
+    int[] colIndices = new int[nLevels]
+    for (int i = 0; i < nLevels; i++) {
+      colIndices[i] = columnIndex(indexedColumnNames[i])
+      if (colIndices[i] < 0) {
+        throw new IllegalStateException("Indexed column '${indexedColumnNames[i]}' no longer exists in the matrix")
+      }
+    }
+    Map<List<?>, List<Integer>> map = new LinkedHashMap<>()
+    List<Object> probe = CompoundKeyUtil.createProbe(nLevels)
+    for (int r = 0; r < nRows; r++) {
+      for (int i = 0; i < nLevels; i++) {
+        probe.set(i, mColumns[colIndices[i]][r])
+      }
+      CompoundKeyUtil.getOrCreateRowBucket(map, probe).add(r)
+    }
+    indexMap = map
+    indexDirty = false
+  }
+
+  /**
+   * Create an index over the specified columns for fast {@link #lookup} access.
+   *
+   * <p>The indexed columns remain normal data columns — they are fully visible in
+   * iteration, {@code columnNames()}, printing, and CSV output. The index is an
+   * internal lookup structure mapping compound key values to row positions.</p>
+   *
+   * <pre>{@code
+   * matrix.createIndex('country', 'quarter')
+   * matrix.lookup('USA', 'Q1')  // fast access
+   * }</pre>
+   *
+   * @param columnNames the columns to index on
+   * @return this matrix for chaining
+   * @throws IllegalArgumentException if any column name does not exist
+   */
+  Matrix createIndex(String... columnNames) {
+    if (columnNames.length == 0) {
+      throw new IllegalArgumentException("At least one column name must be specified for createIndex")
+    }
+    List<String> names = this.columnNames()
+    Set<String> seen = new LinkedHashSet<>()
+    for (String col : columnNames) {
+      if (!names.contains(col)) {
+        throw new IllegalArgumentException("Column '${col}' does not exist in the matrix. Available columns: ${names}")
+      }
+      if (!seen.add(col)) {
+        throw new IllegalArgumentException("Duplicate column name '${col}' in createIndex")
+      }
+    }
+    this.@indexedColumnNames = new ArrayList<>(columnNames as List<String>)
+    buildIndex()
+    this
+  }
+
+  /**
+   * Remove the index, clearing the internal lookup. Data columns are unaffected.
+   *
+   * @return this matrix for chaining
+   */
+  Matrix resetIndex() {
+    this.@indexedColumnNames = []
+    this.@indexMap = null
+    this.@indexDirty = false
+    this
+  }
+
+  /**
+   * Return the names of the currently indexed columns.
+   *
+   * @return list of indexed column names (empty if no index)
+   */
+  List<String> indexedColumns() {
+    Collections.unmodifiableList(new ArrayList<>(indexedColumnNames))
+  }
+
+  /**
+   * Check whether an index is active.
+   *
+   * @return true if an index has been created
+   */
+  boolean hasIndex() {
+    !indexedColumnNames.isEmpty()
+  }
+
+  /**
+   * Look up rows by indexed column values and return a new Matrix.
+   *
+   * <p>The number of keys may be less than or equal to the number of indexed columns.
+   * A partial key matches the first N levels.</p>
+   *
+   * <pre>{@code
+   * matrix.createIndex('country', 'quarter')
+   * matrix.lookup('USA')          // all rows where country='USA'
+   * matrix.lookup('USA', 'Q1')    // rows where country='USA' AND quarter='Q1'
+   * }</pre>
+   *
+   * @param keys the key values to match
+   * @return a new Matrix containing the matching rows
+   * @throws IllegalStateException if no index has been created
+   * @throws IllegalArgumentException if no keys are provided or more keys than indexed columns are provided
+   */
+  Matrix lookup(Object... keys) {
+    List<Integer> indices = lookupIndices(keys)
+    if (indices.isEmpty()) {
+      Matrix empty = builder()
+          .matrixName(mName)
+          .columnNames(columnNames())
+          .types(types())
+          .build()
+      copyIndexTo(empty)
+      return empty
+    }
+    Matrix result = builder()
+        .matrixName(mName)
+        .columnNames(columnNames())
+        .rows(rows(indices) as List<List>)
+        .types(types())
+        .build()
+    copyIndexTo(result)
+    result
+  }
+
+  /**
+   * Look up row indices by indexed column values.
+   *
+   * <p>Supports partial keys (matching the first N levels).</p>
+   *
+   * @param keys the key values to match
+   * @return list of matching row indices
+   * @throws IllegalStateException if no index has been created
+   * @throws IllegalArgumentException if no keys are provided or more keys than indexed columns are provided
+   */
+  List<Integer> lookupIndices(Object... keys) {
+    validateLookupKeys(keys)
+    if (indexDirty) {
+      buildIndex()
+    }
+    int keyLen = keys.length
+    if (keyLen == indexedColumnNames.size()) {
+      // Full key — direct map lookup; return unmodifiable view to protect internal state
+      List<Integer> result = indexMap[keys as List<?>]
+      return result != null
+          ? Collections.unmodifiableList(new ArrayList<>(result))
+          : Collections.emptyList()
+    }
+    // Partial key — scan keys that match the prefix, sort to preserve original row order
+    List<?> prefix = keys as List<?>
+    List<Integer> result = []
+    for (Map.Entry<List<?>, List<Integer>> entry : indexMap.entrySet()) {
+      if (entry.key.subList(0, keyLen) == prefix) {
+        result.addAll(entry.value)
+      }
+    }
+    Collections.sort(result)
+    Collections.unmodifiableList(result)
+  }
+
+  private void validateLookupKeys(Object... keys) {
+    if (indexedColumnNames.isEmpty()) {
+      throw new IllegalStateException("No index has been created. Call createIndex() first.")
+    }
+    if (keys.length == 0) {
+      throw new IllegalArgumentException("At least one key value must be provided")
+    }
+    if (keys.length > indexedColumnNames.size()) {
+      throw new IllegalArgumentException(
+          "Too many keys: got ${keys.length} but index has ${indexedColumnNames.size()} level(s) (${indexedColumnNames})"
+      )
+    }
+  }
+
+  /**
+   * Convenience method that delegates to {@link Stat#groupBy(Matrix, String...)}.
+   *
+   * @param columnNames the columns to group by
+   * @return a GroupedMatrix with structured access to groups
+   */
+  GroupedMatrix groupBy(String... columnNames) {
+    Stat.groupBy(this, columnNames)
+  }
+
+  /**
+   * Convenience method that delegates to {@link Stat#groupBy(Matrix, List)}.
+   *
+   * @param columnNames the columns to group by
+   * @return a GroupedMatrix with structured access to groups
+   */
+  GroupedMatrix groupBy(List<String> columnNames) {
+    Stat.groupBy(this, columnNames)
   }
 }

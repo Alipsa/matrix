@@ -1,6 +1,7 @@
 package se.alipsa.matrix.core
 
 import groovy.transform.CompileStatic
+import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.Logger
 
 import java.math.RoundingMode
@@ -272,9 +273,13 @@ class Stat {
     }
 
     /**
-     * Splits the table into separate tables, one for each value in the named columns.
-     * The key values are a compound of the grouped values in the order specified in columnNames
-     * separated by underscore.
+     * Splits the table into separate sub-matrices, one for each unique combination
+     * of values in the named columns. Returns a {@link GroupedMatrix} with structured
+     * {@code List<?>} compound keys for type-safe access.
+     *
+     * <p>Use {@link GroupedMatrix#toStringKeyMap()} to obtain the legacy
+     * underscore-joined string keys if needed for backward compatibility.</p>
+     *
      * Example usage:
      * <pre><code>
      * def ab = Matrix.builder().data(
@@ -284,48 +289,67 @@ class Stat {
      *   .types(int, String)
      *   .build()
      * def groups = Stat.groupBy(ab, 'a', 'b')
-     * assert 1 == groups['1_A'].size()
-     * assert 1 == groups['1_B'].size()
-     * assert 2 == groups['2_A'].size()
-     * assert 3 == groups['2_B'].size()
+     * assert 1 == groups.get(1, 'A').rowCount()
+     * assert 1 == groups.get(1, 'B').rowCount()
+     * assert 2 == groups.get(2, 'A').rowCount()
+     * assert 3 == groups.get(2, 'B').rowCount()
      * </code></pre>
      *
      * @param table the Matrix to operate on
-     * @param columnName the name(s) of the column(s) containing the values
-     * @return a Map<String, Matrix> where the key is a compound of the grouped values separated by underscore.
+     * @param columnNames the name(s) of the column(s) containing the values
+     * @return a GroupedMatrix providing structured access to groups
      */
-    static Map<String, Matrix> groupBy(Matrix table, String... columnNames) {
+    static GroupedMatrix groupBy(Matrix table, String... columnNames) {
         if (columnNames.length == 0) {
             throw new IllegalArgumentException("At least one column name must be specified to groupBy")
         }
-
-        Map<String, Matrix> result = new LinkedHashMap<>()
-        groupByRecursive(table, columnNames, 0, "", result)
-        return result
+        List<String> groupCols = columnNames as List<String>
+        int nRows = table.rowCount()
+        int nLevels = groupCols.size()
+        int[] colIndices = new int[nLevels]
+        for (int i = 0; i < nLevels; i++) {
+            colIndices[i] = table.columnIndex(groupCols[i])
+            if (colIndices[i] < 0) {
+                throw new IllegalArgumentException("Column '${groupCols[i]}' does not exist in the matrix")
+            }
+        }
+        // Cache column references for the hot loop
+        List[] cachedColumns = new List[nLevels]
+        for (int i = 0; i < nLevels; i++) {
+            cachedColumns[i] = table.column(colIndices[i])
+        }
+        // Build groups by compound key (keys are immutable to protect map integrity)
+        Map<List<?>, List<Integer>> keyToRows = new LinkedHashMap<>()
+        List<Object> probe = CompoundKeyUtil.createProbe(nLevels)
+        for (int r = 0; r < nRows; r++) {
+            for (int i = 0; i < nLevels; i++) {
+                probe.set(i, cachedColumns[i][r])
+            }
+            CompoundKeyUtil.getOrCreateRowBucket(keyToRows, probe).add(r)
+        }
+        // Build sub-matrices
+        Map<List<?>, Matrix> groups = new LinkedHashMap<>()
+        List<String> cachedColumnNames = table.columnNames()
+        List<Class> cachedTypes = table.types()
+        for (Map.Entry<List<?>, List<Integer>> entry : keyToRows.entrySet()) {
+            groups[entry.key] = Matrix.builder()
+                .matrixName(entry.key.collect { String.valueOf(it) }.join('_'))
+                .columnNames(cachedColumnNames)
+                .rows(table.rows(entry.value) as List<List>)
+                .types(cachedTypes)
+                .build()
+        }
+        new GroupedMatrix(table, groupCols, groups)
     }
 
     /**
-     * Recursive helper for groupBy that processes one column level at a time.
+     * Group a matrix by the specified column names.
+     *
+     * @param table the Matrix to operate on
+     * @param columnNames the column names to group by
+     * @return a GroupedMatrix providing structured access to groups
      */
-    private static void groupByRecursive(
-        Matrix currentTable,
-        String[] columnNames,
-        int index,
-        String prefix,
-        Map<String, Matrix> result
-    ) {
-        Map<?, Matrix> splitMap = currentTable.split(columnNames[index])
-        for (Map.Entry<?, Matrix> entry : splitMap.entrySet()) {
-            String key = prefix ? "${prefix}_${entry.key}" : "${entry.key}"
-            if (index == columnNames.length - 1) {
-                result.put(key, entry.value)
-            } else {
-                groupByRecursive(entry.value, columnNames, index + 1, key, result)
-            }
-        }
-    }
-
-    static Map<String, Matrix> groupBy(Matrix table, List<String> columnNames) {
+    static GroupedMatrix groupBy(Matrix table, List<String> columnNames) {
         groupBy(table, columnNames as String[])
     }
 

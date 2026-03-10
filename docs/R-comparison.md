@@ -136,7 +136,13 @@ df$salary + df$bonus
 
 ```groovy
 // Matrix groupBy
-Map<String, Matrix> groups = Stat.groupBy(table, 'department', 'region')
+GroupedMatrix groups = Stat.groupBy(table, 'department', 'region')
+
+// Access a group by structured key
+Matrix itEast = groups.get('IT', 'East')
+
+// Backward-compatible string-keyed view
+Map<String, Matrix> legacy = groups.toStringKeyMap()
 
 // Convenience methods
 Matrix sums = Stat.sumBy(table, 'salary', 'department')

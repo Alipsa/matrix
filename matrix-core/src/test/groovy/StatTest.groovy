@@ -436,10 +436,14 @@ class StatTest {
         .build()
 
     def grouped = groupBy(empData, ['department', 'emp_type'])
-    assertEquals(1, grouped['OPS_Full-time'].size())
-    assertEquals(1, grouped['OPS_Part-time'].size())
-    assertEquals(2, grouped['IT_Full-time'].size())
-    assertEquals(1, grouped['IT_Part-time'].size())
+    assertEquals(1, grouped.get('OPS', 'Full-time').rowCount())
+    assertEquals(1, grouped.get('OPS', 'Part-time').rowCount())
+    assertEquals(2, grouped.get('IT', 'Full-time').rowCount())
+    assertEquals(1, grouped.get('IT', 'Part-time').rowCount())
+
+    // Verify backward-compatible string key map
+    def stringMap = grouped.toStringKeyMap()
+    assertEquals(1, stringMap['OPS_Full-time'].rowCount())
 
     def ab = Matrix.builder().data(
         a: [1, 1, 2, 2, 2, 2, 2],
@@ -448,10 +452,10 @@ class StatTest {
         .types(int, String)
         .build()
     def grouped2 = groupBy(ab, 'a', 'b')
-    assertEquals(1, grouped2['1_A'].size())
-    assertEquals(1, grouped2['1_B'].size())
-    assertEquals(2, grouped2['2_A'].size())
-    assertEquals(3, grouped2['2_B'].size())
+    assertEquals(1, grouped2.get(1, 'A').rowCount())
+    assertEquals(1, grouped2.get(1, 'B').rowCount())
+    assertEquals(2, grouped2.get(2, 'A').rowCount())
+    assertEquals(3, grouped2.get(2, 'B').rowCount())
   }
 
   @Test

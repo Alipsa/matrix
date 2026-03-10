@@ -323,7 +323,7 @@ class GgStat {
     // Group by the grouping column if present, otherwise compute for all data
     Map<String, Matrix> groups
     if (groupingCol != null && data.columnNames().contains(groupingCol)) {
-      groups = Stat.groupBy(data, groupingCol)
+      groups = Stat.groupBy(data, groupingCol).toStringKeyMap()
     } else {
       groups = ['all': data]
     }
@@ -882,7 +882,7 @@ class GgStat {
       return meanClNormalUngrouped(data, yCol, level)
     }
 
-    Map<String, Matrix> groups = Stat.groupBy(data, xCol)
+    Map<String, Matrix> groups = Stat.groupBy(data, xCol).toStringKeyMap()
     List<Map<String, Object>> rows = []
     groups.each { groupKey, groupData ->
       List<Number> values = groupData[yCol] as List<Number>
@@ -927,7 +927,7 @@ class GgStat {
       return medianHiLowUngrouped(data, yCol, confInt)
     }
 
-    Map<String, Matrix> groups = Stat.groupBy(data, xCol)
+    Map<String, Matrix> groups = Stat.groupBy(data, xCol).toStringKeyMap()
     List<Map<String, Object>> rows = []
     groups.each { groupKey, groupData ->
       List<Number> values = groupData[yCol] as List<Number>
