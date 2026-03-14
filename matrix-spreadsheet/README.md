@@ -54,6 +54,30 @@ The SpreadSheetImporter.importSpreadSheetSheet takes the following parameters:
 Note: there are seveal overloaded versions of the importSpreadsheet method e.g taking a sheet index instead of a sheet name,
 using column index instead of column name etc.
 
+## Using Matrix.read() / Matrix.write()
+
+If `matrix-spreadsheet` is on the classpath, `.xlsx` and `.ods` files can be handled through the generic Matrix SPI:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.spreadsheet.SpreadsheetReadOptions
+import se.alipsa.matrix.spreadsheet.SpreadsheetWriteOptions
+
+Matrix auto = Matrix.read(new File('Book1.xlsx'))
+Matrix subset = Matrix.read([sheetName: 'Sheet2', startRow: 6, endRow: 10, startColumn: 'AC', endColumn: 'BH'], new File('Book2.xlsx'))
+
+Matrix.write(auto, new File('copy.xlsx'))
+Matrix.write([sheetName: 'Metrics', startPosition: 'B3'], auto, new File('copy.xlsx'))
+
+println Matrix.listReadOptions('xlsx')
+println Matrix.listWriteOptions('ods')
+println SpreadsheetReadOptions.describe()
+println SpreadsheetWriteOptions.describe()
+```
+
+For offset exports such as `startPosition: 'B3'`, pass explicit `endRow` / `endColumn` values on read if you want just
+that embedded table rather than the full used area of the sheet.
+
 See [the Matrix package](https://github.com/Alipsa/matrix) for more information on what you can do with a Matrix.
 
 If you need to import from a stream you must use the importer specific to the type of spreadsheet you are reading

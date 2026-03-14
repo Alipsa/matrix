@@ -31,6 +31,26 @@ dependencies {
 
 ## Usage
 
+### Using Matrix.read() / Matrix.write()
+
+If `matrix-avro` is on the classpath, `.avro` files are also available through the generic Matrix SPI API:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.avro.AvroReadOptions
+import se.alipsa.matrix.avro.AvroWriteOptions
+
+Matrix data = Matrix.read(new File('users.avro'))
+Matrix renamed = Matrix.read([matrixName: 'Users'], new File('users.avro'))
+
+Matrix.write([inferPrecisionAndScale: true, schemaName: 'Users'], data, new File('users-copy.avro'))
+
+println Matrix.listReadOptions('avro')
+println Matrix.listWriteOptions('avro')
+println AvroReadOptions.describe()
+println AvroWriteOptions.describe()
+```
+
 ### Read Avro → Matrix
 
 ```groovy

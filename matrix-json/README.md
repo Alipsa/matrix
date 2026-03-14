@@ -44,6 +44,27 @@ implementation 'se.alipsa.matrix:matrix-json:2.1.2'
 
 The jvm should be JDK 21 or higher.
 
+## Using Matrix.read() / Matrix.write()
+
+If `matrix-json` is on the classpath, `.json` files can be handled through the generic Matrix API:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.json.JsonReadOptions
+import se.alipsa.matrix.json.JsonWriteOptions
+
+Matrix data = Matrix.read(new File('data.json'))
+Matrix utf16 = Matrix.read([charset: 'UTF-16'], new File('data.json'))
+
+Matrix.write([indent: true], data, new File('pretty.json'))
+Matrix.write([dateFormat: 'yyyy/MM/dd'], data, new File('custom.json'))
+
+println Matrix.listReadOptions('json')
+println Matrix.listWriteOptions('json')
+println JsonReadOptions.describe()
+println JsonWriteOptions.describe()
+```
+
 ## Exporting a Matrix to Json
 
 The simplest way is to just use the toJson method on th JsonExporter, e.g:

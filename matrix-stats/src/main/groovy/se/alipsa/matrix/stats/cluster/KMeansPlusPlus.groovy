@@ -1,5 +1,6 @@
 package se.alipsa.matrix.stats.cluster
 
+import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
 
 /**
@@ -192,6 +193,7 @@ import se.alipsa.matrix.core.Matrix
  * @see GroupEstimator
  * @see ClusteredPoint
  */
+@CompileStatic
 class KMeansPlusPlus {
 /***********************************************************************
  * Data structures
@@ -220,6 +222,8 @@ class KMeansPlusPlus {
   // timing information
   private long start
   private long end
+  private Long randomSeed
+  private Random random
 
   /***********************************************************************
    * Constructors
@@ -247,6 +251,7 @@ class KMeansPlusPlus {
     epsilon = builder.epsilon
     useEpsilon = builder.useEpsilon
     L1norm = builder.L1norm
+    randomSeed = builder.randomSeed
 
     // get dimensions to set last 2 fields
     m = points.length
@@ -274,6 +279,7 @@ class KMeansPlusPlus {
     private double epsilon     = .001
     private boolean useEpsilon = true
     private boolean L1norm = true
+    private Long randomSeed = null
 
 
     /**
@@ -408,6 +414,17 @@ class KMeansPlusPlus {
     }
 
     /**
+     * Sets the random seed used for centroid initialization and empty-cluster recovery.
+     *
+     * @param randomSeed the seed to use for deterministic clustering
+     * @return the updated builder instance
+     */
+    Builder randomSeed(long randomSeed) {
+      this.randomSeed = randomSeed
+      this
+    }
+
+    /**
      * Construct a {@link KMeansPlusPlus} instance using the current builder configuration.
      *
      * @return a new KMeansPlusPlus object
@@ -436,8 +453,8 @@ class KMeansPlusPlus {
     ClusteredPoint[] bestAssignment = new ClusteredPoint[0]
 
     // run multiple times and then choose the best run
-    for (int n = 0; n < iterations; n++) {
-      //println "Iteration $n: WCSS = $WCSS"
+    for (int i = 0; i < iterations; i++) {
+      random = randomForIteration(i)
       cluster()
 
       // store info if it was the best run so far
@@ -523,13 +540,11 @@ class KMeansPlusPlus {
       }
     }
 
-    Random rand = new Random()
-
     // Defensive fix for empty clusters
     for (int i = 0; i < k; i++) {
       if (clustSize[i] == 0) {
         println "⚠️ Cluster $i is empty, reinitializing to a random point"
-        int randIndex = rand.nextInt(m)
+        int randIndex = random.nextInt(m)
         centroids[i] = Arrays.copyOf(points[randIndex], n)
         clustSize[i] = 1 // prevent division by zero
       }
@@ -566,11 +581,9 @@ class KMeansPlusPlus {
     centroids = new double[k][n]
     double[][] copy = points
 
-    Random gen = new Random()
-
     int rand;
     for (int i = 0; i < k; i++) {
-      rand = gen.nextInt(m - i)
+      rand = random.nextInt(m - i)
       for (int j = 0; j < n; j++) {
         centroids[i][j] = copy[rand][j]       // store chosen centroid
         copy[rand][j] = copy[m - 1 - i][j]    // ensure sampling without replacement
@@ -588,14 +601,13 @@ class KMeansPlusPlus {
     double[] distToClosestCentroid = new double[m]
     double[] weightedDistribution  = new double[m]  // cumulative sum of squared distances
 
-    Random gen = new Random()
     int choose = 0
 
     for (int c = 0; c < k; c++) {
 
       // first centroid: choose any data point
       if (c == 0)
-        choose = gen.nextInt(m)
+        choose = random.nextInt(m)
 
       // after first centroid, use a weighted distribution
       else {
@@ -623,7 +635,7 @@ class KMeansPlusPlus {
 
         // choose the next centroid using binary search for O(log m) complexity
         double totalWeight = weightedDistribution[m - 1]
-        double target = gen.nextDouble() * totalWeight
+        double target = random.nextDouble() * totalWeight
         // Binary search to find smallest index j where weightedDistribution[j] >= target
         int lo = 0
         int hi = m - 1
@@ -682,6 +694,10 @@ class KMeansPlusPlus {
    */
   private double distance(double[] x, double[] y) {
     return L1norm ? Distance.L1(x, y) : Distance.L2(x, y)
+  }
+
+  private Random randomForIteration(int iteration) {
+    randomSeed == null ? new Random() : new Random(randomSeed + iteration)
   }
 
   private static class Distance {

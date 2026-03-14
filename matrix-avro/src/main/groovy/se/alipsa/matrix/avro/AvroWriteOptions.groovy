@@ -2,6 +2,8 @@ package se.alipsa.matrix.avro
 
 import groovy.transform.CompileStatic
 import org.apache.avro.file.CodecFactory
+import se.alipsa.matrix.core.spi.OptionDescriptor
+import se.alipsa.matrix.core.spi.OptionMaps
 
 /**
  * Configuration options for writing Matrix data to Avro format.
@@ -216,5 +218,81 @@ class AvroWriteOptions {
       default ->
         CodecFactory.nullCodec()
     }
+  }
+
+  /**
+   * Converts this options object to an SPI-friendly map.
+   *
+   * @return map representation of the configured options
+   */
+  Map<String, ?> toMap() {
+    [
+        inferPrecisionAndScale: inferPrecisionAndScale,
+        namespace             : namespace,
+        schemaName            : schemaName,
+        compression           : compression.name(),
+        compressionLevel      : compressionLevel,
+        syncInterval          : syncInterval
+    ]
+  }
+
+  /**
+   * Creates {@link AvroWriteOptions} from a generic SPI options map.
+   *
+   * @param options the SPI options map
+   * @return configured write options
+   */
+  static AvroWriteOptions fromMap(Map<String, ?> options) {
+    AvroWriteOptions result = new AvroWriteOptions()
+    Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
+    if (normalized.containsKey('inferprecisionandscale')) {
+      result.inferPrecisionAndScale(normalized.inferprecisionandscale as boolean)
+    }
+    if (normalized.containsKey('namespace')) {
+      result.namespace(String.valueOf(normalized.namespace))
+    }
+    if (normalized.containsKey('schemaname')) {
+      result.schemaName(String.valueOf(normalized.schemaname))
+    }
+    if (normalized.containsKey('compression')) {
+      def value = normalized.compression
+      if (value instanceof Compression) {
+        result.compression(value as Compression)
+      } else {
+        result.compression(Compression.valueOf(String.valueOf(value).toUpperCase()))
+      }
+    }
+    if (normalized.containsKey('compressionlevel')) {
+      result.compressionLevel((normalized.compressionlevel as Number).intValue())
+    }
+    if (normalized.containsKey('syncinterval')) {
+      result.syncInterval((normalized.syncinterval as Number).intValue())
+    }
+    result
+  }
+
+  /**
+   * Returns a human-readable description of all supported write options.
+   *
+   * @return formatted table of option descriptors
+   */
+  static String describe() {
+    OptionDescriptor.describe(descriptors())
+  }
+
+  /**
+   * Returns descriptors for all supported write options.
+   *
+   * @return write option descriptors
+   */
+  static List<OptionDescriptor> descriptors() {
+    [
+        new OptionDescriptor('inferPrecisionAndScale', Boolean, 'false', 'Infer decimal precision and scale for BigDecimal columns'),
+        new OptionDescriptor('namespace', String, 'se.alipsa.matrix.avro', 'Namespace for the generated Avro schema'),
+        new OptionDescriptor('schemaName', String, 'MatrixSchema', 'Record name for the generated Avro schema'),
+        new OptionDescriptor('compression', Compression, 'NULL', 'Compression codec to use when writing'),
+        new OptionDescriptor('compressionLevel', Integer, '-1', 'Codec-specific compression level'),
+        new OptionDescriptor('syncInterval', Integer, '0', 'Sync marker interval in bytes')
+    ]
   }
 }

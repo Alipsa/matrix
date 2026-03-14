@@ -316,7 +316,7 @@ class MatrixBuilder {
    * </pre></code>
    *
    * Note: this is a bit experimental as it uses some reflection magic to guess the structure
-   * of the custom objects. If your custom objects ar POJOS it should be fine but if you do something more
+   * of the custom objects. If your custom objects are POJOS it should be fine, but if you do something more
    * exotic, you are probably better off converting the data to a List of List of values and use the
    * rows() method instead.
    *

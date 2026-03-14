@@ -2,6 +2,8 @@ package se.alipsa.matrix.avro
 
 import groovy.transform.CompileStatic
 import org.apache.avro.Schema
+import se.alipsa.matrix.core.spi.OptionDescriptor
+import se.alipsa.matrix.core.spi.OptionMaps
 
 /**
  * Configuration options for reading Avro data into a Matrix.
@@ -116,5 +118,71 @@ class AvroReadOptions {
    */
   boolean isLenientTypeConversion() {
     return lenientTypeConversion
+  }
+
+  /**
+   * Converts this options object to an SPI-friendly map.
+   *
+   * @return map representation of the configured options
+   */
+  Map<String, ?> toMap() {
+    Map<String, Object> options = [lenientTypeConversion: lenientTypeConversion]
+    if (matrixName != null) {
+      options.matrixName = matrixName
+    }
+    if (readerSchema != null) {
+      options.readerSchema = readerSchema
+    }
+    options
+  }
+
+  /**
+   * Creates {@link AvroReadOptions} from a generic SPI options map.
+   *
+   * @param options the SPI options map
+   * @return configured read options
+   */
+  static AvroReadOptions fromMap(Map<String, ?> options) {
+    AvroReadOptions result = new AvroReadOptions()
+    Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
+    if (normalized.containsKey('matrixname')) {
+      result.matrixName(String.valueOf(normalized.matrixname))
+    }
+    if (normalized.containsKey('readerschema')) {
+      def value = normalized.readerschema
+      if (value instanceof Schema) {
+        result.readerSchema(value as Schema)
+      } else if (value instanceof CharSequence) {
+        result.readerSchema(new Schema.Parser().parse(String.valueOf(value)))
+      } else {
+        throw new IllegalArgumentException("readerSchema must be a Schema or schema JSON string but was ${value?.class}")
+      }
+    }
+    if (normalized.containsKey('lenienttypeconversion')) {
+      result.lenientTypeConversion(normalized.lenienttypeconversion as boolean)
+    }
+    result
+  }
+
+  /**
+   * Returns a human-readable description of all supported read options.
+   *
+   * @return formatted table of option descriptors
+   */
+  static String describe() {
+    OptionDescriptor.describe(descriptors())
+  }
+
+  /**
+   * Returns descriptors for all supported read options.
+   *
+   * @return read option descriptors
+   */
+  static List<OptionDescriptor> descriptors() {
+    [
+        new OptionDescriptor('matrixName', String, null, 'Name for the resulting Matrix'),
+        new OptionDescriptor('readerSchema', Schema, null, 'Reader schema or schema JSON for schema evolution'),
+        new OptionDescriptor('lenientTypeConversion', Boolean, 'false', 'Whether to allow lenient type conversions')
+    ]
   }
 }

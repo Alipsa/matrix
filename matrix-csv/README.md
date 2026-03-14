@@ -10,6 +10,27 @@ implementation 'se.alipsa.matrix:matrix-core:3.6.0'
 implementation 'se.alipsa.matrix:matrix-csv:2.2.2'
 ```
 
+## Using Matrix.read() / Matrix.write()
+
+If `matrix-csv` is on the classpath, the CSV provider is registered automatically and you can use the generic Matrix API:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.csv.CsvReadOptions
+import se.alipsa.matrix.csv.CsvWriteOptions
+
+Matrix m = Matrix.read(new File('data.csv'))
+Matrix tsv = Matrix.read(new File('data.tsv'))
+
+Matrix.write(m, new File('copy.csv'))
+Matrix.write([delimiter: ';', charset: 'ISO-8859-1'], m, new File('copy.csv'))
+
+println Matrix.listReadOptions('csv')
+println Matrix.listWriteOptions('csv')
+println CsvReadOptions.describe()
+println CsvWriteOptions.describe()
+```
+
 ## Import a CSV file into a Matrix
 
 ### Using the fluent API (recommended)

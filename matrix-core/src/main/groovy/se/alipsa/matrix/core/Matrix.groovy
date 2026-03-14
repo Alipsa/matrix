@@ -3,6 +3,8 @@ package se.alipsa.matrix.core
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import groovyjarjarantlr4.v4.runtime.misc.NotNull
+import se.alipsa.matrix.core.spi.FormatRegistry
+import se.alipsa.matrix.core.spi.MatrixFormatProvider
 import se.alipsa.matrix.core.util.ClipboardUtil
 import se.alipsa.matrix.core.util.CompoundKeyUtil
 import se.alipsa.matrix.core.util.ComparisonHelper
@@ -13,6 +15,7 @@ import se.alipsa.matrix.core.util.RollingWindowHelper
 import se.alipsa.matrix.core.util.RollingWindowOptions
 import se.alipsa.matrix.core.util.TypeHelper
 
+import java.nio.file.Path
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -85,6 +88,129 @@ class Matrix implements Iterable<Row>, Cloneable {
 
   static List<String> anonymousHeader(int ncols) {
     (1..ncols).collect { 'c' + it }
+  }
+
+  // ──────────────────────────────────────────────────────────────
+  // SPI-based read / write convenience methods
+  // ──────────────────────────────────────────────────────────────
+
+  /**
+   * Read a Matrix from a file, auto-detecting the format by extension.
+   *
+   * <p>The appropriate format provider is resolved via {@link FormatRegistry}.
+   * Add a format module (e.g. {@code matrix-csv}) to the classpath to enable
+   * its extensions.</p>
+   *
+   * <pre>{@code
+   * Matrix data = Matrix.read(new File('sales.csv'))
+   * Matrix data = Matrix.read(delimiter: ';', new File('data.csv'))
+   * }</pre>
+   *
+   * @param options format-specific options (may be empty)
+   * @param file the file to read
+   * @return the parsed Matrix
+   * @throws IllegalArgumentException if no provider is found for the file extension
+   */
+  static Matrix read(Map options = [:], File file) {
+    String ext = FormatRegistry.extractExtension(file.name)
+    MatrixFormatProvider provider = resolveProvider(ext)
+    provider.read(file, options)
+  }
+
+  /**
+   * Read a Matrix from a Path, auto-detecting the format by extension.
+   *
+   * @param options format-specific options (may be empty)
+   * @param path the path to read
+   * @return the parsed Matrix
+   * @throws IllegalArgumentException if no provider is found for the file extension
+   */
+  static Matrix read(Map options = [:], Path path) {
+    String ext = FormatRegistry.extractExtension(path.fileName.toString())
+    MatrixFormatProvider provider = resolveProvider(ext)
+    provider.read(path, options)
+  }
+
+  /**
+   * Read a Matrix from a URL, auto-detecting the format by the URL path extension.
+   *
+   * @param options format-specific options (may be empty)
+   * @param url the URL to read from
+   * @return the parsed Matrix
+   * @throws IllegalArgumentException if no provider is found for the file extension
+   */
+  static Matrix read(Map options = [:], URL url) {
+    String ext = FormatRegistry.extractExtension(url.path)
+    MatrixFormatProvider provider = resolveProvider(ext)
+    provider.read(url, options)
+  }
+
+  /**
+   * Write a Matrix to a file, auto-detecting the format by extension.
+   *
+   * <pre>{@code
+   * Matrix.write(data, new File('output.json'))
+   * Matrix.write(indent: true, data, new File('output.json'))
+   * }</pre>
+   *
+   * @param options format-specific options (may be empty)
+   * @param matrix the matrix to write
+   * @param file the target file
+   * @throws IllegalArgumentException if no provider is found for the file extension
+   */
+  static void write(Map options = [:], Matrix matrix, File file) {
+    String ext = FormatRegistry.extractExtension(file.name)
+    MatrixFormatProvider provider = resolveProvider(ext)
+    provider.write(matrix, file, options)
+  }
+
+  /**
+   * Write a Matrix to a Path, auto-detecting the format by extension.
+   *
+   * @param options format-specific options (may be empty)
+   * @param matrix the matrix to write
+   * @param path the target path
+   * @throws IllegalArgumentException if no provider is found for the file extension
+   */
+  static void write(Map options = [:], Matrix matrix, Path path) {
+    String ext = FormatRegistry.extractExtension(path.fileName.toString())
+    MatrixFormatProvider provider = resolveProvider(ext)
+    provider.write(matrix, path, options)
+  }
+
+  /**
+   * Returns a human-readable description of the read options available for the
+   * given file extension.
+   *
+   * @param fileExtension the extension (e.g. {@code 'csv'}, {@code 'json'})
+   * @return formatted option table, or a message if the extension is unknown
+   */
+  static String listReadOptions(String fileExtension) {
+    FormatRegistry.instance.listReadOptions(fileExtension)
+  }
+
+  /**
+   * Returns a human-readable description of the write options available for the
+   * given file extension.
+   *
+   * @param fileExtension the extension (e.g. {@code 'csv'}, {@code 'json'})
+   * @return formatted option table, or a message if the extension is unknown
+   */
+  static String listWriteOptions(String fileExtension) {
+    FormatRegistry.instance.listWriteOptions(fileExtension)
+  }
+
+  private static MatrixFormatProvider resolveProvider(String ext) {
+    MatrixFormatProvider provider = FormatRegistry.instance.getProvider(ext)
+    if (provider == null) {
+      Set<String> available = FormatRegistry.instance.supportedExtensions()
+      String suggestion = available.isEmpty()
+          ? 'No format modules found on the classpath. Add a dependency like matrix-csv, matrix-json, etc.'
+          : "Available extensions: ${available.join(', ')}"
+      throw new IllegalArgumentException(
+          "No format provider found for extension '${ext}'. ${suggestion}")
+    }
+    provider
   }
 
   /**

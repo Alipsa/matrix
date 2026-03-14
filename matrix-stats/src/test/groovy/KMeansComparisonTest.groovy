@@ -2,6 +2,7 @@ import org.junit.jupiter.api.Test
 import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
 import smile.clustering.KMeans
 
+import static KMeansPlusPlusTest.RANDOM_SEED
 import static KMeansPlusPlusTest.gaussianClusters
 import static java.lang.Math.pow
 import static java.lang.Math.sqrt
@@ -20,6 +21,7 @@ class KMeansComparisonTest {
         .useEpsilon(true)
         .pp(true)
         .useL1norm(false) // Use L2 norm for consistency with SMILE
+        .randomSeed(RANDOM_SEED)
         .build()
 
     def matrixCentroids = matrixKMeans.centroids
