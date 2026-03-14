@@ -19,7 +19,12 @@ class SpreadsheetFormatProviderTest {
 
   @Test
   void testOptionDescriptions() {
-    assertTrue(Matrix.listReadOptions('xlsx').contains('sheetName'))
+    String readOptions = Matrix.listReadOptions('xlsx')
+    assertTrue(readOptions.contains('sheet'))
+    assertTrue(readOptions.contains('sheetName'))
+    assertTrue(readOptions.contains('startColumn'))
+    assertTrue(readOptions.contains('endColumn'))
+    assertTrue(!readOptions.contains('startColumnName'))
     assertTrue(Matrix.listWriteOptions('xlsx').contains('startPosition'))
     assertTrue(SpreadsheetReadOptions.describe().contains('endRow'))
     assertTrue(SpreadsheetWriteOptions.describe().contains('sheetName'))

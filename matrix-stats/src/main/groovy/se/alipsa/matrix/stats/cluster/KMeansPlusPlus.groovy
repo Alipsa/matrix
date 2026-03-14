@@ -769,21 +769,31 @@ class KMeansPlusPlus {
 
     // Group points by clusterId
     for (ClusteredPoint cp : assignment) {
-      grouped.computeIfAbsent(cp.clusterId) { [] }.add(cp.point)
+      List<double[]> clusterPoints = grouped.get(cp.clusterId)
+      if (clusterPoints == null) {
+        clusterPoints = new ArrayList<>()
+        grouped.put(cp.clusterId, clusterPoints)
+      }
+      clusterPoints.add(cp.point)
     }
 
     // Convert each group to a Matrix
     Map<Integer, Matrix> result = new HashMap<>()
-    grouped.each { clusterId, pointList ->
-      // Convert List<double[]> to List<List<Double>> for Matrix compatibility
-      List<List<Double>> rows = pointList.collect { double[] row ->
-        row.collect { it as Double }
+    for (Map.Entry<Integer, List<double[]>> entry : grouped.entrySet()) {
+      Integer clusterId = entry.key
+      List<double[]> pointList = entry.value
+      List<List<Double>> rows = new ArrayList<>(pointList.size())
+      for (double[] row : pointList) {
+        List<Double> values = new ArrayList<>(row.length)
+        for (double value : row) {
+          values.add(value)
+        }
+        rows.add(values)
       }
       Matrix clusterMatrix = Matrix.builder("Cluster $clusterId").data(rows).build()
       result.put(clusterId, clusterMatrix)
     }
-
-    return result
+    result
   }
 
   /**

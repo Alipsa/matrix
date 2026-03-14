@@ -28,7 +28,7 @@ class OptionDescriptor {
   Class type
 
   /** Human-readable default value, e.g. {@code ","} */
-  String defaultValue
+  Object defaultValue
 
   /** Human-readable description of what this option does */
   String description
@@ -45,7 +45,7 @@ class OptionDescriptor {
    * @param description what this option does
    * @param required whether this option must be provided
    */
-  OptionDescriptor(String name, Class type, String defaultValue, String description, boolean required = false) {
+  OptionDescriptor(String name, Class type, Object defaultValue, String description, boolean required = false) {
     this.name = name
     this.type = type
     this.defaultValue = defaultValue
@@ -74,7 +74,7 @@ class OptionDescriptor {
     for (OptionDescriptor d : descriptors) {
       nameWidth = Math.max(nameWidth, (d.name ?: '').length())
       typeWidth = Math.max(typeWidth, (d.type?.simpleName ?: '').length())
-      defaultWidth = Math.max(defaultWidth, (d.defaultValue ?: '').length())
+      defaultWidth = Math.max(defaultWidth, formatDefaultValue(d.defaultValue).length())
       descWidth = Math.max(descWidth, (d.description ?: '').length())
     }
 
@@ -89,12 +89,16 @@ class OptionDescriptor {
       sb.append(String.format(fmt,
           d.name ?: '',
           d.type?.simpleName ?: '',
-          d.defaultValue ?: '',
+          formatDefaultValue(d.defaultValue),
           d.required ? 'yes' : 'no',
           d.description ?: ''
       )).append('\n')
     }
     sb.append(sep)
     sb.toString()
+  }
+
+  private static String formatDefaultValue(Object defaultValue) {
+    defaultValue == null ? '' : String.valueOf(defaultValue)
   }
 }

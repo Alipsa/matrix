@@ -33,6 +33,7 @@ class FormatRegistryTest {
     def descriptors = [
         new OptionDescriptor('delimiter', Character, ',', 'The character used to separate values', false),
         new OptionDescriptor('quote', Character, '"', 'The quoting character', false),
+        new OptionDescriptor('firstRowAsHeader', Boolean, true, 'Whether the first row contains column names', false),
         new OptionDescriptor('header', List, null, 'Column header names', true),
     ]
     String table = OptionDescriptor.describe(descriptors)
@@ -40,6 +41,8 @@ class FormatRegistryTest {
     assertTrue(table.contains('delimiter'))
     assertTrue(table.contains('Character'))
     assertTrue(table.contains('quote'))
+    assertTrue(table.contains('firstRowAsHeader'))
+    assertTrue(table.contains('true'))
     assertTrue(table.contains('header'))
     assertTrue(table.contains('yes'))  // required column
     assertTrue(table.contains('no'))   // not required

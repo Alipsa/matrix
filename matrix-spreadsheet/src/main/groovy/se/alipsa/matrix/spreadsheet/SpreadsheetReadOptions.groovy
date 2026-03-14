@@ -159,14 +159,13 @@ class SpreadsheetReadOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
+        new OptionDescriptor('sheet', Object, null, 'Sheet selector as a name or a 1-based sheet number'),
         new OptionDescriptor('sheetName', String, null, 'Sheet name to read instead of a sheet number'),
         new OptionDescriptor('sheetNumber', Integer, '1', '1-based sheet number to read'),
         new OptionDescriptor('startRow', Integer, '1', '1-based first row to read'),
         new OptionDescriptor('endRow', Integer, 'auto-detect', '1-based last row to read'),
-        new OptionDescriptor('startColumnName', String, null, 'Column name to start from, e.g. A or C'),
-        new OptionDescriptor('startColumnNumber', Integer, '1', '1-based column number to start from'),
-        new OptionDescriptor('endColumnName', String, null, 'Column name to stop at, e.g. D or AA'),
-        new OptionDescriptor('endColumnNumber', Integer, 'auto-detect', '1-based last column number to read'),
+        new OptionDescriptor('startColumn', Object, '1', 'Column to start from, as a name like A or a 1-based column number'),
+        new OptionDescriptor('endColumn', Object, 'auto-detect', 'Column to stop at, as a name like D or a 1-based column number'),
         new OptionDescriptor('firstRowAsColNames', Boolean, 'true', 'Whether the first selected row contains column names')
     ]
   }
