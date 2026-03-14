@@ -107,14 +107,4 @@ class SpreadsheetFormatProvider extends AbstractFormatProvider {
         : reader.findLastCol(options.sheetNumber ?: 1)
     detectedLastColumn
   }
-
-  private static int resolveStartColumn(SpreadsheetReadOptions options) {
-    if (options.startColumnNumber != null) {
-      return options.startColumnNumber
-    }
-    if (options.startColumnName != null) {
-      return SpreadsheetUtil.asColumnNumber(options.startColumnName)
-    }
-    1
-  }
 }

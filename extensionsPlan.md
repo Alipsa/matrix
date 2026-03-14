@@ -209,10 +209,10 @@ Extensions: `['parquet']`. Read delegates to `MatrixParquetReader.read(file, ...
 
 ## Phase 4: Documentation
 
-### 8.1 [ ] Update `matrix-core/readme.md`
+### 8.1 [x] Update `matrix-core/readme.md`
 Add section documenting `Matrix.read()` / `Matrix.write()` / `Matrix.listReadOptions()` / `Matrix.listWriteOptions()`, `FormatRegistry.describe()`, and the SPI mechanism.
 
-### 8.2 [ ] Update format module READMEs
+### 8.2 [x] Update format module READMEs
 Each module's README gets a new section showing usage via `Matrix.read()` / `Matrix.write()`, available options, and `*ReadOptions.describe()` / `*WriteOptions.describe()` for scripting discoverability.
 
 Modules: `matrix-csv/README.md`, `matrix-json/README.md`, `matrix-spreadsheet/README.md`, `matrix-arff/README.md`, `matrix-avro/README.md`, `matrix-parquet/readme.md`
@@ -228,7 +228,7 @@ Modules: `matrix-csv/README.md`, `matrix-json/README.md`, `matrix-spreadsheet/RE
 - `matrix-core/src/main/groovy/se/alipsa/matrix/core/spi/FormatRegistry.groovy`
 - `matrix-core/src/test/groovy/FormatRegistryTest.groovy`
 
-### New files per format module (6 modules x ~4 files each) -- TODO
+### New files per format module (6 modules x ~4 files each) -- DONE
 - `*FormatProvider.groovy`
 - `*ReadOptions.groovy` (new, except avro which modifies existing)
 - `*WriteOptions.groovy` (new, except avro which modifies existing)
@@ -236,10 +236,10 @@ Modules: `matrix-csv/README.md`, `matrix-json/README.md`, `matrix-spreadsheet/RE
 - `*FormatProviderTest.groovy`
 
 ### Modified files
-- `matrix-core/src/main/groovy/se/alipsa/matrix/core/Matrix.groovy` -- DONE (static read/write/listOptions methods added)
-- `matrix-avro/src/main/groovy/se/alipsa/matrix/avro/AvroReadOptions.groovy` -- TODO (add describe/toMap/fromMap)
-- `matrix-avro/src/main/groovy/se/alipsa/matrix/avro/AvroWriteOptions.groovy` -- TODO (add describe/toMap/fromMap)
-- 7 README files -- TODO
+- `matrix-core/src/main/groovy/se/alipsa/matrix/core/Matrix.groovy` -- DONE (static read/write/listReadOptions/listWriteOptions methods added)
+- `matrix-avro/src/main/groovy/se/alipsa/matrix/avro/AvroReadOptions.groovy` -- DONE (describe/toMap/fromMap added)
+- `matrix-avro/src/main/groovy/se/alipsa/matrix/avro/AvroWriteOptions.groovy` -- DONE (describe/toMap/fromMap added)
+- 7 README files -- DONE
 
 ---
 
