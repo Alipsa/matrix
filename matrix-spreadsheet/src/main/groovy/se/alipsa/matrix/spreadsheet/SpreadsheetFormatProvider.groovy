@@ -96,22 +96,16 @@ class SpreadsheetFormatProvider extends AbstractFormatProvider {
   }
 
   private static int resolveLastRow(SpreadsheetReader reader, SpreadsheetReadOptions options) {
-    int detectedLastRow = options.hasSheetName()
+    options.hasSheetName()
         ? reader.findLastRow(options.sheetName)
         : reader.findLastRow(options.sheetNumber ?: 1)
-    detectedLastRow < options.startRow
-        ? detectedLastRow + options.startRow - 1
-        : detectedLastRow
   }
 
   private static int resolveLastColumn(SpreadsheetReader reader, SpreadsheetReadOptions options) {
     int detectedLastColumn = options.hasSheetName()
         ? reader.findLastCol(options.sheetName)
         : reader.findLastCol(options.sheetNumber ?: 1)
-    int startColumn = resolveStartColumn(options)
-    detectedLastColumn < startColumn
-        ? detectedLastColumn + startColumn - 1
-        : detectedLastColumn
+    detectedLastColumn
   }
 
   private static int resolveStartColumn(SpreadsheetReadOptions options) {

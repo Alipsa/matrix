@@ -74,6 +74,22 @@ class FormatRegistryTest {
   }
 
   @Test
+  void testMatrixReadRejectsNullFile() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Matrix.read([:], (File) null)
+    }
+    assertEquals('file cannot be null', exception.message)
+  }
+
+  @Test
+  void testMatrixWriteRejectsNullFile() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Matrix.write([:], Matrix.builder('test').build(), (File) null)
+    }
+    assertEquals('file cannot be null', exception.message)
+  }
+
+  @Test
   void testNormalizeOptionKeys() {
     Map<String, Object> normalized = OptionMaps.normalizeKeys([Charset: 'UTF-8', StartRow: 2])
     assertEquals([charset: 'UTF-8', startrow: 2], normalized)

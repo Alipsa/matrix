@@ -152,10 +152,10 @@ class CsvFormatProvider extends AbstractFormatProvider {
       def charsetValue = normalizedOptions.get('charset')
       if (charsetValue instanceof Charset) {
         charset = CsvOptionUtil.resolveCharset(charsetValue as Charset)
-      } else if (charsetValue instanceof String) {
-        charset = CsvOptionUtil.resolveCharset(charsetValue as String)
+      } else if (charsetValue instanceof CharSequence) {
+        charset = CsvOptionUtil.resolveCharset(charsetValue as CharSequence)
       } else {
-        throw new IllegalArgumentException("Charset must be a java.nio.charset.Charset or String but was ${charsetValue?.class} = $charsetValue")
+        throw new IllegalArgumentException("Charset must be a java.nio.charset.Charset or CharSequence but was ${charsetValue?.class} = $charsetValue")
       }
     }
     builder.to(file, charset)
@@ -196,6 +196,9 @@ class CsvFormatProvider extends AbstractFormatProvider {
    */
   private static Map<String, Object> copyOptions(Map<String, ?> options) {
     Map<String, Object> result = [:]
+    if (options == null) {
+      return result
+    }
     options.each { k, v -> result.put(String.valueOf(k), v) }
     result
   }
@@ -217,6 +220,9 @@ class CsvFormatProvider extends AbstractFormatProvider {
 
   private static Map<String, Object> normalizeOptions(Map<String, ?> options) {
     Map<String, Object> normalized = [:]
+    if (options == null) {
+      return normalized
+    }
     options.each { k, v ->
       normalized.put(String.valueOf(k).toLowerCase(Locale.ROOT), v)
     }

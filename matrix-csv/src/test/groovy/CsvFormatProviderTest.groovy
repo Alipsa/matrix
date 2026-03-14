@@ -45,6 +45,17 @@ class CsvFormatProviderTest {
   }
 
   @Test
+  void testReadCsvWithGStringCharsetOption(@TempDir File tempDir) {
+    File file = new File(tempDir, 'latin1.csv')
+    file.write('id,name\n1,Åsa\n', 'ISO-8859-1')
+    def charsetName = "ISO-${8859}-1"
+
+    Matrix matrix = Matrix.read([charset: charsetName], file)
+
+    assertEquals(['1', 'Åsa'], matrix.row(0), 'Row should be decoded with a GString charset value')
+  }
+
+  @Test
   void testWriteThenReadRoundTrip(@TempDir File tempDir) {
     Matrix original = Matrix.builder()
         .matrixName('test')
@@ -65,6 +76,19 @@ class CsvFormatProviderTest {
     assertEquals(['x', 'y', 'z'], reloaded.columnNames(), 'Column names should survive round-trip')
     assertEquals(['a', 'b', 'c'], reloaded.row(0), 'First row should survive round-trip')
     assertEquals(['g', 'h', 'i'], reloaded.row(2), 'Last row should survive round-trip')
+  }
+
+  @Test
+  void testReadAndWriteHandleNullOptionMaps(@TempDir File tempDir) {
+    URL url = getClass().getResource('/basic.csv')
+    File source = new File(url.toURI())
+
+    Matrix matrix = Matrix.read((Map) null, source)
+    assertEquals(4, matrix.rowCount(), 'Null read options should be treated as empty')
+
+    File target = new File(tempDir, 'null-options.csv')
+    Matrix.write((Map) null, matrix, target)
+    assertTrue(target.isFile(), 'Null write options should still produce a file')
   }
 
   @Test
@@ -89,6 +113,20 @@ class CsvFormatProviderTest {
     Matrix reloaded = Matrix.read([charset: 'ISO-8859-1'], tempFile)
     assertEquals(['Åsa'], reloaded.row(0), 'First row should round-trip with explicit charset')
     assertEquals(['Élodie'], reloaded.row(1), 'Second row should round-trip with explicit charset')
+  }
+
+  @Test
+  void testProviderHandlesNullOptionMaps(@TempDir File tempDir) {
+    CsvFormatProvider provider = new CsvFormatProvider()
+    URL url = getClass().getResource('/basic.csv')
+    File source = new File(url.toURI())
+
+    Matrix matrix = provider.read(source, null)
+    assertEquals(4, matrix.rowCount(), 'Provider should treat null read options as empty')
+
+    File target = new File(tempDir, 'provider-null-options.csv')
+    provider.write(matrix, target, null)
+    assertTrue(target.isFile(), 'Provider should treat null write options as empty')
   }
 
   @Test

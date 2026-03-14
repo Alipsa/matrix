@@ -30,4 +30,14 @@ class CsvOptionUtil {
   static Charset resolveCharset(String value) {
     Charset.forName(value)
   }
+
+  /**
+   * Resolves a charset option supplied as any {@link CharSequence}.
+   *
+   * @param value the charset name to resolve
+   * @return the resolved charset
+   */
+  static Charset resolveCharset(CharSequence value) {
+    Charset.forName(String.valueOf(value))
+  }
 }

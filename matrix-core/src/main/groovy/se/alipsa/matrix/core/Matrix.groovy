@@ -112,9 +112,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @throws IllegalArgumentException if no provider is found for the file extension
    */
   static Matrix read(Map options = [:], File file) {
+    if (file == null) {
+      throw new IllegalArgumentException('file cannot be null')
+    }
     String ext = FormatRegistry.extractExtension(file.name)
     MatrixFormatProvider provider = resolveProvider(ext)
-    provider.read(file, options)
+    provider.read(file, normalizeOptions(options))
   }
 
   /**
@@ -126,9 +129,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @throws IllegalArgumentException if no provider is found for the file extension
    */
   static Matrix read(Map options = [:], Path path) {
+    if (path == null) {
+      throw new IllegalArgumentException('path cannot be null')
+    }
     String ext = FormatRegistry.extractExtension(path.fileName.toString())
     MatrixFormatProvider provider = resolveProvider(ext)
-    provider.read(path, options)
+    provider.read(path, normalizeOptions(options))
   }
 
   /**
@@ -140,9 +146,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @throws IllegalArgumentException if no provider is found for the file extension
    */
   static Matrix read(Map options = [:], URL url) {
+    if (url == null) {
+      throw new IllegalArgumentException('url cannot be null')
+    }
     String ext = FormatRegistry.extractExtension(url.path)
     MatrixFormatProvider provider = resolveProvider(ext)
-    provider.read(url, options)
+    provider.read(url, normalizeOptions(options))
   }
 
   /**
@@ -159,9 +168,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @throws IllegalArgumentException if no provider is found for the file extension
    */
   static void write(Map options = [:], Matrix matrix, File file) {
+    if (file == null) {
+      throw new IllegalArgumentException('file cannot be null')
+    }
     String ext = FormatRegistry.extractExtension(file.name)
     MatrixFormatProvider provider = resolveProvider(ext)
-    provider.write(matrix, file, options)
+    provider.write(matrix, file, normalizeOptions(options))
   }
 
   /**
@@ -173,9 +185,12 @@ class Matrix implements Iterable<Row>, Cloneable {
    * @throws IllegalArgumentException if no provider is found for the file extension
    */
   static void write(Map options = [:], Matrix matrix, Path path) {
+    if (path == null) {
+      throw new IllegalArgumentException('path cannot be null')
+    }
     String ext = FormatRegistry.extractExtension(path.fileName.toString())
     MatrixFormatProvider provider = resolveProvider(ext)
-    provider.write(matrix, path, options)
+    provider.write(matrix, path, normalizeOptions(options))
   }
 
   /**
@@ -198,6 +213,10 @@ class Matrix implements Iterable<Row>, Cloneable {
    */
   static String listWriteOptions(String fileExtension) {
     FormatRegistry.instance.listWriteOptions(fileExtension)
+  }
+
+  private static Map<String, ?> normalizeOptions(Map options) {
+    options ?: [:]
   }
 
   private static MatrixFormatProvider resolveProvider(String ext) {
