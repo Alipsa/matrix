@@ -82,20 +82,32 @@ class ParquetWriteOptions {
     ParquetWriteOptions result = new ParquetWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
     if (normalized.containsKey('inferprecisionandscale')) {
-      result.inferPrecisionAndScale(normalized.inferprecisionandscale as boolean)
+      Object inferPrecisionAndScale = normalized.inferprecisionandscale
+      if (inferPrecisionAndScale != null) {
+        result.inferPrecisionAndScale(inferPrecisionAndScale as boolean)
+      }
     }
     if (normalized.containsKey('precision')) {
-      result.precision((normalized.precision as Number).intValue())
+      Object precision = normalized.precision
+      if (precision != null) {
+        result.precision((precision as Number).intValue())
+      }
     }
     if (normalized.containsKey('scale')) {
-      result.scale((normalized.scale as Number).intValue())
+      Object scale = normalized.scale
+      if (scale != null) {
+        result.scale((scale as Number).intValue())
+      }
     }
     if (normalized.containsKey('decimalmeta')) {
       def value = normalized.decimalmeta
-      if (!(value instanceof Map)) {
+      if (value == null) {
+        // Treat null as absent to preserve defaults.
+      } else if (!(value instanceof Map)) {
         throw new IllegalArgumentException("decimalMeta must be a Map<String, int[]> but was ${value?.class}")
+      } else {
+        result.decimalMeta(validateDecimalMeta(value as Map))
       }
-      result.decimalMeta(validateDecimalMeta(value as Map))
     }
     if (normalized.containsKey('zoneid')) {
       def value = normalized.zoneid

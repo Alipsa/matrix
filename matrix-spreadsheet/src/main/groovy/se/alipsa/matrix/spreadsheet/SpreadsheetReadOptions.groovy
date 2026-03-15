@@ -136,7 +136,10 @@ class SpreadsheetReadOptions {
         result.sheetName(sheetName)
       }
     } else if (normalized.containsKey('sheetnumber')) {
-      result.sheetNumber((normalized.sheetnumber as Number).intValue())
+      Object sheetNumber = normalized.sheetnumber
+      if (sheetNumber != null) {
+        result.sheetNumber((sheetNumber as Number).intValue())
+      }
     } else if (normalized.containsKey('sheet')) {
       def sheet = normalized.sheet
       if (sheet instanceof Number) {
@@ -147,10 +150,16 @@ class SpreadsheetReadOptions {
     }
 
     if (normalized.containsKey('startrow')) {
-      result.startRow((normalized.startrow as Number).intValue())
+      Object startRow = normalized.startrow
+      if (startRow != null) {
+        result.startRow((startRow as Number).intValue())
+      }
     }
     if (normalized.containsKey('endrow')) {
-      result.endRow((normalized.endrow as Number).intValue())
+      Object endRow = normalized.endrow
+      if (endRow != null) {
+        result.endRow((endRow as Number).intValue())
+      }
     }
 
     Object startColumn = normalized.containsKey('startcolumn') ? normalized.startcolumn : normalized.startcol
@@ -168,7 +177,10 @@ class SpreadsheetReadOptions {
     }
 
     if (normalized.containsKey('firstrowascolnames')) {
-      result.firstRowAsColNames(normalized.firstrowascolnames as boolean)
+      Object firstRowAsColNames = normalized.firstrowascolnames
+      if (firstRowAsColNames != null) {
+        result.firstRowAsColNames(firstRowAsColNames as boolean)
+      }
     }
     result
   }

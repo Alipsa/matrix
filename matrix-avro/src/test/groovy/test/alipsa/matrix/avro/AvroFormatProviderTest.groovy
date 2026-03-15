@@ -58,10 +58,21 @@ class AvroFormatProviderTest {
   @Test
   void testReadAndWriteOptionsIgnoreNullStringValues() {
     AvroReadOptions readOptions = AvroReadOptions.fromMap([matrixName: null])
-    AvroWriteOptions writeOptions = AvroWriteOptions.fromMap([namespace: null, schemaName: null])
+    AvroWriteOptions writeOptions = AvroWriteOptions.fromMap([
+        inferPrecisionAndScale: null,
+        namespace             : null,
+        schemaName            : null,
+        compression           : null,
+        compressionLevel      : null,
+        syncInterval          : null
+    ])
 
     assertEquals(null, readOptions.matrixName)
+    assertEquals(false, writeOptions.inferPrecisionAndScale)
     assertEquals('se.alipsa.matrix.avro', writeOptions.namespace)
     assertEquals('MatrixSchema', writeOptions.schemaName)
+    assertEquals(AvroWriteOptions.Compression.NULL, writeOptions.compression)
+    assertEquals(-1, writeOptions.compressionLevel)
+    assertEquals(0, writeOptions.syncInterval)
   }
 }

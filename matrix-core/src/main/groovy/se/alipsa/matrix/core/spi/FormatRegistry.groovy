@@ -33,7 +33,7 @@ class FormatRegistry {
   @SuppressWarnings('unused')
   private static final FormatRegistry INSTANCE = new FormatRegistry()
 
-  private final Map<String, MatrixFormatProvider> providers = [:]
+  private volatile Map<String, MatrixFormatProvider> providers = Collections.emptyMap()
   private volatile boolean loaded = false
   private final Object lock = new Object()
 
@@ -58,7 +58,8 @@ class FormatRegistry {
    */
   MatrixFormatProvider getProvider(String extension) {
     ensureLoaded()
-    providers[extension?.toLowerCase()]
+    Map<String, MatrixFormatProvider> snapshot = providers
+    snapshot[extension?.toLowerCase()]
   }
 
   /**
@@ -68,7 +69,8 @@ class FormatRegistry {
    */
   Set<String> supportedExtensions() {
     ensureLoaded()
-    Collections.unmodifiableSet(providers.keySet())
+    Map<String, MatrixFormatProvider> snapshot = providers
+    Collections.unmodifiableSet(snapshot.keySet())
   }
 
   /**
@@ -78,13 +80,14 @@ class FormatRegistry {
    */
   String describe() {
     ensureLoaded()
-    if (providers.isEmpty()) {
+    Map<String, MatrixFormatProvider> snapshot = providers
+    if (snapshot.isEmpty()) {
       return 'No format providers registered. Add a matrix-* format module to the classpath.'
     }
 
     // Collect unique providers (multiple extensions can map to the same provider)
     Map<MatrixFormatProvider, Set<String>> providerExtensions = [:]
-    providers.each { String ext, MatrixFormatProvider p ->
+    snapshot.each { String ext, MatrixFormatProvider p ->
       providerExtensions.computeIfAbsent(p) { new LinkedHashSet<String>() }.add(ext)
     }
 
@@ -164,9 +167,8 @@ class FormatRegistry {
    */
   void reload() {
     synchronized (lock) {
-      providers.clear()
-      loaded = false
-      ensureLoaded()
+      providers = loadProviders()
+      loaded = true
     }
   }
 
@@ -195,12 +197,14 @@ class FormatRegistry {
   private MatrixFormatProvider resolveProvider(String fileExtension) {
     ensureLoaded()
     String ext = fileExtension?.toLowerCase()
-    providers[ext]
+    Map<String, MatrixFormatProvider> snapshot = providers
+    snapshot[ext]
   }
 
   private String noProviderMessage(String fileExtension) {
     String ext = fileExtension?.toLowerCase()
-    "No provider found for extension '${ext}'. Available: ${providers.keySet().join(', ')}"
+    Map<String, MatrixFormatProvider> snapshot = providers
+    "No provider found for extension '${ext}'. Available: ${snapshot.keySet().join(', ')}"
   }
 
   private void ensureLoaded() {
@@ -211,21 +215,27 @@ class FormatRegistry {
       if (loaded) {
         return
       }
-      ServiceLoader<MatrixFormatProvider> loader = ServiceLoader.load(MatrixFormatProvider)
-      for (MatrixFormatProvider provider : loader) {
-        for (String ext : provider.supportedExtensions()) {
-          String lowerExt = ext.toLowerCase()
-          if (providers.containsKey(lowerExt)) {
-            log.warn("Extension '${lowerExt}' already registered by ${providers[lowerExt].formatName()}, " +
-                "ignoring ${provider.formatName()}")
-          } else {
-            providers[lowerExt] = provider
-          }
-        }
-        log.debug("Registered format provider: ${provider.formatName()} [${provider.supportedExtensions().join(', ')}]")
-      }
+      providers = loadProviders()
       loaded = true
     }
+  }
+
+  private Map<String, MatrixFormatProvider> loadProviders() {
+    Map<String, MatrixFormatProvider> loadedProviders = [:]
+    ServiceLoader<MatrixFormatProvider> loader = ServiceLoader.load(MatrixFormatProvider)
+    for (MatrixFormatProvider provider : loader) {
+      for (String ext : provider.supportedExtensions()) {
+        String lowerExt = ext.toLowerCase()
+        if (loadedProviders.containsKey(lowerExt)) {
+          log.warn("Extension '${lowerExt}' already registered by ${loadedProviders[lowerExt].formatName()}, " +
+              "ignoring ${provider.formatName()}")
+        } else {
+          loadedProviders[lowerExt] = provider
+        }
+      }
+      log.debug("Registered format provider: ${provider.formatName()} [${provider.supportedExtensions().join(', ')}]")
+    }
+    Collections.unmodifiableMap(loadedProviders)
   }
 
   private static String indent(String text, String prefix) {

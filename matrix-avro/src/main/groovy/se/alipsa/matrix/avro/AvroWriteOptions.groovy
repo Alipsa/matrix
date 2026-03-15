@@ -246,7 +246,10 @@ class AvroWriteOptions {
     AvroWriteOptions result = new AvroWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
     if (normalized.containsKey('inferprecisionandscale')) {
-      result.inferPrecisionAndScale(normalized.inferprecisionandscale as boolean)
+      Object inferPrecisionAndScale = normalized.inferprecisionandscale
+      if (inferPrecisionAndScale != null) {
+        result.inferPrecisionAndScale(inferPrecisionAndScale as boolean)
+      }
     }
     if (normalized.containsKey('namespace')) {
       String namespace = OptionMaps.stringValueOrNull(normalized.namespace)
@@ -264,15 +267,21 @@ class AvroWriteOptions {
       def value = normalized.compression
       if (value instanceof Compression) {
         result.compression(value as Compression)
-      } else {
+      } else if (value != null) {
         result.compression(Compression.valueOf(String.valueOf(value).toUpperCase()))
       }
     }
     if (normalized.containsKey('compressionlevel')) {
-      result.compressionLevel((normalized.compressionlevel as Number).intValue())
+      Object compressionLevel = normalized.compressionlevel
+      if (compressionLevel != null) {
+        result.compressionLevel((compressionLevel as Number).intValue())
+      }
     }
     if (normalized.containsKey('syncinterval')) {
-      result.syncInterval((normalized.syncinterval as Number).intValue())
+      Object syncInterval = normalized.syncinterval
+      if (syncInterval != null) {
+        result.syncInterval((syncInterval as Number).intValue())
+      }
     }
     result
   }

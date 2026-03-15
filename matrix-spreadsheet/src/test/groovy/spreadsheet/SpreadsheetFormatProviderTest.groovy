@@ -158,6 +158,21 @@ class SpreadsheetFormatProviderTest {
   }
 
   @Test
+  void testFromMapIgnoresNullNumericAndBooleanValues() {
+    SpreadsheetReadOptions options = SpreadsheetReadOptions.fromMap([
+        sheetNumber        : null,
+        startRow           : null,
+        endRow             : null,
+        firstRowAsColNames : null
+    ])
+
+    assertEquals(1, options.sheetNumber)
+    assertEquals(1, options.startRow)
+    assertEquals(null, options.endRow)
+    assertTrue(options.firstRowAsColNames)
+  }
+
+  @Test
   void testBlankColumnSelectorsAreRejected() {
     IllegalArgumentException startColumnException = assertThrows(IllegalArgumentException) {
       new SpreadsheetReadOptions().startColumn(' ')

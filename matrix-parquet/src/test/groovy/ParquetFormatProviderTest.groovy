@@ -67,10 +67,20 @@ class ParquetFormatProviderTest {
   @Test
   void testReadAndWriteOptionsIgnoreNullTextValues() {
     ParquetReadOptions readOptions = ParquetReadOptions.fromMap([matrixName: null, zoneId: null])
-    ParquetWriteOptions writeOptions = ParquetWriteOptions.fromMap([zoneId: null])
+    ParquetWriteOptions writeOptions = ParquetWriteOptions.fromMap([
+        inferPrecisionAndScale: null,
+        precision             : null,
+        scale                 : null,
+        decimalMeta           : null,
+        zoneId                : null
+    ])
 
     assertEquals(null, readOptions.matrixName)
     assertEquals(null, readOptions.zoneId)
+    assertTrue(writeOptions.inferPrecisionAndScale)
+    assertEquals(null, writeOptions.precision)
+    assertEquals(null, writeOptions.scale)
+    assertEquals([:], writeOptions.decimalMeta)
     assertEquals(null, writeOptions.zoneId)
   }
 

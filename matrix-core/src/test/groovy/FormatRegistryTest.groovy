@@ -7,6 +7,9 @@ import se.alipsa.matrix.core.spi.OptionMaps
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -62,6 +65,50 @@ class FormatRegistryTest {
     // At least verify describe() does not throw when no providers are loaded
     String desc = FormatRegistry.instance.describe()
     assertNotNull(desc)
+  }
+
+  @Test
+  void testReloadIsSafeDuringConcurrentReads() {
+    FormatRegistry registry = FormatRegistry.instance
+    AtomicReference<Throwable> failure = new AtomicReference<>()
+    CountDownLatch start = new CountDownLatch(1)
+
+    Thread reloader = new Thread({
+      awaitLatch(start)
+      try {
+        100.times {
+          registry.reload()
+        }
+      } catch (Throwable t) {
+        failure.compareAndSet(null, t)
+      }
+    }, 'format-registry-reloader')
+
+    List<Thread> readers = (1..4).collect { int index ->
+      new Thread({
+        awaitLatch(start)
+        try {
+          250.times {
+            registry.getProvider('csv')
+            registry.supportedExtensions()
+            registry.describe()
+          }
+        } catch (Throwable t) {
+          failure.compareAndSet(null, t)
+        }
+      }, "format-registry-reader-$index")
+    }
+
+    reloader.start()
+    readers*.start()
+    start.countDown()
+
+    reloader.join(TimeUnit.SECONDS.toMillis(10))
+    readers*.each { it.join(TimeUnit.SECONDS.toMillis(10)) }
+
+    assertEquals(null, failure.get())
+    assertFalse(reloader.isAlive())
+    assertTrue(readers.every { !it.isAlive() })
   }
 
   @Test
@@ -238,5 +285,9 @@ class FormatRegistryTest {
     void write(Matrix matrix, File file, Map<String, ?> options) {
       throw new UnsupportedOperationException('not used')
     }
+  }
+
+  private static void awaitLatch(CountDownLatch latch) {
+    latch.await()
   }
 }
