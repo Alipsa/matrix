@@ -2,13 +2,13 @@
 
 ## Context
 
-The matrix project has 6 file-format modules (csv, json, spreadsheet, arff, avro, parquet), each with its own reader/writer classes. Users must know which class to import for each format. This plan adds a unified `Matrix.read(file)` / `Matrix.write(matrix, file)` API that auto-detects the format by file extension and delegates to the appropriate module via Java's `ServiceLoader`. Adding a format module to the classpath is all that's needed to support that format.
+The matrix project has 6 file-format modules (csv, json, spreadsheet, arff, avro, parquet), each with its own reader/writer classes. Users must know which class to import for each format. This plan adds a unified `Matrix.read(file)` / `matrix.write(file)` API that auto-detects the format by file extension and delegates to the appropriate module via Java's `ServiceLoader`. Adding a format module to the classpath is all that's needed to support that format.
 
 ## Design Decisions
 
 - **Java ServiceLoader** (not Groovy Extension Modules) -- SPI is the standard plugin discovery mechanism; extension modules are for adding methods to existing classes
 - **`Map<String, ?>` options in the SPI interface** -- matrix-core cannot depend on format modules, so the interface must be generic. Each provider converts the map to its typed Options class internally
-- **Static methods on `Matrix`** -- `Matrix.read(file)` is natural alongside `Matrix.builder()`, and is the primary user-facing API
+- **Static `read(...)`, instance `write(...)` on `Matrix`** -- `Matrix.read(file)` is natural alongside `Matrix.builder()`, while `matrix.write(file)` fits the existing object-oriented export style better than a new static write helper
 - **Options classes per module** -- Typed, fluent builders with `describe()` for discoverability and `toMap()` for SPI interop. Users who want type safety use the Options class; script users pass simple map keys
 - **`Matrix.listReadOptions(ext)` / `Matrix.listWriteOptions(ext)`** -- convenience to discover format-specific read and write options for a given extension
 
@@ -36,15 +36,15 @@ Default implementations: `read(Path)` → `read(File)`, `read(URL)` → `read(In
 
 Uses `ServiceLoader.load(MatrixFormatProvider)`. Caches providers by extension. Thread-safe lazy init. Methods: `getProvider(ext)`, `supportedExtensions()`, `describe()`, `listReadOptions(ext)`, `listWriteOptions(ext)`, `reload()`, `extractExtension(fileName)`.
 
-### 1.5 [x] Add static `read()` / `write()` / `listReadOptions()` / `listWriteOptions()` methods to `Matrix`
+### 1.5 [x] Add static `read()` / instance `write()` / `listReadOptions()` / `listWriteOptions()` methods to `Matrix`
 **Modified:** `matrix-core/src/main/groovy/se/alipsa/matrix/core/Matrix.groovy`
 
 Added:
 - `static Matrix read(Map options = [:], File file)`
 - `static Matrix read(Map options = [:], Path path)`
 - `static Matrix read(Map options = [:], URL url)`
-- `static void write(Map options = [:], Matrix matrix, File file)`
-- `static void write(Map options = [:], Matrix matrix, Path path)`
+- `void write(Map options = [:], File file)`
+- `void write(Map options = [:], Path path)`
 - `static String listReadOptions(String fileExtension)`
 - `static String listWriteOptions(String fileExtension)`
 
@@ -210,10 +210,10 @@ Extensions: `['parquet']`. Read delegates to `MatrixParquetReader.read(file, ...
 ## Phase 4: Documentation
 
 ### 8.1 [x] Update `matrix-core/readme.md`
-Add section documenting `Matrix.read()` / `Matrix.write()` / `Matrix.listReadOptions()` / `Matrix.listWriteOptions()`, `FormatRegistry.describe()`, and the SPI mechanism.
+Add section documenting `Matrix.read()` / `matrix.write()` / `Matrix.listReadOptions()` / `Matrix.listWriteOptions()`, `FormatRegistry.describe()`, and the SPI mechanism.
 
 ### 8.2 [x] Update format module READMEs
-Each module's README gets a new section showing usage via `Matrix.read()` / `Matrix.write()`, available options, and `*ReadOptions.describe()` / `*WriteOptions.describe()` for scripting discoverability.
+Each module's README gets a new section showing usage via `Matrix.read()` / `matrix.write()`, available options, and `*ReadOptions.describe()` / `*WriteOptions.describe()` for scripting discoverability.
 
 Modules: `matrix-csv/README.md`, `matrix-json/README.md`, `matrix-spreadsheet/README.md`, `matrix-arff/README.md`, `matrix-avro/README.md`, `matrix-parquet/readme.md`
 
@@ -236,7 +236,7 @@ Modules: `matrix-csv/README.md`, `matrix-json/README.md`, `matrix-spreadsheet/RE
 - `*FormatProviderTest.groovy`
 
 ### Modified files
-- `matrix-core/src/main/groovy/se/alipsa/matrix/core/Matrix.groovy` -- DONE (static read/write/listReadOptions/listWriteOptions methods added)
+- `matrix-core/src/main/groovy/se/alipsa/matrix/core/Matrix.groovy` -- DONE (static read, instance write, listReadOptions, and listWriteOptions methods added)
 - `matrix-avro/src/main/groovy/se/alipsa/matrix/avro/AvroReadOptions.groovy` -- DONE (describe/toMap/fromMap added)
 - `matrix-avro/src/main/groovy/se/alipsa/matrix/avro/AvroWriteOptions.groovy` -- DONE (describe/toMap/fromMap added)
 - 7 README files -- DONE
@@ -262,8 +262,8 @@ def data = Matrix.read(new URL('https://example.com/data.json'))
 def data = Matrix.read(Path.of('/data/archive.parquet'))
 
 // Write
-Matrix.write(data, new File('output.json'))
-Matrix.write(indent: true, data, new File('output.json'))
+data.write(new File('output.json'))
+data.write(indent: true, new File('output.json'))
 
 // Discover available options
 println Matrix.listReadOptions('csv')
