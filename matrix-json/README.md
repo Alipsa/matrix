@@ -65,6 +65,8 @@ println JsonReadOptions.describe()
 println JsonWriteOptions.describe()
 ```
 
+Note: from `matrix-json` 2.1.3 onward, JSON floating-point values are read as `BigDecimal` instead of `Double` so decimal values preserve their exact text precision when imported through `JsonReader` / `Matrix.read(...)`.
+
 ## Exporting a Matrix to Json
 
 The simplest way is to just use the toJson method on th JsonExporter, e.g:

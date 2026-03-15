@@ -38,9 +38,7 @@ class SpreadsheetFormatProvider extends AbstractFormatProvider {
   @Override
   Matrix read(File file, Map<String, ?> options) {
     SpreadsheetReadOptions readOptions = resolveReadOptions(file, options)
-    Map<String, Object> params = [:]
-    params.putAll(readOptions.toMap())
-    params.file = file
+    Map<String, Object> params = importerParams(file, readOptions)
     SpreadsheetImporter.importSpreadsheet(params)
   }
 
@@ -96,6 +94,17 @@ class SpreadsheetFormatProvider extends AbstractFormatProvider {
       }
     }
     readOptions
+  }
+
+  private static Map<String, Object> importerParams(File file, SpreadsheetReadOptions readOptions) {
+    Map<String, Object> params = [:]
+    params.putAll(readOptions.toMap())
+    params.file = file
+    params.startCol = params.remove('startColumn')
+    if (params.containsKey('endColumn')) {
+      params.endCol = params.remove('endColumn')
+    }
+    params
   }
 
   private static int resolveLastRow(SpreadsheetReader reader, SpreadsheetReadOptions options) {

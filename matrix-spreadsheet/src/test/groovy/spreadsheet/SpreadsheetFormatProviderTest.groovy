@@ -173,6 +173,23 @@ class SpreadsheetFormatProviderTest {
   }
 
   @Test
+  void testToMapUsesCanonicalColumnKeys() {
+    SpreadsheetReadOptions options = new SpreadsheetReadOptions()
+        .sheetName('Data')
+        .startColumn('B')
+        .endColumn('D')
+        .endRow(10)
+
+    Map<String, ?> params = options.toMap()
+
+    assertEquals('Data', params.sheetName)
+    assertEquals('B', params.startColumn)
+    assertEquals('D', params.endColumn)
+    assertEquals(null, params.startCol)
+    assertEquals(null, params.endCol)
+  }
+
+  @Test
   void testBlankColumnSelectorsAreRejected() {
     IllegalArgumentException startColumnException = assertThrows(IllegalArgumentException) {
       new SpreadsheetReadOptions().startColumn(' ')

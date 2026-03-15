@@ -117,11 +117,11 @@ class SpreadsheetReadOptions {
     if (endRow != null) {
       params.endRow = endRow
     }
-    params.startCol = startColumnName ?: startColumnNumber
+    params.startColumn = startColumnName ?: startColumnNumber
     if (endColumnName != null) {
-      params.endCol = endColumnName
+      params.endColumn = endColumnName
     } else if (endColumnNumber != null) {
-      params.endCol = endColumnNumber
+      params.endColumn = endColumnNumber
     }
     params
   }
