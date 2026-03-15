@@ -44,7 +44,7 @@ implementation 'se.alipsa.matrix:matrix-json:2.1.2'
 
 The jvm should be JDK 21 or higher.
 
-## Using Matrix.read() / Matrix.write()
+## Using Matrix.read() / matrix.write()
 
 If `matrix-json` is on the classpath, `.json` files can be handled through the generic Matrix API:
 
@@ -56,8 +56,8 @@ import se.alipsa.matrix.json.JsonWriteOptions
 Matrix data = Matrix.read(new File('data.json'))
 Matrix utf16 = Matrix.read([charset: 'UTF-16'], new File('data.json'))
 
-Matrix.write([indent: true], data, new File('pretty.json'))
-Matrix.write([dateFormat: 'yyyy/MM/dd'], data, new File('custom.json'))
+data.write([indent: true], new File('pretty.json'))
+data.write([dateFormat: 'yyyy/MM/dd'], new File('custom.json'))
 
 println Matrix.listReadOptions('json')
 println Matrix.listWriteOptions('json')

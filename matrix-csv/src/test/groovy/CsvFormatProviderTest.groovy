@@ -69,7 +69,7 @@ class CsvFormatProviderTest {
         .build()
 
     File tempFile = new File(tempDir, 'roundtrip.csv')
-    Matrix.write(original, tempFile)
+    original.write(tempFile)
 
     Matrix reloaded = Matrix.read(tempFile)
     assertEquals(3, reloaded.rowCount(), 'Should have 3 rows after round-trip')
@@ -87,7 +87,7 @@ class CsvFormatProviderTest {
     assertEquals(4, matrix.rowCount(), 'Null read options should be treated as empty')
 
     File target = new File(tempDir, 'null-options.csv')
-    Matrix.write((Map) null, matrix, target)
+    matrix.write((Map) null, target)
     assertTrue(target.isFile(), 'Null write options should still produce a file')
   }
 
@@ -104,7 +104,7 @@ class CsvFormatProviderTest {
         .build()
 
     File tempFile = new File(tempDir, 'names.csv')
-    Matrix.write([charset: 'ISO-8859-1'], original, tempFile)
+    original.write([charset: 'ISO-8859-1'], tempFile)
 
     String content = Files.readString(tempFile.toPath(), StandardCharsets.ISO_8859_1)
     assertTrue(content.contains('Åsa'), 'Written content should use the requested charset')

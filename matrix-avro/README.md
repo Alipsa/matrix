@@ -31,7 +31,7 @@ dependencies {
 
 ## Usage
 
-### Using Matrix.read() / Matrix.write()
+### Using Matrix.read() / matrix.write()
 
 If `matrix-avro` is on the classpath, `.avro` files are also available through the generic Matrix SPI API:
 
@@ -43,7 +43,7 @@ import se.alipsa.matrix.avro.AvroWriteOptions
 Matrix data = Matrix.read(new File('users.avro'))
 Matrix renamed = Matrix.read([matrixName: 'Users'], new File('users.avro'))
 
-Matrix.write([inferPrecisionAndScale: true, schemaName: 'Users'], data, new File('users-copy.avro'))
+data.write([inferPrecisionAndScale: true, schemaName: 'Users'], new File('users-copy.avro'))
 
 println Matrix.listReadOptions('avro')
 println Matrix.listWriteOptions('avro')

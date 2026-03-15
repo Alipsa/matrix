@@ -155,42 +155,40 @@ class Matrix implements Iterable<Row>, Cloneable {
   }
 
   /**
-   * Write a Matrix to a file, auto-detecting the format by extension.
+   * Write this Matrix to a file, auto-detecting the format by extension.
    *
    * <pre>{@code
-   * Matrix.write(data, new File('output.json'))
-   * Matrix.write(indent: true, data, new File('output.json'))
+   * data.write(new File('output.json'))
+   * data.write(indent: true, new File('output.json'))
    * }</pre>
    *
    * @param options format-specific options (may be empty)
-   * @param matrix the matrix to write
    * @param file the target file
    * @throws IllegalArgumentException if no provider is found for the file extension
    */
-  static void write(Map options = [:], Matrix matrix, File file) {
+  void write(Map options = [:], File file) {
     if (file == null) {
       throw new IllegalArgumentException('file cannot be null')
     }
     String ext = FormatRegistry.extractExtension(file.name)
     MatrixFormatProvider provider = resolveProvider(ext)
-    provider.write(matrix, file, normalizeOptions(options))
+    provider.write(this, file, normalizeOptions(options))
   }
 
   /**
-   * Write a Matrix to a Path, auto-detecting the format by extension.
+   * Write this Matrix to a Path, auto-detecting the format by extension.
    *
    * @param options format-specific options (may be empty)
-   * @param matrix the matrix to write
    * @param path the target path
    * @throws IllegalArgumentException if no provider is found for the file extension
    */
-  static void write(Map options = [:], Matrix matrix, Path path) {
+  void write(Map options = [:], Path path) {
     if (path == null) {
       throw new IllegalArgumentException('path cannot be null')
     }
     String ext = FormatRegistry.extractExtension(path.fileName.toString())
     MatrixFormatProvider provider = resolveProvider(ext)
-    provider.write(matrix, path, normalizeOptions(options))
+    provider.write(this, path, normalizeOptions(options))
   }
 
   /**

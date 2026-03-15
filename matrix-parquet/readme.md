@@ -13,7 +13,7 @@ implementation 'se.alipsa.matrix:matrix-parquet:0.4.0'
 
 ## Basic Usage
 
-### Using Matrix.read() / Matrix.write()
+### Using Matrix.read() / matrix.write()
 
 If `matrix-parquet` is on the classpath, `.parquet` files are also available through the generic Matrix SPI API:
 
@@ -25,8 +25,8 @@ import se.alipsa.matrix.parquet.ParquetWriteOptions
 Matrix data = Matrix.read(new File('data.parquet'))
 Matrix stockholm = Matrix.read([matrixName: 'events', zoneId: 'Europe/Stockholm'], new File('events.parquet'))
 
-Matrix.write([inferPrecisionAndScale: true], data, new File('copy.parquet'))
-Matrix.write([precision: 38, scale: 18, zoneId: 'Europe/Stockholm'], data, new File('money.parquet'))
+data.write([inferPrecisionAndScale: true], new File('copy.parquet'))
+data.write([precision: 38, scale: 18, zoneId: 'Europe/Stockholm'], new File('money.parquet'))
 
 println Matrix.listReadOptions('parquet')
 println Matrix.listWriteOptions('parquet')

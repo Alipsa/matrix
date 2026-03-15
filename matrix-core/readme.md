@@ -51,7 +51,7 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.core.spi.FormatRegistry
 
 def csv = Matrix.read(new File('sales.csv'))
-Matrix.write([indent: true], csv, new File('sales.json'))
+csv.write([indent: true], new File('sales.json'))
 
 println FormatRegistry.instance.describe()
 println Matrix.listReadOptions('csv')

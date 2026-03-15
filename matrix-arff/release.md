@@ -1,7 +1,7 @@
 # Matrix-arff release history
 
 ## v0.2.0 In progress
-- Add service registration of the module to support Matrix.read(...) and matrix.write(...) of arff files
+- Add service registration of the module to support Matrix.read(...) and matrix.write(...) for arff files
 
 ## v0.1.0 2026-01-30
 Initial release

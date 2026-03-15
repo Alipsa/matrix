@@ -38,7 +38,7 @@ class ParquetFormatProviderTest {
         .build()
 
     File file = tempDir.resolve('payments.parquet').toFile()
-    Matrix.write([precision: 8, scale: 2, zoneId: 'Europe/Stockholm'], source, file)
+    source.write([precision: 8, scale: 2, zoneId: 'Europe/Stockholm'], file)
 
     Matrix matrix = Matrix.read([matrixName: 'loaded-payments', zoneId: 'Europe/Stockholm'], file)
     assertEquals('loaded-payments', matrix.matrixName)

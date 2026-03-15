@@ -36,7 +36,7 @@ class JsonFormatProviderTest {
         .build()
 
     File file = tempDir.resolve('people.json').toFile()
-    Matrix.write([indent: true, dateFormat: 'yyyy/MM/dd'], source, file)
+    source.write([indent: true, dateFormat: 'yyyy/MM/dd'], file)
 
     String json = file.getText('UTF-8')
     assertTrue(json.contains('\n'))

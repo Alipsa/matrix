@@ -54,7 +54,7 @@ The SpreadSheetImporter.importSpreadSheetSheet takes the following parameters:
 Note: there are seveal overloaded versions of the importSpreadsheet method e.g taking a sheet index instead of a sheet name,
 using column index instead of column name etc.
 
-## Using Matrix.read() / Matrix.write()
+## Using Matrix.read() / matrix.write()
 
 If `matrix-spreadsheet` is on the classpath, `.xlsx` and `.ods` files can be handled through the generic Matrix SPI:
 
@@ -66,8 +66,8 @@ import se.alipsa.matrix.spreadsheet.SpreadsheetWriteOptions
 Matrix auto = Matrix.read(new File('Book1.xlsx'))
 Matrix subset = Matrix.read([sheetName: 'Sheet2', startRow: 6, endRow: 10, startColumn: 'AC', endColumn: 'BH'], new File('Book2.xlsx'))
 
-Matrix.write(auto, new File('copy.xlsx'))
-Matrix.write([sheetName: 'Metrics', startPosition: 'B3'], auto, new File('copy.xlsx'))
+auto.write(new File('copy.xlsx'))
+auto.write([sheetName: 'Metrics', startPosition: 'B3'], new File('copy.xlsx'))
 
 println Matrix.listReadOptions('xlsx')
 println Matrix.listWriteOptions('ods')

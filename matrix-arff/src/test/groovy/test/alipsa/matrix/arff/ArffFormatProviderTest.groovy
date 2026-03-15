@@ -50,7 +50,7 @@ class ArffFormatProviderTest {
         .build()
 
     File file = tempDir.resolve('flowers.arff').toFile()
-    Matrix.write([nominalMappings: [species: ['setosa', 'versicolor']]], source, file)
+    source.write([nominalMappings: [species: ['setosa', 'versicolor']]], file)
     String content = file.getText('UTF-8')
     assertTrue(content.contains('{setosa,versicolor}'))
 

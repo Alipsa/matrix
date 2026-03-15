@@ -53,7 +53,7 @@ class SpreadsheetFormatProviderTest {
         .build()
 
     File file = tempDir.resolve('sales.xlsx').toFile()
-    Matrix.write([sheetName: 'Data', startPosition: 'B3'], source, file)
+    source.write([sheetName: 'Data', startPosition: 'B3'], file)
 
     Matrix matrix = Matrix.read([sheetName: 'Data', startRow: 3, endRow: 5, startColumn: 'B', endColumn: 'C'], file)
     assertEquals(source.columnNames(), matrix.columnNames())

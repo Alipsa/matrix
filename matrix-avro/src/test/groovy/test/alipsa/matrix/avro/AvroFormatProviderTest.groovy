@@ -36,11 +36,11 @@ class AvroFormatProviderTest {
         .build()
 
     File file = tempDir.resolve('orders.avro').toFile()
-    Matrix.write([
+    source.write([
         inferPrecisionAndScale: true,
         schemaName            : 'Orders',
         namespace             : 'se.alipsa.matrix.spi'
-    ], source, file)
+    ], file)
 
     Matrix matrix = Matrix.read([matrixName: 'loaded-orders'], file)
     assertEquals('loaded-orders', matrix.matrixName)

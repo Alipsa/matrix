@@ -180,11 +180,16 @@ class FormatRegistry {
     if (fileName == null || fileName.isEmpty()) {
       return ''
     }
-    int lastDot = fileName.lastIndexOf('.')
-    if (lastDot < 0 || lastDot == fileName.length() - 1) {
+    int lastSeparator = Math.max(fileName.lastIndexOf('/'), fileName.lastIndexOf('\\'))
+    String baseName = lastSeparator >= 0 ? fileName.substring(lastSeparator + 1) : fileName
+    if (baseName.isEmpty()) {
       return ''
     }
-    fileName.substring(lastDot + 1).toLowerCase()
+    int lastDot = baseName.lastIndexOf('.')
+    if (lastDot < 0 || lastDot == baseName.length() - 1) {
+      return ''
+    }
+    baseName.substring(lastDot + 1).toLowerCase()
   }
 
   private MatrixFormatProvider resolveProvider(String fileExtension) {

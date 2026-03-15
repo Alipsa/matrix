@@ -17,6 +17,9 @@ class FormatRegistryTest {
     assertEquals('csv', FormatRegistry.extractExtension('data.csv'))
     assertEquals('json', FormatRegistry.extractExtension('my.data.json'))
     assertEquals('parquet', FormatRegistry.extractExtension('/path/to/file.parquet'))
+    assertEquals('csv', FormatRegistry.extractExtension('/releases/v1.2/file.csv'))
+    assertEquals('', FormatRegistry.extractExtension('/releases/v1.2/file'))
+    assertEquals('json', FormatRegistry.extractExtension('C:\\releases\\v1.2\\file.json'))
     assertEquals('', FormatRegistry.extractExtension('noextension'))
     assertEquals('', FormatRegistry.extractExtension(''))
     assertEquals('', FormatRegistry.extractExtension(null))
@@ -84,7 +87,7 @@ class FormatRegistryTest {
   @Test
   void testMatrixWriteRejectsNullFile() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
-      Matrix.write([:], Matrix.builder('test').build(), (File) null)
+      Matrix.builder('test').build().write([:], (File) null)
     }
     assertEquals('file cannot be null', exception.message)
   }
