@@ -546,7 +546,7 @@ class KMeansPlusPlus {
     // Defensive fix for empty clusters
     for (int i = 0; i < k; i++) {
       if (clustSize[i] == 0) {
-        log.warn("Cluster $i is empty, reinitializing to a random point")
+        log.debug("Cluster $i is empty, reinitializing to a random point")
         int randIndex = random.nextInt(m)
         centroids[i] = Arrays.copyOf(points[randIndex], n)
         clustSize[i] = 1 // prevent division by zero

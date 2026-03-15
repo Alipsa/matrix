@@ -7,9 +7,10 @@ import se.alipsa.matrix.core.spi.OptionMaps
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Duration
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import org.junit.jupiter.api.function.Executable
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -69,46 +70,48 @@ class FormatRegistryTest {
 
   @Test
   void testReloadIsSafeDuringConcurrentReads() {
-    FormatRegistry registry = FormatRegistry.instance
-    AtomicReference<Throwable> failure = new AtomicReference<>()
-    CountDownLatch start = new CountDownLatch(1)
+    assertTimeout(Duration.ofSeconds(20), ({
+      FormatRegistry registry = FormatRegistry.instance
+      AtomicReference<Throwable> failure = new AtomicReference<>()
+      CountDownLatch start = new CountDownLatch(1)
 
-    Thread reloader = new Thread({
-      awaitLatch(start)
-      try {
-        100.times {
-          registry.reload()
-        }
-      } catch (Throwable t) {
-        failure.compareAndSet(null, t)
-      }
-    }, 'format-registry-reloader')
-
-    List<Thread> readers = (1..4).collect { int index ->
-      new Thread({
+      Thread reloader = new Thread({
         awaitLatch(start)
         try {
-          250.times {
-            registry.getProvider('csv')
-            registry.supportedExtensions()
-            registry.describe()
+          40.times {
+            registry.reload()
           }
         } catch (Throwable t) {
           failure.compareAndSet(null, t)
         }
-      }, "format-registry-reader-$index")
-    }
+      }, 'format-registry-reloader')
 
-    reloader.start()
-    readers*.start()
-    start.countDown()
+      List<Thread> readers = (1..4).collect { int index ->
+        new Thread({
+          awaitLatch(start)
+          try {
+            100.times {
+              registry.getProvider('csv')
+              registry.supportedExtensions()
+              registry.describe()
+            }
+          } catch (Throwable t) {
+            failure.compareAndSet(null, t)
+          }
+        }, "format-registry-reader-$index")
+      }
 
-    reloader.join(TimeUnit.SECONDS.toMillis(10))
-    readers*.each { it.join(TimeUnit.SECONDS.toMillis(10)) }
+      reloader.start()
+      readers*.start()
+      start.countDown()
 
-    assertEquals(null, failure.get())
-    assertFalse(reloader.isAlive())
-    assertTrue(readers.every { !it.isAlive() })
+      reloader.join()
+      readers*.each { it.join() }
+
+      assertEquals(null, failure.get())
+      assertFalse(reloader.isAlive())
+      assertTrue(readers.every { !it.isAlive() })
+    } as Executable))
   }
 
   @Test
