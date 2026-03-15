@@ -6,6 +6,7 @@ import org.apache.commons.csv.CSVPrinter
 import org.apache.commons.io.output.CloseShieldWriter
 import se.alipsa.matrix.core.Matrix
 
+import java.nio.charset.Charset
 import java.nio.file.Path
 
 /**
@@ -426,6 +427,30 @@ class CsvWriter {
      */
     void to(Path path) {
       to(path.toFile())
+    }
+
+    /**
+     * Writes CSV data to a File using the specified character encoding.
+     *
+     * @param out the file to write to (or a directory)
+     * @param charset the character encoding to use
+     */
+    void to(File out, Charset charset) {
+      validateMatrix(_matrix)
+      out = ensureFileOutput(_matrix, out)
+      out.withWriter(charset.name()) { Writer writer ->
+        to(writer)
+      }
+    }
+
+    /**
+     * Writes CSV data to a Path using the specified character encoding.
+     *
+     * @param path the path to write to
+     * @param charset the character encoding to use
+     */
+    void to(Path path, Charset charset) {
+      to(path.toFile(), charset)
     }
 
     /**

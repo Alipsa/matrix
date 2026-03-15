@@ -40,6 +40,26 @@ the groovy core library as well e.g:
 The only difference when using it from Java is that some of the shorthand methods does not work e.g.
 instead of doing `myMatrix[2, 'id']` you will need to use the underlying method instead i.e. `myMatrix.getAt(2, 'id')`
 
+## Format SPI
+
+`matrix-core` now includes a ServiceLoader-based format SPI. When a format module such as `matrix-csv`,
+`matrix-json`, `matrix-spreadsheet`, `matrix-arff`, `matrix-avro`, or `matrix-parquet` is on the classpath,
+`Matrix` can resolve the format from the file extension and delegate automatically.
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.spi.FormatRegistry
+
+def csv = Matrix.read(new File('sales.csv'))
+csv.write([indent: true], new File('sales.json'))
+
+println FormatRegistry.instance.describe()
+println Matrix.listReadOptions('csv')
+println Matrix.listWriteOptions('json')
+```
+
+Each format module also exposes typed `*ReadOptions` and `*WriteOptions` classes for discoverability and scripting.
+
 ## Matrix
 A Matrix is a grid with a header and where each column type is defined.
 In some ways you can think of it as an in-memory ResultSet.

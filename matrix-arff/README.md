@@ -78,3 +78,24 @@ Columns: [sepallength, sepalwidth, petallength, petalwidth, class]
 ```
 
 See [the tutorial](../docs/tutorial/16-matrix-arff.md) for more details.
+
+## Using Matrix.read() / matrix.write()
+
+If `matrix-arff` is on the classpath, `.arff` files can also be handled through the generic Matrix SPI API:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.arff.ArffReadOptions
+import se.alipsa.matrix.arff.ArffWriteOptions
+
+Matrix iris = Matrix.read(new File('iris.arff'))
+Matrix fallback = Matrix.read([matrixName: 'fallback'], new File('no-relation.arff'))
+
+iris.write(new File('iris-copy.arff'))
+iris.write([nominalMappings: [class: ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']]], new File('iris-nominal.arff'))
+
+println Matrix.listReadOptions('arff')
+println Matrix.listWriteOptions('arff')
+println ArffReadOptions.describe()
+println ArffWriteOptions.describe()
+```

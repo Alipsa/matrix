@@ -164,7 +164,14 @@ class CsvReader {
   private static Map parseMap(Map format) {
     format = convertKeysToOptions(format)
     Map r = [:]
-    r.charset = format.getOrDefault(CsvOption.Charset, StandardCharsets.UTF_8) as Charset
+    def charsetValue = format.getOrDefault(CsvOption.Charset, StandardCharsets.UTF_8)
+    if (charsetValue instanceof Charset) {
+      r.charset = CsvOptionUtil.resolveCharset(charsetValue as Charset)
+    } else if (charsetValue instanceof CharSequence) {
+      r.charset = CsvOptionUtil.resolveCharset(charsetValue as CharSequence)
+    } else {
+      throw new IllegalArgumentException("Charset must be a java.nio.charset.Charset or CharSequence but was ${charsetValue?.class} = $charsetValue")
+    }
     r.tableName = format.getOrDefault(CsvOption.TableName, '')
     r.apacheFormat = createFormatBuilder(format).build()
     boolean firstRowAsHeader

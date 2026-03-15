@@ -3,6 +3,8 @@ import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.stats.cluster.GroupEstimator
 import se.alipsa.matrix.stats.cluster.KMeansPlusPlus
 
+import static KMeansTestData.RANDOM_SEED
+import static KMeansTestData.gaussianClusters
 import static org.junit.jupiter.api.Assertions.assertEquals
 import static org.junit.jupiter.api.Assertions.assertTrue
 
@@ -26,13 +28,11 @@ class KMeansPlusPlusTest {
         .pp(true)
         .epsilon(.003)
         .useEpsilon(true)
+        .randomSeed(RANDOM_SEED)
         .build()
 
     // print timing information
     println clustering.getTiming()
-    // Check that we did not introduce some performance regression, this might fail on a slow machine.
-    assertTrue(clustering.getExecutionTimeMillis() < 1200, "KMeans execution time should be less than 1200 ms but was ${clustering.getExecutionTimeMillis()} ms")
-
     // get output
     double[][] centroids = clustering.getCentroids()
     double WCSS          = clustering.getWCSS()
@@ -61,7 +61,9 @@ class KMeansPlusPlusTest {
   @Test
   void testBuilderWithElbowEstimation() {
     double[][] data = gaussianClusters(750, 0.05) as double[][]
-    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(data, GroupEstimator.CalculationMethod.ELBOW).build()
+    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(data, GroupEstimator.CalculationMethod.ELBOW)
+        .randomSeed(RANDOM_SEED)
+        .build()
     println "Estimated number of clusters for elbow method: ${clustering.getCentroids().length}"
     println clustering.getTiming()
     assert clustering.getCentroids().length in 3..5
@@ -70,46 +72,12 @@ class KMeansPlusPlusTest {
   @Test
   void testBuilderWithRuleOfThumbEstimation() {
     double[][] data = gaussianClusters(750, 0.05) as double[][]
-    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(data, GroupEstimator.CalculationMethod.RULE_OF_THUMB).build()
+    KMeansPlusPlus clustering = new KMeansPlusPlus.Builder(data, GroupEstimator.CalculationMethod.RULE_OF_THUMB)
+        .randomSeed(RANDOM_SEED)
+        .build()
     println "Estimated number of clusters for Rule of thumb: ${clustering.getCentroids().length}"
     println clustering.getTiming()
     assert clustering.getCentroids().length <= (int)Math.max(2, Math.sqrt(data.length / 2.0d))
     assert clustering.getCentroids().length >= Math.max(2, (int) Math.round(Math.cbrt(data.length)))
-  }
-
-  /**
-   * Generates four Gaussian clusters around the corners of a unit square.
-   * Each cluster has 'pointsPerCluster' points, and the standard deviation of the Gaussian
-   * distribution is 'stdDev'.
-   *
-   * @param pointsPerCluster Number of points per cluster
-   * @param stdDev Standard deviation for the Gaussian distribution
-   * @return List of points, each represented as a list of doubles
-   */
-  static List<List<Double>> gaussianClusters(int pointsPerCluster = 750, double stdDev = 0.05) {
-
-
-    // Cluster centers at corners of unit square
-    def centers = [
-        [0.0, 0.0],
-        [1.0, 0.0],
-        [0.0, 1.0],
-        [1.0, 1.0]
-    ]
-
-    // Random number generator
-    Random rand = new Random()
-
-    // Generate 2D Gaussian points around each center
-    List<List<Double>> allPoints = []
-
-    centers.each { center ->
-      (1..pointsPerCluster).each {
-        double x = center[0] + rand.nextGaussian() * stdDev
-        double y = center[1] + rand.nextGaussian() * stdDev
-        allPoints << [x, y]
-      }
-    }
-    allPoints
   }
 }

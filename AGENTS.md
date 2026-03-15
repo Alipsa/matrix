@@ -36,8 +36,9 @@ PointBuilder shape(Object value) { ... }
 ```
 
 When a value can legitimately be one of several types (e.g. an enum or a list), provide a separate overload for each type. Use enums instead of strings for fixed sets of values (e.g. positions, directions, shape names, line types) and do any string-to-enum conversion at API boundaries (bridges, adapters).
-Prefer idiomatic groovy constructs.
-Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Groovy has its own idioms and best practices that differ from Java. Write code that is idiomatic Groovy rather than Java code written in Groovy syntax. Some examples:
+
+## Prefer idiomatic groovy constructs.
+Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Groovy has its own idioms and best practices that **differ** from Java. Write code that is idiomatic Groovy rather than Java code written in Groovy syntax. Some examples:
  - Use Groovy's native collection literals and methods e.g. closures, `each`, `collect`, and `findAll` instead of Java-style loops and streams. Use `[]` instead of `new ArrayList<>()` and `[:]` instead of `new LinkedHashMap<>()`/`new HashMap<>()`.
  - Prefer closures and higher-order functions over verbose anonymous classes.
  - == vs .equals(): Use `==` for value equality in Groovy, which handles nulls gracefully. == does NOT mean reference equality like in Java.

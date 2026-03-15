@@ -255,6 +255,33 @@ class MatrixParquetWriter {
   }
 
   /**
+   * Writes a Matrix to a Parquet file using a typed options object.
+   *
+   * @param matrix the matrix to write
+   * @param fileOrDir the target file or directory
+   * @param options the write options to apply
+   * @return the target file
+   */
+  static File write(Matrix matrix, File fileOrDir, ParquetWriteOptions options) {
+    validateInput(matrix, fileOrDir)
+    if (options == null) {
+      throw new IllegalArgumentException("Options cannot be null")
+    }
+    options.validate()
+    File file = determineTargetFile(matrix, fileOrDir)
+    MessageType schema = createSchema(matrix, options)
+    if (options.zoneId != null) {
+      try {
+        ZONE_ID_HOLDER.set(options.zoneId)
+        return writeInternal(matrix, file, schema)
+      } finally {
+        ZONE_ID_HOLDER.remove()
+      }
+    }
+    return writeInternal(matrix, file, schema)
+  }
+
+  /**
    * Writes a Matrix to a byte array in Parquet format, optionally inferring precision and scale for BigDecimal columns.
    *
    * @param matrix the matrix to write
@@ -313,6 +340,36 @@ class MatrixParquetWriter {
     return writeBytesInternal(matrix, schema)
   }
 
+  /**
+   * Writes a Matrix to a byte array using a typed options object.
+   *
+   * @param matrix the matrix to write
+   * @param options the write options to apply
+   * @return byte array containing Parquet data
+   */
+  static byte[] writeBytes(Matrix matrix, ParquetWriteOptions options) {
+    if (matrix == null) {
+      throw new IllegalArgumentException("Matrix cannot be null")
+    }
+    if (matrix.columnCount() == 0) {
+      throw new IllegalArgumentException("Matrix must have at least one column")
+    }
+    if (options == null) {
+      throw new IllegalArgumentException("Options cannot be null")
+    }
+    options.validate()
+    MessageType schema = createSchema(matrix, options)
+    if (options.zoneId != null) {
+      try {
+        ZONE_ID_HOLDER.set(options.zoneId)
+        return writeBytesInternal(matrix, schema)
+      } finally {
+        ZONE_ID_HOLDER.remove()
+      }
+    }
+    return writeBytesInternal(matrix, schema)
+  }
+
   private static File determineTargetFile(Matrix matrix, File fileOrDir) {
     String name = matrix.matrixName ?: 'matrix'
     File file
@@ -323,6 +380,22 @@ class MatrixParquetWriter {
       file = fileOrDir
     }
     file
+  }
+
+  private static MessageType createSchema(Matrix matrix, ParquetWriteOptions options) {
+    if (options.hasDecimalMeta()) {
+      return buildSchema(matrix, options.decimalMeta)
+    }
+    if (options.hasFixedPrecisionAndScale()) {
+      Map<String, int[]> decimalMeta = [:]
+      matrix.columnNames().each { String col ->
+        if (matrix.type(col) == BigDecimal) {
+          decimalMeta[col] = [options.precision, options.scale] as int[]
+        }
+      }
+      return buildSchema(matrix, decimalMeta)
+    }
+    return buildSchema(matrix, options.inferPrecisionAndScale)
   }
 
   /**
@@ -938,4 +1011,3 @@ class MatrixParquetWriter {
     return Math.ceil( t / 8d) as int
   }
 }
-
