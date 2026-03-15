@@ -47,6 +47,9 @@ class SpreadsheetFormatProvider extends AbstractFormatProvider {
   @Override
   Matrix read(URL url, Map<String, ?> options) {
     String extension = extractExtension(url.path)
+    if (!extension) {
+      throw new IllegalArgumentException("Cannot auto-detect spreadsheet format for URL '$url': no file extension was found")
+    }
     java.nio.file.Path tempFile = Files.createTempFile('matrix-spreadsheet-', ".${extension}")
     try {
       url.openStream().withCloseable { InputStream is ->

@@ -210,12 +210,7 @@ class CsvFormatProvider extends AbstractFormatProvider {
    * @return true if a delimiter key is present
    */
   private static boolean hasDelimiterKey(Map<String, ?> options) {
-    for (String key : options.keySet()) {
-      if (key.equalsIgnoreCase('delimiter')) {
-        return true
-      }
-    }
-    false
+    options.keySet().any { String key -> key.equalsIgnoreCase('delimiter') }
   }
 
   private static Map<String, Object> normalizeOptions(Map<String, ?> options) {

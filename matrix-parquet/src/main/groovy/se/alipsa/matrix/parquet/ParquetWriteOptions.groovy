@@ -60,6 +60,7 @@ class ParquetWriteOptions {
     if ((precision == null) != (scale == null)) {
       throw new IllegalArgumentException('precision and scale must be provided together')
     }
+    validateDecimalMeta(decimalMeta)
   }
 
   Map<String, ?> toMap() {

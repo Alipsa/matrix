@@ -73,4 +73,13 @@ class ParquetFormatProviderTest {
     assertEquals(null, readOptions.zoneId)
     assertEquals(null, writeOptions.zoneId)
   }
+
+  @Test
+  void testTypedWriteOptionsRejectInvalidDecimalMetaShape() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      new ParquetWriteOptions().decimalMeta([amount: [8] as int[]]).validate()
+    }
+
+    assertTrue(exception.message.contains("decimalMeta['amount'] must be an int[] of length 2"))
+  }
 }

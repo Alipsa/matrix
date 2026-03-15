@@ -70,6 +70,18 @@ class SpreadsheetFormatProviderTest {
   }
 
   @Test
+  void testReadUrlRejectsExtensionlessUrls() {
+    SpreadsheetFormatProvider provider = new SpreadsheetFormatProvider()
+    URL url = new URL('https://example.com/download')
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      provider.read(url, [:])
+    }
+
+    assertEquals("Cannot auto-detect spreadsheet format for URL '$url': no file extension was found", exception.message)
+  }
+
+  @Test
   void testResolveLastRowKeepsDetectedBoundWhenStartRowIsPastData() {
     SpreadsheetReadOptions options = new SpreadsheetReadOptions().startRow(20)
 
