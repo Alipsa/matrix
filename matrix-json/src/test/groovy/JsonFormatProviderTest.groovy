@@ -62,4 +62,11 @@ class JsonFormatProviderTest {
     assertEquals('yyyy-MM-dd', options.dateFormat)
     assertTrue(options.columnFormatters.isEmpty())
   }
+
+  @Test
+  void testReadOptionsIgnoreNullCharset() {
+    JsonReadOptions options = JsonReadOptions.fromMap([charset: null])
+
+    assertEquals('UTF-8', options.charset.name())
+  }
 }

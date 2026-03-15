@@ -34,6 +34,8 @@ class JsonReadOptions {
         result.charset(value as Charset)
       } else if (value instanceof CharSequence) {
         result.charset(String.valueOf(value))
+      } else if (value == null) {
+        // Treat null as absent to preserve the default charset.
       } else {
         throw new IllegalArgumentException("charset must be a Charset or String but was ${value?.class}")
       }
