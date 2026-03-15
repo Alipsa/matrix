@@ -54,4 +54,12 @@ class JsonFormatProviderTest {
     assertEquals(['json'] as Set, provider.supportedExtensions())
     assertEquals('JSON', provider.formatName())
   }
+
+  @Test
+  void testWriteOptionsIgnoreNullDateFormatAndColumnFormatters() {
+    JsonWriteOptions options = JsonWriteOptions.fromMap([dateFormat: null, columnFormatters: null])
+
+    assertEquals('yyyy-MM-dd', options.dateFormat)
+    assertTrue(options.columnFormatters.isEmpty())
+  }
 }

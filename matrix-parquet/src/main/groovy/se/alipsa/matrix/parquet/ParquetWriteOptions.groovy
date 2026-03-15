@@ -100,7 +100,7 @@ class ParquetWriteOptions {
       def value = normalized.zoneid
       if (value instanceof ZoneId) {
         result.zoneId(value as ZoneId)
-      } else {
+      } else if (value != null) {
         result.zoneId(String.valueOf(value))
       }
     }

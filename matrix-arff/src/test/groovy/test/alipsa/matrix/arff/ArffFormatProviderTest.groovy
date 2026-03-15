@@ -66,4 +66,11 @@ class ArffFormatProviderTest {
     assertEquals(['arff'] as Set, provider.supportedExtensions())
     assertEquals('ARFF', provider.formatName())
   }
+
+  @Test
+  void testReadOptionsIgnoreNullMatrixName() {
+    ArffReadOptions options = ArffReadOptions.fromMap([matrixName: null])
+
+    assertEquals(null, options.matrixName)
+  }
 }

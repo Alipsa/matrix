@@ -21,7 +21,10 @@ class ArffReadOptions {
     ArffReadOptions result = new ArffReadOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
     if (normalized.containsKey('matrixname')) {
-      result.matrixName(String.valueOf(normalized.matrixname))
+      String matrixName = OptionMaps.stringValueOrNull(normalized.matrixname)
+      if (matrixName != null) {
+        result.matrixName(matrixName)
+      }
     }
     result
   }

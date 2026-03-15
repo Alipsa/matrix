@@ -63,4 +63,14 @@ class ParquetFormatProviderTest {
 
     assertTrue(exception.message.contains("decimalMeta['amount'] must be an int[] of length 2"))
   }
+
+  @Test
+  void testReadAndWriteOptionsIgnoreNullTextValues() {
+    ParquetReadOptions readOptions = ParquetReadOptions.fromMap([matrixName: null, zoneId: null])
+    ParquetWriteOptions writeOptions = ParquetWriteOptions.fromMap([zoneId: null])
+
+    assertEquals(null, readOptions.matrixName)
+    assertEquals(null, readOptions.zoneId)
+    assertEquals(null, writeOptions.zoneId)
+  }
 }

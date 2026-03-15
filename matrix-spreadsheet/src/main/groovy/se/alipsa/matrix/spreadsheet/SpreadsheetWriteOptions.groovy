@@ -14,11 +14,19 @@ class SpreadsheetWriteOptions {
   String startPosition = 'A1'
 
   SpreadsheetWriteOptions sheetName(String value) {
+    if (value == null) {
+      return this
+    }
+    requireText(value, 'sheetName')
     this.sheetName = value
     this
   }
 
   SpreadsheetWriteOptions startPosition(String value) {
+    if (value == null) {
+      return this
+    }
+    requireText(value, 'startPosition')
     this.startPosition = value
     this
   }
@@ -27,10 +35,16 @@ class SpreadsheetWriteOptions {
     SpreadsheetWriteOptions result = new SpreadsheetWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
     if (normalized.containsKey('sheetname')) {
-      result.sheetName(String.valueOf(normalized.sheetname))
+      String sheetName = OptionMaps.stringValueOrNull(normalized.sheetname)
+      if (sheetName != null) {
+        result.sheetName(sheetName)
+      }
     }
     if (normalized.containsKey('startposition')) {
-      result.startPosition(String.valueOf(normalized.startposition))
+      String startPosition = OptionMaps.stringValueOrNull(normalized.startposition)
+      if (startPosition != null) {
+        result.startPosition(startPosition)
+      }
     }
     result
   }
@@ -52,5 +66,11 @@ class SpreadsheetWriteOptions {
         new OptionDescriptor('sheetName', String, null, 'Sheet name to write to'),
         new OptionDescriptor('startPosition', String, 'A1', 'Top-left cell for the header row, e.g. B3')
     ]
+  }
+
+  private static void requireText(String value, String name) {
+    if (value.isBlank()) {
+      throw new IllegalArgumentException("$name must not be blank")
+    }
   }
 }

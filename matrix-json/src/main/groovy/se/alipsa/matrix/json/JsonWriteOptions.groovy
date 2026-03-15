@@ -36,10 +36,16 @@ class JsonWriteOptions {
       result.indent(normalized.indent as boolean)
     }
     if (normalized.containsKey('dateformat')) {
-      result.dateFormat(String.valueOf(normalized.dateformat))
+      String dateFormat = OptionMaps.stringValueOrNull(normalized.dateformat)
+      if (dateFormat != null) {
+        result.dateFormat(dateFormat)
+      }
     }
     if (normalized.containsKey('columnformatters')) {
       def value = normalized.columnformatters
+      if (value == null) {
+        return result
+      }
       if (!(value instanceof Map)) {
         throw new IllegalArgumentException("columnFormatters must be a Map<String, Closure> but was ${value?.class}")
       }

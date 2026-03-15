@@ -249,10 +249,16 @@ class AvroWriteOptions {
       result.inferPrecisionAndScale(normalized.inferprecisionandscale as boolean)
     }
     if (normalized.containsKey('namespace')) {
-      result.namespace(String.valueOf(normalized.namespace))
+      String namespace = OptionMaps.stringValueOrNull(normalized.namespace)
+      if (namespace != null) {
+        result.namespace(namespace)
+      }
     }
     if (normalized.containsKey('schemaname')) {
-      result.schemaName(String.valueOf(normalized.schemaname))
+      String schemaName = OptionMaps.stringValueOrNull(normalized.schemaname)
+      if (schemaName != null) {
+        result.schemaName(schemaName)
+      }
     }
     if (normalized.containsKey('compression')) {
       def value = normalized.compression

@@ -54,4 +54,14 @@ class AvroFormatProviderTest {
     assertEquals(['avro'] as Set, provider.supportedExtensions())
     assertEquals('Avro', provider.formatName())
   }
+
+  @Test
+  void testReadAndWriteOptionsIgnoreNullStringValues() {
+    AvroReadOptions readOptions = AvroReadOptions.fromMap([matrixName: null])
+    AvroWriteOptions writeOptions = AvroWriteOptions.fromMap([namespace: null, schemaName: null])
+
+    assertEquals(null, readOptions.matrixName)
+    assertEquals('se.alipsa.matrix.avro', writeOptions.namespace)
+    assertEquals('MatrixSchema', writeOptions.schemaName)
+  }
 }

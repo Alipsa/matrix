@@ -114,6 +114,76 @@ class SpreadsheetFormatProviderTest {
     assertEquals('startColumn must be >= 1', exception.message)
   }
 
+  @Test
+  void testSheetNameNullDoesNotClearSheetNumber() {
+    SpreadsheetReadOptions options = new SpreadsheetReadOptions().sheetNumber(2)
+
+    options.sheetName(null)
+
+    assertEquals(2, options.sheetNumber)
+    assertEquals(null, options.sheetName)
+  }
+
+  @Test
+  void testBlankSheetNameIsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      new SpreadsheetReadOptions().sheetName('   ')
+    }
+
+    assertEquals('sheetName must not be blank', exception.message)
+  }
+
+  @Test
+  void testFromMapIgnoresNullSheetAndColumnSelectors() {
+    SpreadsheetReadOptions options = SpreadsheetReadOptions.fromMap([sheetName: null, startColumn: null, endColumn: null])
+
+    assertEquals(1, options.sheetNumber)
+    assertEquals(null, options.sheetName)
+    assertEquals(1, options.startColumnNumber)
+    assertEquals(null, options.startColumnName)
+    assertEquals(null, options.endColumnNumber)
+    assertEquals(null, options.endColumnName)
+  }
+
+  @Test
+  void testBlankColumnSelectorsAreRejected() {
+    IllegalArgumentException startColumnException = assertThrows(IllegalArgumentException) {
+      new SpreadsheetReadOptions().startColumn(' ')
+    }
+    IllegalArgumentException endColumnException = assertThrows(IllegalArgumentException) {
+      new SpreadsheetReadOptions().endColumn('\t')
+    }
+
+    assertEquals('startColumn must not be blank', startColumnException.message)
+    assertEquals('endColumn must not be blank', endColumnException.message)
+  }
+
+  @Test
+  void testWriteOptionsIgnoreNullValues() {
+    SpreadsheetWriteOptions options = SpreadsheetWriteOptions.fromMap([sheetName: null, startPosition: null])
+
+    assertEquals(null, options.sheetName)
+    assertEquals('A1', options.startPosition)
+  }
+
+  @Test
+  void testBlankStartPositionIsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      new SpreadsheetWriteOptions().startPosition(' ')
+    }
+
+    assertEquals('startPosition must not be blank', exception.message)
+  }
+
+  @Test
+  void testBlankWriteSheetNameIsRejected() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      new SpreadsheetWriteOptions().sheetName(' ')
+    }
+
+    assertEquals('sheetName must not be blank', exception.message)
+  }
+
   private static int invokeResolveLastRow(SpreadsheetReader reader, SpreadsheetReadOptions options) {
     Method method = SpreadsheetFormatProvider.getDeclaredMethod('resolveLastRow', SpreadsheetReader, SpreadsheetReadOptions)
     method.accessible = true

@@ -36,6 +36,10 @@ class SpreadsheetReadOptions {
   }
 
   SpreadsheetReadOptions sheetName(String value) {
+    if (value == null) {
+      return this
+    }
+    requireText(value, 'sheetName')
     this.sheetName = value
     this.sheetNumber = null
     this
@@ -61,6 +65,10 @@ class SpreadsheetReadOptions {
   }
 
   SpreadsheetReadOptions startColumn(String value) {
+    if (value == null) {
+      return this
+    }
+    requireText(value, 'startColumn')
     this.startColumnName = value
     this.startColumnNumber = null
     this
@@ -74,6 +82,10 @@ class SpreadsheetReadOptions {
   }
 
   SpreadsheetReadOptions endColumn(String value) {
+    if (value == null) {
+      return this
+    }
+    requireText(value, 'endColumn')
     this.endColumnName = value
     this.endColumnNumber = null
     this
@@ -119,14 +131,17 @@ class SpreadsheetReadOptions {
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
 
     if (normalized.containsKey('sheetname')) {
-      result.sheetName(String.valueOf(normalized.sheetname))
+      String sheetName = OptionMaps.stringValueOrNull(normalized.sheetname)
+      if (sheetName != null) {
+        result.sheetName(sheetName)
+      }
     } else if (normalized.containsKey('sheetnumber')) {
       result.sheetNumber((normalized.sheetnumber as Number).intValue())
     } else if (normalized.containsKey('sheet')) {
       def sheet = normalized.sheet
       if (sheet instanceof Number) {
         result.sheetNumber((sheet as Number).intValue())
-      } else {
+      } else if (sheet != null) {
         result.sheetName(String.valueOf(sheet))
       }
     }
@@ -178,6 +193,12 @@ class SpreadsheetReadOptions {
   private static void requireAtLeastOne(int value, String name) {
     if (value < 1) {
       throw new IllegalArgumentException("$name must be >= 1")
+    }
+  }
+
+  private static void requireText(String value, String name) {
+    if (value.isBlank()) {
+      throw new IllegalArgumentException("$name must not be blank")
     }
   }
 }

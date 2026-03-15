@@ -45,13 +45,16 @@ class ParquetReadOptions {
     ParquetReadOptions result = new ParquetReadOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
     if (normalized.containsKey('matrixname')) {
-      result.matrixName(String.valueOf(normalized.matrixname))
+      String matrixName = OptionMaps.stringValueOrNull(normalized.matrixname)
+      if (matrixName != null) {
+        result.matrixName(matrixName)
+      }
     }
     if (normalized.containsKey('zoneid')) {
       def value = normalized.zoneid
       if (value instanceof ZoneId) {
         result.zoneId(value as ZoneId)
-      } else {
+      } else if (value != null) {
         result.zoneId(String.valueOf(value))
       }
     }
