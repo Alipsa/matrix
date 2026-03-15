@@ -70,6 +70,7 @@ dependencies {
   testImplementation "org.openjfx:javafx-swing:${javaFxVersion}:$qualifier"
   testImplementation libs.groovier.junit
   testImplementation libs.junit.jupiter
+  testImplementation libs.groovier.junit
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
   testImplementation libs.slf4j.simple

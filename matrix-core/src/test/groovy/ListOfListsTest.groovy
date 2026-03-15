@@ -20,9 +20,9 @@ class ListOfListsTest {
         assertEquals(5 as BigDecimal, sum(foo[1]), "sum of foo: ")
 
         def bar = convert(foo, 0, BigDecimal)
-        assertEquals(18.2g, sum(bar, 0), "sum of bar: ")
+        assertEquals(18.2, sum(bar, 0), "sum of bar: ")
 
-        assertEquals(12.0g, sum(foo, 0), "after cast, sum of foo: ")
+        assertEquals(12.0, sum(foo, 0), "after cast, sum of foo: ")
 
         def format = DecimalFormat.getInstance(Locale.GERMANY)
 
@@ -46,12 +46,12 @@ class ListOfListsTest {
                 ["4.3", 2, 3]
         ]
 
-        assertEquals(12.0g, sum(foo, 0), "sum of foo: ")
+        assertEquals(12.0, sum(foo, 0), "sum of foo: ")
 
         def bar = convert(foo, 0, Double.class)
-        assertEquals(18.2g, sum(bar, 0), "sum of bar: ")
+        assertEquals(18.2, sum(bar, 0), 1e-9, "sum of bar: ")
 
-        assertEquals(12.0g, sum(foo, 0), "after cast, sum of foo: ")
+        assertEquals(12.0, sum(foo, 0), "after cast, sum of foo: ")
 
         def foo2 = [
             [12.0, 3.0, Math.PI],
@@ -61,7 +61,7 @@ class ListOfListsTest {
 
         def format = DecimalFormat.getInstance(Locale.GERMANY)
         def baz2 = convert(foo2, 0..2, Double.class, format)
-        assertEquals(7.01, sum(baz2, [0,1])[1])
+        assertEquals(7.01, sum(baz2, [0,1])[1], 1e-9)
 
         def baz3 = convert(foo2, 0, Double.class, format)
         def baz4 = convert(foo2, 0, Double.class, format)
@@ -76,7 +76,7 @@ class ListOfListsTest {
                 ["bla", 2, 3]
         ]
 
-        assertEquals(12.0g, sum(foo, 0), "sum of foo: ")
+        assertEquals(12.0, sum(foo, 0), "sum of foo: ")
 
         def bar = convert(foo, 0, { v -> {
             if (v instanceof Number) {
@@ -90,9 +90,9 @@ class ListOfListsTest {
             }
             return 0
         }})
-        assertEquals(13.9g, sum(bar, 0), "sum of bar: ")
+        assertEquals(13.9, sum(bar, 0), "sum of bar: ")
 
-        assertEquals(12.0g, sum(foo, 0), "after cast, sum of foo: ")
+        assertEquals(12.0, sum(foo, 0), "after cast, sum of foo: ")
     }
 
     @Test

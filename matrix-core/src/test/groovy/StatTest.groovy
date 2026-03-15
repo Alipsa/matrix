@@ -349,7 +349,7 @@ class StatTest {
 
   @Test
   void testMixedNumbers() {
-    assertEquals(3.14, min([6, 99g, 3.14d, 7 / 1.23, 5 as Short, (byte) 19, 787987987]))
+    assertEquals(3.14d, min([6, 99g, 3.14d, 7 / 1.23, 5 as Short, (byte) 19, 787987987]) as double, 1e-12d)
     assertEquals(787987987, max([6, 99g, 3.14d, 7 / 1.23, 5 as Short, (byte) 19, 787987987]))
   }
 

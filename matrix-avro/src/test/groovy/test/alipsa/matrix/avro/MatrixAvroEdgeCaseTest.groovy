@@ -158,8 +158,7 @@ class MatrixAvroEdgeCaseTest {
 
       assertEquals(rows, result.rowCount())
       assertEquals(3, result.columnCount())
-      String expected = "row${rows}"
-      assertEquals(expected, result[rows - 1, "name"])
+      assertEquals("row${rows}", result[rows - 1, "name"])
     } finally {
       tmp.delete()
     }

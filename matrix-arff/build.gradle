@@ -32,6 +32,7 @@ dependencies {
   testImplementation project(':matrix-datasets')
   testImplementation libs.slf4j.simple
   testImplementation libs.junit.jupiter.api
+  testImplementation libs.groovier.junit
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
 }

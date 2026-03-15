@@ -47,6 +47,7 @@ dependencies {
   testImplementation libs.groovy
   testImplementation libs.groovy.json
   testImplementation libs.junit.jupiter.api
+  testImplementation libs.groovier.junit
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
 }

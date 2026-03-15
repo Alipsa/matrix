@@ -59,6 +59,7 @@ dependencies {
   testImplementation libs.junit.jupiter.api
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
+  testImplementation libs.groovier.junit
   testImplementation libs.groovy
   testImplementation libs.log4j.slf4j
   // Removed slf4jSimple - conflicts with log4jToSlf4j (both are SLF4J providers)

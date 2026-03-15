@@ -66,8 +66,8 @@ class CorrelationTest {
     def x2 = [1, 4, 7, 1, 0]
     def kc = new KendallsCorrelation()
     def apacheCor = kc.correlation(x1 as double[], x2 as double[])
-    assertEquals(-0.47140452079103173, apacheCor)
+    assertEquals(-0.47140452079103173, apacheCor, 1e-17)
     // BigDecimal implementation gives comparable precision
-    assertEquals(-0.47140452079103, corKendall(x1, x2).setScale(14, RoundingMode.HALF_EVEN))
+    assertEquals(-0.47140452079103, corKendall(x1, x2).setScale(14, RoundingMode.HALF_EVEN), 1e-14)
   }
 }

@@ -26,7 +26,7 @@ class GridTest {
         assertEquals(4.21, g2[2,2])
 
         g2.eachWithIndex { List entry, int idx ->
-            entry[1] = "'$idx - ${entry[1]}'".toString()
+            entry[1] = "'$idx - ${entry[1]}'"
             //println "index $idx: ${entry[0]}, ${entry[1]}, ${entry[2]}"
         }
         assertEquals("'0 - foo'", g2[0,1])
@@ -62,7 +62,7 @@ class GridTest {
                 ["4.3", 2, 3]
         ]
 
-        assertEquals((12.0 + 3.0 + Math.PI), sum(foo[0]), "sum of foo 0: ")
+        assertTrue(sum(foo[0]) == (12.0 + 3.0 + Math.PI), "sum of foo 0: ")
         assertEquals(5 as BigDecimal, sum(foo[1]), "sum of foo 1: ")
 
         Grid bar = convert(foo, 0, BigDecimal)
@@ -95,7 +95,7 @@ class GridTest {
         assertEquals(12.0g, sum(foo, 0), "sum of foo: ")
 
         Grid bar = convert(foo, 0, Double.class)
-        assertEquals(18.2g, sum(bar, 0), "sum of bar: ")
+        assertEquals(18.2d, sum(bar, 0) as double, 1e-9d, "sum of bar: ")
 
         assertEquals(12.0g, sum(foo, 0), "after cast, sum of foo: ")
 
@@ -107,7 +107,7 @@ class GridTest {
 
         def format = DecimalFormat.getInstance(Locale.GERMANY)
         Grid baz2 = convert(foo2, 0..2, Double.class, format)
-        assertEquals(7.01, sum(baz2, [0,1])[1])
+        assertEquals(7.01d, sum(baz2, [0,1])[1] as double, 1e-9d)
     }
 
     @Test

@@ -106,25 +106,23 @@ class FormatRegistryTest {
   @Test
   void testMatrixReadRejectsRootPathWithoutNpe() {
     Path rootPath = Path.of('/')
-    String expected = "Cannot auto-detect format for path '$rootPath': no file extension was found".toString()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Matrix.read(rootPath)
     }
 
-    assertEquals(expected, exception.message)
+    assertEquals("Cannot auto-detect format for path '$rootPath': no file extension was found", exception.message)
   }
 
   @Test
   void testMatrixWriteRejectsRootPathWithoutNpe() {
     Path rootPath = Path.of('/')
-    String expected = "Cannot auto-detect format for path '$rootPath': no file extension was found".toString()
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
       Matrix.builder('test').build().write(rootPath)
     }
 
-    assertEquals(expected, exception.message)
+    assertEquals("Cannot auto-detect format for path '$rootPath': no file extension was found", exception.message)
   }
 
   @Test

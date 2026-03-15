@@ -112,15 +112,18 @@ class FOdsImporterTest {
     assertEquals(3, table2[2, 0, Integer])
     def date = table2[6, 2, LocalDate]
     assertEquals(LocalDate.parse("2023-05-06"), date)
-    assertEquals(17.4 as Double, table2['baz'][table2.rowCount()-1] as Double, 0.00001)
+    assertEquals(BigDecimal, table2['baz'][table2.rowCount()-1].class)
+    assertEquals(17.4, table2['baz'][table2.rowCount()-1].setScale(1, RoundingMode.HALF_UP))
     assertEquals(['id', 'foo', 'bar', 'baz'], table2.columnNames())
 
     Matrix table1 = sheets[1]
     assertEquals(710381, table1[0,0, Integer])
     assertEquals(103599.04, table1[1,1, BigDecimal].setScale(2, RoundingMode.HALF_UP))
-    assertEquals(66952.95, table1[2,2, Double])
+    assertEquals(BigDecimal, table1[2,2].class)
+    assertEquals(66952.95, table1[2,2])
     assertEquals(0.0G, table1[3,3, BigDecimal].setScale(1, RoundingMode.HALF_UP))
-    assertEquals(-0.00982 as Double, table1[6, 'percentdiff', Double], 0.00001d)
+    assertEquals(BigDecimal, table1[6, 'percentdiff'].class)
+    assertEquals(-0.00982d, table1[6, 'percentdiff'] as double, 0.00001d)
     assertIterableEquals(['id',	'OB',	'IB',	'deferred_interest_amount', 'percentdiff'], table1.columnNames())
 
     Matrix comp = sheets.comp.clone()

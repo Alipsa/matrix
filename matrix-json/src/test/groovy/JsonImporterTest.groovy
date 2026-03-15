@@ -174,6 +174,7 @@ class JsonImporterTest {
       // Check individual values rather than comparing lists directly
       assertEquals(1, table.row(0)[0])
       assertEquals('Rick', table.row(0)[1])
+      assertEquals(BigDecimal,  table.row(0)[2].class)
       assertEquals(623.3, table.row(0)[2])
     } finally {
       tempFile.delete()

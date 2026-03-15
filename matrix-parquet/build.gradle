@@ -51,6 +51,7 @@ dependencies {
     }
   implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:3.4.3'
     testImplementation libs.junit.jupiter.api
+    testImplementation libs.groovier.junit
     testRuntimeOnly libs.junit.jupiter.engine
     testRuntimeOnly libs.junit.platform.launcher
     testImplementation libs.groovy
