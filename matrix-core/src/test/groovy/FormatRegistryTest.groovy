@@ -93,6 +93,35 @@ class FormatRegistryTest {
   }
 
   @Test
+  void testMatrixReadRejectsMissingExtension() {
+    File file = new File('missing-extension')
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Matrix.read(file)
+    }
+
+    assertEquals("Cannot auto-detect format for file 'missing-extension': no file extension was found", exception.message)
+  }
+
+  @Test
+  void testMatrixReadRejectsRootPathWithoutNpe() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Matrix.read(Path.of('/'))
+    }
+
+    assertEquals("Cannot auto-detect format for path '/': no file extension was found", exception.message)
+  }
+
+  @Test
+  void testMatrixWriteRejectsRootPathWithoutNpe() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Matrix.builder('test').build().write(Path.of('/'))
+    }
+
+    assertEquals("Cannot auto-detect format for path '/': no file extension was found", exception.message)
+  }
+
+  @Test
   void testNormalizeOptionKeys() {
     Map<String, Object> normalized = OptionMaps.normalizeKeys([Charset: 'UTF-8', StartRow: 2])
     assertEquals([charset: 'UTF-8', startrow: 2], normalized)

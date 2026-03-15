@@ -9,6 +9,7 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class ParquetFormatProviderTest {
@@ -52,5 +53,14 @@ class ParquetFormatProviderTest {
     def provider = new ParquetFormatProvider()
     assertEquals(['parquet'] as Set, provider.supportedExtensions())
     assertEquals('Parquet', provider.formatName())
+  }
+
+  @Test
+  void testWriteOptionsRejectInvalidDecimalMetaShape() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      ParquetWriteOptions.fromMap([decimalMeta: [amount: [8, 2]]])
+    }
+
+    assertTrue(exception.message.contains("decimalMeta['amount'] must be an int[] of length 2"))
   }
 }

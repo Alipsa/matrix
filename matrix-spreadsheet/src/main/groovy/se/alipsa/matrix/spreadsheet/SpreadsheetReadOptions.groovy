@@ -29,6 +29,7 @@ class SpreadsheetReadOptions {
   }
 
   SpreadsheetReadOptions sheetNumber(int value) {
+    requireAtLeastOne(value, 'sheetNumber')
     this.sheetNumber = value
     this.sheetName = null
     this
@@ -41,16 +42,19 @@ class SpreadsheetReadOptions {
   }
 
   SpreadsheetReadOptions startRow(int value) {
+    requireAtLeastOne(value, 'startRow')
     this.startRow = value
     this
   }
 
   SpreadsheetReadOptions endRow(int value) {
+    requireAtLeastOne(value, 'endRow')
     this.endRow = value
     this
   }
 
   SpreadsheetReadOptions startColumn(int value) {
+    requireAtLeastOne(value, 'startColumn')
     this.startColumnNumber = value
     this.startColumnName = null
     this
@@ -63,6 +67,7 @@ class SpreadsheetReadOptions {
   }
 
   SpreadsheetReadOptions endColumn(int value) {
+    requireAtLeastOne(value, 'endColumn')
     this.endColumnNumber = value
     this.endColumnName = null
     this
@@ -168,5 +173,11 @@ class SpreadsheetReadOptions {
         new OptionDescriptor('endColumn', Object, 'auto-detect', 'Column to stop at, as a name like D or a 1-based column number'),
         new OptionDescriptor('firstRowAsColNames', Boolean, 'true', 'Whether the first selected row contains column names')
     ]
+  }
+
+  private static void requireAtLeastOne(int value, String name) {
+    if (value < 1) {
+      throw new IllegalArgumentException("$name must be >= 1")
+    }
   }
 }

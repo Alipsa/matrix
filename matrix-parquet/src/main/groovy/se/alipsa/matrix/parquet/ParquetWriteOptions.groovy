@@ -94,7 +94,7 @@ class ParquetWriteOptions {
       if (!(value instanceof Map)) {
         throw new IllegalArgumentException("decimalMeta must be a Map<String, int[]> but was ${value?.class}")
       }
-      result.decimalMeta((Map<String, int[]>) value)
+      result.decimalMeta(validateDecimalMeta(value as Map))
     }
     if (normalized.containsKey('zoneid')) {
       def value = normalized.zoneid
@@ -106,6 +106,19 @@ class ParquetWriteOptions {
     }
     result.validate()
     result
+  }
+
+  private static Map<String, int[]> validateDecimalMeta(Map<?, ?> value) {
+    Map<String, int[]> validated = [:]
+    value.each { key, meta ->
+      String columnName = String.valueOf(key)
+      if (!(meta instanceof int[]) || (meta as int[]).length != 2) {
+        throw new IllegalArgumentException(
+            "decimalMeta['$columnName'] must be an int[] of length 2 [precision, scale] but was ${meta?.class}")
+      }
+      validated[columnName] = meta as int[]
+    }
+    validated
   }
 
   static String describe() {

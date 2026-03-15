@@ -115,7 +115,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (file == null) {
       throw new IllegalArgumentException('file cannot be null')
     }
-    String ext = FormatRegistry.extractExtension(file.name)
+    String ext = extensionFor(file.name, "file '${file.path}'")
     MatrixFormatProvider provider = resolveProvider(ext)
     provider.read(file, normalizeOptions(options))
   }
@@ -132,7 +132,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (path == null) {
       throw new IllegalArgumentException('path cannot be null')
     }
-    String ext = FormatRegistry.extractExtension(path.fileName.toString())
+    String ext = extensionFor(pathName(path), "path '$path'")
     MatrixFormatProvider provider = resolveProvider(ext)
     provider.read(path, normalizeOptions(options))
   }
@@ -149,7 +149,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (url == null) {
       throw new IllegalArgumentException('url cannot be null')
     }
-    String ext = FormatRegistry.extractExtension(url.path)
+    String ext = extensionFor(url.path, "URL '$url'")
     MatrixFormatProvider provider = resolveProvider(ext)
     provider.read(url, normalizeOptions(options))
   }
@@ -170,7 +170,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (file == null) {
       throw new IllegalArgumentException('file cannot be null')
     }
-    String ext = FormatRegistry.extractExtension(file.name)
+    String ext = extensionFor(file.name, "file '${file.path}'")
     MatrixFormatProvider provider = resolveProvider(ext)
     provider.write(this, file, normalizeOptions(options))
   }
@@ -186,7 +186,7 @@ class Matrix implements Iterable<Row>, Cloneable {
     if (path == null) {
       throw new IllegalArgumentException('path cannot be null')
     }
-    String ext = FormatRegistry.extractExtension(path.fileName.toString())
+    String ext = extensionFor(pathName(path), "path '$path'")
     MatrixFormatProvider provider = resolveProvider(ext)
     provider.write(this, path, normalizeOptions(options))
   }
@@ -228,6 +228,20 @@ class Matrix implements Iterable<Row>, Cloneable {
           "No format provider found for extension '${ext}'. ${suggestion}")
     }
     provider
+  }
+
+  private static String extensionFor(String sourceName, String sourceDescription) {
+    String ext = FormatRegistry.extractExtension(sourceName)
+    if (!ext) {
+      throw new IllegalArgumentException(
+          "Cannot auto-detect format for ${sourceDescription}: no file extension was found")
+    }
+    ext
+  }
+
+  private static String pathName(Path path) {
+    Path fileName = path.fileName
+    fileName == null ? path.toString() : fileName.toString()
   }
 
   /**

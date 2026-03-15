@@ -2,6 +2,7 @@ package se.alipsa.matrix.stats.cluster
 
 import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.core.util.Logger
 
 /**
  * KMeans++ is an enhanced K-Means clustering algorithm that uses an improved initialization
@@ -195,6 +196,8 @@ import se.alipsa.matrix.core.Matrix
  */
 @CompileStatic
 class KMeansPlusPlus {
+
+  private static final Logger log = Logger.getLogger(KMeansPlusPlus)
 /***********************************************************************
  * Data structures
  **********************************************************************/
@@ -543,7 +546,7 @@ class KMeansPlusPlus {
     // Defensive fix for empty clusters
     for (int i = 0; i < k; i++) {
       if (clustSize[i] == 0) {
-        println "⚠️ Cluster $i is empty, reinitializing to a random point"
+        log.warn("Cluster $i is empty, reinitializing to a random point")
         int randIndex = random.nextInt(m)
         centroids[i] = Arrays.copyOf(points[randIndex], n)
         clustSize[i] = 1 // prevent division by zero
@@ -765,33 +768,17 @@ class KMeansPlusPlus {
    * @return a map where keys are cluster IDs (0 to k-1) and values are a {@link Matrix} containing cluster points
    */
   Map<Integer, Matrix> getClustersById() {
-    Map<Integer, List<double[]>> grouped = new HashMap<>()
-
-    // Group points by clusterId
-    for (ClusteredPoint cp : assignment) {
-      List<double[]> clusterPoints = grouped.get(cp.clusterId)
-      if (clusterPoints == null) {
-        clusterPoints = new ArrayList<>()
-        grouped.put(cp.clusterId, clusterPoints)
-      }
-      clusterPoints.add(cp.point)
+    Map<Integer, List<double[]>> grouped = [:]
+    assignment.each { ClusteredPoint cp ->
+      grouped.computeIfAbsent(cp.clusterId) { [] as List<double[]> }.add(cp.point)
     }
 
-    // Convert each group to a Matrix
-    Map<Integer, Matrix> result = new HashMap<>()
-    for (Map.Entry<Integer, List<double[]>> entry : grouped.entrySet()) {
-      Integer clusterId = entry.key
-      List<double[]> pointList = entry.value
-      List<List<Double>> rows = new ArrayList<>(pointList.size())
-      for (double[] row : pointList) {
-        List<Double> values = new ArrayList<>(row.length)
-        for (double value : row) {
-          values.add(value)
-        }
-        rows.add(values)
+    Map<Integer, Matrix> result = [:]
+    grouped.each { Integer clusterId, List<double[]> pointList ->
+      List<List<Double>> rows = pointList.collect { double[] row ->
+        row.collect { double value -> value }
       }
-      Matrix clusterMatrix = Matrix.builder("Cluster $clusterId").data(rows).build()
-      result.put(clusterId, clusterMatrix)
+      result[clusterId] = Matrix.builder("Cluster $clusterId").data(rows).build()
     }
     result
   }

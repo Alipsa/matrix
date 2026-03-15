@@ -12,6 +12,7 @@ import java.lang.reflect.Method
 import java.nio.file.Path
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class SpreadsheetFormatProviderTest {
@@ -84,6 +85,33 @@ class SpreadsheetFormatProviderTest {
     int resolved = invokeResolveLastColumn(new StubSpreadsheetReader(12, 4), options)
 
     assertEquals(4, resolved)
+  }
+
+  @Test
+  void testSheetNumberMustBeOneBased() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      new SpreadsheetReadOptions().sheetNumber(0)
+    }
+
+    assertEquals('sheetNumber must be >= 1', exception.message)
+  }
+
+  @Test
+  void testStartRowMustBeOneBased() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      new SpreadsheetReadOptions().startRow(0)
+    }
+
+    assertEquals('startRow must be >= 1', exception.message)
+  }
+
+  @Test
+  void testNumericStartColumnMustBeOneBased() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      new SpreadsheetReadOptions().startColumn(0)
+    }
+
+    assertEquals('startColumn must be >= 1', exception.message)
   }
 
   private static int invokeResolveLastRow(SpreadsheetReader reader, SpreadsheetReadOptions options) {
