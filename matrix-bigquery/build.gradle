@@ -52,6 +52,7 @@ dependencies {
   testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
   testImplementation libs.groovy
   testImplementation libs.junit.jupiter.api
+  testImplementation libs.groovier.junit
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
   testRuntimeOnly libs.log4j.slf4j

@@ -51,6 +51,7 @@ dependencies {
   implementation 'com.google.apis:google-api-services-drive:v3-rev20260220-2.0.0'
   testImplementation project(':matrix-core')
   testImplementation libs.junit.jupiter.api
+  testImplementation libs.groovier.junit
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
   testImplementation libs.groovy

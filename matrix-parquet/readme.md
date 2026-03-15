@@ -13,6 +13,27 @@ implementation 'se.alipsa.matrix:matrix-parquet:0.4.0'
 
 ## Basic Usage
 
+### Using Matrix.read() / matrix.write()
+
+If `matrix-parquet` is on the classpath, `.parquet` files are also available through the generic Matrix SPI API:
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.parquet.ParquetReadOptions
+import se.alipsa.matrix.parquet.ParquetWriteOptions
+
+Matrix data = Matrix.read(new File('data.parquet'))
+Matrix stockholm = Matrix.read([matrixName: 'events', zoneId: 'Europe/Stockholm'], new File('events.parquet'))
+
+data.write([inferPrecisionAndScale: true], new File('copy.parquet'))
+data.write([precision: 38, scale: 18, zoneId: 'Europe/Stockholm'], new File('money.parquet'))
+
+println Matrix.listReadOptions('parquet')
+println Matrix.listWriteOptions('parquet')
+println ParquetReadOptions.describe()
+println ParquetWriteOptions.describe()
+```
+
 ### Reading a Parquet file
 ```groovy
 import se.alipsa.matrix.core.Matrix

@@ -59,6 +59,7 @@ dependencies {
     testImplementation project(':matrix-stats')
     testImplementation "tech.tablesaw:tablesaw-json:${tablesawVersion}"
     testImplementation libs.junit.jupiter
+    testImplementation libs.groovier.junit
     testRuntimeOnly libs.junit.platform.launcher
     testImplementation 'com.h2database:h2:2.4.240'
     testImplementation libs.slf4j.simple

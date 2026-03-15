@@ -57,6 +57,7 @@ dependencies {
   testImplementation libs.junit.jupiter.api
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
+  testImplementation libs.groovier.junit
   testImplementation 'org.apache.commons:commons-math3:3.6.1'
   testImplementation 'com.h2database:h2:2.4.240'
   testImplementation libs.groovy.sql

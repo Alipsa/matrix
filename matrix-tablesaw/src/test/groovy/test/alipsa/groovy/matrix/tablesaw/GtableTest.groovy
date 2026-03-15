@@ -107,7 +107,7 @@ class GtableTest {
     table[4, 1] = "Sven"
     assertEquals("Sven", table[4, 1])
     table[4, "salary"] = 123.10
-    assertEquals(123.10, table[4, "salary"])
+    assertEquals(123.10, table[4, "salary"] as BigDecimal, 1e-9)
   }
 
   @Test

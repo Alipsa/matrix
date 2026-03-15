@@ -36,8 +36,9 @@ PointBuilder shape(Object value) { ... }
 ```
 
 When a value can legitimately be one of several types (e.g. an enum or a list), provide a separate overload for each type. Use enums instead of strings for fixed sets of values (e.g. positions, directions, shape names, line types) and do any string-to-enum conversion at API boundaries (bridges, adapters).
-Prefer idiomatic groovy constructs.
-Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Groovy has its own idioms and best practices that differ from Java. Write code that is idiomatic Groovy rather than Java code written in Groovy syntax. Some examples:
+
+## Prefer idiomatic groovy constructs.
+Bear in mind that Groovy is not Java, and while they interoperate seamlessly, Groovy has its own idioms and best practices that **differ** from Java. Write code that is idiomatic Groovy rather than Java code written in Groovy syntax. Some examples:
  - Use Groovy's native collection literals and methods e.g. closures, `each`, `collect`, and `findAll` instead of Java-style loops and streams. Use `[]` instead of `new ArrayList<>()` and `[:]` instead of `new LinkedHashMap<>()`/`new HashMap<>()`.
  - Prefer closures and higher-order functions over verbose anonymous classes.
  - == vs .equals(): Use `==` for value equality in Groovy, which handles nulls gracefully. == does NOT mean reference equality like in Java.
@@ -167,6 +168,20 @@ try {
 
 ## Testing Guidelines
 JUnit Jupiter (JUnit 5) is the primary test framework. Always create tests for new features and update tests when behavior changes; place them in the relevant module’s `src/test` tree. Use `-PrunSlowTests=true` and `RUN_EXTERNAL_TESTS=true` only when you intend to run the slow or external suites. For chart rendering tests, prefer headless mode in CI: `./gradlew :matrix-charts:test -Pheadless=true` and `./gradlew :matrix-ggplot:test -Pheadless=true`. When a task is done, run the full test suite to guard against regressions (`./gradlew test`). **Always** run tests after a task is complete to ensure no regressions (except for documentation-only tasks).
+
+### Groovy + JUnit Assertions
+**CRITICAL:** Groovy test modules must include the `se.alipsa.groovy:groovier-junit` test dependency so Groovy-friendly JUnit assertions work correctly under static compilation.
+
+When writing Groovy tests:
+- Do **not** coerce GStrings to `String` just to satisfy `assertEquals` or other JUnit assertions.
+- Do **not** add `.toString()`, `as String`, or `String expected = "..."` workarounds for interpolated values in assertions.
+- Prefer idiomatic Groovy assertions such as:
+```groovy
+assertEquals("Cannot auto-detect format for path '$rootPath': no file extension was found", exception.message)
+assertEquals("row${rows}", result[rows - 1, 'name'])
+```
+
+If a Groovy test needs GString-to-String coercion for JUnit assertions to compile or run, treat that as a missing `groovier-junit` dependency issue and fix the build instead of changing the test style.
 
 ## Commit & Pull Request Guidelines
 Commit messages in this repo are short, imperative summaries (e.g., “Fix …”, “Update …”, “Add …”), optionally mentioning the module. For pull requests, include a concise summary, list the modules touched, and record the tests you ran (with commands). Link relevant issues and add screenshots for visual/chart output changes.

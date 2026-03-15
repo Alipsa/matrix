@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'se.alipsa.matrix'
-version = '0.1.1-SNAPSHOT'
+version = '0.2.0-SNAPSHOT'
 description = 'Matrix ARFF import/export'
 
 JavaCompile javaCompile = compileJava {
@@ -32,6 +32,7 @@ dependencies {
   testImplementation project(':matrix-datasets')
   testImplementation libs.slf4j.simple
   testImplementation libs.junit.jupiter.api
+  testImplementation libs.groovier.junit
   testRuntimeOnly libs.junit.jupiter.engine
   testRuntimeOnly libs.junit.platform.launcher
 }

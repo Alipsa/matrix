@@ -46,6 +46,7 @@ class JsonReaderTest {
       .build()
 
     assertEquals(empData, matrix, empData.diff(matrix))
+    assertEquals(BigDecimal, matrix.row(0)[2].class, 'Decimal JSON values should deserialize as BigDecimal')
   }
 
   @Test

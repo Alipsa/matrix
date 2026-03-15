@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -16,6 +18,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +199,30 @@ class MatrixJavaTest {
     table5.and(t5);
     assertIterableEquals(c(5, 5, 1, 2, 22), (List<?>)table5.getProperty("rv"));
   }
+
+  @Test
+  void testJavaCanCallSpiConvenienceOverloads() throws IOException {
+    File file = Files.createTempFile("matrix-java-spi", ".csv").toFile();
+    Path path = file.toPath();
+    URL url = file.toURI().toURL();
+    Matrix matrix = Matrix.builder().matrixName("test").build();
+
+    IllegalArgumentException readFileException = assertThrows(IllegalArgumentException.class, () -> Matrix.read(file));
+    assertTrue(readFileException.getMessage().contains("No format provider found for extension 'csv'"));
+
+    IllegalArgumentException readPathException = assertThrows(IllegalArgumentException.class, () -> Matrix.read(path));
+    assertTrue(readPathException.getMessage().contains("No format provider found for extension 'csv'"));
+
+    IllegalArgumentException readUrlException = assertThrows(IllegalArgumentException.class, () -> Matrix.read(url));
+    assertTrue(readUrlException.getMessage().contains("No format provider found for extension 'csv'"));
+
+    IllegalArgumentException writeFileException = assertThrows(IllegalArgumentException.class, () -> matrix.write(file));
+    assertTrue(writeFileException.getMessage().contains("No format provider found for extension 'csv'"));
+
+    IllegalArgumentException writePathException = assertThrows(IllegalArgumentException.class, () -> matrix.write(path));
+    assertTrue(writePathException.getMessage().contains("No format provider found for extension 'csv'"));
+  }
+
   @Test
   void testTransposing() {
     var report = new Columns(

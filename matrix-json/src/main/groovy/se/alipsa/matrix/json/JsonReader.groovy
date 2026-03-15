@@ -6,6 +6,7 @@ import se.alipsa.matrix.core.Matrix
 import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import java.nio.charset.Charset
@@ -53,6 +54,7 @@ import java.nio.file.Path
 class JsonReader {
 
   private static final ObjectMapper MAPPER = new ObjectMapper()
+      .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
   private static final JsonFactory FACTORY = MAPPER.getFactory()
 
   private JsonReader() {
