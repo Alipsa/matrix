@@ -49,18 +49,18 @@ if [[ -d "$localRepo/se/alipsa/matrix" ]]; then
   rm -r "$localRepo/se/alipsa/matrix"
 fi
 
-echo "Locally publish bom"
-pushd matrix-bom
-  mvn -f bom.xml install
-popd
+#echo "Locally publish bom"
+#pushd matrix-bom
+#  mvn -f bom.xml install
+#popd
 
 echo "Building and locally publishing matrix"
 ./gradlew build publishToMavenLocal
 
-echo "Verify bom and install matrix-all"
-pushd matrix-bom
-  mvn install
-popd
+#echo "Verify bom and install matrix-all"
+#pushd matrix-bom
+#  mvn install
+#popd
 
 # Clean up
 unset RUN_EXTERNAL_TESTS
