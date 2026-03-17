@@ -137,6 +137,7 @@ Useful write options:
 - `dateFormat(...)` and `dateFormatsByColumn([...])` control DATE declarations and output formatting
 
 By default, nominal inference only applies when the distinct-value count is at or below `nominalThreshold` and, for datasets with 10 or more rows, the distinct-value count is also at or below 10% of the row count.
+
 ## Using Matrix.read() / matrix.write()
 
 If `matrix-arff` is on the classpath, `.arff` files can also be handled through the generic Matrix SPI API:
