@@ -21,8 +21,11 @@ class ArffFormatProviderTest {
   void testOptionDescriptions() {
     assertTrue(Matrix.listReadOptions('arff').contains('matrixName'))
     assertTrue(Matrix.listWriteOptions('arff').contains('nominalMappings'))
+    assertTrue(Matrix.listWriteOptions('arff').contains('inferNominals'))
+    assertTrue(Matrix.listWriteOptions('arff').contains('attributeTypesByColumn'))
     assertTrue(ArffReadOptions.describe().contains('matrixName'))
     assertTrue(ArffWriteOptions.describe().contains('nominalMappings'))
+    assertTrue(ArffWriteOptions.describe().contains('dateFormatsByColumn'))
   }
 
   @Test
@@ -37,6 +40,20 @@ class ArffFormatProviderTest {
     Matrix matrix = Matrix.read([matrixName: 'fallback'], file)
     assertEquals('fallback', matrix.matrixName)
     assertEquals([new BigDecimal('1'), new BigDecimal('2')], matrix.value)
+  }
+
+  @Test
+  void testSpiReadPrefersRelationNameOverFallbackName() {
+    File file = tempDir.resolve('relation-name.arff').toFile()
+    file.text = '''@RELATION actualName
+@ATTRIBUTE value NUMERIC
+@DATA
+1
+'''
+
+    Matrix matrix = Matrix.read([matrixName: 'fallback'], file)
+
+    assertEquals('actualName', matrix.matrixName)
   }
 
   @Test
@@ -68,9 +85,55 @@ class ArffFormatProviderTest {
   }
 
   @Test
+  void testSpiWriteOptionsControlSchema() {
+    Matrix source = Matrix.builder('events')
+        .columns(
+            category: ['A', 'B', 'A'],
+            value: [1, 2, 3]
+        )
+        .types([String, Integer])
+        .build()
+
+    File file = tempDir.resolve('events.arff').toFile()
+    source.write([
+        inferNominals: false,
+        attributeTypesByColumn: [category: 'STRING']
+    ], file)
+
+    String content = file.getText('UTF-8')
+    assertTrue(content.contains('@ATTRIBUTE category STRING'))
+  }
+
+  @Test
   void testReadOptionsIgnoreNullMatrixName() {
     ArffReadOptions options = ArffReadOptions.fromMap([matrixName: null])
 
     assertEquals(null, options.matrixName)
+  }
+
+  @Test
+  void testWriteOptionsRoundTripFromMapToMap() {
+    ArffWriteOptions options = ArffWriteOptions.fromMap([
+        nominalMappings      : [severity: ['high', 'medium', 'low']],
+        inferNominals        : false,
+        nominalThreshold     : 12,
+        nominalColumns       : ['severity'],
+        stringColumns        : ['notes'],
+        attributeTypesByColumn: [createdAt: 'DATE', notes: 'STRING'],
+        dateFormat           : 'yyyy-MM-dd',
+        dateFormatsByColumn  : [createdAt: 'yyyy/MM/dd HH:mm']
+    ])
+
+    Map<String, ?> roundTrip = options.toMap()
+
+    assertEquals([severity: ['high', 'medium', 'low']], roundTrip.nominalMappings)
+    assertEquals(false, roundTrip.inferNominals)
+    assertEquals(12, roundTrip.nominalThreshold)
+    assertEquals(['severity'] as Set, roundTrip.nominalColumns as Set)
+    assertEquals(['notes'] as Set, roundTrip.stringColumns as Set)
+    assertEquals('DATE', String.valueOf((roundTrip.attributeTypesByColumn as Map).createdAt))
+    assertEquals('STRING', String.valueOf((roundTrip.attributeTypesByColumn as Map).notes))
+    assertEquals('yyyy-MM-dd', roundTrip.dateFormat)
+    assertEquals([createdAt: 'yyyy/MM/dd HH:mm'], roundTrip.dateFormatsByColumn)
   }
 }

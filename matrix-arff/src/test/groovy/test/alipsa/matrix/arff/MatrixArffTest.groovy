@@ -2,11 +2,14 @@ package test.alipsa.matrix.arff
 
 import org.junit.jupiter.api.*
 import se.alipsa.matrix.arff.MatrixArffReader
+import se.alipsa.matrix.arff.ArffTypeDecl
+import se.alipsa.matrix.arff.ArffWriteOptions
 import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.text.SimpleDateFormat
 
 import static org.junit.jupiter.api.Assertions.*
 
@@ -685,5 +688,152 @@ plain
     assertNull(m[3, "id"])
     assertEquals("sparse only", m[3, "note"])
     assertNull(m[3, "score"])
+  }
+
+  @Test @Order(32)
+  void testWriteOptionsDisableNominalInference() {
+    Matrix m = Matrix.builder("schema_options")
+        .columnNames("category", "value")
+        .columns(
+            ["A", "B", "A", "C"] as List,
+            [1, 2, 3, 4] as List
+        )
+        .types([String, Integer])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(m, new ArffWriteOptions().inferNominals(false))
+
+    assertTrue(arffContent.contains("@ATTRIBUTE category STRING"))
+  }
+
+  @Test @Order(33)
+  void testWriteOptionsCustomNominalThreshold() {
+    Matrix m = Matrix.builder("nominal_threshold")
+        .columnNames("category", "value")
+        .columns(
+            ["A", "B", "A", "B"] as List,
+            [1, 2, 3, 4] as List
+        )
+        .types([String, Integer])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(m, new ArffWriteOptions().nominalThreshold(1))
+
+    assertTrue(arffContent.contains("@ATTRIBUTE category STRING"))
+  }
+
+  @Test @Order(34)
+  void testWriteOptionsForceStringOutput() {
+    Matrix m = Matrix.builder("force_string")
+        .columnNames("category", "value")
+        .columns(
+            ["A", "B", "A", "C"] as List,
+            [1, 2, 3, 4] as List
+        )
+        .types([String, Integer])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(
+        m,
+        new ArffWriteOptions().attributeTypesByColumn([category: ArffTypeDecl.STRING])
+    )
+
+    assertTrue(arffContent.contains("@ATTRIBUTE category STRING"))
+  }
+
+  @Test @Order(35)
+  void testWriteOptionsForceNominalOutput() {
+    List<String> labels = (1..12).collect { int i -> "label$i" }
+    Matrix m = Matrix.builder("force_nominal")
+        .columns(label: labels)
+        .types([String])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(
+        m,
+        new ArffWriteOptions().nominalColumns(['label'])
+    )
+
+    assertTrue(arffContent.contains("@ATTRIBUTE label {"))
+    assertTrue(arffContent.contains("label1"))
+    assertTrue(arffContent.contains("label12"))
+  }
+
+  @Test @Order(36)
+  void testWriteOptionsPreserveExplicitNominalOrdering() {
+    Matrix m = Matrix.builder("nominal_order")
+        .columns(category: ["A", "B", "C"])
+        .types([String])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(
+        m,
+        new ArffWriteOptions().nominalMappings([category: ["B", "A", "C"]])
+    )
+
+    assertTrue(arffContent.contains("@ATTRIBUTE category {B,A,C}"))
+  }
+
+  @Test @Order(37)
+  void testWriteOptionsGlobalDateFormat() {
+    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd")
+    Matrix m = Matrix.builder("date_format")
+        .columns(created: [inputFormat.parse("2026-03-17"), inputFormat.parse("2026-03-18")])
+        .types([Date])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(
+        m,
+        new ArffWriteOptions().dateFormat("yyyy-MM-dd")
+    )
+
+    assertTrue(arffContent.contains("@ATTRIBUTE created DATE 'yyyy-MM-dd'"))
+    assertTrue(arffContent.contains("'2026-03-17'"))
+  }
+
+  @Test @Order(38)
+  void testWriteOptionsPerColumnDateFormats() {
+    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    Date created = inputFormat.parse("2026-03-17 11:12:13")
+    Date updated = inputFormat.parse("2026-03-18 14:15:16")
+    Matrix m = Matrix.builder("date_format_columns")
+        .columnNames("created", "updated")
+        .columns(
+            [created] as List,
+            [updated] as List
+        )
+        .types([Date, Date])
+        .build()
+
+    String arffContent = MatrixArffWriter.writeString(
+        m,
+        new ArffWriteOptions()
+            .dateFormat("yyyy-MM-dd")
+            .dateFormatsByColumn([updated: "yyyy/MM/dd HH:mm"])
+    )
+
+    assertTrue(arffContent.contains("@ATTRIBUTE created DATE 'yyyy-MM-dd'"))
+    assertTrue(arffContent.contains("@ATTRIBUTE updated DATE 'yyyy/MM/dd HH:mm'"))
+    assertTrue(arffContent.contains("'2026-03-17'"))
+    assertTrue(arffContent.contains("'2026/03/18 14:15'"))
+  }
+
+  @Test @Order(39)
+  void testWriteOptionsRejectConflictingTypeConfiguration() {
+    Matrix m = Matrix.builder("conflict")
+        .columns(category: ["A", "B"])
+        .types([String])
+        .build()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffWriter.writeString(
+          m,
+          new ArffWriteOptions()
+              .nominalMappings([category: ["B", "A"]])
+              .attributeTypesByColumn([category: ArffTypeDecl.STRING])
+      )
+    }
+
+    assertTrue(exception.message.contains("nominal configuration"))
   }
 }

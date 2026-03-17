@@ -103,6 +103,40 @@ When sparse rows are read:
 - explicit `?` values are treated as missing and become `null`
 - duplicate or out-of-range attribute indices are rejected with an `IllegalArgumentException`
 
+## Controlling Writer Schema Generation
+
+`ArffWriteOptions` can be used to control how the writer declares ARFF attribute types:
+
+```groovy
+import se.alipsa.matrix.arff.ArffTypeDecl
+import se.alipsa.matrix.arff.ArffWriteOptions
+import se.alipsa.matrix.arff.MatrixArffWriter
+
+ArffWriteOptions options = new ArffWriteOptions()
+    .inferNominals(false)
+    .nominalColumns(['severity'])
+    .nominalMappings([severity: ['high', 'medium', 'low']])   // explicit order is preserved
+    .attributeTypesByColumn([
+        createdAt: ArffTypeDecl.DATE,
+        notes    : ArffTypeDecl.STRING
+    ])
+    .dateFormat('yyyy-MM-dd')
+    .dateFormatsByColumn([createdAt: 'yyyy/MM/dd HH:mm'])
+
+MatrixArffWriter.write(matrix, new File('configured.arff'), options)
+```
+
+Useful write options:
+
+- `inferNominals(false)` disables the default String/Object nominal inference heuristic
+- `nominalThreshold(n)` changes the maximum distinct-value count used by nominal inference
+- `nominalColumns([...])` forces selected columns to be written as nominal
+- `stringColumns([...])` forces selected columns to be written as `STRING`
+- `attributeTypesByColumn([...])` forces a per-column ARFF type such as `STRING`, `NOMINAL`, `DATE`, `NUMERIC`, or `INTEGER`
+- `nominalMappings([...])` supplies explicit nominal values and preserves their declared order
+- `dateFormat(...)` and `dateFormatsByColumn([...])` control DATE declarations and output formatting
+
+By default, nominal inference only applies when the distinct-value count is at or below `nominalThreshold` and, for datasets with 10 or more rows, the distinct-value count is also at or below 10% of the row count.
 ## Using Matrix.read() / matrix.write()
 
 If `matrix-arff` is on the classpath, `.arff` files can also be handled through the generic Matrix SPI API:
@@ -122,4 +156,19 @@ println Matrix.listReadOptions('arff')
 println Matrix.listWriteOptions('arff')
 println ArffReadOptions.describe()
 println ArffWriteOptions.describe()
+```
+
+Schema control is available through the generic SPI API as well:
+
+```groovy
+matrix.write([
+    inferNominals         : false,
+    nominalColumns        : ['severity'],
+    nominalMappings       : [severity: ['high', 'medium', 'low']],
+    attributeTypesByColumn: [
+        createdAt: 'DATE',
+        notes    : 'STRING'
+    ],
+    dateFormatsByColumn   : [createdAt: 'yyyy/MM/dd HH:mm']
+], new File('configured.arff'))
 ```
