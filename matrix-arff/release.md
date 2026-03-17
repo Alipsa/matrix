@@ -1,6 +1,7 @@
 # Matrix-arff release history
 
 ## v0.2.0 In progress
+- add sparse ARFF data row read support with validation for duplicate and out-of-range attribute indices
 - add `ArffFormatProvider` and service registration so `.arff` files work with the generic `Matrix.read(...)` / `matrix.write(...)` SPI API
 - add `ArffReadOptions` with `matrixName` fallback support when an ARFF file has no `@RELATION`
 - add `ArffWriteOptions` with `nominalMappings` support for explicit nominal value definitions when writing

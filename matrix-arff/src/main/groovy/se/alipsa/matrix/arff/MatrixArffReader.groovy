@@ -285,17 +285,12 @@ class MatrixArffReader {
     }
 
     // Standard types
-    switch (upperType) {
-      case 'NUMERIC':
-      case 'REAL':
-        return new ArffAttribute(name, ArffType.NUMERIC, BigDecimal.class)
-      case 'INTEGER':
-        return new ArffAttribute(name, ArffType.INTEGER, Integer.class)
-      case 'STRING':
-        return new ArffAttribute(name, ArffType.STRING, String.class)
-      default:
-        // Default to string for unknown types
-        return new ArffAttribute(name, ArffType.STRING, String.class)
+    return switch (upperType) {
+      case 'NUMERIC', 'REAL' -> new ArffAttribute(name, ArffType.NUMERIC, BigDecimal.class)
+      case 'INTEGER' -> new ArffAttribute(name, ArffType.INTEGER, Integer.class)
+      case 'STRING' -> new ArffAttribute(name, ArffType.STRING, String.class)
+      // Default to string for unknown types
+      default -> new ArffAttribute(name, ArffType.STRING, String.class)
     }
   }
 
@@ -329,20 +324,18 @@ class MatrixArffReader {
     return row
   }
 
+  /** Parse a sparse ARFF row in `{index value, ...}` format. */
   private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes) {
     if (!line.endsWith('}')) {
       throw new IllegalArgumentException("Invalid sparse ARFF row (missing closing brace): $line")
     }
-    List<Object> row = []
-    for (int i = 0; i < attributes.size(); i++) {
-      row.add(null)
-    }
+    List<Object> row = [null] * attributes.size()
     String body = line.substring(1, line.length() - 1).trim()
     if (body.isEmpty()) {
       return row
     }
 
-    Set<Integer> assignedIndices = new LinkedHashSet<>()
+    Set<Integer> assignedIndices = [] as Set<Integer>
     splitSparseEntries(body).each { String entry ->
       entry = entry?.trim()
       if (entry == null || entry.isEmpty()) {
@@ -375,7 +368,7 @@ class MatrixArffReader {
         throw new IllegalArgumentException("Duplicate sparse ARFF attribute index $attributeIndex in row: $line")
       }
 
-      ParsedToken valueToken = parseSingleValue(valuePart, line)
+      ParsedToken valueToken = parseSparseValue(valuePart, line)
       String value = valueToken.value
       if (value != null && !valueToken.quoted) {
         value = value.trim()
@@ -441,12 +434,41 @@ class MatrixArffReader {
     -1
   }
 
-  private static ParsedToken parseSingleValue(String valuePart, String line) {
-    List<ParsedToken> tokens = parseDelimitedLine(valuePart, ',' as char)
-    if (tokens.size() != 1) {
+  private static ParsedToken parseSparseValue(String valuePart, String line) {
+    String value = valuePart.trim()
+    if (value.isEmpty()) {
       throw new IllegalArgumentException("Invalid sparse ARFF value '$valuePart' in row: $line")
     }
-    tokens[0]
+
+    char first = value.charAt(0)
+    if (first != '\'' && first != '"') {
+      return new ParsedToken(value, false)
+    }
+
+    StringBuilder result = new StringBuilder()
+    boolean escape = false
+    for (int i = 1; i < value.length(); i++) {
+      char c = value.charAt(i)
+      if (escape) {
+        result.append(c)
+        escape = false
+        continue
+      }
+      if (c == '\\') {
+        escape = true
+        continue
+      }
+      if (c == first) {
+        String trailing = i + 1 < value.length() ? value.substring(i + 1).trim() : ''
+        if (!trailing.isEmpty()) {
+          throw new IllegalArgumentException("Invalid sparse ARFF value '$valuePart' in row: $line")
+        }
+        return new ParsedToken(result.toString(), true)
+      }
+      result.append(c)
+    }
+
+    throw new IllegalArgumentException("Invalid sparse ARFF value '$valuePart' in row: $line")
   }
 
   private static List<ParsedToken> parseDelimitedLine(String line, char delimiter) {
@@ -515,18 +537,12 @@ class MatrixArffReader {
       return null
     }
 
-    switch (attr.type) {
-      case ArffType.NUMERIC:
-        return new BigDecimal(value)
-      case ArffType.INTEGER:
-        return Integer.parseInt(value)
-      case ArffType.STRING:
-      case ArffType.NOMINAL:
-        return value
-      case ArffType.DATE:
-        return parseDate(value, attr.dateFormat)
-      default:
-        return value
+    return switch (attr.type) {
+      case ArffType.NUMERIC -> new BigDecimal(value)
+      case ArffType.INTEGER -> Integer.parseInt(value)
+      case ArffType.STRING, ArffType.NOMINAL -> value
+      case ArffType.DATE -> parseDate(value, attr.dateFormat)
+      default -> value
     }
   }
 

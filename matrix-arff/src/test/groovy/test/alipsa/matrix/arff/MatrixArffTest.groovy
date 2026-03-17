@@ -631,4 +631,59 @@ plain
 
     assertTrue(exception.message.contains("out of bounds"))
   }
+
+  @Test @Order(30)
+  void testSparseRowsRejectNegativeIndices() {
+    String arffContent = """
+@RELATION sparse_negative
+
+@ATTRIBUTE value NUMERIC
+@ATTRIBUTE name STRING
+
+@DATA
+{-1 'oops'}
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains("out of bounds"))
+  }
+
+  @Test @Order(31)
+  void testMixedDenseAndSparseRows() {
+    String arffContent = """
+@RELATION mixed_rows
+
+@ATTRIBUTE id INTEGER
+@ATTRIBUTE note STRING
+@ATTRIBUTE score NUMERIC
+
+@DATA
+1,'dense',10.5
+{0 2,2 20.5}
+3,'dense again',?
+{1 'sparse only'}
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+
+    assertEquals(4, m.rowCount())
+    assertEquals(1, m[0, "id"])
+    assertEquals("dense", m[0, "note"])
+    assertEquals(new BigDecimal("10.5"), m[0, "score"])
+
+    assertEquals(2, m[1, "id"])
+    assertNull(m[1, "note"])
+    assertEquals(new BigDecimal("20.5"), m[1, "score"])
+
+    assertEquals(3, m[2, "id"])
+    assertEquals("dense again", m[2, "note"])
+    assertNull(m[2, "score"])
+
+    assertNull(m[3, "id"])
+    assertEquals("sparse only", m[3, "note"])
+    assertNull(m[3, "score"])
+  }
 }
