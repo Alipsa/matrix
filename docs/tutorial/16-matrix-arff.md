@@ -190,6 +190,82 @@ String arff = MatrixArffWriter.writeString(matrix, writeOptions)
 
 Convenience overloads without `ArffWriteOptions` still exist for default behavior.
 
+## Focused v0.2.0 Examples
+
+### Sparse Input
+
+```groovy
+String sparseArff = """
+@RELATION sparse_metrics
+@ATTRIBUTE score NUMERIC
+@ATTRIBUTE note STRING
+@ATTRIBUTE status {ok,warning,error}
+@DATA
+{0 1.5,2 ok}
+{1 'late sample',2 warning}
+{}
+""".trim()
+
+Matrix sparse = MatrixArffReader.readString(sparseArff)
+
+assert sparse[0, 'score'] == 1.5
+assert sparse[0, 'note'] == null
+assert sparse[1, 'status'] == 'warning'
+assert sparse[2, 'score'] == null
+```
+
+### Explicit Schema Control
+
+```groovy
+import se.alipsa.matrix.arff.ArffTypeDecl
+import se.alipsa.matrix.arff.ArffWriteOptions
+import se.alipsa.matrix.arff.MatrixArffWriter
+
+ArffWriteOptions options = new ArffWriteOptions()
+    .inferNominals(false)
+    .attributeTypesByColumn([
+        created : ArffTypeDecl.DATE,
+        category: ArffTypeDecl.STRING
+    ])
+    .dateFormatsByColumn([created: 'yyyy-MM-dd'])
+
+MatrixArffWriter.write(matrix, new File('configured.arff'), options)
+```
+
+### Strict Mode
+
+```groovy
+import se.alipsa.matrix.arff.ArffReadOptions
+import se.alipsa.matrix.arff.MatrixArffReader
+
+Matrix validated = MatrixArffReader.read(
+    new File('incoming.arff'),
+    new ArffReadOptions()
+        .strict(true)
+        .matrixName('fallback-name')
+)
+```
+
+Strict mode is useful when you want malformed rows or unsupported attribute declarations to fail immediately instead of being interpreted leniently.
+
+### Generic Matrix SPI Round-Trip
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+
+Matrix source = Matrix.read([matrixName: 'fallback'], new File('input.arff'))
+
+source.write([
+    inferNominals        : false,
+    attributeTypesByColumn: [category: 'STRING']
+], new File('output.arff'))
+
+println Matrix.listReadOptions('arff')
+println Matrix.listWriteOptions('arff')
+```
+
+This SPI path uses the same typed ARFF read/write behavior as the direct `MatrixArffReader` and `MatrixArffWriter` APIs.
+
 ### Exploring the Loaded Data
 
 ```groovy

@@ -7,7 +7,7 @@
 - expand `ArffWriteOptions` with configurable schema generation, including nominal inference controls, forced per-column ARFF types, and global/per-column DATE formats
 - add typed options-first direct API overloads for ARFF reads and writes, and align the SPI provider with those typed paths
 - refactor `MatrixArffWriter` so direct API and SPI writes share one typed schema-resolution path
-- document the generic `Matrix.read(...)` / `matrix.write(...)` ARFF usage in the README
+- document the current ARFF API surface and defaults in the README and tutorial, including sparse input, strict mode, explicit schema control, and SPI round-tripping examples
 
 ## v0.1.0 2026-01-30
 Initial release

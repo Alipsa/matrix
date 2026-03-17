@@ -2,6 +2,15 @@
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-arff/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-arff)
 Matrix-arff provides reading and writing of ARFF (Attribute-Relation File Format) files. ARFF is a standard format used by machine learning tools, particularly Weka, making this module essential for ML workflows and data interchange between different ML tools.
 
+## At A Glance
+
+- read ARFF from `File`, `Path`, `URL`, `InputStream`, `Reader`, and `String`
+- write ARFF to `File`, `Path`, `OutputStream`, `Writer`, or `String`
+- support dense and sparse `@DATA` rows
+- control reads with `ArffReadOptions`
+- control schema generation with `ArffWriteOptions`
+- use the generic Matrix SPI through `Matrix.read(...)`, `matrix.write(...)`, `Matrix.listReadOptions(...)`, and `Matrix.listWriteOptions(...)`
+
 ## What is ARFF?
 
 ARFF (Attribute-Relation File Format) is a text-based format developed for the Weka machine learning toolkit. It's widely used in the machine learning community because it:
@@ -51,6 +60,25 @@ implementation "se.alipsa.matrix:matrix-arff"
     </dependency>
 </dependencies>
 ```
+
+## API Surface
+
+Direct API entry points:
+
+- `MatrixArffReader.read(...)` for `File`, `Path`, `URL`, `InputStream`, `Reader`, and `String`
+- `MatrixArffWriter.write(...)` for `File`, `Path`, `OutputStream`, and `Writer`
+- `MatrixArffWriter.writeString(...)` for in-memory export
+- `ArffReadOptions` for fallback naming and validation behavior
+- `ArffWriteOptions` for schema generation and date formatting
+
+Generic Matrix SPI entry points:
+
+- `Matrix.read(new File('data.arff'))`
+- `matrix.write(new File('data.arff'))`
+- `Matrix.listReadOptions('arff')`
+- `Matrix.listWriteOptions('arff')`
+- `ArffReadOptions.describe()`
+- `ArffWriteOptions.describe()`
 
 ## Reading ARFF Files
 
@@ -120,6 +148,27 @@ When sparse rows are read:
 - quoted string and nominal values are supported
 - explicit `?` values are treated as missing and become `null`
 - duplicate or out-of-range attribute indices are rejected with an `IllegalArgumentException`
+
+## Default Behavior
+
+The defaults are intentionally lenient so basic imports and exports work without extra configuration:
+
+- matrix name defaults to `@RELATION` when present, otherwise to the fallback name from `ArffReadOptions.matrixName(...)`, otherwise to the source name such as the file name or `ArffMatrix`
+- ARFF missing values (`?`) read as `null`, and `null` values write as `?`
+- dense rows with missing trailing values are padded with `null`
+- dense rows with extra trailing values ignore the extras unless strict row-length validation is enabled
+- unknown attribute types fall back to `STRING` unless strict unknown-type validation is enabled
+- `String` and `Object` columns are inferred as nominal only when their distinct-value count is at or below `nominalThreshold`, and for datasets with 10 or more rows also at or below 10% of the row count
+- DATE output uses `yyyy-MM-dd'T'HH:mm:ss` unless `dateFormat(...)` or `dateFormatsByColumn(...)` overrides it
+
+To inspect the currently available SPI options at runtime:
+
+```groovy
+println Matrix.listReadOptions('arff')
+println Matrix.listWriteOptions('arff')
+println ArffReadOptions.describe()
+println ArffWriteOptions.describe()
+```
 
 ## Reader Validation Modes
 
@@ -231,4 +280,49 @@ Matrix validated = Matrix.read([
     failOnUnknownAttributeType: true,
     failOnRowLengthMismatch   : true
 ], new File('validated.arff'))
+```
+
+## Common Patterns
+
+Sparse input with defaults:
+
+```groovy
+Matrix sparse = MatrixArffReader.readString("""
+@RELATION sparse_metrics
+@ATTRIBUTE score NUMERIC
+@ATTRIBUTE note STRING
+@DATA
+{0 1.5}
+{1 'late sample'}
+{}
+""".trim())
+```
+
+Strict import for validation:
+
+```groovy
+Matrix validated = MatrixArffReader.read(
+    new File('incoming.arff'),
+    new ArffReadOptions().strict(true)
+)
+```
+
+Explicit schema control on write:
+
+```groovy
+MatrixArffWriter.write(
+    matrix,
+    new File('configured.arff'),
+    new ArffWriteOptions()
+        .inferNominals(false)
+        .attributeTypesByColumn([category: ArffTypeDecl.STRING])
+        .dateFormatsByColumn([created: 'yyyy-MM-dd'])
+)
+```
+
+Generic Matrix SPI round-trip:
+
+```groovy
+Matrix matrix = Matrix.read([matrixName: 'fallback'], new File('input.arff'))
+matrix.write([inferNominals: false], new File('output.arff'))
 ```
