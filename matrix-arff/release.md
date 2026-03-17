@@ -5,6 +5,7 @@
 - add `ArffFormatProvider` and service registration so `.arff` files work with the generic `Matrix.read(...)` / `matrix.write(...)` SPI API
 - add `ArffReadOptions` with `matrixName` fallback support when an ARFF file has no `@RELATION`
 - expand `ArffWriteOptions` with configurable schema generation, including nominal inference controls, forced per-column ARFF types, and global/per-column DATE formats
+- add typed options-first direct API overloads for ARFF reads and writes, and align the SPI provider with those typed paths
 - refactor `MatrixArffWriter` so direct API and SPI writes share one typed schema-resolution path
 - document the generic `Matrix.read(...)` / `matrix.write(...)` ARFF usage in the README
 

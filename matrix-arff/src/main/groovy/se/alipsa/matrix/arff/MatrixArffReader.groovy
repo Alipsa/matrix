@@ -24,23 +24,30 @@ class MatrixArffReader {
 
   private static final Pattern DATE_FORMAT_PATTERN = Pattern.compile(/(?i)date\s*(?:'([^']*)'|"([^"]*)")?/)
 
-  /** Read from an Arff file */
+  /** Read from an Arff file. */
   static Matrix read(File file) {
+    read(file, new ArffReadOptions())
+  }
+
+  /** Read from an Arff file using typed ARFF read options. */
+  static Matrix read(File file, ArffReadOptions options) {
     validateFile(file)
-    InputStream is = new FileInputStream(file)
-    try {
-      return read(is, defaultName(file))
-    } finally {
-      is.close()
+    new FileInputStream(file).withCloseable { InputStream is ->
+      read(is, fallbackName(defaultName(file), options), options)
     }
   }
 
-  /** Read from an Arff file */
+  /** Read from an Arff file. */
   static Matrix read(Path path) {
+    read(path, new ArffReadOptions())
+  }
+
+  /** Read from an Arff file using typed ARFF read options. */
+  static Matrix read(Path path, ArffReadOptions options) {
     if (path == null) {
       throw new IllegalArgumentException("Path cannot be null")
     }
-    read(path.toFile())
+    read(path.toFile(), options)
   }
 
   /**
@@ -51,11 +58,34 @@ class MatrixArffReader {
    * @return a Matrix containing the parsed data
    */
   static Matrix read(InputStream input, String defaultName = "ArffMatrix") {
+    read(input, defaultName, new ArffReadOptions())
+  }
+
+  /**
+   * Read arff from an InputStream using typed ARFF read options. Stream will be closed by caller if needed.
+   *
+   * @param input the input stream containing ARFF content
+   * @param options typed read options
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix read(InputStream input, ArffReadOptions options) {
+    read(input, "ArffMatrix", options)
+  }
+
+  /**
+   * Read arff from an InputStream using typed ARFF read options. Stream will be closed by caller if needed.
+   *
+   * @param input the input stream containing ARFF content
+   * @param defaultName fallback name if no @RELATION is present
+   * @param options typed read options
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix read(InputStream input, String defaultName, ArffReadOptions options) {
     if (input == null) {
       throw new IllegalArgumentException("InputStream cannot be null")
     }
     BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))
-    parseArff(reader, defaultName)
+    parseArff(reader, fallbackName(defaultName, options))
   }
 
   /**
@@ -66,11 +96,34 @@ class MatrixArffReader {
    * @return a Matrix containing the parsed data
    */
   static Matrix read(Reader reader, String defaultName = "ArffMatrix") {
+    read(reader, defaultName, new ArffReadOptions())
+  }
+
+  /**
+   * Read arff from a Reader using typed ARFF read options. Reader will be closed by caller if needed.
+   *
+   * @param reader the reader containing ARFF content
+   * @param options typed read options
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix read(Reader reader, ArffReadOptions options) {
+    read(reader, "ArffMatrix", options)
+  }
+
+  /**
+   * Read arff from a Reader using typed ARFF read options. Reader will be closed by caller if needed.
+   *
+   * @param reader the reader containing ARFF content
+   * @param defaultName fallback name if no @RELATION is present
+   * @param options typed read options
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix read(Reader reader, String defaultName, ArffReadOptions options) {
     if (reader == null) {
       throw new IllegalArgumentException("Reader cannot be null")
     }
     BufferedReader buffered = reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader)
-    parseArff(buffered, defaultName)
+    parseArff(buffered, fallbackName(defaultName, options))
   }
 
   /**
@@ -94,22 +147,47 @@ class MatrixArffReader {
    * @return a Matrix containing the parsed data
    */
   static Matrix readString(String arffContent, String defaultName = "ArffMatrix") {
+    readString(arffContent, defaultName, new ArffReadOptions())
+  }
+
+  /**
+   * Read arff content from a String using typed ARFF read options.
+   *
+   * @param arffContent ARFF content as a string
+   * @param options typed read options
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix readString(String arffContent, ArffReadOptions options) {
+    readString(arffContent, "ArffMatrix", options)
+  }
+
+  /**
+   * Read arff content from a String using typed ARFF read options.
+   *
+   * @param arffContent ARFF content as a string
+   * @param defaultName fallback name if no @RELATION is present
+   * @param options typed read options
+   * @return a Matrix containing the parsed data
+   */
+  static Matrix readString(String arffContent, String defaultName, ArffReadOptions options) {
     if (arffContent == null) {
       throw new IllegalArgumentException("ARFF content cannot be null")
     }
-    read(new StringReader(arffContent), defaultName)
+    read(new StringReader(arffContent), defaultName, options)
   }
 
-  /** Read from a URL */
+  /** Read from a URL. */
   static Matrix read(URL url) {
+    read(url, new ArffReadOptions())
+  }
+
+  /** Read from a URL using typed ARFF read options. */
+  static Matrix read(URL url, ArffReadOptions options) {
     if (url == null) {
       throw new IllegalArgumentException("URL cannot be null")
     }
-    InputStream is = url.openStream()
-    try {
-      return read(is, defaultName(url))
-    } finally {
-      is.close()
+    url.openStream().withCloseable { InputStream is ->
+      read(is, fallbackName(defaultName(url), options), options)
     }
   }
 
@@ -285,11 +363,10 @@ class MatrixArffReader {
     }
 
     // Standard types
-    return switch (upperType) {
+    switch (upperType) {
       case 'NUMERIC', 'REAL' -> new ArffAttribute(name, ArffType.NUMERIC, BigDecimal.class)
       case 'INTEGER' -> new ArffAttribute(name, ArffType.INTEGER, Integer.class)
       case 'STRING' -> new ArffAttribute(name, ArffType.STRING, String.class)
-      // Default to string for unknown types
       default -> new ArffAttribute(name, ArffType.STRING, String.class)
     }
   }
@@ -537,7 +614,7 @@ class MatrixArffReader {
       return null
     }
 
-    return switch (attr.type) {
+    switch (attr.type) {
       case ArffType.NUMERIC -> new BigDecimal(value)
       case ArffType.INTEGER -> Integer.parseInt(value)
       case ArffType.STRING, ArffType.NOMINAL -> value
@@ -656,6 +733,10 @@ class MatrixArffReader {
       name = name.substring(0, name.lastIndexOf('.'))
     }
     return name ?: "ArffMatrix"
+  }
+
+  private static String fallbackName(String defaultName, ArffReadOptions options) {
+    options?.matrixName ?: defaultName
   }
 
   @CompileStatic

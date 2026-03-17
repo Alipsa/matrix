@@ -1,6 +1,7 @@
 package test.alipsa.matrix.arff
 
 import org.junit.jupiter.api.*
+import se.alipsa.matrix.arff.ArffReadOptions
 import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.ArffTypeDecl
 import se.alipsa.matrix.arff.ArffWriteOptions
@@ -835,5 +836,76 @@ plain
     }
 
     assertTrue(exception.message.contains("nominal configuration"))
+  }
+
+  @Test @Order(40)
+  void testTypedReadOverloadsUseArffReadOptions() {
+    String arffContent = """
+@ATTRIBUTE id INTEGER
+@ATTRIBUTE label STRING
+@DATA
+1,'alpha'
+2,'beta'
+""".trim()
+    File file = new File(tempDir, 'typed_read.arff')
+    file.text = arffContent
+    ArffReadOptions options = new ArffReadOptions().matrixName('typed_fallback')
+
+    Matrix fromFile = MatrixArffReader.read(file, options)
+    Matrix fromPath = MatrixArffReader.read(file.toPath(), options)
+    Matrix fromUrl = MatrixArffReader.read(file.toURI().toURL(), options)
+    Matrix fromString = MatrixArffReader.readString(arffContent, options)
+    Matrix fromReader = MatrixArffReader.read(new StringReader(arffContent), options)
+
+    new FileInputStream(file).withCloseable { InputStream is ->
+      Matrix fromInputStream = MatrixArffReader.read(is, options)
+      assertEquals('typed_fallback', fromInputStream.matrixName)
+      assertEquals('beta', fromInputStream[1, 'label'])
+    }
+
+    [fromFile, fromPath, fromUrl, fromString, fromReader].each { Matrix matrix ->
+      assertEquals('typed_fallback', matrix.matrixName)
+      assertEquals(2, matrix.rowCount())
+      assertEquals(1, matrix[0, 'id'])
+      assertEquals('beta', matrix[1, 'label'])
+    }
+  }
+
+  @Test @Order(41)
+  void testTypedWriteOverloadsProduceSameOutput() {
+    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    Matrix m = Matrix.builder("typed_write")
+        .columnNames("created", "category", "value")
+        .columns(
+            [inputFormat.parse("2026-03-18 09:10:11")] as List,
+            ['A'] as List,
+            [1] as List
+        )
+        .types([Date, String, Integer])
+        .build()
+    ArffWriteOptions options = new ArffWriteOptions()
+        .inferNominals(false)
+        .attributeTypesByColumn([
+            created : ArffTypeDecl.DATE,
+            category: ArffTypeDecl.STRING
+        ])
+        .dateFormatsByColumn([created: 'yyyy-MM-dd'])
+    String expected = MatrixArffWriter.writeString(m, options)
+
+    File file = new File(tempDir, 'typed_write_file.arff')
+    MatrixArffWriter.write(m, file, options)
+    assertEquals(expected, file.getText('UTF-8'))
+
+    Path path = tempDir.toPath().resolve('typed_write_path.arff')
+    MatrixArffWriter.write(m, path, options)
+    assertEquals(expected, path.toFile().getText('UTF-8'))
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    MatrixArffWriter.write(m, baos, options)
+    assertEquals(expected, baos.toString('UTF-8'))
+
+    StringWriter sw = new StringWriter()
+    MatrixArffWriter.write(m, sw, options)
+    assertEquals(expected, sw.toString())
   }
 }

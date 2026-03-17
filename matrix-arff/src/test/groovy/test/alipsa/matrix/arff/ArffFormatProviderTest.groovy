@@ -4,7 +4,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import se.alipsa.matrix.arff.ArffFormatProvider
 import se.alipsa.matrix.arff.ArffReadOptions
+import se.alipsa.matrix.arff.ArffTypeDecl
 import se.alipsa.matrix.arff.ArffWriteOptions
+import se.alipsa.matrix.arff.MatrixArffReader
+import se.alipsa.matrix.arff.MatrixArffWriter
 import se.alipsa.matrix.core.Matrix
 
 import java.nio.file.Path
@@ -109,6 +112,49 @@ class ArffFormatProviderTest {
     ArffReadOptions options = ArffReadOptions.fromMap([matrixName: null])
 
     assertEquals(null, options.matrixName)
+  }
+
+  @Test
+  void testDirectTypedReadMatchesSpiRead() {
+    File file = tempDir.resolve('typed-direct-read.arff').toFile()
+    file.text = '''@ATTRIBUTE value NUMERIC
+@DATA
+1
+2
+'''
+
+    Matrix direct = MatrixArffReader.read(file, new ArffReadOptions().matrixName('typedDirect'))
+    Matrix viaSpi = Matrix.read([matrixName: 'typedDirect'], file)
+
+    assertEquals(direct.matrixName, viaSpi.matrixName)
+    assertEquals(direct.columnNames(), viaSpi.columnNames())
+    assertEquals(direct.value, viaSpi.value)
+  }
+
+  @Test
+  void testDirectTypedWriteMatchesSpiWrite() {
+    Matrix source = Matrix.builder('typed-write')
+        .columns(
+            category: ['A', 'B', 'A'],
+            value: [1, 2, 3]
+        )
+        .types([String, Integer])
+        .build()
+
+    File directFile = tempDir.resolve('typed-direct-write.arff').toFile()
+    File spiFile = tempDir.resolve('typed-spi-write.arff').toFile()
+
+    ArffWriteOptions writeOptions = new ArffWriteOptions()
+        .inferNominals(false)
+        .attributeTypesByColumn([category: ArffTypeDecl.STRING])
+
+    MatrixArffWriter.write(source, directFile, writeOptions)
+    source.write([
+        inferNominals        : false,
+        attributeTypesByColumn: [category: 'STRING']
+    ], spiFile)
+
+    assertEquals(directFile.getText('UTF-8'), spiFile.getText('UTF-8'))
   }
 
   @Test

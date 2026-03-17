@@ -56,18 +56,36 @@ implementation "se.alipsa.matrix:matrix-arff"
 
 The `MatrixArffReader` class provides several methods to read ARFF files from different sources.
 
-### Reading from a File
+### Options-First Read API
 
 ```groovy
+import se.alipsa.matrix.arff.ArffReadOptions
 import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.core.Matrix
 
-// Read the classic iris dataset
-Matrix iris = MatrixArffReader.read(new File("iris.arff"))
+ArffReadOptions readOptions = new ArffReadOptions()
+    .matrixName('fallback-name')
+
+Matrix iris = MatrixArffReader.read(new File("iris.arff"), readOptions)
+Matrix fromPath = MatrixArffReader.read(Path.of("iris.arff"), readOptions)
+Matrix fromUrl = MatrixArffReader.read(new URL("https://example.com/iris.arff"), readOptions)
+Matrix fromString = MatrixArffReader.readString(arffContent, readOptions)
 
 println "Dataset: ${iris.matrixName}"
 println "Rows: ${iris.rowCount()}"
 println "Columns: ${iris.columnNames()}"
+```
+
+The typed overloads are available for `File`, `Path`, `URL`, `InputStream`, `Reader`, and `String`.
+
+### Convenience Shortcuts
+
+If you do not need typed options, the convenience overloads are still available:
+
+```groovy
+Matrix iris = MatrixArffReader.read(new File("iris.arff"))
+Matrix fromPath = MatrixArffReader.read(Path.of("iris.arff"))
+Matrix fromString = MatrixArffReader.readString(arffContent)
 ```
 
 Output:
@@ -103,7 +121,7 @@ When sparse rows are read:
 - explicit `?` values are treated as missing and become `null`
 - duplicate or out-of-range attribute indices are rejected with an `IllegalArgumentException`
 
-## Controlling Writer Schema Generation
+## Options-First Write API
 
 `ArffWriteOptions` can be used to control how the writer declares ARFF attribute types:
 
@@ -125,6 +143,11 @@ ArffWriteOptions options = new ArffWriteOptions()
 
 MatrixArffWriter.write(matrix, new File('configured.arff'), options)
 ```
+
+The typed overloads are available for `File`, `Path`, `OutputStream`, `Writer`, and `writeString(...)`.
+
+Convenience shortcuts such as `MatrixArffWriter.write(matrix, file)` and
+`MatrixArffWriter.writeString(matrix)` are still available when you want the defaults.
 
 Useful write options:
 

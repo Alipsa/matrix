@@ -36,29 +36,19 @@ class ArffFormatProvider extends AbstractFormatProvider {
   @Override
   Matrix read(File file, Map<String, ?> options) {
     ArffReadOptions readOptions = ArffReadOptions.fromMap(options)
-    if (readOptions.matrixName == null) {
-      return MatrixArffReader.read(file)
-    }
-    new FileInputStream(file).withCloseable { InputStream is ->
-      MatrixArffReader.read(is, readOptions.matrixName)
-    }
+    MatrixArffReader.read(file, readOptions)
   }
 
   @Override
   Matrix read(URL url, Map<String, ?> options) {
     ArffReadOptions readOptions = ArffReadOptions.fromMap(options)
-    if (readOptions.matrixName == null) {
-      return MatrixArffReader.read(url)
-    }
-    url.openStream().withCloseable { InputStream is ->
-      MatrixArffReader.read(is, readOptions.matrixName)
-    }
+    MatrixArffReader.read(url, readOptions)
   }
 
   @Override
   Matrix read(InputStream is, Map<String, ?> options) {
     ArffReadOptions readOptions = ArffReadOptions.fromMap(options)
-    MatrixArffReader.read(is, readOptions.matrixName ?: 'ArffMatrix')
+    MatrixArffReader.read(is, readOptions)
   }
 
   @Override

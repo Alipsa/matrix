@@ -55,14 +55,19 @@ implementation "se.alipsa.matrix:matrix-arff:0.1.0"
 
 The `MatrixArffReader` class provides several methods to read ARFF files from different sources.
 
-### Reading from a File
+### Options-First Read API
 
 ```groovy
+import se.alipsa.matrix.arff.ArffReadOptions
 import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.core.Matrix
 
-// Read the classic iris dataset
-Matrix iris = MatrixArffReader.read(new File("iris.arff"))
+ArffReadOptions readOptions = new ArffReadOptions()
+    .matrixName('fallback-name')
+
+Matrix iris = MatrixArffReader.read(new File("iris.arff"), readOptions)
+Matrix fromPath = MatrixArffReader.read(Paths.get("data/dataset.arff"), readOptions)
+Matrix fromString = MatrixArffReader.readString(arffContent, readOptions)
 
 println "Dataset: ${iris.matrixName}"
 println "Rows: ${iris.rowCount()}"
@@ -76,13 +81,13 @@ Rows: 150
 Columns: [sepallength, sepalwidth, petallength, petalwidth, class]
 ```
 
-### Reading from Different Sources
+### Convenience Shortcuts
 
 ```groovy
 import se.alipsa.matrix.arff.MatrixArffReader
 import java.nio.file.Paths
 
-// Read from a Path
+// Read from a Path without typed options
 Matrix data1 = MatrixArffReader.read(Paths.get("data/dataset.arff"))
 
 // Read from a file path string
@@ -135,6 +140,26 @@ Supported sparse semantics in `matrix-arff`:
 - quoted sparse values are supported
 - explicit `?` values are read as `null`
 - duplicate or out-of-range sparse indices fail fast with `IllegalArgumentException`
+
+## Options-First Write API
+
+`ArffWriteOptions` is the primary configuration surface for direct writes:
+
+```groovy
+import se.alipsa.matrix.arff.ArffTypeDecl
+import se.alipsa.matrix.arff.ArffWriteOptions
+import se.alipsa.matrix.arff.MatrixArffWriter
+
+ArffWriteOptions writeOptions = new ArffWriteOptions()
+    .inferNominals(false)
+    .attributeTypesByColumn([category: ArffTypeDecl.STRING])
+    .dateFormatsByColumn([created: 'yyyy-MM-dd'])
+
+MatrixArffWriter.write(matrix, new File('configured.arff'), writeOptions)
+String arff = MatrixArffWriter.writeString(matrix, writeOptions)
+```
+
+Convenience overloads without `ArffWriteOptions` still exist for default behavior.
 
 ### Exploring the Loaded Data
 
