@@ -1,6 +1,7 @@
 package test.alipsa.matrix.arff
 
 import org.junit.jupiter.api.*
+import se.alipsa.matrix.arff.ArffReadOptions
 import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.arff.ArffTypeDecl
 import se.alipsa.matrix.arff.ArffWriteOptions
@@ -835,5 +836,214 @@ plain
     }
 
     assertTrue(exception.message.contains("nominal configuration"))
+  }
+
+  @Test @Order(40)
+  void testTypedReadOverloadsUseArffReadOptions() {
+    String arffContent = """
+@ATTRIBUTE id INTEGER
+@ATTRIBUTE label STRING
+@DATA
+1,'alpha'
+2,'beta'
+""".trim()
+    File file = new File(tempDir, 'typed_read.arff')
+    file.text = arffContent
+    ArffReadOptions options = new ArffReadOptions().matrixName('typed_fallback')
+
+    Matrix fromFile = MatrixArffReader.read(file, options)
+    Matrix fromPath = MatrixArffReader.read(file.toPath(), options)
+    Matrix fromUrl = MatrixArffReader.read(file.toURI().toURL(), options)
+    Matrix fromString = MatrixArffReader.readString(arffContent, options)
+    Matrix fromReader = MatrixArffReader.read(new StringReader(arffContent), options)
+
+    new FileInputStream(file).withCloseable { InputStream is ->
+      Matrix fromInputStream = MatrixArffReader.read(is, options)
+      assertEquals('typed_fallback', fromInputStream.matrixName)
+      assertEquals('beta', fromInputStream[1, 'label'])
+    }
+
+    [fromFile, fromPath, fromUrl, fromString, fromReader].each { Matrix matrix ->
+      assertEquals('typed_fallback', matrix.matrixName)
+      assertEquals(2, matrix.rowCount())
+      assertEquals(1, matrix[0, 'id'])
+      assertEquals('beta', matrix[1, 'label'])
+    }
+  }
+
+  @Test @Order(41)
+  void testTypedWriteOverloadsProduceSameOutput() {
+    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    Matrix m = Matrix.builder("typed_write")
+        .columnNames("created", "category", "value")
+        .columns(
+            [inputFormat.parse("2026-03-18 09:10:11")] as List,
+            ['A'] as List,
+            [1] as List
+        )
+        .types([Date, String, Integer])
+        .build()
+    ArffWriteOptions options = new ArffWriteOptions()
+        .inferNominals(false)
+        .attributeTypesByColumn([
+            created : ArffTypeDecl.DATE,
+            category: ArffTypeDecl.STRING
+        ])
+        .dateFormatsByColumn([created: 'yyyy-MM-dd'])
+    String expected = MatrixArffWriter.writeString(m, options)
+
+    File file = new File(tempDir, 'typed_write_file.arff')
+    MatrixArffWriter.write(m, file, options)
+    assertEquals(expected, file.getText('UTF-8'))
+
+    Path path = tempDir.toPath().resolve('typed_write_path.arff')
+    MatrixArffWriter.write(m, path, options)
+    assertEquals(expected, path.toFile().getText('UTF-8'))
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    MatrixArffWriter.write(m, baos, options)
+    assertEquals(expected, baos.toString('UTF-8'))
+
+    StringWriter sw = new StringWriter()
+    MatrixArffWriter.write(m, sw, options)
+    assertEquals(expected, sw.toString())
+  }
+
+  @Test @Order(42)
+  void testUnknownAttributeTypeDefaultsToString() {
+    String arffContent = """
+@RELATION unknown_type
+
+@ATTRIBUTE note CUSTOMTYPE
+@DATA
+hello
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+
+    assertEquals(String, m.type('note'))
+    assertEquals('hello', m[0, 'note'])
+  }
+
+  @Test @Order(43)
+  void testStrictUnknownAttributeTypeFails() {
+    String arffContent = """
+@RELATION unknown_type_strict
+
+@ATTRIBUTE note CUSTOMTYPE
+@DATA
+hello
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent, 'unknown_type_strict', new ArffReadOptions().strict(true))
+    }
+
+    assertTrue(exception.message.contains("Unknown @ATTRIBUTE type 'CUSTOMTYPE'"))
+    assertTrue(exception.message.contains('line 3'))
+  }
+
+  @Test @Order(44)
+  void testDenseRowsStayLenientByDefault() {
+    String arffContent = """
+@RELATION lenient_rows
+
+@ATTRIBUTE first STRING
+@ATTRIBUTE second NUMERIC
+
+@DATA
+'only first'
+'first',2.5,99
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+
+    assertEquals(2, m.rowCount())
+    assertEquals('only first', m[0, 'first'])
+    assertNull(m[0, 'second'])
+    assertEquals('first', m[1, 'first'])
+    assertEquals(new BigDecimal('2.5'), m[1, 'second'])
+  }
+
+  @Test @Order(45)
+  void testStrictDenseRowsRejectMissingValues() {
+    String arffContent = """
+@RELATION strict_missing_row
+
+@ATTRIBUTE first STRING
+@ATTRIBUTE second NUMERIC
+
+@DATA
+'only first'
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent, 'strict_missing_row', new ArffReadOptions().strict(true))
+    }
+
+    assertTrue(exception.message.contains('Row length mismatch'))
+    assertTrue(exception.message.contains('expected 2 values but found 1'))
+    assertTrue(exception.message.contains('line 7'))
+  }
+
+  @Test @Order(46)
+  void testStrictDenseRowsRejectExtraValues() {
+    String arffContent = """
+@RELATION strict_extra_row
+
+@ATTRIBUTE first STRING
+@ATTRIBUTE second NUMERIC
+
+@DATA
+'first',2.5,99
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent, 'strict_extra_row', new ArffReadOptions().strict(true))
+    }
+
+    assertTrue(exception.message.contains('Row length mismatch'))
+    assertTrue(exception.message.contains('expected 2 values but found 3'))
+    assertTrue(exception.message.contains('line 7'))
+  }
+
+  @Test @Order(47)
+  void testMalformedDenseRowReportsLineContext() {
+    String arffContent = """
+@RELATION malformed_dense
+
+@ATTRIBUTE note STRING
+
+@DATA
+'unterminated
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains('Unterminated quoted data row'))
+    assertTrue(exception.message.contains('line 6'))
+    assertTrue(exception.message.contains("'unterminated"))
+  }
+
+  @Test @Order(48)
+  void testMalformedSparseRowReportsLineContext() {
+    String arffContent = """
+@RELATION malformed_sparse
+
+@ATTRIBUTE note STRING
+
+@DATA
+{0 'unterminated}
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains('Unterminated quoted sparse value'))
+    assertTrue(exception.message.contains('line 6'))
+    assertTrue(exception.message.contains("{0 'unterminated}"))
   }
 }
