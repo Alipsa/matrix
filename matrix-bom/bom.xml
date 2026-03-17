@@ -32,7 +32,7 @@
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
 
-    <matrixArffVersion>0.2.0-SNAPSHOT</matrixArffVersion>
+    <matrixArffVersion>0.2.0</matrixArffVersion>
     <matrixAvroVersion>0.2.0-SNAPSHOT</matrixAvroVersion>
     <matrixBigQueryVersion>0.5.2-SNAPSHOT</matrixBigQueryVersion>
     <matrixChartsVersion>0.5.0-SNAPSHOT</matrixChartsVersion>
