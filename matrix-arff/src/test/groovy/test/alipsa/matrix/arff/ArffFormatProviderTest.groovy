@@ -43,6 +43,20 @@ class ArffFormatProviderTest {
   }
 
   @Test
+  void testSpiReadPrefersRelationNameOverFallbackName() {
+    File file = tempDir.resolve('relation-name.arff').toFile()
+    file.text = '''@RELATION actualName
+@ATTRIBUTE value NUMERIC
+@DATA
+1
+'''
+
+    Matrix matrix = Matrix.read([matrixName: 'fallback'], file)
+
+    assertEquals('actualName', matrix.matrixName)
+  }
+
+  @Test
   void testSpiWriteAndReadRoundTrip() {
     Matrix source = Matrix.builder('flowers')
         .columns(
@@ -95,5 +109,31 @@ class ArffFormatProviderTest {
     ArffReadOptions options = ArffReadOptions.fromMap([matrixName: null])
 
     assertEquals(null, options.matrixName)
+  }
+
+  @Test
+  void testWriteOptionsRoundTripFromMapToMap() {
+    ArffWriteOptions options = ArffWriteOptions.fromMap([
+        nominalMappings      : [severity: ['high', 'medium', 'low']],
+        inferNominals        : false,
+        nominalThreshold     : 12,
+        nominalColumns       : ['severity'],
+        stringColumns        : ['notes'],
+        attributeTypesByColumn: [createdAt: 'DATE', notes: 'STRING'],
+        dateFormat           : 'yyyy-MM-dd',
+        dateFormatsByColumn  : [createdAt: 'yyyy/MM/dd HH:mm']
+    ])
+
+    Map<String, ?> roundTrip = options.toMap()
+
+    assertEquals([severity: ['high', 'medium', 'low']], roundTrip.nominalMappings)
+    assertEquals(false, roundTrip.inferNominals)
+    assertEquals(12, roundTrip.nominalThreshold)
+    assertEquals(['severity'] as Set, roundTrip.nominalColumns as Set)
+    assertEquals(['notes'] as Set, roundTrip.stringColumns as Set)
+    assertEquals('DATE', String.valueOf((roundTrip.attributeTypesByColumn as Map).createdAt))
+    assertEquals('STRING', String.valueOf((roundTrip.attributeTypesByColumn as Map).notes))
+    assertEquals('yyyy-MM-dd', roundTrip.dateFormat)
+    assertEquals([createdAt: 'yyyy/MM/dd HH:mm'], roundTrip.dateFormatsByColumn)
   }
 }

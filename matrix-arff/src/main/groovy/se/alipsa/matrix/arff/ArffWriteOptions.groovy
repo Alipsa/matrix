@@ -14,14 +14,46 @@ class ArffWriteOptions {
 
   private static final int DEFAULT_NOMINAL_THRESHOLD = 50
 
-  Map<String, List<String>> nominalMappings = [:]
-  boolean inferNominals = true
-  int nominalThreshold = DEFAULT_NOMINAL_THRESHOLD
-  Set<String> nominalColumns = [] as Set<String>
-  Set<String> stringColumns = [] as Set<String>
-  Map<String, ArffTypeDecl> attributeTypesByColumn = [:]
-  String dateFormat = null
-  Map<String, String> dateFormatsByColumn = [:]
+  private Map<String, List<String>> nominalMappings = [:]
+  private boolean inferNominals = true
+  private int nominalThreshold = DEFAULT_NOMINAL_THRESHOLD
+  private Set<String> nominalColumns = [] as Set<String>
+  private Set<String> stringColumns = [] as Set<String>
+  private Map<String, ArffTypeDecl> attributeTypesByColumn = [:]
+  private String dateFormat = null
+  private Map<String, String> dateFormatsByColumn = [:]
+
+  Map<String, List<String>> getNominalMappings() {
+    nominalMappings.asImmutable()
+  }
+
+  boolean isInferNominals() {
+    inferNominals
+  }
+
+  int getNominalThreshold() {
+    nominalThreshold
+  }
+
+  Set<String> getNominalColumns() {
+    nominalColumns.asImmutable()
+  }
+
+  Set<String> getStringColumns() {
+    stringColumns.asImmutable()
+  }
+
+  Map<String, ArffTypeDecl> getAttributeTypesByColumn() {
+    attributeTypesByColumn.asImmutable()
+  }
+
+  String getDateFormat() {
+    dateFormat
+  }
+
+  Map<String, String> getDateFormatsByColumn() {
+    dateFormatsByColumn.asImmutable()
+  }
 
   ArffWriteOptions nominalMappings(Map<String, List<String>> value) {
     this.nominalMappings = value == null ? [:] : copyNominalMappings(value)
@@ -134,8 +166,8 @@ class ArffWriteOptions {
   static List<OptionDescriptor> descriptors() {
     [
         new OptionDescriptor('nominalMappings', Map, null, 'Map of column names to explicit nominal values'),
-        new OptionDescriptor('inferNominals', Boolean, true, 'Whether String/Object columns should be auto-detected as nominal'),
-        new OptionDescriptor('nominalThreshold', Integer, DEFAULT_NOMINAL_THRESHOLD, 'Maximum distinct values allowed for nominal inference'),
+        new OptionDescriptor('inferNominals', Boolean, true, 'Whether String/Object columns should be auto-detected as nominal using nominalThreshold and, for 10+ rows, a 10% row-count heuristic'),
+        new OptionDescriptor('nominalThreshold', Integer, DEFAULT_NOMINAL_THRESHOLD, 'Maximum distinct values allowed before nominal inference falls back to STRING'),
         new OptionDescriptor('nominalColumns', Collection, null, 'Columns that should always be written as nominal'),
         new OptionDescriptor('stringColumns', Collection, null, 'Columns that should always be written as STRING'),
         new OptionDescriptor('attributeTypesByColumn', Map, null, 'Map of column names to ARFF type declarations such as STRING, NOMINAL, DATE, NUMERIC, INTEGER'),
@@ -185,12 +217,7 @@ class ArffWriteOptions {
       return ((Collection<?>) value).collect { Object item -> requireString(item, name) } as List<String>
     }
     if (value != null && value.getClass().array) {
-      List<String> result = []
-      int length = java.lang.reflect.Array.getLength(value)
-      for (int i = 0; i < length; i++) {
-        result << requireString(java.lang.reflect.Array.get(value, i), name)
-      }
-      return result
+      return (value as List<?>).collect { Object item -> requireString(item, name) } as List<String>
     }
     throw new IllegalArgumentException("$name must be a Collection<String> but was ${value?.class}")
   }

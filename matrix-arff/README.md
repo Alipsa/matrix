@@ -136,6 +136,7 @@ Useful write options:
 - `nominalMappings([...])` supplies explicit nominal values and preserves their declared order
 - `dateFormat(...)` and `dateFormatsByColumn([...])` control DATE declarations and output formatting
 
+By default, nominal inference only applies when the distinct-value count is at or below `nominalThreshold` and, for datasets with 10 or more rows, the distinct-value count is also at or below 10% of the row count.
 ## Using Matrix.read() / matrix.write()
 
 If `matrix-arff` is on the classpath, `.arff` files can also be handled through the generic Matrix SPI API:
@@ -161,13 +162,13 @@ Schema control is available through the generic SPI API as well:
 
 ```groovy
 matrix.write([
-    inferNominals      : false,
-    nominalColumns     : ['severity'],
-    nominalMappings    : [severity: ['high', 'medium', 'low']],
+    inferNominals         : false,
+    nominalColumns        : ['severity'],
+    nominalMappings       : [severity: ['high', 'medium', 'low']],
     attributeTypesByColumn: [
         createdAt: 'DATE',
         notes    : 'STRING'
     ],
-    dateFormatsByColumn: [createdAt: 'yyyy/MM/dd HH:mm']
+    dateFormatsByColumn   : [createdAt: 'yyyy/MM/dd HH:mm']
 ], new File('configured.arff'))
 ```
