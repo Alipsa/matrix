@@ -4,8 +4,6 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
-import java.util.Locale
-
 /**
  * Typed options for ARFF read operations via the SPI.
  */
@@ -63,13 +61,13 @@ class ArffReadOptions {
       }
     }
     if (normalized.containsKey('strict')) {
-      result.strict(booleanValue(normalized.strict, 'strict'))
+      result.strict(ArffOptionValues.booleanValue(normalized.strict, 'strict'))
     }
     if (normalized.containsKey('failonunknownattributetype')) {
-      result.failOnUnknownAttributeType(booleanValue(normalized.failonunknownattributetype, 'failOnUnknownAttributeType'))
+      result.failOnUnknownAttributeType(ArffOptionValues.booleanValue(normalized.failonunknownattributetype, 'failOnUnknownAttributeType'))
     }
     if (normalized.containsKey('failonrowlengthmismatch')) {
-      result.failOnRowLengthMismatch(booleanValue(normalized.failonrowlengthmismatch, 'failOnRowLengthMismatch'))
+      result.failOnRowLengthMismatch(ArffOptionValues.booleanValue(normalized.failonrowlengthmismatch, 'failOnRowLengthMismatch'))
     }
     result
   }
@@ -102,21 +100,5 @@ class ArffReadOptions {
         new OptionDescriptor('failOnUnknownAttributeType', Boolean, 'strict', 'Fail when an unknown @ATTRIBUTE type is encountered instead of falling back to STRING'),
         new OptionDescriptor('failOnRowLengthMismatch', Boolean, 'strict', 'Fail when a dense @DATA row has more or fewer values than the declared attributes')
     ]
-  }
-
-  private static boolean booleanValue(Object value, String name) {
-    if (value instanceof Boolean) {
-      return (Boolean) value
-    }
-    if (value instanceof CharSequence) {
-      String normalized = value.toString().trim().toLowerCase(Locale.ROOT)
-      if (normalized == 'true') {
-        return true
-      }
-      if (normalized == 'false') {
-        return false
-      }
-    }
-    throw new IllegalArgumentException("$name must be a boolean but was ${value?.class}")
   }
 }

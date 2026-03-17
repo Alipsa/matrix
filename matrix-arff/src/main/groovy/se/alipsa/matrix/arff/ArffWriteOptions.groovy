@@ -4,8 +4,6 @@ import groovy.transform.CompileStatic
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
-import java.util.Locale
-
 /**
  * Typed options for ARFF write operations via the SPI.
  */
@@ -106,7 +104,7 @@ class ArffWriteOptions {
       result.nominalMappings(nominalMappingsValue(normalized.nominalmappings, 'nominalMappings'))
     }
     if (normalized.containsKey('infernominals')) {
-      result.inferNominals(booleanValue(normalized.infernominals, 'inferNominals'))
+      result.inferNominals(ArffOptionValues.booleanValue(normalized.infernominals, 'inferNominals'))
     }
     if (normalized.containsKey('nominalthreshold')) {
       result.nominalThreshold(intValue(normalized.nominalthreshold, 'nominalThreshold'))
@@ -276,22 +274,6 @@ class ArffWriteOptions {
     stringValue
   }
 
-  private static boolean booleanValue(Object value, String name) {
-    if (value instanceof Boolean) {
-      return (Boolean) value
-    }
-    if (value instanceof CharSequence) {
-      String normalized = value.toString().trim().toLowerCase(Locale.ROOT)
-      if (normalized == 'true') {
-        return true
-      }
-      if (normalized == 'false') {
-        return false
-      }
-    }
-    throw new IllegalArgumentException("$name must be a boolean but was ${value?.class}")
-  }
-
   private static int intValue(Object value, String name) {
     try {
       return new BigDecimal(String.valueOf(value)).intValueExact()
@@ -306,7 +288,7 @@ class ArffWriteOptions {
     }
     if (value instanceof CharSequence) {
       try {
-        return ArffTypeDecl.valueOf(value.toString().trim().toUpperCase(Locale.ROOT))
+        return ArffTypeDecl.valueOf(value.toString().trim().toUpperCase(java.util.Locale.ROOT))
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("$name must be one of ${ArffTypeDecl.values().toList()} but was $value", e)
       }

@@ -542,7 +542,7 @@ class MatrixArffReader {
   }
 
   private static List<ParsedToken> parseDelimitedLine(String line, char delimiter) {
-    parseDelimitedLine(line, delimiter, -1, line, null)
+    parseDelimitedLine(line, delimiter, 0, line, null)
   }
 
   private static List<ParsedToken> parseDelimitedLine(String line, char delimiter, int lineNumber, String rawLine, String context) {
@@ -619,7 +619,7 @@ class MatrixArffReader {
     }
 
     try {
-      switch (attr.type) {
+      return switch (attr.type) {
         case ArffType.NUMERIC -> new BigDecimal(value)
         case ArffType.INTEGER -> Integer.parseInt(value)
         case ArffType.STRING, ArffType.NOMINAL -> value
