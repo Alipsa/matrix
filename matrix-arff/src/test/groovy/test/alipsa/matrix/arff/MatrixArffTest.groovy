@@ -529,4 +529,161 @@ plain
     // They should be identical
     assertEquals(fromWriter, fromWriteString)
   }
+
+  @Test @Order(26)
+  void testReadSparseRows() {
+    String arffContent = """
+@RELATION sparse_test
+
+@ATTRIBUTE score NUMERIC
+@ATTRIBUTE note STRING
+@ATTRIBUTE status {yes,no}
+@ATTRIBUTE count INTEGER
+
+@DATA
+{0 1.5,2 yes}
+{1 'hello',3 4}
+{}
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+
+    assertEquals("sparse_test", m.matrixName)
+    assertEquals(3, m.rowCount())
+    assertEquals(4, m.columnCount())
+
+    assertEquals(new BigDecimal("1.5"), m[0, "score"])
+    assertNull(m[0, "note"])
+    assertEquals("yes", m[0, "status"])
+    assertNull(m[0, "count"])
+
+    assertNull(m[1, "score"])
+    assertEquals("hello", m[1, "note"])
+    assertNull(m[1, "status"])
+    assertEquals(4, m[1, "count"])
+
+    assertNull(m[2, "score"])
+    assertNull(m[2, "note"])
+    assertNull(m[2, "status"])
+    assertNull(m[2, "count"])
+  }
+
+  @Test @Order(27)
+  void testReadSparseRowsWithQuotedStringsAndMissingValues() {
+    String arffContent = """
+@RELATION sparse_quotes
+
+@ATTRIBUTE note STRING
+@ATTRIBUTE category {'value with comma',plain}
+@ATTRIBUTE amount NUMERIC
+
+@DATA
+{0 'text, with comma',1 'value with comma'}
+{0 'O\\'Reilly',2 ?}
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+
+    assertEquals(2, m.rowCount())
+    assertEquals("text, with comma", m[0, "note"])
+    assertEquals("value with comma", m[0, "category"])
+    assertNull(m[0, "amount"])
+
+    assertEquals("O'Reilly", m[1, "note"])
+    assertNull(m[1, "category"])
+    assertNull(m[1, "amount"])
+  }
+
+  @Test @Order(28)
+  void testSparseRowsRejectDuplicateIndices() {
+    String arffContent = """
+@RELATION sparse_duplicate
+
+@ATTRIBUTE value NUMERIC
+@ATTRIBUTE name STRING
+
+@DATA
+{0 1.0,0 2.0}
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains("Duplicate sparse ARFF attribute index 0"))
+  }
+
+  @Test @Order(29)
+  void testSparseRowsRejectOutOfRangeIndices() {
+    String arffContent = """
+@RELATION sparse_bounds
+
+@ATTRIBUTE value NUMERIC
+@ATTRIBUTE name STRING
+
+@DATA
+{2 'oops'}
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains("out of bounds"))
+  }
+
+  @Test @Order(30)
+  void testSparseRowsRejectNegativeIndices() {
+    String arffContent = """
+@RELATION sparse_negative
+
+@ATTRIBUTE value NUMERIC
+@ATTRIBUTE name STRING
+
+@DATA
+{-1 'oops'}
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains("out of bounds"))
+  }
+
+  @Test @Order(31)
+  void testMixedDenseAndSparseRows() {
+    String arffContent = """
+@RELATION mixed_rows
+
+@ATTRIBUTE id INTEGER
+@ATTRIBUTE note STRING
+@ATTRIBUTE score NUMERIC
+
+@DATA
+1,'dense',10.5
+{0 2,2 20.5}
+3,'dense again',?
+{1 'sparse only'}
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+
+    assertEquals(4, m.rowCount())
+    assertEquals(1, m[0, "id"])
+    assertEquals("dense", m[0, "note"])
+    assertEquals(new BigDecimal("10.5"), m[0, "score"])
+
+    assertEquals(2, m[1, "id"])
+    assertNull(m[1, "note"])
+    assertEquals(new BigDecimal("20.5"), m[1, "score"])
+
+    assertEquals(3, m[2, "id"])
+    assertEquals("dense again", m[2, "note"])
+    assertNull(m[2, "score"])
+
+    assertNull(m[3, "id"])
+    assertEquals("sparse only", m[3, "note"])
+    assertNull(m[3, "score"])
+  }
 }
