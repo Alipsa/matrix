@@ -908,4 +908,142 @@ plain
     MatrixArffWriter.write(m, sw, options)
     assertEquals(expected, sw.toString())
   }
+
+  @Test @Order(42)
+  void testUnknownAttributeTypeDefaultsToString() {
+    String arffContent = """
+@RELATION unknown_type
+
+@ATTRIBUTE note CUSTOMTYPE
+@DATA
+hello
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+
+    assertEquals(String, m.type('note'))
+    assertEquals('hello', m[0, 'note'])
+  }
+
+  @Test @Order(43)
+  void testStrictUnknownAttributeTypeFails() {
+    String arffContent = """
+@RELATION unknown_type_strict
+
+@ATTRIBUTE note CUSTOMTYPE
+@DATA
+hello
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent, 'unknown_type_strict', new ArffReadOptions().strict(true))
+    }
+
+    assertTrue(exception.message.contains("Unknown @ATTRIBUTE type 'CUSTOMTYPE'"))
+    assertTrue(exception.message.contains('line 3'))
+  }
+
+  @Test @Order(44)
+  void testDenseRowsStayLenientByDefault() {
+    String arffContent = """
+@RELATION lenient_rows
+
+@ATTRIBUTE first STRING
+@ATTRIBUTE second NUMERIC
+
+@DATA
+'only first'
+'first',2.5,99
+""".trim()
+
+    Matrix m = MatrixArffReader.readString(arffContent)
+
+    assertEquals(2, m.rowCount())
+    assertEquals('only first', m[0, 'first'])
+    assertNull(m[0, 'second'])
+    assertEquals('first', m[1, 'first'])
+    assertEquals(new BigDecimal('2.5'), m[1, 'second'])
+  }
+
+  @Test @Order(45)
+  void testStrictDenseRowsRejectMissingValues() {
+    String arffContent = """
+@RELATION strict_missing_row
+
+@ATTRIBUTE first STRING
+@ATTRIBUTE second NUMERIC
+
+@DATA
+'only first'
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent, 'strict_missing_row', new ArffReadOptions().strict(true))
+    }
+
+    assertTrue(exception.message.contains('Row length mismatch'))
+    assertTrue(exception.message.contains('expected 2 values but found 1'))
+    assertTrue(exception.message.contains('line 7'))
+  }
+
+  @Test @Order(46)
+  void testStrictDenseRowsRejectExtraValues() {
+    String arffContent = """
+@RELATION strict_extra_row
+
+@ATTRIBUTE first STRING
+@ATTRIBUTE second NUMERIC
+
+@DATA
+'first',2.5,99
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent, 'strict_extra_row', new ArffReadOptions().strict(true))
+    }
+
+    assertTrue(exception.message.contains('Row length mismatch'))
+    assertTrue(exception.message.contains('expected 2 values but found 3'))
+    assertTrue(exception.message.contains('line 7'))
+  }
+
+  @Test @Order(47)
+  void testMalformedDenseRowReportsLineContext() {
+    String arffContent = """
+@RELATION malformed_dense
+
+@ATTRIBUTE note STRING
+
+@DATA
+'unterminated
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains('Unterminated quoted data row'))
+    assertTrue(exception.message.contains('line 6'))
+    assertTrue(exception.message.contains("'unterminated"))
+  }
+
+  @Test @Order(48)
+  void testMalformedSparseRowReportsLineContext() {
+    String arffContent = """
+@RELATION malformed_sparse
+
+@ATTRIBUTE note STRING
+
+@DATA
+{0 'unterminated}
+""".trim()
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      MatrixArffReader.readString(arffContent)
+    }
+
+    assertTrue(exception.message.contains('Unterminated quoted sparse value'))
+    assertTrue(exception.message.contains('line 6'))
+    assertTrue(exception.message.contains("{0 'unterminated}"))
+  }
 }

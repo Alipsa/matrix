@@ -5,6 +5,7 @@ import se.alipsa.matrix.core.Matrix
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -29,7 +30,7 @@ class MatrixArffReader {
     read(file, new ArffReadOptions())
   }
 
-  /** Read from an Arff file using typed ARFF read options. */
+  /** Read from an Arff file with typed options. */
   static Matrix read(File file, ArffReadOptions options) {
     validateFile(file)
     new FileInputStream(file).withCloseable { InputStream is ->
@@ -42,7 +43,7 @@ class MatrixArffReader {
     read(path, new ArffReadOptions())
   }
 
-  /** Read from an Arff file using typed ARFF read options. */
+  /** Read from an Arff file with typed options. */
   static Matrix read(Path path, ArffReadOptions options) {
     if (path == null) {
       throw new IllegalArgumentException("Path cannot be null")
@@ -57,23 +58,17 @@ class MatrixArffReader {
    * @param defaultName fallback name if no @RELATION is present
    * @return a Matrix containing the parsed data
    */
-  static Matrix read(InputStream input, String defaultName = "ArffMatrix") {
+  static Matrix read(InputStream input, String defaultName = 'ArffMatrix') {
     read(input, defaultName, new ArffReadOptions())
   }
 
-  /**
-   * Read arff from an InputStream using typed ARFF read options. Stream will be closed by caller if needed.
-   *
-   * @param input the input stream containing ARFF content
-   * @param options typed read options
-   * @return a Matrix containing the parsed data
-   */
+  /** Read arff from an InputStream with typed options. */
   static Matrix read(InputStream input, ArffReadOptions options) {
-    read(input, "ArffMatrix", options)
+    read(input, 'ArffMatrix', options)
   }
 
   /**
-   * Read arff from an InputStream using typed ARFF read options. Stream will be closed by caller if needed.
+   * Read arff from an InputStream with typed options. Stream will be closed by caller if needed.
    *
    * @param input the input stream containing ARFF content
    * @param defaultName fallback name if no @RELATION is present
@@ -82,10 +77,10 @@ class MatrixArffReader {
    */
   static Matrix read(InputStream input, String defaultName, ArffReadOptions options) {
     if (input == null) {
-      throw new IllegalArgumentException("InputStream cannot be null")
+      throw new IllegalArgumentException('InputStream cannot be null')
     }
     BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))
-    parseArff(reader, fallbackName(defaultName, options))
+    parseArff(reader, fallbackName(defaultName, options), options ?: new ArffReadOptions())
   }
 
   /**
@@ -95,23 +90,17 @@ class MatrixArffReader {
    * @param defaultName fallback name if no @RELATION is present
    * @return a Matrix containing the parsed data
    */
-  static Matrix read(Reader reader, String defaultName = "ArffMatrix") {
+  static Matrix read(Reader reader, String defaultName = 'ArffMatrix') {
     read(reader, defaultName, new ArffReadOptions())
   }
 
-  /**
-   * Read arff from a Reader using typed ARFF read options. Reader will be closed by caller if needed.
-   *
-   * @param reader the reader containing ARFF content
-   * @param options typed read options
-   * @return a Matrix containing the parsed data
-   */
+  /** Read arff from a Reader with typed options. */
   static Matrix read(Reader reader, ArffReadOptions options) {
-    read(reader, "ArffMatrix", options)
+    read(reader, 'ArffMatrix', options)
   }
 
   /**
-   * Read arff from a Reader using typed ARFF read options. Reader will be closed by caller if needed.
+   * Read arff from a Reader with typed options. Reader will be closed by caller if needed.
    *
    * @param reader the reader containing ARFF content
    * @param defaultName fallback name if no @RELATION is present
@@ -120,10 +109,10 @@ class MatrixArffReader {
    */
   static Matrix read(Reader reader, String defaultName, ArffReadOptions options) {
     if (reader == null) {
-      throw new IllegalArgumentException("Reader cannot be null")
+      throw new IllegalArgumentException('Reader cannot be null')
     }
     BufferedReader buffered = reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader)
-    parseArff(buffered, fallbackName(defaultName, options))
+    parseArff(buffered, fallbackName(defaultName, options), options ?: new ArffReadOptions())
   }
 
   /**
@@ -134,7 +123,7 @@ class MatrixArffReader {
    */
   static Matrix readFile(String filePath) {
     if (filePath == null) {
-      throw new IllegalArgumentException("File path cannot be null")
+      throw new IllegalArgumentException('File path cannot be null')
     }
     read(new File(filePath))
   }
@@ -146,23 +135,17 @@ class MatrixArffReader {
    * @param defaultName fallback name if no @RELATION is present
    * @return a Matrix containing the parsed data
    */
-  static Matrix readString(String arffContent, String defaultName = "ArffMatrix") {
+  static Matrix readString(String arffContent, String defaultName = 'ArffMatrix') {
     readString(arffContent, defaultName, new ArffReadOptions())
   }
 
-  /**
-   * Read arff content from a String using typed ARFF read options.
-   *
-   * @param arffContent ARFF content as a string
-   * @param options typed read options
-   * @return a Matrix containing the parsed data
-   */
+  /** Read arff content from a String with typed options. */
   static Matrix readString(String arffContent, ArffReadOptions options) {
-    readString(arffContent, "ArffMatrix", options)
+    readString(arffContent, 'ArffMatrix', options)
   }
 
   /**
-   * Read arff content from a String using typed ARFF read options.
+   * Read arff content from a String with typed options.
    *
    * @param arffContent ARFF content as a string
    * @param defaultName fallback name if no @RELATION is present
@@ -171,7 +154,7 @@ class MatrixArffReader {
    */
   static Matrix readString(String arffContent, String defaultName, ArffReadOptions options) {
     if (arffContent == null) {
-      throw new IllegalArgumentException("ARFF content cannot be null")
+      throw new IllegalArgumentException('ARFF content cannot be null')
     }
     read(new StringReader(arffContent), defaultName, options)
   }
@@ -181,10 +164,10 @@ class MatrixArffReader {
     read(url, new ArffReadOptions())
   }
 
-  /** Read from a URL using typed ARFF read options. */
+  /** Read from a URL with typed options. */
   static Matrix read(URL url, ArffReadOptions options) {
     if (url == null) {
-      throw new IllegalArgumentException("URL cannot be null")
+      throw new IllegalArgumentException('URL cannot be null')
     }
     url.openStream().withCloseable { InputStream is ->
       read(is, fallbackName(defaultName(url), options), options)
@@ -199,94 +182,91 @@ class MatrixArffReader {
    */
   static Matrix readUrl(String urlString) {
     if (urlString == null) {
-      throw new IllegalArgumentException("URL string cannot be null")
+      throw new IllegalArgumentException('URL string cannot be null')
     }
     try {
       return read(new URI(urlString).toURL())
     } catch (URISyntaxException | MalformedURLException e) {
-      throw new IllegalArgumentException("Invalid URL string: " + urlString, e)
+      throw new IllegalArgumentException("Invalid URL string: $urlString", e)
     }
   }
 
-  private static Matrix parseArff(BufferedReader reader, String defaultName) {
+  private static Matrix parseArff(BufferedReader reader, String defaultName, ArffReadOptions options) {
     String relationName = defaultName
     List<String> attributeNames = []
     List<ArffAttribute> attributes = []
     List<List<Object>> rows = []
     boolean inDataSection = false
+    int lineNumber = 0
 
-    String line
-    while ((line = reader.readLine()) != null) {
-      line = line.trim()
+    String rawLine
+    while ((rawLine = reader.readLine()) != null) {
+      lineNumber++
+      String line = rawLine.trim()
 
-      // Skip empty lines and comments
       if (line.isEmpty() || line.startsWith('%')) {
         continue
       }
 
       if (inDataSection) {
-        // Parse data row
-        if (!line.isEmpty()) {
-          List<Object> row = parseDataRow(line, attributes)
-          rows.add(row)
-        }
-      } else {
-        String upperLine = line.toUpperCase()
+        List<Object> row = parseDataRow(line, attributes, options, lineNumber, rawLine)
+        rows.add(row)
+        continue
+      }
 
-        if (upperLine.startsWith('@RELATION')) {
-          relationName = parseRelationName(line)
-        } else if (upperLine.startsWith('@ATTRIBUTE')) {
-          ArffAttribute attr = parseAttribute(line)
-          attributeNames.add(attr.name)
-          attributes.add(attr)
-        } else if (upperLine.startsWith('@DATA')) {
-          inDataSection = true
-        }
+      String upperLine = line.toUpperCase()
+      if (upperLine.startsWith('@RELATION')) {
+        relationName = parseRelationName(line, lineNumber, rawLine)
+      } else if (upperLine.startsWith('@ATTRIBUTE')) {
+        ArffAttribute attr = parseAttribute(line, options, lineNumber, rawLine)
+        attributeNames.add(attr.name)
+        attributes.add(attr)
+      } else if (upperLine.startsWith('@DATA')) {
+        inDataSection = true
       }
     }
 
-    // Build the Matrix
-    List<Class> types = attributes.collect { it.javaType }
-
-    // Transpose rows to columns
+    List<Class> types = attributes.collect { ArffAttribute attr -> attr.javaType }
     List<List<Object>> columns = []
     if (!rows.isEmpty()) {
       int numCols = attributeNames.size()
       for (int i = 0; i < numCols; i++) {
         List<Object> col = []
         for (List<Object> row : rows) {
-          col.add(i < row.size() ? row[i] : null)
+          col.add(row[i])
         }
         columns.add(col)
       }
     } else {
-      // Empty data - create empty columns
       for (int i = 0; i < attributeNames.size(); i++) {
         columns.add([])
       }
     }
 
-    return Matrix.builder(relationName)
+    Matrix.builder(relationName)
         .columnNames(attributeNames)
         .columns(columns)
         .types(types)
         .build()
   }
 
-  private static String parseRelationName(String line) {
-    String name = line.substring(9).trim() // Remove @RELATION
-    return unescapeQuoted(name)
+  private static String parseRelationName(String line, int lineNumber, String rawLine) {
+    if (line.length() < 9) {
+      throw parseError('Invalid @RELATION line', lineNumber, rawLine)
+    }
+    String name = line.substring(9).trim()
+    unescapeQuoted(name)
   }
 
-  private static ArffAttribute parseAttribute(String line) {
+  private static ArffAttribute parseAttribute(String line, ArffReadOptions options, int lineNumber, String rawLine) {
     String trimmed = line.trim()
     int attrIndex = trimmed.toUpperCase().indexOf('@ATTRIBUTE')
     if (attrIndex < 0) {
-      throw new IllegalArgumentException("Invalid @ATTRIBUTE line: $line")
+      throw parseError('Invalid @ATTRIBUTE line', lineNumber, rawLine)
     }
     String spec = trimmed.substring(attrIndex + 10).trim()
     if (spec.isEmpty()) {
-      throw new IllegalArgumentException("Invalid @ATTRIBUTE line: $line")
+      throw parseError('Invalid @ATTRIBUTE line', lineNumber, rawLine)
     }
 
     String name
@@ -317,12 +297,12 @@ class MatrixArffReader {
         sb.append(c)
       }
       if (!closed) {
-        throw new IllegalArgumentException("Invalid @ATTRIBUTE line (missing closing quote): $line")
+        throw parseError('Invalid @ATTRIBUTE line (missing closing quote)', lineNumber, rawLine)
       }
       name = sb.toString()
       typeSpec = i < spec.length() ? spec.substring(i).trim() : ''
       if (typeSpec.isEmpty()) {
-        throw new IllegalArgumentException("Invalid @ATTRIBUTE line (missing type): $line")
+        throw parseError('Invalid @ATTRIBUTE line (missing type)', lineNumber, rawLine)
       }
     } else {
       int splitIndex = -1
@@ -333,26 +313,24 @@ class MatrixArffReader {
         }
       }
       if (splitIndex < 0) {
-        throw new IllegalArgumentException("Invalid @ATTRIBUTE line: $line")
+        throw parseError('Invalid @ATTRIBUTE line', lineNumber, rawLine)
       }
       name = spec.substring(0, splitIndex)
       typeSpec = spec.substring(splitIndex).trim()
     }
 
-    return parseAttributeType(name, typeSpec)
+    parseAttributeType(name, typeSpec, options, lineNumber, rawLine)
   }
 
-  private static ArffAttribute parseAttributeType(String name, String typeSpec) {
+  private static ArffAttribute parseAttributeType(String name, String typeSpec, ArffReadOptions options, int lineNumber, String rawLine) {
     String upperType = typeSpec.toUpperCase()
 
-    // Check for nominal (categorical) type
     String nominalValuesStr = extractNominalValues(typeSpec)
     if (nominalValuesStr != null) {
       List<String> nominalValues = parseNominalValues(nominalValuesStr)
       return new ArffAttribute(name, ArffType.NOMINAL, String.class, nominalValues)
     }
 
-    // Check for date type with optional format
     if (upperType.startsWith('DATE')) {
       String dateFormat = null
       Matcher dateMatcher = DATE_FORMAT_PATTERN.matcher(typeSpec)
@@ -362,49 +340,58 @@ class MatrixArffReader {
       return new ArffAttribute(name, ArffType.DATE, Date.class, null, dateFormat)
     }
 
-    // Standard types
     switch (upperType) {
       case 'NUMERIC', 'REAL' -> new ArffAttribute(name, ArffType.NUMERIC, BigDecimal.class)
       case 'INTEGER' -> new ArffAttribute(name, ArffType.INTEGER, Integer.class)
       case 'STRING' -> new ArffAttribute(name, ArffType.STRING, String.class)
-      default -> new ArffAttribute(name, ArffType.STRING, String.class)
+      default -> {
+        if (options.failOnUnknownAttributeType) {
+          throw parseError("Unknown @ATTRIBUTE type '$typeSpec'", lineNumber, rawLine)
+        }
+        yield new ArffAttribute(name, ArffType.STRING, String.class)
+      }
     }
   }
 
   private static List<String> parseNominalValues(String valuesStr) {
     List<String> values = []
     parseDelimitedLine(valuesStr, ',' as char).each { ParsedToken token ->
-      String value = token.quoted ? token.value : token.value.trim()
-      values.add(value)
+      values.add(token.quoted ? token.value : token.value.trim())
     }
-    return values
+    values
   }
 
-  private static List<Object> parseDataRow(String line, List<ArffAttribute> attributes) {
+  private static List<Object> parseDataRow(String line, List<ArffAttribute> attributes, ArffReadOptions options,
+                                           int lineNumber, String rawLine) {
     if (line.startsWith('{')) {
-      return parseSparseDataRow(line, attributes)
+      return parseSparseDataRow(line, attributes, lineNumber, rawLine)
     }
-    List<ParsedToken> values = parseDelimitedLine(line, ',' as char)
-    List<Object> row = []
 
+    List<ParsedToken> values = parseDelimitedLine(line, ',' as char, lineNumber, rawLine, 'data row')
+    if (options.failOnRowLengthMismatch && values.size() != attributes.size()) {
+      throw parseError(
+          "Row length mismatch: expected ${attributes.size()} values but found ${values.size()}",
+          lineNumber,
+          rawLine
+      )
+    }
+
+    List<Object> row = []
     for (int i = 0; i < attributes.size(); i++) {
       ParsedToken token = i < values.size() ? values[i] : new ParsedToken(null, false)
       String value = token.value
-      boolean quoted = token.quoted
-      if (value != null && !quoted) {
+      if (value != null && !token.quoted) {
         value = value.trim()
       }
-      Object converted = convertValue(value, attributes[i], quoted)
-      row.add(converted)
+      row.add(convertValue(value, attributes[i], token.quoted, lineNumber, rawLine))
     }
-
-    return row
+    row
   }
 
   /** Parse a sparse ARFF row in `{index value, ...}` format. */
-  private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes) {
+  private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes, int lineNumber, String rawLine) {
     if (!line.endsWith('}')) {
-      throw new IllegalArgumentException("Invalid sparse ARFF row (missing closing brace): $line")
+      throw parseError('Invalid sparse ARFF row (missing closing brace)', lineNumber, rawLine)
     }
     List<Object> row = [null] * attributes.size()
     String body = line.substring(1, line.length() - 1).trim()
@@ -413,50 +400,53 @@ class MatrixArffReader {
     }
 
     Set<Integer> assignedIndices = [] as Set<Integer>
-    splitSparseEntries(body).each { String entry ->
+    splitSparseEntries(body, lineNumber, rawLine).each { String entry ->
       entry = entry?.trim()
       if (entry == null || entry.isEmpty()) {
-        throw new IllegalArgumentException("Invalid sparse ARFF row (empty entry): $line")
+        throw parseError('Invalid sparse ARFF row (empty entry)', lineNumber, rawLine)
       }
 
       int splitIndex = findSparseEntryValueStart(entry)
       if (splitIndex < 0) {
-        throw new IllegalArgumentException("Invalid sparse ARFF sparse entry '$entry' in row: $line")
+        throw parseError("Invalid sparse ARFF sparse entry '$entry'", lineNumber, rawLine)
       }
 
       String indexPart = entry.substring(0, splitIndex).trim()
       String valuePart = entry.substring(splitIndex).trim()
       if (valuePart.isEmpty()) {
-        throw new IllegalArgumentException("Invalid sparse ARFF sparse entry '$entry' in row: $line")
+        throw parseError("Invalid sparse ARFF sparse entry '$entry'", lineNumber, rawLine)
       }
 
       int attributeIndex
       try {
         attributeIndex = Integer.parseInt(indexPart)
       } catch (NumberFormatException e) {
-        throw new IllegalArgumentException("Invalid sparse ARFF attribute index '$indexPart' in row: $line", e)
+        throw parseError("Invalid sparse ARFF attribute index '$indexPart'", lineNumber, rawLine, e)
       }
 
       if (attributeIndex < 0 || attributeIndex >= attributes.size()) {
-        throw new IllegalArgumentException(
-            "Sparse ARFF attribute index $attributeIndex is out of bounds for ${attributes.size()} attributes in row: $line")
+        throw parseError(
+            "Sparse ARFF attribute index $attributeIndex is out of bounds for ${attributes.size()} attributes",
+            lineNumber,
+            rawLine
+        )
       }
       if (!assignedIndices.add(attributeIndex)) {
-        throw new IllegalArgumentException("Duplicate sparse ARFF attribute index $attributeIndex in row: $line")
+        throw parseError("Duplicate sparse ARFF attribute index $attributeIndex", lineNumber, rawLine)
       }
 
-      ParsedToken valueToken = parseSparseValue(valuePart, line)
+      ParsedToken valueToken = parseSparseValue(valuePart, lineNumber, rawLine)
       String value = valueToken.value
       if (value != null && !valueToken.quoted) {
         value = value.trim()
       }
-      row[attributeIndex] = convertValue(value, attributes[attributeIndex], valueToken.quoted)
+      row[attributeIndex] = convertValue(value, attributes[attributeIndex], valueToken.quoted, lineNumber, rawLine)
     }
 
     row
   }
 
-  private static List<String> splitSparseEntries(String body) {
+  private static List<String> splitSparseEntries(String body, int lineNumber, String rawLine) {
     List<String> entries = []
     StringBuilder current = new StringBuilder()
     boolean inQuote = false
@@ -495,6 +485,9 @@ class MatrixArffReader {
       current.append(c)
     }
 
+    if (inQuote) {
+      throw parseError('Unterminated quoted sparse value', lineNumber, rawLine)
+    }
     if (escape) {
       current.append('\\')
     }
@@ -511,10 +504,10 @@ class MatrixArffReader {
     -1
   }
 
-  private static ParsedToken parseSparseValue(String valuePart, String line) {
+  private static ParsedToken parseSparseValue(String valuePart, int lineNumber, String rawLine) {
     String value = valuePart.trim()
     if (value.isEmpty()) {
-      throw new IllegalArgumentException("Invalid sparse ARFF value '$valuePart' in row: $line")
+      throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
     }
 
     char first = value.charAt(0)
@@ -538,17 +531,21 @@ class MatrixArffReader {
       if (c == first) {
         String trailing = i + 1 < value.length() ? value.substring(i + 1).trim() : ''
         if (!trailing.isEmpty()) {
-          throw new IllegalArgumentException("Invalid sparse ARFF value '$valuePart' in row: $line")
+          throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
         }
         return new ParsedToken(result.toString(), true)
       }
       result.append(c)
     }
 
-    throw new IllegalArgumentException("Invalid sparse ARFF value '$valuePart' in row: $line")
+    throw parseError("Invalid sparse ARFF value '$valuePart'", lineNumber, rawLine)
   }
 
   private static List<ParsedToken> parseDelimitedLine(String line, char delimiter) {
+    parseDelimitedLine(line, delimiter, -1, line, null)
+  }
+
+  private static List<ParsedToken> parseDelimitedLine(String line, char delimiter, int lineNumber, String rawLine, String context) {
     List<ParsedToken> values = []
     StringBuilder current = new StringBuilder()
     boolean inQuote = false
@@ -599,14 +596,21 @@ class MatrixArffReader {
       current.append(c)
     }
 
+    if (inQuote) {
+      String detail = context == null ? 'Unterminated quoted value' : "Unterminated quoted $context"
+      if (lineNumber > 0) {
+        throw parseError(detail, lineNumber, rawLine)
+      }
+      throw new IllegalArgumentException(detail)
+    }
     if (escape) {
       current.append('\\')
     }
     values.add(new ParsedToken(current.toString(), tokenQuoted))
-    return values
+    values
   }
 
-  private static Object convertValue(String value, ArffAttribute attr, boolean quoted) {
+  private static Object convertValue(String value, ArffAttribute attr, boolean quoted, int lineNumber, String rawLine) {
     if (value == null) {
       return null
     }
@@ -614,21 +618,25 @@ class MatrixArffReader {
       return null
     }
 
-    switch (attr.type) {
-      case ArffType.NUMERIC -> new BigDecimal(value)
-      case ArffType.INTEGER -> Integer.parseInt(value)
-      case ArffType.STRING, ArffType.NOMINAL -> value
-      case ArffType.DATE -> parseDate(value, attr.dateFormat)
-      default -> value
+    try {
+      switch (attr.type) {
+        case ArffType.NUMERIC -> new BigDecimal(value)
+        case ArffType.INTEGER -> Integer.parseInt(value)
+        case ArffType.STRING, ArffType.NOMINAL -> value
+        case ArffType.DATE -> parseDate(value, attr.dateFormat)
+        default -> value
+      }
+    } catch (NumberFormatException e) {
+      throw parseError("Invalid ${attr.type} value '$value' for attribute '${attr.name}'", lineNumber, rawLine, e)
+    } catch (ParseException e) {
+      throw parseError("Invalid DATE value '$value' for attribute '${attr.name}'", lineNumber, rawLine, e)
     }
   }
 
-  private static Date parseDate(String value, String format) {
-    if (format == null) {
-      format = "yyyy-MM-dd'T'HH:mm:ss"
-    }
-    SimpleDateFormat sdf = new SimpleDateFormat(format)
-    return sdf.parse(value)
+  private static Date parseDate(String value, String format) throws ParseException {
+    String resolvedFormat = format ?: "yyyy-MM-dd'T'HH:mm:ss"
+    SimpleDateFormat sdf = new SimpleDateFormat(resolvedFormat)
+    sdf.parse(value)
   }
 
   private static String unescapeQuoted(String value) {
@@ -638,13 +646,13 @@ class MatrixArffReader {
       return value
     }
     if (value.length() == 2) {
-      return ""
+      return ''
     }
-    value = value.substring(1, value.length() - 1)
+    String unquoted = value.substring(1, value.length() - 1)
     StringBuilder result = new StringBuilder()
     boolean escape = false
-    for (int i = 0; i < value.length(); i++) {
-      char c = value.charAt(i)
+    for (int i = 0; i < unquoted.length(); i++) {
+      char c = unquoted.charAt(i)
       if (escape) {
         result.append(c)
         escape = false
@@ -659,7 +667,7 @@ class MatrixArffReader {
     if (escape) {
       result.append('\\')
     }
-    return result.toString()
+    result.toString()
   }
 
   private static String extractNominalValues(String typeSpec) {
@@ -695,7 +703,7 @@ class MatrixArffReader {
         return typeSpec.substring(openIndex + 1, i)
       }
     }
-    return null
+    null
   }
 
   private static void validateFile(File file) {
@@ -715,7 +723,7 @@ class MatrixArffReader {
     if (name.contains('.')) {
       name = name.substring(0, name.lastIndexOf('.'))
     }
-    return name
+    name
   }
 
   private static String defaultName(URL url) {
@@ -724,7 +732,7 @@ class MatrixArffReader {
       name = url.getFile()
     }
     if (name == null || name.isEmpty()) {
-      return "ArffMatrix"
+      return 'ArffMatrix'
     }
     if (name.contains('/')) {
       name = name.substring(name.lastIndexOf('/') + 1)
@@ -732,11 +740,19 @@ class MatrixArffReader {
     if (name.contains('.')) {
       name = name.substring(0, name.lastIndexOf('.'))
     }
-    return name ?: "ArffMatrix"
+    name ?: 'ArffMatrix'
   }
 
   private static String fallbackName(String defaultName, ArffReadOptions options) {
     options?.matrixName ?: defaultName
+  }
+
+  private static IllegalArgumentException parseError(String message, int lineNumber, String rawLine) {
+    new IllegalArgumentException("$message at line $lineNumber: ${rawLine?.trim()}")
+  }
+
+  private static IllegalArgumentException parseError(String message, int lineNumber, String rawLine, Throwable cause) {
+    new IllegalArgumentException("$message at line $lineNumber: ${rawLine?.trim()}", cause)
   }
 
   @CompileStatic
@@ -751,7 +767,7 @@ class MatrixArffReader {
   }
 }
 
-/** Enum representing ARFF attribute types */
+/** Enum representing ARFF attribute types. */
 enum ArffType {
   NUMERIC,
   INTEGER,
@@ -760,7 +776,7 @@ enum ArffType {
   DATE
 }
 
-/** Class representing an ARFF attribute definition */
+/** Class representing an ARFF attribute definition. */
 @CompileStatic
 class ArffAttribute {
   String name

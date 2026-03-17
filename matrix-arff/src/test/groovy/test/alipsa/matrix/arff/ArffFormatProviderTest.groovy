@@ -13,6 +13,7 @@ import se.alipsa.matrix.core.Matrix
 import java.nio.file.Path
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertThrows
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class ArffFormatProviderTest {
@@ -23,10 +24,15 @@ class ArffFormatProviderTest {
   @Test
   void testOptionDescriptions() {
     assertTrue(Matrix.listReadOptions('arff').contains('matrixName'))
+    assertTrue(Matrix.listReadOptions('arff').contains('strict'))
+    assertTrue(Matrix.listReadOptions('arff').contains('failOnUnknownAttributeType'))
+    assertTrue(Matrix.listReadOptions('arff').contains('failOnRowLengthMismatch'))
     assertTrue(Matrix.listWriteOptions('arff').contains('nominalMappings'))
     assertTrue(Matrix.listWriteOptions('arff').contains('inferNominals'))
     assertTrue(Matrix.listWriteOptions('arff').contains('attributeTypesByColumn'))
     assertTrue(ArffReadOptions.describe().contains('matrixName'))
+    assertTrue(ArffReadOptions.describe().contains('strict'))
+    assertTrue(ArffReadOptions.describe().contains('failOnUnknownAttributeType'))
     assertTrue(ArffWriteOptions.describe().contains('nominalMappings'))
     assertTrue(ArffWriteOptions.describe().contains('dateFormatsByColumn'))
   }
@@ -99,7 +105,7 @@ class ArffFormatProviderTest {
 
     File file = tempDir.resolve('events.arff').toFile()
     source.write([
-        inferNominals: false,
+        inferNominals        : false,
         attributeTypesByColumn: [category: 'STRING']
     ], file)
 
@@ -112,6 +118,58 @@ class ArffFormatProviderTest {
     ArffReadOptions options = ArffReadOptions.fromMap([matrixName: null])
 
     assertEquals(null, options.matrixName)
+  }
+
+  @Test
+  void testReadOptionsRoundTripFromMapToMap() {
+    ArffReadOptions options = ArffReadOptions.fromMap([
+        matrixName                : 'fallback',
+        strict                    : true,
+        failOnUnknownAttributeType: false,
+        failOnRowLengthMismatch   : true
+    ])
+
+    Map<String, ?> roundTrip = options.toMap()
+
+    assertEquals('fallback', roundTrip.matrixName)
+    assertEquals(true, roundTrip.strict)
+    assertEquals(false, roundTrip.failOnUnknownAttributeType)
+    assertEquals(true, roundTrip.failOnRowLengthMismatch)
+  }
+
+  @Test
+  void testSpiReadStrictUnknownAttributeType() {
+    File file = tempDir.resolve('strict-unknown-type.arff').toFile()
+    file.text = '''@RELATION strict_unknown
+@ATTRIBUTE note CUSTOMTYPE
+@DATA
+value
+'''
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Matrix.read([strict: true], file)
+    }
+
+    assertTrue(exception.message.contains("Unknown @ATTRIBUTE type 'CUSTOMTYPE'"))
+    assertTrue(exception.message.contains('line 2'))
+  }
+
+  @Test
+  void testSpiReadStrictRowLengthMismatch() {
+    File file = tempDir.resolve('strict-row-length.arff').toFile()
+    file.text = '''@RELATION strict_rows
+@ATTRIBUTE first STRING
+@ATTRIBUTE second NUMERIC
+@DATA
+'value'
+'''
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException) {
+      Matrix.read([strict: true], file)
+    }
+
+    assertTrue(exception.message.contains('Row length mismatch'))
+    assertTrue(exception.message.contains('line 5'))
   }
 
   @Test
