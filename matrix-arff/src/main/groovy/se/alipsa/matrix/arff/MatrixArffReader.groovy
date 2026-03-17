@@ -309,6 +309,9 @@ class MatrixArffReader {
   }
 
   private static List<Object> parseDataRow(String line, List<ArffAttribute> attributes) {
+    if (line.startsWith('{')) {
+      return parseSparseDataRow(line, attributes)
+    }
     List<ParsedToken> values = parseDelimitedLine(line, ',' as char)
     List<Object> row = []
 
@@ -324,6 +327,126 @@ class MatrixArffReader {
     }
 
     return row
+  }
+
+  private static List<Object> parseSparseDataRow(String line, List<ArffAttribute> attributes) {
+    if (!line.endsWith('}')) {
+      throw new IllegalArgumentException("Invalid sparse ARFF row (missing closing brace): $line")
+    }
+    List<Object> row = []
+    for (int i = 0; i < attributes.size(); i++) {
+      row.add(null)
+    }
+    String body = line.substring(1, line.length() - 1).trim()
+    if (body.isEmpty()) {
+      return row
+    }
+
+    Set<Integer> assignedIndices = new LinkedHashSet<>()
+    splitSparseEntries(body).each { String entry ->
+      entry = entry?.trim()
+      if (entry == null || entry.isEmpty()) {
+        throw new IllegalArgumentException("Invalid sparse ARFF row (empty entry): $line")
+      }
+
+      int splitIndex = findSparseEntryValueStart(entry)
+      if (splitIndex < 0) {
+        throw new IllegalArgumentException("Invalid sparse ARFF sparse entry '$entry' in row: $line")
+      }
+
+      String indexPart = entry.substring(0, splitIndex).trim()
+      String valuePart = entry.substring(splitIndex).trim()
+      if (valuePart.isEmpty()) {
+        throw new IllegalArgumentException("Invalid sparse ARFF sparse entry '$entry' in row: $line")
+      }
+
+      int attributeIndex
+      try {
+        attributeIndex = Integer.parseInt(indexPart)
+      } catch (NumberFormatException e) {
+        throw new IllegalArgumentException("Invalid sparse ARFF attribute index '$indexPart' in row: $line", e)
+      }
+
+      if (attributeIndex < 0 || attributeIndex >= attributes.size()) {
+        throw new IllegalArgumentException(
+            "Sparse ARFF attribute index $attributeIndex is out of bounds for ${attributes.size()} attributes in row: $line")
+      }
+      if (!assignedIndices.add(attributeIndex)) {
+        throw new IllegalArgumentException("Duplicate sparse ARFF attribute index $attributeIndex in row: $line")
+      }
+
+      ParsedToken valueToken = parseSingleValue(valuePart, line)
+      String value = valueToken.value
+      if (value != null && !valueToken.quoted) {
+        value = value.trim()
+      }
+      row[attributeIndex] = convertValue(value, attributes[attributeIndex], valueToken.quoted)
+    }
+
+    row
+  }
+
+  private static List<String> splitSparseEntries(String body) {
+    List<String> entries = []
+    StringBuilder current = new StringBuilder()
+    boolean inQuote = false
+    boolean escape = false
+    char quoteChar = 0
+
+    for (int i = 0; i < body.length(); i++) {
+      char c = body.charAt(i)
+      if (inQuote) {
+        current.append(c)
+        if (escape) {
+          escape = false
+          continue
+        }
+        if (c == '\\') {
+          escape = true
+          continue
+        }
+        if (c == quoteChar) {
+          inQuote = false
+        }
+        continue
+      }
+
+      if (c == '\'' || c == '"') {
+        inQuote = true
+        quoteChar = c
+        current.append(c)
+        continue
+      }
+      if (c == ',' as char) {
+        entries.add(current.toString())
+        current = new StringBuilder()
+        continue
+      }
+      current.append(c)
+    }
+
+    if (escape) {
+      current.append('\\')
+    }
+    entries.add(current.toString())
+    entries
+  }
+
+  private static int findSparseEntryValueStart(String entry) {
+    for (int i = 0; i < entry.length(); i++) {
+      if (Character.isWhitespace(entry.charAt(i))) {
+        return i
+      }
+    }
+    -1
+  }
+
+  private static ParsedToken parseSingleValue(String valuePart, String line) {
+    List<ParsedToken> tokens = parseDelimitedLine(valuePart, ',' as char)
+    if (tokens.size() != 1) {
+      throw new IllegalArgumentException("Invalid sparse ARFF value '$valuePart' in row: $line")
+    }
+    tokens[0]
   }
 
   private static List<ParsedToken> parseDelimitedLine(String line, char delimiter) {

@@ -79,6 +79,30 @@ Columns: [sepallength, sepalwidth, petallength, petalwidth, class]
 
 See [the tutorial](../docs/tutorial/16-matrix-arff.md) for more details.
 
+## Reading Sparse ARFF Rows
+
+`MatrixArffReader` now supports sparse data rows in the ARFF `@DATA` section:
+
+```arff
+@RELATION sparse_metrics
+
+@ATTRIBUTE score NUMERIC
+@ATTRIBUTE note STRING
+@ATTRIBUTE status {ok,warning,error}
+
+@DATA
+{0 1.5,2 ok}
+{1 'late sample',2 warning}
+{}
+```
+
+When sparse rows are read:
+
+- omitted attributes become `null`
+- quoted string and nominal values are supported
+- explicit `?` values are treated as missing and become `null`
+- duplicate or out-of-range attribute indices are rejected with an `IllegalArgumentException`
+
 ## Using Matrix.read() / matrix.write()
 
 If `matrix-arff` is on the classpath, `.arff` files can also be handled through the generic Matrix SPI API:

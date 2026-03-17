@@ -103,6 +103,39 @@ String arffContent = "... ARFF ..."
 Matrix data4 = MatrixArffReader.readString(arffContent)
 ```
 
+### Reading Sparse ARFF Rows
+
+Sparse ARFF data rows are also supported:
+
+```arff
+@RELATION sparse_metrics
+
+@ATTRIBUTE score NUMERIC
+@ATTRIBUTE note STRING
+@ATTRIBUTE status {ok,warning,error}
+
+@DATA
+{0 1.5,2 ok}
+{1 'late sample',2 warning}
+{}
+```
+
+```groovy
+Matrix sparse = MatrixArffReader.readString(arffContent)
+
+assert sparse[0, 'score'] == 1.5
+assert sparse[0, 'note'] == null
+assert sparse[0, 'status'] == 'ok'
+assert sparse[2, 'score'] == null
+```
+
+Supported sparse semantics in `matrix-arff`:
+
+- omitted attributes are read as `null`
+- quoted sparse values are supported
+- explicit `?` values are read as `null`
+- duplicate or out-of-range sparse indices fail fast with `IllegalArgumentException`
+
 ### Exploring the Loaded Data
 
 ```groovy
