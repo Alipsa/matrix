@@ -46,79 +46,24 @@ class MatrixArffWriter {
 
   private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
 
-  /** Write to a File */
+  /** Write to a File. */
   static void write(Matrix matrix, File file) {
-    validateMatrix(matrix)
-    File output = ensureFileOutput(matrix, file)
-    OutputStream outputStream = new FileOutputStream(output)
-    OutputStreamWriter writer = null
-    try {
-      writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
-      write(matrix, writer)
-      writer.flush()
-    } finally {
-      if (writer != null) {
-        writer.close()
-      } else {
-        outputStream.close()
-      }
-    }
+    write(matrix, file, new ArffWriteOptions())
   }
 
-  /** Write to a Path */
+  /** Write to a Path. */
   static void write(Matrix matrix, Path path) {
-    write(matrix, path.toFile())
+    write(matrix, path, new ArffWriteOptions())
   }
 
-  /** Write to an OutputStream */
+  /** Write to an OutputStream. */
   static void write(Matrix matrix, OutputStream output) {
-    validateMatrix(matrix)
-    OutputStreamWriter writer = new OutputStreamWriter(output, StandardCharsets.UTF_8)
-    write(matrix, writer)
-    writer.flush()
+    write(matrix, output, new ArffWriteOptions())
   }
 
-  /** Write to a Writer */
+  /** Write to a Writer. */
   static void write(Matrix matrix, Writer writer) {
-    validateMatrix(matrix)
-    PrintWriter pw = writer instanceof PrintWriter ? (PrintWriter) writer : new PrintWriter(writer)
-
-    // Write relation name
-    String relationName = matrix.matrixName ?: "matrix"
-    pw.println("@RELATION ${escapeIdentifier(relationName)}")
-    pw.println()
-
-    // Collect column metadata
-    List<String> columnNames = matrix.columnNames()
-    List<ArffAttributeInfo> attributeInfos = []
-
-    for (String colName : columnNames) {
-      Class colType = matrix.type(colName)
-      ArffAttributeInfo info = determineAttributeInfo(matrix, colName, colType)
-      attributeInfos.add(info)
-
-      // Write attribute declaration
-      pw.println("@ATTRIBUTE ${escapeIdentifier(colName)} ${info.typeDeclaration}")
-    }
-
-    pw.println()
-    pw.println("@DATA")
-
-    // Write data rows
-    int rowCount = matrix.rowCount()
-    for (int row = 0; row < rowCount; row++) {
-      StringBuilder line = new StringBuilder()
-      for (int col = 0; col < columnNames.size(); col++) {
-        if (col > 0) {
-          line.append(',')
-        }
-        Object value = matrix[row, col]
-        line.append(formatValue(value, attributeInfos[col]))
-      }
-      pw.println(line.toString())
-    }
-
-    pw.flush()
+    write(matrix, writer, new ArffWriteOptions())
   }
 
   /**
@@ -127,13 +72,23 @@ class MatrixArffWriter {
    * and what their allowed values are.
    */
   static void write(Matrix matrix, File file, Map<String, List<String>> nominalMappings) {
+    write(matrix, file, new ArffWriteOptions().nominalMappings(nominalMappings))
+  }
+
+  /** Write with custom nominal value mappings. */
+  static void write(Matrix matrix, Writer writer, Map<String, List<String>> nominalMappings) {
+    write(matrix, writer, new ArffWriteOptions().nominalMappings(nominalMappings))
+  }
+
+  /** Write to a File using typed ARFF write options. */
+  static void write(Matrix matrix, File file, ArffWriteOptions options) {
     validateMatrix(matrix)
     File output = ensureFileOutput(matrix, file)
     OutputStream outputStream = new FileOutputStream(output)
     OutputStreamWriter writer = null
     try {
       writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
-      write(matrix, writer, nominalMappings)
+      write(matrix, writer, options)
       writer.flush()
     } finally {
       if (writer != null) {
@@ -144,54 +99,24 @@ class MatrixArffWriter {
     }
   }
 
-  /** Write with custom nominal value mappings */
-  static void write(Matrix matrix, Writer writer, Map<String, List<String>> nominalMappings) {
+  /** Write to a Path using typed ARFF write options. */
+  static void write(Matrix matrix, Path path, ArffWriteOptions options) {
+    write(matrix, path.toFile(), options)
+  }
+
+  /** Write to an OutputStream using typed ARFF write options. */
+  static void write(Matrix matrix, OutputStream output, ArffWriteOptions options) {
+    validateMatrix(matrix)
+    OutputStreamWriter writer = new OutputStreamWriter(output, StandardCharsets.UTF_8)
+    write(matrix, writer, options)
+    writer.flush()
+  }
+
+  /** Write to a Writer using typed ARFF write options. */
+  static void write(Matrix matrix, Writer writer, ArffWriteOptions options) {
     validateMatrix(matrix)
     PrintWriter pw = writer instanceof PrintWriter ? (PrintWriter) writer : new PrintWriter(writer)
-
-    // Write relation name
-    String relationName = matrix.matrixName ?: "matrix"
-    pw.println("@RELATION ${escapeIdentifier(relationName)}")
-    pw.println()
-
-    // Collect column metadata
-    List<String> columnNames = matrix.columnNames()
-    List<ArffAttributeInfo> attributeInfos = []
-
-    for (String colName : columnNames) {
-      ArffAttributeInfo info
-      if (nominalMappings.containsKey(colName)) {
-        // Use provided nominal values
-        List<String> nominalValues = nominalMappings[colName]
-        String typeDecl = "{${nominalValues.collect { escapeNominalValue(it) }.join(',')}}"
-        info = new ArffAttributeInfo(ArffTypeDecl.NOMINAL, typeDecl, nominalValues)
-      } else {
-        Class colType = matrix.type(colName)
-        info = determineAttributeInfo(matrix, colName, colType)
-      }
-      attributeInfos.add(info)
-
-      // Write attribute declaration
-      pw.println("@ATTRIBUTE ${escapeIdentifier(colName)} ${info.typeDeclaration}")
-    }
-
-    pw.println()
-    pw.println("@DATA")
-
-    // Write data rows
-    int rowCount = matrix.rowCount()
-    for (int row = 0; row < rowCount; row++) {
-      StringBuilder line = new StringBuilder()
-      for (int col = 0; col < columnNames.size(); col++) {
-        if (col > 0) {
-          line.append(',')
-        }
-        Object value = matrix[row, col]
-        line.append(formatValue(value, attributeInfos[col]))
-      }
-      pw.println(line.toString())
-    }
-
+    writeMatrix(matrix, pw, options)
     pw.flush()
   }
 
@@ -203,12 +128,7 @@ class MatrixArffWriter {
    * @throws IllegalArgumentException if matrix is null
    */
   static String writeString(Matrix matrix) {
-    if (matrix == null) {
-      throw new IllegalArgumentException("Matrix cannot be null")
-    }
-    StringWriter stringWriter = new StringWriter()
-    write(matrix, stringWriter)
-    return stringWriter.toString()
+    writeString(matrix, new ArffWriteOptions())
   }
 
   /**
@@ -220,146 +140,299 @@ class MatrixArffWriter {
    * @throws IllegalArgumentException if matrix is null
    */
   static String writeString(Matrix matrix, Map<String, List<String>> nominalMappings) {
+    writeString(matrix, new ArffWriteOptions().nominalMappings(nominalMappings))
+  }
+
+  /**
+   * Write Matrix to a String in ARFF format using typed ARFF write options.
+   *
+   * @param matrix the Matrix to write
+   * @param options ARFF schema and formatting options
+   * @return ARFF formatted string
+   * @throws IllegalArgumentException if matrix is null
+   */
+  static String writeString(Matrix matrix, ArffWriteOptions options) {
     if (matrix == null) {
       throw new IllegalArgumentException("Matrix cannot be null")
     }
     StringWriter stringWriter = new StringWriter()
-    write(matrix, stringWriter, nominalMappings)
-    return stringWriter.toString()
+    write(matrix, stringWriter, options)
+    stringWriter.toString()
   }
 
-  private static ArffAttributeInfo determineAttributeInfo(Matrix matrix, String colName, Class colType) {
-    // Check for numeric types
-    if (isNumericType(colType)) {
-      return new ArffAttributeInfo(ArffTypeDecl.NUMERIC, "NUMERIC")
+  private static void writeMatrix(Matrix matrix, PrintWriter pw, ArffWriteOptions options) {
+    ArffWriteOptions resolvedOptions = options ?: new ArffWriteOptions()
+    validateWriteOptions(matrix, resolvedOptions)
+
+    String relationName = matrix.matrixName ?: "matrix"
+    pw.println("@RELATION ${escapeIdentifier(relationName)}")
+    pw.println()
+
+    List<String> columnNames = matrix.columnNames()
+    List<ArffAttributeInfo> attributeInfos = resolveAttributeInfos(matrix, columnNames, resolvedOptions)
+    for (int i = 0; i < columnNames.size(); i++) {
+      pw.println("@ATTRIBUTE ${escapeIdentifier(columnNames[i])} ${attributeInfos[i].typeDeclaration}")
     }
 
-    // Check for integer types
+    pw.println()
+    pw.println("@DATA")
+
+    int rowCount = matrix.rowCount()
+    for (int row = 0; row < rowCount; row++) {
+      StringBuilder line = new StringBuilder()
+      for (int col = 0; col < columnNames.size(); col++) {
+        if (col > 0) {
+          line.append(',')
+        }
+        Object value = matrix[row, col]
+        line.append(formatValue(value, attributeInfos[col]))
+      }
+      pw.println(line.toString())
+    }
+  }
+
+  private static List<ArffAttributeInfo> resolveAttributeInfos(Matrix matrix, List<String> columnNames, ArffWriteOptions options) {
+    List<ArffAttributeInfo> attributeInfos = []
+    for (String colName : columnNames) {
+      attributeInfos << resolveAttributeInfo(matrix, colName, options)
+    }
+    attributeInfos
+  }
+
+  private static ArffAttributeInfo resolveAttributeInfo(Matrix matrix, String colName, ArffWriteOptions options) {
+    Class colType = matrix.type(colName)
+    ArffTypeDecl explicitType = options.attributeTypesByColumn[colName]
+    if (explicitType == null && options.stringColumns.contains(colName)) {
+      explicitType = ArffTypeDecl.STRING
+    }
+    if (explicitType == null && (options.nominalColumns.contains(colName) || options.nominalMappings.containsKey(colName))) {
+      explicitType = ArffTypeDecl.NOMINAL
+    }
+    if (explicitType != null) {
+      return createAttributeInfo(matrix, colName, colType, explicitType, options)
+    }
+
     if (isIntegerType(colType)) {
-      return new ArffAttributeInfo(ArffTypeDecl.INTEGER, "INTEGER")
+      return createAttributeInfo(matrix, colName, colType, ArffTypeDecl.INTEGER, options)
     }
-
-    // Check for date types
+    if (isNumericType(colType)) {
+      return createAttributeInfo(matrix, colName, colType, ArffTypeDecl.NUMERIC, options)
+    }
     if (isDateType(colType)) {
-      return new ArffAttributeInfo(ArffTypeDecl.DATE, "DATE '${DEFAULT_DATE_FORMAT}'")
+      return createAttributeInfo(matrix, colName, colType, ArffTypeDecl.DATE, options)
     }
-
-    // For String or Object types, check if it should be nominal (categorical)
-    if (colType == String || colType == Object) {
-      Set<String> uniqueValues = collectUniqueStringValues(matrix, colName)
-      // Heuristic: if there are few unique values relative to row count, treat as nominal
-      if (shouldBeNominal(uniqueValues, matrix.rowCount())) {
-        List<String> sortedValues = uniqueValues.sort()
-        String typeDecl = "{${sortedValues.collect { escapeNominalValue(it) }.join(',')}}"
-        return new ArffAttributeInfo(ArffTypeDecl.NOMINAL, typeDecl, sortedValues)
+    if (options.inferNominals && (colType == String || colType == Object)) {
+      LinkedHashSet<String> uniqueValues = collectUniqueStringValues(matrix, colName)
+      if (shouldBeNominal(uniqueValues, matrix.rowCount(), options.nominalThreshold)) {
+        return createNominalInfo(colName, uniqueValues as List<String>, false)
       }
     }
 
-    // Default to STRING
-    return new ArffAttributeInfo(ArffTypeDecl.STRING, "STRING")
+    createAttributeInfo(matrix, colName, colType, ArffTypeDecl.STRING, options)
+  }
+
+  private static ArffAttributeInfo createAttributeInfo(Matrix matrix, String colName, Class colType,
+                                                       ArffTypeDecl type, ArffWriteOptions options) {
+    return switch (type) {
+      case ArffTypeDecl.NUMERIC -> new ArffAttributeInfo(ArffTypeDecl.NUMERIC, 'NUMERIC')
+      case ArffTypeDecl.REAL -> new ArffAttributeInfo(ArffTypeDecl.REAL, 'REAL')
+      case ArffTypeDecl.INTEGER -> new ArffAttributeInfo(ArffTypeDecl.INTEGER, 'INTEGER')
+      case ArffTypeDecl.STRING -> new ArffAttributeInfo(ArffTypeDecl.STRING, 'STRING')
+      case ArffTypeDecl.DATE -> createDateInfo(colName, options)
+      case ArffTypeDecl.NOMINAL -> {
+        List<String> nominalValues = nominalValuesForColumn(matrix, colName, colType, options)
+        yield createNominalInfo(colName, nominalValues, options.nominalMappings.containsKey(colName))
+      }
+    }
+  }
+
+  private static ArffAttributeInfo createDateInfo(String colName, ArffWriteOptions options) {
+    String dateFormat = resolveDateFormat(colName, options)
+    new ArffAttributeInfo(ArffTypeDecl.DATE, "DATE '${escapeQuotedContent(dateFormat)}'", null, dateFormat)
+  }
+
+  private static ArffAttributeInfo createNominalInfo(String colName, List<String> nominalValues, boolean explicitValues) {
+    if (nominalValues == null || nominalValues.isEmpty()) {
+      String guidance = explicitValues
+          ? "nominalMappings for column '$colName' must contain at least one value"
+          : "Cannot write column '$colName' as NOMINAL because it has no non-null values. Provide nominalMappings to define the allowed nominal values."
+      throw new IllegalArgumentException(guidance)
+    }
+    validateNominalValues(colName, nominalValues)
+    String typeDecl = "{${nominalValues.collect { String value -> escapeNominalValue(value) }.join(',')}}"
+    new ArffAttributeInfo(ArffTypeDecl.NOMINAL, typeDecl, nominalValues)
+  }
+
+  private static List<String> nominalValuesForColumn(Matrix matrix, String colName, Class colType, ArffWriteOptions options) {
+    if (options.nominalMappings.containsKey(colName)) {
+      return options.nominalMappings[colName]
+    }
+    if (colType != String && colType != Object) {
+      throw new IllegalArgumentException(
+          "Column '$colName' cannot be written as NOMINAL without nominalMappings because its type is ${colType?.simpleName}")
+    }
+    collectUniqueStringValues(matrix, colName) as List<String>
+  }
+
+  private static String resolveDateFormat(String colName, ArffWriteOptions options) {
+    options.dateFormatsByColumn[colName] ?: options.dateFormat ?: DEFAULT_DATE_FORMAT
+  }
+
+  private static void validateWriteOptions(Matrix matrix, ArffWriteOptions options) {
+    Set<String> matrixColumns = matrix.columnNames() as Set<String>
+    validateColumnsExist('nominalMappings', options.nominalMappings.keySet(), matrixColumns)
+    validateColumnsExist('nominalColumns', options.nominalColumns, matrixColumns)
+    validateColumnsExist('stringColumns', options.stringColumns, matrixColumns)
+    validateColumnsExist('attributeTypesByColumn', options.attributeTypesByColumn.keySet(), matrixColumns)
+    validateColumnsExist('dateFormatsByColumn', options.dateFormatsByColumn.keySet(), matrixColumns)
+
+    Set<String> overlappingColumns = options.nominalColumns.intersect(options.stringColumns) as Set<String>
+    if (!overlappingColumns.isEmpty()) {
+      throw new IllegalArgumentException("Columns cannot be configured as both nominalColumns and stringColumns: ${overlappingColumns}")
+    }
+
+    for (Map.Entry<String, ArffTypeDecl> entry : options.attributeTypesByColumn.entrySet()) {
+      String colName = entry.key
+      ArffTypeDecl type = entry.value
+      if (options.stringColumns.contains(colName) && type != ArffTypeDecl.STRING) {
+        throw new IllegalArgumentException(
+            "Column '$colName' is configured in stringColumns and attributeTypesByColumn=$type")
+      }
+      if ((options.nominalColumns.contains(colName) || options.nominalMappings.containsKey(colName)) && type != ArffTypeDecl.NOMINAL) {
+        throw new IllegalArgumentException(
+            "Column '$colName' has nominal configuration but attributeTypesByColumn=$type")
+      }
+      if (options.dateFormatsByColumn.containsKey(colName) && type != ArffTypeDecl.DATE) {
+        throw new IllegalArgumentException(
+            "Column '$colName' has dateFormatsByColumn configured but attributeTypesByColumn=$type")
+      }
+    }
+
+    for (String colName : options.dateFormatsByColumn.keySet()) {
+      if (options.stringColumns.contains(colName)) {
+        throw new IllegalArgumentException("Column '$colName' cannot be configured in both stringColumns and dateFormatsByColumn")
+      }
+      if (options.nominalColumns.contains(colName) || options.nominalMappings.containsKey(colName)) {
+        throw new IllegalArgumentException("Column '$colName' cannot be configured as nominal and also use dateFormatsByColumn")
+      }
+      if (!options.attributeTypesByColumn.containsKey(colName) && !isDateType(matrix.type(colName))) {
+        throw new IllegalArgumentException(
+            "dateFormatsByColumn[$colName] requires a DATE column or attributeTypesByColumn[$colName]=DATE")
+      }
+    }
+
+    for (Map.Entry<String, List<String>> entry : options.nominalMappings.entrySet()) {
+      validateNominalValues(entry.key, entry.value)
+    }
+  }
+
+  private static void validateColumnsExist(String optionName, Collection<String> configuredColumns, Set<String> matrixColumns) {
+    Set<String> unknownColumns = configuredColumns.findAll { String colName -> !matrixColumns.contains(colName) } as Set<String>
+    if (!unknownColumns.isEmpty()) {
+      throw new IllegalArgumentException("$optionName references unknown columns: ${unknownColumns}")
+    }
+  }
+
+  private static void validateNominalValues(String colName, List<String> nominalValues) {
+    Set<String> seen = [] as Set<String>
+    for (String nominalValue : nominalValues) {
+      if (nominalValue == null) {
+        throw new IllegalArgumentException("Nominal values for column '$colName' must not contain null")
+      }
+      if (!seen.add(nominalValue)) {
+        throw new IllegalArgumentException("Nominal values for column '$colName' must not contain duplicates: $nominalValue")
+      }
+    }
   }
 
   private static boolean isNumericType(Class type) {
-    return type in [BigDecimal, Double, Float, Long, BigInteger, double.class, float.class, long.class, Number]
+    type in [BigDecimal, Double, Float, Long, BigInteger, double.class, float.class, long.class, Number]
   }
 
   private static boolean isIntegerType(Class type) {
-    return type in [Integer, Short, Byte, int.class, short.class, byte.class]
+    type in [Integer, Short, Byte, int.class, short.class, byte.class]
   }
 
   private static boolean isDateType(Class type) {
-    return type in [Date, java.sql.Date, Timestamp,
-                    LocalDate, LocalDateTime, Instant]
+    type in [Date, java.sql.Date, Timestamp, LocalDate, LocalDateTime, Instant]
   }
 
-  private static Set<String> collectUniqueStringValues(Matrix matrix, String colName) {
-    Set<String> values = new LinkedHashSet<>()
+  private static LinkedHashSet<String> collectUniqueStringValues(Matrix matrix, String colName) {
+    LinkedHashSet<String> values = [] as LinkedHashSet<String>
     int rowCount = matrix.rowCount()
     for (int row = 0; row < rowCount; row++) {
       Object val = matrix[row, colName]
       if (val != null) {
-        values.add(val.toString())
+        values << val.toString()
       }
     }
-    return values
+    values
   }
 
-  private static boolean shouldBeNominal(Set<String> uniqueValues, int rowCount) {
-    // Treat as nominal if:
-    // - There are unique values
-    // - Number of unique values is much smaller than row count (< 10% or max 50 unique values)
+  private static boolean shouldBeNominal(Set<String> uniqueValues, int rowCount, int nominalThreshold) {
     if (uniqueValues.isEmpty()) {
       return false
     }
     int uniqueCount = uniqueValues.size()
-    return uniqueCount <= 50 && (rowCount < 10 || uniqueCount <= rowCount * 0.1)
+    uniqueCount <= nominalThreshold && (rowCount < 10 || uniqueCount <= rowCount * 0.1)
   }
 
   private static String formatValue(Object value, ArffAttributeInfo info) {
     if (value == null) {
-      return "?"
+      return '?'
     }
 
-    switch (info.type) {
-      case ArffTypeDecl.NUMERIC:
-      case ArffTypeDecl.REAL:
-      case ArffTypeDecl.INTEGER:
-        return value.toString()
-
-      case ArffTypeDecl.DATE:
-        return formatDate(value)
-
-      case ArffTypeDecl.NOMINAL:
-        return escapeNominalValue(value.toString())
-
-      case ArffTypeDecl.STRING:
-        return escapeStringValue(value.toString())
-
-      default:
-        return escapeStringValue(value.toString())
+    return switch (info.type) {
+      case ArffTypeDecl.NUMERIC, ArffTypeDecl.REAL, ArffTypeDecl.INTEGER -> value.toString()
+      case ArffTypeDecl.DATE -> formatDate(value, info)
+      case ArffTypeDecl.NOMINAL -> escapeNominalValue(value.toString())
+      case ArffTypeDecl.STRING -> escapeStringValue(value.toString())
     }
   }
 
-  private static String formatDate(Object value) {
-    SimpleDateFormat sdf = new SimpleDateFormat(DEFAULT_DATE_FORMAT)
+  private static String formatDate(Object value, ArffAttributeInfo info) {
+    SimpleDateFormat sdf = new SimpleDateFormat(info.dateFormat ?: DEFAULT_DATE_FORMAT)
     if (value instanceof Date) {
-      return "'" + sdf.format((Date) value) + "'"
-    } else if (value instanceof LocalDate) {
-      Date date = java.sql.Date.valueOf((LocalDate) value)
-      return "'" + sdf.format(date) + "'"
-    } else if (value instanceof LocalDateTime) {
-      Date date = Timestamp.valueOf((LocalDateTime) value)
-      return "'" + sdf.format(date) + "'"
-    } else if (value instanceof Instant) {
-      Date date = Date.from((Instant) value)
-      return "'" + sdf.format(date) + "'"
+      return "'${sdf.format((Date) value)}'"
     }
-    return "'" + value.toString() + "'"
+    if (value instanceof LocalDate) {
+      Date date = java.sql.Date.valueOf((LocalDate) value)
+      return "'${sdf.format(date)}'"
+    }
+    if (value instanceof LocalDateTime) {
+      Date date = Timestamp.valueOf((LocalDateTime) value)
+      return "'${sdf.format(date)}'"
+    }
+    if (value instanceof Instant) {
+      Date date = Date.from((Instant) value)
+      return "'${sdf.format(date)}'"
+    }
+    "'${escapeQuotedContent(value.toString())}'"
   }
 
   private static String escapeIdentifier(String name) {
-    // Quote identifier if it contains spaces or special characters
     if (name.contains(' ') || name.contains(',') || name.contains('{') ||
         name.contains('}') || name.contains('%') || name.contains("'") ||
         name.contains('"')) {
-      // Use single quotes and escape any internal single quotes
-      return "'" + name.replace("\\", "\\\\").replace("'", "\\'") + "'"
+      return "'${escapeQuotedContent(name)}'"
     }
-    return name
+    name
   }
 
   private static String escapeNominalValue(String value) {
-    // For nominal values, escape if they contain special characters
     if (value.contains(',') || value.contains(' ') || value.contains("'") ||
         value.contains('"') || value.contains('{') || value.contains('}')) {
-      return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
+      return "'${escapeQuotedContent(value)}'"
     }
-    return value
+    value
   }
 
   private static String escapeStringValue(String value) {
-    // String values should be quoted
-    return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
+    "'${escapeQuotedContent(value)}'"
+  }
+
+  private static String escapeQuotedContent(String value) {
+    value.replace("\\", "\\\\").replace("'", "\\'")
   }
 
   /**
@@ -391,7 +464,7 @@ class MatrixArffWriter {
         throw new IllegalArgumentException("Failed to create directory: ${output.parentFile.absolutePath}")
       }
     }
-    return output
+    output
   }
 
   private static String safeFileName(String name) {
@@ -405,11 +478,11 @@ class MatrixArffWriter {
     if (baseName.isEmpty() || baseName == '.' || baseName == '..') {
       return 'matrix'
     }
-    return baseName
+    baseName
   }
 }
 
-/** Enum representing ARFF type declarations */
+/** Enum representing ARFF type declarations. */
 enum ArffTypeDecl {
   NUMERIC,
   REAL,
@@ -419,16 +492,18 @@ enum ArffTypeDecl {
   DATE
 }
 
-/** Class holding attribute information for writing */
+/** Class holding attribute information for writing. */
 @CompileStatic
 class ArffAttributeInfo {
   ArffTypeDecl type
   String typeDeclaration
   List<String> nominalValues
+  String dateFormat
 
-  ArffAttributeInfo(ArffTypeDecl type, String typeDeclaration, List<String> nominalValues = null) {
+  ArffAttributeInfo(ArffTypeDecl type, String typeDeclaration, List<String> nominalValues = null, String dateFormat = null) {
     this.type = type
     this.typeDeclaration = typeDeclaration
     this.nominalValues = nominalValues
+    this.dateFormat = dateFormat
   }
 }

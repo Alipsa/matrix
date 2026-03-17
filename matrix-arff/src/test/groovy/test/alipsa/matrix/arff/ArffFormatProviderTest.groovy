@@ -21,8 +21,11 @@ class ArffFormatProviderTest {
   void testOptionDescriptions() {
     assertTrue(Matrix.listReadOptions('arff').contains('matrixName'))
     assertTrue(Matrix.listWriteOptions('arff').contains('nominalMappings'))
+    assertTrue(Matrix.listWriteOptions('arff').contains('inferNominals'))
+    assertTrue(Matrix.listWriteOptions('arff').contains('attributeTypesByColumn'))
     assertTrue(ArffReadOptions.describe().contains('matrixName'))
     assertTrue(ArffWriteOptions.describe().contains('nominalMappings'))
+    assertTrue(ArffWriteOptions.describe().contains('dateFormatsByColumn'))
   }
 
   @Test
@@ -65,6 +68,26 @@ class ArffFormatProviderTest {
     def provider = new ArffFormatProvider()
     assertEquals(['arff'] as Set, provider.supportedExtensions())
     assertEquals('ARFF', provider.formatName())
+  }
+
+  @Test
+  void testSpiWriteOptionsControlSchema() {
+    Matrix source = Matrix.builder('events')
+        .columns(
+            category: ['A', 'B', 'A'],
+            value: [1, 2, 3]
+        )
+        .types([String, Integer])
+        .build()
+
+    File file = tempDir.resolve('events.arff').toFile()
+    source.write([
+        inferNominals: false,
+        attributeTypesByColumn: [category: 'STRING']
+    ], file)
+
+    String content = file.getText('UTF-8')
+    assertTrue(content.contains('@ATTRIBUTE category STRING'))
   }
 
   @Test

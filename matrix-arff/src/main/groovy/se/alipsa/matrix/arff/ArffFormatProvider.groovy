@@ -64,11 +64,7 @@ class ArffFormatProvider extends AbstractFormatProvider {
   @Override
   void write(Matrix matrix, File file, Map<String, ?> options) {
     ArffWriteOptions writeOptions = ArffWriteOptions.fromMap(options)
-    if (writeOptions.nominalMappings.isEmpty()) {
-      MatrixArffWriter.write(matrix, file)
-    } else {
-      MatrixArffWriter.write(matrix, file, writeOptions.nominalMappings)
-    }
+    MatrixArffWriter.write(matrix, file, writeOptions)
   }
 
   @Override
