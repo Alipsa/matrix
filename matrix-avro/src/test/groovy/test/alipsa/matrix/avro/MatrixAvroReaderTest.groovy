@@ -48,6 +48,7 @@ class MatrixAvroReaderTest {
   void readFile() {
     Matrix m = MatrixAvroReader.read(avroFile)
     assertBasicShapeAndValues(m)
+    assertEquals("Person", m.matrixName)
   }
 
   @Test @Order(2)
@@ -55,6 +56,7 @@ class MatrixAvroReaderTest {
     Path p = avroFile.toPath()
     Matrix m = MatrixAvroReader.read(p)
     assertBasicShapeAndValues(m)
+    assertEquals("Person", m.matrixName)
   }
 
   @Test @Order(3)
@@ -62,16 +64,16 @@ class MatrixAvroReaderTest {
     URL url = avroFile.toURI().toURL()
     Matrix m = MatrixAvroReader.read(url)
     assertBasicShapeAndValues(m)
+    assertEquals("Person", m.matrixName)
   }
 
   @Test @Order(4)
   void readFromInputStream() {
     InputStream is = new FileInputStream(avroFile)
     try {
-      Matrix m = MatrixAvroReader.read(is, "FromStream")
+      Matrix m = MatrixAvroReader.read(is)
       assertBasicShapeAndValues(m)
-      // If you expose a name getter, you can assert it here:
-      // assertEquals("FromStream", m.getName())
+      assertEquals("Person", m.matrixName)
     } finally {
       is.close()
     }
@@ -80,16 +82,17 @@ class MatrixAvroReaderTest {
   @Test @Order(5)
   void readFromByteArray() {
     byte[] content = Files.readAllBytes(avroFile.toPath())
-    Matrix m = MatrixAvroReader.read(content, "FromBytes")
+    Matrix m = MatrixAvroReader.read(content)
     assertBasicShapeAndValues(m)
+    assertEquals("Person", m.matrixName)
   }
 
   @Test @Order(6)
-  void readFromByteArrayWithDefaultName() {
+  void readFromByteArrayWithExplicitName() {
     byte[] content = Files.readAllBytes(avroFile.toPath())
-    Matrix m = MatrixAvroReader.read(content)
+    Matrix m = MatrixAvroReader.read(content, "FromBytes")
     assertBasicShapeAndValues(m)
-    assertEquals("AvroMatrix", m.matrixName)
+    assertEquals("FromBytes", m.matrixName)
   }
 
   // ---------- convenience method tests ----------
@@ -98,12 +101,14 @@ class MatrixAvroReaderTest {
   void testReadFile() {
     Matrix m = MatrixAvroReader.readFile(avroFile.absolutePath)
     assertBasicShapeAndValues(m)
+    assertEquals("Person", m.matrixName)
   }
 
   @Test @Order(8)
   void testReadUrl() {
     Matrix m = MatrixAvroReader.readUrl(avroFile.toURI().toString())
     assertBasicShapeAndValues(m)
+    assertEquals("Person", m.matrixName)
   }
 
   // ---------- validation tests ----------
@@ -261,14 +266,40 @@ class MatrixAvroReaderTest {
 
   @Test @Order(26)
   void testReadWithOptionsDefaultName() {
-    // When matrixName is not set, should use file name
+    // When matrixName is not set, should use the Avro record name before the file name fallback
     def options = new AvroReadOptions()
 
     Matrix m = MatrixAvroReader.read(avroFile, options)
     assertBasicShapeAndValues(m)
-    // Name should be derived from file name (without extension)
-    assertNotNull(m.matrixName)
-    assertFalse(m.matrixName.isEmpty())
+    assertEquals("Person", m.matrixName)
+  }
+
+  @Test @Order(27)
+  void testReadWithReaderSchemaProjection() {
+    String readerSchemaJson = """
+    {
+      "type": "record",
+      "name": "Person",
+      "fields": [
+        {"name":"name", "type":"string"},
+        {"name":"age", "type":"long"},
+        {"name":"country", "type":["null","string"], "default": null}
+      ]
+    }
+    """.stripIndent()
+    def options = new AvroReadOptions()
+        .readerSchema(new Schema.Parser().parse(readerSchemaJson))
+
+    Matrix m = MatrixAvroReader.read(avroFile, options)
+
+    assertEquals("Person", m.matrixName)
+    assertEquals(["name", "age", "country"], m.columnNames())
+    assertEquals(3, m.columnCount())
+    assertEquals(2, m.rowCount())
+    assertEquals("Alice", m[0, "name"])
+    assertEquals(30L, m[0, "age"])
+    assertEquals(null, m[0, "country"])
+    assertTrue(m["age"][0] instanceof Long)
   }
 
   // ---------- custom exception tests ----------

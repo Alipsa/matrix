@@ -88,6 +88,9 @@
 ## 11. Experimental (early development) Modules
 - [Matrix Parquet Module](11-matrix-parquet.md)
   - Working with Parquet files
+- [Matrix Avro Module](11b-matrix-avro.md)
+  - Reading and writing Avro object container files
+  - Reader schema projection and schema evolution
 - [Matrix BigQuery Module](12-matrix-bigquery.md)
   - Google BigQuery integration
 - [Matrix Charts Module](13-matrix-charts.md)

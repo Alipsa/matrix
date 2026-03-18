@@ -16,7 +16,7 @@ import se.alipsa.matrix.core.spi.OptionMaps
  * // Use defaults
  * Matrix m = MatrixAvroReader.read(file, new AvroReadOptions())
  *
- * // With custom matrix name
+ * // With custom matrix name override
  * def options = new AvroReadOptions()
  *     .matrixName("MyData")
  * Matrix m = MatrixAvroReader.read(file, options)
@@ -25,7 +25,6 @@ import se.alipsa.matrix.core.spi.OptionMaps
  * def readerSchema = new Schema.Parser().parse(schemaJson)
  * def options = new AvroReadOptions()
  *     .readerSchema(readerSchema)
- *     .lenientTypeConversion(true)
  * Matrix m = MatrixAvroReader.read(file, options)
  * }</pre>
  *
@@ -36,7 +35,6 @@ class AvroReadOptions {
 
   private String matrixName = null
   private Schema readerSchema = null
-  private boolean lenientTypeConversion = false
 
   /**
    * Creates a new AvroReadOptions with default settings.
@@ -47,7 +45,8 @@ class AvroReadOptions {
   /**
    * Sets the name for the resulting Matrix.
    *
-   * <p>If not set, the name is derived from the source file name or defaults to "AvroMatrix".
+   * <p>If not set, the reader falls back to the Avro record name from the file schema and then
+   * to a source-derived fallback such as the file name or "AvroMatrix".
    *
    * @param name the Matrix name
    * @return this options instance for method chaining
@@ -77,26 +76,6 @@ class AvroReadOptions {
     return this
   }
 
-  /**
-   * Sets whether to use lenient type conversion.
-   *
-   * <p>When true:
-   * <ul>
-   *   <li>Numeric type mismatches are converted (e.g., Long to Integer if in range)</li>
-   *   <li>String values may be parsed to appropriate types</li>
-   *   <li>Null values are handled gracefully for non-nullable types</li>
-   * </ul>
-   *
-   * <p>When false (default), type mismatches may throw exceptions.
-   *
-   * @param lenient true for lenient conversion, false for strict
-   * @return this options instance for method chaining
-   */
-  AvroReadOptions lenientTypeConversion(boolean lenient) {
-    this.lenientTypeConversion = lenient
-    return this
-  }
-
   // Getters
 
   /**
@@ -114,19 +93,12 @@ class AvroReadOptions {
   }
 
   /**
-   * @return true if lenient type conversion is enabled
-   */
-  boolean isLenientTypeConversion() {
-    return lenientTypeConversion
-  }
-
-  /**
    * Converts this options object to an SPI-friendly map.
    *
    * @return map representation of the configured options
    */
   Map<String, ?> toMap() {
-    Map<String, Object> options = [lenientTypeConversion: lenientTypeConversion]
+    Map<String, Object> options = [:]
     if (matrixName != null) {
       options.matrixName = matrixName
     }
@@ -161,9 +133,6 @@ class AvroReadOptions {
         throw new IllegalArgumentException("readerSchema must be a Schema or schema JSON string but was ${value?.class}")
       }
     }
-    if (normalized.containsKey('lenienttypeconversion')) {
-      result.lenientTypeConversion(normalized.lenienttypeconversion as boolean)
-    }
     result
   }
 
@@ -183,9 +152,8 @@ class AvroReadOptions {
    */
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('matrixName', String, null, 'Name for the resulting Matrix'),
-        new OptionDescriptor('readerSchema', Schema, null, 'Reader schema or schema JSON for schema evolution'),
-        new OptionDescriptor('lenientTypeConversion', Boolean, 'false', 'Whether to allow lenient type conversions')
+        new OptionDescriptor('matrixName', String, null, 'Override name for the resulting Matrix'),
+        new OptionDescriptor('readerSchema', Schema, null, 'Reader schema or schema JSON for schema evolution')
     ]
   }
 }

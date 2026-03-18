@@ -44,7 +44,7 @@ class MatrixAvroReader {
    * Read an Avro file from a File object.
    *
    * @param file the Avro file to read (must exist and be a file, not a directory)
-   * @param name optional name for the resulting Matrix; defaults to the file name
+   * @param name optional override name for the resulting Matrix
    * @return a Matrix containing the Avro data
    * @throws IllegalArgumentException if file is null or is a directory
    * @throws FileNotFoundException if the file does not exist
@@ -52,10 +52,9 @@ class MatrixAvroReader {
    */
   static Matrix read(File file, String name = null) {
     validateFile(file)
-    name = name ?: defaultName(file)
     InputStream is = new FileInputStream(file)
     try {
-      return read(is, name)
+      return readInternal(is, name, defaultName(file), null)
     } catch (AvroConversionException | AvroValidationException e) {
       throw e
     } catch (Exception e) {
@@ -90,7 +89,7 @@ class MatrixAvroReader {
    * Read Avro data from a URL.
    *
    * @param url the URL to read from (must not be null)
-   * @param name optional name for the resulting Matrix; defaults to the URL file name
+   * @param name optional override name for the resulting Matrix
    * @return a Matrix containing the Avro data
    * @throws IllegalArgumentException if url is null
    * @throws IOException if an I/O error occurs
@@ -99,10 +98,9 @@ class MatrixAvroReader {
     if (url == null) {
       throw new IllegalArgumentException("URL cannot be null")
     }
-    name = name ?: defaultName(url)
     InputStream is = url.openStream()
     try {
-      return read(is, name)
+      return readInternal(is, name, defaultName(url), null)
     } finally {
       is.close()
     }
@@ -112,16 +110,16 @@ class MatrixAvroReader {
    * Read Avro data from a byte array.
    *
    * @param content the Avro content as a byte array (must not be null)
-   * @param name optional name for the resulting Matrix; defaults to "AvroMatrix"
+   * @param name optional override name for the resulting Matrix
    * @return a Matrix containing the Avro data
    * @throws IllegalArgumentException if content is null
    * @throws IOException if an I/O error occurs
    */
-  static Matrix read(byte[] content, String name = "AvroMatrix") {
+  static Matrix read(byte[] content, String name = null) {
     if (content == null) {
       throw new IllegalArgumentException("Content cannot be null")
     }
-    return read(new ByteArrayInputStream(content), name)
+    return readInternal(new ByteArrayInputStream(content), name, "AvroMatrix", null)
   }
 
   /**
@@ -167,16 +165,16 @@ class MatrixAvroReader {
    * <p>The stream will NOT be closed by this method; the caller is responsible for closing it.
    *
    * @param input the InputStream to read from (must not be null)
-   * @param name optional name for the resulting Matrix; defaults to "AvroMatrix"
+   * @param name optional override name for the resulting Matrix
    * @return a Matrix containing the Avro data
    * @throws IllegalArgumentException if input is null
    * @throws IOException if an I/O error occurs
    */
-  static Matrix read(InputStream input, String name = "AvroMatrix") {
+  static Matrix read(InputStream input, String name = null) {
     if (input == null) {
       throw new IllegalArgumentException("InputStream cannot be null")
     }
-    return readInternal(input, name, null)
+    return readInternal(input, name, "AvroMatrix", null)
   }
 
   // ----------------------------------------------------------------------
@@ -199,10 +197,9 @@ class MatrixAvroReader {
     if (options == null) {
       throw new IllegalArgumentException("Options cannot be null")
     }
-    String name = options.matrixName ?: defaultName(file)
     InputStream is = new FileInputStream(file)
     try {
-      return readInternal(is, name, options.readerSchema)
+      return readInternal(is, options.matrixName, defaultName(file), options.readerSchema)
     } catch (AvroConversionException | AvroValidationException e) {
       throw e
     } catch (Exception e) {
@@ -252,10 +249,9 @@ class MatrixAvroReader {
     if (options == null) {
       throw new IllegalArgumentException("Options cannot be null")
     }
-    String name = options.matrixName ?: defaultName(url)
     InputStream is = url.openStream()
     try {
-      return readInternal(is, name, options.readerSchema)
+      return readInternal(is, options.matrixName, defaultName(url), options.readerSchema)
     } finally {
       is.close()
     }
@@ -278,8 +274,7 @@ class MatrixAvroReader {
     if (options == null) {
       throw new IllegalArgumentException("Options cannot be null")
     }
-    String name = options.matrixName ?: "AvroMatrix"
-    return readInternal(new ByteArrayInputStream(content), name, options.readerSchema)
+    return readInternal(new ByteArrayInputStream(content), options.matrixName, "AvroMatrix", options.readerSchema)
   }
 
   /**
@@ -301,21 +296,23 @@ class MatrixAvroReader {
     if (options == null) {
       throw new IllegalArgumentException("Options cannot be null")
     }
-    String name = options.matrixName ?: "AvroMatrix"
-    return readInternal(input, name, options.readerSchema)
+    return readInternal(input, options.matrixName, "AvroMatrix", options.readerSchema)
   }
 
   /**
-   * Internal read implementation supporting optional reader schema.
+   * Internal read implementation supporting optional reader schema and name resolution.
    */
-  private static Matrix readInternal(InputStream input, String name, Schema readerSchema) {
-    GenericDatumReader<GenericRecord> datumReader = readerSchema != null
-        ? new GenericDatumReader<>(readerSchema)
-        : new GenericDatumReader<>()
+  private static Matrix readInternal(InputStream input, String overrideName, String fallbackName, Schema readerSchema) {
+    GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>()
     DataFileStream<GenericRecord> dfs = new DataFileStream<>(input, datumReader)
     try {
-      Schema schema = dfs.schema
-      List<Schema.Field> fields = schema.fields
+      if (readerSchema != null) {
+        datumReader.setExpected(readerSchema)
+      }
+      Schema writerSchema = dfs.schema
+      Schema effectiveSchema = readerSchema ?: writerSchema
+      List<Schema.Field> fields = effectiveSchema.fields
+      String matrixName = resolveMatrixName(overrideName, writerSchema, fallbackName)
 
       LinkedHashMap<String, List<Object>> columns = new LinkedHashMap<>()
       for (Schema.Field f : fields) {
@@ -344,10 +341,21 @@ class MatrixAvroReader {
         rowNumber++
       }
 
-      return Matrix.builder(name).columns(columns).build()
+      return Matrix.builder(matrixName).columns(columns).build()
     } finally {
       dfs.close()
     }
+  }
+
+  private static String resolveMatrixName(String overrideName, Schema writerSchema, String fallbackName) {
+    if (overrideName != null && !overrideName.isBlank()) {
+      return overrideName
+    }
+    String schemaName = writerSchema?.name
+    if (schemaName != null && !schemaName.isBlank()) {
+      return schemaName
+    }
+    fallbackName ?: "AvroMatrix"
   }
 
   /**
