@@ -294,6 +294,7 @@ class MatrixAvroReaderTest {
 
     assertEquals("Person", m.matrixName)
     assertEquals(["name", "age", "country"], m.columnNames())
+    assertEquals(3, m.columnCount())
     assertEquals(2, m.rowCount())
     assertEquals("Alice", m[0, "name"])
     assertEquals(30L, m[0, "age"])

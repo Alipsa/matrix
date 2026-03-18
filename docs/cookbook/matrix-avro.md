@@ -3,6 +3,7 @@
 ## Override the Matrix name on read
 
 ```groovy
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.avro.AvroReadOptions
 import se.alipsa.matrix.avro.MatrixAvroReader
 
@@ -16,6 +17,7 @@ Matrix users = MatrixAvroReader.read(
 
 ```groovy
 import org.apache.avro.Schema
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.avro.AvroReadOptions
 import se.alipsa.matrix.avro.MatrixAvroReader
 

@@ -303,11 +303,12 @@ class MatrixAvroReader {
    * Internal read implementation supporting optional reader schema and name resolution.
    */
   private static Matrix readInternal(InputStream input, String overrideName, String fallbackName, Schema readerSchema) {
-    GenericDatumReader<GenericRecord> datumReader = readerSchema != null
-        ? new GenericDatumReader<>(null, readerSchema)
-        : new GenericDatumReader<>()
+    GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>()
     DataFileStream<GenericRecord> dfs = new DataFileStream<>(input, datumReader)
     try {
+      if (readerSchema != null) {
+        datumReader.setExpected(readerSchema)
+      }
       Schema writerSchema = dfs.schema
       Schema effectiveSchema = readerSchema ?: writerSchema
       List<Schema.Field> fields = effectiveSchema.fields

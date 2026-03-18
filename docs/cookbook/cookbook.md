@@ -7,3 +7,4 @@
 5. [Matrix Spreadsheet](matrix-spreadsheet.md)
 6. [Matrix Charts](matrix-charts.md)
 7. [Matrix GGPlot](matrix-ggplot.md)
+8. [Matrix Avro](matrix-avro.md)

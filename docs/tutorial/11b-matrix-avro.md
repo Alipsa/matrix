@@ -8,6 +8,7 @@ Use `MatrixAvroReader` directly when you want typed read options:
 
 ```groovy
 import org.apache.avro.Schema
+import se.alipsa.matrix.core.Matrix
 import se.alipsa.matrix.avro.AvroReadOptions
 import se.alipsa.matrix.avro.MatrixAvroReader
 
