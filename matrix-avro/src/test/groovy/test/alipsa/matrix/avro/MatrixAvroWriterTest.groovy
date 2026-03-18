@@ -291,6 +291,72 @@ class MatrixAvroWriterTest {
   }
 
   @Test
+  void testWriteDefaultsSchemaNameFromMatrixName() {
+    Matrix m = Matrix.builder("Orders")
+        .columns(id: [1, 2], amount: [new BigDecimal("12.34"), new BigDecimal("56.78")])
+        .types(Integer, BigDecimal)
+        .build()
+
+    File tmp = Files.createTempFile("avro-default-schema-name-", ".avro").toFile()
+    try {
+      MatrixAvroWriter.write(m, tmp, false)
+
+      def reader = new DataFileReader<GenericRecord>(tmp, new GenericDatumReader<>())
+      try {
+        assertEquals("Orders", reader.schema.name)
+      } finally {
+        reader.close()
+      }
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
+  void testWriteFallsBackToMatrixSchemaWhenMatrixNameBlank() {
+    Matrix m = Matrix.builder("")
+        .columns(id: [1, 2])
+        .types(Integer)
+        .build()
+
+    File tmp = Files.createTempFile("avro-fallback-schema-name-", ".avro").toFile()
+    try {
+      MatrixAvroWriter.write(m, tmp, false)
+
+      def reader = new DataFileReader<GenericRecord>(tmp, new GenericDatumReader<>())
+      try {
+        assertEquals("MatrixSchema", reader.schema.name)
+      } finally {
+        reader.close()
+      }
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
+  void testWriteOptionsDefaultSchemaNameFromMatrixName() {
+    Matrix m = Matrix.builder("Invoices")
+        .columns(id: [1, 2], total: [10, 20])
+        .types(Integer, Integer)
+        .build()
+
+    File tmp = Files.createTempFile("avro-options-default-schema-name-", ".avro").toFile()
+    try {
+      MatrixAvroWriter.write(m, tmp, new AvroWriteOptions())
+
+      def reader = new DataFileReader<GenericRecord>(tmp, new GenericDatumReader<>())
+      try {
+        assertEquals("Invoices", reader.schema.name)
+      } finally {
+        reader.close()
+      }
+    } finally {
+      tmp.delete()
+    }
+  }
+
+  @Test
   void testWriteWithDeflateCompression() {
     def cols = new LinkedHashMap<String, List<?>>()
     cols["id"] = (1..100).toList()
@@ -329,6 +395,43 @@ class MatrixAvroWriterTest {
   }
 
   @Test
+  void testInvalidCompressionLevelForSnappyFailsFast() {
+    def ex = assertThrows(IllegalArgumentException) {
+      new AvroWriteOptions()
+          .compression(AvroWriteOptions.Compression.SNAPPY)
+          .compressionLevel(6)
+    }
+    assertEquals("SNAPPY compression does not support compressionLevel; use -1", ex.message)
+  }
+
+  @Test
+  void testInvalidCompressionLevelForFromMapFailsFast() {
+    def ex = assertThrows(IllegalArgumentException) {
+      AvroWriteOptions.fromMap([
+          compression     : 'snappy',
+          compressionLevel: 6
+      ])
+    }
+    assertEquals("SNAPPY compression does not support compressionLevel; use -1", ex.message)
+  }
+
+  @Test
+  void testInvalidSyncIntervalFailsFast() {
+    def ex = assertThrows(IllegalArgumentException) {
+      new AvroWriteOptions().syncInterval(16)
+    }
+    assertTrue(ex.message.contains("syncInterval must be 0"))
+  }
+
+  @Test
+  void testInvalidSyncIntervalFromMapFailsFast() {
+    def ex = assertThrows(IllegalArgumentException) {
+      AvroWriteOptions.fromMap([syncInterval: 16])
+    }
+    assertTrue(ex.message.contains("syncInterval must be 0"))
+  }
+
+  @Test
   void testWriteBytesWithOptions() {
     def cols = new LinkedHashMap<String, List<?>>()
     cols["value"] = [new BigDecimal("123.45"), new BigDecimal("678.90")]
@@ -350,6 +453,25 @@ class MatrixAvroWriterTest {
     Matrix result = se.alipsa.matrix.avro.MatrixAvroReader.read(bytes)
     assertEquals(2, result.rowCount())
     assertEquals(new BigDecimal("123.45"), result[0, "value"])
+  }
+
+  @Test
+  void testWriteOptionsRoundTripToMap() {
+    AvroWriteOptions options = new AvroWriteOptions()
+        .inferPrecisionAndScale(true)
+        .namespace("se.alipsa.matrix.roundtrip")
+        .compression(AvroWriteOptions.Compression.DEFLATE)
+        .compressionLevel(9)
+        .syncInterval(64000)
+
+    Map<String, ?> roundTrip = options.toMap()
+
+    assertEquals(true, roundTrip.inferPrecisionAndScale)
+    assertEquals("se.alipsa.matrix.roundtrip", roundTrip.namespace)
+    assertEquals("DEFLATE", roundTrip.compression)
+    assertEquals(9, roundTrip.compressionLevel)
+    assertEquals(64000, roundTrip.syncInterval)
+    assertFalse(roundTrip.containsKey("schemaName"))
   }
 
   @Test

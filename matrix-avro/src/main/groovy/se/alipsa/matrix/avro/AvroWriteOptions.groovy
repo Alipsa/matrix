@@ -2,6 +2,7 @@ package se.alipsa.matrix.avro
 
 import groovy.transform.CompileStatic
 import org.apache.avro.file.CodecFactory
+import org.apache.avro.file.DataFileConstants
 import se.alipsa.matrix.core.spi.OptionDescriptor
 import se.alipsa.matrix.core.spi.OptionMaps
 
@@ -37,6 +38,11 @@ import se.alipsa.matrix.core.spi.OptionMaps
 @CompileStatic
 class AvroWriteOptions {
 
+  static final int DEFAULT_COMPRESSION_LEVEL = -1
+  static final int DEFAULT_SYNC_INTERVAL = 0
+  static final int MIN_SYNC_INTERVAL = 32
+  static final int MAX_SYNC_INTERVAL = 1 << 30
+
   /**
    * Supported compression codecs for Avro files.
    */
@@ -57,10 +63,10 @@ class AvroWriteOptions {
 
   private boolean inferPrecisionAndScale = false
   private String namespace = "se.alipsa.matrix.avro"
-  private String schemaName = "MatrixSchema"
+  private String schemaName = null
   private Compression compression = Compression.NULL
-  private int compressionLevel = -1  // -1 means use codec default
-  private int syncInterval = 0  // 0 means use Avro default (approximately 64KB)
+  private int compressionLevel = DEFAULT_COMPRESSION_LEVEL
+  private int syncInterval = DEFAULT_SYNC_INTERVAL
 
   /**
    * Creates a new AvroWriteOptions with default settings.
@@ -121,7 +127,9 @@ class AvroWriteOptions {
    * @return this options instance for method chaining
    */
   AvroWriteOptions compression(Compression compression) {
-    this.compression = compression
+    Compression effectiveCompression = compression ?: Compression.NULL
+    validateCompressionLevel(effectiveCompression, compressionLevel)
+    this.compression = effectiveCompression
     return this
   }
 
@@ -135,6 +143,7 @@ class AvroWriteOptions {
    * @return this options instance for method chaining
    */
   AvroWriteOptions compressionLevel(int level) {
+    validateCompressionLevel(compression, level)
     this.compressionLevel = level
     return this
   }
@@ -150,6 +159,7 @@ class AvroWriteOptions {
    * @return this options instance for method chaining
    */
   AvroWriteOptions syncInterval(int interval) {
+    validateSyncInterval(interval)
     this.syncInterval = interval
     return this
   }
@@ -226,14 +236,17 @@ class AvroWriteOptions {
    * @return map representation of the configured options
    */
   Map<String, ?> toMap() {
-    [
+    Map<String, Object> options = [
         inferPrecisionAndScale: inferPrecisionAndScale,
         namespace             : namespace,
-        schemaName            : schemaName,
         compression           : compression.name(),
         compressionLevel      : compressionLevel,
         syncInterval          : syncInterval
     ]
+    if (schemaName != null) {
+      options.schemaName = schemaName
+    }
+    options
   }
 
   /**
@@ -286,6 +299,45 @@ class AvroWriteOptions {
     result
   }
 
+  private static void validateCompressionLevel(Compression compression, int level) {
+    Compression effectiveCompression = compression ?: Compression.NULL
+    if (level == DEFAULT_COMPRESSION_LEVEL) {
+      return
+    }
+    switch (effectiveCompression) {
+      case Compression.DEFLATE:
+        if (level < 1 || level > 9) {
+          throw new IllegalArgumentException("DEFLATE compressionLevel must be -1 or between 1 and 9 but was $level")
+        }
+        return
+      case Compression.XZ:
+        if (level < 0 || level > 9) {
+          throw new IllegalArgumentException("XZ compressionLevel must be -1 or between 0 and 9 but was $level")
+        }
+        return
+      case Compression.ZSTANDARD:
+        if (level < 1 || level > 22) {
+          throw new IllegalArgumentException("ZSTANDARD compressionLevel must be -1 or between 1 and 22 but was $level")
+        }
+        return
+      case Compression.SNAPPY:
+      case Compression.BZIP2:
+      case Compression.NULL:
+        throw new IllegalArgumentException("${effectiveCompression.name()} compression does not support compressionLevel; use -1")
+    }
+  }
+
+  private static void validateSyncInterval(int interval) {
+    if (interval == DEFAULT_SYNC_INTERVAL) {
+      return
+    }
+    if (interval < MIN_SYNC_INTERVAL || interval > MAX_SYNC_INTERVAL) {
+      throw new IllegalArgumentException(
+          "syncInterval must be 0 for the Avro default (${DataFileConstants.DEFAULT_SYNC_INTERVAL}) or between ${MIN_SYNC_INTERVAL} and ${MAX_SYNC_INTERVAL} bytes but was $interval"
+      )
+    }
+  }
+
   /**
    * Returns a human-readable description of all supported write options.
    *
@@ -304,7 +356,7 @@ class AvroWriteOptions {
     [
         new OptionDescriptor('inferPrecisionAndScale', Boolean, 'false', 'Infer decimal precision and scale for BigDecimal columns'),
         new OptionDescriptor('namespace', String, 'se.alipsa.matrix.avro', 'Namespace for the generated Avro schema'),
-        new OptionDescriptor('schemaName', String, 'MatrixSchema', 'Record name for the generated Avro schema'),
+        new OptionDescriptor('schemaName', String, 'matrix.matrixName or MatrixSchema', 'Record name override for the generated Avro schema'),
         new OptionDescriptor('compression', Compression, 'NULL', 'Compression codec to use when writing'),
         new OptionDescriptor('compressionLevel', Integer, '-1', 'Codec-specific compression level'),
         new OptionDescriptor('syncInterval', Integer, '0', 'Sync marker interval in bytes')

@@ -46,5 +46,39 @@ import se.alipsa.matrix.core.Matrix
 Matrix users = Matrix.read([matrixName: 'Users'], new File('users.avro'))
 ```
 
+## Write with the Matrix name as the default Avro schema name
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.avro.MatrixAvroWriter
+
+Matrix orders = Matrix.builder('Orders')
+    .columns(id: [1, 2], total: [10.50, 22.75])
+    .types(Integer, BigDecimal)
+    .build()
+
+MatrixAvroWriter.write(orders, new File('orders.avro'))
+```
+
+## Write with compression and decimal inference
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.avro.MatrixAvroWriter
+
+Matrix orders = Matrix.builder('Orders')
+    .columns(id: [1, 2], total: [new BigDecimal('10.50'), new BigDecimal('22.75')])
+    .types(Integer, BigDecimal)
+    .build()
+
+MatrixAvroWriter.write(orders, new File('orders-compressed.avro'), new AvroWriteOptions()
+    .inferPrecisionAndScale(true)
+    .compression(AvroWriteOptions.Compression.DEFLATE)
+    .compressionLevel(6)
+    .syncInterval(64000)
+)
+```
+
 ---
 [Back to index](cookbook.md)

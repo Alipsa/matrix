@@ -94,7 +94,7 @@ class AvroFormatProviderTest {
     assertEquals(null, readOptions.matrixName)
     assertEquals(false, writeOptions.inferPrecisionAndScale)
     assertEquals('se.alipsa.matrix.avro', writeOptions.namespace)
-    assertEquals('MatrixSchema', writeOptions.schemaName)
+    assertEquals(null, writeOptions.schemaName)
     assertEquals(AvroWriteOptions.Compression.NULL, writeOptions.compression)
     assertEquals(-1, writeOptions.compressionLevel)
     assertEquals(0, writeOptions.syncInterval)
@@ -122,5 +122,86 @@ class AvroFormatProviderTest {
     assertEquals('OrdersView', roundTrip.matrixName)
     assertTrue(roundTrip.readerSchema instanceof org.apache.avro.Schema)
     assertEquals('ProjectedOrders', (roundTrip.readerSchema as org.apache.avro.Schema).name)
+  }
+
+  @Test
+  void testSpiWriteDefaultsSchemaNameFromMatrixName() {
+    Matrix source = Matrix.builder('orders')
+        .columns(
+            id: [1, 2],
+            amount: [new BigDecimal('12.34'), new BigDecimal('56.78')]
+        )
+        .types([Integer, BigDecimal])
+        .build()
+
+    File file = tempDir.resolve('orders-schema-default.avro').toFile()
+    source.write([inferPrecisionAndScale: true], file)
+
+    def reader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+        file,
+        new org.apache.avro.generic.GenericDatumReader<>()
+    )
+    try {
+      assertEquals('orders', reader.schema.name)
+    } finally {
+      reader.close()
+    }
+  }
+
+  @Test
+  void testTypedAndSpiWritesUseSameDefaultSchemaName() {
+    Matrix source = Matrix.builder('orders')
+        .columns(
+            id: [1, 2],
+            amount: [new BigDecimal('12.34'), new BigDecimal('56.78')]
+        )
+        .types([Integer, BigDecimal])
+        .build()
+
+    File spiFile = tempDir.resolve('orders-spi.avro').toFile()
+    File typedFile = tempDir.resolve('orders-typed.avro').toFile()
+
+    source.write([inferPrecisionAndScale: true], spiFile)
+    se.alipsa.matrix.avro.MatrixAvroWriter.write(
+        source,
+        typedFile,
+        new AvroWriteOptions().inferPrecisionAndScale(true)
+    )
+
+    def spiReader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+        spiFile,
+        new org.apache.avro.generic.GenericDatumReader<>()
+    )
+    def typedReader = new org.apache.avro.file.DataFileReader<org.apache.avro.generic.GenericRecord>(
+        typedFile,
+        new org.apache.avro.generic.GenericDatumReader<>()
+    )
+    try {
+      assertEquals('orders', spiReader.schema.name)
+      assertEquals('orders', typedReader.schema.name)
+    } finally {
+      spiReader.close()
+      typedReader.close()
+    }
+  }
+
+  @Test
+  void testWriteOptionsRoundTripFromMapToMap() {
+    AvroWriteOptions options = AvroWriteOptions.fromMap([
+        inferPrecisionAndScale: true,
+        namespace             : 'se.alipsa.matrix.spi',
+        compression           : 'deflate',
+        compressionLevel      : 9,
+        syncInterval          : 64000
+    ])
+
+    Map<String, ?> roundTrip = options.toMap()
+
+    assertEquals(true, roundTrip.inferPrecisionAndScale)
+    assertEquals('se.alipsa.matrix.spi', roundTrip.namespace)
+    assertEquals('DEFLATE', roundTrip.compression)
+    assertEquals(9, roundTrip.compressionLevel)
+    assertEquals(64000, roundTrip.syncInterval)
+    assertFalse(roundTrip.containsKey('schemaName'))
   }
 }

@@ -105,6 +105,7 @@ Default read behavior:
 ### Write Matrix → Avro
 
 ```groovy
+import se.alipsa.matrix.avro.AvroWriteOptions
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.core.Matrix
 import java.time.*
@@ -124,7 +125,32 @@ def m = Matrix.builder("Example").columns(cols).build()
 
 // inferPrecisionAndScale=true → BigDecimal columns use Avro decimal(bytes)
 MatrixAvroWriter.write(m, new File("out/example.avro"), true)
+
+def tuned = new AvroWriteOptions()
+    .inferPrecisionAndScale(true)
+    .namespace("com.example.avro")
+    .compression(AvroWriteOptions.Compression.DEFLATE)
+    .compressionLevel(6)
+    .syncInterval(64000)
+
+MatrixAvroWriter.write(m, new File("out/example-compressed.avro"), tuned)
 ```
+
+Supported write options:
+
+- `inferPrecisionAndScale(...)` enables decimal logical types for `BigDecimal`
+- `namespace(...)` overrides the Avro schema namespace
+- `schemaName(...)` overrides the Avro record name; otherwise the writer uses `matrix.matrixName` before falling back to `MatrixSchema`
+- `compression(...)` selects the Avro codec
+- `compressionLevel(...)` applies only to `DEFLATE`, `XZ`, and `ZSTANDARD`
+- `syncInterval(...)` sets the Avro sync marker interval in bytes
+
+Default write behavior:
+
+- schema naming prefers `schemaName(...)`, then `matrix.matrixName`, then `MatrixSchema`
+- `inferPrecisionAndScale` defaults to `false`, so `BigDecimal` columns fall back to Avro `double`
+- `compression` defaults to `NULL`, `compressionLevel` defaults to `-1`, and `syncInterval` defaults to `0` for Avro's built-in default
+- invalid `compressionLevel` or `syncInterval` values fail fast when options are built or parsed from SPI maps
 
 ## Type mapping
 
