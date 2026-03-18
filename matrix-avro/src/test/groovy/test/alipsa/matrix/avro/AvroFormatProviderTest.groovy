@@ -10,6 +10,7 @@ import se.alipsa.matrix.core.Matrix
 import java.nio.file.Path
 
 import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertFalse
 import static org.junit.jupiter.api.Assertions.assertTrue
 
 class AvroFormatProviderTest {
@@ -20,8 +21,10 @@ class AvroFormatProviderTest {
   @Test
   void testOptionDescriptions() {
     assertTrue(Matrix.listReadOptions('avro').contains('matrixName'))
+    assertFalse(Matrix.listReadOptions('avro').contains('lenientTypeConversion'))
     assertTrue(Matrix.listWriteOptions('avro').contains('schemaName'))
     assertTrue(AvroReadOptions.describe().contains('readerSchema'))
+    assertFalse(AvroReadOptions.describe().contains('lenientTypeConversion'))
     assertTrue(AvroWriteOptions.describe().contains('compression'))
   }
 
@@ -46,6 +49,27 @@ class AvroFormatProviderTest {
     assertEquals('loaded-orders', matrix.matrixName)
     assertEquals(source.columnNames(), matrix.columnNames())
     assertEquals(new BigDecimal('12.34'), matrix[0, 'amount'])
+  }
+
+  @Test
+  void testSpiReadDefaultsToAvroRecordName() {
+    Matrix source = Matrix.builder('orders')
+        .columns(
+            id: [1, 2],
+            amount: [new BigDecimal('12.34'), new BigDecimal('56.78')]
+        )
+        .types([Integer, BigDecimal])
+        .build()
+
+    File file = tempDir.resolve('orders-default-name.avro').toFile()
+    source.write([
+        inferPrecisionAndScale: true,
+        schemaName            : 'Orders',
+        namespace             : 'se.alipsa.matrix.spi'
+    ], file)
+
+    Matrix matrix = Matrix.read(file)
+    assertEquals('Orders', matrix.matrixName)
   }
 
   @Test
@@ -74,5 +98,29 @@ class AvroFormatProviderTest {
     assertEquals(AvroWriteOptions.Compression.NULL, writeOptions.compression)
     assertEquals(-1, writeOptions.compressionLevel)
     assertEquals(0, writeOptions.syncInterval)
+  }
+
+  @Test
+  void testReadOptionsRoundTripFromMapToMap() {
+    String readerSchemaJson = """
+    {
+      "type": "record",
+      "name": "ProjectedOrders",
+      "fields": [
+        {"name":"id", "type":"int"}
+      ]
+    }
+    """.stripIndent()
+
+    AvroReadOptions options = AvroReadOptions.fromMap([
+        matrixName  : 'OrdersView',
+        readerSchema: readerSchemaJson
+    ])
+
+    Map<String, ?> roundTrip = options.toMap()
+
+    assertEquals('OrdersView', roundTrip.matrixName)
+    assertTrue(roundTrip.readerSchema instanceof org.apache.avro.Schema)
+    assertEquals('ProjectedOrders', (roundTrip.readerSchema as org.apache.avro.Schema).name)
   }
 }

@@ -51,9 +51,17 @@ println AvroReadOptions.describe()
 println AvroWriteOptions.describe()
 ```
 
+Read naming precedence is:
+
+- `matrixName` from `AvroReadOptions` or the SPI options map, when supplied
+- the Avro record name from the file schema
+- a source-derived fallback such as the file name or `AvroMatrix`
+
 ### Read Avro → Matrix
 
 ```groovy
+import org.apache.avro.Schema
+import se.alipsa.matrix.avro.AvroReadOptions
 import se.alipsa.matrix.avro.MatrixAvroReader
 
 import java.nio.file.Paths
@@ -61,9 +69,38 @@ import java.nio.file.Paths
 def m1 = MatrixAvroReader.read(new File("data/users.avro"))
 def m2 = MatrixAvroReader.read(new URI("file:data/users.avro").toURL())
 def m3 = MatrixAvroReader.read(Paths.get("data/users.avro"))
+
+def projectedSchema = new Schema.Parser().parse("""
+{
+  "type": "record",
+  "name": "UserProjection",
+  "fields": [
+    {"name":"id", "type":"int"},
+    {"name":"name", "type":["null","string"], "default": null}
+  ]
+}
+""")
+def projected = MatrixAvroReader.read(
+    new File("data/users.avro"),
+    new AvroReadOptions()
+        .matrixName("Users")
+        .readerSchema(projectedSchema)
+)
+
 println m1.dim()           // [rows, cols]
 println m1.columnNames()
 ```
+
+Supported read options:
+
+- `matrixName(...)` overrides the resulting Matrix name
+- `readerSchema(...)` supplies an Avro reader schema for schema evolution and projection
+
+Default read behavior:
+
+- top-level Matrix naming prefers the Avro record name before source-derived fallbacks
+- logical types such as `date`, `timestamp-millis`, `local-timestamp-micros`, `decimal`, and `uuid` are converted to Java values during import
+- nested arrays, maps, and records are read into standard Java collections
 
 ### Write Matrix → Avro
 
