@@ -4,6 +4,13 @@ pluginManagement {
     mavenCentral()
     gradlePluginPortal()
   }
+  resolutionStrategy {
+    eachPlugin {
+      if (requested.id.id == 'se.alipsa.gradle.maven-module') {
+        useModule("se.alipsa.gradle:gradle-maven-module-plugin:${requested.version}")
+      }
+    }
+  }
 }
 rootProject.name = 'matrix'
 include 'matrix-core'
