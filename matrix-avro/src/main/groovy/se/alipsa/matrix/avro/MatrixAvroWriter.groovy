@@ -325,7 +325,7 @@ class MatrixAvroWriter {
    * @return an Avro record schema suitable for writing the Matrix
    */
   static Schema buildSchema(Matrix matrix, boolean inferPrecisionAndScale) {
-    return buildSchemaInternal(matrix, inferPrecisionAndScale, "MatrixSchema", "se.alipsa.matrix.avro")
+    return buildSchemaInternal(matrix, inferPrecisionAndScale, resolveSchemaName(matrix, null), "se.alipsa.matrix.avro")
   }
 
   /**
@@ -336,7 +336,18 @@ class MatrixAvroWriter {
    * @return an Avro record schema suitable for writing the Matrix
    */
   static Schema buildSchema(Matrix matrix, AvroWriteOptions options) {
-    return buildSchemaInternal(matrix, options.inferPrecisionAndScale, options.schemaName, options.namespace)
+    return buildSchemaInternal(matrix, options.inferPrecisionAndScale, resolveSchemaName(matrix, options.schemaName), options.namespace)
+  }
+
+  private static String resolveSchemaName(Matrix matrix, String configuredSchemaName) {
+    if (configuredSchemaName != null && !configuredSchemaName.isBlank()) {
+      return configuredSchemaName
+    }
+    String matrixName = matrix?.matrixName
+    if (matrixName != null && !matrixName.isBlank()) {
+      return matrixName
+    }
+    "MatrixSchema"
   }
 
   /**

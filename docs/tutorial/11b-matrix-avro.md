@@ -57,3 +57,36 @@ Useful read options:
 - arrays are read as `List`
 - maps are read as `Map<String, ?>`
 - nested records are read as `Map<String, Object>`
+
+## Writing Avro Files
+
+```groovy
+import se.alipsa.matrix.core.Matrix
+import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.avro.MatrixAvroWriter
+
+Matrix people = Matrix.builder("People")
+    .columns(id: [1, 2], amount: [new BigDecimal("12.34"), new BigDecimal("56.78")])
+    .types(Integer, BigDecimal)
+    .build()
+
+MatrixAvroWriter.write(people, new File("people.avro"), new AvroWriteOptions()
+    .inferPrecisionAndScale(true)
+    .compression(AvroWriteOptions.Compression.DEFLATE)
+    .compressionLevel(6)
+    .syncInterval(64000)
+)
+```
+
+Write naming precedence is:
+
+1. `AvroWriteOptions.schemaName(...)` when supplied
+2. `matrix.matrixName` when present
+3. `MatrixSchema`
+
+Useful write options:
+
+- `inferPrecisionAndScale(...)` to store `BigDecimal` columns as Avro decimals
+- `namespace(...)` to control the Avro schema namespace
+- `schemaName(...)` to override the default record name
+- `compression(...)`, `compressionLevel(...)`, and `syncInterval(...)` for container-file tuning
