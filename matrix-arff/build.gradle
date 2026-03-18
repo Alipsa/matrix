@@ -63,14 +63,14 @@ publishing {
       pom {
         name = 'Matrix arff support'
         description = "${project.description}"
-        url = "https://github.com/Alipsa/matrix/matrix-arff"
+        url = "https://github.com/Alipsa/matrix/tree/main/matrix-arff"
         properties = [
             'maven.compiler.release': "${javaCompile.options.release.get()}"
         ]
         licenses {
           license {
             name = 'MIT License'
-            url = 'https://raw.githubusercontent.com/Alipsa/matrix/matrix-arff/master/LICENSE'
+            url = 'https://raw.githubusercontent.com/Alipsa/matrix/refs/heads/main/LICENSE'
           }
         }
         developers {

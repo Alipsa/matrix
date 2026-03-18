@@ -1,6 +1,6 @@
 # Matrix-arff release history
 
-## v0.2.0 In progress
+## v0.2.0 - 2016-03-18
 - add sparse ARFF data row read support with validation for duplicate and out-of-range attribute indices
 - add `ArffFormatProvider` and service registration so `.arff` files work with the generic `Matrix.read(...)` / `matrix.write(...)` SPI API
 - expand `ArffReadOptions` with `fallbackMatrixName` support, strict validation toggles, and richer parser error messages with line context
@@ -9,6 +9,6 @@
 - refactor `MatrixArffWriter` so direct API and SPI writes share one typed schema-resolution path
 - document the current ARFF API surface and defaults in the README and tutorial, including sparse input, strict mode, explicit schema control, and SPI round-tripping examples
 
-## v0.1.0 2026-01-30
+## v0.1.0 - 2026-01-30
 Initial release
 Support for reading arff files into a matrix and writing a matrix to an arff file
