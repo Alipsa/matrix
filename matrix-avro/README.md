@@ -142,7 +142,7 @@ Supported write options:
 - `namespace(...)` overrides the Avro schema namespace
 - `schemaName(...)` overrides the Avro record name; otherwise the writer uses `matrix.matrixName` before falling back to `MatrixSchema`
 - `compression(...)` selects the Avro codec
-- `compressionLevel(...)` applies only to `DEFLATE`, `XZ`, and `ZSTANDARD`
+- `compressionLevel(...)` applies only to `DEFLATE`, `XZ`, and `ZSTANDARD`; in fluent usage set `compression(...)` first
 - `syncInterval(...)` sets the Avro sync marker interval in bytes
 
 Default write behavior:
@@ -150,6 +150,7 @@ Default write behavior:
 - schema naming prefers `schemaName(...)`, then `matrix.matrixName`, then `MatrixSchema`
 - `inferPrecisionAndScale` defaults to `false`, so `BigDecimal` columns fall back to Avro `double`
 - `compression` defaults to `NULL`, `compressionLevel` defaults to `-1`, and `syncInterval` defaults to `0` for Avro's built-in default
+- `AvroWriteOptions.toMap()` only includes `schemaName` when explicitly set; otherwise the effective name is resolved at write time
 - invalid `compressionLevel` or `syncInterval` values fail fast when options are built or parsed from SPI maps
 
 ## Type mapping

@@ -137,7 +137,9 @@ class AvroWriteOptions {
    * Sets the compression level for codecs that support it.
    *
    * <p>Only applies to DEFLATE (1-9), XZ (0-9), and ZSTANDARD (1-22).
-   * Other codecs ignore this setting. Use -1 to use the codec's default level.
+   * Other codecs do not support this setting. Use -1 to use the codec's default level.
+   * In fluent usage, call {@link #compression(Compression)} before this method so
+   * codec-specific validation can run immediately.
    *
    * @param level the compression level, or -1 for codec default
    * @return this options instance for method chaining
@@ -233,6 +235,10 @@ class AvroWriteOptions {
   /**
    * Converts this options object to an SPI-friendly map.
    *
+   * <p>{@code schemaName} is only included when explicitly set. When absent, the writer derives
+   * the effective record name from {@code matrix.matrixName} and finally {@code MatrixSchema}
+   * at write time.
+   *
    * @return map representation of the configured options
    */
   Map<String, ?> toMap() {
@@ -258,6 +264,9 @@ class AvroWriteOptions {
   static AvroWriteOptions fromMap(Map<String, ?> options) {
     AvroWriteOptions result = new AvroWriteOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
+    Compression compression = null
+    Integer compressionLevel = null
+    Integer syncInterval = null
     if (normalized.containsKey('inferprecisionandscale')) {
       Object inferPrecisionAndScale = normalized.inferprecisionandscale
       if (inferPrecisionAndScale != null) {
@@ -279,22 +288,31 @@ class AvroWriteOptions {
     if (normalized.containsKey('compression')) {
       def value = normalized.compression
       if (value instanceof Compression) {
-        result.compression(value as Compression)
+        compression = value as Compression
       } else if (value != null) {
-        result.compression(Compression.valueOf(String.valueOf(value).toUpperCase()))
+        compression = Compression.valueOf(String.valueOf(value).toUpperCase())
       }
     }
     if (normalized.containsKey('compressionlevel')) {
-      Object compressionLevel = normalized.compressionlevel
-      if (compressionLevel != null) {
-        result.compressionLevel((compressionLevel as Number).intValue())
+      Object value = normalized.compressionlevel
+      if (value != null) {
+        compressionLevel = (value as Number).intValue()
       }
     }
     if (normalized.containsKey('syncinterval')) {
-      Object syncInterval = normalized.syncinterval
-      if (syncInterval != null) {
-        result.syncInterval((syncInterval as Number).intValue())
+      Object value = normalized.syncinterval
+      if (value != null) {
+        syncInterval = (value as Number).intValue()
       }
+    }
+    if (compression != null) {
+      result.compression(compression)
+    }
+    if (compressionLevel != null) {
+      result.compressionLevel(compressionLevel)
+    }
+    if (syncInterval != null) {
+      result.syncInterval(syncInterval)
     }
     result
   }
@@ -305,25 +323,24 @@ class AvroWriteOptions {
       return
     }
     switch (effectiveCompression) {
-      case Compression.DEFLATE:
+      case Compression.DEFLATE -> {
         if (level < 1 || level > 9) {
           throw new IllegalArgumentException("DEFLATE compressionLevel must be -1 or between 1 and 9 but was $level")
         }
-        return
-      case Compression.XZ:
+      }
+      case Compression.XZ -> {
         if (level < 0 || level > 9) {
           throw new IllegalArgumentException("XZ compressionLevel must be -1 or between 0 and 9 but was $level")
         }
-        return
-      case Compression.ZSTANDARD:
+      }
+      case Compression.ZSTANDARD -> {
         if (level < 1 || level > 22) {
           throw new IllegalArgumentException("ZSTANDARD compressionLevel must be -1 or between 1 and 22 but was $level")
         }
-        return
-      case Compression.SNAPPY:
-      case Compression.BZIP2:
-      case Compression.NULL:
+      }
+      case Compression.SNAPPY, Compression.BZIP2, Compression.NULL -> {
         throw new IllegalArgumentException("${effectiveCompression.name()} compression does not support compressionLevel; use -1")
+      }
     }
   }
 
