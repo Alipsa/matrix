@@ -34,7 +34,7 @@ To use the matrix-arff module, add it as a dependency to your project.
 
 ```groovy
 implementation 'org.apache.groovy:groovy:5.0.4'
-implementation platform("se.alipsa.matrix:matrix-bom:2.4.0")
+implementation platform("se.alipsa.matrix:matrix-bom:2.5.0")
 implementation "se.alipsa.matrix:matrix-core"
 implementation "se.alipsa.matrix:matrix-arff"
 ```
@@ -42,6 +42,18 @@ implementation "se.alipsa.matrix:matrix-arff"
 ### Maven Configuration
 
 ```xml
+<project>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>se.alipsa.matrix</groupId>
+        <artifactId>matrix-bom</artifactId>
+        <version>2.5.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 <dependencies>
     <dependency>
         <groupId>org.apache.groovy</groupId>
@@ -51,14 +63,13 @@ implementation "se.alipsa.matrix:matrix-arff"
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-core</artifactId>
-        <version>3.6.0</version>
     </dependency>
     <dependency>
         <groupId>se.alipsa.matrix</groupId>
         <artifactId>matrix-arff</artifactId>
-        <version>0.1.0</version>
     </dependency>
 </dependencies>
+</project>
 ```
 
 ## API Surface
@@ -92,7 +103,7 @@ import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.core.Matrix
 
 ArffReadOptions readOptions = new ArffReadOptions()
-    .matrixName('fallback-name')
+    .fallbackMatrixName('fallback-name')
 
 Matrix iris = MatrixArffReader.read(new File("iris.arff"), readOptions)
 Matrix fromPath = MatrixArffReader.read(Path.of("iris.arff"), readOptions)
@@ -108,7 +119,7 @@ The typed overloads are available for `File`, `Path`, `URL`, `InputStream`, `Rea
 
 ### Convenience Shortcuts
 
-If you do not need typed options, the convenience overloads are still available:
+If you do not need typed options, the following convenience overloads are available:
 
 ```groovy
 Matrix iris = MatrixArffReader.read(new File("iris.arff"))
@@ -127,7 +138,7 @@ See [the tutorial](../docs/tutorial/16-matrix-arff.md) for more details.
 
 ## Reading Sparse ARFF Rows
 
-`MatrixArffReader` now supports sparse data rows in the ARFF `@DATA` section:
+`MatrixArffReader` supports sparse data rows in the ARFF `@DATA` section since version 0.2.0.:
 
 ```arff
 @RELATION sparse_metrics
@@ -153,7 +164,7 @@ When sparse rows are read:
 
 The defaults are intentionally lenient so basic imports and exports work without extra configuration:
 
-- matrix name defaults to `@RELATION` when present, otherwise to the fallback name from `ArffReadOptions.matrixName(...)`, otherwise to the source name such as the file name or `ArffMatrix`
+- matrix name defaults to `@RELATION` when present, otherwise to the fallback name from `ArffReadOptions.fallbackMatrixName(...)`, otherwise to the source name such as the file name or `ArffMatrix`
 - ARFF missing values (`?`) read as `null`, and `null` values write as `?`
 - dense rows with missing trailing values are padded with `null`
 - dense rows with extra trailing values ignore the extras unless strict row-length validation is enabled
@@ -179,7 +190,7 @@ import se.alipsa.matrix.arff.ArffReadOptions
 import se.alipsa.matrix.arff.MatrixArffReader
 
 ArffReadOptions options = new ArffReadOptions()
-    .matrixName('fallback-name')
+    .fallbackMatrixName('fallback-name')
     .strict(true)
 
 Matrix matrix = MatrixArffReader.read(new File('dataset.arff'), options)
@@ -190,7 +201,7 @@ Useful read options:
 - `strict(true)` enables fail-fast validation for unknown attribute types and dense row length mismatches
 - `failOnUnknownAttributeType(true)` fails on unsupported `@ATTRIBUTE` types instead of falling back to `STRING`
 - `failOnRowLengthMismatch(true)` fails when a dense `@DATA` row has more or fewer values than declared attributes
-- `matrixName(...)` supplies a fallback matrix name when the ARFF file has no `@RELATION`
+- `fallbackMatrixName(...)` supplies a fallback matrix name when the ARFF file has no `@RELATION`
 
 Default read behavior stays lenient:
 
@@ -249,7 +260,7 @@ import se.alipsa.matrix.arff.ArffReadOptions
 import se.alipsa.matrix.arff.ArffWriteOptions
 
 Matrix iris = Matrix.read(new File('iris.arff'))
-Matrix fallback = Matrix.read([matrixName: 'fallback'], new File('no-relation.arff'))
+Matrix fallback = Matrix.read([fallbackMatrixName: 'fallback'], new File('no-relation.arff'))
 Matrix strict = Matrix.read([strict: true], new File('dataset.arff'))
 
 iris.write(new File('iris-copy.arff'))
@@ -323,6 +334,6 @@ MatrixArffWriter.write(
 Generic Matrix SPI round-trip:
 
 ```groovy
-Matrix matrix = Matrix.read([matrixName: 'fallback'], new File('input.arff'))
+Matrix matrix = Matrix.read([fallbackMatrixName: 'fallback'], new File('input.arff'))
 matrix.write([inferNominals: false], new File('output.arff'))
 ```

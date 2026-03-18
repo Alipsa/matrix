@@ -23,14 +23,14 @@ class ArffFormatProviderTest {
 
   @Test
   void testOptionDescriptions() {
-    assertTrue(Matrix.listReadOptions('arff').contains('matrixName'))
+    assertTrue(Matrix.listReadOptions('arff').contains('fallbackMatrixName'))
     assertTrue(Matrix.listReadOptions('arff').contains('strict'))
     assertTrue(Matrix.listReadOptions('arff').contains('failOnUnknownAttributeType'))
     assertTrue(Matrix.listReadOptions('arff').contains('failOnRowLengthMismatch'))
     assertTrue(Matrix.listWriteOptions('arff').contains('nominalMappings'))
     assertTrue(Matrix.listWriteOptions('arff').contains('inferNominals'))
     assertTrue(Matrix.listWriteOptions('arff').contains('attributeTypesByColumn'))
-    assertTrue(ArffReadOptions.describe().contains('matrixName'))
+    assertTrue(ArffReadOptions.describe().contains('fallbackMatrixName'))
     assertTrue(ArffReadOptions.describe().contains('strict'))
     assertTrue(ArffReadOptions.describe().contains('failOnUnknownAttributeType'))
     assertTrue(ArffWriteOptions.describe().contains('nominalMappings'))
@@ -46,7 +46,7 @@ class ArffFormatProviderTest {
 2
 '''
 
-    Matrix matrix = Matrix.read([matrixName: 'fallback'], file)
+    Matrix matrix = Matrix.read([fallbackMatrixName: 'fallback'], file)
     assertEquals('fallback', matrix.matrixName)
     assertEquals([new BigDecimal('1'), new BigDecimal('2')], matrix.value)
   }
@@ -60,7 +60,7 @@ class ArffFormatProviderTest {
 1
 '''
 
-    Matrix matrix = Matrix.read([matrixName: 'fallback'], file)
+    Matrix matrix = Matrix.read([fallbackMatrixName: 'fallback'], file)
 
     assertEquals('actualName', matrix.matrixName)
   }
@@ -114,16 +114,16 @@ class ArffFormatProviderTest {
   }
 
   @Test
-  void testReadOptionsIgnoreNullMatrixName() {
-    ArffReadOptions options = ArffReadOptions.fromMap([matrixName: null])
+  void testReadOptionsIgnoreNullFallbackMatrixName() {
+    ArffReadOptions options = ArffReadOptions.fromMap([fallbackMatrixName: null])
 
-    assertEquals(null, options.matrixName)
+    assertEquals(null, options.fallbackMatrixName)
   }
 
   @Test
   void testReadOptionsRoundTripFromMapToMap() {
     ArffReadOptions options = ArffReadOptions.fromMap([
-        matrixName                : 'fallback',
+        fallbackMatrixName        : 'fallback',
         strict                    : true,
         failOnUnknownAttributeType: false,
         failOnRowLengthMismatch   : true
@@ -131,7 +131,7 @@ class ArffFormatProviderTest {
 
     Map<String, ?> roundTrip = options.toMap()
 
-    assertEquals('fallback', roundTrip.matrixName)
+    assertEquals('fallback', roundTrip.fallbackMatrixName)
     assertEquals(true, roundTrip.strict)
     assertEquals(false, roundTrip.failOnUnknownAttributeType)
     assertEquals(true, roundTrip.failOnRowLengthMismatch)
@@ -181,8 +181,8 @@ value
 2
 '''
 
-    Matrix direct = MatrixArffReader.read(file, new ArffReadOptions().matrixName('typedDirect'))
-    Matrix viaSpi = Matrix.read([matrixName: 'typedDirect'], file)
+    Matrix direct = MatrixArffReader.read(file, new ArffReadOptions().fallbackMatrixName('typedDirect'))
+    Matrix viaSpi = Matrix.read([fallbackMatrixName: 'typedDirect'], file)
 
     assertEquals(direct.matrixName, viaSpi.matrixName)
     assertEquals(direct.columnNames(), viaSpi.columnNames())

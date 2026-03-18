@@ -10,13 +10,13 @@ import se.alipsa.matrix.core.spi.OptionMaps
 @CompileStatic
 class ArffReadOptions {
 
-  private String matrixName = null
+  private String fallbackMatrixName = null
   private boolean strict = false
   private Boolean failOnUnknownAttributeType = null
   private Boolean failOnRowLengthMismatch = null
 
-  String getMatrixName() {
-    matrixName
+  String getFallbackMatrixName() {
+    fallbackMatrixName
   }
 
   boolean isStrict() {
@@ -31,8 +31,8 @@ class ArffReadOptions {
     failOnRowLengthMismatch == null ? strict : failOnRowLengthMismatch.booleanValue()
   }
 
-  ArffReadOptions matrixName(String value) {
-    this.matrixName = value
+  ArffReadOptions fallbackMatrixName(String value) {
+    this.fallbackMatrixName = value
     this
   }
 
@@ -54,10 +54,10 @@ class ArffReadOptions {
   static ArffReadOptions fromMap(Map<String, ?> options) {
     ArffReadOptions result = new ArffReadOptions()
     Map<String, Object> normalized = OptionMaps.normalizeKeys(options)
-    if (normalized.containsKey('matrixname')) {
-      String matrixName = OptionMaps.stringValueOrNull(normalized.matrixname)
-      if (matrixName != null) {
-        result.matrixName(matrixName)
+    if (normalized.containsKey('fallbackmatrixname')) {
+      String fallbackMatrixName = OptionMaps.stringValueOrNull(normalized.fallbackmatrixname)
+      if (fallbackMatrixName != null) {
+        result.fallbackMatrixName(fallbackMatrixName)
       }
     }
     if (normalized.containsKey('strict')) {
@@ -74,8 +74,8 @@ class ArffReadOptions {
 
   Map<String, ?> toMap() {
     Map<String, Object> result = [:]
-    if (matrixName != null) {
-      result.matrixName = matrixName
+    if (fallbackMatrixName != null) {
+      result.fallbackMatrixName = fallbackMatrixName
     }
     if (strict) {
       result.strict = true
@@ -95,7 +95,7 @@ class ArffReadOptions {
 
   static List<OptionDescriptor> descriptors() {
     [
-        new OptionDescriptor('matrixName', String, null, 'Fallback Matrix name when the ARFF file has no @RELATION'),
+        new OptionDescriptor('fallbackMatrixName', String, null, 'Fallback Matrix name when the ARFF file has no @RELATION'),
         new OptionDescriptor('strict', Boolean, false, 'Enable fail-fast validation for unknown attribute types and row length mismatches unless overridden by specific options'),
         new OptionDescriptor('failOnUnknownAttributeType', Boolean, 'strict', 'Fail when an unknown @ATTRIBUTE type is encountered instead of falling back to STRING'),
         new OptionDescriptor('failOnRowLengthMismatch', Boolean, 'strict', 'Fail when a dense @DATA row has more or fewer values than the declared attributes')

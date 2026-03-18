@@ -744,7 +744,7 @@ class MatrixArffReader {
   }
 
   private static String fallbackName(String defaultName, ArffReadOptions options) {
-    options?.matrixName ?: defaultName
+    options?.fallbackMatrixName ?: defaultName
   }
 
   private static IllegalArgumentException parseError(String message, int lineNumber, String rawLine) {

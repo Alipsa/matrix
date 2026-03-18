@@ -849,7 +849,7 @@ plain
 """.trim()
     File file = new File(tempDir, 'typed_read.arff')
     file.text = arffContent
-    ArffReadOptions options = new ArffReadOptions().matrixName('typed_fallback')
+    ArffReadOptions options = new ArffReadOptions().fallbackMatrixName('typed_fallback')
 
     Matrix fromFile = MatrixArffReader.read(file, options)
     Matrix fromPath = MatrixArffReader.read(file.toPath(), options)

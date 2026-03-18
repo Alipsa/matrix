@@ -63,7 +63,7 @@ import se.alipsa.matrix.arff.MatrixArffReader
 import se.alipsa.matrix.core.Matrix
 
 ArffReadOptions readOptions = new ArffReadOptions()
-    .matrixName('fallback-name')
+    .fallbackMatrixName('fallback-name')
 
 Matrix iris = MatrixArffReader.read(new File("iris.arff"), readOptions)
 Matrix fromPath = MatrixArffReader.read(Paths.get("data/dataset.arff"), readOptions)
@@ -157,7 +157,7 @@ import se.alipsa.matrix.arff.MatrixArffReader
 
 ArffReadOptions options = new ArffReadOptions()
     .strict(true)
-    .matrixName('fallback-name')
+    .fallbackMatrixName('fallback-name')
 
 Matrix strictMatrix = MatrixArffReader.read(new File('dataset.arff'), options)
 ```
@@ -242,7 +242,7 @@ Matrix validated = MatrixArffReader.read(
     new File('incoming.arff'),
     new ArffReadOptions()
         .strict(true)
-        .matrixName('fallback-name')
+        .fallbackMatrixName('fallback-name')
 )
 ```
 
@@ -253,7 +253,7 @@ Strict mode is useful when you want malformed rows or unsupported attribute decl
 ```groovy
 import se.alipsa.matrix.core.Matrix
 
-Matrix source = Matrix.read([matrixName: 'fallback'], new File('input.arff'))
+Matrix source = Matrix.read([fallbackMatrixName: 'fallback'], new File('input.arff'))
 
 source.write([
     inferNominals        : false,
