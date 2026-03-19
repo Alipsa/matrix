@@ -1,5 +1,5 @@
 ruleset {
-    description 'CodeNarc ruleset for Matrix Core'
+    description 'CodeNarc ruleset for Matrix'
 
     // Basic rules
     ruleset('rulesets/basic.xml') {
@@ -87,12 +87,15 @@ ruleset {
         exclude 'SpaceAroundMapEntryColon'
         exclude 'LineLength' // Don't enforce line length
         exclude 'Indentation' // Skip indentation checks
-        exclude 'ClassJavadoc' // Don't require Javadoc on all classes
+    }
+
+    // Comments rules (ClassJavadoc moved here in CodeNarc 3.7+)
+    ruleset('rulesets/comments.xml') {
+        'ClassJavadoc' {
+            doNotApplyToFilesMatching = /.*Test\.groovy/
+        }
     }
 
     // Groovy-specific rules
-    ruleset('rulesets/groovyism.xml') {
-        exclude 'ExplicitCallToEqualsMethod'
-        exclude 'ExplicitCallToCompareToMethod'
-    }
+    ruleset('rulesets/groovyism.xml')
 }

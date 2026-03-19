@@ -70,6 +70,67 @@ allprojects {
 }
 
 subprojects {
+  plugins.withId('groovy') {
+    apply plugin: 'codenarc'
+
+    codenarc {
+      toolVersion = libs.versions.codenarc.get()
+      configFile = rootProject.file('config/codenarc/ruleset.groovy')
+      reportFormat = 'html'
+      ignoreFailures = true
+    }
+
+    // Regex matching Groovy 5 arrow switch expressions:
+    //   case 'foo' ->      case SomeEnum.VALUE ->      default ->
+    def arrowSwitchPattern = /(?m)^\s*(?:case\s+.*|default)\s*->\s*\{?\s*$/
+
+    codenarcMain {
+      // Auto-exclude files with arrow switch syntax (CodeNarc 3.7 can't parse them)
+      // TODO: Remove this filter when upgrading to CodeNarc 4.0+
+      def mainSrcDir = file('src/main/groovy')
+      if (mainSrcDir.exists()) {
+        def arrowSwitchFiles = [] as Set<String>
+        mainSrcDir.eachFileRecurse { File f ->
+          if (f.name.endsWith('.groovy') && f.text =~ arrowSwitchPattern) {
+            arrowSwitchFiles << f.absolutePath.replace(mainSrcDir.absolutePath + '/', '')
+          }
+        }
+        source = fileTree('src/main/groovy') {
+          include '**/*.groovy'
+          arrowSwitchFiles.each { path -> exclude path }
+        }
+      }
+
+      // Warn about old-style switch syntax per AGENTS.md
+      // TODO: Change to hard failure once all files are migrated to arrow syntax
+      def enforcementDir = mainSrcDir
+      doLast {
+        if (enforcementDir.exists()) {
+          def oldStyleFiles = []
+          enforcementDir.eachFileRecurse { File f ->
+            if (f.name.endsWith('.groovy')) {
+              String content = f.text
+              // Match old-style case with colon (but not URLs like http:// or
+              // ternary/map colons). Pattern: line starts with case, ends with colon.
+              if (content =~ /(?m)^\s*case\s+.*[^-]:\s*$/) {
+                oldStyleFiles << f.path
+              }
+            }
+          }
+          if (oldStyleFiles) {
+            logger.warn("WARNING: ${oldStyleFiles.size()} file(s) use old-style switch syntax (case X:) — " +
+                "migrate to arrow syntax (case X ->) per AGENTS.md:")
+            oldStyleFiles.each { logger.warn("  - $it") }
+          }
+        }
+      }
+    }
+
+    codenarcTest {
+      source = 'src/test/groovy'
+    }
+  }
+
   apply plugin: "com.github.ben-manes.versions"
   tasks.matching { it.name == "dependencyUpdates" }.configureEach {
     gradleReleaseChannel = "current"
