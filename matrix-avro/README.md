@@ -2,75 +2,70 @@
 [![javadoc](https://javadoc.io/badge2/se.alipsa.matrix/matrix-avro/javadoc.svg)](https://javadoc.io/doc/se.alipsa.matrix/matrix-avro)
 # matrix-avro
 
-[Avro](https://avro.apache.org/) read/write support for [Matrix](https://github.com/Alipsa/matrix).  
-This module lets you round-trip data between Avro Object Container Files (`*.avro`) and `se.alipsa.matrix.core.Matrix`, 
-including Avro logical types, and collections (arrays, maps, and record-like structures).
+[Avro](https://avro.apache.org/) read/write support for [Matrix](https://github.com/Alipsa/matrix).
+This module reads and writes Avro Object Container Files (`.avro`) with support for logical types, schema evolution, and nested arrays, maps, and record-like values.
 
-## Features
+## At A Glance
 
-- Read Avro OCF → `Matrix` (`MatrixAvroReader`)
-- Write `Matrix` → Avro OCF (`MatrixAvroWriter`)
-- Logical types mapped to idiomatic Java time/number types
-- Optional `BigDecimal` → Avro `decimal(bytes)` with **per-column** precision/scale inference
-- Arrays, maps, and record-like nested data supported
-- All top-level fields are nullable (Avro unions like `["null", T]`)
+- read Avro from `File`, `Path`, `URL`, `InputStream`, and byte arrays
+- write Avro to `File`, `Path`, `OutputStream`, and byte arrays
+- control reads with `AvroReadOptions`
+- control writes with `AvroWriteOptions`
+- override nested schema inference explicitly with `AvroSchemaDecl`
+- use the generic Matrix SPI through `Matrix.read(...)`, `matrix.write(...)`, `Matrix.listReadOptions(...)`, and `Matrix.listWriteOptions(...)`
 
-## Getting started
+## Getting Started
 
-Add the module to your build (versions are examples; prefer the Matrix BOM if you use it):
+Add the module to your build. Versions below are examples; prefer the Matrix BOM when you use multiple modules.
 
 ```groovy
 dependencies {
-  api "se.alipsa.matrix:matrix-core:<version>"
-  implementation "se.alipsa.matrix:matrix-avro:<version>"
-  // Avro runtime is brought in transitively by matrix-avro
+  implementation platform("se.alipsa.matrix:matrix-bom:<version>")
+  implementation "se.alipsa.matrix:matrix-core"
+  implementation "se.alipsa.matrix:matrix-avro"
 }
 ```
 
-> In a multi-module build: add `include 'matrix-avro'` to `settings.gradle`.
+## API Surface
 
-## Usage
+Direct API entry points:
 
-### Using Matrix.read() / matrix.write()
+- `MatrixAvroReader.read(...)` for `File`, `Path`, `URL`, `InputStream`, and `byte[]`
+- `MatrixAvroWriter.write(...)` for `File`, `Path`, and `OutputStream`
+- `MatrixAvroWriter.writeBytes(...)` for in-memory export
+- `AvroReadOptions` for naming and schema evolution
+- `AvroWriteOptions` for schema naming, decimal behavior, compression, and explicit nested schema control
+- `AvroSchemaDecl` for per-column decimal, array, map, record, and scalar overrides
 
-If `matrix-avro` is on the classpath, `.avro` files are also available through the generic Matrix SPI API:
+Generic Matrix SPI entry points:
+
+- `Matrix.read(new File('data.avro'))`
+- `matrix.write(new File('data.avro'))`
+- `Matrix.listReadOptions('avro')`
+- `Matrix.listWriteOptions('avro')`
+- `AvroReadOptions.describe()`
+- `AvroWriteOptions.describe()`
+
+Runtime option discovery:
 
 ```groovy
-import se.alipsa.matrix.core.Matrix
-import se.alipsa.matrix.avro.AvroReadOptions
-import se.alipsa.matrix.avro.AvroWriteOptions
-
-Matrix data = Matrix.read(new File('users.avro'))
-Matrix renamed = Matrix.read([matrixName: 'Users'], new File('users.avro'))
-
-data.write([inferPrecisionAndScale: true, schemaName: 'Users'], new File('users-copy.avro'))
-
 println Matrix.listReadOptions('avro')
 println Matrix.listWriteOptions('avro')
 println AvroReadOptions.describe()
 println AvroWriteOptions.describe()
 ```
 
-Read naming precedence is:
+## Options-First Read API
 
-- `matrixName` from `AvroReadOptions` or the SPI options map, when supplied
-- the Avro record name from the file schema
-- a source-derived fallback such as the file name or `AvroMatrix`
-
-### Read Avro → Matrix
+Use `AvroReadOptions` as the primary read surface when you want explicit control over naming or schema evolution:
 
 ```groovy
 import org.apache.avro.Schema
 import se.alipsa.matrix.avro.AvroReadOptions
 import se.alipsa.matrix.avro.MatrixAvroReader
+import se.alipsa.matrix.core.Matrix
 
-import java.nio.file.Paths
-
-def m1 = MatrixAvroReader.read(new File("data/users.avro"))
-def m2 = MatrixAvroReader.read(new URI("file:data/users.avro").toURL())
-def m3 = MatrixAvroReader.read(Paths.get("data/users.avro"))
-
-def projectedSchema = new Schema.Parser().parse("""
+Schema projection = new Schema.Parser().parse("""
 {
   "type": "record",
   "name": "UserProjection",
@@ -80,90 +75,86 @@ def projectedSchema = new Schema.Parser().parse("""
   ]
 }
 """)
-def projected = MatrixAvroReader.read(
-    new File("data/users.avro"),
-    new AvroReadOptions()
-        .matrixName("Users")
-        .readerSchema(projectedSchema)
-)
 
-println m1.dim()           // [rows, cols]
-println m1.columnNames()
+AvroReadOptions readOptions = new AvroReadOptions()
+    .matrixName('Users')
+    .readerSchema(projection)
+
+Matrix users = MatrixAvroReader.read(new File('users.avro'), readOptions)
 ```
 
-Supported read options:
+Useful read options:
 
 - `matrixName(...)` overrides the resulting Matrix name
-- `readerSchema(...)` supplies an Avro reader schema for schema evolution and projection
+- `readerSchema(...)` supplies an Avro reader schema for schema evolution or projection
 
-Default read behavior:
+### Convenience Shortcuts
 
-- top-level Matrix naming prefers the Avro record name before source-derived fallbacks
-- logical types such as `date`, `timestamp-millis`, `local-timestamp-micros`, `decimal`, and `uuid` are converted to Java values during import
-- nested arrays, maps, and records are read into standard Java collections
+Convenience overloads remain available for compatibility, but the typed `AvroReadOptions` API is the primary path:
 
-### Write Matrix → Avro
+```groovy
+Matrix fromFile = MatrixAvroReader.read(new File('users.avro'))
+Matrix fromPath = MatrixAvroReader.read(Path.of('users.avro'))
+Matrix fromUrl = MatrixAvroReader.read(new URL('file:users.avro'))
+Matrix fromBytes = MatrixAvroReader.read(avroBytes)
+```
+
+## Options-First Write API
+
+Use `AvroWriteOptions` as the primary write surface when you want explicit schema behavior:
 
 ```groovy
 import se.alipsa.matrix.avro.AvroWriteOptions
 import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.core.Matrix
-import java.time.*
 
-def cols = [
-  id       : [1, 2, 3],
-  name     : ["Alice","Bob",null],
-  birthday : [LocalDate.of(1990,1,5), null, LocalDate.of(1984,7,23)],
-  ldt      : [LocalDateTime.of(2024,7,1,10,20,30,999_000_000), null, LocalDateTime.now()],
-  price    : [new BigDecimal("12.34"), null, new BigDecimal("1000.50")],
-  tags     : [[ "a","b" ], [], [ "x", null, "z" ]],         // ARRAY
-  props    : [[x:1, y:2], [y:5, z:9], null],                 // MAP (varying keys)
-  person   : [[name:"Ann", age:30], [name:"Bo", age:41], [:]] // RECORD-like (fixed keys)
-] as LinkedHashMap
+Matrix orders = Matrix.builder('Orders')
+    .columns(
+        id: [1, 2],
+        amount: [new BigDecimal('12.34'), new BigDecimal('56.78')]
+    )
+    .types(Integer, BigDecimal)
+    .build()
 
-def m = Matrix.builder("Example").columns(cols).build()
-
-// inferPrecisionAndScale=true → BigDecimal columns use Avro decimal(bytes)
-MatrixAvroWriter.write(m, new File("out/example.avro"), true)
-
-def tuned = new AvroWriteOptions()
+AvroWriteOptions writeOptions = new AvroWriteOptions()
     .inferPrecisionAndScale(true)
-    .namespace("com.example.avro")
+    .namespace('com.example.avro')
     .compression(AvroWriteOptions.Compression.DEFLATE)
     .compressionLevel(6)
     .syncInterval(64000)
 
-MatrixAvroWriter.write(m, new File("out/example-compressed.avro"), tuned)
+MatrixAvroWriter.write(orders, new File('orders.avro'), writeOptions)
 ```
 
-Supported write options:
+Useful write options:
 
-- `inferPrecisionAndScale(...)` enables decimal logical types for `BigDecimal`
-- `namespace(...)` overrides the Avro schema namespace
-- `schemaName(...)` overrides the Avro record name; otherwise the writer uses `matrix.matrixName` before falling back to `MatrixSchema`
-- `compression(...)` selects the Avro codec
-- `compressionLevel(...)` applies only to `DEFLATE`, `XZ`, and `ZSTANDARD`; in fluent usage set `compression(...)` first
-- `syncInterval(...)` sets the Avro sync marker interval in bytes
-- `columnSchema(...)` / `columnSchemas(...)` override per-column schema inference with typed declarations for decimals, arrays, maps, and records
+- `inferPrecisionAndScale(...)` stores `BigDecimal` columns as Avro decimal logical types instead of falling back to `double`
+- `namespace(...)` controls the generated Avro namespace
+- `schemaName(...)` overrides the generated record name
+- `compression(...)`, `compressionLevel(...)`, and `syncInterval(...)` tune the container file
+- `columnSchema(...)` and `columnSchemas(...)` override nested schema inference per column
 
-Default write behavior:
+### Convenience Shortcuts
 
-- schema naming prefers `schemaName(...)`, then `matrix.matrixName`, then `MatrixSchema`
-- `inferPrecisionAndScale` defaults to `false`, so `BigDecimal` columns fall back to Avro `double`
-- `compression` defaults to `NULL`, `compressionLevel` defaults to `-1`, and `syncInterval` defaults to `0` for Avro's built-in default
-- `AvroWriteOptions.toMap()` only includes `schemaName` when explicitly set; otherwise the effective name is resolved at write time
-- invalid `compressionLevel` or `syncInterval` values fail fast when options are built or parsed from SPI maps
-- explicit `columnSchemas` take precedence over heuristic nested-type sampling on the named columns
+Convenience overloads still exist for default behavior:
 
-### Explicit per-column schema control
+```groovy
+MatrixAvroWriter.write(matrix, new File('data.avro'))
+MatrixAvroWriter.write(matrix, new File('data.avro'), true)
+byte[] bytes = MatrixAvroWriter.writeBytes(matrix)
+```
 
-Use `columnSchema(...)` when you need fixed decimal metadata or when a `List` / `Map` column should not rely on sampling heuristics:
+They are shortcuts over the typed API, not the primary configuration surface.
+
+## Explicit Schema Control
+
+Use `AvroSchemaDecl` when nested sampling heuristics are not enough:
 
 ```groovy
 import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.avro.AvroWriteOptions
 
-def options = new AvroWriteOptions()
+AvroWriteOptions options = new AvroWriteOptions()
     .columnSchema('amount', AvroSchemaDecl.decimal(12, 2))
     .columnSchema('tags', AvroSchemaDecl.array(AvroSchemaDecl.type(Long)))
     .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
@@ -173,35 +164,135 @@ def options = new AvroWriteOptions()
     ]))
 ```
 
-The same configuration can be supplied through the Matrix SPI:
-
-```groovy
-matrix.write([
-  columnSchemas: [
-    amount: [kind: 'decimal', precision: 12, scale: 2],
-    tags  : [kind: 'array', elementType: 'LONG'],
-    props : [kind: 'map', valueType: 'INT'],
-    person: [
-      kind  : 'record',
-      recordName: 'PersonRecord',
-      fields: [
-        name: 'STRING',
-        age : 'INT'
-      ]
-    ]
-  ]
-], new File('out/explicit-schema.avro'))
-```
-
 Supported declaration kinds:
 
-- `decimal`: fixed `precision` and `scale`
-- `array`: explicit `elementType`
-- `map`: explicit `valueType`
-- `record`: explicit nested `fields`, with optional `recordName`
-- `scalar`: direct scalar override such as `INT`, `LONG`, `STRING`, `DATE`, or `UUID`
+- `decimal(precision, scale)` for fixed decimal metadata
+- `array(...)` for explicit array element types
+- `map(...)` for explicit map value types
+- `record(...)` for explicit nested record fields
+- `type(...)` or `scalar(...)` for direct scalar overrides
 
-## Type mapping
+## Using Matrix.read() / matrix.write()
+
+If `matrix-avro` is on the classpath, `.avro` files are also available through the generic Matrix SPI API:
+
+```groovy
+import se.alipsa.matrix.avro.AvroReadOptions
+import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.core.Matrix
+
+Matrix data = Matrix.read(new File('users.avro'))
+Matrix renamed = Matrix.read([matrixName: 'Users'], new File('users.avro'))
+
+data.write([
+    inferPrecisionAndScale: true,
+    schemaName            : 'Users'
+], new File('users-copy.avro'))
+
+data.write([
+    columnSchemas: [
+        amount: [kind: 'decimal', precision: 12, scale: 2],
+        props : [kind: 'map', valueType: 'INT'],
+        person: [
+            kind      : 'record',
+            recordName: 'PersonRecord',
+            fields    : [name: 'STRING', age: 'INT']
+        ]
+    ]
+], new File('users-explicit.avro'))
+```
+
+SPI round-tripping is available for both read and write options through `toMap()` / `fromMap(...)`.
+
+## Default Behavior
+
+Read defaults:
+
+- Matrix naming precedence is `AvroReadOptions.matrixName(...)`, then the Avro record name, then a source-derived fallback such as the file name or `AvroMatrix`
+- Avro `uuid` values are read as `String`, not `UUID`
+- logical types such as `date`, `time-millis`, `timestamp-millis`, `local-timestamp-micros`, and `decimal` are converted to Java values during import
+- nested arrays read as `List<?>`, maps as `Map<String, ?>`, and records as `Map<String, Object>`
+
+Write defaults:
+
+- schema naming precedence is `AvroWriteOptions.schemaName(...)`, then `matrix.matrixName`, then `MatrixSchema`
+- `inferPrecisionAndScale` defaults to `false`, so `BigDecimal` columns fall back to Avro `double`
+- `namespace` defaults to `se.alipsa.matrix.avro`
+- `compression` defaults to `NULL`, `compressionLevel` to `-1`, and `syncInterval` to `0`
+
+Nested-type heuristics:
+
+- list element types are inferred from the first non-null element seen in the column
+- map value types are inferred from the first non-null value seen in the column
+- maps are encoded as records only when all non-null rows share the same key set
+- mixed numeric `Object` columns promote to `int`, `long`, or `double` based on observed values
+- `columnSchemas` takes precedence over all of the above when present
+
+## Common Patterns
+
+### Schema Evolution with a Reader Schema
+
+```groovy
+Schema projection = new Schema.Parser().parse("""
+{
+  "type": "record",
+  "name": "ProjectedOrders",
+  "fields": [
+    {"name":"id", "type":"int"},
+    {"name":"amount", "type":["null","bytes"], "default": null,
+     "logicalType":"decimal", "precision":12, "scale":2}
+  ]
+}
+""")
+
+Matrix projected = MatrixAvroReader.read(
+    new File('orders.avro'),
+    new AvroReadOptions().readerSchema(projection)
+)
+```
+
+### Decimal-Safe Writes
+
+```groovy
+MatrixAvroWriter.write(
+    orders,
+    new File('orders.avro'),
+    new AvroWriteOptions().inferPrecisionAndScale(true)
+)
+```
+
+### Custom Schema Naming
+
+```groovy
+MatrixAvroWriter.write(
+    orders,
+    new File('orders.avro'),
+    new AvroWriteOptions()
+        .schemaName('OrderRecord')
+        .namespace('com.example.orders')
+)
+```
+
+### Force Map vs Record Behavior
+
+```groovy
+AvroWriteOptions options = new AvroWriteOptions()
+    .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
+    .columnSchema('person', AvroSchemaDecl.record('PersonRecord', [
+        name: AvroSchemaDecl.type(String),
+        age : AvroSchemaDecl.type(Integer)
+    ]))
+```
+
+## Troubleshooting
+
+- Unexpected `String` for a UUID column on read: this is expected; Avro `uuid` is imported as `String`
+- `BigDecimal` round-trips as `Double`: enable `inferPrecisionAndScale(true)` or use `columnSchema('col', AvroSchemaDecl.decimal(...))`
+- A map column becomes an Avro record: that happens when the non-null rows all share the same key set; force map encoding with `AvroSchemaDecl.map(...)`
+- A list or map uses the wrong nested type: the default heuristic samples the first non-null element or value; use `columnSchemas` when the sample is not representative
+- Invalid `compressionLevel` or `syncInterval`: option validation is fail-fast and happens both in fluent configuration and `fromMap(...)`
+
+## Type Mapping
 
 | Matrix / Java type           | Avro physical type | Avro logical type           | Notes                                              |
 |------------------------------|-------------------:|-----------------------------|----------------------------------------------------|
@@ -211,66 +302,26 @@ Supported declaration kinds:
 | `Long`, `BigInteger`         |             `long` | —                           |                                                    |
 | `Float`                      |            `float` | —                           |                                                    |
 | `Double`                     |           `double` | —                           |                                                    |
-| `BigDecimal` (infer=false)   |           `double` | —                           | fallback for compatibility                         |
-| `BigDecimal` (infer=true)    |            `bytes` | `decimal(precision, scale)` | per-column inference                               |
+| `BigDecimal` (infer=false)   |           `double` | —                           | fallback                                           |
+| `BigDecimal` (infer=true)    |            `bytes` | `decimal(precision, scale)` | inferred or explicit                               |
 | `byte[]`                     |            `bytes` | —                           |                                                    |
 | `LocalDate`, `java.sql.Date` |              `int` | `date`                      | days since epoch                                   |
 | `LocalTime`, `java.sql.Time` |              `int` | `time-millis`               | ms since midnight                                  |
-| `Instant`, `java.util.Date`  |             `long` | `timestamp-millis`          | epoch millis (UTC)                                 |
-| `LocalDateTime`              |             `long` | `local-timestamp-micros`    | zone-less, micros precision                        |
-| `UUID`                       |           `string` | `uuid`                      | stored as canonical string                         |
-| `List<T>`                    |            `array` | —                           | items are **nullable** unions `["null", itemType]` |
-| `Map<String,V>`              |  `map` or `record` | —                           | values are **nullable**; see below                 |
+| `Instant`, `java.util.Date`  |             `long` | `timestamp-millis`          | epoch millis                                       |
+| `LocalDateTime`              |             `long` | `local-timestamp-micros`    | zone-less                                          |
+| `UUID`                       |           `string` | `uuid`                      | reads back as `String`                             |
+| `List<T>`                    |            `array` | —                           | elements are nullable                              |
+| `Map<String,V>`              |  `map` or `record` | —                           | values/fields are nullable                         |
 
-### Arrays, Maps & Record-like nested data
+## Examples & Tests
 
-- **Arrays**: element type inferred from first non-null element; elements are written as `["null", T]` to allow `null` entries.
-- **Maps**:
-  - If **keys vary** across rows → written as Avro `map` of `["null", V]`.
-  - If **keys are identical** across rows → written as an Avro `record` with one field per key (each field `["null", T]`).
-- On read, nested values become standard Java collections:
-  - arrays → `List<?>`
-  - maps → `Map<String,?>`
-  - records → `Map<String, Object>`
+See `src/test/groovy/test/alipsa/matrix/avro/`:
 
-## Decimal handling (`inferPrecisionAndScale`)
-
-- `false` (default): `BigDecimal` columns are stored as `double`. Simple and broadly compatible.
-- `true`: `BigDecimal` columns are stored as Avro `decimal(bytes)` with `(precision, scale)` inferred from the column’s non-null values. This enables lossless round-trip.
-
-## Nullability
-
-- All **top-level** fields are nullable (`["null", T]`).
-- Array **elements** and map **values** are also nullable (`["null", T]`).
-- Record-like fields are nullable per field.
-
-## Precision notes
-
-- `LocalDateTime` is written as `local-timestamp-micros` to preserve sub-second precision (reader supports both `…-micros` and `…-millis`).
-- `LocalTime` uses `time-millis` (ms resolution).
-- If your source `Matrix` already contains truncated values, that truncation carries into Avro.
-
-## Limitations / heuristics
-
-- Element/value types for arrays/maps are inferred from the **first non-null** sample in the column.
-- Record-like detection for maps is heuristic: if the **key set is identical** for all non-null rows, it’s encoded as a record; otherwise a map.
-- Mixed numeric columns are promoted: integers → `int`/`long` depending on range; presence of a floating value promotes to `double`. Heterogeneous arrays currently infer from first non-null element.
-- Use `columnSchemas` when you need to override any of those heuristics explicitly.
-
-## Examples & tests
-
-See `src/test/groovy/se/alipsa/matrix/avro/`:
-- `MatrixAvroReaderTest` – read methods (File, Path, URL, InputStream)
-- `MatrixAvroRoundTripTest` – end-to-end round-trip including logical types & decimals
-- `MatrixAvroWriterTest` – schema sanity (logical types)
-- `MatrixAvroArrayMapRecordRoundTripTest` – arrays, maps, record-like structures
-
-## Troubleshooting
-
-- **UnresolvedUnionException** for arrays/maps: ensure array **items** and map **values** are nullable unions (`["null", T]`). This module does that automatically.
-- **Lost `.999` on `LocalDateTime`**: confirm your source `Matrix` retains nanos (the writer uses `local-timestamp-micros`).
-- **BigDecimal rounding**: with `inferPrecisionAndScale=true` we write `decimal(bytes)` using the inferred scale; when writing floating values into a decimal column, values are rounded using `HALF_UP`.
+- `MatrixAvroReaderTest` for the read entry points and naming precedence
+- `MatrixAvroWriterTest` for schema generation and option validation
+- `MatrixAvroRoundTripTest` for logical types, decimals, and nested collections
+- `AvroFormatProviderTest` for SPI option parsing and round-tripping
 
 ## License
 
-Same license as the parent Matrix project (i.e. MIT). See the repository [LICENSE file](../LICENSE).
+Same license as the parent Matrix project (MIT). See the repository [LICENSE file](../LICENSE).

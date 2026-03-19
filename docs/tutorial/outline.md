@@ -90,7 +90,8 @@
   - Working with Parquet files
 - [Matrix Avro Module](11b-matrix-avro.md)
   - Reading and writing Avro object container files
-  - Reader schema projection and schema evolution
+  - Options-first `AvroReadOptions` and `AvroWriteOptions` usage
+  - Schema evolution and explicit nested schema control
 - [Matrix BigQuery Module](12-matrix-bigquery.md)
   - Google BigQuery integration
 - [Matrix Charts Module](13-matrix-charts.md)
