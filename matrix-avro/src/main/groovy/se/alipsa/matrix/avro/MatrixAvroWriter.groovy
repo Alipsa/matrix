@@ -553,43 +553,50 @@ class MatrixAvroWriter {
 
   private static Schema scalarSchema(AvroScalarTypeDecl scalarType) {
     switch (scalarType) {
-      case AvroScalarTypeDecl.STRING:
-        return Schema.create(Schema.Type.STRING)
-      case AvroScalarTypeDecl.BOOLEAN:
-        return Schema.create(Schema.Type.BOOLEAN)
-      case AvroScalarTypeDecl.INT:
-        return Schema.create(Schema.Type.INT)
-      case AvroScalarTypeDecl.LONG:
-        return Schema.create(Schema.Type.LONG)
-      case AvroScalarTypeDecl.FLOAT:
-        return Schema.create(Schema.Type.FLOAT)
-      case AvroScalarTypeDecl.DOUBLE:
-        return Schema.create(Schema.Type.DOUBLE)
-      case AvroScalarTypeDecl.BYTES:
-        return Schema.create(Schema.Type.BYTES)
-      case AvroScalarTypeDecl.DATE:
-        Schema dateSchema = Schema.create(Schema.Type.INT)
-        LogicalTypes.date().addToSchema(dateSchema)
-        return dateSchema
-      case AvroScalarTypeDecl.TIME_MILLIS:
-        Schema timeSchema = Schema.create(Schema.Type.INT)
-        LogicalTypes.timeMillis().addToSchema(timeSchema)
-        return timeSchema
-      case AvroScalarTypeDecl.TIMESTAMP_MILLIS:
-        Schema timestampSchema = Schema.create(Schema.Type.LONG)
-        LogicalTypes.timestampMillis().addToSchema(timestampSchema)
-        return timestampSchema
-      case AvroScalarTypeDecl.LOCAL_TIMESTAMP_MICROS:
-        Schema localTimestampSchema = Schema.create(Schema.Type.LONG)
-        LogicalTypes.localTimestampMicros().addToSchema(localTimestampSchema)
-        return localTimestampSchema
-      case AvroScalarTypeDecl.UUID:
-        Schema uuidSchema = Schema.create(Schema.Type.STRING)
-        LogicalTypes.uuid().addToSchema(uuidSchema)
-        return uuidSchema
-      default:
-        throw new IllegalArgumentException("Unsupported Avro scalar type declaration $scalarType")
+      case AvroScalarTypeDecl.STRING -> Schema.create(Schema.Type.STRING)
+      case AvroScalarTypeDecl.BOOLEAN -> Schema.create(Schema.Type.BOOLEAN)
+      case AvroScalarTypeDecl.INT -> Schema.create(Schema.Type.INT)
+      case AvroScalarTypeDecl.LONG -> Schema.create(Schema.Type.LONG)
+      case AvroScalarTypeDecl.FLOAT -> Schema.create(Schema.Type.FLOAT)
+      case AvroScalarTypeDecl.DOUBLE -> Schema.create(Schema.Type.DOUBLE)
+      case AvroScalarTypeDecl.BYTES -> Schema.create(Schema.Type.BYTES)
+      case AvroScalarTypeDecl.DATE -> createDateSchema()
+      case AvroScalarTypeDecl.TIME_MILLIS -> createTimeMillisSchema()
+      case AvroScalarTypeDecl.TIMESTAMP_MILLIS -> createTimestampMillisSchema()
+      case AvroScalarTypeDecl.LOCAL_TIMESTAMP_MICROS -> createLocalTimestampMicrosSchema()
+      case AvroScalarTypeDecl.UUID -> createUuidSchema()
+      default -> throw new IllegalArgumentException("Unsupported Avro scalar type declaration $scalarType")
     }
+  }
+
+  private static Schema createDateSchema() {
+    Schema dateSchema = Schema.create(Schema.Type.INT)
+    LogicalTypes.date().addToSchema(dateSchema)
+    dateSchema
+  }
+
+  private static Schema createTimeMillisSchema() {
+    Schema timeSchema = Schema.create(Schema.Type.INT)
+    LogicalTypes.timeMillis().addToSchema(timeSchema)
+    timeSchema
+  }
+
+  private static Schema createTimestampMillisSchema() {
+    Schema timestampSchema = Schema.create(Schema.Type.LONG)
+    LogicalTypes.timestampMillis().addToSchema(timestampSchema)
+    timestampSchema
+  }
+
+  private static Schema createLocalTimestampMicrosSchema() {
+    Schema localTimestampSchema = Schema.create(Schema.Type.LONG)
+    LogicalTypes.localTimestampMicros().addToSchema(localTimestampSchema)
+    localTimestampSchema
+  }
+
+  private static Schema createUuidSchema() {
+    Schema uuidSchema = Schema.create(Schema.Type.STRING)
+    LogicalTypes.uuid().addToSchema(uuidSchema)
+    uuidSchema
   }
 
   // ----------------------------------------------------------------------

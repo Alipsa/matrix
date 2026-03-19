@@ -1,6 +1,9 @@
 package se.alipsa.matrix.avro
 
 import groovy.transform.CompileStatic
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.PackageScope
+import groovy.transform.ToString
 import se.alipsa.matrix.core.spi.OptionMaps
 
 import java.time.Instant
@@ -14,8 +17,8 @@ import java.util.Locale
  *
  * <p>Use the static factory methods to define a fixed decimal schema, force an
  * array or map value type, or force a record schema for record-like map columns.
- * Instances can be round-tripped through SPI option maps by calling {@link #toMap()}
- * and {@link #fromMap(Map)}.
+ * Instances can be round-tripped through SPI option maps by calling {@link AvroSchemaDecl#toMap()}
+ * and {@link AvroSchemaDecl#fromMap(Map)}.
  */
 @CompileStatic
 abstract class AvroSchemaDecl {
@@ -133,24 +136,12 @@ abstract class AvroSchemaDecl {
       throw new IllegalArgumentException("Schema declaration must include 'kind'")
     }
     switch (kind.toLowerCase(Locale.ROOT)) {
-      case 'scalar':
-        ensureOnlyKeys(normalized, 'scalar', ['kind', 'scalartype'] as Set<String>)
-        return scalar(scalarTypeValue(normalized.scalartype, 'scalar.scalarType'))
-      case 'decimal':
-        ensureOnlyKeys(normalized, 'decimal', ['kind', 'precision', 'scale'] as Set<String>)
-        return decimal(intValue(normalized.precision, 'decimal.precision'),
-            intValue(normalized.scale, 'decimal.scale'))
-      case 'array':
-        ensureOnlyKeys(normalized, 'array', ['kind', 'elementtype'] as Set<String>)
-        return array(schemaDeclValue(normalized.elementtype, 'array.elementType'))
-      case 'map':
-        ensureOnlyKeys(normalized, 'map', ['kind', 'valuetype'] as Set<String>)
-        return map(schemaDeclValue(normalized.valuetype, 'map.valueType'))
-      case 'record':
-        ensureOnlyKeys(normalized, 'record', ['kind', 'recordname', 'fields'] as Set<String>)
-        return record(OptionMaps.stringValueOrNull(normalized.recordname), recordFieldsValue(normalized.fields, 'record.fields'))
-      default:
-        throw new IllegalArgumentException("Unsupported schema declaration kind '$kind'")
+      case 'scalar' -> parseScalarDecl(normalized)
+      case 'decimal' -> parseDecimalDecl(normalized)
+      case 'array' -> parseArrayDecl(normalized)
+      case 'map' -> parseMapDecl(normalized)
+      case 'record' -> parseRecordDecl(normalized)
+      default -> throw new IllegalArgumentException("Unsupported schema declaration kind '$kind'")
     }
   }
 
@@ -161,6 +152,10 @@ abstract class AvroSchemaDecl {
    */
   abstract Map<String, ?> toMap()
 
+  /**
+   * Parses the nested `columnSchemas` SPI option map used by {@link AvroWriteOptions}.
+   */
+  @PackageScope
   static Map<String, AvroSchemaDecl> columnSchemasValue(Object value, String optionName) {
     if (!(value instanceof Map)) {
       throw new IllegalArgumentException("$optionName must be a Map<String, AvroSchemaDecl> but was ${value?.class}")
@@ -173,6 +168,10 @@ abstract class AvroSchemaDecl {
     result
   }
 
+  /**
+   * Serializes typed column schema declarations back to the SPI map shape used by {@link AvroWriteOptions}.
+   */
+  @PackageScope
   static Map<String, ?> columnSchemasToMap(Map<String, AvroSchemaDecl> value) {
     Map<String, Object> result = [:]
     value.each { String key, AvroSchemaDecl item ->
@@ -181,7 +180,7 @@ abstract class AvroSchemaDecl {
     result
   }
 
-  static AvroScalarTypeDecl toScalarType(Class<?> javaType) {
+  private static AvroScalarTypeDecl toScalarType(Class<?> javaType) {
     if (javaType == String) return AvroScalarTypeDecl.STRING
     if (javaType == Boolean || javaType == boolean.class) return AvroScalarTypeDecl.BOOLEAN
     if (javaType == Integer || javaType == int.class || javaType == Short || javaType == short.class ||
@@ -310,9 +309,37 @@ abstract class AvroSchemaDecl {
       )
     }
   }
+
+  private static AvroSchemaDecl parseScalarDecl(Map<String, Object> normalized) {
+    ensureOnlyKeys(normalized, 'scalar', ['kind', 'scalartype'] as Set<String>)
+    scalar(scalarTypeValue(normalized.scalartype, 'scalar.scalarType'))
+  }
+
+  private static AvroSchemaDecl parseDecimalDecl(Map<String, Object> normalized) {
+    ensureOnlyKeys(normalized, 'decimal', ['kind', 'precision', 'scale'] as Set<String>)
+    decimal(intValue(normalized.precision, 'decimal.precision'),
+        intValue(normalized.scale, 'decimal.scale'))
+  }
+
+  private static AvroSchemaDecl parseArrayDecl(Map<String, Object> normalized) {
+    ensureOnlyKeys(normalized, 'array', ['kind', 'elementtype'] as Set<String>)
+    array(schemaDeclValue(normalized.elementtype, 'array.elementType'))
+  }
+
+  private static AvroSchemaDecl parseMapDecl(Map<String, Object> normalized) {
+    ensureOnlyKeys(normalized, 'map', ['kind', 'valuetype'] as Set<String>)
+    map(schemaDeclValue(normalized.valuetype, 'map.valueType'))
+  }
+
+  private static AvroSchemaDecl parseRecordDecl(Map<String, Object> normalized) {
+    ensureOnlyKeys(normalized, 'record', ['kind', 'recordname', 'fields'] as Set<String>)
+    record(OptionMaps.stringValueOrNull(normalized.recordname), recordFieldsValue(normalized.fields, 'record.fields'))
+  }
 }
 
 @CompileStatic
+@EqualsAndHashCode
+@ToString(includeNames = true)
 final class ScalarAvroSchemaDecl extends AvroSchemaDecl {
   final AvroScalarTypeDecl scalarType
 
@@ -327,6 +354,8 @@ final class ScalarAvroSchemaDecl extends AvroSchemaDecl {
 }
 
 @CompileStatic
+@EqualsAndHashCode
+@ToString(includeNames = true)
 final class DecimalAvroSchemaDecl extends AvroSchemaDecl {
   final int precision
   final int scale
@@ -343,6 +372,8 @@ final class DecimalAvroSchemaDecl extends AvroSchemaDecl {
 }
 
 @CompileStatic
+@EqualsAndHashCode
+@ToString(includeNames = true)
 final class ArrayAvroSchemaDecl extends AvroSchemaDecl {
   final AvroSchemaDecl elementType
 
@@ -357,6 +388,8 @@ final class ArrayAvroSchemaDecl extends AvroSchemaDecl {
 }
 
 @CompileStatic
+@EqualsAndHashCode
+@ToString(includeNames = true)
 final class MapAvroSchemaDecl extends AvroSchemaDecl {
   final AvroSchemaDecl valueType
 
@@ -371,6 +404,8 @@ final class MapAvroSchemaDecl extends AvroSchemaDecl {
 }
 
 @CompileStatic
+@EqualsAndHashCode
+@ToString(includeNames = true)
 final class RecordAvroSchemaDecl extends AvroSchemaDecl {
   final String recordName
   final Map<String, AvroSchemaDecl> fields
