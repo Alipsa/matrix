@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
 source ~/.sdkman/bin/sdkman-init.sh
 source jdk21
-#./gradlew clean publishToSonatype closeAndReleaseSonatypeStagingRepository
-../gradlew -PrunExternalTests=true :matrix-avro:clean :matrix-avro:build :matrix-avro:release || exit 1
+./gradlew :matrix-avro:clean :matrix-avro:build :matrix-avro:release
 PROJECT=$(basename "$PWD")
-if grep "version '" build.gradle | grep -q 'SNAPSHOT'; then
+VERSION=$(sed -nE "s/^[[:space:]]*version[[:space:]]*=[[:space:]]*['\"](.*)['\"][[:space:]]*$/\\1/p" build.gradle)
+if [ -z "$VERSION" ]; then
+  echo "Failed to determine version from build.gradle" >&2
+  exit 1
+fi
+if [[ "$VERSION" == *SNAPSHOT* ]]; then
   echo "$PROJECT snapshot published"
 else
-  echo "$PROJECT uploaded, release it if it checks out"
+  echo "$PROJECT $VERSION uploaded, release it if it checks out"
   echo "see https://central.sonatype.com/publishing/deployments for more info"
-  # browse https://oss.sonatype.org &
 fi
