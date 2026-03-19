@@ -23,6 +23,34 @@ import java.util.Locale
 @CompileStatic
 abstract class AvroSchemaDecl {
 
+  private static final Map<Class<?>, AvroScalarTypeDecl> SCALAR_TYPE_BY_CLASS = [
+      (String)        : AvroScalarTypeDecl.STRING,
+      (Boolean)       : AvroScalarTypeDecl.BOOLEAN,
+      (boolean.class) : AvroScalarTypeDecl.BOOLEAN,
+      (Integer)       : AvroScalarTypeDecl.INT,
+      (int.class)     : AvroScalarTypeDecl.INT,
+      (Short)         : AvroScalarTypeDecl.INT,
+      (short.class)   : AvroScalarTypeDecl.INT,
+      (Byte)          : AvroScalarTypeDecl.INT,
+      (byte.class)    : AvroScalarTypeDecl.INT,
+      (Long)          : AvroScalarTypeDecl.LONG,
+      (long.class)    : AvroScalarTypeDecl.LONG,
+      (BigInteger)    : AvroScalarTypeDecl.LONG,
+      (Float)         : AvroScalarTypeDecl.FLOAT,
+      (float.class)   : AvroScalarTypeDecl.FLOAT,
+      (Double)        : AvroScalarTypeDecl.DOUBLE,
+      (double.class)  : AvroScalarTypeDecl.DOUBLE,
+      (byte[].class)  : AvroScalarTypeDecl.BYTES,
+      (LocalDate)     : AvroScalarTypeDecl.DATE,
+      (java.sql.Date) : AvroScalarTypeDecl.DATE,
+      (LocalTime)     : AvroScalarTypeDecl.TIME_MILLIS,
+      (java.sql.Time) : AvroScalarTypeDecl.TIME_MILLIS,
+      (Instant)       : AvroScalarTypeDecl.TIMESTAMP_MILLIS,
+      (Date)          : AvroScalarTypeDecl.TIMESTAMP_MILLIS,
+      (LocalDateTime) : AvroScalarTypeDecl.LOCAL_TIMESTAMP_MICROS,
+      (UUID)          : AvroScalarTypeDecl.UUID
+  ].asImmutable()
+
   /**
    * Creates a scalar schema declaration.
    *
@@ -181,19 +209,10 @@ abstract class AvroSchemaDecl {
   }
 
   private static AvroScalarTypeDecl toScalarType(Class<?> javaType) {
-    if (javaType == String) return AvroScalarTypeDecl.STRING
-    if (javaType == Boolean || javaType == boolean.class) return AvroScalarTypeDecl.BOOLEAN
-    if (javaType == Integer || javaType == int.class || javaType == Short || javaType == short.class ||
-        javaType == Byte || javaType == byte.class) return AvroScalarTypeDecl.INT
-    if (javaType == Long || javaType == long.class || javaType == BigInteger) return AvroScalarTypeDecl.LONG
-    if (javaType == Float || javaType == float.class) return AvroScalarTypeDecl.FLOAT
-    if (javaType == Double || javaType == double.class) return AvroScalarTypeDecl.DOUBLE
-    if (javaType == byte[].class) return AvroScalarTypeDecl.BYTES
-    if (javaType == LocalDate || javaType == java.sql.Date) return AvroScalarTypeDecl.DATE
-    if (javaType == LocalTime || javaType == java.sql.Time) return AvroScalarTypeDecl.TIME_MILLIS
-    if (javaType == Instant || javaType == Date) return AvroScalarTypeDecl.TIMESTAMP_MILLIS
-    if (javaType == LocalDateTime) return AvroScalarTypeDecl.LOCAL_TIMESTAMP_MICROS
-    if (javaType == UUID) return AvroScalarTypeDecl.UUID
+    AvroScalarTypeDecl scalarType = SCALAR_TYPE_BY_CLASS[javaType]
+    if (scalarType != null) {
+      return scalarType
+    }
     throw new IllegalArgumentException("Unsupported scalar Java type '${javaType.name}' for explicit Avro schema control")
   }
 
