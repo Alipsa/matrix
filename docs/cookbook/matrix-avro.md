@@ -111,6 +111,7 @@ MatrixAvroWriter.write(orders, new File('orders-named.avro'), new AvroWriteOptio
 ```groovy
 import se.alipsa.matrix.avro.AvroSchemaDecl
 import se.alipsa.matrix.avro.AvroWriteOptions
+import se.alipsa.matrix.avro.MatrixAvroWriter
 import se.alipsa.matrix.core.Matrix
 
 Matrix nested = Matrix.builder('Nested')
@@ -118,11 +119,9 @@ Matrix nested = Matrix.builder('Nested')
     .types(Map)
     .build()
 
-nested.write([
-    columnSchemas: [
-        props: [kind: 'map', valueType: 'INT']
-    ]
-], new File('nested-map.avro'))
+MatrixAvroWriter.write(nested, new File('nested-map.avro'), new AvroWriteOptions()
+    .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
+)
 ```
 
 By default, a map column becomes a record only when every non-null row uses the same key set.

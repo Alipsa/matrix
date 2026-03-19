@@ -91,9 +91,7 @@
 - [Matrix Avro Module](11b-matrix-avro.md)
   - Reading and writing Avro object container files
   - Options-first `AvroReadOptions` and `AvroWriteOptions` usage
-  - Reader schema projection and schema evolution
-  - Explicit nested schema control with `AvroSchemaDecl`
-  - Matrix SPI round-tripping and option discovery
+  - Schema evolution and explicit nested schema control
 - [Matrix BigQuery Module](12-matrix-bigquery.md)
   - Google BigQuery integration
 - [Matrix Charts Module](13-matrix-charts.md)

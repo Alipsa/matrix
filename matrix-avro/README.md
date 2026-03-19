@@ -278,7 +278,7 @@ MatrixAvroWriter.write(
 ```groovy
 AvroWriteOptions options = new AvroWriteOptions()
     .columnSchema('props', AvroSchemaDecl.map(AvroSchemaDecl.type(Integer)))
-    .columnSchema('person', AvroSchemaDecl.record([
+    .columnSchema('person', AvroSchemaDecl.record('PersonRecord', [
         name: AvroSchemaDecl.type(String),
         age : AvroSchemaDecl.type(Integer)
     ]))
